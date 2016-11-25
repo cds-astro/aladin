@@ -419,14 +419,14 @@ public final class Projection {
          alphai = co.al;
          deltai = co.del;
          co = c.getImgCenter();
-         if( frame!=Localisation.ICRS ) co = Localisation.frameToFrame(co, frame,Localisation.ICRS);
+         co = Localisation.frameToFrame(co, frame,Localisation.ICRS);
          //         co.x = c.xnpix/2.;
          //         co.y = c.ynpix/2.;
          //         getCoord(co);
          raj = co.al;
          dej = co.del;
       } catch( Exception e ) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//         if( Aladin.levelTrace>=4 ) e.printStackTrace();
       }
 
       double w = c.getImgWidth();

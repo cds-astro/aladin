@@ -282,6 +282,8 @@ class SED extends JPanel {
    // lorsque c'est terminé, le tracé peut être opéré
    private void setPosition() {
       
+      if( sedList==null ) return;
+      
       // Recherche des intervalles
       absMin = fluxMin = Double.MAX_VALUE;
       absMax = fluxMax = Double.MIN_VALUE;
@@ -417,13 +419,22 @@ class SED extends JPanel {
    }
    
    /** Retourne la dimension du graphique */
-   public Dimension getDimension() { return new Dimension(ZoomView.SIZE,ZoomView.SIZE); }
+//   public Dimension getDimension() { return new Dimension(ZoomView.getSIZE(),ZoomView.getSIZE()); }
+   public Dimension getDimension() { return new Dimension(aladin.calque.zoom.zoomView.getWidth(),aladin.calque.zoom.zoomView.getHeight()); }
    
    static final private Color COLOROPT = new Color(234,234,255);
+   
+   
+   private int lastWidth=0,lastHeight=0;
    
    // Tracé du graphique
    protected void draw(Graphics g) {
       Dimension dim = getDimension();
+      if( dim.width!=lastWidth  || dim.height!=lastHeight ) {
+         setPosition();
+         lastWidth=dim.width;
+         lastHeight=dim.height;
+      }
       int haut=margeHaut, bas=dim.height-margeBas;
       int gauche=margeGauche, droite=dim.width-margeDroite;
       

@@ -846,9 +846,10 @@ public class PlanImageBlink extends PlanImage {
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
+      aladin.view.resumeSourceStatOnCube();
       return true;
    }
-
+   
    /** Rend active la tranche courante des pixels d'origine, soit pour le planBlink lui-même
     * soit pourun planImage désigné (dans le cas d'une extraction d'une frame */
    protected void activePixelsOrigin(ViewSimple v) { activePixelsOrigin(v,this); }

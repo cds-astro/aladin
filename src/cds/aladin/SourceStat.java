@@ -58,7 +58,7 @@ public class SourceStat extends SourceTag {
       legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "_RAJ2000","_DEJ2000","ID",  "Image", "RA (ICRS)","DE (ICRS)","Count",  "Sum",   "Sigma",  "Min",   "Avg",   "Max",   "Radius","Area",       });
       legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "double",  "double",  "char","char",  "char",     "char",     "integer","double","double", "double","double","double","double","double"  });
       legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "deg",     "deg",     "",    "",      "\"h:m:s\"","\"h:m:s\"","pixel",  "",      "",       "",      "",      "",      "arcmin","arcmin^2"       });
-      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "10",      "10",      "15",  "10",    "13",      "13",        "10",     "10",    "10",    "10",    "10",     "10",    "10",    "10"    });
+      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "10",      "10",      "10",  "20",    "13",      "13",        "10",     "10",    "10",    "10",    "10",     "10",    "10",    "10"    });
       legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "6",       "6",       "",    "",      "4",        "5",        "2",      "4",     "4",     "4",     "4",      "4" ,    "4",     "4",         });
       legende = Legende.adjustDefaultLegende(legende,Legende.DESCRIPTION,
             new String[]{  "RA","DEC", "Identifier",  "Reference image", "Right ascension",  "Declination","Pixel count","Sum of pixel values","Median of the distribution", "Minimum value","Average value", "Maximum value",
@@ -138,6 +138,11 @@ public class SourceStat extends SourceTag {
          PlanBG pbg = (PlanBG)planBase;
          int orderFile=order==-1 ? pbg.maxOrder : order==0 ?  pbg.getOrder() : order;
          nomPlan=orderFile+"/"+nomPlan;
+      }
+      
+      if( planBase.isCube() ) {
+         int d = 1+(int)planBase.getZ();
+         nomPlan+="/"+d;
       }
       
       info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+nomPlan+"\t"+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+rad+"\t"+surf;

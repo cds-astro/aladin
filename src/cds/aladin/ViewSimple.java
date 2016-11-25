@@ -1636,8 +1636,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( view.newobj==null ) return;
       calque.setObjet(view.newobj);
       if( view.newobj instanceof Ligne && !(view.newobj instanceof Cote) ) ((Ligne)view.newobj).getFirstBout().bout=0;
-      if( view.newobj instanceof Tag ) {
-      }
       view.extendClip(view.newobj);
       aladin.console.printCommand(view.newobj.getCommand());
       view.setSelectFromView(true);
@@ -2569,26 +2567,35 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
          }
          
-         // Insertion d'un repère avec mesure de surface
-         if( view.newobj!=null ) {
-
-            // Juste pour le spectre localisé pour un cube via un repere
-            if( pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
-               aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
-               aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
-               view.selectCote(view.newobj);
-               view.extendClip(view.newobj);
-            }
-
-//            if( ((SourcePhot)view.newobj).hasRayon() ) {
-//               view.newobj.setSelected(true);
-//               addObjSurfMove(view.newobj);
+//         // Insertion d'un repère avec mesure de surface
+//         if( view.newobj!=null ) {
+//
+//            // Juste pour le spectre localisé pour un cube via un repere
+//            if( pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
+//               aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
+//               aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
+//               view.selectCote(view.newobj);
+//               view.extendClip(view.newobj);
 //            }
-         }
+//
+////            if( ((SourcePhot)view.newobj).hasRayon() ) {
+////               view.newobj.setSelected(true);
+////               addObjSurfMove(view.newobj);
+////            }
+//         }
 
          finNewObjet();
          view.newobj=null;
       }
+      
+      if( view.newobj instanceof RepereSpectrum && pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
+         aladin.toolBox.setMode(ToolBox.SPECT,Tool.UP);
+         aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
+         view.newobj.setSelected(true);
+         view.extendClip(view.newobj);
+         calque.setObjet(view.newobj);
+         view.newobj=null;
+     }
 
 
 //      // Le repere est insere
@@ -6771,9 +6778,10 @@ g.drawString(s,10,100);
       widgetControl.addWidget( aladin.calque.select );
 
       // Le zoomView
-      int x = getWidth()-aladin.calque.zoom.zoomView.SIZE-75;
-      int y = getHeight()-aladin.calque.zoom.zoomView.SIZE-MG;
-      aladin.calque.zoom.zoomView.createWidgetControl(x,y,aladin.calque.zoom.zoomView.SIZE,aladin.calque.zoom.zoomView.SIZE,0.7f,this);
+      int x = getWidth()-aladin.calque.zoom.zoomView.getSIZE()-75;
+      int y = getHeight()-aladin.calque.zoom.zoomView.getSIZE()-MG;
+      aladin.calque.zoom.zoomView.createWidgetControl(x,y,aladin.calque.zoom.zoomView.getSIZE(),
+            aladin.calque.zoom.zoomView.getSIZE(),0.7f,this);
       
       widgetControl.addWidget( aladin.calque.zoom.zoomView );
 

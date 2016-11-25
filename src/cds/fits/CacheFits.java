@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -51,11 +51,12 @@ import cds.tools.Util;
 public class CacheFits {
 
    static private final long DEFAULT_MAXMEM=512*1024*1024L;
+   static protected final int MAXFILE = 10000;
 
    private long maxMem;             // Taille max (en octets)
    private int nextId;              // prochain identificateur unique de fichier
-   private boolean cacheOutOfMem;   // En cas de débordement mémoire, on vire totalement le cache
-   protected Hashtable<String, FitsFile> map;             // Table des fichiers
+   volatile private boolean cacheOutOfMem;   // En cas de débordement mémoire, on vire totalement le cache
+   protected HashMap<String, FitsFile> map;             // Table des fichiers
    //   private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
    Context context;
    private Hashtable<String, double[]> cutCache = new Hashtable<String, double[]>();
@@ -83,7 +84,7 @@ public class CacheFits {
       cacheOutOfMem = maxMem==0;
       nextId = 0;
       statNbFree = statNbOpen = statNbFind = 0;
-      map = new Hashtable<String, FitsFile>(20000);
+      map = new HashMap<String, FitsFile>(MAXFILE+MAXFILE/100);
       //      sortedMap = new TreeMap<String, FitsFile>( new ValueComparator(map) );
    }
 
@@ -138,6 +139,7 @@ public class CacheFits {
    static public final int JPEG = 1; // JPEG
    static public final int PNG  = 2; // PNG
    static public final int HHH  = 4; // HHH (combiné avec JPEG ou PNG)
+   
 
    /**
     * Récupération d'un Fits spécifié par son nom de fichier.
@@ -149,7 +151,7 @@ public class CacheFits {
    public Fits getFits(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
       if( cacheOutOfMem )  return open(fileName,mode,flagLoad,keepHeader).fits;
 
-      synchronized( lockObj  ) {
+//      synchronized( lockObj  ) {
          FitsFile f = find(fileName);
 
          // Trouvé, je le mets à jour
@@ -182,7 +184,7 @@ public class CacheFits {
          }
 
          return f.fits;
-      }
+//      }
    }
 
    // Retrouve l'objet Fits dans le cache, null si inconnu
@@ -296,6 +298,7 @@ public class CacheFits {
 
    // Retourne true si le cache est en surcapacité
    protected boolean isOver() {
+      if( map.size()>MAXFILE ) return true;
       if( maxMem<0 ) {
          //         System.out.println("Cachemem="+Util.getUnitDisk(mem)+" freeMem="+Util.getUnitDisk(getFreeMem())
          //               +" maxMem="+Util.getUnitDisk(-maxMem)
@@ -310,12 +313,16 @@ public class CacheFits {
    public long getMem() {
       long mem=0L;
       if( map==null ) return mem;
-      Enumeration<String> e = map.keys();
-      while( e.hasMoreElements() ) {
-         String key = e.nextElement();
-         FitsFile f = map.get(key);
-         mem += f.fits.getMem();
-      }
+      
+//      Enumeration<String> e = map.keys();
+//      while( e.hasMoreElements() ) {
+//         String key = e.nextElement();
+//         FitsFile f = map.get(key);
+//         mem += f.fits.getMem();
+//      }
+      
+      try { for( FitsFile f: map.values() ) mem += f.fits.getMem(); } catch( Exception e ) { };
+
       return mem;
    }
 
@@ -325,60 +332,102 @@ public class CacheFits {
    }
 
 
+   volatile boolean deja=false;
+   
    // Supprime les plus vieux éléments du cache pour
    // qu'il y ait un peu de place libre
    protected void clean() {
-      long mem = getMem();
-      long totMem=0L;
-      long m=0;
-      int nb=0;
-      long freeMem = getFreeMem();
-      boolean encore=true;
-      long now = System.currentTimeMillis();
-      long delay=5000;
+      
+      synchronized( lockObj ) {
+         long mem = getMem();
+         long freeMem = getFreeMem();
+         
+         boolean tooManyFile = map.size()>MAXFILE;
+         boolean tooManyMem = maxMem<0 && freeMem<-maxMem || maxMem>=0 && mem>maxMem;
+         if( !tooManyFile && !tooManyMem ) return;
+         
+//         if( !isOver() ) return;
+         
+         long totMem=0L;
+         long m=0;
+         int nb=0;
+         boolean encore=true;
+         long now = System.currentTimeMillis();
+         long delay=5000;
 
-      // en premier tour, on supprime les fits non utilisés
-      // depuis plus de 5s, et si pas assez de mémoire, on ne regarde plus la date
-      int i;
-      for( i=0; i<3 && encore; i++) {
-         Enumeration<String> e = map.keys();
-         while( e.hasMoreElements() ) {
-            String key = e.nextElement();
-            FitsFile f = map.get(key);
-            if( f.fits.hasUsers() ) continue;
-            if( i==0 && now-f.timeAccess<delay ) continue;
-            m = f.getMem();
-            totMem+=m;
-            nb++;
-            statNbFree++;
-            //            map.remove(key);
-            try { remove(key); } catch( Exception e1 ) { }
-            if( totMem> mem/2L && map.size()<10000 ) { encore=false; break; }
-//            if( totMem> mem/2L ) { encore=false; break; }
+         int i;
+         try {
+            cacheOutOfMem=true;
+
+            HashMap<String,String> libere = new  HashMap<String,String>(map.size());
+            HashMap<String,FitsFile> map1 = new  HashMap<String,FitsFile>(map.size());
+
+            // en premier tour, on supprime les fits non utilisés
+            // depuis plus de 5s, et si pas assez de mémoire, on ne regarde plus la date
+            for( i=0; i<2 && encore; i++) {
+               int mapsize=map.size();
+
+               for( String key: map.keySet() ) {
+                  FitsFile f = map.get(key);
+                  if( f.fits.hasUsers() ) continue;
+                  if( i==0 && now-f.timeAccess<delay ) continue;
+                  m = f.getMem();
+                  totMem+=m;
+                  nb++;
+                  statNbFree++;
+
+                  libere.put(key,"");
+                  if( totMem>mem/2L && mapsize-nb < 2*MAXFILE/3 ) { encore=false; break; }
+               }
+
+               for( String key: map.keySet() ) {
+                  if( libere.get(key)!=null ) continue;
+                  FitsFile f = map.get(key);
+                  map1.put(key,f);
+               }
+               map=map1;
+
+               //         Enumeration<String> e = map.keys();
+               //         while( e.hasMoreElements() ) {
+               //            String key = e.nextElement();
+               //            FitsFile f = map.get(key);
+               //            if( f.fits.hasUsers() ) continue;
+               //            if( i==0 && now-f.timeAccess<delay ) continue;
+               //            m = f.getMem();
+               //            totMem+=m;
+               //            nb++;
+               //            statNbFree++;
+               //            //            map.remove(key);
+               //            try { remove(key); } catch( Exception e1 ) { }
+               //            if( totMem> mem/2L && map.size()<2*MAXFILE/3 ) { encore=false; break; }
+               //         }
+            }
+
+            //      sortedMap.clear();
+            gc();
+         } finally {
+            cacheOutOfMem=false;
          }
-      }
 
-      //      sortedMap.clear();
-      gc();
-
-      long duree = System.currentTimeMillis() - now;
-      String s1 = i>1 ? "s":"";
-      long freeRam = getFreeMem();
-      if( context!=null ) {
-         context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
-               +" => freeRAM="+Util.getUnitDisk(freeRam));
+         long duree = System.currentTimeMillis() - now;
+         String s1 = i>1 ? "s":"";
+         long freeRam = getFreeMem();
+         if( context!=null ) {
+            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
+            +" => freeRAM="+Util.getUnitDisk(freeRam));
+         }
       }
    }
 
    // Reset totalement le cache
    public void reset() {
       statNbFree+=map.size();
-      //      map.clear();
-      Enumeration<String> e = map.keys();
-      while( e.hasMoreElements() ) {
-         String key = e.nextElement();
-         try { remove(key); } catch( Exception e1 ) { }
-      }
+      map.clear();
+//      Enumeration<String> e = map.keys();
+//      while( e.hasMoreElements() ) {
+//         String key = e.nextElement();
+//         try { remove(key); } catch( Exception e1 ) { }
+//      }
 
       gc();
    }

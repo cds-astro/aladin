@@ -75,6 +75,7 @@ MTAG	tag - Draw a tag with/without label
 MPHOT	phot - Photometry measurement
 #MTEXTE	tag - Draw a free text
 MCUT	Cut graph
+MSPECT	spectrum - Extraction from a cube
 MSTATSURF	Photometry measurement
 MSTATSURFCIRC by circle
 MSTATSURFPOLY	by polygon
@@ -187,6 +188,7 @@ MTAG.fr	marq -  Positionnement de repères
 MPHOT.fr	phot -  Mesures photométriques
 #MTEXTE.fr	texte - Texte libre
 MCUT.fr	Graphe de coupe
+MSPECT.fr	spectre - Extraction depuis un cube
 MSTATSURF.fr	Mesure photométrique
 MSTATSURFCIRC.fr par cercle
 MSTATSURFPOLY.fr	par polygone

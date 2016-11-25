@@ -70,7 +70,8 @@ public class ButtonBookmark extends JButton {
    }
       
    private void suite() {
-      setBorder(BorderFactory.createEmptyBorder(2,12,2,5));
+      setFont( Aladin.SPLAIN );
+      setBorder(BorderFactory.createEmptyBorder(1,10,1,5));
       setToolTipText("<html>"+
             "<b>"+Util.fold(fct.getDescription(),20)+"</b>"+
             "<br><i>"+fct.getCode().replaceAll(";","<br>").replaceAll("\n","<br>")+"</i>"+
@@ -106,7 +107,7 @@ public class ButtonBookmark extends JButton {
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
       g.setColor( fct.isLocalDefinition() ? Color.blue : Orange);
-      Util.drawStar(g, 6,9);
+      Util.drawStar(g, 6,8);
    }
 
 }

@@ -737,7 +737,7 @@ public final class PlanFilter extends Plan {
             p.influence = tmp2;
 
             Iterator<Obj> it = p.iterator();
-            while( it.hasNext() ) {
+            if( it!=null ) while( it.hasNext() ) {
                Obj o = it.next();
                if( !(o instanceof Source) ) continue;
                s = (Source)o;

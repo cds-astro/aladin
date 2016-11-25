@@ -19,6 +19,7 @@
 
 package cds.allsky;
 
+
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.Util;
@@ -46,7 +47,7 @@ public class CacheFitsWriter extends CacheFits {
    public void addFits(String filename,Fits fits) throws Exception {
       synchronized( lockObj ) {
          // On s'assure qu'il va y avoir assez de place pour ajouter un nouveau fits dans le cache
-         if( isOver() || map.size()>10000 ) clean();
+         if( isOver() ) clean();
          FitsFile f = new FitsFile();
          f.fits = fits;
          map.put(filename,f);

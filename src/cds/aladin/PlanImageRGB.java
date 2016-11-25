@@ -20,12 +20,15 @@
 
 package cds.aladin;
 
-import cds.tools.Util;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.image.ColorModel;
+import java.awt.image.MemoryImageSource;
+import java.net.URL;
+import java.util.Date;
+import java.util.Hashtable;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.util.*;
+import cds.tools.Util;
 
 
 /**
@@ -340,25 +343,28 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
     * Calcul les pixels de l'imagette pour le ZoomView en prenant le pixel au plus proche
     * C'est très rapide et le rendu visuel est quasi le même que par interpolation
     */
-   public void calculPixelsZoomRGB() { pixelsZoomRGB = calculPixelsZoomRGB1(pixelsZoomRGB,pixelsRGB,width,height); }
+   public void calculPixelsZoomRGB() { pixelsZoomRGB = calculPixelsZoomRGB1(aladin,pixelsZoomRGB,pixelsRGB,width,height); }
 
-   static public int [] calculPixelsZoomRGB1(int [] pixelsZoomRGB,int [] pixelsRGB,int width,int height) {
+   static public int [] calculPixelsZoomRGB1(Aladin aladin,int [] pixelsZoomRGB,int [] pixelsRGB,int width,int height) {
+      
+      int size = aladin.calque.zoom.zoomView.getWidth();
+      
       // calcul du rapport Largeur/Hauteur de l'image
-      int W = ZoomView.SIZE;
-      int H = (int)(((double)ZoomView.SIZE/width)*height);
+      int W = size;
+      int H = (int)(((double)size/width)*height);
       if( H>W ) {
          W = (int)((double)W*W / H);
-         H = ZoomView.SIZE;
+         H = size;
       }
 
       double fctX = (double)width/W;
       double fctY = (double)height/H;
 
-      if( pixelsZoomRGB==null ) pixelsZoomRGB = new int[ZoomView.SIZE*ZoomView.SIZE];
+      if( pixelsZoomRGB==null ) pixelsZoomRGB = new int[size*size];
       else for( int i=0; i<pixelsZoomRGB.length; i++ ) pixelsZoomRGB[i]=0;
 
       for( int y=0; y<H; y++ ) {
-         int i = y*ZoomView.SIZE;
+         int i = y*size;
          int j = (int)(y*fctY);
          for( int x=0; x<W; x++ ) {
             pixelsZoomRGB[i++] = pixelsRGB[ j*width + (int)(x*fctX) ];

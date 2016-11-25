@@ -1877,7 +1877,7 @@ public final class Glu implements Runnable {
             if( i == a.length ) break one;
 
             // Determination du numero
-            for( offsetNum = ++i; i < a.length && a[i] > '0' && a[i] <= '9'; i++ );
+            for( offsetNum = ++i; i < a.length && a[i] >= '0' && a[i] <= '9'; i++ );
             try {
                num = Integer.parseInt(new String(a, offsetNum, i - offsetNum));
             } catch( NumberFormatException e ) {

@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -222,6 +223,7 @@ Runnable, SwingWidgetFinder, Widget {
    }
 
    //   public Dimension getPreferredSize() { return new Dimension(ws+5,hs); }
+      public Dimension getPreferredSize() { return new Dimension(100,100); }
 
    JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuShow,menuGoto,
    menuColl,menuCreatFold,menuInsertFold,menuProp,menuSelect,menuUnselect,
@@ -1524,12 +1526,12 @@ Runnable, SwingWidgetFinder, Widget {
       }
 
       // Pas très joli
-      if( a.calque.zoom.opacitySlider!=null ) a.calque.zoom.opacitySlider.repaint();
-      if( a.calque.zoom.sizeSlider!=null )    a.calque.zoom.sizeSlider.repaint();
-      if( a.calque.zoom.zoomSlider!=null )    a.calque.zoom.zoomSlider.repaint();
-      if( a.calque.zoom.epochSlider!=null )   a.calque.zoom.epochSlider.repaint();
-      if( a.calque.zoom.cubeSlider!=null )    a.calque.zoom.cubeSlider.repaint();
-      if( a.calque.zoom.densitySlider!=null ) a.calque.zoom.densitySlider.repaint();
+      if( a.calque.slider.opacitySlider!=null ) a.calque.slider.opacitySlider.repaint();
+      if( a.calque.slider.sizeSlider!=null )    a.calque.slider.sizeSlider.repaint();
+      if( a.calque.slider.zoomSlider!=null )    a.calque.slider.zoomSlider.repaint();
+      if( a.calque.slider.epochSlider!=null )   a.calque.slider.epochSlider.repaint();
+      if( a.calque.slider.cubeSlider!=null )    a.calque.slider.cubeSlider.repaint();
+      if( a.calque.slider.densitySlider!=null ) a.calque.slider.densitySlider.repaint();
 
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {

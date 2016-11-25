@@ -42,6 +42,7 @@ public class BuilderMoc extends Builder {
    protected boolean isMocHight;
    
    private String ext=null; // Extension à traiter, null si non encore affectée.
+   private int frameCube=-1; // Numéro de la frame à utiliser pour générer le MOC dans le cas d'un gros cube (depth>10)
 
    public BuilderMoc(Context context) {
       super(context);
@@ -75,6 +76,7 @@ public class BuilderMoc extends Builder {
          isLarge = context.mocIndex.getCoverage()>1/6.;
       } catch( Exception e ) { }
       
+      
       // mocOrder explicitement fourni par l'utilisateur
       if( context.getMocOrder()!=-1 ) mocOrder = context.getMocOrder();
       
@@ -95,6 +97,11 @@ public class BuilderMoc extends Builder {
       // Quel type de tuile utiliser ?
       ext = getDefaultExt(path);
       if( ext!=null ) context.info("MOC generation based on "+ext+" tiles");
+      
+      // S'agit-il d'un gros cube => oui, alors on ne fait le MOC que sur la tranche du milieu
+      // sinon c'est bien trop long
+      frameCube = -1;
+      if( context.getDepth()>10 ) frameCube=context.getDepth()/2;
       
       isMocHight = mocOrder>fileOrder && ext!=null && ext.equals("fits");
       
@@ -174,6 +181,11 @@ public class BuilderMoc extends Builder {
             String e = getExt(file);
             if( ext == null ) ext = e;
             else if( !ext.equals(e) ) continue;
+            
+            // Ecarte les frames non concernées dans le cas d'un cube>10frames
+            if( frameCube>-1 ) {
+               if( getCubeFrameNumber(file)!=frameCube ) continue;
+            }
 
             generateTileMoc(moc,sf1[j], fileOrder, npix);
          }
@@ -242,6 +254,17 @@ public class BuilderMoc extends Builder {
       int pos = file.indexOf(Util.FS,offset);
       if( pos!= -1 ) return "";
       return file.substring(offset + 1, file.length());
+   }
+   
+   // Retourne le numéro de la frame dans le cas d'une tuile de cube, 0 si non trouvé
+   private int getCubeFrameNumber(String file) {
+      try {
+         int fin = file.lastIndexOf('.');
+         int deb = file.lastIndexOf('_',fin);
+         if( deb==-1 || fin==-1 ) return 0;
+         return Integer.parseInt( file.substring(deb+1, fin));
+      } catch( Exception e ) {}
+      return 0;
    }
 
 }

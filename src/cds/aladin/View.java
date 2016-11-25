@@ -370,6 +370,16 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          if( viewSimple[i].pref==v.pref && viewSimple[i].pref.selected ) viewSimple[i].cubeControl.setFrameLevel(frameLevel);
       }
    }
+   
+   /** Traitement à faire suite à un changement de plan dans un Cube */
+   protected void resumeSourceStatOnCube() {
+      if( vselobj.size()!=1 ) return;
+      for( Obj o : vselobj ) {
+         if( o instanceof SourceStat ) ((SourceStat)o).resume();
+      }
+   }
+
+
 
    /**
     * Synchronisation de toutes les vues blinks sur le même plan de référence
@@ -1791,7 +1801,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       int m = niveau<=1?4:niveau==2?9:16;
       double z = vc.zoom;
-      double W = aladin.calque.zoom.zoomView.SIZE;
+      double W = aladin.calque.zoom.zoomView.getSIZE();
       double delta = W/Math.sqrt(m);
       double debut = delta/2.;
       double x=debut,y=debut;

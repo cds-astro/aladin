@@ -39,7 +39,7 @@ import cds.tools.Util;
 class Hist implements Runnable {
 
    int MARGE = 8;
-   int NBHIST = 10;
+   int NBHIST = 12;
    int GAP = 3;
    static final int WCROIX = 5;
 
@@ -53,8 +53,8 @@ class Hist implements Runnable {
    int nb;                  // Nombre de sources
    int nbCategorie;         // Nombre de catégories dans le cas non numérique
    boolean flagHistPartial; // true si l'histogramme n'affiche pas toutes les catégories
-   int width;               // Largeur totale de l'histogramme
-   int height;              // Hauteur totale de l'histogramme
+   int width=100;           // Largeur totale de l'histogramme
+   int height=100;          // Hauteur totale de l'histogramme
    String texte=null;       // Texte en surcharge, ou null (retour à la ligne par "/")
 
    // Paramètres pour un histogramme de pixels
@@ -63,10 +63,8 @@ class Hist implements Runnable {
    private int nPix;               // nombre de pixels
    protected boolean flagHistPixel;  // true s'il s'agit d'un histogramme de pixels
 
-   Hist(Aladin aladin,int width,int height) {
+   Hist(Aladin aladin) {
       this.aladin=aladin;
-      this.width=width;
-      this.height=height;
    }
 
    /** Positionnement d'un texte en surcharge de l'histogramme, null si aucun */
@@ -416,6 +414,9 @@ class Hist implements Runnable {
    /** Dessin de l'histogramme */
    protected void draw(Graphics g) { draw(g,0,0); }
    protected void draw(Graphics g,int dx,int dy) {
+      
+      width = aladin.calque.zoom.zoomView.getWidth();
+      height = aladin.calque.zoom.zoomView.getHeight();
 
       // Nettoyage
       g.clearRect(1+dx,1+dy,width-2,height-2);

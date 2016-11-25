@@ -33,7 +33,9 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import cds.moc.HealpixMoc;
@@ -60,6 +62,7 @@ public class Calque extends JPanel implements Runnable {
 
    // Les composantes de l'objet
    Select select;         // Le selecteur de manipulation des plans
+   SliderPanel slider;    // Le panel des sliders
    Zoom  zoom;            // Le zoom
    protected Plan plan []; // les plans
    //   PlanBG planBG;         // Fond du ciel
@@ -174,12 +177,15 @@ public class Calque extends JPanel implements Runnable {
    //   protected Source osourceToShow; // ancienne source à montrer (thomas, votech)
    
    protected Calque() { super(); }
+   
+   private JPanel haut;
 
    /** Creation de l'objet calque */
    protected Calque(Aladin aladin) {
       this.aladin = aladin;
 
       select = new Select(aladin);
+      slider = new SliderPanel(aladin);
       zoom = new Zoom(aladin);
       scroll = new ScrollbarStack(aladin,Scrollbar.VERTICAL,FIRSTBLOC-1,1,0,FIRSTBLOC);
 
@@ -195,11 +201,26 @@ public class Calque extends JPanel implements Runnable {
       try {
          setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
       } catch( Exception e) {}
+      
+      haut = new JPanel( new BorderLayout(10,10) );
+      haut.add(select,BorderLayout.CENTER);
+      haut.add(slider,BorderLayout.SOUTH);
+      
+      JPanel bas = new JPanel(new BorderLayout(10,10));
+      bas.add(zoom,BorderLayout.CENTER);
+      
+     // Panel principal : contient le selecteur de plans et le zoom
+      setLayout( new BorderLayout() );
+//      add(haut,BorderLayout.CENTER);
+//      add(bas,BorderLayout.SOUTH);
+      
+      MySplitPane splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, haut, bas);
+      bas.setMinimumSize(new Dimension(100,aladin.getZoomViewHeight()));
+      splitH.setResizeWeight(1);
+      splitH.setBorder(BorderFactory.createEmptyBorder());
+      add(splitH,BorderLayout.CENTER);
 
-      // Panel principal : contient le selecteur de plans et le zoom
-      setLayout( new BorderLayout(0,5) );
-      add(select,BorderLayout.CENTER);
-      add(zoom,BorderLayout.SOUTH);
+      
    }
 
    /** Insère ou enlève la scrollbar verticale de la pile si nécessaire
@@ -213,8 +234,8 @@ public class Calque extends JPanel implements Runnable {
       boolean hideScroll = !scroll.getRequired();
 
       //      System.out.println("lastPlan="+lastPlan+" required="+scroll.getRequired()+" value="+scroll.getValue()+" ["+scroll.getMinimum()+".."+scroll.getMaximum()+"] hideScroll => "+hideScroll);
-      if( scroll.isShowing() && hideScroll  ) { remove(scroll); validate(); return true; }
-      else if( !scroll.isShowing() && !hideScroll  ) { add(scroll,"East"); validate(); return true; }
+      if( scroll.isShowing() && hideScroll  ) { haut.remove(scroll); validate(); return true; }
+      else if( !scroll.isShowing() && !hideScroll  ) { haut.add(scroll,"East"); validate(); return true; }
       return false;
    }
 
@@ -1058,8 +1079,8 @@ public class Calque extends JPanel implements Runnable {
 
       return s;
    }
-
-   /** Traitement à  faire suite à un changement de frame */
+   
+   /** Traitement à  faire suite à un changement de frame (coordonnées) */
    protected void resumeFrame() {
 
       int frame = aladin.localisation.getFrame();

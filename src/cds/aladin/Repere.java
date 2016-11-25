@@ -682,8 +682,8 @@ public class Repere extends Position {
             if( !hasRayon() ) {
                g.drawLine(p.x-L, p.y,   p.x+L, p.y);
                g.drawLine(p.x,   p.y-L, p.x,   p.y+L);
-               if( isSelected() && plan.aladin.view.nbSelectedObjet()<=2 ) cutOn();
-               else cutOff();
+//               if( isSelected() && plan.aladin.view.nbSelectedObjet()<=2 ) cutOn();
+//               else cutOff();
             } else {
                int l = (int)(getRayon(v)*v.getZoom());
                if( hasPhot(v.pref) ) {
@@ -774,39 +774,39 @@ public class Repere extends Position {
       Util.drawCircle5(g, p.x, p.y);
    }
 
-   protected void remove() { cutOff(); }
-
-   /** Suppression de la coupe memorise dans le zoomView
-    * => arret de son affichage
-    */
-   protected void cutOff() {
-      plan.aladin.calque.zoom.zoomView.stopHist();
-      plan.aladin.calque.zoom.zoomView.cutOff(this);
-   }
-
-
-   /** Passage d'une coupe du segment au zoomView
-    * => affichage d'un histogramme dans le zoomView en surimpression
-    * de la vignette courante.
-    * @return true si le CutGraph a pu être fait
-    */
-   protected boolean cutOn() {
-      ViewSimple v=plan.aladin.view.getCurrentView();
-      if( v==null || plan.aladin.toolBox.getTool()==ToolBox.PAN ) return false;
-      Plan pc=v.pref;
-      if( !pc.isCube() ) return false;
-
-      double x= xv[v.n];
-      double y= yv[v.n];
-      int n=pc.getDepth();
-      int res[] = new int[n];
-      try {
-         for( int z=0; z<n; z++ ) res[z] = (pc.getPixel8bit(z,x,y)) & 0xFF;
-      } catch( Exception e ) {}
-
-      plan.aladin.calque.zoom.zoomView.setCut(this,res,ZoomView.CUTNORMAL);
-
-      return true;
-   }
+//   protected void remove() { cutOff(); }
+//
+//   /** Suppression de la coupe memorise dans le zoomView
+//    * => arret de son affichage
+//    */
+//   protected void cutOff() {
+//      plan.aladin.calque.zoom.zoomView.stopHist();
+//      plan.aladin.calque.zoom.zoomView.cutOff(this);
+//   }
+//
+//
+//   /** Passage d'une coupe du segment au zoomView
+//    * => affichage d'un histogramme dans le zoomView en surimpression
+//    * de la vignette courante.
+//    * @return true si le CutGraph a pu être fait
+//    */
+//   protected boolean cutOn() {
+//      ViewSimple v=plan.aladin.view.getCurrentView();
+//      if( v==null || plan.aladin.toolBox.getTool()==ToolBox.PAN ) return false;
+//      Plan pc=v.pref;
+//      if( !pc.isCube() ) return false;
+//
+//      double x= xv[v.n];
+//      double y= yv[v.n];
+//      int n=pc.getDepth();
+//      int res[] = new int[n];
+//      try {
+//         for( int z=0; z<n; z++ ) res[z] = (pc.getPixel8bit(z,x,y)) & 0xFF;
+//      } catch( Exception e ) {}
+//
+//      plan.aladin.calque.zoom.zoomView.setCut(this,res,ZoomView.CUTNORMAL);
+//
+//      return true;
+//   }
 
 }

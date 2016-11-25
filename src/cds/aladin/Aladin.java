@@ -116,8 +116,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import cds.aladin.bookmark.Bookmarks;
 import cds.allsky.Context;
@@ -153,7 +151,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC perimeter drawing
+ * @beta    <LI> MOC perimeter drawing + set drawing=xxx script command
  * @beta    <LI> Fisheye projection support (ARC) => planetarium usage
  * @beta    <LI> Fullscreen mode improvements (global menu)
  * @beta    <LI> new script commands (cmoc, ccat, )
@@ -167,6 +165,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> MOC stack bug introduced in v9.039
  * @beta    <LI> Fix to BLANK wrong value in Hipsgen MAPTILES action
  * @beta    <LI> Fix to radians unit support for table coordinates
  * @beta    <LI> Fix to pmra and pmde detection
@@ -201,7 +200,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.039";
+   static public final    String VERSION = "v9.045";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -323,7 +322,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
    static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
-   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
+   static int ALIASING=1;            // 0-défaut système, 1-actif, -1-désactivé
 
    static boolean ENABLE_FOOTPRINT_OPACITY=true; // footprints en transparence ?
    static float DEFAULT_FOOTPRINT_OPACITY_LEVEL=0.15f+0.000111f; // niveau de transparence (entre 0.0 et 1.0)
@@ -395,7 +394,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
-   Match match;                   // Gere le logo pour la grille
+   Match match;                  // Gere le logo pour la grille
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
@@ -495,7 +494,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
-   miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
+   miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
    miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miMocOp,
@@ -557,7 +556,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,COPIER,COLLER,
    RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
-   STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
+   STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
    MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
@@ -953,6 +952,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PHOT    = chaine.getString("MPHOT");
       TAG     = chaine.getString("MTAG");
       CUT     = chaine.getString("MCUT");
+      SPECT   = chaine.getString("MSPECT");
       STATSURF= chaine.getString("MSTATSURF");
       STATSURFCIRC= chaine.getString("MSTATSURFCIRC");
       STATSURFPOLY= chaine.getString("MSTATSURFPOLY");
@@ -1170,7 +1170,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             { {MOVERLAY},
                {CONTOUR},
                //                {MOC,MOCGEN,MOCFILTERING,MOCCROP,MOCM},
-               {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
+               {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},{SPECT},
                {},{NTOOL+"|"+alt+" N"},
                {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},{"?"+CONST+"|"+alt+" C"},
 //               {"?"+GRID+"|"+alt+" G"},/*{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},*/
@@ -1803,6 +1803,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,SELECTALL) ) miSelectAll = ji;
       else if( isMenu(m,UNSELECT) )  miUnSelect  = ji;
       else if( isMenu(m,CUT) )    miCut     = ji;
+      else if( isMenu(m,SPECT) )    miSpect     = ji;
       else if( isMenu(m,STATSURF) ) miStatSurf     = ji;
       else if( isMenu(m,TRANSP) ) miTransp  = ji;
       else if( isMenu(m,TRANSPON) ) miTranspon  = ji;
@@ -2124,19 +2125,22 @@ DropTargetListener, DragSourceListener, DragGestureListener
       setButtonMode();
 
       // Le panel gauche : contient la boite a boutons et les calques
-      final JPanel gauche = new JPanel(new BorderLayout(3,0));
-      gauche.add(calque,BorderLayout.CENTER);
+      final JPanel droite = new JPanel(new BorderLayout(3,0));
+      droite.add(calque,BorderLayout.CENTER);
 
-      JPanel gauche2;
-      gauche2 = new JPanel(new BorderLayout(2,0));
-      gauche2.setBorder( BorderFactory.createEmptyBorder(0, 2, 0, 0));
-      gauche2.add(toolBox,BorderLayout.WEST);
-      gauche2.add(gauche,BorderLayout.CENTER);
+      JPanel droite2;
+      droite2 = new JPanel(new BorderLayout(2,0));
+      droite2.setBorder( BorderFactory.createEmptyBorder(0, 2, 0, 0));
+      droite2.add(toolBox,BorderLayout.WEST);
+      droite2.add(droite,BorderLayout.CENTER);
 
       // Le panel haut1 : contient le menu et le bandeau d'info
       JPanel haut1 = new JPanel(new BorderLayout(1,1));
       haut1.add(saisie,BorderLayout.NORTH);
       JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
+      
+//      bookmarks.setBackground( Color.red );
+
       panelBookmarks.add( bookmarks.getToolBar(), BorderLayout.CENTER);
       haut1.add(panelBookmarks,BorderLayout.SOUTH);
 
@@ -2200,28 +2204,36 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // test thomas (avec un séparateur) + Pierre
       //       final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-      //             gauche1, gauche2);
+      //             gauche1, droite2);
       //       splitV.setBorder(BorderFactory.createEmptyBorder());
       //       splitV.setResizeWeight(1);
-      //       gauche.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W,200));
+      //       droite.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W,200));
       //       gauche1.setMinimumSize(new Dimension(300,300));
 
-      JPanel splitV = new JPanel( new BorderLayout(0,0));
-      splitV.add(gauche1,BorderLayout.CENTER);
-      splitV.add(gauche2,BorderLayout.EAST);
+//      JPanel splitV = new JPanel( new BorderLayout(0,0));
+//      splitV.add(gauche1,BorderLayout.CENTER);
+//      splitV.add(droite2,BorderLayout.EAST);
 
       JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));
-      bigViewSearch.add(splitV,BorderLayout.CENTER);
+      bigViewSearch.add(gauche1 /*splitV*/,BorderLayout.CENTER);
       bigViewSearch.add(searchPanel,BorderLayout.SOUTH);
 
-      splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true,
-            bigViewSearch, mesure);
-      mesure.setPreferredSize(new Dimension(100,150));
+      splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
+      mesure.setPreferredSize(new Dimension(100,getMesureHeight()));
       mesure.setMinimumSize(new Dimension(100,0));
+      splitH.setResizeWeight(1);
       splitH.remove(mesure);
       splitH.setBorder(BorderFactory.createEmptyBorder());
+      
+      // test thomas (avec un séparateur) + Pierre
+      final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
+            splitH, droite2);
+      splitV.setBorder(BorderFactory.createEmptyBorder());
+      splitV.setResizeWeight(1);
+      droite2.setPreferredSize(new Dimension(getStackWidth(),100));
+      
       makeAdd(ct,haut,"North");
-      makeAdd(ct,splitH,"Center");
+      makeAdd(ct,splitV,"Center");
       makeAdd(ct,infoPanel,"South");
 
       // Dernier objet a creer et traitement des parametres
@@ -2289,7 +2301,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }).start();
       }
    }
-
+   
+   
+   /*  Retourne la largeur en pixels du panel qui contient la pile, mes sliders et le zoomview */
+   protected int getStackWidth() { return 220; }
+   
+   /* Retourne la hauteur en pixels du panel qui contient le zoomView */
+   protected int getZoomViewHeight() { return 150; }
+   
+   /* Retourne la hauteur en pixels du panel qui contient les mesures */
+   protected int getMesureHeight() { return 150; }
+   
    protected void manageDrop() {
       // IL Y A UN GROS BUG SOUS LINUX QUI FAIT QUE LA JVM DU BROWSER SE PLANTE ET
       // PLANTE LE BROWSER LORSQUE L'ON FAIT UN DETACH() SI LA FRAME EST DRAG&DROP
@@ -2302,59 +2324,50 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   // Surcharges de classes pour supprimer le trait séparateur du JSplitPane
-   class MySplitPane extends JSplitPane {
-      public MySplitPane(int newOrientation, boolean newContinuousLayout,
-            Component newLeftComponent, Component newRightComponent ) {
-         super(newOrientation,newContinuousLayout,newLeftComponent,newRightComponent);
-         flagMesure = newOrientation==JSplitPane.VERTICAL_SPLIT;
-         setUI(new MyBasicSplitPaneUI());
-      }
-
-      private boolean flagMesure;
-      private int mesureHeight;
-
-      // Repositionne le diviseur à la position mémorisée
-      public void restoreMesureHeight() {
-         setDividerLocation(getHeight()-(mesureHeight<=0 ? 150 : mesureHeight)); }
-
-      // Positionne le diviseur en fonction de la taille de la fenêtre des mesures,
-      // et mémorise cette valeur pour pouvoir y revenir
-      public void setMesureHeight(int h) { mesureHeight=h; }
-
-      // Retourne la taille de la fenêtre des mesures.
-      public int getMesureHeight() { return mesureHeight; }
-
-      // On bride à 55 pixels minimum pour la taille de la fenêtre des mesures
-      public void setDividerLocation(int n) {
-         if( flagMesure ) {
-            int h = getHeight();
-            if( h-n<53 ) return;
-            mesureHeight = h-n;
-         }
-         super.setDividerLocation(n);
-      }
-
-   }
-   class MyBasicSplitPaneUI extends BasicSplitPaneUI {
-      @Override
-      public BasicSplitPaneDivider createDefaultDivider() {
-         return new MySplitPaneDivider(this);
-      }
-   }
-   class MySplitPaneDivider extends BasicSplitPaneDivider {
-      public MySplitPaneDivider(BasicSplitPaneUI ui) { super(ui); }
-      @Override
-      public void paint(Graphics g) {
-         //          g.setColor(Color.gray);
-         //          if( getBasicSplitPaneUI().getOrientation()==JSplitPane.HORIZONTAL_SPLIT ) {
-         //             Util.drawVerticalSplitPaneTriangle(g,0,view.getHeight()-25);
-         //          } else {
-         //             Util.drawHorizontalSplitPaneTriangle(g,view.getWidth()-25,0);
-         //          }
-      }
-   }
-
+//   // Surcharges de classes pour supprimer le trait séparateur du JSplitPane
+//   class MySplitPane extends JSplitPane {
+//      public MySplitPane(int newOrientation, boolean newContinuousLayout,
+//            Component newLeftComponent, Component newRightComponent ) {
+//         super(newOrientation,newContinuousLayout,newLeftComponent,newRightComponent);
+//         flagMesure = newOrientation==JSplitPane.VERTICAL_SPLIT;
+//         setUI(new MyBasicSplitPaneUI());
+//      }
+//
+//      private boolean flagMesure;
+//      private int mesureHeight;
+//
+//      // Repositionne le diviseur à la position mémorisée
+//      public void restoreMesureHeight() {
+//         setDividerLocation(getHeight()-(mesureHeight<=0 ? 150 : mesureHeight)); }
+//
+//      // Positionne le diviseur en fonction de la taille de la fenêtre des mesures,
+//      // et mémorise cette valeur pour pouvoir y revenir
+//      public void setMesureHeight(int h) { mesureHeight=h; }
+//
+//      // Retourne la taille de la fenêtre des mesures.
+//      public int getMesureHeight() { return mesureHeight; }
+//
+//      // On bride à 55 pixels minimum pour la taille de la fenêtre des mesures
+//      public void setDividerLocation(int n) {
+//         if( flagMesure ) {
+//            int h = getHeight();
+//            if( h-n<53 ) return;
+//            mesureHeight = h-n;
+//         }
+//         super.setDividerLocation(n);
+//      }
+//
+//   }
+//   class MyBasicSplitPaneUI extends BasicSplitPaneUI {
+//      public BasicSplitPaneDivider createDefaultDivider() {
+//         return new MySplitPaneDivider(this);
+//      }
+//   }
+//   class MySplitPaneDivider extends BasicSplitPaneDivider {
+//      public MySplitPaneDivider(BasicSplitPaneUI ui) { super(ui); }
+//      public void paint(Graphics g) { }
+//   }
+//
 
    /** Subtilité pour faire de la mise en page une fois que toutes les peer classes
     * aient été correctement initialisées
@@ -3137,9 +3150,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,TRANSP)) { transparency();
       } else if( isMenu(s,TRANSPON)) { transpon();
       } else if( isMenu(s,CUT))    { view.deSelect(); graphic(ToolBox.DIST);
+      } else if( isMenu(s,SPECT))  { view.deSelect(); graphic(ToolBox.SPECT);
       } else if( isMenu(s,STATSURFCIRC))    { view.deSelect(); graphic(ToolBox.PHOT);
       } else if( isMenu(s,STATSURFPOLY))    { view.deSelect(); graphic(ToolBox.DRAW);
-      } else if( isMenu(s,CUT))    { view.deSelect(); graphic(ToolBox.DIST);
+      } else if( isMenu(s,CUT))    { view.deSelect(); graphic(ToolBox.SPECT);
       } else if( isMenu(s,DIST))   { graphic(ToolBox.DIST);
       } else if( isMenu(s,NTOOL))  { newPlanTool();
       } else if( isMenu(s,DRAW))   { graphic(ToolBox.DRAW);
@@ -3930,55 +3944,45 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Coord c1=null;
       boolean first=true;
 
-      for( int sens=0; sens<2; sens++ ) {
-         ArrayList<Vec3> cooList = new ArrayList<Vec3>();
-         if( sens==1 ) trace(3,"createMocRegion("+o+") trying reverse polygon order...");
-         try {
-            Ligne a = sens==0 ? o.getFirstBout() : o.getLastBout();
-            while( a!=null ) {
+      // ON NE PREND DESORMAIS QUE LE SENS ANTI-HORAIRE
+      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+      Ligne a = o.getLastBout();
+      while( a!=null ) {
 
-               // Mémorisation de la plus grande diagonale
-               if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
-               else {
-                  double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
-                  if( size>maxSize ) maxSize=size;
-               }
-
-               double theta = Math.PI/2 - Math.toRadians( a.dej );
-               double phi = Math.toRadians( a.raj );
-               cooList.add(new Vec3(new Pointing(theta,phi)));
-
-               // Prochain sommet ?
-               a = sens==0 ? a.finligne : a.debligne;
-            }
-
-
-            if( sens==0 ) {
-               // L'ordre est déterminé automatiquement par la largeur du polygone
-               if( order==-1 ) order=getAppropriateOrder(maxSize);
-               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
-               if( order<10 ) order=10;
-               else if( order>29 ) order=29;
-            }
-
-            Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-            moc = new HealpixMoc();
-            moc.rangeSet = m.getRangeSet();
-            moc.toHealpixMoc();
-
-            // moins de la moitié du ciel => ca doit être bon
-            if( moc.getCoverage()<0.5 ) break;
-
-            // On va essayer dans l'autre sens avant d'estimer que ça ne fonctionne pas
-         } catch( Throwable e ) {
-            if( sens==1 && e instanceof Exception ) throw (Exception)e;
+         // Mémorisation de la plus grande diagonale
+         if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
+         else {
+            double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
+            if( size>maxSize ) maxSize=size;
          }
+
+         double theta = Math.PI/2 - Math.toRadians( a.dej );
+         double phi = Math.toRadians( a.raj );
+         cooList.add(new Vec3(new Pointing(theta,phi)));
+
+         // Prochain sommet ?
+         a = a.debligne;
       }
+
+      // L'ordre est déterminé automatiquement par la largeur du polygone
+      if( order==-1 ) order=getAppropriateOrder(maxSize);
+      trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+      if( order<10 ) order=10;
+      else if( order>29 ) order=29;
+
+      Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+      moc = new HealpixMoc();
+      moc.rangeSet = m.getRangeSet();
+      moc.toHealpixMoc();
+
+      // plus de la moitié du ciel => y a un prob
+      // Il faudrait également tester si le résultat donne des zones disjointes => prob
+      if( moc.getCoverage()>0.5 ) throw new Exception("Polygon must be expressed in anti-clockwise direction");
 
 
       return moc;
    }
-   
+
    /** Mise à jour de la fenêtre pour la génération d'un MOC */
    protected void updateMocGenProba() {
       if( frameMocGenProba==null ) {
@@ -5112,6 +5116,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miDetag!=null ) miDetag.setEnabled(hasTagSrc);
          if( miUnSelect!=null ) miUnSelect.setEnabled(hasSelectedObj);
          if( miCut!=null ) miCut.setEnabled(nbPlanImgWithoutBG>0);
+         if( miSpect!=null ) miSpect.setEnabled(base!=null && base.type==Plan.IMAGECUBE);
          PlanImage pi = calque.getFirstSelectedPlanImage();
          if( miStatSurf!=null ) miStatSurf.setEnabled(hasPixels && (!isBG || pi instanceof PlanHealpix));
          if( miTransp!=null ) miTransp.setEnabled(pi!=null && calque.canBeTransparent(pi));
@@ -5144,7 +5149,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miBitpix!=null ) miBitpix.setEnabled(hasPixels && !isCube);
          if( miPixExtr!=null ) miPixExtr.setEnabled(hasPixels && !isCube);
          if( miCopy!=null ) miCopy.setEnabled(hasPixels /* && !isCube */);
-         if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj && base!=null && base.isSimpleImage() );
+         if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj && base!=null && (base.isSimpleImage() || base.type==Plan.IMAGERGB) );
          if( miCreateHpxRgb!=null ) miCreateHpxRgb.setEnabled( nbPlanHiPS4RGB>1 );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
          if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube && !isBG);

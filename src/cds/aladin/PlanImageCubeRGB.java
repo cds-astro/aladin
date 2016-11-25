@@ -153,7 +153,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
           for( int x=0; x<width; x++) {
              int pix=0;
              for( int i=0; i<npix; i++ ) {
-                int c = 0xFF & (int)buf[j++];
+                int c = 0xFF & buf[j++];
                 pix = (pix<<8) | c;
              }
              pixelsRGB[ (height-y-1)*width + x] = 0xFF000000 | pix;
@@ -221,6 +221,6 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
     */
    public void calculPixelsZoomRGB() {
       int [] pixelsRGB = getPixelsRGB();
-      pixelsZoomRGB = PlanImageRGB.calculPixelsZoomRGB1(pixelsZoomRGB,pixelsRGB,width,height);
+      pixelsZoomRGB = PlanImageRGB.calculPixelsZoomRGB1(aladin,pixelsZoomRGB,pixelsRGB,width,height);
    }
 }

@@ -109,7 +109,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       setLayout( new BorderLayout(0,0) );
       Aladin.makeAdd(this,haut,"North" );
       Aladin.makeAdd(this,mcanvas,"Center");
-      Aladin.makeAdd(this,est,"East");
+      Aladin.makeAdd(this,est,"West");
       Aladin.makeAdd(this,scrollH,"South");
       haut.setVisible(false);
 

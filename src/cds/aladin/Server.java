@@ -766,6 +766,10 @@ public void layout() {
       int offsetS  = r.indexOf('s');
       int offsetQ  = r.indexOf('\"');
       int offsetM  = r.indexOf('\'');
+      
+      // si l'utilisateur a passé deux quotes simples, plutôt qu'une double
+      if( offsetM<r.length()-1 && r.charAt(offsetM+1)=='\'' ) { offsetQ=offsetM; offsetM=-1; }
+      
       int offsetM1 = r.indexOf('m');
       
       if( offsetD1>0 || offsetD>0 && (offsetS==-1 || offsetD>offsetS) ) fct=60.0; // Degres

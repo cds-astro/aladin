@@ -39,7 +39,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import cds.aladin.Aladin;
 import cds.tools.Util;
 
 /**

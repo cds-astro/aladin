@@ -20,11 +20,15 @@
 
 package cds.aladin;
 
-import cds.tools.Util;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Polygon;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+
+import cds.tools.Util;
 
 public class CubeControl {
 
@@ -448,6 +452,9 @@ public class CubeControl {
       else if( m==PAUSE ) { p.setPause(true,v); mode=PAUSE; askStep(0); }
 
    }
+   
+   /** Increment ou décrément du frame courant */
+   public void incFrame(int s) { askStep(s); }
 
    private int step=0;
    synchronized private void askStep(int s)  { step=s; }

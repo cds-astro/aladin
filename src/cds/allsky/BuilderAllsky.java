@@ -51,6 +51,7 @@ final public class BuilderAllsky  extends Builder {
    public void run() throws Exception {
       abort=false;
       validateDepth();
+      context.info("Creating Allsky...");
       for( int z=0; !abort && z<context.depth; z++ ) {
          if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64, z);
          try {

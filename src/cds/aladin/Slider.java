@@ -25,7 +25,10 @@ package cds.aladin;
  * Window>Preferences>Java>Code Generation>Code Template
  */
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.Graphics;
 
 import javax.swing.JComponent;
 

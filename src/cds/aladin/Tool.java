@@ -20,7 +20,10 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Polygon;
 
 import cds.tools.Util;
 
@@ -333,6 +336,7 @@ public final class Tool {
             aladin.chaine.getString("RSAMP"),
             aladin.chaine.getString("CROP"),
             aladin.chaine.getString("PLOT"),
+            "Spect",
       };
 
       explanation=new String[]{
@@ -357,6 +361,7 @@ public final class Tool {
             aladin.chaine.getString("HRSAMP"),
             aladin.chaine.getString("HCROP"),
             aladin.chaine.getString("HPLOT"),
+            "Spect",
       };
    }
 

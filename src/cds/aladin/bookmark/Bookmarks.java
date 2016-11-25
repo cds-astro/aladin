@@ -20,6 +20,7 @@
 
 package cds.aladin.bookmark;
 
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -34,6 +35,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
 
 import cds.aladin.Aladin;
 import cds.aladin.Cache;
@@ -65,14 +67,22 @@ public class Bookmarks extends JToolBar implements Widget {
       setRollover(true);
       setFloatable(false);
       setBorder(BorderFactory.createEmptyBorder());
-      //      populateToolBar(this);
+//      setBorder(BorderFactory.createLineBorder(Color.yellow));
+   }
+   
+   public Dimension getPreferredSize() {
+      return new Dimension( super.getPreferredSize().width, 16);
    }
 
    /** Initialisation des bookmarks */
    public void init(boolean noCache) {
       createBookmarks(noCache);
       aladin.getCommand().setFunctionModif(false);
-      if( aladin.hasGUI() ) resumeToolBar();
+      if( aladin.hasGUI() ) {
+         SwingUtilities.invokeLater( new Runnable() {
+            public void run() { resumeToolBar(); }
+         });
+      }
    }
 
    public FrameBookmarks getFrameBookmarks() {
@@ -136,6 +146,7 @@ public class Bookmarks extends JToolBar implements Widget {
       try {
          e = aladin.getCommand().getBookmarkFunctions().elements();
       } catch( Exception e1 ) {
+         e1.printStackTrace();
          return;
       }
       while( e.hasMoreElements() ) {
@@ -166,10 +177,10 @@ public class Bookmarks extends JToolBar implements Widget {
    //   }
 
    public void resumeToolBar() {
+//      System.out.println("resumeToolBar");
       removeAll();
       populateToolBar(this);
-      validate();
-      aladin.validate();
+      revalidate();
       aladin.repaint();
    }
 

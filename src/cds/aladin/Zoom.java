@@ -22,7 +22,6 @@ package cds.aladin;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.Rectangle;
 
 import javax.swing.JComboBox;
@@ -63,20 +62,20 @@ public class Zoom extends JPanel {
    ZoomView   zoomView;          // Le canvas associe au Zoom
    JComboBox   cZoom;               // Le Choice des differentes valeurs de zoom
    protected ZoomChoice zoomChoicePanel;
-   protected SliderSize sizeSlider;
-   protected SliderOpacity opacitySlider;
-   protected SliderZoom zoomSlider;
-   protected SliderEpoch epochSlider;
-   protected SliderCube  cubeSlider;
-   protected SliderDensity densitySlider;
-   protected JPanel sliderPanel;
+//   protected SliderSize sizeSlider;
+//   protected SliderOpacity opacitySlider;
+//   protected SliderZoom zoomSlider;
+//   protected SliderEpoch epochSlider;
+//   protected SliderCube  cubeSlider;
+//   protected SliderDensity densitySlider;
+//   protected JPanel sliderPanel;
 
    // Les references aux objets
    //   protected ViewSimple v;      // La vue associée au zoom
    Aladin aladin;
    
    protected Zoom() { super(); }
-
+   
    /** Creation du JPanel du zoom.
     * @param calque,aladin References
     */
@@ -99,42 +98,47 @@ public class Zoom extends JPanel {
       //      });
       //      cZoom.addMouseWheelListener( zoomView );
 
-      cubeSlider    = new SliderCube(aladin);
-      epochSlider   = new SliderEpoch(aladin);
-      sizeSlider    = new SliderSize(aladin);
-      densitySlider = new SliderDensity(aladin);
-      opacitySlider = new SliderOpacity(aladin);
-      zoomSlider    = new SliderZoom(this);
+//      cubeSlider    = new SliderCube(aladin);
+//      epochSlider   = new SliderEpoch(aladin);
+//      sizeSlider    = new SliderSize(aladin);
+//      densitySlider = new SliderDensity(aladin);
+//      opacitySlider = new SliderOpacity(aladin);
+//      zoomSlider    = new SliderZoom(this);
+//
+//      sliderPanel = new JPanel( new BorderLayout(0, 0));
+//      adjustSliderPanel();
+//      
+//      MySplitPane splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, sliderPanel, zoomView);
+//      zoomView.setPreferredSize( ZoomView.DIM );
+//      zoomView.setMinimumSize(new Dimension(100,100));
+//      splitH.setBorder(BorderFactory.createEmptyBorder());
+//      add(splitH,BorderLayout.NORTH);
 
-      sliderPanel = new JPanel( new BorderLayout(0, 0));
-      adjustSliderPanel();
-
-      add(sliderPanel,BorderLayout.NORTH);
-
-      Aladin.makeAdd(this,zoomView,"Center");
+//      add(sliderPanel,BorderLayout.NORTH);
+      add(zoomView,BorderLayout.CENTER);
    }
 
-   private JPanel slp=null;
-   protected void adjustSliderPanel() {
-      JPanel p = new JPanel( new GridLayout(0,1,1,1));
-      if( !Aladin.OUTREACH ) {
-         if( aladin.configuration.isSliderEpoch() )   p.add(epochSlider);
-         if( aladin.configuration.isSliderSize() )    p.add(sizeSlider);
-         if( aladin.configuration.isSliderDensity() ) p.add(densitySlider);
-         if( aladin.configuration.isSliderCube() )    p.add(cubeSlider);
-      }
-      if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
-      if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);
-      if( slp!=null ) sliderPanel.remove(slp);
-      sliderPanel.add(p,BorderLayout.CENTER);
-      slp=p;
-   }
+//   private JPanel slp=null;
+//   protected void adjustSliderPanel() {
+//      JPanel p = new JPanel( new GridLayout(0,1,1,1));
+//      if( !Aladin.OUTREACH ) {
+//         if( aladin.configuration.isSliderEpoch() )   p.add(epochSlider);
+//         if( aladin.configuration.isSliderSize() )    p.add(sizeSlider);
+//         if( aladin.configuration.isSliderDensity() ) p.add(densitySlider);
+//         if( aladin.configuration.isSliderCube() )    p.add(cubeSlider);
+//      }
+//      if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
+//      if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);
+//      if( slp!=null ) sliderPanel.remove(slp);
+//      sliderPanel.add(p,BorderLayout.CENTER);
+//      slp=p;
+//   }
 
    /** Retourne le JPanel contenant le menu déroulant du sélecteur
     *  du facteur du zoom
     */
    protected JPanel getZoomChoicePanel() { return zoomChoicePanel; }
-
+   
    /** Retourne le facteur de zoom existant le plus proche de
     *  celui passé en paramètre
     */
@@ -210,8 +214,8 @@ public class Zoom extends JPanel {
     */
    protected double getValue() {
       int n;
-      if( zoomSlider!=null ) {
-         n = (int)zoomSlider.getValue();
+      if( aladin.calque.slider.zoomSlider!=null ) {
+         n = (int)aladin.calque.slider.zoomSlider.getValue();
          try { cZoom.setSelectedIndex(n); } catch( Exception e ) {}
       } else n=cZoom.getSelectedIndex();
       return getValue(n);
@@ -335,7 +339,7 @@ public class Zoom extends JPanel {
          flagNoAction=true;
          try { cZoom.setSelectedIndex(i);
          } catch( Exception e ) { }
-         if( zoomSlider!=null ) zoomSlider.setValue(i);
+         if( aladin.calque.slider.zoomSlider!=null ) aladin.calque.slider.zoomSlider.setValue(i);
          flagNoAction=false;
       }
    }
@@ -358,7 +362,7 @@ public class Zoom extends JPanel {
    }
 
    public void zoomSliderReset() {
-      if( zoomSlider!=null ) zoomSlider.setEnabled( !aladin.calque.isFree() );
+      if( aladin.calque.slider.zoomSlider!=null ) aladin.calque.slider.zoomSlider.setEnabled( !aladin.calque.isFree() );
    }
 
    /** Réinitialise le zoom

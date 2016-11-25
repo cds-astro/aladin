@@ -1262,7 +1262,8 @@ public class Context {
       String sNbCells = nbCells==-1 ? "" : "/"+nbCells;
       String pourcentNbCells = nbCells==-1 ? "" :
          nbCells==0 ? "-":(Math.round( ( (double)nbLowTile/nbCells )*1000)/10.)+"%";
-      long tempsTotalEstime = nbLowTile==0 ? 0 : nbCells==0 ? 0 : nbCells*(totalTime/nbLowTile)-totalTime;
+      
+      long tempsTotalEstime = nbLowTile==0 ? 0 : nbCells==0 ? 0 :(nbCells*totalTime)/nbLowTile - totalTime;
 
       long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
 

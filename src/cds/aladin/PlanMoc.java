@@ -318,7 +318,32 @@ public class PlanMoc extends PlanBGCat {
       if( flag ) wireFrame |= DRAW_PERIMETER;
       else wireFrame &= ~DRAW_PERIMETER;
    }
+   
+   /** Retourne une chaine décrivant les propriétés d'affichage courantes */
+   public String getPropDrawingMethod() {
+      StringBuilder s = new StringBuilder();
+      if( isDrawingPerimeter() ) {
+         if( s.length()>0 ) s.append(',');
+         s.append("perimeter");
+      }
+      if( isDrawingBorder() ) {
+         if( s.length()>0 ) s.append(',');
+         s.append("border");
+      }
+      if( isDrawingFillIn() ) {
+         if( s.length()>0 ) s.append(',');
+         s.append("fill");
+      }
+      return s.toString();
+   }
+   
+   /** Retourne une chaine décrivant le pourcentage de couverture */
+   public String getPropCoverage() { return Util.myRound(moc.getCoverage()); }
 
+   /** Retourne une chaine décrivant le MOC order */
+   public String getPropMocOrder() { return getRealMaxOrder(moc)+""; }
+
+   protected boolean isCatalog() { return false; }
    protected boolean hasSources() { return false; }
    protected int getCounts() { return 0; }
 
@@ -391,6 +416,20 @@ public class PlanMoc extends PlanBGCat {
    protected void setGapOrder(int gapOrder) {
       if( Math.abs(gapOrder)>MAXGAPORDER ) return;
       this.gapOrder=gapOrder;
+   }
+   
+   /** Modifie (si possible) une propriété du plan */
+   protected void setPropertie(String prop,String specif,String value) throws Exception {
+      int a=-1,b=-1,c=-1;
+      if( prop.equalsIgnoreCase("drawing") ) {
+         if( (a=Util.indexOfIgnoreCase(value,"perimeter"))>=0 ) setDrawingPerimeter(a>0 && value.charAt(a-1)=='-'? false : true);
+         if( (b=Util.indexOfIgnoreCase(value,"fill"))>=0 ) setDrawingFillIn(a>0 && value.charAt(a-1)=='-'? false : true);
+         if( (b=Util.indexOfIgnoreCase(value,"border"))>=0 ) setDrawingBorder(a>0 && value.charAt(a-1)=='-'? false : true);
+         if( a<0 && b<0 && c<0 ) throw new Exception("set drawing parameter unknown [perimeter,fill,border]"); 
+         Properties.majProp(this);
+      } else {
+         super.setPropertie(prop,specif,value);
+      }
    }
    
    // retourne/construit la liste du MOC

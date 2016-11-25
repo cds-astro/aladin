@@ -1459,10 +1459,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       else modeChoice.setSelectedItem(s);
       modeItem = modeChoice.getSelectedIndex();
 
-      s = get(LOOKANDFEEL);
-      if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
-      if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
-      else lfChoice.setSelectedIndex(1);
+      if( !Aladin.OUTREACH ) {
+         s = get(LOOKANDFEEL);
+         if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
+         if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
+         else lfChoice.setSelectedIndex(1);
+      }
 
       //      s = get(PIXEL);
       //      if( s == null || s.charAt(0)!='8' ) pixelChoice.setSelectedIndex(0);
