@@ -2370,7 +2370,7 @@ public class PlanImage extends Plan {
       int h = aladin.calque.zoom.zoomView.getHeight();
 
       // Initialisation du buffer si nécessaire
-      if( pixelsZoom==null || pixelsZoom.length!=w*w) pixelsZoom = new byte[w*h];
+      if( pixelsZoom==null || pixelsZoom.length!=w*h ) pixelsZoom = new byte[w*h];
 
       double fct = Math.max( (double)width/w, (double)height/h);
 

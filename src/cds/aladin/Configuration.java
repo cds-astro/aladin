@@ -136,6 +136,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String HPXGRID    = "HealpixGrid";
    protected static String MESURE     = "HideMeasurements";
    protected static String MHEIGHT    = "MeasurementHeight";
+   protected static String ZHEIGHT    = "ZoomHeight";
+   protected static String ZWIDTH     = "ZoomWidth";
    protected static String BOOKMARKS  = "Bookmarks";
    protected static String FRAME      = "Frame";
    protected static String FRAMEALLSKY= "FrameAllsky";
@@ -1049,17 +1051,23 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return size;
    }
 
-   private Point initWinLocXY=new Point();      // Position initiale de la fenêtre
+   private Point initWinLocXY=new Point();          // Position initiale de la fenêtre
    private Dimension initWinLocWH=new Dimension();  // Dimenison initiale de la fenêtre
-   private int initMesureHeight=0;               // Taille de la fenêtre des mesures
+   private int initMesureHeight=0;                  // Hauteur de la fenêtre des mesures
+   private int initZoomHeight=0;                    // Hauteur de la fenêtre du zoom
+   private int initZoomWidth=0;                     // Largeur de la fenêtre du zoom
 
    /** Retourne true si la fenêtre d'Aladin n'a ni bougé, ni été redimensionnée */
    private boolean sameWinParam() {
       if( aladin.isApplet() ) return true;  // pas de gestion de positionnement en mode applet
       Dimension d = aladin.f.getSize();
       Point p = aladin.f.getLocation();
-      int mesureHeight = aladin.splitH.getMesureHeight();
-      return initWinLocXY.equals(p) && initWinLocWH.equals(d) && initMesureHeight==mesureHeight;
+      int mesureHeight = aladin.splitMesureHeight.getSplit();
+      int zoomHeight = aladin.splitZoomHeight.getPos();
+      int zoomWidth = aladin.splitZoomWidth.getPos();
+      return initWinLocXY.equals(p) && initWinLocWH.equals(d) 
+            && initMesureHeight==mesureHeight
+            && initZoomHeight==zoomHeight && initZoomWidth==zoomWidth;
    }
 
    /** Retourne la position et la taille de la fenêtre Aladin. Mémorise
@@ -1086,10 +1094,20 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       String s;
       int mesureHeight=150;
       try { s = get(MHEIGHT);
-      mesureHeight=Integer.parseInt(s);
+         mesureHeight=Integer.parseInt(s);
       } catch( Exception e ) {}
       setInitMesureHeight(mesureHeight);
       return mesureHeight;
+   }
+   
+   protected int getZoomWidth() {
+      try { return Integer.parseInt( get(ZWIDTH)); } catch( Exception e ) {}
+      return 220; 
+   }
+
+   protected int getZoomHeight() {
+      try { return Integer.parseInt( get(ZHEIGHT)); } catch( Exception e ) {}
+      return 150; 
    }
 
    /** Mémorisation de la position et de la taille de la fenêtre initiale d'Aladin en vue
@@ -1673,8 +1691,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( !aladin.mesure.isReduced() && get(MESURE)!=null ) set(MESURE,"on");
 
       // On conserve la taille de la fenêtre des mesures
-      int hd = aladin.splitH.getMesureHeight();
-      set(MHEIGHT,""+hd);
+      set(MHEIGHT,""+aladin.splitMesureHeight.getSplit());
+      set(ZHEIGHT,""+aladin.splitZoomHeight.getPos());
+      set(ZWIDTH,""+aladin.splitZoomWidth.getPos());
 
       // On mémorise les bookmarks si nécessaire
       if( !Aladin.OUTREACH && aladin.bookmarks.canBeSaved() ) {

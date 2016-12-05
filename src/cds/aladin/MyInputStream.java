@@ -143,10 +143,10 @@ public final class MyInputStream extends FilterInputStream {
       fitsHeadRead=false;
       dejaLu=0L;
 
+      
       this.in= in!=null && withBuffer && !(in instanceof BufferedInputStream ) ?
             new BufferedInputStream(in) : in;
-            NBOPENFILE++;
-
+      NBOPENFILE++;
    }
 
    /** Positionnement du fichier d'origine (pour message d'erreur) */

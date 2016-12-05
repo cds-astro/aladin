@@ -458,6 +458,7 @@ BLINK	assoc
 RSAMP	rsamp
 CROP	crop
 PLOT	x-y
+SPECT   spect
 
 SELECT.fr	select
 DRAW.fr	dessin
@@ -481,6 +482,7 @@ BLINK.fr	assoc
 RSAMP.fr	rsamp
 CROP.fr	coupe
 PLOT.fr	x-y
+SPECT.fr   spect
 
 #Zoom
 ZINFO	Adjust the visible area (clic&drag + mouse wheel)
@@ -531,6 +533,7 @@ HRSAMP	Resample selected images
 HXMATCH	Cross match two catalogue sources
 HCROP	Image cropping
 HPLOT	Scatter plot for catalog sources
+HSPECT  Spectrum extractor for cubes
 
 HSELECT.fr	Sélecteur de vues ou d'objets - cliquer/étendre avec ou sans la touche MAJ
 HDRAW.fr	Dessin - cliquer en continue, ou point à point pour ajouter des lignes
@@ -554,6 +557,7 @@ HRSAMP.fr	Rééchantillonne les images sélectionnées
 HXMATCH.fr	Corrèle les sources de 2 catalogues 
 HCROP.fr	Copie une portion de l'image
 HPLOT.fr	Trace un diagramme de dispersion pour des sources de catalogues
+HSPECT.fr   Génère un spectre associé à un cube
 
 # ToolBox.java strings
 TBBAR	Change the screen area proportions (drag it)

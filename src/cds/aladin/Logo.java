@@ -52,8 +52,8 @@ import cds.tools.Util;
  */
 public final class Logo extends JComponent implements MouseListener {
 
-   static final int W=90;                // Taille du logo
-   static final int H=45;                // Hauteur du logo
+   static final int W=120;                // Taille du logo
+   static final int H=40;                // Hauteur du logo
    static final Dimension DIM = new Dimension(W,H);
    static final int DF=20;               // Taille de la font si le logo n'est pas accessible
    Image img=null;                       // L'image du logo

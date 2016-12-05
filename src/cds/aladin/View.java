@@ -1801,7 +1801,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       int m = niveau<=1?4:niveau==2?9:16;
       double z = vc.zoom;
-      double W = aladin.calque.zoom.zoomView.getSIZE();
+      double W = aladin.calque.zoom.zoomView.getWidth();
       double delta = W/Math.sqrt(m);
       double debut = delta/2.;
       double x=debut,y=debut;
@@ -1942,6 +1942,35 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       return true;
    }
+   
+   /** Ajustement de la position de référence xzoomview,yzoomview de toutes les vues après un changement de taille du zoomView.
+    * Si l'image est verticale ou horizontale, cela jouera en ordonnée, resp. en abscisse
+    * @param lastWidth précédente largeur du zoomview
+    * @param width nouvelle largeur du zoomview
+    * @param lastHeight précédente largeur du zoomview
+    * @param height nouvelle largeur du zoomview
+    */
+   protected void adjustZoomView(int lastWidth,int width, int lastHeight, int height ) {
+      ViewSimple v=null;
+      
+      // Les vues visibles
+      for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
+         v=viewSimple[i];
+         if( v.isFree() ) continue;
+         v.adjustZoomView(lastWidth,width,lastHeight,height);
+      }
+      
+//      // Les vues en mémo
+//      int n = viewMemo.size();
+//      int m=0;
+//      for( int i=0; i<n; i++ ) {
+//         if( v=viewMemo.get(i,v)==null ) continue;
+//         if( v.isFree() ) continue;
+//         v.adjustZoomView(lastWidth,width,lastHeight,height);
+//      }
+
+   }
+
    
    /** Ajustement de toutes les vues (non ROI )
     *  afin que leur centre corresponde à la coordonnée
@@ -3815,7 +3844,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
             // Peut être faut-il lancer une résolution quick Simbad ?
             // et/ou VizierSED ?
-            if( simbadBlink && startQuickSimbad>0 ) {
+            if( !aladin.calque.zoom.zoomView.flagSED && simbadBlink && startQuickSimbad>0 ) {
                if( System.currentTimeMillis()-startQuickSimbad>500) {
                   startQuickSimbad=0L;
                   if( calque.flagSimbad ) quickSimbad();
@@ -3982,15 +4011,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Faut-il également charger un SED ?
       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
-      boolean flagSED=true;
-      Source o;
-      if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
+//      boolean flagSED=true;
+//      if( aladin.view.zoomview.flagSED ) flagSED=false;
 
       InputStream is = null;
       DataInputStream cat = null;
       try {
          aladin.status.setText("Querying Simbad...");
-         if( flagSED ) zoomview.setSED((String)null);
+//         if( flagSED ) zoomview.setSED((String)null);
          URL url = aladin.glu.getURL("SimbadQuick","\""+target+"\" "+radius,false);
          is = url.openStream();
          if( is!=null ) {
@@ -4029,7 +4057,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             aladin.console.printInPad(s1+"\n");
 
             // Et on cherche le SED correspondant
-            if( flagSED && calque.flagVizierSED ) {
+            if( /* flagSED && */ calque.flagVizierSED ) {
                String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
                aladin.trace(2,"Loading VizieR phot. for \""+s2+"\"...");
                Repere sedRep = null;
@@ -4037,7 +4065,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                sedRep.setType(Repere.CARTOUCHE);
                sedRep.setSize(TAILLEARROW);
                sedRep.projection(v);
-               sedRep.setId("Phot: "+target);
+               sedRep.setId("Phot: "+s1); //target);
                sedRep.setWithLabel(true);
                aladin.view.zoomview.setSED(s2,sedRep);
             }
@@ -4070,12 +4098,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Aladin.makeCursor(v,Aladin.WAITCURSOR);
 
       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
-      boolean flagSED=true;
-      Source o;
-      if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
+//      boolean flagSED=true;
+//      if( aladin.view.zoomview.flagSED ) flagSED=false;
 
       try {
-         if( flagSED ) zoomview.setSED((String)null);
+//         if( flagSED ) zoomview.setSED((String)null);
          Repere sedRep = null; //new Repere(plan)
          coo = new Coord(target);
          sedRep = new Repere(null,coo);

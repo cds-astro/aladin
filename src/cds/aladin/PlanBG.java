@@ -264,6 +264,9 @@ public class PlanBG extends PlanImage {
       (new File(getCacheDir()+Util.FS+getCacheName())).mkdir();
       aladin.trace(3,"HEALPix local cache for "+getCacheName()+" is out of date => renamed => will be removed");
    }
+   
+   
+   
 
 
    /** Charge les propriétés à partir du fichier "properties" et en profite
@@ -283,7 +286,8 @@ public class PlanBG extends PlanImage {
          else {
 
             // Eventuellement changera de site Web s'il y a mieux
-            checkSite(false);
+            // MAINTENANT ON LE FAIT EN AMONT
+//            checkSite(false);
 
             String cacheFile = getCacheDir()+Util.FS+getCacheName()+Util.FS+Constante.FILE_PROPERTIES;
             File f = new File(cacheFile);
@@ -399,8 +403,33 @@ public class PlanBG extends PlanImage {
       if( s.startsWith("ivo://") ) s = s.substring(6);
       return s;
    }
-
+   
+   /** Chargement des propriétés du HiPS.
+    * On en profite pour vérifier s'il n'y aurait pas un site miroirs plus rapide
+    */
    protected boolean scanProperties() {
+      boolean rep=true;
+      boolean alternative=true;
+      
+      // Vérifie qu'il y a au-moins une alternative
+      URL u = aladin.glu.getURL(gluTag,"",false,false,2);
+      if( u==null ) alternative=false;
+      
+      // Pas de réponse immédiate => on cherche un autre site tout de suite
+      if( !scanProperties1() && alternative ) {
+         Aladin.trace(3,"HiPS server unreachable ["+url+"] ! Trying another...");
+         checkSite(false);
+         rep = scanProperties1();
+         
+      // Une réponse, mais peut être y a-t-il plus rapide => on teste en parallèle
+      } else if( alternative ) {
+         Aladin.trace(3,"HiPS server OK ["+url+"], looking for a faster...");
+         (new Thread() { public void run() { checkSite(false); } }).start();
+      }
+      return rep;
+   }
+
+   private boolean scanProperties1() {
       // Information supplémentaire par le fichier properties ?
       try {
          java.util.Properties prop = loadPropertieFile();

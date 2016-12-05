@@ -347,29 +347,46 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
 
    static public int [] calculPixelsZoomRGB1(Aladin aladin,int [] pixelsZoomRGB,int [] pixelsRGB,int width,int height) {
       
-      int size = aladin.calque.zoom.zoomView.getWidth();
-      
-      // calcul du rapport Largeur/Hauteur de l'image
-      int W = size;
-      int H = (int)(((double)size/width)*height);
-      if( H>W ) {
-         W = (int)((double)W*W / H);
-         H = size;
-      }
+      int w = aladin.calque.zoom.zoomView.getWidth();
+      int h = aladin.calque.zoom.zoomView.getHeight();
 
-      double fctX = (double)width/W;
-      double fctY = (double)height/H;
+      // Initialisation du buffer si nécessaire
+      if( pixelsZoomRGB==null || pixelsZoomRGB.length!=w*h) pixelsZoomRGB = new int[w*h];
 
-      if( pixelsZoomRGB==null ) pixelsZoomRGB = new int[size*size];
-      else for( int i=0; i<pixelsZoomRGB.length; i++ ) pixelsZoomRGB[i]=0;
+      double fct = Math.max( (double)width/w, (double)height/h);
 
-      for( int y=0; y<H; y++ ) {
-         int i = y*size;
-         int j = (int)(y*fctY);
-         for( int x=0; x<W; x++ ) {
-            pixelsZoomRGB[i++] = pixelsRGB[ j*width + (int)(x*fctX) ];
+      // Remplissage de l'imagette
+      for( int y=0; y<h; y++) {
+         for( int x=0; x<w; x++ ) {
+            int xi = (int)( x*fct + 0.5);
+            int yi = (int)( y*fct + 0.5);
+            pixelsZoomRGB[y*w+x] = ( xi>=width || yi>=height ) ? 0 : pixelsRGB[ yi*width + xi];
          }
       }
+
+//      int size = aladin.calque.zoom.zoomView.getWidth();
+//      
+//      // calcul du rapport Largeur/Hauteur de l'image
+//      int W = size;
+//      int H = (int)(((double)size/width)*height);
+//      if( H>W ) {
+//         W = (int)((double)W*W / H);
+//         H = size;
+//      }
+//
+//      double fctX = (double)width/W;
+//      double fctY = (double)height/H;
+//
+//      if( pixelsZoomRGB==null ) pixelsZoomRGB = new int[size*size];
+//      else for( int i=0; i<pixelsZoomRGB.length; i++ ) pixelsZoomRGB[i]=0;
+//
+//      for( int y=0; y<H; y++ ) {
+//         int i = y*size;
+//         int j = (int)(y*fctY);
+//         for( int x=0; x<W; x++ ) {
+//            pixelsZoomRGB[i++] = pixelsRGB[ j*width + (int)(x*fctX) ];
+//         }
+//      }
       return pixelsZoomRGB;
    }
 

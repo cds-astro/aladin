@@ -644,7 +644,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
          haut.setVisible(false);
          mcanvas.setSize(mcanvas.getSize().width, previousHeight);
          scrollV.setSize(scrollV.getSize().width, previousHeight);
-         if( !flagReduced ) aladin.splitH.restoreMesureHeight();
+         if( !flagReduced ) aladin.splitMesureHeight.restoreSlit();
       }
       setSize( getPreferredSize());
    }
@@ -666,12 +666,12 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       flagReduced=flag;
       if( flagReduced ) {
          aladin.search.hideSearch(true);
-         if( aladin.splitH.getBottomComponent()!=null ) aladin.splitH.remove(this);
+         if( aladin.splitMesureHeight.getBottomComponent()!=null ) aladin.splitMesureHeight.remove(this);
       } else {
          aladin.search.hideSearch(false);
-         if( aladin.splitH.getBottomComponent()==null ) aladin.splitH.setBottomComponent(this);
+         if( aladin.splitMesureHeight.getBottomComponent()==null ) aladin.splitMesureHeight.setBottomComponent(this);
          flagDorepaintForScroll=true;
-         aladin.splitH.restoreMesureHeight();
+         aladin.splitMesureHeight.restoreSlit();
       }
    }
 

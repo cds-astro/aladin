@@ -59,6 +59,8 @@ class SED extends JPanel {
    private static final double FREQMAX = 1E6;
    private static final double WAVEOPTMIN = 0.3;
    private static final double WAVEOPTMAX = 1;
+   private static final double REFMIN = 1.;
+   private static final double REFMAX = 10.;
    private static final double FREQOPTMIN = wave2Freq(WAVEOPTMAX);
    private static final double FREQOPTMAX = wave2Freq(WAVEOPTMIN);
    
@@ -79,6 +81,7 @@ class SED extends JPanel {
    private boolean planeAlreadyCreated;  // true si le plan dans la pile a déjé été créé à partir du SED
    private boolean flagWavelength;  // true pour un affichage en longueur d'onde
    private int xOptMin,xOptMax;     // Position de la bande optique
+   private int yRefMin,yRefMax;     // Position de la bande d'énergie de référence
    
    private ArrayList<SEDItem> sedList;  // Liste des points du SED sous une forme "prémachée"
    
@@ -126,9 +129,11 @@ class SED extends JPanel {
    public void clear() { 
       planeAlreadyCreated=readyToDraw=false;
       xOptMax=xOptMin=0;
+      yRefMax=yRefMin=0;
       fluxMin=fluxMax=0;
       absMin=absMax=0;
-      if( sedList!=null ) sedList.clear();
+      sedList=null;
+//      if( sedList!=null ) sedList.clear();
    }
    
    /** Etend un SED à partir d'un pcat déjà chargé, typiquement à partir d'un plan
@@ -185,28 +190,40 @@ class SED extends JPanel {
       aladin.calque.selectPlan(plan);   // sélectionne également les sources du plan
    }
    
+   private boolean isLoading=false;
+   
+   /** True si on est en train de charger un SED */
+   protected synchronized boolean isLoading() {
+      return isLoading;
+   }
+   
+   private synchronized void setIsLoading(boolean flag) { isLoading=flag; }
+   
    // Chargement et création d'un SED à partir d'un flux de manière asynchrone
    private void loadASync(MyInputStream in) {
       planeAlreadyCreated=readyToDraw=false;
+      setIsLoading(true);
+      clear();
+      aladin.view.zoomview.repaint();
       final MyInputStream inParam=in;
-      
-      plan = new PlanCatalog(aladin);
-      plan.pcat = new Pcat(plan,Color.black,aladin.calque,aladin.status,aladin);
-      (new Thread() {  
-         public void run() {
-            try {
-               plan.pcat.tableParsing(inParam, "TABLE");
-               clear();
-               parseAndDraw();
-            } catch( Exception e ) {
-               aladin.view.zoomview.setSED((String)null);
-               aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
-               if( aladin.levelTrace>=3 ) e.printStackTrace();
-            } finally {
-               if( inParam!=null ) try { inParam.close(); } catch( Exception e ) {}
-            }
-         }
-      } ).start();
+
+      try {
+         plan = new PlanCatalog(aladin);
+         plan.pcat = new Pcat(plan,Color.black,aladin.calque,aladin.status,aladin);
+         //      (new Thread() {  
+         //         public void run() {
+         plan.pcat.tableParsing(inParam, "TABLE");
+         parseAndDraw();
+      } catch( Exception e ) {
+         aladin.view.zoomview.setSED((String)null);
+         aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      } finally {
+         if( inParam!=null ) try { inParam.close(); } catch( Exception e ) {}
+         setIsLoading(false);
+      }
+      //         }
+      //      } ).start();
    }
 
    // Mise en place des listes de points du SED et des conversions de coordonnées
@@ -329,6 +346,10 @@ class SED extends JPanel {
          }
       }
       
+      // Mémorisation de la bande d'énergie de référence
+      yRefMin = (int) ( ( LOG(REFMIN) - LOG(fluxMin)) * coefY );
+      yRefMax = (int) ( ( LOG(REFMAX) - LOG(fluxMin)) * coefY );
+
       // Mémorisation de la portion optique
       if( flagWavelength ) {
          xOptMin = (int) ( ( LOG( freq2Wave(FREQOPTMAX)) - LOG(absMin)) * coefX );
@@ -423,6 +444,7 @@ class SED extends JPanel {
    public Dimension getDimension() { return new Dimension(aladin.calque.zoom.zoomView.getWidth(),aladin.calque.zoom.zoomView.getHeight()); }
    
    static final private Color COLOROPT = new Color(234,234,255);
+   static final private Color COLORREF = new Color(255,234,234);
    
    
    private int lastWidth=0,lastHeight=0;
@@ -442,7 +464,13 @@ class SED extends JPanel {
       g.setColor(Color.white);
       g.clearRect(0, 0, dim.width, dim.height);
       
-      // Bande optique
+      // Bande d'énergie (0.5..1mJy) de référence
+      if( yRefMin!=yRefMax ) {
+         g.setColor(COLORREF);
+         g.fillRect(gauche,bas-Math.max(yRefMin,yRefMax), droite-gauche, Math.abs(yRefMax-yRefMin+1) );
+      }
+      
+      // Bande optique de référence
       if( xOptMin!=xOptMax ) {
          g.setColor(COLOROPT);
          g.fillRect(gauche+Math.min(xOptMin,xOptMax), haut, Math.abs(xOptMax-xOptMin+1), bas-haut);
@@ -635,6 +663,9 @@ class SED extends JPanel {
          flagWavelength = !flagWavelength;
          setPosition();
          aladin.view.zoomview.repaint();
+         
+      // On a cliqué sur un point, on va donc générer la table correspondante
+      // et l'afficher
       } else if( siIn!=null ) {
          int bloc=1;
          if( !planeAlreadyCreated ) createStackPlane();
@@ -642,15 +673,17 @@ class SED extends JPanel {
          aladin.view.showSource(siIn.o, false, true);
          aladin.mesure.mcanvas.show(siIn.o, bloc);
          aladin.calque.repaintAll();
-      } 
+         
+      // On a cliqué en dehors de tout point, on ne fait que déplacer le repère
+      // sur l'emplacement du sed
+      }  else if( simRep!=null ) {
+         aladin.view.setRepere(new Coord(simRep.raj,simRep.dej),true);
+         aladin.calque.repaintAll();
+      }
    }
    
    private void more() {
-      if( source==null ) {
-         System.out.println("SED.more() source=null");
-         return;
-      }
-      System.out.println("SED.more() source="+source);
+      if( source==null )  return;
       
       // Je dois utiliser le %20 plutôt que le '+' pour l'encodage des blancs
       // parce que l'outil VizieR photometry ne les supporte pas

@@ -20,7 +20,8 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -43,7 +44,7 @@ public final class FrameMesure extends JFrame  {
    // Les references aux objets
    Aladin a;
 
-  /** Creation du Frame gerant la creation d'un plan RGB.
+  /** Creation du Frame gerant les mesures lorsqu'elles sont dans une fenêtre externe
    * @param aladin Reference
    */
    protected FrameMesure(Aladin aladin) {
@@ -65,7 +66,7 @@ public final class FrameMesure extends JFrame  {
 //	  super.hide();
 
 //      a.mesurePanel.remove(a.mesure);
-      if( a.splitH.getBottomComponent()!=null ) aladin.splitH.remove(a.mesure);
+      if( a.splitMesureHeight.getBottomComponent()!=null ) aladin.splitMesureHeight.remove(a.mesure);
       a.mesure.scrollV.setValue(0);
       a.validate();
       a.f.validate(); // pour maj frame principale sous Mac
@@ -88,7 +89,7 @@ public final class FrameMesure extends JFrame  {
       dispose();
       a.mesure.split(false);
 //      Aladin.makeAdd(a.mesurePanel,a.mesure,"Center");
-      if( a.splitH.getBottomComponent()==null ) a.splitH.setBottomComponent(a.mesure);
+      if( a.splitMesureHeight.getBottomComponent()==null ) a.splitMesureHeight.setBottomComponent(a.mesure);
       a.mesure.setPreferredSize(new Dimension(100,150));
       a.mesure.setMinimumSize(new Dimension(100,0));
       a.mesure.setReduced(false);

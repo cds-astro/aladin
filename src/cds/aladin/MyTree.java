@@ -20,12 +20,26 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.EventObject;
+import java.util.Iterator;
 
-import javax.swing.*;
-import javax.swing.tree.*;
+import javax.swing.AbstractCellEditor;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTree;
+import javax.swing.UIManager;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellEditor;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreePath;
 
 /**
  * Gestion d'un arbre dynamique
@@ -102,9 +116,31 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    protected void populateTree(Enumeration e) {
       while( e.hasMoreElements() ) {
          TreeNode noeud = (TreeNode)e.nextElement();
+         if( noeud.isHidden() ) continue;
          createTreeBranch(root,noeud,0);
       }
       defaultExpand();
+   }
+   
+   /** Supprime les feuilles et branches non Ok() */
+   protected void elague() {
+      elague(root, (DefaultTreeModel)getModel() );
+   }
+   
+   protected void elague(DefaultMutableTreeNode node, DefaultTreeModel model ) {
+      
+      for( int i=node.getChildCount()-1; i>=0; i-- ) {
+         elague( (DefaultMutableTreeNode)node.getChildAt(i), model );
+      }
+
+      if( node.isLeaf() ) {
+         TreeNode fils = (TreeNode) node.getUserObject();
+         if( !fils.isIn() ) {
+//            System.out.println("rm "+fils.label);
+            model.removeNodeFromParent(node);
+         }
+         return;
+      }
    }
 
    /** Reset */
@@ -127,6 +163,33 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
    /** Appelé en cas de problème lors du submit => à surcharger */
    protected void warning() {}
+   
+
+   //      // EN ATTENDANT QUE CELA SOIT ENLEVE DU GLU
+   //      protected void createTreeBranch(DefaultMutableTreeNode node, TreeNode noeud, int opos) {
+   //         if( noeud.path.startsWith("Progressive catalog")) return;
+   //         super.createTreeBranch(node,noeud, opos);
+   //      }
+
+   /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
+   protected boolean setOkTree(DefaultMutableTreeNode node) {
+      TreeNode gSky = (TreeNode) node.getUserObject();
+      if( node.isLeaf() )  return gSky.isIn();
+
+      boolean rep=false;
+      DefaultMutableTreeNode subNode = null;
+      //         System.out.println("setOkTree "+node+" #subnode="+node.getChildCount());
+      Enumeration e = node.children();
+      while( e.hasMoreElements() ) {
+         subNode = (DefaultMutableTreeNode) e.nextElement();
+         if( setOkTree(subNode) ) rep=true;
+      }
+
+      gSky.setIn(rep);
+      //         System.out.println("*** "+gSky+" => "+rep);
+      return rep;
+   }
+
 
    /** Met à jour les couleurs des widgets avant de les tracer => à surcharger */
    protected void updateColor() {}
@@ -238,7 +301,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          //         System.out.println("getTreeCellRendererComponent ["+node.toString()+"] => "+n.isOk());
 
          if( n!=null && n.hasCheckBox() ) {
-            if( n.isOk() ) n.checkbox.setForeground(Color.black);
+            if( n.isIn() ) n.checkbox.setForeground(Color.black);
             else n.checkbox.setForeground(Color.lightGray);
 
             JPanel panel = n.getPanel();
@@ -253,7 +316,8 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          }
 
          Component c = nonLeafRenderer.getTreeCellRendererComponent(tree, obj, selected, expanded, leaf, row, hasFocus);
-         if( n.isOk() ) c.setForeground( Color.black);
+         if( n.isInStack() ) c.setForeground( Color.red );
+         else if( n.isIn() ) c.setForeground( Color.black);
          else c.setForeground( Color.lightGray );
          return c;
       }
@@ -283,12 +347,12 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          TreeNode n = (TreeNode)node.getUserObject();
          n1 = n;
          if( n!=null &&  n.hasCheckBox() ) {
-            if( n.isOk() ) n.checkbox.setForeground(Color.black);
+            if( n.isIn() ) n.checkbox.setForeground(Color.black);
             else n.checkbox.setForeground(Color.lightGray);
             return n.getPanel();
          }
          Component c = renderer.getTreeCellRendererComponent(tree, obj, true, expanded, leaf, row, true);
-         if( n.isOk() ) c.setForeground( Color.black);
+         if( n.isIn() ) c.setForeground( Color.black);
          else c.setForeground( Color.lightGray );
          return c;
 

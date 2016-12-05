@@ -20,11 +20,14 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.util.Iterator;
 
-import javax.swing.*;
-import javax.swing.tree.*;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * Formulaire d'interrogation sous la forme d'un arbre
@@ -33,7 +36,7 @@ import javax.swing.tree.*;
 public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
    protected String info,info1;
    protected DefaultMutableTreeNode root;
-   protected TreeForServer tree;
+   protected MyTreeForServer tree;
 
    /** Creation du formulaire d'interrogation par arbre. */
    protected ServerTree(Aladin aladin) {
@@ -65,7 +68,7 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
       y=makeTarget(y);
 
       // L'arbre
-      tree = new TreeForServer(aladin);
+      tree = new MyTreeForServer(aladin);
       JScrollPane scrollTree = new JScrollPane(tree);
       scrollTree.setBounds(XTAB1,y,XWIDTH,217); y+=215;
       add(scrollTree);
@@ -112,9 +115,9 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
 
    public Iterator<TreeNode> iterator() { return tree.iterator(); }
 
-   class TreeForServer extends MyTree {
+   class MyTreeForServer extends MyTree {
 
-      TreeForServer(Aladin aladin) { super(aladin); }
+      MyTreeForServer(Aladin aladin) { super(aladin); }
 
       protected void warning() {
          aladin.warning(aladin.dialog,WNEEDCHECK,1);
@@ -127,23 +130,23 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
       //         super.createTreeBranch(node,noeud, opos);
       //      }
 
-      /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
-      protected boolean setOkTree(DefaultMutableTreeNode node) {
-         TreeNode gSky = (TreeNode) node.getUserObject();
-         if( node.isLeaf() )  return gSky.isOk();
-
-         boolean rep=false;
-         DefaultMutableTreeNode subNode = null;
-         //         System.out.println("setOkTree "+node+" #subnode="+node.getChildCount());
-         Enumeration e = node.children();
-         while( e.hasMoreElements() ) {
-            subNode = (DefaultMutableTreeNode) e.nextElement();
-            if( setOkTree(subNode) ) rep=true;
-         }
-
-         gSky.setOk(rep);
-         //         System.out.println("*** "+gSky+" => "+rep);
-         return rep;
-      }
+//      /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
+//      protected boolean setOkTree(DefaultMutableTreeNode node) {
+//         TreeNode gSky = (TreeNode) node.getUserObject();
+//         if( node.isLeaf() )  return gSky.isOk();
+//
+//         boolean rep=false;
+//         DefaultMutableTreeNode subNode = null;
+//         //         System.out.println("setOkTree "+node+" #subnode="+node.getChildCount());
+//         Enumeration e = node.children();
+//         while( e.hasMoreElements() ) {
+//            subNode = (DefaultMutableTreeNode) e.nextElement();
+//            if( setOkTree(subNode) ) rep=true;
+//         }
+//
+//         gSky.setOk(rep);
+//         //         System.out.println("*** "+gSky+" => "+rep);
+//         return rep;
+//      }
    }
 }

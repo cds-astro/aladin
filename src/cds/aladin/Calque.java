@@ -179,7 +179,7 @@ public class Calque extends JPanel implements Runnable {
    protected Calque() { super(); }
    
    private JPanel haut;
-
+   
    /** Creation de l'objet calque */
    protected Calque(Aladin aladin) {
       this.aladin = aladin;
@@ -206,6 +206,16 @@ public class Calque extends JPanel implements Runnable {
       haut.add(select,BorderLayout.CENTER);
       haut.add(slider,BorderLayout.SOUTH);
       
+//      Dataset dataset = new Dataset(aladin);
+//      final MySplitPane gauche1 = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true,
+//            dataset, haut );
+//      gauche1.setBorder(BorderFactory.createEmptyBorder());
+////      gauche1.setResizeWeight(1);
+//      dataset.setMinimumSize(new Dimension(150,100));
+//      dataset.setPreferredSize(new Dimension(100,200));
+////      splitDatasetWidth = splitD;
+
+      
       JPanel bas = new JPanel(new BorderLayout(10,10));
       bas.add(zoom,BorderLayout.CENTER);
       
@@ -214,11 +224,15 @@ public class Calque extends JPanel implements Runnable {
 //      add(haut,BorderLayout.CENTER);
 //      add(bas,BorderLayout.SOUTH);
       
-      MySplitPane splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, haut, bas);
-      bas.setMinimumSize(new Dimension(100,aladin.getZoomViewHeight()));
+      MySplitPane splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, /* gauche1 */ haut, bas);
+      bas.setMinimumSize(new Dimension(100,100));
+      bas.setPreferredSize(new Dimension(100,aladin.getZoomViewHeight()));
       splitH.setResizeWeight(1);
       splitH.setBorder(BorderFactory.createEmptyBorder());
+      aladin.splitZoomHeight = splitH;
+      
       add(splitH,BorderLayout.CENTER);
+
 
       
    }
@@ -1489,6 +1503,20 @@ public class Calque extends JPanel implements Runnable {
          if( p instanceof PlanBG ) ((PlanBG)p).resetDrawFastDetection();
       }
    }
+   
+   /** Retourne true si le plan HiPS indiqué est déjà chargée dans la pile */
+   public boolean isLoaded(String hipsId) {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].isFree() ) continue;
+         if( !(plan[i] instanceof PlanBG )  ) continue;
+         if( ((PlanBG)plan[i]).id==null ) continue;
+         
+         // le hipsId ne contient pas l'origine en premier mot
+         // ex: CDS/P/DSS2/color => hipsID = P/DSS2/color
+         if( ((PlanBG)plan[i]).id.endsWith("/"+hipsId) ) return true;
+      }
+      return false;
+   }
 
    /**
     * Retourne la liste des plans valides d'un certain type
@@ -1628,7 +1656,7 @@ public class Calque extends JPanel implements Runnable {
       Plan p = getPlanRef();
       return p!=null && p instanceof PlanBG;
    }
-
+   
    /** Retourne le prochain plan image dans la pile */
    protected Plan nextImage(Plan pref,int sens) {
       int n= getIndex(pref);

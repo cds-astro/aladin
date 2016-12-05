@@ -101,6 +101,7 @@ public final class Tool {
       /*18 */      15,
       /*19 */      9,
       /*20 */      9,
+      /*21 */      9,
    };
 
    // Décalage du logo par rapport au centre du bouton (vers le haut)
@@ -126,6 +127,7 @@ public final class Tool {
       /*18 */      15,
       /*19 */      9,
       /*20 */      9,
+      /*21 */      9,
    };
 
    // La fleche de selection
@@ -290,11 +292,12 @@ public final class Tool {
    // Les points pour le diagramme de dispersion
    int [][] plot = { { 2,3 }, {4,4}, {5,5}, {5,7}, { 7,5}, {6,4}, {7,9}, {9,10}, {11,12}, {13,13}, {14, 5} };
 
-   /*
+   
    // Le graphique pour le SED
    static final int [] sedX= {  4,8,12,16,20,22};  // Les X de la courbe
    static final int [] sedY= { 14,4,12, 8,12,12};  // Les Y de la courbe
 
+   /*
    // Le graphique pour le ACE
    static final int [] aceX= {  4, 5,11,12,16,18,19,20};  // Les X des objets
    static final int [] aceY= {  8,14, 4,10,15,8, 8,13};  // Les Y des objets
@@ -336,7 +339,7 @@ public final class Tool {
             aladin.chaine.getString("RSAMP"),
             aladin.chaine.getString("CROP"),
             aladin.chaine.getString("PLOT"),
-            "Spect",
+            aladin.chaine.getString("SPECT"),
       };
 
       explanation=new String[]{
@@ -361,7 +364,7 @@ public final class Tool {
             aladin.chaine.getString("HRSAMP"),
             aladin.chaine.getString("HCROP"),
             aladin.chaine.getString("HPLOT"),
-            "Spect",
+            aladin.chaine.getString("HSPECT"),
       };
    }
 
@@ -649,19 +652,19 @@ public final class Tool {
             for( i=0; i<cmlX.length-1; i++ )
                g.drawLine(cmlX[i]+dx,cmlY[i]+dy, cmlX[i+1]+dx,cmlY[i+1]+dy);
             break;
-            /*
-         case ToolBox.SED:                // Le SED
+         case ToolBox.SPECT:                // Le spectr
             int x1,y1,x2,y2;
             int t=2;
-            g.setColor( c );
+            g.setColor( c1 );
             g.drawLine((x1=cmX[0]+dx),(y1=cmX[1]+dy),cmX[2]+dx,cmX[3]+dy);
             g.drawLine(cmY[0]+dx,cmY[1]+dy,(x2=cmY[2]+dx),(y2=cmY[3]+dy));
             g.drawLine(x1-t,y1+t,x1,y1); g.drawLine(x1+t,y1+t,x1,y1);
             g.drawLine(x2-t,y2-t,x2,y2); g.drawLine(x2-t,y2+t,x2,y2);
-            g.setColor( cPapier );
+            g.setColor( c1 );
             for( i=0; i<sedX.length-1; i++ )
                g.drawLine(sedX[i]+dx,sedY[i]+dy, sedX[i+1]+dx,sedY[i+1]+dy);
             break;
+            /*
          case ToolBox.ACE:                // Le ACE
             int t1=2;
             g.setColor( c );

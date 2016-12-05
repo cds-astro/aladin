@@ -1597,7 +1597,12 @@ public class Plan implements Runnable {
       String s=label;
       int p= (int)getPourcent();
       //      int c= (int)getCompletude();
-      if( p>0 && p<100) s=Util.align((label.length()>6 ? label.substring(0,6):label)+"... ",9)+p+"%";
+      if( p>0 && p<100) {
+         int w = aladin.view.zoomview.getWidth();
+         int c  = w/15;
+         if( c<6 ) c=6;
+         s=Util.align((label.length()>c ? label.substring(0,c):label)+"... ",c+3)+p+"%";
+      }
       else if( error==null && !flagOk ) s= label+"...";
       //      else if( c>0 && c<100) s=Util.align((label.length()>9 ? label.substring(0,9):label),11)+c+"%";
       return s;

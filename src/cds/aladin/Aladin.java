@@ -151,10 +151,13 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> HiPS Market tree
+ * @beta    <LI> Panel management improvement
+ * @beta    <LI> HiPS mirror sites management improvement
  * @beta    <LI> MOC perimeter drawing + set drawing=xxx script command
  * @beta    <LI> Fisheye projection support (ARC) => planetarium usage
  * @beta    <LI> Fullscreen mode improvements (global menu)
- * @beta    <LI> new script commands (cmoc, ccat, )
+ * @beta    <LI> New script commands (cmoc, ccat, )
  * @beta    <LI> MultiCCD FITS image support
  * @beta    <LI> Tags improvements
  * @beta    <LI> Probability sky map MOC extraction
@@ -200,7 +203,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.045";
+   static public final    String VERSION = "v9.500";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -322,7 +325,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
    static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
-   static int ALIASING=1;            // 0-défaut système, 1-actif, -1-désactivé
+   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
 
    static boolean ENABLE_FOOTPRINT_OPACITY=true; // footprints en transparence ?
    static float DEFAULT_FOOTPRINT_OPACITY_LEVEL=0.15f+0.000111f; // niveau de transparence (entre 0.0 et 1.0)
@@ -403,7 +406,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    Tips urlStatus;               // Gere la ligne de l'info sur les URLs
    MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
    Mesure mesure;                // Gere la "Frame of measurements"
-   MySplitPane splitH;           // Gère la séparation mesure/Vue
+   MySplitPaneMesure splitMesureHeight;     // Gère la séparation mesure/Vue
+   MySplitPane splitZoomHeight;  // Gère la séparation pile/zoom
+   MySplitPane splitZoomWidth;   // Gère la séparation view/pile-zoom
+   HipsMarket hipsMarket;        // Gère le "HiPS market"
    Search search;                // Gère le bandeau de recherche dans les mesures
    public ToolBox toolBox;       // Gere la "Tool bar"
    public Calque calque;         // Gere a la fois les plans et le zoom
@@ -2120,22 +2126,22 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       JPanel gauche1 = new JPanel( new BorderLayout(3,0));
       gauche1.add(bigView,BorderLayout.CENTER);
-
+      
       // Désactivation des éléments de menus et des boutons non encore accessible
       setButtonMode();
 
       // Le panel gauche : contient la boite a boutons et les calques
-      final JPanel droite = new JPanel(new BorderLayout(3,0));
+      final JPanel droite = new JPanel(new BorderLayout(5,0));
       droite.add(calque,BorderLayout.CENTER);
 
       JPanel droite2;
-      droite2 = new JPanel(new BorderLayout(2,0));
-      droite2.setBorder( BorderFactory.createEmptyBorder(0, 2, 0, 0));
+      droite2 = new JPanel(new BorderLayout(0,0));
+      droite2.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 0));
       droite2.add(toolBox,BorderLayout.WEST);
       droite2.add(droite,BorderLayout.CENTER);
 
       // Le panel haut1 : contient le menu et le bandeau d'info
-      JPanel haut1 = new JPanel(new BorderLayout(1,1));
+      JPanel haut1 = new JPanel(new BorderLayout(0,0));
       haut1.add(saisie,BorderLayout.NORTH);
       JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
       
@@ -2146,7 +2152,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // Le panel haut : contient le logo et le haut1
       JPanel haut = new JPanel(new BorderLayout(0,0));
-      haut.setBorder(BorderFactory.createEmptyBorder(4,0,0,40));
+      haut.setBorder(BorderFactory.createEmptyBorder(4,10,0,40));
       haut.add(haut1,BorderLayout.CENTER);
       haut.add(logo,BorderLayout.EAST);
 
@@ -2164,6 +2170,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       makeAdd(searchPanel,y,"West");
       makeAdd(searchPanel,status,"Center");
       makeAdd(searchPanel,search,"East");
+      search.hideSearch(true);
 
       GridBagLayout g = new GridBagLayout();
       infoPanel = new JPanel(g);
@@ -2218,19 +2225,34 @@ DropTargetListener, DragSourceListener, DragGestureListener
       bigViewSearch.add(gauche1 /*splitV*/,BorderLayout.CENTER);
       bigViewSearch.add(searchPanel,BorderLayout.SOUTH);
 
-      splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
+      splitMesureHeight = new MySplitPaneMesure(aladin,JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
       mesure.setPreferredSize(new Dimension(100,getMesureHeight()));
       mesure.setMinimumSize(new Dimension(100,0));
-      splitH.setResizeWeight(1);
-      splitH.remove(mesure);
-      splitH.setBorder(BorderFactory.createEmptyBorder());
+      splitMesureHeight.setResizeWeight(1);
+      splitMesureHeight.remove(mesure);
+      splitMesureHeight.setBorder(BorderFactory.createEmptyBorder());
+      
+      MySplitPane gauche3=null;
+      if( PROTO ) {
+         hipsMarket = new HipsMarket(aladin);
+         gauche3 = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
+               hipsMarket, splitMesureHeight );
+         gauche3.setBorder(BorderFactory.createEmptyBorder());
+         //      gauche3.setResizeWeight(1);
+         hipsMarket.setMinimumSize(new Dimension(0,100));
+         hipsMarket.setPreferredSize(new Dimension(150,200));
+         //    splitDatasetWidth = splitD;
+      }
+
       
       // test thomas (avec un séparateur) + Pierre
       final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-            splitH, droite2);
+            PROTO ? gauche3 : splitMesureHeight, droite2);
       splitV.setBorder(BorderFactory.createEmptyBorder());
       splitV.setResizeWeight(1);
+      droite2.setMinimumSize(new Dimension(150,100));
       droite2.setPreferredSize(new Dimension(getStackWidth(),100));
+      splitZoomWidth = splitV;
       
       makeAdd(ct,haut,"North");
       makeAdd(ct,splitV,"Center");
@@ -2304,13 +2326,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /*  Retourne la largeur en pixels du panel qui contient la pile, mes sliders et le zoomview */
-   protected int getStackWidth() { return 220; }
+   protected int getStackWidth() { return configuration.getZoomWidth(); } //220; }
    
    /* Retourne la hauteur en pixels du panel qui contient le zoomView */
-   protected int getZoomViewHeight() { return 150; }
+   protected int getZoomViewHeight() { return configuration.getZoomHeight(); } // 150; }
    
    /* Retourne la hauteur en pixels du panel qui contient les mesures */
-   protected int getMesureHeight() { return 150; }
+   protected int getMesureHeight() { return configuration.getWinDivider(); } //150; }
    
    protected void manageDrop() {
       // IL Y A UN GROS BUG SOUS LINUX QUI FAIT QUE LA JVM DU BROWSER SE PLANTE ET
@@ -5351,7 +5373,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( r.width<0 ) { r.width = Math.abs(r.width); r.height=Math.abs(r.height); }
          a.f.setSize(r.width,r.height);
       }
-      a.splitH.setMesureHeight( a.configuration.getWinDivider() );
+//      a.splitMesure.setMesureHeight( a.configuration.getWinDivider() );
       a.offsetLocation();
       
       a.f.setVisible(true);

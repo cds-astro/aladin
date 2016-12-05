@@ -1063,7 +1063,7 @@ public final class Glu implements Runnable {
    
    
    // Retourne la plus grande clé d'une hashtable (clés sur des entiers)
-   // -1 si problème.
+   // 0 si problème.
    private int hashSize(Hashtable h) {
       int max = -1;
       Enumeration e = h.keys();
@@ -1351,16 +1351,20 @@ public final class Glu implements Runnable {
                   }
                }
 
-               if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
-                  if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                  else if( flagGluSky ) memoGluSky(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
-                        aladinSurvey,aladinHpxParam,skyFraction);
-                  else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
-                  else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
-                        copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
-                  else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
-                        aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
-                        resultDataType,institute,aladinFilter,aladinLogo,dir,localFile?system:null,record,aladinProtocol);
+               try {
+                  if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
+                     if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
+                     else if( flagGluSky ) memoGluSky(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+                           aladinSurvey,aladinHpxParam,skyFraction);
+                     else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
+                     else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
+                           copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
+                     else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
+                           aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
+                           resultDataType,institute,aladinFilter,aladinLogo,dir,localFile?system:null,record,aladinProtocol);
+                  }
+               } catch( Exception e ) {
+                  if( Aladin.levelTrace>=3 ) e.printStackTrace();
                }
                distribAladin = !testDomain;
                flagGluSky=flagPlastic=flagLabel = false;

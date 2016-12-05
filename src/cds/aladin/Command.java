@@ -1202,8 +1202,14 @@ public final class Command implements Runnable {
          Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] criteria=["+criteria+"] target=["+target+"] radius=["+radius+"])");
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
 
+         if( Aladin.PROTO && server.equalsIgnoreCase("hips") ) {
+            int n=a.hipsMarket.createPlane(target,radius,criteria,label,null);
+            if( n!=-1 ) {
+               a.calque.getPlan(n).setBookmarkCode("get "+server+(criteria.length()>0?"("+criteria+")":"")+" $TARGET $RADIUS");
+            }
+            if( a.isFullScreen() ) a.fullScreen.repaint();
 
-         if( (j=a.dialog.getServer(server))>=0 ) {
+         } else if( (j=a.dialog.getServer(server))>=0 ) {
             a.dialog.server[j].flagToFront=false;	// Pour eviter le toFront d'Aladin
             int n=a.dialog.server[j].createPlane(target,radius,criteria,label,a.dialog.server[j].institute);
             if( n!=-1 ) {

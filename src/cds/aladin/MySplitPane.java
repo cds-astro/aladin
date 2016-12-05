@@ -28,49 +28,25 @@ import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 // Surcharges de classes pour supprimer le trait séparateur du JSplitPane
 public class MySplitPane extends JSplitPane {
+   
    public MySplitPane(int newOrientation, boolean newContinuousLayout,
          Component newLeftComponent, Component newRightComponent ) {
       super(newOrientation,newContinuousLayout,newLeftComponent,newRightComponent);
-      flagMesure = newOrientation==JSplitPane.VERTICAL_SPLIT;
       setUI(new MyBasicSplitPaneUI());
-//      setDividerSize(20);
-//      setOneTouchExpandable(true);
-   }
-
-   private boolean flagMesure;
-   private int mesureHeight;
-
-   // Repositionne le diviseur à la position mémorisée
-   public void restoreMesureHeight() {
-      setDividerLocation(getHeight()-(mesureHeight<=0 ? 150 : mesureHeight)); }
-
-   // Positionne le diviseur en fonction de la taille de la fenêtre des mesures,
-   // et mémorise cette valeur pour pouvoir y revenir
-   public void setMesureHeight(int h) { mesureHeight=h; }
-
-   // Retourne la taille de la fenêtre des mesures.
-   public int getMesureHeight() { return mesureHeight; }
-
-   // On bride à 55 pixels minimum pour la taille de la fenêtre des mesures
-   public void setDividerLocation(int n) {
-      if( flagMesure ) {
-         int h = getHeight();
-         if( h-n<53 ) return;
-         mesureHeight = h-n;
-      }
-      super.setDividerLocation(n);
-   }
-
-}
-class MyBasicSplitPaneUI extends BasicSplitPaneUI {
-   public BasicSplitPaneDivider createDefaultDivider() {
-      return new MySplitPaneDivider(this);
-   }
-}
-class MySplitPaneDivider extends BasicSplitPaneDivider {
-   public MySplitPaneDivider(BasicSplitPaneUI ui) { super(ui); }
-   public void paint(Graphics g) {
    }
    
+   public int getPos() {
+      return (getOrientation()==VERTICAL_SPLIT ? getHeight() : getWidth()) - getDividerLocation();
+   }
+
+   class MyBasicSplitPaneUI extends BasicSplitPaneUI {
+      public BasicSplitPaneDivider createDefaultDivider() {
+         return new MySplitPaneDivider(this);
+      }
+   }
+   class MySplitPaneDivider extends BasicSplitPaneDivider {
+      public MySplitPaneDivider(BasicSplitPaneUI ui) { super(ui); }
+      public void paint(Graphics g) { }
+   }
 }
 

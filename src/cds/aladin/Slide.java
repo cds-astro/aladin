@@ -753,7 +753,8 @@ public final class Slide {
                          }
                      }
                      if( p.getCompletude()>=0 && p.active ) {
-                        drawProportion(g,x+60,py-1,Select.sizeLabel+10-60,(int)p.getCompletude(),green);
+                        int w = Select.sizeLabel+10-60;
+                        drawProportion(g,px-w/*x+60*/,py-1,w,(int)p.getCompletude(),green);
                      }
                   }
                }

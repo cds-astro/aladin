@@ -2076,6 +2076,7 @@ public class Context {
       }
 
       prop.remove(Constante.OLD_ALADINVERSION);
+      prop.remove("hips_glu_tag");
    }
 
 

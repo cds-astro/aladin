@@ -20,7 +20,10 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -29,13 +32,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
 import cds.tools.Util;
 
 /**
@@ -89,25 +93,25 @@ public final class Search extends JPanel implements MouseListener {
       //         public void actionPerformed(ActionEvent e) { go(); }
       //      });
 
-      if( withReduceButton ) {
-         reduce = b = new JButton(new ImageIcon(aladin.getImagette("Agrandir.gif")));
-         b.setMargin(new Insets(0,0,0,0));
-         b.setBorderPainted(false);
-         b.setContentAreaFilled(false);
-         b.setToolTipText(aladin.chaine.getString("REDUCEH"));
-         b.addActionListener( new ActionListener() {
-            public void actionPerformed(ActionEvent e) { reduce(); }
-         });
-      }
+//      if( withReduceButton ) {
+//         reduce = b = new JButton(new ImageIcon(aladin.getImagette("Agrandir.gif")));
+//         b.setMargin(new Insets(0,0,0,0));
+//         b.setBorderPainted(false);
+//         b.setContentAreaFilled(false);
+//         b.setToolTipText(aladin.chaine.getString("REDUCEH"));
+//         b.addActionListener( new ActionListener() {
+//            public void actionPerformed(ActionEvent e) { reduce(); }
+//         });
+//      }
 
-      out = b = new JButton(new ImageIcon(aladin.getImagette("Cross.gif")));
-      b.setMargin(new Insets(0,0,0,0));
-      b.setBorderPainted(false);
-      b.setContentAreaFilled(false);
-      b.setToolTipText(aladin.chaine.getString("SPLITH"));
-      b.addActionListener( new ActionListener() {
-         public void actionPerformed(ActionEvent e) { split(); }
-      });
+//      out = b = new JButton(new ImageIcon(aladin.getImagette("Cross.gif")));
+//      b.setMargin(new Insets(0,0,0,0));
+//      b.setBorderPainted(false);
+//      b.setContentAreaFilled(false);
+//      b.setToolTipText(aladin.chaine.getString("SPLITH"));
+//      b.addActionListener( new ActionListener() {
+//         public void actionPerformed(ActionEvent e) { split(); }
+//      });
 
       text = new SearchText();
       text.setFont(Aladin.BOLD);
@@ -136,14 +140,14 @@ public final class Search extends JPanel implements MouseListener {
       genericSearchPanel.add(searchControlPanel,"Center");
 
       panelSearch.add(genericSearchPanel,"West");
-      if( !Aladin.OUTREACH ) panelSearch.add(Box.createHorizontalStrut(40),"Center");
+//      if( !Aladin.OUTREACH ) panelSearch.add(Box.createHorizontalStrut(40),"Center");
 
-      JPanel buttonPanel = new JPanel( new BorderLayout(0,0) );
-      if( reduce!=null ) buttonPanel.add(reduce,"West");
-      if( !Aladin.OUTREACH ) buttonPanel.add(out,"East");
+//      JPanel buttonPanel = new JPanel( new BorderLayout(0,0) );
+//      if( reduce!=null ) buttonPanel.add(reduce,"West");
+//      if( !Aladin.OUTREACH && out!=null ) buttonPanel.add(out,"East");
 
       add(panelSearch,"Center");
-      add(buttonPanel,"East");
+//      add(buttonPanel,"East");
 
       setEnabled(false);
       addMouseListener(this);

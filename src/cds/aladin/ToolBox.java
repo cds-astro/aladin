@@ -317,6 +317,11 @@ SwingWidgetFinder, Widget {
       if( v==null || v.isFree() || !v.pref.isPixel() ) {
          mode[ToolBox.CONTOUR]=Tool.UNAVAIL;
       }
+      
+      // Si la vue courante n'est pas sur un cube
+      if( v==null || v.isFree() || v.pref.type!=Plan.IMAGECUBE ) {
+         mode[ToolBox.SPECT]=Tool.UNAVAIL;
+      }
 
       // Si le premier plan sélectionné est un MOC, on peut faire un crop
       if( aladin.calque.getFirstSelectedPlan() instanceof PlanMoc ) {

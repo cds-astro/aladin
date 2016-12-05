@@ -251,6 +251,7 @@ public class TreeNodeAllsky extends TreeNode {
       if( color && !inJPEG && !inPNG) inJPEG=true;
 
       aladin.trace(4,toString1());
+
    }
 
    private boolean getIsColorByPath(String path,boolean local) {
@@ -360,11 +361,12 @@ public class TreeNodeAllsky extends TreeNode {
       // dans le cas d'un répertoire local => pas d'utilisateur du cache
       if( url!=null && !url.startsWith("http") && !url.startsWith("ftp") ) useCache=false;
 
-      if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
-      
       if( color && !inJPEG && !inPNG ) inJPEG=true;
       
-      setMoc();
+      if( !Aladin.PROTO ) {
+         if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
+         setMoc();
+      }
 
       //      Aladin.trace(3,this.toString1());
    }
@@ -429,6 +431,9 @@ public class TreeNodeAllsky extends TreeNode {
       if( progen || cat || nside==-1 /*|| maxOrder==-1 */) return -1;
       return (int)Healpix.log2(nside) /*- maxOrder*/;
    }
+   
+   /** true si déjà chargé dans la pile */
+   protected boolean isInStack() { return aladin.calque.isLoaded(internalId); }
 
    protected boolean isLocal() { return local; }
 
@@ -564,4 +569,5 @@ public class TreeNodeAllsky extends TreeNode {
       gb.setConstraints(c,gc);
       getPanel().add(c);
    }
+
 }

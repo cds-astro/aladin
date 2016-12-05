@@ -27,6 +27,7 @@ import java.util.Comparator;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 public class TreeNode  implements Comparator {
@@ -35,7 +36,8 @@ public class TreeNode  implements Comparator {
    String label;
    String path;
    String ordre;
-   boolean ok;      // le noeud est valide = affiché en noir, sinon en gris clair
+   boolean isIn;      // le noeud est valide = affiché en noir, sinon en gris clair
+   boolean isHidden;  // true si le noeud n'est pas pris dans l'arbre
 
    protected JCheckBox checkbox;
    private JPanel panel;
@@ -52,7 +54,7 @@ public class TreeNode  implements Comparator {
       this.label = label;
       this.path  = path;
       this.ordre = ordre==null ? "Z" : ordre;
-      this.ok=true;
+      this.isIn=true;
       createPanel();
    }
 
@@ -69,8 +71,13 @@ public class TreeNode  implements Comparator {
       return checkbox.isSelected();
    }
 
-   void setOk( boolean ok ) { this.ok=ok; };
-   boolean isOk() { return ok; }
+   void setIn( boolean in ) { this.isIn=in; };
+   boolean isIn() { return isIn; }
+   
+   void setHidden( boolean flag ) { this.isHidden=flag; };
+   boolean isHidden() { return isHidden; }
+   
+   protected boolean isInStack() { return false; }
 
    JPanel getPanel() { return panel; }
 
@@ -79,6 +86,9 @@ public class TreeNode  implements Comparator {
    public Color getForeground() { return checkbox.getForeground(); }
 
    private void createPanel() {
+      
+      if( Aladin.PROTO ) { createPanelProto(); return; }
+      
       checkbox = new JCheckBox(label);
       //      checkbox.setBackground(background);
       checkbox.setBorder(BorderFactory.createEmptyBorder());
@@ -94,6 +104,24 @@ public class TreeNode  implements Comparator {
       //      panel.setBackground(background);
       gb.setConstraints(checkbox,gc);
       panel.add(checkbox);
+   }
+
+   private void createPanelProto() {
+      
+      JLabel lab = new JLabel(label);
+      
+      gc = new GridBagConstraints();
+      gc.fill = GridBagConstraints.VERTICAL;
+      gc.anchor = GridBagConstraints.CENTER;
+      gc.gridx = GridBagConstraints.RELATIVE;
+      //      gc.insets = new Insets(2,0,4,5);
+      gc.insets = new Insets(0,0,0,5);
+      gb = new GridBagLayout();
+      panel = new JPanel(gb);
+//      panel.setOpaque(true);
+      panel.setBackground(background);
+      gb.setConstraints(lab,gc);
+      panel.add(lab);
    }
 
    protected void submit() { };

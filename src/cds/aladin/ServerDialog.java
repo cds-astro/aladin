@@ -393,7 +393,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !Aladin.OUTREACH ) sv = triServer(sv);
 
       // L'arbre des HiPS
-      sv.addElement(hipsServer = new ServerHips(aladin));
+      if( !Aladin.PROTO ) sv.addElement(hipsServer = new ServerHips(aladin));
 
       // L'acces local/url
       sv.addElement(localServer = new ServerFile(aladin));
@@ -652,7 +652,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       aladin.manageDrop();
 
-      setCurrent("hips");
+      if( !Aladin.PROTO ) setCurrent("hips");
+      else setCurrent("file");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
       //      Thread th = new Thread(this,"AladinServerPack");
@@ -1337,11 +1338,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    public void show() {
       super.show();
-      startHipsUpdater();
+      if( !aladin.PROTO ) startHipsUpdater();
    }
 
    public void hide() {
-      stopHipsUpdater();
+      if( !aladin.PROTO ) stopHipsUpdater();
       super.hide();
    }
 

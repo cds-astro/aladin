@@ -411,6 +411,14 @@ final public class Fits {
    //      }
    //   }
 
+   
+   // Test si un Display X11 est bien accessible
+   static boolean X11OK=true;;
+   static {
+      try { Toolkit.getDefaultToolkit( ); } catch( Exception e) { X11OK=false; }
+      System.out.println("X11 Display => "+X11OK);
+   }
+   
    public void loadPreview(MyInputStream dis, int x, int y, int w, int h, boolean flagColor, int format) throws Exception {
       BufferedImage imgBuf;
 
@@ -426,20 +434,20 @@ final public class Fits {
       // Lecture de l'image complète avec la méthode de base (plus rapide que le
       // BufferedImage loader)
       // En revanche il faut réimplanter un ImageConsumer pour éviter l'usage
-      // d'un Component qui recquière un DISPLAY (via MediaTracker)
-      if(( w==-1 && flagColor)  ) {
+      // d'un Component qui requière un DISPLAY (via MediaTracker)
+      if(( w==-1 && flagColor && X11OK )  ) {
          widthCell = w;
          heightCell = h;
          xCell = x;
          yCell = y;
          pixMode = format==PREVIEW_PNG ? PIX_ARGB : PIX_RGB;
-         Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
+         Image img = Toolkit.getDefaultToolkit( ).createImage(dis.readFully());
          MyImageLoader loader = new MyImageLoader();
          img.getSource().startProduction(loader);
          while( !loader.ready() ) Util.pause(5);
          if( width==-1 ) throw new Exception("MyLoader error");
 
-         // Lecture par cellules, plus lente
+      // Lecture via ImageReader et éventuellement par cellules, plus lente
       } else {
          String coding = format==PREVIEW_PNG ? "png" : "jpeg";
          Iterator readers = ImageIO.getImageReadersByFormatName(coding);

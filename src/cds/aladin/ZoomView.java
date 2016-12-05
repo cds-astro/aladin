@@ -70,7 +70,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
    // Les valeurs generiques
    protected int WENZOOM     =  8; // Agrandissement pour la loupe (puissance de 2)
-   private static int SIZE;                   // Taille fixe de la fenetre
 
    // Les references aux autres objets
    Aladin aladin;
@@ -103,10 +102,10 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    boolean flagwen;            // Vrai si c'est la loupe qu'il faut afficher
    // a la place du zoom
    // Les parametres a memoriser pour la coup
-   private int[] cut;               // le graphe de coupe du dernier cut en niveau de gris
-   private int[] cutR,cutG,cutB;  // le graphe de coupe du dernier cut en RGB
+   private int[] cut;                // le graphe de coupe du dernier cut en niveau de gris
+   private int[] cutR,cutG,cutB;     // le graphe de coupe du dernier cut en RGB
    protected boolean flagCut=false;  // true si une coupe est active
-   private Obj objCut;             // L'Objet graphique correspondant au cut que l'on trace
+   private Obj objCut;               // L'Objet graphique correspondant au cut que l'on trace
 
    // Les paramètres à mémoriser pour l'histogramme
    Hist hist=null;                  // L'histogramme courant
@@ -125,8 +124,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       this.aladin = aladin;
       setOpaque(true);
       setBackground(Aladin.BLUE);
-      setSIZE(Select.ws+MyScrollbar.LARGEUR);
-//      setSize(SIZE,SIZE);
 
       addMouseWheelListener(this);
       addMouseListener(this);
@@ -136,10 +133,12 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
    
    private void resumeSize() {
-      cut = new int[getSIZE()];
-      cutR = new int[getSIZE()];
-      cutG = new int[getSIZE()];
-      cutB = new int[getSIZE()];
+      int w = getWidth();
+      if( cut!=null && cut.length==w ) return;
+      cut = new int[w];
+      cutR = new int[w];
+      cutG = new int[w];
+      cutB = new int[w];
    }
 
 //   static Dimension DIM = new Dimension(Select.ws+MyScrollbar.LARGEUR,Select.ws+MyScrollbar.LARGEUR);
@@ -327,7 +326,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    private void setFrameCube(int xc) {
       ViewSimple vc = aladin.view.getCurrentView();
       int nbFrame = vc.cubeControl.nbFrame;
-      int frame = (int)( nbFrame* ( (double)xc/getSIZE()));
+      int frame = (int)( nbFrame* ( (double)xc/getWidth()));
       if( frame>=nbFrame ) frame=nbFrame-1;
       if( frame<0 ) frame=0;
       vc.cubeControl.setFrameLevel(frame);
@@ -462,16 +461,21 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          try {
             PlanImage pi = (PlanImage)v.pref;
             
+            boolean flagRGB = pi.type==Plan.IMAGERGB || pi.type==Plan.IMAGECUBERGB;
+            
             // Dessin de l'image zoomee si cela n'a pas deja ete fait
-            if( lastImgID!=pi.getImgID() || pi.pixelsZoom==null || pi.pixelsZoom.length!=w*h ) {
+            if( lastImgID!=pi.getImgID() || 
+                  !flagRGB && (pi.pixelsZoom==null || pi.pixelsZoom.length!=w*h) ||
+                   flagRGB && (((PlanRGBInterface)pi).getPixelsZoomRGB()==null || ((PlanRGBInterface)pi).getPixelsZoomRGB().length!=w*h)
+                   ) {
 
                // Affichage du zoom suivant l'echelle
                gbuf.setColor(Aladin.LBLUE);
                gbuf.fillRect(0,0,w,h);
 
                Image pimg;
-               if( pi.type==Plan.IMAGERGB || pi.type==Plan.IMAGECUBERGB ) {
-                  if( ((PlanRGBInterface)pi).getPixelsZoomRGB()==null ) ((PlanRGBInterface)pi).calculPixelsZoomRGB();
+               if( flagRGB ) {
+                  ((PlanRGBInterface)pi).calculPixelsZoomRGB();
                   pimg = createImage( new MemoryImageSource(w,h,((PlanRGBInterface)pi).getPixelsZoomRGB(), 0,w));
                } else {
                   pi.calculPixelsZoom();
@@ -602,7 +606,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             gbuf.setFont(Aladin.SPLAIN);
             FontMetrics fm = gbuf.getFontMetrics();
             s="Frame: "+Localisation.REPERE[aladin.localisation.getFrame()];
-            gbuf.drawString(s,getSIZE()-fm.stringWidth(s)-2,10);
+            gbuf.drawString(s,getWidth()-fm.stringWidth(s)-2,10);
             gbuf.setColor(Color.red);
             s=aladin.localisation.J2000ToString(c.al, c.del);
             gbuf.drawString(s,width/2-fm.stringWidth(s)/2,height-16);
@@ -744,22 +748,22 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          s=p.getPixelInfoFromGrey(0);
          g.drawString(s,2,10);
          s=p.getPixelInfoFromGrey(255);
-         g.drawString(s,getSIZE()-g.getFontMetrics().stringWidth(s)-2,10);
+         g.drawString(s,getWidth()-g.getFontMetrics().stringWidth(s)-2,10);
 
          // Affichage de la valeur du pixel courant (sous la souris)
          if( cutX>0 ) {
-            s = p.getPixelInfoFromGrey((int)Math.floor(cutX* (256./getSIZE())));
+            s = p.getPixelInfoFromGrey((int)Math.floor(cutX* (256./getWidth())));
             int x = cutX;
 
             g.setColor(Color.red);
 
             // trait de repère du pixel courant
-            g.drawLine(x,0, x,getSIZE());
+            g.drawLine(x,0, x,getHeight());
 
             int len = g.getFontMetrics().stringWidth(s);
-            if( x+len>getSIZE()-5 ) x = x-5-len;
+            if( x+len>getWidth()-5 ) x = x-5-len;
             else x+=5;
-            g.drawString(s,x,getSIZE()-5);
+            g.drawString(s,x,getHeight()-5);
          }
 
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace() ; }
@@ -871,7 +875,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                n++;
             }
             tR/=n; tG/=n; tB/=n;
-            if( !valid ) cutR[i]=cutG[i]=cutB[i]=getSIZE();
+            if( !valid ) cutR[i]=cutG[i]=cutB[i]=getWidth();
             else {
                cutR[i]=(int)(f*tR); cutG[i]=(int)(f*tG); cutB[i]=(int)(f*tB);
                if( cutR[i]==0 && i>0 ) cutR[i]=cutR[i-1];
@@ -902,6 +906,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void clearSED() {
       flagSED=false;
       oSrcSed="";
+      if( sed!=null ) sed.clear();
       aladin.view.simRep=null;
       aladin.calque.repaintAll();
    }
@@ -914,6 +919,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void setSED(String source) { setSED(source,null); }
    protected void setSED(String source,Repere simRep) {
       if( source==null ) source="";
+      if( source.length()==0 ) flagSED=false;
       if( oSrcSed.equals(source) ) return;
       oSrcSed=source;
 
@@ -926,8 +932,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          if( sed==null )  sed = new SED(aladin);
          flagSED=true;
          flagHist=false;
-         sed.setRepere(simRep);
          sed.loadFromSource(source);
+         sed.setRepere(simRep);
       }
       repaint();
    }
@@ -1136,7 +1142,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void calculWen(ViewSimple v, int x,int y) {
       xmwen = x;
       ymwen = y;
-      int w = (int)Math.ceil((double)getSIZE()/WENZOOM);
+      int w = (int)Math.ceil((double)getWidth()/WENZOOM);
       /*anais*/
       int x1 = xmwen-w/2;
       int y1 = ymwen-w/2;
@@ -1319,17 +1325,18 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       int h = getHeight();
       
       if( w!=lastWidth || h!=lastHeight ) {
-         setSIZE(w);
+         aladin.view.adjustZoomView(lastWidth,w, lastHeight,h);
          lastWidth=w;
          lastHeight=h;
+         resumeSize();
       }
       
-      if( v==null || v.isFree() ) {
+//      if( v==null || v.isFree() ) {
          gr.setColor(Aladin.LBLUE);
          gr.fillRect(0,0,w,h);
          drawBord(gr);
-         return;
-      }
+         if( v==null || v.isFree() ) return;
+//      }
       
 
       Dimension d = v.getSize();
@@ -1359,7 +1366,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
 
-      if( v.isPlotView() ) {
+      if( v.isPlotView()  ) {
          gr.clearRect(0,0,w,h);
          drawBord(gr);
          return;
@@ -1402,7 +1409,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       // Repere dans la loupe et les flèches dans les 4 directions
       if( flagwen && imgok ) {
-         int n = (int)Math.ceil((double)getSIZE()/WENZOOM);
+         int n = (int)Math.ceil((double)getWidth()/WENZOOM);
          int c = (n/2)*WENZOOM;
          int W2 = WENZOOM/2;
          gr.setColor( Color.blue );
@@ -1423,7 +1430,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          if( isPixelTable() && v.pref.type!=Plan.IMAGERGB ) {
             v = aladin.view.getMouseView();
             int i,j,x1,y1;
-            int step= WENZOOM==32 ? 2 : 1;
+            int step= WENZOOM==32 ? 4 : 1;
             gr.setFont( Aladin.BOLD );
             gr.setColor( Color.black );
             for( j=0, y1=ymwen-step; y1<=ymwen+step; y1++,j++) {
@@ -1435,7 +1442,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                }
             }
          }
-
       }
 
       drawBord(gr);
@@ -1453,8 +1459,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       g.setColor( Color.red );
       if( x+width<0 ) drawFleche(g,15,h/2,'W');
       if( y+height<0 ) drawFleche(g,w/2,15,'N');
-      if( x>=getSIZE() ) drawFleche(g,w-15,h/2,'E');
-      if( y>=getSIZE() ) drawFleche(g,w/2,h-15,'S');
+      if( x>=getWidth() ) drawFleche(g,w-15,h/2,'E');
+      if( y>=getHeight() ) drawFleche(g,w/2,h-15,'S');
    }
 
    /** Demande de reaffichage de la loupe.
@@ -1502,15 +1508,5 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    public void paintCollapsed(Graphics g) {
       Tool.drawVOHand(g,3,2);
    }
-
-   int getSIZE() {
-      return SIZE;
-   }
-
-   void setSIZE(int sIZE) {
-      SIZE = sIZE;
-      resumeSize();
-   }
-
 
 }
