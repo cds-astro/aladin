@@ -172,7 +172,7 @@ Runnable, SwingWidgetFinder, Widget {
       addMouseListener(this);
       addMouseWheelListener(this);
 
-      setBackground( a.toolBox.getBackground() );
+      setBackground( aladin.getBackground() );
 
       // Calcule des tailles
       hs=Aladin.LSCREEN?291:200;   // Hauteur du canvas

@@ -219,7 +219,7 @@ public class ServerHips extends ServerTree  {
 
             // Mise à jour des branches de l'arbre
             DefaultMutableTreeNode root = tree.getRoot();
-            tree.setOkTree(root);
+            tree.setInTree(root);
             validate();
             repaint();
 

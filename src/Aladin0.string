@@ -412,6 +412,10 @@ MVIEWDESC	Split the main window into 2, 4, 9 or 16 panels
 MVIEWDESC.fr	Découpe la fenêtre principale en 2, 4, 9 ou 16 écrans
 MVIEWSYNC	Match views (unify scale / orientation)
 MVIEWSYNC.fr	Uniformiser les vues (même échelle / même orientation)
+LOOKTIP Pointer: Simbad > Simbad+VizieR > none
+LOOKTIP.fr Pointeur: Simbad > Simbad+VizieR > aucun
+LOOKTIP1 pointer activated
+LOOKTIP1.fr pointeur activé
 MVIEWLABEL	multiview
 MVIEWLABEL.fr	multivues
 TREETITLE	Session history
@@ -453,6 +457,7 @@ RGB	rgb
 CONT	cont
 FILTER	filter
 SYNC	match
+LOOK	look
 NORTHUP	north
 BLINK	assoc
 RSAMP	rsamp
@@ -477,6 +482,7 @@ RGB.fr	rvb
 CONT.fr	cont
 FILTER.fr	filtre
 SYNC.fr	unif.
+LOOK.fr	exam.
 NORTHUP.fr	nord
 BLINK.fr	assoc
 RSAMP.fr	rsamp

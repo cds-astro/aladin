@@ -59,6 +59,7 @@ import cds.xml.Field;
  * Canvas d'affichage des mesures des objets selectionnees
  *
  * @author Pierre Fernique [CDS]
+ * @version 2.2 : dec 2016 Couleurs alternées
  * @version 2.1 : mars 2006 blink de la source courante
  * @version 2   : (21 janvier 2004) Changement de mode de mémorisation
  * @version 1.2 : 28 mars 00  Toilettage du code
@@ -83,7 +84,7 @@ MouseWheelListener, Widget
    static private Color COLORBORD = new Color(153,153,153);
 
    // Triangles-reperes de la ligne courante (position sur 1ere ligne)
-   static final int [] tX =  {          5,          5,      14 };    // Exterieur
+   static final int [] tX =  {         5,         5,     14 };    // Exterieur
    static final int [] tY =  { HL/2+1 -5, HL/2+1 +5, HL/2+1 };
 
    Aladin aladin;        // Reference
@@ -576,7 +577,7 @@ MouseWheelListener, Widget
     * @return        La taille calculee
     */
    protected int drawWords(Graphics g, Words w, boolean flagClear) {
-      return drawWords(g,w,flagClear, w.y<=HF ? Aladin.BKGD:BG);
+      return drawWords(g,w,flagClear, w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
    }
    private int drawWords(Graphics g, Words w, boolean flagClear,Color background) {
       int y = w.y+HF;        // Ligne de base
@@ -725,12 +726,7 @@ MouseWheelListener, Widget
       int width;     // Largeur du mot (ou du repere) courant
       Enumeration e = ligne.elements();        // Pour faciliter la manip
       Source o = (Source)e.nextElement(); // L'objet lui-meme est en 1er place du vecteur
-
-      // Effacement de la ligne si necessaire
-      if( flagClear && W!=-1 ) {
-         g.setColor( BG );
-         g.fillRect(X+1,y-HF,X+W,HF+3);
-      }
+      Color bg = BG;
 
       // Pour l'extraction du repere de debut de ligne
       Words rep = null;
@@ -740,6 +736,17 @@ MouseWheelListener, Widget
       // Affichage du repere et de chaque mot
       for( int i=0; e.hasMoreElements(); i++ ) {
          w = (Words) e.nextElement();
+         
+         if( i==0 ) {
+            bg = (w.num%2==0) ? Color.white : BG ;
+            
+            // Effacement de la ligne si necessaire
+            if( flagClear && W!=-1 ) {
+               g.setColor( bg );
+               g.fillRect(X+1,y-HF,X+W,HF+3);
+            }
+         }
+         
          if( w.show ) show=true;
 
          // Dans le cas d'un repere
@@ -765,7 +772,7 @@ MouseWheelListener, Widget
 
          // On finit le fond de la ligne si nécessaire
          if( x<X+W ) {
-            g.setColor(show ? C5 : BG);
+            g.setColor(show ? C5 : bg);
             g.fillRect(x-4, y-HF, X+W-(x-4), HF+2);
          }
 
@@ -1199,11 +1206,12 @@ MouseWheelListener, Widget
       Words rep=null;
 
       // On remet le fond
-      int y = ((Words)ligne.elementAt(1)).y;
-      g.setColor(y<=HF ? Aladin.BKGD : BG);
+      Words w=((Words)ligne.elementAt(1));
+      int y = w.y;
+      Color bg = (w.num%2==0) ? Color.white :BG ;
+      g.setColor(y<=HF ? Aladin.BKGD : bg);
       g.fillRect(0,y, W, HF+2);
 
-      Words w=null;
       int size=0;
       while( e1.hasMoreElements() ) {
          w = (Words)e1.nextElement();
@@ -1216,7 +1224,7 @@ MouseWheelListener, Widget
       // On finit le fond de la ligne si nécessaire
       int x=w.x+size+3;
       if( x<W ) {
-         g.setColor(w.show ? C5 : w.y<HF ? Aladin.BKGD : BG);
+         g.setColor(w.show ? C5 : w.y<HF ? Aladin.BKGD : bg);
          g.fillRect(x, y, W-x, HF+2);
       }
 
@@ -1629,14 +1637,23 @@ MouseWheelListener, Widget
       aladin.mesure.validate();
    }
 
-   private int onl = -1;
-
+   private boolean showScrollV=true;
+   
    /** Ajuste le block et l'extend du scrollbar vertical en fonction du nombre
-    * de lignes visibles */
-   protected void adjustScrollV(int nl) {
+    * de lignes visibles
+    * @param nl Nombre de lignes affichables
+    * @param needScrollBar la scrollbar est requise.
+    */
+   protected void adjustScrollV(int nl, boolean needScrollBar) {
       scrollV.setVisibleAmount(nl);
       scrollV.setBlockIncrement(nl-1);
-      onl=nl;
+      
+      if( !needScrollBar  ) {
+         if( showScrollV ) { aladin.mesure.remove(scrollV); showScrollV=false; }
+      } else {
+         if( !showScrollV ) { aladin.mesure.add(scrollV,"East"); showScrollV=true; }
+      }
+      aladin.mesure.validate();
    }
 
    /** Surcharge juste pour en profiter pour mettre à jour
@@ -1723,7 +1740,7 @@ MouseWheelListener, Widget
 
       // Ajustement des scrollbars si necessaire
       adjustScrollH(max);
-      adjustScrollV((H- (MH+MB))/HL - (showScrollH?1:0));
+      adjustScrollV((H- (MH+MB))/HL - (showScrollH?1:0), j<ts);
 
       // Nettoyage de la fin de la fenetre si necessaire
       y-=HF;

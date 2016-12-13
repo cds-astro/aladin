@@ -19,7 +19,17 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.MediaTracker;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.Window;
+
 import cds.tools.Util;
 
 /**
@@ -49,15 +59,18 @@ final public class Banner extends Window implements Runnable {
         byte buf[] = is.readFully();
         if( buf.length==0 ) throw new Exception();
         im = Toolkit.getDefaultToolkit().createImage(buf);
-        MediaTracker mt = new MediaTracker(this);
+        
+        MediaTracker mt = new MediaTracker(this);        
         mt.addImage(im,0);
         mt.waitForAll();
+
         setSize(im.getWidth(this),im.getHeight(this));
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension frameSize = getSize();
         setLocation((screenSize.width - frameSize.width) / 2,
                       (screenSize.height - frameSize.height) / 2);
         setVisible(true);
+        repaint();
         (new Thread(this,"Banner")).start();
         Util.pause(50);
      }

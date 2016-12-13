@@ -996,7 +996,8 @@ public final class Command implements Runnable {
       StringTokenizer st = new StringTokenizer(s,",(");
       String server = st.nextToken();
       if( server.equalsIgnoreCase("allsky") ) server="hips";   // pour compatibilité
-      if( !withServer || a.dialog.getServer(server)<0 ) {
+      if( !withServer || a.dialog.getServer(server)<0 
+            && (!Aladin.PROTO || Aladin.PROTO && !server.equalsIgnoreCase("HiPS"))) {
 
          // Si la vue courante est vide il faut prendre
          // la liste des serveurs par defaut
@@ -4351,7 +4352,7 @@ public final class Command implements Runnable {
 
    /**************************************  Test de non régression du code **************************************/
 
-   private String TEST =
+   protected String TEST =
          "info Aladin test script in progress...;" +
                "reset;" +
                "setconf frame=ICRS;" +

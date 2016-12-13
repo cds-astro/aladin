@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridLayout;
 
 import javax.swing.JPanel;
@@ -49,9 +50,10 @@ public class SliderPanel extends JPanel {
    protected SliderEpoch epochSlider;
    protected SliderCube  cubeSlider;
    protected SliderDensity densitySlider;
+   
+   private JPanel sp;
 
    // Les references aux objets
-   //   protected ViewSimple v;      // La vue associée au zoom
    Aladin aladin;
    
    protected SliderPanel() { super(); }
@@ -69,14 +71,23 @@ public class SliderPanel extends JPanel {
       opacitySlider = new SliderOpacity(aladin);
       zoomSlider    = new SliderZoom(aladin);
 
-      setLayout( new BorderLayout(0, 0));
+      setLayout( new BorderLayout() );
+      setBackground( aladin.getBackground());
+      
+      JPanel p0 = new JPanel();
+      p0.setBackground( Color.yellow );
+      
+      sp = new JPanel(new BorderLayout());
+      sp.setBackground( aladin.getBackground());
       adjustSliderPanel();
       
+      add(p0);
+      add(sp);
    }
-
-   private JPanel slp=null;
+   
    protected void adjustSliderPanel() {
-      JPanel p = new JPanel( new GridLayout(0,1,1,1));
+      JPanel p = new JPanel(new GridLayout(0,1,1,1));
+      p.setBackground( aladin.getBackground());
       if( !Aladin.OUTREACH ) {
          if( aladin.configuration.isSliderEpoch() )   p.add(epochSlider);
          if( aladin.configuration.isSliderSize() )    p.add(sizeSlider);
@@ -85,20 +96,12 @@ public class SliderPanel extends JPanel {
       }
       if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
       if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);
-      if( slp!=null ) remove(slp);
-      add(p,BorderLayout.CENTER);
-      slp=p;
+      boolean flagValidate=false;
+      if( sp.getComponentCount()>0 ) {
+         sp.removeAll();
+         flagValidate=true;
+      }
+      sp.add(p,BorderLayout.CENTER);
+      if( flagValidate ) sp.revalidate();
    }
-   
-//   public void paintComponent(Graphics g) {
-//
-//      // Pas très joli
-//      opacitySlider.repaint();
-//      sizeSlider.repaint();
-//      zoomSlider.repaint();
-//      epochSlider.repaint();
-//      cubeSlider.repaint();
-//      densitySlider.repaint();
-//   }
-
 }

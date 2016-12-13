@@ -39,7 +39,7 @@ import javax.swing.KeyStroke;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (22 fevrier 2002) Creation
  */
-public final class FrameMesure extends JFrame  {
+public final class FrameMesureAjeter extends JFrame  {
 
    // Les references aux objets
    Aladin a;
@@ -47,7 +47,7 @@ public final class FrameMesure extends JFrame  {
   /** Creation du Frame gerant les mesures lorsqu'elles sont dans une fenêtre externe
    * @param aladin Reference
    */
-   protected FrameMesure(Aladin aladin) {
+   protected FrameMesureAjeter(Aladin aladin) {
       super("Aladin Java measurements frame");
       this.a = aladin;
       Aladin.setIcon(this);
@@ -95,7 +95,7 @@ public final class FrameMesure extends JFrame  {
       a.mesure.setReduced(false);
       if( !Aladin.OUTREACH ) a.search.hideSearch(false);
       a.getContentPane().validate();
-      a.search.setIcon();
+//      a.search.setIcon();
       a.f.validate(); // pour maj frame principale sous Mac
       a.getContentPane().repaint();
 //      a.split.in();

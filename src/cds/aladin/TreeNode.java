@@ -27,7 +27,6 @@ import java.util.Comparator;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 public class TreeNode  implements Comparator {
@@ -38,6 +37,7 @@ public class TreeNode  implements Comparator {
    String ordre;
    boolean isIn;      // le noeud est valide = affiché en noir, sinon en gris clair
    boolean isHidden;  // true si le noeud n'est pas pris dans l'arbre
+   int treeIndex=-1;     // Index dans l'arbre (au niveau du parent)
 
    protected JCheckBox checkbox;
    private JPanel panel;
@@ -46,7 +46,7 @@ public class TreeNode  implements Comparator {
    protected GridBagLayout gb;
    protected static Color background = Color.white;
 
-   public TreeNode() {}
+   public TreeNode() { }
 
    TreeNode(Aladin aladin, String id, String ordre, String label, String path) {
       this.aladin      = aladin;
@@ -55,7 +55,7 @@ public class TreeNode  implements Comparator {
       this.path  = path;
       this.ordre = ordre==null ? "Z" : ordre;
       this.isIn=true;
-      createPanel();
+      panel=createPanel();
    }
 
    String getID() { return id; }
@@ -85,9 +85,7 @@ public class TreeNode  implements Comparator {
 
    public Color getForeground() { return checkbox.getForeground(); }
 
-   private void createPanel() {
-      
-      if( Aladin.PROTO ) { createPanelProto(); return; }
+   protected JPanel createPanel() {
       
       checkbox = new JCheckBox(label);
       //      checkbox.setBackground(background);
@@ -99,29 +97,14 @@ public class TreeNode  implements Comparator {
       //      gc.insets = new Insets(2,0,4,5);
       gc.insets = new Insets(0,0,0,5);
       gb = new GridBagLayout();
-      panel = new JPanel(gb);
+      
+      JPanel panel = new JPanel(gb);
+      panel.setBackground( aladin.getBackground() );
       panel.setOpaque(true);
       //      panel.setBackground(background);
       gb.setConstraints(checkbox,gc);
       panel.add(checkbox);
-   }
-
-   private void createPanelProto() {
-      
-      JLabel lab = new JLabel(label);
-      
-      gc = new GridBagConstraints();
-      gc.fill = GridBagConstraints.VERTICAL;
-      gc.anchor = GridBagConstraints.CENTER;
-      gc.gridx = GridBagConstraints.RELATIVE;
-      //      gc.insets = new Insets(2,0,4,5);
-      gc.insets = new Insets(0,0,0,5);
-      gb = new GridBagLayout();
-      panel = new JPanel(gb);
-//      panel.setOpaque(true);
-      panel.setBackground(background);
-      gb.setConstraints(lab,gc);
-      panel.add(lab);
+      return panel;
    }
 
    protected void submit() { };

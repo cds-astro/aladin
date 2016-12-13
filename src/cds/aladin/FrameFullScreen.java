@@ -492,7 +492,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
 
    /** Zoom (+1) ou unzoom (-1) */
    private void zoom(int sens) {
-      aladin.command.exec("zoom "+(sens==1?'+':'-'));
+      aladin.command.execLater("zoom "+(sens==1?'+':'-'));
    }
 
    /** Initialisation de la mémorisation des checkboxes en superposition */

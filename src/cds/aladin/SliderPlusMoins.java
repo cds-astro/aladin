@@ -72,27 +72,32 @@ MouseMotionListener,MouseListener,Widget {
 
    public SliderPlusMoins(Aladin aladin,String title, int min, int max, final int incr,int wheelIncr) {
       this.aladin = aladin;
-
+      setBackground( aladin.getBackground());
       slider = new Slider(min,max,incr);
 
       label = new Lab(title);
       label.setFont(Aladin.SBOLD);
-      label.setBackground( slider.getBackground() );
+      label.setBackground( aladin.getBackground() );
 
       JButton b;
       moins=b = new Bouton("-");
+      b.setBorderPainted(false);
+      b.setBackground( aladin.getBackground());
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(-incr); }
       });
 
       plus=b = new Bouton("+");
       b.setFont(b.getFont().deriveFont((float)b.getFont().getSize()-1));
+      b.setBorderPainted(false);
+      b.setBackground( aladin.getBackground());
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(incr); }
       });
 
       setLayout( new BorderLayout(0,0));
       JPanel p = new JPanel(new BorderLayout(5,0));
+      p.setBackground( aladin.getBackground());
       p.add(moins,BorderLayout.WEST);
       p.add(slider,BorderLayout.CENTER);
       p.add(plus,BorderLayout.EAST);
@@ -165,6 +170,7 @@ MouseMotionListener,MouseListener,Widget {
          this.incr=incr;
          addMouseListener(this);
          addMouseMotionListener(this);
+         setBackground( aladin.getBackground());
       }
 
       public String toString() { return "slider["+min+" .. "+max+"] => "+value; }

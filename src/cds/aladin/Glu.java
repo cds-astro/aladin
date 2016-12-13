@@ -1001,7 +1001,7 @@ public final class Glu implements Runnable {
     */
    private void memoGluSky(boolean withLog,String actionName,String id,String aladinLabel,String aladinMenuNumber,String url,String description,
          String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,
-         String aladinSurvey,String aladinHpxParam,String skyFraction) {
+         String aladinSurvey,String aladinHpxParam,String skyFraction,String origin) {
 
       // Pour éviter les doublons
       int find = findGluSky(actionName);
@@ -1030,6 +1030,9 @@ public final class Glu implements Runnable {
       // Construction du path pour l'arbre (noeud terminal inclus)
       String s = aladinLabel.replace("/","\\/");
       String path = aladinTree==null ? s : aladinTree+"/"+s;
+      
+      // Ajout de l'origine en préfixe de l'id
+      if( origin!=null && !id.startsWith(origin) ) id = origin+"/"+id;
 
       TreeNodeAllsky tn =  new TreeNodeAllsky(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
             description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam,skyFraction);
@@ -1261,6 +1264,7 @@ public final class Glu implements Runnable {
       String aladinSurvey=null; // Le préfixe du survey dans le cas d'enregistrement de Ciel
       String aladinHpxParam=null;      // Paramètres particuliers dans le cas d'un ciel Healpix
       String skyFraction=null;
+      String origin=null;
       String aladinBookmarks=null;    // Liste des bookmarks
       StringBuffer record = null;  // Copie de l'enregistrement en cours.
       boolean ignore=false; // true si on doit ignorer l'enregistrement courant (cf overwrite)
@@ -1314,6 +1318,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"Aladin.UrlDemo") )    aladinUrlDemo=subCR(value);
             else if( isKey(name,"Aladin.Protocol") )   aladinProtocol=subCR(value);
             else if( isKey(name,"SkyFraction") )       skyFraction=subCR(value);
+            else if( isKey(name,"Origin") )            origin=subCR(value);
             else if( isKey(name,"ReleaseNumber") )     releaseNumber=subCR(value);
             else if( isKey(name,"Download") )          download=subCR(value);
             else if( isKey(name,"Jar") )               jar=subCR(value);
@@ -1355,7 +1360,7 @@ public final class Glu implements Runnable {
                   if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
                      if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
                      else if( flagGluSky ) memoGluSky(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
-                           aladinSurvey,aladinHpxParam,skyFraction);
+                           aladinSurvey,aladinHpxParam,skyFraction,origin);
                      else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
                            copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
@@ -1377,7 +1382,7 @@ public final class Glu implements Runnable {
                copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=dir=
                      system=aladinActivated=actionName=description=verboseDescr=ack=resultDataType=aladinMenu=
                      aladinMenuNumber=aladinLabel=aladinLabelPlane=docUser=seeAction=url=test=institute=aladinLogo=
-                     aladinSurvey=aladinHpxParam=aladinBookmarks=id=skyFraction=null;
+                     aladinSurvey=aladinHpxParam=aladinBookmarks=id=skyFraction=origin=null;
                paramDescription = new Hashtable();
                paramDataType = new Hashtable();
                paramValue = new Hashtable(10);
@@ -1487,7 +1492,7 @@ public final class Glu implements Runnable {
          if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
             if( aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
             else if( flagGluSky ) memoGluSky(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
-                  aladinSurvey,aladinHpxParam,skyFraction);
+                  aladinSurvey,aladinHpxParam,skyFraction,origin);
             else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
                   copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);

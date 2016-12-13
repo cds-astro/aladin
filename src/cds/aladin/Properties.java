@@ -266,7 +266,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       t.x+=i*20;
       t.y+=i*20;
       setLocation(t);
-
    }
 
    /** Initialisation d'un JPanel en fonction d'un plan
@@ -1000,7 +999,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                if( a ) {
                   pmoc.setDrawingPerimeter(!a);
                   b3.setSelected(!a);
-               }
+                  aladin.console.printCommand("set drawing=+border,-perimeter");
+               } else aladin.console.printCommand("set drawing=-border");
               aladin.calque.repaintAll();
             }
          });
@@ -1012,7 +1012,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                if( a ) {
                   pmoc.setDrawingBorder(!a);
                   b1.setSelected(!a);
-              }
+                  aladin.console.printCommand("set drawing=+perimeter,-border");
+               } else aladin.console.printCommand("set drawing=-perimeter");
                aladin.calque.repaintAll();
             }
          });
@@ -1021,8 +1022,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          b2a.setSelected( pmoc.isDrawingFillIn() );
          b2a.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               pmoc.setDrawingFillIn(b2a.isSelected());
+               boolean a=b2a.isSelected();
+               pmoc.setDrawingFillIn(a);
                aladin.calque.repaintAll();
+               aladin.console.printCommand("set drawing="+(a?"+":"-")+"fill");
             }
          });
          JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));

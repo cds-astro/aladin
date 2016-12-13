@@ -70,6 +70,7 @@ public final class CreatObj implements Runnable {
 //      trace(1,"Creating Status object");
 
       a.match = new Match(a);
+      a.look = new Look(a);
       a.grid = new Grid(a);
       a.oeil = new Oeil(a);
       a.northup = new Northup(a);

@@ -2949,7 +2949,7 @@ public final class Save extends JFrame implements ActionListener {
       StringTokenizer st = new StringTokenizer(o.info,"\t");
       st.nextElement();     // On saute le triangle
       while( st.hasMoreTokens() ) {
-         Words w = new Words(st.nextToken());
+         Words w = new Words(st.nextToken(),-1);
          if( s.length()!=0 ) s.append(sep);
          s.append(w.getText());
       }

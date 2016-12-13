@@ -98,6 +98,11 @@ import cds.tools.Util;
  */
 public final class Configuration extends JFrame
 implements Runnable, ActionListener, ItemListener, ChangeListener  {
+   
+   static final int DEF_MHEIGHT = 150;  // Hauteur par défaut du panel des mesures
+   static final int DEF_HWIDTH  = 200;  // Largeur par défaut du panel de l'arbre des HiPS
+   static final int DEF_ZWIDTH  = 220;  // Largeur par défaut du panel du zoomView
+   static final int DEF_ZHEIGHT = 150;  // Hauteur par défaut du panel du zoomView
 
    static final String ASTRONOMER    = "astronomer";
    static final String UNDERGRADUATE = "undergraduate";
@@ -134,10 +139,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String SCROLL     = "AutoScroll";
    protected static String MOD        = "Profile";
    protected static String HPXGRID    = "HealpixGrid";
-   protected static String MESURE     = "HideMeasurements";
-   protected static String MHEIGHT    = "MeasurementHeight";
-   protected static String ZHEIGHT    = "ZoomHeight";
-   protected static String ZWIDTH     = "ZoomWidth";
+   protected static String MHEIGHT    = "SplitMeasureHeight";
+   protected static String ZHEIGHT    = "SplitZoomHeight";
+   protected static String ZWIDTH     = "SplitZoomWidth";
+   protected static String HWIDTH     = "SplitHiPSWidth";
    protected static String BOOKMARKS  = "Bookmarks";
    protected static String FRAME      = "Frame";
    protected static String FRAMEALLSKY= "FrameAllsky";
@@ -161,6 +166,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String STOPHELP   = "StopHelp";
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
+   
+   // Liste des mots clés dépréciés (à virer)
+   static final String [] DEPRECATED = { "MeasurementHeight" };
 
    static String NOTACTIVATED = "Not activated";
    static String ACTIVATED = "Activated";
@@ -1054,20 +1062,23 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private Point initWinLocXY=new Point();          // Position initiale de la fenêtre
    private Dimension initWinLocWH=new Dimension();  // Dimenison initiale de la fenêtre
    private int initMesureHeight=0;                  // Hauteur de la fenêtre des mesures
-   private int initZoomHeight=0;                    // Hauteur de la fenêtre du zoom
-   private int initZoomWidth=0;                     // Largeur de la fenêtre du zoom
+//   private int initZoomHeight=0;                    // Hauteur de la fenêtre du zoom
+//   private int initZoomWidth=0;                     // Largeur de la fenêtre du zoom
+//   private int initHipsWidth=0;                     // Largeur de la fenêtre du HiPS market
 
    /** Retourne true si la fenêtre d'Aladin n'a ni bougé, ni été redimensionnée */
    private boolean sameWinParam() {
       if( aladin.isApplet() ) return true;  // pas de gestion de positionnement en mode applet
       Dimension d = aladin.f.getSize();
       Point p = aladin.f.getLocation();
-      int mesureHeight = aladin.splitMesureHeight.getSplit();
-      int zoomHeight = aladin.splitZoomHeight.getPos();
-      int zoomWidth = aladin.splitZoomWidth.getPos();
+//      int mesureHeight = aladin.splitMesureHeight.getSplit();
+//      int zoomHeight = aladin.splitZoomHeight.getPos();
+//      int zoomWidth = aladin.splitZoomWidth.getPos();
+//      int hipsWidth = aladin.splitHiPSWidth.getPos();
       return initWinLocXY.equals(p) && initWinLocWH.equals(d) 
-            && initMesureHeight==mesureHeight
-            && initZoomHeight==zoomHeight && initZoomWidth==zoomWidth;
+//            && initMesureHeight==mesureHeight 
+//            && initHipsWidth!=hipsWidth && initZoomHeight==zoomHeight && initZoomWidth==zoomWidth
+            ;
    }
 
    /** Retourne la position et la taille de la fenêtre Aladin. Mémorise
@@ -1090,24 +1101,38 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne la proportion de la fenêtre des mesures d'Aladin. Mémorise
     * cette position pour vérifier qu'à la fin de la session on a bougé ou non */
-   protected int getWinDivider() {
-      String s;
-      int mesureHeight=150;
-      try { s = get(MHEIGHT);
-         mesureHeight=Integer.parseInt(s);
-      } catch( Exception e ) {}
-      setInitMesureHeight(mesureHeight);
-      return mesureHeight;
-   }
+//   protected int getWinDivider() {
+//      String s;
+//      int mesureHeight=150;
+//      try { s = get(MHEIGHT);
+//         mesureHeight=Integer.parseInt(s);
+//      } catch( Exception e ) {}
+//      setInitMesureHeight(mesureHeight);
+//      return mesureHeight;
+//   }
    
-   protected int getZoomWidth() {
-      try { return Integer.parseInt( get(ZWIDTH)); } catch( Exception e ) {}
-      return 220; 
+   protected int getSplitMesureHeight() {
+      try {
+         int m=Integer.parseInt( get(MHEIGHT));
+         if( m<10 ) throw new Exception();
+         return m;
+      } catch( Exception e ) {}
+      return DEF_MHEIGHT; 
    }
 
-   protected int getZoomHeight() {
+   protected int getSplitHiPSWidth() {
+      try { return Integer.parseInt( get(HWIDTH)); } catch( Exception e ) {}
+      return DEF_HWIDTH; 
+   }
+
+   protected int getSplitZoomWidth() {
+      try { return Integer.parseInt( get(ZWIDTH)); } catch( Exception e ) {}
+      return DEF_ZWIDTH; 
+   }
+
+   protected int getSplitZoomHeight() {
       try { return Integer.parseInt( get(ZHEIGHT)); } catch( Exception e ) {}
-      return 150; 
+      return DEF_ZHEIGHT; 
    }
 
    /** Mémorisation de la position et de la taille de la fenêtre initiale d'Aladin en vue
@@ -1264,14 +1289,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          sliderPanel.add( bxOpac  = new JCheckBox(SLIDEROPAC));
          sliderPanel.add( bxZoom  = new JCheckBox(SLIDERZOOM));
          PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
-         for( JCheckBox b1 : new JCheckBox[] { bxEpoch,bxSize,bxDens,bxCube,bxOpac,bxZoom }) {
-            final Configuration c1 = this;
-            b1.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  Aladin.info(c1,aladin.chaine.getString("RESTART"));
-               }
-            });
-         }
+//         for( JCheckBox b1 : new JCheckBox[] { bxEpoch,bxSize,bxDens,bxCube,bxOpac,bxZoom }) {
+//            b1.addActionListener(new ActionListener() {
+//               public void actionPerformed(ActionEvent e) {
+////                  Aladin.info(c1,aladin.chaine.getString("RESTART"));
+//               }
+//            });
+//         }
       }
 
       // Le Répertoire par défaut
@@ -1656,6 +1680,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
       return null;
    }
+   
+ 
 
    private int oFrame=Localisation.ICRS;
 
@@ -1663,7 +1689,17 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
     * Sauvegarde des propriétés dans un fichier de Configuration (si nécessaire)
     */
    protected void save() throws Exception {
+      try { save1(); }
+      catch( Exception e) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         throw e;
+      }
+   }
+   protected void save1() throws Exception {
       if( Aladin.NOGUI ) return;
+      
+      // On vire les mots clés dépréciés pour faire du ménage dans le fichier de config
+      for( String k : DEPRECATED ) remove(k);
 
       // On mémorise les helps qu'on ne veut plus
       majStopHelp();
@@ -1686,14 +1722,29 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       //      int frame=aladin.localisation.getFrame();
       //      if( getFrame()!=frame ) set(FRAME,Localisation.REPERE[frame]);
 
-      // On conserve l'état de la fenêtre des mesures
-      if( aladin.mesure.isReduced() && get(MESURE)==null ) remove(MESURE);
-      if( !aladin.mesure.isReduced() && get(MESURE)!=null ) set(MESURE,"on");
+//      // On conserve l'état de la fenêtre des mesures
+//      if( aladin.mesure.isReduced() && get(MESURE)==null ) remove(MESURE);
+//      if( !aladin.mesure.isReduced() && get(MESURE)!=null ) set(MESURE,"on");
 
-      // On conserve la taille de la fenêtre des mesures
-      set(MHEIGHT,""+aladin.splitMesureHeight.getSplit());
-      set(ZHEIGHT,""+aladin.splitZoomHeight.getPos());
-      set(ZWIDTH,""+aladin.splitZoomWidth.getPos());
+      // On conserve la taille des différents panels si nécessaire
+      int n;
+      if( aladin.splitZoomHeight!=null ) {
+         n = aladin.splitZoomHeight.getCompSize();    if( n!=DEF_ZHEIGHT ) set(ZHEIGHT,""+n );   else remove(ZHEIGHT);
+      }
+      if( aladin.splitZoomWidth!=null ) {
+         n = aladin.splitZoomWidth.getCompSize();     if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    else remove(ZWIDTH);
+      }
+      if( aladin.splitHiPSWidth!=null ) {
+         n = aladin.splitHiPSWidth.getCompSize();     if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    else remove(HWIDTH);
+      }
+      if( aladin.splitMesureHeight!=null ) {
+         n = aladin.splitMesureHeight.getCompSize();  if( n!=DEF_MHEIGHT ) set(MHEIGHT,""+n );   else remove(MHEIGHT);
+      }
+//      set(ZHEIGHT,""+aladin.splitZoomHeight.getPos());
+//      set(ZWIDTH,""+aladin.splitZoomWidth.getPos());
+//      set(HWIDTH,""+aladin.splitHiPSWidth.getPos());
+            
+//      set(MHEIGHT,""+aladin.splitMesureHeight.getSplit());
 
       // On mémorise les bookmarks si nécessaire
       if( !Aladin.OUTREACH && aladin.bookmarks.canBeSaved() ) {
@@ -2013,9 +2064,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( !bxZoom.isSelected() ) set(SLZOOM,"off");
          else remove(SLZOOM);
       }
-      //      aladin.calque.zoom.adjustSliderPanel();
       // Ca ne fonctionne pas correctement pour le moment
-      //      aladin.calque.zoom.sliderPanel.invalidate();
+      aladin.calque.slider.adjustSliderPanel();
       //      if( aladin.f!=null ) {
       //         Dimension dim = aladin.f.getSize();
       //         aladin.f.pack();

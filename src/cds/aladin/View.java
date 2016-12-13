@@ -3976,12 +3976,24 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       startTimer();
    }
-
+   
+   protected boolean isSimbadOrVizieRPointing() {
+      return isQuickSimbad || isQuickVizieR;
+   }
+   
+   private boolean isQuickSimbad = false;
+   private boolean isQuickVizieR = false;
+  
 
    /** Resolution d'une requête quickSimbad sur la position courante
     * afin de récupérer les informations de base sur l'objet sous
     * la souris */
    protected void quickSimbad() {
+      try { isQuickSimbad=true; quickSimbad1(); }
+      finally { isQuickSimbad=false; }
+   }
+   
+   private void quickSimbad1() {
       ViewSimple v = getMouseView();
       Coord coo = new Coord();
       if( v==null || v.pref==null
@@ -4007,7 +4019,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       v.getProj().getCoord(coo);
       double radius = Util.round(Math.abs(coo.del-d),7);
 
-      Aladin.makeCursor(v,Aladin.WAITCURSOR);
+      Aladin.makeCursor(v,Aladin.LOOKCURSOR);
 
       // Faut-il également charger un SED ?
       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
@@ -4079,7 +4091,15 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Resolution d'une requête VizieRSED sur la position courante
     * afin de récupérer le SED sous la souris */
+   /** Resolution d'une requête quickSimbad sur la position courante
+    * afin de récupérer les informations de base sur l'objet sous
+    * la souris */
    protected void quickVizierSED() {
+      try { isQuickVizieR=true; quickVizierSED1(); }
+      finally { isQuickVizieR=false; }
+   }
+   
+   protected void quickVizierSED1() {
       ViewSimple v = getMouseView();
       Coord coo = new Coord();
       if( v==null || v.pref==null
@@ -4095,7 +4115,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       // Est-on sur un objet avec pixel ?
       //      if( !v.isMouseOnSomething() ) return;
 
-      Aladin.makeCursor(v,Aladin.WAITCURSOR);
+      Aladin.makeCursor(v,Aladin.LOOKCURSOR);
 
       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
 //      boolean flagSED=true;
@@ -4696,6 +4716,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.viewControl.repaint();
          aladin.grid.repaint();
          aladin.match.repaint();
+         aladin.look.repaint();
          aladin.northup.repaint();
          aladin.pix.repaint();
          aladin.oeil.repaint();
@@ -4750,4 +4771,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    public void adjustmentValueChanged(AdjustmentEvent e) {
       repaintAll();
    }
+   
+   
 }

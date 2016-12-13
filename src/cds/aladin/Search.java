@@ -59,6 +59,8 @@ public final class Search extends JPanel implements MouseListener {
 
    protected Search(Aladin aladin,boolean withReduceButton) {
       this.aladin = aladin;
+      setBackground( aladin.getBackground());
+      
       if( MFSEARCHIN==null ) {
          MFSEARCHIN = aladin.chaine.getString("MFSEARCHIN");
          MFSEARCHOUT = aladin.chaine.getString("VWNIF");
@@ -120,22 +122,27 @@ public final class Search extends JPanel implements MouseListener {
 
       setLayout( new BorderLayout(0,0) );
       JPanel searchPanel = new JPanel( new BorderLayout(0,0) );
+      searchPanel.setBackground( aladin.getBackground());
       searchPanel.add(label=Aladin.createLabel(aladin.chaine.getString("MFSEARCHL")),"West");
       label.setToolTipText(aladin.chaine.getString("MFSEARCHHELP"));
 
       JPanel pText = new JPanel(new BorderLayout());
+      pText.setBackground( aladin.getBackground());
       pText.setBorder( BorderFactory.createEmptyBorder(2,0,2,0));
       pText.add(text,BorderLayout.CENTER);
       searchPanel.add(pText,"Center");
 
       panelSearch = new JPanel( new BorderLayout(0,0) );
+      panelSearch.setBackground( aladin.getBackground());
 
       JPanel searchControlPanel = new JPanel( new BorderLayout(0,0) );
+      searchControlPanel.setBackground( aladin.getBackground());
       //      if( !Aladin.OUTREACH ) searchControlPanel.add(go,"West");
       searchControlPanel.add(left,"Center");
       searchControlPanel.add(right,"East");
 
       JPanel genericSearchPanel = new JPanel( new BorderLayout(0,0) );
+      genericSearchPanel.setBackground( aladin.getBackground());
       if( !Aladin.OUTREACH ) genericSearchPanel.add(searchPanel,"West");
       genericSearchPanel.add(searchControlPanel,"Center");
 
@@ -156,13 +163,14 @@ public final class Search extends JPanel implements MouseListener {
    private boolean flagHideSearch=false;
 
    /** Permet de cacher/montrer les widgets propre à la recherche en ne laissant que les boutons "reduce" et "out" */
-   protected void hideSearch(boolean flag) {
-      setIcon();
-      if( flag==flagHideSearch ) return;
+   protected boolean hideSearch(boolean flag) {
+//      setIcon();
+      if( flag==flagHideSearch ) return false;
       flagHideSearch=flag;
       if( flagHideSearch ) remove(panelSearch);
       else add(panelSearch,"Center");
       validate();
+      return true;
    }
 
    private void down() {
@@ -183,19 +191,19 @@ public final class Search extends JPanel implements MouseListener {
 
    private void split() {
       aladin.mesure.split();
-      setIcon();
+//      setIcon();
    }
 
-   protected void reduce() {
-      aladin.mesure.switchReduced();
-      setIcon();
-   }
+//   protected void reduce() {
+//      aladin.mesure.switchReduced();
+//      setIcon();
+//   }
 
-   protected void setIcon() {
-      if( reduce==null ) return;
-      if( aladin.mesure.flagReduced || aladin.mesure.f!=null ) reduce.setIcon(new ImageIcon(aladin.getImagette("Agrandir.gif")));
-      else reduce.setIcon(new ImageIcon(aladin.getImagette("Reduire.gif")));
-   }
+//   protected void setIcon() {
+//      if( reduce==null ) return;
+//      if( aladin.mesure.flagReduced || aladin.mesure.f!=null ) reduce.setIcon(new ImageIcon(aladin.getImagette("Agrandir.gif")));
+//      else reduce.setIcon(new ImageIcon(aladin.getImagette("Reduire.gif")));
+//   }
 
    static String SELECT,UNSELECT,APPEND,SHOW;
 

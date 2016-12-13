@@ -105,12 +105,15 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       cardPanel = new JPanel(cl=new CardLayout(0,0));
       cardPanel.add(LABEL_AFFICHAGE,pos);
       cardPanel.add(LABEL_SAISIE,text);
+      cardPanel.setBackground( aladin.getBackground());
 
       JPanel p2 = new JPanel(new BorderLayout(0,0) );
       p2.add( label=new Lab(titre),BorderLayout.WEST);
       p2.add( cardPanel,BorderLayout.CENTER);
+      p2.setBackground( aladin.getBackground());
 
       setLayout(new BorderLayout(3,3));
+      setBackground( aladin.getBackground() );
       add(p2,BorderLayout.CENTER);
 
       if( !Aladin.OUTREACH ) {
@@ -118,11 +121,12 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
          p1.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
          p1.add( new Lab(aladin.chaine.getString("FRAME")),BorderLayout.WEST );
          p1.add( c,BorderLayout.EAST );
+         p1.setBackground( aladin.getBackground());
          add(p1,BorderLayout.EAST);
       }
 
       addMouseListener(this);
-      setBorder(BorderFactory.createEmptyBorder(0,10,0,0));
+      setBorder(BorderFactory.createEmptyBorder(0,10,0,10));
    }
    
    protected JComboBox getComboBox() { return c; }
@@ -248,8 +252,10 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       }
 
       public void paintComponent(Graphics g) {
-         super.paintComponent(g);
-         drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
+         try {
+            super.paintComponent(g);
+            drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
+         } catch( Exception e ) { }
       }
 
       static private final int X = 6;

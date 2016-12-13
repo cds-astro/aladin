@@ -3,17 +3,18 @@ package cds.aladin;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Enumeration;
 import java.util.HashSet;
 
 import javax.swing.BorderFactory;
@@ -22,36 +23,68 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import cds.aladin.MyTree.NoeudEditor;
 import cds.tools.Util;
 
 
+/**
+ * Classe qui gère l'arbre HiPS apparaissant à gauche de la vue
+ * @version 1.0 décembre 2016 - création
+ * @author Pierre Fernique [CDS]
+ */
 public class HipsMarket extends JPanel {
-   MyTree tree;
-   Aladin aladin;
-   HipsFilter hipsFilter=null;
+   
+   private Aladin aladin;                  // Référence
+   private HipsFilter hipsFilter=null;     // Formulaire de filtrage de l'arbre HiPS
+   private boolean mocServerLoading=false; // true = requête de génération de l'arbre en cours (appel à MocServer)
+   
+   // Composantes de l'interface
+   private MyTree tree;
+   private JButton filter;
+   private Elague prune;
+   
+   // Paramètres d'appel initial du MocServer (construction de l'arbre)
+   private static String  MOCSERVER_PARAMS 
+        = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
+         +"&hips_service_url=*&fmt=glu&get=record";
    
    public HipsMarket(Aladin aladin) {
       this.aladin = aladin;
+      
+      // L'arbre avec sa scrollbar
       tree = new MyTree(aladin);
-      tree.setBackground(getBackground());
-      JScrollPane scrollTree = new JScrollPane(tree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      setBackground(aladin.getBackground());
+      tree.setBackground(aladin.getBackground());
+      JScrollPane scrollTree = new JScrollPane(tree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
       scrollTree.setBorder( BorderFactory.createEmptyBorder(0,0,0,0));
       
-      JButton profiler = new JButton("Preferences");
-      profiler.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            filtre();
-         }
+      // Les boutons de controle
+      JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,1,1));
+      p1.setBackground(aladin.getBackground());
+      prune = new Elague(aladin);
+      p1.add(prune);
+      
+      JPanel p2 = new JPanel( new FlowLayout());
+      p2.setBackground(aladin.getBackground());
+      filter = new JButton("filter...");
+      filter.setEnabled(false);
+      filter.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { filtre(); }
       });
-      JPanel control = new JPanel(new FlowLayout());
-      control.add(profiler);
+      p2.add(filter);
+      
+      JPanel control = new JPanel(new BorderLayout());
+      control.setBackground(aladin.getBackground());
+      control.setBorder( BorderFactory.createEmptyBorder(0,5,0,0));
+      control.add(p1,BorderLayout.WEST);
+      control.add(p2,BorderLayout.CENTER);
       
       setLayout(new BorderLayout() );
       add(scrollTree,BorderLayout.CENTER);
       add(control,BorderLayout.SOUTH);
-      setBorder( BorderFactory.createEmptyBorder(20,0,5,0));
+      setBorder( BorderFactory.createEmptyBorder(25,0,5,0));
 
+      // Actions sur le clic d'un noeud de l'arbre
       tree.addMouseListener(new MouseAdapter() {
          public void mouseClicked(MouseEvent e) {
             System.out.println("mouseClicked");
@@ -65,15 +98,19 @@ public class HipsMarket extends JPanel {
          }
       });
       
+      // Chargement de l'arbre initial
       initTree();
    }
    
+   /** Création/ouverture du formulaire de filtrage de l'arbre HiPS */
    private void filtre() {
-      System.out.println("Je dois filtrer le HiPS tree...");
       if( hipsFilter==null ) hipsFilter = new HipsFilter(aladin);
       hipsFilter.show();
    }
    
+   /** Création du plan via script - méthode identique à celle de la série des classes ServerXXX
+    * (de fait, reprise de ServerHips de la version Aladin v9)
+    * TODO: elle pourrait être décrite via une interface */
    protected int createPlane(String target,String radius,String criteria, String label, String origin) {
       String survey;
       int defaultMode=PlanBG.UNKNOWN;
@@ -107,49 +144,76 @@ public class HipsMarket extends JPanel {
       return aladin.hips(gSky,label,target,radius);
    }
    
-   protected void resumeTree(final String params) {
-      
-      // On cache tous les noeuds déjà chargés
-      Enumeration<TreeNodeAllsky> e = aladin.glu.vGluSky.elements();
-      while( e.hasMoreElements() ) e.nextElement().setHidden(true);
-      
-      // Pour le moment on récupère la nouvelle liste
-      // Par la suite on pourrait juste cacher les noeuds qui ne sont plus retenus
-      (new Thread("resumeTree") {
-         public void run() {
-            loadRemoteTree(params);
-            tree.freeTree();
-            tree.populateTree(aladin.glu.vGluSky.elements());
-         }
-      }).start();
-   }
-
-
-   private boolean dynTree=false;
-   protected void initTree() {
-      if( dynTree ) return;
+   
+   /** Génération initiale de l'arbre HiPS - et maj des menus Aladin correspondants */
+   private void initTree() {
+      if( mocServerLoading ) return;
+      repaint();
       (new Thread("initTree") {
          public void run() {
-            loadRemoteTree();
-            tree.populateTree(aladin.glu.vGluSky.elements());
-            aladin.gluSkyReload();
-            show();
+            try {
+               loadRemoteTree();
+               tree.populateTree(aladin.glu.vGluSky.elements());
+               tree.defaultExpand();
+               aladin.gluSkyReload();
+            } finally { postTreeProcess(); }
          }
       }).start();
    }
    
-   private static String  DEFAULT_PARAMS = "client_application=AladinDesktop"+(Aladin.BETA?"*":"")
-                                          +"&hips_service_url=*&fmt=glu&get=record";
+   private boolean lastPrune = false;
+   
+   /** Regénération de l'arbre HiPS en fonction des flags "isIn()" de chaque noeud */
+   protected void pruneTree() {
+      boolean activated = prune.isActivated();
+      if( lastPrune || activated ) tree.populateTree(aladin.glu.vGluSky.elements());
+      tree.setInTree(tree.root);
+      lastPrune = activated;
+      if( !activated ) return;
+      try { tree.elagueOut(); } finally { postTreeProcess(); }
+   }
 
-   /** Chargement des descriptions de l'arbre */
-   protected void loadRemoteTree() { loadRemoteTree(DEFAULT_PARAMS); }
-   protected void loadRemoteTree(String params) {
-      if( dynTree ) return;
+   /** Regénération de l'arbre HiPS en fonction des flags "isHidden()" de chaque noeud */
+   protected void resumeTree(final String params) {
+      if( mocServerLoading ) return;
+     (new Thread("resumeTree") {
+         public void run() {
+            try {
+               tree.populateTree(aladin.glu.vGluSky.elements());
+               profileUpdate(params);
+               pruneTree();
+               // TODO: Faire un expand du root si nécessaire
+            } finally { postTreeProcess(); }
+         }
+      }).start();
+   }
+   
+   /** Retourne true s'il n'y a pas d'arbre HiPS */
+   protected boolean isFree() {
+      return tree==null || tree.root==null || tree.root.getChildCount()==0;
+   }
+
+   /** Traitement à applique après la génération ou la régénération de l'arbre HiPS */
+   private void postTreeProcess() {
+      
+      boolean treeOk = !isFree();
+      filter.setEnabled(treeOk);
+      
+      // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des HiPS
+      // présents ou non dans la vue courante
+      if( treeOk ) startHipsUpdater();
+      else stopHipsUpdater();
+   }
+   
+   /** Chargement des descriptions de l'arbre par le MocServer */
+   private void loadRemoteTree() { loadRemoteTree(MOCSERVER_PARAMS); }
+   private void loadRemoteTree(String params) {
       DataInputStream dis=null;
 
       // Recherche sur le site principal, et sinon dans le cache local
       try {
-         dynTree=true;
+         mocServerLoading = true;
+
          Aladin.trace(3,"Loading HiPS Tree definitions...");
          
          String u = aladin.glu.getURL("MocServer", params, true).toString();
@@ -168,31 +232,71 @@ public class HipsMarket extends JPanel {
          aladin.glu.tri();
 
       }
-      catch( Exception e1 ) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
+      catch( Exception e1 ) {
+         if( Aladin.levelTrace>=3 ) e1.printStackTrace();
+      }
       finally {
-         dynTree=false;
+         mocServerLoading=false;
          if( dis!=null ) { try { dis.close(); } catch( Exception e) {} }
       }
    }
+   
+   /** Interroge le MocServer pour connaître les HiPS correspondants au filtre courant
+    * Met à jour l'arbre en conséquence */
+   private void profileUpdate(String params) {
+      try {
+         
+         BufferedReader in=null;
+         try {
+            URL u = aladin.glu.getURL("MocServer", params, true);
+
+            // récupération de chaque ID concernée (1 par ligne)
+            HashSet<String> set = new HashSet<String>();
+            
+            Aladin.trace(4,"HipsMarket.profileUpdate: Contacting MocServer : "+u);
+            try {
+               String s;
+               in= new BufferedReader( new InputStreamReader( Util.openStream(u) ));
+               while( (s=in.readLine())!=null ) set.add( getId(s) );
+            } catch( EOFException e ) { }
+
+            // Nettoyage préalable de l'arbre
+            for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) gSky.setHidden(true);
+
+            // Positionnement des datasets dans le champ
+            for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) {
+               gSky.setHidden( !set.contains(gSky.internalId) );
+            }
+
+            // Mise à jour des branches de l'arbre
+            DefaultMutableTreeNode root = tree.getRoot();
+            tree.setHiddenTree(root);
+            
+            // Suppression des noeuds et branches cachés
+            tree.elagueHidden();
+
+            validate();
+            repaint();
+
+         } finally{ if( in!=null ) in.close(); }
+      } catch( Exception e1 ) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
+
+   }
+
    
    // Dernier champs interrogé sur le MocServer
    private Coord oc=null;
    private double osize=-1;
 
    /** Interroge le MocServer pour connaître les HiPS disponibles dans le champ.
-    * Met à jour l'arbre en conséquence
-    */
-   protected void hipsUpdate() {
+    * Met à jour l'arbre en conséquence */
+   private void hipsUpdate() {
+      if( mocServerLoading ) return; 
       try {
-         
          BufferedReader in=null;
          try {
             
-//            if( flagElague ) ((DefaultTreeModel)tree.getModel()).reload();
-
             ViewSimple v = aladin.view.getCurrentView();
-//            if( v.isFree() ) return;
-
             if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) ) {
                for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) gSky.isIn=true;
 
@@ -219,11 +323,11 @@ public class HipsMarket extends JPanel {
 
                URL u = aladin.glu.getURL("MocServer", params, true);
                
-               Aladin.trace(4,"ServerHips.hipsUpdate: Contacting MocServer : "+u);
+               Aladin.trace(4,"HipsMarket.hipsUpdate: Contacting MocServer : "+u);
                in= new BufferedReader( new InputStreamReader( Util.openStream(u) ));
                String s;
 
-               // récupération de chaque IVORN concernée (1 par ligne)
+               // récupération de chaque ID concernée (1 par ligne)
                HashSet<String> set = new HashSet<String>();
                while( (s=in.readLine())!=null ) set.add( getId(s) );
 
@@ -233,32 +337,12 @@ public class HipsMarket extends JPanel {
                // Positionnement des datasets dans le champ
                for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) {
                   gSky.isIn = set.contains(gSky.internalId);
-//                  if( !gSky.ok ) System.out.println(gSky.internalId+" is out");
                }
             }
-
-            // Mise à jour de la cellule de l'arbre en cours d'édition
-            try {
-               NoeudEditor c = (NoeudEditor)tree.getCellEditor();
-               if( c!=null ) {
-                  TreeNode n = (TreeNode)c.getCellEditorValue();
-                  if( n!=null &&  n.hasCheckBox() ) {
-                     if( n.isIn() ) n.checkbox.setForeground(Color.black);
-                     else n.checkbox.setForeground(Color.lightGray);
-                  }
-               }
-            } catch( Exception e ) {
-               if( Aladin.levelTrace>=3 ) e.printStackTrace();
-            }
-            
-            // Elagage éventuel
-//            if( flagElague ) tree.elague();
-//            else {
 
                // Mise à jour des branches de l'arbre
                DefaultMutableTreeNode root = tree.getRoot();
-               tree.setOkTree(root);
-//            }
+               pruneTree();
             
             validate();
             repaint();
@@ -269,25 +353,40 @@ public class HipsMarket extends JPanel {
    }
 
    // Extraction de l'obs_id de l'IVOID pour rester compatible avec la nomenclature interne de l'arbre (TreeNodeAllsky.internalId)
+//   private String getId(String ivoid) {
+//      int start = ivoid.startsWith("ivo://") ? 6 : 0;
+//      int offset = ivoid.indexOf("/",start);
+//      int offset1 = ivoid.indexOf("?",start);
+//      if( offset1>0 ) offset = Math.min(offset,offset1);
+//      String id = ivoid.substring(offset+1);
+//      return id;
+//   }
+//   
+
    private String getId(String ivoid) {
-      int start = ivoid.startsWith("ivo://") ? 6 : 0;
-      int offset = ivoid.indexOf("/",start);
-      int offset1 = ivoid.indexOf("?",start);
-      if( offset1>0 ) offset = Math.min(offset,offset1);
-      String id = ivoid.substring(offset+1);
-      return id;
+      if( ivoid.startsWith("ivo://") ) return ivoid.substring(6);
+      return ivoid;
    }
    
-   public void show() {
-      super.show();
-      startHipsUpdater();
+
+   /** true si on peut raisonnablement faire un updating des HiPS visibles dans la vue */
+   private boolean isReadyForUpdating() {
+      return !mocServerLoading && isVisible() && getWidth()>0;
    }
 
-   public void hide() {
-      stopHipsUpdater();
-      super.hide();
+   public void paintComponent(Graphics g) {
+      super.paintComponent(g);
+      
+      // Petit message pour avertir l'utilisateur
+      if( mocServerLoading ) {
+         g.setColor(Color.red);
+         String s = "Loading...";
+         int x = getWidth()/2 - g.getFontMetrics().stringWidth(s)/2;
+         g.drawString(s, x, 25);
+      }
    }
-
+   
+   /************** Pour faire la maj en continue des HiPS visibles dans la vue *******************/
    private Thread threadUpdater=null;
    private boolean encore=true;
 
@@ -309,7 +408,7 @@ public class HipsMarket extends JPanel {
          while( encore ) {
             try {
                //               System.out.println("Hips updater checking...");
-               if( isOpened() ) hipsUpdate();
+               if( isReadyForUpdating() ) hipsUpdate();
                Thread.currentThread().sleep(1000);
             } catch( Exception e ) { }
          }
@@ -317,12 +416,6 @@ public class HipsMarket extends JPanel {
          threadUpdater=null;
       }
    }
-
-   private boolean isOpened() {
-//      Window window = SwingUtilities.windowForComponent(this);
-      return isVisible();
-   }
-
 
 
 

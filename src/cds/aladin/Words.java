@@ -69,6 +69,7 @@ public final class Words implements Runnable {
    boolean show;            // Mot surligné pour être désigné
    boolean pushed=false;    // Ancre qui vient d'etre cliquee -> en rouge
    boolean haspushed=false; // Ancre qui a ete cliquee -> violet
+   int     num;             // numéro de ligne (pour pouvoir tracer les lignes dans 2 couleurs alternées)
 
    // Variable de travail
    Thread thread;	    // Utilise lors de l'appel d'une marque GLU
@@ -85,25 +86,26 @@ public final class Words implements Runnable {
     * @param align le type d'alignement
     * @param computed s'agit-il d'un champ calculé ?
     */
-   protected Words(String tag) { this(tag,null,0,-1,LEFT, false,Field.UNSORT); }
-   protected Words(String tag,int width) { this(tag,null,width,-1,LEFT, false,Field.UNSORT); }
-   protected Words(String tag,int width,int precision,int align) {
-      this(tag, null,width, precision,align, false,Field.UNSORT);
+   protected Words(String tag, int num) { this(tag,null,0,-1,LEFT, false,Field.UNSORT,num); }
+   protected Words(String tag,int width,int num) { this(tag,null,width,-1,LEFT, false,Field.UNSORT,num); }
+   protected Words(String tag,int width,int precision,int align,int num) {
+      this(tag, null,width, precision,align, false,Field.UNSORT,num);
    }
-   protected Words(String tag,String defText,int width,int precision,int align,boolean computed,int sort) {
+   protected Words(String tag,String defText,int width,int precision,int align,boolean computed,int sort,int num) {
       this.width = width;
       this.precision = precision;
       this.align = align;
       this.computed = computed;
       this.sort=sort;
+      this.num=num;
       char [] a = tag.toCharArray();
       if( !(glu=tagGlu(a)) ) text=tag;
       if( defText!=null ) text=defText;
       setRepere();
    }
 
-   protected Words(String tag,int width,int precision,int align,boolean computed,boolean footprint) {
-      this(tag,width,precision,align);
+   protected Words(String tag,int width,int precision,int align,boolean computed,boolean footprint,int num) {
+      this(tag,width,precision,align,num);
       this.computed = computed;
       this.footprint = footprint;
    }

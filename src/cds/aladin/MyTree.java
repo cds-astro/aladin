@@ -24,13 +24,13 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.EventObject;
 import java.util.Iterator;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JTree;
 import javax.swing.UIManager;
@@ -82,25 +82,6 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       root = r;
    }
 
-   /** "Mise à jour" de l'arbre en fonction des enregistrements GLU recueillis */
-   synchronized protected void updateTree(Enumeration e1) {
-
-      ArrayList<TreeNode> v = new ArrayList<TreeNode>();
-      for( TreeNode n : this ) v.add(n);
-      freeTree();
-
-      while( e1.hasMoreElements() ) {
-         TreeNode noeud = (TreeNode)e1.nextElement();
-         int i = v.indexOf(noeud);
-         if( i>=0 ) {
-            TreeNode oldNoeud = v.get(i);
-            noeud.setCheckBox( oldNoeud.isCheckBoxSelected() );
-         }
-         createTreeBranch(root,noeud,0);
-      }
-      defaultExpand();
-   }
-
    // Recupération d'un itérator sur tous les noeuds de l'arbre
    public Iterator<TreeNode> iterator() { return new TreeIterator(); }
 
@@ -116,32 +97,49 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    protected void populateTree(Enumeration e) {
       while( e.hasMoreElements() ) {
          TreeNode noeud = (TreeNode)e.nextElement();
-         if( noeud.isHidden() ) continue;
-         createTreeBranch(root,noeud,0);
+         noeud.setHidden(false);
+         createTreeBranch((DefaultTreeModel)getModel(),root,noeud,0);
       }
+      validate();
       defaultExpand();
    }
    
-   /** Supprime les feuilles et branches non Ok() */
-   protected void elague() {
-      elague(root, (DefaultTreeModel)getModel() );
-   }
-   
-   protected void elague(DefaultMutableTreeNode node, DefaultTreeModel model ) {
-      
+   /** Supprime les feuilles et branches hidden */
+   protected void elagueHidden() { elagueHidden(root, (DefaultTreeModel)getModel() ); }
+   private void elagueHidden(DefaultMutableTreeNode node, DefaultTreeModel model ) {
+       
       for( int i=node.getChildCount()-1; i>=0; i-- ) {
-         elague( (DefaultMutableTreeNode)node.getChildAt(i), model );
+         elagueHidden( (DefaultMutableTreeNode)node.getChildAt(i), model );
       }
 
       if( node.isLeaf() ) {
          TreeNode fils = (TreeNode) node.getUserObject();
-         if( !fils.isIn() ) {
-//            System.out.println("rm "+fils.label);
+         if( fils.isHidden() && !node.equals(root)) {
+            fils.treeIndex = node.getParent().getIndex(node);
             model.removeNodeFromParent(node);
          }
          return;
       }
    }
+
+   /** Supprime les feuilles et branches !isIn */
+   protected void elagueOut() { elagueOut(root, (DefaultTreeModel)getModel() ); }
+   private void elagueOut(DefaultMutableTreeNode node, DefaultTreeModel model ) {
+       
+      for( int i=node.getChildCount()-1; i>=0; i-- ) {
+         elagueOut( (DefaultMutableTreeNode)node.getChildAt(i), model );
+      }
+
+      if( node.isLeaf() ) {
+         TreeNode fils = (TreeNode) node.getUserObject();
+         if( !fils.isIn() && !node.equals(root)) {
+            fils.treeIndex = node.getParent().getIndex(node);
+            model.removeNodeFromParent(node);
+         }
+         return;
+      }
+   }
+
 
    /** Reset */
    public void reset() {
@@ -172,24 +170,36 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    //      }
 
    /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
-   protected boolean setOkTree(DefaultMutableTreeNode node) {
+   protected boolean setInTree(DefaultMutableTreeNode node) {
       TreeNode gSky = (TreeNode) node.getUserObject();
       if( node.isLeaf() )  return gSky.isIn();
 
       boolean rep=false;
       DefaultMutableTreeNode subNode = null;
-      //         System.out.println("setOkTree "+node+" #subnode="+node.getChildCount());
       Enumeration e = node.children();
       while( e.hasMoreElements() ) {
          subNode = (DefaultMutableTreeNode) e.nextElement();
-         if( setOkTree(subNode) ) rep=true;
+         if( setInTree(subNode) ) rep=true;
       }
-
       gSky.setIn(rep);
-      //         System.out.println("*** "+gSky+" => "+rep);
       return rep;
    }
 
+   /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
+   protected boolean setHiddenTree(DefaultMutableTreeNode node) {
+      TreeNode gSky = (TreeNode) node.getUserObject();
+      if( node.isLeaf() )  return gSky.isHidden();
+
+      boolean rep=true;
+      DefaultMutableTreeNode subNode = null;
+      Enumeration e = node.children();
+      while( e.hasMoreElements() ) {
+         subNode = (DefaultMutableTreeNode) e.nextElement();
+         if( !setHiddenTree(subNode) ) rep=false;
+      }
+      gSky.setHidden(rep); 
+      return rep;
+   }
 
    /** Met à jour les couleurs des widgets avant de les tracer => à surcharger */
    protected void updateColor() {}
@@ -203,7 +213,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
     *             ex:  Nebulae/PN
     *                          ^   <= valeur de opos
     */
-   protected void createTreeBranch(DefaultMutableTreeNode node, TreeNode noeud, int opos) {
+   protected void createTreeBranch(DefaultTreeModel model, DefaultMutableTreeNode node, TreeNode noeud, int opos) {
       int pos;
 
       // On découpe par "/" mais sans prendre en compte "\/"
@@ -230,9 +240,14 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
          if( subNode==null ) {
             subNode = new DefaultMutableTreeNode( pos!=-1? new TreeNode(aladin,"",null,label,"") : noeud );
-            node.add(subNode);
-            if( pos!=-1 ) createTreeBranch(subNode, noeud, pos + 1);
-         } else if( pos!=-1 ) createTreeBranch(subNode, noeud, pos + 1);
+//            node.add(subNode);
+            int i = ((TreeNode)subNode.getUserObject()).treeIndex;
+            int n = node.getChildCount();
+            if( i==-1 || i>n ) i=n;
+            model.insertNodeInto(subNode, node, i);
+         }
+         if( pos!=-1 ) createTreeBranch(model, subNode, noeud, pos + 1);
+
       } catch( Exception e ) {
          e.printStackTrace();
       }
@@ -274,12 +289,15 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    /** Préparation de l'arbre afin qu'il "pré-ouvre" les branches terminales */
    protected void defaultExpand() {
       expandPath(new TreePath(root));
+      if( true ) return;
       Enumeration e = root.preorderEnumeration();
       while( e.hasMoreElements() ) {
          DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
          if( node.isLeaf() ) collapsePath(new TreePath(node));
       }
    }
+   
+   ImageIcon cds = null,jaxa=null,esa=null,irap=null,xcatdb=null; 
 
    /** Classe pour l'édition d'un noeud de l'arbre */
    class NoeudRenderer implements TreeCellRenderer {
@@ -288,9 +306,13 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
       NoeudRenderer() {
          selectionForeground = UIManager.getColor("Tree.selectionForeground");
-         selectionBackground = UIManager.getColor("Tree.selectionBackground");
+//         selectionBackground = UIManager.getColor("Tree.selectionBackground");
+         selectionBackground = aladin.getBackground();
          textForeground = UIManager.getColor("Tree.textForeground");
-         textBackground = UIManager.getColor("Tree.textBackground");
+//         textBackground = UIManager.getColor("Tree.textBackground");
+         textBackground = aladin.getBackground();
+         
+         nonLeafRenderer.setBackgroundNonSelectionColor( aladin.getBackground() );
       }
 
       public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded,
@@ -299,7 +321,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          TreeNode n = (TreeNode)node.getUserObject();
 
          //         System.out.println("getTreeCellRendererComponent ["+node.toString()+"] => "+n.isOk());
-
+         
          if( n!=null && n.hasCheckBox() ) {
             if( n.isIn() ) n.checkbox.setForeground(Color.black);
             else n.checkbox.setForeground(Color.lightGray);
@@ -319,6 +341,26 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          if( n.isInStack() ) c.setForeground( Color.red );
          else if( n.isIn() ) c.setForeground( Color.black);
          else c.setForeground( Color.lightGray );
+         
+         if( n instanceof TreeNodeAllsky && ((TreeNodeAllsky)n).internalId!=null ) {
+            if( ((TreeNodeAllsky)n).internalId.startsWith("CDS/") ) {
+               if( cds==null ) cds = new ImageIcon(aladin.getImagette("cds.png"));
+               nonLeafRenderer.setIcon( cds );
+            } else if( ((TreeNodeAllsky)n).internalId.startsWith("ESAVO/") ) {
+               if( esa==null ) esa = new ImageIcon(aladin.getImagette("esa.png"));
+               nonLeafRenderer.setIcon( esa );
+            } else if( ((TreeNodeAllsky)n).internalId.startsWith("JAXA/") ) {
+               if( jaxa==null ) jaxa = new ImageIcon(aladin.getImagette("jaxa.png"));
+               nonLeafRenderer.setIcon( jaxa );
+            } else if( ((TreeNodeAllsky)n).internalId.startsWith("ov-gso/") ) {
+               if( irap==null ) irap = new ImageIcon(aladin.getImagette("irap.png"));
+               nonLeafRenderer.setIcon( irap );
+            } else if( ((TreeNodeAllsky)n).internalId.startsWith("xcatdb/") ) {
+               if( xcatdb==null ) xcatdb = new ImageIcon(aladin.getImagette("xcatdb.png"));
+               nonLeafRenderer.setIcon( xcatdb );
+           }
+         }
+
          return c;
       }
    }
@@ -354,6 +396,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          Component c = renderer.getTreeCellRendererComponent(tree, obj, true, expanded, leaf, row, true);
          if( n.isIn() ) c.setForeground( Color.black);
          else c.setForeground( Color.lightGray );
+         c.setBackground( Color.red );
          return c;
 
       }
@@ -363,8 +406,10 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    }
 
    public void paint(Graphics g) {
-      updateColor();
-      super.paint(g);
+      try {
+         updateColor();
+         super.paint(g);
+      } catch( Exception e ) { }
    }
 
 

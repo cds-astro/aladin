@@ -23,6 +23,9 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -34,6 +37,7 @@ import java.util.StringTokenizer;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import cds.allsky.Constante;
 import cds.moc.Healpix;
@@ -254,6 +258,118 @@ public class TreeNodeAllsky extends TreeNode {
 
    }
 
+//   /** Construction d'un TreeNodeAllSky à partir du fichier Properties */
+//   public TreeNodeAllsky(Aladin aladin, MyProperties prop, boolean local) throws Exception {
+//      String s;
+//      this.aladin = aladin;
+//      this.local = local;
+//
+//      // recherche du frame Healpix (ancienne & nouvelle syntaxe)
+//      String strFrame = prop.getProperty(Constante.KEY_HIPS_FRAME);
+//      if( strFrame==null  ) strFrame = "galactic";
+//      if( strFrame.equals("equatorial") || strFrame.equals("C") || strFrame.equals("Q") ) frame=Localisation.ICRS;
+//      else if( strFrame.equals("ecliptic") || strFrame.equals("E") ) frame=Localisation.ECLIPTIC;
+//      else if( strFrame.equals("galactic") || strFrame.equals("G") ) frame=Localisation.GAL;
+//
+//      url== prop.getProperty(Constante.KEY_HI);
+//
+//      s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
+//      if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
+//      if( s!=null ) label=s;
+//      else {
+//         char c = local?Util.FS.charAt(0):'/';
+//         int end = pathOrUrl.length();
+//         int offset = pathOrUrl.lastIndexOf(c);
+//         if( offset==end-1 && offset>0 ) { end=offset; offset = pathOrUrl.lastIndexOf(c,end-1); }
+//         label = pathOrUrl.substring(offset+1,end);
+//      }
+//      id="__"+label;
+//
+//      s = prop.getProperty(Constante.OLD_VERSION);
+//      if( s!=null ) version=s;
+//
+//      description = prop.getProperty(Constante.KEY_OBS_TITLE);
+//      verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
+//      copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
+//      copyrightUrl = prop.getProperty(Constante.KEY_OBS_COPYRIGHT_URL);
+//      skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+//
+//      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
+//      if( s!=null) {
+//         String s1 = prop.getProperty(Constante.KEY_HIPS_INITIAL_DEC);
+//         if( s1!=null ) s = s+" "+s1;
+//         else s=null;
+//      }
+//      if( s==null ) target=null;
+//      else {
+//         try { target = new Coord(s); }
+//         catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
+//      }
+//      
+//      double div2=2;
+//      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
+//      if( s==null ) radius=-1;
+//      else {
+//         try { radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2; }
+//         catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
+//      }
+//
+//      s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
+//      if( s!=null ) try { nside = Integer.parseInt(s); } catch( Exception e) {
+//         aladin.trace(3,"NSIDE number not parsable !");
+//         nside=-1;
+//      }
+//
+//      s = prop.getProperty(Constante.KEY_HIPS_ORDER);
+//      try { maxOrder = new Integer(s); }
+//      catch( Exception e ) {
+//         aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
+//         maxOrder=11;
+//      }
+//
+//      // Les paramètres liés aux cubes
+//      String s1 = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
+//      if( s1!=null ) cube = s1.indexOf("cube")>=0;
+//
+//      if( cube ) {
+//         s = prop.getProperty(Constante.KEY_CUBE_DEPTH);
+//         if( s!=null ) {
+//            try { cubeDepth = Integer.parseInt(s); }
+//            catch( Exception e ) { cubeDepth=-1; }
+//         }
+//         s = prop.getProperty(Constante.KEY_CUBE_FIRSTFRAME);
+//         if( s!=null ) {
+//            try { cubeFirstFrame = Integer.parseInt(s); }
+//            catch( Exception e ) { cubeFirstFrame=-1; }
+//         }
+//      }
+//
+////      progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
+//
+//      s = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
+//      if( s!=null) cat = s.indexOf("catalog")>=0;
+//
+//      // Détermination du format des cellules dans le cas d'un survey pixels
+//      String keyColor = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
+//      if( keyColor!=null ) color = keyColor.indexOf("color")>=0;
+//
+//      if( !cat && !progen /* && (keyColor==null || !color)*/ ) {
+//         String format = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
+//         if( format!=null ) {
+//            int a,b;
+//            inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;
+//            inJPEG = (b=Util.indexOfIgnoreCase(format, "jpeg"))>=0
+//                  || (b=Util.indexOfIgnoreCase(format, "jpg"))>=0;
+//                  inPNG  = (b=Util.indexOfIgnoreCase(format, "png"))>=0;
+//                  truePixels = inFits && a<b;                         // On démarre dans le premier format indiqué
+//         }
+//         if( color ) truePixels=false;
+//      }
+//      
+//      if( color && !inJPEG && !inPNG) inJPEG=true;
+//      aladin.trace(4,toString1());
+//   }
+
    private boolean getIsColorByPath(String path,boolean local) {
       String ext = inPNG ? ".png" : ".jpg";
       MyInputStream in = null;
@@ -367,8 +483,26 @@ public class TreeNodeAllsky extends TreeNode {
          if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
          setMoc();
       }
-
-      //      Aladin.trace(3,this.toString1());
+   }
+   
+   protected JPanel createPanel() {
+      
+      JLabel lab = new JLabel(label);
+      lab.setBackground( background );
+      
+      gc = new GridBagConstraints();
+      gc.fill = GridBagConstraints.VERTICAL;
+      gc.anchor = GridBagConstraints.CENTER;
+      gc.gridx = GridBagConstraints.RELATIVE;
+      //      gc.insets = new Insets(2,0,4,5);
+      gc.insets = new Insets(0,0,0,5);
+      gb = new GridBagLayout();
+      JPanel panel = new JPanel(gb);
+//      panel.setOpaque(true);
+      panel.setBackground( background );
+      gb.setConstraints(lab,gc);
+      panel.add(lab);
+      return panel;
    }
 
    public String toString1() {

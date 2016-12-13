@@ -96,12 +96,12 @@ public final class Tool {
       /*13 */      -6,
       /*14 */      0,
       /*15 */      12,
-      /*16 */  	 7,
+      /*16 */  	   7,
       /*17 */      15,
       /*18 */      15,
       /*19 */      9,
       /*20 */      9,
-      /*21 */      9,
+      /*21 */      11,
    };
 
    // Décalage du logo par rapport au centre du bouton (vers le haut)

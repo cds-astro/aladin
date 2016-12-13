@@ -19,17 +19,37 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Event;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import cds.tools.Util;
 
@@ -1493,7 +1513,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
 	       // résolution marque GLU
 	       if( useGluLink ) {
 	           // pour analyse du tag glu
-	           Words w = new Words("");
+	           Words w = new Words("",-1);
 	           w.tagGlu(gluLink.toCharArray());
 	           //System.out.println(w.id);
 	           //System.out.println(w.param);
@@ -1599,7 +1619,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
        // résolution marque GLU
        if( useGluLink ) {
            // pour analyse du tag glu
-           Words w = new Words("");
+           Words w = new Words("",-1);
            w.tagGlu(gluLink.toCharArray());
            //System.out.println(w.id);
            //System.out.println(w.param);

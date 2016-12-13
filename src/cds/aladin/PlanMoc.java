@@ -422,10 +422,14 @@ public class PlanMoc extends PlanBGCat {
    protected void setPropertie(String prop,String specif,String value) throws Exception {
       int a=-1,b=-1,c=-1;
       if( prop.equalsIgnoreCase("drawing") ) {
-         if( (a=Util.indexOfIgnoreCase(value,"perimeter"))>=0 ) setDrawingPerimeter(a>0 && value.charAt(a-1)=='-'? false : true);
-         if( (b=Util.indexOfIgnoreCase(value,"fill"))>=0 ) setDrawingFillIn(a>0 && value.charAt(a-1)=='-'? false : true);
-         if( (b=Util.indexOfIgnoreCase(value,"border"))>=0 ) setDrawingBorder(a>0 && value.charAt(a-1)=='-'? false : true);
-         if( a<0 && b<0 && c<0 ) throw new Exception("set drawing parameter unknown [perimeter,fill,border]"); 
+         Tok tok = new Tok(value,", ");
+         while( tok.hasMoreTokens() ) {
+            String v = tok.nextToken();
+            if( (a=Util.indexOfIgnoreCase(v,"perimeter"))>=0 ) setDrawingPerimeter(a>0 && v.charAt(a-1)=='-'? false : true);
+            if( (b=Util.indexOfIgnoreCase(v,"fill"))>=0 )      setDrawingFillIn   (b>0 && v.charAt(b-1)=='-'? false : true);
+            if( (c=Util.indexOfIgnoreCase(v,"border"))>=0 )    setDrawingBorder   (c>0 && v.charAt(c-1)=='-'? false : true);
+            if( a<0 && b<0 && c<0 ) throw new Exception("set drawing parameter unknown ["+v+"]"); 
+         }
          Properties.majProp(this);
       } else {
          super.setPropertie(prop,specif,value);

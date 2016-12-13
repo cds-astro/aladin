@@ -205,6 +205,7 @@ public class Calque extends JPanel implements Runnable {
       haut = new JPanel( new BorderLayout(10,10) );
       haut.add(select,BorderLayout.CENTER);
       haut.add(slider,BorderLayout.SOUTH);
+      haut.setBackground( aladin.getBackground());
       
 //      Dataset dataset = new Dataset(aladin);
 //      final MySplitPane gauche1 = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true,
@@ -217,6 +218,7 @@ public class Calque extends JPanel implements Runnable {
 
       
       JPanel bas = new JPanel(new BorderLayout(10,10));
+      bas.setBackground( aladin.getBackground());
       bas.add(zoom,BorderLayout.CENTER);
       
      // Panel principal : contient le selecteur de plans et le zoom
@@ -224,13 +226,14 @@ public class Calque extends JPanel implements Runnable {
 //      add(haut,BorderLayout.CENTER);
 //      add(bas,BorderLayout.SOUTH);
       
-      MySplitPane splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, /* gauche1 */ haut, bas);
+      MySplitPane splitH = new MySplitPane(aladin,JSplitPane.VERTICAL_SPLIT, /* gauche1 */ haut, bas,1);
       bas.setMinimumSize(new Dimension(100,100));
       bas.setPreferredSize(new Dimension(100,aladin.getZoomViewHeight()));
       splitH.setResizeWeight(1);
       splitH.setBorder(BorderFactory.createEmptyBorder());
       aladin.splitZoomHeight = splitH;
       
+      setBackground( aladin.getBackground());
       add(splitH,BorderLayout.CENTER);
 
 

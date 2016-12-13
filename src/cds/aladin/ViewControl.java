@@ -38,12 +38,12 @@ import cds.tools.Util;
 public final class ViewControl extends JComponent implements
                   MouseMotionListener, MouseListener
                   {
-   static final int MVIEW1  = 1;
-   static final int MVIEW2C = 2;
-   static final int MVIEW2L  = 3;
-   static final int MVIEW4  = 4;
-   static final int MVIEW9  = 9;
-   static final int MVIEW16 = 16;
+   static public final int MVIEW1  = 1;
+   static public final int MVIEW2C = 2;
+   static public final int MVIEW2L  = 3;
+   static public final int MVIEW4  = 4;
+   static public final int MVIEW9  = 9;
+   static public final int MVIEW16 = 16;
    static final int DEFAULT = MVIEW1;
    static final int[] MODE = { MVIEW1,MVIEW2C,MVIEW2L,MVIEW4,MVIEW9,MVIEW16 };
    static final int MAXVIEW = MVIEW16;

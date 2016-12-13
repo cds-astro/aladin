@@ -1024,7 +1024,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Détermination du facteur de zoom le plus adapté pour conserver
       // la même portion de l'image visible
-      double nz = fct==1 ? z : aladin.calque.zoom.getNearestZoomFct(fct*z);
+//      double nz = fct==1 ? z : aladin.calque.zoom.getNearestZoomFct(fct*z);
+      double nz=z;
 
       // Recalcul du zoom avec le nouveau facteur
       // Nécessaire même si nz==z pour éventuellement recentrer l'image
@@ -1873,6 +1874,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    private boolean rainbowUsed=false;
 
    protected void mousePressed1(double x, double y,MouseEvent e) {
+      
+      if( inHiPSTreeLanguette(e) ) return;
 
       // Au cas où
       aladin.view.resetMegaDrag();
@@ -3467,6 +3470,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
             } else if( flagRollable || inNE((int)x,(int)y) ) {
                if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
+            } else if( view.isSimbadOrVizieRPointing() ) {
+               if( oc!=Aladin.LOOKCURSOR ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));
             } else if( trouve ) {
                if( oc!=Aladin.HANDCURSOR ) Aladin.makeCursor(this,(oc=Aladin.HANDCURSOR));
             } else if( flagMarge ) {
@@ -3609,6 +3614,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Notification a view que c'est moi qui ait la souris
       aladin.view.setMouseView(this);
       paintBordure();
+      if( aladin.look!=null ) aladin.look.repaint();
 
       // Réaffichage du select pour mettre à jour le bon triangle
       aladin.calque.select.repaint();
@@ -6352,6 +6358,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !aladin.view.isMultiView() ) {
          if( !Aladin.NOGUI ) Util.drawEdge(g,w,h);
          if( sticked ) drawStick(g);
+         drawLanguette(g);
          return;
       }
 
@@ -6394,15 +6401,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          g.drawRect(2,2,w-5,h-5);
       }
 
-      //        if( selected ) g.drawString("selected",5,40);
-      //        if( current ) g.drawString("current",5,52);
-
       if( sticked ) drawStick(g);
+      drawLanguette(g);
 
-      /*String s = current && selected ?"SC":current?"C":selected?"S":"";
-g.setColor(Color.red);
-g.drawString(s,10,100);
-       */   }
+   }
 
 
    /** Affichage de la bordure uniquement */
@@ -6611,8 +6613,10 @@ g.drawString(s,10,100);
    // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI
    public void paintComponent(Graphics gr) {
       
-      try { paintComponent1(gr); }
-      catch( Exception e ) {
+      try {
+         paintComponent1(gr);
+         
+      } catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          drawBackground(gr);
          drawBordure(gr);
@@ -6795,6 +6799,30 @@ g.drawString(s,10,100);
       timeForPaint  = (Util.getTime() - t);
       //      System.out.println("ViewSimple paint "+timeForPaint+"ms");
 
+   }
+   
+   private Rectangle rLanguette=null;    // emplacement de la languette qui a été tracé sur le bord de cette vue, null si aucune
+
+   /** Si un clic dans la languette d'ouverture du HiPS tree, l'ouvre à la largeur mémorisée. */
+   private boolean inHiPSTreeLanguette(MouseEvent e) {
+      if( rLanguette==null || !rLanguette.contains(e.getPoint()) ) return false;
+      int memo = aladin.splitHiPSWidth.getMemo();
+      aladin.splitHiPSWidth.setDividerLocation( memo>0 ? memo : Configuration.DEF_HWIDTH );
+      return true;
+   }
+
+   /** Dessin d'une languette pour l'ouverture du HiPS tree (uniquement dans la vue en bas à gauche
+    * et si le panel du HiPS tree n'est pas encore ouvert. Mémorise sa position afin de pouvoir
+    * détecter un clic dedans */
+   private void drawLanguette(Graphics g) {
+      rLanguette = null;
+      if( !Aladin.PROTO ) return;
+      if( aladin.splitHiPSWidth.getCompSize()>10 ) return;
+      int nb = view.getModeView();
+      int ok = nb==ViewControl.MVIEW1 ? 0 : nb==ViewControl.MVIEW2C ? 1 : nb==ViewControl.MVIEW2L ? 0 
+             : nb==ViewControl.MVIEW4 ? 2 : nb==ViewControl.MVIEW9  ? 6 : 12;
+      if( n!=ok ) return;  // Seule la vue en bas à gauche a une languette
+      rLanguette = MySplitPane.drawLanguette(g, 1, true, 6, 0, getHeight()-70, aladin.getBackground(), Color.gray);
    }
 
    private void drawHealpixMouse(Graphics g) {

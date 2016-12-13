@@ -151,6 +151,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Simbad + VizieR pointer improvements
  * @beta    <LI> HiPS Market tree
  * @beta    <LI> Panel management improvement
  * @beta    <LI> HiPS mirror sites management improvement
@@ -203,7 +204,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.500";
+   static public final    String VERSION = "v9.502";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -231,8 +232,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
    // La couleur du fond
+   static final Color BACKGROUND   = new Color(250,250,240); //245,245,250); 
+   
    static final Color BKGD   = Color.lightGray;
-   //    static final Color BKGD   = new Color(246,246,246);
+//       static final Color BKGD   = new Color(100,100,255);
+       
    static final Color GREEN = new Color(27,137,0);
    static final Color DARKBLUE = new Color(102,102,153);
    static final Color MYBLUE = new Color(49,106,197);
@@ -244,7 +248,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final Color STACKBLUE = new Color(140,140,255);
    static final Color STACKGRAY = new Color(150,150,150);
    static final Color BLACKBLUE = new Color(0,0,200);
-   static final Color BACKGROUND   = new Color(198,218,239);
    static final Color ORANGE   = new Color(255,137,58);
    static final Color LIGHTORANGE   = new Color(255,211,58);
 
@@ -398,6 +401,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
    Match match;                  // Gere le logo pour la grille
+   Look look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
@@ -406,9 +410,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    Tips urlStatus;               // Gere la ligne de l'info sur les URLs
    MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
    Mesure mesure;                // Gere la "Frame of measurements"
-   MySplitPaneMesure splitMesureHeight;     // Gère la séparation mesure/Vue
+//   MySplitPaneMesure splitMesureHeight;     // Gère la séparation mesure/Vue
+   MySplitPane splitMesureHeight;     // Gère la séparation mesure/Vue
    MySplitPane splitZoomHeight;  // Gère la séparation pile/zoom
    MySplitPane splitZoomWidth;   // Gère la séparation view/pile-zoom
+   MySplitPane splitHiPSWidth;    // Gère la séparation hips/view
    HipsMarket hipsMarket;        // Gère le "HiPS market"
    Search search;                // Gère le bandeau de recherche dans les mesures
    public ToolBox toolBox;       // Gere la "Tool bar"
@@ -525,7 +531,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Variables associees au mode de fonctionnement
    boolean flagLoad=false;	      // true si on est en mode de chargement
-   MyFrame f=null;        // Le "Frame" en mode "Standalone"
+   public MyFrame f=null;        // Le "Frame" en mode "Standalone"
    protected boolean msgOn=true;           // True si le message d'accueil est actif
    static boolean flagLaunch=false; // true si on a demarre aladin par launch
    static boolean NOGUI=false;  // True si le mode script est actif (sans interface)
@@ -1948,15 +1954,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( !flagLaunch ) {
          try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
             //           UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-
          } catch( Exception e ) { e.printStackTrace(); }
       }
 
       addMouseMotionListener(this);
       addMouseListener(this);
-      setBackground((new JButton()).getBackground());   // UN PEU TORDU
+//      setBackground((new JButton()).getBackground());   // UN PEU TORDU
+      setBackground( PROTO ? BACKGROUND : (new JButton()).getBackground());
       ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(0,3,0,2));
 
       aladinSession = (++ALADINSESSION);
@@ -2090,14 +2095,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Le bandeau sous le menu : Panel saisie comportant la localisation
       // et le target lie au plan de reference
       JToolBar saisie1 = new JToolBar();
+      saisie1.setBackground( getBackground() );
       saisie1.setFloatable(false);
       saisie1.setBorder(BorderFactory.createEmptyBorder());
+      saisie1.setBorderPainted(false);
       saisie1.add(searchData);
       saisie1.add(ExportYourWork);
       //       saisie1.addSeparator();
       //       saisie1.add(avant);
       //       saisie1.add(apres);
       JPanel saisie = new JPanel( new BorderLayout(0,0));
+      saisie.setBackground( getBackground() );
       saisie.add(saisie1,BorderLayout.WEST);
       saisie.add(localisation, BorderLayout.CENTER);
       //       if( !OUTREACH && !BETA ) saisie.add(pixel);
@@ -2125,6 +2133,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       bigView.add("View",view);
 
       JPanel gauche1 = new JPanel( new BorderLayout(3,0));
+      gauche1.setBackground( getBackground());
       gauche1.add(bigView,BorderLayout.CENTER);
       
       // Désactivation des éléments de menus et des boutons non encore accessible
@@ -2132,16 +2141,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // Le panel gauche : contient la boite a boutons et les calques
       final JPanel droite = new JPanel(new BorderLayout(5,0));
+      droite.setBackground( getBackground());
       droite.add(calque,BorderLayout.CENTER);
 
       JPanel droite2;
       droite2 = new JPanel(new BorderLayout(0,0));
+      droite2.setBackground( getBackground());
       droite2.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 0));
       droite2.add(toolBox,BorderLayout.WEST);
       droite2.add(droite,BorderLayout.CENTER);
 
       // Le panel haut1 : contient le menu et le bandeau d'info
       JPanel haut1 = new JPanel(new BorderLayout(0,0));
+      haut1.setBackground( getBackground());
       haut1.add(saisie,BorderLayout.NORTH);
       JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
       
@@ -2153,17 +2165,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Le panel haut : contient le logo et le haut1
       JPanel haut = new JPanel(new BorderLayout(0,0));
       haut.setBorder(BorderFactory.createEmptyBorder(4,10,0,40));
+      haut.setBackground( getBackground());
       haut.add(haut1,BorderLayout.CENTER);
       haut.add(logo,BorderLayout.EAST);
 
       // le panel du status
       JPanel searchPanel = new JPanel(new BorderLayout(0,0));
+      searchPanel.setBackground( getBackground());
       searchPanel.setBorder(BorderFactory.createEmptyBorder(3,0,0,0));
 
       JPanel y = new JPanel( new FlowLayout(FlowLayout.CENTER,0,0));
+      y.setBackground( getBackground());
       y.setBorder(BorderFactory.createEmptyBorder());
       y.add(grid);
-      if( !OUTREACH ) { y.add(oeil); y.add(northup); y.add(pix); }
+      if( !OUTREACH ) { y.add(look); y.add(oeil); y.add(northup); y.add(pix); }
       y.add(viewControl);
       if( !OUTREACH ) y.add(match);
 
@@ -2174,6 +2189,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       GridBagLayout g = new GridBagLayout();
       infoPanel = new JPanel(g);
+      infoPanel.setBackground( getBackground());
       GridBagConstraints gc = new GridBagConstraints();
       gc.gridwidth = 3;
       gc.weightx = 1;
@@ -2222,35 +2238,35 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //      splitV.add(droite2,BorderLayout.EAST);
 
       JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));
+      bigViewSearch.setBackground( getBackground());
       bigViewSearch.add(gauche1 /*splitV*/,BorderLayout.CENTER);
       bigViewSearch.add(searchPanel,BorderLayout.SOUTH);
 
-      splitMesureHeight = new MySplitPaneMesure(aladin,JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
-      mesure.setPreferredSize(new Dimension(100,getMesureHeight()));
+//      splitMesureHeight = new MySplitPaneMesure(aladin,JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
+      splitMesureHeight = new MySplitPane(this,JSplitPane.VERTICAL_SPLIT, bigViewSearch, mesure, 1);
+//      mesure.setPreferredSize(new Dimension(100,getMesureHeight()));
+      mesure.setPreferredSize(new Dimension(100,0));
+      splitMesureHeight.setDefaultSplit( getMesureHeight() );
+      bigViewSearch.setPreferredSize(new Dimension(500,500));
       mesure.setMinimumSize(new Dimension(100,0));
       splitMesureHeight.setResizeWeight(1);
-      splitMesureHeight.remove(mesure);
+//      splitMesureHeight.remove(mesure);
       splitMesureHeight.setBorder(BorderFactory.createEmptyBorder());
       
-      MySplitPane gauche3=null;
       if( PROTO ) {
          hipsMarket = new HipsMarket(aladin);
-         gauche3 = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-               hipsMarket, splitMesureHeight );
-         gauche3.setBorder(BorderFactory.createEmptyBorder());
-         //      gauche3.setResizeWeight(1);
-         hipsMarket.setMinimumSize(new Dimension(0,100));
-         hipsMarket.setPreferredSize(new Dimension(150,200));
-         //    splitDatasetWidth = splitD;
+         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, hipsMarket, splitMesureHeight,0);
+         splitHiPSWidth.setBorder(BorderFactory.createEmptyBorder());
+         hipsMarket.setPreferredSize(new Dimension(getHiPSWidth(),200));
+         hipsMarket.setMinimumSize( new Dimension(0,200));
       }
-
       
       // test thomas (avec un séparateur) + Pierre
-      final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-            PROTO ? gauche3 : splitMesureHeight, droite2);
+      final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, 
+            PROTO ? splitHiPSWidth : splitMesureHeight, droite2,1);
       splitV.setBorder(BorderFactory.createEmptyBorder());
       splitV.setResizeWeight(1);
-      droite2.setMinimumSize(new Dimension(150,100));
+      droite2.setMinimumSize(new Dimension(180,100));
       droite2.setPreferredSize(new Dimension(getStackWidth(),100));
       splitZoomWidth = splitV;
       
@@ -2326,13 +2342,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /*  Retourne la largeur en pixels du panel qui contient la pile, mes sliders et le zoomview */
-   protected int getStackWidth() { return configuration.getZoomWidth(); } //220; }
+   protected int getStackWidth() { return configuration.getSplitZoomWidth(); } 
    
    /* Retourne la hauteur en pixels du panel qui contient le zoomView */
-   protected int getZoomViewHeight() { return configuration.getZoomHeight(); } // 150; }
+   protected int getZoomViewHeight() { return configuration.getSplitZoomHeight(); }
    
    /* Retourne la hauteur en pixels du panel qui contient les mesures */
-   protected int getMesureHeight() { return configuration.getWinDivider(); } //150; }
+   protected int getMesureHeight() { return configuration.getSplitMesureHeight(); } 
+   
+   /* Retourne la largeur en pixels du panel du HiPS market */
+   protected int getHiPSWidth() { return configuration.getSplitHiPSWidth(); } 
    
    protected void manageDrop() {
       // IL Y A UN GROS BUG SOUS LINUX QUI FAIT QUE LA JVM DU BROWSER SE PLANTE ET
@@ -2345,51 +2364,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
                this, DnDConstants.ACTION_COPY_OR_MOVE, this);
       }
    }
-
-//   // Surcharges de classes pour supprimer le trait séparateur du JSplitPane
-//   class MySplitPane extends JSplitPane {
-//      public MySplitPane(int newOrientation, boolean newContinuousLayout,
-//            Component newLeftComponent, Component newRightComponent ) {
-//         super(newOrientation,newContinuousLayout,newLeftComponent,newRightComponent);
-//         flagMesure = newOrientation==JSplitPane.VERTICAL_SPLIT;
-//         setUI(new MyBasicSplitPaneUI());
-//      }
-//
-//      private boolean flagMesure;
-//      private int mesureHeight;
-//
-//      // Repositionne le diviseur à la position mémorisée
-//      public void restoreMesureHeight() {
-//         setDividerLocation(getHeight()-(mesureHeight<=0 ? 150 : mesureHeight)); }
-//
-//      // Positionne le diviseur en fonction de la taille de la fenêtre des mesures,
-//      // et mémorise cette valeur pour pouvoir y revenir
-//      public void setMesureHeight(int h) { mesureHeight=h; }
-//
-//      // Retourne la taille de la fenêtre des mesures.
-//      public int getMesureHeight() { return mesureHeight; }
-//
-//      // On bride à 55 pixels minimum pour la taille de la fenêtre des mesures
-//      public void setDividerLocation(int n) {
-//         if( flagMesure ) {
-//            int h = getHeight();
-//            if( h-n<53 ) return;
-//            mesureHeight = h-n;
-//         }
-//         super.setDividerLocation(n);
-//      }
-//
-//   }
-//   class MyBasicSplitPaneUI extends BasicSplitPaneUI {
-//      public BasicSplitPaneDivider createDefaultDivider() {
-//         return new MySplitPaneDivider(this);
-//      }
-//   }
-//   class MySplitPaneDivider extends BasicSplitPaneDivider {
-//      public MySplitPaneDivider(BasicSplitPaneUI ui) { super(ui); }
-//      public void paint(Graphics g) { }
-//   }
-//
 
    /** Subtilité pour faire de la mise en page une fois que toutes les peer classes
     * aient été correctement initialisées
@@ -2650,15 +2624,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
          configuration.setOfficialVersion(currentVersion);
          trace(1,"Reset cache & bookmarks definition (new official Aladin version)...");
          cache.clear();
-         if( bookmarks!=null ) bookmarks.reload();
+//         if( bookmarks!=null ) bookmarks.reload();
       }
 
       // Doit-on nettoyer le cache et recharger les bookmarks officielles
       // car le numéro de version Aladin a changé par rapport à la dernière utilisation
       else if( configuration.getVersion()==null || !configuration.getVersion().equals(VERSION) ) {
+         System.out.println("In Aladin.conf ["+configuration.getVersion()+"] and in code ["+VERSION+"]");
          trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
          cache.clear();
-         if( bookmarks!=null ) bookmarks.reload();
+//         if( bookmarks!=null ) bookmarks.reload();
       }
 
       // Doit-on nettoyer le cache car la dernière session date de plus de 15 jours
@@ -3652,8 +3627,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       match( !syncOk ? 0 : byProjection ? 3 : 2);
    }
 
-   /** Cycle sur les modes match (aucun, simple match, match + orientation)
-    */
+   /** Cycle sur les modes match (aucun, simple match, match + orientation) */
    protected void cycleMatch() {
       int syncMode = match.getMode();
       int mode = syncMode==3 ? 0 :  3;
@@ -3669,6 +3643,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( mode==0 )  view.unselectViewsPartial();
       }
       match(mode);
+   }
+   
+   /** Cycle sur les modes des outils Simbad pointer + Vizier pointer */
+      protected void cycleLook() {
+      int mode = look.getMode();
+      mode++;
+      if( mode>2 ) mode=0;  // on ne cycle pas sur VizieR tout seul
+      
+      if( mode==0 ) calque.flagSimbad = calque.flagVizierSED = false;
+      else if( mode==1 ) { calque.flagSimbad = true; calque.flagVizierSED = false; }
+      else if( mode==2 ) { calque.flagSimbad = true; calque.flagVizierSED = true; }
+      else { calque.flagSimbad = false; calque.flagVizierSED = true; }
+      
+      look.repaint();
    }
 
    /** Positionnement du match
@@ -4636,6 +4624,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final int JOINDRECURSOR = 10;
    static final int TAGCURSOR = 11;
    static final int BLANKCURSOR = 12;
+   static final int LOOKCURSOR = 13;
 
    /** Retourne le Frame parent */
    protected Frame getFrame(Component c) {
@@ -4731,7 +4720,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Curseurs pour la rotation des Apertures
     * et pour le déplacement d'un plan */
-   static private Cursor turnCursor=null,planCursor=null,joindreCursor=null,tagCursor=null,blankCursor=null;
+   static private Cursor turnCursor=null,planCursor=null,joindreCursor=null,tagCursor=null,blankCursor=null,lookCursor=null;
 
    static private int BLANKCURSORDEF[][]={
          {0,0,0,0,0,0,0,0,0,0},
@@ -4830,6 +4819,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
       {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
       {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
    };
+   
+   static private int LOOKCURSORDEF[][]={
+         {0,0,0,2,2,2,2,2,0,0,0,0,0,0,0,0},
+         {0,0,2,1,1,1,1,1,2,0,0,0,0,0,0,0},
+         {0,2,1,2,2,2,2,2,1,2,0,0,0,0,0,0},
+         {2,1,2,0,0,0,0,0,2,1,2,0,0,0,0,0},
+         {1,2,0,0,0,0,0,0,0,2,1,2,0,0,0,0},
+         {1,2,0,0,0,0,0,0,0,2,1,2,0,0,0,0},
+         {1,2,0,0,0,0,0,0,0,2,1,2,0,0,0,0},
+         {1,2,0,0,0,0,0,0,0,2,1,2,0,0,0,0},
+         {1,2,0,0,0,0,0,0,0,2,1,2,2,0,0,0},
+         {2,1,2,0,0,0,0,0,2,1,1,1,1,2,2,0},
+         {0,2,1,2,2,2,2,2,1,2,1,1,1,1,1,2},
+         {0,0,2,1,1,1,1,1,2,0,2,1,1,1,1,1},
+         {0,0,0,2,2,2,2,2,0,0,0,2,1,1,1,1},
+         {0,0,0,0,0,0,0,0,0,0,0,0,2,2,1,2},
+   };
 
 
    //   static private Cursor createCustomCursor(Image im,Point p,String s) {
@@ -4884,16 +4890,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return blankCursor;
    }
 
+   /** Génération d'un curseur en forme de loupe (outil look) */
+   static private Cursor getLookCursor() {
+      if( lookCursor==null ) lookCursor=createCursor(LOOKCURSORDEF,false);
+      return lookCursor;
+   }
+
    /** Construction d'un curseur sur mesure avec symétrie verticale */
-   static private Cursor createCursor(int cursor[][]) {
+   static private Cursor createCursor(int cursor[][]) { return createCursor(cursor,cursor[0].length<30); }
+   static private Cursor createCursor(int cursor[][],boolean fold) {
       Cursor myCursor;
       try {
-
-
          //         int h = (int)Math.sqrt(cursor.length*2);
          int h = cursor.length;
          int w = cursor[0].length;
-         boolean fold = w<30;
          int width = fold ? w*2 : w;
          Dimension d= Toolkit.getDefaultToolkit().getBestCursorSize(width,h);
          //N'ETAIT PAS UTILISABLE POUR COMPATIBILITE JVM 1.1.4 Windows
@@ -4938,6 +4948,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( Aladin.aladin.inHelp ) type=HANDCURSOR;
       Cursor cursor = type==PLANCURSOR ? getPlanCursor() :
          type==TURNCURSOR ? getTurnCursor() :
+            type==LOOKCURSOR ? getLookCursor() :
             type==JOINDRECURSOR ? getJoindreCursor() :
                type==TAGCURSOR? getTagCursor():
                   type==BLANKCURSOR? getBlankCursor():
@@ -5365,7 +5376,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Rectangle r = a.configuration.getWinLocation();
       if( r==null || r.x>SCREENSIZE.width || r.y>SCREENSIZE.height ) {
          a.f.setLocation(computeLocation(a.f));
-         a.f.setSize(732,679);
+//         a.f.setSize(732,679);
+         int w = 1024;
+         int h = 800;
+         if( w>SCREENSIZE.width ) w=SCREENSIZE.width-40;
+         if( h>SCREENSIZE.height ) h=SCREENSIZE.height-40;
+         a.f.setSize(w,h);
          a.configuration.setInitWinLoc(a.f.getLocation().x,a.f.getLocation().y,
                a.f.getSize().width,a.f.getSize().height);
       } else {
@@ -6256,7 +6272,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       for( int i=0; st.hasMoreTokens(); i++ ) {
-         Words w = new Words(st.nextToken());
+         Words w = new Words(st.nextToken(),-1);
 //         if( !o.leg.isVisible(i) ) continue;
          if( i%5==0 && i>0 ) { writeBytes(s, "\n"); writeIndent(s,11); }
          writeBytes(s, "<TD>"+xmlEncode(getValue(w.getText()))+"</TD>");

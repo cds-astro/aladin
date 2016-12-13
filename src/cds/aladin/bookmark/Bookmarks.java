@@ -55,7 +55,6 @@ import cds.aladin.WidgetControl;
 public class Bookmarks extends JToolBar implements Widget {
    private Aladin aladin;
    private FrameBookmarks frameBookmarks;     // Gère la fenêtre de consultation/édition des favoris
-   //   private JToolBar toolBar;            // JToolbar des bookmarks sélectionnés
 
    private String memoDefaultList="";
 
@@ -66,8 +65,10 @@ public class Bookmarks extends JToolBar implements Widget {
 
       setRollover(true);
       setFloatable(false);
+      setBorderPainted(false);
       setBorder(BorderFactory.createEmptyBorder());
-//      setBorder(BorderFactory.createLineBorder(Color.yellow));
+      setBackground( aladin.getBackground() );
+      
    }
    
    public Dimension getPreferredSize() {
@@ -78,11 +79,6 @@ public class Bookmarks extends JToolBar implements Widget {
    public void init(boolean noCache) {
       createBookmarks(noCache);
       aladin.getCommand().setFunctionModif(false);
-      if( aladin.hasGUI() ) {
-         SwingUtilities.invokeLater( new Runnable() {
-            public void run() { resumeToolBar(); }
-         });
-      }
    }
 
    public FrameBookmarks getFrameBookmarks() {
@@ -91,7 +87,7 @@ public class Bookmarks extends JToolBar implements Widget {
    }
 
    /** Réinitialisation (rechargement) des bookmarks "officielles" */
-   synchronized public void reload() {
+   public void reload() {
       String list = aladin.configuration.getBookmarks();
       aladin.configuration.resetBookmarks();
       init(true);
@@ -157,6 +153,7 @@ public class Bookmarks extends JToolBar implements Widget {
 
       if( !Aladin.OUTREACH ) {
          JButton plus = new JButton("+");
+         plus.setBackground( aladin.getBackground());
          plus.setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
          plus.setToolTipText(aladin.getChaine().getString("BKMEDITOR"));
          plus.setFont( plus.getFont().deriveFont(Font.BOLD));
@@ -175,13 +172,29 @@ public class Bookmarks extends JToolBar implements Widget {
    //      aladin.validate();
    //      aladin.repaint();
    //   }
-
+   
    public void resumeToolBar() {
-//      System.out.println("resumeToolBar");
+      if( SwingUtilities.isEventDispatchThread() ) {
+         resumeToolBar1();
+      } else {
+         SwingUtilities.invokeLater(new Runnable() {
+            public void run() { resumeToolBar1(); }
+         });
+      }
+   }
+
+   private void resumeToolBar1() {
+//      System.out.println("XXXX resumeToolBar");
+//      try { throw new Exception("XXXX resumeToolBar"); }
+//      catch( Exception e ) {
+//         e.printStackTrace();
+//      }
       removeAll();
       populateToolBar(this);
+      
       revalidate();
       aladin.repaint();
+      if( aladin.f!=null ) aladin.f.repaint();
    }
 
 
@@ -257,7 +270,7 @@ public class Bookmarks extends JToolBar implements Widget {
     * 1) Chargement à distance des définitions de fonctions scripts
     * 2) Assignation de certaines d'entre-elles en tant que bookmarks.
     */
-   synchronized public void createBookmarks(boolean noCache) {
+   public void createBookmarks(boolean noCache) {
       Glu glu = aladin.getGlu();
       Cache cache = aladin.getCache();
       Command command = aladin.getCommand();

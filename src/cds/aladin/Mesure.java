@@ -64,7 +64,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    static private int MAXBLOC = 100000;
    protected Source src[] = new Source[DEFAULTBLOC];   // Sources gérées
    protected int nbSrc=0;                            // Nb de sources gérées
-   protected FrameMesure f=null;
+   protected FrameMesureAjeter f=null;
 
    // Mémorisation des WordLines qui ont été affichées dans MCanvas afin
    // d'éviter de les regénérer à chaque fois et de perdre du coup
@@ -102,14 +102,13 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       //          public void actionPerformed(ActionEvent e) { split(); }
       //       });
 
-      JPanel est = new JPanel(new BorderLayout(0,0));
-      //       est.add(cross,BorderLayout.NORTH);
-      est.add(scrollV,BorderLayout.CENTER);
+//      JPanel est = new JPanel(new BorderLayout(0,0));
+//      est.add(scrollV,BorderLayout.CENTER);
 
       setLayout( new BorderLayout(0,0) );
       Aladin.makeAdd(this,haut,"North" );
       Aladin.makeAdd(this,mcanvas,"Center");
-      Aladin.makeAdd(this,est,"West");
+      Aladin.makeAdd(this,scrollV/* est*/,"East");
       Aladin.makeAdd(this,scrollH,"South");
       haut.setVisible(false);
 
@@ -121,7 +120,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    protected void split() {
       if( f==null ) {
-         f = new FrameMesure(aladin);
+         f = new FrameMesureAjeter(aladin);
       } else { f.close(); f=null; }
    }
 
@@ -562,7 +561,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       synchronized( verrou ) {
          Vector wl = (Vector)memoWL.get(new Integer(i));
          if( wl!=null ) return wl;
-         return getWordLine(src[i]);
+         return getWordLine(src[i],i);
       }
    }
 
@@ -573,13 +572,13 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       wordLine = new Vector(leg.field.length+2);
 
       wordLine.addElement(o);           // L'objet lui-meme est tjrs en premiere place
-      wordLine.addElement(new Words("")); // A la place du repère
+      wordLine.addElement(new Words("",-1)); // A la place du repère
 
       for( int i=0; i<leg.field.length; i++ )  {
          if( !leg.isVisible(i) ) continue;
          Words w = new Words(leg.field[i].name,null,o.leg.getWidth(i),o.leg.getPrecision(i),
                Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[i],
-                     leg.field[i].sort);
+                     leg.field[i].sort,-1);
          w.pin = i==0;
          wordLine.addElement(w);
       }
@@ -588,7 +587,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
 
    /** Génération de la WordLine associée à la source passée en paramètre */
-   protected Vector getWordLine(Source o) {
+   protected Vector getWordLine(Source o,int num) {
       if( o==null ) return null;
       Vector wordLine;
       String s =(o.info!=null)?o.info:o.id; // Faute de grive...
@@ -602,7 +601,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       for( int i=0; st.hasMoreTokens(); i++ ) {
          String tag = st.nextToken();
          Words w;
-         if( i==0 ) w = new Words(tag);	// Le triangle n'a pas de taille
+         if( i==0 ) w = new Words(tag,num);	// Le triangle n'a pas de taille
          else {
 
             if( !o.leg.isVisible(i-1) ) continue;
@@ -612,19 +611,19 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
             // Creation d'un mot dans le cas d'un footprint associé (Thomas, VOTech)
             if( indexFootPrint==i-1 ) {
-               w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(i-1),Words.LEFT,false,true);
+               w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(i-1),Words.LEFT,false,true,num);
             }
             // Creation du nouveau mot
             else {
                if( o.leg.isNullValue(tag, i-1) ) tag="";
-               w = new Words(tag,o.leg.getRefText(i-1),o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT);
+               w = new Words(tag,o.leg.getRefText(i-1),o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT,num);
             }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );
          wordLine.addElement(w);
          if( w.glu && w.size<tag.length() ) {
             tag = tag.substring(w.size+1,tag.length());
-            wordLine.addElement(new Words(tag));
+            wordLine.addElement(new Words(tag,num));
          }
       }
       return wordLine;
@@ -644,36 +643,41 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
          haut.setVisible(false);
          mcanvas.setSize(mcanvas.getSize().width, previousHeight);
          scrollV.setSize(scrollV.getSize().width, previousHeight);
-         if( !flagReduced ) aladin.splitMesureHeight.restoreSlit();
+//         if( !flagReduced ) aladin.splitMesureHeight.restoreSlit();
       }
       setSize( getPreferredSize());
    }
 
-   /** retourne l'état courant de la fenêtre des mesures (réduite ou agrandie) */
-   protected boolean isReduced() { return flagReduced; }
+//   /** retourne l'état courant de la fenêtre des mesures (réduite ou agrandie) */
+//   protected boolean isReduced() { return flagReduced; }
 
-   /** permute l'état réduit/agrandit de la fenêtre des mesures */
-   protected void switchReduced() {
-      if( f!=null ) split();
-      setReduced(!flagReduced);
-   }
+//   /** permute l'état réduit/agrandit de la fenêtre des mesures */
+//   protected void switchReduced() {
+//      if( f!=null ) split();
+//      setReduced(!flagReduced);
+//   }
 
-   protected boolean flagReduced=true;
+//   protected boolean flagReduced=true;
    protected boolean flagDorepaintForScroll=false;
-
+   
    protected void setReduced(boolean flag) {
-      if( flagReduced==flag ) return;
-      flagReduced=flag;
-      if( flagReduced ) {
-         aladin.search.hideSearch(true);
-         if( aladin.splitMesureHeight.getBottomComponent()!=null ) aladin.splitMesureHeight.remove(this);
-      } else {
-         aladin.search.hideSearch(false);
-         if( aladin.splitMesureHeight.getBottomComponent()==null ) aladin.splitMesureHeight.setBottomComponent(this);
-         flagDorepaintForScroll=true;
-         aladin.splitMesureHeight.restoreSlit();
-      }
+      aladin.splitMesureHeight.setReduced( flag );
    }
+
+
+//   protected void setReduced(boolean flag) {
+//      if( flagReduced==flag ) return;
+//      flagReduced=flag;
+//      if( flagReduced ) {
+//         aladin.search.hideSearch(true);
+//         if( aladin.splitMesureHeight.getBottomComponent()!=null ) aladin.splitMesureHeight.remove(this);
+//      } else {
+//         aladin.search.hideSearch(false);
+//         if( aladin.splitMesureHeight.getBottomComponent()==null ) aladin.splitMesureHeight.setBottomComponent(this);
+//         flagDorepaintForScroll=true;
+//         aladin.splitMesureHeight.restoreSlit();
+//      }
+//   }
 
    /**
     * Update the status string
@@ -703,7 +707,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    protected String getCurObjURL() {
       if( mcanvas.sCourante==null || mcanvas.indiceCourant==-1 )return "";
       String tag = mcanvas.sCourante.getCodedValue(mcanvas.indiceCourant);
-      Words w = new Words(tag);
+      Words w = new Words(tag,-1);
       return w.getURL(aladin);
    }
 
