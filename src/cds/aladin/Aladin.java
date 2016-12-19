@@ -152,8 +152,9 @@ import healpix.essentials.Vec3;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> Simbad + VizieR pointer improvements
- * @beta    <LI> HiPS Market tree
- * @beta    <LI> Panel management improvement
+ * @beta    <LI> HiPS properties file direct support
+ * @beta    <LI> HiPS Store
+ * @beta    <LI> Panel management improvement (JPane)
  * @beta    <LI> HiPS mirror sites management improvement
  * @beta    <LI> MOC perimeter drawing + set drawing=xxx script command
  * @beta    <LI> Fisheye projection support (ARC) => planetarium usage
@@ -204,7 +205,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.502";
+   static public final    String VERSION = "v9.503";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -415,11 +416,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    MySplitPane splitZoomHeight;  // Gère la séparation pile/zoom
    MySplitPane splitZoomWidth;   // Gère la séparation view/pile-zoom
    MySplitPane splitHiPSWidth;    // Gère la séparation hips/view
-   HipsMarket hipsMarket;        // Gère le "HiPS market"
+   HipsStore hipsStore;        // Gère le "HiPS market"
    Search search;                // Gère le bandeau de recherche dans les mesures
    public ToolBox toolBox;       // Gere la "Tool bar"
    public Calque calque;         // Gere a la fois les plans et le zoom
    Localisation localisation;    // Gere l'affichage de la "Localisation"
+   ProjSelector projSelector;    // Gère le sélecteur de la projection par défaut
    Logo logo;                    // Gere le "logo"
    PlasticWidget plasticWidget;  // Gere le widget PLASTIC
    PlasticPreferences plasticPrefs; // Gere les preferences PLASTIC
@@ -1553,7 +1555,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       // Pour les Cieux
-      gluSkyReload();
+      hipsReload();
 
       // Pour les applications VO
       VOReload();
@@ -1915,7 +1917,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Regénère le popup menu associé aux Ciels */
-   public void gluSkyReload() {
+   public void hipsReload() {
       if( isNonCertifiedApplet() || miGluSky==null ) return;
 
       String m[] = glu.getGluSkyMenu();
@@ -2108,6 +2110,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       saisie.setBackground( getBackground() );
       saisie.add(saisie1,BorderLayout.WEST);
       saisie.add(localisation, BorderLayout.CENTER);
+      
+      if( !OUTREACH && PROTO )  saisie.add(projSelector, BorderLayout.EAST);
+      
       //       if( !OUTREACH && !BETA ) saisie.add(pixel);
 
       // creation widget plastic (doit se faire avant la creation du menu)
@@ -2119,7 +2124,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( !NOGUI ) {
          trace(1,"Creating the Menu");
          jBar = createJBar( createMenu() );
-         // TODO : que faire en mode applet ??
          if( STANDALONE && macPlateform && !isApplet() ) f.setJMenuBar(jBar);
          else setJMenuBar(jBar);
       }
@@ -2254,11 +2258,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       splitMesureHeight.setBorder(BorderFactory.createEmptyBorder());
       
       if( PROTO ) {
-         hipsMarket = new HipsMarket(aladin);
-         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, hipsMarket, splitMesureHeight,0);
+         hipsStore = new HipsStore(aladin);
+         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, hipsStore, splitMesureHeight,0);
          splitHiPSWidth.setBorder(BorderFactory.createEmptyBorder());
-         hipsMarket.setPreferredSize(new Dimension(getHiPSWidth(),200));
-         hipsMarket.setMinimumSize( new Dimension(0,200));
+         hipsStore.setPreferredSize(new Dimension(getHiPSWidth(),200));
+         hipsStore.setMinimumSize( new Dimension(0,200));
       }
       
       // test thomas (avec un séparateur) + Pierre
@@ -2855,13 +2859,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    protected int allsky() {
-      TreeNodeAllsky gSky = glu.getGluSky(0);
+      TreeNodeHips gSky = glu.getGluSky(0);
       return allsky(gSky);
    }
 
    /** Activation d'un background */
-   protected int allsky(TreeNodeAllsky gSky) { return hips(gSky,null,null,null); }
-   protected int hips(TreeNodeAllsky gSky,String label,String target,String radius) {
+   protected int allsky(TreeNodeHips gSky) { return hips(gSky,null,null,null); }
+   protected int hips(TreeNodeHips gSky,String label,String target,String radius) {
       int n=1;
       if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
       else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright,target,radius);
@@ -2873,7 +2877,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected boolean allsky(String s) {
       int i = glu.findGluSky(s,2);
       if( i<0 ) return false;
-      TreeNodeAllsky ga = glu.getGluSky(i);
+      TreeNodeHips ga = glu.getGluSky(i);
       console.printCommand("get hips(\""+ga.aladinLabel+"\")");
       allsky(ga);
       return true;
@@ -6507,7 +6511,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
    /**
     * Cache d'imagettes (logo, images utilisées dans les helps...)
-    * @param aladinLabel Nom de l'image à retrouver. Elle peut se trouver
+    * @param name Nom de l'image à retrouver. Elle peut se trouver
     *             dans le fichier jar, dans le home directory ou
     *             sur le serveur de l'applet
     * @return L'image, ou null si erreur

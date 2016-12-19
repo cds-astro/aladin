@@ -3763,7 +3763,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return newobj instanceof Tag && ((Tag)newobj).isEditing();
    }
 
-   /** Boucle du thread threadB du mode Timer. Effectue un simple
+   /** Boucle du thread threadC du mode Timer. Effectue un simple
     *  repaint des vues toutes les 150 msec
     */
    private void runC() {

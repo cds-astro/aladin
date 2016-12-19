@@ -1204,7 +1204,7 @@ public final class Command implements Runnable {
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
 
          if( Aladin.PROTO && server.equalsIgnoreCase("hips") ) {
-            int n=a.hipsMarket.createPlane(target,radius,criteria,label,null);
+            int n=a.hipsStore.createPlane(target,radius,criteria,label,null);
             if( n!=-1 ) {
                a.calque.getPlan(n).setBookmarkCode("get "+server+(criteria.length()>0?"("+criteria+")":"")+" $TARGET $RADIUS");
             }

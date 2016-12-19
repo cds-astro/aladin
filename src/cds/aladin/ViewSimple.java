@@ -6750,6 +6750,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          view.newobj.draw(g,getProjSyncView(),0,0);
          if( view.newobj instanceof Cote ) view.newobj.status(aladin);
       }
+      
+//       Peut être un Moc de l'arbre HiPS
+//      aladin.hipsStore.drawMoc(g,this);
 
       // trace du rectangle de selection multiple
       if( flagDrag && rselect!=null ) {

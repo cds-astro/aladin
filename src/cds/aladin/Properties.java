@@ -23,7 +23,6 @@ package cds.aladin;
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -37,9 +36,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.text.ParseException;
 import java.util.Enumeration;
@@ -52,9 +48,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -399,89 +393,89 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    //   }
 
 
-   /** Genère un Label, éventuellement sur plusieurs lignes, qui peut avoir à la fin un lien (more...) pour de l'info
-    * additionnel, ou une url complète associée. Les deux simultanément ne sont pas possibles.
-    */
-   class Anchor extends JLabel {
-      String url,more;
-      int width;
-
-      /**
-       * @param text Texte du baratin (ou null si début du texte supplémentaire à afficher)
-       * @param width nombre de caractères avant repli (-1 si pas de repli), ou césure si text==null
-       * @param more texte supplémentaire accessible par (more...), null sinon
-       * @param url url associée, null sinon
-       */
-      Anchor(String text,int width, String more,final String url) {
-         super();
-
-         if( text==null && more==null && url!=null ) text=url;
-
-         if( text==null && more!=null ) {
-            if( more.length()>width ) {
-               int n = more.lastIndexOf(' ',width);
-               if( n<=0 ) n=width;
-               text=more.substring(0,n)+"...";
-            }
-            else { text=more; more=null; }
-         }
-         if( text==null ) text="";
-         this.more = more;
-         this.url=url;
-         if( width>0 ) {
-            if( (text.startsWith("http://") || text.startsWith("ftp://")) && text.length()>width ) text=text.substring(0,width)+"...";
-            else {
-               if( url!=null ) text = Util.fold(text,width,true);
-               text = Util.fold(text,width);
-            }
-         }
-         if( url!=null ) {
-            text = "<html><A HREF=\"\">"+text+"</A></html>";
-            setToolTipText(url);
-         }
-         if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
-         setText(text);
-         setFont(getFont().deriveFont(Font.ITALIC));
-         final String more1 = more;
-         if( url!=null || more!=null ) {
-            final Component c = this;
-            addMouseMotionListener(new MouseMotionListener() {
-               public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
-               public void mouseDragged(MouseEvent e) { }
-            });
-            addMouseListener(new MouseListener() {
-               public void mouseReleased(MouseEvent e) {
-                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) return;
-                  if( url!=null ) aladin.glu.showDocument(url);
-                  else aladin.info(c,more1.replace("\\n","\n"));
-               }
-               public void mousePressed(MouseEvent e)  { 
-                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) {
-                     showPopMenu(e.getX(),e.getY());
-                  }
-               }
-               public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
-               public void mouseEntered(MouseEvent e)  { }
-               public void mouseClicked(MouseEvent e) { }
-            });
-         }
-      }
-      
-      // Affiche le popup
-      private void showPopMenu(int x,int y) {
-         JPopupMenu popMenu = new JPopupMenu();
-         popMenu.setLightWeightPopupEnabled(false);
-         JMenuItem j=new JMenuItem(aladin.chaine.getString("MFCOPYURL"));
-         popMenu.add(j);
-         j.addActionListener( new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               aladin.copyToClipBoard(url);
-            }
-         });
-         popMenu.show(this,x,y);
-      }
-   }
-
+//   /** Genère un Label, éventuellement sur plusieurs lignes, qui peut avoir à la fin un lien (more...) pour de l'info
+//    * additionnel, ou une url complète associée. Les deux simultanément ne sont pas possibles.
+//    */
+//   class MyAnchor extends JLabel {
+//      String url,more;
+//      int width;
+//
+//      /**
+//       * @param text Texte du baratin (ou null si début du texte supplémentaire à afficher)
+//       * @param width nombre de caractères avant repli (-1 si pas de repli), ou césure si text==null
+//       * @param more texte supplémentaire accessible par (more...), null sinon
+//       * @param url url associée, null sinon
+//       */
+//      MyAnchor(String text,int width, String more,final String url) {
+//         super();
+//
+//         if( text==null && more==null && url!=null ) text=url;
+//
+//         if( text==null && more!=null ) {
+//            if( more.length()>width ) {
+//               int n = more.lastIndexOf(' ',width);
+//               if( n<=0 ) n=width;
+//               text=more.substring(0,n)+"...";
+//            }
+//            else { text=more; more=null; }
+//         }
+//         if( text==null ) text="";
+//         this.more = more;
+//         this.url=url;
+//         if( width>0 ) {
+//            if( (text.startsWith("http://") || text.startsWith("ftp://")) && text.length()>width ) text=text.substring(0,width)+"...";
+//            else {
+//               if( url!=null ) text = Util.fold(text,width,true);
+//               text = Util.fold(text,width);
+//            }
+//         }
+//         if( url!=null ) {
+//            text = "<html><A HREF=\"\">"+text+"</A></html>";
+//            setToolTipText(url);
+//         }
+//         if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
+//         setText(text);
+//         setFont(getFont().deriveFont(Font.ITALIC));
+//         final String more1 = more;
+//         if( url!=null || more!=null ) {
+//            final Component c = this;
+//            addMouseMotionListener(new MouseMotionListener() {
+//               public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
+//               public void mouseDragged(MouseEvent e) { }
+//            });
+//            addMouseListener(new MouseListener() {
+//               public void mouseReleased(MouseEvent e) {
+//                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) return;
+//                  if( url!=null ) aladin.glu.showDocument(url);
+//                  else aladin.info(c,more1.replace("\\n","\n"));
+//               }
+//               public void mousePressed(MouseEvent e)  { 
+//                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) {
+//                     showPopMenu(e.getX(),e.getY());
+//                  }
+//               }
+//               public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
+//               public void mouseEntered(MouseEvent e)  { }
+//               public void mouseClicked(MouseEvent e) { }
+//            });
+//         }
+//      }
+//      
+//      // Affiche le popup
+//      private void showPopMenu(int x,int y) {
+//         JPopupMenu popMenu = new JPopupMenu();
+//         popMenu.setLightWeightPopupEnabled(false);
+//         JMenuItem j=new JMenuItem(aladin.chaine.getString("MFCOPYURL"));
+//         popMenu.add(j);
+//         j.addActionListener( new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//               aladin.copyToClipBoard(url);
+//            }
+//         });
+//         popMenu.show(this,x,y);
+//      }
+//   }
+//
    /** Construction du panel des proprietes du plan courant.
     * @return Le panel des proprietes du plan courant
     */
@@ -501,11 +495,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       PropPanel.addCouple(p, LABEL, label, g,c);
 
       if( plan.verboseDescr!=null || plan.description!=null ) {
-         PropPanel.addCouple(p,"Description: ", new Anchor(plan.description,50,plan.verboseDescr,null), g,c);
+         PropPanel.addCouple(p,"Description: ", new MyAnchor(aladin,plan.description,50,plan.verboseDescr,null), g,c);
       }
 
       if( plan.ack!=null ) {
-         PropPanel.addCouple(p,"Acknowledgment: ", new Anchor(null,40,plan.ack,null), g,c);
+         PropPanel.addCouple(p,"Acknowledgment: ", new MyAnchor(aladin,null,40,plan.ack,null), g,c);
       }
 
       // Origine
@@ -513,7 +507,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             (((PlanBG)plan).getProperty(Constante.KEY_OBS_COPYRIGHT)==null && ((PlanBG)plan).getProperty(Constante.KEY_OBS_COPYRIGHT_URL)==null) ) {
          String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
          if( copyright!=null ) {
-            PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,40,null,plan.copyrightUrl), g,c);
+            PropPanel.addCouple(p,ORIGIN, new MyAnchor(aladin,copyright,40,null,plan.copyrightUrl), g,c);
          }
       }
 
@@ -523,7 +517,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          s = pbg.getProperty(Constante.KEY_BIB_REFERENCE);
          su = pbg.getProperty(Constante.KEY_BIB_REFERENCE_URL);
-         if( s!=null || su!=null ) PropPanel.addCouple(p,"Bib. reference", new Anchor(s,40,null,su), g,c);
+         if( s!=null || su!=null ) PropPanel.addCouple(p,"Bib. reference", new MyAnchor(aladin,s,40,null,su), g,c);
 
          if(((PlanBG)plan).id!=null ) PropPanel.addCouple(p,"IVOID: ", new JLabel("ivo://"+((PlanBG)plan).id), g,c);
 
@@ -832,7 +826,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // Url de déchargement
       String s1 = plan.getUrl();
       if( s1!=null && (s1.startsWith("http://") || s1.startsWith("ftp://") )) {
-         PropPanel.addCouple(p,"Url: ", new Anchor(s1,50,null,s1), g,c);
+         PropPanel.addCouple(p,"Url: ", new MyAnchor(aladin,s1,50,null,s1), g,c);
       }
 
       // Panel pour les informations techniques
@@ -1148,8 +1142,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addFilet(p, g, c);
             PropPanel.addSectionTitle(p,"Original data",g,c);
 
-            if( sP!=null ) PropPanel.addCouple(p,"Provenance", new Anchor(null,40,sP,null), g,c);
-            if( sC!=null || sCU!=null ) PropPanel.addCouple(p,"Copyright", new Anchor(sC,40,null,sCU), g,c);
+            if( sP!=null ) PropPanel.addCouple(p,"Provenance", new MyAnchor(aladin,null,40,sP,null), g,c);
+            if( sC!=null || sCU!=null ) PropPanel.addCouple(p,"Copyright", new MyAnchor(aladin,sC,40,null,sCU), g,c);
             if( hasProgen ) {
                JButton bt = new JButton(aladin.chaine.getString("PROGENITOR"));
                bt.addActionListener(new ActionListener() {

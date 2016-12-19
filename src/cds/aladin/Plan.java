@@ -1104,7 +1104,7 @@ public class Plan implements Runnable {
          if( a.y>m[3] ) m[3]=a.y;
       }
    }
-
+   
    /** Modification d'une projection (par le nom de projection) */
    protected void modifyProj(String projName) {
       int t = Projection.getProjType(projName);
@@ -1143,7 +1143,8 @@ public class Plan implements Runnable {
 
    /** Retourne true si la calib du plan n'est pas celle d'origine FITS */
    protected boolean hasSpecificCalib() { return hasSpecificCalib; }
-
+   
+   
    /** Memorisation d'une nouvelle projection possible pour le plan
     * qui devient la projection par defaut (projd)
     * Rq: mise a jour de projD

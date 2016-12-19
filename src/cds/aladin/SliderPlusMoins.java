@@ -56,7 +56,7 @@ MouseMotionListener,MouseListener,Widget {
    JButton plus,moins;
    int wheelIncr;
 
-   public String toString() { return slider.toString(); }
+   public String toString() { return (slider == null) ? "null" : slider.toString(); }
 
    /**
     * Création d'un slider

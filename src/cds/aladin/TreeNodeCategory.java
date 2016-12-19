@@ -29,7 +29,7 @@ import javax.swing.JButton;
 
 
 /** Gère les noeuds de l'arbre des catégories (formulaire ServerCategory) */
-public class TreeNodeCategory extends TreeNode {
+public class TreeNodeCategory extends TreeNodeBasic {
    String url;
    String docUser;
    String exampleUrl;

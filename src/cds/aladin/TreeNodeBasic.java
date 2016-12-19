@@ -29,7 +29,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
-public class TreeNode  implements Comparator {
+public class TreeNodeBasic  implements Comparator {
    Aladin aladin;
    String id;
    String label;
@@ -46,9 +46,9 @@ public class TreeNode  implements Comparator {
    protected GridBagLayout gb;
    protected static Color background = Color.white;
 
-   public TreeNode() { }
+   public TreeNodeBasic() { }
 
-   TreeNode(Aladin aladin, String id, String ordre, String label, String path) {
+   TreeNodeBasic(Aladin aladin, String id, String ordre, String label, String path) {
       this.aladin      = aladin;
       this.id  = id;
       this.label = label;
@@ -113,11 +113,11 @@ public class TreeNode  implements Comparator {
    public String toString() { return label; }
 
    /** Fournit un Comparator de mouvement pour les tris */
-   static protected Comparator getComparator() { return new TreeNode(); }
+   static protected Comparator getComparator() { return new TreeNodeBasic(); }
 
    public int compare(Object o1, Object o2) {
-      TreeNode a1 = (TreeNode)o1;
-      TreeNode a2 = (TreeNode)o2;
+      TreeNodeBasic a1 = (TreeNodeBasic)o1;
+      TreeNodeBasic a2 = (TreeNodeBasic)o2;
       if( a1.ordre==a2.ordre ) return 0;
       if( a1.ordre==null ) return -1;
       if( a2.ordre==null ) return 1;
@@ -125,7 +125,7 @@ public class TreeNode  implements Comparator {
    }
 
    public boolean equals(Object o) {
-      TreeNode a1= (TreeNode)o;
+      TreeNodeBasic a1= (TreeNodeBasic)o;
       return a1.id.equals(id);
    }
 }

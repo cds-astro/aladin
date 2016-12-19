@@ -1,10 +1,8 @@
 package cds.aladin;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Properties;
@@ -104,22 +102,76 @@ public class MyProperties extends Properties {
    /** Retourne le flux des propriétés originales */
    public String getPropOriginal() { return propOriginal!=null ? propOriginal.toString() : null; }
    
-   public synchronized void load(InputStream in) throws IOException { load(in,false); }
-   public synchronized void load(InputStream in,boolean flagKeepOriginal) throws IOException {
+   // Lecture d'une ligne dans un flux basique InputStream
+   // REM: ne supporte que l'ASCII basique
+   // La ligne retournée ne contient ni le CR ni un éventuellement LF
+   private String readLine( InputStream in ) throws IOException {
+      StringBuilder s = new StringBuilder(256);
+      byte [] c = new byte[1];
+      boolean eof = false;
+      while( true ) {
+         if( in.read(c)==-1 ) { eof=true; break; }   // Fin de flux
+         char ch = (char)c[0];
+         if( ch=='\n' ) break;         // Fin de la ligne
+         if( ch!='\r' ) s.append(ch);  // on ne prend pas en compte le LF
+      }
+      
+      // Fin du flux et rien lu => retourn null
+      if( eof && s.length()==0 ) return null;
+      
+      return s.toString();
+   }
+   
+   /** Charge les propriétés de l'enregistrement courant dans le flux. S'arrête à la première
+    * ligne vide qui suit l'enregistrement (sans fermer le flux)
+    * @param in
+    * @return false si on a atteind la fin du flux (l'enregistrement courant a tout de même été chargé
+    * @throws IOException
+    */
+   public boolean loadRecord(InputStream in) throws IOException { return load( in,false,true); }
+   
+   /**
+    * Charge les propriétés depuis le flux courant. Considère qu'il n'y a qu'un seul
+    * enregistrement pour tout le flux
+    */
+   public void load(InputStream in) throws IOException { load( in,false,false); }
+   
+   /**
+    * Charge les propriétés à partir du flux courant
+    * @param in
+    * @param flagKeepOriginal Conserve une copie de l'original
+    * @param flagBlankLinestop S'arrête à la première ligne vide (pour un flux multi-records)
+    * @return false si on a atteind la fin du flux, sinon true
+    * @throws IOException
+    */
+   public synchronized boolean load(InputStream in,boolean flagKeepOriginal,boolean flagBlankLinestop) throws IOException {
       
       // Pour conserver le flux original
       if( flagKeepOriginal ) propOriginal = new StringBuilder();
 
       prop = new Vector<ConfigurationItem>();
-      BufferedReader br = new BufferedReader(new InputStreamReader(in));
+//      BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
       // Je lis les propriétés de la configuration
       String s;
       int line = 0;
-      while( (s = br.readLine()) != null ) {
+      while( (s = readLine(in)) != null ) {
          if( flagKeepOriginal ) propOriginal.append(s+"\n");
          line++;
+         
          if( s.trim().length() == 0 ) {
+            
+            // Dans le cas où l'on doit s'arrêter à la première ligne vide après l'enregistrement
+            // (flux avec plusieurs enregistrements consécutifs)
+            if( flagBlankLinestop ) {
+               
+               // Fin de l'enregistrement
+               if( prop.size()>0 ) break;
+               
+               // L'enregistrement n'ayant pas commencé, on ne mémorise pas les lignes vides
+               else if( prop.size()==0 ) continue;
+            }
+            
             prop.addElement(new ConfigurationItem(" ", null));
             continue;
          }
@@ -170,7 +222,9 @@ public class MyProperties extends Properties {
          //         Aladin.trace(4, "MyProperties.load() [" + key + "] = [" + value + "]");
          put(key, value,true);
       }
-      br.close();
+      
+//      if( !flagBlankLinestop ) br.close();
+      return s!=null;
 
    }
 
@@ -178,14 +232,20 @@ public class MyProperties extends Properties {
       BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
 
       for( ConfigurationItem item : prop ) {
-         //         if( item.key.equals("#") ) bw.write(item.value); // Commentaires
-         //         else if( item.key.trim().length() > 0 ) bw.write(Util.align(item.key, 20) +" = "+ item.value); // Propriétés
          bw.write(item.toString());
          bw.newLine();
       }
       bw.flush();
    }
-
+   
+   public String toString() {
+      StringBuilder s = new StringBuilder(2048);
+      for( ConfigurationItem item : prop ) {
+         s.append(item.toString());
+         s.append('\n');
+      }
+      return s.toString();
+   }
 
    /**
     * Classe permettant la mémorisation d'un propriété, c'est-à-dire un couple

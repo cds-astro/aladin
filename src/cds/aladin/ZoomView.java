@@ -910,7 +910,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       aladin.view.simRep=null;
       aladin.calque.repaintAll();
    }
-
+   
    /** Chargement et affichage d'un SED à partir d'un nom d'objet
     * Si null, arrêt du SED précédent
     * @param source
@@ -918,20 +918,19 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
     */
    protected void setSED(String source) { setSED(source,null); }
    protected void setSED(String source,Repere simRep) {
-      if( source==null ) source="";
-      if( source.length()==0 ) flagSED=false;
+      if( source == null ) source = "";
+      if( source.length() == 0 ) flagSED = false;
       if( oSrcSed.equals(source) ) return;
-      oSrcSed=source;
-
+      oSrcSed = source;
       // Arret du SED
-      if( source.length()==0 ) {
+      if( source.length() == 0 ) {
          clearSED();
 
          // Chargement du SED
       } else {
-         if( sed==null )  sed = new SED(aladin);
-         flagSED=true;
-         flagHist=false;
+         if( sed == null ) sed = new SED(aladin);
+         flagSED = true;
+         flagHist = false;
          sed.loadFromSource(source);
          sed.setRepere(simRep);
       }

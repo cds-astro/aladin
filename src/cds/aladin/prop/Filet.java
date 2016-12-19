@@ -20,7 +20,9 @@
 
 package cds.aladin.prop;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 
 import javax.swing.JComponent;
 
@@ -46,7 +48,6 @@ public final class Filet extends JComponent {
    * @param h la hauteur du filet en pixels
    */
    public Filet(int h) { this(h,1); }
-   
    
    public Dimension getPreferredSize() { return new Dimension(w,h); }
 

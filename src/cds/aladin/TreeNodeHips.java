@@ -40,11 +40,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import cds.allsky.Constante;
+import cds.allsky.Context;
 import cds.moc.Healpix;
 import cds.tools.Util;
 
 /** Gère les noeuds de l'arbre du formulaire ServerAllsky */
-public class TreeNodeAllsky extends TreeNode {
+public class TreeNodeHips extends TreeNodeBasic {
 
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
@@ -79,10 +80,12 @@ public class TreeNodeAllsky extends TreeNode {
    public double radius=-1;   // Field size for starting display
    public int nside=-1;          // Max NSIDE
    public boolean local=false;   // Il s'agit d'un survey sur disque local
+   
+   protected MyProperties prop=null; // Ensemble des propriétés associées au HiPS (via son fichier de properties ou MocServer)
 
    /** Construction d'un TreeNodeAllSky à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
-   public TreeNodeAllsky(Aladin aladin,String pathOrUrl) throws Exception {
+   public TreeNodeHips(Aladin aladin,String pathOrUrl) throws Exception {
       String s;
       this.aladin = aladin;
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
@@ -93,7 +96,9 @@ public class TreeNodeAllsky extends TreeNode {
          InputStream in=null;
          if( !local ) in = (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream();
          else in = new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES));
-         if( in!=null ) { prop.load(in); in.close(); }
+         if( in!=null ) { 
+            try { prop.load(in); } finally { in.close(); }
+         }
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
 
 
@@ -258,156 +263,136 @@ public class TreeNodeAllsky extends TreeNode {
 
    }
 
-//   /** Construction d'un TreeNodeAllSky à partir du fichier Properties */
-//   public TreeNodeAllsky(Aladin aladin, MyProperties prop, boolean local) throws Exception {
-//      String s;
-//      this.aladin = aladin;
-//      this.local = local;
-//
-//      // recherche du frame Healpix (ancienne & nouvelle syntaxe)
-//      String strFrame = prop.getProperty(Constante.KEY_HIPS_FRAME);
-//      if( strFrame==null  ) strFrame = "galactic";
-//      if( strFrame.equals("equatorial") || strFrame.equals("C") || strFrame.equals("Q") ) frame=Localisation.ICRS;
-//      else if( strFrame.equals("ecliptic") || strFrame.equals("E") ) frame=Localisation.ECLIPTIC;
-//      else if( strFrame.equals("galactic") || strFrame.equals("G") ) frame=Localisation.GAL;
-//
-//      url== prop.getProperty(Constante.KEY_HI);
-//
-//      s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
-//      if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
-//      if( s!=null ) label=s;
-//      else {
-//         char c = local?Util.FS.charAt(0):'/';
-//         int end = pathOrUrl.length();
-//         int offset = pathOrUrl.lastIndexOf(c);
-//         if( offset==end-1 && offset>0 ) { end=offset; offset = pathOrUrl.lastIndexOf(c,end-1); }
-//         label = pathOrUrl.substring(offset+1,end);
-//      }
-//      id="__"+label;
-//
-//      s = prop.getProperty(Constante.OLD_VERSION);
-//      if( s!=null ) version=s;
-//
-//      description = prop.getProperty(Constante.KEY_OBS_TITLE);
-//      verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
-//      copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
-//      copyrightUrl = prop.getProperty(Constante.KEY_OBS_COPYRIGHT_URL);
-//      skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
-//
-//      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
-//      if( s!=null) {
-//         String s1 = prop.getProperty(Constante.KEY_HIPS_INITIAL_DEC);
-//         if( s1!=null ) s = s+" "+s1;
-//         else s=null;
-//      }
-//      if( s==null ) target=null;
-//      else {
-//         try { target = new Coord(s); }
-//         catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
-//      }
-//      
-//      double div2=2;
-//      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
-//      if( s==null ) radius=-1;
-//      else {
-//         try { radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2; }
-//         catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
-//      }
-//
-//      s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
-//      if( s!=null ) try { nside = Integer.parseInt(s); } catch( Exception e) {
-//         aladin.trace(3,"NSIDE number not parsable !");
-//         nside=-1;
-//      }
-//
-//      s = prop.getProperty(Constante.KEY_HIPS_ORDER);
-//      try { maxOrder = new Integer(s); }
-//      catch( Exception e ) {
-//         aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
-//         maxOrder=11;
-//      }
-//
-//      // Les paramètres liés aux cubes
-//      String s1 = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
-//      if( s1!=null ) cube = s1.indexOf("cube")>=0;
-//
-//      if( cube ) {
-//         s = prop.getProperty(Constante.KEY_CUBE_DEPTH);
-//         if( s!=null ) {
-//            try { cubeDepth = Integer.parseInt(s); }
-//            catch( Exception e ) { cubeDepth=-1; }
-//         }
-//         s = prop.getProperty(Constante.KEY_CUBE_FIRSTFRAME);
-//         if( s!=null ) {
-//            try { cubeFirstFrame = Integer.parseInt(s); }
-//            catch( Exception e ) { cubeFirstFrame=-1; }
-//         }
-//      }
-//
-////      progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
-//
-//      s = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
-//      if( s!=null) cat = s.indexOf("catalog")>=0;
-//
-//      // Détermination du format des cellules dans le cas d'un survey pixels
-//      String keyColor = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
-//      if( keyColor!=null ) color = keyColor.indexOf("color")>=0;
-//
-//      if( !cat && !progen /* && (keyColor==null || !color)*/ ) {
-//         String format = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
-//         if( format!=null ) {
-//            int a,b;
-//            inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;
-//            inJPEG = (b=Util.indexOfIgnoreCase(format, "jpeg"))>=0
-//                  || (b=Util.indexOfIgnoreCase(format, "jpg"))>=0;
-//                  inPNG  = (b=Util.indexOfIgnoreCase(format, "png"))>=0;
-//                  truePixels = inFits && a<b;                         // On démarre dans le premier format indiqué
-//         }
-//         if( color ) truePixels=false;
-//      }
-//      
-//      if( color && !inJPEG && !inPNG) inJPEG=true;
-//      aladin.trace(4,toString1());
-//   }
+   /** Génération d'un label à partir de l'ID ex: CDS/P/DSS2/color => DSS2 color */
+   private String createLabel(String id,boolean cat) {
+      String label=id;
+      int p1 = id.indexOf('/');
+      int p2 = id.indexOf('/',p1+1);
+      if( cat ) { if( p1>0 ) label = id.substring(p1+1); }
+      else if( p2>0 ) label = id.substring(p2+1);
+      return label.replace('/',' ');
+   }
 
-   private boolean getIsColorByPath(String path,boolean local) {
-      String ext = inPNG ? ".png" : ".jpg";
-      MyInputStream in = null;
-      try {
-         if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext);
-         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky"+ext) );
-         byte [] buf = in.readFully();
-         return Util.isColoredImage(buf);
-      } catch( Exception e) {
-         aladin.trace(3,"Allsky"+ext+" not found => assume B&W survey");
-         return false;
+   /** Création à partir d'un fichier de properties (ne supporte que HiPS 1.3 car dédié
+    * principalement à des enregistrements issues du MocServer */
+   public TreeNodeHips(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
+      String s;
+
+      this.aladin = aladin;
+      this.id = internalId = id;
+      this.local = isLocal;
+      this.prop = prop;
+      
+      // Type de HiPS
+      s=prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
+      if( s!=null ) {
+         if( s.indexOf("catalog")>=0 ) cat=true;
+         else if( s.indexOf("cube")>=0 ) cube=true;
+         else if( s.indexOf("progen")>=0 ) progen=true;
       }
-      finally { try { if( in!=null ) in.close(); } catch( Exception e1 ) {} }
-   }
 
-   private boolean getFormatByPath(String path,boolean local,int fmt) {
-      String ext = fmt==0 ? ".fits" : fmt==1 ? ".jpg" : fmt==3 ? ".png" : ".xml";
-      return local && (new File(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext)).exists() ||
-            !local && Util.isUrlResponding(path+"/Norder3/Allsky"+ext);
-   }
+      // Référence spaciale
+      s=prop.getProperty(Constante.KEY_HIPS_FRAME);
+      if( s!=null ) frame = Context.getFrameVal(s);
+      else frame = cat ? Localisation.ICRS : Localisation.GAL;
 
-   private int getMaxOrderByPath(String urlOrPath,boolean local) {
-      for( int n=25; n>=1; n--) {
-         if( local && new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()
-               || !local && Util.isUrlResponding(urlOrPath+"/Norder"+n)) return n;
+      // le label est construit à partir de l'ID
+//      aladinLabel = label = createLabel(id,cat);
+      
+      // ou le label construit à partir du obs_title et/ou obs_collection
+      s=prop.getProperty(Constante.KEY_OBS_COLLECTION);
+      if( s==null ) s=prop.getProperty(Constante.KEY_OBS_TITLE);
+      aladinLabel = label = s!=null ? s : createLabel(id,cat);
+      
+      // Le path de l'arbre
+      s=prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
+      if( s==null ) s="Others";
+      path = s+"/"+label.replace("/","\\/");
+      
+      // l'ordre de tri
+      ordre=prop.getProperty(Constante.KEY_CLIENT_SORT_KEY);
+      if( ordre==null ) ordre="Z";
+
+      // Divers champs de descriptions
+      description = prop.getProperty(Constante.KEY_OBS_TITLE);
+      verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
+      copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
+      copyrightUrl = prop.getProperty(Constante.KEY_OBS_COPYRIGHT_URL);
+      skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+
+      // Le champ initial
+      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
+      if( s!=null) {
+         String s1 = prop.getProperty(Constante.KEY_HIPS_INITIAL_DEC);
+         if( s1!=null ) s = s+" "+s1;
+         else s=null;
       }
-      return -1;
+      if( s==null ) target=null;
+      else {
+         try { target = new Coord(s); }
+         catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
+      }
+      double div2=2;
+      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
+      if( s==null ) radius=-1;
+      else {
+         try { radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2; }
+         catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
+      }
 
-      //      int maxOrder=-1;
-      //      for( int n=3; n<100; n++ ) {
-      //         if( local && !(new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()) ||
-      //            !local && !Util.isUrlResponding(urlOrPath+"/Norder"+n)) break;
-      //         maxOrder=n;
-      //      }
-      //      return maxOrder;
+      // La taille de la tuile Hips
+      s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
+      if( s!=null ) try { nside = Integer.parseInt(s); } catch( Exception e) {
+         aladin.trace(3,"NSIDE number not parsable !");
+         nside=-1;
+      }
+
+      // Le maxOrder
+      s = prop.getProperty(Constante.KEY_HIPS_ORDER);
+      try { maxOrder = new Integer(s); }
+      catch( Exception e ) {
+         aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
+         maxOrder=11;
+      }
+
+      // Les paramètres liés aux cubes
+      if( cube ) {
+         s = prop.getProperty(Constante.KEY_CUBE_DEPTH);
+         if( s!=null ) {
+            try { cubeDepth = Integer.parseInt(s); }
+            catch( Exception e ) { cubeDepth=-1; }
+         }
+         s = prop.getProperty(Constante.KEY_CUBE_FIRSTFRAME);
+         if( s!=null ) {
+            try { cubeFirstFrame = Integer.parseInt(s); }
+            catch( Exception e ) { cubeFirstFrame=-1; }
+         }
+      }
+
+      // Détermination du format des cellules dans le cas d'un survey pixels
+      String keyColor = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
+      if( keyColor!=null ) color = keyColor.indexOf("color")>=0;
+
+      if( !cat && !progen ) {
+         String format = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
+         if( format!=null ) {
+            int a,b;
+            inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;
+            inJPEG = (b=Util.indexOfIgnoreCase(format, "jpeg"))>=0
+                  || (b=Util.indexOfIgnoreCase(format, "jpg"))>=0;
+                  inPNG  = (b=Util.indexOfIgnoreCase(format, "png"))>=0;
+                  truePixels = inFits && a<b;                         // On démarre dans le premier format indiqué
+         }
+         if( color ) truePixels=false;
+      }
+
+      if( color && !inJPEG && !inPNG) inJPEG=true;
+      aladin.trace(4,toString1());
+
    }
 
-   public TreeNodeAllsky(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
+   /** Création à partir d'un enregistrement GLU */
+   public TreeNodeHips(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
          String aladinHpxParam,String skyFraction) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
@@ -485,7 +470,46 @@ public class TreeNodeAllsky extends TreeNode {
       }
    }
    
+   private boolean getIsColorByPath(String path,boolean local) {
+      String ext = inPNG ? ".png" : ".jpg";
+      MyInputStream in = null;
+      try {
+         if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext);
+         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky"+ext) );
+         byte [] buf = in.readFully();
+         return Util.isColoredImage(buf);
+      } catch( Exception e) {
+         aladin.trace(3,"Allsky"+ext+" not found => assume B&W survey");
+         return false;
+      }
+      finally { try { if( in!=null ) in.close(); } catch( Exception e1 ) {} }
+   }
+
+   private boolean getFormatByPath(String path,boolean local,int fmt) {
+      String ext = fmt==0 ? ".fits" : fmt==1 ? ".jpg" : fmt==3 ? ".png" : ".xml";
+      return local && (new File(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext)).exists() ||
+            !local && Util.isUrlResponding(path+"/Norder3/Allsky"+ext);
+   }
+
+   private int getMaxOrderByPath(String urlOrPath,boolean local) {
+      for( int n=25; n>=1; n--) {
+         if( local && new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()
+               || !local && Util.isUrlResponding(urlOrPath+"/Norder"+n)) return n;
+      }
+      return -1;
+
+      //      int maxOrder=-1;
+      //      for( int n=3; n<100; n++ ) {
+      //         if( local && !(new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()) ||
+      //            !local && !Util.isUrlResponding(urlOrPath+"/Norder"+n)) break;
+      //         maxOrder=n;
+      //      }
+      //      return maxOrder;
+   }
+   
    protected JPanel createPanel() {
+      
+      if( !Aladin.PROTO ) return super.createPanel(); 
       
       JLabel lab = new JLabel(label);
       lab.setBackground( background );
@@ -636,7 +660,7 @@ public class TreeNodeAllsky extends TreeNode {
 
    protected void submit() {
       String mode = isTruePixels() ? ",fits":"";
-      aladin.console.printCommand("get allsky("+Tok.quote(label)+mode+")");
+      aladin.console.printCommand("get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")");
 
       aladin.allsky(this);
    }

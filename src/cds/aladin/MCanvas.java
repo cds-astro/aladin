@@ -577,7 +577,7 @@ MouseWheelListener, Widget
     * @return        La taille calculee
     */
    protected int drawWords(Graphics g, Words w, boolean flagClear) {
-      return drawWords(g,w,flagClear, w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
+      return drawWords(g,w,flagClear, aladin.getBackground() ); //w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
    }
    private int drawWords(Graphics g, Words w, boolean flagClear,Color background) {
       int y = w.y+HF;        // Ligne de base
@@ -738,7 +738,7 @@ MouseWheelListener, Widget
          w = (Words) e.nextElement();
          
          if( i==0 ) {
-            bg = (w.num%2==0) ? Color.white : BG ;
+            bg = aladin.getBackground(); //(w.num%2==0) ? Color.white : BG ;
             
             // Effacement de la ligne si necessaire
             if( flagClear && W!=-1 ) {
@@ -1208,7 +1208,7 @@ MouseWheelListener, Widget
       // On remet le fond
       Words w=((Words)ligne.elementAt(1));
       int y = w.y;
-      Color bg = (w.num%2==0) ? Color.white :BG ;
+      Color bg = aladin.getBackground(); // (w.num%2==0) ? Color.white :BG ;
       g.setColor(y<=HF ? Aladin.BKGD : bg);
       g.fillRect(0,y, W, HF+2);
 

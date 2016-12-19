@@ -754,6 +754,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       } catch( Exception e ) { }
       return Localisation.ICRS;
    }
+   
+   protected String getProj() { 
+      String s = get(PROJALLSKY);
+      if( Aladin.OUTREACH || s==null ) return "Sinus";
+      else if( aladin.isCinema() ) return "Arc";
+      return s;
+   }
 
    /** Retourne le code Calib de la projection par défaut pour les plans
     * en mode all-sky */

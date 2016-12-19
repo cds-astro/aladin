@@ -132,7 +132,7 @@ public final class HipsFilter extends JFrame {
       if( (s=getText(tfUCD)).length()!=0 )       params.append("&data_ucd="+s);
       if( (s=getText(tfFree)).length()!=0 )      params.append("&"+s);
       
-      aladin.hipsMarket.resumeTree(params.toString());
+      aladin.hipsStore.resumeTree(params.toString());
    }
    
    /** Retourne le string d'un JtextField encodé en HTTP */

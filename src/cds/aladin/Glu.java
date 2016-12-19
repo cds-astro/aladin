@@ -25,6 +25,7 @@ import java.awt.Point;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
@@ -129,16 +130,16 @@ public final class Glu implements Runnable {
    /** Memorisation des applications PLASTICs définies par le dictionnaire GLU */
    protected static Vector vGluApp;
 
-   /** Mémorisation des ciels de background définis par le dictionnaire GLU */
-   protected static Vector<TreeNodeAllsky> vGluSky;
+   /** Mémorisation des HiPS définis par le dictionnaire GLU */
+   protected static Vector<TreeNodeHips> vHips;
 
    /** Mémorisation des items des Tree outreach définis par le dictionnaire GLU */
    protected static Vector vGluCategory;
 
    /** Tri des listes */
    protected void tri() {
-      Comparator c = TreeNode.getComparator();
-      Collections.sort(vGluSky,c);
+      Comparator c = TreeNodeBasic.getComparator();
+      Collections.sort(vHips,c);
       Collections.sort(vGluCategory,c);
 
       c = Server.getComparator();
@@ -158,7 +159,7 @@ public final class Glu implements Runnable {
       aladinDicT   = new Hashtable();
       vGluServer   = new Vector(50);
       vGluApp      = new Vector(10);
-      vGluSky      = new Vector(10);
+      vHips      = new Vector(10);
       vGluCategory = new Vector(10);
 
       // Peut être un site GLU défini dans la configuration utilisateur
@@ -244,7 +245,7 @@ public final class Glu implements Runnable {
          d = aladin.dialog.getSize();
       } catch( Exception e ) { p=null; }
       VizieRQuery.resetKeywords();
-      aladin.gluSkyReload();
+      aladin.hipsReload();
 
       aladin.dialog = new ServerDialog(aladin);
       if( showLastGlu ) {
@@ -769,8 +770,8 @@ public final class Glu implements Runnable {
     */
    protected int findGluSky(String A) { return findGluSky(A,0); }
    protected int findGluSky(String A,int mode) {
-      for( int i = vGluSky.size()-1; i >=0; i-- ) {
-         TreeNodeAllsky gs = vGluSky.elementAt(i);
+      for( int i = vHips.size()-1; i >=0; i-- ) {
+         TreeNodeHips gs = vHips.elementAt(i);
          if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
          if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
          if( mode==2 ) {
@@ -783,8 +784,8 @@ public final class Glu implements Runnable {
       }
 
       if( mode==2 ) {
-         for( int i = vGluSky.size()-1; i >=0; i-- ) {
-            TreeNodeAllsky gs = vGluSky.elementAt(i);
+         for( int i = vHips.size()-1; i >=0; i-- ) {
+            TreeNodeHips gs = vHips.elementAt(i);
             int offset = gs.label.lastIndexOf('/');
             if( Util.indexOfIgnoreCase(gs.label.substring(offset+1),A)>=0 ) return i;
          }
@@ -813,8 +814,8 @@ public final class Glu implements Runnable {
    //   }
 
    /** Retourne la description du ciel d'indice i */
-   protected TreeNodeAllsky getGluSky(int i) {
-      TreeNodeAllsky gSky = vGluSky.elementAt(i);
+   protected TreeNodeHips getGluSky(int i) {
+      TreeNodeHips gSky = vHips.elementAt(i);
       return gSky;
    }
 
@@ -905,9 +906,9 @@ public final class Glu implements Runnable {
          }
 
          // On en profite pour ajouter les GSky (vGluSky)
-         e = vGluSky.elements();
+         e = vHips.elements();
          while( e.hasMoreElements() ) {
-            TreeNodeAllsky gs = (TreeNodeAllsky)e.nextElement();
+            TreeNodeHips gs = (TreeNodeHips)e.nextElement();
             if( !gs.isLocalDef()  ) continue;
             out.writeBytes(gs.getGluDic());
          }
@@ -985,10 +986,10 @@ public final class Glu implements Runnable {
     * Génère la liste des menus des ciels décrits par le GLU
     */
    protected String[] getGluSkyMenu() {
-      String menu[] = new String[ vGluSky.size() ];
-      Enumeration e = vGluSky.elements();
+      String menu[] = new String[ vHips.size() ];
+      Enumeration e = vHips.elements();
       for( int i=0; e.hasMoreElements(); i++ ) {
-         TreeNodeAllsky ga = (TreeNodeAllsky)e.nextElement();
+         TreeNodeHips ga = (TreeNodeHips)e.nextElement();
          menu[i] = ga.path!=null ? ga.path : ga.label;
       }
       return menu;
@@ -996,36 +997,18 @@ public final class Glu implements Runnable {
 
 
    /**
-    * Memorisation dans le Vecteur vGluSky des Ciels definis au moyen du
+    * Memorisation dans le Vecteur vHiPS d'un HiPS défini au moyen du
     * dictionnaire GLU propre a Aladin
     */
-   private void memoGluSky(boolean withLog,String actionName,String id,String aladinLabel,String aladinMenuNumber,String url,String description,
+   private void memoHips(boolean withLog,String actionName,String id,String aladinLabel,String aladinMenuNumber,String url,String description,
          String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,
          String aladinSurvey,String aladinHpxParam,String skyFraction,String origin) {
 
       // Pour éviter les doublons
       int find = findGluSky(actionName);
       if( find>=0 && withLog ) {
-         System.err.println("Allsky [" + actionName + ":" + description
-               + "] redefined => Aladin will use the last one (remote)");
+         System.err.println("HiPS [" + actionName + ":" + description + "] redefined => Aladin will use the last one (remote)");
       }
-
-      // Pour incompatibilité avec version <=6.100
-      //      boolean incompatible=false;
-      //      if( aladinSurvey!=null || aladinLabel==null || aladinLabel.indexOf('/')>=0 ) {
-      //         int i;
-      //         if( aladinLabel!=null && (i=aladinLabel.lastIndexOf('/'))>0 ) {
-      //            aladinTree=aladinLabel.substring(0,i);
-      //            aladinLabel=aladinLabel.substring(i+1);
-      //         }
-      //         if( aladinSurvey!=null ) {
-      //            char c = url.charAt(url.length()-1);
-      //            if( c!='/' && c!='\\' ) url = url+ '/';
-      //            url = url + aladinSurvey;
-      //         }
-      //         if( aladinHpxParam==null ) aladinHpxParam="map";
-      //         incompatible=true;
-      //      }
 
       // Construction du path pour l'arbre (noeud terminal inclus)
       String s = aladinLabel.replace("/","\\/");
@@ -1034,16 +1017,26 @@ public final class Glu implements Runnable {
       // Ajout de l'origine en préfixe de l'id
       if( origin!=null && !id.startsWith(origin) ) id = origin+"/"+id;
 
-      TreeNodeAllsky tn =  new TreeNodeAllsky(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
+      TreeNodeHips tn =  new TreeNodeHips(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
             description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam,skyFraction);
 
-      if( find<0 ) vGluSky.addElement(tn);
-      else vGluSky.setElementAt(tn,find);
+      if( find<0 ) vHips.addElement(tn);
+      else vHips.setElementAt(tn,find);
+   }
 
-      //      if( incompatible ) {
-      //         System.err.println("Uncompatible GLU allsky record ["+actionName+"] => translated\nBut please update it:\n" +
-      //               getGluSky( findGluSky(actionName) ).getGluDic());
-      //      }
+   /**
+    * Memorisation dans le Vecteur vHiPS d'un HiPS décrit par ses properties
+    */
+   private void memoHips(String id,boolean localFile, MyProperties prop) {
+
+      // Pour éviter les doublons
+      int find = findGluSky(id);
+      if( find>=0 ) System.err.println("HiPS [" + id + "] redefined => Aladin will use the last one (remote)");
+
+      TreeNodeHips tn =  new TreeNodeHips(aladin,id,localFile,prop);
+
+      if( find<0 ) vHips.addElement(tn);
+      else vHips.setElementAt(tn,find);
    }
 
    /** Memorisation des noeuds pour l'arbre d'outreach (cf TreeServer)
@@ -1057,7 +1050,7 @@ public final class Glu implements Runnable {
 
       Enumeration e=vGluCategory.elements();
       while( e.hasMoreElements() ) {
-         TreeNode n = (TreeNode)e.nextElement();
+         TreeNodeBasic n = (TreeNodeBasic)e.nextElement();
          if( n.id.equals(actionName) ) { vGluCategory.remove(n); break; }
       }
       vGluCategory.addElement(new TreeNodeCategory(aladin,actionName,description,
@@ -1177,15 +1170,184 @@ public final class Glu implements Runnable {
    }
 
    // en JVM 1.1.8, le readLine() de DataInputStream est buggué lorsque je
-   // l'appelle
-   // récursivement (voir %I si dessous) : il oublie les premiers caractères du
+   // l'appelle récursivement (voir %I si dessous) : il oublie les premiers caractères du
    // flux !!
    // J'ai donc contourné le problème en mémorisant le nom de l'enregistrement
-   // GLU
-   // qu'il faut recharger. si l'identificateur %A n'est pas connu à cause de
-   // cette
-   // troncature, je la reconstruits à partir de lastA
+   // GLU qu'il faut recharger. si l'identificateur %A n'est pas connu à cause de
+   // cette troncature, je la reconstruits à partir de lastA
    private String lastA = null;
+   
+   
+   protected boolean loadProperties(InputStream in, boolean localFile) {
+      MyProperties prop;
+      boolean encore=true;
+      
+      try {
+         while( encore ) {
+            prop = new MyProperties();
+            encore = prop.loadRecord(in);
+            if( prop.size()==0 ) continue;
+            System.out.println("\nPROPERTIES:\n"+prop);
+            loadProperties(prop,localFile);
+            
+         }
+      } catch( IOException e ) {
+         System.err.println("loadProperties error: " + e);
+         e.printStackTrace();
+         return false;
+      } finally{ try { in.close(); } catch( Exception e) {} }
+      
+      return true;
+   }
+   
+   private void loadProperties(MyProperties prop, boolean localFile) {
+      // Détermination de l'identificateur (id => glutag)
+      String id = getID(prop);
+      System.out.println("ID=>"+id);
+      
+      // Dans le cas où il n'y a pas de mirroir, mémorisation de l'URL directement
+      if( prop.getProperty("hips_service_url_1")==null ) {
+         String url =  prop.getProperty("hips_service_url");
+         if( url==null ) {
+            System.err.println("Missing hips_service_url in properties ["+id+"]");
+            return;
+         }
+         aladinDic.put(id,url);
+         
+      // Dans le cas où il y a des mirroirs => mémorisation des indirections
+      } else {
+
+         // Enregistrement de tous les mirroirs comme des indirections
+         StringBuilder indirection = null;
+         for( int i=0; true; i++ ) {
+            String url = prop.getProperty("hips_service_url"+(i==0?"":"_"+i));
+            if( url==null ) break;
+            
+            String subid = id+"_"+i;
+            aladinDic.put(subid,url);
+            System.out.println(subid+" -> "+url);
+
+            if( indirection==null ) indirection = new StringBuilder("%I "+subid);
+            else indirection.append("\t"+subid);
+         }
+         
+         // Mémorisation des indirections possibles sous la forme %I id0\tid1\t...
+         aladinDic.put(id,indirection.toString());
+         System.out.println(id+" -> "+indirection);
+      }
+      
+      memoHips(id,localFile,prop);
+   }
+   
+   /** Récupération de l'ID à partir d'un enregistrement properties */ 
+   public String getID(MyProperties prop) {           
+      // L'ID est donné explicitement (ex: CDS/P/DSS2/color)
+      String id = prop.getProperty("ID");
+      if( id!=null ) return id;
+      
+      // l'ID doit être construit à partir des différents champs possibles
+      id = prop.getProperty("creator_did");
+      if( id==null ) id = prop.getProperty("publisher_did");
+      if( id==null ) {
+         String o =  prop.getProperty("obs_id");
+         if( o==null ) o="id"+(System.currentTimeMillis()/1000);
+         String p = prop.getProperty("creator_id");
+         if( p==null ) p = prop.getProperty("publisher_id");
+         if( p==null ) p = "ivo://UNK.AUT";
+         id = p+"/"+o;
+      }
+      // On enlève le préfixe ivo://
+      if( id.startsWith("ivo://") ) id = id.substring(6);
+
+      // On remplace les éventuels ? par des / (merci Markus !)
+      id = id.replace('?', '/');
+      return id;
+   }
+   
+
+   
+//   private String getRecordGlu1(boolean flagMirror) {
+//      StringBuilder s = new StringBuilder();
+//      
+//      String s1 = get(MultiMoc.ID_KEY);
+//      int index=s1.indexOf('/');
+//      
+//      String id = s1.substring(index+1);
+//      String gluId = id.replace('/','-');
+//      String origin = s1.substring(0,index);
+//      
+//      s.append(Util.align("%ActionName", 20) +" "+ gluId+".hpx\n");
+//      s1 = get("obs_title");
+//      if( s1==null ) get("obs_collection");
+//      if( s1!=null ) s.append(Util.align("%Description", 20) +" "+ s1+"\n");
+//      s.append(Util.align("%Owner", 20) +" aladin\n");
+//      s.append(Util.align("%DistribDomain", 20) +" ALADIN\n");
+//      
+//      // Dans le cas du !flagMirror, les mirroirs ne seront utilisés que pour les HiPS prévus pour AladinLite 
+//      String s2 = get("client_application");
+//      boolean flagLite = s2!=null && s2.indexOf("AladinLite")>=0;
+//      
+//      int n=1;
+//      if( flagMirror || !flagMirror && flagLite ) {
+//         while( get("hips_service_url_"+n)!=null ) n++;
+//      }
+//      if( n==1 ) {
+//         s1 = get("hips_service_url"); if( s1!=null ) s.append(Util.align("%Url", 20) +" "+ s1+"\n");
+//      } else {
+//         for( int i=0; i<n; i++ ) {
+//            s1 = get("hips_service_url"+(i==0?"":"_"+i));
+//            s2 = get("hips_status"+(i==0?"":"_"+i));
+//            if( s2!=null && s2.indexOf("partial")>0 ) s.append("#");
+//            if( s1!=null ) s.append(Util.align("%SeeAction", 20) +" "+ gluId+"_"+i+".hpx\n");
+//         }
+//      }
+//      s1 = get("obs_description"); if( s1!=null ) s.append(Util.align("%VerboseDescr", 20) +" "+ s1+"\n");
+//      if( origin.length()>0 ) s.append(Util.align("%Origin", 20) +" "+ origin+"\n");
+//      s.append(Util.align("%Id", 20) +" "+ id+"\n");
+//      s1 = get("client_application"); 
+//      if( s1!=null ) s1 = s1.indexOf("AladinDesktopBeta")>=0 ? " beta":"";
+//      else s1="";
+//      s.append(Util.align("%Aladin.Profile", 20) +" >6.1"+s1+"\n");
+//      s1 = get("obs_copyright"); 
+//      if( s1==null ) s1 = get("prov_progenitor");
+//      if( s1!=null ) s.append(Util.align("%Copyright", 20) +" "+ s1+"\n");
+//      s1 = get("obs_copyright_url"); if( s1!=null ) s.append(Util.align("%Copyright.Url", 20) +" "+ s1+"\n");
+//      s1 = get("moc_sky_fraction"); if( s1!=null ) s.append(Util.align("%SkyFraction", 20) +" "+ s1+"\n");
+//      s1 = get("obs_collection"); if( s1==null ) s1 = id;
+//      s.append(Util.align("%Aladin.XLabel", 20) +" "+ s1+"\n");
+//      s1 = get("client_category"); if( s1!=null ) s.append(Util.align("%Aladin.Tree", 20) +" "+ s1+"\n");
+//      s1 = get("client_sort_key");
+//      if( flagLite ) s1 = s1!=null? s1+" lite" : "lite";
+//      if( s1!=null ) s.append(Util.align("%Aladin.MenuNumber", 20) +" "+ s1+"\n");
+//      
+//      if( get("hips_service_url")!=null ) {
+//         s.append(Util.align("%Aladin.HpxParam",20));
+//         s1= get("hips_order"); if( s1!=null) s.append(" "+s1);
+//         s1= get("dataproduct_type");if( s1!=null) s.append(" "+s1);
+//         s1= get("dataproduct_subtype");if( s1!=null) s.append(" "+s1);
+//         s1= get("hips_frame"); if( s1!=null) s.append(" "+s1);
+//         s1= get("hips_tile_format");if( s1!=null) s.append(" "+s1);
+//         s.append("\n");
+//      }
+//      s1 = get("hips_release_date"); if( s1!=null ) s.append(Util.align("%Aladin.Date", 20) +" "+ s1+"\n");
+//      
+//      // Plusieurs indirections ?
+//      if( n>1 )  {
+//         for( int i=0; i<n; i++ ) {
+//            s1 = get("hips_service_url"+(i==0?"":"_"+i));
+//            if( s1!=null ) {
+//               s.append("\n");
+//               s.append(Util.align("%ActionName", 20) +" "+ gluId+"_"+i+".hpx\n");
+//               s.append(Util.align("%Owner", 20) +" CDS'aladin\n");
+//               s.append(Util.align("%DistribDomain", 20) +" ALADIN\n");
+//               s.append(Util.align("%Url", 20) +" "+ s1+"\n");
+//            }
+//         }
+//      }
+//      
+//      return s.toString();
+//   }
+
 
    /**
     * Chargement d'un dico GLU additionnel. - Mise a jour de tableau associatif
@@ -1359,7 +1521,7 @@ public final class Glu implements Runnable {
                try {
                   if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
                      if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                     else if( flagGluSky ) memoGluSky(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+                     else if( flagGluSky ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                            aladinSurvey,aladinHpxParam,skyFraction,origin);
                      else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
@@ -1491,7 +1653,7 @@ public final class Glu implements Runnable {
          }
          if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
             if( aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-            else if( flagGluSky ) memoGluSky(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+            else if( flagGluSky ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                   aladinSurvey,aladinHpxParam,skyFraction,origin);
             else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,

@@ -1598,7 +1598,6 @@ Runnable, SwingWidgetFinder, Widget {
       lastYMax = y;
       if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
       
-      
       a.resumeVariousThinks();
 
       // Reaffichage du status du plan sous la souris

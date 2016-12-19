@@ -1514,9 +1514,7 @@ public class Calque extends JPanel implements Runnable {
          if( !(plan[i] instanceof PlanBG )  ) continue;
          if( ((PlanBG)plan[i]).id==null ) continue;
          
-         // le hipsId ne contient pas l'origine en premier mot
-         // ex: CDS/P/DSS2/color => hipsID = P/DSS2/color
-         if( ((PlanBG)plan[i]).id.endsWith("/"+hipsId) ) return true;
+         if( ((PlanBG)plan[i]).id.equals(hipsId) ) return true;
       }
       return false;
    }
@@ -3384,7 +3382,7 @@ public class Calque extends JPanel implements Runnable {
    //   }
 
    // Détermination du target de démarrage pour un plan BG
-   private Coord getTargetBG(String target,TreeNodeAllsky gSky) {
+   private Coord getTargetBG(String target,TreeNodeHips gSky) {
       Coord c=null;
       if( target!=null && target.length()>0) {
          try {
@@ -3402,7 +3400,7 @@ public class Calque extends JPanel implements Runnable {
    }
 
    // Détermination du radius de démarrage pour un plan BG
-   private double getRadiusBG(String target,String radius,TreeNodeAllsky gSky) {
+   private double getRadiusBG(String target,String radius,TreeNodeHips gSky) {
       double rad=-1;
       if( radius!=null && radius.length()>0 ) {
          try {
@@ -3444,11 +3442,11 @@ public class Calque extends JPanel implements Runnable {
 
    /** Création d'un plan BG */
    public int newPlanBG(String path, String label, String target,String radius) { return newPlanBG(null,path,null,label,target,radius); }
-   public int newPlanBG(TreeNodeAllsky gSky, String label, String target,String radius) { return newPlanBG(gSky,null,null,label,target,radius); }
+   public int newPlanBG(TreeNodeHips gSky, String label, String target,String radius) { return newPlanBG(gSky,null,null,label,target,radius); }
    public int newPlanBG(URL url, String label, String target,String radius) { return newPlanBG(null,null,url,label,target,radius); }
 
 
-   public int newPlanBG(TreeNodeAllsky gSky,String path,URL url, String label, String target,String radius) {
+   public int newPlanBG(TreeNodeHips gSky,String path,URL url, String label, String target,String radius) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(target,gSky);
@@ -3753,6 +3751,16 @@ public class Calque extends JPanel implements Runnable {
       }
    }
 
+   /** Change pour toute la pile la projection */
+   protected void modifyProjection(String proj) {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( !(plan[i] instanceof PlanBG) ) continue;
+         plan[i].modifyProj(proj);
+      }
+      aladin.view.newView();
+      aladin.calque.repaintAll();
+   }
 
    /** Change pour tous les plans sélectionnés le niveau d'opacité */
    protected void setOpacityLevel(float opacity) {

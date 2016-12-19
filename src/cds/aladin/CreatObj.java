@@ -102,6 +102,9 @@ public final class CreatObj implements Runnable {
 
       a.localisation = new Localisation(a);
       trace(1,"Creating Localisation widget");
+      
+      a.projSelector = new ProjSelector(a);
+      trace(1,"Creating projSelector widget");
 
 //      a.pixel = new Pixel(a);
 //      trace(1,"Creating Pixel widget");

@@ -45,7 +45,7 @@ import javax.swing.tree.TreePath;
  * Gestion d'un arbre dynamique
  * @author Pierre Fernique [CDS]
  */
-public class MyTree extends JTree implements Iterable<TreeNode>  {
+public class MyTree extends JTree implements Iterable<TreeNodeBasic>  {
    protected String info,info1;
    protected DefaultMutableTreeNode root;
    private Aladin aladin;
@@ -56,7 +56,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    }
 
    protected DefaultMutableTreeNode getRoot() {
-      if( root==null ) root = new DefaultMutableTreeNode( new TreeNode(aladin,"root",null,"","") );
+      if( root==null ) root = new DefaultMutableTreeNode( new TreeNodeBasic(aladin,"root",null,"","") );
       return root;
    }
 
@@ -72,23 +72,24 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       setCellRenderer(nr);
       setCellEditor(new NoeudEditor(this));
       setEditable(true);
+      setLargeModel(true);
    }
 
    /** Nettoyage de l'arbre */
    protected void freeTree() {
       if( root!=null && root.getChildCount()==0 ) return;
-      DefaultMutableTreeNode r = new DefaultMutableTreeNode( new TreeNode(aladin,"root",null,"",""));
+      DefaultMutableTreeNode r = new DefaultMutableTreeNode( new TreeNodeBasic(aladin,"root",null,"",""));
       ((DefaultTreeModel)getModel()).setRoot(r);
       root = r;
    }
 
    // Recupération d'un itérator sur tous les noeuds de l'arbre
-   public Iterator<TreeNode> iterator() { return new TreeIterator(); }
+   public Iterator<TreeNodeBasic> iterator() { return new TreeIterator(); }
 
-   class TreeIterator implements Iterator<TreeNode> {
+   class TreeIterator implements Iterator<TreeNodeBasic> {
       private Enumeration e = root.preorderEnumeration();
       public boolean hasNext() { return e.hasMoreElements(); }
-      public TreeNode next() { return (TreeNode) ((DefaultMutableTreeNode)e.nextElement()).getUserObject(); }
+      public TreeNodeBasic next() { return (TreeNodeBasic) ((DefaultMutableTreeNode)e.nextElement()).getUserObject(); }
       public void remove() { }
    }
 
@@ -96,7 +97,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    /** "Peuplement" de l'arbre en fonction des enregistrements GLU recueillis */
    protected void populateTree(Enumeration e) {
       while( e.hasMoreElements() ) {
-         TreeNode noeud = (TreeNode)e.nextElement();
+         TreeNodeBasic noeud = (TreeNodeBasic)e.nextElement();
          noeud.setHidden(false);
          createTreeBranch((DefaultTreeModel)getModel(),root,noeud,0);
       }
@@ -113,7 +114,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       }
 
       if( node.isLeaf() ) {
-         TreeNode fils = (TreeNode) node.getUserObject();
+         TreeNodeBasic fils = (TreeNodeBasic) node.getUserObject();
          if( fils.isHidden() && !node.equals(root)) {
             fils.treeIndex = node.getParent().getIndex(node);
             model.removeNodeFromParent(node);
@@ -131,7 +132,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       }
 
       if( node.isLeaf() ) {
-         TreeNode fils = (TreeNode) node.getUserObject();
+         TreeNodeBasic fils = (TreeNodeBasic) node.getUserObject();
          if( !fils.isIn() && !node.equals(root)) {
             fils.treeIndex = node.getParent().getIndex(node);
             model.removeNodeFromParent(node);
@@ -143,14 +144,14 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
    /** Reset */
    public void reset() {
-      for( TreeNode n : this ) n.setCheckBox(false);
+      for( TreeNodeBasic n : this ) n.setCheckBox(false);
       validate();
    }
 
    /** Interrogation */
    public void submit() {
       boolean ok=false;
-      for( TreeNode n : this ) {
+      for( TreeNodeBasic n : this ) {
          if( !n.isCheckBoxSelected() ) continue;
          submit(n);
          ok=true;
@@ -171,7 +172,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
    /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
    protected boolean setInTree(DefaultMutableTreeNode node) {
-      TreeNode gSky = (TreeNode) node.getUserObject();
+      TreeNodeBasic gSky = (TreeNodeBasic) node.getUserObject();
       if( node.isLeaf() )  return gSky.isIn();
 
       boolean rep=false;
@@ -187,7 +188,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
    /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
    protected boolean setHiddenTree(DefaultMutableTreeNode node) {
-      TreeNode gSky = (TreeNode) node.getUserObject();
+      TreeNodeBasic gSky = (TreeNodeBasic) node.getUserObject();
       if( node.isLeaf() )  return gSky.isHidden();
 
       boolean rep=true;
@@ -204,7 +205,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    /** Met à jour les couleurs des widgets avant de les tracer => à surcharger */
    protected void updateColor() {}
 
-   private void submit(TreeNode n) { n.submit(); }
+   private void submit(TreeNodeBasic n) { n.submit(); }
 
    /** Procédure récursive pour la construction de l'arbre.
     * @param node Noeud courant (au sens JTtree)
@@ -213,7 +214,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
     *             ex:  Nebulae/PN
     *                          ^   <= valeur de opos
     */
-   protected void createTreeBranch(DefaultTreeModel model, DefaultMutableTreeNode node, TreeNode noeud, int opos) {
+   protected void createTreeBranch(DefaultTreeModel model, DefaultMutableTreeNode node, TreeNodeBasic noeud, int opos) {
       int pos;
 
       // On découpe par "/" mais sans prendre en compte "\/"
@@ -226,22 +227,22 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       } while( index!=-1 );
 
       String label = pos<0 ? noeud.path.substring(opos) : noeud.path.substring(opos,pos);
-      ((TreeNode)node.getUserObject()).noCheckbox();
+      ((TreeNodeBasic)node.getUserObject()).noCheckbox();
 
       try {
          DefaultMutableTreeNode subNode = null;
          Enumeration e = node.children();
          while( e.hasMoreElements() ) {
             subNode = (DefaultMutableTreeNode) e.nextElement();
-            TreeNode fils = (TreeNode) subNode.getUserObject();
+            TreeNodeBasic fils = (TreeNodeBasic) subNode.getUserObject();
             if( label.equals(fils.label) ) break;
             subNode=null;
          }
 
          if( subNode==null ) {
-            subNode = new DefaultMutableTreeNode( pos!=-1? new TreeNode(aladin,"",null,label,"") : noeud );
+            subNode = new DefaultMutableTreeNode( pos!=-1? new TreeNodeBasic(aladin,"",null,label,"") : noeud );
 //            node.add(subNode);
-            int i = ((TreeNode)subNode.getUserObject()).treeIndex;
+            int i = ((TreeNodeBasic)subNode.getUserObject()).treeIndex;
             int n = node.getChildCount();
             if( i==-1 || i>n ) i=n;
             model.insertNodeInto(subNode, node, i);
@@ -265,7 +266,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       Enumeration e = node.children();
       while( e.hasMoreElements() ) {
          subNode = (DefaultMutableTreeNode) e.nextElement();
-         TreeNode fils = (TreeNode) subNode.getUserObject();
+         TreeNodeBasic fils = (TreeNodeBasic) subNode.getUserObject();
          String idFils = fils.getID();
          if( idFils!=null && idFils.equals(id) ) { node.remove(subNode); rep=true;  break; }
          if( removeTreeBranch(subNode,id) && node.getChildCount()==0 ) { node.remove(subNode); rep=true; break; }
@@ -273,28 +274,67 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       return rep;
    }
 
-   /** Suppression d'une branche (désignée par son label) */
-   //   protected boolean removeTreeTrunk(DefaultMutableTreeNode node, String label ) {
-   //      DefaultMutableTreeNode subNode = null;
-   //      boolean rep=false;
-   //      Enumeration e = node.children();
-   //      while( e.hasMoreElements() ) {
-   //         subNode = (DefaultMutableTreeNode) e.nextElement();
-   //         TreeNode fils = (TreeNode) subNode.getUserObject();
-   //         if( fils.label!=null && fils.label.equals(label) ) { node.remove(subNode); rep=true;  break; }
-   //      }
-   //      return rep;
-   //   }
-
-   /** Préparation de l'arbre afin qu'il "pré-ouvre" les branches terminales */
-   protected void defaultExpand() {
-      expandPath(new TreePath(root));
-      if( true ) return;
-      Enumeration e = root.preorderEnumeration();
-      while( e.hasMoreElements() ) {
-         DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
-         if( node.isLeaf() ) collapsePath(new TreePath(node));
+   protected boolean isDefaultExpand() {
+      TreePath rootTp = new TreePath(root);
+      if (root.getChildCount() >= 0) {
+         for (Enumeration e = root.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = rootTp.pathByAddingChild(n);
+            if( !isCollapsedRec(path) ) return false;
+         }
       }
+      return true;
+   }
+   
+   public boolean isCollapsedRec(TreePath parent) {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      if (node.getChildCount() >= 0) {
+         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(n);
+            if( !isCollapsedRec(path) ) return false;
+         }
+      }
+      return isCollapsed(parent);
+   }
+   
+   protected void defaultExpand() {
+      TreePath rootTp = new TreePath(root);
+      if (root.getChildCount() >= 0) {
+         for (Enumeration e = root.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = rootTp.pathByAddingChild(n);
+            collapseAll(path);
+         }
+      }
+      expandPath(rootTp);
+   }
+   
+   private void collapseAll(TreePath parent) {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      if (node.getChildCount() >= 0) {
+         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(n);
+            collapseAll(path);
+         }
+      }
+      collapsePath(parent);
+   }
+
+   
+   /** Ouverture de toutes les branches de l'arbre */
+   protected void allExpand() { expandAll(new TreePath(root)); }
+   private void expandAll(TreePath parent) {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      if (node.getChildCount() >= 0) {
+         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode n = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(n);
+            expandAll(path);
+         }
+      }
+      expandPath(parent);
    }
    
    ImageIcon cds = null,jaxa=null,esa=null,irap=null,xcatdb=null; 
@@ -318,7 +358,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded,
             boolean leaf, int row, boolean hasFocus){
          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
-         TreeNode n = (TreeNode)node.getUserObject();
+         TreeNodeBasic n = (TreeNodeBasic)node.getUserObject();
 
          //         System.out.println("getTreeCellRendererComponent ["+node.toString()+"] => "+n.isOk());
          
@@ -338,24 +378,30 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          }
 
          Component c = nonLeafRenderer.getTreeCellRendererComponent(tree, obj, selected, expanded, leaf, row, hasFocus);
-         if( n.isInStack() ) c.setForeground( Color.red );
-         else if( n.isIn() ) c.setForeground( Color.black);
-         else c.setForeground( Color.lightGray );
+         if( n.isInStack() ) c.setForeground( Color.green );
+         else if( !n.isIn() ) c.setForeground(Aladin.ORANGE); //Color.orange);
+         else {
+            if( node.isLeaf() ) c.setForeground( Aladin.GREEN );
+            else c.setForeground(Color.black);
+         }
          
-         if( n instanceof TreeNodeAllsky && ((TreeNodeAllsky)n).internalId!=null ) {
-            if( ((TreeNodeAllsky)n).internalId.startsWith("CDS/") ) {
+         // Dans les cas des hips locaux, le MocServer ne sert à rien => couleur noire
+         if( n instanceof TreeNodeHips && ((TreeNodeHips)n).isLocal() ) c.setForeground(Color.black);
+         
+         if( n instanceof TreeNodeHips && ((TreeNodeHips)n).internalId!=null ) {
+            if( ((TreeNodeHips)n).internalId.startsWith("CDS/") ) {
                if( cds==null ) cds = new ImageIcon(aladin.getImagette("cds.png"));
                nonLeafRenderer.setIcon( cds );
-            } else if( ((TreeNodeAllsky)n).internalId.startsWith("ESAVO/") ) {
+            } else if( ((TreeNodeHips)n).internalId.startsWith("ESAVO/") ) {
                if( esa==null ) esa = new ImageIcon(aladin.getImagette("esa.png"));
                nonLeafRenderer.setIcon( esa );
-            } else if( ((TreeNodeAllsky)n).internalId.startsWith("JAXA/") ) {
+            } else if( ((TreeNodeHips)n).internalId.startsWith("JAXA/") ) {
                if( jaxa==null ) jaxa = new ImageIcon(aladin.getImagette("jaxa.png"));
                nonLeafRenderer.setIcon( jaxa );
-            } else if( ((TreeNodeAllsky)n).internalId.startsWith("ov-gso/") ) {
+            } else if( ((TreeNodeHips)n).internalId.startsWith("ov-gso/") ) {
                if( irap==null ) irap = new ImageIcon(aladin.getImagette("irap.png"));
                nonLeafRenderer.setIcon( irap );
-            } else if( ((TreeNodeAllsky)n).internalId.startsWith("xcatdb/") ) {
+            } else if( ((TreeNodeHips)n).internalId.startsWith("xcatdb/") ) {
                if( xcatdb==null ) xcatdb = new ImageIcon(aladin.getImagette("xcatdb.png"));
                nonLeafRenderer.setIcon( xcatdb );
            }
@@ -369,7 +415,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
    class NoeudEditor extends AbstractCellEditor implements TreeCellEditor {
       JTree tree;
       NoeudRenderer renderer = new NoeudRenderer();
-      TreeNode n1 = null;
+      TreeNodeBasic n1 = null;
 
       public NoeudEditor(JTree tree) {
          this.tree = tree;
@@ -379,14 +425,14 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       public boolean isCellEditable(EventObject event) {
          if (event instanceof MouseEvent) {
             TreePath path = tree.getPathForLocation( ((MouseEvent)event).getX(), ((MouseEvent)event).getY());
-            TreeNode noeud = (TreeNode)((DefaultMutableTreeNode)path.getLastPathComponent()).getUserObject();
+            TreeNodeBasic noeud = (TreeNodeBasic)((DefaultMutableTreeNode)path.getLastPathComponent()).getUserObject();
             return noeud.hasCheckBox();
          }
          return false;
       }
       public Component getTreeCellEditorComponent(JTree tree, Object obj, boolean isSelected, boolean expanded, boolean leaf, int row){
          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
-         TreeNode n = (TreeNode)node.getUserObject();
+         TreeNodeBasic n = (TreeNodeBasic)node.getUserObject();
          n1 = n;
          if( n!=null &&  n.hasCheckBox() ) {
             if( n.isIn() ) n.checkbox.setForeground(Color.black);

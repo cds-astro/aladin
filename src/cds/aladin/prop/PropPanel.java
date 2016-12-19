@@ -111,7 +111,8 @@ public class PropPanel extends JPanel {
    
       Component t;
    
-      if( titre instanceof String ) {
+      if( titre==null ) t = new JLabel();
+      else if( titre instanceof String ) {
          JLabel l = new JLabel((String)titre);
          l.setFont(l.getFont().deriveFont(Font.ITALIC));
          t=l;
@@ -139,7 +140,7 @@ public class PropPanel extends JPanel {
       } else t=valeur;
    
       c.gridwidth = GridBagConstraints.REMAINDER;
-      c.fill = GridBagConstraints.NONE;
+      c.fill = titre==null ? GridBagConstraints.HORIZONTAL : GridBagConstraints.NONE;
       c.weightx = 1.0;
       c.anchor = GridBagConstraints.WEST;
       g.setConstraints(t,c);

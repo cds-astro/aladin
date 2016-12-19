@@ -515,6 +515,16 @@ NORTHUPHELP	Turn the image North up, Est left
 NORTHUPHELP.fr	Oriente l'image le Nord en haut, l'Est à gauche
 PIXHELP	High Dynamic pixel Range
 PIXHELP.fr	HDR: visualisation de la dynamique complète des pixels
+COLLAPSE	coll
+COLLAPSE.fr	réd
+EXPAND	exp
+EXPAND.fr	dév
+COLLAPSETIP	Expand/collapse the HiPS tree
+COLLAPSETIP.fr	Développe/réduit l'arbre des HiPS
+PRUNE	prune
+PRUNE.fr	élague
+PRUNETIP	Hide/show the HiPS without any observation in the current view
+PRUNETIP.fr	Cache/montre les HiPS n'ayant\naucune observation dans le champ courant
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key

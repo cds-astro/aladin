@@ -115,7 +115,7 @@ public class PlanHealpix extends PlanBG {
 
 
    /** CONSTRUCTEUR TEMPORAIRE EN ATTENDANT QUE PlanHealpix SACHE TRAITER LES gluSky COMME LES AUTRES PlanBG */
-   public PlanHealpix(Aladin aladin, TreeNodeAllsky gluSky, String label, Coord c,double radius, String startingTaskId) {
+   public PlanHealpix(Aladin aladin, TreeNodeHips gluSky, String label, Coord c,double radius, String startingTaskId) {
       super(aladin);
 
       this.startingTaskId=startingTaskId;
@@ -777,13 +777,15 @@ public class PlanHealpix extends PlanBG {
 
       File propFile = propertiesFile(dir);
       MyProperties prop = new MyProperties();
+      FileInputStream in=null;
       try {
-         prop.load(new FileInputStream(propFile));
+         in = new FileInputStream(propFile);
+         prop.load(in);
       } catch (Exception e) {
          File dirToRemove = new File(getCacheDir() + Util.FS + getDirname());
          Util.deleteDir(dirToRemove);
          return true;
-      }
+      } finally{ try { in.close(); } catch(Exception e) {} }
 
 
       // if local file, check last modification date

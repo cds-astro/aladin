@@ -128,7 +128,7 @@ public class ServerHips extends ServerTree  {
          return -1;
       }
 
-      TreeNodeAllsky gSky = aladin.glu.getGluSky(j);
+      TreeNodeHips gSky = aladin.glu.getGluSky(j);
 
       try {
          if( defaultMode!=PlanBG.UNKNOWN ) gSky.setDefaultMode(defaultMode);
@@ -160,7 +160,7 @@ public class ServerHips extends ServerTree  {
 //            if( v.isFree() ) return;
 
             if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) ) {
-               for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) gSky.isIn=true;
+               for( TreeNodeHips gSky : aladin.glu.vHips ) gSky.isIn=true;
 
             } else {
                String params;
@@ -194,10 +194,10 @@ public class ServerHips extends ServerTree  {
                while( (s=in.readLine())!=null ) set.add( getId(s) );
 
                // Nettoyage préalable de l'arbre
-               for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) gSky.isIn=false;
+               for( TreeNodeHips gSky : aladin.glu.vHips ) gSky.isIn=false;
 
                // Positionnement des datasets dans le champ
-               for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) {
+               for( TreeNodeHips gSky : aladin.glu.vHips ) {
                   gSky.isIn = set.contains(gSky.internalId);
 //                  if( !gSky.ok ) System.out.println(gSky.internalId+" is out");
                }
@@ -207,7 +207,7 @@ public class ServerHips extends ServerTree  {
             try {
                NoeudEditor c = (NoeudEditor)tree.getCellEditor();
                if( c!=null ) {
-                  TreeNode n = (TreeNode)c.getCellEditorValue();
+                  TreeNodeBasic n = (TreeNodeBasic)c.getCellEditorValue();
                   if( n!=null &&  n.hasCheckBox() ) {
                      if( n.isIn() ) n.checkbox.setForeground(Color.black);
                      else n.checkbox.setForeground(Color.lightGray);
@@ -243,10 +243,10 @@ public class ServerHips extends ServerTree  {
 
    public void submit() {
       String mode = fitsRadio!=null && fitsRadio.isSelected() ? ",fits":"";
-      for( TreeNode n : tree ) {
-         if( !(n instanceof TreeNodeAllsky) ) continue;
+      for( TreeNodeBasic n : tree ) {
+         if( !(n instanceof TreeNodeHips) ) continue;
          if( !n.isCheckBoxSelected() ) continue;
-         TreeNodeAllsky ta = (TreeNodeAllsky) n;
+         TreeNodeHips ta = (TreeNodeHips) n;
          String target = getTarget(false);
          String radius = getRadius(false);
          String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));
@@ -267,8 +267,8 @@ public class ServerHips extends ServerTree  {
       (new Thread("initTree") {
          public void run() {
             loadRemoteTree();
-            tree.populateTree(aladin.glu.vGluSky.elements());
-            aladin.gluSkyReload();
+            tree.populateTree(aladin.glu.vHips.elements());
+            aladin.hipsReload();
          }
       }).start();
    }

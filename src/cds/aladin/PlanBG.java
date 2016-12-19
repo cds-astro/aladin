@@ -223,7 +223,7 @@ public class PlanBG extends PlanImage {
     * @param c Coordonnée centrale ou null si non spécifiée
     * @param radius Taille du champ en degrés, ou <=0 si non spécifié
     */
-   protected PlanBG(Aladin aladin, TreeNodeAllsky gluSky, String label, Coord c,double radius,String startingTaskId) {
+   protected PlanBG(Aladin aladin, TreeNodeHips gluSky, String label, Coord c,double radius,String startingTaskId) {
       super(aladin);
       this.startingTaskId = startingTaskId;
       initCache();
@@ -299,7 +299,7 @@ public class PlanBG extends PlanImage {
                conn.setIfModifiedSince( f.lastModified() );
                prop = new MyProperties();
                InputStream in1 = new FileInputStream(f);
-               prop.load(in1,true);
+               prop.load(in1,true,false);
                in1.close();
                dateRef = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
                if( dateRef==null ) dateRef = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE,"");
@@ -323,7 +323,7 @@ public class PlanBG extends PlanImage {
                   // (nécessaire dans le cas de sites miroirs, ou d'accès via CGI FX)
                   prop = new MyProperties();
                   InputStream in1 = new ByteArrayInputStream(buf);
-                  prop.load(in1,true);
+                  prop.load(in1,true,false);
                   in1.close();
                   String dateRef1= prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
                   if( dateRef1==null ) dateRef1 = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE,"");
@@ -362,7 +362,7 @@ public class PlanBG extends PlanImage {
          }
          if( in==null ) throw new Exception();
          prop = new MyProperties();
-         prop.load(in,true);
+         prop.load(in,true,false);
          in.close();
       } catch( Exception e ) { prop=null; }
       return prop;
@@ -526,7 +526,7 @@ public class PlanBG extends PlanImage {
    }
 
 
-   protected void setSpecificParams(TreeNodeAllsky gluSky) {
+   protected void setSpecificParams(TreeNodeHips gluSky) {
       type = ALLSKYIMG;
       video = aladin.configuration.getCMVideo();
       inFits = gluSky.isFits();
@@ -563,8 +563,8 @@ public class PlanBG extends PlanImage {
       maxOrder=3;
       useCache = false;
       this.label=label;
-      TreeNodeAllsky gsky = null;
-      try { gsky= new TreeNodeAllsky(aladin, url); }
+      TreeNodeHips gsky = null;
+      try { gsky= new TreeNodeHips(aladin, url); }
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       paramByTreeNode(gsky, c, radius);
       scanProperties();
@@ -587,8 +587,8 @@ public class PlanBG extends PlanImage {
       local = false;
       co=c;
       coRadius=radius;
-      TreeNodeAllsky gsky = null;
-      try { gsky= new TreeNodeAllsky(aladin, url); }
+      TreeNodeHips gsky = null;
+      try { gsky= new TreeNodeHips(aladin, url); }
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       paramByTreeNode(gsky,c,radius);
       int n = url.length();
@@ -600,7 +600,7 @@ public class PlanBG extends PlanImage {
       suite();
    }
 
-   protected void paramByTreeNode(TreeNodeAllsky gSky, Coord c, double radius) {
+   protected void paramByTreeNode(TreeNodeHips gSky, Coord c, double radius) {
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       else setLabel(gSky.label);
       maxOrder=gSky.getMaxOrder();
@@ -834,8 +834,9 @@ public class PlanBG extends PlanImage {
    protected void suite() {
 
       if( this.label==null || this.label.trim().length()==0) setLabel(survey);
-      int defaultProjType = aladin.configuration.getProjAllsky();
-      if( co==null ) {
+      int defaultProjType = Aladin.PROTO ? aladin.projSelector.getProjType() 
+               : aladin.configuration.getProjAllsky();
+      if( co==null  ) {
          flagNoTarget=true;
          co = new Coord(0,0);
          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
@@ -846,8 +847,10 @@ public class PlanBG extends PlanImage {
       objet = co+"";
 
       // On va garder le même type de projection que le plan de base.
-      Plan base = aladin.calque.getPlanBase();
-      if( base instanceof PlanBG ) defaultProjType = base.projd.t;
+      if( Aladin.PROTO ) {
+         Plan base = aladin.calque.getPlanBase();
+         if( base instanceof PlanBG ) defaultProjType = base.projd.t;
+      }
 
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
             defaultProjType,Calib.FK5);
@@ -3088,8 +3091,8 @@ public class PlanBG extends PlanImage {
 
                      // Si c'est un cube et qu'on dispose du losange de la tranche d'à-coté, on affiche cette derniere en attendant
                      // plutôt que d'afficher une résolution différente
-                     HealpixKey h = getHealpixPreviousFrame(order,pix[i]);
-                     if( h!=null ) nb+=h.draw(g,v);
+//                     HealpixKey h = getHealpixPreviousFrame(order,pix[i]);
+//                     if( h!=null ) nb+=h.draw(g,v);
 
                      continue;
                   }

@@ -28,7 +28,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
-import cds.aladin.TreeNodeAllsky;
+import cds.aladin.TreeNodeHips;
 import cds.fits.CacheFits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -188,7 +188,7 @@ public class ContextGui extends Context {
                double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), npix);
                double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
                radec = gal2ICRSIfRequired(radec);
-               TreeNodeAllsky gSky = new TreeNodeAllsky(mainPanel.aladin, getOutputPath());
+               TreeNodeHips gSky = new TreeNodeHips(mainPanel.aladin, getOutputPath());
                int n = mainPanel.aladin.calque.newPlanBG(gSky,getOutputPath(), null, "="+mysky,
                      Coord.getSexa(radec[0], radec[1]), "30");
                Aladin.trace(4, "ContextGui.preview(): create "+mysky);

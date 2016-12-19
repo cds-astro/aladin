@@ -23,6 +23,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,13 +103,14 @@ public final class MyInputStream extends FilterInputStream {
    static final public long TAP     = 1L<<41;
    static final public long OBSTAP  = 1L<<42;
    static final public long EOF     = 1L<<43;
+   static final public long PROP= 1L<<44;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF" };
+      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -445,6 +447,9 @@ public final class MyInputStream extends FilterInputStream {
          // Détection fichier GLU (parfile)
          else if( lookForSignature("\n%A",false,offsetCache,2048,false)>0
                && lookForSignature("\n%U",false,offsetCache,2048,false)>0 ) type |= GLU;
+
+         // Détection fichier properties (hips properties)
+         else if( isProperties() ) type |= PROP;
 
          // Detection de XML
          else /* if( c[0]=='<' && c[1]=='?' &&
@@ -1000,51 +1005,6 @@ public final class MyInputStream extends FilterInputStream {
       return -1;
    }
 
-   static public void main(String argv[]) {
-      try {
-         File dir = new File("C:\\Users\\Pierre\\Desktop\\Data\\Scuba");
-         File list [] = dir.listFiles();
-         long t1,t2;
-         long duree=0L,size=0L;
-         int n=0;
-         for( File f : list ) {
-            size += f.length();
-            t1 = System.currentTimeMillis();
-            //METHODE 1
-            //            MyInputStream mi = new MyInputStream( new FileInputStream(f));
-            //            Fits fits = new Fits();
-            //            fits.loadFITS(mi);
-            //            mi.close();
-
-            //METHODE 2
-            //            RandomAccessFile in = new RandomAccessFile(f, "r");
-            //            byte [] b = new byte[(int)f.length()];
-            //            in.readFully(b);
-            //            in.close();
-
-            //METHODE 3
-            //            FileInputStream fi = new FileInputStream(f);
-            //            FileChannel in = fi.getChannel();
-            //
-            //            ByteBuffer buf = ByteBuffer.allocateDirect(1024);
-            //            while(in.read(buf) != -1) {
-            //               buf.clear();
-            //            }
-            //            buf.clear();
-            //            in.close();
-            //            fi.close();
-
-            t2 = System.currentTimeMillis();
-            n++;
-            duree+= (t2-t1);
-            if( n>0 && n%100==0) System.out.print(".");
-         }
-         System.out.println("\nn="+n+" size="+Util.getUnitDisk(size)+" tps="+Util.getTemps(duree));
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-   }
-
    /**
     * Transforme une entête Sextractor en une simple ligne de labels
     */
@@ -1062,7 +1022,7 @@ public final class MyInputStream extends FilterInputStream {
       nHead.append("\n");
       return nHead.toString();
    }
-   
+      
    // Recherche d'une chaine {"nn":[
    private boolean isJsonMoc(int c[] ) {
       int mode=0;
@@ -1108,7 +1068,51 @@ public final class MyInputStream extends FilterInputStream {
 //   else if( c[0]=='\n' && c[1]=='{' && c[2]=='"' ) type |=HPXMOC;
 //   else if( c[0]=='\r' && c[1]=='\n' && c[2]=='{' && c[3]=='"' ) type |=HPXMOC;
    }
+   
+   static private final String [] PROPKEY = { "ID", "creator_did","publisher_did","publisher_id","obs_did" };
+   
+   /** S'agit-il d'un flux contenant des Properties HiPS ?
+    * exemple:
+    *     publisher_did        = ivo://CDS/P/DSS2/color
+    *     obs_collection       = DSS colored
+    *     ...
+    */
+   private boolean isProperties() throws Exception {
+      if( inCache<BLOCCACHE-10 ) {
+         try { loadInCache(BLOCCACHE-10);
+         }
+         catch( EOFException e) { }
+         catch( IOException e ) { throw e; }
+      }
+      int deb = offsetCache;
+      int max=3;      // Nbre de lignes valides (non commentaire, ni vide) à tester
+      int nLines = 0; // Nbre de lignes qui ont le format:  key = valeur...
+      int match=0;    // Nbre de lignes qui matchent un mot clé de référence des Hips properties
 
+      for( int i=0; nLines<max && deb!=-1; i++ ) {
+         StringBuilder ligneb = new StringBuilder(256);
+         deb = getLigne(ligneb,deb);
+         String ligne = ligneb.toString();
+         if( ligne.length()==0 || ligne.charAt(0)=='#' ) continue;
+         
+         // Test qu'il y a bien un caractère "égal"
+         int posEquals = ligne.indexOf('=');
+         if( posEquals==-1 ) return false;
+         
+         // récupération du mot clé
+         String key = ligne.substring(0,posEquals).trim();
+         
+         // Vérifie que le mot clé ne contient pas d'espace
+         for( int j=key.length()-1; j>=0; j--) { if( Character.isSpace( key.charAt(j) ) ) return false; }
+         
+         nLines++;   // La ligne est du bon format
+         if( Util.indexInArrayOf(key, PROPKEY)>=0 ) match++;    // La ligne matche un mot clé de référence
+      }
+      
+      // S'il y a au moins 3 lignes compatibles, ou 1 ligne compatible avec un mot clé qui matche
+      // alors on estime que c'est bon
+      return nLines==max || match>0; 
+   }
 
    /**
     * Determine s'il s'agit d'un flux en CSV.
@@ -1857,7 +1861,7 @@ public final class MyInputStream extends FilterInputStream {
       posAfterFitsHead =  findSignature("END",false,FITSEND);
       fitsHeadRead=true;
       return posAfterFitsHead;
-   }
+   }      
 
    /** Détermine si le flux contient un mot clé Fits "KEY   = Value" ou  "KEY   = 'Value'"
     *  Va au préalable charger le tampon jusqu'au prochain END en position %80 si nécessaire
@@ -1983,22 +1987,27 @@ public final class MyInputStream extends FilterInputStream {
       return n;
    }
 
-   //   public static void main(String[] args) {
-   //      try {
-   //         for( int i=0; i<args.length; i++ ) {
-   //            String file=args[i];
-   //            InputStream in = new FileInputStream(new File(file));
-   ////            OutputStream out = new FileOutputStream(new File(file+".mys"));
-   //
-   //            MyInputStream f = new MyInputStream(in);
-   //            f=f.startRead();
-   //            System.out.println(file+" =>"+decodeType(f.getType()));
-   ////            byte buf[] = f.readFully();
-   ////            out.write(buf);
-   //            f.close();
-   ////            out.close();
-   //         }
-   //      } catch( IOException e ) { e.printStackTrace(); }
-   //   }
+      public static void main(String[] args) {
+         try {
+            if( args.length==0 ) args = new String[] { "C:\\Users\\Pierre\\Desktop\\Test.prop" };
+            for( int i=0; i<args.length; i++ ) {
+               String file=args[i];
+               InputStream in = new FileInputStream(new File(file));
+   //            OutputStream out = new FileOutputStream(new File(file+".mys"));
+   
+               MyInputStream f = new MyInputStream(in);
+               f=f.startRead();
+               try {
+                  System.out.println(file+" =>"+decodeType(f.getType()));
+               } catch( Exception e ) {
+                  e.printStackTrace();
+               }
+   //            byte buf[] = f.readFully();
+   //            out.write(buf);
+               f.close();
+   //            out.close();
+            }
+         } catch( IOException e ) { e.printStackTrace(); }
+      }
 
 }

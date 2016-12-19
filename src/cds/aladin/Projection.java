@@ -323,6 +323,10 @@ public final class Projection {
    public void setProjSym(boolean sym) {
       modify(label,modeCalib,alphai,deltai,rm,rm1,cx,cy,r,r1,rot,sym,t,system);
    }
+   
+   public void setProj(int type) {
+      modify(label,modeCalib,alphai,deltai,rm,rm1,cx,cy,r,r1,rot,sym,type,system);
+   }
 
    protected void setProjCenter(double ra,double dec) {
       Coord c = new Coord(ra,dec);
