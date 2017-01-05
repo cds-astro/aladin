@@ -29,15 +29,18 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
-public class TreeNodeBasic  implements Comparator {
+public class TreeObj  implements Comparator {
    Aladin aladin;
    String id;
    String label;
    String path;
    String ordre;
-   boolean isIn;      // le noeud est valide = affiché en noir, sinon en gris clair
-   boolean isHidden;  // true si le noeud n'est pas pris dans l'arbre
-   int treeIndex=-1;     // Index dans l'arbre (au niveau du parent)
+   int isIn;            // 1-le noeud est isIn, 0-le noeud est isOut, -1-on ne sait pas encore
+   boolean isHidden;    // true si le noeud n'est pas pris dans l'arbre
+   boolean activated;   // true si actuellement inclus dans l'arbre, false si élagué
+   int treeIndex ;      // Index dans l'arbre (au niveau du parent)
+   int nbDescendance;   // Nombre de noeud terminaux dans sa descendance actuelle
+   int nbRefDescendance; // Idem mais pour sa descendance initiale (avant d'éventuels élagages)
 
    protected JCheckBox checkbox;
    private JPanel panel;
@@ -46,15 +49,19 @@ public class TreeNodeBasic  implements Comparator {
    protected GridBagLayout gb;
    protected static Color background = Color.white;
 
-   public TreeNodeBasic() { }
+   public TreeObj() { }
 
-   TreeNodeBasic(Aladin aladin, String id, String ordre, String label, String path) {
+   TreeObj(Aladin aladin, String id, String ordre, String label, String path) {
       this.aladin      = aladin;
       this.id  = id;
       this.label = label;
       this.path  = path;
       this.ordre = ordre==null ? "Z" : ordre;
-      this.isIn=true;
+      this.isIn=-1;
+      this.activated = false;
+      this.isHidden = false;
+      this.treeIndex = -1;
+      nbDescendance=-1;
       panel=createPanel();
    }
 
@@ -71,11 +78,14 @@ public class TreeNodeBasic  implements Comparator {
       return checkbox.isSelected();
    }
 
-   void setIn( boolean in ) { this.isIn=in; };
-   boolean isIn() { return isIn; }
+   void setIn( int in ) { this.isIn=in; };
+   int getIsIn() { return isIn; }
    
    void setHidden( boolean flag ) { this.isHidden=flag; };
    boolean isHidden() { return isHidden; }
+   
+   void setActivated( boolean flag ) { this.activated=flag; };
+   boolean isActivated() { return activated; }
    
    protected boolean isInStack() { return false; }
 
@@ -107,17 +117,17 @@ public class TreeNodeBasic  implements Comparator {
       return panel;
    }
 
-   protected void submit() { };
+   protected void loadHips() { };
 
    @Override
    public String toString() { return label; }
 
    /** Fournit un Comparator de mouvement pour les tris */
-   static protected Comparator getComparator() { return new TreeNodeBasic(); }
+   static protected Comparator getComparator() { return new TreeObj(); }
 
    public int compare(Object o1, Object o2) {
-      TreeNodeBasic a1 = (TreeNodeBasic)o1;
-      TreeNodeBasic a2 = (TreeNodeBasic)o2;
+      TreeObj a1 = (TreeObj)o1;
+      TreeObj a2 = (TreeObj)o2;
       if( a1.ordre==a2.ordre ) return 0;
       if( a1.ordre==null ) return -1;
       if( a2.ordre==null ) return 1;
@@ -125,7 +135,7 @@ public class TreeNodeBasic  implements Comparator {
    }
 
    public boolean equals(Object o) {
-      TreeNodeBasic a1= (TreeNodeBasic)o;
+      TreeObj a1= (TreeObj)o;
       return a1.id.equals(id);
    }
 }

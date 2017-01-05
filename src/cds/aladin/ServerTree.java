@@ -33,7 +33,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * Formulaire d'interrogation sous la forme d'un arbre
  * @author Pierre Fernique [CDS]
  */
-public abstract class ServerTree extends Server implements Iterable<TreeNodeBasic>  {
+public abstract class ServerTree extends Server implements Iterable<TreeObj>  {
    protected String info,info1;
    protected DefaultMutableTreeNode root;
    protected MyTreeForServer tree;
@@ -113,7 +113,7 @@ public abstract class ServerTree extends Server implements Iterable<TreeNodeBasi
    @Override
    public void submit() { tree.submit(); }
 
-   public Iterator<TreeNodeBasic> iterator() { return tree.iterator(); }
+   public Iterator<TreeObj> iterator() { return tree.iterator(); }
 
    class MyTreeForServer extends MyTree {
 

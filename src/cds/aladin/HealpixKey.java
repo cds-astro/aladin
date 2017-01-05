@@ -1745,7 +1745,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean mayCrossTheSky(ViewSimple v) {
       Projection proj = planBG.projd;
       if( proj.t==Calib.TAN || proj.t==Calib.SIN || proj.t==Calib.STG ) return false;
-      return v.getTaille()> 45;
+      return v.getTaille()> 40;
    }
    
    //   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }

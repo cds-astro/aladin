@@ -115,7 +115,7 @@ public class PlanHealpix extends PlanBG {
 
 
    /** CONSTRUCTEUR TEMPORAIRE EN ATTENDANT QUE PlanHealpix SACHE TRAITER LES gluSky COMME LES AUTRES PlanBG */
-   public PlanHealpix(Aladin aladin, TreeNodeHips gluSky, String label, Coord c,double radius, String startingTaskId) {
+   public PlanHealpix(Aladin aladin, TreeObjHips gluSky, String label, Coord c,double radius, String startingTaskId) {
       super(aladin);
 
       this.startingTaskId=startingTaskId;

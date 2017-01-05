@@ -127,6 +127,7 @@ public class Constante {
    static public final String OLD_HIPS_RELEASE_DATE     = "processingDate";
    static public final String KEY_S_PIXEL_SCALE         = "s_pixel_scale";
    static public final String KEY_HIPS_PIXEL_SCALE      = "hips_pixel_scale";
+   static public final String KEY_NB_ROWS               = "nb_rows";
    static public final String KEY_T_MIN                 = "t_min";
    static public final String KEY_T_MAX                 = "t_max";
    static public final String KEY_EM_MIN                = "em_min";

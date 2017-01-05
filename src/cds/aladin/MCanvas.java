@@ -1752,7 +1752,7 @@ MouseWheelListener, Widget
 
       // Les bordures du cadre
       Util.drawEdge(g,W,H);
-
+      
       gr.drawImage(img,0,0,this);
       
       if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();

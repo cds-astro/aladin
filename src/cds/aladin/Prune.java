@@ -56,11 +56,10 @@ public class Prune extends MyIcon {
       for( int i=0; i<TX.length; i++ ) g.drawLine(TX[i][1]+x,TX[i][0]+y,TX[i][2]+x,TX[i][0]+y);
    }
    
-   private boolean isAvailable() {
+   protected boolean isAvailable() {
       return !aladin.view.isFree() && !aladin.hipsStore.isFree();
    }
    private boolean isMouseIn()   { return in; }
-   
    
    /** Retourne true si l'élagage de l'arbre HiPS est activé */
    protected boolean isActivated() { return activated; }
@@ -84,7 +83,7 @@ public class Prune extends MyIcon {
    protected void submit() {
       if( !isAvailable() ) return;
       activated = !activated;
-      aladin.hipsStore.pruneTree();
+      aladin.hipsStore.askForResumeTree();
       repaint();
    }
       

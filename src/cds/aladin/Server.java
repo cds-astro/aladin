@@ -1236,7 +1236,7 @@ public void layout() {
   /** Gestion du ENTER.
    * Pour pouvoir gerer le ENTER comme si on appuyait sur le bouton SUBMIT
    *
-   * @see aladin.Server#submit()
+   * @see aladin.Server#loadHips()
    */
    public void keyPressed(KeyEvent e) {
       if( e.getSource() instanceof JTextField ) {

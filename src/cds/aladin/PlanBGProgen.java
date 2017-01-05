@@ -34,11 +34,11 @@ public class PlanBGProgen extends PlanBGCat {
       super(aladin);
    }
 
-   protected PlanBGProgen(Aladin aladin, TreeNodeHips gluSky,String label, Coord c, double radius,String startingTaskId) {
+   protected PlanBGProgen(Aladin aladin, TreeObjHips gluSky,String label, Coord c, double radius,String startingTaskId) {
       super(aladin,gluSky,label, c,radius,startingTaskId);
    }
 
-   protected void setSpecificParams(TreeNodeHips gluSky) {
+   protected void setSpecificParams(TreeObjHips gluSky) {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);

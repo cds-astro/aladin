@@ -206,7 +206,9 @@ public class MySplitPane extends JSplitPane {
       }
       
       public void mousePressed(MouseEvent e) {
-         if( flagMesure && e.getClickCount()==2 ) { external(); return; }
+         // EN ATTENDANT DE CREER L'ICONE EN HAUT A DROITE POUR EXTERNALISER CETTE FENETRE
+//         if( flagMesure && e.getClickCount()==2 ) { external(); return; }
+         
          if( rLanguette==null && e.getClickCount()!=2 ) return;
          if( rLanguette!=null && !rLanguette.contains( e.getPoint() ) && e.getClickCount()!=2 ) return;
          switchReduced();

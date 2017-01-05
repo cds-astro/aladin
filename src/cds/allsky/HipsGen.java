@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.Vector;
 
@@ -78,12 +77,14 @@ public class HipsGen {
       FileInputStream reader = new FileInputStream(file);
       properties.load(reader);
 
-      Set<Object> keys = properties.keySet();
-      for (Object opt : keys) {
-         String val = properties.getProperty((String)opt);
+//      Set<Object> keys = properties.keySet();
+//      for (Object opt : keys) {
+         
+      for( String opt : properties.getKeys() ) {
+         String val = properties.getProperty(opt);
 
          try {
-            setContextFromOptions((String)opt, val);
+            setContextFromOptions(opt, val);
          } catch (Exception e) {
             e.printStackTrace();
             break;
@@ -388,6 +389,34 @@ public class HipsGen {
          }
 
       }
+      
+      // Vérification de l'ID
+      try {
+         // Si inconnu, je vais essayé de le récupérer depuis le fichier des propriétés
+         if( context.hipsId==null && context.getOutputPath()!=null ) {
+            
+            try {
+               String propFile = context.getOutputPath()+Util.FS+Constante.FILE_PROPERTIES;
+               MyProperties prop = new MyProperties();
+               File f = new File( propFile );
+               if( f.exists() ) {
+                  FileInputStream in = new FileInputStream(propFile);
+                  prop.load(in);
+                  in.close();
+                  String s = prop.getProperty(Constante.KEY_CREATOR_DID);
+                  if( s!=null ) context.setHipsId(s);
+               }
+            } catch( Exception e ) { }
+         }
+         
+         if( !flagConcat && !flagMirror && !flagUpdate) {
+            String s = context.checkHipsId(context.hipsId);
+            context.setHipsId(s);
+         }
+      } catch (Exception e) {
+         context.error(e.getMessage());
+         return;
+      }
 
       // Ajustement du mode par défaut dans le cas d'une génération d'une HiPS RGB
       if( flagRGB && !flagMode ) context.setMode(Mode.REPLACETILE);
@@ -435,15 +464,10 @@ public class HipsGen {
       // Positionnement du frame par défaut
       if( !flagRGB && !flagMapFits ) setDefaultFrame();
 
-      // Positionnement du pubDid
-      if( context.hipsId==null && !flagConcat && !flagMirror && !flagUpdate) {
-         String s = context.checkHipsId(null, false);
-         context.setHipsId(s);
-      }
-
       // C'est parti
       try {
-         long t = System.currentTimeMillis();
+         
+          long t = System.currentTimeMillis();
          new Task(context,actions,true);
          if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
          else {
@@ -459,7 +483,7 @@ public class HipsGen {
          }
          
       } catch (Exception e) {
-         e.printStackTrace();
+         if( context.getVerbose()>0 ) e.printStackTrace();
          context.error(e.getMessage());
          return;
       }
@@ -527,7 +551,7 @@ public class HipsGen {
                   "Basic optional parameters:\n"+
                   "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
                   "   label=name         Label of the survey (by default, input directory name)" + "\n"+
-                  "   id=identifier      HiPS identifier (syntax: AUTHORITY-ID/internalID)" + "\n"+
+                  "   id=identifier      HiPS identifier (syntax: AUTHORITY/internalID)" + "\n"+
                   "   creator=name       Name of the person|institute who builds the HiPS" + "\n"+
                   "   status=xx          HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
                   "                      (default: public clonableOnce)" +
@@ -560,7 +584,7 @@ public class HipsGen {
                   "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
                   "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
                   "   fading=true|false  False to avoid fading effect on overlapping original images " + "\n" +
-                  "                      (default is true)" + "\n" +
+                  "                      (default is false)" + "\n" +
                   "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images " + "\n" +
                   "                      (default is true)" + "\n" +
                   "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 " + "\n" +

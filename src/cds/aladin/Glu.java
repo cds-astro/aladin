@@ -25,7 +25,6 @@ import java.awt.Point;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
@@ -131,14 +130,14 @@ public final class Glu implements Runnable {
    protected static Vector vGluApp;
 
    /** Mémorisation des HiPS définis par le dictionnaire GLU */
-   protected static Vector<TreeNodeHips> vHips;
+   protected static Vector<TreeObjHips> vHips;
 
    /** Mémorisation des items des Tree outreach définis par le dictionnaire GLU */
    protected static Vector vGluCategory;
 
    /** Tri des listes */
    protected void tri() {
-      Comparator c = TreeNodeBasic.getComparator();
+      Comparator c = TreeObj.getComparator();
       Collections.sort(vHips,c);
       Collections.sort(vGluCategory,c);
 
@@ -159,7 +158,7 @@ public final class Glu implements Runnable {
       aladinDicT   = new Hashtable();
       vGluServer   = new Vector(50);
       vGluApp      = new Vector(10);
-      vHips      = new Vector(10);
+      vHips       = new Vector(10);
       vGluCategory = new Vector(10);
 
       // Peut être un site GLU défini dans la configuration utilisateur
@@ -759,19 +758,19 @@ public final class Glu implements Runnable {
    }
 
    /**
-    * Retourne l'indice du ciel GLU dans la liste des ciels GLU connus
-    * @param A le tagGlu du ciel à chercher
+    * Retourne l'indice du HiPS dans la liste des HiPS connus
+    * @param A l'identificateur du HiPS à chercher
     * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
     * @param mode 0 - match exact
     *             1 - substring sur label
     *             2 - match exact puis substring sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
     *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
-    * @return l'indice du ciel dans Glu.vGluSky, sinon -1
+    * @return l'indice du ciel dans Glu.vHips, sinon -1
     */
-   protected int findGluSky(String A) { return findGluSky(A,0); }
-   protected int findGluSky(String A,int mode) {
+   protected int findHips(String A) { return findHips(A,0); }
+   protected int findHips(String A,int mode) {
       for( int i = vHips.size()-1; i >=0; i-- ) {
-         TreeNodeHips gs = vHips.elementAt(i);
+         TreeObjHips gs = vHips.elementAt(i);
          if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
          if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
          if( mode==2 ) {
@@ -785,7 +784,7 @@ public final class Glu implements Runnable {
 
       if( mode==2 ) {
          for( int i = vHips.size()-1; i >=0; i-- ) {
-            TreeNodeHips gs = vHips.elementAt(i);
+            TreeObjHips gs = vHips.elementAt(i);
             int offset = gs.label.lastIndexOf('/');
             if( Util.indexOfIgnoreCase(gs.label.substring(offset+1),A)>=0 ) return i;
          }
@@ -814,8 +813,8 @@ public final class Glu implements Runnable {
    //   }
 
    /** Retourne la description du ciel d'indice i */
-   protected TreeNodeHips getGluSky(int i) {
-      TreeNodeHips gSky = vHips.elementAt(i);
+   protected TreeObjHips getHips(int i) {
+      TreeObjHips gSky = vHips.elementAt(i);
       return gSky;
    }
 
@@ -908,7 +907,7 @@ public final class Glu implements Runnable {
          // On en profite pour ajouter les GSky (vGluSky)
          e = vHips.elements();
          while( e.hasMoreElements() ) {
-            TreeNodeHips gs = (TreeNodeHips)e.nextElement();
+            TreeObjHips gs = (TreeObjHips)e.nextElement();
             if( !gs.isLocalDef()  ) continue;
             out.writeBytes(gs.getGluDic());
          }
@@ -983,13 +982,13 @@ public final class Glu implements Runnable {
    }
 
    /**
-    * Génère la liste des menus des ciels décrits par le GLU
+    * Génère la liste des menus HiPS décrits par le GLU
     */
-   protected String[] getGluSkyMenu() {
+   protected String[] getHipsMenu() {
       String menu[] = new String[ vHips.size() ];
       Enumeration e = vHips.elements();
       for( int i=0; e.hasMoreElements(); i++ ) {
-         TreeNodeHips ga = (TreeNodeHips)e.nextElement();
+         TreeObjHips ga = (TreeObjHips)e.nextElement();
          menu[i] = ga.path!=null ? ga.path : ga.label;
       }
       return menu;
@@ -1005,7 +1004,7 @@ public final class Glu implements Runnable {
          String aladinSurvey,String aladinHpxParam,String skyFraction,String origin) {
 
       // Pour éviter les doublons
-      int find = findGluSky(actionName);
+      int find = findHips(actionName);
       if( find>=0 && withLog ) {
          System.err.println("HiPS [" + actionName + ":" + description + "] redefined => Aladin will use the last one (remote)");
       }
@@ -1017,27 +1016,25 @@ public final class Glu implements Runnable {
       // Ajout de l'origine en préfixe de l'id
       if( origin!=null && !id.startsWith(origin) ) id = origin+"/"+id;
 
-      TreeNodeHips tn =  new TreeNodeHips(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
+      TreeObjHips tn =  new TreeObjHips(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
             description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam,skyFraction);
 
       if( find<0 ) vHips.addElement(tn);
       else vHips.setElementAt(tn,find);
    }
 
-   /**
-    * Memorisation dans le Vecteur vHiPS d'un HiPS décrit par ses properties
-    */
-   private void memoHips(String id,boolean localFile, MyProperties prop) {
-
-      // Pour éviter les doublons
-      int find = findGluSky(id);
-      if( find>=0 ) System.err.println("HiPS [" + id + "] redefined => Aladin will use the last one (remote)");
-
-      TreeNodeHips tn =  new TreeNodeHips(aladin,id,localFile,prop);
-
-      if( find<0 ) vHips.addElement(tn);
-      else vHips.setElementAt(tn,find);
-   }
+//   /**
+//    * Memorisation dans le Vecteur vHiPS d'un HiPS décrit par ses properties
+//    */
+//   private void memoHips(String id,boolean localFile, MyProperties prop) {
+//      
+//      // Pour éviter les doublons
+//      int find = findHips(id);
+//      if( find>=0 ) System.err.println("HiPS [" + id + "] redefined => Aladin will use the last one (remote)");
+//      TreeNodeHips tn =  new TreeNodeHips(aladin,id,localFile,prop);
+//      if( find<0 ) vHips.addElement(tn);
+//      else vHips.setElementAt(tn,find);
+//   }
 
    /** Memorisation des noeuds pour l'arbre d'outreach (cf TreeServer)
     * Si ID déjà existant, on remplace le précédent
@@ -1050,10 +1047,10 @@ public final class Glu implements Runnable {
 
       Enumeration e=vGluCategory.elements();
       while( e.hasMoreElements() ) {
-         TreeNodeBasic n = (TreeNodeBasic)e.nextElement();
+         TreeObj n = (TreeObj)e.nextElement();
          if( n.id.equals(actionName) ) { vGluCategory.remove(n); break; }
       }
-      vGluCategory.addElement(new TreeNodeCategory(aladin,actionName,description,
+      vGluCategory.addElement(new TreeObjCategory(aladin,actionName,description,
             aladinTree,url,docUser,aladinUrlDemo));
    }
    
@@ -1178,92 +1175,140 @@ public final class Glu implements Runnable {
    private String lastA = null;
    
    
-   protected boolean loadProperties(InputStream in, boolean localFile) {
-      MyProperties prop;
-      boolean encore=true;
-      
-      try {
-         while( encore ) {
-            prop = new MyProperties();
-            encore = prop.loadRecord(in);
-            if( prop.size()==0 ) continue;
-            System.out.println("\nPROPERTIES:\n"+prop);
-            loadProperties(prop,localFile);
-            
-         }
-      } catch( IOException e ) {
-         System.err.println("loadProperties error: " + e);
-         e.printStackTrace();
-         return false;
-      } finally{ try { in.close(); } catch( Exception e) {} }
-      
-      return true;
-   }
-   
-   private void loadProperties(MyProperties prop, boolean localFile) {
-      // Détermination de l'identificateur (id => glutag)
-      String id = getID(prop);
-      System.out.println("ID=>"+id);
-      
-      // Dans le cas où il n'y a pas de mirroir, mémorisation de l'URL directement
-      if( prop.getProperty("hips_service_url_1")==null ) {
-         String url =  prop.getProperty("hips_service_url");
-         if( url==null ) {
-            System.err.println("Missing hips_service_url in properties ["+id+"]");
-            return;
-         }
-         aladinDic.put(id,url);
-         
-      // Dans le cas où il y a des mirroirs => mémorisation des indirections
-      } else {
-
-         // Enregistrement de tous les mirroirs comme des indirections
-         StringBuilder indirection = null;
-         for( int i=0; true; i++ ) {
-            String url = prop.getProperty("hips_service_url"+(i==0?"":"_"+i));
-            if( url==null ) break;
-            
-            String subid = id+"_"+i;
-            aladinDic.put(subid,url);
-            System.out.println(subid+" -> "+url);
-
-            if( indirection==null ) indirection = new StringBuilder("%I "+subid);
-            else indirection.append("\t"+subid);
-         }
-         
-         // Mémorisation des indirections possibles sous la forme %I id0\tid1\t...
-         aladinDic.put(id,indirection.toString());
-         System.out.println(id+" -> "+indirection);
-      }
-      
-      memoHips(id,localFile,prop);
-   }
-   
-   /** Récupération de l'ID à partir d'un enregistrement properties */ 
-   public String getID(MyProperties prop) {           
-      // L'ID est donné explicitement (ex: CDS/P/DSS2/color)
-      String id = prop.getProperty("ID");
-      if( id!=null ) return id;
-      
-      // l'ID doit être construit à partir des différents champs possibles
-      id = prop.getProperty("creator_did");
-      if( id==null ) id = prop.getProperty("publisher_did");
-      if( id==null ) {
-         String o =  prop.getProperty("obs_id");
-         if( o==null ) o="id"+(System.currentTimeMillis()/1000);
-         String p = prop.getProperty("creator_id");
-         if( p==null ) p = prop.getProperty("publisher_id");
-         if( p==null ) p = "ivo://UNK.AUT";
-         id = p+"/"+o;
-      }
-      // On enlève le préfixe ivo://
-      if( id.startsWith("ivo://") ) id = id.substring(6);
-
-      // On remplace les éventuels ? par des / (merci Markus !)
-      id = id.replace('?', '/');
-      return id;
-   }
-   
+//   protected boolean loadHipsProp(InputStream in, boolean localFile) {
+//      MyProperties prop;
+//      boolean encore=true;
+//      
+//      try {
+//         while( encore ) {
+//            prop = new MyProperties();
+//            encore = prop.loadRecord(in);
+//            if( prop.size()==0 ) continue;
+//            loadHipsProp(prop,localFile);
+//            
+//         }
+//      } catch( IOException e ) {
+//         System.err.println("loadProperties error: " + e);
+//         e.printStackTrace();
+//         return false;
+//      } finally{ try { in.close(); } catch( Exception e) {} }
+//      
+//      return true;
+//   }
+//   
+//   private HashMap<String, String> mapCat = null;
+//   
+//   private void initMapCat() {
+//      mapCat = new HashMap<String, String>();
+//      mapCat.put("I",   "I-Astrometric Data");
+//      mapCat.put("II",  "II-Photometric Data");
+//      mapCat.put("III", "III-Spectroscopic Data");
+//      mapCat.put("IV",  "IV-Cross-Identifications");
+//      mapCat.put("V",   "V-Combined data");
+//      mapCat.put("VI",  "VI-Miscellaneous");
+//      mapCat.put("VII", "VII-Non-stellar Objects");
+//      mapCat.put("VIII","VIII-Radio and Far-IR data");
+//      mapCat.put("IX",  "IX-High-Energy data");
+//      mapCat.put("B",   "B-External databases, regularly updated");
+//   }
+//   
+//   private String getCatalogCategory(String id) {
+//      if( mapCat==null ) initMapCat();
+//      
+//      if( id.equals("CDS/Simbad") ) return "Data base";
+//      
+//      int i = id.indexOf('/');
+//      int j = id.indexOf('/',i+1);
+//      if( i==-1 || j==-1 ) return "Catalog";
+//      
+//      String c = id.substring(i+1, j);
+//      if( c.equals("J") ) {
+//         int k = id.indexOf('/',j+1);
+//         return "Journal table"+id.substring(j,k);
+//      }
+//      
+//
+//      String c1 = mapCat.get(c);
+//      return "Catalog/"+(c1==null ? c : c1);
+//   }
+//   
+//   // Dans le cas d'un catalog, on ajoute manu-militari la clé client_category = id
+//   private void catatalogAdjustement(MyProperties prop) {
+//      String id = getID(prop);
+//
+//      String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
+//      if( type==null || type.indexOf("catalog")<0 ) return;
+//      
+//      String category = getCatalogCategory(id);
+//      prop.add(Constante.KEY_CLIENT_CATEGORY,category);
+//      prop.add(Constante.KEY_CLIENT_SORT_KEY,id);
+//
+//   }
+//   
+//   private void loadHipsProp(MyProperties prop, boolean localFile) {
+//      // Détermination de l'identificateur (id => glutag)
+//      String id = getID(prop);
+//      
+//      // Ajustement sur les catalogues en attendant que FX le fasse en amont
+//      catatalogAdjustement(prop);
+//      
+//      // Dans le cas où il n'y a pas de mirroir, mémorisation de l'URL directement
+//      if( prop.getProperty("hips_service_url_1")==null ) {
+//         String url =  prop.getProperty("hips_service_url");
+//         if( url==null ) {
+////            System.err.println("Missing hips_service_url in properties ["+id+"]");
+////            url="no url";
+////            return;
+//         } else aladinDic.put(id,url);
+//         
+//      // Dans le cas où il y a des mirroirs => mémorisation des indirections
+//      } else {
+//
+//         // Enregistrement de tous les mirroirs comme des indirections
+//         StringBuilder indirection = null;
+//         for( int i=0; true; i++ ) {
+//            String url = prop.getProperty("hips_service_url"+(i==0?"":"_"+i));
+//            if( url==null ) break;
+//            
+//            String subid = id+"_"+i;
+//            aladinDic.put(subid,url);
+//
+//            if( indirection==null ) indirection = new StringBuilder("%I "+subid);
+//            else indirection.append("\t"+subid);
+//         }
+//         
+//         // Mémorisation des indirections possibles sous la forme %I id0\tid1\t...
+//         aladinDic.put(id,indirection.toString());
+//      }
+//      
+//      memoHips(id,localFile,prop);
+//   }
+//   
+//   /** Récupération de l'ID à partir d'un enregistrement properties */ 
+//   public String getID(MyProperties prop) {           
+//      // L'ID est donné explicitement (ex: CDS/P/DSS2/color)
+//      String id = prop.getProperty("ID");
+//      if( id!=null ) return id;
+//      
+//      // l'ID doit être construit à partir des différents champs possibles
+//      id = prop.getProperty("creator_did");
+//      if( id==null ) id = prop.getProperty("publisher_did");
+//      if( id==null ) {
+//         String o =  prop.getProperty("obs_id");
+//         if( o==null ) o="id"+(System.currentTimeMillis()/1000);
+//         String p = prop.getProperty("creator_id");
+//         if( p==null ) p = prop.getProperty("publisher_id");
+//         if( p==null ) p = "ivo://UNK.AUT";
+//         id = p+"/"+o;
+//      }
+//      // On enlève le préfixe ivo://
+//      if( id.startsWith("ivo://") ) id = id.substring(6);
+//
+//      // On remplace les éventuels ? par des / (merci Markus !)
+//      id = id.replace('?', '/');
+//      return id;
+//   }
+//   
 
    
 //   private String getRecordGlu1(boolean flagMirror) {
@@ -1521,7 +1566,7 @@ public final class Glu implements Runnable {
                try {
                   if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
                      if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                     else if( flagGluSky ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+                     else if( flagGluSky && !Aladin.PROTO ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                            aladinSurvey,aladinHpxParam,skyFraction,origin);
                      else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
@@ -2549,8 +2594,9 @@ public final class Glu implements Runnable {
          InputStream is = null;
          try {
             logIncr();
+            
             is = url.openStream();
-
+            
             // Lecture du numero de la derniere version disponible
             if( flagTmp ) {
                aladin.waitDialog();
@@ -2559,10 +2605,9 @@ public final class Glu implements Runnable {
             }
             is.close();
             is=null;
-
          } finally {
-            if( is!=null ) is.close();
             logDecr();
+            if( is!=null ) is.close();
          }
       } catch( Exception elog ) {
          if( Aladin.levelTrace>=3 ) elog.printStackTrace();

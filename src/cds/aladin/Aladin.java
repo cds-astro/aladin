@@ -151,6 +151,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Collection Registry tree
  * @beta    <LI> Simbad + VizieR pointer improvements
  * @beta    <LI> HiPS properties file direct support
  * @beta    <LI> HiPS Store
@@ -205,7 +206,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.503";
+   static public final    String VERSION = "v9.504";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1920,7 +1921,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public void hipsReload() {
       if( isNonCertifiedApplet() || miGluSky==null ) return;
 
-      String m[] = glu.getGluSkyMenu();
+      String m[] = glu.getHipsMenu();
 
       if( m.length==0 ) return;
       miGluSky.removeAll();
@@ -2615,7 +2616,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * En cas de modification, on efface le cache, notamment le dico GLU */
    protected void setCurrentVersion(String s )  {
       currentVersion = s;
-      if( !NETWORK ) return;
+      
+      // En cas de défaillance réseau, où si on n'obtient pas l'info
+      // (format: v9.010 - mar. mars 1 14:44:13 CET 2016)
+      // => vaut mieux s'abstenir
+      if( !NETWORK || !s.startsWith("v") ) return;
 
       // Banner de demande de maj de la version si nécessaire
       testUpgrade();
@@ -2859,13 +2864,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    protected int allsky() {
-      TreeNodeHips gSky = glu.getGluSky(0);
+      TreeObjHips gSky = glu.getHips(0);
       return allsky(gSky);
    }
 
    /** Activation d'un background */
-   protected int allsky(TreeNodeHips gSky) { return hips(gSky,null,null,null); }
-   protected int hips(TreeNodeHips gSky,String label,String target,String radius) {
+   protected int allsky(TreeObjHips gSky) { return hips(gSky,null,null,null); }
+   protected int hips(TreeObjHips gSky,String label,String target,String radius) {
       int n=1;
       if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
       else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright,target,radius);
@@ -2875,9 +2880,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Mise en place du ciel s */
    protected boolean allsky(String s) {
-      int i = glu.findGluSky(s,2);
+      int i = glu.findHips(s,2);
       if( i<0 ) return false;
-      TreeNodeHips ga = glu.getGluSky(i);
+      TreeObjHips ga = glu.getHips(i);
       console.printCommand("get hips(\""+ga.aladinLabel+"\")");
       allsky(ga);
       return true;
@@ -4159,6 +4164,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          // Nettoyage de la pile
          try { calque.FreeAll(); } catch( Exception e ) {}
       }
+      
+      if( hipsStore!=null ) hipsStore.interruptMocServerReading();
 
       // appel des méthodes cleanup() des plugins
       if( plugins!=null ) {
@@ -4172,10 +4179,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
          reset();		// Nécessaire pour ne pas avoir de ressurections intempestives
          command.stop();
          f.setVisible(false);        // Pour une sombre histoire de bug MAC
+         
 
       } else {         // Sinon terminer l'application
 
-         if( isPrinting() || isSaving() || isLogging() ) {
+        if( isPrinting() || isSaving() || isLogging() ) {
             if( isPrinting() || isSaving() ) trace(3,"Print or Save in progress => waiting...");
             f.setVisible(false);
             long t=System.currentTimeMillis();
@@ -5589,7 +5597,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Retourne true si le dialog est prêt */
    protected boolean dialogOk() {
-      return dialog!=null && calque!=null /* && calque.getPlans()!=null*/ ;
+      return dialog!=null && calque!=null && hipsStore!=null && hipsStore.dialogOk() ;
    }
 
    /** Chargement d'un fichier passé en paramètre */

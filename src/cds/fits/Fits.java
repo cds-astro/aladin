@@ -416,7 +416,6 @@ final public class Fits {
    static boolean X11OK=true;;
    static {
       try { Toolkit.getDefaultToolkit( ); } catch( Exception e) { X11OK=false; }
-      System.out.println("X11 Display => "+X11OK);
    }
    
    public void loadPreview(MyInputStream dis, int x, int y, int w, int h, boolean flagColor, int format) throws Exception {

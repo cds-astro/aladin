@@ -75,6 +75,7 @@ public class TabDesc extends JPanel implements ActionListener {
    private JCheckBox borderCheckbox;
    private JRadioButton skyvalCheckbox;
    private JCheckBox frameCheckbox;
+   private JCheckBox fadingCheckbox;
    
    private JTextField specifTextField;
    protected JTextField blankTextField;
@@ -89,16 +90,17 @@ public class TabDesc extends JPanel implements ActionListener {
    private JCheckBox resetIndex = new JCheckBox();
    private JCheckBox resetTiles = new JCheckBox();
    private JTextField labelField = new JTextField(35);
-   private String defaultDirectory;
    private String BROWSE;
    private JButton next,seeImg,reset;
    private String help, titlehelp;
    
    private MainPanel mainPanel;
+   private Aladin aladin;
    private Context context;
 
-   public TabDesc(String defaultDir, final MainPanel mainPanel) {
+   public TabDesc(Aladin aladin,final MainPanel mainPanel) {
       super(new BorderLayout());
+      this.aladin = aladin;
       this.mainPanel = mainPanel;
       context = mainPanel.context;
       createChaine();
@@ -106,7 +108,6 @@ public class TabDesc extends JPanel implements ActionListener {
       
       JPanel px;
       JPanel pCenter = new JPanel(new GridBagLayout());
-      this.defaultDirectory = defaultDir;
 
       GridBagConstraints c = new GridBagConstraints();
       c.insets = new Insets(1, 3, 1, 3);
@@ -130,7 +131,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(inputField, c);
       c.gridx++;
-      if( Aladin.aladin.configuration.isLookAndFeelJava() ) pCenter.add(browseInput, c);
+      if( aladin.configuration.isLookAndFeelJava() ) pCenter.add(browseInput, c);
 
       // Répertoire destination
       c.insets.top = 1;
@@ -142,7 +143,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(outputField, c);
       c.gridx++;
-      if( Aladin.aladin.configuration.isLookAndFeelJava() ) pCenter.add(browseOutput, c);
+      if( aladin.configuration.isLookAndFeelJava() ) pCenter.add(browseOutput, c);
       
       // Label
       c.insets.bottom = 20;
@@ -216,6 +217,15 @@ public class TabDesc extends JPanel implements ActionListener {
       px.add(skyvalCheckbox,BorderLayout.WEST);
       px.add(skyvalTextField,BorderLayout.CENTER);
       pCenter.add(px, c);
+
+      c.gridy++;
+      final JCheckBox cb2 = fadingCheckbox = new JCheckBox(getString("FADINGALLSKY"), false);
+      cb2.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            mainPanel.context.setFading(cb2.isSelected());
+         }
+      });
+      pCenter.add(cb2, c);
 
       c.gridy++;
       px = new JPanel( new BorderLayout(0,0));
@@ -418,6 +428,7 @@ public class TabDesc extends JPanel implements ActionListener {
          hduCheckbox.setEnabled(ready && !isRunning && !color && !isMap);
          hduTextField.setEnabled(ready && !isRunning && !color && !isMap);
          borderCheckbox.setEnabled(ready && !isRunning && !isMap);
+         fadingCheckbox.setEnabled(ready && !isRunning && !isMap);
          borderTextField.setEnabled(ready && !isRunning && !isMap);
          skyvalCheckbox.setEnabled(ready && !isRunning && !color && !isMap);
          skyvalTextField.setEnabled(ready && !isRunning && !color && !isMap);

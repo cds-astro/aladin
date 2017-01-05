@@ -91,7 +91,7 @@ public class Context {
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    public int dataArea = Constante.SHAPE_UNKNOWN; // Type d'observable (totalité, en ellipse ou en rectangle)
    public double maxRatio = Constante.PIXELMAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
-   protected boolean fading=true;            // Activation du fading entre les images originales
+   protected boolean fading=false;           // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
    protected boolean partitioning=true;      // Activation de la lecture par blocs des fimages originales
@@ -239,7 +239,7 @@ public class Context {
    public void setHeader(HeaderFits h) { header=h; }
    public void setCreator(String s) { creator=s; }
    public void setStatus(String s ) { status=s; }
-   public void setHipsId(String s) { hipsId=checkHipsId(s,true); }
+   public void setHipsId(String s) { hipsId= canonHipsId(s); }
    public void setLabel(String s)     { label=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setFading(boolean fading) { this.fading = fading; }
@@ -323,10 +323,17 @@ public class Context {
 
    /** Vérifie l'ID passé en paramètre, et s'il n'est pas bon le met en forme
     * @param s ID proposée, null si génération automatique
-    * @param verbose false pour n'avoir aucun message d'alerte
+    * @param withException true si on veut avoir une exception en cas d'erreur
     * @return l'ID canonique
     */
-   public String checkHipsId(String s,boolean verbose) {
+   public String canonHipsId(String s) {
+      try {
+         s=checkHipsId(s,false);
+      } catch( Exception e ) { }
+      return s;
+   }
+   public String checkHipsId(String s ) throws Exception { return checkHipsId(s,true); }
+   private String checkHipsId(String s,boolean withException) throws Exception {
 
       String auth,id;
       boolean flagQuestion=false;  // true si l'identificateur utilise un ? après l'authority ID, et non un /
@@ -336,6 +343,7 @@ public class Context {
       if( s==null || s.trim().length()==0 ) {
          verbose=false;
          s=getLabel()!=null?getLabel():"";
+         if( withException ) throw new Exception("Missing ID (ex: id=CDS/P/DSS2/color)");
       }
 
       if( s.startsWith("ivo://")) s=s.substring(6);
@@ -352,13 +360,16 @@ public class Context {
       
       if( offset==-1) {
          auth="UNK.AUTH";
-         if( verbose ) warning("Id error => missing authority => assuming "+auth);
+//         if( verbose ) warning("Id error => missing authority => assuming "+auth);
+         if( withException ) throw new Exception("ID error => missing authority (ex: id=CDS/P/DSS2/color)");
+
       } else {
          auth = s.substring(0,offset);
          s=s.substring(offset+1);
          if( auth.length()<3) {
             while( auth.length()<3) auth=auth+"_";
-            if( verbose ) warning("Creator ID error => at least 3 characters are required => assuming "+auth);
+//            if( verbose ) warning("Creator ID error => at least 3 characters are required => assuming "+auth);
+            if( withException ) throw new Exception("ID error => at least 3 authority characters are required (ex: id=CDS/P/DSS2/color)");
          }
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -368,7 +379,8 @@ public class Context {
          }
          if( bug ) {
             auth=a.toString();
-            if( verbose ) warning("Creator ID error => some characters are not allowed => assuming "+auth);
+//            if( verbose ) warning("Creator ID error => some characters are not allowed => assuming "+auth);
+            if( withException ) throw new Exception("ID error => some characters are not allowed (ex: id=CDS/P/DSS2/color)");
          }
       }
 
@@ -378,7 +390,8 @@ public class Context {
 
       if( id.length()==0) {
          id="ID"+(System.currentTimeMillis()/1000);
-         if( verbose ) warning("Id error => missing ID => assuming "+id);
+//         if( verbose ) warning("Id error => missing ID => assuming "+id);
+         if( withException ) throw new Exception("ID error: suffix Id missing (ex: id=CDS/P/DSS2/color)");
       } else {
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -388,7 +401,8 @@ public class Context {
          }
          if( bug ) {
             id=a.toString();
-            if( verbose ) warning("Id identifier error => some characters are not allowed => assuming "+id);
+//            if( verbose ) warning("Id identifier error => some characters are not allowed => assuming "+id);
+            if( withException ) throw new Exception("ID suffix error: some characters are not allowed (ex: id=CDS/P/DSS2/color)");
          }
       }
 
@@ -1908,13 +1922,19 @@ public class Context {
       String label = getLabel()+"-meta";
       String finderHipxId = getHipsId()+"/meta";
 
-//      prop.setProperty(Constante.KEY_PUBLISHER_DID,ivorn);
-      int offset = finderHipxId.indexOf('/');
-      if( offset==-1 ) prop.setProperty(Constante.KEY_OBS_ID,finderHipxId);
-      else {
-         prop.setProperty(Constante.KEY_OBS_ID,finderHipxId.substring(offset+1));
-         prop.setProperty(Constante.KEY_PUBLISHER_ID,"ivo://"+finderHipxId.substring(0,offset));
-      }
+//      int offset = finderHipxId.indexOf('/');
+//      if( offset==-1 ) prop.setProperty(Constante.KEY_OBS_ID,finderHipxId);
+//      else {
+//         prop.setProperty(Constante.KEY_OBS_ID,finderHipxId.substring(offset+1));
+//         prop.setProperty(Constante.KEY_PUBLISHER_ID,"ivo://"+finderHipxId.substring(0,offset));
+//      }
+      
+      prop.setProperty(Constante.KEY_CREATOR_DID,finderHipxId);
+      
+//      obs_id               = /CDS/P/toto/meta
+//            publisher_id         = ivo://ivo:
+//            obs_collection       = toto-meta
+
       prop.setProperty(Constante.KEY_OBS_COLLECTION, label);
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());

@@ -2516,6 +2516,8 @@ IMGINDEXALLSKY Image indexation
 IMGINDEXALLSKY.fr Indexation des images
 TESSALLSKY HEALPix sampling
 TESSALLSKY.fr Rééchantillonnage HEALPix
+FADINGALLSKY  Fading effect on overlaying borders
+FADINGALLSKY.fr Fondu/enchainé sur les recouvrements
 HELPDIRSRCALLSKY Folder and sub-folders of original images. The supported formats are FITS (possibly gzipped or hcompressed), JPEG or PNG. These images must have an astrometrical calibration (WCS) in header (FITS) or in comment segment (JPEG or PNG), or in a separated file with same name but ".hhh" extension.\nIt is also possible to use an HEALPix map as original data. In this case, use the file name of the map instead of directory name.
 HELPDIRSRCALLSKY.fr Répertoire et sous-répertoires contenant les images originales. Les formats supportés sont le FITS (éventuellement gzippés ou hcompressé), le JPEG ou le PNG. Ces images doivent disposer d'une calibration astrométrique (WCS) soit présente dans l'entête (FITS) ou dans un segment commentaire (JPEG et PNG), soit dans un fichier séparé de même nom mais avec l'extension ".hhh".\nIl est également possible d'utiliser comme image source une carte HEALPix. Dans ce cas, le nom de la carte sera utilisé en lieu et place du nom de répertoire.
 HELPDIRTRGALLSKY Target folder for the generated HiPS tile tree.

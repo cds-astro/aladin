@@ -73,7 +73,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       tabJpg  = new TabJpg(this);
       tabPub  = new TabPub(aladin,this);
       tabRgb  = new TabRgb(aladin,this);
-      tabDesc = new TabDesc(aladin.getDefaultDirectory(), this);
+      tabDesc = new TabDesc(aladin,this);
       tabDesc.inputField.addActionListener(this);
 
       pTab.addTab( getString("MDESC"),   null, tabDesc,  null);

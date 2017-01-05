@@ -55,7 +55,7 @@ public class ServerWatch extends ServerTree  {
    protected ServerWatch(Aladin aladin) { super(aladin); }
    
    protected DefaultMutableTreeNode getRoot() {
-      if( root==null ) root = new DefaultMutableTreeNode( new TreeNodeCategory(aladin,"WP5:root","","") );
+      if( root==null ) root = new DefaultMutableTreeNode( new TreeObjCategory(aladin,"WP5:root","","") );
       return root;
    }
    

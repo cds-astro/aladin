@@ -44,8 +44,12 @@ import cds.allsky.Context;
 import cds.moc.Healpix;
 import cds.tools.Util;
 
-/** Gère les noeuds de l'arbre du formulaire ServerAllsky */
-public class TreeNodeHips extends TreeNodeBasic {
+/**
+ * Gère les noeuds de l'arbre des HiPS
+ * @author Pierre Fernique [CDS]
+ * @version 2.0 Janvier 2017 - désormais utilisé pour le HipsStore
+ */
+public class TreeObjHips extends TreeObj {
 
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
@@ -83,9 +87,9 @@ public class TreeNodeHips extends TreeNodeBasic {
    
    protected MyProperties prop=null; // Ensemble des propriétés associées au HiPS (via son fichier de properties ou MocServer)
 
-   /** Construction d'un TreeNodeAllSky à partir des infos qu'il est possible de glaner
+   /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
-   public TreeNodeHips(Aladin aladin,String pathOrUrl) throws Exception {
+   public TreeObjHips(Aladin aladin,String pathOrUrl) throws Exception {
       String s;
       this.aladin = aladin;
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
@@ -275,7 +279,7 @@ public class TreeNodeHips extends TreeNodeBasic {
 
    /** Création à partir d'un fichier de properties (ne supporte que HiPS 1.3 car dédié
     * principalement à des enregistrements issues du MocServer */
-   public TreeNodeHips(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
+   public TreeObjHips(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
       String s;
 
       this.aladin = aladin;
@@ -291,7 +295,7 @@ public class TreeNodeHips extends TreeNodeBasic {
          else if( s.indexOf("progen")>=0 ) progen=true;
       }
 
-      // Référence spaciale
+      // Référence spatiale
       s=prop.getProperty(Constante.KEY_HIPS_FRAME);
       if( s!=null ) frame = Context.getFrameVal(s);
       else frame = cat ? Localisation.ICRS : Localisation.GAL;
@@ -300,8 +304,8 @@ public class TreeNodeHips extends TreeNodeBasic {
 //      aladinLabel = label = createLabel(id,cat);
       
       // ou le label construit à partir du obs_title et/ou obs_collection
-      s=prop.getProperty(Constante.KEY_OBS_COLLECTION);
-      if( s==null ) s=prop.getProperty(Constante.KEY_OBS_TITLE);
+      s=prop.getProperty( cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
+      if( s==null ) s=prop.getProperty( !cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
       aladinLabel = label = s!=null ? s : createLabel(id,cat);
       
       // Le path de l'arbre
@@ -351,7 +355,6 @@ public class TreeNodeHips extends TreeNodeBasic {
       s = prop.getProperty(Constante.KEY_HIPS_ORDER);
       try { maxOrder = new Integer(s); }
       catch( Exception e ) {
-         aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
          maxOrder=11;
       }
 
@@ -370,8 +373,9 @@ public class TreeNodeHips extends TreeNodeBasic {
       }
 
       // Détermination du format des cellules dans le cas d'un survey pixels
-      String keyColor = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
-      if( keyColor!=null ) color = keyColor.indexOf("color")>=0;
+      s = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
+      if( s==null ) s = prop.getProperty(Constante.OLD_ISCOLOR);
+      if( s!=null ) color = s.indexOf("color")>=0;
 
       if( !cat && !progen ) {
          String format = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
@@ -387,12 +391,11 @@ public class TreeNodeHips extends TreeNodeBasic {
       }
 
       if( color && !inJPEG && !inPNG) inJPEG=true;
-      aladin.trace(4,toString1());
-
+//      aladin.trace(4,toString1());
    }
 
    /** Création à partir d'un enregistrement GLU */
-   public TreeNodeHips(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
+   public TreeObjHips(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
          String aladinHpxParam,String skyFraction) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
@@ -468,6 +471,28 @@ public class TreeNodeHips extends TreeNodeBasic {
          if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
          setMoc();
       }
+   }
+   
+   protected boolean isHiPS() {
+      if( prop==null ) return true;   // S'il n'y a pas de prop, ça ne peut être qu'un HiPS
+      return prop.getProperty(Constante.KEY_HIPS_SERVICE_URL)!=null;
+   }
+   
+   /** Retourne l'URL d'accès aux progénitors, null sinon */
+   protected String getProgenitorsUrl() {
+      if( prop==null ) return null;
+      return prop.getProperty(Constante.KEY_HIPS_PROGENITOR_URL);
+   }
+   
+   /** Retourne l'URL d'accès au MOC, null sinon */
+   protected String getMocUrl() {
+      if( prop==null || isHiPS() ) return getUrl()+"/Moc.fits";
+      return prop.getProperty(Constante.KEY_MOC_ACCESS_URL);
+   }
+   
+   protected String getProperty(String key) {
+      if( prop==null ) return null;
+      return prop.getProperty(key);
    }
    
    private boolean getIsColorByPath(String path,boolean local) {
@@ -657,12 +682,34 @@ public class TreeNodeHips extends TreeNodeBasic {
       s.append(Util.CR);
       return s.toString();
    }
+   
+   /** Chargement par défaut à effectuer (suite à un double-clic sur le noeud de l'arbre) */
+   protected void load() {
+      if( getUrl()==null && isCatalog() )loadCS();
+      else loadHips();
+   }
 
-   protected void submit() {
+   protected void loadHips() {
       String mode = isTruePixels() ? ",fits":"";
       aladin.console.printCommand("get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")");
-
       aladin.allsky(this);
+   }
+   
+   protected void loadCS() {
+      int i = internalId.indexOf('/');
+      String cat = internalId.substring(i+1);
+      double rad = aladin.view.getCurrentView().getTaille();
+      if( rad>1 ) rad=1;
+      String trg = aladin.view.getCurrentView().getCentre();
+      String cmd = "get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
+      aladin.execAsyncCommand(cmd);
+   }
+
+   protected void loadAll() {
+      int i = internalId.indexOf('/');
+      String cat = internalId.substring(i+1);
+      String cmd = "get VizieRX("+cat+")";
+      aladin.execAsyncCommand(cmd);
    }
 
    void loadCopyright() { aladin.glu.showDocument(copyrightUrl); }
@@ -695,14 +742,30 @@ public class TreeNodeHips extends TreeNodeBasic {
    }
 
    void loadMoc() {
-      MyInputStream mis = null;
-      try {
-         mis = Util.openAnyStream( getUrl()+"/Moc.fits" );
-         aladin.calque.newPlanMOC(mis,label+" MOC");
-      }
-      catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+//      MyInputStream mis = null;
+//      try {
+//         mis = Util.openAnyStream( getUrl()+"/Moc.fits" );
+//         aladin.calque.newPlanMOC(mis,label+" MOC");
+//      }
+//      catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      
+      String u = getMocUrl();
+      aladin.execAsyncCommand("'MOC "+label+"'=load "+u);
    }
-
+   
+   void loadProgenitors() {
+      String progen = getProgenitorsUrl();
+      if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
+      aladin.execAsyncCommand("'PROG "+label+"'=load "+progen);
+   }
+   
+   void loadDensityMap() {
+      int off1 = internalId.indexOf('/');
+      int off2 = internalId.lastIndexOf('/');
+      String catId = internalId.substring(off1+1, off2);
+      String url = aladin.glu.gluResolver("getDMap",catId,false);
+      aladin.execAsyncCommand("'DM "+label+"'=load "+url);
+   }
 
    void setUrl(String url) { this.url=url; }
    void setCopyright(String copyright) {

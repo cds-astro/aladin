@@ -4729,7 +4729,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          int m=getNbView();
          boolean hideScroll = getLastUsedView()< m && !hasStickedView();
          if( scrollV.isShowing() && hideScroll  ) { remove(scrollV); validate(); }
-         else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV, "West" ); validate(); }
+         else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV, "East" ); validate(); }
          //System.out.println("getLastUsedView="+getLastUsedView()+" hasSticked="+hasStickedView()+" => hideScroll="+hideScroll);
 
 

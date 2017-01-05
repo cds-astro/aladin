@@ -223,7 +223,7 @@ public class PlanBG extends PlanImage {
     * @param c Coordonnée centrale ou null si non spécifiée
     * @param radius Taille du champ en degrés, ou <=0 si non spécifié
     */
-   protected PlanBG(Aladin aladin, TreeNodeHips gluSky, String label, Coord c,double radius,String startingTaskId) {
+   protected PlanBG(Aladin aladin, TreeObjHips gluSky, String label, Coord c,double radius,String startingTaskId) {
       super(aladin);
       this.startingTaskId = startingTaskId;
       initCache();
@@ -273,7 +273,7 @@ public class PlanBG extends PlanImage {
     * 1) pour déterminer le meilleur site miroir (le cas échéant)
     * 2) pour vérifier que le cache est à jour, en comparant les dates du fichier "properties" local et distant
     */
-   protected java.util.Properties loadPropertieFile() {
+   protected MyProperties loadPropertieFile() {
       if( prop!=null ) return prop;
       String dateRef=null;
 
@@ -387,7 +387,7 @@ public class PlanBG extends PlanImage {
    
    // Détermination de l'identificateur du HiPs, méthode post Markus, pré-Markus, 
    // et même encore avant
-   static public String getHiPSID(java.util.Properties prop) {
+   static public String getHiPSID(MyProperties prop) {
       String s = prop.getProperty(Constante.KEY_CREATOR_DID);
      if( s==null ) s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
       if( s==null ) {
@@ -432,7 +432,7 @@ public class PlanBG extends PlanImage {
    private boolean scanProperties1() {
       // Information supplémentaire par le fichier properties ?
       try {
-         java.util.Properties prop = loadPropertieFile();
+         MyProperties prop = loadPropertieFile();
          if( prop==null ) throw new Exception();
 
          Aladin.trace(4,"PlanBG.setSpecificParams() found a \"properties\" file");
@@ -526,7 +526,7 @@ public class PlanBG extends PlanImage {
    }
 
 
-   protected void setSpecificParams(TreeNodeHips gluSky) {
+   protected void setSpecificParams(TreeObjHips gluSky) {
       type = ALLSKYIMG;
       video = aladin.configuration.getCMVideo();
       inFits = gluSky.isFits();
@@ -563,8 +563,8 @@ public class PlanBG extends PlanImage {
       maxOrder=3;
       useCache = false;
       this.label=label;
-      TreeNodeHips gsky = null;
-      try { gsky= new TreeNodeHips(aladin, url); }
+      TreeObjHips gsky = null;
+      try { gsky= new TreeObjHips(aladin, url); }
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       paramByTreeNode(gsky, c, radius);
       scanProperties();
@@ -587,8 +587,8 @@ public class PlanBG extends PlanImage {
       local = false;
       co=c;
       coRadius=radius;
-      TreeNodeHips gsky = null;
-      try { gsky= new TreeNodeHips(aladin, url); }
+      TreeObjHips gsky = null;
+      try { gsky= new TreeObjHips(aladin, url); }
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       paramByTreeNode(gsky,c,radius);
       int n = url.length();
@@ -600,7 +600,7 @@ public class PlanBG extends PlanImage {
       suite();
    }
 
-   protected void paramByTreeNode(TreeNodeHips gSky, Coord c, double radius) {
+   protected void paramByTreeNode(TreeObjHips gSky, Coord c, double radius) {
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       else setLabel(gSky.label);
       maxOrder=gSky.getMaxOrder();
