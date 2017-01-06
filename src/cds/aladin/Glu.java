@@ -130,7 +130,7 @@ public final class Glu implements Runnable {
    protected static Vector vGluApp;
 
    /** Mémorisation des HiPS définis par le dictionnaire GLU */
-   protected static Vector<TreeObjHips> vHips;
+   protected static Vector<TreeObjReg> vHips;
 
    /** Mémorisation des items des Tree outreach définis par le dictionnaire GLU */
    protected static Vector vGluCategory;
@@ -770,7 +770,7 @@ public final class Glu implements Runnable {
    protected int findHips(String A) { return findHips(A,0); }
    protected int findHips(String A,int mode) {
       for( int i = vHips.size()-1; i >=0; i-- ) {
-         TreeObjHips gs = vHips.elementAt(i);
+         TreeObjReg gs = vHips.elementAt(i);
          if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
          if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
          if( mode==2 ) {
@@ -784,7 +784,7 @@ public final class Glu implements Runnable {
 
       if( mode==2 ) {
          for( int i = vHips.size()-1; i >=0; i-- ) {
-            TreeObjHips gs = vHips.elementAt(i);
+            TreeObjReg gs = vHips.elementAt(i);
             int offset = gs.label.lastIndexOf('/');
             if( Util.indexOfIgnoreCase(gs.label.substring(offset+1),A)>=0 ) return i;
          }
@@ -813,8 +813,8 @@ public final class Glu implements Runnable {
    //   }
 
    /** Retourne la description du ciel d'indice i */
-   protected TreeObjHips getHips(int i) {
-      TreeObjHips gSky = vHips.elementAt(i);
+   protected TreeObjReg getHips(int i) {
+      TreeObjReg gSky = vHips.elementAt(i);
       return gSky;
    }
 
@@ -907,7 +907,7 @@ public final class Glu implements Runnable {
          // On en profite pour ajouter les GSky (vGluSky)
          e = vHips.elements();
          while( e.hasMoreElements() ) {
-            TreeObjHips gs = (TreeObjHips)e.nextElement();
+            TreeObjReg gs = (TreeObjReg)e.nextElement();
             if( !gs.isLocalDef()  ) continue;
             out.writeBytes(gs.getGluDic());
          }
@@ -988,7 +988,7 @@ public final class Glu implements Runnable {
       String menu[] = new String[ vHips.size() ];
       Enumeration e = vHips.elements();
       for( int i=0; e.hasMoreElements(); i++ ) {
-         TreeObjHips ga = (TreeObjHips)e.nextElement();
+         TreeObjReg ga = (TreeObjReg)e.nextElement();
          menu[i] = ga.path!=null ? ga.path : ga.label;
       }
       return menu;
@@ -1016,7 +1016,7 @@ public final class Glu implements Runnable {
       // Ajout de l'origine en préfixe de l'id
       if( origin!=null && !id.startsWith(origin) ) id = origin+"/"+id;
 
-      TreeObjHips tn =  new TreeObjHips(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
+      TreeObjReg tn =  new TreeObjReg(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
             description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam,skyFraction);
 
       if( find<0 ) vHips.addElement(tn);

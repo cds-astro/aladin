@@ -476,9 +476,11 @@ public class MyProperties {
          String v = key.equals("ID") ? id : get(key);
 //         String v = get(key);
          if( v==null ) return;      // La propriété n'y est pas => rien à faire
-         if( c!=0 ) { 
-            if( !testInequality(c, value, v) ) return; } // La propriété ne correspond pas => rien à faire
-         else { if( matchMask(value, v)==test ) return; } // La propriété ne correspond pas => rien à faire
+         if( c!=0 ) {
+            boolean strict=true;
+            if( value.startsWith("=") ) { strict=false; value=value.substring(1); }
+            if( !testInequality(c, strict, value, v) ) return; // La propriété ne correspond pas => rien à faire
+         } else { if( matchMask(value, v)==test ) return; } // La propriété ne correspond pas => rien à faire
       }
       
       // Applique les règles de substitution
@@ -866,11 +868,12 @@ public class MyProperties {
     /** Effectue un test de grandeur (c='>' ou '<') soit numérique, soit calendaire, soit alphanumérique
      * en déterminant automatiquement le type de données
      * @param c    comparateur
+     * @param strict true s'il s'agit d'un test d'inégalité strict, sinon égalité incluse
      * @param ref  valeur à tester
      * @param value valeur de référence
      * @return résultat du test (  value c ref  )
      */
-    public static boolean testInequality(char c, String ref, String value) {
+    public static boolean testInequality(char c, boolean strict, String ref, String value) {
        try {
           // Probablement une date ISO
           if( value.indexOf('T')>0 ) {
@@ -886,13 +889,13 @@ public class MyProperties {
           // Probablement une valeur numérique
           double vNum = Double.parseDouble(ref.trim());
           double vProp = Double.parseDouble(value.trim());
-          if( c=='>' ) return vProp>vNum;
-          return vProp<vNum;
+          if( c=='>' ) return strict ? vProp>vNum : vProp>=vNum;
+          return strict ? vProp<vNum : vProp<=vNum;
 
        // Bon, on va faire une comparaison alphanumérique
        } catch( Exception e ) {
-          if( c=='<' ) return value.compareTo(ref)<0;
-          return value.compareTo(ref)>0;
+          if( c=='<' ) return strict ? value.compareTo(ref)<0 :  value.compareTo(ref)<=0;
+          return strict ? value.compareTo(ref)>0 : value.compareTo(ref)>0;
        }
     }
     

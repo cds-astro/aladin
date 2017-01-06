@@ -513,8 +513,8 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
          }
          
          // Dans les cas des hips locaux, le MocServer ne sert à rien => couleur noire
-         if( n instanceof TreeObjHips ) {
-            TreeObjHips hips = (TreeObjHips)n;
+         if( n instanceof TreeObjReg ) {
+            TreeObjReg hips = (TreeObjReg)n;
 //            if( hips.isLocal() )  c.setForeground(Color.black);
             ImageIcon icon = getIcon(hips.internalId,hips.isColored() ? 1 : 0);
             if( icon!=null ) nonLeafRenderer.setIcon( icon );

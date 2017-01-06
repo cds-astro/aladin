@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -51,15 +52,15 @@ import cds.tools.Util;
  * @version 1.0 décembre 2016 - création
  * @author Pierre Fernique [CDS]
  */
-public class HipsStore extends JPanel implements Iterable<MocItem>{
+public class RegStore extends JPanel implements Iterable<MocItem>{
    
    private Aladin aladin;                  // Référence
-   private MultiMoc multiProp;             // Le multimoc de stockage des properties HiPS
-   private HipsFilter hipsFilter=null;     // Formulaire de filtrage de l'arbre HiPS
+   private MultiMoc multiProp;             // Le multimoc de stockage des properties des collections
+   private RegFilter regFilter=null;       // Formulaire de filtrage de l'arbre des collections
    private boolean mocServerLoading=false; // true = requête de génération de l'arbre en cours (appel à MocServer)
    
-   private HipsTree hipsTree;                 // Le JPanel de l'arbre HiPS
-   private ArrayList<TreeObjHips> listHips;   // Liste des noeuds potentiels de l'arbre
+   private RegTree regTree;               // Le JPanel de l'arbre des collections
+   private ArrayList<TreeObjReg> listReg;  // Liste des noeuds potentiels de l'arbre
    
    // Composantes de l'interface
    private JButton filter;    // Bouton d'ouverture du formulaire de filtrage
@@ -75,7 +76,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    private static String MOCSERVER_UPDATE = "fmt=asciic";
 //   private static String MOCSERVER_UPDATE = "client_application=AladinDesktop"+(Aladin.BETA?"*":"")+"&hips_service_url=*&";
 
-   public HipsStore(Aladin aladin) {
+   public RegStore(Aladin aladin) {
       this.aladin = aladin;
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
@@ -84,11 +85,11 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       multiProp = new MultiMoc();
       
       // L'arbre avec sa scrollbar
-      hipsTree = new HipsTree(aladin);
+      regTree = new RegTree(aladin);
       setBackground(aladin.getBackground());
-      hipsTree.setBackground(aladin.getBackground());
+      regTree.setBackground(aladin.getBackground());
       
-      JScrollPane scrollTree = new JScrollPane(hipsTree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      JScrollPane scrollTree = new JScrollPane(regTree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
       scrollTree.setBorder( BorderFactory.createEmptyBorder(0,0,0,0));
       
       // Les boutons de controle
@@ -120,12 +121,12 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       setBorder( BorderFactory.createEmptyBorder(30,0,5,0));
 
       // Actions sur le clic d'un noeud de l'arbre
-      hipsTree.addMouseListener(new MouseAdapter() {
+      regTree.addMouseListener(new MouseAdapter() {
          public void mouseClicked(MouseEvent e) {
-            TreePath tp = hipsTree.getPathForLocation(e.getX(), e.getY());
+            TreePath tp = regTree.getPathForLocation(e.getX(), e.getY());
             if( tp==null ) hideInfo();
             else {
-               ArrayList<TreeObjHips> treeObjs = getSelectedTreeObjHips();
+               ArrayList<TreeObjReg> treeObjs = getSelectedTreeObjHips();
 
                // Double-clic, on effectue l'action par défaut du noeud
                if (e.getClickCount() == 2) loadMultiHips( treeObjs );
@@ -147,13 +148,13 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    }
    
    /** Récupération de la liste des TreeObj sélectionnées */
-   private ArrayList<TreeObjHips> getSelectedTreeObjHips() {
-      TreePath [] tps = hipsTree.getSelectionPaths();
-      ArrayList<TreeObjHips> treeObjs = new ArrayList<TreeObjHips>();
+   private ArrayList<TreeObjReg> getSelectedTreeObjHips() {
+      TreePath [] tps = regTree.getSelectionPaths();
+      ArrayList<TreeObjReg> treeObjs = new ArrayList<TreeObjReg>();
       if( tps!=null ) {
          for( int i=0; i<tps.length; i++ ) {
             Object obj = ((DefaultMutableTreeNode)tps[i].getLastPathComponent()).getUserObject();
-            if( obj instanceof TreeObjHips ) treeObjs.add( (TreeObjHips)obj );
+            if( obj instanceof TreeObjReg ) treeObjs.add( (TreeObjReg)obj );
          }
       }
       return treeObjs;
@@ -165,18 +166,18 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    /** Cache la fenêtre des infos du HiPS */
    private void hideInfo() { showInfo(null,null); }
    
-   private void loadMultiHips(ArrayList<TreeObjHips> treeObjs) {
+   private void loadMultiHips(ArrayList<TreeObjReg> treeObjs) {
       if( treeObjs.size()==0 ) return;
       hideInfo();
       treeObjs.get(0).load();
    }
 
    
-   /** Affiche la fenetre des infos des HiPS passés en paramètre
-    * @param node le noeud correspondant au HiPS sous la souris, ou null si effacement de la fenêtre
+   /** Affiche la fenetre des infos des Collections passées en paramètre
+    * @param treeObjs les noeuds correspondant aux collections sélectionnées, ou null si effacement de la fenêtre
     * @param e évènement souris pour récupérer la position absolue où il faut afficher la fenêtre d'info
     */
-   private void showInfo(ArrayList<TreeObjHips> treeObjs, MouseEvent e) {
+   private void showInfo(ArrayList<TreeObjReg> treeObjs, MouseEvent e) {
       if( treeObjs==null || treeObjs.size()==0 ) {
          if( frameInfo==null ) return;
          frameInfo.setVisible(false);
@@ -184,9 +185,9 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       }
       if( frameInfo==null ) frameInfo = new FrameInfo();
       Point p = e.getLocationOnScreen();
-      frameInfo.setHips( treeObjs );
+      frameInfo.setCollections( treeObjs );
       
-      int w=350;
+      int w=450;
       int h=120;
       int x=p.x+50;
       int y=p.y-30;
@@ -198,39 +199,39 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       frameInfo.setVisible(true);
    }
    
-   /** Création/ouverture du formulaire de filtrage de l'arbre HiPS */
+   /** Création/ouverture du formulaire de filtrage de l'arbre des Collections */
    private void filtre() {
-      if( hipsFilter==null ) hipsFilter = new HipsFilter(aladin);
-      hipsFilter.showFilter();
+      if( regFilter==null ) regFilter = new RegFilter(aladin);
+      regFilter.showFilter();
    }
    
    /**
-    * Retourne le Hips node correspondant à une identiciation
-    * @param A l'identificateur du HiPS à chercher
+    * Retourne le node correspondant à une identiciation
+    * @param A l'identificateur de la collection à chercher
     * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
     * @param mode 0 - match exact
     *             1 - substring sur label
-    *             2 - match exact puis substring sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
+    *             2 - match exact puis substring sur l'IVOID (ex: Simbad ok pour CDS/Simbad)
     *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
     * @return le Hips node trouvé, null sinon
     */
-   protected TreeObjHips getHips(String A) { return getHips(A,0); }
-   protected TreeObjHips getHips(String A,int mode) {
-      for( TreeObjHips hips : listHips ) {
-         if( A.equals(hips.id) || A.equals(hips.label) || A.equals(hips.internalId) ) return hips;
-         if( mode==1 && Util.indexOfIgnoreCase(hips.label,A)>=0 ) return hips;
+   protected TreeObjReg getTreeObjReg(String A) { return getTreeObjReg(A,0); }
+   protected TreeObjReg getTreeObjReg(String A,int mode) {
+      for( TreeObjReg to : listReg ) {
+         if( A.equals(to.id) || A.equals(to.label) || A.equals(to.internalId) ) return to;
+         if( mode==1 && Util.indexOfIgnoreCase(to.label,A)>=0 ) return to;
          if( mode==2 ) {
-            if( hips.internalId!=null && hips.internalId.endsWith(A) ) return hips;
+            if( to.internalId!=null && to.internalId.endsWith(A) ) return to;
 
-            int offset = hips.label.lastIndexOf('/');
-            if( A.equals(hips.label.substring(offset+1)) ) return hips;
+            int offset = to.label.lastIndexOf('/');
+            if( A.equals(to.label.substring(offset+1)) ) return to;
          }
       }
 
       if( mode==2 ) {
-         for( TreeObjHips gs : listHips ) {
-            int offset = gs.label.lastIndexOf('/');
-            if( Util.indexOfIgnoreCase(gs.label.substring(offset+1),A)>=0 ) return gs;
+         for( TreeObjReg to : listReg ) {
+            int offset = to.label.lastIndexOf('/');
+            if( Util.indexOfIgnoreCase(to.label.substring(offset+1),A)>=0 ) return to;
          }
       }
       return null;
@@ -254,19 +255,19 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
          }
       }
       
-      TreeObjHips hips = getHips(survey,2);
-      if( hips==null ) {
+      TreeObjReg to = getTreeObjReg(survey,2);
+      if( to==null ) {
          Aladin.warning(this,"Progressive survey (HiPS) unknown ["+survey+"]",1);
          return -1;
       }
 
       try {
-         if( defaultMode!=PlanBG.UNKNOWN ) hips.setDefaultMode(defaultMode);
+         if( defaultMode!=PlanBG.UNKNOWN ) to.setDefaultMode(defaultMode);
       } catch( Exception e ) {
          aladin.command.printConsole("!!! "+e.getMessage());
       }
 
-      return aladin.hips(hips,label,target,radius);
+      return aladin.hips(to,label,target,radius);
    }
    
 
@@ -278,19 +279,19 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    // False lorsque la première initialisation de l'arbre est faite
    private boolean init=true;
    
-   /** Génération initiale de l'arbre HiPS - et maj des menus Aladin correspondants */
+   /** Génération initiale de l'arbre - et maj des menus Aladin correspondants */
    protected void initTree() {
       try {
          initMultiProp();
          rebuildTree();
-         hipsTree.defaultExpand();
+         regTree.defaultExpand();
       } finally { postTreeProcess(); init=false;}
    }
    
    boolean refCount = true;
    private void setRefCount(boolean flag) { refCount=flag; }
 
-   /** (Re)construction de l'arbre des HiPS en fonction de l'état précédent de l'arbre
+   /** (Re)construction de l'arbre en fonction de l'état précédent de l'arbre
     * et de la valeur des différents flags associés aux noeuds
     * @param refCount  true si on doit faire les décomptages des noeuds en tant que référence sinon état courant
     * @return true s'il y a eu au-moins une modif
@@ -299,27 +300,27 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       boolean pruneActivated = prune.isActivated();
       boolean modif = false;
       try {
-         hipsTree.setLockExpand(true);
-         for( TreeObjHips hips : listHips ) { 
-            boolean mustBeActivated = !hips.isHidden() && (!pruneActivated || pruneActivated && hips.getIsIn()!=0 );
-            modif |= setActivated( hips, hipsTree, mustBeActivated );
+         regTree.setLockExpand(true);
+         for( TreeObjReg to : listReg ) { 
+            boolean mustBeActivated = !to.isHidden() && (!pruneActivated || pruneActivated && to.getIsIn()!=0 );
+            modif |= setActivated( to, regTree, mustBeActivated );
          }
          if( modif || refCount ) {
-            hipsTree.countDescendance( refCount );
+            regTree.countDescendance( refCount );
             refCount=false;
          }
-         if( prune.isAvailable() && !pruneActivated ) hipsTree.populateFlagIn();
+         if( prune.isAvailable() && !pruneActivated ) regTree.populateFlagIn();
          
-      } finally { hipsTree.setLockExpand(false); }
+      } finally { regTree.setLockExpand(false); }
       return modif;
    }
    
    /** Activation/désactivation d'un noeud de l'arbre */
-   protected boolean setActivated(TreeObjHips hips, HipsTree hipsTree, boolean activated) {
-      if( hips.isActivated() == activated ) return false;
-      hips.setActivated(activated);
-      if( activated ) hipsTree.createTreeBranch( hips );
-      else hipsTree.removeTreeBranch( hips );
+   protected boolean setActivated(TreeObjReg to, RegTree regTree, boolean activated) {
+      if( to.isActivated() == activated ) return false;
+      to.setActivated(activated);
+      if( activated ) regTree.createTreeBranch( to );
+      else regTree.removeTreeBranch( to );
       return true;
    }
    
@@ -345,7 +346,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       } finally { setTreeReady( true ); }
       
       // Pour permettre le changement du curseur d'attente de la fenêtre de filtrage
-      if( hipsFilter!=null ) aladin.makeCursor(hipsFilter, Aladin.DEFAULTCURSOR);
+      if( regFilter!=null ) aladin.makeCursor(regFilter, Aladin.DEFAULTCURSOR);
    }
    
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
@@ -373,13 +374,13 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       
       // Filtrage
       long t0 = System.currentTimeMillis();
-      ArrayList<String> mocIds = multiProp.scan( (HealpixMoc)null, expr, false, -1);
-      System.out.println("Filter: "+mocIds.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
+      ArrayList<String> ids = multiProp.scan( (HealpixMoc)null, expr, false, -1);
+      System.out.println("Filter: "+ids.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
       
       // Positionnement des flags isHidden() en fonction du filtrage
-      HashSet<String> set = new HashSet<String>( mocIds.size() );
-      for( String s : mocIds ) set.add(s);      
-      for( TreeObjHips hips : listHips ) hips.setHidden( !set.contains(hips.internalId) );
+      HashSet<String> set = new HashSet<String>( ids.size() );
+      for( String s : ids ) set.add(s);      
+      for( TreeObjReg to : listReg ) to.setHidden( !set.contains(to.internalId) );
    }
    
    // Dernier champs interrogé sur le MocServer
@@ -387,20 +388,19 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    private double osize=-1;
    private boolean flagCheckIn=false;
 
-   /** Interroge le MocServer pour connaître les HiPS disponibles dans le champ.
+   /** Interroge le MocServer pour connaître les Collections disponibles dans le champ.
     * Met à jour l'arbre en conséquence */
    private boolean checkIn() {
       if( !dialogOk() ) return false; 
-      
 
       // Le champ est trop grand ou que la vue n'a pas de réf spatiale ?
       // => on suppose que tous les HiPS sont a priori visibles
       ViewSimple v = aladin.view.getCurrentView();
       if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) ) {
          boolean modif=false;
-         for( TreeObjHips hips : listHips ) {
-            if( !modif && hips.getIsIn()!=-1 ) modif=true;
-            hips.setIn(-1);
+         for( TreeObjReg to : listReg ) {
+            if( !modif && to.getIsIn()!=-1 ) modif=true;
+            to.setIn(-1);
          }
          return modif;
       }
@@ -444,7 +444,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
             while( (s=in.readLine())!=null ) set.add( getId(s) );
 
             // Positionnement des flags correspondants
-            for( TreeObjHips hips : listHips ) hips.setIn( set.contains(hips.internalId) ? 1 : 0 );
+            for( TreeObjReg to : listReg ) to.setIn( set.contains(to.internalId) ? 1 : 0 );
          
          } catch( EOFException e ) {}
          finally{ flagCheckIn=false; if( in!=null ) in.close(); }
@@ -455,26 +455,26 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    }
 
    /** Retourne true si l'arbre est développé selon le défaut prévu */
-   protected boolean isDefaultExpand() { return hipsTree.isDefaultExpand(); }
+   protected boolean isDefaultExpand() { return regTree.isDefaultExpand(); }
    
    /** Collapse l'arbre sauf le noeud courant */
    protected void collapseAllExceptCurrent() {
-      if( isDefaultExpand() ) hipsTree.allExpand();
-      else hipsTree.defaultExpand();
+      if( isDefaultExpand() ) regTree.allExpand();
+      else regTree.defaultExpand();
    }
    
    /** Retourne true s'il n'y a pas d'arbre HiPS */
    protected boolean isFree() {
-      return hipsTree==null || hipsTree.root==null ;
+      return regTree==null || regTree.root==null ;
    }
 
-   /** Traitement à applique après la génération ou la régénération de l'arbre HiPS */
+   /** Traitement à applique après la génération ou la régénération de l'arbre */
    private void postTreeProcess() {
       
       filter.setEnabled( dialogOk() );
       
-      // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des HiPS
-      // présents ou non dans la vue courante
+      // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des Collections
+      // présentes ou non dans la vue courante
       if( !isFree() ) startHipsUpdater();
       else stopHipsUpdater();
    }
@@ -495,7 +495,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
             prop = new MyProperties();
             mocServerReading = prop.loadRecord(in);
             if( prop.size()==0 ) continue;
-            if( n%1000==0 ) aladin.trace(4,"HipsStore.loadMultiProp(..) "+n+" prop loaded...");
+            if( n%1000==0 ) aladin.trace(4,"RegStore.loadMultiProp(..) "+n+" prop loaded...");
             n++;
             nbRecInProgress=n;
             try {  multiProp.add( prop ); } 
@@ -518,8 +518,8 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
     */
    private void populateMultiProp(boolean localFile) {
       
-      if( listHips==null ) listHips = new ArrayList<TreeObjHips>(20000);
-      else listHips.clear();
+      if( listReg==null ) listReg = new ArrayList<TreeObjReg>(20000);
+      else listReg.clear();
       
       // On force le recomptage des HiPS
       setRefCount(true);
@@ -527,7 +527,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       for( MocItem mi : this ) populateProp(mi.prop,localFile);
       
       Comparator c = TreeObj.getComparator();
-      Collections.sort(listHips,c);
+      Collections.sort(listReg,c);
       
    }
    
@@ -572,7 +572,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       }
       
       // Ajout dans la liste des noeuds d'arbre
-      listHips.add( new TreeObjHips(aladin,id,localFile,prop) );
+      listReg.add( new TreeObjReg(aladin,id,localFile,prop) );
    }
    
    /** Ajustement des propriétés, notamment pour ajouter le bon client_category
@@ -741,7 +741,6 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    }
    
    /** Chargement des descriptions de l'arbre par le MocServer */
-   // DANS LE CAS D'UN SCRIPT, IL FAUDRAIT QUE LA MISE A JOUR SOIT IMMEDIATE (waitingDialog)
    private void initMultiProp() {
 
       // Tentative de rechargement depuis le cache
@@ -921,7 +920,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
 
    private void startHipsUpdater() {
       if( threadUpdater==null ) {
-         threadUpdater = new Updater("HipsUpdater");
+         threadUpdater = new Updater("RegUpdater");
          threadUpdater.start();
       } else encore=true;
    }
@@ -933,7 +932,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
 
       public void run() {
          encore=true;
-         //         System.out.println("Hips updater running");
+         //         System.out.println("Registry Tree updater running");
          while( encore ) {
             try {
                //               System.out.println("Hips updater checking...");
@@ -941,7 +940,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
                Thread.currentThread().sleep(1000);
             } catch( Exception e ) { }
          }
-         //         System.out.println("Hips updater stopped");
+         //         System.out.println("Registry Tree updater stopped");
          threadUpdater=null;
       }
    }
@@ -951,9 +950,9 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
    
    private class FrameInfo extends JFrame {
       
-      ArrayList<TreeObjHips> treeObjs=null;     // hips dont il faut afficher les informations
+      ArrayList<TreeObjReg> treeObjs=null;     // hips dont il faut afficher les informations
       JPanel panelInfo=null;                // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
-      JCheckBox hipsBx=null,mocBx=null,progBx=null, dmBx=null, csBx=null, allBx=null;
+      JCheckBox hipsBx=null,mocBx=null,progBx=null, dmBx=null, csBx=null, msBx=null, allBx=null;
       
       FrameInfo() {
          setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -965,24 +964,24 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
          setAlwaysOnTop(true);
       }
       
-      boolean isSame(ArrayList<TreeObjHips> a1, ArrayList<TreeObjHips> a2) {
+      boolean isSame(ArrayList<TreeObjReg> a1, ArrayList<TreeObjReg> a2) {
          if( a1==null && a2==null ) return true;
          if( a1==null || a2==null ) return false;
          if( a1.size() != a2.size() ) return false;
-         for( TreeObjHips ti : a1) {
+         for( TreeObjReg ti : a1) {
             if( !a2.contains(ti) ) return false;
          }
          return true;
       }
       
-      /** Positionne le hips concerné, et regénère le panel en fonction */
-      void setHips(ArrayList<TreeObjHips> treeObjs) {
+      /** Positionne les collections concernées, et regénère le panel en fonction */
+      void setCollections(ArrayList<TreeObjReg> treeObjs) {
          if( isSame(treeObjs,this.treeObjs) ) return;
          this.treeObjs = treeObjs;
          resumePanel();
       }
       
-      /** Reconstruit le panel des informations en fonction du hips courant */
+      /** Reconstruit le panel des informations en fonction des collections courantes */
       void resumePanel() {
          JPanel contentPane = (JPanel)getContentPane();
          if( panelInfo!=null ) contentPane.remove(panelInfo);
@@ -991,7 +990,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
          panelInfo.setBorder( BorderFactory.createEmptyBorder(5, 5, 2, 5));
          
          String s;
-         long nbRows=0;
+         long nbRows=-1;
          MyAnchor a;
          GridBagConstraints c = new GridBagConstraints();
          GridBagLayout g =  new GridBagLayout();
@@ -999,24 +998,24 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
          c.insets = new Insets(2,2,0,5);
          JPanel p = new JPanel(g);
          
-         TreeObjHips hips=null;
+         TreeObjReg to=null;
          
          if( treeObjs.size()>1 )  {
-            a = new MyAnchor(aladin,treeObjs.size()+" data sets selected",50,null,null);
+            a = new MyAnchor(aladin,treeObjs.size()+" collections selected",50,null,null);
             PropPanel.addCouple(p,null, a, g,c);
             
          } else {
          
-            hips = treeObjs.get(0);
+            to = treeObjs.get(0);
 
-            if( hips.verboseDescr!=null || hips.description!=null ) {
-               s = hips.verboseDescr==null ? "":hips.verboseDescr;
-               s =  s+"\n \n"+hips.prop.getRecord(null);
-               a = new MyAnchor(aladin,hips.description,200,s,null);
+            if( to.verboseDescr!=null || to.description!=null ) {
+               s = to.verboseDescr==null ? "":to.verboseDescr;
+               s =  s+"\n \n"+to.prop.getRecord(null);
+               a = new MyAnchor(aladin,to.description,200,s,null);
                a.setFont(a.getFont().deriveFont(Font.PLAIN));
                PropPanel.addCouple(p,null, a, g,c);
             }
-            String provenance = hips.copyright==null ? hips.copyrightUrl : hips.copyright;
+            String provenance = to.copyright==null ? to.copyrightUrl : to.copyright;
             if( provenance!=null ) {
                s = ".Provenance: "+provenance;
                a = new MyAnchor(aladin,s,50,null,null);
@@ -1025,7 +1024,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
             }
 
             JPanel p1 = new JPanel(new BorderLayout(15,0));
-            s  = hips.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+            s  = to.getProperty(Constante.KEY_MOC_SKY_FRACTION);
             if( s!=null ) {
                try { s = Util.myRound( Double.parseDouble(s)*100); } catch( Exception e) {}
                s = ".Sky coverage: "+s+"%";
@@ -1033,7 +1032,7 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
                a.setForeground(Color.gray);
                p1.add(a,BorderLayout.WEST);
             }
-            s  = hips.getProperty(Constante.KEY_HIPS_PIXEL_SCALE);
+            s  = to.getProperty(Constante.KEY_HIPS_PIXEL_SCALE);
             if( s!=null ) {
                try { s = Coord.getUnit( Double.parseDouble(s)); } catch( Exception e) {}
                s = "    .HiPS pixel scale: "+s;
@@ -1041,10 +1040,10 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
                a.setForeground(Color.gray);
                p1.add(a,BorderLayout.CENTER);
             }
-            s  = hips.getProperty(Constante.KEY_NB_ROWS);
+            s  = to.getProperty(Constante.KEY_NB_ROWS);
             if( s!=null ) {
                try { nbRows = Long.parseLong(s); } catch( Exception e) {}
-               s = "    .nb_row: "+s;
+               s = "    .nb row: "+s;
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a,BorderLayout.CENTER);
@@ -1055,36 +1054,45 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
             hipsBx = mocBx = progBx = dmBx = csBx = allBx = null;
-            if( hips.getUrl()!=null ) {
+            if( to.getUrl()!=null ) {
                hipsBx = bx = new JCheckBox("Progr. survey");
                mocAndMore.add(bx);
                bx.setSelected(true);
                bx.setToolTipText("Hierarchical Progressive Survey (HiPS)");
             }
-            if( hips.isCatalog() ) {
+            if( to.isCatalog() ) {
                boolean allCat = nbRows<2000;
-               if( nbRows<10000 ) {
+               ButtonGroup bg = new ButtonGroup();
+               if( nbRows!=-1 && nbRows<10000 ) {
                   allBx = bx = new JCheckBox("All sources");
                   mocAndMore.add(bx);
-                  bx.setSelected(hips.getUrl()==null && allCat );
-                  bx.setToolTipText("Load all sources (small catalog/table)");
-
+                  bx.setSelected(to.getUrl()==null && allCat );
+                  bx.setToolTipText("Load all sources (small catalog/table <10000)");
+                  bg.add(bx);
                } 
 
                csBx = bx = new JCheckBox("Cone search");
                mocAndMore.add(bx);
-               bx.setSelected(hips.getUrl()==null && !allCat);
+               bx.setSelected(to.getUrl()==null && !allCat);
                bx.setToolTipText("Cone search on the current view");
+               bg.add(bx);
+               
+               msBx = bx = new JCheckBox("Query by MOC");
+               mocAndMore.add(bx);
+               bx.setSelected(false);
+               bx.setToolTipText("Load all sources inside the selected MOC in the stack");
+               bg.add(bx);
+            
             }
             mocBx = bx = new JCheckBox("Coverage"); 
             mocAndMore.add(bx); 
             bx.setToolTipText("MultiOrder Coverage map (MOC)");
-            if( hips.isCatalog() ) {
+            if( to.isCatalog() ) {
                dmBx = bx = new JCheckBox("Density map");
                mocAndMore.add(bx);
                Util.toolTip(bx,"Progressive view (HiPS) of the density map associated to the catalog",true);
             } else {
-               if( hips.getProgenitorsUrl()!=null ) {
+               if( to.getProgenitorsUrl()!=null ) {
                   progBx = bx = new JCheckBox("Orig.data links");
                   mocAndMore.add(bx);
                   Util.toolTip(bx,"Meta data and links to original data sets (progenitors access)",true);
@@ -1116,8 +1124,8 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
          JPanel bas = new JPanel( new BorderLayout(0,0));
          bas.add(control,BorderLayout.CENTER);
          
-         if( hips!=null && hips.internalId!=null ) {
-            JLabel x = new JLabel(hips.internalId);
+         if( to!=null && to.internalId!=null ) {
+            JLabel x = new JLabel(to.internalId);
             x.setForeground(Aladin.GREEN);
             bas.add(x,BorderLayout.WEST);
          }
@@ -1129,13 +1137,14 @@ public class HipsStore extends JPanel implements Iterable<MocItem>{
       
       void submit() {
          if( treeObjs.size()==1 ) {
-            TreeObjHips hips = treeObjs.get(0);
-            if( allBx!=null  && allBx.isSelected() )   hips.loadAll();
-            if( csBx!=null   && csBx.isSelected() )    hips.loadCS();
-            if( hipsBx!=null && hipsBx.isSelected() )  hips.loadHips();
-            if( mocBx!=null  && mocBx.isSelected() )   hips.loadMoc();
-            if( progBx!=null && progBx.isSelected() )  hips.loadProgenitors();
-            if( dmBx!=null   && dmBx.isSelected() )    hips.loadDensityMap();
+            TreeObjReg to = treeObjs.get(0);
+            if( allBx!=null  && allBx.isSelected() )   to.loadAll();
+            if( csBx!=null   && csBx.isSelected() )    to.loadCS();
+            if( msBx!=null   && msBx.isSelected() )    to.queryByMoc();
+            if( hipsBx!=null && hipsBx.isSelected() )  to.loadHips();
+            if( mocBx!=null  && mocBx.isSelected() )   to.loadMoc();
+            if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
+            if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
          } else {
             System.out.println("Je dois charger "+treeObjs.size()+" data sets...");
          }

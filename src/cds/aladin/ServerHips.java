@@ -127,7 +127,7 @@ public class ServerHips extends ServerTree  {
          return -1;
       }
 
-      TreeObjHips gSky = aladin.glu.getHips(j);
+      TreeObjReg gSky = aladin.glu.getHips(j);
 
       try {
          if( defaultMode!=PlanBG.UNKNOWN ) gSky.setDefaultMode(defaultMode);
@@ -159,7 +159,7 @@ public class ServerHips extends ServerTree  {
 //            if( v.isFree() ) return;
 
             if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) ) {
-               for( TreeObjHips gSky : aladin.glu.vHips ) gSky.isIn=0;
+               for( TreeObjReg gSky : aladin.glu.vHips ) gSky.isIn=0;
 
             } else {
                String params;
@@ -193,10 +193,10 @@ public class ServerHips extends ServerTree  {
                while( (s=in.readLine())!=null ) set.add( getId(s) );
 
                // Nettoyage préalable de l'arbre
-               for( TreeObjHips gSky : aladin.glu.vHips ) gSky.isIn=0;
+               for( TreeObjReg gSky : aladin.glu.vHips ) gSky.isIn=0;
 
                // Positionnement des datasets dans le champ
-               for( TreeObjHips gSky : aladin.glu.vHips ) {
+               for( TreeObjReg gSky : aladin.glu.vHips ) {
                   gSky.isIn = set.contains(gSky.internalId) ? 1 : 0;
 //                  if( !gSky.ok ) System.out.println(gSky.internalId+" is out");
                }
@@ -242,9 +242,9 @@ public class ServerHips extends ServerTree  {
    public void submit() {
       String mode = fitsRadio!=null && fitsRadio.isSelected() ? ",fits":"";
       for( TreeObj n : tree ) {
-         if( !(n instanceof TreeObjHips) ) continue;
+         if( !(n instanceof TreeObjReg) ) continue;
          if( !n.isCheckBoxSelected() ) continue;
-         TreeObjHips ta = (TreeObjHips) n;
+         TreeObjReg ta = (TreeObjReg) n;
          String target = getTarget(false);
          String radius = getRadius(false);
          String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));

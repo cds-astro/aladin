@@ -417,7 +417,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    MySplitPane splitZoomHeight;  // Gère la séparation pile/zoom
    MySplitPane splitZoomWidth;   // Gère la séparation view/pile-zoom
    MySplitPane splitHiPSWidth;    // Gère la séparation hips/view
-   HipsStore hipsStore;        // Gère le "HiPS market"
+   RegStore hipsStore;        // Gère le "HiPS market"
    Search search;                // Gère le bandeau de recherche dans les mesures
    public ToolBox toolBox;       // Gere la "Tool bar"
    public Calque calque;         // Gere a la fois les plans et le zoom
@@ -2259,7 +2259,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       splitMesureHeight.setBorder(BorderFactory.createEmptyBorder());
       
       if( PROTO ) {
-         hipsStore = new HipsStore(aladin);
+         hipsStore = new RegStore(aladin);
          splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, hipsStore, splitMesureHeight,0);
          splitHiPSWidth.setBorder(BorderFactory.createEmptyBorder());
          hipsStore.setPreferredSize(new Dimension(getHiPSWidth(),200));
@@ -2864,13 +2864,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    protected int allsky() {
-      TreeObjHips gSky = glu.getHips(0);
+      TreeObjReg gSky = glu.getHips(0);
       return allsky(gSky);
    }
 
    /** Activation d'un background */
-   protected int allsky(TreeObjHips gSky) { return hips(gSky,null,null,null); }
-   protected int hips(TreeObjHips gSky,String label,String target,String radius) {
+   protected int allsky(TreeObjReg gSky) { return hips(gSky,null,null,null); }
+   protected int hips(TreeObjReg gSky,String label,String target,String radius) {
       int n=1;
       if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
       else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright,target,radius);
@@ -2882,7 +2882,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected boolean allsky(String s) {
       int i = glu.findHips(s,2);
       if( i<0 ) return false;
-      TreeObjHips ga = glu.getHips(i);
+      TreeObjReg ga = glu.getHips(i);
       console.printCommand("get hips(\""+ga.aladinLabel+"\")");
       allsky(ga);
       return true;

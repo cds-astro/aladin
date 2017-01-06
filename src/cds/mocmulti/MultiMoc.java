@@ -780,8 +780,9 @@ public class MultiMoc implements Iterable<MocItem> {
             Iterator<String> it = mi.prop.getKeys().iterator();
             while( it.hasNext() && !rep ) {
                String k1 = it.next();
-               if( !MyProperties.matchMask(key, k1) ) continue;
-               rep |= matchList(mask,mi.prop.get(k1),casesens, andLogic);
+               if( !MyProperties.matchMask(key, k1) ) continue;  // forçage pour le cas de l'identificateur
+               boolean cs = k1.equals(KEY_ID) ? true : casesens;
+               rep |= matchList(mask,mi.prop.get(k1),cs, andLogic);
             }
             
             if( DEBUGMATCH) System.out.println("   => matchList = "+rep+(!rep?" (return dans matchKey)":""));
@@ -792,6 +793,7 @@ public class MultiMoc implements Iterable<MocItem> {
       // Nom de champ explicite ?
       } else {
          if( DEBUGMATCH) System.out.println("==> Champ explicite ["+key+"]...");
+         if( key.equals(KEY_ID) ) casesens=true;  // forçage pour le cas de l'identificateur
          boolean rep = matchProp(mapFilter.get(listKey),mi.prop.get(key),casesens, andLogic);
          if( DEBUGMATCH) System.out.println("   matchProp = "+rep+(!rep?" (return dans matchKey)":""));
          if( !rep) return false;
@@ -800,61 +802,7 @@ public class MultiMoc implements Iterable<MocItem> {
       if( DEBUGMATCH) System.out.println("MatchList return true");
       return true;
    }
-
    
-//   private boolean matchOrKey(MocItem mi, HashMap<String,String[]> mapFilter, 
-//         String listKey, String key, boolean casesens) {
-//      
-//      // Jokers sur le nom du champ ?
-//      if( key.indexOf('?')>=0 || key.indexOf('*')>=0 ) {
-//
-//         boolean rep=false;
-//         for( String mask : mapFilter.get(listKey) ) {
-//            rep=false;
-//            
-//            Iterator<String> it = mi.prop.getKeys().iterator();
-//            while( it.hasNext() && !rep ) {
-//               String k1 = it.next();
-//               if( !MyProperties.matchMask(key, k1) ) continue;
-//               rep |= matchOrList(mask,mi.prop.get(k1),casesens);
-//            }
-//            if( !rep ) return false;
-//         }
-//         if( !rep ) return false;
-//         
-//      // Nom de champ explicite ?
-//      } else {
-//         if( !matchProp(mapFilter.get(listKey),mi.prop.get(key),casesens) ) return false;
-//      }
-//      
-//      return true;
-//   }
-   
-//   private boolean matchProp(String [] listMask, String vProp, boolean casesens) {
-//      
-//      // Le champ n'existe pas ? la réponse est true
-//      // sauf si tous les masques sont "ne contient pas..."
-//      if( vProp==null ) {
-//         
-//         for( String mask : listMask ) {
-////            if( mask.equals("!*") ) return true;
-//            if( !mask.startsWith("!") ) return false;
-//         }
-//         return true;
-////         return false;
-//         
-//         // Le champ existe => 
-//         // Il faut que toutes les propositions et tous les masques (ex: Novae, Binaries*) aient au moins
-//         // un champ qui le vérifie (ex: champ xxx \t yyy \t ...)
-//      } else  {
-//         for( String mask : listMask ) {
-//            if( !matchOrList(mask,vProp, casesens) ) return false;
-//         }
-//      }
-//
-//      return true;
-//   }
-
    private boolean matchProp(String [] listMask, String vProp, boolean casesens, boolean andLogic) {
       
       // Le champ n'existe pas ? la réponse est true
@@ -862,10 +810,6 @@ public class MultiMoc implements Iterable<MocItem> {
       if( vProp==null ) {
          if( DEBUGMATCH) System.out.println("      vProp==null...");
          return andLogic;
-//         for( String mask : listMask ) {
-//            if( !mask.startsWith("!") ) return false;
-//         }
-//         return true;
       }
 
       // Le champ existe => 
@@ -947,7 +891,10 @@ public class MultiMoc implements Iterable<MocItem> {
       }
       char c = mask.charAt(0);
       if( c=='>' || c=='<' ) {
-         if( MyProperties.testInequality(c,mask.substring(1),value) ) return true;
+         mask = mask.substring(1);
+         boolean strict=true;
+         if( mask.startsWith("=") ) { strict=false;  mask = mask.substring(1); }
+         if( MyProperties.testInequality(c,strict,mask,value) ) return true;
       } else {
          if( mask.charAt(0)=='!' ) { match=false; mask=mask.substring(1); }
          if( !casesens ) { mask=mask.toUpperCase(); value=value.toUpperCase(); }
@@ -975,96 +922,10 @@ public class MultiMoc implements Iterable<MocItem> {
    }
    
    /**
-    * Fast selection on ID only
-    * @param mapFilter
-    * @param casesens
-    * @return the selected MocItem, null otherwise
-    */
-   private MocItem matchByUniqID( HashMap<String, String[]> mapFilter, boolean casesens ) {
-      if( !casesens ) return null;  //pas possible si caseinsensitive
-      if( mapFilter==null || mapFilter.size()!=1 ) return null;      //trop de contraintes
-      
-      String [] keys = mapFilter.get(KEY_ID);
-      if( keys==null || keys.length!=1 ) return null;  // Pas de contrainte sur l'ID uniquement
-      
-      String k = keys[0];
-      if( k.indexOf('*')>=0 || k.indexOf('?')>=0 || k.indexOf(',')>=0 ) return null; // pas possible si jokers
-      
-      // La recherche directe est possible
-      MocItem mi = getItem(k);
-
-      return mi;
-   }
-   
-//   /**
-//    * Search by MOC.
-//    * @param moc MOC describing input sky region
-//    * @param mapFilter [-]propKey="wildcard mask" list for pre-filtering on MOC identifiers (wildcard syntax: *,?,! (not as first char))
-//    * @return list of MOC identifiers
-//    */
-//   public ArrayList<String> scan(HealpixMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top ) {
-//      ArrayList<String> res = new ArrayList<String>();
-//
-//      // Est-ce qu'il n'y a que la contrainte sur l'ID ? alors je peux y accéder directement
-//      MocItem mi1 = matchByUniqID( mapFilter,casesens);
-//      if( mi1!=null ) {
-//         if( moc==null || mi1.moc!=null && mi1.moc.isIntersecting(moc) ) res.add(mi1.mocId);
-//
-//      // Sinon pas le choix il faut les passer tous en revue
-//      } else {
-//         
-//         // On détermine la liste à virer (s'il y en a)
-//         HashMap<String, String[]> mapFilterRemove = getMapFilter(mapFilter,true);
-//         boolean flagRemove = mapFilterRemove.size()>0;
-//         
-//         // On détermine la liste à garder (s'il y a)
-//         HashMap<String, String[]> mapFilterKeep = getMapFilter(mapFilter,false);
-//         boolean flagKeep = mapFilterKeep.size()>0;
-//
-//         // S'il n'y a rien à virer, on ne fait que garder ceux qui matchent
-//         if( !flagRemove && flagKeep ) res = scan1(null,mapFilter,casesens,true,top);
-//         
-//         else {
-//            ArrayList<String> listId;
-//            
-//            // S'il n'y a rien à garder, on part de la liste complète
-//            if( !flagKeep ) {
-//               listId = new ArrayList<String>( size() );
-//               for( MocItem mi : this ) listId.add(mi.mocId);
-//               
-//            // Sinon on part de la liste de ceux qui matchent
-//            } else listId = scan1(null,mapFilterKeep,casesens, true, !flagRemove ? top : -1);
-//            
-//            // S'il n'y a rien à virer, c'est fini
-//            if( !flagRemove ) res = listId;
-//            
-//            // Sinon on enlève ce qu'il faut
-//            else {
-//
-//               // On mémorise ceux qu'on doit virer dans une Hashset
-//               ArrayList<String> rmIds = scan1(null,mapFilterRemove,casesens,false, -1);
-//               HashSet<String> map = new HashSet<String>( rmIds.size() );
-//               for( String id : rmIds ) map.add(id);
-//
-//               // Et on fait le mixe des deux listes
-//               for( String id : listId ) {
-//                  if( !map.contains(id) ) {
-//                     res.add(id);
-//                     if( top!=-1 && res.size()>=top ) break;
-//                  }
-//               }
-//            }
-//         }
-//      }
-//
-//      return res;
-//   }
-   
-   
-   /**
     * Search by MOC.
     * @param moc MOC describing input sky region
     * @param mapFilter propKey="wildcard mask" list for pre-filtering on MOC identifiers (wildcard syntax: *,?,! (not as first char))
+    * @param casesensitive case sensitive (true by default) - never applied for ID field
     * @return list of MOC identifiers
     */
    public ArrayList<String> scan(HealpixMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top ) {
@@ -1072,10 +933,6 @@ public class MultiMoc implements Iterable<MocItem> {
 
       int n=0;
       for( MocItem mi : this ) {
-         
-//         // Pour Debug
-//         if( mapFilter!=null && match(mi,mapFilter,casesens,true)) { res.add(mi.mocId); return res; }
-
          if( mapFilter!=null && !match(mi,mapFilter,casesens,true)) continue;
          if( moc==null || mi.moc!=null && mi.moc.isIntersecting(moc) ) {
             res.add(mi.mocId);
@@ -1086,21 +943,6 @@ public class MultiMoc implements Iterable<MocItem> {
       return res;
    }
    
-//   /** Récupération de la listes des propriétés, soit à garder (flagMoins=false), soit à virer (flagMoins=true) */
-//   private HashMap<String, String[]> getMapFilter(HashMap<String, String[]> mapFilter, boolean flagMoins) {
-//      HashMap<String, String[]> mf = new HashMap<String, String[]>();
-//      for( String k : mapFilter.keySet() ) {
-//         String [] val = mapFilter.get(k);
-//         boolean moins=false;
-//         if( k.startsWith("-") ) {
-//            moins = true;
-//            k=k.substring(1);
-//         }
-//         if( flagMoins==moins ) mf.put(k, val );
-//      }
-//      return mf;
-//   }
-
    /**
     * Search by wildcard mask.
     * @param mask mask wildcard mask for selecting MOC identifiers (wildcard syntax: *,?,! => not if in first pos))
@@ -1114,6 +956,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * Scanning by MOC and logical expression based on set algebra
     * @param moc MOC describing input sky region
     * @param expr expression based on set algebra
+    * @param casesensitive case sensitive (true by default) - never applied for ID field
     * @return list of IDs (keep the original MultiMoc order)
     */
    public ArrayList<String> scan( HealpixMoc moc, String expr, boolean casesens, int top ) throws Exception {
@@ -1151,10 +994,12 @@ public class MultiMoc implements Iterable<MocItem> {
    /**
     * Scanning by wildcard mask on IDs
     * @param mask mask wildcard mask for selecting MOC identifiers (wildcard syntax: *,?,! (not as first char))
+    * @param casesensitive case sensitive (true by default) - never applied for ID field
     * @return list of IDs (keep the original MultiMoc order)
     */
-   public ArrayList<String> scan(String mask) throws Exception {
-      return scan( (HealpixMoc)null, mask, true, -1);
+   public ArrayList<String> scan(String mask) throws Exception { return scan( mask, true); }
+   public ArrayList<String> scan(String mask, boolean casesensitive) throws Exception {
+      return scan( (HealpixMoc)null, mask, casesensitive, -1);
    }
    
 
@@ -1249,6 +1094,41 @@ public class MultiMoc implements Iterable<MocItem> {
       for( int j=0; j<niv*3; j++ ) s.append(' ');
       return s.toString();
    }
+   
+   /**
+    * Ajustement de syntaxe par substitution
+    * 1) key!=val1,val2  =>  key=!val1,!val2
+    * 2) key>val         =>  key=>val
+    * 3) key<val         =>  key=<val
+    * @param s
+    * @return
+    */
+   private String adjustExpr(String s) {
+      if( s==null || s.length()==0 ) return s;
+      
+      // Traitement de key!=val1,val2  =>  key=!val1,!val2
+      int pos = s.indexOf('!');
+      if( pos>0 && pos<s.length()-1 && s.charAt(pos+1)=='=' ) {
+         StringBuilder res = null;
+         Tok tok = new Tok( s.substring(pos+2), ",");
+         while( tok.hasMoreTokens() ) {
+            String val = tok.nextToken();
+            if( res==null ) res=new StringBuilder( s.substring(0,pos)+"=!"+val);
+            else res.append(",!"+val);
+         }
+         return res.toString();
+      }
+      
+      // Traitement de key>val =>  key=>val
+      pos = s.indexOf('>');
+      if( pos>0 ) return s.substring(0,pos)+"=>"+s.substring(pos+1);
+      
+      // Traitement de key<val =>  key=<val
+      pos = s.indexOf('<');
+      if( pos>0 ) return s.substring(0,pos)+"=<"+s.substring(pos+1);
+      
+      return s;
+   }
 
    /**
     * Calcul récursif d'une expression ensembliste par algorithme à pile.
@@ -1281,7 +1161,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param s      La chaine de l'expression ensembliste 
     *               ex: (ID=CDS* || obs_title=*CDS*) && hips_*_url=* &! datatype_subtype=catalog
     *                => [ [ID=CDS* || obs_title=*CDS*] && [hips_*_url=* &! datatype_subtype=catalog] ]
-    * @param casesens case sensitive or not (default is case sensitive)
+    * @param casesens case sensitive or not (default is case sensitive)  - never applied for ID field
     * @return L'opérande de fin de calcul (contient les élements matchant l'expression
     * @throws Exception en cas d'erreur de syntaxe et autres
     */
@@ -1292,6 +1172,9 @@ public class MultiMoc implements Iterable<MocItem> {
       // Première opérande
       Op op = new Op();
       int pos=getOp(op,a,0);
+      
+      // Peaufinage de syntaxe (!=, >, < )
+      if( op.terminal ) op.expr = adjustExpr(op.expr);
       
       if( pos==-1 ) {
          if( !op.terminal ) op = calculExpr(niv+3, stack, op.expr, casesens);
@@ -1362,24 +1245,42 @@ public class MultiMoc implements Iterable<MocItem> {
     * Initialisation des éléments correspondants à une expression terminale
     * (càd qui peut être traité par un scan(..)
     * @param op L'opérande à initiatiliser (contient l'expression et le résultat)
-    * @param casesens case sensitive or not (default is case sensitive)
+    * @param casesens case sensitive or not (default is case sensitive) - never applied for ID field
     */
    private void initScanItem(Op op, boolean casesens) throws Exception {
+      
+//      System.out.println("J'initialise "+op);
       
       // Découpage de l'expression terminal en paramètres utilisable par scan(...)
       int pos = op.expr.indexOf('=');
       String key;
       
       // Dans le cas où il n'y a pas de champ de filtrage spécifié, il s'agit de ID
-      key= pos==-1 ? "ID" : op.expr.substring(0, pos).trim();
+      key= pos==-1 ? KEY_ID : op.expr.substring(0, pos).trim();
       String val = op.expr.substring(pos+1).trim();
       
+      
+      // Peut être s'agit-il d'un ID unique (ex: CDS/P/2MASS/J) ? on peut donc aller plus vite
+      if( (pos==-1 || key.equals(KEY_ID))
+            && val.indexOf('*')<0 && val.indexOf('?')<0 && val.indexOf(',')<0) {
+
+         // Est-ce qu'il n'y a que la contrainte sur l'ID ? alors je peux y accéder directement
+         op.res = new HashSet<String>( 10 );   // <= je crée une Hashset petite car ce ne sera probablement 
+                                               //    jamais elle qui sera conservé lors des opérations ensemblistes 
+         MocItem mi1 = getItem(val);
+//         System.out.println("Accès direct pour "+val);
+         if( mi1!=null ) op.res.add(mi1.mocId);
+         return;
+      }
+      
+     
       HashMap<String, String[]> mapFilters = new HashMap<String, String[]>();
       mapFilters.put( key, new String[] { val } );
       
       // Scanning du multimoc et mémorisation des éléments qui correspondent
       ArrayList<String> res = scan( (HealpixMoc)null, mapFilters, casesens, -1);
-      op.res = new HashSet<String>(res);
+      op.res = new HashSet<String>( Math.max(2*res.size(), size()) );   // <= Je crée une HashSet assez grande, car elle est susceptible
+                                                                        //    de contenir l'ensemble des résultats. On pourrait affiner en
       op.res.addAll( res );
    }
    
@@ -1389,24 +1290,32 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param b     L'ensemble B
     * @param logic 0-UNION, 1-INTERSECTION, 2-EXCEPT (ex: ABC &! A => BC)
     * @return      L'ensemble résultant (peut être vide, mais jamais null)
-    * ATTENTION: dans le cas de l'UNION, le HashSet b est utilisé pour la réponse
+    * ATTENTION: l'ensemble retourné utilise l'un ou l'autre des ensembles initiaux
     */
    private HashSet<String> combine( HashSet<String> a, HashSet<String> b ,int logic) {
       
+      int aSize = a.size();
+      int bSize = b.size();
+      
       // Logique || => UNION
-      if( logic==0 ) { b.addAll(a); return b; }
+      if( logic==0 ) {
+         if( bSize>aSize ) { b.addAll(a); return b; }
+         a.addAll(b);
+         return a;
+      }
       
       // Logique && => INTERSECTION
       if( logic==1 ) {
-         HashSet<String> c = new HashSet<String>();
-         for( String s : a ) { if( b.contains( s ) ) c.add(s); }
-         return c;
+         
+         if( bSize>aSize ) { b.retainAll(a); return b; }
+         a.retainAll(b);
+         return a;
       }
       
       // logique &! => EXCEPT
-      HashSet<String> c = new HashSet<String>();
-      for( String s : a ) { if( !b.contains( s ) ) c.add(s); }
-      return c;
+      if( bSize>aSize) { b.removeAll(a); return b; }
+      a.removeAll(b);
+      return a;
    }
    
    /**
@@ -1415,7 +1324,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * => retourne tous les ID commençant par CDS ou dont le obs_title contient le mot CDS
     *           et qui ont une URL HiPS, mais sans prendre en compte les catalogues
     * @param s  L'expression ensembliste (voir ci-dessus)
-    * @param casesens case sensitive or not (default is case sensitive)
+    * @param casesens case sensitive or not (default is case sensitive) - never applied for ID field
     * @return   L'ensemble des ID qui matchent l'expression
     * @throws Exception
     */
@@ -1423,7 +1332,6 @@ public class MultiMoc implements Iterable<MocItem> {
       Op op = calculExpr( 0, new Stack<Op>(), s, casesens );
       return op.res;
    }
-   
    
   
    /**
@@ -1473,38 +1381,39 @@ public class MultiMoc implements Iterable<MocItem> {
    }   
    
    
-//   /** Pour tester */
-//   static public void main(String [] s) {
-//      try {
-//         MultiMoc m = new MultiMoc();
-//         
-//         long t0 = System.currentTimeMillis();
-//         String s3 = "/Users/Pierre/.aladin/Cache/Multiprop.bin";
-//         m = (new BinaryDump()).load(s3);
-//         System.out.println("Multiprop loaded ("+m.size()+" rec.) in "+(System.currentTimeMillis()-t0)+"ms...");
-//
-//         
-////         String s2 = "client_application=* &! data*type=catalog";
-////         String s2 = "obs_title,ID=!CDS/B/denis/denis,!CDS/C/CALIFA/V500/DR2";
-//         String s2 = "associated_dataproduct_type=!image,!spectrum,!cube";
-//         
-//         System.out.println("calculer: "+s2);
-//         
-//         t0 = System.currentTimeMillis();
-//         ArrayList<String> res = m.scan(s2);
-//         System.out.println("Résultat ("+res.size()+" rec.) in "+(System.currentTimeMillis()-t0)+"ms...");
-//         
-//         int i=0;
-//         for( String s1 : res ) {
-//            i++;
-//            System.out.println("   "+s1);
-//            if( i>20 ) { System.out.println("   ..."); break; }
-//         }
-//         
-//      } catch( Exception e ) {
-//         e.printStackTrace();
-//      }
-//   }
+   /** Pour tester */
+   static public void main(String [] s) {
+      try {
+         MultiMoc m = new MultiMoc();
+         
+         long t0 = System.currentTimeMillis();
+         String s3 = "/Users/Pierre/.aladin/Cache/Multiprop.bin";
+         m = (new BinaryDump()).load(s3);
+         System.out.println("Multiprop loaded ("+m.size()+" rec.) in "+(System.currentTimeMillis()-t0)+"ms...");
+
+         
+//         String s2 = "client_application=* &! data*type=catalog";
+//         String s2 = "obs_title,ID=!CDS/B/denis/denis,!CDS/C/CALIFA/V500/DR2";
+//         String s2 = "CDS/P/DSS2/Color || CDS/B/denis/Denis";
+         String s2 = "associated_data_product=!image && obs_regime=Optical || ID=CDS*";
+        
+         System.out.println("calculer: "+s2);
+         
+         t0 = System.currentTimeMillis();
+         ArrayList<String> res = m.scan(s2,false);
+         System.out.println("Résultat ("+res.size()+" rec.) in "+(System.currentTimeMillis()-t0)+"ms...");
+         
+         int i=0;
+         for( String s1 : res ) {
+            i++;
+            System.out.println("   "+s1);
+            if( i>20 ) { System.out.println("   ..."); break; }
+         }
+         
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
 
 
    

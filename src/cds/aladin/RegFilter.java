@@ -54,7 +54,7 @@ import cds.mocmulti.MocItem;
  * @version 1.0 décembre 2016 - création
  * @author Pierre Fernique [CDS]
  */
-public final class HipsFilter extends JFrame implements ActionListener {
+public final class RegFilter extends JFrame implements ActionListener {
    
    private boolean first=true;
    private Aladin  aladin;  // référence externe
@@ -64,7 +64,7 @@ public final class HipsFilter extends JFrame implements ActionListener {
         = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
          +"&hips_service_url=*&casesensitive=false";
    
-   public HipsFilter(Aladin aladin) {
+   public RegFilter(Aladin aladin) {
       super();
       this.aladin = aladin;
       

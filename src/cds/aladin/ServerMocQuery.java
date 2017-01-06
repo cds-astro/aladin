@@ -209,6 +209,29 @@ public class ServerMocQuery extends Server  {
     }
 
    protected boolean isDiscovery() { return false; }
+   
+   
+   private PlanMoc dedicatedPlanMoc=null;
+   protected void setPlanMoc(PlanMoc planMoc) { dedicatedPlanMoc = planMoc; }
+   private PlanMoc getPlanMoc() {
+      if( dedicatedPlanMoc!=null ) return dedicatedPlanMoc;
+      return (PlanMoc)comboMoc.getSelectedItem();
+   }
+   
+   private String catName=null;
+   protected void setCatName(String cat) { catName=cat; }
+   private String getCatName() {
+      if( catName!=null ) return catName;
+      if (comboCat.getSelectedItem().equals("---")) return textCat.getText().trim();
+      return comboCat.getSelectedItem().toString();
+   }
+
+   private String planName=null;
+   protected void setPlanName(String label) { planName=label; }
+   private String getPlanName() {
+      if( planName!=null ) return planName;
+      return getCatName() + " MOC query";
+   }
 
    private void submitThread() {
        waitCursor();
@@ -225,7 +248,8 @@ public class ServerMocQuery extends Server  {
            return;
        }
 
-       PlanMoc selectedMoc = (PlanMoc)comboMoc.getSelectedItem();
+//       PlanMoc selectedMoc = (PlanMoc)comboMoc.getSelectedItem();
+       PlanMoc selectedMoc = getPlanMoc();
        if (selectedMoc==null) {
            Aladin.warning("No MOC selected !");
            return;
@@ -243,13 +267,13 @@ public class ServerMocQuery extends Server  {
            MultiPartPostOutputStream out =
                new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
 
-           String catName;
-           if (comboCat.getSelectedItem().equals("---")) {
-               catName = textCat.getText().trim();
-           }
-           else {
-               catName = comboCat.getSelectedItem().toString();
-           }
+           String catName = getCatName();
+//           if (comboCat.getSelectedItem().equals("---")) {
+//               catName = textCat.getText().trim();
+//           }
+//           else {
+//               catName = comboCat.getSelectedItem().toString();
+//           }
            out.writeField("catName", catName);
            out.writeField("mode", "mocfile");
            out.writeField("format", "votable");
@@ -276,7 +300,7 @@ public class ServerMocQuery extends Server  {
 
            out.close();
 
-           aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), catName + " MOC query");
+           aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), getPlanName());
        }
        catch(Exception ioe) {
            defaultCursor();

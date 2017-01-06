@@ -223,7 +223,7 @@ public class PlanBG extends PlanImage {
     * @param c Coordonnée centrale ou null si non spécifiée
     * @param radius Taille du champ en degrés, ou <=0 si non spécifié
     */
-   protected PlanBG(Aladin aladin, TreeObjHips gluSky, String label, Coord c,double radius,String startingTaskId) {
+   protected PlanBG(Aladin aladin, TreeObjReg gluSky, String label, Coord c,double radius,String startingTaskId) {
       super(aladin);
       this.startingTaskId = startingTaskId;
       initCache();
@@ -526,7 +526,7 @@ public class PlanBG extends PlanImage {
    }
 
 
-   protected void setSpecificParams(TreeObjHips gluSky) {
+   protected void setSpecificParams(TreeObjReg gluSky) {
       type = ALLSKYIMG;
       video = aladin.configuration.getCMVideo();
       inFits = gluSky.isFits();
@@ -563,8 +563,8 @@ public class PlanBG extends PlanImage {
       maxOrder=3;
       useCache = false;
       this.label=label;
-      TreeObjHips gsky = null;
-      try { gsky= new TreeObjHips(aladin, url); }
+      TreeObjReg gsky = null;
+      try { gsky= new TreeObjReg(aladin, url); }
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       paramByTreeNode(gsky, c, radius);
       scanProperties();
@@ -587,8 +587,8 @@ public class PlanBG extends PlanImage {
       local = false;
       co=c;
       coRadius=radius;
-      TreeObjHips gsky = null;
-      try { gsky= new TreeObjHips(aladin, url); }
+      TreeObjReg gsky = null;
+      try { gsky= new TreeObjReg(aladin, url); }
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       paramByTreeNode(gsky,c,radius);
       int n = url.length();
@@ -600,7 +600,7 @@ public class PlanBG extends PlanImage {
       suite();
    }
 
-   protected void paramByTreeNode(TreeObjHips gSky, Coord c, double radius) {
+   protected void paramByTreeNode(TreeObjReg gSky, Coord c, double radius) {
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       else setLabel(gSky.label);
       maxOrder=gSky.getMaxOrder();

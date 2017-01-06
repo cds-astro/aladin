@@ -46,11 +46,11 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 2.0 Janvier 2017 - reprise complète à partir de MyTree
  */
-public class HipsTree extends JTree {
+public class RegTree extends JTree {
    protected DefaultMutableTreeNode root;
    private Aladin aladin;
 
-   protected HipsTree(Aladin aladin) {
+   protected RegTree(Aladin aladin) {
       this.aladin = aladin;
       createTree();
    }
@@ -297,7 +297,7 @@ public class HipsTree extends JTree {
          
          // S'il s'agit d'un noeud non terminal, on va le mémoriser pour pouvoir
          // le résinsérer à la bonne place le cas échéant
-         if( !(treeObj instanceof TreeObjHips) ) memorizeOldBranche(treeObj);
+         if( !(treeObj instanceof TreeObjReg) ) memorizeOldBranche(treeObj);
          
          parent.remove(index);
          fils = node;
@@ -478,8 +478,8 @@ public class HipsTree extends JTree {
             lab.setText("<html>"+lab.getText()+s+"</html>" );
          }
          
-         if( n instanceof TreeObjHips ) {
-            TreeObjHips hips = (TreeObjHips)n;
+         if( n instanceof TreeObjReg ) {
+            TreeObjReg hips = (TreeObjReg)n;
 //            if( hips.isLocal() )  c.setForeground(Color.black);
             ImageIcon icon = getIcon(hips.internalId,hips.isColored() ? 1 : 0);
             if( icon!=null ) nonLeafRenderer.setIcon( icon );

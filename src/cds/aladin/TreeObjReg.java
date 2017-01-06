@@ -49,7 +49,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 2.0 Janvier 2017 - désormais utilisé pour le HipsStore
  */
-public class TreeObjHips extends TreeObj {
+public class TreeObjReg extends TreeObj {
 
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
@@ -89,7 +89,7 @@ public class TreeObjHips extends TreeObj {
 
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
-   public TreeObjHips(Aladin aladin,String pathOrUrl) throws Exception {
+   public TreeObjReg(Aladin aladin,String pathOrUrl) throws Exception {
       String s;
       this.aladin = aladin;
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
@@ -279,7 +279,7 @@ public class TreeObjHips extends TreeObj {
 
    /** Création à partir d'un fichier de properties (ne supporte que HiPS 1.3 car dédié
     * principalement à des enregistrements issues du MocServer */
-   public TreeObjHips(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
+   public TreeObjReg(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
       String s;
 
       this.aladin = aladin;
@@ -395,7 +395,7 @@ public class TreeObjHips extends TreeObj {
    }
 
    /** Création à partir d'un enregistrement GLU */
-   public TreeObjHips(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
+   public TreeObjReg(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
          String aladinHpxParam,String skyFraction) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
@@ -701,7 +701,7 @@ public class TreeObjHips extends TreeObj {
       double rad = aladin.view.getCurrentView().getTaille();
       if( rad>1 ) rad=1;
       String trg = aladin.view.getCurrentView().getCentre();
-      String cmd = "get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
+      String cmd = internalId+" = get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
       aladin.execAsyncCommand(cmd);
    }
 
@@ -765,6 +765,32 @@ public class TreeObjHips extends TreeObj {
       String catId = internalId.substring(off1+1, off2);
       String url = aladin.glu.gluResolver("getDMap",catId,false);
       aladin.execAsyncCommand("'DM "+label+"'=load "+url);
+   }
+   
+   void queryByMoc() {
+      ServerMocQuery serverMoc = new ServerMocQuery(aladin);
+      
+      // Détermination du PlanMoc
+      PlanMoc planMoc=null;
+      for( Object p : aladin.calque.getSelectedPlanes() ) {
+         if( p instanceof PlanMoc ) { planMoc=(PlanMoc)p; break; }
+      }
+      if( planMoc==null ) {
+         aladin.warning("You need to select a MOC plane in the stack");
+         return;
+      }
+      serverMoc.setPlanMoc(planMoc);
+      
+      // Positionnement de l'identificateur du catalog
+      int i = internalId.indexOf('/');
+      String catName = internalId.substring(i+1);
+      serverMoc.setCatName(catName);
+      
+      // Postionnement du label du plan à créer
+      serverMoc.setPlanName(internalId);
+      
+      // Et c'est parti
+      serverMoc.submit();
    }
 
    void setUrl(String url) { this.url=url; }
