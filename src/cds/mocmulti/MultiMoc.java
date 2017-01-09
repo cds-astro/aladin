@@ -890,17 +890,34 @@ public class MultiMoc implements Iterable<MocItem> {
          return false;
       }
       char c = mask.charAt(0);
+      
+      // Inégalité ?
       if( c=='>' || c=='<' ) {
          mask = mask.substring(1);
          boolean strict=true;
          if( mask.startsWith("=") ) { strict=false;  mask = mask.substring(1); }
-         if( MyProperties.testInequality(c,strict,mask,value) ) return true;
-      } else {
-         if( mask.charAt(0)=='!' ) { match=false; mask=mask.substring(1); }
-         if( !casesens ) { mask=mask.toUpperCase(); value=value.toUpperCase(); }
-         if( MyProperties.matchMask(mask,value)==match ) return true;
+         return MyProperties.testInequality(c,strict,mask,value);
       }
-      return false;
+      
+      // Une différence plutôt qu'une égalité ?
+      if( mask.charAt(0)=='!' ) { match=false; mask=mask.substring(1); }
+      
+      // Intervalle ?
+      int i = mask.indexOf("..");
+      if( i>0 ) {
+         try {
+            Double min = Double.parseDouble( mask.substring(0,i).trim() );
+            Double max = Double.parseDouble( mask.substring(i+2).trim() );
+            Double val = Double.parseDouble( value.trim() );
+            return (min<=val && val<=max) == match;
+            
+         } catch( Exception e ) { }
+      }
+      
+      // Prise en compte de la case ?
+      if( !casesens ) { mask=mask.toUpperCase(); value=value.toUpperCase(); }
+      
+      return MyProperties.matchMask(mask,value) == match;
    }
    
    /**
@@ -1015,7 +1032,7 @@ public class MultiMoc implements Iterable<MocItem> {
       boolean terminal=false;// true si l'expression de sélection est terminal dans l'arbre des expressions 
                              // (pas d'opérateur ni de parenthèse interne)
       // Juste pour débogage
-      public String toString() { return expr+(logic==2?"&!": logic==0?"&&": logic==1?"||": ""); }
+      public String toString() { return expr+(logic==2?"&!": logic==0?"||": logic==1?"&&": ""); }
    }
    
    /**
@@ -1173,9 +1190,6 @@ public class MultiMoc implements Iterable<MocItem> {
       Op op = new Op();
       int pos=getOp(op,a,0);
       
-      // Peaufinage de syntaxe (!=, >, < )
-      if( op.terminal ) op.expr = adjustExpr(op.expr);
-      
       if( pos==-1 ) {
          if( !op.terminal ) op = calculExpr(niv+3, stack, op.expr, casesens);
          else {
@@ -1250,6 +1264,9 @@ public class MultiMoc implements Iterable<MocItem> {
    private void initScanItem(Op op, boolean casesens) throws Exception {
       
 //      System.out.println("J'initialise "+op);
+      
+      // Peaufinage de syntaxe (!=, >, < )
+      op.expr = adjustExpr(op.expr);
       
       // Découpage de l'expression terminal en paramètres utilisable par scan(...)
       int pos = op.expr.indexOf('=');
@@ -1392,10 +1409,15 @@ public class MultiMoc implements Iterable<MocItem> {
          System.out.println("Multiprop loaded ("+m.size()+" rec.) in "+(System.currentTimeMillis()-t0)+"ms...");
 
          
+//         moc_order=8  hips_order=11
+//               9 .. 12
+
+
+         
 //         String s2 = "client_application=* &! data*type=catalog";
 //         String s2 = "obs_title,ID=!CDS/B/denis/denis,!CDS/C/CALIFA/V500/DR2";
 //         String s2 = "CDS/P/DSS2/Color || CDS/B/denis/Denis";
-         String s2 = "associated_data_product=!image && obs_regime=Optical || ID=CDS*";
+         String s2 = "moc_order<9 && CDS/B/denis/denis";
         
          System.out.println("calculer: "+s2);
          

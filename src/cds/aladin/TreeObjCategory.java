@@ -47,8 +47,11 @@ public class TreeObjCategory extends TreeObj {
       if( aladinUrlDemo!=null ) setExUrl(aladinUrlDemo);
    }
 
-   @Override
-   protected void loadHips() {
+//   @Override
+//   protected void loadHips() {
+//      aladin.calque.newPlan(aladin.glu.getURL(id)+"",label,origin);
+//   }
+   protected void submit() { 
       aladin.calque.newPlan(aladin.glu.getURL(id)+"",label,origin);
    }
 

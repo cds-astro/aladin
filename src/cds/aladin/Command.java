@@ -264,7 +264,7 @@ public final class Command implements Runnable {
       //      // Contournement Bug Windows JAVA 1.1.8 sur le read bloquant après available()==1
       //      if( Aladin.BUGPARAD118 ) { execScript(a.pad.popCmd()); return; }
 
-      if( sleepFlag )thread.interrupt();
+      if( sleepFlag ) thread.interrupt();
    }
 
    synchronized private void setFlagSleep(boolean flag) { sleepFlag=flag; }
@@ -2863,7 +2863,6 @@ public final class Command implements Runnable {
       return execScript(s,true,false);
    }
    synchronized public String execScript(String s,boolean verbose,boolean flagOnlyFunction) {
-      
       
       //      StringTokenizer st = new StringTokenizer(s,";\n\r");
       // thomas, 16/11/06 : permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)

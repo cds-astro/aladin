@@ -11,6 +11,8 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
@@ -28,12 +30,14 @@ import java.util.Iterator;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -63,10 +67,11 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    private ArrayList<TreeObjReg> listReg;  // Liste des noeuds potentiels de l'arbre
    
    // Composantes de l'interface
-   private JButton filter;    // Bouton d'ouverture du formulaire de filtrage
-   protected Prune prune;     // L'icone d'activation du mode "élagage"
-   private Collapse collapse; // L'icone pour développer/réduire l'arbre
-   private Timer timer = null;// Timer pour le réaffichage lors du chargement
+   private JTextField quickFilter; // Champ de filtrage rapide
+   private JButton filter;        // Bouton d'ouverture du formulaire de filtrage
+   protected Prune prune;         // L'icone d'activation du mode "élagage"
+   private Collapse collapse;     // L'icone pour développer/réduire l'arbre
+   private Timer timer = null;    // Timer pour le réaffichage lors du chargement
    
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
 //   private static String  MOCSERVER_INIT = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")+"&hips_service_url=*&get=record"; //&fmt=glu";
@@ -102,12 +107,26 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       
       JPanel p2 = new JPanel( new FlowLayout());
       p2.setBackground(aladin.getBackground());
-      filter = new JButton("filter...");
+      
+      filter = new JButton("filter:");
+      filter.setMargin(new Insets(1,3,1,2));
+      filter.setToolTipText("Advanced collection filter....");
       filter.setEnabled(false);
       filter.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { filtre(); }
       });
       p2.add(filter);
+      
+      quickFilter = new JTextField(6);
+      quickFilter.setToolTipText("Quick filter by key words");
+      quickFilter.addKeyListener(new KeyListener() {
+         public void keyTyped(KeyEvent e) { }
+         public void keyPressed(KeyEvent e) { }
+         public void keyReleased(KeyEvent e) {
+            if( e.getKeyCode()==KeyEvent.VK_ENTER ) quickFiltre();
+         }
+      });
+      p2.add(quickFilter);
       
       JPanel control = new JPanel(new BorderLayout());
       control.setBackground(aladin.getBackground());
@@ -199,10 +218,18 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       frameInfo.setVisible(true);
    }
    
-   /** Création/ouverture du formulaire de filtrage de l'arbre des Collections */
+   /** Création/ouverture/fermeture du formulaire de filtrage de l'arbre des Collections */
    private void filtre() {
       if( regFilter==null ) regFilter = new RegFilter(aladin);
-      regFilter.showFilter();
+      if( regFilter.isVisible() ) regFilter.setVisible(false);
+      else regFilter.showFilter();
+   }
+   
+   /** Filtrage basique de l'arbre des Collections */
+   private void quickFiltre() {
+      if( regFilter==null ) regFilter = new RegFilter(aladin);
+      regFilter.setFreeText( quickFilter.getText() );
+      regFilter.submit();
    }
    
    /**
@@ -343,10 +370,13 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          validate();
          postTreeProcess();
          System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
-      } finally { setTreeReady( true ); }
-      
-      // Pour permettre le changement du curseur d'attente de la fenêtre de filtrage
-      if( regFilter!=null ) aladin.makeCursor(regFilter, Aladin.DEFAULTCURSOR);
+      } finally {
+         setTreeReady( true );
+
+         // Pour permettre le changement du curseur d'attente de la fenêtre de filtrage
+         if( regFilter!=null ) aladin.makeCursor(regFilter, Aladin.DEFAULTCURSOR);
+      }
+
    }
    
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
@@ -472,6 +502,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    private void postTreeProcess() {
       
       filter.setEnabled( dialogOk() );
+      regTree.minimalExpand();
       
       // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des Collections
       // présentes ou non dans la vue courante
@@ -826,7 +857,9 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          } catch( Exception e) {
             if( !aladin.glu.checkIndirection("MocServer", null) ) throw e;
             u = aladin.glu.getURL("MocServer", params, true).toString();
-            in = Util.openStream(u,false,-1);
+            try {
+               in = Util.openStream(u,false,-1);
+            } catch( EOFException e1 ) { eof=true; }
          }
          
          int n = 0;
@@ -1002,6 +1035,15 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          
          if( treeObjs.size()>1 )  {
             a = new MyAnchor(aladin,treeObjs.size()+" collections selected",50,null,null);
+            a.setFont(a.getFont().deriveFont(Font.PLAIN));
+            PropPanel.addCouple(p,null, a, g,c);
+            StringBuilder list = null;
+            for( TreeObjReg to1 : treeObjs ) {
+               if( list==null ) list = new StringBuilder(to1.internalId);
+               else list.append(", "+to1.internalId);
+            }
+            a = new MyAnchor(aladin,list.toString(),100,null,null);
+            a.setForeground(Aladin.GREEN);
             PropPanel.addCouple(p,null, a, g,c);
             
          } else {
@@ -1062,12 +1104,17 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             }
             if( to.isCatalog() ) {
                boolean allCat = nbRows<2000;
-               ButtonGroup bg = new ButtonGroup();
-               if( nbRows!=-1 && nbRows<10000 ) {
+               NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
+               if( hipsBx!=null ) bg.add(hipsBx);
+               
+               boolean hasView = !aladin.view.isFree();
+               boolean hasMoc = aladin.calque.getNbPlanMoc()>0;
+               
+               if( nbRows!=-1 && nbRows<100000 ) {
                   allBx = bx = new JCheckBox("All sources");
                   mocAndMore.add(bx);
                   bx.setSelected(to.getUrl()==null && allCat );
-                  bx.setToolTipText("Load all sources (small catalog/table <10000)");
+                  bx.setToolTipText("Load all sources (small catalog/table <100000)");
                   bg.add(bx);
                } 
 
@@ -1075,15 +1122,26 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
                mocAndMore.add(bx);
                bx.setSelected(to.getUrl()==null && !allCat);
                bx.setToolTipText("Cone search on the current view");
+               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
                bg.add(bx);
                
                msBx = bx = new JCheckBox("Query by MOC");
                mocAndMore.add(bx);
-               bx.setSelected(false);
                bx.setToolTipText("Load all sources inside the selected MOC in the stack");
+               bx.setEnabled( hasMoc );
                bg.add(bx);
-            
+               
+               // Positionnement de la sélection par défaut
+               boolean onMoc = aladin.calque.getFirstSelectedPlan() instanceof PlanMoc;
+               if( onMoc && msBx!=null ) msBx.setSelected(true);
+               else if( allBx!=null && nbRows<10000 ) allBx.setSelected(true);
+               else if( csBx.isEnabled() ) csBx.setSelected(true); 
             }
+            
+            JLabel l = new JLabel(" + ");
+            l.setForeground(Color.lightGray);
+            mocAndMore.add(l);
+            
             mocBx = bx = new JCheckBox("Coverage"); 
             mocAndMore.add(bx); 
             bx.setToolTipText("MultiOrder Coverage map (MOC)");
@@ -1106,7 +1164,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
 
          JPanel control = new JPanel( new FlowLayout(FlowLayout.CENTER,6,2) );
          control.setBackground( contentPane.getBackground() );
-         JButton b = new JButton("Load"); b.setMargin( new Insets(2,4,2,4));
+         JButton b = new JButton(treeObjs.size()>1?"Load all":"Load"); b.setMargin( new Insets(2,4,2,4));
          b.setFont(b.getFont().deriveFont(Font.BOLD));
          control.add(b);
          b.addActionListener(new ActionListener() {
@@ -1135,7 +1193,15 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          contentPane.validate();
       }
       
+      private class NoneSelectedButtonGroup extends ButtonGroup {
+         public void setSelected(ButtonModel model, boolean selected) {
+           if (selected)  super.setSelected(model, selected);
+           else clearSelection();
+         }
+       }
+      
       void submit() {
+         if( treeObjs.size()==0 ) return;
          if( treeObjs.size()==1 ) {
             TreeObjReg to = treeObjs.get(0);
             if( allBx!=null  && allBx.isSelected() )   to.loadAll();
@@ -1146,7 +1212,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
             if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
          } else {
-            System.out.println("Je dois charger "+treeObjs.size()+" data sets...");
+            for( TreeObjReg to : treeObjs ) to.load();
          }
       }
    }

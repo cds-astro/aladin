@@ -696,13 +696,17 @@ public class TreeObjReg extends TreeObj {
    }
    
    protected void loadCS() {
-      int i = internalId.indexOf('/');
-      String cat = internalId.substring(i+1);
-      double rad = aladin.view.getCurrentView().getTaille();
-      if( rad>1 ) rad=1;
-      String trg = aladin.view.getCurrentView().getCentre();
-      String cmd = internalId+" = get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
-      aladin.execAsyncCommand(cmd);
+      try {
+         int i = internalId.indexOf('/');
+         String cat = internalId.substring(i+1);
+         double rad = aladin.view.getCurrentView().getTaille();
+         if( rad>1 ) rad=1;
+         String trg = aladin.view.getCurrentView().getCentre();
+         String cmd = internalId+" = get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
+         aladin.execAsyncCommand(cmd);
+      } catch( Exception e ) {
+         aladin.warning(e.getMessage()==null?"Cone search error":e.getMessage());
+      }
    }
 
    protected void loadAll() {
@@ -788,6 +792,10 @@ public class TreeObjReg extends TreeObj {
       
       // Postionnement du label du plan à créer
       serverMoc.setPlanName(internalId);
+      
+      // Pas de limitation
+//      serverMoc.setLimit("unlimited");
+      serverMoc.setLimit("5000000");
       
       // Et c'est parti
       serverMoc.submit();

@@ -1338,7 +1338,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    public void show() {
       super.show();
-      if( !aladin.PROTO ) startHipsUpdater();
+//      if( !aladin.PROTO ) startHipsUpdater();
    }
 
    public void hide() {

@@ -193,7 +193,7 @@ public class ServerHips extends ServerTree  {
                while( (s=in.readLine())!=null ) set.add( getId(s) );
 
                // Nettoyage préalable de l'arbre
-               for( TreeObjReg gSky : aladin.glu.vHips ) gSky.isIn=0;
+               for( TreeObjReg gSky : aladin.glu.vHips ) gSky.isIn=-1;
 
                // Positionnement des datasets dans le champ
                for( TreeObjReg gSky : aladin.glu.vHips ) {
@@ -208,7 +208,7 @@ public class ServerHips extends ServerTree  {
                if( c!=null ) {
                   TreeObj n = (TreeObj)c.getCellEditorValue();
                   if( n!=null &&  n.hasCheckBox() ) {
-                     if( n.getIsIn()==1 ) n.checkbox.setForeground(Color.black);
+                     if( n.isIn() ) n.checkbox.setForeground(Color.black);
                      else n.checkbox.setForeground(Color.lightGray);
                   }
                }

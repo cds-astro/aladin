@@ -60,8 +60,6 @@ public class ServerMocQuery extends Server  {
     private JTextField textCat;
     private JComboBox comboMaxNbRows;
 
-
-
   /** Initialisation des variables propres à MocQuery */
    protected void init() {
       type    = CATALOG;
@@ -232,6 +230,13 @@ public class ServerMocQuery extends Server  {
       if( planName!=null ) return planName;
       return getCatName() + " MOC query";
    }
+   
+   private String limit=null;
+   protected void setLimit(String limit) { this.limit=limit; }
+   private String getLimit() {
+      if( limit!=null ) return limit;
+      return comboMaxNbRows.getSelectedItem().toString();
+   }
 
    private void submitThread() {
        waitCursor();
@@ -254,6 +259,7 @@ public class ServerMocQuery extends Server  {
            Aladin.warning("No MOC selected !");
            return;
        }
+       aladin.trace(4,"Sending MOC...");
        try {
            MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
            String boundary = MultiPartPostOutputStream.createBoundary();
@@ -277,7 +283,8 @@ public class ServerMocQuery extends Server  {
            out.writeField("catName", catName);
            out.writeField("mode", "mocfile");
            out.writeField("format", "votable");
-           String limit = comboMaxNbRows.getSelectedItem().toString();
+//           String limit = comboMaxNbRows.getSelectedItem().toString();
+           String limit = getLimit();
            if ( ! limit.equals("unlimited")) {
                limit = limit.replaceAll(",", "");
                out.writeField("limit", limit);
@@ -299,8 +306,10 @@ public class ServerMocQuery extends Server  {
            out.writeFile("mocfile", null, tmpMoc, false);
 
            out.close();
+           aladin.trace(4,"moc file sent");
 
            aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), getPlanName());
+           
        }
        catch(Exception ioe) {
            defaultCursor();

@@ -5597,7 +5597,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Retourne true si le dialog est prêt */
    protected boolean dialogOk() {
-      return dialog!=null && calque!=null && hipsStore!=null && hipsStore.dialogOk() ;
+      if( Aladin.PROTO ) return dialog!=null && calque!=null && hipsStore!=null && hipsStore.dialogOk() ;
+      return dialog!=null && calque!=null;
    }
 
    /** Chargement d'un fichier passé en paramètre */

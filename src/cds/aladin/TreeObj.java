@@ -81,6 +81,10 @@ public class TreeObj  implements Comparator {
    void setIn( int in ) { this.isIn=in; };
    int getIsIn() { return isIn; }
    
+   // Juste pour compatibilité avec la version 9 => A VIRER
+   boolean isIn() { return isIn!=0; }
+   void setIn( boolean flag) { isIn= (flag ? 1 : 0); }
+   
    void setHidden( boolean flag ) { this.isHidden=flag; };
    boolean isHidden() { return isHidden; }
    
@@ -117,7 +121,8 @@ public class TreeObj  implements Comparator {
       return panel;
    }
 
-   protected void loadHips() { };
+//   protected void loadHips() { };
+   protected void submit() {};
 
    @Override
    public String toString() { return label; }

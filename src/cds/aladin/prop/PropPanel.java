@@ -188,7 +188,8 @@ public class PropPanel extends JPanel {
       l.setFont(l.getFont().deriveFont(Font.BOLD));
       c.gridwidth = GridBagConstraints.REMAINDER;
       c.anchor = GridBagConstraints.WEST;
-      c.weightx = 1.0;
+      c.fill = GridBagConstraints.BOTH;
+//      c.weightx = 1.0;
       g.setConstraints(l,c);
       p.add(l);
    }

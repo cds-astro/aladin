@@ -20,8 +20,10 @@
 
 package cds.aladin;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -31,6 +33,8 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,10 +48,14 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import cds.aladin.prop.PropPanel;
 import cds.mocmulti.MocItem;
+import cds.tools.Util;
 
 /**
  * Classe qui gère le formulaire de filtrage de l'arbre HiPS
@@ -56,7 +64,6 @@ import cds.mocmulti.MocItem;
  */
 public final class RegFilter extends JFrame implements ActionListener {
    
-   private boolean first=true;
    private Aladin  aladin;  // référence externe
    
    // Préfixe des paramètres de filtrage des HiPS par le MocServer
@@ -68,27 +75,59 @@ public final class RegFilter extends JFrame implements ActionListener {
       super();
       this.aladin = aladin;
       
-//      Aladin.setIcon(this);
-//      enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-//      Util.setCloseShortcut(this, false,aladin);
+      Aladin.setIcon(this);
+      setTitle("Collection registry filter");
+      enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+      Util.setCloseShortcut(this, false,aladin);
       
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       JPanel contentPane = (JPanel)getContentPane();
       contentPane.setLayout( new BorderLayout(5,5)) ;
       contentPane.setBackground( new Color(240,240,250));
-      contentPane.setBorder( BorderFactory.createLineBorder(Color.black));
-      setUndecorated(true);
+//      contentPane.setBorder( BorderFactory.createLineBorder(Color.black));
+//      setUndecorated(true);
       setAlwaysOnTop(true);
+      
+      JPanel exprPanel = createExpPanel();
+      MySplitPane splitPanel = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, createPanel(), exprPanel, 1);
+      splitPanel.setBorder( BorderFactory.createEmptyBorder());
+//      exprPanel.setMinimumSize( new Dimension(400,200) );
+      
+      Aladin.makeAdd(getContentPane(), splitPanel, "Center");
+      Aladin.makeAdd(getContentPane(), getValidPanel(), "South");
+      pack();
+   }
+   
+   private JTextArea exprArea;
+   private boolean inArea=false;
+   
+   /** Création du panel de l'expression correspondant au filtre courant */
+   private JPanel createExpPanel() {
+      JPanel areaPanel = new JPanel( new BorderLayout() );
+      areaPanel.setBackground( new Color(240,240,250));
+      exprArea = new JTextArea(3,60);
+      exprArea.setLineWrap(true);
+      exprArea.addKeyListener(new KeyListener() {
+         public void keyTyped(KeyEvent e) { }
+         public void keyPressed(KeyEvent e) { inArea=true; }
+         public void keyReleased(KeyEvent e) {
+            if( e.getKeyCode()==KeyEvent.VK_ENTER ) submitArea();
+         }
+      });
+      areaPanel.add( exprArea, BorderLayout.CENTER );
+      return areaPanel;
    }
 
    /** Construction du panel des boutons de validation */
-   protected JPanel getValidPanel() {
+   private JPanel getValidPanel() {
       JPanel p = new JPanel();
       p.setLayout( new FlowLayout(FlowLayout.CENTER));
       JButton b;
       p.add( b=new JButton("Apply")); 
       b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { submitLocal(); }
+         public void actionPerformed(ActionEvent e) { 
+            if( inArea ) submitArea();
+            else submitLocal(); }
       });
       b.setFont(b.getFont().deriveFont(Font.BOLD));
       p.add( b=new JButton("Reset"));
@@ -107,6 +146,25 @@ public final class RegFilter extends JFrame implements ActionListener {
          private int ascending;
          public int compare(K k1, K k2) {
             int compare = map.get(k2).compareTo(map.get(k1));
+            if (compare == 0) return 1;
+            else return ascending*compare;
+         }
+         public Comparator<K> setParam(int ascending) {
+            this.ascending = ascending;
+            return this;
+         }
+      }.setParam(ascending);
+
+      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      sortedByValues.putAll(map);
+      return sortedByValues;
+   }
+
+   <K extends Comparable<K>, V> Map<K, V> sortAlpha(final Map<K, V> map, int ascending) {
+      Comparator<K> valueComparator =  new Comparator<K>() {         
+         private int ascending;
+         public int compare(K k1, K k2) {
+            int compare = k2.compareTo(k1);
             if (compare == 0) return 1;
             else return ascending*compare;
          }
@@ -144,21 +202,23 @@ public final class RegFilter extends JFrame implements ActionListener {
          }
       }
       
-      Map<String, Integer> map1  = sortByValues(map, 1);
+      Map<String, Integer> map1  = max==-1 ? sortAlpha(map,-1) : sortByValues(map, 1);
       
       int p=0;
       StringBuilder others=new StringBuilder();
       for( String k : map1.keySet() ) {
         int n = map.get(k);
         String lab = k.length()>11 ? k.substring(0, 8)+"..." : k;
-        JCheckBox bx = new JCheckBox( lab,true);
+        JCheckBox bx = new JCheckBox( lab,max>=0);
         bx.setToolTipText(k);
-        String vm = (addLogic ? "!":"")+ k + (delim==null?"":delim+"*");
+        String vm = (max>0 && addLogic ? "!":"")+ k + (delim==null?"":delim+"*");
         bx.setActionCommand((addLogic?"":"-")+key+"="+vm);
         bx.addActionListener(this);
         vBx.add( bx );
-        if( others.length()>0 ) others.append(',');
-        others.append(vm);
+        if( max>0 ) {
+           if( others.length()>0 ) others.append(',');
+           others.append(vm);
+        }
         
         p+=n;
         if( max>0 && vBx.size()>=max ) {
@@ -172,15 +232,31 @@ public final class RegFilter extends JFrame implements ActionListener {
         }
       }
       
-      JPanel panel = new JPanel( new GridLayout(0,4) );
+      JPanel panel= new JPanel();
       
-      panel.setBorder( BorderFactory.createLineBorder(Color.lightGray));
-      for( JCheckBox bx : vBx ) panel.add(bx);
+      if( vBx.size()<12 ) {
+         panel.setLayout( new GridLayout(0,4) );
+         panel.setBorder( BorderFactory.createLineBorder(Color.lightGray));
+         for( JCheckBox bx : vBx ) panel.add(bx);
+         
+      } else {
+         JPanel p1 = new JPanel( new GridLayout(0,2) );
+         p1.setBorder( BorderFactory.createLineBorder(Color.lightGray));
+         for( JCheckBox bx : vBx ) {
+            bx.setText( bx.getToolTipText() );
+            p1.add(bx);
+         }
+        
+         JScrollPane scrollPane = new JScrollPane(p1, 
+               JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+         scrollPane.setPreferredSize( new Dimension(320,100) );
+         panel.add( scrollPane);
+      }
       
       JButton b = new JButton("none");
       JPanel p1 = new JPanel( new BorderLayout(0,0) );
       p1.add(b,BorderLayout.CENTER);
-      panel.add( p1 );
+      if( max>0 ) panel.add( p1 );
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             boolean flag = ((JButton)e.getSource()).getText().equals("none");
@@ -192,90 +268,108 @@ public final class RegFilter extends JFrame implements ActionListener {
       return panel;
    }
    
-   
    private void addParam( HashMap<String, String []> params, String key, String val ) {
       String v [] = params.get(key);
       if( v==null || v.length==0 ) params.put(key,new String[]{val});
       else {
-         if( key.startsWith("-") ) {
-            v[v.length-1] = v[v.length-1]+","+val;
-         } else {
-            String [] v1 = new String[ v.length+1 ];
-            System.arraycopy(v, 0, v1, 0, v.length);
-            v1[v1.length-1]=val;
-            params.put(key,v1);
-         }
+         String [] v1 = new String[ v.length+1 ];
+         System.arraycopy(v, 0, v1, 0, v.length);
+         v1[v1.length-1]=val;
+         params.put(key,v1);
       }
    }
    
-   private void addParam( HashMap<String, String []> in, HashMap<String, String []> out, String s) {
+   private void addParam( HashMap<String, String []> inclu, HashMap<String, String []> exclu, String s) {
       int i = s.indexOf('=');
       if( i==-1 ) return;
       String val = s.substring(i+1);
       if( s.charAt(0)=='-' ) {
-         addParam( out, s.substring(1,i), val );
+         addParam( exclu, s.substring(1,i), val );
       } else {
-         addParam( in, s.substring(0,i), val );
+         addParam( inclu, s.substring(0,i), val );
       }
+   }
+   
+   private void submitArea() {
+      String expr = exprArea.getText();
+      aladin.hipsStore.resumeFilter(expr);
    }
       
    /** Excécution du filtrage (génération de la requête MocServer correspondante au formulaire
     * puis appel au MocServer */
    private void submitLocal() {
-      HashMap<String, String []> in = new HashMap<String, String[]>();
-      HashMap<String, String []> out = new HashMap<String, String[]>();
+      HashMap<String, String []> inclu = new HashMap<String, String[]>();
+      HashMap<String, String []> exclu = new HashMap<String, String[]>();
       
       StringBuilder special = new StringBuilder();
       
-      if( !bxImage.isSelected() )      addParam(out,"client_category","Image*");
-      if( !bxCube.isSelected() )       addParam(out,"client_category","Cube*");
-      if( !bxCatalog.isSelected() )    addParam(out,"client_category","Catalog*");
-      if( !bxJournal.isSelected() )    addParam(out,"client_category","Journal*");
-      if( !bxMisc.isSelected() )       addParam(in,"client_category","Catalog*,Image*,Cube*,Journal*");
+      if( !bxImage.isSelected() )     addParam(exclu,"client_category","Image*");
+      if( !bxCube.isSelected() )      addParam(exclu,"client_category","Cube*");
+      if( !bxCatalog.isSelected() )   addParam(exclu,"client_category","Catalog*");
+      if( !bxJournal.isSelected() )   addParam(exclu,"client_category","Journal*");
+      if( !bxOtherType.isSelected() )      addParam(inclu,"client_category","Catalog*,Image*,Cube*,Journal*");
       
-      if( !bxGammaRay.isSelected() )  addParam(out,"obs_regime","Gamma-ray");
-      if( !bxXray.isSelected() )      addParam(out,"obs_regime","X-ray");
-      if( !bxUV.isSelected() )        addParam(out,"obs_regime","UV");
-      if( !bxOptical.isSelected() )   addParam(out,"obs_regime","Optical");
-      if( !bxInfrared.isSelected() )  addParam(out,"obs_regime","Infrared");
-      if( !bxRadio.isSelected() )     addParam(out,"obs_regime","Radio");
-      if( !bxGasLines.isSelected() )  addParam(out,"client_category","Image/Gas-lines/*");
+      if( !bxGammaRay.isSelected() )  addParam(exclu,"obs_regime","Gamma-ray");
+      if( !bxXray.isSelected() )      addParam(exclu,"obs_regime","X-ray");
+      if( !bxUV.isSelected() )        addParam(exclu,"obs_regime","UV");
+      if( !bxOptical.isSelected() )   addParam(exclu,"obs_regime","Optical");
+      if( !bxInfrared.isSelected() )  addParam(exclu,"obs_regime","Infrared");
+      if( !bxRadio.isSelected() )     addParam(exclu,"obs_regime","Radio");
+      if( !bxGasLines.isSelected() )  addParam(exclu,"client_category","Image/Gas-lines/*");
 
-      if( bxPixFull.isSelected() )     special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
-      if( bxPixColor.isSelected() )    special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
+      if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
+      if( bxPixColor.isSelected() )   special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
       
-      for( JCheckBox bx : authVbx )    if( !bx.isSelected() ) addParam( in,out, bx.getActionCommand() );
-      for( JCheckBox bx : missionVbx ) if( !bx.isSelected() ) addParam( in,out, bx.getActionCommand() );
-      for( JCheckBox bx : assdataVbx ) if( !bx.isSelected() ) addParam( in,out, bx.getActionCommand() );
+      for( JCheckBox bx : authVbx )    if( !bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
       
-      if( bxSmallCat.isSelected() )   special.append(" &! nb_rows=>999");
-      if( bxBigCat.isSelected() )     special.append(" &! nb_rows=<999999");
+      HashMap<String, String []> inclu1 = new HashMap<String, String[]>();
+      for( JCheckBox bx : catkeyVbx ) if( bx.isSelected() )  addParam( inclu1,exclu, bx.getActionCommand() );
+      if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
+      
+      inclu1 = new HashMap<String, String[]>();
+      for( JCheckBox bx : assdataVbx ) if( bx.isSelected() ) addParam( inclu1,exclu, bx.getActionCommand() );
+      if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
       
       String s;      
-      if( (s=getText(tfCoverage)).length()!=0 )  special.append(" && moc_sky_fraction="+s);
       if( (s=getText(tfDescr)).length()!=0 )     special.append(" && obs_title,obs_description,obs_collection,ID=*"+s+"*");
+      if( (s=getText(tfCoverage)).length()!=0 )  special.append(" && moc_sky_fraction="+s);
       if( (s=getText(tfHiPSorder)).length()!=0 ) special.append(" && (hips_order="+s+"|| hips_service_url=!*)");
-      if( (s=getText(tfUCD)).length()!=0 )       addParam(out,"data_ucd",s);
+      if( (s=getText(tfUCD)).length()!=0 )       addParam(exclu,"data_ucd",s);
+      if( (s=getText(tfCatNbRow)).length()!=0 )  special.append(" && (dataproduct_type!=catalog || nb_rows="+s+")");
       
-//      if( (s=getText(tfFree)).length()!=0 )      addParam(params,s);
+      if( (s=getText(tfMinDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_min>="+s : " && (t_min>="+s+" || t_min!=*)");
+      if( (s=getText(tfMaxDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_max<="+s : " && (t_max<="+s+" || t_max!=*)");
       
-      String is = rebuildExpr(in);
-      String es = rebuildExpr(out);
+      String incluS = rebuildInclu(inclu);
+      String excluS = rebuildExclu(exclu);
       
-      String expr = is.length()==0 ? "*" : is;
-      if( es.length()>0 ) expr = "("+expr+") &! ("+es+")";
-      if( special.length()>0 ) expr="("+expr+")"+special;
+      String expr="";
+      if( excluS.length()>0 ) {
+         if( incluS.length()>0 ) expr = "("+incluS+") && "+excluS;
+         else expr = excluS;
+      } else {
+         if( incluS.length()>0 ) expr = incluS;
+      }
+      if( special.length()>0 ) {
+         if( expr.length()>0 ) expr = "("+expr+")"+special;
+         else {
+            if( special.toString().startsWith(" && ") ) expr = special.substring(4);
+            else expr = "*"+special;
+         }
+      }
       
-      // Pour faire des tests
-      if( (s=getText(tfFree)).length()!=0 ) expr=s;
+//      String expr = incluS.length()==0 ? "*" : incluS;
+//      if( excluS.length()>0 ) expr = "("+expr+") && ("+excluS+")";
+//      if( special.length()>0 ) expr="("+expr+")"+special;
       
       Aladin.trace(3,"Filtering: "+expr);
       
+      exprArea.setText( expr );
       repaint();
-      aladin.hipsStore.resumeFilter(expr);
+      aladin.hipsStore.resumeFilter(expr.length()==0 ? "*" : expr);
    }
    
-   private String rebuildExpr(HashMap<String,String[]> exclusion) {
+   private String rebuildInclu(HashMap<String,String[]> exclusion) {
       StringBuilder expr = new StringBuilder();
       for( String k : exclusion.keySet() ) {
          if( expr.length()>0 )  expr.append(" || ");
@@ -290,52 +384,61 @@ public final class RegFilter extends JFrame implements ActionListener {
       return expr.toString().trim();
    }
 
+   private String rebuildExclu(HashMap<String,String[]> exclusion) {
+      StringBuilder expr = new StringBuilder();
+      for( String k : exclusion.keySet() ) {
+         if( expr.length()>0 )  expr.append(" && ");
+         expr.append(k+"!=");
+         boolean first=true;
+         for( String v : exclusion.get(k)) {
+            if( !first ) expr.append(",");
+            first=false;
+            expr.append(v);
+         }
+      }
+      return expr.toString().trim();
+   }
    
    /** Retourne le string d'un JtextField encodé en HTTP */
    private String getText(JTextField tf) { return tf.getText().trim(); }
    
    /** Affichage du panel pour permettre à l'utilisateur de modifier son filtre */
    public void showFilter() {
-      if( first ) {
-         setTitle("HiPS tree filter");
-         Aladin.makeAdd(getContentPane(), createPanel1(), "Center");
-         Aladin.makeAdd(getContentPane(), getValidPanel(), "South");
-         pack();
-         first = false;
-      }
-//      setBounds(200,100,400,300);
       Point p = aladin.getLocationOnScreen();
-      p.x+=aladin.hipsStore.getWidth();
-      p.y+=100;
+      p.x+=aladin.hipsStore.getWidth()+5;
+      p.y+=50;
       setLocation( p );
       setVisible(true);
    }
-
-   /** Génération du Panel du formulaire */
-//   private JPanel createPanel() {
-//      JPanel p = new JPanel( new BorderLayout());
-//      JScrollPane sc = new JScrollPane(createPanel1());
-//      p.add(sc,BorderLayout.CENTER);
-//      return p;
-//   }
    
-   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxMisc;
+   class JTextFieldX extends JTextField {
+      JTextFieldX(int n) {
+         super(n);
+         addKeyListener(new KeyListener() {
+            public void keyTyped(KeyEvent e) { }
+            public void keyPressed(KeyEvent e) { }
+            public void keyReleased(KeyEvent e) {
+               if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
+            }
+         });
+      }
+   }
+   
+   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxOtherType;
    private JCheckBox bxGammaRay, bxXray,bxUV,bxOptical,bxInfrared,bxRadio,bxGasLines;
-   private JCheckBox bxBigCat,bxSmallCat;
-   private JCheckBox bxPixFull,bxPixColor;
-   private JTextField tfFree,tfCoverage,tfHiPSorder,tfUCD,tfDescr;
+   private JCheckBox bxPixFull,bxPixColor,bxDate;
+   private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfUCD,tfDescr,tfMinDate,tfMaxDate;
    
-   private Vector<JCheckBox> authVbx,missionVbx,categoryVbx,assdataVbx;
+   private Vector<JCheckBox> authVbx,catkeyVbx,assdataVbx;
    
    /** Reset du formulaire */
    private void reset() {
-      bxBigCat.setSelected(false);
-      bxSmallCat.setSelected(false);
+      bxDate.setSelected(true);
       bxImage.setSelected(true);
       bxCube.setSelected(true);
       bxCatalog.setSelected(true);
       bxJournal.setSelected(true);
-      bxMisc.setSelected(true);
+      bxOtherType.setSelected(true);
       bxGammaRay.setSelected(true);
       bxUV.setSelected(true);
       bxOptical.setSelected(true);
@@ -344,23 +447,27 @@ public final class RegFilter extends JFrame implements ActionListener {
       bxGasLines.setSelected(true);
       bxPixFull.setSelected(false);
       bxPixColor.setSelected(false);
-      tfFree.setText("");
+      tfCatNbRow.setText("");
       tfCoverage.setText("");
       tfHiPSorder.setText("");
       tfUCD.setText("");
       tfDescr.setText("");
+      tfMinDate.setText("");
+      tfMaxDate.setText("");
       
       for( JCheckBox bx : authVbx ) bx.setSelected(true);
-      for( JCheckBox bx : missionVbx ) bx.setSelected(true);
-//      for( JCheckBox bx : categoryVbx ) bx.setSelected(true);
-      for( JCheckBox bx : assdataVbx ) bx.setSelected(true);
+      for( JCheckBox bx : catkeyVbx ) bx.setSelected(false);
+      for( JCheckBox bx : assdataVbx ) bx.setSelected(false);
       
       submitLocal();
    }
    
-
+   protected void setFreeText( String s ) {
+      tfDescr.setText(s);
+   }
+   
    /** Construction du panel du formulaire */
-   private JPanel createPanel1() {
+   protected JPanel createPanel() {
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g = new GridBagLayout();
       c.fill = GridBagConstraints.BOTH;
@@ -374,19 +481,17 @@ public final class RegFilter extends JFrame implements ActionListener {
       p.setLayout(g);
       
       // Description
-      tfDescr = new JTextField(30);
-      (l = new JLabel("Keyword")).setFont(l.getFont().deriveFont(Font.BOLD));
-      PropPanel.addCouple(this, p, l, "keyword in title, description, collection...\n(ex: DENIS)", 
+      tfDescr = new JTextFieldX(30);
+      PropPanel.addCouple(this, p, "Keyword", "keyword in title, description, collection...\n(ex: DENIS)", 
             tfDescr, g, c, GridBagConstraints.EAST);
       
       // Le type de données
-      (l = new JLabel("Data types")).setFont(l.getFont().deriveFont(Font.BOLD));
       subPanel = new JPanel( new GridLayout(0,3));
       subPanel.add( bx=bxImage       = new JCheckBox("Image"));   bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxCube        = new JCheckBox("Cube"));    bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxCatalog     = new JCheckBox("Catalog")); bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxJournal     = new JCheckBox("Journal table"));   bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxMisc        = new JCheckBox("Miscellaneous"));   bx.setSelected(true); bx.addActionListener(this);
+      subPanel.add( bx=bxOtherType   = new JCheckBox("Others"));  bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( b = new JButton("none"));
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -394,21 +499,19 @@ public final class RegFilter extends JFrame implements ActionListener {
             bxCube.setSelected(false);
             bxCatalog.setSelected(false);
             bxJournal.setSelected(false);
-            bxMisc.setSelected(false);
+            bxOtherType.setSelected(false);
          }
       });
 //      categoryVbx = new Vector<JCheckBox>();
 //      subPanel = createFilter(categoryVbx, 6, "client_category", "/");
-      PropPanel.addCouple(this, p, l, "Data type...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Data type", "Collection data type...", subPanel, g, c, GridBagConstraints.EAST);
       
       // Couverture du ciel
-      tfCoverage = new JTextField(15);
-      (l = new JLabel("Coverage (ex:>0.5)")).setFont(l.getFont().deriveFont(Font.BOLD));
-      PropPanel.addCouple(this, p, l, "Pourcentage of sky coverage...\n(ex:<0.2", 
+      tfCoverage = new JTextFieldX(15);
+      PropPanel.addCouple(this, p, "Sky fraction", "Fraction of the sky coverage...\n(ex:<0.1", 
             tfCoverage, g, c, GridBagConstraints.EAST);
       
       // Les différents régimes
-      (l = new JLabel("Regimes")).setFont(l.getFont().deriveFont(Font.BOLD));
       subPanel = new JPanel( new GridLayout(2,3) );
       subPanel.add( bx=bxGammaRay = new JCheckBox("Gamma-ray")); bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxXray     = new JCheckBox("X-ray"));     bx.setSelected(true); bx.addActionListener(this);
@@ -429,66 +532,74 @@ public final class RegFilter extends JFrame implements ActionListener {
             bxGasLines.setSelected(false);
          }
       });
-      PropPanel.addCouple(this, p, l, "Wavelength...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Regime", "Wavelength...", subPanel, g, c, GridBagConstraints.EAST);
       
-      // Couverture du ciel
-      tfHiPSorder = new JTextField(15);
-      (l = new JLabel("HiPS order (ex:>12)")).setFont(l.getFont().deriveFont(Font.BOLD));
-      PropPanel.addCouple(this, p, l, "HiPS order...\n(ex:<5", 
-            tfHiPSorder, g, c, GridBagConstraints.EAST);
+      // Date
+      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,5,0) );
+      tfMinDate = new JTextFieldX(10);
+      tfMaxDate = new JTextFieldX(10);
+      bxDate = new JCheckBox("only if known",true); bxDate.setToolTipText("Also removed collections with undefined epoch");
+      bxDate.addActionListener(this);
+      subPanel.add(tfMinDate); subPanel.add( new JLabel(" .. ") ); subPanel.add(tfMaxDate); subPanel.add( bxDate );
+      PropPanel.addCouple(this, p, "Epoch", "In this periode. Date in ISO format", subPanel, g, c, GridBagConstraints.EAST);
       
       // Les différentes origines des HiPS
-      (l = new JLabel("Authority")).setFont(l.getFont().deriveFont(Font.BOLD));
       authVbx = new Vector<JCheckBox>();
       subPanel = createFilter(authVbx, 6, "ID", "/");
-      PropPanel.addCouple(this, p, l, "Authority creator...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Authority", "Authority creator...", subPanel, g, c, GridBagConstraints.EAST);
       
-      // Les différentes Missions
-      (l = new JLabel("Mission")).setFont(l.getFont().deriveFont(Font.BOLD));
-      missionVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(missionVbx, 10, "obs_astronomy_kw", null);
-      PropPanel.addCouple(this, p, l, "Mission...", subPanel, g, c, GridBagConstraints.EAST);
+      // Les filtres dédiés aux HiPS
+      PropPanel.addFilet(p,g,c);
+      PropPanel.addSectionTitle(p, "Dedicated HiPS filters", g, c);
       
-      // Les données associées
-      (l = new JLabel("Ass.data")).setFont(l.getFont().deriveFont(Font.BOLD));
-      assdataVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(assdataVbx, 10, "associated_dataproduct_type", null, true);
-      PropPanel.addCouple(this, p, l, "Associated data to a catalog", subPanel, g, c, GridBagConstraints.EAST);
+      // Couverture du ciel
+      tfHiPSorder = new JTextFieldX(15);
+      PropPanel.addCouple(this, p, "HiPS order", "HiPS order...\n(ex:<5", 
+            tfHiPSorder, g, c, GridBagConstraints.EAST);
       
       // Types de tuiles
-      (l = new JLabel("Pixel formats")).setFont(l.getFont().deriveFont(Font.BOLD));
       subPanel = new JPanel( new FlowLayout());
       subPanel.add( bx=bxPixFull     = new JCheckBox("full dynamic only")); bx.addActionListener(this);
       subPanel.add( bx=bxPixColor    = new JCheckBox("color only"));        bx.addActionListener(this);
-      PropPanel.addCouple(this, p, l, "Image HiPS pixel formats...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Pixel formats", "Image HiPS pixel formats...", subPanel, g, c, GridBagConstraints.EAST);
+      
+      
+     
+      // Les filtres dédiés aux catalogues
+      PropPanel.addFilet(p,g,c);
+      PropPanel.addSectionTitle(p, "Dedicated catalog/table filters", g, c);
+      
+      // Les différentes Missions
+      catkeyVbx = new Vector<JCheckBox>();
+      subPanel = createFilter(catkeyVbx, -1, "obs_astronomy_kw", null, true);
+      PropPanel.addCouple(this, p, "Keywords", "Catalog astronomical keywords", subPanel, g, c, GridBagConstraints.EAST);
       
       // Tailles des tables
-      (l = new JLabel("Cat size")).setFont(l.getFont().deriveFont(Font.BOLD));
-      subPanel = new JPanel( new FlowLayout());
-      subPanel.add( bx=bxBigCat   = new JCheckBox("big only"));   bx.setSelected(false); bx.addActionListener(this);
-      subPanel.add( bx=bxSmallCat = new JCheckBox("small only")); bx.setSelected(false); bx.addActionListener(this);
-      PropPanel.addCouple(this, p, l, "Table/catalog number of rows (<1000, >1 000 000)", 
-            subPanel, g, c, GridBagConstraints.EAST);
+      tfCatNbRow = new JTextFieldX(30);
+      PropPanel.addCouple(this, p, "Nb rows", "Number of rows (ex: >1000 or 10..1000)",
+            tfCatNbRow, g, c, GridBagConstraints.EAST);
       
-      // UCDs
-      tfUCD = new JTextField(30);
-      (l = new JLabel("UCD constraints")).setFont(l.getFont().deriveFont(Font.BOLD));
-      PropPanel.addCouple(this, p, l, "UCD constraints...\n(ex: pos.angDistance)", 
+      // Les données associées
+      assdataVbx = new Vector<JCheckBox>();
+      subPanel = createFilter(assdataVbx, -1, "associated_dataproduct_type", null, true);
+      PropPanel.addCouple(this, p, "Ass.data", "Associated data to a catalog", subPanel, g, c, GridBagConstraints.EAST);
+      
+     // UCDs
+      tfUCD = new JTextFieldX(30);
+      PropPanel.addCouple(this, p, "UCD", "UCD constraints...\n(ex: pos.angDistance)", 
             tfUCD, g, c, GridBagConstraints.EAST);
 
-     // Champ libre
-      tfFree = new JTextField(30);
-      (l = new JLabel("Other constraints")).setFont(l.getFont().deriveFont(Font.BOLD));
-      PropPanel.addCouple(this, p, l, "Additionnal MocServer constraints...\n(ex: ID=CDS*&obs_astronomy_kw=Seyfert*)", 
-            tfFree, g, c, GridBagConstraints.EAST);
-      
-      return p;
+      JScrollPane scrollPane = new JScrollPane(p,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      JPanel p1 = new JPanel(new BorderLayout());
+      p1.add(scrollPane);
+      return p1;
    }
 
    @Override
-   public void actionPerformed(ActionEvent e) {
-      aladin.hipsStore.setTreeReady(false);
+   public void actionPerformed(ActionEvent e) { inArea=false; submit(); }
+   protected void submit() {
       aladin.makeCursor(this, Aladin.WAITCURSOR);
+      aladin.hipsStore.setTreeReady(false);
       submitLocal();
    }
 }

@@ -71,6 +71,11 @@ public class RegTree extends JTree {
       NoeudRenderer nr = new NoeudRenderer();
       setCellRenderer(nr);
       setLargeModel(true);
+      
+//      ImageIcon icon = getIcon("Folder", 0);
+//      UIManager.put("Tree.closedIcon", icon);
+//      UIManager.put("Tree.openIcon", icon);
+//      UIManager.put("Tree.leafIcon", icon);
    }
 
    /** Colorations (noire, verte ou orange) des branches de l'arbre en fonction de l'état des feuilles */
@@ -334,6 +339,12 @@ public class RegTree extends JTree {
       return isCollapsed(parent);
    }
    
+   /** Déploie si nécessaire les noeuds de plus haut niveau */
+   protected void minimalExpand() {
+      TreePath rootTp = new TreePath(root);
+      expandPath(rootTp);
+   }
+   
    /** Collapse tous les noeuds sont ceux au plus haut niveau (sous root) */
    protected void defaultExpand() {
       TreePath rootTp = new TreePath(root);
@@ -383,6 +394,8 @@ public class RegTree extends JTree {
       
       try {
          mapIcon = new HashMap<String, ImageIcon>();
+         img = aladin.getImagette("Folder.png");
+         mapIcon.put("Folder",new ImageIcon(img));
          img = aladin.getImagette("cds.png");
          mapIcon.put("CDS",new ImageIcon(img));
          mapIcon.put("CDS/color",new ImageIcon(setIconTag(img)));
@@ -398,6 +411,7 @@ public class RegTree extends JTree {
          img = aladin.getImagette("xcatdb.png");
          mapIcon.put("xcatdb",new ImageIcon(img));
          mapIcon.put("xcatdb/color",new ImageIcon(setIconTag(img)));
+         mapIcon.put("f",new ImageIcon(img));
       } catch( Exception e ) {
          e.printStackTrace();
       }
@@ -461,6 +475,7 @@ public class RegTree extends JTree {
          TreeObj n = (TreeObj)node.getUserObject();
          
          Component c = nonLeafRenderer.getTreeCellRendererComponent(tree, obj, selected, expanded, leaf, row, hasFocus);
+         
          if( n.isInStack() ) c.setForeground( Color.green );
          else if( !aladin.hipsStore.prune.isActivated() ) {
             int isIn = n.getIsIn();
@@ -473,18 +488,16 @@ public class RegTree extends JTree {
             int ref = n.nbRefDescendance;
             String s = "<font color=\"gray\"> &rarr; "+ (nb==ref || nb==-1 ? +ref 
                   : " "+nb+" / "+ref )+"</font>";
-//            : " "+nb+"<font size=\"1\">/"+ref+"</font>")+"</font>";
             JLabel lab = (JLabel)c;
             lab.setText("<html>"+lab.getText()+s+"</html>" );
          }
          
-         if( n instanceof TreeObjReg ) {
-            TreeObjReg hips = (TreeObjReg)n;
-//            if( hips.isLocal() )  c.setForeground(Color.black);
-            ImageIcon icon = getIcon(hips.internalId,hips.isColored() ? 1 : 0);
-            if( icon!=null ) nonLeafRenderer.setIcon( icon );
-            
-         }
+         ImageIcon icon=null;
+         if( n instanceof TreeObjReg) {
+            TreeObjReg to = (TreeObjReg)n;
+            icon = getIcon( to.internalId,to.isColored() ? 1 : 0);
+         } else if( !node.isLeaf() ) icon=getIcon( "Folder", 0);
+         if( icon!=null ) nonLeafRenderer.setIcon( icon );
 
          return c;
       }

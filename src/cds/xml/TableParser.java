@@ -1973,7 +1973,7 @@ final public class TableParser implements XMLConsumer {
          // Ecarte les portions de texte vides
          if( isEmpty(ch,start,length) ) return;
 
-         System.out.println("characters : ["+(getStringTrim(ch,start,length))+"]");
+//         System.out.println("characters : ["+(getStringTrim(ch,start,length))+"]");
 
          if( inLinkField ) {
             if( f.refText==null ) f.addInfo("refText",getStringTrim(ch,start,length));
