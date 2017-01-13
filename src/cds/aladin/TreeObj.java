@@ -38,9 +38,9 @@ public class TreeObj  implements Comparator {
    int isIn;            // 1-le noeud est isIn, 0-le noeud est isOut, -1-on ne sait pas encore
    boolean isHidden;    // true si le noeud n'est pas pris dans l'arbre
    boolean activated;   // true si actuellement inclus dans l'arbre, false si élagué
-   int treeIndex ;      // Index dans l'arbre (au niveau du parent)
-   int nbDescendance;   // Nombre de noeud terminaux dans sa descendance actuelle
-   int nbRefDescendance; // Idem mais pour sa descendance initiale (avant d'éventuels élagages)
+   int nb;   // Nombre de noeud terminaux dans sa descendance actuelle
+   int nbRef; // Idem mais pour sa descendance initiale (avant d'éventuels élagages)
+   boolean wasExpanded;  // true si le noeud est actuellement expanded
 
    protected JCheckBox checkbox;
    private JPanel panel;
@@ -60,8 +60,7 @@ public class TreeObj  implements Comparator {
       this.isIn=-1;
       this.activated = false;
       this.isHidden = false;
-      this.treeIndex = -1;
-      nbDescendance=-1;
+      nb=-1;
       panel=createPanel();
    }
 
@@ -133,6 +132,9 @@ public class TreeObj  implements Comparator {
    public int compare(Object o1, Object o2) {
       TreeObj a1 = (TreeObj)o1;
       TreeObj a2 = (TreeObj)o2;
+      if( a1==null && a2==null ) return 0;
+      if( a1==null ) return -1;
+      if( a2==null ) return 1;
       if( a1.ordre==a2.ordre ) return 0;
       if( a1.ordre==null ) return -1;
       if( a2.ordre==null ) return 1;

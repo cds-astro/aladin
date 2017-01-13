@@ -64,6 +64,7 @@ public class MySplitPane extends JSplitPane {
    public MySplitPane(Aladin aladin,int orientation, Component first, Component second, int mode ) {
       super(orientation,true,first,second);
       setBackground( aladin.getBackground());
+      setBorder( BorderFactory.createEmptyBorder() );
       setUI(new MyBasicSplitPaneUI());
       this.mode=mode;
       this.aladin = aladin;

@@ -60,7 +60,7 @@ public class Collapse extends MyIcon {
    }
    
    private boolean isAvailable() {
-      return !aladin.hipsStore.isFree();
+      return !aladin.directory.isFree();
    }
    private boolean isMouseIn()   { return in; }
    
@@ -80,13 +80,13 @@ public class Collapse extends MyIcon {
       // Label
       g.setColor(isAvailable() ? Color.black : Aladin.MYGRAY);
       g.setFont(Aladin.SPLAIN);
-      String s = aladin.hipsStore.isDefaultExpand() ? EXPAND : COLLAPSE;
+      String s = aladin.directory.isDefaultExpand() ? EXPAND : COLLAPSE;
       g.drawString(s,W/2-g.getFontMetrics().stringWidth(s)/2,H-2);
    }
    
    protected void submit() {
       if( !isAvailable() ) return;
-      aladin.hipsStore.collapseAllExceptCurrent();
+      aladin.directory.collapseAllExceptCurrent();
       repaint();
    }
       

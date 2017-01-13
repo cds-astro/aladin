@@ -255,17 +255,17 @@ public class ServerFile extends Server implements XMLConsumer {
                      if( PlanBG.isPlanBG(f) ) {
 
                         // recherche des propriétés
-                        TreeObjReg gSky=null;
-                        try { gSky = new TreeObjReg(aladin, f); } catch( Exception e ) { }
+                        TreeObjDir gSky=null;
+                        try { gSky = new TreeObjDir(aladin, f); } catch( Exception e ) { }
 
                         if( gSky==null ) {
 
                            // Progen ?
-                           if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeObjReg(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen",null);
+                           if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeObjDir(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen",null);
 
                            // Catalogue ?
                            else if(  (new File(f+"/"+Constante.FILE_METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
-                              gSky = new TreeObjReg(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat",null);
+                              gSky = new TreeObjDir(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat",null);
                            }
                         }
 
@@ -437,8 +437,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
                // C'est peut être un fichier de properties ?
             } else if( (type & MyInputStream.PROP)!=0 ) {
-               if( aladin.hipsStore.addHipsProp(in, localFile) ) {
-                  aladin.hipsStore.askForResumeTree();
+               if( aladin.directory.addHipsProp(in, localFile) ) {
                   n=1;
                }
 
@@ -446,8 +445,8 @@ public class ServerFile extends Server implements XMLConsumer {
             } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
 
                // Cubes ?
-               TreeObjReg gSky=null;
-               try { gSky = new TreeObjReg(aladin, f); }
+               TreeObjDir gSky=null;
+               try { gSky = new TreeObjDir(aladin, f); }
                catch( Exception e ) {
                   aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found => autodiscovery");
                }
@@ -467,7 +466,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   //                        aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found, assume default params");
                   //                        gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
                   //                     }
-                  gSky = new TreeObjReg(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen",null);
+                  gSky = new TreeObjDir(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen",null);
                   n=aladin.calque.newPlanBG(gSky,label,null,null);
 
                   // ou catalogue ?
@@ -478,7 +477,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   //                     aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found, assume default params");
                   //                     gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
                   //                  }
-                  gSky = new TreeObjReg(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat",null);
+                  gSky = new TreeObjDir(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat",null);
                   n=aladin.calque.newPlanBG(gSky,label,null,null);
                }
 

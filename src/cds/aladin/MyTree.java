@@ -103,26 +103,26 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
       defaultExpand();
    }
    
-   /** Supprime les feuilles et branches hidden */
-   protected void elagueHidden() {
-      elagueHidden(root, (DefaultTreeModel)getModel() );
-   }
+//   /** Supprime les feuilles et branches hidden */
+//   protected void elagueHidden() {
+//      elagueHidden(root, (DefaultTreeModel)getModel() );
+//   }
    
-   private void elagueHidden(DefaultMutableTreeNode node, DefaultTreeModel model ) {
-       
-      for( int i=node.getChildCount()-1; i>=0; i-- ) {
-         elagueHidden( (DefaultMutableTreeNode)node.getChildAt(i), model );
-      }
-
-      if( node.isLeaf() ) {
-         TreeObj fils = (TreeObj) node.getUserObject();
-         if( fils.isHidden() && !node.equals(root)) {
-            fils.treeIndex = node.getParent().getIndex(node);
-            model.removeNodeFromParent(node);
-         }
-         return;
-      }
-   }
+//   private void elagueHidden(DefaultMutableTreeNode node, DefaultTreeModel model ) {
+//       
+//      for( int i=node.getChildCount()-1; i>=0; i-- ) {
+//         elagueHidden( (DefaultMutableTreeNode)node.getChildAt(i), model );
+//      }
+//
+//      if( node.isLeaf() ) {
+//         TreeObj fils = (TreeObj) node.getUserObject();
+//         if( fils.isHidden() && !node.equals(root)) {
+//            fils.treeIndex = node.getParent().getIndex(node);
+//            model.removeNodeFromParent(node);
+//         }
+//         return;
+//      }
+//   }
 
    /** Reset */
    public void reset() {
@@ -206,8 +206,7 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
       } while( index!=-1 );
 
       String label = pos<0 ? noeud.path.substring(opos) : noeud.path.substring(opos,pos);
-      ((TreeObj)node.getUserObject()).noCheckbox();
-
+ 
       try {
          DefaultMutableTreeNode subNode = null;
          Enumeration e = node.children();
@@ -221,7 +220,8 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
          if( subNode==null ) {
             subNode = new DefaultMutableTreeNode( pos!=-1? new TreeObj(aladin,"",null,label,"") : noeud );
 //            node.add(subNode);
-            int i = ((TreeObj)subNode.getUserObject()).treeIndex;
+//            int i = ((TreeObj)subNode.getUserObject()).treeIndex;
+            int i=-1;
             int n = node.getChildCount();
             if( i==-1 || i>n ) i=n;
             model.insertNodeInto(subNode, node, i);
@@ -284,6 +284,8 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
             boolean leaf, int row, boolean hasFocus){
          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
          TreeObj n = (TreeObj)node.getUserObject();
+         
+         if( !node.isLeaf() ) n.noCheckbox();
 
          //         System.out.println("getTreeCellRendererComponent ["+node.toString()+"] => "+n.isOk());
 
@@ -333,7 +335,7 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
          TreeObj n = (TreeObj)node.getUserObject();
          n1 = n;
-         if( n!=null &&  n.hasCheckBox() ) {
+         if( n!=null && n.hasCheckBox() ) {
             if( n.isIn() ) n.checkbox.setForeground(Color.black);
             else n.checkbox.setForeground(Color.lightGray);
             return n.getPanel();

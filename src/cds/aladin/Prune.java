@@ -57,7 +57,7 @@ public class Prune extends MyIcon {
    }
    
    protected boolean isAvailable() {
-      return !aladin.view.isFree() && !aladin.hipsStore.isFree();
+      return !aladin.view.isFree() && !aladin.directory.isFree();
    }
    private boolean isMouseIn()   { return in; }
    
@@ -83,7 +83,7 @@ public class Prune extends MyIcon {
    protected void submit() {
       if( !isAvailable() ) return;
       activated = !activated;
-      aladin.hipsStore.askForResumeTree();
+      aladin.directory.resumeTree();
       repaint();
    }
       

@@ -9,6 +9,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -16,15 +17,19 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -38,6 +43,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -48,30 +55,31 @@ import cds.moc.HealpixMoc;
 import cds.mocmulti.BinaryDump;
 import cds.mocmulti.MocItem;
 import cds.mocmulti.MultiMoc;
+import cds.tools.MultiPartPostOutputStream;
 import cds.tools.Util;
 
 
 /**
- * Classe qui gère l'arbre HiPS apparaissant à gauche de la vue
+ * Classe qui gère l'arbre du Directory des collections
  * @version 1.0 décembre 2016 - création
  * @author Pierre Fernique [CDS]
  */
-public class RegStore extends JPanel implements Iterable<MocItem>{
+public class Directory extends JPanel implements Iterable<MocItem>{
    
    private Aladin aladin;                  // Référence
    private MultiMoc multiProp;             // Le multimoc de stockage des properties des collections
-   private RegFilter regFilter=null;       // Formulaire de filtrage de l'arbre des collections
+   private DirectoryFilter dirFilter=null; // Formulaire de filtrage de l'arbre des collections
    private boolean mocServerLoading=false; // true = requête de génération de l'arbre en cours (appel à MocServer)
    
-   private RegTree regTree;               // Le JPanel de l'arbre des collections
-   private ArrayList<TreeObjReg> listReg;  // Liste des noeuds potentiels de l'arbre
+   private DirectoryTree dirTree;          // Le JTree du directory
+   private ArrayList<TreeObjDir> dirList;  // La liste des collections connues
    
    // Composantes de l'interface
-   private JTextField quickFilter; // Champ de filtrage rapide
-   private JButton filter;        // Bouton d'ouverture du formulaire de filtrage
-   protected Prune prune;         // L'icone d'activation du mode "élagage"
-   private Collapse collapse;     // L'icone pour développer/réduire l'arbre
-   private Timer timer = null;    // Timer pour le réaffichage lors du chargement
+   private QuickFilterField quickFilter; // Champ de filtrage rapide
+   private JButton filter;         // Bouton d'ouverture du formulaire de filtrage
+   protected Prune prune;          // L'icone d'activation du mode "élagage"
+   private Collapse collapse;      // L'icone pour développer/réduire l'arbre
+   private Timer timer = null;     // Timer pour le réaffichage lors du chargement
    
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
 //   private static String  MOCSERVER_INIT = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")+"&hips_service_url=*&get=record"; //&fmt=glu";
@@ -81,8 +89,11 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    private static String MOCSERVER_UPDATE = "fmt=asciic";
 //   private static String MOCSERVER_UPDATE = "client_application=AladinDesktop"+(Aladin.BETA?"*":"")+"&hips_service_url=*&";
 
-   public RegStore(Aladin aladin) {
+   private JScrollPane scrollTree = null;
+   
+   public Directory(Aladin aladin) {
       this.aladin = aladin;
+      setBackground(aladin.getBackground());
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
 //      aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
@@ -90,12 +101,44 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       multiProp = new MultiMoc();
       
       // L'arbre avec sa scrollbar
-      regTree = new RegTree(aladin);
-      setBackground(aladin.getBackground());
-      regTree.setBackground(aladin.getBackground());
+      dirTree = new DirectoryTree(aladin);
+      scrollTree = new JScrollPane(dirTree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      scrollTree.setBorder( BorderFactory.createEmptyBorder(10,0,0,0));
+      scrollTree.setBackground(aladin.getBackground());
       
-      JScrollPane scrollTree = new JScrollPane(regTree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-      scrollTree.setBorder( BorderFactory.createEmptyBorder(0,0,0,0));
+      // Le bandeau en haut
+      JLabel titre = new JLabel("Directory");
+      titre.setFont(Aladin.BOLD);
+      titre.setForeground(Aladin.DARKBLUE);
+      
+      JPanel panelFilter = new JPanel( new BorderLayout(5,5) );
+      panelFilter.setBackground( aladin.getBackground() );
+      quickFilter = new QuickFilterField(6);
+      quickFilter.setToolTipText("Quick filter by key words");
+      quickFilter.addKeyListener(new KeyListener() {
+         public void keyTyped(KeyEvent e) { }
+         public void keyPressed(KeyEvent e) { }
+         public void keyReleased(KeyEvent e) {
+            if( e.getKeyCode()==KeyEvent.VK_ENTER ) quickFiltre();
+         }
+      });
+      panelFilter.add(quickFilter, BorderLayout.CENTER );
+      
+      filter = new JButton("Filter...");
+      filter.setMargin(new Insets(2,3,3,2));
+      filter.setToolTipText("Advanced collection filter....");
+      filter.setEnabled(false);
+      filter.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { filtre(); }
+      });
+      panelFilter.add(filter, BorderLayout.EAST );
+      
+      JPanel header = new JPanel( new BorderLayout(5,5) );
+      header.setBackground( aladin.getBackground() );
+      header.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 10));
+      header.add( titre, BorderLayout.WEST );
+      header.add( panelFilter, BorderLayout.CENTER );
+
       
       // Les boutons de controle
       JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,1,1));
@@ -108,26 +151,6 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       JPanel p2 = new JPanel( new FlowLayout());
       p2.setBackground(aladin.getBackground());
       
-      filter = new JButton("filter:");
-      filter.setMargin(new Insets(1,3,1,2));
-      filter.setToolTipText("Advanced collection filter....");
-      filter.setEnabled(false);
-      filter.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { filtre(); }
-      });
-      p2.add(filter);
-      
-      quickFilter = new JTextField(6);
-      quickFilter.setToolTipText("Quick filter by key words");
-      quickFilter.addKeyListener(new KeyListener() {
-         public void keyTyped(KeyEvent e) { }
-         public void keyPressed(KeyEvent e) { }
-         public void keyReleased(KeyEvent e) {
-            if( e.getKeyCode()==KeyEvent.VK_ENTER ) quickFiltre();
-         }
-      });
-      p2.add(quickFilter);
-      
       JPanel control = new JPanel(new BorderLayout());
       control.setBackground(aladin.getBackground());
       control.setBorder( BorderFactory.createEmptyBorder(0,5,0,0));
@@ -135,20 +158,21 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       control.add(p2,BorderLayout.CENTER);
       
       setLayout(new BorderLayout() );
+      add(header,BorderLayout.NORTH);
       add(scrollTree,BorderLayout.CENTER);
       add(control,BorderLayout.SOUTH);
-      setBorder( BorderFactory.createEmptyBorder(30,0,5,0));
+      setBorder( BorderFactory.createEmptyBorder(5,3,10,0));
 
       // Actions sur le clic d'un noeud de l'arbre
-      regTree.addMouseListener(new MouseAdapter() {
+      dirTree.addMouseListener(new MouseAdapter() {
          public void mouseClicked(MouseEvent e) {
-            TreePath tp = regTree.getPathForLocation(e.getX(), e.getY());
+            TreePath tp = dirTree.getPathForLocation(e.getX(), e.getY());
             if( tp==null ) hideInfo();
             else {
-               ArrayList<TreeObjReg> treeObjs = getSelectedTreeObjHips();
+               ArrayList<TreeObjDir> treeObjs = getSelectedTreeObjDir();
 
                // Double-clic, on effectue l'action par défaut du noeud
-               if (e.getClickCount() == 2) loadMultiHips( treeObjs );
+               if (e.getClickCount() == 2) loadMulti( treeObjs );
 
                // Simple clic => on montre les informations associées au noeud
                else showInfo(treeObjs,e);
@@ -166,14 +190,50 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       initTree();
    }
    
+   /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
+   class QuickFilterField extends JTextField {
+      private Rectangle cross=null;
+
+      QuickFilterField(int nChar) {
+         super(nChar);
+      }
+
+      boolean in(int x,int y) {
+         if( cross==null || getText().length()==0) return false;
+         return x>=cross.x;
+      }
+
+      public void paintComponent(Graphics g) {
+         try {
+            super.paintComponent(g);
+            drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
+         } catch( Exception e ) { }
+      }
+
+      static private final int X = 6;
+      private void drawCross(Graphics g, int x, int y) {
+         g.setColor(Color.white);
+         g.fillOval(x-3, y-3, X+7, X+7);
+         g.setColor( getText().length()>0 ? Color.red.darker() : Color.gray );
+         g.drawLine(x,y,x+X,y+X);
+         g.drawLine(x+1,y,x+X+1,y+X);
+         g.drawLine(x+2,y,x+X+2,y+X);
+         g.drawLine(x+X,y,x,y+X);
+         g.drawLine(x+X+1,y,x+1,y+X);
+         g.drawLine(x+X+2,y,x+2,y+X);
+         cross = new Rectangle(x,y,X,X);
+      }
+   }
+
+   
    /** Récupération de la liste des TreeObj sélectionnées */
-   private ArrayList<TreeObjReg> getSelectedTreeObjHips() {
-      TreePath [] tps = regTree.getSelectionPaths();
-      ArrayList<TreeObjReg> treeObjs = new ArrayList<TreeObjReg>();
+   private ArrayList<TreeObjDir> getSelectedTreeObjDir() {
+      TreePath [] tps = dirTree.getSelectionPaths();
+      ArrayList<TreeObjDir> treeObjs = new ArrayList<TreeObjDir>();
       if( tps!=null ) {
          for( int i=0; i<tps.length; i++ ) {
             Object obj = ((DefaultMutableTreeNode)tps[i].getLastPathComponent()).getUserObject();
-            if( obj instanceof TreeObjReg ) treeObjs.add( (TreeObjReg)obj );
+            if( obj instanceof TreeObjDir ) treeObjs.add( (TreeObjDir)obj );
          }
       }
       return treeObjs;
@@ -185,10 +245,11 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    /** Cache la fenêtre des infos du HiPS */
    private void hideInfo() { showInfo(null,null); }
    
-   private void loadMultiHips(ArrayList<TreeObjReg> treeObjs) {
+   /** Chargements simultanés de toutes les collections sélectionnées */
+   private void loadMulti(ArrayList<TreeObjDir> treeObjs) {
       if( treeObjs.size()==0 ) return;
       hideInfo();
-      treeObjs.get(0).load();
+      for( TreeObjDir to : treeObjs ) to.load();
    }
 
    
@@ -196,7 +257,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
     * @param treeObjs les noeuds correspondant aux collections sélectionnées, ou null si effacement de la fenêtre
     * @param e évènement souris pour récupérer la position absolue où il faut afficher la fenêtre d'info
     */
-   private void showInfo(ArrayList<TreeObjReg> treeObjs, MouseEvent e) {
+   private void showInfo(ArrayList<TreeObjDir> treeObjs, MouseEvent e) {
       if( treeObjs==null || treeObjs.size()==0 ) {
          if( frameInfo==null ) return;
          frameInfo.setVisible(false);
@@ -206,7 +267,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       Point p = e.getLocationOnScreen();
       frameInfo.setCollections( treeObjs );
       
-      int w=450;
+      int w=350;
       int h=120;
       int x=p.x+50;
       int y=p.y-30;
@@ -214,22 +275,36 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       if( y<0 ) y=0;
       if( y+h > aladin.SCREENSIZE.height ) y = aladin.SCREENSIZE.height-h;
       if( x+w > aladin.SCREENSIZE.width )  x = aladin.SCREENSIZE.width -w;
-      frameInfo.setBounds(x,y,w,h);
+      frameInfo.setBounds(x,y,Math.max(w,frameInfo.getWidth()),Math.max(h, frameInfo.getHeight()));
+//    frameInfo.setLocation(x, y);
       frameInfo.setVisible(true);
    }
    
    /** Création/ouverture/fermeture du formulaire de filtrage de l'arbre des Collections */
    private void filtre() {
-      if( regFilter==null ) regFilter = new RegFilter(aladin);
-      if( regFilter.isVisible() ) regFilter.setVisible(false);
-      else regFilter.showFilter();
+      if( dirFilter==null ) dirFilter = new DirectoryFilter(aladin);
+      if( dirFilter.isVisible() ) dirFilter.setVisible(false);
+      else dirFilter.showFilter();
+//      setFilterButtonColor();
    }
    
    /** Filtrage basique de l'arbre des Collections */
    private void quickFiltre() {
-      if( regFilter==null ) regFilter = new RegFilter(aladin);
-      regFilter.setFreeText( quickFilter.getText() );
-      regFilter.submit();
+      if( dirFilter==null ) dirFilter = new DirectoryFilter(aladin);
+      dirFilter.setFreeText( quickFilter.getText() );
+      dirFilter.submit();
+      setFilterButtonColor();
+   }
+   
+   /** Initialise le texte dans le champ du filtre rapide */
+   protected void quickFilterSetText(String t) {
+      quickFilter.setText(t);
+      setFilterButtonColor();
+   }
+   
+   // Affichage en rouge le bouton du filtre s'il y en a un actif
+   private void setFilterButtonColor() {
+      filter.setForeground( dirFilter.hasFilter() ? Color.red : Color.black ) ;
    }
    
    /**
@@ -241,10 +316,13 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
     *             2 - match exact puis substring sur l'IVOID (ex: Simbad ok pour CDS/Simbad)
     *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
     * @return le Hips node trouvé, null sinon
+    * 
+    * NECESSAIRE POUR get Hips(XXX) MAIS IL FAUDRA CHANGER CELA
     */
-   protected TreeObjReg getTreeObjReg(String A) { return getTreeObjReg(A,0); }
-   protected TreeObjReg getTreeObjReg(String A,int mode) {
-      for( TreeObjReg to : listReg ) {
+   protected TreeObjDir getTreeObjDir(String A) { return getTreeObjDir(A,0); }
+   protected TreeObjDir getTreeObjDir(String A,int mode) {
+      for( TreeObjDir to : dirList ) {
+         if( !to.isHiPS() ) continue;
          if( A.equals(to.id) || A.equals(to.label) || A.equals(to.internalId) ) return to;
          if( mode==1 && Util.indexOfIgnoreCase(to.label,A)>=0 ) return to;
          if( mode==2 ) {
@@ -256,7 +334,8 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       }
 
       if( mode==2 ) {
-         for( TreeObjReg to : listReg ) {
+         for( TreeObjDir to : dirList ) {
+            if( !to.isHiPS() ) continue;
             int offset = to.label.lastIndexOf('/');
             if( Util.indexOfIgnoreCase(to.label.substring(offset+1),A)>=0 ) return to;
          }
@@ -282,7 +361,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          }
       }
       
-      TreeObjReg to = getTreeObjReg(survey,2);
+      TreeObjDir to = getTreeObjDir(survey,2);
       if( to==null ) {
          Aladin.warning(this,"Progressive survey (HiPS) unknown ["+survey+"]",1);
          return -1;
@@ -310,71 +389,149 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    protected void initTree() {
       try {
          initMultiProp();
-         rebuildTree();
-         regTree.defaultExpand();
+         buildTree();
+         dirTree.defaultExpand();
       } finally { postTreeProcess(); init=false;}
    }
    
-   boolean refCount = true;
-   private void setRefCount(boolean flag) { refCount=flag; }
-
    /** (Re)construction de l'arbre en fonction de l'état précédent de l'arbre
     * et de la valeur des différents flags associés aux noeuds
     * @param refCount  true si on doit faire les décomptages des noeuds en tant que référence sinon état courant
     * @return true s'il y a eu au-moins une modif
     */
-   private boolean rebuildTree() {
+   private void buildTree() {
+      DirectoryModel model = (DirectoryModel) dirTree.getModel();
+      for( TreeObjDir to : dirList ) model.createTreeBranch( to ); 
+      initCounter( model );
+   }
+   
+   // Initialisation du compteur de référence en fonction d'un TreeModel
+   private void initCounter( DirectoryModel model ) {
+      // Initialisation du compteur de référence
+      HashMap<String,Integer> hs = new HashMap<String,Integer>();
+      model.countDescendance( hs );
+      counter = hs;
+   }
+   
+   // Compteurs des noeuds
+   private HashMap<String,Integer> counter = null;
+   
+   /** Reconstruction de l'arbre en utilisant à chaque fois un nouveau model
+    * pour éviter les conflits d'accès et éviter la lenteur des évènements
+    * de maj des état de l'arbre (après de très nombreux tests, c'est de loin
+    * la meilleure méthode que j'ai trouvée même si elle peut paraitre étonnante
+    * à première vue.)
+    * 
+    * @param tmpDirList
+    */
+   private void rebuildTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand ) {
       boolean pruneActivated = prune.isActivated();
-      boolean modif = false;
-      try {
-         regTree.setLockExpand(true);
-         for( TreeObjReg to : listReg ) { 
-            boolean mustBeActivated = !to.isHidden() && (!pruneActivated || pruneActivated && to.getIsIn()!=0 );
-            modif |= setActivated( to, regTree, mustBeActivated );
-         }
-         if( modif || refCount ) {
-            regTree.countDescendance( refCount );
-            refCount=false;
-         }
-         if( prune.isAvailable() && !pruneActivated ) regTree.populateFlagIn();
-         
-      } finally { regTree.setLockExpand(false); }
-      return modif;
-   }
-   
-   /** Activation/désactivation d'un noeud de l'arbre */
-   protected boolean setActivated(TreeObjReg to, RegTree regTree, boolean activated) {
-      if( to.isActivated() == activated ) return false;
-      to.setActivated(activated);
-      if( activated ) regTree.createTreeBranch( to );
-      else regTree.removeTreeBranch( to );
-      return true;
-   }
-   
-   private boolean treeReady=true;
-   private Object lock = new Object();
-   protected void setTreeReady(boolean flag) { synchronized( lock ) { treeReady=flag; } }
-   protected boolean isTreeReady()           { synchronized( lock ) { return treeReady; } }
-   
-   /** Demande de regénération de l'arbre => sera fait par l'EDT dans le paintComponent() */
-   protected void askForResumeTree() {
-      setTreeReady(false);
-      repaint();
-   }
       
+      // Mémorisation temporaire des états expanded/collapsed
+      HashSet<String> wasExpanded = new HashSet<String>();
+      backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
+
+      // Génération d'un nouveau model prenant en compte les filtres
+      DirectoryModel model = new DirectoryModel(aladin);
+      for( TreeObjDir to : tmpDirList ) {
+         boolean mustBeActivated = !to.isHidden() && (!pruneActivated || pruneActivated && to.getIsIn()!=0 );
+         if( mustBeActivated ) model.createTreeBranch( to );
+      }
+
+      // Comptage de la descendance de chaque branche
+      if( !defaultExpand ) model.countDescendance();
+      
+      // Dans le cas où l'on remet l'expand par défaut, on sait qu'on a ajouté
+      // des collections et qu'il faut donc refaire le comptage de référence
+      else initCounter( model );
+      
+      // Répercussion des états des feuilles sur les branches
+      if( prune.isAvailable() && !pruneActivated ) model.populateFlagIn();
+      
+      // Remplacement du model dans l'arbre affiché
+      dirTree.setModel( model );
+      
+      // Ouverture minimal des noeuds
+      if( defaultExpand ) dirTree.defaultExpand();
+         
+      // Restauration des états expanded/collapses + compteurs de référence
+      restoreState( new TreePath(model.root), defaultExpand ? null : wasExpanded, counter, dirTree);
+   }
+   
+   /** Retourne le path sous forme de chaine - sans le premier "/" et "" pour la racine
+    * ex => Image/Optical/DSS
+    */
+   private String getPathString(TreePath p) {
+      boolean first=true;
+      StringBuilder path = null;
+      for( Object n : p.getPath() ) {
+         if( first ) { first=false; continue; }  // on ne prend pas la racine
+         if( path==null ) path = new StringBuilder(n+"");
+         else path.append("/"+n);
+      }
+      return path==null ? "" : path.toString();
+   }
+   
+   /** Mémorise dans une HashSet les branches qui sont expanded */
+   private void backupState(TreePath parent, HashSet<String> wasExpanded, DirectoryTree tree) {
+      DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      TreeObj to =  (TreeObj)lastNode.getUserObject();
+      if( tree.isExpanded(parent) ) wasExpanded.add(to.path );
+      
+      if( lastNode.getChildCount() >= 0 ) {
+         for( Enumeration e = lastNode.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
+            backupState( parent.pathByAddingChild(node) , wasExpanded, tree);
+         }
+      }
+   }
+   
+   /** Restaure l'état des branches en fonction d'une hashSet des branches
+    * qui étaient expanded, ainsi que d'une hashmap donnant les décomptes
+    * de référence pour chaque branche. */
+   private void restoreState(TreePath parent, HashSet<String> wasExpanded,  HashMap<String,Integer> counter, JTree tree) {
+      String path = getPathString(parent);
+      
+      // Récupération de l'état expanded/collapsed
+      if( wasExpanded!=null && wasExpanded.contains( path ) ) tree.expandPath( parent );
+      
+      // Récupération du compteur de référence
+      DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      Integer nbRef = counter.get( path );
+      if( nbRef!=null )  {
+         TreeObj to =  (TreeObj)lastNode.getUserObject();
+         to.nbRef = nbRef.intValue();
+      }
+
+      if( lastNode.getChildCount() >= 0 ) {
+         for( Enumeration e = lastNode.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
+            restoreState( parent.pathByAddingChild(node) , wasExpanded, counter, tree );
+         }
+      }
+   }
+   
    /** Réaffichage de l'arbre en fonction des flags courants */
-   protected void resumeTree() {
+   protected void resumeTree() { resumeTree(dirList,false); }
+   
+   /** Remplacement et réaffichage de l'arbre avec une nouvelle liste de noeuds */
+   protected void replaceTree(ArrayList<TreeObjDir> tmpDirList) {
+      resumeTree(tmpDirList,true);
+      dirList = tmpDirList;
+   }
+   
+   /** Réaffichage de l'arbre */
+   private void resumeTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand) {
       try {
          long t0 = System.currentTimeMillis();
-         if( !rebuildTree() ) return;
+         rebuildTree(tmpDirList,defaultExpand);
          validate();
          postTreeProcess();
          System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
       } finally {
-         setTreeReady( true );
 
          // Pour permettre le changement du curseur d'attente de la fenêtre de filtrage
-         if( regFilter!=null ) aladin.makeCursor(regFilter, Aladin.DEFAULTCURSOR);
+         if( dirFilter!=null ) aladin.makeCursor(dirFilter, Aladin.DEFAULTCURSOR);
       }
 
    }
@@ -385,7 +542,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    protected void resumeFilter(String expr) {
       try {
          checkFilter(expr);
-         askForResumeTree();
+         resumeTree();
       } catch( Exception e ) {
         if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -394,7 +551,8 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    /** Réaffichage de l'arbre en fonction des Hips in/out de la vue courante */
    protected void resumeIn() {
       if( !checkIn() ) return;
-      askForResumeTree();
+      if( prune.isActivated() ) resumeTree();
+      else repaint();
    }
 
    /** Positionnement des flags isHidden() de l'arbre en fonction des contraintes de filtrage
@@ -410,7 +568,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       // Positionnement des flags isHidden() en fonction du filtrage
       HashSet<String> set = new HashSet<String>( ids.size() );
       for( String s : ids ) set.add(s);      
-      for( TreeObjReg to : listReg ) to.setHidden( !set.contains(to.internalId) );
+      for( TreeObjDir to : dirList ) to.setHidden( !set.contains(to.internalId) );
    }
    
    // Dernier champs interrogé sur le MocServer
@@ -428,7 +586,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       ViewSimple v = aladin.view.getCurrentView();
       if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) ) {
          boolean modif=false;
-         for( TreeObjReg to : listReg ) {
+         for( TreeObjDir to : dirList ) {
             if( !modif && to.getIsIn()!=-1 ) modif=true;
             to.setIn(-1);
          }
@@ -474,7 +632,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             while( (s=in.readLine())!=null ) set.add( getId(s) );
 
             // Positionnement des flags correspondants
-            for( TreeObjReg to : listReg ) to.setIn( set.contains(to.internalId) ? 1 : 0 );
+            for( TreeObjDir to : dirList ) to.setIn( set.contains(to.internalId) ? 1 : 0 );
          
          } catch( EOFException e ) {}
          finally{ flagCheckIn=false; if( in!=null ) in.close(); }
@@ -485,24 +643,24 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    }
 
    /** Retourne true si l'arbre est développé selon le défaut prévu */
-   protected boolean isDefaultExpand() { return regTree.isDefaultExpand(); }
+   protected boolean isDefaultExpand() { return dirTree.isDefaultExpand(); }
    
    /** Collapse l'arbre sauf le noeud courant */
    protected void collapseAllExceptCurrent() {
-      if( isDefaultExpand() ) regTree.allExpand();
-      else regTree.defaultExpand();
+      if( isDefaultExpand() ) dirTree.allExpand();
+      else dirTree.defaultExpand();
    }
    
    /** Retourne true s'il n'y a pas d'arbre HiPS */
    protected boolean isFree() {
-      return regTree==null || regTree.root==null ;
+      return dirTree==null || dirTree.root==null ;
    }
 
    /** Traitement à applique après la génération ou la régénération de l'arbre */
    private void postTreeProcess() {
       
       filter.setEnabled( dialogOk() );
-      regTree.minimalExpand();
+      dirTree.minimalExpand();
       
       // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des Collections
       // présentes ou non dans la vue courante
@@ -520,19 +678,27 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       boolean mocServerReading=true;
       interruptServerReading=false;
       int n=0;
+      int rm=0;
       
       try {
          while( mocServerReading && !interruptServerReading ) {
             prop = new MyProperties();
             mocServerReading = prop.loadRecord(in);
-            if( prop.size()==0 ) continue;
-            if( n%1000==0 ) aladin.trace(4,"RegStore.loadMultiProp(..) "+n+" prop loaded...");
-            n++;
-            nbRecInProgress=n;
-            try {  multiProp.add( prop ); } 
-            catch( Exception e ) {
+            if( prop.size()==0 || MultiMoc.getID(prop)==null ) continue;
+            
+            try {
+               if( prop.getProperty("MOCSERVER_REMOVE")!=null ) {
+                  System.out.println("Remove "+MultiMoc.getID(prop));
+                  multiProp.remove( MultiMoc.getID(prop)); rm++;
+               }
+               else multiProp.add( prop );
+            } catch( Exception e ) {
                if( Aladin.levelTrace>=3 ) e.printStackTrace();
             }
+            
+            n++;
+            nbRecInProgress=n;
+            if( n%1000==0 && n>0) aladin.trace(4,"RegStore.loadMultiProp(..) "+(n-rm)+" prop loaded "+(rm>0?" - "+rm+" removed":"")+"...");
          }
          if( interruptServerReading ) aladin.trace(3,"MocServer update interrupted !");
       } finally{ try { in.close(); } catch( Exception e) {} }
@@ -543,34 +709,30 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    /** Interruption du chargement des infos du MocServer */
    protected void interruptMocServerReading() { interruptServerReading=true; }
    
-   /** Génération des noeuds de l'arbre HiPS en fonction du contenu du MultiProp
-    * Les noeuds seront triés avant d'être mémorisés
+   /** Génération de la liste des collections en fonction du contenu du MultiProp
+    * La liste est triée
     * Les URLs HiPS seront mémorisées dans le Glu afin de pouvoir gérer les sites miroirs
     */
-   private void populateMultiProp(boolean localFile) {
-      
-      if( listReg==null ) listReg = new ArrayList<TreeObjReg>(20000);
-      else listReg.clear();
-      
-      // On force le recomptage des HiPS
-      setRefCount(true);
-      
-      for( MocItem mi : this ) populateProp(mi.prop,localFile);
-      
-      Comparator c = TreeObj.getComparator();
-      Collections.sort(listReg,c);
-      
+   private ArrayList<TreeObjDir> populateMultiProp(boolean localFile) {
+      ArrayList<TreeObjDir> listReg = new ArrayList<TreeObjDir>(20000);
+      for( MocItem mi : this ) populateProp(listReg, mi.prop,localFile);
+      Collections.sort(listReg, TreeObj.getComparator() );
+      return listReg;
    }
    
-   /** Génération du noeud de l'arbre correspondant à un enregistrement prop, ainsi que des
+   /** Ajout d'une collection correspondant à un enregistrement prop, ainsi que des
     * entrées GLU associées
     * @param prop       Enregistrement des propriétés
     * @param localFile  true si cet enregistrement a été chargé localement par l'utilisateur (ACTUELLEMENT NON UTILISE)
     */
-   private void populateProp(MyProperties prop, boolean localFile) {
+   private void populateProp(ArrayList<TreeObjDir> listReg, MyProperties prop, boolean localFile) {
       
       // Détermination de l'identificateur
       String id = MultiMoc.getID(prop);
+      if( id==null ) {
+         System.err.println("Directory.populateProp error - getID returns null => ignored ["+prop.toString().replace("\n"," ")+"]");
+         return;
+      }
       
       // Ajustement local des propriétés
       propAdjust( id, prop );
@@ -603,7 +765,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       }
       
       // Ajout dans la liste des noeuds d'arbre
-      listReg.add( new TreeObjReg(aladin,id,localFile,prop) );
+      listReg.add( new TreeObjDir(aladin,id,localFile,prop) );
    }
    
    /** Ajustement des propriétés, notamment pour ajouter le bon client_category
@@ -775,10 +937,19 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    private void initMultiProp() {
 
       // Tentative de rechargement depuis le cache
-      if( cacheRead() ) {
+      if( cacheRead()  ) {
          startTimer();
+         while( !init ) Util.pause(100);
          (new Thread("updateFromMocServer"){
-            public void run() { updateFromMocServer(); }
+            public void run() {
+               if( updateFromMocServer()>0  ) {
+                  cacheWrite();
+                  final ArrayList<TreeObjDir> tmpListReg = populateMultiProp(false);
+                  SwingUtilities.invokeLater(new Runnable() {
+                     public void run() { replaceTree(tmpListReg); }
+                  });
+               }
+            }
          }).start();
 
 
@@ -790,28 +961,31 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          String s = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
                +"&hips_service_url=*&fields=!obs_description,!hipsgen*&get=record";
          loadFromMocServer(s);
+         
          startTimer();
-
+         while( !init ) Util.pause(100);
          (new Thread("updateFromMocServer"){
             public void run() { 
-               if( loadFromMocServer(MOCSERVER_INIT) ) {
+               if( loadFromMocServer(MOCSERVER_INIT)>0 ) {
                   cacheWrite();
-                  populateMultiProp(false);
-                  askForResumeTree();
+                  final ArrayList<TreeObjDir> tmpListReg = populateMultiProp(false);
+                  SwingUtilities.invokeLater(new Runnable() {
+                     public void run() { replaceTree(tmpListReg); }
+                  });
                }
             }
          }).start();
       }
 
-      populateMultiProp(false);
-      askForResumeTree();
+      this.dirList = populateMultiProp(false);
    }
 
-   // IL FAUT PREVOIR LE CAS D'UN SIMPLE AJOUT, ET NON D'UN REMPLACEMENT COMPLET
+   /** Ajout de nouvelles collections */
    protected boolean addHipsProp(InputStream in, boolean localFile) {
       try {
          loadMultiProp(in);
-         populateMultiProp(localFile);
+         ArrayList<TreeObjDir> listReg = populateMultiProp(localFile);
+         replaceTree(listReg);
       } catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          return false;
@@ -819,23 +993,76 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       return true;
    }
    
-   /** Demande de maj des enr. via le MocServer. La date d'estampillage de référence sera
-    * la plus tardive de l'ensemble des enr. déjà copiés. Et si aucun, ce sera la date
-    * du fichier de cache (avec un risque de décalage des horloges entre le MocServer et
-    * la machine locale
-    * @return true si l'update a fonctionné.
+   /** Demande de maj des enr. via le MocServer en passant en POST la liste des IDs des collections
+    * que l'on connait déjà + une date d'estampillage pour chacune d'elles. Si ça ne fonctionne
+    * pas, on tentera une maj plus basique
+    * @return le nombre de records chargés
     */
-   private boolean updateFromMocServer() {
+   private int updateFromMocServer() {
+      long t0 = System.currentTimeMillis();
+      URL url;
+      try {
+         url  = aladin.glu.getURL("MocServer");
+      } catch(Exception e) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         return -1;
+      }
+
+      try {
+         MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
+         String boundary = MultiPartPostOutputStream.createBoundary();
+         URLConnection urlConn = MultiPartPostOutputStream.createConnection(url);
+         urlConn.setRequestProperty("Accept", "*/*");
+         urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
+         // set some other request headers...
+         urlConn.setRequestProperty("Connection", "Keep-Alive");
+         urlConn.setRequestProperty("Cache-Control", "no-cache");
+         MultiPartPostOutputStream out =  new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
+
+         File tmpMoc = File.createTempFile("moc", ".txt");
+         tmpMoc.deleteOnExit();
+
+         BufferedWriter fo = new BufferedWriter( new FileWriter(tmpMoc));
+         try {
+            for( MocItem mi : this ) {
+               String s = mi.mocId+"="+mi.getPropTimeStamp()+"\n";
+               fo.write( s.toCharArray() );
+            }
+         } finally { try { fo.close(); } catch(Exception e) {} }
+
+         out.writeFile("maj", null, tmpMoc, true);
+         out.close();
+         aladin.trace(4,"ID list sent");
+
+         int n=loadMultiProp( urlConn.getInputStream() );
+         Aladin.trace(3,"Multiprop updated in "+(System.currentTimeMillis()-t0)+"ms => "+n+" record"+(n>1?"s":""));
+         return n;
+
+      } catch(Exception e) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         System.err.println("An error occured while updating the MocServer service => try the basic mode...");
+         return updateFromMocServerBasic();
+      }
+   }
+
+   /** Demande de maj des enr. via le MocServer en fonction d'une seule date spécifique.
+    * La date d'estampillage de référence sera la plus tardive de l'ensemble des enr. déjà copiés.
+    * Et si aucun, ce sera la date du fichier de cache (avec un risque de décalage des horloges
+    * entre le MocServer et la machine locale.
+    * Cette méthode de maj ne permet pas la suppression des rec obsolètes, ni le complément de maj
+    * si la précédente maj a été interrompue en cours.
+    * @return  le nombre de records chargés
+    */
+   private int updateFromMocServerBasic() {
       long ts = getMultiPropTimeStamp();
       if( ts==0L ) ts = getCacheTimeStamp();
-//      ts = -1L;
-//      return loadFromMocServer("obs_regime=Infrared&get=record");
       return loadFromMocServer("TIMESTAMP=>"+ts+"&get=record");
    }
    
-   private boolean loadFromMocServer(String params) {
+   private int loadFromMocServer(String params) {
       InputStream in=null;
       boolean eof=false;
+      int n=0;
       
       String text = params.indexOf("TIMESTAMP")>=0 ? "updat":"load";
 
@@ -862,24 +1089,44 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             } catch( EOFException e1 ) { eof=true; }
          }
          
-         int n = 0;
          if( !eof ) n=loadMultiProp(in);
          Aladin.trace(3,"Multiprop "+text+"ed in "+(System.currentTimeMillis()-t0)+"ms => "+n+" record"+(n>1?"s":""));
          
       } catch( Exception e1 ) {
          if( Aladin.levelTrace>=3 ) e1.printStackTrace();
-         return false;
+         return -1;
          
       } finally {
          mocServerLoading=false;
          if( in!=null ) { try { in.close(); } catch( Exception e) {} }
       }
-      return true;
+      return n;
    }
-
+   
    private String getId(String ivoid) {
       if( ivoid.startsWith("ivo://") ) return ivoid.substring(6);
       return ivoid;
+   }
+   
+   
+   /** Retourne le nombre max (en K) du nombre de lignes des catalogues et tables */
+   protected int getNbKRowMax() {
+      long max = 0L;
+      for( MocItem mi : this ) {
+         try {
+            long n = Long.parseLong( mi.prop.get("nb_rows") );
+            if( n>max ) max=n;
+         } catch( Exception e) {}
+      }
+      return (int)( max/1000L );
+   }
+   
+   /** Retourne le nombre d'items matchant la contrainte */
+   protected int getNumber(String contrainte) {
+      try {
+         return multiProp.scan( contrainte ).size();
+      } catch( Exception e ) { } 
+      return -1;
    }
    
 
@@ -906,44 +1153,40 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    }
    
    
-   public void paintComponent(Graphics g) {
-      
-      // La regénération de l'arbre doit être faite par l'EDT sinon il y a de temps
-      // en temps des conflits d'accès sur la structure de l'arbre
-      // SI CA S'AVERE TROP LONG IL FAUDRAIT EXPLORER L'UTILISATION D'UN SWINGWORKER...
-      if( !init && !isTreeReady() ) { resumeTree(); }
-      
-      super.paintComponent(g);
-      
-      g.setFont( Aladin.BOLD );
-      
-      // Petit message pour avertir l'utilisateur que l'on charge des définitions
-      if( mocServerLoading ) {
-         String dot="";
-         for( int i = 0; i<blinkDot; i++ ) dot+=".";
-         blinkDot++;
-         if( blinkDot>10 ) blinkDot=0;
-         g.setColor(Aladin.BKGD);
-         String s = "Updating registry ("+nbRecInProgress+")"+dot;
-         g.drawString(s, 16, 25);
-         Slide.drawBall(g, 2, 16, blinkState ? Color.white : Color.orange);
-         
-      } else {
-         
-         g.setColor( Aladin.DARKBLUE );
-         g.drawString("Collection registry",16,25);
-         
-         // On fait clignoter le voyant d'attente d'info in/out
-         if( flagCheckIn ) {
-            startTimer();
-            Slide.drawBall(g, 2, 16, blinkState ? Color.white : Color.green );
-            
-         } else {
-            stopTimer();
-            Slide.drawBall(g, 2, 16, Color.green );
-         }
-      }
-   }
+//   public void paintComponent(Graphics g) {
+//      
+//      super.paintComponent(g);
+//      
+//      g.setFont( Aladin.BOLD );
+//      
+//      // Petit message pour avertir l'utilisateur que l'on charge des définitions
+//      if( mocServerLoading ) {
+//         String dot="";
+//         for( int i = 0; i<blinkDot; i++ ) dot+=".";
+//         blinkDot++;
+//         if( blinkDot>10 ) blinkDot=0;
+//         g.setColor(Aladin.BKGD);
+//         String s = "Updating directory ("+nbRecInProgress+")"+dot;
+//         g.drawString(s, 16, 25);
+//         Slide.drawBall(g, 2, 16, blinkState ? Color.white : Color.orange);
+//         
+//      } else {
+//         
+//         g.setColor( Aladin.DARKBLUE );
+//         int n=multiProp.size();
+//         g.drawString("Directory : "+n+" collection"+(n>1?"s":""),16,25);
+//         
+//         // On fait clignoter le voyant d'attente d'info in/out
+//         if( flagCheckIn ) {
+//            startTimer();
+//            Slide.drawBall(g, 2, 16, blinkState ? Color.white : Color.green );
+//            
+//         } else {
+//            stopTimer();
+//            Slide.drawBall(g, 2, 16, Color.green );
+//         }
+//      }
+//   }
    
    
    /************** Pour faire la maj en continue des HiPS visibles dans la vue *******************************/
@@ -983,7 +1226,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
    
    private class FrameInfo extends JFrame {
       
-      ArrayList<TreeObjReg> treeObjs=null;     // hips dont il faut afficher les informations
+      ArrayList<TreeObjDir> treeObjs=null;     // hips dont il faut afficher les informations
       JPanel panelInfo=null;                // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
       JCheckBox hipsBx=null,mocBx=null,progBx=null, dmBx=null, csBx=null, msBx=null, allBx=null;
       
@@ -995,23 +1238,25 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          contentPane.setBorder( BorderFactory.createLineBorder(Color.black));
          setUndecorated(true);
          setAlwaysOnTop(true);
+         pack();
       }
       
-      boolean isSame(ArrayList<TreeObjReg> a1, ArrayList<TreeObjReg> a2) {
+      boolean isSame(ArrayList<TreeObjDir> a1, ArrayList<TreeObjDir> a2) {
          if( a1==null && a2==null ) return true;
          if( a1==null || a2==null ) return false;
          if( a1.size() != a2.size() ) return false;
-         for( TreeObjReg ti : a1) {
+         for( TreeObjDir ti : a1) {
             if( !a2.contains(ti) ) return false;
          }
          return true;
       }
       
       /** Positionne les collections concernées, et regénère le panel en fonction */
-      void setCollections(ArrayList<TreeObjReg> treeObjs) {
+      void setCollections(ArrayList<TreeObjDir> treeObjs) {
          if( isSame(treeObjs,this.treeObjs) ) return;
          this.treeObjs = treeObjs;
          resumePanel();
+         pack();
       }
       
       /** Reconstruit le panel des informations en fonction des collections courantes */
@@ -1031,18 +1276,23 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          c.insets = new Insets(2,2,0,5);
          JPanel p = new JPanel(g);
          
-         TreeObjReg to=null;
+         TreeObjDir to=null;
          
          if( treeObjs.size()>1 )  {
             a = new MyAnchor(aladin,treeObjs.size()+" collections selected",50,null,null);
             a.setFont(a.getFont().deriveFont(Font.PLAIN));
             PropPanel.addCouple(p,null, a, g,c);
             StringBuilder list = null;
-            for( TreeObjReg to1 : treeObjs ) {
+            String sList=null,more=null;
+            for( TreeObjDir to1 : treeObjs ) {
                if( list==null ) list = new StringBuilder(to1.internalId);
                else list.append(", "+to1.internalId);
+               if( sList==null && list.length()>80 ) sList = list+"...";
             }
-            a = new MyAnchor(aladin,list.toString(),100,null,null);
+            if( sList!=null ) more = list.toString();
+            else sList=list.toString();
+            
+            a = new MyAnchor(aladin,sList,100,more,null);
             a.setForeground(Aladin.GREEN);
             PropPanel.addCouple(p,null, a, g,c);
             
@@ -1052,7 +1302,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
 
             if( to.verboseDescr!=null || to.description!=null ) {
                s = to.verboseDescr==null ? "":to.verboseDescr;
-               s =  s+"\n \n"+to.prop.getRecord(null);
+//               s =  s+"\n \n"+to.prop.getRecord(null);
                a = new MyAnchor(aladin,to.description,200,s,null);
                a.setFont(a.getFont().deriveFont(Font.PLAIN));
                PropPanel.addCouple(p,null, a, g,c);
@@ -1060,7 +1310,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             String provenance = to.copyright==null ? to.copyrightUrl : to.copyright;
             if( provenance!=null ) {
                s = ".Provenance: "+provenance;
-               a = new MyAnchor(aladin,s,50,null,null);
+               a = new MyAnchor(aladin,null,50,s,null);
                a.setForeground(Color.gray);
                PropPanel.addCouple(p,null, a, g,c);
             }
@@ -1102,12 +1352,12 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
                bx.setSelected(true);
                bx.setToolTipText("Hierarchical Progressive Survey (HiPS)");
             }
-            if( to.isCatalog() ) {
+            boolean hasView = !aladin.view.isFree();
+            if( to.isCDSCatalog() ) {
                boolean allCat = nbRows<2000;
                NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
                if( hipsBx!=null ) bg.add(hipsBx);
                
-               boolean hasView = !aladin.view.isFree();
                boolean hasMoc = aladin.calque.getNbPlanMoc()>0;
                
                if( nbRows!=-1 && nbRows<100000 ) {
@@ -1136,6 +1386,13 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
                if( onMoc && msBx!=null ) msBx.setSelected(true);
                else if( allBx!=null && nbRows<10000 ) allBx.setSelected(true);
                else if( csBx.isEnabled() ) csBx.setSelected(true); 
+               
+            } else if( to.getCSUrl()!=null ) {
+               csBx = bx = new JCheckBox("Cone search");
+               mocAndMore.add(bx);
+               bx.setSelected(true);
+               bx.setToolTipText("Cone search on the current view");
+               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
             }
             
             JLabel l = new JLabel(" + ");
@@ -1145,7 +1402,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             mocBx = bx = new JCheckBox("Coverage"); 
             mocAndMore.add(bx); 
             bx.setToolTipText("MultiOrder Coverage map (MOC)");
-            if( to.isCatalog() ) {
+            if( to.isCDSCatalog() ) {
                dmBx = bx = new JCheckBox("Density map");
                mocAndMore.add(bx);
                Util.toolTip(bx,"Progressive view (HiPS) of the density map associated to the catalog",true);
@@ -1183,7 +1440,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
          bas.add(control,BorderLayout.CENTER);
          
          if( to!=null && to.internalId!=null ) {
-            JLabel x = new JLabel(to.internalId);
+            MyAnchor x = new MyAnchor(aladin,to.internalId,100,to.prop.getRecord(null),null);
             x.setForeground(Aladin.GREEN);
             bas.add(x,BorderLayout.WEST);
          }
@@ -1203,7 +1460,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
       void submit() {
          if( treeObjs.size()==0 ) return;
          if( treeObjs.size()==1 ) {
-            TreeObjReg to = treeObjs.get(0);
+            TreeObjDir to = treeObjs.get(0);
             if( allBx!=null  && allBx.isSelected() )   to.loadAll();
             if( csBx!=null   && csBx.isSelected() )    to.loadCS();
             if( msBx!=null   && msBx.isSelected() )    to.queryByMoc();
@@ -1212,7 +1469,7 @@ public class RegStore extends JPanel implements Iterable<MocItem>{
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
             if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
          } else {
-            for( TreeObjReg to : treeObjs ) to.load();
+            for( TreeObjDir to : treeObjs ) to.load();
          }
       }
    }

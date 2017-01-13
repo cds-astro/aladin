@@ -31,7 +31,7 @@ public final class FrameHipsProperties extends FrameHeaderFits {
     PlanBG plan;
    
     protected FrameHipsProperties(PlanBG plan) throws Exception {
-       super(plan,"HiPS properties");
+       super(plan,"Properties");
        this.plan = plan;
        Aladin.setIcon(this);
        makeTA(false);

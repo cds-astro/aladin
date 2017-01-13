@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
@@ -230,7 +229,6 @@ public class Calque extends JPanel implements Runnable {
       bas.setMinimumSize(new Dimension(100,100));
       bas.setPreferredSize(new Dimension(100,aladin.getZoomViewHeight()));
       splitH.setResizeWeight(1);
-      splitH.setBorder(BorderFactory.createEmptyBorder());
       aladin.splitZoomHeight = splitH;
       
       setBackground( aladin.getBackground());
@@ -3382,7 +3380,7 @@ public class Calque extends JPanel implements Runnable {
    //   }
 
    // Détermination du target de démarrage pour un plan BG
-   private Coord getTargetBG(String target,TreeObjReg gSky) {
+   private Coord getTargetBG(String target,TreeObjDir gSky) {
       Coord c=null;
       if( target!=null && target.length()>0) {
          try {
@@ -3400,7 +3398,7 @@ public class Calque extends JPanel implements Runnable {
    }
 
    // Détermination du radius de démarrage pour un plan BG
-   private double getRadiusBG(String target,String radius,TreeObjReg gSky) {
+   private double getRadiusBG(String target,String radius,TreeObjDir gSky) {
       double rad=-1;
       if( radius!=null && radius.length()>0 ) {
          try {
@@ -3442,11 +3440,11 @@ public class Calque extends JPanel implements Runnable {
 
    /** Création d'un plan BG */
    public int newPlanBG(String path, String label, String target,String radius) { return newPlanBG(null,path,null,label,target,radius); }
-   public int newPlanBG(TreeObjReg gSky, String label, String target,String radius) { return newPlanBG(gSky,null,null,label,target,radius); }
+   public int newPlanBG(TreeObjDir gSky, String label, String target,String radius) { return newPlanBG(gSky,null,null,label,target,radius); }
    public int newPlanBG(URL url, String label, String target,String radius) { return newPlanBG(null,null,url,label,target,radius); }
 
 
-   public int newPlanBG(TreeObjReg gSky,String path,URL url, String label, String target,String radius) {
+   public int newPlanBG(TreeObjDir gSky,String path,URL url, String label, String target,String radius) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(target,gSky);

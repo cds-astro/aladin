@@ -324,6 +324,7 @@ public class MultiMoc implements Iterable<MocItem> {
                if( !exceptProp(prop,mocId) ) { prop=null; moc=null; }
 
                // Dans le cas où je ne mémorise pas le Moc
+               // Mais j'ai été obligé de le lire pour mettre à jour les champs obs_initial_ra, etc.
                if( !flagWithMoc ) {  moc=null; dateMoc=0L; }
 
                // En fin compte, y a rien à voir !
@@ -335,20 +336,19 @@ public class MultiMoc implements Iterable<MocItem> {
                boolean flagCreation=true;
                
                if( oMM!=null && (mi=oMM.getItem(mocId))!=null ) {
-                  if( dateMoc!=mi.dateMoc ) break;
                   
                   // Pas de changement ? => on le réutilise
-                  if( prop!=null && mi.prop!=null && prop.equals(mi.prop) ) {
+                  if( dateMoc==mi.dateMoc && prop!=null && mi.prop!=null && prop.equals(mi.prop) ) {
                      add(mi);
                      flagCreation=false;
                      nbReused++;
-                     System.out.println("Réutilisation de "+mocId);
+//                     System.out.println("Réutilisation de "+mocId);
                   }
                }
                
                if( flagCreation ) {
                   add(mocId,moc,prop,dateMoc,dateProp);
-                  System.out.println("Ajout de "+mocId);
+//                  System.out.println("Ajout de "+mocId);
                   nbCreation++;
                }
                
@@ -596,7 +596,7 @@ public class MultiMoc implements Iterable<MocItem> {
                System.out.println(filename+" MOC convert from "+sys+" to "+COORDSYS+" in "+ (System.currentTimeMillis()-t)+"ms");
             } catch( Exception e ) {
                System.out.println(filename+" MOC conversion error => ignored");
-               e.printStackTrace();
+//               e.printStackTrace();
                throw e;
             }
          }
@@ -672,7 +672,7 @@ public class MultiMoc implements Iterable<MocItem> {
    
    
    // Détermination de l'ID, soit par le creator_did, ou le publisher_did sinon creator_id?obs_id ou publisher_id?obs_id
-   // et encore sinon, avec le filename passé en paramètre, enfin un numéro aléatoire.
+   // et encore sinon, avec le filename passé en paramètre, enfin null si rien à faire
    // sans le préfixe ivo://
    static public String getID(MyProperties prop) { return getID(prop,null); }
    
@@ -692,7 +692,10 @@ public class MultiMoc implements Iterable<MocItem> {
             if( o==null ) o="id"+(System.currentTimeMillis()/1000);
             String p = prop.get("creator_id");
             if( p==null ) p = prop.get("publisher_id");
-            if( p==null ) p = "ivo://UNK.AUT";
+            if( p==null ) {
+               return null;
+//               p = "ivo://UNK.AUT";
+            }
             id = p+"/"+o;
          }
       }
@@ -1137,12 +1140,13 @@ public class MultiMoc implements Iterable<MocItem> {
       }
       
       // Traitement de key>val =>  key=>val
+      int pos1 = s.indexOf('=');
       pos = s.indexOf('>');
-      if( pos>0 ) return s.substring(0,pos)+"=>"+s.substring(pos+1);
+      if( pos>0 && (pos1==-1 || pos1>pos) ) return s.substring(0,pos)+"=>"+s.substring(pos+1);
       
       // Traitement de key<val =>  key=<val
       pos = s.indexOf('<');
-      if( pos>0 ) return s.substring(0,pos)+"=<"+s.substring(pos+1);
+      if( pos>0 && (pos1==-1 || pos1>pos) ) return s.substring(0,pos)+"=<"+s.substring(pos+1);
       
       return s;
    }
@@ -1417,7 +1421,7 @@ public class MultiMoc implements Iterable<MocItem> {
 //         String s2 = "client_application=* &! data*type=catalog";
 //         String s2 = "obs_title,ID=!CDS/B/denis/denis,!CDS/C/CALIFA/V500/DR2";
 //         String s2 = "CDS/P/DSS2/Color || CDS/B/denis/Denis";
-         String s2 = "moc_order<9 && CDS/B/denis/denis";
+         String s2 = "nb_rows=<100";
         
          System.out.println("calculer: "+s2);
          

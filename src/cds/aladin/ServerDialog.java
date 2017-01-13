@@ -361,16 +361,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          vizierServer = svizier = new ServerVizieR(aladin, this, actions);
          if( !Aladin.OUTREACH ) {
             sv.addElement(svizier);
-            sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
-                  ((ServerVizieR) svizier).vSurveys));
-            sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
-                  ((ServerVizieR) svizier).vArchives));
+            if( !Aladin.PROTO ) {
+               sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
+                     ((ServerVizieR) svizier).vSurveys));
+               sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
+                     ((ServerVizieR) svizier).vArchives));
+            }
             sv.addElement(new ServerSimbad(aladin));
             sv.addElement(new ServerNED(aladin));
-            if( Aladin.PROTO ) {
-               sv.addElement(new ServerSWarp(aladin));
-            }
-            if( Aladin.BETA ) {
+            if( Aladin.BETA && !Aladin.PROTO) {
+//               sv.addElement(new ServerSWarp(aladin));
                sv.addElement(new ServerMocQuery(aladin));
             }
          } else {

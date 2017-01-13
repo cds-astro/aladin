@@ -234,7 +234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
    // La couleur du fond
-   static final Color BACKGROUND   = new Color(250,250,240); //245,245,250); 
+   static final Color BACKGROUND   = new Color(248,248,250);  //250,250,240); //
    
    static final Color BKGD   = Color.lightGray;
 //       static final Color BKGD   = new Color(100,100,255);
@@ -417,7 +417,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    MySplitPane splitZoomHeight;  // Gère la séparation pile/zoom
    MySplitPane splitZoomWidth;   // Gère la séparation view/pile-zoom
    MySplitPane splitHiPSWidth;    // Gère la séparation hips/view
-   RegStore hipsStore;        // Gère le "HiPS market"
+   Directory directory;        // Gère le "HiPS market"
    Search search;                // Gère le bandeau de recherche dans les mesures
    public ToolBox toolBox;       // Gere la "Tool bar"
    public Calque calque;         // Gere a la fois les plans et le zoom
@@ -2162,8 +2162,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       haut1.add(saisie,BorderLayout.NORTH);
       JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
       
-//      bookmarks.setBackground( Color.red );
-
       panelBookmarks.add( bookmarks.getToolBar(), BorderLayout.CENTER);
       haut1.add(panelBookmarks,BorderLayout.SOUTH);
 
@@ -2228,56 +2226,60 @@ DropTargetListener, DragSourceListener, DragGestureListener
       ct.setBackground(getBackground());
       ct.setLayout( new BorderLayout(3,3) );
       ct.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
-      //       ct.setBorder(BorderFactory.createEmptyBorder(0,3,0,3));
-
-      // test thomas (avec un séparateur) + Pierre
-      //       final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-      //             gauche1, droite2);
-      //       splitV.setBorder(BorderFactory.createEmptyBorder());
-      //       splitV.setResizeWeight(1);
-      //       droite.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W,200));
-      //       gauche1.setMinimumSize(new Dimension(300,300));
-
-//      JPanel splitV = new JPanel( new BorderLayout(0,0));
-//      splitV.add(gauche1,BorderLayout.CENTER);
-//      splitV.add(droite2,BorderLayout.EAST);
 
       JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));
       bigViewSearch.setBackground( getBackground());
-      bigViewSearch.add(gauche1 /*splitV*/,BorderLayout.CENTER);
+      bigViewSearch.add(gauche1 ,BorderLayout.CENTER);
       bigViewSearch.add(searchPanel,BorderLayout.SOUTH);
 
 //      splitMesureHeight = new MySplitPaneMesure(aladin,JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
       splitMesureHeight = new MySplitPane(this,JSplitPane.VERTICAL_SPLIT, bigViewSearch, mesure, 1);
-//      mesure.setPreferredSize(new Dimension(100,getMesureHeight()));
       mesure.setPreferredSize(new Dimension(100,0));
       splitMesureHeight.setDefaultSplit( getMesureHeight() );
       bigViewSearch.setPreferredSize(new Dimension(500,500));
       mesure.setMinimumSize(new Dimension(100,0));
       splitMesureHeight.setResizeWeight(1);
-//      splitMesureHeight.remove(mesure);
-      splitMesureHeight.setBorder(BorderFactory.createEmptyBorder());
       
-      if( PROTO ) {
-         hipsStore = new RegStore(aladin);
-         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, hipsStore, splitMesureHeight,0);
-         splitHiPSWidth.setBorder(BorderFactory.createEmptyBorder());
-         hipsStore.setPreferredSize(new Dimension(getHiPSWidth(),200));
-         hipsStore.setMinimumSize( new Dimension(0,200));
-      }
+//      if( PROTO ) {
+//         directory = new Directory(aladin);
+//         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, splitMesureHeight,0);
+//         directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
+//         directory.setMinimumSize( new Dimension(0,200));
+//      }
       
       // test thomas (avec un séparateur) + Pierre
+//      final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, 
+//            PROTO ? splitHiPSWidth : splitMesureHeight, droite2,1);
       final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, 
-            PROTO ? splitHiPSWidth : splitMesureHeight, droite2,1);
-      splitV.setBorder(BorderFactory.createEmptyBorder());
+            splitMesureHeight, droite2,1);
       splitV.setResizeWeight(1);
       droite2.setMinimumSize(new Dimension(180,100));
       droite2.setPreferredSize(new Dimension(getStackWidth(),100));
       splitZoomWidth = splitV;
       
-      makeAdd(ct,haut,"North");
-      makeAdd(ct,splitV,"Center");
-      makeAdd(ct,infoPanel,"South");
+//      makeAdd(ct,haut,"North");
+//      makeAdd(ct,splitV,"Center");
+//      makeAdd(ct,infoPanel,"South");
+      
+      JPanel mainRight = new JPanel( new BorderLayout(0,0));
+      mainRight.add(haut,BorderLayout.NORTH);
+      mainRight.add(splitV,BorderLayout.CENTER);
+      
+      if( PROTO ) {
+         directory = new Directory(aladin);
+         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, mainRight,0);
+         directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
+         directory.setMinimumSize( new Dimension(0,200));
+         
+         ct.add( splitHiPSWidth, BorderLayout.CENTER);
+         ct.add( infoPanel, BorderLayout.SOUTH);
+         
+      } else {
+         ct.add( mainRight, BorderLayout.CENTER);
+         ct.add( infoPanel, BorderLayout.SOUTH);
+      }
+      
+      ct.setBorder( BorderFactory.createEmptyBorder(0, 3, 0, 3));
 
       // Dernier objet a creer et traitement des parametres
       co.creatLastObj();
@@ -2864,13 +2866,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    protected int allsky() {
-      TreeObjReg gSky = glu.getHips(0);
+      TreeObjDir gSky = glu.getHips(0);
       return allsky(gSky);
    }
 
    /** Activation d'un background */
-   protected int allsky(TreeObjReg gSky) { return hips(gSky,null,null,null); }
-   protected int hips(TreeObjReg gSky,String label,String target,String radius) {
+   protected int allsky(TreeObjDir gSky) { return hips(gSky,null,null,null); }
+   protected int hips(TreeObjDir gSky,String label,String target,String radius) {
       int n=1;
       if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
       else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright,target,radius);
@@ -2882,7 +2884,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected boolean allsky(String s) {
       int i = glu.findHips(s,2);
       if( i<0 ) return false;
-      TreeObjReg ga = glu.getHips(i);
+      TreeObjDir ga = glu.getHips(i);
       console.printCommand("get hips(\""+ga.aladinLabel+"\")");
       allsky(ga);
       return true;
@@ -4165,7 +4167,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try { calque.FreeAll(); } catch( Exception e ) {}
       }
       
-      if( hipsStore!=null ) hipsStore.interruptMocServerReading();
+      if( directory!=null ) directory.interruptMocServerReading();
 
       // appel des méthodes cleanup() des plugins
       if( plugins!=null ) {
@@ -5597,7 +5599,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Retourne true si le dialog est prêt */
    protected boolean dialogOk() {
-      if( Aladin.PROTO ) return dialog!=null && calque!=null && hipsStore!=null && hipsStore.dialogOk() ;
+      if( Aladin.PROTO ) return dialog!=null && calque!=null && directory!=null && directory.dialogOk() ;
       return dialog!=null && calque!=null;
    }
 

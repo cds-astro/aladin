@@ -49,7 +49,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 2.0 Janvier 2017 - désormais utilisé pour le HipsStore
  */
-public class TreeObjReg extends TreeObj {
+public class TreeObjDir extends TreeObj {
 
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
@@ -89,7 +89,7 @@ public class TreeObjReg extends TreeObj {
 
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
-   public TreeObjReg(Aladin aladin,String pathOrUrl) throws Exception {
+   public TreeObjDir(Aladin aladin,String pathOrUrl) throws Exception {
       String s;
       this.aladin = aladin;
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
@@ -279,7 +279,7 @@ public class TreeObjReg extends TreeObj {
 
    /** Création à partir d'un fichier de properties (ne supporte que HiPS 1.3 car dédié
     * principalement à des enregistrements issues du MocServer */
-   public TreeObjReg(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
+   public TreeObjDir(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
       String s;
 
       this.aladin = aladin;
@@ -395,7 +395,7 @@ public class TreeObjReg extends TreeObj {
    }
 
    /** Création à partir d'un enregistrement GLU */
-   public TreeObjReg(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
+   public TreeObjDir(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
          String aladinHpxParam,String skyFraction) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
@@ -585,6 +585,12 @@ public class TreeObjReg extends TreeObj {
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCatalog() { return cat; }
 
+   /** Retourne true s'il s'agit d'un catalogue hiérarchique */
+   protected boolean isCDSCatalog() { return cat && internalId.startsWith("CDS/"); }
+   
+   /** Retourne l'URL d'un Cone search ou null si aucun */
+   protected String getCSUrl() { return prop==null ? null : prop.get("cs_service_url"); }
+
    /** Retourne true s'il s'agit d'un catalogue hiérarchique pour des progéniteurs */
    protected boolean isProgen() { return progen; }
 
@@ -702,8 +708,20 @@ public class TreeObjReg extends TreeObj {
          double rad = aladin.view.getCurrentView().getTaille();
          if( rad>1 ) rad=1;
          String trg = aladin.view.getCurrentView().getCentre();
-         String cmd = internalId+" = get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
-         aladin.execAsyncCommand(cmd);
+         
+         // On passe par VizieR via la commande script
+         if( isCDSCatalog() ) {
+            String cmd = internalId+" = get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
+            aladin.execAsyncCommand(cmd);
+            
+         // On utilise une URL directe en CS
+         } else {
+            String csUrl = getCSUrl();
+            Coord c = aladin.view.getCurrentView().getCooCentre();
+            String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+Util.myRound(rad)+"&VERB=2";
+            aladin.execAsyncCommand(cmd);
+            // RA=$1&DEC=$2&SR=$3&VERB=2
+         }
       } catch( Exception e ) {
          aladin.warning(e.getMessage()==null?"Cone search error":e.getMessage());
       }

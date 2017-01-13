@@ -42,7 +42,7 @@ public class PlanBGCat extends PlanBG {
       super(aladin);
    }
 
-   protected PlanBGCat(Aladin aladin, TreeObjReg gluSky,String label, Coord c, double radius,String startingTaskId) {
+   protected PlanBGCat(Aladin aladin, TreeObjDir gluSky,String label, Coord c, double radius,String startingTaskId) {
       super(aladin,gluSky,label, c,radius,startingTaskId);
       aladin.log(Plan.Tp[type],label);
       setAllskyExt();
@@ -56,7 +56,7 @@ public class PlanBGCat extends PlanBG {
       this.gapOrder=gapOrder;
    }
 
-   protected void setSpecificParams(TreeObjReg gluSky) {
+   protected void setSpecificParams(TreeObjDir gluSky) {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);

@@ -447,7 +447,7 @@ public class MyProperties {
             value = new String(b,0,j);
          }
       } catch( Exception e ) {
-         System.err.println("MyProperties reader error => "+e.getMessage());
+//         System.err.println("MyProperties reader error => "+e.getMessage());
          prop.add(new PropItem("#", "#Error: "+s));
          return;
       }
