@@ -236,6 +236,7 @@ public class TreeObjDir extends TreeObj {
       // Pour compatibilité avec l'ancien vocabulaire
       else {
          keyColor = prop.getProperty(Constante.OLD_ISCOLOR);
+         if( keyColor==null ) keyColor = prop.getProperty("isColor");
          if( keyColor!=null ) color = new Boolean(keyColor);
       }
 
@@ -374,7 +375,11 @@ public class TreeObjDir extends TreeObj {
 
       // Détermination du format des cellules dans le cas d'un survey pixels
       s = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
-      if( s==null ) s = prop.getProperty(Constante.OLD_ISCOLOR);
+      if( s==null ) {
+         s = prop.getProperty(Constante.OLD_ISCOLOR);
+         if( s==null ) s = prop.getProperty("isColor");
+         if( s!=null ) s="color";
+      }
       if( s!=null ) color = s.indexOf("color")>=0;
 
       if( !cat && !progen ) {
@@ -588,6 +593,11 @@ public class TreeObjDir extends TreeObj {
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCDSCatalog() { return cat && internalId.startsWith("CDS/"); }
    
+   /** Retourne true s'il existe un accès SIA (par URL direct ou via GLU tag */
+   protected boolean hasSIA() {
+      return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia_glutag")!=null);
+   }
+   
    /** Retourne l'URL d'un Cone search ou null si aucun */
    protected String getCSUrl() { return prop==null ? null : prop.get("cs_service_url"); }
 
@@ -701,26 +711,53 @@ public class TreeObjDir extends TreeObj {
       aladin.allsky(this);
    }
    
+   protected void loadSIA() {
+      if( prop==null ) return;
+ 
+      double rad = aladin.view.getCurrentView().getTaille();
+      String trg = aladin.view.getCurrentView().getCentre();
+
+      // Accès via GLU
+      String gluTag = prop.get("sia_glutag");
+      if( gluTag!=null ) {
+         String cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
+         aladin.execAsyncCommand(cmd);
+         return;
+      } 
+      
+      // Accès direct SIA => http://...?POS=$1,$2&SIZE=$3&FORMAT=image/fits
+      String url = prop.get("sia_service_url");
+      if( url!=null ) {
+         Coord c = aladin.view.getCurrentView().getCooCentre();
+       String cmd = internalId+" = load "+url+"POS"+c.al+","+c.del+"&SIZE="+Util.myRound(rad)+"&FORMAT=image/fits";
+         aladin.execAsyncCommand(cmd);
+         return;
+      }
+   }
+   
    protected void loadCS() {
       try {
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
          double rad = aladin.view.getCurrentView().getTaille();
-         if( rad>1 ) rad=1;
          String trg = aladin.view.getCurrentView().getCentre();
          
-         // On passe par VizieR via la commande script
+         // On passe par VizieR/Simbad via la commande script
          if( isCDSCatalog() ) {
-            String cmd = internalId+" = get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
+            
+            String cmd;
+            if( internalId.startsWith("CDS/Simbad") ) {
+               cmd = "get Simbad "+trg+" "+Util.myRound(rad)+"deg";
+            } else cmd = "get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
             aladin.execAsyncCommand(cmd);
             
-         // On utilise une URL directe en CS
+         // Accès direct CS => http://...?RA=$1&DEC=$2&SR=$3&VERB=2
          } else {
             String csUrl = getCSUrl();
             Coord c = aladin.view.getCurrentView().getCooCentre();
             String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+Util.myRound(rad)+"&VERB=2";
             aladin.execAsyncCommand(cmd);
-            // RA=$1&DEC=$2&SR=$3&VERB=2
+            
          }
       } catch( Exception e ) {
          aladin.warning(e.getMessage()==null?"Cone search error":e.getMessage());

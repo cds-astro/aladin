@@ -4614,7 +4614,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected void drawBackground(Graphics g) {
       if( g==null ) return;
       
-      
       if( aladin.isCinema() ) {
          aladin.makeCursor(this, aladin.BLANKCURSOR );
          g.setColor(Color.black);
@@ -6825,7 +6824,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int ok = nb==ViewControl.MVIEW1 ? 0 : nb==ViewControl.MVIEW2C ? 1 : nb==ViewControl.MVIEW2L ? 0 
              : nb==ViewControl.MVIEW4 ? 2 : nb==ViewControl.MVIEW9  ? 6 : 12;
       if( n!=ok ) return;  // Seule la vue en bas à gauche a une languette
-      rLanguette = MySplitPane.drawLanguette(g, 1, true, 6, 0, getHeight()-70, aladin.getBackground(), Color.gray);
+      rLanguette = MySplitPane.drawLanguette(g, 1, true, 6, 0, getHeight()-70, aladin.COLOR_DIRECTORY, Color.gray);
    }
 
    private void drawHealpixMouse(Graphics g) {

@@ -20,14 +20,18 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.image.ImageObserver;
+import java.util.Stack;
+import java.util.StringTokenizer;
 
 import javax.swing.JComponent;
 
@@ -56,9 +60,10 @@ public final class Help extends JComponent implements
    Aladin aladin;
 
    // Les variables de travail
-   static final Font FI = Aladin.LPLAIN;// Font par defaut
-   static final Font FG = Aladin.LBOLD;	// Font grasse
-   static final Font FTITRE = FG;
+   static Font FI = Aladin.LPLAIN;  // Font par defaut
+   static Font FG = Aladin.LBOLD;	// Font grasse
+   static Font FTITRE = FG;
+   static Font TEST;
    static int dy=-1;			// Espace entre deux lignes
    
    String DEFAUT,VIEW;
@@ -68,6 +73,10 @@ public final class Help extends JComponent implements
    */
    protected Help(Aladin aladin) {
       this.aladin = aladin;
+      
+      FI = font = new Font("Trebuchet MS"/*"Segoe UI"*/,Font.PLAIN,Aladin.LSIZE);
+      FG=FTITRE = new Font("Trebuchet MS",Font.BOLD,Aladin.LSIZE+2);
+      
       setBackground(Color.white);
       addMouseMotionListener(this);
       addMouseListener(this);
@@ -182,7 +191,7 @@ public final class Help extends JComponent implements
 
       // Pas encore de contexte
       if( fm==null ) return y;
-      else dy = fm.getHeight();
+      else dy = fm.getHeight()+2;
 //      else dy = Aladin.GETHEIGHT+1;	// Cochonnerie de JAVA
       
       boolean ligneVide=s.trim().length()==0;
@@ -320,7 +329,7 @@ public final class Help extends JComponent implements
       g.setFont(font);
       
       // AntiAliasing
-      aladin.setAliasing(g);
+      aladin.setAliasing(g,1);
 
       if( fm==null ) fm=g.getFontMetrics();
       

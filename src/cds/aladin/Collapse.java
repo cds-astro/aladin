@@ -74,6 +74,11 @@ public class Collapse extends MyIcon {
       int x = 10;
       int y = 3;
       
+      if( isAvailable() ) {
+         g.setColor( isMouseIn() ? Aladin.MYBLUE : Color.white );
+         g.fillRect(x,y,9,9);
+      }
+      
       g.setColor( !isAvailable() ?  ( isMouseIn() ? Aladin.MYBLUE : Aladin.MYGRAY) : Color.black );
       drawLogo(g,x,y);
       

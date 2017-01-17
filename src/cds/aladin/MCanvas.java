@@ -1645,15 +1645,15 @@ MouseWheelListener, Widget
     * @param needScrollBar la scrollbar est requise.
     */
    protected void adjustScrollV(int nl, boolean needScrollBar) {
-      scrollV.setVisibleAmount(nl);
-      scrollV.setBlockIncrement(nl-1);
-      
       if( !needScrollBar  ) {
          if( showScrollV ) { aladin.mesure.remove(scrollV); showScrollV=false; }
       } else {
          if( !showScrollV ) { aladin.mesure.add(scrollV,"East"); showScrollV=true; }
       }
       aladin.mesure.validate();
+
+      scrollV.setVisibleAmount(nl);
+      scrollV.setBlockIncrement(nl-1);
    }
 
    /** Surcharge juste pour en profiter pour mettre à jour

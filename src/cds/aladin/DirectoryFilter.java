@@ -29,7 +29,6 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -135,15 +134,35 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       JButton b;
       p.add( b=new JButton("Apply")); 
       b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { 
-            if( inArea ) submitArea();
-            else submitLocal(); }
+         public void actionPerformed(ActionEvent e) { submitLocal(); }
       });
       b.setFont(b.getFont().deriveFont(Font.BOLD));
       p.add( b=new JButton("Reset"));
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { reset(); }
       });
+      
+      p.add(new JLabel(" - "));
+      
+      p.add( b=new JButton("Store")); b.setEnabled(false);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            aladin.info("Pas encore implanté\n"
+                  + "Servira à mémoriser des filtres \"customisés\" réutilisables directement\n"
+                  + "depuis la fenêtre principale"); }
+      });
+      p.add( b=new JButton("Delete")); b.setEnabled(false);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            aladin.info("Pas encore implanté\n"
+                  + "Servira à supprimer des filtres \"customisés\"\n"
+                  + "que l'on ne souhaite plus garder");
+         }
+      });
+
+      
+      p.add(new JLabel(" - "));
+      
       p.add( b=new JButton("Close"));
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { setVisible(false); }
@@ -218,8 +237,11 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       StringBuilder others=new StringBuilder();
       for( String k : map1.keySet() ) {
         int n = map.get(k);
-        String lab = k.length()>11 ? k.substring(0, 8)+"..." : k;
-        JCheckBox bx = new JCheckBox( max<0?k:lab, max>=0);
+        String lab = k;
+        if( max<0 ) lab=lab.replace('_',' ');
+        else if( lab.length()>11 ) lab = lab.substring(0, 8)+"...";
+        
+        JCheckBox bx = new JCheckBox( lab, max>=0);
 //        bx.setToolTipText(k);
         String vm = (max>0 && addLogic ? "!":"")+ k + (delim==null?"":delim+"*");
         bx.setActionCommand((addLogic?"":"-")+key+"="+vm);
@@ -309,6 +331,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Excécution du filtrage (génération de la requête MocServer correspondante au formulaire
     * puis appel au MocServer */
    private void submitLocal() {
+      
+      if( inArea ) { inArea=false; submitArea(); return; }
+      
       HashMap<String, String []> inclu = new HashMap<String, String[]>();
       HashMap<String, String []> exclu = new HashMap<String, String[]>();
       
@@ -317,8 +342,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( !bxImage.isSelected() )     addParam(exclu,"client_category","Image*");
       if( !bxCube.isSelected() )      addParam(exclu,"client_category","Cube*");
       if( !bxCatalog.isSelected() )   addParam(exclu,"client_category","Catalog*");
-      if( !bxJournal.isSelected() )   addParam(exclu,"client_category","Journal*");
-      if( !bxOtherType.isSelected() )      addParam(inclu,"client_category","Catalog*,Image*,Cube*,Journal*");
+      if( !bxJournal.isSelected() )   addParam(exclu,"client_category","*/Journal table/*");
+      if( !bxOtherType.isSelected() )      addParam(inclu,"client_category","Catalog*,Image*,Cube*,*/Journal table/*");
       
       if( !bxGammaRay.isSelected() )  addParam(exclu,"obs_regime","Gamma-ray");
       if( !bxXray.isSelected() )      addParam(exclu,"obs_regime","X-ray");
@@ -328,6 +353,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( !bxRadio.isSelected() )     addParam(exclu,"obs_regime","Radio");
       if( !bxGasLines.isSelected() )  addParam(exclu,"client_category","Image/Gas-lines/*");
 
+      if( bxHiPS.isSelected() )       special.append(" && (hips_service_url=*)");
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
       if( bxPixColor.isSelected() )   special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
       
@@ -350,7 +376,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
       
       String s;      
-      if( (s=getText(tfDescr)).length()!=0 )     special.append(" && obs_title,obs_description,obs_collection,ID=*"+s+"*");
+      if( (s=getText(tfDescr)).length()!=0 )     special.append(" && obs_title,obs_description,obs_collection,ID="+jokerize(s));
       if( (s=getText(tfCoverage)).length()!=0 )  special.append(" && moc_sky_fraction="+s);
       if( (s=getText(tfHiPSorder)).length()!=0 ) special.append(" && (hips_order="+s+"|| hips_service_url=!*)");
       if( (s=getText(tfCatNbRow)).length()!=0 )  special.append(" && (dataproduct_type!=catalog || nb_rows="+s+")");
@@ -390,6 +416,20 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       aladin.directory.quickFilterSetText( getText(tfDescr) );
       aladin.directory.resumeFilter(expr.length()==0 ? "*" : expr);
+   }
+   
+   /** Parcours une liste de mots séparés par des virgules (,) ou des pipes (|)
+    * et insère de part et d'autre le joker '*'
+    * ex: 2MASS|USNO => *2MASS*,*USNO2
+    */
+   private String jokerize(String s) {
+      Tok tok = new Tok(s,",|");
+      StringBuilder s1 = null;
+      while( tok.hasMoreTokens() ) {
+         if( s1==null ) s1 = new StringBuilder("*"+tok.nextToken().trim());
+         else s1.append("*,*"+tok.nextToken().trim());
+      }
+      return s1.toString()+"*";
    }
    
    private String rebuildInclu(HashMap<String,String[]> exclusion) {
@@ -449,7 +489,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxOtherType;
    private JCheckBox bxGammaRay, bxXray,bxUV,bxOptical,bxInfrared,bxRadio,bxGasLines;
-   private JCheckBox bxPixFull,bxPixColor,bxDate;
+   private JCheckBox bxPixFull,bxPixColor,bxDate,bxHiPS;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate;
    
    private Vector<JCheckBox> authVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
@@ -471,6 +511,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxRadio.setSelected(true);
       bxGasLines.setSelected(true);
       bxPixFull.setSelected(false);
+      bxHiPS.setSelected(false);
       bxPixColor.setSelected(false);
       tfCatNbRow.setText("");
       tfCoverage.setText("");
@@ -490,8 +531,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       submitLocal();
    }
    
+   /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
    protected void setFreeText( String s ) {
-      tfDescr.setText(s);
+      int i = s.indexOf('=');
+      if( i<0 ) i=s.indexOf('>');
+      if( i<0 ) i=s.indexOf('<');
+      if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) {
+         tfDescr.setText("");
+         exprArea.setText(s);
+         inArea=true;
+         
+      } else tfDescr.setText(s);
    }
    
    // Positionne un cadre de titre autour d'un panel
@@ -509,8 +559,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g = new GridBagLayout();
       c.fill = GridBagConstraints.BOTH;
-      c.insets = new Insets(2,2,2,2);
-      JLabel l;
+//      c.insets = new Insets(2,2,2,2);
       JCheckBox bx;
       JPanel subPanel;
       JButton b;
@@ -592,6 +641,11 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p = bottomLeftPanel = new JPanel(g);
       setTitleBorder(p, "Dedicated HiPS filters");
       
+      // UNiquement les HiPS
+      subPanel = new JPanel( new FlowLayout());
+      subPanel.add( bx=bxHiPS     = new JCheckBox("HiPS collections only")); bx.addActionListener(this); 
+      PropPanel.addCouple(this, p, "Restriction", "Remove no HiPS collections...", subPanel, g, c, GridBagConstraints.EAST);
+
       // Couverture du ciel
       tfHiPSorder = new JTextFieldX(15);
       PropPanel.addCouple(this, p, "HiPS order", "HiPS order...\n(ex:<5", 
@@ -604,7 +658,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //    });
 //    PropPanel.addCouple(this, p, "Test", "Max nb of rows",
 //          slRow, g, c, GridBagConstraints.EAST);
-
+      
       // Types de tuiles
       NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
       subPanel = new JPanel( new FlowLayout());
@@ -679,7 +733,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
     }
    
    private void setToolTip(JCheckBox bx) {
-//      String s = aladin.hipsStore.getNumber( bx.getActionCommand() )+" collections";
+//      String s = aladin.directory.getNumber( bx.getActionCommand() )+" collections";
 //      bx.setToolTipText(s);
    }
 

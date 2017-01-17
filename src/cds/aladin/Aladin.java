@@ -223,7 +223,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+
          " - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2016 Unistra/CNRS - by CDS - Distributed under GNU GPL v3";
+   static String COPYRIGHT         = "(c) 2017 Université de Strasbourg/CNRS - by CDS - Distributed under GNU GPL v3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -234,13 +234,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
    // La couleur du fond
-   static final Color BACKGROUND   = new Color(248,248,250);  //250,250,240); //
+   static final Color BACKGROUND      = new Color(230,230,255); //250,250,255); 
+   static final Color COLOR_INFOPANEL = new Color(160,160,255);   
+   static final Color COLOR_DIRECTORY = new Color(230,230,255);
    
    static final Color BKGD   = Color.lightGray;
 //       static final Color BKGD   = new Color(100,100,255);
        
    static final Color GREEN = new Color(27,137,0);
-   static final Color DARKBLUE = new Color(102,102,153);
+   public static final Color DARKBLUE = new Color(102,102,153);
    static final Color MYBLUE = new Color(49,106,197);
    static final Color LBLUE = new Color(229,229,229);
    public static final Color BLUE =  new Color(214,214,255);
@@ -869,9 +871,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void creatFonts() {
       if( BOLD!=null ) return;
       String s = "SansSerif";
+      String s1 = "Monospaced";
 
       trace(1,"Creating Fonts");
-
+      
       BOLD   = new Font(s,Font.BOLD,  SIZE);
       PLAIN  = new Font(s,Font.PLAIN, SIZE);
       ITALIC = new Font(s,Font.ITALIC,SIZE);
@@ -887,8 +890,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       LBOLD  = new Font(s,Font.BOLD,  LSIZE);
       LITALIC= new Font(s,Font.ITALIC,LSIZE);
       LLITALIC= LBOLD;
-      COURIER= new Font("Monospaced",Font.PLAIN,Aladin.SIZE);
-      BCOURIER= new Font("Monospaced",Font.PLAIN+Font.BOLD,Aladin.SIZE);
+      COURIER= new Font(s1,Font.PLAIN,Aladin.SIZE);
+      BCOURIER= new Font(s1,Font.PLAIN+Font.BOLD,Aladin.SIZE);
    }
 
    /** Création des chaines dans la langue */
@@ -2117,9 +2120,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //       if( !OUTREACH && !BETA ) saisie.add(pixel);
 
       // creation widget plastic (doit se faire avant la creation du menu)
-      if( PLASTIC_SUPPORT ) {
-         plasticWidget = new PlasticWidget(this);
-      }
+      if( PLASTIC_SUPPORT ) plasticWidget = new PlasticWidget(this);
 
       // Creation du menu
       if( !NOGUI ) {
@@ -2152,7 +2153,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       JPanel droite2;
       droite2 = new JPanel(new BorderLayout(0,0));
       droite2.setBackground( getBackground());
-      droite2.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 0));
+      droite2.setBorder( BorderFactory.createEmptyBorder(0, 0, 3, 3));
       droite2.add(toolBox,BorderLayout.WEST);
       droite2.add(droite,BorderLayout.CENTER);
 
@@ -2167,7 +2168,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // Le panel haut : contient le logo et le haut1
       JPanel haut = new JPanel(new BorderLayout(0,0));
-      haut.setBorder(BorderFactory.createEmptyBorder(4,10,0,40));
+      haut.setBorder(BorderFactory.createEmptyBorder(4,0,0,40));
       haut.setBackground( getBackground());
       haut.add(haut1,BorderLayout.CENTER);
       haut.add(logo,BorderLayout.EAST);
@@ -2192,7 +2193,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       GridBagLayout g = new GridBagLayout();
       infoPanel = new JPanel(g);
-      infoPanel.setBackground( getBackground());
+      infoPanel.setBackground( COLOR_INFOPANEL );
+      urlStatus.setBackground( COLOR_INFOPANEL );
+      memStatus.setBackground( COLOR_INFOPANEL);
+      
+      urlStatus.setForeground(Color.white);
+      
       GridBagConstraints gc = new GridBagConstraints();
       gc.gridwidth = 3;
       gc.weightx = 1;
@@ -2224,7 +2230,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else ct = (JPanel)getContentPane();
 
       ct.setBackground(getBackground());
-      ct.setLayout( new BorderLayout(3,3) );
+      ct.setLayout( new BorderLayout(0,0) );
       ct.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 
       JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));
@@ -2232,7 +2238,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       bigViewSearch.add(gauche1 ,BorderLayout.CENTER);
       bigViewSearch.add(searchPanel,BorderLayout.SOUTH);
 
-//      splitMesureHeight = new MySplitPaneMesure(aladin,JSplitPane.VERTICAL_SPLIT, true, bigViewSearch, mesure);
       splitMesureHeight = new MySplitPane(this,JSplitPane.VERTICAL_SPLIT, bigViewSearch, mesure, 1);
       mesure.setPreferredSize(new Dimension(100,0));
       splitMesureHeight.setDefaultSplit( getMesureHeight() );
@@ -2240,37 +2245,27 @@ DropTargetListener, DragSourceListener, DragGestureListener
       mesure.setMinimumSize(new Dimension(100,0));
       splitMesureHeight.setResizeWeight(1);
       
-//      if( PROTO ) {
-//         directory = new Directory(aladin);
-//         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, splitMesureHeight,0);
-//         directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
-//         directory.setMinimumSize( new Dimension(0,200));
-//      }
+      JPanel px = new JPanel( new BorderLayout(0,0) );
+      px.add(splitMesureHeight, BorderLayout.CENTER );
+      px.setBorder( BorderFactory.createEmptyBorder(0, 0, 3, 0));
       
-      // test thomas (avec un séparateur) + Pierre
-//      final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, 
-//            PROTO ? splitHiPSWidth : splitMesureHeight, droite2,1);
-      final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, 
-            splitMesureHeight, droite2,1);
+      final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, px, droite2,1);
       splitV.setResizeWeight(1);
       droite2.setMinimumSize(new Dimension(180,100));
       droite2.setPreferredSize(new Dimension(getStackWidth(),100));
       splitZoomWidth = splitV;
-      
-//      makeAdd(ct,haut,"North");
-//      makeAdd(ct,splitV,"Center");
-//      makeAdd(ct,infoPanel,"South");
       
       JPanel mainRight = new JPanel( new BorderLayout(0,0));
       mainRight.add(haut,BorderLayout.NORTH);
       mainRight.add(splitV,BorderLayout.CENTER);
       
       if( PROTO ) {
-         directory = new Directory(aladin);
+         directory = new Directory(aladin, COLOR_DIRECTORY);
          splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, mainRight,0);
          directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
          directory.setMinimumSize( new Dimension(0,200));
          
+         splitHiPSWidth.setBackground(COLOR_DIRECTORY);
          ct.add( splitHiPSWidth, BorderLayout.CENTER);
          ct.add( infoPanel, BorderLayout.SOUTH);
          
@@ -2279,7 +2274,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
          ct.add( infoPanel, BorderLayout.SOUTH);
       }
       
-      ct.setBorder( BorderFactory.createEmptyBorder(0, 3, 0, 3));
 
       // Dernier objet a creer et traitement des parametres
       co.creatLastObj();

@@ -521,10 +521,10 @@ EXPAND	exp
 EXPAND.fr	dév
 COLLAPSETIP	Expand/collapse the HiPS tree
 COLLAPSETIP.fr	Développe/réduit l'arbre des HiPS
-PRUNE	prune
-PRUNE.fr	élague
-PRUNETIP	Hide/show the HiPS without any observation in the current view
-PRUNETIP.fr	Cache/montre les HiPS n'ayant\naucune observation dans le champ courant
+INSIDE	inside
+INSIDE.fr	dedans
+INSIDETIP	Hide/show the collections without any observation in the current view
+INSIDETIP.fr	Cache/montre les collections n'ayant\naucune observation dans le champ courant
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key

@@ -22,6 +22,7 @@ package cds.aladin;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -53,11 +54,11 @@ public class DirectoryTree extends JTree {
    protected DefaultMutableTreeNode root;
    private Aladin aladin;
 
-   protected DirectoryTree(Aladin aladin) {
+   protected DirectoryTree(Aladin aladin, Color cbg) {
       this.aladin = aladin;
       setModel( new DirectoryModel(aladin) );
       
-      setBackground( aladin.getBackground() );
+      setBackground( cbg );
       setBorder( BorderFactory.createEmptyBorder(10, 0, 10, 0));
       setShowsRootHandles(true);
       NoeudRenderer nr = new NoeudRenderer();
@@ -89,7 +90,7 @@ public class DirectoryTree extends JTree {
    }
    
    /** true si tous les noeuds sous le parent indiqué par son TreePath sont collapsés */
-   private boolean isCollapsedRec(TreePath parent) {
+   protected boolean isCollapsedRec(TreePath parent) {
       DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
       if (node.getChildCount() >= 0) {
          for (Enumeration e = node.children(); e.hasMoreElements(); ) {
@@ -121,7 +122,7 @@ public class DirectoryTree extends JTree {
    }
    
    /** Collapse tous les noeuds sous le parent */
-   private void collapseRec(TreePath parent) {
+   protected void collapseRec(TreePath parent) {
       DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
       if (node.getChildCount() >= 0) {
          for (Enumeration e = node.children(); e.hasMoreElements(); ) {
@@ -133,19 +134,21 @@ public class DirectoryTree extends JTree {
       collapsePath(parent);
    }
    
+   
+   
    /** Ouverture de toutes les branches de l'arbre */
-   protected void allExpand() {
+   protected void allExpand() { allExpand( new TreePath(root) ); } 
+   protected void allExpand(TreePath path) {
 
       List<TreeExpansionListener> expListeners = Arrays.asList( getTreeExpansionListeners() );
       for( TreeExpansionListener listener : expListeners) removeTreeExpansionListener(listener);
 
-      TreePath rootPath = new TreePath(root);
-      expandAll( rootPath );
+      expandAll( path );
 
       for( TreeExpansionListener listener : expListeners) addTreeExpansionListener(listener);
 
-      collapsePath(rootPath);
-      expandPath(rootPath);
+      collapsePath(path);
+      expandPath(path);
    }
    
    private void expandAll(TreePath parent) {
@@ -241,7 +244,7 @@ public class DirectoryTree extends JTree {
          textForeground = UIManager.getColor("Tree.textForeground");
          textBackground = aladin.getBackground();
          
-         nonLeafRenderer.setBackgroundNonSelectionColor( aladin.getBackground() );
+         nonLeafRenderer.setBackgroundNonSelectionColor( getBackground() );
       }
 
       public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded,
@@ -253,7 +256,7 @@ public class DirectoryTree extends JTree {
          
          try {
             if( n.isInStack() ) c.setForeground( Color.green );
-            else if( !aladin.directory.prune.isActivated() ) {
+            else if( !aladin.directory.inside.isActivated() ) {
                int isIn = n.getIsIn();
                c.setForeground( isIn==0 ? Aladin.ORANGE : isIn==1 ? Aladin.GREEN : Color.black );
             }
@@ -276,6 +279,8 @@ public class DirectoryTree extends JTree {
             } else if( !node.isLeaf() ) icon=getIcon( "Folder", 0);
             if( icon!=null ) nonLeafRenderer.setIcon( icon );
          } catch( Exception e ) { }
+         
+         c.setMinimumSize( new Dimension( 150,c.getMinimumSize().height));
 
          return c;
       }
