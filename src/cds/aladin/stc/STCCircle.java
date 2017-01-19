@@ -1,0 +1,108 @@
+/**
+ * 
+ */
+package cds.aladin.stc;
+
+import java.util.List;
+
+import cds.aladin.Coord;
+
+/**
+ * Class representing a circle formed from an stc string
+ * @author chaitra
+ *
+ */
+public class STCCircle extends STCObj {
+	
+	private STCFrame frame;
+	private Coord center;
+	private double radius;
+	
+	public STCCircle() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	public STCCircle(STCFrame frame, double ra, double dec, double radius) {
+		this();
+		this.frame =  frame;
+		this.center = new Coord(ra,dec);
+		this.radius = radius;
+	}
+	
+	public STCCircle(double ra, double dec, double radius) {
+		this();
+		this.center = new Coord(ra,dec);
+		this.radius = radius;
+	}
+	
+	public STCCircle(STCFrame frame, String ra, String dec, String radius) {
+		this(Double.parseDouble(ra),Double.parseDouble(dec),Double.parseDouble(radius));
+		this.frame =  frame;
+	}
+	
+	public static void main(String[] args) {
+		String stc = "circle icrs 84.23 -10.95 0.0005 circle icrs 90.32 -10.95 0.0005";
+		STCStringParser parser = new STCStringParser();
+		List<STCObj> stcobj = parser.parse(stc);
+		for (STCObj stcObj2 : stcobj) {
+			System.out.println(stcObj2.toString());
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see cds.aladin.stc.STCObj#getShapeType()
+	 */
+	@Override
+	public ShapeType getShapeType() {
+		// TODO Auto-generated method stub
+		return STCObj.ShapeType.CIRCLE;
+	}
+
+	/* (non-Javadoc)
+	 * @see cds.aladin.stc.STCObj#isIn(double, double)
+	 */
+	@Override
+	public boolean isIn(double lon, double lat) {
+		boolean isIn = false;
+		double distance = Coord.getDist(this.center,
+				new Coord(lat, lon));
+		if (distance <= this.radius) {
+			isIn = true;
+		}
+		return isIn;
+	}
+
+	public STCFrame getFrame() {
+		return frame;
+	}
+
+	public void setFrame(STCFrame frame) {
+		this.frame = frame;
+	}
+
+	public Coord getCenter() {
+		return center;
+	}
+
+	public void setCenter(Coord center) {
+		this.center = center;
+	}
+
+	public double getRadius() {
+		return radius;
+	}
+
+	public void setRadius(double radius) {
+		this.radius = radius;
+	}
+	
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		StringBuffer toPrint = new StringBuffer();
+		toPrint.append(this.getShapeType()).append(" ").append(this.frame).append(" ").append(this.center.al)
+				.append(" ").append(this.center.del).append(" ").append(this.radius);
+		return toPrint.toString();
+	}
+
+}

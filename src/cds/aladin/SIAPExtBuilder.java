@@ -288,18 +288,16 @@ public class SIAPExtBuilder extends TreeBuilder {
 		Aladin.trace(3, "+++ : "+obsRefIndex);
 		TRSet trs = table.getData().getTableData().getTRs();
 		TDSet tds;
-		SavotTR tr;
 
 		if( trs.getItemCount()==0 ) return;
 
-		Enumeration e = trs.getItems().elements();
+		List<SavotTR> e = trs.getItems();
 		String keyVal;
 		ResourceNode node, parentNode;
-
-	    // boucle sur les TR
-	    while( e.hasMoreElements() ) {
-	        tr = (SavotTR)e.nextElement();
-	        tds = tr.getTDs();
+		
+		// boucle sur les TR
+		for (SavotTR tr : e) {
+			tds = tr.getTDs();
 
 	        keyVal = tds.getContent(obsRefIndex);
 //	        node = (ResourceNode)namesToNodes.get(key);
@@ -348,7 +346,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 	    TRSet trSet = dataAccessTab.getData().getTableData().getTRs();
 	    if( trSet.getItems()==null ) return;
 
-	    Enumeration e = trSet.getItems().elements();
+	    List<SavotTR> e = trSet.getItems();
 
 	    String obsRef, relatedObs;
 	    ResourceNode parent;
@@ -374,12 +372,10 @@ public class SIAPExtBuilder extends TreeBuilder {
         String locationStr, dataOrgaStr, descStr;
         locationStr=dataOrgaStr=descStr=null;
         TDSet tds;
-        SavotTR tr;
 
 	    // boucle sur les TR
-	    while( e.hasMoreElements() ) {
-	        tr = (SavotTR)e.nextElement();
-	        tds = tr.getTDs();
+        for (SavotTR tr : e) {
+        	tds = tr.getTDs();
 	        obsRef = tds.getContent(obsRefIndex);
 //	        System.out.println("obsref : "+obsRef);
 	        parent = (ResourceNode)namesToNodes.get(obsRef);
@@ -475,16 +471,14 @@ public class SIAPExtBuilder extends TreeBuilder {
 	    Hashtable namesToMembers = new Hashtable();
 
 	    TRSet trSet = compositionTab.getData().getTableData().getTRs();
-	    SavotTR tr;
-	    Enumeration e = trSet.getItems().elements();
+	    List<SavotTR> e = trSet.getItems();
 	    String obsRef, relatedObs;
 	    ResourceNode parent;
 	    ResourceNode curMembersNode;
 	    Vector children;
 
 	    // boucle sur les TR
-	    while( e.hasMoreElements() ) {
-	        tr = (SavotTR)e.nextElement();
+	    for (SavotTR tr : e) {
 	        obsRef = ((SavotTD)(tr.getTDs().getItemAt(obsRefIndex))).getContent();
 	        parent = (ResourceNode)namesToNodes.get(obsRef);
 
@@ -540,15 +534,12 @@ public class SIAPExtBuilder extends TreeBuilder {
 	    Hashtable namesToInfo = new Hashtable();
 
 	    TRSet trSet = characTab.getData().getTableData().getTRs();
-	    SavotTR tr;
-	    Enumeration e = trSet.getItems().elements();
+	    List<SavotTR> e = trSet.getItems();
 	    String obsRef;
 	    ResourceNode curInfoNode;
 
-	    while( e.hasMoreElements() ) {
-	        tr = (SavotTR)e.nextElement();
-
-	        obsRef = ((SavotTD)(tr.getTDs().getItemAt(obsRefIndex))).getContent();
+	    for (SavotTR tr : e) {
+	    	obsRef = ((SavotTD)(tr.getTDs().getItemAt(obsRefIndex))).getContent();
 	        ResourceNode parent = (ResourceNode)namesToNodes.get(obsRef);
 
 	        if( parent!=null ) {

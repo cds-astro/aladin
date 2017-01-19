@@ -128,7 +128,7 @@ public class TreeBuilder {
     private static final String UCD1P_TITLE = "meta.title";
 
     public static final String UTYPE_STCS_REGION1 = "stc:ObservationLocation.AstroCoordArea.Region";
-    public static final String UTYPE_STCS_REGION2 = "Char.SpatialAxis.Coverage.Support.Area";
+    public static final String UTYPE_STCS_REGION2 = "*Char.SpatialAxis.Coverage.Support.Area";
 
     // variables de travail pour le Fov
     private double xVal, yVal, alphaVal, deltaVal;
@@ -267,12 +267,12 @@ public class TreeBuilder {
         }
 
 //        Enumeration<SavotField> fields = firstRes.getFieldSet(0).getItems().elements();
-        Enumeration<Object> fields = firstRes.getFieldSet(0).getItems().elements();
-        SavotField curField;
+        //Enumeration<Object> fields = firstRes.getFieldSet(0).getItems().elements();
+        List<SavotField> fields = firstRes.getFieldSet(0).getItems();
+        SavotField curField1;
         String curUtype, curUCD;
         // TODO : pour distinguer vraiment SSAP de SIAP, on pourrait peut-etre se baser sur le namespace
-        while( fields.hasMoreElements() ) {
-            curField = (SavotField)fields.nextElement();
+        for (SavotField curField : fields) {
             curUtype = stripNSForUtype(curField.getUtype().trim());
             curUCD = curField.getUcd();
             if(    curUtype.equalsIgnoreCase(UTYPE_ACREF_SSA) && ! curUCD.equalsIgnoreCase(SIAP_URL)
@@ -315,9 +315,9 @@ public class TreeBuilder {
         if( firstRes.getTableCount()>0 ) {
         	FieldSet fSet = firstRes.getFieldSet(0);
         	if( fSet!=null && fSet.getItems()!=null ) {
-        		Enumeration e = fSet.getItems().elements();
-        		while( e.hasMoreElements() ) {
-        			if( ((SavotField)e.nextElement()).getUtype().equalsIgnoreCase(FOOTPRINT_REF_UTYPE) ) {
+        		List<SavotField> e = fSet.getItems();
+        		for (SavotField savotField : e) {
+        			if(savotField.getUtype().equalsIgnoreCase(FOOTPRINT_REF_UTYPE) ) {
         				type = SIAP_EXT;
         				return;
         			}

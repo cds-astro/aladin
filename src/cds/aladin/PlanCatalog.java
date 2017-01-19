@@ -180,6 +180,9 @@ public class PlanCatalog extends Plan {
    */
    protected boolean Free() {
       aladin.view.deSelect(this);
+      if (Aladin.PROTO) {//TODO:: tintinproto
+    	  TapManager.getInstance(aladin).updateDeleteUploadPlans(this);
+      }
       super.Free();
       aladin.view.free(this);
       headerFits=null;
@@ -251,6 +254,11 @@ public class PlanCatalog extends Plan {
 
          // Y a-t-il des filtres prédéfinis à activer ?
          setFilter(filterIndex);
+         
+         //to add loaded plan into upload options
+         if (Aladin.PROTO) {//TODO:: tintinproto
+        	 TapManager.getInstance(aladin).updateAddUploadPlans(this);
+		}
       }
 
       if( getNbTable()>1 ) aladin.calque.splitCatalog(this);

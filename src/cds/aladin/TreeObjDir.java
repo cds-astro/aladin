@@ -598,6 +598,9 @@ public class TreeObjDir extends TreeObj {
       return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia_glutag")!=null);
    }
    
+   /** Retourne true si la collection dispose d'un MOC */
+   protected boolean hasMoc() { return prop!=null && prop.get("moc_sky_fraction")!=null; }
+   
    /** Retourne l'URL d'un Cone search ou null si aucun */
    protected String getCSUrl() { return prop==null ? null : prop.get("cs_service_url"); }
 
@@ -763,7 +766,7 @@ public class TreeObjDir extends TreeObj {
          aladin.warning(e.getMessage()==null?"Cone search error":e.getMessage());
       }
    }
-
+   
    protected void loadAll() {
       int i = internalId.indexOf('/');
       String cat = internalId.substring(i+1);
@@ -807,6 +810,7 @@ public class TreeObjDir extends TreeObj {
 //         aladin.calque.newPlanMOC(mis,label+" MOC");
 //      }
 //      catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      
       
       String u = getMocUrl();
       aladin.execAsyncCommand("'MOC "+label+"'=load "+u);

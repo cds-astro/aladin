@@ -3,7 +3,8 @@ package cds.aladin.stc;
 public abstract class STCObj {
 
     public enum ShapeType {
-        POLYGON
+        POLYGON,
+        CIRCLE
     }
 
 

@@ -20,6 +20,13 @@
 
 package cds.aladin;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import cds.savot.model.SavotResource;
 import cds.tools.Util;
 import cds.xml.Field;
 
@@ -70,13 +77,17 @@ public final class Words implements Runnable {
    boolean pushed=false;    // Ancre qui vient d'etre cliquee -> en rouge
    boolean haspushed=false; // Ancre qui a ete cliquee -> violet
    int     num;             // numéro de ligne (pour pouvoir tracer les lignes dans 2 couleurs alternées)
-
+   boolean isDatalink = false;
+   
    // Variable de travail
    Thread thread;	    // Utilise lors de l'appel d'une marque GLU
 
    // Les References
    MCanvas  m;		    // Canvas pour l'affichage des mesures
    Glu     g;		    // Pour faire appel au GLU
+   
+   Map<String,SavotResource> metaResources= null;
+   List<SimpleData> datalinksInfo = null;
 
    /** Creation d'une sequence de mots.
     * Determine s'il s'agit d'un tag GLU, d'un repere (triangle) ou
@@ -86,18 +97,19 @@ public final class Words implements Runnable {
     * @param align le type d'alignement
     * @param computed s'agit-il d'un champ calculé ?
     */
-   protected Words(String tag, int num) { this(tag,null,0,-1,LEFT, false,Field.UNSORT,num); }
-   protected Words(String tag,int width,int num) { this(tag,null,width,-1,LEFT, false,Field.UNSORT,num); }
+   protected Words(String tag, int num) { this(tag,null,0,-1,LEFT, false,Field.UNSORT,num, false); }
+   protected Words(String tag,int width,int num) { this(tag,null,width,-1,LEFT, false,Field.UNSORT,num,false); }
    protected Words(String tag,int width,int precision,int align,int num) {
-      this(tag, null,width, precision,align, false,Field.UNSORT,num);
+      this(tag, null,width, precision,align, false,Field.UNSORT,num,false);
    }
-   protected Words(String tag,String defText,int width,int precision,int align,boolean computed,int sort,int num) {
+   protected Words(String tag,String defText,int width,int precision,int align,boolean computed,int sort,int num, boolean isDatalink) {
       this.width = width;
       this.precision = precision;
       this.align = align;
       this.computed = computed;
       this.sort=sort;
       this.num=num;
+      this.isDatalink = isDatalink;
       char [] a = tag.toCharArray();
       if( !(glu=tagGlu(a)) ) text=tag;
       if( defText!=null ) text=defText;
@@ -264,18 +276,25 @@ public final class Words implements Runnable {
    }
 
    private boolean callArchive=false;
+   private boolean getDatalinks=false;
    private Aladin _aladin;
    private Obj _o;
 
-   protected void callArchive(Aladin aladin,Obj o) {
-      haspushed=pushed=true;
-      callArchive=true;
-      _aladin=aladin;
-      _o=o;
-      thread = new Thread(this,"AladinCallGlu");
-      thread.setPriority( Thread.NORM_PRIORITY -1);
-      thread.start();
-   }
+   protected void callArchive(Aladin aladin,Obj o, boolean isDatalinkCall) {
+		if (Aladin.PROTO && isDatalinkCall) {
+			this.callArchive = true;
+			this.getDatalinks = true;
+			
+		}else {
+			haspushed = pushed = true;
+			callArchive = true;
+		}
+		_aladin = aladin;
+		_o = o;
+		thread = new Thread(this, "AladinCallGlu");
+		thread.setPriority(Thread.NORM_PRIORITY - 1);
+		thread.start();
+	}
 
    private void callArchive1(Aladin aladin,Obj o) {
       String label = param;
@@ -291,10 +310,53 @@ public final class Words implements Runnable {
          aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
          return;
       }
-
-      aladin.calque.newPlan(url,label,"provided by the original archive server", o);
+      
+		try {
+			if (getDatalinks) {
+				URL datalinkUrl = null;
+				// aladin.calque.newPlan(url,label,"provided by the original
+				// archive
+				// server", o, true);
+				if (this.datalinksInfo == null || this.datalinksInfo.isEmpty()) {
+					datalinksInfo = new ArrayList<SimpleData>();
+					datalinkUrl = new URL(url);
+				} else if (aladin.mesure.activeDataLinkGlu!=null && datalinksInfo.contains(aladin.mesure.activeDataLinkGlu)) {
+					
+					//Code part1: incase of datalink result again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
+					/*dataLinkInfoCopy = new ArrayList<>();
+					dataLinkInfoCopy.addAll(datalinksInfo);
+					dataLinkInfoCopy.remove(aladin.mesure.activeDataLinkGlu);*/
+					
+					datalinksInfo = new ArrayList<SimpleData>();
+					SimpleData activeDatalinkLabel = aladin.mesure.activeDataLinkGlu;
+					datalinkUrl = new URL(activeDatalinkLabel.getParams().get(Constants.ACCESSURL));
+				}
+				
+				aladin.mesure.activeDataLinkWord = this;
+				aladin.mesure.activeDataLinkSource = (Source) o;
+				aladin.mesure.datalinkManager = new DatalinkManager(datalinkUrl);
+				
+				aladin.mesure.datalinkManager.populateDataLinksInfo(datalinksInfo);
+				
+				//Code part2: incase of datalink reult again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
+				/*if (dataLinkInfoCopy!=null && !dataLinkInfoCopy.isEmpty()) {
+					aladin.mesure.datalinkManager.addOriginalItems(dataLinkInfoCopy, datalinksInfo);
+				}*/
+				aladin.mesure.datalinkPopupShow(datalinksInfo);
+				aladin.mesure.activeDataLinkGlu = null;
+			} else {
+				aladin.calque.newPlan(url, label, "provided by the original archive server", o);
+			}
+		} catch (MalformedURLException e) {
+			// TODO: handle exception
+			aladin.warning(aladin, "Error in loading url");
+			if (Aladin.levelTrace >= 3)
+				e.printStackTrace();
+		}
+      
    }
-   
+
+    
    /** Juste pour récupérer l'URL associée */
    String getURL(Aladin aladin) {
       if( id==null ) return "";

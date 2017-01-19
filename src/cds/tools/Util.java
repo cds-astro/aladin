@@ -101,14 +101,21 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.Vector;
+import java.util.AbstractMap.SimpleEntry;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -127,10 +134,16 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import cds.aladin.Aladin;
+import cds.aladin.Coord;
 import cds.aladin.Forme;
 import cds.aladin.MyInputStream;
+import cds.aladin.Plan;
 import cds.aladin.Tok;
 import cds.image.EPSGraphics;
+import cds.savot.model.ResourceSet;
+import cds.savot.model.SavotResource;
+import cds.savot.pull.SavotPullParser;
+import static cds.aladin.Constants.*;
 import healpix.essentials.FastMath;
 
 /**
@@ -2175,6 +2188,173 @@ public final class Util {
       return s1.toString();
    }
 
+   /**
+	 * Method to parse date given in natural language.
+	 * Parses date in the below formats only: the delimiters could include "-" or "/" or " "
+	 * <ol><li>dd-MM-yyyy</li>
+	 * <li>dd-MMM-yyyy</li>
+	 * <li>yyyy-MM-dd</li>
+	 * <li>yyyy-MMM-dd</li>
+	 * </ol>
+	 * 
+	 * Including the combination resulting with time provided in <b>HH:mm</b> or <b>HH:mm:ss</b> formats.
+	 * 
+	 * @param input
+	 * @return 
+	 * @throws ParseException 
+	 */
+	public static Date parseDate(String input) throws ParseException {
+		String dateFormat = null;
+		Date date = null;
+		input = input.trim();
+	    
+		if(input.contains(" ") || input.contains("/") || input.contains("-")){
+			input = input.replaceAll("[\\s/-]+", "-");
+			SimpleEntry<String, String> timeFormat = null;
+
+			int hourMinDelimiter = input.indexOf(":");
+			if (hourMinDelimiter != -1) {
+				if (input.indexOf(":", hourMinDelimiter + 1)==-1) {
+					timeFormat = new SimpleEntry<String, String>("-\\d{1,2}:\\d{1,2}$", "-HH:mm");
+				} else {
+					timeFormat = new SimpleEntry<String, String>("-\\d{1,2}:\\d{1,2}:\\d{1,2}$", "-HH:mm:ss");
+				}
+			}
+			
+			StringBuffer completeRegEx = null;
+			for (String regExp : DATE_FORMATS.keySet()) {
+				if (timeFormat != null) {
+					completeRegEx = new StringBuffer(regExp).append(timeFormat.getKey());
+					 if (input.matches(completeRegEx.toString())) {
+						 dateFormat = DATE_FORMATS.get(regExp) + timeFormat.getValue();
+						 break;
+					}
+				} else if(input.matches(regExp)){
+					dateFormat = DATE_FORMATS.get(regExp);
+					break;
+				}
+			}
+		}
+		
+		if (dateFormat!=null && !dateFormat.isEmpty()) {
+			DateFormat dateformat = new SimpleDateFormat(dateFormat);
+			dateformat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		    try {
+				date =  dateformat.parse(input);
+				System.out.println(date);
+			} catch (ParseException pe) {
+				throw pe;
+			} 
+		} 
+		
+		return date;
+	}
+	
+	/**
+	 * Method to convert date to MJD.
+	 * @param date
+	 * @return dateinMJD
+	 */
+	public static double ISOToMJD(Date date) {
+		double result = 0.0d;
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		result = Astrodate.dateToJD(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1, cal.get(Calendar.DAY_OF_MONTH),
+				cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+		System.out.println(cal.get(Calendar.YEAR)+" " +cal.get(Calendar.MONTH)+1+" " +cal.get(Calendar.DAY_OF_MONTH)+" " +
+				cal.get(Calendar.HOUR_OF_DAY)+" " +cal.get(Calendar.MINUTE)+" " +cal.get(Calendar.SECOND));
+		result = Astrodate.JDToMJD(result);
+		return result;
+	}
+	
+	public static List<Coord> getRectangleVertices(double ra, double dec, double width, double height) {
+		List<Coord> rectVertices = new ArrayList<Coord>();
+		width = width/2;
+		height = height/2;
+		rectVertices.add(new Coord(ra-width, dec-height));
+		rectVertices.add(new Coord(ra+width, dec-height));
+		rectVertices.add(new Coord(ra+width, dec+height));
+		rectVertices.add(new Coord(ra-width, dec+height));
+		
+		return rectVertices;
+		
+	}
+	
+	/**
+	 * Method to extract resource of type="results"
+	 * @param resourceSet
+	 * @return results typed SavotResource
+	 */
+	public static SavotResource populateResultsResource(SavotPullParser savotParser) {
+		ResourceSet resourceSet = savotParser.getAllResources().getResources();
+		SavotResource resultsResource = null;
+		if (resourceSet!=null && resourceSet.getItemCount()>0) {
+			for (int i = 0; i < resourceSet.getItemCount(); i++) {
+				SavotResource resource= (SavotResource)resourceSet.getItemAt(i);
+				if (resource.getType().equalsIgnoreCase(RESULTS_RESOURCE_NAME)) {
+					resultsResource = resource;
+				}
+			}
+		}
+		return resultsResource;
+	}
+	
+	/**
+	 * Methode statique qui dit si une expression est une chaine de caractère ou non
+	 * @param str La chaine a parser
+	 * @return vrai ou faux
+	 * @author Mallory Marcot
+	 */
+	public static boolean isString(String str) {
+		
+		String str_upper = new String(str.toUpperCase());
+		for(int i=0; i<str_upper.length(); i++) {
+			if( LISTE_CARACTERE_STRING.contains(str_upper.charAt(i) + ""))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Methode qui juge si il faut entourer l'expression de simple quote ou non
+	 * @param str Expression à parser
+	 * @return La chaine correctement formattée
+	 * @author Mallory Marcot
+	 */
+	public static String formatterPourRequete(String str) {
+		if(isString(str) && !str.toLowerCase().equals("null") && !dejaQuote(str))
+			str = "'" + str + "'";
+		
+		return " "+ str;
+	}
+	
+	
+	/**
+	 * Permet de savoir si une chaine de caractère est entourée de simple quote
+	 * ou non
+	 * @param str La chaine à tester
+	 * @return oui ou non
+	 * @author Mallory Marcot
+	 */
+	public static boolean dejaQuote(String str) {
+		boolean ret = false;
+		
+		if(str.charAt(0) == '\'' && str.charAt(str.length()-1) == '\'')
+			ret = true;
+		
+		return ret;
+	}
+	
+	public static Plan getPlanByLabel(Plan[] plans, String aladinFileName) {
+		Plan plan = null;
+		for (int i = 0; i < plans.length; i++) {
+			if (plans[i].label!=null && plans[i].label.equalsIgnoreCase(aladinFileName)) {
+				plan = plans[i];
+			}
+		}
+		return plan;
+	}
 
    // PAS ENCORE TESTE
    //    /** Extrait le premier nombre entier qui se trouve dans la chaine � partir

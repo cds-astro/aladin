@@ -27,6 +27,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -38,6 +39,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Formatter;
@@ -52,6 +55,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 
+import cds.tools.ConfigurationReader;
 import cds.tools.Util;
 import cds.xml.Field;
 
@@ -240,6 +244,7 @@ MouseWheelListener, Widget
    /** Reactions aux differents boutons du menu */
    public void actionPerformed(ActionEvent e) {
       Object src = e.getSource();
+      if( src == datalinktimer  ) { populateDataLinkInfos(); return; }
       if( src instanceof Timer ) { endTimerHist(); return; }
 
       //      if( src instanceof JMenuItem ) System.out.println("ActionCommand = "+((JMenuItem)src).getActionCommand());
@@ -387,6 +392,7 @@ MouseWheelListener, Widget
       menuCopyMeasurement.setEnabled(flag);
       menuCopyURL.setEnabled( aladin.mesure.getCurObjURL().length()>0 );
       popMenu.show(this,x,y);
+      bindDatalinkPopupFunctionality(-1, -1,-1);
    }
 
 
@@ -577,7 +583,8 @@ MouseWheelListener, Widget
     * @return        La taille calculee
     */
    protected int drawWords(Graphics g, Words w, boolean flagClear) {
-      return drawWords(g,w,flagClear, aladin.getBackground() ); //w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
+      return drawWords(g,w,flagClear, Color.white );
+//      return drawWords(g,w,flagClear, aladin.getBackground() ); //w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
    }
    private int drawWords(Graphics g, Words w, boolean flagClear,Color background) {
       int y = w.y+HF;        // Ligne de base
@@ -738,7 +745,7 @@ MouseWheelListener, Widget
          w = (Words) e.nextElement();
          
          if( i==0 ) {
-            bg = aladin.getBackground(); //(w.num%2==0) ? Color.white : BG ;
+            bg = Color.white; // aladin.getBackground(); //(w.num%2==0) ? Color.white : BG ;
             
             // Effacement de la ligne si necessaire
             if( flagClear && W!=-1 ) {
@@ -891,7 +898,13 @@ MouseWheelListener, Widget
       if( wButton!=null ) {
          wButton.pushed=false;
          wButton.haspushed=true;
-         wButton.callArchive(aladin,oButton);
+         wButton.callArchive(aladin,oButton, wButton.isDatalink);
+         if (Aladin.PROTO && wButton.isDatalink) {//TODO:: tintinproto
+        	 aladin.makeCursor(this, Aladin.WAITCURSOR);
+        	 aladin.mesure.isEnabledDatalinkPopUp = true;
+        	 aladin.mesure.datalinkshowX = x;
+			 aladin.mesure.datalinkshowY = y;
+		}
          wButton=null; oButton=null;
          repaint();
       }
@@ -977,6 +990,12 @@ MouseWheelListener, Widget
       if( (ev.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) {
          sortField = indiceCourant;
          flagPopup=true;
+      }
+      
+      // externalisation d'un panel dans une fenêtre indépendante
+      if( rectOut!=null && rectOut.contains(ev.getPoint()) ) {
+         aladin.mesure.split();
+         return;
       }
 
       // Clic dans l'entête
@@ -1138,6 +1157,11 @@ MouseWheelListener, Widget
       if( n+mode>=scrollV.getMaximum() ) return;
       if( n+mode<0 ) return;
       scrollV.setValue(n+mode);
+      
+      int x = e.getX();
+      int y = e.getY();
+      
+      bindDatalinkPopupFunctionality(firstsee+ (y-MH)/HL, x, y);
    }
 
 
@@ -1208,7 +1232,7 @@ MouseWheelListener, Widget
       // On remet le fond
       Words w=((Words)ligne.elementAt(1));
       int y = w.y;
-      Color bg = aladin.getBackground(); // (w.num%2==0) ? Color.white :BG ;
+      Color bg = Color.white; // aladin.getBackground(); // (w.num%2==0) ? Color.white :BG ;
       g.setColor(y<=HF ? Aladin.BKGD : bg);
       g.fillRect(0,y, W, HF+2);
 
@@ -1391,7 +1415,13 @@ MouseWheelListener, Widget
          if( onBordField!=-1 ) setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
          else aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 
-         return;
+		if (datalinktimer != null) {
+			datalinktimer.stop();
+		}
+		trackedHoverRowIndex = -1;
+		
+		drawIconOut(g);
+        return;
       }
 
       aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
@@ -1411,6 +1441,10 @@ MouseWheelListener, Widget
          aladin.urlStatus.setText("");
          aladin.mesure.setStatus("");
          Util.toolTip(this, tip);
+         
+         bindDatalinkPopupFunctionality(-1, -1, -1);
+         
+         drawIconOut(g);
          return;
       }
 
@@ -1450,6 +1484,10 @@ MouseWheelListener, Widget
 
       // Affichage du texte (legende ou texte) associee a la mesure
       e = ligne.elements();
+      
+      
+      bindDatalinkPopupFunctionality(currentsee, x, y);
+      
       o=(Source)e.nextElement();   // Je saute l'objet lui-meme
       boolean trouve=false;        // true si on trouve un mot a selectionner
       for( int i=0; e.hasMoreElements() && x>15 ; i++ ) {
@@ -1514,6 +1552,7 @@ MouseWheelListener, Widget
          indiceCourant=-1;
       }
 
+      drawIconOut(g);
       Util.toolTip(this, tip);
    }
 
@@ -1521,6 +1560,8 @@ MouseWheelListener, Widget
       if( s.leg!=null && s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
    }
 
+   Timer datalinktimer = null;
+   int trackedHoverRowIndex;
 
    //   public boolean mouseEnter(Event e, int x, int y) {
    public void mouseEntered(MouseEvent e) {
@@ -1540,6 +1581,7 @@ MouseWheelListener, Widget
    public void mouseExited(MouseEvent e) {// Clear du status
       if( aladin.inHelp ) return;
       if( timer!=null ) timer.stop();
+      if( datalinktimer!=null ) datalinktimer.stop(); trackedHoverRowIndex =-1; //resetting popups for datalinks in the dataset
       aladin.urlStatus.setText(aladin.COPYRIGHT);   // Remet le copyright
       currentsee=-1;                                // Plus aucune ligne courante
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
@@ -1551,6 +1593,76 @@ MouseWheelListener, Widget
       if( ow!=null ) ow.onMouse=false;
       repaint();
    }
+
+	/**
+    * Method that populates datalink pop-up when action is on any part of the row containing a datalink element
+    */
+	public void populateDataLinkInfos() {
+		Vector currentHoverLigne = aladin.mesure.getWordLine(trackedHoverRowIndex);
+	    Enumeration trackedHoverRow= currentHoverLigne.elements();
+	    
+		Source currentHoverSource = (Source) trackedHoverRow.nextElement();
+		
+		if (ligneHead == null)
+			return;
+
+		Words linkWord = null;
+		boolean isDatalink = false;
+
+		while (trackedHoverRow.hasMoreElements()) {
+			Words word = (Words) trackedHoverRow.nextElement();
+			if (word.archive) {
+				linkWord = word;
+			} if (word.isDatalink) {
+				isDatalink = true;
+			}
+		}
+
+		if (isDatalink) {
+			try {
+				aladin.mesure.isEnabledDatalinkPopUp = true;
+				URL url = new URL(linkWord.text);
+				this.aladin.mesure.datalinkManager = new DatalinkManager(url);
+				linkWord.callArchive(aladin, currentHoverSource, true);
+			} catch (MalformedURLException e) {
+				if (Aladin.levelTrace >= 3)
+					e.printStackTrace();
+			}
+			repaint();
+			trackedHoverRowIndex =-1;
+			currentsee = -1;
+			return;
+		}
+	}
+	
+	/**
+	 * Funtion to trigger the datalink funtionality on hover actions
+	 * @param currentseeparam
+	 * @param x
+	 * @param y
+	 */
+	public void bindDatalinkPopupFunctionality(int currentseeparam, int x, int y) {
+		if (ConfigurationReader.getInstance().getPropertyValue("DATALINKHOVEREVENT").contains("enable")) {
+			if (currentseeparam != -1) {
+				if (trackedHoverRowIndex != currentseeparam) {//logic to check current hover row for populating datalinks
+			    	trackedHoverRowIndex = currentseeparam;
+					if (datalinktimer == null) {
+						datalinktimer = new Timer(1500, this);
+						datalinktimer.setRepeats(false);
+						datalinktimer.start();
+					} else
+						datalinktimer.restart();
+			    }
+				aladin.mesure.datalinkshowX = x;
+			    aladin.mesure.datalinkshowY = y;
+			} else {
+				if (datalinktimer != null) {
+					datalinktimer.stop();
+				}
+				trackedHoverRowIndex = -1; // resetting popups for datalinks in the dataset
+			}
+		}
+	}
    
    /** Ouverture de l'outil de manipulation des coordonnées pour la source indiquée */
    protected void openCooToolbox(Source o) {
@@ -1662,9 +1774,34 @@ MouseWheelListener, Widget
       aladin.adjustNbSel();
       super.repaint();
    }
+   
+   private Image iconOut=null;
+   private Rectangle rectOut = null;
 
    // Regeneration du plan image pour la fenetre des mesures
    public void paintComponent(Graphics gr) {
+      paintComponent1(gr);
+      drawIconOut(gr);
+   }
+   
+   // tracé de l'icone permettant l'extraction du panel dans une fenêtre indépendante
+   private void drawIconOut(Graphics gr) {
+      if( aladin.mesure.isSplitted() ) return;
+      if( iconOut==null ) {
+         iconOut = aladin.getImagette("Preview.gif");
+      }
+      if( iconOut!=null ) {
+         int w=16;
+         int x = getWidth()-w-4;
+         int y = 4;
+         gr.drawImage(iconOut, x,y,aladin);
+         rectOut = new Rectangle(x,y,w,w);
+      }
+   }
+   
+   private void paintComponent1(Graphics gr) {
+      
+      super.paintComponent(gr);
       
       int j;
 
@@ -1756,6 +1893,19 @@ MouseWheelListener, Widget
       gr.drawImage(img,0,0,this);
       
       if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();
+      
+      /*if (aladin.mesure.isEnabledDatalinkPopUp) {
+    	  List<String[]> datalinkInfos = aladin.mesure.getDataLinks();
+    	  aladin.mesure.isEnabledDatalinkPopUp = false;
+    	  
+			if (datalinkInfos != null && !datalinkInfos.isEmpty()) {
+				createAdditionalServiceMenu(datalinkInfos);
+				datalinkPopupShow(datalinkshowX, datalinkshowY);
+				datalinkshowX = -1;
+				datalinkshowY = -1;
+			}
+      }*/
+      
    }
 
    /** Gestion du Help */

@@ -29,10 +29,13 @@ import java.awt.Rectangle;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -40,6 +43,10 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import cds.astro.Unit;
+import cds.tools.Astrodate;
+import cds.tools.ConfigurationReader;
+import cds.tools.ScientificUnitsUtil;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.TableParser;
@@ -485,6 +492,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    private int indexOID=-1;          // Position de la colonne OID eventuelle
    private TableParser res;          // Parser utilisé pour créer les objets
    private StringBuffer line = new StringBuffer(500);
+   private Map<Integer, Field> standardisedColumns = new HashMap<Integer, Field>();
 
 
    // Légende générique qui vient remplacer toutes les légendes propres
@@ -518,6 +526,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             int underRA, underDE, RA, DE;
             underRA = underDE = RA = DE = -1;
             Field fRA = null, fDE = null;
+            String standardColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2StandardColumns"); //column to hide in SIAV2 results table
+            
             for( int i = 0; e.hasMoreElements(); i++ ) {
                Field f = (Field) e.nextElement();
                if( f == null ) continue;
@@ -548,6 +558,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                }
 
                v.addElement(f);
+               if( standardColumns.contains(f.name) ) {
+            	   Field displayField = new Field(f, true);
+            	   v.addElement(displayField);
+            	   this.standardisedColumns.put(i, displayField);
+			   }
             }
 
             // Si champs RAJ2000 et DEJ2000 on cache _RAJ2000 et _DEJ2000
@@ -612,8 +627,12 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String a=value[i].trim();
             if( leg == null || !leg.hasInfo(j) || a.length() == 0
                   || a.equals("0") || a.equals("-") /* || a.equalsIgnoreCase("null") */ ) {
-               line.append("\t" + ((a.length() == 0) ? " " : value[i]));
-               continue;
+            	String displayString = "\t" + ((a.length() == 0) ? " " : value[i]);
+            	line.append(displayString);
+            	if (standardisedColumns.containsKey(i)) {
+            		line.append(displayString);
+           		}
+            	continue;
             }
 
             // Construction des ancres
@@ -670,7 +689,15 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                line.append("<&" + dollarSub(tag, value, (href != null) ? 1 : 0));
                if( text != null ) line.append("|" + dollarSub(text, value, 0));
                line.append(">");
-            } else line.append(text);
+            } else {
+            	line.append(text);
+            	if (standardisedColumns.containsKey(i)) {
+            		line.append("\t");
+            		line.append(this.processValuesToStandardRepresentation(standardisedColumns.get(i), text));
+    			}
+            }
+            
+            
          }
 
          // Calcul en vue de definir la target
@@ -745,6 +772,83 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          e.printStackTrace();
       }
    }
+   
+   /**
+    * Method to process data to standardised representation.
+    * Currently time(in MJD) and spectral data(in m) are supported.
+    * 
+    * @param field
+    * @param text
+    * @return formated string
+    */
+   public String processValuesToStandardRepresentation(Field field, String text) {
+
+	   String standardRepresentation = text;
+		if (text != null && !text.trim().isEmpty() && field!=null && field.ucd!=null) {
+			if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
+					&& "d".equalsIgnoreCase(field.unit)) {
+				standardRepresentation = this.convertMJDToISO(text);
+			} else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
+					&& "m".equalsIgnoreCase(field.unit)) {
+				standardRepresentation = this.setStandardSpectralRepresentation(text);
+			}
+		}
+		return standardRepresentation;
+
+	}
+   
+   public String convertMJDToISO(String timeWord) {
+		double valueInProcess= Astrodate.MJDToJD(Double.valueOf(timeWord)); 
+		return Astrodate.JDToDate(valueInProcess);
+	}
+	
+   /**
+    * Method to process spectral data
+    * The input wavelength (in m): will be converted to either 
+    * 		- eV(higher frequencies: Gamma, X-ray)
+    * 		- m (mid: EUV, UV, optical, IR)
+    * 		- Hz(lower frequencies: micro, radio)
+    * The boundaries for the above categorization is defined in configuration file as
+    * 		- WAVELENGTHRANGE1(Between X-ray and UV) 
+    * 		- WAVELENGTHRANGE2(between IR and Radio)
+    * @param text
+    * @return formatted spectral param
+    */
+	public String setStandardSpectralRepresentation(String text) {
+		String defaultWavelengthUnit = "m";
+		Double spectralVal = Double.parseDouble(text);
+		Unit unitToProcess = null;
+		Double wavelengthRange1 = Double
+				.parseDouble(ConfigurationReader.getInstance().getPropertyValue("WAVELENGTHRANGE1"));
+		Double wavelengthRange2 = Double
+				.parseDouble(ConfigurationReader.getInstance().getPropertyValue("WAVELENGTHRANGE2"));
+		try {
+			if (spectralVal != null && spectralVal != 0.0d) {
+				if (spectralVal < wavelengthRange1) {
+					// convert to eV
+					unitToProcess = ScientificUnitsUtil.convertMeter2eV(spectralVal);
+
+				} else if (spectralVal >= wavelengthRange1 && spectralVal < wavelengthRange2) {
+					// Do no conversions
+					unitToProcess = new Unit(defaultWavelengthUnit);
+					unitToProcess.value = spectralVal;
+				} else if (spectralVal >= wavelengthRange2) {
+					// Convert to hertz
+					unitToProcess = ScientificUnitsUtil.convertMeter2Frequency(spectralVal);
+				}
+
+				if (unitToProcess != null) {
+					text = ScientificUnitsUtil.prefixProcessing(unitToProcess);
+				}
+			} else {
+				text = "0.0";
+			}
+		} catch (ParseException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return text;
+	}
 
    /** Retourne true si on a des infos sur le catalogue */
    protected boolean hasCatalogInfo() { return parsingInfo!=null || description!=null; }

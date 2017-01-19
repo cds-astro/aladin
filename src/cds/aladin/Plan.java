@@ -891,6 +891,11 @@ public class Plan implements Runnable {
          SwingUtilities.invokeLater(new Runnable() {
             public void run() { aladin.dialog.resume(); }
          });
+      
+      if( aladin.additionalServiceDialog!=null )
+          SwingUtilities.invokeLater(new Runnable() {
+             public void run() { aladin.additionalServiceDialog.resume(); }
+          });
 
       // Suppression de la fenetre des proprietes associee au plan si necessaire
       final Plan [] param1 = new Plan[1];
@@ -2128,6 +2133,7 @@ public class Plan implements Runnable {
 
          // Mise à jour des formulaires serveurs (gratit et Choice input)
          if( aladin.dialog!=null ) aladin.dialog.resume();
+         if( aladin.additionalServiceDialog!=null ) aladin.additionalServiceDialog.resume();
       }
 
       // Libération de l'attente possible sur le target (voir Command.waitingPlanInProgress)

@@ -2050,6 +2050,13 @@ FSCHECKUNCHECK	Check/uncheck the servers concerned by the ALL VO discovery mode
 FSIMGSRV	Image servers
 FSCATSRC	Catalog servers
 FSSPECSRV	Spectra servers
+FSLOAD LOAD
+FSSELECTTAP	Select a tap server or job
+TIPLOAD Load tap server
+FSRELOAD RELOAD
+TIPRELOAD Reload tap server
+#TIPNORELOAD Cannot reload this server as it is loaded from configuration file
+
 
 FSTITLE.fr	Liste des serveurs
 FSCHECK.fr	Les sélectionne tous
@@ -2061,6 +2068,11 @@ FSCHECKUNCHECK.fr	Sélectionne/désélectionne les serveurs concernés par le mode e
 FSIMGSRV.fr	Serveurs d'images
 FSCATSRC.fr	Serveurs de catalogues
 FSSPECSRV.fr	Serveurs de spectres
+FSLOAD.fr CHARGER
+TIPLOAD.fr CHARGER TAP serveur
+FSRELOAD.fr Recharger
+TIPRELOAD.fr Rechargez serveur sélectionné
+
 
 # Mesure.java strings
 MFASCSORT	Ascending sort
@@ -2912,3 +2924,55 @@ BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques.\n \nChaqu
 BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: change la taille des objets\n*zoom: modifie l'agrandissement\n*opacité: ajuste la transparence.\n \nLa vue est dessinée en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
 BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les informations Simbad sur un objet, laissez dessus qq secondes le pointeur.
 BEGIN5.fr	Contrôle de base:\n \n- Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n- Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n- Visualiser simultanément plusieurs vues via le contrôle du"multivue".
+
+
+#For datalink pop-ups- default texts
+DATALINK_SERVICE This dataset
+DATALINK_CUTOUT Get cutout
+DATALINK_IMAGE Image
+DATALINK_METADATA Metadata
+DATALINK_MOREINFO More Info
+DATALINK_HIPS Hips
+
+#For SIAv2 simple readable column labels
+t_min Observation Starttime
+t_max Observation Endtime
+em_min Spectral coordinate start
+em_max Spectral coordinate end
+
+#glu error messages
+DATEFORMATINCORRECT Please specify date in a correct format: MJD or dd/mm/yyy HH:mm:ss. \nMultiple values are comma separated.
+PARSEMJDFIELDHINT Please enter comma separated Ex:Date1, Date2
+BANDFORMATINCORRECT Please enter band in correct format. Example: 1.5E-5  or 1.5M
+TARGETOUTOFBOUNDSMESSAGE Your target is outside bounds. Please verify.
+
+#tap menu configurations -- also not needed remove this tintin
+TAPFORMNAME	TAP1
+TAPFORMTITLE	Tap client
+TAPFORMINFO	Construct your query, verify and execute.
+SELECTSERVERTOOLTIP List of tap server that can be loaded...
+TAPFORMDESC	Access TAP servers via Aladin. \nYou can write your tap query in the large white text area at the bottom \nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Write" button (above the large white text area).\nPosition constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(above the large white text area).To add position constraints click on "Add".\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "-" button. \nOnce you are ready, click the "Write" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\n\nThe metadata from the tap schema of the server is shown below. In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
+TAPFORMERR	TAP form error !
+TARGETERROR Please check target co-ordinates!
+
+TAPTABLEJOINTIP Join table
+TAPTABLEJOINTIP.fr Join table --configure message
+TAPTABLEUPLOADTIP Upload table. 
+TAPTABLENOUPLOADTIP No table uploads are available for this server
+TAPTABLEUPLOADTIP.fr Upload table.  --configure message
+TAPTABLENOUPLOADTIP.fr No table uploads are available for this server	--configure message
+TIPCLICKTOADD Click to add
+TIPCLICKTOADD.fr Click to add --configure message
+TAPNOFILELOAD Please select a tapserver to load!
+TAPNOFILERELOAD Please select a tapserver to reload!
+ADDFILE Add file:
+
+# FrameUploadServer.java strings
+UPTITLE	Upload tables
+UPFILEINFO Choose either your local system file or an already loaded file in Aladin.
+UPTITLE.fr	Upload serveur
+
+#UWS
+JOBERRORTOOLTIP Error in query execution, please check job summary for more details
+JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
+SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobs

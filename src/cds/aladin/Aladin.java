@@ -87,11 +87,13 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -118,6 +120,10 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import cds.aladin.bookmark.Bookmarks;
+import cds.aladin.stc.STCCircle;
+import cds.aladin.stc.STCFrame;
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCPolygon;
 import cds.allsky.Context;
 import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
@@ -430,6 +436,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    PlasticPreferences plasticPrefs; // Gere les preferences PLASTIC
    Help help;                    // Gere le "Help" en ligne
    public ServerDialog dialog;   // Gere l'interrogation des serveurs
+   public ServerDialog additionalServiceDialog;
    TreeView treeView;            // Gere l'arbre contenant l'historique des interrogations
    FrameColorMap frameCM;              // Gere la fenetre du controle de la table des couleurs
    FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB
@@ -466,6 +473,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Les objets internes
    public Glu glu=null;   // Gere les interactions avec le GLU
+   public DataLinkGlu datalinkGlu=null;
    static Cache cache=null; // Gère le cache
    protected Plugins plugins;    // Accès aux plugins
    CardLayout cardView;          // Gere la permutation entre le "Help" et la "View"
@@ -3947,8 +3955,164 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       return m;
    }
+   
+	protected HealpixMoc createMocRegion(List<STCObj> stcObjects) throws Exception {
+		HealpixMoc moc = null;
+		STCObj stcobj = stcObjects.get(0);
+		if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
+			moc = createMocRegionPol((STCPolygon)stcobj);
+			moc.toRangeSet();
+		} else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
+			moc = createMocRegionCircle((STCCircle)stcobj);
+			moc.toRangeSet();
+		}
+		return moc;
 
+	}
+	
+	protected HealpixMoc createMocRegionCircle(STCCircle stcCircle) throws Exception {
+		return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), -1);
+	}
+	
+	public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
+			double height) throws Exception {
+	      HealpixMoc moc=null;
+	      double maxSize=0;
+	      Coord c1=null;
+	      boolean first=true;
+	      int order=0;
+	      double firstRa = 0.0d,firstDec = 0.0d;
+	      rectVertices = Util.getRectangleVertices(ra, dec, width, height); 
+	      
+	      
+	      for( int sens=0; sens<2; sens++ ) {
+		      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+		      if( sens==1 ) trace(3,"createMocRegion("+rectVertices.toString()+") trying reverse polygon order...");
+		      
+		      try {
+		    	  for (Coord rectCoord : rectVertices) {
+						if (first) {
+							firstRa = rectCoord.al;
+							firstDec = rectCoord.del;
+							c1 = rectCoord;
+							first = false;
+						} else {
+							double size = Coord.getDist(c1, rectCoord);
+							if (size > maxSize)
+								maxSize = size;
+						}
 
+						addVec3(cooList, rectCoord.al, rectCoord.del);
+					}
+					
+		    	  	addVec3(cooList, firstRa, firstDec);
+					
+					if( sens==0 ) {
+			               // L'ordre est déterminé automatiquement par la largeur du polygone
+			               order=getAppropriateOrder(maxSize);
+			               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+			               if( order<10 ) order=10;
+			               else if( order>29 ) order=29;
+			               
+			        }
+					
+					Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+		            moc = new HealpixMoc();
+		            moc.rangeSet = m.getRangeSet();
+		            moc.toHealpixMoc();
+		            
+		            // moins de la moitié du ciel => ca doit être bon
+		            if( moc.getCoverage()<0.5 ) break;
+		            
+		            Collections.reverse(rectVertices);
+		      } catch( Throwable e ) {
+	            if( sens==1 && e instanceof Exception ) throw (Exception)e;
+		      }
+		      
+		      
+	      }
+	      
+	      return moc;
+	}
+	
+	
+	public double getMaxSize(Coord c1,Coord c2, double maxSize) {
+		double size = Coord.getDist(c1,c2);
+		if (size > maxSize)
+			maxSize = size;
+		return maxSize;
+	}
+	protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon) throws Exception {
+	      HealpixMoc moc=null;
+	      double maxSize=0;
+	      Coord c1=null;
+	      boolean first=true;
+	      int order=0;
+	      double firstRa = 0.0d,firstDec = 0.0d;
+	      
+	      for( int sens=0; sens<2; sens++ ) {
+	         ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+	         if( sens==1 ) trace(3,"createMocRegion("+stcPolygon+") trying reverse polygon order...");
+	         try {
+                 STCFrame frame = stcPolygon.getFrame();
+                 // currently, we only support FK5, ICRS and J2000 frames
+                 if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)) {
+                	 return null;
+                 }
+                 
+                 for (int i=0; i < stcPolygon.getxCorners().size(); i++) {
+						if (first) {
+							firstRa = stcPolygon.getxCorners().get(i);
+							firstDec = stcPolygon.getyCorners().get(i);
+							c1 = new Coord(firstRa, firstDec);
+							first = false;
+						} else {
+							double size = Coord.getDist(c1,
+									new Coord(stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i)));
+							if (size > maxSize)
+								maxSize = size;
+						}
+						
+						addVec3(cooList, stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i));
+					}
+                 
+                 addVec3(cooList, firstRa, firstDec);
+
+	            if( sens==0 ) {
+	               // L'ordre est déterminé automatiquement par la largeur du polygone
+	               order=getAppropriateOrder(maxSize);
+	               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+	               if( order<10 ) order=10;
+	               else if( order>29 ) order=29;
+	               
+	            }
+
+	            Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+	            moc = new HealpixMoc();
+	            moc.rangeSet = m.getRangeSet();
+	            moc.toHealpixMoc();
+
+	            // moins de la moitié du ciel => ca doit être bon
+	            if( moc.getCoverage()<0.5 ) break;
+
+	            stcPolygon.reverseDrawDirection();
+	            
+	            // On va essayer dans l'autre sens avant d'estimer que ça ne fonctionne pas
+	         } catch( Throwable e ) {
+	            if( sens==1 && e instanceof Exception ) throw (Exception)e;
+	         }
+	      }
+
+	      
+	      return moc;
+	}
+	
+	public void addVec3(ArrayList<Vec3> cooList, double ra, double dec) {
+		double theta = Math.PI / 2 - Math.toRadians(dec);
+		double phi = Math.toRadians(ra);
+		cooList.add(new Vec3(new Pointing(theta, phi)));
+	}
+   
    /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets
     * Tente de faire les deux sens d'orientation du polygone et ne garde que celui qui
     * fournit une surface inférieure à la moitié du ciel */
@@ -4132,6 +4296,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Deselection des objets en cours dans le cas ou une application
       // type VOPlot est utilisee en parallele
 
+	  if (Aladin.PROTO) {//TODO:: tintinproto
+		  glu.tapManager.cleanUp();
+	  }
+	  
       if( hasExtApp() ) try { resetCallbackVOApp(); } catch( Exception e) {}
 
       if( aladinSession==0 ) {
@@ -4167,6 +4335,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( plugins!=null ) {
          trace(3,"Plugin cleaning...");
          try { plugins.cleanup(); } catch( Exception e ) {}
+      }
+      
+      if (Aladin.PROTO) {//TODO:: tintinproto
+    	  glu.tapManager.finalCleanUp();
       }
 
       if( aladinSession>0 || flagLaunch ) { // Si Aladin demarre par launch() cacher la fenetre

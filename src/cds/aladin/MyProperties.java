@@ -854,8 +854,8 @@ public class MyProperties {
        return key+suffixe+s;
     }
     
-    static final String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm";
-    static final SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
+    static public final String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm";
+    static public final SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
     static {
        TimeZone utc = TimeZone.getTimeZone("UTC");
        sdf.setTimeZone(utc);

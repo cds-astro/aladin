@@ -1708,19 +1708,55 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             Math.abs((int)Math.round(fixev.y)+1-y) );
       //      extendClip(rselect);
    }
+   
+//   /** Retourne l'etat du mode GrabIt */
+//   protected boolean isGrabIt() {
+//      return aladin.dialog==null?false:aladin.dialog.isGrabIt();
+//   }
+
+//   /**
+//    * Arrete le GrabIt Courant
+//    */
+//   protected void stopGrabIt() {
+//      if( !isGrabIt() ) return;
+//      pGrabItX=-1;
+//      aladin.dialog.stopGrabIt();
+//      aladin.view.repaintAll();
+//   }
+
+
 
    /** Retourne l'etat du mode GrabIt */
-   protected boolean isGrabIt() {
-      return aladin.dialog==null?false:aladin.dialog.isGrabIt();
+   protected ServerDialog isGrabIt() {
+	   ServerDialog grabItDialog = null;
+	   if (aladin.dialog!=null && aladin.dialog.isGrabIt()) {
+		   grabItDialog = aladin.dialog;
+	   } else if (aladin.additionalServiceDialog!=null && aladin.additionalServiceDialog.isGrabIt()) {
+		   grabItDialog = aladin.additionalServiceDialog;
+	   } 
+      return grabItDialog;
    }
 
+   /** Retourne l'etat du mode GrabIt */
+   /*protected boolean isGrabIt() {
+	   ServerDialog grabItDialog = null;
+	   if (aladin.dialog==null?false:aladin.dialog.isGrabIt()) {
+		   grabItDialog = 
+	   }
+	   if (aladin.additionalServiceDialog==null?false:aladin.additionalServiceDialog.isGrabIt()) {
+		   isGrabIt++;
+	   }
+      return isGrabIt!=0;
+   }*/
+   
    /**
     * Arrete le GrabIt Courant
     */
    protected void stopGrabIt() {
-      if( !isGrabIt() ) return;
+	   ServerDialog grabItDialog = isGrabIt();
+      if( grabItDialog ==null ) return;
       pGrabItX=-1;
-      aladin.dialog.stopGrabIt();
+      grabItDialog.stopGrabIt();
       aladin.view.repaintAll();
    }
 
@@ -2019,14 +2055,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( Double.isNaN(cs.al ) ) cs=null;
       }
 
+      ServerDialog grabItDialog = isGrabIt();
       // Mode GrabIt actif
-      if( isGrabIt() && !isFree() ) {
-         aladin.dialog.setGrabItCoord(x,y);
-         cGrabItX=pGrabItX=-1;
-         grabItX=x; grabItY=y;
-         modeGrabIt=true;
-         aladin.view.repaintAll();
-         return;
+      if( grabItDialog!=null && !isFree() ) {
+    	  grabItDialog.setGrabItCoord(x,y);
+    	  cGrabItX=pGrabItX=-1;
+    	  grabItX=x; grabItY=y;
+    	  modeGrabIt=true;
+    	  aladin.view.repaintAll();
+    	  return;
       }
 
       // Juste pour tester...
@@ -2535,9 +2572,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          }
       }
       
+      ServerDialog grabItDialog = isGrabIt();
       // Déplacement du repère
       if( (tool==ToolBox.SELECT || tool==ToolBox.PAN && (!flagClicAndDrag || e.getClickCount()>1) )
-            && flagMoveRepere && !isGrabIt() && !e.isShiftDown() && !isPlotView() ) {
+            && flagMoveRepere && grabItDialog==null && !e.isShiftDown() && !isPlotView() ) {
          PointD p = vs.getPosition(x,y);
          vs.moveRepere(p.x,p.y,e.getClickCount()>1);
          
@@ -2551,11 +2589,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isFree() ) return;
 
       // Mode GrabIt actif
-      if( isGrabIt() ) {
+      if( grabItDialog!=null ) {
          modeGrabIt=false;
-         aladin.dialog.setGrabItRadius(grabItX,grabItY,x,y);
+         grabItDialog.setGrabItRadius(grabItX,grabItY,x,y);
          stopGrabIt();
-         aladin.dialog.toFront();
+         grabItDialog.toFront();
          flagMoveRepere=false;
       }
 
@@ -2973,9 +3011,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( rselect!=null && Math.max(rselect.width,rselect.height)>4
             || !aladin.view.vselobj.isEmpty() ) flagMoveRepere=false;
 
+      ServerDialog grabItDialog = isGrabIt();
       // Mode GrabIt actif
-      if( isGrabIt() ) {
-         aladin.dialog.setGrabItRadius(grabItX,grabItY,x,y);
+      if( grabItDialog!=null ) {
+    	 grabItDialog.setGrabItRadius(grabItX,grabItY,x,y);
          cGrabItX=x; cGrabItY=y;
          aladin.view.updateAll();
          return;
@@ -3637,11 +3676,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * d'un éventuel Megadrag en cours */
    protected void setDefaultCursor(int tool,boolean shift) {
       if( aladin.lockCursor ) return;
+      ServerDialog grabItDialog = isGrabIt();
       currentCursor =
             tool==ToolBox.PAN ? Aladin.HANDCURSOR :
                tool==ToolBox.PHOT ? ( isTagCentered(shift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :
                   aladin.view.isRecalibrating() && (tool==ToolBox.SELECT || tool==ToolBox.PAN)
-                  || isGrabIt() || tool==ToolBox.ZOOM || tool==ToolBox.SPECT ? Aladin.CROSSHAIRCURSOR:
+                  || grabItDialog!=null || tool==ToolBox.ZOOM || tool==ToolBox.SPECT ? Aladin.CROSSHAIRCURSOR:
                      tool==ToolBox.TAG ? Aladin.TEXTCURSOR:Aladin.DEFAULTCURSOR;
 
                Aladin.makeCursor(this,currentCursor);

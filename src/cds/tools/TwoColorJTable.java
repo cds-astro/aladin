@@ -2,6 +2,7 @@ package cds.tools;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.util.Vector;
 
 import javax.swing.JTable;
 import javax.swing.JViewport;
@@ -29,6 +30,10 @@ public class TwoColorJTable extends JTable {
         super(tableModel);
 
         this.alternateColor = alternateColor;
+    }
+    
+    public TwoColorJTable(Vector<Vector<String>> tabledata, Vector<String> columnNames) {
+        super(tabledata, columnNames);
     }
 
     public TwoColorJTable() {

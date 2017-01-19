@@ -343,7 +343,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( !bxCube.isSelected() )      addParam(exclu,"client_category","Cube*");
       if( !bxCatalog.isSelected() )   addParam(exclu,"client_category","Catalog*");
       if( !bxJournal.isSelected() )   addParam(exclu,"client_category","*/Journal table/*");
-      if( !bxOtherType.isSelected() )      addParam(inclu,"client_category","Catalog*,Image*,Cube*,*/Journal table/*");
+      if( !bxOtherType.isSelected() ) addParam(inclu,"client_category","Catalog*,Image*,Cube*,*/Journal table/*");
       
       if( !bxGammaRay.isSelected() )  addParam(exclu,"obs_regime","Gamma-ray");
       if( !bxXray.isSelected() )      addParam(exclu,"obs_regime","X-ray");
@@ -353,7 +353,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( !bxRadio.isSelected() )     addParam(exclu,"obs_regime","Radio");
       if( !bxGasLines.isSelected() )  addParam(exclu,"client_category","Image/Gas-lines/*");
 
-      if( bxHiPS.isSelected() )       special.append(" && (hips_service_url=*)");
+      if( bxHiPS.isSelected() )      special.append(" && hips_service_url=*"); 
+      if( bxSIA.isSelected() )       special.append(" && sia*service_url=*");  
+      if( bxCS.isSelected() )        special.append(" && cs_service_url=*");   
+      
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
       if( bxPixColor.isSelected() )   special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
       
@@ -381,8 +384,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( (s=getText(tfHiPSorder)).length()!=0 ) special.append(" && (hips_order="+s+"|| hips_service_url=!*)");
       if( (s=getText(tfCatNbRow)).length()!=0 )  special.append(" && (dataproduct_type!=catalog || nb_rows="+s+")");
       
-      if( (s=getText(tfMinDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_min>="+s : " && (t_min>="+s+" || t_min!=*)");
-      if( (s=getText(tfMaxDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_max<="+s : " && (t_max<="+s+" || t_max!=*)");
+      if( (s=getMJD(tfMinDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_min>="+s : " && (t_min>="+s+" || t_min!=*)");
+      if( (s=getMJD(tfMaxDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_max<="+s : " && (t_max<="+s+" || t_max!=*)");
       
       
 //      int v;
@@ -416,6 +419,23 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       aladin.directory.quickFilterSetText( getText(tfDescr) );
       aladin.directory.resumeFilter(expr.length()==0 ? "*" : expr);
+   }
+   
+   /** Retourne la date MJD d'une date écrite en clair */
+   // NE MARCHE PAS ENCORE => VOIR AVEC CHAITRA
+   private String getMJD( JTextField d) {
+      String s1 = getText(d);
+      if( s1.length()==0 ) return s1;
+      try { Long.parseLong(s1); return s1; }
+      catch( Exception e) {}
+      StringBuffer s;
+      try {
+         s = aladin.dialog.aladinServer.setDateInMJDFormat(false,s1,null);
+         if( s==null ) return "";
+      } catch( Exception e ) {
+         return "";
+      }
+      return s.toString();
    }
    
    /** Parcours une liste de mots séparés par des virgules (,) ou des pipes (|)
@@ -489,7 +509,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxOtherType;
    private JCheckBox bxGammaRay, bxXray,bxUV,bxOptical,bxInfrared,bxRadio,bxGasLines;
-   private JCheckBox bxPixFull,bxPixColor,bxDate,bxHiPS;
+   private JCheckBox bxPixFull,bxPixColor,bxDate,bxHiPS,bxSIA,bxCS;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate;
    
    private Vector<JCheckBox> authVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
@@ -505,6 +525,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxJournal.setSelected(true);
       bxOtherType.setSelected(true);
       bxGammaRay.setSelected(true);
+      bxXray.setSelected(true);
       bxUV.setSelected(true);
       bxOptical.setSelected(true);
       bxInfrared.setSelected(true);
@@ -512,6 +533,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxGasLines.setSelected(true);
       bxPixFull.setSelected(false);
       bxHiPS.setSelected(false);
+      bxSIA.setSelected(false);
+      bxCS.setSelected(false);
       bxPixColor.setSelected(false);
       tfCatNbRow.setText("");
       tfCoverage.setText("");
@@ -623,7 +646,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       PropPanel.addCouple(this, p, "Regime", "Wavelength...", subPanel, g, c, GridBagConstraints.EAST);
       
       // Date
-      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,5,0) );
+      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0) );
       tfMinDate = new JTextFieldX(10);
       tfMaxDate = new JTextFieldX(10);
       bxDate = new JCheckBox("only if known",true); bxDate.setToolTipText("Also removed collections with undefined epoch");
@@ -636,16 +659,21 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel = createFilter(authVbx, 6, "ID", "/");
       PropPanel.addCouple(this, p, "Authority", "Authority creator...", subPanel, g, c, GridBagConstraints.EAST);
       
-      
+      // Restriction suivant le mode d'accès
+      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+      NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
+      subPanel.add( bx=bxHiPS = new JCheckBox("HiPS only")); bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Hierarchical progressive survey");
+      subPanel.add( bx=bxSIA  = new JCheckBox("SIA only"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Simple Image Access (version 1 & 2)");
+      subPanel.add( bx=bxCS   = new JCheckBox("CS only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Catalog/table cone search");
+      PropPanel.addCouple(this, p, "Protocol ", "Keep the collections supporting these specifical access protocols.", subPanel, g, c, GridBagConstraints.EAST);
+     
       // Les filtres dédiés aux HiPS
       p = bottomLeftPanel = new JPanel(g);
       setTitleBorder(p, "Dedicated HiPS filters");
       
-      // UNiquement les HiPS
-      subPanel = new JPanel( new FlowLayout());
-      subPanel.add( bx=bxHiPS     = new JCheckBox("HiPS collections only")); bx.addActionListener(this); 
-      PropPanel.addCouple(this, p, "Restriction", "Remove no HiPS collections...", subPanel, g, c, GridBagConstraints.EAST);
-
       // Couverture du ciel
       tfHiPSorder = new JTextFieldX(15);
       PropPanel.addCouple(this, p, "HiPS order", "HiPS order...\n(ex:<5", 
@@ -660,8 +688,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //          slRow, g, c, GridBagConstraints.EAST);
       
       // Types de tuiles
-      NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
-      subPanel = new JPanel( new FlowLayout());
+      bg = new NoneSelectedButtonGroup();
+      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       subPanel.add( bx=bxPixFull     = new JCheckBox("full dynamic only")); bx.addActionListener(this);  bg.add(bx);
       subPanel.add( bx=bxPixColor    = new JCheckBox("color only"));        bx.addActionListener(this);  bg.add(bx);
       PropPanel.addCouple(this, p, "Pixel formats", "Image HiPS pixel formats...", subPanel, g, c, GridBagConstraints.EAST);
@@ -673,7 +701,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       // Les différents mots clés
       catkeyVbx = new Vector<JCheckBox>();
       subPanel = createFilter(catkeyVbx, -1, "obs_astronomy_kw", null, true);
-      PropPanel.addCouple(this, p, "Keywords", "Catalog astronomical keywords", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Keyword", "Catalog astronomical keywords", subPanel, g, c, GridBagConstraints.EAST);
       
       // Les différents mots clés
       catMisVbx = new Vector<JCheckBox>();
@@ -694,7 +722,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel.add( bx  = new JCheckBox("Redshift"));      bx.setSelected(false); bx.addActionListener(this);
       bx.setActionCommand("data_ucd=src.redshift*");       setToolTip(bx);   catUcdVbx.add(bx);
       subPanel.add( bx  = new JCheckBox("Radial vel."));   bx.setSelected(false); bx.addActionListener(this);
-      bx.setActionCommand("data_ucd=spect.dopplerVeloc*,phys.veloc*");
+      bx.setActionCommand("data_ucd=spect.dopplerVeloc*,phys.veloc*");      setToolTip(bx);   catUcdVbx.add(bx);
       subPanel.add( bx  = new JCheckBox("Proper motion")); bx.setSelected(false); bx.addActionListener(this);
       bx.setActionCommand("data_ucd=pos.pm*");             setToolTip(bx);   catUcdVbx.add(bx);
       subPanel.add( bx  = new JCheckBox("Flux"));          bx.setSelected(false); bx.addActionListener(this);

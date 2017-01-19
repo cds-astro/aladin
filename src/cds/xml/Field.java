@@ -22,6 +22,8 @@ package cds.xml;
 
 import java.util.Hashtable;
 
+import cds.aladin.Aladin;
+import cds.tools.ConfigurationReader;
 import cds.tools.Util;
 
 /** Field description according to the Astrores XML standard.
@@ -134,6 +136,7 @@ final public class Field {
    public Field(Hashtable atts) {
       ID       =(String)atts.get("ID");
       name     =(String)atts.get("name");
+      visible = shouldHide(name);
       unit     =(String)atts.get("unit");
 
       // UCD in Astrores and ucd in V0Table
@@ -178,7 +181,13 @@ final public class Field {
       visible = f.visible;
       columnSize = f.columnSize;
       nullValue = f.nullValue;
+      visible = shouldHide(name);
    }
+   
+	public Field(Field f, boolean isStandardised) {
+		this(f);
+		name = Aladin.getChaine().getString(f.name);
+	}
 
    /** Get the field edition size (width, otherwise arraysize, otherwise 10) */
    public void computeColumnSize() {
@@ -310,8 +319,17 @@ final public class Field {
 //      return "E";
       return "A";
    }
-
-
+   
+   /**
+    * Method to check if the field is configured to be hidden
+    * @param name
+    * @return
+    */
+	public boolean shouldHide(String name) {
+		return !ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns")
+		.contains(name);
+	}
+	
    public String toString() {
       return  (ID==null?       "":" ID="+ID)
             +(name==null?     "":" name="+name)

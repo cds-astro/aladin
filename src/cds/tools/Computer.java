@@ -3,6 +3,7 @@ package cds.tools;
 import java.util.Stack;
 
 import cds.astro.Coo;
+import cds.tools.parser.Exp;
 
 /**
  * Gestion d'une calculatrice d'expressions arithmétiques

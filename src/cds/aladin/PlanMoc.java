@@ -507,6 +507,11 @@ public class PlanMoc extends PlanBGCat {
          if( (++i)>=order ) { bord++; i=1; }
          return res;
       }
+	@Override
+	public void remove() {
+		// TODO Auto-generated method stub
+		//TODO:: tintin i added this as there was compilation issue without it
+	}
    }
    
    private long oiz=-1;

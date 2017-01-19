@@ -1,6 +1,7 @@
 package cds.aladin.stc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class STCPolygon extends STCObj {
     private STCFrame frame;
@@ -43,6 +44,11 @@ public class STCPolygon extends STCObj {
     public void setyCorners(ArrayList<Double> yCorners) {
         this.yCorners = yCorners;
     }
+    
+    public void reverseDrawDirection() {
+		Collections.reverse(xCorners);
+		Collections.reverse(yCorners);
+	}
     
     @Override
     public boolean isIn(double lon,double lat) {

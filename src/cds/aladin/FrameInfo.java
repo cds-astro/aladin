@@ -948,6 +948,8 @@ public class FrameInfo extends JFrame implements WindowListener, MyListener, Act
             // pour activer le bouton grab
             if( aladin.dialog.server[aladin.dialog.current].grab!=null )
                 aladin.dialog.server[aladin.dialog.current].grab.setEnabled(true);
+            if( aladin.additionalServiceDialog.server[aladin.additionalServiceDialog.current].grab!=null )
+                aladin.additionalServiceDialog.server[aladin.additionalServiceDialog.current].grab.setEnabled(true);
         }
       // les JRadioButton
       else if( src instanceof JRadioButton ) {
