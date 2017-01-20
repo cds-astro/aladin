@@ -743,7 +743,7 @@ public class MultiMoc implements Iterable<MocItem> {
             while( tok.hasMoreTokens() ) {
                String key = tok.nextToken();
                rep1 |= matchKey(mi,mapFilter,listKey,key,casesens,internalAndLogic);
-               if( !internalAndLogic && rep1 ) {
+               if( !andLogic && !internalAndLogic && rep1 ) {
                   if( DEBUGMATCH) System.out.println("   => matchKey("+key+",...)==true (orLogic) => return true)");
                   return true;
                }
@@ -755,7 +755,9 @@ public class MultiMoc implements Iterable<MocItem> {
             rep1 =  matchKey(mi,mapFilter,listKey,listKey,casesens,internalAndLogic);
          }
          
-         if( !internalAndLogic && rep1 ) return true;
+         // Si que des OU et que c'est ok, on peut conclure que c'est bon
+         if( !andLogic && !internalAndLogic && rep1 ) return true;
+         
          
          if( andLogic ) {
             rep &= rep1;

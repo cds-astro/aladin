@@ -88,6 +88,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private static String  MOCSERVER_INIT = "*&fields=!hipsgen*&get=record&fmt=asciic";
    
    // Paramètres de maj par le MocServer (update de l'arbre)
+   private String mocUrl = null; //préfixe de l'URL une fois connue par le GLU
    private static String MOCSERVER_UPDATE = "fmt=asciic";
 //   private static String MOCSERVER_UPDATE = "client_application=AladinDesktop"+(Aladin.BETA?"*":"")+"&hips_service_url=*&";
 
@@ -858,6 +859,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          String dir = i<0 ? "" : "/"+id.substring(0,i);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,"Miscellaneous"+dir);
       }
+      
+      // Tri de la catégorie générale
+      String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
+      if( key==null ) key="";
+      String cat = prop.get(Constante.KEY_CLIENT_CATEGORY);
+      int i = cat.indexOf('/');
+      String dir = cat;
+      if( i>0 ) dir = cat.substring(0,i);
+      int c = Util.indexInArrayOf(dir, CAT);
+      if( c==-1 ) c=CAT.length;
+      key = String.format("%02d",c)+"/"+key;
+      prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, key);
    }
    
    private void propAdjust1(String id, MyProperties prop) {
@@ -874,28 +887,33 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          String code = getCatCode(id);
          if( code==null ) return;
          
+         String sortPrefix = "";
          boolean flagJournal = code.equals("J");
          if( flagJournal ) {
-            category = "Catalog/CDS/Journal table";
+            String journal = getJournalCode(id);
+            category = "Catalog/CDS VizieR/Journal table/"+journal;
+            sortPrefix = journal;
             
          } else {
             int c = Util.indexInArrayOf(code, CAT_CODE);
-            if( c==-1 ) category = "Catalog/CDS/"+code;   // Catégorie inconnue
+            if( c==-1 ) category = "Catalog/CDS VizieR/"+code;   // Catégorie inconnue
             
-            // Tri par category puis popularity
             else {
-               category = "Catalog/CDS/"+CAT_LIB[c];
+               category = "Catalog/CDS VizieR/"+CAT_LIB[c];
 //               String sortKey = "Catalog/CDS/"+c+"/"+getCatSuffix(id);
                
-               String popularity = prop.get("vizier_popularity");
-               if( popularity!=null ) {
-                  popularity = String.format("%08d", 10000000 -Long.parseLong(popularity));
-               } else popularity=getCatSuffix(id);
+               sortPrefix=String.format("%02d",c);
                
-               String sortKey = "Catalog/CDS/"+c+"/"+popularity;
-               prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY,sortKey);
            }
          }
+         
+         // Tri par popularité et catégorie
+         String popularity = prop.get("vizier_popularity");
+         if( popularity!=null ) {
+            popularity = String.format("%08d", 10000000 -Long.parseLong(popularity));
+         } else popularity=getCatSuffix(id);
+         String sortKey = sortPrefix+"/"+popularity;
+         prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY,sortKey);
          
          // Détermination du suffixe (on ne va pas créer un folder pour un élément unique)
          String parent = getCatParent(id);
@@ -933,9 +951,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
 
          }
-         String suffix = getCatSuffix( parent );
-         suffix = suffix==null ? "" : "/"+suffix;
-         category += suffix;
+         if( !flagJournal ) {
+            String suffix = getCatSuffix( parent );
+            suffix = suffix==null ? "" : "/"+suffix;
+            category += suffix;
+         }
       }
       
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category );
@@ -967,6 +987,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return null;
    }
    
+   /** retourne l'abbréviation du journal
+    * (ex: CDS/J/A+A/171/261/table1 => A+A) */
+   private String getJournalCode(String id) {
+      int i=id.indexOf('/');
+      int j=id.indexOf('/',i+1);
+      int k=id.indexOf('/',j+1);
+      if( j>0 && k>j ) return id.substring(j+1,k);
+      return null;
+   }
+   
    /** Retourne le suffixe de l'identificateur d'un catalogue => tous ce qui suit le code
     * de catégorie
     * (ex: CDS/I/246/out => 246/out) */
@@ -985,6 +1015,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( i>0 ) return id.substring(0,i);
       return null;
    }
+   
+   private final String [] CAT = {"Image","Data base","Catalog","Cube","Miscellaneous","Outreach" };
    
    private final String [] CAT_CODE = { "I","II","III","IV","V","VI","VII","VIII","IX","B" };
    private final String [] CAT_LIB = {
@@ -1374,19 +1406,20 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          pack();
       }
       
-      boolean isSame(ArrayList<TreeObjDir> a1, ArrayList<TreeObjDir> a2) {
-         if( a1==null && a2==null ) return true;
-         if( a1==null || a2==null ) return false;
-         if( a1.size() != a2.size() ) return false;
-         for( TreeObjDir ti : a1) {
-            if( !a2.contains(ti) ) return false;
-         }
-         return true;
-      }
+//      boolean isSame(ArrayList<TreeObjDir> a1, ArrayList<TreeObjDir> a2) {
+//         if( a1==null && a2==null ) return true;
+//         if( a1==null || a2==null ) return false;
+//         if( a1.size() != a2.size() ) return false;
+//         for( TreeObjDir ti : a1) {
+//            if( !a2.contains(ti) ) return false;
+//         }
+//         return true;
+//      }
+      
       
       /** Positionne les collections concernées, et regénère le panel en fonction */
       void setCollections(ArrayList<TreeObjDir> treeObjs) {
-         if( isSame(treeObjs,this.treeObjs) ) return;
+//         if( isSame(treeObjs,this.treeObjs) ) return;
          this.treeObjs = treeObjs;
          resumePanel();
          pack();
@@ -1410,6 +1443,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          JPanel p = new JPanel(g);
          
          TreeObjDir to=null;
+         boolean hasView = !aladin.view.isFree();
          
          if( treeObjs.size()>1 )  {
             a = new MyAnchor(aladin,treeObjs.size()+" collections selected",50,null,null);
@@ -1424,6 +1458,26 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             if( sList!=null ) more = list.toString();
             else sList=list.toString();
+            
+            JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
+            JCheckBox bx;
+            mocBx = csBx = null;
+
+            csBx = bx = new JCheckBox("Multiple cone search");
+            mocAndMore.add(bx);
+            bx.setSelected(true);
+            bx.setToolTipText("Cone search on the current view of the selected collections");
+            bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+            
+            JLabel labelPlus = new JLabel(" + ");
+            labelPlus.setForeground(Color.lightGray);
+            mocAndMore.add(labelPlus);
+            
+            mocBx = bx = new JCheckBox("MOC union"); 
+            mocAndMore.add(bx); 
+            bx.setToolTipText("Load the union of MOCs of the selected collections");
+          
+            PropPanel.addCouple(p,"", mocAndMore, g,c);
             
             a = new MyAnchor(aladin,sList,100,more,null);
             a.setForeground(Aladin.GREEN);
@@ -1484,8 +1538,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                bx.setSelected(true);
                bx.setToolTipText("Hierarchical Progressive Survey access");
             }
-            boolean hasView = !aladin.view.isFree();
-            
+             
             if( to.hasSIA() ) {
                siaBx = bx = new JCheckBox("SIA");
                mocAndMore.add(bx);
@@ -1624,6 +1677,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       void submit() {
          if( treeObjs.size()==0 ) return;
+         
+         // Accès à une collection
          if( treeObjs.size()==1 ) {
             TreeObjDir to = treeObjs.get(0);
             if( allBx!=null  && allBx.isSelected() )   to.loadAll();
@@ -1634,9 +1689,36 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( mocBx!=null  && mocBx.isSelected() )   to.loadMoc();
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
             if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
+            
+         // Accès à plusieurs collections simultanément
          } else {
-            for( TreeObjDir to : treeObjs ) to.load();
+            
+            // CS
+            if( csBx!=null   && csBx.isSelected() ) {
+               for( TreeObjDir to : treeObjs ) {
+                  if( to.hasSIA() ) to.loadSIA();
+                  else to.loadCS();
+               }
+            }
+            
+            // Union des MOCs
+            if( mocBx!=null  && mocBx.isSelected() ) multiMocLoad(treeObjs);
          }
+      }
+      
+      /** Chargement de l'union des Mocs */
+      void multiMocLoad(ArrayList<TreeObjDir> treeObjs ) {
+         
+         // Liste des ID
+         StringBuilder params = null;
+         for( TreeObjDir to : treeObjs ) {
+            if( params==null ) params = new StringBuilder(to.internalId);
+            else params.append(","+to.internalId);
+         }
+         params.append("&get=moc");
+         
+         String u = aladin.glu.getURL("MocServer", params.toString(),true).toString();
+         aladin.execAsyncCommand("MOCs=load "+u);
       }
    }
    

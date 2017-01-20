@@ -24,7 +24,6 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Event;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -183,7 +182,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int i;
 
       for( int j = sourceServer.size() - 1; j >= 0; j-- ) {
-         sTmp = (Server) sourceServer.elementAt(j);
+         sTmp = sourceServer.elementAt(j);
          if( (sTmp.type & type) ==0 ) continue;
 
          // Correction du bug multi-instances d'Aladin dans le cas de l'applet
@@ -1550,7 +1549,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    public void show() {
       super.show();
-      if( !aladin.PROTO ) startHipsUpdater();
+//      if( !aladin.PROTO ) startHipsUpdater();
    }
 
    public void hide() {

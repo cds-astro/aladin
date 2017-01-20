@@ -83,7 +83,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false,aladin);
       
-      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       JPanel contentPane = (JPanel)getContentPane();
       contentPane.setLayout( new BorderLayout(5,5)) ;
 //      contentPane.setBorder( BorderFactory.createLineBorder(Color.black));

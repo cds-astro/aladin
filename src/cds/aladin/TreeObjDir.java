@@ -491,8 +491,12 @@ public class TreeObjDir extends TreeObj {
    
    /** Retourne l'URL d'accès au MOC, null sinon */
    protected String getMocUrl() {
-      if( prop==null || isHiPS() ) return getUrl()+"/Moc.fits";
-      return prop.getProperty(Constante.KEY_MOC_ACCESS_URL);
+      String params = internalId+"&get=moc";
+      String u = aladin.glu.getURL("MocServer",params,true).toString();
+      return u;
+      
+//      if( prop==null || isHiPS() ) return getUrl()+"/Moc.fits";
+//      return prop.getProperty(Constante.KEY_MOC_ACCESS_URL);
    }
    
    protected String getProperty(String key) {

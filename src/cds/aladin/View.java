@@ -305,7 +305,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne true si on peut/doit effacer au-moins une ou plusieurs vues */
    protected boolean isViewSelected() {
       if( !selectFromView ) return false;
-      //       if( modeView==ViewControl.MVIEW1 ) return false;
       for( int i=0; i<ViewControl.MAXVIEW; i++ ) if( viewSimple[i].selected ) return true;
       return false;
    }
