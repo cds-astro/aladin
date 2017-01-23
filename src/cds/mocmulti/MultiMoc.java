@@ -1,5 +1,7 @@
 package cds.mocmulti;
 
+import java.io.BufferedInputStream;
+
 // Copyright 2011 - UDS/CNRS
 // The MOC API project is distributed under the terms
 // of the GNU General Public License version 3.
@@ -23,7 +25,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -186,7 +188,7 @@ public class MultiMoc implements Iterable<MocItem> {
       
       // Ajout de propriétés propres au MOC
       if( moc!=null ) {
-         prop.replaceValue("moc_sky_fraction", moc.getCoverage()+"" );
+         prop.replaceValue("moc_sky_fraction", Unite.myRound( moc.getCoverage() )+"" );
 
          s = moc.getProperty("MOCORDER");
 
@@ -613,11 +615,11 @@ public class MultiMoc implements Iterable<MocItem> {
       if( !f.exists() ) return null;
       
       // Chargement des propriétés
-      InputStream in=null;
+      InputStreamReader in=null;
       MyProperties prop = null;
       try {
          prop = new MyProperties();
-         in = new FileInputStream(f);
+         in = new InputStreamReader( new BufferedInputStream( new FileInputStream(f) ));
          prop.load( in );
       } 
       catch( Exception e) {}

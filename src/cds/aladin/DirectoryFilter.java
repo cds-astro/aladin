@@ -58,6 +58,7 @@ import javax.swing.border.TitledBorder;
 
 import cds.aladin.prop.PropPanel;
 import cds.mocmulti.MocItem;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 
 /**
@@ -356,6 +357,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( bxHiPS.isSelected() )      special.append(" && hips_service_url=*"); 
       if( bxSIA.isSelected() )       special.append(" && sia*service_url=*");  
       if( bxCS.isSelected() )        special.append(" && cs_service_url=*");   
+      if( bxProg.isSelected() )      special.append(" && hips_progenitor_url=*");   
       
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
       if( bxPixColor.isSelected() )   special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
@@ -384,8 +386,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( (s=getText(tfHiPSorder)).length()!=0 ) special.append(" && (hips_order="+s+"|| hips_service_url=!*)");
       if( (s=getText(tfCatNbRow)).length()!=0 )  special.append(" && (dataproduct_type!=catalog || nb_rows="+s+")");
       
-      if( (s=getMJD(tfMinDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_min>="+s : " && (t_min>="+s+" || t_min!=*)");
-      if( (s=getMJD(tfMaxDate)).length()!=0 )   special.append( bxDate.isSelected() ? " && t_max<="+s : " && (t_max<="+s+" || t_max!=*)");
+      if( (s=getMJD(tfMinDate)).length()!=0 )   special.append( " && (t_min>="+s+" || t_min!=*)");
+      if( (s=getMJD(tfMaxDate)).length()!=0 )   special.append( " && (t_max<="+s+" || t_max!=*)");
+      if( (s=getText(tfBibYear)).length()!=0 )  special.append( " && bib_year="+s);
       
       
 //      int v;
@@ -422,20 +425,23 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    /** Retourne la date MJD d'une date écrite en clair */
-   // NE MARCHE PAS ENCORE => VOIR AVEC CHAITRA
    private String getMJD( JTextField d) {
       String s1 = getText(d);
       if( s1.length()==0 ) return s1;
       try { Long.parseLong(s1); return s1; }
       catch( Exception e) {}
-      StringBuffer s;
+      String s;
       try {
-         s = aladin.dialog.aladinServer.setDateInMJDFormat(false,s1,null);
+         //         s = aladin.dialog.aladinServer.setDateInMJDFormat(false,s1,null);
+
+         double Yd = Double.valueOf( s1 ).doubleValue();
+         s=Astrodate.JDToDate(Astrodate.YdToJD(Yd));
+
          if( s==null ) return "";
       } catch( Exception e ) {
          return "";
       }
-      return s.toString();
+      return s;
    }
    
    /** Parcours une liste de mots séparés par des virgules (,) ou des pipes (|)
@@ -509,16 +515,15 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxOtherType;
    private JCheckBox bxGammaRay, bxXray,bxUV,bxOptical,bxInfrared,bxRadio,bxGasLines;
-   private JCheckBox bxPixFull,bxPixColor,bxDate,bxHiPS,bxSIA,bxCS;
-   private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate;
+   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxCS,bxProg;
+   private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    
    private Vector<JCheckBox> authVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
    
 //   private JSlider slRow;
    
    /** Reset du formulaire */
-   private void reset() {
-      bxDate.setSelected(true);
+   protected void reset() {
       bxImage.setSelected(true);
       bxCube.setSelected(true);
       bxCatalog.setSelected(true);
@@ -535,6 +540,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxHiPS.setSelected(false);
       bxSIA.setSelected(false);
       bxCS.setSelected(false);
+      bxProg.setSelected(false);
       bxPixColor.setSelected(false);
       tfCatNbRow.setText("");
       tfCoverage.setText("");
@@ -542,6 +548,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       tfDescr.setText("");
       tfMinDate.setText("");
       tfMaxDate.setText("");
+      tfBibYear.setText("");
       
       for( JCheckBox bx : authVbx ) bx.setSelected(true);
       for( JCheckBox bx : catMisVbx ) bx.setSelected(false);
@@ -645,14 +652,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       });
       PropPanel.addCouple(this, p, "Regime", "Wavelength...", subPanel, g, c, GridBagConstraints.EAST);
       
-      // Date
+      // Epoch of observations
+      tfBibYear = new JTextFieldX(10);
+      PropPanel.addCouple(this, p, "Bib. year", "Year of the biblographic reference paper\n(ex:2008, >2015, 2012..2014)", tfBibYear, g, c, GridBagConstraints.EAST);
+
+      
+      // Epoch of observations
       subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0) );
       tfMinDate = new JTextFieldX(10);
       tfMaxDate = new JTextFieldX(10);
-      bxDate = new JCheckBox("only if known",true); bxDate.setToolTipText("Also removed collections with undefined epoch");
-      bxDate.addActionListener(this);
-      subPanel.add(tfMinDate); subPanel.add( new JLabel(" .. ") ); subPanel.add(tfMaxDate); subPanel.add( bxDate );
-      PropPanel.addCouple(this, p, "Epoch", "In this periode. Date in ISO format", subPanel, g, c, GridBagConstraints.EAST);
+      subPanel.add(tfMinDate); subPanel.add( new JLabel(" .. ") ); subPanel.add(tfMaxDate);
+      PropPanel.addCouple(this, p, "Obs. epoch", "Epoch of observations (MJD or ISO date)", subPanel, g, c, GridBagConstraints.EAST);
       
       // Les différentes origines des HiPS
       authVbx = new Vector<JCheckBox>();
@@ -668,6 +678,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bx.setToolTipText("Simple Image Access (version 1 & 2)");
       subPanel.add( bx=bxCS   = new JCheckBox("CS only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Catalog/table cone search");
+      subPanel.add( bx=bxProg   = new JCheckBox("Prog.only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("HiPS Progenitors only");
       PropPanel.addCouple(this, p, "Protocol ", "Keep the collections supporting these specifical access protocols.", subPanel, g, c, GridBagConstraints.EAST);
      
       // Les filtres dédiés aux HiPS
@@ -716,20 +728,39 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // les UCDs
       catUcdVbx = new Vector<JCheckBox>();
-      subPanel = new JPanel( new GridLayout(2,3) );
+      subPanel = new JPanel( new GridLayout(0,3) );
       subPanel.add( bx = new JCheckBox("Parallax"));       bx.setSelected(false); bx.addActionListener(this);
       bx.setActionCommand("data_ucd=pos.parallax*");       setToolTip(bx);   catUcdVbx.add(bx);
-      subPanel.add( bx  = new JCheckBox("Redshift"));      bx.setSelected(false); bx.addActionListener(this);
-      bx.setActionCommand("data_ucd=src.redshift*");       setToolTip(bx);   catUcdVbx.add(bx);
       subPanel.add( bx  = new JCheckBox("Radial vel."));   bx.setSelected(false); bx.addActionListener(this);
       bx.setActionCommand("data_ucd=spect.dopplerVeloc*,phys.veloc*");      setToolTip(bx);   catUcdVbx.add(bx);
       subPanel.add( bx  = new JCheckBox("Proper motion")); bx.setSelected(false); bx.addActionListener(this);
       bx.setActionCommand("data_ucd=pos.pm*");             setToolTip(bx);   catUcdVbx.add(bx);
-      subPanel.add( bx  = new JCheckBox("Flux"));          bx.setSelected(false); bx.addActionListener(this);
-      bx.setActionCommand("data_ucd=phot.flux*");          setToolTip(bx);   catUcdVbx.add(bx);
-      subPanel.add( bx  = new JCheckBox("Magnitude"));     bx.setSelected(false); bx.addActionListener(this);
-      bx.setActionCommand("data_ucd=phot.mag*");           setToolTip(bx);   catUcdVbx.add(bx);
-      PropPanel.addCouple(this, p, "Content", "Dedicated type of measurements (based on UCDs)...", subPanel, g, c, GridBagConstraints.EAST);
+      
+      subPanel.add( bx  = new JCheckBox("Flux Radio"));    bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.flux*;em.radio*");setToolTip(bx);   catUcdVbx.add(bx);
+      subPanel.add( bx  = new JCheckBox("Flux IR"));       bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.flux*;em.IR*,phot.flux*;em.mm*");setToolTip(bx);   catUcdVbx.add(bx);
+      subPanel.add( bx  = new JCheckBox("Flux Opt"));       bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.flux*;em.opt*");setToolTip(bx);   catUcdVbx.add(bx);
+      subPanel.add( bx  = new JCheckBox("Flux HE"));       bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.flux*;em.X-ray*,phot.flux*;em.gamma*");setToolTip(bx);   catUcdVbx.add(bx);
+      
+      subPanel.add( bx  = new JCheckBox("Mag IR"));     bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.mag*;em.IR.K*");           setToolTip(bx);   catUcdVbx.add(bx);
+      subPanel.add( bx  = new JCheckBox("Mag Opt"));     bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.mag*;em.opt.B*");           setToolTip(bx);   catUcdVbx.add(bx);
+      
+      subPanel.add( bx  = new JCheckBox("Color"));     bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=phot.color*");           setToolTip(bx);   catUcdVbx.add(bx);
+      subPanel.add( bx  = new JCheckBox("Redshift"));      bx.setSelected(false); bx.addActionListener(this);
+      bx.setActionCommand("data_ucd=src.redshift*");       setToolTip(bx);   catUcdVbx.add(bx);
+
+      JPanel p1 = new JPanel( new BorderLayout(0,0) );
+      subPanel.setBorder( BorderFactory.createLineBorder(Color.gray));
+      p1.add(subPanel);
+      p1.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 5));
+      PropPanel.addCouple(this, p, "Content", "Dedicated type of measurements (based on UCDs)...", p1, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
+      
       
       // Les données associées
       assdataVbx = new Vector<JCheckBox>();

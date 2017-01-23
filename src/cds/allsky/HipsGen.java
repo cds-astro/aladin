@@ -19,8 +19,10 @@
 
 package cds.allsky;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -73,8 +75,7 @@ public class HipsGen {
 
       // Ouverture et lecture du fichier
       MyProperties properties = new MyProperties();
-      //      Reader reader = new FileReader(file);
-      FileInputStream reader = new FileInputStream(file);
+      InputStreamReader reader = new InputStreamReader( new BufferedInputStream( new FileInputStream(file) ));
       properties.load(reader);
 
 //      Set<Object> keys = properties.keySet();
@@ -284,6 +285,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-fast") ) context.mixing=true;
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
          else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
+         else if (arg.equalsIgnoreCase("-notouch") ) context.notouch=true;
          else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
          else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
@@ -400,7 +402,7 @@ public class HipsGen {
                MyProperties prop = new MyProperties();
                File f = new File( propFile );
                if( f.exists() ) {
-                  FileInputStream in = new FileInputStream(propFile);
+                  InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
                   prop.load(in);
                   in.close();
                   String s = prop.getProperty(Constante.KEY_CREATOR_DID);
@@ -505,7 +507,7 @@ public class HipsGen {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            FileInputStream in = new FileInputStream(propFile);
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
             prop.load(in);
             in.close();
             String s =prop.getProperty(Constante.KEY_HIPS_FRAME);
@@ -615,6 +617,7 @@ public class HipsGen {
                   "   maxThread=nn       Max number of computing threads" + "\n" +
                   "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
+                  "   -notouch           Do not touch the hips_release_date" + "\n"+
                   "   -nice              Slow download for avoiding to overload remote http server (dedicated " + "\n" +
                   "                      to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +

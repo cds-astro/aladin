@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -437,7 +438,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
                // C'est peut être un fichier de properties ?
             } else if( (type & MyInputStream.PROP)!=0 ) {
-               if( aladin.directory.addHipsProp(in, localFile) ) {
+               if( aladin.directory.addHipsProp( new InputStreamReader(in), localFile) ) {
                   n=1;
                }
 

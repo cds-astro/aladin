@@ -240,9 +240,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
    // La couleur du fond
-   static final Color BACKGROUND      = new Color(230,230,255); //250,250,255); 
+   static final Color BACKGROUND      = new Color(210,210,255); //250,250,255); 
    static final Color COLOR_INFOPANEL = new Color(160,160,255);   
-   static final Color COLOR_DIRECTORY = new Color(230,230,255);
+   static final Color COLOR_DIRECTORY = new Color(210,210,255);
    
    static final Color BKGD   = Color.lightGray;
 //       static final Color BKGD   = new Color(100,100,255);
@@ -2139,7 +2139,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       trace(1,"Creating the main interface");
-
+      
       // Le Panel contenant a la fois le View et le help
       cardView =  new CardLayout();
       bigView = new JPanel(cardView);
@@ -2159,7 +2159,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       droite.add(calque,BorderLayout.CENTER);
 
       JPanel droite2;
-      droite2 = new JPanel(new BorderLayout(0,0));
+      droite2 = new JPanel(new BorderLayout(2,0));
       droite2.setBackground( getBackground());
       droite2.setBorder( BorderFactory.createEmptyBorder(0, 0, 3, 3));
       droite2.add(toolBox,BorderLayout.WEST);
@@ -2254,6 +2254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       splitMesureHeight.setResizeWeight(1);
       
       JPanel px = new JPanel( new BorderLayout(0,0) );
+      px.setBackground( getBackground() );
       px.add(splitMesureHeight, BorderLayout.CENTER );
       px.setBorder( BorderFactory.createEmptyBorder(0, 0, 3, 0));
       

@@ -21,7 +21,7 @@ package cds.aladin;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -108,13 +108,17 @@ public class MyProperties {
     * Compare les propriétés et retourne la liste de celles qui ont été modifiées
     * dans le MyProperties passé en paramètre
     * @param p La référence à comparer
+    * @param exceptKey une clé qu'il ne faut pas prendre en compte (null sinon)
     * @return Une liste de chaines indiquant les modifications des propriétés
     */
-   public ArrayList<String> getModVal(MyProperties p) {
+   public ArrayList<String> getModVal(MyProperties p) { return getModVal(p,null); }
+   public ArrayList<String> getModVal(MyProperties p, String exceptKey) {
       ArrayList<String> a = new ArrayList<String>();
       if( p==null ) return a;
       for( String k : getKeys() ) {
          if( k.equals(" ") || k.equals("#") ) continue;
+         if( k.equals(exceptKey) ) continue;
+         if( k.equals("TIMESTAMP") ) continue;         // Jamais pris en compte
          String v = get(k);
          String v1 = p.get(k);
          if( v1==null ) continue;
@@ -174,7 +178,7 @@ public class MyProperties {
    public ArrayList<String> getAddKey(MyProperties p) {
       ArrayList<String> a = new ArrayList<String>();
       if( p==null ) return a;
-      for( String k1 : getKeys() ) {
+      for( String k1 : p.getKeys() ) {
          if( k1.equals(" ") || k1.equals("#") ) continue;
          String v = get(k1);
          if( v==null ) a.add(k1);
@@ -321,18 +325,17 @@ public class MyProperties {
    public String getPropOriginal() { return propOriginal!=null ? propOriginal.toString() : null; }
    
    // Lecture d'une ligne dans un flux basique InputStream
-   // REM: ne supporte que l'ASCII basique
    // La ligne retournée ne contient ni le CR ni un éventuellement LF
-   private String readLine( InputStream in ) throws IOException {
+   private String readLine( InputStreamReader in ) throws IOException {
       StringBuilder s = new StringBuilder(256);
-      byte [] c = new byte[1];
+      int ch;
       boolean eof = false;
-      while( true ) {
-         if( in.read(c)==-1 ) { eof=true; break; }   // Fin de flux
-         char ch = (char)c[0];
-         if( ch=='\n' ) break;         // Fin de la ligne
-         if( ch!='\r' ) s.append(ch);  // on ne prend pas en compte le LF
-      }
+      
+         while( true ) {
+            if( (ch=in.read())==-1 ) { eof=true; break; }   // Fin de flux
+            if( ch=='\n' ) break;         // Fin de la ligne
+            if( ch!='\r' ) s.append( (char) ch);  // on ne prend pas en compte le LF
+         }
       
       // Fin du flux et rien lu => retourn null
       if( eof && s.length()==0 ) return null;
@@ -346,13 +349,13 @@ public class MyProperties {
     * @return false si on a atteint la fin du flux (l'enregistrement courant a tout de même été chargé
     * @throws IOException
     */
-   public boolean loadRecord(InputStream in) throws IOException { return load( in,false,true); }
+   public boolean loadRecord(InputStreamReader in) throws IOException { return load( in,false,true); }
    
    /**
     * Charge les propriétés depuis le flux courant. Considère qu'il n'y a qu'un seul
     * enregistrement pour tout le flux
     */
-   public void load(InputStream in) throws IOException { load( in,false,false); }
+   public void load(InputStreamReader in) throws IOException { load( in,false,false); }
    
    /**
     * Charge les propriétés à partir du flux courant
@@ -362,13 +365,14 @@ public class MyProperties {
     * @return false si on a atteint la fin du flux, sinon true
     * @throws IOException
     */
-   public synchronized boolean load(InputStream in,boolean flagKeepOriginal,boolean flagBlankLinestop) throws IOException {
+   public synchronized boolean load(InputStreamReader in,boolean flagKeepOriginal,boolean flagBlankLinestop) throws IOException {
       
       // Pour conserver le flux original
       if( flagKeepOriginal ) propOriginal = new StringBuilder();
 
       prop = new ArrayList<PropItem>();
       hash = new HashMap<String, PropItem>();
+      
 
       // Je lis les propriétés de la configuration
       String s;
@@ -447,7 +451,8 @@ public class MyProperties {
             value = new String(b,0,j);
          }
       } catch( Exception e ) {
-//         System.err.println("MyProperties reader error => "+e.getMessage());
+         System.err.println("MyProperties reader error => "+e.getMessage());
+         e.printStackTrace();
          prop.add(new PropItem("#", "#Error: "+s));
          return;
       }
@@ -854,8 +859,8 @@ public class MyProperties {
        return key+suffixe+s;
     }
     
-    static public final String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm";
-    static public final SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
+    static final String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm";
+    static final SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
     static {
        TimeZone utc = TimeZone.getTimeZone("UTC");
        sdf.setTimeZone(utc);

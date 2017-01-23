@@ -38,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -298,7 +299,7 @@ public class PlanBG extends PlanImage {
             if( useCache && f.exists() ) {
                conn.setIfModifiedSince( f.lastModified() );
                prop = new MyProperties();
-               InputStream in1 = new FileInputStream(f);
+               InputStreamReader in1 = new InputStreamReader(new FileInputStream(f));
                prop.load(in1,true,false);
                in1.close();
                dateRef = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
@@ -322,7 +323,7 @@ public class PlanBG extends PlanImage {
                   // properties est bien différente de celle de la version déjà en cache
                   // (nécessaire dans le cas de sites miroirs, ou d'accès via CGI FX)
                   prop = new MyProperties();
-                  InputStream in1 = new ByteArrayInputStream(buf);
+                  InputStreamReader in1 = new InputStreamReader( new ByteArrayInputStream(buf) );
                   prop.load(in1,true,false);
                   in1.close();
                   String dateRef1= prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
@@ -362,7 +363,8 @@ public class PlanBG extends PlanImage {
          }
          if( in==null ) throw new Exception();
          prop = new MyProperties();
-         prop.load(in,true,false);
+         
+         prop.load( new InputStreamReader(in),true,false);
          in.close();
       } catch( Exception e ) { prop=null; }
       return prop;
@@ -1136,9 +1138,9 @@ public class PlanBG extends PlanImage {
       try {
          MyProperties prop = new MyProperties();
          String urlFile = url+"/"+Constante.FILE_PROPERTIES;
-         InputStream in = null;
+         InputStreamReader in = null;
          try {
-            in=Util.openAnyStream(urlFile);
+            in= new InputStreamReader( Util.openAnyStream(urlFile) );
             prop.load(in);
          } finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
          

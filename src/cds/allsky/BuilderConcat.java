@@ -19,9 +19,11 @@
 
 package cds.allsky;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 
 import cds.aladin.HealpixProgen;
 import cds.aladin.MyProperties;
@@ -240,13 +242,13 @@ public class BuilderConcat extends BuilderTiles {
    
    /** Charge les propriétés d'un fichier properties, retourne null si problème */
    protected MyProperties loadProperties(String path) {
-      FileInputStream in = null;
+      InputStreamReader in = null;
       try {
          String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            in = new FileInputStream(propFile);
+            in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
             prop.load(in);
             in.close();
             in=null;

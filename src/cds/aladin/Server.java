@@ -20,8 +20,8 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
+import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -986,23 +986,23 @@ public void layout() {
 //         grab.setEnabled(grabEnable);
 //      }
    }
-   
+
    protected boolean updateWidgets() {
-	   int widgetsUpdateCounter = 0;
-	      if( aladin.dialog!=null ) {
-	    	  this.updateWidgets(aladin.dialog);
-	    	  widgetsUpdateCounter++;
-	      }
-	      
-	      if( aladin.additionalServiceDialog!=null ) {
-	    	  this.updateWidgets(aladin.additionalServiceDialog);
-	    	  widgetsUpdateCounter++;
-	      }
-	      
-	      // Activation ou non du bouton GrabIt
-	      return widgetsUpdateCounter==2;
-	   }
-   
+      int widgetsUpdateCounter = 0;
+      if( aladin.dialog!=null ) {
+         this.updateWidgets(aladin.dialog);
+         widgetsUpdateCounter++;
+      }
+
+      if( aladin.additionalServiceDialog!=null ) {
+         this.updateWidgets(aladin.additionalServiceDialog);
+         widgetsUpdateCounter++;
+      }
+
+      // Activation ou non du bouton GrabIt
+      return widgetsUpdateCounter==2;
+   }
+
    protected void updateWidgets(ServerDialog dialog) {
 	   if( !dialog.isGrabIt() && grab!=null ) {
 	         Plan pref = aladin.calque.getPlanRef();
@@ -1869,10 +1869,10 @@ public void layout() {
 			
 		} catch(UnresolvedIdentifiersException ie){	
 			Aladin.trace(3, "Number of errors in the query:"+ie.getNbErrors());
-			Iterator<adql.parser.ParseException> it = ((UnresolvedIdentifiersException)ie).getErrors();
+			Iterator<adql.parser.ParseException> it = ie.getErrors();
 			adql.parser.ParseException ex = null;
 			while(it.hasNext()){
-				ex = (adql.parser.ParseException) it.next();
+				ex = it.next();
 				highlightQueryError(highlighter, ex, unrecognisedParams);
 			}
 		} catch (adql.parser.ParseException pe) {

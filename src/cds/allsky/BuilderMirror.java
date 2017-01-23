@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -69,10 +70,12 @@ public class BuilderMirror extends BuilderTiles {
       // Chargement des propriétés distantes
       prop = new MyProperties();
       MyInputStream in = null;
+      
+      InputStreamReader in1=null;
       try {
-         in = Util.openAnyStream( context.getInputPath()+"/properties");
-         prop.load(in);
-      } finally{  if( in!=null ) in.close(); }
+         in1 = new InputStreamReader( Util.openAnyStream( context.getInputPath()+"/properties") );
+         prop.load(in1);
+      } finally{  if( in1!=null ) in1.close(); }
 
       // Détermination du statut
       String s = prop.getProperty(Constante.KEY_HIPS_STATUS);
@@ -132,6 +135,7 @@ public class BuilderMirror extends BuilderTiles {
       if( s!=null ) { if( s.equals("color")) context.setBitpixOrig(0); }
       else {
          s = prop.getProperty(Constante.OLD_ISCOLOR);
+         if( s==null ) s = prop.getProperty("isColor");
          if( s!=null && s.equals("true")) context.setBitpixOrig(0);
       }
       if( context.isColor() ) context.info("Mirroring colored HiPS");
@@ -157,10 +161,10 @@ public class BuilderMirror extends BuilderTiles {
       // Peut être existe-t-il déjà une copie locale à jour ?
       if( (new File(context.getOutputPath()+"/properties")).exists() ) {
          MyProperties localProp = new MyProperties();
-         in = null;
+         in1 = null;
          try {
-            in = Util.openAnyStream( context.getOutputPath()+"/properties");
-            localProp.load(in);
+            in1 = new InputStreamReader( Util.openAnyStream( context.getOutputPath()+"/properties") );
+            localProp.load(in1);
 
             String dLocal = localProp.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
             String dRemote = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
@@ -179,7 +183,7 @@ public class BuilderMirror extends BuilderTiles {
             isUpdate=true;
             context.info("Updating a previous HiPS copy ["+context.getOutputPath()+"]...");
 
-         } finally{  if( in!=null ) in.close(); }
+         } finally{ if( in1!=null ) in1.close(); }
       }
    }
 

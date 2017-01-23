@@ -1,8 +1,10 @@
 package cds.allsky;
 
 import java.awt.image.IndexColorModel;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
 
 import cds.aladin.CanvasColorMap;
 import cds.aladin.KernelList;
@@ -279,7 +281,7 @@ public class BuilderRgb extends BuilderTiles {
       File f = new File( propFile );
       if( f.exists() ) {
          if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-         FileInputStream in = new FileInputStream(propFile);
+         InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
          prop.load(in);
          in.close();
       }

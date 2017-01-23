@@ -58,6 +58,10 @@
 //
 package cds.tools;
 
+import static cds.aladin.Constants.DATE_FORMATS;
+import static cds.aladin.Constants.LISTE_CARACTERE_STRING;
+import static cds.aladin.Constants.RESULTS_RESOURCE_NAME;
+
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -107,6 +111,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -115,7 +120,6 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
-import java.util.AbstractMap.SimpleEntry;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -143,7 +147,6 @@ import cds.image.EPSGraphics;
 import cds.savot.model.ResourceSet;
 import cds.savot.model.SavotResource;
 import cds.savot.pull.SavotPullParser;
-import static cds.aladin.Constants.*;
 import healpix.essentials.FastMath;
 
 /**
@@ -427,6 +430,25 @@ public final class Util {
       if( len>=0 ) return s+x.substring(len);
       return s;
 
+   }
+   
+   /** Retourne la sous-chaine d'un path délimité par des /
+    * Rq: le / initial présent ou absent n'a pas d'incidence
+    * @param path le path
+    * @param deb l'indice de l'élément (commence à 0)
+    * @param num le nombre d'éléments (par défaut 1)
+    * @return ex: CDS/P/DSS2/color,2,2  => DSS2/color
+    */
+   static public String getSubpath(String path,int deb ) { return getSubpath(path,deb,1); }
+   static public String getSubpath(String path,int deb, int num ) {
+      if( path==null ) return null;
+      int j=-1;
+      int posDeb=-1;
+      for( int i=0, pos=0; pos!=-1; pos=path.indexOf('/',pos+1), i++ ) {
+         if( i==deb ) { posDeb=pos+ (path.charAt(pos)=='/'? 1:0); j=i; }
+         if( j!=-1 && i-j==num ) return path.substring(posDeb,pos);
+      }
+      return j==-1 ? null : path.substring(posDeb);
    }
 
    /**
@@ -934,6 +956,17 @@ public final class Util {
          }
       }
       gr.setColor(c);
+   }
+   
+   static public void drawRect(Graphics g,int x,int y,int w, int h, Color ch, Color cb) {
+      int r=0;
+      g.setColor(ch);
+      g.drawLine(x+r,y, x+w-r,y);
+      g.drawLine(x,y+r, x,y+h-r);
+
+      g.setColor(cb);
+      g.drawLine(x+r,y+h,x+w-r,y+h);
+      g.drawLine(x+w,y+r,x+w,y+h-r);
    }
 
    static public void drawRoundRect(Graphics g,int x,int y,int w, int h,int r, Color ch, Color cb) {
@@ -2290,7 +2323,7 @@ public final class Util {
 		SavotResource resultsResource = null;
 		if (resourceSet!=null && resourceSet.getItemCount()>0) {
 			for (int i = 0; i < resourceSet.getItemCount(); i++) {
-				SavotResource resource= (SavotResource)resourceSet.getItemAt(i);
+				SavotResource resource= resourceSet.getItemAt(i);
 				if (resource.getType().equalsIgnoreCase(RESULTS_RESOURCE_NAME)) {
 					resultsResource = resource;
 				}

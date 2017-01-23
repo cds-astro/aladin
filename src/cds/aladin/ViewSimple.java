@@ -102,7 +102,7 @@ implements MouseWheelListener, MouseListener,MouseMotionListener,
 KeyListener,ActionListener,
 DropTargetListener, DragSourceListener, DragGestureListener {
 
-   static final boolean OVERLAYFORCEDISPLAY = true;
+   static final boolean OVERLAYFORCEDISPLAY = false;
    static final String CREDIT = "Powered by Aladin";
    static final float CARTOUCHE = 0.7f;
 

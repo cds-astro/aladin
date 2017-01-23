@@ -20,10 +20,11 @@
 package cds.allsky;
 
 import java.awt.Polygon;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -103,7 +104,8 @@ public class Context {
    protected ArrayList<String> fitsKeys=null;// Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
-
+   protected boolean notouch=false;          // true si on ne doit pas modifier la date du hips_release_date
+   
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
    protected double bzero=0;                 // Valeur BZERO de la boule Healpix à générer
@@ -1047,12 +1049,12 @@ public class Context {
    public boolean verifTileOrder() {
 
       // Récupération d'un éventuel changement de TileOrder dans les propriétés du HpxFinder
-      InputStream in = null;
+      InputStreamReader in = null;
       boolean flagTileOrderFound=false;
       try {
          String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
          MyProperties prop = new MyProperties();
-         prop.load( in=new FileInputStream( propFile ) );
+         prop.load( in=new InputStreamReader( new FileInputStream( propFile )) );
          int o;
          String s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
          if( s!=null ) o = (int)CDSHealpix.log2( Integer.parseInt(s));
@@ -1088,12 +1090,12 @@ public class Context {
    public boolean verifFrame() {
 
       // Récupération d'un éventuel changement de hips_frame dans les propriétés du HpxFinder
-      InputStream in = null;
+      InputStreamReader in = null;
       boolean flagFrameFound=false;
       try {
          String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
          MyProperties prop = new MyProperties();
-         prop.load( in=new FileInputStream( propFile ) );
+         prop.load( in=new InputStreamReader( new FileInputStream( propFile )) );
          int o=0;
          String s = prop.getProperty(Constante.KEY_HIPS_FRAME);
          if( s!=null ) {
@@ -1792,7 +1794,7 @@ public class Context {
 
       setPropriete(Constante.KEY_HIPS_BUILDER,"Aladin/HipsGen "+Aladin.VERSION);
       setPropriete(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
-      setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
+      if( !notouch ) setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
 
       setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
@@ -1940,7 +1942,7 @@ public class Context {
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
       prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");
       if( minOrder>3 ) prop.setProperty(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
-      prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, getNow());
+      if( !notouch ) prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, getNow());
       prop.setProperty(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
       prop.setProperty(Constante.KEY_HIPS_BUILDER, "Aladin/HipsGen "+Aladin.VERSION);
 
@@ -2055,7 +2057,7 @@ public class Context {
          try {
             String v = Constante.sdf.format( HipsGen.SDF.parse(s) )+"Z";
             prop.replaceKey(Constante.OLD_HIPS_RELEASE_DATE, Constante.KEY_HIPS_RELEASE_DATE);
-            prop.replaceValue(Constante.KEY_HIPS_RELEASE_DATE, v);
+            if( !notouch ) prop.replaceValue(Constante.KEY_HIPS_RELEASE_DATE, v);
          } catch( ParseException e ) { }
       }
 
@@ -2077,6 +2079,7 @@ public class Context {
       // Certains champs sont remplacés sous une autre forme, à moins qu'ils n'aient été
       // déjà mis à jour
       s = prop.getProperty(Constante.OLD_ISCOLOR);
+      if( s==null ) s = prop.getProperty("isColor");
       if( s!=null ) {
          if( s.equals("true")
                && prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_SUBTYPE, "color");
@@ -2122,7 +2125,7 @@ public class Context {
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-            FileInputStream in = new FileInputStream(propFile);
+            InputStreamReader in = new InputStreamReader( new FileInputStream(propFile) );
             prop.load(in);
             in.close();
          }
@@ -2134,7 +2137,7 @@ public class Context {
          // Mise à jour des propriétés
          for( int i=0; i<key.length; i++ ) {
  
-            if( key[i].equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
+            if( !notouch && key[i].equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
                // Conservation de la première date de processing si nécessaire
                if( prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null
                      && (v=prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE))!=null) {
@@ -2225,7 +2228,7 @@ public class Context {
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-            FileInputStream in = new FileInputStream(propFile);
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
             prop.load(in);
             in.close();
 

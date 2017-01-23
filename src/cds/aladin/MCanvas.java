@@ -1829,7 +1829,7 @@ MouseWheelListener, Widget
       aladin.setAliasing(g);
 
       // Affichage des lignes visibles
-      nbligne = (H- (MH+MB))/HL;             // Nbre de lignes
+      nbligne = (H- (MH+MB))/HL+1;             // Nbre de lignes
       int y = MH+HF+1;                    // Ordonnee courante
       int ts = aladin.mesure.getNbSrc();
       int max=0;			  // Taille max

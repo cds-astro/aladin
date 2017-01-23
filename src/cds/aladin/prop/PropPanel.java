@@ -108,7 +108,11 @@ public class PropPanel extends JPanel {
    */
    public static void addCouple(final JFrame frame, JPanel p, Object titre, final String help, Component valeur,
                 GridBagLayout g, GridBagConstraints c, int titleAnchor) {
+      addCouple(frame,p,titre,help,valeur,g,c,titleAnchor,GridBagConstraints.NONE);
+   }
    
+      public static void addCouple(final JFrame frame, JPanel p, Object titre, final String help, Component valeur,
+            GridBagLayout g, GridBagConstraints c, int titleAnchor, int fillComp) {
       Component t;
    
       if( titre==null ) t = new JLabel();
@@ -140,7 +144,7 @@ public class PropPanel extends JPanel {
       } else t=valeur;
    
       c.gridwidth = GridBagConstraints.REMAINDER;
-      c.fill = titre==null ? GridBagConstraints.HORIZONTAL : GridBagConstraints.NONE;
+      c.fill = titre==null ? GridBagConstraints.HORIZONTAL : fillComp;
       c.weightx = 1.0;
       c.anchor = GridBagConstraints.WEST;
       g.setConstraints(t,c);

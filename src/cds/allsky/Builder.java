@@ -19,8 +19,10 @@
 
 package cds.allsky;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
 
 import cds.aladin.MyProperties;
 import cds.fits.Fits;
@@ -310,7 +312,7 @@ public abstract class Builder {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            FileInputStream in = new FileInputStream(propFile);
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
             prop.load(in);
             in.close();
             String s = prop.getProperty(Constante.KEY_HIPS_PIXEL_CUT);
@@ -355,7 +357,7 @@ public abstract class Builder {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            FileInputStream in = new FileInputStream(propFile);
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
             prop.load(in);
             in.close();
             String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);

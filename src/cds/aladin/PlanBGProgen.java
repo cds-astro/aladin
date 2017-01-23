@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.TreeMap;
 
@@ -76,9 +77,9 @@ public class PlanBGProgen extends PlanBGCat {
       int fin = s.lastIndexOf("/"+Constante.FILE_HPXFINDER);
       if( fin==-1 ) return null;
       String propPath = s.substring(0,fin)+"/"+Constante.FILE_PROPERTIES;
-      MyInputStream in=null;
+      InputStreamReader in=null;
       try {
-         in = cds.tools.Util.openStream(propPath);
+         in = new InputStreamReader( cds.tools.Util.openStream(propPath) );
          prop = new MyProperties();
          prop.load(in);
          String label = prop.getProperty("label");

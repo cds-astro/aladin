@@ -64,6 +64,15 @@ public class DirectoryTree extends JTree {
       NoeudRenderer nr = new NoeudRenderer();
       setCellRenderer(nr);
       
+//      setUI(new javax.swing.plaf.basic.BasicTreeUI(){
+//         protected void paintHorizontalLine(Graphics g,JComponent c,int y,int left,int right){
+//           super.paintHorizontalLine(g,c,y,left,right);
+//         }
+//         protected void paintVerticalLine(Graphics g,JComponent c,int x,int top,int bottom){
+//           super.paintVerticalLine(g,c,x,top,bottom);
+//         }
+//       });
+      
       // Pour accélérer tout ça
       setLargeModel(true);
       Component c =  nr.getTreeCellRendererComponent( this, getModel().getRoot(), false, false, false, 1, false);

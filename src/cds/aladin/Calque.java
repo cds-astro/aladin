@@ -2122,7 +2122,7 @@ public class Calque extends JPanel implements Runnable {
 
       // Les plans BG se mettent tjs en bas de la pile
       // juste au dessous du dernier plan qui n'est pas BG
-      if( plan[n].type==Plan.ALLSKYIMG ) {
+      if( plan[n].type==Plan.ALLSKYIMG && !plan[n].isOverlay()) {
          for( i=plan.length-1; i>=0; i-- ) {
             if( plan[i].type!=Plan.ALLSKYIMG ) break;
          }

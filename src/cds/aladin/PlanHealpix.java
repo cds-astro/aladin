@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -777,9 +778,9 @@ public class PlanHealpix extends PlanBG {
 
       File propFile = propertiesFile(dir);
       MyProperties prop = new MyProperties();
-      FileInputStream in=null;
+      InputStreamReader in=null;
       try {
-         in = new FileInputStream(propFile);
+         in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
          prop.load(in);
       } catch (Exception e) {
          File dirToRemove = new File(getCacheDir() + Util.FS + getDirname());

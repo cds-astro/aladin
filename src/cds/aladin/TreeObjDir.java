@@ -30,7 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.StringTokenizer;
 
@@ -97,12 +97,10 @@ public class TreeObjDir extends TreeObj {
 
       // Par http ou ftp ?
       try {
-         InputStream in=null;
-         if( !local ) in = (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream();
-         else in = new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES));
-         if( in!=null ) { 
-            try { prop.load(in); } finally { in.close(); }
-         }
+         InputStreamReader in=null;
+         if( !local ) in = new InputStreamReader( (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream() );
+         else in = new InputStreamReader( new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES)) );
+         try { prop.load(in); } finally { in.close(); }
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
 
 
@@ -713,8 +711,11 @@ public class TreeObjDir extends TreeObj {
    }
 
    protected void loadHips() {
+      String trg = "";
+      try { trg = " "+aladin.view.getCurrentView().getCentre(); } catch( Exception e ) {}
+      
       String mode = isTruePixels() ? ",fits":"";
-      aladin.console.printCommand("get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")");
+      aladin.console.printCommand("get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")"+trg);
       aladin.allsky(this);
    }
    
@@ -755,7 +756,7 @@ public class TreeObjDir extends TreeObj {
             String cmd;
             if( internalId.startsWith("CDS/Simbad") ) {
                cmd = "get Simbad "+trg+" "+Util.myRound(rad)+"deg";
-            } else cmd = "get VizieR("+cat+") "+trg+" "+Util.myRound(rad)+"deg";
+            } else cmd = "get VizieR("+cat+",allcolumns) "+trg+" "+Util.myRound(rad)+"deg";
             aladin.execAsyncCommand(cmd);
             
          // Accès direct CS => http://...?RA=$1&DEC=$2&SR=$3&VERB=2

@@ -1,8 +1,10 @@
 package cds.allsky;
 
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -77,7 +79,7 @@ public class BuilderCube extends Builder {
             File f = new File( propFile );
             if( f.exists() ) {
                if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-               FileInputStream in = new FileInputStream(propFile);
+               InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
                context.prop.load(in);
                in.close();
                propFound=true;

@@ -458,9 +458,15 @@ public final class Tool {
 
       g.setColor( mode==DOWN ? CU : currentButton && mode!=UNAVAIL ? CBU : CBG);
       g.fillRect(idx+2,idy+2,W-3,H-3);
-      if( mode==DOWN ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, Color.darkGray, Color.white);
-      else if( mode==UP && currentButton ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, Color.white, Color.darkGray);
-      else Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, CBG, CBG);
+//      if( aladin.isFullScreen() ) {
+//         if( mode==DOWN ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 3, Color.darkGray, Color.white);
+//         else if( mode==UP && currentButton ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 3, Color.white, Color.darkGray);
+//         else Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 3, CBG, CBG);
+//      } else {
+         if( mode==DOWN ) Util.drawRect(g, idx+1, idy+1,W-2,H-2, Color.gray, Color.gray);
+         else if( mode==UP && currentButton ) Util.drawRect(g, idx+1, idy+1,W-2,H-2, Color.gray, Color.gray);
+         else Util.drawRect(g, idx+1, idy+1,W-2,H-2,  CBG, CBG);
+//      }
 
 
       //      // Couleur du fond
