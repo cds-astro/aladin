@@ -65,42 +65,41 @@ public class Look extends MyIcon {
       for( int i=0; i<TX.length; i++ ) g.drawLine(TX[i][1]+x,TX[i][0]+y,TX[i][2]+x,TX[i][0]+y);
    }
    
-   private boolean isAvailable() {
+   protected boolean isAvailable() {
       if( aladin.view.isFree() ) return false;
       return true;
-//      ViewSimple v = aladin.view.getMouseView();
-//      return v!=null && !v.isFree() && !v.isAllSky();
    }
-   private boolean isMouseIn()   { return in; }
+   
+   protected boolean isMouseIn()   { return in; }
+   
+   protected Color getLogoColor() {
+      int mode=getMode();
+      Color c = !isAvailable() ?  Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE : 
+         mode==0 ? Aladin.COLOR_CONTROL_FOREGROUND :
+         mode==1 ? Aladin.COLOR_GREEN :
+         mode==2 ? Aladin.COLOR_ICON_ACTIVATED : Color.orange;
+      if( isMouseIn() ) c = c.brighter();
+      return c;
+      
+   }
    
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
-      g.setColor( getBackground());
-      g.fillRect(0,0,W,H);
+      super.drawLogo(g);
       int x = 10;
       int y = 0;
       int r = 10;
       
-      int mode=getMode();
-      
-      g.setColor( mode==0 ? getBackground() :
-                  mode==1 ? Color.green :
-                  mode==3 ? ViewSimple.ORANGE :
-                     Color.red );
-      
-      if( isAvailable() && isMouseIn() ) {
-         g.setColor( Aladin.MYBLUE );
+      if( isAvailable() ) {
+         g.setColor( getFillInColor() );
          g.fillOval(x,y,r,r);
       }
       
-      g.setColor( !isAvailable() ?  Aladin.MYGRAY : 
-           mode==0 ? Color.black :
-           mode==1 ? Aladin.GREEN :
-           mode==2 ?  Color.red : Color.orange ) ;
+      g.setColor( getLogoColor() ) ;
       drawLook(g,10,0);
       
       // Label
-      g.setColor(isAvailable() ? Color.black : Aladin.MYGRAY);
+      g.setColor( getLabelColor() );
       g.setFont(Aladin.SPLAIN);
       g.drawString(LOOK,W/2-g.getFontMetrics().stringWidth(LOOK)/2,H-2);
    }

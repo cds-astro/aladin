@@ -376,7 +376,7 @@ public class UWSFacade implements ActionListener{
 	public JPanel instantiateGui() {
 		if (asyncPanel == null) {
 			asyncPanel = new JPanel(new GridBagLayout());
-			asyncPanel.setBackground(Aladin.LBLUE);
+			asyncPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 			asyncPanel.setFont(Aladin.PLAIN);
 			if (inSessionAsyncJobsPanel == null) {
 				inSessionAsyncJobsPanel = new JPanel();
@@ -385,7 +385,7 @@ public class UWSFacade implements ActionListener{
 					infoLabel.setFont(Aladin.LITALIC);
 					inSessionAsyncJobsPanel.add(infoLabel);
 				}
-				inSessionAsyncJobsPanel.setBackground(Aladin.LBLUE);
+				inSessionAsyncJobsPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 				inSessionAsyncJobsPanel.setLayout(new BoxLayout(inSessionAsyncJobsPanel, BoxLayout.Y_AXIS));
 			}
 			radioGroup = new ButtonGroup();
@@ -429,7 +429,7 @@ public class UWSFacade implements ActionListener{
 			asyncPanel.add(searchPanel,c);
 			
 			JPanel actionPanel = new JPanel();
-			actionPanel.setBackground(Aladin.LBLUE);
+			actionPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 			button = new JButton("ABORT");
 			button.setActionCommand(ABORTJOB);
 			button.addActionListener(this);

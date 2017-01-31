@@ -99,7 +99,7 @@ public class PluginDescription extends JPanel {
       p.add(l = name = new JLabel(), c);
       l.setFont(l.getFont().deriveFont(Font.BOLD + Font.ITALIC,
             l.getFont().getSize2D() + 2));
-      l.setForeground(Aladin.GREEN);
+      l.setForeground(Aladin.COLOR_GREEN);
       c.gridwidth = 1;
       c.anchor = GridBagConstraints.WEST;
       c.fill = GridBagConstraints.HORIZONTAL;
@@ -309,7 +309,7 @@ public class PluginDescription extends JPanel {
       state.setText((running = suspended = ap.isSuspended()) ? SUSPENDED
             : !(running = ap.isRunning()) ? IDLE : threaded ? RUNNING : ACTIVE);
       state.setForeground(suspended ? Color.orange : running ? Color.red
-            : Aladin.GREEN);
+            : Aladin.COLOR_GREEN);
       start.setEnabled(!running);
       stop.setEnabled(running);
       resume.setEnabled(threaded && running && suspended);

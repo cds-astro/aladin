@@ -31,7 +31,19 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import cds.savot.model.*;
+import cds.savot.model.FieldSet;
+import cds.savot.model.MarkupComment;
+import cds.savot.model.ParamSet;
+import cds.savot.model.ResourceSet;
+import cds.savot.model.SavotField;
+import cds.savot.model.SavotParam;
+import cds.savot.model.SavotResource;
+import cds.savot.model.SavotTR;
+import cds.savot.model.SavotTable;
+import cds.savot.model.SavotVOTable;
+import cds.savot.model.TDSet;
+import cds.savot.model.TRSet;
+import cds.savot.model.TableSet;
 import cds.savot.pull.SavotPullEngine;
 import cds.savot.pull.SavotPullParser;
 import cds.tools.Util;
@@ -85,7 +97,7 @@ public class FootprintParser {
 	 * @return la Hashtable donnant un objet Footprint d'après son nom
 	 */
 	public Hashtable<String, FootprintBean> getFooprintHash() {
-		InputStream is;
+		InputStream is=null;
 		ResourceSet resSet = new ResourceSet();
 		try {
 			// cas où on a passé un inputstream comme constructeur
@@ -106,6 +118,7 @@ public class FootprintParser {
 			Aladin.warning("Problem during parsing of footprints !");
 			return null;
 		}
+		finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} };
 
 		int nbRes = resSet.getItemCount();
 //		System.out.println(nbRes);
@@ -113,7 +126,7 @@ public class FootprintParser {
 
 		for( int i=0; i<nbRes; i++ ) {
 			Aladin.trace(3, "Footprint: Processing resource: "+i);
-			processFovResource((SavotResource)resSet.getItemAt(i));
+			processFovResource(resSet.getItemAt(i));
 		}
 //		new Footprint(raOffset,deOffset,)
 
@@ -155,7 +168,7 @@ public class FootprintParser {
 		int nbParam = params.getItemCount();
 		SavotParam param;
 		for( int i=0; i<nbParam; i++ ) {
-			param = (SavotParam)params.getItemAt(i);
+			param = params.getItemAt(i);
 
 			if ( param.getUtype().trim().equalsIgnoreCase(SPHERICAL_COORDS)) {
 			    sphericalCoordinates = true;
@@ -245,11 +258,11 @@ public class FootprintParser {
 		// traitement des RESOURCEs dans RESOURCE (Tom Donaldson)
 		ResourceSet resources = res.getResources();
 		for( int i=0; i<resources.getItemCount(); i++ ) {
-		    sub = processResource((SavotResource)resources.getItemAt(i));
+		    sub = processResource(resources.getItemAt(i));
 		    if( sub!=null ) {
 		    	fpBean.addSubFootprintBean(sub);
 		    	// on garde en mémoire les sous-parties d'un FoV --> on les place pour cela dans un container
-		    	String subfpId = ((SavotResource)resources.getItemAt(i)).getId();
+		    	String subfpId = resources.getItemAt(i).getId();
 		    	if (subfpId!=null && subfpId.length()>0) {
 		    	    FootprintBean container = new FootprintBean();
 		    	    container.addSubFootprintBean(sub);
@@ -288,7 +301,7 @@ public class FootprintParser {
 
 		for( int i=0; i<nbTab; i++ ) {
 			// TODO : prendre en compte couleur éventuelle au niveau de la TABLE (pour les types STRING notamment)
-			sub = processTable((SavotTable)tables.getItemAt(i));
+			sub = processTable(tables.getItemAt(i));
 			if( sub!=null ) {
 				subFpBean.addSubFootprintBean(sub);
 			}
@@ -489,7 +502,7 @@ public class FootprintParser {
 			String utype;
 			// boucle sur les champs
 			for( int i=0; i<nbFields; i++ ) {
-				field = (SavotField)fields.getItemAt(i);
+				field = fields.getItemAt(i);
 				field = getField(field);
 				utype = field.getUtype();
 				if( utype.equals("stc:AstroCoordArea/Region/reg:Polygon/Vertex/Position[1]") ||
@@ -519,7 +532,7 @@ public class FootprintParser {
 			TDSet tds;
 			counter += nbRows;
 			for( int i=0; i<nbRows; i++ ) {
-				tr = (SavotTR)trs.getItemAt(i);
+				tr = trs.getItemAt(i);
 				tds = tr.getTDs();
 				try {
 
@@ -557,7 +570,7 @@ public class FootprintParser {
 			String utype;
 			// boucle sur les params
 			for( int i=0; i<nbParams; i++ ) {
-				param = (SavotParam)params.getItemAt(i);
+				param = params.getItemAt(i);
 				param = getParam(param);
 				utype = param.getUtype();
 				if( utype.equals("stc:AstroCoordArea/Region/reg:Box/Center[1]")) {
@@ -629,7 +642,7 @@ public class FootprintParser {
 			String utype;
 			// boucle sur les params
 			for( int i=0; i<nbParams; i++ ) {
-				param = (SavotParam)params.getItemAt(i);
+				param = params.getItemAt(i);
 				param = getParam(param);
 				utype = param.getUtype();
 //				System.out.println(utype);
@@ -691,7 +704,7 @@ public class FootprintParser {
 			String utype;
 			// boucle sur les params
 			for( int i=0; i<nbParams; i++ ) {
-				param = (SavotParam)params.getItemAt(i);
+				param = params.getItemAt(i);
 				param = getParam(param);
 				utype = param.getUtype();
 				if( utype.equals("stc:AstroCoordArea/Region/reg:Sector/Center[1]")) {
@@ -773,7 +786,7 @@ public class FootprintParser {
 			String utype;
 			// boucle sur les params
 			for( int i=0; i<nbParams; i++ ) {
-				param = (SavotParam)params.getItemAt(i);
+				param = params.getItemAt(i);
 				param = getParam(param);
 				utype = param.getUtype();
 				if( utype.equals("stc:AstroCoord.Position2D.Value2.C1") ) {
@@ -846,7 +859,7 @@ public class FootprintParser {
 		int nbParam = params.getItemCount();
 		SavotParam param;
 		for( int i=0; i<nbParam; i++ ) {
-			param = (SavotParam)params.getItemAt(i);
+			param = params.getItemAt(i);
 			if( param.getName().equals("Region") ||
                 param.getUtype().equalsIgnoreCase("dal:footprint.geom.segment.shape")) return param.getValue();
 
@@ -877,7 +890,7 @@ public class FootprintParser {
 	private InputStream buildInputStream() throws IOException {
 		MyByteArrayStream is = new MyByteArrayStream();
 		// écriture préambule VOTable
-		is.write("<?xml version=\"1.0\" ?>\n<VOTABLE>".getBytes());
+//      is.write("<?xml version=\"1.0\" ?>\n<VOTABLE>".getBytes());
 		// on écrit d'abord le contenu du buffer qui correspond au début du stream à créer
 		if( beginStream!=null ) is.write(beginStream);
 
@@ -898,7 +911,7 @@ public class FootprintParser {
 
 		SavotParam param;
 		for( int i=0; i<nbParams; i++ ) {
-			param = (SavotParam)params.getItemAt(i);
+			param = params.getItemAt(i);
 			param = getParam(param);
 			if( param!=null && param.getName().equalsIgnoreCase("color") ) {
 				String val = param.getValue();

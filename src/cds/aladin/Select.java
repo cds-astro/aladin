@@ -1273,7 +1273,7 @@ Runnable, SwingWidgetFinder, Widget {
       String s = BEGIN[begin];
       lastBegin=begin;
       if( s==null ) return;
-      int y= drawBeginnerHelp1(g,s,Aladin.DARKBLUE,yMax);
+      int y= drawBeginnerHelp1(g,s,Aladin.COLOR_LABEL,yMax);
       //      drawControlHelp(g,y);
    }
 

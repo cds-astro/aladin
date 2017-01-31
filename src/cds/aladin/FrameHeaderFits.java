@@ -130,10 +130,10 @@ public class FrameHeaderFits extends JFrame {
          atValue.addAttribute(StyleConstants.CharacterConstants.Foreground,Color.black);
          atValue.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
          atComment = new SimpleAttributeSet();
-         atComment.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.DARKBLUE);
+         atComment.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.COLOR_LABEL);
          atComment.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
          atCom = new SimpleAttributeSet();
-         atCom.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.GREEN);
+         atCom.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.COLOR_GREEN);
          atCom.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
          atErr = new SimpleAttributeSet();
          atErr.addAttribute(StyleConstants.CharacterConstants.Foreground,Color.red);

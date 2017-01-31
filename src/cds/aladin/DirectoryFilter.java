@@ -102,10 +102,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    private JTextArea exprArea;
-   private boolean inArea=false;
+   private boolean flagFormEdit=false;
    
    /** True si un filtre est en cours d'application */
-   protected boolean hasFilter() { return exprArea.getText().trim().length()>0; }
+   protected boolean hasFilter() { return exprArea.getText().trim().length()>0 && !exprArea.getText().equals("*"); }
    
    /** Création du panel de l'expression correspondant au filtre courant */
    private JPanel createExpPanel() {
@@ -115,9 +115,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       exprArea.setLineWrap(true);
       exprArea.addKeyListener(new KeyListener() {
          public void keyTyped(KeyEvent e) { }
-         public void keyPressed(KeyEvent e) { inArea=true; }
+         public void keyPressed(KeyEvent e) { flagFormEdit=true; }
          public void keyReleased(KeyEvent e) {
-            if( e.getKeyCode()==KeyEvent.VK_ENTER ) submitArea();
+            if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
          }
       });
       areaPanel.add( exprArea, BorderLayout.CENTER );
@@ -128,46 +128,98 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return p;
    }
 
+   
+   private JButton storeButton, deleteButton;
+   private JTextField nameField;
+   
+   /** Activation/desactivation des boutons en fonction du contenu du formulaire */
+   private void updateWidget() {
+      String name = nameField.getText().trim();
+      boolean enabled = name.length()>0 && hasFilter();
+      storeButton.setEnabled( enabled );
+      deleteButton.setEnabled( enabled && aladin.configuration.dirFilter.containsKey(name) 
+            && !name.equals("default"));
+      String expr = aladin.configuration.dirFilter.get(name);
+      boolean modif = expr==null ? false : expr.equals( exprArea.getText().trim() );
+      storeButton.setText( modif ? "update" : "store" );
+      
+      aladin.directory.updateFilterButtonColor();
+   }
+   
+   /** Mémorisation + activation du filtre courant */
+   private void store() {
+      String name = nameField.getText().trim();
+      String expr = exprArea.getText().trim();
+      aladin.configuration.setDirFilter(name, expr);
+      aladin.directory.updateDirFilter();
+      aladin.directory.filter.setSelectedItem(name);
+   }
+   
+   /** Suppression de la mémorisation du filtre courant */
+   private void delete() {
+      String name = nameField.getText().trim();
+      if( name.equals("default") ) return;
+      aladin.configuration.dirFilter.remove(name);
+      aladin.directory.updateDirFilter();
+      globalReset();
+   }
+   
    /** Construction du panel des boutons de validation */
    private JPanel getValidPanel() {
       JPanel p = new JPanel();
-      p.setLayout( new FlowLayout(FlowLayout.CENTER));
+      p.setLayout( new BorderLayout(10,10) );
       JButton b;
-      p.add( b=new JButton("Apply")); 
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { submitLocal(); }
-      });
-      b.setFont(b.getFont().deriveFont(Font.BOLD));
-      p.add( b=new JButton("Reset"));
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { reset(); }
-      });
       
-      p.add(new JLabel(" - "));
-      
-      p.add( b=new JButton("Store")); b.setEnabled(false);
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            aladin.info("Pas encore implanté\n"
-                  + "Servira à mémoriser des filtres \"customisés\" réutilisables directement\n"
-                  + "depuis la fenêtre principale"); }
-      });
-      p.add( b=new JButton("Delete")); b.setEnabled(false);
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            aladin.info("Pas encore implanté\n"
-                  + "Servira à supprimer des filtres \"customisés\"\n"
-                  + "que l'on ne souhaite plus garder");
+      JPanel storePanel = new JPanel( new FlowLayout(FlowLayout.CENTER,7,7) );
+      storePanel.setBorder( BorderFactory.createEmptyBorder(0,20,0,0));
+      storeButton=b=new JButton("Store");
+      deleteButton=b=new JButton("Delete");
+            
+      JLabel l = new JLabel("Filter name ");
+      l.setFont( l.getFont().deriveFont(Font.BOLD));
+      storePanel.add( l );
+      nameField = new JTextField(10);
+      nameField.addKeyListener(new KeyListener() {
+         public void keyTyped(KeyEvent e) { }
+         public void keyReleased(KeyEvent e) { updateWidget(); }
+         public void keyPressed(KeyEvent e) {
          }
+      });
+      storePanel.add(nameField);
+      
+      storePanel.add( b=storeButton ); b.setEnabled(false);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { store(); }
+      });
+      storePanel.add( b=deleteButton ); b.setEnabled(false);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { delete(); }
       });
 
       
-      p.add(new JLabel(" - "));
+      JPanel applyPanel = new JPanel( new FlowLayout( FlowLayout.CENTER,7,7 ) );
       
-      p.add( b=new JButton("Close"));
+      applyPanel.add( b=new JButton("Apply")); 
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { submit(); }
+      });
+      b.setFont(b.getFont().deriveFont(Font.BOLD));
+      applyPanel.add( b=new JButton("Reset"));
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { globalReset(); }
+      });
+      
+      JPanel closePanel = new JPanel( new FlowLayout( FlowLayout.CENTER,7,7 ) );
+      
+      closePanel.add( b=new JButton("Close"));
+      closePanel.setBorder( BorderFactory.createEmptyBorder(0,0,0,20));
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { setVisible(false); }
       });
+      
+      p.add( storePanel, BorderLayout.WEST );
+      p.add( applyPanel, BorderLayout.CENTER );
+      p.add( closePanel, BorderLayout.EAST );
       return p;
    }
    
@@ -266,7 +318,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
         }
       }
       
-      JPanel panel= new JPanel( new FlowLayout() );
+      JPanel panel= new JPanel( new BorderLayout(0,0) );
       
       if( vBx.size()<12 ) {
          panel.setLayout( new GridLayout(0,4) );
@@ -284,13 +336,19 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          JScrollPane scrollPane = new JScrollPane(p1, 
                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
          scrollPane.setPreferredSize( new Dimension(320,95) );
-         panel.add( scrollPane);
+         panel.add( scrollPane, BorderLayout.CENTER);
+         panel.setBorder( BorderFactory.createEmptyBorder(3, 0, 3, 3));
       }
       
-      JButton b = new JButton("none");
-      JPanel p1 = new JPanel( new BorderLayout(0,0) );
-      p1.add(b,BorderLayout.CENTER);
-      if( max>0 ) panel.add( p1 );
+//      JButton b = new JButton("none");
+//      JPanel p1 = new JPanel( new BorderLayout(0,0) );
+//      p1.add(b,BorderLayout.CENTER);
+      
+      JButton b;
+      JPanel px = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      px.add(b = new JButton("none"));
+      
+      if( max>0 ) panel.add( px );
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             boolean flag = ((JButton)e.getSource()).getText().equals("none");
@@ -324,16 +382,34 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-   private void submitArea() {
+      
+   /** Excécution du filtrage, soit à partir du contenu du formulaire, soit directement à partir
+    * de l'expression saisie directement dans le champ exprArea */
+   private void submit() {
+      
+      // Faut-il mettre à jour l'expression de filtrage en fonction du formulaire ?
+      if( !flagFormEdit ) generateExpression();
+      
+      flagFormEdit=false;
+      updateWidget();
+      
       String expr = exprArea.getText();
+      if( expr.trim().length()==0 ) expr="*";
       aladin.directory.resumeFilter(expr);
+      
+      // mémorisation de l'expression s'il s'agit d'un "default"
+      if( aladin.directory.filter.getSelectedIndex()==0 ) {
+         System.out.println("je mémorise default=>"+expr);
+         aladin.configuration.setDirFilter("default", expr);
+      }
+      
+
+      
    }
-      
-   /** Excécution du filtrage (génération de la requête MocServer correspondante au formulaire
-    * puis appel au MocServer */
-   private void submitLocal() {
-      
-      if( inArea ) { inArea=false; submitArea(); return; }
+   
+   /** Génération de l'expression de filtrage correspondante aux positionnements des checkboxes et autres
+    * champs de saisie. Le résultat est stocké dans le champ exprArea */
+   private void generateExpression() {
       
       HashMap<String, String []> inclu = new HashMap<String, String[]>();
       HashMap<String, String []> exclu = new HashMap<String, String[]>();
@@ -344,7 +420,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( !bxCube.isSelected() )      addParam(exclu,"client_category","Cube*");
       if( !bxCatalog.isSelected() )   addParam(exclu,"client_category","Catalog*");
       if( !bxJournal.isSelected() )   addParam(exclu,"client_category","*/Journal table/*");
-      if( !bxOtherType.isSelected() ) addParam(inclu,"client_category","Catalog*,Image*,Cube*,*/Journal table/*");
+      if( !bxMisc.isSelected() )      addParam(exclu,"client_category","Miscellaneous*");
+      if( !bxOtherType.isSelected() ) addParam(inclu,"client_category","Catalog*,Image*,Cube*,*/Journal table/*,Miscellaneous*");
       
       if( !bxGammaRay.isSelected() )  addParam(exclu,"obs_regime","Gamma-ray");
       if( !bxXray.isSelected() )      addParam(exclu,"obs_regime","X-ray");
@@ -415,13 +492,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //      String expr = incluS.length()==0 ? "*" : incluS;
 //      if( excluS.length()>0 ) expr = "("+expr+") && ("+excluS+")";
 //      if( special.length()>0 ) expr="("+expr+")"+special;
-      
-      Aladin.trace(3,"Filtering: "+expr);
-      
-      exprArea.setText( expr );
-      
+            
       aladin.directory.quickFilterSetText( getText(tfDescr) );
-      aladin.directory.resumeFilter(expr.length()==0 ? "*" : expr);
+      exprArea.setText( expr );
    }
    
    /** Retourne la date MJD d'une date écrite en clair */
@@ -507,13 +580,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             public void keyTyped(KeyEvent e) { }
             public void keyPressed(KeyEvent e) { }
             public void keyReleased(KeyEvent e) {
-               if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
+               if( e.getKeyCode()==KeyEvent.VK_ENTER ) submitAction();
             }
          });
       }
    }
    
-   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxOtherType;
+   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxMisc, bxOtherType;
    private JCheckBox bxGammaRay, bxXray,bxUV,bxOptical,bxInfrared,bxRadio,bxGasLines;
    private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxCS,bxProg;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
@@ -522,12 +595,27 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
 //   private JSlider slRow;
    
-   /** Reset du formulaire */
-   protected void reset() {
+   /** Reset complet des filtres
+    * => nettoyage du formulaire + nettoyage du champ rapide + repositionnement du filtre "default" */
+   protected void globalReset() {
+      aladin.directory.filter.setSelectedIndex(0);
+      nameField.setText("");
+      reset();
+   }
+   
+   /** Reset du formulaire et application à l'arbre immédiatement */
+   protected void reset() { 
+      clean();
+      submit();
+   }
+   
+   /** Remise à l'état initial du formulaire - sans application à l'arbre */
+   protected void clean() {
       bxImage.setSelected(true);
       bxCube.setSelected(true);
       bxCatalog.setSelected(true);
       bxJournal.setSelected(true);
+      bxMisc.setSelected(true);
       bxOtherType.setSelected(true);
       bxGammaRay.setSelected(true);
       bxXray.setSelected(true);
@@ -556,22 +644,43 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       for( JCheckBox bx : assdataVbx ) bx.setSelected(false);
       for( JCheckBox bx : catUcdVbx ) bx.setSelected(false);
       
-//      slRow.setValue(100);
+      aladin.directory.quickFilterSetText("");
       
-      submitLocal();
+      updateWidget();
+   }
+   
+   /** Mise en place d'un filtre prédéfini.
+    * POUR LE MOMENT, SEULE LA SYNTAXE AVANCEE EST PRISE EN COMPTE, LES CHECKBOXES NE SONT PAS UTILISEES */
+   protected void setSpecificalFilter(String name, String expr) {
+      clean();
+      nameField.setText(name);      // Positionnement du nom du filtre
+      exprArea.setText(expr);       // Positionnement de l'expression du filtre
+      flagFormEdit=true;                
+      submit();
    }
    
    /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
-   protected void setFreeText( String s ) {
+   protected void setFreeText(String name, String s ) {
+      
+      String expr;
+      
+      // S'il s'agit directement d'une expression, rien à faire, sinon
+      // il faut générer l'expression en fonction d'une liste de mots clés
       int i = s.indexOf('=');
       if( i<0 ) i=s.indexOf('>');
       if( i<0 ) i=s.indexOf('<');
-      if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) {
-         tfDescr.setText("");
-         exprArea.setText(s);
-         inArea=true;
-         
-      } else tfDescr.setText(s);
+      if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) expr = s;
+      else {
+         expr = "obs_title,obs_description,obs_collection,ID="+jokerize(s);
+         tfDescr.setText(s); // On affiche la liste des mots clés dans le champ prévu
+      }
+      
+      // Y a-t-il déjà une expression ? => ajout de la contrainte en fin d'expression
+      String previousExpr = aladin.configuration.dirFilter.get(name);
+      if( previousExpr.length()>0 ) expr = "("+previousExpr+") && "+expr;
+      
+      exprArea.setText(expr);
+      flagFormEdit=true;
    }
    
    // Positionne un cadre de titre autour d'un panel
@@ -600,33 +709,38 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Description
       tfDescr = new JTextFieldX(30);
-      PropPanel.addCouple(this, p, "Keyword", "keyword in title, description, collection...\n(ex: DENIS)", 
+      PropPanel.addCouple(this, p, "Keyword", "keyword or list of keyword (comma separated)\n"
+            + "in title, description, collection, identifier...\nExamples: DENIS, CDS/P/DSS2/color", 
             tfDescr, g, c, GridBagConstraints.EAST);
       
       // Le type de données
-      subPanel = new JPanel( new GridLayout(0,3));
+      subPanel = new JPanel( new GridLayout(0,4));
       subPanel.add( bx=bxImage       = new JCheckBox("Image"));   bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxCube        = new JCheckBox("Cube"));    bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxCatalog     = new JCheckBox("Catalog")); bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxJournal     = new JCheckBox("Journal table"));   bx.setSelected(true); bx.addActionListener(this);
+      subPanel.add( bx=bxJournal     = new JCheckBox("J.table"));   bx.setSelected(true); bx.addActionListener(this);
+      subPanel.add( bx=bxMisc        = new JCheckBox("Misc."));   bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxOtherType   = new JCheckBox("Others"));  bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( b = new JButton("none"));
+      JPanel px = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      px.add(b = new JButton("none")); subPanel.add( px);
+      subPanel.add(px);
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             bxImage.setSelected(false);
             bxCube.setSelected(false);
             bxCatalog.setSelected(false);
             bxJournal.setSelected(false);
+            bxMisc.setSelected(false);
             bxOtherType.setSelected(false);
          }
       });
 //      categoryVbx = new Vector<JCheckBox>();
 //      subPanel = createFilter(categoryVbx, 6, "client_category", "/");
-      PropPanel.addCouple(this, p, "Data type", "Collection data type...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Data type", "Collection data types", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Couverture du ciel
       tfCoverage = new JTextFieldX(15);
-      PropPanel.addCouple(this, p, "Sky fraction", "Fraction of the sky coverage...\n(ex:<0.1", 
+      PropPanel.addCouple(this, p, "Sky fraction", "Fraction of the sky coverage...\nExamples: <0.1, 0.2 .. 0.4, >=0.9)", 
             tfCoverage, g, c, GridBagConstraints.EAST);
       
       // Les différents régimes
@@ -638,7 +752,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel.add( bx=bxInfrared = new JCheckBox("Infrared"));  bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxRadio    = new JCheckBox("Radio"));     bx.setSelected(true); bx.addActionListener(this);
       subPanel.add( bx=bxGasLines = new JCheckBox("Gas-lines")); bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( b = new JButton("none"));
+      px = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      px.add(b = new JButton("none")); subPanel.add( px);
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             bxGammaRay.setSelected(false);
@@ -650,27 +765,27 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             bxGasLines.setSelected(false);
          }
       });
-      PropPanel.addCouple(this, p, "Regime", "Wavelength...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Regime", "Wavelength regime of the collection", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Epoch of observations
       tfBibYear = new JTextFieldX(10);
-      PropPanel.addCouple(this, p, "Bib. year", "Year of the biblographic reference paper\n(ex:2008, >2015, 2012..2014)", tfBibYear, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Bib. year", "Year of the biblographic reference paper\nExamples: 2008, >2015, 2012..2014", tfBibYear, g, c, GridBagConstraints.EAST);
 
+      
+      // Les différentes origines des HiPS
+      authVbx = new Vector<JCheckBox>();
+      subPanel = createFilter(authVbx, 6, "ID", "/");
+      PropPanel.addCouple(this, p, "Authority", "Filtering by the authority creator.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Epoch of observations
       subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0) );
       tfMinDate = new JTextFieldX(10);
       tfMaxDate = new JTextFieldX(10);
       subPanel.add(tfMinDate); subPanel.add( new JLabel(" .. ") ); subPanel.add(tfMaxDate);
-      PropPanel.addCouple(this, p, "Obs. epoch", "Epoch of observations (MJD or ISO date)", subPanel, g, c, GridBagConstraints.EAST);
-      
-      // Les différentes origines des HiPS
-      authVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(authVbx, 6, "ID", "/");
-      PropPanel.addCouple(this, p, "Authority", "Authority creator...", subPanel, g, c, GridBagConstraints.EAST);
-      
+      PropPanel.addCouple(this, p, "Obs. epoch", "Epoch of observations (in MJD)\nExample: 46000 52000, >47000", subPanel, g, c, GridBagConstraints.EAST);
+
       // Restriction suivant le mode d'accès
-      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+      subPanel = new JPanel( new GridLayout(0,4) );
       NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
       subPanel.add( bx=bxHiPS = new JCheckBox("HiPS only")); bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Hierarchical progressive survey");
@@ -679,8 +794,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel.add( bx=bxCS   = new JCheckBox("CS only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Catalog/table cone search");
       subPanel.add( bx=bxProg   = new JCheckBox("Prog.only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
-      bx.setToolTipText("HiPS Progenitors only");
-      PropPanel.addCouple(this, p, "Protocol ", "Keep the collections supporting these specifical access protocols.", subPanel, g, c, GridBagConstraints.EAST);
+      bx.setToolTipText("HiPS Progenitors access (details and links\nto original images used for building the HiPS)");
+      PropPanel.addCouple(this, p, "Protocol ", "Keep the collections supporting the selected protocol", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
      
       // Les filtres dédiés aux HiPS
       p = bottomLeftPanel = new JPanel(g);
@@ -688,7 +803,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Couverture du ciel
       tfHiPSorder = new JTextFieldX(15);
-      PropPanel.addCouple(this, p, "HiPS order", "HiPS order...\n(ex:<5", 
+      PropPanel.addCouple(this, p, "HiPS order", "HiPS order (WILL BE REPLACED BY ANGULAR RESOLUTION)\nExamples: <5, 6..11, >12", 
             tfHiPSorder, g, c, GridBagConstraints.EAST);
       
 //    System.out.println("max="+max);
@@ -704,7 +819,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       subPanel.add( bx=bxPixFull     = new JCheckBox("full dynamic only")); bx.addActionListener(this);  bg.add(bx);
       subPanel.add( bx=bxPixColor    = new JCheckBox("color only"));        bx.addActionListener(this);  bg.add(bx);
-      PropPanel.addCouple(this, p, "Pixel formats", "Image HiPS pixel formats...", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Pixel formats", "Filtering the HiPS images according to the constraint", subPanel, g, c, GridBagConstraints.EAST);
       
       // Les filtres dédiés aux catalogues
       p = rightPanel = new JPanel( g );
@@ -713,17 +828,18 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       // Les différents mots clés
       catkeyVbx = new Vector<JCheckBox>();
       subPanel = createFilter(catkeyVbx, -1, "obs_astronomy_kw", null, true);
-      PropPanel.addCouple(this, p, "Keyword", "Catalog astronomical keywords", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Keyword", "Catalog astronomical keyword selection.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Les différents mots clés
       catMisVbx = new Vector<JCheckBox>();
       subPanel = createFilter(catMisVbx, -1, "obs_mission", null, true);
-      PropPanel.addCouple(this, p, "Mission", "Catalog missions", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Mission", "Catalog mission keyword selection.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Tailles des tables
-      long max = aladin.directory.getNbKRowMax();
+      long max = aladin.directory.getNbRowMax();
       tfCatNbRow = new JTextFieldX(30); 
-      PropPanel.addCouple(this, p, "Nb rows", "Number of rows (ex: >1000 or 10..1000).\nMax="+max+"KRows",
+      PropPanel.addCouple(this, p, "Nb rows", "Filtering by the number of rows.\nHide not relevant tables."
+            + "\nExamples: >1000, 10..1000.\n \n(Note: max nb rows is "+max+")",
             tfCatNbRow, g, c, GridBagConstraints.EAST);
       
       // les UCDs
@@ -759,13 +875,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel.setBorder( BorderFactory.createLineBorder(Color.gray));
       p1.add(subPanel);
       p1.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 5));
-      PropPanel.addCouple(this, p, "Content", "Dedicated type of measurements (based on UCDs)...", p1, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
+      PropPanel.addCouple(this, p, "Content", "Filtering by the content based on UCD tagging.\nHide not relevant tables.", p1, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       
       // Les données associées
       assdataVbx = new Vector<JCheckBox>();
       subPanel = createFilter(assdataVbx, -1, "associated_dataproduct_type", null, true);
-      PropPanel.addCouple(this, p, "Ass.data", "Associated data to a catalog", subPanel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, "Ass.data", "Filtering by the associated data to a catalog.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
 //      JScrollPane scrollPane = new JScrollPane(p,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 //      JPanel p1 = new JPanel(new BorderLayout());
@@ -797,9 +913,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
 
    @Override
-   public void actionPerformed(ActionEvent e) { inArea=false; submit(); }
-   protected void submit() {
+   public void actionPerformed(ActionEvent e) { flagFormEdit=false; submitAction(); }
+   protected void submitAction() {
       aladin.makeCursor(this, Aladin.WAITCURSOR);
-      submitLocal();
+      submit();
    }
 }

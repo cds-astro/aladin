@@ -155,24 +155,24 @@ public final class Slide {
    // l'ordonne pour le dessin est passee en parametre (dy).
    // Si newREf est different de -1, on remplit le nouveau triangle
    // de reference
-   void drawRepereRef(Graphics g,int dy,int mode) {
-      if( !p.flagOk || (!p.ref && !p.isImage()) || mode==DRAG ) return;
-
-      int [] y2  = new int[trX.length];
-      for( int k=0; k<trX.length; k++ ) y2[k] = trY[k]+dy;
-
-      if( mode!=VIDE ) {
-         Color mc = g.getColor();
-         g.setColor(mode==NOIR?Color.blue:Color.lightGray);
-         g.fillPolygon(trX,y2,trX.length);
-         g.setColor(mc);
-      }
-//      if( newRef || p.ref) g.fillPolygon(trX,y2,trX.length);
-      
-      if( g.getColor()==Color.black ) g.setColor(Color.green);
-      g.fillPolygon(trX,y2,trX.length);
-      g.drawPolygon(trX,y2,trX.length);
-   }
+//   void drawRepereRef(Graphics g,int dy,int mode) {
+//      if( !p.flagOk || (!p.ref && !p.isImage()) || mode==DRAG ) return;
+//
+//      int [] y2  = new int[trX.length];
+//      for( int k=0; k<trX.length; k++ ) y2[k] = trY[k]+dy;
+//
+//      if( mode!=VIDE ) {
+//         Color mc = g.getColor();
+//         g.setColor(mode==NOIR?Color.blue:Color.lightGray);
+//         g.fillPolygon(trX,y2,trX.length);
+//         g.setColor(mc);
+//      }
+////      if( newRef || p.ref) g.fillPolygon(trX,y2,trX.length);
+//      
+//      if( g.getColor()==Color.black ) g.setColor(Color.green);
+//      g.fillPolygon(trX,y2,trX.length);
+//      g.drawPolygon(trX,y2,trX.length);
+//   }
 
    // Affichage d'un fond du logo de plan rempli en fonction d'une
    // valeur de pourcentage (remplissage vertical)
@@ -455,7 +455,7 @@ public final class Slide {
       try {
          Color labelBG= a.calque.select.getBackground();
          Color colorForeground = p.c;
-         Color colorBorder = Color.gray;
+         Color colorBorder = Aladin.COLOR_CONTROL_FOREGROUND;
          Color colorFillFG = Aladin.MYGRAY;
          Color colorFillBG = Color.white;
          
@@ -498,7 +498,7 @@ public final class Slide {
          // Tracage du fond particulier sur le label
          if(  mode!=DRAG && (
                ref || p.selected  || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
-            labelBG=(p.selected ? Aladin.STACKBLUE : Aladin.STACKGRAY );
+            labelBG=(p.selected ? Aladin.COLOR_STACK_SELECT : Aladin.COLOR_STACK_HIGHLIGHT );
             g.setColor(labelBG.brighter());
             g.fillRect(x,y,W,H-2);
             g.setColor(labelBG);
@@ -514,12 +514,13 @@ public final class Slide {
          // que pour les autres plans
          if( isRefForVisibleView ) {
             colorFillFG = Color.gray;
-            colorBorder = new Color(50,50,50);
+//            colorBorder = new Color(50,50,50);
          }
          
          boolean canBeTransparent= a.calque.canBeTransparent(p);
          boolean isViewable = p.isViewable();
          boolean inLogo = inLogo(xMouse) && in(yMouse);
+         boolean inLabel = inLabel(xMouse) && in(yMouse);
          
          // On penche un peu plus le logo si la souris est dessus
          if( inLogo && isRefForVisibleView ) {
@@ -555,17 +556,13 @@ public final class Slide {
          }
          
          g.setColor( colorBorder );
+         g.drawPolygon(xc,yc,frX.length);
          
          // on n'affiche le bord du cadre que pour les plans de référence
          // et on fait un effet de relief si la souris est dessus
-//         drawSlideBorder(g,xc,yc,inLogo,p.ref);
-         if( isRefForVisibleView || inLogo ) g.drawPolygon(xc,yc,frX.length);
+//         if( isRefForVisibleView || inLogo ) g.drawPolygon(xc,yc,frX.length);
          
          // Cote clair à droite et en bas du calque courant
-//         if( p.ref ) {
-//            g.setColor(colorBorder.brighter());
-//            g.drawLine(xc[2],yc[2],xc[3],yc[3]);
-//         }
          g.drawLine(xc[1],yc[1],xc[2],yc[2]);
 
          // Affichage de la petite languette du folder + le logo indiquant le localScope
@@ -658,7 +655,7 @@ public final class Slide {
          if( mode!=DRAG && p.folder>0 ) {
             Plan [] allPlan = a.calque.getPlans();
             int n=a.calque.getIndex(allPlan,p);
-            g.setColor( Color.black );
+            g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
             for( int i=0; i<p.folder; i++ ) {
 
                // tjrs une barre vert. pour le dernier niveau
@@ -691,7 +688,7 @@ public final class Slide {
          
          // Le libelle
 //         g.setFont( Aladin.BOLD );
-         g.setFont( Aladin.PLAIN );
+         g.setFont( Aladin.BOLD );
          if( p.label!=null ) {
             int py = dy+15-1;
             int px = Select.ws-12;
@@ -699,11 +696,16 @@ public final class Slide {
             x = dx+xLabel;
             
             try {
-               if( (labelBG==Aladin.STACKGRAY
-                     || labelBG==Aladin.STACKBLUE) && (p.c.equals(Couleur.DC[2])) ) g.setColor(Aladin.GREEN);
-               else if( labelBG==Aladin.STACKBLUE 
-                     && (p.c.equals(Couleur.DC[7]) || p.c.equals(Couleur.DC[8])) ) g.setColor(Color.white);
-               else g.setColor(p.c);
+               Color fg=p.c;
+               if( (labelBG==Aladin.COLOR_STACK_HIGHLIGHT
+                     || labelBG==Aladin.COLOR_STACK_SELECT) && (p.c.equals(Couleur.DC[2])) ) fg=Aladin.COLOR_GREEN;
+               else if( labelBG==Aladin.COLOR_STACK_SELECT 
+                     && (p.c.equals(Couleur.DC[7]) || p.c.equals(Couleur.DC[8]))|| p.c.equals(Color.black)) fg=Aladin.COLOR_CONTROL_FOREGROUND;
+               else {
+                  if( p.c==null || p.c.equals(Color.black) ) fg=Aladin.COLOR_CONTROL_FOREGROUND;
+               }
+               if( inLabel ) fg=fg.brighter();
+               g.setColor(fg);
             } catch( Exception e) {}
             g.drawString(p.getLabel(),x,py-1);
             
@@ -775,7 +777,7 @@ public final class Slide {
             
             // Pas de double trait pour un folder
             if( p.type!=Plan.FOLDER ) {
-               g.setColor( Color.black );
+               g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
                g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
                g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
             }

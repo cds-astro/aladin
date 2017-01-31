@@ -721,6 +721,7 @@ public class TreeObjDir extends TreeObj {
    
    protected void loadSIA() {
       if( prop==null ) return;
+      checkTarget();
  
       double rad = aladin.view.getCurrentView().getTaille();
       String trg = aladin.view.getCurrentView().getCentre();
@@ -743,8 +744,16 @@ public class TreeObjDir extends TreeObj {
       }
    }
    
+   private void checkTarget() {
+      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+         aladin.info("Pas encore implanté !\nIl faudrait demander ici une position et un rayon "
+               + "puisqu'il n'y a pas de vue chargée actuellement");
+      }
+   }
+   
    protected void loadCS() {
       try {
+         checkTarget();
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
          double rad = aladin.view.getCurrentView().getTaille();
@@ -841,10 +850,15 @@ public class TreeObjDir extends TreeObj {
       // Détermination du PlanMoc
       PlanMoc planMoc=null;
       for( Object p : aladin.calque.getSelectedPlanes() ) {
-         if( p instanceof PlanMoc ) { planMoc=(PlanMoc)p; break; }
+         if( p instanceof PlanMoc && ((PlanMoc) p).flagOk) { planMoc=(PlanMoc)p; break; }
       }
       if( planMoc==null ) {
-         aladin.warning("You need to select a MOC plane in the stack");
+         for( Object p : aladin.calque.getPlans() ) {
+            if( p instanceof PlanMoc && ((PlanMoc) p).flagOk) { planMoc=(PlanMoc)p; break; }
+         }
+      }
+      if( planMoc==null ) {
+         aladin.warning("You need to select or have a MOC plane in the stack");
          return;
       }
       serverMoc.setPlanMoc(planMoc);

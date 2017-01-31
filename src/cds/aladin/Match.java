@@ -20,11 +20,8 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Graphics;
 
 /**
  * Bouton pour la synchronisation des vues
@@ -48,27 +45,29 @@ public class Match extends MyIcon {
       return aladin.view.getNbSelectedView()>1 && !aladin.view.hasCompatibleViews();
    }
 
-   private boolean isAvailable() { return aladin.view.isMultiView() && getMode()>=1; }
-   private boolean isMouseIn()   { return in; }
+   protected boolean isAvailable() { return aladin.view.isMultiView() && getMode()>=1; }
+   
+   protected Color getFillColor() {
+      int mode=getMode();
+      Color c = mode==0 ? getBackground() :
+         mode==1 ? Color.green :
+         mode==2 ? new Color(80,80,255) /* ViewSimple.ORANGE*/ :
+            Aladin.COLOR_ICON_ACTIVATED;
+      return c;
+   }
    
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
-      g.setColor( getBackground());
-      g.fillRect(0,0,W,H);
+      super.drawLogo(g);
       int x = 20;
       int y = 7;
       int r = 3;
       
-      int mode=getMode();
-      
-      g.setColor( mode==0 ? getBackground() :
-                  mode==1 ? Color.green :
-                  mode==2 ? new Color(80,80,255) /* ViewSimple.ORANGE*/ :
-                     Color.red );
+      g.setColor( getFillColor() );
       g.fillRect(x-r,y-r,2*r,2*r);
       
       // Les bords du carré
-      g.setColor( !isAvailable() ?  Aladin.MYGRAY : isMouseIn() ? Color.blue : Color.black);
+      g.setColor( getLogoColor() );
       g.drawRect(x-r,y-r,2*r,2*r);
       
       // La croix
@@ -78,11 +77,9 @@ public class Match extends MyIcon {
       g.drawLine(x,y+1,x,y+L/2);
       
       // Label
-      g.setColor(isAvailable() ? Color.black : Aladin.MYGRAY);
+      g.setColor( getLabelColor() );
       g.setFont(Aladin.SPLAIN);
-//      g.drawString(SYNC,6,H-2);
       g.drawString(MATCH,W/2-g.getFontMetrics().stringWidth(MATCH)/2,H-2);
-
    }
    
    
@@ -102,9 +99,7 @@ public class Match extends MyIcon {
    
    protected boolean isProjSync() { return getMode()==3; }
 
-   protected void submit() {
-      aladin.cycleMatch();
-   }
+   protected void submit() { aladin.cycleMatch(); }
       
    protected String getHelpTip() { return aladin.chaine.getString("MVIEWSYNC"); }
    protected String Help()       { return aladin.chaine.getString("Sync.HELP"); }

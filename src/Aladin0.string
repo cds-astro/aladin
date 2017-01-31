@@ -1696,6 +1696,10 @@ FILEDIALOG.fr Style de fenêtres
 FILEDIALOGHELP.fr Rendu (Look&feel) des fenêtres de dialogue de sélection des fichiers et des répertoires.
 FILEDIALOGJAVA.fr Library Java
 FILEDIALOGNATIVE.fr Système d'exploitation
+THEME	Theme
+THEMEHELP	Graphical interface theme. Required to restart.
+THEME.fr	Thème
+THEMEHELP.fr	Thème de l'interface graphique. Recquière un redémarrage.
 
 
 UPTITLE.fr	Préférences utilisateur

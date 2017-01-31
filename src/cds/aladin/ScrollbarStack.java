@@ -35,8 +35,10 @@ public final class ScrollbarStack extends MyScrollbar {
    ScrollbarStack(Aladin aladin,int orientation,int value,int visible,int min,int max) {
       super(orientation,value,visible,min,max);
       this.aladin=aladin;
-   }
       
+      if( Aladin.DARK_THEME ) setUI(new MyScrollBarUI());
+   }
+   
    /** Retourne le numéro de plan qui correspond à la scrollbar vertical (en bas) */
    protected int getLastVisiblePlan() {  
       if( calque==null ) {

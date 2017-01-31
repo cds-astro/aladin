@@ -419,20 +419,21 @@ class Hist implements Runnable {
       height = aladin.calque.zoom.zoomView.getHeight();
 
       // Nettoyage
-      g.clearRect(1+dx,1+dy,width-2,height-2);
+      g.setColor( Aladin.COLOR_BACKGROUND );
+      g.fillRect(1+dx,1+dy,width-2,height-2);
       if( hist==null ) return;
 
       int gap = GAP;
       double larg = ( width - MARGE - (gap*(hist.length+1)) )/(double)hist.length;
       double x=gap+MARGE;
-      int y=height-12;
+      int y=height-20;
       String s;
       g.setFont(Aladin.SSBOLD);
       FontMetrics fm = g.getFontMetrics();
 
       if( !isOverFlow() ) for( int i=0; i<hist.length; i++) {
 
-         g.setColor(Color.black);
+         g.setColor( Aladin.COLOR_FOREGROUND );
          // Le label min et max en dessous de l'histogramme dans le cas numérique
          if( hist[i].categorie==null ) {
             if( i==0 ) g.drawString(Util.myRound(hist[i].min),2+dx,height-2+dy);
@@ -458,7 +459,7 @@ class Hist implements Runnable {
 
             // Tracé de la case courante
          } else {
-            g.setColor( hist[i]==onMouse ? Aladin.GREEN : Color.cyan );
+            g.setColor( hist[i]==onMouse ? Aladin.COLOR_GREEN : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
             g.fillRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
             g.setColor( Color.black );
             g.drawRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
@@ -478,7 +479,7 @@ class Hist implements Runnable {
 
       // Information textuelle
       g.setFont(Aladin.BOLD);
-      g.setColor(Color.blue);
+      g.setColor( Aladin.COLOR_GREEN );
       fm = g.getFontMetrics();
 
       // Sous la souris ?
@@ -488,7 +489,7 @@ class Hist implements Runnable {
          g.drawString(s,5,14);
          int pos = 8+fm.stringWidth(s);
 
-         g.setColor(Color.blue);
+         g.setColor( Aladin.COLOR_GREEN );
          s=Util.myRound(onMouse.prop+"",1)+"%";
          int pos2=width-fm.stringWidth(s)-12;
          g.drawString(s,pos2,14);
@@ -512,7 +513,7 @@ class Hist implements Runnable {
       }
 
       // Le trait du bas du graphique
-      g.setColor(Color.black);
+      g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
       g.drawLine(gap-2+MARGE,y,width-2*gap+2,y);
 
       // Le curseur de la résolution de l'histogramme
@@ -529,7 +530,7 @@ class Hist implements Runnable {
       // L'icone pour fermer l'histogramme
       if( !flagHistPixel ) {
          int w=WCROIX;
-         g.setColor(Aladin.BKGD);
+         g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
          g.fillRect(width-w-4,1,w+4,w+4);
          g.setColor(Color.red);
          g.drawLine(width-w-3,2,width-3,w+2);

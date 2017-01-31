@@ -42,6 +42,7 @@ public final class MyFrame extends JFrame {
    /** Creation du Frame. */
    protected MyFrame(Aladin aladin,String title) {
       super(env.getDefaultScreenDevice().getDefaultConfiguration());
+      
       setTitle(title);
       this.aladin=aladin;
       Aladin.setIcon(this);

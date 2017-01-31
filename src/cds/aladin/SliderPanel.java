@@ -21,7 +21,6 @@
 package cds.aladin;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridLayout;
 
 import javax.swing.JPanel;
@@ -73,16 +72,13 @@ public class SliderPanel extends JPanel {
 
       setLayout( new BorderLayout() );
       setBackground( aladin.getBackground());
-      
-      JPanel p0 = new JPanel();
-      p0.setBackground( Color.yellow );
+      setOpaque(true);
       
       sp = new JPanel(new BorderLayout());
       sp.setBackground( aladin.getBackground());
       adjustSliderPanel();
       
-      add(p0);
-      add(sp);
+      add(sp,BorderLayout.CENTER);
    }
    
    protected void adjustSliderPanel() {

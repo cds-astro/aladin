@@ -52,6 +52,7 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -161,9 +162,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String SLOPAC     = "SliderOpac";
    protected static String SLZOOM     = "SliderZoom";
    protected static String SEDWAVE    = "SEDWave";
+   protected static String DIRFILER   = "DirFilter";
    protected static String LASTFILE   = "LastFile";
    protected static String LASTRUN    = "LastRun";
    protected static String STOPHELP   = "StopHelp";
+   protected static String LOOKANDFEELTHEME      = "LookAndFeelTheme";
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
    
@@ -182,7 +185,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
-   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE;
+   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP;
 
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
    static private String CSVITEMLONG[];
@@ -199,6 +202,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private boolean         flagModifLang=true;   // true si on vient de modifier la langue (ou au démarrage)
    private String          currentLang="En";     // Le suffixe de la langue courante
    protected LinkedBlockingDeque<String> lastFile;  // La liste des derniers fichiers chargés
+   protected LinkedHashMap<String,String>  dirFilter;            // Liste des filtres du répertoire des collections -(name->filterRule)
 
    // Les variables pour la gestion des champs de préférences
    private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
@@ -215,6 +219,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JComboBox        fctChoice;            // Choix de la fonction de transfert
    private JComboBox        gluChoice;            // Pour la sélection du site GLU
    private JComboBox        lfChoice;             // Pour la sélection du Look & Feel
+   private JComboBox        themeChoice;          // Pour la sélection du thème du Look & Feel (dark or classic)
    private JComboBox        langChoice;           // Pour la sélection de la langue
    private JComboBox        modeChoice;           // Pour la sélection du mode (astronomers | undergraduate)
    //   private JComboBox        smbChoice;            // Pour la sélection du mode Simbad pointer
@@ -314,6 +319,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       FILEDIALOGHELP = aladin.chaine.getString("FILEDIALOGHELP");
       FILEDIALOGJAVA = aladin.chaine.getString("FILEDIALOGJAVA");
       FILEDIALOGNATIVE = aladin.chaine.getString("FILEDIALOGNATIVE");
+      THEME = aladin.chaine.getString("THEME");
+      THEMEHELP = aladin.chaine.getString("THEMEHELP");
       
 
       //      TAGCENTER = aladin.chaine.getString("UPTAGCENTER");
@@ -331,6 +338,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false,aladin);
       prop = new Vector(10);
+      dirFilter = new LinkedHashMap<String,String>();
+      setDirFilter("default", "*");
       flagModif = false;
    }
 
@@ -565,8 +574,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne le mode video par défaut pour le background */
    protected int getBkgVideo() {
       String s = aladin.BKGDEFAULT==null ? get(BKG) : aladin.BKGDEFAULT;
-      if( s!=null && s.indexOf("noreverse")>=0 ) return PlanImage.VIDEO_NORMAL;
-      return Aladin.OUTREACH ? PlanImage.VIDEO_NORMAL : PlanImage.VIDEO_INVERSE;
+      if( s!=null && s.indexOf("noreverse")==-1 ) return PlanImage.VIDEO_INVERSE;
+      return PlanImage.VIDEO_NORMAL;
+//      if( s!=null && s.indexOf("noreverse")>=0 ) return PlanImage.VIDEO_NORMAL;
+//      return Aladin.OUTREACH ? PlanImage.VIDEO_NORMAL : PlanImage.VIDEO_INVERSE;
    }
 
    /** Retourne la fonction de transfert par défaut pour le background */
@@ -606,14 +617,16 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             }
          }
       }
-      return Aladin.OUTREACH ? 1 : 0;
+      return 1; // Aladin.OUTREACH ? 1 : 0;
    }
 
    /** Retourne le mode video par défaut */
    protected int getCMVideo() {
       String s = aladin.CMDEFAULT==null ? get(CM) : aladin.CMDEFAULT;
-      if( s!=null && s.indexOf("noreverse")>=0 ) return PlanImage.VIDEO_NORMAL;
-      return Aladin.OUTREACH ? PlanImage.VIDEO_NORMAL : PlanImage.VIDEO_INVERSE;
+//      if( s!=null && s.indexOf("noreverse")>=0 ) return PlanImage.VIDEO_NORMAL;
+//      return Aladin.OUTREACH ? PlanImage.VIDEO_NORMAL : PlanImage.VIDEO_INVERSE;
+      if( s!=null && s.indexOf("noreverse")==-1 ) return PlanImage.VIDEO_INVERSE;
+      return PlanImage.VIDEO_NORMAL;
    }
 
    /** Retourne true si par défault l'autocut est activé */
@@ -743,6 +756,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
       return currentLang;
    }
+   
+   /** Retourne true si on veut un thème sombre de l'interface graphique */
+   protected boolean isDarkTheme() {
+      String s =get(LOOKANDFEELTHEME);
+      return s==null || s.equals("dark");
+   }
 
    /** Retourne l'indice de la frame mémorisée par l'utilisateur, ICRS par défaut */
    protected int getFrame() {
@@ -756,8 +775,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
    
    protected String getProj() { 
+      if( Aladin.OUTREACH ) return "Sinus";
       String s = get(PROJALLSKY);
-      if( Aladin.OUTREACH || s==null ) return "Sinus";
+      if( s==null ) return "Aitoff";
       else if( aladin.isCinema() ) return "Arc";
       return s;
    }
@@ -774,7 +794,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          i=Calib.getProjType(calibProj);
          if( i>=0 ) return i;
       } catch( Exception e ) { }
-      return Calib.SIN;
+      return Calib.AIT;
    }
 
    /** Positionne la projection par défaut par script - non sauvegardée */
@@ -1296,13 +1316,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          sliderPanel.add( bxOpac  = new JCheckBox(SLIDEROPAC));
          sliderPanel.add( bxZoom  = new JCheckBox(SLIDERZOOM));
          PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
-//         for( JCheckBox b1 : new JCheckBox[] { bxEpoch,bxSize,bxDens,bxCube,bxOpac,bxZoom }) {
-//            b1.addActionListener(new ActionListener() {
-//               public void actionPerformed(ActionEvent e) {
-////                  Aladin.info(c1,aladin.chaine.getString("RESTART"));
-//               }
-//            });
-//         }
       }
 
       // Le Répertoire par défaut
@@ -1438,6 +1451,14 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          b.addActionListener(this);
          panel.add(b,BorderLayout.EAST);
          PropPanel.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
+         
+         // Le thème du Look&Feel
+         (l = new JLabel(THEME)).setFont(l.getFont().deriveFont(Font.BOLD));
+         themeChoice = new JComboBox();
+         themeChoice.addItem("dark");
+         themeChoice.addItem("classic");
+         themeChoice.addActionListener(this);
+         PropPanel.addCouple(this, p, l, THEMEHELP, themeChoice, g, c, GridBagConstraints.EAST);
 
          // Le Look&Feel des FileDialog
          (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1513,6 +1534,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
          if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
          else lfChoice.setSelectedIndex(1);
+         
+         s = get(LOOKANDFEELTHEME);
+         if( s!=null ) themeChoice.setSelectedItem("classic");
+         else themeChoice.setSelectedIndex(0);
       }
 
       //      s = get(PIXEL);
@@ -1524,7 +1549,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       else frameChoice.setSelectedItem(s);
 
       s = get(PROJALLSKY);
-      if( s == null ) projAllskyChoice.setSelectedItem("SINUS");
+      if( s == null ) projAllskyChoice.setSelectedItem("Aitoff");
       else projAllskyChoice.setSelectedItem(s);
 
       s = get(FRAMEALLSKY);
@@ -1545,6 +1570,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
                }
             }
          }
+      } else {
+         videoChoice.setSelectedIndex(1);  // noreverse
+         mapChoice.setSelectedIndex(1);    // BB
       }
 
       //      fctBkgChoice.setSelectedIndex(2);  // LINEAR par défaut
@@ -1741,7 +1769,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( aladin.splitZoomWidth!=null ) {
          n = aladin.splitZoomWidth.getCompSize();     if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    else remove(ZWIDTH);
       }
-      if( aladin.splitHiPSWidth!=null ) {
+      if( aladin.PROTO && aladin.splitHiPSWidth!=null ) {
          n = aladin.splitHiPSWidth.getCompSize();     if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    else remove(HWIDTH);
       }
       if( aladin.splitMesureHeight!=null ) {
@@ -1779,6 +1807,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
       s = get(LOOKANDFEEL);
       if( s!=null && s.equals(JAVA) ) remove(LOOKANDFEEL);
+
+      s = get(LOOKANDFEELTHEME);
+      if( s!=null && s.equals("dark") ) remove(LOOKANDFEELTHEME);
 
       // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
       if( !Aladin.OUTREACH ) {
@@ -1861,6 +1892,24 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             bw.newLine();
          }
       }
+      
+      // Je sauvegarde les filtres du répertoire des collections
+      // sous la forme : DirFilterNN   name : filter_rule
+      if( dirFilter.size()>0) {
+         int i=1;
+         try {
+            for( String name : dirFilter.keySet() ) {
+               if( name.equals("default") ) continue;
+               String expr = dirFilter.get(name);
+               if( expr==null || expr.equals("*") ) continue;
+               String key = DIRFILER+(i++);
+               bw.write( Util.align(key, 20) + name+" : " + expr );
+               bw.newLine();
+            }
+         } catch( Exception e1 ) {
+            e1.printStackTrace();
+         }
+      }
 
       bw.close();
       flagModif = false;
@@ -1935,6 +1984,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          aladin.trace(4, "Configuration.load() [" + key + "] = [" + value + "]");
 
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
+         else if( key.startsWith(DIRFILER) ) setDirFilter(value);
          else set(key, value);
       }
       br.close();
@@ -2044,6 +2094,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( lfChoice!=null ) {
          if( lfChoice.getSelectedIndex()==1 ) set(LOOKANDFEEL,OPSYS);
          else remove(LOOKANDFEEL);
+      }
+
+      // Pour le Look & Feel
+      if( themeChoice!=null ) {
+         if( themeChoice.getSelectedIndex()!=0 ) set(LOOKANDFEELTHEME, (String) themeChoice.getSelectedItem() );
+         else remove(LOOKANDFEELTHEME);
       }
 
       // Les sliders de controle
@@ -2317,6 +2373,20 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private void setMode(String s) throws Exception {
       if( s==null ) { remove(MOD); return; }
       set(MOD,s);
+   }
+   
+   /** Mémorise un nouveau filtre sur l'arbre des collections
+    * Syntaxe   name: filter.... */
+   protected void setDirFilter(String s) {
+      int i = s.indexOf(':');
+      if( i<0 ) return;
+      setDirFilter( s.substring(0,i).trim(), s.substring(i+1).trim() );
+   }
+   
+   /** Mémorise un nouveau filtre sur l'arbre des collections */
+   protected void setDirFilter(String name,String filter) {
+      if( dirFilter.containsKey(name) ) dirFilter.replace(name, filter);
+      else dirFilter.put(name,filter);
    }
 
    static private final int MAXLASTFILE = 20;

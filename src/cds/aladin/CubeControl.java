@@ -488,7 +488,7 @@ public class CubeControl {
       // Tracage du blinkControl en fonction du mode courant PLAY/PAUSE
       Polygon p;
 
-      g.setColor(mouseMove==EDIT ? Aladin.GREEN : Color.red);
+      g.setColor(mouseMove==EDIT ? Aladin.COLOR_GREEN : Color.red);
       g.setFont(Aladin.SPLAIN);
       g.drawString(Util.align3(frame+1),edit[0]=x+labelX,edit[1]=y+labelY);
 
@@ -522,7 +522,7 @@ public class CubeControl {
                || (mouseMove==FORWARD &&  i==5)
                || (mouseMove==PLUS    && (i==6 || i==7))
                || (mouseMove==MOINS   &&  i==9)
-               || (mouseMove==SLIDE   &&  i==11) ) g.setColor(Aladin.GREEN);
+               || (mouseMove==SLIDE   &&  i==11) ) g.setColor(Aladin.COLOR_GREEN);
          else if( ((i==0 || i==1) && mode==PAUSE  )
                || ((i==2 || i==3) && mode==PLAY ) ) g.setColor(Color.blue);
          else g.setColor(Color.red);

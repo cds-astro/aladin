@@ -41,13 +41,29 @@ package cds.aladin;
 import java.awt.Color;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCStringParser;
 import cds.astro.Astrocoo;
 import cds.astro.Coo;
-import cds.savot.model.*;
+import cds.savot.model.FieldSet;
+import cds.savot.model.InfoSet;
+import cds.savot.model.ParamSet;
+import cds.savot.model.ResourceSet;
+import cds.savot.model.SavotField;
+import cds.savot.model.SavotInfo;
+import cds.savot.model.SavotParam;
+import cds.savot.model.SavotResource;
+import cds.savot.model.SavotTD;
+import cds.savot.model.SavotTR;
+import cds.savot.model.SavotVOTable;
+import cds.savot.model.TDSet;
+import cds.savot.model.TRSet;
 import cds.savot.pull.SavotPullEngine;
 import cds.savot.pull.SavotPullParser;
 import cds.tools.Util;
@@ -127,7 +143,7 @@ public class TreeBuilder {
     private static final String UTYPE_DATATITLE_SSA = "DataID.Title";
     private static final String UCD1P_TITLE = "meta.title";
 
-    public static final String UTYPE_STCS_REGION1 = "stc:ObservationLocation.AstroCoordArea.Region";
+    public static final String UTYPE_STCS_REGION1 = "*ObservationLocation.AstroCoordArea.Region";
     public static final String UTYPE_STCS_REGION2 = "*Char.SpatialAxis.Coverage.Support.Area";
 
     // variables de travail pour le Fov
@@ -250,13 +266,13 @@ public class TreeBuilder {
     }
 
     protected boolean mayBeSSA(SavotVOTable vot) {
-        SavotResource firstRes = (SavotResource)vot.getResources().getItemAt(0);
+        SavotResource firstRes = vot.getResources().getItemAt(0);
 
         // detection de SSA
         InfoSet infos = firstRes.getInfos();
         SavotInfo info;
         for( int i=0; i<infos.getItemCount(); i++ ) {
-            info = (SavotInfo)infos.getItemAt(i);
+            info = infos.getItemAt(i);
             if( info.getContent().equals("SSAP") ) {
                 return true;
             }
@@ -293,11 +309,11 @@ public class TreeBuilder {
             return;
         }
         // on récupère la première ressource
-        SavotResource firstRes = (SavotResource)savotParser.getVOTable().getResources().getItemAt(0);
+        SavotResource firstRes = savotParser.getVOTable().getResources().getItemAt(0);
         int nbRes = savotParser.getVOTable().getResources().getItemCount();
         SavotResource secondRes = null;
         if( nbRes>=2 ) {
-            secondRes = (SavotResource)savotParser.getVOTable().getResources().getItemAt(1);
+            secondRes = savotParser.getVOTable().getResources().getItemAt(1);
         }
 
         if( firstRes==null ) {
@@ -471,7 +487,7 @@ public class TreeBuilder {
         InfoSet infos = savotParser.getVOTable().getInfos();
         SavotInfo info;
         for( int i=0; i<infos.getItemCount(); i++ ) {
-            info = (SavotInfo)infos.getItemAt(i);
+            info = infos.getItemAt(i);
             if( info.getId().equalsIgnoreCase("position") ) {
                 targetFound = info.getValue();
                 if( targetObjet==null ) targetObjet = targetFound;
@@ -483,13 +499,13 @@ public class TreeBuilder {
         ParamSet params;
         SavotParam param;
         try {
-        	params = ((SavotResource)savotParser.getVOTable().getResources().getItemAt(0)).getParams();
+        	params = savotParser.getVOTable().getResources().getItemAt(0).getParams();
         }
         // au cas ou on ne trouve pas de ressource par exemple
         catch( Exception e ) {return;}
 
         for( int i=0; i<params.getItemCount(); i++ ) {
-            param = (SavotParam)params.getItemAt(i);
+            param = params.getItemAt(i);
             if( param.getName().equalsIgnoreCase("INPUT:POS") ) {
                 targetFound = param.getValue();
                 return;
@@ -536,7 +552,7 @@ public class TreeBuilder {
 
         // pour chaque resource
         for( int i=0; i<resources.getItemCount(); i++ ) {
-            SavotResource curResource = (SavotResource)resources.getItemAt(i);
+            SavotResource curResource = resources.getItemAt(i);
             ResourceNode newNode = new ResourceNode(aladin, curResource.getName());
             newNode.isLeaf = true;
             newNode.type = ResourceNode.CAT;
@@ -549,7 +565,7 @@ public class TreeBuilder {
             // memorisation du keyword precedent
             String oKeyword=null;
             for( int j=0; j<infos.getItemCount(); j++ ) {
-                SavotInfo info = (SavotInfo)infos.getItemAt(j);
+                SavotInfo info = infos.getItemAt(j);
                 String keyWord = info.getName();
                 String value = info.getValue();
 
@@ -625,7 +641,7 @@ public class TreeBuilder {
 
         SavotResource res=null;
         // on suppose que la resource dont le type="results" est la premiere
-        res = (SavotResource)rootResSet.getItemAt(0);
+        res = rootResSet.getItemAt(0);
 
         if( res==null ) return null;
 
@@ -634,7 +650,7 @@ public class TreeBuilder {
         for( int i=0; i<initFields.length; i++ ) idFields[i] = initFields[i].getId();
 
 
-        SavotResource res2 = (SavotResource)rootResSet.getItemAt(2);
+        SavotResource res2 = rootResSet.getItemAt(2);
         SavotField[] fields2 = createDescription(res2.getFieldSet(0));
 
         int toto = findFieldByID("RelatedObservation", fields2);
@@ -652,14 +668,14 @@ public class TreeBuilder {
         Hashtable altNamesToNodes = new Hashtable();
 
         // ici, je fais un gros présupposé !!!
-        String refName = ((SavotField)(((SavotResource)rootResSet.getItemAt(2)).getFieldSet(0).getItemAt(0))).getRef();
+        String refName = (rootResSet.getItemAt(2).getFieldSet(0).getItemAt(0)).getRef();
 //        System.out.println("ref name : "+refName);
 
 
 
 
         // on suppose que la resource dont le type="GeneralFeatures" est la deuxieme
-        res = (SavotResource)rootResSet.getItemAt(1);
+        res = rootResSet.getItemAt(1);
         if( res!=null ) {
             if( root.nbChildren>0 ) {
                 // les descriptions disponibles
@@ -715,7 +731,7 @@ public class TreeBuilder {
 
 
         // on suppose que la 3e resource est ObservationDetails
-        res = (SavotResource)rootResSet.getItemAt(2);
+        res = rootResSet.getItemAt(2);
         if( res!=null ) {
           root.removeAllChild();
 
@@ -1023,7 +1039,7 @@ public class TreeBuilder {
           int nbRows = obsSet.getItemCount();
 
           for( int j=0; j<nbRows; j++ ) {
-              n = createSIAPNode((SavotTR)obsSet.getItemAt(j), fields);
+              n = createSIAPNode(obsSet.getItemAt(j), fields);
               n.name = n.explanation[0];
               nodes.put(n.description[0]+n.name, n);
               //System.out.println(n.description[0]+" : "+n.explanation[0]+"**");
@@ -1045,7 +1061,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
     ResourceNode[] resTab = new ResourceNode[obsSet.getItemCount()];
 
     for( int i=0; i<resTab.length; i++ ) {
-        resTab[i] = createSIAPNode((SavotTR)obsSet.getItemAt(i), fields);
+        resTab[i] = createSIAPNode(obsSet.getItemAt(i), fields);
 		resTab[i].isSIAPEvol = true;
         root.addChild(resTab[i]);
     }
@@ -1078,7 +1094,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         // il peut y avoir plusieurs resources, on recherche celle avec type="results"
         SavotResource curRes=null;
         for( int i=0; i<rootResSet.getItemCount(); i++ ) {
-            curRes = (SavotResource)rootResSet.getItemAt(i);
+            curRes = rootResSet.getItemAt(i);
             if( curRes.getType().equals("results") ) {
                 mainRes = curRes;
                 break;
@@ -1130,7 +1146,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         	ResourceNode curSurvey = null;
         	ResourceNode curColor = null;
             for( int i=0; i<resTab.length; i++ ) {
-            	resTab[i] = createSIAPNode((SavotTR)obsSet.getItemAt(i), fields);
+            	resTab[i] = createSIAPNode(obsSet.getItemAt(i), fields);
             	// création d'un nouveau noeud survey
                 if( curSurvey==null || !resTab[i].survey.equals(curSurvey.name) ) {
             	    curSurvey = new ResourceNode(aladin, resTab[i].survey);
@@ -1156,7 +1172,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
             ResourceNode parent,tmp;
         	for( int i=0; i<resTab.length; i++ ) {
                 parent = root;
-            	resTab[i] = createSIAPNode((SavotTR)obsSet.getItemAt(i), fields);
+            	resTab[i] = createSIAPNode(obsSet.getItemAt(i), fields);
                 if( resTab[i].bandPass!=null ) {
                      if( (tmp=(ResourceNode)colors.get(resTab[i].bandPass))!=null ) parent = tmp;
                      else {
@@ -1182,7 +1198,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         SavotInfo curInfo, qStatusInfo;
         qStatusInfo = null;
         for( int i=0; i<infos.getItemCount() ; i++ ) {
-            curInfo = (SavotInfo)infos.getItemAt(i);
+            curInfo = infos.getItemAt(i);
             if( curInfo.getName().equalsIgnoreCase("QUERY_STATUS") ) {
                 qStatusInfo = curInfo;
                 break;
@@ -1245,7 +1261,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         String ucd, utype;
         // recuperation des valeurs des TD
         for( int i=0; i<nbTd; i++ ) {
-            expla[i] = ((SavotTD)tdSet.getItemAt(i)).getContent();
+            expla[i] = tdSet.getItemAt(i).getContent();
             originalExpla[i] = expla[i];
             //System.out.println("**"+expla[i]+"**");
 
@@ -1767,7 +1783,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 	    ResourceSet set = sr.getResources();
 	    SavotResource curRes;
 	    for( int i=0; i<set.getItemCount() ; i++) {
-	        curRes = (SavotResource)set.getItemAt(i);
+	        curRes = set.getItemAt(i);
 	        //System.out.println("On s'occupe de : "+curRes.getName());
 	        // on arrive sur les images
 	        if( curRes.getName().equalsIgnoreCase(IDIMAGE) ) {
@@ -1822,7 +1838,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 
         // première étape: on récupère toutes les observations
 	    for( int i=0; i<resTab.length; i++ ) {
-            resTab[i] = createNode((SavotTR)obsSet.getItemAt(i), 0, desc, IDIMAGE);
+            resTab[i] = createNode(obsSet.getItemAt(i), 0, desc, IDIMAGE);
             resTab[i].criteriaVal = critVal;
             //father.addChild(newNode);
             xValSave[i] = xVal;
@@ -1863,8 +1879,8 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
             ResourceNode subObs, fatherSubObs;
             // boucle sur les lignes de StorageMapping
             for( int i=0; i<trMapping.getItemCount(); i++ ) {
-                TDSet tds = ((SavotTR)trMapping.getItemAt(i)).getTDs();
-                String mapName = ((SavotTD)tds.getItemAt(idxNameColumn)).getContent();
+                TDSet tds = trMapping.getItemAt(i).getTDs();
+                String mapName = tds.getItemAt(idxNameColumn).getContent();
                 Integer indexFather = (Integer)indexToNode.get(mapName);
                 //if( indexFather==null ) continue;
                 if( indexFather==null ) indexFather = new Integer(i);
@@ -1880,7 +1896,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
                 SavotTD td;
                 // boucle sur les TD
                 for( int j=0; j<tds.getItemCount(); j++ ) {
-                    td = (SavotTD)tds.getItemAt(j);
+                    td = tds.getItemAt(j);
                     String descStr = descMapping[j].getId();
                     if( descStr.length()==0 ) descStr = descMapping[j].getName();
 
@@ -1995,11 +2011,11 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
                 curNode = terminalObs[i];
                 if( curNode==null ) continue;
 
-                TDSet tds = ((SavotTR)trStored.getItemAt(i)).getTDs();
+                TDSet tds = trStored.getItemAt(i).getTDs();
                 SavotTD td;
 
                 for( int j=0; j<tds.getItemCount(); j++ ) {
-                    td = (SavotTD)tds.getItemAt(j);
+                    td = tds.getItemAt(j);
 
                     String descStr = descStored[j].getId();
                     if( descStr.length()==0 ) descStr = descStored[j].getName();
@@ -2132,16 +2148,16 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
      * @param res resource
      */
     private void processLowerLevel(Hashtable lowLevNodes, SavotResource res, SavotField[] desc) {
-        SavotResource obsRes = (SavotResource)res.getResources().getItemAt(0);
-        SavotResource mapRes = (SavotResource)res.getResources().getItemAt(1);
-        SavotResource storedRes = (SavotResource)res.getResources().getItemAt(2);
+        SavotResource obsRes = res.getResources().getItemAt(0);
+        SavotResource mapRes = res.getResources().getItemAt(1);
+        SavotResource storedRes = res.getResources().getItemAt(2);
         TRSet obsSet = obsRes.getData(0).getTableData().getTRs();
         int nbNodes = obsSet.getItemCount();
         SavotTR tr;
         ResourceNode curNode, father;
         Hashtable nodes = new Hashtable();
         for( int i=0; i<nbNodes; i++ ) {
-            tr = (SavotTR)obsSet.getItemAt(i);
+            tr = obsSet.getItemAt(i);
             curNode = createNode(tr, 0, desc, IDIMAGE);
             //System.out.println(curNode.name);
             father = (ResourceNode)lowLevNodes.get(curNode.name);
@@ -2169,8 +2185,8 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
             ResourceNode curObs;
             // boucle sur les lignes de StorageMapping
             for( int i=0; i<trMapping.getItemCount(); i++ ) {
-                TDSet tds = ((SavotTR)trMapping.getItemAt(i)).getTDs();
-                String mapName = ((SavotTD)tds.getItemAt(idxNameColumn)).getContent();
+                TDSet tds = trMapping.getItemAt(i).getTDs();
+                String mapName = tds.getItemAt(idxNameColumn).getContent();
                 curObs = (ResourceNode)nodes.get(mapName);
                 if( curObs==null ) continue;
                 /*
@@ -2190,7 +2206,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
                 SavotTD td;
                 // boucle sur les TD
                 for( int j=0; j<tds.getItemCount(); j++ ) {
-                    td = (SavotTD)tds.getItemAt(j);
+                    td = tds.getItemAt(j);
                     String descStr = descMapping[j].getId();
                     if( descStr.length()==0 ) descStr = descMapping[j].getName();
                     /*
@@ -2273,16 +2289,16 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
             for( int i=0; i<trStored.getItemCount(); i++ ) {
 
 
-                TDSet tds = ((SavotTR)trStored.getItemAt(i)).getTDs();
+                TDSet tds = trStored.getItemAt(i).getTDs();
                 SavotTD td;
 
                 // indispensable pour retrouver les bonnes locations !!
-                String mapName = ((SavotTD)tds.getItemAt(idxNameColumn)).getContent();
+                String mapName = tds.getItemAt(idxNameColumn).getContent();
                 curNode = (ResourceNode)nodes.get(mapName);
                 if( curNode==null ) continue;
 
                 for( int j=0; j<tds.getItemCount(); j++ ) {
-                    td = (SavotTD)tds.getItemAt(j);
+                    td = tds.getItemAt(j);
 
                     String descStr = descStored[j].getId();
                     if( descStr.length()==0 ) descStr = descStored[j].getName();
@@ -2401,7 +2417,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 	            // on récupère la resource contenant des infos sur le critère
 	            SavotResource sr = (SavotResource)info.get(criteria[i]);
 	            if( sr!=null ) {
-                    node = createNode((SavotTR)sr.getData(0).getTableData().getTRs().getItemAt(0),-1,getDescription(sr),criteria[i]);
+                    node = createNode(sr.getData(0).getTableData().getTRs().getItemAt(0),-1,getDescription(sr),criteria[i]);
 	            }
 	            else {
 	                node = new ResourceNode(aladin);
@@ -2440,7 +2456,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
      *  @param father - the node to which the new sub-nodes will be bound to
      */
     private void processResource(ResourceSet set, int indexRes, ResourceNode father) {
-        SavotResource sr = (SavotResource)set.getItemAt(indexRes);
+        SavotResource sr = set.getItemAt(indexRes);
 
 
         // -----------------------------------------------------------
@@ -2458,8 +2474,8 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 
         SavotField[] desc = null;
         // on remplit le tableau des descriptions, et on recupere l'index pour le nom
-        String id = ((SavotTable)(sr.getTables().getItemAt(0))).getId();
-        String ref = ((SavotTable)(sr.getTables().getItemAt(0))).getRef();
+        String id = (sr.getTables().getItemAt(0)).getId();
+        String ref = (sr.getTables().getItemAt(0)).getRef();
         //System.out.println("process resource");
 
         /*System.out.println("id vaut "+id);
@@ -2534,7 +2550,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         }
             // création des noeuds pour chaque TR
             for( int i=0; i<nbTr; i++ ) {
-                newNode = createNode((SavotTR)trSet.getItemAt(i), nameIndex, desc, nameRes);
+                newNode = createNode(trSet.getItemAt(i), nameIndex, desc, nameRes);
                 father.addChild(newNode);
                 /*
                 if( nameRes.equals(IDIMAGE) ) {
@@ -2640,8 +2656,8 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 	 *	@return le tableau des champs correspondant
      */
     private SavotField[] getDescription(SavotResource sr) {
-    	String id = ((SavotTable)(sr.getTables().getItemAt(0))).getId();
-        String ref = ((SavotTable)(sr.getTables().getItemAt(0))).getRef();
+    	String id = (sr.getTables().getItemAt(0)).getId();
+        String ref = (sr.getTables().getItemAt(0)).getRef();
         SavotField[] desc;
 
 		if( id.length()!=0 ) {
@@ -2662,7 +2678,7 @@ protected SavotField[] createDescription(FieldSet fs) {
     SavotField[] desc = new SavotField[nb];
     String id, ref;
     for( int i=0; i<nb; i++ ) {
-        desc[i] = ((SavotField)fs.getItemAt(i));
+        desc[i] = (fs.getItemAt(i));
         id = desc[i].getId();
         ref = desc[i].getRef();
         //System.out.println("ID : "+id);
@@ -2708,7 +2724,7 @@ protected SavotField[] createDescription(FieldSet fs) {
         String unit;
         // recuperation des valeurs des TD
         for( int i=0; i<nbTd; i++ ) {
-            expla[i] = ((SavotTD)tdSet.getItemAt(i)).getContent();
+            expla[i] = tdSet.getItemAt(i).getContent();
             originalExpla[i] = expla[i];
 
             try {
@@ -3020,7 +3036,7 @@ protected SavotField[] createDescription(FieldSet fs) {
  		int nbParam = params.getItemCount();
  		SavotParam param;
  		for( int i=0; i<nbParam; i++ ) {
- 			param = (SavotParam)params.getItemAt(i);
+ 			param = params.getItemAt(i);
  			if( param.getName().equalsIgnoreCase("SORTORDER") ) {
  				String value = param.getValue();
  				if( value!=null && value.length()>0 ) {

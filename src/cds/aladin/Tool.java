@@ -40,11 +40,11 @@ import cds.tools.Util;
  */
 public final class Tool {
    // Couleurs geres
-   static final Color CS  = Color.black;     // Couleur si l'outil est selectionnable
+   static final Color CS  = Aladin.COLOR_CONTROL_FOREGROUND;     // Couleur si l'outil est selectionnable
    //   static final Color CNS = Color.gray;      // COuleur si l'outil n'est pas selectionnable
-   static final Color CNS = Aladin.MYGRAY;      // COuleur si l'outil n'est pas selectionnable
-   static final Color CD = Aladin.MAXBLUE;   // Couleur du bouton appuyé
-   static final Color CU = Aladin.BLUE;      // Couleur du bouton releve
+   static final Color CNS = Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE;      // COuleur si l'outil n'est pas selectionnable
+   static final Color CD = Aladin.COLOR_TOOL_DOWN;   // Couleur du bouton appuyé
+   static final Color CU = Aladin.COLOR_TOOL_UP;      // Couleur du bouton releve
 
    // Differents modes possible d'un bouton
    static final int UNAVAIL =  0;           //   0 - UP/non-selectionnable
@@ -443,30 +443,41 @@ public final class Tool {
 
       Polygon p;
       //      boolean flagIsForTool = ToolBox.isForTool(ntool) /* || ntool==ToolBox.FILTER */;
-      boolean flagIsForTool = false;
+//      boolean flagIsForTool = false;
       int dx = idx + W/2 - dX();
       int dy = idy + mode + H/3 - dY()+3;
-      Color c1 = (mode==UNAVAIL && !flagIsForTool)?CNS:currentButton?CS:CS;
-      Color c2 = (mode==UNAVAIL && !flagIsForTool)?CNS:CS;
+//      Color c1 = (mode==UNAVAIL && !flagIsForTool)?CNS:currentButton?CS:CS;
+//      Color c2 = (mode==UNAVAIL && !flagIsForTool)?CNS:CS;
 
       // Mémorisation de la position du tracé
       X=idx;
       Y=idy;
-
-      Color CBG = aladin.toolBox.getBackground();
-      Color CBU = new Color(250,249,254);
-
-      g.setColor( mode==DOWN ? CU : currentButton && mode!=UNAVAIL ? CBU : CBG);
+      
+      // Tracé du fond
+      Color c1 = Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
+      if( mode==UP || mode==DOWN ) {
+         c1 = Aladin.COLOR_CONTROL_FOREGROUND;
+         if( currentButton || mode==DOWN )  c1 = c1.brighter();
+      }
+      
+      Color bg = Aladin.COLOR_MAINPANEL_BACKGROUND;
+      if( (mode==UP || mode==DOWN) && currentButton ) bg = bg.brighter();
+      g.setColor( bg );
       g.fillRect(idx+2,idy+2,W-3,H-3);
-//      if( aladin.isFullScreen() ) {
-//         if( mode==DOWN ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 3, Color.darkGray, Color.white);
-//         else if( mode==UP && currentButton ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 3, Color.white, Color.darkGray);
-//         else Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 3, CBG, CBG);
-//      } else {
-         if( mode==DOWN ) Util.drawRect(g, idx+1, idy+1,W-2,H-2, Color.gray, Color.gray);
-         else if( mode==UP && currentButton ) Util.drawRect(g, idx+1, idy+1,W-2,H-2, Color.gray, Color.gray);
-         else Util.drawRect(g, idx+1, idy+1,W-2,H-2,  CBG, CBG);
-//      }
+      
+      if( mode==DOWN ) Util.drawRect(g, idx+1, idy+1,W-2,H-2,
+            Aladin.COLOR_CONTROL_FOREGROUND, Aladin.COLOR_CONTROL_FOREGROUND);
+
+      Color cPapier = Aladin.COLOR_CONTROL_FILL_IN;
+      
+//      Color CBG = aladin.toolBox.getBackground();
+//      Color CBU = new Color(250,249,254);
+//
+//      g.setColor( mode==DOWN ? CU : currentButton && mode!=UNAVAIL ? CBU : CBG);
+//      g.fillRect(idx+2,idy+2,W-3,H-3);
+//      if( mode==DOWN ) Util.drawRect(g, idx+1, idy+1,W-2,H-2, Color.gray, Color.gray);
+//      else if( mode==UP && currentButton ) Util.drawRect(g, idx+1, idy+1,W-2,H-2, Color.gray, Color.gray);
+//      else Util.drawRect(g, idx+1, idy+1,W-2,H-2,  CBG, CBG);
 
 
       //      // Couleur du fond
@@ -493,21 +504,20 @@ public final class Tool {
       //         Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, CS, Color.white);
       //      }
 
-      Color cPapier = Color.white;
 
 
       // Dessin du logo suivant le type d'outil
       switch(ntool) {
          case ToolBox.SELECT:                // dessin de la fleche du select
             p = setPolygon(selectX,selectY,dx,dy);
-            g.setColor(cPapier);
+            g.setColor( mode==UNAVAIL || Aladin.DARK_THEME ? cPapier :  new Color( 230,230,230 ));
             g.fillPolygon(p);
             g.setColor( c1 );
             g.drawPolygon(p);
             break;
          case ToolBox.DRAW:                // dessin du crayon
             //            g.setColor( cPapier );
-            g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
+            g.setColor( mode==UNAVAIL || Aladin.DARK_THEME ? cPapier :  new Color( 215,198,142) );
             p = setPolygon(craymX,craymY,dx,dy);
             g.fillPolygon(p);
             g.setColor(c1);
@@ -522,7 +532,7 @@ public final class Tool {
          case ToolBox.TAG:                // dessin du grand A avec le réticule
             p = setPolygon(exAX,exAY,dx,dy);
             //            g.setColor(cPapier);
-            g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
+            g.setColor( mode==UNAVAIL || Aladin.DARK_THEME ? cPapier : new Color( 215,198,142) );
             g.fillPolygon(p);
             g.setColor(c1);
             g.drawPolygon(p);
@@ -592,9 +602,9 @@ public final class Tool {
                g.setColor( mode==UNAVAIL ? c1 : new Color( 127,88,0) );
                p = setPolygon(m1X,m1Y,dx,dy);
                g.fillPolygon(p);
-               g.setColor( c2 );
+               g.setColor( c1 );
                g.drawPolygon(p);
-               g.setColor(mode==UNAVAIL ? c2 : Color.red);
+               g.setColor(mode==UNAVAIL ? c1 : Color.red);
                for( i=0; i<m3X.length; i++ ) {
                   g.drawLine(dx+m3X[i][0],dy+m3X[i][2],dx+m3X[i][1],dy+m3X[i][2]);
                }
@@ -606,7 +616,6 @@ public final class Tool {
             drawRsampIcon(g,c1,dx,dy,true);
             break;
          case ToolBox.PROP:
-            //            g.setColor(c1);
             g.setColor( mode==UNAVAIL ? c1 : new Color( 85,121,203) );
             p = setPolygon(p1X,p1Y,dx,dy);
             g.fillPolygon(p);
@@ -620,7 +629,6 @@ public final class Tool {
             g.drawLine(dx+3,dy+9,dx+3,dy+9); g.drawLine(dx+6,dy+9,dx+12,dy+9);
             break;
          case ToolBox.WEN:                // la loupe
-            //            g.setColor(c1);
             g.setColor( mode==UNAVAIL ? c1 : new Color( 127,88,0) );
             p = setPolygon(lpX,lpY,dx,dy);
             g.fillPolygon(p);
@@ -633,14 +641,13 @@ public final class Tool {
             break;
          case ToolBox.ZOOM:                // le Z du Zoom
             p = setPolygon(zX,zY,dx,dy);
-            g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
+            g.setColor( mode==UNAVAIL || Aladin.DARK_THEME ? cPapier : new Color( 215,198,142) );
             g.fillPolygon(p);
             g.setColor(c1);
             g.drawPolygon(p);
             break;
          case ToolBox.PAN:                // la main du PAN
-            g.setColor( cPapier );
-            g.setColor( mode==UNAVAIL ? cPapier : new Color(239,220,219) );
+            g.setColor( mode==UNAVAIL || Aladin.DARK_THEME ? cPapier : new Color(239,220,219) );
             for( i=0; i<pF.length; i++) g.fillRect(pF[i][0]+dx,pF[i][1]+dy,pF[i][2],pF[i][3]);
             g.setColor(c1);
             for( i=0; i<pV.length; i++ ) g.drawLine(pV[i][2]+dx,pV[i][0]+dy,pV[i][2]+dx,pV[i][1]+dy);
@@ -732,7 +739,7 @@ public final class Tool {
          int x,y;
 
          //         g.setColor(currentButton && mode==UP ? Color.white : c2);
-         g.setColor(c2);
+         g.setColor(c1);
 
          // Positionnement du label en fonction de la presence
          // ou de l'absence d'une icone

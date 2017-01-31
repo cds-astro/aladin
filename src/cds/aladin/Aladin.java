@@ -158,9 +158,9 @@ import healpix.essentials.Vec3;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> Collection Registry tree
+ * @beta    <LI> Datalink, SODA and TAP supports
  * @beta    <LI> Simbad + VizieR pointer improvements
  * @beta    <LI> HiPS properties file direct support
- * @beta    <LI> HiPS Store
  * @beta    <LI> Panel management improvement (JPane)
  * @beta    <LI> HiPS mirror sites management improvement
  * @beta    <LI> MOC perimeter drawing + set drawing=xxx script command
@@ -212,7 +212,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.504";
+   static public final    String VERSION = "v9.600";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -239,24 +239,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String TREEURL = "http://"+Aladin.ALADINMAINSITE+"/java/Tree.dic";
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
+   // Gère le mode particuliers
+   static boolean LOG=true;  // false si on inhibe les logs
+   public static boolean BETA=true;  // true si on tourne en mode BETA
+   public static boolean CDS=false;   // true si on tourne en mode CDS
+   public static boolean PROTO=true;    // true si on tourne en mode PROTO (nécessite Proto.jar)
+   static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
+   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
+   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
+
    // La couleur du fond
-   static final Color BACKGROUND      = new Color(210,210,255); //250,250,255); 
-   static final Color COLOR_INFOPANEL = new Color(160,160,255);   
-   static final Color COLOR_DIRECTORY = new Color(210,210,255);
    
-   static final Color BKGD   = Color.lightGray;
-//       static final Color BKGD   = new Color(100,100,255);
-       
-   static final Color GREEN = new Color(27,137,0);
-   public static final Color DARKBLUE = new Color(102,102,153);
-   static final Color MYBLUE = new Color(49,106,197);
-   static final Color LBLUE = new Color(229,229,229);
+   static public boolean DARK_THEME = true;
+   static Color BACKGROUND      = new Color(235,235,255); //250,250,255); 
+   
+//   static final Color COLOR_CONTROL_BACKGROUND = FUN ? new Color(10,10,10) : new Color(229,229,229);
    public static final Color BLUE =  new Color(214,214,255);
    static final Color MAXBLUE =  new Color(153,153,255);
    static final Color BLUEHELP = new Color(25,76,127);
-   static final Color MYGRAY = new Color(180,183,187);
-   static final Color STACKBLUE = new Color(140,140,255);
-   static final Color STACKGRAY = new Color(150,150,150);
+   static final Color MYGRAY = DARK_THEME ? new Color(100,103,107) : new Color(180,183,187);
    static final Color BLACKBLUE = new Color(0,0,200);
    static final Color ORANGE   = new Color(255,137,58);
    static final Color LIGHTORANGE   = new Color(255,211,58);
@@ -264,6 +265,126 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // couleur de fond du bouton Load... lorsqu'il est opérationnel
    //    static final Color COLOR_LOAD_READY = new Color(110,230,50);
    static final Color COLOR_LOAD_READY = new Color(50,205,110);
+   
+   static final Color MYBLUE = new Color(49,106,197);
+   
+   
+   static public Color COLOR_BACKGROUND;
+   static public Color COLOR_FOREGROUND;
+   static public Color COLOR_MAINPANEL_BACKGROUND; 
+   static public Color COLOR_MAINPANEL_FOREGROUND;
+   static public Color COLOR_CONTROL_BACKGROUND; 
+   static public Color COLOR_CONTROL_FOREGROUND;
+   static public Color COLOR_CONTROL_FOREGROUND_HIGHLIGHT;
+   static public Color COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
+   static public Color COLOR_CONTROL_FILL_IN;
+   static public Color COLOR_BUTTON_BACKGROUND;
+   static public Color COLOR_BUTTON_BACKGROUND_BORDER_UP;
+   static public Color COLOR_BUTTON_BACKGROUND_BORDER_DOWN;
+   static public Color COLOR_BUTTON_FOREGROUND;
+   static public Color COLOR_STATUS_BACKGROUND;
+   static public Color COLOR_STATUS_LEFT_FOREGROUND;
+   static public Color COLOR_DIRECTORY_BACKGROUND;
+   static public Color COLOR_MEASUREMENT_BACKGROUND;
+   static public Color COLOR_MEASUREMENT_HEADER_BACKGROUND;
+   static public Color COLOR_MEASUREMENT_HEADER_FOREGROUND;
+   static public Color COLOR_MEASUREMENT_FOREGROUND;
+   static public Color COLOR_MEASUREMENT_LINE;
+   static public Color COLOR_MEASUREMENT_ANCHOR_HASPUSHED;
+   static public Color COLOR_MEASUREMENT_FOREGROUND_COMPUTED;    // couleur pour valeurs calculees
+   static public Color COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE;  // bleu clair - ligne montrée
+   static public Color COLOR_MEASUREMENT_BORDERS_MOUSE_CELL;  // bleu foncé - bordure de la cellule sous la souris
+   static public Color COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL;  // Jaune pâle - sous la souris
+   static public Color COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
+   static public Color COLOR_LABEL;
+   static public Color COLOR_ICON_ACTIVATED;
+   static public Color COLOR_TOOL_DOWN;
+   static public Color COLOR_TOOL_UP;
+   static public Color COLOR_TEXT_BACKGROUND;
+   static public Color COLOR_TEXT_FOREGROUND;
+   static public Color COLOR_BLUE;
+   static public Color COLOR_GREEN;
+   static public Color COLOR_STACK_SELECT;
+   static public Color COLOR_STACK_HIGHLIGHT;
+   static public Color COLOR_FOREGROUND_ANCHOR;
+  
+
+   private void initColors() {
+      
+      DARK_THEME = configuration.isDarkTheme();
+      
+      COLOR_BACKGROUND = new Color(250,250,250); //Color.white;
+      COLOR_FOREGROUND = Color.black;
+      COLOR_MAINPANEL_BACKGROUND = new Color(235,235,255);
+      COLOR_CONTROL_BACKGROUND = PROTO ? new Color(229,229,229)  : (new JButton()).getBackground();
+      COLOR_CONTROL_FOREGROUND = new Color(60,60,60); //new Color(128, 128, 128); // Color.gray; 
+      COLOR_CONTROL_FOREGROUND_HIGHLIGHT = Color.black;
+      COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(180,183,187);
+      COLOR_CONTROL_FILL_IN = Color.white;
+      COLOR_BUTTON_BACKGROUND   = Color.lightGray;
+      COLOR_BUTTON_FOREGROUND   = Color.black;
+      COLOR_BUTTON_BACKGROUND_BORDER_UP = Color.white;
+      COLOR_STATUS_BACKGROUND = new Color(160,160,255);
+      COLOR_STATUS_LEFT_FOREGROUND = Color.white;
+      COLOR_BUTTON_BACKGROUND_BORDER_DOWN = Color.black;
+      COLOR_MEASUREMENT_LINE = new Color(153,153,153);
+      COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
+      COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = new Color(195,195,255);
+      COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_FOREGROUND;
+      COLOR_MEASUREMENT_BORDERS_MOUSE_CELL = new Color(140,140,255);
+      COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(255,255,225);
+      COLOR_MEASUREMENT_BACKGROUND = COLOR_BACKGROUND;
+      COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
+      COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_BUTTON_BACKGROUND;
+      COLOR_LABEL = new Color(102,102,153);
+      COLOR_ICON_ACTIVATED = new Color(220,0,0);
+      COLOR_TOOL_DOWN = new Color(153,153,255);
+      COLOR_TOOL_UP = new Color(214,214,255);
+      COLOR_TEXT_BACKGROUND = Color.white;
+      COLOR_TEXT_FOREGROUND = Color.black;
+      COLOR_BLUE = Color.blue;
+      COLOR_GREEN = new Color(27,137,0);
+      COLOR_STACK_SELECT = new Color(140,140,255);
+      COLOR_STACK_HIGHLIGHT = new Color(150,150,150);
+      COLOR_FOREGROUND_ANCHOR = COLOR_BLUE;
+      
+      if( DARK_THEME ) {
+         COLOR_MAINPANEL_BACKGROUND = new Color(40,40,40);
+         COLOR_BACKGROUND = new Color(60,60,60);
+         COLOR_FOREGROUND = new Color(250,250,250);
+         COLOR_LABEL = new Color(172,172,213);
+         COLOR_CONTROL_FOREGROUND = new Color(200,203,207);
+         COLOR_CONTROL_FOREGROUND_HIGHLIGHT = COLOR_CONTROL_FOREGROUND.brighter();
+         COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(80,83,87);
+         COLOR_CONTROL_FILL_IN = new Color(60,60,60);
+         COLOR_TOOL_DOWN = new Color(60,60,60);
+         COLOR_TOOL_UP = new Color(80,80,80);
+         COLOR_TEXT_BACKGROUND = new Color(205,205,215);
+         COLOR_TEXT_FOREGROUND = Color.black;
+         COLOR_STATUS_BACKGROUND = COLOR_BUTTON_BACKGROUND;
+         COLOR_STATUS_LEFT_FOREGROUND = COLOR_TEXT_FOREGROUND;
+         COLOR_BLUE = new Color(120,149,220);
+         COLOR_FOREGROUND_ANCHOR = new Color(0,136,204);
+         COLOR_GREEN = new Color(57,167,0);
+         COLOR_STACK_SELECT = new Color(40,50,100);
+         COLOR_STACK_HIGHLIGHT = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
+         BACKGROUND = new Color(20,23,27);
+         COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
+         COLOR_MEASUREMENT_HEADER_FOREGROUND = COLOR_CONTROL_FOREGROUND;
+         COLOR_MEASUREMENT_BACKGROUND = COLOR_BACKGROUND;
+         COLOR_MEASUREMENT_LINE = new Color(153,153,153);
+         COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
+         COLOR_MEASUREMENT_BORDERS_MOUSE_CELL = new Color(140,140,255);
+         COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(215,215,225);
+         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_BACKGROUND.brighter();
+         COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_TEXT_FOREGROUND;
+      }
+      
+      COLOR_MEASUREMENT_FOREGROUND = COLOR_FOREGROUND;
+      COLOR_DIRECTORY_BACKGROUND = COLOR_MAINPANEL_BACKGROUND;
+
+   }
+   
 
    // Le repertoire d'installation d'Aladin
    static String HOME;
@@ -331,16 +452,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // true si on ne lance ne charge pas les plugins
    static boolean NOPLUGIN=false;
 
-   // Gère le mode particuliers
-   static boolean LOG=true;  // false si on inhibe les logs
-   public static boolean BETA=true;  // true si on tourne en mode BETA
-   public static boolean CDS=false;   // true si on tourne en mode CDS
-   public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
-   static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
-   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
-   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
-
-   static boolean ENABLE_FOOTPRINT_OPACITY=true; // footprints en transparence ?
+    static boolean ENABLE_FOOTPRINT_OPACITY=true; // footprints en transparence ?
    static float DEFAULT_FOOTPRINT_OPACITY_LEVEL=0.15f+0.000111f; // niveau de transparence (entre 0.0 et 1.0)
 
    // Si le menu ou le sous-menu commence par l'une des chaines ci-dessous,
@@ -403,7 +515,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static boolean PLASTIC_SUPPORT = true; // activation ou non du support PLASTIC/SAMP
    static boolean USE_ACR = false; // True si on utilise les librairies ACR (AstroGrid)
 
-   private Banner banner=null;
+//   private Banner banner=null;
 
    // Les objets associees a l'interface
    public FrameFullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
@@ -878,9 +990,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Creation des fonts */
    protected void creatFonts() {
       if( BOLD!=null ) return;
-      String s = "SansSerif";
-      String s1 = "Monospaced";
-
+      String s =  "SansSerif";
+      String s1 = "Lucida Sans typewriter"; //"Monospaced";
+      
       trace(1,"Creating Fonts");
       
       BOLD   = new Font(s,Font.BOLD,  SIZE);
@@ -1302,7 +1414,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       configuration.setLastFile(path, true);
       updateLastFileMenu();
    }
-
+   
    /** Met à jour le menu des fichiers récemment ouverts */
    protected void updateLastFileMenu() {
       if( miLastFile==null ) return;
@@ -1574,7 +1686,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // Pour les fichiers récents
       updateLastFileMenu();
-
+      
       // Ajout des formats de sauvegarde supportés
       if( miSave!=null ) {
          miSave.removeAll();
@@ -1958,7 +2070,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * cas d'instanciation multiple d'Aladin */
    public int getInstanceId() { return aladinSession; }
 
-
    /** Creation des objets et mise en place de l'interface.
     * On utilisera la plupart du temps des Panels hierarchises
     */
@@ -1968,24 +2079,26 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( !flagLaunch ) {
          try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            //           UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+//                       UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
          } catch( Exception e ) { e.printStackTrace(); }
-      }
 
-      addMouseMotionListener(this);
-      addMouseListener(this);
-//      setBackground((new JButton()).getBackground());   // UN PEU TORDU
-      setBackground( PROTO ? BACKGROUND : (new JButton()).getBackground());
-      ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(0,3,0,2));
-
+      } else DARK_THEME=false;
+      
       aladinSession = (++ALADINSESSION);
-      //       CDSHealpix.init();
       configuration = new Configuration(this);
       if( STANDALONE ) {
          try {  configuration.load(); }
          catch( Exception e ) { System.err.println(e.getMessage()); }
       }
 
+      // Initialisations des couleurs
+      initColors();
+      
+      addMouseMotionListener(this);
+      addMouseListener(this);
+      setBackground( COLOR_MAINPANEL_BACKGROUND );
+      ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(0,3,0,2));
+      
       if( !setOUTREACH ) OUTREACH = configuration.isOutReach();
       ENABLE_FOOTPRINT_OPACITY = configuration.isTransparent();
       DEFAULT_FOOTPRINT_OPACITY_LEVEL = configuration.getTransparencyLevel();
@@ -2010,25 +2123,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       makeCursor(this,WAITCURSOR);
 
       // Pour gérer les accès protégé.
-      try {
-         //          Class auth = Class.forName("java.net.Authenticator");
-         //          Method setDefault = auth.getDeclaredMethod("setDefault",new Class[]{ auth });
-         //          setDefault.invoke((Object)null, new Object[] { new MyAuthenticator() } );
-
-         // METHODE PLUS SIMPLE DES QUE COMPATIBLE JVM 1.2
-         Authenticator.setDefault(new MyAuthenticator());
-
+      try { Authenticator.setDefault(new MyAuthenticator());
       } catch( Exception e) {  }
 
       // Affichage du banner
-      if( BANNER && !NOGUI && aladinSession==0 && (!isApplet() || flagLaunch) ) {
-         (new Thread("AladinBanner") {
-            @Override
-            public void run() { banner=new Banner(aladin); }
-
-         }).start();
-         Util.pause(50);
-      }
+//      if( BANNER && !NOGUI && aladinSession==0 && (!isApplet() || flagLaunch) ) {
+//         (new Thread("AladinBanner") {
+//            @Override
+//            public void run() { banner=new Banner(aladin); }
+//
+//         }).start();
+//         Util.pause(50);
+//      }
 
       getContentPane().setLayout( new BorderLayout(0,0) );
       int id = getInstanceId();
@@ -2082,43 +2188,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       });
       bg.add(b);
 
-      //       avant = b = new JButton(new ImageIcon(getImagette("Avant.gif")));
-      //       b.setMargin(new Insets(0,0,0,0));
-      //       b.setBorderPainted(false);
-      //       b.setContentAreaFilled(false);
-      //       Util.toolTip(b,chaine.getString("TIPAVANT"));
-      //       b.addActionListener( new ActionListener() {
-      //          public void actionPerformed(ActionEvent e) {
-      //             view.undo( (e.SHIFT_MASK & e.getModifiers())!=0 );
-      //          }
-      //       });
-      //       bg.add(b);
-      //
-      //       apres = b = new JButton(new ImageIcon(getImagette("Apres.gif")));
-      //       b.setMargin(new Insets(0,0,0,0));
-      //       b.setBorderPainted(false);
-      //       b.setContentAreaFilled(false);
-      //       Util.toolTip(b,chaine.getString("TIPPRES"));
-      //       b.addActionListener( new ActionListener() {
-      //          public void actionPerformed(ActionEvent e) {
-      //             view.redo( (e.SHIFT_MASK & e.getModifiers())!=0 );
-      //          }
-      //       });
-      //       bg.add(b);
-
       // Le bandeau sous le menu : Panel saisie comportant la localisation
       // et le target lie au plan de reference
       JToolBar saisie1 = new JToolBar();
+      saisie1.setUI( new MyToolbarUI() );
       saisie1.setBackground( getBackground() );
       saisie1.setFloatable(false);
       saisie1.setBorder(BorderFactory.createEmptyBorder());
       saisie1.setBorderPainted(false);
       saisie1.add(searchData);
       saisie1.add(ExportYourWork);
-      //       saisie1.addSeparator();
-      //       saisie1.add(avant);
-      //       saisie1.add(apres);
+      
       JPanel saisie = new JPanel( new BorderLayout(0,0));
+      saisie1.setBorder( BorderFactory.createEmptyBorder(0, 10, 0, 0));
       saisie.setBackground( getBackground() );
       saisie.add(saisie1,BorderLayout.WEST);
       saisie.add(localisation, BorderLayout.CENTER);
@@ -2169,9 +2251,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       JPanel haut1 = new JPanel(new BorderLayout(0,0));
       haut1.setBackground( getBackground());
       haut1.add(saisie,BorderLayout.NORTH);
-      JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
       
+      JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
+      panelBookmarks.setBackground( getBackground() );
       panelBookmarks.add( bookmarks.getToolBar(), BorderLayout.CENTER);
+      JLabel l = new JLabel(" "); l.setBackground( getBackground() );
+      panelBookmarks.add(l, BorderLayout.EAST);   // Pour donner une certaine taille même si bookmarks vide
       haut1.add(panelBookmarks,BorderLayout.SOUTH);
 
       // Le panel haut : contient le logo et le haut1
@@ -2201,11 +2286,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       GridBagLayout g = new GridBagLayout();
       infoPanel = new JPanel(g);
-      infoPanel.setBackground( COLOR_INFOPANEL );
-      urlStatus.setBackground( COLOR_INFOPANEL );
-      memStatus.setBackground( COLOR_INFOPANEL);
+      infoPanel.setBackground( COLOR_STATUS_BACKGROUND );
+      urlStatus.setBackground( COLOR_STATUS_BACKGROUND );
+      memStatus.setBackground( COLOR_STATUS_BACKGROUND );
       
-      urlStatus.setForeground(Color.white);
+      urlStatus.setForeground( COLOR_STATUS_LEFT_FOREGROUND );
       
       GridBagConstraints gc = new GridBagConstraints();
       gc.gridwidth = 3;
@@ -2269,12 +2354,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
       mainRight.add(splitV,BorderLayout.CENTER);
       
       if( PROTO ) {
-         directory = new Directory(aladin, COLOR_DIRECTORY);
+         directory = new Directory(aladin, COLOR_DIRECTORY_BACKGROUND );
          splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, mainRight,0);
          directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
          directory.setMinimumSize( new Dimension(0,200));
          
-         splitHiPSWidth.setBackground(COLOR_DIRECTORY);
+         splitHiPSWidth.setBackground( COLOR_DIRECTORY_BACKGROUND );
+         splitHiPSWidth.setBorder( BorderFactory.createEmptyBorder());
          ct.add( splitHiPSWidth, BorderLayout.CENTER);
          ct.add( infoPanel, BorderLayout.SOUTH);
          
@@ -2283,6 +2369,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          ct.add( infoPanel, BorderLayout.SOUTH);
       }
       
+      
+      // Pour les filtres sauvegardés
+      directory.updateDirFilter();
 
       // Dernier objet a creer et traitement des parametres
       co.creatLastObj();
@@ -2315,8 +2404,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Suppression d'éventuels vieux caches oubliés
       if( STANDALONE && getInstanceId()==0 ) removeOldCaches();
 
-      // Cache le banner si ce n'est déjà fait
-      if( banner!=null ) banner.setVisible(false);
+//      // Cache le banner si ce n'est déjà fait
+//      if( banner!=null ) banner.setVisible(false);
 
       // Le mot d'accueil pour le demarrage
       if( aladinSession==0 ) {
@@ -2771,6 +2860,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       msgOn=false;
       if( isFullScreen() ) fullScreen.repaint();
       setHelp(false);
+      
+      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips SAO70467 3deg");
    }
 
 
@@ -4598,7 +4689,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       JLabel l = new JLabel(s);
       l.setBorder(BorderFactory.createEmptyBorder(0,3,0,2));
       l.setFont(Aladin.BOLD);
-      l.setForeground(DARKBLUE);
+      l.setForeground(COLOR_LABEL);
       return l;
    }
 
@@ -5507,8 +5598,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //               "       -scriptfile=\"pathname|url[;...]\": script by local files or url \n"+
                "       -script=\"cmd1;cmd2...\": script commands passed by parameter\n"+
                "       -nogui: no graphical interface (for script mode only)\n" +
-               "               => noplugin, nobanner, nobookmarks, nohub\n"+
-               "       -nobanner: no Aladin banner\n"+
+               "               => noplugin, nobookmarks, nohub\n"+
                "       -noreleasetest: no Aladin new release test\n"+
                "       -[no]hub: no usage of the internal PLASTIC hub\n"+
                "       -[no]plugin: with/without plugin support\n"+

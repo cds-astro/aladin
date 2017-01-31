@@ -80,7 +80,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		
 		uploadServer = new ServerTap(aladin);
 		uploadServer.primaryColor = Aladin.BACKGROUND;
-		uploadServer.secondColor = Aladin.LBLUE;
+		uploadServer.secondColor = Aladin.COLOR_CONTROL_BACKGROUND;
 //		newServer.aladinLabel = this.selectedServerLabel.getLabel();
 		uploadServer.isUploadServer = true;
 		uploadServer.setName("LocalResources");
@@ -111,7 +111,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 * Creates the first form for loading upload data
 	 */
 	public void setUploadFileForm() {
-		this.getContentPane().setBackground(Aladin.LBLUE);
+		this.getContentPane().setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 		c = new GridBagConstraints();
 		c.gridx = 0;
 	    c.gridy = 0;
@@ -198,7 +198,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		c.fill = GridBagConstraints.HORIZONTAL;
 		
 		JPanel buttonsPanel = new JPanel();
-		buttonsPanel.setBackground(Aladin.LBLUE);
+		buttonsPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 		JButton button = new JButton("Upload");
 		button.setActionCommand(UPLOAD);
 		button.addActionListener(this);

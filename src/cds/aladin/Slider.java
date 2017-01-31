@@ -63,6 +63,7 @@ public class Slider extends JComponent {
     * @param nbSteps
     */
    public Slider(double begin, int nbSteps) {
+      setOpaque(true);
       this.begin = begin;
       this.nbSteps = nbSteps;
       W = nbSteps + mX + margeDroite;

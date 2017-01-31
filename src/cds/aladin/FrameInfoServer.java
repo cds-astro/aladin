@@ -99,7 +99,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	   JPanel tnom = new JPanel(new FlowLayout(FlowLayout.CENTER));
 	   nom = new JLabel(TITLE);
 	   nom.setFont(Aladin.LLITALIC);
-	   nom.setForeground(Aladin.GREEN);
+	   nom.setForeground(Aladin.COLOR_GREEN);
 	   tnom.add(nom);
 
 	   JPanel submit = new JPanel();
@@ -177,7 +177,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 		JPanel tnom = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		nom = new JLabel(TITLE);
 		nom.setFont(Aladin.LLITALIC);
-		nom.setForeground(Aladin.GREEN);
+		nom.setForeground(Aladin.COLOR_GREEN);
 		tnom.add(nom);
 	    
 		JPanel submit = new JPanel();

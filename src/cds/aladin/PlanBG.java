@@ -3241,7 +3241,7 @@ public class PlanBG extends PlanImage {
 
       if( v.getTaille()<15 ) return;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      g.setColor( aladin.isCinema() ? Color.black : Color.white);
+      g.setColor( Aladin.COLOR_BACKGROUND );
       Stroke st = g.getStroke();
 
       int epaisseur = 200;

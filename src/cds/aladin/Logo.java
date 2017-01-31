@@ -147,11 +147,14 @@ public final class Logo extends JComponent implements MouseListener {
    * @Return : La chaine du Help (String)
    */
    protected String Help() {
-
-      return (Aladin.OUTREACH|Aladin.BETA|Aladin.PROTO? 
+      
+      return Aladin.PROTO ?
+            "!"+Aladin.FULLTITRE+" - prototype based on "+Aladin.getReleaseNumber()+"\n"
+            +aladin.chaine.getString("PUBPROTO") :
+            
+            (Aladin.OUTREACH|Aladin.BETA? 
          "!"+Aladin.FULLTITRE+" - "+Aladin.getReleaseNumber()+"\n"
-            +aladin.chaine.getString(Aladin.OUTREACH?"PUBOUTREACH":
-               Aladin.PROTO?"PUBPROTO":"PUBBETA") :
+            +aladin.chaine.getString(Aladin.OUTREACH?"PUBOUTREACH":"PUBBETA") :
 
          "! \n!"+Aladin.FULLTITRE+" - "+Aladin.getReleaseNumber()+"\n"
          	+aladin.chaine.getString("PUB"))+"\n*"+Aladin.COPYRIGHT;

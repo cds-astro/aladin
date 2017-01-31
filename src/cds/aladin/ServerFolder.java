@@ -70,7 +70,7 @@ public final class ServerFolder extends Server implements
       menu = new Vector();
       menu.addElement(NOTHING);
       m = Toolkit.getDefaultToolkit().getFontMetrics(Aladin.PLAIN);
-      backGround =Aladin.LBLUE;
+      backGround =Aladin.COLOR_CONTROL_BACKGROUND;
       
       addMouseMotionListener(this);
       addMouseListener(this);
@@ -150,7 +150,7 @@ public final class ServerFolder extends Server implements
       int yc=y+MARGE;
       g.setColor(Aladin.BLUE);
       g.fillRect(0,0,getWidth(),getHeight());
-      g.setColor(Aladin.LBLUE);
+      g.setColor(Aladin.COLOR_CONTROL_BACKGROUND);
       g.fillRect(x,y,W,H);
       for( int i=0; e.hasMoreElements(); i++ ) {
          if( i==choix ) {

@@ -309,7 +309,7 @@ public class Server extends JPanel
             : status==STATUS_ERROR ?    "Error    "
             : status==STATUS_ABORT ?    "Abort    "
                   : "-");
-      statusAllVO.setForeground( status==STATUS_OK ? Aladin.GREEN
+      statusAllVO.setForeground( status==STATUS_OK ? Aladin.COLOR_GREEN
             : status==STATUS_ERROR ? Color.red
             : status==STATUS_NORESULT ? Color.blue: Color.black);
 
@@ -519,7 +519,7 @@ public class Server extends JPanel
 //       JButton b = new JButton(FrameServer.INFO);
 //       JButton b = Util.getHelpButton(this,MESSAGE)
              
-       JButton b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Help.gif")));
+       JButton b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Help.png")));
        b.setMargin(new Insets(0,0,0,0));
        b.setBorderPainted(false);
        b.setContentAreaFilled(false);

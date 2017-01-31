@@ -481,7 +481,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       JLabel l,limg,ldat;
       limg = l = new JLabel(Util.fold("<center><i>"+IMG+"</i></center>",80,true));
       l.setFont(Aladin.BOLD);
-      l.setForeground(Aladin.DARKBLUE);
+      l.setForeground(Aladin.COLOR_LABEL);
       gbimg.setConstraints(l,gcimg);
       buttonImg.add(l);
       gcimg.insets.bottom=0;
@@ -491,7 +491,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       gcdat.insets.top=12;
       ldat = l = new JLabel(Util.fold("<center><i>"+CAT+"</i></center>",80,true));
       l.setFont(Aladin.BOLD);
-      l.setForeground(Aladin.DARKBLUE);
+      l.setForeground(Aladin.COLOR_LABEL);
       gbdat.setConstraints(l,gcdat);
       buttonData.add(l);
       gcdat.insets.bottom=0;
@@ -500,7 +500,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       gctop.insets.right=12;
       l = new JLabel(Util.fold("<center><i>"+OTHER+"</i></center>",80,true));
       l.setFont(Aladin.BOLD);
-      l.setForeground(Aladin.DARKBLUE);
+      l.setForeground(Aladin.COLOR_LABEL);
       gbtop.setConstraints(l,gctop);
       buttonTop.add(l);
       gctop.insets.right=0;
@@ -639,7 +639,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       m=submit = new JButton(SUBMIT);         // m.setModeMenu(true);
       m.addActionListener(this); m.setOpaque(false);
       m.setToolTipText(TIPSUBMIT);
-      m.setForeground(Aladin.GREEN);
+      m.setForeground(Aladin.COLOR_GREEN);
       m.setFont(m.getFont().deriveFont(Font.BOLD));
       actions.add(submit);
       actions.add(m=new JButton(CLOSE));   // m.setModeMenu(true);
@@ -727,7 +727,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       gctop.insets.right=12;
       l = new JLabel(Util.fold("<center><i>DataLink</i></center>",80,true));
       l.setFont(Aladin.BOLD);
-      l.setForeground(Aladin.DARKBLUE);
+      l.setForeground(Aladin.COLOR_LABEL);
       gbtop.setConstraints(l,gctop);
       buttonTop.add(l);
       gctop.insets.right=0;
@@ -812,7 +812,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       m=submit = new JButton(SUBMIT);         // m.setModeMenu(true);
       m.addActionListener(this); m.setOpaque(false);
       m.setToolTipText(TIPSUBMIT);
-      m.setForeground(Aladin.GREEN);
+      m.setForeground(Aladin.COLOR_GREEN);
       m.setFont(m.getFont().deriveFont(Font.BOLD));
       actions.add(submit);
       actions.add(m=new JButton(CLOSE));   // m.setModeMenu(true);

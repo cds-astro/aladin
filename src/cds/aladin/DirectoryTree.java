@@ -56,22 +56,18 @@ public class DirectoryTree extends JTree {
 
    protected DirectoryTree(Aladin aladin, Color cbg) {
       this.aladin = aladin;
+      
+      setUI( new MyTreeUI() );
+
       setModel( new DirectoryModel(aladin) );
       
       setBackground( cbg );
+      setOpaque(true);
+      
       setBorder( BorderFactory.createEmptyBorder(10, 0, 10, 0));
       setShowsRootHandles(true);
       NoeudRenderer nr = new NoeudRenderer();
       setCellRenderer(nr);
-      
-//      setUI(new javax.swing.plaf.basic.BasicTreeUI(){
-//         protected void paintHorizontalLine(Graphics g,JComponent c,int y,int left,int right){
-//           super.paintHorizontalLine(g,c,y,left,right);
-//         }
-//         protected void paintVerticalLine(Graphics g,JComponent c,int x,int top,int bottom){
-//           super.paintVerticalLine(g,c,x,top,bottom);
-//         }
-//       });
       
       // Pour accélérer tout ça
       setLargeModel(true);
@@ -183,6 +179,8 @@ public class DirectoryTree extends JTree {
          mapIcon = new HashMap<String, ImageIcon>();
          img = aladin.getImagette("Folder.png");
          mapIcon.put("Folder",new ImageIcon(img));
+         img = aladin.getImagette("FolderVizieR.png");
+         mapIcon.put("FolderVizieR",new ImageIcon(img));
          img = aladin.getImagette("cds.png");
          mapIcon.put("CDS",new ImageIcon(img));
          mapIcon.put("CDS/color",new ImageIcon(setIconTag(img)));
@@ -199,6 +197,7 @@ public class DirectoryTree extends JTree {
          mapIcon.put("xcatdb",new ImageIcon(img));
          mapIcon.put("xcatdb/color",new ImageIcon(setIconTag(img)));
          mapIcon.put("f",new ImageIcon(img));
+         
       } catch( Exception e ) {
          e.printStackTrace();
       }
@@ -242,6 +241,7 @@ public class DirectoryTree extends JTree {
       return img2;
    }
 
+   
    /** Classe pour l'édition d'un noeud de l'arbre */
    class NoeudRenderer implements TreeCellRenderer {
       DefaultTreeCellRenderer nonLeafRenderer = new DefaultTreeCellRenderer();
@@ -249,9 +249,9 @@ public class DirectoryTree extends JTree {
 
       NoeudRenderer() {
          selectionForeground = UIManager.getColor("Tree.selectionForeground");
-         selectionBackground = aladin.getBackground();
+         selectionBackground = UIManager.getColor("Tree.selectionBackground");
          textForeground = UIManager.getColor("Tree.textForeground");
-         textBackground = aladin.getBackground();
+         textBackground = UIManager.getColor("Tree.textBackground");
          
          nonLeafRenderer.setBackgroundNonSelectionColor( getBackground() );
       }
@@ -267,8 +267,9 @@ public class DirectoryTree extends JTree {
             if( n.isInStack() ) c.setForeground( Color.green );
             else if( !aladin.directory.inside.isActivated() ) {
                int isIn = n.getIsIn();
-               c.setForeground( isIn==0 ? Aladin.ORANGE : isIn==1 ? Aladin.GREEN : Color.black );
-            }
+               c.setForeground( isIn==0 ? Aladin.ORANGE : isIn==1 ? Aladin.COLOR_GREEN : 
+                  Aladin.COLOR_CONTROL_FOREGROUND );
+            } else c.setForeground( Aladin.COLOR_CONTROL_FOREGROUND );
             
             // Affichage des compteurs
             if( !node.isLeaf() && c instanceof JLabel ) {
@@ -278,14 +279,22 @@ public class DirectoryTree extends JTree {
                      : " "+nb+" / "+ref )+"</font>";
                JLabel lab = (JLabel)c;
                lab.setText("<html>"+lab.getText()+s+"</html>" );
-               lab.invalidate();
+//               lab.invalidate();
             }
-            
+
+            TreeObjDir tohl = aladin.directory.getTreeObjDirHighLighted();
+            if( node.isLeaf() && tohl!=null && ((TreeObjDir)n).internalId.equals(tohl.internalId) ) {
+               ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( selectionBackground.brighter() );
+            } else ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( getBackground() );
+
             ImageIcon icon=null;
             if( n instanceof TreeObjDir) {
                TreeObjDir to = (TreeObjDir)n;
                icon = getIcon( to.internalId,to.isColored() ? 1 : 0);
-            } else if( !node.isLeaf() ) icon=getIcon( "Folder", 0);
+            } else if( !node.isLeaf() ) {
+               if( n.path.endsWith("/CDS VizieR") ) icon=getIcon( "FolderVizieR", 0);
+               else icon=getIcon( "Folder", 0);
+            }
             if( icon!=null ) nonLeafRenderer.setIcon( icon );
          } catch( Exception e ) { }
          

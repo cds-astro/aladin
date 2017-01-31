@@ -1017,7 +1017,7 @@ MouseMotionListener, MouseListener, KeyListener
       // Tracé des 3 courbes de la colormap en superposition de l'histogramme
       if( !flagCMBand ) {
          for( int j=0; j<3; j++ ) {
-            gr.setColor(j==0?Color.red:j==1?Aladin.GREEN:Color.blue);
+            gr.setColor(j==0?Color.red:j==1?Aladin.COLOR_GREEN:Color.blue);
             byte t[] = j==0?r:j==1?g:b;
             for( int i=0; i<256; i++ ) {
                y = (int)( (256-(t[i]&0xFF))*f-0.5);

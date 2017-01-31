@@ -20,7 +20,6 @@
 
 package cds.aladin.bookmark;
 
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -43,6 +42,7 @@ import cds.aladin.Command;
 import cds.aladin.Function;
 import cds.aladin.Glu;
 import cds.aladin.MyInputStream;
+import cds.aladin.MyToolbarUI;
 import cds.aladin.Tok;
 import cds.aladin.Widget;
 import cds.aladin.WidgetControl;
@@ -63,6 +63,8 @@ public class Bookmarks extends JToolBar implements Widget {
       frameBookmarks = null;
       //      toolBar = null;
 
+      setUI( new MyToolbarUI() );
+      
       setRollover(true);
       setFloatable(false);
       setBorderPainted(false);
@@ -71,9 +73,11 @@ public class Bookmarks extends JToolBar implements Widget {
       
    }
    
-   public Dimension getPreferredSize() {
-      return new Dimension( super.getPreferredSize().width, 16);
-   }
+//   public Dimension getMinimumSize() { return getPreferredSize(); }
+//   public Dimension getMaximumSize() { return getPreferredSize(); }
+//   public Dimension getPreferredSize() {
+//      Dimension dim = super.getPreferredSize(); dim.height=22; return dim;
+//   }
 
    /** Initialisation des bookmarks */
    public void init(boolean noCache) {
@@ -154,6 +158,7 @@ public class Bookmarks extends JToolBar implements Widget {
       if( !Aladin.OUTREACH ) {
          JButton plus = new JButton("+");
          plus.setBackground( aladin.getBackground());
+         plus.setForeground( Aladin.COLOR_LABEL );
          plus.setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
          plus.setToolTipText(aladin.getChaine().getString("BKMEDITOR"));
          plus.setFont( plus.getFont().deriveFont(Font.BOLD));

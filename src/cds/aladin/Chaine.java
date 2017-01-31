@@ -270,7 +270,7 @@ public class Chaine {
           atValue.addAttribute(StyleConstants.CharacterConstants.Foreground,Color.black);
           atValue.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
           atCom = new SimpleAttributeSet();
-          atCom.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.GREEN);
+          atCom.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.COLOR_GREEN);
           atCom.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
           atLang = new SimpleAttributeSet();
           atLang.addAttribute(StyleConstants.CharacterConstants.Foreground,new Color(127,0,85));

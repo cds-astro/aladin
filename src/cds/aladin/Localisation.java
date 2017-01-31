@@ -180,7 +180,7 @@ public class Localisation extends MyBox  {
 
       text.requestFocusInWindow();
    }
-
+   
    boolean first=true;
    int posHist=-1;
 
@@ -330,11 +330,11 @@ public class Localisation extends MyBox  {
          Color deff = text.getForeground();
          public void run() {
             flagReadyToClear=true;
-            text.setBackground(Color.white);
+            text.setBackground( Aladin.COLOR_TEXT_BACKGROUND );
             for( int i=0; i<3 && aladin.calque.isFree() && !flagStopInfo ; i++ ) {
                if( !flagStopInfo ) {
                   text.setText("");
-                  text.setForeground(Color.gray);
+                  text.setForeground( Aladin.COLOR_CONTROL_FOREGROUND );
                   myPause(100);
                }
                if( !flagStopInfo ) {
@@ -348,6 +348,7 @@ public class Localisation extends MyBox  {
             }
             text.setText("");
             text.setForeground(deff);
+            text.setBackground(def);
             text.setFont(text.getFont().deriveFont(Font.BOLD));
             text.requestFocusInWindow();
          }
@@ -370,13 +371,13 @@ public class Localisation extends MyBox  {
          }
       });
       c.setPrototypeDisplayValue(new Integer(100000));
+      c.setMaximumRowCount(REPERE.length);
       c.setFont(F);
       int n = Aladin.BETA ? REPERE.length : REPERE.length-2;
       for( int i=0; i<n; i++ ) c.addItem(REPERE[i]);
       //      else for( int i=0; i<REPERE.length-1; i++ ) c.addItem(REPERE[i]);
       c.setSelectedIndex(ICRS);
       previousFrame=ICRS;
-      c.setMaximumRowCount(REPERE.length);
       return c;
    }
 

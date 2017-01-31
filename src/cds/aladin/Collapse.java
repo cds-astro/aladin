@@ -20,7 +20,6 @@
 
 package cds.aladin;
 
-import java.awt.Color;
 import java.awt.Graphics;
 
 /**
@@ -55,35 +54,31 @@ public class Collapse extends MyIcon {
    
    
    /** Dessine l'icone  */
-   protected void drawLogo(Graphics g, int x,int y) {
+   private void drawLogo(Graphics g, int x,int y) {
       for( int i=0; i<TX.length; i++ ) g.drawLine(TX[i][1]+x,TX[i][0]+y,TX[i][2]+x,TX[i][0]+y);
    }
    
-   private boolean isAvailable() {
-      return !aladin.directory.isFree();
-   }
-   private boolean isMouseIn()   { return in; }
+   protected boolean isAvailable() { return !aladin.directory.isFree(); }
    
    /** Retourne true si l'élagage de l'arbre HiPS est activé */
-   protected boolean isActivated() { return true; }
+   protected boolean isActivated() { return false; }
    
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
-      g.setColor( getBackground());
-      g.fillRect(0,0,W,H);
+      super.drawLogo(g);
       int x = 10;
       int y = 3;
       
       if( isAvailable() ) {
-         g.setColor( isMouseIn() ? Aladin.MYBLUE : Color.white );
+         g.setColor( getFillInColor() );
          g.fillRect(x,y,9,9);
       }
       
-      g.setColor( !isAvailable() ?  ( isMouseIn() ? Aladin.MYBLUE : Aladin.MYGRAY) : Color.black );
+      g.setColor( getLogoColor() );
       drawLogo(g,x,y);
       
       // Label
-      g.setColor(isAvailable() ? Color.black : Aladin.MYGRAY);
+      g.setColor( getLabelColor() );
       g.setFont(Aladin.SPLAIN);
       String s = aladin.directory.isDefaultExpand() ? EXPAND : COLLAPSE;
       g.drawString(s,W/2-g.getFontMetrics().stringWidth(s)/2,H-2);

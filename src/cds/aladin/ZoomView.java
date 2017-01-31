@@ -116,6 +116,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    // Gestion de la synchronization des vues compatibles
    private boolean flagSynchronized=false;  // true - indique que l'on a déjà fait un synchronize des vues (SHIFT)
 
+   static private Color BGD;
 
    /** creation de la fenetre du zoom.
     * @param aladin,calque References
@@ -124,6 +125,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       this.aladin = aladin;
       setOpaque(true);
       setBackground(Aladin.BLUE);
+      
+      BGD = Aladin.COLOR_BACKGROUND;
 
       addMouseWheelListener(this);
       addMouseListener(this);
@@ -451,7 +454,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          // L'image associe au zoom sera simplement le zoom vide lui-meme
          if( lastImgID!=-2 ) {
-            gbuf.setColor(Aladin.LBLUE);
+            gbuf.setColor( BGD);
             gbuf.fillRect(0,0,w,h);
             drawBord(gbuf);
             lastImgID=-2;
@@ -470,7 +473,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                    ) {
 
                // Affichage du zoom suivant l'echelle
-               gbuf.setColor(Aladin.LBLUE);
+               gbuf.setColor( BGD );
                gbuf.fillRect(0,0,w,h);
 
                Image pimg;
@@ -536,7 +539,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             int ga = (4*width)/10;
             int pa;
 
-            gbuf.setColor(Color.white);
+            gbuf.setColor( BGD );
             gbuf.fillRect(0, 0, width, height);
 
 //            proj = new Projection(null,0,0,0,180*60,0,0,width*0.45, 0,false, Calib.AIT,Calib.FK5);
@@ -559,7 +562,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             ga=pa*2;
 
 //            gbuf.translate(width/2-xc,height/2-yc);
-            gbuf.setColor(Aladin.GREEN);
+            gbuf.setColor(Aladin.COLOR_GREEN);
             gbuf.drawOval(x-ga,y-pa,ga*2,pa*2);
             gbuf.drawOval(x-(ga+pa)/2,y-pa,ga+pa,pa*2);
             gbuf.drawOval(x-pa,y-pa,pa*2,pa*2);
@@ -572,7 +575,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             Coord [] coin = v.getCouverture();
             if( coin!=null ) {
                proj.frame = aladin.localisation.getFrame();
-               gbuf.setColor( Color.blue );
+               gbuf.setColor( Aladin.COLOR_BLUE );
                for( int i=0; i<coin.length; i++ ) {
                   if( Double.isNaN(coin[i].al) ) continue;
                   c.al = coin[i].al;
@@ -595,7 +598,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             }
 
             gbuf.setFont(Aladin.SPLAIN);
-            gbuf.setColor(Aladin.GREEN);
+            gbuf.setColor(Aladin.COLOR_GREEN);
             gbuf.drawString("+90",x-5,y-pa-2);
             gbuf.drawString("-90",x-5,y+pa+10);
             gbuf.drawString("-180",x-ga+5-gbuf.getFontMetrics().stringWidth("-180"),y+15);
@@ -1331,7 +1334,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       }
       
 //      if( v==null || v.isFree() ) {
-         gr.setColor(Aladin.LBLUE);
+         gr.setColor( Aladin.COLOR_BACKGROUND );
          gr.fillRect(0,0,w,h);
          drawBord(gr);
          if( v==null || v.isFree() ) return;

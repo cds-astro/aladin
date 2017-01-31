@@ -261,7 +261,7 @@ public class Rainbow  extends JComponent implements Widget  {
       int x=(int)((r.x+r.width-2)/z);
       int y=(int)((r.y+2)/z);
       int w=5;
-      g.setColor(Aladin.BKGD);
+      g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       g.fillRect(x-w-4,y+1,w+4,w+4);
       g.setColor(Color.red);
       g.drawLine(x-w-3,y+2,x-3,y+w+2);

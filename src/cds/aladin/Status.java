@@ -20,13 +20,12 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
 
 import javax.swing.JComponent;
 
@@ -87,10 +86,12 @@ public class Status extends JComponent implements MouseListener {
    
    public Dimension getPreferredSize() { return new Dimension(W,H); }
    
-   private Color foreGround = Color.blue;
+   private Color foreGround = Aladin.COLOR_BLUE;
    
    public void paintComponent(Graphics g) {
+      
       super.paintComponent(g);
+      
       aladin.setAliasing(g);
       g.setColor( getBackground() );
       g.fillRect(0,0,W,H);

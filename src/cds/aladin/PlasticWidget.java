@@ -238,7 +238,7 @@ public final class PlasticWidget extends JComponent  implements
 		gr.setColor(isConnected || isIn || state==AppMessagingInterface.PLASTIC_NOT_CONNECTED ?Color.black:Color.gray);
 		for( int i=0; i<RH.length; i++ ) gr.drawLine(RH[i][1]-2,RH[i][0]+2,RH[i][2]-2,RH[i][0]+2);
         for( int i=0; i<RV.length; i++ ) gr.drawLine(RV[i][0]-2,RV[i][1]+2,RV[i][0]-2,RV[i][2]+2);
-        gr.setColor(isIn?Aladin.DARKBLUE:Color.white);
+        gr.setColor(isIn?Aladin.COLOR_LABEL:Color.white);
         for( int i=0; i<RB.length; i++ ) gr.drawLine(RB[i][1]-2,RB[i][0]+2,RB[i][2]-2,RB[i][0]+2);
 //		for( int i=0; i<TOWER_LINES.length; i++ ) {
 //			drawLine(i, TOWER_LINES[i], gr);

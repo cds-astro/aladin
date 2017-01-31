@@ -424,13 +424,15 @@ public class CropTool  {
    // Dessin des boutons dans les coordonnées de la view
    // @param code OK ou CLOSE
    private void drawButton(Graphics g,int code,int x,int y,int w,int h) {
-      g.setColor(Aladin.BKGD );
+      g.setColor( Aladin.COLOR_BUTTON_BACKGROUND );
       g.fillRect(x, y, w, h);
       rectButton[code] = new RectangleD(x,y,w,h);
-      g.setColor(Color.white);
+      g.setColor( Aladin.COLOR_BUTTON_BACKGROUND_BORDER_UP );
       g.drawLine(x,y,x+w,y); g.drawLine(x,y,x,y+h);
-      g.setColor(Color.black);
+      g.setColor( Aladin.COLOR_BUTTON_BACKGROUND_BORDER_DOWN );
       g.drawLine(x,y+h,x+w,y+h); g.drawLine(x+w,y,x+w,y+h);
+      
+      g.setColor( Aladin.COLOR_BUTTON_FOREGROUND );
       String s = aladin.chaine.getString(code==0 ? "OK" : "CLOSE");
       FontMetrics f = g.getFontMetrics();
       g.drawString(s, x+w/2-f.stringWidth(s)/2, y+h-3);
@@ -502,7 +504,7 @@ public class CropTool  {
       RectangleD rc = new RectangleD(hg.x, hg.y, bd.x-hg.x+1,bd.y-hg.y+1 );
       int w = v.getWidth();
       int h = v.getHeight();
-      Util.drawArea(aladin, g, 0,0,(int)w,(int)rc.y, color, 0.15f, false);
+      Util.drawArea(aladin, g, 0,0,w,(int)rc.y, color, 0.15f, false);
       Util.drawArea(aladin, g, 0,(int)rc.y,(int)rc.x,(int)rc.height, color,0.15f, false);
       Util.drawArea(aladin, g, (int)(rc.x+rc.width),(int)rc.y,(int)(w-(rc.x+rc.width)),(int)rc.height, color,0.15f, false);
       Util.drawArea(aladin, g, 0,(int)rc.y+(int)rc.height,w,(int)(h-(rc.y+rc.height)), color,0.15f, false);

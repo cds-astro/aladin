@@ -71,7 +71,7 @@ public class ButtonBookmark extends JButton {
       
    private void suite() {
       setFont( Aladin.SBOLD );
-      setForeground(Aladin.DARKBLUE);
+      setForeground(Aladin.COLOR_LABEL);
       setBackground( aladin.getBackground() );
       setBorder(BorderFactory.createEmptyBorder(1,10,1,5));
       setToolTipText("<html>"+

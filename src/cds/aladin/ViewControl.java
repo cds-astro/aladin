@@ -126,7 +126,7 @@ public final class ViewControl extends JComponent implements
 
   /** Affichage du panneau de contrôle des vues multiples */
    private void drawLogo(Graphics g) {
-      g.setColor( getBackground() );
+      g.setColor( Aladin.COLOR_MAINPANEL_BACKGROUND );
       g.fillRect(0,0,W,H);
       
       for( int i=0; i<MODE.length; i++ ) {
@@ -143,18 +143,27 @@ public final class ViewControl extends JComponent implements
             for( int k=0; k<nlig; k++ ) {
                int x=5+i*(L+2)+j*mw;
                int y=2+k*mh;
-               if( down || in ) {
-               	  g.setColor( !enabled ? Aladin.MYGRAY : in ? Aladin.MYBLUE : Aladin.DARKBLUE);
-               	  g.fillRect(x,y,w,h);
-               }
-               g.setColor(!enabled ? Aladin.MYGRAY : down || in ?Color.black:Color.white);
+               
+               Color fg = !enabled ? Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE
+                            : down ? Color.red : Aladin.COLOR_CONTROL_FOREGROUND;
+               if( enabled && in ) fg = fg.brighter();
+               g.setColor( fg );
                g.drawLine(x,y,x+w,y); g.drawLine(x,y,x,y+h);
-               g.setColor(!enabled ? Aladin.MYGRAY : !down || in ?Color.black:Color.white);
                g.drawLine(x+w,y,x+w,y+h); g.drawLine(x,y+h,x+w,y+h);
+               
+//               if( down || in ) {
+//                  g.setColor( !enabled ? Aladin.MYGRAY : in ? Aladin.MYBLUE : Aladin.COLOR_LABEL);
+//               	  g.fillRect(x,y,w,h);
+//               }
+//               g.setColor(!enabled ? Aladin.MYGRAY : down || in ? Color.black:Color.white);
+//               g.drawLine(x,y,x+w,y); g.drawLine(x,y,x,y+h);
+//               g.setColor(!enabled ? Aladin.MYGRAY : !down || in ? Color.black:Color.white);
+//               g.drawLine(x+w,y,x+w,y+h); g.drawLine(x,y+h,x+w,y+h);
             }
          }
       }
-      g.setColor(!enabled ? Aladin.MYGRAY : Color.black);
+//      g.setColor(!enabled ? Aladin.MYGRAY : Color.black);
+      g.setColor( !enabled ? Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE : Aladin.COLOR_CONTROL_FOREGROUND );
       g.setFont(Aladin.SPLAIN);
       g.drawString(LABEL,(W+6)/2-g.getFontMetrics().stringWidth(LABEL)/2,H-2);
    }

@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.awt.Dimension;
+
 import javax.swing.JScrollBar;
 
 /**
@@ -35,6 +36,7 @@ public class MyScrollbar extends JScrollBar {
    
    MyScrollbar(int orientation,int value,int visible,int min,int max) {
       super(orientation,value,visible,min,max);
+      if( Aladin.DARK_THEME ) setUI( new MyScrollBarUI() );
    }
    
    MyScrollbar(int orientation) {

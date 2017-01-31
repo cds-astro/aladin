@@ -222,7 +222,7 @@ public final class MyLink extends JComponent {
        return true;
        
    }
-   public boolean mouseEnter(Event e, int x, int y) { if( mode==UP ) { color=Aladin.GREEN; repaint(); } return true;}
+   public boolean mouseEnter(Event e, int x, int y) { if( mode==UP ) { color=Aladin.COLOR_GREEN; repaint(); } return true;}
    public boolean mouseExit(Event e, int x, int y) { color=Color.black; repaint(); return true;}
 
    static boolean flagShift=false;
@@ -294,7 +294,7 @@ public final class MyLink extends JComponent {
 
       // Couleur du fond du bouton
       if( mode==DOWN ) {
-         g.setColor(type!=NORMAL?Aladin.LBLUE:Color.gray);
+         g.setColor(type!=NORMAL?Aladin.COLOR_CONTROL_BACKGROUND:Color.gray);
          g.fillRect(2,2,W-4,H-4);
       }
 

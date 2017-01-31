@@ -20,7 +20,6 @@
 
 package cds.aladin;
 
-import java.awt.Color;
 import java.awt.Graphics;
 
 /**
@@ -75,29 +74,26 @@ public class Inside extends MyIcon {
    protected boolean isAvailable() {
       return !aladin.view.isFree() && !aladin.directory.isFree();
    }
-   private boolean isMouseIn()   { return in; }
    
    /** Retourne true si l'élagage de l'arbre HiPS est activé */
    protected boolean isActivated() { return activated; }
    
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
-      g.setColor( getBackground());
-      g.fillRect(0,0,W,H);
+      super.drawLogo(g);
       int x = 10;
       int y = 1;
       boolean isAvailable = isAvailable();
       
       if( isAvailable ) {
-         g.setColor( isMouseIn() ? Aladin.MYBLUE : Color.white );
+         g.setColor( getFillInColor() );
          g.fillRect(x, y, 13, 10);
       }
-      
-      g.setColor( !isAvailable ?  ( isMouseIn() ? Aladin.MYBLUE : Aladin.MYGRAY) : isActivated() ? Color.red : Color.black );
+
+      g.setColor( getLogoColor() );
       drawElague(g,x,y);
       
-      // Label
-      g.setColor( isAvailable() ? Color.black : Aladin.MYGRAY);
+      g.setColor( getLabelColor() );
       g.setFont(Aladin.SPLAIN);
       g.drawString(INSIDE,W/2-g.getFontMetrics().stringWidth(INSIDE)/2,H-2);
    }

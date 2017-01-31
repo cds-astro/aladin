@@ -513,7 +513,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
          Command c = cmdHistory.elementAt(row);
          Color color = Color.red;
          if( c.type==CMD ) color=Color.black;
-         else if( c.type==INFO ) color=Aladin.GREEN;
+         else if( c.type==INFO ) color=Aladin.COLOR_GREEN;
          
          cell.setForeground(color);
          cell.setFont(cell.getFont().deriveFont( col==DESC ? Font.BOLD : Font.PLAIN) );

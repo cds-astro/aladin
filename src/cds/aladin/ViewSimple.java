@@ -226,6 +226,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected BufferedImage imageBG=null;
    //   protected Image imageBG=null;
    protected int oImgIDBG=-2;
+   private Color BGD;
 
    /** Creation de l'objet View
     * @param aladin Reference
@@ -239,9 +240,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       this.n=nview;
       iz=1;
       lastImgID=-1;
+      
+      BGD = Aladin.COLOR_BACKGROUND;
 
       createPopupMenu();
-      setBackground(Color.white);
+      setBackground(BGD);
       setDimension(w,h);
 
       addMouseWheelListener(this);
@@ -4666,7 +4669,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          } else {
             g.setColor( pref!=null && (pref.type==Plan.IMAGE || pref.type==Plan.IMAGEHUGE)
                   && pref.active
-                  && ((PlanImage)pref).video==PlanImage.VIDEO_NORMAL ? Color.black : Color.white );
+                  && ((PlanImage)pref).video==PlanImage.VIDEO_NORMAL ? Aladin.COLOR_BACKGROUND : BGD );
          }
          g.fillRect(1,1,getWidth()-2,getHeight()-2);
 
@@ -4674,7 +4677,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             ((PlanBG)pref).drawBackground(g, this);
          }
       } catch( Exception e ) {
-         g.setColor(Color.white);
+         g.setColor( BGD );
          g.fillRect(1,1,getWidth()-2,getHeight()-2);
       }
    }
@@ -4732,7 +4735,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Spécification du crédit */
    protected void drawCredit(Graphics g, int dx, int dy ) {
       if( !aladin.CREDIT ) return;
-      g.setColor(Aladin.GREEN);
+      g.setColor(Aladin.COLOR_GREEN);
       g.setFont(Aladin.SITALIC);
       g.drawString(CREDIT,dx+4, dy+rv.height-2);
    }
@@ -6864,7 +6867,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int ok = nb==ViewControl.MVIEW1 ? 0 : nb==ViewControl.MVIEW2C ? 1 : nb==ViewControl.MVIEW2L ? 0 
              : nb==ViewControl.MVIEW4 ? 2 : nb==ViewControl.MVIEW9  ? 6 : 12;
       if( n!=ok ) return;  // Seule la vue en bas à gauche a une languette
-      rLanguette = MySplitPane.drawLanguette(g, 1, true, 6, 0, getHeight()-70, aladin.COLOR_DIRECTORY, Color.gray);
+      rLanguette = MySplitPane.drawLanguette(g, 1, true, 6, 0, getHeight()-70, aladin.COLOR_DIRECTORY_BACKGROUND, Color.gray);
    }
 
    private void drawHealpixMouse(Graphics g) {
@@ -6948,7 +6951,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                StringTokenizer st = new StringTokenizer(pixel);
                for( int i=0; i<3; i++ ) {
                   String c = st.nextToken().substring(2);
-                  g.setColor( i==0 ? Color.red : i==1 ? Aladin.GREEN : Color.blue );
+                  g.setColor( i==0 ? Color.red : i==1 ? Aladin.COLOR_GREEN : Color.blue );
                   Util.drawStringOutline(g, c,x+i*50,y, null,null);
                }
             } else {

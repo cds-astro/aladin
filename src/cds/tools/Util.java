@@ -187,6 +187,7 @@ public final class Util {
       if( conn instanceof HttpURLConnection ) {
          HttpURLConnection http = (HttpURLConnection)conn;
          http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
+         http.setRequestProperty("Accept-Encoding", "gzip");
       }
 
       MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
@@ -1040,6 +1041,8 @@ public final class Util {
       new Color(221,232,243),new Color(215,228,241),
       new Color(210,224,239),new Color(205,221,237)
    };
+   
+   static private boolean first = true;
 
    /**
     * Dessin d'une checkbox
@@ -1063,6 +1066,10 @@ public final class Util {
 
          // Couleur de fond par défaut
       } else {
+         if( first && Aladin.DARK_THEME ) {
+            for( int i=0; i<CINT.length; i++ ) CINT[i] = CINT[i].darker();
+            first=false;
+         }
          for( int i=0; i<CINT.length; i++ ) {
             g.setColor(CINT[i]);
             g.drawLine(x+1,y+1+i,x+CINT.length,y+1+i);
@@ -1464,7 +1471,7 @@ public final class Util {
 
    /** Retourne un bouton avec une icone en forme de point d'interrogation */
    static public JButton getHelpButton(final Component f, final String help) {
-      JButton h = new JButton(new ImageIcon(Aladin.aladin.getImagette("Help.gif")));
+      JButton h = new JButton(new ImageIcon(Aladin.aladin.getImagette("Help.png")));
       h.setMargin(new Insets(0,0,0,0));
       h.setBorderPainted(false);
       h.setContentAreaFilled(false);

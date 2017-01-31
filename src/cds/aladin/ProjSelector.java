@@ -20,6 +20,7 @@
 package cds.aladin;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -40,14 +41,18 @@ public class ProjSelector extends JPanel {
       this.aladin = aladin;
 
       // Construction du Panel (label + selector)
-      setLayout(new BorderLayout(0,0));
+      setLayout(new BorderLayout(7,7));
       setBackground( aladin.getBackground() );
       JLabel lab = new JLabel( aladin.chaine.getString("PROPPROJ")+" " );
-      lab.setFont(Aladin.BOLD);
-      lab.setForeground(Aladin.DARKBLUE);
+      lab.setFont(lab.getFont().deriveFont(Font.BOLD));
+      lab.setForeground(Aladin.COLOR_LABEL);
 
       add( lab, BorderLayout.WEST);
-      combo = new JComboBox<String>( Projection.getAlaProj() );
+      String [] list = Projection.getAlaProj();
+      combo = new JComboBox<String>( list );
+      combo.setUI( new MyComboBoxUI());
+      combo.setMaximumRowCount(list.length);
+      combo.setFont(Aladin.PLAIN);
       
       // Positionnement de la projection par défaut
       String s = aladin.configuration.getProj();

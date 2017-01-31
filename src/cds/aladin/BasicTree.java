@@ -77,7 +77,7 @@ public class BasicTree extends JComponent
     static final Color mouseOverColor = Color.blue;
 //    static final Color underlineColor = Color.green;
     static final Color bkgdLeafColor = Aladin.MYBLUE; // couleur pour une feuille survolée
-    static final Color bkgdLeafClickedColor = Aladin.LBLUE; // couleur pour une feuille cliquée
+    static final Color bkgdLeafClickedColor = Aladin.COLOR_CONTROL_BACKGROUND; // couleur pour une feuille cliquée
     
     // couleur des lignes
     static final Color lineColor = Color.black;
@@ -96,7 +96,7 @@ public class BasicTree extends JComponent
 	
 
 	// couleur de fond
-    protected Color bkgColor = Aladin.LBLUE;
+    protected Color bkgColor = Aladin.COLOR_CONTROL_BACKGROUND;
 
 //    protected Color bkgColor = Color.white;
     

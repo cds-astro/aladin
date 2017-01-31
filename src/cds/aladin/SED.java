@@ -91,11 +91,19 @@ class SED extends JPanel {
    private int currentX,currentY;         // Dernière position de la souris
    private SEDItem siIn;                  // !=null si sous la souris
    
+   static private Color COLOROPT;
+   static private Color COLORREF;
+   
+
+   
    public SED(Aladin aladin) {
       this.aladin = aladin;
       transparency = 0.5f;
       flagWavelength = aladin.configuration.getSEDWave();
       radius = 5;
+      
+      COLOROPT = Aladin.DARK_THEME ? Aladin.COLOR_STACK_SELECT : new Color(234,234,255);
+      COLORREF = Aladin.DARK_THEME ? Aladin.COLOR_STACK_HIGHLIGHT : new Color(255,234,234);
    }
    
    /** Mémorise le repère de la vue afin de pouvoir le réafficher ultérieurement
@@ -418,7 +426,7 @@ class SED extends JPanel {
 
          // Mise en évidence de ce point particulièrement
          if( highLight ) {
-            g.setColor( Aladin.GREEN);
+            g.setColor( Aladin.COLOR_GREEN);
             g.drawRect(r.x, r.y, r.width, r.height);
             
             // Affichage des infos sous le graphique
@@ -443,9 +451,6 @@ class SED extends JPanel {
 //   public Dimension getDimension() { return new Dimension(ZoomView.getSIZE(),ZoomView.getSIZE()); }
    public Dimension getDimension() { return new Dimension(aladin.calque.zoom.zoomView.getWidth(),aladin.calque.zoom.zoomView.getHeight()); }
    
-   static final private Color COLOROPT = new Color(234,234,255);
-   static final private Color COLORREF = new Color(255,234,234);
-   
    
    private int lastWidth=0,lastHeight=0;
    
@@ -461,24 +466,24 @@ class SED extends JPanel {
       int gauche=margeGauche, droite=dim.width-margeDroite;
       
       // Nettoyage
-      g.setColor(Color.white);
-      g.clearRect(0, 0, dim.width, dim.height);
+      g.setColor( Aladin.COLOR_BACKGROUND );
+      g.fillRect(0, 0, dim.width, dim.height);
       
       // Bande d'énergie (0.5..1mJy) de référence
       if( yRefMin!=yRefMax ) {
          g.setColor(COLORREF);
          g.fillRect(gauche,bas-Math.max(yRefMin,yRefMax), droite-gauche, Math.abs(yRefMax-yRefMin+1) );
       }
-      
+
       // Bande optique de référence
       if( xOptMin!=xOptMax ) {
          g.setColor(COLOROPT);
          g.fillRect(gauche+Math.min(xOptMin,xOptMax), haut, Math.abs(xOptMax-xOptMin+1), bas-haut);
       }
-      
+
       // Tracé des axes
       int arrow=3;
-      g.setColor(Color.gray);
+      g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
       g.drawLine(gauche, haut, gauche, bas);
       g.drawLine(gauche, haut, gauche-arrow, haut+arrow);
       g.drawLine(gauche, haut, gauche+arrow, haut+arrow);
@@ -487,14 +492,14 @@ class SED extends JPanel {
       g.drawLine(droite, bas, droite-arrow, bas+arrow);
       
       // Légende
-      g.setColor(Color.black);
+      g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
       g.setFont(Aladin.SSPLAIN);
       g.drawString("log f("+NU+")",gauche-2,haut-4);
       g.drawString((fluxMax==0 ? "":getUnitJy(fluxMax)),gauche+4,haut+6);
       g.drawString("log "+(flagWavelength ? MU : NU),droite+2,bas);
       
       // Tracé de la valeur sous la souris
-      g.setColor(LIGHTGRAY);
+      g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
       String s;
       if( !Double.isNaN(currentAbs) ) {
          g.drawLine(currentX,bas,currentX,bas-5);
@@ -507,6 +512,8 @@ class SED extends JPanel {
             g.drawString(s, 5,dim.height-3);
          }
       }
+      
+      g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
       if( !Double.isNaN(currentFlux) ) {
          g.drawLine(gauche,currentY,gauche+5,currentY);
          g.setFont(Aladin.SSPLAIN);
@@ -530,6 +537,7 @@ class SED extends JPanel {
       // Pas encore prêt
       if( sedList==null || !readyToDraw ) {
          g.setFont(Aladin.ITALIC);
+         g.setColor( Aladin.COLOR_GREEN );
          s = aladin.chaine.getString("SEDLOADING");
          int y = (haut+bas)/2-20;
          g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,y+=18);
@@ -556,7 +564,7 @@ class SED extends JPanel {
       
       // Tracé de l'intervalle de Fréquence
       if( siIn==null ) {
-         g.setColor(Color.black);
+         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
          g.setFont(Aladin.SPLAIN);
          s = flagWavelength ? getUnitWave(absMin) :  getUnitFreq(absMin);
          g.drawString(s,gauche,bas+10);
@@ -566,7 +574,7 @@ class SED extends JPanel {
       
       // Tracé du titre du graphique : le nom de la source
       if( source!=null ) {
-         g.setColor(Aladin.GREEN);
+         g.setColor(Aladin.COLOR_GREEN);
          g.setFont(Aladin.BOLD);
          String s1 = "VizieR Phot. at "+Coord.getUnit(radius/3600.);
          int size = g.getFontMetrics().stringWidth(s1);
@@ -591,7 +599,7 @@ class SED extends JPanel {
    private void drawCroix(Graphics g) {
       int w=5;
       int width=getDimension().width;
-      g.setColor(Aladin.BKGD);
+      g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rCroix = new Rectangle(width-w-4,1,w+4,w+4);
       g.fillRect(rCroix.x,rCroix.y,rCroix.width,rCroix.height);
       g.setColor(Color.red);
@@ -621,7 +629,7 @@ class SED extends JPanel {
    private void drawMore(Graphics g) {
       int w=5;
       Dimension dim=getDimension();
-      g.setColor(Aladin.BKGD);
+      g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rMore = new Rectangle(dim.width-w-4,16+3*w,w+4,w+4);
       g.fillRect(rMore.x,rMore.y,rMore.width,rMore.height);
       g.setColor( flagWavelength ? Color.blue : Color.red );
@@ -633,7 +641,7 @@ class SED extends JPanel {
    private void drawWave(Graphics g) {
       int w=5;
       Dimension dim=getDimension();
-      g.setColor(Aladin.BKGD);
+      g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rWave = new Rectangle(dim.width-w-4,11+2*w,w+4,w+4);
       g.fillRect(rWave.x,rWave.y,rWave.width,rWave.height);
       g.setColor( flagWavelength ? Color.blue : Color.red );
@@ -645,7 +653,7 @@ class SED extends JPanel {
    private void drawHelp(Graphics g) {
       int w=5;
       Dimension dim=getDimension();
-      g.setColor(Aladin.BKGD);
+      g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rHelp = new Rectangle(dim.width-w-4,6+w,w+4,w+4);
       g.fillRect(rHelp.x,rHelp.y,rHelp.width,rHelp.height);
       g.setColor( Color.blue );
