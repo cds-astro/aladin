@@ -20,6 +20,7 @@
 package cds.aladin;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -41,13 +42,10 @@ public class ProjSelector extends JPanel {
       this.aladin = aladin;
 
       // Construction du Panel (label + selector)
-      setLayout(new BorderLayout(7,7));
-      setBackground( aladin.getBackground() );
       JLabel lab = new JLabel( aladin.chaine.getString("PROPPROJ")+" " );
       lab.setFont(lab.getFont().deriveFont(Font.BOLD));
       lab.setForeground(Aladin.COLOR_LABEL);
 
-      add( lab, BorderLayout.WEST);
       String [] list = Projection.getAlaProj();
       combo = new JComboBox<String>( list );
       combo.setUI( new MyComboBoxUI());
@@ -64,7 +62,15 @@ public class ProjSelector extends JPanel {
          }
       });
       combo.setPrototypeDisplayValue("12345678");
-      add( combo, BorderLayout.CENTER);
+      
+      JPanel pCombo = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+      pCombo.setBackground( aladin.getBackground() );
+      pCombo.add(combo);
+      
+      setLayout(new BorderLayout(7,7));
+      setBackground( aladin.getBackground() );
+      add( lab, BorderLayout.WEST);
+      add( pCombo, BorderLayout.CENTER);
    }
    
    /** Change la projection de tous les plans HiPS exceptés ceux qui ont une

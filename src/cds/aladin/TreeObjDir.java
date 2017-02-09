@@ -278,12 +278,12 @@ public class TreeObjDir extends TreeObj {
 
    /** Création à partir d'un fichier de properties (ne supporte que HiPS 1.3 car dédié
     * principalement à des enregistrements issues du MocServer */
-   public TreeObjDir(Aladin aladin, String id,boolean isLocal,MyProperties prop) {
+   public TreeObjDir(Aladin aladin, String id, MyProperties prop) {
       String s;
 
       this.aladin = aladin;
       this.id = internalId = id;
-      this.local = isLocal;
+//      this.local = isLocal;
       this.prop = prop;
       
       // Type de HiPS
@@ -600,6 +600,9 @@ public class TreeObjDir extends TreeObj {
       return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia_glutag")!=null);
    }
    
+   /** Retourne true si la collection dispose d'un HiPS */
+   protected boolean hasHips() { return prop!=null && prop.get("hips_service_url")!=null; }
+   
    /** Retourne true si la collection dispose d'un MOC */
    protected boolean hasMoc() { return prop!=null && prop.get("moc_sky_fraction")!=null; }
    
@@ -637,7 +640,7 @@ public class TreeObjDir extends TreeObj {
    }
    
    /** true si déjà chargé dans la pile */
-   protected boolean isInStack() { return aladin.calque.isLoaded(internalId); }
+   protected Color isInStack() { return aladin.calque.isLoaded(internalId); }
 
    protected boolean isLocal() { return local; }
 
@@ -706,24 +709,28 @@ public class TreeObjDir extends TreeObj {
    
    /** Chargement par défaut à effectuer (suite à un double-clic sur le noeud de l'arbre) */
    protected void load() {
-      if( getUrl()==null && isCatalog() )loadCS();
+      if( getUrl()==null && isCatalog() ) loadCS();
       else loadHips();
    }
 
    protected void loadHips() {
-      String trg = "";
-      try { trg = " "+aladin.view.getCurrentView().getCentre(); } catch( Exception e ) {}
+      String rad="";
+      String trg="";
+      try {
+         rad = " "+Coord.getUnit( aladin.view.getCurrentView().getTaille() );
+         trg = " "+aladin.view.getCurrentView().getCentre();
+      } catch( Exception e ) { }
       
       String mode = isTruePixels() ? ",fits":"";
-      aladin.console.printCommand("get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")"+trg);
-      aladin.allsky(this);
+      String cmd = "get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")"+trg+rad;
+      aladin.execAsyncCommand(cmd);
    }
    
    protected void loadSIA() {
       if( prop==null ) return;
       checkTarget();
  
-      double rad = aladin.view.getCurrentView().getTaille();
+      String rad = Util.myRound( aladin.view.getCurrentView().getTaille() );
       String trg = aladin.view.getCurrentView().getCentre();
 
       // Accès via GLU
@@ -738,7 +745,7 @@ public class TreeObjDir extends TreeObj {
       String url = prop.get("sia_service_url");
       if( url!=null ) {
          Coord c = aladin.view.getCurrentView().getCooCentre();
-       String cmd = internalId+" = load "+url+"POS"+c.al+","+c.del+"&SIZE="+Util.myRound(rad)+"&FORMAT=image/fits";
+       String cmd = internalId+" = load "+url+"POS"+c.al+","+c.del+"&SIZE="+rad+"&FORMAT=image/fits";
          aladin.execAsyncCommand(cmd);
          return;
       }
@@ -756,23 +763,23 @@ public class TreeObjDir extends TreeObj {
          checkTarget();
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
-         double rad = aladin.view.getCurrentView().getTaille();
+         double radius = aladin.view.getCurrentView().getTaille();
+         String rad = Coord.getUnit( radius );
          String trg = aladin.view.getCurrentView().getCentre();
          
          // On passe par VizieR/Simbad via la commande script
          if( isCDSCatalog() ) {
             
             String cmd;
-            if( internalId.startsWith("CDS/Simbad") ) {
-               cmd = "get Simbad "+trg+" "+Util.myRound(rad)+"deg";
-            } else cmd = "get VizieR("+cat+",allcolumns) "+trg+" "+Util.myRound(rad)+"deg";
+            if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad "+trg+" "+rad;
+            else cmd = "get VizieR("+cat+",allcolumns) "+trg+" "+rad;
             aladin.execAsyncCommand(cmd);
             
          // Accès direct CS => http://...?RA=$1&DEC=$2&SR=$3&VERB=2
          } else {
             String csUrl = getCSUrl();
             Coord c = aladin.view.getCurrentView().getCooCentre();
-            String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+Util.myRound(rad)+"&VERB=2";
+            String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+Util.myRound(radius)+"&VERB=2";
             aladin.execAsyncCommand(cmd);
             
          }
@@ -784,7 +791,7 @@ public class TreeObjDir extends TreeObj {
    protected void loadAll() {
       int i = internalId.indexOf('/');
       String cat = internalId.substring(i+1);
-      String cmd = "get VizieRX("+cat+")";
+      String cmd = "get VizieR("+cat+",allsky,allcolumns)";
       aladin.execAsyncCommand(cmd);
    }
 

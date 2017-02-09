@@ -54,6 +54,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import cds.aladin.prop.Propable;
 import cds.tools.UrlLoader;
@@ -172,6 +173,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    // Gestion du mode blinking
    protected int blinkMode=0;    // Etat du blink
+   
+   // true si la génération d'un repère généré par QuickSimbad est actuellement autorisée
+   // false sinon (par exemple si on n'a pas bougé le réticule depuis la dernière génération d'un QuickSimbad
+//   private boolean flagAllowSimrep=false;
 
    protected Obj newobj;
 
@@ -206,7 +211,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean flagHighlight=false;       // true si on est en mode highlight des sources (voir hist[] dans ZommView)
 
    static protected String NOZOOM,MSTICKON,MSTICKOFF,MOREVIEWS,
-   MLABELON,MCOPY,MCOPYIMG,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
+   MLABELON,MCOPY,MCOPYIMG,MLOOK,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
    VIEW,ROIWNG,ROIINFO,HCLIC,HCLIC1,NIF,NEXT;
 
    protected void createChaine() {
@@ -214,6 +219,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       MSTICKON  = aladin.chaine.getString("VWMSTICKON");
       MSTICKOFF = aladin.chaine.getString("VWMSTICKOFF");
       MCOPYIMG  = aladin.chaine.getString("VWMCOPYIMG");
+      MLOOK     = aladin.chaine.getString("VWMLOOK");
       MCOPY     = aladin.chaine.getString("VWMCOPY");
       MLABELON  = aladin.chaine.getString("VWMLABELON");
       MLABELOFF = aladin.chaine.getString("VWMLABELOFF");
@@ -2101,7 +2107,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       //         }
       //      }
 
-      suspendQuickSimbad();
+//      suspendQuickSimbad();
 
       boolean flagMoveRepere=coo!=null;
 
@@ -3355,6 +3361,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
 
       aladin.localisation.setLastCoord(ra,dec);
+      
+      // comme on a bougé le réticule, on pourra regénérer un nouveau QuickSimbad
+//      flagAllowSimrep=true;
 
       // TEST : mise à jour des champs des formulaires de saisie en fonction de la position du repère
       //      aladin.dialog.adjustParameters();
@@ -3768,7 +3777,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    private void runC() {
       long debut = -1;
       long t,lastT=-1;
-      boolean tagBlink,editBlink,planBlink,sourceBlink,simbadBlink,scrolling,sablierBlink,taquinBlink;
+      boolean tagBlink,editBlink,planBlink,sourceBlink,/*simbadBlink,*/scrolling,sablierBlink,taquinBlink;
       int delais=getDefaultDelais();
 
       for( int tour=0; _flagTimer; tour++ ) {
@@ -3837,19 +3846,19 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                taquinBlink|=taquin;
             }
 
-            simbadBlink = calque.flagSimbad || calque.flagVizierSED;
+//            simbadBlink = calque.flagSimbad || calque.flagVizierSED;
 
             if( t2>0 ) blinkMode++;
 
             // Peut être faut-il lancer une résolution quick Simbad ?
             // et/ou VizierSED ?
-            if( !aladin.calque.zoom.zoomView.flagSED && simbadBlink && startQuickSimbad>0 ) {
-               if( System.currentTimeMillis()-startQuickSimbad>500) {
-                  startQuickSimbad=0L;
-                  if( calque.flagSimbad ) quickSimbad();
-                  if( calque.flagVizierSED && !calque.flagSimbad ) quickVizierSED();
-               }
-            }
+//            if( !aladin.calque.zoom.zoomView.flagSED && simbadBlink && startQuickSimbad>0 ) {
+//               if( System.currentTimeMillis()-startQuickSimbad>500) {
+//                  startQuickSimbad=0L;
+//                  if( calque.flagSimbad ) quickSimbad();
+//                  if( calque.flagVizierSED && !calque.flagSimbad ) quickVizierSED();
+//               }
+//            }
 
             //t = System.currentTimeMillis();
             //int gap= lastT>=0? (int)(t-lastT) : -1;
@@ -3858,7 +3867,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
             // Arrêt au bout de 5 secondes sans blinking nécessaire
             if( tagBlink|editBlink|planBlink|sourceBlink
-                  |simbadBlink|scrolling|sablierBlink|taquinBlink ) debut=-1;
+                  /*|simbadBlink*/|scrolling|sablierBlink|taquinBlink ) debut=-1;
             else {
                if( debut==-1 ) debut=System.currentTimeMillis();
                else if( System.currentTimeMillis()-debut>5000 ) stopTimer();
@@ -3944,8 +3953,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected CoteDist coteDist = null;
 
    protected Repere simRep = null;
-   private long startQuickSimbad=0L;
-   private double ox=0, oy=0;		// Pour vérifier qu'on déplace suffisemment
+//   private long startQuickSimbad=0L;
+//   private double ox=0, oy=0;		// Pour vérifier qu'on déplace suffisemment
 
    /** Ouverture de la page simbad pour l'objet indiqué par le repere SimRep */
    protected void showSimRep() {
@@ -3954,28 +3963,76 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       String obj = simRep.id.substring(0,offset).trim();
       aladin.glu.showDocument("smb.query", Tok.quote(obj));
    }
+   
+   
+   private Timer timerQuickSimbad = null;
+   
+   /** Lancement d'une attente de résolution QuickSimbad */
+   protected void startQuickSimbad() {
+      
+      // Effacement du précédent QuickSimbad s'il y a lieu
+      simRep=null;
+      
+      // Effacement du précédent SED s'il y a lieu
+      if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.clearSED();
+      
+      // Si la fonction n'a pas été activée => on sort
+      if( !aladin.calque.flagSimbad && !aladin.calque.flagVizierSED ) return;
+      
+      // Lancement du décompte
+      if( timerQuickSimbad==null ) {
+         timerQuickSimbad = new Timer(2000, new ActionListener() {
+            public void actionPerformed(ActionEvent e) { quickSimbadOnReticle() ; }
+         });
+         timerQuickSimbad.setRepeats( false );
+      }
+      
+      timerQuickSimbad.start();
+      
+      repaint();
+   }
+   
+   /** Relance d'une attente de résolution QuickSimbad */
+   protected void restartQuickSimbad() {
+      
+      // Si la fonction n'a pas été activée => on sort
+      if( !aladin.calque.flagSimbad && !aladin.calque.flagVizierSED ) return;
+      
+      // On a déjà un quickSimbad => on sort
+      if( simRep!=null  ) return;
+     
+      // N'a jamais été lancé => on sort
+      if( timerQuickSimbad==null ) return;
+      
+      // Rédémarrage du décompte
+//      System.out.println("Relance du timer...");
+      timerQuickSimbad.restart();
+   }
+   
+
 
    /** Arrêt de la procédure Quick Simbad */
-   synchronized protected void suspendQuickSimbad(){ startQuickSimbad=0L; simRep=null;  }
+//   synchronized protected void suspendQuickSimbad(){ startQuickSimbad=0L; simRep=null;  }
 
    static final int TAILLEARROW = 15;
 
-   /** (Re)démarrage du compteur en attendant une requête quickSimbad */
-   synchronized protected void waitQuickSimbad(ViewSimple v) {
-      if( v.pref==null || !(v.pref.isImage() || v.pref instanceof PlanBG) || v.lastMove==null ) return;
-      if( !Projection.isOk(v.pref.projd) || v.isAllSky() /* || v.getTaille()>1 */ ) return;
-      if( Math.abs(ox-v.lastMove.x)<TAILLEARROW/v.zoom && Math.abs(oy-v.lastMove.y)<TAILLEARROW/v.zoom ) return;
-      if( simRep!=null && simRep.inLabel(v, v.lastView.x, v.lastView.y) ) return;
-
-      startQuickSimbad = System.currentTimeMillis();
-      if( simRep!=null ) {
-         extendClip(simRep);
-         simRep=null;
-         v.repaint();
-      }
-      startTimer();
-   }
-   
+//   /** (Re)démarrage du compteur en attendant une requête quickSimbad */
+//   synchronized protected void waitQuickSimbad(ViewSimple v) {
+////      if( !flagAllowSimrep ) return;
+//      if( v.pref==null || !(v.pref.isImage() || v.pref instanceof PlanBG) || v.lastMove==null ) return;
+//      if( !Projection.isOk(v.pref.projd) || v.isAllSky()  ) return;
+//      if( Math.abs(ox-v.lastMove.x)<TAILLEARROW/v.zoom && Math.abs(oy-v.lastMove.y)<TAILLEARROW/v.zoom ) return;
+//      if( simRep!=null && simRep.inLabel(v, v.lastView.x, v.lastView.y) ) return;
+//
+//      startQuickSimbad = System.currentTimeMillis();
+//      if( simRep!=null ) {
+//         extendClip(simRep);
+//         simRep=null;
+//         v.repaint();
+//      }
+//      startTimer();
+//   }
+//   
    protected boolean isSimbadOrVizieRPointing() {
       return isQuickSimbad || isQuickVizieR;
    }
@@ -3984,31 +4041,39 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    private boolean isQuickVizieR = false;
   
 
-   /** Resolution d'une requête quickSimbad sur la position courante
-    * afin de récupérer les informations de base sur l'objet sous
-    * la souris */
-   protected void quickSimbad() {
-      try { isQuickSimbad=true; quickSimbad1(); }
+   /** Lancement d'une interrogation quickSimbad + éventuellement quickVizieR
+    * à l'emplacement du réticule. L'interrogation sera annulée si la souris
+    * ne se trouve pas à proximitée du réticule */
+   protected void quickSimbadOnReticle() {
+      try {
+         isQuickSimbad=true;
+         
+         ViewSimple v = getMouseView();
+         Coord coo = new Coord();
+         if( v==null || v.pref==null || v.pref.projd==null ) return;
+
+         coo.al = repere.raj;
+         coo.del = repere.dej;
+         v.getProj().getXY(coo);
+         
+         // On ne fait rien si on a éloigné la souris du point cliqué
+         PointD p1 = v.getViewCoordDble(coo.x, coo.y);
+         PointD p2 = v.getViewCoordDble(v.lastMove.x, v.lastMove.y);
+         double x2 = p1.x - p2.x; 
+         double y2 = p1.y - p2.y; 
+         double d1 = Math.sqrt( x2*x2 + y2*y2 );
+         if( d1 > 10 )  return;
+
+         quickSimbad(v,coo,calque.flagVizierSED);
+      }
       finally { isQuickSimbad=false; }
    }
    
-   private void quickSimbad1() {
-      ViewSimple v = getMouseView();
-      Coord coo = new Coord();
-      if( v==null || v.pref==null
-            || v.pref.projd==null
-            || v.lastMove==null  ) return;
-
+   /** Lancement d'une interrogation quickSimbad + éventuellement quickVizieR
+    * à l'emplacement indiqué en paramètre. */
+   protected void quickSimbad( ViewSimple v, Coord coo, boolean flagSED ) {
       String s=null;
-      ox = coo.x = v.lastMove.x;
-      oy = coo.y = v.lastMove.y;
-      v.getProj().getCoord(coo);
-      if( Double.isNaN(coo.al) ) return;
       String target = coo.getSexa(":");
-
-      // Est-on sur un objet avec pixel ?
-      // CA NE MARCHE PAS BIEN, JE PREFERE LAISSER DE COTE
-      //      if( !v.isMouseOnSomething() ) return;
 
       // Quelle est le rayon de l'interrogation (15 pixels écran au dessus) Max 1°
       double d = coo.del;
@@ -4020,16 +4085,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       Aladin.makeCursor(v,Aladin.LOOKCURSOR);
 
-      // Faut-il également charger un SED ?
-      // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
-//      boolean flagSED=true;
-//      if( aladin.view.zoomview.flagSED ) flagSED=false;
-
       InputStream is = null;
       DataInputStream cat = null;
       try {
          aladin.status.setText("Querying Simbad...");
-//         if( flagSED ) zoomview.setSED((String)null);
          URL url = aladin.glu.getURL("SimbadQuick","\""+target+"\" "+radius,false);
          is = url.openStream();
          if( is!=null ) {
@@ -4041,6 +4100,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          return;
       }
       finally {
+         Aladin.makeCursor(v,Cursor.DEFAULT_CURSOR);
          try {
             if( cat!=null ) cat.close();
             else if( is!=null ) is.close();
@@ -4048,11 +4108,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
 
       // On affiche le résultat
-      if( simRep!=null ) extendClip(simRep);
+      if( simRep!=null )  extendClip(simRep);
+      
       if( s==null || s.trim().length()==0 ) {
          simRep=null;
          aladin.status.setText("No Simbad object here !");
-         if( calque.flagVizierSED ) quickVizierSED();
+         if( flagSED ) quickVizierSED();
       } else {
          StringTokenizer st = new StringTokenizer(s,"/");
          try {
@@ -4068,17 +4129,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             aladin.console.printInPad(s1+"\n");
 
             // Et on cherche le SED correspondant
-            if( /* flagSED && */ calque.flagVizierSED ) {
+            if( flagSED ) {
                String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
                aladin.trace(2,"Loading VizieR phot. for \""+s2+"\"...");
-               Repere sedRep = null;
-               sedRep = new Repere(null,coo);
-               sedRep.setType(Repere.CARTOUCHE);
-               sedRep.setSize(TAILLEARROW);
-               sedRep.projection(v);
-               sedRep.setId("Phot: "+s1); //target);
-               sedRep.setWithLabel(true);
-               aladin.view.zoomview.setSED(s2,sedRep);
+               aladin.view.zoomview.setSED(s2,simRep);
             }
          } catch( Exception e ) { return; }
 
@@ -4101,15 +4155,31 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void quickVizierSED1() {
       ViewSimple v = getMouseView();
       Coord coo = new Coord();
-      if( v==null || v.pref==null
-            || v.pref.projd==null
-            || v.lastMove==null  ) return;
+      if( v==null || v.pref==null || v.pref.projd==null /* || v.lastMove==null */  ) return;
 
-      ox = coo.x = v.lastMove.x;
-      oy = coo.y = v.lastMove.y;
-      v.getProj().getCoord(coo);
-      if( Double.isNaN(coo.al) ) return;
+//      ox = coo.x = v.last Move.x;
+//      oy = coo.y = v.lastMove.y;
+//      v.getProj().getCoord(coo);
+//      if( Double.isNaN(coo.al) ) return;
+      
+      coo.al = repere.raj;
+      coo.del = repere.dej;
+      v.getProj().getXY(coo);
+//      ox = coo.x;
+//      oy = coo.y;
+      
+      PointD p1 = v.getViewCoordDble(coo.x, coo.y);
+      PointD p2 = v.getViewCoordDble(v.lastMove.x, v.lastMove.y);
+      double x2 = p1.x - p2.x; 
+      double y2 = p1.y - p2.y; 
+      double d1 = Math.sqrt( x2*x2 + y2*y2 );
+      if( d1 > 10 ) {
+         System.out.println("Souris trop loin du repère => quickSED non fourni");
+         return;
+      }
+
       String target = coo.getSexa();
+      System.out.println("QuickVizieR sur "+target+"...");
 
       // Est-on sur un objet avec pixel ?
       //      if( !v.isMouseOnSomething() ) return;
@@ -4121,16 +4191,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 //      if( aladin.view.zoomview.flagSED ) flagSED=false;
 
       try {
-//         if( flagSED ) zoomview.setSED((String)null);
-         Repere sedRep = null; //new Repere(plan)
          coo = new Coord(target);
-         sedRep = new Repere(null,coo);
-         sedRep.setType(Repere.CARTOUCHE);
-         sedRep.setSize(TAILLEARROW);
-         sedRep.projection(v);
-         sedRep.setId("Phot.: "+target);
-         sedRep.setWithLabel(true);
-         aladin.view.zoomview.setSED(target,sedRep);
+         simRep = new Repere(null,coo);
+         simRep.setType(Repere.CARTOUCHE);
+         simRep.setSize(TAILLEARROW);
+         simRep.projection(v);
+         simRep.setId("Phot.: "+target);
+         simRep.setWithLabel(true);
+         aladin.view.zoomview.setSED(target,simRep);
 
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

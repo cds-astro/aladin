@@ -161,7 +161,6 @@ public class PlanBG extends PlanImage {
    protected MyProperties prop = null; // La liste des propriétés associées au HiPS
 
    protected String gluTag=null;   // Identificateur dans le dico GLU
-   protected String id=null;       // Identification unique
    protected String survey;        // Nom du background
    protected String version="";    // Numéro de version du background si existant (ex: -v1.2)
    protected String url;           // Préfixe de l'url permettant d'accéder au background
@@ -220,37 +219,37 @@ public class PlanBG extends PlanImage {
    /**
     * Création d'un plan Healpix
     * @param aladin
-    * @param gluSky
+    * @param to
     * @param c Coordonnée centrale ou null si non spécifiée
     * @param radius Taille du champ en degrés, ou <=0 si non spécifié
     */
-   protected PlanBG(Aladin aladin, TreeObjDir gluSky, String label, Coord c,double radius,String startingTaskId) {
+   protected PlanBG(Aladin aladin, TreeObjDir to, String label, Coord c,double radius,String startingTaskId) {
       super(aladin);
       this.startingTaskId = startingTaskId;
       initCache();
 
-      gluTag = gluSky.getID();
-      id = gluSky.internalId;
-      url = gluSky.getUrl();
-      survey = gluSky.label;
-      version = gluSky.version;
-      minOrder = gluSky.minOrder;
-      maxOrder = gluSky.maxOrder;
-      useCache = gluSky.useCache();
-      local=gluSky.local;
-      loadMocNow=gluSky.loadMocNow();
-      frameOrigin=gluSky.frame;
-      description=gluSky.description;
-      verboseDescr=gluSky.verboseDescr;
-      ack=gluSky.ack;
-      copyright=gluSky.copyright;
-      copyrightUrl=gluSky.copyrightUrl;
+      gluTag = to.getID();
+      id = to.internalId;
+      url = to.getUrl();
+      survey = to.label;
+      version = to.version;
+      minOrder = to.minOrder;
+      maxOrder = to.maxOrder;
+      useCache = to.useCache();
+      local=to.local;
+      loadMocNow=to.loadMocNow();
+      frameOrigin=to.frame;
+      description=to.description;
+      verboseDescr=to.verboseDescr;
+      ack=to.ack;
+      copyright=to.copyright;
+      copyrightUrl=to.copyrightUrl;
       co=c;
       coRadius=radius;
       if( label!=null && label.trim().length()>0 ) setLabel(label);
-      setSpecificParams(gluSky);
+      setSpecificParams(to);
       //      if( copyrightUrl==null ) copyrightUrl=url;
-      aladin.trace(3,"AllSky creation: "+gluSky.toString1()+(c!=null ? " around "+c:""));
+      aladin.trace(3,"AllSky creation: "+to.toString1()+(c!=null ? " around "+c:""));
       suite();
    }
 
@@ -948,9 +947,7 @@ public class PlanBG extends PlanImage {
    }
 
    @Override
-   public String getUrl() {
-      return url;
-   }
+   public String getUrl() { return url; }
 
    @Override
    protected void planReady(boolean ready) {
@@ -958,6 +955,7 @@ public class PlanBG extends PlanImage {
       setPourcent(0);
       flagOk=ready;
       aladin.synchroPlan.stop(startingTaskId);
+      
       if( co!=null ) aladin.view.setRepere(co);
 
       // Chargement du MOC associé, avec ou sans création d'un plan dédié

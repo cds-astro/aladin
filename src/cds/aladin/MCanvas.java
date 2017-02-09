@@ -643,13 +643,14 @@ MouseWheelListener, Widget
 
       // Une marque GLU (ancre)
       else if( w.glu && !(w.archive || w.footprint) ) {
-         if( w.pushed ) fg = Color.red ;  // L'ancre a ete cliquee
+         if( w.pushed ) fg = Aladin.COLOR_RED ;  // L'ancre a ete cliquee
          else if( w.haspushed ) fg = Aladin.COLOR_MEASUREMENT_ANCHOR_HASPUSHED; // Ancre inactive (jamais cliquee)
          else fg = Aladin.COLOR_FOREGROUND_ANCHOR;           // Ancre deja cliquee
       } 
       else if( y<=2*HF ) fg = Aladin.COLOR_MEASUREMENT_HEADER_FOREGROUND;
       else if( w.computed ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_COMPUTED;
       else if( w.onMouse ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
+      else if( w.show    ) fg = Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT;
       
       g.setColor( fg );
 
@@ -1707,6 +1708,7 @@ MouseWheelListener, Widget
    }
 
    private int omax=-1;
+   private int oW=-1;
    private boolean showScrollH=true;
 
    /** Ajustement du scrollbar horizontal si necessaire
@@ -1716,9 +1718,16 @@ MouseWheelListener, Widget
    private void adjustScrollH(int max) {
       boolean ok;
 
-      if( max==omax ) return;
+      if( max==omax && oW==W ) return;
       omax=max;
-      scrollH.setMaximum(max);
+      scrollH.setMaximum(max+20);
+      
+      // Juste en cas d'ouverture du panel
+      if( W!=oW ) {
+         scrollH.setVisibleAmount(W);
+         scrollH.setBlockIncrement(W-10*wblanc);
+         oW=W;
+      }
 
       if( ok=(max<W && showScrollH) ) { aladin.mesure.remove(scrollH); showScrollH=false; }
       else if( ok=(max>=W && !showScrollH) ) {
@@ -1802,7 +1811,7 @@ MouseWheelListener, Widget
       mouseLigne=null;
       showLigne=null;
       ow=null;
-
+      
       // Double buffer (beaucoup plus rapide que le double buffering natif de SWING)
       if( img==null || img.getWidth(this)!=getWidth()
             || img.getHeight(this)!=getHeight() ) {
@@ -1837,7 +1846,7 @@ MouseWheelListener, Widget
          if( oleg==null ) oleg = (Source)word.elementAt(0);
 
          int m = drawLigne(g,y,word,true);
-
+         
          // Mémorisation de la WordLine afin de ne pas perdre les paramètres du tracé
          aladin.mesure.memoWordLine(word,lastsee);
 
@@ -1862,7 +1871,7 @@ MouseWheelListener, Widget
          int m = drawLigne(g,-30,word,true);
          if( m>max ) max=W;
       }
-
+      
       // Ajustement des scrollbars si necessaire
       adjustScrollH(max);
       adjustScrollV((H- (MH+MB))/HL - (showScrollH?1:0), j<ts);

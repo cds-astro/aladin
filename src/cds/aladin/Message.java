@@ -23,7 +23,6 @@ package cds.aladin;
 
 import java.awt.BorderLayout;
 import java.awt.Button;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -122,7 +121,7 @@ public class Message extends Panel {
 //                 a.setFont( new Font("Helvetica",Font.BOLD,taille));
                  if( type==WARNING) {
                     a.setFont(a.getFont().deriveFont(Font.BOLD));
-                    a.setForeground(Color.red);
+                    a.setForeground( Aladin.COLOR_RED );
                  }
                  c.insets = new Insets(mh,mg,0,20); mh=MH;
                  g.setConstraints(a,c);

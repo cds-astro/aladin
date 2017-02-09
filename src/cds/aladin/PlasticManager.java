@@ -57,14 +57,13 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
-import net.ladypleaser.rmilite.Client;
-
 import org.votech.plastic.PlasticHubListener;
 import org.votech.plastic.PlasticListener;
 
+import cds.tools.Util;
+import net.ladypleaser.rmilite.Client;
 import uk.ac.starlink.plastic.MinimalHub;
 import uk.ac.starlink.plastic.ServerSet;
-import cds.tools.Util;
 
 
 

@@ -1505,16 +1505,16 @@ public class Calque extends JPanel implements Runnable {
       }
    }
    
-   /** Retourne true si le plan HiPS indiqué est déjà chargée dans la pile */
-   public boolean isLoaded(String hipsId) {
+   /** Retourne la couleur du plan si le plan HiPS indiqué est déjà chargée dans la pile, sinon null */
+   public Color isLoaded(String hipsId) {
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].isFree() ) continue;
-         if( !(plan[i] instanceof PlanBG )  ) continue;
-         if( ((PlanBG)plan[i]).id==null ) continue;
+         if( plan[i].id==null ) continue;
          
-         if( ((PlanBG)plan[i]).id.equals(hipsId) ) return true;
+         if( plan[i].id.equals(hipsId) ) return plan[i].c;
+         if( ("CDS/"+plan[i].id).equals(hipsId) ) return plan[i].c;
       }
-      return false;
+      return null;
    }
 
    /**

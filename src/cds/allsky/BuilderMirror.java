@@ -20,6 +20,7 @@
 package cds.allsky;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -323,9 +324,29 @@ public class BuilderMirror extends BuilderTiles {
    }
    
    private int copy(String fileIn, String fileOut) throws Exception {
-      if( isLocal ) return copyLocal(fileIn,fileOut);
-      return copyRemote(fileIn,fileOut);
+      try {
+         if( isLocal ) return copyLocal(fileIn,fileOut);
+         return copyRemote(fileIn,fileOut);
+         
+      } catch( FileNotFoundException e ) {
+         context.warning("File not found ["+fileIn+"] => ignored (may be out of the MOC)");
+      }
+      return 0;
    }
+   
+//   static public void main(String [] s) {
+//      try {
+//         String fileIn="http://alasky.u-strasbg.fr/SDSS/DR9/color/Norder10/Dir20000/Npix28115.jpg";
+////         String fileIn="http://alasky.u-strasbg.fr/SDSS/DR9/color/Norder10/Dir20000/Npix28124.jpg";
+//         String fileOut="/Users/Pierre/Desktop/toto.jpg";
+//         int size = copyRemote(fileIn,fileOut);
+//         System.out.println("copy done => "+size);
+//      } catch( Exception e ) {
+//         
+//         e.printStackTrace();
+//      }
+//      
+//   }
 
    // Copie d'un fichier distant (url) vers un fichier local, uniquement si la copie locale évenutelle
    // et plus ancienne et/ou de taille différente à l'originale.
@@ -378,6 +399,7 @@ public class BuilderMirror extends BuilderTiles {
                while( es.read(buf1) > 0) { }
                es.close();  
             }
+         
          } finally { if( dis!=null ) try{ dis.close(); } catch( Exception e) {}  }
 
          RandomAccessFile f = null;

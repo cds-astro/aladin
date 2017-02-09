@@ -334,7 +334,7 @@ public class Localisation extends MyBox  {
             for( int i=0; i<3 && aladin.calque.isFree() && !flagStopInfo ; i++ ) {
                if( !flagStopInfo ) {
                   text.setText("");
-                  text.setForeground( Aladin.COLOR_CONTROL_FOREGROUND );
+                  text.setForeground( Color.black );
                   myPause(100);
                }
                if( !flagStopInfo ) {

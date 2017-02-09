@@ -308,7 +308,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       int i;
       boolean allColumn=false;
       if( (i=criteria.indexOf("allcolumns"))>=0 ) {
-         criteria=criteria.substring(0,i) + criteria.substring(i+"allcolumns".length());
+         criteria=criteria.substring(0,i-1) + criteria.substring(i+"allcolumns".length());
          criteria=criteria.trim();
          allColumn=true;
       }
@@ -316,7 +316,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       // Tout le catalogue
       if( cbGetAllCat.isSelected() ) target="";
       if( (i=criteria.indexOf("allsky"))>=0 ) {
-         criteria=criteria.substring(0,i) + criteria.substring(i+"allsky".length());
+         criteria=criteria.substring(0,i-1) + criteria.substring(i+"allsky".length());
          criteria=criteria.trim();
          target="";
       }

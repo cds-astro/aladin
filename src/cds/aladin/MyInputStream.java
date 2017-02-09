@@ -103,7 +103,7 @@ public final class MyInputStream extends FilterInputStream {
    static final public long TAP     = 1L<<41;
    static final public long OBSTAP  = 1L<<42;
    static final public long EOF     = 1L<<43;
-   static final public long PROP= 1L<<44;
+   static final public long PROP    = 1L<<44;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
@@ -1093,7 +1093,7 @@ public final class MyInputStream extends FilterInputStream {
          StringBuilder ligneb = new StringBuilder(256);
          deb = getLigne(ligneb,deb);
          String ligne = ligneb.toString();
-         if( ligne.length()==0 || ligne.charAt(0)=='#' ) continue;
+         if( ligne.trim().length()==0 || ligne.charAt(0)=='#' ) continue;
          
          // Test qu'il y a bien un caractère "égal"
          int posEquals = ligne.indexOf('=');

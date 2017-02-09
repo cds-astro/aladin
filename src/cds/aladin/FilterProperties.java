@@ -20,15 +20,54 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.DefaultEditorKit;
 
@@ -1192,20 +1231,6 @@ public final class FilterProperties extends Properties implements MouseListener,
     /** trie le tableau t dans l'ordre lexicographique (ne tient pas compte de majuscules/minuscules */
     static void sortLexico(String[] t) {
         MetaDataTree.sort(t, null, true);
-        /*
-        for (int i = 0 ; i < t.length ; i++) {
-            String tmp = t[i];
-            for (int j = i+1 ; j < t.length ; j++) {
-                if ( t[j].toLowerCase().compareTo(tmp.toLowerCase())<0 ) {
-                    // echanger t[i] et t[j]
-                    String tmp2 = tmp;
-                    tmp = t[j];
-                    t[j] = tmp2;
-                    t[i] = tmp;
-                }
-            }
-        }
-        */
     }
 
 	  /** Méthode appelée lorsqu'un nouveau PlanCatalog est prêt */
@@ -1389,6 +1414,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 	}
 
       static void getUcdsAndColumns(Aladin aladin) {
+         
           Aladin.trace(3,"Recompute all available columns and UCD");
 //          Vector vCol = new Vector(); // pour mémoriser les noms de colonnes
           Vector vUCD = new Vector(); // pour mémoriser les noms des UCD

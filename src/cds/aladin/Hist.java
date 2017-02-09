@@ -32,7 +32,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
 import cds.tools.Util;
 
@@ -453,7 +452,7 @@ class Hist implements Runnable {
          // Histogramme non complet ? et dernière case, mettre des points de suspension
          if( flagHistPartial && i==hist.length-1 ) {
             for( int j=0; j<3; j++ ) {
-               g.setColor(Color.black);
+               g.setColor( Aladin.COLOR_FOREGROUND );
                Util.fillCircle5(g, (int)(x+gap+j*6)+dx,y-15+dy);
             }
 
@@ -461,7 +460,7 @@ class Hist implements Runnable {
          } else {
             g.setColor( hist[i]==onMouse ? Aladin.COLOR_GREEN : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
             g.fillRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
-            g.setColor( Color.black );
+            g.setColor( Aladin.COLOR_CONTROL_FOREGROUND ); //Color.black );
             g.drawRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
             hist[i].x=(int)x; hist[i].y=y-hist[i].haut; hist[i].larg=(int)larg; // voir setIn()
             x+=larg+gap;
@@ -484,7 +483,7 @@ class Hist implements Runnable {
 
       // Sous la souris ?
       if( onMouse!=null ) {
-         g.setColor(Color.red);
+         g.setColor( Aladin.COLOR_RED );
          s=onMouse.nb+"";
          g.drawString(s,5,14);
          int pos = 8+fm.stringWidth(s);
@@ -540,24 +539,24 @@ class Hist implements Runnable {
       }
 
       // Des informations textuelles en surcharge
-      if( texte!=null ) {
-         g.setFont(Aladin.SBOLD);
-         fm = g.getFontMetrics();
-         g.setColor(Color.red);
-         StringTokenizer st = new StringTokenizer(texte,"/");
-         y = 17;
-         int h= fm.getHeight();
-         int h1 = fm.getAscent();
-         //         Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
-         g.setColor(Color.black);
-         while( st.hasMoreTokens() ) {
-            s = st.nextToken().trim();
-            int len = fm.stringWidth(s);
-            int x1 = width - len-5;
-            Util.drawCartouche(g, x1, y, len, h, 0.8f, null, Color.white);
-            g.drawString(s, x1, y+h1);
-            y+=h;
-         }
-      }
+//      if( texte!=null ) {
+//         g.setFont(Aladin.SBOLD);
+//         fm = g.getFontMetrics();
+//         g.setColor(Color.red);
+//         StringTokenizer st = new StringTokenizer(texte,"/");
+//         y = 17;
+//         int h= fm.getHeight();
+//         int h1 = fm.getAscent();
+//         //         Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
+//         g.setColor(Color.black);
+//         while( st.hasMoreTokens() ) {
+//            s = st.nextToken().trim();
+//            int len = fm.stringWidth(s);
+//            int x1 = width - len-5;
+//            Util.drawCartouche(g, x1, y, len, h, 0.8f, null, Color.white);
+//            g.drawString(s, x1, y+h1);
+//            y+=h;
+//         }
+//      }
    }
 }

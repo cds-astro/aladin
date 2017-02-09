@@ -261,9 +261,131 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return sortedByValues;
    }
 
-   private JPanel createFilter( final Vector<JCheckBox> vBx, int max, String key, String delim) {
-      return createFilter(vBx,max,key,delim,false);
+   
+   <K extends Comparable<K>, V> Map<K, V> sortList(final Map<K, V> map, final String [] list) {
+      Comparator<K> valueComparator =  new Comparator<K>() {         
+         public int compare(K k1, K k2) {
+            int i = Util.indexInArrayOf((String)k1, list,true);
+            int j = Util.indexInArrayOf((String)k2, list,true);
+            if( i==j ) return 0;
+            if( i==-1 ) return 1;
+            if( j==-1 ) return -1;
+            return i-j;
+         }
+         public Comparator<K> setParam() {
+            return this;
+         }
+      }.setParam();
+
+      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      sortedByValues.putAll(map);
+      return sortedByValues;
    }
+
+
+   static private final int SORT_NO     = 0;
+   static private final int SORT_FREQ   = 1;
+   static private final int SORT_ALPHA  = 2;
+   static private final int SORT_LIST   = 3;
+   
+   static private final String [] REGIME = { "Radio" , "Millimeter" , "Infrared" , "Optical" , "UV" , "EUV" , "X-ray" , "Gamma-ray" };
+   
+   /**
+    * 
+    * @param vBx
+    * @param max
+    * @param split
+    * @param key
+    * @param delim
+    * @param sort 0-non trié, 1-décroissant en fréquence, 2-alphabétique sur label
+    * @return
+    */
+   private JPanel createFilterBis( final Vector<JCheckBox> vBx, int max, boolean split, String key, String delim, int sort) {
+      Map<String, Integer> map = new HashMap<String, Integer>();
+      
+      // On décompte les occurences
+      int total=0;
+      for( MocItem mi : aladin.directory ) {
+         Iterator<String> it = mi.prop.getIteratorValues(key);
+         if( it==null ) continue;
+         while( it.hasNext() ) {
+            String v = it.next();
+            
+            // Si un délimiteur est indiqué, seul le préfixe repéré
+            // est pris en compte (jusqu'au délimiteur)
+            if( delim!=null ) {
+               int i = v.indexOf(delim);
+               if( i>0 ) v = v.substring(0,i);
+            }
+            Integer ni = map.get(v);
+            int n = ni==null ? 0 : ni.intValue();
+            map.put(v,new Integer(n+1));
+            total++;
+         }
+      }
+      
+      // On trie 
+      Map<String, Integer> map1  = sort==SORT_FREQ ? sortByValues(map, 1) 
+                  : sort==SORT_ALPHA ? sortAlpha(map,-1) 
+                  : sort==SORT_LIST ? sortList(map, REGIME ) 
+                  : map;
+      
+      int p=0, i=0;
+      for( String k : map1.keySet() ) {
+         int n = map.get(k);
+         
+         // Ne retient pas les catégorie à un seul élément
+         if( max==-2 && n==1 ) continue;
+
+         // On génère chaque label de checkbox
+         String lab = k;
+         lab=lab.replace('_',' ');
+
+         // si le label est trop grand => on coupe (slit=true)
+         if( split && lab.length()>11 ) lab = lab.substring(0, 8)+"...";
+
+         JCheckBox bx = new JCheckBox( lab, false);
+         bx.setToolTipText(k+": "+n+" item"+(n>1?"s":""));
+
+         // Positionnement de l'action correspondante
+         String vm =  k + (delim==null?"":"*");
+         bx.setActionCommand(key+"="+vm);
+         bx.addActionListener(this);
+
+         // Mémorisation de cette checkbox
+         vBx.add( bx );
+
+         p+=n;
+         
+         // On a fini ?
+         i++;
+         if( max>0 && i>=max ) break;
+      }
+      
+      // On met tout ça dans un panel
+      JPanel panel= new JPanel( new BorderLayout(0,0) );
+      
+      // Peu de checkboxes => une simple grille 
+      if( vBx.size()<12 ) {
+         panel.setLayout( new GridLayout(0,4) );
+         panel.setBorder( BorderFactory.createLineBorder(Color.lightGray));
+         for( JCheckBox bx : vBx ) panel.add(bx);
+         
+      // Beaucoup d'éléments => deux colonnes avec scroll
+      } else {
+         JPanel p1 = new JPanel( new GridLayout(0,2) );
+         for( JCheckBox bx : vBx )  p1.add(bx);
+        
+         JScrollPane scrollPane = new JScrollPane(p1, 
+               JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+         scrollPane.setPreferredSize( new Dimension(320,120) );
+         panel.add( scrollPane, BorderLayout.CENTER);
+         panel.setBorder( BorderFactory.createEmptyBorder(3, 0, 3, 3));
+      }
+      
+      return panel;
+   }
+   
    private JPanel createFilter( final Vector<JCheckBox> vBx, int max, String key, String delim, boolean addLogic) {
       Map<String, Integer> map = new HashMap<String, Integer>();
       
@@ -399,7 +521,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // mémorisation de l'expression s'il s'agit d'un "default"
       if( aladin.directory.filter.getSelectedIndex()==0 ) {
-         System.out.println("je mémorise default=>"+expr);
          aladin.configuration.setDirFilter("default", expr);
       }
       
@@ -416,21 +537,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       StringBuilder special = new StringBuilder();
       
-      if( !bxImage.isSelected() )     addParam(exclu,"client_category","Image*");
-      if( !bxCube.isSelected() )      addParam(exclu,"client_category","Cube*");
-      if( !bxCatalog.isSelected() )   addParam(exclu,"client_category","Catalog*");
-      if( !bxJournal.isSelected() )   addParam(exclu,"client_category","*/Journal table/*");
-      if( !bxMisc.isSelected() )      addParam(exclu,"client_category","Miscellaneous*");
-      if( !bxOtherType.isSelected() ) addParam(inclu,"client_category","Catalog*,Image*,Cube*,*/Journal table/*,Miscellaneous*");
-      
-      if( !bxGammaRay.isSelected() )  addParam(exclu,"obs_regime","Gamma-ray");
-      if( !bxXray.isSelected() )      addParam(exclu,"obs_regime","X-ray");
-      if( !bxUV.isSelected() )        addParam(exclu,"obs_regime","UV");
-      if( !bxOptical.isSelected() )   addParam(exclu,"obs_regime","Optical");
-      if( !bxInfrared.isSelected() )  addParam(exclu,"obs_regime","Infrared");
-      if( !bxRadio.isSelected() )     addParam(exclu,"obs_regime","Radio");
-      if( !bxGasLines.isSelected() )  addParam(exclu,"client_category","Image/Gas-lines/*");
-
       if( bxHiPS.isSelected() )      special.append(" && hips_service_url=*"); 
       if( bxSIA.isSelected() )       special.append(" && sia*service_url=*");  
       if( bxCS.isSelected() )        special.append(" && cs_service_url=*");   
@@ -439,7 +545,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
       if( bxPixColor.isSelected() )   special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
       
-      for( JCheckBox bx : authVbx )    if( !bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
+      for( JCheckBox bx : catVbx )    if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
+      for( JCheckBox bx : regVbx )    if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
+      for( JCheckBox bx : authVbx )   if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
       
       HashMap<String, String []> inclu1 = new HashMap<String, String[]>();
       for( JCheckBox bx : catMisVbx ) if( bx.isSelected() )  addParam( inclu1,exclu, bx.getActionCommand() );
@@ -493,7 +601,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //      if( excluS.length()>0 ) expr = "("+expr+") && ("+excluS+")";
 //      if( special.length()>0 ) expr="("+expr+")"+special;
             
-      aladin.directory.quickFilterSetText( getText(tfDescr) );
       exprArea.setText( expr );
    }
    
@@ -521,7 +628,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
     * et insère de part et d'autre le joker '*'
     * ex: 2MASS|USNO => *2MASS*,*USNO2
     */
-   private String jokerize(String s) {
+   static protected String jokerize(String s) {
       Tok tok = new Tok(s,",|");
       StringBuilder s1 = null;
       while( tok.hasMoreTokens() ) {
@@ -534,7 +641,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private String rebuildInclu(HashMap<String,String[]> exclusion) {
       StringBuilder expr = new StringBuilder();
       for( String k : exclusion.keySet() ) {
-         if( expr.length()>0 )  expr.append(" || ");
+         if( expr.length()>0 )  expr.append(" && ");
          expr.append(k+"=");
          boolean first=true;
          for( String v : exclusion.get(k)) {
@@ -586,12 +693,11 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxMisc, bxOtherType;
-   private JCheckBox bxGammaRay, bxXray,bxUV,bxOptical,bxInfrared,bxRadio,bxGasLines;
+//   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxMisc;
    private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxCS,bxProg;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    
-   private Vector<JCheckBox> authVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
+   private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
    
 //   private JSlider slRow;
    
@@ -611,19 +717,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Remise à l'état initial du formulaire - sans application à l'arbre */
    protected void clean() {
-      bxImage.setSelected(true);
-      bxCube.setSelected(true);
-      bxCatalog.setSelected(true);
-      bxJournal.setSelected(true);
-      bxMisc.setSelected(true);
-      bxOtherType.setSelected(true);
-      bxGammaRay.setSelected(true);
-      bxXray.setSelected(true);
-      bxUV.setSelected(true);
-      bxOptical.setSelected(true);
-      bxInfrared.setSelected(true);
-      bxRadio.setSelected(true);
-      bxGasLines.setSelected(true);
+      
       bxPixFull.setSelected(false);
       bxHiPS.setSelected(false);
       bxSIA.setSelected(false);
@@ -638,13 +732,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       tfMaxDate.setText("");
       tfBibYear.setText("");
       
-      for( JCheckBox bx : authVbx ) bx.setSelected(true);
+      for( JCheckBox bx : regVbx ) bx.setSelected(false);
+      for( JCheckBox bx : catVbx ) bx.setSelected(false);
+      for( JCheckBox bx : authVbx ) bx.setSelected(false);
       for( JCheckBox bx : catMisVbx ) bx.setSelected(false);
       for( JCheckBox bx : catkeyVbx ) bx.setSelected(false);
       for( JCheckBox bx : assdataVbx ) bx.setSelected(false);
       for( JCheckBox bx : catUcdVbx ) bx.setSelected(false);
-      
-      aladin.directory.quickFilterSetText("");
       
       updateWidget();
    }
@@ -659,34 +753,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       submit();
    }
    
-   /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
-   protected void setFreeText(String name, String s ) {
-      
-      String expr;
-      
-      // S'il s'agit directement d'une expression, rien à faire, sinon
-      // il faut générer l'expression en fonction d'une liste de mots clés
-      int i = s.indexOf('=');
-      if( i<0 ) i=s.indexOf('>');
-      if( i<0 ) i=s.indexOf('<');
-      if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) expr = s;
-      else {
-         expr = "obs_title,obs_description,obs_collection,ID="+jokerize(s);
-         tfDescr.setText(s); // On affiche la liste des mots clés dans le champ prévu
-      }
-      
-      // Y a-t-il déjà une expression ? => ajout de la contrainte en fin d'expression
-      String previousExpr = aladin.configuration.dirFilter.get(name);
-      if( previousExpr.length()>0 ) expr = "("+previousExpr+") && "+expr;
-      
-      exprArea.setText(expr);
-      flagFormEdit=true;
-   }
-   
    // Positionne un cadre de titre autour d'un panel
    private void setTitleBorder(JPanel p, String title) {
       
-      Border line = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.lightGray);
+      Border line = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.gray);
       if( title==null ) p.setBorder( line );
       else p.setBorder( BorderFactory.createTitledBorder(line,title,
             TitledBorder.CENTER,TitledBorder.DEFAULT_POSITION,
@@ -713,29 +783,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             + "in title, description, collection, identifier...\nExamples: DENIS, CDS/P/DSS2/color", 
             tfDescr, g, c, GridBagConstraints.EAST);
       
-      // Le type de données
-      subPanel = new JPanel( new GridLayout(0,4));
-      subPanel.add( bx=bxImage       = new JCheckBox("Image"));   bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxCube        = new JCheckBox("Cube"));    bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxCatalog     = new JCheckBox("Catalog")); bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxJournal     = new JCheckBox("J.table"));   bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxMisc        = new JCheckBox("Misc."));   bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxOtherType   = new JCheckBox("Others"));  bx.setSelected(true); bx.addActionListener(this);
-      JPanel px = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      px.add(b = new JButton("none")); subPanel.add( px);
-      subPanel.add(px);
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            bxImage.setSelected(false);
-            bxCube.setSelected(false);
-            bxCatalog.setSelected(false);
-            bxJournal.setSelected(false);
-            bxMisc.setSelected(false);
-            bxOtherType.setSelected(false);
-         }
-      });
-//      categoryVbx = new Vector<JCheckBox>();
-//      subPanel = createFilter(categoryVbx, 6, "client_category", "/");
+      // Catégories des collections
+      catVbx = new Vector<JCheckBox>();
+      subPanel = createFilterBis(catVbx, -2, true, "client_category", "/",SORT_FREQ);
       PropPanel.addCouple(this, p, "Data type", "Collection data types", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Couverture du ciel
@@ -744,27 +794,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             tfCoverage, g, c, GridBagConstraints.EAST);
       
       // Les différents régimes
-      subPanel = new JPanel( new GridLayout(2,3) );
-      subPanel.add( bx=bxGammaRay = new JCheckBox("Gamma-ray")); bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxXray     = new JCheckBox("X-ray"));     bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxUV       = new JCheckBox("UV"));        bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxOptical  = new JCheckBox("Optical"));   bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxInfrared = new JCheckBox("Infrared"));  bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxRadio    = new JCheckBox("Radio"));     bx.setSelected(true); bx.addActionListener(this);
-      subPanel.add( bx=bxGasLines = new JCheckBox("Gas-lines")); bx.setSelected(true); bx.addActionListener(this);
-      px = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      px.add(b = new JButton("none")); subPanel.add( px);
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            bxGammaRay.setSelected(false);
-            bxXray.setSelected(false);
-            bxUV.setSelected(false);
-            bxOptical.setSelected(false);
-            bxInfrared.setSelected(false);
-            bxRadio.setSelected(false);
-            bxGasLines.setSelected(false);
-         }
-      });
+      regVbx = new Vector<JCheckBox>();
+      subPanel = createFilterBis(regVbx, -2, true, "obs_regime", null,SORT_LIST);
       PropPanel.addCouple(this, p, "Regime", "Wavelength regime of the collection", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Epoch of observations
@@ -774,7 +805,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Les différentes origines des HiPS
       authVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(authVbx, 6, "ID", "/");
+      subPanel = createFilterBis(authVbx, -1, true, "ID", "/",SORT_FREQ);
       PropPanel.addCouple(this, p, "Authority", "Filtering by the authority creator.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Epoch of observations
@@ -787,13 +818,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       // Restriction suivant le mode d'accès
       subPanel = new JPanel( new GridLayout(0,4) );
       NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
-      subPanel.add( bx=bxHiPS = new JCheckBox("HiPS only")); bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
-      bx.setToolTipText("Hierarchical progressive survey");
-      subPanel.add( bx=bxSIA  = new JCheckBox("SIA only"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
-      bx.setToolTipText("Simple Image Access (version 1 & 2)");
-      subPanel.add( bx=bxCS   = new JCheckBox("CS only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
-      bx.setToolTipText("Catalog/table cone search");
-      subPanel.add( bx=bxProg   = new JCheckBox("Prog.only"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      subPanel.add( bx=bxHiPS = new JCheckBox("HiPS")); bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Hierarchical progressive survey compatible collections");
+      subPanel.add( bx=bxSIA  = new JCheckBox("SIA"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Simple Image Access (version 1 & 2) compatible collections");
+      subPanel.add( bx=bxCS   = new JCheckBox("Cone search"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Catalog/table cone searchable collections");
+      subPanel.add( bx=bxProg   = new JCheckBox("Progenitors"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("HiPS Progenitors access (details and links\nto original images used for building the HiPS)");
       PropPanel.addCouple(this, p, "Protocol ", "Keep the collections supporting the selected protocol", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
      
@@ -827,12 +858,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Les différents mots clés
       catkeyVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(catkeyVbx, -1, "obs_astronomy_kw", null, true);
+      subPanel = createFilterBis(catkeyVbx, -1, false, "obs_astronomy_kw", null, SORT_ALPHA);
       PropPanel.addCouple(this, p, "Keyword", "Catalog astronomical keyword selection.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Les différents mots clés
       catMisVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(catMisVbx, -1, "obs_mission", null, true);
+      subPanel = createFilterBis(catMisVbx, -1, false, "obs_mission", null, SORT_ALPHA);
       PropPanel.addCouple(this, p, "Mission", "Catalog mission keyword selection.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Tailles des tables
@@ -877,10 +908,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p1.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 5));
       PropPanel.addCouple(this, p, "Content", "Filtering by the content based on UCD tagging.\nHide not relevant tables.", p1, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
-      
       // Les données associées
       assdataVbx = new Vector<JCheckBox>();
-      subPanel = createFilter(assdataVbx, -1, "associated_dataproduct_type", null, true);
+      subPanel = createFilterBis(assdataVbx, -1, false, "associated_dataproduct_type", null, SORT_FREQ );
       PropPanel.addCouple(this, p, "Ass.data", "Filtering by the associated data to a catalog.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
 //      JScrollPane scrollPane = new JScrollPane(p,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -896,7 +926,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       globalPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
       globalPanel.add( left, BorderLayout.WEST);
       globalPanel.add( rightPanel, BorderLayout.EAST);
-      
+
       return globalPanel;
    }
    
@@ -913,7 +943,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
 
    @Override
-   public void actionPerformed(ActionEvent e) { flagFormEdit=false; submitAction(); }
+   public void actionPerformed(ActionEvent e) {
+      flagFormEdit=false; submitAction();
+   }
    protected void submitAction() {
       aladin.makeCursor(this, Aladin.WAITCURSOR);
       submit();

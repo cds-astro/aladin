@@ -100,6 +100,7 @@ public class Plan implements Runnable {
       "MOC","CubeColor","HipsFinder","HipsCube"
    };
 
+   protected String id=null;     // Identification unique (ex: CDS/I/231...)
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
    protected int folder;	     // niveau du folder, 0 si aucun
    protected Slide slide=null;   // Slide pour la pile
@@ -213,6 +214,7 @@ public class Plan implements Runnable {
 
    /** Duplication du Plan */
    protected void copy(Plan p) {
+      p.id=id;
       p.type=type;
       p.folder=folder;
       p.collapse=collapse;
@@ -1459,30 +1461,35 @@ public class Plan implements Runnable {
 
    // Peut être sous un plan Background ?
    private boolean setUnderBackGroundFlag(ViewSimple v) {
+      
+      // ON A CHANGE D'AVIS. ON PEUT ACTIVER UN PLAN SOUS LE PLAN DE REFERENCE, MEME CACHE
+      // NOTAMMENT POUR POUVOIR SELECTION DES SOURCES
       boolean under=false;
-
-      // Si l'on force l'affichage des overlays qq soit leur position dans la pile
-      // on peut simplifier comme suit
-      if( ViewSimple.OVERLAYFORCEDISPLAY && !isPixel() ) {
-         setDebugFlag(UNDERBKGD, under);
-         return !under;
-      }
-
-      Plan [] allPlan = aladin.calque.getPlans();
-      int n = aladin.calque.getIndex(allPlan,this);
-      for( int i=n-1; i>=0; i-- ) {
-         Plan p=allPlan[i];
-         if( p.type==ALLSKYIMG && p.active
-               && (p.getOpacityLevel()==1 || p.isRefForVisibleView())
-               && !((PlanImage)p).isTransparent() ) {
-            under=true;
-            break;
-         }
-      }
-      if( under && aladin.view.isMultiView() ) under=false;
-
       setDebugFlag(UNDERBKGD, under);
       return !under;
+
+//      // Si l'on force l'affichage des overlays qq soit leur position dans la pile
+//      // on peut simplifier comme suit
+//      if( ViewSimple.OVERLAYFORCEDISPLAY && !isPixel() ) {
+//         setDebugFlag(UNDERBKGD, under);
+//         return !under;
+//      }
+//
+//      Plan [] allPlan = aladin.calque.getPlans();
+//      int n = aladin.calque.getIndex(allPlan,this);
+//      for( int i=n-1; i>=0; i-- ) {
+//         Plan p=allPlan[i];
+//         if( p.type==ALLSKYIMG && p.active
+//               && (p.getOpacityLevel()==1 || p.isRefForVisibleView())
+//               && !((PlanImage)p).isTransparent() ) {
+//            under=true;
+//            break;
+//         }
+//      }
+//      if( under && aladin.view.isMultiView() ) under=false;
+//
+//      setDebugFlag(UNDERBKGD, under);
+//      return !under;
 
    }
 

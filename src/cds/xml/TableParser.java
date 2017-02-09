@@ -1426,8 +1426,8 @@ final public class TableParser implements XMLConsumer {
       // Gestion du système du calcul de l'année par défaut en fonction du système
       char letter='J';
       if( sys.indexOf("FK4")>=0 || sys.indexOf("B1950")>=0 ) letter='B';
-      if( ep!=null && ep.length()>1 && !Character.isDigit(ep.charAt(0)) ) ep = letter+ep;
-      if( eq!=null && eq.length()>1 && !Character.isDigit(eq.charAt(0)) ) eq = letter+eq;
+      if( ep!=null && ep.length()>1 && Character.isDigit(ep.charAt(0)) ) ep = letter+ep;
+      if( eq!=null && eq.length()>1 && Character.isDigit(eq.charAt(0)) ) eq = letter+eq;
 
       if( sys.indexOf("FK4")>=0 ) {
          if( eq==null ) srcAstroFrame = AF_FK4;
@@ -1461,16 +1461,23 @@ final public class TableParser implements XMLConsumer {
          else consumer.tableParserInfo("      !!! Coordinate system unknown... assuming ICRS");
       }
 
-      // Pour le moment, identique à ICRS donc inutile
-      if( srcAstroFrame==AF_FK5
-            || (srcAstroFrame+"").equals("ICRS")
-            || (srcAstroFrame+"").equals("FK5(J2000.0)") ) srcAstroFrame=null;
+      // Déjà dans le bon référentiel
+      if( (srcAstroFrame+"").equals("ICRS") ) srcAstroFrame=null;
 
       if( ref==null ) ref="null";
 
       if( srcAstroFrame!=null ) {
-         c = new Astropos(srcAstroFrame);
-         consumer.tableParserInfo("      => RA/DEC coordinate conversion: ref=\""+ref+"\" => "+srcAstroFrame+" to "+trgAstroFrame);
+
+         // Pour le moment, identique à ICRS donc inutile
+         if( srcAstroFrame==AF_FK5 || (srcAstroFrame+"").equals("FK5(J2000.0)") ) {
+            consumer.tableParserInfo("      => RA/DEC coordinate conversion not required: ref=\""+ref+"\" => "+srcAstroFrame+" to "+trgAstroFrame);
+            srcAstroFrame=null;
+         
+         } else {
+
+            c = new Astropos(srcAstroFrame);
+            consumer.tableParserInfo("      => RA/DEC coordinate conversion: ref=\""+ref+"\" => "+srcAstroFrame+" to "+trgAstroFrame);
+         }
       } else {
          consumer.tableParserInfo("      => RA/DEC coordinate system used: ref=\""+ref+"\" => "+trgAstroFrame);
       }

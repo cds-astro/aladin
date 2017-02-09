@@ -122,6 +122,7 @@ public class PlanCatalog extends Plan {
       this.aladin= aladin;
       type       = CATALOG;
       c          = Couleur.getNextDefault(aladin.calque);
+      id=label;
       setLabel(label);
       this.objet = objet;
       this.param = param;
@@ -179,6 +180,8 @@ public class PlanCatalog extends Plan {
    * cad met toutes ses variables a <I>null</I> ou a <I>false</I>
    */
    protected boolean Free() {
+      if( getCounts()<=0 || isSED() ) return true;
+      
       aladin.view.deSelect(this);
       if (Aladin.PROTO) {//TODO:: tintinproto
     	  TapManager.getInstance(aladin).updateDeleteUploadPlans(this);
@@ -188,6 +191,7 @@ public class PlanCatalog extends Plan {
       headerFits=null;
       // thomas
       FilterProperties.notifyNewPlan();
+      
       return true;
    }
    

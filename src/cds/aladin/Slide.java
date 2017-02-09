@@ -699,8 +699,9 @@ public final class Slide {
                Color fg=p.c;
                if( (labelBG==Aladin.COLOR_STACK_HIGHLIGHT
                      || labelBG==Aladin.COLOR_STACK_SELECT) && (p.c.equals(Couleur.DC[2])) ) fg=Aladin.COLOR_GREEN;
+               else if( Aladin.DARK_THEME && labelBG==Aladin.COLOR_STACK_SELECT && (p.c.equals(Couleur.DC[1])) ) fg=Color.black;
                else if( labelBG==Aladin.COLOR_STACK_SELECT 
-                     && (p.c.equals(Couleur.DC[7]) || p.c.equals(Couleur.DC[8]))|| p.c.equals(Color.black)) fg=Aladin.COLOR_CONTROL_FOREGROUND;
+                     && (p.c.equals(Couleur.DC[7]) || p.c.equals(Couleur.DC[8])) || p.c.equals(Color.black)) fg=Aladin.COLOR_CONTROL_FOREGROUND;
                else {
                   if( p.c==null || p.c.equals(Color.black) ) fg=Aladin.COLOR_CONTROL_FOREGROUND;
                }

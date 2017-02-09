@@ -617,7 +617,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             }
          }
       }
-      return 1; // Aladin.OUTREACH ? 1 : 0;
+      return 0; // Aladin.OUTREACH ? 1 : 0;
    }
 
    /** Retourne le mode video par défaut */
@@ -1572,7 +1572,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          }
       } else {
          videoChoice.setSelectedIndex(1);  // noreverse
-         mapChoice.setSelectedIndex(1);    // BB
+         mapChoice.setSelectedIndex(0);    // BB
       }
 
       //      fctBkgChoice.setSelectedIndex(2);  // LINEAR par défaut
@@ -2385,7 +2385,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Mémorise un nouveau filtre sur l'arbre des collections */
    protected void setDirFilter(String name,String filter) {
-      if( dirFilter.containsKey(name) ) dirFilter.replace(name, filter);
+      if( dirFilter.containsKey(name) ) dirFilter.put(name, filter);
       else dirFilter.put(name,filter);
    }
 

@@ -430,8 +430,6 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    /** Fin du mode plein écran => réintégration de la vue dans son container originale */
    protected void end() {
       
-      System.out.println("end");
-      
       viewSimple.aladin.fullScreen=null;
       viewSimple.setToolTipText(null);
       viewSimple.setBounds(bounds);

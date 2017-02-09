@@ -26,6 +26,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -109,7 +110,7 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       cardPanel.add(LABEL_SAISIE,text);
       cardPanel.setBackground( aladin.getBackground());
 
-      setLayout(new BorderLayout(7,7));
+      setLayout(new BorderLayout(0,0));
       setBackground( aladin.getBackground() );
       
       label=new Lab(titre);
@@ -119,8 +120,13 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       if( !Aladin.OUTREACH ) {
          JPanel p1 = new JPanel( new BorderLayout(0,0));
          p1.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
-         p1.add( new Lab(aladin.chaine.getString("FRAME")),BorderLayout.WEST );
-         p1.add( c,BorderLayout.EAST );
+         p1.add( new Lab(aladin.chaine.getString("FRAME")+" "),BorderLayout.WEST );
+         
+         JPanel pCombo = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+         pCombo.setBackground( aladin.getBackground() );
+         pCombo.add(c);
+         
+         p1.add( pCombo,BorderLayout.CENTER );
          p1.setBackground( aladin.getBackground());
          add(p1,BorderLayout.EAST);
       }

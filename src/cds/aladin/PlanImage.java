@@ -480,7 +480,7 @@ public class PlanImage extends Plan {
       return true;
    }
 
-   static int id=0;
+//   static int id=0;
 
    /** Duplication du Plan (et de ses paramètres)
     * @param p1 le plan à copier

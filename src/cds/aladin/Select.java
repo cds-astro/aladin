@@ -532,7 +532,7 @@ Runnable, SwingWidgetFinder, Widget {
 
       // Recherche du plan clique
       if( (currentPlan = getPlan(y))==null ) return;
-
+      
       // Par defaut, memorisation de la position
       this.x=x; this.y=y;
       oldy=y; oldx=x;
@@ -908,6 +908,9 @@ Runnable, SwingWidgetFinder, Widget {
 
       // Recherche du plan clique
       currentPlan = p;
+      
+      // On montre la branche associée si c'est possible
+      if( s.inLabel(x) ) a.directory.showTreeObj( currentPlan.id );
 
       Plan [] allPlan = a.calque.getPlans();
 
@@ -1314,7 +1317,8 @@ Runnable, SwingWidgetFinder, Widget {
 
 
    private int drawBeginnerHelp1(Graphics g,String s,Color c,int yMax) {
-      int xMax=getWidth()-5;
+      int x=10;
+      int xMax=getWidth()-x;
       Font FI = Help.FI.deriveFont(Help.FI.getSize2D()-2);
       Font FG = Help.FG.deriveFont(Help.FG.getSize2D()-2);
       g.setColor(c);
@@ -1334,7 +1338,7 @@ Runnable, SwingWidgetFinder, Widget {
             if( s1.length()>0 ) newLine=false;
             int w1 = fm.stringWidth(" "+s1);
             if( w1+w>xMax ) {
-               drawString(g,line.toString(),5,y);
+               drawString(g,line.toString(),x,y);
                y+=h;
                line = new StringBuffer(s1);
                w=0;
@@ -1343,7 +1347,7 @@ Runnable, SwingWidgetFinder, Widget {
             w+=w1;
          }
          if( y<yMax && line.length()>0 ) {
-            drawString(g,line.toString(),5,y);
+            drawString(g,line.toString(),x,y);
             line = new StringBuffer();
             w=0;
          }
@@ -1352,10 +1356,10 @@ Runnable, SwingWidgetFinder, Widget {
       }
 
       // Bordure en marge gauche si on a écrit au-moins une ligne
-      if( !first ) {
-         g.setColor( Color.lightGray );
-         g.drawLine(2,y0-10,2,y);
-      }
+//      if( !first ) {
+//         g.setColor( Color.lightGray );
+//         g.drawLine(2,y0-10,2,y);
+//      }
 
       return y;
    }

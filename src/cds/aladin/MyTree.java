@@ -271,13 +271,13 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
 
       NoeudRenderer() {
          selectionForeground = UIManager.getColor("Tree.selectionForeground");
-//         selectionBackground = UIManager.getColor("Tree.selectionBackground");
-         selectionBackground = aladin.getBackground();
+         selectionBackground = UIManager.getColor("Tree.selectionBackground");
+//         selectionBackground = aladin.getBackground();
          textForeground = UIManager.getColor("Tree.textForeground");
-//         textBackground = UIManager.getColor("Tree.textBackground");
-         textBackground = aladin.getBackground();
+         textBackground = UIManager.getColor("Tree.textBackground");
+//         textBackground = aladin.getBackground();
          
-         nonLeafRenderer.setBackgroundNonSelectionColor( aladin.getBackground() );
+//         nonLeafRenderer.setBackgroundNonSelectionColor( aladin.getBackground() );
       }
 
       public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded,

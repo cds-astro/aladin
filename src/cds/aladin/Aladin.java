@@ -157,6 +157,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Dark theme user interface
  * @beta    <LI> Collection Registry tree
  * @beta    <LI> Datalink, SODA and TAP supports
  * @beta    <LI> Simbad + VizieR pointer improvements
@@ -177,6 +178,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Fix to Hipsgen mirror filenotfound bug
  * @beta    <LI> MOC stack bug introduced in v9.039
  * @beta    <LI> Fix to BLANK wrong value in Hipsgen MAPTILES action
  * @beta    <LI> Fix to radians unit support for table coordinates
@@ -212,7 +214,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.600";
+   static public final    String VERSION = "v9.602";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -302,6 +304,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_TOOL_UP;
    static public Color COLOR_TEXT_BACKGROUND;
    static public Color COLOR_TEXT_FOREGROUND;
+   static public Color COLOR_RED;
    static public Color COLOR_BLUE;
    static public Color COLOR_GREEN;
    static public Color COLOR_STACK_SELECT;
@@ -343,6 +346,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_TEXT_BACKGROUND = Color.white;
       COLOR_TEXT_FOREGROUND = Color.black;
       COLOR_BLUE = Color.blue;
+      COLOR_RED = Color.red;
       COLOR_GREEN = new Color(27,137,0);
       COLOR_STACK_SELECT = new Color(140,140,255);
       COLOR_STACK_HIGHLIGHT = new Color(150,150,150);
@@ -363,11 +367,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_TEXT_FOREGROUND = Color.black;
          COLOR_STATUS_BACKGROUND = COLOR_BUTTON_BACKGROUND;
          COLOR_STATUS_LEFT_FOREGROUND = COLOR_TEXT_FOREGROUND;
+         COLOR_RED = new Color(255,20,20);
          COLOR_BLUE = new Color(120,149,220);
          COLOR_FOREGROUND_ANCHOR = new Color(0,136,204);
          COLOR_GREEN = new Color(57,167,0);
-         COLOR_STACK_SELECT = new Color(40,50,100);
-         COLOR_STACK_HIGHLIGHT = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
+         COLOR_STACK_SELECT = new Color(40,50,150);
+         COLOR_STACK_HIGHLIGHT = COLOR_CONTROL_FOREGROUND_UNAVAILABLE.brighter();
          BACKGROUND = new Color(20,23,27);
          COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
          COLOR_MEASUREMENT_HEADER_FOREGROUND = COLOR_CONTROL_FOREGROUND;
@@ -378,9 +383,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(215,215,225);
          COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_BACKGROUND.brighter();
          COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_TEXT_FOREGROUND;
+         COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       }
       
-      COLOR_MEASUREMENT_FOREGROUND = COLOR_FOREGROUND;
       COLOR_DIRECTORY_BACKGROUND = COLOR_MAINPANEL_BACKGROUND;
 
    }
@@ -1654,7 +1659,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          b.setBorderPainted(false);
          b.setContentAreaFilled(false);
          b.addActionListener( new ActionListener() {
-            public void actionPerformed(ActionEvent e) {  fullScreen(1); }
+            public void actionPerformed(ActionEvent e) {  fullScreen( isFullScreen() ?-1 : 1); }
          });
          if( !isApplet() )  jBar.add(b);
 
@@ -2923,6 +2928,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     *             -1-mode normal
     */
    protected void fullScreen(int mode) {
+      System.out.println("fullscreen("+mode+")");
       if( mode!=-1 ) {
          
          int m = mode==0 ? FrameFullScreen.FULL : mode==3 ? FrameFullScreen.CINEMA
@@ -3760,6 +3766,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( mode==1 ) { calque.flagSimbad = true; calque.flagVizierSED = false; }
       else if( mode==2 ) { calque.flagSimbad = true; calque.flagVizierSED = true; }
       else { calque.flagSimbad = false; calque.flagVizierSED = true; }
+      
+      if( mode!=0 ) view.startQuickSimbad();
       
       look.repaint();
    }
@@ -6058,21 +6066,21 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( USE_SAMP_REQUESTED ) {
             appMessagingMgr = new SAMPManager(this);
          }
-         else if( USE_PLASTIC_REQUESTED ) {
-            appMessagingMgr = new PlasticManager(this);
-         }
+//         else if( USE_PLASTIC_REQUESTED ) {
+//            appMessagingMgr = new PlasticManager(this);
+//         }
          // TODO : test if hub is responding !!
          // else look for an existing conf file
          else if( SAMPManager.getLockFile().exists() ) {
             appMessagingMgr = new SAMPManager(this);
          }
-         else if( PlasticManager.getLockFile().exists() ) {
-            appMessagingMgr = new PlasticManager(this);
-         }
-         // else take default
-         else if( DEFAULT_MESSAGING_MGR.equals(PlasticManager.class) ) {
-            appMessagingMgr = new PlasticManager(this);
-         }
+//         else if( PlasticManager.getLockFile().exists() ) {
+//            appMessagingMgr = new PlasticManager(this);
+//         }
+//         // else take default
+//         else if( DEFAULT_MESSAGING_MGR.equals(PlasticManager.class) ) {
+//            appMessagingMgr = new PlasticManager(this);
+//         }
          else {
             appMessagingMgr = new SAMPManager(this);
          }

@@ -2,7 +2,6 @@ package cds.aladin;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -116,7 +115,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       scrollTree.setBackground(cbg);
       scrollTree.getViewport().setOpaque(true);
       scrollTree.getViewport().setBackground(cbg);
-      scrollTree.getViewport().setBorder(null);
       scrollTree.setOpaque(false);
       
       if( Aladin.DARK_THEME ) {
@@ -124,15 +122,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          scrollTree.getHorizontalScrollBar().setUI(new MyScrollBarUI());
       }
       
-      JPanel toolbar = new JPanel( new BorderLayout(5,7));
-      toolbar.setBorder(BorderFactory.createEmptyBorder());
-      toolbar.setBackground( cbg );
-      
       // Le bandeau en haut
       JLabel titre = new JLabel("Filter");
       titre.setFont(Aladin.BOLD);
       titre.setForeground(Aladin.COLOR_LABEL);
-      toolbar.add(titre,BorderLayout.WEST);
       
       quickFilter = new QuickFilterField(6);
       quickFilter.setToolTipText(Util.fold("Collection filter by free keywords (comma separated) "
@@ -144,12 +137,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( e.getKeyCode()==KeyEvent.VK_ENTER ) quickFiltre();
          }
       });
-      toolbar.add(quickFilter, BorderLayout.CENTER);
       
       
-      JPanel header = new JPanel( new BorderLayout(0,0));
-      header.setBackground(cbg);
-      header.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 10));
       filter = new JComboBox<String>();
       filter.setUI( new MyComboBoxUI());
       filter.setPrototypeDisplayValue("1234567");
@@ -158,6 +147,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       filter.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { filtre( (String)filter.getSelectedItem() ); }
       });
+      JPanel pFilter = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      pFilter.setBackground(cbg);
+      pFilter.add(filter);
       
       JLabel plus = new JLabel(" + ");
       plus.setFont( Aladin.LBOLD );
@@ -170,28 +162,34 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          public void mouseClicked(MouseEvent e) { filtre(); }
       });
       
-      header.add(filter,BorderLayout.WEST);
-      header.add(plus,BorderLayout.EAST);
-      toolbar.add(header, BorderLayout.EAST);
+      JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,3,0));
+      p1.setBackground( cbg );
+      p1.add(pFilter);
+      p1.add(plus);
+
+      JPanel header = new JPanel( new BorderLayout(3,0));
+      header.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 10));
+      header.setBackground( cbg );
+      header.add(titre,BorderLayout.WEST);
+      header.add(quickFilter,BorderLayout.CENTER);
+      header.add(p1,BorderLayout.EAST);
       
       // Les boutons de controle
-      header = new JPanel(new FlowLayout(FlowLayout.LEFT,1,1));
-      header.setBackground(cbg);
       collapse = new Collapse(aladin);
-      header.add(collapse);
       inside = new Inside(aladin);
-      header.add(inside);
       
-      JPanel p2 = new JPanel( new FlowLayout());
-      p2.setBackground(getBackground());
+      JPanel pControl = new JPanel(new FlowLayout(FlowLayout.LEFT,1,1));
+      pControl.setBackground(cbg);
+      pControl.add(collapse);
+      pControl.add(inside);
       
       JPanel control = new JPanel(new BorderLayout());
       control.setBackground(cbg);
       control.setBorder( BorderFactory.createEmptyBorder(0,5,0,0));
       control.add(header,BorderLayout.WEST);
-      control.add(p2,BorderLayout.CENTER);
+      control.add(pControl,BorderLayout.CENTER);
       
-      add(toolbar,BorderLayout.NORTH);
+      add(header,BorderLayout.NORTH);
       add(scrollTree,BorderLayout.CENTER);
       add(control,BorderLayout.SOUTH);
 
@@ -212,6 +210,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             
             collapse.repaint();
+            resetWasExpanded();
             repaint();
          }
       });
@@ -244,10 +243,20 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       });
       
 //       Chargement de l'arbre initial
-//      initTree();   // le cache est lu dans ce thread, mais le reste dans un autre thread
       (new Thread(){
          public void run() {  updateTree(); }
       }).start();
+   }
+   
+   /** ouvre l'arbre en montrant le noeud associé à l'id spécifié */
+   protected void showTreeObj(String id) {
+      if( !isVisible() || dirList.size()==0) return;
+      dirTree.showTreeObj(id);
+   }
+   
+   protected void reset() {
+      quickFilter.setText("");
+      directoryFilter.globalReset();
    }
    
    // Mémorisation de la dernière position de la souris en mouseMoved()
@@ -287,7 +296,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          setForeground( Aladin.COLOR_TEXT_FOREGROUND );
       }
       
-      public Dimension getMinimumSize() { Dimension d = super.getMinimumSize(); d.height=16; return d; }
+//      public Dimension getMinimumSize() { Dimension d = super.getMinimumSize(); d.height=16; return d; }
       
       boolean in(int x) {
          if( cross==null ) return false;
@@ -307,7 +316,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       static private final int X = 6;
       private void drawCross(Graphics g, int x, int y) {
          cross = new Rectangle(x,y,X,X);
-         if( directoryFilter==null || !directoryFilter.hasFilter() ) return;
+         if( getText().trim().length()==0 && (directoryFilter==null || !directoryFilter.hasFilter()) ) return;
          g.setColor( getBackground() );
          g.fillOval(x-3, y-3, X+7, X+7);
 //         g.setColor( dirFilter.hasFilter() ? Color.red.darker() : Color.gray );
@@ -327,7 +336,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
       public void mouseReleased(MouseEvent e) {
          if( in(e.getX())  ) {
-            directoryFilter.globalReset();
+            reset();
          }
       }
       
@@ -418,17 +427,30 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Filtrage basique de l'arbre des Collections */
    private void quickFiltre() {
       if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
-      directoryFilter.setFreeText( (String)filter.getSelectedItem(), quickFilter.getText() );
       directoryFilter.submitAction();
+      dirTree.allExpand();
+   }
+   
+   /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
+   protected String getQuickFilterExpr() {
+      String s = quickFilter.getText().trim();
+      if( s.length()==0 ) return s;
+      
+      String expr;
+      
+      // S'il s'agit directement d'une expression, rien à faire, sinon
+      // il faut générer l'expression en fonction d'une liste de mots clés
+      int i = s.indexOf('=');
+      if( i<0 ) i=s.indexOf('>');
+      if( i<0 ) i=s.indexOf('<');
+      if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) expr = s;
+      else expr = "obs_title,obs_description,obs_collection,ID="+DirectoryFilter.jokerize(s);
+      
+      return expr;
    }
    
    /** Retourne true si la chaine est une clé de propriété d'au moins un enregistrement */
    protected boolean isFieldName(String s) { return multiProp.isFieldName(s); }
-   
-   /** Initialise le texte dans le champ du filtre rapide */
-   protected void quickFilterSetText(String t) {
-      quickFilter.setText(t);
-   }
    
    // Affichage en rouge le bouton du filtre s'il y en a un actif
    protected void updateFilterButtonColor() {
@@ -544,6 +566,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    // Compteurs des noeuds
    private HashMap<String,Integer> counter = null;
+   private HashSet<String> wasExpanded = null;
+   
+   protected void resetWasExpanded() { wasExpanded = null; }
    
    /** Reconstruction de l'arbre en utilisant à chaque fois un nouveau model
     * pour éviter les conflits d'accès et éviter la lenteur des évènements
@@ -557,8 +582,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       boolean insideActivated = inside.isActivated();
       
       // Mémorisation temporaire des états expanded/collapsed
-      HashSet<String> wasExpanded = new HashSet<String>();
-      backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
+//      HashMap<String,Boolean> wasExpanded = new HashMap<String,Boolean>();
+      if( wasExpanded==null ) {
+         wasExpanded = new HashSet<String>();
+         backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
+      }
 
       // Génération d'un nouveau model prenant en compte les filtres
       DirectoryModel model = new DirectoryModel(aladin);
@@ -570,13 +598,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( initCounter ) initCounter( model );
       else model.countDescendance();
 
-//      // Comptage de la descendance de chaque branche
-//      if( !defaultExpand ) model.countDescendance();
-//      
-//      // Dans le cas où l'on remet l'expand par défaut, on sait qu'on a ajouté
-//      // des collections et qu'il faut donc refaire le comptage de référence
-//      else initCounter( model );
-      
       // Répercussion des états des feuilles sur les branches
       if( inside.isAvailable() && !insideActivated ) model.populateFlagIn();
       
@@ -608,7 +629,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private void backupState(TreePath parent, HashSet<String> wasExpanded, DirectoryTree tree) {
       DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) parent.getLastPathComponent();
       TreeObj to =  (TreeObj)lastNode.getUserObject();
-      if( tree.isExpanded(parent) ) wasExpanded.add(to.path );
+      if( tree.isExpanded(parent) ) wasExpanded.add( to.path );
       
       if( lastNode.getChildCount() >= 0 ) {
          for( Enumeration e = lastNode.children(); e.hasMoreElements(); ) {
@@ -618,17 +639,25 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
    }
    
+   private String parent( String path ) {
+      int i = path.lastIndexOf('/');
+      if( i<0 ) return "";
+      return path.substring(0,i);
+   }
+   
    /** Restaure l'état des branches en fonction d'une hashSet des branches
     * qui étaient expanded, ainsi que d'une hashmap donnant les décomptes
     * de référence pour chaque branche. */
    private void restoreState(TreePath parent, HashSet<String> wasExpanded,  HashMap<String,Integer> counter, JTree tree) {
+      DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) parent.getLastPathComponent();
       String path = getPathString(parent);
       
       // Récupération de l'état expanded/collapsed
-      if( wasExpanded!=null && wasExpanded.contains( path ) ) tree.expandPath( parent );
+      if( wasExpanded!=null ) {
+         if( wasExpanded.contains( path ) ) tree.expandPath( parent );
+      }
       
       // Récupération du compteur de référence
-      DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) parent.getLastPathComponent();
       Integer nbRef = counter.get( path );
       if( nbRef!=null )  {
          TreeObj to =  (TreeObj)lastNode.getUserObject();
@@ -655,11 +684,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Réaffichage de l'arbre */
    private void resumeTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter) {
       try {
-         long t0 = System.currentTimeMillis();
+//         long t0 = System.currentTimeMillis();
          rebuildTree(tmpDirList,defaultExpand,initCounter);
          validate();
          postTreeProcess();
-         System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
+//         System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
       } finally {
 
          // Pour permettre le changement du curseur d'attente de la fenêtre de filtrage
@@ -673,7 +702,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
     */
    protected void resumeFilter(String expr) {
       try {
+         
+         // Ajout de la contrainte du filtre rapide
+         String quick = getQuickFilterExpr();
+         if( quick.length()>0 ) {
+            if( expr.length()==0 || expr.equals("*") ) expr=quick;
+            else expr = "("+expr+") && "+quick;
+         }
+         // Filtrage
          checkFilter(expr);
+         
+         // Regénération de l'arbre
          resumeTree();
       } catch( Exception e ) {
         if( Aladin.levelTrace>=3 ) e.printStackTrace();
@@ -696,9 +735,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private void checkFilter(String expr) throws Exception {
       
       // Filtrage
-      long t0 = System.currentTimeMillis();
+//      long t0 = System.currentTimeMillis();
       ArrayList<String> ids = multiProp.scan( (HealpixMoc)null, expr, false, -1);
-      System.out.println("Filter: "+ids.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
+//      System.out.println("Filter: "+ids.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
       
       // Positionnement des flags isHidden() en fonction du filtrage
       HashSet<String> set = new HashSet<String>( ids.size() );
@@ -813,6 +852,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( isDefaultExpand() ) dirTree.allExpand();
          else dirTree.defaultExpand();
       }
+      resetWasExpanded();
    }
    
    /** Retourne true s'il n'y a pas d'arbre HiPS */
@@ -832,10 +872,29 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       else stopInsideUpdater();
    }
    
+   /** Ajoute si nécessaire les propriétés d'un fichier "properties" distant */
+   private void addRemoteProp(MyProperties prop) {
+      String u = prop.getProperty("hips_service_url");
+      if( u==null || prop.getProperty("hips_order")!=null ) return;
+      
+      InputStreamReader in=null;
+      try {
+         in = new InputStreamReader( Util.openAnyStream(u+"/properties") );
+         MyProperties aProp = new MyProperties();
+         aProp.load( in );
+         
+         for( String key : aProp.getKeys() ) {
+            if( prop.get(key)==null ) prop.put(key,aProp.get(key));
+         }
+      } catch( Exception e) {}
+      finally{ try { if( in!=null ) in.close(); } catch(Exception e) {} }
+
+   }
+   
    private boolean interruptServerReading;
    
    /** (Re)génération du Multiprop en fonction d'un stream d'enregistrements properties */
-   protected int loadMultiProp(InputStreamReader in) throws Exception {
+   protected int loadMultiProp(InputStreamReader in,boolean local) throws Exception {
       MyProperties prop;
       
       boolean mocServerReading=true;
@@ -854,7 +913,21 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             mocServerReading = prop.loadRecord(in);
             if( prop.size()==0 || MultiMoc.getID(prop)==null ) continue;
             
+            // Définition locale => PROP_ORIGIN = local
+            if( local ) {
+               prop.setProperty("PROP_ORIGIN", "local");
+               
+               // si HiPS, peut être requière un complément d'information par accès au fichier properties distant ?
+               addRemoteProp(prop);
+               
+               String u = prop.getProperty("hips_service_url");
+               if( u!=null && prop.getProperty("hips_order")==null ) {
+                  
+               }
+            }
+            
             try {
+               
                if( prop.getProperty("MOCSERVER_REMOVE")!=null ) {
                   multiProp.remove( MultiMoc.getID(prop));
                   rm++;
@@ -888,9 +961,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
     * La liste est triée
     * Les URLs HiPS seront mémorisées dans le Glu afin de pouvoir gérer les sites miroirs
     */
-   private ArrayList<TreeObjDir> populateMultiProp(boolean localFile) {
+   private ArrayList<TreeObjDir> populateMultiProp() {
       ArrayList<TreeObjDir> listReg = new ArrayList<TreeObjDir>(20000);
-      for( MocItem mi : this ) populateProp(listReg, mi.prop,localFile);
+      for( MocItem mi : this ) populateProp(listReg, mi.prop);
       Collections.sort(listReg, TreeObj.getComparator() );
       return listReg;
    }
@@ -900,7 +973,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
     * @param prop       Enregistrement des propriétés
     * @param localFile  true si cet enregistrement a été chargé localement par l'utilisateur (ACTUELLEMENT NON UTILISE)
     */
-   private void populateProp(ArrayList<TreeObjDir> listReg, MyProperties prop, boolean localFile) {
+   private void populateProp(ArrayList<TreeObjDir> listReg, MyProperties prop) {
       
       // Détermination de l'identificateur
       String id = MultiMoc.getID(prop);
@@ -940,7 +1013,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       
       // Ajout dans la liste des noeuds d'arbre
-      listReg.add( new TreeObjDir(aladin,id,localFile,prop) );
+      listReg.add( new TreeObjDir(aladin,id,prop) );
    }
    
    /** Ajustement des propriétés, notamment pour ajouter le bon client_category
@@ -953,8 +1026,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             || id.equals("CDS/METAobj")
             || id.equals("CDS/ReadMeObj") ) category=null;
       
+      boolean local = prop.getProperty("PROP_ORIGIN")!=null;
+      
+      // Sans catégorie => dans la branche "Miscellaneous" suivi de l'authority
       if( category==null ) {
-         prop.setProperty(Constante.KEY_CLIENT_CATEGORY,"Miscellaneous/"+Util.getSubpath(id, 0,1));
+         category = "Miscellaneous/"+Util.getSubpath(id, 0,1);
+         prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
+      }
+      
+      // Rangement dans la branche "local" si chargement local
+      if( local && !category.startsWith("Local/") ) {
+         category = "Local/"+ category;
+         prop.replaceValue(Constante.KEY_CLIENT_CATEGORY,category);
       }
       
       // Tri de la catégorie générale
@@ -974,6 +1057,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             prop.put("bib_year",""+year);
          } catch( Exception e) {}
       }
+      
    }
    
    private void propAdjust1(String id, MyProperties prop) {
@@ -985,6 +1069,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       if( id.equals("CDS/Simbad") ) category = "Data base";
       else {
+         // Nettoyage des macros latex qui trainent         
+         cleanLatexMacro(prop);
          
          // Détermination de la catégorie
          String code = getCatCode(id);
@@ -1060,6 +1146,99 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category );
+   }
+   
+   static private final String [] TEXTKEYS = { "obs_title","obs_description","obs_label","obs_collection" };
+   
+   /** Nettoyage des macros Latex oublié par VizieR */
+   private void cleanLatexMacro( MyProperties prop ) {
+      for( String key : TEXTKEYS ) {
+         String s = prop.get(key);
+         if( s==null ) continue;
+         if( s.indexOf('\\')<0 ) continue;
+         s = cleanLatexMacro( s );
+         prop.replaceValue(key, s);
+      }
+   }
+   
+   static final private int AVANT = 0, MACRO = 1, IN = 2, NEXT = 3, MACRO1 = 4, NAMEMACRO = 5, INMACRO = 6;
+
+   /** Suppression des macros Latex présent dans la chaine
+    * ex: texte avant \macro{contenu{ou plus}} texte avant... */
+   private String cleanLatexMacro( String s ) {
+      StringBuilder s1 = new StringBuilder();
+      StringBuilder macro = new StringBuilder();
+      char [] a = s.toCharArray();
+      int mode=0;
+      int level=0;
+      boolean keepIn=false;
+      
+      for( char c : a ) {
+         switch( mode ) {
+            case AVANT:
+               if( c=='{' ) mode=MACRO1;
+               else if( c=='\\' ) { mode=MACRO; macro.replace(0, macro.length(), ""); }
+               else s1.append(c);
+               break;
+            case MACRO:
+               if( c=='\\' ) macro.replace(0, macro.length(), "");
+               else if( c=='{' ) {
+                  keepIn = macro.toString().equals("vFile") || macro.toString().equals("em") || macro.toString().equals("bf");
+                  mode=IN;
+               } else if( !Character.isJavaIdentifierPart(c) ) {
+                  String s2 = resolveMacro( macro.toString() );
+                  if( s2.length()>0 ) { s1.append( s2 ); s1.append(c); }
+                  else {
+                     int n = s1.length()-1;
+                     if( c==')' && s1.charAt(n)=='(' ) s1.deleteCharAt( n );
+                     else if( c==']' && s1.charAt(n)=='[' ) s1.deleteCharAt( n );
+                     else if( c=='}' && s1.charAt(n)=='{' ) s1.deleteCharAt( n );
+                  }
+                  mode=AVANT;
+               } else macro.append(c);
+               break;
+            case IN:
+               if( c=='}' && level==0 ) mode=NEXT;
+               else if( c=='{' ) level++;
+               else if( c=='}' ) level--;
+               else if( keepIn ) s1.append(c);
+               break;
+            case NEXT:
+               if( c=='{' ) { mode=IN; keepIn=false; }
+               else {
+                  mode=AVANT;
+                  int n = s1.length()-1;
+                  if( c==')' && s1.charAt(n)=='(' ) s1.deleteCharAt( n );
+                  else if( c==']' && s1.charAt(n)=='[' ) s1.deleteCharAt( n );
+                  else if( c=='}' && s1.charAt(n)=='{' ) s1.deleteCharAt( n );
+                  else s1.append(c);
+               }
+               break;
+            case MACRO1:
+               if( c!='\\' ) { s1.append('{'); s1.append(c); mode=AVANT; } // Fausse alerte
+               else mode=NAMEMACRO;
+               break;
+            case NAMEMACRO:
+               if( c=='\\' ) break;
+               if( !Character.isJavaIdentifierPart(c) ) mode=INMACRO;
+               break;
+            case INMACRO:
+               if( c=='}' ) mode=AVANT;
+               else s1.append(c);
+               break;
+         }
+      }
+//      System.out.println("\nAVANT: "+s+"\nAPRES: "+s1.toString());
+      return s1.toString();
+   }
+   
+   static final private String MACRO_LIST [] = { "deg","originalcolumnnames" };
+   static final private String MACRO_CONV []  = { "°", ""  };
+   
+   private String resolveMacro( String macro ) {
+      int i = Util.indexInArrayOf(macro, MACRO_LIST);
+      if( i<0 ) return macro;
+      return MACRO_CONV[i];
    }
    
    // Mémorise les paths de l'arbre qui ont de multiples feuilles
@@ -1175,7 +1354,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             public void run() {
                if( updateFromMocServer()>0  ) {
                   cacheWrite();
-                  final ArrayList<TreeObjDir> tmpListReg = populateMultiProp(false);
+                  final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
                   SwingUtilities.invokeLater(new Runnable() {
                      public void run() { replaceTree(tmpListReg); }
                   });
@@ -1199,7 +1378,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             public void run() { 
                if( loadFromMocServer(MOCSERVER_INIT)>0 ) {
                   cacheWrite();
-                  final ArrayList<TreeObjDir> tmpListReg = populateMultiProp(false);
+                  final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
                   SwingUtilities.invokeLater(new Runnable() {
                      public void run() { replaceTree(tmpListReg); }
                   });
@@ -1208,17 +1387,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          }).start();
       }
 
-      this.dirList = populateMultiProp(false);
+      this.dirList = populateMultiProp();
    }
 
    /** Ajout de nouvelles collections */
    protected boolean addHipsProp(InputStreamReader in, boolean localFile) {
       try {
-         loadMultiProp(in);
-         dirList = populateMultiProp(localFile);
-//         replaceTree(listReg);
-         checkIn(true);
-         resumeTree(dirList, false, true);
+         loadMultiProp(in,localFile);
+         ArrayList<TreeObjDir> tmpDirList = populateMultiProp();
+//         checkIn(true);
+//         resumeTree(dirList, false, true);
+         rebuildTree(tmpDirList,  false,  true);
+         dirList=tmpDirList;
       } catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          return false;
@@ -1269,7 +1449,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          out.close();
          aladin.trace(4,"ID list sent");
 
-         int n=loadMultiProp( new InputStreamReader( urlConn.getInputStream() ) );
+         int n=loadMultiProp( new InputStreamReader( urlConn.getInputStream() ), false );
          Aladin.trace(3,"Multiprop updated in "+(System.currentTimeMillis()-t0)+"ms => "+n+" record"+(n>1?"s":""));
          return n;
 
@@ -1336,7 +1516,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             } catch( EOFException e1 ) { eof=true; }
          }
          
-         if( !eof ) n=loadMultiProp(in);
+         if( !eof ) n=loadMultiProp(in, false);
          Aladin.trace(3,"Multiprop "+text+"ed in "+(System.currentTimeMillis()-t0)+"ms => "+n+" record"+(n>1?"s":""));
          
       } catch( Exception e1 ) {
@@ -1489,6 +1669,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          pack();
       }
       
+      public void setVisible(boolean flag) {
+         
+         // Si on efface la fenêtre popup, on resete aussi la mémorisation
+         // de la liste des TreeObj concerné par le dernier affichage
+         if( flag==false ) treeObjs = null;
+         
+         super.setVisible(flag);
+      }
+      
       boolean isSame(ArrayList<TreeObjDir> a1, ArrayList<TreeObjDir> a2) {
          if( a1==null && a2==null ) return true;
          if( a1==null || a2==null ) return false;
@@ -1557,7 +1746,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
             
             JLabel labelPlus = new JLabel(" + ");
-            labelPlus.setForeground(Color.lightGray);
             mocAndMore.add(labelPlus);
             
             mocBx = bx = new JCheckBox("MOC union"); 
@@ -1586,7 +1774,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             String provenance = to.copyright==null ? to.copyrightUrl : to.copyright;
             if( provenance!=null ) {
-               s = ".Provenance: "+provenance+" ";
+               s = "Provenance: "+provenance+" ";
                a = new MyAnchor(aladin,null,50,s,null);
                a.setForeground(Color.gray);
                PropPanel.addCouple(p,null, a, g,c);
@@ -1596,7 +1784,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             s  = to.getProperty(Constante.KEY_MOC_SKY_FRACTION);
             if( s!=null ) {
                try { s = Util.myRound( Double.parseDouble(s)*100); } catch( Exception e) {}
-               s = ".Sky coverage: "+s+"% ";
+               s = "Sky coverage: "+s+"% ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
@@ -1604,7 +1792,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             s  = to.getProperty(Constante.KEY_HIPS_PIXEL_SCALE);
             if( s!=null ) {
                try { s = Coord.getUnit( Double.parseDouble(s)); } catch( Exception e) {}
-               s = "    .HiPS pixel scale: "+s+" ";
+               s = "    HiPS pixel scale: "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
@@ -1612,14 +1800,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             s  = to.getProperty(Constante.KEY_NB_ROWS);
             if( s!=null ) {
                try { nbRows = Long.parseLong(s); } catch( Exception e) {}
-               s = "    .nb rows: "+s+" ";
+               s = "    Nb rows: "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
             }
             s  = to.getProperty("bib_year");
             if( s!=null ) {
-               s = "    .pub.year: "+s+" ";
+               s = "    Pub.year: "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
@@ -1631,7 +1819,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
             hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = allBx = null;
-            if( to.getUrl()!=null ) {
+            if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox("HiPS");
                mocAndMore.add(bx);
                bx.setSelected(true);
@@ -1642,7 +1830,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                siaBx = bx = new JCheckBox("SIA");
                mocAndMore.add(bx);
                bx.setEnabled(hasView && to.isIn() );
-               bx.setSelected(to.getUrl()==null );
+               bx.setSelected( !to.hasHips() );
                bx.setToolTipText("Simple Image Access => load the image list available in the current view");
            }
             
@@ -1656,14 +1844,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if( nbRows!=-1 && nbRows<100000 ) {
                   allBx = bx = new JCheckBox("All sources");
                   mocAndMore.add(bx);
-                  bx.setSelected(to.getUrl()==null && allCat );
+                  bx.setSelected( !to.hasHips() && allCat );
                   bx.setToolTipText("Load all sources (small catalog/table <100000)");
                   bg.add(bx);
                } 
 
                csBx = bx = new JCheckBox("Cone search");
                mocAndMore.add(bx);
-               bx.setSelected(to.getUrl()==null && !allCat);
+               bx.setSelected( !to.hasHips() && !allCat);
                bx.setToolTipText("Cone search on the current view");
                bx.setEnabled( to.isIn() );
                bg.add(bx);
@@ -1683,13 +1871,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             } else if( to.getCSUrl()!=null ) {
                csBx = bx = new JCheckBox("Cone search");
                mocAndMore.add(bx);
-               bx.setSelected(true);
+               bx.setSelected( !to.hasHips() );
                bx.setToolTipText("Cone search on the current view");
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
             }
             
             JLabel labelPlus = new JLabel(" + ");
-            labelPlus.setForeground(Color.lightGray);
             mocAndMore.add(labelPlus);
             
             if( to.hasMoc() ) {
@@ -1698,7 +1885,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                bx.setToolTipText("Load the MultiOrder Coverage map (MOC) associated to the collection");
             }
             
-            if( to.isCDSCatalog() ) {
+            if( to.isCDSCatalog() && nbRows!=-1 && nbRows>=100000 ) {
                dmBx = bx = new JCheckBox("Density map");
                mocAndMore.add(bx);
                Util.toolTip(bx,"Progressive view (HiPS) of the density map associated to the catalog",true);

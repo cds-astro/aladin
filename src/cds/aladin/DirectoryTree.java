@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -80,6 +81,39 @@ public class DirectoryTree extends JTree {
       root = (DefaultMutableTreeNode) model.getRoot();
       super.setModel(model);
    }
+   
+   /** Ouvre l'arbre en montrant le noeud associé à l'id spécifié */
+   protected void showTreeObj(String id) { 
+      if( id==null ) return;
+      TreePath path = findTreeObj(new TreePath(root),id);
+      if( path==null ) return;
+         
+      // Selection du noeud trouvé
+      setSelectionPath(path);
+      
+      // Scrolling s'il n'est pas visible
+      Rectangle bounds = getPathBounds(path);
+      bounds.height = getVisibleRect().height;
+      scrollRectToVisible(bounds);
+   }
+   
+   /** Retourne le path du noeud associé à l'id, ou null si non trouvé */
+   private TreePath findTreeObj(TreePath parent,String id) {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      TreeObj to = (TreeObj)node.getUserObject();
+      if( to instanceof TreeObjDir && ((TreeObjDir)to).internalId.endsWith(id) ) return parent;
+      
+      if (node.getChildCount() >= 0) {
+         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode subNode = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(subNode);
+            TreePath tp = findTreeObj(path,id);
+            if( tp!=null ) return tp;
+         }
+      }
+      return null;
+   }
+
 
    /** true si tous les noeuds sont collapsés sauf ceux au plus haut niveau (sous root) */
    protected boolean isDefaultExpand() {
@@ -156,7 +190,7 @@ public class DirectoryTree extends JTree {
       expandPath(path);
    }
    
-   private void expandAll(TreePath parent) {
+   protected void expandAll(TreePath parent) {
       DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
       if (node.getChildCount() >= 0) {
          for (Enumeration e = node.children(); e.hasMoreElements(); ) {
@@ -264,13 +298,6 @@ public class DirectoryTree extends JTree {
          Component c = nonLeafRenderer.getTreeCellRendererComponent(tree, obj, selected, expanded, leaf, row, hasFocus);
          
          try {
-            if( n.isInStack() ) c.setForeground( Color.green );
-            else if( !aladin.directory.inside.isActivated() ) {
-               int isIn = n.getIsIn();
-               c.setForeground( isIn==0 ? Aladin.ORANGE : isIn==1 ? Aladin.COLOR_GREEN : 
-                  Aladin.COLOR_CONTROL_FOREGROUND );
-            } else c.setForeground( Aladin.COLOR_CONTROL_FOREGROUND );
-            
             // Affichage des compteurs
             if( !node.isLeaf() && c instanceof JLabel ) {
                int nb = n.nb;
@@ -279,13 +306,28 @@ public class DirectoryTree extends JTree {
                      : " "+nb+" / "+ref )+"</font>";
                JLabel lab = (JLabel)c;
                lab.setText("<html>"+lab.getText()+s+"</html>" );
-//               lab.invalidate();
             }
 
+            boolean flagHighLighted=false;
             TreeObjDir tohl = aladin.directory.getTreeObjDirHighLighted();
             if( node.isLeaf() && tohl!=null && ((TreeObjDir)n).internalId.equals(tohl.internalId) ) {
-               ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( selectionBackground.brighter() );
-            } else ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( getBackground() );
+               ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( Aladin.COLOR_STACK_HIGHLIGHT );
+               flagHighLighted=true;
+            } else {
+               ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( getBackground() );
+            }
+            
+//            if( n.isInStack() ) c.setForeground( Color.green );
+            Color color;
+            if( (color=n.isInStack())!=null ) c.setForeground( color==Color.black ? Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT : 
+               selected && color==Color.blue ? Color.black : color );
+            else if( !aladin.directory.inside.isActivated() ) {
+               int isIn = n.getIsIn();
+//               c.setForeground( isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
+//                     (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
+//                  Aladin.COLOR_CONTROL_FOREGROUND );
+               c.setForeground( isIn==0 ? ( flagHighLighted || selected ? Color.black : Color.gray) : Aladin.COLOR_CONTROL_FOREGROUND );
+            } else c.setForeground( selected ? Color.black : Aladin.COLOR_CONTROL_FOREGROUND );
 
             ImageIcon icon=null;
             if( n instanceof TreeObjDir) {

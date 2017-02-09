@@ -19,8 +19,6 @@
 
 package cds.aladin;
 
-import java.awt.Color;
-
 import javax.swing.plaf.basic.BasicToolBarUI;
 
 public class MyToolbarUI extends BasicToolBarUI {
@@ -28,10 +26,6 @@ public class MyToolbarUI extends BasicToolBarUI {
    
    protected void installDefaults( ) {
       super.installDefaults();
-      dockingColor = Color.red;
-      floatingColor = Color.yellow;
-      floatingBorderColor = Color.green;
-      
       toolBar.setForeground( Aladin.COLOR_CONTROL_FOREGROUND );
       toolBar.setBackground( Aladin.COLOR_CONTROL_BACKGROUND );
    }

@@ -281,7 +281,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    public void mouseEntered(MouseEvent e) {
       if( aladin.inHelp ) { aladin.help.setText(Help()); return; }
 
-      if( flagSED ) { sed.mouseEnter(); return; }
+//      if( flagSED ) { sed.mouseEnter(); return; }
 
       boolean resize = flagCut;
       if( objCut instanceof SourceStat ) resize=false;
@@ -454,7 +454,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          // L'image associe au zoom sera simplement le zoom vide lui-meme
          if( lastImgID!=-2 ) {
-            gbuf.setColor( BGD);
+            gbuf.setColor( BGD );
             gbuf.fillRect(0,0,w,h);
             drawBord(gbuf);
             lastImgID=-2;
@@ -613,7 +613,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             gbuf.setColor(Color.red);
             s=aladin.localisation.J2000ToString(c.al, c.del);
             gbuf.drawString(s,width/2-fm.stringWidth(s)/2,height-16);
-            gbuf.setColor(Color.blue);
+            gbuf.setColor( Aladin.COLOR_BLUE );
             s=v.getTaille(0);
             
             
@@ -662,7 +662,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       int h = getHeight();
 
       // Nettoyage
-      g.clearRect(1,1,w-2,h-2);
+      g.setColor( Aladin.COLOR_BACKGROUND );
+      g.fillRect(1,1,w-2,h-2);
       drawBord(g);
 
       boolean trouve=false;
@@ -677,9 +678,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       // Affichage de la coupe (cut) courant. Si la premiere valeur de hist[] est -1
       // il s'agit d'une coupe en couleur, sinon d'une coupe en niveau de gris
       if( cut[0]!=-1 ) {
-         g.setColor(Color.cyan);
+         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
          for( int i=1; i<cut.length-1; i++ ) g.drawLine(i,h-cut[i],i,h);
-         g.setColor(Color.blue);
+         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
          for( int i=1; i<cut.length-1; i++ ) g.drawLine(i,h-cut[i-1],i,h-cut[i]);
 
       } else {
@@ -705,11 +706,11 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       // en ordonnée de la souris dans le cut graph.
       PlanImage pimg = (PlanImage)aladin.calque.getPlanBase();
       String pixel = "pixel value: "+pimg.getPixelInfoFromGrey(y*256/height);
-      g.setFont(Aladin.SPLAIN);
-      g.setColor(Color.black);
+      g.setFont(Aladin.PLAIN);
+      g.setColor( Aladin.COLOR_BLUE );
       g.drawLine(1,cutY,4,cutY);
       g.drawLine(width-4,cutY,width,cutY);
-      g.drawString(pixel,25,cutY<20?height-2:10);
+      g.drawString(pixel,25,cutY<20?height-2:18);
       //       Util.drawStringOutline(g, pixel,25,cutY<20?SIZE-2:10, Color.yellow, Color.black);
 
       // Tracage du trait repérant le FWHM en fonction de la position
@@ -722,7 +723,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       //       else ((Cote)objCut).drawFWHM((longCut*((x1+1.)/SIZE)),(longCut*((x2-1.)/SIZE)));
       //       aladin.view.repaintAll();
       if( x2<=x1 ) return;
-      g.setColor(Color.red);
+      g.setColor(Aladin.COLOR_FOREGROUND );
       g.drawLine(x1+1,cutY,x2-1,cutY);
       g.drawLine(x1+1,cutY+1,x2-1,cutY+1);		// Pour mieux voir
 
@@ -744,7 +745,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          PlanImage p = (PlanImage)aladin.calque.getPlanBase();
          if( p==null ) return;
-         g.setColor(Color.blue);
+         g.setColor( Aladin.COLOR_BLUE );
          g.setFont(Aladin.SPLAIN);
 
          // Affichage de la valeur min et max à droite et à gauche
@@ -814,7 +815,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected void suspendCut() { flagCut=false; repaint(); }
 
    /** Retourne le Cote associée au cutGraph courant, null si aucune */
-   protected Obj getObjCut() { return objCut; }
+   protected Obj getObjCut() {
+      return objCut;
+   }
 
    protected void cutOff(Obj objCut) {
       if( objCut!=this.objCut ) return;
@@ -920,17 +923,20 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
     * @param simRep repere correspondant à l'objet dans la vue (si connu)
     */
    protected void setSED(String source) { setSED(source,null); }
-   protected void setSED(String source,Repere simRep) {
+   protected void setSED(String source, Repere simRep) {
       if( source == null ) source = "";
       if( source.length() == 0 ) flagSED = false;
       if( oSrcSed.equals(source) ) return;
       oSrcSed = source;
+      
       // Arret du SED
       if( source.length() == 0 ) {
+//         System.out.println("ZoomView.clearSED");
          clearSED();
 
          // Chargement du SED
       } else {
+//         System.out.println("ZoomView.setSED pour "+source);
          if( sed == null ) sed = new SED(aladin);
          flagSED = true;
          flagHist = false;
@@ -1264,7 +1270,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          String w1 = Coord.getUnit(c.getImgWidth());
          String h1 = Coord.getUnit(c.getImgHeight());
          g.setFont(Aladin.SPLAIN);
-         g.setColor(Color.blue);
+         g.setColor( Aladin.COLOR_BLUE );
          String s = w1+" x "+h1;
          g.drawString(s,w/2-g.getFontMetrics().stringWidth(s)/2,h-10);
       } catch( Exception e ) {}
@@ -1405,7 +1411,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( !v.isFree() && !flagwen && !flagCut && rectzoom!=null ) {
          drawArea(gr, (int)Math.round(rectzoom.x),(int)Math.round(rectzoom.y),
                (int)Math.round(rectzoom.width-1),(int)Math.round(rectzoom.height-1));
-         gr.setColor(Color.blue);
+         gr.setColor( Aladin.COLOR_BLUE );
          drawInfo(gr,w,h);
       }
 
@@ -1414,7 +1420,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          int n = (int)Math.ceil((double)getWidth()/WENZOOM);
          int c = (n/2)*WENZOOM;
          int W2 = WENZOOM/2;
-         gr.setColor( Color.blue );
+         gr.setColor( Aladin.COLOR_BLUE );
          gr.drawRect(c,c,WENZOOM,WENZOOM);
 
          if( WENZOOM<=16 ) {

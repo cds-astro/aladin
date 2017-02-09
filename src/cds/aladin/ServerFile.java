@@ -438,7 +438,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
                // C'est peut être un fichier de properties ?
             } else if( (type & MyInputStream.PROP)!=0 ) {
-               if( aladin.directory.addHipsProp( new InputStreamReader(in), localFile) ) {
+               if( aladin.directory.addHipsProp( new InputStreamReader(in), true) ) {
                   n=1;
                }
 

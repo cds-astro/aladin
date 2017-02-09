@@ -1329,6 +1329,7 @@ VWMSTICKON	Sticked panel
 VWMLABELOFF	Unlabel the selected objects
 VWMLABELON	Label the selected objects
 VWMCOPY     Copy the reticle location in the clipboard
+VWMLOOK     Astronomical object exploration (Simbad & VizieR)
 VWMCOPYIMG  Copy the current view in the clipboard
 VWMOREVIEWS	Create one view per image
 VWONEVIEW	Delete other views
@@ -1369,6 +1370,7 @@ VWMSTICKON.fr	Panneau scotché
 VWMLABELON.fr	Afficher l'identificateur des objets sélectionnés
 VWMLABELOFF.fr	Cacher l'identificateur des objets sélectionnés
 VWMCOPY.fr     Copier la position du réticule dans le presse-papier
+VWMLOOK.fr	Exploration de l'objet astronomique (Simbad & VizieR)
 VWMCOPYIMG.fr     Copier la vue courante dans le presse-papier
 VWMOREVIEWS.fr	Créer une vue par image
 VWONEVIEW.fr	Supprimer les autres vues
@@ -1696,10 +1698,10 @@ FILEDIALOG.fr Style de fenêtres
 FILEDIALOGHELP.fr Rendu (Look&feel) des fenêtres de dialogue de sélection des fichiers et des répertoires.
 FILEDIALOGJAVA.fr Library Java
 FILEDIALOGNATIVE.fr Système d'exploitation
-THEME	Theme
+THEME	Interface theme
 THEMEHELP	Graphical interface theme. Required to restart.
-THEME.fr	Thème
-THEMEHELP.fr	Thème de l'interface graphique. Recquière un redémarrage.
+THEME.fr	Thème de l'interface
+THEMEHELP.fr	Thème de l'interface graphique. Nécessite un redémarrage.
 
 
 UPTITLE.fr	Préférences utilisateur

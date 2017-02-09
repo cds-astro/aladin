@@ -539,7 +539,7 @@ public final class Tool {
             p = setPolygon(bAX,bAY,dx,dy);
             g.drawPolygon(p);
 
-            g.setColor( mode==UNAVAIL ? c1 : Color.red.darker() );
+            g.setColor( mode==UNAVAIL ? c1 : Aladin.COLOR_RED );
             g.drawLine(dx+4,dy+3,dx+4,dy+3+6);
             g.drawLine(dx+4-3,dy+6,dx+4+3,dy+6);
 
@@ -550,7 +550,7 @@ public final class Tool {
             g.setColor(c1);
             g.drawOval(dx+1,dy,14,14);
             //            g.setColor(c1);
-            g.setColor( mode==UNAVAIL ? c1 : Color.red.darker() );
+            g.setColor( mode==UNAVAIL ? c1 :  Aladin.COLOR_RED );
             g.drawLine(dx+8,dy+4,dx+8,dy+4+6);
             g.drawLine(dx+8-3,dy+7,dx+8+3,dy+7);
             break;
@@ -568,15 +568,15 @@ public final class Tool {
          case ToolBox.DEL:                // la croix
             //            g.setColor(c1);
             p = setPolygon(crX,crY,dx,dy);
-            g.setColor( mode==UNAVAIL ? c1 : Color.red.darker() );
+            g.setColor( mode==UNAVAIL ? c1 :  Aladin.COLOR_RED );
             g.fillPolygon(p);
             g.drawPolygon(p);
             break;
          case ToolBox.RGB:
             if( mode!=UNAVAIL ) {
-               g.setColor(Color.red);   g.fillOval(dx-5,dy-3,12,12);
-               g.setColor(Color.green); g.fillOval(dx+3,dy-3,12,12);
-               g.setColor(Color.blue);  g.fillOval(dx-1,dy+4,12,12);
+               g.setColor( Aladin.COLOR_RED);   g.fillOval(dx-5,dy-3,12,12);
+               g.setColor( Aladin.COLOR_GREEN); g.fillOval(dx+3,dy-3,12,12);
+               g.setColor( Aladin.COLOR_BLUE);  g.fillOval(dx-1,dy+4,12,12);
             }
             g.setColor(c1);
             drawCercle(g,dx-7,dy-4);
@@ -587,7 +587,8 @@ public final class Tool {
             g.setColor(c1);
             g.fillRect(dx+1,dy+2,23,13);
             g.setColor(cPapier);
-            g.setColor( mode==UNAVAIL ? cPapier : new Color( 236,226,181) );
+            g.setColor( mode==UNAVAIL ? cPapier : Aladin.DARK_THEME ? 
+                  Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE : new Color( 236,226,181) );
             g.fillRect(dx+1,dy+5,4,7);
             g.fillRect(dx+8,dy+5,10,7);
             g.fillRect(dx+21,dy+5,3,7);
@@ -604,7 +605,7 @@ public final class Tool {
                g.fillPolygon(p);
                g.setColor( c1 );
                g.drawPolygon(p);
-               g.setColor(mode==UNAVAIL ? c1 : Color.red);
+               g.setColor(mode==UNAVAIL ? c1 :Aladin.COLOR_RED );
                for( i=0; i<m3X.length; i++ ) {
                   g.drawLine(dx+m3X[i][0],dy+m3X[i][2],dx+m3X[i][1],dy+m3X[i][2]);
                }
@@ -661,7 +662,7 @@ public final class Tool {
             g.drawLine(cmX[0]+dx,cmX[1]+dy,cmX[2]+dx,cmX[3]+dy);
             g.drawLine(cmY[0]+dx,cmY[1]+dy,cmY[2]+dx,cmY[3]+dy);
             g.setColor( cPapier );
-            g.setColor( mode==UNAVAIL ? cPapier : Color.red );
+            g.setColor( mode==UNAVAIL ? cPapier : Aladin.COLOR_RED );
             for( i=0; i<cmlX.length-1; i++ )
                g.drawLine(cmlX[i]+dx,cmlY[i]+dy, cmlX[i+1]+dx,cmlY[i+1]+dy);
             break;
@@ -714,7 +715,7 @@ public final class Tool {
          case ToolBox.CROP:
             g.setColor(c1);
             for(i=0; i<CROPN.length; i++) { int s[] = CROPN[i]; g.drawLine(dx+s[0],dy+s[2],dx+s[1],dy+s[2]); }
-            g.setColor(mode==UNAVAIL ? c1 : Color.red.darker() /*new Color( 85,121,203)*/ );
+            g.setColor(mode==UNAVAIL ? c1 : Aladin.COLOR_RED /*new Color( 85,121,203)*/ );
             for(i=16; i<CROPN.length; i++) { int s[] = CROPN[i]; g.drawLine(dx+s[0],dy+s[2],dx+s[1],dy+s[2]); }
             g.setColor( cPapier );
             for(i=0; i<CROPB.length; i++) { int s[] = CROPB[i]; g.drawLine(dx+s[0],dy+s[2],dx+s[1],dy+s[2]); }
@@ -729,7 +730,7 @@ public final class Tool {
             g.setColor(c1);
             g.drawLine(dx,dy,dx,dy+h); g.drawLine(dx-1,dy+1,dx+1,dy+1);
             g.drawLine(dx,dy+h,dx+w,dy+h); g.drawLine(dx+w-1,dy+h-1,dx+w-1,dy+h+1);
-            g.setColor( mode==UNAVAIL ? c1 : Color.red ); //new Color( 85,121,203) );
+            g.setColor( mode==UNAVAIL ? c1 : Aladin.COLOR_RED ); //new Color( 85,121,203) );
             for( i=0; i<plot.length; i++ ) g.drawLine(plot[i][0]+dx,dy+h-plot[i][1],plot[i][0]+dx,dy+h-plot[i][1]);
             break;
       }
