@@ -87,8 +87,11 @@ public class PlanImage extends Plan {
    // Type de table des couleurs supportees
    static final public int CMGRAY = 0;
    static final public int CMBB   = 1;
-   static final public int CMA    = 2;
-   static final public int CMSTERN= 3;
+   static final public int CMRED  = 2;
+   static final public int CMGREEN= 3;
+   static final public int CMBLUE = 4;
+   static final public int CMA    = 5;
+   static final public int CMSTERN= 6;
 
    // modes video possibles
    public static final int VIDEO_NORMAL  = 0;  // Video mode normal

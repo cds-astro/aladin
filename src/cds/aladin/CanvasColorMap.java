@@ -383,8 +383,7 @@ MouseMotionListener, MouseListener, KeyListener
 
    /** Retourne la liste des noms des colormaps */
    public static String [] getCMList() {
-      String res [] = new String[ FrameColorMap.CM.length +
-                                  (customCMName==null ? 0 : customCMName.size())];
+      String res [] = new String[ FrameColorMap.CM.length + (customCMName==null ? 0 : customCMName.size())];
       // ajout des CM par défaut
       int i=0;
       for( ; i<FrameColorMap.CM.length; i++ ) res[i] = FrameColorMap.CM[i];
@@ -556,6 +555,18 @@ MouseMotionListener, MouseListener, KeyListener
             gn[i] = (i-64)<<1;  if( gn[i]<0 ) gn[i]=0; else if( gn[i]>255 ) gn[i]=255;
             bl[i] = (i-128)<<1; if( bl[i]<0 ) bl[i]=0;
          }
+         interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
+         
+      } else if( typeCM== PlanImage.CMRED ) {
+         for( i=0; i<256; i++ ) rd[i]=i;
+         interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
+
+      } else if( typeCM== PlanImage.CMGREEN ) {
+         for( i=0; i<256; i++ ) gn[i]=i;
+         interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
+
+      } else if( typeCM== PlanImage.CMBLUE ) {
+         for( i=0; i<256; i++ ) bl[i]=i;
          interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
 
          // S'il s'agit d'une table des couleurs A

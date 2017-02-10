@@ -73,8 +73,8 @@ import cds.tools.Util;
  */
 public final class FrameColorMap extends JFrame implements MouseListener {
 
-   static public final String CM[]      = { "gray", "BB", "A","stern" };
-   static public final String CMA[]     = { "gray", "BB", "A","stern" };
+   static public final String CM[]      = { "gray", "BB", "Red","Green","Blue", "A","stern"  };
+   static public final String CMA[]     = { "gray", "BB", "Red","Green","Blue", "A","stern" };
 
    // Les chaines statiques
    private String CMTITRE,CMREVERSE,CMLIMITS,CMERRORRANGE,CMRESET,CMLOCALCUT,CMCLOSE,

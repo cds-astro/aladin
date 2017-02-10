@@ -1337,6 +1337,8 @@ public class Calque extends JPanel implements Runnable {
       if( select.canBeNewRef(p) ) {
          if( setPlanRef(p) ) aladin.view.newView();
       } else if( !aladin.view.tryToShow(p) ) p.setActivated(true);
+      
+      if( p.isCatalog() && p.active)  PlanFilter.updatePlan(p);
       if( flagPaint ) repaintAll();
    }
 
