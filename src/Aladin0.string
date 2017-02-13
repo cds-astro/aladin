@@ -1412,7 +1412,7 @@ CMCLOSE	Close
 #CMHELP	Help
 CMNOCUT	All values
 CMNOCUTTIP Display the whole range of pixel values
-CMAPPLYALL	Apply on other images
+CMAPPLYALL	Apply on all selected images
 CMAPPLYCCD Apply on all CCDs
 CMAPPLYALLTIP	Apply this pixel mapping on all other compatible images selected in the stack
 CMAPPLYCCDTIP	Apply this pixel mapping on all other CCDs
@@ -1447,7 +1447,7 @@ CMLOCALCUTTIP.fr Seuillage automatique basé sur la portion de l'image actuelleme
 CMCLOSE.fr	Fermer
 CMNOCUT.fr	Toutes les valeurs
 CMNOCUTTIP.fr Affiche la totalité des valeurs des pixels
-CMAPPLYALL.fr	Appliquer aux autres images
+CMAPPLYALL.fr	Appliquer aux images sélectionnées
 CMAPPLYCCD.fr	Appliquer aux autres CCD
 CMAPPLYALLTIP.fr	Applique cet dynamique de pixel à toutes les images compatibles sélectionnées dans la pile.
 CMAPPLYCCDTIP.fr	Applique cet dynamique de pixel à tous les CCD.

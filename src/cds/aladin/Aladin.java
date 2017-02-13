@@ -179,6 +179,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Fix to VOTable UTF-16 STREAM bug
  * @beta    <LI> Fix to Hipsgen mirror filenotfound bug
  * @beta    <LI> MOC stack bug introduced in v9.039
  * @beta    <LI> Fix to BLANK wrong value in Hipsgen MAPTILES action
@@ -2530,8 +2531,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
             while( st.hasMoreTokens() ) {
                String f = st.nextToken();
                if( f.trim().length()==0 ) continue;
-               calque.newPlan(f,null,null);
-               console.printCommand("load "+f);
+               String cmd = "load "+f;
+               aladin.execAsyncCommand(cmd);
+               
+//               calque.newPlan(f,null,null);
+//               console.printCommand("load "+f);
             }
             dropTargetDropEvent.getDropTargetContext().dropComplete(true);
 
@@ -2542,8 +2546,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
             Iterator iterator = fileList.iterator();
             while( iterator.hasNext() ) {
                File file = (File) iterator.next();
-               calque.newPlan(file.getAbsolutePath(),file.getName(),null);
-               console.printCommand("load "+file.getAbsolutePath());
+               String cmd = "load "+file.getAbsolutePath();
+               aladin.execAsyncCommand(cmd);
+               
+//               calque.newPlan(file.getAbsolutePath(),file.getName(),null);
+//               console.printCommand("load "+file.getAbsolutePath());
             }
             dropTargetDropEvent.getDropTargetContext().dropComplete(true);
 

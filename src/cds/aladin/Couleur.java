@@ -20,7 +20,11 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -54,8 +58,8 @@ public final class Couleur extends JComponent implements MouseListener {
    
    // Les premières couleurs par défaut sont en "dur", les autres random
    static Color [] DC1 = {
-      Color.red,
-      Color.blue,
+      Aladin.COLOR_RED, //Color.red,
+      Aladin.COLOR_BLUE, //Color.blue,
       new Color(153,204,0),
       new Color(255,255,0),
       new Color(0,0,102),

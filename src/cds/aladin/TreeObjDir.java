@@ -728,10 +728,9 @@ public class TreeObjDir extends TreeObj {
    
    protected void loadSIA() {
       if( prop==null ) return;
-      checkTarget();
  
-      String rad = Util.myRound( aladin.view.getCurrentView().getTaille() );
-      String trg = aladin.view.getCurrentView().getCentre();
+      String rad = getDefaultRadius();
+      String trg = getDefaultTarget();
 
       // Accès via GLU
       String gluTag = prop.get("sia_glutag");
@@ -751,21 +750,33 @@ public class TreeObjDir extends TreeObj {
       }
    }
    
-   private void checkTarget() {
+   private String getDefaultTarget() {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
-         aladin.info("Pas encore implanté !\nIl faudrait demander ici une position et un rayon "
-               + "puisqu'il n'y a pas de vue chargée actuellement");
+         String s = aladin.localisation.getTextSaisie();
+         if( s.length()!=0 ) return s;
+         Coord coo = getTarget();
+         s = coo==null ? null : coo.toString();
+         if( s!=null ) return s;
+         aladin.info("Pas encore implanté, il faudrait demander Target+Radius");
       }
+      return aladin.view.getCurrentView().getCentre();
    }
    
+   private String getDefaultRadius() {
+      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+         return "14'";
+      }
+      double radius = aladin.view.getCurrentView().getTaille();
+      return Coord.getUnit( radius );
+   }
+   
+  
    protected void loadCS() {
       try {
-         checkTarget();
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
-         double radius = aladin.view.getCurrentView().getTaille();
-         String rad = Coord.getUnit( radius );
-         String trg = aladin.view.getCurrentView().getCentre();
+         String rad = getDefaultRadius();
+         String trg = getDefaultTarget();
          
          // On passe par VizieR/Simbad via la commande script
          if( isCDSCatalog() ) {

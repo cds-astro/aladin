@@ -340,6 +340,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       prop = new Vector(10);
       dirFilter = new LinkedHashMap<String,String>();
       setDirFilter("default", "*");
+      setDirFilter("Color surveys", "dataproduct_subtype=color && moc_sky_fraction>0.2");
+      setDirFilter("Large catalogs", "nb_rows>1000000");
+      setDirFilter("Log missions", "ID=CDS/B*");
       flagModif = false;
    }
 

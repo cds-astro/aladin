@@ -647,9 +647,9 @@ MouseWheelListener, Widget
          else if( w.haspushed ) fg = Aladin.COLOR_MEASUREMENT_ANCHOR_HASPUSHED; // Ancre inactive (jamais cliquee)
          else fg = Aladin.COLOR_FOREGROUND_ANCHOR;           // Ancre deja cliquee
       } 
+      else if( w.onMouse ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
       else if( y<=2*HF ) fg = Aladin.COLOR_MEASUREMENT_HEADER_FOREGROUND;
       else if( w.computed ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_COMPUTED;
-      else if( w.onMouse ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
       else if( w.show    ) fg = Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT;
       
       g.setColor( fg );
@@ -1783,10 +1783,9 @@ MouseWheelListener, Widget
    
    // tracé de l'icone permettant l'extraction du panel dans une fenêtre indépendante
    private void drawIconOut(Graphics gr) {
+      if( aladin.isFullScreen() ) return;
       if( aladin.mesure.isSplitted() ) return;
-      if( iconOut==null ) {
-         iconOut = aladin.getImagette("Preview.gif");
-      }
+      if( iconOut==null ) iconOut = aladin.getImagette("Preview.gif");
       if( iconOut!=null ) {
          int w=16;
          int x = getWidth()-w-8;

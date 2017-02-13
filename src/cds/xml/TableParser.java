@@ -21,6 +21,7 @@
 package cds.xml;
 
 import java.io.EOFException;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -289,21 +290,21 @@ final public class TableParser implements XMLConsumer {
 
             prec[i]=6;
             try { prec[i] = Integer.parseInt(f.precision); } catch( Exception e ) { prec[i]=6; }
-            //System.out.println("Field "+i+" type="+type[i]+" pos="+pos[i]+" len="+len[i]+" prec="+prec[i]);
+//            System.out.println("Field "+i+" type="+type[i]+" pos="+pos[i]+" len="+len[i]+" prec="+prec[i]);
          }
          pos[0]=0;
          memoField=null;    // va permettre de répérer un appel ultérieur à parseBin en continuation
-         //System.out.println("length="+length+" sizeRecord="+sizeRecord);
+         System.out.println("length="+length+" sizeRecord="+sizeRecord);
       }
 
-      //System.out.println("\nparseBin position="+offset+" length="+length+" nRecord="+nRecord+" nField="+nField);
+//      System.out.println("\nparseBin position="+offset+" length="+length+" nRecord="+nRecord+" nField="+nField);
 
       // Parsing du buffer (on reprend éventuellement là où on en était)
       int position=offset;
       while( position<length ) {
          if( nField==nbField ) {
             nField=0;
-            //System.out.print(nRecord+": ");
+//            System.out.print(nRecord+": ");
          }
 
          // En BINARY2, il faut lire le masque de bits en préambule de la ligne
@@ -313,7 +314,7 @@ final public class TableParser implements XMLConsumer {
             // sinon ce sera pour la prochaine fois
             int n = length-position;
             if( n<nullMask.length ) {
-               //System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause du nullMask..");
+//               System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause du nullMask..");
                memoB = new byte[n];
                System.arraycopy(b,position,memoB,0,n);
                return true;
@@ -325,6 +326,7 @@ final public class TableParser implements XMLConsumer {
          } else maskRead=false;
 
          int nbBytes = len[nField]==-1 ? -1 : binSizeOf(type[nField], len[nField]);
+         int lenv=0;   // Pour les champs variables.
 
          // Champ variable ?
          if( nbBytes==-1 ) {
@@ -332,12 +334,14 @@ final public class TableParser implements XMLConsumer {
             // Y a-t-il encore au-moins 4 bytes ? sinon ce sera pour la prochaine fois
             int n = length-position;
             if( n<4 ) {
-               //System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause de la longueur d'un champ variable..");
+//               System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause de la longueur d'un champ variable..");
                memoB = new byte[n];
                System.arraycopy(b,position,memoB,0,n);
                return true;
             }
-            nbBytes = getInt(b, position);
+            
+            lenv = getInt(b, position);
+            nbBytes =  binSizeOf( type[nField], lenv );
             position+=4;
          }
 
@@ -352,7 +356,7 @@ final public class TableParser implements XMLConsumer {
             // Dans le cas d'un champ variable, il faut également garder sa taille
             if( len[nField]==-1 ) position-=4;
             int n = length-position;
-            //System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause d'un champ non complet..");
+//            System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause d'un champ non complet..");
             memoB = new byte[n];
             System.arraycopy(b,position,memoB,0,n);
             return true;
@@ -363,14 +367,14 @@ final public class TableParser implements XMLConsumer {
          if( inBinary2 && isNull(nullMask,nField) ) record[nField]="null";
 
          // Sinon
-         else record[nField] = getBinField(b,position, len[nField]==-1 ? nbBytes : len[nField], type[nField],prec[nField], 0.,1.,false,0);
+         else record[nField] = getBinField(b,position, len[nField]==-1 ? lenv /*nbBytes */ : len[nField], type[nField],prec[nField], 0.,1.,false,0);
 
-         //System.out.print(" "+nbBytes+"/"+record[nField]);
+//         System.out.print(" "+nbBytes+"/"+record[nField]);
          position = nextPosition;
          nField++;
          if( nField==nbField ) {
             consumeRecord(record,nRecord++);
-            //System.out.println();
+            System.out.println();
          }
       }
 
@@ -681,6 +685,7 @@ final public class TableParser implements XMLConsumer {
                               type=='C'? 8:
                                  type=='M'? 16:
                                     type=='P'? 8:
+                                       type=='U'? 2:
                                        0;
       if( sizeOf==0 ) {
          System.out.println("Problème sérieux pour ["+type+"]");
@@ -705,12 +710,13 @@ final public class TableParser implements XMLConsumer {
          boolean hasNull,int tnull) {
       if( n==0 ) return "";
       if( type=='A' ) return getStringTrim(t,i,n);
+//      if( type=='U' ) return getStringUTrim(t,i,n);
       if( n==1 ) return getBinField(t,i,type,prec,tzero,tscale,hasNull,tnull);
 
-      StringBuffer a=null;
+      StringBuilder a=null;
       for( int j=0; j<n; j++ ) {
-         if( j==0 ) a = new StringBuffer();
-         else a.append(' ');
+         if( j==0 ) a = new StringBuilder();
+         else if( type!='U' ) a.append(' ');
          a.append( getBinField(t,i+binSizeOf(type,j),type,prec,tzero,tscale,hasNull,tnull) );
       }
       return a+"";
@@ -765,11 +771,16 @@ final public class TableParser implements XMLConsumer {
          return fmt( Double.longBitsToDouble(a),p,z,s )
                +(b>=0?"+":"-")
                +fmt( Double.longBitsToDouble(b),p,z,s )+"i";
+         case 'U': 
+            try { return new String(t, i, 2, utf16); }
+            catch( Exception e) { return "[??]"; }
          case 'A': return ""+( (char)t[i]);
          default: return "[???]";
       }
    }
-
+   
+   static private Charset utf16 = Charset.forName("UTF-16");
+   
 
    /**
     * Mise en forme d'un entier
@@ -890,6 +901,10 @@ final public class TableParser implements XMLConsumer {
       //      for( fin = offset+len-1; fin>deb && (s[fin]==BLB || s[fin]==TABB); fin--);
       //      return new String(s,deb,fin-deb+1);
    }
+   
+//   static final public String getStringUTrim(byte s[],int offset,int len) {
+//      return (new String(s,offset,len,utf16)).trim();
+//   }
 
    /** Extrait la chaine de caractères indiquée par la paramètre en trimmant
     * les éventuels blancs en début et fin de chaine

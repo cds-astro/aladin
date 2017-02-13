@@ -74,6 +74,7 @@ public final class FrameMesure extends JFrame  {
       
       JPanel p = (JPanel)getContentPane();
       p.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 5));
+      p.setBackground( a.getBackground() );
       p.add(a.mesure,"Center");
       a.mesure.split(true);
       pack();
@@ -105,16 +106,4 @@ public final class FrameMesure extends JFrame  {
       if( e.getID()==WindowEvent.WINDOW_CLOSING ) close();
       super.processWindowEvent(e);
    }
-   
-
-   
-//   // Gestion des evenement
-//   public boolean handleEvent(Event e) {
-//
-//      // On supprime le frame
-//      if( e.id==Event.WINDOW_DESTROY ) close(); 
-//
-//
-//      return super.handleEvent(e);
-//   }
 }

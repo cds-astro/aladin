@@ -107,14 +107,20 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       scrollV.addAdjustmentListener(mcanvas);
       scrollH.addAdjustmentListener(mcanvas);
       status = new Status(aladin,"");
+      status.setBackground( aladin.getBackground());
       flagSplit=false;
 
-      haut = new JPanel();
-      haut.setLayout( new BorderLayout(2,2) );
-      Aladin.makeAdd(haut,status,"Center");
       search = new Search(aladin,false); search.setEnabled(true);
+      search.setBackground( aladin.getBackground() );
+      haut = new JPanel();
+      haut.setBackground( aladin.getBackground() );
+      haut.setLayout( new BorderLayout(2,2) );
+      haut.add(status,BorderLayout.CENTER);
+//      Aladin.makeAdd(haut,status,"Center");
       JPanel x = new JPanel(); x.add(search);
-      Aladin.makeAdd(haut,x,"East");
+      x.setBackground( aladin.getBackground() );
+//      Aladin.makeAdd(haut,x,"East");
+      haut.add(x,BorderLayout.EAST);
 
       //       cross = new JButton(new ImageIcon(aladin.getImagette("Out.gif")));
       //       cross.setMargin(new Insets(0,0,0,0));
@@ -129,16 +135,19 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 //      est.add(scrollV,BorderLayout.CENTER);
 
       setLayout( new BorderLayout(0,0) );
-      Aladin.makeAdd(this,haut,"North" );
-      Aladin.makeAdd(this,mcanvas,"Center");
-      Aladin.makeAdd(this,scrollV/* est*/,"East");
-      Aladin.makeAdd(this,scrollH,"South");
+      setBackground( aladin.getBackground() );
+      add(haut,BorderLayout.NORTH);
+      add(mcanvas,BorderLayout.CENTER);
+      add(scrollV,BorderLayout.EAST);
+      add(scrollH,BorderLayout.SOUTH);
+      
       haut.setVisible(false);
 
       MFSEARCH=aladin.chaine.getString("MFSEARCH");
       //       MFSEARCHINFO=aladin.chaine.getString("MFSEARCHINFO");
       MFSEARCHO=aladin.chaine.getString("MFSEARCHO");
       MFSEARCHBAD=aladin.chaine.getString("MFSEARCHBAD");
+      
       this.datalinkManager = new DatalinkManager();
    }
    

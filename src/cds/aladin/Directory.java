@@ -195,7 +195,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
       // Actions sur le clic d'un noeud de l'arbre
       dirTree.addMouseListener(new MouseAdapter() {
-         public void mouseClicked(MouseEvent e) {
+         public void mousePressed(MouseEvent e) {
             toHighLighted = null;
             TreePath tp = dirTree.getPathForLocation(e.getX(), e.getY());
             if( tp==null ) hideInfo();
@@ -257,6 +257,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    protected void reset() {
       quickFilter.setText("");
       directoryFilter.globalReset();
+      dirTree.defaultExpand();
    }
    
    // Mémorisation de la dernière position de la souris en mouseMoved()
@@ -714,6 +715,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          // Regénération de l'arbre
          resumeTree();
+         
+         dirTree.allExpand();
       } catch( Exception e ) {
         if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -1665,7 +1668,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          contentPane.setBackground( new Color(240,240,250));
          contentPane.setBorder( BorderFactory.createLineBorder(Color.black));
          setUndecorated(true);
-         setAlwaysOnTop(true);
+//         setAlwaysOnTop(true);
          pack();
       }
       
@@ -1690,13 +1693,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       
       /** Positionne les collections concernées, et regénère le panel en fonction */
-      boolean setCollections(ArrayList<TreeObjDir> treeObjs) {
-         if( isSame(treeObjs,this.treeObjs) ) return false;
-         this.treeObjs = treeObjs;
+      boolean setCollections(ArrayList<TreeObjDir> tos) {
+         if( isSame(tos,treeObjs) ) { toFront(); return false; }
+         this.treeObjs = tos;
          resumePanel();
          validate();
          SwingUtilities.invokeLater( new Runnable() {
-            public void run() { pack(); repaint(); }
+            public void run() { pack(); toFront(); repaint();}
          });
          return true;
       }
