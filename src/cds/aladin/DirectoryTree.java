@@ -203,34 +203,36 @@ public class DirectoryTree extends JTree {
    }
    
    // Map d'icones qui servent à montrer l'origine des HiPS */
-   private HashMap<String, ImageIcon> mapIcon = null;
+   private HashMap<String, MyImageIcon> mapIcon = null;
    
    // Initialisation de la map des Icons et de leurs différents états */
    private void initMapIcon() {
       Image img;
       
       try {
-         mapIcon = new HashMap<String, ImageIcon>();
+         mapIcon = new HashMap<String, MyImageIcon>();
          img = aladin.getImagette("Folder.png");
-         mapIcon.put("Folder",new ImageIcon(img));
+         mapIcon.put("Folder",new MyImageIcon(img));
          img = aladin.getImagette("FolderVizieR.png");
-         mapIcon.put("FolderVizieR",new ImageIcon(img));
+         mapIcon.put("FolderVizieR",new MyImageIcon(img));
          img = aladin.getImagette("cds.png");
-         mapIcon.put("CDS",new ImageIcon(img));
-         mapIcon.put("CDS/color",new ImageIcon(setIconTag(img)));
+         mapIcon.put("CDS",new MyImageIcon(img));
+         mapIcon.put("CDS/color",new MyImageIcon(setIconTag(img)));
          img = aladin.getImagette("esa.png");
-         mapIcon.put("ESAVO",new ImageIcon(img));
-         mapIcon.put("ESAVO/color",new ImageIcon(setIconTag(img)));
+         mapIcon.put("ESAVO",new MyImageIcon(img));
+         mapIcon.put("ESAVO/color",new MyImageIcon(setIconTag(img)));
          img = aladin.getImagette("jaxa.png");
-         mapIcon.put("JAXA",new ImageIcon(img));
-         mapIcon.put("JAXA/color",new ImageIcon(setIconTag(img)));
+         mapIcon.put("JAXA",new MyImageIcon(img));
+         mapIcon.put("JAXA/color",new MyImageIcon(setIconTag(img)));
          img = aladin.getImagette("irap.png");
-         mapIcon.put("ov-gso",new ImageIcon(img));
-         mapIcon.put("ov-gso/color",new ImageIcon(setIconTag(img)));
+         mapIcon.put("ov-gso",new MyImageIcon(img));
+         mapIcon.put("ov-gso/color",new MyImageIcon(setIconTag(img)));
          img = aladin.getImagette("xcatdb.png");
-         mapIcon.put("xcatdb",new ImageIcon(img));
-         mapIcon.put("xcatdb/color",new ImageIcon(setIconTag(img)));
-         mapIcon.put("f",new ImageIcon(img));
+         mapIcon.put("xcatdb",new MyImageIcon(img));
+         mapIcon.put("xcatdb/color",new MyImageIcon(setIconTag(img)));
+         mapIcon.put("f",new MyImageIcon(img));
+         
+         mapIcon.put("defaut",new MyImageIcon());
          
       } catch( Exception e ) {
          e.printStackTrace();
@@ -238,7 +240,7 @@ public class DirectoryTree extends JTree {
    }
 
    // Retourne l'icone qui correspond à un Identificateur de HiPS et à un mode partiulier */
-   private ImageIcon getIcon(String id, int mode) {
+   private MyImageIcon getIcon(String id, int mode) {
       if( id==null ) return null;
       if( mapIcon==null ) initMapIcon();
       
@@ -258,7 +260,7 @@ public class DirectoryTree extends JTree {
       int h = img.getHeight(aladin);
       BufferedImage img2 = new BufferedImage(w,h, BufferedImage.TYPE_INT_ARGB);
       Graphics g = img2.getGraphics();
-      g.drawImage(img,0,0,aladin);
+      g.drawImage(img,1,0,aladin);
       
       int x = w-8;
       int y = h/2;
@@ -318,31 +320,78 @@ public class DirectoryTree extends JTree {
             }
             
 //            if( n.isInStack() ) c.setForeground( Color.green );
-            Color color;
-            if( (color=n.isInStack())!=null ) c.setForeground( color==Color.black ? Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT : 
-               selected && color==Color.blue ? Color.black : color );
-            else if( !aladin.directory.inside.isActivated() ) {
-               int isIn = n.getIsIn();
-//               c.setForeground( isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
-//                     (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
-//                  Aladin.COLOR_CONTROL_FOREGROUND );
-               c.setForeground( isIn==0 ? ( flagHighLighted || selected ? Color.black : Color.gray) : Aladin.COLOR_CONTROL_FOREGROUND );
-            } else c.setForeground( selected ? Color.black : Aladin.COLOR_CONTROL_FOREGROUND );
+            
+            // Mise en couleur particulière si déjà chargé dans la pile
+//            Color color;
+//            if( (color=n.isInStack())!=null ) c.setForeground( color==Color.black ? Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT : 
+//               selected && color==Color.blue ? Color.black : color );
+//            else 
+            
+            int isIn = n.getIsIn();
+            if( !aladin.directory.inside.isActivated() ) {
+               c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
+                     (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
+                  Aladin.COLOR_CONTROL_FOREGROUND );
+//               c.setForeground( (node.isLeaf() && isIn==-1) ? color.red  : isIn==0 ? ( flagHighLighted || selected ? Color.black : Color.gray) : Aladin.COLOR_CONTROL_FOREGROUND );
+            } else {
+               c.setForeground( isIn==-1 ? Aladin.COLOR_CONTROL_FOREGROUND : (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) );
+            }
 
-            ImageIcon icon=null;
+            MyImageIcon icon=null;
             if( n instanceof TreeObjDir) {
                TreeObjDir to = (TreeObjDir)n;
                icon = getIcon( to.internalId,to.isColored() ? 1 : 0);
+               if( icon==null ) icon = getIcon("defaut",0);
             } else if( !node.isLeaf() ) {
                if( n.path.endsWith("/CDS VizieR") ) icon=getIcon( "FolderVizieR", 0);
                else icon=getIcon( "Folder", 0);
             }
-            if( icon!=null ) nonLeafRenderer.setIcon( icon );
+            if( icon!=null ) {
+               icon.setColor( n.isInStack() );
+               nonLeafRenderer.setIcon( icon );
+            }
          } catch( Exception e ) { }
          
          c.setMinimumSize( new Dimension( 150,c.getMinimumSize().height));
 
          return c;
+      }
+   }
+   
+   class MyImageIcon extends ImageIcon {
+      Color color=null;
+      boolean defaut=false;
+      
+      public MyImageIcon() {
+         super();
+         defaut=true;
+      }
+      public MyImageIcon(Image image) {
+         super(image);
+      }
+      
+      void setColor(Color color) { this.color=color; }
+      
+      public int getIconWidth() {
+         if( defaut ) return 7;
+         return super.getIconWidth();
+      }
+      
+      public int getIconHeight() {
+         if( defaut ) return 7;
+         return super.getIconHeight();
+      }
+      
+      public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+         if( defaut ) {
+            g.setColor( Color.gray.darker() );
+            Util.fillCircle7(g, x+3, y+3);
+            
+         } else super.paintIcon(c,g,x,y);
+         
+         if( color!=null ) {
+            Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
+         }
       }
    }
 }

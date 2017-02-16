@@ -517,6 +517,7 @@ public final class Slide {
 //            colorBorder = new Color(50,50,50);
          }
          
+//         boolean canBeTransparent= a.calque.canBeTransparent(p);
          boolean canBeTransparent= a.calque.canBeTransparent(p);
          boolean isViewable = p.isViewable();
          boolean inLogo = inLogo(xMouse) && in(yMouse);

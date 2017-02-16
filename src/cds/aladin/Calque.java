@@ -3784,45 +3784,50 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Détermine si le plan doit être activé comme un plan de référence ou simplement afficher en overlay */
-   protected boolean mustBeSetPlanRef(Plan p) {
-      boolean setRef=false;
-
-      // prochaine vue à utiliser
-      ViewSimple v = aladin.view.viewSimple[ aladin.view.getLastNumView(p) ];
-
-      // Juste pour du débuging
-      String sDebug=null;
-
-      // La pile est vide => ref
-      if( aladin.calque.isFreeX(p) ) { setRef=true; sDebug="Stack Vide"; }
-
-      // Il s'agit d'un simple remplacement de plan => activate
-      else if( p.isOldPlan ) { setRef=false; sDebug="Flag IsOldPlan=true"; }
-
-      // Dans une case vide sans être un simple overlay => ref
-      else if( v.isFree() && !p.isOverlay() ) { setRef=true; sDebug="Image dans la prochaine view vide"; }
-
-      // Le plan de ref est une image normal et on charge une autre image => ref
-      else if( v.pref!=null && v.pref.isImage() && p.isImage() ) { setRef=true; sDebug="Image sur image"; }
-
-      // Le plan de ref est catalogue normal  et on charge image ou un plan allsky => ref
-      else if( v.pref!=null && (v.pref.isSimpleCatalog() && (p.isImage() || p instanceof PlanBG)) ) { setRef=true; sDebug="Image ou Allsky sur catalogue"; }
-
-      // Le plan de ref n'est pas allsky et le catalogue n'est pas visible
-      else if( v.pref!=null && !(v.pref instanceof PlanBG) && p.isSimpleCatalog() && !p.isViewable() ) { setRef=true; sDebug="Catalogue non visible autrement"; }
-
-      // Dans le cas d'un multiview on priviligiera la création du plan
-      else if( aladin.view.isMultiView() && p.isImage() ) { setRef=true; sDebug="Image sur multivue"; }
-
-      aladin.trace(4,"Calque.mustBeSetPlanRef("+p.label+") => "+setRef+(sDebug!=null?" ("+sDebug+")":""));
-      return setRef;
-   }
+//   protected boolean mustBeSetPlanRef(Plan p) {
+//      boolean setRef=false;
+//
+//      // prochaine vue à utiliser
+//      ViewSimple v = aladin.view.viewSimple[ aladin.view.getLastNumView(p) ];
+//
+//      // Juste pour du débuging
+//      String sDebug=null;
+//
+//      // La pile est vide => ref
+//      if( aladin.calque.isFreeX(p) ) { setRef=true; sDebug="Stack Vide"; }
+//
+//      // Il s'agit d'un simple remplacement de plan => activate
+//      else if( p.isOldPlan ) { setRef=false; sDebug="Flag IsOldPlan=true"; }
+//
+//      // Dans une case vide sans être un simple overlay => ref
+//      else if( v.isFree() && !p.isOverlay() ) { setRef=true; sDebug="Image dans la prochaine view vide"; }
+//
+//      // Le plan de ref est une image normal et on charge une autre image => ref
+//      else if( v.pref!=null && v.pref.isImage() && p.isImage() ) { setRef=true; sDebug="Image sur image"; }
+//
+//      // Le plan de ref est catalogue normal  et on charge image ou un plan allsky => ref
+//      else if( v.pref!=null && (v.pref.isSimpleCatalog() && (p.isImage() || p instanceof PlanBG)) ) { setRef=true; sDebug="Image ou Allsky sur catalogue"; }
+//
+//      // Le plan de ref n'est pas allsky et le catalogue n'est pas visible
+//      else if( v.pref!=null && !(v.pref instanceof PlanBG) && p.isSimpleCatalog() && !p.isViewable() ) { setRef=true; sDebug="Catalogue non visible autrement"; }
+//
+//      // Dans le cas d'un multiview on priviligiera la création du plan
+//      else if( aladin.view.isMultiView() && p.isImage() ) { setRef=true; sDebug="Image sur multivue"; }
+//
+//      aladin.trace(4,"Calque.mustBeSetPlanRef("+p.label+") => "+setRef+(sDebug!=null?" ("+sDebug+")":""));
+//      return setRef;
+//   }
 
 
    /** Retourne true si le plan passé en paramètre peut être transparent
     *  Vérifie que la compatibilité des projections
     */
    protected boolean canBeTransparent(Plan p) {
+      if( Aladin.SLIDERTEST ) {
+         if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,true);
+         return true;
+      }
+      
       boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();
       if( p==null || p.type==Plan.FILTER || !isFree() && isRefForVisibleView && !p.isOverlay() ) {
          if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);

@@ -216,7 +216,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.603";
+   static public final    String VERSION = "v9.604";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -249,6 +249,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=true;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
+   static public boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
    static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
 

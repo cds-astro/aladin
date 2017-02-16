@@ -1078,12 +1078,20 @@ public final class Util {
 
       // La petite coche de sélection
       if( selected ) {
-         g.setColor(colorCoche==null?Color.black:colorCoche);
-         g.fillRect(x+3, y+4, 2, 5);
-         for( int i=0; i<4; i++ ){
-            g.drawLine(x+5+i,y+6-i,x+5+i,y+7-i);
-         }
+         drawCheck(g,x,y,colorCoche==null?Color.black:colorCoche);
+//         g.setColor(colorCoche==null?Color.black:colorCoche);
+//         g.fillRect(x+3, y+4, 2, 5);
+//         for( int i=0; i<4; i++ ){
+//            g.drawLine(x+5+i,y+6-i,x+5+i,y+7-i);
+//         }
       }
+   }
+   
+   static public void drawCheck(Graphics g, int x, int y, Color c) {
+      g.setColor(c);
+      g.fillRect(x+3, y+4, 2, 5);
+      for( int i=0; i<4; i++ ) g.drawLine(x+5+i,y+6-i,x+5+i,y+7-i);
+     
    }
 
    //    static public void drawVerticalSplitPaneTriangle(Graphics g,int x, int y) {

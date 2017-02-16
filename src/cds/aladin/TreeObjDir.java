@@ -286,12 +286,14 @@ public class TreeObjDir extends TreeObj {
 //      this.local = isLocal;
       this.prop = prop;
       
-      // Type de HiPS
+      // Type de Collection
       s=prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
       if( s!=null ) {
          if( s.indexOf("catalog")>=0 ) cat=true;
          else if( s.indexOf("cube")>=0 ) cube=true;
          else if( s.indexOf("progen")>=0 ) progen=true;
+      } else {
+         cat = prop.getProperty("cs_service_url")!=null;
       }
 
       // Référence spatiale
@@ -489,12 +491,20 @@ public class TreeObjDir extends TreeObj {
    
    /** Retourne l'URL d'accès au MOC, null sinon */
    protected String getMocUrl() {
-      String params = internalId+"&get=moc";
-      String u = aladin.glu.getURL("MocServer",params,true).toString();
-      return u;
+      String u=null;
       
-//      if( prop==null || isHiPS() ) return getUrl()+"/Moc.fits";
-//      return prop.getProperty(Constante.KEY_MOC_ACCESS_URL);
+      // On dispose du MOC directement dans le MOC server qui a fourni les propriétés ?
+      if( hasMocByMocServer() ) {
+         String params = internalId+"&get=moc";
+         u = aladin.glu.getURL("MocServer",params,true).toString();
+         
+      // Serait-il explicitement mentionné ?
+      } else if( prop!=null ) u = prop.getProperty("moc_access_url");
+      
+      // Pour un HiPS on peut y accéder directement
+      else if( isHiPS() ) return getUrl()+"/Moc.fits";
+      
+      return u;
    }
    
    protected String getProperty(String key) {
@@ -604,10 +614,21 @@ public class TreeObjDir extends TreeObj {
    protected boolean hasHips() { return prop!=null && prop.get("hips_service_url")!=null; }
    
    /** Retourne true si la collection dispose d'un MOC */
-   protected boolean hasMoc() { return prop!=null && prop.get("moc_sky_fraction")!=null; }
+   protected  boolean hasMoc() {
+      return hasMocByMocServer() || prop!=null && prop.getProperty("moc_access_url")!=null || isHiPS();
+   }
+   
+   /** Retourne true si la collection dispose d'un MOC via le MocServer
+    * (=> celui-ci ayant ajouté le mot clé moc_sky_fraction) */
+   private boolean hasMocByMocServer() { return prop!=null && prop.get("moc_sky_fraction")!=null; }
    
    /** Retourne l'URL d'un Cone search ou null si aucun */
-   protected String getCSUrl() { return prop==null ? null : prop.get("cs_service_url"); }
+   protected String getCSUrl() {
+      if( prop==null ) return null;
+      String u = prop.get("cs_service_url");
+      if( u!=null && !(u.endsWith("?") || u.endsWith("&")) ) u+='?';
+      return u;
+   }
 
    /** Retourne true s'il s'agit d'un catalogue hiérarchique pour des progéniteurs */
    protected boolean isProgen() { return progen; }
@@ -729,12 +750,12 @@ public class TreeObjDir extends TreeObj {
    protected void loadSIA() {
       if( prop==null ) return;
  
-      String rad = getDefaultRadius();
-      String trg = getDefaultTarget();
-
       // Accès via GLU
       String gluTag = prop.get("sia_glutag");
       if( gluTag!=null ) {
+         String rad = getDefaultRadius();
+         String trg = getDefaultTarget();
+         
          String cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
          aladin.execAsyncCommand(cmd);
          return;
@@ -743,8 +764,10 @@ public class TreeObjDir extends TreeObj {
       // Accès direct SIA => http://...?POS=$1,$2&SIZE=$3&FORMAT=image/fits
       String url = prop.get("sia_service_url");
       if( url!=null ) {
+         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+         String radius = Util.myRound( getDefaultRadiusInDeg() );
          Coord c = aladin.view.getCurrentView().getCooCentre();
-       String cmd = internalId+" = load "+url+"POS"+c.al+","+c.del+"&SIZE="+rad+"&FORMAT=image/fits";
+         String cmd = internalId+" = load "+url+"POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
          aladin.execAsyncCommand(cmd);
          return;
       }
@@ -762,6 +785,14 @@ public class TreeObjDir extends TreeObj {
       return aladin.view.getCurrentView().getCentre();
    }
    
+   
+   private double getDefaultRadiusInDeg() {
+      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+         return 14./60;
+      }
+      return  aladin.view.getCurrentView().getTaille();
+   }
+   
    private String getDefaultRadius() {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
          return "14'";
@@ -773,13 +804,14 @@ public class TreeObjDir extends TreeObj {
   
    protected void loadCS() {
       try {
-         int i = internalId.indexOf('/');
-         String cat = internalId.substring(i+1);
-         String rad = getDefaultRadius();
-         String trg = getDefaultTarget();
          
          // On passe par VizieR/Simbad via la commande script
          if( isCDSCatalog() ) {
+            
+            int i = internalId.indexOf('/');
+            String cat = internalId.substring(i+1);
+            String rad = getDefaultRadius();
+            String trg = getDefaultTarget();
             
             String cmd;
             if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad "+trg+" "+rad;
@@ -790,7 +822,8 @@ public class TreeObjDir extends TreeObj {
          } else {
             String csUrl = getCSUrl();
             Coord c = aladin.view.getCurrentView().getCooCentre();
-            String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+Util.myRound(radius)+"&VERB=2";
+            String radius = Util.myRound( getDefaultRadiusInDeg() );
+            String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
             aladin.execAsyncCommand(cmd);
             
          }

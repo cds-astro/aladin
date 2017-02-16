@@ -1371,9 +1371,50 @@ final public class TableParser implements XMLConsumer {
       // Par défaut, ce sera du ICRS
       srcAstroFrame=null;
 
-      if( nRA<0 ) {
+      // Aucune colonne ne ressemble de près ou de loin à des coordonnées
+      if( nRA<0 || nDEC<0 ) {
          if( !(flagXY=(nX>=0 && nY>=0))) { nRA=0; nDEC=1; }
          else consumer.setTableInfo("__XYPOS","true");
+      }
+
+      // Si un COOSYS ref a été utilisé, on va se baser sur lui pour déterminer de façon certaine
+      // les colonnes utilisant le même COOSYS
+      if( coosys!=null ) {
+         
+         // On recherche le "ref" du champ de coordonnées le plus probable pour RA
+         Field f = memoField.elementAt( nRA );
+         if( f.ref!=null ) {
+            
+            // Pour tous les champs associés aux coordonnées qui n'ont pas de ref (ou pas le même ref),
+            // je vais vérifier voire ajuster le choix
+            boolean flagDec=false, flagPmra=false, flagPmdec=false;  // Liste des éléments des coordonnées à vérifier
+            Field f1;
+            boolean ok=false;
+            if( nDEC>=0 )   { f1 =  memoField.elementAt( nDEC );   ok = f.ref.equals( f1.ref ); }
+            flagDec=!ok;
+            ok=false;
+            if( nPMRA>=0 )  { f1 =  memoField.elementAt( nPMRA );  ok = f.ref.equals( f1.ref ); }
+            flagPmra=!ok;
+            flagPmra=true;
+            ok=false;
+            if( nPMDEC>=0 ) { f1 =  memoField.elementAt( nPMDEC ); ok = f.ref.equals( f1.ref ); }
+            flagPmdec=!ok;
+            
+            // On passe en revue tous les champs, et s'ils ont même ref, on "diminue" de mille la qualité de
+            // la détection du rôle (on ne le fait que pour le premier champ trouvé => ON POURRAIT LE FAIRE
+            // POUR CELUI QUI A LA MEILLEURE QUALITE PARMI CEUX QUI ONT MEME REF ET ROLE)
+            if( flagDec || flagPmra || flagPmdec ) {
+               Enumeration<Field> e = memoField.elements();
+               for( int i=0; e.hasMoreElements(); i++ ) {
+                  f1 = e.nextElement();
+                  if( f1.ref!=null && f1.ref.equals( f.ref ) ) {
+                          if( flagDec   && qualDEC>=0   && f.cooPossibleSignature==Field.DE )   { nDEC=i;   qualDEC-=1000; } 
+                     else if( flagPmra  && qualPMRA>=0  && f.cooPossibleSignature==Field.PMRA ) { nPMRA=i;  qualPMRA-=1000; } 
+                     else if( flagPmdec && qualPMDEC>=0 && f.cooPossibleSignature==Field.PMDE ) { nPMDEC=i; qualPMDEC-=1000; } 
+                  }
+               }
+            }
+         }
       }
 
       consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY,
@@ -1791,11 +1832,10 @@ final public class TableParser implements XMLConsumer {
       if( ucd.equals("pos.eq") ||  ucd.equals("pos.eq;meta.main") ) {
          nRA=nDEC = nField;
          this.unit = getUnit(unit);
-         format= unit.length()==0 ? FMT_UNKNOWN :
-            unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
-            validLastCoordSys();
-            qualRA=qualDEC=0;
-            return;
+         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
+         validLastCoordSys();
+         qualRA=qualDEC=0;
+         return;
       }
 
       // Détection du RA et évaluation de la qualité de cette détection
@@ -1816,10 +1856,10 @@ final public class TableParser implements XMLConsumer {
       }
       if( qual>=0 && qualRA>qual ) {
          nRA=nField; qualRA=qual;
+         f.cooPossibleSignature = Field.RA;
          this.unit = getUnit(unit);
-         format= unit.length()==0 ? FMT_UNKNOWN :
-            unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
-            validLastCoordSys();
+         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
+         validLastCoordSys();
       }
 
       // Détection du DE et évaluation de la qualité de cette détection
@@ -1844,6 +1884,7 @@ final public class TableParser implements XMLConsumer {
 
       if( qual>=0 && qualDEC>qual ) {
          nDEC=nField; qualDEC=qual;
+         f.cooPossibleSignature = Field.DE;
       }
 
       // Détection du PMRA et évaluation de la qualité de cette détection
@@ -1870,7 +1911,10 @@ final public class TableParser implements XMLConsumer {
             catch( Exception e ) { qual=700+n; }
          }
       }
-      if( qual>=0 &&  qualPMRA>qual ) { nPMRA=nField; qualPMRA=qual; }
+      if( qual>=0 &&  qualPMRA>qual ) {
+         nPMRA=nField; qualPMRA=qual;
+         f.cooPossibleSignature = Field.PMRA;
+      }
 
       // Détection du PMDE et évaluation de la qualité de cette détection
       qual=-1;
@@ -1888,7 +1932,10 @@ final public class TableParser implements XMLConsumer {
             catch( Exception e ) { qual=700+n; }
          }
       }
-      if( qual>=0 &&  qualPMDEC>qual ) { nPMDEC=nField; qualPMDEC=qual; }
+      if( qual>=0 &&  qualPMDEC>qual ) {
+         nPMDEC=nField; qualPMDEC=qual;
+         f.cooPossibleSignature = Field.PMDE;
+      }
 
 
       // Détection du X et évaluation de la qualité de cette détection

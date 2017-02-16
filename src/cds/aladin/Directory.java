@@ -104,7 +104,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       setBorder( BorderFactory.createEmptyBorder(5,3,10,0));
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
-//      aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
+//      if( aladin.levelTrace>=3 ) aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
       
       multiProp = new MultiMoc();
       
@@ -1029,13 +1029,19 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             || id.equals("CDS/METAobj")
             || id.equals("CDS/ReadMeObj") ) category=null;
       
-      boolean local = prop.getProperty("PROP_ORIGIN")!=null;
       
-      // Sans catégorie => dans la branche "Miscellaneous" suivi de l'authority
+      // Sans catégorie => dans la branche "Unsupervised" suivi du protocole puis de l'authority
       if( category==null ) {
-         category = "Miscellaneous/"+Util.getSubpath(id, 0,1);
+         boolean isHips = prop.getProperty("hips_service_url")!=null;
+         boolean isCS   = prop.getProperty("cs_service_url")!=null;
+         boolean isSIA  = prop.getProperty("sia_service_url")!=null;
+         boolean isTAP  = prop.getProperty("tap_service_url")!=null;
+         String subCat = isHips ? "HiPS": isCS ? "CS" : isSIA ? "SIA" : isTAP ? "TAP" : "Miscellaneous";
+         category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
       }
+      
+      boolean local = prop.getProperty("PROP_ORIGIN")!=null;
       
       // Rangement dans la branche "local" si chargement local
       if( local && !category.startsWith("Local/") ) {
@@ -1057,7 +1063,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( bib!=null ) {
          try { 
             int year = Integer.parseInt( bib.substring(0,4) );
-            prop.put("bib_year",""+year);
+            prop.replaceValue("bib_year",""+year);
          } catch( Exception e) {}
       }
       
@@ -1280,7 +1286,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return null;
    }
    
-   private final String [] CAT = {"Image","Data base","Catalog","Cube","Miscellaneous","Outreach" };
+   private final String [] CAT = {"Image","Data base","Catalog","Cube","Outreach","Unsupervised" };
    
    private final String [] CAT_CODE = { "I","II","III","IV","V","VI","VII","VIII","IX","B" };
    private final String [] CAT_LIB = {

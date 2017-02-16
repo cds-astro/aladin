@@ -665,10 +665,12 @@ public class Plan implements Runnable {
                      mu1.setValue(s.getValue(npmra));
                   } catch( Exception e1 ) { e1.printStackTrace(); }
                   Unit mu2 = new Unit();
+                  
                   try {
                      mu2.setUnit(s.getUnit(npmde));
                      mu2.setValue(s.getValue(npmde));
                   } catch( Exception e1 ) { e1.printStackTrace();  }
+                  
                   if( mu1.getValue()!=0 || mu2.getValue()!=0 ) {
                      try {
                         mu1.convertTo(new Unit("mas/yr"));

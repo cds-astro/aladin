@@ -6256,7 +6256,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                continue;
             }
 
-            if( p==pref && p instanceof PlanBG ) {
+            if( !Aladin.SLIDERTEST && p==pref && p instanceof PlanBG ) {
                if( p.active ) {
                   ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
                   if( p.isPixel() ) flagBordure=true;
@@ -6281,9 +6281,17 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-               if( flagActive && !p.isRefForVisibleView() ) {
-                  ((PlanImage)p).draw(g,vs,dx,dy,-1);
-                  if( p instanceof PlanBG && p.isPixel() && p.getOpacityLevel()>0.1) flagBordure=true;
+               
+               if( Aladin.SLIDERTEST ) {
+                  if( flagActive && (p==pref || p!=pref && !p.isRefForVisibleView()) ) {
+                     ((PlanImage)p).draw(g,vs,dx,dy,-1);
+                     if( p instanceof PlanBG && p.isPixel() && p.getOpacityLevel()>0.1) flagBordure=true;
+                  }
+               } else {
+                  if( flagActive && (p==pref || p!=pref && !p.isRefForVisibleView()) ) {
+                     ((PlanImage)p).draw(g,vs,dx,dy,-1);
+                     if( p instanceof PlanBG && p.isPixel() && p.getOpacityLevel()>0.1) flagBordure=true;
+                  }
                }
                if( fullScreen &&  p.hasObj() && p.isOverlay() ) aladin.fullScreen.setCheck(p);
 
