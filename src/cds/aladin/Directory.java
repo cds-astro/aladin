@@ -1665,7 +1665,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       ArrayList<TreeObjDir> treeObjs=null;     // hips dont il faut afficher les informations
       JPanel panelInfo=null;                // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
       JCheckBox hipsBx=null,mocBx=null,mociBx=null,progBx=null,
-                dmBx=null, siaBx=null, csBx=null, msBx=null, allBx=null;
+                dmBx=null, siaBx=null, csBx=null, msBx=null, allBx=null, tapBx=null;
       
       FrameInfo() {
          setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -1827,7 +1827,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
-            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = allBx = null;
+            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = allBx = tapBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox("HiPS");
                mocAndMore.add(bx);
@@ -1883,6 +1883,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                bx.setSelected( !to.hasHips() );
                bx.setToolTipText("Cone search on the current view");
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+            }
+            
+            if( to.hasTAP() ) {
+               tapBx = bx = new JCheckBox("TAP");
+               mocAndMore.add(bx);
+               bx.setSelected( false );
+               bx.setToolTipText("Advanced table query form (Table Access Protocol)");
+               bx.setEnabled( true );
             }
             
             JLabel labelPlus = new JLabel(" + ");
@@ -1989,6 +1997,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( mocBx!=null  && mocBx.isSelected() )   to.loadMoc();
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
             if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
+            if( tapBx!=null  && tapBx.isSelected() )   to.queryByTap();
             
          // Accès à plusieurs collections simultanément
          } else {

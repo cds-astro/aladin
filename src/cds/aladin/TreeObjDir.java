@@ -305,8 +305,10 @@ public class TreeObjDir extends TreeObj {
 //      aladinLabel = label = createLabel(id,cat);
       
       // ou le label construit à partir du obs_title et/ou obs_collection
-      s=prop.getProperty( cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
-      if( s==null ) s=prop.getProperty( !cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
+//      s=prop.getProperty( cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
+//      if( s==null ) s=prop.getProperty( !cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
+      s=prop.getProperty( Constante.KEY_OBS_TITLE );
+      if( s==null ) s=prop.getProperty( Constante.KEY_OBS_COLLECTION );
       aladinLabel = label = s!=null ? s : createLabel(id,cat);
       
       // Le path de l'arbre
@@ -613,6 +615,12 @@ public class TreeObjDir extends TreeObj {
    /** Retourne true si la collection dispose d'un HiPS */
    protected boolean hasHips() { return prop!=null && prop.get("hips_service_url")!=null; }
    
+   /** Retourne true si la collection dispose d'un accès TAP */
+   protected boolean hasTAP() {
+      if( prop==null ) return false;
+      return prop.get("tap_glutag")!=null || prop.get("tap_service_url")!=null;
+   }
+   
    /** Retourne true si la collection dispose d'un MOC */
    protected  boolean hasMoc() {
       return hasMocByMocServer() || prop!=null && prop.getProperty("moc_access_url")!=null || isHiPS();
@@ -745,6 +753,27 @@ public class TreeObjDir extends TreeObj {
       String mode = isTruePixels() ? ",fits":"";
       String cmd = "get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")"+trg+rad;
       aladin.execAsyncCommand(cmd);
+   }
+   
+   /** Open the TAP form associated to this collection => Chaitra */
+   void queryByTap() {
+      // GLU TAP tag
+      String gluTag = prop.get("tap_glutag");
+      
+      // Generation of simplified TAP form by GLU definition 
+      if( gluTag!=null ) {
+         aladin.info("Simplified TAP form based on GLU definition "+gluTag+"\n(Not yet implemented)");
+         // Chaitra ...
+         return;
+      } 
+      
+      // If there is no TAP glu definition, we will use base TAP url
+      String url = prop.get("tap_service_url");
+      if( url!=null ) {
+         aladin.info("Generic TAP form for "+url+"\n(Not yet implemented)");
+         // Chaitra ...
+         return;
+      }
    }
    
    protected void loadSIA() {
