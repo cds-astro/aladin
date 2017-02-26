@@ -58,6 +58,44 @@
 %O CDS'aladin
 %U <&AlaU>/nph-aladin.pl?frame=gludic
 
+%A CS
+%D Cone search query
+%U    $4RA=$1&DEC=$2&SR=$3&VERB=3
+%P.D  4:Base URL (incl. '?')
+%P.D  1:Right Ascension
+%P.D  2:Declination
+%P.D  3:Radius in deg
+%P.K  1:Target(RAd)
+%P.K  2:Target(DEd)
+%P.K  3:Field(RADIUSd)
+%P.V  3:0.17
+%R    Mime(text/xml)
+%Aladin.Menu Others..
+%Aladin.XLabel Generic CS query
+%Aladin.LabelPlane CS $4
+%Aladin.Profile >6.909
+%DistribDomain ALADIN
+
+%A SIA
+%Description Generic SIA query
+%U $4POS=$1,$2&SIZE=$3
+#&FORMAT=image/fits
+%Param.Description $4=Base URL (incl. '?')
+%Param.Description $1=Right Ascension
+%Param.Description $2=Declination
+%Param.Description $3=Radius in deg
+%Param.DataType $1=Target(RAd)
+%Param.DataType $2=Target(DEd)
+%Param.DataType $3=Field(RADIUSd)
+%Param.Value $3=0.17
+%ResultDataType Mime(text/xml)
+%Aladin.Menu Others..
+%Aladin.XLabel Generic SIA query
+%Aladin.LabelPlane SIA $4
+%Aladin.Profile >6.909
+%DistribDomain ALADIN
+
+
 
 #----------------- ADDITIONNAL SERVERS ------------------------------
 #---------- see the FAQ or the manual to have more explanations -----
@@ -223,23 +261,23 @@
 #%Aladin.Bookmarks Optical,IR,UV,Radio,DSS,Simbad,NED
 #%Aladin.Profile >=6.033
 
-%ActionName GenericSIA
-%Description Generic SIA query
-%U $4POS=$1,$2&SIZE=$3&FORMAT=image/fits
-%Param.Description $4=Base URL (incl. '?')
-%Param.Description $1=Right Ascension
-%Param.Description $2=Declination
-%Param.Description $3=Radius in deg
-%Param.DataType $1=Target(RAd)
-%Param.DataType $2=Target(DEd)
-%Param.DataType $3=Field(RADIUSd)
-%Param.Value $3=0.17
-%ResultDataType Mime(sia/xml)
-%Aladin.Menu Others...
-%Aladin.XLabel Generic SIA query
-%Aladin.LabelPlane SIA $4
-%Aladin.Profile >6.909
-%DistribDomain ALADIN
+#%ActionName GenericSIA
+#%Description Generic SIA query
+#%U $4POS=$1,$2&SIZE=$3&FORMAT=image/fits
+#%Param.Description $4=Base URL (incl. '?')
+#%Param.Description $1=Right Ascension
+#%Param.Description $2=Declination
+#%Param.Description $3=Radius in deg
+#%Param.DataType $1=Target(RAd)
+#%Param.DataType $2=Target(DEd)
+#%Param.DataType $3=Field(RADIUSd)
+#%Param.Value $3=0.17
+#%ResultDataType Mime(sia/xml)
+#%Aladin.Menu Others...
+#%Aladin.XLabel Generic SIA query
+#%Aladin.LabelPlane SIA $4
+#%Aladin.Profile >6.909
+#%DistribDomain ALADIN
 
 #### Cartes biblio ####
 

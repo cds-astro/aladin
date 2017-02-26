@@ -29,13 +29,13 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Mars 2007) Creation
  */
-public class Match extends MyIcon {
+public class IconMatch extends MyIcon {
    static final int L = 12;      // Taille d'un logo
    static String MATCH;
    protected boolean megaMatch=false;
 
   /** Creation */
-   protected Match(Aladin aladin) {
+   protected IconMatch(Aladin aladin) {
       super(aladin,35,24);
       MATCH= aladin.chaine.getString("SYNC");
    }

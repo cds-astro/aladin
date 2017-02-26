@@ -919,11 +919,12 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    
    /** Chargement et affichage d'un SED à partir d'un nom d'objet
     * Si null, arrêt du SED précédent
-    * @param source
+    * @param position position de la source (résultat Sésame)
+    * @param source identificateur de la source
     * @param simRep repere correspondant à l'objet dans la vue (si connu)
     */
-   protected void setSED(String source) { setSED(source,null); }
-   protected void setSED(String source, Repere simRep) {
+   protected void setSED(String position, String source) { setSED(position, source,null); }
+   protected void setSED(String position, String source, Repere simRep) {
       if( source == null ) source = "";
       if( source.length() == 0 ) flagSED = false;
       if( oSrcSed.equals(source) ) return;
@@ -940,7 +941,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          if( sed == null ) sed = new SED(aladin);
          flagSED = true;
          flagHist = false;
-         sed.loadFromSource(source);
+         sed.loadFromSource(position,source);
          sed.setRepere(simRep);
       }
       repaint();

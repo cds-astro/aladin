@@ -69,8 +69,8 @@ public final class CreatObj implements Runnable {
       a.status = new Status(a,a.WELCOME);
 //      trace(1,"Creating Status object");
 
-      a.match = new Match(a);
-      a.look = new Look(a);
+      a.match = new IconMatch(a);
+      a.look = new IconLook(a);
       a.grid = new Grid(a);
       a.oeil = new Oeil(a);
       a.northup = new Northup(a);

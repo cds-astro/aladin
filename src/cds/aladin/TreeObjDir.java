@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,6 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
@@ -42,6 +44,8 @@ import javax.swing.JPanel;
 import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.moc.Healpix;
+import cds.moc.HealpixMoc;
+import cds.mocmulti.MocItem2;
 import cds.tools.Util;
 
 /**
@@ -84,6 +88,8 @@ public class TreeObjDir extends TreeObj {
    public double radius=-1;   // Field size for starting display
    public int nside=-1;          // Max NSIDE
    public boolean local=false;   // Il s'agit d'un survey sur disque local
+   public Image imPreview=null;  // Image preview
+   public boolean previewError=false; // true s'il y a eu un problème lors du chargement du preview
    
    protected MyProperties prop=null; // Ensemble des propriétés associées au HiPS (via son fichier de properties ou MocServer)
 
@@ -621,6 +627,40 @@ public class TreeObjDir extends TreeObj {
       return prop.get("tap_glutag")!=null || prop.get("tap_service_url")!=null;
    }
    
+   /** Retourne true si la collection dispose d'un accès cone search */
+   protected boolean hasCS() {
+      return isCDSCatalog() || prop!=null && prop.get("cs_service_url")!=null;
+   }
+   
+   /** Retourne true si la collection dispose d'une URL donnant accès à un preview */
+   protected boolean hasPreview() {
+      return (isCDSCatalog() || isHiPS()) && !previewError;
+   }
+   
+   /** Retourne l'URL du preview
+    * ex: http://alasky.u-strasbg.fr/footprints/tables/vizier/B_denis_denis/densityMap?format=png&size=small
+    */
+   protected String getPreviewUrl() {
+      if( isCDSCatalog() ) {
+         String s;
+         if( internalId.startsWith("CDS/Simbad") ) s="simbad";
+         else {
+            s = Util.getSubpath(internalId, 1, -1);
+            s = "vizier/"+ s.replace("/","_");
+         }
+         return "http://alasky.u-strasbg.fr/footprints/tables/"+s+"/densityMap?format=png&size=small";
+      }
+      
+      if( isHiPS() ) return getUrl()+"/preview.jpg";
+      
+      return null;
+   }
+   
+   /** Retourne true si la collection dispose d'une URL donnant des infos supplémentaires */
+   protected boolean hasInfo() {
+      return prop!=null && prop.get("web_access_url")!=null;
+   }
+   
    /** Retourne true si la collection dispose d'un MOC */
    protected  boolean hasMoc() {
       return hasMocByMocServer() || prop!=null && prop.getProperty("moc_access_url")!=null || isHiPS();
@@ -636,6 +676,11 @@ public class TreeObjDir extends TreeObj {
       String u = prop.get("cs_service_url");
       if( u!=null && !(u.endsWith("?") || u.endsWith("&")) ) u+='?';
       return u;
+   }
+   
+   /** Retourne l'URL donnant des informations supplémentaires sur la collection */
+   protected String getInfoUrl() {
+      return prop==null ? null : prop.get("web_access_url");
    }
 
    /** Retourne true s'il s'agit d'un catalogue hiérarchique pour des progéniteurs */
@@ -750,8 +795,9 @@ public class TreeObjDir extends TreeObj {
          trg = " "+aladin.view.getCurrentView().getCentre();
       } catch( Exception e ) { }
       
+      String id = Tok.quote(internalId!=null?internalId:label);
       String mode = isTruePixels() ? ",fits":"";
-      String cmd = "get hips("+Tok.quote(internalId!=null?internalId:label)+mode+")"+trg+rad;
+      String cmd = id+"=get hips("+id+mode+")"+trg+rad;
       aladin.execAsyncCommand(cmd);
    }
    
@@ -778,14 +824,16 @@ public class TreeObjDir extends TreeObj {
    
    protected void loadSIA() {
       if( prop==null ) return;
+      
+      String cmd;
+      String rad = getDefaultRadius(15);
+      String trg = getDefaultTarget();
  
       // Accès via GLU
       String gluTag = prop.get("sia_glutag");
       if( gluTag!=null ) {
-         String rad = getDefaultRadius();
-         String trg = getDefaultTarget();
          
-         String cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
+         cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
          aladin.execAsyncCommand(cmd);
          return;
       } 
@@ -794,12 +842,14 @@ public class TreeObjDir extends TreeObj {
       String url = prop.get("sia_service_url");
       if( url!=null ) {
          if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-         String radius = Util.myRound( getDefaultRadiusInDeg() );
-         Coord c = aladin.view.getCurrentView().getCooCentre();
-         String cmd = internalId+" = load "+url+"POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
-         aladin.execAsyncCommand(cmd);
-         return;
-      }
+//         String radius = Util.myRound( getDefaultRadiusInDeg() );
+//         Coord c = aladin.view.getCurrentView().getCooCentre();
+//         String cmd = internalId+" = load "+url+"POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
+//         aladin.execAsyncCommand(cmd);
+       
+       cmd = Tok.quote(internalId)+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
+       aladin.execAsyncCommand(cmd);
+     }
    }
    
    private String getDefaultTarget() {
@@ -822,11 +872,13 @@ public class TreeObjDir extends TreeObj {
       return  aladin.view.getCurrentView().getTaille();
    }
    
-   private String getDefaultRadius() {
+   private String getDefaultRadius() { return getDefaultRadius(-1); }
+   private String getDefaultRadius(double maxRad) {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
          return "14'";
       }
       double radius = aladin.view.getCurrentView().getTaille();
+      if( maxRad>=0 && radius>maxRad ) radius=maxRad;
       return Coord.getUnit( radius );
    }
    
@@ -834,25 +886,31 @@ public class TreeObjDir extends TreeObj {
    protected void loadCS() {
       try {
          
+         String cmd;
+         String rad = getDefaultRadius(15);
+         String trg = getDefaultTarget();
+         
          // On passe par VizieR/Simbad via la commande script
          if( isCDSCatalog() ) {
             
             int i = internalId.indexOf('/');
             String cat = internalId.substring(i+1);
-            String rad = getDefaultRadius();
-            String trg = getDefaultTarget();
             
-            String cmd;
-            if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad "+trg+" "+rad;
-            else cmd = "get VizieR("+cat+",allcolumns) "+trg+" "+rad;
+            if( internalId.startsWith("CDS/Simbad") ) cmd = internalId+"=get Simbad "+trg+" "+rad;
+            else cmd = internalId+"=get VizieR("+cat+",allcolumns) "+trg+" "+rad;
             aladin.execAsyncCommand(cmd);
             
          // Accès direct CS => http://...?RA=$1&DEC=$2&SR=$3&VERB=2
          } else {
-            String csUrl = getCSUrl();
+            String url = getCSUrl();
+            if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+            
             Coord c = aladin.view.getCurrentView().getCooCentre();
             String radius = Util.myRound( getDefaultRadiusInDeg() );
-            String cmd = internalId+" = load "+csUrl+"RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
+            url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
+//            String cmd = internalId+" = load "+url;
+            
+            cmd = Tok.quote(internalId)+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
             aladin.execAsyncCommand(cmd);
             
          }
@@ -861,10 +919,110 @@ public class TreeObjDir extends TreeObj {
       }
    }
    
+   private boolean scanning=false;
+   synchronized void setScanning(boolean flag) { scanning = flag; }
+   synchronized boolean isScanning() { return scanning; }
+   
+   /** Génération du MOC qui correspond aux sources CS ou SIA du champ courant */
+   protected void scan( MocItem2 mo ) {
+      setScanning(true);
+      try { scan1(mo); }
+      finally { setScanning(false); }
+   }
+   
+   protected void scan1( MocItem2 mo ) {
+      String url=null;
+      Coord c = aladin.view.getCurrentView().getCooCentre();
+      double rad = getDefaultRadiusInDeg();
+      String radius = Util.myRound( rad );
+      
+      if( hasCS() ) {
+         url = getCSUrl();
+         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+         url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=2";
+         
+      } else if( hasSIA() ) {
+         url = prop.get("sia_service_url");
+         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+         url+="POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
+      }
+      
+      if( url==null ) return;
+      
+      // Mémorisation du résultat
+      HealpixMoc moc;
+      try { 
+         moc = scan(url); 
+         
+         if( mo.moc==null ) mo.moc=moc;
+         else mo.moc.add(moc);
+
+      } catch( Exception e ) { }
+      
+      // Mémorisation de la surface couverte
+      try {
+         int order=11;
+         Healpix hpx = new Healpix();
+         moc = new HealpixMoc(order);
+         int i=0;
+         moc.setCheckConsistencyFlag(false);
+         for( long n : hpx.queryDisc(order, c.al, c.del,  rad) ) {
+            moc.add(order, n);
+            if( (++i)%1000==0 )  moc.checkAndFix();
+         }
+         moc.setCheckConsistencyFlag(true);
+         
+         if( mo.mocRef==null ) mo.mocRef=moc;
+         else mo.mocRef.add(moc);
+        
+         
+      } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace(); }
+      
+   }
+   
+   /**  Génération d'un Moc à partir du catalogue retournée par l'URL
+    * passée en paramètre */
+   private HealpixMoc scan( String url) {
+      Pcat pcat = new Pcat(aladin);
+      pcat.plan = new PlanCatalog(aladin);
+      pcat.plan.label="test";
+      MyInputStream in = null;
+      HealpixMoc moc=null;
+      int order=11;
+      
+      try {
+         moc = new HealpixMoc(order);
+         in=new MyInputStream( Util.openStream(url) );
+         pcat.tableParsing(in,null);
+         
+         Iterator<Obj> it = pcat.iterator();
+         Healpix hpx = new Healpix();
+         int n=0;
+         while( it.hasNext() ) {
+            Obj o = it.next();
+            if( !(o instanceof Position) ) continue;
+            if( Double.isNaN( ((Position)o).raj ) ) continue;
+            try {
+               long pix = hpx.ang2pix(order, ((Position)o).raj, ((Position)o).dej);
+               moc.add(order,pix);
+               n++;
+               if( n>10000 ) { moc.checkAndFix(); n=0; }
+            } catch( Exception e ) {
+               if( aladin.levelTrace>=3 ) e.printStackTrace();
+            }
+         }
+         moc.setCheckConsistencyFlag(true);
+          
+      } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace();
+      } finally { if( in!=null ) try { in.close(); } catch( Exception e) {} }
+      
+      return moc;
+   }
+   
    protected void loadAll() {
       int i = internalId.indexOf('/');
       String cat = internalId.substring(i+1);
-      String cmd = "get VizieR("+cat+",allsky,allcolumns)";
+      String cmd = internalId+"=get VizieR("+cat+",allsky,allcolumns)";
       aladin.execAsyncCommand(cmd);
    }
 
@@ -907,21 +1065,24 @@ public class TreeObjDir extends TreeObj {
       
       
       String u = getMocUrl();
-      aladin.execAsyncCommand("'MOC "+label+"'=load "+u);
+      aladin.execAsyncCommand("'MOC "+internalId+"'=load "+u);
    }
    
    void loadProgenitors() {
       String progen = getProgenitorsUrl();
       if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
-      aladin.execAsyncCommand("'PROG "+label+"'=load "+progen);
+      aladin.execAsyncCommand("'PGN "+internalId+"'=load "+progen);
    }
    
    void loadDensityMap() {
       int off1 = internalId.indexOf('/');
       int off2 = internalId.lastIndexOf('/');
       String catId = internalId.substring(off1+1, off2);
-      String url = aladin.glu.gluResolver("getDMap",catId,false);
-      aladin.execAsyncCommand("'DM "+label+"'=load "+url);
+      
+      try {  aladin.calque.newPlanDMap(internalId,catId);
+      } catch( Exception e ) { }
+//      String url = aladin.glu.gluResolver("getDMap",catId,false);
+//      aladin.execAsyncCommand("'DM "+internalId+"'=load "+url);
    }
    
    void queryByMoc() {

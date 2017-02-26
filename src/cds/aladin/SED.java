@@ -160,7 +160,7 @@ class SED extends JPanel {
          aladin.calque.repaintAll();
          
       } catch( Exception e ) {
-         aladin.view.zoomview.setSED((String)null);
+         aladin.view.zoomview.setSED((String)null,(String)null);
          aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -171,18 +171,20 @@ class SED extends JPanel {
       for( SEDItem si : sedList )  si.highLight = si.o==o;
    }
    
-   /** Charge et crée un SED à partir d'un identificateur de source astronomique (à la Sésame) */
-   protected void loadFromSource(String source) {
+   /** Charge et crée un SED à partir d'un identificateur de source astronomique (à la Sésame)
+    * @param position position de la source (résultat Sésame)
+    * @param source identificateur de la source
+    */
+   protected void loadFromSource(String position, String source) {
       clear();
       this.source = source;
       try {
          aladin.trace(2,"VizieR photometry loading around source \""+source+"\"...");
-         url = ""+aladin.glu.getURL(SEDGLUTAG,Glu.quote(source)+" "+radius);
-//         url = "http://cdsarc.u-strasbg.fr/viz-bin/sed?-c="+URLEncoder.encode(source) +"&-c.rs="+radius;
+         url = ""+aladin.glu.getURL(SEDGLUTAG,Glu.quote(position)+" "+radius);
          aladin.trace(2,"Phot. loading: "+url);
          loadASync( url );
       } catch( Exception e ) {
-         aladin.view.zoomview.setSED((String)null);
+         aladin.view.zoomview.setSED((String)null,(String)null);
          aladin.command.printConsole("!!! VizieR photometry builder error ["+source+"] => "+e.getMessage());
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -228,7 +230,7 @@ class SED extends JPanel {
                plan.pcat.tableParsing(inParam, "TABLE");
                parseAndDraw();
             } catch( Exception e ) {
-               aladin.view.zoomview.setSED((String)null);
+               aladin.view.zoomview.setSED((String)null,(String)null);
                aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
                if( aladin.levelTrace>=3 ) e.printStackTrace();
             } finally {
@@ -693,7 +695,7 @@ class SED extends JPanel {
    
    /** Actions à effectuer lors du relachement de la souris */
    protected void mouseRelease(int x,int y) {
-      if( rCroix.contains(x,y) ) aladin.view.zoomview.setSED((String)null);
+      if( rCroix.contains(x,y) ) aladin.view.zoomview.setSED((String)null,(String)null);
 //      else if( rInfo.contains(x,y) ) createStackPlane();
       else if( rMore.contains(x,y) ) more();
       else if( rHelp.contains(x,y) ) help();

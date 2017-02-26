@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
@@ -260,11 +261,15 @@ public class DirectoryTree extends JTree {
       int h = img.getHeight(aladin);
       BufferedImage img2 = new BufferedImage(w,h, BufferedImage.TYPE_INT_ARGB);
       Graphics g = img2.getGraphics();
-      g.drawImage(img,1,0,aladin);
       
-      int x = w-8;
-      int y = h/2;
-
+      g.drawImage(img,1,0,aladin);
+      drawRGBIconTag(g,w-8,h/2);
+      
+      return img2;
+   }
+   
+   /** Tracé des 3 cercles RGB pour indiquer qu'il s'agit d'une collection HiPS couleur */
+   static public void drawRGBIconTag(Graphics g, int x, int y) {
       g.setColor(r);
       Util.fillCircle5(g, x, y-3);
 
@@ -273,8 +278,6 @@ public class DirectoryTree extends JTree {
 
       g.setColor(b);
       Util.fillCircle5(g, x+4, y);
-      
-      return img2;
    }
 
    
@@ -327,8 +330,9 @@ public class DirectoryTree extends JTree {
 //               selected && color==Color.blue ? Color.black : color );
 //            else 
             
+            boolean flagInside = aladin.directory.inside.isActivated();
             int isIn = n.getIsIn();
-            if( !aladin.directory.inside.isActivated() ) {
+            if( !flagInside ) {
                c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
                      (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
                   Aladin.COLOR_CONTROL_FOREGROUND );
@@ -337,6 +341,8 @@ public class DirectoryTree extends JTree {
                c.setForeground( isIn==-1 ? Aladin.COLOR_CONTROL_FOREGROUND : (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) );
             }
 
+            boolean flagTestInside = aladin.directory.inside.isAvailable();
+            
             MyImageIcon icon=null;
             if( n instanceof TreeObjDir) {
                TreeObjDir to = (TreeObjDir)n;
@@ -348,6 +354,10 @@ public class DirectoryTree extends JTree {
             }
             if( icon!=null ) {
                icon.setColor( n.isInStack() );
+               boolean hasMoc = isIn!=-1 || !node.isLeaf() || !(n instanceof TreeObjDir) || ((TreeObjDir)n).hasMoc();
+               
+               if( !hasMoc && ((TreeObjDir)n).isScanning() ) { hasMoc = blink; blink =!blink; }
+               icon.setMoc( !flagTestInside || hasMoc );
                nonLeafRenderer.setIcon( icon );
             }
          } catch( Exception e ) { }
@@ -356,24 +366,30 @@ public class DirectoryTree extends JTree {
 
          return c;
       }
+      
+      private boolean blink=false;
    }
    
    class MyImageIcon extends ImageIcon {
-      Color color=null;
-      boolean defaut=false;
+      Color color;
+      boolean defaut;
+      boolean hasMoc;
       
       public MyImageIcon() {
          super();
          defaut=true;
+         hasMoc=true;
+         color=null;
       }
       public MyImageIcon(Image image) {
          super(image);
       }
       
       void setColor(Color color) { this.color=color; }
+      void setMoc(boolean hasMoc) { this.hasMoc = hasMoc; }
       
       public int getIconWidth() {
-         if( defaut ) return 7;
+         if( defaut ) return 9;
          return super.getIconWidth();
       }
       
@@ -385,13 +401,35 @@ public class DirectoryTree extends JTree {
       public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
          if( defaut ) {
             g.setColor( Color.gray.darker() );
-            Util.fillCircle7(g, x+3, y+3);
+            Util.fillCircle7(g, x+5, y+3);
             
          } else super.paintIcon(c,g,x,y);
          
          if( color!=null ) {
             Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
          }
+         
+         if( !hasMoc ) {
+            drawWarning(g,0,8,Aladin.ORANGE);
+         }
+      }
+      
+      // Dessin d'un triangle warning
+      void drawWarning(Graphics g,int x,int y, Color c) {
+         int h=6;
+         int w=5;
+         int w2 = 1+ w/2;
+         
+         // Le triangle
+         g.setColor( c );
+         Polygon p = new Polygon( new int[]{ x+w2, x+w+1, x }, new int[] {y, y+h, y+h}, 3);
+         g.fillPolygon(p);
+         g.drawPolygon(p);
+         
+         // Le !
+         g.setColor( Color.black );
+         g.drawLine( x+w2, y+2, x+w2, y+h-2);
+         g.drawLine( x+w2, y+h, x+w2, y+h);
       }
    }
 }

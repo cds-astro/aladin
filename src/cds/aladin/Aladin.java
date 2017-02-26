@@ -530,8 +530,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
-   Match match;                  // Gere le logo pour la grille
-   Look look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
+   IconMatch match;                  // Gere le logo pour la grille
+   IconLook look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
@@ -2533,7 +2533,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                String f = st.nextToken();
                if( f.trim().length()==0 ) continue;
                String cmd = "load "+f;
-               aladin.execAsyncCommand(cmd);
+               execAsyncCommand(cmd);
                
 //               calque.newPlan(f,null,null);
 //               console.printCommand("load "+f);

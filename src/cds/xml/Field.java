@@ -326,10 +326,11 @@ final public class Field {
     * @param name
     * @return
     */
-	public boolean shouldHide(String name) {
-		return !ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns")
-		.contains(name);
-	}
+   public boolean shouldHide(String name) {
+      if( name==null ) return false;
+      String p = ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns");
+      return p==null ? false : !p.contains(name);
+   }
 	
    public String toString() {
       return  (ID==null?       "":" ID="+ID)

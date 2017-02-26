@@ -914,7 +914,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       if( nX>=0   && nX<n   ) ((Field)vField.elementAt(nX)).coo=Field.X;
       if( nY>=0   && nY<n   ) ((Field)vField.elementAt(nY)).coo=Field.Y;
       badRaDecDetection = badDetection;
-      plan.hasPM=-1;
+      if( plan!=null ) plan.hasPM=-1;
    }
 
    //   /** Retourne l'indice de la colonne RA si connu, sinon -1 */

@@ -28,14 +28,14 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class Inside extends MyIcon {
+public class IconInside extends MyIcon {
    static final int L = 12;      // Taille d'un logo
    static String INSIDE;
    
    private boolean activated=false;
 
   /** Creation */
-   protected Inside(Aladin aladin) {
+   protected IconInside(Aladin aladin) {
       super(aladin,32,24);
       INSIDE=  aladin.chaine.getString("INSIDE");
    }

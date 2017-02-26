@@ -4050,7 +4050,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          
          ViewSimple v = getMouseView();
          Coord coo = new Coord();
-         if( v==null || v.pref==null || v.pref.projd==null ) return;
+         if( v==null || v.pref==null || v.pref.projd==null || v.lastMove==null ) return;
 
          coo.al = repere.raj;
          coo.del = repere.dej;
@@ -4122,7 +4122,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             simRep.setType(Repere.CARTOUCHE);
             simRep.setSize(TAILLEARROW);
             simRep.projection(v);
-            String s1=s.substring(s.indexOf('/')+1);
+            int i = s.indexOf('/');
+            String position = s.substring(0,i).trim();
+            String s1=s.substring(i+1);
             aladin.status.setText(s1+"    [by Simbad]");
             simRep.setId(s1);
             simRep.setWithLabel(true);
@@ -4130,9 +4132,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
             // Et on cherche le SED correspondant
             if( flagSED ) {
-               String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
-               aladin.trace(2,"Loading VizieR phot. for \""+s2+"\"...");
-               aladin.view.zoomview.setSED(s2,simRep);
+               String source = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
+               aladin.trace(2,"Loading VizieR phot. for \""+source+"\" => ("+position+") ...");
+               aladin.view.zoomview.setSED(position,source,simRep);
             }
          } catch( Exception e ) { return; }
 
@@ -4198,7 +4200,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          simRep.projection(v);
          simRep.setId("Phot.: "+target);
          simRep.setWithLabel(true);
-         aladin.view.zoomview.setSED(target,simRep);
+         aladin.view.zoomview.setSED(target,target,simRep);
 
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

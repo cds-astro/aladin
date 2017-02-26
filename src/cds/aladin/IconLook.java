@@ -32,12 +32,12 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class Look extends MyIcon {
+public class IconLook extends MyIcon {
    static final int L = 12;      // Taille d'un logo
    static String LOOK;
 
   /** Creation */
-   protected Look(Aladin aladin) {
+   protected IconLook(Aladin aladin) {
       super(aladin,32,24);
       LOOK= aladin.chaine.getString("LOOK");
    }

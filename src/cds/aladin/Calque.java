@@ -1775,9 +1775,9 @@ public class Calque extends JPanel implements Runnable {
    static final String  DMAPGLU = "getDMap";
 
    /** Chargement de la carte de densité associée à un catalogue */
-   protected int newPlanDMap(String catID) throws Exception {
+   protected int newPlanDMap(String internalId, String catID) throws Exception {
       String u = ""+aladin.glu.getURL(DMAPGLU,aladin.glu.quote(catID));
-      String label = "DMAP "+catID;
+      String label = "DMAP "+internalId;
       int n=getStackIndex(label);
       try {
          plan[n] = new PlanHealpixDMap(aladin,u, label);
@@ -3510,7 +3510,9 @@ public class Calque extends JPanel implements Runnable {
       return newPlan(filename,label,origin,null,null);
    }
    protected int newPlan(String filename,String label,String origin,String target,String radius) {
-      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,null,null,null,null,target,radius);
+      ServerFile f = (ServerFile)aladin.dialog.localServer;
+      label = prepareLabel(label);
+      return f.creatLocalPlane(filename,label,origin,null,null,null,null,target,radius);
    }
 
    /** Creation d'un plan à partir d'un stream ouvert */

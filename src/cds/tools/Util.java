@@ -449,7 +449,7 @@ public final class Util {
          if( i==deb ) { posDeb=pos+ (path.charAt(pos)=='/'? 1:0); j=i; }
          if( j!=-1 && i-j==num ) return path.substring(posDeb,pos);
       }
-      return j==-1 ? null : path.substring(posDeb);
+      return (j>=0 || num==-1 ) && posDeb>=0 ? path.substring(posDeb) : null;
    }
 
    /**

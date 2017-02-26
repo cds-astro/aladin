@@ -510,7 +510,7 @@ public class ServerVizieRMission extends Server  {
                    aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
                 
                 // Chargement de la carte de densité
-                } else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
+                } else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata,cata);
                 
                 defaultCursor();
                 return;

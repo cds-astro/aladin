@@ -290,6 +290,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       PointD p=null;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
       int mult=1;
+      
+      // Pour éviter un View.quickSimbadOnReticle(...) intempestif
+      lastMove=null;
 
       if( isFullScreen() && widgetControl!=null && widgetControl.mouseWheel(e) ) {
          repaint(); return;

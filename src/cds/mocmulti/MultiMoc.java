@@ -63,9 +63,9 @@ public class MultiMoc implements Iterable<MocItem> {
    
    final private String COORDSYS ="C";   // Coordinate system (HEALPix convention => G=galactic, C=Equatorial, E=Ecliptic)
    
-   private HashMap<String, MocItem> map; // Liste des MocItem repéré par leur ID (ex: CDS/P/2MASS/J)
+   protected HashMap<String, MocItem> map; // Liste des MocItem repéré par leur ID (ex: CDS/P/2MASS/J)
    private ArrayList<String> tri;        // Liste des IDs afin de pouvoir les parcourirs en ordre alphanumérique
-   private int mocOrder=-1;              // Better MOC order
+   protected int mocOrder=-1;              // Better MOC order
    private ArrayList<MyProperties> except = null;   // List of exceptions and associating rewriting rules
    private MyProperties example = null;  // List of existing properties with examples
    

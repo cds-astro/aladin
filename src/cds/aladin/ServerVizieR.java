@@ -600,7 +600,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
                }
                
                // Chargement de la carte de densité
-               else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
+               else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata,cata);
                defaultCursor();
                return;
             } catch( Exception e1 ) {
