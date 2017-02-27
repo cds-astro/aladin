@@ -1828,15 +1828,6 @@ final public class TableParser implements XMLConsumer {
       if( memoField==null ) memoField = new Vector<Field>();
       memoField.addElement( f );
 
-      // Cas vraiment particulier d'une colonne unique pour les coordonnées
-      if( ucd.equals("pos.eq") ||  ucd.equals("pos.eq;meta.main") ) {
-         nRA=nDEC = nField;
-         this.unit = getUnit(unit);
-         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
-         validLastCoordSys();
-         qualRA=qualDEC=0;
-         return;
-      }
 
       // Détection du RA et évaluation de la qualité de cette détection
       qual=-1;
@@ -1969,6 +1960,17 @@ final public class TableParser implements XMLConsumer {
          else qual=700+n;
       }
       if( qual>=0 &&  qualY>qual ) { nY=nField; qualY=qual; }
+      
+      // Cas vraiment particulier d'une colonne unique pour les coordonnées
+      if( nRA==-1 && (ucd.equals("pos.eq") ||  ucd.equals("pos.eq;meta.main")) ) {
+         nRA=nDEC = nField;
+         this.unit = getUnit(unit);
+         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
+         validLastCoordSys();
+         qualRA=qualDEC=0;
+         return;
+      }
+
    }
 
    /** XMLparser interface */

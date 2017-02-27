@@ -71,7 +71,7 @@ public final class MyInputStream extends FilterInputStream {
    static final public long AJ 	    = 1<<9;
    static final public long AJS 	= 1<<10;
    static final public long IDHA    = 1<<11;
-   static final public long SIA_SSA = 1<<12; // SIA ou SSA
+   static final public long SIA     = 1<<12;
    static final public long CSV 	= 1<<13;
    static final public long NOTAVAILABLE= 1<<14;
    static final public long AJSx    = 1<<15;
@@ -104,13 +104,14 @@ public final class MyInputStream extends FilterInputStream {
    static final public long OBSTAP  = 1L<<42;
    static final public long EOF     = 1L<<43;
    static final public long PROP    = 1L<<44;
+   static final public long SSA     = 1L<<45;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP" };
+      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -469,8 +470,8 @@ public final class MyInputStream extends FilterInputStream {
                type |= VOTABLE|XML;
 
                // Detection de IDHA
-               if( lookForSignature("name=\"ObservingProgram\"",true)>0 ) type |= IDHA|XML;
-               if( lookForSignature("name=\"Observation_Group\"",true)>0 ) type |= IDHA|XML;
+               if( lookForSignature("name=\"ObservingProgram\"",true)>0 
+                     || lookForSignature("name=\"Observation_Group\"",true)>0 ) type |= IDHA|XML;
 
                // Detection de SIA
                // TODO : à améliorer car <RESOURCE ID=... type="results" ne sera pas reconnu
@@ -478,8 +479,26 @@ public final class MyInputStream extends FilterInputStream {
                      // SIAP et anciennes versions de SSAP
                      lookForSignature("ucd=\"VOX:Image_Title\"",true)>0
                      || lookForSignature("ucd=\"VOX:Image_AccessReference\"",true)>0
-                     // SSAP 1.x (ce n'est qu'un 'should' malheureusement)
-                     || lookForSignature("SSAP</INFO>", true)>0
+                     
+//                     // SSAP 1.x (ce n'est qu'un 'should' malheureusement)
+//                     || lookForSignature("SSAP</INFO>", true)>0
+//                     // SSAP 1.x
+//                     || lookForSignature("utype=\"ssa:Access.Reference\"", true)>0
+//                     // en raison des namespace, je suis obligé de tronquer la partie 'utype='
+//                     // je mets ici un certain nombre de champs 'MANDATORY' qui suggèrent fortement qu'il s'agit d'un document SSA
+//                     || (     lookForSignature("Dataset.DataModel", true)>0
+//                           && lookForSignature("Dataset.Length", true)>0
+//                           && lookForSignature("Access.Reference", true)>0
+//                           && lookForSignature("Access.Format", true)>0
+//                           && lookForSignature("DataID.Title", true)>0  )
+                     )
+                  type |= SIA;
+
+               // Detection de SSA
+               // TODO : à améliorer car <RESOURCE ID=... type="results" ne sera pas reconnu
+               else if( 
+                     // anciennes versions de SSAP
+                     lookForSignature("SSAP</INFO>", true)>0
                      // SSAP 1.x
                      || lookForSignature("utype=\"ssa:Access.Reference\"", true)>0
                      // en raison des namespace, je suis obligé de tronquer la partie 'utype='
@@ -490,9 +509,9 @@ public final class MyInputStream extends FilterInputStream {
                            && lookForSignature("Access.Format", true)>0
                            && lookForSignature("DataID.Title", true)>0  )
                      )
-                  type |= SIA_SSA;
-
-               // Detection de FOV
+                  type |= SSA;
+               
+              // Detection de FOV
                else if( lookForSignature("name=\"FoVRef\"",true)>0 ||
                      lookForSignature("ID=\"FoVRef\"",true)>0   ||
                      // pour nouveau format

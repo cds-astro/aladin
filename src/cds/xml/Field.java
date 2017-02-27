@@ -327,6 +327,7 @@ final public class Field {
     * @return
     */
    public boolean shouldHide(String name) {
+      if( true ) return true;   // PF - 26 fev 2017 - By waiting Chaitra bug fix
       if( name==null ) return false;
       String p = ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns");
       return p==null ? false : !p.contains(name);

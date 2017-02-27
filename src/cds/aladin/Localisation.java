@@ -530,6 +530,7 @@ public class Localisation extends MyBox  {
    private String lastPosition="";
    protected String getLastPosition() { return lastPosition; }
    protected Coord getLastCoord() { return coo; }
+   protected Coord getLastCoordInCurrentFrame() { return ICRSToFrame(coo); }
    protected void setLastCoord(double ra,double dec) { coo=new Coord(ra,dec); }
 
    static final Astroframe AF_FK4 = new FK4();
@@ -574,6 +575,17 @@ public class Localisation extends MyBox  {
       c.del= cTmp.getLat();
       return c;
    }
+   
+//   public static void main( String []s ) {
+//      Coord c = new Coord();
+//      c.al  = 189.9976249999999;
+//      c.del = -11.62305555555556;
+//      System.out.println("ICRS => "+c);
+//      c = frameToFrame(c,Localisation.ICRS, Localisation.GAL);
+//      System.out.println("GAL => "+c);
+//      c = frameToFrame(c,Localisation.GAL, Localisation.ICRS);
+//      System.out.println("ICRS => "+c);
+//   }
 
    protected Coord ICRSToFrame(Coord c) {
       if( frame==ICRS || frame==ICRSD ) return c;
@@ -624,13 +636,14 @@ public class Localisation extends MyBox  {
                || frameTarget==ECLIPTIC || frameTarget==GAL || frameTarget==SGAL )?
                      aft.toString("2d"):aft.toString("2s");
 
-                     //if( frameSource!=frameTarget ) {
-                     //   System.out.println("convert ["+coo+"]/"+Localisation.REPERE[frameSource]+"  => ["+s+"]/"+Localisation.REPERE[frameTarget]);
-                     ////try { throw new Exception("convert"); } catch(Exception e) { e.printStackTrace(); }
-                     //}
+        if( frameSource!=frameTarget ) {
+           System.out.println("convert ["+coo+"]/"+Localisation.REPERE[frameSource]+"  => ["+s+"]/"+Localisation.REPERE[frameTarget]);
+           //try { throw new Exception("convert"); } catch(Exception e) { e.printStackTrace(); }
+        }
 
-                     if( s.indexOf("--")>=0 ) return "";
-                     return s;
+        if( s.indexOf("--")>=0 ) return "";
+        return s;
+        
       } catch( Exception e ) { return coo; }
    }
 

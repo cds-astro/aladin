@@ -322,21 +322,12 @@ public class DirectoryTree extends JTree {
                ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( getBackground() );
             }
             
-//            if( n.isInStack() ) c.setForeground( Color.green );
-            
-            // Mise en couleur particulière si déjà chargé dans la pile
-//            Color color;
-//            if( (color=n.isInStack())!=null ) c.setForeground( color==Color.black ? Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT : 
-//               selected && color==Color.blue ? Color.black : color );
-//            else 
-            
             boolean flagInside = aladin.directory.inside.isActivated();
             int isIn = n.getIsIn();
             if( !flagInside ) {
                c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
                      (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
                   Aladin.COLOR_CONTROL_FOREGROUND );
-//               c.setForeground( (node.isLeaf() && isIn==-1) ? color.red  : isIn==0 ? ( flagHighLighted || selected ? Color.black : Color.gray) : Aladin.COLOR_CONTROL_FOREGROUND );
             } else {
                c.setForeground( isIn==-1 ? Aladin.COLOR_CONTROL_FOREGROUND : (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) );
             }
@@ -354,10 +345,14 @@ public class DirectoryTree extends JTree {
             }
             if( icon!=null ) {
                icon.setColor( n.isInStack() );
-               boolean hasMoc = isIn!=-1 || !node.isLeaf() || !(n instanceof TreeObjDir) || ((TreeObjDir)n).hasMoc();
                
-               if( !hasMoc && ((TreeObjDir)n).isScanning() ) { hasMoc = blink; blink =!blink; }
-               icon.setMoc( !flagTestInside || hasMoc );
+               boolean hasMoc = true;
+               if( n instanceof TreeObjDir && flagTestInside ) {
+                  TreeObjDir to = (TreeObjDir)n;
+                  hasMoc = isIn!=-1 || to.hasMoc();
+                  if( !hasMoc && to.isScanning() ) { hasMoc = aladin.directory.blinkState; }
+               }
+               icon.setMoc( hasMoc );
                nonLeafRenderer.setIcon( icon );
             }
          } catch( Exception e ) { }
@@ -366,8 +361,6 @@ public class DirectoryTree extends JTree {
 
          return c;
       }
-      
-      private boolean blink=false;
    }
    
    class MyImageIcon extends ImageIcon {

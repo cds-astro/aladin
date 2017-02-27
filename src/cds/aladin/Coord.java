@@ -91,6 +91,13 @@ public final class Coord {
       } catch( Exception e ) { System.err.println(e); }
       return "";
    }
+   
+   /** Affichage en degré de l'objet
+    * @param 
+    */
+   public String getDeg() {
+      return al+" "+(del>=0?"+":"")+del;
+   }
 
    /** Affichage sexagesimal de l'objet.
     * @param c le caractere seperateur des h,m,s,d

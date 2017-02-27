@@ -1171,7 +1171,7 @@ public final class Command implements Runnable {
          if( target.length()==0 ) {
             Aladin.warning(a.chaine.getString("WNEEDOBJ"),1);
             return null;
-         } else a.dialog.setDefaultTarget(target);
+         } else a.dialog.setDefaultTarget(targetX.toString() );  // Attention 
 
          // On verifie immediatement que l'identificateur est bien
          // reconnu par Simbad

@@ -648,20 +648,20 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                // SIA 1.0
                if( flagArchive==null ) {
                   String ucd = leg.getUCD(j);
-                  if( ucd!=null && ucd.indexOf("Image_AccessReference")>=0 ) flagArchive="image/fits";
+                  if( ucd!=null && Util.indexOfIgnoreCase(ucd,"Image_AccessReference")>=0 ) flagArchive="image/fits";
                }
                
                // SSA - spectrum
                if( flagArchive==null ) {
                   String utype = leg.getUtype(j);
-                  if( utype!=null && utype.indexOf("ssa:Access.Reference")>=0 ) {
+                  if( utype!=null && Util.indexOfIgnoreCase(utype,"ssa:Access.Reference")>=0 ) {
                      flagArchive="spectrum/???";
                   }
                }
                // SSA - preview
                if( flagArchive==null ) {
                   String ucd = leg.getUCD(j);
-                  if( ucd!=null && ucd.indexOf("meta.ref.url;datalink.preview")>=0 ) flagArchive="image/???";
+                  if( ucd!=null && Util.indexOfIgnoreCase(ucd,"meta.ref.url;datalink.preview")>=0 ) flagArchive="image/???";
                }
             }
 

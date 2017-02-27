@@ -20,14 +20,21 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.net.URL;
+import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 
 import cds.tools.Util;
 
@@ -467,7 +474,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
 
 //         MyInputStream is = new MyInputStream(url.openStream());
          MyInputStream is = Util.openStream(url);
-         if( (is.getType() & (MyInputStream.IDHA|MyInputStream.SIA_SSA))==0 ) {
+         if( (is.getType() & (MyInputStream.IDHA|MyInputStream.SIA|MyInputStream.SSA))==0 ) {
             String err = is.readLine().trim();
             Aladin.warning(this,SERVERR+
                            "\n\""+err+"\"");

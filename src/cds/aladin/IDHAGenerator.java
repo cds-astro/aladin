@@ -58,7 +58,7 @@ public class IDHAGenerator extends JFrame {
     //  on ne conserve que les fichiers FITS, VOTable, ASTRORES, IDHA, SIA,
     // scripts Aladin (détectés de manière non équivoque), AJ
     static long keptMask = MyInputStream.FITS | MyInputStream.VOTABLE | MyInputStream.ASTRORES |
-        MyInputStream.IDHA | MyInputStream.SIA_SSA |  MyInputStream.AJS | MyInputStream.AJ;
+        MyInputStream.IDHA | MyInputStream.SIA | MyInputStream.SSA |  MyInputStream.AJS | MyInputStream.AJ;
 
 
     private static final String BARATIN_OBSERVING_PROGRAM = "<DESCRIPTION>" +CR+

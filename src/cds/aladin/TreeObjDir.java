@@ -618,6 +618,11 @@ public class TreeObjDir extends TreeObj {
       return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia_glutag")!=null);
    }
    
+   /** Retourne true s'il existe un accès SSA (par URL direct ou via GLU tag */
+   protected boolean hasSSA() {
+      return prop!=null && (prop.get("ssa_service_url")!=null || prop.get("ssa_glutag")!=null);
+   }
+   
    /** Retourne true si la collection dispose d'un HiPS */
    protected boolean hasHips() { return prop!=null && prop.get("hips_service_url")!=null; }
    
@@ -634,7 +639,7 @@ public class TreeObjDir extends TreeObj {
    
    /** Retourne true si la collection dispose d'une URL donnant accès à un preview */
    protected boolean hasPreview() {
-      return (isCDSCatalog() || isHiPS()) && !previewError;
+      return (isCDSCatalog() || isHiPS());
    }
    
    /** Retourne l'URL du preview
@@ -783,7 +788,9 @@ public class TreeObjDir extends TreeObj {
    
    /** Chargement par défaut à effectuer (suite à un double-clic sur le noeud de l'arbre) */
    protected void load() {
-      if( getUrl()==null && isCatalog() ) loadCS();
+      if( hasSIA() ) loadSIA();
+      else if( hasSSA() ) loadSSA();
+      else if( getUrl()==null && isCatalog() ) loadCS();
       else loadHips();
    }
 
@@ -821,49 +828,80 @@ public class TreeObjDir extends TreeObj {
          return;
       }
    }
-   
-   protected void loadSIA() {
+ 
+   protected void loadSSA() {
       if( prop==null ) return;
-      
+
       String cmd;
       String rad = getDefaultRadius(15);
       String trg = getDefaultTarget();
- 
+
       // Accès via GLU
-      String gluTag = prop.get("sia_glutag");
+      String gluTag = prop.get("ssa_glutag");
       if( gluTag!=null ) {
-         
+
          cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
          aladin.execAsyncCommand(cmd);
          return;
       } 
-      
+
+      // Accès direct SSA => http://...?REQUEST=queryData&POS=$1,$2&SIZE=$3
+      String url = prop.get("ssa_service_url");
+      if( url!=null ) {
+         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+
+         cmd = Tok.quote(internalId)+"=get SSA("+Tok.quote(url)+") "+trg+" "+rad;
+         aladin.execAsyncCommand(cmd);
+      }
+   }
+   
+   protected void loadSIA() {
+      if( prop==null ) return;
+
+      String cmd;
+      String rad = getDefaultRadius(15);
+      String trg = getDefaultTarget();
+
+      // Accès via GLU
+      String gluTag = prop.get("sia_glutag");
+      if( gluTag!=null ) {
+
+         cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
+         aladin.execAsyncCommand(cmd);
+         return;
+      } 
+
       // Accès direct SIA => http://...?POS=$1,$2&SIZE=$3&FORMAT=image/fits
       String url = prop.get("sia_service_url");
       if( url!=null ) {
          if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-//         String radius = Util.myRound( getDefaultRadiusInDeg() );
-//         Coord c = aladin.view.getCurrentView().getCooCentre();
-//         String cmd = internalId+" = load "+url+"POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
-//         aladin.execAsyncCommand(cmd);
-       
-       cmd = Tok.quote(internalId)+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
-       aladin.execAsyncCommand(cmd);
-     }
+         
+         // On enlève un éventuel FORMAT=xxx redondant
+         int pos;
+         final String fmt = "&FORMAT=image/fits";
+         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
+            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+         }
+
+         cmd = Tok.quote(internalId)+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
+         aladin.execAsyncCommand(cmd);
+      }
    }
-   
+
    private String getDefaultTarget() {
+      Coord coo;
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
          String s = aladin.localisation.getTextSaisie();
          if( s.length()!=0 ) return s;
-         Coord coo = getTarget();
+         coo = getTarget();
          s = coo==null ? null : coo.toString();
          if( s!=null ) return s;
          aladin.info("Pas encore implanté, il faudrait demander Target+Radius");
       }
-      return aladin.view.getCurrentView().getCentre();
+      coo = aladin.view.getCurrentView().getCooCentre();
+      coo = aladin.localisation.ICRSToFrame( coo );
+      return coo.getDeg();
    }
-   
    
    private double getDefaultRadiusInDeg() {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
@@ -905,9 +943,9 @@ public class TreeObjDir extends TreeObj {
             String url = getCSUrl();
             if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
             
-            Coord c = aladin.view.getCurrentView().getCooCentre();
-            String radius = Util.myRound( getDefaultRadiusInDeg() );
-            url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
+//            Coord c = aladin.view.getCurrentView().getCooCentre();
+//            String radius = Util.myRound( getDefaultRadiusInDeg() );
+//            url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
 //            String cmd = internalId+" = load "+url;
             
             cmd = Tok.quote(internalId)+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
@@ -945,6 +983,11 @@ public class TreeObjDir extends TreeObj {
          url = prop.get("sia_service_url");
          if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
          url+="POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
+
+      } else if( hasSSA() ) {
+         url = prop.get("ssa_service_url");
+         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+         url+="REQUEST=queryData&POS="+c.al+","+c.del+"&SIZE="+radius;
       }
       
       if( url==null ) return;
@@ -980,25 +1023,32 @@ public class TreeObjDir extends TreeObj {
       
    }
    
+   
+   private MyInputStream inScan=null;
+   
+   protected void abortScan() { 
+      try { if( inScan!=null ) { inScan.close(); inScan=null; }  } catch( Exception e ) {}
+   }
+   
    /**  Génération d'un Moc à partir du catalogue retournée par l'URL
     * passée en paramètre */
    private HealpixMoc scan( String url) {
       Pcat pcat = new Pcat(aladin);
       pcat.plan = new PlanCatalog(aladin);
       pcat.plan.label="test";
-      MyInputStream in = null;
       HealpixMoc moc=null;
       int order=11;
       
       try {
          moc = new HealpixMoc(order);
-         in=new MyInputStream( Util.openStream(url) );
-         pcat.tableParsing(in,null);
+         inScan=new MyInputStream( Util.openStream(url,false,15000) );
+         pcat.tableParsing(inScan,null);
          
          Iterator<Obj> it = pcat.iterator();
          Healpix hpx = new Healpix();
          int n=0;
          while( it.hasNext() ) {
+//            if( n%100==0 && aladin.directory.isAbortingScan() ) throw new Exception("Aborted");
             Obj o = it.next();
             if( !(o instanceof Position) ) continue;
             if( Double.isNaN( ((Position)o).raj ) ) continue;
@@ -1014,7 +1064,7 @@ public class TreeObjDir extends TreeObj {
          moc.setCheckConsistencyFlag(true);
           
       } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace();
-      } finally { if( in!=null ) try { in.close(); } catch( Exception e) {} }
+      } finally { if( inScan!=null ) try { inScan.close(); inScan=null; } catch( Exception e) {} }
       
       return moc;
    }

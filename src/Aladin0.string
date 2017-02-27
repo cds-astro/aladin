@@ -457,7 +457,7 @@ RGB	rgb
 CONT	cont
 FILTER	filter
 SYNC	match
-LOOK	look
+LOOK	study
 NORTHUP	north
 BLINK	assoc
 RSAMP	rsamp
@@ -525,6 +525,12 @@ INSIDE	inside
 INSIDE.fr	dedans
 INSIDETIP	Hide/show the collections without any observation in the current view
 INSIDETIP.fr	Cache/montre les collections n'ayant\naucune observation dans le champ courant
+SCAN	scan
+SCAN.fr	scan
+STOP	stop
+STOP.fr	stop
+SCANTIP	Scan the selected collections to know\nwhich of them contain result in the current field of view
+SCANTIP.fr	Interroge les collections sélectionnées\nafin de déterminer lesquelles ont des résultats dans le champ de vue courant
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key

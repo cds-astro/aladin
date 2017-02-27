@@ -376,7 +376,7 @@ public class Server extends JPanel
    * @return le target (resolu ou non) sinon null
    */
    protected String resolveTarget(String t) throws Exception {
-      t=aladin.localisation.getICRSCoord(t);
+//      t=aladin.localisation.getICRSCoord(t);
       if( coo!=null ) {
          if( (modeCoo & SIMBAD)!=0 ) {
             coo[0].setText(t);
@@ -739,7 +739,8 @@ public void layout() {
     protected String resolveQueryField() throws Exception {
        if( radius!=null ) resolveRadius( radius.getText().trim(), false );
        if( target==null ) return null;
-       return resolveTarget( target.getText().trim() );
+       String t=aladin.localisation.getICRSCoord(target.getText().trim() );
+       return resolveTarget( t );
     }
     
     /**

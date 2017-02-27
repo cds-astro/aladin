@@ -28,12 +28,12 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class Collapse extends MyIcon {
+public class IconCollapse extends MyIcon {
    static final int L = 12;      // Taille d'un logo
    static String COLLAPSE,EXPAND;
    
   /** Creation */
-   protected Collapse(Aladin aladin) {
+   protected IconCollapse(Aladin aladin) {
       super(aladin,32,24);
       COLLAPSE= aladin.chaine.getString("COLLAPSE");
       EXPAND =aladin.chaine.getString("EXPAND");

@@ -159,7 +159,7 @@ import healpix.essentials.Vec3;
  * @beta <UL>
  * @beta    <LI> Additionnal colormaps: Red, Green and Blue
  * @beta    <LI> Dark theme user interface
- * @beta    <LI> Collection Registry tree
+ * @beta    <LI> Collection Registry tree (HiPS, CS, SIA, SSA, TAP,...)
  * @beta    <LI> Datalink, SODA and TAP supports
  * @beta    <LI> Simbad + VizieR pointer improvements
  * @beta    <LI> HiPS properties file direct support
@@ -216,7 +216,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.604";
+   static public final    String VERSION = "v9.605";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

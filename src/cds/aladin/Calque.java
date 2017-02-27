@@ -3941,6 +3941,7 @@ public class Calque extends JPanel implements Runnable {
          zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();
+         if( Aladin.PROTO ) aladin.directory.repaint();
          aladin.toolBox.toolMode();
       }
    }
