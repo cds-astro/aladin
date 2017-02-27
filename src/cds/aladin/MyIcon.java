@@ -112,7 +112,7 @@ abstract public class MyIcon extends JComponent implements
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
       if( DESCRIPTION==null ) DESCRIPTION = getHelpTip();
-      Util.toolTip(this,DESCRIPTION);
+      Util.toolTip(this,DESCRIPTION,true);
    }
 
   /** On quitte le bouton du split*/

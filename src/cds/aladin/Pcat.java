@@ -640,7 +640,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String gref = leg.getGref(j);
             String refText = leg.getRefText(j);
             String flagArchive = leg.getRefValue(j);
-
+            String utype = leg.getUtype(j);
+            
             // On met un lien sur les urls ?
             if( href==null && (value[i].startsWith("http://") || value[i].startsWith("https://") || value[i].startsWith("ftp://"))) {
                href=value[i];
@@ -648,20 +649,25 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                // SIA 1.0
                if( flagArchive==null ) {
                   String ucd = leg.getUCD(j);
-                  if( ucd!=null && Util.indexOfIgnoreCase(ucd,"Image_AccessReference")>=0 ) flagArchive="image/fits";
+                  if( ucd!=null && Util.indexOfIgnoreCase(ucd,"Image_AccessReference")>=0 ) {
+                     flagArchive="image/fits";
+                     indexAccessUrl=-2;  // Pour éviter de le traiter par la suite
+                  }
                }
                
                // SSA - spectrum
                if( flagArchive==null ) {
-                  String utype = leg.getUtype(j);
                   if( utype!=null && Util.indexOfIgnoreCase(utype,"ssa:Access.Reference")>=0 ) {
                      flagArchive="spectrum/???";
+                     indexAccessUrl=-2;  // Pour éviter de le traiter par la suite
                   }
                }
                // SSA - preview
                if( flagArchive==null ) {
                   String ucd = leg.getUCD(j);
-                  if( ucd!=null && Util.indexOfIgnoreCase(ucd,"meta.ref.url;datalink.preview")>=0 ) flagArchive="image/???";
+                  if( ucd!=null && Util.indexOfIgnoreCase(ucd,"meta.ref.url;datalink.preview")>=0 ) {
+                     flagArchive="image/???";
+                  }
                }
             }
 
@@ -671,14 +677,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="£"+tag;
 
             else if( tag != null && flagArchive != null && flagArchive.indexOf('/')>0  ) tag = "^" + tag;
-
-            // AVO, support de Specview, je dois tester sur spectrumavo car les
-            // spectres
-            // accessibles à partir de VizieR sont gzippés et ne rentrent pas
-            // directement dans Specview
-            // TODO
-            //else if( tag!=null && flagArchive!=null && flagArchive.startsWith("spectrumavo/") ) tag="*"+tag;
-
+            
+            // utype "a la obscore"
+            if( indexAccessUrl==-1 && Util.indexOfIgnoreCase(utype,"Access.Reference")>=0 ) indexAccessUrl=j;
+            if( indexAccessFormat==-1 && Util.indexOfIgnoreCase(utype,"Access.Format")>=0 ) indexAccessFormat=j;
 
             // DESORMAIS LE TEXTE FORCE EST MIS A LA VISUALISATION DES MESURES (A FAIRE)
 //            String text = (refText != null) ? refText : value[i];
@@ -696,8 +698,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             		line.append(this.processValuesToStandardRepresentation(standardisedColumns.get(i), text));
     			}
             }
-            
-            
          }
 
          // Calcul en vue de definir la target
@@ -723,8 +723,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
             // Dans le cas d'un résultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
             // de la valeur MIME du champ "access_format" (alternativement content-type)
-            indexAccessUrl = leg.find("access_url");
-            indexAccessFormat = leg.find("access_format");
+            if( indexAccessUrl==-1 )    indexAccessUrl    = leg.find("access_url");
+            if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("access_format");
             if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("content_type");
          }
 
@@ -749,11 +749,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
          // Post-traitement ObsTap => on remplace le <&xxx par <^xxx ou <£xxx e la colonne "access_url"
          // en fonction du MIME type de la colonne "access_format"
-         if( indexAccessFormat>=0 && indexAccessUrl>=0 ) {
+         if( indexAccessUrl>=0 ) {
             try {
-               String fmt = source.getCodedValue(indexAccessFormat);
+               String fmt = indexAccessFormat==-1 ? "" : source.getCodedValue(indexAccessFormat);
                String val = source.getCodedValue(indexAccessUrl);
-               if( val.startsWith("<&") && fmt.length()>0 && fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) {
+               if( val.startsWith("<&") && /* fmt.length()>0 && */ fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) {
                   String tag="^";
                   if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
                   val = "<&"+tag+val.substring(2);

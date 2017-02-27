@@ -137,10 +137,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       JLabel titre = new JLabel("Filter");
       titre.setFont(Aladin.BOLD);
       titre.setForeground(Aladin.COLOR_LABEL);
+      Util.toolTip(titre,"Allow to specify a filter on the tree of available data collections",true);
       
       quickFilter = new QuickFilterField(6);
-      quickFilter.setToolTipText(Util.fold("Collection filter by free keywords (comma separated) "
-            + "or by any advanced filter expression (ex: nb_rows<1000)",40,true));
+      Util.toolTip(quickFilter,"Filter by free keywords (comma separated) "
+            + "or by any advanced filter expression (ex: nb_rows&lt;1000)",true);
       quickFilter.addKeyListener(new KeyListener() {
          public void keyTyped(KeyEvent e) { }
          public void keyPressed(KeyEvent e) { }
@@ -153,7 +154,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       filter = new JComboBox<String>();
       filter.setUI( new MyComboBoxUI());
       filter.setPrototypeDisplayValue("1234567");
-      filter.setToolTipText("Advanced filters....");
+      Util.toolTip(filter,"Predefined filters. Use '+' button to edit/create one",true);
       filter.setFont(Aladin.PLAIN);
       filter.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { filtre( (String)filter.getSelectedItem() ); }
@@ -163,6 +164,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       pFilter.add(filter);
       
       JLabel plus = new JLabel(" + ");
+      Util.toolTip(plus,"Edit the current filter or create a new one",true);
       plus.setFont( Aladin.LBOLD );
       plus.setForeground(Aladin.COLOR_LABEL);
       plus.addMouseListener(new MouseListener() {
@@ -1245,6 +1247,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private void propAdjust(String id, MyProperties prop) {
       propAdjust1(id,prop);
       String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
+      String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
       
       if( id.equals("CDS/Model.SED/sed") 
             || id.equals("CDS/METAobj")
@@ -1258,9 +1261,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          boolean isSIA  = prop.getProperty("sia_service_url")!=null;
          boolean isSSA  = prop.getProperty("ssa_service_url")!=null;
          boolean isTAP  = prop.getProperty("tap_service_url")!=null;
-         String subCat = isHips ? "HiPS": isCS ? "CS" : isSIA ? "SIA" : isSSA ? "SSA" : isTAP ? "TAP" : "Miscellaneous";
+         String subCat = isHips ? "HiPS": isCS ? "Catalog by CS" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : isTAP ? "Table by TAP" : "Miscellaneous";
          category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
+         
+         // On trie un peu les branches
+         int k = isHips ? 4: isCS ? 1 : isSIA ? 0 : isSSA ? 3 : isTAP ? 2 : 5;
+         key = key==null ? k+"" : k+"/"+key;
+         prop.replaceValue( Constante.KEY_CLIENT_SORT_KEY, key);
       }
       
       boolean local = prop.getProperty("PROP_ORIGIN")!=null;
@@ -1272,7 +1280,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       
       // Tri de la catégorie générale
-      String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
+      
       if( key==null ) key="Z";
       String cat = prop.get(Constante.KEY_CLIENT_CATEGORY);
       int c = Util.indexInArrayOf( Util.getSubpath(cat, 0), CAT);
@@ -2119,14 +2127,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                siaBx = bx = new JCheckBox("SIA");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               bx.setToolTipText("Simple Image Access (SIA)\n => load the list of images available in the current view");
+               Util.toolTip(bx,"Simple Image Access (SIA)\n => load the list of images available in the current view",true);
            }
             
             if( to.hasSSA() ) {
                ssaBx = bx = new JCheckBox("SSA");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               bx.setToolTipText("Simple Spectra Access (SSA)\n => load the list of spectra available in the current view");
+               Util.toolTip(bx,"Simple Spectra Access (SSA)\n => load the list of spectra available in the current view",true);
            }
             
             if( to.isCDSCatalog() ) {
@@ -2140,7 +2148,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                   allBx = bx = new JCheckBox("All sources");
                   mocAndMore.add(bx);
                   bx.setSelected( !to.hasHips() && allCat );
-                  bx.setToolTipText("Load all sources (small catalog/table <100000)");
+                  Util.toolTip(bx,"Load all sources (small catalog/table <100000)");
                   bg.add(bx);
                } 
 
@@ -2152,7 +2160,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                
                msBx = bx = new JCheckBox("MOC search");
                mocAndMore.add(bx);
-               bx.setToolTipText("Load all sources inside the selected MOC in the stack");
+               Util.toolTip(bx,"Load all sources inside the selected MOC in the stack");
                bx.setEnabled( hasLoadedMoc );
                bg.add(bx);
                
@@ -2166,14 +2174,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                csBx = bx = new JCheckBox("Cone search");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               bx.setToolTipText("Cone search on the current view");
+               Util.toolTip(bx,"Cone search on the current view");
             }
             
             if( to.hasTAP() ) {
                tapBx = bx = new JCheckBox("TAP");
                mocAndMore.add(bx);
                bx.setSelected( false );
-               bx.setToolTipText("Advanced table query form (Table Access Protocol)");
+               Util.toolTip(bx,"Advanced table query form (Table Access Protocol)",true);
             }
             
             JLabel labelPlus = new JLabel(" + ");
@@ -2182,7 +2190,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( to.hasMoc() ) {
                mocBx = bx = new JCheckBox("MOC"); 
                mocAndMore.add(bx); 
-               bx.setToolTipText("Load the MultiOrder Coverage map (MOC) associated to the collection");
+               Util.toolTip(bx,"Load the MultiOrder Coverage map (MOC) associated to the collection",true);
             }
             
             if( to.isCDSCatalog() && nbRows!=-1 && nbRows>=100000 ) {
@@ -2232,7 +2240,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             // Bookmark
             b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Bookmark.png")));
-            b.setToolTipText("Bookmarks this collection query");
+            Util.toolTip(b,"Bookmarks this collection query");
             b.setMargin(new Insets(0,0,0,0));
             b.setBorderPainted(false);
             b.setContentAreaFilled(false);
@@ -2245,7 +2253,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             b = new JButton("Scan"); b.setMargin( new Insets(2,4,2,4));
             b.setEnabled( hasView );
-            b.setToolTipText("Check if the collections contains data in the current view");
+            Util.toolTip(b,"Check if the collections contains data in the current view",true);
             b.setFont(b.getFont().deriveFont(Font.BOLD));
             control.add(b);
             b.addActionListener(new ActionListener() {

@@ -125,7 +125,7 @@ public class IconLook extends MyIcon {
    /** On se deplace sur l'icone */
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
-      Util.toolTip(this,getHelpTip());
+      Util.toolTip(this,getHelpTip(),true);
    }
       
    protected String getHelpTip() {

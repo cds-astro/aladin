@@ -883,7 +883,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       // Dans le logo de la grille
       else if( XGRID>0 && x>=XGRID && x<=XGRID+15 && y>=YGRID && y<=YGRID+15 ) {
          cursor= Aladin.HANDCURSOR;
-         Util.toolTip(viewSimple,aladin.grid.getHelpTip());
+         Util.toolTip(viewSimple,aladin.grid.getHelpTip(),true);
          rep=true;
       }
 
