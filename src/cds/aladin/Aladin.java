@@ -4762,7 +4762,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    protected void copier() {
       ViewSimple v = view.getCurrentView();
-      v.copier();
+      v.copierVue();
    }
 
    protected void coller() {

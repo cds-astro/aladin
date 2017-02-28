@@ -36,6 +36,7 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
+import java.awt.Toolkit;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
@@ -72,6 +73,7 @@ import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
 
 import cds.astro.AstroMath;
 import cds.moc.Healpix;
@@ -414,8 +416,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       j.addActionListener(this);
       popMenu.addSeparator();
       popMenu.add( menuCopyImg=j=new JMenuItem(view.MCOPYIMG));
+      j.setAccelerator( KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMask()) );
       j.addActionListener(this);
+      
+      //set shortcut CTRL+H (command+h on mac os)
+
+      //set the accelerator
       popMenu.add( menuCopy=j=new JMenuItem(view.MCOPY));
+      j.setAccelerator( KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMask()) );
       j.addActionListener(this);
       popMenu.add( menuClone=j=new JMenuItem(aladin.CLONE));
       j.addActionListener(this);
@@ -447,8 +455,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( src==menuLabel )  view.setSourceLabel();
       else if( src==menuClone )  aladin.cloneObj(false);
-      else if( src==menuCopy )   aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del));
-      else if( src==menuCopyImg ) copier();
+      else if( src==menuCopy )   copierReticule();
+      else if( src==menuCopyImg ) copierVue();
       else if( src==menuLook ) look();
       //      else if( src==menuROI )    aladin.view.createROI();
       else if( src==menuLock )   switchLock();
@@ -474,11 +482,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       getProj().getCoord(coo);
       view.quickSimbad(this, coo, true );
    }
+   
+   /** Copie de la position courante dans le Clipboard */
+   protected void copierReticule() { aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del)); }
 
    /** Copie la vue courante dans le Clipboard */
-   protected void copier() {
-      aladin.copyToClipBoard(getImage(-1,-1));
-   }
+   protected void copierVue() { aladin.copyToClipBoard(getImage(-1,-1)); }
 
    /** Permute l'état lock de la vue */
    protected boolean switchLock() {
@@ -3845,7 +3854,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          //         aladin.view.delSelObjet();   // Ca sera effectué par aladin.delete()
          return;
       }
-
+      
       if( isPlanBlink() && cubeControl.isEditing() ) {
          if( cubeControl.keyPress(e) ) repaint();
          return;
