@@ -44,8 +44,8 @@ public class Position extends Obj {
    // Les autres constantes
    static final int DS  = 4;         // Taille des poignees de selection
    static final int DDS = DS*2;      // Decalage du aux poignees de selection
-   static final int HF  = Aladin.SSIZE;
-   static final Font DF = Aladin.SBOLD;
+   static final int HF  = Aladin.SIZE;
+   static final Font DF = Aladin.BOLD;
 
    protected double x,y;        // Position initiale de l'objet en X,Y (soit catalogue sans coordonnée, soit graphique sans calib)
    protected double xv[],yv[];   // Position de l'objet pour chaque vue

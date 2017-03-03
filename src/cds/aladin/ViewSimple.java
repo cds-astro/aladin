@@ -3335,6 +3335,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
       mouseMoved1(e.getX(),e.getY(),e);
    }
+   
+   private boolean oTrouve=false; // Pour éviter des repaint intempestif => cf mouseMove1.trouve
 
    protected void mouseMoved1(double x, double y,MouseEvent e) {
       boolean trouve = false;
@@ -3429,7 +3431,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       } else if( isSelectOrTool ) {
          PointD p = lastMove;   // deja calcule
 
-         if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) trouve=true;
+         if( view.simRep!=null ) {
+            if( view.simRep.inLabel(this, x, y) ) trouve=true;
+            if( oTrouve!=trouve ) repaint();
+            oTrouve = trouve;
+         }
 
          Plan [] allPlans = calque.getPlans();
          Plan folder = calque.getMyScopeFolder(allPlans,pref);

@@ -272,7 +272,7 @@ public class SourceStat extends SourceTag {
    void setRayon(ViewSimple v,double r) {
       Coord c = new Coord();
       Projection proj = v.getProj().copy();
-      proj.setProjCenter(0,0);
+//      proj.setProjCenter(0,0);
       double d=0;
       c.al=c.del=0;
 
@@ -281,13 +281,13 @@ public class SourceStat extends SourceTag {
       // Y a blême pour les Calibs qui ne sont pas en equatorial.
       // Dans ce cas, je prend comme référence le point lui-même
       // et je ne change pas le centre de projection
-      if( Double.isNaN(c.del) ) {
-         proj = v.getProj().copy();
-         c.al=raj;
-         c.del=dej;
-         d=dej;
-         proj.getXY(c);
-      }
+//      if( Double.isNaN(c.del) ) {
+//         proj = v.getProj().copy();
+//         c.al=raj;
+//         c.del=dej;
+//         d=dej;
+//         proj.getXY(c);
+//      }
       c.y+=r;
       proj.getCoord(c);
       radius=Math.abs(d-c.del);

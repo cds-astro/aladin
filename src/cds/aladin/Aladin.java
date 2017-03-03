@@ -179,6 +179,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Phot tool clic&drag fix
  * @beta    <LI> Fix to VOTable UTF-16 STREAM bug
  * @beta    <LI> Fix to Hipsgen mirror filenotfound bug
  * @beta    <LI> MOC stack bug introduced in v9.039
@@ -216,7 +217,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.605";
+   static public final    String VERSION = "v9.607";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -319,6 +320,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       DARK_THEME = configuration.isDarkTheme();
       
+      COLOR_BLUE = Color.blue;
+      COLOR_RED = Color.red;
+      COLOR_GREEN = new Color(27,137,0);
       COLOR_BACKGROUND = new Color(250,250,250); //Color.white;
       COLOR_FOREGROUND = Color.black;
       COLOR_MAINPANEL_BACKGROUND = new Color(235,235,255);
@@ -343,14 +347,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_BUTTON_BACKGROUND;
       COLOR_LABEL = new Color(102,102,153);
-      COLOR_ICON_ACTIVATED = new Color(220,0,0);
       COLOR_TOOL_DOWN = new Color(153,153,255);
       COLOR_TOOL_UP = new Color(214,214,255);
       COLOR_TEXT_BACKGROUND = Color.white;
       COLOR_TEXT_FOREGROUND = Color.black;
-      COLOR_BLUE = Color.blue;
-      COLOR_RED = Color.red;
-      COLOR_GREEN = new Color(27,137,0);
       COLOR_STACK_SELECT = new Color(140,140,255);
       COLOR_STACK_HIGHLIGHT = new Color(150,150,150);
       COLOR_FOREGROUND_ANCHOR = COLOR_BLUE;
@@ -389,6 +389,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       }
       
+      COLOR_ICON_ACTIVATED = Aladin.COLOR_GREEN.brighter(); //new Color(220,0,0);
       COLOR_DIRECTORY_BACKGROUND = COLOR_MAINPANEL_BACKGROUND;
 
    }
@@ -531,7 +532,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
    IconMatch match;                  // Gere le logo pour la grille
-   IconLook look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
+   IconStudy look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
@@ -2373,13 +2374,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
          ct.add( infoPanel, BorderLayout.SOUTH);
          
       } else {
+         mainRight.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0));
+         mainRight.setBackground( getBackground());
          ct.add( mainRight, BorderLayout.CENTER);
          ct.add( infoPanel, BorderLayout.SOUTH);
       }
       
       
       // Pour les filtres sauvegardés
-      directory.updateDirFilter();
+      if( directory!=null ) directory.updateDirFilter();
 
       // Dernier objet a creer et traitement des parametres
       co.creatLastObj();

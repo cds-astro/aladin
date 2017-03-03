@@ -339,7 +339,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       Util.setCloseShortcut(this, false,aladin);
       prop = new Vector(10);
       dirFilter = new LinkedHashMap<String,String>();
-      setDirFilter("default", "*");
+      setDirFilter(DirectoryFilter.DEFAULT, "*");
       setDirFilter("Color surveys", "dataproduct_subtype=color && moc_sky_fraction>0.2");
       setDirFilter("Large catalogs", "nb_rows>1000000");
       setDirFilter("Log missions", "ID=CDS/B*");
@@ -762,6 +762,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Retourne true si on veut un thème sombre de l'interface graphique */
    protected boolean isDarkTheme() {
+//      if( !Aladin.PROTO ) return false;
       String s =get(LOOKANDFEELTHEME);
       return s==null || s.equals("dark");
    }
@@ -1902,7 +1903,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          int i=1;
          try {
             for( String name : dirFilter.keySet() ) {
-               if( name.equals("default") ) continue;
+               if( name.equals(DirectoryFilter.DEFAULT) ) continue;
                String expr = dirFilter.get(name);
                if( expr==null || expr.equals("*") ) continue;
                String key = DIRFILER+(i++);

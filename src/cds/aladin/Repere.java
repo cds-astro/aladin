@@ -196,8 +196,22 @@ public class Repere extends Position {
    /** Determine le decalage pour ecrire l'id */
    void setD() {
       FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(DF);
-      dw = m.stringWidth(id)+4;
-      dh=HF;
+      dw = m.stringWidth(id)+25;
+      dh=  HF;
+      if( type==CARTOUCHE ) { 
+         try {
+            dw = m.stringWidth( getId(id) )+25;
+            int w = m.stringWidth( "Type : "+getType(id) )+25;
+            if( w>dw ) dw = w;
+            w = m.stringWidth( "Mag : "+getMag(id) )+25;
+            if( w>dw ) dw = w;
+            dh*=5.4; 
+         } catch( Exception e ) { 
+            int w = m.stringWidth("unknown by Simbad")+20;
+            if( w>dw ) dw = w;
+            dh*=3; 
+         }
+      }
    }
 
    /** Set specifical color (dedicated for catalog sources) */
@@ -243,13 +257,7 @@ public class Repere extends Position {
       setD();
    }
 
-   /** Test d'appartenance.
-    * Retourne vrai si le point (x,y) de l'image se trouve sur le texte
-    * @param x,y le point a tester
-    * @param z valeur courante du zoom
-    * @return <I>true</I> c'est bon, <I>false</I> sinon
-    */
-   protected boolean inside(ViewSimple v,double x, double y) {
+   protected  boolean inside(ViewSimple v,double x, double y) {
       if( !isVisible() ) return false;
 
       // Cas d'un repère avec surface
@@ -269,7 +277,13 @@ public class Repere extends Position {
       }
    }
 
+   private boolean flagIn=false;
    protected boolean inLabel(ViewSimple v,double x, double y) {
+      boolean rep = inLabel1(v,x,y);
+      flagIn = rep;
+      return rep;
+   }
+   private boolean inLabel1(ViewSimple v,double x, double y) {
       Point p = getViewCoord(v,L,L);
       if( p==null ) return false;
       return x>=p.x-dw/2 && x<=p.x+dw/2 && y>=p.y-L-dh-1 && y<=p.y-L+5;
@@ -643,7 +657,9 @@ public class Repere extends Position {
    }
 
 
-   static final Color JAUNEPALE = new Color(255,255,225);
+   static final Color JAUNEPALE  = new Color(255,255,225);
+   static final Color CARTOUCHE_FOREGROUND = new Color(200,203,207);
+   static final Color CARTOUCHE_BACKGROUND = new Color(60,60,60);
 
    /** Affiche le repere
     * @param g        le contexte graphique
@@ -700,11 +716,11 @@ public class Repere extends Position {
             break;
          case CARTOUCHE:
             g.setColor(JAUNEPALE);
-            g.drawLine(p.x-L+1,   p.y-L, p.x+1,   p.y);
+            g.drawLine(p.x,   p.y-L, p.x,   p.y-3);
             g.setColor(Color.black);
-            g.drawLine(p.x-L,   p.y-L, p.x,   p.y);
+            g.drawLine(p.x+1,   p.y-L, p.x+1,   p.y-3);
             g.setColor(JAUNEPALE);
-            Util.fillCircle5(g, p.x, p.y);
+            Util.drawCircle5(g, p.x, p.y);
             g.setColor(Color.black);
             Util.drawCircle7(g, p.x, p.y);
             break;
@@ -719,13 +735,53 @@ public class Repere extends Position {
       if( isWithLabel() && !hasRayon() ) {
          if( id==null ) setId();
          if( type==CARTOUCHE ) {
-            //            Util.drawStringOutline((Graphics2D)g,id, p.x-dw/2,p.y-L-1,null,null);
-            Util.drawCartouche(g,p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 1f, Color.black,JAUNEPALE);
-            g.setColor( getColor() );
-            g.setFont(Aladin.SPLAIN);
-            g.drawString(id,p.x-dw/2,p.y-L-1);
-
-            //            g.drawLine(p.x-dw/2,p.y-L,p.x+dw/2,p.y-L);
+//            Util.drawCartouche(g,p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 1f, Color.black,JAUNEPALE);
+//            g.setColor( getColor() );
+//            g.setFont(Aladin.SPLAIN);
+//            g.drawString(id,p.x-dw/2,p.y-L-1);
+            
+            g.setColor( CARTOUCHE_BACKGROUND );
+            g.fillRoundRect(p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 10, 10);
+//            g.setColor( CARTOUCHE_BACKGROUND.brighter().brighter() );
+//            g.drawRoundRect(p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 10, 10);
+            
+            try {
+               g.setColor( Aladin.COLOR_BLUE );
+               g.setFont(Aladin.BOLD);
+               int x=p.x-dw/2+5;
+               int y=p.y-4*L-6;
+               String s = getId(id);
+               g.drawString( s,x,y);
+               if( flagIn ) {
+                  int w = g.getFontMetrics().stringWidth(s);
+                  g.drawLine(x-1,y+3,x+w+2,y+3);
+                  g.drawLine(x-1,y+4,x+w+2,y+4);
+               }
+               
+               g.setFont(Aladin.ITALIC);
+               g.setColor( CARTOUCHE_FOREGROUND );
+               g.drawString( "Type: "+getType(id),p.x-dw/2+15,p.y-3*L-4);
+               g.drawString( "Mag : "+getMag(id),p.x-dw/2+15,p.y-2*L-4);
+               
+               g.setColor( CARTOUCHE_FOREGROUND.darker() );
+               s = "by Simbad";
+               g.setFont( g.getFont().deriveFont( g.getFont().getSize2D()-2));
+               x = p.x+dw/2-5 - g.getFontMetrics().stringWidth(s);
+               y = p.y-L-2;
+               g.drawString( s,x,y);
+               
+            } catch( Exception e ) {
+               g.setColor( CARTOUCHE_FOREGROUND );
+               g.drawString( id,p.x-dw/2+5,p.y-2*L-5);
+               g.setColor( CARTOUCHE_FOREGROUND.darker() );
+               g.setFont(Aladin.ITALIC);
+               g.setFont( g.getFont().deriveFont( g.getFont().getSize2D()-2));
+               String s = "unknown by Simbad";
+               int x = p.x+dw/2-5 - g.getFontMetrics().stringWidth(s);
+               int y = p.y-L-2;
+               g.drawString( s,x,y );
+            }
+            
 
          } else g.drawString(id,p.x-dw/2,p.y-L-1);
       }
@@ -736,6 +792,23 @@ public class Repere extends Position {
          drawSelect(g,v);
       }
       return true;
+   }
+   
+   static private String getId( String id ) {
+      int i=id.lastIndexOf('(');
+      return id.substring(0,i).trim();
+   }
+
+   static private String getMag( String id ) {
+      int i=id.lastIndexOf('(');
+      int j=id.indexOf(',',i+1);
+      return id.substring(i+1,j).trim();
+   }
+
+   static private String getType( String id ) {
+      int i=id.lastIndexOf('(');
+      int j=id.indexOf(',',i+1);
+      return id.substring(j+1,id.length()-1).trim();
    }
 
    protected void drawSelect(Graphics g,ViewSimple v) {

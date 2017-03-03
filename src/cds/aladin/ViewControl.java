@@ -145,7 +145,7 @@ public final class ViewControl extends JComponent implements
                int y=2+k*mh;
                
                Color fg = !enabled ? Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE
-                            : down ? Color.red : Aladin.COLOR_CONTROL_FOREGROUND;
+                            : down ? Aladin.COLOR_ICON_ACTIVATED : Aladin.COLOR_CONTROL_FOREGROUND;
                if( enabled && in ) fg = fg.brighter();
                g.setColor( fg );
                g.drawLine(x,y,x+w,y); g.drawLine(x,y,x,y+h);

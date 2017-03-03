@@ -51,6 +51,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
@@ -70,6 +71,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private Aladin  aladin;  // référence externe
    
+   static protected String DEFAULT = "All collections";
+   
    // Préfixe des paramètres de filtrage des HiPS par le MocServer
    private static String MOCSERVER_FILTERING 
         = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
@@ -84,90 +87,18 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false,aladin);
       
-//      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       JPanel contentPane = (JPanel)getContentPane();
       contentPane.setLayout( new BorderLayout(5,5)) ;
-//      contentPane.setBorder( BorderFactory.createLineBorder(Color.black));
-//      setUndecorated(true);
       setAlwaysOnTop(true);
       
-      JPanel exprPanel = createExpPanel();
-      MySplitPane splitPanel = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, createPanel(), exprPanel, 1);
-      splitPanel.setBackground( contentPane.getBackground() );
-//      exprPanel.setMinimumSize( new Dimension(400,200) );
+      contentPane.add( getHeaderPanel(), BorderLayout.NORTH );
+      contentPane.add( getMainFilterPanel(), BorderLayout.CENTER );
+      contentPane.add( getValidPanel(), BorderLayout.SOUTH );
       
-      Aladin.makeAdd(getContentPane(), splitPanel, "Center");
-      Aladin.makeAdd(getContentPane(), getValidPanel(), "South");
       pack();
    }
    
-   private JTextArea exprArea;
-   private boolean flagFormEdit=false;
-   
-   /** True si un filtre est en cours d'application */
-   protected boolean hasFilter() { return exprArea.getText().trim().length()>0 && !exprArea.getText().equals("*"); }
-   
-   /** Création du panel de l'expression correspondant au filtre courant */
-   private JPanel createExpPanel() {
-      JPanel areaPanel = new JPanel( new BorderLayout(5,5) );
-      setTitleBorder(areaPanel, "Advanced filter expression");
-      exprArea = new JTextArea(3,60);
-      exprArea.setLineWrap(true);
-      exprArea.addKeyListener(new KeyListener() {
-         public void keyTyped(KeyEvent e) { }
-         public void keyPressed(KeyEvent e) { flagFormEdit=true; }
-         public void keyReleased(KeyEvent e) {
-            if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
-         }
-      });
-      areaPanel.add( exprArea, BorderLayout.CENTER );
-      
-      JPanel p = new JPanel( new BorderLayout());
-      p.setBorder( BorderFactory.createEmptyBorder(0,5,5,5));
-      p.add( areaPanel, BorderLayout.CENTER);
-      return p;
-   }
-
-   
-   private JButton storeButton, deleteButton;
-   private JTextField nameField;
-   
-   /** Activation/desactivation des boutons en fonction du contenu du formulaire */
-   private void updateWidget() {
-      String name = nameField.getText().trim();
-      boolean enabled = name.length()>0 && hasFilter();
-      storeButton.setEnabled( enabled );
-      deleteButton.setEnabled( enabled && aladin.configuration.dirFilter.containsKey(name) 
-            && !name.equals("default"));
-      String expr = aladin.configuration.dirFilter.get(name);
-      boolean modif = expr==null ? false : expr.equals( exprArea.getText().trim() );
-      storeButton.setText( modif ? "update" : "store" );
-      
-      aladin.directory.updateFilterButtonColor();
-   }
-   
-   /** Mémorisation + activation du filtre courant */
-   private void store() {
-      String name = nameField.getText().trim();
-      String expr = exprArea.getText().trim();
-      aladin.configuration.setDirFilter(name, expr);
-      aladin.directory.updateDirFilter();
-      aladin.directory.filter.setSelectedItem(name);
-   }
-   
-   /** Suppression de la mémorisation du filtre courant */
-   private void delete() {
-      String name = nameField.getText().trim();
-      if( name.equals("default") ) return;
-      aladin.configuration.dirFilter.remove(name);
-      aladin.directory.updateDirFilter();
-      globalReset();
-   }
-   
-   /** Construction du panel des boutons de validation */
-   private JPanel getValidPanel() {
-      JPanel p = new JPanel();
-      p.setLayout( new BorderLayout(10,10) );
+   private JPanel getHeaderPanel() {
       JButton b;
       
       JPanel storePanel = new JPanel( new FlowLayout(FlowLayout.CENTER,7,7) );
@@ -178,7 +109,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       JLabel l = new JLabel("Filter name ");
       l.setFont( l.getFont().deriveFont(Font.BOLD));
       storePanel.add( l );
-      nameField = new JTextField(10);
+      nameField = new JTextField(20);
       nameField.addKeyListener(new KeyListener() {
          public void keyTyped(KeyEvent e) { }
          public void keyReleased(KeyEvent e) { updateWidget(); }
@@ -196,6 +127,90 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          public void actionPerformed(ActionEvent e) { delete(); }
       });
 
+      return storePanel;
+   }
+   
+   private JTextArea exprArea;
+   private boolean flagFormEdit=false;
+   
+   /** True si un filtre est en cours d'application */
+   protected boolean hasFilter() { return exprArea.getText().trim().length()>0 && !exprArea.getText().equals("*"); }
+   
+   /** Création du panel de l'expression correspondant au filtre courant */
+   private JPanel createExpPanel() {
+      JPanel areaPanel = new JPanel( new BorderLayout(5,5) );
+      setTitleBorder(areaPanel, "corresponding filter expression");
+      exprArea = new JTextArea(3,60);
+      exprArea.setLineWrap(true);
+      exprArea.addKeyListener(new KeyListener() {
+         public void keyTyped(KeyEvent e) { }
+         public void keyPressed(KeyEvent e) { flagFormEdit=true; updateWidget(); }
+         public void keyReleased(KeyEvent e) {
+            if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
+         }
+      });
+      areaPanel.add( exprArea, BorderLayout.CENTER );
+      
+      JPanel p = new JPanel( new BorderLayout());
+      p.setBorder( BorderFactory.createEmptyBorder(0,5,5,5));
+      p.add( areaPanel, BorderLayout.CENTER);
+      return p;
+   }
+   
+   private JButton storeButton, deleteButton;
+   private JTextField nameField;
+   
+   /** Activation/desactivation des boutons en fonction du contenu du formulaire */
+   private void updateWidget() {
+      String name = nameField.getText().trim();
+      boolean enabled = name.length()>0 && hasFilter();
+      storeButton.setEnabled( enabled );
+      deleteButton.setEnabled( enabled && aladin.configuration.dirFilter.containsKey(name) 
+            && !name.equals(DEFAULT));
+      String expr = aladin.configuration.dirFilter.get(name);
+      boolean modif = expr==null ? false : expr.equals( exprArea.getText().trim() );
+      storeButton.setText( modif ? "update" : "store" );
+
+      if( flagFormEdit && ! exprArea.getText().trim().equals("*") ) {
+         exprArea.setForeground( Aladin.COLOR_GREEN );
+         exprArea.getFont().deriveFont(Font.BOLD);
+      } else {
+         exprArea.setForeground( Color.gray );
+         exprArea.getFont().deriveFont(Font.ITALIC);
+      }
+   }
+   
+   /** Mémorisation + activation du filtre courant */
+   private void store() {
+      String name = nameField.getText().trim();
+      String expr = exprArea.getText().trim();
+      aladin.configuration.setDirFilter(name, expr);
+      aladin.directory.updateDirFilter();
+      aladin.directory.comboFilter.setSelectedItem(name);
+   }
+   
+   /** Suppression de la mémorisation du filtre courant */
+   private void delete() {
+      String name = nameField.getText().trim();
+      if( name.equals(DEFAULT) ) return;
+      aladin.configuration.dirFilter.remove(name);
+      aladin.directory.updateDirFilter();
+      globalReset();
+   }
+   
+   /** Construction du panel qui contient les tabs des différents filtres + le panel de l'expression brute */
+   private JSplitPane getMainFilterPanel() {
+      MySplitPane pane = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, createFilterPanel(), createExpPanel() , 1);
+      pane.setBackground( getBackground() );
+      return pane;
+   }
+
+   /** Construction du panel des boutons de validation */
+   private JPanel getValidPanel() {
+      JPanel p = new JPanel();
+      p.setLayout( new BorderLayout(10,10) );
+      JButton b;
+      
       
       JPanel applyPanel = new JPanel( new FlowLayout( FlowLayout.CENTER,7,7 ) );
       
@@ -217,7 +232,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          public void actionPerformed(ActionEvent e) { setVisible(false); }
       });
       
-      p.add( storePanel, BorderLayout.WEST );
       p.add( applyPanel, BorderLayout.CENTER );
       p.add( closePanel, BorderLayout.EAST );
       return p;
@@ -511,21 +525,19 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Faut-il mettre à jour l'expression de filtrage en fonction du formulaire ?
       if( !flagFormEdit ) generateExpression();
+      updateWidget();
       
       flagFormEdit=false;
-      updateWidget();
       
       String expr = exprArea.getText();
       if( expr.trim().length()==0 ) expr="*";
+      
       aladin.directory.resumeFilter(expr);
       
       // mémorisation de l'expression s'il s'agit d'un "default"
-      if( aladin.directory.filter.getSelectedIndex()==0 ) {
-         aladin.configuration.setDirFilter("default", expr);
+      if( aladin.directory.comboFilter.getSelectedIndex()==0 ) {
+         aladin.configuration.setDirFilter(DEFAULT, expr);
       }
-      
-
-      
    }
    
    /** Génération de l'expression de filtrage correspondante aux positionnements des checkboxes et autres
@@ -538,8 +550,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       StringBuilder special = new StringBuilder();
       
       if( bxHiPS.isSelected() )      special.append(" && hips_service_url=*"); 
-      if( bxSIA.isSelected() )       special.append(" && sia*service_url=*");  
-      if( bxCS.isSelected() )        special.append(" && cs_service_url=*");   
+      if( bxSIA.isSelected() )       special.append(" && sia*=*");  
+      if( bxSSA.isSelected() )       special.append(" && ssa*=*");  
+      if( bxTAP.isSelected() )       special.append(" && tap*=*");  
+      if( bxCS.isSelected() )        special.append(" && cs*=*");   
       if( bxProg.isSelected() )      special.append(" && hips_progenitor_url=*");   
       
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
@@ -694,7 +708,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
 //   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxMisc;
-   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxCS,bxProg;
+   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxProg;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
@@ -704,8 +718,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Reset complet des filtres
     * => nettoyage du formulaire + nettoyage du champ rapide + repositionnement du filtre "default" */
    protected void globalReset() {
-      aladin.directory.filter.setSelectedIndex(0);
-      nameField.setText("");
+//      aladin.directory.comboFilter.setSelectedIndex(0);
+//      nameField.setText("");
       reset();
    }
    
@@ -721,6 +735,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxPixFull.setSelected(false);
       bxHiPS.setSelected(false);
       bxSIA.setSelected(false);
+      bxSSA.setSelected(false);
+      bxTAP.setSelected(false);
       bxCS.setSelected(false);
       bxProg.setSelected(false);
       bxPixColor.setSelected(false);
@@ -755,7 +771,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    // Positionne un cadre de titre autour d'un panel
    private void setTitleBorder(JPanel p, String title) {
-      
       Border line = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.gray);
       if( title==null ) p.setBorder( line );
       else p.setBorder( BorderFactory.createTitledBorder(line,title,
@@ -764,18 +779,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
 
    /** Construction du panel du formulaire */
-   protected JPanel createPanel() {
+   protected JTabbedPane createFilterPanel() {
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g = new GridBagLayout();
       c.fill = GridBagConstraints.BOTH;
 //      c.insets = new Insets(2,2,2,2);
       JCheckBox bx;
       JPanel subPanel;
-      JButton b;
       JPanel topLeftPanel,bottomLeftPanel,rightPanel;
-
+      
       JPanel p = topLeftPanel = new JPanel( g );
-      setTitleBorder(p,"Global filters");
+//      setTitleBorder(p,"Global filters");
       
       // Description
       tfDescr = new JTextFieldX(30);
@@ -822,6 +836,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bx.setToolTipText("Hierarchical progressive survey compatible collections");
       subPanel.add( bx=bxSIA  = new JCheckBox("SIA"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Simple Image Access (version 1 & 2) compatible collections");
+      subPanel.add( bx=bxSSA  = new JCheckBox("SSA"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Simple Spectra Access compatible collections");
+      subPanel.add( bx=bxTAP  = new JCheckBox("TAP"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText("Table Access Protocol compatible collections");
       subPanel.add( bx=bxCS   = new JCheckBox("Cone search"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Catalog/table cone searchable collections");
       subPanel.add( bx=bxProg   = new JCheckBox("Progenitors"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
@@ -830,7 +848,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
      
       // Les filtres dédiés aux HiPS
       p = bottomLeftPanel = new JPanel(g);
-      setTitleBorder(p, "Dedicated HiPS filters");
+//      setTitleBorder(p, "Dedicated HiPS filters");
       
       // Couverture du ciel
       tfHiPSorder = new JTextFieldX(15);
@@ -854,7 +872,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Les filtres dédiés aux catalogues
       p = rightPanel = new JPanel( g );
-      setTitleBorder(p, "Dedicated catalog/table filters");
+//      setTitleBorder(p, "Dedicated catalog/table filters");
       
       // Les différents mots clés
       catkeyVbx = new Vector<JCheckBox>();
@@ -918,14 +936,21 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //      p1.add(scrollPane);
       
       
-      JPanel left = new JPanel( new BorderLayout(5,5));
-      left.add( topLeftPanel, BorderLayout.NORTH );
-      left.add( bottomLeftPanel, BorderLayout.SOUTH );
-      
-      JPanel globalPanel = new JPanel( new BorderLayout(5,5));
+//      JPanel left = new JPanel( new BorderLayout(5,5));
+//      left.add( topLeftPanel, BorderLayout.NORTH );
+//      left.add( bottomLeftPanel, BorderLayout.SOUTH );
+//      
+//      JPanel globalPanel = new JPanel( new BorderLayout(5,5));
+//      globalPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
+//      globalPanel.add( left, BorderLayout.WEST);
+//      globalPanel.add( rightPanel, BorderLayout.EAST);
+
+      JTabbedPane globalPanel = new JTabbedPane( );
+      globalPanel.setBackground( getBackground() );
       globalPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
-      globalPanel.add( left, BorderLayout.WEST);
-      globalPanel.add( rightPanel, BorderLayout.EAST);
+      globalPanel.add( topLeftPanel,    " Global constraints ");
+      globalPanel.add( rightPanel,      " Catalog constraints ");
+      globalPanel.add( bottomLeftPanel, " HiPS constraints ");
 
       return globalPanel;
    }
@@ -948,6 +973,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    protected void submitAction() {
       aladin.makeCursor(this, Aladin.WAITCURSOR);
+      aladin.directory.iconFilter.setActivated(true);
       submit();
    }
 }

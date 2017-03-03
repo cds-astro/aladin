@@ -66,7 +66,8 @@ public class DirectoryTree extends JTree {
       setBackground( cbg );
       setOpaque(true);
       
-      setBorder( BorderFactory.createEmptyBorder(10, 0, 10, 0));
+//      setBorder( BorderFactory.createEmptyBorder(10, 0, 10, 0));
+      setBorder( BorderFactory.createEmptyBorder(10, 0, 5, 0));
       setShowsRootHandles(true);
       NoeudRenderer nr = new NoeudRenderer();
       setCellRenderer(nr);
@@ -322,7 +323,7 @@ public class DirectoryTree extends JTree {
                ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( getBackground() );
             }
             
-            boolean flagInside = aladin.directory.inside.isActivated();
+            boolean flagInside = aladin.directory.iconInside.isActivated();
             int isIn = n.getIsIn();
             if( !flagInside ) {
                c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
@@ -332,7 +333,7 @@ public class DirectoryTree extends JTree {
                c.setForeground( isIn==-1 ? Aladin.COLOR_CONTROL_FOREGROUND : (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) );
             }
 
-            boolean flagTestInside = aladin.directory.inside.isAvailable();
+            boolean flagTestInside = aladin.directory.iconInside.isAvailable();
             
             MyImageIcon icon=null;
             if( n instanceof TreeObjDir) {

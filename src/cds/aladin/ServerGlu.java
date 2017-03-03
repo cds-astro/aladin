@@ -846,7 +846,7 @@ public class ServerGlu extends Server implements Runnable {
          	   
             }
             else if(modeDate==0){
-               System.err.println("Server ["+aladinLabel+"]; unknown Date code ["+s+"] => assume JD");
+               if( Aladin.levelTrace>=3 ) System.err.println("Server ["+aladinLabel+"]; unknown Date code ["+s+"] => assume JD");
                modeDate |= JD;
             }
          }

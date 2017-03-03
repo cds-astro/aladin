@@ -90,10 +90,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    // Composantes de l'interface
    private QuickFilterField quickFilter; // Champ de filtrage rapide
-   protected JComboBox<String> filter;   // Bouton d'ouverture du formulaire de filtrage
-   protected IconInside inside;          // L'icone d'activation du mode "inside"
-   protected IconScan scan;              // L'icone d'activation du scan
-   private IconCollapse collapse;        // L'icone pour développer/réduire l'arbre
+   protected FilterCombo comboFilter;         // Menu popup des filtres
+   protected IconFilter iconFilter;      // L'icone d'activation du filtrage
+   protected IconInside iconInside;      // L'icone d'activation du mode "inside"
+   protected IconScan iconScan;          // L'icone d'activation du scan
+   private IconCollapse iconCollapse;    // L'icone pour développer/réduire l'arbre
    private Timer timer = null;           // Timer pour le réaffichage lors du chargement
    
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
@@ -109,20 +110,29 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    public Directory(Aladin aladin, Color cbg) {
       this.aladin = aladin;
-      
-      setBackground(cbg);
-      setLayout(new BorderLayout(0,0) );
-      setBorder( BorderFactory.createEmptyBorder(5,3,10,0));
+      multiProp = new MultiMoc2();
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
       if( aladin.levelTrace>=3 ) aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
+
+      setBackground(cbg);
+      setLayout(new BorderLayout(0,0) );
+      setBorder( BorderFactory.createEmptyBorder(8,3,10,0));
       
-      multiProp = new MultiMoc2();
+      JPanel pTitre = new JPanel( new FlowLayout(FlowLayout.LEFT,35,0));
+      pTitre.setBackground( cbg );
+      JLabel dir = new JLabel("Directory tree");
+      Util.toolTip(dir, "Tree of available data set collections from CDS and other IVOA servers.\n"
+            + "Browse, filter, select, and load the collections you want to display...",true);
+      dir.setFont(dir.getFont().deriveFont(Font.BOLD));
+      dir.setForeground( Aladin.COLOR_LABEL);
+      pTitre.add( dir );
       
       // L'arbre avec sa scrollbar
       dirTree = new DirectoryTree(aladin, cbg);
       scrollTree = new JScrollPane(dirTree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-      scrollTree.setBorder( BorderFactory.createEmptyBorder(10,0,0,0));
+//      scrollTree.setBorder( BorderFactory.createEmptyBorder(10,0,0,0));
+      scrollTree.setBorder( BorderFactory.createEmptyBorder(6,0,0,0));
       scrollTree.setBackground(cbg);
       scrollTree.getViewport().setOpaque(true);
       scrollTree.getViewport().setBackground(cbg);
@@ -133,37 +143,35 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          scrollTree.getHorizontalScrollBar().setUI(new MyScrollBarUI());
       }
       
-      // Le bandeau en haut
-      JLabel titre = new JLabel("Filter");
-      titre.setFont(Aladin.BOLD);
-      titre.setForeground(Aladin.COLOR_LABEL);
-      Util.toolTip(titre,"Allow to specify a filter on the tree of available data collections",true);
+      String s = "Filter by free keywords (comma separated) "
+            + "or by any advanced filter expression (ex: nb_rows&lt;1000). Press ENTER to activate it.";
+      JLabel labelFilter = new JLabel("select");
+      Util.toolTip(labelFilter,s,true);
+      labelFilter.setFont(labelFilter.getFont().deriveFont(Font.BOLD));
+      labelFilter.setForeground( Aladin.COLOR_LABEL);
       
-      quickFilter = new QuickFilterField(6);
-      Util.toolTip(quickFilter,"Filter by free keywords (comma separated) "
-            + "or by any advanced filter expression (ex: nb_rows&lt;1000)",true);
+      quickFilter = new QuickFilterField(10);
+      Util.toolTip(quickFilter,s,true);
       quickFilter.addKeyListener(new KeyListener() {
          public void keyTyped(KeyEvent e) { }
          public void keyPressed(KeyEvent e) { }
          public void keyReleased(KeyEvent e) {
-            if( e.getKeyCode()==KeyEvent.VK_ENTER ) quickFiltre();
+            if( e.getKeyCode()==KeyEvent.VK_ENTER ) {
+               iconFilter.setActivated(true);
+               doFiltre();
+            }
          }
       });
       
+      s = "List of predefined filters. Use '+' button to edit it, or create a new one";
+      JLabel fromLabel = new JLabel("from");
+      Util.toolTip(fromLabel,s,true);
+      fromLabel.setFont(fromLabel.getFont().deriveFont(Font.BOLD));
+      fromLabel.setForeground( Aladin.COLOR_LABEL);
       
-      filter = new JComboBox<String>();
-      filter.setUI( new MyComboBoxUI());
-      filter.setPrototypeDisplayValue("1234567");
-      Util.toolTip(filter,"Predefined filters. Use '+' button to edit/create one",true);
-      filter.setFont(Aladin.PLAIN);
-      filter.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { filtre( (String)filter.getSelectedItem() ); }
-      });
-      JPanel pFilter = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      pFilter.setBackground(cbg);
-      pFilter.add(filter);
+      comboFilter = new FilterCombo(s);
       
-      JLabel plus = new JLabel(" + ");
+      JLabel plus = new JLabel("  + ");
       Util.toolTip(plus,"Edit the current filter or create a new one",true);
       plus.setFont( Aladin.LBOLD );
       plus.setForeground(Aladin.COLOR_LABEL);
@@ -172,41 +180,70 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          public void mousePressed(MouseEvent e) { }
          public void mouseExited(MouseEvent e) { }
          public void mouseEntered(MouseEvent e) { }
-         public void mouseClicked(MouseEvent e) { filtre(); }
+         public void mouseClicked(MouseEvent e) { openAdvancedFilterFrame(); }
       });
-      
-      JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,3,0));
-      p1.setBackground( cbg );
-      p1.add(pFilter);
-      p1.add(plus);
 
-      JPanel header = new JPanel( new BorderLayout(3,0));
-      header.setBorder( BorderFactory.createEmptyBorder(0, 0, 0, 10));
-      header.setBackground( cbg );
-      header.add(titre,BorderLayout.WEST);
-      header.add(quickFilter,BorderLayout.CENTER);
-      header.add(p1,BorderLayout.EAST);
+      JPanel pFilter = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      pFilter.setBackground(cbg);
+      pFilter.add(comboFilter);
+      pFilter.add(plus);
+
+//      JPanel leftFilter, rightFilter, p, p1;
+//      leftFilter = p = new JPanel( new GridLayout(2,1,2,2));
+//      p.setBackground( cbg );
+//      p1 = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0)); p1.setBackground( cbg ); p1.add(labelFilter);
+//      p.add(p1);
+//      p1 = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0)); p1.setBackground( cbg ); p1.add(fromLabel);
+//      p.add(p1);
+//
+//      rightFilter = p = new JPanel( new GridLayout(2,1,2,2));
+//      p.setBackground( cbg );
+//      p.add(quickFilter);
+//      p.add(pFilter);
+//
+//      JPanel panelFilter = p = new JPanel( new BorderLayout(2,2) );
+//      p.setBorder( BorderFactory.createEmptyBorder(5,5,10,20));
+//      p.setBackground( cbg );
+//      p.add( leftFilter, BorderLayout.CENTER );
+//      p.add( rightFilter, BorderLayout.EAST );
+
+
+      GridBagConstraints c = new GridBagConstraints();
+      GridBagLayout g = new GridBagLayout();
+      c.fill = GridBagConstraints.BOTH;            // J'agrandirai les composantes
+      c.insets = new Insets(2,3,0,5);
+      JPanel panelFilter = new JPanel( g );
+      panelFilter.setBorder( BorderFactory.createEmptyBorder(5,5,10,20));
+      panelFilter.setBackground( cbg );
+      PropPanel.addCouple(null,panelFilter, labelFilter, null, quickFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
+      PropPanel.addCouple(null,panelFilter, fromLabel, null, pFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
       
       // Les boutons de controle
-      collapse = new IconCollapse(aladin);
-      inside = new IconInside(aladin);
-      scan = new IconScan(aladin);
-      
+      iconFilter = new IconFilter(aladin);
+      iconCollapse = new IconCollapse(aladin);
+      iconInside = new IconInside(aladin);
+      iconScan = new IconScan(aladin);
+     
       JPanel pControl = new JPanel(new FlowLayout(FlowLayout.LEFT,1,1));
       pControl.setBackground(cbg);
-      pControl.add(collapse);
-      pControl.add(inside);
-      pControl.add(scan);
+      pControl.add(iconFilter);
+      pControl.add(iconCollapse);
+      pControl.add(iconInside);
+      pControl.add(iconScan);
       
-      JPanel control = new JPanel(new BorderLayout());
-      control.setBackground(cbg);
-      control.setBorder( BorderFactory.createEmptyBorder(0,5,0,0));
-      control.add(header,BorderLayout.WEST);
-      control.add(pControl,BorderLayout.CENTER);
+      JPanel panelControl = new JPanel(new BorderLayout(0,0));
+      panelControl.setBackground(cbg);
+      panelControl.setBorder( BorderFactory.createEmptyBorder(0,5,0,0));
+      panelControl.add(panelFilter,BorderLayout.NORTH);
+      panelControl.add(pControl,BorderLayout.SOUTH);
       
-      add(header,BorderLayout.NORTH);
-      add(scrollTree,BorderLayout.CENTER);
-      add(control,BorderLayout.SOUTH);
+      JPanel panelTree = new JPanel( new BorderLayout(0,0));
+      panelTree.setBackground(cbg);
+      panelTree.add(pTitre,BorderLayout.NORTH);
+      panelTree.add(scrollTree,BorderLayout.CENTER);
+
+      add(panelTree, BorderLayout.CENTER);
+      add(panelControl,BorderLayout.SOUTH);
 
       // Actions sur le clic d'un noeud de l'arbre
       dirTree.addMouseListener(new MouseAdapter() {
@@ -224,7 +261,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                else showInfo(treeObjs,e);
             }
             
-            collapse.repaint();
+            iconCollapse.repaint();
             resetWasExpanded();
             repaint();
          }
@@ -265,12 +302,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) {
-      if( !isVisible() || dirList.size()==0) return;
+      if( !isVisible() || hasCollections() ) return;
       dirTree.showTreeObj(id);
    }
    
+   /** Retourne true si le directory contient quelque chose (avant filtrage éventuel) */
+   protected boolean hasCollections() {
+      return dirList!=null &&  dirList.size()>0;
+   }
+   
    protected void reset() {
-      quickFilter.setText("");
       directoryFilter.globalReset();
       dirTree.defaultExpand();
    }
@@ -280,18 +321,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Met à jour la liste des filtres  */
    protected void updateDirFilter() {
-      if( filter==null ) return;
+      if( comboFilter==null ) return;
       
-      ActionListener[] a = filter.getListeners(ActionListener.class);
-      if( a!=null ) for( ActionListener a1 : a ) filter.removeActionListener( a1 );
+      ActionListener[] a = comboFilter.getListeners(ActionListener.class);
+      if( a!=null ) for( ActionListener a1 : a ) comboFilter.removeActionListener( a1 );
       
-      String current = (String)filter.getSelectedItem();
-      filter.removeAllItems();
-      for( String name : aladin.configuration.dirFilter.keySet() ) filter.addItem( name );
+      String current = (String)comboFilter.getSelectedItem();
+      comboFilter.removeAllItems();
+      for( String name : aladin.configuration.dirFilter.keySet() ) comboFilter.addItem( name );
       
-      if( current!=null ) filter.setSelectedItem( current );
+      if( current!=null ) comboFilter.setSelectedItem( current );
       
-      if( a!=null ) for( ActionListener a1 : a) filter.addActionListener( a1 );
+      if( a!=null ) for( ActionListener a1 : a) comboFilter.addActionListener( a1 );
    }
    
    
@@ -300,6 +341,26 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** retourne le noeud qu'il faut encadrer (passage de la souris dessus) */
    protected TreeObjDir getTreeObjDirHighLighted() { return toHighLighted; }
    
+   class FilterCombo extends JComboBox<String> {
+      FilterCombo(String tooltip) {
+         super();
+         setUI( new MyComboBoxUI());
+         //      setPrototypeDisplayValue("000000000000000");
+         Util.toolTip(this,tooltip,true);
+         setFont(Aladin.PLAIN);
+         addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { filtre( (String)getSelectedItem() ); }
+         });
+         updateWidgets();
+      }
+
+      void updateWidgets() {
+         boolean actif = iconFilter!=null && iconFilter.isActivated();
+         setBackground( actif ? Aladin.COLOR_TEXT_BACKGROUND : Aladin.COLOR_TEXT_BACKGROUND.darker() );
+//         setForeground( actif ? Aladin.COLOR_TEXT_FOREGROUND : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
+      }
+   }
+   
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
    class QuickFilterField extends JTextField implements MouseListener /*,MouseMotionListener*/ {
       private Rectangle cross=null;
@@ -307,13 +368,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       QuickFilterField(int nChar) {
          super(nChar);
          addMouseListener(this);
-         setFont( Aladin.BOLD );
-         setBackground( Aladin.COLOR_TEXT_BACKGROUND );
-         setForeground( Aladin.COLOR_TEXT_FOREGROUND );
+         updateWidgets();
       }
       
-//      public Dimension getMinimumSize() { Dimension d = super.getMinimumSize(); d.height=16; return d; }
-      
+      public Dimension getMaximumSize() { Dimension d = super.getMaximumSize(); d.width=150; return d; }
+
+      void updateWidgets() {
+         boolean actif = iconFilter!=null && iconFilter.isActivated();
+         setBackground( actif ? Aladin.COLOR_TEXT_BACKGROUND : Aladin.COLOR_TEXT_BACKGROUND.darker() );
+         setForeground( actif ? Aladin.COLOR_TEXT_FOREGROUND : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
+      }
+
       boolean in(int x) {
          if( cross==null ) return false;
          return x>=cross.x;
@@ -332,7 +397,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       static private final int X = 6;
       private void drawCross(Graphics g, int x, int y) {
          cross = new Rectangle(x,y,X,X);
-         if( getText().trim().length()==0 && (directoryFilter==null || !directoryFilter.hasFilter()) ) return;
+         if( getText().trim().length()==0  ) return;
          g.setColor( getBackground() );
          g.fillOval(x-3, y-3, X+7, X+7);
 //         g.setColor( dirFilter.hasFilter() ? Color.red.darker() : Color.gray );
@@ -350,22 +415,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       public void mouseEntered(MouseEvent e) { }
       public void mouseExited(MouseEvent e) { }
 
-      public void mouseReleased(MouseEvent e) {
-         if( in(e.getX())  ) {
-            reset();
-         }
+      void reset() {
+         if( getText().length()==0 ) return;
+         setText("");
+         doFiltre();
       }
-      
-//      public void mouseDragged(MouseEvent e) { }
-//      public void mouseMoved(MouseEvent e) {
-//         Cursor nc,c =getCursor();
-//         if( in(e.getX(),e.getY()) )  nc = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
-//         else nc = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
-//         if( nc.equals(c) ) return;
-//         setCursor(nc);
-//      }
 
-
+      public void mouseReleased(MouseEvent e) {
+         if( in(e.getX())  ) reset();
+         else { iconFilter.setActivated(true); updateWidgets(); }
+      }
     }
    
    /** Retourne true si on a sélectionné quelque chose de scannable */
@@ -569,27 +628,40 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }).start();
    }
 
-   /** Activation d'un filtre préalablement sauvegardé */
-   private void filtre(String name) {
-      String expr = aladin.configuration.dirFilter.get(name);
-      if( expr!=null ) {
-         if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
-         directoryFilter.setSpecificalFilter(name, expr );
+   /** Création/ouverture/fermeture du formulaire de filtrage de l'arbre des Collections */
+   private void openAdvancedFilterFrame() {
+      if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
+      if( directoryFilter.isVisible() ) directoryFilter.setVisible( false );
+      else {
+         String name = (String)comboFilter.getSelectedItem();
+         if( name.equals(directoryFilter.DEFAULT) ){
+            String n = name = "My list";
+            int i=0;
+            while( aladin.configuration.dirFilter.get(name)!=null ) name = n+" "+(i++);
+            aladin.configuration.setDirFilter(name, "*");
+            updateDirFilter();
+            comboFilter.setSelectedItem(name);
+         }
+
+         directoryFilter.showFilter();
       }
    }
 
-   /** Création/ouverture/fermeture du formulaire de filtrage de l'arbre des Collections */
-   private void filtre() {
-      if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
-      if( directoryFilter.isVisible() ) directoryFilter.setVisible( false );
-      else directoryFilter.showFilter();
-   }
-
-   /** Filtrage basique de l'arbre des Collections */
-   private void quickFiltre() {
+   /** Filtrage de l'arbre des Collections */
+   protected void doFiltre() {
       if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
       directoryFilter.submitAction();
       if( dirList.size()<1000 ) dirTree.allExpand();
+   }
+   
+   /** Activation d'un filtre préalablement sauvegardé */
+   protected void filtre(String name) {
+      String expr = aladin.configuration.dirFilter.get(name);
+      if( expr!=null ) {
+         iconFilter.setActivated(true);
+         if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
+         directoryFilter.setSpecificalFilter(name, expr );
+      }
    }
    
    /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
@@ -612,11 +684,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Retourne true si la chaine est une clé de propriété d'au moins un enregistrement */
    protected boolean isFieldName(String s) { return multiProp.isFieldName(s); }
-   
-   // Affichage en rouge le bouton du filtre s'il y en a un actif
-   protected void updateFilterButtonColor() {
-      filter.setForeground( directoryFilter.hasFilter() ? Color.red : Aladin.COLOR_TEXT_FOREGROUND ) ;
-   }
    
    /**
     * Retourne le node correspondant à une identiciation
@@ -740,7 +807,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
     * @param tmpDirList
     */
    private void rebuildTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter ) {
-      boolean insideActivated = inside.isActivated();
+      boolean insideActivated = iconInside.isActivated();
       
       // Mémorisation temporaire des états expanded/collapsed
 //      HashMap<String,Boolean> wasExpanded = new HashMap<String,Boolean>();
@@ -760,7 +827,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       else model.countDescendance();
 
       // Répercussion des états des feuilles sur les branches
-      if( inside.isAvailable() && !insideActivated ) model.populateFlagIn();
+      if( iconInside.isAvailable() && !insideActivated ) model.populateFlagIn();
       
       // Remplacement du model dans l'arbre affiché
       dirTree.setModel( model );
@@ -858,28 +925,55 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
    }
    
+   /** retourne true si un filtre est positionné */
+   protected boolean hasFilter() {
+      return quickFilter.getText().trim().length()>0 
+            || comboFilter.getSelectedIndex()>0;
+//            || directoryFilter!=null && directoryFilter.hasFilter(); 
+   }
+   
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
     *  @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
     */
    protected void resumeFilter(String expr) {
       try {
          
-         // Ajout de la contrainte du filtre rapide
-         String quick = getQuickFilterExpr();
-         if( quick.length()>0 ) {
-            if( expr.length()==0 || expr.equals("*") ) expr=quick;
-            else expr = "("+expr+") && "+quick;
+         // En cas de désactivation du filtrage, pas de contraintes
+         if( !iconFilter.isActivated() ) expr="*";
+         
+         // sinon
+         else {
+            // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
+            String quick = getQuickFilterExpr();
+            if( quick.length()>0 ) {
+               if( expr.length()==0 || expr.equals("*") ) expr=quick;
+               else expr = "("+expr+") && "+quick;
+            }
          }
+         
+         if( iconFilter.isActivated() && expr.equals("*") ) iconFilter.setActivated( false );
+         
+         System.out.println("resumeFilter("+expr+")");
          // Filtrage
          checkFilter(expr);
-         
+
          // Regénération de l'arbre
          resumeTree();
          
          dirTree.allExpand();
+         
+         updateWidgets();
+         
       } catch( Exception e ) {
         if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
+   }
+   
+   private void updateWidgets() {
+      iconFilter.repaint();
+      
+      quickFilter.updateWidgets();
+      comboFilter.updateWidgets();
    }
    
    static private enum ResumeMode { NORMAL, FORCE, LOCALADD };
@@ -888,7 +982,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    protected void resumeIn() { resumeIn( ResumeMode.NORMAL ); }
    protected void resumeIn( ResumeMode mode) {
       if( !checkIn( mode ) ) return;
-      if( inside.isActivated() ) resumeTree();
+      if( iconInside.isActivated() ) resumeTree();
       else {
          ((DirectoryModel)dirTree.getModel()).populateFlagIn();
          repaint();
@@ -1094,7 +1188,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des Collections
       // présentes ou non dans la vue courante
-      if( dirList.size()>0 ) startInsideUpdater();
+      if( hasCollections() ) startInsideUpdater();
       else stopInsideUpdater();
    }
    

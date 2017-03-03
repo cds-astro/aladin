@@ -85,7 +85,7 @@ public class IconScan extends MyIcon {
       boolean isActivated = isActivated();
       
 
-      if( isActivated ) g.setColor( aladin.directory.blinkState ? (abort ? Aladin.COLOR_RED : Aladin.ORANGE) 
+      if( isActivated ) g.setColor( aladin.directory.blinkState ? (abort ? Aladin.COLOR_ICON_ACTIVATED : Aladin.ORANGE) 
             : Aladin.COLOR_CONTROL_FOREGROUND);
       else g.setColor( getLogoColor() );
       drawIcon(g,x,y);

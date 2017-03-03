@@ -32,12 +32,12 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class IconLook extends MyIcon {
+public class IconStudy extends MyIcon {
    static final int L = 12;      // Taille d'un logo
    static String LOOK;
 
   /** Creation */
-   protected IconLook(Aladin aladin) {
+   protected IconStudy(Aladin aladin) {
       super(aladin,32,24);
       LOOK= aladin.chaine.getString("LOOK");
    }
@@ -76,8 +76,8 @@ public class IconLook extends MyIcon {
       int mode=getMode();
       Color c = !isAvailable() ?  Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE : 
          mode==0 ? Aladin.COLOR_CONTROL_FOREGROUND :
-         mode==1 ? Aladin.COLOR_GREEN :
-         mode==2 ? Aladin.COLOR_ICON_ACTIVATED : Color.orange;
+         mode==1 ? Color.orange :
+         mode==2 ? Aladin.COLOR_ICON_ACTIVATED : Aladin.COLOR_BLUE;
       if( isMouseIn() ) c = c.brighter();
       return c;
       
