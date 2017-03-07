@@ -297,7 +297,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) {
-      if( !isVisible() || !hasCollections() ) return;
+      if( !isVisible() || !hasCollections() || id==null ) return;
       int i = id.indexOf(' ');
       if( i>0 ) id = id.substring(0,i);
       dirTree.showTreeObj(id);
