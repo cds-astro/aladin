@@ -175,8 +175,24 @@ public final class Words implements Runnable {
 
       for( j=i+1; j<a.length && a[j]!='>'; j++) anchor.append(a[j]);
       if( j==i ) return j;
-      this.text = anchor.toString();
+      this.text = shortLabel( anchor.toString() );
       return (j==a.length)?-1:j;
+   }
+   
+   /** Retourne le dernier mot sans l'extension dans une chaine du genre un path, une url,
+    * si problème, ou trop courte on retourne toute la chaine */
+   private String shortLabel( String s ) {
+      if( s.length()<20 ) return s;
+      int i = s.lastIndexOf('/');
+      int j = s.lastIndexOf('\\');
+      int k = s.lastIndexOf('=');
+      
+      i = Math.max(Math.max(i,j),k);
+      if( i<0 ) return s;
+      
+      k = s.lastIndexOf('.');
+      if( k<=i ) k=s.length();
+      return s.substring(i+1,k);
    }
 
    /** Analyse de chaine GLU.
@@ -192,7 +208,8 @@ public final class Words implements Runnable {
       for( j=i; j<a.length && a[j]==' ' && a[j]!='>' && a[j]!='|'; j++);
       for( ; j<a.length && a[j]!='>' && a[j]!='|'; j++) param.append(a[j]);
       if( j==i ) return j;
-      this.param = this.text = param.toString();
+      this.param = param.toString();
+      this.text = shortLabel( this.param );
       return (j==a.length)?-1:j;
    }
 

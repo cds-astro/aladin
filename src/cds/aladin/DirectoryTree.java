@@ -65,6 +65,7 @@ public class DirectoryTree extends JTree {
       
       setBackground( cbg );
       setOpaque(true);
+//      setRootVisible(false);
       
 //      setBorder( BorderFactory.createEmptyBorder(10, 0, 10, 0));
       setBorder( BorderFactory.createEmptyBorder(10, 0, 5, 0));
@@ -78,6 +79,10 @@ public class DirectoryTree extends JTree {
       int rowHeight = c.getPreferredSize().height;
       setRowHeight(rowHeight);
    }
+   
+   public boolean hasBeenExpanded(TreePath path) {
+      return false;
+  }
    
    public void setModel( TreeModel model ) {
       root = (DefaultMutableTreeNode) model.getRoot();
@@ -326,8 +331,9 @@ public class DirectoryTree extends JTree {
             boolean flagInside = aladin.directory.iconInside.isActivated();
             int isIn = n.getIsIn();
             if( !flagInside ) {
-               c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1 ? 
-                     (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
+               c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 
+                     ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1
+                     ? (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
                   Aladin.COLOR_CONTROL_FOREGROUND );
             } else {
                c.setForeground( isIn==-1 ? Aladin.COLOR_CONTROL_FOREGROUND : (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) );
@@ -348,11 +354,17 @@ public class DirectoryTree extends JTree {
                icon.setColor( n.isInStack() );
                
                boolean hasMoc = true;
-               if( n instanceof TreeObjDir && flagTestInside ) {
+               boolean isNew = false;
+               if( n instanceof TreeObjDir ) {
                   TreeObjDir to = (TreeObjDir)n;
-                  hasMoc = isIn!=-1 || to.hasMoc();
-                  if( !hasMoc && to.isScanning() ) { hasMoc = aladin.directory.blinkState; }
+                  isNew = to.isNew();
+                  
+                  if( flagTestInside ) {
+                     hasMoc = isIn!=-1 || to.hasMoc();
+                     if( !hasMoc && to.isScanning() ) { hasMoc = aladin.directory.blinkState; }
+                  }
                }
+               icon.setNew( isNew );
                icon.setMoc( hasMoc );
                nonLeafRenderer.setIcon( icon );
             }
@@ -368,6 +380,7 @@ public class DirectoryTree extends JTree {
       Color color;
       boolean defaut;
       boolean hasMoc;
+      boolean isNew;
       
       public MyImageIcon() {
          super();
@@ -379,8 +392,9 @@ public class DirectoryTree extends JTree {
          super(image);
       }
       
-      void setColor(Color color) { this.color=color; }
+      void setColor(Color color)  { this.color=color; }
       void setMoc(boolean hasMoc) { this.hasMoc = hasMoc; }
+      void setNew(boolean isNew)  { this.isNew = isNew; }
       
       public int getIconWidth() {
          if( defaut ) return 9;
@@ -399,16 +413,12 @@ public class DirectoryTree extends JTree {
             
          } else super.paintIcon(c,g,x,y);
          
-         if( color!=null ) {
-            Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
-         }
-         
-         if( !hasMoc ) {
-            drawWarning(g,0,8,Aladin.ORANGE);
-         }
+         if( color!=null ) Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
+         if( !hasMoc ) drawWarning(g,0,8,Aladin.ORANGE);
+         if( isNew ) drawNew(g,10,4,Color.yellow);
       }
       
-      // Dessin d'un triangle warning
+      // Dessin d'un triangle "warning"
       void drawWarning(Graphics g,int x,int y, Color c) {
          int h=6;
          int w=5;
@@ -424,6 +434,12 @@ public class DirectoryTree extends JTree {
          g.setColor( Color.black );
          g.drawLine( x+w2, y+2, x+w2, y+h-2);
          g.drawLine( x+w2, y+h, x+w2, y+h);
+      }
+      
+      // Dessin d'une petit étoile pour indiquer "new"
+      void drawNew(Graphics g,int x,int y, Color c) {
+         g.setColor( c );
+         Util.drawStar(g, x, y);
       }
    }
 }

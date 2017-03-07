@@ -568,7 +568,7 @@ public final class Legende extends AbstractTableModel  {
    public Object getValueAt(int row, int col) {
       switch(col) {
          case N:           return (row+1)+"";
-         case COO:         return field[row].getCooSignature();
+         case COO:         return getCooSignature(row); //field[row].getCooSignature();
          case VISIBLE:     return new Boolean(field[row].visible);
          case NAME:        return field[row].name;
          case UNIT:        return field[row].unit;
@@ -581,6 +581,11 @@ public final class Legende extends AbstractTableModel  {
          case PRECISION:   return field[row].precision;
       }
       return "";
+   }
+   
+   private String getCooSignature(int row) {
+      if( field[row].isDe() && getRa()==-1 ) return "COO";
+      return field[row].getCooSignature();
    }
 
    public boolean isCellEditable(int row, int col) { return col>0; }

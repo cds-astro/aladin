@@ -96,6 +96,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    protected IconScan iconScan;          // L'icone d'activation du scan
    private IconCollapse iconCollapse;    // L'icone pour développer/réduire l'arbre
    private Timer timer = null;           // Timer pour le réaffichage lors du chargement
+   private JLabel dir=null;              // Le titre qui apparait au-dessus de l'arbre
    
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
 //   private static String  MOCSERVER_INIT = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")+"&hips_service_url=*&get=record"; //&fmt=glu";
@@ -113,7 +114,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       multiProp = new MultiMoc2();
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
-      if( aladin.levelTrace>=3 ) aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
+//      if( aladin.levelTrace>=3 ) aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
 
       setBackground(cbg);
       setLayout(new BorderLayout(0,0) );
@@ -121,7 +122,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       JPanel pTitre = new JPanel( new FlowLayout(FlowLayout.LEFT,35,0));
       pTitre.setBackground( cbg );
-      JLabel dir = new JLabel("Directory tree");
+      dir = new JLabel("Directory tree");
       Util.toolTip(dir, "Tree of available data set collections from CDS and other IVOA servers.\n"
             + "Browse, filter, select, and load the collections you want to display...",true);
       dir.setFont(dir.getFont().deriveFont(Font.BOLD));
@@ -143,6 +144,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          scrollTree.getHorizontalScrollBar().setUI(new MyScrollBarUI());
       }
       
+      
+      // Le controle des filtres
       String s = "Filter by free keywords (comma separated) "
             + "or by any advanced filter expression (ex: nb_rows&lt;1000). Press ENTER to activate it.";
       JLabel labelFilter = new JLabel("select");
@@ -183,42 +186,34 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          public void mouseClicked(MouseEvent e) { openAdvancedFilterFrame(); }
       });
 
-      JPanel pFilter = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      pFilter.setBackground(cbg);
-      pFilter.add(comboFilter);
-      pFilter.add(plus);
-
-//      JPanel leftFilter, rightFilter, p, p1;
-//      leftFilter = p = new JPanel( new GridLayout(2,1,2,2));
-//      p.setBackground( cbg );
-//      p1 = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0)); p1.setBackground( cbg ); p1.add(labelFilter);
-//      p.add(p1);
-//      p1 = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0)); p1.setBackground( cbg ); p1.add(fromLabel);
-//      p.add(p1);
-//
-//      rightFilter = p = new JPanel( new GridLayout(2,1,2,2));
-//      p.setBackground( cbg );
-//      p.add(quickFilter);
-//      p.add(pFilter);
-//
-//      JPanel panelFilter = p = new JPanel( new BorderLayout(2,2) );
-//      p.setBorder( BorderFactory.createEmptyBorder(5,5,10,20));
-//      p.setBackground( cbg );
-//      p.add( leftFilter, BorderLayout.CENTER );
-//      p.add( rightFilter, BorderLayout.EAST );
-
-
+      // Pour que le quickFilter et le popupFilter aient même taille et soient alignés, je les place
+      // tous les deux dans un GridBagLayoutPanel qui sera CENTER dans BorderLayout, et à EAST de ce panel
+      // le bouton du " + ". Ca permet également d'éviter de faire disparaitre ce "+" lorsque le bandeau
+      //  du Directory tree est trop étroit
+      //
+      //     select XXXXXXXX  |
+      //     from   XXXXXXXX  |  +
+      //
+      JPanel plusFilter = new JPanel( new BorderLayout(0,0));
+      plusFilter.setBackground(cbg);
+      plusFilter.add(plus, BorderLayout.SOUTH);
+      
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g = new GridBagLayout();
       c.fill = GridBagConstraints.BOTH;            // J'agrandirai les composantes
-      c.insets = new Insets(2,3,0,5);
-      JPanel panelFilter = new JPanel( g );
-      panelFilter.setBorder( BorderFactory.createEmptyBorder(5,5,10,20));
-      panelFilter.setBackground( cbg );
-      PropPanel.addCouple(null,panelFilter, labelFilter, null, quickFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
-      PropPanel.addCouple(null,panelFilter, fromLabel, null, pFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
+      c.insets = new Insets(2,3,0,2);
+      JPanel panelFilter1 = new JPanel( g );
+      panelFilter1.setBackground( cbg );
+      PropPanel.addCouple(null,panelFilter1, labelFilter, null, quickFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
+      PropPanel.addCouple(null,panelFilter1, fromLabel, null, comboFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
       
-      // Les boutons de controle
+      JPanel panelFilter = new JPanel( new BorderLayout(0,0));
+      panelFilter.setBorder( BorderFactory.createEmptyBorder(5,5,10,5));
+      panelFilter.setBackground(cbg);
+      panelFilter.add(panelFilter1, BorderLayout.CENTER);
+      panelFilter.add(plusFilter, BorderLayout.EAST);
+      
+      // Les icones de controle tout en bas
       iconFilter = new IconFilter(aladin);
       iconCollapse = new IconCollapse(aladin);
       iconInside = new IconInside(aladin);
@@ -302,7 +297,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) {
-      if( !isVisible() || hasCollections() ) return;
+      if( !isVisible() || !hasCollections() ) return;
+      int i = id.indexOf(' ');
+      if( i>0 ) id = id.substring(0,i);
       dirTree.showTreeObj(id);
    }
    
@@ -559,6 +556,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          return;
       }
       
+      // Déployement de l'arbre pour montrer les collections concernées
+      dirTree.allExpand(  dirTree.getSelectionPath() );
+      
       // Liste des collections sélectionnées scannables
       final ArrayList<TreeObjDir> treeObjs = getSelectedTreeObjDirScannable();
       
@@ -600,6 +600,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 //                           System.out.println("Scanning "+to.internalId+"...");
                            MocItem2 mo = multiProp.getItem(to.internalId);
                            to.scan( mo );
+//                           System.out.println(mo.mocId+" => "+mo.getMocRef().todebug());
                            
                         } catch( Exception e ) {
                            if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -620,6 +621,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                scanTreeObjs=null;
                scanService=null;
                stopTimer();
+               Util.pause( 200 );
                resumeIn( ResumeMode.FORCE );   // Un dernier resume complet de l'arbre
                Aladin.trace(4,"Directory.scan() finished");
                repaint();
@@ -770,7 +772,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       try {
          initMultiProp();
          buildTree();
-      } finally { postTreeProcess(); init=false;}
+      } finally { postTreeProcess(true); init=false;}
    }
    
    /** (Re)construction de l'arbre en fonction de l'état précédent de l'arbre
@@ -785,11 +787,22 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    // Initialisation du compteur de référence en fonction d'un TreeModel
-   private void initCounter( DirectoryModel model ) {
+   private int initCounter( DirectoryModel model ) {
       // Initialisation du compteur de référence
       HashMap<String,Integer> hs = new HashMap<String,Integer>();
-      model.countDescendance( hs );
+      int n = model.countDescendance( hs );
       counter = hs;
+      return n;
+   }
+   
+   /** Mise à jour du titre au-dessus de l'arbre en fonction des compteurs */
+   private void updateTitre(int nb) {
+      String t = "Directory tree";
+      if( !( nb==-1 || dirList==null || nb==dirList.size() ) ) {
+         t = "<html>"+t+"<font color=\"#D0D0F0\"> &rarr; "+nb+" / "+dirList.size()+"</font></html>";
+
+      }
+      dir.setText(t);
    }
    
    // Compteurs des noeuds
@@ -823,8 +836,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( mustBeActivated ) model.createTreeBranch( to );
       }
       
-      if( initCounter ) initCounter( model );
-      else model.countDescendance();
+      int n;
+      if( initCounter ) n=initCounter( model );
+      else n=model.countDescendance();
+      updateTitre(n);
 
       // Répercussion des états des feuilles sur les branches
       if( iconInside.isAvailable() && !insideActivated ) model.populateFlagIn();
@@ -915,7 +930,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 //         long t0 = System.currentTimeMillis();
          rebuildTree(tmpDirList,defaultExpand,initCounter);
          validate();
-         postTreeProcess();
+         postTreeProcess(defaultExpand);
 //         System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
       } finally {
 
@@ -1181,10 +1196,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
 
    /** Traitement à applique après la génération ou la régénération de l'arbre */
-   private void postTreeProcess() {
+   private void postTreeProcess(boolean minimalExpand) {
       
 //      filter.setEnabled( dialogOk() );
-      dirTree.minimalExpand();
+      if( minimalExpand ) dirTree.minimalExpand();
       
       // Mise en route ou arrêt du thread de coloration de l'arbre en fonction des Collections
       // présentes ou non dans la vue courante
@@ -2345,7 +2360,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
          } else if( flagScan ) {
             
-            b = new JButton("Scan"); b.setMargin( new Insets(2,4,2,4));
+            b = new JButton("Scan only"); b.setMargin( new Insets(2,4,2,4));
             b.setEnabled( hasView );
             Util.toolTip(b,"Check if the collections contains data in the current view",true);
             b.setFont(b.getFont().deriveFont(Font.BOLD));
@@ -2357,7 +2372,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                }
             });
             
-        }
+            control.add(new JLabel("    "));
+            
+         }
 
          b = new JButton("Load"); b.setMargin( new Insets(2,4,2,4));
          b.setFont(b.getFont().deriveFont(Font.BOLD));

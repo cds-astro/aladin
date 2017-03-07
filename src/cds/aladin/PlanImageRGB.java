@@ -715,7 +715,6 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
             // et pouvoir afficher le changement de pourcentage
             if( i%10000==0 ) {
                setPourcent(i*100L/pRef.pixels.length);
-               if( Aladin.isSlow ) Util.pause(10);
             }
          }
       }

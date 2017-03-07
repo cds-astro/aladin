@@ -659,7 +659,7 @@ public class Repere extends Position {
 
    static final Color JAUNEPALE  = new Color(255,255,225);
    static final Color CARTOUCHE_FOREGROUND = new Color(200,203,207);
-   static final Color CARTOUCHE_BACKGROUND = new Color(60,60,60);
+   static final Color CARTOUCHE_BACKGROUND = new Color(50,50,50);
 
    /** Affiche le repere
     * @param g        le contexte graphique

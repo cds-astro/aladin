@@ -19,10 +19,6 @@
 
 package cds.aladin;
 
-import cds.tools.Util;
-
-
-
 public final class ContourPlot extends ContourAlgorithm {
 	
 	// Below, data members which store the grid steps,
@@ -132,11 +128,6 @@ public final class ContourPlot extends ContourAlgorithm {
 		        
 		        nb+=2;
 		        
-		        // Pour laisser la main aux autres threads(test)
-		        if(Aladin.isSlow) {
-		           if( nb%300==0 ) Util.pause(10);
-		        }
-			
 		}
 		prevXY[0] = xy[0];
 		prevXY[1] = xy[1];
@@ -212,10 +203,6 @@ public final class ContourPlot extends ContourAlgorithm {
 	//-------------------------------------------------------
 	boolean Routine_label_150() {
 	        compteur++;
-	        if(Aladin.isSlow) {
-	           // on laisse la main aux autres threads
-	    	   if(compteur%2000==0) Util.pause(10);
-	        }   
 		while (true) {
 			//------------------------------------------------
 			// Lines from z[ij[0]-1][ij[1]-1]

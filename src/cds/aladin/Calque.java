@@ -1513,8 +1513,8 @@ public class Calque extends JPanel implements Runnable {
          if( plan[i].isFree() ) continue;
          if( plan[i].id==null ) continue;
          
-         if( plan[i].id.equals(hipsId) ) return plan[i].c;
-         if( ("CDS/"+plan[i].id).equals(hipsId) ) return plan[i].c;
+         if( plan[i].id.startsWith(hipsId) ) return plan[i].c;
+         if( ("CDS/"+plan[i].id).startsWith(hipsId) ) return plan[i].c;
       }
       return null;
    }

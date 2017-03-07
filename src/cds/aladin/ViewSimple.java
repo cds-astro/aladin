@@ -4550,7 +4550,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          //System.out.println("flagBord="+flagBord+" flagchange="+flagchange);
 
          if( flagchange ) {
-            if( gr!=null && Aladin.isSlow ) waitImg(gr);      // message pour patienter
 
             // Zoom des pixels
             if( !(p instanceof PlanImageBlink)
@@ -4629,7 +4628,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
                   // PROBLEME DE SYNCHRONISATION, ON RETENTE UN COUP (Pas fantastique je sais !!)
                   if( w*h!=nPixels.length  ) {
-                     if( Aladin.isSlow ) waitImg(gr);
                      resetImgID();
                      return false;
                   }

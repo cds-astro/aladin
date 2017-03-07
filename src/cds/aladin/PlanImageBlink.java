@@ -442,7 +442,6 @@ public class PlanImageBlink extends PlanImage {
                // et pouvoir afficher le changement de pourcentage
                if( (i * p.length) % 10000 == 0 ) {
                   setPourcent(i * 100 / taille);
-                  if( Aladin.isSlow ) Util.pause(10);
                }
             }
          }

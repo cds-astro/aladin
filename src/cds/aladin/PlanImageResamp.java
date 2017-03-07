@@ -185,10 +185,10 @@ public class PlanImageResamp extends PlanImage {
                   int x2=x1 + 1;
                   int y2=y1 + 1;
                   if( x1<0 || x2>=widthInit || y1<0 || y2>=heightInit ) break;                  
-                  double p0=(0xFF & (int) pixelsInit[y1 * widthInit+ x1]);
-                  double p1=(0xFF & (int) pixelsInit[y1 * widthInit+ x2]);
-                  double p2=(0xFF & (int) pixelsInit[y2 * widthInit+ x1]);
-                  double p3=(0xFF & (int) pixelsInit[y2 * widthInit+ x2]);
+                  double p0=(0xFF & pixelsInit[y1 * widthInit+ x1]);
+                  double p1=(0xFF & pixelsInit[y1 * widthInit+ x2]);
+                  double p2=(0xFF & pixelsInit[y2 * widthInit+ x1]);
+                  double p3=(0xFF & pixelsInit[y2 * widthInit+ x2]);
                   
                   double d0,d1,d2,d3,pA,pB;
                   try {
@@ -221,7 +221,6 @@ public class PlanImageResamp extends PlanImage {
             // et pouvoir afficher le changement de pourcentage
             if( i % 10000 == 0 ) {
                setPourcent(i * 100 / pref.getBufPixels8().length);
-               if( Aladin.isSlow ) Util.pause(10);
             }
          }
       }

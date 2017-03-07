@@ -96,7 +96,16 @@ public final class Coord {
     * @param 
     */
    public String getDeg() {
-      return al+" "+(del>=0?"+":"")+del;
+      Astrocoo coo = new Astrocoo();
+      coo.set(al,del);
+      coo.setPrecision(Astrocoo.ARCSEC+1);
+      try{
+         String o = "2d";
+         return coo.toString(o);
+      } catch( Exception e ) { System.err.println(e); }
+      return "";
+      
+//     return Util.myRound(al)+" "+(del>=0?"+":"")+Util.myRound(del);
    }
 
    /** Affichage sexagesimal de l'objet.

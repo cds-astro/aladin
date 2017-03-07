@@ -20,8 +20,6 @@
 
 package cds.aladin;
 
-import cds.tools.Util;
-
 /**
  * Un Simple Tokenizer gérant les " et les '
  * @author  P.Fernique [CDS]
@@ -48,10 +46,11 @@ public final class Tok {
       int i;
       char a[] = s.toCharArray();
       if( !force ) {
-      for( i=0; i<a.length && !Character.isSpace(a[i]) && a[i]!=',' && a[i]!='\\' && a[i]!='\'' && a[i]!='"'; i++ );
-      if( i==a.length ) return s;
+         for( i=0; i<a.length && !Character.isSpace(a[i]) && a[i]!=',' 
+               && a[i]!='&' && a[i]!='|' && a[i]!=')' && a[i]!='(' && a[i]!='\\' && a[i]!='\'' && a[i]!='"'; i++ );
+         if( i==a.length ) return s;
       }
-      
+
       StringBuilder s1 = new StringBuilder(a.length);
       s1.append('"');
       for( i=0; i<a.length; i++ ) {
@@ -122,10 +121,16 @@ public final class Tok {
    
    private StringBuffer curTok = new StringBuffer();
    
+   private void resetString( StringBuffer s ) {
+      int n = s.length();
+      if( n==0 ) return;
+      s.delete(0,n);
+   }
+   
    /** Retourne le prochain Token, soit séparé par un des délimiteurs spécifiés
     * soit délimité par des "" ou des '' */
    public  String nextToken() {
-      Util.resetString(curTok);
+      resetString(curTok);
       boolean quote=false;
       boolean backslash=false;
       boolean first=true;

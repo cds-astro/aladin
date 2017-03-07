@@ -34,10 +34,10 @@ public class MyTreeUI extends BasicTreeUI {
 
 
    protected void paintHorizontalLine(Graphics g,JComponent c,int y,int left,int right){
-      //         super.paintHorizontalLine(g,c,y,left,right);
+//               super.paintHorizontalLine(g,c,y,left,right);
    }
    protected void paintVerticalLine(Graphics g,JComponent c,int x,int top,int bottom){
-      //         super.paintVerticalLine(g,c,x,top,bottom);
+//               super.paintVerticalLine(g,c,x,top,bottom);
    }
 
 

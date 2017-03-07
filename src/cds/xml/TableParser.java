@@ -2106,11 +2106,12 @@ final public class TableParser implements XMLConsumer {
             else {
                String s = rec[nRA];
                int i = s.indexOf('+');
-               if( i<0 ) i =s.indexOf('-');
-               if( i<0 ) { i = s.indexOf(','); if( i>0 ) i++; }
-               if( i<0 ) i = s.indexOf(' ');
+               int j=i;
+               if( i<0 ) i=j =s.indexOf('-');
+               if( i<0 ) { i=j = s.indexOf(','); if( i>0 ) i++; }
+               if( i<0 ) i=j = s.indexOf(' ');
                if( i<0 ) throw new Exception("Unsupported syntax for coordinates expressed as an unique field");
-               ra = s.substring(0,i).trim();
+               ra = s.substring(0,j).trim();
                dec= s.substring(i).trim();
             }
             

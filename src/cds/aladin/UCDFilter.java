@@ -826,9 +826,6 @@ public class UCDFilter {
 
 			for (int i = sources.length - 1; i >= 0; i--) {
 
-				// Pour laisser la main aux autres threads
-				if (Aladin.isSlow && i % 50 == 0) Util.pause(10);
-
 				if (verifyValueConstraints(sources[i], curBlock)) {
 
 					sources[i].setSelect(true);
@@ -909,7 +906,6 @@ public class UCDFilter {
 				// maj du pourcentage
 				pf.setPourcent(100.0*((double)(nbSources-i)/(double)(nbSources)));
 				//System.out.println(pf.pourcent);
-				if( Aladin.isSlow ) Util.pause(10);
 			}
 
             // should we stop the processing

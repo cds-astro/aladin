@@ -21,7 +21,6 @@ package cds.aladin;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.util.Vector;
 
 import cds.tools.Util;
 
@@ -223,7 +222,7 @@ public final class PlanContour extends PlanTool {
    protected boolean getPixels() {
 
 //       p = calque.getPlanBase();
-       p = (Plan) (pimg==null ? calque.getPlanBase() : pimg);
+       p = pimg==null ? calque.getPlanBase() : pimg;
        if ( p == null ) return false;
        objet = p.objet;
 
@@ -815,10 +814,6 @@ public final class PlanContour extends PlanTool {
                 a=y*width;
                 for(x=width-1;x>=0;x--)  {
 
-                    if((a+x)%4000==0) {
-                        if(aladin.isSlow) Util.pause(10);
-                    }
-
                     b=smoothLevel*y*orgWidth + smoothLevel*x + decalX + decalY*orgWidth;
 
                     // calcul des elts de pos et de p
@@ -853,9 +848,6 @@ public final class PlanContour extends PlanTool {
        for(j=height-2;j>=0;j--) {
           a=j*width;
           for(i=width-2;i>=0;i--) {
-             if(aladin.isSlow) {
-                if((a+i)%4000 == 0) Util.pause(10);
-             }
 
              p1 = pix[a+i];
              p2 = pix[a+i+1];

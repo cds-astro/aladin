@@ -67,10 +67,13 @@ public class DirectoryModel extends DefaultTreeModel {
     * @param hs mémorisation des valeurs sous forme path=n (ex: /Image/Optical=32, ...)
     */
    protected int countDescendance() { return countDescendance(null); }
-   protected int countDescendance(HashMap<String,Integer> hs) { return countDescendance(root.toString(),root,hs); }
+   protected int countDescendance(HashMap<String,Integer> hs) {
+      if( root.isLeaf() ) return 0;
+      return countDescendance(root.toString(),root,hs);
+   }
    private int countDescendance(String prefix,DefaultMutableTreeNode parent,HashMap<String,Integer> hs) {
       TreeObj to = (TreeObj) parent.getUserObject();
-      if( parent.isLeaf() )  return 1;
+      if( parent.isLeaf() ) return 1;
 
       int n=0;
       Enumeration e = parent.children();

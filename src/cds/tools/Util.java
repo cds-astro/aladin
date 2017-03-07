@@ -1924,6 +1924,21 @@ public final class Util {
          runme.setPriority(ref.getPriority()-2);
       } catch( Exception e ) {}
    }
+   
+   static final String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm";
+   static final SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
+   static {
+      TimeZone utc = TimeZone.getTimeZone("UTC");
+      sdf.setTimeZone(utc);
+   }
+   
+   /** Retourne le temps Unix à partir d'une DATE ISO UTC */
+   public static long getTimeFromISO(String date_iso) throws Exception {
+      if( date_iso.indexOf('T')<0) date_iso += "T00:00";
+      if( date_iso.charAt(date_iso.length()-1)=='Z' ) date_iso=date_iso.substring(0,date_iso.length()-1);
+      Date date = sdf.parse(date_iso);
+      return date.getTime();
+   }
 
    /** retourne une date ISO 8601 (YYYY-MM-DD) à partir d'une valeur MJD */
    static public String getDateFromMJD(String mjd) {

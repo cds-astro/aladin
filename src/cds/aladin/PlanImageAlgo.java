@@ -160,7 +160,7 @@ public class PlanImageAlgo extends PlanImage {
          Util.pause(500);
          Aladin.trace(4,"PlanImageAlgo.normalise:  waiting "+p+"...");
       }
-      return (PlanImage)p1;
+      return p1;
    }
    
        
@@ -264,7 +264,6 @@ public class PlanImageAlgo extends PlanImage {
             if( y % 100 == 0 ) {
                if( type==NO ) break;  // En cas de suppression inopinée du plan
                pourcent=x*y * 100 / p1.getBufPixels8().length;
-               if( Aladin.isSlow ) Util.pause(10);
             }
          }
          bZero=pMin-minCoding;
@@ -336,7 +335,6 @@ public class PlanImageAlgo extends PlanImage {
                if( y % 100 == 0 ) {
                   if( type==NO ) break;  // En cas de suppression inopinée du plan
                   pourcent=x*y * 100 / p1.getBufPixels8().length;
-                  if( Aladin.isSlow ) Util.pause(10);
                }
             }
          }
@@ -443,7 +441,6 @@ public class PlanImageAlgo extends PlanImage {
             if( y % 100 == 0 ) {
                if( type==NO ) break;  // En cas de suppression inopinée du plan
                pourcent=x*y * 100 / p1.getBufPixels8().length;
-               if( Aladin.isSlow ) Util.pause(10);
             }
          }
       }
@@ -498,7 +495,6 @@ public class PlanImageAlgo extends PlanImage {
          if( y % 100 == 0 ) {
             if( type==NO ) break;  // En cas de suppression inopinée du plan
             pourcent= (gap+(y*width)/2) * 100 / inPixels.length;
-            if( Aladin.isSlow ) Util.pause(10);
          }
       }
    }

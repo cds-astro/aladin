@@ -1299,8 +1299,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int i = findIndiceServer(nom);
 
       // Les cas particuliers VizieR
-      if( i<0 && vizierSurveys.setParam(nom) )  i=findIndiceServer(vizierSurveys);
-      if( i<0 && vizierArchives.setParam(nom) ) i=findIndiceServer(vizierArchives);
+      if( vizierSurveys!=null ) {
+         if( i<0 && vizierSurveys.setParam(nom) )  i=findIndiceServer(vizierSurveys);
+      }
+      if( vizierSurveys!=null ) {
+         if( i<0 && vizierArchives.setParam(nom) ) i=findIndiceServer(vizierArchives);
+      }
 
       if( i<0 ) return false;
       setCurrent(i);

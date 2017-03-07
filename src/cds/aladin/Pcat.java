@@ -489,9 +489,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    boolean firstTrace=true;	         // Pour afficher la premiere source en cas de trace
    private int indexAccessUrl=-1;    // Position de la colonne pour in access_url éventuel
    private int indexAccessFormat=-1; // Position de la colonne pour un access_format éventuel
+   private int indexSTC=-1;          // Position de la colonne pour un FOV STC éventuel
    private int indexOID=-1;          // Position de la colonne OID eventuelle
    private TableParser res;          // Parser utilisé pour créer les objets
-   private StringBuffer line = new StringBuffer(500);
+   private StringBuilder line = new StringBuilder(500);
    private Map<Integer, Field> standardisedColumns = new HashMap<Integer, Field>();
 
 
@@ -554,11 +555,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                      && (f.type.indexOf("hidden") >= 0 || f.type.indexOf("trigger") >= 0) ) {
                   hiddenField[i] = true;
                   f.visible=false;
-                  //                  continue;
                }
 
                v.addElement(f);
-               if( standardColumns.contains(f.name) ) {
+               if( f.name!=null && standardColumns.contains(f.name) ) {
             	   Field displayField = new Field(f, true);
             	   v.addElement(displayField);
             	   this.standardisedColumns.put(i, displayField);
@@ -641,6 +641,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String refText = leg.getRefText(j);
             String flagArchive = leg.getRefValue(j);
             String utype = leg.getUtype(j);
+            String name = leg.getName(j);
+            
+            if( indexSTC==-1 && Util.indexOfIgnoreCase( value[i], "Polygon ")==0 ) {
+               indexSTC=j;
+            }
             
             // On met un lien sur les urls ?
             if( href==null && (value[i].startsWith("http://") || value[i].startsWith("https://") || value[i].startsWith("ftp://"))) {
@@ -669,6 +674,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                      flagArchive="image/???";
                   }
                }
+               
+               // datalink uniquement basé sur le nom de la colonne (genre Markus)
+               if( flagArchive==null ) {
+                  if( name.equalsIgnoreCase("datalink") ) flagArchive="data/???";
+               }
             }
 
             String tag = (gref != null) ? gref : (href != null) ? "Http " + href : null;
@@ -686,15 +696,15 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 //            String text = (refText != null) ? refText : value[i];
             String text = value[i];
 
-            line.append("\t");
+            line.append('\t');
             if( tag != null ) {
                line.append("<&" + dollarSub(tag, value, (href != null) ? 1 : 0));
                if( text != null ) line.append("|" + dollarSub(text, value, 0));
-               line.append(">");
+               line.append('>');
             } else {
             	line.append(text);
             	if (standardisedColumns.containsKey(i)) {
-            		line.append("\t");
+            		line.append('\t');
             		line.append(this.processValuesToStandardRepresentation(standardisedColumns.get(i), text));
     			}
             }
@@ -738,6 +748,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          // Fov STCS attaché ?
          int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION1);
          if( idxSTCS<0 ) idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION2);
+         if( idxSTCS<0 ) idxSTCS = indexSTC;
          if (idxSTCS>=0) {
             try {
                source.setFootprint(source.getValue(idxSTCS));
@@ -763,9 +774,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                e.printStackTrace();
             }
          }
-
-         // Pour laisser la main aux autres threads
-         if( Aladin.isSlow && nb_o%200==0 ) Util.pause(10);
 
       } catch( Exception e ) {
          System.out.println("setRecord (3p) " + e);

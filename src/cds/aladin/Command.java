@@ -1103,29 +1103,77 @@ public final class Command implements Runnable {
       //         } while( encore);
       //      }
    }
+   
+   private enum ModeServerInfo { SERVER, AVANT_CRITERE, INQUOTE_CRITERE, 
+      IN_CRITERE, APRES_SERVER, APRES_INQUOTE, BACKSLASH, FIN };
 
    /** Decoupage du serveur courant et de ses criteres eventuels */
    protected int getServerInfo(StringBuffer server,StringBuffer criteria,
-         char a[],int i) {
-      int inPar;	// Niveau de parenthesage
-      int d;
-
-      for( d=i, inPar=0; i<a.length; i++ ) {
-         //System.out.println("a["+i+"]="+a[i]+" inPar="+inPar);
-         if( inPar==0 ) {
-            if( a[i]=='(' ) {
-               inPar++;
-               server.append(new String(a,d,i-d));
-               d=i+1;
-            } else if( a[i]==',' ) break;
-         } else if( a[i]==')' ) {
-            inPar--;
-            criteria.append(new String(a,d,i-d));
-         }
+         char a[],int i)  {
+//      int inPar;	// Niveau de parenthesage
+//      int d;
+      char quote=' ';
+      ModeServerInfo mode;
+      
+      for( mode=ModeServerInfo.SERVER; i<a.length && mode!=ModeServerInfo.FIN; i++ ) {
+         char c = a[i];
+         switch(mode) {
+            case SERVER: 
+               if( c==',' ) { mode=ModeServerInfo.FIN; break; }
+               if( c=='(' ) mode=ModeServerInfo.AVANT_CRITERE;
+               else server.append(c);
+               break;
+            case AVANT_CRITERE:
+               if( Character.isWhitespace(c) ) break;
+               if( c=='"' || c=='\'' ) { quote=c; mode=ModeServerInfo.INQUOTE_CRITERE; }
+               else mode=ModeServerInfo.IN_CRITERE;
+               criteria.append(c); 
+               break;
+            case IN_CRITERE:
+               if( c==')' ) { mode=ModeServerInfo.APRES_SERVER; break; }
+               if( Character.isWhitespace(c) || c==',' ) mode=ModeServerInfo.AVANT_CRITERE;
+               criteria.append(c);
+               break;
+            case INQUOTE_CRITERE:
+               if( c==quote ) mode=ModeServerInfo.APRES_INQUOTE;
+               else if( c=='\\' ) mode=ModeServerInfo.BACKSLASH;
+               criteria.append(c);
+               break;
+            case BACKSLASH:
+               mode=ModeServerInfo.INQUOTE_CRITERE;
+               criteria.append(c);
+               break;
+            case APRES_INQUOTE:
+               if( c==')' ) { mode=ModeServerInfo.APRES_SERVER; break; }
+               if( c==',' ) mode=ModeServerInfo.AVANT_CRITERE;
+               criteria.append(c);
+               break;
+            case APRES_SERVER:
+               if( c==',' )  mode=ModeServerInfo.FIN;
+               break;
+        }
       }
-      if( server.length()==0 ) server.append(new String(a,d,i-d));
-      if( i<a.length && a[i]==',' ) i++;
+      
+//      if( mode!=ModeServerInfo.FIN && mode!=ModeServerInfo.APRES_SERVER ) throw new Exception("Script syntax error");
+      
       return i;
+
+//      for( d=i, inPar=0; i<a.length; i++ ) {
+//         //System.out.println("a["+i+"]="+a[i]+" inPar="+inPar);
+//         if( inPar==0 ) {
+//            if( a[i]=='(' ) {
+//               inPar++;
+//               server.append(new String(a,d,i-d));
+//               d=i+1;
+//            } else if( a[i]==',' ) break;
+//         } else if( a[i]==')' ) {
+//            inPar--;
+//            criteria.append(new String(a,d,i-d));
+//         }
+//      }
+//      if( server.length()==0 ) server.append(new String(a,d,i-d));
+//      if( i<a.length && a[i]==',' ) i++;
+//      return i;
    }
 
    /** retourne false si la ligne designant les serveurs ne contient

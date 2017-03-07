@@ -384,7 +384,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
          COLOR_MEASUREMENT_BORDERS_MOUSE_CELL = new Color(140,140,255);
          COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(215,215,225);
-         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_BACKGROUND.brighter();
+         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = new Color( 100,100,240); //COLOR_BACKGROUND.brighter();
          COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_TEXT_FOREGROUND;
          COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       }
@@ -672,9 +672,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    boolean inHelp=false;  // True si le mode "Help" est actif
    boolean inScriptHelp=false;  // True si le mode "ScriptHelp" est actif
    static int iv=0;              // Indice de la performance JAVA
-   static long speed=-1;         // Indice de performance (lower is better)
-   static final long slownessThreshold = 800; // Seuil a partir duquel on considere la JVM comme lente
-   static boolean isSlow;        // true si lance en mode APPLET et speed>seuil
    //    boolean flagInsets=false;     // True si on a deja pris en compte le Insets du peer
    boolean print=false;	  // true si on est entrain d'imprimer
    protected boolean gc=true;	// false si on a inhibé l'appel à Aladin.gc()
@@ -2393,13 +2390,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          myParent = getParent();
       }
 
-      // Evaluation de la vitesse, methode Thomas
-      speed = getSpeed();
-      isSlow = speed>slownessThreshold;
-
       // Log
       log("Start",(SIGNEDAPPLET?"signed applet ":STANDALONE?"standalone ":"applet ")+VERSION+
-            " perf="+speed+
+            " perf="+0+
             " java="+javaVersion+"/"+javaVendor+
             " syst="+osName+"/"+osArch+"/"+osVersion+
             (FROMDB!=null?" from="+FROMDB:"")+

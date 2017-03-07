@@ -666,6 +666,23 @@ public class TreeObjDir extends TreeObj {
       return prop!=null && prop.get("web_access_url")!=null;
    }
    
+   /** Retourne true si la collection a été créée récemment (moins de 3 mois) */
+   protected boolean isNew() {
+      if( prop==null ) return false;
+      
+      String date = prop.getProperty("hips_creation_date");
+      if( date==null ) date = prop.getProperty("hips_release_date");
+      if( date!=null ) {
+         try {
+            long t = Util.getTimeFromISO(date);
+            long now = System.currentTimeMillis();
+            return now-t < 86400L*90L*1000L;     // Moins de 3 mois ?
+            
+         } catch( Exception e ) {}
+      }
+      return false;
+   }
+   
    /** Retourne true si la collection dispose d'un MOC */
    protected  boolean hasMoc() {
       return hasMocByMocServer() || prop!=null && prop.getProperty("moc_access_url")!=null || isHiPS();
@@ -850,7 +867,7 @@ public class TreeObjDir extends TreeObj {
       if( url!=null ) {
          if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
 
-         cmd = Tok.quote(internalId)+"=get SSA("+Tok.quote(url)+") "+trg+" "+rad;
+         cmd = Tok.quote(internalId+" "+trg)+"=get SSA("+Tok.quote(url)+") "+trg+" "+rad;
          aladin.execAsyncCommand(cmd);
       }
    }
@@ -883,7 +900,7 @@ public class TreeObjDir extends TreeObj {
             url = url.substring(0,pos) + url.substring(pos+fmt.length() );
          }
 
-         cmd = Tok.quote(internalId)+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
+         cmd = Tok.quote(internalId+" "+trg)+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
          aladin.execAsyncCommand(cmd);
       }
    }
@@ -948,7 +965,7 @@ public class TreeObjDir extends TreeObj {
 //            url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
 //            String cmd = internalId+" = load "+url;
             
-            cmd = Tok.quote(internalId)+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
+            cmd = Tok.quote(internalId+" "+trg)+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
             aladin.execAsyncCommand(cmd);
             
          }
@@ -1000,7 +1017,7 @@ public class TreeObjDir extends TreeObj {
          if( mo.moc==null ) mo.moc=moc;
          else mo.moc.add(moc);
 
-      } catch( Exception e ) { }
+      } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace();  }
       
       // Mémorisation de la surface couverte
       try {
@@ -1041,7 +1058,7 @@ public class TreeObjDir extends TreeObj {
       
       try {
          moc = new HealpixMoc(order);
-         inScan=new MyInputStream( Util.openStream(url,false,15000) );
+         inScan=new MyInputStream( Util.openStream(url,false,30000) );
          pcat.tableParsing(inScan,null);
          
          Iterator<Obj> it = pcat.iterator();

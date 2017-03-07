@@ -640,7 +640,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Parcours une liste de mots séparés par des virgules (,) ou des pipes (|)
     * et insère de part et d'autre le joker '*'
-    * ex: 2MASS|USNO => *2MASS*,*USNO2
+    * Ajoute des quotes si nécessaire
+    * ex: 2MASS|US(NO) => "*2MASS*,*US(NO)*"
     */
    static protected String jokerize(String s) {
       Tok tok = new Tok(s,",|");
@@ -649,7 +650,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          if( s1==null ) s1 = new StringBuilder("*"+tok.nextToken().trim());
          else s1.append("*,*"+tok.nextToken().trim());
       }
-      return s1.toString()+"*";
+      s=s1.toString()+"*";
+      if( s.indexOf("(")>=0 || s.indexOf(")")>=0 
+            || s.indexOf("&&")>=0 ||  s.indexOf("||")>=0 || s.indexOf("&!")>=0 ) s = Tok.quote(s); 
+      return s;
    }
    
    private String rebuildInclu(HashMap<String,String[]> exclusion) {

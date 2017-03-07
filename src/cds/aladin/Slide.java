@@ -689,7 +689,7 @@ public final class Slide {
          
          // Le libelle
 //         g.setFont( Aladin.BOLD );
-         g.setFont( Aladin.BOLD );
+         g.setFont( Aladin.PLAIN );
          if( p.label!=null ) {
             int py = dy+15-1;
             int px = Select.ws-12;
