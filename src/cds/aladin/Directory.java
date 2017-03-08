@@ -397,7 +397,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             super.paintComponent(g);
             int x = getWidth()-X-8;
             int y = getHeight()/2-X/2;
-            if( mocServerLoading || mocServerUpdating ) Slide.drawBall(g, x, y, blinkState ? Color.white : Color.green );
+            if( mocServerLoading || mocServerUpdating ) {
+               Slide.drawBall(g, x, y, blinkState ? Color.white : Color.green );
+            }
             else drawCross(g,x,y);
          } catch( Exception e ) { }
       }
@@ -408,7 +410,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( getText().trim().length()==0  ) return;
          g.setColor( getBackground() );
          g.fillOval(x-3, y-3, X+7, X+7);
-//         g.setColor( dirFilter.hasFilter() ? Color.red.darker() : Color.gray );
          g.setColor( Color.red.darker() );
          g.drawLine(x,y,x+X,y+X);
          g.drawLine(x+1,y,x+X+1,y+X);
@@ -661,7 +662,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Filtrage de l'arbre des Collections */
    protected void doFiltre() {
       if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
-      directoryFilter.submitAction();
+      
+      int i = aladin.directory.comboFilter.getSelectedIndex();
+      if( iconFilter.isActivated() && i>0 ) {
+         aladin.directory.filtre( (String)aladin.directory.comboFilter.getSelectedItem() );
+         
+      } else {
+         directoryFilter.submitAction(false);
+      }
+      
       if( dirList.size()<1000 ) dirTree.allExpand();
    }
    
@@ -969,6 +978,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
     */
    protected void resumeFilter(String expr) {
       try {
+         
+         System.out.println("resumeFilter iconFilter.isActivated="+iconFilter.isActivated());
          
          // En cas de désactivation du filtrage, pas de contraintes
          if( !iconFilter.isActivated() ) expr="*";
@@ -2378,22 +2389,29 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                public void actionPerformed(ActionEvent e) { bookmark(); }
             });
             
-         } else if( flagScan ) {
+         } else {
             
-            b = new JButton("Scan only"); b.setMargin( new Insets(2,4,2,4));
-            b.setEnabled( hasView );
-            Util.toolTip(b,"Check if the collections contains data in the current view",true);
-            b.setFont(b.getFont().deriveFont(Font.BOLD));
+            b = new JButton("Coll/Exp"); b.setMargin( new Insets(2,4,2,4));
+            Util.toolTip(b,"Collapse/Expand the selected collections in the tree",true);
             control.add(b);
             b.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  scan();
-                  hideInfo();
-               }
+               public void actionPerformed(ActionEvent e) { iconCollapse.submit(); }
             });
             
+            if( flagScan ) {
+               b = new JButton("Scan only"); b.setMargin( new Insets(2,4,2,4));
+               b.setEnabled( hasView );
+               Util.toolTip(b,"Check if the collections contains data in the current view",true);
+               b.setFont(b.getFont().deriveFont(Font.BOLD));
+               control.add(b);
+               b.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent e) {
+                     scan();
+                     hideInfo();
+                  }
+               });
+            }
             control.add(new JLabel("    "));
-            
          }
 
          b = new JButton("Load"); b.setMargin( new Insets(2,4,2,4));
@@ -2471,21 +2489,23 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          public void paintComponent(Graphics g) {
             paintComponent1(g);
             if( to.isNew() ) {
+               g.setFont( Aladin.ITALIC );
+               String s = "New "+(to.isNewObsRelease()?"release":to.isNewHips()?"HiPS":"!");
                g.setColor(Color.yellow);
-               
-               int x=15,y=getHeight()/2-2;
-               Util.drawStar(g, x, y);
-               g.drawString("New!",x+10,y+5);
+               int x=getWidth()/2-g.getFontMetrics().stringWidth(s)/2+3; 
+               int y=13;
+               Util.drawStar(g, x-4, y-6);
+               g.drawString(s,x,y);
             }
          }
          private void paintComponent1(Graphics g) {
             super.paintComponent(g);
             int ws=getWidth();
             int hs=getHeight();
+            g.setColor( Color.gray);
+            g.fillRect(0, 0, ws, hs );
             
             if( to.previewError || to.imPreview==null ) {
-               g.setColor( Color.gray);
-               g.fillRect(0, 0, ws, hs );
                g.setColor( Color.white );
                String s = to.previewError ? "no preview" : "loading...";
                g.setFont( Aladin.ITALIC);

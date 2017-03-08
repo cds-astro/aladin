@@ -666,22 +666,35 @@ public class TreeObjDir extends TreeObj {
       return prop!=null && prop.get("web_access_url")!=null;
    }
    
-   /** Retourne true si la collection a été créée récemment (moins de 3 mois) */
+   /** Retourne true si la collection a été créée/maj récemment */
    protected boolean isNew() {
+      return isNewHips() || isNewObsRelease();
+   }
+   
+   /** Retourne true si la collection (hors HiPS) a été créée/maj récemment */
+   protected boolean isNewObsRelease() {
       if( prop==null ) return false;
-      
+      return lastYear( prop.getProperty("obs_release_date") );
+   }
+   
+   /** Retourne true si le HiPS associée à la collection a été créé/maj récemment */
+   protected boolean isNewHips() {
+      if( prop==null ) return false;
       String date = prop.getProperty("hips_creation_date");
       if( date==null ) date = prop.getProperty("hips_release_date");
-      if( date!=null ) {
-         try {
-            long t = Util.getTimeFromISO(date);
-            long now = System.currentTimeMillis();
-            return now-t < 86400L*90L*1000L;     // Moins de 3 mois ?
-            
-         } catch( Exception e ) {}
-      }
+      return lastYear(date);
+   }
+   
+   private boolean lastYear(String date ) {
+      if( date==null ) return false;
+      try {
+         long t = Util.getTimeFromISO(date);
+         long now = System.currentTimeMillis();
+         return now-t < 86400L*365L*1000L;     // Moins d'un an
+      } catch( Exception e ) {}
       return false;
    }
+
    
    /** Retourne true si la collection dispose d'un MOC */
    protected  boolean hasMoc() {

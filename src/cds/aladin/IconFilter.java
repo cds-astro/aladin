@@ -94,13 +94,13 @@ public class IconFilter extends MyIcon {
    protected void submit() {
       if( !isAvailable() ) return;
       activated = !activated;
-      if( activated ) {
-         int i = aladin.directory.comboFilter.getSelectedIndex();
-         if( i>0 ) {
-            aladin.directory.filtre( (String)aladin.directory.comboFilter.getSelectedItem() );
-            return;
-         }
-      }
+//      if( activated ) {
+//         int i = aladin.directory.comboFilter.getSelectedIndex();
+//         if( i>0 ) {
+//            aladin.directory.filtre( (String)aladin.directory.comboFilter.getSelectedItem() );
+//            return;
+//         }
+//      }
       aladin.directory.doFiltre();
    }
       

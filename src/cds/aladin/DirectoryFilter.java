@@ -562,6 +562,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       String expr = exprArea.getText();
       if( expr.trim().length()==0 ) expr="*";
       
+      if( isVisible() ) aladin.makeCursor(this, Aladin.WAITCURSOR);
+
       aladin.directory.resumeFilter(expr);
       
       // mémorisation de l'expression s'il s'agit du MYLIST
@@ -735,7 +737,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             public void keyTyped(KeyEvent e) { }
             public void keyPressed(KeyEvent e) { }
             public void keyReleased(KeyEvent e) {
-               if( e.getKeyCode()==KeyEvent.VK_ENTER ) submitAction();
+               if( e.getKeyCode()==KeyEvent.VK_ENTER ) submitAction(true);
             }
          });
       }
@@ -994,11 +996,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    @Override
    public void actionPerformed(ActionEvent e) {
       flagFormEdit=false; 
-      submitAction();
+      submitAction(true);
    }
-   protected void submitAction() {
-      aladin.makeCursor(this, Aladin.WAITCURSOR);
-      aladin.directory.iconFilter.setActivated(true);
+   protected void submitAction(boolean forceActivation) {
+      if( forceActivation ) aladin.directory.iconFilter.setActivated(true);
       submit();
    }
 }

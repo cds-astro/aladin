@@ -67,7 +67,6 @@ public class DirectoryTree extends JTree {
       setOpaque(true);
 //      setRootVisible(false);
       
-//      setBorder( BorderFactory.createEmptyBorder(10, 0, 10, 0));
       setBorder( BorderFactory.createEmptyBorder(10, 0, 5, 0));
       setShowsRootHandles(true);
       NoeudRenderer nr = new NoeudRenderer();
@@ -402,7 +401,7 @@ public class DirectoryTree extends JTree {
       }
       
       public int getIconHeight() {
-         if( defaut ) return 7;
+         if( defaut ) return 12;
          return super.getIconHeight();
       }
       
@@ -415,7 +414,7 @@ public class DirectoryTree extends JTree {
          
          if( color!=null ) Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
          if( !hasMoc ) drawWarning(g,0,8,Aladin.ORANGE);
-         if( isNew ) drawNew(g,10,4,Color.yellow);
+         if( isNew ) drawNew(g,9,getIconHeight()-2,Color.yellow);
       }
       
       // Dessin d'un triangle "warning"
