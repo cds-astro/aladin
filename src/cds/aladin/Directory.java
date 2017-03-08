@@ -309,7 +309,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    protected void reset() {
-      directoryFilter.globalReset();
+      directoryFilter.reset();
       dirTree.defaultExpand();
    }
    
@@ -325,7 +325,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       String current = (String)comboFilter.getSelectedItem();
       comboFilter.removeAllItems();
-      for( String name : aladin.configuration.dirFilter.keySet() ) comboFilter.addItem( name );
+      comboFilter.addItem(directoryFilter.ALLCOLLHTML);
+      
+      String mylist = aladin.configuration.dirFilter.get(DirectoryFilter.MYLIST);
+      if( mylist!=null ) {
+         comboFilter.addItem(DirectoryFilter.MYLISTHTML);
+      }
+      
+      for( String name : aladin.configuration.dirFilter.keySet() ) {
+         if( name.equals(directoryFilter.ALLCOLL) ) continue;
+         if( name.equals(directoryFilter.MYLIST) ) continue;
+         comboFilter.addItem( name );
+      }
       
       if( current!=null ) comboFilter.setSelectedItem( current );
       
@@ -636,13 +647,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( directoryFilter.isVisible() ) directoryFilter.setVisible( false );
       else {
          String name = (String)comboFilter.getSelectedItem();
-         if( name.equals(directoryFilter.DEFAULT) ){
-            String n = name = "My list";
-            int i=0;
-            while( aladin.configuration.dirFilter.get(name)!=null ) name = n+" "+(i++);
-            aladin.configuration.setDirFilter(name, "*");
+         if( name.equals(directoryFilter.ALLCOLLHTML) ){
+            name = directoryFilter.MYLIST;
+            aladin.configuration.setDirFilter(name, "");
             updateDirFilter();
-            comboFilter.setSelectedItem(name);
+            comboFilter.setSelectedItem(directoryFilter.MYLISTHTML);
          }
 
          directoryFilter.showFilter();
@@ -658,10 +667,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Activation d'un filtre préalablement sauvegardé */
    protected void filtre(String name) {
-      String expr = aladin.configuration.dirFilter.get(name);
+      
+      if( name.equals(DirectoryFilter.ALLCOLLHTML) ) name=DirectoryFilter.ALLCOLL;
+      else if( name.equals(DirectoryFilter.MYLISTHTML) ) name=DirectoryFilter.MYLIST;
+      
+      System.out.println("filter("+name+")");
+      
+      String expr = name.equals(DirectoryFilter.ALLCOLL) ? "*" : aladin.configuration.dirFilter.get(name);
+      
       if( expr!=null ) {
          iconFilter.setActivated(true);
          if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
+         
          directoryFilter.setSpecificalFilter(name, expr );
       }
    }
@@ -2078,7 +2095,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          if( treeObjs.size()>1 )  {
             a = new MyAnchor(aladin,treeObjs.size()+" collections selected",50,null,null);
-            a.setFont(a.getFont().deriveFont(Font.PLAIN));
+            a.setFont(a.getFont().deriveFont(Font.BOLD));
+            a.setFont(a.getFont().deriveFont(a.getFont().getSize2D()+1));
+            a.setForeground( Aladin.COLOR_GREEN );
             PropPanel.addCouple(p,null, a, g,c);
             StringBuilder list = null;
             String sList=null,more=null;
@@ -2151,7 +2170,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
 
             a = new MyAnchor(aladin,sList,100,more,null);
-            a.setForeground(Aladin.COLOR_GREEN);
+            a.setForeground(Aladin.COLOR_BLUE);
             PropPanel.addCouple(p,null, a, g,c);
             
          // Une seule collection
@@ -2162,7 +2181,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( to.verboseDescr!=null || to.description!=null ) {
                s = to.verboseDescr==null ? "":to.verboseDescr;
                a = new MyAnchor(aladin,to.description,200,s,null);
-               a.setFont(a.getFont().deriveFont(Font.PLAIN));
+               a.setFont(a.getFont().deriveFont(Font.BOLD));
+               a.setFont(a.getFont().deriveFont( a.getFont().getSize2D()+1) );
+               a.setForeground( Aladin.COLOR_GREEN );
                PropPanel.addCouple(p,null, a, g,c);
             }
             String provenance = to.copyright==null ? to.copyrightUrl : to.copyright;
@@ -2329,7 +2350,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          JButton b;
          
- 
          if( treeObjs.size()==1 ) {
             
             if( to.hasPreview() ) preview = new Preview( to );
@@ -2449,6 +2469,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          public Dimension getPreferredSize() { return new Dimension(88,88); }
          
          public void paintComponent(Graphics g) {
+            paintComponent1(g);
+            if( to.isNew() ) {
+               g.setColor(Color.yellow);
+               
+               int x=15,y=getHeight()/2-2;
+               Util.drawStar(g, x, y);
+               g.drawString("New!",x+10,y+5);
+            }
+         }
+         private void paintComponent1(Graphics g) {
             super.paintComponent(g);
             int ws=getWidth();
             int hs=getHeight();
@@ -2476,8 +2506,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             else { sx2 = wi; sy2 = hs * ((double)wi/ws); }
             
             if( hi<hs ) g.translate(0,(hs-hi)/2);
-            
             g.drawImage(img,0,0,ws,hs, 0,0, (int)sx2,(int)sy2, this);
+            if( hi<hs ) g.translate(0,-(hs-hi)/2);
          }
       }
       

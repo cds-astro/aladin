@@ -34,6 +34,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -71,12 +73,16 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private Aladin  aladin;  // référence externe
    
-   static protected String DEFAULT = "All collections";
+   static protected String ALLCOLL = "All collections";
+   static protected String MYLIST  = ""; //"My working list";
    
-   // Préfixe des paramètres de filtrage des HiPS par le MocServer
-   private static String MOCSERVER_FILTERING 
-        = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
-         +"&hips_service_url=*&casesensitive=false";
+   static protected String ALLCOLLHTML = "<html><i> -- All collections --</i></html>";
+   static protected String MYLISTHTML  = "<html><i> -- My working list --</i></html>";
+   
+//   // Préfixe des paramètres de filtrage des HiPS par le MocServer
+//   private static String MOCSERVER_FILTERING 
+//        = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
+//         +"&hips_service_url=*&casesensitive=false";
    
    public DirectoryFilter(Aladin aladin) {
       super();
@@ -104,8 +110,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       JPanel storePanel = new JPanel( new FlowLayout(FlowLayout.CENTER,7,7) );
       storePanel.setBorder( BorderFactory.createEmptyBorder(0,20,0,0));
       storeButton=b=new JButton("Store");
+      Util.toolTip(storeButton, "Allows to create/update a permanent filter with its own specific label",true);
       deleteButton=b=new JButton("Delete");
-            
+      Util.toolTip(deleteButton, "Allows to remove a permanent filter",true);
+           
       JLabel l = new JLabel("Filter name ");
       l.setFont( l.getFont().deriveFont(Font.BOLD));
       storePanel.add( l );
@@ -149,6 +157,11 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
          }
       });
+      exprArea.addMouseListener(new MouseAdapter() {
+         public void mousePressed(MouseEvent e) {
+            activateAreaText(true);
+         }
+      });
       areaPanel.add( exprArea, BorderLayout.CENTER );
       
       JPanel p = new JPanel( new BorderLayout());
@@ -164,18 +177,26 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private void updateWidget() {
       String name = nameField.getText().trim();
       boolean enabled = name.length()>0 && hasFilter();
-      storeButton.setEnabled( enabled );
+      storeButton.setEnabled( enabled && !name.equals(ALLCOLL) );
       deleteButton.setEnabled( enabled && aladin.configuration.dirFilter.containsKey(name) 
-            && !name.equals(DEFAULT));
+            && !name.equals(ALLCOLL) && !name.equals(MYLIST));
+      
       String expr = aladin.configuration.dirFilter.get(name);
       boolean modif = expr==null ? false : expr.equals( exprArea.getText().trim() );
       storeButton.setText( modif ? "update" : "store" );
 
-      if( flagFormEdit && ! exprArea.getText().trim().equals("*") ) {
-         exprArea.setForeground( Aladin.COLOR_GREEN );
+      if( flagFormEdit && !exprArea.getText().trim().equals("") ) activateAreaText(true);
+      else activateAreaText(false);
+   }
+
+   private void activateAreaText(boolean flag) {
+      if( flag ) {
+         exprArea.setForeground( Aladin.COLOR_GREEN.darker() );
+         exprArea.setBackground( Color.white );
          exprArea.getFont().deriveFont(Font.BOLD);
       } else {
          exprArea.setForeground( Color.gray );
+         exprArea.setBackground( getBackground() );
          exprArea.getFont().deriveFont(Font.ITALIC);
       }
    }
@@ -183,8 +204,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Mémorisation + activation du filtre courant */
    private void store() {
       String name = nameField.getText().trim();
+      if( name.equals(ALLCOLL) || name.equals(MYLIST) ) {
+         aladin.warning(this,"You have to provide your own specific filter name\n"
+               + "to save it as a permanent filter.");
+         return;
+      }
       String expr = exprArea.getText().trim();
       aladin.configuration.setDirFilter(name, expr);
+      aladin.configuration.dirFilter.remove(MYLIST);
       aladin.directory.updateDirFilter();
       aladin.directory.comboFilter.setSelectedItem(name);
    }
@@ -192,10 +219,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Suppression de la mémorisation du filtre courant */
    private void delete() {
       String name = nameField.getText().trim();
-      if( name.equals(DEFAULT) ) return;
+      if( name.equals(ALLCOLL) ) return;
+      if( name.equals(MYLIST) ) return;
       aladin.configuration.dirFilter.remove(name);
       aladin.directory.updateDirFilter();
-      globalReset();
+      reset();
+      nameField.setText("");
    }
    
    /** Construction du panel qui contient les tabs des différents filtres + le panel de l'expression brute */
@@ -221,7 +250,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       b.setFont(b.getFont().deriveFont(Font.BOLD));
       applyPanel.add( b=new JButton("Reset"));
       b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { globalReset(); }
+         public void actionPerformed(ActionEvent e) { reset(); }
       });
       
       JPanel closePanel = new JPanel( new FlowLayout( FlowLayout.CENTER,7,7 ) );
@@ -525,6 +554,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Faut-il mettre à jour l'expression de filtrage en fonction du formulaire ?
       if( !flagFormEdit ) generateExpression();
+      
       updateWidget();
       
       flagFormEdit=false;
@@ -534,9 +564,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       aladin.directory.resumeFilter(expr);
       
-      // mémorisation de l'expression s'il s'agit d'un "default"
-      if( aladin.directory.comboFilter.getSelectedIndex()==0 ) {
-         aladin.configuration.setDirFilter(DEFAULT, expr);
+      // mémorisation de l'expression s'il s'agit du MYLIST
+      if( aladin.directory.comboFilter.getSelectedItem().equals(MYLISTHTML) ) {
+         aladin.configuration.setDirFilter(MYLIST, expr);
       }
    }
    
@@ -692,8 +722,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Affichage du panel pour permettre à l'utilisateur de modifier son filtre */
    public void showFilter() {
       Point p = aladin.getLocationOnScreen();
-      p.x+=aladin.directory.getWidth()+5;
-      p.y+=50;
+      p.x+=aladin.directory.getWidth()+30;
+      p.y+=20;
       setLocation( p );
       setVisible(true);
    }
@@ -711,21 +741,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-//   private JCheckBox bxImage, bxCube, bxCatalog, bxJournal, bxMisc;
    private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxProg;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
-   
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
-   
-//   private JSlider slRow;
-   
-   /** Reset complet des filtres
-    * => nettoyage du formulaire + nettoyage du champ rapide + repositionnement du filtre "default" */
-   protected void globalReset() {
-//      aladin.directory.comboFilter.setSelectedIndex(0);
-//      nameField.setText("");
-      reset();
-   }
    
    /** Reset du formulaire et application à l'arbre immédiatement */
    protected void reset() { 
@@ -767,8 +785,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
     * POUR LE MOMENT, SEULE LA SYNTAXE AVANCEE EST PRISE EN COMPTE, LES CHECKBOXES NE SONT PAS UTILISEES */
    protected void setSpecificalFilter(String name, String expr) {
       clean();
+//      System.out.println("setSpecificalFilter("+name+")");
+      if( name.equals(ALLCOLL) ) name=MYLIST;
       nameField.setText(name);      // Positionnement du nom du filtre
-      exprArea.setText(expr);       // Positionnement de l'expression du filtre
+      exprArea.setText(expr.equals("*") ? "" : expr);       // Positionnement de l'expression du filtre
       flagFormEdit=true;                
       submit();
    }
@@ -973,7 +993,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 
    @Override
    public void actionPerformed(ActionEvent e) {
-      flagFormEdit=false; submitAction();
+      flagFormEdit=false; 
+      submitAction();
    }
    protected void submitAction() {
       aladin.makeCursor(this, Aladin.WAITCURSOR);

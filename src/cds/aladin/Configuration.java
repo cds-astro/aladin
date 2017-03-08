@@ -339,7 +339,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       Util.setCloseShortcut(this, false,aladin);
       prop = new Vector(10);
       dirFilter = new LinkedHashMap<String,String>();
-      setDirFilter(DirectoryFilter.DEFAULT, "*");
       setDirFilter("Color surveys", "dataproduct_subtype=color && moc_sky_fraction>0.2");
       setDirFilter("Large catalogs", "nb_rows>1000000");
       setDirFilter("Log missions", "ID=CDS/B*");
@@ -1903,9 +1902,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          int i=1;
          try {
             for( String name : dirFilter.keySet() ) {
-               if( name.equals(DirectoryFilter.DEFAULT) ) continue;
+               if( name.equals(DirectoryFilter.ALLCOLL) ) continue;
+               if( name.equals(DirectoryFilter.MYLIST) ) continue;
                String expr = dirFilter.get(name);
-               if( expr==null || expr.equals("*") ) continue;
+               if( expr==null || expr.equals("*") || expr.equals("")) continue;
                String key = DIRFILER+(i++);
                bw.write( Util.align(key, 20) + name+" : " + expr );
                bw.newLine();
