@@ -97,7 +97,7 @@
 
 %A SSA
 %Description Generic SSA query
-%U $4POS=$1,$2&SIZE=$3
+%U $4POS=$1,$2&SIZE=$3&REQUEST=queryData
 #&FORMAT=image/fits
 %Param.Description $4=Base URL (incl. '?')
 %Param.Description $1=Right Ascension
@@ -113,6 +113,24 @@
 %Aladin.LabelPlane SIA $4
 %Aladin.Profile >6.909
 %DistribDomain ALADIN
+
+
+%A Vignettes.CDS
+%D Vignette de densite des tables VizieR et de Simbad
+%I Vignettes.CDS_0
+%I Vignettes.CDS_1
+
+%A Vignettes.CDS_0
+%D Vignette de densite des tables VizieR et de Simbad (alasky)
+%U http://alasky.unistra.fr/footprints/tables/$1/densityMap?format=png&size=small
+%P.D 1:Identification de la table (ex: vizier/II_337_out)
+%R Mime(image/png)
+
+%A Vignettes.CDS_1
+%D Vignette de densite des tables VizieR et de Simbad (alasky)
+%U http://alasky.unistra.fr/footprints/tables/$1/densityMap?format=png&size=small
+%P.D 1:Identification de la table (ex: vizier/II_337_out)
+%R Mime(image/png)
 
 
 

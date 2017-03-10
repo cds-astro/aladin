@@ -1565,7 +1565,7 @@ Runnable, SwingWidgetFinder, Widget {
       g.clipRect(2,2,ws-3,hs-3);
 
       // AntiAliasing
-      a.setAliasing(g,1);
+      a.setAliasing(g,Aladin.ALIASING);
 
       Plan [] plan = a.calque.getPlans();
       // Determination du premier plan image (opaque)

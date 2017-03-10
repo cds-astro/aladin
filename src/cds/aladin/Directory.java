@@ -78,6 +78,8 @@ import cds.tools.Util;
  */
 public class Directory extends JPanel implements Iterable<MocItem>{
    
+   static private final String UPDATING = "  updating...";
+   
    private Aladin aladin;                  // Référence
    private MultiMoc2 multiProp;             // Le multimoc de stockage des properties des collections
    private DirectoryFilter directoryFilter=null; // Formulaire de filtrage de l'arbre des collections
@@ -99,13 +101,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private JLabel dir=null;              // Le titre qui apparait au-dessus de l'arbre
    
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
-//   private static String  MOCSERVER_INIT = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")+"&hips_service_url=*&get=record"; //&fmt=glu";
    private static String  MOCSERVER_INIT = "*&fields=!hipsgen*&get=record&fmt=asciic";
    
    // Paramètres de maj par le MocServer (update de l'arbre)
-   private String mocUrl = null; //préfixe de l'URL une fois connue par le GLU
-   private static String MOCSERVER_UPDATE = "fmt=asciic";
-//   private static String MOCSERVER_UPDATE = "client_application=AladinDesktop"+(Aladin.BETA?"*":"")+"&hips_service_url=*&";
+   private static String MOCSERVER_PARAM = "fmt=asciic";
 
    private JScrollPane scrollTree = null;
    
@@ -298,7 +297,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) {
       if( !isVisible() || !hasCollections() || id==null ) return;
-      int i = id.indexOf(' ');
+      int i = id.indexOf('~');
+      if( i<0 ) i = id.indexOf(' ');
       if( i>0 ) id = id.substring(0,i);
       dirTree.showTreeObj(id);
    }
@@ -809,7 +809,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private void buildTree() {
       DirectoryModel model = (DirectoryModel) dirTree.getModel();
       for( TreeObjDir to : dirList ) model.createTreeBranch( to ); 
-      initCounter( model );
+      int n = initCounter( model );
+      updateTitre(n);
    }
    
    // Initialisation du compteur de référence en fonction d'un TreeModel
@@ -824,7 +825,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Mise à jour du titre au-dessus de l'arbre en fonction des compteurs */
    private void updateTitre(int nb) {
       String t = "Directory tree";
-      if( !( nb==-1 || dirList==null || nb==dirList.size() ) ) {
+      if( nb!=-1 && dirList==null && nb<dirList.size() ) {
          t = "<html>"+t+"<font color=\"#D0D0F0\"> &rarr; "+nb+" / "+dirList.size()+"</font></html>";
 
       }
@@ -968,9 +969,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** retourne true si un filtre est positionné */
    protected boolean hasFilter() {
-      return quickFilter.getText().trim().length()>0 
-            || comboFilter.getSelectedIndex()>0;
-//            || directoryFilter!=null && directoryFilter.hasFilter(); 
+      String s = quickFilter.getText();
+      if( s.startsWith(UPDATING) ) s="";
+      return s.length()>0  || comboFilter.getSelectedIndex()>0;
    }
    
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
@@ -1119,13 +1120,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          // Interrogation par cercle
          if( v.getTaille()>45 ) {
-            params = MOCSERVER_UPDATE+"&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
+            params = MOCSERVER_PARAM+"&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
 
             // Interrogation par rectangle
          } else {
             StringBuilder s1 = new StringBuilder("Polygon");
             for( Coord c1: v.getCooCorners())  s1.append(" "+c1.al+" "+c1.del);
-            params = MOCSERVER_UPDATE+"&stc="+URLEncoder.encode(s1.toString());
+            params = MOCSERVER_PARAM+"&stc="+URLEncoder.encode(s1.toString());
          }
 
          try {
@@ -1297,7 +1298,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                }
                else multiProp.add( prop );
                
-               quickFilter.setText("  updating... ("+multiProp.size()+")");
+               quickFilter.setText(UPDATING+" ("+multiProp.size()+")");
             } catch( Exception e ) {
                if( Aladin.levelTrace>=3 ) e.printStackTrace();
             }
@@ -1398,12 +1399,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          boolean isSIA  = prop.getProperty("sia_service_url")!=null;
          boolean isSSA  = prop.getProperty("ssa_service_url")!=null;
          boolean isTAP  = prop.getProperty("tap_service_url")!=null;
-         String subCat = isHips ? "HiPS": isCS ? "Catalog by CS" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : isTAP ? "Table by TAP" : "Miscellaneous";
+         String subCat = isHips ? "HiPS": isCS || isTAP ? "Catalog by CS,TAP" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : "Miscellaneous";
          category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
          
          // On trie un peu les branches
-         int k = isHips ? 4: isCS ? 1 : isSIA ? 0 : isSSA ? 3 : isTAP ? 2 : 5;
+         int k = isHips ? 4: isCS ? 1 :  isTAP ? 2 : isSIA ? 0 : isSSA ? 3 :5;
          key = key==null ? k+"" : k+"/"+key;
          prop.replaceValue( Constante.KEY_CLIENT_SORT_KEY, key);
       }
@@ -1473,7 +1474,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          // Tri par popularité et catégorie
          String popularity = prop.get("vizier_popularity");
          if( popularity!=null ) {
-            popularity = String.format("%08d", 10000000 -Long.parseLong(popularity));
+            popularity = String.format("%08d", 1000 -Long.parseLong(popularity));
          } else popularity=getCatSuffix(id);
          String sortKey = sortPrefix+"/"+popularity;
          prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY,sortKey);
@@ -1729,6 +1730,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          while( !init ) Util.pause(100);
          (new Thread("updateFromMocServer"){
             public void run() {
+               quickFilter.setText(UPDATING);
                if( updateFromMocServer()>0  ) {
                   cacheWrite();
                   final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
@@ -1736,6 +1738,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                      public void run() { replaceTree(tmpListReg); stopTimer(); }
                   });
                } else stopTimer();
+               quickFilter.setText("");
             }
          }).start();
 
@@ -1772,8 +1775,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       try {
          loadMultiProp(in,localFile);
          ArrayList<TreeObjDir> tmpDirList = populateMultiProp();
-//         checkIn(true);
-//         resumeTree(dirList, false, true);
          rebuildTree(tmpDirList,  false,  true);
          dirList=tmpDirList;
       } catch( Exception e ) {

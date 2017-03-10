@@ -280,6 +280,14 @@ MouseWheelListener, Widget
          if( urlSamp==null ) return;
          sendBySAMP(urlSamp,o);
          urlSamp=null;
+         
+      // Envoi directement dan Aladin
+      } else if( src==menuDirectLoad ) {
+         String o = ((JMenuItem)src).getText();
+         if( urlSamp==null ) return;
+         
+         aladin.calque.newPlan(urlSamp, "Data", "provided by the original archive server", null);
+         urlSamp=null;
       }
 
       if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();
@@ -396,6 +404,8 @@ MouseWheelListener, Widget
    private JPopupMenu popMenuSAMP = null;
 
    private JMenu menuBroadcastSpectrum;
+   private JMenuItem menuDirectLoad;
+   
    //   private JMenuItem menuBroadcast;
    private String MALLAPPS;
    //   private String MBROADCASTALL;
@@ -418,6 +428,9 @@ MouseWheelListener, Widget
          //         j.addActionListener(this);
          popMenuSAMP.add( menuBroadcastSpectrum = new JMenu(MBROADCASTSPECTRUM) );
       }
+      popMenuSAMP.add( menuDirectLoad = new JMenuItem("try to load it directly in Aladin") );
+      menuDirectLoad.addActionListener( this );
+
    }
 
 

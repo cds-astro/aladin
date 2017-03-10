@@ -653,7 +653,8 @@ public class TreeObjDir extends TreeObj {
             s = Util.getSubpath(internalId, 1, -1);
             s = "vizier/"+ s.replace("/","_");
          }
-         return "http://alasky.u-strasbg.fr/footprints/tables/"+s+"/densityMap?format=png&size=small";
+//         return "http://alasky.u-strasbg.fr/footprints/tables/"+s+"/densityMap?format=png&size=small";
+         return aladin.glu.getURL("Vignettes.CDS", s)+"";
       }
       
       if( isHiPS() ) return getUrl()+"/preview.jpg";
@@ -663,7 +664,7 @@ public class TreeObjDir extends TreeObj {
    
    /** Retourne true si la collection dispose d'une URL donnant des infos supplémentaires */
    protected boolean hasInfo() {
-      return prop!=null && prop.get("web_access_url")!=null;
+      return prop!=null && (prop.get("web_access_url")!=null || prop.get("obs_description_url")!=null);
    }
    
    /** Retourne true si la collection a été créée/maj récemment */
@@ -715,7 +716,10 @@ public class TreeObjDir extends TreeObj {
    
    /** Retourne l'URL donnant des informations supplémentaires sur la collection */
    protected String getInfoUrl() {
-      return prop==null ? null : prop.get("web_access_url");
+      if( prop==null ) return null;
+      String url = prop.get("obs_description_url");
+      if( url==null ) url = prop.get("web_access_url");
+      return url;
    }
 
    /** Retourne true s'il s'agit d'un catalogue hiérarchique pour des progéniteurs */
@@ -863,7 +867,7 @@ public class TreeObjDir extends TreeObj {
       if( prop==null ) return;
 
       String cmd;
-      String rad = getDefaultRadius(15);
+      String rad = getDefaultRadius(1);
       String trg = getDefaultTarget();
 
       // Accès via GLU
@@ -880,16 +884,26 @@ public class TreeObjDir extends TreeObj {
       if( url!=null ) {
          if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
 
-         cmd = Tok.quote(internalId+" "+trg)+"=get SSA("+Tok.quote(url)+") "+trg+" "+rad;
+         // On enlève un éventuel FORMAT=xxx redondant
+         int pos;
+         final String fmt = "&REQUEST=queryData";
+         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
+            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+         }
+
+         cmd = Tok.quote(internalId+getSuffix())+"=get SSA("+Tok.quote(url)+") "+trg+" "+rad;
          aladin.execAsyncCommand(cmd);
       }
    }
+   
+   static private String getSuffix() { return "~"+(++SUFFIX); }
+   static private int SUFFIX = 0;
    
    protected void loadSIA() {
       if( prop==null ) return;
 
       String cmd;
-      String rad = getDefaultRadius(15);
+      String rad = getDefaultRadius(1);
       String trg = getDefaultTarget();
 
       // Accès via GLU
@@ -913,7 +927,7 @@ public class TreeObjDir extends TreeObj {
             url = url.substring(0,pos) + url.substring(pos+fmt.length() );
          }
 
-         cmd = Tok.quote(internalId+" "+trg)+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
+         cmd = Tok.quote(internalId+getSuffix())+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
          aladin.execAsyncCommand(cmd);
       }
    }
@@ -964,8 +978,8 @@ public class TreeObjDir extends TreeObj {
             int i = internalId.indexOf('/');
             String cat = internalId.substring(i+1);
             
-            if( internalId.startsWith("CDS/Simbad") ) cmd = internalId+"=get Simbad "+trg+" "+rad;
-            else cmd = internalId+"=get VizieR("+cat+",allcolumns) "+trg+" "+rad;
+            if( internalId.startsWith("CDS/Simbad") ) cmd = Tok.quote(internalId+getSuffix())+"=get Simbad "+trg+" "+rad;
+            else cmd = Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allcolumns) "+trg+" "+rad;
             aladin.execAsyncCommand(cmd);
             
          // Accès direct CS => http://...?RA=$1&DEC=$2&SR=$3&VERB=2
@@ -978,7 +992,7 @@ public class TreeObjDir extends TreeObj {
 //            url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
 //            String cmd = internalId+" = load "+url;
             
-            cmd = Tok.quote(internalId+" "+trg)+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
+            cmd = Tok.quote(internalId+getSuffix())+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
             aladin.execAsyncCommand(cmd);
             
          }

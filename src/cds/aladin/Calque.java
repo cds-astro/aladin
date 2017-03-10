@@ -1511,10 +1511,10 @@ public class Calque extends JPanel implements Runnable {
    public Color isLoaded(String hipsId) {
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].isFree() ) continue;
-         if( plan[i].id==null ) continue;
          
-         if( plan[i].id.startsWith(hipsId) ) return plan[i].c;
-         if( ("CDS/"+plan[i].id).startsWith(hipsId) ) return plan[i].c;
+         if( plan[i].id!=null && plan[i].id.startsWith(hipsId) ) return plan[i].c;
+         if( plan[i].label!=null && plan[i].label.startsWith(hipsId) ) return plan[i].c;
+         if( plan[i].id!=null && ("CDS/"+plan[i].id).startsWith(hipsId) ) return plan[i].c;
       }
       return null;
    }
