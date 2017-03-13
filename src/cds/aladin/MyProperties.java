@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.TimeZone;
 
+import cds.mocmulti.MultiMoc;
+
 /**
  * Gestion avancée d'une liste de propriétés
  * - conserve les lignes blanches et les commentaires si nécessaire
@@ -419,6 +421,11 @@ public class MyProperties {
          }
 
          // ajout normal de la propriété
+         if( s.indexOf('=')<0 ) {
+            String id = MultiMoc.getID(this);
+            System.out.println("propertie file line syntax error (missing '=')"+(id!=null?" in "+id:"")+" ignored: "+s);
+            continue;
+         }
          add(s);
       }
       
@@ -451,7 +458,7 @@ public class MyProperties {
             value = new String(b,0,j);
          }
       } catch( Exception e ) {
-//         System.err.println("MyProperties reader error => "+e.getMessage());
+         System.err.println("MyProperties reader error => "+e.getMessage()+"\n => "+s);
 //         e.printStackTrace();
          prop.add(new PropItem("#", "#Error: "+s));
          return;

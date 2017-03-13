@@ -553,9 +553,6 @@ MouseWheelListener, Widget
       if( x+width>=1 ) {
          l=width-3;
 
-         //         g.setColor(BG);
-         //         g.fillRect(x,y,l,h);
-
          g.setColor( w.samp ? Color.yellow : Aladin.COLOR_BUTTON_BACKGROUND);
          g.fillRect(x,y,l,h);
 
@@ -567,7 +564,7 @@ MouseWheelListener, Widget
          g.drawLine(x+l,y+h,x,y+h);
 
          if( w.pushed ) g.setColor( Color.red );
-         else if( w.haspushed ) g.setColor( Color.white );
+         else if( w.haspushed ) g.setColor(  Color.green.darker().darker() );
          else g.setColor( Color.black );
          g.drawString(s,x+3,y+h-1);
       }
@@ -588,14 +585,14 @@ MouseWheelListener, Widget
       return drawWords(g,w,flagClear, w.y<=HF ?  Aladin.COLOR_MEASUREMENT_HEADER_BACKGROUND : Aladin.COLOR_MEASUREMENT_BACKGROUND );
 //      return drawWords(g,w,flagClear, aladin.getBackground() ); //w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
    }
-   private int drawWords(Graphics g, Words w, boolean flagClear,Color background) {
+   private int drawWords(Graphics g, Words w, boolean flagClear, Color background) {
       int y = w.y+HF;        // Ligne de base
       int x = w.x;
       int xtext;	     // Ligne du texte
       int width;	     // Taille totale (en fonction du nbre de carac. indiques)
       int widthw;	     // Taille du mot
       String text =  w.text;
-
+      
       // Prise en compte de la precision
       if( w.precision>=0 ) {
          //         int i = text.lastIndexOf('.');
@@ -640,7 +637,22 @@ MouseWheelListener, Widget
 
       // Remplissage prealable si necessaire
       if( flagClear || w.onMouse || w.show ) {
-         g.setColor( w.onMouse ? Aladin.COLOR_MEASUREMENT_BORDERS_MOUSE_CELL : w.show ? Aladin.COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE :  background );
+         Color bg = background;
+
+         // Cellule sous la souris
+         if( w.onMouse ) bg = Aladin.COLOR_MEASUREMENT_BORDERS_MOUSE_CELL;
+         
+         // Ligne sous la souris
+         else if( w.show ) {
+            
+            // Ligne non "sélectionnée" (changement pour simple mouseMove)
+            if( objSelect==null ) bg = Aladin.COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE;
+            
+            // Ligne sélectionnée (il faut recliquer pour la désélectionner)
+            else  bg = Aladin.COLOR_STACK_SELECT;
+         }
+
+         g.setColor( bg );
          g.fillRect(x-4,y-HF,width+7,HL-1);
          if( w.onMouse && !(w.archive || w.footprint)  ) {
             int M=2;
@@ -655,15 +667,34 @@ MouseWheelListener, Widget
       if( x+width<1  || x>W ) return width;
 
       // Une marque GLU (ancre)
-      else if( w.glu && !(w.archive || w.footprint) ) {
-         if( w.pushed ) fg = Aladin.COLOR_RED ;  // L'ancre a ete cliquee
-         else if( w.haspushed ) fg = Aladin.COLOR_MEASUREMENT_ANCHOR_HASPUSHED; // Ancre inactive (jamais cliquee)
-         else fg = Aladin.COLOR_FOREGROUND_ANCHOR;           // Ancre deja cliquee
+      else if( w.glu) { // && !(w.archive || w.footprint) ) {
+         
+         // Le lien vient d'être cliqué
+         if( w.pushed ) fg = Color.red ;
+         
+         // Le lien a été cliqué au préalable
+         else if( w.haspushed ) {
+            fg =  Color.green;
+         }
+         
+         // Le lien n'a jamais été cliqué jusqu'à présent
+         else fg = Aladin.COLOR_FOREGROUND_ANCHOR;
       } 
+      
+      // Sous la souris ?
       else if( w.onMouse ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
+      
+      // Dans l'entête ?
       else if( y<=2*HF ) fg = Aladin.COLOR_MEASUREMENT_HEADER_FOREGROUND;
+      
+      // Une valeur issue d'une colonne "calculée"
       else if( w.computed ) fg = Aladin.COLOR_MEASUREMENT_FOREGROUND_COMPUTED;
-      else if( w.show    ) fg = Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT;
+      
+      // Ligne sélectionnée => Adaptation de la couleur pour que cela tranche sur le fond
+      if( w.show ) {
+         if( w.onMouse ) fg = fg.darker().darker();
+         else fg = fg.brighter().brighter();
+      }
       
       g.setColor( fg );
 
@@ -901,6 +932,7 @@ MouseWheelListener, Widget
       if( wButton!=null ) {
          wButton.pushed=false;
          wButton.haspushed=true;
+
          wButton.callArchive(aladin,oButton, wButton.isDatalink);
          if (Aladin.PROTO && wButton.isDatalink) {//TODO:: tintinproto
         	 aladin.makeCursor(this, Aladin.WAITCURSOR);
@@ -1069,7 +1101,6 @@ MouseWheelListener, Widget
          if( aladin.frameCooTool!=null ) aladin.frameCooTool.setSource(o);
          aladin.sendObserver();
 
-
          // Je clique dans le tag
          if( x<15 ) {
             o.setTag( !o.isTagged() );
@@ -1078,13 +1109,16 @@ MouseWheelListener, Widget
             return;
          }
 
-         while( e.hasMoreElements() ) {
+         for( int numField=0; e.hasMoreElements(); numField++ ) {
             Words w = (Words) e.nextElement(); // Analyse mot par mot
 
             if( w.inside(x,y) ) {              // C'est gagne
                if( !w.glu && !w.footprint ) continue;             // Inutile si ce n'est pas une marque GLU
 
-               // Indication d'appel direct a l'archive
+               // Mémorisation du lien qui aura été cliqué
+               aladin.mesure.setHaspushed(o,numField);
+               
+              // Indication d'appel direct a l'archive
                if( w.archive ) {
                   wButton=w;	// Memo en vue de l'utilisation dans mouseUp
                   oButton=o;	// Idem
@@ -1130,7 +1164,7 @@ MouseWheelListener, Widget
       currentselect=(currentselect==currentsee)?-2:currentsee;
       repaint();
    }
-
+   
    /** Déselection de la source indiquée */
    void deselect(Source o) {
       if( o==null ) return;
@@ -1450,7 +1484,6 @@ MouseWheelListener, Widget
          drawIconOut(g);
          return;
       }
-
 
       Vector ligne = aladin.mesure.getWordLine(currentsee);
       o = (Source)ligne.elementAt(0);

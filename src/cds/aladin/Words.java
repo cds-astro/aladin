@@ -298,25 +298,25 @@ public final class Words implements Runnable {
    private Obj _o;
 
    protected void callArchive(Aladin aladin,Obj o, boolean isDatalinkCall) {
-		if (Aladin.PROTO && isDatalinkCall) {
-			this.callArchive = true;
-			this.getDatalinks = true;
-			
-		}else {
-			haspushed = pushed = true;
-			callArchive = true;
-		}
-		_aladin = aladin;
-		_o = o;
-		thread = new Thread(this, "AladinCallGlu");
-		thread.setPriority(Thread.NORM_PRIORITY - 1);
-		thread.start();
-	}
+      if (Aladin.PROTO && isDatalinkCall) {
+         this.callArchive = true;
+         this.getDatalinks = true;
+
+      }else {
+         haspushed = pushed = true;
+         callArchive = true;
+      }
+      _aladin = aladin;
+      _o = o;
+      thread = new Thread(this, "AladinCallGlu");
+      thread.setPriority(Thread.NORM_PRIORITY - 1);
+      thread.start();
+   }
 
    private void callArchive1(Aladin aladin,Obj o) {
       String label = param;
       String url=getURL(aladin);
-
+      
       // Les noms basé sur une url son généralement trop long
       if( label.startsWith("http://") || label.startsWith("https://")
             || label.startsWith("ftp://") ) label=text;
@@ -327,53 +327,53 @@ public final class Words implements Runnable {
          aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
          return;
       }
-      
-		try {
-			if (getDatalinks) {
-				URL datalinkUrl = null;
-				// aladin.calque.newPlan(url,label,"provided by the original
-				// archive
-				// server", o, true);
-				if (this.datalinksInfo == null || this.datalinksInfo.isEmpty()) {
-					datalinksInfo = new ArrayList<SimpleData>();
-					datalinkUrl = new URL(url);
-				} else if (aladin.mesure.activeDataLinkGlu!=null && datalinksInfo.contains(aladin.mesure.activeDataLinkGlu)) {
-					
-					//Code part1: incase of datalink result again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
-					/*dataLinkInfoCopy = new ArrayList<>();
+
+      try {
+         if (getDatalinks) {
+            URL datalinkUrl = null;
+            // aladin.calque.newPlan(url,label,"provided by the original
+            // archive
+            // server", o, true);
+            if (this.datalinksInfo == null || this.datalinksInfo.isEmpty()) {
+               datalinksInfo = new ArrayList<SimpleData>();
+               datalinkUrl = new URL(url);
+            } else if (aladin.mesure.activeDataLinkGlu!=null && datalinksInfo.contains(aladin.mesure.activeDataLinkGlu)) {
+
+               //Code part1: incase of datalink result again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
+               /*dataLinkInfoCopy = new ArrayList<>();
 					dataLinkInfoCopy.addAll(datalinksInfo);
 					dataLinkInfoCopy.remove(aladin.mesure.activeDataLinkGlu);*/
-					
-					datalinksInfo = new ArrayList<SimpleData>();
-					SimpleData activeDatalinkLabel = aladin.mesure.activeDataLinkGlu;
-					datalinkUrl = new URL(activeDatalinkLabel.getParams().get(Constants.ACCESSURL));
-				}
-				
-				aladin.mesure.activeDataLinkWord = this;
-				aladin.mesure.activeDataLinkSource = (Source) o;
-				aladin.mesure.datalinkManager = new DatalinkManager(datalinkUrl);
-				
-				aladin.mesure.datalinkManager.populateDataLinksInfo(datalinksInfo);
-				
-				//Code part2: incase of datalink reult again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
-				/*if (dataLinkInfoCopy!=null && !dataLinkInfoCopy.isEmpty()) {
+
+               datalinksInfo = new ArrayList<SimpleData>();
+               SimpleData activeDatalinkLabel = aladin.mesure.activeDataLinkGlu;
+               datalinkUrl = new URL(activeDatalinkLabel.getParams().get(Constants.ACCESSURL));
+            }
+
+            aladin.mesure.activeDataLinkWord = this;
+            aladin.mesure.activeDataLinkSource = (Source) o;
+            aladin.mesure.datalinkManager = new DatalinkManager(datalinkUrl);
+
+            aladin.mesure.datalinkManager.populateDataLinksInfo(datalinksInfo);
+
+            //Code part2: incase of datalink reult again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
+            /*if (dataLinkInfoCopy!=null && !dataLinkInfoCopy.isEmpty()) {
 					aladin.mesure.datalinkManager.addOriginalItems(dataLinkInfoCopy, datalinksInfo);
 				}*/
-				aladin.mesure.datalinkPopupShow(datalinksInfo);
-				aladin.mesure.activeDataLinkGlu = null;
-			} else {
-				aladin.calque.newPlan(url, label, "provided by the original archive server", o);
-			}
-		} catch (MalformedURLException e) {
-			// TODO: handle exception
-			aladin.warning(aladin, "Error in loading url");
-			if (Aladin.levelTrace >= 3)
-				e.printStackTrace();
-		}
-      
+            aladin.mesure.datalinkPopupShow(datalinksInfo);
+            aladin.mesure.activeDataLinkGlu = null;
+         } else {
+            aladin.calque.newPlan(url, label, "provided by the original archive server", o);
+         }
+      } catch (MalformedURLException e) {
+         // TODO: handle exception
+         aladin.warning(aladin, "Error in loading url");
+         if (Aladin.levelTrace >= 3)
+            e.printStackTrace();
+      }
+
    }
 
-    
+
    /** Juste pour récupérer l'URL associée */
    String getURL(Aladin aladin) {
       if( id==null ) return "";

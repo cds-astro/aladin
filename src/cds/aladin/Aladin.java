@@ -157,6 +157,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Script command extension for CS, SIA (1&2), SSA
  * @beta    <LI> Additionnal colormaps: Red, Green and Blue
  * @beta    <LI> Dark theme user interface
  * @beta    <LI> Collection Registry tree (HiPS, CS, SIA, SSA, TAP,...)
@@ -217,7 +218,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.608";
+   static public final    String VERSION = "v9.610";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -384,7 +385,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
          COLOR_MEASUREMENT_BORDERS_MOUSE_CELL = new Color(140,140,255);
          COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(215,215,225);
-         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = new Color( 100,100,240); //COLOR_BACKGROUND.brighter();
+         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_STACK_HIGHLIGHT; //COLOR_BACKGROUND.brighter();
          COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_TEXT_FOREGROUND;
          COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       }

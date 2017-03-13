@@ -613,9 +613,10 @@ public class TreeObjDir extends TreeObj {
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCDSCatalog() { return cat && internalId.startsWith("CDS/"); }
    
-   /** Retourne true s'il existe un accès SIA (par URL direct ou via GLU tag */
+   /** Retourne true s'il existe un accès SIA  ou SIA2 (par URL directe ou via GLU tag */
    protected boolean hasSIA() {
-      return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia_glutag")!=null);
+      return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia2_service_url")!=null
+            || prop.get("sia_glutag")!=null || prop.get("sia2_glutag")!=null);
    }
    
    /** Retourne true s'il existe un accès SSA (par URL direct ou via GLU tag */
@@ -675,7 +676,7 @@ public class TreeObjDir extends TreeObj {
    /** Retourne true si la collection (hors HiPS) a été créée/maj récemment */
    protected boolean isNewObsRelease() {
       if( prop==null ) return false;
-      return lastYear( prop.getProperty("obs_release_date") );
+      return lastDays( prop.getProperty("obs_release_date"),90 );
    }
    
    /** Retourne true si le HiPS associée à la collection a été créé/maj récemment */
@@ -683,15 +684,15 @@ public class TreeObjDir extends TreeObj {
       if( prop==null ) return false;
       String date = prop.getProperty("hips_creation_date");
       if( date==null ) date = prop.getProperty("hips_release_date");
-      return lastYear(date);
+      return lastDays(date,90);
    }
    
-   private boolean lastYear(String date ) {
+   private boolean lastDays(String date,int days ) {
       if( date==null ) return false;
       try {
          long t = Util.getTimeFromISO(date);
          long now = System.currentTimeMillis();
-         return now-t < 86400L*365L*1000L;     // Moins d'un an
+         return now-t < 86400L*days*1000L;    
       } catch( Exception e ) {}
       return false;
    }
@@ -863,75 +864,79 @@ public class TreeObjDir extends TreeObj {
       }
    }
  
+   /** Génération et exécution de la requête script correspondant au protocole SSA */
    protected void loadSSA() {
       if( prop==null ) return;
-
-      String cmd;
-      String rad = getDefaultRadius(1);
-      String trg = getDefaultTarget();
-
-      // Accès via GLU
+      
       String gluTag = prop.get("ssa_glutag");
-      if( gluTag!=null ) {
+      if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SSA("+internalId+")";
 
-         cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
-         aladin.execAsyncCommand(cmd);
+      if( gluTag==null ) {
+         aladin.console.printError("loadSIA error for "+internalId);
          return;
-      } 
-
-      // Accès direct SSA => http://...?REQUEST=queryData&POS=$1,$2&SIZE=$3
-      String url = prop.get("ssa_service_url");
-      if( url!=null ) {
-         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-
-         // On enlève un éventuel FORMAT=xxx redondant
-         int pos;
-         final String fmt = "&REQUEST=queryData";
-         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
-            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
-         }
-
-         cmd = Tok.quote(internalId+getSuffix())+"=get SSA("+Tok.quote(url)+") "+trg+" "+rad;
-         aladin.execAsyncCommand(cmd);
       }
+      
+      String cmd = "get "+gluTag+" "+getDefaultTarget()+" "+getDefaultRadius(1);
+      aladin.execAsyncCommand(cmd);
+   }
+   
+   /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
+   protected void loadSIA() {
+      if( prop==null ) return;
+      
+      // Glu tags spécifiques ?
+      String gluTag = prop.get("sia_glutag");
+      if( gluTag==null ) gluTag = prop.get("sia2_glutag");
+      
+      // URL de base ?
+      if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
+      if( gluTag==null && prop.get("sia2_service_url")!=null ) gluTag = "SIA2("+internalId+")";
+      
+      if( gluTag==null ) {
+         aladin.console.printError("loadSIA error for "+internalId);
+         return;
+      }
+      
+      String cmd = "get "+gluTag+" "+getDefaultTarget()+" "+getDefaultRadius(1);
+      aladin.execAsyncCommand(cmd);
+   }
+
+   /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
+   protected void loadCS() {
+      String cmd = null;
+      String param = getDefaultTarget()+" "+getDefaultRadius(15);
+
+      // On passe par VizieR/Simbad via la commande script adaptée
+      if( isCDSCatalog() ) {
+
+         int i = internalId.indexOf('/');
+         String cat = internalId.substring(i+1);
+
+         if( internalId.startsWith("CDS/Simbad") ) cmd = Tok.quote(internalId+getSuffix())+"=get Simbad "+param;
+         else cmd = Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allcolumns) "+param;
+
+      // Accès direct CS
+      } else if( prop!=null && (prop.get("cs_service_url")!=null) ) cmd = "get CS("+internalId+") "+param;
+
+      if( cmd==null ) {
+         aladin.console.printError("loadCS error for "+internalId);
+         return;
+      }
+
+      aladin.execAsyncCommand(cmd);
+   }
+   
+  /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
+  protected void loadAll() {
+      int i = internalId.indexOf('/');
+      String cat = internalId.substring(i+1);
+      String cmd = Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allsky,allcolumns)";
+      aladin.execAsyncCommand(cmd);
    }
    
    static private String getSuffix() { return "~"+(++SUFFIX); }
    static private int SUFFIX = 0;
    
-   protected void loadSIA() {
-      if( prop==null ) return;
-
-      String cmd;
-      String rad = getDefaultRadius(1);
-      String trg = getDefaultTarget();
-
-      // Accès via GLU
-      String gluTag = prop.get("sia_glutag");
-      if( gluTag!=null ) {
-
-         cmd = "get "+gluTag+" "+trg+" "+rad+"deg";
-         aladin.execAsyncCommand(cmd);
-         return;
-      } 
-
-      // Accès direct SIA => http://...?POS=$1,$2&SIZE=$3&FORMAT=image/fits
-      String url = prop.get("sia_service_url");
-      if( url!=null ) {
-         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-         
-         // On enlève un éventuel FORMAT=xxx redondant
-         int pos;
-         final String fmt = "&FORMAT=image/fits";
-         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
-            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
-         }
-
-         cmd = Tok.quote(internalId+getSuffix())+"=get SIA("+Tok.quote(url)+") "+trg+" "+rad;
-         aladin.execAsyncCommand(cmd);
-      }
-   }
-
    private String getDefaultTarget() {
       Coord coo;
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
@@ -965,42 +970,6 @@ public class TreeObjDir extends TreeObj {
    }
    
   
-   protected void loadCS() {
-      try {
-         
-         String cmd;
-         String rad = getDefaultRadius(15);
-         String trg = getDefaultTarget();
-         
-         // On passe par VizieR/Simbad via la commande script
-         if( isCDSCatalog() ) {
-            
-            int i = internalId.indexOf('/');
-            String cat = internalId.substring(i+1);
-            
-            if( internalId.startsWith("CDS/Simbad") ) cmd = Tok.quote(internalId+getSuffix())+"=get Simbad "+trg+" "+rad;
-            else cmd = Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allcolumns) "+trg+" "+rad;
-            aladin.execAsyncCommand(cmd);
-            
-         // Accès direct CS => http://...?RA=$1&DEC=$2&SR=$3&VERB=2
-         } else {
-            String url = getCSUrl();
-            if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-            
-//            Coord c = aladin.view.getCurrentView().getCooCentre();
-//            String radius = Util.myRound( getDefaultRadiusInDeg() );
-//            url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=3";
-//            String cmd = internalId+" = load "+url;
-            
-            cmd = Tok.quote(internalId+getSuffix())+"=get CS("+Tok.quote(url)+") "+trg+" "+rad;
-            aladin.execAsyncCommand(cmd);
-            
-         }
-      } catch( Exception e ) {
-         aladin.warning(e.getMessage()==null?"Cone search error":e.getMessage());
-      }
-   }
-   
    private boolean scanning=false;
    synchronized void setScanning(boolean flag) { scanning = flag; }
    synchronized boolean isScanning() { return scanning; }
@@ -1113,13 +1082,6 @@ public class TreeObjDir extends TreeObj {
       return moc;
    }
    
-   protected void loadAll() {
-      int i = internalId.indexOf('/');
-      String cat = internalId.substring(i+1);
-      String cmd = internalId+"=get VizieR("+cat+",allsky,allcolumns)";
-      aladin.execAsyncCommand(cmd);
-   }
-
    void loadCopyright() { aladin.glu.showDocument(copyrightUrl); }
 
    void setDefaultMode(int mode) {

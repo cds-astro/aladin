@@ -79,11 +79,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    static protected String ALLCOLLHTML = "<html><i> -- All collections --</i></html>";
    static protected String MYLISTHTML  = "<html><i> -- My working list --</i></html>";
    
-//   // Préfixe des paramètres de filtrage des HiPS par le MocServer
-//   private static String MOCSERVER_FILTERING 
-//        = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
-//         +"&hips_service_url=*&casesensitive=false";
-   
    public DirectoryFilter(Aladin aladin) {
       super();
       this.aladin = aladin;

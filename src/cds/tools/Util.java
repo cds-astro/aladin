@@ -987,7 +987,8 @@ public final class Util {
    }
 
    /**Tracage d'une petite étoile */
-   static public void drawStar(Graphics g,int x, int y) {
+   static public void drawStar(Graphics g,int x, int y,Color c) {
+      g.setColor(c);
       g.drawLine(x,y-3,x,y-2);
       g.drawLine(x-1,y-1,x+1,y-1);
       g.drawLine(x-3,y,x+3,y);
@@ -996,6 +997,26 @@ public final class Util {
       g.drawLine(x-2,y+3,x-2,y+3);
       g.drawLine(x+2,y+3,x+2,y+3);
    }
+   
+   /** Dessin d'un triangle "warning" */
+   static public void drawWarning(Graphics g,int x,int y, Color bg, Color fg) {
+      int h=6;
+      int w=5;
+      int w2 = 1+ w/2;
+      
+      // Le triangle
+      g.setColor( bg );
+      Polygon p = new Polygon( new int[]{ x+w2, x+w+1, x }, new int[] {y, y+h, y+h}, 3);
+      g.fillPolygon(p);
+      g.drawPolygon(p);
+      
+      // Le !
+      g.setColor( fg );
+      g.drawLine( x+w2, y+2, x+w2, y+h-2);
+      g.drawLine( x+w2, y+h, x+w2, y+h);
+   }
+   
+
 
    /**
     * Dessin d'un bouton radio

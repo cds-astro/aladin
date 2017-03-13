@@ -36,6 +36,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -704,10 +705,22 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return wordLine;
    }
 
+   // Liste des liens qui ont déjà été cliqué (on mémorise le hashcode de l'obj et l'index
+   // de la colonne concernée
+   private HashSet<String> haspushedSet = new HashSet<String>();
+   protected void setHaspushed(Obj o, int numField) {
+      String key = o.hashCode()+"/"+numField;
+      haspushedSet.add( key );
+   }
+   private boolean hasBeenPushed(Obj o, int numField) {
+      String key = o.hashCode()+"/"+numField;
+      return haspushedSet.contains( key );
+   }
 
    /** Génération de la WordLine associée à la source passée en paramètre */
    protected Vector getWordLine(Source o,int num) {
       if( o==null ) return null;
+      
       Vector wordLine;
       String s =(o.info!=null)?o.info:o.id; // Faute de grive...
 
@@ -716,11 +729,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       wordLine.addElement(o);           // L'objet lui-meme est tjrs en premiere place
 
       int indexFootPrint = o.getIdxFootprint(); // position d'un Fov, -1 si aucun
-      
+
       boolean isDatalink= isValueOfSpecifiedUcdField(o, ACCESSFORMAT_UCD, DATATYPE_DATALINK);
-      
-		for (int i = 0; st.hasMoreTokens(); i++) {
-    	  
+
+      for (int i = 0; st.hasMoreTokens(); i++) {
+
          String tag = st.nextToken();
          Words w;
          if( i==0 ) w = new Words(tag,num);	// Le triangle n'a pas de taille
@@ -742,6 +755,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );
+         w.haspushed = hasBeenPushed(o, i);
          wordLine.addElement(w);
          if( w.glu && w.size<tag.length() ) {
             tag = tag.substring(w.size+1,tag.length());

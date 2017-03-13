@@ -791,20 +791,23 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     */
    public String processValuesToStandardRepresentation(Field field, String text) {
 
-	   String standardRepresentation = text;
-		if (text != null && !text.trim().isEmpty() && field!=null && field.ucd!=null) {
-			if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
-					&& "d".equalsIgnoreCase(field.unit)) {
-				standardRepresentation = this.convertMJDToISO(text);
-			} else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
-					&& "m".equalsIgnoreCase(field.unit)) {
-				standardRepresentation = this.setStandardSpectralRepresentation(text);
-			}
-		}
-		return standardRepresentation;
+      String standardRepresentation = text;
+      try {
+         if (text != null && !text.trim().isEmpty() && field!=null && field.ucd!=null) {
+            if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
+                  && "d".equalsIgnoreCase(field.unit)) {
+               standardRepresentation = this.convertMJDToISO(text);
+            } else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
+                  && "m".equalsIgnoreCase(field.unit)) {
+               standardRepresentation = this.setStandardSpectralRepresentation(text);
+            }
+         }
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+      return standardRepresentation;
+   }
 
-	}
-   
    public String convertMJDToISO(String timeWord) {
 		double valueInProcess= Astrodate.MJDToJD(Double.valueOf(timeWord)); 
 		return Astrodate.JDToDate(valueInProcess);

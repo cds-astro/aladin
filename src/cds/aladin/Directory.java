@@ -78,7 +78,8 @@ import cds.tools.Util;
  */
 public class Directory extends JPanel implements Iterable<MocItem>{
    
-   static private final String UPDATING = "  updating...";
+   static private final String UPDATING   = "  updating...";
+   static protected final String ROOT_LABEL = "Data collections";
    
    private Aladin aladin;                  // Référence
    private MultiMoc2 multiProp;             // Le multimoc de stockage des properties des collections
@@ -407,7 +408,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       static private final int X = 6;
       private void drawCross(Graphics g, int x, int y) {
          cross = new Rectangle(x,y,X,X);
-         if( getText().trim().length()==0  ) return;
+         String s = getText();
+         if( s.length()==0 || s.startsWith(UPDATING) ) return;
          g.setColor( getBackground() );
          g.fillOval(x-3, y-3, X+7, X+7);
          g.setColor( Color.red.darker() );
@@ -577,7 +579,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       // Demande de confirmation du scan s'il concerne beaucoup de collections
       final int n = treeObjs.size();
       if( n>100 ) {
-         if( !aladin.confirmation("Do you really want to query "+n+" collections\n"
+         if( !aladin.confirmation("Do you really want to query "+n+" data sets\n"
                + "to check which of them have a result inside the current view ?") ) return;
       }
       
@@ -601,7 +603,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                abortScan = false;
                flagScanLocal=true;  // le MultiProp local doit être pris en compte
                
-               Aladin.trace(4,"Directory.scan()... Launched on "+n+" collections...");
+               Aladin.trace(4,"Directory.scan()... Launched on "+n+" data sets...");
                
                for( final TreeObjDir to : treeObjs ) {
                   
@@ -782,6 +784,49 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return aladin.hips(to,label,target,radius);
    }
    
+   /** Returne l'URL du service_url indiqué (cs,sia,ssa,tap...) pour
+    * l'enregistrement properties correspondant au mocid
+    * @param service_url (cs,sia,ssa,tap...)
+    * @param mocId 
+    * @return l'URL demandé, ou null si non trouvé
+    */
+   protected String resolveServiceUrl(String service_url, String mocId ) {
+      
+      // un éventuel préfixe ivo:// doit être ignoré
+      if( mocId.startsWith("ivo://") ) mocId = mocId.substring(6);
+      
+      MocItem m = multiProp.getItem( mocId );
+      if( m==null ) return null;
+
+      // Recherche du champ correspondant au service_url indiqué
+      String key = service_url.toLowerCase()+"_service_url";
+      String url = m.prop.get( key );
+      if( url==null ) return null;
+
+      // Petit nettoyage de l'URL (le VO registry regorge d'imagination...)
+      if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+
+      int pos;
+      String fmt;
+
+      // On enlève un éventuel &REQUEST=queryData redondant
+      if( service_url.equalsIgnoreCase("ssa") ) {
+         fmt = "&REQUEST=queryData";
+         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
+            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+         }
+
+      } else if( service_url.equalsIgnoreCase("sia") ) {
+         fmt = "&FORMAT=image/fits";
+         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
+            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+         }
+      }
+
+      return url;
+
+   }
+
 
    @Override
    public Iterator<MocItem> iterator() {
@@ -1914,7 +1959,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    
-   /** Retourne le nombre max (en K) du nombre de lignes des catalogues et tables */
+   /** Retourne le nombre max  du nombre de lignes des catalogues et tables */
    protected int getNbRowMax() {
       long max = 0L;
       for( MocItem mi : this ) {
@@ -2106,7 +2151,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          boolean hasView = !aladin.view.isFree();
          
          if( treeObjs.size()>1 )  {
-            a = new MyAnchor(aladin,treeObjs.size()+" collections selected",50,null,null);
+            a = new MyAnchor(aladin,treeObjs.size()+" data sets selected",50,null,null);
             a.setFont(a.getFont().deriveFont(Font.BOLD));
             a.setFont(a.getFont().deriveFont(a.getFont().getSize2D()+1));
             a.setForeground( Aladin.COLOR_GREEN );
@@ -2213,7 +2258,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                try { s = Util.myRound( Double.parseDouble(s)*100); } catch( Exception e) {}
                s = "Sky coverage: "+s+"% ";
                a = new MyAnchor(aladin,s,50,null,null);
-               a.setForeground(!hasView ? Color.gray : isIn ? Aladin.COLOR_GREEN : Aladin.ORANGE );
+               a.setForeground( Color.gray );
                p1.add(a);
                
                if( hasView ) {
@@ -2239,6 +2284,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             s  = to.getProperty(Constante.KEY_NB_ROWS);
             if( s!=null ) {
                try { nbRows = Long.parseLong(s); } catch( Exception e) {}
+               s = String.format("%,d", nbRows);
                s = "    Nb rows: "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
@@ -2364,7 +2410,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          if( treeObjs.size()==1 ) {
             
-            if( to.hasPreview() ) preview = new Preview( to );
+            /* if( to.hasPreview() ) */ preview = new Preview( to );
             
             // Info
             if( to.hasInfo() ) {
@@ -2456,9 +2502,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          Preview( TreeObjDir to ) {
             super();
             this.to = to;
-            this.url = to.getPreviewUrl();
-            if( to.previewError || to.imPreview!=null ) return;   // Déjà fait
             
+            // Déjà fait ?
+            if( to.previewError || to.imPreview!=null ) return; 
+            
+            // Pas de preview ?
+            if( !to.hasPreview() ) {
+               to.previewError=true;
+               return;
+            }
+            
+            this.url = to.getPreviewUrl();
             (new Thread(){
                public void run() { load(); }
             }).start();
@@ -2489,13 +2543,27 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          public void paintComponent(Graphics g) {
             paintComponent1(g);
+            int w = getWidth();
+            int h = getHeight();
+            
             if( to.isNew() ) {
                g.setFont( Aladin.ITALIC );
                String s = "New "+(to.isNewObsRelease()?"release":to.isNewHips()?"HiPS":"!");
-               g.setColor(Color.yellow);
-               int x=getWidth()/2-g.getFontMetrics().stringWidth(s)/2+3; 
+               int x=w/2-g.getFontMetrics().stringWidth(s)/2+3; 
                int y=13;
-               Util.drawStar(g, x-4, y-6);
+               Util.drawStar(g, x-4, y-6, Color.yellow);
+               g.drawString(s,x,y);
+            }
+            
+            if( to.getIsIn()!=-1 ) {
+               boolean in = to.getIsIn()==1;
+               g.setFont( Aladin.SPLAIN );
+               String s = in ? "data in view" : "out of view";
+               int x=w/2-g.getFontMetrics().stringWidth(s)/2+( in ? 0 : 3 ); 
+               int y=h-4;
+               Color c = in ? Aladin.COLOR_GREEN.brighter().brighter() : Aladin.ORANGE.brighter();
+               if( !in ) Util.drawWarning(g, x-10, y-7, c, Color.black);
+               g.setColor(c);
                g.drawString(s,x,y);
             }
          }

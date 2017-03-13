@@ -25,7 +25,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
@@ -413,32 +412,8 @@ public class DirectoryTree extends JTree {
          } else super.paintIcon(c,g,x,y);
          
          if( color!=null ) Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
-         if( !hasMoc ) drawWarning(g,0,8,Aladin.ORANGE);
-         if( isNew ) drawNew(g,9,getIconHeight()-2,Color.yellow);
-      }
-      
-      // Dessin d'un triangle "warning"
-      void drawWarning(Graphics g,int x,int y, Color c) {
-         int h=6;
-         int w=5;
-         int w2 = 1+ w/2;
-         
-         // Le triangle
-         g.setColor( c );
-         Polygon p = new Polygon( new int[]{ x+w2, x+w+1, x }, new int[] {y, y+h, y+h}, 3);
-         g.fillPolygon(p);
-         g.drawPolygon(p);
-         
-         // Le !
-         g.setColor( Color.black );
-         g.drawLine( x+w2, y+2, x+w2, y+h-2);
-         g.drawLine( x+w2, y+h, x+w2, y+h);
-      }
-      
-      // Dessin d'une petit étoile pour indiquer "new"
-      void drawNew(Graphics g,int x,int y, Color c) {
-         g.setColor( c );
-         Util.drawStar(g, x, y);
+         if( !hasMoc ) Util.drawWarning(g,0,8,Aladin.ORANGE,Color.black);
+         if( isNew ) Util.drawStar(g,9,getIconHeight()-2,Color.yellow);
       }
    }
 }

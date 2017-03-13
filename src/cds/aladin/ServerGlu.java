@@ -106,6 +106,7 @@ public class ServerGlu extends Server implements Runnable {
                         // correspond a l'indice du champ. le tableau est null
                         // si aucune valeur sinon seulement les elements sans
                         // valeur par defaut sont null.
+   int baseUrlIndex;    // Indice du paramètre dont le type est BaseUrl(URL|MOCID)
    Thread thread;       // pour interrogation asynchrone des serveurs SIA/SSA
 
    protected int lastY;
@@ -240,6 +241,9 @@ public class ServerGlu extends Server implements Runnable {
 //         add(l);
       }
 
+      // Y a-t-il un champ dont le type est baseUrl(URL|MOCID)
+      baseUrlIndex = getBaseUrlParam(paramDataType);
+      
       // Creation du JPanel du target
       boolean targetRequired = targetRequired(paramDataType);
       boolean radiusRequired = radiusRequired(paramDataType);
@@ -253,14 +257,14 @@ public class ServerGlu extends Server implements Runnable {
          tPanel.setBounds(0,y,XWIDTH,h); y+=h;
          tPanel.setName("tPanel");
          if (flagTAPV2) {
-        	 tapTableMapping.get("GENERAL").add(tPanel);
+            tapTableMapping.get("GENERAL").add(tPanel);
          }
          add(tPanel);
       }
-      
-		if (flagTAPV2 && tapTables!=null) {
-			this.currentSelectedTapTable = tapTables[0];
-		}
+
+      if (flagTAPV2 && tapTables!=null) {
+         this.currentSelectedTapTable = tapTables[0];
+      }
 
       // Creation des champs de saisie
       vc = new Vector(5);
@@ -633,6 +637,7 @@ public class ServerGlu extends Server implements Runnable {
    private boolean targetRequired(String PK[]) { return keyWordRequired(PK,"Target"); }
    private boolean radiusRequired(String PK[]) { return keyWordRequired(PK,"Field"); }
    private boolean checkIfMultiSelect(String paramDataType) { return isParamSpecified(paramDataType,"MultiSelect"); }
+   private int getBaseUrlParam(String PK[]) { return getKeyWordRequiredIndex(PK,"BaseUrl"); }
 
    /** Retourne vrai si dans la liste des types de données PK[] ont a au-moins une
     * fois un type donné en paramètre
@@ -640,16 +645,33 @@ public class ServerGlu extends Server implements Runnable {
     * @param keyWord le type de données recherché
     */
     private boolean keyWordRequired(String PK[],String keyWord) {
+       return getKeyWordRequiredIndex(PK,keyWord)>=0;
+       
+//       for( int i=0; i<PK.length; i++ ) {
+//          if( PK[i]==null ) continue;
+//          int j=PK[i].indexOf('(');
+//          if( j<0 ) continue;
+//          if( PK[i].substring(0,j).equalsIgnoreCase(keyWord) ) return true;
+//       }
+//       return false;
+    }
+    
+    /** Retourne le premier indice dans la liste des types de données PK[] qui a le type
+     * de paramèter indiqué
+     * @param PK[] liste des types de données
+     * @param keyWord le type de données recherché
+     */
+    private int getKeyWordRequiredIndex(String PK[],String keyWord) {
        for( int i=0; i<PK.length; i++ ) {
           if( PK[i]==null ) continue;
           int j=PK[i].indexOf('(');
-          if( j<0 ) continue;
-          if( PK[i].substring(0,j).equalsIgnoreCase(keyWord) ) return true;
+          if( j<0 ) j=PK[i].length();
+          if( PK[i].substring(0,j).equalsIgnoreCase(keyWord) ) return i;
        }
-       return false;
+       return -1;
     }
     
-    /**
+   /**
      * Method to check if an additionl param is specified in the PK.
      * Example: 
      * returns true for additionalParam2 in case PK[n]= ParamName(additionalParam1,additionalParam2)
@@ -1040,8 +1062,7 @@ public class ServerGlu extends Server implements Runnable {
 
          // Pré-remplissage du champ concernant la date
          if( date!=null && date.getText().trim().length()==0 ) resolveDate(getDefaultDate());
-
-
+         
          // Découpage des critères dans un tableau
          Tok st = new Tok(criteria.trim(),",");
          String crit[] = new String[st.countTokens()];
@@ -1177,6 +1198,15 @@ public class ServerGlu extends Server implements Runnable {
             v.setElementAt(s,j);
             vbis.setElementAt(s,j);
             //System.out.println();
+         }
+         
+         // Résolution d'un paramètre de type BaseUrl(URL|MOCID)
+         if( baseUrlIndex>=0 ) {
+            s = (String) v.get( baseUrlIndex );
+            if( !s.startsWith("http://") && !s.startsWith("https://") ) {
+              s = aladin.directory.resolveServiceUrl(actionName,s);
+              if( s!=null ) v.setElementAt( s, baseUrlIndex);
+            }
          }
 
          e = v.elements();

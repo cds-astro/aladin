@@ -27,16 +27,16 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 /**
- * Gestion d'un model associé à l'arbre Registry
+ * Gestion d'un model associé au Directory Tree
  * @author Pierre Fernique [CDS]
  * @version 1.0 Janvier 2017 - création
  */
 public class DirectoryModel extends DefaultTreeModel {
    protected DefaultMutableTreeNode root;
    private Aladin aladin;
-
+   
    protected DirectoryModel(Aladin aladin) {
-      super( new DefaultMutableTreeNode( new TreeObj(aladin,"root",null,"Collections","") ) );
+      super( new DefaultMutableTreeNode( new TreeObj(aladin,"root",null,Directory.ROOT_LABEL,"") ) );
       root = (DefaultMutableTreeNode) getRoot();
       this.aladin = aladin;
    }
@@ -124,12 +124,6 @@ public class DirectoryModel extends DefaultTreeModel {
       TreeObj pere = (TreeObj) lastParentNode.getUserObject();
       if( !path.equals(pere.path) ) return false;
       
-//      int i = treeObj.treeIndex;
-//      int n = lastParentNode.getChildCount();
-//      if( i==-1 || i>n ) i=n;
-//      lastParentNode.insert( new DefaultMutableTreeNode(treeObj), i);
-//      model.nodesWereInserted( lastParentNode, new int[]{i});
-      
       lastParentNode.add( new DefaultMutableTreeNode(treeObj) );
       
       return true;
@@ -186,20 +180,9 @@ public class DirectoryModel extends DefaultTreeModel {
             if( pos==-1 ) subNode = new DefaultMutableTreeNode( treeObj );
             
             // Branche intermédiaire ? déjà connue ou non ?
-            else {
-//               TreeObj obj = retrieveOldBranch(path);
-//               if( obj==null ) obj = new TreeObj(aladin,"",null,label,path);
-//               subNode = new DefaultMutableTreeNode( obj );
-               subNode = new DefaultMutableTreeNode( new TreeObj(aladin,"",null,label,path) );
-            }
-//            int i = ((TreeObj)subNode.getUserObject()).treeIndex;
-//            int n = parent.getChildCount();
-//            if( i==-1 || i>n ) i=n;
-//            parent.insert(subNode,i);
-            parent.add(subNode);
+            else  subNode = new DefaultMutableTreeNode( new TreeObj(aladin,"",null,label,path) );
             
-            // Mémorisation du parent et de l'indice du fils pour la 1ère greffe opérée
-//            if( parentUp[0]==null ) { parentUp[0]=parent; childIndex[0]=i; }
+            parent.add(subNode);
          }
          
          // On n'est pas au bout du path, il faut donc continuer récursivement
@@ -215,68 +198,5 @@ public class DirectoryModel extends DefaultTreeModel {
       }
       return null;
    }
-   
-//   // Permet la mémorisation des vielles branches lors
-//   // d'un élagage afin de pouvoir les réinsérer au bon endroit le cas échéant
-//   private HashMap<String, TreeObj> memoPathIndex = null;
-//   
-//   /** Retrouve la branche qui aurait été supprimée précédemment afin de l'insérer au bon endroit */
-//   private TreeObj retrieveOldBranch(String path ) {
-//      if( memoPathIndex==null ) return null;
-//      TreeObj treeObj = memoPathIndex.get(path);
-//      if( treeObj==null ) return null;
-//      treeObj.isIn=-1;
-//      return treeObj;
-//   }
-//   
-//   /** Mémorisation de la position de la branche dans l'arbre afin de pouvoir la réinsérer au bon endroit */
-//   private void memorizeOldBranche(TreeObj treeObj) {
-//      if( memoPathIndex==null ) memoPathIndex = new HashMap<String, TreeObj>(10000);
-//      memoPathIndex.put(treeObj.path,treeObj);
-//   }
-//   
-//   /** Suppression d'un noeud, et de la branche morte si nécessaire
-//    * @param treeObj l'objet associé au noeud qu'il faut supprimer
-//    */
-//   protected void removeTreeBranch(TreeObj treeObj) {
-//      
-//      // Il faut trouver le node correspondant au treeObj
-//      boolean trouve = false;
-//      DefaultMutableTreeNode node=null;
-//      Enumeration e = root.preorderEnumeration();
-//      while( e.hasMoreElements() ) {
-//         node = (DefaultMutableTreeNode) e.nextElement();
-//         if( treeObj == (TreeObj) node.getUserObject() ) { trouve=true; break; }
-//      }
-//      if( !trouve ) return;
-//      
-//      removeTreeBranch(this, node);
-//   }
-//   
-//   /** Suppression d'un node, et de la branche morte si nécessaire */
-//   private void removeTreeBranch( DefaultTreeModel model, DefaultMutableTreeNode node ) {
-//      DefaultMutableTreeNode fils=null;
-//      int index = -1;
-//      while( node!=root && node.isLeaf() ) {
-//         DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-//         TreeObj treeObj = (TreeObj) node.getUserObject();
-//         index = parent.getIndex(node);
-//         
-//         // Mémorisation de l'index afin de pouvoir réinsérer la branche au bon endroit
-//         treeObj.treeIndex = index;
-//         
-//         // S'il s'agit d'un noeud non terminal, on va le mémoriser pour pouvoir
-//         // le résinsérer à la bonne place le cas échéant
-//         if( !(treeObj instanceof TreeObjReg) ) memorizeOldBranche(treeObj);
-//         
-//         parent.remove(index);
-//         fils = node;
-//         node = parent;
-//      }
-//      
-//      // On alerte les listeners qu'une branche a été supprimée
-//      if( fils!=null ) model.nodesWereRemoved(node, new int[]{index}, new Object[]{fils} );
-//   }
-   
 }
 

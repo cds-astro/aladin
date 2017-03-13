@@ -32,8 +32,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.BorderFactory;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -436,8 +436,7 @@ public class FrameBookmarks extends JFrame {
       /** Affichage du bouton "bookmark", avec une petite étoile en préfixe */
       public void paintComponent(Graphics g) {
          super.paintComponent(g);
-         g.setColor( f.isLocalDefinition() ? Color.blue : ButtonBookmark.Orange);
-         Util.drawStar(g, 6,7);
+         Util.drawStar(g, 6,7, f.isLocalDefinition() ? Color.blue : ButtonBookmark.Orange);
       }
    }
    
