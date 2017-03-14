@@ -707,7 +707,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( i<0 ) i=s.indexOf('>');
       if( i<0 ) i=s.indexOf('<');
       if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) expr = s;
-      else expr = "obs_title,obs_description,obs_collection,ID="+DirectoryFilter.jokerize(s);
+//      else expr = "obs_title,obs_description,obs_collection,ID="+DirectoryFilter.jokerize(s);
+      else expr = "obs_title,obs_collection,ID="+DirectoryFilter.jokerize(s);
       
       return expr;
    }
@@ -1441,7 +1442,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( category==null ) {
          boolean isHips = prop.getProperty("hips_service_url")!=null;
          boolean isCS   = prop.getProperty("cs_service_url")!=null;
-         boolean isSIA  = prop.getProperty("sia_service_url")!=null;
+         boolean isSIA  = prop.getProperty("sia_service_url")!=null || prop.getProperty("sia2_service_url")!=null;
          boolean isSSA  = prop.getProperty("ssa_service_url")!=null;
          boolean isTAP  = prop.getProperty("tap_service_url")!=null;
          String subCat = isHips ? "HiPS": isCS || isTAP ? "Catalog by CS,TAP" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : "Miscellaneous";
@@ -2312,7 +2313,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
              
             if( to.hasSIA() ) {
-               siaBx = bx = new JCheckBox("SIA");
+               siaBx = bx = new JCheckBox( to.hasSIAv2() ? "SIAv2" : "SIA");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
                Util.toolTip(bx,"Simple Image Access (SIA)\n => load the list of images available in the current view",true);

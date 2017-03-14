@@ -1193,36 +1193,37 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       String defTarget = lastTarget != null ? lastTarget
             : objet != null ? aladin.localisation.getFrameCoord(objet) : radec != null ? aladin.localisation.getFrameCoord(radec) : "";
-            String defTaille;
-            if( mode == 5 ) defTaille = lastTaille != null ? lastTaille : taille;
-            else defTaille = taille != null ? taille : lastTaille;
+            
+      String defTaille;
+      if( mode == 5 ) defTaille = lastTaille != null ? lastTaille : taille;
+      else defTaille = taille != null ? taille : lastTaille;
 
-            setDefaultTarget(defTarget);
-            if( server[i].modeRad != Server.NOMODE ) setDefaultTaille(taille);
+      setDefaultTarget(defTarget);
+      if( server[i].modeRad != Server.NOMODE ) setDefaultTaille(taille);
 
-            // Positionnement de l'epoque d'observation
-            if( v!=null ) {
-               epoch = v.getEpoch();
-               if( epoch != null ) server[i].setDate(epoch);
-               else if( v.pref instanceof PlanImage ) {
-                  epoch = ((PlanImage)v.pref).getDateObs();
-                  if( epoch!=null ) server[i].setDate(epoch);
-               }
-               setDefaultDate(epoch);
-            }
+      // Positionnement de l'epoque d'observation
+      if( v!=null ) {
+         epoch = v.getEpoch();
+         if( epoch != null ) server[i].setDate(epoch);
+         else if( v.pref instanceof PlanImage ) {
+            epoch = ((PlanImage)v.pref).getDateObs();
+            if( epoch!=null ) server[i].setDate(epoch);
+         }
+         setDefaultDate(epoch);
+      }
 
-            // Si le formulaire a un arbre de métadata non vide, on ne met pas
-            // à jour le target à moins que le target soit vide
-            if( server[i].tree != null && !server[i].tree.isEmpty()
-                  && (server[i].target==null || server[i].target.getText().trim().length()!=0 ) ) return;
+      // Si le formulaire a un arbre de métadata non vide, on ne met pas
+      // à jour le target à moins que le target soit vide
+      if( server[i].tree != null && !server[i].tree.isEmpty()
+            && (server[i].target==null || server[i].target.getText().trim().length()!=0 ) ) return;
 
-            server[i].setTarget(defTarget);
-            try {
-               if( defTaille != null && defTaille.trim().length()!=0
-                     && server[i].modeRad != Server.NOMODE ) server[i].resolveRadius(defTaille, true);
-            } catch( Exception e ) {
-               if( aladin.levelTrace>=3 ) e.printStackTrace();
-            }
+      server[i].setTarget(defTarget);
+      try {
+         if( defTaille != null && defTaille.trim().length()!=0
+               && server[i].modeRad != Server.NOMODE ) server[i].resolveRadius(defTaille, true);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
 
    }
 

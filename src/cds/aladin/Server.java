@@ -1019,7 +1019,6 @@ public void layout() {
     */
     protected void setDate(String s) {
        if( date==null ) return;
-       if( date.getText()!=null || !date.getText().isEmpty()) return;
        // On suppose que s est en année décimale (via getEpoch() )
        try {
 // Methode Fox

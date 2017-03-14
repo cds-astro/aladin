@@ -859,13 +859,13 @@ public class ServerGlu extends Server implements Runnable {
             else if( s.equalsIgnoreCase("YEARd") ) { modeDate |= YEARd; }
             else if( s.equalsIgnoreCase("ParseToMJD") ) { modeDate |= ParseToMJD; }
             else if( flagTAPV2 && this.gluAdqlQueryTemplates.keySet().contains(s)) {
-         	   classifyAsPerTapTables(prefixe, s, gluIndex+1, sourceGluAdqlTemplate);
+               classifyAsPerTapTables(prefixe, s, gluIndex+1, sourceGluAdqlTemplate);
             } else if( flagTAPV2 && s.equalsIgnoreCase("OP") && f instanceof JTextField) {
-         	   if( adqlOpInputs==null ) {
-     			   adqlOpInputs = new Vector<JTextField>();
-                 }
-     		   adqlOpInputs.addElement((JTextField) f);
-         	   
+               if( adqlOpInputs==null ) {
+                  adqlOpInputs = new Vector<JTextField>();
+               }
+               adqlOpInputs.addElement((JTextField) f);
+
             }
             else if(modeDate==0){
                if( Aladin.levelTrace>=3 ) System.err.println("Server ["+aladinLabel+"]; unknown Date code ["+s+"] => assume JD");
@@ -876,7 +876,7 @@ public class ServerGlu extends Server implements Runnable {
          date = (JTextField)f;
          // System.out.println("modeDate="+modeDate);
 
-      // Pour le input
+         // Pour le input
       } else if( prefixe.equalsIgnoreCase("Input") ) {
 //System.out.println("Input...");
          while(true) {
@@ -1327,27 +1327,27 @@ public class ServerGlu extends Server implements Runnable {
       
       // Resolution par Simbad necessaire ?
       if(target!=null) {
-    	  try {
-	            objet=resolveQueryField();
-	            if( objet==null ) throw new Exception(UNKNOWNOBJ);
-	            if (this.posBounds!=null) { //current config to check target limits
-	            	String error = isWithinBounds(this.posBounds, rectVertices);
-	                if( error!=null ) throw new Exception(error);
-				}
-	            /*int i = getDelimiterIndex(radius.getText().trim()); //code for poly shape addition --in progress 6 lines
+         try {
+            objet=resolveQueryField();
+            if( objet==null ) throw new Exception(UNKNOWNOBJ);
+            if (this.posBounds!=null) { //current config to check target limits
+               String error = isWithinBounds(this.posBounds, rectVertices);
+               if( error!=null ) throw new Exception(error);
+            }
+            /*int i = getDelimiterIndex(radius.getText().trim()); //code for poly shape addition --in progress 6 lines
 	            if (i>=0) {
 	            	if (rectVertices.isEmpty()) {
 	       	 			rectVertices= getRectVertices();
 					}
 				}*/
-	            
-	         } catch( Exception e1 ) {
-	            if( !flagDoIt ) return;
-	            Aladin.warning(this,e1.getMessage());
-	            ball.setMode(Ball.NOK);
-	            return;
-	         }
-         
+
+         } catch( Exception e1 ) {
+            if( !flagDoIt ) return;
+            Aladin.warning(this,e1.getMessage());
+            ball.setMode(Ball.NOK);
+            return;
+         }
+
       }
 
       Vector v = new Vector(10);
@@ -1365,30 +1365,31 @@ public class ServerGlu extends Server implements Runnable {
             flagScriptEquiv=false;
          } else if( c instanceof JTextField ) {
             s = ((JTextField)c).getText();
-            try {
-				StringBuffer processedText = processCustomFields(c, (flagDoIt || userReady));
-            	if (processedText!=null && processedText.length()>0) {
-					s = processedText.toString();
-				}
-			} catch (Exception e1) {
-				if( !flagDoIt ) return;
-				Aladin.warning(this, e1.getMessage());
-				ball.setMode(Ball.NOK);
-				return;
-			}
-            if (flagTAPV2 && !s.isEmpty() && adqlOpInputs!=null && adqlOpInputs.contains(c)) {
-            	String processedInput = getRangeInput(s);
-				if (processedInput.isEmpty()) {
-					processedInput = isInValidOperatorNumber(s, userReady || flagDoIt);
-					if (processedInput==null) {
-						return;
-					} else {
-						s = processedInput;
-					}
-				} else {
-					s = processedInput;
-				}
-				/*for (FocusListener focusListener : c.getFocusListeners()) {
+            if( false ) {   // Chaitra has to look ! otherwise it tries to modify the date in ServerSkybot.submit1() call
+               try {
+                  StringBuffer processedText = processCustomFields(c, (flagDoIt || userReady));
+                  if (processedText!=null && processedText.length()>0) {
+                     s = processedText.toString();
+                  }
+               } catch (Exception e1) {
+                  if( !flagDoIt ) return;
+                  Aladin.warning(this, e1.getMessage());
+                  ball.setMode(Ball.NOK);
+                  return;
+               }
+               if (flagTAPV2 && !s.isEmpty() && adqlOpInputs!=null && adqlOpInputs.contains(c)) {
+                  String processedInput = getRangeInput(s);
+                  if (processedInput.isEmpty()) {
+                     processedInput = isInValidOperatorNumber(s, userReady || flagDoIt);
+                     if (processedInput==null) {
+                        return;
+                     } else {
+                        s = processedInput;
+                     }
+                  } else {
+                     s = processedInput;
+                  }
+                  /*for (FocusListener focusListener : c.getFocusListeners()) {
 					if (focusListener instanceof DelimitedValFieldListener) {
 						DelimitedValFieldListener constraint2Val = ((DelimitedValFieldListener)focusListener);
 						if (!constraint2Val.isValid()) {
@@ -1398,41 +1399,42 @@ public class ServerGlu extends Server implements Runnable {
 						}
 					}
 				}*/
-			}
+               }
+            }
             v.addElement(s);
             vbis.addElement(s);
             if( !isFieldTargetOrRadius(c) ) crit=s;
             limitViolation = isValueWithinLimits(s, rangeValues.get(index), null);
          } else if( c instanceof JComboBox ) {
-                 int j;
-                 String t=null;
-                 crit=s = (String)((JComboBox)c).getSelectedItem();
-                 // Si la valeur est précédée d'un "XXX - valeur", c'est XXX qui sera utilisé
-                 // en tant que valeur.
-                 if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
-                 if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2));
-                 else vbis.addElement(s);
-                 if( j>=0 ) s=s.substring(0,j).trim();
-                 else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) crit=s="";
-                 v.addElement(s);
-              }//TODO:: add in case limitViolation for the combobox
+            int j;
+            String t=null;
+            crit=s = (String)((JComboBox)c).getSelectedItem();
+            // Si la valeur est précédée d'un "XXX - valeur", c'est XXX qui sera utilisé
+            // en tant que valeur.
+            if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
+            if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2));
+            else vbis.addElement(s);
+            if( j>=0 ) s=s.substring(0,j).trim();
+            else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) crit=s="";
+            v.addElement(s);
+         }//TODO:: add in case limitViolation for the combobox
          else if( c instanceof JList ) {
-             int j;
-             StringBuffer listString = new StringBuffer();
-             List<String> selectedValues= ((JList<String>)c).getSelectedValuesList();
-             for (String selectedValue : selectedValues) {
-            	 crit=s = selectedValue;
-                 if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
-                 if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2));
-                 else vbis.addElement(s);
-                 if( j>=0 ) s=s.substring(0,j).trim();
-                 else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) crit=s="";
-                 listString.append(s).append(LISTDELIMITER);
-			}
-             
-             v.addElement(listString.toString().trim().replaceAll(LISTDELIMITER+"$", EMPTYSTRING));
-             limitViolation = isValueWithinGivenOptions(listString.toString(), rangeValues.get(index), null);
-          }
+            int j;
+            StringBuffer listString = new StringBuffer();
+            List<String> selectedValues= ((JList<String>)c).getSelectedValuesList();
+            for (String selectedValue : selectedValues) {
+               crit=s = selectedValue;
+               if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
+               if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2));
+               else vbis.addElement(s);
+               if( j>=0 ) s=s.substring(0,j).trim();
+               else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) crit=s="";
+               listString.append(s).append(LISTDELIMITER);
+            }
+
+            v.addElement(listString.toString().trim().replaceAll(LISTDELIMITER+"$", EMPTYSTRING));
+            limitViolation = isValueWithinGivenOptions(listString.toString(), rangeValues.get(index), null);
+         }
 
          // Mise à jour des critères de la commande script équivalente
          if( crit!=null && crit.length()>0 ) {
@@ -1892,43 +1894,43 @@ public class ServerGlu extends Server implements Runnable {
       super.actionPerformed(e);
    }
 
-public HealpixMoc getPosBounds() {
-	return posBounds;
-}
+   public HealpixMoc getPosBounds() {
+      return posBounds;
+   }
 
-public void setPosBounds(HealpixMoc posBounds) {
-	this.posBounds = posBounds;
-}
+   public void setPosBounds(HealpixMoc posBounds) {
+      this.posBounds = posBounds;
+   }
 
-public Map<String, GluAdqlTemplate> getGluAdqlQueryTemplates() {
-	return gluAdqlQueryTemplates;
-}
+   public Map<String, GluAdqlTemplate> getGluAdqlQueryTemplates() {
+      return gluAdqlQueryTemplates;
+   }
 
-public void setGluAdqlQueryTemplates(Map<String, GluAdqlTemplate> gluAdqlQueryTemplates) {
-	this.gluAdqlQueryTemplates = gluAdqlQueryTemplates;
-}
+   public void setGluAdqlQueryTemplates(Map<String, GluAdqlTemplate> gluAdqlQueryTemplates) {
+      this.gluAdqlQueryTemplates = gluAdqlQueryTemplates;
+   }
 
-public String getCurrentSelectedTapTable() {
-	return currentSelectedTapTable;
-}
+   public String getCurrentSelectedTapTable() {
+      return currentSelectedTapTable;
+   }
 
-public void setCurrentSelectedTapTable(String currentSelectedTapTable) {
-	this.currentSelectedTapTable = currentSelectedTapTable;
-}
+   public void setCurrentSelectedTapTable(String currentSelectedTapTable) {
+      this.currentSelectedTapTable = currentSelectedTapTable;
+   }
 
-public Hashtable<String, String> getAdqlFunc() {
-	return adqlFunc;
-}
+   public Hashtable<String, String> getAdqlFunc() {
+      return adqlFunc;
+   }
 
-public void setAdqlFunc(Hashtable<String, String> adqlFunc) {
-	this.adqlFunc = adqlFunc;
-}
+   public void setAdqlFunc(Hashtable<String, String> adqlFunc) {
+      this.adqlFunc = adqlFunc;
+   }
 
-public Hashtable<String, String> getAdqlFuncParams() {
-	return adqlFuncParams;
-}
+   public Hashtable<String, String> getAdqlFuncParams() {
+      return adqlFuncParams;
+   }
 
-public void setAdqlFuncParams(Hashtable<String, String> adqlFuncParams) {
-	this.adqlFuncParams = adqlFuncParams;
-}
+   public void setAdqlFuncParams(Hashtable<String, String> adqlFuncParams) {
+      this.adqlFuncParams = adqlFuncParams;
+   }
 }

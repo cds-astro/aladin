@@ -614,9 +614,16 @@ public class TreeObjDir extends TreeObj {
    protected boolean isCDSCatalog() { return cat && internalId.startsWith("CDS/"); }
    
    /** Retourne true s'il existe un accès SIA  ou SIA2 (par URL directe ou via GLU tag */
-   protected boolean hasSIA() {
-      return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia2_service_url")!=null
-            || prop.get("sia_glutag")!=null || prop.get("sia2_glutag")!=null);
+   protected boolean hasSIA() { return hasSIAv1() || hasSIAv2(); }
+   
+   /** Retourne true s'il existe un accès SIA v1 (par URL directe ou via GLU tag */
+   protected boolean hasSIAv1() {
+      return prop!=null && (prop.get("sia_service_url")!=null || prop.get("sia_glutag")!=null );
+   }
+   
+   /** Retourne true s'il existe un accès SIA v2 (par URL directe ou via GLU tag */
+   protected boolean hasSIAv2() {
+      return prop!=null && (prop.get("sia2_service_url")!=null || prop.get("sia2_glutag")!=null);
    }
    
    /** Retourne true s'il existe un accès SSA (par URL direct ou via GLU tag */
@@ -952,14 +959,14 @@ public class TreeObjDir extends TreeObj {
       return coo.getDeg();
    }
    
-   private double getDefaultRadiusInDeg() {
-      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
-         return 14./60;
-      }
-      return  aladin.view.getCurrentView().getTaille();
-   }
-   
-   private String getDefaultRadius() { return getDefaultRadius(-1); }
+//   private double getDefaultRadiusInDeg() {
+//      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+//         return 14./60;
+//      }
+//      return  aladin.view.getCurrentView().getTaille();
+//   }
+//   
+//   private String getDefaultRadius() { return getDefaultRadius(-1); }
    private String getDefaultRadius(double maxRad) {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
          return "14'";
@@ -974,7 +981,7 @@ public class TreeObjDir extends TreeObj {
    synchronized void setScanning(boolean flag) { scanning = flag; }
    synchronized boolean isScanning() { return scanning; }
    
-   /** Génération du MOC qui correspond aux sources CS ou SIA du champ courant */
+   /** Génération du MOC qui correspond aux sources CS ou SIA ou SSA du champ courant */
    protected void scan( MocItem2 mo ) {
       setScanning(true);
       try { scan1(mo); }
@@ -984,8 +991,10 @@ public class TreeObjDir extends TreeObj {
    protected void scan1( MocItem2 mo ) {
       String url=null;
       Coord c = aladin.view.getCurrentView().getCooCentre();
-      double rad = getDefaultRadiusInDeg();
+      double rad = aladin.view.getCurrentView().getTaille();
+      if( rad>1 ) rad=1;
       String radius = Util.myRound( rad );
+
       
       if( hasCS() ) {
          url = getCSUrl();
@@ -994,8 +1003,16 @@ public class TreeObjDir extends TreeObj {
          
       } else if( hasSIA() ) {
          url = prop.get("sia_service_url");
-         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-         url+="POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
+         if( url!=null ) {
+            if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+            url+="POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
+         } else {
+            url = prop.get("sia2_service_url");
+            if( url!=null ) {
+               if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+               url+="REQUEST=query&POS=CIRCLE="+c.al+" "+c.del+" "+radius+"&FORMAT=image/fits";
+            }
+         }
 
       } else if( hasSSA() ) {
          url = prop.get("ssa_service_url");
@@ -1009,10 +1026,8 @@ public class TreeObjDir extends TreeObj {
       HealpixMoc moc;
       try { 
          moc = scan(url); 
-         
          if( mo.moc==null ) mo.moc=moc;
          else mo.moc.add(moc);
-
       } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace();  }
       
       // Mémorisation de la surface couverte
