@@ -22,6 +22,8 @@ package cds.aladin;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -63,9 +65,16 @@ public class ProjSelector extends JPanel {
       });
       combo.setPrototypeDisplayValue("12345678");
       
-      JPanel pCombo = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+//      JPanel pCombo = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+//      pCombo.setBackground( aladin.getBackground() );
+//      pCombo.add(combo);
+      
+      GridBagLayout g;
+      JPanel pCombo = new JPanel( g=new GridBagLayout() );
       pCombo.setBackground( aladin.getBackground() );
-      pCombo.add(combo);
+      GridBagConstraints gc = new GridBagConstraints();
+      gc.fill = GridBagConstraints.HORIZONTAL;
+      pCombo.add(combo,gc);
       
       setLayout(new BorderLayout(7,7));
       setBackground( aladin.getBackground() );

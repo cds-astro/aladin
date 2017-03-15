@@ -55,6 +55,7 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.plaf.basic.BasicTextFieldUI;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -132,12 +133,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       // L'arbre avec sa scrollbar
       dirTree = new DirectoryTree(aladin, cbg);
       scrollTree = new JScrollPane(dirTree,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-//      scrollTree.setBorder( BorderFactory.createEmptyBorder(10,0,0,0));
       scrollTree.setBorder( BorderFactory.createEmptyBorder(6,0,0,0));
       scrollTree.setBackground(cbg);
-      scrollTree.getViewport().setOpaque(true);
-      scrollTree.getViewport().setBackground(cbg);
+//      scrollTree.getViewport().setOpaque(true);
+//      scrollTree.getViewport().setBackground(cbg);
       scrollTree.setOpaque(false);
+      scrollTree.setViewportBorder(null);
       
       if( Aladin.DARK_THEME ) {
          scrollTree.getVerticalScrollBar().setUI(new MyScrollBarUI());
@@ -201,7 +202,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g = new GridBagLayout();
       c.fill = GridBagConstraints.BOTH;            // J'agrandirai les composantes
-      c.insets = new Insets(2,3,0,2);
+      c.insets = new Insets(2,3,3,2);
       JPanel panelFilter1 = new JPanel( g );
       panelFilter1.setBackground( cbg );
       PropPanel.addCouple(null,panelFilter1, labelFilter, null, quickFilter, g,c,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL);
@@ -377,8 +378,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       QuickFilterField(int nChar) {
          super(nChar);
          addMouseListener(this);
+         setUI( new BasicTextFieldUI() );
          updateWidgets();
       }
+
+//      public Dimension getPreferredSize() {  Dimension d = super.getPreferredSize(); d.height-=4; return d; } 
       
       public Dimension getMaximumSize() { Dimension d = super.getMaximumSize(); d.width=150; return d; }
 

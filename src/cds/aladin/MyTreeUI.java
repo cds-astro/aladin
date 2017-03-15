@@ -19,26 +19,39 @@
 
 package cds.aladin;
 
-import java.awt.Graphics;
+import java.awt.Color;
+import java.awt.Image;
 
-import javax.swing.JComponent;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import javax.swing.plaf.basic.BasicTreeUI;
 
 public class MyTreeUI extends BasicTreeUI {
 
-   public MyTreeUI() {
+   public MyTreeUI(Color c) {
       super();
+      
+      UIManager.put("Tree.background", c );
       UIManager.put("Tree.selectionBackground", Aladin.COLOR_STACK_SELECT.brighter() );
+      UIManager.put("Tree.paintLines", false );
+      UIManager.put("Tree.drawsFocusBorder", false);
+      
+      Image img;
+      img = Aladin.aladin.getImagette("expandedIcon.png");
+      if( img!=null ) UIManager.put("Tree.expandedIcon", new ImageIcon( img ) );
+      img = Aladin.aladin.getImagette("collapsedIcon.png");
+      if( img!=null ) UIManager.put("Tree.collapsedIcon", new ImageIcon( img ) );
+      if( img!=null ) UIManager.put("Tree.closeIcon", new ImageIcon( img ) );
    }
 
 
-   protected void paintHorizontalLine(Graphics g,JComponent c,int y,int left,int right){
-//               super.paintHorizontalLine(g,c,y,left,right);
-   }
-   protected void paintVerticalLine(Graphics g,JComponent c,int x,int top,int bottom){
-//               super.paintVerticalLine(g,c,x,top,bottom);
-   }
+//   protected void paintHorizontalLine(Graphics g,JComponent c,int y,int left,int right){
+////               super.paintHorizontalLine(g,c,y,left,right);
+//   }
+//   protected void paintVerticalLine(Graphics g,JComponent c,int x,int top,int bottom){
+////               super.paintVerticalLine(g,c,x,top,bottom);
+//   }
 
 
 

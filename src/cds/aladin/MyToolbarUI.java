@@ -19,6 +19,7 @@
 
 package cds.aladin;
 
+
 import javax.swing.plaf.basic.BasicToolBarUI;
 
 public class MyToolbarUI extends BasicToolBarUI {
@@ -29,5 +30,5 @@ public class MyToolbarUI extends BasicToolBarUI {
       toolBar.setForeground( Aladin.COLOR_CONTROL_FOREGROUND );
       toolBar.setBackground( Aladin.COLOR_CONTROL_BACKGROUND );
    }
-   
+
 }

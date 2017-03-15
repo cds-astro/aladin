@@ -108,7 +108,7 @@ public class ButtonBookmark extends JButton {
    /** Affichage du bouton "bookmark", avec une petite étoile en préfixe */
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
-      Util.drawStar(g, 6,8, fct.isLocalDefinition() ? Color.blue : Orange);
+      Util.drawStar(g, 5,8, fct.isLocalDefinition() ? Aladin.COLOR_BLUE : Orange);
    }
 
 }

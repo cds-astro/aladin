@@ -35,41 +35,41 @@ import java.util.TimeZone;
 import cds.mocmulti.MultiMoc;
 
 /**
- * Gestion avancée d'une liste de propriétés
- * - conserve les lignes blanches et les commentaires si nécessaire
- * - prend en compte l'ordre (insertion en début, en fin...)
- * - peut gérer plusieurs valeurs pour une clé
+ * Gestion avancï¿½e d'une liste de propriï¿½tï¿½s
+ * - conserve les lignes blanches et les commentaires si nï¿½cessaire
+ * - prend en compte l'ordre (insertion en dï¿½but, en fin...)
+ * - peut gï¿½rer plusieurs valeurs pour une clï¿½
  * - supporte plusieurs formats en sortie (ASCII, ASCIIC, JSON, HTML, GLU )
- * - accepte en entrée, une liste de clé = valeur, sous forme d'un, voire de plusieurs enregistrements
+ * - accepte en entrï¿½e, une liste de clï¿½ = valeur, sous forme d'un, voire de plusieurs enregistrements
  * 
  * Rq: ne supporte que l'ASCII basique
  * 
  * @author Pierre Fernique [CDS]
- * @version 2.0 décembre 2016 - fusion de la version Aladin et MultiMoc
+ * @version 2.0 dï¿½cembre 2016 - fusion de la version Aladin et MultiMoc
  */
 public class MyProperties {
    
-   // Contient les propriétés (ConfigurationItem)
-   private ArrayList<PropItem>         prop;  // Liste séquentielle des propriétés
-   private HashMap<String, PropItem>   hash;  // Accès direct à la valeur d'une propriété
+   // Contient les propriï¿½tï¿½s (ConfigurationItem)
+   private ArrayList<PropItem>         prop;  // Liste sï¿½quentielle des propriï¿½tï¿½s
+   private HashMap<String, PropItem>   hash;  // Accï¿½s direct ï¿½ la valeur d'une propriï¿½tï¿½
    
-   private StringBuilder propOriginal = null;   // Strings des properties originales (telles que) si demandé dans load()
+   private StringBuilder propOriginal = null;   // Strings des properties originales (telles que) si demandï¿½ dans load()
 
    public MyProperties() {
       prop = new ArrayList<PropItem>();
       hash = new HashMap<String, PropItem>();
    }
    
-   /** Retourne la liste ordonnée des clés */
+   /** Retourne la liste ordonnï¿½e des clï¿½s */
    public ArrayList<String> getKeys() {
       ArrayList<String> a = new ArrayList<String>();
       for( PropItem ci : prop ) a.add(ci.key);
       return a;
    }
    
-   /** Teste l'égalité. 
-    * Gère les valeurs multiples possibles pour une même clé
-    * Ne prend pas en compte une éventuelle clé TIMESTAMP
+   /** Teste l'ï¿½galitï¿½. 
+    * Gï¿½re les valeurs multiples possibles pour une mï¿½me clï¿½
+    * Ne prend pas en compte une ï¿½ventuelle clï¿½ TIMESTAMP
     */
    public boolean equals(MyProperties p) {
       
@@ -78,7 +78,7 @@ public class MyProperties {
       if( p==null ) return false;
       if( Math.abs( size()-p.size() )>1 ) return false;   // peut y avoir le timestamp en plus
 
-      // On compare les clés une à une
+      // On compare les clï¿½s une ï¿½ une
       for( String k : getKeys() ) {
          if( k.equals(" ") || k.equals("#") ) continue; // On ne compare les commentaires
          if( k.equals("TIMESTAMP") ) continue;          // On ne compare pas sur l'estampillage
@@ -91,7 +91,7 @@ public class MyProperties {
          if( v1.indexOf('\t')<0 && v.indexOf('\t')<0 ) {
             if( !v1.equals(v) ) return false;
             
-         // Des valeurs multiples => il faut comparer chaque possibilité de valeur
+         // Des valeurs multiples => il faut comparer chaque possibilitï¿½ de valeur
          } else if( !v1.equals(v) ) {
             int n=0,n1=0;
             Tok tok = new Tok(v,"\t");
@@ -107,11 +107,11 @@ public class MyProperties {
    }
    
    /**
-    * Compare les propriétés et retourne la liste de celles qui ont été modifiées
-    * dans le MyProperties passé en paramètre
-    * @param p La référence à comparer
-    * @param exceptKey une clé qu'il ne faut pas prendre en compte (null sinon)
-    * @return Une liste de chaines indiquant les modifications des propriétés
+    * Compare les propriï¿½tï¿½s et retourne la liste de celles qui ont ï¿½tï¿½ modifiï¿½es
+    * dans le MyProperties passï¿½ en paramï¿½tre
+    * @param p La rï¿½fï¿½rence ï¿½ comparer
+    * @param exceptKey une clï¿½ qu'il ne faut pas prendre en compte (null sinon)
+    * @return Une liste de chaines indiquant les modifications des propriï¿½tï¿½s
     */
    public ArrayList<String> getModVal(MyProperties p) { return getModVal(p,null); }
    public ArrayList<String> getModVal(MyProperties p, String exceptKey) {
@@ -152,10 +152,10 @@ public class MyProperties {
    }
    
    /**
-    * Compare les propriétés et retourne la liste de celles qui ont été supprimées
-    * dans le MyProperties passé en paramètre
-    * @param p La référence à comparer
-    * @return Une liste des clés supprimées
+    * Compare les propriï¿½tï¿½s et retourne la liste de celles qui ont ï¿½tï¿½ supprimï¿½es
+    * dans le MyProperties passï¿½ en paramï¿½tre
+    * @param p La rï¿½fï¿½rence ï¿½ comparer
+    * @return Une liste des clï¿½s supprimï¿½es
     */
    public ArrayList<String> getDelKey(MyProperties p) {
       ArrayList<String> a = new ArrayList<String>();
@@ -172,10 +172,10 @@ public class MyProperties {
    }
    
    /**
-    * Compare les propriétés et retourne la liste de celles qui ont été ajoutées
-    * dans le MyProperties passé en paramètre
-    * @param p La référence à comparer
-    * @return Une liste des clés ajoutées
+    * Compare les propriï¿½tï¿½s et retourne la liste de celles qui ont ï¿½tï¿½ ajoutï¿½es
+    * dans le MyProperties passï¿½ en paramï¿½tre
+    * @param p La rï¿½fï¿½rence ï¿½ comparer
+    * @return Une liste des clï¿½s ajoutï¿½es
     */
    public ArrayList<String> getAddKey(MyProperties p) {
       ArrayList<String> a = new ArrayList<String>();
@@ -188,46 +188,46 @@ public class MyProperties {
       return a;
    }
    
-   /** Retourne directement une propriété particulière
-    * @param key la clé de la propriété recherchée
-    * @return la ConfigurationItem associée à la clé, null si asbsente
+   /** Retourne directement une propriï¿½tï¿½ particuliï¿½re
+    * @param key la clï¿½ de la propriï¿½tï¿½ recherchï¿½e
+    * @return la ConfigurationItem associï¿½e ï¿½ la clï¿½, null si asbsente
     */
    private PropItem getItem(String key) {
       return hash.get(key);
    }
    
-   /** Retourne le nombre de clés utilisées */
+   /** Retourne le nombre de clï¿½s utilisï¿½es */
    public int size() { return prop.size(); }
    
-   /** Retourne une estimation du nombre d'octets nécessaires à la mémorisation */
+   /** Retourne une estimation du nombre d'octets nï¿½cessaires ï¿½ la mï¿½morisation */
    public long getMem() {
       long mem=0L;
       for( PropItem item : prop ) mem += item.getMem();
       return mem;
    }
   
-   /** Retourne la valeur associée à une clé, et si elle est absente, retourne
-    * la valeur indiquée en défaut
-    * @param key la clé de la propriété recherchée
-    * @param defaut la valeur de la clé en cas de défaut
+   /** Retourne la valeur associï¿½e ï¿½ une clï¿½, et si elle est absente, retourne
+    * la valeur indiquï¿½e en dï¿½faut
+    * @param key la clï¿½ de la propriï¿½tï¿½ recherchï¿½e
+    * @param defaut la valeur de la clï¿½ en cas de dï¿½faut
     */
    public String getProperty(String key,String defaut) { 
       String s = get(key); 
       return s==null ? defaut : s;
    }
    
-   /** Retourne la valeur associée à une clé, ou null si absente (identique à get(key))*/
+   /** Retourne la valeur associï¿½e ï¿½ une clï¿½, ou null si absente (identique ï¿½ get(key))*/
    public String getProperty(String key) { return get(key); }
 
-   /** Retourne la valeur associée à une clé, ou null si absente */
+   /** Retourne la valeur associï¿½e ï¿½ une clï¿½, ou null si absente */
    public String get(String key) {
       PropItem item = getItem(key);
       if( item!=null ) return item.value;
       return null;
    }
    
-   /** Retourne la liste des valeurs pour une clé (découpage des xxx\txxx\txxx...
-    * null si la clé est inconnue */
+   /** Retourne la liste des valeurs pour une clï¿½ (dï¿½coupage des xxx\txxx\txxx...
+    * null si la clï¿½ est inconnue */
    public Iterator<String> getIteratorValues(String key) {
       final String value = get(key);
       if( value==null ) return null;
@@ -240,11 +240,16 @@ public class MyProperties {
             opos=pos;
             return rep;
          }
+		@Override
+		public void remove() {
+			// TODO Auto-generated method stub
+			
+		}
       };
    }
    
-   /** Ajoute une propriété en fin de liste. 
-    * Suppression de l'ancienne valeur si nécessaire
+   /** Ajoute une propriï¿½tï¿½ en fin de liste. 
+    * Suppression de l'ancienne valeur si nï¿½cessaire
     * @param key
     * @param value
     */
@@ -255,8 +260,8 @@ public class MyProperties {
       hash.put(key,item);
    }
 
-   /** Insertion de la clé et de la valeur au début de liste.
-    * Suppression de l'ancienne valeur si nécessaire
+   /** Insertion de la clï¿½ et de la valeur au dï¿½but de liste.
+    * Suppression de l'ancienne valeur si nï¿½cessaire
     * @param key
     * @param value
     */
@@ -267,14 +272,14 @@ public class MyProperties {
       hash.put(key,item);
    }
    
-   /** Suppression d'une propriété */
+   /** Suppression d'une propriï¿½tï¿½ */
    public void remove(String key) {
       prop.remove( getItem(key) );
       hash.remove(key);
    }
    
-   /** Ajout d'une nouvelle propriété.
-    * Si la clé existe déjà, remplace sa valeur
+   /** Ajout d'une nouvelle propriï¿½tï¿½.
+    * Si la clï¿½ existe dï¿½jï¿½, remplace sa valeur
     * @param key
     * @param value
     */
@@ -282,8 +287,8 @@ public class MyProperties {
       replaceValue(key, value);
    }
    
-   /** Remplacement de la valeur associée à une clé
-    * Ajout simple en fin de liste si inexistant au préalable
+   /** Remplacement de la valeur associï¿½e ï¿½ une clï¿½
+    * Ajout simple en fin de liste si inexistant au prï¿½alable
     * @param key
     * @param value
     */
@@ -296,8 +301,8 @@ public class MyProperties {
       } else item.value = value;
    }
    
-   /** Ajout d'une valeur à une propriété. 
-    * Si déjà existant, ajoute cette valeur à la précédente (multi-valeurs)
+   /** Ajout d'une valeur ï¿½ une propriï¿½tï¿½. 
+    * Si dï¿½jï¿½ existant, ajoute cette valeur ï¿½ la prï¿½cï¿½dente (multi-valeurs)
     * @param key
     * @param value
     */
@@ -311,7 +316,7 @@ public class MyProperties {
    }
    
    
-   /** Substitution d'une clé par une autre */
+   /** Substitution d'une clï¿½ par une autre */
    public void replaceKey(String oldKey, String key) {
       for( PropItem item : prop ) {
          if( item.key.equals(oldKey) ) {
@@ -323,11 +328,11 @@ public class MyProperties {
       }
    }
    
-   /** Retourne le flux des propriétés originales (uniquement s'il a été mémorisé losr du load */
+   /** Retourne le flux des propriï¿½tï¿½s originales (uniquement s'il a ï¿½tï¿½ mï¿½morisï¿½ losr du load */
    public String getPropOriginal() { return propOriginal!=null ? propOriginal.toString() : null; }
    
    // Lecture d'une ligne dans un flux basique InputStream
-   // La ligne retournée ne contient ni le CR ni un éventuellement LF
+   // La ligne retournï¿½e ne contient ni le CR ni un ï¿½ventuellement LF
    private String readLine( InputStreamReader in ) throws IOException {
       StringBuilder s = new StringBuilder(256);
       int ch;
@@ -345,25 +350,25 @@ public class MyProperties {
       return s.toString();
    }
    
-   /** Charge les propriétés de l'enregistrement courant dans le flux. S'arrête à la première
+   /** Charge les propriï¿½tï¿½s de l'enregistrement courant dans le flux. S'arrï¿½te ï¿½ la premiï¿½re
     * ligne vide qui suit l'enregistrement (sans fermer le flux)
     * @param in
-    * @return false si on a atteint la fin du flux (l'enregistrement courant a tout de même été chargé
+    * @return false si on a atteint la fin du flux (l'enregistrement courant a tout de mï¿½me ï¿½tï¿½ chargï¿½
     * @throws IOException
     */
    public boolean loadRecord(InputStreamReader in) throws IOException { return load( in,false,true); }
    
    /**
-    * Charge les propriétés depuis le flux courant. Considère qu'il n'y a qu'un seul
+    * Charge les propriï¿½tï¿½s depuis le flux courant. Considï¿½re qu'il n'y a qu'un seul
     * enregistrement pour tout le flux
     */
    public void load(InputStreamReader in) throws IOException { load( in,false,false); }
    
    /**
-    * Charge les propriétés à partir du flux courant
+    * Charge les propriï¿½tï¿½s ï¿½ partir du flux courant
     * @param in
     * @param flagKeepOriginal Conserve une copie de l'original
-    * @param flagBlankLinestop S'arrête à la première ligne vide (pour un flux multi-records)
+    * @param flagBlankLinestop S'arrï¿½te ï¿½ la premiï¿½re ligne vide (pour un flux multi-records)
     * @return false si on a atteint la fin du flux, sinon true
     * @throws IOException
     */
@@ -376,7 +381,7 @@ public class MyProperties {
       hash = new HashMap<String, PropItem>();
       
 
-      // Je lis les propriétés de la configuration
+      // Je lis les propriï¿½tï¿½s de la configuration
       String s;
       while( (s = readLine(in)) != null ) {
          if( flagKeepOriginal ) propOriginal.append(s+"\n");
@@ -385,22 +390,22 @@ public class MyProperties {
          // Cas d'une ligne blanche...
          if( s.trim().length() == 0 ) {
             
-            // Dans le cas où l'on doit s'arrêter à la première ligne vide après l'enregistrement
-            // (flux avec plusieurs enregistrements consécutifs)
+            // Dans le cas oï¿½ l'on doit s'arrï¿½ter ï¿½ la premiï¿½re ligne vide aprï¿½s l'enregistrement
+            // (flux avec plusieurs enregistrements consï¿½cutifs)
             if( flagBlankLinestop ) {
                
                // Fin de l'enregistrement
                if( prop.size()>0 ) break;
                
-               // L'enregistrement n'ayant pas commencé, on ne mémorise pas les lignes vides
+               // L'enregistrement n'ayant pas commencï¿½, on ne mï¿½morise pas les lignes vides
                else if( prop.size()==0 ) continue;
             }
             
-            // On mémorise cette ligne blanche pour pouvoir la restituer
+            // On mï¿½morise cette ligne blanche pour pouvoir la restituer
             prop.add(new PropItem(" ", null));
             continue;
          }
-         // Simple commentaire (ou proposition de clé "#Cle  = valeur")
+         // Simple commentaire (ou proposition de clï¿½ "#Cle  = valeur")
          if( s.charAt(0) == '#' ) {
             boolean simpleComment = true;
             int egal = s.indexOf('=');
@@ -413,14 +418,14 @@ public class MyProperties {
                } else simpleComment=false;
             }
 
-            // Mémorisation s'il s'agit d'un commentaire classique
+            // Mï¿½morisation s'il s'agit d'un commentaire classique
             if( simpleComment ) {
                prop.add(new PropItem("#", s));
                continue;
             }
          }
 
-         // ajout normal de la propriété
+         // ajout normal de la propriï¿½tï¿½
          if( s.indexOf('=')<0 ) {
             String id = MultiMoc.getID(this);
             System.out.println("propertie file line syntax error (missing '=')"+(id!=null?" in "+id:"")+" ignored: "+s);
@@ -429,13 +434,13 @@ public class MyProperties {
          add(s);
       }
       
-      return s!=null;  // s==null si le flux est terminée => return false
+      return s!=null;  // s==null si le flux est terminï¿½e => return false
 
    }
    
-   /** Ajout d'une ligne décrivant une propriété par "clé = valeur".
+   /** Ajout d'une ligne dï¿½crivant une propriï¿½tï¿½ par "clï¿½ = valeur".
     * Le "=" est facultatif.
-    * Gère le codage éventuel des propriétés à la java.
+    * Gï¿½re le codage ï¿½ventuel des propriï¿½tï¿½s ï¿½ la java.
     */
    public void add(String s) {
       String key;
@@ -467,16 +472,16 @@ public class MyProperties {
       put(key, value);
    }
    
-   /** Gestion d'une modification des propriétés par MyProperties d'exceptions.
+   /** Gestion d'une modification des propriï¿½tï¿½s par MyProperties d'exceptions.
     * @param except
     * @param id
     */
    public void exceptions(MyProperties except, String id) {
       
-      // Détermine si l'enregistrement correspond
+      // Dï¿½termine si l'enregistrement correspond
       for( PropItem item : except.prop ) {
          if( item.key.startsWith("#") ) continue;  // Commentaire => on ignore
-         if( item.key.startsWith(">") ) continue;  // Les substitutions seront appliquées dans la deuxième passe
+         if( item.key.startsWith(">") ) continue;  // Les substitutions seront appliquï¿½es dans la deuxiï¿½me passe
          String key = item.key;
          String value = item.value;
          boolean test=false;
@@ -487,18 +492,18 @@ public class MyProperties {
          
          String v = key.equals("ID") ? id : get(key);
 //         String v = get(key);
-         if( v==null ) return;      // La propriété n'y est pas => rien à faire
+         if( v==null ) return;      // La propriï¿½tï¿½ n'y est pas => rien ï¿½ faire
          if( c!=0 ) {
             boolean strict=true;
             if( value.startsWith("=") ) { strict=false; value=value.substring(1); }
-            if( !testInequality(c, strict, value, v) ) return; // La propriété ne correspond pas => rien à faire
-         } else { if( matchMask(value, v)==test ) return; } // La propriété ne correspond pas => rien à faire
+            if( !testInequality(c, strict, value, v) ) return; // La propriï¿½tï¿½ ne correspond pas => rien ï¿½ faire
+         } else { if( matchMask(value, v)==test ) return; } // La propriï¿½tï¿½ ne correspond pas => rien ï¿½ faire
       }
       
-      // Applique les règles de substitution
+      // Applique les rï¿½gles de substitution
       for( PropItem item : except.prop ) {
          if( item.key.startsWith("#") ) continue;  // Commentaire => on ignore
-         if( !item.key.startsWith(">") ) continue; // on ne retient que les règles de substitution
+         if( !item.key.startsWith(">") ) continue; // on ne retient que les rï¿½gles de substitution
          String key = item.key.trim().substring(1);
          String value = item.value.trim();
          int mode=0;
@@ -533,7 +538,7 @@ public class MyProperties {
       }
    }
 
-   /** Mémorisation des propriétés sur la forme ASCII simple
+   /** Mï¿½morisation des propriï¿½tï¿½s sur la forme ASCII simple
     * @param out
     * @param comments
     * @throws IOException
@@ -548,7 +553,7 @@ public class MyProperties {
       bw.flush();
    }
    
-   /** Affichage des propriétés sur la forme d'une liste de chaines classiques "clé valeur\n" */
+   /** Affichage des propriï¿½tï¿½s sur la forme d'une liste de chaines classiques "clï¿½ valeur\n" */
    public String toString() {
       StringBuilder s = new StringBuilder(2048);
       for( PropItem item : prop ) {
@@ -561,8 +566,8 @@ public class MyProperties {
    /** Retourne l'enregistrement dans la syntaxe GLU */
    public String getRecordGlu() { return getRecordGlu1(true); }
    
-   /** Retourne l'enregistrement dans la syntaxe GLU, mais les éventuels sites miroirs alternatifs ne seront
-    * indiqués que pour les HiPS prévus pour Aladin Lite
+   /** Retourne l'enregistrement dans la syntaxe GLU, mais les ï¿½ventuels sites miroirs alternatifs ne seront
+    * indiquï¿½s que pour les HiPS prï¿½vus pour Aladin Lite
     */
    public String getRecordGluX() {return getRecordGlu1(false); }
    
@@ -583,7 +588,7 @@ public class MyProperties {
       s.append(align("%Owner", 20) +" aladin\n");
       s.append(align("%DistribDomain", 20) +" ALADIN\n");
       
-      // Dans le cas du !flagMirror, les mirroirs ne seront utilisés que pour les HiPS prévus pour AladinLite 
+      // Dans le cas du !flagMirror, les mirroirs ne seront utilisï¿½s que pour les HiPS prï¿½vus pour AladinLite 
       String s2 = get("client_application");
       boolean flagLite = s2!=null && s2.indexOf("AladinLite")>=0;
       
@@ -648,7 +653,7 @@ public class MyProperties {
       return s.toString();
    }
 
-   /** Retourne la première URL matchant les filtres sur les fields */
+   /** Retourne la premiï¿½re URL matchant les filtres sur les fields */
    public String getFirstUrl(HashSet<String> fields) {
       StringBuilder s = new StringBuilder();
 
@@ -659,16 +664,16 @@ public class MyProperties {
             int pos=-1;
             pos = item.value.indexOf('\t',pos+1);
             if( pos==-1 ) pos=item.value.length();
-            return item.value.substring(0,pos); // Trouvé !
+            return item.value.substring(0,pos); // Trouvï¿½ !
          }
        }
       return null;
    }
 
    /**
-    * Retourne l'enregistrement sous la forme ASCII (cle = valeur), éventuellement compactée
-    * en enlevant les espaces de part et d'autre du signe égal. La liste des propriétés retenues
-    * ou non peut être controlée par le paramètre fields
+    * Retourne l'enregistrement sous la forme ASCII (cle = valeur), ï¿½ventuellement compactï¿½e
+    * en enlevant les espaces de part et d'autre du signe ï¿½gal. La liste des propriï¿½tï¿½s retenues
+    * ou non peut ï¿½tre controlï¿½e par le paramï¿½tre fields
     * @param fields controle des champs en sortie, null si tous
     */
    public String getRecord(HashSet<String> fields) { return getRecord(fields,false); }
@@ -684,7 +689,7 @@ public class MyProperties {
                int opos=pos;
                pos = item.value.indexOf('\t',pos+1);
                if( pos==-1 ) pos=item.value.length();
-               s.append( getAsciiLine( item.key, item.value.substring(opos+1,pos),flagCompact) ); // Propriétés
+               s.append( getAsciiLine( item.key, item.value.substring(opos+1,pos),flagCompact) ); // Propriï¿½tï¿½s
             } while( pos<item.value.length() );
          }
       }
@@ -697,8 +702,8 @@ public class MyProperties {
    }
    
    /**
-    * Retourne l'enregistrement sous la forme HTML (colorisée). La liste des propriétés retenues
-    * ou non peut être controlée par le paramètre fields
+    * Retourne l'enregistrement sous la forme HTML (colorisï¿½e). La liste des propriï¿½tï¿½s retenues
+    * ou non peut ï¿½tre controlï¿½e par le paramï¿½tre fields
     * @param fields controle des champs en sortie, null si tous
     */
    public String getRecordHTML(HashSet<String> fields) {
@@ -724,7 +729,7 @@ public class MyProperties {
                else if( k.startsWith("client") ) c="orange";
                else c="black";
                if( k.equals("ID")) { c="red"; v = "<font size=\"+1\" color=\""+c+"\"><b>"+v+"</b></font>"; }
-               s.append("<font color=\""+c+"\"><b>"+align(k, 20) +"</b></font> = "+ v+"\n"); // Propriétés
+               s.append("<font color=\""+c+"\"><b>"+align(k, 20) +"</b></font> = "+ v+"\n"); // Propriï¿½tï¿½s
             } while( pos<item.value.length() );
          }
       }
@@ -733,7 +738,7 @@ public class MyProperties {
    }
    
    /**
-    * Teste si une clé correspond ou non à un nom de champ particulier
+    * Teste si une clï¿½ correspond ou non ï¿½ un nom de champ particulier
     * @param key
     * @param fields
     * @return
@@ -745,7 +750,7 @@ public class MyProperties {
       boolean trouve=false;
       boolean onlyRemove=true;
       
-      // Le champ doit-il être retenu ?
+      // Le champ doit-il ï¿½tre retenu ?
       for( String mask : fields ) {
          if( mask.charAt(0)=='!' ) { deuxTours=true; continue; }
          onlyRemove=false;
@@ -765,8 +770,8 @@ public class MyProperties {
    }
 
    /**
-    * Retourne l'enregistrement sous la forme JSON. La liste des propriétés retenues
-    * ou non peut être controlée par le paramètre fields
+    * Retourne l'enregistrement sous la forme JSON. La liste des propriï¿½tï¿½s retenues
+    * ou non peut ï¿½tre controlï¿½e par le paramï¿½tre fields
     * @param fields controle des champs en sortie, null si tous
     */
    public String getRecordJson(HashSet<String> fields) {
@@ -777,7 +782,7 @@ public class MyProperties {
          if( item.key.trim().length() > 0 ) {
             s.append(" \""+item.key+"\":");
             String value = escapeJson(item.value);
-            if( item.value.indexOf('\t')==-1 ) s.append("\""+ value+"\","); // Propriétés
+            if( item.value.indexOf('\t')==-1 ) s.append("\""+ value+"\","); // Propriï¿½tï¿½s
             else {
                int pos=-1;
                s.append("[ ");
@@ -804,7 +809,7 @@ public class MyProperties {
       return " \""+key+"\":\""+ escapeJson(value)+"\"";
    }
    
-   /** Insère les caractères d'échappement qu'il faut pour une chaine JSON */
+   /** Insï¿½re les caractï¿½res d'ï¿½chappement qu'il faut pour une chaine JSON */
    public static String escapeJson( String s ) {
       if( s.indexOf('"')<0 && s.indexOf('\\')<0 ) return s;
       char [] a = s.toCharArray();
@@ -822,12 +827,12 @@ public class MyProperties {
    }
   
     /**
-     * Classe permettant la mémorisation d'un propriété, c'est-à-dire un couple
-     * (clé,valeur)
+     * Classe permettant la mï¿½morisation d'un propriï¿½tï¿½, c'est-ï¿½-dire un couple
+     * (clï¿½,valeur)
      */
     private class PropItem {
-       protected String key;   // Clé associée à la propriété
-       protected String value; // Valeur associée à la propriété
+       protected String key;   // Clï¿½ associï¿½e ï¿½ la propriï¿½tï¿½
+       protected String value; // Valeur associï¿½e ï¿½ la propriï¿½tï¿½
 
        private PropItem(String key, String value) {
           this.key = key;
@@ -835,9 +840,9 @@ public class MyProperties {
        }
 
        public String toString() {
-          if( key.equals("#")) return value; // Commentaire unique (pour compatibilité)
+          if( key.equals("#")) return value; // Commentaire unique (pour compatibilitï¿½)
           if( key==null || value==null ) return "";
-          if( value.indexOf('\t')==-1 ) return align(key, 20) +" = "+ value; // Propriété simple
+          if( value.indexOf('\t')==-1 ) return align(key, 20) +" = "+ value; // Propriï¿½tï¿½ simple
           StringBuilder s = new StringBuilder();
           Tok tok = new Tok(value,"\t");
           while( tok.hasMoreTokens() ) {
@@ -852,10 +857,10 @@ public class MyProperties {
     
     static final String CR = System.getProperty("line.separator");
 
-    /** Utilitaire pour ajouter des blancs après un mot afin de lui donner une taille particulière
-     * @param key le mot à aligner
-     * @param n le nombre de caractères souhaités
-     * @return le mot aligné, ou si trop grand, avec juste un espace derrière
+    /** Utilitaire pour ajouter des blancs aprï¿½s un mot afin de lui donner une taille particuliï¿½re
+     * @param key le mot ï¿½ aligner
+     * @param n le nombre de caractï¿½res souhaitï¿½s
+     * @return le mot alignï¿½, ou si trop grand, avec juste un espace derriï¿½re
      */
     static public String align(String key,int n) { return align(key,n,""); }
     static public String align(String key,int n,String suffixe) {
@@ -877,13 +882,13 @@ public class MyProperties {
        return sdf.format(new Date(ms));
     }
     
-    /** Effectue un test de grandeur (c='>' ou '<') soit numérique, soit calendaire, soit alphanumérique
-     * en déterminant automatiquement le type de données
+    /** Effectue un test de grandeur (c='>' ou '<') soit numï¿½rique, soit calendaire, soit alphanumï¿½rique
+     * en dï¿½terminant automatiquement le type de donnï¿½es
      * @param c    comparateur
-     * @param strict true s'il s'agit d'un test d'inégalité strict, sinon égalité incluse
-     * @param ref  valeur à tester
-     * @param value valeur de référence
-     * @return résultat du test (  value c ref  )
+     * @param strict true s'il s'agit d'un test d'inï¿½galitï¿½ strict, sinon ï¿½galitï¿½ incluse
+     * @param ref  valeur ï¿½ tester
+     * @param value valeur de rï¿½fï¿½rence
+     * @return rï¿½sultat du test (  value c ref  )
      */
     public static boolean testInequality(char c, boolean strict, String ref, String value) {
        try {
@@ -898,13 +903,13 @@ public class MyProperties {
              return dProp.compareTo(dNum)>0;
           }
           
-          // Probablement une valeur numérique
+          // Probablement une valeur numï¿½rique
           double vNum = Double.parseDouble(ref.trim());
           double vProp = Double.parseDouble(value.trim());
           if( c=='>' ) return strict ? vProp>vNum : vProp>=vNum;
           return strict ? vProp<vNum : vProp<=vNum;
 
-       // Bon, on va faire une comparaison alphanumérique
+       // Bon, on va faire une comparaison alphanumï¿½rique
        } catch( Exception e ) {
           if( c=='<' ) return strict ? value.compareTo(ref)<0 :  value.compareTo(ref)<=0;
           return strict ? value.compareTo(ref)>0 : value.compareTo(ref)>0;
@@ -947,7 +952,7 @@ public class MyProperties {
           return word.startsWith( mask.substring(0,n-1) );
        }
        
-       // Cas général
+       // Cas gï¿½nï¿½ral
        String m = mask+'\0';
        String a = word+'\0';
        int im=0,ia=0,ib=-1,ic=-1;

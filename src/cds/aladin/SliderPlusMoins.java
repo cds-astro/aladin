@@ -109,7 +109,7 @@ MouseMotionListener,MouseListener,Widget {
 
       setEnabled(false);
 
-      setBorder( BorderFactory.createEmptyBorder(0, 10, 0, 5));
+//      setBorder( BorderFactory.createEmptyBorder(0, 10, 0, 5));
       addMouseWheelListener(this);
       this.wheelIncr=wheelIncr;
    }

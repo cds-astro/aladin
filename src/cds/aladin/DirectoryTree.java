@@ -58,11 +58,11 @@ public class DirectoryTree extends JTree {
    protected DirectoryTree(Aladin aladin, Color cbg) {
       this.aladin = aladin;
       
-      setUI( new MyTreeUI() );
+      setUI( new MyTreeUI(cbg ));
 
       setModel( new DirectoryModel(aladin) );
       
-      setBackground( cbg );
+//      setBackground( cbg );
       setOpaque(true);
 //      setRootVisible(false);
       

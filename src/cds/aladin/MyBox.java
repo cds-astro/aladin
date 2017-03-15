@@ -25,10 +25,10 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,6 +42,8 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.plaf.basic.BasicTextFieldUI;
+
 
 /**
  * Classe gerant l'affichage conjoint d'un champ d'affichage et d'un champ
@@ -122,9 +124,12 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
          p1.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
          p1.add( new Lab(aladin.chaine.getString("FRAME")+" "),BorderLayout.WEST );
          
-         JPanel pCombo = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+         GridBagLayout g;
+         JPanel pCombo = new JPanel( g=new GridBagLayout() );
          pCombo.setBackground( aladin.getBackground() );
-         pCombo.add(c);
+         GridBagConstraints gc = new GridBagConstraints();
+         gc.fill = GridBagConstraints.HORIZONTAL;
+         pCombo.add(c,gc);
          
          p1.add( pCombo,BorderLayout.CENTER );
          p1.setBackground( aladin.getBackground());
@@ -239,18 +244,20 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       //         return new Dimension(60,super.getPreferredSize().height);
       //      }
    }
-
+   
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
    class Text extends JTextField {
-      private Dimension dim=null;
+//      private Dimension dim=null;
       private Rectangle cross=null;
 
       Text(String t,int width) {
          super(t,width);
-         dim = new Dimension(width,super.getPreferredSize().height);
+         setUI( new BasicTextFieldUI() );
+
+//         dim = new Dimension(width,super.getPreferredSize().height-3);
       }
 
-      public Dimension getPreferredSize() { return dim; }
+//      public Dimension getPreferredSize() { return dim; }
 
       boolean in(int x,int y) {
          if( cross==null || text.getText().length()==0) return false;
@@ -258,10 +265,10 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       }
 
       public void paintComponent(Graphics g) {
-         try {
-            super.paintComponent(g);
-            drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
-         } catch( Exception e ) { }
+    	  try {
+    		  super.paintComponent(g);
+    		  drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
+    	  } catch( Exception e ) { }
       }
 
       static private final int X = 6;
