@@ -2119,7 +2119,6 @@ public class Plan implements Runnable {
             || (trois=isSimpleCatalog() && !isViewable() && !aladin.calque.isBackGround() ) ) {
          aladin.calque.setPlanRef(this);
          if( !isOverlay() )  setOpacityLevel(0f);
-         //         setOpacityLevel( isOverlay()?1f : 0f);
       } else {
          if( !isViewable() ) aladin.view.syncPlan(this);
          setActivated(true);

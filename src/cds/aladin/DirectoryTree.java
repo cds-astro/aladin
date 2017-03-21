@@ -87,6 +87,44 @@ public class DirectoryTree extends JTree {
       super.setModel(model);
    }
    
+   /** Ouvre l'arbre en montrant la branche/le noeud associé au path donnée */
+   protected void showBranch(String p) {
+      if( p==null ) return;
+      
+      TreePath path = findBranch(new TreePath(root),p);
+      if( path==null ) return;
+         
+      // Et on ouvre uniquement les sous-branches
+      collapseRec(new TreePath(root));
+      expandPath(path);
+      
+      // Selection du noeud trouvé
+      setSelectionPath(path);
+      
+      // Scrolling s'il n'est pas visible
+      Rectangle bounds = getPathBounds(path);
+      bounds.height = getVisibleRect().height;
+      scrollRectToVisible(bounds);
+   }
+   
+   /** Retourne le path de la branche/noeud associé au "path", ou null si non trouvé */
+   private TreePath findBranch(TreePath parent,String p) {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
+      TreeObj to = (TreeObj)node.getUserObject();
+      if( to.path.equals( p ) ) return parent;
+      
+      if (node.getChildCount() >= 0) {
+         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
+            DefaultMutableTreeNode subNode = (DefaultMutableTreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(subNode);
+            TreePath tp = findBranch(path,p);
+            if( tp!=null ) return tp;
+         }
+      }
+      return null;
+   }
+
+   
    /** Ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) { 
       if( id==null ) return;
@@ -155,6 +193,7 @@ public class DirectoryTree extends JTree {
    /** Collapse tous les noeuds sont ceux au plus haut niveau (sous root) */
    protected void defaultExpand() {
       TreePath rootTp = new TreePath(root);
+
       if (root.getChildCount() >= 0) {
          for (Enumeration e = root.children(); e.hasMoreElements(); ) {
             DefaultMutableTreeNode subNode = (DefaultMutableTreeNode) e.nextElement();
@@ -326,16 +365,15 @@ public class DirectoryTree extends JTree {
                ((DefaultTreeCellRenderer)c).setBackgroundNonSelectionColor( getBackground() );
             }
             
-            boolean flagInside = aladin.directory.iconInside.isActivated();
             int isIn = n.getIsIn();
-            if( !flagInside ) {
-               c.setForeground( (node.isLeaf() && isIn==-1) ? Aladin.COLOR_CONTROL_FOREGROUND  : isIn==0 
-                     ? flagHighLighted || selected ? Aladin.ORANGE.brighter() : Aladin.ORANGE : isIn==1
-                     ? (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) : 
-                  Aladin.COLOR_CONTROL_FOREGROUND );
-            } else {
-               c.setForeground( isIn==-1 ? Aladin.COLOR_CONTROL_FOREGROUND : (flagHighLighted || selected ? Aladin.COLOR_GREEN.brighter() : Aladin.COLOR_GREEN) );
-            }
+            
+            Color fg = Aladin.COLOR_CONTROL_FOREGROUND;
+            if( isIn== 0 ) fg = Aladin.ORANGE;
+            else if( isIn== 1 ) fg = Aladin.COLOR_GREEN;
+            if( aladin.directory.iconInside.isActivated() 
+                  && !node.isLeaf() && n.nb!=n.nbRef ) fg = Aladin.COLOR_CONTROL_FOREGROUND;
+            if( flagHighLighted || selected ) fg = fg.brighter();
+            c.setForeground( fg );
 
             boolean flagTestInside = aladin.directory.iconInside.isAvailable();
             
@@ -407,13 +445,13 @@ public class DirectoryTree extends JTree {
       public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
          if( defaut ) {
             g.setColor( Color.gray.darker() );
-            Util.fillCircle7(g, x+5, y+3);
+            Util.fillCircle7(g, x+5, y+6);
             
          } else super.paintIcon(c,g,x,y);
          
-         if( color!=null ) Util.drawCheck(g,-3,-1,color==Color.black ? color.lightGray : color);
+         if( color!=null ) Util.drawCheck(g,-3,-2,color==Color.black ? color.lightGray : color);
          if( !hasMoc ) Util.drawWarning(g,0,8,Aladin.ORANGE,Color.black);
-         if( isNew ) Util.drawStar(g,9,getIconHeight()-2,Color.yellow);
+         if( isNew ) Util.drawStar(g,9,3/*getIconHeight()-2*/,Color.yellow);
       }
    }
 }

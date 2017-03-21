@@ -101,7 +101,7 @@ public final class Configuration extends JFrame
 implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    static final int DEF_MHEIGHT = 150;  // Hauteur par défaut du panel des mesures
-   static final int DEF_HWIDTH  = 200;  // Largeur par défaut du panel de l'arbre des HiPS
+   static final int DEF_HWIDTH  = 250;  // Largeur par défaut du panel de l'arbre des HiPS
    static final int DEF_ZWIDTH  = 220;  // Largeur par défaut du panel du zoomView
    static final int DEF_ZHEIGHT = 150;  // Hauteur par défaut du panel du zoomView
 

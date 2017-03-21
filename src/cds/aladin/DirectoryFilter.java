@@ -76,8 +76,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    static protected String ALLCOLL = "All collections";
    static protected String MYLIST  = ""; //"My working list";
    
-   static protected String ALLCOLLHTML = "<html><i> -- All collections --</i></html>";
-   static protected String MYLISTHTML  = "<html><i> -- My working list --</i></html>";
+   static protected String ALLCOLLHTML = "-- All collections --";
+   static protected String MYLISTHTML  = "-- My working list --";
    
    public DirectoryFilter(Aladin aladin) {
       super();

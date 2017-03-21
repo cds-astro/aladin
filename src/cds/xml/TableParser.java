@@ -1308,7 +1308,8 @@ final public class TableParser implements XMLConsumer {
             if( name.equalsIgnoreCase("LINK") ) {
                f.addInfo("href",(String)atts.get("href"));
                f.addInfo("gref",(String)atts.get("gref"));
-               f.addInfo("refValue",(String)atts.get("content-type"));
+               String contentRole = (String)atts.get("content-role");
+               if( contentRole==null || contentRole.equalsIgnoreCase("doc") ) f.addInfo("refValue",(String)atts.get("content-type"));
                f.addInfo("refText",(String)atts.get("title"));
                inLinkField=true;
 

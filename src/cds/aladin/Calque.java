@@ -1290,6 +1290,21 @@ public class Calque extends JPanel implements Runnable {
       }
       select.showSelectedPlan();
    }
+   
+   /** Sélectionne un plan dans la pile en indiquant son id */
+   protected void selectPlan(String id) {
+      for( Plan p : plan ) {
+         if( p.isFree() ) continue;
+         if( id.equals(p.id) || id.startsWith(p.label)) {
+            unSelectAllPlan();
+            p.selected=true;
+            p.setActivated(true);
+            select.showSelectedPlan();
+            aladin.calque.repaintAll();
+            return;
+         }
+      }
+   }
 
    /** Spécifie le plan sous la souris */
    protected void selectPlanUnderMouse(Plan p) {

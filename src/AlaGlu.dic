@@ -79,7 +79,7 @@
 
 %ActionName        SIA2
 %Description       Generic SIA v2 query
-%Url               $4REQUEST=query&POS=CIRCLE+$1+$2+$3&FORMAT=image/fits
+%Url               $4REQUEST=query&POS=CIRCLE+$1+$2+$3
 %Param.Description $4=Base URL (incl. '?')
 %Param.Description $1=Right Ascension
 %Param.Description $2=Declination

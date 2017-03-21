@@ -79,8 +79,9 @@ import cds.tools.Util;
  */
 public class Directory extends JPanel implements Iterable<MocItem>{
    
+   static private final String DIRECTORY = "Data access";
    static private final String UPDATING   = "  updating...";
-   static protected final String ROOT_LABEL = "Data collections";
+   static protected final String ROOT_LABEL = "Collections";
    
    private Aladin aladin;                  // Référence
    private MultiMoc2 multiProp;             // Le multimoc de stockage des properties des collections
@@ -90,7 +91,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private boolean flagScanLocal=false;       // true si on a des MOCs dans le multiprop local
    
    private DirectoryTree dirTree;          // Le JTree du directory
-   private ArrayList<TreeObjDir> dirList;  // La liste des collections connues
+   protected ArrayList<TreeObjDir> dirList;  // La liste des collections connues
    
    // Composantes de l'interface
    private QuickFilterField quickFilter; // Champ de filtrage rapide
@@ -123,8 +124,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       JPanel pTitre = new JPanel( new FlowLayout(FlowLayout.LEFT,35,0));
       pTitre.setBackground( cbg );
-      dir = new JLabel("Directory tree");
-      Util.toolTip(dir, "Tree of available data set collections from CDS and other IVOA servers.\n"
+      dir = new JLabel(DIRECTORY);
+      Util.toolTip(dir, "Directory of available data set collections from CDS and other IVOA servers.\n"
             + "Browse, filter, select, and load the collections you want to display...",true);
       dir.setFont(dir.getFont().deriveFont(Font.BOLD));
       dir.setForeground( Aladin.COLOR_LABEL);
@@ -254,7 +255,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if (e.getClickCount() == 2) loadMulti( treeObjs );
 
                // Simple clic => on montre les informations associées au noeud
-               else showInfo(treeObjs,e);
+               else {
+                  if( treeObjs.size()==1 ) selectInStack( treeObjs.get(0).internalId );
+                  showInfo(treeObjs,e);
+               }
             }
             
             iconCollapse.repaint();
@@ -296,7 +300,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }).start();
    }
    
-   /** ouvre l'arbre en montrant le noeud associé à l'id spécifié */
+   protected void selectInStack(String id) {
+      aladin.calque.selectPlan( id );
+   }
+   
+   /** Ouvre l'arbre en montrant le noeud associé au path spécifié */
+   protected void showTreePath(String path) {
+      if( !isVisible() || !hasCollections() || path==null ) return;
+      dirTree.showBranch(path);
+   }
+   
+   /** Ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) {
       if( !isVisible() || !hasCollections() || id==null ) return;
       int i = id.indexOf('~');
@@ -444,7 +458,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Retourne true si on a sélectionné quelque chose de scannable */
    protected boolean isScannable() {
-      return getSelectedTreeObjDirScannable().size()>1;
+      return getSelectedTreeObjDirScannable().size()>=1;
    }
 
    /** Récupération de la liste des TreeObj sélectionnées qui n'ont pas de MOC à disposition */
@@ -492,7 +506,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private void loadMulti(ArrayList<TreeObjDir> treeObjs) {
       if( treeObjs.size()==0 ) return;
       hideInfo();
+      if( tooMany(treeObjs.size()) ) return;
       for( TreeObjDir to : treeObjs ) to.load();
+   }
+   
+   private boolean tooMany( int n ) {
+      if( n>100 ) {
+         if( !aladin.confirmation("Do you really want to query "+n+" data sets\n"
+               + "to check which of them have a result inside the current view ?") ) return true;
+      }
+      return false;
    }
    
    /** Affiche la fenetre des infos des Collections passées en paramètre
@@ -582,10 +605,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       // Demande de confirmation du scan s'il concerne beaucoup de collections
       final int n = treeObjs.size();
-      if( n>100 ) {
-         if( !aladin.confirmation("Do you really want to query "+n+" data sets\n"
-               + "to check which of them have a result inside the current view ?") ) return;
-      }
+      if( tooMany(n) ) return;
       
       // On va travaillé avec un pool de threads
       final ExecutorService service = Executors.newFixedThreadPool(10);
@@ -649,7 +669,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
 
    /** Création/ouverture/fermeture du formulaire de filtrage de l'arbre des Collections */
-   private void openAdvancedFilterFrame() {
+   protected void openAdvancedFilterFrame() {
       if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
       if( directoryFilter.isVisible() ) directoryFilter.setVisible( false );
       else {
@@ -869,12 +889,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       HashMap<String,Integer> hs = new HashMap<String,Integer>();
       int n = model.countDescendance( hs );
       counter = hs;
+      System.out.println("Init counter n="+n);
       return n;
    }
    
    /** Mise à jour du titre au-dessus de l'arbre en fonction des compteurs */
    private void updateTitre(int nb) {
-      String t = "Directory tree";
+      String t = DIRECTORY;
       if( nb!=-1 && dirList==null && nb<dirList.size() ) {
          t = "<html>"+t+"<font color=\"#D0D0F0\"> &rarr; "+nb+" / "+dirList.size()+"</font></html>";
 
@@ -913,13 +934,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( mustBeActivated ) model.createTreeBranch( to );
       }
       
-      int n;
-      if( initCounter ) n=initCounter( model );
-      else n=model.countDescendance();
-      updateTitre(n);
+      if( initCounter ) initCounter( model );
+      else  updateTitre( model.countDescendance() );
 
       // Répercussion des états des feuilles sur les branches
-      if( iconInside.isAvailable() && !insideActivated ) model.populateFlagIn();
+      model.populateFlagIn();
       
       // Remplacement du model dans l'arbre affiché
       dirTree.setModel( model );
@@ -1070,17 +1089,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       comboFilter.updateWidgets();
    }
    
-   static private enum ResumeMode { NORMAL, FORCE, LOCALADD };
+   static protected enum ResumeMode { NORMAL, FORCE, LOCALADD };
 
    /** Réaffichage de l'arbre en fonction des Hips in/out de la vue courante */
    protected void resumeIn() { resumeIn( ResumeMode.NORMAL ); }
    protected void resumeIn( ResumeMode mode) {
       if( !checkIn( mode ) ) return;
       if( iconInside.isActivated() ) resumeTree();
-      else {
-         ((DirectoryModel)dirTree.getModel()).populateFlagIn();
-         repaint();
-      }
+      ((DirectoryModel)dirTree.getModel()).populateFlagIn();
+      repaint();
    }
 
    /** Positionnement des flags isHidden() de l'arbre en fonction des contraintes de filtrage
@@ -1274,7 +1291,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return dirTree==null || dirTree.root==null ;
    }
 
-   /** Traitement à applique après la génération ou la régénération de l'arbre */
+   /** Traitement à appliquer après la génération ou la régénération de l'arbre */
    private void postTreeProcess(boolean minimalExpand) {
       
 //      filter.setEnabled( dialogOk() );
@@ -1430,6 +1447,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       listReg.add( new TreeObjDir(aladin,id,prop) );
    }
    
+//   static private final String [] CS_AUTH      = { "archive.stsci.edu","nasa.heasarc", "irsa.ipac","uk.ac.le.star.tmpledas","wfau.roe.ac.uk","org.gavo.dc" };
+//   static private final String [] CS_AUTH_NAME = { "STScI","HEASARC","IRSA","LEDAS","WFAU","GAVO" };
+   
    /** Ajustement des propriétés, notamment pour ajouter le bon client_category
     * s'il s'agit d'un catalogue */
    private void propAdjust(String id, MyProperties prop) {
@@ -1450,7 +1470,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          boolean isSSA  = prop.getProperty("ssa_service_url")!=null;
          boolean isTAP  = prop.getProperty("tap_service_url")!=null;
          String subCat = isHips ? "HiPS": isCS || isTAP ? "Catalog by CS,TAP" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : "Miscellaneous";
-         category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
+         
+//         if( isCS ) {
+//            String auth = Util.getSubpath(id, 0, 1);
+//            int i;
+//            if( (i=Util.indexInArrayOf(auth, CS_AUTH, true))>=0 ) category = "Catalog/"+CS_AUTH_NAME[i];
+//         }
+         
+         if( category==null ) category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
          
          // On trie un peu les branches
@@ -1490,9 +1517,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private void propAdjust1(String id, MyProperties prop) {
 
       String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
-      if( type==null || type.indexOf("catalog")<0 || !id.startsWith("CDS/") ) return;
+      if( type==null || type.indexOf("catalog")<0 ) return;
       
       String category=null;
+      
+      if( !id.startsWith("CDS/") ) {
+         category = prop.get(Constante.KEY_CLIENT_CATEGORY);
+         if( category.equals("Catalog") ) prop.replaceValue(Constante.KEY_CLIENT_CATEGORY,null);
+         return;
+      }
+      
       
       if( id.equals("CDS/Simbad") ) category = "Data base";
       else {
@@ -1504,18 +1538,21 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( code==null ) return;
          
          String sortPrefix = "";
+//         String vizier = "/CDS VizieR";
+         String vizier = "";
+         
          boolean flagJournal = code.equals("J");
          if( flagJournal ) {
             String journal = getJournalCode(id);
-            category = "Catalog/CDS VizieR/Journal table/"+journal;
+            category = "Catalog"+vizier+"/Journal table/"+journal;
             sortPrefix = journal;
             
          } else {
             int c = Util.indexInArrayOf(code, CAT_CODE);
-            if( c==-1 ) category = "Catalog/CDS VizieR/"+code;   // Catégorie inconnue
+            if( c==-1 ) category = "Catalog"+vizier+"/"+code;   // Catégorie inconnue
             
             else {
-               category = "Catalog/CDS VizieR/"+CAT_LIB[c];
+               category = "Catalog"+vizier+"/"+CAT_LIB[c];
                sortPrefix=String.format("%02d",c);
                
            }
@@ -1785,7 +1822,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                   cacheWrite();
                   final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
                   SwingUtilities.invokeLater(new Runnable() {
-                     public void run() { replaceTree(tmpListReg); stopTimer(); }
+                     public void run() {
+                        replaceTree(tmpListReg);
+                        stopTimer();
+                     }
                   });
                } else stopTimer();
                quickFilter.setText("");
@@ -1810,7 +1850,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                   cacheWrite();
                   final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
                   SwingUtilities.invokeLater(new Runnable() {
-                     public void run() { replaceTree(tmpListReg); stopTimer(); }
+                     public void run() {
+                        replaceTree(tmpListReg);
+                        stopTimer();
+                     }
                   });
                } else stopTimer();
             }
@@ -2416,7 +2459,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( treeObjs.size()==1 ) {
             
             /* if( to.hasPreview() ) */ preview = new Preview( to );
-            
             // Info
             if( to.hasInfo() ) {
                b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Info.png")));
@@ -2443,12 +2485,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
          } else {
             
-            b = new JButton("Coll/Exp"); b.setMargin( new Insets(2,4,2,4));
-            Util.toolTip(b,"Collapse/Expand the selected collections in the tree",true);
-            control.add(b);
-            b.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) { iconCollapse.submit(); }
-            });
+//            b = new JButton("Coll/Exp"); b.setMargin( new Insets(2,4,2,4));
+//            Util.toolTip(b,"Collapse/Expand the selected collections in the tree",true);
+//            control.add(b);
+//            b.addActionListener(new ActionListener() {
+//               public void actionPerformed(ActionEvent e) { iconCollapse.submit(); }
+//            });
             
             if( flagScan ) {
                b = new JButton("Scan only"); b.setMargin( new Insets(2,4,2,4));

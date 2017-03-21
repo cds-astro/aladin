@@ -149,7 +149,7 @@ import healpix.essentials.Vec3;
  * <BR>
  * Elle fonctionne a la fois en Applet ou en Standalone via la fonction main()
  *
- * @author   Pierre Fernique [CDS], Thomas Boch [CDS], Anaï¿½s Oberto[CDS], Franï¿½ois Bonnarel [CDS]
+ * @author   Pierre Fernique [CDS], Thomas Boch [CDS], Anaïs Oberto[CDS], François Bonnarel [CDS]
  *
  * The beta version incorporates new features in test phase for the next official Aladin version.<BR>
  * The stability of these features is not totally guaranteed.
@@ -217,7 +217,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.611";
+   static public final    String VERSION = "v9.614";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -234,25 +234,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+
          " - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2017 Universitï¿½ de Strasbourg/CNRS - by CDS - Distributed under GNU GPL v3";
+   static String COPYRIGHT         = "(c) 2017 Université de Strasbourg/CNRS - by CDS - Distributed under GNU GPL v3";
 
-   static protected String CACHE = ".aladin"; // Nom du rï¿½pertoire cache
-   static protected String CACHEDIR = null;   // Filename du rï¿½pertoire cache, null si non encore
-   // crï¿½ï¿½, "" si impossible ï¿½ crï¿½er
+   static protected String CACHE = ".aladin"; // Nom du répertoire cache
+   static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
+   // crée, "" si impossible à créer
 
    static protected final String FOVURL  = "http://"+Aladin.ALADINMAINSITE+"/java/FOVs.xml";
    static protected final String TREEURL = "http://"+Aladin.ALADINMAINSITE+"/java/Tree.dic";
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
-   // Gï¿½re le mode particuliers
+   // Gère le mode particuliers
    static boolean LOG=true;  // false si on inhibe les logs
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
-   public static boolean PROTO=true;    // true si on tourne en mode PROTO (nï¿½cessite Proto.jar)
+   public static boolean PROTO=true;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
-   static public boolean SLIDERTEST=false; // true pour les tests de dï¿½veloppement sur le slider de transparent actif mï¿½me pour les plans de rï¿½fï¿½rence
-   static boolean setOUTREACH=false; // true si le mode OUTREACH a ï¿½tï¿½ modifiï¿½ par paramï¿½tre sur la ligne de commande
-   static int ALIASING=0;            // 0-dï¿½faut systï¿½me, 1-actif, -1-dï¿½sactivï¿½
+   static public boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
+   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
+   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
 
    // La couleur du fond
    
@@ -268,7 +268,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final Color ORANGE   = new Color(255,137,58);
    static final Color LIGHTORANGE   = new Color(255,211,58);
 
-   // couleur de fond du bouton Load... lorsqu'il est opï¿½rationnel
+   // couleur de fond du bouton Load... lorsqu'il est opérationnel
    //    static final Color COLOR_LOAD_READY = new Color(110,230,50);
    static final Color COLOR_LOAD_READY = new Color(50,205,110);
    
@@ -298,9 +298,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_MEASUREMENT_LINE;
    static public Color COLOR_MEASUREMENT_ANCHOR_HASPUSHED;
    static public Color COLOR_MEASUREMENT_FOREGROUND_COMPUTED;    // couleur pour valeurs calculees
-   static public Color COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE;  // bleu clair - ligne montrï¿½e
-   static public Color COLOR_MEASUREMENT_BORDERS_MOUSE_CELL;  // bleu foncï¿½ - bordure de la cellule sous la souris
-   static public Color COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL;  // Jaune pï¿½le - sous la souris
+   static public Color COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE;  // bleu clair - ligne montrée
+   static public Color COLOR_MEASUREMENT_BORDERS_MOUSE_CELL;  // bleu foncé - bordure de la cellule sous la souris
+   static public Color COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL;  // Jaune pâle - sous la souris
    static public Color COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE;
    static public Color COLOR_LABEL;
    static public Color COLOR_ICON_ACTIVATED;
@@ -402,26 +402,26 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static String APPLETSERVER=null;
    static String HOSTSERVER=null;
 
-   // Le nom de la base de donnï¿½es qui a lancï¿½ l'applet ( champ &from=XXX dans l'url )
+   // Le nom de la base de données qui a lancé l'applet ( champ &from=XXX dans l'url )
    static String FROMDB=null;
 
-   // Les noms des fichiers GLU locaux additionnels passï¿½s en ligne de commande
+   // Les noms des fichiers GLU locaux additionnels passés en ligne de commande
    static String GLUFILE=null;
 
-   // url pour passer un script ï¿½ l'applet
+   // url pour passer un script à l'applet
    static String SCRIPTFILE=null;
 
-   // Les noms des fichiers Strings locaux additionnels passï¿½s en ligne de commande
+   // Les noms des fichiers Strings locaux additionnels passés en ligne de commande
    static String STRINGFILE=null;
 
-   // Le nom de la machine distante qui utilise Aladin Java ï¿½ travers un cgi
+   // Le nom de la machine distante qui utilise Aladin Java à travers un cgi
    static String RHOST=null;
 
-   // Le mode de dï¿½marrage d'Aladin (full, frame, preview, le dï¿½faut si null)
+   // Le mode de démarrage d'Aladin (full, frame, preview, le défaut si null)
    protected String SCREEN=null;
-   private boolean flagScreen=false;   // true si le mode SCREEN doit ï¿½tre pris en compte (voir paint())
+   private boolean flagScreen=false;   // true si le mode SCREEN doit être pris en compte (voir paint())
 
-   // true si on tourne sous LINUX (pour pallier ï¿½ un bug MemoryImage.newPixel)
+   // true si on tourne sous LINUX (pour pallier à un bug MemoryImage.newPixel)
    static boolean ISLINUX=false;
 
    static boolean ISJNLP=false;
@@ -431,7 +431,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // true si mode robot supporte !
    static boolean ROBOTSUPPORT=false;
 
-   // true si Centre de rotation FOV dï¿½portï¿½ supportï¿½
+   // true si Centre de rotation FOV déporté supporté
    static boolean ROTATEFOVCENTER=true;
 
    // true si le reseau est accessible
@@ -449,10 +449,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // true si on charge les bookmarks
    static boolean BOOKMARKS=true;
 
-   // true si on effectue un test de prï¿½sence du rï¿½seau
+   // true si on effectue un test de présence du réseau
    static boolean TESTNETWORK=true;
 
-   // true si on compare le numï¿½ro de version avec la version courante
+   // true si on compare le numéro de version avec la version courante
    static boolean TESTRELEASE=true;
 
    // true si on ne lance pas de hub interne, quelles que soient les preferences
@@ -472,8 +472,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String OUTREACHPREFIX = "OUTREACH:";
    static final String NOAPPLETPREFIX = "NOAPPLET:";
 
-   // Si une image est plus petite que cette limite, on prï¿½fï¿½rera garder les pixels
-   // d'origine (PlanImage.pixelsOrigin) en mï¿½moire pour ï¿½viter des accï¿½s disques
+   // Si une image est plus petite que cette limite, on préférera garder les pixels
+   // d'origine (PlanImage.pixelsOrigin) en mémoire pour éviter des accès disques
    // pour chaque valeur de pixel
    static final int LIMIT_PIXELORIGIN_INMEM = 8*1024*1024;
 
@@ -484,18 +484,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static long MAXMEM = Runtime.getRuntime().maxMemory()/(1024L*1024L);
 
    // Marge limite en MO pour le chargement des cubes en RAM.
-   // Il faut au-moins 500Mo de disponible pour une telle stratï¿½gie
+   // Il faut au-moins 500Mo de disponible pour une telle stratégie
    //    static int MARGERAM = !PROTO ? 20000 : MAXMEM>500 ? 150 : 500;
    static int MARGERAM = MAXMEM>500 ? 150 : 500;
 
    // Le nom du dico GLU specifique a Aladin
    static String ALAGLU = "AlaGlu.dic";
 
-   // Caractï¿½res (ï¿½ventuellement plusieurs) utilisï¿½s comme sï¿½parateur
+   // Caractères (éventuellement plusieurs) utilisés comme séparateur
    // de colonne pour les tables CSV
    protected String CSVCHAR = "\t";
 
-   // True si par dï¿½faut l'outil Tag doit centrer sur l'objet le plus proche
+   // True si par défaut l'outil Tag doit centrer sur l'objet le plus proche
    protected boolean CENTEREDTAG = false;
 
    // Le mapping des pixels par defaut (si surcharge via setconf)
@@ -505,10 +505,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Le mapping du background par defaut (si surcharge via setconf)
    protected String BKGDEFAULT = null;
 
-   // Un filtre dï¿½diï¿½ doit-il ï¿½tre appliquï¿½ par dï¿½faut
+   // Un filtre dédié doit-il être appliqué par défaut
    protected String FILTERDEFAULT=null;
 
-   // Le numï¿½ro de session d'Aladin
+   // Le numéro de session d'Aladin
    static private int ALADINSESSION = -1;
    protected int aladinSession=0;
    
@@ -527,31 +527,31 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //   private Banner banner=null;
 
    // Les objets associees a l'interface
-   public FrameFullScreen fullScreen=null;   // Gï¿½re le Frame du mode plein ï¿½cran, null si non actif
-   public Bookmarks bookmarks;          // Gï¿½re les favoris
+   public FrameFullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
+   public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
    IconMatch match;                  // Gere le logo pour la grille
    IconStudy look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
-   Northup northup;              // Gï¿½re le logo pour le Nord en haut
-   Hdr pix;                      // Gï¿½re le logo pour le passage en full dynamique
+   Northup northup;              // Gère le logo pour le Nord en haut
+   Hdr pix;                      // Gère le logo pour le passage en full dynamique
    ViewControl viewControl;	     // Gere le logo de controle des views
    Tips urlStatus;               // Gere la ligne de l'info sur les URLs
-   MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mï¿½moire
+   MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
    Mesure mesure;                // Gere la "Frame of measurements"
-//   MySplitPaneMesure splitMesureHeight;     // Gï¿½re la sï¿½paration mesure/Vue
-   MySplitPane splitMesureHeight;     // Gï¿½re la sï¿½paration mesure/Vue
-   MySplitPane splitZoomHeight;  // Gï¿½re la sï¿½paration pile/zoom
-   MySplitPane splitZoomWidth;   // Gï¿½re la sï¿½paration view/pile-zoom
-   MySplitPane splitHiPSWidth;    // Gï¿½re la sï¿½paration hips/view
-   Directory directory;        // Gï¿½re le "HiPS market"
-   Search search;                // Gï¿½re le bandeau de recherche dans les mesures
+//   MySplitPaneMesure splitMesureHeight;     // Gère la séparation mesure/Vue
+   MySplitPane splitMesureHeight;     // Gère la séparation mesure/Vue
+   MySplitPane splitZoomHeight;  // Gère la séparation pile/zoom
+   MySplitPane splitZoomWidth;   // Gère la séparation view/pile-zoom
+   MySplitPane splitHiPSWidth;    // Gère la séparation hips/view
+   Directory directory;        // Gère le "HiPS market"
+   Search search;                // Gère le bandeau de recherche dans les mesures
    public ToolBox toolBox;       // Gere la "Tool bar"
    public Calque calque;         // Gere a la fois les plans et le zoom
    Localisation localisation;    // Gere l'affichage de la "Localisation"
-   ProjSelector projSelector;    // Gï¿½re le sï¿½lecteur de la projection par dï¿½faut
+   ProjSelector projSelector;    // Gère le sélecteur de la projection par défaut
    Logo logo;                    // Gere le "logo"
    PlasticWidget plasticWidget;  // Gere le widget PLASTIC
    PlasticPreferences plasticPrefs; // Gere les preferences PLASTIC
@@ -562,14 +562,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameColorMap frameCM;              // Gere la fenetre du controle de la table des couleurs
    FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB
    FrameBlink frameBlink;        // Gere la fenetre pour la creation des plans Blink
-   FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opï¿½ration arithmï¿½tique
-   FrameMocFiltering frameMocFiltering;   // Gere la fenetre pour les opï¿½rations de filtrage par les MOCs
-   FrameMocOperation frameMocOperation;   // Gere la fenetre pour les opï¿½rations sur les MOCs
-   FrameMocGenImgs frameMocGenImgs; // Gere la fenetre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir d'une collection d'images
-   FrameMocGenImg frameMocGenImg;   // Gere la fenetre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir d'images
-   FrameMocGenProba frameMocGenProba;   // Gere la fenetre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir d'un map de proba
-   FrameMocGenCat frameMocGenCat;   // Gere la fenetre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir de catalogues
-   FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir d'un autre MOC de meilleure rï¿½solution
+   FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opération arithmétique
+   FrameMocFiltering frameMocFiltering;   // Gere la fenetre pour les opérations de filtrage par les MOCs
+   FrameMocOperation frameMocOperation;   // Gere la fenetre pour les opérations sur les MOCs
+   FrameMocGenImgs frameMocGenImgs; // Gere la fenetre pour la génération d'un MOC à partir d'une collection d'images
+   FrameMocGenImg frameMocGenImg;   // Gere la fenetre pour la génération d'un MOC à partir d'images
+   FrameMocGenProba frameMocGenProba;   // Gere la fenetre pour la génération d'un MOC à partir d'un map de proba
+   FrameMocGenCat frameMocGenCat;   // Gere la fenetre pour la génération d'un MOC à partir de catalogues
+   FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution
    FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
    FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
    FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
@@ -577,44 +577,44 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameColumnCalculator frameCalc; // Gere la fenetre pour ajout de colonnes
    FrameContour frameContour;    // Gere la fenetre pour les choix de niveaux de contour
    FrameInfo frameInfo;          // Gere la fenetre d'informations sur un noeud de l'arbre
-   FrameInfoServer frameInfoServer; // Gï¿½re la fenï¿½tre des infos sur un serveur
+   FrameInfoServer frameInfoServer; // Gère la fenêtre des infos sur un serveur
    FrameMacro frameMacro;        // Gere la fenetre des Macros
-   FrameVOTool frameVOTool;      // Gï¿½re les applications VO accessibles par Aladin
-   protected FrameProp frameProp;// Fenï¿½tre des propriï¿½tï¿½s individuelles d'un objet graphique
-   public FrameAllskyTool frameAllsky;  // Gï¿½re la creation locale d'un allsky
+   FrameVOTool frameVOTool;      // Gère les applications VO accessibles par Aladin
+   protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
+   public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
    public Console console;                  // Gere la fenetre de la console
    public Command command=null;	      // Gere les commandes asynchrones
-   Synchro synchroServer;              // Gï¿½re les synchronisations des servers
-   Synchro synchroPlan;              // Gï¿½re les synchronisations des Plans
+   Synchro synchroServer;              // Gère les synchronisations des servers
+   Synchro synchroPlan;              // Gère les synchronisations des Plans
    FrameNewCalib frameNewCalib=null; // Gere la fenetre de recalibration astrometrique
    public Configuration configuration;	      // Configuration utilisateur
-   public KernelList kernelList;    // Gï¿½re la liste des noyaux de convolution
-   static protected Chaine chaine;     // Gï¿½re les chaines de textes (support multilangage
-   AppMessagingInterface appMessagingMgr;    // Gï¿½re la connexion/l'envoi de messages PLASTIC/SAMP
+   public KernelList kernelList;    // Gère la liste des noyaux de convolution
+   static protected Chaine chaine;     // Gère les chaines de textes (support multilangage
+   AppMessagingInterface appMessagingMgr;    // Gère la connexion/l'envoi de messages PLASTIC/SAMP
 
    // Les objets internes
    public Glu glu=null;   // Gere les interactions avec le GLU
    public DataLinkGlu datalinkGlu=null;
-   static Cache cache=null; // Gï¿½re le cache
-   protected Plugins plugins;    // Accï¿½s aux plugins
+   static Cache cache=null; // Gère le cache
+   protected Plugins plugins;    // Accès aux plugins
    CardLayout cardView;          // Gere la permutation entre le "Help" et la "View"
    CreatObj co;		          // pour gerer la creation parallele des widgets
    public Save save=null;		          // pour gerer les sauvegardes
    ExtApp extApp = null;         // Application cooperative a Aladin
    String javaVersion;
-   static boolean macPlateform = false; // Aladin est-il exï¿½cutï¿½ sur un Mac ?
-   static boolean winPlateform = false; // Aladin est-il exï¿½cutï¿½ sur un Windows ?
-   private String lastDir=null;  // Le dernier rï¿½pertoire utilisï¿½
-   private final long startTime = System.currentTimeMillis();  // Date de dï¿½marrage
+   static boolean macPlateform = false; // Aladin est-il exécuté sur un Mac ?
+   static boolean winPlateform = false; // Aladin est-il exécuté sur un Windows ?
+   private String lastDir=null;  // Le dernier répertoire utilisé
+   private final long startTime = System.currentTimeMillis();  // Date de démarrage
    private long sizeCache=0L;    // Taille du cache disque pour les grosses images
 
    // plugin VOSpec
    Object vospec;
 
-   // rï¿½fï¿½rence sur la derniï¿½re fenetre FilterProperties ï¿½ avoir ï¿½tï¿½ crï¿½ï¿½e (pour robot)
+   // référence sur la dernière fenetre FilterProperties à avoir été créée (pour robot)
    FilterProperties lastFilterCreated;
 
-   // rï¿½fï¿½rence sur le bouton Load (pour robot)
+   // référence sur le bouton Load (pour robot)
    MyButton loadBtn;
 
    // Les memorisations en vue de mises a jour
@@ -651,12 +651,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    JButton ExportYourWork,searchData,avant,apres;
 
    static boolean STANDALONE = false;	// True si on fonctionne en mode standalone
-   static boolean SIGNEDAPPLET = false;// True si on fonctionne en mode applet signï¿½
+   static boolean SIGNEDAPPLET = false;// True si on fonctionne en mode applet signé
 
    // Juste pour les essais NED
    static String CGIPATH = null;
 
-   // Pour savoir si on a dï¿½jï¿½ affichï¿½ un message d'usage restreint de l'applet
+   // Pour savoir si on a déjà affiché un message d'usage restreint de l'applet
    static private boolean warningRestricted = false;
 
    // Gestion du niveau de trace
@@ -674,9 +674,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static int iv=0;              // Indice de la performance JAVA
    //    boolean flagInsets=false;     // True si on a deja pris en compte le Insets du peer
    boolean print=false;	  // true si on est entrain d'imprimer
-   protected boolean gc=true;	// false si on a inhibï¿½ l'appel ï¿½ Aladin.gc()
+   protected boolean gc=true;	// false si on a inhibé l'appel à Aladin.gc()
    static Applet extApplet=null; // Decrit l'applet qui aurait appele launch()
-   protected boolean firstLoad=true; // true si on n'a pas encore affichï¿½ le ServerDialog
+   protected boolean firstLoad=true; // true si on n'a pas encore affiché le ServerDialog
    protected boolean flagDetach=true; // true si on tourne aladin dans sa propre frame
 
 
@@ -684,7 +684,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final int GETHEIGHT  = 15;		// Cochonnerie de getHeight()
 
    // Les menus;
-   String MFILE,MSAVE,OPENLOAD,LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
+   String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,
+          LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
    MIMAGE,MCATALOG,MOVERLAY,MDOC ;
    String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
    String MBGKG; // menus pour les backgrounds
@@ -708,7 +709,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    HPXCREATE,HPXDUMP,FOVEDITOR,HPXGENERATE,HPXGEN,HPXGENMAP,HPXGENRGB,GETOBJ;
    String JUNIT=PROTOPREFIX+"*** Aladin internal code tests ***";
 
-   /** Retourne l'objet gï¿½rant les chaines */
+   /** Retourne l'objet gérant les chaines */
    public static Chaine getChaine() { return chaine; }
 
    /**
@@ -722,8 +723,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    private boolean flagFrame=false;
 
-   /** Va tester s'il s'agit d'une applet signï¿½ ou non et va lancer l'applet dans une fenï¿½tre ï¿½ part si le parametre
-    * inFrame est prï¿½sent */
+   /** Va tester s'il s'agit d'une applet signé ou non et va lancer l'applet dans une fenêtre à part si le parametre
+    * inFrame est présent */
    @Override
    public void init() {
       try {
@@ -762,7 +763,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          long t=System.currentTimeMillis();
          while( isLogging() ) {
             Util.pause(500);
-            if( System.currentTimeMillis()-t>30000 ) break; // Au-delï¿½ de 30s on quitte
+            if( System.currentTimeMillis()-t>30000 ) break; // Au-delà de 30s on quitte
          }
       }
 
@@ -807,7 +808,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          trace = getParameter("-debug");
          if( trace!=null ) levelTrace=4;
 
-         // dï¿½sactivation du lancement automatique du hub interne
+         // désactivation du lancement automatique du hub interne
          try { if( getParameter("-nohub")!=null ) NOHUB = true; } catch(Exception e) {}
 
          try {
@@ -825,25 +826,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
             e1.printStackTrace();
          }
 
-         // Recupï¿½ration du nom du lanceur de l'applet (Simbad, VizieR, NED...)
+         // Recupération du nom du lanceur de l'applet (Simbad, VizieR, NED...)
          try { FROMDB = getParameter("from"); } catch( Exception e ) {}
 
-         // Recupï¿½ration d'une ï¿½ventuelle surcharge glu
+         // Recupération d'une éventuelle surcharge glu
          try { GLUFILE = getParameter("-glufile"); } catch( Exception e ) {}
 
-         // Recupï¿½ration d'un script passï¿½ par url
+         // Recupération d'un script passé par url
          try { SCRIPTFILE = getParameter("-scriptfile"); } catch( Exception e ) {}
 
-         // Recupï¿½ration du mode de dï¿½marrage
+         // Recupération du mode de démarrage
          try {
             SCREEN = getParameter("-screen");
             flagScreen = SCREEN!=null;
          } catch( Exception e ) {}
 
-         // Dans le cas d'une applet non signï¿½e,
-         // on va vï¿½rifier que le site qui a fourni l'applet Aladin est aussi un site GLU,
-         // sinon il faudra demander un redï¿½marrage sur un site Aladin complet puisque le client
-         // ne supporte pas l'applet signï¿½e
+         // Dans le cas d'une applet non signée,
+         // on va vérifier que le site qui a fourni l'applet Aladin est aussi un site GLU,
+         // sinon il faudra demander un redémarrage sur un site Aladin complet puisque le client
+         // ne supporte pas l'applet signée
          String load=null;
          if( isNonCertifiedApplet() ) {
             try {
@@ -873,7 +874,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                   if( s!=null ) param=param+"&"+var[i]+"="+URLEncoder.encode(s);
                }
 
-               // Simple redï¿½marrage ou demande de redirection
+               // Simple redémarrage ou demande de redirection
                String mode = load.equals("redirect")?"redirect":"launching";
 
                try {
@@ -912,41 +913,41 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return super.getAppletContext();
    }
 
-   /** Mï¿½morisation du dernier rï¿½pertoire utilisï¿½ dans Aladin */
+   /** Mémorisation du dernier répertoire utilisé dans Aladin */
    protected void memoDefaultDirectory(FileDialog f) { lastDir = f.getDirectory();  }
    protected void memoDefaultDirectory(String f)     { lastDir = f; }
 
-   /** Selection du dernier rï¿½pertoire utilisï¿½ dans Aladin */
+   /** Selection du dernier répertoire utilisé dans Aladin */
    protected void setDefaultDirectory(FileDialog f) {
       f.setDirectory(getDefaultDirectory());
    }
 
-   /** Selection du dernier rï¿½pertoire utilisï¿½ dans Aladin */
+   /** Selection du dernier répertoire utilisé dans Aladin */
    protected void setDefaultDirectory(CDSFileDialog f) {
       f.setDirectory(getDefaultDirectory());
    }
 
 
-   /** Rï¿½cupï¿½ration du rï¿½pertoire par dï¿½faut de l'utilisateur */
+   /** Récupération du répertoire par défaut de l'utilisateur */
    public String getDefaultDirectory() {
       String dir=null;
 
       if( lastDir!=null ) dir=lastDir;
       if( dir==null ) dir=configuration.get(Configuration.DIR);
 
-      // On va essayer le rï¿½pertoire courant de l'utilisateur
+      // On va essayer le répertoire courant de l'utilisateur
       if( dir==null ) {
          try { dir = System.getProperty("user.dir");
          } catch( Exception e ) { dir=null; }
       }
 
-      // On va essayer le rï¿½pertoire HOME de l'utilisateur
+      // On va essayer le répertoire HOME de l'utilisateur
       if( dir==null ) {
          try { dir = System.getProperty("user.home");
          } catch( Exception e ) { dir=null; }
       }
 
-      // Toujours pas de rï¿½pertoire par dï¿½faut => on prend celui qui contient Aladin.jar
+      // Toujours pas de répertoire par défaut => on prend celui qui contient Aladin.jar
       if( dir==null ) {
          if( Aladin.HOME==null ) setAladinHome();
          dir = Aladin.HOME.substring(0,Aladin.HOME.length()-1);
@@ -954,10 +955,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return dir;
    }
 
-   /** Complï¿½te le filename si nï¿½cessaire par le rï¿½pertoire par dï¿½faut
-    *  Rï¿½ï¿½crit ï¿½calement les URLs du type file://localhost/<path> pour qu'elles soient comprises par Java
+   /** Complète le filename si nécessaire par le répertoire par défaut
+    *  Réécrit également les URLs du type file://localhost/<path> pour qu'elles soient comprises par Java
     *
-    * @param filename le nom de fichier tel que reï¿½u par l'application
+    * @param filename le nom de fichier tel que reçu par l'application
     */
    public String getFullFileName(String filename) {
       if( filename==null || filename.length()==0 ) return filename;
@@ -967,8 +968,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       File f;
       try {
          if( filename.startsWith("file:/")) {
-            // les URLs du type file://localhost/<path> ne sont pas bien traitï¿½es
-            // et Java lance une exception si on crï¿½e un fichier du type new File(new URI("file://localhost/path"))
+            // les URLs du type file://localhost/<path> ne sont pas bien traitées
+            // et Java lance une exception si on crée un fichier du type new File(new URI("file://localhost/path"))
             int idx = filename.indexOf("file://localhost");
             if( idx>=0 ) {
                f = new File(new URI("file://"+filename.substring(idx+16)));
@@ -1020,7 +1021,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       BCOURIER= new Font(s1,Font.PLAIN+Font.BOLD,Aladin.SIZE);
    }
 
-   /** Crï¿½ation des chaines dans la langue */
+   /** Création des chaines dans la langue */
    protected void creatChaine() {
       MBGKG   = chaine.getString("MBKGD");
       MEDIT   = chaine.getString("MEDIT");
@@ -1032,6 +1033,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOVERLAY= chaine.getString("MOVERLAY");
       OPENFILE= chaine.getString("MOPENFILE");
       OPENLOAD= chaine.getString("MOPENLOAD");
+//      OPENDIRIMG= chaine.getString("MOPENDIRIMG");
+//      OPENDIRCAT= chaine.getString("MOPENDIRCAT");
+//      OPENDIRJ= chaine.getString("MOPENDIRJ");
+//      OPENDIRDB= chaine.getString("MOPENDIRDB");
+//    OPENDIRCUBE= chaine.getString("MOPENDIRCUBE");
+//    FILTERDIR= chaine.getString("MFILTERDIR");
       LASTFILE=chaine.getString("MLASTFILE");
       OPENURL = chaine.getString("MOPENURL");
       LOADIMG = chaine.getString("MLOADIMG");
@@ -1216,7 +1223,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       STOPINTERNALHUB = BETAPREFIX+chaine.getString("PWSTOPINTERNALHUB");
    }
 
-   /** Crï¿½ation du menu principal sous la forme d'un tableau ï¿½ trois dimensions permettant
+   /** Création du menu principal sous la forme d'un tableau à trois dimensions permettant
     * deux sous-niveaux de menus
     * voir createJBar();
     */
@@ -1284,6 +1291,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{NEW+"|"+meta+" N"},
                {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
             },
+
             { {MEDIT},
                {"?"+PAN+"|"+alt+" Z"},
                {ZOOM,ZOOMM+"|F2",ZOOMP+"|F3","","?"+ZOOMPT+"|F4"},
@@ -1366,6 +1374,32 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{SENDBUG}, {NEWS}, {ABOUT}
             },
       };
+      
+      if( PROTO ) {
+         
+         OPENDIRIMG     = "Image surveys...";
+         OPENDIRCUBE    = "Cube surveys...";
+         OPENDIRCAT     = "Catalogs (VizieR, ...)";
+         OPENDIRDB      = "Data bases (Simbad, NED, ...)";
+         
+         OPENFILE       = "Load local file...";
+         OPENURL        = "Load direct URL...";
+         OPENLOAD       = "Open server selector...";
+         FILTERDIR      = "Filter data collections...";
+         
+         String[][] menu1 = new String[][] {  {MFILE},
+            {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
+                 {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
+            {},{FILTERDIR},
+            {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
+            {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
+            {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
+            {},{MPRINT+"|"+meta+" P"},
+            {},{NEW+"|"+meta+" N"},
+            {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
+         };
+         menu[0] = menu1;
+      }
 
       // ajout menu interop
       if( PLASTIC_SUPPORT ) {
@@ -1399,7 +1433,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Retourne true si la barre de menu et/ou les ComboBox de
-    * localisation et de pixel sont dï¿½roulï¿½ et cachent une partie
+    * localisation et de pixel sont déroulé et cachent une partie
     * de la zone des vues (voir ViewSimple.mouseEntered()
     * et ViewSimple.mouseExited())
     */
@@ -1421,7 +1455,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       updateLastFileMenu();
    }
    
-   /** Met ï¿½ jour le menu des fichiers rï¿½cemment ouverts */
+   /** Met à jour le menu des fichiers récemment ouverts */
    protected void updateLastFileMenu() {
       if( miLastFile==null ) return;
       if( configuration.lastFile==null ) {
@@ -1453,7 +1487,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Met ï¿½ jour le menu Interop
+    * Met à jour le menu Interop
     */
    private void updateInteropMenu() {
       AppMessagingInterface mgr = getMessagingMgr();
@@ -1516,17 +1550,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
       miBroadcastTables.setEnabled(isRegistered && nbCatalog>0 && tabApps.size()>0);
    }
 
-   /** Creation d'un JMenuBar en fonction d'un tableau ï¿½ 3 dimensionspermettant
+   /** Creation d'un JMenuBar en fonction d'un tableau à 3 dimensionspermettant
     * deux sous-niveaux de menus.
-    * - une dimension vide au niveau 1, ou une chaine vide au niveau 2 donne lieu ï¿½ un Sï¿½parateur
-    * - un menu qui commence par "?" va donner lieu ï¿½ une JCheckboxMenuItem
-    * - un menu qui commence par "%" var donner lieu ï¿½ un JRadioButtonMenuItem
+    * - une dimension vide au niveau 1, ou une chaine vide au niveau 2 donne lieu à un Séparateur
+    * - un menu qui commence par "?" va donner lieu à une JCheckboxMenuItem
+    * - un menu qui commence par "%" var donner lieu à un JRadioButtonMenuItem
     * { {Niveau0-A}, {Niveau1-A}, {}, {Niveau1-B,"",Niveau2-A}, {Niveau1-C} },
     * { {Niveau0-B}, ...
     */
    protected JMenuBar createJBar(String menu[][][]) {
       jBar = new JMenuBar();
-      boolean separator=false;     // pour ï¿½viter de sï¿½paration de suite
+      boolean separator=false;     // pour éviter de séparation de suite
 
       for( int i=0; i<menu.length; i++ ) {
          String s=menu[i][0][0];
@@ -1607,7 +1641,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       jBar.add(javax.swing.Box.createGlue());
       JButton b;
 
-      // Si applet, ajout d'un bouton tout ï¿½ droite pour proposer l'installation
+      // Si applet, ajout d'un bouton tout à droite pour proposer l'installation
       if( isApplet() ) {
          bDetach = b=new JButton(MDCH1);
          b.setBorderPainted(false);
@@ -1676,7 +1710,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } catch( Exception e ) { if( levelTrace>=3 ) e.printStackTrace(); }
 
 
-      // Chargement des plugins ï¿½ventuels
+      // Chargement des plugins éventuels
       if( !NOPLUGIN && !isApplet() && !ISJNLP ) {
          (new Thread("plugin search"){
             @Override
@@ -1690,10 +1724,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Pour les applications VO
       VOReload();
 
-      // Pour les fichiers rï¿½cents
+      // Pour les fichiers récents
       updateLastFileMenu();
       
-      // Ajout des formats de sauvegarde supportï¿½s
+      // Ajout des formats de sauvegarde supportés
       if( miSave!=null ) {
          miSave.removeAll();
          appendJMenu((JMenu)miSave,Save.getFormatMenu());
@@ -1706,7 +1740,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //          appendJMenu((JMenu)miConv,Kernel.getKernelMenu());
       //       }
 
-      // Chargement des filtres prï¿½dï¿½finis
+      // Chargement des filtres prédéfinis
       if( miFilterB!=null ) {
          miFilterB.removeAll();
          appendJMenu((JMenu)miFilterB,FilterProperties.getBeginnerFilters());
@@ -1715,7 +1749,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return jBar;
    }
 
-   /** Retourne le path ï¿½ la profondeur prof, ou null si impossible */
+   /** Retourne le path à la profondeur prof, ou null si impossible */
    private String prefixMenu(String pathMenu,int prof) {
       int pos=0;
       for( int i=0; i<prof-1; i++) pos = indexOfSlash(pathMenu,pos)+1;
@@ -1724,8 +1758,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return unBackSlash( pathMenu.substring(0,npos) );
    }
 
-   /** Retourne l'indice du prochain / ï¿½ partir de la position pos.
-    * Ne prend pas en compte les / prï¿½cï¿½dï¿½ de \ */
+   /** Retourne l'indice du prochain / à partir de la position pos.
+    * Ne prend pas en compte les / précédé de \ */
    private int indexOfSlash(String s, int pos ) {
       pos--;
       do { pos = s.indexOf('/',pos+1); }
@@ -1733,10 +1767,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return pos;
    }
 
-   /** Retourne true si le path ï¿½ la profondeur prof n'est pas terminï¿½ */
+   /** Retourne true si le path à la profondeur prof n'est pas terminé */
    private boolean hasSubMenu(String pathMenu,int prof) { return prefixMenu(pathMenu,prof)!=null; }
 
-   /** Dernier terme du path. ON doit prendre garde au / prï¿½fixï¿½ par \ qui ne
+   /** Dernier terme du path. ON doit prendre garde au / préfixé par \ qui ne
     * comptent pas */
    private String suffixMenu(String pathMenu) {
       int pos=pathMenu.length()+1;
@@ -1746,7 +1780,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return unBackSlash(pathMenu.substring(pos+1));
    }
 
-   /** Supprime les \ qui prï¿½cï¿½dent les / */
+   /** Supprime les \ qui précédent les / */
    private String unBackSlash(String s) {
       int n;
       StringBuffer res = new StringBuffer(n=s.length());
@@ -1757,7 +1791,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return res.toString();
    }
 
-   /** Crï¿½ation rï¿½cursive des sous-menus (utilisï¿½ par appendJMenu() */
+   /** Création récursive des sous-menus (utilisé par appendJMenu() */
    private JMenu createJMenu1(String []sm, int index, int prof) {
       String name = prefixMenu(sm[index],prof);
       JMenu jm = new JMenu(suffixMenu(name)+"...");
@@ -1765,8 +1799,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       ButtonGroup mg = null;
 
       for(int i=index; i<sm.length; i++ ) {
-         if( sm[i]==null ) continue;             // dï¿½jï¿½ traitï¿½
-         if( !sm[i].startsWith(name+"/") ) continue; // pas concernï¿½
+         if( sm[i]==null ) continue;             // déjà traité
+         if( !sm[i].startsWith(name+"/") ) continue; // pas concerné
          if( hasSubMenu(sm[i],prof+1) ) {
             jm.add(createJMenu1(sm,i,prof+1) );
          }
@@ -1785,17 +1819,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return jm;
    }
 
-   /** Ajout au menu passï¿½ en paramï¿½tre de la liste des chaines indiquï¿½es
-    * en paramï¿½tre. Les menus peuvent ï¿½tre rï¿½cursifs si ils sont construits
-    * avec un path. Exemple: Catalog/Browser. Les / qui ne dï¿½crivent pas
-    * la hiï¿½rarchie doivent ï¿½tre prï¿½cï¿½dï¿½s de \. Les menus prï¿½cï¿½dï¿½s du
-    * caractï¿½re % donnera lieu ï¿½ un JRadioMenu */
+   /** Ajout au menu passé en paramètre de la liste des chaines indiquées
+    * en paramètre. Les menus peuvent être récursifs si ils sont construits
+    * avec un path. Exemple: Catalog/Browser. Les / qui ne décrivent pas
+    * la hiérarchie doivent être précédés de \. Les menus précédés du
+    * caractère % donnera lieu à un JRadioMenu */
    private JMenu appendJMenu(JMenu jm,String []SM) {
       JMenuItem ji;
       ButtonGroup mg=null;
 
       // La copie est indispensable car on va utiliser le tableau pour "marquer"
-      // les items dï¿½jï¿½ traitï¿½s
+      // les items déjà traités
       String sm[] = new String[SM.length];
       System.arraycopy(SM,0,sm,0,SM.length);
 
@@ -1811,7 +1845,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                mg.add(ji);
             } else  {
                ji = new JMenuItem( unBackSlash(s) );
-               // ajout raccourci ctrl-I pour accï¿½s serveur Aladin
+               // ajout raccourci ctrl-I pour accès serveur Aladin
                if( s.equals(ALADIN_IMG_SERVER) ) {
                   ji.setAccelerator(KeyStroke.getKeyStroke(
                         KeyEvent.VK_I, macPlateform?ActionEvent.META_MASK:ActionEvent.CTRL_MASK));
@@ -1826,12 +1860,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
 
-   /** Mise en forme d'un sous-menu muni d'une extension pour dï¿½crire un touche d'accï¿½lï¿½ration
-    * Celle-ci est prï¿½fixï¿½e par le caractï¿½re rï¿½servï¿½ '|'
+   /** Mise en forme d'un sous-menu muni d'une extension pour décrire un touche d'accélération
+    * Celle-ci est préfixée par le caractère réservé '|'
     * ex : "Copy|ctrl c"
-    * @param key Retourne la chaine dï¿½crivant la touche d'accï¿½lï¿½ration, "" si aucune
+    * @param key Retourne la chaine décrivant la touche d'accélération, "" si aucune
     * @param s le menu
-    * @return le menu dont on a enlï¿½vï¿½ l'accï¿½lï¿½rateur,
+    * @return le menu dont on a enlévé l'accélérateur,
     */
    private String hasKeyStroke(StringBuffer key,String s) {
       int i=s.lastIndexOf('|');
@@ -1841,7 +1875,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Mise en forme des sous-menus BETA, PROTO ou OUTREACH si besoin, return null si
-    * le sous-menu doit ï¿½tre ommis */
+    * le sous-menu doit être ommis */
    protected String isSpecialMenu(String sm){
       if( sm==null ) {
          try { throw new Exception(); } catch(Exception e) { e.printStackTrace(); return "XXX undefined XXX";}
@@ -1866,7 +1900,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return sm;
    }
 
-   /** Repï¿½rage des sous-menus particuliers pour d'ï¿½ventuelles modif. ultï¿½rieures */
+   /** Repérage des sous-menus particuliers pour d'éventuelles modif. ultérieures */
    private void memoMenuItem(String m,JMenuItem ji) {
       int i;
 
@@ -2000,7 +2034,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   int lastOrder=-2;  // -2:ï¿½ calculer, -1:inutilisï¿½, 0 et suivant:order courant
+   int lastOrder=-2;  // -2:à calculer, -1:inutilisé, 0 et suivant:order courant
    boolean healpixCtrl=true;
    Hashtable<Integer, JMenuItem> miNside = new Hashtable<Integer, JMenuItem>();
 
@@ -2031,11 +2065,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
             dialog.getServerNames(Server.APPLI | Server.APPLIIMG,false));
    }
 
-   /** Regï¿½nï¿½re le popup menu associï¿½ aux plugins */
+   /** Regénère le popup menu associé aux plugins */
    protected void pluginReload() {
       if( miPlugs==null ) return;
       //       if( plugins!=null ) plugins.controleur.dispose();
-      plugins = new Plugins(this);         // On le regï¿½nï¿½re systï¿½matiquement
+      plugins = new Plugins(this);         // On le regénère systématiquement
       JMenuItem ji = ((JMenu)miPlugs).getItem(0);
       miPlugs.removeAll();
       miPlugs.add(ji);
@@ -2046,7 +2080,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** Regï¿½nï¿½re le popup menu associï¿½ aux Ciels */
+   /** Regénère le popup menu associé aux Ciels */
    public void hipsReload() {
       if( isNonCertifiedApplet() || miGluSky==null ) return;
 
@@ -2059,7 +2093,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    }
 
-   /** Regï¿½nï¿½re le popup menu associï¿½ aux VOtools */
+   /** Regénère le popup menu associé aux VOtools */
    protected void VOReload() {
       if( isNonCertifiedApplet() || miVOtool==null ) return;
       JMenuItem ji = ((JMenu)miVOtool).getItem(0);
@@ -2072,7 +2106,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** Retourne le numï¿½ro de session d'Aladin. N'a d'intï¿½rï¿½t que dans le
+   /** Retourne le numéro de session d'Aladin. N'a d'intéret que dans le
     * cas d'instanciation multiple d'Aladin */
    public int getInstanceId() { return aladinSession; }
 
@@ -2080,7 +2114,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * On utilisera la plupart du temps des Panels hierarchises
     */
    protected void suiteInit() {
-      aladin=this;                 // Une horreur pour que ï¿½a marche en applet
+      aladin=this;                 // Une horreur pour que ça marche en applet
 
       if( !flagLaunch ) {
          try {
@@ -2128,7 +2162,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       makeCursor(this,WAITCURSOR);
 
-      // Pour gï¿½rer les accï¿½s protï¿½gï¿½.
+      // Pour gérer les accès protégés.
       try { Authenticator.setDefault(new MyAuthenticator());
       } catch( Exception e) {  }
 
@@ -2161,7 +2195,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       bookmarks = new Bookmarks(this);
       co = new CreatObj(this);
 
-      // Mise ï¿½ jour des langues supportï¿½es
+      // Mise à jour des langues supportées
       configuration.loadRemoteLang();
 
       JButton b;
@@ -2170,7 +2204,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       b.setMargin(new Insets(0,0,0,0));
       b.setBorderPainted(false);
       b.setContentAreaFilled(false);
-      // sera activï¿½ dans CreatObj apres creation de ServerDialog
+      // sera activé dans CreatObj apres creation de ServerDialog
       b.setEnabled(false);
       Util.toolTip(searchData,chaine.getString("TIPOPEN"));
       b.addActionListener( new ActionListener() {
@@ -2239,7 +2273,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       gauche1.setBackground( getBackground());
       gauche1.add(bigView,BorderLayout.CENTER);
       
-      // Dï¿½sactivation des ï¿½lï¿½ments de menus et des boutons non encore accessible
+      // Désactivation des éléments de menus et des boutons non encore accessible
       setButtonMode();
 
       // Le panel gauche : contient la boite a boutons et les calques
@@ -2263,7 +2297,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       panelBookmarks.setBackground( getBackground() );
       panelBookmarks.add( bookmarks, BorderLayout.CENTER);
       JLabel l = new JLabel(" "); l.setBackground( getBackground() );
-      panelBookmarks.add(l, BorderLayout.EAST);   // Pour donner une certaine taille mï¿½me si bookmarks vide
+      panelBookmarks.add(l, BorderLayout.EAST);   // Pour donner une certaine taille même si bookmarks vide
       haut1.add(panelBookmarks,BorderLayout.CENTER);
 
       // Le panel haut : contient le logo et le haut1
@@ -2379,7 +2413,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       
       
-      // Pour les filtres sauvegardï¿½s
+      // Pour les filtres sauvegardés
       if( directory!=null ) directory.updateDirFilter();
 
       // Dernier objet a creer et traitement des parametres
@@ -2406,10 +2440,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // En mode trace, affichage du classpath
       if( STANDALONE ) Aladin.trace(1, "Classpath is : ** "+System.getProperty("java.class.path")+" **");
 
-      // Suppression d'ï¿½ventuels vieux caches oubliï¿½s
+      // Suppression d'éventuels vieux caches oubliés
       if( STANDALONE && getInstanceId()==0 ) removeOldCaches();
 
-//      // Cache le banner si ce n'est dï¿½jï¿½ fait
+//      // Cache le banner si ce n'est déjà fait
 //      if( banner!=null ) banner.setVisible(false);
 
       // Le mot d'accueil pour le demarrage
@@ -2425,7 +2459,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Lecture des commandes scripts sur la console (et/ou stdin)
       if( CONSOLE ) command.readStandardInput();
 
-      // Message d'avertissement pour le mode applet bridï¿½e
+      // Message d'avertissement pour le mode applet bridée
       if( !STANDALONE && v>=120 && !warningRestricted) {
          warningRestricted = true;
          warning(chaine.getString("RESTRICTED"));
@@ -2462,15 +2496,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // PLANTE LE BROWSER LORSQUE L'ON FAIT UN DETACH() SI LA FRAME EST DRAG&DROP
       if( !( isApplet() && osName.startsWith("Linux")) ) {
 
-         // Pour gï¿½rer le DnD de fichiers externes
+         // Pour gérer le DnD de fichiers externes
          new DropTarget (this, this);
          DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
                this, DnDConstants.ACTION_COPY_OR_MOVE, this);
       }
    }
 
-   /** Subtilitï¿½ pour faire de la mise en page une fois que toutes les peer classes
-    * aient ï¿½tï¿½ correctement initialisï¿½es
+   /** Subtilité pour faire de la mise en page une fois que toutes les peer classes
+    * aient été correctement initialisées
     */
    @Override
    public void paint(Graphics g) {
@@ -2519,9 +2553,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          DataFlavor uriList = new DataFlavor("text/uri-list; class=java.lang.String");
          Transferable tr = dropTargetDropEvent.getTransferable();
 
-         // On prï¿½fï¿½re tout d'abord charger via une URL si possible
-         // car cela ï¿½vite de planter sur les caches de Firefox
-         // et permet ï¿½galement de supporter IE
+         // On préfère tout d'abord charger via une URL si possible
+         // car cela évite de planter sur les caches de Firefox
+         // et permet également de supporter IE
          if( tr.isDataFlavorSupported(uriList) ) {
             dropTargetDropEvent.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
             String s = (String)tr.getTransferData(uriList);
@@ -2561,10 +2595,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
 
-   /** Retourne true si Aladin a ï¿½tï¿½ lancï¿½ avec des paramï¿½tres de chargement */
+   /** Retourne true si Aladin a été lancé avec des paramètres de chargement */
    protected boolean isLoading() { return flagLoad; }
 
-   /** Crï¿½ation si nï¿½cessaire d'un rï¿½pertoire cache destinï¿½ ï¿½ Aladin
+   /** Création si nécessaire d'un répertoire cache destiné à Aladin
     *  se trouvera dans ${HOME}/.aladin
     *  @return true si ok, false sinon
     */
@@ -2572,12 +2606,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( CACHEDIR!=null ) return CACHEDIR.length()!=0;
 
       try {
-         // Existe-il dï¿½jï¿½ un rï¿½pertoire gï¿½nï¿½rique .aladin sinon je le crï¿½e ?
+         // Existe-il déjà un répertoire générique .aladin sinon je le crée ?
          CACHEDIR = System.getProperty("user.home")+Util.FS+CACHE;
          File f = new File(CACHEDIR);
          if( !f.isDirectory() ) if( !f.mkdir() ) { CACHEDIR=""; return false; }
 
-         // Je vais crï¿½er un sous-rï¿½pertoire cache pour la session uniquement
+         // Je vais créer un sous-répertoire cache pour la session uniquement
          CACHEDIR = CACHEDIR+Util.FS+CACHE+"."+(int)(Math.random()*65536);
          f = new File(CACHEDIR);
 
@@ -2591,20 +2625,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Thread du cacheUpdater
    private Thread updaterCache=null;
 
-   // Pour pouvoir arrï¿½ter proprement le thread d'update de la date du cache
+   // Pour pouvoir arrêter proprement le thread d'update de la date du cache
    private boolean cacheUpdaterRunning=false;
 
-   /** Demande d'arrï¿½t du thread de mise ï¿½ jour de la date de derniï¿½re modif du cache */
+   /** Demande d'arrêt du thread de mise à jour de la date de dernière modif du cache */
    private void stopCacheUpdater() {
       cacheUpdaterRunning=false;
       if( updaterCache!=null ) updaterCache.interrupt();
    }
 
-   /** Mise ï¿½ jour de la date de modif du rï¿½pertoire cache afin qu'une autre session
+   /** Mise à jour de la date de modif du répertoire cache afin qu'une autre session
     * ne puisse faire un nettoyage intempestif (toutes les minutes) */
    private void launchCacheUpdater() {
       
-      // Suppression d'un ï¿½ventuel vieux fichier "flag" signalant un nettoyage en cours
+      // Suppression d'un éventuel vieux fichier "flag" signalant un nettoyage en cours
       File ft = new File(Cache.getCacheDir()+Util.FS+"ScanRunning.bin");
       if( ft.exists() ) ft.delete();
       
@@ -2628,12 +2662,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }).start();
    }
 
-   // Permet de connaï¿½tre la taille approximative du cache disque
+   // Permet de connaître la taille approximative du cache disque
    protected void setInCache(long size) {
       sizeCache+=size;
    }
 
-   /** Construit le rï¿½pertoire des VOTools et le crï¿½e si nï¿½cessaire */
+   /** Construit le répertoire des VOTools et le crée si nécessaire */
    protected String getVOPath() {
       String dir = System.getProperty("user.home")
             +Util.FS+aladin.CACHE
@@ -2662,7 +2696,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       CACHEDIR=null;
    }
 
-   /**  Sauvegarde de la config utilisateur si nï¿½cessaire
+   /**  Sauvegarde de la config utilisateur si nécessaire
     */
    protected void saveConfig() {
       if( !STANDALONE ) return;
@@ -2676,8 +2710,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } catch( Exception e ) { System.err.println(e.getMessage()); }
    }
 
-   /** Suppression d'ï¿½ventuels vieux caches oubliï¿½s dans une session prï¿½cï¿½dente (plus vieux de 24h)
-    * On cherche tous les rï¿½pertoires qui se trouvent dans le home/.aladin de l'utilisateur
+   /** Suppression d'éventuels vieux caches oubliés dans une session précédente (plus vieux de 24h)
+    * On cherche tous les répertoires qui se trouvent dans le home/.aladin de l'utilisateur
     * et qui suivent la syntaxe ".aladin.nnnn ou nnn est un nombre */
    protected void removeOldCaches() {
       long date = System.currentTimeMillis()-24*3600000L;
@@ -2703,7 +2737,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
 
-   /** Suppression du cache passï¿½ en paramï¿½tre et de tout ce qu'il contient */
+   /** Suppression du cache passé en paramètre et de tout ce qu'il contient */
    static protected void removeThisCache(String cacheDir) {
       try {
          File cache = new File(cacheDir);
@@ -2722,16 +2756,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void setCurrentVersion(String s )  {
       currentVersion = s;
       
-      // En cas de dï¿½faillance rï¿½seau, oï¿½ si on n'obtient pas l'info
+      // En cas de défaillance réseau, ou si on n'obtient pas l'info
       // (format: v9.010 - mar. mars 1 14:44:13 CET 2016)
       // => vaut mieux s'abstenir
       if( !NETWORK || !s.startsWith("v") ) return;
 
-      // Banner de demande de maj de la version si nï¿½cessaire
+      // Banner de demande de maj de la version si nécessaire
       testUpgrade();
 
       // Doit-on nettoyer le cache et recharger les bookmarks officielles
-      // car le numï¿½ro officiel de la version Aladin a changï¿½ ?
+      // car le numéro officiel de la version Aladin a changé ?
       String lastCurrentVersion = configuration.getOfficialVersion();
       if( currentVersion!=null && currentVersion.length()!=0 &&
             (lastCurrentVersion==null || !lastCurrentVersion.equals(currentVersion)) ) {
@@ -2742,7 +2776,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       // Doit-on nettoyer le cache et recharger les bookmarks officielles
-      // car le numï¿½ro de version Aladin a changï¿½ par rapport ï¿½ la derniï¿½re utilisation
+      // car le numéro de version Aladin a changé par rapport à la dernière utilisation
       else if( configuration.getVersion()==null || !configuration.getVersion().equals(VERSION) ) {
          System.out.println("In Aladin.conf ["+configuration.getVersion()+"] and in code ["+VERSION+"]");
          trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
@@ -2750,14 +2784,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //         if( bookmarks!=null ) bookmarks.reload();
       }
 
-      // Doit-on nettoyer le cache car la derniï¿½re session date de plus de 15 jours
+      // Doit-on nettoyer le cache car la dernière session date de plus de 15 jours
       else if((System.currentTimeMillis()-configuration.getLastRun())>15*86400*1000L ) {
          trace(1,"Reloading GLU records & VizieR keywords (too old definitions) => clear local cache...");
          cache.clear();
       }
    }
 
-   /** Vï¿½rifie s'il est nï¿½cessaire de demander ï¿½ l'utilisateur l'installation
+   /** Vérifie s'il est nécessaire de demander à l'utilisateur l'installation
     * de la nouvelle version */
    private void testUpgrade() {
       if( NOGUI || isApplet() || !TESTRELEASE ) return;
@@ -2877,7 +2911,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
 
 
-   //    /** Visualisation (crï¿½ation si nï¿½cessaire) de la fenï¿½tre des progï¿½niteurs */
+   //    /** Visualisation (création si nécessaire) de la fenêtre des progéniteurs */
    //    protected void showFrameProgen() {
    //       if( frameProgen==null ) frameProgen = new FrameProgen(aladin);
    //       else frameProgen.setVisible(true);
@@ -2895,7 +2929,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** On insï¿½re l'applet dans sa propre fenetre */
+   /** On insére l'applet dans sa propre fenetre */
    protected void detach() { detach(true); }
    protected void detach(boolean show) {
       try {
@@ -2926,11 +2960,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       myParent.layout();
    }
 
-   /** Passage en plein ï¿½cran
-    * @param mode 0-plein ï¿½cran classique,
-    *             1-fenï¿½tre preview
-    *             2-fenï¿½tre preview mais dï¿½marre cachï¿½ (trï¿½s utile en mode applet
-    *             3-plein ï¿½cran mode cinï¿½ma (exclusif)
+   /** Passage en plein écran
+    * @param mode 0-plein écran classique,
+    *             1-fenêtre preview
+    *             2-fenêtre preview mais démarre caché (très utile en mode applet
+    *             3-plein écran mode cinéma (exclusif)
     *             -1-mode normal
     */
    protected void fullScreen(int mode) {
@@ -3009,7 +3043,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private void about() {
       Aladin.info(TITRE+" ("+VERSION+(BETA?" beta":PROTO?" proto":"")+") "+
             chaine.getString("CDS")+
-            "Authors: Pierre Fernique, Thomas Boch,\n      Anaï¿½s Oberto, Franï¿½ois Bonnarel\n" +
+            "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
             "* Copyright: Unistra/CNRS - distributed under GNU GPL v3\n  \n" +
             "Portions of the code (HiPS & MOCs) have been developped  in the framework of ASTERICS project (2015-2018)." +
@@ -3028,7 +3062,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Pour envoyer un rapport de bug/une question
    private void sendBugReport() {
       String s = "mailto:cds-question@unistra.fr?subject=[Aladin] Bug report/question";
-      // on ajoute la date pour gï¿½nï¿½rer des sujets uniques, sinon on a des problemes ï¿½ trier dans question
+      // on ajoute la date pour générer des sujets uniques, sinon on a des problemes à trier dans question
       String date = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.ENGLISH).format(new Date());
       s += " ("+date+")";
       s += "&body=";
@@ -3071,7 +3105,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    protected void printer() { new Printer(this); }
 
-   // test des menus qui vire un ï¿½ventuel prï¿½fixe "BETA:", "PROTO:" ou "OUTREACH:"
+   // test des menus qui vire un éventuel préfixe "BETA:", "PROTO:" ou "OUTREACH:"
    protected boolean isMenu(String s,String t) {
       if( s==null || t==null ) return false;
       return s.equals(t)
@@ -3101,10 +3135,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       Object src = evt.getSource();
 
-      // envoi de plans ï¿½ une appli SAMP/PLASTIC
+      // envoi de plans à une appli SAMP/PLASTIC
       if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(BROADCASTTABLE) ) {
          String o = ((JMenuItem)src).getText();
-         // broadcast ï¿½ toutes les applis
+         // broadcast à toutes les applis
          if( o.equals(calque.select.MALLAPPS) ) {
             broadcastSelectedTables(null);
          }
@@ -3114,11 +3148,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( src instanceof JMenuItem
             && ((JMenuItem)src).getActionCommand().equals(BROADCASTIMAGE) ) {
          String o = ((JMenuItem)src).getText();
-         // broadcast ï¿½ toutes les applis
+         // broadcast à toutes les applis
          if( o.equals(calque.select.MALLAPPS) ) {
             broadcastSelectedImages(null);
          }
-         // envoi ï¿½ une appli particuliï¿½re
+         // envoi à une appli particulière
          else {
             broadcastSelectedImages(new String[]{o.toString()});
          }
@@ -3133,7 +3167,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //    public boolean action(Event e, Object o) {
    //      String s;
    //
-   //      // Rendre ï¿½ Cï¿½sar ce qui est ï¿½ Cï¿½sar
+   //      // Rendre à César ce qui est à César
    //      if( !NOGUI && e.target==calque.zoom.cZoom ) {
    //         calque.zoom.submit();
    //         return true;
@@ -3154,6 +3188,21 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       if( s.indexOf("NSIDE")>=0 ) { lastOrder=-2; aladin.calque.repaintAll(); }
 
+      // Data tree
+      else if( isMenu(s,OPENDIRIMG) || isMenu(s,OPENDIRCAT) || isMenu(s,OPENDIRDB) 
+            || isMenu(s,OPENDIRCUBE) ) {
+         if( dialog==null ) {
+            Aladin.warning(chaine.getString("NOTYET"));
+            return true;
+         }
+         int w = splitHiPSWidth.getDividerLocation();
+         if( w<Configuration.DEF_HWIDTH ) splitHiPSWidth.setDividerLocation( Configuration.DEF_HWIDTH );
+         directory.showTreePath( isMenu(s,OPENDIRIMG) ? "Image" 
+               : isMenu(s,OPENDIRCAT) ? "Catalog" 
+                     : isMenu(s,OPENDIRDB) ? "Data base" 
+                     : isMenu(s,OPENDIRCUBE) ? "Cube" : "");
+      }
+      
       // Interface d'interrogation des serveurs
       else if( isMenu(s,OPENFILE) || isMenu(s,OPENLOAD) || isMenu(s,OPENURL) || isMenu(s,LOADVO)
             || isMenu(s,LOADFOV) || isMenu(s,ALADIN_IMG_SERVER) ) {
@@ -3183,6 +3232,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          help.setCenter(false);
          status.setText(chaine.getString("SCRIPT"));
          command.execHelpCmd("");
+      } else if( isMenu(s,FILTERDIR) ) { directory.openAdvancedFilterFrame();
       } else if( isMenu(s,FULLSCREEN) ) { fullScreen(0);
       } else if( isMenu(s,PREVIEWSCREEN) ) { fullScreen(1);
       } else if( isMenu(s,MOREVIEWS) ) { view.autoViewGenerator();
@@ -3334,26 +3384,26 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
          quit(0);
 
-         // Peut ï¿½tre une convolution prï¿½dï¿½finie
+         // Peut être une convolution prédéfinie
          //      } else if( conv(s) ) { return true;
 
-         // Peut ï¿½tre un save
+         // Peut être un save
       } else if( save(s) ) { return true;
 
-      // Peut ï¿½tre un fond de ciel
+      // Peut être un fond de ciel
       } else if( allsky(s) ) { return true;
 
-      // Peut ï¿½tre une application VO plastic
+      // Peut être une application VO plastic
       } else if( appli(s) ) { return true;
 
-      // Mode outreach, accï¿½s direct sur derniï¿½re position connue
-      // ou demande de la position par dï¿½faut
+      // Mode outreach, accés direct sur dernière position connue
+      // ou demande de la position par défaut
       } else if( /* OUTREACH &&*/ dialog!=null && dialog.submitServer(s) ) { return true;
 
-      // Peut ï¿½tre un filtre prï¿½dï¿½fini
+      // Peut être un filtre prédéfini
       }else if( filterB(s) ) { return true;
 
-      // Peut ï¿½tre un plugin ?
+      // Peut être un plugin ?
       } else if( plugins!=null ) {
          AladinPlugin ap = plugins.find(s);
          if( ap!=null ) {
@@ -3373,15 +3423,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    }
 
-   /** Affichage des propriï¿½tï¿½s du premier planImage sï¿½lectionnï¿½ dans
-    * le cas oï¿½ l'utilisateur peut changer sa transparence */
+   /** Affichage des propriétés du premier planImage sélectionné dans
+    * le cas où l'utilisateur peut changer sa transparence */
    void transparency() {
       PlanImage pi = calque.getFirstSelectedPlanImage();
       if( pi==null ) return;
       Properties.createProperties(pi);
    }
 
-   /** Positionne toutes les transparences des images de la pile ï¿½ 100%, respectivement ï¿½ 0% */
+   /** Positionne toutes les transparences des images de la pile à 100%, respectivement à 0% */
    void transpon() {
       float val=0f;
       if( miTranspon.isSelected() ) val=1f;
@@ -3389,7 +3439,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.repaintAll();
    }
 
-   /** Exï¿½cution de l'inversion verticale ou horizontale du plan de base */
+   /** Exécution de l'inversion verticale ou horizontale du plan de base */
    protected void flip(int methode) {
       try {
          PlanImage p = calque.getFirstSelectedSimpleImage();
@@ -3401,7 +3451,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } catch( Exception e) { e.printStackTrace(); }
    }
 
-   /** Exï¿½cution de l'inversion verticale ou horizontale */
+   /** Exécution de l'inversion verticale ou horizontale */
    protected void flip(PlanImage p,int methode) throws Exception {
       aladin.console.printCommand("flipflop "+(methode==0 ? "V" : "H"));
       aladin.view.flip(p,methode);
@@ -3412,14 +3462,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       header(calque.getFirstSelectedPlan());
    }
 
-   /** Affichage du header fits du plan passï¿½ en paramï¿½tre */
+   /** Affichage du header fits du plan passé en paramètre */
    protected void header(Plan plan) {
       if( plan==null ) return;
       if( plan instanceof PlanBG && !(plan instanceof PlanHealpix || plan instanceof PlanMoc ) )  ((PlanBG)plan).seeHipsProp();
       else plan.headerFits.seeHeaderFits();
    }
 
-   //    /** Exï¿½cute une convolution sur le plan de base */
+   //    /** Exécute une convolution sur le plan de base */
    //    protected boolean conv(String kernel) {
    //       if( Kernel.findKernel(kernel)<0 ) return false;
    //       command.execLater("conv "+kernel);
@@ -3427,12 +3477,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //    }
 
 
-   /** Exï¿½cute une normalisation sur le plan de base */
+   /** Exécute une normalisation sur le plan de base */
    protected void norm() {
       command.execLater("norm");
    }
 
-   /** Exï¿½cute une opï¿½ration arithmï¿½tique sur les deux plans images sï¿½lectionnï¿½s */
+   /** Exécute une opération arithmétique sur les deux plans images sélectionnés */
    //    protected void arithmetic(String op) {
    //       Vector v = calque.getSelectedPlanes();
    //       PlanImage p1,p2;
@@ -3443,26 +3493,26 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //       } catch( Exception e ) { e.printStackTrace(); }
    //    }
 
-   /** Crï¿½ation d'un nouveau folder dans la pile */
+   /** Création d'un nouveau folder dans la pile */
    protected void fold() {
       int n=calque.newFolder(null,0,false);
       Plan p = calque.getPlan(n);
       if( p!=null ) console.printCommand("md "+p.getLabel());
    }
 
-   /** Insertion des plans sï¿½lectionnï¿½s dans un nouveau folder de la pile */
+   /** Insertion des plans sélectionnés dans un nouveau folder de la pile */
    protected void inFold() {
       calque.select.insertFolder();
    }
 
-   //    /** Affichage du metadata tree gï¿½nï¿½ral */
+   //    /** Affichage du metadata tree général */
    //    protected void history() {
    //       treeView.toFront();
    //       treeView.show();
    //    }
 
    /** Affiche les informations sur les colonnes du PlanCatalog
-    * passï¿½ en paramï¿½tre, ou si null, tous les plans catalogues sï¿½lectionnï¿½s */
+    * passé en paramètre, ou si null, tous les plans catalogues sélectionnés */
    protected void tableInfo(Plan p) {
       if( p!=null )  new FrameInfoTable(aladin,p);
       else {
@@ -3487,7 +3537,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    }
 
-   /** Crï¿½ation d'un graphe de nuage de points sur le plan Catalog sï¿½lectionnï¿½ */
+   /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
    protected void createPlotCat() {
       PlanCatalog p = calque.getFirstSelectedPlanCatalog();
       if( p==null ) return;
@@ -3514,7 +3564,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       toolBox.setMode(ToolBox.CROP, Tool.DOWN);
    }
 
-   /** Crï¿½ation d'un fichier map HEALpix ï¿½ partir d'un PlanImage et affichage de cette map */
+   /** Création d'un fichier map HEALpix à partir d'un PlanImage et affichage de cette map */
    protected void createHpx() {
       final PlanImage pi = calque.getFirstSelectedSimpleImage();
       pi.flagProcessing=true;
@@ -3541,7 +3591,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }).start();
    }
 
-   /* Reset des donnï¿½es */
+   /* Reset des données */
    protected void reset() {
       view.unStickAll();
       view.setModeView(ViewControl.MVIEW1);
@@ -3563,38 +3613,38 @@ DropTargetListener, DragSourceListener, DragGestureListener
       search.focus();
    }
 
-   /** Pour sï¿½lectionner tous les objets des plans sï¿½lectionnï¿½s */
+   /** Pour sélectionner tous les objets des plans sélectionnés */
    protected void select() {
       calque.selectAllObjectInPlans();
    }
 
-   /** Pour sï¿½lectionner toutes les sources marquï¿½es */
+   /** Pour sélectionner toutes les sources marquées */
    protected void selecttag() {
       calque.selectAllObject(2);
    }
 
-   /** Pour marquer toutes les sources sï¿½lectionnï¿½es */
+   /** Pour marquer toutes les sources sélectionnées */
    protected void tagselect() {
       aladin.mesure.tag();
    }
 
-   /** Dï¿½tague toutes les sources marquï¿½es */
+   /** Détague toutes les sources marquées */
    protected void untag() {
       calque.untag();
    }
 
-   /** Pour sï¿½lectionner tous les objets */
+   /** Pour sélectionner tous les objets */
    protected void selectAll() {
       calque.selectAllObject(0);
    }
 
-   /** Pour dï¿½sï¿½lectionner tous les objets */
+   /** Pour désélectionner tous les objets */
    protected void unSelect() {
       view.deSelect();
       calque.repaintAll();
    }
 
-   /** POur afficher les propriï¿½tï¿½s des plans sï¿½lectionnï¿½s */
+   /** POur afficher les propriétés des plans sélectionnés */
    protected void prop() {
       calque.select.propertiesOfSelectedPlanes();
    }
@@ -3626,7 +3676,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameCDSXMatch.update();
    }
 
-   /** Crï¿½ation d'un nouveau filtre et affichage des propriï¿½tï¿½s
+   /** Création d'un nouveau filtre et affichage des propriétés
     * correspondantes */
    protected void filter() {
       Plan p = view.calque.newPlanFilter();
@@ -3635,7 +3685,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Crï¿½ation d'un filtre pour dï¿½butant via la JBar
+    * Création d'un filtre pour débutant via la JBar
     * PF 24/8/2007
     * @param label nom du filtre
     * @return false si le filtre est inconnu
@@ -3650,13 +3700,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
          pf.setActivated(true);
          pf.updateState();
 
-         // affichage dans la console de la commande script ï¿½quivalente
+         // affichage dans la console de la commande script équivalente
          aladin.console.printCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
       }
       return true;
    }
 
-   /** Crï¿½ation d'un filtre prï¿½dï¿½fini
+   /** Création d'un filtre prédéfini
     * @param s Nom du filtre
     * @return false si le filtre n'existe pas
     */
@@ -3677,14 +3727,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } catch( Exception e ) {}
    }
 
-   /** Positionnement du mode du rï¿½ticule via la JBar */
+   /** Positionnement du mode du réticule via la JBar */
    protected void reticle(int mode) {
       calque.setReticle(mode);
       console.printCommand("reticle "+(!calque.hasReticle() ? "off" : calque.reticleMode==1?"on" : "large" ));
       calque.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation du rï¿½ticule via la Jbar */
+   /** Activation ou désactivation du réticule via la Jbar */
    protected void target() {
       calque.setOverlayFlag("target", miTarget.isSelected() );
       //       console.setCommand("target "+(calque.hasTarget()?"on":"off"));
@@ -3692,20 +3742,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation des infos d'overlays colormap via la Jbar */
+   /** Activation ou désactivation des infos d'overlays colormap via la Jbar */
    protected void rainbow() {
       view.showRainbow(miRainbow.isSelected());
       view.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation des infos d'overlays via la Jbar */
+   /** Activation ou désactivation des infos d'overlays via la Jbar */
    protected void overlay() {
       calque.setOverlay(miOverlay.isSelected());
       console.printCommand("overlay "+(calque.flagOverlay?"on":"off"));
       calque.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation des constellations */
+   /** Activation ou désactivation des constellations */
    protected void constellation() {
       boolean flag = miConst.isSelected();
       calque.setOverlayFlag("const", flag);
@@ -3713,19 +3763,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       view.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation de la grille via la Jbar */
+   /** Activation ou désactivation de la grille via la Jbar */
    protected void grid(int mode) {
       calque.setGrid(mode);
       view.repaintAll();
    }
 
-   /** Permute l'activation/dï¿½sactivation de la grille HEALPix */
+   /** Permute l'activation/désactivation de la grille HEALPix */
    public void switchHpxGrid() {
       miHpxGrid.setSelected( !miHpxGrid.isSelected() );
       hpxGrid();
    }
 
-   /** Activation ou dï¿½sactivation de la grille HEALPix via la Jbar */
+   /** Activation ou désactivation de la grille HEALPix via la Jbar */
    public void hpxGrid() { hpxGrid(miHpxGrid.isSelected()); }
    public void hpxGrid(boolean flag) {
       calque.setOverlayFlag("hpxgrid", flag );
@@ -3733,7 +3783,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       view.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation de la synchronisation des vues
+   /** Activation ou désactivation de la synchronisation des vues
     * @param byProjection : true si synchronisation par projection, sinon par zoom
     */
    protected void switchMatch(boolean byProjection) {
@@ -3749,7 +3799,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       int syncMode = match.getMode();
       int mode = syncMode==3 ? 0 :  3;
 
-      // Pour conserver la mï¿½me position approximative aprï¿½s un retour ï¿½ la normal
+      // Pour conserver la même position approximative après un retour à la normal
       if( mode==0 ) view.setZoomRaDecForSelectedViews(view.getCurrentView().getZoom(),null);
 
       view.switchSelectCompatibleViews();
@@ -3779,7 +3829,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Positionnement du match
-    * @param mode 0 ou 1 arrï¿½t, 2 par zoom, 3 par zoom et rotation (projection)
+    * @param mode 0 ou 1 arrêt, 2 par zoom, 3 par zoom et rotation (projection)
     */
    protected void match(int mode) {
       if( mode==2 || mode==3 ) {
@@ -3794,7 +3844,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       match.repaint();
    }
 
-   /** Activation ou dï¿½sactivation du zoom pointï¿½ via la Jbar */
+   /** Activation ou désactivation du zoom pointé via la Jbar */
    protected void zoom() {
       if( miZoomPt.isSelected() ) {
          toolBox.tool[ToolBox.SELECT].mode=Tool.UP;
@@ -3806,7 +3856,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       toolBox.repaint();
    }
 
-   /** Activation ou dï¿½sactivation du panning via la Jbar */
+   /** Activation ou désactivation du panning via la Jbar */
    protected void pan() { pan(miPan.isSelected()); }
    protected void pan(boolean mode) {
       if( mode ) {
@@ -3832,13 +3882,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
       toolBox.repaint();
    }
 
-   /** Activation ou dï¿½sactivation du GREY via la Jbar */
+   /** Activation ou désactivation du GREY via la Jbar */
    protected void grey() {
       aladin.console.printCommand("grey");
       view.calque.newPlanImage((PlanImageRGB)(view.getCurrentView().pref));
    }
 
-   /** Activation ou dï¿½sactivation du MGLASS via la Jbar */
+   /** Activation ou désactivation du MGLASS via la Jbar */
    protected void glass() {
       if( miGlass.isSelected() ) toolBox.tool[ToolBox.WEN].mode=Tool.DOWN;
       else toolBox.tool[ToolBox.WEN].mode=Tool.UP;
@@ -3848,7 +3898,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.repaintAll();
    }
 
-   /** Activation ou dï¿½sactivation du MGLASS via la Jbar */
+   /** Activation ou désactivation du MGLASS via la Jbar */
    protected void glassTable() {
       if( miGlassTable.isSelected()) toolBox.tool[ToolBox.WEN].mode=Tool.DOWN;
       else if( !miGlass.isSelected() )toolBox.tool[ToolBox.WEN].mode=Tool.UP;
@@ -3858,7 +3908,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.repaintAll();
    }
 
-   /** Suppression soit des objets, soit des vues sï¿½lectionnï¿½es,
+   /** Suppression soit des objets, soit des vues sélectionnées,
     * soit des plans suivant le dernier clic */
    protected void delete() {
       if( view.isDelSelObjet() ) view.delSelObjet();
@@ -3866,19 +3916,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else calque.FreeSet(false);
    }
 
-   /** Crï¿½ation de la fenï¿½tre pour paramï¿½trer un rï¿½ï¿½chantillonnage */
+   /** Création de la fenêtre pour paramètrer un rééchantillonnage */
    protected void rsamp() {
       new FrameResample(this);
    }
 
-   /** Ouverture de la fenï¿½tre des pixels avec maj du bouton pixel associï¿½ */
+   /** Ouverture de la fenêtre des pixels avec maj du bouton pixel associé */
    protected void pixel() {
       toolBox.tool[ToolBox.HIST].mode=Tool.DOWN;
       toolBox.repaint();
       updatePixel();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre des pixels en fonction de la position du bouton associï¿½ */
+   /** Mise à jour de la fenêtre des pixels en fonction de la position du bouton associé */
    public void updatePixel() {
       if( frameCM==null ) {
          trace(1,"Creating the colormap window");
@@ -3889,14 +3939,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( visible ) frameCM.majCM();
    }
 
-   /** Ouverture de la fenï¿½tre des RGB avec maj du bouton associï¿½ */
+   /** Ouverture de la fenêtre des RGB avec maj du bouton associé */
    protected void RGB() {
       toolBox.tool[ToolBox.RGB].mode=Tool.DOWN;
       toolBox.repaint();
       updateRGB();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la construction d'une RGB */
+   /** Mise à jour de la fenêtre pour la construction d'une RGB */
    protected void updateRGB() {
       if( frameRGB==null ) {
          trace(1,"Creating the RGB window");
@@ -3905,7 +3955,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameRGB.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations arithmetiques */
+   /** Mise à jour de la fenêtre pour les operations arithmetiques */
    protected void updateArithm() {
       if( frameArithm==null ) {
          trace(1,"Creating the Arithmetic window");
@@ -3914,7 +3964,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameArithm.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations des MOCs */
+   /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void updateMocFiltering() {
       if( frameMocFiltering==null ) {
          trace(1,"Creating the MocOp window");
@@ -3933,7 +3983,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    private boolean loadMocFirst=true;
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations des MOCs */
+   /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void loadMoc() {
       dialog.show("VizieR");
       if( loadMocFirst ) SwingUtilities.invokeLater(new Runnable() {
@@ -3944,7 +3994,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       loadMocFirst=false;
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations des MOCs */
+   /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void updateMocOp() {
       if( frameMocOperation==null ) {
          trace(1,"Creating the MocOp window");
@@ -3953,7 +4003,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameMocOperation.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir d'un autre MOC de meilleure rï¿½solution */
+   /** Mise à jour de la fenêtre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution */
    protected void updateMocToOrder() {
       if( frameMocGenRes==null ) {
          trace(1,"Creating the MocGenRes window");
@@ -3962,7 +4012,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameMocGenRes.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la gï¿½nï¿½ration d'un MOC */
+   /** Mise à jour de la fenêtre pour la génération d'un MOC */
    protected void updateMocGenCat() {
       if( frameMocGenCat==null ) {
          trace(1,"Creating the MocGenCat window");
@@ -3971,7 +4021,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameMocGenCat.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la gï¿½nï¿½ration d'un MOC ï¿½ partir d'une collection d'images */
+   /** Mise à jour de la fenêtre pour la génération d'un MOC à partir d'une collection d'images */
    protected void updateMocGenImgs() {
       if( frameMocGenImgs==null ) {
          trace(1,"Creating the MocGenImgs window");
@@ -3982,9 +4032,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /**
-    * Dï¿½termination de l'ordre pour avoir 75 cellules dans la distance
-    * @param size taille ï¿½ couvrir (en degrï¿½s)
-    * @return order HEALPix appropriï¿½
+    * Détermination de l'ordre pour avoir 75 cellules dans la distance
+    * @param size taille à couvrir (en degrés)
+    * @return order HEALPix approprié
     */
    static public int getAppropriateOrder(double size) {
       int order = 4;
@@ -3999,7 +4049,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return order;
    }
    
-   /**Creation d'un MOC ï¿½ partir de tous les polygones sï¿½lectionnï¿½s */
+   /**Creation d'un MOC à partir de tous les polygones sélectionnés */
    protected int createMocRegion() { return createMocRegion(-1); }
    protected int createMocRegion(int order) {
       HealpixMoc moc = new HealpixMoc();
@@ -4045,7 +4095,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    }
       
-   /** Crï¿½ation d'un MOC ï¿½ partir d'un cercle (ra,dec,radius) */
+   /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
    protected HealpixMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
       HealpixMoc m = new HealpixMoc();
       if( order==-1 ) order=getAppropriateOrder(radius);
@@ -4114,7 +4164,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		    	  	addVec3(cooList, firstRa, firstDec);
 					
 					if( sens==0 ) {
-			               // L'ordre est dï¿½terminï¿½ automatiquement par la largeur du polygone
+			               // L'ordre est déterminé automatiquement par la largeur du polygone
 			               order=getAppropriateOrder(maxSize);
 			               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
 			               if( order<10 ) order=10;
@@ -4127,7 +4177,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		            moc.rangeSet = m.getRangeSet();
 		            moc.toHealpixMoc();
 		            
-		            // moins de la moitiï¿½ du ciel => ca doit ï¿½tre bon
+		            // moins de la moitié du ciel => ca doit être bon
 		            if( moc.getCoverage()<0.5 ) break;
 		            
 		            Collections.reverse(rectVertices);
@@ -4185,7 +4235,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                  addVec3(cooList, firstRa, firstDec);
 
 	            if( sens==0 ) {
-	               // L'ordre est dï¿½terminï¿½ automatiquement par la largeur du polygone
+	               // L'ordre est déterminé automatiquement par la largeur du polygone
 	               order=getAppropriateOrder(maxSize);
 	               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
 	               if( order<10 ) order=10;
@@ -4198,12 +4248,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
 	            moc.rangeSet = m.getRangeSet();
 	            moc.toHealpixMoc();
 
-	            // moins de la moitiï¿½ du ciel => ca doit ï¿½tre bon
+	            // moins de la moitié du ciel => ca doit être bon
 	            if( moc.getCoverage()<0.5 ) break;
 
 	            stcPolygon.reverseDrawDirection();
 	            
-	            // On va essayer dans l'autre sens avant d'estimer que ï¿½a ne fonctionne pas
+	            // On va essayer dans l'autre sens avant d'estimer que ça ne fonctionne pas
 	         } catch( Throwable e ) {
 	            if( sens==1 && e instanceof Exception ) throw (Exception)e;
 	         }
@@ -4219,9 +4269,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		cooList.add(new Vec3(new Pointing(theta, phi)));
 	}
    
-   /**Creation d'un MOC ï¿½ partir du polygone sï¿½lectionnï¿½ pour un de ses sommets
+   /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets
     * Tente de faire les deux sens d'orientation du polygone et ne garde que celui qui
-    * fournit une surface infï¿½rieure ï¿½ la moitiï¿½ du ciel */
+    * fournit une surface inférieure à la moitié du ciel */
    protected HealpixMoc createMocRegionPol(Ligne o, int order) throws Exception {
       HealpixMoc moc=null;
 
@@ -4234,7 +4284,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Ligne a = o.getLastBout();
       while( a!=null ) {
 
-         // Mï¿½morisation de la plus grande diagonale
+         // Mémorisation de la plus grande diagonale
          if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
          else {
             double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
@@ -4249,7 +4299,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          a = a.debligne;
       }
 
-      // L'ordre est dï¿½terminï¿½ automatiquement par la largeur du polygone
+      // L'ordre est déterminé automatiquement par la largeur du polygone
       if( order==-1 ) order=getAppropriateOrder(maxSize);
       trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
       if( order<10 ) order=10;
@@ -4260,15 +4310,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
       moc.rangeSet = m.getRangeSet();
       moc.toHealpixMoc();
 
-      // plus de la moitiï¿½ du ciel => y a un prob
-      // Il faudrait ï¿½galement tester si le rï¿½sultat donne des zones disjointes => prob
+      // plus de la moitié du ciel => y a un prob
+      // Il faudrait également tester si le résultat donne des zones disjointes => prob
       if( moc.getCoverage()>0.5 ) throw new Exception("Polygon must be expressed in anti-clockwise direction");
 
 
       return moc;
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la gï¿½nï¿½ration d'un MOC */
+   /** Mise à jour de la fenêtre pour la génération d'un MOC */
    protected void updateMocGenProba() {
       if( frameMocGenProba==null ) {
          trace(1,"Creating the MocGenImg window");
@@ -4279,7 +4329,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
 
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la gï¿½nï¿½ration d'un MOC */
+   /** Mise à jour de la fenêtre pour la génération d'un MOC */
    protected void updateMocGenImg() {
       if( frameMocGenImg==null ) {
          trace(1,"Creating the MocGenImg window");
@@ -4288,7 +4338,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameMocGenImg.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations de convolutions */
+   /** Mise à jour de la fenêtre pour les operations de convolutions */
    protected void updateConvolution() {
       if( frameConvolution==null ) {
          trace(1,"Creating the Convolution window");
@@ -4297,7 +4347,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameConvolution.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations arithmetiques sur plans Healpix*/
+   /** Mise à jour de la fenêtre pour les operations arithmetiques sur plans Healpix*/
    protected void updateHealpixArithm() {
       if( frameHealpixArithm==null ) {
          trace(1,"Creating the Arithmetic window");
@@ -4306,7 +4356,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameHealpixArithm.maj();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour les operations arithmetiques */
+   /** Mise à jour de la fenêtre pour les operations arithmetiques */
    protected void updateBitpix() {
       if( frameBitpix==null ) {
          trace(1,"Creating the Bitpix window");
@@ -4315,14 +4365,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameBitpix.maj();
    }
 
-   /** Ouverture de la fenï¿½tre des blinks avec maj du bouton associï¿½ */
+   /** Ouverture de la fenêtre des blinks avec maj du bouton associé */
    protected void blink(int mode) {
       toolBox.tool[ToolBox.BLINK].mode=Tool.DOWN;
       toolBox.repaint();
       updateBlink(mode);
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre pour la construction
+   /** Mise à jour de la fenêtre pour la construction
     * d'un BLINK (mode=0), ou d'une MOSAIC (mode=1) */
    protected void updateBlink(int mode) {
       if( frameBlink==null ) {
@@ -4333,14 +4383,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameBlink.setMode(mode);
    }
 
-   /** Ouverture de la fenï¿½tre des Contours avec maj du bouton pixel associï¿½ */
+   /** Ouverture de la fenêtre des Contours avec maj du bouton pixel associé */
    protected void contour() {
       toolBox.tool[ToolBox.CONTOUR].mode=Tool.DOWN;
       toolBox.repaint();
       updateContour();
    }
 
-   /** Mise ï¿½ jour de la fenï¿½tre des Contours en fonction de la position du bouton associï¿½ */
+   /** Mise à jour de la fenêtre des Contours en fonction de la position du bouton associé */
    protected void updateContour() {
       if( frameContour==null ) {
          trace(1,"Creating the Contour window");
@@ -4350,8 +4400,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Affiche la fenï¿½tre de gestion des "macros"
-    * (mode script ï¿½voluï¿½, portant sur une liste de paramï¿½tres)
+    * Affiche la fenêtre de gestion des "macros"
+    * (mode script évolué, portant sur une liste de paramètres)
     */
    protected void macro() {
       FrameMacro fm = getFrameMacro();
@@ -4378,7 +4428,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Affiche la fenetre pour crï¿½er un allsky
+    * Affiche la fenetre pour créer un allsky
     */
    protected void buildHiPS() {
       FrameAllskyTool.display(this);
@@ -4389,7 +4439,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Affiche la fenetre pour crï¿½er un FoV
+    * Affiche la fenetre pour créer un FoV
     */
    protected void buildFoV() {
       glu.showDocument("FovEditor","");
@@ -4415,7 +4465,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          //          console.printInfo("Aladin stopped");
          saveConfig();
 
-         // Arrï¿½t d'un ï¿½ventuel calcul de allsky
+         // Arrêt d'un éventuel calcul de allsky
          try {
             Context context = frameAllsky!=null && frameAllsky.context!=null ? frameAllsky.context
                   : command.hipsgen!=null && command.hipsgen.context!=null ? command.hipsgen.context : null;
@@ -4426,7 +4476,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             }
          } catch( Exception e1 ) { }
 
-         // Suppression d'un cache ï¿½ventuel
+         // Suppression d'un cache éventuel
          trace(3,"Cache cleaning...");
          stopCacheUpdater();
          removeCache();
@@ -4437,7 +4487,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       if( directory!=null ) directory.interruptMocServerReading();
 
-      // appel des mï¿½thodes cleanup() des plugins
+      // appel des méthodes cleanup() des plugins
       if( plugins!=null ) {
          trace(3,"Plugin cleaning...");
          try { plugins.cleanup(); } catch( Exception e ) {}
@@ -4450,7 +4500,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( aladinSession>0 || flagLaunch ) { // Si Aladin demarre par launch() cacher la fenetre
          //          System.out.println("Aladin.action: flagLaunch true => dispose");
          trace(3,"Slave session => not true exit() ...");
-         reset();		// Nï¿½cessaire pour ne pas avoir de ressurections intempestives
+         reset();		// Nécessaire pour ne pas avoir de ressurections intempestives
          command.stop();
          f.setVisible(false);        // Pour une sombre histoire de bug MAC
          
@@ -4463,7 +4513,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             long t=System.currentTimeMillis();
             while( isPrinting() || isSaving() || isLogging() ) {
                Util.pause(500);
-               if( System.currentTimeMillis()-t>5*60000 ) break; // Au-delï¿½ de 5 minutes on quitte
+               if( System.currentTimeMillis()-t>5*60000 ) break; // Au-delà de 5 minutes on quitte
             }
          }
          trace(3,"See you !");
@@ -4475,14 +4525,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** JE NE SAIS PAS QUI A RAJOUTE CELA ??? LE CFH ?? */
    public void shut() { Thread.currentThread().stop(); }
 
-   /** Ouverture de la fenï¿½tre des prï¿½fï¿½rences utilisateur */
+   /** Ouverture de la fenêtre des préférences utilisateur */
    protected void preferences() {
       configuration.show();
    }
 
 
-   /** retourne l'instance de FrameInfo actuellement utilisï¿½e
-    * En crï¿½e une si nï¿½cessaire */
+   /** retourne l'instance de FrameInfo actuellement utilisée
+    * En crée une si nécessaire */
    protected synchronized FrameInfo getFrameInfo() {
       // lazy initialization
       if( frameInfo==null ) frameInfo = new FrameInfo(this);
@@ -4541,28 +4591,28 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else framePixelTool.setVisible(true);
    }
 
-   /** Lancement ou arrï¿½t du mode Simbad Pointer */
+   /** Lancement ou arrêt du mode Simbad Pointer */
    protected void simbadPointer() {
       calque.setSimbad(!calque.flagSimbad);
    }
 
-   /** Lancement ou arrï¿½t du mode VizieR SED Pointer */
+   /** Lancement ou arrêt du mode VizieR SED Pointer */
    protected void vizierSED() {
       calque.setVizierSED(!calque.flagVizierSED);
    }
 
-   /** Activation ou dï¿½sactivation de l'outil de mesure automatique des distance */
+   /** Activation ou désactivation de l'outil de mesure automatique des distance */
    protected void autodist() {
       calque.setAutoDist(!calque.flagAutoDist);
    }
 
 
-   //    /** Activation ou dï¿½sactivation des tooltips sur les objets */
+   //    /** Activation ou désactivation des tooltips sur les objets */
    //    protected void tip() {
    //       calque.flagTip=!calque.flagTip;
    //    }
 
-   /** Dï¿½marrage d'une extraction de vignettes ROI */
+   /** Démarrage d'une extraction de vignettes ROI */
    protected void roi() { view.createROI(); }
 
    /** lance le pad */
@@ -4578,10 +4628,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
             && !confirmation(chaine.getString("DEMO")+":\n- \""+s+
                   "\" -\n"+chaine.getString("DEMO1")) ) return;
 
-      // en applet signï¿½, on force l'affichage de l'applet dans sa propre frame
+      // en applet signé, on force l'affichage de l'applet dans sa propre frame
       if( isCertifiedApplet() && !flagDetach ) detach();
 
-      // la chaine se prï¿½sente sous la forme 'Tutorial.Show-me-how-to' dans Aladin.string
+      // la chaine se présente sous la forme 'Tutorial.Show-me-how-to' dans Aladin.string
       String tutoStr = chaine.getString("Tutorial."+s.replaceAll(" ", "-"));
       if( tutoStr!=null ) {
          reset();
@@ -4638,11 +4688,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Broadcaste les plans sï¿½lectionnï¿½s aux applications PLASTIC
+    * Broadcaste les plans sélectionnés aux applications PLASTIC
     * @param : 0 --> on broadcaste tout
     *          1 --> seulement les tables
     *          2 --> seulement les images
-    * @param : tableau des destinataires. Si null, on envoie ï¿½ tout le monde
+    * @param : tableau des destinataires. Si null, on envoie à tout le monde
     */
    private void broadcastSelectedPlanes(int mask, String[] recipients) {
       boolean bdcastTab = (mask==0 || mask==1);
@@ -4707,7 +4757,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return l;
    }
 
-   /** retourne true s'il y a un rï¿½seau disponible */
+   /** retourne true s'il y a un réseau disponible */
    static public boolean hasNetwork() { return NETWORK; }
 
    /** retourne true s'il s'agit d'un Aladin avec interface graphique (NOGUI) */
@@ -4716,13 +4766,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Retourne true s'il tourne en applet */
    static public boolean isApplet() { return SIGNEDAPPLET || !STANDALONE; }
 
-   /** Retourne true s'il tourne en applet certifiï¿½ */
+   /** Retourne true s'il tourne en applet certifié */
    static public boolean isCertifiedApplet() { return SIGNEDAPPLET; }
 
-   /** Retourne true s'il tourne en applet non certifiï¿½ */
+   /** Retourne true s'il tourne en applet non certifié */
    static public boolean isNonCertifiedApplet() { return !STANDALONE && !SIGNEDAPPLET; }
 
-   /** Retourne true s'il un accï¿½s non limitï¿½ au rï¿½seau, au disque, ï¿½ l'imprimante... */
+   /** Retourne true s'il un accès non limité au réseau, au disque, à l'imprimante... */
    static public boolean hasNoResctriction() { return STANDALONE; }
 
    /** Retourne true si Aladin est en mode fullscreen (ou preview) */
@@ -4735,7 +4785,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public boolean isOutreach() { return OUTREACH; }
 
 
-   /** Dï¿½s que je saurai le faire */
+   /** Dès que je saurai le faire */
    protected boolean hasClipBoard() {
       Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
       Transferable tr=null;
@@ -4803,8 +4853,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Copie du texte dans le clipboard de la machine
-    *  (sous Unix/Linux, ï¿½ la fois dans le clipboard systï¿½me et dans le clipboard de sï¿½lection)
-    * @param text le texte ï¿½ mettre dans le presse-papiers
+    *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
+    * @param text le texte à mettre dans le presse-papiers
     */
    protected void copyToClipBoard(String text) {
       if( isNonCertifiedApplet() ) return;
@@ -4814,8 +4864,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Copie du texte dans le clipboard de la machine
-    *  (sous Unix/Linux, ï¿½ la fois dans le clipboard systï¿½me et dans le clipboard de sï¿½lection)
-    * @param L'image ï¿½ mettre dans le presse-papiers
+    *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
+    * @param L'image à mettre dans le presse-papiers
     */
    protected void copyToClipBoard(Image img) {
       if( isNonCertifiedApplet() ) return;
@@ -4825,7 +4875,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Copie d'un objet dans le clipboard de la machine
-    *  (sous Unix/Linux, ï¿½ la fois dans le clipboard systï¿½me et dans le clipboard de sï¿½lection)
+    *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
     * @param l'objet transferable
     */
    protected static void copyToClipBoard(Transferable selection) {
@@ -4834,7 +4884,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
       if( clipboard!=null ) clipboard.setContents(selection, aladin);
       // - l'autre dont le contenu est accessible par le bouton du milieu
-      // (mais on ne peut y accï¿½der que depuis Java 1.4 !) et il n'existe pas sous Windows
+      // (mais on ne peut y accéder que depuis Java 1.4 !) et il n'existe pas sous Windows
       //      if( Aladin.JAVAAFTER140 ) {
       clipboard = Toolkit.getDefaultToolkit().getSystemSelection();
       if( clipboard!=null ) clipboard.setContents(selection, aladin);
@@ -4858,7 +4908,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** implï¿½mentation de l'interface ClipboardOwner */
+   /** implémentation de l'interface ClipboardOwner */
    public void lostOwnership(Clipboard clipboard, Transferable contents) {}
 
    /** Sort du mode help si necessaire
@@ -4921,23 +4971,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final int MARGEB=25;  // Taille de la barre sous windows
 
 
-   /** retourne le dï¿½callage en absisse qu'il faut ajouter ï¿½ la position lors de
-    * la crï¿½ation d'une nouvelle frame dans le cas de multi-ï¿½crans
+   /** retourne le décallage en absisse qu'il faut ajouter à la position lors de
+    * la création d'une nouvelle frame dans le cas de multi-écrans
     */
    static private int getMainWindowOffset() {
       try {
          Point p = aladin.f.getLocation();
          Dimension d = aladin.f.getSize();
-         if( p.x+d.width<0 ) return -1024;  // 2ï¿½me ï¿½cran ï¿½ gauche
-         else if( p.x>SCREENSIZE.width )return SCREENSIZE.width; // 2ï¿½me ï¿½cran ï¿½ droite
+         if( p.x+d.width<0 ) return -1024;  // 2ème écran à gauche
+         else if( p.x>SCREENSIZE.width )return SCREENSIZE.width; // 2ème écran à droite
       } catch( Exception e) {}
-      return 0; // Pas de deuxiï¿½me ï¿½cran ou problï¿½me
+      return 0; // Pas de deuxième écran ou problême
    }
 
-   /** Retourne le positionnement des Frames utilisï¿½es par Aladin
-    *  en fonction de la taille de l'ï¿½cran et du nombre d'ï¿½crans afin que les fenï¿½tres
-    *  ent dans le mï¿½me ï¿½cran.
-    *  @param f objet ï¿½ positionner
+   /** Retourne le positionnement des Frames utilisées par Aladin
+    *  en fonction de la taille de l'écran et du nombre d'écrans afin que les fenêtres
+    *  ent dans le même écran.
+    *  @param f objet à positionner
     *  @return la localisation
     */
    static protected Point computeLocation(Frame f) {
@@ -4978,7 +5028,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          return p;
       }
 
-      // Pour aladin lui-mï¿½me
+      // Pour aladin lui-même
       //      d = f.getSize();
       //      int id = aladin.getInstanceId();
       //      int x = 500+id*20;
@@ -4993,8 +5043,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    }
 
-   /** Ajoute un offset ï¿½ la position de la fenï¿½tre dans le cas oï¿½ il s'agit d'une
-    * fenï¿½tre secondaire */
+   /** Ajoute un offset à la position de la fenêtre dans le cas où il s'agit d'une
+    * fenêtre secondaire */
    private void offsetLocation() {
       int id = getInstanceId();
       if( id==0 ) return;
@@ -5005,7 +5055,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Curseurs pour la rotation des Apertures
-    * et pour le dï¿½placement d'un plan */
+    * et pour le déplacement d'un plan */
    static private Cursor turnCursor=null,planCursor=null,joindreCursor=null,tagCursor=null,blankCursor=null,lookCursor=null;
 
    static private int BLANKCURSORDEF[][]={
@@ -5146,43 +5196,43 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //      } catch( Exception e) { e.printStackTrace(); return new Dimension(32,32); }
    //  }
 
-   /** Gï¿½nï¿½ration d'un curseur pour la rotation des Apertures */
+   /** Génération d'un curseur pour la rotation des Apertures */
    static private Cursor getTurnCursor() {
       if( turnCursor==null ) turnCursor=createCursor(TURNCURSORDEF);
       return turnCursor;
    }
 
-   /** Gï¿½nï¿½ration d'un curseur pour le dï¿½placement des plans */
+   /** Génération d'un curseur pour le déplacement des plans */
    static private Cursor getPlanCursor() {
       if( planCursor==null ) planCursor=createCursor(PLANCURSORDEF);
       return planCursor;
    }
 
-   /** Gï¿½nï¿½ration d'un curseur pour le connection de points de controle */
+   /** Génération d'un curseur pour le connection de points de controle */
    static private Cursor getJoindreCursor() {
       if( joindreCursor==null ) joindreCursor=createCursor(JOINDRECURSORDEF);
       return joindreCursor;
    }
 
-   /** Gï¿½nï¿½ration d'un curseur pour le connection de points de controle */
+   /** Génération d'un curseur pour le connection de points de controle */
    static private Cursor getTagCursor() {
       if( tagCursor==null ) tagCursor=createCursor(TAGCURSORDEF);
       return tagCursor;
    }
 
-   /** Gï¿½nï¿½ration d'un curseur totalement transparent (pour le mode cinema) */
+   /** Génération d'un curseur totalement transparent (pour le mode cinema) */
    static private Cursor getBlankCursor() {
       if( blankCursor==null ) blankCursor=createCursor(BLANKCURSORDEF);
       return blankCursor;
    }
 
-   /** Gï¿½nï¿½ration d'un curseur en forme de loupe (outil look) */
+   /** Génération d'un curseur en forme de loupe (outil look) */
    static private Cursor getLookCursor() {
       if( lookCursor==null ) lookCursor=createCursor(LOOKCURSORDEF,false);
       return lookCursor;
    }
 
-   /** Construction d'un curseur sur mesure avec symï¿½trie verticale */
+   /** Construction d'un curseur sur mesure avec symétrie verticale */
    static private Cursor createCursor(int cursor[][]) { return createCursor(cursor,cursor[0].length<30); }
    static private Cursor createCursor(int cursor[][],boolean fold) {
       Cursor myCursor;
@@ -5199,8 +5249,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( d.height<h ) d.height=h;
          int tc [] = new int[d.width*d.height];
 
-         // On recopie, ï¿½ventuellement par symï¿½trie verticale uniquement dans le coin en haut ï¿½ gauche
-         // du curseur (dï¿½pendant de la meilleure taille de curseur retournï¿½e par le systï¿½me)
+         // On recopie, éventuellement par symétrie verticale uniquement dans le coin en haut à gauche
+         // du curseur (dépendant de la meilleure taille de curseur retournée par le système)
          for( int i=0; i<h; i++ ) {
             for( int j=0; j<w; j++ ) {
                int c = cursor[i][j];
@@ -5210,7 +5260,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                if( fold ) tc[i*d.width + w*2-j-1] = c;
             }
          }
-         // On crï¿½e le curseur
+         // On crée le curseur
          Image im = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(d.width,d.height,tc,0,d.width));
          myCursor = Toolkit.getDefaultToolkit().createCustomCursor(im,new Point(width/2-1,h/2-1),"Turn");
          // N'ETAIT PAS UTILISABLE POUR COMPATIBILITE JVM 1.1.4 Windows
@@ -5261,7 +5311,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    private long ot=0L;
    
-   /** Met ï¿½ jour diffï¿½rents ï¿½lï¿½ments */
+   /** Met à jour différents éléments */
    protected void resumeVariousThinks() {
 
       long t = System.currentTimeMillis();
@@ -5496,7 +5546,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       } catch( Exception e ) { e.printStackTrace(); }
 
-      // Test si le stack a ï¿½voluï¿½, et l'indique aux VO Observers correspondants
+      // Test si le stack a évolué, et l'indique aux VO Observers correspondants
       if( VOObsEvent!=null ) {
          String status = command.getStatus("stack");
          if( !status.equals(ostatus) ) {
@@ -5656,7 +5706,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.f.setTitle(TITRE+" "+getReleaseNumber()
             +(OUTREACH?OUTREACH_VERSION : PROTO?PROTO_VERSION : BETA?BETA_VERSION:"")
             +(id>0?" ("+(id)+")":""));
-      a.f.pack(); // Mï¿½me en mode script, le pack est indipensable pour crï¿½er les peer classes
+      a.f.pack(); // Même en mode script, le pack est indipensable pour créer les peer classes
       if( NOGUI ) return;
       Rectangle r = a.configuration.getWinLocation();
       if( r==null || r.x>SCREENSIZE.width || r.y>SCREENSIZE.height ) {
@@ -5683,10 +5733,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Positionne des flags et des propriï¿½tï¿½s spï¿½cifiques au Mac
+    * Positionne des flags et des propriétés spécifiques au Mac
     */
    static private void setMacWinLinuxProperties() {
-      // propriï¿½tï¿½ spï¿½cifique ï¿½ Mac OS permettant de faire apparaitre les ï¿½lï¿½ments de menu tout en haut (selon le L'n'F Mac)
+      // propriété spécifique à Mac OS permettant de faire apparaitre les éléments de menu tout en haut (selon le L'n'F Mac)
       // (cf.	http://devworld.apple.com/documentation/Java/Conceptual/Java14Development/04-JavaUIToolkits/JavaUIToolkits.html#//apple_ref/doc/uid/TP40001901-209837)
       macPlateform = System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
       winPlateform = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
@@ -5697,23 +5747,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   // Les commandes a exï¿½cuter aprï¿½s la crï¿½ation d'Aladin (voir creanObj.run())
+   // Les commandes a exécuter après la création d'Aladin (voir creanObj.run())
    private StringBuffer launchScript=null;
    private boolean quitAfterLaunchScript=false;
 
-   /** Retourne le script de dï¿½marrage, ou "" si rien ï¿½ faire */
+   /** Retourne le script de démarrage, ou "" si rien à faire */
    protected String getLaunchScript() {
       if( launchScript==null ) return "";
       return launchScript+";";
    }
 
-   /** Ajoute une commande au script de dï¿½marrage */
+   /** Ajoute une commande au script de démarrage */
    protected void addLaunchScript(String s) {
       if( launchScript==null ) launchScript = new StringBuffer(s);
       else launchScript.append(";"+s);
    }
 
-   /** Retourne true s'il faut quitter Aladin aprï¿½s le script de dï¿½marrage */
+   /** Retourne true s'il faut quitter Aladin après le script de démarrage */
    protected boolean quitAfterLaunchScript() { return quitAfterLaunchScript; }
 
    /**
@@ -5778,7 +5828,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-hub") )         { NOHUB=false; lastArg=i+1; }
          else if( args[i].equals("-noplugin") )    { NOPLUGIN=true; lastArg=i+1; }
          else if( args[i].equals("-plugin") )      { NOPLUGIN=false; lastArg=i+1; }
-         else if( args[i].equals("-open") ) lastArg=i+1;	//Simplement ignorï¿½ pour supporter protocol Windows
+         else if( args[i].equals("-open") ) lastArg=i+1;	//Simplement ignoré pour supporter protocol Windows
          else if( args[i].startsWith("-screen=") ) { SCREEN=args[i].substring(8); lastArg=i+1; }
          else if( args[i].startsWith("-preview") ) { SCREEN="preview"; lastArg=i+1; }
          else if( args[i].startsWith("-script=") ) { scriptParam=args[i].substring(8); lastArg=i+1; }
@@ -5801,18 +5851,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       //      if( chart!=null ) NOGUI=true;
 
-      // TODO : ï¿½ supprimer
+      // TODO : à supprimer
       USE_ACR = PROTO;
 
-      // Crï¿½ation d'Aladin
-      setMacWinLinuxProperties(); // indispensable d'appeler cette mï¿½thode avant la crï¿½ation de l'objet Aladin !
+      // Création d'Aladin
+      setMacWinLinuxProperties(); // indispensable d'appeler cette méthode avant la création de l'objet Aladin !
       aladin = new Aladin();
       aladin.SCREEN = SCREEN;
       aladin.flagScreen = SCREEN!=null;
       if( scriptParam!=null ) aladin.addLaunchScript(scriptParam);
       startInFrame(aladin);
 
-      // Simplification d'ï¿½criture pour une simple carte de champ
+      // Simplification d'écriture pour une simple carte de champ
       if( chart!=null ) {
          if( !chart.startsWith("get") ) chart="get "+chart;
          aladin.addLaunchScript(chart+";grid on;save -png");
@@ -5833,7 +5883,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
       }
 
-      // Passage d'un script par paramï¿½tre du main
+      // Passage d'un script par paramètre du main
       if( aladin.getLaunchScript().length()>0 && NOGUI ) aladin.quitAfterLaunchScript=true;
 
    }
@@ -5846,7 +5896,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       try{ mt.waitForID(0); } catch( Exception e){ if( levelTrace>=3 ) e.printStackTrace(); }
 
       // Methode rapide, mais susceptible de ne pas marcher dans
-      // des versions postï¿½rieures de JVM
+      // des versions postérieures de JVM
       //      while( img.getWidth(this)<0 ) Util.pause(10);
    }
    
@@ -5868,13 +5918,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
       messReady=true;
    }
 
-   /** Retourne true si le dialog est prï¿½t */
+   /** Retourne true si le dialog est prêt */
    protected boolean dialogOk() {
       if( Aladin.PROTO ) return dialog!=null && calque!=null && directory!=null && directory.dialogOk() ;
       return dialog!=null && calque!=null;
    }
 
-   /** Chargement d'un fichier passï¿½ en paramï¿½tre */
+   /** Chargement d'un fichier passé en paramètre */
    protected void load(String f,String label) {
       waitDialog();
       f=getFullFileName(f);
@@ -5911,7 +5961,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected Vector VOObsPos = null;	// Liste des VOObserver de la position courante
    protected Vector VOObsPix = null;  // Liste des VOObserver de la valeur courante du pixel
    protected Vector VOObsMes = null;  // Liste des VOObserver sur les mesures
-   protected Vector VOObsEvent= null;  // Liste des VOObserver sur les ï¿½vï¿½nements de la pile
+   protected Vector VOObsEvent= null;  // Liste des VOObserver sur les événements de la pile
 
    /** Pour interface VOObserver */
    protected void sendObserver() {
@@ -5948,7 +5998,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //
    //      if( VOObsMes==null ) return;
    //
-   //      // Recherche des coordonnï¿½es des coins du rectangle de sï¿½lection
+   //      // Recherche des coordonnées des coins du rectangle de sélection
    //      ViewSimple v = view.getCurrentView();
    //      if( v==null ) return;
    //      Plan plan = v.pref;
@@ -6011,7 +6061,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** Envoi d'une commande aux observers des ï¿½vï¿½nements sur la pile pour indiquer un changement  */
+   /** Envoi d'une commande aux observers des évènements sur la pile pour indiquer un changement  */
    protected void sendEventObserver() {
       if( aladin.VOObsEvent==null || aladin.VOObsEvent.size()==0 ) return;
       String s = "info stackEvent";
@@ -6030,7 +6080,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public String execCommand(String cmd) {
       waitDialog();
       
-      // Arrï¿½t de l'animation en cours
+      // Arrêt de l'animation en cours
       while( isAnimated() ) stopAnimation();
 
       try { return command.execScript(cmd); }
@@ -6050,7 +6100,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public void execAsyncCommand(String cmd) {
       waitDialog();
       
-      // Arrï¿½t de l'animation en cours
+      // Arrêt de l'animation en cours
       while( isAnimated() ) stopAnimation();
 
       console.pushCmd(cmd);
@@ -6062,7 +6112,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected boolean messagingMgrCreated = false;
    /**
     * retourne l'instance du AppMessagingInterface correspondant
-    * crï¿½e l'objet si nï¿½cessaire
+    * crée l'objet si nécessaire
     *
     */
    protected synchronized AppMessagingInterface getMessagingMgr() {
@@ -6183,7 +6233,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          //
          //         } else throw new Exception("Data format not recognized");
 
-         // magic code pour les FoV sans position (ie ne crï¿½ant pas de nouveau plan)
+         // magic code pour les FoV sans position (ie ne créant pas de nouveau plan)
          if( n==-2 ) return null;
 
          if( voApp!=null ) {
@@ -6199,7 +6249,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //         int n = calque.newPlan(in,label,null);
       //         if( n==-1 ) throw new Exception("Data format not recognized");
       //
-      //         // magic code pour les FoV sans position (ie ne crï¿½ant pas de nouveau plan)
+      //         // magic code pour les FoV sans position (ie ne créant pas de nouveau plan)
       //         if( n==-2 ) return null;
       //
       //         if( voApp!=null ) {
@@ -6318,8 +6368,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** En fin de programme, supprimer les sï¿½lections et show sur tous les observers si
-    * c'est nï¿½cessaire */
+   /** En fin de programme, supprimer les sélections et show sur tous les observers si
+    * c'est nécessaire */
    private void resetCallbackVOApp() {
       if( VOAppObserver!=null ) {
          Enumeration e = VOAppObserver.elements();
@@ -6336,7 +6386,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** Dernier objet (Source) transmis ï¿½ un observer */
+   /** Dernier objet (Source) transmis à un observer */
    //   private Objet oVOApp=null;
 
 
@@ -6382,7 +6432,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return n;
    }
 
-   /** Affiche une message de demande de confirmation s'il y a plus de 5 images ï¿½ charger simultanï¿½ment */
+   /** Affiche une message de demande de confirmation s'il y a plus de 5 images à charger simultanément */
    protected boolean testNbImgLoad(int n) {
       if( n<6 ) return true;
       if( n>16 ) {
@@ -6420,9 +6470,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /**
     * Generation du VOTable pour la legende d'un objet (les champs FIELD)
-    * ATTENTION: Comme cette fonction est utilisï¿½e pour passer les info ï¿½ VOPlot
-    * et que VOPLOT ne veut tracer que les colonnes qui ont un datatype dument renseignï¿½,
-    * je force ï¿½ "double" si le datatype du field est ï¿½ null.
+    * ATTENTION: Comme cette fonction est utilisée pour passer les info à VOPlot
+    * et que VOPLOT ne veut tracer que les colonnes qui ont un datatype dument renseigné,
+    * je force à "double" si le datatype du field est à null.
     * @param s le stream de sortie
     * @param o l'objet en question
     * @param writeOID true si on doit mettre la colonne OID
@@ -6441,7 +6491,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       writeBytes(s, "<TABLE name=\""+XMLParser.XMLEncode(tableName)+"\">\n");
       indent+=3;
 
-      // Les dï¿½finitions par des groupes
+      // Les définitions par des groupes
       if( leg.hasGroup() ) {
          writeBytes(s, leg.getGroup() );
       }
@@ -6537,7 +6587,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( addXY ) {
 
          pAddXY = o.getViewCoordDouble(view.getCurrentView(),o.getL(),o.getL());
-         // si hors champ, on ignore carrï¿½ment la source !
+         // si hors champ, on ignore carrément la source !
          if( pAddXY==null ) {
             return;
          }
@@ -6571,7 +6621,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * Dans le cas ou il n'y a aucun objet (selectionne) dans le plan, la ressource
     * est totalement omise.
     * @param s1 le stream de sortie
-    * @param o la source ï¿½ traiter
+    * @param o la source à traiter
     * @param writeOID true si on ecrit la colonne OID
     */
    private void writeSourceInVOTable(OutputStream s1, Source o,
@@ -6646,12 +6696,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-    * Generation du VOTable pour une source particuliï¿½re
+    * Generation du VOTable pour une source particulière
     * @param s1 le stream de sortie
-    * @param o la source ï¿½ traiter
-    * @param oleg la lï¿½gende de la source prï¿½cï¿½dente, ou null si aucune
+    * @param o la source à traiter
+    * @param oleg la légende de la source précédente, ou null si aucune
     * @param writeOID true si on ecrit la colonne OID
-    * @return la lï¿½gende de la source courante
+    * @return la légende de la source courante
     */
    private Legende writeOneSourceInVOTable(OutputStream s1, Source o, Legende oleg,
          boolean writeOID, String linkSuffix, boolean addXY)
@@ -6700,25 +6750,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
                   " xmlns=\"http://www.ivoa.net/xml/VOTable/v1.1\""+
                   " xsi:schemaLocation=\"http://www.ivoa.net/xml/VOTable/v1.1 http://www.ivoa.net/xml/VOTable/v1.1\">\n"+
                   "  <DESCRIPTION>VOTable generated by Aladin</DESCRIPTION>\n"+
-                  // TODO : vï¿½rifier si c'est encore conforme en VOTable 1.1
+                  // TODO : vérifier si c'est encore conforme en VOTable 1.1
                   "  <DEFINITIONS>\n"+
                   "    <COOSYS ID=\"J2000\" equinox=\"2000.\" epoch=\"2000\" system=\"eq_FK5\"/>\n"+
                   "  </DEFINITIONS>\n"
             );
 
 
-      // plans non null : generation de VOTable pour les plans mentionnï¿½s
+      // plans non null : generation de VOTable pour les plans mentionnés
       if( plans!=null ) {
          for( int i=0; i<plans.length; i++ ) {
             String linkSuffix = xmatch?"_tab"+(i+1):null;
             writePlanInVOTable(out, plans[i], false, writeOID, linkSuffix, addXY);
          }
 
-         // Gï¿½nï¿½ration d'un VOTable juste pour cette source
+         // Génération d'un VOTable juste pour cette source
       } else if( src!=null ) {
          writeSourceInVOTable(out,src,writeOID,null,addXY);
 
-         // sinon on gï¿½nï¿½re le VOTable pour tous les objets selectionnes
+         // sinon on génére le VOTable pour tous les objets selectionnes
       } else {
          for( int i=calque.plan.length-1; i>=0; i-- ) {
             Plan p = calque.plan[i];
@@ -6734,7 +6784,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /**
     * Generation de VOTable de tous les objets en cours de selection
-    * dans Aladin (utilisï¿½ pour envoi VOTable ï¿½ VOPlot)
+    * dans Aladin (utilisé pour envoi VOTable à VOPlot)
     */
    protected MyByteArrayStream writeObjectInVOTable(Plan pc) throws IOException {
       return writeObjectInVOTable(new Plan[] {pc}, null, false, false, false);
@@ -6742,7 +6792,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /**
     * Generation de VOTable de tous les objets en cours de selection
-    * dans Aladin (utilisï¿½ pour envoi VOTable ï¿½ VOPlot)
+    * dans Aladin (utilisé pour envoi VOTable à VOPlot)
     */
    protected MyByteArrayStream writeObjectInVOTable() throws IOException {
       return writeObjectInVOTable(null, null, true, false, false);
@@ -6750,7 +6800,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /**
     * Generation de VOTable pour les objets du PlanCatalog pc
-    * (utilisï¿½ pour sauvegarde d'un plan en VOTable)
+    * (utilisé pour sauvegarde d'un plan en VOTable)
     * @param pc le plan catalogue pour lequel on veut un VOTable
     * @return ByteArrayStream
     * @throws IOException
@@ -6792,8 +6842,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return s;
    }
    /**
-    * Cache d'imagettes (logo, images utilisï¿½es dans les helps...)
-    * @param name Nom de l'image ï¿½ retrouver. Elle peut se trouver
+    * Cache d'imagettes (logo, images utilisées dans les helps...)
+    * @param name Nom de l'image à retrouver. Elle peut se trouver
     *             dans le fichier jar, dans le home directory ou
     *             sur le serveur de l'applet
     * @return L'image, ou null si erreur
@@ -6932,8 +6982,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
     */
 
-   /** thomas : je ne sais pas bien oï¿½ mettre cette mï¿½thode
-    * Traitement d'un document VOTable dï¿½crivant un Field of View (MyInputStream.FOV_ONLY)
+   /** thomas : je ne sais pas bien où mettre cette méthode
+    * Traitement d'un document VOTable décrivant un Field of View (MyInputStream.FOV_ONLY)
     * @param in
     */
    public int processFovVOTable(MyInputStream in, String label, boolean createNewPlane) {
@@ -7024,7 +7074,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
 
-   /** Libï¿½re toute la mï¿½moire inutile */
+   /** Libère toute la mémoire inutile */
    protected void gc() {
       if( gc ) {
          trace(4,"Aladin.gc()...");
@@ -7043,7 +7093,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       gc();
    }
 
-   /** Gï¿½nï¿½ration d'un log via le glu */
+   /** Génération d'un log via le glu */
    public void log(String id,String param) {
       glu.log(id,param);
    }
@@ -7074,12 +7124,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
 
    boolean dontReconnectAutomatically = false ; // if user asked once to be unregistered from the hub
-   /** met ï¿½ jour l'ï¿½tat de la connexion PLASTIC/SAMP
-    * - si non connectï¿½ au hub : tente de se connecter (sauf si l'utilisateur s'est dï¿½connectï¿½ de son fait)
+   /** met à jour l'état de la connexion PLASTIC/SAMP
+    * - si non connecté au hub : tente de se connecter (sauf si l'utilisateur s'est déconnecté de son fait)
     *
-    * - si connectï¿½ : vï¿½rifie que la connexion est valide
+    * - si connecté : vérifie que la connexion est valide
     *
-    * Cette mï¿½thode est appelï¿½e par le timer dï¿½fini au niveau de CreatObj.run()
+    * Cette méthode est appelée par le timer défini au niveau de CreatObj.run()
     */
    protected void setPlastic(final boolean launchHubIfNeeded) {
       final AppMessagingInterface pMgr = getMessagingMgr();
@@ -7112,8 +7162,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private long lastNbSrc=0;
    private long lastSetMemory = 0L;
 
-   /** Positionne le statut de l'usage de la mï¿½moire (pour les data)
-    * en bas ï¿½ droite de l'ï¿½cran d'Aladin */
+   /** Positionne le statut de l'usage de la mémoire (pour les data)
+    * en bas à droite de l'écran d'Aladin */
    protected void setMemory() {
       long t = System.currentTimeMillis();
       if( t-lastSetMemory<1000 ) return;
@@ -7154,7 +7204,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       lastMem=mem;
       lastNbSrc=nbSrc;
 
-      // Warnings pour les limites de mï¿½moire
+      // Warnings pour les limites de mémoire
       int memory = (int)(MAXMEM-lastMem);
       if( memory<50 ) {
          trace(4,"Aladin.setMemory(): low memory ("+memory+" MB)");
@@ -7171,16 +7221,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    public long freeSomeRam() { return freeSomeRam(-1,null); }
 
-   /** Demande de libï¿½ration de la mï¿½moire non indispensable. Si -1, demande du max
-    * @param askMem Nombre d'octets demandï¿½s, -1 si max
-    * @param saufPlan plan a ne pas libï¿½rer, null si aucun spï¿½cifiï¿½
-    * @return nombre d'octets libï¿½rï¿½s
+   /** Demande de libération de la mémoire non indispensable. Si -1, demande du max
+    * @param askMem Nombre d'octets demandés, -1 si max
+    * @param saufPlan plan a ne pas libérer, null si aucun spécifié
+    * @return nombre d'octets libérés
     */
    public long freeSomeRam(long askMem,Plan saufPlan) {
       long mem=0;
       Plan [] p = calque.getPlans();
       for( int i=0; i<p.length; i++ ) {
-         if( p[i]==saufPlan ) continue;     // On ne libï¿½re pas ce plan
+         if( p[i]==saufPlan ) continue;     // On ne libére pas ce plan
          if( p[i] instanceof PlanImageBlink ) {
             mem+= ((PlanImageBlink)p[i]).freeRam(askMem==-1 ? -1 : askMem-mem);
          }
@@ -7192,7 +7242,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    private boolean lowMem=false;
 
-   /** Retourne le nombre de mï¿½gaoctets disponibles en RAM */
+   /** Retourne le nombre de mégaoctets disponibles en RAM */
    protected double getMem() {
       double mem = (Runtime.getRuntime().maxMemory()-
             (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()))/(1024*1024.);
@@ -7202,8 +7252,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Retourne true si on a de la marge en RAM */
    protected boolean enoughMemory() { return MAXMEM-lastMem>256; }
 
-   /** Ajuste rapidement le status de mï¿½moire pour tenir compte de nouvelles sources
-    * sï¿½lectionnï¿½es */
+   /** Ajuste rapidement le status de mémoire pour tenir compte de nouvelles sources
+    * sélectionnées */
    void adjustNbSel() {
       if( MB==null ) MB="Mb";
       int nbSel = view.vselobj.size();
@@ -7214,7 +7264,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Changement du niveau de trace */
    public void setTraceLevel(int n) {
       levelTrace=n;
-      //      if( n>0 ) pixel.addDebugItem();   // ajout de la possibilitï¿½ Pixel FITS value
+      //      if( n>0 ) pixel.addDebugItem();   // ajout de la possibilité Pixel FITS value
       if( n==0 ) command.println("Trace off");
       else command.println("Trace on (level "+n+")");
       view.newView();
@@ -7250,8 +7300,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    public void stopAnimation() { flagGoto=false; }
    
-   /** Va montrer la position repï¿½ree par son identificateur ou sa coordonnï¿½e J2000
-    * @param target Identificateur valide, ou coordonnï¿½es J2000
+   /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
+    * @param target Identificateur valide, ou coordonnées J2000
     * @return true si ok
     */
    public void gotoAnimation(String target,String radius) {
@@ -7466,9 +7516,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //	faire log IDL + log macro
    //	faire FAQ IDL + FAQ macro
 
-   /************** Mï¿½thodes liï¿½es ï¿½ l'interaction IDL/Aladin ****************/
+   /************** Méthodes liées à l'interaction IDL/Aladin ****************/
 
-   // true si on n'a pas encore loguï¿½ l'usage via IDL
+   // true si on n'a pas encore logué l'usage via IDL
    private boolean mustLogIDL = true;
 
    protected String osName;
@@ -7487,8 +7537,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** transmet la position courante du rï¿½ticule
-    * mï¿½thode ad-hoc crï¿½ï¿½e pour l'interaction avec IDL
+   /** transmet la position courante du réticule
+    * méthode ad-hoc créée pour l'interaction avec IDL
     *
     * @return la position sous forme d'un tableau de double (1er elt : RAJ J2000, 2e elt : DE J2000)
     */
@@ -7500,8 +7550,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return new double[] {view.repere.raj, view.repere.dej};
    }
 
-   /** transmet la valeur du pixel pour la position courante du rï¿½ticule
-    * mï¿½thode ad-hoc crï¿½ï¿½e pour l'interaction avec IDL
+   /** transmet la valeur du pixel pour la position courante du réticule
+    * méthode ad-hoc créée pour l'interaction avec IDL
     *
     * @return la valeur du pixel sous la forme d'un double
     */
@@ -7514,11 +7564,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
 
-   /** sï¿½lection de source selon
-    * (utilisï¿½ par IDL via IDL Java Bridge)
+   /** sélection de source selon
+    * (utilisé par IDL via IDL Java Bridge)
     *
     * @param planeName label du plan
-    * @param indexes numï¿½ros d'ordre des sources
+    * @param indexes numéros d'ordre des sources
     */
    public void selectSourcesByRowNumber(String planeName, int[] indexes) {
       logIDL("selectSourcesByRowNumber");
@@ -7534,8 +7584,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
 
-   /** Rï¿½cupï¿½re le contenu d'un plan catalogue dans des vecteurs
-    * (utilisï¿½ par IDL via IDL Java Bridge)
+   /** Récupère le contenu d'un plan catalogue dans des vecteurs
+    * (utilisé par IDL via IDL Java Bridge)
     *
     * @param planeName
     * @param colNames
@@ -7559,7 +7609,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Legende leg = plan.getFirstLegende();
       for (int i = 0; i < colNames.length; i++) {
 
-         // au cas oï¿½ on n'a pas donnï¿½ de noms de colonnes
+         // au cas où on n'a pas donné de noms de colonnes
          if( colNames[i]==null || colNames[i].length()==0 ) {
             colIdx[i] = i;
             continue;
@@ -7590,7 +7640,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          s = (Source)o;
          //			values = Util.split(s.info, "\t");
 
-         // boucle sur les colonnes ï¿½ rï¿½cupï¿½rer
+         // boucle sur les colonnes à récupèrer
          for( int j=0; j<colIdx.length; j++ ) {
             //				System.out.println(s.getValue(colIdx[j]));
             data[i][j] = s.getValue(colIdx[j]);
@@ -7605,10 +7655,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return data;
    }
 
-   /** Charge une image ï¿½ partir de son path
+   /** Charge une image à partir de son path
     *
     * @param file path vers l'image
-    * @param planeName nom du plan crï¿½ï¿½
+    * @param planeName nom du plan créé
     */
    public void loadImageFromFile(String file, String planeName) {
       logIDL("loadImageFromFile");
@@ -7622,8 +7672,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** Crï¿½e un nouveau plan catalogue ï¿½ partir d'un tableau de vecteurs
-    * (utilisï¿½ par IDL via IDL Java Bridge)
+   /** Crée un nouveau plan catalogue à partir d'un tableau de vecteurs
+    * (utilisé par IDL via IDL Java Bridge)
     *
     * @param vectors
     * @param vecNames
@@ -7633,13 +7683,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
       logIDL("loadTableFromVectors");
 
       Vector vField = new Vector();
-      // on donne des noms par dï¿½faut si nï¿½cessaire
+      // on donne des noms par défaut si nécessaire
       if( vecNames==null ) {
          vecNames = new String[vectors.length];
          for( int k=0; k<vecNames.length; k++ ) vecNames[k] = "col"+k;
       }
 
-      // TODO : ï¿½ virer, plus nï¿½cessaire
+      // TODO : à virer, plus nécessaire
       vecNames[0] = "ra";
       vecNames[1] = "dec";
 
@@ -7696,10 +7746,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //		int indice = calque.newPlanCatalog(mis, planeName);
       //		PlanCatalog plan = (PlanCatalog)calque.plan[indice];
    }
-   /******************* fin des mï¿½thodes liï¿½es ï¿½ IDL ************************/
+   /******************* fin des méthodes liées à IDL ************************/
 
 
-   /** Crï¿½ation d'un fichier temporaire dans le rï¿½pertoire "cache" d'Aladin
+   /** Création d'un fichier temporaire dans le répertoire "cache" d'Aladin
     *
     * @param prefix
     * @param suffix

@@ -876,7 +876,7 @@ public class TreeObjDir extends TreeObj {
       if( prop==null ) return;
       
       String gluTag = prop.get("ssa_glutag");
-      if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SSA("+internalId+")";
+      if( gluTag==null && prop.get("ssa_service_url")!=null )  gluTag = "SSA("+internalId+")";
 
       if( gluTag==null ) {
          aladin.console.printError("loadSIA error for "+internalId);
@@ -896,8 +896,8 @@ public class TreeObjDir extends TreeObj {
       if( gluTag==null ) gluTag = prop.get("sia2_glutag");
       
       // URL de base ?
-      if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
       if( gluTag==null && prop.get("sia2_service_url")!=null ) gluTag = "SIA2("+internalId+")";
+      if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
       
       if( gluTag==null ) {
          aladin.console.printError("loadSIA error for "+internalId);

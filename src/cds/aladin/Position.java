@@ -600,10 +600,15 @@ public class Position extends Obj {
       
       if( zoom>2 ) {
          Point p = v.getViewCoord(x+0.5,y+0.5);
-        if( Double.isNaN(pix) ) g.setColor(Color.orange);
-         else g.setColor(Color.red);
-         if( zoom>4 ) Util.fillCircle5(g, p.x, p.y);
-         else Util.fillCircle2(g, p.x, p.y);
+         if( !Double.isNaN(pix) ) {
+            g.setColor( col );
+            if( zoom>4 ) Util.fillCircle5(g, p.x, p.y);
+            else Util.fillCircle2(g, p.x, p.y);
+         }
+//         if( Double.isNaN(pix) ) g.setColor(Color.orange);
+//         else g.setColor(Color.red);
+//         if( zoom>4 ) Util.fillCircle5(g, p.x, p.y);
+//         else Util.fillCircle2(g, p.x, p.y);
       }
       g.setColor(col);
       
@@ -636,10 +641,15 @@ public class Position extends Obj {
       
       if( pixelSize>4 ) {
          Point p = v.getViewCoord(coo.x,coo.y);
-         if( Double.isNaN(pix) ) g.setColor(Color.orange);
-         else g.setColor(Color.red);
-         if( pixelSize>8 ) Util.fillCircle5(g, p.x, p.y);
-         else Util.fillCircle2(g, p.x, p.y);
+         if( !Double.isNaN(pix) ) {
+            g.setColor( col );
+            if( pixelSize>8 ) Util.fillCircle5(g, p.x, p.y);
+            else Util.fillCircle2(g, p.x, p.y);
+         }
+//         if( Double.isNaN(pix) ) g.setColor(Color.orange);
+//         else g.setColor(Color.red);
+//         if( pixelSize>8 ) Util.fillCircle5(g, p.x, p.y);
+//         else Util.fillCircle2(g, p.x, p.y);
       }
       g.setColor(col);
       

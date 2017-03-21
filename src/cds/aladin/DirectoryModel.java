@@ -54,8 +54,7 @@ public class DirectoryModel extends DefaultTreeModel {
          subNode = (DefaultMutableTreeNode) e.nextElement();
          int isIn =  populateFlagIn(subNode);
          if( rep==-2 ) rep=isIn;
-         else if( rep==0 && (isIn==-1 || isIn==1) ) rep=isIn;
-         else if( rep==1 && (isIn==-1 || isIn==0) ) rep=-1;
+         else if( rep!=isIn ) rep=-1;
       }
       treeObj.setIn(rep);
       return rep;
