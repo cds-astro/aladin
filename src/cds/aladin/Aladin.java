@@ -684,7 +684,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final int GETHEIGHT  = 15;		// Cochonnerie de getHeight()
 
    // Les menus;
-   String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,
+   String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,SEARCHDIR,
           LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
    MIMAGE,MCATALOG,MOVERLAY,MDOC ;
    String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
@@ -1385,12 +1385,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
          OPENFILE       = "Load local file...";
          OPENURL        = "Load direct URL...";
          OPENLOAD       = "Open server selector...";
-         FILTERDIR      = "Filter data collections...";
+         
+         SEARCHDIR      = "Search a data collection...";
+         FILTERDIR      = "Filter on data collections...";
          
          String[][] menu1 = new String[][] {  {MFILE},
             {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
                  {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
-            {},{FILTERDIR},
+            {},{SEARCHDIR},{FILTERDIR},
             {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
             {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
             {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
@@ -3232,6 +3234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          help.setCenter(false);
          status.setText(chaine.getString("SCRIPT"));
          command.execHelpCmd("");
+      } else if( isMenu(s,SEARCHDIR) ) { directory.focusSearch();
       } else if( isMenu(s,FILTERDIR) ) { directory.openAdvancedFilterFrame();
       } else if( isMenu(s,FULLSCREEN) ) { fullScreen(0);
       } else if( isMenu(s,PREVIEWSCREEN) ) { fullScreen(1);
@@ -4269,9 +4272,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		cooList.add(new Vec3(new Pointing(theta, phi)));
 	}
    
-   /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets
-    * Tente de faire les deux sens d'orientation du polygone et ne garde que celui qui
-    * fournit une surface inférieure à la moitié du ciel */
+   /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets */
    protected HealpixMoc createMocRegionPol(Ligne o, int order) throws Exception {
       HealpixMoc moc=null;
 
@@ -4279,7 +4280,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Coord c1=null;
       boolean first=true;
 
-      // ON NE PREND DESORMAIS QUE LE SENS ANTI-HORAIRE
       ArrayList<Vec3> cooList = new ArrayList<Vec3>();
       Ligne a = o.getLastBout();
       while( a!=null ) {

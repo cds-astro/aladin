@@ -157,16 +157,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       quickFilter = new QuickFilterField(10);
       Util.toolTip(quickFilter,s,true);
-      quickFilter.addKeyListener(new KeyListener() {
-         public void keyTyped(KeyEvent e) { }
-         public void keyPressed(KeyEvent e) { }
-         public void keyReleased(KeyEvent e) {
-            if( e.getKeyCode()==KeyEvent.VK_ENTER ) {
-               iconFilter.setActivated(true);
-               doFiltre();
-            }
-         }
-      });
       
       s = "List of predefined filters. Use '+' button to edit it, or create a new one";
       JLabel fromLabel = new JLabel("from");
@@ -385,15 +375,83 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
    }
    
+   protected void focusSearch() {
+      quickFilter.focus("Your keyword ?");
+   }
+   
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
-   class QuickFilterField extends JTextField implements MouseListener /*,MouseMotionListener*/ {
+   class QuickFilterField extends JTextField implements MouseListener, KeyListener /*,MouseMotionListener*/ {
       private Rectangle cross=null;
+      
 
       QuickFilterField(int nChar) {
          super(nChar);
          addMouseListener(this);
+         addKeyListener(this);
          setUI( new BasicTextFieldUI() );
          updateWidgets();
+      }
+      
+      public void keyTyped(KeyEvent e) { }
+      public void keyPressed(KeyEvent e) { }
+      public void keyReleased(KeyEvent e) {
+         iconFilter.setActivated(true);
+         if( e.getKeyCode()==KeyEvent.VK_ENTER ) {
+            if( timer!=null ) timer.stop(); 
+            timer=null;
+            doFiltre(); 
+         }
+         else filtre();
+      }
+      
+      Timer timer = null;
+      private void filtre() {
+         if( timer==null ) {
+            timer = new Timer(500, new ActionListener() {
+               public void actionPerformed(ActionEvent e) { 
+                  doFiltre();
+                  requestFocus();
+                  timer=null;
+               }
+            });
+            timer.setRepeats(false);
+            timer.start();
+         } else {
+            timer.restart();
+         }
+         updateWidgets();
+      }
+      
+      /** Fait clignoter le champ pour attirer l'attention
+       * de l'utilisateur et demande le focus sur le champ de saisie */
+      protected void focus(String s) { focus(s,null); }
+      protected void focus(String s,final String initial) {
+         setText(s);
+
+         (new Thread() {
+            Color def = getBackground();
+            Color deff = getForeground();
+            public void run() {
+               for( int i=0; i<2; i++ ) {
+                  setBackground(Color.green);
+                  setForeground(Color.black);
+                  Util.pause(800);
+                  setBackground(def);
+                  setForeground(deff);
+                  Util.pause(200);
+               }
+               if( initial==null ) {
+                  setText("");
+                  requestFocusInWindow();
+               } else {
+                  setText(initial);
+                  requestFocusInWindow();
+                  setCaretPosition(getText().length());
+               }
+               if( iconFilter!=null ) iconFilter.setActivated(true);
+               updateWidgets();
+            }
+         }).start();
       }
 
 //      public Dimension getPreferredSize() {  Dimension d = super.getPreferredSize(); d.height-=4; return d; } 
@@ -889,16 +947,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       HashMap<String,Integer> hs = new HashMap<String,Integer>();
       int n = model.countDescendance( hs );
       counter = hs;
-      System.out.println("Init counter n="+n);
       return n;
    }
    
    /** Mise à jour du titre au-dessus de l'arbre en fonction des compteurs */
    private void updateTitre(int nb) {
       String t = DIRECTORY;
-      if( nb!=-1 && dirList==null && nb<dirList.size() ) {
+      if( nb!=-1 && dirList!=null && nb<dirList.size() ) {
          t = "<html>"+t+"<font color=\"#D0D0F0\"> &rarr; "+nb+" / "+dirList.size()+"</font></html>";
-
       }
       dir.setText(t);
    }
