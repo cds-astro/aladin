@@ -217,7 +217,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.614";
+   static public final    String VERSION = "v9.615";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3164,6 +3164,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
       String s = ji.getActionCommand();
       execute(s);
    }
+   
+   /** Ouvre le panneau du Directory Tree si ce n'est déjà fait */
+   private void openDirTab() {
+      int w = splitHiPSWidth.getDividerLocation();
+      if( w<Configuration.DEF_HWIDTH ) splitHiPSWidth.setDividerLocation( Configuration.DEF_HWIDTH );
+      
+   }
 
    /** Reactions aux differents boutons du menu */
    //    public boolean action(Event e, Object o) {
@@ -3197,8 +3204,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             Aladin.warning(chaine.getString("NOTYET"));
             return true;
          }
-         int w = splitHiPSWidth.getDividerLocation();
-         if( w<Configuration.DEF_HWIDTH ) splitHiPSWidth.setDividerLocation( Configuration.DEF_HWIDTH );
+         openDirTab();
          directory.showTreePath( isMenu(s,OPENDIRIMG) ? "Image" 
                : isMenu(s,OPENDIRCAT) ? "Catalog" 
                      : isMenu(s,OPENDIRDB) ? "Data base" 
@@ -3234,8 +3240,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          help.setCenter(false);
          status.setText(chaine.getString("SCRIPT"));
          command.execHelpCmd("");
-      } else if( isMenu(s,SEARCHDIR) ) { directory.focusSearch();
-      } else if( isMenu(s,FILTERDIR) ) { directory.openAdvancedFilterFrame();
+      } else if( isMenu(s,SEARCHDIR) ) { openDirTab(); directory.focusSearch();
+      } else if( isMenu(s,FILTERDIR) ) { openDirTab(); directory.openAdvancedFilterFrame();
       } else if( isMenu(s,FULLSCREEN) ) { fullScreen(0);
       } else if( isMenu(s,PREVIEWSCREEN) ) { fullScreen(1);
       } else if( isMenu(s,MOREVIEWS) ) { view.autoViewGenerator();
