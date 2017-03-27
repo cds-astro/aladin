@@ -89,7 +89,7 @@ MBACKUP	Backup the stack...
 MARITHM	Arithmetic operation...
 MMOC Coverage
 MMOCHIPS Load the coverage (MOC) of the current survey
-MMOCLOAD Load a specifical catalog MOC...
+MMOCLOAD Load a specifical MOC...
 MMOCGEN Generate a MOC based on...
 MMOCGENIMG The current image...
 MMOCGENPROBA The current probability skymap...
@@ -201,7 +201,7 @@ MEXPORT.fr	Exporter des plans (FITS,VOTable,...)...
 MBACKUP.fr	Sauvegarder la pile...
 MMOC.fr Couverture
 MMOCHIPS.fr	Chargement de la couverture (MOC) du relevé courant
-MMOCLOAD.fr Chargement pour un catalogue spécifique...
+MMOCLOAD.fr Chargement pour d'un MOC spécifique...
 MMOCGEN.fr Génération d'un MOC à partir de...
 MMOCGENIMG.fr	L'image courante...
 MMOCGENPROBA.fr	La carte courante de probabilités...
@@ -464,6 +464,7 @@ RSAMP	rsamp
 CROP	crop
 PLOT	x-y
 SPECT   spect
+MOC     moc
 
 SELECT.fr	select
 DRAW.fr	dessin
@@ -489,6 +490,7 @@ RSAMP.fr	rsamp
 CROP.fr	coupe
 PLOT.fr	x-y
 SPECT.fr   spect
+MOC.fr     moc
 
 #Zoom
 ZINFO	Adjust the visible area (clic&drag + mouse wheel)
@@ -556,6 +558,7 @@ HXMATCH	Cross match two catalogue sources
 HCROP	Image cropping
 HPLOT	Scatter plot for catalog sources
 HSPECT  Spectrum extractor for cubes
+HMOC    Multi-Order Coverage map operations
 
 HSELECT.fr	Sélecteur de vues ou d'objets - cliquer/étendre avec ou sans la touche MAJ
 HDRAW.fr	Dessin - cliquer en continue, ou point à point pour ajouter des lignes
@@ -580,6 +583,7 @@ HXMATCH.fr	Corrèle les sources de 2 catalogues
 HCROP.fr	Copie une portion de l'image
 HPLOT.fr	Trace un diagramme de dispersion pour des sources de catalogues
 HSPECT.fr   Génère un spectre associé à un cube
+HMOC.fr     Opérations sur les Multi-Order Coverage
 
 # ToolBox.java strings
 TBBAR	Change the screen area proportions (drag it)
@@ -2969,7 +2973,7 @@ TARGETERROR Please check target co-ordinates!
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message
 TAPTABLEUPLOADPARSETIP Load this data on the gui. 
-TAPTABLEUPLOADTIP Upload table.
+TAPTABLEUPLOADTIP Upload table. 
 TAPTABLENOUPLOADTIP No table uploads are available for this server
 TAPTABLEUPLOADTIP.fr Upload table.  --configure message
 TAPTABLENOUPLOADTIP.fr No table uploads are available for this server	--configure message
@@ -3004,8 +3008,7 @@ ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
-SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobs
-UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the query you run from the TAP form with a "ASYNC" option selected.
+SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobsUWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the query you run from the TAP form with a "ASYNC" option selected.
 CANTSTARTJOB Unable to start the job. please try again later.
 STANDARDRESULTSLOAD Load from TAP results url
 STANDARDRESULTSLOADTIP Loads results from "/results/result" path

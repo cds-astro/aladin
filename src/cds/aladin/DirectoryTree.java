@@ -433,7 +433,7 @@ public class DirectoryTree extends JTree {
       void setNew(boolean isNew)  { this.isNew = isNew; }
       
       public int getIconWidth() {
-         if( defaut ) return 9;
+         if( defaut ) return 12;
          return super.getIconWidth();
       }
       

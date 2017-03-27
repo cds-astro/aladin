@@ -586,6 +586,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
       if( bxPixColor.isSelected() )   special.append(" && (dataproduct_subtype=color || dataproduct_type=!Image)");
       
+      if( bxSuperseded.isSelected() )   special.append(" &! obs_superseded_by=*");
+
       for( JCheckBox bx : catVbx )    if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
       for( JCheckBox bx : regVbx )    if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
       for( JCheckBox bx : authVbx )   if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
@@ -738,7 +740,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxProg;
+   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxProg,bxSuperseded;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
    
@@ -751,6 +753,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Remise à l'état initial du formulaire - sans application à l'arbre */
    protected void clean() {
       
+      bxSuperseded.setSelected(false);
       bxPixFull.setSelected(false);
       bxHiPS.setSelected(false);
       bxSIA.setSelected(false);
@@ -952,7 +955,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel = createFilterBis(assdataVbx, -1, false, "associated_dataproduct_type", null, SORT_FREQ );
       PropPanel.addCouple(this, p, "Ass.data", "Filtering by the associated data to a catalog.\nHide not relevant tables.", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
-//      JScrollPane scrollPane = new JScrollPane(p,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      // Types de tuiles
+      subPanel = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
+      subPanel.add( bx=bxSuperseded     = new JCheckBox("Remove superseded tables")); bx.addActionListener(this); 
+      PropPanel.addCouple(this, p, "Flags", "Filtering by various flags", subPanel, g, c, GridBagConstraints.EAST);
+      
+      
+      //      JScrollPane scrollPane = new JScrollPane(p,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 //      JPanel p1 = new JPanel(new BorderLayout());
 //      p1.add(scrollPane);
       

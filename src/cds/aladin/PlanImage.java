@@ -2416,7 +2416,7 @@ public class PlanImage extends Plan {
    }
 
    /** retourne la description du mode graphique */
-   protected String getPixModeInfo() { return PIX_MODE[ pixMode ]; }
+   protected String getPixModeInfo() { return pixMode<0 ? "" : PIX_MODE[ pixMode ]; }
 
    /** Retourne la chaine d'explication de la taille et du codage de l'image
     * d'origine */

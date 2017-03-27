@@ -102,6 +102,7 @@ public final class Tool {
       /*19 */      9,
       /*20 */      9,
       /*21 */      11,
+      /*22 */      12,
    };
 
    // Décalage du logo par rapport au centre du bouton (vers le haut)
@@ -128,6 +129,7 @@ public final class Tool {
       /*19 */      9,
       /*20 */      9,
       /*21 */      9,
+      /*22 */      8,
    };
 
    // La fleche de selection
@@ -201,7 +203,26 @@ public final class Tool {
       {3,5,11}, {10,12,11},
       {3,4,12}, {11,12,12}
    };
-
+   
+   // Les segments X1,X2,Y pour le MOC
+   static final int MOC[][] = {
+         {15,15,0}, {21,21,0},
+         {14,14,1}, {16,16,1}, {20,20,1}, {22,22,1},
+         {13,13,2}, {17,17,2}, {19,19,2}, {23,23,2},
+         {6,6,3},   {12,12,3}, {18,18,3}, {24,24,3},
+         {5,5,4},   {7,7,4},   {11,11,4}, {13,13,4}, {17,17,4},{19,19,4}, {23,23,4},
+         {4,4,5},   {8,8,5},   {10,10,5}, {14,14,5}, {16,16,5},{20,20,5}, {22,22,5},
+         {3,3,6},   {9,9,6},   {15,15,6}, {21,21,6},
+         {2,2,7},   {10,10,7}, {14,14,7}, {22,22,7},
+         {1,1,8},   {11,11,8}, {13,13,8}, {23,23,8},
+         {0,0,9},   {12,12,9}, {24,24,9},
+         {1,1,10},  {11,11,10},{13,13,10},{23,23,10},
+         {2,2,11},  {10,10,11},{14,14,11}, {22,22,11},
+         {3,3,12},  {9,9,12},  {15,15,12}, {21,21,12},
+         {4,4,13},  {8,8,13},  {10,10,13}, {14,14,13}, {16,16,13},{20,20,13},
+         {5,5,14},  {7,7,14},  {11,11,14}, {13,13,14}, {17,17,14},{19,19,14}, 
+         {6,6,15},  {12,12,15},{18,18,15},
+   };
 
    /*
    //Le carre du label
@@ -340,6 +361,7 @@ public final class Tool {
             aladin.chaine.getString("CROP"),
             aladin.chaine.getString("PLOT"),
             aladin.chaine.getString("SPECT"),
+            aladin.chaine.getString("MOC"),
       };
 
       explanation=new String[]{
@@ -365,6 +387,7 @@ public final class Tool {
             aladin.chaine.getString("HCROP"),
             aladin.chaine.getString("HPLOT"),
             aladin.chaine.getString("HSPECT"),
+            aladin.chaine.getString("HMOC"),
       };
    }
 
@@ -583,6 +606,10 @@ public final class Tool {
             drawCercle(g,dx+1,dy-4);
             drawCercle(g,dx-3,dy+3);
             break;
+         case ToolBox.MOC:
+            g.setColor( c1 );
+            for(i=0; i<MOC.length; i++) { int s[] = MOC[i]; g.drawLine(dx+s[0],dy+s[2],dx+s[1],dy+s[2]); }
+            break;
          case ToolBox.BLINK:
             g.setColor(c1);
             g.fillRect(dx+1,dy+2,23,13);
@@ -753,7 +780,7 @@ public final class Tool {
             y += idy + H/2+Aladin.SIZE/2-5;
          } else {
             g.setFont(Aladin.SPLAIN);
-            x += idx + W/2-g.getFontMetrics().stringWidth(label[ntool])/2-2;
+            x += idx + W/2-g.getFontMetrics().stringWidth(label[ntool])/2;
             y += idy + H-4;
          }
 

@@ -105,7 +105,7 @@ class SED extends JPanel {
       flagWavelength = aladin.configuration.getSEDWave();
       radius = 5;
       
-      COLOROPT = Aladin.DARK_THEME ? Aladin.COLOR_STACK_SELECT : new Color(234,234,255);
+      COLOROPT = Aladin.DARK_THEME ? new Color(47,68,83) : new Color(234,234,255);
       COLORREF = Aladin.DARK_THEME ? Aladin.COLOR_STACK_HIGHLIGHT : new Color(255,234,234);
    }
    

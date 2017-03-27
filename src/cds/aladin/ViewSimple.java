@@ -1771,13 +1771,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 	   FrameUploadServer uploadFrame = TapManager.getInstance(aladin).uploadFrame;
 	   if (aladin.dialog!=null && aladin.dialog.isGrabIt()) {
 		   grabItDialog = aladin.dialog;
-	   } else if (aladin.additionalServiceDialog != null && aladin.additionalServiceDialog.isGrabIt()) {
+	   } else if (aladin.additionalServiceDialog!=null && aladin.additionalServiceDialog.isGrabIt()) {
 		   grabItDialog = aladin.additionalServiceDialog;
 	   } else if (uploadFrame != null && uploadFrame.uploadServer != null && uploadFrame.isGrabIt()) {
 		   grabItDialog = uploadFrame;
 	   } else if (aladin.grabUtilInstance.grabFrame != null && aladin.grabUtilInstance.grabFrame.isGrabIt() ) {
 		   grabItDialog = aladin.grabUtilInstance.grabFrame;
-	   }
+	   } 
       return grabItDialog;
    }
 
@@ -5318,7 +5318,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          lX = aladin.fullScreen.getContentPane().getWidth()-L;
          lY = aladin.fullScreen.getContentPane().getHeight()-L;
       }
-      return x>lX && y>lY;
+      return x>lX && x<rv.width-8 && y>lY && y<rv.height-8 ;
    }
 
    /** Positionnement d'un repere Nord et Est */

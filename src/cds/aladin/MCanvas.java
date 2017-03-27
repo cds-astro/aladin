@@ -1545,16 +1545,24 @@ MouseWheelListener, Widget
                if( !w.repere ) w.onMouse=true;
                drawWords(g,w,true);
             }
+            
+//            String sDesc = getDescription(o,indice);
+//            String sUCD = o.leg.getUCD(indice);
+//            String sHref = w.glu ? w.getHref() : "";
+//            StringBuilder sTip = new StringBuilder();
+//            if( sDesc.length()>0 ) add(sTip,sDesc);
+//            if( sUCD.length()>0 ) add(sTip,"UCD: "+sUCD);
+//            if( sHref.length()>0 ) add(sTip,sHref);
+//            tip = sTip.length()>0 ? "<html>"+sTip.toString()+"</html>" : null;
+//            Util.drawEdge(g,W,H);
 
             // Recuperation de la description du champ et d'un éventuel tooltip
             if( w.repere ) { /* tip=TIPREP; */ s=w.text; }
             else if( w.glu )      tip=TIPGLU;
             else if( w.archive )  tip=TIPARCH;
             else if( w.footprint)  tip=TIPFOV;
-
             s=getDescription(o,indice);
             if( s==null ) s="";
-
             // On change le curseur et on affiche eventuellement
             // l'URL ou la marque GLU
             try {
@@ -1565,16 +1573,16 @@ MouseWheelListener, Widget
                   else aladin.urlStatus.setText("");
                }
             } catch(Exception ecurs) {}
-
             Util.drawEdge(g,W,H);
             aladin.mesure.setStatus(s);   // Mise a jour du status
+            
             mouseLigne=ligne;
             ow=w;
 
             break;
          }
       }
-
+      
       // Un tooltip sur la coche ?
       if(x<15 ) tip=TIPTAG;
 
@@ -1590,6 +1598,13 @@ MouseWheelListener, Widget
       drawIconOut(g);
       Util.toolTip(this, tip);
    }
+   
+   private void add(StringBuilder tip, String s) {
+      if( s.length()==0 ) return;
+      if( tip.length()>0 ) tip.append("<br>"+s);
+      else tip.append(s);
+   }
+
 
    protected void showSEDPoint(Source s) {
       if( s.leg!=null && s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);

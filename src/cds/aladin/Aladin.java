@@ -1331,7 +1331,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
-               {MOCHIPS},{MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA},
+               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
             },
             { {MTOOLS},
@@ -1393,7 +1393,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          String[][] menu1 = new String[][] {  {MFILE},
             {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
                  {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
-            {},{SEARCHDIR},{FILTERDIR},
+            {},{SEARCHDIR+"|"+meta+" E"},{FILTERDIR},
             {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
             {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
             {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
@@ -3977,10 +3977,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void updateMocFiltering() {
       if( frameMocFiltering==null ) {
-         trace(1,"Creating the MocOp window");
+         trace(1,"Creating the MocFilering window");
          frameMocFiltering = new FrameMocFiltering(aladin);
       }
       frameMocFiltering.maj();
+   }
+
+   /** Mise à jour de la fenêtre pour les operations des MOCs */
+   protected void updateMocOperation() {
+      if( frameMocOperation==null ) {
+         trace(1,"Creating the MocOperation window");
+         frameMocOperation = new FrameMocOperation(aladin);
+      }
+      frameMocOperation.maj();
    }
 
    /** Chargemetn du MOC correspondant au plan HiPS courant  */
@@ -3995,6 +4004,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void loadMoc() {
+      if( PROTO ) {
+         directory.focusSearch();
+         return;
+      }
+      
       dialog.show("VizieR");
       if( loadMocFirst ) SwingUtilities.invokeLater(new Runnable() {
          public void run() {

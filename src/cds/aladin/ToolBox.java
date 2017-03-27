@@ -73,11 +73,12 @@ SwingWidgetFinder, Widget {
    static final int CROP  = 19;
    static final int PLOT  = 20;
    static final int SPECT = 21;
+   static final int MOC   = 22;
 
-   static int NBTOOL = 22;        // Nombre d'outils existants
+   static int NBTOOL = 23;        // Nombre d'outils existants
 
    // Ordre d'apparition des boutons
-   private int [] drawn = {SELECT,PAN,ZOOM,DIST,PHOT,DRAW,TAG,SPECT,
+   private int [] drawn = {SELECT,PAN,/*ZOOM,*/DIST,PHOT,DRAW,TAG,MOC,SPECT,
          FILTER,XMATCH,PLOT,RGB,BLINK,/* RESAMP,*/CROP,CONTOUR,HIST,PROP,
          DEL };
 
@@ -244,6 +245,7 @@ SwingWidgetFinder, Widget {
       int nbSimpleImg=0;
       int nbBlinkImg=0;
       int nbSimpleCat=0;
+      int nbMoc=0;
       int nbCat=0;
 
       aladin.setMemory();   // Met à jour le niveau d'usage de la mémoire
@@ -263,6 +265,7 @@ SwingWidgetFinder, Widget {
          if( allPlan[i] instanceof PlanImageBlink )  nbBlinkImg++;
          if( allPlan[i].type==Plan.CATALOG ) nbSimpleCat++;
          if( allPlan[i].isCatalog() ) nbCat++;
+         if( allPlan[i].type==Plan.ALLSKYMOC ) nbMoc++;
          aucun=false;
          if( !allPlan[i].selected ) continue;
 
@@ -308,6 +311,11 @@ SwingWidgetFinder, Widget {
          mode[ToolBox.RGB]=/*mode[ToolBox.RESAMP]=*/mode[ToolBox.BLINK]=Tool.UNAVAIL;
       }
 
+      // S'il n'y a pas au-moins un MOC on invalide
+      if( nbMoc<1 ) {
+         mode[ToolBox.MOC]=Tool.UNAVAIL;
+      }
+
       ViewSimple v = aladin.view.getCurrentView();
 
       // Si la vue courante a un plan de référence qui n'a pas de pixels accessibles
@@ -335,15 +343,6 @@ SwingWidgetFinder, Widget {
       // ni RGB on invalide HIST et PHOT
       Plan p = aladin.calque.getFirstSelectedPlan();
       if( p==null || !p.isPixel() && p.type!=Plan.IMAGERGB && p.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-      //      else if( p!=null && p.type==Plan.ALLSKYIMG && p instanceof PlanBG && ((PlanBG)p).color ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-
-      //      if( v==null || v.isFree()
-      //            || !v.pref.hasAvailablePixels()
-      //        && v.pref.type!=Plan.IMAGERGB && v.pref.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-
-      //      if( v!=null && !v.isFree() && v.pref instanceof PlanBG && ((PlanBG)v.pref).color ) {
-      //         mode[ToolBox.HIST]=Tool.UNAVAIL;
-      //      }
 
       if( v!=null && !v.isFree() && (v.pref instanceof PlanBG || v.northUp) ) mode[ToolBox.WEN]=Tool.UNAVAIL;
 
@@ -437,6 +436,9 @@ SwingWidgetFinder, Widget {
             break;
          case RGB :
             aladin.updateRGB();
+            break;
+         case MOC :
+            aladin.updateMocOperation();
             break;
          case BLINK :
             aladin.updateBlink(0);

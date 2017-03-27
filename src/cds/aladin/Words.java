@@ -151,10 +151,15 @@ public final class Words implements Runnable {
 
    /** Affiche dans aladin.urlStatus l'URL ou la marque GLU associee */
    protected void urlStatus(MyLabel urlStatus) {
+      urlStatus.setText( getHref() );
+   }
+   
+   /** Retourne l'URL ou la marque GLU associée */
+   protected String getHref() {
       String s;
       if( id.equals("Http") ) s=param;
       else s=(param.length()>0)?"Glu tag: <&"+id+" "+param+">":"Glu: <&"+id+">";
-      urlStatus.setText(s);
+      return s;
    }
 
    /** Modifie la position et la taille.

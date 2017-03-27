@@ -778,6 +778,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
    protected String getQuickFilterExpr() {
+      String s1;
       String s = quickFilter.getText().trim();
       if( s.length()==0 ) return s;
       
@@ -788,7 +789,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       int i = s.indexOf('=');
       if( i<0 ) i=s.indexOf('>');
       if( i<0 ) i=s.indexOf('<');
-      if( i>0 && aladin.directory.isFieldName( s.substring(0,i).trim()) ) expr = s;
+      if( i>0 && (aladin.directory.isFieldName( (s1=s.substring(0,i).trim())) || s1.indexOf('*')>=0) ) expr = s;
 //      else expr = "obs_title,obs_description,obs_collection,ID="+DirectoryFilter.jokerize(s);
       else expr = "obs_title,obs_collection,ID="+DirectoryFilter.jokerize(s);
       
@@ -1095,7 +1096,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** retourne true si un filtre est positionné */
    protected boolean hasFilter() {
       String s = quickFilter.getText();
-      if( s.startsWith(UPDATING) ) s="";
+      if( s==null || s.startsWith(UPDATING) ) s="";
       return s.length()>0  || comboFilter.getSelectedIndex()>0;
    }
    
@@ -1421,7 +1422,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                }
                else multiProp.add( prop );
                
-               quickFilter.setText(UPDATING+" ("+multiProp.size()+")");
+               quickFilter.setText(UPDATING+" ("+n+")");
             } catch( Exception e ) {
                if( Aladin.levelTrace>=3 ) e.printStackTrace();
             }
@@ -2472,7 +2473,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( to.hasTAP() ) {
                tapBx = bx = new JCheckBox("TAP");
                mocAndMore.add(bx);
-               bx.setSelected( false );
+               bx.setSelected( csBx==null );
                Util.toolTip(bx,"Advanced table query form (Table Access Protocol)",true);
             }
             
@@ -2485,7 +2486,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                Util.toolTip(bx,"Load the MultiOrder Coverage map (MOC) associated to the collection",true);
             }
             
-            if( to.isCDSCatalog() && nbRows!=-1 && nbRows>=100000 ) {
+            if( to.isCDSCatalog() && nbRows!=-1 && nbRows>=10000 ) {
                dmBx = bx = new JCheckBox("Density map");
                mocAndMore.add(bx);
                Util.toolTip(bx,"Progressive view (HiPS) of the density map associated to the catalog",true);
