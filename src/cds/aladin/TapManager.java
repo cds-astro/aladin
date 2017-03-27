@@ -8,13 +8,19 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -29,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -54,6 +61,7 @@ import cds.xml.VOSICapabilitiesReader;
 public class TapManager {
 	
 	private static TapManager instance = null;
+	private boolean loadFromLocalFile = true;
 	ExecutorService executor;
 	
 	public Aladin aladin;
@@ -61,8 +69,10 @@ public class TapManager {
 	protected TapFrameServer tapFrameServer=null;
 	protected DataLabel selectedServerLabel;
 	protected FrameUploadServer uploadFrame;
+	public static Map<String, DataLabel> managedGluTapServerLabels;
 	
-	protected static Map<String, Server> tapServerPanelCache = new HashMap<String, Server>();
+	protected static Map<String, Server> tapServerPanelCache = new HashMap<String, Server>();//main cache where all the ServerGlu's are loaded on init
+	protected static Map<String, Server> simpleFrameServers = new HashMap<String, Server>();//cache for the servers loading from tree
 	public static final String GETTAPSCHEMACOLUMNCOUNT = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+COUNT(*)+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMACOLUMNS = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMATABLES = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.tables";
@@ -74,6 +84,7 @@ public class TapManager {
 	protected List<String> eligibleUploadServers;//URls of servers loaded and allow uploads
 	
 	public UWSFacade uwsFacade;
+	public FrameSimple tapPanelFromTree;
 	
 	public TapManager() {
 		// TODO Auto-generated constructor stub
@@ -95,20 +106,57 @@ public class TapManager {
 		return instance;
 	}
 	
+	/**
+	 * Method initializes from the local file for one time
+	 * @return
+	 * @throws Exception
+	 */
 	public List<DataLabel> getTapServerList(){
-		if (tapServerLabels==null || tapServerLabels.isEmpty()) {
-			populateTapServerList();
+		if (loadFromLocalFile) {
+			populateTapServerListFromLocalFile();
+			// load from glu here
 		}
 		return tapServerLabels;
 	}
 	
 	/**
-	 * Method to populate all the tap servers in the configuration file into a tap frame server
+	 * Adds new tap server to tapserver list
+	 * Also takes care of updates to the server. 
+	 * 		ActionName is the key to an update.
+	 * @param actionName
+	 * @param label
+	 * @param url
+	 * @param description
 	 */
-	private void populateTapServerList() {
+	public void addTapService(String actionName, String label, String url, String description) {
+		if (actionName != null) {
+			DataLabel newDatalabel = new DataLabel(label, url, description);
+			if (tapServerLabels == null) {
+				tapServerLabels = new ArrayList<DataLabel>();
+			}
+			if (managedGluTapServerLabels == null) {
+				managedGluTapServerLabels = new HashMap<String, DataLabel>();
+			}
+			if (managedGluTapServerLabels.containsKey(actionName)) {
+				DataLabel oldDataLabel = managedGluTapServerLabels.get(actionName);
+				tapServerLabels.remove(oldDataLabel);
+			}
+			
+			tapServerLabels.add(newDatalabel);
+			managedGluTapServerLabels.put(actionName, newDatalabel);
+		}
+	}
+
+	/**
+	 * Method to populate all the tap servers in the configuration file into a tap frame server
+	 * @throws Exception 
+	 */
+	private void populateTapServerListFromLocalFile(){
 		BufferedReader bufReader = null;
 		try {
-			tapServerLabels = new ArrayList<DataLabel>();
+			if (tapServerLabels == null) {
+				tapServerLabels = new ArrayList<DataLabel>();
+			}
 			String fileLine;
 			String label;
 			String url;
@@ -128,6 +176,7 @@ public class TapManager {
             e.printStackTrace();
 			Aladin.warning("TapServer.txt not loaded !", 1);
 		} finally {
+			loadFromLocalFile = false;
 			if (bufReader!=null) {
 				try {
 					bufReader.close();
@@ -140,40 +189,176 @@ public class TapManager {
 	}
 	
 	/**
-	 * Loads the tapquery gui for the selected tap server
+	 * Loads the tapquery gui for the selected tap server from the tap server list
 	 * - either loads cached gui
 	 * - creates a new gui
 	 * - or just loads the registry incase no tapserver is selected
 	 * @return whether the query panel is loaded or not
+	 * @throws Exception 
 	 */
-	public boolean loadTapServer(){
+	public void loadTapServer() {
 		//either get exixitng details form the configuration file or call url to get tap server details.
-		boolean result = false;
-		
-		if (this.getSelectedServerLabel() == null) {//not necessary condition. But adding just in case.
+		if (this.getSelectedServerLabel() == null) {//not a necessary condition. But adding just in case.
 			this.showTapRegistryForm();
-			result = false;
-		} else if (tapServerPanelCache.containsKey(this.selectedServerLabel.getValue())) {
-			Server cachedCopy = tapServerPanelCache.get(this.selectedServerLabel.getValue());
+		} else if (tapServerPanelCache.containsKey(this.selectedServerLabel.getLabel())) {
+			Server cachedCopy = tapServerPanelCache.get(this.selectedServerLabel.getLabel());
 			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, cachedCopy);
 			aladin.dialog.tapServer = cachedCopy;
-			result = true;
-		} else {
-			ServerTap newServer = new ServerTap(aladin);
-			newServer.setName(this.selectedServerLabel.getLabel());
+		} else {//added new change -start
+			Server resultServer = null;
+			String label = this.selectedServerLabel.getLabel();
 			String url = this.selectedServerLabel.getValue();
-			newServer.setUrl(url);
-			newServer.showloading();
-			tapServerPanelCache.put(url, newServer);
-			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, newServer);
-			aladin.dialog.tapServer = newServer;
-			newServer.capabilities = this.getTapCapabilities(url);
-			this.loadTapColumnSchemas(url);
-			newServer.setOpaque(true);
-			tapFrameServer.setReload(url);
-			result = true;
+			//check in the other cache if there is a reference.
+			if (simpleFrameServers.containsKey(label)){
+				resultServer = simpleFrameServers.get(label);
+				if (resultServer instanceof ServerGlu) {
+					StringBuffer originalGluRecord = ((ServerGlu)resultServer).record;
+					String gluRecord = originalGluRecord.toString();
+					gluRecord = gluRecord.concat("%Aladin.LabelPlane GLU");
+					resultServer = getCopy(originalGluRecord, gluRecord);
+				} else if (resultServer instanceof ServerTap) {
+					ServerTap cacheServerTapCopy =  getCopy((ServerTap)resultServer);
+					aladin.dialog.findReplaceServer(aladin.dialog.tapServer, cacheServerTapCopy);
+					aladin.dialog.tapServer = cacheServerTapCopy;
+					loadServerTapForm(cacheServerTapCopy, null);
+					tapFrameServer.setReload(label);
+					resultServer = cacheServerTapCopy;
+				}
+			} 
+			if (resultServer == null) {
+				//final resort is to create generic form ServerTap
+				ServerTap newServer = new ServerTap(aladin);
+				newServer.setName(label);
+				newServer.setUrl(url);
+				newServer.showloading();
+				aladin.dialog.findReplaceServer(aladin.dialog.tapServer, newServer);
+				aladin.dialog.tapServer = newServer;
+				newServer.capabilities = this.getTapCapabilities(url);
+				this.loadTapColumnSchemas(newServer);
+				newServer.setOpaque(true);
+				tapFrameServer.setReload(label);
+				resultServer = newServer;
+			}
+			tapServerPanelCache.put(label, resultServer);
+			//added new change -end
 		}
-		return result;
+	}
+	
+	/**
+	 * Method creates a tap server from label(primary ID) and url
+	 * - server is either created from glu records or a generic panel is created
+	 * @param label
+	 * @param url
+	 * @return resultant server tpa panel
+	 */
+	public Server loadTapServerForSimpleFrame(String label, String url) {
+		Server resultServer = null;
+		if (simpleFrameServers.containsKey(label)) {//get from cache
+			resultServer = simpleFrameServers.get(label);
+		} else {
+			if (tapServerPanelCache.containsKey(label)){//try to create from the main cache
+				resultServer = tapServerPanelCache.get(label);
+				if (resultServer instanceof ServerGlu) {
+					StringBuffer originalGluRecord = ((ServerGlu)resultServer).record;
+					String gluRecord = ((ServerGlu)resultServer).record.toString();
+					gluRecord = gluRecord.concat("%Aladin.LabelPlane TREEPANEL");
+					resultServer = getCopy(originalGluRecord, gluRecord);
+				} else if (resultServer instanceof ServerTap) {
+					ServerTap cacheServerCopy = getCopy((ServerTap)resultServer);
+					cacheServerCopy.showloading();
+					cacheServerCopy.primaryColor = Aladin.COLOR_FOREGROUND;
+					cacheServerCopy.secondColor = Color.white;
+					loadServerTapForm(cacheServerCopy, TapServerMode.TREEPANEL);
+					resultServer = cacheServerCopy;
+				}
+			} 
+			if (resultServer == null) {
+				ServerTap newServer = new ServerTap(aladin);//final resort is to create generic form ServerTap
+				newServer.primaryColor = Aladin.COLOR_FOREGROUND;
+				newServer.secondColor = Color.white;
+				newServer.setName(label);
+				newServer.setUrl(url);
+				newServer.mode = TapServerMode.TREEPANEL;
+				newServer.setOpaque(true);
+				newServer.showloading();
+				newServer.capabilities = this.getTapCapabilities(url);
+				this.loadTapColumnSchemas(newServer);
+				resultServer = newServer;
+			}
+			simpleFrameServers.put(label, resultServer);
+		}
+		if (tapPanelFromTree == null) {
+			tapPanelFromTree = new FrameSimple(aladin);
+		}
+		tapPanelFromTree.show(resultServer, "TAP access with "+label);
+		return resultServer;
+	}
+	
+
+	public void reloadSimpleFramePanelServer(String label, String url) {
+		if (simpleFrameServers.containsKey(label)) {
+			simpleFrameServers.remove(label);
+		}
+		loadTapServerForSimpleFrame(label, url);
+	}
+	
+	//we wont deepcopy the data and metadata or the infopanel. we will only duplicate the main form using the metadata
+	/**
+	 * Method shallow copies serverTap data.
+	 * @param original
+	 * @return
+	 */
+	public ServerTap getCopy(ServerTap original) {
+		ServerTap newServer = new ServerTap(aladin);
+		newServer.setName(original.getName());
+		newServer.setUrl(original.getUrl());
+		newServer.capabilities = original.capabilities;
+		newServer.setData(original.tablesMetaData);
+		newServer.setOpaque(true);
+		newServer.infoPanel = original.infoPanel;
+		return newServer;
+	}
+	
+	/**
+	 * Method creates copy of a serverglu from its record
+	 * @param originalGluRecord
+	 * @param gluRecord
+	 * @return
+	 */
+	public ServerGlu getCopy(StringBuffer originalGluRecord, String gluRecord) {
+		aladin.glu.vGluServer = new Vector(50);
+		ByteArrayInputStream dicStream = new ByteArrayInputStream(gluRecord.getBytes(StandardCharsets.UTF_8));
+		aladin.glu.loadGluDic(new DataInputStream(dicStream),true,false);
+		Vector serverVector = aladin.glu.vGluServer;
+		int n = serverVector.size();
+        if( n == 0 ) return null;
+        ServerGlu serverGlu = (ServerGlu) serverVector.get(0);
+        serverGlu.record = originalGluRecord;
+        return serverGlu;
+	}
+	
+	/**
+	 * Thread to create tap form
+	 * @param newServer
+	 * @param mode
+	 */
+	public void loadServerTapForm(final ServerTap newServer, final TapServerMode mode) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				final Thread currentT = Thread.currentThread();
+				final String oldTName = currentT.getName();
+				try {
+					currentT.setName("TloadServerTapForm: "+newServer.getName());
+					newServer.createFormDefault(mode); //default choice is the first table
+					newServer.revalidate();
+					newServer.repaint();
+				} finally {
+					currentT.setName(oldTName);
+				}
+			}
+		});
 	}
 	
 	/**
@@ -242,51 +427,55 @@ public class TapManager {
 	 * Method to populate tap meta data
 	 * @param tapServiceUrl
 	 */
-	public void loadTapColumnSchemas(final String tapServiceUrl){
+	public void loadTapColumnSchemas(final ServerTap serverToLoad){
 		executor.execute(new Runnable(){
 			@Override
 			public void run() {
 				final Thread currentT = Thread.currentThread();
 				final String oldTName = currentT.getName();
+				String tapServiceUrl = serverToLoad.getUrl();
 				currentT.setName("TgetMetaInfo: "+tapServiceUrl);
-				ServerTap serverToLoad = (ServerTap) tapServerPanelCache.get(tapServiceUrl);
 				try {
-					String volume = getFutureResultsVolume(tapServiceUrl);
-					if (volume != null) {
-						serverToLoad.setData(new HashMap<String,TapTable>());
-						int count = Integer.parseInt(volume);
-						if (count > MAXTAPCOLUMNDOWNLOADVOLUME) {
-							//download only table names and first table's columns
-							SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
-							populateTables(serverToLoad, resultsResource);
-							String defaultTable = serverToLoad.tablesMetaData.keySet().iterator().next();
-							String tableNameQueryParam = defaultTable;
-							tableNameQueryParam = URLEncoder.encode(tableNameQueryParam, UTF8);
-							
-							//get single table data and populate it to front end
-							String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, defaultTable);
-							SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
-							populateColumns(serverToLoad, columnResults);
-						} else if (count > 0) {
-							// download all
-							SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
-							populateColumns(serverToLoad, resultsResource);
-						} else {
-							serverToLoad.showLoadingError();
-							Aladin.warning(aladin.dialog, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
-							return;
+					int count = MAXTAPCOLUMNDOWNLOADVOLUME;
+					try {
+						String volume = getFutureResultsVolume(tapServiceUrl);
+						if (volume != null) {
+							count = Integer.parseInt(volume);
 						}
-						serverToLoad.createFormDefault(); //default choice is the first table
-						serverToLoad.revalidate();
-						serverToLoad.repaint();
-						serverToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
+					} catch (Exception e) {
+						// TODO: handle exception
+						if (Aladin.levelTrace >= 3) 
+							e.printStackTrace();
+						Aladin.trace(3, "Murky waters..do not know count. will get data table-wise...");
+					}
+					serverToLoad.setData(new HashMap<String,TapTable>());
+					if (count >= MAXTAPCOLUMNDOWNLOADVOLUME) {
+						//download only table names and first table's columns
+						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
+						populateTables(serverToLoad, resultsResource);
+						String defaultTable = serverToLoad.tablesMetaData.keySet().iterator().next();
+						String tableNameQueryParam = defaultTable;
+						tableNameQueryParam = URLEncoder.encode(tableNameQueryParam, UTF8);
+						
+						//get single table data and populate it to front end
+						String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, defaultTable);
+						SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
+						populateColumns(serverToLoad, columnResults);
+					} else if (count > 0) {
+						// download all
+						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
+						populateColumns(serverToLoad, resultsResource);
 					} else {
 						serverToLoad.showLoadingError();
 						Aladin.warning(aladin.dialog, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
+						return;
 					}
+					serverToLoad.createFormDefault(); //default choice is the first table
+					serverToLoad.revalidate();
+					serverToLoad.repaint();
+					serverToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
 				} catch (Exception e) {
-					if (Aladin.levelTrace >= 3) 
-						e.printStackTrace();
+					e.printStackTrace();
 					serverToLoad.showLoadingError();
 					Aladin.warning(aladin.dialog, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
 				} finally {
@@ -299,9 +488,10 @@ public class TapManager {
 	}
 	
 	/**
-	 * creates the first form to load the tap servers from the registry file
+	 * Creates the form to load the tap servers from the registry file
+	 * @throws Exception 
 	 */
-	public void showTapRegistryForm() {
+	public void showTapRegistryForm(){
 		/*String tapGluRecord = ServerTap.getForm(TAP_MAIN_FORM);
 		if (tapGluRecord != null) {
 			ByteArrayInputStream dicStream = new ByteArrayInputStream(tapGluRecord.getBytes(StandardCharsets.UTF_8));
@@ -318,8 +508,9 @@ public class TapManager {
 	
 	/**
 	 * Method shows the async panel
+	 * @throws Exception 
 	 */
-	public void showAsyncPanel() {
+	public void showAsyncPanel(){
 		loadTapServerList();
 		tapFrameServer.tabbedTapThings.setSelectedIndex(1);
 		tapFrameServer.setVisible(true);
@@ -329,6 +520,13 @@ public class TapManager {
 	public void loadTapServerList() {
 		if (tapFrameServer == null) {
 			tapFrameServer = new TapFrameServer(aladin, this);
+		}
+	}
+	
+	public void reloadTapServerList() {
+		if (tapFrameServer!=null) {
+			tapFrameServer.createRegistryPanel();
+			tapFrameServer.reloadRegistryPanel();
 		}
 	}
 	
@@ -342,7 +540,7 @@ public class TapManager {
 	public Vector<TapTableColumn> updateTableColumnSchemas(String tableName, ServerTap serverTap) throws Exception {
 		Vector<TapTableColumn> tableColumnMetaData = null;
 		String tapServiceUrl = serverTap.getUrl();
-		Future<Vector<TapTableColumn>> futureResult = updateTableColumnSchemas(tapServiceUrl, tableName);
+		Future<Vector<TapTableColumn>> futureResult = updateTableColumnSchemas(serverTap.getName(), tapServiceUrl, tableName);
 		try {
 			Aladin.trace(3, futureResult+ " is the serverTap");
 			tableColumnMetaData = futureResult.get();
@@ -365,7 +563,7 @@ public class TapManager {
 	 * @return
 	 * @throws Exception 
 	 */
-	public Future<Vector<TapTableColumn>> updateTableColumnSchemas(final String tapServiceUrl, final String tableName) throws Exception {
+	public Future<Vector<TapTableColumn>> updateTableColumnSchemas(final String label, final String tapServiceUrl, final String tableName) throws Exception {
 		final int refThreadPriority = Thread.currentThread().getPriority();
 		Future<Vector<TapTableColumn>> tapResult = executor.submit(new  Callable<Vector<TapTableColumn>>(){
 			@Override
@@ -378,7 +576,7 @@ public class TapManager {
 					currentT.setPriority(refThreadPriority-1);//TODO:: tintin i donno check what todo
 				}
 				
-				ServerTap serverToLoad = (ServerTap) tapServerPanelCache.get(tapServiceUrl);
+				ServerTap serverToLoad = (ServerTap) tapServerPanelCache.get(label);
 				try {
 					tableNamequeryParam = URLEncoder.encode(tableName, UTF8);
 					String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNamequeryParam);
@@ -399,7 +597,7 @@ public class TapManager {
 	
 	/**
 	 * Makes small notification flags to user. The initial text set is erased after a small time delay.
-	 * Usefull to flag user when any gui model updates are made.
+	 * Useful to flag user when any gui model updates are made.
 	 * @param notificationBar
 	 * @param message
 	 */
@@ -597,14 +795,13 @@ public class TapManager {
 		TapTable table = null;
 		TapTableColumn tableColumn = null;
 		Vector<TapTableColumn> tableColumns = null;
-		String columnName = null;
-		String raColumnName = null;
-		String decColumnName = null;
 		if (fieldSet != null && tableRows != null) {
 			for (int j = 0; j < tableRows.getItemCount(); j++) {
 				tableColumn = new TapTableColumn();
 				TDSet theTDs = tableRows.getTDSet(j);
 				String tableName = null;
+				boolean foundRaColumn = false;
+				boolean foundDecColumn = false;
 				for (int k = 0; k < theTDs.getItemCount(); k++) {
 					SavotField field = fieldSet.getItemAt(k);
 					String fieldName = field.getName();
@@ -613,8 +810,7 @@ public class TapManager {
 							tableName = theTDs.getContent(k);
 							tableColumn.setTable_name(tableName);
 						} else if (fieldName.equalsIgnoreCase(COLUMNNAME)) {
-							columnName = theTDs.getContent(k);
-							tableColumn.setColumn_name(columnName);
+							tableColumn.setColumn_name(theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
 							tableColumn.setDescription(theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(UNIT)) {
@@ -622,13 +818,11 @@ public class TapManager {
 						} else if (fieldName.equalsIgnoreCase(UCD)) {
 							String ucd = theTDs.getContent(k);
 							tableColumn.setUcd(ucd);
-							if (raColumnName == null
-									&& (ucd.contains(UCD_RA_PATTERN2) || ucd.equalsIgnoreCase(UCD_RA_PATTERN3))) {
-								raColumnName = columnName;
+							if (ucd.startsWith(UCD_RA_PATTERN2) || ucd.equalsIgnoreCase(UCD_RA_PATTERN3)) {
+								foundRaColumn = true;
 							}
-							if (decColumnName == null
-									&& (ucd.contains(UCD_DEC_PATTERN2) || ucd.equalsIgnoreCase(UCD_DEC_PATTERN3))) {
-								decColumnName = columnName;
+							if (ucd.startsWith(UCD_DEC_PATTERN2) || ucd.equalsIgnoreCase(UCD_DEC_PATTERN3)) {
+								foundDecColumn = true;
 							}
 						} else if (fieldName.equalsIgnoreCase(UTYPE)) {
 							tableColumn.setUtype(theTDs.getContent(k));
@@ -637,11 +831,11 @@ public class TapManager {
 						} else if (fieldName.equalsIgnoreCase(SIZE)) {
 							tableColumn.setSize(field.getDataType(), theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(PRINCIPAL)) {
-							tableColumn.setPrincipal(field.getDataType(), theTDs.getContent(k));
+							tableColumn.setIsPrincipal(theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(INDEXED)) {
-							tableColumn.setIndexed(field.getDataType(), theTDs.getContent(k));
+							tableColumn.setIsIndexed(theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(STD)) {
-							tableColumn.setStandard(field.getDataType(), theTDs.getContent(k));
+							tableColumn.setIsStandard( theTDs.getContent(k));
 						}
 					}
 				}
@@ -661,17 +855,15 @@ public class TapManager {
 							table.setColumns(tableColumns);
 							serverToLoad.tablesMetaData.put(tableColumn.getTable_name(), table);
 						}
+						if (foundRaColumn && table.getRaColumnName() == null) {// second condition:: set only the first one
+							table.setRaColumnName(tableColumn.getColumn_name());
+						}
+						if (foundDecColumn && table.getDecColumnName() == null) {
+							table.setDecColumnName(tableColumn.getColumn_name());
+						}
+						tableColumns.add(tableColumn);
 					}
 				}
-				if (raColumnName != null) {
-					table.setRaColumnName(raColumnName);
-					raColumnName = null;
-				}
-				if (decColumnName != null) {
-					table.setDecColumnName(decColumnName);
-					decColumnName = null;
-				}
-				tableColumns.add(tableColumn);
 			}
 		}
 	}
@@ -687,9 +879,6 @@ public class TapManager {
 		TapTable table = null; 
 		TapTableColumn tableColumn = null; 
 		Vector<TapTableColumn> tableColumns = null;
-		String columnName = null;
-		String raColumnName = null;
-		String decColumnName = null;
 		DataBinaryReader parser = null;
 		try {
 			parser = new DataBinaryReader(binaryData.getStream(), fields);
@@ -697,16 +886,17 @@ public class TapManager {
 				table = new TapTable();
 				tableColumn = new TapTableColumn();
 				String tableName = null;
+				boolean foundRaColumn = false;
+				boolean foundDecColumn = false;
                 for (int j = 0; j < fields.getItemCount(); j++) {
                     SavotField field = fields.getItemAt(j);
 					String fieldName = field.getName();
-					if (fieldName!=null && !fieldName.isEmpty()) {
+					if (fieldName != null && !fieldName.isEmpty()) {
 						if (fieldName.equalsIgnoreCase(TABLENAME)) {
-							tableName= parser.getCellAsString(j);
+							tableName = parser.getCellAsString(j);
 							tableColumn.setTable_name(tableName);
 						} else if (fieldName.equalsIgnoreCase(COLUMNNAME)) {
-							columnName = parser.getCellAsString(j);
-							tableColumn.setColumn_name(columnName);
+							tableColumn.setColumn_name(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
 							tableColumn.setDescription(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(UNIT)) {
@@ -714,13 +904,11 @@ public class TapManager {
 						} else if (fieldName.equalsIgnoreCase(UCD)) {
 							String ucd = parser.getCellAsString(j);
 							tableColumn.setUcd(ucd);
-							if (raColumnName == null && (ucd.startsWith(UCD_RA_PATTERN2)
-									|| ucd.equalsIgnoreCase(UCD_RA_PATTERN3))) {
-								raColumnName = columnName;
+							if (ucd.startsWith(UCD_RA_PATTERN2) || ucd.equalsIgnoreCase(UCD_RA_PATTERN3)) {
+								foundRaColumn = true;
 							}
-							if (decColumnName == null && (ucd.startsWith(UCD_DEC_PATTERN2)
-									|| ucd.equalsIgnoreCase(UCD_DEC_PATTERN3))) {
-								decColumnName = columnName;
+							if (ucd.startsWith(UCD_DEC_PATTERN2) || ucd.equalsIgnoreCase(UCD_DEC_PATTERN3)) {
+								foundDecColumn = true;
 							}
 						} else if (fieldName.equalsIgnoreCase(UTYPE)) {
 							tableColumn.setUtype(parser.getCellAsString(j));
@@ -729,33 +917,21 @@ public class TapManager {
 						} else if (fieldName.equalsIgnoreCase(SIZE)) {
 							tableColumn.setSize(field.getDataType(), parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(PRINCIPAL)) {
-							tableColumn.setPrincipal(field.getDataType(), parser.getCellAsString(j));
+							tableColumn.setIsPrincipal(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(INDEXED)) {
-							tableColumn.setIndexed(field.getDataType(), parser.getCellAsString(j));
+							tableColumn.setIsIndexed(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(STD)) {
-							tableColumn.setStandard(field.getDataType(), parser.getCellAsString(j));
+							tableColumn.setIsStandard(parser.getCellAsString(j));
 						}
 						
-						if (fieldName.equalsIgnoreCase(TABLETYPE)) {
-							table.setTable_type(parser.getCellAsString(j));
-						} else if (fieldName.equalsIgnoreCase(SCHEMANAME)) {
-							table.setSchema_name(parser.getCellAsString(j));
-						} else if (fieldName.equalsIgnoreCase(TABLENAME)) {
-							tableName= parser.getCellAsString(j);
-							table.setTable_name(tableName);
-						} else if (fieldName.equalsIgnoreCase(UTYPE)) {
-							table.setUtype(parser.getCellAsString(j));
-						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
-							table.setDescription(parser.getCellAsString(j));
-						}
 					}
                 }
-                if (tableName!=null) {
+                if (tableName != null) {
 					synchronized (serverToLoad.tablesMetaData) {
 						if (serverToLoad.tablesMetaData.containsKey(tableName)) {
 							table = serverToLoad.tablesMetaData.get(tableColumn.getTable_name());
 							tableColumns = table.getColumns();
-							if (tableColumns==null) {
+							if (tableColumns == null) {
 								tableColumns = new Vector<TapTableColumn>();
 								table.setColumns(tableColumns);
 							}
@@ -766,17 +942,16 @@ public class TapManager {
 							table.setColumns(tableColumns);
 							serverToLoad.tablesMetaData.put(tableColumn.getTable_name(), table);
 						}
+						
+						if (foundRaColumn && table.getRaColumnName() == null) {// second condition:: set only the first one
+							table.setRaColumnName(tableColumn.getColumn_name());
+						}
+						if (foundDecColumn && table.getDecColumnName() == null) {
+							table.setDecColumnName(tableColumn.getColumn_name());
+						}
+						tableColumns.add(tableColumn);
 					}
 				}
-				if (raColumnName!=null && table.getRaColumnName()==null) {// second condition:: set only the first one
-					table.setRaColumnName(raColumnName);
-					raColumnName = null;
-				}
-				if (decColumnName!=null && table.getDecColumnName()==null) {
-					table.setDecColumnName(decColumnName);
-					decColumnName = null;
-				}
-				tableColumns.add(tableColumn);
             }
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -818,10 +993,12 @@ public class TapManager {
 			tableColumn.setUtype(f.utype);
 //			tableColumn.setSize(f.columnSize); nope
 			tableColumns.add(tableColumn);
-			if (f.isRa()) {
+			if (f.isRa()) {//bug with upload where it assumes ra and dec. maximum damage here is the appearance of target panel with wrong col identified as ra and dec. all user has todo is to ignore the target panel
+				System.err.println("f.isRa()"+f.isRa()+" , and its name is: "+f.name);
 				raName = f.name;
 			}
 			if (f.isDe()) {
+				System.err.println("f.isDe()"+f.isDe()+" , and its name is: "+f.name);
 				decName = f.name;
 			}
 			
@@ -847,6 +1024,7 @@ public class TapManager {
 		SavotResource resultsResource = null;
 		try {
 			URL url = new URL(tapServiceUrl);// change to just url tintin TODO
+			System.err.println(tapServiceUrl);
 			SavotPullParser savotParser = new SavotPullParser(url, SavotPullEngine.FULL, null, false);
 			resultsResource = Util.populateResultsResource(savotParser);
 		} catch (MalformedURLException e) {
@@ -882,14 +1060,17 @@ public class TapManager {
 //				uploadServer.tablesGui.invalidate();
 				populateColumnsFromPlan(planToLoad, tableName , uploadFrame.uploadServer.tablesMetaData);
 //				uploadFrame.setUploadFileForm();
-				if (firstUpload) {
+				if (firstUpload || (uploadFrame.uploadServer.loadStatus == TAPFORM_STATUS_NOTLOADED
+						|| uploadFrame.uploadServer.loadStatus == TAPFORM_STATUS_ERROR)) {
 					uploadFrame.createUploadServer();
 				}
-				if (uploadFrame.uploadServer.isNotLoaded) {
-					uploadFrame.uploadServer.createFormDefault();
-					uploadFrame.uploadServer.invalidate();
-					
-				}
+				
+				if (!firstUpload && uploadFrame.uploadServer.loadStatus == TAPFORM_STATUS_LOADED) {
+//					uploadFrame.uploadServer.createFormDefault();
+//					uploadFrame.uploadServer.revalidate();
+					uploadFrame.uploadServer.tablesGui.addItem(tableName);
+					uploadFrame.uploadServer.tablesGui.setSelectedItem(tableName);
+				} 
 				uploadFrame.pack();
 				
 			}
@@ -958,7 +1139,7 @@ public class TapManager {
 	 * @param index
 	 * @param tableRows
 	 * @param fieldSet
-	 * @param paramName
+	 * @param paramName - not in use. see comment below //checking COUNT... 
 	 * @return
 	 */
 	protected String getBinarySingleParam(int index, SavotBinary binaryData, FieldSet fieldSet, String paramName) {
@@ -1166,7 +1347,7 @@ public class TapManager {
 								if (postParam.getValue() instanceof String) {
 									out.writeField(postParam.getKey(), String.valueOf(postParam.getValue()));
 								} else if (postParam.getValue() instanceof File) {
-									out.writeFile(postParam.getKey(), null, (File) postParam.getValue(), false);
+									out.writeFile(postParam.getKey(), "application/x-votable+xml", (File) postParam.getValue(), false);
 								}
 							}
 						}
@@ -1211,9 +1392,16 @@ public class TapManager {
 				final Thread currentT = Thread.currentThread();
 				final String oldTName = currentT.getName();
 				currentT.setName("TsubmitAsync: "+serverUrl);
-				showAsyncPanel();
-				uwsFacade.handleJob(name, serverUrl, query, postParams);
-				currentT.setName(oldTName);
+				try {
+					showAsyncPanel();
+					uwsFacade.handleJob(name, serverUrl, query, postParams);
+					currentT.setName(oldTName);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					Aladin.warning(aladin.dialog, Aladin.getChaine().getString("GENERICERROR"));
+				}
+				
 			}
 		});
 	}
@@ -1286,7 +1474,7 @@ public class TapManager {
 		Aladin.trace(3,"Shutdown of tap service...");
 	}
 	
-	/*Unless cast expcetions are -remove theis
+	/*tintin Unless cast expcetions are -remove theis
     public <T> Future<T> submit(Callable<T> task) throws Exception {
         return executor.submit((Callable<T>) addOriginInfo(task, submitTrace(), Thread.currentThread().getName()));
     }
@@ -1323,10 +1511,11 @@ public class TapManager {
 	
 	/**
 	 * Removes current selected tap server cached info form the cache
+	 * @throws Exception 
 	 */
-	public void removeCurrentFromServerCache() {
+	public void removeCurrentFromServerCache(){
 		setSelectedServerLabel();
-		tapServerPanelCache.remove(this.selectedServerLabel.getValue());
+		tapServerPanelCache.remove(this.selectedServerLabel.getLabel());
 	}
 	
 	/**
@@ -1343,9 +1532,28 @@ public class TapManager {
 	}
 	
 	/**
-	 * Gets the selected datalabel on click of load
+	 * Method caches/updates serverGlu
+	 * @param actionName
+	 * @param g
+	 * @return 
 	 */
-	public void setSelectedServerLabel() {
+	public static boolean cache(String actionName, ServerGlu g) {
+		// TODO Auto-generated method stub
+		boolean showLastRecord = true;
+		if (g.mode!=null && g.mode == TapServerMode.TREEPANEL) {
+			TapManager.simpleFrameServers.put(actionName, g);
+			showLastRecord = false;
+		} else {
+			TapManager.tapServerPanelCache.put(actionName, g);
+		}
+		return showLastRecord;
+	}
+	
+	/**
+	 * Gets the selected datalabel on click of load
+	 * @throws Exception 
+	 */
+	public void setSelectedServerLabel(){
 //		this.selectedServerLabel = tapServerLabels.get(DataLabel.selectedId);
 		this.selectedServerLabel = null;
 		for (DataLabel datalabel : getTapServerList()) {
@@ -1355,10 +1563,6 @@ public class TapManager {
 				break;
 			}
 		}
-	}
-	
-	public boolean canReload() {
-		return canReload(this.selectedServerLabel.getValue());
 	}
 	
 	/**
@@ -1377,12 +1581,26 @@ public class TapManager {
 	}
 	
 	/**
+	 * Checking for retry loading a ServerTap instance in the case of loading from tree
+	 * @param cacheId
+	 * @return
+	 */
+	public boolean canReloadForTreePanel(String cacheId) {
+		boolean result = false;
+		if (simpleFrameServers.containsKey(cacheId)
+				&& simpleFrameServers.get(cacheId) instanceof ServerTap) {
+			result = true;
+		}
+		return result;
+	}
+	
+	/**
 	 * Adds newly loaded plancatalogue into upload options
 	 * @param newPlan
 	 */
 	public void updateAddUploadPlans(Plan newPlan) {
-		if (this.uploadFrame!=null && this.uploadFrame.uploadOptions!=null) {
-			if (newPlan.pcat!=null && newPlan.pcat.flagVOTable) {
+		if (this.uploadFrame != null && this.uploadFrame.uploadOptions != null) {
+			if (newPlan.pcat != null && newPlan.pcat.flagVOTable) {
 				this.uploadFrame.uploadOptions.addItem(newPlan.label);
 				this.uploadFrame.uploadOptions.setEnabled(true);
 				if (this.uploadFrame.isVisible()) {
@@ -1391,16 +1609,16 @@ public class TapManager {
 					this.uploadFrame.uploadOptions.revalidate();
 					this.uploadFrame.uploadOptions.repaint();
 				}
-				
+
 			}
 		}
 	}
-	
+
 	public void updateDeleteUploadPlans(Plan planInDeletion) {
-		if (this.uploadFrame!=null && this.uploadFrame.uploadOptions!=null) {
-			if (planInDeletion.pcat!=null && planInDeletion.pcat.flagVOTable) {
+		if (this.uploadFrame != null && this.uploadFrame.uploadOptions != null) {
+			if (planInDeletion.pcat != null && planInDeletion.pcat.flagVOTable) {
 				this.uploadFrame.uploadOptions.removeItem(planInDeletion.label);
-				if (this.uploadFrame.uploadOptions.getItemCount()<=0) {
+				if (this.uploadFrame.uploadOptions.getItemCount() <= 0) {
 					this.uploadFrame.uploadOptions.setEnabled(false);
 				} else {
 					this.uploadFrame.uploadOptions.setEnabled(true);
@@ -1411,10 +1629,13 @@ public class TapManager {
 					this.uploadFrame.uploadOptions.revalidate();
 					this.uploadFrame.uploadOptions.repaint();
 				}
-				
+
 			}
 		}
 	}
 
-	
+	public static Server getTapServerForLabel(String label) {
+		return tapServerPanelCache.get(label);
+	}
+
 }

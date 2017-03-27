@@ -856,19 +856,36 @@ public class TreeObjDir extends TreeObj {
       String gluTag = prop.get("tap_glutag");
       
       // Generation of simplified TAP form by GLU definition 
-      if( gluTag!=null ) {
+     /* if( gluTag==null ) {
          aladin.info("Simplified TAP form based on GLU definition "+gluTag+"\n(Not yet implemented)");
          // Chaitra ...
          return;
-      } 
+      } */
       
       // If there is no TAP glu definition, we will use base TAP url
       String url = prop.get("tap_service_url");
-      if( url!=null ) {
-         aladin.info("Generic TAP form for "+url+"\n(Not yet implemented)");
-         // Chaitra ...
-         return;
+      String id = prop.get("ID");
+      if( id!=null && url!=null ) {
+    	  TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url);
+//         aladin.info("Generic TAP form for "+url+"\n(Not yet implemented)");
+//         // Chaitra ...
+//         return;
+      } else {
+    	  aladin.warning("Error! No TAP form configured for "+gluTag);
       }
+      
+      //TODO:: tintin remove the below just for demo
+     /* String url1 = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
+      String id1 = "GAIA_VIZIER";
+      url1 = "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap2";
+      id1 = "TAPCADC98";
+      if( id1!=null && url1!=null ) {
+    	  TapManager tapManager = TapManager.getInstance(aladin);
+          tapManager.loadTapServerForSimpleFrame(id1, url1);
+//         aladin.info("Generic TAP form for "+url+"\n(Not yet implemented)");
+//         // Chaitra ...
+//         return;
+      }*/
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */

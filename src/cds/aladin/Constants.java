@@ -65,6 +65,7 @@ public static final String LIMIT_UNKNOWN_MESSAGE = "Field limit unknown...";
 public static final String POL_DEFAULT_VALUES = "I\tQ\tU\tV\tRR\tLL\tRL\tLR\tXX\tYY\tXY\tYX\tPOLI\tPOLA";
 public static final int NUMBEROFOPTIONS = 14;
 public static final String REGEX_ARRAY_PRINT = "[\\[\\]null(,$)]";
+public static final String NEWLINE_CHAR = "\n";
 
 public static final Map<String, String> DATE_FORMATS = new HashMap<String, String>();
 //wont allow .0
@@ -154,8 +155,9 @@ public static final String TABLETYPE = "table_type";
 public static final String SCHEMANAME = "schema_name";
 public static final String LASTPANEL = "LASTPANEL";
 public static final String GENERAL = "GENERAL";
-public static final String DELETEALL = "Delete all";
-public static final Map<String, String> STANDARD_REQUESTPARAMS = new HashMap<String, String>();//TODO tintin remove if not used
+public static final String DISCARDACTION = "DISCARD";
+public static final String DISCARDALLACTION = "DISCARDALL";
+public static final String RETRYACTION = "RETRYACTION";
 public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: tintin
 
 /** Liste des caractère définissant une chaine de carac @author Mallory Marcot*/
@@ -181,11 +183,6 @@ public static final String LISTE_CARACTERE_STRING = "AZRTYUIOPQSDFGHJKLMWXCVBN%_
 		DATE_FORMATS.put("^\\d{1,2}-[a-zA-Z]{3}-\\d{4}", "dd-MMM-yyyy");
 		DATE_FORMATS.put("^\\d{4}-\\d{1,2}-\\d{1,2}", "yyyy-MM-dd");
 		DATE_FORMATS.put("^\\d{4}-[a-zA-Z]{3}-\\d{1,2}", "yyyy-MMM-dd");
-		
-		STANDARD_REQUESTPARAMS.put("REQUEST", "doQuery");//TODO:: tintin
-		STANDARD_REQUESTPARAMS.put("VERSION", "1.0");
-		STANDARD_REQUESTPARAMS.put("LANG", "ADQL");
-		STANDARD_REQUESTPARAMS.put("FORMAT", "votable");// "application/x-votable+xml";
 		
 	}
 	
@@ -219,7 +216,18 @@ public static final String SHOWAYNCJOBS = "SHOWAYNCJOBS";
 public static final String DELETEONEXIT = "DELETEONEXIT";
 public static final String GETPREVIOUSSESSIONJOB = "GETPREVIOUSSESSIONJOB";
 public static final String LOADJOBRESULT = "LOADJOBRESULT";
+public static final String LOADDEFAULTTAPRESULT = "LOADDEFAULTTAPRESULT";
 public static final String DELETEJOB = "DELETEJOB";
 public static final String ABORTJOB = "ABORTJOB";
+public static final String OLDJOBSELECTED = "OLDJOBSELECTED";
+/*public static final String RUNJOB = "RUNJOB";*/
+
+public static final int TAPFORM_STATUS_NOTLOADED = 0;
+public static final int TAPFORM_STATUS_LOADED = 1;
+public static final int TAPFORM_STATUS_ERROR = -1;
+
+public static enum TapServerMode {
+	GENERAL, GLU, EXAMPLE, UPLOAD, TREEPANEL;
+}
 
 }

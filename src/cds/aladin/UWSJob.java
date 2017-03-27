@@ -1,6 +1,8 @@
 package cds.aladin;
 
 import static cds.aladin.Constants.LOADJOBRESULT;
+import static cds.aladin.Constants.LOADDEFAULTTAPRESULT;
+import static cds.aladin.Constants.UTF8;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -9,14 +11,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.font.TextAttribute;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -29,6 +37,10 @@ import javax.swing.JTextPane;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.Util;
 
+/**
+ * @author chaitra
+ *
+ */
 public class UWSJob implements ActionListener{
 	
 	public static final String PHASEACTION_RUN = "RUN";
@@ -88,45 +100,12 @@ public class UWSJob implements ActionListener{
 	
 	//job info: jobInfoXml not sure how it looks
 	
-	
 	public UWSJob(UWSFacade uwsFacade, String serverLabel, URL location) {
 		// TODO Auto-generated constructor stub
 		this.serverLabel = serverLabel;
 		this.location = location;
 		this.uwsFacade = uwsFacade;
 	}
-	
-	/**
-	 * Method to move the job to a queued or executing phase from a pending/held phase.
-	 * @throws IOException 
-	 */
-	
-	public void run() throws IOException {
-		if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
-			try {
-				MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
-				String boundary = MultiPartPostOutputStream.createBoundary();
-				URL phaseChangeUrl = new URL(this.location.toString()+"/phase");
-				URLConnection urlConn = MultiPartPostOutputStream.createConnection(phaseChangeUrl);
-				urlConn.setRequestProperty("Accept", "*/*");
-				urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
-				// set some other request headers...
-				urlConn.setRequestProperty("Connection", "Keep-Alive");
-				urlConn.setRequestProperty("Cache-Control", "no-cache");
-				MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
-				out.writeField("PHASE", "run");
-				out.close();
-				String previousPhase = this.currentPhase;
-				handleJobHttpInterface(urlConn, HttpURLConnection.HTTP_SEE_OTHER, "Error with running job :\n", true);
-				this.updateGui(previousPhase);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block tintin
-				if (Aladin.levelTrace >= 3) e.printStackTrace();
-				throw e;
-			}
-		}
-	}
-	
 
 	/**
 	 * Method checks if job phase is not okay to abort
@@ -143,25 +122,25 @@ public class UWSJob implements ActionListener{
 	}
 	
 	/**
+	 * Method checks if job phase is not okay to start
+	 */
+	public boolean canRun() {
+		boolean result = false;
+		if (this.currentPhase.equals(HELD) || this.currentPhase.equals(PENDING)) {
+			result = true;
+		} else {
+			result = false;
+		}
+		return result;
+	}
+	
+	/**
 	 * Method aborts an executing job
 	 * */
 	public void abortJob() throws IOException {
-		HttpURLConnection httpClient;
+		HttpURLConnection httpClient = null;
 		try {
-			MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
-			String boundary = MultiPartPostOutputStream.createBoundary();
-			URL phaseChangeUrl = new URL(this.location.toString()+"/phase");
-			URLConnection urlConn = MultiPartPostOutputStream.createConnection(phaseChangeUrl);
-			urlConn.setRequestProperty("Accept", "*/*");
-			urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
-			// set some other request headers...
-			urlConn.setRequestProperty("Connection", "Keep-Alive");
-			urlConn.setRequestProperty("Cache-Control", "no-cache");
-			MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
-			out.writeField("PHASE", PHASEACTION_ABORT);
-			out.close();
-			httpClient = (HttpURLConnection) urlConn;
-			httpClient.setInstanceFollowRedirects(false);
+			httpClient = createWritePostData(this.location.toString()+"/phase", "PHASE", PHASEACTION_ABORT);
 			String previousPhase = this.currentPhase;
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {
 				String locationString = httpClient.getHeaderField("Location");
@@ -169,18 +148,78 @@ public class UWSJob implements ActionListener{
 				httpClient.disconnect();
 				UWSFacade.populateJob(this.location.openStream(), this);
 			} else {
+				httpClient.disconnect();
+				notificationText = UWSFacade.CANTABORTJOB;
 				throw new IOException("Error when aborting job:\n"+this.location.toString()+"\n httpcode:"+httpClient.getResponseCode()+"\n phase: "+this.currentPhase);
 			}
-			httpClient.disconnect();
 			this.updateGui(previousPhase);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block tintin
-			e.printStackTrace();
+			if (Aladin.levelTrace >= 3) e.printStackTrace();
 			throw e;
+		}
+		finally {
+			if (httpClient != null) {
+				httpClient.disconnect();
+			}
 		}
 	}
 	
+	/**
+	 * Method to move the job to a queued or executing phase from a pending/held phase.
+	 * @throws IOException 
+	 */
+	public void run() throws IOException {
+		Aladin.trace(3,"In run. Job phase is:"+this.currentPhase);
+		if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
+			HttpURLConnection httpClient = null;
+			try {
+				httpClient = createWritePostData(this.location.toString()+"/phase", "PHASE", PHASEACTION_RUN);
+				String previousPhase = this.currentPhase;
+				if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {
+					String locationString = httpClient.getHeaderField("Location");
+					this.location = new URL(locationString);
+					httpClient.disconnect();
+					UWSFacade.populateJob(this.location.openStream(), this);
+				} else {
+					httpClient.disconnect();
+					this.currentPhase = UNEXPECTEDERROR+ "-Phase: "+this.currentPhase;//Unexpected Error(phase)
+					notificationText = UWSFacade.CANTSTARTJOB;
+					throw new IOException("Error when starting job:\n"+this.location.toString()+"\n httpcode:"+httpClient.getResponseCode()+"\n phase: "+this.currentPhase);
+				}
+				this.updateGui(previousPhase);
+			} catch (IOException e) {
+				if (Aladin.levelTrace >= 3) e.printStackTrace();
+				throw e;
+			} finally {
+				if (httpClient != null) {
+					httpClient.disconnect();
+				}
+			}
+		}
+		Aladin.trace(3,"run finished. Job phase is:"+this.currentPhase);
+	}
 	
+	public HttpURLConnection createWritePostData(String url, String name, String value) throws IOException {
+		HttpURLConnection httpClient = null;
+		URL writeUrl = new URL(url);
+		URLConnection urlConn = MultiPartPostOutputStream.createConnection(writeUrl);
+		urlConn.setRequestProperty("Accept", "*/*");
+		urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		// set some other request headers...
+		urlConn.setRequestProperty("Cache-Control", "no-cache");
+		String encodedPhaseRunParam = URLEncoder.encode(name, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
+		DataOutputStream os = new DataOutputStream(urlConn.getOutputStream());
+		os.writeBytes(encodedPhaseRunParam);
+		os.close();
+		if (urlConn instanceof HttpURLConnection) {
+			httpClient = (HttpURLConnection) urlConn;
+			httpClient.setInstanceFollowRedirects(false);
+		} else {
+			throw new IOException("Error with job url. Please try again later!\nURL: "+this.location.toString());
+		}
+		return httpClient;
+	}
+
 	/**
 	 * Method polls every second for phase change of job
 	 * In case of UWS 1.1, blocking behavior can be used: blocks indefinitely until phase change
@@ -191,6 +230,7 @@ public class UWSJob implements ActionListener{
 	 */
 	public void pollForCompletion(boolean useBlocking, UWSFacade uwsFacade) throws IOException, InterruptedException, Exception {
 		try {
+			System.err.println("In pollForCompletion. Jon phase is:"+this.currentPhase);
 			URL jobInProgressUrl = this.location;
 			String previousPhase = this.currentPhase;
 			while (true) {
@@ -202,12 +242,15 @@ public class UWSJob implements ActionListener{
 				}
 				if (this.currentPhase.equals(EXECUTING) || this.currentPhase.equals(QUEUED) 
 						|| this.currentPhase.equals(SUSPENDED) || this.currentPhase.equals(UNKNOWN)) {
+//					UWSFacade.printStringFromInputStream(this);
 					URLConnection conn = jobInProgressUrl.openConnection();
 					handleJobHttpInterface(conn, HttpURLConnection.HTTP_OK, "Error for job: \n", false);
-				} else if (this.currentPhase.equals(COMPLETED)) {
-					uwsFacade.loadResults(this, this.results.entrySet().iterator().next().getValue());
+				} else if (this.currentPhase.equals(COMPLETED)) {//TODO:: tintin remove the below ting
+//					uwsFacade.loadResults(this, this.results.entrySet().iterator().next().getValue());
+//					UWSFacade.printStringFromInputStream(this);
 					break;
 				} else if (this.currentPhase.equals(ERROR)) {
+//					UWSFacade.printStringFromInputStream(this);
 					this.showAsErroneous();
 					break;
 				} else if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
@@ -219,7 +262,7 @@ public class UWSJob implements ActionListener{
 				
 				if (!useBlocking) {
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(UWSFacade.POLLINGDELAY);
 					} catch (InterruptedException e) {
 						// TODO: handle exception
 						if (Aladin.levelTrace >= 3) e.printStackTrace();//do -not much- if poll fails
@@ -242,15 +285,17 @@ public class UWSJob implements ActionListener{
 	public void handleJobHttpInterface(URLConnection urlConn, int expectedHttpResponseCode, String genericErrorMessage, boolean setPhaseOnly) throws IOException {
 		HttpURLConnection httpConn = null;
 		try {
+			urlConn = this.location.openConnection();
 			if (urlConn instanceof HttpURLConnection) {
 				httpConn = (HttpURLConnection) urlConn;
 				httpConn.setInstanceFollowRedirects(false);
 				if (httpConn.getResponseCode() == expectedHttpResponseCode) {
-					if (setPhaseOnly) {
+					/*if (setPhaseOnly) {
 						UWSFacade.getsetPhase(this); //not to open conn again to check just phase, we have the response anyway
 					} else {
 						UWSFacade.populateJob(httpConn.getInputStream(), this);
-					}
+					}*/
+					UWSFacade.populateJob(httpConn.getInputStream(), this);
 				} else if(httpConn.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND){
 					System.out.println("Job is not found, user probably asked for delete: \n"+this.location.toString());
 					this.currentPhase = JOBNOTFOUND;//Not found Error_404
@@ -275,8 +320,8 @@ public class UWSJob implements ActionListener{
 				httpConn.disconnect();
 			}
 		}
-		
 	}
+	
 	
 	/**
 	 * Gets block-indefinite-until-phase-change endpoint
@@ -288,24 +333,6 @@ public class UWSJob implements ActionListener{
 		return urlInProgress.toString();
 	}
 	
-	public String getResultsPath(String resultToLoad) throws MalformedURLException {
-		String resultsUrl = null;
-		if (resultToLoad != null) {
-			if (resultToLoad.startsWith("http") || resultToLoad.startsWith("https")) {
-				resultsUrl = resultToLoad;
-			} else {
-				resultsUrl = getDefaultResultsUrl();
-				//parse if relative path :://TODO:: tintin
-				//server : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/async/1479376281691_5
-				//results path : /xamin/vo/tap/async/1479376281691_5/results/result
-				//server base url : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/
-			}
-		} else {
-			resultsUrl = getDefaultResultsUrl();
-		}
-		return resultsUrl;
-	}
-	
 	/**
 	 * As per spec- better to have result at /base async url/results/result
 	 * @return
@@ -314,7 +341,6 @@ public class UWSJob implements ActionListener{
 	public String getDefaultResultsUrl() throws MalformedURLException {
 		return this.getLocation().toString()+"/results/result";
 	}
-	
 	
 	public void setInitialGui() {
 //		this.gui = new JRadioButton(this.serverLabel+", Job: "+this.location+"     "+this.currentPhase);
@@ -413,6 +439,12 @@ public class UWSJob implements ActionListener{
 			loadbutton.addActionListener(this);
 			resultsPanel.add(loadbutton);
 			jobDetails.add(resultsPanel);
+			
+			JButton loadDefault = new JButton(UWSFacade.STANDARDRESULTSLOAD);
+			loadDefault.setToolTipText(UWSFacade.STANDARDRESULTSLOADTIP);
+			loadDefault.addActionListener(this);
+			loadDefault.setActionCommand(LOADDEFAULTTAPRESULT);
+			jobDetails.add(loadDefault);
 		}
 		
 		if (errorType != null) {
@@ -478,7 +510,7 @@ public class UWSJob implements ActionListener{
 	}
 	
 	public static Font getErrorFont() {
-		Font font = new Font("PLAIN",Font.PLAIN,15);
+		Font font = new Font("PLAIN", Font.PLAIN, 15);
 		Map fontAttri = font.getAttributes();
 		fontAttri.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 		return new Font(fontAttri);
@@ -501,7 +533,7 @@ public class UWSJob implements ActionListener{
 					uwsFacade.loadResults(this, (String)displayResults.getSelectedItem());
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, "Please enter a valid job url!");
+					Aladin.warning(uwsFacade.asyncPanel, "Error in processing results url! Please try with the default tap results url also");
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					Aladin.warning(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
@@ -510,6 +542,19 @@ public class UWSJob implements ActionListener{
 					Aladin.warning(uwsFacade.asyncPanel, e1.getMessage());
 				}
 				
+			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
+				try {
+					uwsFacade.loadResults(this, null);
+				} catch (MalformedURLException e1) {
+					// TODO Auto-generated catch block
+					Aladin.warning(uwsFacade.asyncPanel, "Error in processing results url!");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					Aladin.warning(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					Aladin.warning(uwsFacade.asyncPanel, e1.getMessage());
+				}
 			}
 		}
 	}

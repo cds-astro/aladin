@@ -145,7 +145,7 @@ public final class DataLinkGlu {
 					paramDataType.put(index, param.getDataType());
 					paramValue.put(index, this.getParamValue(param, selectedDatalink));
 					addIndexedQueryParameter(urlString, param.getName(), index);
-					System.out.println(urlString.toString());
+//					System.out.println(urlString.toString());
 				}
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 				

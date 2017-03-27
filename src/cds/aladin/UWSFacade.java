@@ -8,6 +8,7 @@ import static cds.aladin.Constants.DELETEJOB;
 import static cds.aladin.Constants.DELETEONEXIT;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETPREVIOUSSESSIONJOB;
+import static cds.aladin.Constants.NEWLINE_CHAR;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -20,11 +21,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +41,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -64,13 +70,21 @@ public class UWSFacade implements ActionListener{
 	public JCheckBox deleteOnExit;
 	public JButton loadbutton;
 	
-	public static String JOBNOTFOUNDMESSAGE;
-	public static String JOBERRORTOOLTIP;
+	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
+			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
+	public static final int POLLINGDELAY = 1000;
 	
 	static {
 		JOBNOTFOUNDMESSAGE = Aladin.chaine.getString("JOBNOTFOUNDMESSAGE");
 		JOBERRORTOOLTIP = Aladin.chaine.getString("JOBERRORTOOLTIP");
+		UWSNOJOBMESSAGE = Aladin.chaine.getString("UWSNOJOBMESSAGE");
+		CANTSTARTJOB = Aladin.chaine.getString("CANTSTARTJOB");
+		GENERICERROR1LINE = Aladin.getChaine().getString("GENERICERROR")+"\n";
+		STANDARDRESULTSLOAD = Aladin.getChaine().getString("STANDARDRESULTSLOAD");
+		STANDARDRESULTSLOADTIP = Aladin.getChaine().getString("STANDARDRESULTSLOADTIP");
+		UWSASKLOADDEFAULTRESULTS = Aladin.getChaine().getString("UWSASKLOADDEFAULTRESULTS");
+		CANTABORTJOB= Aladin.getChaine().getString("CANTABORTJOB");
 	}
 	
 	public UWSFacade() {
@@ -98,34 +112,76 @@ public class UWSFacade implements ActionListener{
 		UWSJob job = null;
 		try {
 			job = createJob(serverLabel, url, query, postParams);
+//			printStringFromInputStream(job);
 			addNewJobToGui(job);
 			refreshGui();
 			job.run();
+//			printStringFromInputStream(job);
 			job.pollForCompletion(true, this);
+//			printStringFromInputStream(job);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			StringBuffer errorMessageToUser = new StringBuffer(GENERICERROR1LINE);
+			if (job == null || job.gui==null) {
+				errorMessageToUser.append("\n Unable to create job");
+			}
+			errorMessageToUser.append("\n For query: ").append(query.toADQL()).append(NEWLINE_CHAR).append(e.getMessage());
+			
 			if (job != null && UWSJob.JOBNOTFOUND.equals(job.getCurrentPhase())) {//specific case of job not found
 				if (checkIfJobInCache(job)) {
 					System.err.println("Job is not found, user did not ask for delete: \n"+job.getLocation().toString());
 //					removeJobUpdateGui(job); Not removing deleted jobs(deleted elsewhere) from gui. maybe user needs to view ? 
-					Aladin.warning(aladin.dialog, e.getMessage());
+					Aladin.warning(aladin.dialog, errorMessageToUser.toString());
 				}
 			} else {
-				Aladin.warning(aladin.dialog, e.getMessage());
+				Aladin.warning(aladin.dialog, errorMessageToUser.toString());
 			}
 			if (job != null) {
 				job.showAsErroneous();
-			}
+			} 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (job != null) {
 				job.showAsErroneous();
 			}
-			Aladin.warning(aladin.dialog, e.getMessage());
+			Aladin.warning(aladin.dialog, "Error with async job! "+e.getMessage());
 		}
 		
 	}
+	
+	// convert InputStream to String
+		public static String printStringFromInputStream(UWSJob job) throws IOException {
+
+			InputStream is = job.getLocation().openStream();
+			BufferedReader br = null;
+			StringBuilder sb = new StringBuilder();
+
+			String line;
+			try {
+
+				br = new BufferedReader(new InputStreamReader(is));
+				while ((line = br.readLine()) != null) {
+					sb.append(line);
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				if (br != null) {
+					try {
+						br.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			System.out.println("----------printing one-----------");
+			System.out.println(sb.toString());
+			System.out.println("----------printing end-----------");
+			return sb.toString();
+
+		}
 	
 	/**
 	 * Method creates an sync job
@@ -151,18 +207,22 @@ public class UWSFacade implements ActionListener{
 			MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
 
 			//standard request parameters
-			out.writeField("request", "doQuery");
-			out.writeField("lang", "adql");
-			out.writeField("version", "1.0");
-			out.writeField("format", "votable");
+//			out.writeField("request", "doQuery");
+//			out.writeField("lang", "ADQL-2.0");
+//			out.writeField("version", "1.0");
+//			out.writeField("format", "votable");
+			
+			
+			out.writeField( "REQUEST", "doQuery" );
+			out.writeField( "LANG", "ADQL" );
 			
 			int limit = query.getSelect().getLimit();
 			if (limit > 0) {
-				out.writeField("maxrec", String.valueOf(limit));
+				out.writeField("MAXREC", String.valueOf(limit));
 			}
-			out.writeField("query", query.toADQL());
+			out.writeField("QUERY", query.toADQL());
 			
-			out.writeField("phase", "run"); // remove this if we start comparing quotes
+//			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
 //			out.writeField("time", "10");
 //			out.writeField("name", "ti");
 			
@@ -200,6 +260,7 @@ public class UWSFacade implements ActionListener{
 			e.printStackTrace();
 			throw e;
 		}
+		System.err.println("In createJob. Jon phase is:"+job.getCurrentPhase());
 		return job;
 	}
 	
@@ -315,6 +376,7 @@ public class UWSFacade implements ActionListener{
 		UWSReader uwsReader = new UWSReader();
 		synchronized (job) {
 			uwsReader.load(inputStream, job);
+			System.out.println("in populateJob phase is:"+job.getCurrentPhase()+" results"+job.getResults());
 		}
 //		try (Scanner scanner = new Scanner(httpClient.getInputStream())) {
 	}
@@ -351,6 +413,7 @@ public class UWSFacade implements ActionListener{
 						removeJobUpdateGui(job);
 					}
 				} else {
+					System.err.println("Error when deleting job! Http response is: "+httpConn.getResponseCode());
 					throw new IOException("Error when deleting job!");
 				}
 			}
@@ -381,7 +444,7 @@ public class UWSFacade implements ActionListener{
 			if (inSessionAsyncJobsPanel == null) {
 				inSessionAsyncJobsPanel = new JPanel();
 				if (sessionUWSJobs == null) {
-					JLabel infoLabel = new JLabel("No jobs from the active session.");
+					JLabel infoLabel = new JLabel(UWSNOJOBMESSAGE);
 					infoLabel.setFont(Aladin.LITALIC);
 					inSessionAsyncJobsPanel.add(infoLabel);
 				}
@@ -430,6 +493,10 @@ public class UWSFacade implements ActionListener{
 			
 			JPanel actionPanel = new JPanel();
 			actionPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
+			/*button = new JButton("START");
+			button.setActionCommand(RUNJOB);
+			button.addActionListener(this);
+			actionPanel.add(button);*/
 			button = new JButton("ABORT");
 			button.setActionCommand(ABORTJOB);
 			button.addActionListener(this);
@@ -530,12 +597,88 @@ public class UWSFacade implements ActionListener{
 	 * @throws IOException
 	 * @throws Exception
 	 */
-	public void loadResults(UWSJob uwsJob, String result) throws MalformedURLException, IOException, Exception {
+	public void loadResults(UWSJob uwsJob, String chosen) throws MalformedURLException, IOException, Exception {
 		if (UWSJob.COMPLETED.equals(uwsJob.getCurrentPhase())) {
-			String resultsUrl = uwsJob.getResultsPath(result);
+			String resultsUrl = null;
+			if (chosen != null) {
+				resultsUrl = getResultsPath(uwsJob, chosen); //way to many looseends in trying to get the correct results path. But anyway the spec says it is mandatory to have /results/result
+				if (resultsUrl == null ) {
+					int option = JOptionPane.showConfirmDialog(asyncPanel, UWSASKLOADDEFAULTRESULTS);
+					if (option == JOptionPane.OK_OPTION) {
+						resultsUrl = uwsJob.getDefaultResultsUrl();
+					}
+				}
+			} else {
+				resultsUrl = uwsJob.getDefaultResultsUrl();
+			}
 			aladin.calque.newPlan(resultsUrl, uwsJob.getServerLabel(), null);
 		}
 	}
+	
+	public String getResultsPath(UWSJob uwsJob, String resultToLoad) {
+		String resultsUrlString = null;
+		URL resultsUrl = null;
+		if (resultToLoad.startsWith("http") || resultToLoad.startsWith("https")) {
+			resultsUrl = validateUrlSimple(resultToLoad);
+			if (resultsUrl != null) {
+				resultsUrlString = resultsUrl.toString();
+			}
+		} else {//its path to be constructed from original url. we will assume located on the same server
+			try {
+				resultsUrl =  new URL(uwsJob.getLocation().getProtocol(), uwsJob.getLocation().getHost(), uwsJob.getLocation().getPort(), URLDecoder.decode(resultToLoad, Constants.UTF8));
+				resultsUrl.toURI();
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if (resultsUrl != null) {
+				resultsUrlString = resultsUrl.toString();
+			}
+			//parse if relative path :://TODO:: tintin
+			//server : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/async/1479376281691_5
+			//results path : /xamin/vo/tap/async/1479376281691_5/results/result
+			//server base url : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/
+		}
+		return resultsUrlString;
+	}
+	
+	public URL validateUrlSimple(String resultToLoad) {
+		URL resultsUrl = null;
+		try {
+			resultsUrl = new URL(URLDecoder.decode(resultToLoad, Constants.UTF8));
+			//if in application/x-www-form-urlencoded form
+			// as in case of csirohttp%3A%2F%2Fatoavo.atnf.csiro.au%2Ftap%2Fasync%2F1488450523217A%2Fresults%2Fresult
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if (resultsUrl != null) {
+			try {
+				resultsUrl.toURI();
+			} catch (URISyntaxException e) {
+				System.err.println("URISyntaxException "+e.getMessage());
+				resultsUrl = null;
+			}
+			
+			if (resultsUrl.getAuthority() == null) {
+				System.err.println("no authority " + resultsUrl);
+				resultsUrl = null;
+			}
+		}
+		return resultsUrl;
+	}
+	
 	
 	public UWSJob processJobSelection(boolean loadJobSummary) throws Exception {
 		UWSJob selectedJob = null;
@@ -590,10 +733,10 @@ public class UWSFacade implements ActionListener{
 				try {
 					URL jobUrl = new URL(previousSessionJob.getText());
 					UWSJob selectedJob = getJobFromCache(jobUrl.toString());
-					if (selectedJob!=null) {
+					if (selectedJob != null) {
 						selectedJob.setJobDetailsPanel();
 						deleteOnExit.setVisible(false);
-						if (loadbutton!=null) {
+						if (loadbutton != null) {
 							loadbutton.setEnabled(true);
 						}
 						if (sessionUWSJobs == null) {
@@ -611,6 +754,7 @@ public class UWSFacade implements ActionListener{
 	    	  if (action.equals(GETPREVIOUSSESSIONJOB)) {
 	    		//this go button is for getting prev job. behavior : won't check if corresponding radio is selected or not, but directly selects it
 				prevJobRadio.setSelected(true);
+				deleteOnExit.setVisible(false);
 				try {
 					UWSJob selectedJob = processJobSelection(true);
 				} catch (Exception e1) {
@@ -658,7 +802,35 @@ public class UWSFacade implements ActionListener{
 					// TODO Auto-generated catch block
 					Aladin.warning(asyncPanel, e1.getMessage());
 				}
-			}	    	  
+			} /*else if (action.equals(RUNJOB)) {
+				UWSJob selectedJob = null;
+				try {
+					selectedJob = processJobSelection(false);
+					if (selectedJob.canRun()) {
+						selectedJob.run();
+						if (prevJobRadio.isSelected()) {
+							selectedJob.updateGui(null);
+							if (selectedJob.getCurrentPhase().equalsIgnoreCase("")) {
+								Aladin.info(asyncPanel, selectedJob.getJobId()+" -job sucessfully started");
+							}
+						}
+					} else {
+						Aladin.warning(asyncPanel, "Cannot start job when phase is: "+selectedJob.getCurrentPhase());
+						return;
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+					if (selectedJob != null) {
+						Aladin.warning(asyncPanel, "Please try again. Error when aborting job: "+selectedJob.getJobId());
+					} else {
+						Aladin.warning(asyncPanel, e1.getMessage());
+					}
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					Aladin.warning(asyncPanel, e1.getMessage());
+				}
+			}*/	    	  
 		} else if (o instanceof JCheckBox) {//DELETEONEXIT action command not checked for now
 			try {
 				UWSJob selectedJob = processJobSelection(false);

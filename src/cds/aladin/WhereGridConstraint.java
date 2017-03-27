@@ -5,8 +5,7 @@ import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Vector;
-
+import java.util.Vector;import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -26,6 +25,7 @@ public abstract class WhereGridConstraint extends JPanel{
 			"IS NOT", "LIKE", "NOT LIKE" };
 	protected static final String defaultValue = "IS NOT NULL";
 	protected static final String[] andOrOptions = { AND, "OR" };
+	protected static final String DELETEBUTTON_TOOLTIP = "Click to delete this constraint";
 	
 	protected ServerTap serverTap;
 	JComboBox<String> andOrOperator;
@@ -44,7 +44,8 @@ public abstract class WhereGridConstraint extends JPanel{
 	        	 write();
 	          }
 	       });
-		this.removeButton = new JButton("-");
+		this.removeButton = new JButton(new ImageIcon(Aladin.aladin.getImagette("delete_button.png")));
+		this.removeButton.setToolTipText(DELETEBUTTON_TOOLTIP);
 		this.removeButton.setActionCommand(REMOVEWHERECONSTRAINT);
 	}
 	
@@ -90,7 +91,6 @@ public abstract class WhereGridConstraint extends JPanel{
 				whereGridConstraint.remove(whereGridConstraint.andOrOperator);
 				whereGridConstraint.andOrOperator = null;
 			}
-
 		}
 	}
 	

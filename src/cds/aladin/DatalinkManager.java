@@ -25,7 +25,7 @@ import cds.savot.pull.SavotPullParser;
 import cds.tools.Util;
 
 /**
- * Manager class for all funtions relating to handling datalink in Aladin
+ * Manager class for all functions relating to handling datalink in Aladin
  * @author chaitra
  *
  */

@@ -71,6 +71,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
@@ -1765,13 +1766,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
 
    /** Retourne l'etat du mode GrabIt */
-   protected ServerDialog isGrabIt() {
-	   ServerDialog grabItDialog = null;
+   protected GrabItFrame isGrabIt() {
+	   GrabItFrame grabItDialog = null;
+	   FrameUploadServer uploadFrame = TapManager.getInstance(aladin).uploadFrame;
 	   if (aladin.dialog!=null && aladin.dialog.isGrabIt()) {
 		   grabItDialog = aladin.dialog;
-	   } else if (aladin.additionalServiceDialog!=null && aladin.additionalServiceDialog.isGrabIt()) {
+	   } else if (aladin.additionalServiceDialog != null && aladin.additionalServiceDialog.isGrabIt()) {
 		   grabItDialog = aladin.additionalServiceDialog;
-	   } 
+	   } else if (uploadFrame != null && uploadFrame.uploadServer != null && uploadFrame.isGrabIt()) {
+		   grabItDialog = uploadFrame;
+	   } else if (aladin.grabUtilInstance.grabFrame != null && aladin.grabUtilInstance.grabFrame.isGrabIt() ) {
+		   grabItDialog = aladin.grabUtilInstance.grabFrame;
+	   }
       return grabItDialog;
    }
 
@@ -1791,7 +1797,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * Arrete le GrabIt Courant
     */
    protected void stopGrabIt() {
-	   ServerDialog grabItDialog = isGrabIt();
+	   GrabItFrame grabItDialog = isGrabIt();
       if( grabItDialog ==null ) return;
       pGrabItX=-1;
       grabItDialog.stopGrabIt();
@@ -2093,7 +2099,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( Double.isNaN(cs.al ) ) cs=null;
       }
 
-      ServerDialog grabItDialog = isGrabIt();
+      GrabItFrame grabItDialog = isGrabIt();
       // Mode GrabIt actif
       if( grabItDialog!=null && !isFree() ) {
     	  grabItDialog.setGrabItCoord(x,y);
@@ -2610,7 +2616,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          }
       }
       
-      ServerDialog grabItDialog = isGrabIt();
+      GrabItFrame grabItDialog = isGrabIt();
       // Déplacement du repère
       if( (tool==ToolBox.SELECT || tool==ToolBox.PAN && (!flagClicAndDrag || e.getClickCount()>1) )
             && flagMoveRepere && grabItDialog==null && !e.isShiftDown() && !isPlotView() ) {
@@ -2632,7 +2638,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          modeGrabIt=false;
          grabItDialog.setGrabItRadius(grabItX,grabItY,x,y);
          stopGrabIt();
-         grabItDialog.toFront();
+         ((JFrame)grabItDialog).toFront();
          flagMoveRepere=false;
       }
 
@@ -3050,7 +3056,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( rselect!=null && Math.max(rselect.width,rselect.height)>4
             || !aladin.view.vselobj.isEmpty() ) flagMoveRepere=false;
 
-      ServerDialog grabItDialog = isGrabIt();
+      GrabItFrame grabItDialog = isGrabIt();
       // Mode GrabIt actif
       if( grabItDialog!=null ) {
     	 grabItDialog.setGrabItRadius(grabItX,grabItY,x,y);
@@ -3737,7 +3743,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * d'un éventuel Megadrag en cours */
    protected void setDefaultCursor(int tool,boolean shift) {
       if( aladin.lockCursor ) return;
-      ServerDialog grabItDialog = isGrabIt();
+      GrabItFrame grabItDialog = isGrabIt();
       currentCursor =
             tool==ToolBox.PAN ? Aladin.HANDCURSOR :
                tool==ToolBox.PHOT ? ( isTagCentered(shift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :

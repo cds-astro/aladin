@@ -52,6 +52,8 @@ public class Ball extends JComponent implements ActionListener {
    
    protected boolean isBlinking() { return mode==WAIT; }
    
+   protected boolean isRed() { return mode==NOK; }
+   
    public void actionPerformed(ActionEvent e) {
       blinkState=!blinkState;
       if( !Aladin.NOGUI ) repaint();

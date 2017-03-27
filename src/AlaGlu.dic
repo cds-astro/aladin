@@ -512,7 +512,7 @@
 
 
 #GLU record for Gaia tapvizier (Gaia Collaboration, 2016)
-%A    GaiaGluTAP
+%A    GAIA_VIZIER
 %D    Gaia via TAP Vizier (Gaia Collaboration, 2016)
 %O    CDS'aladin
 %Z    ALADIN
@@ -576,7 +576,7 @@
 %D    Gaia DR1 (Gaia Collaboration, 2016)
 %O    CDS'aladin
 %Z    ALADIN
-%Aladin.Protocol TAPv1
+%Aladin.Protocol TAPv1-TREEPANEL
 %N    1475571165  2016/10/04 10:52:35
 %U    http://gaia.ari.uni-heidelberg.de/tap/tapper
 
@@ -632,7 +632,306 @@
 %Aladin.Label TAP
 %Aladin.LabelPlane GaiaGluTapARI
 
+%A    Sample1
+%S					ALATAP
+%Aladin.Label		SomeOtherLabel
+%D    NASA's Wide-field Infrared Survey Explorer (WISE; Wright et al. 2010) mapped the sky at 3.4, 4.6, 12, and 22 Î¼m (W1, W2, W3, W4) in 2010 with an angular resolution of 6.1", 6.4", 6.5", & 12.0" in the four bands. WISE achieved 5Ï? point source sensitivities better than 0.08, 0.11, 1 and 6 mJy in unconfused regions on the ecliptic in the four bands. Sensitivity improves toward the ecliptic poles due to denser coverage and lower zodiacal background.
+%U    http://gaia.ari.uni-heidelberg.de/tap/tintin
 
+%A    tapvizierGeneric
+%S					ALATAP
+%Aladin.Label		tapvizierGeneric
+%D    <html>Gaia DR1 <br/>(Gaia Collaboration, 2016)</html>
+%U    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
+
+#new things
+%A IRSA
+%Aladin.Label		IRSA
+%S ALATAP
+%U http://irsa.ipac.caltech.edu/TAP
+
+%A LMD
+%Aladin.Label		LMD
+%S ALATAP
+%U http://sery.lmd.jussieu.fr/tap
+
+%A GAVO
+%Aladin.Label		GAVO
+%S ALATAP
+%U http://dc.zah.uni-heidelberg.de/tap
+
+%A VMC DR2
+%Aladin.Label		VMC
+%S ALATAP
+%U http://wfaudata.roe.ac.uk/vmcDR2-dsa/TAP
+
+%A GAIAESA
+%Aladin.Label		GAIAESA
+%S ALATAP
+%U http://gea.esac.esa.int/tap-server/tap
+
+%A GAIAESA
+%Aladin.Label		GAIAESA
+%S ALATAP
+%U http://gea.esac.esa.int/tap-server/tap
+
+
+%A AIPGAVO
+%Aladin.Label		AIPGAVO
+%S ALATAP
+%U http://gavo.aip.de/tap
+
+%A AIPGAVO
+%Aladin.Label		AIPGAVO
+%S ALATAP
+%U http://gavo.aip.de/tap
+
+%A APIS
+%Aladin.Label		APIS
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A BASECOM
+%Aladin.Label		BASECOM
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A BDIP
+%Aladin.Label		BDIP
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A DynAstVO
+%Aladin.Label		DynAstVO
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A ExoPlanet
+%Aladin.Label		ExoPlanet
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A IKS
+%Aladin.Label		IKS
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A M4AST
+%Aladin.Label		M4AST
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A Titan
+%Aladin.Label		Titan
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+
+%A ASDC
+%Aladin.Label		ASDC
+%S ALATAP
+%U http://tools.asdc.asi.it/TAP
+
+%A PlanetsLesia
+%Aladin.Label		PlanetsLesia
+%S ALATAP
+%U http://voparis-tap.obspm.fr/__system__/tap/run/tap
+%D Main characteristics of solar system planets
+
+%A Planets
+%Aladin.Label		Planets
+%S ALATAP
+%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
+%D Asteroid orbital database and ephemerides
+
+%A EUROVORegistry
+%Aladin.Label		EUROVORegistry
+%S ALATAP
+%U http://registry.euro-vo.org/regtap/tap
+
+%A VOXAstro
+%Aladin.Label		VOXAstro
+%S ALATAP
+%U http://rcsed-vo.sai.msu.ru/tap
+
+%A 3xmmdr6
+%Aladin.Label		3xmmdr6
+%S ALATAP
+%U http://xcatdb.unistra.fr/3xmmdr6/tap
+
+%A TohokuTAP
+%Aladin.Label		TohokuTAP
+%S ALATAP
+%U http://thebe.gp.tohoku.ac.jp/tap
+
+%A TAO
+%Aladin.Label		TAO
+%S ALATAP
+%U https://tao.asvo.org.au/tao/tap
+
+%A EPN1
+%Aladin.Label		EPN1
+%S ALATAP
+%U http://epn1.epn-vespa.jacobs-university.de/tap
+
+%A LATMOS
+%Aladin.Label		LATMOS
+%S ALATAP
+%U http://vo.projet.latmos.ipsl.fr/tap
+
+%A STscl
+%Aladin.Label		STscl
+%S ALATAP
+%U http://vao.stsci.edu/RegTAP/TapService.aspx
+
+%A hfclar
+%Aladin.Label		hfclar
+%S ALATAP
+%U http://voparis-tap-helio.obspm.fr/__system__/tap/run/tap
+
+%A hfclar3
+%Aladin.Label		hfclar3
+%S ALATAP
+%U http://voparis-tap-helio.obspm.fr/__system__/tap/run/tap
+
+%A CDA
+%Aladin.Label		CDA
+%S ALATAP
+%U http://cda.harvard.edu/cxctap
+
+%A GAIAGEPI
+%Aladin.Label		GAIAGEPI
+%S ALATAP
+%U http://gaiatap.obspm.fr/tap
+
+%A SXDS_V1
+%Aladin.Label		SXDS_V1
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/sxds_v1
+
+%A BIRA-IASB
+%Aladin.Label		BIRA-IASB
+%S ALATAP
+%U http://vespa-ae.oma.be/tap
+
+%A IAA-CAB
+%Aladin.Label		IAA-CAB
+%S ALATAP
+%U http://spectrum.iaa.es/tap
+
+%A routinejup
+%Aladin.Label		routinejup
+%S ALATAP
+%U http://vogate.obs-nancay.fr/__system__/tap/run/tap
+
+%A CSC
+%Aladin.Label		CSC
+%S ALATAP
+%U http://cda.harvard.edu/csctap
+
+%A CSIRO_ATOA
+%Aladin.Label		CSIRO_ATOA
+%S ALATAP
+%U http://atoavo.atnf.csiro.au/tap
+
+%A SUBARU_SUP
+%Aladin.Label		SUBARU_SUP
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/spcam
+
+%A WiggleZTAP
+%Aladin.Label		WiggleZTAP
+%S ALATAP
+%U http://wiggleztap.asvo.nci.org.au/ncitap/tap
+
+%A UKIDSS
+%Aladin.Label		UKIDSS
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/ukidss
+
+%A wgetap
+%Aladin.Label		wgetap
+%S ALATAP
+%U http://ia2-tap.oats.inaf.it:8080/wgetap
+
+%A AKARI_DR1
+%Aladin.Label		AKARI_DR1
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/AKARI_DR1
+
+%A moircs
+%Aladin.Label		moircs
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/moircs
+
+%A sdss_dr8
+%Aladin.Label		sdss_dr8
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/sdss_dr8
+
+%A alma
+%Aladin.Label		alma
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/alma
+
+%A HIPPARCOS
+%Aladin.Label		HIPPARCOS
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/hip
+
+%A henry_draper
+%Aladin.Label		henry_draper
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/henry_draper
+
+%A AGN
+%Aladin.Label		AGN
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/agn
+
+%A akari
+%Aladin.Label		akari
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/akari
+
+%A kug2000
+%Aladin.Label		kug2000
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/kug2000
+
+%A rosat
+%Aladin.Label		rosat
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/rosat
+
+%A saga
+%Aladin.Label		saga
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/saga
+
+%A SDSSDR2_SPECTRA
+%Aladin.Label		SDSSDR2_SPECTRA
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/sdss
+
+%A swire
+%Aladin.Label		swire
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/swire
+
+%A SubaruHDS
+%Aladin.Label		SubaruHDS
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/hds
+
+%A TWOMASS_JVO
+%Aladin.Label		TWOMASS_JVO
+%S ALATAP
+%U http://jvo.nao.ac.jp/skynode/do/tap/twomass
+
+%A NASADUSTCAT
+%Aladin.Label		NASADUSTCAT
+%S ALATAP
+%U http://ia2-tap.oats.inaf.it:8080/epntap
 
 
 

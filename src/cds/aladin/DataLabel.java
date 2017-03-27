@@ -21,7 +21,11 @@ public class DataLabel {
 	public DataLabel(String label, String value, String description){
 		this.label = label;
 		this.value = value;
-		this.description = description;
+		if (description!=null && !description.isEmpty()) {
+//			this.description = "<html>"+description+"</html>";
+			this.description = description;
+		}
+		
 	}
 	
 	public DataLabel(String label, String value, String description, boolean setui){
@@ -59,12 +63,12 @@ public class DataLabel {
 	public void setUi() {
 		gui = new JRadioButton(this.label+"  ::"+this.value);
 		if (this.description!=null && !this.description.isEmpty()) {
-			gui.setToolTipText(this.description);
+			gui.setToolTipText("<html><p width=\"500\">"+this.description+"</p></html>");
 		}
 	}
 	
 	public void setUiActionForTapRegistry() {
-		gui.addActionListener(new ActionListener() {
+		this.gui.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -72,7 +76,7 @@ public class DataLabel {
 				Container registryPanel = SwingUtilities.getAncestorNamed(REGISTRYPANEL, gui);
 				if (registryPanel instanceof TapFrameServer) {
 					TapFrameServer frameServer = (TapFrameServer) registryPanel;
-					frameServer.setReload(value);
+					frameServer.setReload(label);
 				}
 			}
 		});

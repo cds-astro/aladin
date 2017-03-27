@@ -2958,18 +2958,18 @@ PARSEMJDFIELDHINT Please enter comma separated Ex:Date1, Date2
 BANDFORMATINCORRECT Please enter band in correct format. Example: 1.5E-5  or 1.5M
 TARGETOUTOFBOUNDSMESSAGE Your target is outside bounds. Please verify.
 
-#tap menu configurations -- also not needed remove this tintin
+#tap menu configurations
 TAPFORMNAME	TAP1
 TAPFORMTITLE	Tap client
 TAPFORMINFO	Construct your query, verify and execute.
 SELECTSERVERTOOLTIP List of tap server that can be loaded...
-TAPFORMDESC	Access TAP servers via Aladin. \nYou can write your tap query in the large white text area at the bottom \nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Write" button (above the large white text area).\nPosition constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(above the large white text area).To add position constraints click on "Add".\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "-" button. \nOnce you are ready, click the "Write" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\n\nThe metadata from the tap schema of the server is shown below. In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
-TAPFORMERR	TAP form error !
+TAPFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "X" button. \nOnce you are ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
 TARGETERROR Please check target co-ordinates!
 
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message
-TAPTABLEUPLOADTIP Upload table. 
+TAPTABLEUPLOADPARSETIP Load this data on the gui. 
+TAPTABLEUPLOADTIP Upload table.
 TAPTABLENOUPLOADTIP No table uploads are available for this server
 TAPTABLEUPLOADTIP.fr Upload table.  --configure message
 TAPTABLENOUPLOADTIP.fr No table uploads are available for this server	--configure message
@@ -2978,13 +2978,36 @@ TIPCLICKTOADD.fr Click to add --configure message
 TAPNOFILELOAD Please select a tapserver to load!
 TAPNOFILERELOAD Please select a tapserver to reload!
 ADDFILE Add file:
+GENERICERROR Error. Please try again later
+REFRESHQUERYTOOLTIP Regenerate query from above form.
+CHECKQUERYTOOLTIP Click to check the query below for syntax
+SYNCASYNCTOOLTIP You can choose how tap response is obtained by Aladin: synchronously or asynchronously. Choose ASYNC for jobs you know take longer to run.
+SHOWASYNCTOOLTIP Click to see the asynchronous job panel
+CHECKQUERY_SUCCESS Your constructed query has valid syntax!
+CHECKQUERY_ISBLANK Please generate/write a query
+NOTAPSERVERSCONFIGUREDMESSAGE No tap servers configured.
+OPENTAPSERVER Open tap server list
+TAPRETRY Retry
+TAPTIPRETRY Click to retry loading the tap services on this server
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables
 UPFILEINFO Choose either your local system file or an already loaded file in Aladin.
 UPTITLE.fr	Upload serveur
+DISCARD	Discard table
+DISCARDALL Discard all
+DISCARDTIP Click to discard the parsed table currently selected in the tables dropdown
+DISCARDALLTIP Click to discard all of the parsed tables
+NOTABLELOADEDMESSAGE Load new table to populate the gui!
+ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
 SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobs
+UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the query you run from the TAP form with a "ASYNC" option selected.
+CANTSTARTJOB Unable to start the job. please try again later.
+STANDARDRESULTSLOAD Load from TAP results url
+STANDARDRESULTSLOADTIP Loads results from "/results/result" path
+UWSASKLOADDEFAULTRESULTS Unable to parse results url. Try to download from the tap results path?
+CANTABORTJOB Unable to abort the job. please try again later.

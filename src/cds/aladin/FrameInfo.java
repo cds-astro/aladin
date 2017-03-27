@@ -950,6 +950,7 @@ public class FrameInfo extends JFrame implements WindowListener, MyListener, Act
                 aladin.dialog.server[aladin.dialog.current].grab.setEnabled(true);
             if( aladin.additionalServiceDialog.server[aladin.additionalServiceDialog.current].grab!=null )
                 aladin.additionalServiceDialog.server[aladin.additionalServiceDialog.current].grab.setEnabled(true);
+            aladin.grabUtilInstance.setAllGrabItsEnabled(true);
         }
       // les JRadioButton
       else if( src instanceof JRadioButton ) {

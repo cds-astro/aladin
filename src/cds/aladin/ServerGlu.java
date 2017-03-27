@@ -79,6 +79,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import adql.parser.ADQLParser;
+import cds.aladin.Constants.TapServerMode;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -95,7 +96,8 @@ public class ServerGlu extends Server implements Runnable {
    private boolean flagTAP=false;
    private boolean flagTAPV2=false;
    int fmt;		// Format de retour (PlanImage.fmt)
-   String actionName,info1,/*info2,*/filter,PARSEMJDFIELDHINT;
+	String actionName, info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP,
+			SHOWASYNCTOOLTIP;
    String system;       // appel système dans le cas d'un enregistrement concernant une application locale, null sinon
    String dir;          // Répertoire d'exécution du system, null sinon
    StringBuffer record;
@@ -120,6 +122,7 @@ public class ServerGlu extends Server implements Runnable {
    private Hashtable<String, String> adqlFuncParams = null;
    JComboBox sync_async;
    String LISTDELIMITER = SPACESTRING;
+   public TapServerMode mode = TapServerMode.GLU;
 
    protected void createChaine() {
       super.createChaine();
@@ -128,7 +131,11 @@ public class ServerGlu extends Server implements Runnable {
       filter= aladin.chaine.getString("SMBFILTER");
       HELP  = aladin.chaine.getString("GLUHELP");
       ERR   = aladin.chaine.getString("GLUERR");
-      PARSEMJDFIELDHINT = aladin.chaine.getString("PARSEMJDFIELDHINT");
+      PARSEMJDFIELDHINT = Aladin.chaine.getString("PARSEMJDFIELDHINT");
+      GENERICERROR = Aladin.chaine.getString("GENERICERROR");
+      CHECKQUERYTOOLTIP = Aladin.chaine.getString("CHECKQUERYTOOLTIP");
+      SYNCASYNCTOOLTIP = Aladin.chaine.getString("SYNCASYNCTOOLTIP");
+      SHOWASYNCTOOLTIP = Aladin.chaine.getString("SHOWASYNCTOOLTIP");
    }
 
    /**
@@ -186,6 +193,9 @@ public class ServerGlu extends Server implements Runnable {
             || resultDataType.indexOf("idha")>=0  || resultDataType.indexOf("ssa")>=0 );
       flagTAP = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tap")==0; 
       flagTAPV2 = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tapv1")==0 && Aladin.PROTO;//TODO:: tintinproto
+      if (flagTAPV2 && aladinProtocol.endsWith("TREEPANEL")) {
+		mode = TapServerMode.TREEPANEL;
+      }
       if( flagSIAIDHA && type!=SPECTRUM ) type=IMAGE;
       DISCOVERY=flagSIAIDHA || type==SPECTRUM || type==CATALOG;
 
@@ -205,7 +215,7 @@ public class ServerGlu extends Server implements Runnable {
     	  for (int i = 0; i < tapTables.length; i++) {
     		  this.gluAdqlQueryTemplates.put(tapTables[i], new GluAdqlTemplate());
 		}
-    	  //TODO:: tintin todo setQueryChecker
+    	  //No setQueryChecker for ServerGlu. We only check syntax.
       }
       // Le titre
       JPanel tp = new JPanel();
@@ -218,12 +228,14 @@ public class ServerGlu extends Server implements Runnable {
       if (flagTAPV2) {
       	 tapTableMapping.put("GENERAL",new Vector());
       	 tapTableMapping.get("GENERAL").add(tp);
-      	JButton button = new JButton("Change server");
-		button.setActionCommand(CHANGESERVER);
-		button.addActionListener(this);
-		button.setBounds(x+d.width,y-d.height-5,90,HAUT);
-		tapTableMapping.get("GENERAL").add(button);
-		add(button);
+      	if (mode != TapServerMode.TREEPANEL) {
+      		JButton button = new JButton("Change server");
+    		button.setActionCommand(CHANGESERVER);
+    		button.addActionListener(this);
+    		button.setBounds(x+d.width,y-d.height-5,90,HAUT);
+    		tapTableMapping.get("GENERAL").add(button);
+    		add(button);
+		}
        }
       add(tp);
 
@@ -409,28 +421,31 @@ public class ServerGlu extends Server implements Runnable {
     		this.adqlParser = new ADQLParser();
     		JPanel linePanel = new JPanel();
 			linePanel.setBackground(Aladin.BLUE);
-			JButton button = new JButton("Generate query");
+			/*JButton button = new JButton("Refresh query");
 			button.setActionCommand("WRITEQUERY");
 			button.addActionListener(this);
-			linePanel.add(button);
+			linePanel.add(button);*/
 			
-			button = new JButton("Check..");
+			JButton button = new JButton("Check..");
+			button.setToolTipText(CHECKQUERYTOOLTIP);
 			button.setActionCommand("CHECKQUERY");
 			button.addActionListener(this);
 			linePanel.add(button);
 			
-			sync_async = new JComboBox<String>(SYNC_ASYNC);//tintin for when you develop async
-			sync_async.setOpaque(false);
+			this.sync_async = new JComboBox<String>(SYNC_ASYNC);
+			this.sync_async.setToolTipText(SYNCASYNCTOOLTIP);
+			this.sync_async.setOpaque(false);
 			linePanel.add(sync_async);
 			linePanel.setBounds(XTAB1,y,XWIDTH-2*XTAB1,HAUT+10); y+=HAUT+10;
 			
 			button = new JButton("Async jobs>>");
+			button.setToolTipText(SHOWASYNCTOOLTIP);
 			button.setActionCommand(SHOWAYNCJOBS);
 			button.addActionListener(this);
 			linePanel.add(button);
 			
-			tapTableMapping.put(LASTPANEL, new Vector());
-			tapTableMapping.get(LASTPANEL).add(linePanel);
+			this.tapTableMapping.put(LASTPANEL, new Vector());
+			this.tapTableMapping.get(LASTPANEL).add(linePanel);
 		    add(linePanel);
 		}
     	  
@@ -1365,31 +1380,30 @@ public class ServerGlu extends Server implements Runnable {
             flagScriptEquiv=false;
          } else if( c instanceof JTextField ) {
             s = ((JTextField)c).getText();
-            if( false ) {   // Chaitra has to look ! otherwise it tries to modify the date in ServerSkybot.submit1() call
-               try {
-                  StringBuffer processedText = processCustomFields(c, (flagDoIt || userReady));
-                  if (processedText!=null && processedText.length()>0) {
-                     s = processedText.toString();
-                  }
-               } catch (Exception e1) {
-                  if( !flagDoIt ) return;
-                  Aladin.warning(this, e1.getMessage());
-                  ball.setMode(Ball.NOK);
-                  return;
-               }
-               if (flagTAPV2 && !s.isEmpty() && adqlOpInputs!=null && adqlOpInputs.contains(c)) {
-                  String processedInput = getRangeInput(s);
-                  if (processedInput.isEmpty()) {
-                     processedInput = isInValidOperatorNumber(s, userReady || flagDoIt);
-                     if (processedInput==null) {
-                        return;
-                     } else {
-                        s = processedInput;
-                     }
-                  } else {
-                     s = processedInput;
-                  }
-                  /*for (FocusListener focusListener : c.getFocusListeners()) {
+            try {
+                StringBuffer processedText = processCustomFields(c, (flagDoIt || userReady));
+                if (processedText!=null && processedText.length()>0 && !processedText.toString().trim().isEmpty()) {
+                   s = processedText.toString();
+                }
+             } catch (Exception e1) {
+                if( !flagDoIt ) return;
+                Aladin.warning(this, e1.getMessage());
+                ball.setMode(Ball.NOK);
+                return;
+             }
+             if (flagTAPV2 && !s.isEmpty() && adqlOpInputs!=null && adqlOpInputs.contains(c)) {
+                String processedInput = getRangeInput(s);
+                if (processedInput.isEmpty()) {
+                   processedInput = isInValidOperatorNumber(s, userReady || flagDoIt);
+                   if (processedInput==null) {
+                      return;
+                   } else {
+                      s = processedInput;
+                   }
+                } else {
+                   s = processedInput;
+                }
+                /*for (FocusListener focusListener : c.getFocusListeners()) {
 					if (focusListener instanceof DelimitedValFieldListener) {
 						DelimitedValFieldListener constraint2Val = ((DelimitedValFieldListener)focusListener);
 						if (!constraint2Val.isValid()) {
@@ -1399,8 +1413,7 @@ public class ServerGlu extends Server implements Runnable {
 						}
 					}
 				}*/
-               }
-            }
+             }
             v.addElement(s);
             vbis.addElement(s);
             if( !isFieldTargetOrRadius(c) ) crit=s;
@@ -1872,13 +1885,26 @@ public class ServerGlu extends Server implements Runnable {
     		TapManager tapManager = TapManager.getInstance(aladin);
   			String action = ((JButton) o).getActionCommand();
   			if (action.equals(CHECKQUERY)) {
-  				checkQueryFlagMessage(new ArrayList<String>());
-  			} else if (action.equals(WRITEQUERY)) {
   				this.submit1(false, true);
-  			} else if (action.equals(CHANGESERVER)) {
-  				tapManager.showTapRegistryForm();
+  				if (!ball.isRed()) {
+  					checkQueryFlagMessage();
+				}
+  			}/* else if (action.equals(WRITEQUERY)) {
+  				this.submit1(false, true);
+  			}*/ else if (action.equals(CHANGESERVER)) {
+  				try {
+					tapManager.showTapRegistryForm();
+				} catch (Exception e1) {
+					Aladin.warning(this, GENERICERROR);
+		            ball.setMode(Ball.NOK);
+				}
 			} else if (action.equals(SHOWAYNCJOBS)) {
-				tapManager.showAsyncPanel();
+				try {
+					tapManager.showAsyncPanel();
+				} catch (Exception e1) {
+					Aladin.warning(this, GENERICERROR);
+		            ball.setMode(Ball.NOK);
+				}
 			}
 
   		} else if (o instanceof JComboBox) {

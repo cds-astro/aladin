@@ -105,13 +105,14 @@ public final class MyInputStream extends FilterInputStream {
    static final public long EOF     = 1L<<43;
    static final public long PROP    = 1L<<44;
    static final public long SSA     = 1L<<45;
+   static final public long SIAV2   = 1L<<46;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA" };
+      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -531,6 +532,12 @@ public final class MyInputStream extends FilterInputStream {
 
                else if( lookForSignature("utype=\"photdm:PhotometryFilter.SpectralAxis.Coverage.Location.Value", true)>0 ) {
                   type |= SED;
+               }  
+               
+               else if( lookForSignature("utype=\"obscore:ObsDataset.dataProductType\"", true)>0
+                       || lookForSignature("utype=\"obscore:Access.Reference\"", true)>0
+                       || lookForSignature("utype=\"obscore:Access.Format\"", true)>0 ) {
+                   type |= SIAV2;
                }
 
             }

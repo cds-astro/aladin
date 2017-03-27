@@ -24,12 +24,11 @@ import static cds.aladin.Constants.SUBMITPANEL;
 import static cds.aladin.Constants.REGISTRYPANEL;
 import static cds.tools.CDSConstants.DEFAULT;
 import static cds.tools.CDSConstants.WAIT;
-import static cds.aladin.Constants.SHOWAYNCJOBS;
+import static cds.aladin.Constants.EMPTYSTRING;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -44,11 +43,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
@@ -61,8 +58,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    
 	private static final long serialVersionUID = 1L;
 
-	static String FSSELECTTAP,INFO = " ? ",CLOSE,
-                 TIPSUBMIT,TIPCLOSE,FILTER,RESET,GO,LOAD,TIPLOAD,RELOAD,TIPRELOAD,TAPNOFILELOAD,TAPNOFILERELOAD, SELECTSERVERTOOLTIP,SELECTASYNCPANELTOOLTIP;
+	static String FSSELECTTAP, INFO = " ? ", CLOSE, TIPSUBMIT, TIPCLOSE, FILTER, RESET, GO, LOAD, TIPLOAD, RELOAD,
+			TIPRELOAD, TAPNOFILELOAD, TAPNOFILERELOAD, SELECTSERVERTOOLTIP, SELECTASYNCPANELTOOLTIP,
+			NOTAPSERVERSCONFIGUREDMESSAGE;
 
    Aladin aladin;
    TapManager tapManager;
@@ -72,26 +70,28 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    GridBagConstraints c;
    protected JButton reloadServerButton;
    JTabbedPane tabbedTapThings;
+   JPanel registryPanel;
 
    protected void createChaine() {
-      GO = aladin.chaine.getString("FSGO");
-      RESET = aladin.chaine.getString("RESET");
-      FILTER = aladin.chaine.getString("FSFILTER");
-      CLOSE = aladin.chaine.getString("CLOSE");
-      TIPSUBMIT = aladin.chaine.getString("TIPSUBMIT");
-      TIPCLOSE = aladin.chaine.getString("TIPCLOSE");
-      LOAD = aladin.chaine.getString("FSLOAD");
-      TIPLOAD = aladin.chaine.getString("TIPLOAD");
-      FSSELECTTAP = aladin.chaine.getString("FSSELECTTAP");
-      RELOAD = aladin.chaine.getString("FSRELOAD");
-      TIPRELOAD = aladin.chaine.getString("TIPRELOAD");
-      TAPNOFILELOAD = aladin.chaine.getString("TAPNOFILELOAD");
-      TAPNOFILERELOAD = aladin.chaine.getString("TAPNOFILERELOAD");
-      SELECTSERVERTOOLTIP = aladin.chaine.getString("SELECTSERVERTOOLTIP");
-      SELECTASYNCPANELTOOLTIP = aladin.chaine.getString("SELECTASYNCPANELTOOLTIP");
+      GO = Aladin.chaine.getString("FSGO");
+      RESET = Aladin.chaine.getString("RESET");
+      FILTER = Aladin.chaine.getString("FSFILTER");
+      CLOSE = Aladin.chaine.getString("CLOSE");
+      TIPSUBMIT = Aladin.chaine.getString("TIPSUBMIT");
+      TIPCLOSE = Aladin.chaine.getString("TIPCLOSE");
+      LOAD = Aladin.chaine.getString("FSLOAD");
+      TIPLOAD = Aladin.chaine.getString("TIPLOAD");
+      FSSELECTTAP = Aladin.chaine.getString("FSSELECTTAP");
+      RELOAD = Aladin.chaine.getString("FSRELOAD");
+      TIPRELOAD = Aladin.chaine.getString("TIPRELOAD");
+      TAPNOFILELOAD = Aladin.chaine.getString("TAPNOFILELOAD");
+      TAPNOFILERELOAD = Aladin.chaine.getString("TAPNOFILERELOAD");
+      SELECTSERVERTOOLTIP = Aladin.chaine.getString("SELECTSERVERTOOLTIP");
+      SELECTASYNCPANELTOOLTIP = Aladin.chaine.getString("SELECTASYNCPANELTOOLTIP");
+      NOTAPSERVERSCONFIGUREDMESSAGE = Aladin.chaine.getString("NOTAPSERVERSCONFIGUREDMESSAGE");
    }
 
-	protected TapFrameServer(Aladin aladin, TapManager tapManager) {
+	protected TapFrameServer(Aladin aladin, TapManager tapManager){
 		super();
 		this.setName(REGISTRYPANEL);
 		this.aladin = aladin;
@@ -104,7 +104,6 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		Util.setCloseShortcut(this, false, aladin);
-
 		getContentPane().add(createCenterPane(), "Center");
 		pack();
 	}
@@ -113,8 +112,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		return new Dimension(600, 500);
 	}
 
-	private JTabbedPane createCenterPane() {
-		JPanel registryPanel = createRegistryPanel();
+	private JTabbedPane createCenterPane(){
+		registryPanel = new JPanel();
+		createRegistryPanel();
 		JPanel asyncPanel = this.tapManager.uwsFacade.instantiateGui();
 
 		tabbedTapThings = new JTabbedPane();
@@ -124,109 +124,118 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		return tabbedTapThings;
 	}
   
-   private JPanel createRegistryPanel() {
-      JPanel p = new JPanel();
-      p.setLayout( new BorderLayout(0,0) );
+	public JPanel createRegistryPanel() {
+		registryPanel.removeAll();
+		registryPanel.setLayout(new BorderLayout(0, 0));
 
-      int scrollWidth = 650;
-      int scrollHeight = 500;
+		int scrollWidth = 650;
+		int scrollHeight = 500;
 
-      JPanel check = new JPanel();
-      JButton b;
-      check.add(new JLabel("      "+FILTER+": "));
-      filter = new JTextField(15);
-      check.add(filter); filter.addKeyListener(this);
-      check.add(b=new JButton(GO));     b.addActionListener(this);
-      check.add(b=new JButton(RESET));  b.addActionListener(this);
-
-      JPanel header = new JPanel( new BorderLayout());
-      header.add(check,"West");
-
-      p.add(header,"North");
-
-      g = new GridBagLayout();
-      c = new GridBagConstraints();
-      c.fill = GridBagConstraints.BOTH;
-
-      panelScroll = new JPanel(g);
-//	      panelScroll.setLayout(new GridLayout(0,1,0,0));
-      JScrollPane scroll = new JScrollPane(panelScroll);
-      scroll.setSize(scrollWidth,scrollHeight);
-      scroll.setBackground(Color.white);
-      scroll.getVerticalScrollBar().setUnitIncrement(70);
-
-      fillWithRegistryServers();
-
-      Aladin.makeAdd(p,scroll,"Center");
-
-      JPanel submit = new JPanel();
-      submit.setName(SUBMITPANEL);
-      submit.add(b=new JButton(LOAD));
-      b.addActionListener(this);
-      b.setToolTipText(TIPLOAD);
-      submit.add(reloadServerButton=new JButton(RELOAD));
-      reloadServerButton.addActionListener(this);
-      reloadServerButton.setToolTipText(TIPRELOAD);
-      submit.add(b=new JButton(CLOSE));
-      b.addActionListener(this);
-      b.setToolTipText(TIPCLOSE);
-      p.add(submit,"South");
-
-      return p;
-   }
-
-   /**
-    * Method to create frame for all tap servers
-    */
-	private void fillWithRegistryServers() {
-		panelScroll.removeAll();
 		List<DataLabel> datalabels = tapManager.getTapServerList();
+		if (datalabels != null && !datalabels.isEmpty()) {
+			JPanel check = new JPanel();
+			JButton b;
+			check.add(new JLabel("      " + FILTER + ": "));
+			filter = new JTextField(15);
+			check.add(filter);
+			filter.addKeyListener(this);
+			check.add(b = new JButton(GO));
+			b.addActionListener(this);
+			check.add(b = new JButton(RESET));
+			b.addActionListener(this);
 
+			JPanel header = new JPanel(new BorderLayout());
+			header.add(check, "West");
+
+			registryPanel.add(header, "North");
+
+			g = new GridBagLayout();
+			c = new GridBagConstraints();
+
+			panelScroll = new JPanel(g);
+			// panelScroll.setLayout(new GridLayout(0,1,0,0));
+			JScrollPane scroll = new JScrollPane(panelScroll);
+			scroll.setSize(scrollWidth, scrollHeight);
+			scroll.setBackground(Color.white);
+			scroll.getVerticalScrollBar().setUnitIncrement(70);
+
+			fillWithRegistryServers(null);
+
+			Aladin.makeAdd(registryPanel, scroll, "Center");
+			JPanel submit = new JPanel();
+			submit.setName(SUBMITPANEL);
+			submit.add(b = new JButton(LOAD));
+			b.addActionListener(this);
+			b.setToolTipText(TIPLOAD);
+			submit.add(reloadServerButton = new JButton(RELOAD));
+			reloadServerButton.addActionListener(this);
+			reloadServerButton.setToolTipText(TIPRELOAD);
+			submit.add(b = new JButton(CLOSE));
+			b.addActionListener(this);
+			b.setToolTipText(TIPCLOSE);
+			registryPanel.add(submit, "South");
+		} else {
+			panelScroll = new JPanel();
+			panelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
+			Aladin.makeAdd(registryPanel, panelScroll, "Center");
+		}
+		return registryPanel;
+	}
+  
+	private void fillWithRegistryServers(String mask) {
+		List<DataLabel> datalabels = tapManager.getTapServerList();
+		fillWithRegistryServers(datalabels, mask);
+	}
+	
+	/**
+	 * Method to create frame for all tap servers
+	 * 
+	 * @throws Exception
+	 */
+	private void fillWithRegistryServers(List<DataLabel> datalabels, String mask) {
+		panelScroll.removeAll();
 		if (datalabels != null) {
 			int h = 0;
 			int height;
-
-			String mask = filter.getText().trim();
-			if (mask.length() == 0)
-				mask = null;
 			ButtonGroup radioGroup = new ButtonGroup();
+			c.gridx = 0;
+			c.weighty = 0.01;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.anchor = GridBagConstraints.PAGE_START;
 
 			for (DataLabel dataLabel : datalabels) {
 				if (mask != null)
 					if (!(Util.indexOfIgnoreCase(dataLabel.getLabel(), mask) >= 0
-							|| Util.indexOfIgnoreCase(dataLabel.getValue(), mask) >= 0
-							|| Util.indexOfIgnoreCase(dataLabel.getDescription(), mask) >= 0)) {
+							|| (dataLabel.getValue() != null && Util.indexOfIgnoreCase(dataLabel.getValue(), mask) >= 0)
+							|| (dataLabel.getDescription() != null
+									&& Util.indexOfIgnoreCase(dataLabel.getDescription(), mask) >= 0))) {
 						continue;
 					}
 				h++;
-				
+
 				dataLabel.setUi();
 				dataLabel.setUiActionForTapRegistry();
-				height = dataLabel.gui.getPreferredSize().height;
-				dataLabel.gui.setPreferredSize(new Dimension(330, height));
+//				height = dataLabel.gui.getPreferredSize().height;
+//				dataLabel.gui.setPreferredSize(new Dimension(330, height));
 				Color bg = h % 2 == 0 ? TwoColorJTable.DEFAULT_ALTERNATE_COLOR : getBackground();
 
-				c.gridx = 0;
 				c.gridy++;
-				c.gridwidth = 1;
-				c.weightx = 0.6;
+//				c.gridwidth = 1;
+				c.weightx = 1;
 				c.insets.left = 5;
 				dataLabel.gui.setBackground(bg);
 				g.setConstraints(dataLabel.gui, c);
 				radioGroup.add(dataLabel.gui);
 				panelScroll.add(dataLabel.gui);
 			}
-
 			c.gridy++;
-			c.gridwidth = 4;
-			c.weighty = 0.9;
+			c.weighty = 0.99;
 			JLabel l1 = new JLabel(" ");
 			g.setConstraints(l1, c);
 			panelScroll.add(l1);
-
-			panelScroll.revalidate();
-			panelScroll.repaint();
 		}
+		panelScroll.revalidate();
+		panelScroll.repaint();
 	}
 	   
 	public void actionPerformed(ActionEvent e) {
@@ -252,18 +261,23 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			reset();
 		} else if (s.equals(LOAD)) {
 			this.tapManager.setSelectedServerLabel();
-			if (this.tapManager.getSelectedServerLabel() == null) {
+			if (this.tapManager.getSelectedServerLabel() != null) {
+				loadServer();
+			} else {
 				Aladin.warning(TAPNOFILELOAD);
-				return;
 			}
-			loadServer();
 		} else if (s.equals(RELOAD)) {
-			this.tapManager.setSelectedServerLabel();
-			if (this.tapManager.getSelectedServerLabel() == null) {
-				Aladin.warning(TAPNOFILERELOAD);
-				return;
+			try {
+				this.tapManager.setSelectedServerLabel();
+				if (this.tapManager.getSelectedServerLabel() != null) {
+					reloadServer();
+				} else {
+					Aladin.warning(TAPNOFILERELOAD);
+				}
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
-			reloadServer();
 		}
 	}
 
@@ -272,10 +286,16 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	 * server is selected by user on the tap servers list
 	 */
 	private void loadServer() {
-		Aladin.makeCursor(this, WAIT);
-		this.tapManager.loadTapServer();
-		this.aladin.dialog.show(this.aladin.dialog.tapServer);
-		Aladin.makeCursor(this, DEFAULT);
+		try {
+			Aladin.makeCursor(this, WAIT);
+			this.tapManager.loadTapServer();
+			this.aladin.dialog.show(this.aladin.dialog.tapServer);
+			Aladin.makeCursor(this, DEFAULT);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Aladin.makeCursor(this, DEFAULT);
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -296,21 +316,33 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		this.tapManager.removeCurrentFromServerCache();
 		this.tapManager.loadTapServer();
 		this.aladin.dialog.show(this.aladin.dialog.tapServer);
+//		this.tapManager.loadTapServerForSimpleFrame("SIMBAD_TAP", "http://simbad.u-strasbg.fr:80/simbad/sim-tap");
+//		this.tapManager.loadTapServerForSimpleFrame("GAIA_VIZIER","http://tapvizier.u-strasbg.fr/TAPVizieR/tap");
 		Aladin.makeCursor(this, DEFAULT);
 	}
-	
-   private void go() {
-      fillWithRegistryServers();
-      pack();
-   }
 
-   private void reset() {
-      filter.setText("");
-      fillWithRegistryServers();
-      revalidate();
-	  repaint();
-   }
-   
+	private void go() {
+		String mask = filter.getText().trim();
+		if (mask.length() == 0) {
+			mask = null;
+		}
+		fillWithRegistryServers(mask);
+		pack();
+	}
+
+	public void reset() {
+		fillWithRegistryServers(EMPTYSTRING);
+		reloadRegistryPanel();
+	}
+	
+	public void reloadRegistryPanel() {
+		if (filter!=null) {
+			filter.setText(EMPTYSTRING);
+		}
+		registryPanel.revalidate();
+		registryPanel.repaint();
+	}
+
    public void keyPressed(KeyEvent e) { }
    public void keyTyped(KeyEvent e) { }
 

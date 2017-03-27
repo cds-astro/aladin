@@ -137,7 +137,6 @@ final public class Field {
    public Field(Hashtable atts) {
       ID       =(String)atts.get("ID");
       name     =(String)atts.get("name");
-      visible = shouldHide(name);
       unit     =(String)atts.get("unit");
 
       // UCD in Astrores and ucd in V0Table
@@ -182,13 +181,7 @@ final public class Field {
       visible = f.visible;
       columnSize = f.columnSize;
       nullValue = f.nullValue;
-      visible = shouldHide(name);
    }
-   
-	public Field(Field f, boolean isStandardised) {
-		this(f);
-		name = Aladin.getChaine().getString(f.name);
-	}
 
    /** Get the field edition size (width, otherwise arraysize, otherwise 10) */
    public void computeColumnSize() {
@@ -319,18 +312,6 @@ final public class Field {
       if( s.equals("unicodeChar") )   return "U";   // Non Fits standard
 //      return "E";
       return "A";
-   }
-   
-   /**
-    * Method to check if the field is configured to be hidden
-    * @param name
-    * @return
-    */
-   public boolean shouldHide(String name) {
-      if( true ) return true;   // PF - 26 fev 2017 - By waiting Chaitra bug fix
-      if( name==null ) return false;
-      String p = ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns");
-      return p==null ? false : !p.contains(name);
    }
 	
    public String toString() {

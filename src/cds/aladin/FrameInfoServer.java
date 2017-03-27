@@ -212,7 +212,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 					this.getContentPane().remove(this.centerPanel);
 					this.centerPanel.remove(oldScrollPane);
 					this.centerPanel.add(mainScrollPane);
-					getContentPane().add(this.centerPanel,"Center");
+					this.getContentPane().add(this.centerPanel,"Center");
 					break;
 				} catch (Exception e) {
 					// TODO Auto-generated catch block

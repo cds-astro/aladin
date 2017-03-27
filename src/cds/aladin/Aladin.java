@@ -722,6 +722,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    private boolean flagFrame=false;
+   public GrabUtil grabUtilInstance = GrabUtil.getInstance();
 
    /** Va tester s'il s'agit d'une applet signé ou non et va lancer l'applet dans une fenêtre à part si le parametre
     * inFrame est présent */

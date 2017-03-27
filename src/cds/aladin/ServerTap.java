@@ -14,16 +14,21 @@ import static cds.aladin.Constants.SELECTALL;
 import static cds.aladin.Constants.SHOWAYNCJOBS;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.SYNC_ASYNC;
-import static cds.aladin.Constants.TABLECHANGED;
+import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
+import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
+import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.TAP_REC_LIMIT;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.WRITEQUERY;
+import static cds.aladin.Constants.DISCARDACTION;
 import static cds.tools.CDSConstants.BOLD;
+import static cds.aladin.Constants.RETRYACTION;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -39,6 +44,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
@@ -62,6 +68,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
 
 import adql.db.DBChecker;
 import adql.db.DBType;
@@ -71,13 +79,16 @@ import adql.db.DefaultDBTable;
 import adql.parser.ADQLParser;
 import adql.parser.QueryChecker;
 import adql.query.ADQLQuery;
+import cds.aladin.Constants.TapServerMode;
 import cds.tools.Util;
 import cds.xml.VOSICapabilitiesReader;
 
 public class ServerTap extends Server implements MouseListener{
 
 	private static final long serialVersionUID = 1L;
-	String ERR,LOAD,TAPTABLEJOINTIP, TAPTABLEUPLOADTIP, TARGETERROR, TIPCLICKTOADD, TAPTABLENOUPLOADTIP;
+	String LOAD, TAPTABLEJOINTIP, TAPTABLEUPLOADTIP, TARGETERROR, TIPCLICKTOADD, TAPTABLENOUPLOADTIP, GENERICERROR,
+			REFRESHQUERYTOOLTIP, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP, SHOWASYNCTOOLTIP, DISCARD, DISCARDTIP, RETRY,
+			TIPRETRY, OPENTAPSERVER;
 	private String name;
 	private String url;
 	protected TapManager tapManager = null;
@@ -102,13 +113,14 @@ public class ServerTap extends Server implements MouseListener{
 	Hashtable adqlWhere = new Hashtable();
     Map<String, String> adqlElements;
     List<DefaultDBTable> queryCheckerTables;
-    protected boolean isUploadServer;
     Color primaryColor = Aladin.BLUE;
-    Color secondColor = Aladin.BACKGROUND;
-    protected boolean isNotLoaded;
+    Color secondColor = new Color(198,218,239);
+    protected int loadStatus; 
     protected boolean dummyInstantiation;
     Future<VOSICapabilitiesReader> capabilities;
     JFrame setRaDecFrame;
+    JTextField maskInput;
+    public TapServerMode mode;
     
 	static{
 		for (DBDatatype dbDatatype : DBDatatype.values()) {
@@ -117,14 +129,16 @@ public class ServerTap extends Server implements MouseListener{
 	}
 
 	protected ServerTap(Aladin aladin) {
-	  this.aladin = aladin;
-	  isNotLoaded = true;
-      createChaine();
-      type = CATALOG;
-      aladinLabel="TAP";
-      this.adqlParser = new ADQLParser();
-      this.tapManager = TapManager.getInstance(aladin);
-   }
+		this.aladin = aladin;
+		loadStatus = TAPFORM_STATUS_NOTLOADED;
+		createChaine();
+		type = CATALOG;
+		aladinLabel = "TAP";
+//		aladinLogo = "tap.png";
+		this.adqlParser = new ADQLParser();
+		this.tapManager = TapManager.getInstance(aladin);
+		this.mode = TapServerMode.GENERAL;
+	}
 	
 	protected ServerTap(Aladin aladin, boolean dummyInstantiation){
 		this(aladin);
@@ -132,7 +146,14 @@ public class ServerTap extends Server implements MouseListener{
 	}
 	
 	protected void createFormDefault() {
-		this.createForm(0);
+		this.createForm(null);
+	}
+	
+	protected void createFormDefault(TapServerMode mode) {
+		if (mode != null) {
+			this.mode = mode;
+		}
+		this.createForm(null);
 	}
 	
 	/**
@@ -140,13 +161,20 @@ public class ServerTap extends Server implements MouseListener{
 	 * @param tablesMetaData
 	 * @param tableChoice
 	 */
-	protected void createForm(int tableChoice) {
+	protected void createForm(String tableChoice) {
+		if (mode == null) {
+			mode = TapServerMode.GENERAL;
+		}
 		Vector<String> tables = new Vector<String>(this.tablesMetaData.keySet().size());
 		tables.addAll(this.tablesMetaData.keySet());
-		selectedTableName = tables.get(tableChoice);
+		if (tableChoice == null || !tables.contains(tableChoice)) {
+			selectedTableName = tables.get(0);
+		} else {
+			selectedTableName = tableChoice;
+		}
 		Vector<TapTableColumn> columnNames = this.tablesMetaData.get(selectedTableName).getColumns();
 		if (columnNames == null) {
-			if (isUploadServer) {
+			if (mode == TapServerMode.UPLOAD) {
 				Aladin.warning("Error in uploaded data");
 				return;
 			}
@@ -162,7 +190,7 @@ public class ServerTap extends Server implements MouseListener{
 				return;
 			}
 		}
-		setQueryChecker(this.selectedTableName);
+		setQueryChecker();
 		
 		JButton button;
 		type = CATALOG;
@@ -184,7 +212,7 @@ public class ServerTap extends Server implements MouseListener{
 		JPanel titlePanel = new JPanel();
 		titlePanel.setBackground(this.primaryColor);
 		titlePanel.setAlignmentY(SwingConstants.CENTER);
-		if (!isUploadServer) {
+		if (mode != TapServerMode.UPLOAD) {
 			makeTitle(titlePanel, this.name);
 //			this.aladinLabel = this.name;
 		} else {
@@ -197,11 +225,11 @@ public class ServerTap extends Server implements MouseListener{
 	    c.weighty = 0.02;
 		containerPanel.add(titlePanel, c);
 
-		if (!isUploadServer) {
-		button = new JButton("Change server");
-		button.setActionCommand(CHANGESERVER);
-		button.addActionListener(this);
-		titlePanel.add(button);
+		if (mode != TapServerMode.UPLOAD && mode != TapServerMode.TREEPANEL) {
+			button = new JButton("Change server");
+			button.setActionCommand(CHANGESERVER);
+			button.addActionListener(this);
+			titlePanel.add(button);
 		}
 		
 		// Premiere indication
@@ -215,7 +243,14 @@ public class ServerTap extends Server implements MouseListener{
 	    c.gridy++;
 	    
 	    
-		JPanel tablesPanel = getTablesPanel(tableChoice, tables);
+		JPanel tablesPanel = null;
+		try {
+			tablesPanel = getTablesPanel(tableChoice, tables);
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			Aladin.warning(e.getMessage());
+			return;
+		}
 		tablesPanel.setBackground(this.primaryColor);
 		tablesPanel.setFont(BOLD);
 		c.weighty = 0.02;
@@ -223,7 +258,7 @@ public class ServerTap extends Server implements MouseListener{
         c.weightx = 0.10;
 	    c.fill = GridBagConstraints.NONE;
 	    c.gridx = 0;
-	    c.insets = new Insets(0, 0, 0, 0);
+	    c.insets = new Insets(0, 4, 0, 0);
 	    containerPanel.add(tablesPanel, c);		
 		
 	    this.queryComponentsGui = new JPanel();
@@ -239,6 +274,7 @@ public class ServerTap extends Server implements MouseListener{
 		JPanel linePanel = getBottomPanel();
 		c.weightx = 0.10;
 		c.weighty = 0.02;
+		c.insets = new Insets(0, -6, 0, 0);
 	    c.fill = GridBagConstraints.BOTH;
 	    c.gridy++;
 	    containerPanel.add(linePanel, c);
@@ -253,24 +289,51 @@ public class ServerTap extends Server implements MouseListener{
 		scrolley = new JScrollPane(tap);
 		c.weightx = 0.35;
 		c.weighty = 0.35;
+		if (mode == TapServerMode.TREEPANEL) {
+			c.weighty = 0.33;
+		}
+		c.insets = new Insets(0, 4, 0, 0);
 	    c.fill = GridBagConstraints.BOTH;
 	    c.gridy++;
 	    containerPanel.add(scrolley, c);	
+	    
+	    if (mode == TapServerMode.TREEPANEL) {
+	    	JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+			JButton submit = new JButton("Submit");
+			submit.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					ServerTap.this.submit();
+				}
+			});
+			buttonsPanel.add(submit);
+			c.weighty = 0.02;
+			c.gridy++;
+	    	containerPanel.add(buttonsPanel, c);
+		}
+
 	    this.removeAll();
 	    add(containerPanel);
 	    
-	    isNotLoaded = false;
+	    this.addMouseListener(this);
+	    loadStatus = TAPFORM_STATUS_LOADED;
 	    writeQuery();
+	    
 	}
 	
-	
-	protected void changeTableSelection(int tableChoice) {
+	protected void changeTableSelection(String tableChoice) {
+		waitCursor();
 		Vector<String> tables = new Vector<String>(this.tablesMetaData.keySet().size());
 		tables.addAll(this.tablesMetaData.keySet());
-		selectedTableName = tables.get(tableChoice);
+		if (tableChoice == null || !tables.contains(tableChoice)) {
+			selectedTableName = tables.get(0);
+		} else {
+			selectedTableName = tableChoice;
+		}
 		Vector<TapTableColumn> columnNames = this.tablesMetaData.get(selectedTableName).getColumns();
 		if (columnNames == null) {
-			if (isUploadServer) {
+			if (mode == TapServerMode.UPLOAD) {
 				Aladin.warning("Error in uploaded data");
 				return;
 			}
@@ -285,44 +348,40 @@ public class ServerTap extends Server implements MouseListener{
 				Aladin.warning("Error in updating the metadata for :"+selectedTableName);
 				return;
 			}
+			updateQueryChecker(this.selectedTableName);
 		}
-		setQueryChecker(this.selectedTableName);
 		
 		
-		boolean targetPanelPresent = false;
-		if (this.raColumnName!=null && this.decColumnName!=null) {
-			targetPanelPresent = true;
-		}
-
 		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
 		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
-		
-		if (targetPanelPresent) {
-			if (this.raColumnName==null || this.decColumnName==null) {
-				targetPanel.setVisible(false);
-			}
-		} else {
-			if (this.raColumnName!=null && this.decColumnName!=null) {
+		System.out.println("ra and dec:"+(this.raColumnName!=null && this.decColumnName!=null));
+		if  (this.raColumnName!=null && this.decColumnName!=null){
+			System.out.println("target: "+(target));
+			if (target == null) {
 				createTargetPanel();
 			}
+			targetPanel.setVisible(true);
+		} else {
+			if (target != null) {
+				targetPanel.setVisible(false);
+			}
 		}
 		
-		if (this.selectAll!=null) {
-			this.selectAll.setSelected(true);
-		}
 		this.selectList.removeAll();
 		this.selectList.setListData(columnNames);
 		
-	    
+		if (this.selectAll != null) {
+			this.selectAll.setSelected(true);
+		}
+		
 		resetFields();
 		ball.setMode(Ball.UNKNOWN);
-	    aladin.dialog.setDefaultParameters(aladin.dialog.getCurrent(),5);
-	    isNotLoaded = false;
+//	    aladin.dialog.setDefaultParameters(aladin.dialog.getCurrent(),5);
+	    loadStatus = TAPFORM_STATUS_LOADED;
 	    writeQuery();
-	    
 		this.revalidate();
 		this.repaint();
-		
+		defaultCursor();
 	}
 	
 	/**
@@ -333,11 +392,12 @@ public class ServerTap extends Server implements MouseListener{
 		JLabel planeLabel = new JLabel("loading "+this.name+"...");
 		planeLabel.setFont(Aladin.ITALIC);
 		add(planeLabel,"Center");
-		JButton button = new JButton("Open tap server list");
-		button.setActionCommand(CHANGESERVER);
-		button.addActionListener(this);
-		add(button);
-		isNotLoaded = true;
+		if (mode != TapServerMode.TREEPANEL) {
+			JButton button = new JButton("Open tap server list");
+			button.setActionCommand(CHANGESERVER);
+			button.addActionListener(this);
+			add(button);
+		}
 		revalidate();
 		repaint();
 	}
@@ -351,11 +411,20 @@ public class ServerTap extends Server implements MouseListener{
 		JLabel planeLabel = new JLabel("Error: unable to load "+this.name);
 		planeLabel.setFont(Aladin.ITALIC);
 		add(planeLabel,"Center");
-		JButton button = new JButton("Open tap server list");
-		button.setActionCommand(CHANGESERVER);
-		button.addActionListener(this);
-		isNotLoaded = true;
-		add(button);
+		JButton button = null;
+		if (mode == TapServerMode.GENERAL || mode == TapServerMode.GLU) {
+			button = new JButton(OPENTAPSERVER);
+			button.setActionCommand(CHANGESERVER);
+		} else if (mode == TapServerMode.TREEPANEL && tapManager.canReloadForTreePanel(this.name)){
+			button = new JButton(RETRY);
+			button.setToolTipText(TIPRETRY);
+			button.setActionCommand(RETRYACTION);
+		}
+		if (button != null) {
+			button.addActionListener(this);
+			add(button);
+		}
+		loadStatus = TAPFORM_STATUS_ERROR;
 		revalidate();
 		repaint();
 	}
@@ -365,8 +434,9 @@ public class ServerTap extends Server implements MouseListener{
 	 * @param tableChoice
 	 * @param tables
 	 * @return
+	 * @throws BadLocationException 
 	 */
-	public JPanel getTablesPanel(int tableChoice, Vector<String> tables) {
+	public JPanel getTablesPanel(String tableChoice, Vector<String> tables) throws BadLocationException {
     	JPanel tablesPanel = new JPanel();
 		GridBagLayout gridbag = new GridBagLayout();
 		tablesPanel.setLayout(gridbag);
@@ -375,7 +445,7 @@ public class ServerTap extends Server implements MouseListener{
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;
-		c.insets = new Insets(1, 2, 1, 3);
+		c.insets = new Insets(1, 3, 1, 3);
 		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.WEST;
 		c.weightx = 0.05;
@@ -383,27 +453,40 @@ public class ServerTap extends Server implements MouseListener{
 		label.setText("Table:");
 		label.setFont(BOLD);
 		tablesPanel.add(label, c);
-
+		
 		tablesGui = new JComboBox(tables);
+		tablesGui.setEditable(true);
+		JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
+		tablesGuiEditor.setDocument(new TapTableFilterDocument(this));
 		tablesGui.setOpaque(false);
 		tablesGui.setName("table");
-		tablesGui.setActionCommand(TABLECHANGED);
-		tablesGui.setSelectedIndex(tableChoice);
-		tablesGui.addActionListener(this);
+//		tablesGui.setActionCommand(TABLECHANGED);
 		tablesGui.setAlignmentY(SwingConstants.CENTER);
+		c.insets = new Insets(1, 0, 1, 0);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.anchor = GridBagConstraints.CENTER;
 		c.gridx++;
 		c.weightx = 0.75;
 		tablesPanel.add(tablesGui, c);
 		
+		if (mode == TapServerMode.UPLOAD) {
+			c.weightx = 0.05;
+			c.gridx++;
+			JButton button = new JButton(DISCARD);
+			button.setActionCommand(DISCARDACTION);
+			button.addActionListener(tapManager.uploadFrame);
+			button.setToolTipText(DISCARDTIP);
+			tablesPanel.add(button, c);
+		}
+		
 		JButton button = new JButton("Set ra, dec");
 		button.setActionCommand(OPEN_SET_RADEC);
 		button.addActionListener(this);
+		c.insets = new Insets(1, 3, 1, 3);
 		c.weightx = 0.10;
 		c.gridx++;
-		tablesPanel.add(button);
-
+		tablesPanel.add(button,c);
+		
 		button = new JButton("Join");
 		c.weightx = 0.05;
 		c.gridx++;
@@ -412,7 +495,7 @@ public class ServerTap extends Server implements MouseListener{
 		button.addActionListener(this);
 		button.setToolTipText(TAPTABLEJOINTIP);
 		
-		if (!isUploadServer) {
+		if (mode != TapServerMode.UPLOAD) {
 			String uploadTipText = TAPTABLEUPLOADTIP;
 			button = new JButton("Upload");
 			button.setActionCommand(UPLOAD);
@@ -453,7 +536,7 @@ public class ServerTap extends Server implements MouseListener{
 		this.queryComponentsGui.setBackground(this.primaryColor);
 		
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		panel.setBackground(Aladin.BACKGROUND);
+		panel.setBackground(this.secondColor);
 		JLabel label = new JLabel("Select:");
 		label.setFont(BOLD);
 		panel.add(label);
@@ -492,13 +575,15 @@ public class ServerTap extends Server implements MouseListener{
 		c.gridwidth = 1;
 		c.weightx = 0.20;
 		c.weighty = 0.02;
+		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.BOTH;
-		c.insets = new Insets(0, 0, 0, 0);
+		c.insets = new Insets(0, -5, 0, 0);
 		this.queryComponentsGui.add(panel, c);
 		
 		c.gridy = 1;
 		c.weighty = 0.98;
 		c.gridheight = 2;
+		c.insets = new Insets(0, 0, 0, 0);
 		this.queryComponentsGui.add(scrolley, c);
 		
 		c.gridy = 0;
@@ -540,7 +625,8 @@ public class ServerTap extends Server implements MouseListener{
 		
 		targetPanel = new JPanel();
 		targetPanel.setBackground(this.primaryColor);
-		if (this.raColumnName!=null && this.decColumnName!=null) {
+		System.err.println("ra and dec at createForm"+(this.raColumnName!=null && this.decColumnName!=null));
+		if (this.raColumnName != null && this.decColumnName != null) {
 			createTargetPanel();// TAPALADIN
 		} else {
 			targetPanel.setVisible(false);
@@ -570,22 +656,29 @@ public class ServerTap extends Server implements MouseListener{
 	public JPanel getBottomPanel() {
 		JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		bottomPanel.setBackground(this.primaryColor);
-		JButton button = new JButton("Generate query");
+		JButton button = new JButton("Refresh query");
+		button.setToolTipText(REFRESHQUERYTOOLTIP);
 		button.setActionCommand("WRITEQUERY");
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
 		button = new JButton("Check..");
+		button.setToolTipText(CHECKQUERYTOOLTIP);
 		button.setActionCommand("CHECKQUERY");
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
 		this.sync_async = new JComboBox<String>(SYNC_ASYNC);
 		this.sync_async.setOpaque(false);
+		if (SYNCASYNCTOOLTIP!=null && !SYNCASYNCTOOLTIP.isEmpty()) {
+			SYNCASYNCTOOLTIP = "<html><p width=\"500\">"+SYNCASYNCTOOLTIP+"</p></html>";
+			this.sync_async.setToolTipText(SYNCASYNCTOOLTIP);
+		}
 		bottomPanel.add(this.sync_async);
 		
 		button = new JButton("Async jobs>>");
 		button.setActionCommand(SHOWAYNCJOBS);
+		button.setToolTipText(SHOWASYNCTOOLTIP);
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
@@ -631,18 +724,26 @@ public class ServerTap extends Server implements MouseListener{
 		Insets m = grab.getMargin();
         grab.setMargin(new Insets(m.top,2,m.bottom,2));
         grab.setOpaque(false);
-        grab.addActionListener(new ActionListener() {
-           public void actionPerformed(ActionEvent e) {
-              aladin.dialog.startGrabIt();
+		grab.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				aladin.f.toFront();
+				JPanel server = ServerTap.this;
+				aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
+       	   
+              /*aladin.dialog.startGrabIt();
               if (aladin.additionalServiceDialog!=null) {
             	  aladin.additionalServiceDialog.startGrabIt();
-			}
+			}*/
               
            }
         });
         grab.setFont(Aladin.SBOLD);
-        updateWidgets(aladin.dialog);
-        if (this.aladinLabel.equalsIgnoreCase(Constants.DATALINK_CUTOUT_FORMLABEL)) {//TODO:tintin change this logic?
+        Component rootFrame = SwingUtilities.getRoot(this);
+        if (rootFrame instanceof GrabItFrame) {
+        	updateWidgets((GrabItFrame) rootFrame);
+		}
+        
+        if (this.aladinLabel.equalsIgnoreCase(Constants.DATALINK_CUTOUT_FORMLABEL)) {
         	grab.setEnabled(true);//Default true for datalink forms
 		}
         
@@ -755,7 +856,7 @@ public class ServerTap extends Server implements MouseListener{
 		
 		
 		// Col-- end
-		whereConstraintPanel.setBackground(Aladin.BACKGROUND);
+		whereConstraintPanel.setBackground(this.secondColor);
 		whereConstraintPanel.addWhereConstraints();
 		this.whereClausesPanel.add(whereConstraintPanel, Component.TOP_ALIGNMENT);
 		ColumnConstraint.removeFirstAndOrOperator(this.whereClausesPanel);
@@ -767,7 +868,8 @@ public class ServerTap extends Server implements MouseListener{
 	
 	@Override
 	protected void showStatusReport() {
-		if (aladin.frameInfoServer == null || !aladin.frameInfoServer.isOfTapServerType() || !aladin.frameInfoServer.getServer().equals(this)) {
+		if (aladin.frameInfoServer == null || !aladin.frameInfoServer.isOfTapServerType()
+				|| !aladin.frameInfoServer.getServer().equals(this)) {
 			if (aladin.frameInfoServer != null) {
 				aladin.frameInfoServer.dispose();
 			}
@@ -777,13 +879,14 @@ public class ServerTap extends Server implements MouseListener{
 				aladin.frameInfoServer = new FrameInfoServer(aladin);
 			}
 		} else if (aladin.frameInfoServer.isFlagUpdate()) {
-				try {
-					aladin.frameInfoServer.updateInfoPanel();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-				}
+			try {
+				aladin.frameInfoServer.updateInfoPanel();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				if (Aladin.levelTrace >= 3)
+					e.printStackTrace();
 			}
+		}
 		aladin.frameInfoServer.show(this);
 	}
 	
@@ -881,72 +984,59 @@ public class ServerTap extends Server implements MouseListener{
 		return queryPartInput;
 	}
 	
-	@Override
-	public ADQLQuery checkQuery(List<String> unrecognisedParams) {
+	/*@Override
+	public ADQLQuery checkQuery() {
 		// TODO Auto-generated method stub
-		ADQLQuery query = super.checkQuery(unrecognisedParams);
+		return super.checkQuery();
 		if (query == null && unrecognisedParams!=null && !unrecognisedParams.isEmpty()) {
 			for (String tableName : unrecognisedParams) {
-				setQueryChecker(tableName);
+				updateQueryChecker(tableName);
 			}
 		}
-		return super.checkQuery(new ArrayList<String>());
-	}
+		return query;
+	}*/
 	
 	/**
-	 * Method adds the database metadata to the parser
+	 * Method sets the database metadata to the parser
 	 */
-	public void setQueryChecker(String tableName) {
-		DefaultDBTable table = new DefaultDBTable(tableName);
-		DefaultDBTable queryCheckerTable = null;
-		boolean updateQueryChecker = true;
-		
+	public void setQueryChecker() {
 		if (this.queryCheckerTables == null) {//initialise for the first time
 			this.queryCheckerTables = new ArrayList<DefaultDBTable>();
 		} else {
+			this.queryCheckerTables.clear();
+		}
+		
+		for (Entry<String, TapTable> metaDataEntry : tablesMetaData.entrySet()) {
+			DefaultDBTable parserTable = new DefaultDBTable(metaDataEntry.getKey());
+			Vector<TapTableColumn> columnsMeta = tablesMetaData.get(metaDataEntry.getKey()).getColumns();
+			updateQueryCheckTableColumns(parserTable, columnsMeta);
+			this.queryCheckerTables.add(parserTable);
+		}
+		QueryChecker checker = new DBChecker(this.queryCheckerTables);
+		this.adqlParser.setQueryChecker(checker);
+	}
+	
+	/**
+	 * Updates the adql parser for a table.
+	 * @param tableName
+	 */
+	public void updateQueryChecker(String tableName) {
+		DefaultDBTable table = new DefaultDBTable(tableName);
+		DefaultDBTable queryCheckerTable = null;
+		
+		if (this.queryCheckerTables != null) {
 			for (DefaultDBTable defaultDBTable : this.queryCheckerTables) {//Check if table is existing
-				if (defaultDBTable.getADQLName()!=null && defaultDBTable.getADQLName().equalsIgnoreCase(table.getADQLName())) {
+				if (defaultDBTable.getADQLName() != null && defaultDBTable.getADQLName().equalsIgnoreCase(table.getADQLName())) {
 					queryCheckerTable = defaultDBTable;
 					break;
 				}
 			}
-		}
-		
-		if (tablesMetaData.containsKey(tableName)) {//Get table metadata if we have 
-			Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
-			if (columns != null) {
-				for (TapTableColumn tapTableColumn : columns) {
-					DefaultDBColumn columnForParser = null;
-					if (queryCheckerTable!=null) {
-						columnForParser = (DefaultDBColumn) queryCheckerTable.getColumn(tapTableColumn.getColumn_name(), true);//check if queryparser has column info
-						if (columnForParser!=null) {
-							updateQueryChecker = false;// or just that columnForParser!=null..for all columns
-							break;//all other column would be populated
-						}
-					} 
-					columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), table); //if column info is not there then you do the below, populate checker from metainfo of column..
-					if (tapTableColumn.getDatatype()!=null && !tapTableColumn.getDatatype().isEmpty()) {
-						int offset = tapTableColumn.getDatatype().indexOf("adql:");
-						if (offset!=-1 && offset+5<tapTableColumn.getDatatype().length()) {
-							String datatype = tapTableColumn.getDatatype().substring(offset+5);
-							if (DBDATATYPES.containsKey(datatype)) {
-								DBDatatype dbDataType = DBDATATYPES.get(datatype);
-								DBType type = null;
-								if (tapTableColumn.getSize()!=0) {
-									type = new DBType(dbDataType, tapTableColumn.getSize());
-								} else {
-									type = new DBType(dbDataType);
-								}
-								columnForParser.setDatatype(type);
-							}
-						}
-					}
-					table.addColumn(columnForParser);
-				}
-			}
 			
-			if (updateQueryChecker) {
-				if (queryCheckerTable!=null) {
+			if (tablesMetaData.containsKey(tableName)) {//Get table metadata
+				Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
+				updateQueryCheckTableColumns(table, columns);
+				
+				if (queryCheckerTable != null) {
 					this.queryCheckerTables.remove(queryCheckerTable);
 				}
 				this.queryCheckerTables.add(table);
@@ -954,7 +1044,36 @@ public class ServerTap extends Server implements MouseListener{
 				this.adqlParser.setQueryChecker(checker);
 			}
 		}
-		
+	}
+	
+	/**
+	 * Convenience method to set column to table for parser
+	 * @param parserTable
+	 * @param columnsMeta
+	 */
+	private void updateQueryCheckTableColumns(DefaultDBTable parserTable, Vector<TapTableColumn> columnsMeta) {
+		if (parserTable!=null && columnsMeta != null) {
+			for (TapTableColumn tapTableColumn : columnsMeta) {
+				DefaultDBColumn columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), parserTable); 
+				if (tapTableColumn.getDatatype() != null && !tapTableColumn.getDatatype().isEmpty()) {
+					int offset = tapTableColumn.getDatatype().indexOf("adql:");
+					if (offset!=-1 && offset+5<tapTableColumn.getDatatype().length()) {
+						String datatype = tapTableColumn.getDatatype().substring(offset+5);
+						if (DBDATATYPES.containsKey(datatype)) {
+							DBDatatype dbDataType = DBDATATYPES.get(datatype);
+							DBType type = null;
+							if (tapTableColumn.getSize() > 0) {
+								type = new DBType(dbDataType, tapTableColumn.getSize());
+							} else {
+								type = new DBType(dbDataType);
+							}
+							columnForParser.setDatatype(type);
+						}
+					}
+				}
+				parserTable.addColumn(columnForParser);
+			}
+		}
 	}
 	
 	@Override
@@ -1045,7 +1164,7 @@ public class ServerTap extends Server implements MouseListener{
 	 */
 	public void submit(Map<String, Object> requestParams) {
 	      //check again
-		if (this.isNotLoaded) {
+		if (loadStatus != TAPFORM_STATUS_LOADED) {
 			return;
 		}
 		boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
@@ -1065,7 +1184,12 @@ public class ServerTap extends Server implements MouseListener{
 		if (source instanceof JButton) {
 			String action = ((JButton) source).getActionCommand();
 			if (action.equals(CHANGESERVER)) {
-				this.tapManager.showTapRegistryForm();
+				try {
+					this.tapManager.showTapRegistryForm();
+				} catch (Exception e) {
+					Aladin.warning(this, GENERICERROR);
+		            ball.setMode(Ball.NOK);
+				}
 			} else if (action.equals(WRITEQUERY)) {
 				this.writeQuery();
 			} else if (action.equals(ADDWHERECONSTRAINT)) {
@@ -1104,7 +1228,7 @@ public class ServerTap extends Server implements MouseListener{
 				addWhereConstraint(positionConstraint);
 				writeQuery();
 			} else if (action.equals(CHECKQUERY)) {
-				checkQueryFlagMessage(new ArrayList<String>());
+				checkQueryFlagMessage();
 			} else if (action.equals(UPLOAD)) {
 				//disabled based on capability and if user has not created a table
 				if (tapManager.uploadFrame == null) {
@@ -1115,16 +1239,17 @@ public class ServerTap extends Server implements MouseListener{
 			} else if (action.equals(OPEN_SET_RADEC)) {
 	        	this.tapManager.setRaDecForTapServer(this, selectedTableName);
 			} else if (action.equals(SHOWAYNCJOBS)) {
-				this.tapManager.showAsyncPanel();
+				try {
+					this.tapManager.showAsyncPanel();
+				} catch (Exception e) {
+					Aladin.warning(this, GENERICERROR);
+		            ball.setMode(Ball.NOK);
+				}
+			} else if (action.equals(RETRYACTION)) {
+				tapManager.reloadSimpleFramePanelServer(this.name, this.url);
 			}
-		} else if (source instanceof JComboBox) {
-			this.createForm(((JComboBox) source).getSelectedIndex());
-//			this.changeTableSelection(((JComboBox) source).getSelectedIndex());
-			//TODO:: tintin changeTableSelection will be the method to use. Work in progress!!
-			revalidate();
-			repaint();
-			
 		} else if(source instanceof JCheckBox){// check command- SELECTALL
+			System.err.println("actionperformed for SELECTALL was triggered");
 			JCheckBox selectAll = (JCheckBox)source;
 			String action = selectAll.getActionCommand();
 			if (action.equals(SELECTALL)) {
@@ -1138,17 +1263,26 @@ public class ServerTap extends Server implements MouseListener{
 	
 	protected void createChaine() {
 		super.createChaine();
-		aladinLabel = aladin.chaine.getString("TAPFORMNAME");
-		description = aladin.chaine.getString("TAPFORMINFO");
-		title = aladin.chaine.getString("TAPFORMTITLE");
-		verboseDescr = aladin.chaine.getString("TAPFORMDESC");
-		ERR = aladin.chaine.getString("TAPFORMERR");
-		LOAD = aladin.chaine.getString("FSLOAD");
-		TAPTABLEJOINTIP = aladin.chaine.getString("TAPTABLEJOINTIP");
-		TAPTABLEUPLOADTIP = aladin.chaine.getString("TAPTABLEUPLOADTIP");
-		TARGETERROR = aladin.chaine.getString("TARGETERROR");
-		TIPCLICKTOADD = aladin.chaine.getString("TIPCLICKTOADD");
-		TAPTABLENOUPLOADTIP = aladin.chaine.getString("TAPTABLENOUPLOADTIP");
+		aladinLabel = Aladin.chaine.getString("TAPFORMNAME");
+		description = Aladin.chaine.getString("TAPFORMINFO");
+		title = Aladin.chaine.getString("TAPFORMTITLE");
+		verboseDescr = Aladin.chaine.getString("TAPFORMDESC");
+		LOAD = Aladin.chaine.getString("FSLOAD");
+		TAPTABLEJOINTIP = Aladin.chaine.getString("TAPTABLEJOINTIP");
+		TAPTABLEUPLOADTIP = Aladin.chaine.getString("TAPTABLEUPLOADTIP");
+		TARGETERROR = Aladin.chaine.getString("TARGETERROR");
+		TIPCLICKTOADD = Aladin.chaine.getString("TIPCLICKTOADD");
+		TAPTABLENOUPLOADTIP = Aladin.chaine.getString("TAPTABLENOUPLOADTIP");
+		GENERICERROR = Aladin.chaine.getString("GENERICERROR");
+		REFRESHQUERYTOOLTIP = Aladin.chaine.getString("REFRESHQUERYTOOLTIP");
+		CHECKQUERYTOOLTIP = Aladin.chaine.getString("CHECKQUERYTOOLTIP");
+		SYNCASYNCTOOLTIP = Aladin.chaine.getString("SYNCASYNCTOOLTIP");
+		SHOWASYNCTOOLTIP = Aladin.chaine.getString("SHOWASYNCTOOLTIP");
+		DISCARD = Aladin.chaine.getString("DISCARD");
+		DISCARDTIP = Aladin.chaine.getString("DISCARDTIP");
+		RETRY = Aladin.chaine.getString("TAPRETRY");
+		TIPRETRY = Aladin.chaine.getString("TAPTIPRETRY");
+	    OPENTAPSERVER = Aladin.chaine.getString("OPENTAPSERVER");
 	}
 	
 	public void setData(Map<String, TapTable> tablesMetaData) {
@@ -1192,35 +1326,93 @@ public class ServerTap extends Server implements MouseListener{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		this.requestFocusInWindow();
+		this.writeQuery();
+	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		this.writeQuery();
 	}
 	
+	/*Keeping this method just for ref
+	 * public void setQueryChecker(String tableName) {
+		DefaultDBTable table = new DefaultDBTable(tableName);
+		DefaultDBTable queryCheckerTable = null;
+		boolean updateQueryChecker = true;
+		
+		if (this.queryCheckerTables == null) {//initialise for the first time
+			this.queryCheckerTables = new ArrayList<DefaultDBTable>();
+		} else {
+			for (DefaultDBTable defaultDBTable : this.queryCheckerTables) {//Check if table is existing
+				if (defaultDBTable.getADQLName() != null && defaultDBTable.getADQLName().equalsIgnoreCase(table.getADQLName())) {
+					queryCheckerTable = defaultDBTable;
+					break;
+				}
+			}
+		}
+		
+		if (tablesMetaData.containsKey(tableName)) {//Get table metadata
+			Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
+			if (columns != null) {
+				for (TapTableColumn tapTableColumn : columns) {
+					DefaultDBColumn columnForParser = null;
+					if (queryCheckerTable != null) {
+						columnForParser = (DefaultDBColumn) queryCheckerTable.getColumn(tapTableColumn.getColumn_name(), true);//check if queryparser has column info
+						if (columnForParser != null) {// if there are columns already. if yes- then no need to update
+							updateQueryChecker = false;// or just that columnForParser != null..for all columns
+							break;//all other column would be populated
+						}
+					} 
+					columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), table); //if column info is not there then you do the below, populate checker from metainfo of column..
+					if (tapTableColumn.getDatatype() != null && !tapTableColumn.getDatatype().isEmpty()) {
+						int offset = tapTableColumn.getDatatype().indexOf("adql:");
+						if (offset != -1 && offset + 5 < tapTableColumn.getDatatype().length()) {
+							String datatype = tapTableColumn.getDatatype().substring(offset+5);
+							if (DBDATATYPES.containsKey(datatype)) {
+								DBDatatype dbDataType = DBDATATYPES.get(datatype);
+								DBType type = null;
+								if (tapTableColumn.getSize() > 0) {
+									type = new DBType(dbDataType, tapTableColumn.getSize());
+								} else {
+									type = new DBType(dbDataType);
+								}
+								columnForParser.setDatatype(type);
+							}
+						}
+					}
+					table.addColumn(columnForParser);
+				}
+			}
+			
+			if (updateQueryChecker) {
+				if (queryCheckerTable != null) {
+					this.queryCheckerTables.remove(queryCheckerTable);
+				}
+				this.queryCheckerTables.add(table);
+				QueryChecker checker = new DBChecker(this.queryCheckerTables);
+				this.adqlParser.setQueryChecker(checker);
+			}
+		}
+		
+	}*/
+
 }

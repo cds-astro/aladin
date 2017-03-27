@@ -268,6 +268,7 @@ public final class Glu implements Runnable {
  		}
          if( c1!=-1 ) c=c1;
       }
+      tapManager.reloadTapServerList();
       aladin.dialog.setCurrent(c);
       if( p!=null ) {
          aladin.dialog.flagSetPos=true;
@@ -1179,16 +1180,16 @@ public final class Glu implements Runnable {
                   aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
                   resultDataType, institute, aladinFilter, aladinLogo, record);
          } else {
-            if(TAPv1.equalsIgnoreCase(aladinProtocol)) {
+            if(aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, TAPv1) == 0) {
 	            GluAdqlTemplate gluAdqlTemplate = new GluAdqlTemplate(adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);
 	        	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
 	                    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
 	                    null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, gluAdqlTemplate);
 	           	 g.setAdqlFunc(adqlFunc);
 	      		 g.setAdqlFuncParams(adqlFuncParams);
-	      		 TapManager.tapServerPanelCache.put(String.valueOf(aladinDic.get(actionName)), g);
+	      		 boolean showPanel = TapManager.cache(actionName, g);
 	      		 g.HIDDEN = true;
-	      		 if (localFile) {//changing tapserver here wont work. ServerDialog that containts the instance of tapserver is reloaded at glu reload.
+	      		 if (localFile && showPanel) {//changing tapserver here wont work. ServerDialog that containts the instance of tapserver is reloaded at glu reload.
 	      			lastTapGluServer = g;
 //	      			tapManager.loadTapServer(g);
 				}
@@ -1556,6 +1557,7 @@ public final class Glu implements Runnable {
       String aladinProfile=null;  // indications d'usage (undergraduate, beta, 5.9+...)
       boolean flagPlastic = false; // true si on a un champ %Aladin.Plastic
       boolean flagGluSky = false;  // true si on a "hpx" dans le profile => GluSky background
+      boolean flagTapServices = false;
 
       int maxIndir = Integer.MAX_VALUE; // Pour repérer la meilleure indirection
       String tablesIndex = EMPTYSTRING;
@@ -1655,16 +1657,20 @@ public final class Glu implements Runnable {
                      else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
                            copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
-                       else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
+                     else if (flagTapServices && flagLabel) {
+ 						tapManager.addTapService(actionName, aladinLabel,url,description);
+ 					 }
+                     else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                              aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
                              resultDataType,institute,aladinFilter,aladinLogo,dir,localFile, localFile?system:null,record,aladinProtocol,
                              tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);
+                     
                     }
                } catch (Exception e) {
             	   if( Aladin.levelTrace>=3 ) e.printStackTrace();
                }
                distribAladin = !testDomain;
-               flagGluSky=flagPlastic=flagLabel = false;
+               flagGluSky=flagPlastic=flagLabel=flagTapServices = false;
                aladinUrlDemo=aladinTree=aladinProfile=aladinProtocol=null;
 
                // On mémorise le filtre pour le serveurs non GLU
@@ -1790,14 +1796,17 @@ public final class Glu implements Runnable {
 					} else if (clauseElements[1].equals(GLU_FROM)) {
 						adqlFrom.put(num, v);
 					}
-				}  else if (name.startsWith("ADQL.FuncParam") && clauseElements.length>3) {
+				}  else if (name.startsWith("ADQL.FuncParam") && clauseElements.length > 3) {
 					String paramName = name.replace("ADQL.FuncParam.", EMPTYSTRING);
 					adqlFuncParams.put(paramName, value);
-				} else if (name.startsWith("ADQL.Func") && clauseElements.length>2){
+				} else if (name.startsWith("ADQL.Func") && clauseElements.length > 2){
 					String paramName = name.replace("ADQL.Func.", EMPTYSTRING);
 					adqlFunc.put(paramName, value);
 				}
-			} 
+			} else if ((name.equals("Glu.Services") || name.equals("S"))
+						&& (value.equals("ALATAP") || value.equals("TAP") || value.equals("TAPv1"))) {
+					flagTapServices = true;
+			}
          }
 
          dis.close();
@@ -1817,6 +1826,9 @@ public final class Glu implements Runnable {
             else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
                   copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
+            else if (flagTapServices && flagLabel) {
+					tapManager.addTapService(actionName, aladinLabel,url,description);
+			}
             else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                   aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
                   resultDataType,institute,aladinFilter,aladinLogo,dir,localFile,localFile?system:null,record,aladinProtocol, 

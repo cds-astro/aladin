@@ -77,7 +77,7 @@ import cds.tools.Util;
  */
 public final class ServerDialog extends JFrame
 implements SwingWidgetFinder, Runnable, ActionListener,
-DropTargetListener, DragSourceListener, DragGestureListener {
+DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    static final int MAXSERVER = 10;
 
    // Les indices des serveurs
@@ -97,7 +97,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // Les chaines
    String TITLE,/*HISTORY,*/SUBMIT,RESET,CLEAR,HELP,CLOSE,IMG,CAT,OTHER,MESSAGE,
-   TIPRESET,TIPCLEAR,TIPSUBMIT,TIPCLOSE;
+   TIPRESET,TIPCLEAR,TIPSUBMIT,TIPCLOSE,GENERICERROR;
 
    // Les composantes de l'objet
    Server[] server;
@@ -313,6 +313,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       TIPCLEAR = aladin.chaine.getString("TIPCLEAR");
       TIPSUBMIT = aladin.chaine.getString("TIPSUBMIT");
       TIPCLOSE = aladin.chaine.getString("TIPCLOSE");
+      GENERICERROR = Aladin.getChaine().getString("GENERICERROR");
    }
 
 
@@ -1036,7 +1037,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * fonction du x,y de la souris
     * @param x,y Position dans la vue
     */
-   protected void setGrabItCoord(double x, double y) {
+   public void setGrabItCoord(double x, double y) {
       ViewSimple v = aladin.view.getCurrentView();
       Plan pr = v.pref;
       if( pr == null ) return;
@@ -1054,7 +1055,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /**
     * Arrete le GrabIt
     */
-   protected void stopGrabIt() {
+   public void stopGrabIt() {
       JToggleButton grab = server[current].grab;
       if( grab != null ) {
          Plan pref = aladin.calque.getPlanRef();
@@ -1069,7 +1070,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /**
     * Démarrage d'une séquence de GrabIT
     */
-   protected void startGrabIt() {
+   public void startGrabIt() {
       if( server[current].grab == null
             || !server[current].grab.getModel().isSelected() ) return;
       aladin.f.toFront();
@@ -1079,7 +1080,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * Retourne true si le bouton grabit du formulaire existe et qu'il est
     * enfoncé
     */
-   protected boolean isGrabIt() {
+   public boolean isGrabIt() {
       return (server[current].modeCoo != Server.NOMODE
             && server[current].grab != null && server[current].grab.getModel().isSelected());
    }
@@ -1089,7 +1090,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * fonction du x,y de la souris
     * @param x,y Position dans la vue
     */
-   protected void setGrabItRadius(double x1, double y1, double x2, double y2) {
+   public void setGrabItRadius(double x1, double y1, double x2, double y2) {
       if( server[current].modeRad == Server.NOMODE ) return;
       if( Math.abs(x1 - x2) < 3 && Math.abs(y1 - y2) < 3 ) return;
       ViewSimple v = aladin.view.getCurrentView();
@@ -1523,7 +1524,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       server[current].memTarget(); // Memorisation du precedent target
       if (Aladin.PROTO && "TAP".equals(what)) {//TODO::tintinproto
     	  if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
-    		  this.tapManager.showTapRegistryForm();
+    		  try {
+				this.tapManager.showTapRegistryForm();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				Aladin.warning(this, Aladin.getChaine().getString("GENERICERROR"));
+				e.printStackTrace();
+			}
     		  return false;
 		  }
       }

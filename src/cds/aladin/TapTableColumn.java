@@ -2,7 +2,7 @@
  * 
  */
 package cds.aladin;
-
+import static cds.aladin.Constants.EMPTYSTRING;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -12,6 +12,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+
 
 /**
  * Model class representing the column information in the tap schema for columns
@@ -28,9 +29,9 @@ public class TapTableColumn {
 	private String utype;
 	private String datatype; //adql datatype
 	private int size;
-	private boolean isPrincipal; //is principal column
-	private boolean isIndexed;	//is indexed column
-	private boolean isStandard; //is standard column
+	private String isPrincipal; 
+	private String isIndexed;	
+	private String isStandard;
 	
 	/**
 	 * Method to convert represent all properties as row vectors
@@ -44,10 +45,14 @@ public class TapTableColumn {
 		allValuesVector.addElement(this.ucd);
 		allValuesVector.addElement(this.utype);
 		allValuesVector.addElement(this.datatype);
-		allValuesVector.addElement(String.valueOf(this.size));
-		allValuesVector.addElement(String.valueOf(this.isPrincipal));
-		allValuesVector.addElement(String.valueOf(this.isIndexed));
-		allValuesVector.addElement(String.valueOf(this.isStandard));
+		if (this.size == -1) {
+			allValuesVector.addElement(EMPTYSTRING);
+		} else {
+			allValuesVector.addElement(String.valueOf(this.size));
+		}
+		allValuesVector.addElement(this.isPrincipal);
+		allValuesVector.addElement(this.isIndexed);
+		allValuesVector.addElement(this.isStandard);
 		return allValuesVector;
 
 	}
@@ -120,15 +125,8 @@ public class TapTableColumn {
 		this.datatype = datatype;
 	}
 	
-	public int getSize() {
-		return size;
-	}
-	public void setSize(int size) {
-		this.size = size;
-	}
 	public void setSize(String dataType, String value) {
-		int parsedValue = verifyExtractInt(dataType, value);
-		this.size = parsedValue;
+		this.size = verifyExtractIntString(dataType, value);
 	}
 	
 	/**
@@ -137,57 +135,42 @@ public class TapTableColumn {
 	 * @param value
 	 * @return
 	 */
-	public int verifyExtractInt(String dataType, String value) {
-		if (dataType!=null && dataType.equals("int")) {
-			int parsedValue = Integer.parseInt(value);
+	public int verifyExtractIntString(String dataType, String value) {
+		int parsedValue = -1;
+		if (dataType != null && value != null && !value.isEmpty() && dataType.equals("int")) {
+			try {
+				parsedValue = Integer.parseInt(value);
+			} catch (Exception e) {
+				// TODO: handle exception
+				Aladin.trace(3, "unable to parse: value:" + value);
+			}
 			return parsedValue;
 		}
-		return -1;
+		return parsedValue;
 	}
 	
-	public boolean isPrincipal() {
+	public String getIsPrincipal() {
 		return isPrincipal;
 	}
-	public void setPrincipal(boolean isPrincipal) {
+
+	public void setIsPrincipal(String isPrincipal) {
 		this.isPrincipal = isPrincipal;
 	}
-	public void setPrincipal(String dataType, String value) {
-		int parsedValue = verifyExtractInt(dataType, value);
-		if (parsedValue==1) {
-			this.isPrincipal = true;
-		} else if (parsedValue==0){
-			this.isPrincipal = false;
-		}
-	}
-	
-	public boolean isIndexed() {
+
+	public String getIsIndexed() {
 		return isIndexed;
 	}
-	public void setIndexed(boolean isIndexed) {
+
+	public void setIsIndexed(String isIndexed) {
 		this.isIndexed = isIndexed;
 	}
-	public void setIndexed(String dataType, String value) {
-		int parsedValue = verifyExtractInt(dataType, value);
-		if (parsedValue==1) {
-			this.isIndexed = true;
-		} else if (parsedValue==0){
-			this.isIndexed = false;
-		}
-	}
-	
-	public boolean isStandard() {
+
+	public String getIsStandard() {
 		return isStandard;
 	}
-	public void setStandard(boolean isStandard) {
+
+	public void setIsStandard(String isStandard) {
 		this.isStandard = isStandard;
-	}
-	public void setStandard(String dataType, String value) {
-		int parsedValue = verifyExtractInt(dataType, value);
-		if (parsedValue==1) {
-			this.isStandard = true;
-		} else if (parsedValue==0){
-			this.isStandard = false;
-		}
 	}
 	
 	/**
@@ -209,5 +192,13 @@ public class TapTableColumn {
 		.append(", is standard :").append(this.isStandard);
 		return toPrint.toString();
 	}
-	
+
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
 }

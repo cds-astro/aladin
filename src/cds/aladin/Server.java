@@ -39,7 +39,6 @@ import java.awt.event.KeyListener;
 import java.io.OutputStream;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
@@ -62,6 +61,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
@@ -108,10 +108,10 @@ public class Server extends JPanel
    static final int YOUTREACH = 60; // Ordonnée du premier label en mode OUTREACH
    static final int MAXSELECTEDPLANE = 10; // Nombre max d'images à charger avant affichage un warning
 
-   protected String TARGET,RAD,GRABIT="",DEFAULT_METHODE,TARGET_EX,RADIUS_EX,WNEEDOBJ,
-        WNEEDRAD,WNEEDDATE, WNEEDCAT,WERROR,WTOOLARGE,WERRORDATE,WDEJA,HASFILTER1,
-        HASFILTER2,NOINPUTITEM,WNEEDCHECK,UNKNOWNOBJ,NOTTOOMANY,DATEFORMATINCORRECT, BANDFORMATINCORRECT,TARGETOUTOFBOUNDSMESSAGE;
-
+	protected String TARGET, RAD, GRABIT = "", DEFAULT_METHODE, TARGET_EX, RADIUS_EX, WNEEDOBJ, WNEEDRAD, WNEEDDATE,
+			WNEEDCAT, WERROR, WTOOLARGE, WERRORDATE, WDEJA, HASFILTER1, HASFILTER2, NOINPUTITEM, WNEEDCHECK, UNKNOWNOBJ,
+			NOTTOOMANY, DATEFORMATINCORRECT, BANDFORMATINCORRECT, TARGETOUTOFBOUNDSMESSAGE, CHECKQUERY_SUCCESS,
+			CHECKQUERY_ISBLANK;
 
    // Pour le positionnement des widgets en absolu
    static final int XTAB1=10;		// Abscisse des labels des champs à saisir
@@ -177,7 +177,7 @@ public class Server extends JPanel
    static final int JD    = 1;		// Date en Modified Julian Day
    static final int MJD   = 2;		// Date en Julian Day
    static final int YEARd = 4;		// Date en années décimale
-   static final int ParseToMJD = 5; //Parse any date to MJD
+   static final int ParseToMJD = 8; //Parse any date to MJD
    
    static final int BANDINMETERS = 1; //Parse to meters
 
@@ -270,6 +270,8 @@ public class Server extends JPanel
       DATEFORMATINCORRECT = aladin.chaine.getString("DATEFORMATINCORRECT");
       BANDFORMATINCORRECT = aladin.chaine.getString("BANDFORMATINCORRECT");
       TARGETOUTOFBOUNDSMESSAGE = aladin.chaine.getString("TARGETOUTOFBOUNDSMESSAGE");
+      CHECKQUERY_ISBLANK = Aladin.chaine.getString("CHECKQUERY_ISBLANK");
+      CHECKQUERY_SUCCESS = Aladin.chaine.getString("CHECKQUERY_SUCCESS");
 
       statusAllVO=new JLabel(" "); // Le status pour le mode ALLVO
 
@@ -613,13 +615,17 @@ public class Server extends JPanel
             grab.setMargin(new Insets(m.top,2,m.bottom,2));
             grab.setOpaque(false);
             grab.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  aladin.dialog.startGrabIt();
-                  if (aladin.additionalServiceDialog!=null) {
-                	  aladin.additionalServiceDialog.startGrabIt();
+				public void actionPerformed(ActionEvent e) {
+					aladin.dialog.startGrabIt();
+					if (aladin.additionalServiceDialog != null) {
+						aladin.additionalServiceDialog.startGrabIt();
+					}
+					// ABOVE NOT REALLY NEEDED, BEACUSE OF THE BELOW.
+					aladin.f.toFront();
+					JPanel server = Server.this;
+					aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
+
 				}
-                  
-               }
             });
             grab.setFont(Aladin.SBOLD);
             grab.setEnabled(false);
@@ -1012,6 +1018,14 @@ public void layout() {
 	      }
    }
    
+   protected void updateWidgets(GrabItFrame frame) {
+	   if( !frame.isGrabIt() && grab != null ) {
+	         Plan pref = aladin.calque.getPlanRef();
+	         boolean grabEnable = pref != null && Projection.isOk(pref.projd);
+	         grab.setEnabled(grabEnable);
+	      }
+   }
+   
    /** Pre-remplissage du champ Date. Si c'est une valeur double, on considère
     * que c'est une année décimale et on la convertit en JD, sinon on laisse
     * tel que.
@@ -1054,7 +1068,7 @@ public void layout() {
     public StringBuffer setDateInMJDFormat(boolean replaceUserField, String input, String[] range) throws Exception {
 		StringBuffer error = null;
 		StringBuffer processedText = null;
-		if( date!=null && input!=null && !input.isEmpty() && (modeDate & ParseToMJD)!=0 ) {
+		if( date!=null && modeDate == ParseToMJD && input!=null && !input.isEmpty()) {
 			processedText = new StringBuffer();
 			Pattern p = Pattern.compile(Constants.REGEX_NUMBERNOEXP);
 			String delimiterRegex = REGEX_TIME_RANGEINPUT;
@@ -1121,7 +1135,7 @@ public void layout() {
 	public StringBuffer processSpectralBand(boolean replaceUserField, String input, String[] range) throws Exception {
 		StringBuffer error = null;
 		StringBuffer result = null;
-		if (band!=null && input!=null && !input.isEmpty() && (modeBand & BANDINMETERS)!=0) {
+		if (band!=null && (modeBand == BANDINMETERS) && input!=null && !input.isEmpty()) {
 			result = new StringBuffer();
 			String delimiterRegex = REGEX_BAND_RANGEINPUT;
 			Pattern regex = Pattern.compile(delimiterRegex);
@@ -1846,9 +1860,9 @@ public void layout() {
     * Essentially calls checkQuery and then shows valid message on screen
  * @param arrayList 
     */
-   public void checkQueryFlagMessage(List<String> unrecognisedParams) {
-	   if (this.checkQuery(unrecognisedParams)!=null) {
-			Aladin.info(this, "Your constructed query has valid syntax!");
+   public void checkQueryFlagMessage() {
+	   if (this.checkQuery() != null) {
+			Aladin.info(this, CHECKQUERY_SUCCESS);
 		};
    }
    /**
@@ -1856,9 +1870,9 @@ public void layout() {
 	 * Mantelet's (ARI/ZAH) adql parser lib
 	 * @return the adql query
 	 */
-	public ADQLQuery checkQuery(List<String> unrecognisedParams) {
+	public ADQLQuery checkQuery() {
 		if (tap.getText().isEmpty()) {
-			Aladin.warning(this, "Please generate/write a query");
+			Aladin.warning(this, CHECKQUERY_ISBLANK);
 			return null;
 		}
 		ADQLQuery query = null;
@@ -1873,10 +1887,12 @@ public void layout() {
 			adql.parser.ParseException ex = null;
 			while(it.hasNext()){
 				ex = it.next();
-				highlightQueryError(highlighter, ex, unrecognisedParams);
+				highlightQueryError(highlighter, ex);
+				Aladin.warning(this, "Incorrect query: " + ex.getMessage());
 			}
 		} catch (adql.parser.ParseException pe) {
-			highlightQueryError(highlighter, pe, unrecognisedParams);
+			highlightQueryError(highlighter, pe);
+			Aladin.warning(this, "Incorrect query: " + pe.getMessage());
 		} catch (TokenMgrError e) {
 			// TODO: handle exception
 			Aladin.warning(this, "Incorrect query: " + e.getMessage());
@@ -1892,13 +1908,12 @@ public void layout() {
 	 * @param url
 	 */
 	public void submitTapServerRequest(boolean sync, Map<String, Object> requestParams, String name, String url) {
-		ADQLQuery query = checkQuery(new ArrayList<String>());
+		ADQLQuery query = checkQuery();
 		if (query != null) {
 			try {
 				TapManager tapManager = TapManager.getInstance(aladin);
 				if (sync) {
-					//TODO:: tintin handle this: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					//this is automatically redirected .remove comment tintin
+					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
 					tapManager.fireSync(name, url, query, requestParams);
 				} else {
 					tapManager.fireASync(name, url, query, requestParams);
@@ -1909,29 +1924,29 @@ public void layout() {
 				if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 				Aladin.warning(aladin.dialog, "Server error!");
 			}
-		} else {
+		} /*else {
 			Aladin.warning(aladin.dialog, "Query is null!");
-		}
+		}*/
 	}
 	
-	public void highlightQueryError(Highlighter highlighter, adql.parser.ParseException pe, List<String> unrecognisedParams) {
+	public void highlightQueryError(Highlighter highlighter, adql.parser.ParseException pe) {
 		int errorStart = pe.getPosition().beginColumn-1;
 		int errorEnd = pe.getPosition().endColumn-1;
-		highlightQueryError(highlighter, errorStart, errorEnd, pe.getMessage(), unrecognisedParams);
+		highlightQueryError(highlighter, errorStart, errorEnd, pe.getMessage());
 	}
 	
 	/**
 	 * Method to highlight error written in the tap text field
 	 * @param highlighter
 	 * @param pe
-	 * @param unrecognisedParams 
+	 * @param unrecognisedParams -not used currently
 	 */
-	public void highlightQueryError(Highlighter highlighter, int errorStart, int errorEnd, String message, List<String> unrecognisedParams) {
+	public void highlightQueryError(Highlighter highlighter, int errorStart, int errorEnd, String message) {
 		Aladin.warning(this, "Check the syntax around the highlighted words : " + message);
 		HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Aladin.LIGHTORANGE);
 		try {
-			String tableName = tap.getText().substring(errorStart, errorEnd);
-			unrecognisedParams.add(tableName);
+//			String tableName = tap.getText().substring(errorStart, errorEnd);
+//			unrecognisedParams.add(tableName);
 			highlighter.addHighlight(errorStart, errorEnd, painter);
 		} catch (BadLocationException e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();

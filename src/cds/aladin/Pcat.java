@@ -91,6 +91,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    int nIdVraisemblance=0; // 10-nom commence par ID, 20-nom contient "name" ou "designation", 30-ucd=ID_main 40-ucd=meta.id,meta.main
    boolean badRaDecDetection;       // true si la détection des colonnes RA et DEC est plus qu'incertaine
    boolean flagVOTable=false;       // True si on est sûr a priori que c'est du VOTable (évite le test)
+   boolean flagSIAV2 = false;
    boolean flagLabelFromData=false; // True si on laisse possible le renommage du plan par le contenu
 
    protected StringBuffer parsingInfo=null;    // Information éventuelle sur le parsing des données
@@ -527,7 +528,12 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             int underRA, underDE, RA, DE;
             underRA = underDE = RA = DE = -1;
             Field fRA = null, fDE = null;
-            String standardColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2StandardColumns"); //column to hide in SIAV2 results table
+            String siaStandardColumns = null;
+            String siaHideColumns = null;
+            if (flagSIAV2) {
+            	siaStandardColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2StandardColumns"); //column to standardize in SIAV2 results table;
+            	siaHideColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns"); //column to hide in SIAV2 results table;
+			}
             
             for( int i = 0; e.hasMoreElements(); i++ ) {
                Field f = (Field) e.nextElement();
@@ -558,10 +564,24 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                }
 
                v.addElement(f);
-               if( f.name!=null && standardColumns.contains(f.name) ) {
-            	   Field displayField = new Field(f, true);
-            	   v.addElement(displayField);
-            	   this.standardisedColumns.put(i, displayField);
+               if(flagSIAV2 && f.name!=null){
+            	   if (siaHideColumns!=null && siaHideColumns.contains(f.name)) {
+            		   hiddenField[i] = true;
+                       f.visible=false;
+            	   }
+            	   
+            	   if (siaStandardColumns!=null && siaStandardColumns.contains(f.name)) {
+            		   Field displayField = new Field(f);
+            		   displayField.name = Aladin.getChaine().getString(f.name);
+            		   //below logic to check if standardized columns are to be hidden
+            		   if (siaHideColumns!=null && siaHideColumns.contains(displayField.name)) {
+            			   displayField.visible = false;
+                	   } else {
+                		   displayField.visible = true;
+                	   }
+                	   v.addElement(displayField);
+                	   this.standardisedColumns.put(i, displayField);
+            	   }
 			   }
             }
 
@@ -1161,6 +1181,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
          flagVOTable=(dis.getType() & MyInputStream.VOTABLE)!=0;
          flagFootprint = (dis.getType() & MyInputStream.FOV)!=0;
+         flagSIAV2 = (dis.getType() & MyInputStream.SIAV2)!= 0;
          if( flagFootprint ) {
             // devrait etre RESOURCE, mais il y a un bug dans getUnreadBuffer (mange un tag trop en avant)
             endTag = "TABLE";

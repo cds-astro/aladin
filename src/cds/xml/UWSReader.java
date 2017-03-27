@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Set;
 
 import cds.aladin.MyInputStream;
 import cds.aladin.UWSJob;
@@ -95,8 +96,33 @@ public class UWSReader implements XMLConsumer {
 				tag = "results";
 			} else if (inResults && name.equals("result")) {
 				tag = "result";
-				if (atts.containsKey("id") && atts.containsKey("xlink:href")) {
-					uwsJob.getResults().put((String)atts.get("id"), (String)atts.get("xlink:href"));
+				if (atts != null && atts.size() > 0) {
+					String idForResultsMap = null;
+					if (atts.containsKey("id")) {
+						idForResultsMap = (String)atts.get("id");
+					} else {
+						idForResultsMap = "result"+uwsJob.getResults().size();
+					}
+					
+					if (atts.containsKey("xlink:href")) {
+						uwsJob.getResults().put(idForResultsMap, (String)atts.get("xlink:href"));
+					} else if (atts.containsKey("href")) {
+						uwsJob.getResults().put(idForResultsMap, (String)atts.get("href"));
+					} /*else if (atts.containsKey("ns2:href")) {
+						uwsJob.getResults().put(id, (String)atts.get("ns2:href"));
+					} */else if (atts.size() > 0) {
+						Set potentialHrefs= atts.keySet();
+						String potentialHref = null;
+						for (Object object : potentialHrefs) {
+							potentialHref = String.valueOf(object);
+							if (potentialHref.contains("href") || potentialHref.contains("HREF")) {
+								break;
+							}
+						}
+						if (potentialHref!=null && atts.get(potentialHref)!=null) {
+							uwsJob.getResults().put(idForResultsMap, (String)atts.get(potentialHref));
+						}
+					}
 				}
 			}  else if (name.equals("errorSummary")) {
 				tag = "errorSummary";
