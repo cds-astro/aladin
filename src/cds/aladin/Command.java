@@ -3123,7 +3123,7 @@ public final class Command implements Runnable {
       //      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
       //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
-      else if( cmd.equalsIgnoreCase("test") )   hop();
+      else if( cmd.equalsIgnoreCase("tap") )   tap();
       else if( cmd.equalsIgnoreCase("cleancache") )   PlanBG.cleanCache();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
       else if( cmd.equalsIgnoreCase("testimg") )testCalib(label,param,0);
@@ -4898,9 +4898,14 @@ public final class Command implements Runnable {
       }catch( Exception e ) { e.printStackTrace();  }
    }
 
-   private void hop() {
-//      PlanMoc.PERIMETER = !PlanMoc.PERIMETER;
-//      System.out.println("Tracage perimetre MOC : "+PlanMoc.PERIMETER);
+   // Just for testing tap list for Chaitra
+   private void tap () {
+      try {
+         ArrayList<String> b = a.directory.getBigTAPServers(10);
+         for( String s : b ) System.out.println(s);
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
    }
 
 }

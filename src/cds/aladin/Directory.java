@@ -37,6 +37,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -84,7 +85,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    static protected final String ROOT_LABEL = "Collections";
    
    private Aladin aladin;                  // Référence
-   private MultiMoc2 multiProp;             // Le multimoc de stockage des properties des collections
+   protected MultiMoc2 multiProp;             // Le multimoc de stockage des properties des collections
    private DirectoryFilter directoryFilter=null; // Formulaire de filtrage de l'arbre des collections
    protected boolean mocServerLoading=false;  // true si on est en train de charger le directory initial
    protected boolean mocServerUpdating=false; // true si on est en train de mettre à jour le directory
@@ -1590,6 +1591,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          // Nettoyage des macros latex qui trainent         
          cleanLatexMacro(prop);
          
+         // Ajout de l'entrée TAP (si elle n'existe pas)
+         prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+         
          // Détermination de la catégorie
          String code = getCatCode(id);
          if( code==null ) return;
@@ -1778,6 +1782,56 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       return multiple.contains(path);
    }
+   
+   protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
+      
+      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1);
+
+      Map<String, Integer> map = new HashMap<String, Integer>();
+      for( String id : a) {
+         
+         // Cas particulier à écarter pour ne pas poser souci avec les catalogues VizieR
+         if( id.startsWith("CDS/Simbad") ) continue;
+
+         String auth = Util.getSubpath(id, 0);
+         int m;
+         Integer n = map.get(auth);
+         if( n==null ) m=0;
+         else m = n;
+         m++;
+         map.put(auth,m);
+      }
+      
+      // On trie 
+      Map<String, Integer> map1  = DirectoryFilter.sortByValues(map, 1);
+      
+      // On prend uniquement les serveurs qui ont au moins limitNbCat collections
+      ArrayList<String> b = new ArrayList<String>();
+      for( String auth : map1.keySet() ) {
+         
+         Integer n = map.get(auth);
+         if( n<limitNbCat ) break;
+         
+         // On cherche la première entrée correspondante pour récupérer une URL TAP
+         for( String id : a ) {
+            String auth1 = Util.getSubpath(id, 0);
+            if( !auth1.equals(auth) ) continue;
+            
+            MocItem mi = multiProp.getItem(id);
+            String url = mi.prop.get("tap_service_url");
+            
+            // On mémorise pour le tableau résultat.
+            if( auth.equals("CDS") ) auth="cds.vizier";
+            String s = auth+"  "+url+" "+n+" collections";
+            b.add(s);
+            break;
+         }
+      }
+      
+      return b;
+   }
+
+
    
    /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */
    private String getCatCode(String id) { return Util.getSubpath(id,1); }
@@ -2430,9 +2484,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                Util.toolTip(bx,"Simple Spectra Access (SSA)\n => load the list of spectra available in the current view",true);
            }
             
+            NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
             if( to.isCDSCatalog() ) {
                boolean allCat = nbRows<2000;
-               NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
                if( hipsBx!=null ) bg.add(hipsBx);
                
                boolean hasLoadedMoc = aladin.calque.getNbPlanMoc()>0;
@@ -2468,13 +2522,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
                Util.toolTip(bx,"Cone search on the current view");
-            }
+               bg.add(bx);
+           }
             
             if( to.hasTAP() ) {
                tapBx = bx = new JCheckBox("TAP");
                mocAndMore.add(bx);
                bx.setSelected( csBx==null );
                Util.toolTip(bx,"Advanced table query form (Table Access Protocol)",true);
+               bg.add(bx);
             }
             
             JLabel labelPlus = new JLabel(" + ");

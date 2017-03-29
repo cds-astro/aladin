@@ -261,7 +261,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return p;
    }
    
-   <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map, int ascending) {
+   static protected <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map, int ascending) {
       Comparator<K> valueComparator =  new Comparator<K>() {         
          private int ascending;
          public int compare(K k1, K k2) {
@@ -280,7 +280,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return sortedByValues;
    }
 
-   <K extends Comparable<K>, V> Map<K, V> sortAlpha(final Map<K, V> map, int ascending) {
+   static protected <K extends Comparable<K>, V> Map<K, V> sortAlpha(final Map<K, V> map, int ascending) {
       Comparator<K> valueComparator =  new Comparator<K>() {         
          private int ascending;
          public int compare(K k1, K k2) {
@@ -300,7 +300,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
 
    
-   <K extends Comparable<K>, V> Map<K, V> sortList(final Map<K, V> map, final String [] list) {
+   static protected <K extends Comparable<K>, V> Map<K, V> sortList(final Map<K, V> map, final String [] list) {
       Comparator<K> valueComparator =  new Comparator<K>() {         
          public int compare(K k1, K k2) {
             int i = Util.indexInArrayOf((String)k1, list,true);
@@ -319,8 +319,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       sortedByValues.putAll(map);
       return sortedByValues;
    }
-
-
+   
    static private final int SORT_NO     = 0;
    static private final int SORT_FREQ   = 1;
    static private final int SORT_ALPHA  = 2;
