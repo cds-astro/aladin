@@ -4901,7 +4901,7 @@ public final class Command implements Runnable {
    // Just for testing tap list for Chaitra
    private void tap () {
       try {
-         ArrayList<String> b = a.directory.getBigTAPServers(10);
+         ArrayList<String> b = a.directory.getBigTAPServers(5);
          for( String s : b ) System.out.println(s);
       } catch( Exception e ) {
          e.printStackTrace();

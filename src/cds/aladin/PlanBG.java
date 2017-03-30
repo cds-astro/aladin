@@ -1819,8 +1819,7 @@ public class PlanBG extends PlanImage {
 
    /**
     * Récupération d'une valeur de pixel HEALPix pour une coordonnée particulière
-    * par approximation linéaire avec le pixel le plus proche
-    * ainsi que les 4 voisins N-S-E-W.
+    * par approximation linéaire 3 voisins (S,SW,W) + le pixel en question
     * @param order l'ordre Healpix pour lequel le pixel sera récupéré, -1 si ordre courant de l'affichage
     */
    protected double getHealpixLinearPixel(double ra,double dec,double ra1,double dec1, int order) {
