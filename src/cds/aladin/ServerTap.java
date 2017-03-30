@@ -28,7 +28,6 @@ import static cds.aladin.Constants.RETRYACTION;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -78,7 +77,6 @@ import adql.db.DefaultDBColumn;
 import adql.db.DefaultDBTable;
 import adql.parser.ADQLParser;
 import adql.parser.QueryChecker;
-import adql.query.ADQLQuery;
 import cds.aladin.Constants.TapServerMode;
 import cds.tools.Util;
 import cds.xml.VOSICapabilitiesReader;
@@ -179,7 +177,7 @@ public class ServerTap extends Server implements MouseListener{
 				return;
 			}
 			try {
-				columnNames = tapManager.updateTableColumnSchemas(selectedTableName, this);
+				columnNames = tapManager.updateTableColumnSchemas(this);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				Aladin.warning(e.getMessage());
@@ -338,14 +336,33 @@ public class ServerTap extends Server implements MouseListener{
 				return;
 			}
 			try {
-				columnNames = tapManager.updateTableColumnSchemas(selectedTableName, this);
+				columnNames = tapManager.updateTableColumnSchemas(this);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				Aladin.warning(e.getMessage());
+				String revertTable = tables.get(0);
+				if (this.tablesMetaData.get(revertTable).getColumns() != null) {
+					JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
+					TapTableFilterDocument tapTableFilterDocument = (TapTableFilterDocument) tablesGuiEditor
+							.getDocument();
+					try {
+						tapTableFilterDocument.setDefaultTable();//trying to select default table till here
+						changeTableSelection(revertTable);
+					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+						showLoadingError();
+					}
+				} else {
+					showLoadingError();
+				}
+				defaultCursor();
 				return;
 			}
 			if (columnNames == null) {
 				Aladin.warning("Error in updating the metadata for :"+selectedTableName);
+				showLoadingError();
+				defaultCursor();
 				return;
 			}
 			updateQueryChecker(this.selectedTableName);
@@ -354,9 +371,9 @@ public class ServerTap extends Server implements MouseListener{
 		
 		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
 		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
-		System.out.println("ra and dec:"+(this.raColumnName!=null && this.decColumnName!=null));
+		if(Aladin.levelTrace >3) System.out.println("ra and dec:"+(this.raColumnName!=null && this.decColumnName!=null));
 		if  (this.raColumnName!=null && this.decColumnName!=null){
-			System.out.println("target: "+(target));
+			if (Aladin.levelTrace >3) System.out.println("target: "+(target));
 			if (target == null) {
 				createTargetPanel();
 			}
@@ -408,9 +425,10 @@ public class ServerTap extends Server implements MouseListener{
 	protected void showLoadingError() {
 		this.setBackground(this.primaryColor);
 		this.removeAll();
+		this.setLayout(new FlowLayout(FlowLayout.CENTER));
 		JLabel planeLabel = new JLabel("Error: unable to load "+this.name);
 		planeLabel.setFont(Aladin.ITALIC);
-		add(planeLabel,"Center");
+		add(planeLabel);
 		JButton button = null;
 		if (mode == TapServerMode.GENERAL || mode == TapServerMode.GLU) {
 			button = new JButton(OPENTAPSERVER);
@@ -1005,7 +1023,6 @@ public class ServerTap extends Server implements MouseListener{
 		} else {
 			this.queryCheckerTables.clear();
 		}
-		
 		for (Entry<String, TapTable> metaDataEntry : tablesMetaData.entrySet()) {
 			DefaultDBTable parserTable = new DefaultDBTable(metaDataEntry.getKey());
 			Vector<TapTableColumn> columnsMeta = tablesMetaData.get(metaDataEntry.getKey()).getColumns();
@@ -1026,7 +1043,7 @@ public class ServerTap extends Server implements MouseListener{
 		
 		if (this.queryCheckerTables != null) {
 			for (DefaultDBTable defaultDBTable : this.queryCheckerTables) {//Check if table is existing
-				if (defaultDBTable.getADQLName() != null && defaultDBTable.getADQLName().equalsIgnoreCase(table.getADQLName())) {
+				if (TapManager.areSameQueryCheckerTables(defaultDBTable, table)) {
 					queryCheckerTable = defaultDBTable;
 					break;
 				}
@@ -1036,12 +1053,13 @@ public class ServerTap extends Server implements MouseListener{
 				Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
 				updateQueryCheckTableColumns(table, columns);
 				
-				if (queryCheckerTable != null) {
-					this.queryCheckerTables.remove(queryCheckerTable);
+				if (queryCheckerTable != null && this.queryCheckerTables.remove(queryCheckerTable)) {
+					this.queryCheckerTables.add(table);
+					QueryChecker checker = new DBChecker(this.queryCheckerTables);
+					this.adqlParser.setQueryChecker(checker);
 				}
-				this.queryCheckerTables.add(table);
-				QueryChecker checker = new DBChecker(this.queryCheckerTables);
-				this.adqlParser.setQueryChecker(checker);
+				
+				
 			}
 		}
 	}
@@ -1052,13 +1070,13 @@ public class ServerTap extends Server implements MouseListener{
 	 * @param columnsMeta
 	 */
 	private void updateQueryCheckTableColumns(DefaultDBTable parserTable, Vector<TapTableColumn> columnsMeta) {
-		if (parserTable!=null && columnsMeta != null) {
-			for (TapTableColumn tapTableColumn : columnsMeta) {
-				DefaultDBColumn columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), parserTable); 
+		if (parserTable != null && columnsMeta != null) {
+			for(TapTableColumn tapTableColumn : columnsMeta) {
+				DefaultDBColumn columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), parserTable);
 				if (tapTableColumn.getDatatype() != null && !tapTableColumn.getDatatype().isEmpty()) {
 					int offset = tapTableColumn.getDatatype().indexOf("adql:");
-					if (offset!=-1 && offset+5<tapTableColumn.getDatatype().length()) {
-						String datatype = tapTableColumn.getDatatype().substring(offset+5);
+					if (offset != -1 && offset + 5 < tapTableColumn.getDatatype().length()) {
+						String datatype = tapTableColumn.getDatatype().substring(offset + 5);
 						if (DBDATATYPES.containsKey(datatype)) {
 							DBDatatype dbDataType = DBDATATYPES.get(datatype);
 							DBType type = null;

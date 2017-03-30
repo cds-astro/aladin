@@ -39,7 +39,7 @@ public class CharInterpreter extends BinaryFieldInterpreter<Character> {
     }
 
     public CharInterpreter(final int[] arraysizes, final String typeLabel, final int nbBytes) throws BinaryInterpreterException {
-        super(arraysizes, "character", 1);
+        super(arraysizes, "character", nbBytes);
         arraySeparator = "";
     }
 

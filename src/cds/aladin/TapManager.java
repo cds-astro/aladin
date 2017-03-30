@@ -42,6 +42,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import adql.db.DefaultDBTable;
 import adql.query.ADQLQuery;
 import cds.savot.binary.DataBinaryReader;
 import cds.savot.model.FieldSet;
@@ -69,7 +70,7 @@ public class TapManager {
 	protected TapFrameServer tapFrameServer=null;
 	protected DataLabel selectedServerLabel;
 	protected FrameUploadServer uploadFrame;
-	public static Map<String, DataLabel> managedGluTapServerLabels;
+	public static Map<String, DataLabel> managedGluTapServerLabels;//tintin this guy is not needed
 	
 	protected static Map<String, Server> tapServerPanelCache = new HashMap<String, Server>();//main cache where all the ServerGlu's are loaded on init
 	protected static Map<String, Server> simpleFrameServers = new HashMap<String, Server>();//cache for the servers loading from tree
@@ -537,10 +538,10 @@ public class TapManager {
 	 * @return
 	 * @throws Exception
 	 */
-	public Vector<TapTableColumn> updateTableColumnSchemas(String tableName, ServerTap serverTap) throws Exception {
+	public Vector<TapTableColumn> updateTableColumnSchemas(ServerTap serverTap) throws Exception {
 		Vector<TapTableColumn> tableColumnMetaData = null;
 		String tapServiceUrl = serverTap.getUrl();
-		Future<Vector<TapTableColumn>> futureResult = updateTableColumnSchemas(serverTap.getName(), tapServiceUrl, tableName);
+		Future<Vector<TapTableColumn>> futureResult = updateColumnSchemaForATable(serverTap);
 		try {
 			Aladin.trace(3, futureResult+ " is the serverTap");
 			tableColumnMetaData = futureResult.get();
@@ -549,7 +550,7 @@ public class TapManager {
 			}
 			 //update info panel
 			serverTap.tackleFrameInfoServerUpdate(this.createMetaInfoDisplay(tapServiceUrl, serverTap.tablesMetaData));
-			Aladin.trace(3,"done updating tap info fo : "+tableName+" server: "+serverTap.getUrl());
+			Aladin.trace(3,"done updating tap info fo : "+serverTap.selectedTableName+" server: "+serverTap.getUrl());
 		} catch (Exception e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 			throw e;
@@ -563,33 +564,32 @@ public class TapManager {
 	 * @return
 	 * @throws Exception 
 	 */
-	public Future<Vector<TapTableColumn>> updateTableColumnSchemas(final String label, final String tapServiceUrl, final String tableName) throws Exception {
+	public Future<Vector<TapTableColumn>> updateColumnSchemaForATable(final ServerTap serverTap) throws Exception {
 		final int refThreadPriority = Thread.currentThread().getPriority();
 		Future<Vector<TapTableColumn>> tapResult = executor.submit(new  Callable<Vector<TapTableColumn>>(){
 			@Override
 			public Vector<TapTableColumn> call() throws Exception {
-				String tableNamequeryParam = tableName;
+				String tableNamequeryParam = serverTap.selectedTableName;
 				final Thread currentT = Thread.currentThread();
 				final String oldTName = currentT.getName();
-				currentT.setName("Tupdate: "+tableName+", from: "+tapServiceUrl);
+				currentT.setName("Tupdate: "+serverTap.selectedTableName+", from: "+serverTap.getUrl());
 				if (currentT.getPriority() < refThreadPriority-1) {//just asking for quicker execution without overstepping a lot
 					currentT.setPriority(refThreadPriority-1);//TODO:: tintin i donno check what todo
 				}
 				
-				ServerTap serverToLoad = (ServerTap) tapServerPanelCache.get(label);
 				try {
-					tableNamequeryParam = URLEncoder.encode(tableName, UTF8);
+					tableNamequeryParam = URLEncoder.encode(tableNamequeryParam, UTF8);
 					String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNamequeryParam);
-					SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
-					populateColumns(serverToLoad, columnResults);
+					SavotResource columnResults = getResults(serverTap.getUrl()+gettablesColumnsQuery);
+					populateColumns(serverTap, columnResults);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-					throw e;
+					throw new Exception("Error from tap server: unable to get metadata !\n"+e.getMessage());
 				} finally {
 					currentT.setName(oldTName);
 				}
-				return serverToLoad.tablesMetaData.get(tableName).getColumns();
+				return serverTap.tablesMetaData.get(serverTap.selectedTableName).getColumns();
 			}
 		});
 		return tapResult;
@@ -643,7 +643,7 @@ public class TapManager {
 					binaryTableReader(newServer, resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(i));
 					break;
 				default:
-					System.err.println("ERROR in populateTables! Did not read table data for "+newServer.getUrl());
+					if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateTables! Did not read table data for "+newServer.getUrl());
 					throw new Exception("ERROR in populateTables! Did not read table data"+newServer.getUrl());
 				}
 			}
@@ -778,7 +778,7 @@ public class TapManager {
 					binaryColumnReader(serverToLoad, resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(i));
 					break;
 				default:
-					System.err.println("ERROR in populateColumns! Did not read table column data for "+serverToLoad.getUrl());
+					if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateColumns! Did not read table column data for "+serverToLoad.getUrl());
 					throw new Exception("ERROR in populateColumns! Did not read table column data for "+serverToLoad.getUrl());
 				}
 			}
@@ -1024,7 +1024,7 @@ public class TapManager {
 		SavotResource resultsResource = null;
 		try {
 			URL url = new URL(tapServiceUrl);// change to just url tintin TODO
-			System.err.println(tapServiceUrl);
+			Aladin.trace(3, "in TapManager.getResults() for: "+tapServiceUrl);
 			SavotPullParser savotParser = new SavotPullParser(url, SavotPullEngine.FULL, null, false);
 			resultsResource = Util.populateResultsResource(savotParser);
 		} catch (MalformedURLException e) {
@@ -1099,7 +1099,7 @@ public class TapManager {
 					break;
 
 				default:
-					System.err.println("ERROR in populateTables! Did not read count. url:"+tapServiceUrl);
+					if( Aladin.levelTrace >= 3 ) System.err.println("ERROR in getFutureResultsVolume()! Did not read count. url:"+tapServiceUrl);
 					break;
 				}
 			}
@@ -1156,7 +1156,7 @@ public class TapManager {
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			System.err.println("IOError.. Count not known");
+			if (Aladin.levelTrace >= 3) System.err.println("IOError.. Count not known");
 			if (Aladin.levelTrace >= 3)	e.printStackTrace();
 		}
 		
@@ -1462,6 +1462,7 @@ public class TapManager {
 		this.executor.shutdown();
 		this.uwsFacade.deleteAllSetToDeleteJobs();
 		tapServerPanelCache.clear();
+		simpleFrameServers.clear();
 		Aladin.trace(3,"soft shutdown of tap threads....");
 		Aladin.trace(3,"deleting all(set to delete) uws jobs....");
 	}
@@ -1635,7 +1636,48 @@ public class TapManager {
 	}
 
 	public static Server getTapServerForLabel(String label) {
-		return tapServerPanelCache.get(label);
+		Server result = null;
+		if (tapServerPanelCache.containsKey(label)) {
+			result = tapServerPanelCache.get(label);
+		} else if (simpleFrameServers.containsKey(label)) {
+			result = simpleFrameServers.get(label);
+		}
+		return result;
+	}
+	
+	/**
+	 * Method to obtain the fully qualified table name form a DefaultDBTable
+	 * @param defaultDBTable
+	 * @return
+	 */
+	public static String getFullyQualifiedTableName(DefaultDBTable defaultDBTable) {
+		StringBuffer tableName = new StringBuffer();
+		if (defaultDBTable.getADQLCatalogName() != null) {
+			tableName.append(defaultDBTable.getADQLCatalogName()).append(DOT_CHAR);
+		}
+		if (defaultDBTable.getADQLSchemaName() != null) {
+			tableName.append(defaultDBTable.getADQLSchemaName()).append(DOT_CHAR);
+		}
+
+		if (defaultDBTable.getADQLName() != null) {
+			tableName.append(defaultDBTable.getADQLName());
+		}
+		return tableName.toString();
+	}
+	
+	public static boolean areSameQueryCheckerTables(DefaultDBTable input1, DefaultDBTable input2) {
+		boolean result = false;
+		String input1QualifiedName = getFullyQualifiedTableName(input1);
+		if (!input1QualifiedName.isEmpty()) {
+			String input2QualifiedName = getFullyQualifiedTableName(input2);
+			if (!input2QualifiedName.isEmpty()) {
+				if (input1QualifiedName.equalsIgnoreCase(input2QualifiedName)) {
+					result = true;
+				}
+			}
+		}
+		return result;
+		
 	}
 
 }

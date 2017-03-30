@@ -367,6 +367,7 @@ public class UWSJob implements ActionListener{
 			if (this.gui.isSelected()) {// update job details panel also if that is selected
 				setJobDetailsPanel();
 			}
+			uwsFacade.loadResultsbutton.setVisible(UWSJob.COMPLETED.equals(this.currentPhase));
 		}
 	}
 
@@ -440,11 +441,11 @@ public class UWSJob implements ActionListener{
 			resultsPanel.add(loadbutton);
 			jobDetails.add(resultsPanel);
 			
-			JButton loadDefault = new JButton(UWSFacade.STANDARDRESULTSLOAD);
+			/*JButton loadDefault = new JButton(UWSFacade.STANDARDRESULTSLOAD);
 			loadDefault.setToolTipText(UWSFacade.STANDARDRESULTSLOADTIP);
 			loadDefault.addActionListener(this);
 			loadDefault.setActionCommand(LOADDEFAULTTAPRESULT);
-			jobDetails.add(loadDefault);
+			jobDetails.add(loadDefault);*/
 		}
 		
 		if (errorType != null) {
@@ -526,6 +527,7 @@ public class UWSJob implements ActionListener{
 			setJobDetailsPanel();
 			uwsFacade.deleteOnExit.setVisible(true);
 			uwsFacade.deleteOnExit.setSelected(isDeleteOnExit());
+			uwsFacade.loadResultsbutton.setVisible(UWSJob.COMPLETED.equals(this.currentPhase));
 		} else if (o instanceof JButton) {
 			String action = ((JButton)o).getActionCommand();
 			if (action.equals(LOADJOBRESULT)) {

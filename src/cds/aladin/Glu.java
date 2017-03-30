@@ -1803,7 +1803,7 @@ public final class Glu implements Runnable {
 					String paramName = name.replace("ADQL.Func.", EMPTYSTRING);
 					adqlFunc.put(paramName, value);
 				}
-			} else if ((name.equals("Glu.Services") || name.equals("S"))
+				} else if (name.equals("Aladin.TapService")
 						&& (value.equals("ALATAP") || value.equals("TAP") || value.equals("TAPv1"))) {
 					flagTapServices = true;
 			}

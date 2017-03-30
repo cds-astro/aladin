@@ -160,7 +160,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				Server sourceServerSelected = TapManager.getTapServerForLabel((String) uploadAvailableServers.getSelectedItem());
-				if (sourceServerSelected!=null) {
+				if (sourceServerSelected != null) {
 					show(sourceServerSelected);
 				}
 			}

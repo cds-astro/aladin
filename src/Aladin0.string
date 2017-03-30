@@ -3008,9 +3008,10 @@ ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
-SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobsUWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the query you run from the TAP form with a "ASYNC" option selected.
+SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobs
+UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the query you run from the TAP form with a "ASYNC" option selected.
 CANTSTARTJOB Unable to start the job. please try again later.
-STANDARDRESULTSLOAD Load from TAP results url
+STANDARDRESULTSLOAD Load Results
 STANDARDRESULTSLOADTIP Loads results from "/results/result" path
 UWSASKLOADDEFAULTRESULTS Unable to parse results url. Try to download from the tap results path?
 CANTABORTJOB Unable to abort the job. please try again later.

@@ -19,6 +19,8 @@
 
 
 package cds.aladin;
+import static cds.aladin.Constants.REGEX_NUMBER;
+
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics;
@@ -38,6 +40,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -570,11 +574,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                        f.visible=false;
             	   }
             	   
-            	   if (siaStandardColumns!=null && siaStandardColumns.contains(f.name)) {
+            	   if (siaStandardColumns != null && siaStandardColumns.contains(f.name)) {
             		   Field displayField = new Field(f);
             		   displayField.name = Aladin.getChaine().getString(f.name);
             		   //below logic to check if standardized columns are to be hidden
-            		   if (siaHideColumns!=null && siaHideColumns.contains(displayField.name)) {
+            		   if (siaHideColumns != null && siaHideColumns.contains(displayField.name)) {
             			   displayField.visible = false;
                 	   } else {
                 		   displayField.visible = true;
@@ -649,7 +653,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   || a.equals("0") || a.equals("-") /* || a.equalsIgnoreCase("null") */ ) {
             	String displayString = "\t" + ((a.length() == 0) ? " " : value[i]);
             	line.append(displayString);
-            	if (standardisedColumns.containsKey(i)) {
+            	if (flagSIAV2 && standardisedColumns.containsKey(i)) {
             		line.append(displayString);
            		}
             	continue;
@@ -804,29 +808,40 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /**
     * Method to process data to standardised representation.
     * Currently time(in MJD) and spectral data(in m) are supported.
+    * This method is used because in case of siav2 we know date is in MJD 
+    * as opposed to other results where date could be in JD 
     * 
     * @param field
     * @param text
     * @return formated string
     */
-   public String processValuesToStandardRepresentation(Field field, String text) {
+	public String processValuesToStandardRepresentation(Field field, String text) {
+		if (!flagSIAV2) {//for now only siav2 are known to get time in MJD and spectral data in m.
+			return text;
+		}
 
-      String standardRepresentation = text;
-      try {
-         if (text != null && !text.trim().isEmpty() && field!=null && field.ucd!=null) {
-            if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
-                  && "d".equalsIgnoreCase(field.unit)) {
-               standardRepresentation = this.convertMJDToISO(text);
-            } else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
-                  && "m".equalsIgnoreCase(field.unit)) {
-               standardRepresentation = this.setStandardSpectralRepresentation(text);
-            }
-         }
-      } catch( Exception e ) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-      }
-      return standardRepresentation;
-   }
+		String standardRepresentation = text;
+		try {
+			if (text != null && !text.trim().isEmpty() && field != null && field.ucd != null) {
+				if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
+						&& "d".equalsIgnoreCase(field.unit)) {
+					Pattern regex = Pattern.compile(REGEX_NUMBER);
+					Matcher matcher = regex.matcher(text);
+					if (matcher.find()) {
+						standardRepresentation = this.convertMJDToISO(text);
+					}
+				} else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
+						&& "m".equalsIgnoreCase(field.unit)) {
+					standardRepresentation = this.setStandardSpectralRepresentation(text);
+				}
+			}
+		} catch (Exception e) {
+			if (Aladin.levelTrace >= 3)
+				e.printStackTrace();
+			standardRepresentation = text;
+		}
+		return standardRepresentation;
+	}
 
    public String convertMJDToISO(String timeWord) {
 		double valueInProcess= Astrodate.MJDToJD(Double.valueOf(timeWord)); 

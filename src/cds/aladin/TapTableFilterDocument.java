@@ -190,6 +190,7 @@ public class TapTableFilterDocument extends PlainDocument{
 //					&& !serverTap.selectedTableName.equalsIgnoreCase(tablesGui.getSelectedItem().toString()));
 			if (tablesGui.getSelectedItem() != null
 					&& !serverTap.selectedTableName.equalsIgnoreCase(tablesGui.getSelectedItem().toString())) {
+				Aladin.trace(3, "Change table selection from within the document");
 				serverTap.changeTableSelection((String) serverTap.tablesGui.getSelectedItem());
 			}
 		} catch (BadLocationException e1) {

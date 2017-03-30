@@ -8,6 +8,7 @@ import static cds.aladin.Constants.DELETEJOB;
 import static cds.aladin.Constants.DELETEONEXIT;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETPREVIOUSSESSIONJOB;
+import static cds.aladin.Constants.LOADDEFAULTTAPRESULT;
 import static cds.aladin.Constants.NEWLINE_CHAR;
 
 import java.awt.Dimension;
@@ -68,7 +69,7 @@ public class UWSFacade implements ActionListener{
 	private List<UWSJob> sessionUWSJobs;
 	private JTextField previousSessionJob;
 	public JCheckBox deleteOnExit;
-	public JButton loadbutton;
+	public JButton loadResultsbutton;
 	
 	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
 			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB;
@@ -195,6 +196,7 @@ public class UWSFacade implements ActionListener{
 		UWSJob job = null;
 		try {
 			URL tapServerRequestUrl = new URL(serverBaseUrl+"/async");
+			Aladin.trace(3,"trying to createJob() uws for:: "+serverBaseUrl+"/async");
 //			URL tapServerRequestUrl = new URL("http://cdsportal.u-strasbg.fr/uwstuto/basic/timers");
 			MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
 			String boundary = MultiPartPostOutputStream.createBoundary();
@@ -216,13 +218,18 @@ public class UWSFacade implements ActionListener{
 			out.writeField( "REQUEST", "doQuery" );
 			out.writeField( "LANG", "ADQL" );
 			
+			Aladin.trace(3,"createJob() REQUEST :: doQuery");
+			Aladin.trace(3,"createJob() LANG :: ADQL");
+			
 			int limit = query.getSelect().getLimit();
 			if (limit > 0) {
 				out.writeField("MAXREC", String.valueOf(limit));
+				Aladin.trace(3,"createJob() MAXREC :: "+String.valueOf(limit));
 			}
 			out.writeField("QUERY", query.toADQL());
+			Aladin.trace(3,"createJob() QUERY :: "+query.toADQL());
 			
-//			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
+			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
 //			out.writeField("time", "10");
 //			out.writeField("name", "ti");
 			
@@ -230,8 +237,10 @@ public class UWSFacade implements ActionListener{
 				for (Entry<String, Object> postParam : postParams.entrySet()) {
 					if (postParam.getValue() instanceof String) {
 						out.writeField(postParam.getKey(), String.valueOf(postParam.getValue()));
+						Aladin.trace(3,"createJob() "+postParam.getKey()+" :: "+String.valueOf(postParam.getValue()));
 					} else if (postParam.getValue() instanceof File) {
 						out.writeFile(postParam.getKey(), null, (File) postParam.getValue(), false);
+						Aladin.trace(3,"createJob() "+postParam.getKey()+" :: "+(File) postParam.getValue());
 					}
 				}
 			}
@@ -253,6 +262,7 @@ public class UWSFacade implements ActionListener{
 //				getsetPhase(job);
 				job.setInitialGui();
 			} else {
+				Aladin.trace(3,"createJob() ERROR !! did not get a url redirect. reponse code "+httpClient.getResponseCode());
 				throw new Exception("Error in calling tap server: "+tapServerRequestUrl+"\n"+httpClient.getResponseMessage());
 			}
 			httpClient.disconnect();
@@ -260,7 +270,7 @@ public class UWSFacade implements ActionListener{
 			e.printStackTrace();
 			throw e;
 		}
-		System.err.println("In createJob. Jon phase is:"+job.getCurrentPhase());
+		Aladin.trace(3,"In createJob. Jon phase is:"+job.getCurrentPhase());
 		return job;
 	}
 	
@@ -376,7 +386,7 @@ public class UWSFacade implements ActionListener{
 		UWSReader uwsReader = new UWSReader();
 		synchronized (job) {
 			uwsReader.load(inputStream, job);
-			System.out.println("in populateJob phase is:"+job.getCurrentPhase()+" results"+job.getResults());
+			Aladin.trace(3, "in populateJob phase is:"+job.getCurrentPhase()+" results"+job.getResults());
 		}
 //		try (Scanner scanner = new Scanner(httpClient.getInputStream())) {
 	}
@@ -497,6 +507,12 @@ public class UWSFacade implements ActionListener{
 			button.setActionCommand(RUNJOB);
 			button.addActionListener(this);
 			actionPanel.add(button);*/
+			loadResultsbutton = new JButton(STANDARDRESULTSLOAD);
+			loadResultsbutton.setToolTipText(STANDARDRESULTSLOADTIP);
+			loadResultsbutton.addActionListener(this);
+			loadResultsbutton.setActionCommand(LOADDEFAULTTAPRESULT);
+			actionPanel.add(loadResultsbutton);
+			
 			button = new JButton("ABORT");
 			button.setActionCommand(ABORTJOB);
 			button.addActionListener(this);
@@ -729,24 +745,29 @@ public class UWSFacade implements ActionListener{
 		if (o instanceof JRadioButton) {
 			//if it is a valid job which was previously parsed- load it.
 			//if use asks to load then make it a job- by parsing the job
-			if (prevJobRadio.isSelected() && !previousSessionJob.getText().isEmpty()) {
-				try {
-					URL jobUrl = new URL(previousSessionJob.getText());
-					UWSJob selectedJob = getJobFromCache(jobUrl.toString());
-					if (selectedJob != null) {
-						selectedJob.setJobDetailsPanel();
-						deleteOnExit.setVisible(false);
-						if (loadbutton != null) {
-							loadbutton.setEnabled(true);
-						}
-						if (sessionUWSJobs == null) {
-							asyncPanel.revalidate();
-							asyncPanel.repaint();
-						}
-					}
-				} catch (Exception e1) {
-					//all suppressed if user just clicks on previous job button
+			if (prevJobRadio.isSelected()) {
+				if (loadResultsbutton != null) {
+					loadResultsbutton.setVisible(false);
 				}
+				if (!previousSessionJob.getText().isEmpty()) {
+					try {
+						URL jobUrl = new URL(previousSessionJob.getText());
+						UWSJob selectedJob = getJobFromCache(jobUrl.toString());
+						if (selectedJob != null) {
+							selectedJob.setJobDetailsPanel();
+							if (UWSJob.COMPLETED.equals(selectedJob.getCurrentPhase())) {
+								loadResultsbutton.setVisible(true);
+							}
+							if (sessionUWSJobs == null) {
+								asyncPanel.revalidate();
+								asyncPanel.repaint();
+							}
+						}
+					} catch (Exception e1) {
+						//all suppressed if user just clicks on previous job button
+					}
+				}
+				deleteOnExit.setVisible(false);
 			}
 		}	
 		else if(o instanceof JButton) {
@@ -755,9 +776,29 @@ public class UWSFacade implements ActionListener{
 	    		//this go button is for getting prev job. behavior : won't check if corresponding radio is selected or not, but directly selects it
 				prevJobRadio.setSelected(true);
 				deleteOnExit.setVisible(false);
+				if (loadResultsbutton != null) {
+					loadResultsbutton.setVisible(false);
+				}
 				try {
 					UWSJob selectedJob = processJobSelection(true);
+					if (selectedJob != null && UWSJob.COMPLETED.equals(selectedJob.getCurrentPhase())) {
+						loadResultsbutton.setVisible(true);
+					}
 				} catch (Exception e1) {
+					Aladin.warning(asyncPanel, e1.getMessage());
+				}
+			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
+				try {
+					UWSJob selectedJob = processJobSelection(true);
+					loadResults(selectedJob, null);
+				} catch (MalformedURLException e1) {
+					// TODO Auto-generated catch block
+					Aladin.warning(asyncPanel, "Error in processing results url!");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					Aladin.warning(asyncPanel, "Unable to get the job information, please try again!");
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
 					Aladin.warning(asyncPanel, e1.getMessage());
 				}
 			} else if (action.equals(DELETEJOB)) {
