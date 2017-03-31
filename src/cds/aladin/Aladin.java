@@ -156,6 +156,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> UTF-8 BOM support
  * @beta    <LI> Script command extension for CS, SIA (1&2), SSA
  * @beta    <LI> Additionnal colormaps: Red, Green and Blue
  * @beta    <LI> Dark theme user interface
@@ -217,7 +218,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.615";
+   static public final    String VERSION = "v9.616";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

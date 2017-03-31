@@ -336,13 +336,20 @@ public final class MyInputStream extends FilterInputStream {
             c[i] = (cache[offsetCache+i]) & 0xFF;
             //System.out.println("MAGIC CODE c["+i+"]="+c[i]);
          }
-
+         
+         // Préfixe BOM UTF-8
+         if( c[0]==239 && c[1]==187 && c[2]==191 ) {
+            Aladin.trace(3,"BOM UTF-8 detected and skipped");
+            for( int i=0; i<3; i++ ) read();
+            System.arraycopy(c, 3, c, 0, c.length-3);
+         }
+         
          // Detection de GZIP
          if( c[0]==31  && c[1]==139 ) type |= GZ;
 
          // Detection de BZIP2 => ACTUELLEMENT IL Y A UN BUG DANS LE DECOMPRESSEUR BZIP2
          else if( Aladin.PROTO && c[0]=='B'  && c[1]=='Z' )  type |= BZIP2;
-
+         
          // Détection PDS
          else if( c[0]=='P' && c[1]=='D' && c[2]=='S' ) type |=PDS;
 
@@ -457,8 +464,7 @@ public final class MyInputStream extends FilterInputStream {
          else /* if( c[0]=='<' && c[1]=='?' &&
              (c[2]=='X' || c[2]=='x') &&
              (c[3]=='M' || c[3]=='m') &&
-             (c[4]=='L' || c[4]=='l')  ) {
-             type |= XML; */
+             (c[4]=='L' || c[4]=='l')  ) type |= XML; */
 
             // Detection de ASTRORES
             if( lookForSignature("<!DOCTYPE ASTRO",false)>0 ) type |= ASTRORES|XML;
