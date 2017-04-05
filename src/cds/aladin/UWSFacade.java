@@ -72,7 +72,7 @@ public class UWSFacade implements ActionListener{
 	public JButton loadResultsbutton;
 	
 	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
-			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB;
+			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB, UWSJOBRADIOTOOLTIP;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
 	public static final int POLLINGDELAY = 1000;
 	
@@ -86,6 +86,7 @@ public class UWSFacade implements ActionListener{
 		STANDARDRESULTSLOADTIP = Aladin.getChaine().getString("STANDARDRESULTSLOADTIP");
 		UWSASKLOADDEFAULTRESULTS = Aladin.getChaine().getString("UWSASKLOADDEFAULTRESULTS");
 		CANTABORTJOB= Aladin.getChaine().getString("CANTABORTJOB");
+		UWSJOBRADIOTOOLTIP = Aladin.getChaine().getString("UWSJOBRADIOTOOLTIP");
 	}
 	
 	public UWSFacade() {
@@ -150,39 +151,6 @@ public class UWSFacade implements ActionListener{
 		}
 		
 	}
-	
-	// convert InputStream to String
-		public static String printStringFromInputStream(UWSJob job) throws IOException {
-
-			InputStream is = job.getLocation().openStream();
-			BufferedReader br = null;
-			StringBuilder sb = new StringBuilder();
-
-			String line;
-			try {
-
-				br = new BufferedReader(new InputStreamReader(is));
-				while ((line = br.readLine()) != null) {
-					sb.append(line);
-				}
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				if (br != null) {
-					try {
-						br.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			System.out.println("----------printing one-----------");
-			System.out.println(sb.toString());
-			System.out.println("----------printing end-----------");
-			return sb.toString();
-
-		}
 	
 	/**
 	 * Method creates an sync job
@@ -511,6 +479,7 @@ public class UWSFacade implements ActionListener{
 			loadResultsbutton.setToolTipText(STANDARDRESULTSLOADTIP);
 			loadResultsbutton.addActionListener(this);
 			loadResultsbutton.setActionCommand(LOADDEFAULTTAPRESULT);
+			loadResultsbutton.setVisible(false);
 			actionPanel.add(loadResultsbutton);
 			
 			button = new JButton("ABORT");
@@ -657,7 +626,7 @@ public class UWSFacade implements ActionListener{
 			if (resultsUrl != null) {
 				resultsUrlString = resultsUrl.toString();
 			}
-			//parse if relative path :://TODO:: tintin
+			//parse if relative path ::
 			//server : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/async/1479376281691_5
 			//results path : /xamin/vo/tap/async/1479376281691_5/results/result
 			//server base url : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/

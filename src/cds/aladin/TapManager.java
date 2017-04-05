@@ -79,6 +79,7 @@ public class TapManager {
 	public static final String GETTAPSCHEMATABLES = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.tables";
 	public static final String GETTAPSCHEMACOLUMN = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns+where+table_name+=+'%1$s'+";
 	public static final String GETTAPCAPABILITIES = "/capabilities";
+	public static final String GETTAPSCHEMATABLE = GETTAPSCHEMATABLES+"+where+table_name+=+'%1$s'+";
 	
 	public static final int MAXTAPCOLUMNDOWNLOADVOLUME = 1000;//limit for the table columns that will be downloaded together. 409 cadc;1000 decided limit
 	
@@ -283,7 +284,14 @@ public class TapManager {
 				newServer.setOpaque(true);
 				newServer.showloading();
 				newServer.capabilities = this.getTapCapabilities(url);
-				this.loadTapColumnSchemas(newServer);
+				String vizierTable = processIfVizier(newServer);
+				if (vizierTable != null) {
+					//get table name
+					this.loadTapColumnSchemasForATable(newServer, vizierTable);
+				} else {
+					this.loadTapColumnSchemas(newServer);
+				}
+				
 				resultServer = newServer;
 			}
 			simpleFrameServers.put(label, resultServer);
@@ -294,7 +302,30 @@ public class TapManager {
 		tapPanelFromTree.show(resultServer, "TAP access with "+label);
 		return resultServer;
 	}
-	
+
+	/**
+	 * Only tests out if the service is vizier. 
+	 * This is temporary workaround and is done to treat vizier as a special case:
+	 * where only vizier's registry tables are known to be same as the Tap.Schema tables
+	 * We will enlarge the logic as and when we realize this about the other servers.
+	 * Currently this is not the case for other servers.
+	 * @return
+	 */
+	private String processIfVizier(ServerTap server) {
+		// TODO Auto-generated method stub
+		String result = null;
+		String vizierTapServiceBaseUrl = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
+		if (server.getUrl() != null && server.getUrl().startsWith(vizierTapServiceBaseUrl)) {
+			try {
+				result = server.getName().substring(4, server.getName().length());
+			} catch (Exception e) {
+				// TODO: handle exception
+				// Won't do anything
+			}
+		}
+
+		return result;
+	}
 
 	public void reloadSimpleFramePanelServer(String label, String url) {
 		if (simpleFrameServers.containsKey(label)) {
@@ -426,6 +457,55 @@ public class TapManager {
 	
 	/**
 	 * Method to populate tap meta data
+	 * @param tableName 
+	 * @param tapServiceUrl
+	 */
+	public void loadTapColumnSchemasForATable(final ServerTap serverToLoad, final String tableName){
+		executor.execute(new Runnable(){
+			@Override
+			public void run() {
+				final Thread currentT = Thread.currentThread();
+				final String oldTName = currentT.getName();
+				String tapServiceUrl = serverToLoad.getUrl();
+				currentT.setName("TgetMetaInfoForATable: "+tapServiceUrl);
+				Aladin.trace(3, "Getting meta from tree for table ..."+serverToLoad.getName());
+				try {
+					serverToLoad.setData(new HashMap<String,TapTable>());
+					
+					//download only table names and first table's columns
+					String tableNameQueryParam = URLEncoder.encode(tableName, UTF8);
+					
+					String gettablesQuery = String.format(GETTAPSCHEMATABLE, tableNameQueryParam);
+					SavotResource resultsResource = getResults(tapServiceUrl+gettablesQuery);
+					populateTables(serverToLoad, resultsResource);
+					
+					//get single table data and populate it to front end
+					String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
+					SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
+					populateColumns(serverToLoad, columnResults);
+					
+					serverToLoad.createFormDefault(); //default choice is the first table
+					serverToLoad.revalidate();
+					serverToLoad.repaint();
+					serverToLoad.infoPanel = createMetaInfoDisplay((tapServiceUrl+gettablesQuery), serverToLoad.tablesMetaData);
+				} catch (Exception e) {
+					if (Aladin.levelTrace >= 3) {
+						e.printStackTrace();
+						System.err.println("Error in getting meta data for ..."+serverToLoad.getName());
+						System.out.println("Now will try the default get all tables...");
+					}
+					loadTapColumnSchemas(serverToLoad);
+				} finally {
+					serverToLoad.revalidate();
+					serverToLoad.repaint();
+					currentT.setName(oldTName);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Method to populate tap meta data
 	 * @param tapServiceUrl
 	 */
 	public void loadTapColumnSchemas(final ServerTap serverToLoad){
@@ -459,7 +539,7 @@ public class TapManager {
 						tableNameQueryParam = URLEncoder.encode(tableNameQueryParam, UTF8);
 						
 						//get single table data and populate it to front end
-						String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, defaultTable);
+						String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
 						SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
 						populateColumns(serverToLoad, columnResults);
 					} else if (count > 0) {
@@ -574,7 +654,7 @@ public class TapManager {
 				final String oldTName = currentT.getName();
 				currentT.setName("Tupdate: "+serverTap.selectedTableName+", from: "+serverTap.getUrl());
 				if (currentT.getPriority() < refThreadPriority-1) {//just asking for quicker execution without overstepping a lot
-					currentT.setPriority(refThreadPriority-1);//TODO:: tintin i donno check what todo
+					currentT.setPriority(refThreadPriority-1);
 				}
 				
 				try {
@@ -617,7 +697,7 @@ public class TapManager {
 					notificationBar.repaint();
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if(Aladin.levelTrace >= 3) e.printStackTrace();
 				} finally {
 					currentT.setName(oldTName);
 				}
@@ -655,10 +735,11 @@ public class TapManager {
 	 * @param newServer
 	 * @param tableRows
 	 * @param fieldSet
+	 * @throws Exception 
 	 */
-	protected void tableReader(ServerTap newServer, TRSet tableRows, FieldSet fieldSet) {
+	protected void tableReader(ServerTap newServer, TRSet tableRows, FieldSet fieldSet) throws Exception {
 		TapTable table = null;
-		if (fieldSet != null && tableRows != null) {
+		if (fieldSet != null && tableRows != null && tableRows.getItemCount() > 0) {
 			for (int j = 0; j < tableRows.getItemCount(); j++) {
 				table = new TapTable();
 				TDSet theTDs = tableRows.getTDSet(j);
@@ -687,6 +768,9 @@ public class TapManager {
 					}
 				}
 			}
+		} else {
+			if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateTables! Did not read table data for "+newServer.getUrl());
+			throw new Exception("ERROR in populateTables! Did not read table data"+newServer.getUrl());
 		}
 	}
 	
@@ -790,12 +874,13 @@ public class TapManager {
 	 * @param serverToLoad
 	 * @param tableRows
 	 * @param fieldSet
+	 * @throws Exception 
 	 */
-	protected void tableColumnReader(ServerTap serverToLoad, TRSet tableRows, FieldSet fieldSet) {
+	protected void tableColumnReader(ServerTap serverToLoad, TRSet tableRows, FieldSet fieldSet) throws Exception {
 		TapTable table = null;
 		TapTableColumn tableColumn = null;
 		Vector<TapTableColumn> tableColumns = null;
-		if (fieldSet != null && tableRows != null) {
+		if (fieldSet != null && tableRows != null && tableRows.getItemCount() > 0) {
 			for (int j = 0; j < tableRows.getItemCount(); j++) {
 				tableColumn = new TapTableColumn();
 				TDSet theTDs = tableRows.getTDSet(j);
@@ -865,6 +950,9 @@ public class TapManager {
 					}
 				}
 			}
+		} else {
+			if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateColumns! Did not read table column data for "+serverToLoad.getUrl());
+			throw new Exception("ERROR in populateColumns! Did not read table column data for "+serverToLoad.getUrl());
 		}
 	}
 	
@@ -994,11 +1082,11 @@ public class TapManager {
 //			tableColumn.setSize(f.columnSize); nope
 			tableColumns.add(tableColumn);
 			if (f.isRa()) {//bug with upload where it assumes ra and dec. maximum damage here is the appearance of target panel with wrong col identified as ra and dec. all user has todo is to ignore the target panel
-				System.err.println("f.isRa()"+f.isRa()+" , and its name is: "+f.name);
+				if(Aladin.levelTrace >= 3)System.err.println("f.isRa()"+f.isRa()+" , and its name is: "+f.name);
 				raName = f.name;
 			}
 			if (f.isDe()) {
-				System.err.println("f.isDe()"+f.isDe()+" , and its name is: "+f.name);
+				if(Aladin.levelTrace >= 3)System.err.println("f.isDe()"+f.isDe()+" , and its name is: "+f.name);
 				decName = f.name;
 			}
 			
@@ -1474,41 +1562,6 @@ public class TapManager {
 		this.executor.shutdownNow();
 		Aladin.trace(3,"Shutdown of tap service...");
 	}
-	
-	/*tintin Unless cast expcetions are -remove theis
-    public <T> Future<T> submit(Callable<T> task) throws Exception {
-        return executor.submit((Callable<T>) addOriginInfo(task, submitTrace(), Thread.currentThread().getName()));
-    }
-    
-    private <T> T addOriginInfo(final Callable<T> task, final Exception oriStack, final String oriTName) throws Exception {
-    	try {
-            return task.call();
-        } catch (Exception e) {
-        	e.printStackTrace();
-            System.err.println("Exception :"+oriTName+e+oriStack);
-            throw e;
-        }
-    }
-    
-    public <T> void execute(Runnable task) throws Exception {
-        executor.execute(addOriginInfo(task, submitTrace(), Thread.currentThread().getName()));
-    }
- 
-    private <T> Runnable addOriginInfo(final Runnable task, final Exception oriStack, final String oriTName) throws Exception {
-    	try {
-            task.run();
-        } catch (Exception e) {
-        	e.printStackTrace();
-            System.err.println("Exception:"+oriTName+e+oriStack);
-            throw e;
-        }
-		return task;
-    }
-	
-    private Exception submitTrace() {
-        return new Exception("TwhereSubmit here");
-    }
-    */
 	
 	/**
 	 * Removes current selected tap server cached info form the cache

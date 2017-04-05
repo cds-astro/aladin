@@ -230,7 +230,7 @@ public class UWSJob implements ActionListener{
 	 */
 	public void pollForCompletion(boolean useBlocking, UWSFacade uwsFacade) throws IOException, InterruptedException, Exception {
 		try {
-			System.err.println("In pollForCompletion. Jon phase is:"+this.currentPhase);
+			if (Aladin.levelTrace >= 3) System.out.println("pollForCompletion. Jon phase is:"+this.currentPhase);
 			URL jobInProgressUrl = this.location;
 			String previousPhase = this.currentPhase;
 			while (true) {
@@ -242,15 +242,12 @@ public class UWSJob implements ActionListener{
 				}
 				if (this.currentPhase.equals(EXECUTING) || this.currentPhase.equals(QUEUED) 
 						|| this.currentPhase.equals(SUSPENDED) || this.currentPhase.equals(UNKNOWN)) {
-//					UWSFacade.printStringFromInputStream(this);
 					URLConnection conn = jobInProgressUrl.openConnection();
 					handleJobHttpInterface(conn, HttpURLConnection.HTTP_OK, "Error for job: \n", false);
-				} else if (this.currentPhase.equals(COMPLETED)) {//TODO:: tintin remove the below ting
-//					uwsFacade.loadResults(this, this.results.entrySet().iterator().next().getValue());
-//					UWSFacade.printStringFromInputStream(this);
+				} else if (this.currentPhase.equals(COMPLETED)) {
+					uwsFacade.loadResults(this, null);
 					break;
 				} else if (this.currentPhase.equals(ERROR)) {
-//					UWSFacade.printStringFromInputStream(this);
 					this.showAsErroneous();
 					break;
 				} else if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
@@ -344,11 +341,21 @@ public class UWSJob implements ActionListener{
 	
 	public void setInitialGui() {
 //		this.gui = new JRadioButton(this.serverLabel+", Job: "+this.location+"     "+this.currentPhase);
-		StringBuffer radioLabel =  new StringBuffer(this.currentPhase);
-		radioLabel.append(" , Query: ").append(this.query).append(" ( server: ").append(this.serverLabel).append(")");
-		this.gui = new JRadioButton(radioLabel.toString());
+		this.gui = new JRadioButton(getJobLabel());
 		this.gui.setMinimumSize(new Dimension(0, Server.HAUT));
 		this.gui.addActionListener(this);
+		this.gui.setToolTipText(UWSFacade.UWSJOBRADIOTOOLTIP);
+	}
+	
+	/**
+	 * Gets the front end radio label display string
+	 * @return
+	 */
+	public String getJobLabel() {
+		StringBuffer radioLabel =  new StringBuffer("<html><p width=\"1600\">").append(this.currentPhase);
+		radioLabel.append(" , Start time: ").append(this.startTime)
+		.append(" , Query: ").append(this.query).append(" ( server: ").append(this.serverLabel).append(")</p></html>");
+		return radioLabel.toString();
 	}
 	
 	/**
@@ -358,10 +365,7 @@ public class UWSJob implements ActionListener{
 	public void updateGui(String oldPhase) {
 		// TODO Auto-generated method stub
 		if (((oldPhase != null && !oldPhase.equals(this.currentPhase)) || oldPhase == null) && this.gui != null) {
-			StringBuffer radioLabel = new StringBuffer(this.currentPhase);
-			radioLabel.append(" , Query: ").append(this.query)
-			.append(" ( server: ").append(this.serverLabel).append(")");
-			this.gui.setText(radioLabel.toString());
+			this.gui.setText(getJobLabel());
 			this.gui.revalidate();
 			this.gui.repaint();
 			if (this.gui.isSelected()) {// update job details panel also if that is selected

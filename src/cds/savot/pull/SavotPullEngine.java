@@ -1355,6 +1355,12 @@ public final class SavotPullEngine implements Markups {
                                               System.err.println("GROUP from TABLE father = " + father);
                                           }
                                           includedGroup--;
+                                      } else if (lastFather() == VOTableTag.RESOURCE) {
+											_currentResource.getGroups().addItem(currentGroup);
+											if (trace) {
+                                              System.err.println("GROUP from RESOURCE father = " + father);
+                                          }
+                                          includedGroup--;
                                       }
                                   }
                                   break;

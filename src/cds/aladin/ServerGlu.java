@@ -1672,7 +1672,7 @@ public class ServerGlu extends Server implements Runnable {
  	      String adqlQueryEncoded = URLDecoder.decode(adqlQueryUnEncoded, UTF8) ;
  	      adqlQueryEncoded = URLEncoder.encode(adqlQueryEncoded, UTF8);
  		  url = url.replace(adqlQueryUnEncoded, adqlQueryEncoded);
- 		  if(Aladin.levelTrace>=3){
+ 		  if(Aladin.levelTrace >= 3){
  			  System.out.println("adqlQueryUnEncoded"+adqlQueryUnEncoded);//TODO:: tintin sysouts
  			  System.out.println("adqlQueryEncoded"+adqlQueryEncoded);
  			  System.out.println("Tryin to decode again:"+URLDecoder.decode(adqlQueryEncoded, UTF8));

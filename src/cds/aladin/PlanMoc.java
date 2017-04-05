@@ -510,7 +510,6 @@ public class PlanMoc extends PlanBGCat {
 	@Override
 	public void remove() {
 		// TODO Auto-generated method stub
-		//TODO:: tintin i added this as there was compilation issue without it
 	}
    }
    

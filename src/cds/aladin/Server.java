@@ -22,6 +22,7 @@ package cds.aladin;
 
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
+import static cds.aladin.Constants.DATALINK_FORM;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -1026,6 +1027,24 @@ public void layout() {
 	      }
    }
    
+   /**
+    * Quickfix for a (one of datalink) SODA form to not have the default date like Skybot
+    * It would not be a travesty not to have this quickfix
+    * It will only fill the SODA client form with an epoch-in ISO which the client has to change to proper format
+    * So we will not fill epoch in the soda form
+    * @return
+    */
+	public boolean setDateForServerGluIsDateLinkForms() {
+		boolean result = false;
+		if (this instanceof ServerGlu) {
+			if (((ServerGlu) this).actionName.equals(DATALINK_FORM)
+					&& (date.getText() != null || !date.getText().isEmpty())) {
+				result = true;
+			}
+		}
+		return result;
+	}
+
    /** Pre-remplissage du champ Date. Si c'est une valeur double, on considère
     * que c'est une année décimale et on la convertit en JD, sinon on laisse
     * tel que.
@@ -1033,6 +1052,7 @@ public void layout() {
     */
     protected void setDate(String s) {
        if( date==null ) return;
+       if( setDateForServerGluIsDateLinkForms()) return;
        // On suppose que s est en année décimale (via getEpoch() )
        try {
 // Methode Fox

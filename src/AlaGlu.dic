@@ -636,7 +636,7 @@
 %Aladin.TapService					ALATAP
 %Aladin.Label		SomeOtherLabel
 %D    NASA's Wide-field Infrared Survey Explorer (WISE; Wright et al. 2010) mapped the sky at 3.4, 4.6, 12, and 22 Î¼m (W1, W2, W3, W4) in 2010 with an angular resolution of 6.1", 6.4", 6.5", & 12.0" in the four bands. WISE achieved 5Ï? point source sensitivities better than 0.08, 0.11, 1 and 6 mJy in unconfused regions on the ecliptic in the four bands. Sensitivity improves toward the ecliptic poles due to denser coverage and lower zodiacal background.
-%U    http://gaia.ari.uni-heidelberg.de/tap/tintin
+%U    http://gaia.ari.uni-heidelberg.de/tap
 
 %A    tapvizierGeneric
 %Aladin.TapService					ALATAP

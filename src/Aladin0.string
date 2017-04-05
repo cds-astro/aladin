@@ -3015,3 +3015,4 @@ STANDARDRESULTSLOAD Load Results
 STANDARDRESULTSLOADTIP Loads results from "/results/result" path
 UWSASKLOADDEFAULTRESULTS Unable to parse results url. Try to download from the tap results path?
 CANTABORTJOB Unable to abort the job. please try again later.
+UWSJOBRADIOTOOLTIP Click to load job details
