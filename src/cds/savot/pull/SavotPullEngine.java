@@ -1344,9 +1344,8 @@ public final class SavotPullEngine implements Markups {
                               case GROUP:
                                   if (includedGroup > 1) {
                                       final SavotGroup tmp = currentGroup;
-                                      //currentGroup = getGroupStack();
-                                      //currentGroup.getGroups().addItem(tmp);
-                                      _currentResource.getGroups().addItem(tmp);
+                                      currentGroup = getGroupStack();
+                                      currentGroup.getGroups().addItem(tmp);
                                       includedGroup--;
                                   } else {
                                       if (lastFather() == VOTableTag.TABLE) {
