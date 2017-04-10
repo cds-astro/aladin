@@ -318,7 +318,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		Vector<String> canUploadVOTablesNames = new Vector<String>();
 		Plan[] plan = this.aladin.calque.plan;
 		for (int i = 0; i < plan.length; i++) {
-			if (plan[i].error == null && plan[i].pcat != null && plan[i].pcat.flagVOTable) {
+			if (plan[i].flagOk/*plan[i].error == null*/ && plan[i].pcat != null && plan[i].pcat.flagVOTable) {
 				canUploadVOTablesNames.add(plan[i].label);
 			}
 		}

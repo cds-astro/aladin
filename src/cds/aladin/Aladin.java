@@ -687,7 +687,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Les menus;
    String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,SEARCHDIR,
           LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
-   MIMAGE,MCATALOG,MOVERLAY,MDOC ;
+   MIMAGE,MCATALOG,MOVERLAY,MDOC,SHOWASYNCJOBS ;
    String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
    String MBGKG; // menus pour les backgrounds
 
@@ -707,7 +707,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
    REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
-   HPXCREATE,HPXDUMP,FOVEDITOR,HPXGENERATE,HPXGEN,HPXGENMAP,HPXGENRGB,GETOBJ;
+   HPXCREATE,HPXDUMP,FOVEDITOR,HPXGENERATE,HPXGEN,HPXGENMAP,HPXGENRGB,GETOBJ,ACCESSTAP;
    String JUNIT=PROTOPREFIX+"*** Aladin internal code tests ***";
 
    /** Retourne l'objet gérant les chaines */
@@ -1223,6 +1223,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       SAMPPREFS = chaine.getString("PWPREFS").replaceAll("SAMP", name);
       STARTINTERNALHUB = BETAPREFIX+chaine.getString("PWSTARTINTERNALHUB");
       STOPINTERNALHUB = BETAPREFIX+chaine.getString("PWSTOPINTERNALHUB");
+      
+      //for TAP
+      ACCESSTAP = Aladin.chaine.getString("ACCESSTAP");
    }
 
    /** Création du menu principal sous la forme d'un tableau à trois dimensions permettant
@@ -1391,6 +1394,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          SEARCHDIR      = "Search a data collection...";
          FILTERDIR      = "Filter on data collections...";
          
+         SHOWASYNCJOBS = "Show async jobs";
+         
          String[][] menu1 = new String[][] {  {MFILE},
             {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
                  {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
@@ -1403,6 +1408,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
             {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
          };
          menu[0] = menu1;
+         
+         menu1 = new String[][] {
+        	 {MTOOLS},
+             {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
+             {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
+             {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
+             {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
+             {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
+             { BETAPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
+                "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
+                "%Mouse NSIDE 2^12","%Mouse NSIDE 2^13","%Mouse NSIDE 2^14","%Mouse NSIDE 2^15","%Mouse NSIDE 2^16",
+                "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
+                "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
+                "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
+                {},{FOVEDITOR},
+
+                {JUNIT},{"TAP", ACCESSTAP, SHOWASYNCJOBS}
+         };
+         menu[6] = menu1;
       }
 
       // ajout menu interop
@@ -1436,7 +1460,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    }
 
-   /** Retourne true si la barre de menu et/ou les ComboBox de
+/** Retourne true si la barre de menu et/ou les ComboBox de
     * localisation et de pixel sont déroulé et cachent une partie
     * de la zone des vues (voir ViewSimple.mouseEntered()
     * et ViewSimple.mouseExited())
@@ -3415,6 +3439,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }else if( filterB(s) ) { return true;
 
       // Peut être un plugin ?
+      } else if (isMenu(s, ACCESSTAP)) {
+		try {
+			dialog.show("TAP");
+		} catch (Exception e) {
+			warning(this, Aladin.chaine.getString("GENERICERROR"));
+		}
+      } else if (isMenu(s, SHOWASYNCJOBS)) {
+		try {
+			dialog.tapManager.showAsyncPanel();
+		} catch (Exception e) {
+			warning(this, Aladin.chaine.getString("GENERICERROR"));
+		}
       } else if( plugins!=null ) {
          AladinPlugin ap = plugins.find(s);
          if( ap!=null ) {
@@ -3423,8 +3459,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                warning(this,chaine.getString("PLUGERROR")+"\n\n"+e1.getMessage());
             }
          }
-      }
-      return true;
+       }
+     return true;
    }
 
    /** Propose d'installer Aladin en standalone */

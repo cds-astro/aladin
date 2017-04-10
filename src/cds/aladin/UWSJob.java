@@ -136,8 +136,9 @@ public class UWSJob implements ActionListener{
 	
 	/**
 	 * Method aborts an executing job
+	 * @throws Exception 
 	 * */
-	public void abortJob() throws IOException {
+	public void abortJob() throws Exception {
 		HttpURLConnection httpClient = null;
 		try {
 			httpClient = createWritePostData(this.location.toString()+"/phase", "PHASE", PHASEACTION_ABORT);
@@ -166,9 +167,9 @@ public class UWSJob implements ActionListener{
 	
 	/**
 	 * Method to move the job to a queued or executing phase from a pending/held phase.
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public void run() throws IOException {
+	public void run() throws Exception {
 		Aladin.trace(3,"In run. Job phase is:"+this.currentPhase);
 		if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
 			HttpURLConnection httpClient = null;
@@ -207,7 +208,7 @@ public class UWSJob implements ActionListener{
 		urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 		// set some other request headers...
 		urlConn.setRequestProperty("Cache-Control", "no-cache");
-		String encodedPhaseRunParam = URLEncoder.encode(name, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
+		String encodedPhaseRunParam = URLEncoder.encode(name, UTF8) + "=" + URLEncoder.encode(value, UTF8);
 		DataOutputStream os = new DataOutputStream(urlConn.getOutputStream());
 		os.writeBytes(encodedPhaseRunParam);
 		os.close();
@@ -278,8 +279,9 @@ public class UWSJob implements ActionListener{
 	 * Method sets phase/populate uwsjob based on a expected response code
 	 * If not found -throws exception
 	 * If expected code/in case of error- throws exception with generic message
+	 * @throws Exception 
 	 */
-	public void handleJobHttpInterface(URLConnection urlConn, int expectedHttpResponseCode, String genericErrorMessage, boolean setPhaseOnly) throws IOException {
+	public void handleJobHttpInterface(URLConnection urlConn, int expectedHttpResponseCode, String genericErrorMessage, boolean setPhaseOnly) throws Exception {
 		HttpURLConnection httpConn = null;
 		try {
 			urlConn = this.location.openConnection();

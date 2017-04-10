@@ -1,6 +1,30 @@
 package cds.aladin;
 
-import static cds.aladin.Constants.*;
+import static cds.aladin.Constants.COLUMNNAME;
+import static cds.aladin.Constants.COUNT;
+import static cds.aladin.Constants.DATATYPE;
+import static cds.aladin.Constants.DESCRIPTION;
+import static cds.aladin.Constants.DOT_CHAR;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.INDEXED;
+import static cds.aladin.Constants.PRINCIPAL;
+import static cds.aladin.Constants.SCHEMANAME;
+import static cds.aladin.Constants.SIZE;
+import static cds.aladin.Constants.STD;
+import static cds.aladin.Constants.SYNCGETRESULT;
+import static cds.aladin.Constants.TABLENAME;
+import static cds.aladin.Constants.TABLETYPE;
+import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
+import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
+import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
+import static cds.aladin.Constants.UCD;
+import static cds.aladin.Constants.UCD_DEC_PATTERN2;
+import static cds.aladin.Constants.UCD_DEC_PATTERN3;
+import static cds.aladin.Constants.UCD_RA_PATTERN2;
+import static cds.aladin.Constants.UCD_RA_PATTERN3;
+import static cds.aladin.Constants.UNIT;
+import static cds.aladin.Constants.UTF8;
+import static cds.aladin.Constants.UTYPE;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -9,13 +33,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -35,7 +56,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -44,6 +64,7 @@ import javax.swing.JTextArea;
 
 import adql.db.DefaultDBTable;
 import adql.query.ADQLQuery;
+import cds.aladin.Constants.TapServerMode;
 import cds.savot.binary.DataBinaryReader;
 import cds.savot.model.FieldSet;
 import cds.savot.model.SavotBinary;
@@ -70,7 +91,7 @@ public class TapManager {
 	protected TapFrameServer tapFrameServer=null;
 	protected DataLabel selectedServerLabel;
 	protected FrameUploadServer uploadFrame;
-	public static Map<String, DataLabel> managedGluTapServerLabels;//tintin this guy is not needed
+	public static Map<String, DataLabel> managedGluTapServerLabels;
 	
 	protected static Map<String, Server> tapServerPanelCache = new HashMap<String, Server>();//main cache where all the ServerGlu's are loaded on init
 	protected static Map<String, Server> simpleFrameServers = new HashMap<String, Server>();//cache for the servers loading from tree
@@ -200,7 +221,7 @@ public class TapManager {
 	 */
 	public void loadTapServer() {
 		//either get exixitng details form the configuration file or call url to get tap server details.
-		if (this.getSelectedServerLabel() == null) {//not a necessary condition. But adding just in case.
+		if (this.selectedServerLabel == null) {//not a necessary condition. But adding just in case.
 			this.showTapRegistryForm();
 		} else if (tapServerPanelCache.containsKey(this.selectedServerLabel.getLabel())) {
 			Server cachedCopy = tapServerPanelCache.get(this.selectedServerLabel.getLabel());
@@ -285,6 +306,7 @@ public class TapManager {
 				newServer.showloading();
 				newServer.capabilities = this.getTapCapabilities(url);
 				String vizierTable = processIfVizier(newServer);
+				// we only get nodes in trees for now. from list we do not support taking table param as of now.
 				if (vizierTable != null) {
 					//get table name
 					this.loadTapColumnSchemasForATable(newServer, vizierTable);
@@ -305,10 +327,11 @@ public class TapManager {
 
 	/**
 	 * Only tests out if the service is vizier. 
-	 * This is temporary workaround and is done to treat vizier as a special case:
-	 * where only vizier's registry tables are known to be same as the Tap.Schema tables
+	 * This is temporary workaround to treat vizier as a special case:
+	 * where only vizier's registry tables names are known to be same as the Tap.Schema tables
+	 * so for that registry node we can download metadata for that table only
 	 * We will enlarge the logic as and when we realize this about the other servers.
-	 * Currently this is not the case for other servers.
+	 * because currently this is not the case for other servers.
 	 * @return
 	 */
 	private String processIfVizier(ServerTap server) {
@@ -1157,6 +1180,7 @@ public class TapManager {
 //					uploadFrame.uploadServer.createFormDefault();
 //					uploadFrame.uploadServer.revalidate();
 					uploadFrame.uploadServer.tablesGui.addItem(tableName);
+					uploadFrame.uploadServer.updateQueryChecker(tableName);
 					uploadFrame.uploadServer.tablesGui.setSelectedItem(tableName);
 				} 
 				uploadFrame.pack();
@@ -1287,8 +1311,9 @@ public class TapManager {
 				bagConstraints.gridy = 0;
 				bagConstraints.gridwidth = 1;
 				bagConstraints.weightx = 1;
-				bagConstraints.weighty = 1;
-				bagConstraints.fill = GridBagConstraints.HORIZONTAL;
+				bagConstraints.weighty = 0.001;
+				bagConstraints.fill = GridBagConstraints.NONE;
+				bagConstraints.anchor = GridBagConstraints.WEST;
 				bagConstraints.insets = new Insets(20, 2, 2, 2);
 				
 				JLabel displayString = new JLabel("Database Schema: ");
@@ -1314,14 +1339,12 @@ public class TapManager {
 						//tableName.setBounds(x, y, width, 10);y+=10;
 						bagConstraints.gridy++;
 						bagConstraints.insets = new Insets(20, 2, 2, 2);
-						gridbag.setConstraints(tableNameLabel, bagConstraints);
-						infoPanel.add(tableNameLabel);
+						infoPanel.add(tableNameLabel, bagConstraints);
 						if (!description.isEmpty()) {
-							tableDescription = new JLabel(description);
+							tableDescription = new JLabel("<html><p width=\"1000\">Description:"+description);
 							bagConstraints.gridy++;
 							bagConstraints.insets = new Insets(2, 2, 2, 2);
-							gridbag.setConstraints(tableDescription, bagConstraints);
-							infoPanel.add(tableDescription);
+							infoPanel.add(tableDescription, bagConstraints);
 						}
 						
 						allRows = new Vector<Vector<String>>();
@@ -1335,15 +1358,16 @@ public class TapManager {
 						scrollPane.getVerticalScrollBar().setUnitIncrement(4);
 						bagConstraints.gridy++;
 						bagConstraints.insets = new Insets(2, 2, 2, 2);
-						gridbag.setConstraints(scrollPane, bagConstraints);
-						infoPanel.add(scrollPane);
+						bagConstraints.fill = GridBagConstraints.BOTH;
+						bagConstraints.weighty = 0.05;
+						infoPanel.add(scrollPane, bagConstraints);
 					} else {
-						recordInfoTables.append("\nTable: "+tableName);
+						recordInfoTables.append("\n------------Table: "+tableName+"--------------");
 						if (!description.isEmpty()) {
 							recordInfoTables.append("\n").append(description);
 								
 						}
-						recordInfoTables.append("\nNo column metadata available.\n");
+						recordInfoTables.append("\nPlease select this table in the TAP server selector form to get column metadata.\n");
 //						noInfolabel = new JLabel("No column metadata available.");
 //						noInfolabel.setFont(Aladin.ITALIC);
 //						bagConstraints.gridy++;
@@ -1352,13 +1376,15 @@ public class TapManager {
 //						infoPanel.add(noInfolabel);
 					}
 				}
-				if (recordInfoTables.length()>0) {
+				if (recordInfoTables.length() > 0) {
 					JTextArea infoTablesDisplay = new JTextArea(20, 85);
 					infoTablesDisplay.setText(recordInfoTables.toString());
 					infoTablesDisplay.setFont(Aladin.COURIER);
 					infoTablesDisplay.setBackground(Color.white);
 					infoTablesDisplay.setEditable(false);
 					scrollPane = new JScrollPane(infoTablesDisplay);
+					bagConstraints.fill = GridBagConstraints.BOTH;
+					bagConstraints.weighty = 0.10;
 					bagConstraints.gridy++;
 					bagConstraints.insets = new Insets(2, 2, 2, 2);
 					gridbag.setConstraints(scrollPane, bagConstraints);
@@ -1731,6 +1757,14 @@ public class TapManager {
 		}
 		return result;
 		
+	}
+	
+	public static boolean isChangeServerMode(TapServerMode mode) {
+		boolean result = false;
+		if (mode == TapServerMode.GENERAL || mode == TapServerMode.GLU){ 
+			result = true;
+		}
+		return result;
 	}
 
 }

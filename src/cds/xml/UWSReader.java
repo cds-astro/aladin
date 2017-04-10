@@ -24,7 +24,7 @@ public class UWSReader implements XMLConsumer {
 	private UWSJob uwsJob;
 	private String paramId;
 	
-	public boolean load(InputStream in, UWSJob job) {
+	public boolean load(InputStream in, UWSJob job) throws Exception {
 		this.uwsJob = job;
 		XMLParser xmlParser = new XMLParser(this);
 		boolean result = false;
@@ -37,9 +37,11 @@ public class UWSReader implements XMLConsumer {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw e;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw e;
 		}
 		return result;
 	}

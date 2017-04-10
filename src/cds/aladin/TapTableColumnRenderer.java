@@ -18,9 +18,15 @@ public class TapTableColumnRenderer extends JLabel implements ListCellRenderer {
 		JLabel column = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected,
 				cellHasFocus);
 		String columnName = ((TapTableColumn) value).getColumn_name();
+		String tooltip = ((TapTableColumn) value).getDescription();
+		
 		StringBuffer texter = new StringBuffer("<html><p>").append(columnName).append("</html></p>");
     	column.setPreferredSize(new Dimension(150, Server.HAUT));//25(Server.HAUT) renders a little bit small. Had it at 28, but windows shows lot of height.
-		column.setToolTipText(columnName);
+		
+		if (tooltip != null && !tooltip.isEmpty()) {
+			column.setToolTipText(tooltip);
+		}
+		
 		column.setText(texter.toString());
 		return column;
 	}

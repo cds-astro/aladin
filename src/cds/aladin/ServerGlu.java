@@ -228,7 +228,7 @@ public class ServerGlu extends Server implements Runnable {
       if (flagTAPV2) {
       	 tapTableMapping.put("GENERAL",new Vector());
       	 tapTableMapping.get("GENERAL").add(tp);
-      	if (mode != TapServerMode.TREEPANEL) {
+      	if (TapManager.isChangeServerMode(mode)) {
       		JButton button = new JButton("Change server");
     		button.setActionCommand(CHANGESERVER);
     		button.addActionListener(this);
@@ -1915,7 +1915,7 @@ public class ServerGlu extends Server implements Runnable {
   			}
 
   		}
-      	} else if( flagTAP) updateWidgets();
+      } else if( flagTAP) updateWidgets();
 
       super.actionPerformed(e);
    }

@@ -198,6 +198,7 @@ public class UWSFacade implements ActionListener{
 			Aladin.trace(3,"createJob() QUERY :: "+query.toADQL());
 			
 			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
+			Aladin.trace(3,"createJob() PHASE :: "+"RUN");
 //			out.writeField("time", "10");
 //			out.writeField("name", "ti");
 			
@@ -224,9 +225,9 @@ public class UWSFacade implements ActionListener{
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {// is accepted
 				String location = httpClient.getHeaderField("Location");
 				job = new UWSJob(this, serverLabel, new URL(location));
+				populateJob(job.getLocation().openStream(), job);
 				job.setQuery(query.toADQL());
 				job.setDeleteOnExit(true);
-				populateJob(job.getLocation().openStream(), job);
 //				getsetPhase(job);
 				job.setInitialGui();
 			} else {
@@ -348,12 +349,14 @@ public class UWSFacade implements ActionListener{
 	 * Method updates job based on the new uws status
 	 * @param inputStream
 	 * @param job
+	 * @throws Exception 
 	 */
-	public static void populateJob(InputStream inputStream, UWSJob job) {
+	public static void populateJob(InputStream inputStream, UWSJob job) throws Exception {
 //		SavotPullParser savotPullParser = new SavotPullParser(httpClient.getInputStream(), SavotPullEngine.FULL, null);
 		UWSReader uwsReader = new UWSReader();
 		synchronized (job) {
 			uwsReader.load(inputStream, job);
+			inputStream.close();
 			Aladin.trace(3, "in populateJob phase is:"+job.getCurrentPhase()+" results"+job.getResults());
 		}
 //		try (Scanner scanner = new Scanner(httpClient.getInputStream())) {

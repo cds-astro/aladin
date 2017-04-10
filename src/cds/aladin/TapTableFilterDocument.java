@@ -253,7 +253,11 @@ public class TapTableFilterDocument extends PlainDocument{
 		DefaultComboBoxModel<String> items = new DefaultComboBoxModel<String>(tables);
 		tablesGui.removeAllItems();
 //		System.out.println("resetting popup menu options");
-		/*for (String string : tables) {
+		/*if (tables!=null) {
+			System.out.println("resetting popup menu options to something");
+			
+		}
+		for (String string : tables) {
 			System.out.print(string+", ");
 		}
 		System.out.println();*/
@@ -303,8 +307,8 @@ public class TapTableFilterDocument extends PlainDocument{
 				if (table != null && table.getDescription() != null && !table.getDescription().isEmpty()) {
 					checkDescription = true;
 				}
-				if (!(Util.indexOfIgnoreCase(tableName, mask) >= 0)
-						|| (checkDescription && Util.indexOfIgnoreCase(table.getDescription(), mask) >= 0)) {
+				if (!(Util.indexOfIgnoreCase(tableName, mask) >= 0
+						|| (checkDescription && Util.indexOfIgnoreCase(table.getDescription(), mask) >= 0))) {
 					continue;
 				}
 				matches.add(tableName);

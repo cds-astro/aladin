@@ -92,7 +92,7 @@ public class SimpleData {
 				this.type = "DATALINK_HIPS";
 			} else if (contentType.equalsIgnoreCase(CONTENT_TYPE_APPLICATIONIMG)) {
 				this.type = "DATALINK_HIPS";
-			} else if (contentType.equalsIgnoreCase(DATATYPE_DATALINK)) {
+			} else if (contentType.contains(DATATYPE_DATALINK)) {
 				this.type = "DATALINK";
 			}
 			

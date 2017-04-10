@@ -223,7 +223,7 @@ public class ServerTap extends Server implements MouseListener{
 	    c.weighty = 0.02;
 		containerPanel.add(titlePanel, c);
 
-		if (mode != TapServerMode.UPLOAD && mode != TapServerMode.TREEPANEL) {
+		if (TapManager.isChangeServerMode(mode)) {
 			button = new JButton("Change server");
 			button.setActionCommand(CHANGESERVER);
 			button.addActionListener(this);
@@ -368,7 +368,6 @@ public class ServerTap extends Server implements MouseListener{
 			updateQueryChecker(this.selectedTableName);
 		}
 		
-		
 		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
 		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
 		if(Aladin.levelTrace >3) System.out.println("ra and dec:"+(this.raColumnName!=null && this.decColumnName!=null));
@@ -409,7 +408,7 @@ public class ServerTap extends Server implements MouseListener{
 		JLabel planeLabel = new JLabel("loading "+this.name+"...");
 		planeLabel.setFont(Aladin.ITALIC);
 		add(planeLabel,"Center");
-		if (mode != TapServerMode.TREEPANEL) {
+		if (TapManager.isChangeServerMode(mode)) {
 			JButton button = new JButton("Open tap server list");
 			button.setActionCommand(CHANGESERVER);
 			button.addActionListener(this);
@@ -430,7 +429,7 @@ public class ServerTap extends Server implements MouseListener{
 		planeLabel.setFont(Aladin.ITALIC);
 		add(planeLabel);
 		JButton button = null;
-		if (mode == TapServerMode.GENERAL || mode == TapServerMode.GLU) {
+		if (TapManager.isChangeServerMode(mode)) {
 			button = new JButton(OPENTAPSERVER);
 			button.setActionCommand(CHANGESERVER);
 		} else if (mode == TapServerMode.TREEPANEL && tapManager.canReloadForTreePanel(this.name)){
@@ -524,7 +523,7 @@ public class ServerTap extends Server implements MouseListener{
 					c.weightx = 0.05;
 					c.gridx++;
 					button.addActionListener(this);
-					if (meta.isUploadAllowed() && meta.getUploadHardLimit()!=0L) {
+					if (meta.isUploadAllowed() && meta.getUploadHardLimit()>0L) {
 						String tip= String.format("Hard limit =%1$s rows", meta.getUploadHardLimit());
 						uploadTipText = uploadTipText.concat(tip);
 					} else if (!meta.isUploadAllowed()) {
@@ -1053,7 +1052,7 @@ public class ServerTap extends Server implements MouseListener{
 				Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
 				updateQueryCheckTableColumns(table, columns);
 				
-				if (queryCheckerTable != null && this.queryCheckerTables.remove(queryCheckerTable)) {
+				if (mode == TapServerMode.UPLOAD || (queryCheckerTable != null && this.queryCheckerTables.remove(queryCheckerTable))) {
 					this.queryCheckerTables.add(table);
 					QueryChecker checker = new DBChecker(this.queryCheckerTables);
 					this.adqlParser.setQueryChecker(checker);

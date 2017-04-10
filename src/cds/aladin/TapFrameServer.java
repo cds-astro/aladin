@@ -209,6 +209,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 							|| (dataLabel.getValue() != null && Util.indexOfIgnoreCase(dataLabel.getValue(), mask) >= 0)
 							|| (dataLabel.getDescription() != null
 									&& Util.indexOfIgnoreCase(dataLabel.getDescription(), mask) >= 0))) {
+						radioGroup.add(dataLabel.gui);
 						continue;
 					}
 				h++;

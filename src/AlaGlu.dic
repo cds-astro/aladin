@@ -933,6 +933,12 @@
 %Aladin.TapService ALATAP
 %U http://ia2-tap.oats.inaf.it:8080/epntap
 
+%A    tapvizierGlu
+%Aladin.TapService					ALATAP
+%Aladin.Label		GAIA_VIZIER
+%D    Gaia DR1 (Gaia Collaboration, 2016)
+%U    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
+
 
 
 

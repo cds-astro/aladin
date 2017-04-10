@@ -1319,6 +1319,20 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    public boolean show(String nom) {
       int i = findIndiceServer(nom);
       if( i<0 ) return false;
+      
+      if (Aladin.PROTO && "TAP".equals(nom)) {//TODO::tintinproto
+    	  if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
+    		  try {
+				this.tapManager.showTapRegistryForm();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				Aladin.warning(this, Aladin.getChaine().getString("GENERICERROR"));
+				e.printStackTrace();
+			}
+    		  return false;
+		  }
+      }
+      
       setCurrent(i);
       toFront();
       return true;

@@ -24,9 +24,9 @@ import static cds.aladin.Constants.INFOGUI;
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,6 +38,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 
 import cds.tools.Util;
@@ -59,7 +60,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	private Aladin aladin;
 	private Server server;
 	private Future<JPanel> additionalComponent;
-	private JPanel centerPanel;
+	private MySplitPane centerPanel;
 	private boolean flagUpdate;
 	private int guiType; //0- simple, 1 for ServerTap with metadata table
 
@@ -137,22 +138,6 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 //		js.setBounds(10, 10, 800, 200);
 //		js.setSize(new Dimension(800, 200));
 
-		this.centerPanel = new JPanel();
-//		BoxLayout boxLayout = new BoxLayout(this.centerPanel, BoxLayout.Y_AXIS);
-		GridBagLayout gridbag = new GridBagLayout();
-		this.centerPanel.setLayout(gridbag);
-		
-		GridBagConstraints c = new GridBagConstraints();
-		c.gridx = 0;
-		c.gridy = 0;
-		c.gridwidth = 1;
-		c.weightx = 1;
-		c.weighty = 0.20;
-		c.fill = GridBagConstraints.BOTH;
-		c.insets = new Insets(0, 0, 0, 0); 
-		
-		this.centerPanel.add(js, c);
-		
 		this.additionalComponent = infoPanel;
 	    //this.additionalComponent.setBounds(10, 50, 800, 600);
 		JScrollPane mainScrollPane;
@@ -163,13 +148,14 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 //			mainScrollPane.setBounds(10, 60, 800, 300);
 			mainScrollPane.getVerticalScrollBar().setUnitIncrement(4);
 			
-			c.gridy = 1;
-			c.weighty = 0.80;
-			c.gridheight = 2;
-			this.centerPanel.add(mainScrollPane, c);
+			this.centerPanel = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, js, mainScrollPane, 1);
+			js.setMinimumSize(new Dimension(800, 200));
+			js.setPreferredSize(new Dimension(800, 300));
         } catch (InterruptedException e) {
+        	//TODO::
            e.printStackTrace();
        } catch (ExecutionException e) {
+    	   //TODO::
            e.printStackTrace();
 		}
 		
@@ -202,7 +188,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	public void updateInfoPanel() throws Exception {
 		Component[] components = this.centerPanel.getComponents();
 		for (Component component : components) {
-			if (component.getName()!=null && component.getName().equals(INFOGUI)) {
+			if (component.getName() != null && component.getName().equals(INFOGUI)) {
 				JScrollPane oldScrollPane = (JScrollPane) component;
 				try {
 					JScrollPane  mainScrollPane= new JScrollPane(this.additionalComponent.get());
