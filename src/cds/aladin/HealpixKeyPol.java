@@ -184,6 +184,8 @@ protected int loadFits(String filename) throws Exception {
    }
 
    static final private int MAXPOLARSIZE=15;
+   
+   static private boolean bingo=true;
 
    /** Trace les segments de polarisation décrits dans ce losange Healpix */
    protected int drawPolarisation(Graphics g,ViewSimple v) { return drawPolarisation(g,v,0); }
@@ -238,6 +240,11 @@ protected int loadFits(String filename) throws Exception {
 
                double polaQ = getPixVal(pix1,bitpix,offset);
                double polaU = getPixVal(pix2,bitpix2,offset);
+               
+               if( planBG.isSegmentIAUConv() ) {
+                  if( bingo ) { System.out.println("bingo IAU"); bingo=false; }
+                  polaU= -polaU;
+               }
 
                // TODO : angle si GAL, ICRS, etc (voir rose vents : ViewSimple.drawNE )
                
@@ -245,7 +252,6 @@ protected int loadFits(String filename) throws Exception {
                // TODO : traitement des valeurs blanks ou invalides
                double angle = Math.toDegrees(0.5 * Math.atan2(polaU, polaQ));
                double norme = Math.sqrt(polaU * polaU + polaQ * polaQ);
-
 
 //               double angle = getMoyenne(pix,8,X-gap/2,Y-gap/2,gap,gap);
 //               double norme = getMoyenne(pix2,bitpix2,X-gap/2,Y-gap/2,gap,gap);

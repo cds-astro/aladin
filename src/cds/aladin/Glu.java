@@ -1667,7 +1667,10 @@ public final class Glu implements Runnable {
                      
                     }
                } catch (Exception e) {
-            	   if( Aladin.levelTrace>=3 ) e.printStackTrace();
+            	   if( Aladin.levelTrace>=3 ) {
+            	      System.err.println("Error in GLU record "+actionName);
+            	      e.printStackTrace();
+            	   }
                }
                distribAladin = !testDomain;
                flagGluSky=flagPlastic=flagLabel=flagTapServices = false;

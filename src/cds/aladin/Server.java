@@ -20,9 +20,9 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.DATALINK_FORM;
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
-import static cds.aladin.Constants.DATALINK_FORM;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -95,6 +95,7 @@ public class Server extends JPanel
    static final int SPECTRUM  = 4;
    static final int APPLI     = 8;
    static final int APPLIIMG  =16;
+   static final int MOC       =32;
 
    // Les différents status de la dernière interrogation ALLVO
    static final int STATUS_OK       = 0;
@@ -224,7 +225,7 @@ public class Server extends JPanel
    
    protected String getTitle() { return aladinLabel; }
    protected String getOrigin() { return institute; }
-   protected String getType() { return type==IMAGE?"Image":type==CATALOG?"Catalog":type==SPECTRUM?"Spectra":""; }
+   protected String getType() { return type==IMAGE?"Image":type==CATALOG?"Catalog":type==SPECTRUM?"Spectra":type==MOC?"Coverage (MOC)":""; }
    protected MyInputStream getMetaData(String target,String radius,StringBuffer infoUrl) throws Exception { return null; }
    protected boolean isHidden() { return HIDDEN; }
    protected boolean isDiscovery() { return DISCOVERY; }
@@ -1681,10 +1682,20 @@ public void layout() {
     * (voir ArchiveServer) */
    protected boolean setParam(String param) { return false; }
 
- /** Retourne le premier mot du nom */
-   protected String getNom() {
-      StringTokenizer st = new StringTokenizer(aladinLabel);
-      return st.nextToken();
+// /** Retourne le premier mot du nom */
+//   protected String getNom() {
+//      StringTokenizer st = new StringTokenizer(aladinLabel);
+//      return st.nextToken();
+//   }
+   
+   /** Retourne un label associé au plan généré par ce serveur.
+    * Si s est vide ou null, ou ne contient qu'un identificateur technique "as id" retourne 
+    * un label par défaut. Dans le dernier cas le label par défaut sera inséré en préfixe.
+    * Dans tous les autres cas retourne le label proposé. */
+   protected String getDefaultLabelIfRequired(String s) { return getDefaultLabelIfRequired(s,aladinLabel); }
+   protected String getDefaultLabelIfRequired(String s,String defaut) {
+      if( s==null || s.length()==0 ) return defaut;
+      return s;
    }
 
  /** Retrouve le frame.

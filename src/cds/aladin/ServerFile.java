@@ -215,6 +215,19 @@ public class ServerFile extends Server implements XMLConsumer {
       } catch(Exception e) { }
       return s;
    }
+   
+   private String getLabelFromFile(String f) {
+      String label;
+      int i = f.lastIndexOf(f.startsWith("http:")||f.startsWith("https:")||f.startsWith("ftp:") ? "/"
+            : Util.FS);
+      label=(i>=0)?f.substring(i+1):f;
+
+      // Suppression d'une extension éventuelle
+      i = label.lastIndexOf('.');
+      if( i>0 && label.length()-i<=5 ) label = label.substring(0,i);
+      
+      return label;
+   }
 
    /** Creation d'un plan issu d'un chargement d'un fichier AJ, fits ou autre
     * @param f path du fichier
@@ -235,15 +248,17 @@ public class ServerFile extends Server implements XMLConsumer {
 
          waitCursor();
          try {
-            if( label==null ) {
-               int i = f.lastIndexOf(f.startsWith("http:")||f.startsWith("https:")||f.startsWith("ftp:") ? "/"
-                     : Util.FS);
-               label=(i>=0)?f.substring(i+1):f;
-
-               // Suppression d'une extension éventuelle
-               i = label.lastIndexOf('.');
-               if( i>0 && label.length()-i<=5 ) label = label.substring(0,i);
-            }
+//            if( label==null ) {
+//               int i = f.lastIndexOf(f.startsWith("http:")||f.startsWith("https:")||f.startsWith("ftp:") ? "/"
+//                     : Util.FS);
+//               label=(i>=0)?f.substring(i+1):f;
+//
+//               // Suppression d'une extension éventuelle
+//               i = label.lastIndexOf('.');
+//               if( i>0 && label.length()-i<=5 ) label = label.substring(0,i);
+//            }
+            
+            label = getDefaultLabelIfRequired( label, getLabelFromFile(f) );
 
             // Analyse du contenu d'un répertoire local
             if( is==null && !(f.startsWith("http:") || f.startsWith("https:"))) {

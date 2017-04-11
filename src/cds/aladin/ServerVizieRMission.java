@@ -314,7 +314,8 @@ public class ServerVizieRMission extends Server  {
       criteria = specialUnQuoteCriteria(criteria);
 
       String catalogs=criteria;	// EN PREMIERE APPOCHE...
-      if( label==null ) label=catalogs;
+//      if( label==null ) label=catalogs;
+      label = getDefaultLabelIfRequired(label,catalogs);
       return creatArchivePlane(target,radius,catalogs,label,origin,cbGetAll.isSelected());
    }
 

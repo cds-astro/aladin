@@ -154,6 +154,7 @@ public class Constante {
    static public final String OLD_NBPIXGENERATEDIMAGE   = "nbPixGeneratedImage";
    static public final String OLD_ORDERING              = "ordering";
    static public final String OLD_ISPARTIAL             = "isPartial";
+   static public final String OLD_ISIAU                 = "IAU";
    static public final String OLD_ARGB                  = "ARGB";
    static public final String OLD_TYPEHPX               = "typehpx";
    static public final String OLD_LENHPX                = "lenhpx";

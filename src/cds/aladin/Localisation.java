@@ -636,10 +636,9 @@ public class Localisation extends MyBox  {
                || frameTarget==ECLIPTIC || frameTarget==GAL || frameTarget==SGAL )?
                      aft.toString("2d"):aft.toString("2s");
 
-        if( frameSource!=frameTarget ) {
-           System.out.println("convert ["+coo+"]/"+Localisation.REPERE[frameSource]+"  => ["+s+"]/"+Localisation.REPERE[frameTarget]);
-           //try { throw new Exception("convert"); } catch(Exception e) { e.printStackTrace(); }
-        }
+//        if( frameSource!=frameTarget ) {
+//           System.out.println("convert ["+coo+"]/"+Localisation.REPERE[frameSource]+"  => ["+s+"]/"+Localisation.REPERE[frameTarget]);
+//        }
 
         if( s.indexOf("--")>=0 ) return "";
         return s;

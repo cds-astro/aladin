@@ -87,6 +87,7 @@ import cds.tools.Util;
  * Le formulaire d'interrogation d'un serveur defini par enregistrement GLU
  *
  * @author Pierre Fernique [CDS]
+ * @version 2.1 : avr 07 - Prise en compte du type MOC
  * @version 2.0 : jan 03 - Suppression du Layout Manager et toilettage
  * @version 1.0 : (23 oct 2000) Creation
  */
@@ -180,6 +181,7 @@ public class ServerGlu extends Server implements Runnable {
       type=IMAGE;
       if( resultDataType!=null ) {
          if( resultDataType.indexOf("ssa")>=0 ) type=SPECTRUM;
+         else if( resultDataType.indexOf("moc")>=0 ) type=MOC;
          else if( resultDataType.indexOf("x-votable+xml")>=0 ) type=CATALOG;
          else if( resultDataType.indexOf("application")>=0 ) {
             if( resultDataType.indexOf("image")>0 ) type=APPLIIMG;
@@ -1049,7 +1051,7 @@ public class ServerGlu extends Server implements Runnable {
       }
       return null;
    }
-
+   
    /** Creation d'un plan de maniere generique */
    protected int createPlane(String target,String radius,String criteria,
    				 String label, String origin) {
@@ -1059,7 +1061,6 @@ public class ServerGlu extends Server implements Runnable {
       
       String serverTaskId = aladin.synchroServer.start("ServerGlu.createPlane/"+target);
       try {
-//         setSync(false);
 
          // Resolution par Simbad necessaire ?,
          // et remplissage des champs adequats
@@ -1068,7 +1069,6 @@ public class ServerGlu extends Server implements Runnable {
             if( objet==null ) throw new Exception(UNKNOWNOBJ);
          } catch( Exception e1 ) {
             Aladin.warning(this,e1.getMessage(),1);
-//            setSync(true);
             return -1;
          }
 
@@ -1251,7 +1251,6 @@ public class ServerGlu extends Server implements Runnable {
                SIAPruner pruner = new SIAPruner((ResourceNode[])leaves.toArray(new ResourceNode[leaves.size()]), crit);
                ResourceNode[] nodesToLoad = pruner.prune();
                if( nodesToLoad==null ) {
-//                  setSync(true);
                   return -1;
                }
                ResourceNode node;
@@ -1271,13 +1270,12 @@ public class ServerGlu extends Server implements Runnable {
                aladin.command.println("error : "+e2.getMessage());
                e2.printStackTrace();
             }
-//            setSync(true);
             return 1;
          }
 
-         // Generation du label du plan
+
          if( label==null ) {
-            if( planeLabel==null ) label=aladinLabel;
+            if( planeLabel==null ) label=getDefaultLabelIfRequired(label);
             else {
                String [] param = new String[vbis.size()];
                for( i=0; i<param.length; i++ ) {
@@ -1286,7 +1284,7 @@ public class ServerGlu extends Server implements Runnable {
                   param[i] = s;
                }
                planeLabel = dollarQuerySet(planeLabel);
-               label = aladin.glu.dollarSet(planeLabel,param,Glu.NOURL).trim();
+               label = getDefaultLabelIfRequired(label, aladin.glu.dollarSet(planeLabel,param,Glu.NOURL).trim());
             }
          }
 
@@ -1295,29 +1293,44 @@ public class ServerGlu extends Server implements Runnable {
          // S'agit-il d'un serveur d'images
          if( type==IMAGE ) {
             if( !verif(Plan.IMAGE,objet,param) ) {
-//               setSync(true);
                return -1;
             }
             if( fmt==PlanImage.NATIVE ) {
                int n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
                      fmt,PlanImage.UNDEF,null,null);
-//               setSync(true);
                return n;
             } else {
                int n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
                      label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
-//               setSync(true);
                return n;
+            }
+            
+         // Ou d'un serveur de MOC (on prend on compte les mirroirs)
+         } else if( type==MOC ) {
+            MyInputStream in=null;
+            try {
+               try { in = Util.openStream(u); }
+               catch( Exception e1 ) {
+                  
+                  // Peut être un miroir ?
+                  if( aladin.glu.checkIndirection(actionName, null) ) {
+                     u=aladin.glu.getURL(actionName,p.toString());
+                     in = Util.openStream(u);
+                  } else throw e1;
+               }
+               return aladin.calque.newPlanMOC( in, label);
+               
+            } catch( Exception e1 ) {
+               if( aladin.levelTrace>=3 ) e1.printStackTrace(); 
+               return -1;
             }
 
             // Ou d'un serveur de donnees
          } else {
             if( !verif(Plan.CATALOG,objet,param) ) { 
-//               setSync(true);
                return -1;
             }
             int n = aladin.calque.newPlanCatalog(u,label,objet,param,"provided by "+institute,this);
-//            setSync(true);
             return n;
          }
 
@@ -1672,7 +1685,7 @@ public class ServerGlu extends Server implements Runnable {
  	      String adqlQueryEncoded = URLDecoder.decode(adqlQueryUnEncoded, UTF8) ;
  	      adqlQueryEncoded = URLEncoder.encode(adqlQueryEncoded, UTF8);
  		  url = url.replace(adqlQueryUnEncoded, adqlQueryEncoded);
- 		  if(Aladin.levelTrace >= 3){
+ 		  if(Aladin.levelTrace>=3){
  			  System.out.println("adqlQueryUnEncoded"+adqlQueryUnEncoded);//TODO:: tintin sysouts
  			  System.out.println("adqlQueryEncoded"+adqlQueryEncoded);
  			  System.out.println("Tryin to decode again:"+URLDecoder.decode(adqlQueryEncoded, UTF8));
@@ -1915,7 +1928,7 @@ public class ServerGlu extends Server implements Runnable {
   			}
 
   		}
-      } else if( flagTAP) updateWidgets();
+      	} else if( flagTAP) updateWidgets();
 
       super.actionPerformed(e);
    }

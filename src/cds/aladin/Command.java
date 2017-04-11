@@ -1003,7 +1003,7 @@ public final class Command implements Runnable {
          // la liste des serveurs par defaut
          if( a.view.getCurrentView().isFree() /* || a.isFullScreen() */ ) {
             t=cmd;
-            if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"P/DSS2/color\")";
+            if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"CDS/P/DSS2/color\")";
             else {
                s=a.configuration.getServer();
                String p = a.configuration.getSurvey();
@@ -1190,6 +1190,7 @@ public final class Command implements Runnable {
       return ! (server.equalsIgnoreCase("Local")
             || server.equalsIgnoreCase("MyData")
             || server.equalsIgnoreCase("VizieRX")
+            || server.equalsIgnoreCase("MOC")
             || (server.equalsIgnoreCase("VizieR")
                   && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
                   || server.equalsIgnoreCase("allsky")
@@ -3029,9 +3030,9 @@ public final class Command implements Runnable {
       // ex: toto = get Simbad m1
       StringBuffer tp = new StringBuffer();
       String s = getTargetPlane(tp, s1);
+      
       String label = tp.length()==0 ? null : "="+tp.toString();
-      //System.out.println("TargetPlane=["+tp+"] => s="+s+" label="+label);
-
+//      System.out.println("TargetPlane=["+tp+"] => s="+s+" label="+label);
 
       Tok st = new Tok(s);
       String cmd = st.nextToken();

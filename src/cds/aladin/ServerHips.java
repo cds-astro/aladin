@@ -104,12 +104,11 @@ public class ServerHips extends ServerTree  {
    protected ServerHips(Aladin aladin) { super(aladin); }
 
    @Override
-   protected int createPlane(String target,String radius,String criteria,
-         String label, String origin) {
+   protected int createPlane(String target,String radius,String criteria, String label, String origin) {
       String survey;
       int defaultMode=PlanBG.UNKNOWN;
 
-      if( criteria==null || criteria.trim().length()==0 ) survey="DSS colored";
+      if( criteria==null || criteria.trim().length()==0 ) survey="CDS/P/DSS2/color";
       else {
          Tok tok = new Tok(criteria,", ");
          survey = tok.nextToken();
@@ -244,15 +243,16 @@ public class ServerHips extends ServerTree  {
       for( TreeObj n : tree ) {
          if( !(n instanceof TreeObjDir) ) continue;
          if( !n.isCheckBoxSelected() ) continue;
-         TreeObjDir ta = (TreeObjDir) n;
+         TreeObjDir to = (TreeObjDir) n;
          String target = getTarget(false);
          String radius = getRadius(false);
          String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));
-         String id = ta.internalId!=null ? ta.internalId : ta.id;
+         String id = to.internalId!=null ? to.internalId : to.id;
          String criteria = id+mode;
          String code = "get hips("+Tok.quote(id)+mode+")";
          aladin.console.printCommand(code+cible);
-         int m=createPlane(target,radius,criteria,ta.aladinLabel,ta.copyright);
+         String label = to.internalId==null ? to.aladinLabel : to.internalId;
+         int m=createPlane(target,radius,criteria,label,to.copyright);
          if( m!=-1 ) aladin.calque.getPlan(m).setBookmarkCode(code+" $TARGET $RADIUS");
       }
       reset();

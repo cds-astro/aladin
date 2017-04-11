@@ -1449,6 +1449,13 @@ public class Calque extends JPanel implements Runnable {
     */
    protected int getIndexPlan(String mask) { return getIndexPlan(mask,0); }
    protected int getIndexPlan(String mask,int mode) {
+      
+      // Premier tout avec les identificateurs techniques "asId"
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].asId!=null && plan[i].asId.equals(mask) ) return i;
+      }
+      
+      // Deuxième tour sur les labels
       for( int i=0; i<plan.length; i++ ) {
          if( mode==0 && Util.matchMask(mask,plan[i].label)
                || mode==1 && mask.equals(plan[i].label)  ) return i;
@@ -3258,6 +3265,7 @@ public class Calque extends JPanel implements Runnable {
     * simplement le "=" pour qu'Aladin en crée un nouveau
     */
    protected String prepareLabel(String label) {
+      
       if( !isNewPlan(label) ) {
          if( label.charAt(1)=='@' ) {
             int n;

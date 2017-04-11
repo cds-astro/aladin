@@ -60,6 +60,7 @@ import javax.swing.plaf.basic.BasicTextFieldUI;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
 import cds.moc.Healpix;
@@ -2767,9 +2768,37 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          }
        }
       
+      // Ajout du bookmark qui correspond à la sélection des checkboxes
       void bookmark() {
+         StringBuilder bkm=new StringBuilder();
          TreeObjDir to = treeObjs.get(0);
-         aladin.info("Pas encore implanté\nIl faudrait ajouté automatiquement un Bookmark sur cette collection");
+         if( allBx!=null  && allBx.isSelected() )   addBkm( bkm, to.getAllBkm() );
+         if( siaBx!=null  && siaBx.isSelected() )   addBkm( bkm, to.getSIABkm() );
+         if( ssaBx!=null  && ssaBx.isSelected() )   addBkm( bkm, to.getSSABkm() );
+         if( csBx!=null   && csBx.isSelected() )    addBkm( bkm, to.getCSBkm() );
+//         if( msBx!=null   && msBx.isSelected() )    to.queryByMoc();
+         if( hipsBx!=null && hipsBx.isSelected() )  addBkm( bkm, to.getHipsBkm() );
+         if( mocBx!=null  && mocBx.isSelected() )   addBkm( bkm, to.getMocBkm() );
+         
+//         J'EN SUIS LA
+//         if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
+//         if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
+//         if( tapBx!=null  && tapBx.isSelected() )   to.queryByTap();
+         
+         if( bkm.length()==0 ) return;
+         
+         String name = to.internalId;
+         FrameBookmarks fb = aladin.bookmarks.getFrameBookmarks();
+         fb.setVisibleEdit();
+         fb.createNewBookmark( name,"$TARGET,$RADIUS","Load "+name+" on the view", bkm.toString() );
+
+//         aladin.info("Pas encore implanté\nIl faudrait ajouté automatiquement un Bookmark sur cette collection");
+      }
+      
+      // Ajout d'une commande au bookmark en cours de construction
+      private void addBkm( StringBuilder bkm, String cmd) {
+         if( bkm.length()>0 ) bkm.append("\n");
+         bkm.append("   "+cmd );
       }
       
       void info() {
@@ -2829,13 +2858,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( params==null ) params = new StringBuilder(to.internalId);
             else params.append(","+to.internalId);
          }
+         String cmd = (mode==MultiMocMode.INTER?"iMOCs":"MOCs")+"=get Moc("+Tok.quote(params.toString())+(mode==MultiMocMode.INTER?",imoc":"")+")";
+         aladin.execAsyncCommand(cmd);
          
-         String label;
-         if( mode==MultiMocMode.UNION ) { params.append("&get=moc"); label="MOCs"; }
-         else { params.append("&get=imoc"); label="iMOCs"; }
-         
-         String u = aladin.glu.getURL("MocServer", params.toString(),true).toString();
-         aladin.execAsyncCommand(label+"=load "+u);
+//         String label;
+//         if( mode==MultiMocMode.UNION ) { params.append("&get=moc"); label="MOCs"; }
+//         else { params.append("&get=imoc"); label="iMOCs"; }
+//         
+//         String u = aladin.glu.getURL("MocServer", params.toString(),true).toString();
+//         aladin.execAsyncCommand(label+"=load "+u);
       }
    }
    

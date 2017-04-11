@@ -59,7 +59,7 @@
 %U <&AlaU>/nph-aladin.pl?frame=gludic
 
 %ActionName        CS
-%Description       Cone search query
+%Description       Generic CS query
 %Url               $4RA=$1&DEC=$2&SR=$3&VERB=3
 %Param.Description $4=Base URL (incl. '?')
 %Param.Description $1=Right Ascension
@@ -72,13 +72,13 @@
 %Param.DataType    $4=BaseUrl
 %ResultDataType    Mime(text/xml)
 %Aladin.Menu       VO protocols..
-%Aladin.XLabel     Generic CS query
+%Aladin.XLabel     Generic Cone Search query
 %Aladin.LabelPlane $4
 %Aladin.Profile    >9.6
 %DistribDomain     ALADIN
 
 %ActionName        SIA2
-%Description       Generic SIA v2 query
+%Description       Generic SIAv2 query
 %Url               $4REQUEST=query&POS=CIRCLE+$1+$2+$3
 %Param.Description $4=Base URL (incl. '?')
 %Param.Description $1=Right Ascension
@@ -91,13 +91,13 @@
 %Param.DataType    $4=BaseUrl
 %ResultDataType    Mime(text/xml)
 %Aladin.Menu       VO protocols..
-%Aladin.XLabel     Generic SIA v2 query
+%Aladin.XLabel     Generic Simple Image Access v2 query
 %Aladin.LabelPlane $4
 %Aladin.Profile    >9.6
 %DistribDomain     ALADIN
 
 %ActionName        SIA
-%Description       Generic SIA v1 query
+%Description       Generic SIAv1 query
 %Url               $4POS=$1,$2&SIZE=$3&FORMAT=image/fits
 %Param.Description $4=Base URL (incl. '?')
 %Param.Description $1=Right Ascension
@@ -110,7 +110,7 @@
 %Param.DataType    $4=BaseUrl
 %ResultDataType    Mime(text/xml)
 %Aladin.Menu       VO protocols..
-%Aladin.XLabel     Generic SIA v1 query
+%Aladin.XLabel     Generic Simple Image Access v1 query
 %Aladin.LabelPlane $4
 %Aladin.Profile    >9.6
 %DistribDomain     ALADIN
@@ -129,27 +129,59 @@
 %Param.DataType    $4=BaseUrl
 %ResultDataType    Mime(text/xml)
 %Aladin.Menu       VO protocols..
-%Aladin.XLabel     Generic SSA query
+%Aladin.XLabel     Generic Simple Spectra Access query
 %Aladin.LabelPlane $4
 %Aladin.Profile    >9.6
 %DistribDomain     ALADIN
 
-%A Vignettes.CDS
-%D Vignette de densite des tables VizieR et de Simbad
-%I Vignettes.CDS_0
-%I Vignettes.CDS_1
+%ActionName        MOC
+%Description       MOC server
+%Url               <&MOC_url>?$1&get=$2&order=$3
+%Param.Description $1=Id(s) ex: CDS/P/2MASS/J,...
+%Param.Description $2=Operation
+%Param.Value       $2=moc - Union
+%Param.Value       $2=imoc - Intersection
+%Param.Description $3=Specific order
+%Aladin.Menu       VO protocols..
+%Aladin.XLabel     Coverage server (MOC)
+%Aladin.LabelPlane MOC $1
+%Aladin.Profile    >9.6
+%DistribDomain     ALADIN
+%ResultDataType    Mime(moc/fits)
 
-%A Vignettes.CDS_0
-%D Vignette de densite des tables VizieR et de Simbad (alasky)
-%U http://alasky.unistra.fr/footprints/tables/$1/densityMap?format=png&size=small
-%P.D 1:Identification de la table (ex: vizier/II_337_out)
-%R Mime(image/png)
+%ActionName        MOC_url
+%Description       Base url of MocServer
+%SeeAction         MOC_1
+%SeeAction         MOC_2
+%DistribDomain     ALADIN
 
-%A Vignettes.CDS_1
-%D Vignette de densite des tables VizieR et de Simbad (alasky)
-%U http://alasky.unistra.fr/footprints/tables/$1/densityMap?format=png&size=small
-%P.D 1:Identification de la table (ex: vizier/II_337_out)
-%R Mime(image/png)
+%ActionName        MOC_1
+%Url               http://alasky.u-strasbg.fr/MocServer/query
+%DistribDomain     ALADIN
+
+%ActionName        MOC_2
+%Url               http://alaskybis.u-strasbg.fr/MocServer/query
+%DistribDomain     ALADIN
+
+%ActionName        Vignettes.CDS
+%Description       Vignette de densite des tables VizieR et de Simbad
+%SeeAction         Vignettes.CDS_0
+%SeeAction         Vignettes.CDS_1
+%DistribDomain     ALADIN
+
+%ActionName        Vignettes.CDS_0
+%Description       Vignette de densite des tables VizieR et de Simbad (alasky)
+%Url               http://alasky.u-strasbg.fr/footprints/tables/$1/densityMap?format=png&size=small
+%Param.Description $1=Identification de la table (ex: vizier/II_337_out)
+%ResultDataType    Mime(image/png)
+%DistribDomain     ALADIN
+
+%ActionName        Vignettes.CDS_1
+%Description       Vignette de densite des tables VizieR et de Simbad (alaskybis)
+%Url               http://alaskybis.u-strasbg.fr/footprints/tables/$1/densityMap?format=png&size=small
+%Param.Description $1=Identification de la table (ex: vizier/II_337_out)
+%ResultDataType    Mime(image/png)
+%DistribDomain     ALADIN
 
 
 

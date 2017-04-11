@@ -101,6 +101,7 @@ public class Plan implements Runnable {
    };
 
    protected String id=null;     // Identification unique (ex: CDS/I/231...)
+   protected String asId=null;   // Identification technique (cf. prepareLabel()
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
    protected int folder;	     // niveau du folder, 0 si aucun
    protected Slide slide=null;   // Slide pour la pile
@@ -1735,13 +1736,15 @@ public class Plan implements Runnable {
 
    /** Enregistrement du label du plan (ce qui apparaitra a cote du logo
     * du plan) en le modifiant éventuellement pour qu'il soit unique
+    * Mémorise également un éventuelle identificateur technique fourni
+    * en suffixe sous la forme " as xxx"
     */
    protected void setLabel(String label) {
       String x = getUniqueLabel(label);
       if( x==null ) return;
       this.label = x;
    }
-
+   
    /**
     * Retourne un label pour qu'il soit unique dans la pile
     * Change tous les \n en ' ' et les '/' en '.'

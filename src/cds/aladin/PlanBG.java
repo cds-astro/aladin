@@ -135,6 +135,7 @@ public class PlanBG extends PlanImage {
    static final int DRAWPOLARISATION=1;
 
    // pour l'affichage de la polarisation
+   protected boolean segmentIAUConv = false;
    private float segmentLenFactor = 1f;
    private int segmentThickness = 1;
    private float segmentDensityFactor = 1f;
@@ -264,10 +265,6 @@ public class PlanBG extends PlanImage {
       (new File(getCacheDir()+Util.FS+getCacheName())).mkdir();
       aladin.trace(3,"HEALPix local cache for "+getCacheName()+" is out of date => renamed => will be removed");
    }
-   
-   
-   
-
 
    /** Charge les propriétés à partir du fichier "properties" et en profite
     * 1) pour déterminer le meilleur site miroir (le cas échéant)
@@ -834,7 +831,7 @@ public class PlanBG extends PlanImage {
 
    protected void suite() {
 
-      if( this.label==null || this.label.trim().length()==0) setLabel(survey);
+      if( this.label==null || this.label.trim().length()==0) setLabel( id!=null ? id : survey);
       int defaultProjType = Aladin.PROTO ? aladin.projSelector.getProjType() 
                : aladin.configuration.getProjAllsky();
       if( co==null  ) {
@@ -3417,6 +3414,10 @@ public class PlanBG extends PlanImage {
       }
    }
 
+   protected boolean isSegmentIAUConv() {
+      return segmentIAUConv;
+   }
+   
    protected float getSegmentLenFactor() {
       return segmentLenFactor;
    }

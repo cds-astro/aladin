@@ -427,7 +427,8 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       if( !verif(Plan.IMAGE,target,qual, PlanImage.getFmt(format)+"/"+PlanImage.getRes(resol) ) ) return -1;
 
       // Generation automatique du label du plan
-      if( label==null) label=getPlanLabel(resol,qual);
+//      if( label==null) label=getPlanLabel(resol,qual);
+      label = getDefaultLabelIfRequired(label,getPlanLabel(resol,qual));
 
       // Positionnement de l'origine si non mentionne
       if( origin==null ) {

@@ -30,7 +30,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -208,7 +217,8 @@ public final class ServerFoV extends Server implements TableModel {
       FootprintBean fpBean = getFovBeanByID(instrument);
       // TODO : refactor, on pourrait peut etre remonter tout ça au niveau de PlanField, avec un seul constructeur qui chercherait les beans selon l'id
 
-      if( label==null ) label=instrument;
+//      if( label==null ) label=instrument;
+      label = getDefaultLabelIfRequired(label,instrument);
       if( fpBean!=null ) return aladin.calque.newPlanField(fpBean, target, label,roll);
       else return aladin.calque.newPlanField(target,roll,instrument,label);
    }

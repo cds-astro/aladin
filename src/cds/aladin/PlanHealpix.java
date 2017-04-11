@@ -31,10 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 
 import cds.allsky.Constante;
 import cds.allsky.Context;
@@ -363,6 +361,8 @@ public class PlanHealpix extends PlanBG {
       prop.setProperty(Constante.KEY_SIZERECORD, sizeRecord+"");
 
       prop.setProperty(Constante.OLD_ISPARTIAL, isPartial+"");
+      
+      prop.setProperty(Constante.OLD_ISIAU, segmentIAUConv+"");
 
       prop.setProperty(Constante.OLD_ARGB, isARGB+"");
 
@@ -480,6 +480,8 @@ public class PlanHealpix extends PlanBG {
             catch( Exception e) {}
             try { ordering = headerFits.getStringFromHeader("ORDERING"); }
             catch( Exception e) {}
+            try { segmentIAUConv = headerFits.getStringFromHeader("POLCCONV").equalsIgnoreCase("IAU"); }
+            catch( Exception e) {}
 
             // Je saute l'éventuel baratin de la première HDU
             try {
@@ -527,8 +529,13 @@ public class PlanHealpix extends PlanBG {
       naxis1 = sizeRecord = headerFits.getIntFromHeader("NAXIS1");
       naxis2 = nRecord = headerFits.getIntFromHeader("NAXIS2");
       nField = headerFits.getIntFromHeader("TFIELDS");
-      if( ordering==null ) ordering = headerFits.getStringFromHeader("ORDERING");
-
+      if( ordering==null ) {
+         ordering = headerFits.getStringFromHeader("ORDERING");
+      }
+      
+      try { segmentIAUConv = headerFits.getStringFromHeader("POLCCONV").equalsIgnoreCase("IAU"); }
+      catch( Exception e) {}
+      if( segmentIAUConv ) Aladin.trace(3, "POLCCONV: IAU");
 
       Aladin.trace(3, "sizeRecord: "+sizeRecord);
       Aladin.trace(3, "nRecord: "+nRecord);
@@ -838,6 +845,8 @@ public class PlanHealpix extends PlanBG {
          isGZ = new Boolean(prop.getProperty(Constante.KEY_GZ)).booleanValue();
 
          isARGB = new Boolean(prop.getProperty(Constante.OLD_ARGB)).booleanValue();
+
+         segmentIAUConv = new Boolean(prop.getProperty(Constante.OLD_ISIAU)).booleanValue();
 
          originalPath = prop.getProperty(Constante.KEY_ORIGINAL_PATH);
 
@@ -1273,13 +1282,48 @@ public class PlanHealpix extends PlanBG {
       double nsideImage = Math.sqrt(nbNeededImages/12L);
       return Math.log(nsideImage)/Math.log(2);
    }
-
-   protected boolean hasPolarisationData() {
-      if( tfieldNames==null ) return false;
-      List<String> l = Arrays.asList(tfieldNames);
-      return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION") || l.contains("U_Stokes"))
-            && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION") || l.contains("Q_Stokes"));
+   
+   
+   // Modif PF - Avril 2017 (liste fournie par Eric Hivon et Jan Tauber)
+   static private String UPOL[] = {
+         "U-POLARIZATION", // Map PLANCK DR2
+         "U_POLARIZATION", // On ne sait jamais !
+         "U-POLARISATION", // Fortran 90
+         "U_POLARISATION", // IDL
+         "U-Pol",          // C++
+         "U_STOKES",       // Python (default)
+   };
+   
+   static private String QPOL[] = {
+         "Q-POLARIZATION", // Map PLANCK DR2
+         "Q_POLARIZATION", // On ne sait jamais !
+         "Q-POLARISATION", // Fortran 90
+         "Q_POLARISATION", // IDL
+         "Q-Pol",          // C++
+         "Q_STOKES",       // Python (default)
+   };
+   
+   protected int getIdxPolaU() { return getIdxPola(UPOL); }
+   protected int getIdxPolaQ() { return getIdxPola(QPOL); }
+   private int getIdxPola( String [] polKeys) {
+      if( tfieldNames==null ) return -1;
+      for( int i=0; i<tfieldNames.length; i++) {
+         if( Util.indexInArrayOf(tfieldNames[i], polKeys, true)>=0 ) return i;
+      }
+      return -1;
    }
+   
+   protected boolean hasPolarisationData() {
+      return getIdxPolaU()>=0 && getIdxPolaQ()>=0 ;
+   }
+
+   // Ancienne méthode de TB
+//   protected boolean hasPolarisationData() {
+//      if( tfieldNames==null ) return false;
+//      List<String> l = Arrays.asList(tfieldNames);
+//      return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION") || l.contains("U_Stokes"))
+//            && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION") || l.contains("Q_Stokes"));
+//   }
 
    protected boolean isPartial() { return isPartial; }
 
@@ -1372,20 +1416,14 @@ public class PlanHealpix extends PlanBG {
       // prendre le PIXELMIN/PIXELMAX n'a pas beaucoup de sens pour l'amplitude, on prend tout le range systématiquement
       String minKw = "DATAMIN";
       String maxKw = "DATAMAX";
-      double dataMinUAllsky = Double.parseDouble(fitsU.headerFits
-            .getStringFromHeader(minKw));
-      double dataMaxUAllsky = Double.parseDouble(fitsU.headerFits
-            .getStringFromHeader(maxKw));
+      double dataMinUAllsky = Double.parseDouble(fitsU.headerFits.getStringFromHeader(minKw));
+      double dataMaxUAllsky = Double.parseDouble(fitsU.headerFits.getStringFromHeader(maxKw));
 
-      double dataMinQAllsky = Double.parseDouble(fitsQ.headerFits
-            .getStringFromHeader(minKw));
-      double dataMaxQAllsky = Double.parseDouble(fitsQ.headerFits
-            .getStringFromHeader(maxKw));
+      double dataMinQAllsky = Double.parseDouble(fitsQ.headerFits.getStringFromHeader(minKw));
+      double dataMaxQAllsky = Double.parseDouble(fitsQ.headerFits.getStringFromHeader(maxKw));
 
-      double maxU = Math.max(Math.abs(dataMinUAllsky), Math
-            .abs(dataMaxUAllsky));
-      double maxQ = Math.max(Math.abs(dataMinQAllsky), Math
-            .abs(dataMaxQAllsky));
+      double maxU = Math.max(Math.abs(dataMinUAllsky), Math.abs(dataMaxUAllsky));
+      double maxQ = Math.max(Math.abs(dataMinQAllsky), Math.abs(dataMaxQAllsky));
       //        double minU = Math.min(Math.abs(dataMinUAllsky), Math
       //                .abs(dataMaxUAllsky));
       //        double minQ = Math.min(Math.abs(dataMinQAllsky), Math
@@ -1417,26 +1455,30 @@ public class PlanHealpix extends PlanBG {
                   return;
                }
                // on cree les boules pour Q et U
-               List<String> l = Arrays.asList(tfieldNames);
-               int idxPolaU = l.indexOf("U-POLARISATION");
-               int idxPolaQ = l.indexOf("Q-POLARISATION");
-               // les donnees WMAP ont des noms de champ legerement
-               // differents
-               // :(
-               if (idxPolaU < 0) idxPolaU = l.indexOf("U_POLARISATION");
-               if (idxPolaQ < 0) idxPolaQ = l.indexOf("Q_POLARISATION");
-               if (idxPolaU < 0) idxPolaU = l.indexOf("U_Stokes");
-               if (idxPolaQ < 0) idxPolaQ = l.indexOf("Q_Stokes");
+               
+               // Ancien code de TB
+//               List<String> l = Arrays.asList(tfieldNames);
+//               int idxPolaU = l.indexOf("U-POLARISATION");
+//               int idxPolaQ = l.indexOf("Q-POLARISATION");
+//               // les donnees WMAP ont des noms de champ legerement
+//               // differents
+//               // :(
+//               if (idxPolaU < 0) idxPolaU = l.indexOf("U_POLARISATION");
+//               if (idxPolaQ < 0) idxPolaQ = l.indexOf("Q_POLARISATION");
+//               if (idxPolaU < 0) idxPolaU = l.indexOf("U_Stokes");
+//               if (idxPolaQ < 0) idxPolaQ = l.indexOf("Q_Stokes");
+               
+               // Nouveau code PF - Avril 2017
+               int idxPolaU = getIdxPolaU();
+               int idxPolaQ = getIdxPolaQ();
 
                if (idxPolaU < 0 || idxPolaQ < 0) {
                   System.err.println("Can't find polarisation indexes");
                   return;
                }
 
-               String dirnamePolaU = getDirname() + Util.FS
-                     + dirNameForIdx(idxPolaU);
-               String dirnamePolaQ = getDirname() + Util.FS
-                     + dirNameForIdx(idxPolaQ);
+               String dirnamePolaU = getDirname() + Util.FS + dirNameForIdx(idxPolaU);
+               String dirnamePolaQ = getDirname() + Util.FS + dirNameForIdx(idxPolaQ);
 
                if (needProcessing(dirnamePolaU, false)) {
                   // mode plus proche voisin pour les all sky de
@@ -1466,12 +1508,10 @@ public class PlanHealpix extends PlanBG {
                   fitsQ.loadFITS(getAllskyFilePath(idxPolaQ, 3));
 
                   if (idxTFormToRead == POLA_AMPLITUDE_MAGIC_CODE) {
-                     double[] dataExtrema = getPolaAmpMinMax(fitsQ,
-                           fitsU, true);
+                     double[] dataExtrema = getPolaAmpMinMax(fitsQ, fitsU, true);
                      dataMinPola = dataExtrema[0];
                      dataMaxPola = dataExtrema[1];
-                     double[] pixelExtrema = getPolaAmpMinMax(fitsQ,
-                           fitsU, false);
+                     double[] pixelExtrema = getPolaAmpMinMax(fitsQ, fitsU, false);
                      pixelMinPola = pixelExtrema[0];
                      pixelMaxPola = pixelExtrema[1];
                   } else if (idxTFormToRead == POLA_ANGLE_MAGIC_CODE) {
@@ -1488,7 +1528,7 @@ public class PlanHealpix extends PlanBG {
                   }
                   computePolarisation(fitsOut, fitsQ, fitsU, 3, npix,
                         true, dataMinPola, dataMaxPola, pixelMinPola,
-                        pixelMaxPola, idxTFormToRead);
+                        pixelMaxPola, idxTFormToRead, segmentIAUConv);
                   fitsOut = null;
                } catch (Exception e1) {
                   e1.printStackTrace();
@@ -1499,31 +1539,22 @@ public class PlanHealpix extends PlanBG {
                int deepestNorder = (int) log2(newNSideImage);
 
                for (int norder = 3; norder <= deepestNorder; norder++) {
-                  int nbPix = (int) (12 * Math
-                        .pow(CDSHealpix.pow2(norder), 2));
+                  int nbPix = (int) (12 * Math.pow(CDSHealpix.pow2(norder), 2));
                   for (int npix = 0; npix < nbPix; npix++) {
                      try {
-                        fitsU.loadFITS(getFilePath(idxPolaU, norder,
-                              npix)
-                              + ".fits");
-                        fitsQ.loadFITS(getFilePath(idxPolaQ, norder,
-                              npix)
-                              + ".fits");
+                        fitsU.loadFITS(getFilePath(idxPolaU, norder, npix) + ".fits");
+                        fitsQ.loadFITS(getFilePath(idxPolaQ, norder, npix) + ".fits");
                      } catch (Exception e) {
                         e.printStackTrace();
                         continue;
                      }
 
                      try {
-                        if (fitsOut == null
-                              && idxTFormToRead != POLA_SEGMENT_MAGIC_CODE) {
-                           fitsOut = new Fits(fitsU.width,
-                                 fitsU.heightCell, -32);
+                        if (fitsOut == null && idxTFormToRead != POLA_SEGMENT_MAGIC_CODE) {
+                           fitsOut = new Fits(fitsU.width, fitsU.heightCell, -32);
                         }
-                        computePolarisation(fitsOut, fitsQ, fitsU,
-                              norder, npix, false, dataMinPola,
-                              dataMaxPola, pixelMinPola,
-                              pixelMaxPola, idxTFormToRead);
+                        computePolarisation(fitsOut, fitsQ, fitsU, norder, npix, false, dataMinPola,
+                              dataMaxPola, pixelMinPola, pixelMaxPola, idxTFormToRead, segmentIAUConv);
                      } catch (Exception e1) {
                         e1.printStackTrace();
                         continue;
@@ -1538,8 +1569,7 @@ public class PlanHealpix extends PlanBG {
 
                // écriture fichier de properties dans repertoire de
                // polarisation
-               writePropertiesFile(getDirname() + Util.FS
-                     + dirNameForIdx(idxTFormToRead));
+               writePropertiesFile(getDirname() + Util.FS + dirNameForIdx(idxTFormToRead));
             }
          } catch (Exception e) {
             e.printStackTrace();
@@ -1562,12 +1592,13 @@ public class PlanHealpix extends PlanBG {
     * @param dataMax
     * @param pixelMin
     * @param pixelMax
+    * @param polcconIAU Convention IAU: true => inversion du signe su U
     *
     * @param mode:
     */
    private void computePolarisation(Fits fitsOut, Fits fitsQ, Fits fitsU,
          int norder, int npix, boolean allsky,
-         double dataMin, double dataMax, double pixelMin, double pixelMax, int mode)
+         double dataMin, double dataMax, double pixelMin, double pixelMax, int mode, boolean polcconvIAU)
                throws Exception {
       HeaderFits extHeader;
       int mybitpix = -32;
@@ -1576,9 +1607,7 @@ public class PlanHealpix extends PlanBG {
       h = fitsQ.height;
 
       try {
-         String header = "XTENSION=IMAGE\nBITPIX="+mybitpix
-               +"\nNAXIS=2\nNAXIS1="+w
-               +"\nNAXIS2="+h;
+         String header = "XTENSION=IMAGE\nBITPIX="+mybitpix +"\nNAXIS=2\nNAXIS1="+w +"\nNAXIS2="+h;
          if (mode!=POLA_SEGMENT_MAGIC_CODE) {
             header += "\nPIXELMIN="+pixelMin+"\nPIXELMAX="+pixelMax;
             header += "\nDATAMIN="+dataMin+"\nDATAMAX="+dataMax;
@@ -1588,8 +1617,7 @@ public class PlanHealpix extends PlanBG {
             Aladin.trace(3, "Allsky header:\n"+header);
          }
 
-      }
-      catch(Exception e) {
+      } catch(Exception e) {
          e.printStackTrace();
          return;
       }
@@ -1611,6 +1639,9 @@ public class PlanHealpix extends PlanBG {
       for (int x = 0; x < w; x++) {
          for (int y = 0; y < h; y++) {
             valU = fitsU.getPixelFull(x, y);
+            if( polcconvIAU ) {
+               valU = -valU;     // PF - Avril 2017 - info par Eric Hivon
+            }
             valQ = fitsQ.getPixelFull(x, y);
             // on s'intéresse à la norme
             if (mode==POLA_AMPLITUDE_MAGIC_CODE) {

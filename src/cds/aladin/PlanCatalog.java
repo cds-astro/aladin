@@ -122,8 +122,8 @@ public class PlanCatalog extends Plan {
       this.aladin= aladin;
       type       = CATALOG;
       c          = Couleur.getNextDefault(aladin.calque);
-      id=label;
       setLabel(label);
+      id=this.label;
       this.objet = objet;
       this.param = param;
       this.copyright  = from;

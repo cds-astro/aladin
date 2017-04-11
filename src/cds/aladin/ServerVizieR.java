@@ -326,9 +326,23 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
 
 //System.out.println("criteria ["+criteria+"]");
 
-      String catalogs=criteria;	// EN PREMIERE APPROCHE...
-      if( label==null ) label=catalogs;
-      return creatVizieRPlane(target,radius,catalogs,label,institute,allColumn);
+      String catalogs= addCDSPrefix(criteria);	// EN PREMIERE APPROCHE...
+//      if( label==null ) label=catalogs;
+      label = getDefaultLabelIfRequired(label,catalogs);
+      return creatVizieRPlane(target,radius,criteria,label,institute,allColumn);
+   }
+   
+   // Ajoute le préfixe "CDS/" devant chaque nom de table si ce n'est déjà fait
+   private String addCDSPrefix( String s ) {
+      StringBuilder res=null;
+      Tok tok = new Tok(s,", ");
+      while( tok.hasMoreTokens() ) {
+         String s1 = tok.nextToken();
+         if( !s1.startsWith("CDS/") ) s1="CDS/"+s1;
+         if( res==null ) res = new StringBuilder(s1);
+         else res.append(","+s1);
+      }
+      return res.toString();
    }
 
    /** Creation d'un plan de maniere specifique */

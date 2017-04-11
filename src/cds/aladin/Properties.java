@@ -913,12 +913,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                PropPanel.addFilet(p, g, c);
                PropPanel.addCouple(p, CURRENTFIELD, new JLabel(ph.tfieldNames[ph.idxTFormToRead]), g, c);
             }
+            
+            boolean hasPolarisationData = ph.hasPolarisationData();
 
-            if( ph.hasPolarisationData() || ph.tfieldNames.length>1 ) {
+            if( hasPolarisationData || ph.tfieldNames.length>1 ) {
                PropPanel.addFilet(p, g, c);
             }
             // bouton pour demander affichage de la polarisation
-            if (ph.hasPolarisationData()) {
+            if (hasPolarisationData) {
                JPanel pPola = new JPanel(new GridLayout(0, 1));
                btnDisplayPola = new JButton(DISPLAYPOLA);
                btnDisplayPola.addActionListener(this);
@@ -1684,7 +1686,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          param.append("$RADIUS");
       }
       String param1 = param.length()>0 ? param.toString() : null;
-      fb.createNewBookmark(name,param1,"Load "+plan.label+(param1!=null?"":" on current position"), code);
+      fb.createNewBookmark(name,param1,"Load "+plan.label+(param1!=null?"":" on the view"), code);
    }
 
    private void apply() {

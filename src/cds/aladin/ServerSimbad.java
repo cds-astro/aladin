@@ -304,7 +304,8 @@ public class ServerSimbad extends Server  {
       
       String s = Glu.quote(target)+" "+Glu.quote(radius);
 
-      if( label==null ) label=getNom();
+//      if( label==null ) label=getNom();
+      label = getDefaultLabelIfRequired(label,"CDS/Simbad");
 
       if( (u=aladin.glu.getURL(getTagGlu(),s))==null ) {
          ball.setMode(Ball.HS);

@@ -836,20 +836,6 @@ public class TreeObjDir extends TreeObj {
       else loadHips();
    }
 
-   protected void loadHips() {
-      String rad="";
-      String trg="";
-      try {
-         rad = " "+Coord.getUnit( aladin.view.getCurrentView().getTaille() );
-         trg = " "+aladin.view.getCurrentView().getCentre();
-      } catch( Exception e ) { }
-      
-      String id = Tok.quote(internalId!=null?internalId:label);
-      String mode = isTruePixels() ? ",fits":"";
-      String cmd = id+"=get hips("+id+mode+")"+trg+rad;
-      aladin.execAsyncCommand(cmd);
-   }
-   
    /** Open the TAP form associated to this collection => Chaitra */
    void queryByTap() {
       // GLU TAP tag
@@ -889,73 +875,93 @@ public class TreeObjDir extends TreeObj {
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
-   protected void loadSSA() {
-      if( prop==null ) return;
-      
+   protected void loadSSA() { aladin.execAsyncCommand( getSSACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1) ); }
+   protected String getSSABkm() { return getSSACmd()+" $TARGET $RADIUS"; }
+   protected String getSSACmd() {
+      // Glu tags spécifiques ?
       String gluTag = prop.get("ssa_glutag");
+      
+      // URL de base ?
+      // On passe tout de même par le ID afin d'avoir une commande script clean
+      // => voir GluServer pour la résolution internalId => Url de base
       if( gluTag==null && prop.get("ssa_service_url")!=null )  gluTag = "SSA("+internalId+")";
 
-      if( gluTag==null ) {
-         aladin.console.printError("loadSIA error for "+internalId);
-         return;
-      }
-      
-      String cmd = "get "+gluTag+" "+getDefaultTarget()+" "+getDefaultRadius(1);
-      aladin.execAsyncCommand(cmd);
+      return "get "+gluTag;
    }
    
+   
    /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
-   protected void loadSIA() {
-      if( prop==null ) return;
-      
+   protected void loadSIA() { aladin.execAsyncCommand( getSIACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1) ); }
+   protected String getSIABkm() { return getSIACmd()+" $TARGET $RADIUS"; }
+   private String getSIACmd() {
       // Glu tags spécifiques ?
       String gluTag = prop.get("sia_glutag");
       if( gluTag==null ) gluTag = prop.get("sia2_glutag");
       
       // URL de base ?
+      // On passe tout de même par le ID afin d'avoir une commande script clean
+      // => voir GluServer pour la résolution internalId => Url de base
       if( gluTag==null && prop.get("sia2_service_url")!=null ) gluTag = "SIA2("+internalId+")";
       if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
       
-      if( gluTag==null ) {
-         aladin.console.printError("loadSIA error for "+internalId);
-         return;
-      }
-      
-      String cmd = "get "+gluTag+" "+getDefaultTarget()+" "+getDefaultRadius(1);
-      aladin.execAsyncCommand(cmd);
+      return "get "+gluTag;
    }
-
+   
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
-   protected void loadCS() {
+   protected void loadCS() { aladin.execAsyncCommand( getCSCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected String getCSBkm() { return getCSCmd()+" $TARGET $RADIUS"; }
+   private String getCSCmd() {
       String cmd = null;
-      String param = getDefaultTarget()+" "+getDefaultRadius(15);
 
       // On passe par VizieR/Simbad via la commande script adaptée
       if( isCDSCatalog() ) {
-
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
-
-         if( internalId.startsWith("CDS/Simbad") ) cmd = Tok.quote(internalId+getSuffix())+"=get Simbad "+param;
-         else cmd = Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allcolumns) "+param;
+         if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad";
+         else cmd = "get VizieR("+cat+",allcolumns)";
 
       // Accès direct CS
-      } else if( prop!=null && (prop.get("cs_service_url")!=null) ) cmd = "get CS("+internalId+") "+param;
+      } else if( prop!=null && (prop.get("cs_service_url")!=null) ) cmd = "get CS("+internalId+")";
 
-      if( cmd==null ) {
-         aladin.console.printError("loadCS error for "+internalId);
-         return;
-      }
-
-      aladin.execAsyncCommand(cmd);
+      return cmd;
    }
    
-  /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
-  protected void loadAll() {
+   /** Génération et exécution de la requête script correspondant au protocole MOC */
+   protected void loadMoc( ) { aladin.execAsyncCommand( getMocCmd() ); }
+   protected String getMocBkm() { return getMocCmd(); }
+   private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+")"; }
+
+// protected void loadHips() {
+   // String rad="";
+   // String trg="";
+   // try {
+   //    rad = " "+Coord.getUnit( aladin.view.getCurrentView().getTaille() );
+   //    trg = " "+aladin.view.getCurrentView().getCentre();
+   // } catch( Exception e ) { }
+   // 
+   // String id = Tok.quote(internalId!=null?internalId:label);
+   // String mode = isTruePixels() ? ",fits":"";
+   // String cmd = id+"=get hips("+id+mode+")"+trg+rad;
+   // aladin.execAsyncCommand(cmd);
+   //}
+
+   /** Génération et exécution de la requête script correspondant au protocole HiPS */
+   protected void loadHips() { aladin.execAsyncCommand( getHipsCmd()+" "+getDefaultTarget()+" "+getDefaultRadius() ); }
+   protected String getHipsBkm() { return getHipsCmd()+" $TARGET $RADIUS"; }
+   protected String getHipsCmd() {
+      String id = Tok.quote(internalId!=null?internalId:label);
+      String mode = isTruePixels() ? ",fits":"";
+      String cmd = "get hips("+id+mode+")";
+      return cmd;
+   }
+
+   /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
+   protected void loadAll() { aladin.execAsyncCommand( getLoadAllCmd() ); }
+   protected String getAllBkm() { return getLoadAllCmd(); }
+   private String getLoadAllCmd() {
       int i = internalId.indexOf('/');
       String cat = internalId.substring(i+1);
-      String cmd = Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allsky,allcolumns)";
-      aladin.execAsyncCommand(cmd);
+      return Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allsky,allcolumns)";
    }
    
    static private String getSuffix() { return "~"+(++SUFFIX); }
@@ -983,7 +989,7 @@ public class TreeObjDir extends TreeObj {
 //      return  aladin.view.getCurrentView().getTaille();
 //   }
 //   
-//   private String getDefaultRadius() { return getDefaultRadius(-1); }
+   private String getDefaultRadius() { return getDefaultRadius(-1); }
    private String getDefaultRadius(double maxRad) {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
          return "14'";
@@ -1143,19 +1149,6 @@ public class TreeObjDir extends TreeObj {
       getPanel().add(b);
    }
 
-   void loadMoc() {
-//      MyInputStream mis = null;
-//      try {
-//         mis = Util.openAnyStream( getUrl()+"/Moc.fits" );
-//         aladin.calque.newPlanMOC(mis,label+" MOC");
-//      }
-//      catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-      
-      
-      String u = getMocUrl();
-      aladin.execAsyncCommand("'MOC "+internalId+"'=load "+u);
-   }
-   
    void loadProgenitors() {
       String progen = getProgenitorsUrl();
       if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;

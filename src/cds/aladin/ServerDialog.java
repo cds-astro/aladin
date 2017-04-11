@@ -204,8 +204,8 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
             if( i < 0 ) {
                i = sv.size(); // Indice de son emplacement
                sv.addElement(new ServerFolder(aladin, sTmp.aladinMenu, i,
-                     type == Server.IMAGE ? ServerFolder.LEFT :
-                        type == Server.CATALOG ? ServerFolder.RIGHT : ServerFolder.TOP ));
+                     sTmp.type == Server.IMAGE ? ServerFolder.LEFT :
+                        sTmp.type == Server.CATALOG || sTmp.type == Server.MOC ? ServerFolder.RIGHT : ServerFolder.TOP ));
             }
             ((ServerFolder) sv.elementAt(i)).addItem(sTmp.aladinLabel);
          }
@@ -394,8 +394,6 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
             
          } else {
             sv.addElement(new ServerSimbad(aladin));
-            //            sv.addElement(vizierBestof = new BestofServer(aladin,
-            //                  ((VizieRServer) svizier).vSurveys));
             sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
                   ((ServerVizieR) svizier).vSurveys));
             sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
@@ -405,7 +403,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       }
 
       // Les serveurs Catalog via GLU
-      if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.CATALOG);
+      if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.CATALOG | Server.MOC);
 
       // Tri des serveurs pour mettre ceux qui sont sous "others" en fin de
       // liste
@@ -421,7 +419,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       discoveryServer = null;
 
       // Le mode discovery
-      if( !Aladin.OUTREACH && Aladin.NETWORK ) {
+      if( !Aladin.OUTREACH && Aladin.NETWORK && !Aladin.PROTO) {
          discoveryServer = new ServerAllVO(aladin);
          sv.addElement(discoveryServer);
       }
