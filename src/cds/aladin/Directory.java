@@ -2776,12 +2776,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( siaBx!=null  && siaBx.isSelected() )   addBkm( bkm, to.getSIABkm() );
          if( ssaBx!=null  && ssaBx.isSelected() )   addBkm( bkm, to.getSSABkm() );
          if( csBx!=null   && csBx.isSelected() )    addBkm( bkm, to.getCSBkm() );
-//         if( msBx!=null   && msBx.isSelected() )    to.queryByMoc();
          if( hipsBx!=null && hipsBx.isSelected() )  addBkm( bkm, to.getHipsBkm() );
          if( mocBx!=null  && mocBx.isSelected() )   addBkm( bkm, to.getMocBkm() );
+         if( progBx!=null && progBx.isSelected() )  addBkm( bkm, to.getProgenitorsBkm() );
          
-//         J'EN SUIS LA
-//         if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
+         // LES 3 AUTRES ACCES NE SONT PAS ACTUELLEMENT ACCESSIBLES PAR COMMANDE SCRIPT
+         // => PAS DE BOOKMARK POSSIBLE
+//         if( msBx!=null   && msBx.isSelected() )    to.queryByMoc();
 //         if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
 //         if( tapBx!=null  && tapBx.isSelected() )   to.queryByTap();
          
@@ -2791,8 +2792,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          FrameBookmarks fb = aladin.bookmarks.getFrameBookmarks();
          fb.setVisibleEdit();
          fb.createNewBookmark( name,"$TARGET,$RADIUS","Load "+name+" on the view", bkm.toString() );
-
-//         aladin.info("Pas encore implanté\nIl faudrait ajouté automatiquement un Bookmark sur cette collection");
       }
       
       // Ajout d'une commande au bookmark en cours de construction

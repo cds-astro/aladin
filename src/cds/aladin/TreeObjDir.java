@@ -931,28 +931,27 @@ public class TreeObjDir extends TreeObj {
    protected String getMocBkm() { return getMocCmd(); }
    private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+")"; }
 
-// protected void loadHips() {
-   // String rad="";
-   // String trg="";
-   // try {
-   //    rad = " "+Coord.getUnit( aladin.view.getCurrentView().getTaille() );
-   //    trg = " "+aladin.view.getCurrentView().getCentre();
-   // } catch( Exception e ) { }
-   // 
-   // String id = Tok.quote(internalId!=null?internalId:label);
-   // String mode = isTruePixels() ? ",fits":"";
-   // String cmd = id+"=get hips("+id+mode+")"+trg+rad;
-   // aladin.execAsyncCommand(cmd);
-   //}
-
    /** Génération et exécution de la requête script correspondant au protocole HiPS */
-   protected void loadHips() { aladin.execAsyncCommand( getHipsCmd()+" "+getDefaultTarget()+" "+getDefaultRadius() ); }
+   protected void loadHips() {
+      String trg = getDefaultTarget();
+      String s = trg==null ? "" : " "+trg+" "+getDefaultRadius();
+      aladin.execAsyncCommand( getHipsCmd()+s );
+   }
    protected String getHipsBkm() { return getHipsCmd()+" $TARGET $RADIUS"; }
    protected String getHipsCmd() {
       String id = Tok.quote(internalId!=null?internalId:label);
-      String mode = isTruePixels() ? ",fits":"";
-      String cmd = "get hips("+id+mode+")";
+      String mode = !isCatalog() && isTruePixels() ? ",fits":"";
+      String cmd = "get HiPS("+id+mode+")";
       return cmd;
+   }
+   
+   /** Génération et exécution de la requête script correspondant à l'accès aux progéniteurs */
+   protected void loadProgenitors() { aladin.execAsyncCommand( getProgenitorsCmd() ); }
+   protected String getProgenitorsBkm() { return getProgenitorsCmd(); }
+   private String getProgenitorsCmd() {
+      String progen = getProgenitorsUrl();
+      if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
+      return Tok.quote("PGN "+internalId)+"=load "+progen;
    }
 
    /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
@@ -961,11 +960,8 @@ public class TreeObjDir extends TreeObj {
    private String getLoadAllCmd() {
       int i = internalId.indexOf('/');
       String cat = internalId.substring(i+1);
-      return Tok.quote(internalId+getSuffix())+"=get VizieR("+cat+",allsky,allcolumns)";
+      return "get VizieR("+cat+",allsky,allcolumns)";
    }
-   
-   static private String getSuffix() { return "~"+(++SUFFIX); }
-   static private int SUFFIX = 0;
    
    private String getDefaultTarget() {
       Coord coo;
@@ -975,7 +971,8 @@ public class TreeObjDir extends TreeObj {
          coo = getTarget();
          s = coo==null ? null : coo.toString();
          if( s!=null ) return s;
-         aladin.info("Pas encore implanté, il faudrait demander Target+Radius");
+         return null;
+//         aladin.info("Pas encore implanté, il faudrait demander Target+Radius");
       }
       coo = aladin.view.getCurrentView().getCooCentre();
       coo = aladin.localisation.ICRSToFrame( coo );
@@ -1149,12 +1146,6 @@ public class TreeObjDir extends TreeObj {
       getPanel().add(b);
    }
 
-   void loadProgenitors() {
-      String progen = getProgenitorsUrl();
-      if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
-      aladin.execAsyncCommand("'PGN "+internalId+"'=load "+progen);
-   }
-   
    void loadDensityMap() {
       int off1 = internalId.indexOf('/');
       int off2 = internalId.lastIndexOf('/');
