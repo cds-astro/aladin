@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -74,7 +75,7 @@ public class BuilderMirror extends BuilderTiles {
       
       InputStreamReader in1=null;
       try {
-         in1 = new InputStreamReader( Util.openAnyStream( context.getInputPath()+"/properties") );
+         in1 = new InputStreamReader( Util.openAnyStream( context.getInputPath()+"/properties"), "UTF-8" );
          prop.load(in1);
       } finally{  if( in1!=null ) in1.close(); }
 
@@ -164,7 +165,7 @@ public class BuilderMirror extends BuilderTiles {
          MyProperties localProp = new MyProperties();
          in1 = null;
          try {
-            in1 = new InputStreamReader( Util.openAnyStream( context.getOutputPath()+"/properties") );
+            in1 = new InputStreamReader( Util.openAnyStream( context.getOutputPath()+"/properties") , "UTF-8");
             localProp.load(in1);
 
             String dLocal = localProp.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
@@ -249,9 +250,9 @@ public class BuilderMirror extends BuilderTiles {
          }
          prop.replaceValue(Constante.KEY_HIPS_STATUS, status1.toString());
 
-         FileOutputStream out = null;
+         OutputStreamWriter out = null;
          try {
-            out = new FileOutputStream( context.getOutputPath()+"/properties");
+            out = new OutputStreamWriter( new FileOutputStream( context.getOutputPath()+"/properties"), "UTF-8");
             prop.store( out, null);
          } finally {  if( out!=null ) out.close(); }
       }

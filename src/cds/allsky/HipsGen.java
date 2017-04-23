@@ -36,6 +36,7 @@ import cds.aladin.Tok;
 import cds.allsky.Context.JpegMethod;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 public class HipsGen {
 
@@ -45,6 +46,7 @@ public class HipsGen {
    private boolean flagConcat=false;
    private boolean flagMirror=false;
    private boolean flagUpdate=false;
+   private boolean flagLint=false;
    private boolean flagMethod=false;
    private boolean flagRGB=false;
    private boolean flagMapFits=false;
@@ -98,7 +100,9 @@ public class HipsGen {
    
    /** Retourne le paramètre qui remplace un paramètre devenu obsolète, null sinon */
    private String obsolete(String s) {
-      if( s.equalsIgnoreCase("ivorn") )      return "id";
+      
+      if( s.equalsIgnoreCase("ivorn") )      return "creator_did";
+      if( s.equalsIgnoreCase("id") )         return "creator_did";
       if( s.equalsIgnoreCase("input") )      return "in";
       if( s.equalsIgnoreCase("output") )     return "out";
       if( s.equalsIgnoreCase("pixel") )      return "mode";
@@ -107,10 +111,23 @@ public class HipsGen {
       if( s.equalsIgnoreCase("cutting") )    return "partitioning";
       if( s.equalsIgnoreCase("polygon") )    return "fov";
       if( s.equalsIgnoreCase("jpegMethod") ) return "method";
-      if( s.equalsIgnoreCase("dataCut") )    return "id";
-      if( s.equalsIgnoreCase("ivorn") )      return "pixelRange";
+      if( s.equalsIgnoreCase("dataCut") )    return "hips_data_range";
+      if( s.equalsIgnoreCase("pixelRange") ) return "hips_data_range";
+      if( s.equalsIgnoreCase("pixelCut") )   return "hips_pixel_cut";
       if( s.equalsIgnoreCase("histoPercent"))return "skyval";
       if( s.equalsIgnoreCase("publisher") )  return "creator";
+      if( s.equalsIgnoreCase("label") )      return "obs_title";
+      if( s.equalsIgnoreCase("publisher") )  return "hips_creator";
+      if( s.equalsIgnoreCase("creator") )    return "hips_creator";
+      if( s.equalsIgnoreCase("pixel") )      return "mode";
+      if( s.equalsIgnoreCase("blocking") )   return "partitioning";
+      if( s.equalsIgnoreCase("cutting") )    return "partitioning";
+      if( s.equalsIgnoreCase("circle") )     return "radius";
+      if( s.equalsIgnoreCase("status") )     return "hips_status";
+      if( s.equalsIgnoreCase("order") )      return "hips_order";
+      if( s.equalsIgnoreCase("minOrder") )   return "hips_min_order";
+      if( s.equalsIgnoreCase("frame") )      return "hips_frame";
+      
       return null;
    }
 
@@ -132,103 +149,74 @@ public class HipsGen {
       System.out.println("OPTION: "+opt + "=" + val);
       
       String alt=obsolete(opt);
-      if( alt!=null ) context.warning("Obsoleted parameter, prefer \""+alt+"\"");
+      if( alt!=null ) {
+         context.warning("Deprecated parameter, use \""+alt+"\"");
+         opt=alt;
+      }
 
       // System.out.println(opt +" === " +val);
       if( opt.equalsIgnoreCase("h")) {
          usage(launcher);
-      } else if (opt.equalsIgnoreCase("verbose"))    { Context.setVerbose(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("blank"))      { context.setBlankOrig(Double.parseDouble(val));
-      } else if (opt.equalsIgnoreCase("order"))      { context.setOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("minOrder"))   { context.setMinOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("mocOrder"))   { context.setMocOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("nside"))      { context.setMapNside(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("tileOrder"))  { context.setTileOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("bitpix"))     { context.setBitpix(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
-      } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("skyval"))     { context.setSkyval(val);
-      } else if (opt.equalsIgnoreCase("skyvalues"))  { context.setSkyValues(val);
-      } else if (opt.equalsIgnoreCase("exptime"))    { context.setExpTime(val);
-      } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val); 
-      } else if (opt.equalsIgnoreCase("mixing"))     { context.setMixing(val);
-      } else if (opt.equalsIgnoreCase("color"))      { context.setColor(val);
-      } else if (opt.equalsIgnoreCase("inRed"))      { context.setRgbInput(val, 0); flagRGB=true;
-      } else if (opt.equalsIgnoreCase("inGreen"))    { context.setRgbInput(val, 1); flagRGB=true;
-      } else if (opt.equalsIgnoreCase("inBlue"))     { context.setRgbInput(val, 2); flagRGB=true;
-      } else if (opt.equalsIgnoreCase("cmRed"))      { context.setRgbCmParam(val, 0);
-      } else if (opt.equalsIgnoreCase("cmGreen"))    { context.setRgbCmParam(val, 1);
-      } else if (opt.equalsIgnoreCase("cmBlue"))     { context.setRgbCmParam(val, 2);
-      } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
-      } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
-      } else if (opt.equalsIgnoreCase("status"))     { context.setStatus(val);
-      } else if (opt.equalsIgnoreCase("target"))     { context.setTarget(val);
-      } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
-      } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
-      } else if (opt.equalsIgnoreCase("filter"))     { context.setFilter(val);
-      } else if (opt.equalsIgnoreCase("hdu"))        { context.setHDU(val);
-      } else if (opt.equalsIgnoreCase("publisher") || opt.equalsIgnoreCase("creator"))  {
-         context.setCreator(val);
-      } else if (opt.equalsIgnoreCase("ivorn") || opt.equalsIgnoreCase("id")) {
-         context.setHipsId(val);
-
-      } else if (opt.equalsIgnoreCase("debug")) {
-         if (Boolean.parseBoolean(val)) Context.setVerbose(4);
-
-      } else if (opt.equalsIgnoreCase("in") || opt.equalsIgnoreCase("input")) {
-         context.setInputPath(val);
-
-      } else if (opt.equalsIgnoreCase("out") || opt.equalsIgnoreCase("output")) {
-         context.setOutputPath(val);
-
-      } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
-         context.setMode(Mode.valueOf(val.toUpperCase()));
-         flagMode=true;
-
-      } else if (opt.equalsIgnoreCase("region") || opt.equalsIgnoreCase("moc")) {
+      } else if (opt.equalsIgnoreCase("verbose"))      { Context.setVerbose(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
+      } else if (opt.equalsIgnoreCase("hips_order"))   { context.setOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("mocOrder"))     { context.setMocOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("nside"))        { context.setMapNside(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("tileOrder"))    { context.setTileOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("hips_tile_width"))  { context.setTileOrder((int)CDSHealpix.log2( Integer.parseInt(val)));
+      } else if (opt.equalsIgnoreCase("bitpix"))       { context.setBitpix(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("hips_frame"))   { context.setFrameName(val);
+      } else if (opt.equalsIgnoreCase("maxThread"))    { context.setMaxNbThread(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("skyval"))       { context.setSkyval(val);
+      } else if (opt.equalsIgnoreCase("skyvalues"))    { context.setSkyValues(val);
+      } else if (opt.equalsIgnoreCase("exptime"))      { context.setExpTime(val);
+      } else if (opt.equalsIgnoreCase("fading"))       { context.setFading(val); 
+      } else if (opt.equalsIgnoreCase("mixing"))       { context.setMixing(val);
+      } else if (opt.equalsIgnoreCase("color"))        { context.setColor(val);
+      } else if (opt.equalsIgnoreCase("inRed"))        { context.setRgbInput(val, 0); flagRGB=true;
+      } else if (opt.equalsIgnoreCase("inGreen"))      { context.setRgbInput(val, 1); flagRGB=true;
+      } else if (opt.equalsIgnoreCase("inBlue"))       { context.setRgbInput(val, 2); flagRGB=true;
+      } else if (opt.equalsIgnoreCase("cmRed"))        { context.setRgbCmParam(val, 0);
+      } else if (opt.equalsIgnoreCase("cmGreen"))      { context.setRgbCmParam(val, 1);
+      } else if (opt.equalsIgnoreCase("cmBlue"))       { context.setRgbCmParam(val, 2);
+      } else if (opt.equalsIgnoreCase("img"))          { context.setImgEtalon(val);
+      } else if (opt.equalsIgnoreCase("fitskeys"))     { context.setIndexFitskey(val);
+      } else if (opt.equalsIgnoreCase("hips_status"))  { context.setStatus(val);
+      } else if (opt.equalsIgnoreCase("target"))       { context.setTarget(val);
+      } else if (opt.equalsIgnoreCase("targetRadius")) { context.setTargetRadius(val);
+      } else if (opt.equalsIgnoreCase("label"))        { context.setLabel(val);
+      } else if (opt.equalsIgnoreCase("filter"))       { context.setFilter(val);
+      } else if (opt.equalsIgnoreCase("hdu"))          { context.setHDU(val);
+      } else if (opt.equalsIgnoreCase("hips_creator")) { context.setCreator(val);
+      } else if (opt.equalsIgnoreCase("creator_did"))  { context.setHipsId(val);
+      } else if (opt.equalsIgnoreCase("debug"))        { if (Boolean.parseBoolean(val)) Context.setVerbose(4);
+      } else if (opt.equalsIgnoreCase("in"))           { context.setInputPath(val);
+      } else if (opt.equalsIgnoreCase("out") )         { context.setOutputPath(val);
+      } else if (opt.equalsIgnoreCase("mode"))         { context.setMode(Mode.valueOf(val.toUpperCase())); flagMode=true;
+      } else if( opt.equalsIgnoreCase("partitioning")) { context.setPartitioning(val);
+      } else if( opt.equalsIgnoreCase("tileTypes") )   { context.setTileTypes(val);
+      } else if( opt.equalsIgnoreCase("shape") )       { context.setShape(val);
+      } else if ( opt.equalsIgnoreCase("method"))      { context.setMethod(val); flagMethod=true;
+      } else if (opt.equalsIgnoreCase("histoPercent")) { context.setHistoPercent(val);
+      } else if (opt.equalsIgnoreCase("pixelGood"))    { context.setPixelGood(val);
+      } else if (opt.equalsIgnoreCase("hips_pixel_cut"))  { context.setPixelCut(val);
+      } else if (opt.equalsIgnoreCase("hips_data_range")) { context.setDataCut(val);
+      } else if (opt.equalsIgnoreCase("hips_min_order"))  { context.setMinOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("region")) {
          if (val.endsWith("fits")) {
             HealpixMoc moc = new HealpixMoc();
             moc.read(val);
             context.setMocArea(moc);
          } else context.setMocArea(val);
-
-      } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting") || opt.equalsIgnoreCase("partitioning")) {
-         context.setPartitioning(val);
-
-      } else if( opt.equalsIgnoreCase("tileTypes") ) {
-         context.setTileTypes(val);
-
-      } else if( opt.equalsIgnoreCase("shape") ) {
-         context.setShape(val);
-
-      } else if (opt.equalsIgnoreCase("maxRatio")) {
+      } else if( opt.equalsIgnoreCase("maxRatio")) {
          try {  context.setMaxRatio(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
-
-      } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
+      } else if( opt.equalsIgnoreCase("radius")) {
          try {  context.setCircle(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
-
-      } else if (opt.equalsIgnoreCase("polygon") || opt.equalsIgnoreCase("fov") ) {
+      } else if( opt.equalsIgnoreCase("fov") ) {
          try {  context.setPolygon(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
-
       } else if (opt.equalsIgnoreCase("border")) {
-         try {
-            context.setBorderSize(val);
-         } catch (ParseException e) {
-            throw new Exception(e.getMessage());
-         }
-
-      } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
-         flagMethod=true;
-         context.setMethod(val);
-
-      } else if (opt.equalsIgnoreCase("histoPercent")) { context.setHistoPercent(val);
-      } else if (opt.equalsIgnoreCase("pixelGood")) { context.setPixelGood(val);
-      } else if (opt.equalsIgnoreCase("pixelCut")) { context.setPixelCut(val);
-      } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
-         context.setDataCut(val);
-         //         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
+         try { context.setBorderSize(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
       } else throw new Exception("Option unknown [" + opt + "]");
-
    }
 
    static public SimpleDateFormat SDF;
@@ -313,6 +301,7 @@ public class HipsGen {
                if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
                if( a==Action.MIRROR ) flagMirror=true;
                if( a==Action.UPDATE ) flagUpdate=true;
+               if( a==Action.LINT )   flagLint=true;
                if( a==Action.CONCAT ) {
                   flagConcat=true;
                   if( !flagMode ) context.setMode(Mode.AVERAGE);
@@ -411,7 +400,7 @@ public class HipsGen {
             } catch( Exception e ) { }
          }
          
-         if( !flagConcat && !flagMirror && !flagUpdate) {
+         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint) {
             String s = context.checkHipsId(context.hipsId);
             context.setHipsId(s);
          }
@@ -547,79 +536,79 @@ public class HipsGen {
             "directly on the comand line :\n");
       System.out.println(
             "Required parameter:\n"+
-                  "   in=dir             Source image directory (FITS or JPEG|PNG +hhh or HiPS),\n"+
-                  "                      unique image or HEALPix map file" + "\n" +
+                  "   in=dir                  Source image directory (FITS or JPEG|PNG +hhh or HiPS),\n"+
+                  "                           unique image or HEALPix map file" + "\n" +
                   "\n"+
                   "Basic optional parameters:\n"+
-                  "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
-                  "   label=name         Label of the survey (by default, input directory name)" + "\n"+
-                  "   id=identifier      HiPS identifier (syntax: AUTHORITY/internalID)" + "\n"+
-                  "   creator=name       Name of the person|institute who builds the HiPS" + "\n"+
-                  "   status=xx          HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
-                  "                      (default: public clonableOnce)" +
-                  "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
-                  "   blank=nn           Specifical BLANK value" + "\n" +
+                  "   out=dir                 HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
+                  "   obs_title=name          Name of the survey (by default, input directory name)" + "\n"+
+                  "   creator_did=id          HiPS identifier (syntax: [ivo://]AUTHORITY/internalID)" + "\n"+
+                  "   hips_creator=name       Name of the person|institute who builds the HiPS" + "\n"+
+                  "   hips_status=xx          HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
+                  "                          (default: public clonableOnce)\n" +
+                  "   hdu=n1,n2-n3,...|all    List of HDU numbers (0 is the primary HDU - default is 0)\n" +
+                  "   blank=nn                Specifical BLANK value" + "\n" +
                   "   skyval=key|true|%info|%min %max   Fits key to use for removing a sky background, true auto detection " + "\n" +
-                  "                      or percents of pixel histogram kept (central ex 99, or min max ex 0.3 99.7)" + "\n" +
-                  "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be " + "\n" +
-                  "                      produced in jpeg (resp. png)" + "\n" +
-                  "   shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
-                  "   border=...         Margins (in pixels) to ignore in the original observations (N W S E or " + "\n" +
-                  "                      constant)" + "\n" +
-                  "   fov=true|x1,y1..   Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
-                  "   verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
-                  "   -live              incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
-                  "   -f                 clear previous computations\n"+
-                  "   -n                 Just print process information, but do not execute it.\n"+
+                  "                           or percents of pixel histogram kept (central ex 99, or min max ex 0.3 99.7)" + "\n" +
+                  "   color=jpeg|png          The source images are colored images (jpg or png) and the tiles will be " + "\n" +
+                  "                           produced in jpeg (resp. png)" + "\n" +
+                  "   shape=...               Shape of the observations (ellipse|rectangle)" + "\n" +
+                  "   border=...              Margins (in pixels) to ignore in the original observations (N W S E or " + "\n" +
+                  "                           constant)" + "\n" +
+                  "   fov=true|x1,y1..        Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
+                  "   verbose=n               Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
+                  "   -live                   incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
+                  "   -f                      clear previous computations\n"+
+                  "   -n                      Just print process information, but do not execute it.\n"+
                   "\n"+
                   "Advanced optional parameters:\n"+
-                  "   order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
-                  "   bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
-                  "   pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
-                  "                      conversion - ex: \"120 140 log\")" + "\n" +
-                  "   pixelRange=min max Specifical pixel value range (required for bitpix\n" +
-                  "                      conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
-                  "   pixelGood=min [max] Range of pixel values kept" + "\n" +
-                  "   img=file           Specifical reference image for default initializations \n" +
-                  "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,pixelRange)" + "\n" +
-                  "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|ADD|AVERAGE) \n" +
-                  "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
-                  "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
-                  "   fading=true|false  False to avoid fading effect on overlapping original images " + "\n" +
-                  "                      (default is false)" + "\n" +
-                  "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images " + "\n" +
-                  "                      (default is true)" + "\n" +
+                  "   hips_order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
+                  "   hips_pixel_bitpix=nn    Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
+                  "   hips_pixel_cut=min max  Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
+                  "                           conversion - ex: \"120 140 log\")" + "\n" +
+                  "   hips_data_range=min max Specifical pixel value range (required for bitpix\n" +
+                  "                           conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
+                  "   pixelGood=min [max]     Range of pixel values kept" + "\n" +
+                  "   img=file                Specifical reference image for default initializations \n" +
+                  "                           (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,pixelRange)" + "\n" +
+                  "   mode=xx                 Coadd mode when restart: pixel level(OVERWRITE|KEEP|ADD|AVERAGE) \n" +
+                  "                           or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
+                  "                           Or LINK|COPY for CUBE action (default COPY)" + "\n" +
+                  "   fading=true|false       False to avoid fading effect on overlapping original images " + "\n" +
+                  "                           (default is false)" + "\n" +
+                  "   mixing=true|false       False to avoid mixing (and fading) effect on overlapping original images " + "\n" +
+                  "                           (default is true)" + "\n" +
                   "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 " + "\n" +
-                  "                      (default is true)" + "\n" +
-                  "   region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
-                  "                      or Moc.fits file (all sky by default)" + "\n" +
-                  "   maxRatio=nn        Max height/width pixel ratio tolerated for original obs " + "\n" +
-                  "                      (default 2, 0 for removing the test)" + "\n" +
-                  "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value " + "\n" +
-                  "                      to memorized in the HiPS index" + "\n" +
-                  "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-                  "   method=m           Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored " + "\n" +
-                  "                      compressed tiles (JPEG|PNG)" + "\n" +
-                  "   frame              Target coordinate frame (equatorial|galactic)" + "\n" +
-                  "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
-                  "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
-                  "                      auto-adapted to the HiPS" + "\n" +
-                  "   nside=nn           HEALPix map NSIDE (only for MAP action) - by default 2048" + "\n" +
-                  "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
-                  "   inRed              HiPS red path component (RGB action)\n" +
-                  "   inGreen            HiPS green path component (RGB action)\n" +
-                  "   inBlue             HiPS blue path component (RGB action)\n" +
-                  "   cmRed              Colormap parameters for HiPS red component (min [mid] max [fct])\n" +
-                  "   cmGreen            Colormap parameters for HiPS green component (min [mid] max [fct])\n" +
-                  "   cmBlue             Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
-                  "   filter=gauss       Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
-                  "   tileTypes          List of tile format to copy (MIRROR action)" + "\n" +
-                  "   maxThread=nn       Max number of computing threads" + "\n" +
-                  "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
-                  "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
-                  "   -notouch           Do not touch the hips_release_date" + "\n"+
-                  "   -nice              Slow download for avoiding to overload remote http server (dedicated " + "\n" +
-                  "                      to MIRROR action)" + "\n"
+                  "                           (default is true)" + "\n" +
+                  "   region=moc              Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
+                  "                           or Moc.fits file (all sky by default)" + "\n" +
+                  "   maxRatio=nn             Max height/width pixel ratio tolerated for original obs " + "\n" +
+                  "                           (default 2, 0 for removing the test)" + "\n" +
+                  "   fitskeys=list           Fits key list (blank separator) designing metadata FITS keyword value " + "\n" +
+                  "                           to memorized in the HiPS index" + "\n" +
+                  "   hips_min_order=nn       Specifical HEALPix min order (only for DETAILS action)" + "\n" +
+                  "   method=m                Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored " + "\n" +
+                  "                           compressed tiles (JPEG|PNG)" + "\n" +
+                  "   hip_frame               Target coordinate frame (equatorial|galactic)" + "\n" +
+                  "   hips_tile_width=nn      Specifical tile width (pow of 2) - default 512" + "\n" +
+                  "   mocOrder=nn             Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
+                  "                           auto-adapted to the HiPS" + "\n" +
+                  "   nside=nn                HEALPix map NSIDE (only for MAP action) - by default 2048" + "\n" +
+                  "   exptime=key             Fits key to use for adjusting variation of exposition" + "\n" +
+                  "   inRed                   HiPS red path component (RGB action)\n" +
+                  "   inGreen                 HiPS green path component (RGB action)\n" +
+                  "   inBlue                  HiPS blue path component (RGB action)\n" +
+                  "   cmRed                   Colormap parameters for HiPS red component (min [mid] max [fct])\n" +
+                  "   cmGreen                 Colormap parameters for HiPS green component (min [mid] max [fct])\n" +
+                  "   cmBlue                  Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
+                  "   filter=gauss            Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
+                  "   tileTypes               List of tile format to copy (MIRROR action)" + "\n" +
+                  "   maxThread=nn            Max number of computing threads" + "\n" +
+                  "   target=ra +dec          Default HiPS target (ICRS deg)" + "\n"+
+                  "   targetRadius=rad        Default HiPS radius view (deg)" + "\n"+
+                  "   -notouch                Do not touch the hips_release_date" + "\n"+
+                  "   -nice                   Slow download for avoiding to overload remote http server (dedicated " + "\n" +
+                  "                           to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
             );
 
@@ -640,11 +629,12 @@ public class HipsGen {
             "   GZIP       "+Action.GZIP.doc() + "\n"+
             "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
             "   DETAILS    "+Action.DETAILS.doc() + "\n"+
+            "   MAP        "+Action.MAP.doc() + "\n" +
             "   MIRROR     "+Action.MIRROR.doc() + "\n"+
-            "   MAP        "+Action.MAP.doc() + "\n"
+            "   LINT       "+Action.LINT.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
-            "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +
+            "\n    java -jar "+launcher+" in=/MyImages hips_pixel_bitpix=16 hips_pixel_cut=\"-1 100 log\"" +
             "\n           The FITS tiles will be coded in short integers, the preview tiles" +
             "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
             "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE   " + "\n" +

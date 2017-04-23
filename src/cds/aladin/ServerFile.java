@@ -217,6 +217,7 @@ public class ServerFile extends Server implements XMLConsumer {
    }
    
    private String getLabelFromFile(String f) {
+      if( f==null ) return "Data";
       String label;
       int i = f.lastIndexOf(f.startsWith("http:")||f.startsWith("https:")||f.startsWith("ftp:") ? "/"
             : Util.FS);

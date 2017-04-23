@@ -26,7 +26,7 @@ import java.util.TimeZone;
 
 public class Constante {
 
-   static final public String HIPS_VERSION  = "1.31";
+   static final public String HIPS_VERSION  = "1.4";
 
 
    // Noms des différents fichiers HiPS

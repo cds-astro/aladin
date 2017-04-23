@@ -50,7 +50,7 @@ public enum Action {
    PROP      ("Display HiPS properties files in HiPS version "+Constante.HIPS_VERSION+" syntax"),
    MIRROR    ("Mirror a remote HiPS locally"),
    RGB       ("Build and RGB HiPS based on 2 or 3 other HiPS"),
-   CHECK     ("** In progress: Check readability of all tiles"),
+   LINT      ("Check HiPS IVOA 1.0 standard compatibility"),
    //   INFO      ("Generate properties and index.html information files"),
    MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité

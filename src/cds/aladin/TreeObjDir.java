@@ -104,8 +104,8 @@ public class TreeObjDir extends TreeObj {
       // Par http ou ftp ?
       try {
          InputStreamReader in=null;
-         if( !local ) in = new InputStreamReader( (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream() );
-         else in = new InputStreamReader( new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES)) );
+         if( !local ) in = new InputStreamReader( (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream(), "UTF-8" );
+         else in = new InputStreamReader( new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES)), "UTF-8" );
          try { prop.load(in); } finally { in.close(); }
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
 

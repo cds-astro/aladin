@@ -281,7 +281,7 @@ public class BuilderRgb extends BuilderTiles {
       File f = new File( propFile );
       if( f.exists() ) {
          if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-         InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
+         InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
          prop.load(in);
          in.close();
       }

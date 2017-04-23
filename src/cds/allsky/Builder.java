@@ -59,7 +59,7 @@ public abstract class Builder {
          case CLEANPNG:  return new BuilderCleanPng(context);
          case CLEANDATE: return new BuilderCleanDate(context);
          case CLEANWEIGHT:return new BuilderCleanWeight(context);
-         case CHECK:     return new BuilderCheck(context);
+         case LINT:      return new BuilderLint(context);
          case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);
@@ -312,7 +312,7 @@ public abstract class Builder {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
             prop.load(in);
             in.close();
             String s = prop.getProperty(Constante.KEY_HIPS_PIXEL_CUT);
@@ -357,7 +357,7 @@ public abstract class Builder {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
             prop.load(in);
             in.close();
             String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);

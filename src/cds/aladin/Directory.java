@@ -1369,7 +1369,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       InputStreamReader in=null;
       try {
-         in = new InputStreamReader( Util.openAnyStream(u+"/properties") );
+         in = new InputStreamReader( Util.openAnyStream(u+"/properties"),"UTF-8" );
          MyProperties aProp = new MyProperties();
          aProp.load( in );
          

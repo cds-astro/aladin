@@ -168,7 +168,7 @@ public class BuilderAppend extends Builder {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
+            in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
             prop.load(in);
             in.close();
             in=null;

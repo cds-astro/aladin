@@ -19,6 +19,8 @@
 
 package cds.allsky;
 
+import java.io.OutputStreamWriter;
+
 /** Permet de visualiser les properties maj d'un survey préalablement généré
  * @author Pierre Fernique [CDS]
  */
@@ -31,7 +33,7 @@ public class BuilderProp extends Builder {
    public void run() throws Exception {
       context.scriptCommand=null;
       System.out.println();
-      context.writePropertiesFile(System.out);
+      context.writePropertiesFile( new OutputStreamWriter( System.out ) );
       System.out.println();
    }
 

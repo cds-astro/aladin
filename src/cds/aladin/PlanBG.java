@@ -1135,7 +1135,7 @@ public class PlanBG extends PlanImage {
          String urlFile = url+"/"+Constante.FILE_PROPERTIES;
          InputStreamReader in = null;
          try {
-            in= new InputStreamReader( Util.openAnyStream(urlFile) );
+            in= new InputStreamReader( Util.openAnyStream(urlFile), "UTF-8" );
             prop.load(in);
          } finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
          

@@ -22,7 +22,6 @@ package cds.aladin;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -543,8 +542,8 @@ public class MyProperties {
     * @param comments
     * @throws IOException
     */
-   public void store(OutputStream out, String comments) throws IOException {
-      BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+   public void store(OutputStreamWriter out, String comments) throws IOException {
+      BufferedWriter bw = new BufferedWriter(out);
 
       for( PropItem item : prop ) {
          bw.write(item.toString());

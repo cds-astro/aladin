@@ -79,7 +79,7 @@ public class PlanBGProgen extends PlanBGCat {
       String propPath = s.substring(0,fin)+"/"+Constante.FILE_PROPERTIES;
       InputStreamReader in=null;
       try {
-         in = new InputStreamReader( cds.tools.Util.openStream(propPath) );
+         in = new InputStreamReader( cds.tools.Util.openStream(propPath), "UTF-8" );
          prop = new MyProperties();
          prop.load(in);
          String label = prop.getProperty("label");

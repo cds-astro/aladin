@@ -177,6 +177,7 @@ public final class MyInputStream extends FilterInputStream {
     *          gzippe
     */
    public MyInputStream startRead() throws IOException {
+      
       long t = isGZorBzip2();
       if( (t & GZ)!=0 ) {
          return new MyInputStream(new GZIPInputStream(this),GZ,withBuffer);
@@ -238,7 +239,7 @@ public final class MyInputStream extends FilterInputStream {
    /** Juste pour tester s'il s'agit d'un flux gzippé ou Bzippé2 */
    public long isGZorBzip2() throws IOException {
       // le type de stream a deja ete detecte
-      if( flagGetType ) return type;
+      if( flagGetType && alreadyRead ) return type;
 
       // Le stream a deja ete entame, impossible de determine le type
       if( alreadyRead ) return 0;

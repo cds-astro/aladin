@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -378,14 +379,15 @@ public class PlanHealpix extends PlanBG {
 
       prop.setProperty(Constante.OLD_ALADINVERSION, aladin.VERSION);
 
-
+      OutputStreamWriter out = null;
       try {
-         prop.store(new FileOutputStream(propertiesFile(dir)), null);
+         out = new OutputStreamWriter( new FileOutputStream(propertiesFile(dir)) ,"UTF-8");
+         prop.store( out, null);
       } catch (FileNotFoundException e) {
          return false;
       } catch (IOException e) {
          return false;
-      }
+      } finally { if( out!=null ) { try{ out.close(); } catch( Exception e ) {} } }
 
       return true;
    }
@@ -787,7 +789,7 @@ public class PlanHealpix extends PlanBG {
       MyProperties prop = new MyProperties();
       InputStreamReader in=null;
       try {
-         in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
+         in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
          prop.load(in);
       } catch (Exception e) {
          File dirToRemove = new File(getCacheDir() + Util.FS + getDirname());

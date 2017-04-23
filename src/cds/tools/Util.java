@@ -1527,7 +1527,7 @@ public final class Util {
          int code = conn.getResponseCode();
 //                   System.out.println(url+" => ["+code+"]");
 //                   if( code/100 == 4 ) return false;
-         return code/100 == 2;
+         return code/100 == 2 || code==403;
       } catch( Exception e ) { }
       return false;
    }

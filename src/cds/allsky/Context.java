@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,6 +47,7 @@ import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
+import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -1754,7 +1755,7 @@ public class Context {
    /** Création, ou mise à jour du fichier des Properties associées au survey
     * @param stream null pour l'écrire à l'emplacement prévu par défaut
     */
-   protected void writePropertiesFile(OutputStream stream) throws Exception {
+   protected void writePropertiesFile(OutputStreamWriter stream) throws Exception {
 
 
       // Ajout de l'IVORN si besoin
@@ -1775,7 +1776,7 @@ public class Context {
       
       if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
       setPropriete(Constante.KEY_OBS_COLLECTION,getLabel());
-      setPropriete("#"+Constante.KEY_OBS_TITLE,"Dataset text title");
+      setPropriete("#"+Constante.KEY_OBS_COLLECTION,"Dataset collection name");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
       setPropriete("#"+Constante.KEY_OBS_ACK,"Acknowledgement mention");
       setPropriete("#"+Constante.KEY_PROV_PROGENITOR,"Provenance of the original data (free text)");
@@ -1801,7 +1802,7 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
       // L'url
-      setPropriete("#"+Constante.KEY_HIPS_MASTER_URL,"ex: http://yourHipsServer/"+label+"");
+      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
       setPropriete(Constante.KEY_HIPS_STATUS,"public master clonableOnce");
       
       // le status du HiPS : par defaut "public master clonableOnce"
@@ -1960,9 +1961,9 @@ public class Context {
       String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
       File f = new File(propFile);
       if( f.exists() ) f.delete();
-      FileOutputStream out = null;
+      OutputStreamWriter out = null;
       try {
-         out = new FileOutputStream(f);
+         out = new OutputStreamWriter( new FileOutputStream(f), "UTF-8");
          prop.store( out, null);
       } finally {  if( out!=null ) out.close(); }
    }
@@ -2114,7 +2115,7 @@ public class Context {
    protected void updateProperties(String[] key, String[] value,boolean overwrite) throws Exception {
       updateProperties(key,value,overwrite,null);
    }
-   protected void updateProperties(String[] key, String[] value,boolean overwrite,OutputStream stream) throws Exception {
+   protected void updateProperties(String[] key, String[] value,boolean overwrite,OutputStreamWriter stream) throws Exception {
 
       waitingPropertieFile();
       try {
@@ -2125,13 +2126,50 @@ public class Context {
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-            InputStreamReader in = new InputStreamReader( new FileInputStream(propFile) );
+            InputStreamReader in = new InputStreamReader( new FileInputStream(propFile), "UTF-8" );
             prop.load(in);
             in.close();
          }
 
          // Changement éventuel de vocabulaire
          replaceKeys(prop);
+         
+         // S'il n'y a pas d'indication hips_initial... on les indique manu-militari
+         String ra  = prop.get( Constante.KEY_HIPS_INITIAL_RA );
+         String dec = prop.get( Constante.KEY_HIPS_INITIAL_DEC );
+         String fov = prop.get( Constante.KEY_HIPS_INITIAL_FOV );
+         if( ra==null || dec==null || fov==null ) {
+            if( fov==null ) {
+
+               // On va préférer prendre le moc_order indiqué dans les properties
+               // pour éviter de récupérer le bug sur le MocOrder
+               try {
+                  int n = Integer.parseInt( prop.get("moc_order"));
+                  HealpixMoc mm = new HealpixMoc();
+                  mm.setMocOrder(n);
+                  fov =  mm.getAngularRes()+"";
+               } catch( Exception e) {
+                  fov = moc.getAngularRes()+"";
+               }
+               prop.replaceValue( Constante.KEY_HIPS_INITIAL_FOV,fov);
+            }
+            if( ra==null || dec==null ) {
+               Healpix hpx = new Healpix();
+               if( moc.isAllSky() ) { ra="0"; dec="+0"; }
+               else {
+                  try {
+                     int o = moc.getMocOrder();
+                     long pix = moc.pixelIterator().next();
+                     double coo[] = hpx.pix2ang(o,pix);
+                     ra = coo[0]+"";
+                     dec = coo[1]+"";
+                  } catch( Exception e ) { }
+               }
+               prop.replaceValue( Constante.KEY_HIPS_INITIAL_RA,ra);
+               prop.replaceValue( Constante.KEY_HIPS_INITIAL_DEC,dec);
+            }
+         }
+
 
          String v;
          // Mise à jour des propriétés
@@ -2203,9 +2241,9 @@ public class Context {
             if( ftmp.exists() ) ftmp.delete();
             File dir = new File( getOutputPath() );
             if( !dir.exists() && !dir.mkdir() ) throw new Exception("Cannot create output directory");
-            FileOutputStream out = null;
+            OutputStreamWriter out = null;
             try {
-               out = new FileOutputStream(ftmp);
+               out = new OutputStreamWriter( new FileOutputStream(ftmp), "UTF-8");
                prop.store( out, null);
 
 
@@ -2228,7 +2266,7 @@ public class Context {
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ));
+            InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
             prop.load(in);
             in.close();
 
