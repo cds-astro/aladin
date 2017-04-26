@@ -1538,8 +1538,19 @@ public class Context {
    // Insère un NL si nécessaire
    private void nl() { if( flagNL ) System.out.println(); flagNL=false; }
    //   private void nl() { if( flagNL ) System.out.print("\b"); flagNL=false; }
+   
+   // Retourne la chaine indiquée encadrée par deux traits
+   // ex: ------------------- toto -------------------
+   static public String getTitle(String s ) { return getTitle(s,'-'); }
+   static public String getTitle(String s, char c ) { return getTitle(s,c,102); }
+   static public String getTitle(String s, char c, int len) {
+      int m = (len - 2 - s.length() )/2;
+      StringBuilder s1 = new StringBuilder();
+      for( int i=0; i<m; i++ ) s1.append(c);
+      return s1+" "+s+" "+(s.length()%2==0?"":" ")+s1;
+   }
 
-   public void running(String s)  { nl(); System.out.println("RUN   : ================================ "+s+" ==============================="); }
+   public void running(String s)  { nl(); System.out.println("RUN   : "+getTitle(s,'=')); }
    public void done(String r)     { nl(); System.out.println("DONE  : "+r); }
    public void abort(String r)    { nl(); System.out.println("ABORT : "+r); }
    public void info(String s)     { nl(); System.out.println("INFO  : "+s); }

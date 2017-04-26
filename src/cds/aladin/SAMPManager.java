@@ -1676,7 +1676,7 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
         new Thread("AladinSampSendTable") {
             public void run() {
                 if( a.save==null ) a.save = new Save(a);
-                a.save.saveCatVOTable(tmpFile, pc, false);
+                a.save.saveCatVOTable(tmpFile, pc, false,false);
                 URL url = SAMPUtil.getURLForFile(tmpFile);
                 String urlStr = url.toString();
                 String id = pc.getPlasticID();

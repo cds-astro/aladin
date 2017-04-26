@@ -26,18 +26,18 @@ import cds.aladin.MyProperties;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
-public class HipsServerLint {
+public class HipsLint {
 
-   public HipsServerLint() { }
+   public HipsLint() { }
    
    private void check(String hipsListUrl ) throws Exception {
       boolean mocServerReading = true;
       String s;
       MyProperties prop;
       Context context = new Context();
-      boolean flagError=false, flagWarning=false;
+      boolean flagError=false, flagWarning=false, flagException=false;
       
-      context.info("================== CHECKING HiPSserver ["+hipsListUrl+"] ==========================");
+      context.info(Context.getTitle("CHECKING HiPSserver ["+hipsListUrl+"]",'='));
       InputStreamReader in = new InputStreamReader( Util.openAnyStream(hipsListUrl), "UTF-8");
       
       while( mocServerReading ) {
@@ -49,7 +49,7 @@ public class HipsServerLint {
             String id=MultiMoc.getID(prop);
             if( prop.size()==0 || id==null ) continue;
             
-            context.info("---------------------------- Checking HiPSList record ["+id+"] -----------------------------------");
+            context.info(Context.getTitle("Checking HiPSList record ["+id+"]"));
 
            // Vérification des 4 keywords requis
             // creator_did, hips_release_date, hips_service_url, hips_status
@@ -122,22 +122,36 @@ public class HipsServerLint {
                flagError=true;
             }
             
-            context.info("-------------------------------- Checking HiPS ["+id+"] -----------------------------------");
+            context.info( Context.getTitle("Checking HiPS ["+id+"]"));
 
             context.setOutputPath(u);
             BuilderLint builderLint = new BuilderLint( context );
-            builderLint.run();
+            try {
+               int rep = builderLint.lint();
+               if( rep==0 ) flagError=true;
+               else if( rep==-1 ) flagWarning=true;
+            } catch( Exception e) { flagException = true; }
             
          } catch( Exception e ) {
             e.printStackTrace();
          }
       }
       in.close();
+      
+      if( flagException ) context.info("!!! ["+hipsListUrl+"] has not been fully checked => partial validation");
+      if( flagError ) context.info("*** ["+hipsListUrl+"] is not IVOA HiPS 1.0 compatible");
+      else if( flagWarning ) context.info("!!! ["+hipsListUrl+"] is IVOA HiPS 1.0 compatible but with warnings !");
+      else context.info("*** ["+hipsListUrl+"] is fully IVOA HiPS 1.0 compatible");
    }
    
    public static void main(String[] args) {
+      if( args.length==0 || args[0].equals("-h") ) {
+         System.out.println("Usage: java -jar Hipslint http://hips.server/hipslist [hipslisturl2 ...]");
+         System.out.println("       HiPS server compatibility checker (IVOA HiPS 1.0 standard)");
+         System.exit(0);
+      }
       try {
-         HipsServerLint lint = new HipsServerLint();
+         HipsLint lint = new HipsLint();
          for( String hipsListUrl : args ) lint.check(hipsListUrl);
       } catch( Exception e ) {
          e.printStackTrace();

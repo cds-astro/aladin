@@ -2244,7 +2244,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       ArrayList<TreeObjDir> treeObjs=null;     // hips dont il faut afficher les informations
       JPanel panelInfo=null;                // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
       JCheckBox hipsBx=null,mocBx=null,mociBx=null,mocuBx,progBx=null,
-                dmBx=null, siaBx=null, ssaBx=null, csBx=null, msBx=null, allBx=null, tapBx=null;
+                dmBx=null, siaBx=null, ssaBx=null, csBx=null, msBx=null, allBx=null, tapBx=null,xmatchBx=null;
       
       FrameInfo() {
          setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -2463,7 +2463,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
-            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = tapBx = null;
+            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = tapBx = xmatchBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox("HiPS");
                mocAndMore.add(bx);
@@ -2491,6 +2491,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if( hipsBx!=null ) bg.add(hipsBx);
                
                boolean hasLoadedMoc = aladin.calque.getNbPlanMoc()>0;
+               boolean hasLoadedCat = aladin.calque.getNbPlanCat()>0;
                
                if( nbRows!=-1 && nbRows<100000 ) {
                   allBx = bx = new JCheckBox("All sources");
@@ -2512,6 +2513,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                bx.setEnabled( hasLoadedMoc );
                bg.add(bx);
                
+               xmatchBx = bx = new JCheckBox("Xmatch");
+               mocAndMore.add(bx);
+               bx.setEnabled( hasLoadedCat );
+               Util.toolTip(bx,"Xmatch with the table selected in the stack",true);
+               bg.add(bx);
+
                // Positionnement de la sélection par défaut
                boolean onMoc = aladin.calque.getFirstSelectedPlan() instanceof PlanMoc;
                if( onMoc && msBx!=null ) msBx.setSelected(true);
@@ -2538,7 +2545,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             mocAndMore.add(labelPlus);
             
             if( to.hasMoc() ) {
-               mocBx = bx = new JCheckBox("MOC"); 
+               mocBx = bx = new JCheckBox("Coverage"); 
                mocAndMore.add(bx); 
                Util.toolTip(bx,"Load the MultiOrder Coverage map (MOC) associated to the collection",true);
             }
@@ -2822,6 +2829,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
             if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
             if( tapBx!=null  && tapBx.isSelected() )   to.queryByTap();
+            if( xmatchBx!=null  && xmatchBx.isSelected() )   to.queryByXmatch();
             
          // Accès à plusieurs collections simultanément
          } else {

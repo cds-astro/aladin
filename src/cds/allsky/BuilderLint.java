@@ -10,6 +10,7 @@ import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
+import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
 /**
@@ -24,6 +25,7 @@ public class BuilderLint extends Builder {
    private String FS;           // "\" ou "/" suivant le cas
    
    // Informations à récupérer depuis le fichier properties
+   private String id;           // Identificateur du HiPS
    private boolean flagImage;   // true pour un HiPS image
    private boolean flagCatalog; // true pour un HiPS catalogue
    private boolean flagCube;    // true pour un HiPS cube
@@ -108,7 +110,12 @@ public class BuilderLint extends Builder {
       lint();
    }
    
-   private void lint() throws Exception{
+   /**
+    * Check IVOA HiPS 1.0 compatibility
+    * @return 1 ok, -1 ok but with warning, 0 uncompatible
+    * @throws Exception
+    */
+   protected int lint() throws Exception{
       flagError=false;
       flagWarning=false;
       flagImage=flagCatalog=flagCube=false;
@@ -118,6 +125,8 @@ public class BuilderLint extends Builder {
       tileWidth=-1;
       skyFraction=-1;
       depth=1;
+      id="null";
+      
       extensions = new ArrayList<String>();
       
       // Vérification du path du HiPS à checker
@@ -152,9 +161,11 @@ public class BuilderLint extends Builder {
       // Test des autres fichiers optionels
       lintMiscFiles();
       
-      if( flagError ) context.error("*** Not HiPS IVOA 1.0 compatible");
-      else if( flagWarning ) context.warning("!!! HiPS IVOA 1.0 compatible with warnings");
-      else context.info("Fully HiPS IVOA 1.0 compatible");
+      if( flagError ) context.error("*** HiPS "+id+" is not IVOA HiPS 1.0 compatible");
+      else if( flagWarning ) context.warning("!!! HiPS "+id+" is IVOA HiPS 1.0 compatible but with warnings");
+      else context.info("HiPS "+id+" is fully IVOA HiPS 1.0 compatible");
+      
+      return flagError ? 0 : flagWarning ? -1 : 1;
    }
    
    /** Test du metadata.xml */
@@ -452,12 +463,10 @@ public class BuilderLint extends Builder {
       if( version==-1 ) {
          context.error("Lint[4.4.1] hips_version syntax error ["+s+"]");
          flagError=true;
-      } else if( version>=130 && version<140 ) {
-         context.info("Lint: hips_version before the IVOA HiPS standard 1.0 but should be compatible ["+s+"]");
-      } else if( version<130 ) {
-         context.warning("Lint: hips_version before the IVOA HiPS standard 1.0 ["+s+"] => LINT probably not supported");
+      } else if( version<140 ) {
+         context.info("Lint: hips_version precedes the IVOA HiPS 1.0 standard (hips_version 1.4) ["+s+"]");
       } else if( version>140 ) {
-         context.warning("Lint: hips_version after the IVOA HiPS standard 1.0 ["+s+"]");
+         context.warning("Lint: hips_version supersedes the IVOA HiPS 1.0 standard (hips_version 1.4)  ["+s+"]");
       } 
 
       // Vérification de la présence des mots clés requis et recommandés
@@ -773,6 +782,8 @@ public class BuilderLint extends Builder {
          }
       }
       
+      // Génération de l'identificateur du HiPS
+      id = MultiMoc.getID(prop);
       
       if( !flagError ) context.info("Lint: \"properties\" file ok");
       else if( !flagError ) context.info("Lint: \"properties\" file warning");

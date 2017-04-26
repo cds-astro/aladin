@@ -3793,7 +3793,7 @@ public final class Command implements Runnable {
                }
 
                if( p instanceof PlanMoc ) (a.save).saveMoc(file, (PlanMoc)p, HealpixMoc.FITS);
-               else if( p.isCatalog() ) (a.save).saveCatalog(file,p,!vot,addXY);
+               else if( p.isCatalog() ) (a.save).saveCatalog(file,p,!vot,false,addXY);
                else if( p.isImage() && !(p instanceof PlanImageBlink) ) (a.save).saveImage(file,p,hpx?1:fits?0:2);
                else {
                   String tmp="plane type ["+Plan.Tp[p.type]+"] not supported";

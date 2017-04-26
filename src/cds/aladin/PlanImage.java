@@ -150,7 +150,7 @@ public class PlanImage extends Plan {
    protected double dataMaxFits=0.;   // La valeur DATAMAX indiquée dans l'enête FITS (si elle existe)
    protected double dataMin,dataMax;  // Plus grande et plus petite valeur de pixel effectivement trouvée
    // (après suppression des pixels erronés) - sans prendre en compte BSACLE et BZERO
-   protected double pixelMin,pixelMax;// Les min et max des cuts - sans prendre en compte BSACLE et BZERO
+   protected double pixelMin,pixelMax;// Les min et max des cuts - sans prendre en compte BSCALE et BZERO
    protected boolean isBlank=false;   // True s'il y a une valeur consideree comme BLANK
    protected double blank;            // La valeur BLANK si elle existe
    public double bZero;            // La valeur BZERO si elle existe

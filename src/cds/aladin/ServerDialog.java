@@ -380,6 +380,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 //               sv.addElement(new ServerSWarp(aladin));
                sv.addElement(new ServerMocQuery(aladin));
             }
+//            if( Aladin.PROTO) sv.addElement(new ServerXmatch(aladin));
             if( Aladin.PROTO ) {//TODO:: tintinproto
             	this.tapManager = TapManager.getInstance(aladin);
                 if (aladin.glu.lastTapGluServer!=null) {//drag drop of new server take priority

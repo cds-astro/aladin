@@ -156,6 +156,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> CDS X-match integration in the Directory tree
  * @beta    <LI> HiPS IVOA 1.0 standard compatibility (Aladin + Hipsgen + Hipsserverlint)
  * @beta    <LI> UTF-8 BOM support
  * @beta    <LI> Script command extension for CS, SIA (1&2), SSA
@@ -181,6 +182,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Polarisation segment size normalized
  * @beta    <LI> Phot tool clic&drag fix
  * @beta    <LI> Fix to VOTable UTF-16 STREAM bug
  * @beta    <LI> Fix to Hipsgen mirror filenotfound bug
@@ -219,7 +221,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.618";
+   static public final    String VERSION = "v9.620";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -6538,7 +6540,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param writeCoo true si on ecrit les colonnes _RAJ2000 et _DEJ2000
     */
    private void writeVOTableStartTable(OutputStream s,Source o,boolean writeOID,
-         String linkSuffix,boolean addXY)
+         String linkSuffix,boolean addCoo, boolean addXY)
                throws IOException {
       int indent=4;
       Legende leg = o.leg;
@@ -6553,6 +6555,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Les définitions par des groupes
       if( leg.hasGroup() ) {
          writeBytes(s, leg.getGroup() );
+      }
+      
+      if( addCoo ) {
+         writeIndent(s,indent);
+         writeBytes(s, "<FIELD name=\"_RAJ2000\" datatype=\"double\" type=\"hidden\" />\n");
+
+         writeIndent(s,indent);
+         writeBytes(s, "<FIELD name=\"_DEJ2000\" datatype=\"double\" type=\"hidden\" />\n");
       }
 
       // Champs X et Y
@@ -6636,7 +6646,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param addXY ajout positions courantes X,Y
     * @param o L'objet a traiter
     */
-   private void writeVOTableData(OutputStream s,Source o,boolean writeOID,boolean addXY)
+   private void writeVOTableData(OutputStream s,Source o,boolean writeOID,boolean addCoo, boolean addXY)
          throws IOException {
       StringTokenizer st = new StringTokenizer(o.info,"\t");
       st.nextElement();		// On saute le triangle
@@ -6653,6 +6663,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       writeIndent(s,9);writeBytes(s, "<TR>");
+
+      if( addCoo ) {
+         writeBytes(s, "<TD>"+o.getRa()+"</TD>");
+         writeBytes(s, "<TD>"+o.getDec()+"</TD>");
+      }
 
       if( addXY ) {
          writeBytes(s, "<TD>"+pAddXY.x+"</TD>");
@@ -6684,7 +6699,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param writeOID true si on ecrit la colonne OID
     */
    private void writeSourceInVOTable(OutputStream s1, Source o,
-         boolean writeOID, String linkSuffix, boolean addXY)
+         boolean writeOID, String linkSuffix, boolean addCoo, boolean addXY)
                throws IOException {
       Legende leg=null;
 
@@ -6696,7 +6711,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       if( addXY ) view.getCurrentView().paintComponent(null);
 
-      leg = writeOneSourceInVOTable(s1,o,leg,writeOID,linkSuffix,addXY);
+      leg = writeOneSourceInVOTable(s1,o,leg,writeOID,linkSuffix,addCoo,addXY);
       if( leg==null ) {
          writeBytes(s1, "   </RESOURCE>\n");
          return;   // Il n'y avait aucun objet dans cette ressource
@@ -6717,7 +6732,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param writeOID true si on ecrit la colonne OID
     */
    private void writePlanInVOTable(OutputStream s1, Plan p,boolean onlySelected,
-         boolean writeOID, String linkSuffix, boolean addXY)
+         boolean writeOID, String linkSuffix, boolean addCoo, boolean addXY)
                throws IOException {
       Legende leg=null;
 
@@ -6740,7 +6755,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          // Ne traite que les objets selectionnes par l'utilisateur le cas echeant
          if( onlySelected && !((Position)o).isSelected() ) continue;
 
-         leg = writeOneSourceInVOTable(s1,o,leg,writeOID,linkSuffix,addXY);
+         leg = writeOneSourceInVOTable(s1,o,leg,writeOID,linkSuffix,addCoo, addXY);
       }
 
       if( leg==null ) {
@@ -6763,18 +6778,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @return la légende de la source courante
     */
    private Legende writeOneSourceInVOTable(OutputStream s1, Source o, Legende oleg,
-         boolean writeOID, String linkSuffix, boolean addXY)
+         boolean writeOID, String linkSuffix, boolean addCoo, boolean addXY)
                throws IOException {
 
       // Nouvelle table dans le plan courant
       if( o.leg!=oleg ) {
          if( oleg!=null ) writeBytes(s1, "      </TABLEDATA></DATA></TABLE>\n");    // fin de la table precedente
-         writeVOTableStartTable(s1,o,writeOID,linkSuffix,addXY);          //Nouvelle table
+         writeVOTableStartTable(s1,o,writeOID,linkSuffix,addCoo,addXY);          //Nouvelle table
          oleg=o.leg;
       }
 
       // Ecriture des donnees pour l'objet courant
-      writeVOTableData(s1,o,writeOID,addXY);
+      writeVOTableData(s1,o,writeOID,addCoo,addXY);
 
       return oleg;
    }
@@ -6784,18 +6799,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param plans tableau de plans catalogue. Si null, on parcourt tous les plans
     * @param os outputstream dans lequel on ecrit. Si null, on ecrit dans le MyByteArrayStream retourne
     * @param writeOID si true, on ajoute une colonne OID
-    * @param writeCoo si true, on ajoute les colonnes _RAJ2000 _DEJ2000
+    * @param xmatch 
+    * @param addCoo si true, on ajoute les colonnes _RAJ2000 _DEJ2000 si nécessaire
     * @param addXY si true, on ajoute les colonne X et Y (positions courantes)
     * @return MyByteArrayStream si os est null, retourne le stream dans lequel on a ecrit. retourne null sinon
     * @throws IOException
     */
    private MyByteArrayStream writeObjectInVOTable(Plan[] plans, OutputStream os,
-         boolean writeOID, boolean xmatch, boolean addXY)
+         boolean writeOID, boolean xmatch, boolean addCoo, boolean addXY)
                throws IOException {
-      return writeObjectInVOTable(plans,null,os,writeOID,xmatch,addXY);
+      return writeObjectInVOTable(plans,null,os,writeOID,xmatch,addCoo,addXY);
    }
    protected MyByteArrayStream writeObjectInVOTable(Plan[] plans, Source src, OutputStream os,
-         boolean writeOID, boolean xmatch, boolean addXY)
+         boolean writeOID, boolean xmatch, boolean addCoo, boolean addXY)
                throws IOException {
       MyByteArrayStream bas = null;
       OutputStream out;
@@ -6820,19 +6836,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( plans!=null ) {
          for( int i=0; i<plans.length; i++ ) {
             String linkSuffix = xmatch?"_tab"+(i+1):null;
-            writePlanInVOTable(out, plans[i], false, writeOID, linkSuffix, addXY);
+            writePlanInVOTable(out, plans[i], false, writeOID, linkSuffix, addCoo, addXY);
          }
 
          // Génération d'un VOTable juste pour cette source
       } else if( src!=null ) {
-         writeSourceInVOTable(out,src,writeOID,null,addXY);
+         writeSourceInVOTable(out,src,writeOID,null,addCoo,addXY);
 
          // sinon on génére le VOTable pour tous les objets selectionnes
       } else {
          for( int i=calque.plan.length-1; i>=0; i-- ) {
             Plan p = calque.plan[i];
             if( !p.isCatalog()  || !p.flagOk || !p.active ) continue;
-            writePlanInVOTable(out,p,view.hasSelectedObj(),writeOID,null,addXY);
+            writePlanInVOTable(out,p,view.hasSelectedObj(),writeOID,null, addCoo, addXY);
          }
       }
 
@@ -6846,7 +6862,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * dans Aladin (utilisé pour envoi VOTable à VOPlot)
     */
    protected MyByteArrayStream writeObjectInVOTable(Plan pc) throws IOException {
-      return writeObjectInVOTable(new Plan[] {pc}, null, false, false, false);
+      return writeObjectInVOTable(new Plan[] {pc}, null, false, false, false, false);
    }
 
    /**
@@ -6854,7 +6870,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * dans Aladin (utilisé pour envoi VOTable à VOPlot)
     */
    protected MyByteArrayStream writeObjectInVOTable() throws IOException {
-      return writeObjectInVOTable(null, null, true, false, false);
+      return writeObjectInVOTable(null, null, true, false, false, false);
    }
 
    /**
@@ -6864,12 +6880,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @return ByteArrayStream
     * @throws IOException
     */
-   protected MyByteArrayStream writePlaneInVOTable(Plan pc, OutputStream out, boolean addXY) throws IOException {
-      return writeObjectInVOTable(new Plan[] {pc}, out, false, false, addXY);
+   protected MyByteArrayStream writePlaneInVOTable(Plan pc, OutputStream out, boolean addCoo, boolean addXY) throws IOException {
+      return writeObjectInVOTable(new Plan[] {pc}, out, false, false, addCoo, addXY);
    }
 
    protected MyByteArrayStream writePlanesInVOTable(Plan[] pc, OutputStream out, boolean writeOID, boolean xmatch) throws IOException {
-      return writeObjectInVOTable(pc, out, writeOID, xmatch, false);
+      return writeObjectInVOTable(pc, out, writeOID, xmatch, false, false);
    }
 
 

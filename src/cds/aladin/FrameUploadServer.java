@@ -1,6 +1,14 @@
 package cds.aladin;
 
-import static cds.aladin.Constants.*;
+import static cds.aladin.Constants.ALADINTABLEPREFIX;
+import static cds.aladin.Constants.DISCARDACTION;
+import static cds.aladin.Constants.DISCARDALLACTION;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.REGEX_ALPHA;
+import static cds.aladin.Constants.REGEX_ONLYALPHANUM;
+import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
+import static cds.aladin.Constants.UPLOAD;
+import static cds.aladin.Constants.UPLOADTABLEPREFIX;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
@@ -14,10 +22,10 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -458,7 +466,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		}
 		if (aladin.save == null)
 			aladin.save = new Save(aladin);
-		aladin.save.saveCatVOTable(tmpFile, planCatalog, false);
+		aladin.save.saveCatVOTable(tmpFile, planCatalog, false,false);
 		tmpFile.deleteOnExit();
 		uploadedTableFiles.put(uploadTableName, tmpFile);
 		

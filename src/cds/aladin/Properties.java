@@ -552,12 +552,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Affichage de l'etat
       if( !plan.flagOk ) {
-         JLabel l = new JLabel();
+         MyAnchor l;
          String titre;
+         if( plan.error!=null ) { titre = ERROR; l = new MyAnchor(aladin,null,40,plan.error,null); }
+         else { titre = STATE; l = new MyAnchor(aladin,null,40,UNDER,null); }
          l.setForeground( Color.red );
          l.setFont(l.getFont().deriveFont(Font.BOLD));
-         if( plan.error!=null ) { titre = ERROR; l.setText(plan.error); }
-         else { titre = STATE; l.setText(UNDER); }
          PropPanel.addCouple(p,titre, l, g,c );
       }
 

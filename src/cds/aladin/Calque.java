@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.Scrollbar;
 import java.io.EOFException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -2143,15 +2144,19 @@ public class Calque extends JPanel implements Runnable {
       Plan [] plan = getPlans();
       Plan p = plan[n];
       int folder = p.folder;
-
+      
       // Les plans BG se mettent tjs en bas de la pile
       // juste au dessous du dernier plan qui n'est pas BG
       if( plan[n].type==Plan.ALLSKYIMG && !plan[n].isOverlay()) {
+         
          for( i=plan.length-1; i>=0; i-- ) {
             if( plan[i].type!=Plan.ALLSKYIMG ) break;
          }
          if( i+1==n ) return n; // inutile, c'est moi-même
-         if( i!=n ) permute(plan[n],plan[i]);
+         if( i!=n ) {
+            folder = plan[i].folder;
+            permute(plan[n],plan[i]);
+         }
          p.folder=folder;
          return i;
       }
@@ -3253,6 +3258,14 @@ public class Calque extends JPanel implements Runnable {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = new PlanCatalog(aladin,in,label,origin);
+      suiteNew(plan[n]);
+      return n;
+   }
+
+   protected int newPlanCatalog(HttpURLConnection in,String label) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = new PlanCatalog(aladin,in,label);
       suiteNew(plan[n]);
       return n;
    }

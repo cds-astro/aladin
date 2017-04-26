@@ -1290,12 +1290,12 @@ public final class Save extends JFrame implements ActionListener {
       }
    }
 
-   protected boolean saveCatalog(String s,Plan p, boolean tsv, boolean addXY) {
+   protected boolean saveCatalog(String s,Plan p, boolean tsv, boolean addCoo, boolean addXY) {
       s=aladin.getFullFileName(s);
       File f = new File(s);
       boolean rep;
       if( tsv ) rep=saveCatTSV(f,p);
-      else rep=saveCatVOTable(f,p,addXY);
+      else rep=saveCatVOTable(f,p,addCoo,addXY);
       if( rep ) aladin.memoLastFile(s);
       return rep;
    }
@@ -1303,7 +1303,7 @@ public final class Save extends JFrame implements ActionListener {
    protected boolean saveCatalog(File file, Plan p ,int mode) {
       if( mode==TSV ) return saveCatTSV(file,p);
       else if( mode==JSON ) return saveCatJSON(file,p);
-      else return saveCatVOTable(file,p,false);
+      else return saveCatVOTable(file,p,false,false);
    }
 
    /** Ajout d'un suffixe en cas de multi-table en TSV */
@@ -1561,11 +1561,11 @@ public final class Save extends JFrame implements ActionListener {
     * @param addXY ajout (ou non) des positions (X,Y) -> utilisé par SimPlay générique
     * @return boolean true si la sauvegarde s'est bien effectuee, false sinon
     */
-   protected boolean saveCatVOTable(File file, Plan p, boolean addXY ) {
+   protected boolean saveCatVOTable(File file, Plan p, boolean addCoo, boolean addXY ) {
       try {
          DataOutputStream out = new DataOutputStream(
                new BufferedOutputStream(new FileOutputStream(file)));
-         aladin.writePlaneInVOTable(p, out, addXY);
+         aladin.writePlaneInVOTable(p, out, addCoo, addXY);
          out.close();
       }
       catch(IOException ioe) {errorFile=errorFile+"\n"+file;return false;}

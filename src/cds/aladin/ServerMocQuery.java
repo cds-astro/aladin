@@ -25,9 +25,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -53,25 +53,27 @@ public class ServerMocQuery extends Server  {
                                           "DENIS", "GLIMPSE", "GSC23", "NOMAD", "PPMX", "PPMXL", "TYCHO2", "SIMBAD",
                                           "UKIDSS_DR8_LAS", "UKIDSS_DR6_GPS"};
 
-    private String baseUrl = "http://cdsxmatch.u-strasbg.fr/QueryCat/QueryCat";
+    protected String   baseUrl;
+    protected String title1,title2;
 
-    private JComboBox comboMoc;
-    private JComboBox comboCat;
+    private JComboBox  comboLocalPlane;
+    private JComboBox  comboCat;
     private JTextField textCat;
-    private JComboBox comboMaxNbRows;
+    private JComboBox  comboMaxNbRows;
 
   /** Initialisation des variables propres à MocQuery */
    protected void init() {
-      type    = CATALOG;
-      title = "MOC query";
-      aladinLabel     = "MOC";
+      type        = CATALOG;
+      title       = "MOC query";
+      title1      = "Choose a MOC";
+      title2      = "Catalog to query";
+      aladinLabel = "MOC";
+      baseUrl      = "http://cdsxmatch.u-strasbg.fr/QueryCat/QueryCat";
    }
 
-
    protected void createChaine() {
-      // TODO : localisation
-       description = "Query by MOC";
       super.createChaine();
+      description = "Query by MOC";
    }
 
  /** Creation du formulaire d'interrogation par MOC
@@ -101,16 +103,16 @@ public class ServerMocQuery extends Server  {
       add(l);
 
       // combo box pour choix du MOC
-      JLabel pTitre = new JLabel("Choose a MOC");
+      JLabel pTitre = new JLabel(title1);
       pTitre.setFont(Aladin.BOLD);
       pTitre.setBounds(XTAB1,y,XTAB2-10,HAUT);
       add(pTitre);
-      comboMoc = new JComboBox();
-      comboMoc.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
-      add(comboMoc);
+      comboLocalPlane = new JComboBox();
+      comboLocalPlane.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
+      add(comboLocalPlane);
 
       // combo box pour choix du catalogue à interroger
-      pTitre = new JLabel("Catalog to query");
+      pTitre = new JLabel(title2);
       pTitre.setFont(Aladin.BOLD);
       pTitre.setBounds(XTAB1,y,XTAB2-10,HAUT);
       add(pTitre);
@@ -123,9 +125,7 @@ public class ServerMocQuery extends Server  {
       comboCat = new JComboBox();
       comboCat.addItem("---");
       Arrays.sort(LARGE_CATS);
-      for (String cat: LARGE_CATS ) {
-          comboCat.addItem(cat);
-      }
+      for (String cat: LARGE_CATS ) comboCat.addItem(cat);
 
       comboCat.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
       add(comboCat);
@@ -144,13 +144,8 @@ public class ServerMocQuery extends Server  {
       comboCat.addItemListener(new ItemListener() {
 
           public void itemStateChanged(ItemEvent e) {
-              if (e.getItem().equals("---")) {
-                  textCat.setEnabled(true);
-              }
-              else {
-                  textCat.setEnabled(false);
-                  textCat.setText("");
-              }
+              if (e.getItem().equals("---")) textCat.setEnabled(true);
+              else { textCat.setEnabled(false); textCat.setText(""); }
           }
       });
 
@@ -166,7 +161,6 @@ public class ServerMocQuery extends Server  {
       comboMaxNbRows.addItem("unlimited");
       comboMaxNbRows.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
       add(comboMaxNbRows);
-
    }
 
    protected void adjustInputChoice(JComboBox c, Vector v,int defaut) {
@@ -189,51 +183,51 @@ public class ServerMocQuery extends Server  {
        // Précédent item sélectionné
        else c.setSelectedItem(s);
     }
+   
+   protected Vector<Plan> getPlans() {
+      return aladin.calque.getPlans(PlanCatalog.class);
+   }
 
     @Override
     public void setVisible(boolean flag) {
-        // update list of MOCs
+        // update list of local planes
         if (flag) {
-            Vector<Plan> mocs = aladin.calque.getPlans(PlanMoc.class);
-            comboMoc.removeAllItems();
-            if (mocs != null) {
-                for (Iterator it = mocs.iterator(); it.hasNext();) {
-                    comboMoc.addItem(it.next());
-                }
+            Vector<Plan> plans = getPlans();
+            comboLocalPlane.removeAllItems();
+            if (plans != null) {
+                for (Iterator it = plans.iterator(); it.hasNext(); ) comboLocalPlane.addItem(it.next());
             }
         }
-
         super.setVisible(flag);
     }
 
    protected boolean isDiscovery() { return false; }
    
-   
-   private PlanMoc dedicatedPlanMoc=null;
-   protected void setPlanMoc(PlanMoc planMoc) { dedicatedPlanMoc = planMoc; }
-   private PlanMoc getPlanMoc() {
-      if( dedicatedPlanMoc!=null ) return dedicatedPlanMoc;
-      return (PlanMoc)comboMoc.getSelectedItem();
+   private Plan dedicatedLocalPlane=null;
+   protected void setPlan(Plan plan) { dedicatedLocalPlane = plan; }
+   private Plan getPlan() {
+      if( dedicatedLocalPlane!=null ) return dedicatedLocalPlane;
+      return (Plan)comboLocalPlane.getSelectedItem();
    }
    
    private String catName=null;
    protected void setCatName(String cat) { catName=cat; }
-   private String getCatName() {
+   protected String getCatName() {
       if( catName!=null ) return catName;
       if (comboCat.getSelectedItem().equals("---")) return textCat.getText().trim();
       return comboCat.getSelectedItem().toString();
    }
-
-   private String planName=null;
+   
+   protected String planName=null;
    protected void setPlanName(String label) { planName=label; }
-   private String getPlanName() {
-      if( planName!=null ) return planName;
-      return getCatName() + " MOC query";
+   protected String getPlanName() {
+      String s = planName==null ? getCatName() : planName;
+      return s + " by MOC";
    }
    
    private String limit=null;
    protected void setLimit(String limit) { this.limit=limit; }
-   private String getLimit() {
+   protected String getLimit() {
       if( limit!=null ) return limit;
       return comboMaxNbRows.getSelectedItem().toString();
    }
@@ -241,91 +235,74 @@ public class ServerMocQuery extends Server  {
    private void submitThread() {
        waitCursor();
 
-
        URL url;
        try {
            url = new URL(baseUrl);
-           aladin.trace(4,"ServerMocQuery.submitThread: url="+url);
-       }
-       catch(MalformedURLException mue) {
+           aladin.trace(4,"ServerXQuery.submitThread: url="+url);
+       } catch(MalformedURLException e) {
            defaultCursor();
-           mue.printStackTrace();
+           e.printStackTrace();
            return;
        }
 
-//       PlanMoc selectedMoc = (PlanMoc)comboMoc.getSelectedItem();
-       PlanMoc selectedMoc = getPlanMoc();
-       if (selectedMoc==null) {
-           Aladin.warning("No MOC selected !");
+       Plan localPlan = getPlan();
+       if (localPlan==null) {
+           Aladin.warning("No local plane selected !");
            return;
        }
-       aladin.trace(4,"Sending MOC...");
+       
+       aladin.trace(4,"Sending local data...");
        try {
            MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
            String boundary = MultiPartPostOutputStream.createBoundary();
-           URLConnection urlConn = MultiPartPostOutputStream.createConnection(url);
+           HttpURLConnection urlConn = (HttpURLConnection)MultiPartPostOutputStream.createConnection(url);
            urlConn.setRequestProperty("Accept", "*/*");
-           urlConn.setRequestProperty("Content-Type",
-               MultiPartPostOutputStream.getContentType(boundary));
-           // set some other request headers...
+           urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
            urlConn.setRequestProperty("Connection", "Keep-Alive");
            urlConn.setRequestProperty("Cache-Control", "no-cache");
-           MultiPartPostOutputStream out =
-               new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
-
-           String catName = getCatName();
-//           if (comboCat.getSelectedItem().equals("---")) {
-//               catName = textCat.getText().trim();
-//           }
-//           else {
-//               catName = comboCat.getSelectedItem().toString();
-//           }
-           out.writeField("catName", catName);
-           out.writeField("mode", "mocfile");
-           out.writeField("format", "votable");
-//           String limit = comboMaxNbRows.getSelectedItem().toString();
-           String limit = getLimit();
-           if ( ! limit.equals("unlimited")) {
-               limit = limit.replaceAll(",", "");
-               out.writeField("limit", limit);
-           }
-
-           HealpixMoc hpxMoc = selectedMoc.getMoc();
-           File tmpMoc = File.createTempFile("moc", "fits");
-           tmpMoc.deleteOnExit();
-           FileOutputStream fo = new FileOutputStream(tmpMoc);
-           try {
-               hpxMoc.writeFits(fo);
-           }
-           finally {
-               try {
-                   fo.close();
-               }
-               catch(Exception e) {}
-           }
-           out.writeFile("mocfile", null, tmpMoc, false);
-
+           MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
+           addParameter(out);
+           addUpload(out,localPlan);
            out.close();
-           aladin.trace(4,"moc file sent");
+           aladin.trace(4,"Local data file sent");
+           aladin.calque.newPlanCatalog( urlConn, getPlanName());
+           aladin.trace(4,"Result loaded");
 
-           aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), getPlanName());
-           
-       }
-       catch(Exception ioe) {
+       } catch(Exception e) {
            defaultCursor();
-           ioe.printStackTrace();
-           Aladin.warning("An error occured while contacting the QueryCat service");
+           e.printStackTrace();
+           Aladin.warning("An error occured while contacting the remote service");
            return;
        }
        defaultCursor();
    }
-
+   
+   protected void addParameter( MultiPartPostOutputStream out ) throws Exception {
+      String catName = getCatName();
+      out.writeField("catName", catName);
+      out.writeField("mode", "mocfile");
+      out.writeField("format", "votable");
+      String limit = getLimit();
+      if ( ! limit.equals("unlimited")) {
+          limit = limit.replaceAll(",", "");
+          out.writeField("limit", limit);
+      }
+   }
+   
+   protected void addUpload( MultiPartPostOutputStream out, Plan plan ) throws Exception {
+      HealpixMoc hpxMoc = ((PlanMoc)plan).getMoc();
+      File tmp = File.createTempFile("tmp", "fits");
+      tmp.deleteOnExit();
+      FileOutputStream fo = new FileOutputStream(tmp);
+      try { hpxMoc.writeFits(fo); }
+      finally { try { fo.close(); } catch(Exception e) {} }
+      out.writeFile("mocfile", null, tmp, false);
+   }
+   
   /** Soumission du formulaire */
    public void submit() {
-       new Thread() {
-           public void run() {
-               submitThread();
-           }
-       }.start();
+      new Thread() {
+         public void run() { submitThread(); }
+      }.start();
    }
 }

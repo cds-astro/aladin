@@ -34,6 +34,7 @@ import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.StringTokenizer;
 
 import cds.allsky.Constante;
 import cds.allsky.Context;
@@ -340,45 +341,27 @@ public class PlanHealpix extends PlanBG {
       }
       //      prop.setProperty(Constante.OLD_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
       prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, Constante.getDate());
-
       prop.setProperty(Constante.KEY_HIPS_ORDER, maxOrder+"");
       prop.setProperty(Constante.OLD_NSIDE_FILE, newNSideImage+""); // TODO : oui, je sais, j'ai merdé sur les noms !! newNSideImage devrait s'appeler newNSideFile
       prop.setProperty(Constante.OLD_NSIDE_PIXEL, newNSideFile+""); // et newNSideFile devrait s'appeler newNSidePixel
-
       prop.setProperty(Constante.KEY_HIPS_TILE_WIDTH, CDSHealpix.pow2(hpxOrderGeneratedImgs)+"");
-
       prop.setProperty(Constante.OLD_ORDERING, ordering);
-
       prop.setProperty(Constante.OLD_TFIELDS, nField+"");
-
       prop.setProperty(Constante.OLD_TTYPES, Util.join(tfieldNames, ','));
-
       prop.setProperty(Constante.KEY_LOCAL_DATA, isLocal+"");
-
       prop.setProperty(Constante.KEY_GZ, isGZ+"");
-
       prop.setProperty(Constante.KEY_OFFSET, initialOffsetHpx+"");
-
       prop.setProperty(Constante.KEY_SIZERECORD, sizeRecord+"");
-
       prop.setProperty(Constante.OLD_ISPARTIAL, isPartial+"");
-      
       prop.setProperty(Constante.OLD_ISIAU, segmentIAUConv+"");
-
       prop.setProperty(Constante.OLD_ARGB, isARGB+"");
-
       prop.setProperty(Constante.OLD_NBPIXGENERATEDIMAGE, nbPixGeneratedImage+"");
-
       prop.setProperty(Constante.OLD_CURTFORMBITPIX, curTFormBitpix+"");
-
       prop.setProperty(Constante.KEY_HIPS_FRAME, getCoordSys(coordsys));
-
       prop.setProperty(Constante.OLD_LENHPX, Util.join(lenHpx, ','));
-
       prop.setProperty(Constante.OLD_TYPEHPX, Util.join(typeHpx, ','));
-
       prop.setProperty(Constante.OLD_ALADINVERSION, aladin.VERSION);
-
+      
       OutputStreamWriter out = null;
       try {
          out = new OutputStreamWriter( new FileOutputStream(propertiesFile(dir)) ,"UTF-8");
@@ -547,7 +530,6 @@ public class PlanHealpix extends PlanBG {
       try {
          badData = Double.parseDouble(headerFits.getStringFromHeader("BAD_DATA"));
          hasBadData=true;
-         System.out.println("BAD_DATA: "+badData);
       } catch( Exception e ) {
          //           // Pour HEALPIX - A VIRER LORSQUE LE MOT CLE BAD_DATA SERA POSITIONNE
          //           badData=-1.637499996306027E30/*-1.6375E+30*/; hasBadData=true;
@@ -892,6 +874,20 @@ public class PlanHealpix extends PlanBG {
 
          // typeHpx
          typeHpx = Util.splitAschar(prop.getProperty(Constante.OLD_TYPEHPX), ",");
+         
+         // On récupère les cuts (ATTENTION ne fonction que pour la polarisation)
+         s= prop.getProperty(Constante.KEY_HIPS_PIXEL_CUT);
+         if( s!=null ) {
+            StringTokenizer st = new StringTokenizer(s);
+            pixelMin = Double.parseDouble( st.nextToken());
+            pixelMax = Double.parseDouble( st.nextToken());
+         }
+         s= prop.getProperty(Constante.KEY_HIPS_DATA_RANGE);
+         if( s!=null ) {
+            StringTokenizer st = new StringTokenizer(s);
+            dataMin = Double.parseDouble( st.nextToken());
+            dataMax = Double.parseDouble( st.nextToken());
+         }
 
 
       } catch (Exception e) {
@@ -1509,7 +1505,7 @@ public class PlanHealpix extends PlanBG {
                   fitsU.loadFITS(getAllskyFilePath(idxPolaU, 3));
                   fitsQ.loadFITS(getAllskyFilePath(idxPolaQ, 3));
 
-                  if (idxTFormToRead == POLA_AMPLITUDE_MAGIC_CODE) {
+                  if (idxTFormToRead == POLA_AMPLITUDE_MAGIC_CODE || idxTFormToRead == POLA_SEGMENT_MAGIC_CODE ) {
                      double[] dataExtrema = getPolaAmpMinMax(fitsQ, fitsU, true);
                      dataMinPola = dataExtrema[0];
                      dataMaxPola = dataExtrema[1];
@@ -1530,7 +1526,7 @@ public class PlanHealpix extends PlanBG {
                   }
                   computePolarisation(fitsOut, fitsQ, fitsU, 3, npix,
                         true, dataMinPola, dataMaxPola, pixelMinPola,
-                        pixelMaxPola, idxTFormToRead, segmentIAUConv);
+                        pixelMaxPola, idxTFormToRead);
                   fitsOut = null;
                } catch (Exception e1) {
                   e1.printStackTrace();
@@ -1553,10 +1549,10 @@ public class PlanHealpix extends PlanBG {
 
                      try {
                         if (fitsOut == null && idxTFormToRead != POLA_SEGMENT_MAGIC_CODE) {
-                           fitsOut = new Fits(fitsU.width, fitsU.heightCell, -32);
+                           fitsOut = new Fits(fitsU.width, fitsU.height, -32);
                         }
                         computePolarisation(fitsOut, fitsQ, fitsU, norder, npix, false, dataMinPola,
-                              dataMaxPola, pixelMinPola, pixelMaxPola, idxTFormToRead, segmentIAUConv);
+                              dataMaxPola, pixelMinPola, pixelMaxPola, idxTFormToRead);
                      } catch (Exception e1) {
                         e1.printStackTrace();
                         continue;
@@ -1571,7 +1567,7 @@ public class PlanHealpix extends PlanBG {
 
                // écriture fichier de properties dans repertoire de
                // polarisation
-               writePropertiesFile(getDirname() + Util.FS + dirNameForIdx(idxTFormToRead));
+               writePropertiesFile(getDirname() + Util.FS + dirNameForIdx(idxTFormToRead) );
             }
          } catch (Exception e) {
             e.printStackTrace();
@@ -1594,19 +1590,19 @@ public class PlanHealpix extends PlanBG {
     * @param dataMax
     * @param pixelMin
     * @param pixelMax
-    * @param polcconIAU Convention IAU: true => inversion du signe su U
     *
     * @param mode:
     */
    private void computePolarisation(Fits fitsOut, Fits fitsQ, Fits fitsU,
          int norder, int npix, boolean allsky,
-         double dataMin, double dataMax, double pixelMin, double pixelMax, int mode, boolean polcconvIAU)
+         double dataMin, double dataMax, double pixelMin, double pixelMax, int mode)
                throws Exception {
       HeaderFits extHeader;
       int mybitpix = -32;
       int w, h;
       w = fitsQ.width;
       h = fitsQ.height;
+      
 
       try {
          String header = "XTENSION=IMAGE\nBITPIX="+mybitpix +"\nNAXIS=2\nNAXIS1="+w +"\nNAXIS2="+h;
@@ -1626,6 +1622,11 @@ public class PlanHealpix extends PlanBG {
 
       //////// mode DRAW_POLA_SEGMENT ////////
       if (mode==POLA_SEGMENT_MAGIC_CODE) {
+         
+         // PF 24 Avril 2017 - Je normalise entre 0 et 1 pour que les segments aient une taille raisonnable
+         fitsQ = normalize(fitsQ,pixelMin,pixelMax);
+         fitsU = normalize(fitsU,pixelMin,pixelMax);
+         
          fitsQ.clearExtensions();
          fitsQ.addFitsExtension(extHeader, fitsU.pixels);
          String path = allsky ? getAllskyFilePath(POLA_SEGMENT_MAGIC_CODE, norder) : getFilePath(POLA_SEGMENT_MAGIC_CODE, norder, npix) + ".fits";
@@ -1641,9 +1642,6 @@ public class PlanHealpix extends PlanBG {
       for (int x = 0; x < w; x++) {
          for (int y = 0; y < h; y++) {
             valU = fitsU.getPixelFull(x, y);
-            if( polcconvIAU ) {
-               valU = -valU;     // PF - Avril 2017 - info par Eric Hivon
-            }
             valQ = fitsQ.getPixelFull(x, y);
             // on s'intéresse à la norme
             if (mode==POLA_AMPLITUDE_MAGIC_CODE) {
@@ -1653,13 +1651,29 @@ public class PlanHealpix extends PlanBG {
             else {
                value = Math.toDegrees(0.5 * Math.atan2(valU, valQ));
             }
-            //              angle = 0.5 * Math.atan(valU/valQ);
             fitsOut.setPixelDouble(x, y, value);
          }
       }
       String path = allsky ? getAllskyFilePath(mode, norder) : getFilePath(mode, norder, npix) + ".fits";
       fitsOut.writeFITS(path);
    }
+   
+   // Normalisation entre 0 et 1
+   private Fits normalize(Fits in, double min, double max) {
+      Fits out = new Fits(in.width, in.height, in.bitpix );
+      double range = max-min;
+      if( range==0 ) return in;
+      for( int y=0; y<in.height; y++ ) {
+         for( int x=0; x<in.width; x++ ) {
+            double val = in.getPixelDouble(x,y);
+            val = (val / range) + min;
+            out.setPixelDouble(x,y,val);
+         }
+      }
+      return out;
+   }
+   
+  
 
    /**
     * Création d'un nouveau PlanHealpix pour l'indice tform passé en parametre

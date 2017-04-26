@@ -99,6 +99,7 @@ class HealpixKeyPol extends HealpixKey {
       if( pixelsOrigin2!=null ) { pixelsOrigin2=null; rep=1; }
       return rep;
    }
+   
 
    final private double getPixVal(byte[]t ,int bitpix,int i) {
       switch(bitpix) {
@@ -115,14 +116,11 @@ class HealpixKeyPol extends HealpixKey {
       }
       return 0;
    }
+   
 
 
-   /** Chargement du losange sous forme de FITS. Si le BITPIX n'est pas à 8, il y a conversions des pixels
-    * en 8 bits en fonction des valeurs PIXELMIN et PIXELMAX indiquées dans l'entête. Si ces valeurs
-    * sont absentes ou égales (par exemple 0,0), Aladin effectue un autocut
-    * @return le nombre de bytes du flux FITS */
-   @Override
-protected int loadFits(String filename) throws Exception {
+   /** Chargement de la tuile FITS contenant pixU et pixQ en deux extensions HDU */
+   protected int loadFits(String filename) throws Exception {
 
       byte [] buf = loadStream(filename);
 
@@ -141,6 +139,7 @@ protected int loadFits(String filename) throws Exception {
       System.arraycopy(buf, 2880, in, 0, taille);
       pixelsOrigin = new byte[in.length];
       invLine(in,pixelsOrigin,bitpix);
+
 
       // Allocation puis lecture du deuxième HDU pour Q
       int pos = 2880+taille;
@@ -163,7 +162,6 @@ protected int loadFits(String filename) throws Exception {
          }
       }
 
-      in=null;
       return pos;
    }
 
@@ -185,7 +183,7 @@ protected int loadFits(String filename) throws Exception {
 
    static final private int MAXPOLARSIZE=15;
    
-   static private boolean bingo=true;
+//   static private boolean bingo=true;
 
    /** Trace les segments de polarisation décrits dans ce losange Healpix */
    protected int drawPolarisation(Graphics g,ViewSimple v) { return drawPolarisation(g,v,0); }
@@ -242,7 +240,7 @@ protected int loadFits(String filename) throws Exception {
                double polaU = getPixVal(pix2,bitpix2,offset);
                
                if( planBG.isSegmentIAUConv() ) {
-                  if( bingo ) { System.out.println("bingo IAU"); bingo=false; }
+//                  if( bingo ) { System.out.println("bingo IAU"); bingo=false; }
                   polaU= -polaU;
                }
 

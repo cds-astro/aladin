@@ -460,7 +460,7 @@ public class HipsGen {
          
           long t = System.currentTimeMillis();
          new Task(context,actions,true);
-         if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+         if( context.isTaskAborting() ) context.abort(context.getTitle("(aborted after "+Util.getTemps(System.currentTimeMillis()-t),'='));
          else {
             if( !flagMirror ) {
                String id = context.getHipsId();
@@ -470,7 +470,7 @@ public class HipsGen {
                }
                context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
             }
-            context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+            context.done(context.getTitle("THE END (done in "+Util.getTemps(System.currentTimeMillis()-t),'='));
          }
          
       } catch (Exception e) {

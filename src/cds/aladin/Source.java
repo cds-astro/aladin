@@ -1206,7 +1206,7 @@ public class Source extends Position implements Comparator {
 
    /** VOTable just for this source */
    public InputStream getVOTable() throws Exception {
-      return plan.aladin.writeObjectInVOTable(null, this, null, true, false, false).getInputStream();
+      return plan.aladin.writeObjectInVOTable(null, this, null, true, false, false,false).getInputStream();
    }
 
   /**

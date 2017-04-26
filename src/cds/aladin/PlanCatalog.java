@@ -20,6 +20,9 @@
 package cds.aladin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Vector;
@@ -78,6 +81,15 @@ public class PlanCatalog extends Plan {
    protected PlanCatalog(Aladin aladin, MyInputStream in,String label) {
    	this(aladin,in,label,null);
    }
+
+   private HttpURLConnection httpConn;
+   
+   protected PlanCatalog(Aladin aladin, HttpURLConnection httpConn,String label) {
+      this.httpConn = httpConn;
+      if( label==null) label="HttpConn";
+      flagWaitTarget=true;
+      Suite(aladin,label,"","",null,null);
+     }
 
   /** Creation d'un plan de type CATALOG (sans info)
    */
@@ -233,13 +245,31 @@ public class PlanCatalog extends Plan {
    */
    protected boolean waitForPlan() {
       int n=0;
+      boolean flagError=false;
+      
+      // On n'a pas encore le MyInputStream, mais uniquement la connection http
+      if( httpConn!=null ) {
+         try {
+            InputStream is;
+            if( httpConn.getResponseCode() < 400 ) {
+               is = httpConn.getInputStream();
+            } else {
+               flagError=true;
+               is = httpConn.getErrorStream();;
+            }
+            dis = new MyInputStream( is );
+         } catch( IOException e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            return false;
+         }
+      }
 
-      // Chargement du catalogue, soit local, soit distant, soit par inputStream (VOTable seulement)
-      //if( flagLocal ) n=pcat.setPlanCat(this,dis);
       if( dis!=null ) n=pcat.setPlanCat(this,dis,null,true);
       else if( flagLocal ) n=pcat.setPlanCat(this,url,true);
       else n=pcat.setPlanCat(this,u,true);
-
+      
+      if( flagError ) n=-1;
+      
       if( n==0 )  aladin.error = error = "No object found in the field!";
       if( n<=0 ) {
           callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.ERROR, aladin.error));

@@ -1047,7 +1047,7 @@ public class PlasticManager implements PlasticListener, AppMessagingInterface {
 		new Thread("AladinPlasticSendTable") {
 			public void run() {
 				if( a.save==null ) a.save = new Save(a);
-				a.save.saveCatVOTable(tmpFile, pc, false);
+				a.save.saveCatVOTable(tmpFile, pc, false,false);
 				URL url = SAMPUtil.getURLForFile(tmpFile);
 				String urlStr = url.toString();
 				String id = pc.getPlasticID();

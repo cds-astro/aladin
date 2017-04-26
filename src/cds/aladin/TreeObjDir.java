@@ -835,6 +835,35 @@ public class TreeObjDir extends TreeObj {
       else if( getUrl()==null && isCatalog() ) loadCS();
       else loadHips();
    }
+   
+   void queryByXmatch() {
+      ServerXmatch serverXmatch = new ServerXmatch(aladin);
+
+      // Détermination du PlanCatalogue
+      Plan plan=null;
+      for( Object p : aladin.calque.getSelectedPlanes() ) {
+         if( ((Plan)p).isSimpleCatalog() && ((Plan)p).flagOk) { plan=(Plan)p; break; }
+      }
+      if( plan==null ) {
+         for( Object p : aladin.calque.getPlans() ) {
+            if( ((Plan)p).isSimpleCatalog() && ((Plan) p).flagOk) { plan=(Plan)p; break; }
+         }
+      }
+      if( plan==null ) {
+         aladin.warning("You need to select or have a catalog plane in the stack");
+         return;
+      }
+      serverXmatch.setPlan(plan);
+
+      serverXmatch.setCatName(internalId);
+      serverXmatch.setPlanName(internalId);
+
+      // Pas de limitation
+      serverXmatch.setLimit("5000000");
+
+      // Et c'est parti
+      serverXmatch.submit();
+   }
 
    /** Open the TAP form associated to this collection => Chaitra */
    void queryByTap() {
@@ -1174,7 +1203,7 @@ public class TreeObjDir extends TreeObj {
          aladin.warning("You need to select or have a MOC plane in the stack");
          return;
       }
-      serverMoc.setPlanMoc(planMoc);
+      serverMoc.setPlan(planMoc);
       
       // Positionnement de l'identificateur du catalog
       int i = internalId.indexOf('/');
