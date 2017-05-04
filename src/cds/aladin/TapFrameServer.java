@@ -20,11 +20,12 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.SUBMITPANEL;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.LOADCLIENTTAPURL;
 import static cds.aladin.Constants.REGISTRYPANEL;
+import static cds.aladin.Constants.SUBMITPANEL;
 import static cds.tools.CDSConstants.DEFAULT;
 import static cds.tools.CDSConstants.WAIT;
-import static cds.aladin.Constants.EMPTYSTRING;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
@@ -32,10 +33,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
@@ -58,9 +62,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    
 	private static final long serialVersionUID = 1L;
 
-	static String FSSELECTTAP, INFO = " ? ", CLOSE, TIPSUBMIT, TIPCLOSE, FILTER, RESET, GO, LOAD, TIPLOAD, RELOAD,
-			TIPRELOAD, TAPNOFILELOAD, TAPNOFILERELOAD, SELECTSERVERTOOLTIP, SELECTASYNCPANELTOOLTIP,
-			NOTAPSERVERSCONFIGUREDMESSAGE;
+	static String FSSELECTTAP, INFO = " ? ", CLOSE, TIPSUBMIT, TIPCLOSE, TAPURLCLIENTFILTERLABEL, FILTER, RESET, GO, LOAD, TIPLOAD,
+			TIPRELOAD, TAPNOFILELOAD, TAPNOFILERELOAD, SELECTSERVERLABEL, SELECTASYNCPANELLABEL, SELECTSERVERTOOLTIP,
+			SELECTASYNCPANELTOOLTIP, NOTAPSERVERSCONFIGUREDMESSAGE, TAPURLCLIENTFIELDLABEL;
 
    Aladin aladin;
    TapManager tapManager;
@@ -68,9 +72,12 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    private JPanel panelScroll;
    GridBagLayout g;
    GridBagConstraints c;
-   protected JButton reloadServerButton;
    JTabbedPane tabbedTapThings;
    JPanel registryPanel;
+   public DataLabel selectedServerLabel;
+   
+   //inputs
+   JTextField userProvidedTapUrl;
 
    protected void createChaine() {
       GO = Aladin.chaine.getString("FSGO");
@@ -82,13 +89,16 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
       LOAD = Aladin.chaine.getString("FSLOAD");
       TIPLOAD = Aladin.chaine.getString("TIPLOAD");
       FSSELECTTAP = Aladin.chaine.getString("FSSELECTTAP");
-      RELOAD = Aladin.chaine.getString("FSRELOAD");
       TIPRELOAD = Aladin.chaine.getString("TIPRELOAD");
       TAPNOFILELOAD = Aladin.chaine.getString("TAPNOFILELOAD");
       TAPNOFILERELOAD = Aladin.chaine.getString("TAPNOFILERELOAD");
+      SELECTSERVERLABEL = Aladin.chaine.getString("SELECTSERVERLABEL");
+      SELECTASYNCPANELLABEL = Aladin.chaine.getString("SELECTASYNCPANELLABEL");
       SELECTSERVERTOOLTIP = Aladin.chaine.getString("SELECTSERVERTOOLTIP");
       SELECTASYNCPANELTOOLTIP = Aladin.chaine.getString("SELECTASYNCPANELTOOLTIP");
       NOTAPSERVERSCONFIGUREDMESSAGE = Aladin.chaine.getString("NOTAPSERVERSCONFIGUREDMESSAGE");
+      TAPURLCLIENTFIELDLABEL = Aladin.chaine.getString("TAPURLCLIENTFIELDLABEL");
+      TAPURLCLIENTFILTERLABEL = Aladin.chaine.getString("TAPURLCLIENTFILTERLABEL");
    }
 
 	protected TapFrameServer(Aladin aladin, TapManager tapManager){
@@ -119,8 +129,8 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 
 		tabbedTapThings = new JTabbedPane();
 		tabbedTapThings.setFont(Aladin.PLAIN);
-		tabbedTapThings.addTab("Select server", null, registryPanel, SELECTSERVERTOOLTIP);
-		tabbedTapThings.addTab("Async jobs", null, asyncPanel, SELECTASYNCPANELTOOLTIP);
+		tabbedTapThings.addTab(SELECTSERVERLABEL, null, registryPanel, SELECTSERVERTOOLTIP);
+		tabbedTapThings.addTab(SELECTASYNCPANELLABEL, null, asyncPanel, SELECTASYNCPANELTOOLTIP);
 		return tabbedTapThings;
 	}
   
@@ -130,12 +140,45 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 
 		int scrollWidth = 650;
 		int scrollHeight = 500;
+		
+		JPanel urlClientPanel = new JPanel(new GridBagLayout());
+		c = new GridBagConstraints();
+		c.gridx = 0;
+	    c.gridy = 0;
+		c.gridy++;
+		c.gridx = 0;
+		c.gridwidth = 1;
+//		this.getContentPane().add(file, c);
+		c.insets = new Insets(1, 10, 1, 1);
+		
+		c.gridx = 0;
+		c.insets = new Insets(1,1,1,1);
+		c.weightx = 0.05;
+		urlClientPanel.add(new JLabel(TAPURLCLIENTFIELDLABEL), c);
+		
+		c.gridx = 1;
+		c.weightx = 0.90;
+		userProvidedTapUrl = new JTextField();
+		userProvidedTapUrl.setPreferredSize(new Dimension(240, Server.HAUT));
+		c.anchor = GridBagConstraints.WEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		urlClientPanel.add(userProvidedTapUrl, c);
+
+		JButton loadUserUrl = new JButton(LOAD);
+		loadUserUrl.setActionCommand(LOADCLIENTTAPURL);
+		loadUserUrl.addActionListener(this);
+		c.fill = GridBagConstraints.NONE;
+		c.anchor = GridBagConstraints.WEST;
+		c.insets = new Insets(1, 1, 1, 35);
+		c.weightx = 0.05;
+		c.gridx = 2;
+		urlClientPanel.add(loadUserUrl, c);
 
 		List<DataLabel> datalabels = tapManager.getTapServerList();
 		if (datalabels != null && !datalabels.isEmpty()) {
 			JPanel check = new JPanel();
 			JButton b;
-			check.add(new JLabel("      " + FILTER + ": "));
+			check.add(new JLabel(TAPURLCLIENTFILTERLABEL + FILTER + ": "));
 			filter = new JTextField(15);
 			check.add(filter);
 			filter.addKeyListener(this);
@@ -145,6 +188,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			b.addActionListener(this);
 
 			JPanel header = new JPanel(new BorderLayout());
+			header.add(urlClientPanel, "North");
 			header.add(check, "West");
 
 			registryPanel.add(header, "North");
@@ -167,14 +211,13 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			submit.add(b = new JButton(LOAD));
 			b.addActionListener(this);
 			b.setToolTipText(TIPLOAD);
-			submit.add(reloadServerButton = new JButton(RELOAD));
-			reloadServerButton.addActionListener(this);
-			reloadServerButton.setToolTipText(TIPRELOAD);
 			submit.add(b = new JButton(CLOSE));
 			b.addActionListener(this);
 			b.setToolTipText(TIPCLOSE);
 			registryPanel.add(submit, "South");
 		} else {
+			registryPanel.add(urlClientPanel, "North");
+			
 			panelScroll = new JPanel();
 			panelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
 			Aladin.makeAdd(registryPanel, panelScroll, "Center");
@@ -215,7 +258,6 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 				h++;
 
 				dataLabel.setUi();
-				dataLabel.setUiActionForTapRegistry();
 //				height = dataLabel.gui.getPreferredSize().height;
 //				dataLabel.gui.setPreferredSize(new Dimension(330, height));
 				Color bg = h % 2 == 0 ? TwoColorJTable.DEFAULT_ALTERNATE_COLOR : getBackground();
@@ -261,65 +303,55 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		} else if (s.equals(RESET)) {
 			reset();
 		} else if (s.equals(LOAD)) {
-			this.tapManager.setSelectedServerLabel();
-			if (this.tapManager.getSelectedServerLabel() != null) {
-				loadServer();
-			} else {
-				Aladin.warning(TAPNOFILELOAD);
-			}
-		} else if (s.equals(RELOAD)) {
 			try {
+				Aladin.makeCursor(this, WAIT);
 				this.tapManager.setSelectedServerLabel();
-				if (this.tapManager.getSelectedServerLabel() != null) {
-					reloadServer();
+				if (this.selectedServerLabel != null) {
+					if (this.selectedServerLabel == null || this.selectedServerLabel.getLabel() == null
+							|| this.selectedServerLabel.getValue() == null) {// not a necessary condition. But adding just in case.
+						this.tapManager.showTapRegistryForm();
+					} else {
+						this.tapManager.loadTapServer(this.selectedServerLabel.getLabel(),
+								this.selectedServerLabel.getValue(), null);
+						this.aladin.dialog.show(this.aladin.dialog.tapServer);
+					}
 				} else {
-					Aladin.warning(TAPNOFILERELOAD);
+					Aladin.warning(TAPNOFILELOAD);
 				}
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				Aladin.warning(e1.getMessage());
+			} finally {
+				Aladin.makeCursor(this, DEFAULT);
 			}
+		} else if (s.equals(LOADCLIENTTAPURL)) {
+			loadInputUrlServer();
 		}
 	}
 
 	/**
-	 * Action on click of load button: asks tap manager downstream to load whichever 
-	 * server is selected by user on the tap servers list
+	 * Loads tap client from the url provided by the user
 	 */
-	private void loadServer() {
+	private void loadInputUrlServer() {
 		try {
 			Aladin.makeCursor(this, WAIT);
-			this.tapManager.loadTapServer();
-			this.aladin.dialog.show(this.aladin.dialog.tapServer);
+			if (userProvidedTapUrl.getText() != null && !userProvidedTapUrl.getText().isEmpty()) {
+				URL tapUrl = new URL(userProvidedTapUrl.getText());
+				Aladin.trace(3, "Will create tap client for: " + tapUrl);
+				tapManager.loadTapServer(tapUrl.toString(), tapUrl.toString(), null);
+				this.aladin.dialog.show(this.aladin.dialog.tapServer);
+			}
 			Aladin.makeCursor(this, DEFAULT);
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			if (Aladin.levelTrace >= 3)
+				e1.printStackTrace();
+			Aladin.warning("Error! please check the url provided");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			Aladin.makeCursor(this, DEFAULT);
 			e.printStackTrace();
 		}
-	}
-	
-	/**
-	 * Method sets whether the server can be reloaded or not
-	 * Servers loaded for GLU are not 
-	 * Servers which have been loaded/if load resulted in error: can be reloaded
-	 * @param serverId
-	 */
-	public void setReload(String serverId) {
-		this.reloadServerButton.setEnabled(this.tapManager.canReload(serverId));
-	}
-	
-	/**
-	 * Removes userselected server from cache and reloads it
-	 */
-	private void reloadServer() {
-		Aladin.makeCursor(this, WAIT);
-		this.tapManager.removeCurrentFromServerCache();
-		this.tapManager.loadTapServer();
-		this.aladin.dialog.show(this.aladin.dialog.tapServer);
-//		this.tapManager.loadTapServerForSimpleFrame("SIMBAD_TAP", "http://simbad.u-strasbg.fr:80/simbad/sim-tap");
-//		this.tapManager.loadTapServerForSimpleFrame("GAIA_VIZIER","http://tapvizier.u-strasbg.fr/TAPVizieR/tap");
-		Aladin.makeCursor(this, DEFAULT);
 	}
 
 	private void go() {

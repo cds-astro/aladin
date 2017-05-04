@@ -19,7 +19,48 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.*;
+import static cds.aladin.Constants.AMPERSAND_CHAR;
+import static cds.aladin.Constants.BAND;
+import static cds.aladin.Constants.BandSODAForm;
+import static cds.aladin.Constants.COMMA_CHAR;
+import static cds.aladin.Constants.DATALINK_CUTOUT_FORMLABEL;
+import static cds.aladin.Constants.DATALINK_FORM;
+import static cds.aladin.Constants.DEC_STRING;
+import static cds.aladin.Constants.DIMENSIONS;
+import static cds.aladin.Constants.DOLLAR_CHAR;
+import static cds.aladin.Constants.DateTimeMJD;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.EM_MAX;
+import static cds.aladin.Constants.EM_MIN;
+import static cds.aladin.Constants.EQUALS_CHAR;
+import static cds.aladin.Constants.ID;
+import static cds.aladin.Constants.LIMIT_UNKNOWN_MESSAGE;
+import static cds.aladin.Constants.NUMBEROFOPTIONS;
+import static cds.aladin.Constants.POL;
+import static cds.aladin.Constants.POL_DEFAULT_VALUES;
+import static cds.aladin.Constants.POL_STATES;
+import static cds.aladin.Constants.QUESTIONMARK_CHAR;
+import static cds.aladin.Constants.RANGE_DELIMITER;
+import static cds.aladin.Constants.RA_STRING;
+import static cds.aladin.Constants.SETFORMVALUES;
+import static cds.aladin.Constants.SODAPOL_DATATYPE;
+import static cds.aladin.Constants.SODA_BANDINDEX;
+import static cds.aladin.Constants.SODA_IDINDEX;
+import static cds.aladin.Constants.SODA_POLINDEX;
+import static cds.aladin.Constants.SODA_POSINDEX1;
+import static cds.aladin.Constants.SODA_POSINDEX2;
+import static cds.aladin.Constants.SODA_POSINDEX3;
+import static cds.aladin.Constants.SODA_STANDARDID;
+import static cds.aladin.Constants.SODA_SYNC_FORM;
+import static cds.aladin.Constants.SODA_TIMEINDEX;
+import static cds.aladin.Constants.SODA_URL_PARAM;
+import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.STANDARDID;
+import static cds.aladin.Constants.S_REGION;
+import static cds.aladin.Constants.TIME;
+import static cds.aladin.Constants.T_MAX;
+import static cds.aladin.Constants.T_MIN;
+import static cds.aladin.Constants.UTF8;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -381,14 +422,14 @@ public final class DataLinkGlu {
 	      if( system!=null && system.trim().length()==0 ) system=null;
 	      if( institute == null ) institute = description;
 	      
-	   ServerGlu g=null;
-	      if( aladin!=null ) {  
-	    	  g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
-	                  aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
-	                  paramRange, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null);
-	    	  vGluDLServer.clear();
-	    	  vGluDLServer.addElement(g);
-	      }
+		ServerGlu g = null;
+		if (aladin != null) {
+			g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, aladinMenuNumber, aladinLabel,
+					aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, paramRange, resultDataType,
+					institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, null);
+			vGluDLServer.clear();
+			vGluDLServer.addElement(g);
+		}
   }
 	
 	void reload(boolean clearBefore, Vector server) {

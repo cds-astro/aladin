@@ -383,14 +383,19 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 //            if( Aladin.PROTO) sv.addElement(new ServerXmatch(aladin));
             if( Aladin.PROTO ) {//TODO:: tintinproto
             	this.tapManager = TapManager.getInstance(aladin);
-                if (aladin.glu.lastTapGluServer!=null) {//drag drop of new server take priority
+            	
+            	tapServer = new ServerTap(aladin);
+				sv.addElement(tapServer);
+            	
+            	
+                /*if (aladin.glu.lastTapGluServer != null) {//drag drop of new server take priority
                 	tapServer = aladin.glu.lastTapGluServer;
                 	tapServer.HIDDEN = false;
                 	if( !tapServer.isVisible() ) tapServer.setVisible(true);
-    			} else {//initial aladin load
-    				tapServer = new ServerTap(aladin, true);
+    			} else{//initial aladin load
+    				tapServer = new ServerTap(aladin);
     				sv.addElement(tapServer);
-    			}
+    			}*/
             }
             
          } else {
@@ -1320,7 +1325,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       if( i<0 ) return false;
       
       if (Aladin.PROTO && "TAP".equals(nom)) {//TODO::tintinproto
-    	  if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
+    	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
+  			return false;
+      	  };
+    	  /*if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
     		  try {
 				this.tapManager.showTapRegistryForm();
 			} catch (Exception e) {
@@ -1329,7 +1337,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 				e.printStackTrace();
 			}
     		  return false;
-		  }
+		  }*/
       }
       
       setCurrent(i);
@@ -1536,7 +1544,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       // Changement du formulaire
       server[current].memTarget(); // Memorisation du precedent target
       if (Aladin.PROTO && "TAP".equals(what)) {//TODO::tintinproto
-    	  if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
+    	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
+			return false;
+    	  };
+    	 /* if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
     		  try {
 				this.tapManager.showTapRegistryForm();
 			} catch (Exception e) {
@@ -1545,7 +1556,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 				e.printStackTrace();
 			}
     		  return false;
-		  }
+		  }*/
       }
       setCurrent((String) what);
 

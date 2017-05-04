@@ -39,7 +39,6 @@ import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.SYNC_ASYNC;
 import static cds.aladin.Constants.TABLECHANGED;
 import static cds.aladin.Constants.UTF8;
-import static cds.aladin.Constants.WRITEQUERY;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -79,7 +78,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import adql.parser.ADQLParser;
-import cds.aladin.Constants.TapServerMode;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -123,7 +121,6 @@ public class ServerGlu extends Server implements Runnable {
    private Hashtable<String, String> adqlFuncParams = null;
    JComboBox sync_async;
    String LISTDELIMITER = SPACESTRING;
-   public TapServerMode mode = TapServerMode.GLU;
 
    protected void createChaine() {
       super.createChaine();
@@ -147,12 +144,13 @@ public class ServerGlu extends Server implements Runnable {
     * @param record simple copie de l'enregistrement GLU original
     * @param tapTables
     * @param gluAdqlTemplate
+ * @param tapClient 
     */
 	protected ServerGlu(Aladin aladin, String actionName, String description, String verboseDescr, String aladinMenu,
 			String aladinMenuNumber, String aladinLabel, String planeLabel, String docUser, String[] paramDescription,
 			String[] paramDataType, String[] paramValue, String[][] paramRange, String resultDataType, String institute,
 			String[] aladinFilter, String aladinLogo, String dir, String system, StringBuffer record,
-			String aladinProtocol, String[] tapTables, GluAdqlTemplate gluAdqlTemplate) {
+			String aladinProtocol, String[] tapTables, GluAdqlTemplate gluAdqlTemplate, TapClient tapClient) {
 
       this.aladin = aladin;
       createChaine();
@@ -195,9 +193,7 @@ public class ServerGlu extends Server implements Runnable {
             || resultDataType.indexOf("idha")>=0  || resultDataType.indexOf("ssa")>=0 );
       flagTAP = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tap")==0; 
       flagTAPV2 = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tapv1")==0 && Aladin.PROTO;//TODO:: tintinproto
-      if (flagTAPV2 && aladinProtocol.endsWith("TREEPANEL")) {
-		mode = TapServerMode.TREEPANEL;
-      }
+
       if( flagSIAIDHA && type!=SPECTRUM ) type=IMAGE;
       DISCOVERY=flagSIAIDHA || type==SPECTRUM || type==CATALOG;
 
@@ -211,14 +207,16 @@ public class ServerGlu extends Server implements Runnable {
       if( Aladin.OUTREACH ) y=YOUTREACH;
       if( y<10 ) { y=5; flagInfo=false; }
 
-      if (flagTAPV2) {
-    	  LISTDELIMITER = COMMA_CHAR;
-    	  this.gluAdqlQueryTemplates = new HashMap<String, GluAdqlTemplate>();
-    	  for (int i = 0; i < tapTables.length; i++) {
-    		  this.gluAdqlQueryTemplates.put(tapTables[i], new GluAdqlTemplate());
+		if (flagTAPV2) {
+			LISTDELIMITER = COMMA_CHAR;
+			this.tapClient = tapClient;
+			this.tapClient.serverGlu = this;
+			this.gluAdqlQueryTemplates = new HashMap<String, GluAdqlTemplate>();
+			for (int i = 0; i < tapTables.length; i++) {
+				this.gluAdqlQueryTemplates.put(tapTables[i], new GluAdqlTemplate());
+			}
+			// No setQueryChecker for ServerGlu. We only check syntax.
 		}
-    	  //No setQueryChecker for ServerGlu. We only check syntax.
-      }
       // Le titre
       JPanel tp = new JPanel();
       Dimension d = makeTitle(tp,description);
@@ -230,14 +228,25 @@ public class ServerGlu extends Server implements Runnable {
       if (flagTAPV2) {
       	 tapTableMapping.put("GENERAL",new Vector());
       	 tapTableMapping.get("GENERAL").add(tp);
-      	if (TapManager.isChangeServerMode(mode)) {
-      		JButton button = new JButton("Change server");
-    		button.setActionCommand(CHANGESERVER);
+      	/*if (this.tapClient.mode == TapClientMode.DIALOG) {
+      		JButton button = ServerTap.getChangeServerButton();
     		button.addActionListener(this);
-    		button.setBounds(x+d.width,y-d.height-5,90,HAUT);
+//    		button.setBounds(x+d.width,y-d.height,85,HAUT);
+//    		button.setBounds(x+d.width+65, y-d.height, 30, 30);
+    		button.setBounds(XWIDTH-2*XTAB1-60, y-d.height+3, 35, 25);
     		tapTableMapping.get("GENERAL").add(button);
     		add(button);
 		}
+      		
+      	if (mode != TapServerMode.UPLOAD) {
+      		modeChoice = tapClient.getGluModeButton();
+      		modeChoice.setSelected(true);
+//      		modeChoice.setBounds(x+d.width+95,y-d.height+3,35,25);
+      		modeChoice.setBounds(XWIDTH-2*XTAB1-25, y-d.height+3, 35, 25);
+      		tapClient.enableModes();
+			add(modeChoice);
+		}*/
+      	
        }
       add(tp);
 
@@ -254,6 +263,19 @@ public class ServerGlu extends Server implements Runnable {
 //         l.setBounds(128,y,300, 20); y+=20;
 //         add(l);
       }
+      
+      if (flagTAPV2) {
+    	  JPanel optionsPanel = ServerTap.getOptionsPanel(this);
+      	optionsPanel.setName("optionsPanel");
+      	 if (modeChoice!=null) {
+      		modeChoice.setSelected(true);
+  		}
+      	optionsPanel.setBackground(Aladin.BLUE);
+//      	optionsPanel.setBounds(XWIDTH-2*XTAB1-60, y-d.height-5, 78, 30);
+      	optionsPanel.setBounds(x+d.width, y-d.height-5, 78, 30);
+      	 add(optionsPanel);
+      	tapTableMapping.get("GENERAL").add(optionsPanel);
+	}
 
       // Y a-t-il un champ dont le type est baseUrl(URL|MOCID)
       baseUrlIndex = getBaseUrlParam(paramDataType);
@@ -271,7 +293,19 @@ public class ServerGlu extends Server implements Runnable {
          tPanel.setBounds(0,y,XWIDTH,h); y+=h;
          tPanel.setName("tPanel");
          if (flagTAPV2) {
-            tapTableMapping.get("GENERAL").add(tPanel);
+        	 int targetIndex = getKeyWordRequiredIndex(paramDataType, "Target");
+        	 if (targetIndex >= 0) {
+        		 for (String tapTable : tapTables) {
+        				if (isParamSpecified(paramDataType[targetIndex],tapTable)) {
+        					Vector components = this.tapTableMapping.get(tapTable);
+    	  					if (components == null) {
+    	  							components = new Vector();
+    		  						this.tapTableMapping.put(tapTable, components);
+    		 				}
+    	  					components.add(tPanel);
+        				}
+             	 }
+			}
          }
          add(tPanel);
       }
@@ -382,22 +416,22 @@ public class ServerGlu extends Server implements Runnable {
             nc++;
          }
          
-         if (flagTAPV2 && paramDataType[i]!=null && tapTables!=null) {
+         if (flagTAPV2 && paramDataType[i] != null && tapTables != null) {
   			for (String tapTable : tapTables) {
   				if (isParamSpecified(paramDataType[i],tapTable)) {
-  	  				//components: classify as per table
-  					if (flagShowBackUp) {
-  	  					Vector components = this.tapTableMapping.get(tapTable);
-  	  					if (components==null) {
-  	  					this.tapTableMapping.put(tapTable, new Vector());
-  	  						components = this.tapTableMapping.get(tapTable);
-  	 					}
-  	  					if (pTitre==null) {
+  					Vector components = this.tapTableMapping.get(tapTable);
+  					if (components == null) {
+	  						this.tapTableMapping.put(tapTable, new Vector());
+	  						components = this.tapTableMapping.get(tapTable);
+	 				}
+  					//components: classify as per table
+  					if (flagShowBackUp){//flagShowBackUp not really needed but its an extra putty
+  						if (pTitre == null) {
   	 						pTitre = createDescriptiveLabel(paramDescription, i);
   						}
   	  					components.add(pTitre);
   	  					components.add(co);
-  					}
+					}
  				}
   			}
   		}
@@ -512,18 +546,33 @@ public class ServerGlu extends Server implements Runnable {
 		}
 		removeAll();
 		
-		Vector<Component> components = new Vector();
-		components.addAll(tapTableMapping.get("GENERAL"));
+		if (tapTableMapping.get("GENERAL") != null) {
+			for (Object topPanelComponent : tapTableMapping.get("GENERAL")) {
+				add((Component) topPanelComponent);
+				if ("optionsPanel".equals(((Component) topPanelComponent).getName())) {
+					y += 20;
+				}
+			}
+		}
+		y += 20;
+		Vector<Component> components = new Vector<Component>();
+//		components.addAll(tapTableMapping.get("GENERAL"));
 		components.addAll(tapTableMapping.get(this.currentSelectedTapTable));
-		
-		
 		for (Component co : components) {
 			if (co instanceof JPanel) {
 				add(co);
 				y += co.getHeight();
-				if ("titrePanel".equals(co.getName())) {
+				/*if ("optionsPanel".equals(co.getName())) {
 					y += 10;
-				}
+				}*/
+				
+				/*y += co.getHeight();
+				if ("optionsPanel".equals(co.getName())) {
+					y += 20;
+				} else if ("tPanel".equals(co.getName())) {
+					y += 10;
+				}*/
+				
 			} else if (co instanceof JButton) {
 				add(co);
 			} else if (co instanceof JLabel) {
@@ -750,6 +799,11 @@ public class ServerGlu extends Server implements Runnable {
        String prefixe = new String(a,0,i);
        return !( prefixe.equalsIgnoreCase("Target") || prefixe.equalsIgnoreCase("Field") );
     }
+    
+    //Change this if isShownField(String PK) changes it logic from identifying target panel components
+    private boolean isTargetPanelComponent(String PK) {
+        return !isShownField(PK);
+     }
 
   /** Positionnement des indicateurs modeCoo, modeRad et modeDate, modeInput[] ainsi que
    * coo[], rad[] et date et input[] associes
@@ -1509,9 +1563,12 @@ public class ServerGlu extends Server implements Runnable {
     		  queryString = gluQueryTemplate.getGluQuery(v, this.currentSelectedTapTable, this.adqlFunc, this.adqlFuncParams);
     	  }
     	  String url = (String) aladin.glu.aladinDic.get(actionName);
+    	  Aladin.trace(3, "URL for "+actionName+" is: "+url);
     	  url = TapManager.getInstance(aladin).getSyncUrlUnEncoded(url, queryString);
+    	  Aladin.trace(3, "getSyncUrlUnEncoded: "+url);
     	  aladin.glu.aladinDic.put(actionName+"v1", url);// for setting all glu params
-    	  u = aladin.glu.getURL(actionName+"v1",p==null?"" : p.toString());
+    	  u = aladin.glu.getURL(actionName+"v1",p==null?"" : p.toString(), true);
+    	  Aladin.trace(3, "getURL u: "+u);
     	  try {
 			u = addQueryEncodedUrl(u.toString());
 			aladin.glu.aladinDic.put(actionName+"v1", u.toString());//update the properly encoded query
@@ -1682,13 +1739,13 @@ public class ServerGlu extends Server implements Runnable {
 	   try {
  		  int offset = url.indexOf("QUERY=");
  	      String adqlQueryUnEncoded = url.substring(offset+6);
- 	      String adqlQueryEncoded = URLDecoder.decode(adqlQueryUnEncoded, UTF8) ;
- 	      adqlQueryEncoded = URLEncoder.encode(adqlQueryEncoded, UTF8);
+ 	      String adqlQueryEncoded = URLEncoder.encode(adqlQueryUnEncoded, UTF8);
+ 	     
  		  url = url.replace(adqlQueryUnEncoded, adqlQueryEncoded);
- 		  if(Aladin.levelTrace>=3){
- 			  System.out.println("adqlQueryUnEncoded"+adqlQueryUnEncoded);//TODO:: tintin sysouts
- 			  System.out.println("adqlQueryEncoded"+adqlQueryEncoded);
- 			  System.out.println("Tryin to decode again:"+URLDecoder.decode(adqlQueryEncoded, UTF8));
+ 		  if(Aladin.levelTrace >= 3){
+ 			  System.out.println("adqlQueryUnEncoded: "+adqlQueryUnEncoded);//TODO:: tintin sysouts
+ 			  System.out.println("adqlQueryEncoded: "+adqlQueryEncoded);
+ 			  System.out.println("Tryin to decode again: "+URLDecoder.decode(adqlQueryEncoded, UTF8));
  		  }
  		  aladin.glu.aladinDic.put(actionName+"v1", url);
  		  u = new URL(url);

@@ -16,6 +16,7 @@ import static cds.aladin.Constants.TABLENAME;
 import static cds.aladin.Constants.TABLETYPE;
 import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
+import static cds.aladin.Constants.TAPFORM_STATUS_NOTCREATEDGUI;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.UCD;
 import static cds.aladin.Constants.UCD_DEC_PATTERN2;
@@ -25,6 +26,8 @@ import static cds.aladin.Constants.UCD_RA_PATTERN3;
 import static cds.aladin.Constants.UNIT;
 import static cds.aladin.Constants.UTF8;
 import static cds.aladin.Constants.UTYPE;
+import static cds.tools.CDSConstants.DEFAULT;
+import static cds.tools.CDSConstants.WAIT;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -64,7 +67,7 @@ import javax.swing.JTextArea;
 
 import adql.db.DefaultDBTable;
 import adql.query.ADQLQuery;
-import cds.aladin.Constants.TapServerMode;
+import cds.aladin.Constants.TapClientMode;
 import cds.savot.binary.DataBinaryReader;
 import cds.savot.model.FieldSet;
 import cds.savot.model.SavotBinary;
@@ -83,25 +86,23 @@ import cds.xml.VOSICapabilitiesReader;
 public class TapManager {
 	
 	private static TapManager instance = null;
-	private boolean loadFromLocalFile = true;
+	private boolean initAllLoad = true;
 	ExecutorService executor;
 	
 	public Aladin aladin;
 	protected static List<DataLabel> tapServerLabels;
 	protected TapFrameServer tapFrameServer=null;
-	protected DataLabel selectedServerLabel;
 	protected FrameUploadServer uploadFrame;
-	public static Map<String, DataLabel> managedGluTapServerLabels;
 	
-	protected static Map<String, Server> tapServerPanelCache = new HashMap<String, Server>();//main cache where all the ServerGlu's are loaded on init
-	protected static Map<String, Server> simpleFrameServers = new HashMap<String, Server>();//cache for the servers loading from tree
+	protected static Map<String, TapClient> tapServerPanelCache = new HashMap<String, TapClient>();//main cache where all the ServerGlu's are loaded on init
+	protected static Map<String, TapClient> tapServerTreeCache = new HashMap<String, TapClient>();//cache for the servers loading from tree
 	public static final String GETTAPSCHEMACOLUMNCOUNT = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+COUNT(*)+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMACOLUMNS = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMATABLES = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.tables";
 	public static final String GETTAPSCHEMACOLUMN = "/sync?REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns+where+table_name+=+'%1$s'+";
 	public static final String GETTAPCAPABILITIES = "/capabilities";
 	public static final String GETTAPSCHEMATABLE = GETTAPSCHEMATABLES+"+where+table_name+=+'%1$s'+";
-	
+	public static final String GENERICERROR;
 	public static final int MAXTAPCOLUMNDOWNLOADVOLUME = 1000;//limit for the table columns that will be downloaded together. 409 cadc;1000 decided limit
 	
 	protected List<String> eligibleUploadServers;//URls of servers loaded and allow uploads
@@ -109,6 +110,9 @@ public class TapManager {
 	public UWSFacade uwsFacade;
 	public FrameSimple tapPanelFromTree;
 	
+	static {
+		GENERICERROR = Aladin.getChaine().getString("GENERICERROR");
+	}
 	public TapManager() {
 		// TODO Auto-generated constructor stub
 		executor = Executors.newFixedThreadPool(10);
@@ -135,10 +139,13 @@ public class TapManager {
 	 * @throws Exception
 	 */
 	public List<DataLabel> getTapServerList(){
-		if (loadFromLocalFile) {
+		if (initAllLoad) {
 			populateTapServerListFromLocalFile();
 			// load from glu here
+			
+			populateFromDirectory();//loading form directory
 		}
+		
 		return tapServerLabels;
 	}
 	
@@ -157,16 +164,17 @@ public class TapManager {
 			if (tapServerLabels == null) {
 				tapServerLabels = new ArrayList<DataLabel>();
 			}
-			if (managedGluTapServerLabels == null) {
-				managedGluTapServerLabels = new HashMap<String, DataLabel>();
-			}
-			if (managedGluTapServerLabels.containsKey(actionName)) {
-				DataLabel oldDataLabel = managedGluTapServerLabels.get(actionName);
-				tapServerLabels.remove(oldDataLabel);
-			}
-			
+			removeOldEntries(label);
 			tapServerLabels.add(newDatalabel);
-			managedGluTapServerLabels.put(actionName, newDatalabel);
+		}
+	}
+	
+	public void removeOldEntries(String actionName) {
+		for (DataLabel datalabel : tapServerLabels) {
+			if (datalabel.getLabel().equals(actionName)) {
+				tapServerLabels.remove(datalabel);
+				break;
+			}
 		}
 	}
 
@@ -199,7 +207,7 @@ public class TapManager {
             e.printStackTrace();
 			Aladin.warning("TapServer.txt not loaded !", 1);
 		} finally {
-			loadFromLocalFile = false;
+			initAllLoad = false;
 			if (bufReader!=null) {
 				try {
 					bufReader.close();
@@ -212,6 +220,35 @@ public class TapManager {
 	}
 	
 	/**
+	 * To populate the tap servers configured in the directory tree
+	 */
+	private void populateFromDirectory() {
+		try {
+			if (tapServerLabels == null) {
+				tapServerLabels = new ArrayList<DataLabel>();
+			}
+			String label;
+			String url;
+			String description;
+			ArrayList<String> tapServers = aladin.directory.getBigTAPServers(5);
+			for (String dirTapServerInfoLine : tapServers) {
+				if (dirTapServerInfoLine.equals("") || dirTapServerInfoLine.charAt(0) == '#') continue;
+				label = dirTapServerInfoLine.split("\\s+")[0];
+				url = dirTapServerInfoLine.split("\\s+")[1];
+				description = dirTapServerInfoLine.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
+				tapServerLabels.add(new DataLabel(label, url, description));
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			if(Aladin.levelTrace >=3) e.printStackTrace();
+			Aladin.warning("Unable to load tap servers from directory !", 1);
+		} finally {
+			initAllLoad = false;
+			Aladin.trace(3, "populateFromDirectory():: Done loading from directory...");
+		}
+	}
+	
+	/**
 	 * Loads the tapquery gui for the selected tap server from the tap server list
 	 * - either loads cached gui
 	 * - creates a new gui
@@ -219,51 +256,91 @@ public class TapManager {
 	 * @return whether the query panel is loaded or not
 	 * @throws Exception 
 	 */
-	public void loadTapServer() {
+	/*public void loadTapServer() {
 		//either get exixitng details form the configuration file or call url to get tap server details.
 		if (this.selectedServerLabel == null) {//not a necessary condition. But adding just in case.
 			this.showTapRegistryForm();
 		} else if (tapServerPanelCache.containsKey(this.selectedServerLabel.getLabel())) {
-			Server cachedCopy = tapServerPanelCache.get(this.selectedServerLabel.getLabel());
-			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, cachedCopy);
-			aladin.dialog.tapServer = cachedCopy;
+			TapClient cachedClient = tapServerPanelCache.get(this.selectedServerLabel.getLabel());
+			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, cachedClient.getServerToDisplay());
+			aladin.dialog.tapServer = cachedClient.getServerToDisplay();
 		} else {//added new change -start
+			TapClient tapClient = null;
 			Server resultServer = null;
 			String label = this.selectedServerLabel.getLabel();
 			String url = this.selectedServerLabel.getValue();
 			//check in the other cache if there is a reference.
+			//Handle this change later.
 			if (simpleFrameServers.containsKey(label)){
-				resultServer = simpleFrameServers.get(label);
-				if (resultServer instanceof ServerGlu) {
-					StringBuffer originalGluRecord = ((ServerGlu)resultServer).record;
-					String gluRecord = originalGluRecord.toString();
-					gluRecord = gluRecord.concat("%Aladin.LabelPlane GLU");
-					resultServer = getCopy(originalGluRecord, gluRecord);
-				} else if (resultServer instanceof ServerTap) {
-					ServerTap cacheServerTapCopy =  getCopy((ServerTap)resultServer);
-					aladin.dialog.findReplaceServer(aladin.dialog.tapServer, cacheServerTapCopy);
-					aladin.dialog.tapServer = cacheServerTapCopy;
-					loadServerTapForm(cacheServerTapCopy, null);
-					tapFrameServer.setReload(label);
-					resultServer = cacheServerTapCopy;
-				}
-			} 
-			if (resultServer == null) {
+				tapClient = copyTapClientAndDisplay(simpleFrameServers.get(label), null);
+				resultServer = tapClient.getServerToDisplay();
+			} else {
 				//final resort is to create generic form ServerTap
 				ServerTap newServer = new ServerTap(aladin);
 				newServer.setName(label);
 				newServer.setUrl(url);
 				newServer.showloading();
-				aladin.dialog.findReplaceServer(aladin.dialog.tapServer, newServer);
-				aladin.dialog.tapServer = newServer;
 				newServer.capabilities = this.getTapCapabilities(url);
 				this.loadTapColumnSchemas(newServer);
 				newServer.setOpaque(true);
 				tapFrameServer.setReload(label);
 				resultServer = newServer;
+				tapClient = new TapClient(label, null, newServer);
 			}
-			tapServerPanelCache.put(label, resultServer);
+			
+			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, resultServer);
+			aladin.dialog.tapServer = resultServer;
+			tapServerPanelCache.put(label, tapClient);
 			//added new change -end
+		}
+	}*/
+	
+	/**
+	 * Replaces tap server reference before displaying on the Server selector dialog
+	 * @param server
+	 */
+	public void showTapServerOnServerSelector(Server server) {
+		aladin.dialog.findReplaceServer(aladin.dialog.tapServer, server);
+		aladin.dialog.tapServer = server;
+		this.aladin.dialog.show(server);
+	}
+	
+	public void showTapPanelFromTree(String label, Server resultServer) {
+		// TODO Auto-generated method stub
+		if (tapPanelFromTree == null) {
+			tapPanelFromTree = new FrameSimple(aladin);
+		}
+		Aladin.makeCursor(tapPanelFromTree, WAIT);
+		tapPanelFromTree.show(resultServer, "TAP access with "+label);
+		Aladin.makeCursor(tapPanelFromTree, DEFAULT);
+	}
+	
+	/**
+	 * Loads tap server in the server dialog
+	 * @param label
+	 * @param url
+	 * @param modeSelected
+	 * @throws Exception
+	 */
+	public void loadTapServer(String label, String url, String modeSelected) throws Exception {
+		//either get exixitng details form the configuration file or call url to get tap server details.
+		if (label != null) {//not a necessary condition. But adding just in case.
+			TapClient tapClient = null;
+			if (tapServerPanelCache.containsKey(label)) {
+				tapClient = tapServerPanelCache.get(label);
+				tapClient.tapBaseUrl = url;//in case there is any updates to the generic server url
+			} else {//not in cache..and does not have a glu record
+				if (tapServerTreeCache.containsKey(label)){//check in the other cache if there is a reference.
+					tapClient = copyTapClientAndDisplay(tapServerTreeCache.get(label), url, TapClientMode.DIALOG);
+				} else {
+					//final resort is to create generic form ServerTap
+					tapClient = new TapClient(TapClientMode.DIALOG, this, label, url);
+				}
+				tapServerPanelCache.put(label, tapClient);
+			}
+			Server resultServer = tapClient.getServerToDisplay(modeSelected);
+			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, resultServer);
+			aladin.dialog.tapServer = resultServer;
 		}
 	}
 	
@@ -272,30 +349,80 @@ public class TapManager {
 	 * - server is either created from glu records or a generic panel is created
 	 * @param label
 	 * @param url
-	 * @return resultant server tpa panel
+	 * @return resultant server tap panel
+	 * @throws Exception 
 	 */
-	public Server loadTapServerForSimpleFrame(String label, String url) {
+	public Server loadTapServerForSimpleFrame(String label, String url, String serverType) throws Exception {
+		TapClient tapClient = null;
+		if (tapServerTreeCache.containsKey(label)) {//get from cache
+			tapClient = tapServerTreeCache.get(label);
+			tapClient.tapBaseUrl = url;
+		} else {//not in cache..and does not have a glu record
+			if (tapServerPanelCache.containsKey(label)){//try to create from the main cache
+				tapClient = copyTapClientAndDisplay(tapServerPanelCache.get(label), url, TapClientMode.TREEPANEL);
+			} else {
+				tapClient = new TapClient(TapClientMode.TREEPANEL, this, label, url);
+			}
+			tapServerTreeCache.put(label, tapClient);
+		}
+		Server resultServer = tapClient.getServerToDisplay(serverType);
+		showTapPanelFromTree(label, resultServer);
+		return resultServer;
+	}
+	
+	/**
+	 * Creates a generic tap server
+	 * Slight changes in resultant server w.r.t to the container: TreePanel or ServerDialog
+	 * @param tapClient
+	 * @param mode
+	 * @return
+	 * @throws Exception
+	 */
+	public ServerTap createAndLoadServerTap(TapClient tapClient) throws Exception {
+		ServerTap newServer = new ServerTap(aladin);//final resort is to create generic form ServerTap
+		newServer.setName(tapClient.tapLabel);
+		if (tapClient.tapBaseUrl == null) {
+			Object urlFromGlu = aladin.glu.aladinDic.get(tapClient.tapLabel);
+			if (urlFromGlu != null) {//as a last resort glu url can also be used for generic
+				tapClient.tapBaseUrl = (String) urlFromGlu;
+			}
+			if (tapClient.tapBaseUrl == null) {
+				throw new Exception("Tap server url not found");
+			}
+		}
+		newServer.setUrl(tapClient.tapBaseUrl);
+		newServer.tapClient = tapClient;
+		newServer.setOpaque(true);
+		newServer.showloading();
+		newServer.capabilities = this.getTapCapabilities(tapClient.tapBaseUrl);
+		
+		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
+		String vizierTable = processIfVizier(newServer);
+		boolean nodeOn = false;
+		if (tapClient.mode != null && tapClient.mode == TapClientMode.TREEPANEL) {
+			newServer.primaryColor = Aladin.COLOR_FOREGROUND;
+			newServer.secondColor = Color.white;
+			nodeOn = true;
+		}
+		if (nodeOn && vizierTable != null) {
+			//if you have a table name
+			this.loadTapColumnSchemasForATable(newServer, vizierTable);
+		} else {
+			this.loadTapColumnSchemas(newServer);
+		}
+		return newServer;
+	}
+	
+	/*public Server loadTapServerForSimpleFrame(String label, String url) {
+		TapClient tapClient = null;
 		Server resultServer = null;
 		if (simpleFrameServers.containsKey(label)) {//get from cache
-			resultServer = simpleFrameServers.get(label);
-		} else {
+			tapClient = simpleFrameServers.get(label);
+		} else {//not in cache..and does not have a glu record
 			if (tapServerPanelCache.containsKey(label)){//try to create from the main cache
-				resultServer = tapServerPanelCache.get(label);
-				if (resultServer instanceof ServerGlu) {
-					StringBuffer originalGluRecord = ((ServerGlu)resultServer).record;
-					String gluRecord = ((ServerGlu)resultServer).record.toString();
-					gluRecord = gluRecord.concat("%Aladin.LabelPlane TREEPANEL");
-					resultServer = getCopy(originalGluRecord, gluRecord);
-				} else if (resultServer instanceof ServerTap) {
-					ServerTap cacheServerCopy = getCopy((ServerTap)resultServer);
-					cacheServerCopy.showloading();
-					cacheServerCopy.primaryColor = Aladin.COLOR_FOREGROUND;
-					cacheServerCopy.secondColor = Color.white;
-					loadServerTapForm(cacheServerCopy, TapServerMode.TREEPANEL);
-					resultServer = cacheServerCopy;
-				}
-			} 
-			if (resultServer == null) {
+				tapClient = copyTapClientAndDisplay(simpleFrameServers.get(label), TapServerMode.TREEPANEL);
+				resultServer = tapClient.getServerToDisplay();
+			} else {
 				ServerTap newServer = new ServerTap(aladin);//final resort is to create generic form ServerTap
 				newServer.primaryColor = Aladin.COLOR_FOREGROUND;
 				newServer.secondColor = Color.white;
@@ -313,17 +440,17 @@ public class TapManager {
 				} else {
 					this.loadTapColumnSchemas(newServer);
 				}
-				
+				tapClient = new TapClient(label, null, newServer);
 				resultServer = newServer;
 			}
-			simpleFrameServers.put(label, resultServer);
+			simpleFrameServers.put(label, tapClient);
 		}
 		if (tapPanelFromTree == null) {
 			tapPanelFromTree = new FrameSimple(aladin);
 		}
 		tapPanelFromTree.show(resultServer, "TAP access with "+label);
 		return resultServer;
-	}
+	}*/
 
 	/**
 	 * Only tests out if the service is vizier. 
@@ -350,11 +477,39 @@ public class TapManager {
 		return result;
 	}
 
-	public void reloadSimpleFramePanelServer(String label, String url) {
-		if (simpleFrameServers.containsKey(label)) {
-			simpleFrameServers.remove(label);
+	public void reloadSimpleFramePanelServer(String label, String url) throws Exception {
+		if (tapServerTreeCache.containsKey(label)) {
+			tapServerTreeCache.remove(label);
 		}
-		loadTapServerForSimpleFrame(label, url);
+		loadTapServerForSimpleFrame(label, url, null);
+	}
+	
+	public TapClient copyTapClientAndDisplay(TapClient original, String urlInput, TapClientMode mode) {
+		TapClient copy = null;
+		if (original.serverGlu != null) {
+			ServerGlu serverGluCopy = null;
+			StringBuffer originalGluRecord = original.serverGlu.record;
+			String gluRecord = originalGluRecord.toString();
+			if (mode == TapClientMode.TREEPANEL) {
+//				gluRecord = gluRecord.concat("%Aladin.LabelPlane TREEPANEL");
+				gluRecord = gluRecord.concat("%Aladin.Protocol TAPv1-TREEPANEL");
+			} else {
+				gluRecord = gluRecord.concat("%Aladin.Protocol TAPv1");
+//				gluRecord = gluRecord.concat("%Aladin.LabelPlane GLU");
+			}
+			serverGluCopy = getCopy(originalGluRecord, gluRecord);
+			copy = serverGluCopy.tapClient;
+		} 
+		
+		if (copy == null) {
+			copy = new TapClient(mode, this, original.tapLabel, urlInput);
+		}
+		
+		if (original.serverTap != null && original.tapBaseUrl.equalsIgnoreCase(urlInput)) { //at this point generic form ui is not created. only metadata is copied
+			copy.serverTap =  getCopy(original.serverTap, mode);
+			copy.serverTap.tapClient = copy;
+		}
+		return copy;
 	}
 	
 	//we wont deepcopy the data and metadata or the infopanel. we will only duplicate the main form using the metadata
@@ -363,7 +518,7 @@ public class TapManager {
 	 * @param original
 	 * @return
 	 */
-	public ServerTap getCopy(ServerTap original) {
+	public ServerTap getCopy(ServerTap original, TapClientMode mode) {
 		ServerTap newServer = new ServerTap(aladin);
 		newServer.setName(original.getName());
 		newServer.setUrl(original.getUrl());
@@ -371,6 +526,11 @@ public class TapManager {
 		newServer.setData(original.tablesMetaData);
 		newServer.setOpaque(true);
 		newServer.infoPanel = original.infoPanel;
+		if (mode == TapClientMode.TREEPANEL) {
+			newServer.primaryColor = Aladin.COLOR_FOREGROUND;
+			newServer.secondColor = Color.white;
+		}
+		newServer.formLoadStatus = TAPFORM_STATUS_NOTCREATEDGUI;
 		return newServer;
 	}
 	
@@ -397,7 +557,7 @@ public class TapManager {
 	 * @param newServer
 	 * @param mode
 	 */
-	public void loadServerTapForm(final ServerTap newServer, final TapServerMode mode) {
+	public void createGenericTapFormFromMetaData(final ServerTap newServer) {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -406,7 +566,7 @@ public class TapManager {
 				final String oldTName = currentT.getName();
 				try {
 					currentT.setName("TloadServerTapForm: "+newServer.getName());
-					newServer.createFormDefault(mode); //default choice is the first table
+					newServer.createFormDefault(); //default choice is the first table
 					newServer.revalidate();
 					newServer.repaint();
 				} finally {
@@ -414,6 +574,22 @@ public class TapManager {
 				}
 			}
 		});
+	}
+	
+	public boolean checkDummyInitForServerDialog(Server tapServer) {
+		boolean result = true;
+		if (aladin.glu.lastTapGluServer == null && tapServer instanceof ServerTap
+				&& ((ServerTap) tapServer).isNotLoaded()) {
+			try {
+				this.showTapRegistryForm();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				Aladin.warning(aladin.dialog, GENERICERROR);
+				e.printStackTrace();
+			}
+			result = false;
+		}
+		return result;
 	}
 	
 	/**
@@ -426,7 +602,7 @@ public class TapManager {
 		boolean result = false;
 		//check if not at all loaded
 		//check if selected label is 
-		if (server instanceof ServerTap && ((ServerTap)server).dummyInstantiation) {
+		if (server instanceof ServerTap && ((ServerTap)server).isNotLoaded()) {
 			result = true;
 		}
 		return result;
@@ -493,6 +669,7 @@ public class TapManager {
 				currentT.setName("TgetMetaInfoForATable: "+tapServiceUrl);
 				Aladin.trace(3, "Getting meta from tree for table ..."+serverToLoad.getName());
 				try {
+					serverToLoad.nodeName = tableName;
 					serverToLoad.setData(new HashMap<String,TapTable>());
 					
 					//download only table names and first table's columns
@@ -571,7 +748,7 @@ public class TapManager {
 						populateColumns(serverToLoad, resultsResource);
 					} else {
 						serverToLoad.showLoadingError();
-						Aladin.warning(aladin.dialog, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
+						displayWarning(serverToLoad.tapClient, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
 						return;
 					}
 					serverToLoad.createFormDefault(); //default choice is the first table
@@ -581,7 +758,7 @@ public class TapManager {
 				} catch (Exception e) {
 					e.printStackTrace();
 					serverToLoad.showLoadingError();
-					Aladin.warning(aladin.dialog, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
+					displayWarning(serverToLoad.tapClient, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
 				} finally {
 					serverToLoad.revalidate();
 					serverToLoad.repaint();
@@ -628,7 +805,7 @@ public class TapManager {
 	}
 	
 	public void reloadTapServerList() {
-		if (tapFrameServer!=null) {
+		if (tapFrameServer != null) {
 			tapFrameServer.createRegistryPanel();
 			tapFrameServer.reloadRegistryPanel();
 		}
@@ -1171,12 +1348,12 @@ public class TapManager {
 //				uploadServer.tablesGui.invalidate();
 				populateColumnsFromPlan(planToLoad, tableName , uploadFrame.uploadServer.tablesMetaData);
 //				uploadFrame.setUploadFileForm();
-				if (firstUpload || (uploadFrame.uploadServer.loadStatus == TAPFORM_STATUS_NOTLOADED
-						|| uploadFrame.uploadServer.loadStatus == TAPFORM_STATUS_ERROR)) {
+				if (firstUpload || (uploadFrame.uploadServer.formLoadStatus == TAPFORM_STATUS_NOTLOADED
+						|| uploadFrame.uploadServer.formLoadStatus == TAPFORM_STATUS_ERROR)) {
 					uploadFrame.createUploadServer();
 				}
 				
-				if (!firstUpload && uploadFrame.uploadServer.loadStatus == TAPFORM_STATUS_LOADED) {
+				if (!firstUpload && uploadFrame.uploadServer.formLoadStatus == TAPFORM_STATUS_LOADED) {
 //					uploadFrame.uploadServer.createFormDefault();
 //					uploadFrame.uploadServer.revalidate();
 					uploadFrame.uploadServer.tablesGui.addItem(tableName);
@@ -1576,7 +1753,7 @@ public class TapManager {
 		this.executor.shutdown();
 		this.uwsFacade.deleteAllSetToDeleteJobs();
 		tapServerPanelCache.clear();
-		simpleFrameServers.clear();
+		tapServerTreeCache.clear();
 		Aladin.trace(3,"soft shutdown of tap threads....");
 		Aladin.trace(3,"deleting all(set to delete) uws jobs....");
 	}
@@ -1590,15 +1767,6 @@ public class TapManager {
 	}
 	
 	/**
-	 * Removes current selected tap server cached info form the cache
-	 * @throws Exception 
-	 */
-	public void removeCurrentFromServerCache(){
-		setSelectedServerLabel();
-		tapServerPanelCache.remove(this.selectedServerLabel.getLabel());
-	}
-	
-	/**
 	 * Hide the registry form of tap
 	 */
 	public void hideTapRegistryForm() {
@@ -1607,26 +1775,28 @@ public class TapManager {
 		}
 	}
 	
-	public DataLabel getSelectedServerLabel() {
-		return selectedServerLabel;
+	/**
+	 * Add new tap client for tree or server dialog tap client cache
+	 * @param isForDialog
+	 * @param actionName
+	 * @param tapClient
+	 */
+	public void addNewTapClientToCache(boolean isForDialog, String actionName, TapClient tapClient) {
+		if (isForDialog) {
+    		TapManager.tapServerPanelCache.put(actionName, tapClient);
+		} else {
+			TapManager.tapServerTreeCache.put(actionName, tapClient);
+		}
 	}
 	
-	/**
-	 * Method caches/updates serverGlu
-	 * @param actionName
-	 * @param g
-	 * @return 
-	 */
-	public static boolean cache(String actionName, ServerGlu g) {
-		// TODO Auto-generated method stub
-		boolean showLastRecord = true;
-		if (g.mode!=null && g.mode == TapServerMode.TREEPANEL) {
-			TapManager.simpleFrameServers.put(actionName, g);
-			showLastRecord = false;
-		} else {
-			TapManager.tapServerPanelCache.put(actionName, g);
+	public TapClient getExistingTapClientForGluActionName(TapClientMode clientMode, String actionName) {
+		TapClient result = null;
+		if (clientMode == TapClientMode.TREEPANEL && TapManager.tapServerTreeCache.containsKey(actionName)) {
+			result = TapManager.tapServerTreeCache.get(actionName);
+		} else if (clientMode == TapClientMode.DIALOG && TapManager.tapServerPanelCache.containsKey(actionName)) {
+			result = TapManager.tapServerPanelCache.get(actionName);
 		}
-		return showLastRecord;
+		return result;
 	}
 	
 	/**
@@ -1635,11 +1805,11 @@ public class TapManager {
 	 */
 	public void setSelectedServerLabel(){
 //		this.selectedServerLabel = tapServerLabels.get(DataLabel.selectedId);
-		this.selectedServerLabel = null;
+		this.tapFrameServer.selectedServerLabel = null;
 		for (DataLabel datalabel : getTapServerList()) {
 			if (datalabel.gui.isSelected()) {
 				this.loadTapServerList();
-				this.selectedServerLabel = datalabel;
+				this.tapFrameServer.selectedServerLabel = datalabel;
 				break;
 			}
 		}
@@ -1653,22 +1823,8 @@ public class TapManager {
 	 */
 	public boolean canReload(String cacheId) {
 		boolean result = false;
-		if (tapServerPanelCache.containsKey(cacheId)
-				&& tapServerPanelCache.get(cacheId) instanceof ServerTap) {
-			result = true;
-		}
-		return result;
-	}
-	
-	/**
-	 * Checking for retry loading a ServerTap instance in the case of loading from tree
-	 * @param cacheId
-	 * @return
-	 */
-	public boolean canReloadForTreePanel(String cacheId) {
-		boolean result = false;
-		if (simpleFrameServers.containsKey(cacheId)
-				&& simpleFrameServers.get(cacheId) instanceof ServerTap) {
+		if (tapServerPanelCache.containsKey(cacheId) && tapServerPanelCache.get(cacheId).serverTap != null
+				&& tapServerPanelCache.get(cacheId).serverTap.isVisible()) {
 			result = true;
 		}
 		return result;
@@ -1714,14 +1870,29 @@ public class TapManager {
 		}
 	}
 
+	/**
+	 * Cached tapservers are obtained from either of the caches
+	 * For upload- we do not care whether it is a tree panel or a dialog panel
+	 * For now only ServerTap has upload feature
+	 * @param label
+	 * @return
+	 */
 	public static Server getTapServerForLabel(String label) {
 		Server result = null;
 		if (tapServerPanelCache.containsKey(label)) {
-			result = tapServerPanelCache.get(label);
-		} else if (simpleFrameServers.containsKey(label)) {
-			result = simpleFrameServers.get(label);
+			result = tapServerPanelCache.get(label).serverTap;
+		} else if (tapServerTreeCache.containsKey(label)) {
+			result = tapServerTreeCache.get(label).serverTap;
 		}
 		return result;
+	}
+	
+	public void displayWarning(TapClient tapClient, String message) {
+		if (tapClient.mode == TapClientMode.TREEPANEL) {
+			Aladin.warning(this.tapPanelFromTree, message);
+		} else {
+			Aladin.warning(aladin.dialog, message);
+		}
 	}
 	
 	/**
@@ -1754,15 +1925,6 @@ public class TapManager {
 					result = true;
 				}
 			}
-		}
-		return result;
-		
-	}
-	
-	public static boolean isChangeServerMode(TapServerMode mode) {
-		boolean result = false;
-		if (mode == TapServerMode.GENERAL || mode == TapServerMode.GLU){ 
-			result = true;
 		}
 		return result;
 	}

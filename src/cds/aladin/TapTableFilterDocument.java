@@ -4,19 +4,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -158,11 +152,15 @@ public class TapTableFilterDocument extends PlainDocument{
 			return;
 		}
 		super.insertString(offs, str, a);
-
+//		System.out.println("insertString called processLevelFlag: "+processLevelFlag);
 		if (processLevelFlag > 0) {
 			searchTable();
 			tablesGui.setPopupVisible(true);
 		}
+		
+		/*if (Aladin.winPlateform) {//tintin TODO:: check for windows issue
+			editor.setCaretPosition(getLength());
+		}*/
 		
 	}
 	

@@ -5,7 +5,6 @@ HEASARC_TAP http://heasarc.gsfc.nasa.gov/xamin/vo/tap The HEASARC is NASA domain
 SIMBAD_TAP http://simbad.u-strasbg.fr:80/simbad/sim-tap This service provides TAP access to a simplified view of the SIMBAD database
 WISE http://wfaudata.roe.ac.uk/wise-dsa/TAP NASA's Wide-field Infrared Survey Explorer (WISE; Wright et al. 2010) mapped the sky at 3.4, 4.6, 12, and 22 Î¼m (W1, W2, W3, W4) in 2010 with an angular resolution of 6.1", 6.4", 6.5", & 12.0" in the four bands. WISE achieved 5Ï? point source sensitivities better than 0.08, 0.11, 1 and 6 mJy in unconfused regions on the ecliptic in the four bands. Sensitivity improves toward the ecliptic poles due to denser coverage and lower zodiacal background.
 cadc.nrc.ca/tap http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap
-CADC2 http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap2 
 ObsTAP http://cdsarc.u-strasbg.fr/saadavizier.tap/tap
 TAPVizieR http://tapvizier.u-strasbg.fr/TAPVizieR/tap This service provides TAP access to a simplified view of the VizieR database
 

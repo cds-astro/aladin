@@ -27,6 +27,7 @@ import static cds.aladin.Constants.DATATYPE_DATALINK;
 import static cds.aladin.Constants.SEMANTICS;
 import static cds.aladin.Constants.SEMANTIC_ACCESS;
 import static cds.aladin.Constants.SEMANTIC_CUTOUT;
+import static cds.aladin.Constants.SEMANTIC_PROC;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
@@ -215,7 +216,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 					String semantics = activeDataLinkGlu.getParams().get(SEMANTICS);
 					String contentType = activeDataLinkGlu.getParams().get(CONTENTTYPE);
 					
-					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS) || semantics.equalsIgnoreCase("#proc")) {//TODO:: remove access semantic. added to facilitate testing.
+					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS) || semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
 						aladin.datalinkGlu = new DataLinkGlu(aladin);
 						aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
 					} else if (contentType!=null && accessUrl!=null && contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {

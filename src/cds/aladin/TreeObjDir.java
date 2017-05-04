@@ -865,7 +865,7 @@ public class TreeObjDir extends TreeObj {
       serverXmatch.submit();
    }
 
-   /** Open the TAP form associated to this collection => Chaitra */
+     /** Open the TAP form associated to this collection => Chaitra */
    void queryByTap() {
       // GLU TAP tag
       String gluTag = prop.get("tap_glutag");
@@ -881,7 +881,13 @@ public class TreeObjDir extends TreeObj {
       String url = prop.get("tap_service_url");
       String id = prop.get("ID");
       if( id!=null && url!=null ) {
-    	  TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url);
+    	  try {
+			TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url, null);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			aladin.warning("Error unable to load "+url+"\n"+e.getMessage());
+		}
 //         aladin.info("Generic TAP form for "+url+"\n(Not yet implemented)");
 //         // Chaitra ...
 //         return;

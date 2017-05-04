@@ -1,13 +1,6 @@
 package cds.aladin;
 
-import static cds.aladin.Constants.REGISTRYPANEL;
-
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.JRadioButton;
-import javax.swing.SwingUtilities;
 
 public class DataLabel {
 	private String label;
@@ -65,21 +58,6 @@ public class DataLabel {
 		if (this.description!=null && !this.description.isEmpty()) {
 			gui.setToolTipText("<html><p width=\"500\">"+this.description+"</p></html>");
 		}
-	}
-	
-	public void setUiActionForTapRegistry() {
-		this.gui.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-//				Integer.parseInt(e.getActionCommand());
-				Container registryPanel = SwingUtilities.getAncestorNamed(REGISTRYPANEL, gui);
-				if (registryPanel instanceof TapFrameServer) {
-					TapFrameServer frameServer = (TapFrameServer) registryPanel;
-					frameServer.setReload(label);
-				}
-			}
-		});
 	}
 	
 	@Override

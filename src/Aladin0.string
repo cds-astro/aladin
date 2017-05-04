@@ -2971,6 +2971,9 @@ TAPFORMINFO	Construct your query, verify and execute.
 SELECTSERVERTOOLTIP List of tap server that can be loaded...
 TAPFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "X" button. \nOnce you are ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
 TARGETERROR Please check target co-ordinates!
+SELECTSERVERLABEL Select server
+SELECTASYNCPANELLABEL Async jobs
+
 
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message
@@ -2992,9 +2995,12 @@ SHOWASYNCTOOLTIP Click to see the asynchronous job panel
 CHECKQUERY_SUCCESS Your constructed query has valid syntax!
 CHECKQUERY_ISBLANK Please generate/write a query
 NOTAPSERVERSCONFIGUREDMESSAGE No tap servers configured.
-OPENTAPSERVER Open tap server list
 TAPRETRY Retry
 TAPTIPRETRY Click to retry loading the tap services on this server
+TAPURLCLIENTFIELDLABEL Provide a TAP server URL
+TAPURLCLIENTFILTERLABEL Or choose from below servers. 
+TAPGLUGENTOGGLEBUTTONTOOLTIP Toggle between generic and glu tap forms
+CHANGESERVERTOOLTIP Choose a different tap server
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables
@@ -3011,7 +3017,7 @@ ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
 SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobs
-UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the query you run from the TAP form with a "ASYNC" option selected.
+UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the queries submitted from the TAP form with an "ASYNC" option selected.
 CANTSTARTJOB Unable to start the job. please try again later.
 STANDARDRESULTSLOAD Load Results
 STANDARDRESULTSLOADTIP Loads results from "/results/result" path

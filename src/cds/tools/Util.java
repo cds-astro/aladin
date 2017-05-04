@@ -99,6 +99,8 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
@@ -2438,6 +2440,14 @@ public final class Util {
 			}
 		}
 		return plan;
+	}
+	
+	public static String getDomainNameFromUrl(String url) throws URISyntaxException {
+		String result = url;
+	    URI uri = new URI(url);
+	    String domain = uri.getHost();
+	    result =  domain.startsWith("www.") ? domain.substring(4) : domain;
+	    return result;
 	}
 
    // PAS ENCORE TESTE

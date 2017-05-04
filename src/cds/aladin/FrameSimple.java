@@ -1,17 +1,16 @@
 package cds.aladin;
 
-import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
-
 import java.awt.AWTEvent;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import cds.aladin.Constants.TapServerMode;
 import cds.tools.Util;
 
 
@@ -76,16 +75,17 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 		this.getContentPane().removeAll();
 		this.getContentPane().setBackground(Aladin.COLOR_MAINPANEL_BACKGROUND);
 		this.getContentPane().add(this.server, "Center");
-		this.getContentPane().revalidate();
-		this.getContentPane().repaint();
-		
-		/*buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		JButton submit = new JButton("Submit");
 		submit.addActionListener(this);
 		submit.setActionCommand("SUBMIT");
 		buttonsPanel.add(submit);
 		
-		this.getContentPane().add(buttonsPanel, "South");*/
+		this.getContentPane().add(buttonsPanel, "South");
+		this.getContentPane().revalidate();
+		this.getContentPane().repaint();
+		this.getRootPane().setBorder(BorderFactory.createLineBorder(Color.gray));
+		this.getRootPane().getInsets().set(2, 2, 0, 2);
 //		setSize(700, 500);
 	}
 	

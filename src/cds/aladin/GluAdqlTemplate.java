@@ -8,7 +8,6 @@ import static cds.aladin.Constants.FROM;
 import static cds.aladin.Constants.GLU_FROM;
 import static cds.aladin.Constants.GLU_SELECT;
 import static cds.aladin.Constants.GLU_WHERE;
-import static cds.aladin.Constants.PLUS_CHAR;
 import static cds.aladin.Constants.TOP;
 
 import java.util.Enumeration;
@@ -87,7 +86,7 @@ public class GluAdqlTemplate extends ADQLQuery {
 			String colGluKey = this.gluSelect.keys().nextElement();
 			setSingleGluQueryParam(colGluKey, this.gluSelect.get(colGluKey), v, gluQuery, null, " * ");
 		} else {
-			gluQuery.append("+*+");
+			gluQuery.append(" * ");
 		}
 	}
 	
@@ -124,9 +123,9 @@ public class GluAdqlTemplate extends ADQLQuery {
 				  value = (String) v.get(Integer.valueOf(gluKey)-1);
 				  if (value!=null && !value.isEmpty() && !value.equals("NaN")) {
 					  if (param!=null) {
-						  gluQuery.append(param).append(PLUS_CHAR);
+						  gluQuery.append(param).append(" ");
 					  }
-					  gluQuery.append(gluParam).append(PLUS_CHAR);
+					  gluQuery.append(gluParam).append(" ");
 					  notSetFlag = false;
 	    		  }
 			  }
@@ -160,7 +159,7 @@ public class GluAdqlTemplate extends ADQLQuery {
 
 			if (value != null && !value.isEmpty() && !value.equals("NaN")) {
 				if (!isfirst) {
-					whereQuery.append("+AND+");
+					whereQuery.append(" AND ");
 				}
 				if (adqlFunc!=null && adqlFuncParams!=null && adqlFunc.containsKey(this.gluWhere.get(gluKey))) {
 					String function = adqlFunc.get(this.gluWhere.get(gluKey));
@@ -182,7 +181,7 @@ public class GluAdqlTemplate extends ADQLQuery {
 			}
 		}
 		if (whereQuery.length()>0) {
-			gluQuery.append("WHERE+").append(whereQuery);
+			gluQuery.append("WHERE ").append(whereQuery);
 		}
 	}
 	
@@ -196,7 +195,7 @@ public class GluAdqlTemplate extends ADQLQuery {
 	 * @return gluQuery
 	 */
 	public String getGluQuery(Vector v, String currentSelectedTapTable, Hashtable<String, String> adqlFunc, Hashtable<String, String> adqlFuncParams) {
-		StringBuffer query = new StringBuffer("SELECT+");
+		StringBuffer query = new StringBuffer("SELECT ");
 		this.setGluQueryAllOrDistinct(v, query);
 		this.setGluQueryTop(v, query);
 		this.setGluQueryColumns(v, query);

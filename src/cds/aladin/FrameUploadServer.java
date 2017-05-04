@@ -520,7 +520,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 */
 	public void clearBottomPanel() {
 		this.uploadServer.tablesMetaData.clear();
-		this.uploadServer.loadStatus = TAPFORM_STATUS_NOTLOADED;
+		this.uploadServer.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
 		this.uploadServer.removeAll();
 		this.remove(this.uploadServer);
 		this.remove(this.bottomButtonsPanel);

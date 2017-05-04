@@ -46,6 +46,7 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import cds.aladin.Constants.TapClientMode;
 import cds.tools.UrlLoader;
 import cds.tools.Util;
 import cds.vizier.VizieRQuery;
@@ -261,14 +262,25 @@ public final class Glu implements Runnable {
       aladin.dialog = new ServerDialog(aladin);
       if( showLastGlu ) {
          int c1 = aladin.dialog.getLastGluServerIndice();
-         if (lastTapGluServer!=null) {
-        	 c1 = aladin.dialog.getTapServerIndex();
-        	 lastTapGluServer = null;
-//        	 aladin.dialog.setCurrent("TAP");
- 		}
+         if (Aladin.PROTO) {
+        	 if (lastTapGluServer != null) {
+            	 c1 = aladin.dialog.getTapServerIndex();
+            	 aladin.dialog.findReplaceServer(aladin.dialog.tapServer, lastTapGluServer);
+     			 aladin.dialog.tapServer = lastTapGluServer;
+            	 lastTapGluServer = null;
+//            	 aladin.dialog.setCurrent("TAP");
+     		} else if (oldDialog.tapServer != null) {
+     			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, oldDialog.tapServer);
+    			aladin.dialog.tapServer = oldDialog.tapServer;
+     		}
+		}
+         
          if( c1!=-1 ) c=c1;
       }
-      tapManager.reloadTapServerList();
+      if (Aladin.PROTO) {
+    	  tapManager.reloadTapServerList();
+      }
+      
       aladin.dialog.setCurrent(c);
       if( p!=null ) {
          aladin.dialog.flagSetPos=true;
@@ -1182,22 +1194,40 @@ public final class Glu implements Runnable {
          } else {
             if(aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, TAPv1) == 0) {
 	            GluAdqlTemplate gluAdqlTemplate = new GluAdqlTemplate(adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);
+	            TapClientMode clientMode = null;
+	            boolean isForDialog = true;
+	            if (aladinProtocol.endsWith("TREEPANEL")) {
+	            	clientMode = TapClientMode.TREEPANEL;
+	            	isForDialog = false;
+	            } else {
+	            	clientMode = TapClientMode.DIALOG;
+				}
+	            TapClient tapClient = tapManager.getExistingTapClientForGluActionName(clientMode, actionName);
+	            if (tapClient == null) {
+	            	tapClient = new TapClient(clientMode, tapManager, actionName, null);
+	            	tapManager.addNewTapClientToCache(isForDialog, actionName, tapClient);
+				}
 	        	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
 	                    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
-	                    null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, gluAdqlTemplate);
+	                    null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, 
+	                    gluAdqlTemplate, tapClient);
 	           	 g.setAdqlFunc(adqlFunc);
 	      		 g.setAdqlFuncParams(adqlFuncParams);
-	      		 boolean showPanel = TapManager.cache(actionName, g);
+	      		 
 	      		 g.HIDDEN = true;
-	      		 if (localFile && showPanel) {//changing tapserver here wont work. ServerDialog that containts the instance of tapserver is reloaded at glu reload.
-	      			lastTapGluServer = g;
+	      		 if (localFile) {//changing tapserver here wont work. ServerDialog that contraints the instance of tapserver is reloaded at glu reload.
+	      			if (!isForDialog) {
+		      			tapManager.showTapPanelFromTree(actionName, g);
+		      		} else {
+		      			lastTapGluServer = g;
+					}
 //	      			tapManager.loadTapServer(g);
 				}
 	      		
             } else {
             	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
                         aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
-                        null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null);
+                        null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, null);
 			}
          }
          if (g!=null) {

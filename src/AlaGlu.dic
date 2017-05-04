@@ -466,13 +466,14 @@
 #%Aladin.LabelPlane TAP
 
 ###TAP client description from GLU###
-%A    TAPCADC
-%D    CADC via TAP GLU
-%Z    ALADIN
-%O    aladin
-%Url  http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap2
-%R    Mime(votable/xml)
+%ActionName    cadc.nrc.ca/tap
+%Description    CADC via TAP GLU
+%DistribDomain    ALADIN
+%Owner    aladin
+%Url  http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap
+%ResultDataType    Mime(votable/xml)
 %Aladin.Protocol TAPv1
+#%Aladin.Protocol TAPv1-TREEPANEL
 %Aladin.Label TAP
 %Aladin.LabelPlane TAP-CADC
 %Param.Description							$7=Collection
@@ -537,439 +538,140 @@
 %Param.DataType   	 						$11=char(ivoa.ObsCore)
 %ADQL.Where        							$11=facility_name LIKE "$11"
 
-%Param.Description							$12=Polarization states
-%Param.DataType   	 						$12=char(Multiselect,ivoa.ObsCore)
-%Param.Value  								$12=I	Q	U	V	RR	LL	RL	LR	XX	YY	XY	YX	POLI	POLA
-%ADQL.Where        							$12=pol_states LIKE "$12"
-
 
 #GLU record for Gaia tapvizier (Gaia Collaboration, 2016)
-%A    GAIA_VIZIER
-%D    Gaia via TAP Vizier (Gaia Collaboration, 2016)
-%O    CDS'aladin
-%Z    ALADIN
+%ActionName    GAIA_VIZIER
+%Description    Gaia via TAP Vizier
+%Owner    CDS'aladin
+%DistribDomain    ALADIN
 %Aladin.Protocol TAPv1
-%N    1475571165  2016/10/04 10:52:35
-%U    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
+%VersionNumber    1475571165  2016/10/04 10:52:35
+%Url    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
 
-%P.D	$1=Target
-%P.K    $1=Target(RAd,"I/337/gaia","I/337/tgasptyc")
-%P.D	$2=Declination
-%P.K	$2=Target(DEd,"I/337/gaia","I/337/tgasptyc")
-%P.D	$3=Radius
-%P.K	$3=Field(RADIUSd,"I/337/gaia","I/337/tgasptyc")
-%ADQL.Where	$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
+%Param.Description	$1=Target
+%Param.DataType    $1=Target(RAd,"I/337/gaia","I/337/tgasptyc")
+%Param.Description	$2=Declination
+%Param.DataType	$2=Target(DEd,"I/337/gaia","I/337/tgasptyc")
+%Param.Description	$3=Radius
+%Param.DataType	$3=Field(RADIUSd,"I/337/gaia","I/337/tgasptyc")
+%ADQL.Where		$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
 #%ADQL.Where	$1=1%3DCONTAINS%28POINT%28%27ICRS%27%2C+rap%2C+dec%29%2C+CIRCLE%28%27ICRS%27%2C+$1%2C+$2%2C+$3+%29%29
-%P.V	3:0.17
+%Param.Value	$3=0.17
 
-%P.D	4:Table
-%P.K	$4=Tables("I/337/gaia","I/337/tgasptyc")
-%P.V  	4:"I/337/gaia" - Gaia Source data
-%P.V  	4:"I/337/tgasptyc" - TGAS supplemented with BT and VT magnitudes
+%Param.Description	$4=Table
+%Param.DataType	$4=Tables("I/337/gaia","I/337/tgasptyc")
+%Param.Value  	$4="I/337/gaia" - Gaia Source data
+%Param.Value  	$4="I/337/tgasptyc" - TGAS supplemented with BT and VT magnitudes
 %ADQL.TAPTables	"I/337/gaia"	"I/337/tgasptyc"
-%ADQL.From	$4=$4
+%ADQL.From		$4=$4
 
-%P.D  	5:Plx [mas](ex: >50)
-%P.K  	5=char(OP,"I/337/gaia","I/337/tgasptyc")
-%ADQL.Where 5=parallax $5
+%Param.Description  	$5=Plx [mas](ex: >50)
+%Param.DataType  	$5=char(OP,"I/337/gaia","I/337/tgasptyc")
+%ADQL.Where 		$5=parallax $5
 
-%P.D  	6:Gmag (ex: 10..11)
-%P.K  	6=char(OP,"AND","I/337/gaia","I/337/tgasptyc")
-%ADQL.Where 6=phot_g_mean_mag $6
+%Param.Description  	$6=Gmag (ex: 10..11)
+%Param.DataType  	$6=char(OP,"AND","I/337/gaia","I/337/tgasptyc")
+%ADQL.Where 		$6=phot_g_mean_mag $6
 
-%P.D  	7:pm limit [mas/yr]
-%P.K  	7=char("I/337/gaia","I/337/tgasptyc")
-%ADQL.Where 7= SQRT(POWER(pmRA,2)%2BPOWER(pmdec,2))>$7
+%Param.Description  	$7=pm limit [mas/yr]
+%Param.DataType  	$7=char("I/337/gaia","I/337/tgasptyc")
+#%ADQL.Where 	$7= SQRT(POWER(pmRA,2)%2BPOWER(pmdec,2))>$7
+%ADQL.Where 	$7= SQRT(POWER(pmRA,2)+POWER(pmdec,2))>$7
 
-%P.D	$8=Max records
-%P.V	$8=TOP 10 - A few
-%P.V	$8=TOP 1000 - first 1000
-%P.V	$8=- Default server limit
-%P.K	$8=TOP("I/337/gaia","I/337/tgasptyc")
+%Param.Description	$8=Max records
+%Param.Value	$8=TOP 10 - A few
+%Param.Value	$8=TOP 1000 - first 1000
+%Param.Value	$8=- Default server limit
+%Param.DataType	$8=TOP("I/337/gaia","I/337/tgasptyc")
 %ADQL.Select	$8=$8
 
-%P.D  	9:Output columns
-%P.V  	9:* - Default columns
-%P.V	9:ra, dec, pmra, pmdec, SQRT(POWER(pmRA,2)+POWER(pmdec,2)) as pm  - Position and proper motion
-%P.V	9:source_id, phot_g_mean_mag+5*log10(parallax)-10 as g_mag - Absolute magnitude MG 
-%P.V  	9:b,dec,dec_error,duplicated_source,phot_g_mean_flux,phot_g_mean_flux_error, phot_g_mean_mag,phot_variable_flag,l,ra,ra_error, source_id,ref_epoch,pmRa,ra_dec_corr
-%P.V	9:MAX(SQRT(POWER(pmRA,2)+POWER(pmdec,2))) as maxPm - Largest proper motion
-%P.K  	9=char("I/337/gaia")
+%Param.Description  	$9=Output columns
+%Param.Value  	$9=* - Default columns
+%Param.Value	$9=ra, dec, pmra, pmdec, SQRT(POWER(pmRA,2)+POWER(pmdec,2)) as pm  - Position and proper motion
+%Param.Value	$9=source_id, phot_g_mean_mag+5*log10(parallax)-10 as g_mag - Absolute magnitude MG 
+%Param.Value  	$9=b,dec,dec_error,duplicated_source,phot_g_mean_flux,phot_g_mean_flux_error, phot_g_mean_mag,phot_variable_flag,l,ra,ra_error, source_id,ref_epoch,pmRa,ra_dec_corr
+%Param.Value	$9=MAX(SQRT(POWER(pmRA,2)+POWER(pmdec,2))) as maxPm - Largest proper motion
+%Param.DataType  	$9=char("I/337/gaia")
 %ADQL.Select	$9=$9
 
-%R    Mime(votable/xml)
+%ResultDataType    Mime(votable/xml)
 %Aladin.Label TAP
 %Aladin.LabelPlane GaiaGluTap
 
 
 #GLU record for Gaia DR1 from ARI
 #Catalog Identifier    : Gaia-DR1.cat
-%A    GaiaGluTAPARI
-%D    Gaia DR1 (Gaia Collaboration, 2016)
-%O    CDS'aladin
-%Z    ALADIN
-%Aladin.Protocol TAPv1-TREEPANEL
-%N    1475571165  2016/10/04 10:52:35
-%U    http://gaia.ari.uni-heidelberg.de/tap/tapper
+%ActionName    GaiaGluTAPARI
+%Description    Gaia DR1 (Gaia Collaboration, 2016)
+%Owner    CDS'aladin
+%DistribDomain    ALADIN
+%Aladin.Protocol TAPv1
+%VersionNumber    1475571165  2016/10/04 10:52:35
+%Url    http://gaia.ari.uni-heidelberg.de/tap
 
-%P.D	$1=Target
-%P.K    $1=Target(RAd,gaiadr1.gaia_source,gaiadr1.tgas_source)
-%P.D	$2=Declination
-%P.K	$2=Target(DEd,gaiadr1.gaia_source,gaiadr1.tgas_source)
-%P.D	$3=Radius
-%P.K	$3=Field(RADIUSd,gaiadr1.gaia_source,gaiadr1.tgas_source)
-%ADQL.Where	$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
-%P.V	3:0.17
+%Param.Description	$1=Target
+%Param.DataType    	$1=Target(RAd,gaiadr1.gaia_source,gaiadr1.tgas_source)
+%Param.Description	$2=Declination
+%Param.DataType		$2=Target(DEd,gaiadr1.gaia_source,gaiadr1.tgas_source)
+%Param.Description	$3=Radius
+%Param.DataType	$3=Field(RADIUSd,gaiadr1.gaia_source,gaiadr1.tgas_source)
+%ADQL.Where		$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
+%Param.Value	$3=0.17
 
-%P.D	4:Table
-%P.K	$4=Tables(gaiadr1.gaia_source,gaiadr1.tgas_source)
-%P.V  	4:gaiadr1.gaia_source - Gaia Source data
-%P.V  	4:gaiadr1.tgas_source - TGAS supplemented with BT and VT magnitudes
-%ADQL.TAPTables	gaiadr1.gaia_source	gaiadr1.tgas_source
-%ADQL.From	$4=$4
+%Param.Description	$4=Table
+%Param.DataType		$4=Tables(gaiadr1.gaia_source,gaiadr1.tgas_source)
+%Param.Value  		$4=gaiadr1.gaia_source - Gaia Source data
+%Param.Value  		$4=gaiadr1.tgas_source - TGAS supplemented with BT and VT magnitudes
+%ADQL.TAPTables		gaiadr1.gaia_source	gaiadr1.tgas_source
+%ADQL.From			$4=$4
 
-%P.D  	5:Plx [mas](ex: >50)
-%P.K  	5=char(OP,gaiadr1.gaia_source,gaiadr1.tgas_source)
-%ADQL.Where 5=parallax $5
+%Param.Description  	$5=Plx [mas](ex: >50)
+%Param.DataType  		$5=char(OP,gaiadr1.gaia_source,gaiadr1.tgas_source)
+%ADQL.Where 			$5=parallax $5
 
-%P.D  	6:Gmag (ex: 10..11)
-%P.K  	6=char(OP,gaiadr1.gaia_source,gaiadr1.tgas_source)
-%ADQL.Where 6=phot_g_mean_mag $6
+%Param.Description  $6=Gmag (ex: 10..11)
+%Param.DataType  	$6=char(OP,gaiadr1.gaia_source,gaiadr1.tgas_source)
+%ADQL.Where 		$6=phot_g_mean_mag $6
 
-%P.D  	7:pm limit [mas/yr]
-%P.K  	7=char(gaiadr1.gaia_source,gaiadr1.tgas_source)
-%ADQL.Where 7= SQRT(POWER(pmRA,2)%2BPOWER(pmdec,2))>$7
+%Param.Description  $7=pm limit [mas/yr]
+%Param.DataType  	$7=char(gaiadr1.gaia_source,gaiadr1.tgas_source)
+%ADQL.Where 		$7= SQRT(POWER(pmRA,2)+POWER(pmdec,2))>$7
 
-%P.D	$8=Max records
-%P.V	$8=TOP 10 - A few
-%P.V	$8=TOP 1000 - first 1000
-%P.V	$8=- Default server limit
-%P.K	$8=TOP(gaiadr1.gaia_source,gaiadr1.tgas_source)
+%Param.Description	$8=Max records
+%Param.Value	$8=TOP 10 - A few
+%Param.Value	$8=TOP 1000 - first 1000
+%Param.Value	$8=- Default server limit
+%Param.DataType	$8=TOP(gaiadr1.gaia_source,gaiadr1.tgas_source)
 %ADQL.Select	$8=$8
 
-%P.D  	9:Output columns
-%P.V  	9:* - Default columns
-%P.V	9:ra, dec, pmra, pmdec, SQRT(POWER(pmRA,2)+POWER(pmdec,2)) as pm  - Position and proper motion
-%P.V	9:source_id, phot_g_mean_mag+5*log10(parallax)-10 as g_mag - Absolute magnitude MG 
-%P.V  	9:b,dec,dec_error,duplicated_source,phot_g_mean_flux,phot_g_mean_flux_error, phot_g_mean_mag,phot_variable_flag,l,ra,ra_error, source_id,ref_epoch,pmRa,ra_dec_corr
-%P.V	9:MAX(SQRT(POWER(pmRA,2)+POWER(pmdec,2))) as maxPm - Largest proper motion
-%P.K  	9=char(gaiadr1.gaia_source)
+%Param.Description  	$9=Output columns
+%Param.Value  	$9=* - Default columns
+%Param.Value	$9=ra, dec, pmra, pmdec, SQRT(POWER(pmRA,2)+POWER(pmdec,2)) as pm  - Position and proper motion
+%Param.Value	$9=source_id, phot_g_mean_mag+5*log10(parallax)-10 as g_mag - Absolute magnitude MG 
+%Param.Value	$9=b,dec,dec_error,duplicated_source,phot_g_mean_flux,phot_g_mean_flux_error, phot_g_mean_mag,phot_variable_flag,l,ra,ra_error, source_id,ref_epoch,pmRa,ra_dec_corr
+%Param.Value	$9=MAX(SQRT(POWER(pmRA,2)+POWER(pmdec,2))) as maxPm - Largest proper motion
+%Param.DataType  	$9=char(gaiadr1.gaia_source)
 %ADQL.Select	$9=$9
 
-%P.D	10:Plx uncertainity limit
-%P.K  	10=char(gaiadr1.gaia_source,gaiadr1.tgas_source)	
-%ADQL.Where	10=parallax/parallax_error >= $10
+%Param.Description	$10=Plx uncertainity limit
+%Param.DataType  	$10=char(gaiadr1.gaia_source,gaiadr1.tgas_source)	
+%ADQL.Where	$10=parallax/parallax_error >= $10
 
-%R    Mime(votable/xml)
+%ResultDataType    Mime(votable/xml)
 %Aladin.Label TAP
 %Aladin.LabelPlane GaiaGluTapARI
 
-%A    Sample1
+%ActionName    Sample1
 %Aladin.TapService					ALATAP
 %Aladin.Label		SomeOtherLabel
-%D    NASA's Wide-field Infrared Survey Explorer (WISE; Wright et al. 2010) mapped the sky at 3.4, 4.6, 12, and 22 Î¼m (W1, W2, W3, W4) in 2010 with an angular resolution of 6.1", 6.4", 6.5", & 12.0" in the four bands. WISE achieved 5Ï? point source sensitivities better than 0.08, 0.11, 1 and 6 mJy in unconfused regions on the ecliptic in the four bands. Sensitivity improves toward the ecliptic poles due to denser coverage and lower zodiacal background.
-%U    http://gaia.ari.uni-heidelberg.de/tap
+%Description    NASA's Wide-field Infrared Survey Explorer (WISE; Wright et al. 2010) mapped the sky at 3.4, 4.6, 12, and 22 Î¼m (W1, W2, W3, W4) in 2010 with an angular resolution of 6.1", 6.4", 6.5", & 12.0" in the four bands. WISE achieved 5Ï? point source sensitivities better than 0.08, 0.11, 1 and 6 mJy in unconfused regions on the ecliptic in the four bands. Sensitivity improves toward the ecliptic poles due to denser coverage and lower zodiacal background.
+%Url    http://gaia.ari.uni-heidelberg.de/tap
 
-%A    tapvizierGeneric
+%ActionName    tapvizierGeneric
 %Aladin.TapService					ALATAP
 %Aladin.Label		tapvizierGeneric
-%D    <html>Gaia DR1 <br/>(Gaia Collaboration, 2016)</html>
-%U    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
-
-#new things
-%A IRSA
-%Aladin.Label		IRSA
-%Aladin.TapService ALATAP
-%U http://irsa.ipac.caltech.edu/TAP
-
-%A LMD
-%Aladin.Label		LMD
-%Aladin.TapService ALATAP
-%U http://sery.lmd.jussieu.fr/tap
-
-%A GAVO
-%Aladin.Label		GAVO
-%Aladin.TapService ALATAP
-%U http://dc.zah.uni-heidelberg.de/tap
-
-%A VMC DR2
-%Aladin.Label		VMC
-%Aladin.TapService ALATAP
-%U http://wfaudata.roe.ac.uk/vmcDR2-dsa/TAP
-
-%A GAIAESA
-%Aladin.Label		GAIAESA
-%Aladin.TapService ALATAP
-%U http://gea.esac.esa.int/tap-server/tap
-
-%A GAIAESA
-%Aladin.Label		GAIAESA
-%Aladin.TapService ALATAP
-%U http://gea.esac.esa.int/tap-server/tap
-
-
-%A AIPGAVO
-%Aladin.Label		AIPGAVO
-%Aladin.TapService ALATAP
-%U http://gavo.aip.de/tap
-
-%A AIPGAVO
-%Aladin.Label		AIPGAVO
-%Aladin.TapService ALATAP
-%U http://gavo.aip.de/tap
-
-%A APIS
-%Aladin.Label		APIS
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A BASECOM
-%Aladin.Label		BASECOM
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A BDIP
-%Aladin.Label		BDIP
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A DynAstVO
-%Aladin.Label		DynAstVO
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A ExoPlanet
-%Aladin.Label		ExoPlanet
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A IKS
-%Aladin.Label		IKS
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A M4AST
-%Aladin.Label		M4AST
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A Titan
-%Aladin.Label		Titan
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-
-%A ASDC
-%Aladin.Label		ASDC
-%Aladin.TapService ALATAP
-%U http://tools.asdc.asi.it/TAP
-
-%A PlanetsLesia
-%Aladin.Label		PlanetsLesia
-%Aladin.TapService ALATAP
-%U http://voparis-tap.obspm.fr/__system__/tap/run/tap
-%D Main characteristics of solar system planets
-
-%A Planets
-%Aladin.Label		Planets
-%Aladin.TapService ALATAP
-%U http://voparis-tap-planeto.obspm.fr/__system__/tap/run/tap
-%D Asteroid orbital database and ephemerides
-
-%A EUROVORegistry
-%Aladin.Label		EUROVORegistry
-%Aladin.TapService ALATAP
-%U http://registry.euro-vo.org/regtap/tap
-
-%A VOXAstro
-%Aladin.Label		VOXAstro
-%Aladin.TapService ALATAP
-%U http://rcsed-vo.sai.msu.ru/tap
-
-%A 3xmmdr6
-%Aladin.Label		3xmmdr6
-%Aladin.TapService ALATAP
-%U http://xcatdb.unistra.fr/3xmmdr6/tap
-
-%A TohokuTAP
-%Aladin.Label		TohokuTAP
-%Aladin.TapService ALATAP
-%U http://thebe.gp.tohoku.ac.jp/tap
-
-%A TAO
-%Aladin.Label		TAO
-%Aladin.TapService ALATAP
-%U https://tao.asvo.org.au/tao/tap
-
-%A EPN1
-%Aladin.Label		EPN1
-%Aladin.TapService ALATAP
-%U http://epn1.epn-vespa.jacobs-university.de/tap
-
-%A LATMOS
-%Aladin.Label		LATMOS
-%Aladin.TapService ALATAP
-%U http://vo.projet.latmos.ipsl.fr/tap
-
-%A STscl
-%Aladin.Label		STscl
-%Aladin.TapService ALATAP
-%U http://vao.stsci.edu/RegTAP/TapService.aspx
-
-%A hfclar
-%Aladin.Label		hfclar
-%Aladin.TapService ALATAP
-%U http://voparis-tap-helio.obspm.fr/__system__/tap/run/tap
-
-%A hfclar3
-%Aladin.Label		hfclar3
-%Aladin.TapService ALATAP
-%U http://voparis-tap-helio.obspm.fr/__system__/tap/run/tap
-
-%A CDA
-%Aladin.Label		CDA
-%Aladin.TapService ALATAP
-%U http://cda.harvard.edu/cxctap
-
-%A GAIAGEPI
-%Aladin.Label		GAIAGEPI
-%Aladin.TapService ALATAP
-%U http://gaiatap.obspm.fr/tap
-
-%A SXDS_V1
-%Aladin.Label		SXDS_V1
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/sxds_v1
-
-%A BIRA-IASB
-%Aladin.Label		BIRA-IASB
-%Aladin.TapService ALATAP
-%U http://vespa-ae.oma.be/tap
-
-%A IAA-CAB
-%Aladin.Label		IAA-CAB
-%Aladin.TapService ALATAP
-%U http://spectrum.iaa.es/tap
-
-%A routinejup
-%Aladin.Label		routinejup
-%Aladin.TapService ALATAP
-%U http://vogate.obs-nancay.fr/__system__/tap/run/tap
-
-%A CSC
-%Aladin.Label		CSC
-%Aladin.TapService ALATAP
-%U http://cda.harvard.edu/csctap
-
-%A CSIRO_ATOA
-%Aladin.Label		CSIRO_ATOA
-%Aladin.TapService ALATAP
-%U http://atoavo.atnf.csiro.au/tap
-
-%A SUBARU_SUP
-%Aladin.Label		SUBARU_SUP
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/spcam
-
-%A WiggleZTAP
-%Aladin.Label		WiggleZTAP
-%Aladin.TapService ALATAP
-%U http://wiggleztap.asvo.nci.org.au/ncitap/tap
-
-%A UKIDSS
-%Aladin.Label		UKIDSS
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/ukidss
-
-%A wgetap
-%Aladin.Label		wgetap
-%Aladin.TapService ALATAP
-%U http://ia2-tap.oats.inaf.it:8080/wgetap
-
-%A AKARI_DR1
-%Aladin.Label		AKARI_DR1
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/AKARI_DR1
-
-%A moircs
-%Aladin.Label		moircs
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/moircs
-
-%A sdss_dr8
-%Aladin.Label		sdss_dr8
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/sdss_dr8
-
-%A alma
-%Aladin.Label		alma
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/alma
-
-%A HIPPARCOS
-%Aladin.Label		HIPPARCOS
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/hip
-
-%A henry_draper
-%Aladin.Label		henry_draper
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/henry_draper
-
-%A AGN
-%Aladin.Label		AGN
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/agn
-
-%A akari
-%Aladin.Label		akari
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/akari
-
-%A kug2000
-%Aladin.Label		kug2000
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/kug2000
-
-%A rosat
-%Aladin.Label		rosat
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/rosat
-
-%A saga
-%Aladin.Label		saga
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/saga
-
-%A SDSSDR2_SPECTRA
-%Aladin.Label		SDSSDR2_SPECTRA
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/sdss
-
-%A swire
-%Aladin.Label		swire
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/swire
-
-%A SubaruHDS
-%Aladin.Label		SubaruHDS
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/hds
-
-%A TWOMASS_JVO
-%Aladin.Label		TWOMASS_JVO
-%Aladin.TapService ALATAP
-%U http://jvo.nao.ac.jp/skynode/do/tap/twomass
-
-%A NASADUSTCAT
-%Aladin.Label		NASADUSTCAT
-%Aladin.TapService ALATAP
-%U http://ia2-tap.oats.inaf.it:8080/epntap
-
-%A    tapvizierGlu
-%Aladin.TapService					ALATAP
-%Aladin.Label		GAIA_VIZIER
-%D    Gaia DR1 (Gaia Collaboration, 2016)
-%U    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
+%Description    <html>Gaia DR1 <br/>(Gaia Collaboration, 2016)</html>
+%Url    http://tapvizier.u-strasbg.fr/TAPVizieR/tap
 
 
 

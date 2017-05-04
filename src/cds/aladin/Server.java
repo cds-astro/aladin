@@ -20,9 +20,9 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.DATALINK_FORM;
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
+import static cds.aladin.Constants.DATALINK_FORM;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -72,6 +72,7 @@ import adql.db.exception.UnresolvedIdentifiersException;
 import adql.parser.ADQLParser;
 import adql.parser.TokenMgrError;
 import adql.query.ADQLQuery;
+import cds.aladin.Constants.TapServerMode;
 import cds.moc.HealpixMoc;
 import cds.tools.Astrodate;
 import cds.tools.ScientificUnitsUtil;
@@ -222,6 +223,9 @@ public class Server extends JPanel
    public Aladin aladin;
 
    ADQLParser adqlParser;
+   public TapClient tapClient;
+   protected TapServerMode mode;
+   JToggleButton modeChoice = null;
    
    protected String getTitle() { return aladinLabel; }
    protected String getOrigin() { return institute; }

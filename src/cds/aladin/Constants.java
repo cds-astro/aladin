@@ -88,6 +88,7 @@ public static final String DATATYPE_DATALINK = "content=datalink";//"application
 public static final String ACCESSFORMAT_UCD = "obscore:Access.Format";
 public static final String SEMANTIC_CUTOUT = "#cutout";
 public static final String SEMANTIC_ACCESS = "#access";
+public static final String SEMANTIC_PROC = "#proc";
 public static final String REGEX_TABLENAME_SPECIALCHAR = "[$&+,:;=?@#/\\\\|]";
 public static final String REGEX_ONLYALPHANUM = "[^A-Za-z0-9]";
 public static final String REGEX_ALPHA = "[A-Za-z]";
@@ -222,12 +223,23 @@ public static final String ABORTJOB = "ABORTJOB";
 public static final String OLDJOBSELECTED = "OLDJOBSELECTED";
 /*public static final String RUNJOB = "RUNJOB";*/
 
-public static final int TAPFORM_STATUS_NOTLOADED = 0;
-public static final int TAPFORM_STATUS_LOADED = 1;
-public static final int TAPFORM_STATUS_ERROR = -1;
+public static final int TAPFORM_STATUS_NOTCREATEDGUI = 1;//have metadata..not created gui
+public static final int TAPFORM_STATUS_NOTLOADED = 0;//no metadata
+public static final int TAPFORM_STATUS_LOADED = 2;//metadata and gui in place
+public static final int TAPFORM_STATUS_ERROR = -1;//error
 
-public static enum TapServerMode {
-	GENERAL, GLU, EXAMPLE, UPLOAD, TREEPANEL;
+public static enum TapServerMode {//generic client modes
+	UPLOAD;
 }
+
+//modes correspond to the frame that host these servers
+public static enum TapClientMode {//Dialog is serverselector
+	DIALOG, TREEPANEL;
+}
+public static final String GLU = "GLU";
+public static final String GENERIC = "GENERIC";
+public static final String[] TAPSERVERMODES = { GENERIC , GLU };
+public static final String TAPMODECHANGETOOLTIP = "TAPMODECHANGETOOLTIP";
+public static final String LOADCLIENTTAPURL = "LOADCLIENTTAPURL";
 
 }
