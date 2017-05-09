@@ -90,17 +90,17 @@ public class ServerXmatch extends ServerMocQuery  {
          addCoo=true;
       }
       
-      out.writeField("colRA2", raName );
-      out.writeField("colDec2", deName );
+      out.writeField("colRA1", raName );
+      out.writeField("colDec1", deName );
       aladin.trace(4,"with local plan="+plan.getLabel()+" "+plan.getCounts()+"src RA="+raName+" DE="+deName+"...");
      
-//      File file = File.createTempFile("tmp", "xml");
-//      file.deleteOnExit();
-      File file = new File("D:\\Temp.xml");
+      File file = File.createTempFile("tmp", "xml");
+      file.deleteOnExit();
+//      File file = new File("D:\\Temp.xml");
       DataOutputStream dos = new DataOutputStream( new BufferedOutputStream(new FileOutputStream(file)) );
       aladin.writePlaneInVOTable(plan, dos, addCoo,false);
       dos.close();
-      out.writeFile("cat2", null, file, false);
+      out.writeFile("cat1", null, file, false);
    }
    
    protected void addParameter( MultiPartPostOutputStream out ) throws Exception {
@@ -108,10 +108,10 @@ public class ServerXmatch extends ServerMocQuery  {
       aladin.trace(4,"Xmatch ["+catName+"]...");
       
       out.writeField("REQUEST", "xmatch");
-      out.writeField("cat1", catName);
+      out.writeField("cat2", catName);
       out.writeField("distMaxArcsec", "5");
       out.writeField("selection", "best");
-      out.writeField("cols2", "");
+//      out.writeField("cols1", "");
       out.writeField("RESPONSEFORMAT", "votable");
       
 //      String limit = getLimit();
@@ -121,5 +121,9 @@ public class ServerXmatch extends ServerMocQuery  {
 //      }
    }
 
+   protected void log() {
+      aladin.log("XmatchQuery",getPlan().getLabel()+" "+super.getCatName());
+   }
+   
 
 }

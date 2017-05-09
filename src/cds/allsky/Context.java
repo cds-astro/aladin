@@ -1999,7 +1999,7 @@ public class Context {
    private void replaceKeys(MyProperties prop) {
       replaceKey(prop,Constante.OLD_HIPS_PUBLISHER,Constante.KEY_CREATOR);
       replaceKey(prop,Constante.OLD_HIPS_BUILDER,Constante.KEY_HIPS_BUILDER);
-      replaceKey(prop,Constante.OLD_OBS_COLLECTION,Constante.KEY_OBS_COLLECTION);
+      replaceKey(prop,Constante.OLD_OBS_COLLECTION,Constante.KEY_OBS_TITLE);
       replaceKey(prop,Constante.OLD_OBS_TITLE,Constante.KEY_OBS_TITLE);
       replaceKey(prop,Constante.OLD_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);
       replaceKey(prop,Constante.OLD1_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);

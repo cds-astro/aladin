@@ -2181,6 +2181,7 @@ SFCANNOT1	=>save aborted
 SFINFOIMG	Aladin saves images\nby keeping original pixels if possible, otherwise\nin 8 bits per pixel (for instance with the JPEG images).\n \nFor images with modified astrometrical reductions,\nthe original WCS FITS keywords have been replaced with\na new WCS definition.
 SFSAVEIN	Save catalogs in:
 SFSAVERGBIN	Save images in:
+SFSAVEMOCIN	Save MOCs in:
 SFJPEGENCODER	Image encoder not available in your Java configuration, use BMP default format.
 SFCH1	Backup\nthe\nstack
 SFCH2	Export\nsome\nplanes
@@ -2973,7 +2974,6 @@ TAPFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form.
 TARGETERROR Please check target co-ordinates!
 SELECTSERVERLABEL Select server
 SELECTASYNCPANELLABEL Async jobs
-
 
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message

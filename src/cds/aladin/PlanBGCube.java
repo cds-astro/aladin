@@ -53,8 +53,9 @@ public class PlanBGCube extends PlanBG {
    protected String getFrameLabel(int i) {
       if( !active ) return label;
       if( fromCanal ) return getCanalValue(i);
-      String s = prop.getProperty(Constante.OLD_OBS_COLLECTION+"_"+i);
-      if( s==null ) s = prop.getProperty(Constante.KEY_OBS_COLLECTION+"_"+i);
+      String s = prop.getProperty(Constante.KEY_OBS_TITLE+"_"+i);
+      if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION+"_"+i);
+//      if( s==null ) s = prop.getProperty(Constante.KEY_OBS_COLLECTION+"_"+i);
       return s!=null ? s : label;
    }
 

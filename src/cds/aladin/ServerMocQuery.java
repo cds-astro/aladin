@@ -205,7 +205,7 @@ public class ServerMocQuery extends Server  {
    
    private Plan dedicatedLocalPlane=null;
    protected void setPlan(Plan plan) { dedicatedLocalPlane = plan; }
-   private Plan getPlan() {
+   protected Plan getPlan() {
       if( dedicatedLocalPlane!=null ) return dedicatedLocalPlane;
       return (Plan)comboLocalPlane.getSelectedItem();
    }
@@ -253,6 +253,7 @@ public class ServerMocQuery extends Server  {
        
        aladin.trace(4,"Sending local data...");
        try {
+           log();
            MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
            String boundary = MultiPartPostOutputStream.createBoundary();
            HttpURLConnection urlConn = (HttpURLConnection)MultiPartPostOutputStream.createConnection(url);
@@ -266,7 +267,6 @@ public class ServerMocQuery extends Server  {
            out.close();
            aladin.trace(4,"Local data file sent");
            aladin.calque.newPlanCatalog( urlConn, getPlanName());
-           aladin.trace(4,"Result loaded");
 
        } catch(Exception e) {
            defaultCursor();
@@ -275,6 +275,10 @@ public class ServerMocQuery extends Server  {
            return;
        }
        defaultCursor();
+   }
+   
+   protected void log() {
+      aladin.log("MocQuery",getCatName());
    }
    
    protected void addParameter( MultiPartPostOutputStream out ) throws Exception {

@@ -632,7 +632,8 @@ public class TreeObjDir extends TreeObj {
    }
    
    /** Retourne true si la collection dispose d'un HiPS */
-   protected boolean hasHips() { return prop!=null && prop.get("hips_service_url")!=null; }
+   protected boolean hasHips() { return prop!=null && 
+         (prop.get("hips_service_url")!=null || prop.get("hips_service_path")!=null); }
    
    /** Retourne true si la collection dispose d'un accès TAP */
    protected boolean hasTAP() {
@@ -786,6 +787,13 @@ public class TreeObjDir extends TreeObj {
 
    /** retourne l'URL de base pour accéder au serveur HTTP */
    protected String getUrl() {
+      
+      // HiPS local ?
+      if( prop!=null ) {
+         String path = prop.getProperty("hips_service_path");
+         if( path!=null ) return path;
+      }
+      
       try {
          if( id!=null && aladin.glu.aladinDic.get(id)!=null) {
             return aladin.glu.getURL(id,"",false,false,1)+"";
@@ -854,7 +862,6 @@ public class TreeObjDir extends TreeObj {
          return;
       }
       serverXmatch.setPlan(plan);
-
       serverXmatch.setCatName(internalId);
       serverXmatch.setPlanName(internalId);
 
@@ -865,7 +872,7 @@ public class TreeObjDir extends TreeObj {
       serverXmatch.submit();
    }
 
-     /** Open the TAP form associated to this collection => Chaitra */
+   /** Open the TAP form associated to this collection => Chaitra */
    void queryByTap() {
       // GLU TAP tag
       String gluTag = prop.get("tap_glutag");
@@ -942,6 +949,9 @@ public class TreeObjDir extends TreeObj {
       return "get "+gluTag;
    }
    
+   protected void loadCS(Coord c,double radius) {
+      aladin.execAsyncCommand( getCSCmd()+" "+aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius ));
+   }
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
    protected void loadCS() { aladin.execAsyncCommand( getCSCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15)); }
    protected String getCSBkm() { return getCSCmd()+" $TARGET $RADIUS"; }
@@ -986,7 +996,7 @@ public class TreeObjDir extends TreeObj {
    private String getProgenitorsCmd() {
       String progen = getProgenitorsUrl();
       if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
-      return Tok.quote("PGN "+internalId)+"=load "+progen;
+      return Tok.quote(internalId+" PNG")+"=load "+progen;
    }
 
    /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
@@ -1192,23 +1202,8 @@ public class TreeObjDir extends TreeObj {
 //      aladin.execAsyncCommand("'DM "+internalId+"'=load "+url);
    }
    
-   void queryByMoc() {
+   void queryByMoc(PlanMoc planMoc) {
       ServerMocQuery serverMoc = new ServerMocQuery(aladin);
-      
-      // Détermination du PlanMoc
-      PlanMoc planMoc=null;
-      for( Object p : aladin.calque.getSelectedPlanes() ) {
-         if( p instanceof PlanMoc && ((PlanMoc) p).flagOk) { planMoc=(PlanMoc)p; break; }
-      }
-      if( planMoc==null ) {
-         for( Object p : aladin.calque.getPlans() ) {
-            if( p instanceof PlanMoc && ((PlanMoc) p).flagOk) { planMoc=(PlanMoc)p; break; }
-         }
-      }
-      if( planMoc==null ) {
-         aladin.warning("You need to select or have a MOC plane in the stack");
-         return;
-      }
       serverMoc.setPlan(planMoc);
       
       // Positionnement de l'identificateur du catalog

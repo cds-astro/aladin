@@ -144,7 +144,7 @@
 %Param.Description $3=Specific order
 %Aladin.Menu       VO protocols..
 %Aladin.XLabel     Coverage server (MOC)
-%Aladin.LabelPlane MOC $1
+%Aladin.LabelPlane $1 MOC
 %Aladin.Profile    >9.6
 %DistribDomain     ALADIN
 %ResultDataType    Mime(moc/fits)
@@ -554,7 +554,7 @@
 %Param.DataType	$2=Target(DEd,"I/337/gaia","I/337/tgasptyc")
 %Param.Description	$3=Radius
 %Param.DataType	$3=Field(RADIUSd,"I/337/gaia","I/337/tgasptyc")
-%ADQL.Where		$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
+%ADQL.Where	$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
 #%ADQL.Where	$1=1%3DCONTAINS%28POINT%28%27ICRS%27%2C+rap%2C+dec%29%2C+CIRCLE%28%27ICRS%27%2C+$1%2C+$2%2C+$3+%29%29
 %Param.Value	$3=0.17
 
@@ -563,7 +563,7 @@
 %Param.Value  	$4="I/337/gaia" - Gaia Source data
 %Param.Value  	$4="I/337/tgasptyc" - TGAS supplemented with BT and VT magnitudes
 %ADQL.TAPTables	"I/337/gaia"	"I/337/tgasptyc"
-%ADQL.From		$4=$4
+%ADQL.From	$4=$4
 
 %Param.Description  	$5=Plx [mas](ex: >50)
 %Param.DataType  	$5=char(OP,"I/337/gaia","I/337/tgasptyc")
@@ -615,15 +615,15 @@
 %Param.DataType		$2=Target(DEd,gaiadr1.gaia_source,gaiadr1.tgas_source)
 %Param.Description	$3=Radius
 %Param.DataType	$3=Field(RADIUSd,gaiadr1.gaia_source,gaiadr1.tgas_source)
-%ADQL.Where		$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
+%ADQL.Where	$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
 %Param.Value	$3=0.17
 
 %Param.Description	$4=Table
 %Param.DataType		$4=Tables(gaiadr1.gaia_source,gaiadr1.tgas_source)
 %Param.Value  		$4=gaiadr1.gaia_source - Gaia Source data
 %Param.Value  		$4=gaiadr1.tgas_source - TGAS supplemented with BT and VT magnitudes
-%ADQL.TAPTables		gaiadr1.gaia_source	gaiadr1.tgas_source
-%ADQL.From			$4=$4
+%ADQL.TAPTables	gaiadr1.gaia_source	gaiadr1.tgas_source
+%ADQL.From	$4=$4
 
 %Param.Description  	$5=Plx [mas](ex: >50)
 %Param.DataType  		$5=char(OP,gaiadr1.gaia_source,gaiadr1.tgas_source)

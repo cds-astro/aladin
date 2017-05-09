@@ -1800,7 +1800,7 @@ public class Calque extends JPanel implements Runnable {
    /** Chargement de la carte de densité associée à un catalogue */
    protected int newPlanDMap(String internalId, String catID) throws Exception {
       String u = ""+aladin.glu.getURL(DMAPGLU,aladin.glu.quote(catID));
-      String label = "DMAP "+internalId;
+      String label = internalId+" DMAP";
       int n=getStackIndex(label);
       try {
          plan[n] = new PlanHealpixDMap(aladin,u, label);
@@ -3418,7 +3418,7 @@ public class Calque extends JPanel implements Runnable {
    //   }
 
    // Détermination du target de démarrage pour un plan BG
-   private Coord getTargetBG(String target,TreeObjDir gSky) {
+   protected Coord getTargetBG(String target,TreeObjDir gSky) {
       Coord c=null;
       if( target!=null && target.length()>0) {
          try {
@@ -3436,7 +3436,7 @@ public class Calque extends JPanel implements Runnable {
    }
 
    // Détermination du radius de démarrage pour un plan BG
-   private double getRadiusBG(String target,String radius,TreeObjDir gSky) {
+   protected double getRadiusBG(String target,String radius,TreeObjDir gSky) {
       double rad=-1;
       if( radius!=null && radius.length()>0 ) {
          try {

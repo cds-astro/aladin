@@ -360,7 +360,8 @@ public abstract class Builder {
             InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
             prop.load(in);
             in.close();
-            String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
+            String s = prop.getProperty(Constante.KEY_OBS_TITLE);
+//            String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
             if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
             if( s!=null && s.length()>0 ) label=s;
          }

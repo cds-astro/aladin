@@ -2345,7 +2345,7 @@ public final class Command implements Runnable {
          
          // Pour des objets
          if( type==-1 || type==Plan.TOOL ) {
-            int n = a.createMocRegion(order);
+            int n = a.createPlanMocByRegions(order);
             Plan pMoc = a.calque.getPlan(n);
             if( label!=null ) pMoc.setLabel(label);
             

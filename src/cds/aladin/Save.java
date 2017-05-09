@@ -154,7 +154,7 @@ public final class Save extends JFrame implements ActionListener {
    static String [] CHOICE;
 
    static String TITLE,INFO,FISTINFO,SECONDINFO,CLOSE,EXPORT,DIR,
-   CANNOT,CANNOT1,INFOIMG,SAVEIN,SAVERGBIN,ENCODER;
+   CANNOT,CANNOT1,INFOIMG,SAVEIN,SAVERGBIN,SAVEMOC,ENCODER;
 
    // Memorisation temporaire
    JTextField directory;
@@ -182,6 +182,7 @@ public final class Save extends JFrame implements ActionListener {
       CANNOT1 = aladin.chaine.getString("SFCANNOT1");
       INFOIMG = aladin.chaine.getString("SFINFOIMG");
       SAVEIN = aladin.chaine.getString("SFSAVEIN");
+      SAVEMOC = aladin.chaine.getString("SFSAVEMOCIN");
       SAVERGBIN = aladin.chaine.getString("SFSAVERGBIN");
       ENCODER = aladin.chaine.getString("SFJPEGENCODER");
 
@@ -556,7 +557,7 @@ public final class Save extends JFrame implements ActionListener {
 
          c.gridwidth = 1;
          c.anchor = GridBagConstraints.WEST;
-         JLabel l = new JLabel(SAVEIN);
+         JLabel l = new JLabel(SAVEMOC);
          l.setFont(Aladin.BOLD);
          g.setConstraints(l,c); p.add(l);
 

@@ -221,7 +221,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.620";
+   static public final    String VERSION = "v9.622";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3383,7 +3383,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,ARITHM) ){ updateArithm();
       } else if( isMenu(s,MOCGENIMG) ){ updateMocGenImg();
       } else if( isMenu(s,MOCGENPROBA) ){ updateMocGenProba();
-      } else if( isMenu(s,MOCPOL) ){ createMocRegion();
+      } else if( isMenu(s,MOCPOL) ){ createPlanMocByRegions();
       } else if( isMenu(s,MOCGENIMGS) ){ updateMocGenImgs();
       } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
@@ -4113,9 +4113,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return order;
    }
    
+   /**Creation d'un Plann MOC à partir de tous les polygones sélectionnés */
+   protected int createPlanMocByRegions() { return createPlanMocByRegions(-1); }
+   protected int createPlanMocByRegions(int order) {
+      HealpixMoc moc = createMocByRegions(order);
+      if( moc==null ) {
+         warning("MOC creation error !\n",1);
+         return -1;
+      }
+      return calque.newPlanMOC(moc,"Moc reg");
+
+   }
+
    /**Creation d'un MOC à partir de tous les polygones sélectionnés */
-   protected int createMocRegion() { return createMocRegion(-1); }
-   protected int createMocRegion(int order) {
+   protected HealpixMoc createMocByRegions(int order) {
       HealpixMoc moc = new HealpixMoc();
       HashSet<Obj> set = new HashSet<Obj>();
       for( Obj o : view.vselobj ) {
@@ -4149,15 +4160,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       }
       
-      if( moc.getSize()==0 ) {
-         warning("MOC creation error !\n",1);
-         return -1;
-      }
-      
-
-      return calque.newPlanMOC(moc,"Moc reg");
-
+      if( moc.getSize()==0 )  return null;
+      return moc;
    }
+
       
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
    protected HealpixMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {

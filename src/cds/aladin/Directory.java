@@ -1384,7 +1384,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private boolean interruptServerReading;
    
    /** (Re)génération du Multiprop en fonction d'un stream d'enregistrements properties */
-   protected int loadMultiProp(InputStreamReader in,boolean local) throws Exception {
+   protected int loadMultiProp(InputStreamReader in,boolean addition, String path) throws Exception {
       MyProperties prop;
       
       boolean mocServerReading=true;
@@ -1404,16 +1404,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( prop.size()==0 || MultiMoc.getID(prop)==null ) continue;
             
             // Définition locale => PROP_ORIGIN = local
-            if( local ) {
+            if( addition ) {
                prop.setProperty("PROP_ORIGIN", "local");
                
                // si HiPS, peut être requière un complément d'information par accès au fichier properties distant ?
                addRemoteProp(prop);
                
-               String u = prop.getProperty("hips_service_url");
-               if( u!=null && prop.getProperty("hips_order")==null ) {
-                  
-               }
+               // Dans le cas d'un fichier local, on conserve on éventuel path pour le HiPS
+               if( path!=null ) prop.setProperty("hips_service_url",path);
             }
             
             try {
@@ -1976,9 +1974,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
 
    /** Ajout de nouvelles collections */
-   protected boolean addHipsProp(InputStreamReader in, boolean localFile) {
+   protected boolean addHipsProp(InputStreamReader in, boolean addition, String path) {
       try {
-         loadMultiProp(in,localFile);
+         loadMultiProp(in,addition,path);
          ArrayList<TreeObjDir> tmpDirList = populateMultiProp();
          rebuildTree(tmpDirList,  false,  true);
          dirList=tmpDirList;
@@ -2032,7 +2030,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          out.close();
          aladin.trace(4,"ID list sent");
 
-         int n=loadMultiProp( new InputStreamReader( urlConn.getInputStream() ), false );
+         int n=loadMultiProp( new InputStreamReader( urlConn.getInputStream() ), false, null );
          Aladin.trace(3,"Multiprop updated in "+(System.currentTimeMillis()-t0)+"ms => "+n+" record"+(n>1?"s":""));
          return n;
 
@@ -2099,7 +2097,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             } catch( EOFException e1 ) { eof=true; }
          }
          
-         if( !eof ) n=loadMultiProp(in, false);
+         if( !eof ) n=loadMultiProp(in, false, null);
          Aladin.trace(3,"Multiprop "+text+"ed in "+(System.currentTimeMillis()-t0)+"ms => "+n+" record"+(n>1?"s":""));
          
       } catch( Exception e1 ) {
@@ -2309,6 +2307,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          TreeObjDir to=null;
          boolean hasView = !aladin.view.isFree();
+         boolean hasMocPol = aladin.view.hasMocPolSelected();
+         boolean hasRegion = aladin.calque.getNbPlanMoc()>0 || hasMocPol;
+         boolean hasLoadedCat = aladin.calque.getNbPlanCat()>0;
+         
+         NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
          
          if( treeObjs.size()>1 )  {
             a = new MyAnchor(aladin,treeObjs.size()+" data sets selected",50,null,null);
@@ -2321,7 +2324,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             boolean hasCS = false;
             boolean hasSIA = false;
             boolean hasSSA = false;
+            boolean hasCDScat = false;
             boolean hasMoc = false;
+            
             for( TreeObjDir to1 : treeObjs ) {
                if( list==null ) list = new StringBuilder(to1.internalId);
                else list.append(", "+to1.internalId);
@@ -2330,6 +2335,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if( !hasSIA && to1.hasSIA() ) hasSIA=true;
                if( !hasSSA && to1.hasSSA() ) hasSSA=true;
                if( !hasMoc && to1.hasMoc() ) hasMoc=true;
+               if( !hasCDScat && to1.isCDSCatalog() ) hasCDScat=true;
                if( !flagScan && !to1.hasMoc() ) flagScan=true;
             }
             if( sList!=null ) more = list.toString();
@@ -2340,27 +2346,37 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             mociBx = mocBx = csBx = null;
 
             if( hasCS ) {
-               csBx = bx = new JCheckBox("Multiple cone search");
+               csBx = bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               bx.setToolTipText("Cone search (CS) on the current view\nfor the selected collections");
+               Util.toolTip(bx,"Cone search (CS) on the current view\nfor the selected collections");
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+               bg.add(bx);
             }
             
             if( hasSIA ) {
-               siaBx= bx = new JCheckBox("Multiple SIA query");
+               siaBx= bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               bx.setToolTipText("Simple Image Access (SIA) query\non the current view for the selected collections");
+               Util.toolTip(bx,"Simple Image Access (SIA) query\non the current view for the selected collections");
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
             }
 
             if( hasSSA ) {
-               ssaBx= bx = new JCheckBox("Multiple SSA query");
+               ssaBx= bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               bx.setToolTipText("Simple Spectra Access (SSA) query \non the current view for the selected collections");
+               Util.toolTip(bx,"Simple Spectra Access (SSA) query \non the current view for the selected collections");
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+            }
+            
+            if( hasCDScat && hasRegion ) {
+               msBx = bx = new JCheckBox("in region or MOC");
+               mocAndMore.add(bx);
+               Util.toolTip(bx,"Load all sources inside the selected region or MOC\nfor the selected collections supporting this access query");
+               bx.setEnabled( hasRegion );
+               bg.add(bx);
+               
             }
 
             if( (hasCS || hasSIA || hasSSA) && (hasMoc) ) {
@@ -2369,17 +2385,22 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             
             if( hasMoc ) {
-               mocBx = bx = new JCheckBox("multi MOCs"); 
+               JLabel labelMoc = new JLabel("Coverages: ");
+               labelMoc.setFont( labelMoc.getFont().deriveFont(Font.ITALIC));
+               labelMoc.setForeground( Color.gray );
+               mocAndMore.add( labelMoc );
+               
+               mocBx = bx = new JCheckBox("All"); 
                mocAndMore.add(bx); 
-               bx.setToolTipText("Load all MOCs of the selected collections");
+               Util.toolTip(bx,"Load all MOCs of the selected collections");
 
-               mocuBx = bx = new JCheckBox("MOC union"); 
+               mocuBx = bx = new JCheckBox("Union"); 
                mocAndMore.add(bx); 
-               bx.setToolTipText("Load the union of MOCs of the selected collections");
+               Util.toolTip(bx,"Load the union of MOCs of the selected collections");
 
-               mociBx = bx = new JCheckBox("MOC intersection"); 
+               mociBx = bx = new JCheckBox("Intersection"); 
                mocAndMore.add(bx); 
-               bx.setToolTipText("Load the intersection of MOCs of the selected collections");
+               Util.toolTip(bx,"Load the intersection of MOCs of the selected collections");
             }
 
             if( mocAndMore.getComponentCount()>0 ) {
@@ -2452,7 +2473,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             s  = to.getProperty("bib_year");
             if( s!=null ) {
-               s = "    Pub.year: "+s+" ";
+               s = "    Reference pub. year: "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
@@ -2465,79 +2486,76 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             JCheckBox bx;
             hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = tapBx = xmatchBx = null;
             if( to.hasHips() ) {
-               hipsBx = bx = new JCheckBox("HiPS");
+               hipsBx = bx = new JCheckBox("prog.access");
                mocAndMore.add(bx);
                bx.setSelected(true);
-               bx.setToolTipText("Hierarchical Progressive Survey access");
+               Util.toolTip(bx,"Hierarchical Progressive Survey (HiPS)\n => Load the progressive view of the data");
             }
              
             if( to.hasSIA() ) {
-               siaBx = bx = new JCheckBox( to.hasSIAv2() ? "SIAv2" : "SIA");
+               siaBx = bx = new JCheckBox( "in view" );
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               Util.toolTip(bx,"Simple Image Access (SIA)\n => load the list of images available in the current view",true);
+               String proto = to.hasSIAv2() ? "SIAv2" : "SIA";
+               Util.toolTip(bx,"Simple Image Access ("+proto+")\n => load the list of images available in the current view",true);
            }
             
             if( to.hasSSA() ) {
-               ssaBx = bx = new JCheckBox("SSA");
+               ssaBx = bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
                Util.toolTip(bx,"Simple Spectra Access (SSA)\n => load the list of spectra available in the current view",true);
            }
             
-            NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
             if( to.isCDSCatalog() ) {
                boolean allCat = nbRows<2000;
                if( hipsBx!=null ) bg.add(hipsBx);
                
-               boolean hasLoadedMoc = aladin.calque.getNbPlanMoc()>0;
-               boolean hasLoadedCat = aladin.calque.getNbPlanCat()>0;
-               
                if( nbRows!=-1 && nbRows<100000 ) {
-                  allBx = bx = new JCheckBox("All sources");
+                  allBx = bx = new JCheckBox("all");
                   mocAndMore.add(bx);
                   bx.setSelected( !to.hasHips() && allCat );
-                  Util.toolTip(bx,"Load all sources (small catalog/table <100000)");
+                  Util.toolTip(bx,"Load all sources\n(only available for small catalogs/tables <100000)");
                   bg.add(bx);
                } 
 
-               csBx = bx = new JCheckBox("Cone search");
+               csBx = bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() && !allCat);
-               bx.setToolTipText("Cone search on the current view");
+               bx.setToolTipText("Load all sources covering the current view");
                bg.add(bx);
                
-               msBx = bx = new JCheckBox("MOC search");
+               msBx = bx = new JCheckBox("in region or MOC");
                mocAndMore.add(bx);
-               Util.toolTip(bx,"Load all sources inside the selected MOC in the stack");
-               bx.setEnabled( hasLoadedMoc );
+               Util.toolTip(bx,"Load all sources inside the selected region or MOC");
+               bx.setEnabled( hasRegion );
                bg.add(bx);
                
-               xmatchBx = bx = new JCheckBox("Xmatch");
+               xmatchBx = bx = new JCheckBox("via Xmatch");
                mocAndMore.add(bx);
                bx.setEnabled( hasLoadedCat );
-               Util.toolTip(bx,"Xmatch with the table selected in the stack",true);
+               Util.toolTip(bx,"Cross-correlate the remote catalog/table\nwith the table selected in the stack",true);
                bg.add(bx);
 
                // Positionnement de la sélection par défaut
-               boolean onMoc = aladin.calque.getFirstSelectedPlan() instanceof PlanMoc;
-               if( onMoc && msBx!=null ) msBx.setSelected(true);
+               boolean onRegion = aladin.calque.getFirstSelectedPlan() instanceof PlanMoc || hasMocPol;
+               if( onRegion && msBx!=null ) msBx.setSelected(true);
                else if( allBx!=null && nbRows<10000 ) allBx.setSelected(true);
                else if( csBx.isEnabled() ) csBx.setSelected(true); 
                
             } else if( to.getCSUrl()!=null ) {
-               csBx = bx = new JCheckBox("Cone search");
+               csBx = bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               Util.toolTip(bx,"Cone search on the current view");
+               Util.toolTip(bx,"Load all sources covering the current view");
                bg.add(bx);
            }
             
             if( to.hasTAP() ) {
-               tapBx = bx = new JCheckBox("TAP");
+               tapBx = bx = new JCheckBox("by criteria");
                mocAndMore.add(bx);
                bx.setSelected( csBx==null );
-               Util.toolTip(bx,"Advanced table query form (Table Access Protocol)",true);
+               Util.toolTip(bx,"Table Access Protocol (TAP)\n => Advanced query by criteria",true);
                bg.add(bx);
             }
             
@@ -2558,7 +2576,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if( to.getProgenitorsUrl()!=null ) {
                   progBx = bx = new JCheckBox("Progenitors");
                   mocAndMore.add(bx);
-                  Util.toolTip(bx,"Meta data and links to the original data images",true);
+                  Util.toolTip(bx,"Load meta data and links to the original data images/cubes\nwhich have been used for generating the progressive view (HiPS)",true);
                }
             }
             PropPanel.addCouple(p,"", mocAndMore, g,c);
@@ -2816,6 +2834,60 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       void submit() {
          if( treeObjs.size()==0 ) return;
          
+         // Interrogation par region, mais comme c'est un cercle, on fait directement un CS
+         // plutôt qu'un query by MOC
+         if( msBx!=null && msBx.isSelected() && aladin.view.vselobj.size()==1  ) {
+            Obj o = aladin.view.vselobj.get(0);
+            if( o instanceof Cercle || o instanceof SourceStat ) {
+               try {
+                  double ra = o.getRa();
+                  double de = o.getDec();
+                  double radius = o.getRadius();
+                  for( TreeObjDir to : treeObjs ) to.loadCS(new Coord(ra,de),radius);
+                  return;
+               } catch( Exception e ) {}
+            }
+         }
+
+         
+         PlanMoc planMoc=null;
+         if( msBx!=null && msBx.isSelected() ) {
+
+            // Création d'un plan MOC à partir d'une région sélectionnée
+            // dans un plan tool
+            if( aladin.view.hasMocPolSelected() ) {
+               
+               HealpixMoc moc=null;
+               try { moc = aladin.createMocByRegions(-1); } 
+               catch( Exception e ) { }
+               if( moc!=null ) {
+                  Coord c=aladin.calque.getTargetBG(null,null);
+                  double rad=aladin.calque.getRadiusBG(null,null,null);
+                  planMoc = new PlanMoc(aladin, moc, "moc",c,rad);
+               } else {
+                  aladin.warning("MOC creation failed !\nYour graphical region must be circles, and/or polygons counter-clock oriented");
+                  return;
+               }
+
+            // Détermination du PlanMoc directement dans la pile
+            } else {
+
+               for( Object p : aladin.calque.getSelectedPlanes() ) {
+                  if( p instanceof PlanMoc && ((PlanMoc) p).flagOk) { planMoc=(PlanMoc)p; break; }
+               }
+               if( planMoc==null ) {
+                  for( Object p : aladin.calque.getPlans() ) {
+                     if( p instanceof PlanMoc && ((PlanMoc) p).flagOk) { planMoc=(PlanMoc)p; break; }
+                  }
+               }
+            }
+            
+            if( planMoc==null ) {
+               aladin.warning("You need to select a graphical region or a MOC plane in the stack");
+               return;
+            }
+         }
+
          // Accès à une collection
          if( treeObjs.size()==1 ) {
             TreeObjDir to = treeObjs.get(0);
@@ -2823,7 +2895,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( siaBx!=null  && siaBx.isSelected() )   to.loadSIA();
             if( ssaBx!=null  && ssaBx.isSelected() )   to.loadSSA();
             if( csBx!=null   && csBx.isSelected() )    to.loadCS();
-            if( msBx!=null   && msBx.isSelected() )    to.queryByMoc();
+            if( msBx!=null   && msBx.isSelected() )    to.queryByMoc(planMoc);
             if( hipsBx!=null && hipsBx.isSelected() )  to.loadHips();
             if( mocBx!=null  && mocBx.isSelected() )   to.loadMoc();
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
@@ -2840,6 +2912,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                        if( to.hasSIA() ) to.loadSIA();
                   else if( to.hasSSA() ) to.loadSSA();
                   else to.loadCS();
+               }
+            }
+            
+            // MOC search
+            if( msBx!=null && msBx.isSelected() ) {
+               for( TreeObjDir to : treeObjs ) {
+                  if( to.isCDSCatalog() ) to.queryByMoc(planMoc);
                }
             }
             

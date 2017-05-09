@@ -184,7 +184,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("hips_status"))  { context.setStatus(val);
       } else if (opt.equalsIgnoreCase("target"))       { context.setTarget(val);
       } else if (opt.equalsIgnoreCase("targetRadius")) { context.setTargetRadius(val);
-      } else if (opt.equalsIgnoreCase("label"))        { context.setLabel(val);
+      } else if (opt.equalsIgnoreCase("obs_title"))    { context.setLabel(val);
       } else if (opt.equalsIgnoreCase("filter"))       { context.setFilter(val);
       } else if (opt.equalsIgnoreCase("hdu"))          { context.setHDU(val);
       } else if (opt.equalsIgnoreCase("hips_creator")) { context.setCreator(val);
@@ -626,11 +626,12 @@ public class HipsGen {
             "   APPEND     "+Action.APPEND.doc() + "\n"+
             "   CONCAT     "+Action.CONCAT.doc() + "\n"+
             "   CUBE       "+Action.CUBE.doc() + "\n"+
-            "   GZIP       "+Action.GZIP.doc() + "\n"+
+//            "   GZIP       "+Action.GZIP.doc() + "\n"+
             "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
             "   DETAILS    "+Action.DETAILS.doc() + "\n"+
             "   MAP        "+Action.MAP.doc() + "\n" +
             "   MIRROR     "+Action.MIRROR.doc() + "\n"+
+            "   UPDATE     "+Action.UPDATE.doc() + "\n"+
             "   LINT       "+Action.LINT.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
