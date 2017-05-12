@@ -5,6 +5,9 @@ package cds.aladin;
 
 import static cds.aladin.Constants.*;
 import java.util.Map;
+
+import cds.savot.model.ParamSet;
+import cds.savot.model.SavotParam;
 import cds.savot.model.SavotResource;
 
 /**
@@ -47,8 +50,22 @@ public class SimpleData {
 			defaultLinkLabel.append(this.params.get(DESCRIPTION));
 		} else {
 			this.setType();
-			if (this.type==null) {
+			if (this.type == null) {
 				defaultLinkLabel.append(this.getParams().get(SEMANTICS));
+			} else if (/*this.type.equals("DATALINK_CUTOUT") ||*/ this.type.equals("DATALINK_SERVICE")){
+				//get id
+				ParamSet inputParams = metaResource.getParams();
+				SavotParam idParam = DatalinkManager.getInputParams(inputParams, STANDARDID);
+				String standardId = null;
+				if (idParam != null) {
+					standardId = SimpleData.processStandardIdDisplayString(idParam.getValue());
+				}
+				if (standardId != null && !standardId.isEmpty()) {
+					defaultLinkLabel.append(standardId);
+				} else {
+					defaultLinkLabel.append(Aladin.chaine.getString(this.type));
+				}
+				
 			} else {
 				defaultLinkLabel.append(Aladin.chaine.getString(this.type));
 			}
@@ -58,6 +75,15 @@ public class SimpleData {
 			defaultLinkLabel.append(" (size ").append(this.params.get(CONTENTLENGTH)).append(" bytes)");
 		}
 		this.displayString = defaultLinkLabel.toString();
+	}
+
+	private static String processStandardIdDisplayString(String value) {
+		// TODO Auto-generated method stub
+		String displayStandardIdLabel = null;
+		if (value != null && value.contains("ivo://ivoa.net/std/")) {
+			displayStandardIdLabel = value.replace("ivo://ivoa.net/std/", EMPTYSTRING);
+		}
+		return displayStandardIdLabel;
 	}
 
 	public void setDisplayString(String displayString) {
@@ -76,9 +102,11 @@ public class SimpleData {
 		String contentType= this.params.get(CONTENTTYPE);
 		
 		if (semantic.equalsIgnoreCase("#this")) {
-			this.type = "DATALINK_SERVICE";
+			this.type = "DATALINK_THISDATASET";
 		} else if (semantic.equalsIgnoreCase("#cutout")) {
 			this.type = "DATALINK_CUTOUT";
+		} else if (semantic.equalsIgnoreCase("#proc")) {
+			this.type = "DATALINK_SERVICE";
 		} else if (semantic.equalsIgnoreCase("#preview-image") || semantic.equalsIgnoreCase("#dark")
 				|| semantic.equalsIgnoreCase("#flat")) {
 			this.type = "DATALINK_IMAGE";

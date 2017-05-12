@@ -210,7 +210,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 		try {
 			String accessUrl = activeDataLinkGlu.getParams().get(ACCESSURL);
 			
-			if (activeDataLinkGlu!=null) {
+			if (activeDataLinkGlu != null) {
 				Map<String,String> params = activeDataLinkGlu.getParams();
 				if (params!=null) {
 					String semantics = activeDataLinkGlu.getParams().get(SEMANTICS);

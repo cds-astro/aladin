@@ -46,6 +46,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 
 import adql.query.ADQLQuery;
@@ -61,7 +62,7 @@ public class UWSFacade implements ActionListener{
 	
 	private static UWSFacade instance = null;
 	public Aladin aladin;
-	public JPanel asyncPanel;
+	public MySplitPane asyncPanel;
 	private JPanel inSessionAsyncJobsPanel;
 	public JPanel jobDetails;
 	private ButtonGroup radioGroup;
@@ -417,11 +418,10 @@ public class UWSFacade implements ActionListener{
 	 * sets the Uws job panel
 	 * @return
 	 */
-	public JPanel instantiateGui() {
+	public MySplitPane instantiateGui() {
 		if (asyncPanel == null) {
-			asyncPanel = new JPanel(new GridBagLayout());
-			asyncPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
-			asyncPanel.setFont(Aladin.PLAIN);
+			JPanel topPanel = new JPanel(new GridBagLayout());
+			
 			if (inSessionAsyncJobsPanel == null) {
 				inSessionAsyncJobsPanel = new JPanel();
 				if (sessionUWSJobs == null) {
@@ -448,7 +448,7 @@ public class UWSFacade implements ActionListener{
 			c.fill = GridBagConstraints.BOTH;
 			c.insets = new Insets(4, 7, 0, 4);
 			jobsScroll.setBorder(BorderFactory.createTitledBorder("Asynchronous jobs of current session:"));
-			asyncPanel.add(jobsScroll,c);
+			topPanel.add(jobsScroll,c);
 			
 			JPanel searchPanel = new JPanel();
 			searchPanel.setBackground(Aladin.BLUE);
@@ -470,7 +470,7 @@ public class UWSFacade implements ActionListener{
 			c.fill = GridBagConstraints.HORIZONTAL;
 //			c.anchor = GridBagConstraints.BASELINE;
 			searchPanel.setBorder(BorderFactory.createTitledBorder("Or choose an already submitted job:"));
-			asyncPanel.add(searchPanel,c);
+			topPanel.add(searchPanel,c);
 			
 			JPanel actionPanel = new JPanel();
 			actionPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
@@ -500,18 +500,24 @@ public class UWSFacade implements ActionListener{
 			deleteOnExit.setVisible(false);
 			actionPanel.add(deleteOnExit);
 			c.gridy++;
-			asyncPanel.add(actionPanel,c);
+			topPanel.add(actionPanel,c);
 			
 			this.jobDetails = new JPanel();
 			jobsScroll = new JScrollPane(this.jobDetails); 
-			c.insets = new Insets(4, 7, 7, 4);
+//			c.insets = new Insets(4, 7, 7, 4);
 			jobsScroll.setBackground(Aladin.BLUE);
 			this.jobDetails.setVisible(false);
 			this.jobDetails.setBorder(BorderFactory.createTitledBorder("Job details:"));
-			c.gridy++;
-			c.weighty = 0.50;
-			c.fill = GridBagConstraints.BOTH;
-			asyncPanel.add(jobsScroll,c);
+//			c.gridy++;
+//			c.weighty = 0.50;
+//			c.fill = GridBagConstraints.BOTH;
+//			asyncPanel.add(jobsScroll,c);
+			
+			asyncPanel = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, topPanel, jobsScroll, 1);
+//			asyncPanel = new JPanel(new GridBagLayout());
+			asyncPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
+			asyncPanel.setFont(Aladin.PLAIN);
+			
 		}
 		return asyncPanel;
 	}

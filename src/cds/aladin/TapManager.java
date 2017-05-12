@@ -413,6 +413,7 @@ public class TapManager {
 		return newServer;
 	}
 	
+	
 	/*public Server loadTapServerForSimpleFrame(String label, String url) {
 		TapClient tapClient = null;
 		Server resultServer = null;
@@ -731,6 +732,7 @@ public class TapManager {
 					}
 					serverToLoad.setData(new HashMap<String,TapTable>());
 					if (count >= MAXTAPCOLUMNDOWNLOADVOLUME) {
+						serverToLoad.setQueryCheck = false;
 						//download only table names and first table's columns
 						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
 						populateTables(serverToLoad, resultsResource);
@@ -744,6 +746,7 @@ public class TapManager {
 						populateColumns(serverToLoad, columnResults);
 					} else if (count > 0) {
 						// download all
+						serverToLoad.setQueryCheck = true;
 						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
 						populateColumns(serverToLoad, resultsResource);
 					} else {

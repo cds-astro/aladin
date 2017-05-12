@@ -2946,7 +2946,8 @@ BEGIN5.fr	Contrôle de base:\n \n- Saisissez un nom d'objet, des coordonnées pour
 
 
 #For datalink pop-ups- default texts
-DATALINK_SERVICE This dataset
+DATALINK_THISDATASET This dataset
+DATALINK_SERVICE Proc service
 DATALINK_CUTOUT Get cutout
 DATALINK_IMAGE Image
 DATALINK_METADATA Metadata

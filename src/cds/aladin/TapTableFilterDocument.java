@@ -157,10 +157,11 @@ public class TapTableFilterDocument extends PlainDocument{
 			searchTable();
 			tablesGui.setPopupVisible(true);
 		}
-		
-		/*if (Aladin.winPlateform) {//tintin TODO:: check for windows issue
+//		Aladin.trace(3, "is it windows platform: "+Aladin.winPlateform);
+		if (Aladin.winPlateform) {//for windows issue
+			JTextComponent editor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
 			editor.setCaretPosition(getLength());
-		}*/
+		}
 		
 	}
 	

@@ -7,38 +7,49 @@ import static cds.aladin.Constants.GLU;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTCREATEDGUI;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 
 import cds.aladin.Constants.TapClientMode;
+import cds.aladin.Constants.TapServerMode;
 
 /**
  * @author chaitra
  *
  */
-public class TapClient implements ActionListener{
+public class TapClient{
 	
-	public static String[] modeIconImages = { "gluIconV2.png", "genericIconV2.png" };
-	public static String[] modeIconToolTips = { "Click to load GLU mode", "Click to load a generic tap client" };
+	public static String[] modeIconImages = { "gluIconV2.png", "genericIconV2.png" };//tintin remove this
+	public static String modeIconImage = "settings.png";
+	public static String modesLabel = "Modes";
+	public static String modesToolTip = "Load a different TAP client to construct your queries";
+	public static String[] modeIconToolTips = { "Click to load GLU mode - this is a customised form  generated from a GLU record", "Click to load a generic tap client" };
 	public static String[] modeChoices = { GLU, GENERIC };
-	public static String TAPGLUGENTOGGLEBUTTONTOOLTIP;
+	public DefaultComboBoxModel model = null;
+	public static String TAPGLUGENTOGGLEBUTTONTOOLTIP,RELOAD, TIPRELOAD;
 	
 	public TapManager tapManager;
 	public String tapLabel;
 	public String tapBaseUrl;
 	public ServerGlu serverGlu;
 	public ServerTap serverTap;
-	public boolean isGluSelected;
 	public TapClientMode mode;
 	
 	
 	static {
 		TAPGLUGENTOGGLEBUTTONTOOLTIP = Aladin.chaine.getString("TAPGLUGENTOGGLEBUTTONTOOLTIP");
+		RELOAD = Aladin.chaine.getString("FSRELOAD");
+	    TIPRELOAD = Aladin.chaine.getString("TIPRELOAD");
 	}
 	
 	public TapClient(TapClientMode mode, TapManager tapManager, String tapLabel, String tapBaseUrl) {
@@ -47,6 +58,39 @@ public class TapClient implements ActionListener{
 		this.tapManager = tapManager;
 		this.tapLabel = tapLabel;
 		this.tapBaseUrl = tapBaseUrl;
+		
+		model = new DefaultComboBoxModel(modeChoices);
+		model.addListDataListener(new ListDataListener() {
+
+			@Override
+			public void intervalRemoved(ListDataEvent arg0) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void intervalAdded(ListDataEvent arg0) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void contentsChanged(ListDataEvent arg0) {
+				// TODO Auto-generated method stub
+//				System.out.println("contentsChanges" + arg0.getIndex0() + "  " + arg0.getIndex1());
+				try {
+					String selected = (String) model.getSelectedItem();
+					Server serverToDisplay = getServerToDisplay(selected);
+					if (TapClient.this.mode == TapClientMode.TREEPANEL) {
+						TapClient.this.tapManager.showTapPanelFromTree(TapClient.this.tapLabel, serverToDisplay);
+					} else {
+						TapClient.this.tapManager.showTapServerOnServerSelector(serverToDisplay);
+					}
+				} catch (Exception ex) {
+					if (Aladin.levelTrace >= 3) ex.printStackTrace();
+					Aladin.warning("Error! unable load tap server!" + ex.getMessage());
+				}
+			}
+
+		});
 	}
 	
 	public TapClient(TapClientMode mode, TapManager tapManager, String tapLabel, String tapBaseUrl, ServerGlu serverGlu, ServerTap serverTap) {
@@ -56,7 +100,7 @@ public class TapClient implements ActionListener{
 		this.serverTap = serverTap;
 	}
 
-	public JToggleButton getGluModeButton() {
+	public JToggleButton getGluModeButtonOld() {
 		JToggleButton changeModeButton = null;
 		Image image = Aladin.aladin.getImagette("gluIconV5.png");
 		if (image == null) {
@@ -71,13 +115,70 @@ public class TapClient implements ActionListener{
 		}
 		changeModeButton.setBorderPainted(false);
 		changeModeButton.setContentAreaFilled(true);
-		changeModeButton.setSelected(isGluSelected);
-		changeModeButton.addActionListener(this);
 		return changeModeButton;
 	}
 	
-	public void enableModes() {
-		if (this.serverTap != null && this.serverTap.modeChoice != null) {
+	public JComboBox getGluModeButton() {
+		JComboBox comboBox = new JComboBox(model);
+		comboBox.setRenderer(new TapClientModesRenderer());
+		comboBox.setOpaque(false);
+		comboBox.setBackground(Aladin.BLUE);
+		comboBox.setForeground(Aladin.BLUE);
+		if (this.serverGlu == null) {
+			comboBox.setVisible(false);
+		}
+		return comboBox;
+	}
+	
+	public JPanel getOptionsPanel(Server server) {
+		JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0 , 0));
+		if (this.mode == TapClientMode.DIALOG) {
+			JButton button = ServerTap.getChangeServerButton();
+			button.addActionListener(server);
+//			titlePanel.add(button);
+			optionsPanel.add(button);
+		}
+
+		if (server.mode != TapServerMode.UPLOAD) {
+			if (server instanceof ServerTap) {
+				JButton reloadButton = getReloadButton();
+				reloadButton.addActionListener(server);
+//				titlePanel.add(reloadButton);
+				optionsPanel.add(reloadButton);
+			}
+			
+//			titlePanel.add(modeChoice);
+			server.modeChoice = getGluModeButton();
+			optionsPanel.add(server.modeChoice);
+			
+			//enable mode in servertap if it is already created
+			if (this.serverGlu != null && this.serverTap != null && this.serverTap.modeChoice != null) {
+				this.serverTap.modeChoice.setVisible(true);
+				this.serverTap.modeChoice.revalidate();
+				this.serverTap.modeChoice.repaint();
+			}
+		}
+		return optionsPanel;
+	}
+	
+	public static JButton getReloadButton() {
+		JButton reloadButton = null;
+		Image image = Aladin.aladin.getImagette("reload.png");
+		if (image == null) {
+			reloadButton = new JButton("Reload");
+		} else {
+			reloadButton = new JButton(new ImageIcon(image));
+		}
+		reloadButton.setBorderPainted(false);
+		reloadButton.setMargin(new Insets(0, 0, 0, 0));
+		reloadButton.setContentAreaFilled(true);
+		reloadButton.setActionCommand(RELOAD);
+		reloadButton.setToolTipText(TIPRELOAD);
+		return reloadButton;
+	}
+	
+	public void enableModes(Server server) {
+		if (this.serverGlu != null && this.serverTap != null && this.serverTap.modeChoice != null) {
 			this.serverTap.modeChoice.setVisible(true);
 			this.serverTap.modeChoice.revalidate();
 			this.serverTap.modeChoice.repaint();
@@ -96,10 +197,7 @@ public class TapClient implements ActionListener{
 		Server resultServer = null;
 		if ((serverType == null || serverType == GLU ) && this.serverGlu != null ) {
 			resultServer = this.serverGlu;
-			isGluSelected = true;
-			resultServer.modeChoice.setSelected(true);
 		} else if (serverType == null || serverType == GENERIC ) {
-			isGluSelected = false;
 			if (this.serverTap == null) {
 				this.serverTap = tapManager.createAndLoadServerTap(this);
 			} else if (this.serverTap.formLoadStatus == TAPFORM_STATUS_NOTCREATEDGUI) {
@@ -109,8 +207,6 @@ public class TapClient implements ActionListener{
 					this.serverTap.secondColor = Color.white;
 				}
 				tapManager.createGenericTapFormFromMetaData(this.serverTap);
-			} else if(this.serverTap.modeChoice != null){
-				this.serverTap.modeChoice.setSelected(isGluSelected);
 			}
 			resultServer = this.serverTap;
 		} else {
@@ -118,38 +214,12 @@ public class TapClient implements ActionListener{
 		}
 		return resultServer;
 	}
-	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		if (e.getSource() instanceof JToggleButton) {
-			try {
-				JToggleButton changeMode = (JToggleButton) e.getSource();
-				String command = GLU;
-				if (!changeMode.isSelected()) {
-					command = GENERIC;
-				}
-				Server serverToDisplay = getServerToDisplay(command);
-				if (this.mode == TapClientMode.TREEPANEL) {
-					tapManager.showTapPanelFromTree(tapLabel, serverToDisplay);
-				} else{
-					tapManager.showTapServerOnServerSelector(serverToDisplay);
-				}
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-				Aladin.warning("Error! unable load tap server!"+e1.getMessage());
-			}
-			
-		}
-	}
 
 	/**
 	 * Reloads the generic tap client
 	 * @throws Exception 
 	 */
 	public void reload() throws Exception {
-		// TODO Auto-generated method stub
 		this.serverTap = tapManager.createAndLoadServerTap(this);
 		if (this.mode == TapClientMode.TREEPANEL) {
 			tapManager.showTapPanelFromTree(tapLabel, this.serverTap);

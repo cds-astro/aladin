@@ -241,5 +241,6 @@ public static final String GENERIC = "GENERIC";
 public static final String[] TAPSERVERMODES = { GENERIC , GLU };
 public static final String TAPMODECHANGETOOLTIP = "TAPMODECHANGETOOLTIP";
 public static final String LOADCLIENTTAPURL = "LOADCLIENTTAPURL";
+public static final String RELOAD = "RELOAD";
 
 }

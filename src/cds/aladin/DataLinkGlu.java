@@ -153,14 +153,13 @@ public final class DataLinkGlu {
 					}
 					
 					int sRegionIndex = activeDataLinkSource.findColumn(S_REGION);
-					if (sRegionIndex!=-1) {
+					if (sRegionIndex != -1) {
 						String boundaryArea_stcs = activeDataLinkSource.getValue(sRegionIndex);
 						
 						STCStringParser parser = new STCStringParser();
 						List<STCObj> stcObjects = parser.parse(boundaryArea_stcs);
 						sourceMoc = aladin.createMocRegion(stcObjects);
 					}
-					
 					
 					/*if (sourceMoc!=null) {
 						Command command = new Command(aladin);

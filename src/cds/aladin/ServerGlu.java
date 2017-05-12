@@ -265,14 +265,12 @@ public class ServerGlu extends Server implements Runnable {
       }
       
       if (flagTAPV2) {
-    	  JPanel optionsPanel = ServerTap.getOptionsPanel(this);
+    	  JPanel optionsPanel = this.tapClient.getOptionsPanel(this);
       	optionsPanel.setName("optionsPanel");
-      	 if (modeChoice!=null) {
-      		modeChoice.setSelected(true);
-  		}
       	optionsPanel.setBackground(Aladin.BLUE);
 //      	optionsPanel.setBounds(XWIDTH-2*XTAB1-60, y-d.height-5, 78, 30);
-      	optionsPanel.setBounds(x+d.width, y-d.height-5, 78, 30);
+//      	optionsPanel.setBounds(x+d.width, y-d.height-5, 78, 30);
+      	optionsPanel.setBounds(x+d.width, y-d.height-5, 150, 30);
       	 add(optionsPanel);
       	tapTableMapping.get("GENERAL").add(optionsPanel);
 	}

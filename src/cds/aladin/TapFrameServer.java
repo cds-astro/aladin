@@ -125,7 +125,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	private JTabbedPane createCenterPane(){
 		registryPanel = new JPanel();
 		createRegistryPanel();
-		JPanel asyncPanel = this.tapManager.uwsFacade.instantiateGui();
+		MySplitPane asyncPanel = this.tapManager.uwsFacade.instantiateGui();
 
 		tabbedTapThings = new JTabbedPane();
 		tabbedTapThings.setFont(Aladin.PLAIN);

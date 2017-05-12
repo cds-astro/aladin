@@ -222,10 +222,11 @@ public class Server extends JPanel
    // Les references aux objets
    public Aladin aladin;
 
+   //for tap client
    ADQLParser adqlParser;
    public TapClient tapClient;
    protected TapServerMode mode;
-   JToggleButton modeChoice = null;
+   JComboBox modeChoice = null;
    
    protected String getTitle() { return aladinLabel; }
    protected String getOrigin() { return institute; }
