@@ -243,4 +243,8 @@ public static final String TAPMODECHANGETOOLTIP = "TAPMODECHANGETOOLTIP";
 public static final String LOADCLIENTTAPURL = "LOADCLIENTTAPURL";
 public static final String RELOAD = "RELOAD";
 
+//some votable tag names
+public static final String STR_RESULTS = "RESULTS";
+public static final String STR_QUERY_STATUS = "QUERY_STATUS";
+
 }

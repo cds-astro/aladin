@@ -10,6 +10,7 @@ import static cds.aladin.Constants.DISCARDACTION;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.OPEN_SET_RADEC;
 import static cds.aladin.Constants.REGEX_TABLENAME_SPECIALCHAR;
+import static cds.aladin.Constants.RELOAD;
 import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 import static cds.aladin.Constants.RETRYACTION;
 import static cds.aladin.Constants.SELECTALL;
@@ -23,9 +24,7 @@ import static cds.aladin.Constants.TAP_REC_LIMIT;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.WRITEQUERY;
-import static cds.aladin.Constants.RELOAD;
 import static cds.tools.CDSConstants.BOLD;
-
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -45,6 +44,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,8 +80,12 @@ import adql.db.DBType;
 import adql.db.DBType.DBDatatype;
 import adql.db.DefaultDBColumn;
 import adql.db.DefaultDBTable;
+import adql.db.exception.UnresolvedIdentifiersException;
 import adql.parser.ADQLParser;
+import adql.parser.ParseException;
 import adql.parser.QueryChecker;
+import adql.query.ADQLQuery;
+import adql.query.from.ADQLTable;
 import cds.aladin.Constants.TapClientMode;
 import cds.aladin.Constants.TapServerMode;
 import cds.tools.Util;
@@ -122,8 +126,8 @@ public class ServerTap extends Server implements MouseListener{
     protected int formLoadStatus; 
     Future<VOSICapabilitiesReader> capabilities;
     JFrame setRaDecFrame;
-    public boolean setQueryCheck; //MAXTAPCOLUMNDOWNLOADVOLUME tempporary fix
     public String nodeName = null;//tintin:: TODO::for future
+    JLabel info1;
     
 	static{
 		for (DBDatatype dbDatatype : DBDatatype.values()) {
@@ -166,7 +170,7 @@ public class ServerTap extends Server implements MouseListener{
 				return;
 			}
 			try {
-				columnNames = tapManager.updateTableColumnSchemas(this);
+				columnNames = tapManager.updateTableColumnSchemas(this, null);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				Aladin.warning(e.getMessage());
@@ -229,7 +233,7 @@ public class ServerTap extends Server implements MouseListener{
 		containerPanel.add(optionsPanel, c);
 		
 		// Premiere indication
-		JLabel info1 = new JLabel(description);
+		info1 = new JLabel(description);
 		c.anchor = GridBagConstraints.NORTH;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 1;
@@ -333,7 +337,7 @@ public class ServerTap extends Server implements MouseListener{
 				return;
 			}
 			try {
-				columnNames = tapManager.updateTableColumnSchemas(this);
+				columnNames = tapManager.updateTableColumnSchemas(this, null);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				Aladin.warning(e.getMessage());
@@ -1026,6 +1030,79 @@ public class ServerTap extends Server implements MouseListener{
 		return query;
 	}*/
 	
+	@Override
+	public ADQLQuery checkQuery()  throws UnresolvedIdentifiersException {
+		ADQLQuery query = null;
+		try {
+			query = super.checkQuery();
+		} catch (UnresolvedIdentifiersException uie) {	
+			Aladin.trace(3, "Number of errors in the query: "+uie.getNbErrors());
+			adql.parser.ParseException ex = null;
+			try {
+				List<String> tableNames = getTableNamesofNoMetadataInQuery(tap.getText());
+				if (tableNames != null && !tableNames.isEmpty()) {
+					try {
+						tapManager.updateTableColumnSchemas(this, tableNames);
+						updateQueryChecker(tableNames);
+						Aladin.trace(3, "updated metadata for these tables:"+uie.getNbErrors());
+					} catch (Exception e) {
+						// do nothing. 
+					}
+					query = this.adqlParser.parseQuery(tap.getText());
+				} else {
+					throw uie;
+				}
+			} catch (UnresolvedIdentifiersException uie2) {
+				//yeah those are columns then get those table meta data
+				//if still there is an issue then you go ahead and highlight
+				Iterator<adql.parser.ParseException> it = uie2.getErrors();
+				while (it.hasNext()) {
+					ex = it.next();
+					highlightQueryError(tap.getHighlighter(), ex);
+				}
+				info1.setText("Are you sure of the highlighted identifiers?");
+				tapManager.eraseNotification(info1, description);
+				throw uie2;// this is just for showing message
+			} catch (ParseException e) {
+				//this one should not occur, but anyway error from this is highlighted. so do nothing
+			}
+		}
+		return query;
+	}
+
+	public List<String> getTableNamesofNoMetadataInQuery(String query) {
+		ADQLParser syntaxParser = new ADQLParser();
+		List<String> tableNames = null;
+		try {
+			ADQLQuery adqlQuery = syntaxParser.parseQuery(query);
+			tableNames = new ArrayList<String>();
+//			DBColumn[] columns = query.getResultingColumns();//match columns with the unresolvedIdentifiers?
+			for (ADQLTable adqlTable : adqlQuery.getFrom().getTables()) {
+				String tableNameKey = getTableMetaCacheKey(adqlTable.getFullTableName());
+				TapTable meta = this.tablesMetaData.get(tableNameKey);
+				Vector<TapTableColumn> columnNames = null;
+				if (meta != null) {
+					columnNames = meta.getColumns();
+				}
+				if (columnNames == null) {
+					tableNames.add(tableNameKey);
+				}
+				
+			}
+		} catch (Exception ie){
+			//don't do anything
+		}
+		return tableNames;
+	}
+	
+	public String getTableMetaCacheKey(String fullTableName) {
+		String result = fullTableName;
+		if (fullTableName.contains("\"")) {
+			result = fullTableName.replaceAll("\"", EMPTYSTRING);
+		}
+		return result;
+	}
+	
 	/**
 	 * Method sets the database metadata to the parser
 	 */
@@ -1042,8 +1119,14 @@ public class ServerTap extends Server implements MouseListener{
 			this.queryCheckerTables.add(parserTable);
 		}
 		QueryChecker checker = new DBChecker(this.queryCheckerTables);
-		if (setQueryCheck) {
-			this.adqlParser.setQueryChecker(checker);
+		this.adqlParser.setQueryChecker(checker);
+	}
+	
+
+	public void updateQueryChecker(List<String> tableNames) {
+		// TODO Auto-generated method stub
+		for (String tableName : tableNames) {
+			updateQueryChecker(tableName);
 		}
 	}
 	
@@ -1070,9 +1153,7 @@ public class ServerTap extends Server implements MouseListener{
 				if (mode == TapServerMode.UPLOAD || (queryCheckerTable != null && this.queryCheckerTables.remove(queryCheckerTable))) {
 					this.queryCheckerTables.add(table);
 					QueryChecker checker = new DBChecker(this.queryCheckerTables);
-					if (setQueryCheck) {
-						this.adqlParser.setQueryChecker(checker);
-					}
+					this.adqlParser.setQueryChecker(checker);
 				}
 				
 			}

@@ -109,12 +109,13 @@ public class UWSFacade implements ActionListener{
 	
 	/**
 	 * Method where an asyn job is created and handled 
+	 * @param query2 
 	 * @param postParams 
 	 */
-	public void handleJob(String serverLabel, String url, ADQLQuery query, Map<String, Object> postParams) {
+	public void handleJob(String serverLabel, String url, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams) {
 		UWSJob job = null;
 		try {
-			job = createJob(serverLabel, url, query, postParams);
+			job = createJob(serverLabel, url, query, adqlQueryObj, postParams);
 //			printStringFromInputStream(job);
 			addNewJobToGui(job);
 			refreshGui();
@@ -129,7 +130,7 @@ public class UWSFacade implements ActionListener{
 			if (job == null || job.gui==null) {
 				errorMessageToUser.append("\n Unable to create job");
 			}
-			errorMessageToUser.append("\n For query: ").append(query.toADQL()).append(NEWLINE_CHAR).append(e.getMessage());
+			errorMessageToUser.append("\n For query: ").append(query).append(NEWLINE_CHAR).append(e.getMessage());
 			
 			if (job != null && UWSJob.JOBNOTFOUND.equals(job.getCurrentPhase())) {//specific case of job not found
 				if (checkIfJobInCache(job)) {
@@ -155,13 +156,14 @@ public class UWSFacade implements ActionListener{
 	
 	/**
 	 * Method creates an sync job
+	 * @param query2 
 	 * @param newJobCreationUrl
-	 * @param query
+	 * @param adqlQueryObj
 	 * @param postParams 
 	 * @return
 	 * @throws Exception
 	 */
-	public UWSJob createJob(String serverLabel, String serverBaseUrl, ADQLQuery query, Map<String, Object> postParams) throws Exception {
+	public UWSJob createJob(String serverLabel, String serverBaseUrl, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams) throws Exception {
 		UWSJob job = null;
 		try {
 			URL tapServerRequestUrl = new URL(serverBaseUrl+"/async");
@@ -190,13 +192,16 @@ public class UWSFacade implements ActionListener{
 			Aladin.trace(3,"createJob() REQUEST :: doQuery");
 			Aladin.trace(3,"createJob() LANG :: ADQL");
 			
-			int limit = query.getSelect().getLimit();
-			if (limit > 0) {
-				out.writeField("MAXREC", String.valueOf(limit));
-				Aladin.trace(3,"createJob() MAXREC :: "+String.valueOf(limit));
+			if (adqlQueryObj != null) {
+				int limit = adqlQueryObj.getSelect().getLimit();
+				if (limit > 0) {
+					out.writeField("MAXREC", String.valueOf(limit));
+					Aladin.trace(3,"createJob() MAXREC :: "+String.valueOf(limit));
+				}
 			}
-			out.writeField("QUERY", query.toADQL());
-			Aladin.trace(3,"createJob() QUERY :: "+query.toADQL());
+			
+			out.writeField("QUERY", query);
+			Aladin.trace(3,"createJob() QUERY :: "+query);
 			
 			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
 			Aladin.trace(3,"createJob() PHASE :: "+"RUN");
@@ -227,7 +232,7 @@ public class UWSFacade implements ActionListener{
 				String location = httpClient.getHeaderField("Location");
 				job = new UWSJob(this, serverLabel, new URL(location));
 				populateJob(job.getLocation().openStream(), job);
-				job.setQuery(query.toADQL());
+				job.setQuery(adqlQueryObj.toADQL());
 				job.setDeleteOnExit(true);
 //				getsetPhase(job);
 				job.setInitialGui();
@@ -313,11 +318,11 @@ public class UWSFacade implements ActionListener{
 	 * @param url
 	 * @return response
 	 */
-	public static StringBuffer getResponse(URL url) {
+	public static StringBuffer getResponse(InputStream in) {
 		BufferedReader buffReader = null;
 		StringBuffer result = null;
 		try {
-			buffReader = new BufferedReader(new InputStreamReader(Util.openStream(url)));
+			buffReader = new BufferedReader(new InputStreamReader(in));
 			String response;
 			result = new StringBuffer();
 			while ((response = buffReader.readLine()) != null) {
@@ -336,6 +341,23 @@ public class UWSFacade implements ActionListener{
 					e.printStackTrace();
 				}
 			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Basic buffered reader for http get
+	 * @param url
+	 * @return response
+	 */
+	public static StringBuffer getResponse(URL url) {
+		StringBuffer result = null;
+		try {
+			result = getResponse(Util.openStream(url));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result = null;
 		}
 		return result;
 	}

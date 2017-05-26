@@ -348,7 +348,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			
 			uploadServer.submit(requestParams);
 			this.infoLabel.setText("Submitting your query for table: "+uploadServer.selectedTableName);
-			TapManager.getInstance(aladin).eraseNotification(this.infoLabel);
+			TapManager.getInstance(aladin).eraseNotification(this.infoLabel, EMPTYSTRING);
 		} else if (command.equals(UPLOAD)) {
 			//Just parse the selected table's metadata to create gui and store file version of it
 			if (checkInputs()) {
@@ -475,7 +475,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		
 		this.tableName.setText(this.generateSuffix());
 		this.infoLabel.setText("New table(Name: "+uploadTableName+") from "+planCatalog.label+" is parsed in Aladin!");
-		tapManager.eraseNotification(this.infoLabel);
+		tapManager.eraseNotification(this.infoLabel, EMPTYSTRING);
 	}
 	
 	protected void createUploadServer() {

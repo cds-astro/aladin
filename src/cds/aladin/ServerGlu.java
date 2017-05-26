@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -77,7 +78,9 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import adql.db.exception.UnresolvedIdentifiersException;
 import adql.parser.ADQLParser;
+import adql.query.ADQLQuery;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -1937,7 +1940,27 @@ public class ServerGlu extends Server implements Runnable {
       }
       return super.updateWidgets();
    }
-
+   
+	@Override
+	public ADQLQuery checkQuery() throws UnresolvedIdentifiersException {
+		// TODO Auto-generated method stub
+		ADQLQuery result = null;
+		try {
+			result = super.checkQuery();
+		} catch (UnresolvedIdentifiersException uie) {
+			Aladin.trace(3, "Number of errors in the query:"+uie.getNbErrors());
+			Iterator<adql.parser.ParseException> it = uie.getErrors();
+			adql.parser.ParseException ex = null;
+			while(it.hasNext()){
+				ex = it.next();
+				highlightQueryError(tap.getHighlighter(), ex);
+//				Aladin.warning(this, "Check the syntax around the highlighted words : " + ex.getMessage());
+			}
+			throw uie;
+		}
+		return result;
+	}
+   
    public void actionPerformed(ActionEvent e) {
       Object o = e.getSource();
       if( o instanceof JButton) {

@@ -20,9 +20,9 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.DATALINK_FORM;
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
-import static cds.aladin.Constants.DATALINK_FORM;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -1894,19 +1894,31 @@ public void layout() {
    
    /**
     * Essentially calls checkQuery and then shows valid message on screen
- * @param arrayList 
+    * @param arrayList 
     */
-   public void checkQueryFlagMessage() {
-	   if (this.checkQuery() != null) {
-			Aladin.info(this, CHECKQUERY_SUCCESS);
-		};
-   }
+	public void checkQueryFlagMessage() {
+		try {
+			if (this.checkQuery() != null) {
+				Aladin.info(this, CHECKQUERY_SUCCESS);
+			}
+		} catch (UnresolvedIdentifiersException uie) {
+			// TODO Auto-generated catch block
+			Iterator<adql.parser.ParseException> it = uie.getErrors();
+			adql.parser.ParseException ex = null;
+			while(it.hasNext()){
+				ex = it.next();
+				highlightQueryError(tap.getHighlighter(), ex);
+			}
+			Aladin.warning(this, "Not sure about the highlighted words : " + ex.getMessage());
+		}
+	}
    /**
 	 * Method parses adql query from user using Grégory
 	 * Mantelet's (ARI/ZAH) adql parser lib
 	 * @return the adql query
+	 * @throws UnresolvedIdentifiersException 
 	 */
-	public ADQLQuery checkQuery() {
+	public ADQLQuery checkQuery() throws UnresolvedIdentifiersException {
 		if (tap.getText().isEmpty()) {
 			Aladin.warning(this, CHECKQUERY_ISBLANK);
 			return null;
@@ -1916,19 +1928,12 @@ public void layout() {
 		try {
 			highlighter.removeAllHighlights();
 			query = this.adqlParser.parseQuery(tap.getText());//parser already set when/if table changed
-			
-		} catch(UnresolvedIdentifiersException ie){	
+		} catch (UnresolvedIdentifiersException ie) {	
 			Aladin.trace(3, "Number of errors in the query:"+ie.getNbErrors());
-			Iterator<adql.parser.ParseException> it = ie.getErrors();
-			adql.parser.ParseException ex = null;
-			while(it.hasNext()){
-				ex = it.next();
-				highlightQueryError(highlighter, ex);
-				Aladin.warning(this, "Incorrect query: " + ex.getMessage());
-			}
+			throw ie;
 		} catch (adql.parser.ParseException pe) {
 			highlightQueryError(highlighter, pe);
-			Aladin.warning(this, "Incorrect query: " + pe.getMessage());
+			Aladin.warning(this, "Check the syntax around the highlighted words : " + pe.getMessage());
 		} catch (TokenMgrError e) {
 			// TODO: handle exception
 			Aladin.warning(this, "Incorrect query: " + e.getMessage());
@@ -1944,31 +1949,43 @@ public void layout() {
 	 * @param url
 	 */
 	public void submitTapServerRequest(boolean sync, Map<String, Object> requestParams, String name, String url) {
-		ADQLQuery query = checkQuery();
+		ADQLQuery query = null;
+		try {
+			query = checkQuery();
+		} catch (UnresolvedIdentifiersException e) {
+			//error is handled in the respective checkQuery() methods
+			ADQLParser syntaxParser = new ADQLParser();
+			try {
+				query = syntaxParser.parseQuery(tap.getText());
+			} catch (adql.parser.ParseException e1) {
+				// TODO Auto-generated catch block
+				Aladin.trace(3, "Parse exception with query..");
+			}
+			Aladin.trace(3, "I do not understand some identifiers..but may be user knows better..");
+		}
 		if (query != null) {
 			try {
 				TapManager tapManager = TapManager.getInstance(aladin);
+				Aladin.trace(3, "Firing " + sync + " for " + name + " url: " + url + "\n query: " + tap.getText()
+						/*+ "\n ADQLQuery: " + query.toADQL()*/ + "\n requestParams: " + requestParams);
 				if (sync) {
 					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					tapManager.fireSync(name, url, query, requestParams);
+					tapManager.fireSync(name, url, tap.getText(), query, requestParams);
 				} else {
-					tapManager.fireASync(name, url, query, requestParams);
+					tapManager.fireASync(name, url, tap.getText(), query, requestParams);
 				}
-				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 				Aladin.warning(aladin.dialog, "Server error!");
 			}
-		} /*else {
-			Aladin.warning(aladin.dialog, "Query is null!");
-		}*/
+		}
 	}
 	
 	public void highlightQueryError(Highlighter highlighter, adql.parser.ParseException pe) {
 		int errorStart = pe.getPosition().beginColumn-1;
 		int errorEnd = pe.getPosition().endColumn-1;
-		highlightQueryError(highlighter, errorStart, errorEnd, pe.getMessage());
+		highlightQueryError(highlighter, errorStart, errorEnd);
 	}
 	
 	/**
@@ -1977,8 +1994,7 @@ public void layout() {
 	 * @param pe
 	 * @param unrecognisedParams -not used currently
 	 */
-	public void highlightQueryError(Highlighter highlighter, int errorStart, int errorEnd, String message) {
-		Aladin.warning(this, "Check the syntax around the highlighted words : " + message);
+	public void highlightQueryError(Highlighter highlighter, int errorStart, int errorEnd) {
 		HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Aladin.LIGHTORANGE);
 		try {
 //			String tableName = tap.getText().substring(errorStart, errorEnd);

@@ -39,7 +39,9 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -81,6 +83,7 @@ import cds.tools.MultiPartPostOutputStream;
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
 import cds.xml.Field;
+import cds.xml.TapQueryResponseStatusReader;
 import cds.xml.VOSICapabilitiesReader;
 
 public class TapManager {
@@ -732,7 +735,6 @@ public class TapManager {
 					}
 					serverToLoad.setData(new HashMap<String,TapTable>());
 					if (count >= MAXTAPCOLUMNDOWNLOADVOLUME) {
-						serverToLoad.setQueryCheck = false;
 						//download only table names and first table's columns
 						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
 						populateTables(serverToLoad, resultsResource);
@@ -746,7 +748,6 @@ public class TapManager {
 						populateColumns(serverToLoad, columnResults);
 					} else if (count > 0) {
 						// download all
-						serverToLoad.setQueryCheck = true;
 						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
 						populateColumns(serverToLoad, resultsResource);
 					} else {
@@ -818,13 +819,14 @@ public class TapManager {
 	 * Method updates the tap metadata and calls for a metadata gui update.
 	 * @param tableName
 	 * @param serverTap
+	 * @param tableNames 
 	 * @return
 	 * @throws Exception
 	 */
-	public Vector<TapTableColumn> updateTableColumnSchemas(ServerTap serverTap) throws Exception {
+	public Vector<TapTableColumn> updateTableColumnSchemas(ServerTap serverTap, List<String> tableNames) throws Exception {
 		Vector<TapTableColumn> tableColumnMetaData = null;
 		String tapServiceUrl = serverTap.getUrl();
-		Future<Vector<TapTableColumn>> futureResult = updateColumnSchemaForATable(serverTap);
+		Future<Vector<TapTableColumn>> futureResult = updateColumnSchemaForSpecificTables(serverTap, tableNames);
 		try {
 			Aladin.trace(3, futureResult+ " is the serverTap");
 			tableColumnMetaData = futureResult.get();
@@ -833,7 +835,12 @@ public class TapManager {
 			}
 			 //update info panel
 			serverTap.tackleFrameInfoServerUpdate(this.createMetaInfoDisplay(tapServiceUrl, serverTap.tablesMetaData));
-			Aladin.trace(3,"done updating tap info fo : "+serverTap.selectedTableName+" server: "+serverTap.getUrl());
+			if (tableNames != null && !tableNames.isEmpty()) {
+				Aladin.trace(3,"done updating tap info for : "+tableNames.toString()+"| server is : "+serverTap.getUrl());
+			} else {
+				Aladin.trace(3,"done updating tap info for : "+serverTap.selectedTableName+"| server is: "+serverTap.getUrl());
+			}
+			
 		} catch (Exception e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 			throw e;
@@ -843,13 +850,14 @@ public class TapManager {
 	
 	/**
 	 * Method to populate tap meta data of a particular table
+	 * @param tableNames 
 	 * @param tapServiceUrl
 	 * @return
 	 * @throws Exception 
 	 */
-	public Future<Vector<TapTableColumn>> updateColumnSchemaForATable(final ServerTap serverTap) throws Exception {
+	public Future<Vector<TapTableColumn>> updateColumnSchemaForSpecificTables(final ServerTap serverTap, final List<String> tableNames) throws Exception {
 		final int refThreadPriority = Thread.currentThread().getPriority();
-		Future<Vector<TapTableColumn>> tapResult = executor.submit(new  Callable<Vector<TapTableColumn>>(){
+		Future<Vector<TapTableColumn>> tapResult = executor.submit(new Callable<Vector<TapTableColumn>>(){
 			@Override
 			public Vector<TapTableColumn> call() throws Exception {
 				String tableNamequeryParam = serverTap.selectedTableName;
@@ -859,9 +867,20 @@ public class TapManager {
 				if (currentT.getPriority() < refThreadPriority-1) {//just asking for quicker execution without overstepping a lot
 					currentT.setPriority(refThreadPriority-1);
 				}
-				
 				try {
-					tableNamequeryParam = URLEncoder.encode(tableNamequeryParam, UTF8);
+					if (tableNames != null && !tableNames.isEmpty()) {
+						boolean isNotFirst = false;
+						StringBuffer whereCondition = new StringBuffer();
+						for (String tableName : tableNames) {
+							if (isNotFirst) {
+								whereCondition.append("OR+table_name+=+");
+							}
+							whereCondition.append(URLEncoder.encode(tableName, UTF8));
+						}
+						tableNamequeryParam = whereCondition.toString();
+					} else {
+						tableNamequeryParam = URLEncoder.encode(tableNamequeryParam, UTF8);
+					}
 					String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNamequeryParam);
 					SavotResource columnResults = getResults(serverTap.getUrl()+gettablesColumnsQuery);
 					populateColumns(serverTap, columnResults);
@@ -884,7 +903,7 @@ public class TapManager {
 	 * @param notificationBar
 	 * @param message
 	 */
-	public void eraseNotification(final JLabel notificationBar) {
+	public void eraseNotification(final JLabel notificationBar, final String resetText) {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -895,7 +914,7 @@ public class TapManager {
 					currentT.setName("TeraseNotification: ");
 					currentT.setPriority(Thread.MIN_PRIORITY);
 					TimeUnit.SECONDS.sleep(3);
-					notificationBar.setText(EMPTYSTRING);
+					notificationBar.setText(resetText);
 					notificationBar.revalidate();
 					notificationBar.repaint();
 				} catch (InterruptedException e) {
@@ -1586,10 +1605,11 @@ public class TapManager {
 	 * </ol>
 	 * if postParams are null then it executes GET, else this method executes a POST
 	 * @param url 
-	 * @param query
+	 * @param string 
+	 * @param parserObj
 	 * @throws Exception 
 	 */
-	public void fireSync(final String name, final String url, final ADQLQuery query,
+	public void fireSync(final String name, final String url, final String query, final ADQLQuery parserObj,
 			final Map<String, Object> postParams) throws Exception {
 		// TODO Auto-generated method stub
 		executor.execute(new Runnable() {
@@ -1600,7 +1620,7 @@ public class TapManager {
 				final String oldTName = currentT.getName();
 				try {
 					if (postParams == null) {
-						String queryParam = URLEncoder.encode(query.toADQL(), UTF8);
+						String queryParam = URLEncoder.encode(query, UTF8);
 						URL syncUrl = new URL(String.format(SYNCGETRESULT, url, queryParam));
 						currentT.setName("TsubmitSync: " + syncUrl);
 						//TODO:: tintin check for the query status before loading: and remove return- covert to execute
@@ -1609,7 +1629,13 @@ public class TapManager {
 						value=”ERROR” must be included before the TABLE. If the TABLE does not
 						contain the entire query result, one INFO element with value=”OVERFLOW” or
 						value=”ERROR” must be included after the table.*/
-						aladin.calque.newPlanCatalog(Util.openStream(syncUrl), name);
+						
+						URLConnection urlConn = syncUrl.openConnection();
+						urlConn.setRequestProperty("Accept", "*/*");
+						urlConn.setRequestProperty("Connection", "Keep-Alive");
+						urlConn.setRequestProperty("Cache-Control", "no-cache");
+						handleSyncGetResponse(urlConn, name);
+						
 					} else {//currently this else part is used only for upload.
 						URL syncUrl = new URL(url + "/sync");
 						currentT.setName("TsubmitSync: " + syncUrl);
@@ -1630,11 +1656,14 @@ public class TapManager {
 						out.writeField("version", "1.0");
 						out.writeField("format", "votable");
 
-						int limit = query.getSelect().getLimit();
-						if (limit > 0) {
-							out.writeField("maxrec", String.valueOf(limit));
+						if (parserObj != null) {
+							int limit = parserObj.getSelect().getLimit();
+							if (limit > 0) {
+								out.writeField("maxrec", String.valueOf(limit));
+							}
 						}
-						out.writeField("query", query.toADQL());
+						
+						out.writeField("query", query);
 
 						if (postParams != null) {// this part only for upload as of now
 							for (Entry<String, Object> postParam : postParams.entrySet()) {
@@ -1646,7 +1675,7 @@ public class TapManager {
 							}
 						}
 						out.close();
-						aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), name);
+						handleSyncGetResponse(urlConn, name);
 					}
 
 				} catch (MalformedURLException e) {
@@ -1665,6 +1694,50 @@ public class TapManager {
 		});
 	}
 	
+	/**
+	 * Convenience method
+	 * - creates plane for successful response
+	 * - shows error otherwise
+	 * @param conn
+	 * @param planeName
+	 * @throws Exception 
+	 */
+	public void handleSyncGetResponse(URLConnection conn, String planeName) throws Exception {
+		if (conn instanceof HttpURLConnection) {
+			HttpURLConnection httpConn = (HttpURLConnection) conn;
+			try {
+				InputStream is;
+				httpConn.connect();
+				if (httpConn.getResponseCode() < 400) {
+					// is = httpConn.getInputStream();
+					aladin.calque.newPlanCatalog(httpConn, planeName);
+					// stream is closed downstream when it is not an error scenario
+				} else {
+					is = httpConn.getErrorStream();
+					TapQueryResponseStatusReader queryStatusReader = new TapQueryResponseStatusReader();
+					queryStatusReader.load(is);
+					is.close();
+					String errorMessage = queryStatusReader.getQuery_status_message();
+					if (errorMessage == null || errorMessage.isEmpty()) {
+						errorMessage = "Error. unable to get response for this request.";
+					} else {
+						errorMessage = queryStatusReader.getQuery_status_value() + " " + errorMessage;
+					}
+					httpConn.disconnect();
+					throw new IOException(errorMessage);
+				}
+			} catch (IOException e) {
+				Aladin.trace(3, "Error when getting job! Http response is: " + httpConn.getResponseCode());
+				if (httpConn != null) {
+					httpConn.disconnect();
+				}
+				throw e;
+			} /*
+				 * finally { if (httpConn!=null) { httpConn.disconnect(); } }
+				 */
+		}
+	}
+	
 	public String getSyncUrlUnEncoded(String url, String queryParam) {
 		return String.format(SYNCGETRESULT, url, queryParam);
 	}
@@ -1675,10 +1748,11 @@ public class TapManager {
 	 * 		<li>Query tap server asynchronously</li>
 	 * 		<li>Populate results on Aladin</li>
 	 * </ol>
-	 * @param query
+	 * @param string 
+	 * @param adqlParserObj
 	 * @throws Exception 
 	 */
-	public void fireASync(final String name, final String serverUrl,final ADQLQuery query, final Map<String, Object> postParams) throws Exception {
+	public void fireASync(final String name, final String serverUrl, final String query, final ADQLQuery adqlParserObj, final Map<String, Object> postParams) throws Exception {
 		// TODO Auto-generated method stub
 		executor.execute(new Runnable() {
 			@Override
@@ -1688,7 +1762,7 @@ public class TapManager {
 				currentT.setName("TsubmitAsync: "+serverUrl);
 				try {
 					showAsyncPanel();
-					uwsFacade.handleJob(name, serverUrl, query, postParams);
+					uwsFacade.handleJob(name, serverUrl, query, adqlParserObj, postParams);
 					currentT.setName(oldTName);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -1844,7 +1918,7 @@ public class TapManager {
 				this.uploadFrame.uploadOptions.setEnabled(true);
 				if (this.uploadFrame.isVisible()) {
 					this.uploadFrame.infoLabel.setText("New option added to upload file choices!");
-					this.eraseNotification(this.uploadFrame.infoLabel);
+					this.eraseNotification(this.uploadFrame.infoLabel, EMPTYSTRING);
 					this.uploadFrame.uploadOptions.revalidate();
 					this.uploadFrame.uploadOptions.repaint();
 				}
@@ -1864,7 +1938,7 @@ public class TapManager {
 				}
 				if (this.uploadFrame.isVisible()) {
 					this.uploadFrame.infoLabel.setText("One option removed from upload file choices!");
-					this.eraseNotification(this.uploadFrame.infoLabel);
+					this.eraseNotification(this.uploadFrame.infoLabel, EMPTYSTRING);
 					this.uploadFrame.uploadOptions.revalidate();
 					this.uploadFrame.uploadOptions.repaint();
 				}
