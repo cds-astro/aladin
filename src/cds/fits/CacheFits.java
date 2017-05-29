@@ -21,6 +21,7 @@ package cds.fits;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import cds.aladin.Aladin;
+import cds.allsky.CacheFitsWriter;
 import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.tools.Util;
@@ -385,6 +387,12 @@ public class CacheFits {
                   FitsFile f = map.get(key);
                   map1.put(key,f);
                }
+               
+               // Obligatoire d'appeler le remove dans le cas d'un cacheFitsWriter
+               if( this instanceof CacheFitsWriter ) {
+                  for( String key: libere.keySet() ) try { remove(key); } catch( Exception e ) {}
+               }
+               
                map=map1;
 
                //         Enumeration<String> e = map.keys();
@@ -422,12 +430,15 @@ public class CacheFits {
    // Reset totalement le cache
    public void reset() {
       statNbFree+=map.size();
-      map.clear();
-//      Enumeration<String> e = map.keys();
-//      while( e.hasMoreElements() ) {
-//         String key = e.nextElement();
-//         try { remove(key); } catch( Exception e1 ) { }
-//      }
+      
+      if( this instanceof CacheFitsWriter ) {
+         ArrayList<String> a = new ArrayList<String>(map.size());
+         for( String key: map.keySet() ) a.add(key);
+         for( String key: a ) {
+            try { remove(key); } catch( Exception e1 ) { }
+         }
+         
+      } else map.clear();
 
       gc();
    }

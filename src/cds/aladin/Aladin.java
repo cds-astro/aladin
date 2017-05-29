@@ -156,6 +156,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Deprecated PLASTIC lib and dependencies removed 
  * @beta    <LI> CDS X-match integration in the Directory tree
  * @beta    <LI> HiPS IVOA 1.0 standard compatibility (Aladin + Hipsgen + Hipsserverlint)
  * @beta    <LI> UTF-8 BOM support
@@ -221,8 +222,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.622";
-   static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
+   static public final    String VERSION = "v9.624";
+   static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
    static protected final String PROTO_VERSION    = "    *** PROTOTYPE VERSION (based on "+VERSION+") ***";
@@ -4515,6 +4516,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Terminaison propre d'Aladin */
    protected void quit(int code) {
+      
+      // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
+      try {
+         getMessagingMgr().stopInternalHub(true);
+      } catch( Exception e2 ) {
+         e2.printStackTrace();
+      }
 
       // Deselection des objets en cours dans le cas ou une application
       // type VOPlot est utilisee en parallele

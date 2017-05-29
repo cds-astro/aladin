@@ -1621,7 +1621,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          // Tri par popularité et catégorie
          String popularity = prop.get("vizier_popularity");
          if( popularity!=null ) {
-            popularity = String.format("%08d", 1000 -Long.parseLong(popularity));
+            popularity = String.format("%04d", 1000 -Long.parseLong(popularity));
          } else popularity=getCatSuffix(id);
          String sortKey = sortPrefix+"/"+popularity;
          prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY,sortKey);
@@ -2901,7 +2901,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( progBx!=null && progBx.isSelected() )  to.loadProgenitors();
             if( dmBx!=null   && dmBx.isSelected() )    to.loadDensityMap();
             if( tapBx!=null  && tapBx.isSelected() )   to.queryByTap();
-            if( xmatchBx!=null  && xmatchBx.isSelected() )   to.queryByXmatch();
+            if( xmatchBx!=null && xmatchBx.isSelected() )   to.queryByXmatch();
             
          // Accès à plusieurs collections simultanément
          } else {
