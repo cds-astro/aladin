@@ -1867,7 +1867,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          "B-External databases, regularly updated"
    };
    
-   static private final String MMOC = "Multiprop.bin";
+   static protected final String MMOC = "Multiprop.bin";
    
    // Sauvegarde dans le cache du MultiMoc sous forme binaire
    private boolean cacheWrite() {
@@ -2153,14 +2153,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          });
       }
       if( !timer.isRunning() ) {
-         System.out.println("Timer started");
+//         System.out.println("Timer started");
          timer.start();
       }
    }
    
    private void stopTimer() {
       if( timer!=null && timer.isRunning() ) {
-         System.out.println("Timer stopped");
+//         System.out.println("Timer stopped");
          timer.stop();
       }
    }

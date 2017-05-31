@@ -1380,7 +1380,7 @@ final public class TableParser implements XMLConsumer {
 
       // Si un COOSYS ref a été utilisé, on va se baser sur lui pour déterminer de façon certaine
       // les colonnes utilisant le même COOSYS
-      if( coosys!=null ) {
+      if( coosys!=null && nRA!=-1) {
          
          // On recherche le "ref" du champ de coordonnées le plus probable pour RA
          Field f = memoField.elementAt( nRA );

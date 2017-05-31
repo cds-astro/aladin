@@ -241,6 +241,7 @@ public class BuilderTiles extends Builder {
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
       if( b!=null ) { b.showStatistics(); return; }
+      statNbThreadRunning = nbThreadRunning();
       if( statNbThreadRunning==0 || statNbTile==0 ) return;
       long now = System.currentTimeMillis();
       totalTime = now-startTime;
@@ -329,14 +330,14 @@ public class BuilderTiles extends Builder {
    // Libère les bitmaps des Fits en cours de construction pour faire de la place
    protected long releaseBitmap() {
       long size=0L;
-      try {
-         for( Thread t : memPerThread.keySet() ) {
-            ArrayList<Fits> m = memPerThread.get(t);
-            for( Fits f : m ) {
+      for( Thread t : memPerThread.keySet() ) {
+         ArrayList<Fits> m = memPerThread.get(t);
+         for( Fits f : m ) {
+            try {
                if( f.isReleasable() ) size += f.releaseBitmap();
-            }
+            } catch( Exception e ) {  }
          }
-      } catch( Exception e ) { }
+      }
       return size;
    }
 
@@ -397,7 +398,6 @@ public class BuilderTiles extends Builder {
       int order;
       long npix;
       int z;
-      boolean keepResult;
       Fits fits;
       boolean ready;
       Thread th;
@@ -499,7 +499,9 @@ public class BuilderTiles extends Builder {
 
       // Attente de la fin du travail
 //      while( stillAlive() ) {
-      while( !stopped && !(allWaiting() && fifo.isEmpty()) ) cds.tools.Util.pause(1000);
+      while( !stopped && !(allWaiting() && fifo.isEmpty()) ) {
+         cds.tools.Util.pause(1000);
+      }
       destroyThreadBuilderHpx();
       if( stopped ) return;
       
@@ -601,7 +603,6 @@ public class BuilderTiles extends Builder {
       return f;
    }
    
-   
    // Génération des 4 fils en parallèle
    private void multiThreadCreateHpx(ThreadBuilderTile hpx, Fits [] fils, String path,int order,long npix, int z) throws Exception {
       Item [] item = new Item[3];
@@ -624,7 +625,7 @@ public class BuilderTiles extends Builder {
       for( int i=0; i<3; i++ ) fils[i] = item[i].getFits();
    }
    
-   static final String [] MODE =  { "START","WAIT","EXEC","DIED" };
+   static final String [] MODE =  { "START","WAIT","EXEC","DIED","SUSPEND" };
    
    // Classe des threads de calcul
    private class ThreadBuilder extends Thread {
@@ -632,6 +633,7 @@ public class BuilderTiles extends Builder {
       static final int WAIT  =1;
       static final int EXEC  =2;
       static final int DIED  =3;
+      static final int SUSPEND = 4;
       
 
       ThreadBuilderTile threadBuilderTile;
@@ -652,9 +654,33 @@ public class BuilderTiles extends Builder {
       /** Le thread travaille */
       public boolean isExec() { return mode==EXEC; }
 
-      /** Le thread travaille */
-      public boolean isWait() { return mode==WAIT; }
-
+      /** Le thread est en attente et éventuellement
+       * s'il y a assez de RAM pour le réutiliser */
+      public boolean isWait(boolean checkMem) {
+         if( mode!=WAIT ) return false;
+         if( checkMem ) {
+            try {
+               return !threadBuilderTile.requiredMem(Constante.MAXOVERLAY,3 ); 
+            } catch( Exception e ) {}
+         }
+         return true;
+      }
+      
+      public boolean arret() {
+         if( !suspendable ) return false;
+         mode=SUSPEND;
+         return true;
+      }
+      public boolean reprise() { 
+         if( mode!=SUSPEND ) return false;
+         mode=EXEC;
+         wakeUp();
+         return true;
+      }
+      
+      // true si le thread peut être suspendu temporairement (jamais un thread fils)
+      private boolean suspendable=true;
+      
       /** Demande la mort du thread */
       public void tue() { encore=false; }
 
@@ -662,11 +688,15 @@ public class BuilderTiles extends Builder {
 
          while( encore ) {
             Item item=null;
+            while( encore && mode==SUSPEND ) {
+               try { Thread.currentThread().sleep(100); } catch( Exception e) { };
+            }
             while( encore && (item = getNextNpix())==null ) {
                mode=WAIT;
                try { Thread.currentThread().sleep(100); } catch( Exception e) { };
             }
             if( encore ) {
+               suspendable= item.order==3;
                mode=EXEC;
                updateStat(+1,0,0,0,0,0);
                try {
@@ -723,7 +753,7 @@ public class BuilderTiles extends Builder {
 
       initStat(nbThreads);
       context.createHealpixOrder(context.getTileOrder());
-      ThreadBuilderTile.nbThreadRunning=nbThreads;
+      ThreadBuilderTile.nbThreads=nbThreads;
       ThreadBuilderTile.hashPolygon = new HashMap<File, Polygon>();
 
       for( int i=0; i<nbThreads; i++ ) {
@@ -743,12 +773,33 @@ public class BuilderTiles extends Builder {
          tb.tue();
       }
    }
+   
+   boolean arret(ThreadBuilderTile tbt ) {
+      Iterator<ThreadBuilder> it = threadList.iterator();
+      while( it.hasNext() ) {
+         ThreadBuilder tb = it.next();
+         if( tb.threadBuilderTile==tbt ) return tb.arret();
+      }
+      return false;
+   }
+   
+   boolean reprise(ThreadBuilderTile tbt ) {
+      Iterator<ThreadBuilder> it = threadList.iterator();
+      while( it.hasNext() ) {
+         ThreadBuilder tb = it.next();
+         if( tb.threadBuilderTile==tbt ) return tb.reprise();
+      }
+      return false;
+   }
+
 
    int nbThreadRunning() {
       int n=0;
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) {
-         if( it.next().isExec() ) n++;
+         ThreadBuilder tb = it.next();
+         if( tb.isExec() ) n++;
+//         System.out.println(tb.getName()+" mode="+tb.getMode());
       }
       return n;
    }
@@ -763,14 +814,16 @@ public class BuilderTiles extends Builder {
    // Retourne true si tous les threads de calculs sont en attente
    boolean allWaiting() {
       Iterator<ThreadBuilder> it = threadList.iterator();
-      while( it.hasNext() ) if( !it.next().isWait() ) return false;
+      while( it.hasNext() ) {
+         if( !it.next().isWait(false) ) return false;
+      }
       return true;
    }
    
    boolean oneWaiting() {
       try {
          Iterator<ThreadBuilder> it = threadList.iterator();
-         while( it.hasNext() ) if( it.next().isWait() ) return true;
+         while( it.hasNext() ) if( it.next().isWait(true) ) return true;
       } catch( Exception e ) { }
       return false;
    }
@@ -780,7 +833,7 @@ public class BuilderTiles extends Builder {
          Iterator<ThreadBuilder> it = threadList.iterator();
          while( it.hasNext() ) {
             ThreadBuilder tb = it.next();
-            if( tb.isWait() ) tb.interrupt();
+            if( tb.isWait(false) ) tb.interrupt();
          }
       } catch( Exception e ) {
       }

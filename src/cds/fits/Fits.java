@@ -1907,7 +1907,7 @@ final public class Fits {
       if( hasUsers() ) return 0; // Pas possible, qq s'en sert
       if( filename==null ) return 0;
       testBitmapReleaseFeature();
-      long size = pixels.length;
+      long size = pixels==null ? 0L : pixels.length;
       pixels = null;
       bitmapReleaseDone = true;
       //      System.out.println("releaseBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" "+getCellSuffix()+" de "+filename);

@@ -79,6 +79,10 @@ public final class Cache implements Runnable {
          File cache = new File(dir);
          String f[] = cache.list();
          for( int i=0; f!=null && i<f.length; i++ ) {
+            
+            // On efface pas le MultiProp
+            if( f[i].equals(Directory.MMOC) ) continue;
+            
 //System.out.println("f="+decodage(f[i]));
             try { (new File(dir+Util.FS+f[i])).delete(); }
             catch( Exception e1 ) { e1.printStackTrace(); }

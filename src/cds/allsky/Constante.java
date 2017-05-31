@@ -183,7 +183,7 @@ public class Constante {
    static public String SURVEY = HIPS;  // sous répertoire final contenant la hierarchie healpix
 
    static public final int ORDER           = 9;    // Taille des imagettes HEALPix
-   static public final int ORIGCELLWIDTH   = 1024;  // Taille des cellules des images originales lors de la Hipselisation
+   static public final int ORIGCELLWIDTH   = 512;  // Taille des cellules des images originales lors de la Hipselisation
    static public final int GZIPMAXORDER    = 5;    // On gzippe les tiles que jusqu'au niveau 5
    static public final int MAXOVERLAY      = 10;   // Nombre max de recouvrement pris en compte
    static public final int DEFAULTMOCORDER = 8;    // MOC ORDER minimal

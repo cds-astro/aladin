@@ -222,7 +222,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.624";
+   static public final    String VERSION = "v9.626";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4517,24 +4517,24 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Terminaison propre d'Aladin */
    protected void quit(int code) {
       
-      // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
-      try {
-         getMessagingMgr().stopInternalHub(true);
-      } catch( Exception e2 ) {
-         e2.printStackTrace();
-      }
-
-      // Deselection des objets en cours dans le cas ou une application
-      // type VOPlot est utilisee en parallele
-
-	  if (Aladin.PROTO) {//TODO:: tintinproto
-		  glu.tapManager.cleanUp();
-	  }
-	  
       if( hasExtApp() ) try { resetCallbackVOApp(); } catch( Exception e) {}
 
       if( aladinSession==0 ) {
          trace(4,"Aladin.quit in progress... " );
+         
+         // Deselection des objets en cours dans le cas ou une application
+         // type VOPlot est utilisee en parallele
+         if (Aladin.PROTO) {//TODO:: tintinproto
+            glu.tapManager.cleanUp();
+         }
+         
+         // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
+         try {
+            getMessagingMgr().stopInternalHub(true);
+         } catch( Exception e2 ) {
+            e2.printStackTrace();
+         }
+         
          trace(3,"User configuration backup...");
          // Sauvegarde config utilisateur
          //          console.printInfo("Aladin stopped");

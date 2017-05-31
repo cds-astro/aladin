@@ -701,7 +701,7 @@ public class CacheFits {
             +" using "+Util.getUnitDisk(getMem())
             +(maxMem>0 ? "/"+Util.getUnitDisk(maxMem):"["+Util.getUnitDisk(maxMem)+"]")
             +" freeRAM="+Util.getUnitDisk(getFreeMem())
-            +" (open="+statNbOpen+" find="+statNbFind+" remove="+statNbFree+")";
+            +" (opened="+statNbOpen+" found="+statNbFind+" released="+statNbFree+")";
    }
 
    // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]
@@ -772,7 +772,7 @@ public class CacheFits {
    static long lastMem=0;
 
    /** Retourne le nombre d'octets disponibles en RAM */
-   public long getFreeMem() {
+  static public long getFreeMem() {
       //      long t1 = System.nanoTime();
       //      if( t1-lastTimeMem<100000 ) return lastMem;
       lastMem = Runtime.getRuntime().maxMemory()-
