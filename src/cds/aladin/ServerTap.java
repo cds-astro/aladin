@@ -912,7 +912,7 @@ public class ServerTap extends Server implements MouseListener{
 			} else {// incase the table info is not populated or some issues..
 				aladin.frameInfoServer = new FrameInfoServer(aladin);
 			}
-		} else if (aladin.frameInfoServer.isFlagUpdate()) {
+		} else if (aladin.frameInfoServer.isFlagUpdate() == 1) {
 			try {
 				aladin.frameInfoServer.updateInfoPanel();
 			} catch (Exception e) {
@@ -931,32 +931,46 @@ public class ServerTap extends Server implements MouseListener{
 	 */
 	protected void tackleFrameInfoServerUpdate(Future<JPanel> newInfoPanel) {
 		try {
-			if (this.infoPanel!=null) {
+			FrameInfoServer frameInfoServer = null;
+			if (this.infoPanel != null) {
 				if (this.infoPanel.isDone()) {
 					JPanel infoPanel = this.infoPanel.get();
-					FrameInfoServer frameInfoServer = (FrameInfoServer) SwingUtilities.getRoot(infoPanel);
-					if (frameInfoServer!=null) {
+					frameInfoServer = (FrameInfoServer) SwingUtilities.getRoot(infoPanel);
+					if (frameInfoServer != null) {
 						frameInfoServer.setAdditionalComponent(newInfoPanel);
 						if (frameInfoServer.isVisible()) {
 							frameInfoServer.updateInfoPanel();
 							frameInfoServer.revalidate();
 							frameInfoServer.repaint();
 						} else {
-							frameInfoServer.setFlagUpdate(true);
+							frameInfoServer.setFlagUpdate(1);
 						}
 					}
 				} else {
 					this.infoPanel.cancel(true);
 				}
+			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer().equals(this)) {
+				//this else part is for a specific case where generic status report is displayed before table meta can be obtained
+				frameInfoServer = new FrameInfoServer(aladin, newInfoPanel);
+				if (aladin.frameInfoServer.isVisible()) {
+					frameInfoServer.updateInfoPanel();
+					aladin.frameInfoServer.dispose();
+					aladin.frameInfoServer = frameInfoServer;
+					frameInfoServer.revalidate();
+					frameInfoServer.repaint();
+					frameInfoServer.show(this);
+				} else {
+					frameInfoServer.setFlagUpdate(1);
+				}
 			}
 			this.infoPanel = newInfoPanel;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+			if (Aladin.levelTrace >= 3)
+				e.printStackTrace();
 		}
-
 	}
-
+	
 	/**
 	 * Method assembles the query from all the front end components.
 	 */
@@ -1150,7 +1164,8 @@ public class ServerTap extends Server implements MouseListener{
 				Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
 				updateQueryCheckTableColumns(table, columns);
 				
-				if (mode == TapServerMode.UPLOAD || (queryCheckerTable != null && this.queryCheckerTables.remove(queryCheckerTable))) {
+				if (mode == TapServerMode.UPLOAD
+						|| (queryCheckerTable != null && this.queryCheckerTables.remove(queryCheckerTable))) {
 					this.queryCheckerTables.add(table);
 					QueryChecker checker = new DBChecker(this.queryCheckerTables);
 					this.adqlParser.setQueryChecker(checker);

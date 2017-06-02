@@ -177,14 +177,6 @@ public class TapClient{
 		return reloadButton;
 	}
 	
-	public void enableModes(Server server) {
-		if (this.serverGlu != null && this.serverTap != null && this.serverTap.modeChoice != null) {
-			this.serverTap.modeChoice.setVisible(true);
-			this.serverTap.modeChoice.revalidate();
-			this.serverTap.modeChoice.repaint();
-		}
-	}
-	
 	/**
 	 * Precedence is for serverGlu. So by default serverGlu this displayed
 	 * In case there is not ServerGlu configured for the tap client then 

@@ -212,20 +212,22 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 			
 			if (activeDataLinkGlu != null) {
 				Map<String,String> params = activeDataLinkGlu.getParams();
-				if (params!=null) {
+				if (params != null) {
 					String semantics = activeDataLinkGlu.getParams().get(SEMANTICS);
 					String contentType = activeDataLinkGlu.getParams().get(CONTENTTYPE);
 					
-					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS) || semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
+					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS)
+							|| semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
 						aladin.datalinkGlu = new DataLinkGlu(aladin);
 						aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
-					} else if (contentType!=null && accessUrl!=null && contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {
+					} else if (contentType != null && accessUrl != null
+							&& contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {
 						aladin.glu.showDocument("Http", accessUrl, true);
-					} else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {
+					} else if (contentType != null && accessUrl != null && contentType.contains(DATATYPE_DATALINK)) {
 						aladin.mesure.isEnabledDatalinkPopUp = true;
 						aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
 						this.activeDataLinkWord.callArchive(aladin, activeDataLinkSource, true);
-					} else if (accessUrl!=null && !accessUrl.isEmpty()) {
+					} else if (accessUrl != null && !accessUrl.isEmpty()) {
 						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null);//TODO::change to access
 					} else {
 						Aladin.warning("Error in loading datalink",1);

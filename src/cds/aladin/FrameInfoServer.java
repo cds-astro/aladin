@@ -61,7 +61,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	private Server server;
 	private Future<JPanel> additionalComponent;
 	private MySplitPane centerPanel;
-	private boolean flagUpdate;
+	private int flagUpdate;// if 1- then it needs update
 	private int guiType; //0- simple, 1 for ServerTap with metadata table
 
 	protected void createChaine() {
@@ -258,11 +258,11 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 		this.additionalComponent = additionalComponent;
 	}
 
-	public boolean isFlagUpdate() {
+	public int isFlagUpdate() {
 		return flagUpdate;
 	}
 
-	public void setFlagUpdate(boolean flagUpdate) {
+	public void setFlagUpdate(int flagUpdate) {
 		this.flagUpdate = flagUpdate;
 	}
 

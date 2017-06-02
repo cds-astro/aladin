@@ -746,10 +746,13 @@ public class TapManager {
 						String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
 						SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
 						populateColumns(serverToLoad, columnResults);
+						serverToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
 					} else if (count > 0) {
 						// download all
 						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
 						populateColumns(serverToLoad, resultsResource);
+						//update table meta anyway and then create the info panel
+						updateTableMetadata(serverToLoad, tapServiceUrl);
 					} else {
 						serverToLoad.showLoadingError();
 						displayWarning(serverToLoad.tapClient, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
@@ -758,7 +761,6 @@ public class TapManager {
 					serverToLoad.createFormDefault(); //default choice is the first table
 					serverToLoad.revalidate();
 					serverToLoad.repaint();
-					serverToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
 				} catch (Exception e) {
 					e.printStackTrace();
 					serverToLoad.showLoadingError();
@@ -986,6 +988,21 @@ public class TapManager {
 				}
 				if (tableName != null) {
 					synchronized (newServer.tablesMetaData) {
+						if (newServer.tablesMetaData.containsKey(tableName)) {
+							//conserve columns if already set. but other details are updated
+							TapTable oldEntry = newServer.tablesMetaData.get(tableName);
+							if (oldEntry.getColumns() != null) {
+								table.setColumns(oldEntry.getColumns());
+							}
+							
+							if (oldEntry.getRaColumnName() != null) {
+								table.setRaColumnName(oldEntry.getRaColumnName());
+							}
+							
+							if (oldEntry.getDecColumnName() != null) {
+								table.setDecColumnName(oldEntry.getDecColumnName());
+							}
+						}
 						newServer.tablesMetaData.put(tableName, table);
 					}
 				}
@@ -1032,6 +1049,21 @@ public class TapManager {
 				}
 				if (tableName != null) {
 					synchronized (newServer.tablesMetaData) {
+						if (newServer.tablesMetaData.containsKey(tableName)) {
+							//conserve columns if already set. but other details are updated
+							TapTable oldEntry = newServer.tablesMetaData.get(tableName);
+							if (oldEntry.getColumns() != null) {
+								table.setColumns(oldEntry.getColumns());
+							}
+							
+							if (oldEntry.getRaColumnName() != null) {
+								table.setRaColumnName(oldEntry.getRaColumnName());
+							}
+							
+							if (oldEntry.getDecColumnName() != null) {
+								table.setDecColumnName(oldEntry.getDecColumnName());
+							}
+						}
 						newServer.tablesMetaData.put(tableName, table);
 					}
 				}
@@ -1475,6 +1507,39 @@ public class TapManager {
 	}
 	
 	/**
+	 * Method to lazily get table metadata.
+	 * @param serverToLoad
+	 * @param tapServiceUrl
+	 * @param tablesMetaData
+	 */
+	public void updateTableMetadata(final ServerTap serverToLoad, final String tapServiceUrl) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				final Thread currentT = Thread.currentThread();
+				final String oldTName = currentT.getName();
+				currentT.setName("TupdateTableMetadata: "+tapServiceUrl);
+				currentT.setPriority(Thread.NORM_PRIORITY-2);
+				try {
+					SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
+					populateTables(serverToLoad, resultsResource);
+					//update info panel
+					serverToLoad.tackleFrameInfoServerUpdate(createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					if (Aladin.levelTrace >=3 ) {//we do not bother here if all table description is not obtained. 
+						//if there is problem obtaining essential metadata then there will be error actions in the main loadTapColumnSchemas thread
+						e.printStackTrace();
+					}
+				} finally {
+					currentT.setName(oldTName);
+				}
+			}
+		});
+	}
+	
+	/**
 	 * Method populates the info panel gui of the server
 	 * @param tapServiceUrl
 	 * @param tablesMetaData
@@ -1529,7 +1594,7 @@ public class TapManager {
 					
 					TapTable table = tablesMetaData.get(tableName);
 					if (table != null && table.getDescription() != null && !table.getDescription().isEmpty()) {
-						description = "Description:" + table.getDescription();
+						description = table.getDescription();
 					}
 					
 					if (columnMetadata != null) {

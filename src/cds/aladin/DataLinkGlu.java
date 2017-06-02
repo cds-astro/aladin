@@ -136,6 +136,7 @@ public final class DataLinkGlu {
 				
 				//Check if this is a standard SODA service
 				//TODO:: handle SODA async as well.
+				//Note: TODO:: tintin if we do not get any values from the original table to set in cutout client, then we use values form the datalink response.
 				if (resourceParam.getName().equalsIgnoreCase(STANDARDID) && resourceParam.getValue().equalsIgnoreCase(SODA_STANDARDID)) {
 					String sodaGluRecord = aladin.datalinkGlu.getStandardActionGlu(SODA_SYNC_FORM);
 					
@@ -195,13 +196,13 @@ public final class DataLinkGlu {
 			}
 			
 			Vector serverVector = null;
-			if (dicStream!=null) { //in case this is soda sync and form is loaded from configuration. Hence using generic glu
+			if (dicStream != null) { //in case this is soda sync and form is loaded from configuration. Hence using generic glu
 				aladin.glu.vGluServer = new Vector(50);
 				aladin.glu.loadGluDic(new DataInputStream(dicStream),true,false);
 	            serverVector = aladin.glu.vGluServer;
 			} else {
 				Vector  aladinFilter = new Vector(10);
-				StringBuffer record =new StringBuffer(1000);
+				StringBuffer record = new StringBuffer(1000);
 			    record.append("%A ").append(DATALINK_FORM).append("\n%D Cutout prototype for SODA sync server");
 			    serverDataLinks(DATALINK_FORM, "Cutout service", null, null, null, DATALINK_CUTOUT_FORMLABEL,
 		   	         "Cutout service", null, paramDescription, paramDataType, paramValue, paramRange,

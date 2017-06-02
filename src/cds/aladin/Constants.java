@@ -45,9 +45,11 @@ public static final int SODA_POLINDEX = 6;
 public static final String RESULTS_RESOURCE_NAME = "results";
 public static final String INPUTPARAM_NAME = "inputParams";
 public static final String RANGE_DELIMITER = " > ";
-public static final String SODA_URL_PARAM = "?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
-public static final String SODA_CIRCLE_URL_PARAM = "?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
-public static final String SODA_POLY_URL_PARAM = "?POS=polygon+$1&TIME=$2&BAND=$3&POL=$4*&ID=$5";
+//DALI specs says shpe names are casesensititve.. an they are accepted as all caps
+//so poS = "CIRCLE.. is ok and pOS = "Circle is not
+public static final String SODA_URL_PARAM = "?POS=CIRCLE+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
+public static final String SODA_CIRCLE_URL_PARAM = "?POS=CIRCLE+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
+public static final String SODA_POLY_URL_PARAM = "?POS=POLYGON+$1&TIME=$2&BAND=$3&POL=$4*&ID=$5";
 public static final String DATALINK_FORM = "Datalink_Form";
 public static final String DATALINK_SODACIRCLE_FORM = "Datalink_SodaCircle_Form";
 public static final String DATALINK_SODAPOLY_FORM = "Datalink_SodaPoly_Form";
