@@ -1,20 +1,22 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-// This file is part of Aladin.
+//This file is part of Aladin.
 //
-// Aladin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 3 of the License.
+//    Aladin is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
 //
-// Aladin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+//    Aladin is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
 //
-// The GNU General Public License is available in COPYING file
-// along with Aladin.
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin.
 //
 
 package cds.fits;
@@ -57,6 +59,8 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.MyInputStream;
+import cds.allsky.MyInputStreamCached;
+import cds.allsky.MyInputStreamCachedException;
 import cds.image.Hdecomp;
 import cds.tools.Util;
 
@@ -569,28 +573,28 @@ final public class Fits {
 
    /** Chargement d'une image FITS depuis un fichier */
    public void loadFITS(String filename, int ext, int x, int y, int w, int h)
-         throws Exception {
+         throws Exception,MyInputStreamCachedException {
       loadFITS(filename + "[" + ext + ":" + x + "," + y + "-" + w + "x" + h + "]");
    }
 
    /** Chargement d'une image FITS depuis un fichier */
    public void loadFITS(String filename, int ext, int x, int y, int z, int w, int h, int d)
-         throws Exception {
+         throws Exception,MyInputStreamCachedException {
       loadFITS(filename + "[" + ext + ":" + x + "," + y + "," + z + "-" + w + "x" + h + "x" + d + "]");
    }
 
-   public void loadFITS(String filename) throws Exception {
+   public void loadFITS(String filename) throws Exception,MyInputStreamCachedException {
       loadFITS(filename, false, true);
    }
 
    public void loadFITS(String filename, boolean color, boolean flagLoad)
-         throws Exception {
+         throws Exception,MyInputStreamCachedException {
       filename = parseCell(filename); // extraction de la descrition d'une
       // cellule éventuellement en suffixe du
       // nom fichier.fits[x,y-wxh]
       MyInputStream is = null;
       try {
-         is = new MyInputStream(new FileInputStream(filename));
+         is = new MyInputStreamCached( filename);
          is = is.startRead();
          if( color ) {
             if( widthCell < 0 ) throw new Exception( "Mosaic mode not supported yet for FITS color file");
@@ -608,7 +612,7 @@ final public class Fits {
    }
 
    /** Chargement d'une cellule d'une image FITS */
-   public void loadFITS(MyInputStream dis, int ext, int x, int y, int z, int w, int h, int d) throws Exception {
+   public void loadFITS(MyInputStream dis, int ext, int x, int y, int z, int w, int h, int d) throws Exception,MyInputStreamCachedException {
       loadFITS(dis,ext, x, y, z, w, h, d, true);
    }
 
@@ -821,20 +825,21 @@ final public class Fits {
       } catch( Exception e ) {
          calib = null;
       }
-
    }
+   
 
    static final public int GZIP  = 1;
    static final public int HHH   = 1 << 1;
    static final public int COLOR = 1 << 2;
    static final public int XFITS = 1 << 3;
    static final public int HDU0SKIP = 1 << 4;
+   static final public int RICE = 1 << 5;
 
    /**
     * Chargement de l'entete d'une image FITS depuis un fichier
     * @return un code GZIP|HHH|COLOR pour savoir de quoi il s'agit
     */
-   public int loadHeaderFITS(String filename) throws Exception {
+   public int loadHeaderFITS(String filename) throws Exception,MyInputStreamCachedException {
       filename = parseCell(filename); // extraction de la descrition d'une
       // cellule éventuellement en suffixe du
       // nom fichier.fits[ext:x,y-wxh]
@@ -848,6 +853,10 @@ final public class Fits {
          }
          //         long type = is.getType();
          long type = is.getType(10000);
+         
+//         is = new MyInputStreamCached( filename );
+//         is = is.startRead();
+//         long type = is.getType(10000);
 
          if( (type&(MyInputStream.JPEG|MyInputStream.PNG))!=0 && !is.hasCommentCalib() ) {
             is.fastExploreCommentOrAvmCalib(filename);
@@ -888,6 +897,7 @@ final public class Fits {
                headerFits.setKeyword("NAXIS1", headerFits.getStringFromHeader("ZNAXIS1") );
                headerFits.setKeyword("NAXIS2", headerFits.getStringFromHeader("ZNAXIS2") );
                headerFits.setKeyword("NAXIS","2");
+               code |= RICE;
             }
 
             bitmapOffset = is.getPos();
@@ -2576,15 +2586,15 @@ final public class Fits {
    //      }
    //   }
 
-   public static void main(String[] args) {
-      try {
-
-         Fits f = new Fits();
-         f.loadFITS("C:\\Users\\Pierre\\Desktop\\Data\\Herschell\\hspire1342239942browse_18217979027709026.fits[2]");
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-   }
+//   public static void main(String[] args) {
+//      try {
+//
+//         Fits f = new Fits();
+//         f.loadFITS("C:\\Users\\Pierre\\Desktop\\Data\\Herschell\\hspire1342239942browse_18217979027709026.fits[2]");
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
 
 
 

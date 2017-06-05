@@ -1,21 +1,24 @@
-// Copyright 2011 - UDS/CNRS
-// The MOC API project is distributed under the terms
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
+// The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of MOC API java project.
+//This file is part of Aladin.
 //
-//    MOC API java project is free software: you can redistribute it and/or modify
+//    Aladin is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    MOC API java project is distributed in the hope that it will be useful,
+//    Aladin is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with MOC API java project.
+//    along with Aladin.
 //
+
 package cds.mocmulti;
 
 import java.text.DecimalFormat;

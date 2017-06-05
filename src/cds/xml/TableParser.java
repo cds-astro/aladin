@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.xml;
 
@@ -961,6 +962,7 @@ final public class TableParser implements XMLConsumer {
       cooepoch = new Hashtable<String,String>(10);
       cooequinox = new Hashtable<String,String>(10);
       cooFieldref = new Hashtable<String,String>(10);
+      typeFmt = dis.getType();
 
       return (xmlparser.parse(dis,endTag) && error==null /* && nField>1 */ );
    }
@@ -1368,10 +1370,14 @@ final public class TableParser implements XMLConsumer {
          if( sSedId!=null )   consumer.tableParserInfo("      .SEDid col     #"+nSedId+1);
          inSEDGroup=false;
       }
+      
+      if( (typeFmt & MyInputStream.EPNTAP)!=0 ) {
+         consumer.tableParserInfo("   -EPNTAP VOTABLE => c1min,c2min used as longitude,latitude");
+      }
 
       // Par défaut, ce sera du ICRS
       srcAstroFrame=null;
-
+      
       // Aucune colonne ne ressemble de près ou de loin à des coordonnées
       if( nRA<0 || nDEC<0 ) {
          if( !(flagXY=(nX>=0 && nY>=0))) { nRA=0; nDEC=1; }
@@ -1820,6 +1826,7 @@ final public class TableParser implements XMLConsumer {
       String name = f.name==null?"":f.name;
       String ucd =  f.ucd==null?"":f.ucd;
       String unit = f.unit==null?"":f.unit;
+      String ID   = f.ID==null?"":f.ID;
       boolean numeric = f.isNumDataType();
       int qual;
       int n;
@@ -1833,6 +1840,7 @@ final public class TableParser implements XMLConsumer {
       // Détection du RA et évaluation de la qualité de cette détection
       qual=-1;
       if( ucd.equals("POS_EQ_RA_MAIN") || ucd.equals("pos.eq.ra;meta.main") ) qual=0;
+      else if( (typeFmt&MyInputStream.EPNTAP)!=0 && ID.equals("c1min") ) qual=50;
       else if( ucd.startsWith("POS_EQ_RA") || ucd.startsWith("pos.eq.ra") ) qual=100;
       else if( (n=raName(name))>=0 ) {
          if( unit.indexOf("h:m:s")>=0 ) qual=200+n;
@@ -1857,6 +1865,7 @@ final public class TableParser implements XMLConsumer {
       // Détection du DE et évaluation de la qualité de cette détection
       qual=-1;
       if( ucd.equals("POS_EQ_DEC_MAIN") || ucd.equals("pos.eq.dec;meta.main") )qual=0;
+      else if( (typeFmt&MyInputStream.EPNTAP)!=0 && ID.equals("c2min") ) qual=50;
       else if( ucd.startsWith("POS_EQ_DEC") || ucd.startsWith("pos.eq.dec") ) qual=100;
       else if( (n=deName(name))>=0 ) {
          if( unit.indexOf("d:m:s")>=0 ) qual=200+n;

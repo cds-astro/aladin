@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 
@@ -463,6 +464,7 @@ public final class Legende extends AbstractTableModel  {
       return field[i].refText.length()+1;
    }
 
+   protected String getID(int i)       { return i>=field.length?null:field[i].ID;     }
    protected String getName(int i)     { return i>=field.length?null:field[i].name;     }
    protected String getHref(int i)     { return i>=field.length?null:field[i].href;     }
    protected String getGref(int i)     { return i>=field.length?null:field[i].gref;     }

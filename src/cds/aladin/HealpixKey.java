@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 
@@ -1802,12 +1803,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
                boolean mayCrossTheSky = mayCrossTheSky(v);
                boolean methodeRecursive = 
-                     ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC||planBG.projd.t==Calib.FEYE ) ||
+                     ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC ) ||
                      planBG.projd.t==Calib.MOL || planBG.projd.t==Calib.AIT ) && mayCrossTheSky 
                      || planBG.projd.t==Calib.CAR;
                
                // Methode récursive pour s'approcher du bord du ciel
-               if( methodeRecursive && isTooLarge(b, planBG.projd.t==Calib.ARC||planBG.projd.t==Calib.FEYE ? 100 : 150) ) {
+               if( methodeRecursive && isTooLarge(b, planBG.projd.t==Calib.ARC ? 100 : 150) ) {
                   resetTimer();
                   int m = drawFils(g,v,drawFast?1:planBG.projd.t==Calib.ZEA?8:4);
                   if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père

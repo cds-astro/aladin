@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -196,13 +198,13 @@ public final class DataLinkGlu {
 			}
 			
 			Vector serverVector = null;
-			if (dicStream != null) { //in case this is soda sync and form is loaded from configuration. Hence using generic glu
+			if (dicStream!=null) { //in case this is soda sync and form is loaded from configuration. Hence using generic glu
 				aladin.glu.vGluServer = new Vector(50);
 				aladin.glu.loadGluDic(new DataInputStream(dicStream),true,false);
 	            serverVector = aladin.glu.vGluServer;
 			} else {
 				Vector  aladinFilter = new Vector(10);
-				StringBuffer record = new StringBuffer(1000);
+				StringBuffer record =new StringBuffer(1000);
 			    record.append("%A ").append(DATALINK_FORM).append("\n%D Cutout prototype for SODA sync server");
 			    serverDataLinks(DATALINK_FORM, "Cutout service", null, null, null, DATALINK_CUTOUT_FORMLABEL,
 		   	         "Cutout service", null, paramDescription, paramDataType, paramValue, paramRange,

@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,8 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
-
 
 /** <p>Title : TreeBuilder</p>
  *  <p>Description : Builds the hierarchical tree of available resources from a VOTable file</p>

@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 
@@ -156,6 +157,8 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Hipsgen native support for gzip, bzip2 and rice images (via cache disk)
+ * @beta    <LI> Support for EPNTAP results (c1min,c2min,s_region)
  * @beta    <LI> Deprecated PLASTIC lib and dependencies removed 
  * @beta    <LI> CDS X-match integration in the Directory tree
  * @beta    <LI> HiPS IVOA 1.0 standard compatibility (Aladin + Hipsgen + Hipsserverlint)
@@ -170,7 +173,6 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Panel management improvement (JPane)
  * @beta    <LI> HiPS mirror sites management improvement
  * @beta    <LI> MOC perimeter drawing + set drawing=xxx script command
- * @beta    <LI> Fisheye projection support (ARC) => planetarium usage
  * @beta    <LI> Fullscreen mode improvements (global menu)
  * @beta    <LI> New script commands (cmoc, ccat, )
  * @beta    <LI> MultiCCD FITS image support
@@ -222,7 +224,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.626";
+   static public final    String VERSION = "v9.629";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

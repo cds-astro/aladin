@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -32,6 +34,7 @@ import cds.aladin.Aladin;
 import cds.allsky.CacheFitsWriter;
 import cds.allsky.Constante;
 import cds.allsky.Context;
+import cds.allsky.MyInputStreamCachedException;
 import cds.tools.Util;
 
 
@@ -149,8 +152,8 @@ public class CacheFits {
     * @return l'objet Fits
     * @throws Exception
     */
-   public Fits getFits(String fileName) throws Exception { return getFits(fileName,FITS,true,true); }
-   public Fits getFits(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
+   public Fits getFits(String fileName) throws Exception,MyInputStreamCachedException { return getFits(fileName,FITS,true,true); }
+   public Fits getFits(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception,MyInputStreamCachedException {
       if( cacheOutOfMem )  return open(fileName,mode,flagLoad,keepHeader).fits;
 
 //      synchronized( lockObj  ) {
@@ -195,7 +198,7 @@ public class CacheFits {
    }
 
    // Ajoute un fichier Fits au cache. Celui-ci est totalement chargé en mémoire
-   private FitsFile add(String name,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
+   private FitsFile add(String name,int mode,boolean flagLoad,boolean keepHeader) throws Exception,MyInputStreamCachedException {
       FitsFile f = open(name,mode,flagLoad,keepHeader);
       map.put(name, f);
       return f;
@@ -209,7 +212,7 @@ public class CacheFits {
    private boolean firstChangeOrig=true;
 
    // Ouvre un fichier
-   private FitsFile open(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
+   private FitsFile open(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception,MyInputStreamCachedException {
       boolean flagChangeOrig=false;
 
       // Le fichier existe-t-il ? (suppression d'une éventuelle extension [x,y-wxh]
@@ -421,7 +424,7 @@ public class CacheFits {
          String s1 = i>1 ? "s":"";
          long freeRam = getFreeMem();
          if( context!=null ) {
-            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
+            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
             +" => freeRAM="+Util.getUnitDisk(freeRam));
          }
       }

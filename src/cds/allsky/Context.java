@@ -1,4 +1,6 @@
-// Copyright 2012 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -789,7 +791,7 @@ public class Context {
       return false;
    }
 
-   String justFindImgEtalon(String rootPath) {
+   String justFindImgEtalon(String rootPath) throws MyInputStreamCachedException {
       MyInputStream in = null;
       
       if( isInputFile ) {
@@ -828,12 +830,19 @@ public class Context {
             // cas particulier d'un survey couleur en JPEG ou PNG avec calibration externe
             if( path.endsWith(".hhh") ) return path;
 
-            in = (new MyInputStream( new FileInputStream(path)) ).startRead();
+//            in = (new MyInputStream( new FileInputStream(path)) ).startRead();
+            in = (new MyInputStreamCached(path) ).startRead();
+            
             long type = in.getType();
             if( (type&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;
             return path + (hdu==null || hdu.length>0 && hdu[0]==-1 ? "":"["+hdu[0]+"]");
 
-         }  catch( Exception e) { Aladin.trace(4, "justFindImgEtalon : " +e.getMessage()); continue; }
+         }  
+         catch( MyInputStreamCachedException e) { taskAbort(); throw e; }
+         catch( Exception e) {
+            Aladin.trace(4, "justFindImgEtalon : " +e.getMessage());
+            continue;
+         }
          finally { if( in!=null ) try { in.close(); } catch( Exception e1 ) {} }
       }
 

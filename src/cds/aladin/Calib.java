@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,8 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
-
 
 package cds.aladin;
 
@@ -141,11 +141,10 @@ public final class Calib  implements Cloneable {
    static public final int FIE = 13 ;
    static public final int TPV = 14 ;
    static public final int SINSIP = 15 ;
-   static public final int FEYE = 16 ;
 
    // Signature dans les mots clés FITS des différentes projections (l'indice dans le tableau doit correspondre
    // aux constantes statics ci-dessus
-   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP","FEYE" };
+   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP" };
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
    static int getProjType(String s) {//System.out.println("ssss "+s);
@@ -3426,7 +3425,6 @@ public final class Calib  implements Cloneable {
                //System.out.println("xystand"+x_stand+" "+y_stand);
                break ;
             case ZPN:
-            case FEYE:
             case ARC:
                // System.out.println("al del"+al+" "+del);
                if((sin_del*cdelz- cos_del*sdelz *cos_dalpha)!=0)
@@ -3456,12 +3454,6 @@ public final class Calib  implements Cloneable {
                 
              //    System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
               // if (rteta < 0) System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
-               
-               // PF - 21/06/2016
-               if( proj==FEYE && rteta>Math.toRadians(95) ) {
-                  y_stand=x_stand=Double.NaN;
-                  break;
-               }
                
                x_stand = rteta*FastMath.sin(phi) ;
                //                        y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;

@@ -1,61 +1,24 @@
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
+// The Aladin program is distributed under the terms
+// of the GNU General Public License version 3.
 //
-//Copyright 1999-2005 - Universite Louis Pasteur / Centre National de la
-//Recherche Scientifique
+//This file is part of Aladin.
 //
-//------
+//    Aladin is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
 //
-//Address: Centre de Donnees astronomiques de Strasbourg
-//       11 rue de l'Universite
-//       67000 STRASBOURG
-//       FRANCE
-//Email:   cds-question@unistra.fr
+//    Aladin is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
 //
-//-------
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin.
 //
-//In accordance with the international conventions about intellectual
-//property rights this software and associated documentation files
-//(the "Software") is protected. The rightholder authorizes :
-//the reproduction and representation as a private copy or for educational
-//and research purposes outside any lucrative use,
-//subject to the following conditions:
-//
-//The above copyright notice shall be included.
-//
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-//EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-//OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON INFRINGEMENT,
-//LOSS OF DATA, LOSS OF PROFIT, LOSS OF BARGAIN OR IMPOSSIBILITY
-//TO USE SUCH SOFWARE. IN NO EVENT SHALL THE RIGHTHOLDER BE LIABLE
-//FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-//TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
-//THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-//For any other exploitation contact the rightholder.
-//
-//                     -----------
-//
-//Conformement aux conventions internationales relatives aux droits de
-//propriete intellectuelle ce logiciel et sa documentation sont proteges.
-//Le titulaire des droits autorise :
-//la reproduction et la representation a titre de copie privee ou des fins
-//d'enseignement et de recherche et en dehors de toute utilisation lucrative.
-//Cette autorisation est faite sous les conditions suivantes :
-//
-//La mention du copyright portee ci-dessus devra etre clairement indiquee.
-//
-//LE LOGICIEL EST LIVRE "EN L'ETAT", SANS GARANTIE D'AUCUNE SORTE.
-//LE TITULAIRE DES DROITS NE SAURAIT, EN AUCUN CAS ETRE TENU CONTRACTUELLEMENT
-//OU DELICTUELLEMENT POUR RESPONSABLE DES DOMMAGES DIRECTS OU INDIRECTS
-//(Y COMPRIS ET A TITRE PUREMENT ILLUSTRATIF ET NON LIMITATIF,
-//LA PRIVATION DE JOUISSANCE DU LOGICIEL, LA PERTE DE DONNEES,
-//LE MANQUE A GAGNER OU AUGMENTATION DE COUTS ET DEPENSES, LES PERTES
-//D'EXPLOITATION,LES PERTES DE MARCHES OU TOUTES ACTIONS EN CONTREFACON)
-//POUVANT RESULTER DE L'UTILISATION, DE LA MAUVAISE UTILISATION
-//OU DE L'IMPOSSIBILITE D'UTILISER LE LOGICIEL, ALORS MEME
-//QU'IL AURAIT ETE AVISE DE LA POSSIBILITE DE SURVENANCE DE TELS DOMMAGES.
-//
-//Pour toute autre utilisation contactez le titulaire des droits.
-//
+
 package cds.tools;
 
 import static cds.aladin.Constants.DATE_FORMATS;
@@ -2063,17 +2026,36 @@ public final class Util {
    //       }
    //    }
 
+   
+   /** Affiche dans une unité cohérente le chiffre peut être suivi d'une autre unité
+    * par défaut il s'agit de BYTES. ex; 1024m => 1g */
+   static final public String getUnitDisk(String val) throws Exception {
+      int i=0;
+      int unit;
+      long size;
+      for( i=0; i<val.length() && Character.isDigit(val.charAt(i)); i++);
+      if( i==val.length() ) {
+         size = (long)Double.parseDouble(val.trim());
+         unit=0;
+      } else {
+         String s = val.substring(i).trim();
+         unit = Util.indexInArrayOf(s, unites, false);
+         if( unit==-1 ) throw new Exception("Unit unknown !");
+         size = (long)Double.parseDouble( val.substring(0,i));
+      }
+      return getUnitDisk(size,unit,2);
+   }
+
    /**
     * Affiche le chiffre donné avec une unité de volume disque (K M T)
     * @param val taille en octets
+    * @param unit l'unité de départ (par défaut le byte)
+    * @param format le nombre de décimals après la virgule (par défaut 2)
     * @return le volume disque dans une unite coherente + l'unite utilisee
     */
    static final public String unites[] = {"B","KB","MB","GB","TB","PB","EB","ZB"};
-   static final public String getUnitDisk(long val) {
-      return getUnitDisk(val, 2);
-   }
-   static final public String getUnitDisk(long val, int format) {
-      int unit = 0;
+   static final public String getUnitDisk(long val) { return getUnitDisk(val, 0, 2); }
+   static final public String getUnitDisk(long val, int unit, int format) {
       long div,rest=0;
       boolean neg=false;
       if( val<0 ) { neg=true; val=-val; }
@@ -2471,6 +2453,17 @@ public final class Util {
    //
    //       return val;
    //    }
+	
+//	static public void main(String [] a) {
+//       try {
+//         System.out.println("==>"+ getUnitDisk(1024*1024*1024));
+//         System.out.println("==>"+ getUnitDisk((1024*1024)+"KB"));
+//         System.out.println("==>"+ getUnitDisk((1024)+"MB"));
+//      } catch( Exception e ) {
+//         // TODO Auto-generated catch block
+//         e.printStackTrace();
+//      }
+//	}
 
 
 }

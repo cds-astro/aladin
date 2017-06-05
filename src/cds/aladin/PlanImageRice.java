@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -19,9 +21,9 @@
 
 package cds.aladin;
 
-import cds.tools.*;
+import java.util.Date;
 
-import java.util.*;
+import cds.tools.Util;
 
 /**
  * Plan dedie a une image RICE
@@ -36,7 +38,8 @@ public class PlanImageRice extends PlanImage {
          Obj o,ResourceNode imgNode,boolean skip,boolean doClose,Plan forPourcent) {
       super(aladin,file,inImg,label,from,o,imgNode,skip,doClose,forPourcent);
    }
-
+   
+   
    protected boolean cacheImageFits(MyInputStream dis) throws Exception {
 
       int taille;       // nombre d'octets a lire
@@ -164,7 +167,7 @@ public class PlanImageRice extends PlanImage {
    static int nonzero_count[] =null;
    static byte b[] = new byte[1];
 
-   static final protected void setPixVal(byte[] t,int bitpix,int i,int c) {
+   static final public void setPixVal(byte[] t,int bitpix,int i,int c) {
       switch(bitpix) {
          case   8: t[i]=(byte)(0xFF & c);
          break;

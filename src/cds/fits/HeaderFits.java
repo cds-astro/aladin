@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -20,7 +22,9 @@
 package cds.fits;
 
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import cds.aladin.Aladin;
 import cds.aladin.FrameHeaderFits;
@@ -97,7 +101,10 @@ public final class HeaderFits {
    public int getSizeHeader() { return sizeHeader; }
    
    /** retourne la table de hash des mots clés */
-   public Hashtable getHashHeader() { return header; }
+   public Hashtable<String,String> getHashHeader() { return header; }
+   
+   /** Retourne un énumerateur sur la liste des mots clés (ordonnés) */
+   public Enumeration<String> getKeys() { return keysOrder.elements(); }
 
   /** Extraction de la valeur d'un champ FITS. Si on commence par une quote, va jusqu'à la
    * prochaine quote, sinon jusqu'au commentaire, ou sinon la fin de la ligne

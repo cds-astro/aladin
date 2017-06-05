@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -52,7 +54,7 @@ import cds.xml.TableParser;
  * @version 1.1 : (fév 2005) GIF
  * @version 1.0 : (16 juin 2003) creation
  */
-public final class MyInputStream extends FilterInputStream {
+public class MyInputStream extends FilterInputStream {
 
    // La taille des blocs du tampon
    private static final int BLOCCACHE = 65536;
@@ -106,20 +108,22 @@ public final class MyInputStream extends FilterInputStream {
    static final public long PROP    = 1L<<44;
    static final public long SSA     = 1L<<45;
    static final public long SIAV2   = 1L<<46;
+   static final public long EPNTAP  = 1L<<47;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2" };
+      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
+      "EPNTAP" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
    static private final int FITSEND = 1; // Detection de la fin d'entete FITS
 
 
-   private boolean withBuffer; // true si on a demandé une bufferisation
+   protected boolean withBuffer; // true si on a demandé une bufferisation
    private byte cache[]=null; // Le tampon
    private int offsetCache=0; // Position du prochain octet a lire dans le tampon
    private int inCache=0;     // Nombre d'octets disponibles dans le tampon
@@ -129,7 +133,7 @@ public final class MyInputStream extends FilterInputStream {
    private boolean alreadyRead; // true si le flux a deja ete entame
    private long dejaLu;       // Nombre d'octets déjà lu sur le flux
    private String commentCalib=null;  // Calib trouvée dans un segment commentaire (pour JPEG ou PNG)
-   private String filename=null; // Nom du fichier d'origine si connu (pour debug)
+   protected String filename=null; // Nom du fichier d'origine si connu
    private boolean fitsHeadRead; // true si on a déjà charger (ou essayé)
    // toute l'entête fits courante dans le cache (voir hasFitsKey())
 
@@ -176,7 +180,7 @@ public final class MyInputStream extends FilterInputStream {
     * @return le flux lui-meme, ou un nouveau flux s'il s'agit d'un flux
     *          gzippe
     */
-   public MyInputStream startRead() throws IOException {
+   public MyInputStream startRead() throws IOException,Exception {
       
       long t = isGZorBzip2();
       if( (t & GZ)!=0 ) {
@@ -547,6 +551,12 @@ public final class MyInputStream extends FilterInputStream {
                    type |= SIAV2;
                }
 
+               else if( lookForSignature("ID=\"c1min\"", true)>0
+                     && lookForSignature("ID=\"c1max\"", true)>0 
+                     && lookForSignature("ID=\"c2min\"", true)>0
+                     && lookForSignature("ID=\"c2max\"", true)>0) {
+                 type |= EPNTAP;
+             }
             }
          /* } */
 
@@ -2022,7 +2032,7 @@ public final class MyInputStream extends FilterInputStream {
 
       public static void main(String[] args) {
          try {
-            if( args.length==0 ) args = new String[] { "C:\\Users\\Pierre\\Desktop\\Test.prop" };
+            if( args.length==0 ) args = new String[] { "D:\\Skymapper\\Skymapper_0864036950_2016-04-07T03c27c51_24_red.fits.fz" };
             for( int i=0; i<args.length; i++ ) {
                String file=args[i];
                InputStream in = new FileInputStream(new File(file));
@@ -2040,7 +2050,7 @@ public final class MyInputStream extends FilterInputStream {
                f.close();
    //            out.close();
             }
-         } catch( IOException e ) { e.printStackTrace(); }
+         } catch( Exception e ) { e.printStackTrace(); }
       }
 
 }

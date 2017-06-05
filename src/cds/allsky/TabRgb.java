@@ -1,4 +1,6 @@
-// Copyright 2012 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,6 +18,7 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
+
 package cds.allsky;
 
 import java.awt.BorderLayout;

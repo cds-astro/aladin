@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 import static cds.aladin.Constants.REGEX_NUMBER;
@@ -96,6 +97,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    boolean badRaDecDetection;       // true si la détection des colonnes RA et DEC est plus qu'incertaine
    boolean flagVOTable=false;       // True si on est sûr a priori que c'est du VOTable (évite le test)
    boolean flagSIAV2 = false;
+   boolean flagEPNTAP = false;
    boolean flagLabelFromData=false; // True si on laisse possible le renommage du plan par le contenu
 
    protected StringBuffer parsingInfo=null;    // Information éventuelle sur le parsing des données
@@ -667,6 +669,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String utype = leg.getUtype(j);
             String name = leg.getName(j);
             
+            if( indexSTC==-1 && flagEPNTAP && leg.getID(j).equals("s_region") ) {
+               indexSTC=j;
+            }
+            
             if( indexSTC==-1 && Util.indexOfIgnoreCase( value[i], "Polygon ")==0 ) {
                indexSTC=j;
             }
@@ -1194,9 +1200,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          }
          plan.dis=dis;
 
-         flagVOTable=(dis.getType() & MyInputStream.VOTABLE)!=0;
-         flagFootprint = (dis.getType() & MyInputStream.FOV)!=0;
-         flagSIAV2 = (dis.getType() & MyInputStream.SIAV2)!= 0;
+         long type=dis.getType();
+         flagVOTable=(type & MyInputStream.VOTABLE)!=0;
+         flagFootprint = (type & MyInputStream.FOV)!=0;
+         flagSIAV2 = (type & MyInputStream.SIAV2)!= 0;
+         flagEPNTAP = (type & MyInputStream.EPNTAP)!= 0;
          if( flagFootprint ) {
             // devrait etre RESOURCE, mais il y a un bug dans getUnreadBuffer (mange un tag trop en avant)
             endTag = "TABLE";

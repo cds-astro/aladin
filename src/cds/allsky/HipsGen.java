@@ -1,4 +1,6 @@
-// Copyright 2012 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -52,6 +54,10 @@ public class HipsGen {
    private boolean flagMapFits=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
+   
+   private String cache = null; // Path alternatif pour un cache disque (dans le cas d'images compressées)
+   private long cacheSize = -1;  // Taille alternative du cache disque (en Mo)
+   private boolean cacheRemoveOnExit = true; // Suppression ou non du cache en fin de calcul
 
    public String launcher = "Aladin.jar -hipsgen";
 
@@ -144,19 +150,25 @@ public class HipsGen {
     */
    private void setContextFromOptions(String opt, String val) throws Exception {
       // enlève des éventuels apostrophes ou guillemets
-      val = val.replace("\'", "");
-      val = val.replace("\"", "");
-      System.out.println("OPTION: "+opt + "=" + val);
-      
+      if( val!=null ) {
+         val = val.replace("\'", "");
+         val = val.replace("\"", "");
+      }
+      System.out.println("OPTION: "+opt + "=" + (val==null?"null":val));
+
       String alt=obsolete(opt);
       if( alt!=null ) {
          context.warning("Deprecated parameter, use \""+alt+"\"");
          opt=alt;
       }
 
-      // System.out.println(opt +" === " +val);
       if( opt.equalsIgnoreCase("h")) {
          usage(launcher);
+         
+      } else if (opt.equalsIgnoreCase("cache"))              { cache=val;
+      } else if (opt.equalsIgnoreCase("cacheSize"))          { cacheSize = Long.parseLong(val);
+      } else if (opt.equalsIgnoreCase("cacheRemoveOnExit"))  { cacheRemoveOnExit = Boolean.parseBoolean(val);
+
       } else if (opt.equalsIgnoreCase("verbose"))      { Context.setVerbose(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
       } else if (opt.equalsIgnoreCase("hips_order"))   { context.setOrder(Integer.parseInt(val));
@@ -457,11 +469,21 @@ public class HipsGen {
 
       // C'est parti
       try {
-         
-          long t = System.currentTimeMillis();
+
+
+         // Création d'un cache disque si nécessaire
+         MyInputStreamCached.context = context;
+         if( cache!=null || cacheSize!=-1 ) {
+            MyInputStreamCached.setCache( cache==null ? null : new File(cache), cacheSize );
+         }
+
+         long t = System.currentTimeMillis();
          new Task(context,actions,true);
          if( context.isTaskAborting() ) context.abort(context.getTitle("(aborted after "+Util.getTemps(System.currentTimeMillis()-t),'='));
          else {
+            // Suppression du cache disque si nécessaire
+            if( cacheRemoveOnExit ) MyInputStreamCached.removeCache();
+            
             if( !flagMirror ) {
                String id = context.getHipsId();
                if( id==null || id.startsWith("ivo://UNK.AUT") ) {
@@ -472,12 +494,16 @@ public class HipsGen {
             }
             context.done(context.getTitle("THE END (done in "+Util.getTemps(System.currentTimeMillis()-t),'='));
          }
-         
+
       } catch (Exception e) {
          if( context.getVerbose()>0 ) e.printStackTrace();
+         
+         // Suppression du cache disque si spécifique pour éviter d'avoir à recommencer
+         if( cacheRemoveOnExit && cache!=null ) MyInputStreamCached.removeCache();
+         
          context.error(e.getMessage());
-         return;
       }
+      
    }
 
    // Positionnement du frame par défaut (equatorial, sauf s'il y a déjà
@@ -595,6 +621,9 @@ public class HipsGen {
                   "                           auto-adapted to the HiPS" + "\n" +
                   "   nside=nn                HEALPix map NSIDE (only for MAP action) - by default 2048" + "\n" +
                   "   exptime=key             Fits key to use for adjusting variation of exposition" + "\n" +
+                  "   cache=dir               Directory name for an alternative cache disk location" + "\n" +
+                  "   cacheSize=nn            Alternative cache disk size limit (in MB - default 1024" + "\n" +
+                  "   cacheRemoveOnExit=true|false Remove or not the cache disk at the end - default true" + "\n" +
                   "   inRed                   HiPS red path component (RGB action)\n" +
                   "   inGreen                 HiPS green path component (RGB action)\n" +
                   "   inBlue                  HiPS blue path component (RGB action)\n" +

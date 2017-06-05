@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 import static cds.aladin.Constants.ACCESSFORMAT_UCD;
@@ -212,7 +213,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 			
 			if (activeDataLinkGlu != null) {
 				Map<String,String> params = activeDataLinkGlu.getParams();
-				if (params != null) {
+				if (params!=null) {
 					String semantics = activeDataLinkGlu.getParams().get(SEMANTICS);
 					String contentType = activeDataLinkGlu.getParams().get(CONTENTTYPE);
 					
@@ -223,11 +224,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 					} else if (contentType != null && accessUrl != null
 							&& contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {
 						aladin.glu.showDocument("Http", accessUrl, true);
-					} else if (contentType != null && accessUrl != null && contentType.contains(DATATYPE_DATALINK)) {
+					} else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {
 						aladin.mesure.isEnabledDatalinkPopUp = true;
 						aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
 						this.activeDataLinkWord.callArchive(aladin, activeDataLinkSource, true);
-					} else if (accessUrl != null && !accessUrl.isEmpty()) {
+					} else if (accessUrl!=null && !accessUrl.isEmpty()) {
 						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null);//TODO::change to access
 					} else {
 						Aladin.warning("Error in loading datalink",1);

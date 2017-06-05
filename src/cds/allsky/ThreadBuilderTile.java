@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -289,10 +291,7 @@ final public class ThreadBuilderTile {
 
       for( int i=downFiles.size()-1; i>=0; i-- ) {
          SrcFile f1 = downFiles.get(i);
-         if( f1!=null ) {
-            Fits f = f1.fitsfile;
-            f.rmUser();
-         }
+         f1.release();
       }
 
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
@@ -1037,6 +1036,7 @@ final public class ThreadBuilderTile {
          return fitsfile.getFilename();
       }
 
+      /** Ouverture effective du fichier FITS */
       protected void open(int frame) throws Exception {
          if( isOpened==frame ) return;
          if( isOpened!=-1 ) fitsfile.rmUser();  // je ne peux de totue façon pas ouvrir simultanément plusieurs frame du même fichier
@@ -1051,7 +1051,12 @@ final public class ThreadBuilderTile {
          // Mode normal
          else {
             if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);
-            fitsfile=context.cacheFits.getFits(name,mode,true,false);
+            try {
+               fitsfile=context.cacheFits.getFits(name,mode,true,false);
+            } catch( MyInputStreamCachedException e ) {
+               context.taskAbort();
+               throw new Exception();
+            }
          }
 
          // Faut-il associer un Polygon particulier
@@ -1059,8 +1064,16 @@ final public class ThreadBuilderTile {
 
          isOpened=frame;
          fitsfile.addUser();
+         MyInputStreamCached.incActiveFile(name);
 
          blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
+      }
+      
+      /** Libération des ressources associées à la geston de ce fichier Fits */
+      protected void release() {
+         fitsfile.rmUser();
+         MyInputStreamCached.decActiveFile(name);
+         isOpened=-1;
       }
 
       // J'ai [ext;x,y-wxh] et je veux [ext;x,y,z-w*h*d]

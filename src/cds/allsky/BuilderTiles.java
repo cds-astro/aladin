@@ -1,4 +1,6 @@
-// Copyright 2012 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -521,7 +523,6 @@ public class BuilderTiles extends Builder {
    protected void activateCache(long size,long sizeCache) {
       context.setCache(new CacheFits(sizeCache));
       context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cds.tools.Util.getUnitDisk(sizeCache));
-
    }
 
    /** Création d'un losange et de toute sa descendance si nécessaire.

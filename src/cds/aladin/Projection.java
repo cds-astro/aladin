@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 
@@ -76,8 +77,8 @@ public final class Projection {
    protected Coord coo[];			// Liste de quadruplets pour methode QUADRUPLET de recalibration
 
    // Liste des projections comme elles apparaissent dans Aladin, et correspondances dans Calib
-   static String [] alaProj            = {"Sinus", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mollweide", "Arc", "Fisheye" };
-   static String [] alaProjToType      = {"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC", "FEYE" };
+   static String [] alaProj            = {"Spheric", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mollweide", "Arc" };
+   static String [] alaProjToType      = {"SIN",     "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC" };
 
 
    /** Retourne l'indice de la signature de la projection (case insensitive, qu'il s'agisse de son nom complet
@@ -114,11 +115,11 @@ public final class Projection {
 
    protected double getRaMax() { return getRaMax(t); }
    static protected double getRaMax(int t) {
-      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.FEYE ? 180 :360;
+      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP ? 180 :360;
    }
 
    protected double getDeMax() {
-      return t==Calib.FEYE ? 90 : t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.AIT || t==Calib.CAR || t==Calib.MOL
+      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.AIT || t==Calib.CAR || t==Calib.MOL
             || t==Calib.ZEA || t==Calib.ARC ? 180 : 360;
    }
 

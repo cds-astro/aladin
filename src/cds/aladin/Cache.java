@@ -1,4 +1,6 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -16,7 +18,6 @@
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
 
 package cds.aladin;
 
@@ -240,7 +241,7 @@ Aladin.trace(3,"Clear cache");
    /** Codage d'une chaine pour servir en tant que nom de fichier.
     * Remplace tous ce qui n'est ni lettre ni chiffre en code hexa
     * préfixé par _ */
-   static private String codage(String s) {
+   static public String codage(String s) {
       StringBuffer r = new StringBuffer();
       char a[] = s.toCharArray();
       for( int i=0; i<a.length; i++ ) {
@@ -252,7 +253,7 @@ Aladin.trace(3,"Clear cache");
    }
    
    /** Réciproque à la fonction codage() */
-   static private String decodage(String s) {
+   static public String decodage(String s) {
       StringBuffer r = new StringBuffer();
       char a[] = s.toCharArray();
       for( int i=0; i<a.length; i++ ) {

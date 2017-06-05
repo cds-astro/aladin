@@ -1,4 +1,6 @@
-// Copyright 2012 - UDS/CNRS
+// Copyright 1999-2017 - Université de Strasbourg/CNRS
+// The Aladin program is developped by the Centre de Données
+// astronomiques de Strasbourgs (CDS).
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -375,6 +377,8 @@ public class BuilderIndex extends Builder {
                   addBadFile(currentfile,e1.getMessage());
                   break;
                }
+            } catch( MyInputStreamCachedException e ) {
+               context.taskAbort();
             }  catch (Exception e) {
                Aladin.trace(3,e.getMessage() + " " + currentfile);
                break;
@@ -473,7 +477,7 @@ public class BuilderIndex extends Builder {
       // On estime la RAM nécessaire au chargement d'une cellule du fichier
       long cellMem = fitsfile.widthCell * fitsfile.heightCell * (fitsfile.bitpix==0 ?32 : Math.abs( fitsfile.bitpix ) /8);
 
-      long[] npixs;
+      long[] npixs=null;
       long nside = CDSHealpix.pow2(order);
 //      Coord c1 = new Coord(cooList.get(0)[0],cooList.get(0)[1]);
       Coord c1 = corner[0];
@@ -482,8 +486,13 @@ public class BuilderIndex extends Builder {
       // Si le rayon est trop grand on préfèrera une requête pour cone pour
       // éviter le risque d'un polygone sphérique concave
       if( radius<30 ) {
-         npixs = CDSHealpix.query_polygon(nside, cooList);
-      } else {
+         try {
+            npixs = CDSHealpix.query_polygon(nside, cooList);
+         } catch( Exception e ) { }
+      }
+         
+      // Deuxième essai via un disque plutôt qu'un polygone
+      if( npixs==null ) {
          try {
             double cent[] = context.ICRS2galIfRequired(center.al, center.del);
             npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], radius);
