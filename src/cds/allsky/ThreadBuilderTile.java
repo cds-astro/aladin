@@ -291,7 +291,7 @@ final public class ThreadBuilderTile {
 
       for( int i=downFiles.size()-1; i>=0; i-- ) {
          SrcFile f1 = downFiles.get(i);
-         f1.release();
+         try { if( f1!=null ) f1.release(); } catch( Exception e ) { }
       }
 
       if( context.isTaskAborting() ) throw new Exception("Task abort !");

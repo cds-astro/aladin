@@ -69,14 +69,14 @@ public class MyInputStreamCached extends MyInputStream {
       
       long type = getType(10000);
       
-      if( (type&XFITS)!=0 ) {
-         skip(2880);   // AVANT DE FAIRE CELA, IL FAUDRAIT ETRE SUR QUE C'EST BIEN DU RICE DERRIERE
-         resetType();
-         type=getType();
-         if( (type&RICE)==0 ) throw new Exception("Bad RICE detection");
-      }
+//      if( (type&XFITS)!=0 ) {
+//         skip(2880);   // AVANT DE FAIRE CELA, IL FAUDRAIT ETRE SUR QUE C'EST BIEN DU RICE DERRIERE
+//         resetType();
+//         type=getType();
+//         if( (type&RICE)==0 ) throw new Exception("Bad RICE detection");
+//      }
       
-      if( (type & ( GZ|BZIP2|XFITS|RICE) )==0 ) return this;
+      if( (type & ( GZ|BZIP2|RICE) )==0 ) return this;
       
       synchronized( lock ) {
          if( (type & (GZ|BZIP2))!=0 )    return convertGZorBzip2(type);
@@ -152,6 +152,9 @@ public class MyInputStreamCached extends MyInputStream {
          // Ajustement éventuelle de la taille du cache en supposant que le fichier
          // décompresser prendra au mieux 3x la taille du fichier compressé
          checkCache( (new File(filename)).length()*(3/(1024*1024.)) );
+         
+         // Skip de la première HDU
+         skip(2880); 
          
          // Décompression
          OutputStream out = null;

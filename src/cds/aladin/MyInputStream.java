@@ -121,6 +121,7 @@ public class MyInputStream extends FilterInputStream {
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
    static private final int FITSEND = 1; // Detection de la fin d'entete FITS
+   static private final int FITSEND2 = 2; // Detection de la fin de la deuxième entete FITS (cas RICE)
 
 
    protected boolean withBuffer; // true si on a demandé une bufferisation
@@ -300,12 +301,19 @@ public class MyInputStream extends FilterInputStream {
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
 
-      // Detection de HCOMP
-      int n = findFitsEnd();
-      int c0 =  (cache[n]) & 0xFF;
-      int c1 =  (cache[n+1]) & 0xFF;
-      //System.out.println("FITS Data magic code "+c0+" "+c1);
-      if( c0==221 && c1==153 ) type |= HCOMP;
+      // Rice
+      if(  (type&XFITS)!=0 ) {
+         findFitsEnd2();
+         if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
+         
+         // Detection de HCOMP
+      } else {
+         int n = findFitsEnd();
+         int c0 =  (cache[n]) & 0xFF;
+         int c1 =  (cache[n+1]) & 0xFF;
+         //System.out.println("FITS Data magic code "+c0+" "+c1);
+         if( c0==221 && c1==153 ) type |= HCOMP;
+      }
    }
 
    /**
@@ -439,7 +447,7 @@ public class MyInputStream extends FilterInputStream {
             type |= FITSB;
 
             // Compression RICE
-            if(  hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
+            if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
 
             // Pour répérer les tables AIPS CC de calculs intermédiaires
             else if( hasFitsKey("EXTNAME","AIPS CC") && hasFitsKey("TFIELDS","3")
@@ -1906,6 +1914,19 @@ public class MyInputStream extends FilterInputStream {
       return posAfterFitsHead;
    }      
 
+   /**
+    * Detection de la fin de la deuxième entete FITS.
+    * Genere un EOFException si non trouve
+    * @return la position du premier octet qui suit l'entete FITS (mod 80 et non 2880)
+    *         dans le tampon.
+    */
+   private int findFitsEnd2() throws IOException {
+      if( fitsHeadRead ) return posAfterFitsHead;
+      posAfterFitsHead =  findSignature("END",false,FITSEND2);
+      fitsHeadRead=true;
+      return posAfterFitsHead;
+   }      
+
    /** Détermine si le flux contient un mot clé Fits "KEY   = Value" ou  "KEY   = 'Value'"
     *  Va au préalable charger le tampon jusqu'au prochain END en position %80 si nécessaire
     *  @param key Le mot clé fits recherché (sans blanc ni égale (=), en majuscules
@@ -1989,7 +2010,8 @@ public class MyInputStream extends FilterInputStream {
          throws IOException {
       int offset=offsetCache;	// position ou l'on commence la recherche
       int n;
-
+      int nbEnd=0;
+      
       do {
 
          // Recherche de la signature, avec reiteration (augmente le tampon)
@@ -2011,15 +2033,25 @@ public class MyInputStream extends FilterInputStream {
                // des donnees FITS pour preparer un eventuel test
                // du MAGIC NUMBER de HCOMP
                if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
-               //for( int i=n-3; i<dataFits+2; i++ ) {
-               //   if( i%10==0 ) System.out.println();
-               //   char x = (char)cache[i];
-               //   if( x>'A' && x<'Z' ) System.out.print(x);
-               //   else System.out.print(" "+(((int)cache[i])&0xFF));
-               //}
-               //System.out.println();
 
                return dataFits;
+               
+            // Dans le cas de la méthode FITSEND2, on va lire également la deuxième entête
+            } else if( methode==FITSEND2 ) {
+               if( (n-sig.length())%80==0) {
+                  nbEnd++;
+                  if( nbEnd==2 ) {
+                     int dataFits = ((n/80)+1)*80;
+                     //System.out.println("==> Data fits offset "+dataFits);
+
+                     // On remplit le cache jusqu'au deux premiers bytes
+                     // des donnees FITS pour preparer un eventuel test
+                     // du MAGIC NUMBER de HCOMP
+                     if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
+
+                     return dataFits;
+                  }
+               }
             }
 
             offset=n;
