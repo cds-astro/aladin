@@ -43,8 +43,8 @@ public class BuilderMoc extends Builder {
    protected int tileOrder;
    protected boolean isMocHight;
    
-   private String ext=null; // Extension à traiter, null si non encore affectée.
-   private int frameCube=-1; // Numéro de la frame à utiliser pour générer le MOC dans le cas d'un gros cube (depth>10)
+   protected String ext=null; // Extension à traiter, null si non encore affectée.
+   protected int frameCube=-1; // Numéro de la frame à utiliser pour générer le MOC dans le cas d'un gros cube (depth>10)
 
    public BuilderMoc(Context context) {
       super(context);
@@ -136,12 +136,12 @@ public class BuilderMoc extends Builder {
    long startTime=0L;
    int nbTiles = -1;
    
-   private void initStat() {
+   protected void initStat() {
       startTime = System.currentTimeMillis();
       nbTiles=1;
    }
    
-   private void updateStat() {
+   protected void updateStat() {
       nbTiles++;
    }
    
@@ -195,7 +195,7 @@ public class BuilderMoc extends Builder {
       }
    }
    
-   private void generateTileMoc(HealpixMoc moc,File f,int fileOrder, long npix) throws Exception {
+   protected void generateTileMoc(HealpixMoc moc,File f,int fileOrder, long npix) throws Exception {
       updateStat();
       if( isMocHight ) generateHighTileMoc(moc,fileOrder,f,npix);
       else moc.add(fileOrder,npix);
@@ -203,15 +203,17 @@ public class BuilderMoc extends Builder {
    
    private void generateHighTileMoc(HealpixMoc moc,int fileOrder, File f, long npix) throws Exception {
       Fits fits = new Fits();
-      MyInputStream dis = new MyInputStream(new FileInputStream(f));
-      dis=dis.startRead();
+      MyInputStream dis = null;
       try {
+         dis = new MyInputStream(new FileInputStream(f));
+         dis=dis.startRead();
          fits.loadFITS(dis);
+         dis.close();
+         dis=null;
       }catch( Exception e ) {
          System.err.println("f="+f.getAbsolutePath());
          throw e;
-      }
-      dis.close();
+      } finally { if( dis!=null ) dis.close(); }
       
       long nside = fits.width;
       long min = nside * nside * npix;
@@ -250,7 +252,7 @@ public class BuilderMoc extends Builder {
 
    
    // Retourne l'extension du fichier passé en paramètre, "" si aucune
-   private String getExt(String file) {
+   protected String getExt(String file) {
       int offset = file.lastIndexOf('.');
       if( offset == -1 ) return "";
       int pos = file.indexOf(Util.FS,offset);
@@ -259,7 +261,7 @@ public class BuilderMoc extends Builder {
    }
    
    // Retourne le numéro de la frame dans le cas d'une tuile de cube, 0 si non trouvé
-   private int getCubeFrameNumber(String file) {
+   protected int getCubeFrameNumber(String file) {
       try {
          int fin = file.lastIndexOf('.');
          int deb = file.lastIndexOf('_',fin);

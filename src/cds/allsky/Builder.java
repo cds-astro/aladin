@@ -51,6 +51,7 @@ public abstract class Builder {
          case JPEG:      return new BuilderJpg(context);
          case PNG:       return new BuilderPng(context);
          case MOC:       return new BuilderMoc(context);
+         case MOCERROR:  return new BuilderMocError(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
          case CLEAN:     return new BuilderClean(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);

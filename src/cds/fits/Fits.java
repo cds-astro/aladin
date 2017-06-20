@@ -610,6 +610,7 @@ final public class Fits {
    public void loadFITS(MyInputStream dis) throws Exception {
       loadFITS(dis, 0,  0,0,0, -1,-1,-1);
    }
+   
 
    /** Chargement d'une cellule d'une image FITS */
    public void loadFITS(MyInputStream dis, int ext, int x, int y, int z, int w, int h, int d) throws Exception,MyInputStreamCachedException {
@@ -1101,8 +1102,7 @@ final public class Fits {
       }
 
       // Bourrage final
-      // POUR DES TUILES HiPS, PAS NECESSAIRE
-      //      os.write(getBourrage(size)); // Quel gachi !
+      os.write(getBourrage(size)); // Quel gachi !
    }
 
    /** Génération d'un fichier FITS (sans calibration) */

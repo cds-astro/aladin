@@ -35,6 +35,7 @@ public class Constante {
    static final public String FILE_PROPERTIES  = "properties";
    static final public String FILE_HPXFINDER   = "HpxFinder";
    public static final String FILE_MOC         = "Moc.fits";
+   public static final String FILE_MOCERROR    = "MocError.fits";
    static final public String FILE_METADATAXML = "metadata.xml";
    static final public String FILE_METADATATXT = "metadata.txt";
    

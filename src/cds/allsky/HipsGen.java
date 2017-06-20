@@ -49,6 +49,7 @@ public class HipsGen {
    private boolean flagMirror=false;
    private boolean flagUpdate=false;
    private boolean flagLint=false;
+   private boolean flagMocError=false;
    private boolean flagMethod=false;
    private boolean flagRGB=false;
    private boolean flagMapFits=false;
@@ -314,6 +315,7 @@ public class HipsGen {
                if( a==Action.MIRROR ) flagMirror=true;
                if( a==Action.UPDATE ) flagUpdate=true;
                if( a==Action.LINT )   flagLint=true;
+               if( a==Action.MOCERROR ) flagMocError=true;
                if( a==Action.CONCAT ) {
                   flagConcat=true;
                   if( !flagMode ) context.setMode(Mode.AVERAGE);
@@ -412,7 +414,7 @@ public class HipsGen {
             } catch( Exception e ) { }
          }
          
-         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint) {
+         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint && !flagMocError) {
             String s = context.checkHipsId(context.hipsId);
             context.setHipsId(s);
          }
@@ -648,7 +650,7 @@ public class HipsGen {
             "   PNG        "+Action.PNG.doc() + "\n" +
             "   RGB        "+Action.RGB.doc() + "\n" +
             "   MOC        "+Action.MOC.doc() + "\n" +
-            //            "   MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
+            //            "   MOCERROR   "+Action.MOCERROR.doc() + "\n" +
             "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+
             "   TREE       "+Action.TREE.doc() + "\n"+
             "   MAPTILES   "+Action.MAPTILES.doc() + "\n"+
