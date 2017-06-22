@@ -1949,7 +1949,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         // TODO : rendre tout cela thread-safe
 
         public void actionPerformed(ActionEvent e) {
-           if( true || ! Aladin.PROTO ) return;
+           if( ! Aladin.PROTO ) return;
 
            String s = e.getActionCommand();
 

@@ -833,7 +833,7 @@ public class PlanBG extends PlanImage {
    protected void suite() {
 
       if( this.label==null || this.label.trim().length()==0) setLabel( id!=null ? id : survey);
-      int defaultProjType = Aladin.PROTO ? aladin.projSelector.getProjType() 
+      int defaultProjType = Aladin.BETA ? aladin.projSelector.getProjType() 
                : aladin.configuration.getProjAllsky();
       if( co==null  ) {
          flagNoTarget=true;
@@ -846,7 +846,7 @@ public class PlanBG extends PlanImage {
       objet = co+"";
 
       // On va garder le même type de projection que le plan de base.
-      if( Aladin.PROTO ) {
+      if( Aladin.BETA ) {
          Plan base = aladin.calque.getPlanBase();
          if( base instanceof PlanBG ) defaultProjType = base.projd.t;
       }

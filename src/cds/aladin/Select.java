@@ -810,7 +810,7 @@ Runnable, SwingWidgetFinder, Widget {
          }
 
          // thomas
-         if( p.isCatalog() && p.active)  PlanFilter.updatePlan(p);
+//         if( p.isCatalog() && p.active)  PlanFilter.updatePlan(p);
       }
       return true;
    }

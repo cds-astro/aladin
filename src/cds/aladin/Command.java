@@ -527,11 +527,23 @@ public final class Command implements Runnable {
          Tok st = new Tok(param);
          while( st.hasMoreTokens() ) {
             String s = st.nextToken();
-            Plan p = getPlanFromParam(s,method==2?1:0);
-            if( p==null ) continue;
-            if( method==1 && !p.isPixel()) continue;
-            if( method==3 && p.type!=Plan.FOLDER ) continue;
-            if( p!=null ) {
+            
+            // Requête avec jokers
+            if( s.indexOf('*')>=0 || s.indexOf('?')>=0 ) {
+               for( Plan p: allPlan ) {
+                  if( p==null ) continue;
+                  if( method==1 && !p.isPixel()) continue;
+                  if( method==3 && p.type!=Plan.FOLDER ) continue;
+                  if( !Util.matchMask(s, p.label) ) continue;
+                  if( p.flagOk || method==4 ) v.addElement(p);
+               }
+               
+            // requete simple
+            } else {
+               Plan p = getPlanFromParam(s,method==2?1:0);
+               if( p==null ) continue;
+               if( method==1 && !p.isPixel()) continue;
+               if( method==3 && p.type!=Plan.FOLDER ) continue;
                if( p.flagOk || method==4 ) v.addElement(p);
             }
          }
@@ -998,7 +1010,7 @@ public final class Command implements Runnable {
       String server = st.nextToken();
       if( server.equalsIgnoreCase("allsky") ) server="hips";   // pour compatibilité
       if( !withServer || a.dialog.getServer(server)<0 
-            && (!Aladin.PROTO || Aladin.PROTO && !server.equalsIgnoreCase("HiPS"))) {
+            && (!Aladin.BETA || Aladin.BETA && !server.equalsIgnoreCase("HiPS"))) {
 
          // Si la vue courante est vide il faut prendre
          // la liste des serveurs par defaut
@@ -1253,7 +1265,7 @@ public final class Command implements Runnable {
          Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] criteria=["+criteria+"] target=["+target+"] radius=["+radius+"])");
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
 
-         if( Aladin.PROTO && server.equalsIgnoreCase("hips") ) {
+         if( Aladin.BETA && server.equalsIgnoreCase("hips") ) {
             int n=a.directory.createPlane(target,radius,criteria,label,null);
             if( n!=-1 ) {
                a.calque.getPlan(n).setBookmarkCode("get "+server+(criteria.length()>0?"("+criteria+")":"")+" $TARGET $RADIUS");

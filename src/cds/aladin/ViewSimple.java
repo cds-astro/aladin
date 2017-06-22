@@ -6930,7 +6930,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * détecter un clic dedans */
    private void drawLanguette(Graphics g) {
       rLanguette = null;
-      if( !Aladin.PROTO ) return;
+      if( !Aladin.BETA ) return;
       if( aladin.splitHiPSWidth.getCompSize()>10 ) return;
       int nb = view.getModeView();
       int ok = nb==ViewControl.MVIEW1 ? 0 : nb==ViewControl.MVIEW2C ? 1 : nb==ViewControl.MVIEW2L ? 0 

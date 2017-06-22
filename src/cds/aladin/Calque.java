@@ -370,8 +370,13 @@ public class Calque extends JPanel implements Runnable {
    /** Activation ou desactivation de tous les plans d'un folder */
    protected void setActiveFolder(Plan f,boolean flag) {
       Plan p[] = getFolderPlan(f);
-      for( int i=0; i<p.length; i++ ) p[i].setActivated(flag);
-      f.active=flag;
+//      for( int i=0; i<p.length; i++ ) p[i].setActivated(flag);
+//      f.active=flag;
+      for( int i=p.length-1; i>=0; i-- ) {
+         p[i].setActivated(flag);
+//         if( p[i].isCatalog() && p[i].active)  PlanFilter.updatePlan(p[i]);
+      }
+      f.setActivated(flag);
       repaintAll();
    }
 
@@ -1355,7 +1360,7 @@ public class Calque extends JPanel implements Runnable {
          if( setPlanRef(p) ) aladin.view.newView();
       } else if( !aladin.view.tryToShow(p) ) p.setActivated(true);
       
-      if( p.isCatalog() && p.active)  PlanFilter.updatePlan(p);
+//      if( p.isCatalog() && p.active)  PlanFilter.updatePlan(p);
       if( flagPaint ) repaintAll();
    }
 
@@ -3978,7 +3983,7 @@ public class Calque extends JPanel implements Runnable {
          zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();
-         if( Aladin.PROTO ) aladin.directory.repaint();
+         if( Aladin.BETA ) aladin.directory.repaint();
          aladin.toolBox.toolMode();
       }
    }

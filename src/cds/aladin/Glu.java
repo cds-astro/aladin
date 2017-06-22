@@ -263,7 +263,7 @@ public final class Glu implements Runnable {
       aladin.dialog = new ServerDialog(aladin);
       if( showLastGlu ) {
          int c1 = aladin.dialog.getLastGluServerIndice();
-         if (Aladin.PROTO) {
+         if (Aladin.BETA) {
         	 if (lastTapGluServer != null) {
             	 c1 = aladin.dialog.getTapServerIndex();
             	 aladin.dialog.findReplaceServer(aladin.dialog.tapServer, lastTapGluServer);
@@ -278,7 +278,7 @@ public final class Glu implements Runnable {
          
          if( c1!=-1 ) c=c1;
       }
-      if (Aladin.PROTO) {
+      if (Aladin.BETA) {
     	  tapManager.reloadTapServerList();
       }
       
@@ -1683,7 +1683,7 @@ public final class Glu implements Runnable {
                try {
                   if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
                      if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                     else if( flagGluSky && !Aladin.PROTO ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+                     else if( flagGluSky && !Aladin.BETA ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                            aladinSurvey,aladinHpxParam,skyFraction,origin);
                      else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,

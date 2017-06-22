@@ -369,7 +369,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          vizierServer = svizier = new ServerVizieR(aladin, this, actions);
          if( !Aladin.OUTREACH ) {
             sv.addElement(svizier);
-            if( !Aladin.PROTO ) {
+            if( !Aladin.BETA ) {
                sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
                      ((ServerVizieR) svizier).vSurveys));
                sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
@@ -377,12 +377,12 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
             }
             sv.addElement(new ServerSimbad(aladin));
             sv.addElement(new ServerNED(aladin));
-            if( Aladin.BETA && !Aladin.PROTO) {
+            if( !Aladin.BETA ) {
 //               sv.addElement(new ServerSWarp(aladin));
                sv.addElement(new ServerMocQuery(aladin));
             }
 //            if( Aladin.PROTO) sv.addElement(new ServerXmatch(aladin));
-            if( Aladin.PROTO ) {//TODO:: tintinproto
+            if( Aladin.BETA ) {//TODO:: tintinproto
             	this.tapManager = TapManager.getInstance(aladin);
             	
             	tapServer = new ServerTap(aladin);
@@ -417,7 +417,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       if( !Aladin.OUTREACH ) sv = triServer(sv);
 
       // L'arbre des HiPS
-      if( !Aladin.PROTO ) sv.addElement(hipsServer = new ServerHips(aladin));
+      if( !Aladin.BETA ) sv.addElement(hipsServer = new ServerHips(aladin));
 
       // L'acces local/url
       sv.addElement(localServer = new ServerFile(aladin));
@@ -426,7 +426,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       discoveryServer = null;
 
       // Le mode discovery
-      if( !Aladin.OUTREACH && Aladin.NETWORK && !Aladin.PROTO) {
+      if( !Aladin.OUTREACH && Aladin.NETWORK && !Aladin.BETA) {
          discoveryServer = new ServerAllVO(aladin);
          sv.addElement(discoveryServer);
       }
@@ -676,7 +676,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       aladin.manageDrop();
 
-      if( !Aladin.PROTO ) setCurrent("hips");
+      if( !Aladin.BETA ) setCurrent("hips");
       else setCurrent("file");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
@@ -1325,7 +1325,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       int i = findIndiceServer(nom);
       if( i<0 ) return false;
       
-      if (Aladin.PROTO && "TAP".equals(nom)) {//TODO::tintinproto
+      if (Aladin.BETA && "TAP".equals(nom)) {//TODO::tintinproto
     	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
   			return false;
       	  };
@@ -1544,7 +1544,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       // Changement du formulaire
       server[current].memTarget(); // Memorisation du precedent target
-      if (Aladin.PROTO && "TAP".equals(what)) {//TODO::tintinproto
+      if (Aladin.BETA && "TAP".equals(what)) {//TODO::tintinproto
     	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
 			return false;
     	  };
@@ -1590,7 +1590,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    }
 
    public void hide() {
-      if( !aladin.PROTO ) stopHipsUpdater();
+      if( !aladin.BETA ) stopHipsUpdater();
       super.hide();
    }
 

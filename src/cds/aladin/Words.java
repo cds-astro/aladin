@@ -305,7 +305,7 @@ public final class Words implements Runnable {
    private Obj _o;
 
    protected void callArchive(Aladin aladin,Obj o, boolean isDatalinkCall) {
-      if (Aladin.PROTO && isDatalinkCall) {
+      if (Aladin.BETA && isDatalinkCall) {
          this.callArchive = true;
          this.getDatalinks = true;
 

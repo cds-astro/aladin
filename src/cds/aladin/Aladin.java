@@ -185,15 +185,16 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
- * @beta    <LI> Polarisation segment size normalized
+ * @beta    <LI> Filter activation by script
+ * @beta    <LI> Polarisation segment size normalized bug fixing
  * @beta    <LI> Phot tool clic&drag fix
- * @beta    <LI> Fix to VOTable UTF-16 STREAM bug
- * @beta    <LI> Fix to Hipsgen mirror filenotfound bug
+ * @beta    <LI> Correction for VOTable UTF-16 STREAM bug
+ * @beta    <LI> Correction for Hipsgen mirror filenotfound bug
  * @beta    <LI> MOC stack bug introduced in v9.039
- * @beta    <LI> Fix to BLANK wrong value in Hipsgen MAPTILES action
- * @beta    <LI> Fix to radians unit support for table coordinates
- * @beta    <LI> Fix to pmra and pmde detection
- * @beta    <LI> Fix to ZEA and ARC projection in HiPS context
+ * @beta    <LI> Bug correction for BLANK wrong value in Hipsgen MAPTILES action
+ * @beta    <LI> Bug correction for radians unit support for table coordinates
+ * @beta    <LI> Bug correction for pmra and pmde detection
+ * @beta    <LI> Bug correction for ZEA and ARC projection in HiPS context
  * @beta    <LI> Graphical object mouse selection over a HiPS
  * @beta    <LI> HiPS catalog "ghost" source selection
  * @beta    <LI> File dialog window directory selection on MacOs and Linux
@@ -224,7 +225,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.630";
+   static public final    String VERSION = "v10.000";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -255,7 +256,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static boolean LOG=true;  // false si on inhibe les logs
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
-   public static boolean PROTO=true;    // true si on tourne en mode PROTO (nécessite Proto.jar)
+   public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
    static public boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
    static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
@@ -333,7 +334,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_BACKGROUND = new Color(250,250,250); //Color.white;
       COLOR_FOREGROUND = Color.black;
       COLOR_MAINPANEL_BACKGROUND = new Color(235,235,255);
-      COLOR_CONTROL_BACKGROUND = PROTO ? new Color(229,229,229)  : (new JButton()).getBackground();
+      COLOR_CONTROL_BACKGROUND = BETA ? new Color(229,229,229)  : (new JButton()).getBackground();
       COLOR_CONTROL_FOREGROUND = new Color(60,60,60); //new Color(128, 128, 128); // Color.gray; 
       COLOR_CONTROL_FOREGROUND_HIGHLIGHT = Color.black;
       COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(180,183,187);
@@ -529,7 +530,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static Aladin aladin;
 
    static boolean PLASTIC_SUPPORT = true; // activation ou non du support PLASTIC/SAMP
-   static boolean USE_ACR = false; // True si on utilise les librairies ACR (AstroGrid)
 
 //   private Banner banner=null;
 
@@ -1386,7 +1386,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             },
       };
       
-      if( PROTO ) {
+      if( BETA ) {
          
          OPENDIRIMG     = "Image surveys...";
          OPENDIRCUBE    = "Cube surveys...";
@@ -2280,7 +2280,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //      saisie.add(saisie1,BorderLayout.SOUTH);
       saisie.add(localisation, BorderLayout.CENTER);
       
-      if( !OUTREACH && PROTO )  saisie.add(projSelector, BorderLayout.EAST);
+      if( !OUTREACH && BETA )  saisie.add(projSelector, BorderLayout.EAST);
       
       //       if( !OUTREACH && !BETA ) saisie.add(pixel);
 
@@ -2428,7 +2428,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       mainRight.add(haut,BorderLayout.NORTH);
       mainRight.add(splitV,BorderLayout.CENTER);
       
-      if( PROTO ) {
+      if( BETA ) {
          directory = new Directory(aladin, COLOR_DIRECTORY_BACKGROUND );
          splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, mainRight,0);
          directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
@@ -2858,11 +2858,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
     *         ou 0 si s==null ou d'un mauvais format;
     */
    protected int numVersion(String s) {
-      if( s==null || s.length()<6 ) return 0;
-      char [] a = s.toCharArray();
-      if( a[0]!='v' || a[2]!='.' ) return 0;
-      int i= (a[1]-'0')*10 + (a[3]-'0');
-      return i;
+//      if( s==null || s.length()<6 ) return 0;
+//      char [] a = s.toCharArray();
+//      if( a[0]!='v' || a[2]!='.' ) return 0;
+//      int j= (a[1]-'0')*10 + (a[3]-'0');
+//      return j;
+      
+      try {
+         int i = s.indexOf('.');
+         int entiere = Integer.parseInt( s.substring(1,i) );
+         int decimal = Integer.parseInt( s.substring(i+1,i+2) );
+         int version = entiere*10 + decimal;
+//         System.out.println("Version => "+version);
+         return version;
+      } catch( Exception e ) {
+         e.printStackTrace();
+         return 0;
+      }
    }
 
    /** Transformation de la chaine du numero de version vx.xxx en valeur
@@ -4047,7 +4059,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void loadMoc() {
-      if( PROTO ) {
+      if( BETA ) {
          directory.focusSearch();
          return;
       }
@@ -4526,7 +4538,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          // Deselection des objets en cours dans le cas ou une application
          // type VOPlot est utilisee en parallele
-         if (Aladin.PROTO) {//TODO:: tintinproto
+         if (Aladin.BETA) {//TODO:: tintinproto
             glu.tapManager.cleanUp();
          }
          
@@ -4570,7 +4582,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try { plugins.cleanup(); } catch( Exception e ) {}
       }
       
-      if (Aladin.PROTO) {//TODO:: tintinproto
+      if (Aladin.BETA) {//TODO:: tintinproto
     	  glu.tapManager.finalCleanUp();
       }
 
@@ -5928,9 +5940,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       //      if( chart!=null ) NOGUI=true;
 
-      // TODO : à supprimer
-      USE_ACR = PROTO;
-
       // Création d'Aladin
       setMacWinLinuxProperties(); // indispensable d'appeler cette méthode avant la création de l'objet Aladin !
       aladin = new Aladin();
@@ -5997,7 +6006,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Retourne true si le dialog est prêt */
    protected boolean dialogOk() {
-      if( Aladin.PROTO ) return dialog!=null && calque!=null && directory!=null && directory.dialogOk() ;
+      if( Aladin.BETA ) return dialog!=null && calque!=null && directory!=null && directory.dialogOk() ;
       return dialog!=null && calque!=null;
    }
 

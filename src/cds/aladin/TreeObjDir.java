@@ -481,7 +481,7 @@ public class TreeObjDir extends TreeObj {
 
       if( color && !inJPEG && !inPNG ) inJPEG=true;
       
-      if( !Aladin.PROTO ) {
+      if( !Aladin.BETA ) {
          if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
          setMoc();
       }
@@ -560,7 +560,7 @@ public class TreeObjDir extends TreeObj {
    
    protected JPanel createPanel() {
       
-      if( !Aladin.PROTO ) return super.createPanel(); 
+      if( !Aladin.BETA ) return super.createPanel(); 
       
       JLabel lab = new JLabel(label);
       lab.setBackground( background );

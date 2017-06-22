@@ -160,7 +160,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 	*/
    public void datalinkPopupShow(List<SimpleData> datalinksInfo) {
 	   
-		if (Aladin.PROTO && aladin.mesure.isEnabledDatalinkPopUp) {//TODO tintinproto
+		if (Aladin.BETA && aladin.mesure.isEnabledDatalinkPopUp) {//TODO tintinproto
 
 			if (datalinksInfo != null && !datalinksInfo.isEmpty()) {
 				aladin.makeCursor(mcanvas, Aladin.DEFAULTCURSOR);

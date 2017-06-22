@@ -1955,6 +1955,9 @@ public class Plan implements Runnable {
       //   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
       if( !active ) aladin.view.deSelect(this);
       else aladin.view.addTaggedSource(this);
+      
+      // Activation le cas échéant d'un filtre qui serait associé
+      if( isCatalog() && active)  PlanFilter.updatePlan(this);
 
       // Activation automatique du SED associé au plan (le cas échéant)
       if( active && isSED() ) {

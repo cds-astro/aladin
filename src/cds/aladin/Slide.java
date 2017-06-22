@@ -544,7 +544,13 @@ public final class Slide {
             
             // Sinon, dessin du calque en fonction du mode activé ou non
          } else {
-            if( p.type==Plan.FOLDER ) g.setColor(!p.active || canBeTransparent ? Color.yellow:jauneGris);
+            if( p.type==Plan.FOLDER ) {
+               
+               // changement éventuel d'état si un des plans internes à changer d'état
+               adjustFolderState( (PlanFolder)p );
+               
+               g.setColor(!p.active || canBeTransparent ? Color.yellow:jauneGris);
+            } 
             else if( isRefForVisibleView && (p.isUnderImgBkgd() && p.type!=Plan.ALLSKYIMG) ) g.setColor(colorFillBG);
             else g.setColor( !p.active || !isRefForVisibleView && isViewable && canBeTransparent  ? colorFillBG : colorFillFG ) ;
             g.fillPolygon(xc,yc,frX.length);
@@ -794,6 +800,23 @@ public final class Slide {
          }
          
       } catch( Exception e ) { e.printStackTrace(); }
+   }
+   
+   // Ajustement de l'état d'un folder en fonction de l'état des plans qu'il contient
+   private void adjustFolderState( PlanFolder f) {
+      boolean active = f.active;
+      boolean allNotActive = true;
+      
+      for( Plan p : a.calque.getFolderPlan(f) ) {
+         
+         // Un plan active dans un folder désactivé => réactivation du folder
+         if( !active && p.active ) { f.active=true; return; }
+         
+         allNotActive &= !p.active;
+      }
+      
+      // tous les plans ont été désactivés dans le folder qui était actif => désactivation du folder
+      if( active && allNotActive ) f.active = false;
    }
    
    private void drawCheckBox(Graphics g, int x, int y, int xMouse, int yMouse, int mode, Plan p) {

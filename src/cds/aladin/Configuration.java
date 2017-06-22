@@ -1773,7 +1773,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( aladin.splitZoomWidth!=null ) {
          n = aladin.splitZoomWidth.getCompSize();     if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    else remove(ZWIDTH);
       }
-      if( aladin.PROTO && aladin.splitHiPSWidth!=null ) {
+      if( aladin.BETA && aladin.splitHiPSWidth!=null ) {
          n = aladin.splitHiPSWidth.getCompSize();     if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    else remove(HWIDTH);
       }
       if( aladin.splitMesureHeight!=null ) {

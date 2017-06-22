@@ -177,7 +177,7 @@ public class TabDesc extends JPanel implements ActionListener {
       pTiles.add(coaddRadio);     //coaddRadio.setEnabled(false);
       pCenter.add(pTiles, c);
       
-      if( Aladin.PROTO ) {
+      if( Aladin.BETA ) {
          c.gridy++;
          pTiles = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
          pTiles.setBorder( BorderFactory.createEmptyBorder(0,10,0,0));
@@ -251,7 +251,7 @@ public class TabDesc extends JPanel implements ActionListener {
       });
       pCenter.add(px,c);
       
-      if (Aladin.PROTO) {
+      if (Aladin.BETA) {
          c.gridy++;
          final JCheckBox cb1 = frameCheckbox = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
          cb1.addActionListener(new ActionListener() {
