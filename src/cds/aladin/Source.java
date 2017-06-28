@@ -1235,6 +1235,14 @@ public class Source extends Position implements Comparator {
        createSourceFootprint();
        sourceFootprint.setStcs(this.raj, this.dej, stcs);
    }
+   
+   protected void resetFootprint() {
+	   sourceFootprint = null;
+   }
+   
+	protected boolean isSetFootprint() {
+		return sourceFootprint!=null && sourceFootprint.isSet();
+	}
 
    /**
     * Switch the state (on/off) of the associated footprint

@@ -21,8 +21,6 @@
 
 package cds.aladin;
 
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,8 +131,6 @@ public class GrabUtil {
 		if (Math.abs(x1 - x2) < 3 && Math.abs(y1 - y2) < 3)
 			return;
 		
-		System.err.println(aladin);
-		System.err.println(aladin.view);
 		ViewSimple v = aladin.view.getCurrentView();
 		Plan pr = v.pref;
 		if (pr == null)

@@ -79,6 +79,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JComboBox;
@@ -100,6 +101,7 @@ import cds.savot.model.TDSet;
 import cds.savot.model.TRSet;
 import cds.savot.pull.SavotPullEngine;
 import cds.savot.pull.SavotPullParser;
+import cds.tools.ConfigurationReader;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
@@ -137,6 +139,7 @@ public class TapManager {
 	static {
 		GENERICERROR = Aladin.getChaine().getString("GENERICERROR");
 	}
+	
 	public TapManager() {
 		// TODO Auto-generated constructor stub
 		executor = Executors.newFixedThreadPool(10);
@@ -422,7 +425,8 @@ public class TapManager {
 		
 		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
 		String vizierTable = processIfVizier(newServer);
-		boolean nodeOn = false;
+		// just another control on the nodes feature
+		boolean nodeOn = (ConfigurationReader.getInstance().getPropertyValue("TAPNODES").contains("enable"));
 		if (tapClient.mode != null && tapClient.mode == TapClientMode.TREEPANEL) {
 			newServer.primaryColor = Aladin.COLOR_FOREGROUND;
 			newServer.secondColor = Color.white;
@@ -502,12 +506,12 @@ public class TapManager {
 		return result;
 	}
 
-	public void reloadSimpleFramePanelServer(String label, String url) throws Exception {
+	/*public void reloadSimpleFramePanelServer(String label, String url) throws Exception {
 		if (tapServerTreeCache.containsKey(label)) {
 			tapServerTreeCache.remove(label);
 		}
 		loadTapServerForSimpleFrame(label, url, null);
-	}
+	}*///tintin remove commented
 	
 	public TapClient copyTapClientAndDisplay(TapClient original, String urlInput, TapClientMode mode) {
 		TapClient copy = null;
@@ -535,6 +539,32 @@ public class TapManager {
 			copy.serverTap.tapClient = copy;
 		}
 		return copy;
+	}
+	
+	/**
+	 * Specific method This method is to handle a specific case where serverglu
+	 * is updated for both the caches and we load the servertap for one cache at
+	 * this point the metadata of the tapclient of the other cache also needs to
+	 * be updated
+	 * 
+	 * @param original
+	 * @return
+	 */
+	public void updateServerMetaDataInCache(TapClient original) {
+		TapClientMode mode = null;
+		TapClient toUpdate = null;
+		if (original.mode == TapClientMode.DIALOG) {
+			mode = TapClientMode.TREEPANEL;
+			toUpdate = tapServerTreeCache.get(original.tapLabel);
+		} else {
+			mode = TapClientMode.DIALOG;
+			toUpdate = tapServerPanelCache.get(original.tapLabel);
+		}
+
+		if (toUpdate != null && toUpdate.serverTap == null && original.serverTap != null) {
+			toUpdate.serverTap = getCopy(original.serverTap, mode);
+			toUpdate.serverTap.tapClient = toUpdate;
+		}
 	}
 	
 	//we wont deepcopy the data and metadata or the infopanel. we will only duplicate the main form using the metadata
@@ -583,22 +613,30 @@ public class TapManager {
 	 * @param mode
 	 */
 	public void createGenericTapFormFromMetaData(final ServerTap newServer) {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				try {
-					currentT.setName("TloadServerTapForm: "+newServer.getName());
-					newServer.createFormDefault(); //default choice is the first table
-					newServer.revalidate();
-					newServer.repaint();
-				} finally {
-					currentT.setName(oldTName);
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						currentT.setName("TloadServerTapForm: "+newServer.getName());
+						newServer.createFormDefault(); //default choice is the first table
+						newServer.revalidate();
+						newServer.repaint();
+					} finally {
+						currentT.setName(oldTName);
+					}
 				}
-			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			// TODO: handle exception
+			newServer.showLoadingError();
+			newServer.revalidate();
+			newServer.repaint();
+			displayWarning(newServer.tapClient, "Unable to get metadata for "+newServer.getName()+"\n Request overload! Please wait and try again.");
+		}
 	}
 	
 	public boolean checkDummyInitForServerDialog(Server tapServer) {
@@ -652,30 +690,37 @@ public class TapManager {
 	 * @return
 	 */
 	public Future<VOSICapabilitiesReader> getTapCapabilities(final String tapServiceUrl) {
-		Future<VOSICapabilitiesReader> capabilities = executor.submit(new Callable<VOSICapabilitiesReader>() {
-			@Override
-			public VOSICapabilitiesReader call() {
-				// TODO Auto-generated method stub
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				VOSICapabilitiesReader vosiCapabilitiesReader = null;
-				currentT.setName("TgetCapabilities: "+tapServiceUrl);
-				try {
-					URL capabilitiesUrl = new URL(tapServiceUrl+GETTAPCAPABILITIES);
-					vosiCapabilitiesReader = new VOSICapabilitiesReader();
-					vosiCapabilitiesReader.load(capabilitiesUrl);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					System.err.println("Unable to get capabilitites for.."+tapServiceUrl);
-					if (Aladin.levelTrace >= 3) {//Upload won't be allowed. thats all. no warnings
-						e.printStackTrace();
+		Future<VOSICapabilitiesReader> capabilities = null;
+		try {
+			capabilities = executor.submit(new Callable<VOSICapabilitiesReader>() {
+				@Override
+				public VOSICapabilitiesReader call() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					VOSICapabilitiesReader vosiCapabilitiesReader = null;
+					currentT.setName("TgetCapabilities: "+tapServiceUrl);
+					try {
+						URL capabilitiesUrl = new URL(tapServiceUrl+GETTAPCAPABILITIES);
+						vosiCapabilitiesReader = new VOSICapabilitiesReader();
+						vosiCapabilitiesReader.load(capabilitiesUrl);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						System.err.println("Unable to get capabilitites for.."+tapServiceUrl);
+						if (Aladin.levelTrace >= 3) {//Upload won't be allowed. thats all. no warnings
+							e.printStackTrace();
+						}
+					} finally {
+						currentT.setName(oldTName);
 					}
-				} finally {
-					currentT.setName(oldTName);
+					return vosiCapabilitiesReader;
 				}
-				return vosiCapabilitiesReader;
-			}
-		});
+			});
+		} catch (RejectedExecutionException e) {
+			// TODO: handle exception
+			Aladin.trace(3, "RejectedExecutionException. Unable to get capabilitites for.."+tapServiceUrl);
+			//Nothing doing
+		}
 		return capabilities;
 	}
 	
@@ -684,49 +729,57 @@ public class TapManager {
 	 * @param tableName 
 	 * @param tapServiceUrl
 	 */
-	public void loadTapColumnSchemasForATable(final ServerTap serverToLoad, final String tableName){
-		executor.execute(new Runnable(){
-			@Override
-			public void run() {
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				String tapServiceUrl = serverToLoad.getUrl();
-				currentT.setName("TgetMetaInfoForATable: "+tapServiceUrl);
-				Aladin.trace(3, "Getting meta from tree for table ..."+serverToLoad.getName());
-				try {
-					serverToLoad.nodeName = tableName;
-					serverToLoad.setData(new HashMap<String,TapTable>());
-					
-					//download only table names and first table's columns
-					String tableNameQueryParam = URLEncoder.encode(tableName, UTF8);
-					
-					String gettablesQuery = String.format(GETTAPSCHEMATABLE, tableNameQueryParam);
-					SavotResource resultsResource = getResults(tapServiceUrl+gettablesQuery);
-					populateTables(serverToLoad, resultsResource);
-					
-					//get single table data and populate it to front end
-					String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
-					SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
-					populateColumns(serverToLoad, columnResults);
-					
-					serverToLoad.createFormDefault(); //default choice is the first table
-					serverToLoad.revalidate();
-					serverToLoad.repaint();
-					serverToLoad.infoPanel = createMetaInfoDisplay((tapServiceUrl+gettablesQuery), serverToLoad.tablesMetaData);
-				} catch (Exception e) {
-					if (Aladin.levelTrace >= 3) {
-						e.printStackTrace();
-						System.err.println("Error in getting meta data for ..."+serverToLoad.getName());
-						System.out.println("Now will try the default get all tables...");
+	public void loadTapColumnSchemasForATable(final ServerTap serverToLoad, final String tableName) {
+		try {
+			executor.execute(new Runnable(){
+				@Override
+				public void run() {
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					String tapServiceUrl = serverToLoad.getUrl();
+					currentT.setName("TgetMetaInfoForATable: "+tapServiceUrl);
+					Aladin.trace(3, "Getting meta from tree for table ..."+serverToLoad.getName());
+					try {
+						serverToLoad.nodeName = tableName;
+						serverToLoad.setData(new HashMap<String,TapTable>());
+						
+						//download only table names and first table's columns
+						String tableNameQueryParam = URLEncoder.encode(tableName, UTF8);
+						
+						String gettablesQuery = String.format(GETTAPSCHEMATABLE, tableNameQueryParam);
+						SavotResource resultsResource = getResults(tapServiceUrl+gettablesQuery);
+						populateTables(serverToLoad, resultsResource);
+						
+						//get single table data and populate it to front end
+						String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
+						SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
+						populateColumns(serverToLoad, columnResults);
+						
+						serverToLoad.createFormDefault(); //default choice is the first table
+						serverToLoad.revalidate();
+						serverToLoad.repaint();
+						serverToLoad.infoPanel = createMetaInfoDisplay((tapServiceUrl+gettablesQuery), serverToLoad.tablesMetaData);
+					} catch (Exception e) {
+						if (Aladin.levelTrace >= 3) {
+							e.printStackTrace();
+							System.err.println("Error in getting meta data for ..."+serverToLoad.getName());
+							System.out.println("Now will try the default get all tables...");
+						}
+						loadTapColumnSchemas(serverToLoad);
+					} finally {
+						serverToLoad.revalidate();
+						serverToLoad.repaint();
+						currentT.setName(oldTName);
 					}
-					loadTapColumnSchemas(serverToLoad);
-				} finally {
-					serverToLoad.revalidate();
-					serverToLoad.repaint();
-					currentT.setName(oldTName);
 				}
-			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			// TODO: handle exception
+			serverToLoad.showLoadingError();
+			serverToLoad.revalidate();
+			serverToLoad.repaint();
+			displayWarning(serverToLoad.tapClient, "Unable to get metadata for "+serverToLoad.getName()+"\n Request overload! Please wait and try again.");
+		}
 	}
 	
 	/**
@@ -734,65 +787,73 @@ public class TapManager {
 	 * @param tapServiceUrl
 	 */
 	public void loadTapColumnSchemas(final ServerTap serverToLoad){
-		executor.execute(new Runnable(){
-			@Override
-			public void run() {
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				String tapServiceUrl = serverToLoad.getUrl();
-				currentT.setName("TgetMetaInfo: "+tapServiceUrl);
-				try {
-					int count = MAXTAPCOLUMNDOWNLOADVOLUME;
+		try {
+			executor.execute(new Runnable(){
+				@Override
+				public void run() {
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					String tapServiceUrl = serverToLoad.getUrl();
+					currentT.setName("TgetMetaInfo: "+tapServiceUrl);
 					try {
-						String volume = getFutureResultsVolume(tapServiceUrl);
-						if (volume != null) {
-							count = Integer.parseInt(volume);
+						int count = MAXTAPCOLUMNDOWNLOADVOLUME;
+						try {
+							String volume = getFutureResultsVolume(tapServiceUrl);
+							if (volume != null) {
+								count = Integer.parseInt(volume);
+							}
+						} catch (Exception e) {
+							// TODO: handle exception
+							if (Aladin.levelTrace >= 3) 
+								e.printStackTrace();
+							Aladin.trace(3, "Murky waters..do not know count. will get data table-wise...");
 						}
+						serverToLoad.setData(new HashMap<String,TapTable>());
+						if (count >= MAXTAPCOLUMNDOWNLOADVOLUME) {
+							//download only table names and first table's columns
+							SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
+							populateTables(serverToLoad, resultsResource);
+							String defaultTable = serverToLoad.tablesMetaData.keySet().iterator().next();
+							String tableNameQueryParam = defaultTable;
+							tableNameQueryParam = URLEncoder.encode(tableNameQueryParam, UTF8);
+							
+							//get single table data and populate it to front end
+							String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
+							SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
+							populateColumns(serverToLoad, columnResults);
+							serverToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
+						} else if (count > 0) {
+							// download all
+							SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
+							populateColumns(serverToLoad, resultsResource);
+							//update table meta anyway and then create the info panel
+							updateTableMetadata(serverToLoad, tapServiceUrl);
+						} else {
+							serverToLoad.showLoadingError();
+							displayWarning(serverToLoad.tapClient, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
+							return;
+						}
+						serverToLoad.createFormDefault(); //default choice is the first table
+						serverToLoad.revalidate();
+						serverToLoad.repaint();
 					} catch (Exception e) {
-						// TODO: handle exception
-						if (Aladin.levelTrace >= 3) 
-							e.printStackTrace();
-						Aladin.trace(3, "Murky waters..do not know count. will get data table-wise...");
-					}
-					serverToLoad.setData(new HashMap<String,TapTable>());
-					if (count >= MAXTAPCOLUMNDOWNLOADVOLUME) {
-						//download only table names and first table's columns
-						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
-						populateTables(serverToLoad, resultsResource);
-						String defaultTable = serverToLoad.tablesMetaData.keySet().iterator().next();
-						String tableNameQueryParam = defaultTable;
-						tableNameQueryParam = URLEncoder.encode(tableNameQueryParam, UTF8);
-						
-						//get single table data and populate it to front end
-						String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
-						SavotResource columnResults = getResults(tapServiceUrl+gettablesColumnsQuery);
-						populateColumns(serverToLoad, columnResults);
-						serverToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
-					} else if (count > 0) {
-						// download all
-						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMACOLUMNS);
-						populateColumns(serverToLoad, resultsResource);
-						//update table meta anyway and then create the info panel
-						updateTableMetadata(serverToLoad, tapServiceUrl);
-					} else {
+						e.printStackTrace();
 						serverToLoad.showLoadingError();
 						displayWarning(serverToLoad.tapClient, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
-						return;
+					} finally {
+						serverToLoad.revalidate();
+						serverToLoad.repaint();
+						currentT.setName(oldTName);
 					}
-					serverToLoad.createFormDefault(); //default choice is the first table
-					serverToLoad.revalidate();
-					serverToLoad.repaint();
-				} catch (Exception e) {
-					e.printStackTrace();
-					serverToLoad.showLoadingError();
-					displayWarning(serverToLoad.tapClient, "Error from tap server "+serverToLoad.getName()+" : unable to get metadata !");
-				} finally {
-					serverToLoad.revalidate();
-					serverToLoad.repaint();
-					currentT.setName(oldTName);
 				}
-			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			// TODO: handle exception
+			serverToLoad.showLoadingError();
+			serverToLoad.revalidate();
+			serverToLoad.repaint();
+			displayWarning(serverToLoad.tapClient, "Unable to get metadata for "+serverToLoad.getName()+"\n Request overload! Please wait and try again.");
+		}
 	}
 	
 	/**
@@ -848,22 +909,28 @@ public class TapManager {
 	 */
 	public Vector<TapTableColumn> updateTableColumnSchemas(ServerTap serverTap, List<String> tableNames) throws Exception {
 		Vector<TapTableColumn> tableColumnMetaData = null;
-		String tapServiceUrl = serverTap.getUrl();
-		Future<Vector<TapTableColumn>> futureResult = updateColumnSchemaForSpecificTables(serverTap, tableNames);
 		try {
+			String tapServiceUrl = serverTap.getUrl();
+			Future<Vector<TapTableColumn>> futureResult = updateColumnSchemaForSpecificTables(serverTap, tableNames);
 			Aladin.trace(3, futureResult+ " is the serverTap");
 			tableColumnMetaData = futureResult.get();
 			if (tableColumnMetaData == null) {
 				throw new Exception("Error from tap server: unable to get metadata !");
 			}
 			 //update info panel
-			serverTap.tackleFrameInfoServerUpdate(this.createMetaInfoDisplay(tapServiceUrl, serverTap.tablesMetaData));
+			Future<JPanel> infoPanel = this.createMetaInfoDisplay(tapServiceUrl, serverTap.tablesMetaData);
+			if (infoPanel != null) {
+				serverTap.tackleFrameInfoServerUpdate(infoPanel);
+			}
 			if (tableNames != null && !tableNames.isEmpty()) {
 				Aladin.trace(3,"done updating tap info for : "+tableNames.toString()+"| server is : "+serverTap.getUrl());
 			} else {
 				Aladin.trace(3,"done updating tap info for : "+serverTap.selectedTableName+"| server is: "+serverTap.getUrl());
 			}
 			
+		} catch (RejectedExecutionException e) {
+			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+			throw new Exception("Request overload! Please wait and try again.");
 		} catch (Exception e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 			throw e;
@@ -927,27 +994,33 @@ public class TapManager {
 	 * @param message
 	 */
 	public void eraseNotification(final JLabel notificationBar, final String resetText) {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				try {
-					currentT.setName("TeraseNotification: ");
-					currentT.setPriority(Thread.MIN_PRIORITY);
-					TimeUnit.SECONDS.sleep(3);
-					notificationBar.setText(resetText);
-					notificationBar.revalidate();
-					notificationBar.repaint();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					if(Aladin.levelTrace >= 3) e.printStackTrace();
-				} finally {
-					currentT.setName(oldTName);
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						currentT.setName("TeraseNotification: ");
+						currentT.setPriority(Thread.MIN_PRIORITY);
+						TimeUnit.SECONDS.sleep(3);
+						notificationBar.setText(resetText);
+						notificationBar.revalidate();
+						notificationBar.repaint();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						if (Aladin.levelTrace >= 3)
+							e.printStackTrace();
+					} finally {
+						currentT.setName(oldTName);
+					}
 				}
-			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			Aladin.trace(3, "RejectedExecutionException");
+			notificationBar.setText(resetText);
+		}
 	}
 	
 	/**
@@ -1436,7 +1509,6 @@ public class TapManager {
 					uploadFrame.uploadServer.tablesGui.setSelectedItem(tableName);
 				} 
 				uploadFrame.pack();
-				
 			}
 		});
 	}
@@ -1534,30 +1606,39 @@ public class TapManager {
 	 * @param tablesMetaData
 	 */
 	public void updateTableMetadata(final ServerTap serverToLoad, final String tapServiceUrl) {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				currentT.setName("TupdateTableMetadata: "+tapServiceUrl);
-				currentT.setPriority(Thread.NORM_PRIORITY-2);
-				try {
-					SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
-					populateTables(serverToLoad, resultsResource);
-					//update info panel
-					serverToLoad.tackleFrameInfoServerUpdate(createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData));
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					if (Aladin.levelTrace >=3 ) {//we do not bother here if all table description is not obtained. 
-						//if there is problem obtaining essential metadata then there will be error actions in the main loadTapColumnSchemas thread
-						e.printStackTrace();
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					currentT.setName("TupdateTableMetadata: "+tapServiceUrl);
+					currentT.setPriority(Thread.NORM_PRIORITY-2);
+					try {
+						SavotResource resultsResource = getResults(tapServiceUrl+GETTAPSCHEMATABLES);
+						populateTables(serverToLoad, resultsResource);
+						//update info panel
+						Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, serverToLoad.tablesMetaData);
+						if (infoPanel != null) {
+							serverToLoad.tackleFrameInfoServerUpdate(infoPanel);
+						}
+						
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						if (Aladin.levelTrace >=3 ) {//we do not bother here if all table description is not obtained. 
+							//if there is problem obtaining essential metadata then there will be error actions in the main loadTapColumnSchemas thread
+							e.printStackTrace();
+						}
+					} finally {
+						currentT.setName(oldTName);
 					}
-				} finally {
-					currentT.setName(oldTName);
 				}
-			}
-		});
+			});
+		} catch (RejectedExecutionException e) {
+			System.err.println("RejectedExecutionException. Unable to cupdate table metadata.."+tapServiceUrl);
+			//Nothing doing
+		}
 	}
 	
 	/**
@@ -1567,120 +1648,126 @@ public class TapManager {
 	 * @return
 	 */
 	public Future<JPanel> createMetaInfoDisplay(final String tapServiceUrl, final Map<String, TapTable> tablesMetaData){
- 		Future<JPanel> result = executor.submit(new Callable<JPanel>() {
-			@Override
-			public JPanel call() throws MalformedURLException {
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				currentT.setName("TcreateInfoFrame: "+tapServiceUrl);
-				currentT.setPriority(Thread.NORM_PRIORITY-2);
-				GridBagLayout gridbag = new GridBagLayout();
-				GridBagConstraints bagConstraints = null;
-				
-				JPanel infoPanel = new JPanel();
-				infoPanel.setLayout(gridbag);
-				infoPanel.setFont(Aladin.PLAIN);
-				
-				JLabel tableNameLabel = null;
-				TwoColorJTable infoTable = null;
-				
-				JScrollPane scrollPane = null;
-				Vector<String> columnNames = TapTableColumn.getColumnLabels();
-				Vector<Vector<String>> allRows = null;
-				
-				int width = 500;
-				int height = ServerTap.DEFAULT_INFO_TABLE_HEIGHT;
-				
-				bagConstraints = new GridBagConstraints();
-				bagConstraints.gridx = 0;
-				bagConstraints.gridy = 0;
-				bagConstraints.gridwidth = 1;
-				bagConstraints.weightx = 1;
-				bagConstraints.weighty = 0.001;
-				bagConstraints.fill = GridBagConstraints.NONE;
-				bagConstraints.anchor = GridBagConstraints.WEST;
-				bagConstraints.insets = new Insets(20, 2, 2, 2);
-				
-				JLabel displayString = new JLabel("Database Schema: ");
-				displayString.setFont(Aladin.BOLD);
-				gridbag.setConstraints(displayString, bagConstraints);
-				infoPanel.add(displayString);
-				
-				JLabel tableDescription = null;
-				StringBuilder recordInfoTables = new StringBuilder();
-				
-				for (String tableName : tablesMetaData.keySet()) {
-					String description = EMPTYSTRING;
-					Vector<TapTableColumn> columnMetadata = tablesMetaData.get(tableName).getColumns();
-					
-					TapTable table = tablesMetaData.get(tableName);
-					if (table != null && table.getDescription() != null && !table.getDescription().isEmpty()) {
-						description = table.getDescription();
-					}
-					
-					if (columnMetadata != null) {
-						tableNameLabel = new JLabel("Table: "+tableName);
-						tableNameLabel.setFont(Aladin.BOLD);
-						//tableName.setBounds(x, y, width, 10);y+=10;
-						bagConstraints.gridy++;
-						bagConstraints.insets = new Insets(20, 2, 2, 2);
-						infoPanel.add(tableNameLabel, bagConstraints);
-						if (!description.isEmpty()) {
-							tableDescription = new JLabel("<html><p width=\"1000\">Description:"+description);
-							bagConstraints.gridy++;
-							bagConstraints.insets = new Insets(2, 2, 2, 2);
-							infoPanel.add(tableDescription, bagConstraints);
-						}
-						
-						allRows = new Vector<Vector<String>>();
-						for (TapTableColumn tapTableColumn : columnMetadata) {
-							allRows.addElement(tapTableColumn.getRowVector());
-						}
-						infoTable = new TwoColorJTable(allRows, columnNames);
-						infoTable.setPreferredScrollableViewportSize(new Dimension(width, height));
-						scrollPane = new JScrollPane(infoTable);
-						// scrollPane.setBounds(x, y, width, height);y+=height;
-						scrollPane.getVerticalScrollBar().setUnitIncrement(4);
-						bagConstraints.gridy++;
-						bagConstraints.insets = new Insets(2, 2, 2, 2);
-						bagConstraints.fill = GridBagConstraints.BOTH;
-						bagConstraints.weighty = 0.05;
-						infoPanel.add(scrollPane, bagConstraints);
-					} else {
-						recordInfoTables.append("\n------------Table: "+tableName+"--------------");
-						if (!description.isEmpty()) {
-							recordInfoTables.append("\n").append(description);
-								
-						}
-						recordInfoTables.append("\nPlease select this table in the TAP server selector form to get column metadata.\n");
-//						noInfolabel = new JLabel("No column metadata available.");
-//						noInfolabel.setFont(Aladin.ITALIC);
-//						bagConstraints.gridy++;
-//						bagConstraints.insets = new Insets(2, 2, 2, 2);
-//						gridbag.setConstraints(noInfolabel, bagConstraints);
-//						infoPanel.add(noInfolabel);
-					}
-				}
-				if (recordInfoTables.length() > 0) {
-					JTextArea infoTablesDisplay = new JTextArea(20, 85);
-					infoTablesDisplay.setText(recordInfoTables.toString());
-					infoTablesDisplay.setFont(Aladin.COURIER);
-					infoTablesDisplay.setBackground(Color.white);
-					infoTablesDisplay.setEditable(false);
-					scrollPane = new JScrollPane(infoTablesDisplay);
-					bagConstraints.fill = GridBagConstraints.BOTH;
-					bagConstraints.weighty = 0.10;
-					bagConstraints.gridy++;
-					bagConstraints.insets = new Insets(2, 2, 2, 2);
-					gridbag.setConstraints(scrollPane, bagConstraints);
-					infoPanel.add(scrollPane);
-				}
-//				FrameInfoServer frameInfoServer = new FrameInfoServer(aladin, infoPanel);
-				currentT.setName(oldTName);
-				return infoPanel;
-			}
-		});
-		return result;
+		Future<JPanel> result = null;
+ 		try {
+ 			result = executor.submit(new Callable<JPanel>() {
+ 				@Override
+ 				public JPanel call() throws MalformedURLException {
+ 					final Thread currentT = Thread.currentThread();
+ 					final String oldTName = currentT.getName();
+ 					currentT.setName("TcreateInfoFrame: "+tapServiceUrl);
+ 					currentT.setPriority(Thread.NORM_PRIORITY-2);
+ 					GridBagLayout gridbag = new GridBagLayout();
+ 					GridBagConstraints bagConstraints = null;
+ 					
+ 					JPanel infoPanel = new JPanel();
+ 					infoPanel.setLayout(gridbag);
+ 					infoPanel.setFont(Aladin.PLAIN);
+ 					
+ 					JLabel tableNameLabel = null;
+ 					TwoColorJTable infoTable = null;
+ 					
+ 					JScrollPane scrollPane = null;
+ 					Vector<String> columnNames = TapTableColumn.getColumnLabels();
+ 					Vector<Vector<String>> allRows = null;
+ 					
+ 					int width = 500;
+ 					int height = ServerTap.DEFAULT_INFO_TABLE_HEIGHT;
+ 					
+ 					bagConstraints = new GridBagConstraints();
+ 					bagConstraints.gridx = 0;
+ 					bagConstraints.gridy = 0;
+ 					bagConstraints.gridwidth = 1;
+ 					bagConstraints.weightx = 1;
+ 					bagConstraints.weighty = 0.001;
+ 					bagConstraints.fill = GridBagConstraints.NONE;
+ 					bagConstraints.anchor = GridBagConstraints.WEST;
+ 					bagConstraints.insets = new Insets(20, 2, 2, 2);
+ 					
+ 					JLabel displayString = new JLabel("Database Schema: ");
+ 					displayString.setFont(Aladin.BOLD);
+ 					gridbag.setConstraints(displayString, bagConstraints);
+ 					infoPanel.add(displayString);
+ 					
+ 					JLabel tableDescription = null;
+ 					StringBuilder recordInfoTables = new StringBuilder();
+ 					
+ 					for (String tableName : tablesMetaData.keySet()) {
+ 						String description = EMPTYSTRING;
+ 						Vector<TapTableColumn> columnMetadata = tablesMetaData.get(tableName).getColumns();
+ 						
+ 						TapTable table = tablesMetaData.get(tableName);
+ 						if (table != null && table.getDescription() != null && !table.getDescription().isEmpty()) {
+ 							description = table.getDescription();
+ 						}
+ 						
+ 						if (columnMetadata != null) {
+ 							tableNameLabel = new JLabel("Table: "+tableName);
+ 							tableNameLabel.setFont(Aladin.BOLD);
+ 							//tableName.setBounds(x, y, width, 10);y+=10;
+ 							bagConstraints.gridy++;
+ 							bagConstraints.insets = new Insets(20, 2, 2, 2);
+ 							infoPanel.add(tableNameLabel, bagConstraints);
+ 							if (!description.isEmpty()) {
+ 								tableDescription = new JLabel("<html><p width=\"1000\">Description:"+description);
+ 								bagConstraints.gridy++;
+ 								bagConstraints.insets = new Insets(2, 2, 2, 2);
+ 								infoPanel.add(tableDescription, bagConstraints);
+ 							}
+ 							
+ 							allRows = new Vector<Vector<String>>();
+ 							for (TapTableColumn tapTableColumn : columnMetadata) {
+ 								allRows.addElement(tapTableColumn.getRowVector());
+ 							}
+ 							infoTable = new TwoColorJTable(allRows, columnNames);
+ 							infoTable.setPreferredScrollableViewportSize(new Dimension(width, height));
+ 							scrollPane = new JScrollPane(infoTable);
+ 							// scrollPane.setBounds(x, y, width, height);y+=height;
+ 							scrollPane.getVerticalScrollBar().setUnitIncrement(4);
+ 							bagConstraints.gridy++;
+ 							bagConstraints.insets = new Insets(2, 2, 2, 2);
+ 							bagConstraints.fill = GridBagConstraints.BOTH;
+ 							bagConstraints.weighty = 0.05;
+ 							infoPanel.add(scrollPane, bagConstraints);
+ 						} else {
+ 							recordInfoTables.append("\n------------Table: "+tableName+"--------------");
+ 							if (!description.isEmpty()) {
+ 								recordInfoTables.append("\n").append(description);
+ 									
+ 							}
+ 							recordInfoTables.append("\nPlease select this table in the TAP server selector form to get column metadata.\n");
+// 							noInfolabel = new JLabel("No column metadata available.");
+// 							noInfolabel.setFont(Aladin.ITALIC);
+// 							bagConstraints.gridy++;
+// 							bagConstraints.insets = new Insets(2, 2, 2, 2);
+// 							gridbag.setConstraints(noInfolabel, bagConstraints);
+// 							infoPanel.add(noInfolabel);
+ 						}
+ 					}
+ 					if (recordInfoTables.length() > 0) {
+ 						JTextArea infoTablesDisplay = new JTextArea(20, 85);
+ 						infoTablesDisplay.setText(recordInfoTables.toString());
+ 						infoTablesDisplay.setFont(Aladin.COURIER);
+ 						infoTablesDisplay.setBackground(Color.white);
+ 						infoTablesDisplay.setEditable(false);
+ 						scrollPane = new JScrollPane(infoTablesDisplay);
+ 						bagConstraints.fill = GridBagConstraints.BOTH;
+ 						bagConstraints.weighty = 0.10;
+ 						bagConstraints.gridy++;
+ 						bagConstraints.insets = new Insets(2, 2, 2, 2);
+ 						gridbag.setConstraints(scrollPane, bagConstraints);
+ 						infoPanel.add(scrollPane);
+ 					}
+// 					FrameInfoServer frameInfoServer = new FrameInfoServer(aladin, infoPanel);
+ 					currentT.setName(oldTName);
+ 					return infoPanel;
+ 				}
+ 			});
+		} catch (RejectedExecutionException ex) {
+			System.err.println("RejectedExecutionException. Unable to create the metainfo display for.."+tapServiceUrl);
+			//Nothing doing
+		}
+ 		return result;
 	}
 	
 	/**
@@ -1690,94 +1777,99 @@ public class TapManager {
 	 * 		<li>Populate results(votable) on Aladin</li>
 	 * </ol>
 	 * if postParams are null then it executes GET, else this method executes a POST
+	 * @param server 
 	 * @param url 
 	 * @param string 
 	 * @param parserObj
 	 * @throws Exception 
 	 */
-	public void fireSync(final String name, final String url, final String query, final ADQLQuery parserObj,
+	public void fireSync(final Server server, final String name, final String url, final String query, final ADQLQuery parserObj,
 			final Map<String, Object> postParams) throws Exception {
 		// TODO Auto-generated method stub
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				try {
-					if (postParams == null) {
-						String queryParam = URLEncoder.encode(query, UTF8);
-						URL syncUrl = new URL(String.format(SYNCGETRESULT, url, queryParam));
-						currentT.setName("TsubmitSync: " + syncUrl);
-						//TODO:: tintin check for the query status before loading: and remove return- covert to execute
-						/*
-						 * one INFO element with name=”QUERY_STATUS” and value=”OK” or
-						value=”ERROR” must be included before the TABLE. If the TABLE does not
-						contain the entire query result, one INFO element with value=”OVERFLOW” or
-						value=”ERROR” must be included after the table.*/
-						
-						URLConnection urlConn = syncUrl.openConnection();
-						urlConn.setRequestProperty("Accept", "*/*");
-						urlConn.setRequestProperty("Connection", "Keep-Alive");
-						urlConn.setRequestProperty("Cache-Control", "no-cache");
-						handleSyncGetResponse(urlConn, name);
-						
-					} else {//currently this else part is used only for upload.
-						URL syncUrl = new URL(url + "/sync");
-						currentT.setName("TsubmitSync: " + syncUrl);
-						MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
-						String boundary = MultiPartPostOutputStream.createBoundary();
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						if (postParams == null) {
+							String queryParam = URLEncoder.encode(query, UTF8);
+							URL syncUrl = new URL(String.format(SYNCGETRESULT, url, queryParam));
+							currentT.setName("TsubmitSync: " + syncUrl);
+							//TODO:: tintin check for the query status before loading: and remove return- covert to execute
+							/*
+							 * one INFO element with name=\94QUERY_STATUS\94 and value=\94OK\94 or
+							value=\94ERROR\94 must be included before the TABLE. If the TABLE does not
+							contain the entire query result, one INFO element with value=\94OVERFLOW\94 or
+							value=\94ERROR\94 must be included after the table.*/
+							
+							URLConnection urlConn = syncUrl.openConnection();
+							urlConn.setRequestProperty("Accept", "*/*");
+							urlConn.setRequestProperty("Connection", "Keep-Alive");
+							urlConn.setRequestProperty("Cache-Control", "no-cache");
+							handleSyncGetResponse(urlConn, name);
+							
+						} else {//currently this else part is used only for upload.
+							URL syncUrl = new URL(url + "/sync");
+							currentT.setName("TsubmitSync: " + syncUrl);
+							MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
+							String boundary = MultiPartPostOutputStream.createBoundary();
 
-						URLConnection urlConn = MultiPartPostOutputStream.createConnection(syncUrl);
-						urlConn.setRequestProperty("Accept", "*/*");
-						urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
-						// set some other request headers...
-						urlConn.setRequestProperty("Connection", "Keep-Alive");
-						urlConn.setRequestProperty("Cache-Control", "no-cache");
-						MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
+							URLConnection urlConn = MultiPartPostOutputStream.createConnection(syncUrl);
+							urlConn.setRequestProperty("Accept", "*/*");
+							urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
+							// set some other request headers...
+							urlConn.setRequestProperty("Connection", "Keep-Alive");
+							urlConn.setRequestProperty("Cache-Control", "no-cache");
+							MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
 
-						// standard request parameters
-						out.writeField("request", "doQuery");
-						out.writeField("lang", "adql");
-						out.writeField("version", "1.0");
-						out.writeField("format", "votable");
+							// standard request parameters
+							out.writeField("request", "doQuery");
+							out.writeField("lang", "adql");
+							out.writeField("version", "1.0");
+							out.writeField("format", "votable");
 
-						if (parserObj != null) {
-							int limit = parserObj.getSelect().getLimit();
-							if (limit > 0) {
-								out.writeField("maxrec", String.valueOf(limit));
-							}
-						}
-						
-						out.writeField("query", query);
-
-						if (postParams != null) {// this part only for upload as of now
-							for (Entry<String, Object> postParam : postParams.entrySet()) {
-								if (postParam.getValue() instanceof String) {
-									out.writeField(postParam.getKey(), String.valueOf(postParam.getValue()));
-								} else if (postParam.getValue() instanceof File) {
-									out.writeFile(postParam.getKey(), "application/x-votable+xml", (File) postParam.getValue(), false);
+							if (parserObj != null) {
+								int limit = parserObj.getSelect().getLimit();
+								if (limit > 0) {
+									out.writeField("maxrec", String.valueOf(limit));
 								}
 							}
-						}
-						out.close();
-						handleSyncGetResponse(urlConn, name);
-					}
+							
+							out.writeField("query", query);
 
-				} catch (MalformedURLException e) {
-					if (Aladin.levelTrace >= 3) e.printStackTrace();
-					Aladin.warning(aladin.dialog, e.getMessage());
-				} catch (IOException e) {
-					if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-					Aladin.warning(aladin.dialog, e.getMessage());
-				} catch (Exception e) {
-					if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-					Aladin.warning(aladin.dialog, e.getMessage());
-				} finally {
-					currentT.setName(oldTName);
+							if (postParams != null) {// this part only for upload as of now
+								for (Entry<String, Object> postParam : postParams.entrySet()) {
+									if (postParam.getValue() instanceof String) {
+										out.writeField(postParam.getKey(), String.valueOf(postParam.getValue()));
+									} else if (postParam.getValue() instanceof File) {
+										out.writeFile(postParam.getKey(), "application/x-votable+xml", (File) postParam.getValue(), false);
+									}
+								}
+							}
+							out.close();
+							handleSyncGetResponse(urlConn, name);
+						}
+
+					} catch (MalformedURLException e) {
+						if (Aladin.levelTrace >= 3) e.printStackTrace();
+						displayWarning(server.tapClient, e.getMessage());
+					} catch (IOException e) {
+						if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+						displayWarning(server.tapClient, e.getMessage());
+					} catch (Exception e) {
+						if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+						displayWarning(server.tapClient, e.getMessage());
+					} finally {
+						currentT.setName(oldTName);
+					}
 				}
-			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			displayWarning(server.tapClient, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
+		} 
 	}
 	
 	/**
@@ -1834,78 +1926,86 @@ public class TapManager {
 	 * 		<li>Query tap server asynchronously</li>
 	 * 		<li>Populate results on Aladin</li>
 	 * </ol>
+	 * @param server 
 	 * @param string 
 	 * @param adqlParserObj
 	 * @throws Exception 
 	 */
-	public void fireASync(final String name, final String serverUrl, final String query, final ADQLQuery adqlParserObj, final Map<String, Object> postParams) throws Exception {
-		// TODO Auto-generated method stub
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				currentT.setName("TsubmitAsync: "+serverUrl);
-				try {
-					showAsyncPanel();
-					uwsFacade.handleJob(name, serverUrl, query, adqlParserObj, postParams);
-					currentT.setName(oldTName);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					Aladin.warning(aladin.dialog, Aladin.getChaine().getString("GENERICERROR"));
+	public void fireASync(Server server, final String name, final String serverUrl, final String query, final ADQLQuery adqlParserObj,
+			final Map<String, Object> postParams) throws Exception {
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					currentT.setName("TsubmitAsync: " + serverUrl);
+					try {
+						showAsyncPanel();
+						uwsFacade.handleJob(name, serverUrl, query, adqlParserObj, postParams);
+						currentT.setName(oldTName);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						Aladin.warning(aladin.dialog, Aladin.getChaine().getString("GENERICERROR"));
+					}
 				}
-				
-			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			displayWarning(server.tapClient, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
+		} 
 	}
 	
 	
 	public void setRaDecForTapServer(final ServerTap serverTap, final String selectedTableName) {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				final Thread currentT = Thread.currentThread();
-				final String oldTName = currentT.getName();
-				currentT.setName("TsetRaDec: "+serverTap.getUrl());
-				
-				boolean addTargetPanel = false;
-				Vector<TapTableColumn> columns = serverTap.tablesMetaData.get(selectedTableName).getColumns();
-				JComboBox raColumn = new JComboBox(columns);
-				raColumn.setRenderer(new TapTableColumnRenderer());
-				raColumn.setSize(raColumn.getWidth(), Server.HAUT);
-				JComboBox decColumn = new JComboBox(columns);
-				decColumn.setRenderer(new TapTableColumnRenderer());
-				decColumn.setSize(decColumn.getWidth(), Server.HAUT);
-				
-				Object[] raAndDec = {
-				    "ra:", raColumn,
-				    "dec:", decColumn
-				};
-				
-				int option = JOptionPane.showConfirmDialog(aladin.dialog , raAndDec, "Set ra and dec", JOptionPane.OK_CANCEL_OPTION);
-				if (option == JOptionPane.OK_OPTION) {
-					if (serverTap.getRaColumnName() == null || serverTap.getDecColumnName() == null) {
-						addTargetPanel = true;
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					currentT.setName("TsetRaDec: "+serverTap.getUrl());
+					
+					boolean addTargetPanel = false;
+					Vector<TapTableColumn> columns = serverTap.tablesMetaData.get(selectedTableName).getColumns();
+					JComboBox raColumn = new JComboBox(columns);
+					raColumn.setRenderer(new TapTableColumnRenderer());
+					raColumn.setSize(raColumn.getWidth(), Server.HAUT);
+					JComboBox decColumn = new JComboBox(columns);
+					decColumn.setRenderer(new TapTableColumnRenderer());
+					decColumn.setSize(decColumn.getWidth(), Server.HAUT);
+					
+					Object[] raAndDec = {
+					    "ra:", raColumn,
+					    "dec:", decColumn
+					};
+					
+					int option = JOptionPane.showConfirmDialog(aladin.dialog , raAndDec, "Set ra and dec", JOptionPane.OK_CANCEL_OPTION);
+					if (option == JOptionPane.OK_OPTION) {
+						if (serverTap.getRaColumnName() == null || serverTap.getDecColumnName() == null) {
+							addTargetPanel = true;
+						}
+						serverTap.setRaColumnName(((TapTableColumn) ((JComboBox) raColumn).getSelectedItem()).getColumn_name());
+						serverTap.setDecColumnName(((TapTableColumn) ((JComboBox) decColumn).getSelectedItem()).getColumn_name());
+						if (addTargetPanel) {
+//							setWhereAddConstraintsGui(columnNames);
+//							this.queryComponentsGui.revalidate();
+//							this.queryComponentsGui.repaint();
+							if (serverTap.target == null) {
+								serverTap.createTargetPanel();
+							}
+							serverTap.queryComponentsGui.revalidate();
+							serverTap.queryComponentsGui.repaint();
+						}
+						serverTap.writeQuery();
 					}
-					serverTap.setRaColumnName(((TapTableColumn) ((JComboBox) raColumn).getSelectedItem()).getColumn_name());
-					serverTap.setDecColumnName(((TapTableColumn) ((JComboBox) decColumn).getSelectedItem()).getColumn_name());
-					if (addTargetPanel) {
-//						setWhereAddConstraintsGui(columnNames);
-//						this.queryComponentsGui.revalidate();
-//						this.queryComponentsGui.repaint();
-						serverTap.createTargetPanel();
-						serverTap.queryComponentsGui.revalidate();
-						serverTap.queryComponentsGui.repaint();
-					}
-					serverTap.writeQuery();
+					currentT.setName(oldTName);
 				}
-				
-				currentT.setName(oldTName);
-			}
-		});
-		
+			});
+		} catch (RejectedExecutionException e) {
+			displayWarning(serverTap.tapClient, "Request overload! Please wait and try again.");
+		}
 	}
 	
 	/**

@@ -22,9 +22,8 @@
 package cds.aladin;
 
 import java.awt.Component;
-import java.awt.Image;
+import java.awt.Dimension;
 
-import javax.swing.ImageIcon;
 import javax.swing.JList;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
@@ -39,21 +38,19 @@ public class TapClientModesRenderer extends BasicComboBoxRenderer {
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
 			boolean cellHasFocus) {
 		super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-		String label = (String) value;
 		if (index < 0) {
-			setText("");
-			setToolTipText(TapClient.modesToolTip);
-			Image image = Aladin.aladin.getImagette(TapClient.modeIconImage);
-			if (image != null) {
-				setIcon(new ImageIcon(image));
-			}
+			setText("Mode");//tintin remove comments and settings.png
+//			Image image = Aladin.aladin.getImagette(TapClient.modeIconImage);
+//			if (image != null) {
+//				setIcon(new ImageIcon(image));
+//			}
 		} else {
-			setText(label);
+			setText((String) value);
 			setToolTipText(TapClient.modeIconToolTips[index]);
 			setIcon(null);
 		}
 		setBackground(Aladin.BLUE);
-		
+		setPreferredSize(new Dimension(45, Server.HAUT));
 		return this;
 	}
 

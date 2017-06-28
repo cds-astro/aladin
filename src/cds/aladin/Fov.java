@@ -21,10 +21,16 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 
+import cds.aladin.stc.STCCircle;
 import cds.aladin.stc.STCFrame;
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCPolygon;
@@ -379,25 +385,30 @@ public class Fov {
         ///////////////////////////////////////////////////////////////////////
         if (stcObjects != null) {
             ArrayList<PointD[]> polygons = new ArrayList<PointD[]>();
+            List<STCCircle> stcCircles = new ArrayList<STCCircle>();
             for (STCObj stcObj : this.stcObjects) {
-                if ( stcObj.getShapeType() != STCObj.ShapeType.POLYGON ) {
-                    continue;
-                }
-
-                STCPolygon stcPolygon = (STCPolygon)stcObj;
-                STCFrame frame = stcPolygon.getFrame();
+            	STCFrame frame = stcObj.getFrame();
                 // currently, we only support FK5, ICRS and J2000 frames
                 if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)) {
                     continue;
                 }
-                PointD[] polygonBords = new PointD[stcPolygon.getxCorners().size()];
-                for (int i=0; i<polygonBords.length; i++) {
-                    polygonBords[i] = new PointD(stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i));
-                }
+                if ( stcObj.getShapeType() == STCObj.ShapeType.POLYGON ) {
+                	STCPolygon stcPolygon = (STCPolygon)stcObj;
+                    PointD[] polygonBords = new PointD[stcPolygon.getxCorners().size()];
+                    for (int i=0; i<polygonBords.length; i++) {
+                        polygonBords[i] = new PointD(stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i));
+                    }
+                    polygons.add(polygonBords);
+                } else if (stcObj.getShapeType() == STCObj.ShapeType.CIRCLE) {
+					STCCircle stcCircle = (STCCircle) stcObj;
+					stcCircles.add(stcCircle);
+				}
 
-                polygons.add(polygonBords);
             }
             doDraw(polygons, proj, v, g, dx, dy, col);
+            if (!stcCircles.isEmpty()) {
+            	doDrawCircles(stcCircles, proj, v, g, dx, dy, col);
+			}
             return;
         }
         ///////////////////////////////////////////////////////////////////////
@@ -434,7 +445,6 @@ public class Fov {
 
 	               // fill FoV polygon
 	               g2d.fill(new Polygon(xCoord, yCoord, xCoord.length));
-
 	               // restore previous composite
 	               g2d.setComposite(saveComposite);
 	        }
@@ -446,6 +456,63 @@ public class Fov {
 	            g.drawLine(xCoord[i], yCoord[i], xCoord[iNext], yCoord[iNext]);
 	        }
         }
+	}
+	
+	 /**
+	  * Method calculates the plot radius for a circle
+	  * @param proj
+	  * @param centre
+	  * @param radius
+	  * @return
+	  */
+	public double getPlotRadiusForCircleFromCoord(Projection proj, Coord centre, double radius) {
+		Coord c0 = new Coord(centre.al, centre.del);
+		proj.getXY(c0);
+		Coord c1 = new Coord(0, 0);
+		c1.al = c0.al;
+		c1.del = c0.del + radius;
+		if (c0.del > 90) {
+			c1.del = c0.del - radius;
+		}
+		proj.getXY(c1);
+		double dy = c1.y - c0.y;
+		double dx = c1.x - c0.x;
+		return Math.sqrt(dx * dx + dy * dy);
+	}
+	
+	private void doDrawCircles(List<STCCircle> stcCircles, Projection proj, ViewSimple v, Graphics g, int dx, int dy,
+			Color col) {
+		for (STCCircle stcCircle : stcCircles) {
+			if (stcCircle == null || stcCircle.getCenter() == null || Double.isNaN(stcCircle.getCenter().al)
+					|| Double.isNaN(stcCircle.getCenter().del) || stcCircle.getRadius() == 0.0d)
+				continue;
+
+			Coord centre = stcCircle.getCenter();
+
+			Coord coord = new Coord(centre.al, centre.del);
+			coord = proj.getXY(coord);
+
+			double radius = Server.getAngleInArcmin(String.valueOf(stcCircle.getRadius()), Server.RADIUSd) / 60.;
+			int plotRadius = (int) Math.round(getPlotRadiusForCircleFromCoord(proj, coord, radius) * v.getZoom());
+
+			PointD ptD = v.getViewCoordDble(coord.x, coord.y);
+
+			// affichage en transparence
+			if (Aladin.ENABLE_FOOTPRINT_OPACITY && g instanceof Graphics2D) {
+				Graphics2D g2d = null;
+				Composite saveComposite = null;
+				g2d = (Graphics2D) g;
+				saveComposite = g2d.getComposite();
+				Composite myComposite = Util.getFootprintComposite(Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL);
+				g2d.setComposite(myComposite);
+				g2d.fillOval((int) (ptD.x - plotRadius), (int) (ptD.y - plotRadius), plotRadius * 2, plotRadius * 2);
+				// restore previous composite
+				g2d.setComposite(saveComposite);
+			}
+			// affichage en "fil de fer"
+			
+			g.drawOval((int) (ptD.x - plotRadius), (int) (ptD.y - plotRadius), plotRadius * 2, plotRadius * 2);
+		}
 	}
 
     /** teste si le point (x,y) tombe dans le fov

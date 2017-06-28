@@ -44,6 +44,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -137,20 +138,19 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	
 	/** Affichage des infos associées à un serveur */
 	protected void show(Server s) {
-		if (s instanceof ServerTap) {
-			setTitle("Upload to "+s.getName());
-			boolean addServer = true;
-			for (int i = 0; i < uploadAvailableServers.getItemCount(); i++) {
-				if (uploadAvailableServers.getItemAt(i).equalsIgnoreCase(s.getName())) {
-					addServer = false;
-				}
+		setTitle("Upload to "+s.tapClient.tapLabel);
+		boolean addServer = true;
+		for (int i = 0; i < uploadAvailableServers.getItemCount(); i++) {
+			if (uploadAvailableServers.getItemAt(i).equalsIgnoreCase(s.tapClient.tapLabel)) {
+				addServer = false;
 			}
-			if (addServer) {
-				uploadAvailableServers.addItem(s.getName());
-			}
-			uploadAvailableServers.setSelectedItem(s.getName());
-			uploadServer.setUrl(((ServerTap)s).getUrl());
 		}
+		if (addServer) {
+			uploadAvailableServers.addItem(s.tapClient.tapLabel);
+		}
+		uploadAvailableServers.setSelectedItem(s.tapClient.tapLabel);
+		uploadServer.setUrl(s.tapClient.tapBaseUrl);
+		
 		setFont(Aladin.PLAIN);
 		pack();
 		setVisible(true);
@@ -395,6 +395,8 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 					Plan planToLoad = tapManager.getPlan(fileName);
 					try {
 						saveUploadFile(uploadTableName, planToLoad);
+					} catch (RejectedExecutionException ex) {
+						Aladin.warning(this.getContentPane(), "Unable to get load "+fileName+"\n Request overload! Please wait and try again.");
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						if(Aladin.levelTrace >= 3) e.printStackTrace();
@@ -455,7 +457,9 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			String uploadTableName = uploadingPlanCatalogs.get(ple.plane.label);
 			try {
 				saveUploadFile(uploadTableName, ple.plane);
-			} catch (Exception e) {
+			} catch (RejectedExecutionException ex) {
+				Aladin.warning(this.getContentPane(), "Unable to get load "+ple.plane.label+"\n Request overload! Please wait and try again.");
+			}  catch (Exception e) {
 				// TODO Auto-generated catch block
 				if(Aladin.levelTrace >= 3) e.printStackTrace();
 				Aladin.warning(this.getContentPane(), "Unable to parse " + ple.plane.label + " data!");

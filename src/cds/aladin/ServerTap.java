@@ -117,11 +117,27 @@ public class ServerTap extends Server implements MouseListener{
 	private static final long serialVersionUID = 1L;
 	public static String LOAD, TAPTABLEJOINTIP, TAPTABLEUPLOADTIP, TARGETERROR, TIPCLICKTOADD, TAPTABLENOUPLOADTIP, GENERICERROR,
 			REFRESHQUERYTOOLTIP, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP, SHOWASYNCTOOLTIP, DISCARD, DISCARDTIP, RETRY,
-			TIPRETRY, CHANGESERVERTOOLTIP;
-	private String name;
-	private String url;
+			TIPRETRY, CHANGESERVERTOOLTIP, CLIENTINSTR;
+	
 	protected TapManager tapManager = null;
 	
+	//metadata
+	private String name;
+	private String url;
+	Map<String, TapTable> tablesMetaData;
+	Future<VOSICapabilitiesReader> capabilities;
+    public String nodeName = null;//tintin:: TODO::for future
+    public static Map<String, DBDatatype> DBDATATYPES = new HashMap();
+	List<DefaultDBTable> queryCheckerTables;
+	Color primaryColor = Aladin.BLUE;
+    Color secondColor = new Color(198,218,239);
+    
+    //these data are serverTap specific
+    protected int formLoadStatus; 
+    private String raColumnName;
+	private String decColumnName;
+	
+	//gui
 	public Future<JPanel> infoPanel;
 	static final int DEFAULT_INFO_TABLE_HEIGHT = 115;
 	JComboBox tablesGui;
@@ -129,25 +145,13 @@ public class ServerTap extends Server implements MouseListener{
 	JCheckBox selectAll;
 	JPanel whereClausesPanel;
 	List<ColumnConstraint> whereClauses;
-	Map<String, TapTable> tablesMetaData;
 	String selectedTableName;
 	JComboBox<Integer> limit;
 	JComboBox<String> sync_async;
 	JComboBox<String> circleOrSquare;
 	JPanel queryComponentsGui;
-	private String raColumnName;
-	private String decColumnName;
 	JPanel targetPanel;
-	public static Map<String, DBDatatype> DBDATATYPES = new HashMap();
-	Hashtable adqlWhere = new Hashtable();
-    Map<String, String> adqlElements;
-    List<DefaultDBTable> queryCheckerTables;
-    Color primaryColor = Aladin.BLUE;
-    Color secondColor = new Color(198,218,239);
-    protected int formLoadStatus; 
-    Future<VOSICapabilitiesReader> capabilities;
     JFrame setRaDecFrame;
-    public String nodeName = null;//tintin:: TODO::for future
     JLabel info1;
     
 	static{
@@ -155,7 +159,7 @@ public class ServerTap extends Server implements MouseListener{
 			DBDATATYPES.put(dbDatatype.name(), dbDatatype);
 		}
 	}
-
+	
 	protected ServerTap(Aladin aladin) {
 		this.aladin = aladin;
 		formLoadStatus = TAPFORM_STATUS_NOTLOADED;
@@ -241,7 +245,7 @@ public class ServerTap extends Server implements MouseListener{
 		JPanel optionsPanel = new JPanel();
 		if (this.tapClient != null) {
 			optionsPanel = this.tapClient.getOptionsPanel(this);
-			if (this.tapClient.serverGlu == null && this.modeChoice!=null) {
+			if (this.tapClient.serverGlu == null && this.modeChoice != null) {
 				this.modeChoice.setVisible(false);
 			}
 		}
@@ -254,7 +258,7 @@ public class ServerTap extends Server implements MouseListener{
 		containerPanel.add(optionsPanel, c);
 		
 		// Premiere indication
-		info1 = new JLabel(description);
+		info1 = new JLabel(CLIENTINSTR);
 		c.anchor = GridBagConstraints.NORTH;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 1;
@@ -352,6 +356,7 @@ public class ServerTap extends Server implements MouseListener{
 			selectedTableName = tableChoice;
 		}
 		Vector<TapTableColumn> columnNames = this.tablesMetaData.get(selectedTableName).getColumns();
+		tablesGui.setToolTipText(tablesMetaData.get(selectedTableName).getDescription());
 		if (columnNames == null) {
 			if (mode == TapServerMode.UPLOAD) {
 				Aladin.warning("Error in uploaded data");
@@ -505,6 +510,7 @@ public class ServerTap extends Server implements MouseListener{
 		tablesPanel.add(label, c);
 		
 		tablesGui = new JComboBox(tables);
+		tablesGui.setToolTipText(tablesMetaData.get(selectedTableName).getDescription());
 		tablesGui.setEditable(true);
 		JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
 		tablesGuiEditor.setDocument(new TapTableFilterDocument(this));
@@ -544,32 +550,6 @@ public class ServerTap extends Server implements MouseListener{
 		button.setEnabled(false);
 		button.addActionListener(this);
 		button.setToolTipText(TAPTABLEJOINTIP);
-		
-		if (mode != TapServerMode.UPLOAD) {
-			String uploadTipText = TAPTABLEUPLOADTIP;
-			button = new JButton("Upload");
-			button.setActionCommand(UPLOAD);
-			if (this.capabilities!=null) {
-				try {
-					VOSICapabilitiesReader meta = this.capabilities.get();
-					button.setEnabled(meta.isUploadAllowed());
-					c.weightx = 0.05;
-					c.gridx++;
-					button.addActionListener(this);
-					if (meta.isUploadAllowed() && meta.getUploadHardLimit()>0L) {
-						String tip= String.format("Hard limit =%1$s rows", meta.getUploadHardLimit());
-						uploadTipText = uploadTipText.concat(tip);
-					} else if (!meta.isUploadAllowed()) {
-						uploadTipText = TAPTABLENOUPLOADTIP;
-					}
-					button.setToolTipText(uploadTipText);
-					tablesPanel.add(button, c);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					if( Aladin.levelTrace >= 3 ) e.printStackTrace();//Do nothing, no upload button will be added
-				}
-			}
-		}
 		
 		return tablesPanel;
 	}
@@ -737,6 +717,30 @@ public class ServerTap extends Server implements MouseListener{
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
+		if (mode != TapServerMode.UPLOAD) {
+			String uploadTipText = TAPTABLEUPLOADTIP;
+			button = new JButton("Upload");
+			button.setActionCommand(UPLOAD);
+			if (this.capabilities != null) {
+				try {
+					VOSICapabilitiesReader meta = this.capabilities.get();
+					button.setEnabled(meta.isUploadAllowed());
+					button.addActionListener(this);
+					if (meta.isUploadAllowed() && meta.getUploadHardLimit() > 0L) {
+						String tip= String.format("Hard limit =%1$s rows", meta.getUploadHardLimit());
+						uploadTipText = uploadTipText.concat(tip);
+					} else if (!meta.isUploadAllowed()) {
+						uploadTipText = TAPTABLENOUPLOADTIP;
+					}
+					button.setToolTipText(uploadTipText);
+					bottomPanel.add(button);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					if( Aladin.levelTrace >= 3 ) e.printStackTrace();//Do nothing, no upload button will be added
+				}
+			}
+		}
+		
 		return bottomPanel;
 	}
 	
@@ -745,6 +749,7 @@ public class ServerTap extends Server implements MouseListener{
 	 * @param targetPanel
 	 */
 	protected void createTargetPanel(){
+		this.targetPanel.removeAll();
 		GridBagLayout gridbag = new GridBagLayout();
 		this.targetPanel.setLayout(gridbag);
 		this.targetPanel.setFont(BOLD);
@@ -1396,7 +1401,7 @@ public class ServerTap extends Server implements MouseListener{
 					Aladin.warning(this, GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
-			} else if (action.equals(RETRYACTION)) {//tinti what is this rety and reload for 2
+			} /*else if (action.equals(RETRYACTION)) {//tintin what is this rety and reload for 2
 				try {
 					tapManager.reloadSimpleFramePanelServer(this.name, this.url);
 				} catch (Exception e) {
@@ -1404,7 +1409,7 @@ public class ServerTap extends Server implements MouseListener{
 					if (Aladin.levelTrace >=3) e.printStackTrace();
 					Aladin.warning(this, e.getMessage());
 				}
-			} else if (action.equals(RELOAD)) {
+			}*/ else if (action.equals(RELOAD)) {
 				try {
 					this.tapClient.reload();
 				} catch (Exception e) {
@@ -1451,6 +1456,7 @@ public class ServerTap extends Server implements MouseListener{
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
 		verboseDescr = Aladin.chaine.getString("TAPFORMDESC");
+		CLIENTINSTR  = Aladin.chaine.getString("TAPCLIENTINSTR");
 	}
 	
 	static {

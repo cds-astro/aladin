@@ -51,6 +51,7 @@ public static final String EMPTYSTRING = "";
 public static final String STANDARDID = "standardID";
 public static final String T_MIN = "t_min";
 public static final String T_MAX = "t_max";
+public static final String T_XEL = "t_xel";
 public static final String EM_MIN = "em_min";
 public static final String EM_MAX = "em_max";
 public static final String SETFORMVALUES = "SETFORMVALUES";
@@ -66,7 +67,7 @@ public static final int SODA_POLINDEX = 6;
 public static final String RESULTS_RESOURCE_NAME = "results";
 public static final String INPUTPARAM_NAME = "inputParams";
 public static final String RANGE_DELIMITER = " > ";
-//DALI specs says shpe names are casesensititve.. an they are accepted as all caps
+//DALI specs says shape names are casesensitive.. an they are accepted as all caps
 //so poS = "CIRCLE.. is ok and pOS = "Circle is not
 public static final String SODA_URL_PARAM = "?POS=CIRCLE+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
 public static final String SODA_CIRCLE_URL_PARAM = "?POS=CIRCLE+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
@@ -100,10 +101,12 @@ public static final String DESCRIPTION = "description";
 public static final String SEMANTICS = "semantics";
 public static final String CONTENTTYPE = "content_type";
 public static final String CONTENTLENGTH = "content_length";
+public static final String CONTENTLENGTH_DISPLAY = "content_length_display";
+public static final String DEFAULT_CONTENTLENGTH_UNITS = "bytes";
 public static final String ACCESSURL = "access_url";
 public static final String CONTENT_TYPE_TEXTXML = "text/xml";
 public static final String CONTENT_TYPE_TEXTHTML = "text/html";
-public static final String CONTENT_TYPE_APPLICATIONIMG = "application/image;content=hips";
+public static final String CONTENT_TYPE_HIPS = "content=hips";
 public static final String UNKNOWN = "UNKNOWN";
 public static final String SPACESTRING = " ";
 public static final String S_REGION = "s_region";
@@ -112,6 +115,7 @@ public static final String ACCESSFORMAT_UCD = "obscore:Access.Format";
 public static final String SEMANTIC_CUTOUT = "#cutout";
 public static final String SEMANTIC_ACCESS = "#access";
 public static final String SEMANTIC_PROC = "#proc";
+public static final String SEMANTIC_PREVIEW = "#preview";
 public static final String REGEX_TABLENAME_SPECIALCHAR = "[$&+,:;=?@#/\\\\|]";
 public static final String REGEX_ONLYALPHANUM = "[^A-Za-z0-9]";
 public static final String REGEX_ALPHA = "[A-Za-z]";
@@ -269,5 +273,8 @@ public static final String RELOAD = "RELOAD";
 //some votable tag names
 public static final String STR_RESULTS = "RESULTS";
 public static final String STR_QUERY_STATUS = "QUERY_STATUS";
+
+public static final String STCPREFIX_POLYGON = "POLYGON ICRS ";
+public static final String STCPREFIX_CIRCLE = "CIRCLE ICRS ";
 
 }

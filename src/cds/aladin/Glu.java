@@ -1139,15 +1139,15 @@ public final class Glu implements Runnable {
  * @param adqlSelect 
  * @param adqlFuncParams 
  * @param adqlFunc 
+ * @param flagTapUpload 
     */
-   private void memoServer(String actionName, String description, String verboseDescr,
-         String aladinMenu, String aladinMenuNumber,String aladinLabel,
-         String aladinLabelPlane, String docUser, Hashtable paramDescription1,
-         Hashtable paramDataType1, Hashtable paramValue1,
-         String resultDataType, String institute, Vector aladinFilter1,
-         String aladinLogo,String dir,boolean localFile, String system,StringBuffer record,String aladinProtocol, 
-         String[] tapTables, Hashtable<String,String> adqlSelect, Hashtable<String,String> adqlFrom, 
-         Hashtable<String,String> adqlWhere, Hashtable<String, String> adqlFunc, Hashtable<String, String> adqlFuncParams) {
+	private void memoServer(String actionName, String description, String verboseDescr, String aladinMenu,
+			String aladinMenuNumber, String aladinLabel, String aladinLabelPlane, String docUser,
+			Hashtable paramDescription1, Hashtable paramDataType1, Hashtable paramValue1, String resultDataType,
+			String institute, Vector aladinFilter1, String aladinLogo, String dir, boolean localFile, String system,
+			StringBuffer record, String aladinProtocol, String[] tapTables, Hashtable<String, String> adqlSelect,
+			Hashtable<String, String> adqlFrom, Hashtable<String, String> adqlWhere, Hashtable<String, String> adqlFunc,
+			Hashtable<String, String> adqlFuncParams, boolean flagTapUpload) {
       int i;
 
       // Pour éviter les doublons
@@ -1211,7 +1211,7 @@ public final class Glu implements Runnable {
 	        	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
 	                    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
 	                    null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, 
-	                    gluAdqlTemplate, tapClient);
+	                    gluAdqlTemplate, tapClient, flagTapUpload);
 	           	 g.setAdqlFunc(adqlFunc);
 	      		 g.setAdqlFuncParams(adqlFuncParams);
 	      		 
@@ -1228,7 +1228,8 @@ public final class Glu implements Runnable {
             } else {
             	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
                         aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
-                        null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, null);
+                        null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, 
+                        null, null, false);
 			}
          }
          if (g!=null) {
@@ -1589,6 +1590,7 @@ public final class Glu implements Runnable {
       boolean flagPlastic = false; // true si on a un champ %Aladin.Plastic
       boolean flagGluSky = false;  // true si on a "hpx" dans le profile => GluSky background
       boolean flagTapServices = false;
+      boolean flagTapUpload = false;
 
       int maxIndir = Integer.MAX_VALUE; // Pour repérer la meilleure indirection
       String tablesIndex = EMPTYSTRING;
@@ -1694,7 +1696,7 @@ public final class Glu implements Runnable {
                      else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                              aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
                              resultDataType,institute,aladinFilter,aladinLogo,dir,localFile, localFile?system:null,record,aladinProtocol,
-                             tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);
+                             tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams, flagTapUpload);
                      
                     }
                } catch (Exception e) {
@@ -1815,7 +1817,7 @@ public final class Glu implements Runnable {
                if( v1 != null ) v1 = v1 + "\t" + v;
                else v1 = v;
                paramValue.put(num, v1);
-            } else if (name.equals("ADQL.TAPTables")) {// add more specific restrictions if required
+            } else if (name.equals("TAPTables")) {// add more specific restrictions if required
 				String v = getValParam(value);
             	tapTables = v.split("\\t");
 			} else if (name.startsWith("ADQL")) {
@@ -1837,9 +1839,11 @@ public final class Glu implements Runnable {
 					String paramName = name.replace("ADQL.Func.", EMPTYSTRING);
 					adqlFunc.put(paramName, value);
 				}
-				} else if (name.equals("Aladin.TapService")
+			} else if (name.equals("Aladin.TapService")
 						&& (value.equals("ALATAP") || value.equals("TAP") || value.equals("TAPv1"))) {
 					flagTapServices = true;
+			} else if (name.equals("TAPTables.Upload")) {
+				flagTapUpload = true;
 			}
          }
 
@@ -1866,7 +1870,7 @@ public final class Glu implements Runnable {
             else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                   aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
                   resultDataType,institute,aladinFilter,aladinLogo,dir,localFile,localFile?system:null,record,aladinProtocol, 
-                  tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);
+                  tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams, flagTapUpload);
             /*else if (stdForm != null && !stdForm.isEmpty()) {//may be use this to load standardforms directly.
 				serverDataLinks(actionName, description, verboseDescr, aladinMenu, aladinMenuNumber, aladinLabel,
 						aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, null,

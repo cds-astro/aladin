@@ -62,6 +62,10 @@ import static cds.aladin.Constants.S_REGION;
 import static cds.aladin.Constants.TIME;
 import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
+import static cds.aladin.Constants.T_XEL;
+import static cds.aladin.Constants.STCPREFIX_CIRCLE;
+import static cds.aladin.Constants.STCPREFIX_POLYGON;
+
 import static cds.aladin.Constants.UTF8;
 
 import java.awt.Dimension;
@@ -75,15 +79,14 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Vector;
 
-import cds.aladin.stc.STCObj;
-import cds.aladin.stc.STCStringParser;
 import cds.moc.HealpixMoc;
 import cds.savot.model.ParamSet;
+import cds.savot.model.SavotOption;
 import cds.savot.model.SavotParam;
 import cds.savot.model.SavotResource;
+import cds.savot.model.SavotValues;
 import cds.xml.Field;
 
 public final class DataLinkGlu {
@@ -127,6 +130,7 @@ public final class DataLinkGlu {
 		SavotParam resourceParam = null;
 		ParamSet inputParams = null;
 		HealpixMoc sourceMoc = null;
+		String boundaryArea_stcs = null;
 		ByteArrayInputStream dicStream = null;
 		
 		try {
@@ -138,31 +142,42 @@ public final class DataLinkGlu {
 				
 				//Check if this is a standard SODA service
 				//TODO:: handle SODA async as well.
-				//Note: TODO:: tintin if we do not get any values from the original table to set in cutout client, then we use values form the datalink response.
 				if (resourceParam.getName().equalsIgnoreCase(STANDARDID) && resourceParam.getValue().equalsIgnoreCase(SODA_STANDARDID)) {
 					String sodaGluRecord = aladin.datalinkGlu.getStandardActionGlu(SODA_SYNC_FORM);
 					
 					inputParams = DatalinkManager.getInputParams(metaResource.getGroups()).getParams();
 					SavotParam idParam = DatalinkManager.getInputParams(inputParams, ID);
-					paramValue.put(String.valueOf(SODA_IDINDEX), this.getParamValue(idParam, selectedDatalink));
+					paramValue.put(String.valueOf(SODA_IDINDEX), getParamValue(idParam, selectedDatalink));
 					
+					boolean noParamSet = true;
 					if (sodaGluRecord!=null) {
 						dicStream = new ByteArrayInputStream(sodaGluRecord.getBytes(StandardCharsets.UTF_8));
-						this.setSODAFormTimeBandPol(activeDataLinkSource, paramDescription, paramDataType, paramValue, paramRange);
+						noParamSet = this.setSODAFormParams(activeDataLinkSource, paramDescription, paramDataType, paramValue, paramRange);
 					} else {
 						paramDescription.put(String.valueOf(SODA_IDINDEX), ID);
 						paramDataType.put(String.valueOf(SODA_IDINDEX), resourceParam.getDataType());
-						this.setCompleteSODAForm(activeDataLinkSource, paramDescription, paramDataType, paramValue, paramRange);
+						noParamSet = this.setCompleteSODAForm(activeDataLinkSource,selectedDatalink , paramDescription, paramDataType, paramValue, paramRange);
 					}
 					
 					int sRegionIndex = activeDataLinkSource.findColumn(S_REGION);
 					if (sRegionIndex != -1) {
-						String boundaryArea_stcs = activeDataLinkSource.getValue(sRegionIndex);
-						
+						boundaryArea_stcs = activeDataLinkSource.getValue(sRegionIndex);
+						if (boundaryArea_stcs != null && !boundaryArea_stcs.isEmpty()) {
+							noParamSet = false;
+						}
+					}
+					
+					//Note: noParamSet: if we do not get any values from the original table to set in cutout client, then we use values from the datalink response.
+					if (noParamSet) {
+						this.setSODAFormParams(selectedDatalink, paramDescription, paramDataType, paramValue, paramRange);
+						boundaryArea_stcs = getFovFromDatalinkResponse(inputParams);
+					}
+					
+					/*if (boundaryArea_stcs != null) {
 						STCStringParser parser = new STCStringParser();
 						List<STCObj> stcObjects = parser.parse(boundaryArea_stcs);
 						sourceMoc = aladin.createMocRegion(stcObjects);
-					}
+					}*/
 					
 					/*if (sourceMoc!=null) {
 						Command command = new Command(aladin);
@@ -193,6 +208,7 @@ public final class DataLinkGlu {
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 				
 			} else {
+//				urlString.append("?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7");
 				urlString.append(SODA_URL_PARAM);
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 			}
@@ -216,11 +232,36 @@ public final class DataLinkGlu {
 	        if( n == 0 ) return;
 	        ServerGlu dlGlu = (ServerGlu) serverVector.get(0);
 	        if (!isNonStandardService) {
-	        	dlGlu.setPosBounds(sourceMoc);
-	        	if (dicStream!=null) {
+//	        	dlGlu.setPosBounds(sourceMoc);
+	        	dlGlu.setBoundaryAreaStcs(boundaryArea_stcs);
+	        	dlGlu.setDataLinkSource(activeDataLinkSource);
+	        	if (dicStream != null) {
 	        		dlGlu.setAdditionalGluParams(paramRange, paramValue);
 				}
-	            
+	        	//decide to have time param
+	        	boolean disableTime = true;
+	        	int tXelIndex = activeDataLinkSource.findColumn(T_XEL);
+	        	if (tXelIndex > 0) {
+	        		String tXelValue = activeDataLinkSource.getValue(tXelIndex);
+					if (tXelValue != null) {
+						//logic now is if t_xel =1 then time is known factor and hence we can constrain time
+						//logic added as we saw a usecase with califa from gavo
+						//as discussed with Francois B. we don't do this for other soda params for now
+						try {
+							int tXelIntValue = Integer.parseInt(tXelValue);
+							if (tXelIntValue == 1) {
+								disableTime = false;
+							}
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+	        		
+				}
+	        	if (disableTime) {
+	        		dlGlu.disableDateField(String.format(DatalinkManager.PARAMDISABLEDTOOLTIP, TIME));
+				}
+	        	
 			}
 			aladin.datalinkGlu.reload(false, serverVector);
 			
@@ -230,70 +271,191 @@ public final class DataLinkGlu {
 		}
 	    
 	}
-	
+
+	/**
+	 * Method extracts FOV form datalink reponse
+	 * Priority is for polygon
+	 * and if that is not present we aim to take in circle
+	 * Logic is to construct the stc string by taking parameter value with name = "polygon" or "circle"
+	 * we do not check other params because:
+	 * utypes- do not match
+		gavo does not have xtype=polygon
+		so just take name and append values 
+	 * @param selectedDatalink
+	 * @return
+	 */
+	private String getFovFromDatalinkResponse(ParamSet inputParamSet) {
+		// TODO Auto-generated method stub
+		String stcString = null;
+		String shape = STCPREFIX_POLYGON;
+		SavotParam param = DatalinkManager.getInputParams(inputParamSet, "POLYGON");
+		if (param == null) {
+			param = DatalinkManager.getInputParams(inputParamSet, "CIRCLE");
+			shape = STCPREFIX_CIRCLE;
+		}
+		
+		if (param != null && param.getValues() != null && param.getValues().getMax() != null
+				&& param.getValues().getMax().getValue() != null && !param.getValues().getMax().getValue().isEmpty()) {
+			stcString = shape + param.getValues().getMax().getValue();
+		}
+		return stcString;
+	}
+
 	/**
 	 * Method assumes one datalink glu at a time.
+	 * 
 	 * @return
 	 */
 	public ServerGlu getDataLinkServerGlu() {
 		return (ServerGlu) vGluDLServer.get(0);
 	}
-	
-	
+
 	/**
-	    * This method extracts the input paramters required to make a standard SODA call.
-	    * 
-	    * @param activeDatalinkSource
-	    * @param paramRange 
-	    * @return 
-	    */
-	   	public void setCompleteSODAForm(Source activeDatalinkSource, Hashtable<String,String> paramDescription, Hashtable<String,String> paramDataType, Hashtable<String,String> paramValue, HashMap<String, String[]> paramRange) {
-	   		if (activeDatalinkSource == null) return;
+	 * This method extracts the input paramters required to make a standard SODA
+	 * call.
+	 * 
+	 * @param activeDatalinkSource
+	 * @param selectedDatalink
+	 * @param paramRange
+	 * @return 
+	 * @return
+	 */
+	public boolean setCompleteSODAForm(Source activeDatalinkSource, SimpleData selectedDatalink,
+			Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
+			Hashtable<String, String> paramValue, HashMap<String, String[]> paramRange) {
+
+		if (activeDatalinkSource == null)
+			return false;
+
+		// POS
+		setSODATargetParameter(paramDescription, paramDataType, paramValue);
+
+		// others
+		return setSODAFormParams(activeDatalinkSource, paramDescription, paramDataType, paramValue,
+				paramRange);
+
+	}
+
+	public boolean setSODAFormParams(Source activeDatalinkSource,
+			Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
+			Hashtable<String, String> paramValue, HashMap<String, String[]> paramRange) {
+
+		// time
+		boolean noFieldSet = setSODAFormParam(activeDatalinkSource,
+				String.valueOf(SODA_TIMEINDEX), paramDescription, paramDataType, DateTimeMJD, paramValue, SETFORMVALUES,
+				paramRange, TIME, activeDatalinkSource.findColumn(T_MIN), activeDatalinkSource.findColumn(T_MAX));
+
+		// band
+		noFieldSet = noFieldSet
+				| setSODAFormParam(activeDatalinkSource, String.valueOf(SODA_BANDINDEX),
+						paramDescription, paramDataType, BandSODAForm, paramValue, SETFORMVALUES, paramRange, BAND,
+						activeDatalinkSource.findColumn(EM_MIN), activeDatalinkSource.findColumn(EM_MAX));
+
+		// pol
+		int polStatesIndex = activeDatalinkSource.findColumn(POL_STATES);
+		String pol_states = null;
+		if (polStatesIndex != -1) {
+			pol_states = activeDatalinkSource.getValue(polStatesIndex);
+		}
+		if (pol_states == null || pol_states.isEmpty()) {
+			pol_states = POL_DEFAULT_VALUES;
+		} else {
+			noFieldSet = false;
+		}
+
+		setSODAFormParam(activeDatalinkSource, String.valueOf(SODA_POLINDEX), paramDescription,
+				paramDataType, SODAPOL_DATATYPE, paramValue, pol_states, paramRange, POL,
+				activeDatalinkSource.findColumn(POL_STATES), -1);
+
+		// if no parameter values are present in the original table: then we
+		// load value from the datalink response if it contains any parameters
+		// values
+		// offcourse pos is not done
+		// but band, time, pol are set
+		// and standard id is anyway taken form the datalink response
 		
-			//POS
-	   		setSODATargetParameter(paramDescription, paramDataType, paramValue);
-			
-	   		//others
-	   		setSODAFormTimeBandPol(activeDatalinkSource, paramDescription, paramDataType, paramValue, paramRange);
+		return noFieldSet;
+	}
+	
+	public boolean setSODAFormParams(SimpleData selectedDatalink,
+			Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
+			Hashtable<String, String> paramValue, HashMap<String, String[]> paramRange) {
 
-		}
-	   	
-	   	public void setSODAFormTimeBandPol(Source activeDatalinkSource, Hashtable<String,String> paramDescription, Hashtable<String,String> paramDataType, Hashtable<String,String> paramValue, HashMap<String, String[]> paramRange) {
-	   		// time
-	   		setSODAFormParam(activeDatalinkSource, String.valueOf(SODA_TIMEINDEX), paramDescription, paramDataType, DateTimeMJD , paramValue, SETFORMVALUES, paramRange,
-					TIME, activeDatalinkSource.findColumn(T_MIN), activeDatalinkSource.findColumn(T_MAX));
+		setSODAFormParam(selectedDatalink, String.valueOf(SODA_TIMEINDEX), paramDescription,
+				paramDataType, DateTimeMJD, paramValue, SETFORMVALUES, paramRange, TIME);
 
-			// band
-			setSODAFormParam(activeDatalinkSource, String.valueOf(SODA_BANDINDEX), paramDescription, paramDataType, BandSODAForm, paramValue, SETFORMVALUES, paramRange, 
-					BAND, activeDatalinkSource.findColumn(EM_MIN), activeDatalinkSource.findColumn(EM_MAX));
+		// band
+		setSODAFormParam(selectedDatalink, String.valueOf(SODA_BANDINDEX),
+						paramDescription, paramDataType, BandSODAForm, paramValue, SETFORMVALUES, paramRange, BAND);
 
-			// pol
-			int polStatesIndex = activeDatalinkSource.findColumn(POL_STATES);
-			String pol_states = null;
-			if (polStatesIndex!=-1) {
-				pol_states = activeDatalinkSource.getValue(polStatesIndex);
+		String pol_states = POL_DEFAULT_VALUES;
+		setSODAFormParam(selectedDatalink, String.valueOf(SODA_POLINDEX), paramDescription,
+				paramDataType, SODAPOL_DATATYPE, paramValue, pol_states, paramRange, POL);
+		
+		return true;
+	}
+
+	public static boolean setSODAFormParam(SimpleData selectedDatalink, String paramFormIndex,
+			Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
+			String paramDataTypeDefault, Hashtable<String, String> paramValue, String paramDefaultValue,
+			HashMap<String, String[]> paramRange, String paramName) {
+
+		paramDescription.put(paramFormIndex, paramName);
+
+		ParamSet inputParams = DatalinkManager.getInputParams(selectedDatalink.getMetaResource().getGroups()).getParams();
+		SavotParam ipParam = DatalinkManager.getInputParams(inputParams, paramName);
+		
+		if (paramDataTypeDefault == null) {
+			if (ipParam != null && ipParam.getDataType() != null && !ipParam.getDataType().isEmpty()) {
+				paramDataType.put(paramFormIndex, Field.typeVOTable2Fits(ipParam.getDataType()));
 			}
-			if (pol_states==null || pol_states.isEmpty()) {
-				pol_states = POL_DEFAULT_VALUES;
+		} else {
+			paramDataType.put(paramFormIndex, paramDataTypeDefault);
+		}
+		
+		String lowerLimit = null;
+		String upperLimit = null;
+		
+		if (ipParam != null) {//range
+			String dlParamValue = getParamValue(ipParam, selectedDatalink);
+			if (dlParamValue == null || dlParamValue.isEmpty()) {
+				SavotValues savotValues = ipParam.getValues();
+				if (savotValues!=null) {
+					if (savotValues.getMin() != null && savotValues.getMax() != null) {
+						lowerLimit = savotValues.getMin().getValue();
+						upperLimit = savotValues.getMax().getValue();
+					} else if (savotValues.getOptions() != null) {
+						StringBuffer optionString = new StringBuffer();
+						boolean isNotFirst = false;
+						for (SavotOption option : savotValues.getOptions().getItems()) {
+							if (isNotFirst) {
+								optionString.append("/");
+							}
+							optionString.append(option.getValue());
+							isNotFirst = true;
+						}
+						paramDefaultValue = optionString.toString();
+					}
+					
+				}
 			}
-			setSODAFormParam(activeDatalinkSource, String.valueOf(SODA_POLINDEX), paramDescription, paramDataType, SODAPOL_DATATYPE , paramValue, pol_states, paramRange, 
-					POL, activeDatalinkSource.findColumn(POL_STATES), -1);
 		}
-	   	
-	   	public void setSODATargetParameter(Hashtable<String,String> paramDescription, Hashtable<String,String> paramDataType, Hashtable<String,String> paramValue) {
-			
-			//POS
-			paramDescription.put(String.valueOf(SODA_POSINDEX1), RA_STRING);
-			paramDescription.put(String.valueOf(SODA_POSINDEX2), DEC_STRING);
-			paramDescription.put(String.valueOf(SODA_POSINDEX3), DIMENSIONS);
-			paramDataType.put(String.valueOf(SODA_POSINDEX1), "Target(RAd)"); 
-			paramDataType.put(String.valueOf(SODA_POSINDEX2), "Target(DEd)");
-			paramDataType.put(String.valueOf(SODA_POSINDEX3), "Field(STRINGd)");
-			paramValue.put(String.valueOf(SODA_POSINDEX1), EMPTYSTRING);
-			paramValue.put(String.valueOf(SODA_POSINDEX2), EMPTYSTRING);
-			paramValue.put(String.valueOf(SODA_POSINDEX3), EMPTYSTRING);
-			
-		}
+		return setValueAndRange(paramFormIndex, paramValue, paramDefaultValue, paramRange, paramName, lowerLimit, upperLimit);
+	}
+
+	public void setSODATargetParameter(Hashtable<String, String> paramDescription,
+			Hashtable<String, String> paramDataType, Hashtable<String, String> paramValue) {
+		// POS
+		paramDescription.put(String.valueOf(SODA_POSINDEX1), RA_STRING);
+		paramDescription.put(String.valueOf(SODA_POSINDEX2), DEC_STRING);
+		paramDescription.put(String.valueOf(SODA_POSINDEX3), DIMENSIONS);
+		paramDataType.put(String.valueOf(SODA_POSINDEX1), "Target(RAd)");
+		paramDataType.put(String.valueOf(SODA_POSINDEX2), "Target(DEd)");
+		paramDataType.put(String.valueOf(SODA_POSINDEX3), "Field(STRINGd)");
+		paramValue.put(String.valueOf(SODA_POSINDEX1), EMPTYSTRING);
+		paramValue.put(String.valueOf(SODA_POSINDEX2), EMPTYSTRING);
+		paramValue.put(String.valueOf(SODA_POSINDEX3), EMPTYSTRING);
+	}
 	   	
 	   	/**
 	   	 * Method to set one form field's parameters
@@ -308,55 +470,71 @@ public final class DataLinkGlu {
 	   	 * @param paramName
 	   	 * @param lowerLimitIndex
 	   	 * @param upperLimitIndex
+	   	 * @return 
 	   	 */
-		public static void setSODAFormParam(Source activeDatalinkSource, String paramFormIndex,
-				Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
-				String paramDataTypeDefault, Hashtable<String, String> paramValue, String paramDefaultValue,
-				HashMap<String, String[]> paramRange, String paramName, int lowerLimitIndex, int upperLimitIndex) {
-			Field[] field = activeDatalinkSource.leg.field;
-			paramDescription.put(paramFormIndex, paramName);
-			  
-			if (paramDataTypeDefault == null) {
-				if (lowerLimitIndex!=-1) {
+	public static boolean setSODAFormParam(Source activeDatalinkSource, String paramFormIndex,
+			Hashtable<String, String> paramDescription, Hashtable<String, String> paramDataType,
+			String paramDataTypeDefault, Hashtable<String, String> paramValue, String paramDefaultValue,
+			HashMap<String, String[]> paramRange, String paramName, int lowerLimitIndex, int upperLimitIndex) {
+
+		paramDescription.put(paramFormIndex, paramName);
+		if (paramDataTypeDefault == null) {
+			if (activeDatalinkSource != null) {
+				if (lowerLimitIndex != -1) {
+					Field[] field = activeDatalinkSource.leg.field;
 					paramDataType.put(paramFormIndex, field[lowerLimitIndex].datatype);
 				}
-			} else {
-				paramDataType.put(paramFormIndex, paramDataTypeDefault);
 			}
-			
-			if (upperLimitIndex != -1) {
-				String lowerLimit = activeDatalinkSource.getValue(lowerLimitIndex);
-				String upperLimit =  activeDatalinkSource.getValue(upperLimitIndex);
-				
-				String[] anArray = new String[NUMBEROFOPTIONS];
-				anArray[0] = lowerLimit;
-				anArray[1] = upperLimit;
-				paramRange.put(paramFormIndex, anArray);
-				
-				if (lowerLimit!=null && !lowerLimit.isEmpty() && upperLimit!=null && !upperLimit.isEmpty()) {
-					if (paramDefaultValue.equalsIgnoreCase(SETFORMVALUES)) {
-						String delimiter = SPACESTRING;
-						if (paramName.equalsIgnoreCase(TIME)) {
-							delimiter = COMMA_CHAR;
-						}
-						StringBuffer paramValueDisplay = new StringBuffer(lowerLimit).append(delimiter).append(upperLimit);
-						paramValue.put(paramFormIndex, paramValueDisplay.toString());
-					}
-				} 
-				/*paramHint.put(paramFormIndex, getSODAParamHint(activeDatalinkSource.getValue(lowerLimit),
-						activeDatalinkSource.getValue(upperLimit))+ "\n" + hintMessage);*/
-			} else if (!paramDefaultValue.equalsIgnoreCase(SETFORMVALUES)) {
-				if (paramDefaultValue.contains("/")) {
-					paramValue.put(paramFormIndex, paramDefaultValue.replaceAll("/", "\t"));
-					String [] paramDefaultValues= paramDefaultValue.split("/");
-					String[] anArray = Arrays.copyOf(paramDefaultValues, NUMBEROFOPTIONS);
-					paramRange.put(paramFormIndex, anArray);
-				} else {
-					paramValue.put(paramFormIndex, paramDefaultValue);
-				}
-				
-			}
+		} else {
+			paramDataType.put(paramFormIndex, paramDataTypeDefault);
 		}
+		
+		String lowerLimit = null;
+		String upperLimit = null;
+		
+		if (upperLimitIndex != -1) {
+			lowerLimit = activeDatalinkSource.getValue(lowerLimitIndex);
+			upperLimit = activeDatalinkSource.getValue(upperLimitIndex);
+		}
+		
+		return setValueAndRange(paramFormIndex, paramValue, paramDefaultValue, paramRange, paramName, lowerLimit, upperLimit);
+	}
+	
+	public static boolean setValueAndRange(String paramFormIndex, Hashtable<String, String> paramValue,
+			String paramDefaultValue, HashMap<String, String[]> paramRange, String paramName,
+			String lowerLimit, String upperLimit) {
+		boolean noFieldSet = true;
+		if (upperLimit != null) {
+			String[] anArray = new String[NUMBEROFOPTIONS];
+			anArray[0] = lowerLimit;
+			anArray[1] = upperLimit;
+			paramRange.put(paramFormIndex, anArray);
+
+			if (lowerLimit != null && !lowerLimit.isEmpty() && upperLimit != null && !upperLimit.isEmpty()) {
+				if (paramDefaultValue.equalsIgnoreCase(SETFORMVALUES)) {
+					String delimiter = SPACESTRING;
+					if (paramName.equalsIgnoreCase(TIME)) {
+						delimiter = COMMA_CHAR;
+					}
+					StringBuffer paramValueDisplay = new StringBuffer(lowerLimit).append(delimiter).append(upperLimit);
+					paramValue.put(paramFormIndex, paramValueDisplay.toString());
+					noFieldSet = false;
+				}
+			}
+			/* paramHint.put(paramFormIndex, getSODAParamHint(activeDatalinkSource.getValue(lowerLimit), activeDatalinkSource.getValue(upperLimit))+ "\n" + hintMessage);*/
+		} else if (!paramDefaultValue.equalsIgnoreCase(SETFORMVALUES)) {
+			if (paramDefaultValue.contains("/")) {
+				paramValue.put(paramFormIndex, paramDefaultValue.replaceAll("/", "\t"));
+				String[] paramDefaultValues = paramDefaultValue.split("/");
+				String[] anArray = Arrays.copyOf(paramDefaultValues, NUMBEROFOPTIONS);
+				paramRange.put(paramFormIndex, anArray);
+			} else {
+				paramValue.put(paramFormIndex, paramDefaultValue);
+			}
+
+		}
+		return noFieldSet;
+	}
 		
 		/**
 		 * Method to set a form paramter hint
@@ -428,7 +606,7 @@ public final class DataLinkGlu {
 		if (aladin != null) {
 			g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, aladinMenuNumber, aladinLabel,
 					aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, paramRange, resultDataType,
-					institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, null);
+					institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, null, false);
 			vGluDLServer.clear();
 			vGluDLServer.addElement(g);
 		}
@@ -489,7 +667,7 @@ public final class DataLinkGlu {
 	 * @param selectedDatalink
 	 * @return
 	 */
-	public String getParamValue(SavotParam param, SimpleData selectedDatalink) {
+	public static String getParamValue(SavotParam param, SimpleData selectedDatalink) {
 		String value = "";
 		if (param.getRef()!=null && !param.getRef().isEmpty()) {
 			value = selectedDatalink.getParams().get(param.getRef());

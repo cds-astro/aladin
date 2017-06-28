@@ -483,6 +483,8 @@
 %Param.Value								$7=CFHT
 %ADQL.Where									$7=collection=$7
 
+%TAPTables.Upload	true
+
 %Param.Description			 				$1=Right ascension
 %Param.DataType        						$1=Target(RAd,caom2.SIAv1,ivoa.ObsCore)
 %Param.Description 							$2=Declination
@@ -513,7 +515,7 @@
 %Param.DataType  							$6=Tables(caom2.SIAv1,ivoa.ObsCore)
 %Param.Value        						$6=caom2.SIAv1
 %Param.Value        						$6=ivoa.ObsCore
-%ADQL.TAPTables								caom2.SIAv1	ivoa.ObsCore
+%TAPTables								caom2.SIAv1	ivoa.ObsCore
 %ADQL.From        							$6=$6
 
 %Param.Description  						$8=Output fields
@@ -562,7 +564,7 @@
 %Param.DataType	$4=Tables("I/337/gaia","I/337/tgasptyc")
 %Param.Value  	$4="I/337/gaia" - Gaia Source data
 %Param.Value  	$4="I/337/tgasptyc" - TGAS supplemented with BT and VT magnitudes
-%ADQL.TAPTables	"I/337/gaia"	"I/337/tgasptyc"
+%TAPTables	"I/337/gaia"	"I/337/tgasptyc"
 %ADQL.From	$4=$4
 
 %Param.Description  	$5=Plx [mas](ex: >50)
@@ -577,6 +579,8 @@
 %Param.DataType  	$7=char("I/337/gaia","I/337/tgasptyc")
 #%ADQL.Where 	$7= SQRT(POWER(pmRA,2)%2BPOWER(pmdec,2))>$7
 %ADQL.Where 	$7= SQRT(POWER(pmRA,2)+POWER(pmdec,2))>$7
+
+%TAPTables.Upload	true
 
 %Param.Description	$8=Max records
 %Param.Value	$8=TOP 10 - A few
@@ -618,11 +622,13 @@
 %ADQL.Where	$1=1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', $1, $2, $3 ))
 %Param.Value	$3=0.17
 
+%TAPTables.Upload	true
+
 %Param.Description	$4=Table
 %Param.DataType		$4=Tables(gaiadr1.gaia_source,gaiadr1.tgas_source)
 %Param.Value  		$4=gaiadr1.gaia_source - Gaia Source data
 %Param.Value  		$4=gaiadr1.tgas_source - TGAS supplemented with BT and VT magnitudes
-%ADQL.TAPTables	gaiadr1.gaia_source	gaiadr1.tgas_source
+%TAPTables	gaiadr1.gaia_source	gaiadr1.tgas_source
 %ADQL.From	$4=$4
 
 %Param.Description  	$5=Plx [mas](ex: >50)

@@ -113,7 +113,28 @@ public class STCStringParser {
     }
     
     private STCObj parseCircle(Iterator<String> stcWords) {
-		STCCircle circle = new STCCircle(STCFrame.valueOf(stcWords.next()), stcWords.next(), stcWords.next(), stcWords.next());
+		STCCircle circle = null;
+		STCFrame frame = STCFrame.valueOf(stcWords.next());
+		double ra, dec, rad;
+		while (stcWords.hasNext()) {
+            ra = dec = Double.NaN;
+            String nextParam;
+            try {
+            	nextParam = stcWords.next();
+                if (!isNumber(nextParam)) {// to ignore all strings [<refpos>] [<flavor>] which are not handled currently.
+                	continue;
+                }
+            	ra = Double.parseDouble(nextParam);
+            	dec = Double.parseDouble(stcWords.next());// any words between numbers is unexpected and hence exception
+            	rad = Double.parseDouble(stcWords.next());
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+                continue;
+            }
+            circle = new STCCircle(frame, ra, dec, rad);
+            break;
+        }
 		return circle;
 	}
     
@@ -131,7 +152,9 @@ public class STCStringParser {
 
     public static void main(String[] args) {
         STCStringParser parser = new STCStringParser();
-        parser.parse("Polygon   ICRS   211.115036    54.280565  211.115135    54.336616  210.971306    54.336617  210.971403    54.280566  Polygon   J2000   211.115036    54.280565  211.115135    54.336616  210.971306    54.336617  210.971403    54.280566");
-        parser.parse("Polygon J2000 40.57741 0.07310 40.57741 0.06771 40.60596 -0.06867 40.60597 -0.06868 40.61360 -0.06868 40.74998 -0.04013 40.74999 -0.04012 40.74999 -0.03473 40.72144 0.10165 40.72142 0.10166 40.71380 0.10166 40.57742 0.07311");
+        List<STCObj> stc = null;
+        stc = parser.parse("Polygon   ICRS   211.115036    54.280565  211.115135    54.336616  210.971306    54.336617  210.971403    54.280566  Polygon   J2000   211.115036    54.280565  211.115135    54.336616  210.971306    54.336617  210.971403    54.280566");
+        stc = parser.parse("Polygon J2000 40.57741 0.07310 40.57741 0.06771 40.60596 -0.06867 40.60597 -0.06868 40.61360 -0.06868 40.74998 -0.04013 40.74999 -0.04012 40.74999 -0.03473 40.72144 0.10165 40.72142 0.10166 40.71380 0.10166 40.57742 0.07311");
+        stc =  parser.parse("Polygon 9.4996719542 8.6262877169 9.4996724321 8.6457321609 9.4780377021 8.6457320742 9.4780383392 8.6262876304");
     }
 }

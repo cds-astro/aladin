@@ -39,6 +39,7 @@ import static cds.aladin.Constants.SODA_POLINDEX;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.SYNC_ASYNC;
 import static cds.aladin.Constants.TABLECHANGED;
+import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.UTF8;
 
 import java.awt.Component;
@@ -82,6 +83,8 @@ import javax.swing.event.ListSelectionListener;
 import adql.db.exception.UnresolvedIdentifiersException;
 import adql.parser.ADQLParser;
 import adql.query.ADQLQuery;
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCStringParser;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -117,7 +120,10 @@ public class ServerGlu extends Server implements Runnable {
    protected int lastY;
    
    HashMap<Integer, String[]> rangeValues = new HashMap<Integer, String[]>();
+   
+   private Source dataLinkSource = null;
    private HealpixMoc posBounds = null;
+   private String boundaryAreaStcs = null;
    private Map<String, Vector> tapTableMapping = new HashMap<String, Vector>();
    private Map<String, GluAdqlTemplate> gluAdqlQueryTemplates;
    private String currentSelectedTapTable;
@@ -125,6 +131,7 @@ public class ServerGlu extends Server implements Runnable {
    private Hashtable<String, String> adqlFuncParams = null;
    JComboBox sync_async;
    String LISTDELIMITER = SPACESTRING;
+   private boolean cleanupFov;
 
    protected void createChaine() {
       super.createChaine();
@@ -148,13 +155,15 @@ public class ServerGlu extends Server implements Runnable {
     * @param record simple copie de l'enregistrement GLU original
     * @param tapTables
     * @param gluAdqlTemplate
- * @param tapClient 
+    * @param tapClient 
+    * @param flagTapUpload 
     */
 	protected ServerGlu(Aladin aladin, String actionName, String description, String verboseDescr, String aladinMenu,
 			String aladinMenuNumber, String aladinLabel, String planeLabel, String docUser, String[] paramDescription,
 			String[] paramDataType, String[] paramValue, String[][] paramRange, String resultDataType, String institute,
 			String[] aladinFilter, String aladinLogo, String dir, String system, StringBuffer record,
-			String aladinProtocol, String[] tapTables, GluAdqlTemplate gluAdqlTemplate, TapClient tapClient) {
+			String aladinProtocol, String[] tapTables, GluAdqlTemplate gluAdqlTemplate, TapClient tapClient,
+			boolean flagTapUpload) {
 
       this.aladin = aladin;
       createChaine();
@@ -481,6 +490,15 @@ public class ServerGlu extends Server implements Runnable {
 			button.setActionCommand(SHOWAYNCJOBS);
 			button.addActionListener(this);
 			linePanel.add(button);
+			
+			if (flagTapUpload) {
+				button = new JButton("Upload");
+				button.setActionCommand(UPLOAD);
+				String uploadTipText = ServerTap.TAPTABLEUPLOADTIP;
+				button.addActionListener(this);
+				button.setToolTipText(uploadTipText);
+				linePanel.add(button);
+			}
 			
 			this.tapTableMapping.put(LASTPANEL, new Vector());
 			this.tapTableMapping.get(LASTPANEL).add(linePanel);
@@ -1414,9 +1432,21 @@ public class ServerGlu extends Server implements Runnable {
          try {
             objet=resolveQueryField();
             if( objet==null ) throw new Exception(UNKNOWNOBJ);
-            if (this.posBounds!=null) { //current config to check target limits
-               String error = isWithinBounds(this.posBounds, rectVertices);
-               if( error!=null ) throw new Exception(error);
+            
+            if (this.boundaryAreaStcs != null && !this.boundaryAreaStcs.isEmpty()) { //current config to check target limits
+            	if (this.posBounds == null) {
+            		STCStringParser parser = new STCStringParser();
+					List<STCObj> stcObjects = parser.parse(this.boundaryAreaStcs);
+					this.posBounds = aladin.createMocRegion(stcObjects);
+				}
+                String error = isWithinBounds(this.posBounds, rectVertices);
+                if( error != null ) {
+                	showFOV();
+                	throw new Exception(error);
+                } else if (cleanupFov) {
+                	cleanUpFOV();
+                	cleanupFov = false;
+				}
             }
             /*int i = getDelimiterIndex(radius.getText().trim()); //code for poly shape addition --in progress 6 lines
 	            if (i>=0) {
@@ -1655,6 +1685,27 @@ public class ServerGlu extends Server implements Runnable {
     }
    
    /**
+    * Method shows fov from the stc string
+    */
+	private void showFOV() {
+		if (!dataLinkSource.isSetFootprint()) {
+			cleanupFov = true;
+			dataLinkSource.setFootprint(boundaryAreaStcs);
+		}
+		if (!dataLinkSource.isShowingFootprint()) {
+			dataLinkSource.setShowFootprint(true, true);
+		}
+		
+	}
+	
+	private void cleanUpFOV() {
+		if (!dataLinkSource.isShowingFootprint()) {
+			dataLinkSource.setShowFootprint(false, true);
+		}
+		dataLinkSource.resetFootprint();
+	}
+
+/**
     * Method to process date and band fields
     * @param c
     * @param takeAction
@@ -1997,6 +2048,12 @@ public class ServerGlu extends Server implements Runnable {
 					Aladin.warning(this, GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
+			} else if (action.equals(UPLOAD)) {
+				if (tapManager.uploadFrame == null) {
+					tapManager.uploadFrame = new FrameUploadServer(aladin, this.tapClient.tapBaseUrl);
+				}
+				tapManager.uploadFrame.show(this);
+				
 			}
 
   		} else if (o instanceof JComboBox) {
@@ -2051,4 +2108,20 @@ public class ServerGlu extends Server implements Runnable {
    public void setAdqlFuncParams(Hashtable<String, String> adqlFuncParams) {
       this.adqlFuncParams = adqlFuncParams;
    }
+
+public String getBoundaryAreaStcs() {
+	return boundaryAreaStcs;
+}
+
+public void setBoundaryAreaStcs(String boundaryAreaStcs) {
+	this.boundaryAreaStcs = boundaryAreaStcs;
+}
+
+public Source getDataLinkSource() {
+	return dataLinkSource;
+}
+
+public void setDataLinkSource(Source dataLinkSource) {
+	this.dataLinkSource = dataLinkSource;
+}
 }

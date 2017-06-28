@@ -19,9 +19,6 @@
 //    along with Aladin.
 //
 
-/**
- * 
- */
 package cds.aladin.stc;
 
 import java.util.List;
@@ -35,7 +32,6 @@ import cds.aladin.Coord;
  */
 public class STCCircle extends STCObj {
 	
-	private STCFrame frame;
 	private Coord center;
 	private double radius;
 	
@@ -91,10 +87,6 @@ public class STCCircle extends STCObj {
 			isIn = true;
 		}
 		return isIn;
-	}
-
-	public STCFrame getFrame() {
-		return frame;
 	}
 
 	public void setFrame(STCFrame frame) {

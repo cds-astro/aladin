@@ -221,7 +221,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 							|| semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
 						aladin.datalinkGlu = new DataLinkGlu(aladin);
 						aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
-					} else if (contentType != null && accessUrl != null
+					} /*else if (semantics.startsWith(SEMANTIC_PREVIEW) && accessUrl != null
+							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)
+							|| contentType.equalsIgnoreCase(CONTENT_TYPE_PNG))) { //for now we just load plot image or votable in Aladin
+						aladin.glu.showDocument("Http", accessUrl, true);
+					}*/ else if (contentType != null && accessUrl != null
 							&& contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {
 						aladin.glu.showDocument("Http", accessUrl, true);
 					} else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {

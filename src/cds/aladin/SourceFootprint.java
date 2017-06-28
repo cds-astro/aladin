@@ -80,6 +80,10 @@ public class SourceFootprint {
 	        stcsFov.draw(proj, v, g, dx, dy, c);
 	    }
 	}
+	
+	public boolean isSet() {
+		return footprint != null || (stcsFov != null && !stcsFov.getStcObjects().isEmpty());
+	}
 
 	/**
 	 * @return Returns the idxFootprint.

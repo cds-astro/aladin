@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import static cds.aladin.Constants.DATALINK_FORM;
+import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
 
@@ -1405,6 +1406,23 @@ public void layout() {
         }
         return false;
      }
+     
+     /**
+      * Disables date field on server
+      * @param toolTipText
+      * @return
+      */
+	protected boolean disableDateField(String toolTipText) {
+		if (date != null) {
+			date.setEditable(false);
+			date.setEnabled(false);
+			date.setText(EMPTYSTRING);
+			if (toolTipText != null) {
+				date.setToolTipText(toolTipText);
+			}
+		}
+		return false;
+	}
 
      /** Retourne true si le Component passé en paramètre concerne un
       * dhamp de date  */
@@ -1967,13 +1985,13 @@ public void layout() {
 		if (query != null) {
 			try {
 				TapManager tapManager = TapManager.getInstance(aladin);
-				Aladin.trace(3, "Firing " + sync + " for " + name + " url: " + url + "\n query: " + tap.getText()
+				Aladin.trace(3, "Firing sync?" + sync + " for " + name + " url: " + url + "\n query: " + tap.getText()
 						/*+ "\n ADQLQuery: " + query.toADQL()*/ + "\n requestParams: " + requestParams);
 				if (sync) {
 					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					tapManager.fireSync(name, url, tap.getText(), query, requestParams);
+					tapManager.fireSync(this, name, url, tap.getText(), query, requestParams);
 				} else {
-					tapManager.fireASync(name, url, tap.getText(), query, requestParams);
+					tapManager.fireASync(this, name, url, tap.getText(), query, requestParams);
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

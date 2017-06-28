@@ -19,13 +19,14 @@
 //    along with Aladin.
 //
 
-/**
- * 
- */
 package cds.aladin;
 
 import static cds.aladin.Constants.INPUTPARAM_NAME;
 import static cds.aladin.Constants.SERVICE_DEF;
+import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.CONTENTLENGTH;
+import static cds.aladin.Constants.DEFAULT_CONTENTLENGTH_UNITS;
+import static cds.aladin.Constants.CONTENTLENGTH_DISPLAY;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -51,6 +52,12 @@ import cds.tools.Util;
  *
  */
 public class DatalinkManager {
+	
+	public static String PARAMDISABLEDTOOLTIP;
+	
+	static {
+		PARAMDISABLEDTOOLTIP = Aladin.getChaine().getString("PARAMDISABLEDTOOLTIP");
+	}
 	
 	SavotPullParser savotParser;
 	URL accessUrl;
@@ -106,12 +113,13 @@ public class DatalinkManager {
 	
 	public static SavotParam getInputParams(ParamSet params, String query) {
 		SavotParam param = null;
-		if (params!=null && params.getItemCount()>0) {
+		if (params != null && params.getItemCount() > 0) {
 			for (int i = 0; i < params.getItemCount(); i++) {
 				param = (SavotParam) params.getItemAt(i);
 				if (param.getName().equalsIgnoreCase(query)) {
 					break;
 				}
+				param = null;
 			}
 		}
 		return param;
@@ -138,7 +146,7 @@ public class DatalinkManager {
 					TRSet tableRows = resultsResource.getTRSet(i);
 					FieldSet fieldSet = resultsResource.getFieldSet(i);
 
-					if (fieldSet != null && tableRows!=null) {
+					if (fieldSet != null && tableRows != null) {
 						for (int j = 0; j < tableRows.getItemCount(); j++) {
 							TDSet theTDs = tableRows.getTDSet(j);
 							data = new SimpleData();
@@ -146,11 +154,29 @@ public class DatalinkManager {
 							String service_def = null;
 							for (int k = 0; k < theTDs.getItemCount(); k++) {
 								SavotField field = resultsResource.getFieldSet(i).getItemAt(k);
+								String key = null;
+								String value = theTDs.getContent(k);
 								if (field.getId() == null || field.getId().isEmpty()) {
-									params.put(field.getName(), theTDs.getContent(k));
+									key = field.getName();
 								} else {
-									params.put(field.getId(), theTDs.getContent(k));
+									key = field.getId();
 								}
+								if (key.equalsIgnoreCase(CONTENTLENGTH) && value != null && !value.isEmpty()) {
+									try {
+										int length = Integer.parseInt(value);
+										if (length > 0) {
+											String units = field.getUnit();
+											if (units == null || units.isEmpty()) {
+												units = DEFAULT_CONTENTLENGTH_UNITS;
+											}
+											value = value + SPACESTRING + units;
+											params.put(CONTENTLENGTH_DISPLAY, value);
+										}
+									} catch (Exception e) {
+										// TODO: handle exception
+									}
+								}
+								params.put(key, value);
 								
 								if (field.getName().equalsIgnoreCase(SERVICE_DEF)) {
 									service_def = theTDs.getContent(k);

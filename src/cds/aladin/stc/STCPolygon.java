@@ -25,16 +25,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class STCPolygon extends STCObj {
-    private STCFrame frame;
+	
     private ArrayList<Double> xCorners = new ArrayList<Double>();
     private ArrayList<Double> yCorners = new ArrayList<Double>();
 
 
     public STCPolygon() {}
-
-    public STCFrame getFrame() {
-        return frame;
-    }
 
     public void setFrame(STCFrame frame) {
         this.frame = frame;

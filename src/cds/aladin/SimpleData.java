@@ -19,9 +19,6 @@
 //    along with Aladin.
 //
 
-/**
- * 
- */
 package cds.aladin;
 
 import static cds.aladin.Constants.*;
@@ -73,7 +70,7 @@ public class SimpleData {
 			this.setType();
 			if (this.type == null) {
 				defaultLinkLabel.append(this.getParams().get(SEMANTICS));
-			} else if (/*this.type.equals("DATALINK_CUTOUT") ||*/ this.type.equals("DATALINK_SERVICE")){
+			} else if (/*this.type.equals("DATALINK_CUTOUT") ||*/ this.type.equals("DATALINK_PROC")){//only for proc demo we show 
 				//get id
 				ParamSet inputParams = metaResource.getParams();
 				SavotParam idParam = DatalinkManager.getInputParams(inputParams, STANDARDID);
@@ -89,11 +86,14 @@ public class SimpleData {
 				
 			} else {
 				defaultLinkLabel.append(Aladin.chaine.getString(this.type));
+				if (this.type.equals("DATALINK")){
+					defaultLinkLabel.append(SPACESTRING).append(this.getParams().get(SEMANTICS));
+				} 
 			}
 			
 		}
-		if (this.params.get(CONTENTLENGTH) != null && !this.params.get(CONTENTLENGTH).isEmpty()) {
-			defaultLinkLabel.append(" (size ").append(this.params.get(CONTENTLENGTH)).append(" bytes)");
+		if (this.params.containsKey(CONTENTLENGTH_DISPLAY)) {
+			defaultLinkLabel.append(" (size ").append(this.params.get(CONTENTLENGTH_DISPLAY)).append(")");
 		}
 		this.displayString = defaultLinkLabel.toString();
 	}
@@ -124,22 +124,38 @@ public class SimpleData {
 		
 		if (semantic.equalsIgnoreCase("#this")) {
 			this.type = "DATALINK_THISDATASET";
+		} else if (semantic.equalsIgnoreCase("#progenitor")) {
+			this.type = "DATALINK_PROGENITOR";
+		} else if (semantic.equalsIgnoreCase("#derivation")) {
+			this.type = "DATALINK_DERIVATION";
+		} else if (semantic.equalsIgnoreCase("#auxiliary")) {
+			this.type = "DATALINK_AUXILIARY";
+		} else if (semantic.equalsIgnoreCase("#weight")) {
+			this.type = "DATALINK_WEIGHT";
+		} else if (semantic.equalsIgnoreCase("#error")) {
+			this.type = "DATALINK_ERROR";
+		} else if (semantic.equalsIgnoreCase("#noise")) {
+			this.type = "DATALINK_NOISE";
+		} else if (semantic.equalsIgnoreCase("#calibration")) {
+			this.type = "DATALINK_CALIBRATION";
+		} else if (semantic.equalsIgnoreCase("#bias")) {
+			this.type = "DATALINK_BIAS";
+		} else if (semantic.equalsIgnoreCase("#dark")) {
+			this.type = "DATALINK_DARK";
+		} else if (semantic.equalsIgnoreCase("#flat")) {
+			this.type = "DATALINK_FLAT";
+		} else if (semantic.equalsIgnoreCase("#preview")) {
+			this.type = "DATALINK_PREVIEW";
+		} else if (semantic.equalsIgnoreCase("#preview-image")) {
+			this.type = "DATALINK_PREVIEW_IMAGE";
+		} else if (semantic.equalsIgnoreCase("#preview-plot")) {
+			this.type = "DATALINK_PREVIEW_PLOT";
+		} else if (semantic.equalsIgnoreCase("#proc")) {
+			this.type = "DATALINK_PROC";
 		} else if (semantic.equalsIgnoreCase("#cutout")) {
 			this.type = "DATALINK_CUTOUT";
-		} else if (semantic.equalsIgnoreCase("#proc")) {
-			this.type = "DATALINK_SERVICE";
-		} else if (semantic.equalsIgnoreCase("#preview-image") || semantic.equalsIgnoreCase("#dark")
-				|| semantic.equalsIgnoreCase("#flat")) {
-			this.type = "DATALINK_IMAGE";
-		} else if (contentType!=null) {
-			this.type = "DATALINK_METADATA";
-			if (contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTXML)) {
-				this.type = "DATALINK_METADATA";
-			} else if (contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {
-				this.type = "DATALINK_MOREINFO";
-			} else if (contentType.equalsIgnoreCase(CONTENT_TYPE_APPLICATIONIMG)) {
-				this.type = "DATALINK_HIPS";
-			} else if (contentType.equalsIgnoreCase(CONTENT_TYPE_APPLICATIONIMG)) {
+		} else if (contentType != null) {
+			if (contentType.contains(CONTENT_TYPE_HIPS)) {
 				this.type = "DATALINK_HIPS";
 			} else if (contentType.contains(DATATYPE_DATALINK)) {
 				this.type = "DATALINK";

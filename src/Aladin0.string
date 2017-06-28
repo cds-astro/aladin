@@ -2944,15 +2944,25 @@ BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: chan
 BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les informations Simbad sur un objet, laissez dessus qq secondes le pointeur.
 BEGIN5.fr	Contrôle de base:\n \n- Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n- Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n- Visualiser simultanément plusieurs vues via le contrôle du"multivue".
 
-
 #For datalink pop-ups- default texts
 DATALINK_THISDATASET This dataset
-DATALINK_SERVICE Proc service
-DATALINK_CUTOUT Get cutout
-DATALINK_IMAGE Image
-DATALINK_METADATA Metadata
-DATALINK_MOREINFO More Info
+DATALINK_PROGENITOR Progenitor data
+DATALINK_DERIVATION	Derivation data
+DATALINK_AUXILIARY	Auxiliary data
+DATALINK_WEIGHT	Weight map
+DATALINK_ERROR	Error map
+DATALINK_NOISE	Noise map
+DATALINK_CALIBRATION	Calibration data
+DATALINK_BIAS	Bias calibration data
+DATALINK_DARK	Dark calibration data
+DATALINK_FLAT	Flat field calibration data
+DATALINK_PREVIEW Preview
+DATALINK_PREVIEW_IMAGE Image preview
+DATALINK_PREVIEW_PLOT	Plot preview
+DATALINK_PROC	Data processing service
+DATALINK_CUTOUT	Cutout service
 DATALINK_HIPS Hips
+DATALINK Datalink
 
 #For SIAv2 simple readable column labels
 t_min Observation Starttime
@@ -2965,11 +2975,13 @@ DATEFORMATINCORRECT Please specify date in a correct format: MJD or dd/mm/yyy HH
 PARSEMJDFIELDHINT Please enter comma separated Ex:Date1, Date2
 BANDFORMATINCORRECT Please enter band in correct format. Example: 1.5E-5  or 1.5M
 TARGETOUTOFBOUNDSMESSAGE Your target is outside bounds. Please verify.
+PARAMDISABLEDTOOLTIP %1$s unknown for the dataset and hence it cannot be constrained.
 
 #tap menu configurations
 TAPFORMNAME	TAP1
 TAPFORMTITLE	Tap client
-TAPFORMINFO	Construct your query, verify and execute.
+TAPFORMINFO	Query TAP servers via Aladin.
+TAPCLIENTINSTR Construct your query, verify and execute.
 SELECTSERVERTOOLTIP List of tap server that can be loaded...
 TAPFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "X" button. \nOnce you are ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
 TARGETERROR Please check target co-ordinates!
@@ -3002,6 +3014,9 @@ TAPURLCLIENTFIELDLABEL Provide a TAP server URL
 TAPURLCLIENTFILTERLABEL Or choose from below servers. 
 TAPGLUGENTOGGLEBUTTONTOOLTIP Toggle between generic and glu tap forms
 CHANGESERVERTOOLTIP Choose a different tap server
+TAPMODESTOOLTIP Load a different TAP client to construct your queries
+GLUTAPMODESTOOLTIP Click to load GLU mode - this is a customised form  generated from a GLU record
+GENERICTAPMODESTOOLTIP Click to load a generic tap client
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables

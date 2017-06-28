@@ -23,11 +23,16 @@ package cds.aladin.stc;
 
 public abstract class STCObj {
 
+	protected STCFrame frame;
+
     public enum ShapeType {
         POLYGON,
         CIRCLE
     }
-
+    
+    public STCFrame getFrame() {
+        return frame;
+    }
 
     public abstract ShapeType getShapeType();
     
