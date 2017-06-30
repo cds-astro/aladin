@@ -287,6 +287,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
          else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
          else if (arg.equalsIgnoreCase("-notouch") ) context.notouch=true;
+         else if (arg.equalsIgnoreCase("-nocolor") ) context.ANSI=false;
          else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
          else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
@@ -576,7 +577,7 @@ public class HipsGen {
                   "                          (default: public clonableOnce)\n" +
                   "   hdu=n1,n2-n3,...|all    List of HDU numbers (0 is the primary HDU - default is 0)\n" +
                   "   blank=nn                Specifical BLANK value" + "\n" +
-                  "   skyval=key|true|%info|%min %max   Fits key to use for removing a sky background, true auto detection " + "\n" +
+                  "   skyval=key|auto|%info|%min %max   Fits key to use for removing a sky background, or auto detection " + "\n" +
                   "                           or percents of pixel histogram kept (central ex 99, or min max ex 0.3 99.7)" + "\n" +
                   "   color=jpeg|png          The source images are colored images (jpg or png) and the tiles will be " + "\n" +
                   "                           produced in jpeg (resp. png)" + "\n" +
@@ -606,8 +607,8 @@ public class HipsGen {
                   "                           (default is false)" + "\n" +
                   "   mixing=true|false       False to avoid mixing (and fading) effect on overlapping original images " + "\n" +
                   "                           (default is true)" + "\n" +
-                  "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 " + "\n" +
-                  "                           (default is true)" + "\n" +
+                  "   partitioning=true|false|nnn True for cutting large original images in blocks of nnn x nnn " + "\n" +
+                  "                           (default is true, nnn=512 )" + "\n" +
                   "   region=moc              Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
                   "                           or Moc.fits file (all sky by default)" + "\n" +
                   "   maxRatio=nn             Max height/width pixel ratio tolerated for original obs " + "\n" +
@@ -638,6 +639,7 @@ public class HipsGen {
                   "   target=ra +dec          Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad        Default HiPS radius view (deg)" + "\n"+
                   "   -notouch                Do not touch the hips_release_date" + "\n"+
+                  "   -nocolor                Do not colorized console log messages" + "\n" +
                   "   -nice                   Slow download for avoiding to overload remote http server (dedicated " + "\n" +
                   "                           to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +

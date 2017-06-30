@@ -301,26 +301,26 @@
 #%Aladin.Filter #HII\nfilter HII {${OTYPE}="HII" { draw dot }}
 #%Aladin.Filter #X\nfilter X {${OTYPE}="X" { draw cross }}
 
-%A Astrometry.net
-%D Astrometry.net facility (v0.2)
-%O aladin
-%Z ALADIN
-%Z CDS
-%U http://cds-dev-tb.u-strasbg.fr:8080/astrometry/cgi-bin/solve-image.py?imageurl=$1&scale-low=$2&scale-high=$3
-%P.D 1:Image reference
-%P.D 2:Scale low
-%P.D 3:Scale high
-%P.K 1:Input(ALLIMG)
-%R Mime(image/fits)
-%R Mime(application/image)
-%M.V This form allows to query remotely the Astrometry.net solve-field program on your current image in order to provide an astrometry (WCS) to your image
-%F.U http://www.astrometry.net/
-%Aladin.Profile >=7 beta
-%Aladin.Label Astro.net
-%Aladin.LabelPlane Astrometry $1
-#%Aladin.Logo AstrometryDotNet.gif
-%R Mime(application/xml)
-%Aladin.Menu Tools...
+#%A Astrometry.net
+#%D Astrometry.net facility (v0.2)
+#%O aladin
+#%Z ALADIN
+#%Z CDS
+#%U http://cds-dev-tb.u-strasbg.fr:8080/astrometry/cgi-bin/solve-image.py?imageurl=$1&scale-low=$2&scale-high=$3
+#%P.D 1:Image reference
+#%P.D 2:Scale low
+#%P.D 3:Scale high
+#%P.K 1:Input(ALLIMG)
+#%R Mime(image/fits)
+#%R Mime(application/image)
+#%M.V This form allows to query remotely the Astrometry.net solve-field program on your current image in order to provide an astrometry (WCS) to your image
+#%F.U http://www.astrometry.net/
+#%Aladin.Profile >=7 beta
+#%Aladin.Label Astro.net
+#%Aladin.LabelPlane Astrometry $1
+##%Aladin.Logo AstrometryDotNet.gif
+#%R Mime(application/xml)
+#%Aladin.Menu Tools...
 
 
 %ActionName         GALEX
@@ -417,53 +417,6 @@
 %Aladin.LabelPlane Simbad-ADS map
 %Aladin.Menu Proto...
 %Aladin.Profile proto
-
-
-############################ Planets (Tests) ###############################
-
-%A Mars.hpx
-%D Mars
-%O CDS'aladin
-%Z ALADIN
-%U http://alasky.u-strasbg.fr/healpix-maps/planets/mars512.hpx.gz
-%Aladin.Profile >9 proto
-%Aladin.XLabel Mars topographic map
-%Aladin.Tree Test/Planet
-%Aladin.HpxParam map
-%VerboseDesc Mars topographic map. Data origin : http://ode.rsl.wustl.edu/mars/indexproductsearch.aspx
-
-%A Moon.hpx
-%D Moon
-%O CDS'aladin
-%Z ALADIN
-%U http://alasky.u-strasbg.fr/healpix-maps/planets/moon512.hpx.gz
-%Aladin.Profile >9 proto
-%Aladin.XLabel Moon topographic map
-%Aladin.Tree Test/Planet
-%Aladin.HpxParam map
-%VerboseDesc Moon topographic map. Data origin : https://www.soac.selene.isas.jaxa.jp/archive/index.html.en
-
-%A Earth.hpx
-%D Earth
-%O CDS'aladin
-%Z ALADIN
-%U http://alasky.u-strasbg.fr/healpix-maps/planets/earth512.hpx.gz
-%Aladin.Profile >9 proto
-%Aladin.XLabel Earth topographic map
-%Aladin.Tree Test/Planet
-%Aladin.HpxParam map
-%VerboseDesc Earth topographic map. Data origin : http://topex.ucsd.edu/cgi-bin/get_data.cgi
-
-
-###Aladin's TAP###
-#%A TAP3
-#%D CDS'aladin TAP4
-#%O CDS'aladin
-#%ResultDataType Mime(application/xml)
-#%Aladin.Label Choose my TAP server...
-#%Aladin.Menu TAP
-#%Aladin.Menu.OnClickLoad TapServices.txt
-#%Aladin.LabelPlane TAP
 
 ###TAP client description from GLU###
 %ActionName    cadc.nrc.ca/tap

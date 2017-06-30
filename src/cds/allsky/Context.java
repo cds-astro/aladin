@@ -250,7 +250,15 @@ public class Context {
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
    public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
-   public void setPartitioning(String s) { partitioning = s.equalsIgnoreCase("false") ? false : true; }
+   public void setPartitioning(String s) {
+      try {
+         int val = Integer.parseInt(s);
+         Constante.ORIGCELLWIDTH = val;
+         partitioning = true;
+      } catch( Exception e ) {
+         partitioning = s.equalsIgnoreCase("false") ? false : true;
+      }
+   }
    public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
    public void setMaxRatio(String r) throws Exception { maxRatio = Double.parseDouble(r); }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
@@ -269,7 +277,10 @@ public class Context {
    public void setSkyValName(String s ) {
       skyvalName=s;
       if( s==null ) return;
-      if(s.equalsIgnoreCase("true") )  info("Skyval automatical adjustement activated...");
+      if(s.equalsIgnoreCase("true") || s.equalsIgnoreCase("auto") ) {
+         skyvalName="auto";
+         info("Skyval automatical adjustement activated...");
+      }
       else info("Skyval adjustement based on the FITS keyword ["+s+"]");
    }
    public int [] getHDU() { return hdu; }
@@ -877,7 +888,7 @@ public class Context {
       
       // Va pour les valeurs numériques
       if( flagNum ) {
-         this.skyvalName = "true";
+         this.skyvalName = "auto";
          setHistoPercent(fieldName);
          
       // Simple mot clé
@@ -1558,15 +1569,25 @@ public class Context {
       for( int i=0; i<m; i++ ) s1.append(c);
       return s1+" "+s+" "+(s.length()%2==0?"":" ")+s1;
    }
+   
+   protected boolean ANSI = true;
+   
+   private String rouge() { return ANSI ? "\033[32m" : ""; }
+   private String brun()  { return ANSI ? "\033[33m" : ""; }
+   private String blue()  { return ANSI ? "\033[34m" : ""; }
+   private String violet(){ return ANSI ? "\033[35m" : ""; }
+   private String bluec() { return ANSI ? "\033[36m" : ""; }
+   private String cyan()  { return ANSI ? "\033[37m" : ""; }
+   private String end()   { return ANSI ? "\033[0m"  : ""; }
 
-   public void running(String s)  { nl(); System.out.println("RUN   : "+getTitle(s,'=')); }
-   public void done(String r)     { nl(); System.out.println("DONE  : "+r); }
-   public void abort(String r)    { nl(); System.out.println("ABORT : "+r); }
-   public void info(String s)     { nl(); System.out.println("INFO  : "+s); }
-   public void warning(String s)  { nl(); System.out.println("*WARN*: "+s); }
-   public void error(String s)    { nl(); System.out.println("*ERROR: "+s); }
-   public void action(String s)   { nl(); System.out.println("ACTION: "+s); }
-   public void stat(String s)     { nl(); System.out.println("STAT  : "+s); }
+   public void running(String s)  { nl(); System.out.println(blue()  +"RUN   : "+getTitle(s,'=')+end()); }
+   public void done(String r)     { nl(); System.out.println(blue()  +"DONE  : "+r+end()); }
+   public void abort(String r)    { nl(); System.out.println(rouge() +"ABORT : "+r+end()); }
+   public void info(String s)     { nl(); System.out.println(         "INFO  : "+s); }
+   public void warning(String s)  { nl(); System.out.println(violet()+"*WARN*: "+s+end()); }
+   public void error(String s)    { nl(); System.out.println(rouge() +"*ERROR: "+s+end()); }
+   public void action(String s)   { nl(); System.out.println(blue()  +"ACTION: "+s+end()); }
+   public void stat(String s)     { nl(); System.out.println(bluec() +"STAT  : "+s+end()); }
 
    private boolean validateOutputDone=false;
    public boolean isValidateOutput() { return validateOutputDone; }

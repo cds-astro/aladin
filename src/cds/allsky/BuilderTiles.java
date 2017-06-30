@@ -65,7 +65,7 @@ public class BuilderTiles extends Builder {
    public static boolean DEBUG = true;
 
    public static String FS;
-   private boolean stopped = false;
+//   private boolean stopped = false;
 
    static { FS = System.getProperty("file.separator"); }
 
@@ -252,9 +252,11 @@ public class BuilderTiles extends Builder {
       lastTime=now;
       lastNbTile=statNbTile;
       context.showTilesStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statEmptyTile,statNodeTile,
-            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),deltaTime,deltaNbTile);
-      //      String s = showMem();
-      //      if( s.length()>0 ) context.stat(s);
+            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,0L/*getUsedMem()*/,deltaTime,deltaNbTile);
+      if( Aladin.levelTrace>=3 ) {
+         String s = showMem();
+         if( s.length()>0 ) context.stat(s);
+      }
       //      if( context.cacheFits!=null && context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
    }
 
@@ -301,9 +303,11 @@ public class BuilderTiles extends Builder {
    // Suivi de mémoire d'un Thread particulier : suppression du Thread
    private void rmThread(Thread t) {
       Long key = new Long(t.hashCode());
-      ArrayList<Fits> m = memPerThread.get(key);
-      if( m!=null ) for( Fits f : m ) f.free();
-      memPerThread.remove(key);
+      synchronized( memPerThread ) {
+         ArrayList<Fits> m = memPerThread.get(key);
+         if( m!=null ) for( Fits f : m ) f.free();
+         memPerThread.remove(key);
+      }
    }
 
    // Suivi de mémoire d'un Thread particulier : ajout d'un Fits
@@ -314,30 +318,36 @@ public class BuilderTiles extends Builder {
             throw new Exception();
          } catch( Exception e) { e.printStackTrace(); }
       }
-      ArrayList<Fits> m = memPerThread.get(t);
-      if( m==null ) {
-         m=new  ArrayList<Fits>();
-         memPerThread.put(t,m);
+      synchronized( memPerThread ) {
+         ArrayList<Fits> m = memPerThread.get(t);
+         if( m==null ) {
+            m=new  ArrayList<Fits>();
+            memPerThread.put(t,m);
+         }
+         m.add(f);
       }
-      m.add(f);
    }
 
    // Suivi de mémoire d'un Thread particulier : retrait d'un Fits
    protected void rmFits(Thread t,Fits f) {
-      ArrayList<Fits> m = memPerThread.get(t);
-      if( m==null ) return;
-      m.remove(f);
+      synchronized( memPerThread ) {
+         ArrayList<Fits> m = memPerThread.get(t);
+         if( m==null ) return;
+         m.remove(f);
+      }
    }
    
    // Libère les bitmaps des Fits en cours de construction pour faire de la place
    protected long releaseBitmap() {
       long size=0L;
-      for( Thread t : memPerThread.keySet() ) {
-         ArrayList<Fits> m = memPerThread.get(t);
-         for( Fits f : m ) {
-            try {
-               if( f.isReleasable() ) size += f.releaseBitmap();
-            } catch( Exception e ) {  }
+      synchronized( memPerThread ) {
+         for( Thread t : memPerThread.keySet() ) {
+            ArrayList<Fits> m = memPerThread.get(t);
+            for( Fits f : m ) {
+               try {
+                  if( f.isReleasable() ) size += f.releaseBitmap();
+               } catch( Exception e ) {  }
+            }
          }
       }
       return size;
@@ -346,22 +356,30 @@ public class BuilderTiles extends Builder {
    private long getUsedMem() {
       long mem=0L;
       try {
-         for( Thread t : memPerThread.keySet() ) {
-            ArrayList<Fits> m = memPerThread.get(t);
-            mem += getUsedMem(m);
+         synchronized( memPerThread ) {
+            for( Thread t : memPerThread.keySet() ) {
+               ArrayList<Fits> m = memPerThread.get(t);
+               mem += getUsedMem(m);
+            }
          }
       } catch( Exception e ) { }
       return mem;
    }
 
    private String showMem() {
-      StringBuffer s = new StringBuffer();
-      for( Thread t : memPerThread.keySet() ) {
-         ArrayList<Fits> m = memPerThread.get(t);
-         if( s.length()>0 ) s.append(", ");
-         s.append(t.getName()+":"+m.size()+"tiles"+"/"+cds.tools.Util.getUnitDisk( getUsedMem(m) ));
+      try {
+         StringBuffer s = new StringBuffer();
+         synchronized( memPerThread ) {
+            for( Thread t : memPerThread.keySet() ) {
+               ArrayList<Fits> m = memPerThread.get(t);
+               if( s.length()>0 ) s.append(", ");
+               s.append(t.getName()+":"+m.size()+"tiles"+"/"+cds.tools.Util.getUnitDisk( getUsedMem(m) ));
+            }
+         }
+         return s.toString();
+      } catch( Exception e ) {
+          return null;
       }
-      return s.toString();
    }
 
    // Suivi de mémoire d'un Thread particulier : retourne la mémoire utilisé (en bytes)
@@ -451,10 +469,19 @@ public class BuilderTiles extends Builder {
       moc.setMocOrder(3);
       int depth = context.getDepth();
       fifo = new LinkedList<Item>();
-      Iterator<Long> it = moc.pixelIterator();
-      while( it.hasNext() ) {
-         long npix=it.next();
-         for( int z=0; z<depth; z++ ) {
+      
+//      Iterator<Long> it = moc.pixelIterator();
+//      while( it.hasNext() ) {
+//         long npix=it.next();
+//         for( int z=0; z<depth; z++ ) {
+//            fifo.add( new Item(3, npix,z,null ) );
+//         }
+//      }
+      
+      for( int z=0; z<depth; z++ ) {
+         Iterator<Long> it = moc.pixelIterator();
+         while( it.hasNext() ) {
+            long npix=it.next();
             fifo.add( new Item(3, npix,z,null ) );
          }
       }
@@ -500,12 +527,20 @@ public class BuilderTiles extends Builder {
       launchThreadBuilderHpx(nbThread);
 
       // Attente de la fin du travail
-//      while( stillAlive() ) {
-      while( !stopped && !(allWaiting() && fifo.isEmpty()) ) {
+      while( /* !stopped && */ !fifo.isEmpty() || stillWorking() ) {
          cds.tools.Util.pause(1000);
       }
+      
+      // Pour débogage
+//      System.out.println("End of multithreaded computation:");
+//      Iterator<ThreadBuilder> it = threadList.iterator();
+//      while( it.hasNext() ) {
+//         ThreadBuilder tb = it.next();
+//         System.out.println(".thread "+tb.getName()+" => "+tb.getMode());
+//      }
+      
       destroyThreadBuilderHpx();
-      if( stopped ) return;
+//      if( stopped ) return;
       
       if( !context.isTaskAborting() ) {
 
@@ -544,7 +579,7 @@ public class BuilderTiles extends Builder {
       String file = Util.getFilePath(path,order,npix,z);
 
       // si le process a été arrêté on essaie de ressortir au plus vite
-      if (stopped) return null;
+//      if (stopped) return null;
 
       // si on n'est pas dans le Moc, il faut retourner le fichier
       // pour la construction de l'arborescence...
@@ -584,7 +619,7 @@ public class BuilderTiles extends Builder {
             
          } else {
          
-            for( int i =0; !stopped && i<4; i++ ) {
+            for( int i =0; /* !stopped && */ i<4; i++ ) {
                if( context.isTaskAborting() ) throw new Exception("Task abort !");
                fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
             }
@@ -655,9 +690,15 @@ public class BuilderTiles extends Builder {
       /** Le thread travaille */
       public boolean isExec() { return mode==EXEC; }
 
+      /** Le thread est suspendu */
+      public boolean isSuspend() { return mode==SUSPEND; }
+
+      /** Le thread est en attente pour un nouveau boulot */
+      public boolean isWait() { return mode==WAIT; }
+
       /** Le thread est en attente et éventuellement
        * s'il y a assez de RAM pour le réutiliser */
-      public boolean isWait(boolean checkMem) {
+      public boolean isWaitingAndUsable(boolean checkMem) {
          if( mode!=WAIT ) return false;
          if( checkMem ) {
             try {
@@ -704,11 +745,13 @@ public class BuilderTiles extends Builder {
                   Aladin.trace(4,Thread.currentThread().getName()+" process high level cell "+item+"...");
 
                   // si le process a été arrêté on essaie de ressortir au plus vite
-                  if (stopped) break;
+//                  if (stopped) break;
                   if( context.isTaskAborting() ) break;
 
                   Fits fits = createHpx(threadBuilderTile, context.getOutputPath(), item.order, item.npix, item.z);
                   item.setFits(fits);
+                  
+                  rmFits(Thread.currentThread(), fits);
                   
                   if( item.order==3 && item.z==0 ) setProgressBar((int)item.npix);
 
@@ -793,7 +836,6 @@ public class BuilderTiles extends Builder {
       return false;
    }
 
-
    int nbThreadRunning() {
       int n=0;
       Iterator<ThreadBuilder> it = threadList.iterator();
@@ -805,26 +847,20 @@ public class BuilderTiles extends Builder {
       return n;
    }
 
-   // Retourne true s'il reste encore au-moins un thread de calcul vivant
-   boolean stillAlive() {
-      Iterator<ThreadBuilder> it = threadList.iterator();
-      while( it.hasNext() ) if( !it.next().isDied() ) return true;
-      return false;
-   }
-
-   // Retourne true si tous les threads de calculs sont en attente
-   boolean allWaiting() {
+   // Retourne true si au-moins un thread est encore en train de travailler
+   boolean stillWorking() {
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) {
-         if( !it.next().isWait(false) ) return false;
+         ThreadBuilder tb = it.next();
+         if( tb.isExec() || tb.isSuspend() ) return true;
       }
-      return true;
+      return false;
    }
    
    boolean oneWaiting() {
       try {
          Iterator<ThreadBuilder> it = threadList.iterator();
-         while( it.hasNext() ) if( it.next().isWait(true) ) return true;
+         while( it.hasNext() ) if( it.next().isWaitingAndUsable(true) ) return true;
       } catch( Exception e ) { }
       return false;
    }
@@ -834,7 +870,7 @@ public class BuilderTiles extends Builder {
          Iterator<ThreadBuilder> it = threadList.iterator();
          while( it.hasNext() ) {
             ThreadBuilder tb = it.next();
-            if( tb.isWait(false) ) tb.interrupt();
+            if( tb.isWaitingAndUsable(false) ) tb.interrupt();
          }
       } catch( Exception e ) {
       }

@@ -171,8 +171,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       
       // Le controle des filtres
-      String s = "Filter by free keywords (comma separated) "
-            + "or by any advanced filter expression (ex: nb_rows&lt;1000). Press ENTER to activate it.";
+      String s = "Filter by free keywords (AND logic, blank separated, quote sub-expr. supported) "
+            + "or by any advanced filter expression (ex: nb_rows&lt;1000).";
       JLabel labelFilter = new JLabel("select");
       Util.toolTip(labelFilter,s,true);
       labelFilter.setFont(labelFilter.getFont().deriveFont(Font.BOLD));
@@ -337,9 +337,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return dirList!=null &&  dirList.size()>0;
    }
    
+   /** Reset du filtre (combobox) possitionné */
    protected void reset() {
       directoryFilter.reset();
       dirTree.defaultExpand();
+   }
+   
+   /** Reset complet du filtrage (quickFilter+combobox) */
+   protected void fullReset() {
+      quickFilter.setText("");
+      comboFilter.setSelectedIndex(0);
+      reset();
    }
    
    // Mémorisation de la dernière position de la souris en mouseMoved()
@@ -403,13 +411,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
-   class QuickFilterField extends JTextField implements MouseListener, KeyListener /*,MouseMotionListener*/ {
+   class QuickFilterField extends JTextField implements KeyListener/*,MouseListener,MouseMotionListener*/ {
       private Rectangle cross=null;
       
 
       QuickFilterField(int nChar) {
          super(nChar);
-         addMouseListener(this);
+//         addMouseListener(this);
          addKeyListener(this);
          setUI( new BasicTextFieldUI() );
          updateWidgets();
@@ -500,41 +508,41 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( mocServerLoading || mocServerUpdating ) {
                Slide.drawBall(g, x, y, blinkState ? Color.white : Color.green );
             }
-            else drawCross(g,x,y);
+//            else drawCross(g,x,y);
          } catch( Exception e ) { }
       }
 
       static private final int X = 6;
-      private void drawCross(Graphics g, int x, int y) {
-         cross = new Rectangle(x,y,X,X);
-         String s = getText();
-         if( s.length()==0 || s.startsWith(UPDATING) ) return;
-         g.setColor( getBackground() );
-         g.fillOval(x-3, y-3, X+7, X+7);
-         g.setColor( Color.red.darker() );
-         g.drawLine(x,y,x+X,y+X);
-         g.drawLine(x+1,y,x+X+1,y+X);
-         g.drawLine(x+2,y,x+X+2,y+X);
-         g.drawLine(x+X,y,x,y+X);
-         g.drawLine(x+X+1,y,x+1,y+X);
-         g.drawLine(x+X+2,y,x+2,y+X);
-      }
-
-      public void mouseClicked(MouseEvent e) { }
-      public void mousePressed(MouseEvent e) { }
-      public void mouseEntered(MouseEvent e) { }
-      public void mouseExited(MouseEvent e) { }
-
-      void reset() {
-         if( getText().length()==0 ) return;
-         setText("");
-         doFiltre();
-      }
-
-      public void mouseReleased(MouseEvent e) {
-         if( in(e.getX())  ) reset();
-         else { iconFilter.setActivated(true); updateWidgets(); }
-      }
+//      private void drawCross(Graphics g, int x, int y) {
+//         cross = new Rectangle(x,y,X,X);
+//         String s = getText();
+//         if( s.length()==0 || s.startsWith(UPDATING) ) return;
+//         g.setColor( getBackground() );
+//         g.fillOval(x-3, y-3, X+7, X+7);
+//         g.setColor( Color.red.darker() );
+//         g.drawLine(x,y,x+X,y+X);
+//         g.drawLine(x+1,y,x+X+1,y+X);
+//         g.drawLine(x+2,y,x+X+2,y+X);
+//         g.drawLine(x+X,y,x,y+X);
+//         g.drawLine(x+X+1,y,x+1,y+X);
+//         g.drawLine(x+X+2,y,x+2,y+X);
+//      }
+//
+//      public void mouseClicked(MouseEvent e) { }
+//      public void mousePressed(MouseEvent e) { }
+//      public void mouseEntered(MouseEvent e) { }
+//      public void mouseExited(MouseEvent e) { }
+//
+//      void reset() {
+//         if( getText().length()==0 ) return;
+//         setText("");
+//         doFiltre();
+//      }
+//
+//      public void mouseReleased(MouseEvent e) {
+//         if( in(e.getX())  ) reset();
+//         else { iconFilter.setActivated(true); updateWidgets(); }
+//      }
     }
    
    /** Retourne true si on a sélectionné quelque chose de scannable */
@@ -807,14 +815,26 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       String expr;
       
-      // S'il s'agit directement d'une expression, rien à faire, sinon
-      // il faut générer l'expression en fonction d'une liste de mots clés
       int i = s.indexOf('=');
       if( i<0 ) i=s.indexOf('>');
       if( i<0 ) i=s.indexOf('<');
+      
+      // S'il s'agit directement d'une expression, rien à faire, ...
       if( i>0 && (aladin.directory.isFieldName( (s1=s.substring(0,i).trim())) || s1.indexOf('*')>=0) ) expr = s;
-//      else expr = "obs_title,obs_description,obs_collection,ID="+DirectoryFilter.jokerize(s);
-      else expr = "obs_title,obs_collection,ID="+DirectoryFilter.jokerize(s);
+      
+      // Sinon il faut générer l'expression en fonction d'une liste de mots clés
+      else {
+//         expr = "obs_title,obs_collection,ID="+DirectoryFilter.jokerize(s);
+         
+         StringBuilder s2 = null;
+         Tok tok = new Tok(s);
+         while( tok.hasMoreTokens() ) {
+            expr = "obs_title,obs_collection,ID="+DirectoryFilter.jokerize( tok.nextToken() );
+            if( s2==null ) s2 = new StringBuilder( expr );
+            else s2.append(" && "+expr );
+         }
+         expr = s2.toString();
+      }
       
       return expr;
    }
@@ -1129,7 +1149,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    protected void resumeFilter(String expr) {
       try {
          
-         System.out.println("resumeFilter iconFilter.isActivated="+iconFilter.isActivated());
+//         System.out.println("resumeFilter iconFilter.isActivated="+iconFilter.isActivated());
          
          // En cas de désactivation du filtrage, pas de contraintes
          if( !iconFilter.isActivated() ) expr="*";
@@ -1146,7 +1166,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          if( iconFilter.isActivated() && expr.equals("*") ) iconFilter.setActivated( false );
          
-         System.out.println("resumeFilter("+expr+")");
+         aladin.trace(4,"Directory.resumeFilter() => "+expr);
+         
+//         System.out.println("resumeFilter("+expr+")");
          // Filtrage
          checkFilter(expr);
 
@@ -2505,7 +2527,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
-            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = tapBx = xmatchBx = null;
+            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox("prog.access");
                mocAndMore.add(bx);

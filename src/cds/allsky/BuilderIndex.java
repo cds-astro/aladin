@@ -159,8 +159,9 @@ public class BuilderIndex extends Builder {
 
       // Récupération de la liste des HDU
       hdu = context.getHDU();
-      if( hdu==null ) context.info("MEF stategy => extension 0, otherwise 1");
-      else if( hdu.length>0 && hdu[0]==-1 ) context.info("MEF stategy => all images found in the MEF");
+      if( hdu==null ) {
+         if( !context.isColor() ) context.info("MEF strategy => extension 0, otherwise 1");
+      } else if( hdu.length>0 && hdu[0]==-1 ) context.info("MEF strategy => all images found in the MEF");
       else {
          StringBuilder s = new StringBuilder("MEF stategy: extensions ");
          for( int i=0; i<hdu.length; i++ ) { if( i>0 )  s.append(','); s.append(hdu[i]+""); }
@@ -402,7 +403,7 @@ public class BuilderIndex extends Builder {
          }
       }
    }
-
+   
    private void testAndInsert(Fits fitsfile, String pathDest, String currentFile,
          String suffix, int order) throws Exception {
       String hpxname;
@@ -412,6 +413,7 @@ public class BuilderIndex extends Builder {
 
       // Recherche les 4 coins de l'image (cellule)
       Calib c = fitsfile.getCalib();
+      boolean isCAR = c.getProj()==Calib.CAR;
       ArrayList<double[]> cooList = new ArrayList<double[]>(4);
       Coord coo = new Coord();
       Coord corner[] = new Coord[4];
@@ -443,8 +445,8 @@ public class BuilderIndex extends Builder {
 //      System.out.println();
       
       // On teste le rapport largeur/longeur du pixel si nécessaire
-      // sauf s'il n'y a qu'une i
-      if( maxRatio>0 && statNbFile>0 ) {
+      // sauf s'il n'y a qu'une image ou que la projection est CAR
+      if( !isCAR && maxRatio>0 && statNbFile>0 ) {
          double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
          double h = Coord.getDist(corner[1], corner[2])/fitsfile.height;
          //         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));
@@ -475,7 +477,8 @@ public class BuilderIndex extends Builder {
       }
       
       // On estime la RAM nécessaire au chargement d'une cellule du fichier
-      long cellMem = fitsfile.widthCell * fitsfile.heightCell * (fitsfile.bitpix==0 ?32 : Math.abs( fitsfile.bitpix ) /8);
+      long cellMem = fitsfile.widthCell * fitsfile.heightCell * fitsfile.depth
+            * (fitsfile.bitpix==0 ?32 : Math.abs( fitsfile.bitpix ) /8);
 
       long[] npixs=null;
       long nside = CDSHealpix.pow2(order);
@@ -541,8 +544,8 @@ public class BuilderIndex extends Builder {
             coo.y = f.height - coo.y -1;
             int width = f.widthCell+marge;
             int height = f.heightCell+marge;
-            if (coo.x >= f.xCell - marge && coo.x < f.xCell + width
-                  && coo.y >= f.yCell - marge && coo.y < f.yCell + height) {
+            if( coo.x >= f.xCell - marge && coo.x < f.xCell + width
+                  && coo.y >= f.yCell - marge && coo.y < f.yCell + height ) {
                return true;
             }
             // tous d'un coté => x/y tous du meme signe
@@ -554,7 +557,7 @@ public class BuilderIndex extends Builder {
          return false;
       }
 
-      if (Math.abs(signeX) == Math.abs(corners.length) || Math.abs(signeY) == Math.abs(corners.length)) {
+      if( Math.abs(signeX) == 4 || Math.abs(signeY) == 4 ) {
          return false;
       }
       return true;

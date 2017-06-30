@@ -438,6 +438,19 @@ final public class ThreadBuilderTile {
                      try {
                         file.open(z);
                      } catch( Exception e ) {
+                        if( context.getVerbose()>=3 ) context.warning("One original file retired: "+file.name);
+                        
+                        // Cas complexe où l'image originale est un JPEG ou un PNG et que JAVA
+                        // tente de l'ouvrir sur une portion uniquement. Il va en interne
+                        // l'ouvrir totalement sut le tmp du système. Si tmp est trop petit
+                        // ça va planter et faire des petits carrés noirs sur le HiPS final,
+                        // un par thread de calcul
+                        String msg = e.getMessage();
+                        if( msg!=null && msg.indexOf("space")>=0 ) {
+                           context.taskAbort();
+                           throw e;
+                        }
+                        
                         file.flagRemoved=true;
                         removed++;
                         if( removed>=fin-deb ) return null;  // Aucun fichier source disponible
@@ -1039,41 +1052,46 @@ final public class ThreadBuilderTile {
       /** Ouverture effective du fichier FITS */
       protected void open(int frame) throws Exception {
          if( isOpened==frame ) return;
-         if( isOpened!=-1 ) fitsfile.rmUser();  // je ne peux de totue façon pas ouvrir simultanément plusieurs frame du même fichier
-         int mode = (name.endsWith(".hhh") || name.indexOf(".hhh[")>0) ? CacheFits.HHH
-               : (name.endsWith(".jpg") || name.indexOf(".jpg[")>0) ? CacheFits.JPEG
-                     : (name.endsWith(".png") || name.indexOf(".png[")>0) ? CacheFits.PNG
-                           : CacheFits.FITS;
+         synchronized( this ) {
+            if( isOpened!=-1 ) fitsfile.rmUser();  // je ne peux de totue façon pas ouvrir simultanément plusieurs frame du même fichier
+            int mode = (name.endsWith(".hhh") || name.indexOf(".hhh[")>0) ? CacheFits.HHH
+                  : (name.endsWith(".jpg") || name.indexOf(".jpg[")>0) ? CacheFits.JPEG
+                        : (name.endsWith(".png") || name.indexOf(".png[")>0) ? CacheFits.PNG
+                              : CacheFits.FITS;
 
-         // Mode FITS couleur
-         if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
+            // Mode FITS couleur
+            if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
 
-         // Mode normal
-         else {
-            if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);
-            try {
-               fitsfile=context.cacheFits.getFits(name,mode,true,false);
-            } catch( MyInputStreamCachedException e ) {
-               context.taskAbort();
-               throw new Exception();
+            // Mode normal
+            else {
+               if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);
+               try {
+                  fitsfile=context.cacheFits.getFits(name,mode,true,false);
+               } catch( MyInputStreamCachedException e ) {
+                  context.taskAbort();
+                  throw new Exception();
+               }
             }
+
+            // Faut-il associer un Polygon particulier
+            if( context.scanFov ) polygon = getPolygon(fitsfile);
+
+            isOpened=frame;
+            fitsfile.addUser();
+            MyInputStreamCached.incActiveFile(name);
+
+            blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
          }
-
-         // Faut-il associer un Polygon particulier
-         if( context.scanFov ) polygon = getPolygon(fitsfile);
-
-         isOpened=frame;
-         fitsfile.addUser();
-         MyInputStreamCached.incActiveFile(name);
-
-         blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
       }
       
       /** Libération des ressources associées à la geston de ce fichier Fits */
       protected void release() {
-         fitsfile.rmUser();
-         MyInputStreamCached.decActiveFile(name);
-         isOpened=-1;
+         if( isOpened==-1 ) return;
+         synchronized( this ) {
+            fitsfile.rmUser();
+            MyInputStreamCached.decActiveFile(name);
+            isOpened=-1;
+         }
       }
 
       // J'ai [ext;x,y-wxh] et je veux [ext;x,y,z-w*h*d]

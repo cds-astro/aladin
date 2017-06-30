@@ -21,6 +21,7 @@
 
 package cds.allsky;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -153,21 +154,35 @@ public class MyInputStreamCached extends MyInputStream {
          // décompresser prendra au mieux 3x la taille du fichier compressé
          checkCache( (new File(filename)).length()*(3/(1024*1024.)) );
          
-         // Skip de la première HDU
-         skip(2880); 
+         HeaderFits header = new HeaderFits(this);
          
          // Décompression
          OutputStream out = null;
          try {
             out = new FileOutputStream(file);
-            long size = writeRice( out, this );
+            
+            // La première entête
+            long size = header.writeHeader(out);
+
+            // Chaque HDU RICE, jusqu'à la fin du fichier
+            long n;
+            while( (n=writeRice( out, this))!=-1 ) {
+               size+=n;
+            }
             
             // Positionnement de la nouvelle taille du cache disque
             cacheSize+=size/(1024*1024.);
             
+         // Y a un problème, l'image en cours de construction est supprimée du cache
+         } catch( Exception e ) {
+            out.close();
+            out=null;
+            file.delete();
+            throw e;
+            
          } finally {
             close();
-            out.close();
+            if( out!=null ) out.close();
          }
       }
       
@@ -176,7 +191,10 @@ public class MyInputStreamCached extends MyInputStream {
    
    protected long writeRice(OutputStream os, MyInputStream dis) throws Exception {
 
-      HeaderFits headerFits = new HeaderFits(dis);
+      HeaderFits headerFits;
+      try {
+         headerFits = new HeaderFits(dis);
+      } catch( EOFException e0 ) { return -1; }
 
       int bitpix = headerFits.getIntFromHeader("ZBITPIX");
       int naxis1 = headerFits.getIntFromHeader("ZNAXIS1");
@@ -242,20 +260,30 @@ public class MyInputStreamCached extends MyInputStream {
          offset+=tile;
       }
       
+      // Alignement sur 2880
+      // On se cale sur le prochain segment de 2880
+      long pos = getPos();
+      if( pos%2880!=0 ) {
+         long off = ((pos/2880)+1) *2880  -pos;
+         skip(off);
+      }
+      
       // Génération de l'entête de sortie
       HeaderFits outHeader = new HeaderFits();
       Hashtable<String,String> map = headerFits.getHashHeader();
       Enumeration<String> e = headerFits.getKeys();
-      outHeader.setKeyValue("SIMPLE","T");
       while( e.hasMoreElements() ) {
          String key = e.nextElement();
          if( Util.indexInArrayOf(key, KEYIGNORE)>=0 ) continue;
          
          String  val;
-              if( key.equals("BITPIX") ) val=bitpix+"";
-         else if( key.equals("NAXIS1") ) val=naxis1+"";
-         else if( key.equals("NAXIS2") ) val=naxis2+"";
-         else if( key.equals("NAXIS") )  val="2";
+              if( key.equals("XTENSION") ) val="IMAGE";
+         else if( key.equals("BITPIX") )   val=bitpix+"";
+         else if( key.equals("NAXIS1") )   val=naxis1+"";
+         else if( key.equals("NAXIS2") )   val=naxis2+"";
+         else if( key.equals("NAXIS") )    val="2";
+         else if( key.equals("PCOUNT") )   val="0";
+         else if( key.equals("GCOUNT") )   val="1";
          else val = map.get(key);
          outHeader.setKeyValue(key, val);
       }
@@ -269,9 +297,9 @@ public class MyInputStreamCached extends MyInputStream {
       return size;
    }
    
-   static private String [] KEYIGNORE = { "XTENSION","PCOUNT","GCOUNT","TFIELDS","TFIELDS","TTYPE1","TFORM1",
+   static private String [] KEYIGNORE = { "TFIELDS","TFIELDS","TTYPE1","TFORM1",
          "ZIMAGE","ZTILE1","ZTILE2","ZCMPTYPE","ZNAME1","ZVAL1","ZNAME2","ZVAL2","ZSIMPLE","ZBITPIX",
-         "ZNAXIS","ZNAXIS1","ZNAXIS2","ZEXTEND" };
+         "ZNAXIS","ZNAXIS1","ZNAXIS2","ZEXTEND","ZPCOUNT","ZGCOUNT","ZTENSION" };
    
    static public byte[] getBourrage(long currentPos) {
       int n = (int)(currentPos % 2880L);
@@ -279,7 +307,6 @@ public class MyInputStreamCached extends MyInputStream {
       byte[] b = new byte[size];
       return b;
    }
-
    
    /** Vérification de la taille du cache disque, et nettoyage si nécessaire
     * @param size nombre d'octets qu'il faudrait ajouter au cache

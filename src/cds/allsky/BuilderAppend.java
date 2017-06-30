@@ -106,7 +106,7 @@ public class BuilderAppend extends Builder {
       if( f.exists() && (!f.isDirectory() || !f.canRead() )) throw new Exception("\"inputPath\" directory not available ["+inputPath+"]");
 
       skyval=getSkyVal(outputPath);
-      if( skyval!=null && skyval.toLowerCase().equals("true") ) {
+      if( skyval!=null && skyval.toLowerCase().equals("auto") ) {
          try {
             skyvalues = loadProperty(outputPath,Constante.KEY_HIPS_SKYVAL_VALUE);
          } catch( Exception e) {}

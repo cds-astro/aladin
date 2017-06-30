@@ -94,18 +94,12 @@ public class IconFilter extends MyIcon {
    
    protected void submit() {
       if( !isAvailable() ) return;
-      activated = !activated;
-//      if( activated ) {
-//         int i = aladin.directory.comboFilter.getSelectedIndex();
-//         if( i>0 ) {
-//            aladin.directory.filtre( (String)aladin.directory.comboFilter.getSelectedItem() );
-//            return;
-//         }
-//      }
-      aladin.directory.doFiltre();
+//      activated = !activated;
+//      aladin.directory.doFiltre();
+      aladin.directory.fullReset();
    }
       
-   protected String getHelpTip() { return "Activate/suspend the filter"; } //aladin.chaine.getString("SCANTIP"); }
+   protected String getHelpTip() { return "Reset the filter"; } //aladin.chaine.getString("SCANTIP"); }
    protected String Help()       { return aladin.chaine.getString("Scan.HELP");  }
 
 }

@@ -166,7 +166,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Script command extension for CS, SIA (1&2), SSA
  * @beta    <LI> Additionnal colormaps: Red, Green and Blue
  * @beta    <LI> Dark theme user interface
- * @beta    <LI> Collection Registry tree (HiPS, CS, SIA, SSA, TAP,...)
+ * @beta    <LI> Discovery tree panel (HiPS, CS, SIA, SSA, TAP,...)
  * @beta    <LI> Datalink, SODA and TAP supports
  * @beta    <LI> Simbad + VizieR pointer improvements
  * @beta    <LI> HiPS properties file direct support
@@ -176,7 +176,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Fullscreen mode improvements (global menu)
  * @beta    <LI> New script commands (cmoc, ccat, )
  * @beta    <LI> MultiCCD FITS image support
- * @beta    <LI> Tags improvements
+ * @beta    <LI> Tags tool improvements
  * @beta    <LI> Probability sky map MOC extraction
  * @beta    <LI> Planetary HiPS (longitude inversion)
  * @beta    <LI> Hipsgen improvements: HiPS color multithread code, local MIRROR, APPEND, MAP
@@ -185,14 +185,14 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
- * @beta    <LI> Filter activation by script
+ * @beta    <LI> Filter activation by script bug fixing
  * @beta    <LI> Polarisation segment size normalized bug fixing
- * @beta    <LI> Phot tool clic&drag fix
+ * @beta    <LI> Phot tool clic&drag bug fixing
  * @beta    <LI> Correction for VOTable UTF-16 STREAM bug
  * @beta    <LI> Correction for Hipsgen mirror filenotfound bug
- * @beta    <LI> MOC stack bug introduced in v9.039
+ * @beta    <LI> MOC stack bug fixing (introduced in v9.039)
  * @beta    <LI> Bug correction for BLANK wrong value in Hipsgen MAPTILES action
- * @beta    <LI> Bug correction for radians unit support for table coordinates
+ * @beta    <LI> Radians unit support for table coordinates
  * @beta    <LI> Bug correction for pmra and pmde detection
  * @beta    <LI> Bug correction for ZEA and ARC projection in HiPS context
  * @beta    <LI> Graphical object mouse selection over a HiPS
@@ -225,7 +225,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.000";
+   static public final    String VERSION = "v10.005";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3988,8 +3988,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Ouverture de la fenêtre des pixels avec maj du bouton pixel associé */
    protected void pixel() {
-      toolBox.tool[ToolBox.HIST].mode=Tool.DOWN;
-      toolBox.repaint();
+      toolBox.setMode(ToolBox.HIST, Tool.DOWN);
       updatePixel();
    }
 
@@ -4006,8 +4005,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Ouverture de la fenêtre des RGB avec maj du bouton associé */
    protected void RGB() {
-      toolBox.tool[ToolBox.RGB].mode=Tool.DOWN;
-      toolBox.repaint();
+      toolBox.setMode(ToolBox.RGB, Tool.DOWN);
       updateRGB();
    }
 
@@ -4079,6 +4077,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          trace(1,"Creating the MocOp window");
          frameMocOperation = new FrameMocOperation(aladin);
       }
+      toolBox.setMode(ToolBox.MOC, Tool.DOWN);
       frameMocOperation.maj();
    }
 
@@ -4449,8 +4448,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Ouverture de la fenêtre des blinks avec maj du bouton associé */
    protected void blink(int mode) {
-      toolBox.tool[ToolBox.BLINK].mode=Tool.DOWN;
-      toolBox.repaint();
+      toolBox.setMode(ToolBox.BLINK, Tool.DOWN);
       updateBlink(mode);
    }
 
@@ -4467,8 +4465,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Ouverture de la fenêtre des Contours avec maj du bouton pixel associé */
    protected void contour() {
-      toolBox.tool[ToolBox.CONTOUR].mode=Tool.DOWN;
-      toolBox.repaint();
+      toolBox.setMode(ToolBox.CONTOUR, Tool.DOWN);
       updateContour();
    }
 

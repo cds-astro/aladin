@@ -4436,12 +4436,12 @@ public final class Calib  implements Cloneable {
    /**
  * Retourne Le type de projection (indice du tableau projection)
  */
-   protected int getProj() { return proj; }
+   public int getProj() { return proj; }
 
    /**
  * Retourne Le système de coordonnées
  */
-   protected int getSystem() { return system; }
+   public int getSystem() { return system; }
 
    /**
  * Retourne La dimension en pixels de l'image

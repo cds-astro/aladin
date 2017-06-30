@@ -579,7 +579,7 @@ public class CacheFits {
       if( context.skyvalName!=null ) {
 
          try {
-            if( context.skyvalName.equalsIgnoreCase("true") ) {
+            if( context.skyvalName.equalsIgnoreCase("auto") ) {
                double cut [] = findAutocutRange(f,pourcentMin,pourcentMax);
                double cutOrig [] = context.getCutOrig();
                skyval = cut[0] - cutOrig[0];
