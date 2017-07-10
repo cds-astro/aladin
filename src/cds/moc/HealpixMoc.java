@@ -19,6 +19,8 @@
 //    along with Aladin.
 //
 
+
+
 package cds.moc;
 
 import java.io.InputStream;
@@ -35,6 +37,7 @@ import healpix.essentials.RangeSet;
  * A MOC is used to define a sky region by using HEALPix sky tesselation
  *
  * @authors Pierre Fernique [CDS], Martin Reinecke [Max Plank]
+ * @version 4.8 July 2017 - isEmpty(), isIncluding(..) methods
  * @version 4.7 Dec 2016 - Undeprecated new HealpicMoc(Inputstream in, int mode) + isAscendant(int order, Array a) bug fix
  * @version 4.6 Apr 2016 - MocLint - IVOA 1.0 MOC recommendation compatibility checker
  * @version 4.5 Nov 2015 - JSON #MOCORDER patch
@@ -650,7 +653,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    public void trim() {
       for( int order=0; order<nOrder; order++ ) level[order].trim();
    }
-
+   
    // Juste pour du debogage
    public String todebug() {
       StringBuffer s = new StringBuffer();
@@ -774,6 +777,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
     * @return true if the intersection is not null
     */
    public boolean isIntersecting(HealpixMoc moc) {
+      if( isAllSky() ) return true;
       sort();
       moc.sort();
       int n = moc.getMaxOrder();
@@ -782,6 +786,20 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
          if( isInTree(o,a) ) return true;
       }
       return false;
+   }
+   
+   /** Fast test for checking if the parameter MOC is totally inside
+    * the current MOC object
+    * @return true if MOC is totally inside
+    */
+   public boolean isIncluding(HealpixMoc moc) {
+      if( isAllSky() ) return true;
+      Iterator<MocCell> it = moc.iterator();
+      while( it.hasNext() ) {
+         MocCell c = it.next();
+         if( !isIn(c.order,c.npix) && !isDescendant(c.order,c.npix) ) return false;
+      }
+      return true;
    }
 
    public HealpixMoc union(HealpixMoc moc) throws Exception {
@@ -831,6 +849,11 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    /** Return true if the MOC covers the whole sky */
    public boolean isAllSky() {
       return  getSize( minLimitOrder ) == 12L*pow2(minLimitOrder)*pow2(minLimitOrder);
+   }
+   
+   /** Return true if the MOC is empty */
+   public boolean isEmpty() {
+      return getSize()==0;
    }
 
    /** Equality test */

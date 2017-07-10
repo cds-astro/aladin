@@ -334,6 +334,16 @@ public final class Words implements Runnable {
          aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
          return;
       }
+      
+// FOR CHAITRA DALALINK => the getDataLinks flag is no longer required
+//      try {
+//         MyInputStream mis = Util.openAnyStream(url);
+//         if( (mis.getType() & MyInputStream.DATALINK)!=0 ) {
+//           //.... Chaitra DatalinkManager(mis) new code ...
+//         } else {
+//            aladin.calque.newPlan(mis,label,"provided by the original archive server", o);
+//         }
+//      }
 
       try {
          if (getDatalinks) {
@@ -371,6 +381,7 @@ public final class Words implements Runnable {
          } else {
             aladin.calque.newPlan(url, label, "provided by the original archive server", o);
          }
+         
       } catch (MalformedURLException e) {
          // TODO: handle exception
          aladin.warning(aladin, "Error in loading url");

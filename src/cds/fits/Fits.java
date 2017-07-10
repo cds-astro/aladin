@@ -419,7 +419,10 @@ final public class Fits {
    // Test si un Display X11 est bien accessible
    static boolean X11OK=true;;
    static {
-      try { Toolkit.getDefaultToolkit( ); } catch( Exception e) { X11OK=false; }
+      try { Toolkit.getDefaultToolkit( ); } catch( Throwable e) {
+         X11OK=false;
+         System.out.println("You do not have X11 display. Do not panic, it should be not a problem, just slower for some tasks...");
+      }
    }
    
    public void loadPreview(MyInputStream dis, int x, int y, int w, int h, boolean flagColor, int format) throws Exception {

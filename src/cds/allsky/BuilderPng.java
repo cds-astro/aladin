@@ -39,4 +39,5 @@ public class BuilderPng extends BuilderJpg {
    public Action getAction() { return Action.PNG; }
    
    protected int getMinCM() { return 1; }
+
 }

@@ -3077,22 +3077,19 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( hasRainbow() && rainbow.mouseDrag( vs, x,y, e.isShiftDown() ) ) { repaint(); return; }
       if( rainbowF!=null && rainbowF.mouseDrag( vs, x,y, e.isShiftDown() ) ) { repaint(); return; }
 
-      if( true /* planRecalibrating==null */ ) {
+      // Peut etre un début de MegaDrag
+      if( tool==ToolBox.SELECT && xDrag==-1 ) aladin.view.startMegaDrag(this);
 
-         // Peut etre un début de MegaDrag
-         if( tool==ToolBox.SELECT && xDrag==-1 ) aladin.view.startMegaDrag(this);
-
-         // On sort du panel, sans doute un MegaDrag
-         if( x<0 || x>getSize().width || y<0 || y>getSize().height ) return;
+      // On sort du panel, sans doute un MegaDrag
+      if( x<0 || x>getSize().width || y<0 || y>getSize().height ) return;
 
 
-         // Agrandissement du rectangle de selection multiple
-         if( rselect!=null ) {
-            extendSelect(x,y);
-            flagDrag=true;
-            repaint();
-            return;
-         }
+      // Agrandissement du rectangle de selection multiple
+      if( rselect!=null ) {
+         extendSelect(x,y);
+         flagDrag=true;
+         repaint();
+         return;
       }
 
       // Deplacement d'objets sélectionnés
@@ -3254,24 +3251,35 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // Calcul de la nouvelle position
          PointD p = vs.getPosition((double)x,(double)y);
-
+         
          // Positionnement du clip initial
          view.extendClip(view.newobj);
 
-         // Memorisation de la nouvelle position
-         view.newobj.setPosition(vs,p.x,p.y);
+//         // Memorisation de la nouvelle position
+//         view.newobj.setPosition(vs,p.x,p.y);
 
          // Dans le cas d'une polyligne, on commence une nouvelle arete
-         if( !(view.newobj instanceof Cote) /* && !flagLigneClic */ ) {
-
-            Obj suivant = new Ligne(view.newobj.getPlan(),vs,p.x,p.y,(Ligne)view.newobj);
-            setNewObjet();
-            view.newobj = suivant;
-         } else {
-            if( view.newobj!=null ) {
-               view.unSelectObjetPlanField(((Position)view.newobj).plan);
-               view.selectCote(view.newobj);
+         if( !(view.newobj instanceof Cote)  ) {
+            
+            // La distance entre deux points de controles consécutifs est contraintes (6 pixels xview)
+            double dx= ((Ligne)view.newobj).xv[n]-p.x;
+            double dy = ((Ligne)view.newobj).yv[n]-p.y;
+            double dist = Math.sqrt( dx*dx + dy*dy );
+//            System.out.println("dist="+dist+" newobj="+((Ligne)view.newobj).xv[n]+","+((Ligne)view.newobj).yv[n]+
+//                  " -> "+p.x+","+p.y);
+            if( dist*zoom>6 ) {
+               Obj suivant = new Ligne(view.newobj.getPlan(),vs,p.x,p.y,(Ligne)view.newobj);
+               setNewObjet();
+               view.newobj = suivant;
             }
+            
+         } else {
+            
+            // Memorisation de la nouvelle position
+            view.newobj.setPosition(vs,p.x,p.y);
+            
+            view.unSelectObjetPlanField(((Position)view.newobj).plan);
+            view.selectCote(view.newobj);
          }
 
          // Extension du clip et reaffichage

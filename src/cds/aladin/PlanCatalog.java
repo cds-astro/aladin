@@ -272,7 +272,7 @@ public class PlanCatalog extends Plan {
       
       if( flagError ) n=-1;
       
-      if( n==0 )  aladin.error = error = "No object found in the field!";
+      if( n==0 )  aladin.error = error = "EMPTY: No object found in the field!";
       if( n<=0 ) {
           callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.ERROR, aladin.error));
           return false;

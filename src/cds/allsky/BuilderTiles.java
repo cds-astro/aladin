@@ -593,7 +593,6 @@ public class BuilderTiles extends Builder {
             moc = moc.intersection(new HealpixMoc(order+"/"+npix));
             int nbTiles = (int)moc.getUsedArea();
             updateStat(0,0,nbTiles,0,nbTiles/4,0);
-//            oldOut.releaseBitmap();
             return oldOut;
          }
       }
@@ -1127,8 +1126,7 @@ public class BuilderTiles extends Builder {
       addFits(Thread.currentThread(), out);
       return out;
    }
-
-
+   
    /** Recherche et chargement d'un losange déjà calculé
     *  Retourne null si non trouvé
     * @param file Nom du fichier ( sans extension)

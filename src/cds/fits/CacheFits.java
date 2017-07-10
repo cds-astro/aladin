@@ -452,7 +452,8 @@ public class CacheFits {
    public void setContext(Context c) { context = c; }
 
 
-   private static final int WIDTHAUTOCUT=1024;
+   protected static int WIDTHAUTOCUT =-1;
+   protected static int HEIGHTAUTOCUT=-1;
 
    // Détermination des cuts d'une image,
    // @param pourcentMin % de l'info ignoré en début d'histogramme (ex: 0.003)
@@ -476,8 +477,24 @@ public class CacheFits {
 
       // Estimation au centre
       try {
+         
+         // Initialisation de la taille
+         if( WIDTHAUTOCUT==-1 ) {
+            if( f1.width>512 && f1.height>512 ) {
+               WIDTHAUTOCUT = (int)(f1.width/3.5);
+               if( WIDTHAUTOCUT>1024 ) WIDTHAUTOCUT=1024;
+               HEIGHTAUTOCUT = (int)(f1.height/3.5);
+               if( HEIGHTAUTOCUT>1024 ) HEIGHTAUTOCUT=1024;
+               context.info("skyval estimation based on median on 5 regions ("+WIDTHAUTOCUT+"x"+HEIGHTAUTOCUT+" pixels)");
+            } else {
+               WIDTHAUTOCUT = (int)(f1.width*0.8);
+               WIDTHAUTOCUT = (int)(f1.width*0.8);
+               context.info("skyval estimation based central region ("+WIDTHAUTOCUT+"x"+HEIGHTAUTOCUT+" pixels)");
+           }
+         }
+         
          int w=f1.width>WIDTHAUTOCUT ? WIDTHAUTOCUT : f1.width;
-         int h=f1.height>WIDTHAUTOCUT ? WIDTHAUTOCUT : f1.height;
+         int h=f1.height>HEIGHTAUTOCUT ? HEIGHTAUTOCUT : f1.height;
          int d=f1.depth>10 ? 10 : f1.depth;
          int x = f.width/2-w/2, y=f.height/2-h/2, z=f.depth/3-d/3;
 
@@ -494,10 +511,10 @@ public class CacheFits {
          // et prendre la médiane des 5
          if( width>3*WIDTHAUTOCUT &&height>3*WIDTHAUTOCUT ) {
             int gapx = (width-2*WIDTHAUTOCUT)/3;
-            int gapy = (height-2*WIDTHAUTOCUT)/3;
+            int gapy = (height-2*HEIGHTAUTOCUT)/3;
             for( int i=0; i<4; i++ ) {
                x = i==0 || i==2 ? gapx : width-WIDTHAUTOCUT-gapx;
-               y = i<2 ? gapy : height-WIDTHAUTOCUT-gapy;
+               y = i<2 ? gapy : height-HEIGHTAUTOCUT-gapy;
                f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
                cut1[i] = new Cut();
                cut1[i].cut = f1.findAutocutRange(pourcentMin,pourcentMax);
@@ -704,7 +721,7 @@ public class CacheFits {
             +" using "+Util.getUnitDisk(getMem())
             +(maxMem>0 ? "/"+Util.getUnitDisk(maxMem):"["+Util.getUnitDisk(maxMem)+"]")
             +" freeRAM="+Util.getUnitDisk(getFreeMem())
-            +" (opened="+statNbOpen+" found="+statNbFind+" released="+statNbFree+")";
+            +" (opened="+statNbOpen+" reused="+statNbFind+" released="+statNbFree+")";
    }
 
    // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]

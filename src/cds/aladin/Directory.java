@@ -47,8 +47,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -139,7 +141,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       multiProp = new MultiMoc2();
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
-//      if( aladin.levelTrace>=3 ) aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
+//      if( aladin.levelTrace>=3 ) {
+//         aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
+//         aladin.trace(0,"WARNING: use local MocServer for test => http://localhost:8080/MocServer/query !!!");
+//      }
 
       setBackground(cbg);
       setLayout(new BorderLayout(0,0) );
@@ -236,10 +241,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
      
       JPanel pControl = new JPanel(new FlowLayout(FlowLayout.LEFT,1,1));
       pControl.setBackground(cbg);
-      pControl.add(iconFilter);
       pControl.add(iconCollapse);
       pControl.add(iconInside);
       pControl.add(iconScan);
+      pControl.add(iconFilter);
       
       JPanel panelControl = new JPanel(new BorderLayout(0,0));
       panelControl.setBackground(cbg);
@@ -352,6 +357,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    // Mémorisation de la dernière position de la souris en mouseMoved()
    private Point lastMove = null;
+   
+   // Mise à jour du formulaire des filtres s'il est visible
+   protected void updateWidget() {
+      if( directoryFilter!=null && directoryFilter.isShowing() ) directoryFilter.updateWidget();
+   }
    
    /** Met à jour la liste des filtres  */
    protected void updateDirFilter() {
@@ -795,7 +805,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( name.equals(DirectoryFilter.ALLCOLLHTML) ) name=DirectoryFilter.ALLCOLL;
       else if( name.equals(DirectoryFilter.MYLISTHTML) ) name=DirectoryFilter.MYLIST;
       
-      System.out.println("filter("+name+")");
+//      System.out.println("filter("+name+")");
       
       String expr = name.equals(DirectoryFilter.ALLCOLL) ? "*" : aladin.configuration.dirFilter.get(name);
       
@@ -1145,8 +1155,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
     *  @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
+    *  @param moc filtrage spatial, null si aucun
+    *  @param inclusive pour le filtrage spatial, true=>totalité du moc inclus
     */
-   protected void resumeFilter(String expr) {
+   protected void resumeFilter(String expr, HealpixMoc moc, boolean inclusive) {
       try {
          
 //         System.out.println("resumeFilter iconFilter.isActivated="+iconFilter.isActivated());
@@ -1170,7 +1182,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
 //         System.out.println("resumeFilter("+expr+")");
          // Filtrage
-         checkFilter(expr);
+         checkFilter(expr, moc, inclusive);
 
          // Regénération de l'arbre
          resumeTree();
@@ -1204,18 +1216,89 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
    /** Positionnement des flags isHidden() de l'arbre en fonction des contraintes de filtrage
     * @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
+    * @param moc filtrage spatial, null si aucun
+    * @param inclusive pour le filtrage spatial, true=>totalité du moc inclus
     */
-   private void checkFilter(String expr) throws Exception {
+   private void checkFilter(String expr, HealpixMoc moc, boolean inclusive) throws Exception {
       
-      // Filtrage
+      // Filtrage par expression
 //      long t0 = System.currentTimeMillis();
-      ArrayList<String> ids = multiProp.scan( (HealpixMoc)null, expr, false, -1);
+      ArrayList<String> ids = multiProp.scan( (HealpixMoc)null, expr, false, -1, false);
 //      System.out.println("Filter: "+ids.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
+      
+      // Filtrage spatial
+      ArrayList<String> ids1 = filtrageSpatial( moc, inclusive );
       
       // Positionnement des flags isHidden() en fonction du filtrage
       HashSet<String> set = new HashSet<String>( ids.size() );
-      for( String s : ids ) set.add(s);      
+      for( String s : ids ) {
+         if( ids1!=null && !ids1.contains(s) ) continue;
+         set.add(s);      
+      }
       for( TreeObjDir to : dirList ) to.setHidden( !set.contains(to.internalId) );
+   }
+   
+   private HealpixMoc oldMocSpatial=null;
+   private ArrayList<String> oldIds=null;
+   private boolean oldInclusive=false;
+   
+   /** Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire
+    * plusieurs fois de suite la même requête
+    * @param moc
+    * @param inclusive true si la totalité du Moc doit être incluse dans le MOC de la collection à retenir
+    * @return la liste des IDs qui matchent
+    */
+   private ArrayList<String> filtrageSpatial( HealpixMoc moc, boolean inclusive ) {
+      if( moc==null ) return null;
+      if( oldMocSpatial!=null && inclusive==oldInclusive && oldMocSpatial.equals(moc) ) return oldIds;
+      
+      oldInclusive = inclusive;
+      oldMocSpatial= moc;
+      try {
+         oldIds=filtrageSpatial1( moc, inclusive );
+      } catch( Exception e ) {
+         oldIds=null;
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+      return oldIds;
+   }
+   
+   /** Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire
+    * => voir filtrageSpatial(...)
+    */
+   private ArrayList<String> filtrageSpatial1( HealpixMoc moc, boolean inclusive ) throws Exception {
+      String url = aladin.glu.getURL("MocServer").toString();
+      int i=url.lastIndexOf('?');
+      if( i>0 ) url = url.substring(0,i);
+      
+      MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
+      String boundary = MultiPartPostOutputStream.createBoundary();
+      HttpURLConnection urlConn = (HttpURLConnection)MultiPartPostOutputStream.createConnection( new URL(url) );
+      urlConn.setRequestProperty("Accept", "*/*");
+      urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
+      urlConn.setRequestProperty("Connection", "Keep-Alive");
+      urlConn.setRequestProperty("Cache-Control", "no-cache");
+      MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
+      if( inclusive ) out.writeField("inclusive","true");
+      File tmp = File.createTempFile("tmp", "fits");
+      tmp.deleteOnExit();
+      FileOutputStream fo = new FileOutputStream(tmp);
+      try { moc.writeFits(fo); }
+      finally { try { fo.close(); } catch(Exception e) {} }
+      out.writeFile("moc", null, tmp, false);
+      out.close();
+      
+      // récupération de chaque ID concernée (1 par ligne)
+      BufferedReader in=null;
+      ArrayList<String> ids=null;
+      try {
+         in = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
+         String s;
+         ids = new ArrayList<String>();
+         while( (s = in.readLine()) != null ) ids.add(getId(s));
+      } finally { in.close(); }
+   
+      return ids;
    }
    
    /**
@@ -1827,7 +1910,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
       
-      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1);
+      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1, false);
 
       Map<String, Integer> map = new HashMap<String, Integer>();
       for( String id : a) {
@@ -2458,7 +2541,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          } else {
          
             to = treeObjs.get(0);
-
+            
             if( to.verboseDescr!=null || to.description!=null ) {
                s = to.verboseDescr==null ? "":to.verboseDescr;
                a = new MyAnchor(aladin,to.description,200,s,null);
@@ -2609,6 +2692,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                mocBx = bx = new JCheckBox("Coverage"); 
                mocAndMore.add(bx); 
                Util.toolTip(bx,"Load the MultiOrder Coverage map (MOC) associated to the collection",true);
+               
+               if( hipsBx!=null ) {
+                  boolean isAlreadyLoaded = aladin.calque.getPlans(to.internalId)!=null;
+                  if( isAlreadyLoaded ) {
+                     mocBx.setSelected(true);
+                     hipsBx.setSelected(false);
+                  }
+               }
             }
             
             if( to.isCDSCatalog() && nbRows!=-1 && nbRows>=10000 ) {
@@ -2641,6 +2732,20 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( treeObjs.size()==1 ) {
             
             /* if( to.hasPreview() ) */ preview = new Preview( to );
+            
+            // Paramètre
+            b = new JButton(new ImageIcon(Aladin.aladin.getImagette("settings.png")));
+            b.setToolTipText("Parameters");
+            b.setMargin(new Insets(0,0,0,0));
+            b.setBorderPainted(false);
+            b.setContentAreaFilled(false);
+            control.add(b);
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) { parameters(); }
+            });
+
+
+            
             // Info
             if( to.hasInfo() ) {
                b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Info.png")));
@@ -2866,6 +2971,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       private void addBkm( StringBuilder bkm, String cmd) {
          if( bkm.length()>0 ) bkm.append("\n");
          bkm.append("   "+cmd );
+      }
+      
+      void parameters() {
+         aladin.info("Parameter settings. Sorry, not yet implemented");
       }
       
       void info() {

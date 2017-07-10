@@ -520,7 +520,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          su = pbg.getProperty(Constante.KEY_BIB_REFERENCE_URL);
          if( s!=null || su!=null ) PropPanel.addCouple(p,"Bib. reference", new MyAnchor(aladin,s,40,null,su), g,c);
 
-         if(((PlanBG)plan).id!=null ) PropPanel.addCouple(p,"IVOID: ", new JLabel("ivo://"+((PlanBG)plan).id), g,c);
+         if(((PlanBG)plan).id!=null ) {
+            JLabel datasetId = new JLabel(((PlanBG)plan).id);
+            PropPanel.addCouple(p,"Dataset ID: ", datasetId, g,c);
+         }
 
          s = pbg.getProperty(Constante.KEY_CREATOR);
          if( s==null ) s = pbg.getProperty(Constante.OLD_HIPS_PUBLISHER);

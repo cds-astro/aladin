@@ -109,6 +109,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long SSA     = 1L<<45;
    static final public long SIAV2   = 1L<<46;
    static final public long EPNTAP  = 1L<<47;
+   static final public long DATALINK= 1L<<48;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
@@ -116,7 +117,7 @@ public class MyInputStream extends FilterInputStream {
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
       "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP" };
+      "EPNTAP","DATALINK" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -553,10 +554,19 @@ public class MyInputStream extends FilterInputStream {
                   type |= SED;
                }  
                
+               // Détection de DATALINK
+               else if( lookForSignature("name=\"ID\"", true)>0
+                     && lookForSignature("name=\"semantics", true)>0
+                     && lookForSignature("name=\"access_url", true)>0
+                     && lookForSignature("name=\"service_def", true)>0 ) {
+                  type |= DATALINK;
+               }
+               
+               // Détection de SIAv2 (TRES AMBIGU)
                else if( lookForSignature("utype=\"obscore:ObsDataset.dataProductType\"", true)>0
-                       || lookForSignature("utype=\"obscore:Access.Reference\"", true)>0
-                       || lookForSignature("utype=\"obscore:Access.Format\"", true)>0 ) {
-                   type |= SIAV2;
+                     || lookForSignature("utype=\"obscore:Access.Reference\"", true)>0
+                     || lookForSignature("utype=\"obscore:Access.Format\"", true)>0 ) {
+                 type |= SIAV2;
                }
 
                else if( lookForSignature("ID=\"c1min\"", true)>0

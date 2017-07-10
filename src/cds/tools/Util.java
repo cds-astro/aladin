@@ -2040,7 +2040,8 @@ public final class Util {
       } else {
          String s = val.substring(i).trim();
          unit = Util.indexInArrayOf(s, unites, false);
-         if( unit==-1 ) throw new Exception("Unit unknown !");
+//         if( unit==-1 ) throw new Exception("Unit unknown !");
+         if( unit==-1 ) return val;
          size = (long)Double.parseDouble( val.substring(0,i));
       }
       return getUnitDisk(size,unit,2);

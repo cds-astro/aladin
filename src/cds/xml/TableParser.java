@@ -1203,7 +1203,10 @@ final public class TableParser implements XMLConsumer {
             } else if( att!=null && att.equals("QUERY_STATUS") ) {
                att=(String)atts.get("value");
                if( att.equals("OVERFLOW") ) consumer.tableParserWarning("!!! Truncated result (server OVERFLOW)");
-               else if( att.equals("ERROR") ) consumer.tableParserWarning("!!! Result error (server ERROR)");
+               else if( att.equals("ERROR") ) {
+                  inError=true;
+                  consumer.tableParserWarning("!!! Result error (server ERROR)");
+               }
             }
          } else if( name.equalsIgnoreCase("COOSYS") ) {
             id=(String)atts.get("ID");

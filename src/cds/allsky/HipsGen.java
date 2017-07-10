@@ -171,6 +171,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("cacheRemoveOnExit"))  { cacheRemoveOnExit = Boolean.parseBoolean(val);
 
       } else if (opt.equalsIgnoreCase("verbose"))      { Context.setVerbose(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("pilot"))        { context.setPilot(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
       } else if (opt.equalsIgnoreCase("hips_order"))   { context.setOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("mocOrder"))     { context.setMocOrder(Integer.parseInt(val));
@@ -493,7 +494,8 @@ public class HipsGen {
                   context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
 
                }
-               context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
+               if( context.nbPilot>0 ) context.warning("Pilot test limited to "+context.nbPilot+" images => partial HiPS");
+               else context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
             }
             context.done(context.getTitle("THE END (done in "+Util.getTemps(System.currentTimeMillis()-t),'='));
          }
@@ -585,6 +587,7 @@ public class HipsGen {
                   "   border=...              Margins (in pixels) to ignore in the original observations (N W S E or " + "\n" +
                   "                           constant)" + "\n" +
                   "   fov=true|x1,y1..        Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
+                  "   pilot=nnn               Pilot test limited to the nnn first original images." + "\n" +
                   "   verbose=n               Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
                   "   -live                   incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
                   "   -f                      clear previous computations\n"+

@@ -298,18 +298,28 @@ public class BuilderIndex extends Builder {
    // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
    // les fichiers FITS
-   private void create(String pathSource, String pathDest, int order) throws Exception {
+   private boolean create(String pathSource, String pathDest, int order) throws Exception {
 
       // pour chaque fichier dans le sous répertoire
       File main = new File(pathSource);
 
       ArrayList<File> dir = new ArrayList<File>();
       File[] list = context.isInputFile ? new File[]{ main } : main.listFiles();
-      if (list == null) return;
+      if (list == null) return true;
+      
+      // Limitation du nombre de fichiers dans le cas d'un Pilot
+      int nbPilot = context.nbPilot;
 
       int i=0;
       context.setProgress(0,list.length-1);
       for( File file : list ) {
+         
+         // S'agit-il d'un Pilot ?
+         if( nbPilot>=0 && i>nbPilot ) {
+            context.warning("Test Pilot limited to "+nbPilot+" images => partial HiPS");
+            return false;
+         }
+         
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          context.setProgress(i++);
          if( !context.isInputFile && file.isDirectory() ) { dir.add(file); continue; }
@@ -395,13 +405,14 @@ public class BuilderIndex extends Builder {
             currentfile = f1.getPath();
 //            System.out.println("Look into dir " + currentfile);
             try {
-               create(currentfile, pathDest, order);
+               if( !create(currentfile, pathDest, order) ) return false;
             } catch( Exception e ) {
                Aladin.trace(3,e.getMessage() + " " + currentfile);
                continue;
             }
          }
       }
+      return true;
    }
    
    private void testAndInsert(Fits fitsfile, String pathDest, String currentFile,

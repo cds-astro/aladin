@@ -55,6 +55,7 @@ final public class ThreadBuilderTile {
    private double blankOrig;
    private double blank;
    private boolean flagColor;
+   private boolean flagGauss;
    private double bScale;
    private double bZero;
    private boolean fading;
@@ -78,6 +79,7 @@ final public class ThreadBuilderTile {
       coaddMode=context.getMode();
       max = Fits.getMax( context.getBitpixOrig() );
       flagColor = context.isColor();
+      flagGauss = context.gaussFilter;
       mixing = context.mixing;
       if( !flagColor ) {
          bZero = context.getBZero();
@@ -436,7 +438,7 @@ final public class ThreadBuilderTile {
                      file = downFiles.get(i);
                      if( file.flagRemoved ) continue;
                      try {
-                        file.open(z);
+                        file.open(z, flagGauss);
                      } catch( Exception e ) {
                         if( context.getVerbose()>=3 ) context.warning("One original file retired: "+file.name);
                         
@@ -1050,7 +1052,8 @@ final public class ThreadBuilderTile {
       }
 
       /** Ouverture effective du fichier FITS */
-      protected void open(int frame) throws Exception {
+      protected void open(int frame) throws Exception { open(frame,false); }
+      protected void open(int frame, boolean gauss) throws Exception {
          if( isOpened==frame ) return;
          synchronized( this ) {
             if( isOpened!=-1 ) fitsfile.rmUser();  // je ne peux de totue façon pas ouvrir simultanément plusieurs frame du même fichier
@@ -1067,6 +1070,10 @@ final public class ThreadBuilderTile {
                if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);
                try {
                   fitsfile=context.cacheFits.getFits(name,mode,true,false);
+                  
+                  // Filtre gaussien => CA NE MARCHE PAS POUR LE MOMENT
+//                  if( gauss ) BuilderRgb.gaussian(fitsfile);
+                  
                } catch( MyInputStreamCachedException e ) {
                   context.taskAbort();
                   throw new Exception();

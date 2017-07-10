@@ -65,6 +65,7 @@ import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.moc.MocCell;
 
 
 /**
@@ -691,7 +692,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param moc MOC describing input sky region
     * @return list of MOC identifiers
     */
-   public ArrayList<String> scan(HealpixMoc moc) { return scan(moc, (HashMap<String,String[]>)null, true, -1); }
+   public ArrayList<String> scan(HealpixMoc moc) { return scan(moc, (HashMap<String,String[]>)null, true, -1, false); }
    
    
    // Détermination de l'ID, soit par le creator_did, ou le publisher_did sinon creator_id?obs_id ou publisher_id?obs_id
@@ -973,16 +974,22 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param casesensitive case sensitive (true by default) - never applied for ID field
     * @return list of MOC identifiers
     */
-   public ArrayList<String> scan(HealpixMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top ) {
+   public ArrayList<String> scan(HealpixMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top, boolean inclusive ) {
       ArrayList<String> res = new ArrayList<String>();
 
       int n=0;
       for( MocItem mi : this ) {
          if( mapFilter!=null && !match(mi,mapFilter,casesens,true)) continue;
-         if( moc==null || mi.moc!=null && mi.moc.isIntersecting(moc) ) {
-            res.add(mi.mocId);
-            if( top!=-1 && (++n)>=top ) return res;
+         if( moc!=null ) {
+            if( mi.moc==null ) continue;
+            if( !inclusive ) {
+               if( !mi.moc.isIntersecting(moc) ) continue;
+            } else {
+               if( !isIncluded(moc,mi.moc) ) continue;
+            }
          }
+         res.add(mi.mocId);
+         if( top!=-1 && (++n)>=top ) return res;
       }
 
       return res;
@@ -994,7 +1001,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @return
     */
    public ArrayList<String> scan(HashMap<String,String[]> mapFilter) {
-      return scan( (HealpixMoc)null, mapFilter, true, -1);
+      return scan( (HealpixMoc)null, mapFilter, true, -1, false);
    }
    
    /**
@@ -1002,9 +1009,10 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param moc MOC describing input sky region
     * @param expr expression based on set algebra
     * @param casesensitive case sensitive (true by default) - never applied for ID field
+    * @param inclusive true implies that all sky region must be inside
     * @return list of IDs (keep the original MultiMoc order)
     */
-   public ArrayList<String> scan( HealpixMoc moc, String expr, boolean casesens, int top ) throws Exception {
+   public ArrayList<String> scan( HealpixMoc moc, String expr, boolean casesens, int top, boolean inclusive ) throws Exception {
       ArrayList<String> res = new ArrayList<String>();
       
       // Détermination des IDs candidats
@@ -1014,13 +1022,29 @@ public class MultiMoc implements Iterable<MocItem> {
       int n=0;
       for( MocItem mi : this ) {
          if( !candidateIds.contains(mi.mocId) ) continue;
-         if( moc==null || mi.moc!=null && mi.moc.isIntersecting(moc) ) {
-            res.add(mi.mocId);
-            if( top!=-1 && (++n)>=top ) return res;
+         if( moc!=null ) {
+            if( mi.moc==null ) continue;
+            if( !inclusive ) {
+               if( !mi.moc.isIntersecting(moc) ) continue;
+            } else {
+               if( !isIncluded(moc,mi.moc) ) continue;
+            }
          }
+         res.add(mi.mocId);
+         if( top!=-1 && (++n)>=top ) return res;
       }
 
       return res;
+   }
+   
+   private boolean isIncluded(HealpixMoc region, HealpixMoc moc) {
+      if( moc.isAllSky() ) return true;
+      Iterator<MocCell> it = region.iterator();
+      while( it.hasNext() ) {
+         MocCell c = it.next();
+         if( !(moc.isIn(c.order,c.npix) || moc.isDescendant(c.order,c.npix)) ) return false;
+      }
+      return true;
    }
 
    /**
@@ -1044,7 +1068,7 @@ public class MultiMoc implements Iterable<MocItem> {
     */
    public ArrayList<String> scan(String mask) throws Exception { return scan( mask, true); }
    public ArrayList<String> scan(String mask, boolean casesensitive) throws Exception {
-      return scan( (HealpixMoc)null, mask, casesensitive, -1);
+      return scan( (HealpixMoc)null, mask, casesensitive, -1, false);
    }
    
 
@@ -1140,7 +1164,7 @@ public class MultiMoc implements Iterable<MocItem> {
             case DEDANS:
                if( c==')' ) par--;
                if( i>0 && (a[i-1]=='|' && c=='|' 
-                || a[i-1]=='&' && c=='&' 
+                      || a[i-1]=='&' && c=='&' 
                       || a[i-1]=='&' && c=='!' ) ) {
                   if( par==0 ) { mode = MgetOp.FIN; i--; }
                   else mode = MgetOp.AVANT;
@@ -1162,7 +1186,7 @@ public class MultiMoc implements Iterable<MocItem> {
       
       return i+1;
    }
-   
+
 // METHODE BASIQUE - SANS POSSIBILITE D'AVOIR DES PARENTHESES OU DES &&, ||, &! DANS LE TEXTE DES CONTRAINTES
 //   /**
 //    * Extrait la prochaine opérande dans une expression ensembliste logique
@@ -1245,7 +1269,7 @@ public class MultiMoc implements Iterable<MocItem> {
       
       return s;
    }
-
+   
    /**
     * suppression des cotes éventuelles sur la valeur
     * cle="xxx" => cle=xxx
@@ -1409,7 +1433,7 @@ public class MultiMoc implements Iterable<MocItem> {
       mapFilters.put( key, new String[] { val } );
       
       // Scanning du multimoc et mémorisation des éléments qui correspondent
-      ArrayList<String> res = scan( (HealpixMoc)null, mapFilters, casesens, -1);
+      ArrayList<String> res = scan( (HealpixMoc)null, mapFilters, casesens, -1, false);
       op.res = new HashSet<String>( Math.max(2*res.size(), size()) );   // <= Je crée une HashSet assez grande, car elle est susceptible
                                                                         //    de contenir l'ensemble des résultats. On pourrait affiner en
       op.res.addAll( res );

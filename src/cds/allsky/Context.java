@@ -125,6 +125,7 @@ public class Context {
    protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
    protected String blueInfo;                // Information de colormap lors de la génération d'un HIPS RGB (composante blue)
    protected boolean gaussFilter=false;      // Filtrage gaussien lors de la génération d'un HiPS RGB (pour améliorer le rendu du fond)
+   protected int nbPilot=-1;                 // Indique le nombre d'images à prendre en compte (pour faire un test pilot)
 
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
@@ -554,6 +555,7 @@ public class Context {
       }
       if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
    }
+   public void setPilot(int nbPilot) { this.nbPilot=nbPilot; }
    
    public void setPixelGood(String sGood) throws Exception {
       StringTokenizer st = new StringTokenizer(sGood," ");

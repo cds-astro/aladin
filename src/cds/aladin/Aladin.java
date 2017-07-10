@@ -157,6 +157,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Hipsgen pilot=nnn parameter for generating HiPS pilot limited to nnn images
  * @beta    <LI> Hipsgen native support for gzip, bzip2 and rice images (via cache disk)
  * @beta    <LI> Support for EPNTAP results (c1min,c2min,s_region)
  * @beta    <LI> Deprecated PLASTIC lib and dependencies removed 
@@ -185,6 +186,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> MOC generation from clockwise polygons
  * @beta    <LI> Filter activation by script bug fixing
  * @beta    <LI> Polarisation segment size normalized bug fixing
  * @beta    <LI> Phot tool clic&drag bug fixing
@@ -225,7 +227,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.005";
+   static public final    String VERSION = "v10.007";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4110,7 +4112,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /**
-    * Détermination de l'ordre pour avoir 75 cellules dans la distance
+    * Détermination de l'ordre pour avoir 200 cellules dans la distance
     * @param size taille à couvrir (en degrés)
     * @return order HEALPix approprié
     */
@@ -4118,7 +4120,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       int order = 4;
       if( size==0 ) order=HealpixMoc.MAXORDER;
       else {
-         double pixRes = size/75;
+         double pixRes = size/200;
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
          double res = Math.sqrt(skyArea/(12*16*16));
@@ -4135,10 +4137,47 @@ DropTargetListener, DragSourceListener, DragGestureListener
          warning("MOC creation error !\n",1);
          return -1;
       }
-      return calque.newPlanMOC(moc,"Moc reg");
-
+      int n = calque.newPlanMOC(moc,"Moc reg");
+      
+      // Affichage à la densité max du MOC immédiatement
+      ((PlanMoc)calque.plan[n]).setGapOrder(PlanBGCat.MAXGAPORDER);
+      return n;
+   }
+   
+   private double calculAngle(Ligne avant, Ligne centre, Ligne apres ) {
+      double xavant = avant.xv[0] - centre.xv[0];
+      double yavant = avant.yv[0] - centre.yv[0];
+      double xapres = apres.xv[0] - centre.xv[0];
+      double yapres = apres.yv[0] - centre.yv[0];
+      double angle = Math.toDegrees( Math.atan2(yapres,xapres)- Math.atan2(yavant, xavant) );
+//      System.out.println("Angle "+avant.id+"-"+centre.id+"-"+apres.id+"="+angle);
+      return angle;
+   }
+   
+   // Détermine le sens du polygone en fonction de l'angle signé (atan2) du plus haut sommet avec
+   // ses deux arcs adjacents
+   private boolean isCounterClok(Ligne o ) { 
+      Ligne o0 = o.getLastBout();
+      Ligne oN = o0;
+      double ymin = o.yv[0];
+      Ligne oMin = o0;
+//      int i=0;
+//      o0.id = (i++)+"";
+      for( o=o0.debligne; o!=null; o = o.debligne ) {
+         if( o.yv[0]<ymin ) { oMin=o; ymin=o.yv[0]; }
+         oN = o;
+//         o.id=(i++)+"";
+      }
+      
+//      System.out.println("Le sommet le plus haut est "+oMin.id+", le 1er="+o0.id+" le dernier="+oN.id);
+      Ligne oMinDeb = oMin.debligne==null ? o0.debligne : oMin.debligne;
+      Ligne oMinFin = oMin.finligne==null ? oN.finligne : oMin.finligne;
+      double angleMin = calculAngle(oMinDeb,oMin,oMinFin);
+      return angleMin>0;
    }
 
+   
+   
    /**Creation d'un MOC à partir de tous les polygones sélectionnés */
    protected HealpixMoc createMocByRegions(int order) {
       HealpixMoc moc = new HealpixMoc();
@@ -4162,23 +4201,34 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          // Ajout des polygones
          if( !(o instanceof Ligne) ) continue;
+         
          o = ((Ligne)o).getLastBout();
          if( ((Ligne)o).bout!=3 ) continue;
          if( set.contains(o) ) continue;
          set.add(o);
+         
          try {
-            HealpixMoc m = createMocRegionPol( (Ligne)o,order );
+            boolean isCounterClock =  isCounterClok( (Ligne) o );
+            trace(4,"polygon counterClock="+isCounterClock);
+            HealpixMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock );
             if( m==null || m.getSize()==0 ) continue;
             moc.add(m);
-         } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
-
+         } catch( Exception e) { if( levelTrace>=3 ) { e.printStackTrace();  } }
+//         if( levelTrace>=3 ) errorMoc( order, (Ligne)o);
       }
       
       if( moc.getSize()==0 )  return null;
       return moc;
    }
-
       
+//   private void errorMoc( int order, Ligne o ) {
+//      StringBuilder s = new StringBuilder("Poly2Moc (order="+order+"):");
+//      for( o = o.getLastBout(); o!=null; o = o.debligne ) {
+//         if( o.debligne!=null ) s.append("\n   "+new Coord(o.raj,+o.dej).getDeg());
+//      }
+//      System.out.println(s);
+//   }
+
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
    protected HealpixMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
       HealpixMoc m = new HealpixMoc();
@@ -4354,7 +4404,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 	}
    
    /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets */
-   protected HealpixMoc createMocRegionPol(Ligne o, int order) throws Exception {
+   protected HealpixMoc createMocRegionPol(Ligne o, int order, boolean isCounterClock) throws Exception {
       HealpixMoc moc=null;
 
       double maxSize=0;
@@ -4362,7 +4412,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       boolean first=true;
 
       ArrayList<Vec3> cooList = new ArrayList<Vec3>();
-      Ligne a = o.getLastBout();
+      Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
       while( a!=null ) {
 
          // Mémorisation de la plus grande diagonale
@@ -4374,10 +4424,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
          double theta = Math.PI/2 - Math.toRadians( a.dej );
          double phi = Math.toRadians( a.raj );
-         cooList.add(new Vec3(new Pointing(theta,phi)));
-
+         
          // Prochain sommet ?
-         a = a.debligne;
+         a = isCounterClock ? a.debligne : a.finligne;
+         
+         if( a!=null ) cooList.add(new Vec3(new Pointing(theta,phi)));
+
       }
 
       // L'ordre est déterminé automatiquement par la largeur du polygone
@@ -5418,6 +5470,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                // Activation ou desactivation des boutons du menu principal
                // associes a la presence d'au moins un plan
                setButtonMode();
+               
+               directory.updateWidget();
 
                // On met a jour la fenetre des contours
                if( frameContour!=null ) frameContour.majContour();

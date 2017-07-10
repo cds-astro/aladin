@@ -43,7 +43,7 @@ import cds.tools.Util;
 public class MyInputStreamCached extends MyInputStream {
    
    // Taille max du cache disque par défaut (cf setCacheLimit() )
-   static private long DEFAULTLIMIT = 2*1024; // 2Go
+   static private long DEFAULTLIMIT = 500*1024; // 500Go
    
    // Nom du fichier dans le cache (clé unique)
    private String nameInCache=null;
@@ -383,7 +383,7 @@ public class MyInputStreamCached extends MyInputStream {
    static private double cacheSize = 0;
    static private long cacheLimit = DEFAULTLIMIT;  
    
-   /** Indication explicite d'un emplacement pour le cache disque, ainsi que sa taille limite (en octets) */
+   /** Indication explicite d'un emplacement pour le cache disque, ainsi que sa taille limite (en MB) */
    static public void setCache(File dir) throws Exception { setCache(dir,DEFAULTLIMIT); }
    static public void setCache(File dir,long sizeLimit) throws Exception {
       synchronized( lock ) {
@@ -470,10 +470,15 @@ public class MyInputStreamCached extends MyInputStream {
          if( !flagCreate ) throw new MyInputStreamCachedException("Cache disk creation error ("+cachedir.getAbsolutePath()+")");
       }
       if( flagCreate ) {
-         double freeSpace = cachedir.getFreeSpace()/(1024*1024.);
+         long freeSpace = (long)( cachedir.getFreeSpace()/(1024*1024.) );
          if( freeSpace<cacheLimit ) {
-            throw new MyInputStreamCachedException("Cache disk: not enough space on partition ("
-                  +Util.getUnitDisk(cacheLimit+"MB")+"/"+Util.getUnitDisk((long)freeSpace+"MB")+") "+cachedir.getAbsolutePath());
+            long newsize = (3L*freeSpace)/5L;
+            context.warning("Cache disk: not enoug space on partition for "+Util.getUnitDisk(cacheLimit+"MB")
+            +" => assume "+Util.getUnitDisk(newsize+"MB"));
+            cacheLimit = newsize;
+//            throw new MyInputStreamCachedException("Cache disk: not enough space on partition ("
+//                  +Util.getUnitDisk(cacheLimit+"MB")+"/"+Util.getUnitDisk(freeSpace+"MB")+") "
+//                  +cachedir.getAbsolutePath());
          }
          
          if( context!=null ) context.info("Cache disk created: "+cachedir.getAbsolutePath()+" (max size: "+Util.getUnitDisk(cacheLimit+"MB")+")");

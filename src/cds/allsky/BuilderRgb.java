@@ -485,7 +485,7 @@ public class BuilderRgb extends BuilderTiles {
    
    static final double [] kernel = KernelList.createFastGaussienMatrix(2, 0.8);
    
-   private void gaussian(Fits in) {
+   static public void gaussian(Fits in) {
       if( in==null ) return;
       double [] inPixels = new double[in.width*in.height];
       int x,y,i;
@@ -496,7 +496,7 @@ public class BuilderRgb extends BuilderTiles {
       convolveAndTranspose(kernel, inPixels, outPixels, in.width, in.height);
       convolveAndTranspose(kernel, outPixels, inPixels, in.height, in.width);
       for( i=y=0; y<in.height; y++ ) {
-         for( x=0; x<width; x++ ) in.setPixelDouble(x,y, inPixels[i++]);
+         for( x=0; x<in.width; x++ ) in.setPixelDouble(x,y, inPixels[i++]);
       }
    }
    
@@ -504,7 +504,7 @@ public class BuilderRgb extends BuilderTiles {
     * Calcul d'une convolution par une gaussienne en 2 passes (voir compute())
     * @param gap Juste pour mettre à jour le pourcentage de progression en tenant compte du calcul précédent
     */
-   protected void convolveAndTranspose(double [] k, double [] inPixels, double [] outPixels, int width, int height) {
+   static private void convolveAndTranspose(double [] k, double [] inPixels, double [] outPixels, int width, int height) {
       int cols = k.length;
       int cols2 = cols/2;
       
