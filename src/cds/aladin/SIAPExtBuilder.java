@@ -27,10 +27,21 @@
  */
 package cds.aladin;
 
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Vector;
 
-import cds.savot.model.*;
-import cds.savot.pull.*;
+import cds.savot.model.ResourceSet;
+import cds.savot.model.SavotField;
+import cds.savot.model.SavotResource;
+import cds.savot.model.SavotTR;
+import cds.savot.model.SavotTable;
+import cds.savot.model.SavotVOTable;
+import cds.savot.model.TDSet;
+import cds.savot.model.TRSet;
+import cds.savot.model.TableSet;
+import cds.savot.pull.SavotPullParser;
 
 /** Cette classe permet le parsing propre des extensions SIAP
  * Une attention toute particulière a été portée à
@@ -194,7 +205,6 @@ public class SIAPExtBuilder extends TreeBuilder {
 //        if( true){
 		    for( int i=0; i<siapRes.length; i++ )
 		        root.addChild(siapRes[i]);
-
 		}
 
 
@@ -481,7 +491,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 
 	    // boucle sur les TR
 	    for (SavotTR tr : e) {
-	        obsRef = ((SavotTD)(tr.getTDs().getItemAt(obsRefIndex))).getContent();
+	        obsRef = (tr.getTDs().getItemAt(obsRefIndex)).getContent();
 	        parent = (ResourceNode)namesToNodes.get(obsRef);
 
 	        if( parent!=null ) {
@@ -492,7 +502,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 	            if( curMembersNode==null ) {
 	            	// on donne un autre nom que Members si possible
 	            	if(  compositionDescIdx>=0 ) {
-	            		curMembersNode = new ResourceNode(aladin, ((SavotTD)(tr.getTDs().getItemAt(compositionDescIdx))).getContent());
+	            		curMembersNode = new ResourceNode(aladin, (tr.getTDs().getItemAt(compositionDescIdx)).getContent());
 	            	}
 	            	else {
 	            		curMembersNode = new ResourceNode(aladin, "Members");
@@ -503,7 +513,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 	                parent.isLeaf = false;
 	            }
 
-	            relatedObs = ((SavotTD)(tr.getTDs().getItemAt(relatedObsIndex))).getContent();
+	            relatedObs = (tr.getTDs().getItemAt(relatedObsIndex)).getContent();
 	            children = (Vector)altNamesToNodes.get(relatedObs);
 
 
@@ -541,7 +551,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 	    ResourceNode curInfoNode;
 
 	    for (SavotTR tr : e) {
-	    	obsRef = ((SavotTD)(tr.getTDs().getItemAt(obsRefIndex))).getContent();
+	    	obsRef = (tr.getTDs().getItemAt(obsRefIndex)).getContent();
 	        ResourceNode parent = (ResourceNode)namesToNodes.get(obsRef);
 
 	        if( parent!=null ) {
@@ -644,7 +654,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 		Aladin.trace(3, "nb rsources : "+resources.getItemCount());
 
 		for( int i=0; i<resources.getItemCount(); i++ ) {
-			resource = (SavotResource)resources.getItemAt(i);
+			resource = resources.getItemAt(i);
 			checkIfOrgSiap(resource);
 			if( checkIfDalExt(resource) ) continue;
 
@@ -655,7 +665,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 			for( int j=0; j<tSet.getItemCount(); j++ ) {
 				// TODO : à supprimer ?
 				Aladin.trace(3, "Process table "+j);
-				tab = (SavotTable) tSet.getItemAt(j);
+				tab = tSet.getItemAt(j);
 
 //                System.out.println(tab.getUtype());
 
@@ -723,7 +733,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 	    ResourceNode[] resTab = new ResourceNode[obsSet.getItemCount()];
 
 	    for( int i=0; i<resTab.length; i++ ) {
-	        resTab[i] = createSIAPNode((SavotTR)obsSet.getItemAt(i), fields);
+	        resTab[i] = createSIAPNode(obsSet.getItemAt(i), fields);
 			resTab[i].isSIAPEvol = true;
 			if( idxRefRelObs>=0 && obsRefIndex>=0 ) resTab[i].altName = resTab[i].explanation[obsRefIndex];
 
@@ -970,7 +980,7 @@ public class SIAPExtBuilder extends TreeBuilder {
 		Vector v = new Vector();
 		SavotResource curRes;
 		for( int i=0; i<nbRes; i++ ) {
-			curRes = (SavotResource)resources.getItemAt(i);
+			curRes = resources.getItemAt(i);
 			if( curRes.getUtype().equalsIgnoreCase("ivoa:characterization[ucd=pos]/coverage/support") ||
                 curRes.getUtype().equalsIgnoreCase("char:SpatialAxis.coverage.support") ) {
                 v.addElement(curRes);

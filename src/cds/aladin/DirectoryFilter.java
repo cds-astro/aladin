@@ -30,6 +30,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -145,19 +146,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private JTextArea exprArea;
    private JTextField mocArea;
-   private JComboBox<String> comboInclusive;
+   private JButton btMocShow;
+   private JLabel labelInclusive,labelCollection;
    private boolean flagFormEdit=false;
    private HealpixMoc mocFiltreSpatial=null;
    private boolean inclusiveFiltreSpatial=false;
-   
-   /** True si un filtre est en cours d'application */
-   protected boolean hasFilter() { return exprArea.getText().trim().length()>0 && !exprArea.getText().equals("*"); }
    
    /** Création du panel de l'expression correspondant au filtre courant */
    private JPanel createExpPanel() {
       JPanel areaPanel = new JPanel( new BorderLayout(2,2) );
       areaPanel.setBackground( BGCOLOR );
-      setTitleBorder(areaPanel, " associated filter encoding rule ", new Color(80,80,80));
+      setTitleBorder(areaPanel, " associated filter encoding rule ", FGCOLOR);
       exprArea = new JTextArea(3,50);
       exprArea.setLineWrap(true);
       exprArea.addKeyListener(new KeyListener() {
@@ -174,12 +173,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       });
       areaPanel.add( exprArea, BorderLayout.CENTER );
       
-      JPanel mocPanel = new JPanel( new FlowLayout( FlowLayout.LEFT, 0,0));
+      JPanel mocPanel = new JPanel( new BorderLayout( 5,5));
       mocPanel.setBackground( BGCOLOR );
-      comboInclusive = new JComboBox<String>(new String[]{"intersecting the MOC","containing the MOC"});
-      Util.toolTip(comboInclusive, "Spacial constraint expressed as a MOC"
+      labelInclusive = new JLabel("intersecting the MOC");
+      Util.toolTip(labelInclusive, "Spacial constraint expressed as a MOC"
             + "which has to intersect or to be fully inside the coverage of each matching collection", true);
-      mocPanel.add( comboInclusive );
+      mocPanel.add( labelInclusive, BorderLayout.WEST );
       
       mocArea = new JTextField(46);
       mocArea.addKeyListener(new KeyListener() {
@@ -194,11 +193,35 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             activateAreaText(true);
          }
       });
-      mocPanel.add(new JLabel(" "));
-      mocPanel.add(mocArea);
-      areaPanel.add( mocPanel, BorderLayout.SOUTH );
+      mocPanel.add(mocArea, BorderLayout.CENTER );
       
-      JPanel p = new JPanel( new BorderLayout());
+      
+      JPanel p = new JPanel( new FlowLayout(FlowLayout.CENTER,0,0) );
+      p.setBackground( BGCOLOR );
+      JButton bt = btMocShow = new JButton("show it");
+      bt.setMargin( new Insets(2,2,2,2) ); 
+      bt.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { 
+            if( mocFiltreSpatial!=null ) aladin.calque.newPlanMOC(mocFiltreSpatial, "Moc spatial filter"); }
+      });
+      p.add(bt);
+      mocPanel.add(p, BorderLayout.EAST );
+      
+      
+      p = new JPanel( new BorderLayout());
+      p.setBackground( BGCOLOR );
+      p.add( mocPanel, BorderLayout.CENTER);
+      
+      JPanel p1 = new JPanel( new FlowLayout() );
+      p1.setBackground( BGCOLOR );
+      labelCollection = new JLabel();
+      labelCollection.setFont(labelCollection.getFont().deriveFont(Font.BOLD));
+      p1.add( labelCollection);
+      
+      p.add( p1, BorderLayout.SOUTH );
+      areaPanel.add( p, BorderLayout.SOUTH );
+      
+      p = new JPanel( new BorderLayout());
       p.setBackground( BGCOLOR );
       p.setBorder( BorderFactory.createEmptyBorder(0,5,5,5));
       p.add( areaPanel, BorderLayout.CENTER);
@@ -207,13 +230,28 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return p;
    }
    
+   /** Maj du résumé des collections qui matchent */
+   protected void setLabelResume(int nb, int total,boolean hasQuickFilter) {
+      boolean isEmpty = isEmpty();
+      if( isEmpty && !hasQuickFilter ) {
+         labelCollection.setText("<html>&rarr; no filter applied: "+total+" available collection"+(total>1?"s":"")+"<html>");
+         labelCollection.setForeground(new Color(80,80,80));
+      }
+      else {
+         String s = hasQuickFilter && !isEmpty ? "Filter + quickfilter" : 
+                    hasQuickFilter ? "Quickfilter" : "Filter";
+         labelCollection.setText("<html>&rarr; "+s+" activated: <font size=\"+1\">"+nb+"</font> matching collection"+(nb>1?"s":"")+"<html>");
+         labelCollection.setForeground( Aladin.COLOR_GREEN.darker() );
+      }
+   }
+   
    private JButton storeButton, deleteButton;
    private JTextField nameField;
    
    /** Activation/desactivation des boutons en fonction du contenu du formulaire */
    synchronized protected void updateWidget() {
       String name = nameField.getText().trim();
-      boolean enabled = name.length()>0 && hasFilter();
+      boolean enabled = name.length()>0 && !isEmpty();
       storeButton.setEnabled( enabled && !name.equals(ALLCOLL) );
       deleteButton.setEnabled( enabled && aladin.configuration.dirFilter.containsKey(name) 
             && !name.equals(ALLCOLL) && !name.equals(MYLIST));
@@ -222,7 +260,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       boolean modif = expr==null ? false : expr.equals( exprArea.getText().trim() );
       storeButton.setText( modif ? "update" : "store" );
       
-      comboInclusive.setEnabled( mocArea.getText().trim().length()>0 );
+      labelInclusive.setForeground( mocArea.getText().trim().length()>0 ? Color.black : FGCOLOR );
+      labelInclusive.setText( cbIntersecting.isSelected()? "intersecting the MOC" : "containing the MOC"); 
       
       // Maj du JComboBox de la liste des plans MOC
       ActionListener al = comboMocPlane.getActionListeners()[0];
@@ -248,8 +287,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       if( flagFormEdit && !exprArea.getText().trim().equals("") ) activateAreaText(true);
       else activateAreaText(false);
+      
+      btMocShow.setEnabled( mocFiltreSpatial!=null ); 
+      
+      btReset.setEnabled( !isEmpty() );
+      btApply.setEnabled( !hasBeenApplied() );
+      System.out.println("updateWidget hasBeenApplied=>"+hasBeenApplied());
    }
-
+   
    private void activateAreaText(boolean flag) {
       if( flag ) {
          exprArea.setForeground( Aladin.COLOR_GREEN.darker() );
@@ -261,11 +306,11 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          mocArea.getFont().deriveFont(Font.BOLD);
      } else {
          exprArea.setForeground( new Color(80,80,80) );
-         exprArea.setBackground( Color.lightGray );
+         exprArea.setBackground( BGCOLOR );
          exprArea.getFont().deriveFont(Font.ITALIC);
          
          mocArea.setForeground( new Color(80,80,80) );
-         mocArea.setBackground( Color.lightGray );
+         mocArea.setBackground( BGCOLOR );
          mocArea.getFont().deriveFont(Font.ITALIC);
       }
    }
@@ -297,13 +342,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    
-   private Color BGCOLOR = new Color(170,170,170);
+   private Color BGCOLOR = new Color(220,220,220);
+   private Color FGCOLOR = new Color(150,150,150);
    
    /** Construction du panel qui contient les tabs des différents filtres + le panel de l'expression brute */
    private JSplitPane getMainFilterPanel() {
       JPanel p =  createExpPanel();
       MySplitPane pane = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, createFilterPanel(),p , 1);
-      p.setPreferredSize(new Dimension(0,80));
+      p.setPreferredSize(new Dimension(0,120));
 
       pane.setBackground( BGCOLOR );
       return pane;
@@ -319,12 +365,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       JPanel applyPanel = new JPanel( new FlowLayout( FlowLayout.CENTER,7,7 ) );
       applyPanel.setBackground( BGCOLOR );
       
-      applyPanel.add( b=new JButton("Apply")); 
+      b= btApply = new JButton("Apply");
+      applyPanel.add( b ); 
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(); }
       });
       b.setFont(b.getFont().deriveFont(Font.BOLD));
-      applyPanel.add( b=new JButton("Reset"));
+      b= btReset = new JButton("Reset");
+      applyPanel.add( b );
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { reset(); }
       });
@@ -340,6 +388,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p.add( applyPanel, BorderLayout.CENTER );
       p.add( closePanel, BorderLayout.EAST );
       return p;
+   }
+   
+   
+   public void setVisible(boolean visible) {
+      // Si on ferme la fenêtre des filtres sans qu'il n'y ait aucune contrainte, on remet le selecteur
+      // de filtres de la fenêtre principale au choix par défaut
+      if( !visible && isEmpty() ) aladin.directory.comboFilter.setSelectedIndex(0);
+      super.setVisible(visible);
    }
    
    static protected <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map, int ascending) {
@@ -652,7 +708,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       String expr = exprArea.getText();
       if( expr.trim().length()==0 ) expr="*";
       
-      inclusiveFiltreSpatial = comboInclusive.getSelectedIndex()==1;
+      inclusiveFiltreSpatial = !cbIntersecting.isSelected();
       
       if( isVisible() ) aladin.makeCursor(this, Aladin.WAITCURSOR);
 
@@ -664,38 +720,46 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
+   
    /** Génération du MOC de filtrage correspondante aux positionnements des checkboxes et autres
     * champs de saisie. Le résultat est stocké dans le champ mocArea */
    private void generateMoc() {
-      String s=null;
+      mocFiltreSpatial=getMoc();
+      mocArea.setText( getASCII(mocFiltreSpatial) );
+   }
+   
+   /** Génération du MOC de filtrage correspondante aux positionnements des checkboxes et autres
+    * champs de saisie. */
+   private HealpixMoc getMoc() {
+      HealpixMoc moc=null;
+      
       try {
          if( cbMocInLine.isSelected() ) {
-            mocFiltreSpatial = new HealpixMoc( tMoc.getText().trim() );
+            moc = new HealpixMoc( tMoc.getText().trim() );
          }
          
          else if( cbStcInLine.isSelected() ) {
             List<STCObj> stcObjects = new STCStringParser().parse( tSTC.getText().trim() );
-            mocFiltreSpatial = aladin.createMocRegion(stcObjects);
+            moc = aladin.createMocRegion(stcObjects);
          }
          
          else if( cbMocPlane.isSelected() && comboMocPlane.getItemCount()>1) {
             String  label = (String)comboMocPlane.getSelectedItem();
             PlanMoc p = (PlanMoc) aladin.calque.getPlan( label );
-            mocFiltreSpatial = p.getMoc();
+            moc = p.getMoc();
          }
          
          else if( cbSelectedGraph.isSelected() ) {
-            mocFiltreSpatial = aladin.createMocByRegions(-1);
+            moc = aladin.createMocByRegions(-1);
          }
-         s=getASCII(mocFiltreSpatial);
         
-         if( s!=null ) mocArea.setText( s );
          
       } catch( Exception e ) {
          e.printStackTrace();
-         mocFiltreSpatial=null;
-         mocArea.setText("");
+         moc=null;
       }
+      
+      return moc;
    }
    
    /** Return the ASCII basic representation of a MOC  */
@@ -720,6 +784,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    /** Génération de l'expression de filtrage correspondante aux positionnements des checkboxes et autres
     * champs de saisie. Le résultat est stocké dans le champ exprArea */
    private void generateExpression() {
+      exprArea.setText( getExpression() );
+   }
+
+   
+   /** Génération de l'expression de filtrage correspondante aux positionnements des checkboxes et autres
+    * champs de saisie. */
+   private String getExpression() {
       
       HashMap<String, String []> inclu = new HashMap<String, String[]>();
       HashMap<String, String []> exclu = new HashMap<String, String[]>();
@@ -760,7 +831,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       String s;      
       if( (s=getText(tfDescr)).length()!=0 )     special.append(" && obs_title,obs_description,obs_collection,ID="+jokerize(s));
-      if( (s=getText(tfCoverage)).length()!=0 )  special.append(" && moc_sky_fraction="+s);
+      if( (s=getText(tfCoverage)).length()!=0 )  special.append(" && moc_sky_fraction="+getFromPourcent(s));
+      
       if( (s=getText(tfHiPSorder)).length()!=0 ) special.append(" && (hips_order="+s+"|| hips_service_url=!*)");
       if( (s=getText(tfCatNbRow)).length()!=0 )  special.append(" && (dataproduct_type!=catalog || nb_rows="+s+")");
       
@@ -794,7 +866,19 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //      if( excluS.length()>0 ) expr = "("+expr+") && ("+excluS+")";
 //      if( special.length()>0 ) expr="("+expr+")"+special;
             
-      exprArea.setText( expr );
+      return expr;
+   }
+   
+   /** Retourne un pourcentage nnn% en valeur entre 0 et 1, à moins que ce ne soit déjà le cas */
+   private String getFromPourcent(String s) {
+      int i = s.lastIndexOf('%');
+      int j;
+      for( j=0; j<s.length() && !Character.isDigit( s.charAt(j) ); j++);
+      double n;
+      if( i==-1 ) n = Double.parseDouble(s.substring(j).trim());
+      else n = Double.parseDouble( s.substring(j,i).trim());
+      n/=100.;
+      return s.substring(0,j)+n;
    }
    
    /** Retourne la date MJD d'une date écrite en clair */
@@ -896,8 +980,36 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private JTextArea tMoc,tSTC;
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
    private JComboBox<String> comboMocPlane;
+   private JButton btReset,btApply;
    
    private NoneSelectedButtonGroup spaceBG;
+   
+   /** Retourne true si aucune contrainte n'est active */
+   protected boolean isEmpty() {
+      return exprArea.getText().trim().length()==0 && mocFiltreSpatial==null;
+   }
+   
+   /** Retourne true si le filtre a déjà été appliquée */
+   protected boolean hasBeenApplied() {
+      
+      HealpixMoc moc = getMoc();
+      if( moc==null && mocFiltreSpatial!=null || moc!=null && mocFiltreSpatial==null
+            || moc!=null && !moc.equals(mocFiltreSpatial) ) return false;
+      
+      if( isEmpty() ) return true;
+      
+      String expr = getExpression();
+      String oExpr = exprArea.getText();
+      System.out.println("expr="+expr+" oExpr="+oExpr);
+      if( !expr.equals( oExpr ) ) return false;
+      
+     boolean inter = cbIntersecting.isSelected();
+     boolean oInter = labelInclusive.getText().startsWith("inter");
+     System.out.println("inter="+inter+" ointer="+oInter);
+     if( inter!=oInter ) return false;
+     
+     return true;
+   }
    
    /** Reset du formulaire et application à l'arbre immédiatement */
    protected void reset() { 
@@ -907,6 +1019,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Remise à l'état initial du formulaire - sans application à l'arbre */
    protected void clean() {
+      
+      nameField.setText("");
       
       bxSuperseded.setSelected(false);
       bxPixFull.setSelected(false);
@@ -937,6 +1051,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       cbIntersecting.setSelected(true);
       spaceBG.clearSelection();
+      
+      mocFiltreSpatial=null;
       mocArea.setText("");
       
       updateWidget();
@@ -955,7 +1071,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    // Positionne un cadre de titre autour d'un panel
-   private void setTitleBorder(JPanel p, String title) { setTitleBorder(p,title,new Color(140,140,140)); }
    private void setTitleBorder(JPanel p, String title, Color foreground) {
       Border line = BorderFactory.createMatteBorder(1, 1, 1, 1, foreground);
       if( title==null ) p.setBorder( line );
@@ -985,12 +1100,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       // Catégories des collections
       catVbx = new Vector<JCheckBox>();
-      subPanel = createFilterBis(catVbx, -2, true, "client_category", "/",SORT_FREQ);
+      subPanel = createFilterBis(catVbx, -2, true, "client_category", "/",SORT_ALPHA);
       PropPanel.addCouple(this, p, "Data type", "Collection data types", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Couverture du ciel
       tfCoverage = new JTextFieldX(15);
-      PropPanel.addCouple(this, p, "Sky fraction", "Fraction of the sky coverage...\nExamples: <0.1, 0.2 .. 0.4, >=0.9)", 
+      PropPanel.addCouple(this, p, "Sky coverage", "Percentage of the sky coverage...\nExamples: <10%, >=90%)", 
             tfCoverage, g, c, GridBagConstraints.EAST);
       
       // Les différents régimes
@@ -1015,8 +1130,15 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       subPanel.add(tfMinDate); subPanel.add( new JLabel(" .. ") ); subPanel.add(tfMaxDate);
       PropPanel.addCouple(this, p, "Obs. epoch", "Epoch of observations (in MJD)\nExample: 46000 52000, >47000", subPanel, g, c, GridBagConstraints.EAST);
 
+      // Les filtres dédiés aux HiPS
+      p = bottomLeftPanel = new JPanel(g);
+//      setTitleBorder(p, "Dedicated HiPS filters");
+
       // Restriction suivant le mode d'accès
+      PropPanel.addSectionTitle(p, " Protocols:", g, c);
+      
       subPanel = new JPanel( new GridLayout(0,4) );
+      subPanel.setBorder(  BorderFactory.createLineBorder(Color.gray));
       NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
       subPanel.add( bx=bxHiPS = new JCheckBox("HiPS")); bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Hierarchical progressive survey compatible collections");
@@ -1026,17 +1148,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bx.setToolTipText("Simple Spectra Access compatible collections");
       subPanel.add( bx=bxTAP  = new JCheckBox("TAP"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Table Access Protocol compatible collections");
-      subPanel.add( bx=bxCS   = new JCheckBox("Cone search"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      subPanel.add( bx=bxCS   = new JCheckBox("Cone Search"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("Catalog/table cone searchable collections");
-      subPanel.add( bx=bxProg   = new JCheckBox("Progenitors"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      subPanel.add( bx=bxProg   = new JCheckBox("HiPS progenitors"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText("HiPS Progenitors access (details and links\nto original images used for building the HiPS)");
       PropPanel.addCouple(this, p, "Protocol ", "Keep the collections supporting the selected protocol", subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
      
-      // Les filtres dédiés aux HiPS
-      p = bottomLeftPanel = new JPanel(g);
-//      setTitleBorder(p, "Dedicated HiPS filters");
       
-      // Couverture du ciel
+      // Résolution HiPS
+      PropPanel.addFilet(p, g, c, 30, 0);
+      PropPanel.addSectionTitle(p, " HiPS constraints:", g, c);
+      
       tfHiPSorder = new JTextFieldX(15);
       PropPanel.addCouple(this, p, "HiPS order", "HiPS order (WILL BE REPLACED BY ANGULAR RESOLUTION)\nExamples: <5, 6..11, >12", 
             tfHiPSorder, g, c, GridBagConstraints.EAST);
@@ -1142,15 +1264,15 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       JLabel desc = new JLabel("<html>A space constraint is defined by a sky region "
             + "for which<br>all matching collections must "
             + "partially or fully overlap it</html>");
-//      PropPanel.addSectionTitle(p, desc, g, c);
       PropPanel.addCouple(this, p, "  ", null, desc, g, c, GridBagConstraints.EAST);
       desc.setFont( desc.getFont().deriveFont(Font.ITALIC));
       
       PropPanel.addFilet(p, g, c, 20, 0);
 
-      PropPanel.addSectionTitle(p, " Spacial region definition:", g, c);
+      PropPanel.addSectionTitle(p, " Spatial region definition:", g, c);
       
       JCheckBox cb = cbSelectedGraph = new JCheckBox("the current selected polygon/circle");
+      cb.addActionListener( this );
       spaceBG = new NoneSelectedButtonGroup();
       spaceBG.add(cb);
       PropPanel.addCouple(this, p, "   ", "speficy the spacial constraint by the current selected polygon or circle",
@@ -1158,6 +1280,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       p1 = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       cb = cbMocPlane = new JCheckBox("a MOC plane");
+      cb.addActionListener( this );
       cb.setSelected(true);
       spaceBG.add(cb);
       comboMocPlane = new JComboBox<String>();
@@ -1172,6 +1295,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 
       p1 = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       cb = cbMocInLine = new JCheckBox("an inline MOC: ");
+      cb.addActionListener( this );
       spaceBG.add(cb);
 //      tMoc = new JTextFieldX(40);
       tMoc = new JTextArea(3,40);
@@ -1180,7 +1304,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       tMoc.addKeyListener( new KeyAdapter() {
          public void keyReleased(KeyEvent e) {
             cbMocInLine.setSelected( tMoc.getText().length()>0 );
-            
+            updateWidget();
          }
       });
       p1.add(cb); p1.add(js);
@@ -1191,6 +1315,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
      
       p1 = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       cb = cbStcInLine = new JCheckBox("an inline STC:  ");
+      cb.addActionListener( this );
       spaceBG.add(cb);
 //      tSTC = new JTextFieldX(41);
       tSTC = new JTextArea(3,40);
@@ -1199,6 +1324,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       tSTC.addKeyListener( new KeyAdapter() {
          public void keyReleased(KeyEvent e) {
             cbStcInLine.setSelected( tSTC.getText().length()>0 );
+            updateWidget();
          }
       });
 
@@ -1209,6 +1335,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       ButtonGroup bg1 = new ButtonGroup();
       p1 = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       cb = cbIntersecting = new JCheckBox("intersecting");
+      cb.addActionListener( this );
       bg1.add(cb);
       p1.add(cb);
       cb = new JCheckBox("fully containing");
@@ -1223,8 +1350,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       globalPanel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
       globalPanel.add( topLeftPanel,    " Global constraints ");
       globalPanel.add( rightPanel,      " Catalog constraints ");
-      globalPanel.add( bottomLeftPanel, " HiPS constraints ");
       globalPanel.add( spacePanel,      " Space constraints ");
+      globalPanel.add( bottomLeftPanel, " Technical constraints");
 
       return globalPanel;
    }
@@ -1240,7 +1367,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //      String s = aladin.directory.getNumber( bx.getActionCommand() )+" collections";
 //      bx.setToolTipText(s);
    }
-
+   
    @Override
    public void actionPerformed(ActionEvent e) {
       flagFormEdit=false; 

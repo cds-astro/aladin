@@ -257,12 +257,12 @@ public class MyTree extends JTree implements Iterable<TreeObj>  {
    /** Préparation de l'arbre afin qu'il "pré-ouvre" les branches terminales */
    protected void defaultExpand() {
       expandPath(new TreePath(root));
-      if( true ) return;
-      Enumeration e = root.preorderEnumeration();
-      while( e.hasMoreElements() ) {
-         DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
-         if( node.isLeaf() ) collapsePath(new TreePath(node));
-      }
+//      if( true ) return;
+//      Enumeration e = root.preorderEnumeration();
+//      while( e.hasMoreElements() ) {
+//         DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
+//         if( node.isLeaf() ) collapsePath(new TreePath(node));
+//      }
    }
 
    /** Classe pour l'édition d'un noeud de l'arbre */

@@ -82,6 +82,9 @@ public class PlanMoc extends PlanBGCat {
          String f = moc.getCoordSys();
          frameOrigin = f.equals("E")?Localisation.ECLIPTIC :
             f.equals("G")?Localisation.GAL:Localisation.ICRS;
+         
+         // Si le MOC est petit, affichage immédiat à la résolution max
+         if( moc.getSize()<10000 ) setMaxGapOrder();
       }
       type = ALLSKYMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
@@ -413,6 +416,8 @@ public class PlanMoc extends PlanBGCat {
 
    static int MAXGAPORDER=3;
    private int gapOrder=0;
+   
+   protected void setMaxGapOrder() { setGapOrder(MAXGAPORDER); }
 
    protected int getGapOrder() { return gapOrder; }
    protected void setGapOrder(int gapOrder) {

@@ -456,11 +456,11 @@ public class ServerFile extends Server implements XMLConsumer {
                // C'est peut être un fichier de properties ?
             } else if( (type & MyInputStream.PROP)!=0 ) {
                
-               // Dans le cas d'un fichier properties local, on passe le path pour 
-               // fournit l'accès au HiPS associé dans le cas où il n'est pas décrit
+               // Dans le cas d'un fichier properties, on passe le path ou l'url pour 
+               // fournir l'accès au HiPS associé dans le cas où il n'est pas décrit
                // par un hips_service_url
                String path = null;
-               int i = (f==null || !mode.equals("file")) ? -1 : f.lastIndexOf("properties");
+               int i = (f==null /* || !mode.equals("file")*/ ) ? -1 : f.lastIndexOf("properties");
                if( i>0 ) path = f.substring(0,i-1);
                
                if( aladin.directory.addHipsProp( new InputStreamReader(in), true, path) ) {

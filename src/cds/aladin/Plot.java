@@ -233,8 +233,8 @@ public class Plot {
             else if( cY>max1Y && cY<maxY || max1Y==maxY && cY>min1Y ) max1Y=cY;
          }
          
-         if( true || min1X==max1X ) { min1X=minX; max1X=maxX; }
-         if( true || min1Y==max1Y ) { min1Y=minY; max1Y=maxY; }
+         min1X=minX; max1X=maxX;
+         min1Y=minY; max1Y=maxY;
          
          aladin.trace(4,"ViewSimple.adjustPlot: nsrc="+n+" X=["+minX+" ("+min1X+") .. ("+max1X+") "+maxX+"] Y=["+minY+" ("+min1Y+") .. ("+max1Y+") "+maxY+"]");
          int w = viewSimple.getWidth();

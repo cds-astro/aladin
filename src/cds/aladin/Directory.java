@@ -1009,8 +1009,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       String t = DIRECTORY;
       if( nb!=-1 && dirList!=null && nb<dirList.size() ) {
          t = "<html>"+t+"<font color=\"#D0D0F0\"> &rarr; "+nb+" / "+dirList.size()+"</font></html>";
+         if( directoryFilter!=null ) directoryFilter.setLabelResume(nb,dirList.size(),quickFilter.getText().trim().length()>0);
       }
       dir.setText(t);
+      
    }
    
    // Compteurs des noeuds
@@ -1031,7 +1033,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       boolean insideActivated = iconInside.isActivated();
       
       // Mémorisation temporaire des états expanded/collapsed
-//      HashMap<String,Boolean> wasExpanded = new HashMap<String,Boolean>();
       if( wasExpanded==null ) {
          wasExpanded = new HashSet<String>();
          backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
@@ -1045,7 +1046,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       
       if( initCounter ) initCounter( model );
-      else  updateTitre( model.countDescendance() );
+      else updateTitre( model.countDescendance() );
 
       // Répercussion des états des feuilles sur les branches
       model.populateFlagIn();
@@ -2102,6 +2103,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Ajout de nouvelles collections */
    protected boolean addHipsProp(InputStreamReader in, boolean addition, String path) {
       try {
+//         System.out.println("addHipsProp => "+path);
          loadMultiProp(in,addition,path);
          ArrayList<TreeObjDir> tmpDirList = populateMultiProp();
          rebuildTree(tmpDirList,  false,  true);
