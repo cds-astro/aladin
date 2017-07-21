@@ -374,12 +374,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       comboFilter.removeAllItems();
       comboFilter.addItem(directoryFilter.ALLCOLLHTML);
       
-      String mylist = aladin.configuration.dirFilter.get(DirectoryFilter.MYLIST);
+      String mylist = aladin.configuration.filterExpr.get(DirectoryFilter.MYLIST);
       if( mylist!=null ) {
          comboFilter.addItem(DirectoryFilter.MYLISTHTML);
       }
       
-      for( String name : aladin.configuration.dirFilter.keySet() ) {
+      for( String name : aladin.configuration.filterExpr.keySet() ) {
          if( name.equals(directoryFilter.ALLCOLL) ) continue;
          if( name.equals(directoryFilter.MYLIST) ) continue;
          comboFilter.addItem( name );
@@ -436,7 +436,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       public void keyTyped(KeyEvent e) { }
       public void keyPressed(KeyEvent e) { }
       public void keyReleased(KeyEvent e) {
-         iconFilter.setActivated(true);
          if( e.getKeyCode()==KeyEvent.VK_ENTER ) {
             if( timer!=null ) timer.stop(); 
             timer=null;
@@ -489,7 +488,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                   requestFocusInWindow();
                   setCaretPosition(getText().length());
                }
-               if( iconFilter!=null ) iconFilter.setActivated(true);
                updateWidgets();
             }
          }).start();
@@ -775,7 +773,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          String name = (String)comboFilter.getSelectedItem();
          if( name.equals(directoryFilter.ALLCOLLHTML) ){
             name = directoryFilter.MYLIST;
-            aladin.configuration.setDirFilter(name, "");
+            aladin.configuration.setDirFilter(name, "", null);
             updateDirFilter();
             comboFilter.setSelectedItem(directoryFilter.MYLISTHTML);
          }
@@ -807,13 +805,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
 //      System.out.println("filter("+name+")");
       
-      String expr = name.equals(DirectoryFilter.ALLCOLL) ? "*" : aladin.configuration.dirFilter.get(name);
+      String expr = name.equals(DirectoryFilter.ALLCOLL) ? "*" : aladin.configuration.filterExpr.get(name);
+      HealpixMoc moc = name.equals(DirectoryFilter.ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
       
-      if( expr!=null ) {
-         iconFilter.setActivated(true);
+      if( expr!=null || moc!=null ) {
          if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
          
-         directoryFilter.setSpecificalFilter(name, expr );
+         int intersect = DirectoryFilter.getIntersect(moc);
+         directoryFilter.setSpecificalFilter(name, expr, moc, intersect );
       }
    }
    
@@ -1009,9 +1008,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       String t = DIRECTORY;
       if( nb!=-1 && dirList!=null && nb<dirList.size() ) {
          t = "<html>"+t+"<font color=\"#D0D0F0\"> &rarr; "+nb+" / "+dirList.size()+"</font></html>";
-         if( directoryFilter!=null ) directoryFilter.setLabelResume(nb,dirList.size(),quickFilter.getText().trim().length()>0);
       }
       dir.setText(t);
+      if( directoryFilter!=null && dirList!=null ) directoryFilter.setLabelResume(nb,dirList.size(),quickFilter.getText().trim().length()>0);
       
    }
    
@@ -1157,33 +1156,25 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
     *  @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
     *  @param moc filtrage spatial, null si aucun
-    *  @param inclusive pour le filtrage spatial, true=>totalité du moc inclus
+    *  @param intersect pour le filtrage spatial: MultiMoc.OVERLAPS, ENCLOSED ou COVERS
     */
-   protected void resumeFilter(String expr, HealpixMoc moc, boolean inclusive) {
+   protected void resumeFilter(String expr, HealpixMoc moc, int intersect) {
       try {
          
 //         System.out.println("resumeFilter iconFilter.isActivated="+iconFilter.isActivated());
          
-         // En cas de désactivation du filtrage, pas de contraintes
-         if( !iconFilter.isActivated() ) expr="*";
-         
-         // sinon
-         else {
-            // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
-            String quick = getQuickFilterExpr();
-            if( quick.length()>0 ) {
-               if( expr.length()==0 || expr.equals("*") ) expr=quick;
-               else expr = "("+expr+") && "+quick;
-            }
+         // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
+         String quick = getQuickFilterExpr();
+         if( quick.length()>0 ) {
+            if( expr.length()==0 || expr.equals("*") ) expr=quick;
+            else expr = "("+expr+") && "+quick;
          }
-         
-         if( iconFilter.isActivated() && expr.equals("*") ) iconFilter.setActivated( false );
          
          aladin.trace(4,"Directory.resumeFilter() => "+expr);
          
 //         System.out.println("resumeFilter("+expr+")");
          // Filtrage
-         checkFilter(expr, moc, inclusive);
+         checkFilter(expr, moc, intersect);
 
          // Regénération de l'arbre
          resumeTree();
@@ -1218,17 +1209,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Positionnement des flags isHidden() de l'arbre en fonction des contraintes de filtrage
     * @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
     * @param moc filtrage spatial, null si aucun
-    * @param inclusive pour le filtrage spatial, true=>totalité du moc inclus
+    * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     */
-   private void checkFilter(String expr, HealpixMoc moc, boolean inclusive) throws Exception {
+   private void checkFilter(String expr, HealpixMoc moc, int intersect) throws Exception {
       
       // Filtrage par expression
 //      long t0 = System.currentTimeMillis();
-      ArrayList<String> ids = multiProp.scan( (HealpixMoc)null, expr, false, -1, false);
+      ArrayList<String> ids = multiProp.scan( (HealpixMoc)null, expr, false, -1, -1);
 //      System.out.println("Filter: "+ids.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
       
       // Filtrage spatial
-      ArrayList<String> ids1 = filtrageSpatial( moc, inclusive );
+      ArrayList<String> ids1 = filtrageSpatial( moc, intersect );
       
       // Positionnement des flags isHidden() en fonction du filtrage
       HashSet<String> set = new HashSet<String>( ids.size() );
@@ -1241,22 +1232,22 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    private HealpixMoc oldMocSpatial=null;
    private ArrayList<String> oldIds=null;
-   private boolean oldInclusive=false;
+   private int oldIntersect=MultiMoc.OVERLAPS;
    
    /** Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire
     * plusieurs fois de suite la même requête
     * @param moc
-    * @param inclusive true si la totalité du Moc doit être incluse dans le MOC de la collection à retenir
+    * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     * @return la liste des IDs qui matchent
     */
-   private ArrayList<String> filtrageSpatial( HealpixMoc moc, boolean inclusive ) {
+   private ArrayList<String> filtrageSpatial( HealpixMoc moc, int intersect ) {
       if( moc==null ) return null;
-      if( oldMocSpatial!=null && inclusive==oldInclusive && oldMocSpatial.equals(moc) ) return oldIds;
+      if( oldMocSpatial!=null && intersect==oldIntersect && oldMocSpatial.equals(moc) ) return oldIds;
       
-      oldInclusive = inclusive;
+      oldIntersect = intersect;
       oldMocSpatial= moc;
       try {
-         oldIds=filtrageSpatial1( moc, inclusive );
+         oldIds=filtrageSpatial1( moc, intersect );
       } catch( Exception e ) {
          oldIds=null;
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -1267,7 +1258,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire
     * => voir filtrageSpatial(...)
     */
-   private ArrayList<String> filtrageSpatial1( HealpixMoc moc, boolean inclusive ) throws Exception {
+   private ArrayList<String> filtrageSpatial1( HealpixMoc moc, int intersect ) throws Exception {
       String url = aladin.glu.getURL("MocServer").toString();
       int i=url.lastIndexOf('?');
       if( i>0 ) url = url.substring(0,i);
@@ -1280,7 +1271,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       urlConn.setRequestProperty("Connection", "Keep-Alive");
       urlConn.setRequestProperty("Cache-Control", "no-cache");
       MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
-      if( inclusive ) out.writeField("inclusive","true");
+      if( intersect!=MultiMoc.OVERLAPS ) out.writeField("intersect",MultiMoc.INTERSECT[ intersect ]);
       File tmp = File.createTempFile("tmp", "fits");
       tmp.deleteOnExit();
       FileOutputStream fo = new FileOutputStream(tmp);
@@ -1624,15 +1615,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          }
          
          // Mémorisation des indirections possibles sous la forme %I id0\tid1\t...
-         aladin.glu.aladinDic.put(id,indirection.toString());
+         if( indirection!=null ) aladin.glu.aladinDic.put(id,indirection.toString());
       }
       
       // Ajout dans la liste des noeuds d'arbre
       listReg.add( new TreeObjDir(aladin,id,prop) );
    }
    
-//   static private final String [] CS_AUTH      = { "archive.stsci.edu","nasa.heasarc", "irsa.ipac","uk.ac.le.star.tmpledas","wfau.roe.ac.uk","org.gavo.dc" };
-//   static private final String [] CS_AUTH_NAME = { "STScI","HEASARC","IRSA","LEDAS","WFAU","GAVO" };
    
    /** Ajustement des propriétés, notamment pour ajouter le bon client_category
     * s'il s'agit d'un catalogue */
@@ -1653,15 +1642,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          boolean isSIA  = prop.getProperty("sia_service_url")!=null || prop.getProperty("sia2_service_url")!=null;
          boolean isSSA  = prop.getProperty("ssa_service_url")!=null;
          boolean isTAP  = prop.getProperty("tap_service_url")!=null;
-         String subCat = isHips ? "HiPS": isCS || isTAP ? "Catalog by CS,TAP" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : "Miscellaneous";
+         String subCat = isHips ? "HiPS" : isCS ? "Catalog by CS" : isTAP ? "Table by TAP" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : "Miscellaneous";
          
-//         if( isCS ) {
-//            String auth = Util.getSubpath(id, 0, 1);
-//            int i;
-//            if( (i=Util.indexInArrayOf(auth, CS_AUTH, true))>=0 ) category = "Catalog/"+CS_AUTH_NAME[i];
-//         }
-         
-         if( category==null ) category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
+         category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
          
          // On trie un peu les branches
@@ -1725,8 +1708,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( code==null ) return;
          
          String sortPrefix = "";
-//         String vizier = "/CDS VizieR";
-         String vizier = "";
+         String vizier = "/VizieR";
+//         String vizier = "";
          
          boolean flagJournal = code.equals("J");
          if( flagJournal ) {
@@ -1911,7 +1894,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
       
-      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1, false);
+      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1, -1);
 
       Map<String, Integer> map = new HashMap<String, Integer>();
       for( String id : a) {
@@ -2370,7 +2353,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       ArrayList<TreeObjDir> treeObjs=null;     // hips dont il faut afficher les informations
       JPanel panelInfo=null;                // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
       JCheckBox hipsBx=null,mocBx=null,mociBx=null,mocuBx,progBx=null,
-                dmBx=null, siaBx=null, ssaBx=null, csBx=null, msBx=null, allBx=null, tapBx=null,xmatchBx=null;
+                dmBx=null, siaBx=null, ssaBx=null, csBx=null, msBx=null, allBx=null, tapBx=null,xmatchBx=null,
+                globalBx=null;
       
       FrameInfo() {
          setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -2612,29 +2596,38 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
-            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = tapBx = xmatchBx = msBx = null;
+            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = 
+                  globalBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox("prog.access");
                mocAndMore.add(bx);
                bx.setSelected(true);
                Util.toolTip(bx,"Hierarchical Progressive Survey (HiPS)\n => Load the progressive view of the data");
             }
-             
+
+            if( to.hasGlobalAccess() ) {
+               globalBx = bx = new JCheckBox("Data access");
+               mocAndMore.add(bx);
+               bx.setSelected( true );
+               Util.toolTip(bx,"Load the whole collection");
+               bg.add(bx);
+            }
+
             if( to.hasSIA() ) {
                siaBx = bx = new JCheckBox( "in view" );
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
                String proto = to.hasSIAv2() ? "SIAv2" : "SIA";
                Util.toolTip(bx,"Simple Image Access ("+proto+")\n => load the list of images available in the current view",true);
-           }
-            
+            }
+
             if( to.hasSSA() ) {
                ssaBx = bx = new JCheckBox("in view");
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
                Util.toolTip(bx,"Simple Spectra Access (SSA)\n => load the list of spectra available in the current view",true);
-           }
-            
+            }
+
             if( to.isCDSCatalog() ) {
                boolean allCat = nbRows<2000;
                if( hipsBx!=null ) bg.add(hipsBx);
@@ -3045,6 +3038,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          // Accès à une collection
          if( treeObjs.size()==1 ) {
             TreeObjDir to = treeObjs.get(0);
+            if( globalBx!=null  && globalBx.isSelected() )   to.loadGlobalAccess();
             if( allBx!=null  && allBx.isSelected() )   to.loadAll();
             if( siaBx!=null  && siaBx.isSelected() )   to.loadSIA();
             if( ssaBx!=null  && ssaBx.isSelected() )   to.loadSSA();
@@ -3060,11 +3054,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          // Accès à plusieurs collections simultanément
          } else {
             
-            // CS
+            // CS et assimilés
             if( csBx!=null  && csBx.isSelected() ) {
                for( TreeObjDir to : treeObjs ) {
                        if( to.hasSIA() ) to.loadSIA();
                   else if( to.hasSSA() ) to.loadSSA();
+                  else if( to.hasGlobalAccess() ) to.loadGlobalAccess();
                   else to.loadCS();
                }
             }

@@ -45,14 +45,18 @@ import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -73,6 +77,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.prop.PropPanel;
+import cds.moc.HealpixMoc;
+import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
 /**
@@ -112,6 +118,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    // Nom du fichier de configuration
    private static String   CONFIGNAME = "Aladin.conf";
+   private static String   MOCFILTER = "MocFilter";
 
    // NOm du fichier des fonctions locales associées aux bookmarks
    private static String   CONFIGBKM = "Bookmarks.ajs";
@@ -203,7 +210,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private boolean         flagModifLang=true;   // true si on vient de modifier la langue (ou au démarrage)
    private String          currentLang="En";     // Le suffixe de la langue courante
    protected LinkedBlockingDeque<String> lastFile;  // La liste des derniers fichiers chargés
-   protected LinkedHashMap<String,String>  dirFilter;            // Liste des filtres du répertoire des collections -(name->filterRule)
+   protected LinkedHashMap<String,String>  filterExpr; // Liste des filtres pour l'arbre des découvertes -(name->filterRule)
+   protected HashMap<String, HealpixMoc>   filterMoc;  // Liste des régions associées aux filtres
 
    // Les variables pour la gestion des champs de préférences
    private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
@@ -339,10 +347,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false,aladin);
       prop = new Vector(10);
-      dirFilter = new LinkedHashMap<String,String>();
-      setDirFilter("Color surveys", "dataproduct_subtype=color && moc_sky_fraction>0.2");
-      setDirFilter("Large catalogs", "nb_rows>1000000");
-      setDirFilter("Log missions", "ID=CDS/B*");
+      filterMoc = new HashMap<String, HealpixMoc>();
+      filterExpr = new LinkedHashMap<String,String>();
+      setDirFilter("Color surveys", "dataproduct_subtype=color && moc_sky_fraction>0.2",null);
+      setDirFilter("Large catalogs", "nb_rows>1000000",null);
+      setDirFilter("Log missions", "ID=CDS/B*",null);
       flagModif = false;
    }
 
@@ -1899,17 +1908,47 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       
       // Je sauvegarde les filtres du répertoire des collections
       // sous la forme : DirFilterNN   name : filter_rule
-      if( dirFilter.size()>0) {
+      // et j'en profite pour sauvegarder les MOCs correspondants (et nettoyer les vieux)
+      String filterMocDir = configDir + Util.FS + MOCFILTER;
+      File mocDir = new File(filterMocDir);
+      Util.deleteDir( mocDir );
+      System.out.println("XXX Configuration.save1() delete "+mocDir);
+      
+      boolean mocDirCreated=false;
+      
+      if( filterExpr.size()>0) {
+         
          int i=1;
          try {
-            for( String name : dirFilter.keySet() ) {
+            for( String name : filterExpr.keySet() ) {
                if( name.equals(DirectoryFilter.ALLCOLL) ) continue;
                if( name.equals(DirectoryFilter.MYLIST) ) continue;
-               String expr = dirFilter.get(name);
-               if( expr==null || expr.equals("*") || expr.equals("")) continue;
+               String expr = filterExpr.get(name);
+               HealpixMoc moc = filterMoc.get(name);
+               if( moc==null && (expr==null || expr.equals("*") || expr.equals("")) ) continue;
+               
+               String mocInfo = moc==null ? "" : MultiMoc.INTERSECT[ DirectoryFilter.getIntersect(moc) ]+":";
+               
+               // mémorisation du filtre dans le fichier de conf
                String key = DIRFILER+(i++);
-               bw.write( Util.align(key, 20) + name+" : " + expr );
+               bw.write( Util.align(key, 20) + name+":" + mocInfo + (expr==null?"":expr) );
                bw.newLine();
+               
+               // mémorisation du Moc associé dans le répertoire prévu à cet effet
+               if( moc!=null ) {
+                  if( !mocDirCreated ) {
+                     mocDir.mkdir();
+                     Util.pause(100);
+                     mocDirCreated=true;
+                     System.out.println("XXX Configuration.save1() => create "+mocDir);
+                  }
+                  
+                  String mocName = name2MocName( name );
+                  System.out.println("XXX Configuration.save1() => writing "+mocName+" mocInfo="+mocInfo+" "+DirectoryFilter.getASCII(moc));
+                  OutputStream out = new FileOutputStream( filterMocDir + Util.FS + mocName );
+                  moc.writeFITS(out);
+                  out.close();
+               }
             }
          } catch( Exception e1 ) {
             e1.printStackTrace();
@@ -1920,6 +1959,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       flagModif = false;
 
       Aladin.trace(3, "Aladin user configuration file saved");
+   }
+   
+   private String name2MocName( String name ) {
+      String s = name.replace('/', '_')
+            .replace('\\', '_').replace(':', '_').replace('.', '_')
+            .replace('?', '_');
+      return s+".fits";
    }
 
    protected void saveLocalFunction() throws Exception {
@@ -1989,7 +2035,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          aladin.trace(4, "Configuration.load() [" + key + "] = [" + value + "]");
 
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
-         else if( key.startsWith(DIRFILER) ) setDirFilter(value);
+         else if( key.startsWith(DIRFILER) ) loadDirFilter(value);
          else set(key, value);
       }
       br.close();
@@ -2380,18 +2426,50 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       set(MOD,s);
    }
    
-   /** Mémorise un nouveau filtre sur l'arbre des collections
-    * Syntaxe   name: filter.... */
-   protected void setDirFilter(String s) {
+   /** Recharge les filtres mémorisés pour l'arbre des collections
+    * Syntaxe   name:[overlaps|enclosed|covers:]filter.... 
+    * => peut disposer d'un MOC associé dans le répertoire MocFilter et sous le nom
+    * name[_covers|_enclosed].fit
+    */
+   protected void loadDirFilter(String s) {
       int i = s.indexOf(':');
       if( i<0 ) return;
-      setDirFilter( s.substring(0,i).trim(), s.substring(i+1).trim() );
+      
+      HealpixMoc moc = null;
+      int intersect=-1;   // Par défaut par de Moc associé, sinon MultiMoc.OVERLAPS|ENCLOSED|COVERS
+      String name = s.substring(0,i).trim();
+      String expr = s.substring(i+1).trim();
+      
+      // Y a-t-il un MOC associé au filtre, et si oui, selon quel mode de recouvrement de région
+      int j = s.indexOf(':',i+1);
+      if( j>i  ) {
+         String mocInfo = s.substring(i+1,j).trim();
+         intersect = Util.indexInArrayOf(mocInfo, MultiMoc.INTERSECT);
+         if( intersect>=0 ) expr = s.substring(j+1).trim();
+
+         // récupération d'un éventuel Moc associé au filtre
+         File f = new File( System.getProperty("user.home") + Util.FS + aladin.CACHE
+               + Util.FS + MOCFILTER + Util.FS + name2MocName(name) );
+         if( f.exists() ) {
+            InputStream in = null;
+            try {
+               in = new FileInputStream(f);
+               moc = new HealpixMoc(in);
+               DirectoryFilter.setIntersect(moc, intersect);
+            }
+            catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+            finally{ try{ in.close(); } catch( Exception e) {} }
+         }
+      }
+      setDirFilter( name, expr, moc );
    }
    
    /** Mémorise un nouveau filtre sur l'arbre des collections */
-   protected void setDirFilter(String name,String filter) {
-      if( dirFilter.containsKey(name) ) dirFilter.put(name, filter);
-      else dirFilter.put(name,filter);
+   protected void setDirFilter(String name,String expr, HealpixMoc moc) {
+      filterExpr.put(name, expr);
+      if( moc!=null ) filterMoc.put(name,moc);
+      
+      System.out.println("XXX Configuration.setDirFilter("+name+") "+expr+" moc="+DirectoryFilter.getASCII(moc));
    }
 
    static private final int MAXLASTFILE = 20;

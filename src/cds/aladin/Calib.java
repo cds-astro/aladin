@@ -4555,34 +4555,34 @@ public final class Calib  implements Cloneable {
    static double EPSILON = 1./(60.*60.*1000.*1000.);   // Milli arcseconde
 
    static boolean equalEpsilon(double a, double b) {
-   if( Double.isNaN(a) || Double.isNaN(b) ) return false;
-   //    if (Math.abs(a-b) >= EPSILON) 
-   //        { System.out.println("Diff "+(Math.abs(a-b))+" "+EPSILON) ;
-   //        System.out.println(" "+a+" "+b+" "+EPSILON) ;}
-   return Math.abs(a-b)<=EPSILON ;
+      if( Double.isNaN(a) || Double.isNaN(b) ) return false;
+      //    if (Math.abs(a-b) >= EPSILON) 
+      //        { System.out.println("Diff "+(Math.abs(a-b))+" "+EPSILON) ;
+      //        System.out.println(" "+a+" "+b+" "+EPSILON) ;}
+      return Math.abs(a-b)<=EPSILON ;
    }
 
    //      test();
    //   }
    static public boolean test1() {
-   boolean toutestbon=true;
-   Calib C = new Calib(8,424,0,1) ;
-   Calib Cp = new Calib(8,0,0,1 ) ;
+      boolean toutestbon=true;
+      Calib C = new Calib(8,424,0,1) ;
+      Calib Cp = new Calib(8,0,0,1 ) ;
 
-   return toutestbon ;
+      return toutestbon ;
    }
 
    static public boolean test() {
-   boolean toutestbon=true;
-   try {
-      //         System.out.println("Test des projections ï¿½ la milliarcseconde ("+EPSILON+")\n" +
-      //                " - centre de projection dans les 2 sens pour 4 valeurs clefs...\n" +
-      //                " - bijectivitï¿½ pour des valeurs alï¿½atoires...\n" 
-      //                );
-      System.out.println("> Calib test...");
-      //for( int proj=1; proj<projType.length; proj++ ) {
-     int  proj = ARC ;  
-      boolean erreur=false;
+      boolean toutestbon=true;
+      try {
+         //         System.out.println("Test des projections ï¿½ la milliarcseconde ("+EPSILON+")\n" +
+         //                " - centre de projection dans les 2 sens pour 4 valeurs clefs...\n" +
+         //                " - bijectivitï¿½ pour des valeurs alï¿½atoires...\n" 
+         //                );
+         System.out.println("> Calib test...");
+         //for( int proj=1; proj<projType.length; proj++ ) {
+         int  proj = ARC ;  
+         boolean erreur=false;
          System.out.print("   Test"+projType[proj]+"...");
          for( int j=0; j<testCenter.length; j++ ) {
             double ra  = testCenter[j][0];
@@ -4618,30 +4618,30 @@ public final class Calib  implements Cloneable {
             try {
                // Test de la bijectivitï¿½ pour des valeurs alï¿½atoires
                Random rand = new Random(System.currentTimeMillis());
-              // System.out.println("try ");
-              
+               // System.out.println("try ");
+
                for( int i=0; i<1000; i++ ) {
-        //          x=coo.x = rand.nextDouble()*widthPix;
-        //          y=coo.y = rand.nextDouble()*heightPix;
+                  //          x=coo.x = rand.nextDouble()*widthPix;
+                  //          y=coo.y = rand.nextDouble()*heightPix;
                   //                     System.out.println("random avant GetCoord"+coo.x+" "+coo.y);
-        //          c.GetCoord(coo);
-                //   coo.al = rand.nextDouble()*Math.PI*2.0;
-                //   coo.del = (rand.nextDouble()-0.5)*Math.PI;
-                   coo.al = Math.PI * (1-1.0/1000.0) ;
-                   coo.del =  Math.PI*(-0.5 + i/1000.0) ;
-                  
+                  //          c.GetCoord(coo);
+                  //   coo.al = rand.nextDouble()*Math.PI*2.0;
+                  //   coo.del = (rand.nextDouble()-0.5)*Math.PI;
+                  coo.al = Math.PI * (1-1.0/1000.0) ;
+                  coo.del =  Math.PI*(-0.5 + i/1000.0) ;
+
                   c.GetXY(coo);
                   if (Math.abs(coo.y)>30000.0) {
-                  System.out.println(" coo.aldel"+coo.al+" "+coo.del) ;
-                  System.out.println(" coo.XY"+coo.x+" "+coo.y) ;}
+                     System.out.println(" coo.aldel"+coo.al+" "+coo.del) ;
+                     System.out.println(" coo.XY"+coo.x+" "+coo.y) ;}
                   // System.out.println("Grand coo.xy"+coo.x+" "+coo.y+" "+coo.al+" "+coo.del) ;
-            //      if ((Math.abs(coo.x) > 30000)||(Math.abs(coo.y) > 30000))
-                //    if (Math.abs(coo.x) > 20000)
-            //        System.out.println("Grand coo.xy"+coo.x+" "+coo.y+" "+coo.al+" "+coo.del) ;
-          //        if( !equalEpsilon(coo.x,x) || !equalEpsilon(coo.y,y) ) {
-          //           if( !erreur ) System.out.print(" Error");
-          //           erreur=true;
-          //           System.out.print("\n"+centre+" no bijective: xy=("+x+","+y+") => coo=("+coo.al+","+coo.del+") => xy=("+coo.x+","+coo.y+")");
+                  //      if ((Math.abs(coo.x) > 30000)||(Math.abs(coo.y) > 30000))
+                  //    if (Math.abs(coo.x) > 20000)
+                  //        System.out.println("Grand coo.xy"+coo.x+" "+coo.y+" "+coo.al+" "+coo.del) ;
+                  //        if( !equalEpsilon(coo.x,x) || !equalEpsilon(coo.y,y) ) {
+                  //           if( !erreur ) System.out.print(" Error");
+                  //           erreur=true;
+                  //           System.out.print("\n"+centre+" no bijective: xy=("+x+","+y+") => coo=("+coo.al+","+coo.del+") => xy=("+coo.x+","+coo.y+")");
                   //   break;
                   //}
                }
@@ -4655,10 +4655,42 @@ public final class Calib  implements Cloneable {
          else System.out.println();
          toutestbon &= erreur;
          //         return !erreur;
- //     } 
-   } catch( Exception e ) { e.printStackTrace(); toutestbon=false; }
-   return toutestbon;
+         //     } 
+      } catch( Exception e ) { e.printStackTrace(); toutestbon=false; }
+      return toutestbon;
    }
+   
+   // Pour tests FX
+   static public void main( String [] args) {
+      double cra=0., cdec=0.; // centre de la projection
+      double withPix=1000.;   // taille en pixel
+      double withAng=60.;     // taille angulaire (en arcmin)
+      int proj=AIT;           // Type de projection
+      
+//      public Calib (double ra,double de, double cx, double cy,
+//            double width, double height, double radius, double radius1, double rot, int proje,  boolean sym,
+//            int systeme) {
 
+      try {
+         Calib c = new Calib(cra,cdec,withPix/2.,withPix/2.,withPix,withPix, withAng, withAng, 0. ,proj, false, FK5);
 
+         Coord coo = new Coord();
+         long t = System.currentTimeMillis();
+         for( int i=0; i<1000000; i++ ) {
+            coo.al= Math.random()*360.;
+            coo.del = Math.random()*180. - 90.;
+//            System.out.print(coo.al+","+coo.del);
+            try {
+               c.GetXY(coo);
+//               System.out.print(" => "+coo.x+","+coo.y);
+               c.GetCoord(coo);
+//               System.out.println(" => "+coo.al+","+coo.del);
+            } catch( Exception e ) {
+//               System.out.println(" => hors projection");
+            }
+         }
+         long t1 = System.currentTimeMillis();
+         System.out.println("Test terminé en "+(t1-t)+"ms");
+      } catch( Exception e ) { e.printStackTrace(); }
+   }
 }

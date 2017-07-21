@@ -607,7 +607,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    public String getProperty(String key) {
       return property.get(key);
    }
-
+   
    /** Return the fraction of the sky covered by the Moc [0..1] */
    public double getCoverage() {
       long area = getArea();

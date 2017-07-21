@@ -3252,7 +3252,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
          openDirTab();
          directory.showTreePath( isMenu(s,OPENDIRIMG) ? "Image" 
-               : isMenu(s,OPENDIRCAT) ? "Catalog" 
+               : isMenu(s,OPENDIRCAT) ? "Catalog/VizieR" 
                      : isMenu(s,OPENDIRDB) ? "Data base" 
                      : isMenu(s,OPENDIRCUBE) ? "Cube" : "");
       }
@@ -4209,7 +4209,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          try {
             boolean isCounterClock =  isCounterClok( (Ligne) o );
-            trace(4,"polygon counterClock="+isCounterClock);
+//            trace(4,"polygon counterClock="+isCounterClock);
             HealpixMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock );
             if( m==null || m.getSize()==0 ) continue;
             moc.add(m);
@@ -4265,66 +4265,65 @@ DropTargetListener, DragSourceListener, DragGestureListener
 	}
 	
 	public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
-			double height) throws Exception {
-	      HealpixMoc moc=null;
-	      double maxSize=0;
-	      Coord c1=null;
-	      boolean first=true;
-	      int order=0;
-	      double firstRa = 0.0d,firstDec = 0.0d;
-	      rectVertices = Util.getRectangleVertices(ra, dec, width, height); 
-	      
-	      
-	      for( int sens=0; sens<2; sens++ ) {
-		      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
-		      if( sens==1 ) trace(3,"createMocRegion("+rectVertices.toString()+") trying reverse polygon order...");
-		      
-		      try {
-		    	  for (Coord rectCoord : rectVertices) {
-						if (first) {
-							firstRa = rectCoord.al;
-							firstDec = rectCoord.del;
-							c1 = rectCoord;
-							first = false;
-						} else {
-							double size = Coord.getDist(c1, rectCoord);
-							if (size > maxSize)
-								maxSize = size;
-						}
+	      double height) throws Exception {
+	   HealpixMoc moc=null;
+	   double maxSize=0;
+	   Coord c1=null;
+	   boolean first=true;
+	   int order=0;
+	   double firstRa = 0.0d,firstDec = 0.0d;
+	   rectVertices = Util.getRectangleVertices(ra, dec, width, height); 
 
-						addVec3(cooList, rectCoord.al, rectCoord.del);
-					}
-					
-		    	  	addVec3(cooList, firstRa, firstDec);
-					
-					if( sens==0 ) {
-			               // L'ordre est déterminé automatiquement par la largeur du polygone
-			               order=getAppropriateOrder(maxSize);
-			               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
-			               if( order<10 ) order=10;
-			               else if( order>29 ) order=29;
-			               
-			        }
-					
-					Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-		            moc = new HealpixMoc();
-		            moc.rangeSet = m.getRangeSet();
-		            moc.toHealpixMoc();
-		            
-		            // moins de la moitié du ciel => ca doit être bon
-		            if( moc.getCoverage()<0.5 ) break;
-		            
-		            Collections.reverse(rectVertices);
-		      } catch( Throwable e ) {
-	            if( sens==1 && e instanceof Exception ) throw (Exception)e;
-		      }
-		      
-		      
+	   for( int sens=0; sens<2; sens++ ) {
+	      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+	      if( sens==1 ) trace(3,"createMocRegion("+rectVertices.toString()+") trying reverse polygon order...");
+
+	      try {
+	         for (Coord rectCoord : rectVertices) {
+	            if (first) {
+	               firstRa = rectCoord.al;
+	               firstDec = rectCoord.del;
+	               c1 = rectCoord;
+	               first = false;
+	            } else {
+	               double size = Coord.getDist(c1, rectCoord);
+	               if (size > maxSize)
+	                  maxSize = size;
+	            }
+
+	            addVec3(cooList, rectCoord.al, rectCoord.del);
+	         }
+
+	         addVec3(cooList, firstRa, firstDec);
+
+	         if( sens==0 ) {
+	            // L'ordre est déterminé automatiquement par la largeur du polygone
+	            order=getAppropriateOrder(maxSize);
+	            trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+	            if( order<10 ) order=10;
+	            else if( order>29 ) order=29;
+
+	         }
+
+	         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+	         moc = new HealpixMoc();
+	         moc.rangeSet = m.getRangeSet();
+	         moc.toHealpixMoc();
+
+	         // moins de la moitié du ciel => ca doit être bon
+	         if( moc.getCoverage()<0.5 ) break;
+
+	         Collections.reverse(rectVertices);
+	      } catch( Throwable e ) {
+	         if( sens==1 && e instanceof Exception ) throw (Exception)e;
 	      }
-	      
-	      return moc;
+
+
+	   }
+
+	   return moc;
 	}
-	
+
 	
 	public double getMaxSize(Coord c1,Coord c2, double maxSize) {
 		double size = Coord.getDist(c1,c2);

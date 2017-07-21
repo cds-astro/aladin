@@ -70,6 +70,7 @@ import cds.aladin.stc.STCStringParser;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.mocmulti.MocItem;
+import cds.mocmulti.MultiMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 
@@ -147,16 +148,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private JTextArea exprArea;
    private JTextField mocArea;
    private JButton btMocShow;
-   private JLabel labelInclusive,labelCollection;
+   private JLabel labelIntersect,labelCollection;
    private boolean flagFormEdit=false;
    private HealpixMoc mocFiltreSpatial=null;
-   private boolean inclusiveFiltreSpatial=false;
+   
+   private static final String SINTERSECT[] = { "overlaps","is enclosed","covers" };
    
    /** Création du panel de l'expression correspondant au filtre courant */
    private JPanel createExpPanel() {
       JPanel areaPanel = new JPanel( new BorderLayout(2,2) );
       areaPanel.setBackground( BGCOLOR );
-      setTitleBorder(areaPanel, " associated filter encoding rule ", FGCOLOR);
+      setTitleBorder(areaPanel, " associated filter encoding rule & MOC region ", FGCOLOR);
       exprArea = new JTextArea(3,50);
       exprArea.setLineWrap(true);
       exprArea.addKeyListener(new KeyListener() {
@@ -175,12 +177,15 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       JPanel mocPanel = new JPanel( new BorderLayout( 5,5));
       mocPanel.setBackground( BGCOLOR );
-      labelInclusive = new JLabel("intersecting the MOC");
-      Util.toolTip(labelInclusive, "Spacial constraint expressed as a MOC"
-            + "which has to intersect or to be fully inside the coverage of each matching collection", true);
-      mocPanel.add( labelInclusive, BorderLayout.WEST );
+      labelIntersect = new JLabel( "MOC " );
+      Util.toolTip(labelIntersect, "Spatial constraint expressed as a MOC"
+            + "which overlaps, is enclosed or covers the coverage of each matching collection", true);
+      mocPanel.add( labelIntersect, BorderLayout.WEST );
       
       mocArea = new JTextField(46);
+      mocArea.setEditable( false );
+      mocArea.setForeground( new Color(80,80,80) );
+      mocArea.setBackground( BGCOLOR );
       mocArea.addKeyListener(new KeyListener() {
          public void keyTyped(KeyEvent e) { }
          public void keyPressed(KeyEvent e) { flagFormEdit=true; updateWidget(); }
@@ -250,18 +255,19 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Activation/desactivation des boutons en fonction du contenu du formulaire */
    synchronized protected void updateWidget() {
+      System.out.println("PPPP updateWidget...");
+      
       String name = nameField.getText().trim();
       boolean enabled = name.length()>0 && !isEmpty();
       storeButton.setEnabled( enabled && !name.equals(ALLCOLL) );
-      deleteButton.setEnabled( enabled && aladin.configuration.dirFilter.containsKey(name) 
+      deleteButton.setEnabled( enabled && aladin.configuration.filterExpr.containsKey(name) 
             && !name.equals(ALLCOLL) && !name.equals(MYLIST));
       
-      String expr = aladin.configuration.dirFilter.get(name);
+      String expr = aladin.configuration.filterExpr.get(name);
       boolean modif = expr==null ? false : expr.equals( exprArea.getText().trim() );
       storeButton.setText( modif ? "update" : "store" );
       
-      labelInclusive.setForeground( mocArea.getText().trim().length()>0 ? Color.black : FGCOLOR );
-      labelInclusive.setText( cbIntersecting.isSelected()? "intersecting the MOC" : "containing the MOC"); 
+      labelIntersect.setForeground( mocArea.getText().trim().length()>0 ? Color.black : FGCOLOR );
       
       // Maj du JComboBox de la liste des plans MOC
       ActionListener al = comboMocPlane.getActionListeners()[0];
@@ -288,11 +294,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( flagFormEdit && !exprArea.getText().trim().equals("") ) activateAreaText(true);
       else activateAreaText(false);
       
-      btMocShow.setEnabled( mocFiltreSpatial!=null ); 
+//      btMocShow.setEnabled( mocFiltreSpatial!=null ); 
       
       btReset.setEnabled( !isEmpty() );
       btApply.setEnabled( !hasBeenApplied() );
-      System.out.println("updateWidget hasBeenApplied=>"+hasBeenApplied());
    }
    
    private void activateAreaText(boolean flag) {
@@ -301,17 +306,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          exprArea.setBackground( Color.white );
          exprArea.getFont().deriveFont(Font.BOLD);
 
-         mocArea.setForeground( Aladin.COLOR_GREEN.darker() );
-         mocArea.setBackground( Color.white );
-         mocArea.getFont().deriveFont(Font.BOLD);
+//         mocArea.setForeground( Aladin.COLOR_GREEN.darker() );
+//         mocArea.setBackground( Color.white );
+//         mocArea.getFont().deriveFont(Font.BOLD);
      } else {
          exprArea.setForeground( new Color(80,80,80) );
          exprArea.setBackground( BGCOLOR );
          exprArea.getFont().deriveFont(Font.ITALIC);
          
-         mocArea.setForeground( new Color(80,80,80) );
-         mocArea.setBackground( BGCOLOR );
-         mocArea.getFont().deriveFont(Font.ITALIC);
+//         mocArea.setForeground( new Color(80,80,80) );
+//         mocArea.setBackground( BGCOLOR );
+//         mocArea.getFont().deriveFont(Font.ITALIC);
       }
    }
    
@@ -324,8 +329,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          return;
       }
       String expr = exprArea.getText().trim();
-      aladin.configuration.setDirFilter(name, expr);
-      aladin.configuration.dirFilter.remove(MYLIST);
+      
+      aladin.configuration.setDirFilter(name, expr, mocFiltreSpatial );
+      aladin.configuration.filterExpr.remove(MYLIST);
       aladin.directory.updateDirFilter();
       aladin.directory.comboFilter.setSelectedItem(name);
    }
@@ -335,7 +341,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       String name = nameField.getText().trim();
       if( name.equals(ALLCOLL) ) return;
       if( name.equals(MYLIST) ) return;
-      aladin.configuration.dirFilter.remove(name);
+      aladin.configuration.filterExpr.remove(name);
       aladin.directory.updateDirFilter();
       reset();
       nameField.setText("");
@@ -691,16 +697,17 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          generateExpression();
          generateMoc();
       } else {
-         String smoc = mocArea.getText().trim();
-         try {
-            if( smoc.length()==0 ) mocFiltreSpatial=null;
-            else mocFiltreSpatial = new HealpixMoc(smoc);
-         } catch( Exception e ) {
-            exprArea.setText( MOCERROR );
-            mocFiltreSpatial=null;
-         }
+         
+         // PAS D'EDITION DIRECTE POSSIBLE
+//         String smoc = mocArea.getText().trim();
+//         try {
+//            if( smoc.length()==0 ) mocFiltreSpatial=null;
+//            else mocFiltreSpatial = new HealpixMoc(smoc);
+//         } catch( Exception e ) {
+//            mocArea.setText( MOCERROR );
+//            mocFiltreSpatial=null;
+//         }
       }
-      
       updateWidget();
       
       flagFormEdit=false;
@@ -708,15 +715,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       String expr = exprArea.getText();
       if( expr.trim().length()==0 ) expr="*";
       
-      inclusiveFiltreSpatial = !cbIntersecting.isSelected();
-      
       if( isVisible() ) aladin.makeCursor(this, Aladin.WAITCURSOR);
 
-      aladin.directory.resumeFilter(expr, mocFiltreSpatial, inclusiveFiltreSpatial);
+      aladin.directory.resumeFilter(expr, mocFiltreSpatial, getIntersect( mocFiltreSpatial) );
       
       // mémorisation de l'expression s'il s'agit du MYLIST
       if( aladin.directory.comboFilter.getSelectedItem().equals(MYLISTHTML) ) {
-         aladin.configuration.setDirFilter(MYLIST, expr);
+         aladin.configuration.setDirFilter(MYLIST, expr, mocFiltreSpatial);
       }
    }
    
@@ -735,7 +740,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       try {
          if( cbMocInLine.isSelected() ) {
-            moc = new HealpixMoc( tMoc.getText().trim() );
+            String s = tMoc.getText().trim();
+            moc = s.length()==0 ? null : new HealpixMoc( s );
          }
          
          else if( cbStcInLine.isSelected() ) {
@@ -743,28 +749,44 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             moc = aladin.createMocRegion(stcObjects);
          }
          
-         else if( cbMocPlane.isSelected() && comboMocPlane.getItemCount()>1) {
+         else if( cbMocPlane.isSelected() ) {
             String  label = (String)comboMocPlane.getSelectedItem();
             PlanMoc p = (PlanMoc) aladin.calque.getPlan( label );
-            moc = p.getMoc();
+            moc = p==null ? null : p.getMoc();
          }
          
          else if( cbSelectedGraph.isSelected() ) {
             moc = aladin.createMocByRegions(-1);
          }
-        
          
       } catch( Exception e ) {
-         e.printStackTrace();
          moc=null;
       }
+      
+      if( moc!=null ) setIntersect(moc, comboIntersecting.getSelectedIndex() );
       
       return moc;
    }
    
+   static public void setIntersect( HealpixMoc moc, int intersect ) {
+      if( moc==null ) return;
+      String value = intersect==MultiMoc.OVERLAPS ? null : MultiMoc.INTERSECT[ intersect ];
+      try {
+         moc.setProperty("intersect", value);
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+   
+   static public int getIntersect( HealpixMoc moc ) {
+      if( moc==null ) return -1;
+      String s = moc.getProperty("intersect");
+      return s==null ? MultiMoc.OVERLAPS : Util.indexInArrayOf(s,MultiMoc.INTERSECT,true);
+   }
+   
    /** Return the ASCII basic representation of a MOC  */
-   private String getASCII(HealpixMoc moc ) { return getASCII(moc,50); }
-   private String getASCII(HealpixMoc moc, int nbChars) {
+   static public String getASCII(HealpixMoc moc ) { return getASCII(moc,40); }
+   static public String getASCII(HealpixMoc moc, int nbChars) {
       if( moc==null ) return "";
       StringBuffer s = new StringBuffer();
       long oOrder=-1;
@@ -778,6 +800,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 
          if( s.length()>nbChars-4 ) { s.append(" ..."); break; }
       }
+      
+      int intersect = getIntersect(moc);
+      if( intersect>=0 ) s.append(" ("+SINTERSECT[intersect]+")");
       return s.toString();
    }
    
@@ -974,12 +999,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-   private JCheckBox cbMocPlane,cbMocInLine,cbStcInLine,cbSelectedGraph,cbIntersecting;
+   private JCheckBox cbMocPlane,cbMocInLine,cbStcInLine,cbSelectedGraph;
    private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxProg,bxSuperseded;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    private JTextArea tMoc,tSTC;
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
-   private JComboBox<String> comboMocPlane;
+   private JComboBox<String> comboMocPlane,comboIntersecting;
    private JButton btReset,btApply;
    
    private NoneSelectedButtonGroup spaceBG;
@@ -991,24 +1016,31 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Retourne true si le filtre a déjà été appliquée */
    protected boolean hasBeenApplied() {
-      
+      boolean rep = hasBeenApplied1();
+      System.out.println("PPPP hasBeenApplied => "+rep);
+      return rep;
+   }
+   protected boolean hasBeenApplied1() {
+      if( flagFormEdit ) return false;
+
       HealpixMoc moc = getMoc();
       if( moc==null && mocFiltreSpatial!=null || moc!=null && mocFiltreSpatial==null
             || moc!=null && !moc.equals(mocFiltreSpatial) ) return false;
-      
+
       if( isEmpty() ) return true;
-      
+
       String expr = getExpression();
       String oExpr = exprArea.getText();
-      System.out.println("expr="+expr+" oExpr="+oExpr);
       if( !expr.equals( oExpr ) ) return false;
-      
-     boolean inter = cbIntersecting.isSelected();
-     boolean oInter = labelInclusive.getText().startsWith("inter");
-     System.out.println("inter="+inter+" ointer="+oInter);
-     if( inter!=oInter ) return false;
-     
-     return true;
+
+      if( mocFiltreSpatial!=null ) {
+         int inter = comboIntersecting.getSelectedIndex();
+         int oInter = getIntersect(mocFiltreSpatial);
+         System.out.println("PPPPP comboIntersecting="+inter+" mocfiltreSpatial="+oInter+" hasBeenApplied=>"+!(inter!=oInter));
+         if( inter!=oInter ) return false;
+      }
+
+      return true;
    }
    
    /** Reset du formulaire et application à l'arbre immédiatement */
@@ -1049,7 +1081,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       for( JCheckBox bx : assdataVbx ) bx.setSelected(false);
       for( JCheckBox bx : catUcdVbx ) bx.setSelected(false);
       
-      cbIntersecting.setSelected(true);
+      comboIntersecting.setSelectedIndex( MultiMoc.OVERLAPS );
       spaceBG.clearSelection();
       
       mocFiltreSpatial=null;
@@ -1060,12 +1092,16 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Mise en place d'un filtre prédéfini.
     * POUR LE MOMENT, SEULE LA SYNTAXE AVANCEE EST PRISE EN COMPTE, LES CHECKBOXES NE SONT PAS UTILISEES */
-   protected void setSpecificalFilter(String name, String expr) {
+   protected void setSpecificalFilter(String name, String expr, HealpixMoc moc, int intersect) {
       clean();
-//      System.out.println("setSpecificalFilter("+name+")");
+      System.out.println("XXX DirectoryFilter.setSpecificalFilter("+name+",expr="+expr+",intersect="+intersect+",moc="+getASCII(moc));
       if( name.equals(ALLCOLL) ) name=MYLIST;
       nameField.setText(name);      // Positionnement du nom du filtre
-      exprArea.setText(expr.equals("*") ? "" : expr);       // Positionnement de l'expression du filtre
+      exprArea.setText(expr==null || expr.equals("*") ? "" : expr);       // Positionnement de l'expression du filtre
+      if( moc!=null ) {
+         mocFiltreSpatial=moc;
+         mocArea.setText( getASCII(moc) );
+      }
       flagFormEdit=true;                
       submit();
    }
@@ -1329,21 +1365,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       });
 
       p1.add(cb); p1.add(js);
-      PropPanel.addCouple(this, p, "   ", "speficy the spacial constraint by an inline STC (ex: \"Polygon ra1 de1 ra2 de2 ...\")",
+      PropPanel.addCouple(this, p, "   ", "speficy the spatial constraint by an inline STC (ex: \"Polygon ra1 de1 ra2 de2 ...\")",
             p1, g, c, GridBagConstraints.EAST);
       
-      ButtonGroup bg1 = new ButtonGroup();
-      p1 = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
-      cb = cbIntersecting = new JCheckBox("intersecting");
-      cb.addActionListener( this );
-      bg1.add(cb);
-      p1.add(cb);
-      cb = new JCheckBox("fully containing");
-      bg1.add(cb);
-      p1.add(cb);
+      comboIntersecting = new JComboBox<String>( SINTERSECT );
+      comboIntersecting.addActionListener( this );
       PropPanel.addFilet(p, g, c, 20, 2);
-      JLabel mode = new JLabel("Mode");
-      PropPanel.addCouple(this, p, mode, "Does the region must be intersected or fully inside the candidate collection footprints ?",p1, g, c, GridBagConstraints.EAST);
+      JLabel mode = new JLabel("Intersect mode");
+      PropPanel.addCouple(this, p, mode, "Does the region overlap, is enclosed or cover the candidate collection footprints ?",comboIntersecting, g, c, GridBagConstraints.EAST);
       mode.setFont( mode.getFont().deriveFont(Font.BOLD));
      
       JTabbedPane globalPanel = new JTabbedPane( );
@@ -1374,7 +1403,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       submitAction(true);
    }
    protected void submitAction(boolean forceActivation) {
-      if( forceActivation ) aladin.directory.iconFilter.setActivated(true);
       submit();
    }
 }

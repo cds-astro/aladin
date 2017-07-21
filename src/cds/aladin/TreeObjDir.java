@@ -647,6 +647,11 @@ public class TreeObjDir extends TreeObj {
       return isCDSCatalog() || prop!=null && prop.get("cs_service_url")!=null;
    }
    
+   /** Retourne true si la collection dispose d'un accès global */
+   protected boolean hasGlobalAccess() {
+      return prop!=null && prop.get("access_url")!=null;
+   }
+   
    /** Retourne true si la collection dispose d'une URL donnant accès à un preview */
    protected boolean hasPreview() {
       return (isCDSCatalog() || isHiPS());
@@ -721,6 +726,13 @@ public class TreeObjDir extends TreeObj {
       if( prop==null ) return null;
       String u = prop.get("cs_service_url");
       if( u!=null && !(u.endsWith("?") || u.endsWith("&")) ) u+='?';
+      return u;
+   }
+   
+   /** Retourne l'URL d'un acces global ou null si aucun */
+   protected String getGlobalAccessUrl() {
+      if( prop==null ) return null;
+      String u = prop.get("access_url");
       return u;
    }
    
@@ -948,6 +960,15 @@ public class TreeObjDir extends TreeObj {
       if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
       
       return "get "+gluTag;
+   }
+   
+   /** Génération et exécution de la requête script correspondant à un accès global */
+   protected void loadGlobalAccess() { aladin.execAsyncCommand( getGlobalAccessCmd() ); }
+   protected String getGlobalAccessBkm() { return getGlobalAccessCmd(); }
+   private String getGlobalAccessCmd() {
+      String cmd = null;
+      if( prop!=null && hasGlobalAccess() ) cmd = "load "+getGlobalAccessUrl();
+      return cmd;
    }
    
    protected void loadCS(Coord c,double radius) {

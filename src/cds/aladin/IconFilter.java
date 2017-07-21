@@ -31,7 +31,6 @@ import java.awt.Graphics;
  */
 public class IconFilter extends MyIcon {
    static final int L = 12;      // Taille d'un logo
-   private boolean activated=false;
    private String title;
 
   /** Creation */
@@ -65,17 +64,13 @@ public class IconFilter extends MyIcon {
    
    /** Retourne true si le scanning des collections sélectionnées peut être lancé */
    protected boolean isAvailable() {
-      return aladin.directory.hasCollections() && aladin.directory.hasFilter();
-   }
-   
-   /** Activation du filtrage */
-   protected void setActivated(boolean flag ) {
-      activated=flag;
-      repaint();
+      return isActivated();
    }
    
    /** Retourne true si le scanning de certaines collections est en cours */
-   protected boolean isActivated() { return activated; }
+   protected boolean isActivated() {
+      return aladin.directory.hasCollections() && aladin.directory.hasFilter();
+   }
 
    /** Affichage du logo */
    protected void drawLogo(Graphics g) {

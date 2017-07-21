@@ -7054,8 +7054,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.frameCM==null ) {
          aladin.frameCM = new FrameColorMap(aladin);
          aladin.frameCM.initCM((PlanImage)pref);
+         aladin.frameCM.cm.drawColorMap(g, 1, 1, getWidth(), 20);
       }
-      aladin.frameCM.cm.drawColorMap(g, 1, 1, getWidth(), 20);
    }
 
    /** Retourne le facteur de zoom courant.
