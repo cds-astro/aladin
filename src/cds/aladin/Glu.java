@@ -1097,8 +1097,8 @@ public final class Glu implements Runnable {
    }
    
    
-   // Retourne la plus grande clé d'une hashtable (clés sur des entiers)
-   // 0 si problème.
+   // Retourne la plus grande valeur d'une hashtable (sur des entiers)
+   // -1 si problème.
    private int hashSize(Hashtable h) {
       int max = -1;
       Enumeration e = h.keys();

@@ -36,7 +36,7 @@ public class IconFilter extends MyIcon {
   /** Creation */
    protected IconFilter(Aladin aladin) {
       super(aladin,32,24);
-      title = "filter";
+      title = aladin.getChaine().getString("DTFILTER");
    }
    
    // Barres horizontales du dessin 

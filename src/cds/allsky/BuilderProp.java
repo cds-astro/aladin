@@ -35,6 +35,13 @@ public class BuilderProp extends Builder {
    public void run() throws Exception {
       context.scriptCommand=null;
       System.out.println();
+      try {
+         context.loadMoc();
+         context.moc = context.mocIndex;
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+      context.loadProperties();
       context.writePropertiesFile( new OutputStreamWriter( System.out ) );
       System.out.println();
    }

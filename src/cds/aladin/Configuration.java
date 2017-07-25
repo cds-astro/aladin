@@ -944,9 +944,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne le mode repéré dans le fichier de config */
    protected boolean isOutReach() {
-      String s = get(MOD);
-      if( s!=null && s.charAt(0)=='u' ) return true;
-      return false;
+      return false;    // A partir de la version 10
+//      String s = get(MOD);
+//      if( s!=null && s.charAt(0)=='u' ) return true;
+//      return false;
    }
 
    /** Retourne le mode repéré dans le fichier de config */
@@ -1309,7 +1310,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       modeChoice.addItem(UNDERGRADUATE);
       if( aladin.PROTO ) modeChoice.addItem(PREVIEW);
       (l = new JLabel(MODE)).setFont(l.getFont().deriveFont(Font.BOLD));
-      if( !aladin.setOUTREACH ) {
+      if( !aladin.setOUTREACH && !Aladin.BETA) {
          PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);
       }
 
@@ -1921,8 +1922,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          int i=1;
          try {
             for( String name : filterExpr.keySet() ) {
-               if( name.equals(DirectoryFilter.ALLCOLL) ) continue;
-               if( name.equals(DirectoryFilter.MYLIST) ) continue;
+               if( name.equals(Directory.ALLCOLL) ) continue;
+               if( name.equals(Directory.MYLIST) ) continue;
                String expr = filterExpr.get(name);
                HealpixMoc moc = filterMoc.get(name);
                if( moc==null && (expr==null || expr.equals("*") || expr.equals("")) ) continue;

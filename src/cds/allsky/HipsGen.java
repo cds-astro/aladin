@@ -50,6 +50,7 @@ public class HipsGen {
    private boolean flagUpdate=false;
    private boolean flagLint=false;
    private boolean flagMocError=false;
+   private boolean flagProp=false;
    private boolean flagMethod=false;
    private boolean flagRGB=false;
    private boolean flagMapFits=false;
@@ -317,6 +318,7 @@ public class HipsGen {
                if( a==Action.MIRROR ) flagMirror=true;
                if( a==Action.UPDATE ) flagUpdate=true;
                if( a==Action.LINT )   flagLint=true;
+               if( a==Action.PROP )   flagProp=true;
                if( a==Action.MOCERROR ) flagMocError=true;
                if( a==Action.CONCAT ) {
                   flagConcat=true;
@@ -416,7 +418,7 @@ public class HipsGen {
             } catch( Exception e ) { }
          }
          
-         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint && !flagMocError) {
+         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint && !flagMocError && !flagProp) {
             String s = context.checkHipsId(context.hipsId);
             context.setHipsId(s);
          }

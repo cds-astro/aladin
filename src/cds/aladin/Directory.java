@@ -104,7 +104,18 @@ import cds.tools.Util;
  */
 public class Directory extends JPanel implements Iterable<MocItem>{
    
-   static private final String DIRECTORY = "Data access";
+   static private String DIRECTORY, MULTICOL;
+   
+   static protected String AWCSLAB,AWCSTIP,AWSIATIP,AWSSATIP,AWMOCQLAB,AWMOCQLABTIP,AWMOCTITLE,
+   AWMOC1,AWMOC1TIP,AWMOC2,AWMOC2TIP,AWMOC3,AWMOC3TIP;
+   
+   static protected String ALLCOLL,MYLIST,ALLCOLLHTML,MYLISTHTML,
+   AWSKYCOV,AWMOCUNK,AWHIPSRES,AWNBROWS,AWREFPUB,AWPROGACC,AWPROGACCTIP,
+   AWDATAACC,AWDATAACCTIP,AWDATAACCTIP1,AWINVIEWTIP,AWMOCQLABTIP2,
+   AWXMATCH,AWXMATCHTIP,AWCRIT,AWCRITTIP,AWMOCX,AWMOCXTIP,AWDM,AWDMTIP,AWPROGEN,
+   AWPROGENTIP,AWSCANONLY,AWSCANONLYTIP,AWLOAD,AWMOCLABTIP2,FPCLOSE;
+
+
    static private final String UPDATING   = "  updating...";
    static protected final String ROOT_LABEL = "Collections";
    
@@ -136,8 +147,62 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
    private JScrollPane scrollTree = null;
    
+   private String S(String k) { return aladin.chaine.getString(k); }
+   
+   
+   
+   private void loadString() {
+      DIRECTORY = S("DTLABEL");
+      MULTICOL = S("AWMULTICOL");
+      MYLIST  = "";
+      MYLISTHTML = "-- "+S("DTWORKLIST")+" --";
+      ALLCOLLHTML = "-- "+S("DTALLCOLL")+" --";
+      ALLCOLL = ALLCOLLHTML;
+      AWCSLAB = S("AWCSLAB");
+      AWCSTIP = S("AWCSTIP");
+      AWSIATIP = S("AWSIATIP");
+      AWSSATIP = S("AWSSATIP");
+      AWMOCQLAB = S("AWMOCQLAB");
+      AWMOCQLABTIP = S("AWMOCQLABTIP");
+      AWMOCTITLE = S("AWMOCTITLE");
+      AWMOC1 = S("AWMOC1");
+      AWMOC1TIP = S("AWMOC1TIP");
+      AWMOC2 = S("AWMOC2");
+      AWMOC2TIP = S("AWMOC2TIP");
+      AWMOC3 = S("AWMOC3");
+      AWMOC3TIP = S("AWMOC3TIP");
+      AWSKYCOV = S("AWSKYCOV");
+      AWMOCUNK = S("AWMOCUNK");
+      AWHIPSRES = S("AWHIPSRES");
+      AWNBROWS = S("AWNBROWS");
+      AWREFPUB = S("AWREFPUB");
+      AWPROGACC = S("AWPROGACC");
+      AWPROGACCTIP = S("AWPROGACCTIP");
+      AWDATAACC = S("AWDATAACC");
+      AWDATAACCTIP = S("AWDATAACCTIP");
+      AWDATAACCTIP1 = S("AWDATAACCTIP1");
+      AWINVIEWTIP = S("AWINVIEWTIP");
+      AWMOCQLABTIP2 = S("AWMOCQLABTIP2");
+      AWXMATCH = S("AWXMATCH");
+      AWXMATCHTIP = S("AWXMATCHTIP");
+      AWCRIT = S("AWCRIT");
+      AWCRITTIP = S("AWCRITTIP");
+      AWMOCX = S("AWMOCX");
+      AWMOCXTIP = S("AWMOCXTIP");
+      AWDM = S("AWDM");
+      AWDMTIP = S("AWDMTIP");
+      AWPROGEN = S("AWPROGEN");
+      AWPROGENTIP = S("AWPROGENTIP");
+      AWSCANONLY = S("AWSCANONLY");
+      AWSCANONLYTIP = S("AWSCANONLYTIP");
+      AWLOAD = S("AWLOAD");
+      AWMOCLABTIP2 = S("AWMOCLABTIP2");
+      FPCLOSE = S("FPCLOSE");
+   }
+   
    public Directory(Aladin aladin, Color cbg) {
       this.aladin = aladin;
+      loadString();
       multiProp = new MultiMoc2();
       
       // POUR LES TESTS => Surcharge de l'URL du MocServer
@@ -153,8 +218,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       JPanel pTitre = new JPanel( new FlowLayout(FlowLayout.LEFT,35,0));
       pTitre.setBackground( cbg );
       dir = new JLabel(DIRECTORY);
-      Util.toolTip(dir, "Directory of available data set collections from CDS and other IVOA servers.\n"
-            + "Browse, filter, select, and load the collections you want to display...",true);
+      Util.toolTip(dir, S("DTLABELTIP"),true);
       dir.setFont(dir.getFont().deriveFont(Font.BOLD));
       dir.setForeground( Aladin.COLOR_LABEL);
       pTitre.add( dir );
@@ -176,9 +240,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       
       // Le controle des filtres
-      String s = "Filter by free keywords (AND logic, blank separated, quote sub-expr. supported) "
-            + "or by any advanced filter expression (ex: nb_rows&lt;1000).";
-      JLabel labelFilter = new JLabel("select");
+      String s = S("DTSELECTTIP");
+      JLabel labelFilter = new JLabel( S("DTSELECT") );
       Util.toolTip(labelFilter,s,true);
       labelFilter.setFont(labelFilter.getFont().deriveFont(Font.BOLD));
       labelFilter.setForeground( Aladin.COLOR_LABEL);
@@ -186,8 +249,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       quickFilter = new QuickFilterField(10);
       Util.toolTip(quickFilter,s,true);
       
-      s = "List of predefined filters. Use '+' button to edit it, or create a new one";
-      JLabel fromLabel = new JLabel("from");
+      s = S("DTCOMBOTIP");
+      JLabel fromLabel = new JLabel(S("DTFROM"));
       Util.toolTip(fromLabel,s,true);
       fromLabel.setFont(fromLabel.getFont().deriveFont(Font.BOLD));
       fromLabel.setForeground( Aladin.COLOR_LABEL);
@@ -195,7 +258,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       comboFilter = new FilterCombo(s);
       
       JLabel plus = new JLabel("  + ");
-      Util.toolTip(plus,"Edit the current filter or create a new one",true);
+      Util.toolTip(plus,S("DTPLUSTIP"),true);
       plus.setFont( Aladin.LBOLD );
       plus.setForeground(Aladin.COLOR_LABEL);
       plus.addMouseListener(new MouseListener() {
@@ -372,16 +435,16 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       String current = (String)comboFilter.getSelectedItem();
       comboFilter.removeAllItems();
-      comboFilter.addItem(directoryFilter.ALLCOLLHTML);
+      comboFilter.addItem(ALLCOLLHTML);
       
-      String mylist = aladin.configuration.filterExpr.get(DirectoryFilter.MYLIST);
+      String mylist = aladin.configuration.filterExpr.get(MYLIST);
       if( mylist!=null ) {
-         comboFilter.addItem(DirectoryFilter.MYLISTHTML);
+         comboFilter.addItem(Directory.MYLISTHTML);
       }
       
       for( String name : aladin.configuration.filterExpr.keySet() ) {
-         if( name.equals(directoryFilter.ALLCOLL) ) continue;
-         if( name.equals(directoryFilter.MYLIST) ) continue;
+         if( name.equals(ALLCOLL) ) continue;
+         if( name.equals(MYLIST) ) continue;
          comboFilter.addItem( name );
       }
       
@@ -417,7 +480,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    protected void focusSearch() {
-      quickFilter.focus("Your keyword ?");
+      quickFilter.focus(S("DTYRKW"));
    }
    
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
@@ -609,8 +672,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    private boolean tooMany( int n ) {
       if( n>100 ) {
-         if( !aladin.confirmation("Do you really want to query "+n+" data sets\n"
-               + "to check which of them have a result inside the current view ?") ) return true;
+         if( !aladin.confirmation(S("DTTOOMANY")+" ("+n+")") ) return true;
       }
       return false;
    }
@@ -689,8 +751,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       // On va éviter de lancer plusieurs scans en parallèle.
       if( isScanning() ) {
-         aladin.warning("Another scan is still running.\nWait the end if this previous scan\n"
-               + "or stop it before launching another one (button stop).");
+         aladin.warning(S("DTSCANRUN"));
          return;
       }
       
@@ -771,11 +832,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( directoryFilter.isVisible() ) directoryFilter.setVisible( false );
       else {
          String name = (String)comboFilter.getSelectedItem();
-         if( name.equals(directoryFilter.ALLCOLLHTML) ){
-            name = directoryFilter.MYLIST;
+         if( name.equals(ALLCOLLHTML) ){
+            name = MYLIST;
             aladin.configuration.setDirFilter(name, "", null);
             updateDirFilter();
-            comboFilter.setSelectedItem(directoryFilter.MYLISTHTML);
+            comboFilter.setSelectedItem(MYLISTHTML);
          }
 
          directoryFilter.showFilter();
@@ -800,13 +861,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Activation d'un filtre préalablement sauvegardé */
    protected void filtre(String name) {
       
-      if( name.equals(DirectoryFilter.ALLCOLLHTML) ) name=DirectoryFilter.ALLCOLL;
-      else if( name.equals(DirectoryFilter.MYLISTHTML) ) name=DirectoryFilter.MYLIST;
+      if( name.equals(ALLCOLLHTML) ) name=ALLCOLL;
+      else if( name.equals(MYLISTHTML) ) name=MYLIST;
       
 //      System.out.println("filter("+name+")");
       
-      String expr = name.equals(DirectoryFilter.ALLCOLL) ? "*" : aladin.configuration.filterExpr.get(name);
-      HealpixMoc moc = name.equals(DirectoryFilter.ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
+      String expr = name.equals(ALLCOLL) ? "*" : aladin.configuration.filterExpr.get(name);
+      HealpixMoc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
       
       if( expr!=null || moc!=null ) {
          if( directoryFilter==null ) directoryFilter = new DirectoryFilter(aladin);
@@ -2277,42 +2338,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    
-//   public void paintComponent(Graphics g) {
-//      
-//      super.paintComponent(g);
-//      
-//      g.setFont( Aladin.BOLD );
-//      
-//      // Petit message pour avertir l'utilisateur que l'on charge des définitions
-//      if( mocServerLoading ) {
-//         String dot="";
-//         for( int i = 0; i<blinkDot; i++ ) dot+=".";
-//         blinkDot++;
-//         if( blinkDot>10 ) blinkDot=0;
-//         g.setColor(Aladin.BKGD);
-//         String s = "Updating directory ("+nbRecInProgress+")"+dot;
-//         g.drawString(s, 16, 25);
-//         Slide.drawBall(g, 2, 16, blinkState ? Color.white : Color.orange);
-//         
-//      } else {
-//         
-//         g.setColor( Aladin.DARKBLUE );
-//         int n=multiProp.size();
-//         g.drawString("Directory : "+n+" collection"+(n>1?"s":""),16,25);
-//         
-//         // On fait clignoter le voyant d'attente d'info in/out
-//         if( flagCheckIn ) {
-//            startTimer();
-//            Slide.drawBall(g, 2, 16, blinkState ? Color.white : Color.green );
-//            
-//         } else {
-//            stopTimer();
-//            Slide.drawBall(g, 2, 16, Color.green );
-//         }
-//      }
-//   }
-   
-   
    /************** Pour faire la maj en continue des HiPS visibles dans la vue *******************************/
    
    transient private Thread threadUpdater=null;
@@ -2363,7 +2388,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          contentPane.setBackground( new Color(240,240,250));
          contentPane.setBorder( BorderFactory.createLineBorder(Color.black));
          setUndecorated(true);
-//         setAlwaysOnTop(true);
          pack();
       }
       
@@ -2426,7 +2450,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
          
          if( treeObjs.size()>1 )  {
-            a = new MyAnchor(aladin,treeObjs.size()+" data sets selected",50,null,null);
+            a = new MyAnchor(aladin,MULTICOL+": "+treeObjs.size(),50,null,null);
             a.setFont(a.getFont().deriveFont(Font.BOLD));
             a.setFont(a.getFont().deriveFont(a.getFont().getSize2D()+1));
             a.setForeground( Aladin.COLOR_GREEN );
@@ -2458,34 +2482,34 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             mociBx = mocBx = csBx = null;
 
             if( hasCS ) {
-               csBx = bx = new JCheckBox("in view");
+               csBx = bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               Util.toolTip(bx,"Cone search (CS) on the current view\nfor the selected collections");
+               Util.toolTip(bx,AWCSTIP);
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
                bg.add(bx);
             }
             
             if( hasSIA ) {
-               siaBx= bx = new JCheckBox("in view");
+               siaBx= bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               Util.toolTip(bx,"Simple Image Access (SIA) query\non the current view for the selected collections");
+               Util.toolTip(bx,AWSIATIP);
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
             }
 
             if( hasSSA ) {
-               ssaBx= bx = new JCheckBox("in view");
+               ssaBx= bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               Util.toolTip(bx,"Simple Spectra Access (SSA) query \non the current view for the selected collections");
+               Util.toolTip(bx,AWSSATIP);
                bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
             }
             
             if( hasCDScat && hasRegion ) {
-               msBx = bx = new JCheckBox("in region or MOC");
+               msBx = bx = new JCheckBox(AWMOCQLAB);
                mocAndMore.add(bx);
-               Util.toolTip(bx,"Load all sources inside the selected region or MOC\nfor the selected collections supporting this access query");
+               Util.toolTip(bx,AWMOCQLABTIP);
                bx.setEnabled( hasRegion );
                bg.add(bx);
                
@@ -2497,22 +2521,22 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             
             if( hasMoc ) {
-               JLabel labelMoc = new JLabel("Coverages: ");
+               JLabel labelMoc = new JLabel(AWMOCTITLE);
                labelMoc.setFont( labelMoc.getFont().deriveFont(Font.ITALIC));
                labelMoc.setForeground( Color.gray );
                mocAndMore.add( labelMoc );
                
-               mocBx = bx = new JCheckBox("All"); 
+               mocBx = bx = new JCheckBox(AWMOC1); 
                mocAndMore.add(bx); 
-               Util.toolTip(bx,"Load all MOCs of the selected collections");
+               Util.toolTip(bx,AWMOC1TIP);
 
-               mocuBx = bx = new JCheckBox("Union"); 
+               mocuBx = bx = new JCheckBox(AWMOC2); 
                mocAndMore.add(bx); 
-               Util.toolTip(bx,"Load the union of MOCs of the selected collections");
+               Util.toolTip(bx,AWMOC2TIP);
 
-               mociBx = bx = new JCheckBox("Intersection"); 
+               mociBx = bx = new JCheckBox(AWMOC3); 
                mocAndMore.add(bx); 
-               Util.toolTip(bx,"Load the intersection of MOCs of the selected collections");
+               Util.toolTip(bx,AWMOC3TIP);
             }
 
             if( mocAndMore.getComponentCount()>0 ) {
@@ -2549,7 +2573,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( s!=null ) {
                boolean isIn = to.getIsIn()==1;
                try { s = Util.myRound( Double.parseDouble(s)*100); } catch( Exception e) {}
-               s = "Sky coverage: "+s+"% ";
+               s = AWSKYCOV+" "+s+"% ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground( Color.gray );
                p1.add(a);
@@ -2560,7 +2584,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                }
                
             } else {
-               s = "Coverage unknown (no available MOC)";
+               s = AWMOCUNK;
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Aladin.ORANGE);
                p1.add(a);
@@ -2569,7 +2593,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             s  = to.getProperty(Constante.KEY_HIPS_PIXEL_SCALE);
             if( s!=null ) {
                try { s = Coord.getUnit( Double.parseDouble(s)); } catch( Exception e) {}
-               s = "    HiPS pixel scale: "+s+" ";
+               s = "    "+AWHIPSRES+" "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
@@ -2578,14 +2602,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( s!=null ) {
                try { nbRows = Long.parseLong(s); } catch( Exception e) {}
                s = String.format("%,d", nbRows);
-               s = "    Nb rows: "+s+" ";
+               s = "    "+AWNBROWS+" "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
             }
             s  = to.getProperty("bib_year");
             if( s!=null ) {
-               s = "    Reference pub. year: "+s+" ";
+               s = "    "+AWREFPUB+" "+s+" ";
                a = new MyAnchor(aladin,s,50,null,null);
                a.setForeground(Color.gray);
                p1.add(a);
@@ -2599,33 +2623,35 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = 
                   globalBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
-               hipsBx = bx = new JCheckBox("prog.access");
+               hipsBx = bx = new JCheckBox(AWPROGACC);
                mocAndMore.add(bx);
                bx.setSelected(true);
-               Util.toolTip(bx,"Hierarchical Progressive Survey (HiPS)\n => Load the progressive view of the data");
+               Util.toolTip(bx,AWPROGACCTIP);
             }
 
             if( to.hasGlobalAccess() ) {
-               globalBx = bx = new JCheckBox("Data access");
+               globalBx = bx = new JCheckBox(AWDATAACC);
                mocAndMore.add(bx);
                bx.setSelected( true );
-               Util.toolTip(bx,"Load the whole collection");
+               Util.toolTip(bx,AWDATAACCTIP);
                bg.add(bx);
             }
 
             if( to.hasSIA() ) {
-               siaBx = bx = new JCheckBox( "in view" );
+               siaBx = bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
                String proto = to.hasSIAv2() ? "SIAv2" : "SIA";
-               Util.toolTip(bx,"Simple Image Access ("+proto+")\n => load the list of images available in the current view",true);
+               String s1 = AWSIATIP;
+               s1 = s1.replace("SIA",proto);
+               Util.toolTip(bx,s1,true);
             }
 
             if( to.hasSSA() ) {
-               ssaBx = bx = new JCheckBox("in view");
+               ssaBx = bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               Util.toolTip(bx,"Simple Spectra Access (SSA)\n => load the list of spectra available in the current view",true);
+               Util.toolTip(bx,AWSSATIP,true);
             }
 
             if( to.isCDSCatalog() ) {
@@ -2633,29 +2659,29 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if( hipsBx!=null ) bg.add(hipsBx);
                
                if( nbRows!=-1 && nbRows<100000 ) {
-                  allBx = bx = new JCheckBox("all");
+                  allBx = bx = new JCheckBox(AWDATAACC);
                   mocAndMore.add(bx);
                   bx.setSelected( !to.hasHips() && allCat );
-                  Util.toolTip(bx,"Load all sources\n(only available for small catalogs/tables <100000)");
+                  Util.toolTip(bx,AWDATAACCTIP1);
                   bg.add(bx);
                } 
 
-               csBx = bx = new JCheckBox("in view");
+               csBx = bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() && !allCat);
-               bx.setToolTipText("Load all sources covering the current view");
+               bx.setToolTipText(AWINVIEWTIP);
                bg.add(bx);
                
-               msBx = bx = new JCheckBox("in region or MOC");
+               msBx = bx = new JCheckBox(AWMOCQLAB);
                mocAndMore.add(bx);
-               Util.toolTip(bx,"Load all sources inside the selected region or MOC");
+               Util.toolTip(bx,AWMOCLABTIP2);
                bx.setEnabled( hasRegion );
                bg.add(bx);
                
-               xmatchBx = bx = new JCheckBox("via Xmatch");
+               xmatchBx = bx = new JCheckBox(AWXMATCH);
                mocAndMore.add(bx);
                bx.setEnabled( hasLoadedCat );
-               Util.toolTip(bx,"Cross-correlate the remote catalog/table\nwith the table selected in the stack",true);
+               Util.toolTip(bx,AWXMATCHTIP,true);
                bg.add(bx);
 
                // Positionnement de la sélection par défaut
@@ -2665,18 +2691,18 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                else if( csBx.isEnabled() ) csBx.setSelected(true); 
                
             } else if( to.getCSUrl()!=null ) {
-               csBx = bx = new JCheckBox("in view");
+               csBx = bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected( !to.hasHips() );
-               Util.toolTip(bx,"Load all sources covering the current view");
+               Util.toolTip(bx,AWINVIEWTIP);
                bg.add(bx);
            }
             
             if( to.hasTAP() ) {
-               tapBx = bx = new JCheckBox("by criteria");
+               tapBx = bx = new JCheckBox(AWCRIT);
                mocAndMore.add(bx);
                bx.setSelected( csBx==null );
-               Util.toolTip(bx,"Table Access Protocol (TAP)\n => Advanced query by criteria",true);
+               Util.toolTip(bx,AWCRITTIP,true);
                bg.add(bx);
             }
             
@@ -2684,9 +2710,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             mocAndMore.add(labelPlus);
             
             if( to.hasMoc() ) {
-               mocBx = bx = new JCheckBox("Coverage"); 
+               mocBx = bx = new JCheckBox(AWMOCX); 
                mocAndMore.add(bx); 
-               Util.toolTip(bx,"Load the MultiOrder Coverage map (MOC) associated to the collection",true);
+               Util.toolTip(bx,AWMOCXTIP,true);
                
                if( hipsBx!=null ) {
                   boolean isAlreadyLoaded = aladin.calque.getPlans(to.internalId)!=null;
@@ -2698,14 +2724,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             
             if( to.isCDSCatalog() && nbRows!=-1 && nbRows>=10000 ) {
-               dmBx = bx = new JCheckBox("Density map");
+               dmBx = bx = new JCheckBox(AWDM);
                mocAndMore.add(bx);
-               Util.toolTip(bx,"Progressive view (HiPS) of the density map associated to the catalog",true);
+               Util.toolTip(bx,AWDMTIP,true);
             } else {
                if( to.getProgenitorsUrl()!=null ) {
-                  progBx = bx = new JCheckBox("Progenitors");
+                  progBx = bx = new JCheckBox(AWPROGEN);
                   mocAndMore.add(bx);
-                  Util.toolTip(bx,"Load meta data and links to the original data images/cubes\nwhich have been used for generating the progressive view (HiPS)",true);
+                  Util.toolTip(bx,AWPROGENTIP,true);
                }
             }
             PropPanel.addCouple(p,"", mocAndMore, g,c);
@@ -2775,9 +2801,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 //            });
             
             if( flagScan ) {
-               b = new JButton("Scan only"); b.setMargin( new Insets(2,4,2,4));
+               b = new JButton(AWSCANONLY); b.setMargin( new Insets(2,4,2,4));
                b.setEnabled( hasView );
-               Util.toolTip(b,"Check if the collections contains data in the current view",true);
+               Util.toolTip(b,AWSCANONLYTIP,true);
                b.setFont(b.getFont().deriveFont(Font.BOLD));
                control.add(b);
                b.addActionListener(new ActionListener() {
@@ -2790,7 +2816,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             control.add(new JLabel("    "));
          }
 
-         b = new JButton("Load"); b.setMargin( new Insets(2,4,2,4));
+         b = new JButton(AWLOAD); b.setMargin( new Insets(2,4,2,4));
          b.setFont(b.getFont().deriveFont(Font.BOLD));
          control.add(b);
          b.addActionListener(new ActionListener() {
@@ -2801,7 +2827,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          });
          
          
-         b = new JButton("Close"); b.setMargin( new Insets(2,4,2,4));
+         b = new JButton(FPCLOSE); b.setMargin( new Insets(2,4,2,4));
          control.add(b);
          b.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) { hideInfo(); }
@@ -2849,7 +2875,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          void load() {
             
-            System.out.println("Loading preview => "+url);
             MyInputStream is=null;
             try {
                is = new MyInputStream( Util.openStream(url));

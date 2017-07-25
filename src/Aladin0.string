@@ -26,9 +26,18 @@ MPASTEALL	Paste
 MVIEW	View
 MOVERLAY	Overlay
 MDOC	Other documentation...
-MOPENLOAD	Open...
-MOPENFILE	Open local file...
-MOPENURL	Open URL...
+
+MOPENDIRIMG	Image surveys...
+MOPENDIRCUBE	Cube surveys...
+MOPENDIRCAT	Catalogs (VizieR, ...)
+MOPENDIRDB	Data bases (Simbad, NED, ...)
+MOPENFILE	Load local file...
+MOPENURL	Load direct URL...
+MOPENLOAD1	Open server selector...
+MSEARCHDIR	Search a data collection...
+MFILTERDIR	Filter on data collections...
+
+#MOPENLOAD	Open...
 MLASTFILE   Recent files & URLs...
 MLASTFILECLEAR Clear history
 MLOADIMG	Load astronomical image
@@ -139,9 +148,18 @@ MPASTEALL.fr	Coller
 MVIEW.fr	Vue
 MOVERLAY.fr	Graphique
 MDOC.fr	Documentation additionnelle...
-MOPENLOAD.fr	Ouvrir...
-MOPENFILE.fr	Ouvrir un fichier...
-MOPENURL.fr	Ouvrir une URL...
+
+MOPENDIRIMG.fr	Relevés images...
+MOPENDIRCUBE.fr	Relevés cubes...
+MOPENDIRCAT.fr	Catalogues (VizieR, ...)
+MOPENDIRDB.fr	Bases de données (Simbad, NED, ...)
+MOPENFILE.fr	Charger un fichier local...
+MOPENURL.fr	Utiliser directement une URL...
+MOPENLOAD1.fr	Ouvrir le sélecteur de serveurs...
+MSEARCHDIR.fr	Rechercher une collection de donnée...
+MFILTERDIR.fr	Filtrer les collections disponibles...
+
+#MOPENLOAD.fr	Ouvrir...
 MLASTFILE.fr   Fichiers & URL récents...
 MLASTFILECLEAR.fr Effacer l'historique
 MLOADIMG.fr	Charger une image astronomique
@@ -519,22 +537,6 @@ NORTHUPHELP	Turn the image North up, Est left
 NORTHUPHELP.fr	Oriente l'image le Nord en haut, l'Est à gauche
 PIXHELP	High Dynamic pixel Range
 PIXHELP.fr	HDR: visualisation de la dynamique complète des pixels
-COLLAPSE	coll
-COLLAPSE.fr	réd
-EXPAND	exp
-EXPAND.fr	dév
-COLLAPSETIP	Expand/collapse the HiPS tree
-COLLAPSETIP.fr	Développe/réduit l'arbre des HiPS
-INSIDE	inside
-INSIDE.fr	dedans
-INSIDETIP	Hide/show the collections without any observation in the current view
-INSIDETIP.fr	Cache/montre les collections n'ayant\naucune observation dans le champ courant
-SCAN	scan
-SCAN.fr	scan
-STOP	stop
-STOP.fr	stop
-SCANTIP	Scan the selected collections to know\nwhich of them contain result in the current field of view
-SCANTIP.fr	Interroge les collections sélectionnées\nafin de déterminer lesquelles ont des résultats dans le champ de vue courant
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key
@@ -3040,3 +3042,295 @@ STANDARDRESULTSLOADTIP Loads results from "/results/result" path
 UWSASKLOADDEFAULTRESULTS Unable to parse results url. Try to download from the tap results path?
 CANTABORTJOB Unable to abort the job. please try again later.
 UWSJOBRADIOTOOLTIP Click to load job details
+
+#V10
+DTLABEL	Available data
+DTLABEL.fr	Données disponibles
+DTLABELTIP	Tree of available data set collections from CDS and other IVOA compliant providers.\nBrowse, filter, select, and load the collections you want to display...
+DTLABELTIP.fr	Arbre des collections de données fournies par le CDS et autres fournisseurs compatibles IVOA.\n Visualisez, filtrez, sélectionnez et enfin charger les collections que vous voulez afficher
+DTSELECT	select
+DTSELECT.fr	sélect.
+DTSELECTTIP	Filter by free keywords (AND logic, blank separated, quote sub-expr supported) or by any advanced filter expression (ex: nb_rows&lt;1000).
+DTSELECTTIP.fr	Filtrage par mot clés (logique ET, séparateur ESPACE, sous-expression quotées) ou par tout autre expression de filtrage avancée (ex: nb_rows&lt;1000).
+DTCOMBOTIP	List of predefined filters. Use '+' button to edit it, or create a new one
+DTCOMBOTIP.fr	Liste des filtres prédéfinis. Utiliser le bouton '+' afin de les éditer, ou pour créer un nouveau filtre.
+DTPLUSTIP	Edit the current filter or create a new one
+DTPLUSTIP.fr	Editer le filtre courante, ou créer un nouveau filtre
+DTFROM	from
+DTFROM.fr	dans
+DTYRKW	Your keyword ?
+DTYRKW.fr	Votre mot clé ?
+DTTOOMANY	Do you really want to query so many data set collections ?
+DTTOOMANY.fr	Voulez-vous réellement interroger autant collection de données ?
+DTSCANRUN	Another scan is still running.\nWait the end if this previous scan\nor stop it before launching another one (button stop).
+DTSCANRUN.fr	Un scan est déjà en cours d'exécution.\nVeuillez atteindre la fin de son exécution ou forcer son arrêt (bouton "stop").
+COLLAPSE	coll.
+COLLAPSE.fr	réd.
+EXPAND	exp.
+EXPAND.fr	dév.
+COLLAPSETIP	Expand/collapse the Data Discovery tree
+COLLAPSETIP.fr	Développe/réduit l'arbre de découverte des données
+INSIDE	view
+INSIDE.fr	vue
+INSIDETIP	Hide/show the collections without\nany observation in the current view
+INSIDETIP.fr	Cache/montre les collections n'ayant\naucune observation dans la vue courant
+SCAN	scan
+SCAN.fr	scan
+STOP	stop
+STOP.fr	stop
+SCANTIP	Amongst the selected collections\nscans those of them which do not provide a coverage (MOC) to know\nif they contain results in the current view.
+SCANTIP.fr	Parmi les collections sélectionnées,\ninterroge celles qui ne fournissent pas de courverture (MOC)\nafin de déterminer lesquelles ont des résultats dans le champ de vue courant.
+DTFILTER	filter
+DTFILTER.fr	filtre
+DTFILTERTIP	Indicate if a filter is presently activated.\nClic on to remove the active filter
+DTFILTERTIP.fr	Indique si un filtre est actuellement activé.\nCliquer pour supprimer le filtre actif
+DTALLCOLL	all collections
+DTALLCOLL.fr	toutes les collections
+DTWORKLIST	working list
+DTWORKLIST.fr	liste de travail
+
+#V10 - Filter Panel
+FPTITLE	Data discovery tree filter
+FPTITLE.fr	Filtre sur l'arbre de découverte des données
+FPNAME	Filter name
+FPNAME.fr	Nom du filtre
+FPSTORE	Save
+FPSTORE.fr	Sauvegarder
+FPUPDATE	Update
+FPUPDATE.fr	Maj
+FPSTORETIP	Allows to create/update a permanent filter saved with a specific label. This filter appears in the popup menu of the available filters (under the discovery tree).
+FPSTORETIP.fr	Permet la création ou la mise à jour d'un filtre permanent mémorisé sous un nom particulier. Celui-ci apparait dans le menu déroulant des filtres disponibles (sous l'arbre des découvertes)
+FPSTOREWARNING	You have to provide your own specific filter name to save it as a permanent filter.
+FPSTOREWARNING.fr	Vous devez fournir un nom au filtre pour pouvoir le sauvegarder de manière permanente
+FPDELETE	Delete
+FPDELETE.fr	Supprimer
+FPDELETETIP	Remove a permanent filter (specified by its label)
+FPDELETETIP.fr	Supprime un filtre permanent (désigné par son nom)
+FPGLOBAL	Global constraints
+FPGLOBAL.fr	Contraintes globales
+FPCAT	Dedicated to catalog
+FPCAT.fr	Spécifiques aux catalogues
+FPREGION	Spatial
+FPREGION.fr	Spatiales
+FPTECH	Technical
+FPTECH.fr	Techniques
+FPKEYWORD	Keyword
+FPKEYWORD.fr	Mot-clé
+FPKEYWORDTIP	Keyword, or keyword list (comma separated) for which one of them must be present in the title, the description, the collection name or the identifier.\nExample: DENIS, CDS/P/DSS2/color
+FPKEYWORDTIP.fr	Mot clé, ou liste de mots clés séparés par une virgule dont l'un d'eux doit être présent dans le titre, la description, le nom de la collection ou l'identificateur.\nExemple: DENIS, CDS/P/DSS2/color
+FPDATATYPE	Category
+FPDATATYPE.fr	Catégorie
+FPDATATYPETIP	Collection category\n(1st tree branch level).
+FPDATATYPETIP.fr	Catégorie de la collection\n(1ère branche de l'arbre de découvertes).
+FPCOVERAGE	Spatial coverage
+FPCOVERAGE.fr	Couverture spatiale
+FPCOVERAGETIP	Percentage of the sky (resp. planet) coverage.\nExamples: <10% or >=90%
+FPCOVERAGETIP.fr	Pourcentage de couverture du ciel (resp. de la planète).\nExemples: <10% ou >=90%
+FPREGIME	Regime
+FPREGIME.fr	Régime
+FPREGIMETIP	Wavelength regime of the collection
+FPREGIMETIP.fr	Régime de longueur d'onde de la collection
+FPBIB	Bib.year
+FPBIB.fr	Année de publicat.
+FPBIBTIP	Year of the bibliographic reference paper associated to the collection.\nExamples: 2008, >2015 ou 2012..1014
+FPBIBTIP.fr	Année de publication de l'article de référence associé à la collection.\nExemples: 2008, >2015 ou 2012..1014
+FPAUTH	Authority
+FPAUTH.fr	Autorité
+FPAUTHTIP	Accronym of the authority who distributes the collection\n(1st component of the identifier).
+FPAUTHTIP.fr	Accronyme de l'autorité responsable de la distribution de la collection\n(premier élément de l'identificateur).
+FPEPOCH	Obs. epoch
+FPEPOCH.fr	Epoque d'obs.
+FPEPOCHTIP	Epoch of observations (or range of epochs) expressed in MJD.\nExample: >47000, 46000..52000
+FPEPOCHTIP.fr	Epoque d'observation (ou intervalle) de la collection exprimée en MJD.\nExemples: >47000, 46000..52000
+FPCATKEYWORD	Keyword
+FPCATKEYWORD.fr	Mot-clé
+FPCATKEYWORDTIP	Hide the catalogs no associated to the selected keyword(s).\nThese keywords have been manually set to each catalog by the CDS staff.
+FPCATKEYWORDTIP.fr	Cache les catalogues non associés au(x) mot(s) clé(s) sélectionné(s).\nCes mots clés ont été attribués manuellement à chaque catalogue par l'équipe du CDS.
+FPMISSION	Mission
+FPMISSION.fr	Mission
+FPMISSIONTIP	Hide the catalogs no associated to the selected mission.\nThe mission has been manually set to some catalogs by the CDS staff.
+FPMISSIONTIP.fr	Cache les catalogues non associés à la mission sélectionnée.\nL'affectation a des missions pour certains catalogues\na été opérée manuellement par l'équipe du CDS.
+FPNBROWS	Nb rows
+FPNBROWS.fr	Nb de lignes
+FPNBROWSTIP	Hide the catalogs for which the number of rows does not match.\nExamples: <1000, 10000..1000000, >9999
+FPNBROWSTIP.fr	Cache les catalogues dont le nombre de ligne ne correspond pas.\nExemples: <1000, 10000..1000000, >9999
+FPCONTENT	Content
+FPCONTENT.fr	Contenu
+FPCONTENTTIP	Hide the catalogs for which the content does not match the selection.\nThis content has been described automatically based on the UCD (Unified Content Descriptor)\nprealably associated to each column.
+FPCONTENTTIP.fr	Cache les catalogues dont le contenu ne correspond pas à la sélection.\nCe contenu a été caractérisé automatiquement à partir\ndes UCD (Unified Content Descriptor) ayant été associées à chaque colonne.
+FPASSDATA	Ass. data
+FPASSDATA.fr	Données assoc.
+FPASSDATATIP	Hide the catalogs which does not provide the selected associated data type (images, cubes, spectra, ...).\nThese associated data are only related to the content of the CDS VizieR data base.
+FPASSDATATIP.fr	Cache les catalogues ne disposant pas des données associées (images, cubes, spectres, ...) sélectionnées.\nCes données associées ne concernent que la base de données VizieR du CDS.
+FPSUPERSEDED	Last release
+FPSUPERSEDED.fr	Dernière version
+FPSUPERSEDEDTIP	Hide the catalogs for which there is a more recent release.
+FPSUPERSEDEDTIP.fr	Cache les catalogues dont il existe une version plus récente.
+FPSUPERSEDEDCB	hide superseded tables
+FPSUPERSEDEDCB,fr	cache les tables obsolètes
+FPSPACEDESC	The spatial filtering is based on<br>a specific region for which the matching collections<br>must respectively intersect, cover, or is enclosed it.<br>Several modes of region definition is proposed:
+FPSPACEDESC.fr	Le filtrage spatial consiste à définir<br>une région pour laquelle les collections retenues doivent<br>respectivement, intersecter, couvrir<br>ou être incluses dans cette région.<br>Plusieurs modes de définitions de la région sont possibles:
+FPSPACEDEFLAB	Region definition
+FPSPACEDEFLAB.fr	Définition de la région
+FPSPACECURRENT	the polygon or circle presently selected in the current view
+FPSPACECURRENT.fr	le polygone ou le cercle sélectionné actuellement dans la vue
+FPSPACECURRENTTIP	The region is computed from the polygon or the circle presently selected in the current view. Warning, the computed region may be slightly greater that the drawn polygon or circle.
+FPSPACECURRENTTIP.fr	La région est calculée à partir du polygone ou du cercle actuellement sélectionné dans la vue courante. Attention, la région retenue peut être légèrement plus large que le polygone ou le cercle dessiné.
+FPSPACEMOC	a MOC plane loaded in the stack
+FPSPACEMOC.fr	un plan MOC déjà chargé dans la pile
+FPSPACEMOCTIP	The region is provided by the selected MOC plane.\nThis MOC has to be loaded prealably in the stack.\nFor instance, it could be the MOC\nof the coverage of another collection.
+FPSPACEMOCTIP.fr	La région est déterminée par le plan MOC indiquée.\nCelui-ci aura dû être préalablement chargé dans la pile.\nCe peut être par exemple le MOC\nde la couverture d'une autre collection.
+FPSPACEMOCINLINE	an inline MOC       :
+FPSPACEMOCINLINE.fr	un MOC "en ligne"    :
+FPSPACEMOCINLINETIP	The region is provided as a MOC written in the ASCII string syntax.\nExample: 3/1,3,5-8 4/34-67
+FPSPACEMOCINLINETIP.fr	La région est déterminée par le MOC fourni sous la forme d'une chaine de caractère ASCII.\nExemple: 3/1,3,5-8 4/34-67
+FPSPACESTCINLINE	a STC expression :
+FPSPACESTCINLINE.fr	une expression STC :
+FPSPACESTCINLINETIP	The region is provided by an STS-S simplified expression (J2000 or ICRS only, without union or intersectino).\nExample: POLYGON 311.45309 31.29971 311.63440 30.75153 310.85538 31.04652.\nWarning: the computed region may be slightly greater that the provided STS-S region.
+FPSPACESTCINLINETIP.fr	La région est déterminée par une expression STC-S simplifiée (uniquement en J2000 ou ICRS, sans union, ni intersection).\nExemple: POLYGON 311.45309 31.29971 311.63440 30.75153 310.85538 31.04652.\nAttention, la région retenue peut être légèrement plus large que l'expression STC-S spécifiée.
+FPSPACEINTER	Intersect mode
+FPSPACEINTER.FR	Mode d'intersection
+FPSPACEINTERTIP	Specify the intersect constraints between the provided region and the matching coverage collections. This constraints can be a simple overlap between both, or the region is enclosed in the collection coverage, or the opposite, the region covers totally the collection coverage.\n \nWarning: the collection coverage (MOC) is generally not the real coverage but a slighty upper approximation of it (depending of the resolution choosen for computing the coverage MOC).
+FPSPACEINTERTIP.fr	Détermine la contrainte de superposition de la région décrite et de la couverture des collections à retenir. Cette contrainte peut être une simple intersection non vide, un englobement complet de la région, ou au contraire un recouvrement complet par la region.\n \nAttention: Les couvertures des collections (MOC) sont généralement des approximations légèrement plus étendue que la couverture réelle car elles dépendent du niveau de résolution retenue pour les calculées (variables suivants les collections).
+FPOVERLAPS	overlaps
+FPOVERLAPS.fr	intersecte
+FPISENCLOSED	is enclosed
+FPISENCLOSED.fr	est inclus
+FPCOVERS	covers
+FPCOVERS.fr	recouvre
+FPPROTOLAB	Access mode
+FPPROTOLAB.fr	Mode d'accès
+FPPROTOHIPS	Hierarchical Progressive Survey compatible collections
+FPPROTOHIPS.fr	Collections supportant le protocol Hierarchical progressive Survey (HiPS)
+FPPROTOSIA	Simple Image Access (1 & 2) compatible collections
+FPPROTOSIA.fr	Collections supportant le protocol Simple Image Access (1 & 2)
+FPPROTOSSA	Simple Spectra Access compatible collections
+FPPROTOSSA.fr	Collections supportant le protocol Simple Spectra Access
+FPPROTOTAP	Simple Table Access compatible collections
+FPPROTOTAP.fr	Collections supportant le protocol Simple Table Access
+FPPROTOCS	Cone Search compatible collections
+FPPROTOCS.fr	Collections supportant le protocol Cone Search
+FPPROTOHIPSPRO	HiPS collections providing progenitors (original images links)
+FPPROTOHIPSPRO.fr	Collections HiPS fournissant les progéniteurs (les liens vers les images originales)
+FPPROTO	Protocol
+FPPROTO.fr	Protocole
+FPPROTOTIP	Protocol used to access the collection: HiPS: Hierarchical Progressive Survey, SIA: Simple Image Access, SSA: Simple Spectra Access, TAP: Table Access Protocol, Cone Search
+FPPROTOTIP.fr	Protocole utilisé pour accéder à la collection: HiPS: Hierarchical Progressive Survey, SIA: Simple Image Access, SSA: Simple Spectra Access, TAP: Table Access Protocol, Cone Search
+FPHIPSLAB	HiPS dedicated constraints
+FPHIPSLAB.fr	Contraintes spécifiques aux HiPS
+FPHIPSORDER	Order
+FPHIPSORDER.fr	Ordre
+FPHIPSORDERTIP	Order or range of orders that the HiPS must provided.\nExamples:  >10, <5, 5..9
+FPHIPSORDERTIP.fr	Ordre ou intervale d'ordres que les HiPS doivent fournir.\nExemples: >10, <5, 5..9
+FPHIPSPIXEL	Pixel formats
+FPHIPSPIXEL.fr	Format des pixels
+FPHIPSPIXELTIP	Hide the HiPS images which are not able to provide the pixels in the specified format.
+FPHIPSPIXELTIP.fr	Cache les HiPS images ne pouvant fournit les pixels dans le format spécifié.
+FPHIPSPIXEL1	FITS tile HIPS only
+FPHIPSPIXEL1	que les HiPS à tuiles FITS
+FPHIPSPIXEL2	color HiPS only
+FPHIPSPIXEL2.fr	que les HiPS couleurs
+FPRULELABEL	expression & MOC generated by the filter
+FPRULELABEL.fr	expression & MOC générés par le filtre
+FPMOCLABELTIP	Spatial constraint expressed as a MOC which overlaps, is enclosed or covers the coverage of each matching collection.
+FPMOCLABELTIP.fr	Contrainte spatiale exprimée au moyen d'un MOC qui intersecte, est inclus ou recouvre totalement chaque couverture des collections retenues.
+FPSHOWIT	show it
+FPSHOWIT.fr	afficher
+FPSHOWITTIP	Create and display a MOC plane corresponding to the filtering region.
+FPSHOWITTIP.fr	Crée et visualise un plan MOC correspondant à la région de filtrage.
+FPACTIVATED	Filter activated
+FPACTIVATED.fr	Filtre activé
+FPNOACTIVATED	No filter activated
+FPNOACTIVATED.fr	Aucun filtre activé
+FPACTIVATED1	matching collections:
+FPACTIVATED1.fr	collections retenues:
+FPACTIVATED2	available collections:
+FPACTIVATED2.fr	collections disponibles:
+FPAPPLY	Apply the filter
+FPAPPLY.fr	Appliquer le filtre
+FPRESET	Reset
+FPRESET.fr	Réinitialiser
+FPCLOSE	Close
+FPCLOSE.fr	Fermer
+
+#V10 - Access window
+AWMULTICOL Selected collections
+AWMULTICOL.fr	Collections sélectionnées
+AWCSLAB	in view
+AWSSLAB.fr	dans la vue
+AWCSTIP	Cone search (CS) covering the current view\nfor the selected collections
+AWCSTIP.fr	Recherche par cônes (CS) couvrant la vue courante\npour les collections sélectionnées
+AWSIATIP	Simple Image Access (SIA) query\ncovering the current view for the selected collections
+AWSIATIP.fr	Interrogation "Simple Image Access (SIA)\ncouvrant la vue courante pour les collections sélectionnées
+AWSSATIP	Simple Spectra Access (SSA) query\ncovering the current view for the selected collections
+AWSSATIP.fr	Interrogation "Simple Spectra Access (SSA)\ncouvrant la vue courante pour les collections sélectionnées
+AWMOCQLAB	by region or MOC
+AWMOCQLAB.fr	par région ou MOC
+AWMOCQLABTIP	Only load the sources inside the selected region or MOC\nfor the selected collections supporting this access query.
+AWMOCLABTIP.fr	Charge toutes les sources à l'intérieur de la région ou du MOC spécifié,\npour toutes les collections sélectionnées supportant ce mode d'interrogation.
+AWMOCTITLE	Coverages :
+AWMOCTITLE.fr	Couvertures :
+AWMOC1	all
+AWMOC1.fr	toutes
+AWMOC1TIP	Load the coverage (MOC) of each selected collection
+AWMOC1TIP.fr	Charge la couverture (MOC) de chaque collection sélectionnées
+AWMOC2	the union
+AWMOC2.fr	l'union
+AWMOC2TIP	Load the union of MOCs of the selected collections
+AWMOC2TIP.fr	Charge l'union des couvertures (MOC) des collections sélectionnées
+AWMOC3	the intersection
+AWMOC3.fr	l'intersection
+AWMOC3TIP	Load the intersection of MOCs of the selected collections
+AWMOC3TIP.fr	Charge l'intersection des couvertures (MOC) des collections sélectionnées
+
+AWSKYCOV	Sky coverage:
+AWSKYCOV.fr	Couverture du ciel:
+AWMOCUNK	Coverage unknown (no available MOC)
+AWMOCUNK.fr	Couverture inconnue (aucun MOC disponible)
+AWHIPSRES	HiPS pixel scale:
+AWHIPSRES.fr	Rés.pixel HiPS:
+AWNBROWS	Nb rows:
+AWNBROWS.fr	Nb de col.:
+AWREFPUB	Reference pub. year:
+AWREFPUB.fr	Année pub.réf.
+AWPROGACC	progr.access
+AWPROGACC.fr	acces.progr.
+AWPROGACCTIP	Progressive access to the collection\n(HiPS: Hierarchical Progressive Survey)
+AWPROGACCTIP.fr	Accès progressif à la collection\n(HiPS: Hierarchical Progressive Survey)
+AWDATAACC	Whole data
+AWDATAACC.fr	Toutes les données
+AWDATAACCTIP	Load the whole collection
+AWDATAACCTIP.fr	Charge la collection dans sa totalité
+AWDATAACCTIP1	Load all sources\n(only available for small catalogs/tables <100,000)
+AWDATAACCTIP1.fr Charge toutes les sources\n(uniquement possible pour les catalogues et tables <100.000)
+AWINVIEWTIP	Only load the sources\ncovering the current view.
+AWINVIEWTIP.fr	Charge uniquement les sources\nrecouvrant la vue courante.
+AWMOCQLABTIP2	Only load the sources inside\nthe selected region or MOC.
+AWMOCQLABTIP2.fr	Charge uniquement les sources\nà l'intérieur de la région ou du MOC spécifié.
+AWXMATCH	by CDS Xmatch
+AWXMATCH.fr	par Xmatch CDS
+AWXMATCHTIP	Cross-correlate the remote catalog/table\nwith the table selected in the stack.
+AWXMATCHTIP.fr	Corrèle le catalogue ou la table distante\navec la table sélectonnée dans la pile.
+AWCRIT	by criteria
+AWCRIT.fr	par critères
+AWCRITTIP	Advanced query by criteria\nby TAP protocol (Table Access Protocol).
+AWCRITTIP.fr	Interrogration avancée par critères\nvia le protocole TAP (Table Acccess Protocol).
+AWMOCX	coverage
+AWMOCX.fr	couverture
+AWMOCXTIP	Load the coverage associated to the collection\nas a MOC MultiOrder Coverage map).
+AWMOCXTIP.fr	Charge la couverture associée à la collection\nsous la forme d'un MOC (MultiOrder Coverage map).
+AWDM	density map
+AWDM.fr	carte de densité
+AWDMTIP	Load de density map associated to the catalog\nas a progressive view (HiPS).
+AWDMTIP.fr	Charge la carte de densité associée au catalogue\nsous la forme d'une vue progressive (HiPS).
+AWPROGEN	Links to orig.img.
+AWPROGEN.fr	Liens img.orig.
+AWPROGENTIP	Load the meta data associated to the collection\nwhich allows to access to the original images\nor cubes used to generate the progressive view (HiPS).
+AWPROGENTIP.fr	Charge les méta données associées à la collection\n offrant l'accès aux images ou aux cubes originaux\nayant permis de générer la vue progressive (HiPS).
+AWSCANONLY	Scan only
+AWSCANONLY.fr	Uniquement scanner
+AWSCANONLYTIP	Only check if the collections contains\ndata in the current view.
+AWSCANONLYTIP.fr	Vérifie uniquement si les collections\ncontiennent ou non des données dans la vue courante.
+AWLOAD	Load
+AWLOAD.fr	Charger
+

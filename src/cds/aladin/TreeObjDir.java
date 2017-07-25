@@ -967,7 +967,7 @@ public class TreeObjDir extends TreeObj {
    protected String getGlobalAccessBkm() { return getGlobalAccessCmd(); }
    private String getGlobalAccessCmd() {
       String cmd = null;
-      if( prop!=null && hasGlobalAccess() ) cmd = "load "+getGlobalAccessUrl();
+      if( prop!=null && hasGlobalAccess() ) cmd = Tok.quote(internalId)+" = load "+getGlobalAccessUrl();
       return cmd;
    }
    

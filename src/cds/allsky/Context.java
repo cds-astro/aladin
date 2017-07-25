@@ -63,6 +63,8 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Context {
    
+   static final public String FORCOMPATIBILITY = "#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____";
+   
    private static boolean verbose=false;
    protected String hipsId=null;             // Identificateur du HiPS (publisher_did, sinon publisher_id/obs_id sans le préfixe ivo://)
    protected String label;                   // Nom du survey
@@ -1992,7 +1994,8 @@ public class Context {
 
       // Gestion de la compatibilité
       // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
-      prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
+      while( prop.removeComment(FORCOMPATIBILITY) );
+     prop.add("#",FORCOMPATIBILITY);
       prop.add(Constante.OLD_OBS_COLLECTION,label);
       prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
       prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
@@ -2259,7 +2262,8 @@ public class Context {
          
          // Gestion de la compatibilité
          // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
-         prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
+         while( prop.removeComment(FORCOMPATIBILITY) );
+         prop.add("#",FORCOMPATIBILITY);
          prop.add(Constante.OLD_OBS_COLLECTION,getLabel());
          prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
          prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
@@ -2299,7 +2303,7 @@ public class Context {
       }
       finally { releasePropertieFile(); }
    }
-
+   
    /** Lecture des propriétés */
    protected void loadProperties() throws Exception {
       waitingPropertieFile();

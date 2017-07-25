@@ -432,7 +432,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       }
 
       // L'arbre des catégories
-      sv.addElement(new ServerWatch(aladin));
+      if( !Aladin.BETA ) sv.addElement(new ServerWatch(aladin));
 
       // Les serveurs Spectra via GLU
       if( !Aladin.OUTREACH && Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.SPECTRUM);

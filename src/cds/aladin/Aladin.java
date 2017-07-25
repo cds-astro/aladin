@@ -157,32 +157,45 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Hipsgen pilot=nnn parameter for generating HiPS pilot limited to nnn images
- * @beta    <LI> Hipsgen native support for gzip, bzip2 and rice images (via cache disk)
- * @beta    <LI> Support for EPNTAP results (c1min,c2min,s_region)
- * @beta    <LI> Deprecated PLASTIC lib and dependencies removed 
- * @beta    <LI> CDS X-match integration in the Directory tree
- * @beta    <LI> HiPS IVOA 1.0 standard compatibility (Aladin + Hipsgen + Hipsserverlint)
- * @beta    <LI> UTF-8 BOM support
- * @beta    <LI> Script command extension for CS, SIA (1&2), SSA
- * @beta    <LI> Additionnal colormaps: Red, Green and Blue
- * @beta    <LI> Dark theme user interface
- * @beta    <LI> Discovery tree panel (HiPS, CS, SIA, SSA, TAP,...)
- * @beta    <LI> Datalink, SODA and TAP supports
- * @beta    <LI> Simbad + VizieR pointer improvements
- * @beta    <LI> HiPS properties file direct support
- * @beta    <LI> Panel management improvement (JPane)
- * @beta    <LI> HiPS mirror sites management improvement
- * @beta    <LI> MOC perimeter drawing + set drawing=xxx script command
- * @beta    <LI> Fullscreen mode improvements (global menu)
- * @beta    <LI> New script commands (cmoc, ccat, )
- * @beta    <LI> MultiCCD FITS image support
- * @beta    <LI> Tags tool improvements
- * @beta    <LI> Probability sky map MOC extraction
- * @beta    <LI> Planetary HiPS (longitude inversion)
- * @beta    <LI> Hipsgen improvements: HiPS color multithread code, local MIRROR, APPEND, MAP
- * @beta    <LI> File dialog window multi-selections
- * @beta    <LI> Copy-able propertie links
+ * @beta    <LI> User interface:
+ * @beta    <LI> - new theme (dark background...)
+ * @beta    <LI> - new panels/facilities (data discovery tree...)
+ * @beta    <LI> - Simbad + VizieR "pointers" improvements
+ * @beta    <LI> - fullscreen mode menu and widgets
+ * @beta    <LI> - flexible panels management (split)
+ * @beta    <LI> - file dialog window multi-platforms
+ * @beta    <LI> Data discovery tree panel:
+ * @beta    <LI> - integrated access to all CDS and other VO collections (>20,000 data sets)
+ * @beta    <LI> - multi-protocol support & integration: HiPS, CS, SIA, SSA, TAP,...
+ * @beta    <LI> - derived data product access (coverages, density maps, progenitors)
+ * @beta    <LI> - fast collection filter (by any properties and/or regions)
+ * @beta    <LI> - remote CDS X-match integration
+ * @beta    <LI> - MOC constraints integration (filtering by MOC, querying by MOC)
+ * @beta    <LI> HiPS (progressive survey):
+ * @beta    <LI> - mirror sites management improvement
+ * @beta    <LI> - properties file direct support
+ * @beta    <LI> - planetary HiPS (longitude inversion)
+ * @beta    <LI> - polarized HiPS (segments drawing)
+ * @beta    <LI> MOC (coverage):
+ * @beta    <LI> - perimeter drawing + set drawing=xxx script command
+ * @beta    <LI> - probability sky map MOC extraction
+ * @beta    <LI> Hipsgen (HiPS generator):
+ * @beta    <LI> - IVOA 1.0 standard compliance (Aladin + Hipsgen + Hipsserverlint)
+ * @beta    <LI> - gzip, bzip2 and rice image support (via cache disk)
+ * @beta    <LI> - HiPS color multithread code, 
+ * @beta    <LI> - new actions: local MIRROR, APPEND, MAP
+ * @beta    <LI> - pilot=nnn parameter for generating HiPS pilot limited to nnn images
+ * @beta    <LI> Script:
+ * @beta    <LI> - script commands dedicated to VO protocol access: CS, SIA (1&2), SSA, MOC
+ * @beta    <LI> - new script commands: cmoc, ccat
+ * @beta    <LI> Miscellaneous:
+ * @beta    <LI> - support to multiCCD as MEF FITS image
+ * @beta    <LI> - EPNTAP support (c1min,c2min,s_region)
+ * @beta    <LI> - deprecated PLASTIC lib and dependencies removed 
+ * @beta    <LI> - UTF-8 BOM support
+ * @beta    <LI> - additionnal colormaps: Red, Green and Blue
+ * @beta    <LI> - datalink, SODA and TAP supports
+ * @beta    <LI> - tags tool improvements
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
@@ -227,7 +240,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.007";
+   static public final    String VERSION = "v10.009";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1041,16 +1054,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MIMAGE  = chaine.getString("IMAGE");
       MCATALOG= chaine.getString("VZCAT");
       MOVERLAY= chaine.getString("MOVERLAY");
-      OPENFILE= chaine.getString("MOPENFILE");
-      OPENLOAD= chaine.getString("MOPENLOAD");
-//      OPENDIRIMG= chaine.getString("MOPENDIRIMG");
-//      OPENDIRCAT= chaine.getString("MOPENDIRCAT");
-//      OPENDIRJ= chaine.getString("MOPENDIRJ");
-//      OPENDIRDB= chaine.getString("MOPENDIRDB");
-//    OPENDIRCUBE= chaine.getString("MOPENDIRCUBE");
-//    FILTERDIR= chaine.getString("MFILTERDIR");
+      
+      OPENDIRIMG  = chaine.getString("MOPENDIRIMG");
+      OPENDIRCUBE = chaine.getString("MOPENDIRCUBE");
+      OPENDIRCAT  = chaine.getString("MOPENDIRCAT");
+      OPENDIRDB   = chaine.getString("MOPENDIRDB");
+      OPENFILE    = chaine.getString("MOPENFILE");
+      OPENURL     = chaine.getString("MOPENURL");
+      OPENLOAD    = chaine.getString("MOPENLOAD1");
+      SEARCHDIR   = chaine.getString("MSEARCHDIR");
+      FILTERDIR   = chaine.getString("MFILTERDIR");
+
       LASTFILE=chaine.getString("MLASTFILE");
-      OPENURL = chaine.getString("MOPENURL");
       LOADIMG = chaine.getString("MLOADIMG");
       LOADCAT = chaine.getString("MLOADCAT");
       LOADVO  = chaine.getString("MLOADVO");
@@ -1389,18 +1404,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       };
       
       if( BETA ) {
-         
-         OPENDIRIMG     = "Image surveys...";
-         OPENDIRCUBE    = "Cube surveys...";
-         OPENDIRCAT     = "Catalogs (VizieR, ...)";
-         OPENDIRDB      = "Data bases (Simbad, NED, ...)";
-         
-         OPENFILE       = "Load local file...";
-         OPENURL        = "Load direct URL...";
-         OPENLOAD       = "Open server selector...";
-         
-         SEARCHDIR      = "Search a data collection...";
-         FILTERDIR      = "Filter on data collections...";
          
          SHOWASYNCJOBS = "Show async jobs";
          
@@ -5806,7 +5809,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -[no]hub: no usage of the internal PLASTIC hub\n"+
                "       -[no]plugin: with/without plugin support\n"+
                "       -[no]bookmarks: with/without bookmarks support\n"+
-               "       -[no]outreach: with/without outreach mode\n"+
+//               "       -[no]outreach: with/without outreach mode\n"+
                "       -[no]beta: with/without new features in beta test\n"+
                "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
                "       -trace: trace mode for debugging purpose\n"+
@@ -5942,7 +5945,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
          else if( args[i].equals("-nolog") )       { LOG=false; lastArg=i+1; }
-         else if( args[i].equals("-outreach") )    { OUTREACH=true; setOUTREACH=true; lastArg=i+1; }
+//         else if( args[i].equals("-outreach") )    { OUTREACH=true; setOUTREACH=true; lastArg=i+1; }
          else if( args[i].equals("-proto") )       { PROTO=BETA=true; lastArg=i+1; }
          else if( args[i].equals("-nobeta") )      { BETA=false; lastArg=i+1; }
          else if( args[i].equals("-noproto") )     { PROTO=BETA=false; lastArg=i+1; }

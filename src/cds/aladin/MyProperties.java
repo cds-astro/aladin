@@ -47,6 +47,7 @@ import cds.mocmulti.MultiMoc;
  * 
  * @author Pierre Fernique [CDS]
  * @version 2.0 décembre 2016 - fusion de la version Aladin et MultiMoc
+ * @version 2.1 Juillet 2017 - ajout méthode removeComment(...)
  */
 public class MyProperties {
    
@@ -66,6 +67,20 @@ public class MyProperties {
       ArrayList<String> a = new ArrayList<String>();
       for( PropItem ci : prop ) a.add(ci.key);
       return a;
+   }
+   
+   /** Supprimer le premier commentaire identique à celui fourni
+    * @return true si trouvé, false sinon
+    */
+   public boolean removeComment(String s) {
+      int find=-1;
+      for( int i=0; i<prop.size(); i++ ) {
+         PropItem pi = prop.get(i);
+         if( pi.key.equals("#") && pi.value!=null && pi.value.equals(s) ) { find=i; break; }
+      }
+      if( find==-1 ) return false;
+      prop.remove( find );
+      return true;
    }
    
    /** Teste l'égalité. 
