@@ -759,7 +759,11 @@ public class ServerFile extends Server implements XMLConsumer {
             if( (s=(String)atts.get("RA"))!=null )     ra=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("DE"))!=null )     de=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("radius"))!=null ) rm=Double.valueOf(s).doubleValue();
-            if( (s=(String)atts.get("color"))!=null )  plan.c=Action.getColor(s);;
+            if( (s=(String)atts.get("color"))!=null )  plan.c=Action.getColor(s);
+            if( (s=(String)atts.get("shape"))!=null )  {
+               int sourceType = Util.indexInArrayOf(s, Source.TYPENAME, true);
+               if( sourceType!=-1 ) plan.sourceType=sourceType;
+            }
             break;
          case Plan.APERTURE:
          case Plan.TOOL:
@@ -844,6 +848,8 @@ public class ServerFile extends Server implements XMLConsumer {
          if( (s=(String)atts.get("depth"))!=null ) plan.folder = Integer.parseInt(s);
          if( (s=(String)atts.get("activated"))!=null ) plan.active=plan.askActive = (new Boolean(s)).booleanValue();
          if( (s=(String)atts.get("selectable"))!=null ) plan.setSelectable( (new Boolean(s)).booleanValue() );
+         if( (s=(String)atts.get("scalingfactor"))!=null ) plan.setScalingFactor( Float.parseFloat(s) );
+         
          if( plan instanceof PlanImage ) ((PlanImage)plan).orig = PlanImage.LOCAL;
 
          // Mise en place de la calib et de la projection associee

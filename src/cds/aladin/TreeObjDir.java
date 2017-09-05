@@ -34,14 +34,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
+import cds.aladin.prop.Propable;
 import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.moc.Healpix;
@@ -54,7 +61,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 2.0 Janvier 2017 - désormais utilisé pour le HipsStore
  */
-public class TreeObjDir extends TreeObj {
+public class TreeObjDir extends TreeObj implements Propable {
 
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
@@ -462,7 +469,6 @@ public class TreeObjDir extends TreeObj {
                if( Util.indexOfIgnoreCase(s, "map")>=0 ) map=true;
                if( Util.indexOfIgnoreCase(s, "moc")>=0 ) moc=true;
 
-
                // Un numéro de version du genre "v1.23" ?
                if( s.charAt(0)=='v' ) {
                   try {
@@ -608,7 +614,7 @@ public class TreeObjDir extends TreeObj {
    /** Retourne true si la description GLU correspond à un fichier Map healpix*/
    protected boolean isMap() { return map; }
 
-   /** Retourne true s'il s'agit d'un catalogue hiérarchique */
+   /** Retourne true s'il s'agit d'un catalogue */
    protected boolean isCatalog() { return cat; }
 
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
@@ -877,9 +883,9 @@ public class TreeObjDir extends TreeObj {
       serverXmatch.setPlan(plan);
       serverXmatch.setCatName(internalId);
       serverXmatch.setPlanName(internalId);
-
-      // Pas de limitation
-      serverXmatch.setLimit("5000000");
+      serverXmatch.setSeparation( aladin.directory.getParam(XMATCH_RADIUS_KEY) );
+      serverXmatch.setSelection( aladin.directory.getParam(XMATCH_SELECTION_KEY) );
+      serverXmatch.setLimit( aladin.directory.getParam(CAT_LIMIT_KEY) );
 
       // Et c'est parti
       serverXmatch.submit();
@@ -962,6 +968,7 @@ public class TreeObjDir extends TreeObj {
       return "get "+gluTag;
    }
    
+   
    /** Génération et exécution de la requête script correspondant à un accès global */
    protected void loadGlobalAccess() { aladin.execAsyncCommand( getGlobalAccessCmd() ); }
    protected String getGlobalAccessBkm() { return getGlobalAccessCmd(); }
@@ -979,16 +986,23 @@ public class TreeObjDir extends TreeObj {
    protected String getCSBkm() { return getCSCmd()+" $TARGET $RADIUS"; }
    private String getCSCmd() {
       String cmd = null;
+      String allcolumns = aladin.directory.getParam("QueryCatColumns");
 
       // On passe par VizieR/Simbad via la commande script adaptée
       if( isCDSCatalog() ) {
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
          if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad";
-         else cmd = "get VizieR("+cat+",allcolumns)";
+         else {
+            String s = allcolumns.equals("all") ? ",allcolumns":"";
+            cmd = "get VizieR("+cat+s+")";
+         }
 
       // Accès direct CS
-      } else if( prop!=null && (prop.get("cs_service_url")!=null) ) cmd = "get CS("+internalId+")";
+      } else if( prop!=null && (prop.get("cs_service_url")!=null) ) {
+         String s = allcolumns.equals("all") ? ",3":"";
+         cmd = "get CS("+internalId+s+")";
+      }
 
       return cmd;
    }
@@ -1007,7 +1021,15 @@ public class TreeObjDir extends TreeObj {
    protected String getHipsBkm() { return getHipsCmd()+" $TARGET $RADIUS"; }
    protected String getHipsCmd() {
       String id = Tok.quote(internalId!=null?internalId:label);
-      String mode = !isCatalog() && isTruePixels() ? ",fits":"";
+//      String mode = !isCatalog() && isTruePixels() ? ",fits":"";
+      
+      String mode = "";
+      if( !isCatalog() ) {
+         String s = aladin.directory.getParam(HIPS_FORMAT_KEY);
+         mode = s.indexOf("fits")>=0 ? ",fits" : s.indexOf("preview")>0 ?
+               ( isPNG() ? ",png" : isJPEG() ? ",jpeg" : "" )
+               : "";
+      }
       String cmd = "get HiPS("+id+mode+")";
       return cmd;
    }
@@ -1236,9 +1258,7 @@ public class TreeObjDir extends TreeObj {
       // Postionnement du label du plan à créer
       serverMoc.setPlanName(internalId);
       
-      // Pas de limitation
-//      serverMoc.setLimit("unlimited");
-      serverMoc.setLimit("5000000");
+      serverMoc.setLimit( aladin.directory.getParam(CAT_LIMIT_KEY));
       
       // Et c'est parti
       serverMoc.submit();
@@ -1267,5 +1287,170 @@ public class TreeObjDir extends TreeObj {
       gb.setConstraints(c,gc);
       getPanel().add(c);
    }
+   
+   
+   /**********************  Gestion des propriétés associées aux différents modes d'interrogation ************************/
+   
+   static public HashMap<String, String> paramsFactory() {
+      HashMap<String, String> params = new HashMap<String, String>();
+      params.put("QueryXmatchRadius", "5");
+      params.put("QueryXmatchSelection", "best");
+      params.put("QueryHipsFormat", "default");
+      params.put("QueryCatColumns", "default");
+      params.put("QueryCatLimit", "unlimited");
+      return params;
+   }
+   
+   /** Retourne true si la collection dispose d'un HiPS en format Fits et preview */
+   private boolean hasHipsFmt() {
+      if( prop==null ) return false;
+      String s = prop.get("hips_tile_format");
+      if( s==null ) return false;
+      return s.indexOf("fits")>=0 && (s.indexOf("jpeg")>=0 || s.indexOf("png")>=0);
+   }
+
+   @Override
+   public boolean hasProp() { return hasHipsFmt() || isCatalog(); }
+
+   @Override
+   public Vector<Prop> getProp() {
+      Vector<Prop> v = new Vector<Prop>();
+      if( hasHipsFmt() ) v.add( getHipsFmtProp() );
+      if( isCatalog() ) {
+         v.add( getCatLimitProp() );
+         v.add( getCatColumnProp() );
+      }
+      if( isCDSCatalog() ) {
+         v.add( getXmatchRadiusProp() );
+         v.add( getXmatchSelectionProp() );
+      }
+      return v;
+   }
+   
+   static public final String    XMATCH_RADIUS_KEY   = "QueryXmatchRadius";
+   static public final String    XMATCH_RADIUS_TITLE = "Xmatch separation (arcsec)";
+   static public final String    XMATCH_RADIUS_HELP  = "Maximum distance in arcsec to look for counterparts.\n"
+         + "Maximum allowed value is 180.";
+
+   public Prop getXmatchRadiusProp() {
+      final JTextField testRadius = new JTextField( 10 );
+      final PropAction update = new PropAction() {
+         public int action() { testRadius.setText( aladin.directory.getParam(XMATCH_RADIUS_KEY) ); return PropAction.SUCCESS; }
+      };
+      PropAction change = new PropAction() {
+         public int action() {
+            testRadius.setForeground(Color.black);
+            String oval = aladin.directory.getParam(XMATCH_RADIUS_KEY);
+            try {
+               String nval = testRadius.getText();
+               if( nval.equals(oval) ) return PropAction.NOTHING;
+               aladin.directory.setParam(XMATCH_RADIUS_KEY,nval);
+               return PropAction.SUCCESS;
+            } catch( Exception e1 ) {
+               update.action();
+               testRadius.setForeground(Color.red);
+            }
+            return PropAction.FAILED;
+         }
+      };
+
+      return Prop.propFactory(XMATCH_RADIUS_KEY,XMATCH_RADIUS_TITLE,XMATCH_RADIUS_HELP,testRadius,update,change);
+   }
+
+   static public final String    XMATCH_SELECTION_KEY   = "QueryXmatchSelection";
+   static public final String [] XMATCH_SELECTION       = { "best","all" };
+   static public final String    XMATCH_SELECTION_TITLE = "Xmatch selection";
+   static public final String    XMATCH_SELECTION_HELP  = "Match selection mode."
+         + "\n.all: all matches are kept. In this mode, the cross-match is symmetric."
+         + "\n.best: keep best match in the remote catalog for each row in the local catalog. "
+         + "In \"brest\" mode, the cross-match is not symmetric.";
+
+   public Prop getXmatchSelectionProp() {
+      final JComboBox<String> combo =  new JComboBox<String>( XMATCH_SELECTION );
+      final PropAction update = new PropAction() {
+         public int action() { combo.setSelectedItem( aladin.directory.getParam(XMATCH_SELECTION_KEY)); return PropAction.SUCCESS; }
+      };
+      final PropAction change = new PropAction() {
+         public int action() {
+            String s = (String)combo.getSelectedItem();
+            if( s.equals( aladin.directory.getParam(XMATCH_SELECTION_KEY)) ) return PropAction.NOTHING;
+            aladin.directory.setParam(XMATCH_SELECTION_KEY,s);
+            return PropAction.SUCCESS;
+         }
+      };
+      return Prop.propFactory(XMATCH_SELECTION_KEY,XMATCH_SELECTION_TITLE,XMATCH_SELECTION_HELP,combo,update,change);
+   }
+
+
+   static public final String    HIPS_FORMAT_KEY   = "QueryHipsFormat";
+   static public final String [] HIPS_FORMAT       = {"default", "preview (jpg|png)", "full dynamic (fits)" };
+   static public final String    HIPS_FORMAT_TITLE = "HiPS tile format";
+   static public final String    HIPS_FORMAT_HELP  = "The image HiPS and cube HiPS can be provided in two mode:\n"
+         + ".preview: the fastest mode but with a precomputed dynamic (8 bits)\n"
+         + ".full dynamic: the original pixel dynamic is provided. This mode is the slower.\n"
+         + "The \"default\" mode will use the server choice (generally preview)";
+
+   public Prop getHipsFmtProp() {
+      final JComboBox<String> combo =  new JComboBox<String>( HIPS_FORMAT );
+      final PropAction update = new PropAction() {
+         public int action() { combo.setSelectedItem( aladin.directory.getParam(HIPS_FORMAT_KEY)); return PropAction.SUCCESS; }
+      };
+      final PropAction change = new PropAction() {
+         public int action() {
+            String s = (String)combo.getSelectedItem();
+            if( s.equals( aladin.directory.getParam(HIPS_FORMAT_KEY)) ) return PropAction.NOTHING;
+            aladin.directory.setParam(HIPS_FORMAT_KEY,s);
+            return PropAction.SUCCESS;
+         }
+      };
+      return Prop.propFactory(HIPS_FORMAT_KEY,HIPS_FORMAT_TITLE,HIPS_FORMAT_HELP,combo,update,change);
+   }
+
+   static public final String    CAT_LIMIT_KEY   = "QueryCatLimit";
+   static public final String [] CAT_LIMIT       = {"100","1000","10000","100000","unlimited"};
+   static public final String    CAT_LIMIT_TITLE = "Max returned rows";
+   static public final String    CAT_LIMIT_HELP  = "Maximal number of rows returned by table or catalog server.\n"
+         + "Note that this facility may be not implemented by some servers, or some servers can have an internal smaller limit.";
+
+   public Prop getCatLimitProp() {
+      final JComboBox<String> combo =  new JComboBox<String>( CAT_LIMIT );
+      final PropAction update = new PropAction() {
+         public int action() { combo.setSelectedItem( aladin.directory.getParam(CAT_LIMIT_KEY)); return PropAction.SUCCESS; }
+      };
+      final PropAction change = new PropAction() {
+         public int action() {
+            String s = (String)combo.getSelectedItem();
+            if( s.equals( aladin.directory.getParam(CAT_LIMIT_KEY)) ) return PropAction.NOTHING;
+            aladin.directory.setParam(CAT_LIMIT_KEY,s);
+            return PropAction.SUCCESS;
+         }
+      };
+      return Prop.propFactory(CAT_LIMIT_KEY,CAT_LIMIT_TITLE,CAT_LIMIT_HELP,combo,update,change);
+   }
+
+   static public final String    CAT_COLUMNS_KEY   = "QueryCatColumns";
+   static public final String [] CAT_COLUMNS       = {"default","all"};
+   static public final String    CAT_COLUMNS_TITLE = "Returned columns";
+   static public final String    CAT_COLUMNS_HELP  = "List of columns returned by the server:\n"
+         + ".default: the server returns a default list of rows\n"
+         + ".all: the server returns all columns\n"
+         + "Note that this facility may be not implemented by some servers";
+
+   public Prop getCatColumnProp() {
+      final JComboBox<String> combo =  new JComboBox<String>( CAT_COLUMNS );
+      final PropAction update = new PropAction() {
+         public int action() { combo.setSelectedItem( aladin.directory.getParam(CAT_COLUMNS_KEY)); return PropAction.SUCCESS; }
+      };
+      final PropAction change = new PropAction() {
+         public int action() {
+            String s = (String)combo.getSelectedItem();
+            if( s.equals( aladin.directory.getParam(CAT_COLUMNS_KEY)) ) return PropAction.NOTHING;
+            aladin.directory.setParam(CAT_COLUMNS_KEY,s);
+            return PropAction.SUCCESS;
+         }
+      };
+      return Prop.propFactory(CAT_COLUMNS_KEY,CAT_COLUMNS_TITLE,CAT_COLUMNS_HELP,combo,update,change);
+   }
+
 
 }

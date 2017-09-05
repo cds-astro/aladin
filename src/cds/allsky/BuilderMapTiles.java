@@ -21,6 +21,7 @@
 
 package cds.allsky;
 
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
@@ -332,7 +333,7 @@ public class BuilderMapTiles extends Builder {
 
       context.info("MAP structure: nbRecord=" + nbRecord + " nbValPerSegment=" + nbValPerSegment + " valType=" + type);
 
-      // Lecture séquentiel enr par enr du fichier Map et création ou maj des tuiles corresdantes
+      // Lecture séquentiel enr par enr du fichier Map et création ou maj des tuiles correspondantes
       // On retient la dernière tuile pour gagner du temps
       RandomAccessFile f = null;
       Fits fits = null, lastFits = null;
@@ -353,7 +354,7 @@ public class BuilderMapTiles extends Builder {
       sizeBuf = nbRecordInBuf * sizeRecord;
       byte buf[] = new byte[sizeBuf];
 
-      // System.out.println("nbRecordInBuf="+nbRecordInBuf+" sizeBuf="+sizeBuf);
+//      System.out.println("nbRecordInBuf="+nbRecordInBuf+" sizeBuf="+sizeBuf);
 
       long count, npix;
       int posSample;
@@ -430,7 +431,10 @@ public class BuilderMapTiles extends Builder {
             for( long n = 0; n < nbRecord; n++, cRecordInBuf++ ) {
 
                if( cRecordInBuf == nbRecordInBuf ) {
-                  f.readFully(buf);
+//                  f.readFully(buf);
+                  int nbytes = f.read(buf);
+                  if( nbytes==-1 ) throw new EOFException();
+                  nbRecordInBuf = nbytes/sizeRecord;
                   cRecordInBuf = 0;
                }
 

@@ -60,16 +60,19 @@
 
 %ActionName        CS
 %Description       Generic CS query
-%Url               $4RA=$1&DEC=$2&SR=$3&VERB=3
-%Param.Description $4=Base URL (incl. '?')
+%Url               $4RA=$1&DEC=$2&SR=$3&VERB=$5
 %Param.Description $1=Right Ascension
 %Param.Description $2=Declination
 %Param.Description $3=Radius in deg
+%Param.Description $4=Base URL (incl. '?')
+%Param.Description $5=Returned columns
 %Param.DataType    $1=Target(RAd)
 %Param.DataType    $2=Target(DEd)
 %Param.DataType    $3=Field(RADIUSd)
 %Param.Value       $3=0.17
 %Param.DataType    $4=BaseUrl
+%Param.Value       $5=2 - default
+%Param.Value       $5=3 - all
 %ResultDataType    Mime(text/xml)
 %Aladin.Menu       VO protocols..
 %Aladin.XLabel     Generic Cone Search query

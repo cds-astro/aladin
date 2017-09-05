@@ -77,6 +77,7 @@ public class MySplitPane extends JSplitPane {
       }
    }
    
+   
    /** True si le component de référence est réduit au max (invisible) */
    public boolean isReduced() { return getCompSize()<=getDividerSize(); }
    

@@ -235,10 +235,8 @@ public class Calque extends JPanel implements Runnable {
       
       setBackground( aladin.getBackground());
       add(splitH,BorderLayout.CENTER);
-
-
-      
    }
+   
 
    /** Insère ou enlève la scrollbar verticale de la pile si nécessaire
     * @return true s'il y a eu un changement d'état

@@ -106,14 +106,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    static private String DIRECTORY, MULTICOL;
    
-   static protected String AWCSLAB,AWCSTIP,AWSIATIP,AWSSATIP,AWMOCQLAB,AWMOCQLABTIP,AWMOCTITLE,
+   static protected String AWCSLAB,AWCSTIP,AWMCSTIP,AWSIATIP,AWSSATIP,AWMOCQLAB,AWMOCQLABTIP,AWMOCTITLE,
    AWMOC1,AWMOC1TIP,AWMOC2,AWMOC2TIP,AWMOC3,AWMOC3TIP;
    
    static protected String ALLCOLL,MYLIST,ALLCOLLHTML,MYLISTHTML,
    AWSKYCOV,AWMOCUNK,AWHIPSRES,AWNBROWS,AWREFPUB,AWPROGACC,AWPROGACCTIP,
    AWDATAACC,AWDATAACCTIP,AWDATAACCTIP1,AWINVIEWTIP,AWMOCQLABTIP2,
    AWXMATCH,AWXMATCHTIP,AWCRIT,AWCRITTIP,AWMOCX,AWMOCXTIP,AWDM,AWDMTIP,AWPROGEN,
-   AWPROGENTIP,AWSCANONLY,AWSCANONLYTIP,AWLOAD,AWMOCLABTIP2,FPCLOSE;
+   AWPROGENTIP,AWSCANONLY,AWSCANONLYTIP,AWLOAD,FPCLOSE;
 
 
    static private final String UPDATING   = "  updating...";
@@ -138,7 +138,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    private IconCollapse iconCollapse;    // L'icone pour développer/réduire l'arbre
    private Timer timer = null;           // Timer pour le réaffichage lors du chargement
    private JLabel dir=null;              // Le titre qui apparait au-dessus de l'arbre
+   private FrameProp frameProp = null;   // Frame des paramètres pour les différents types d'interrogation
    
+
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
    private static String  MOCSERVER_INIT = "*&fields=!hipsgen*&get=record&fmt=asciic";
    
@@ -159,7 +161,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       ALLCOLLHTML = "-- "+S("DTALLCOLL")+" --";
       ALLCOLL = ALLCOLLHTML;
       AWCSLAB = S("AWCSLAB");
-      AWCSTIP = S("AWCSTIP");
+      AWMCSTIP = S("AWMCSTIP");
       AWSIATIP = S("AWSIATIP");
       AWSSATIP = S("AWSSATIP");
       AWMOCQLAB = S("AWMOCQLAB");
@@ -196,7 +198,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       AWSCANONLY = S("AWSCANONLY");
       AWSCANONLYTIP = S("AWSCANONLYTIP");
       AWLOAD = S("AWLOAD");
-      AWMOCLABTIP2 = S("AWMOCLABTIP2");
       FPCLOSE = S("FPCLOSE");
    }
    
@@ -374,6 +375,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          }
          public void mouseDragged(MouseEvent e) { }
       });
+      
+      // Chargement des paramètres initiaux
+      initParams();
       
 //       Chargement de l'arbre initial
       (new Thread(){
@@ -579,41 +583,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( mocServerLoading || mocServerUpdating ) {
                Slide.drawBall(g, x, y, blinkState ? Color.white : Color.green );
             }
-//            else drawCross(g,x,y);
          } catch( Exception e ) { }
       }
 
       static private final int X = 6;
-//      private void drawCross(Graphics g, int x, int y) {
-//         cross = new Rectangle(x,y,X,X);
-//         String s = getText();
-//         if( s.length()==0 || s.startsWith(UPDATING) ) return;
-//         g.setColor( getBackground() );
-//         g.fillOval(x-3, y-3, X+7, X+7);
-//         g.setColor( Color.red.darker() );
-//         g.drawLine(x,y,x+X,y+X);
-//         g.drawLine(x+1,y,x+X+1,y+X);
-//         g.drawLine(x+2,y,x+X+2,y+X);
-//         g.drawLine(x+X,y,x,y+X);
-//         g.drawLine(x+X+1,y,x+1,y+X);
-//         g.drawLine(x+X+2,y,x+2,y+X);
-//      }
-//
-//      public void mouseClicked(MouseEvent e) { }
-//      public void mousePressed(MouseEvent e) { }
-//      public void mouseEntered(MouseEvent e) { }
-//      public void mouseExited(MouseEvent e) { }
-//
-//      void reset() {
-//         if( getText().length()==0 ) return;
-//         setText("");
-//         doFiltre();
-//      }
-//
-//      public void mouseReleased(MouseEvent e) {
-//         if( in(e.getX())  ) reset();
-//         else { iconFilter.setActivated(true); updateWidgets(); }
-//      }
     }
    
    /** Retourne true si on a sélectionné quelque chose de scannable */
@@ -671,7 +644,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    }
    
    private boolean tooMany( int n ) {
-      if( n>100 ) {
+      if( n>20 ) {
          if( !aladin.confirmation(S("DTTOOMANY")+" ("+n+")") ) return true;
       }
       return false;
@@ -1491,28 +1464,37 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    /** Retourne true si l'arbre est développé selon le défaut prévu */
    protected boolean isDefaultExpand() { return dirTree.isDefaultExpand(); }
    
-   /** Collapse l'arbre sauf le noeud courant */
-   protected void collapseAllExceptCurrent() {
+   /** Collapse/Expande l'arbre en fonction du noeud courant et de l'état de l'arbre */
+   protected void collapseOrNot() {
       
-      // Si j'ai une ou plusieurs branches sélectionnées
+      // Si j'ai une ou plusieurs branches sélectionnées...
       TreePath [] tps = dirTree.getSelectionPaths();
       if( tps!=null ) {
 
-         int mode=0;  // -1 collapse, 0-pas encore initialisé,  1 expand
-         
-         for( TreePath tp: tps ) {
+         // Sélection d'une feuille => on collapse tout l'arbre sauf la feuille
+         if( tps.length==1 && ((DefaultMutableTreeNode)tps[0].getLastPathComponent()).isLeaf() ) {
+            dirTree.defaultExpand(); 
+            dirTree.expandPath(tps[0].getParentPath());
+            dirTree.setSelectionPath(tps[0]);
             
-            // cas particulier de la racine => on ne referme pas tout
-            if( tp.getPathCount()==1 ) {
-               if( mode==1 || isDefaultExpand() ) { mode=1; dirTree.allExpand(); }
-               else { mode=-1; dirTree.defaultExpand(); }
+         // Selection de plusieurs noeud
+         } else {
 
-               // Cas de la sélection d'une branche
-            } else {
+            int mode=0;  // -1 collapse, 0-pas encore initialisé,  1 expand
+            for( TreePath tp: tps ) {
 
-               // S'il n'est pas totalement ouvert, je le fais
-               if( mode==1 || dirTree.isCollapsed(tp) ) { mode=1; dirTree.allExpand(tp); }
-               else  { mode=-1; dirTree.collapseRec(tp); }
+               // cas particulier de la racine => on ne referme pas tout
+               if( tp.getPathCount()==1 ) {
+                  if( mode==1 || isDefaultExpand() ) { mode=1; dirTree.allExpand(); }
+                  else { mode=-1; dirTree.defaultExpand(); }
+
+                  // Cas de la sélection d'une branche
+               } else {
+
+                  // S'il n'est pas totalement ouvert, je le fais
+                  if( mode==1 || dirTree.isCollapsed(tp) ) { mode=1; dirTree.allExpand(tp); }
+                  else  { mode=-1; dirTree.collapseRec(tp); }
+               }
             }
          }
 
@@ -1523,7 +1505,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       resetWasExpanded();
    }
-   
+
    /** Retourne true s'il n'y a pas d'arbre HiPS */
    protected boolean isFree() {
       return dirTree==null || dirTree.root==null ;
@@ -2369,6 +2351,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          threadUpdater=null;
       }
    }
+   
+   /****************** Gestion des paramètres des différents modes d'interrogation *************************/
+   
+   private HashMap<String, String> params = null;
+   
+   private void initParams() { params = TreeObjDir.paramsFactory(); }
+   
+   protected void setParam(String key, String val ) { params.put(key,val); }
+   protected String getParam(String key) { return params.get(key); }
 
    
    /********* Classe gérant une fenêtre d'information associée au HiPS cliqué dans l'arbre des HiPS ***************/
@@ -2450,11 +2441,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
          
          if( treeObjs.size()>1 )  {
-            a = new MyAnchor(aladin,MULTICOL+": "+treeObjs.size(),50,null,null);
-            a.setFont(a.getFont().deriveFont(Font.BOLD));
-            a.setFont(a.getFont().deriveFont(a.getFont().getSize2D()+1));
-            a.setForeground( Aladin.COLOR_GREEN );
-            PropPanel.addCouple(p,null, a, g,c);
             StringBuilder list = null;
             String sList=null,more=null;
             boolean hasCS = false;
@@ -2462,6 +2448,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             boolean hasSSA = false;
             boolean hasCDScat = false;
             boolean hasMoc = false;
+            boolean hasHips = false;
+            boolean hasGlobalAccess = false;
+            int nbIn = 0;
+            int nbInMayBe = 0;
+            int nbInHips = 0;
             
             for( TreeObjDir to1 : treeObjs ) {
                if( list==null ) list = new StringBuilder(to1.internalId);
@@ -2471,40 +2462,74 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                if( !hasSIA && to1.hasSIA() ) hasSIA=true;
                if( !hasSSA && to1.hasSSA() ) hasSSA=true;
                if( !hasMoc && to1.hasMoc() ) hasMoc=true;
+               if( !hasHips && to1.hasHips() ) hasHips=true;
+               if( !hasGlobalAccess && to1.hasGlobalAccess() ) hasGlobalAccess=true;
                if( !hasCDScat && to1.isCDSCatalog() ) hasCDScat=true;
                if( !flagScan && !to1.hasMoc() ) flagScan=true;
+               int inFlag = to1.getIsIn();
+               if( inFlag==1 ) nbIn++;
+               else if( inFlag==-1 ) nbInMayBe++;
+               if( inFlag!=0 && to1.hasHips() ) nbInHips++;
             }
+            
+            a = new MyAnchor(aladin,MULTICOL+": "+treeObjs.size(),50,null,null);
+            a.setFont(a.getFont().deriveFont(Font.BOLD));
+            a.setFont(a.getFont().deriveFont(a.getFont().getSize2D()+1));
+            a.setForeground( Aladin.COLOR_GREEN );
+            PropPanel.addCouple(p,null, a, g,c);
+            
             if( sList!=null ) more = list.toString();
             else sList=list.toString();
             
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
             mociBx = mocBx = csBx = null;
-
-            if( hasCS ) {
+            
+            // On utilise le checkbox CS pour cumuler à la fois les accès CS,SIA et SSA
+            if( hasCS || hasSIA || hasSSA || hasCDScat || hasGlobalAccess ) {
                csBx = bx = new JCheckBox(AWCSLAB);
                mocAndMore.add(bx);
                bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               Util.toolTip(bx,AWCSTIP);
-               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+               String info = nbIn+nbInMayBe==0 ? "(no data in the field)" :
+                  "("+(nbIn+nbInMayBe) +" collections "+(nbInMayBe>0?" may ":"should")+" have data in the field)";
+               Util.toolTip(bx,Util.fold(AWMCSTIP+"\n"+info,100,true));
+               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) 
+                     && nbIn+nbInMayBe>0);
                bg.add(bx);
             }
             
-            if( hasSIA ) {
-               siaBx= bx = new JCheckBox(AWCSLAB);
+            if( hasHips ) {
+               hipsBx = bx = new JCheckBox(AWPROGACC);
                mocAndMore.add(bx);
-               bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               Util.toolTip(bx,AWSIATIP);
-               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+               bx.setSelected(true);
+               String info = "("+nbInHips+" coll. have data in the field)";
+               Util.toolTip(bx,Util.fold(AWPROGACCTIP+"\n"+info,100,true));
             }
 
-            if( hasSSA ) {
-               ssaBx= bx = new JCheckBox(AWCSLAB);
-               mocAndMore.add(bx);
-               bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-               Util.toolTip(bx,AWSSATIP);
-               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
-            }
+//            if( hasCS ) {
+//               csBx = bx = new JCheckBox(AWCSLAB);
+//               mocAndMore.add(bx);
+//               bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+//               Util.toolTip(bx,AWCSTIP);
+//               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+//               bg.add(bx);
+//            }
+//            
+//            if( hasSIA ) {
+//               siaBx= bx = new JCheckBox(AWCSLAB);
+//               mocAndMore.add(bx);
+//               bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+//               Util.toolTip(bx,AWSIATIP);
+//               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+//            }
+//
+//            if( hasSSA ) {
+//               ssaBx= bx = new JCheckBox(AWCSLAB);
+//               mocAndMore.add(bx);
+//               bx.setSelected(hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+//               Util.toolTip(bx,AWSSATIP);
+//               bx.setEnabled( hasView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
+//            }
             
             if( hasCDScat && hasRegion ) {
                msBx = bx = new JCheckBox(AWMOCQLAB);
@@ -2515,7 +2540,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                
             }
 
-            if( (hasCS || hasSIA || hasSSA) && (hasMoc) ) {
+            if( (csBx!=null || hipsBx!=null || msBx!=null ) /* (hasCS || hasSIA || hasSSA) */ && (hasMoc) ) {
                JLabel labelPlus = new JLabel(" + ");
                mocAndMore.add(labelPlus);
             }
@@ -2674,7 +2699,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                
                msBx = bx = new JCheckBox(AWMOCQLAB);
                mocAndMore.add(bx);
-               Util.toolTip(bx,AWMOCLABTIP2);
+               Util.toolTip(bx,AWMOCQLABTIP);
                bx.setEnabled( hasRegion );
                bg.add(bx);
                
@@ -2754,18 +2779,19 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             /* if( to.hasPreview() ) */ preview = new Preview( to );
             
-            // Paramètre
-            b = new JButton(new ImageIcon(Aladin.aladin.getImagette("settings.png")));
-            b.setToolTipText("Parameters");
-            b.setMargin(new Insets(0,0,0,0));
-            b.setBorderPainted(false);
-            b.setContentAreaFilled(false);
-            control.add(b);
-            b.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) { parameters(); }
-            });
-
-
+            // Paramètres
+            if( to.hasProp() ) {
+               b = new JButton(new ImageIcon(Aladin.aladin.getImagette("settings.png")));
+               b.setToolTipText("Parameters");
+               b.setMargin(new Insets(0,0,0,0));
+               b.setBorderPainted(false);
+               b.setContentAreaFilled(false);
+               control.add(b);
+               final TreeObjDir to1 = treeObjs.get(0);
+               b.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent e) { parameters(to1); }
+               });
+            }
             
             // Info
             if( to.hasInfo() ) {
@@ -2837,7 +2863,17 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          bas.add(control,BorderLayout.CENTER);
          
          if( to!=null && to.internalId!=null ) {
-            MyAnchor x = new MyAnchor(aladin,to.internalId,100,to.prop.getRecord(null),null);
+//            MyAnchor x = new MyAnchor(aladin,to.internalId,100,to.prop.getRecord(null),null);
+            
+            final TreeObjDir to1 = to;
+            ActionListener action = new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  try {
+                     new FrameHipsProperties(to1.internalId+" properties",to1.prop.getRecord(null));
+                  } catch( Exception e2 ) { }
+               }
+            };
+            MyAnchor x = new MyAnchor(aladin,to.internalId,action);
             x.setForeground(Aladin.COLOR_BLUE);
             x.setFont( x.getFont().deriveFont(Font.BOLD));
             bas.add(x,BorderLayout.WEST);
@@ -2993,8 +3029,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          bkm.append("   "+cmd );
       }
       
-      void parameters() {
-         aladin.info("Parameter settings. Sorry, not yet implemented");
+      /** Affiche la fenêtre des paramètres */
+      void parameters(TreeObjDir to) {
+         if( !to.hasProp() ) {
+            if( frameProp!=null ) frameProp.setVisible(false);
+            return;
+         }
+         if( frameProp==null ) frameProp = new FrameProp(aladin,"Query parameters",to);
+         else frameProp.updateAndShow(to);
       }
       
       void info() {
@@ -3081,11 +3123,20 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             // CS et assimilés
             if( csBx!=null  && csBx.isSelected() ) {
+               if( tooMany(treeObjs.size()) ) return;
                for( TreeObjDir to : treeObjs ) {
+                  if( to.getIsIn()==0 ) continue; // Je n'interroge pas les collections hors champs
                        if( to.hasSIA() ) to.loadSIA();
                   else if( to.hasSSA() ) to.loadSSA();
                   else if( to.hasGlobalAccess() ) to.loadGlobalAccess();
                   else to.loadCS();
+               }
+            }
+            
+            if( hipsBx!=null && hipsBx.isSelected() ) {
+               if( tooMany(treeObjs.size()) ) return;
+               for( TreeObjDir to : treeObjs ) {
+                  if( to.hasHips() ) to.loadHips();
                }
             }
             
@@ -3097,7 +3148,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             }
             
             // Union des MOCs
-            if( mocBx!=null   && mocBx.isSelected() )  multiMocLoad(treeObjs,MultiMocMode.EACH);
+            if( mocBx!=null   && mocBx.isSelected() )  {
+               if( tooMany(treeObjs.size()) ) return;
+               multiMocLoad(treeObjs,MultiMocMode.EACH);
+            }
             if( mocuBx!=null  && mocuBx.isSelected() ) multiMocLoad(treeObjs,MultiMocMode.UNION);
             if( mociBx!=null  && mociBx.isSelected() ) multiMocLoad(treeObjs,MultiMocMode.INTER);
          }

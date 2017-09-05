@@ -1867,7 +1867,7 @@ final public class TableParser implements XMLConsumer {
 
       // Détection du DE et évaluation de la qualité de cette détection
       qual=-1;
-      if( ucd.equals("POS_EQ_DEC_MAIN") || ucd.equals("pos.eq.dec;meta.main") )qual=0;
+      if( ucd.equals("POS_EQ_DEC_MAIN") || ucd.equals("pos.eq.dec;meta.main") ) qual=0;
       else if( (typeFmt&MyInputStream.EPNTAP)!=0 && ID.equals("c2min") ) qual=50;
       else if( ucd.startsWith("POS_EQ_DEC") || ucd.startsWith("pos.eq.dec") ) qual=100;
       else if( (n=deName(name))>=0 ) {
@@ -1899,20 +1899,29 @@ final public class TableParser implements XMLConsumer {
       }
       else if( ucd.equals("POS_PMRA") || ucd.equals("pos.pm;pos.eq.ra") ) {
          try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=100; }
-         catch( Exception e ) { qual=101; }
+         catch( Exception e ) {
+            try { (new Unit(unit)).convertTo(new Unit("ms/yr")); qual=100; }
+            catch( Exception e1 ) { qual=101; }
+         }
       }
       else if( (n=pmraName(name))>=0 ) {
          if( ucd.startsWith("pos.pm") ) qual=200+n;
          else {
             try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=300+n; }
-            catch( Exception e ) { qual=600+n; }
+            catch( Exception e ) {
+               try { (new Unit(unit)).convertTo(new Unit("ms/yr")); qual=300+n; }
+               catch( Exception e1 ) { qual=600+n; }
+            }
          }
       }
       else if( (n=pmraSubName(name))>=0 ) {
          if( ucd.startsWith("pos.pm") ) qual=400+n;
          else {
             try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=500+n; }
-            catch( Exception e ) { qual=700+n; }
+            catch( Exception e ) {
+               try { (new Unit(unit)).convertTo(new Unit("ms/yr")); qual=500+n; }
+               catch( Exception e1 ) { qual=700+n; }
+            }
          }
       }
       if( qual>=0 &&  qualPMRA>qual ) {

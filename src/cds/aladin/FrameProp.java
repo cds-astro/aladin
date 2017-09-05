@@ -48,8 +48,8 @@ public class FrameProp extends JFrame implements ActionListener {
    private Propable obj=null;
    private PropPanel propPanel;
    
-   public FrameProp(Aladin aladin, Propable obj) {
-      super("Individual object properties");
+   public FrameProp(Aladin aladin, String title,Propable obj) {
+      super(title);
       this.aladin = aladin;
       Aladin.setIcon(this);
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);

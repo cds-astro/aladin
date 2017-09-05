@@ -28,17 +28,43 @@ package cds.aladin;
  *
  * @author Pierre Fernique [CDS]
 * @version 1.0 : nov 2015 - Creation
+* @version 1.1 : sept 2017 - Ajout de la création par simple chaine
  */
-public final class FrameHipsProperties extends FrameHeaderFits {
-    PlanBG plan;
+public class FrameHipsProperties extends FrameHeaderFits {
+    private PlanBG plan=null;
+    private String prop=null;
    
+    /**
+     * Visualisation des propriétés HiPS à partir de son plan
+     * @param plan
+     * @throws Exception
+     */
     protected FrameHipsProperties(PlanBG plan) throws Exception {
-       super(plan,"Properties");
+       this();
        this.plan = plan;
+    }
+    
+    /**
+     * Visualisation des propriétés HiPS directement passés en paramètre
+     * @param prop
+     * @throws Exception
+     */
+    protected FrameHipsProperties(String title,String prop) throws Exception {
+       this();
+       setTitle(title);
+       this.prop = prop;
+       seeHeaderFits();
+    }
+    
+    private FrameHipsProperties() throws Exception {
+       super(null,"Properties");
        Aladin.setIcon(this);
        makeTA(false);
     }
     
-    protected String getOriginalHeaderFits() { return plan.prop.getPropOriginal(); }
+    protected String getOriginalHeaderFits() {
+       if( prop!=null ) return prop;
+       return plan.prop.getPropOriginal();
+    }
 
 }

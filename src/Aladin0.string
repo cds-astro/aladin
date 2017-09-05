@@ -1161,7 +1161,7 @@ PROPPOLAOPTIONS Polarisation visualisation options
 PROPSEGMENTLENGTH Segments length
 PROPSEGMENTTHICK Segments thickness
 PROPSEGMENTDENSITY Number of segments
-PROPSCALINGFACTOR Scaling factor (for filters)
+PROPSCALINGFACTOR Scaling factor
 PROPPOINTING Pointing centers
 PROPPOINTINGLABEL Export pointing centers
 PROPDEFCATPROJ	Drawing method
@@ -1244,7 +1244,7 @@ PROPPOLAOPTIONS.fr Options de visualisation de la polarisation
 PROPSEGMENTLENGTH.fr Longueur des segments
 PROPSEGMENTTHICK.fr Epaisseur des segments
 PROPSEGMENTDENSITY.fr Nombre de segments
-PROPSCALINGFACTOR.fr Facteur d'échelle (pour les filtres)
+PROPSCALINGFACTOR.fr Facteur d'échelle
 PROPPOINTING.fr Pointages
 PROPPOINTINGLABEL.fr Exporter les positions des pointages
 PROPDEFCATPROJ.fr	Méthode d'affichage
@@ -3264,10 +3264,12 @@ AWSIATIP	Simple Image Access (SIA) query\ncovering the current view for the sele
 AWSIATIP.fr	Interrogation "Simple Image Access (SIA)\ncouvrant la vue courante pour les collections sélectionnées
 AWSSATIP	Simple Spectra Access (SSA) query\ncovering the current view for the selected collections
 AWSSATIP.fr	Interrogation "Simple Spectra Access (SSA)\ncouvrant la vue courante pour les collections sélectionnées
+AWMCSTIP	Multi-protocol Cone search (CS,SIA,SSA) covering the current view\nfor the selected collections
+AWMCSTIP.fr	Recherche par cônes (protocoles: CS,SIA,SSA) couvrant la vue courante\npour les collections sélectionnées
 AWMOCQLAB	by region or MOC
 AWMOCQLAB.fr	par région ou MOC
 AWMOCQLABTIP	Only load the sources inside the selected region or MOC\nfor the selected collections supporting this access query.
-AWMOCLABTIP.fr	Charge toutes les sources à l'intérieur de la région ou du MOC spécifié,\npour toutes les collections sélectionnées supportant ce mode d'interrogation.
+AWMOCQLABTIP.fr	Charge toutes les sources à l'intérieur de la région ou du MOC spécifié,\npour toutes les collections sélectionnées supportant ce mode d'interrogation.
 AWMOCTITLE	Coverages :
 AWMOCTITLE.fr	Couvertures :
 AWMOC1	all

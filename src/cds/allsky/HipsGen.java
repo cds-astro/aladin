@@ -92,6 +92,7 @@ public class HipsGen {
 //      for (Object opt : keys) {
          
       for( String opt : properties.getKeys() ) {
+         if( opt.startsWith("#") ) continue;
          String val = properties.getProperty(opt);
 
          try {

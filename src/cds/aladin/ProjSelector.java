@@ -22,7 +22,6 @@
 package cds.aladin;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -84,6 +83,12 @@ public class ProjSelector extends JPanel {
       add( pCombo, BorderLayout.CENTER);
    }
    
+   protected void setProjection(String s) { 
+      int index = Projection.getAlaProjIndex(s);
+      if( index<0 ) return;
+      combo.setSelectedIndex(index);
+   }
+
    /** Change la projection de tous les plans HiPS exceptés ceux qui ont une
     * projection particulière 
     * @param s nom de la projection (Projection.alaProj[])

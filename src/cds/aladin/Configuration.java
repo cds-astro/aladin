@@ -816,6 +816,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( i<0 ) throw new Exception("Unknown projection ["+s+"]");
       String s1 = Projection.getAlaProj(i);
       set(PROJALLSKY,s1);
+      aladin.projSelector.setProjection(s1); // Pour garder la cohérence du popup menu dans la v10
    }
 
    // EN ATTENDANT
@@ -1913,7 +1914,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       String filterMocDir = configDir + Util.FS + MOCFILTER;
       File mocDir = new File(filterMocDir);
       Util.deleteDir( mocDir );
-      System.out.println("XXX Configuration.save1() delete "+mocDir);
       
       boolean mocDirCreated=false;
       
@@ -1941,11 +1941,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
                      mocDir.mkdir();
                      Util.pause(100);
                      mocDirCreated=true;
-                     System.out.println("XXX Configuration.save1() => create "+mocDir);
                   }
                   
                   String mocName = name2MocName( name );
-                  System.out.println("XXX Configuration.save1() => writing "+mocName+" mocInfo="+mocInfo+" "+DirectoryFilter.getASCII(moc));
                   OutputStream out = new FileOutputStream( filterMocDir + Util.FS + mocName );
                   moc.writeFITS(out);
                   out.close();
@@ -2469,8 +2467,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected void setDirFilter(String name,String expr, HealpixMoc moc) {
       filterExpr.put(name, expr);
       if( moc!=null ) filterMoc.put(name,moc);
-      
-      System.out.println("XXX Configuration.setDirFilter("+name+") "+expr+" moc="+DirectoryFilter.getASCII(moc));
    }
 
    static private final int MAXLASTFILE = 20;

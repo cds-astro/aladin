@@ -256,11 +256,11 @@ public class MyProperties {
             opos=pos;
             return rep;
          }
-		@Override
-		public void remove() {
-			// TODO Auto-generated method stub
-			
-		}
+        @Override
+        public void remove() {
+            // TODO Auto-generated method stub
+            
+        }
       };
    }
    
@@ -599,8 +599,9 @@ public class MyProperties {
       
       s.append(align("%ActionName", 20) +" "+ gluId+".hpx\n");
       s1 = get("obs_title");
-      if( s1==null ) get("obs_collection");
-      if( s1!=null ) s.append(align("%Description", 20) +" "+ s1+"\n");
+      if( s1==null ) s1=get("obs_collection");
+      if( s1==null ) s1="-- missing description --";
+      s.append(align("%Description", 20) +" "+ s1+"\n");
       s.append(align("%Owner", 20) +" aladin\n");
       s.append(align("%DistribDomain", 20) +" ALADIN\n");
       

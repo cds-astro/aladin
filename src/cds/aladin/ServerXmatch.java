@@ -104,22 +104,44 @@ public class ServerXmatch extends ServerMocQuery  {
       out.writeFile("cat1", null, file, false);
    }
    
+   private String separation=null;
+   protected void setSeparation(String separation) { this.separation=separation; }
+   protected String getSeparation() {
+      if( separation!=null ) return separation;
+      return "";
+   }
+   
+   private String selection=null;
+   protected void setSelection(String selection) { this.selection=selection; }
+   protected String getSelection() {
+      if( selection!=null ) return selection;
+      return "";
+   }
+   
    protected void addParameter( MultiPartPostOutputStream out ) throws Exception {
       String catName = getCatName();
       aladin.trace(4,"Xmatch ["+catName+"]...");
       
       out.writeField("REQUEST", "xmatch");
       out.writeField("cat2", catName);
-      out.writeField("distMaxArcsec", "5");
-      out.writeField("selection", "best");
+      
+      String separation = getSeparation();
+      if( separation.length()==0 ) separation="5";
+      out.writeField("distMaxArcsec", separation);
+      
+      String selection = getSelection();
+      if( selection.length()==0 ) selection="best";
+      out.writeField("selection", selection);
+      
 //      out.writeField("cols1", "");
       out.writeField("RESPONSEFORMAT", "votable");
       
-//      String limit = getLimit();
-//      if ( ! limit.equals("unlimited")) {
-//          limit = limit.replaceAll(",", "");
-//          out.writeField("MAXREC", limit);
-//      }
+      String limit = getLimit();
+      if( limit.length()==0 ) limit="unlimited";
+      if( !limit.equals("unlimited")) {
+          limit = limit.replaceAll(",", "");
+          out.writeField("MAXREC", limit);
+      }
    }
 
    protected void log() {

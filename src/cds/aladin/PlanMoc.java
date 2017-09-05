@@ -35,6 +35,8 @@ import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
 import healpix.essentials.HealpixBase;
+import healpix.essentials.Pointing;
+import healpix.essentials.Vec3;
 
 /**
  * Génération d'un plan MOC à partir d'un flux
@@ -152,7 +154,7 @@ public class PlanMoc extends PlanBGCat {
    
    /** Retourne le Moc.maxOrder réel, même pour les vieux MOCs dont le Norder est généralement
     * faux */
-   private int getRealMaxOrder(HealpixMoc m) {
+   static private int getRealMaxOrder(HealpixMoc m) {
       int nOrder = m.getMaxOrder();
       if( nOrder<=0 ) return nOrder;
       Array a;
@@ -181,98 +183,126 @@ public class PlanMoc extends PlanBGCat {
 //         return pcat;
 //      }
 //   
-//   public ArrayList<double[]> getPerimeter(HealpixMoc moc) throws Exception {
-//      if( moc==null ) return null;
-//      int maxOrder = getRealMaxOrder(moc);
-//      ArrayList<double[]> a = new ArrayList<double[]>();
-//      if( maxOrder==-1 || moc.isAllSky() ) return a;
-//      HealpixMoc done = new HealpixMoc( moc.getCoordSys(), moc.getMinLimitOrder(),maxOrder );
-//      HealpixBase hpx= CDSHealpix.getHealpixBase(maxOrder);
-//
-//      Iterator<Long> it = moc.pixelIterator();
-//      while( it.hasNext() ) {
-//         long pix = it.next();
-//         parcoursBord(hpx,moc,done,a,maxOrder,pix,0,0);
-//         if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
-//      }
-//
-//      return a;
-//   }
-//   
-//   private void parcoursBord(HealpixBase hpx, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
-//         int maxOrder, long pix, int sens, int rec ) throws Exception {
-////      for( int i=0; i<rec; i++ ) System.out.print("  ");
-////      System.out.println(maxOrder+"/"+pix+" sens="+sens);
-//      if( done.isIntersecting(maxOrder,pix) ) return;
-//      
-//      if( rec>10000 ) return;
-////      if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
-//      
-//      done.add(maxOrder,pix);
-//      
-//      long [] voisins = getVoisins(hpx,moc,maxOrder,pix);
-//      double [][] corners = null;
-//      for( int j=0; j<4; j++ ) {
-//         int i = (sens+j)%4;
-//         long voisin = voisins[i];
-//         if( voisin!=-1 ) continue;
-//         if( corners==null ) corners = getCorners(hpx,pix);
-//         
-//         boolean flagAdd=true;
-////         if( a.size()>1 ) {
-////            double [] bisCorner = a.get( a.size()-1 );
-////            double [] lastCorner = a.get( a.size()-2 );
-////            if( bisCorner==null && 
-////                  (lastCorner!=null && lastCorner[0]==corners[i][0] && lastCorner[1]==corners[i][1]) ) {
-////               a.remove(a.size()-1);
-////               flagAdd=false;
-////            }
-////         }
-//         if( flagAdd && a.size()>0 ) {
-//            double [] lastCorner = a.get( a.size()-1 );
-//            flagAdd = lastCorner==null || lastCorner[0]!=corners[i][0] || lastCorner[1]!=corners[i][1];
-//         }
-//         
-//         if( flagAdd ) a.add( corners[i]);
-//         a.add( corners[ i<3?i+1:0] );
-//         
-//         long nextVoisin = voisins[ i<3 ? i+1 : 0 ];
-//         if( nextVoisin!=-1 ) {
-//            
-//            long [] vVoisins = getVoisins(hpx,moc,maxOrder,nextVoisin);
-//            long nNextVoisin = vVoisins[i];
-//            if( nNextVoisin!=-1 ) {
-//               parcoursBord(hpx,moc,done,a,maxOrder,nNextVoisin,i==0?3:i-1,rec+1);
+ 
+   /**
+    * Crée une chaine donnant la liste des coordonnées du perimetre
+    * @param v
+    * @param moc
+    * @return
+    * @throws Exception
+    */
+   static public String createPerimeterString(HealpixMoc moc) throws Exception {
+      StringBuilder res = null;
+      ArrayList<double[]> a = getPerimeter(moc);
+
+      for( int i=a.size()-1; i>=0; i-- ) {
+         double [] c = a.get(i);
+         if( c==null ) continue;
+         if( res==null ) res = new StringBuilder();
+         res.append(","+c[0]+","+c[1]);
+      }
+      return res.toString();
+   }
+
+   
+   /**
+    * Retourne la liste des coordonnées du périmètres
+    * @param moc
+    * @return
+    * @throws Exception
+    */
+   static public ArrayList<double[]> getPerimeter(HealpixMoc moc) throws Exception {
+      if( moc==null ) return null;
+      int maxOrder = getRealMaxOrder(moc);
+      ArrayList<double[]> a = new ArrayList<double[]>();
+      if( maxOrder==-1 || moc.isAllSky() ) return a;
+      HealpixMoc done = new HealpixMoc( moc.getCoordSys(), moc.getMinLimitOrder(),maxOrder );
+      HealpixBase hpx= CDSHealpix.getHealpixBase(maxOrder);
+
+      Iterator<Long> it = moc.pixelIterator();
+      while( it.hasNext() ) {
+         long pix = it.next();
+         parcoursBord(hpx,moc,done,a,maxOrder,pix,0,0);
+         if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
+      }
+
+      return a;
+   }
+   
+   static private void parcoursBord(HealpixBase hpx, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
+         int maxOrder, long pix, int sens, int rec ) throws Exception {
+//      for( int i=0; i<rec; i++ ) System.out.print("  ");
+//      System.out.println(maxOrder+"/"+pix+" sens="+sens);
+      if( done.isIntersecting(maxOrder,pix) ) return;
+      
+      if( rec>10000 ) return;
+//      if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
+      
+      done.add(maxOrder,pix);
+      
+      long [] voisins = getVoisins(hpx,moc,maxOrder,pix);
+      double [][] corners = null;
+      for( int j=0; j<4; j++ ) {
+         int i = (sens+j)%4;
+         long voisin = voisins[i];
+         if( voisin!=-1 ) continue;
+         if( corners==null ) corners = getCorners(hpx,pix);
+         
+         boolean flagAdd=true;
+//         if( a.size()>1 ) {
+//            double [] bisCorner = a.get( a.size()-1 );
+//            double [] lastCorner = a.get( a.size()-2 );
+//            if( bisCorner==null && 
+//                  (lastCorner!=null && lastCorner[0]==corners[i][0] && lastCorner[1]==corners[i][1]) ) {
+//               a.remove(a.size()-1);
+//               flagAdd=false;
 //            }
-//            else parcoursBord(hpx,moc,done,a,maxOrder,nextVoisin,i,rec+1);
-//            if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
 //         }
-//      }
-//   }
-//   
-//   static final private int [] A = { 2, 1, 0, 3 };
-//
-//   // Retourne les coordonnées des 4 coins du pixel HEALPix indiqué
-//   // Ordre des coins => S, W, N, E
-//   private double [][] getCorners(HealpixBase hpx,long pix) throws Exception {
-//      Vec3[] tvec = hpx.boundaries(pix,1);   // N W S E
-//      double [][] corners = new double[tvec.length][2];
-//      for (int i=0; i<tvec.length; ++i) {
-//         Pointing pt = new Pointing(tvec[i]);
-//         int j=A[i];
-//         corners[j][0] = ra(pt);
-//         corners[j][1] = dec(pt);
-//      }
-//      return corners;
-//   }
-//   
-//   public static final double cPr = Math.PI / 180;
-//   static private double dec(Pointing ptg) { return (Math.PI*0.5 - ptg.theta) / cPr; }
-//   static private double ra(Pointing ptg) { return ptg.phi / cPr; }
+         if( flagAdd && a.size()>0 ) {
+            double [] lastCorner = a.get( a.size()-1 );
+            flagAdd = lastCorner==null || lastCorner[0]!=corners[i][0] || lastCorner[1]!=corners[i][1];
+         }
+         
+         if( flagAdd ) a.add( corners[i]);
+         a.add( corners[ i<3?i+1:0] );
+         
+         long nextVoisin = voisins[ i<3 ? i+1 : 0 ];
+         if( nextVoisin!=-1 ) {
+            
+            long [] vVoisins = getVoisins(hpx,moc,maxOrder,nextVoisin);
+            long nNextVoisin = vVoisins[i];
+            if( nNextVoisin!=-1 ) {
+               parcoursBord(hpx,moc,done,a,maxOrder,nNextVoisin,i==0?3:i-1,rec+1);
+            }
+            else parcoursBord(hpx,moc,done,a,maxOrder,nextVoisin,i,rec+1);
+            if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
+         }
+      }
+   }
+   
+   static final private int [] A = { 2, 1, 0, 3 };
+
+   // Retourne les coordonnées des 4 coins du pixel HEALPix indiqué
+   // Ordre des coins => S, W, N, E
+   static private double [][] getCorners(HealpixBase hpx,long pix) throws Exception {
+      Vec3[] tvec = hpx.boundaries(pix,1);   // N W S E
+      double [][] corners = new double[tvec.length][2];
+      for (int i=0; i<tvec.length; ++i) {
+         Pointing pt = new Pointing(tvec[i]);
+         int j=A[i];
+         corners[j][0] = ra(pt);
+         corners[j][1] = dec(pt);
+      }
+      return corners;
+   }
+   
+   public static final double cPr = Math.PI / 180;
+   static private double dec(Pointing ptg) { return (Math.PI*0.5 - ptg.theta) / cPr; }
+   static private double ra(Pointing ptg) { return ptg.phi / cPr; }
 
    // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'ils sont en dehors du MOC   
    // Ordre des voisins => W, N, E, S
-   private long [] getVoisins(HealpixBase hpx, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+   static private long [] getVoisins(HealpixBase hpx, HealpixMoc moc, int maxOrder,long npix) throws Exception {
       long [] voisins = new long[4];
       long [] neib = hpx.neighbours(npix);
       for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {

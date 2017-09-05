@@ -288,7 +288,7 @@ public class ServerMocQuery extends Server  {
       out.writeField("mode", "mocfile");
       out.writeField("format", "votable");
       String limit = getLimit();
-      if ( ! limit.equals("unlimited")) {
+      if ( !limit.equals("unlimited")) {
           limit = limit.replaceAll(",", "");
           out.writeField("limit", limit);
       }

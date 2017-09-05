@@ -87,7 +87,7 @@ public class IconCollapse extends MyIcon {
    
    protected void submit() {
       if( !isAvailable() ) return;
-      aladin.directory.collapseAllExceptCurrent();
+      aladin.directory.collapseOrNot();
       repaint();
    }
       

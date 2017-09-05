@@ -1034,19 +1034,20 @@ public class PlanBG extends PlanImage {
       //      if( allsky!=null ) { allsky.free(); allsky=null; }
    }
 
-   @Override
-   protected void setPropertie(String prop,String specif,String value) throws Exception {
-      if( prop.equalsIgnoreCase("Projection") ) {
-         Projection p = this.projd;
-         this.modifyProj(null,Projection.SIMPLE,p.alphai,p.deltai,p.rm1,
-               p.cx,p.cy,p.r1,p.rot,p.sym,Projection.getProjType(value),p.system);
-         aladin.view.newView(1);
-         aladin.calque.repaintAll();
-      } else {
-         super.setPropertie(prop,specif,value);
-      }
-   }
-
+   // DEJA PRIS EN COMPTE PAR "proj"
+//   @Override
+//   protected void setPropertie(String prop,String specif,String value) throws Exception {
+//      if( prop.equalsIgnoreCase("Projection") ) {
+//         Projection p = this.projd;
+//         this.modifyProj(null,Projection.SIMPLE,p.alphai,p.deltai,p.rm1,
+//               p.cx,p.cy,p.r1,p.rot,p.sym,Projection.getProjType(value),p.system);
+//         aladin.view.newView(1);
+//         aladin.calque.repaintAll();
+//      } else {
+//         super.setPropertie(prop,specif,value);
+//      }
+//   }
+   
    protected int getPolaScaleFactor() {
       return polaScaleFactor;
    }

@@ -1146,6 +1146,24 @@ public class Source extends Position implements Comparator {
        if( info==null ) return 0;
        return new StringTokenizer(info,"\t").countTokens();
     }
+    
+    /** Fournit un enregistrement nom = valeur unit description pour tous les champs */
+    public String getRecord() {
+       StringBuilder rep = new StringBuilder();
+       String [] names = getNames();
+       String [] values = getValues();
+       String [] desc = getDescriptions();
+       String [] units = getUnits();
+       
+       for( int i=0; i<names.length; i++ ) {
+          if( values[i].trim().length()==0 ) continue;
+          String d = desc[i]== null || desc[i].length()==0 ? "" : 
+             desc[i].length()>40 ? " / "+desc[i].substring(0,38)+"...": " / "+desc[i];
+          String u = units[i]==null || units[i].length()==0 ? "" : " "+units[i];
+          rep.append(Util.align(names[i], 15)+"= "+ Util.align(values[i]+u,20)+d+"\n");
+       }
+       return rep.toString();
+    }
 
     /** Retourne la liste des noms de chaque valeur */
     public String [] getNames() { return getMeta(0); }
@@ -1171,6 +1189,9 @@ public class Source extends Position implements Comparator {
     /** Retourne la liste des nullValues pour chaque valeur */
     public String [] getNullValues() { return getMeta(7); }
 
+    /** Retourne la liste des descriptions pour chaque valeur */
+    public String [] getDescriptions() { return getMeta(8); }
+
     /** Retourne la liste d'une metadata particulière associée aux valeurs
      *  @param m 0:label, 1:unit,  2:ucd
      */
@@ -1187,6 +1208,7 @@ public class Source extends Position implements Comparator {
              case 5: u[i]=leg.field[i].width;  break;
              case 6: u[i]=leg.field[i].precision;  break;
              case 7: u[i]=leg.field[i].nullValue;  break;
+             case 8: u[i]=leg.field[i].description;  break;
           }
        }
        return u;
@@ -1202,7 +1224,9 @@ public class Source extends Position implements Comparator {
    /** Returns the unit for the field at position pos */
    protected String getUnit(int pos) {
     	if(pos<0) return "";
-    	return leg.field[pos].unit;
+    	String u = leg.field[pos].unit;
+    	u = u.replace("year","yr");   // pour faire plaisir à l'ESAC pour Gaia qui utilise des unités non conformes ni à l'IVOA, ni à l'UAI
+    	return u;
    }
 
    /** VOTable just for this source */

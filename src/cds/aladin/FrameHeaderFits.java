@@ -278,7 +278,8 @@ public class FrameHeaderFits extends JFrame {
    }
 
   /** Construction du Frame de visualisation du Header FITS */
-   public void makeTA(boolean savable) {
+   public void makeTA(boolean savable) { makeTA(savable,600,600); }
+   public void makeTA(boolean savable,int width,int height) {
       JButton b;
 
       df=new DefaultStyledDocument() ;
@@ -292,8 +293,9 @@ public class FrameHeaderFits extends JFrame {
       ta.setFont( Aladin.COURIER );
       ta.setEditable(savable); 
 
-      JScrollPane sc = new JScrollPane(ta);
-      sc.setPreferredSize(new Dimension(600,600));
+      JScrollPane sc = new JScrollPane(ta,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      sc.setPreferredSize(new Dimension(width,height));
       JPanel p = new JPanel();
       ts = new JTextField(10);
       ts.addKeyListener(new KeyAdapter() {

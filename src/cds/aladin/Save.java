@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -1168,6 +1169,11 @@ public final class Save extends JFrame implements ActionListener {
          append(CR+"     color=\""+Action.findColorName(p.c)+"\"");
       }
       if( p.type==Plan.TOOL && ((PlanTool)p).isCatalog() ) append(CR+"     withsource=\"true\"");
+      if( p.isCatalog() ) {
+         String shape = Source.TYPENAME[ p.sourceType ];
+         append(CR+"     shape=\""+shape+"\"");
+      }
+      if( p.getScalingFactor()!=1 ) append(CR+"     scalingfactor=\""+p.getScalingFactor()+"\"");
       if( !p.isSelectable() )   append(CR+"     selectable=\"false\"");
       if( p.isImage() ) {
          PlanImage pi = (PlanImage)p;
@@ -1946,6 +1952,25 @@ public final class Save extends JFrame implements ActionListener {
       return saveImageFITS(file,w,h,a,null);
    }
     */
+   
+   /** Sauvegarde d'un MOC sous la forme d'une liste de coordonnées du périmètre
+    * @param filename
+    * @param p
+    * @return
+    * @throws Exception
+    */
+   protected boolean saveMocAsAJS(String filename, PlanMoc p) {
+      PrintWriter fo =null;
+      try {
+         fo = new PrintWriter(new FileOutputStream(new File(filename)));
+         String s = PlanMoc.createPerimeterString(p.getMoc());
+         fo.print("#AJS\ndraw polyline("+s+")\n");
+         fo.close();
+         fo=null;
+      } catch( Exception e ) { e.printStackTrace(); return false; }
+      finally{ if( fo!=null ) fo.close(); }
+      return true;
+   }
 
    protected boolean saveMoc(String filename, PlanMoc p, int format) {
       try {
@@ -2355,7 +2380,7 @@ public final class Save extends JFrame implements ActionListener {
             }
 
             String valOrig = HeaderFits.getValue(s);
-            String valC = (String)headerFits.getHeaderFits().getHashHeader().get(k);
+            String valC = headerFits.getHeaderFits().getHashHeader().get(k);
             if( valC==null ) continue;      // La clé a été supprimé
             if( Tok.unQuote(valC).trim().equals(valOrig) ) v.addElement( getFullFitsLine(s));  // La clé n'a pas été touchée
             else v.addElement( getFitsLine(k,valC,"Aladin modif") );   // La clé a été modifiée
@@ -2367,7 +2392,7 @@ public final class Save extends JFrame implements ActionListener {
             while( e.hasMoreElements() ) {
                String k = (String)e.nextElement();
                if( origKeys.get(k)==null ) {
-                  v.addElement( getFitsLine(k,(String)headerFits.getHeaderFits().getHashHeader().get(k),"Aladin add") );
+                  v.addElement( getFitsLine(k,headerFits.getHeaderFits().getHashHeader().get(k),"Aladin add") );
                }
             }
          }

@@ -106,6 +106,37 @@ class MyAnchor extends JLabel {
       }
    }
    
+   /**
+    * Texte suivi d'un "(more)" auquel on a associé une action qui sera effectué
+    * si on clique sur le "more" ou le texte
+    * @param aladin
+    * @param text
+    * @param action
+    */
+   MyAnchor(Aladin aladin,String text, final ActionListener action) {
+      super();
+      text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
+      setText(text);
+      setFont(getFont().deriveFont(Font.ITALIC));
+      final Component c = this;
+      addMouseMotionListener(new MouseMotionListener() {
+         public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
+         public void mouseDragged(MouseEvent e) { }
+      });
+      addMouseListener(new MouseListener() {
+         public void mouseReleased(MouseEvent e) {
+            if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) return;
+            action.actionPerformed(null);
+         }
+         public void mousePressed(MouseEvent e)  { }
+         public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
+         public void mouseEntered(MouseEvent e)  { }
+         public void mouseClicked(MouseEvent e) { }
+      });
+   }
+   
+
+   
    // Affiche dans un navigateur Web
    private void showDocument(String url) { aladin.glu.showDocument(url); }
    

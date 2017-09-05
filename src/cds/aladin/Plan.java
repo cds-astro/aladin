@@ -1846,8 +1846,9 @@ public class Plan implements Runnable {
       if( prop.equalsIgnoreCase("PlaneID") ) {
          if( isExistingLabel(value,false) ) throw new Exception("PlaneID already existing");
          setLabel(value);
-      } else if( prop.equalsIgnoreCase("proj") ) {
+      } else if( prop.equalsIgnoreCase("proj") || prop.equalsIgnoreCase("projection") ) {
          modifyProj(value);
+         aladin.projSelector.setProjection(value); // Pour garder la cohérence du popup menu dans la v10
       } else if( prop.equalsIgnoreCase("epoch") ) {
          if( !isCatalog() ) throw new Exception("Epoch can be modified only for catalog planes");
          if( !hasPM() ) throw new Exception("Unknown proper motion fields");

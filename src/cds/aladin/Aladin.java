@@ -240,7 +240,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.009";
+   static public final    String VERSION = "v10.010";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4153,7 +4153,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       double xapres = apres.xv[0] - centre.xv[0];
       double yapres = apres.yv[0] - centre.yv[0];
       double angle = Math.toDegrees( Math.atan2(yapres,xapres)- Math.atan2(yavant, xavant) );
-//      System.out.println("Angle "+avant.id+"-"+centre.id+"-"+apres.id+"="+angle);
       return angle;
    }
    
@@ -4164,15 +4163,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Ligne oN = o0;
       double ymin = o.yv[0];
       Ligne oMin = o0;
-//      int i=0;
-//      o0.id = (i++)+"";
       for( o=o0.debligne; o!=null; o = o.debligne ) {
          if( o.yv[0]<ymin ) { oMin=o; ymin=o.yv[0]; }
          oN = o;
-//         o.id=(i++)+"";
       }
-      
-//      System.out.println("Le sommet le plus haut est "+oMin.id+", le 1er="+o0.id+" le dernier="+oN.id);
       Ligne oMinDeb = oMin.debligne==null ? o0.debligne : oMin.debligne;
       Ligne oMinFin = oMin.finligne==null ? oN.finligne : oMin.finligne;
       double angleMin = calculAngle(oMinDeb,oMin,oMinFin);
@@ -5867,12 +5861,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
          a.f.setSize(r.width,r.height);
       }
 //      a.splitMesure.setMesureHeight( a.configuration.getWinDivider() );
+      
       a.offsetLocation();
       
       a.f.setVisible(true);
       a.mesure.setReduced(true);
+      a.splitHiPSWidth.setDividerLocation( a.getHiPSWidth() );
       //      trace(2,"Aladin window size: "+a.getWidth()+"x"+a.getHeight());
    }
+  
 
    /**
     * Positionne des flags et des propriétés spécifiques au Mac

@@ -171,7 +171,7 @@ MouseWheelListener, Widget
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
    /* menuLoadImg,menuLoadImgs,*/menuUnselect,
-   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit,menuCooToolbox;
+   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit,menuCooToolbox,menuInfo;
 
    // Cree le popup menu associe au View
    private void createPopupMenu() {
@@ -181,6 +181,8 @@ MouseWheelListener, Widget
       JMenuItem j;
       JMenu m;
       popMenu.add( menuUnselect=j=new JMenuItem(c.getString("MFUNSELECT")));
+      j.addActionListener(this);
+      popMenu.add( menuInfo=j=new JMenuItem("Display source record")); //c.getString("MFEDIT")));
       j.addActionListener(this);
       popMenu.add( menuEdit=j=new JMenuItem(c.getString("MFEDIT")));
       j.addActionListener(this);
@@ -271,6 +273,7 @@ MouseWheelListener, Widget
       else if( src==menuUnselect ) deselect(objSelect);
       else if( src==menuDel ) delete(objSelect);
       else if( src==menuEdit ) edit(objSelect);
+      else if( src==menuInfo ) info(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
       else if( src==menuCooToolbox ) openCooToolbox(objSelect);
@@ -1179,6 +1182,13 @@ MouseWheelListener, Widget
    void edit(Source o) {
       if( o==null || !(o instanceof SourceTag) ) return;
       aladin.view.editPropObj(o);
+   }
+
+   /** Edition d'une source (uniquement s'il s'agit d'une source editable (SourceTag) */
+   void info(Source o) {
+      try {
+         new FrameRecord("Source record ("+o.id+") from "+o.plan.id,o.getRecord());
+      } catch( Exception e ) { }
    }
 
    /** Suppression d'une source (uniquement pour les plan isSourceRemovable() */

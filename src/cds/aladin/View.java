@@ -2342,7 +2342,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Edition des propriétés d'un objets */
    protected void editPropObj(Propable obj) {
       if( obj==null ) return;
-      if( aladin.frameProp==null ) aladin.frameProp = new FrameProp(aladin,obj);
+      if( aladin.frameProp==null ) aladin.frameProp = new FrameProp(aladin,"Individual object properties",obj);
       else aladin.frameProp.updateAndShow(obj);
    }
 
@@ -3338,7 +3338,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int m=getNbView();
       for( int i=0; i<m; i++ ) {
          viewSimple[i].repaint();
-         rep |= viewSimple[i].isInImage(coo.al,coo.del);
+         rep |= viewSimple[i].isInImage(coo.al,coo.del) || viewSimple[i].pref instanceof PlanBG;
 
          // Petite subtilité pour éviter tous les bugs liés à l'utilisation du ViewSimple.projLocal
          // à la place de pref.projd.

@@ -159,10 +159,10 @@ public abstract class Builder {
             
          }
          context.setOutputPath(output);
-         context.info("the output directory will be "+output);
       }
       File f = new File(output);
       if( f.exists() && (!f.isDirectory()  || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
+      context.info("the output directory will be "+output);
       context.setValidateOutput(true);
    }
 

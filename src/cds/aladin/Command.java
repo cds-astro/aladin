@@ -3008,7 +3008,15 @@ public final class Command implements Runnable {
    }
    
    protected String exec(String s) { return exec(s,true,false); }
-   protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
+   
+//      PROBABLEMENT TROP VERBEUX POUR APT.... JE NE LE METS PAS
+//   protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
+//      String s = exec1(s1,verbose,flagOnlyFunction);
+//      if( !Aladin.NOGUI && s!=null && s.length()>0 ) a.console.printInPad(s);
+//      return s;
+//   }
+   
+   private String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
       
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
@@ -3752,6 +3760,8 @@ public final class Command implements Runnable {
                boolean vot=false;
                boolean fits=false;
                boolean hpx=false;
+               boolean ajs=false;
+               boolean json=false;
                int finFile = -1;
 
                String planID=st.nextToken();
@@ -3767,6 +3777,8 @@ public final class Command implements Runnable {
                   }
                   else if( planID.indexOf("fits")>0 ) fits=true;
                   else if( planID.indexOf("hpx")>0 ) hpx=true;
+                  else if( planID.indexOf("ajs")>0 ) ajs=true;
+                  else if( planID.indexOf("json")>0 ) json=true;
                   planID = st.nextToken();
                }
 
@@ -3796,7 +3808,11 @@ public final class Command implements Runnable {
                   if( param.endsWith(" hpx") || param.endsWith(" HPX")) {
                      finFile = param.length()-" hpx".length();
                   }
-               }
+                  
+               // Pour les MOCs
+               } else if( param.endsWith(".json") ) json=true;
+                 else if( param.endsWith(".ajs") ) ajs=true;
+               
                String file = finFile==-1 ? s.substring(posFile) : s.substring(posFile,finFile);
                file = Tok.unQuote(file.trim()).trim();
                if( file.endsWith("fits") || file.endsWith("FITS")) {
@@ -3805,7 +3821,10 @@ public final class Command implements Runnable {
                   hpx=true;
                }
 
-               if( p instanceof PlanMoc ) (a.save).saveMoc(file, (PlanMoc)p, HealpixMoc.FITS);
+               if( p instanceof PlanMoc ) {
+                  if( ajs ) (a.save).saveMocAsAJS(file, (PlanMoc)p );
+                  else (a.save).saveMoc(file, (PlanMoc)p, json ? HealpixMoc.JSON : HealpixMoc.FITS);
+               }
                else if( p.isCatalog() ) (a.save).saveCatalog(file,p,!vot,false,addXY);
                else if( p.isImage() && !(p instanceof PlanImageBlink) ) (a.save).saveImage(file,p,hpx?1:fits?0:2);
                else {
