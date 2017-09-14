@@ -122,16 +122,16 @@ public final class Command implements Runnable {
                "   @resamp x1 x2 ...                        @ccat [-uniq] [x1...]\n" +
                "   @crop [x|v] [[X,Y] WxH]                  @search {expr|+|-}\n" +
                "   @flipflop [x|v] [V|H]                    @tag|@untag\n" +
-               "   @contour [nn] [nosmooth] [zoom]          @select -tag\n" +
-               "   @grey|@bitpix [-cut] [x] BITPIX\n" +
-               "                                         #FOLDER:#\n" +
-               "#GRAPHIC# #TOOL:#                              @md [-localscope] [name]\n" +
-               "   @draw [color] fct(param)                 @mv|@rm [name]\n" +
-               "   @grid [on|off]                           @collapse|@expand [name]\n" +
-               "   @reticle [on|off]\n" +
-               "   @overlay [on|off]                      #COVERAGE:#\n" +
-               "                                           @cmoc [-order=o] [x1|v1...]\n" +
+               "   @contour [nn] [nosmooth] [zoom]          @select [-tag]\n" +
+               "   @grey|@bitpix [-cut] [x] BITPIX         @browse [x]\n" +
                " \n" +
+               "#GRAPHIC# #TOOL:#                            #FOLDER:#\n" +
+               "   @draw [color] fct(param)                 @md [-localscope] [name]\n" +
+               "   @grid [on|off]                           @mv|@rm [name]\n" +
+               "   @reticle [on|off]                        @collapse|@expand [name]\n" +
+               "   @overlay [on|off]\n" +
+               "                                         #COVERAGE:#\n" +
+               "                                           @cmoc [-order=o] [x1|v1...]\n" +
                "#MISCELLANEOUS:#\n" +
                "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
                "   @help ...            @trace        @mem        @info msg\n" +
@@ -148,7 +148,7 @@ public final class Command implements Runnable {
 
    // Liste des commandes scripts documentés
    static final String CMD[] = {
-      "addcol","backup","bitpix","blink","call","cm","cmoc","collapse","conv","contour","coord","copy",
+      "addcol","backup","bitpix","blink","browse","call","cm","cmoc","collapse","conv","contour","coord","copy",
       "ccat","cview","crop","demo","draw","expand","export","filter","moreonfilter","function",
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
       "macro","md","mem","northup","match",
@@ -2390,6 +2390,52 @@ public final class Command implements Runnable {
       }
    }
    
+   /** Browse des sources sélectionnées, ou éventuellement celles indiquées par le nom du plan
+    * catalogue passé en paramètre. charge le survey par défaut s'il s'agit d'un HiPS et qu'il n'y a aucun
+    * autre HiPS image/cubes déja chargé, et zoome sur la première source */
+   protected void browse(String param) {
+      
+      // Sélection des sources d'un catalogue spécifique
+      if( param!=null && param.trim().length()>0 ) {
+         Plan p = getNumber(param);
+         if( p==null || !p.isCatalog()) {
+            printConsole("!!! browse error => bad catalog designation");
+            return;
+         }
+         a.view.selectAllInPlan(p);
+         
+      // Sinon, simple browse des sources déjà sélectionnées
+      }
+      
+      // Récupération de la première source
+      final Source objSelect = a.view.getFirstSelectedSource();
+      if( objSelect==null ) {
+         printConsole("!!! browse error => no selected sources");
+         return;
+      }
+      
+      // Chargement d'un HiPS en arrière plan si nécessaire
+      Plan base = a.calque.getPlanBase();
+      if( base==null || !(base instanceof PlanBG) ) {
+         String survey = a.configuration.getSurvey();
+         a.directory.createPlane(objSelect.raj+" "+objSelect.dej,"10",survey,null,null);
+         syncServer();
+      }
+      
+      // Zoom sur la première source, et la montre en surbrillance dans la table
+      a.view.gotoThere( objSelect);
+      a.view.zoomOnSource( objSelect);
+      
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            a.mesure.mcanvas.show((objSelect),2);
+            a.search.focusOnLeft();
+         }
+      });
+
+      
+   }
+   
    protected void gotoAnimation(String param) {
       StringBuffer targetX=new StringBuffer();
       StringBuffer radiusX=new StringBuffer();
@@ -2401,8 +2447,6 @@ public final class Command implements Runnable {
          radius = radiusX.toString();
       } else target = param;
 
-      System.out.println("target="+target+" radius="+radius);
-      
       a.gotoAnimation(target,radius);
    }
 
@@ -3163,6 +3207,7 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("untag") )  a.untag();
       else if( cmd.equalsIgnoreCase("reloadglu") )  a.glu = new Glu(a);
       else if( cmd.equalsIgnoreCase("goto") )   gotoAnimation(param);
+      else if( cmd.equalsIgnoreCase("browse") ) browse(param);
       else if( cmd.equalsIgnoreCase("crop") )   execCropCmd(param,label);
       else if( cmd.equalsIgnoreCase("match") )   execMatchCmd(param);
       else if( cmd.equalsIgnoreCase("stick") )  execViewCmd(param,STICKVIEW);

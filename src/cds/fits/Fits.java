@@ -667,10 +667,31 @@ final public class Fits {
       headerFits = new HeaderFits(dis);
 
       // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante, sinon on sort
-      if( ext==0 &&  headerFits.getIntFromHeader("NAXIS")==0 ) {
+//      if( ext==0 &&  headerFits.getIntFromHeader("NAXIS")==0 ) {
+//         if( !skipHDU0 ) return;
+//         headerFits = new HeaderFits(dis);
+//      }
+      
+      // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante, sinon on sort
+      int naxis = -1;
+      try { naxis = headerFits.getIntFromHeader("NAXIS"); } catch( Exception e ) {}
+      
+      // Cas tordu on l'entête est tout de même vide (du genre NAXIS=1, et NAXIS1=0)
+      if( naxis>0 ) {
+         try {
+            for( int j=1; j<=naxis; j++ ) {
+               int naxisn = headerFits.getIntFromHeader("NAXIS"+j);
+               if( naxisn>0 ) break;
+            }
+            // Bon c'était tout de même vide !
+            naxis=-1;
+         } catch( Exception e ) {}
+      }
+      if( ext==0 && naxis<=0 ) {
          if( !skipHDU0 ) return;
          headerFits = new HeaderFits(dis);
       }
+
 
       bitpix = headerFits.getIntFromHeader("BITPIX");
       width = headerFits.getIntFromHeader("NAXIS1");
@@ -887,11 +908,24 @@ final public class Fits {
             headerFits = new HeaderFits(is);
 
             // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante, sinon on sort
-            if( ext==0 &&  headerFits.getIntFromHeader("NAXIS")==0 ) {
+            int naxis = -1;
+            try { naxis = headerFits.getIntFromHeader("NAXIS"); } catch( Exception e ) {}
+            
+            // Cas tordu on l'entête est tout de même vide (du genre NAXIS=1, et NAXIS1=0)
+            if( naxis>0 ) {
+               try {
+                  for( int j=1; j<=naxis; j++ ) {
+                     int naxisn = headerFits.getIntFromHeader("NAXIS"+j);
+                     if( naxisn>0 ) break;
+                  }
+                  // Bon c'était tout de même vide !
+                  naxis=-1;
+               } catch( Exception e ) {}
+            }
+            if( ext==0 && naxis<=0 ) {
                if( !skipHDU0 ) return 0;
                headerFits0 = headerFits;   // on garde la première HDU pour recherche éventuel de mots clés
                headerFits = new HeaderFits(is);
-               
             }
             
             // Cas particulier d'une image RICE

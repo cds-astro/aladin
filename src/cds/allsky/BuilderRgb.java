@@ -40,6 +40,7 @@ public class BuilderRgb extends BuilderTiles {
 
 
    private String [] inputs;         // Les paths des HiPS red, green, blue
+   private int [] cubeIndex;         // Les indices des frames des composantes red, green, blue en cas de cubes d'origine (0 par défaut)
    private HealpixMoc [] moc;        // Les Mocs de chaque composante
    private MyProperties [] prop;     // Les propriétés de chaque composante
    private String [] labels;         // Les labels des HiPS red, green blue
@@ -110,7 +111,51 @@ public class BuilderRgb extends BuilderTiles {
       super.build();
    }
 
+   
+   // Transforme un path à la mode cube (ex: xxx/Allsky.fits[1]) par sa
+   // syntaxe HiPS (ex: xxx/Allsky_1.fits)
+   // sinon retourne le path original
+   private String pathCube2path(String path) {
+      if( !path.endsWith("]") ) return path;
+      int i = path.lastIndexOf('[');
+      if( i<=0 ) return path;
+      try {
+         int n = Integer.parseInt(path.substring(i+1, path.length()-1) );
+         String suff = n==0 ? "": ("_"+n);
+         int j = path.lastIndexOf(".",i);
+         if( j==-1 ) return path.substring(0,i)+suff;   // s'il n'y a pas d'extension, ou met _nnn à la fin
+         return path.substring(0,j)+suff+path.substring(j,i);  // sinon on l'insère juste avant l'extension
+         
+      } catch( Exception e) { }
+      
+      return path;
+   }
 
+   // Supprime le suffixe d'un path à la mode cube (ex: xxx/Allsky.fits[1] => xxx/Allsky.fits
+   // sinon retourne le path original
+   private String removeCubeSuffixe( String path ) {
+      if( !path.endsWith("]") ) return path;
+      int i = path.lastIndexOf('[');
+      if( i<=0 ) return path;
+      try {
+         Integer.parseInt(path.substring(i+1, path.length()-1) );
+         return path.substring(0,i);
+      } catch( Exception e) { }
+      return path;
+   }
+   
+   // Retourne l'indice cube d'un path  à la mode cube (ex: xxx/Allsky.fits[1] => xxx/Allsky.fits
+   // sinon retourne 0
+   int getCubeIndex( String path ) {
+      if( !path.endsWith("]") ) return 0;
+      int i = path.lastIndexOf('[');
+      if( i<=0 ) return 0;
+      try {
+         return Integer.parseInt(path.substring(i+1, path.length()-1) );
+      } catch( Exception e) { }
+      return 0;
+   }
+   
    public void validateContext() throws Exception {
 
       String path = context.getRgbOutput();
@@ -127,6 +172,7 @@ public class BuilderRgb extends BuilderTiles {
       String pathRef=null;
 
       inputs = new String[3];
+      cubeIndex = new int[3];
       labels = new String[3];
       moc = new HealpixMoc[3];
       prop = new MyProperties[3];
@@ -146,13 +192,14 @@ public class BuilderRgb extends BuilderTiles {
       if( context.hasFrame() ) frame = context.getFrameName();
 
       for( int c=0; c<3; c++ ) {
-         inputs[c] = context.plansRGB[c];
+         inputs[c] = removeCubeSuffixe( context.plansRGB[c] );
+         cubeIndex[c] = getCubeIndex( context.plansRGB[c] );
          if( inputs[c]==null ) {
             if( missing!=-1 ) throw new Exception("HiPS RGB generation required at least 2 original components");
             missing=c;
          } else {
-
-            if( !context.isExistingAllskyDir(inputs[c]) ) {
+            
+            if( !context.isExistingAllskyDir( inputs[c] ) ) {
                throw new Exception("Input HiPS missing ["+inputs[c]+"]");
             }
                   
@@ -713,7 +760,7 @@ public class BuilderRgb extends BuilderTiles {
       // Détermination du premier ordre parent qui dispose d'une tuile
       long n=npix;
       for( o=order; o>=3; o--, n/=4 ) {
-         file =  Util.getFilePath( inputs[c], o, n)+".fits";
+         file =  Util.getFilePath( inputs[c], o, n, cubeIndex[c])+".fits";
          if( (new File(file)).exists() ) break;
       }
 

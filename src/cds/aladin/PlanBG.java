@@ -851,7 +851,9 @@ public class PlanBG extends PlanImage {
          if( base instanceof PlanBG ) defaultProjType = base.projd.t;
       }
 
-      Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
+      boolean longAsc = displayLongAsc();
+      
+      Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
             defaultProjType,Calib.FK5);
 
       p.frame = getCurrentFrameDrawing();
@@ -870,6 +872,16 @@ public class PlanBG extends PlanImage {
    protected void suite1() {
       threading();
       log();
+   }
+   
+   /** Retourne le mode d'affichage par défaut de la longitude. S'il y a mention
+    * d'une référence spaciale, on suppose qu'il s'agit d'une planète et on affiche
+    * avec la longitude ascendante
+    */
+   protected boolean displayLongAsc() {
+      if( prop==null ) return false;
+      String refpos = prop.getProperty("hips_refpos");
+      return refpos!=null;
    }
 
    protected void suiteSpecific() {

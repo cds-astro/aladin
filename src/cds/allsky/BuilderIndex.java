@@ -50,6 +50,8 @@ public class BuilderIndex extends Builder {
    private int [] hdu = null;
    private HealpixMoc area;                // région de travail
    private boolean flagAppend;             // true => inutile de vérifier les doublons
+   private int maxOverlays;                // Estimation du nombre max d'overlays 
+                                           // (en décomptant le nombre d'entrées dans chaque tuile de HpxFinder=
 
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
@@ -96,6 +98,13 @@ public class BuilderIndex extends Builder {
       }
 
       if( statNbFile==0 ) throw new Exception("No available image found ! => Aborted");
+      
+      long val = partitioning ? Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH : statMaxWidth*statMaxHeight;
+      val *= statMaxNbyte;
+      val *= maxOverlays;
+      context.info("Max original image overlay estimation"
+         +(partitioning?" ("+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixel blocks from original images)":"")
+         +": "+maxOverlays+" => may required "+cds.tools.Util.getUnitDisk(val)+" per thread");
    }
 
 
@@ -143,6 +152,7 @@ public class BuilderIndex extends Builder {
             if( order<3 ) order=3;
             context.setOrder(order);
          } catch (Exception e) {
+            e.printStackTrace();
             context.warning("The reference image has no astrometrical calibration ["+img+"] => order can not be computed");
          }
       }
@@ -211,6 +221,7 @@ public class BuilderIndex extends Builder {
       int order = context.getOrder();
       borderSize = context.getBorderSize();
       maxRatio = context.getMaxRatio();
+      maxOverlays = 0;
 
       File f = new File(output);
       if (!f.exists()) f.mkdir();
@@ -254,7 +265,8 @@ public class BuilderIndex extends Builder {
    }
 
    // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
-   private void createAFile(RandomAccessFile out, String filename, Coord center, long cellMem, String stc, String fitsVal)
+   private void createAFile(RandomAccessFile out, String filename, Coord center, long cellMem, 
+         String stc, String fitsVal)
          throws IOException {
 
       try {
@@ -280,6 +292,10 @@ public class BuilderIndex extends Builder {
                "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
                "\"cellmem\": \""+cellMem+"\", " +
                "\"stc\": \""+stc+"\""+fitsVal+" }\n";
+         
+         // Estimation du nombre d'entrées
+         int nbEntries = (int)( out.length()/line.length()) +1;
+         if( maxOverlays<nbEntries ) maxOverlays=nbEntries;
 
          if( flagAppend ) out.seek( out.length() );
          else {
@@ -355,22 +371,28 @@ public class BuilderIndex extends Builder {
                try {
 
                   // Test sur l'image entière
-                  if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
+                  if( !partitioning ) {
                      testAndInsert(fitsfile, pathDest, currentfile, null, order);
                      updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
 
-                     // Découpage en blocs
+                  // Découpage en blocs de tailles fixes sauf les derniers des lignes et des colonnes
+                  // pour qu'ils ne soient pas trop petits
                   } else {
                      //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
                      int width = fitsfile.width - borderSize[3];
                      int height = fitsfile.height - borderSize[2];
+                     
+                     for( int x=borderSize[1]; x<width; x+=fitsfile.widthCell ) {
 
-
-                     for( int x=borderSize[1]; x<width; x+=cellSize ) {
-
-                        for( int y=borderSize[0]; y<height; y+=cellSize ) {
-                           fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
-                           fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
+                        for( int y=borderSize[0]; y<height; y+=fitsfile.heightCell ) {
+                           fitsfile.widthCell = x + cellSize > width || width-x<2*cellSize ? 
+                                 width - x : cellSize;
+                           fitsfile.heightCell = y + cellSize > height || height-y<2*cellSize ? 
+                                 height - y : cellSize;
+                           
+//                           if( fitsfile.widthCell!=cellSize || fitsfile.heightCell!=cellSize ) {
+//                              System.out.println(currentfile +" "+x+","+y+" "+fitsfile.widthCell+"x"+fitsfile.heightCell);
+//                           }
                            fitsfile.depthCell = fitsfile.depth = 1;
                            fitsfile.xCell=x;
                            fitsfile.yCell=y;
@@ -430,7 +452,7 @@ public class BuilderIndex extends Builder {
       Coord corner[] = new Coord[4];
       StringBuffer stc = new StringBuffer("POLYGON J2000");
       boolean hasCell = fitsfile.hasCell();
-//      System.out.print("draw polygon");
+//      System.out.print("draw blue polygon");
       for( int i=0; i<4; i++ ) {
          coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
          coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
@@ -497,8 +519,7 @@ public class BuilderIndex extends Builder {
       Coord c1 = corner[0];
       double radius = Coord.getDist(center,c1 );
       
-      // Si le rayon est trop grand on préfèrera une requête pour cone pour
-      // éviter le risque d'un polygone sphérique concave
+      // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
       if( radius<30 ) {
          try {
             npixs = CDSHealpix.query_polygon(nside, cooList);
@@ -508,13 +529,30 @@ public class BuilderIndex extends Builder {
       // Deuxième essai via un disque plutôt qu'un polygone
       if( npixs==null ) {
          try {
+            
+            // On calcule le centre et le rayon de la cellule (sauf si on travaille en image complète)
+            if( hasCell ) {
+               center.x = fitsfile.xCell+fitsfile.widthCell/2;
+               center.y = fitsfile.yCell+fitsfile.heightCell/2;
+               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
+                  center.y = fitsfile.height - center.y -1;
+               c.GetCoord(center);
+               
+               c1.x=fitsfile.xCell;
+               c1.y=fitsfile.yCell;
+               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
+                  c1.y = fitsfile.height - c1.y -1;
+               c.GetCoord(c1);
+               radius = Coord.getDist(center,c1 );
+            }
+
             double cent[] = context.ICRS2galIfRequired(center.al, center.del);
-            npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], radius);
-//            npixs = CDSHealpix.query_disc(nside, center.al, center.del, radius);
+            npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], Math.toRadians(radius));
          } catch( Exception e ) {
           throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" center="+center+" corner="+c1+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
          }
       }
+      
       // pour chacun des losanges concernés
       for (int i = 0; i < npixs.length; i++) {
          long npix = npixs[i];
@@ -523,7 +561,7 @@ public class BuilderIndex extends Builder {
          if( area!=null && !area.isIntersecting(order, npix) ) continue;
 
          // vérifie la validité du losange trouvé
-         if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;
+         if (!isInImage(fitsfile, Util.getCorners(order, npix), isCAR))  continue;
 
          hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
          out = openFile(hpxname);
@@ -538,7 +576,7 @@ public class BuilderIndex extends Builder {
       }
    }
 
-   private boolean isInImage(Fits f, Coord[] corners) {
+   private boolean isInImage(Fits f, Coord[] corners,boolean isCAR) {
       int signeX = 0;
       int signeY = 0;
       try {
@@ -550,18 +588,22 @@ public class BuilderIndex extends Builder {
                coo.al = radec[0];
                coo.del = radec[1];
             }
+            // Pour éviter de récupérer la coordonnée X de l'autre coté du ciel
+            if( isCAR && coo.al==0 ) coo.al-=0.0000001;
+            
             f.getCalib().GetXY(coo);
+
             if (Double.isNaN(coo.x)) continue;
             coo.y = f.height - coo.y -1;
             int width = f.widthCell+marge;
             int height = f.heightCell+marge;
-            if( coo.x >= f.xCell - marge && coo.x < f.xCell + width
-                  && coo.y >= f.yCell - marge && coo.y < f.yCell + height ) {
+            if( coo.x >= f.xCell - marge/2 && coo.x <= f.xCell + width
+                  && coo.y >= f.yCell - marge/2 && coo.y <= f.yCell + height ) {
                return true;
             }
             // tous d'un coté => x/y tous du meme signe
-            signeX += (coo.x >= f.xCell + width) ? 1 : (coo.x < f.xCell - marge) ? -1 : 0;
-            signeY += (coo.y >= f.yCell + height) ? 1 : (coo.y < f.yCell - marge) ? -1 : 0;
+            signeX += (coo.x > f.xCell + width) ? 1 : (coo.x < f.xCell - marge/2) ? -1 : 0;
+            signeY += (coo.y > f.yCell + height) ? 1 : (coo.y < f.yCell - marge/2) ? -1 : 0;
 
          }
       } catch (Exception e) {

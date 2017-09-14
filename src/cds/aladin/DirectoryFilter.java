@@ -825,6 +825,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( bxSSA.isSelected() )       special.append(" && ssa*=*");  
       if( bxTAP.isSelected() )       special.append(" && tap*=*");  
       if( bxCS.isSelected() )        special.append(" && cs*=*");   
+      if( bxMOC.isSelected() )       special.append(" && moc*=*");   
       if( bxProg.isSelected() )      special.append(" && hips_progenitor_url=*");   
       
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
@@ -998,7 +999,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    private JCheckBox cbMocPlane,cbMocInLine,cbStcInLine,cbSelectedGraph;
-   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxProg,bxSuperseded;
+   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxMOC,bxProg,bxSuperseded;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    private JTextArea tMoc,tSTC;
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
@@ -1057,6 +1058,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxSSA.setSelected(false);
       bxTAP.setSelected(false);
       bxCS.setSelected(false);
+      bxMOC.setSelected(false);
       bxProg.setSelected(false);
       bxPixColor.setSelected(false);
       tfCatNbRow.setText("");
@@ -1176,6 +1178,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bx.setToolTipText(S("FPPROTOTAP"));
       subPanel.add( bx=bxCS   = new JCheckBox("Cone Search"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOCS"));
+      subPanel.add( bx=bxMOC  = new JCheckBox("MOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText(S("FPPROTOMOC"));
       subPanel.add( bx=bxProg   = new JCheckBox("HiPS progenitors"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOHIPSPRO"));
       PropPanel.addCouple(this, p, S("FPPROTO")+" ", S("FPPROTOTIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);

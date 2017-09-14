@@ -2244,6 +2244,15 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean hasSelectedObj() {
       return( vselobj.size()>0 );
    }
+   
+   /** Retourne la première Source sélectionnée, null si aucune */
+   protected Source getFirstSelectedSource() { 
+      if( vselobj==null ) return null;
+      for( Obj o : vselobj ) {
+         if( o instanceof Source ) return (Source)o;
+      }
+      return null;
+   }
 
    /** Retourne le nombre d'objets sélectionnés */
    protected int nbSelectedObjet() { return vselobj.size(); }
@@ -4790,6 +4799,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.northup.repaint();
          aladin.pix.repaint();
          aladin.oeil.repaint();
+         aladin.directory.resumeFrameInfo();
 
          // Ajustement de la configuration d'affichage en fonction de la position
          // de la scrollbar verticale si elle a changé.

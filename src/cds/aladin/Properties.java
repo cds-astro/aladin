@@ -1828,6 +1828,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       Object src = e.getSource();
       String what = src instanceof JButton ? ((JButton)src).getActionCommand() : "";
 
+      if( (src==longitudeDescending || src==longitudeAscending) && plan instanceof PlanBG ) {
+         apply();
+         return;
+      }
+      
       // Bouton d'édition d'un filtre dédié
       if( src==toGenFilterButton ) {
          plan.toGenericalFilter();
@@ -1854,6 +1859,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          return;
       }
 
+
       // filtres prédéfinis à positionner
       if( src instanceof JRadioButton && plan.isCatalog()&& filterCB!=null  ) {
          String s = filterCB.getSelection().getActionCommand();
@@ -1868,11 +1874,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          try { ((PlanTool)plan).setMovable(s); } catch( Exception e1 ) { }
       }
       
-      else if( src instanceof JRadioButton && plan instanceof PlanBG ) {
-         apply();
-         return;
-      }
-
       // Peut être le sélecteur de couleur de fond puor une image couleur
       else if( src instanceof JRadioButton && plan.ref ) {
          String s = cb.getSelection().getActionCommand();

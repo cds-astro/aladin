@@ -100,6 +100,7 @@ public class Context {
    protected boolean fading=false;           // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
+   protected boolean flagRecomputePartitioning=true; // true si hipsgen doit déterminer automatiquement la taille du partitionnement
    protected boolean partitioning=true;      // Activation de la lecture par blocs des fimages originales
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    public double pourcentMin=-1;             // Pourcentage de l'info à garder en début d'histog. si autocut (ex: 0.003), -1 = défaut
@@ -258,6 +259,7 @@ public class Context {
          int val = Integer.parseInt(s);
          Constante.ORIGCELLWIDTH = val;
          partitioning = true;
+         flagRecomputePartitioning = false;
       } catch( Exception e ) {
          partitioning = s.equalsIgnoreCase("false") ? false : true;
       }
@@ -678,7 +680,7 @@ public class Context {
 
       // Mémorise la taille typique de l'image étalon
       typicalImgWidth = Math.max(fitsfile.width,fitsfile.height);
-
+      
       // Peut être s'agit-il d'un cube ?
       try {
          setDepth( fitsfile.headerFits.getIntFromHeader("NAXIS3") );
@@ -1216,7 +1218,7 @@ public class Context {
       if( path==null ) return false;
       return  (new File(path)).isDirectory();
    }
-
+   
    protected boolean isExistingAllskyDir() { return isExistingAllskyDir( getOutputPath() ); }
    protected boolean isExistingAllskyDir(String path) {
       if( path==null ) return false;

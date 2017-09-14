@@ -129,8 +129,6 @@ public class HipsGen {
       if( s.equalsIgnoreCase("publisher") )  return "hips_creator";
       if( s.equalsIgnoreCase("creator") )    return "hips_creator";
       if( s.equalsIgnoreCase("pixel") )      return "mode";
-      if( s.equalsIgnoreCase("blocking") )   return "partitioning";
-      if( s.equalsIgnoreCase("cutting") )    return "partitioning";
       if( s.equalsIgnoreCase("circle") )     return "radius";
       if( s.equalsIgnoreCase("status") )     return "hips_status";
       if( s.equalsIgnoreCase("order") )      return "hips_order";
@@ -633,9 +631,9 @@ public class HipsGen {
                   "   cache=dir               Directory name for an alternative cache disk location" + "\n" +
                   "   cacheSize=nn            Alternative cache disk size limit (in MB - default 1024" + "\n" +
                   "   cacheRemoveOnExit=true|false Remove or not the cache disk at the end - default true" + "\n" +
-                  "   inRed                   HiPS red path component (RGB action)\n" +
-                  "   inGreen                 HiPS green path component (RGB action)\n" +
-                  "   inBlue                  HiPS blue path component (RGB action)\n" +
+                  "   inRed                   HiPS red path component, possibly suffixed by cube index (ex: [1]) (RGB action)\n" +
+                  "   inGreen                 HiPS green path component, possibly suffixed by cube index (ex: [1]) (RGB action)\n" +
+                  "   inBlue                  HiPS blue path component, possibly suffixed by cube index (ex: [1]) (RGB action)\n" +
                   "   cmRed                   Colormap parameters for HiPS red component (min [mid] max [fct])\n" +
                   "   cmGreen                 Colormap parameters for HiPS green component (min [mid] max [fct])\n" +
                   "   cmBlue                  Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +

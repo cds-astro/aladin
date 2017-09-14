@@ -70,13 +70,6 @@ public class MyInputStreamCached extends MyInputStream {
       
       long type = getType(10000);
       
-//      if( (type&XFITS)!=0 ) {
-//         skip(2880);   // AVANT DE FAIRE CELA, IL FAUDRAIT ETRE SUR QUE C'EST BIEN DU RICE DERRIERE
-//         resetType();
-//         type=getType();
-//         if( (type&RICE)==0 ) throw new Exception("Bad RICE detection");
-//      }
-      
       if( (type & ( GZ|BZIP2|RICE) )==0 ) return this;
       
       synchronized( lock ) {

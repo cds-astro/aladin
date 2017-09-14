@@ -21,13 +21,13 @@
 
 package cds.tools.pixtools;
 
+import java.util.ArrayList;
+
 import healpix.essentials.HealpixBase;
 import healpix.essentials.Pointing;
 import healpix.essentials.RangeSet;
 import healpix.essentials.Scheme;
 import healpix.essentials.Vec3;
-
-import java.util.ArrayList;
 
 /** Wrapper Healpix CDS pour ne pas réinitialiser systématiquement l'objet HealpixBase pour chaque NSIDE
  * @author Pierre Fernique [CDS] with the help of Martin Reinecke
@@ -60,6 +60,7 @@ public final class CDSHealpix {
       return hpxBase[ init(nside) ].ang2pix(new Pointing(theta,phi));
    }
 
+   // ATTNENTION LE RAYON EST EN RADIAN
    static public long[] query_disc(long nside,double ra, double dec, double radius) throws Exception {
       return query_disc(nside, ra, dec, radius, true);
    }

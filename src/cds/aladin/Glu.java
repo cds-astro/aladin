@@ -1957,6 +1957,11 @@ public final class Glu implements Runnable {
    //      return rep;
    //   }
 
+   
+   public boolean hasValidProfile(String profile) {
+      return hasValidProfile(profile,null,false);
+   }
+
    /** Détermine si l'enregistrement GLU doit être pris en compte ou non.
     * 1) En mode OUTREACH, le mot "undergraduate" doit être obligatoirement présent
     * 2) D'autre part, il faut que toutes les contraintes mentionnées soit respectées

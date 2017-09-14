@@ -3210,6 +3210,8 @@ FPPROTOTAP	Simple Table Access compatible collections
 FPPROTOTAP.fr	Collections supportant le protocol Simple Table Access
 FPPROTOCS	Cone Search compatible collections
 FPPROTOCS.fr	Collections supportant le protocol Cone Search
+FPPROTOMOC	Collections providing their coverage as a MOC (Multi-Order Coverage map)
+FPPROTOMOC.fr	Collections fournissant leur couverture sous forme d'un MOC (Multi-Order Coverage map)
 FPPROTOHIPSPRO	HiPS collections providing progenitors (original images links)
 FPPROTOHIPSPRO.fr	Collections HiPS fournissant les progéniteurs (les liens vers les images originales)
 FPPROTO	Protocol
@@ -3257,7 +3259,7 @@ FPCLOSE.fr	Fermer
 AWMULTICOL Selected collections
 AWMULTICOL.fr	Collections sélectionnées
 AWCSLAB	in view
-AWSSLAB.fr	dans la vue
+AWCSLAB.fr	dans la vue
 AWCSTIP	Cone search (CS) covering the current view\nfor the selected collections
 AWCSTIP.fr	Recherche par cônes (CS) couvrant la vue courante\npour les collections sélectionnées
 AWSIATIP	Simple Image Access (SIA) query\ncovering the current view for the selected collections
@@ -3335,4 +3337,29 @@ AWSCANONLYTIP	Only check if the collections contains\ndata in the current view.
 AWSCANONLYTIP.fr	Vérifie uniquement si les collections\ncontiennent ou non des données dans la vue courante.
 AWLOAD	Load
 AWLOAD.fr	Charger
+
+XMATCH_RADIUS_TITLE	Xmatch separation (arcsec)
+XMATCH_RADIUS_TITLE.fr	Séparation angulaire du Xmatch (arcsec)
+XMATCH_RADIUS_HELP	Maximum distance in arcsec to look for counterparts.\nMaximum allowed value is 180.
+XMATCH_RADIUS_HELP.fr	Distance maximale (en arcsec) de la recherche de contre-parties.\nLa valeur maximale autorisée est 180.
+XMATCH_SELECTION_TITLE	Xmatch selection
+XMATCH_SELECTION_TITLE.fr	Modes de sélection du Xmatch
+XMATCH_SELECTION_HELP	Xmatch selection mode.\n.all: all matches are kept. In this mode, the cross-match is symmetric.\n.best: keep best match in the remote catalog for each row in the local catalog. In "best" mode, the cross-match is not symmetric.
+XMATCH_SELECTION_HELP.fr	Mode de sélection du Xmatch.\n.all: tous les candidats sont conservés. Dans ce mode le crass-match est symétrique.\n. best: ne conserve que le meilleure candidat du catalogue distant pour chaque ligne du catalogue local. En mode "best", le cross-match n'est pas symétrique.
+HIPS_FORMAT_TITLE	HiPS tile format
+HIPS_FORMAT_TITLE.fr	Format des tuiles HiPS
+HIPS_FORMAT_HELP	The image HiPS and cube HiPS can be provided in two mode:\n.preview: the fastest mode but with a precomputed dynamic (8 bits)\n.full dynamic: the original pixel dynamic is provided. This mode is the slower.\nThe "default" mode will use the server choice (generally preview)
+HIPS_FORMAT_HELP.fr	Les HiPS images et cubes peuvent être distribués sous deux formes:\n.preview: c'est le mode le plus rapide mais pour lequel la dynamique des pixels a été réduites à 256 niveaux (8 bits)\n.full dynamic: la dynamic des pixels originaux est fournie. En contre-partie, c'est le mode le plus lent.
+CAT_LIMIT_TITLE	Max returned rows
+CAT_LIMIT_TITLE.fr	Nombre max. de lignes fournies
+CAT_LIMIT_HELP	Maximal number of rows returned by table or catalog server.\nNote that this facility may be not implemented by some servers, or some servers can have an internal smaller limit.
+CAT_LIMIT_HELP.fr	Nombre maximum de lignes retournées par le serveur pour une table ou un catalogue.\nA noter que cette limite peut ne pas être reconnue par certains serveurs. Certains serveurs peuvent également avoir leur propre limite interne, plus basse que celle demandée.
+CAT_COLUMNS_TITLE	Returned columns
+CAT_COLUMNS_TITLE.fr	Colonnes fournies
+CAT_COLUMNS_HELP	List of columns returned by the server:\n.default: the server returns a default list of rows\n.all: the server returns all columns\nNote that this facility may be not implemented by some servers.
+CAT_COLUMNS_HELP.fr	Liste des colonnes qui sont fournies par le serveur :\n.default: le serveur fournit une liste de colonne par défaut.\n.all: le serveur fournit toutes les colonnes\nA noter que cette fonctionnalité peut ne pas être implantée sur certains serveurs.
+BROWSING_TITLE	Automatic sources selection
+BROWSING_TITLE.fr	Sélection automatique des sources
+BROWSING_HELP	Select automatically the resulting sources, zoom on the first one,\nand if required, load a default background image survey.
+BROWSING_HELP.fr	Sélectionne automatiquement les sources retournées, zoome sur la première d'entre elles,\n et si nécessaire, charge un relevé image en arrière fond.
 

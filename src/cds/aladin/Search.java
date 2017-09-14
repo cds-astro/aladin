@@ -235,6 +235,24 @@ public final class Search extends JPanel implements MouseListener {
          }
       }).start();
    }
+   
+//   b.setBorderPainted(false);
+   
+   /** Fait clignoter la fleche vers le bas */
+   protected void focusOnLeft() {
+      (new Thread() {
+         public void run() {
+            Color cp = left.getParent().getBackground();
+            boolean mode = false;
+            for( int i=0; i<6; i++ ) {
+               left.getParent().setBackground( mode ? cp : Color.green);
+               mode = !mode;
+               Util.pause(500);
+            }
+            left.getParent().setBackground( cp);
+         }
+      }).start();
+   }
 
    private Insets INSETS = new Insets(1,0,3,0);
    public Insets getInsets() { return INSETS; }

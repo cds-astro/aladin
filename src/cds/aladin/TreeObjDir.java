@@ -145,6 +145,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 
       description = prop.getProperty(Constante.KEY_OBS_TITLE);
       if( description==null ) description = prop.getProperty(Constante.OLD_OBS_TITLE);
+      if( description==null ) description = prop.getProperty(Constante.KEY_OBS_COLLECTION);
       verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
       if( verboseDescr==null ) verboseDescr = prop.getProperty(Constante.OLD_OBS_DESCRIPTION);
       copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
@@ -336,6 +337,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 
       // Divers champs de descriptions
       description = prop.getProperty(Constante.KEY_OBS_TITLE);
+      if( description==null ) description = prop.getProperty(Constante.KEY_OBS_COLLECTION);
       verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
       copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
       copyrightUrl = prop.getProperty(Constante.KEY_OBS_COPYRIGHT_URL);
@@ -860,6 +862,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( hasSIA() ) loadSIA();
       else if( hasSSA() ) loadSSA();
       else if( getUrl()==null && isCatalog() ) loadCS();
+      else if( hasGlobalAccess() ) loadGlobalAccess();
       else loadHips();
    }
    
@@ -936,8 +939,8 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
-   protected void loadSSA() { aladin.execAsyncCommand( getSSACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1) ); }
-   protected String getSSABkm() { return getSSACmd()+" $TARGET $RADIUS"; }
+   protected void loadSSA() { aladin.execAsyncCommand( addBrowse( getSSACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1)) ); }
+   protected String getSSABkm() { return addBrowse( getSSACmd()+" $TARGET $RADIUS"); }
    protected String getSSACmd() {
       // Glu tags spécifiques ?
       String gluTag = prop.get("ssa_glutag");
@@ -952,8 +955,8 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    
    /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
-   protected void loadSIA() { aladin.execAsyncCommand( getSIACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1) ); }
-   protected String getSIABkm() { return getSIACmd()+" $TARGET $RADIUS"; }
+   protected void loadSIA() { aladin.execAsyncCommand( addBrowse( getSIACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1)) ); }
+   protected String getSIABkm() { return addBrowse( getSIACmd()+" $TARGET $RADIUS"); }
    private String getSIACmd() {
       // Glu tags spécifiques ?
       String gluTag = prop.get("sia_glutag");
@@ -970,20 +973,35 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    
    /** Génération et exécution de la requête script correspondant à un accès global */
-   protected void loadGlobalAccess() { aladin.execAsyncCommand( getGlobalAccessCmd() ); }
-   protected String getGlobalAccessBkm() { return getGlobalAccessCmd(); }
+   protected void loadGlobalAccess() { aladin.execAsyncCommand( addBrowse( getGlobalAccessCmd(), false ) ); }
+   protected String getGlobalAccessBkm() { return addBrowse( getGlobalAccessCmd(), false ); }
    private String getGlobalAccessCmd() {
       String cmd = null;
-      if( prop!=null && hasGlobalAccess() ) cmd = Tok.quote(internalId)+" = load "+getGlobalAccessUrl();
+      
+      String id = Tok.quote(internalId);
+      if( prop!=null && hasGlobalAccess() ) cmd = id+" = load "+getGlobalAccessUrl();
       return cmd;
    }
    
+   // Ajoute éventuellement les commandes de sélections et de browsing
+   private String addBrowse(String s) { return addBrowse(s,true); }
+   private String addBrowse(String s, boolean onlySelect) {
+      if( s==null ) return s;
+      String browse = aladin.directory.getParam(BROWSING_KEY);
+      if( ((hasSIA() || hasSSA() || hasGlobalAccess()) && browse.equals(BROWSING[0])) 
+            || browse.equals(BROWSING[1]) )  {
+         if( onlySelect ) s+="; select "+id;
+         else s+="; browse "+id;
+      }
+      return s;
+   }
+   
    protected void loadCS(Coord c,double radius) {
-      aladin.execAsyncCommand( getCSCmd()+" "+aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius ));
+      aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius )));
    }
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
-   protected void loadCS() { aladin.execAsyncCommand( getCSCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15)); }
-   protected String getCSBkm() { return getCSCmd()+" $TARGET $RADIUS"; }
+   protected void loadCS() { aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15))); }
+   protected String getCSBkm() { return addBrowse( getCSCmd()+" $TARGET $RADIUS" ); }
    private String getCSCmd() {
       String cmd = null;
       String allcolumns = aladin.directory.getParam("QueryCatColumns");
@@ -1003,7 +1021,7 @@ public class TreeObjDir extends TreeObj implements Propable {
          String s = allcolumns.equals("all") ? ",3":"";
          cmd = "get CS("+internalId+s+")";
       }
-
+      
       return cmd;
    }
    
@@ -1044,8 +1062,8 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
 
    /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
-   protected void loadAll() { aladin.execAsyncCommand( getLoadAllCmd() ); }
-   protected String getAllBkm() { return getLoadAllCmd(); }
+   protected void loadAll() { aladin.execAsyncCommand( addBrowse( getLoadAllCmd() )); }
+   protected String getAllBkm() { return addBrowse( getLoadAllCmd() ); }
    private String getLoadAllCmd() {
       int i = internalId.indexOf('/');
       String cat = internalId.substring(i+1);
@@ -1293,11 +1311,12 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    static public HashMap<String, String> paramsFactory() {
       HashMap<String, String> params = new HashMap<String, String>();
-      params.put("QueryXmatchRadius", "5");
-      params.put("QueryXmatchSelection", "best");
-      params.put("QueryHipsFormat", "default");
-      params.put("QueryCatColumns", "default");
-      params.put("QueryCatLimit", "unlimited");
+      params.put(XMATCH_RADIUS_KEY, "5");
+      params.put(XMATCH_SELECTION_KEY, XMATCH_SELECTION[0]);
+      params.put(HIPS_FORMAT_KEY, HIPS_FORMAT[0]);
+      params.put(CAT_COLUMNS_KEY, CAT_COLUMNS[0]);
+      params.put(CAT_LIMIT_KEY, CAT_LIMIT[ CAT_LIMIT.length-1 ]);
+      params.put(BROWSING_KEY, BROWSING[0]);
       return params;
    }
    
@@ -1310,7 +1329,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
 
    @Override
-   public boolean hasProp() { return hasHipsFmt() || isCatalog(); }
+   public boolean hasProp() { return hasHipsFmt() || isCatalog() || hasSIA() || hasSSA() || hasGlobalAccess(); }
 
    @Override
    public Vector<Prop> getProp() {
@@ -1324,13 +1343,49 @@ public class TreeObjDir extends TreeObj implements Propable {
          v.add( getXmatchRadiusProp() );
          v.add( getXmatchSelectionProp() );
       }
+      if( isCatalog() || hasGlobalAccess() || hasSIA() || hasSSA() ) v.add( getBrowsingProp() );
       return v;
    }
    
-   static public final String    XMATCH_RADIUS_KEY   = "QueryXmatchRadius";
-   static public final String    XMATCH_RADIUS_TITLE = "Xmatch separation (arcsec)";
-   static public final String    XMATCH_RADIUS_HELP  = "Maximum distance in arcsec to look for counterparts.\n"
-         + "Maximum allowed value is 180.";
+   static public void loadString(Chaine chaine) {
+      XMATCH_RADIUS_TITLE = chaine.getString("XMATCH_RADIUS_TITLE");
+      XMATCH_RADIUS_HELP = chaine.getString("XMATCH_RADIUS_HELP");
+      XMATCH_SELECTION_TITLE = chaine.getString("XMATCH_SELECTION_TITLE");
+      XMATCH_SELECTION_HELP = chaine.getString("XMATCH_SELECTION_HELP");
+      HIPS_FORMAT_TITLE = chaine.getString("HIPS_FORMAT_TITLE");
+      HIPS_FORMAT_HELP = chaine.getString("HIPS_FORMAT_HELP");
+      CAT_LIMIT_TITLE = chaine.getString("CAT_LIMIT_TITLE");
+      CAT_LIMIT_HELP = chaine.getString("CAT_LIMIT_HELP");
+      CAT_COLUMNS_TITLE = chaine.getString("CAT_COLUMNS_TITLE");
+      CAT_COLUMNS_HELP = chaine.getString("CAT_COLUMNS_HELP");
+      BROWSING_TITLE = chaine.getString("BROWSING_TITLE");
+      BROWSING_HELP = chaine.getString("BROWSING_HELP");
+   }
+   
+   static public String    BROWSING_KEY   = "Browsing";
+   static public String [] BROWSING       = { "outreach/SIA/SSA only","any catalog","never" };
+   static public String    BROWSING_TITLE;
+   static public String    BROWSING_HELP;
+
+   public Prop getBrowsingProp() {
+      final JComboBox<String> combo =  new JComboBox<String>( BROWSING );
+      final PropAction update = new PropAction() {
+         public int action() { combo.setSelectedItem( aladin.directory.getParam(BROWSING_KEY)); return PropAction.SUCCESS; }
+      };
+      final PropAction change = new PropAction() {
+         public int action() {
+            String s = (String)combo.getSelectedItem();
+            if( s.equals( aladin.directory.getParam(BROWSING_KEY)) ) return PropAction.NOTHING;
+            aladin.directory.setParam(BROWSING_KEY,s);
+            return PropAction.SUCCESS;
+         }
+      };
+      return Prop.propFactory(BROWSING_KEY,BROWSING_TITLE,BROWSING_HELP,combo,update,change);
+   }
+   
+   static public String  XMATCH_RADIUS_KEY   = "QueryXmatchRadius";
+   static public String  XMATCH_RADIUS_TITLE;
+   static public String  XMATCH_RADIUS_HELP;
 
    public Prop getXmatchRadiusProp() {
       final JTextField testRadius = new JTextField( 10 );
@@ -1357,13 +1412,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       return Prop.propFactory(XMATCH_RADIUS_KEY,XMATCH_RADIUS_TITLE,XMATCH_RADIUS_HELP,testRadius,update,change);
    }
 
-   static public final String    XMATCH_SELECTION_KEY   = "QueryXmatchSelection";
-   static public final String [] XMATCH_SELECTION       = { "best","all" };
-   static public final String    XMATCH_SELECTION_TITLE = "Xmatch selection";
-   static public final String    XMATCH_SELECTION_HELP  = "Match selection mode."
-         + "\n.all: all matches are kept. In this mode, the cross-match is symmetric."
-         + "\n.best: keep best match in the remote catalog for each row in the local catalog. "
-         + "In \"brest\" mode, the cross-match is not symmetric.";
+   static public String    XMATCH_SELECTION_KEY   = "QueryXmatchSelection";
+   static public String [] XMATCH_SELECTION       = { "best","all" };
+   static public String    XMATCH_SELECTION_TITLE;
+   static public String    XMATCH_SELECTION_HELP;
 
    public Prop getXmatchSelectionProp() {
       final JComboBox<String> combo =  new JComboBox<String>( XMATCH_SELECTION );
@@ -1382,13 +1434,10 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
 
 
-   static public final String    HIPS_FORMAT_KEY   = "QueryHipsFormat";
-   static public final String [] HIPS_FORMAT       = {"default", "preview (jpg|png)", "full dynamic (fits)" };
-   static public final String    HIPS_FORMAT_TITLE = "HiPS tile format";
-   static public final String    HIPS_FORMAT_HELP  = "The image HiPS and cube HiPS can be provided in two mode:\n"
-         + ".preview: the fastest mode but with a precomputed dynamic (8 bits)\n"
-         + ".full dynamic: the original pixel dynamic is provided. This mode is the slower.\n"
-         + "The \"default\" mode will use the server choice (generally preview)";
+   static public String    HIPS_FORMAT_KEY   = "QueryHipsFormat";
+   static public String [] HIPS_FORMAT       = {"default", "preview (jpg|png)", "full dynamic (fits)" };
+   static public String    HIPS_FORMAT_TITLE;
+   static public String    HIPS_FORMAT_HELP;
 
    public Prop getHipsFmtProp() {
       final JComboBox<String> combo =  new JComboBox<String>( HIPS_FORMAT );
@@ -1406,11 +1455,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       return Prop.propFactory(HIPS_FORMAT_KEY,HIPS_FORMAT_TITLE,HIPS_FORMAT_HELP,combo,update,change);
    }
 
-   static public final String    CAT_LIMIT_KEY   = "QueryCatLimit";
-   static public final String [] CAT_LIMIT       = {"100","1000","10000","100000","unlimited"};
-   static public final String    CAT_LIMIT_TITLE = "Max returned rows";
-   static public final String    CAT_LIMIT_HELP  = "Maximal number of rows returned by table or catalog server.\n"
-         + "Note that this facility may be not implemented by some servers, or some servers can have an internal smaller limit.";
+   static public String    CAT_LIMIT_KEY   = "QueryCatLimit";
+   static public String [] CAT_LIMIT       = {"100","1000","10000","100000","unlimited"};
+   static public String    CAT_LIMIT_TITLE;
+   static public String    CAT_LIMIT_HELP;
 
    public Prop getCatLimitProp() {
       final JComboBox<String> combo =  new JComboBox<String>( CAT_LIMIT );
@@ -1428,13 +1476,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       return Prop.propFactory(CAT_LIMIT_KEY,CAT_LIMIT_TITLE,CAT_LIMIT_HELP,combo,update,change);
    }
 
-   static public final String    CAT_COLUMNS_KEY   = "QueryCatColumns";
-   static public final String [] CAT_COLUMNS       = {"default","all"};
-   static public final String    CAT_COLUMNS_TITLE = "Returned columns";
-   static public final String    CAT_COLUMNS_HELP  = "List of columns returned by the server:\n"
-         + ".default: the server returns a default list of rows\n"
-         + ".all: the server returns all columns\n"
-         + "Note that this facility may be not implemented by some servers";
+   static public String    CAT_COLUMNS_KEY   = "QueryCatColumns";
+   static public String [] CAT_COLUMNS       = {"default","all"};
+   static public String    CAT_COLUMNS_TITLE;
+   static public String    CAT_COLUMNS_HELP;
 
    public Prop getCatColumnProp() {
       final JComboBox<String> combo =  new JComboBox<String>( CAT_COLUMNS );
