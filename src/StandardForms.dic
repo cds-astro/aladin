@@ -21,3 +21,76 @@
 %R    Mime(application/xml)
 %Aladin.XLabel Cutout
 %Aladin.LabelPlane SODA sync
+
+%Aladin.StdForm OBSCORE
+%ActionName    StdForm_Obscore
+%Description    Obscore glu client
+%DistribDomain    ALADIN
+%Owner    aladin
+%Url  http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap
+%ResultDataType    Mime(votable/xml)
+%Aladin.Protocol TAPv1
+#%Aladin.Protocol TAPv1-TREEPANEL
+%Aladin.Label TAP
+%Aladin.LabelPlane Obscore
+%Param.Description							$7=Collection
+%Param.DataType								$7=char(caom2.SIAv1)
+%Param.Value								$7=- Any
+%Param.Value								$7=HST
+%Param.Value								$7=CFHT
+%ADQL.Where									$7=collection=$7
+
+%TAPTables.Upload	true
+
+%Param.Description			 				$1=Right ascension
+%Param.DataType        						$1=Target(RAd,ivoa.ObsCore)
+%Param.Description 							$2=Declination
+%Param.DataType        						$2=Target(DEd,ivoa.ObsCore)
+%Param.Description 							$3=Radius
+%Param.DataType        						$3=Field(RADIUSd,ivoa.ObsCore)
+%ADQL.Where        							$1=SpatialCS
+#SpatialCS function description below
+%ADQL.Func.SpatialCS						1=CONTAINS(POINT('ICRS', %1$s, %2$s), CIRCLE('ICRS', $1, $2, $3 ))
+%ADQL.FuncParam.SpatialCS.ivoa.ObsCore 		s_ra	s_dec
+
+%Param.Description 							$4=Energy
+%Param.DataType        						$4=Band(m,ivoa.ObsCore)
+%ADQL.Where        							$4=BandRange
+%ADQL.Func.BandRange						%1$s>$4 AND %2$s<$4
+%ADQL.FuncParam.BandRange.caom2.SIAv1 		energy_bounds_cval1	energy_bounds_cval2
+%ADQL.FuncParam.BandRange.ivoa.ObsCore 		em_min	em_max
+
+%Param.Description							$5=Time axis
+%Param.DataType   	 						$5=Date(OP,ParseToMJD,caom2.SIAv1,ivoa.ObsCore)
+%ADQL.Where        							$5=TimeRange
+%ADQL.Func.TimeRange						%1$s $5
+%ADQL.FuncParam.TimeRange.caom2.SIAv1 		time_bounds_cval1	time_bounds_cval2
+%ADQL.FuncParam.TimeRange.ivoa.ObsCore 		t_min	t_max
+
+%Param.Description  						$6=Table
+%Param.DataType  							$6=Tables(caom2.SIAv1, ivoa.ObsCore)
+%Param.Value        						$6=ivoa.ObsCore
+%TAPTables								caom2.SIAv1	ivoa.ObsCore
+%ADQL.From        							$6=$6
+
+%Param.Description  						$8=Output fields
+%Param.DataType								$8=COLUMNS
+%Param.Value        						$8=* - All fields
+%Param.Value        						$8=collection, publisherDID, instrument_name, position_center_ra, position_center_dec, energy_bounds_center, time_bounds_center - few fields
+%Param.DataType  							$8=char(ivoa.ObsCore)
+%ADQL.Select        						$8=$8
+
+%Param.Description  						$9=Max records
+%Param.Value        						$9=TOP 10 - A few
+%Param.Value        						$9=TOP 1000 - first 1000
+%Param.Value        						$9=- Default server limit
+%Param.DataType								$9=TOP(ivoa.ObsCore)
+%ADQL.Select        						$9=$9
+
+%Param.Description 							$10=Target name
+%Param.DataType   	 						$10=char(ivoa.ObsCore)
+%ADQL.Where        							$10=target_name LIKE "$10"
+
+%Param.Description 							$11=Facility name
+%Param.DataType   	 						$11=char(ivoa.ObsCore)
+%ADQL.Where        							$11=facility_name LIKE "$11"

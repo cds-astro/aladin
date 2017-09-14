@@ -2980,21 +2980,23 @@ TARGETOUTOFBOUNDSMESSAGE Your target is outside bounds. Please verify.
 PARAMDISABLEDTOOLTIP %1$s unknown for the dataset and hence it cannot be constrained.
 
 #tap menu configurations
-TAPFORMNAME	TAP1
 TAPFORMTITLE	Tap client
 TAPFORMINFO	Query TAP servers via Aladin.
 TAPCLIENTINSTR Construct your query, verify and execute.
 SELECTSERVERTOOLTIP List of tap server that can be loaded...
-TAPFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "X" button. \nOnce you are ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
+TAPGENERICFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "X" button. \nOnce you are ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\nChoose other flavours of tap clients with the "Mode" dropdown at the top right corner of form.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
+TAPEXAMPLEFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor select the generated queries: \nFirst, select the table you want from the "Table" dropdown at the top. \nThe queries are generated w.r.t the selected table.\nClick on "Settings" button to change some basic settings like maximum rows, target selection, setting of right ascension and declination columns, a second table which includes a choice to upload local tables.\nYou can make any manual edits to the generated query and then verify the query for correctness with the "Check" button. To submit click on "Submit"(at the bottom) and get the results. \nChoose other flavours of tap clients with the "Mode" dropdown at the top right corner of form.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
 TARGETERROR Please check target co-ordinates!
 SELECTSERVERLABEL Select server
 SELECTASYNCPANELLABEL Async jobs
+TAPEXCLIENTINSTR Choose an example query to execute.
+TAPOBSCORECLIENTINSTR Add any obscore criteria and execute query.
 
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message
 TAPTABLEUPLOADPARSETIP Load this data on the gui. 
 TAPTABLEUPLOADTIP Upload table. 
-TAPTABLENOUPLOADTIP No table uploads are available for this server
+TAPTABLENOUPLOADTIP Table uploads are not available for this server
 TAPTABLEUPLOADTIP.fr Upload table.  --configure message
 TAPTABLENOUPLOADTIP.fr No table uploads are available for this server	--configure message
 TIPCLICKTOADD Click to add
@@ -3003,14 +3005,13 @@ TAPNOFILELOAD Please select a tapserver to load!
 TAPNOFILERELOAD Please select a tapserver to reload!
 ADDFILE Add file:
 GENERICERROR Error. Please try again later
-REFRESHQUERYTOOLTIP Regenerate query from above form.
+REFRESHQUERYTOOLTIP Regenerate query from above form. This overwrites on your manual edits(if any).
 CHECKQUERYTOOLTIP Click to check the query below for syntax
 SYNCASYNCTOOLTIP You can choose how tap response is obtained by Aladin: synchronously or asynchronously. Choose ASYNC for jobs you know take longer to run.
 SHOWASYNCTOOLTIP Click to see the asynchronous job panel
 CHECKQUERY_SUCCESS Your constructed query has valid syntax!
 CHECKQUERY_ISBLANK Please generate/write a query
 NOTAPSERVERSCONFIGUREDMESSAGE No tap servers configured.
-TAPRETRY Retry
 TAPTIPRETRY Click to retry loading the tap services on this server
 TAPURLCLIENTFIELDLABEL Provide a TAP server URL
 TAPURLCLIENTFILTERLABEL Or choose from below servers. 
@@ -3019,6 +3020,14 @@ CHANGESERVERTOOLTIP Choose a different tap server
 TAPMODESTOOLTIP Load a different TAP client to construct your queries
 GLUTAPMODESTOOLTIP Click to load GLU mode - this is a customised form  generated from a GLU record
 GENERICTAPMODESTOOLTIP Click to load a generic tap client
+EXAMPLETAPMODESTOOLTIP Click to load a template based tap client
+OBSCORETAPMODESTOOLTIP Click to load a custom client for obscore tables
+TAPSERVICEEXAMPLESTOOLTIP These are service provided examples!
+SETRADECBUTTONTIP Select columns of the tap table as right ascension and declination columns
+TAPSETTINGSTOOLTIP Set targets, max rows and other values.
+SETTARGETTOOLTIP Hint: Configure different target by clicking the "Settings" button
+CHANGESETTINGSTOOLTIP Hint: Configure second table by clicking the "Settings" button
+NOGLURECFOUND No glu records found to create the GLU client!
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables
@@ -3030,7 +3039,7 @@ DISCARDTIP Click to discard the parsed table currently selected in the tables dr
 DISCARDALLTIP Click to discard all of the parsed tables
 NOTABLELOADEDMESSAGE Load new table to populate the gui!
 ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
-
+TABLEDISCARDINFO One option removed from upload file choices!
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again

@@ -219,7 +219,9 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 					
 					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS)
 							|| semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
-						aladin.datalinkGlu = new DataLinkGlu(aladin);
+						if (aladin.datalinkGlu == null) {
+							aladin.datalinkGlu = new DataLinkGlu(aladin);
+						}
 						aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
 					} /*else if (semantics.startsWith(SEMANTIC_PREVIEW) && accessUrl != null
 							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)

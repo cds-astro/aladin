@@ -23,8 +23,13 @@ package cds.aladin;
 
 import static cds.aladin.Constants.DATALINK_FORM;
 import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.RANGE_DELIMITER;
 import static cds.aladin.Constants.REGEX_BAND_RANGEINPUT;
+import static cds.aladin.Constants.REGEX_NUMBERNOEXP;
+import static cds.aladin.Constants.REGEX_OPANYVAL;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
+import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.TIME;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -74,7 +79,7 @@ import adql.db.exception.UnresolvedIdentifiersException;
 import adql.parser.ADQLParser;
 import adql.parser.TokenMgrError;
 import adql.query.ADQLQuery;
-import cds.aladin.Constants.TapServerMode;
+import adql.query.TextPosition;
 import cds.moc.HealpixMoc;
 import cds.tools.Astrodate;
 import cds.tools.ScientificUnitsUtil;
@@ -227,7 +232,6 @@ public class Server extends JPanel
    //for tap client
    ADQLParser adqlParser;
    public TapClient tapClient;
-   protected TapServerMode mode;
    JComboBox modeChoice = null;
    
    protected String getTitle() { return aladinLabel; }
@@ -626,9 +630,6 @@ public class Server extends JPanel
             grab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					aladin.dialog.startGrabIt();
-					if (aladin.additionalServiceDialog != null) {
-						aladin.additionalServiceDialog.startGrabIt();
-					}
 					// ABOVE NOT REALLY NEEDED, BEACUSE OF THE BELOW.
 					aladin.f.toFront();
 					JPanel server = Server.this;
@@ -1010,11 +1011,6 @@ public void layout() {
          widgetsUpdateCounter++;
       }
 
-      if( aladin.additionalServiceDialog!=null ) {
-         this.updateWidgets(aladin.additionalServiceDialog);
-         widgetsUpdateCounter++;
-      }
-
       // Activation ou non du bouton GrabIt
       return widgetsUpdateCounter==2;
    }
@@ -1059,7 +1055,7 @@ public void layout() {
     * @param s La chaine a mettre dans le champ Date
     */
     protected void setDate(String s) {
-       if( date==null ) return;
+       if( date == null ) return;
        if( setDateForServerGluIsDateLinkForms()) return;
        // On suppose que s est en année décimale (via getEpoch() )
        try {
@@ -1093,25 +1089,47 @@ public void layout() {
      * @return dateinMJD
      * @throws Exception 
 	 */
-    public StringBuffer setDateInMJDFormat(boolean replaceUserField, String input, String[] range) throws Exception {
+    public StringBuffer setDateInMJDFormat(boolean replaceUserField, String input, String[] range, String outputDelimiter) throws Exception {
 		StringBuffer error = null;
 		StringBuffer processedText = null;
-		if( date!=null && modeDate == ParseToMJD && input!=null && !input.isEmpty()) {
+		if(input != null && !input.isEmpty()) {
 			processedText = new StringBuffer();
-			Pattern p = Pattern.compile(Constants.REGEX_NUMBERNOEXP);
+			
 			String delimiterRegex = REGEX_TIME_RANGEINPUT;
-			Pattern regex = Pattern.compile(delimiterRegex);
-			Matcher matcher = regex.matcher(input);
-			String delimiter = getDelimiter(matcher);
-			String[] time = input.split(delimiterRegex);
+			String delimiter = getDelimiter(delimiterRegex, input);
+			String split = delimiter;
+			if (split.equals("..")) {
+				split = "\\.\\.";
+			} else if (split.trim().isEmpty()) {
+				split = "\\s";
+			}
+			String[] time = input.split(split);
+			Pattern p = Pattern.compile(REGEX_NUMBERNOEXP);
 			for (int i = 0; i < time.length; i++) {
 				time[i] = time[i].trim();
+				String op = null;
+				Pattern regexOpValue = Pattern.compile(REGEX_OPANYVAL);// find no special chars
+				Matcher matcherOpValue = regexOpValue.matcher(time[i]);
+				if (matcherOpValue.find()) {
+					if (matcherOpValue.group("operator") != null) {
+						op = matcherOpValue.group("operator");
+						if (time.length > 1) {
+							throw new Exception(DATEFORMATINCORRECT);
+						}
+						if (matcherOpValue.group("value") != null) {
+							time[i] = matcherOpValue.group("value");
+						}
+					}
+				}
 				Matcher m = p.matcher(time[i]);
 				if (m.find()) {
 					double timeInput = Double.parseDouble(time[i]);
-					error = isValueWithinLimits(timeInput, range, Constants.TIME);
+					error = isValueWithinLimits(timeInput, range, TIME);
 					if (error != null) {
 						throw new Exception(error.toString());
+					}
+					if (op != null) {
+						processedText.append(op).append(SPACESTRING);
 					}
 					processedText.append(timeInput);
 					if (i + 1 < time.length) {
@@ -1120,15 +1138,18 @@ public void layout() {
 				} else {
 					try {	
 						Date date = Util.parseDate(time[i]);
-						if (date==null) {
+						if (date == null) {
 							throw new Exception(DATEFORMATINCORRECT);
 						} else {
 							double timeInput = Util.ISOToMJD(date);
+							if (op != null) {
+								processedText.append(op).append(SPACESTRING);
+							}
 							processedText.append(timeInput);
 							if (i + 1 < time.length) {
 								processedText.append(delimiter);
 							}
-							error = isValueWithinLimits(timeInput, range, Constants.TIME);
+							error = isValueWithinLimits(timeInput, range, TIME);
 							if (error != null) {
 								throw new Exception(error.toString());
 							}
@@ -1142,14 +1163,12 @@ public void layout() {
 					
 				}
 			}
-			if (processedText!=null && processedText.length()!=0) {
-				if (replaceUserField) {
+			if (processedText != null && processedText.length() != 0) {
+				if (replaceUserField && date != null ) {
 					date.setText(processedText.toString());
 				}
-				processedText = new StringBuffer(processedText.toString().replaceAll(delimiter, " "));
+				processedText = new StringBuffer(processedText.toString().replaceAll(delimiter, outputDelimiter));
 			}
-			
-			System.out.println(date.getText());
 		}
 		return processedText;
 	}
@@ -1163,48 +1182,82 @@ public void layout() {
 	public StringBuffer processSpectralBand(boolean replaceUserField, String input, String[] range) throws Exception {
 		StringBuffer error = null;
 		StringBuffer result = null;
-		if (band!=null && (modeBand == BANDINMETERS) && input!=null && !input.isEmpty()) {
+		String op = null;
+		String valueToProcess = null;
+		if (input != null && !input.isEmpty()) {
 			result = new StringBuffer();
 			String delimiterRegex = REGEX_BAND_RANGEINPUT;
-			Pattern regex = Pattern.compile(delimiterRegex);
-			Matcher matcher = regex.matcher(input);
-			String delimiter = getDelimiter(matcher);
-			String[] spectralBand = input.split(delimiter);
+			String delimiter = getDelimiter(delimiterRegex, input);
+			String split = delimiter;
+			if (split != null && !split.isEmpty()) {
+				if (split.equals("..")) {
+					split = "\\.\\.";
+				} else if (split.trim().isEmpty()) {
+					split = "\\s";
+				}
+			}
+			String[] spectralBand = input.split(split);
 			for (int i = 0; i < spectralBand.length; i++) {
-				double bandInputInMeters = ScientificUnitsUtil.getUnitInMeters(spectralBand[i].trim());
+				valueToProcess = spectralBand[i].trim();
+				Pattern regexOpValue = Pattern.compile(REGEX_OPANYVAL);// find no special chars
+				Matcher matcherOpValue = regexOpValue.matcher(valueToProcess);
+				if (matcherOpValue.find()) {
+					if (matcherOpValue.group("operator") != null) {
+						op = matcherOpValue.group("operator");
+						if (spectralBand.length > 1) {
+							throw new Exception(input+" is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+						}
+					}
+					if (matcherOpValue.group("value") != null) {
+						valueToProcess = matcherOpValue.group("value");
+					} else {
+						throw new Exception(input+" is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+					}
+				}
+//				op = TapClient.getValidOperatorNumber(spectralBand[i]);
+//				if (op != null && spectralBand.length > 1) {
+//					throw new Exception(input+" is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+//				}
+				double bandInputInMeters = ScientificUnitsUtil.getUnitInMeters(valueToProcess.trim());
 				error = isValueWithinLimits(bandInputInMeters, range, Constants.BAND);
-				if (error!=null) {
+				if (error != null) {
 					throw new Exception(error.toString());
+				}
+				if (op != null) {
+					result.append(op).append(SPACESTRING);
 				}
 				result.append(bandInputInMeters);
 				if ((i + 1) < spectralBand.length) {
 					result.append(delimiter);
 				}
 			}
-			if (result!=null && result.length()!=0) {
-				if (replaceUserField) {
+			if (result != null && result.length() != 0) {
+				if (replaceUserField && band != null) {
 					band.setText(result.toString().trim());
 				}
-				result = new StringBuffer(result.toString().trim().replaceAll(delimiter, " "));
+				result = new StringBuffer(result.toString().trim().replaceAll(split, " "));
 			}
-			
+
 		}
 		return result;
 	}
 	
 	/**
 	 * Extract delimiter or return default -1;
+	 * \\s*(?<delimiter>,|\\.\\.|\\s+\\band\\b\\s+|\\s+\\bAND\\b\\s+)\\s*
 	 * @param matcher
 	 * @return
 	 */
-	public static String getDelimiter(Matcher matcher) {
+	public String getDelimiter(String delimiterRegex, String input) {
 		String delimiter = null;
+		Pattern regex = Pattern.compile(delimiterRegex);
+		Matcher matcher = regex.matcher(input);
 		if (matcher.find()) {
 			delimiter = matcher.group("delimiter");
 		}
 		if (delimiter == null) {
 			delimiter = ",";
-		}
+		} 
 		return delimiter;
 	}
 	
@@ -1239,17 +1292,26 @@ public void layout() {
 		if (range!=null && ((isValidNumberRange(range[0]) && input<Double.parseDouble(range[0])) || (isValidNumberRange(range[1]) && input>Double.parseDouble(range[1])))) {
 			output = new StringBuffer("Please specify ");
 			if (paramName==null) {
-				output.append(" value");
-			}else {
+				output.append(" values");
+			} else {
 				output.append(paramName);
 			}
-			output.append(" between ").append(range[0]).append(" and ").append(range[1]);
+			appendRangeInvalidMessage(output, range);
 		}
 		return output;
 	}
 	
 	public static boolean isValidNumberRange(String range) {
 		return range!=null && !range.trim().isEmpty(); 
+	}
+	
+	public static void appendRangeInvalidMessage(StringBuffer output, String[] range) {
+		String lowerLimitString = (isValidNumberRange(range[0])) ? EMPTYSTRING: range[0];
+		String upperLimitString = (isValidNumberRange(range[0])) ? EMPTYSTRING: range[1];
+		if (!(lowerLimitString.isEmpty() && upperLimitString.isEmpty())) {
+			output.append(" within limits. Valid range: ").append(lowerLimitString);
+			output.append(RANGE_DELIMITER).append(upperLimitString);
+		}
 	}
 	
 	
@@ -1263,9 +1325,9 @@ public void layout() {
 	public StringBuffer isValueWithinGivenOptions(String inputs, String[] allowedValues, String paramName) {
 		boolean valueFound = false;
 		StringBuffer output = null;
-		String[] input= null;
-		if (allowedValues!=null && inputs!=null && !inputs.isEmpty()) {
-			input=inputs.split(" ");
+		String[] input = null;
+		if (allowedValues != null && inputs != null && !inputs.isEmpty()) {
+			input = inputs.split(" ");
 			for (int i = 0; i < input.length; i++) {
 				for (int j = 0; j < allowedValues.length; j++) {
 					if (allowedValues[j]!=null && input[i].equalsIgnoreCase(allowedValues[j])) {
@@ -1279,9 +1341,9 @@ public void layout() {
 			}
 			if (!valueFound) {
 				output = new StringBuffer("Please specify ");
-				if (paramName==null) {
+				if (paramName == null) {
 					output.append(" value ");
-				}else {
+				} else {
 					output.append(paramName);
 				}
 				output.append("within: ").append(Arrays.toString(allowedValues).replaceAll("[\\[\\]null(,$)]", ""));
@@ -1606,7 +1668,7 @@ public void layout() {
    /** Affichage du status report pour le serveur */
    protected void showStatusReport() {
       if( aladin.frameInfoServer==null )  aladin.frameInfoServer = new FrameInfoServer(aladin);
-      else if (!(this instanceof ServerTap) && aladin.frameInfoServer.isOfTapServerType()){
+      else if (!(this instanceof ServerTap) && aladin.frameInfoServer.isOfDynamicTapServerType()){
     	  aladin.frameInfoServer.dispose();
     	  aladin.frameInfoServer = new FrameInfoServer(aladin);
 	}
@@ -1967,7 +2029,7 @@ public void layout() {
 	 * @param name
 	 * @param url
 	 */
-	public void submitTapServerRequest(boolean sync, Map<String, Object> requestParams, String name, String url) {
+	public void submitTapServerRequest(boolean sync, Map<String, Object> requestParams, String name, String url, String queryString) {
 		ADQLQuery query = null;
 		try {
 			query = checkQuery();
@@ -1975,7 +2037,7 @@ public void layout() {
 			//error is handled in the respective checkQuery() methods
 			ADQLParser syntaxParser = new ADQLParser();
 			try {
-				query = syntaxParser.parseQuery(tap.getText());
+				query = syntaxParser.parseQuery(queryString);
 			} catch (adql.parser.ParseException e1) {
 				// TODO Auto-generated catch block
 				Aladin.trace(3, "Parse exception with query..");
@@ -1985,13 +2047,13 @@ public void layout() {
 		if (query != null) {
 			try {
 				TapManager tapManager = TapManager.getInstance(aladin);
-				Aladin.trace(3, "Firing sync?" + sync + " for " + name + " url: " + url + "\n query: " + tap.getText()
+				Aladin.trace(3, "Firing sync?" + sync + " for " + name + " url: " + url + "\n query: " + queryString
 						/*+ "\n ADQLQuery: " + query.toADQL()*/ + "\n requestParams: " + requestParams);
 				if (sync) {
 					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					tapManager.fireSync(this, name, url, tap.getText(), query, requestParams);
+					tapManager.fireSync(this.tapClient, name, url, queryString, query, requestParams);
 				} else {
-					tapManager.fireASync(this, name, url, tap.getText(), query, requestParams);
+					tapManager.fireASync(this.tapClient, name, url, queryString, query, requestParams);
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -2002,9 +2064,12 @@ public void layout() {
 	}
 	
 	public void highlightQueryError(Highlighter highlighter, adql.parser.ParseException pe) {
-		int errorStart = pe.getPosition().beginColumn-1;
-		int errorEnd = pe.getPosition().endColumn-1;
-		highlightQueryError(highlighter, errorStart, errorEnd);
+		TextPosition errPosition = pe.getPosition();
+		if (errPosition != null) {
+			int errorStart = pe.getPosition().beginColumn-1;
+			int errorEnd = pe.getPosition().endColumn-1;
+			highlightQueryError(highlighter, errorStart, errorEnd);
+		}
 	}
 	
 	/**
@@ -2027,6 +2092,5 @@ public void layout() {
 			//Don't do anything if this fails
 		}
 	}
-
-
+	
 }

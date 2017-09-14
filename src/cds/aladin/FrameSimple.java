@@ -24,19 +24,24 @@ package cds.aladin;
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import cds.tools.Util;
 
 
 /**
- * This class is to show the upload frame for Tap servers
+ * This class is generic to show servers
  *
  */
 public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
@@ -68,6 +73,18 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 		Util.setCloseShortcut(this, false, aladin);
 		setLocation(Aladin.computeLocation(this));
 		setFont(Aladin.PLAIN);
+		getRootPane().registerKeyboardAction(new ActionListener() {
+	         public void actionPerformed(ActionEvent e) { processAnyClosingActions(); }
+	      },
+	      KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),
+	      JComponent.WHEN_IN_FOCUSED_WINDOW
+	            );
+	      getRootPane().registerKeyboardAction(new ActionListener() {
+	         public void actionPerformed(ActionEvent e) { processAnyClosingActions(); }
+	      },
+	      KeyStroke.getKeyStroke(KeyEvent.VK_W,Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+	      JComponent.WHEN_IN_FOCUSED_WINDOW
+	            );
 	}
 	
 	/** Affichage des infos associées à un serveur */
@@ -141,6 +158,23 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	public void setGrabItRadius(double x1, double y1, double x2, double y2) {
 		GrabUtil.setGrabItRadius(aladin, server, x1, y1, x2, y2);
 	}
+	
+	@Override
+	protected void processWindowEvent(WindowEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getID() == WindowEvent.WINDOW_CLOSING)
+			processAnyClosingActions();
+		super.processWindowEvent(e);
+	}
 
+	protected void processAnyClosingActions() {
+		try {
+			if (server instanceof ServerGlu) {
+				((ServerGlu) server).cleanUpFOV();
+			}
+		} catch (Exception e) {
+		}
+		setVisible(false);
+	}
 
 }

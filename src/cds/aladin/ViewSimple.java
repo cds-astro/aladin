@@ -1772,9 +1772,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 	   FrameUploadServer uploadFrame = TapManager.getInstance(aladin).uploadFrame;
 	   if (aladin.dialog!=null && aladin.dialog.isGrabIt()) {
 		   grabItDialog = aladin.dialog;
-	   } else if (aladin.additionalServiceDialog!=null && aladin.additionalServiceDialog.isGrabIt()) {
-		   grabItDialog = aladin.additionalServiceDialog;
-	   } else if (uploadFrame != null && uploadFrame.uploadServer != null && uploadFrame.isGrabIt()) {
+	   } else if (uploadFrame != null && uploadFrame.uploadClient.serverTap != null && uploadFrame.isGrabIt()) {
 		   grabItDialog = uploadFrame;
 	   } else if (aladin.grabUtilInstance.grabFrame != null && aladin.grabUtilInstance.grabFrame.isGrabIt() ) {
 		   grabItDialog = aladin.grabUtilInstance.grabFrame;

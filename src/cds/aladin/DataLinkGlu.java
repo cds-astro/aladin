@@ -67,9 +67,6 @@ import static cds.aladin.Constants.STCPREFIX_CIRCLE;
 import static cds.aladin.Constants.STCPREFIX_POLYGON;
 
 import static cds.aladin.Constants.UTF8;
-
-import java.awt.Dimension;
-import java.awt.Point;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.UnsupportedEncodingException;
@@ -81,7 +78,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import cds.moc.HealpixMoc;
 import cds.savot.model.ParamSet;
 import cds.savot.model.SavotOption;
 import cds.savot.model.SavotParam;
@@ -94,6 +90,8 @@ public final class DataLinkGlu {
 	public Aladin aladin;
 
 	protected static Vector vGluDLServer;
+	
+	FrameSimple serviceClientFrame;
 	
 	public DataLinkGlu() {
 		// TODO Auto-generated constructor stub
@@ -110,7 +108,7 @@ public final class DataLinkGlu {
 	
 	/**
 	 * Creates glu related to invoking services linked to a datalink
-	 * Incase of a SODA sync, a specialised form is generated.
+	 * In case of a SODA sync, a specialized form is generated.
 	 * @param resultsResource
 	 * @param activeDataLinkSource
 	 * @param selectedDatalink
@@ -129,7 +127,6 @@ public final class DataLinkGlu {
 		ParamSet resourceParams = metaResource.getParams();
 		SavotParam resourceParam = null;
 		ParamSet inputParams = null;
-		HealpixMoc sourceMoc = null;
 		String boundaryArea_stcs = null;
 		ByteArrayInputStream dicStream = null;
 		
@@ -150,7 +147,7 @@ public final class DataLinkGlu {
 					paramValue.put(String.valueOf(SODA_IDINDEX), getParamValue(idParam, selectedDatalink));
 					
 					boolean noParamSet = true;
-					if (sodaGluRecord!=null) {
+					if (sodaGluRecord != null) {
 						dicStream = new ByteArrayInputStream(sodaGluRecord.getBytes(StandardCharsets.UTF_8));
 						noParamSet = this.setSODAFormParams(activeDataLinkSource, paramDescription, paramDataType, paramValue, paramRange);
 					} else {
@@ -167,7 +164,7 @@ public final class DataLinkGlu {
 						}
 					}
 					
-					//Note: noParamSet: if we do not get any values from the original table to set in cutout client, then we use values from the datalink response.
+					//Note: noParamSet: if we do not get any values from the original table to set in service client, then we use values from the datalink response.
 					if (noParamSet) {
 						this.setSODAFormParams(selectedDatalink, paramDescription, paramDataType, paramValue, paramRange);
 						boundaryArea_stcs = getFovFromDatalinkResponse(inputParams);
@@ -201,14 +198,14 @@ public final class DataLinkGlu {
 					param = (SavotParam) inputParams.getItemAt(i);
 					paramDescription.put(index, param.getName());
 					paramDataType.put(index, param.getDataType());
-					paramValue.put(index, this.getParamValue(param, selectedDatalink));
+					paramValue.put(index, getParamValue(param, selectedDatalink));
 					addIndexedQueryParameter(urlString, param.getName(), index);
 //					System.out.println(urlString.toString());
 				}
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 				
 			} else {
-//				urlString.append("?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7");
+//				urlString.append("?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6&ID=$7");
 				urlString.append(SODA_URL_PARAM);
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 			}
@@ -246,7 +243,7 @@ public final class DataLinkGlu {
 					if (tXelValue != null) {
 						//logic now is if t_xel =1 then time is known factor and hence we can constrain time
 						//logic added as we saw a usecase with califa from gavo
-						//as discussed with Francois B. we don't do this for other soda params for now
+						//as discussed with Francois Bonnarel, we don't do this for other soda params for now
 						try {
 							int tXelIntValue = Integer.parseInt(tXelValue);
 							if (tXelIntValue == 1) {
@@ -263,7 +260,14 @@ public final class DataLinkGlu {
 				}
 	        	
 			}
-			aladin.datalinkGlu.reload(false, serverVector);
+//			aladin.datalinkGlu.reload(false, serverVector);
+			
+			if (serviceClientFrame == null) {
+				serviceClientFrame = new FrameSimple(aladin);
+			}
+//			Aladin.makeCursor(tapPanelFromTree, WAIT);
+			serviceClientFrame.show(dlGlu, "Service "+dlGlu.aladinLabel);
+//			Aladin.makeCursor(tapPanelFromTree, DEFAULT);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -420,7 +424,7 @@ public final class DataLinkGlu {
 			String dlParamValue = getParamValue(ipParam, selectedDatalink);
 			if (dlParamValue == null || dlParamValue.isEmpty()) {
 				SavotValues savotValues = ipParam.getValues();
-				if (savotValues!=null) {
+				if (savotValues != null) {
 					if (savotValues.getMin() != null && savotValues.getMax() != null) {
 						lowerLimit = savotValues.getMin().getValue();
 						upperLimit = savotValues.getMax().getValue();
@@ -611,37 +615,6 @@ public final class DataLinkGlu {
 			vGluDLServer.addElement(g);
 		}
   }
-	
-	void reload(boolean clearBefore, Vector server) {
-		ServerDialog oldDialog = aladin.additionalServiceDialog;
-
-		Point p = null;
-		Dimension d = null;
-		try {
-			if (oldDialog != null && oldDialog.isVisible()) {
-				p = aladin.additionalServiceDialog.getLocationOnScreen();
-				d = aladin.additionalServiceDialog.getSize();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			p = null;
-		}
-		// aladin.gluSkyReload();
-
-		aladin.additionalServiceDialog = new ServerDialog(aladin, server);
-		// aladin.additionalServiceDialog.setCurrent(aladin.additionalServiceDialog.getLastGluServerIndice());
-
-		if (p != null) {
-			aladin.additionalServiceDialog.flagSetPos = true;
-			aladin.additionalServiceDialog.setLocation(p);
-			aladin.additionalServiceDialog.setSize(d);
-		}
-
-		aladin.additionalServiceDialog.showNow();
-		if ((oldDialog != null && oldDialog.isVisible())) {
-			oldDialog.dispose();
-		}
-	}
 	
 	/**
 	 * Method to append query parameter

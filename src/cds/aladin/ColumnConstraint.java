@@ -53,7 +53,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		// TODO Auto-generated constructor stub
 		super(serverTap, new JComboBox(columnNames), new JComboBox(operators), new JTextField(6));
 		JComboBox columns = (JComboBox) this.firstGridComponent;
-		columns.setRenderer(new TapTableColumnRenderer());
+		columns.setRenderer(new CustomListCellRenderer());
 		columns.setSize(columns.getWidth(), Server.HAUT);
 		columns.addItemListener(this);
 		
@@ -82,7 +82,6 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 	public void processInput(JTextField constraint) {
 		ColumnConstraint columnConstraintPanel = (ColumnConstraint) constraint.getParent();
 		String selectedWhereOperator = (String) ((JComboBox<String>) columnConstraintPanel.secondGridComponent).getSelectedItem();
-
 		if (selectedWhereOperator.equals(BETWEEN) || selectedWhereOperator.equals(NOTBETWEEN)) {
 			DelimitedValFieldListener.andConstraint(constraint, REGEX_RANGEINPUT/*REGEX_BETWEENINPUT*/, toolTipText);
 		}
@@ -101,7 +100,8 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		JTextField constraintValue = (JTextField) this.thirdGridComponent;
 		String selectedWhereOperator = (String) whereOperator.getSelectedItem();
 		
-		String columnName = ((TapTableColumn)columns.getSelectedItem()).getColumn_name();
+		TapTableColumn column = ((TapTableColumn)columns.getSelectedItem());
+		String columnName = column.getColumn_name();
 		whereClause.append(columnName).append(SPACESTRING);
 		
 		if (constraintValue.getText().isEmpty()) {
@@ -127,12 +127,17 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 					throw new Exception("Error for column contraint: "+columnName+". \nFormat for between operator: value1 AND value2. Ex: 2 and 3. ");
 				} else {
 					if (matcher.group("range1") != null && matcher.group("range2") != null) {
-						whereClause.append(selectedWhereOperator).append(SPACESTRING).append(Util.formatterPourRequete(matcher.group("range1")))
-						.append(" AND ").append(Util.formatterPourRequete(matcher.group("range2"))).append(SPACESTRING);
+						whereClause.append(selectedWhereOperator).append(SPACESTRING).append(Util.formatterPourRequete(false, matcher.group("range1")))
+						.append(" AND ").append(Util.formatterPourRequete(false, matcher.group("range2"))).append(SPACESTRING);
 					}
 				}
 			} else{
-				whereClause.append(whereOperator.getSelectedItem()).append(SPACESTRING).append(Util.formatterPourRequete(constraintValue.getText()))
+				String dataType = column.getDatatype();
+				boolean processAsNumber = true;
+				if (dataType!=null && !dataType.toUpperCase().contains("VARCHAR")) {
+					processAsNumber = false;
+				}
+				whereClause.append(whereOperator.getSelectedItem()).append(SPACESTRING).append(Util.formatterPourRequete(processAsNumber, constraintValue.getText()))
 				.append(SPACESTRING);
 			}
 			

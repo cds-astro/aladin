@@ -94,7 +94,7 @@ public static final String NEWLINE_CHAR = "\n";
 public static final Map<String, String> DATE_FORMATS = new HashMap<String, String>();
 //wont allow .0
 //if allowing exponent:: REGEX_NUMBER = "^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$";
-public static final String REGEX_NUMBER = "[-+]?\\d+(\\.\\d+)?";
+public static final String REGEX_NUMBER = "[-+]?\\d+(\\.\\d+)?";//integer plus decimal
 public static final String REGEX_NUMBERNOEXP = "^"+REGEX_NUMBER+"$";// = "^[-+]?[0-9]\\d*(\\.\\d+)?$";//^\\d{1,5}$"; //\\s?-?[0-9]*\\s?";
 public static final String SERVICE_DEF = "service_def";
 public static final String DESCRIPTION = "description";
@@ -119,17 +119,49 @@ public static final String SEMANTIC_PREVIEW = "#preview";
 public static final String REGEX_TABLENAME_SPECIALCHAR = "[$&+,:;=?@#/\\\\|]";
 public static final String REGEX_ONLYALPHANUM = "[^A-Za-z0-9]";
 public static final String REGEX_ALPHA = "[A-Za-z]";
+
+public static final String REGEX_OPTIONNALEXPONENT = "([eE]{1}[-+]?\\d+)?";
+public static final String REGEX_RANGEDELIMITERS = "\\.\\.|,|and|AND|\\s+";
+
 /** REGEX_OPNUM: compare operator(1 or 0) +or-(1 or 0) decimal or whole number(exactly 1): 
 -valid matches: >=233, <34, !=-65, >=-434.05
 -invalid matches: =>64, >>344, asf, >=-434.05asd, >=-434.05 434.05
 */
-public static final String REGEX_OPNUM = "^\\s*(?<operator>[><=]|>=|<=|!=)?(?<value>[-+]?[0-9]\\d*(\\.\\d+)?){1}$";
+//public static final String REGEX_OPNUM = "^\\s*((?<operator>[><=]|>=|<=|!=)\\s*)?(?<value>[-+]?[0-9]\\d*(\\.\\d+)?){1}$";
+//public static final String REGEX_OPNUM = "^\\s*((?<operator>[><=]|>=|<=|!=)\\s*)?(?<value>[-+]?[0-9]\\d*(\\.\\d+)?){1}$";
+public static final String REGEX_OP = "^\\s*((?<operator>>=|<=|!=|[><=])\\s*)";
+public static final String REGEX_OPNUM = REGEX_OP+"?(?<value>"+REGEX_NUMBER+REGEX_OPTIONNALEXPONENT+"){1}$";
+public static final String REGEX_OPANYVAL = REGEX_OP+"?(?<value>.*)$";//get valid operator , followed by 'any' value
+
+
+
+//integer plus decimal plsu exponent
+public static final String REGEX_NUMBERWITHEXP = "\\A\\s*("+REGEX_NUMBER+REGEX_OPTIONNALEXPONENT+"){1}\\s*\\z";//matches one number
 /** REGEX_RANGEINPUT: min(exactly1) ..(exactly1) max(exactly1): 
 -valid matches: 2..34, -523232323..+23423423424
 -invalid matches: 2.., ..35345
 the delimiter between the 2 values can be .. or , or and/AND
 */
-public static final String REGEX_RANGEINPUT = "(?<range1>"+REGEX_NUMBER+"){1}\\s*(\\.\\.|,|and|AND|\\s+)\\s*(?<range2>"+REGEX_NUMBER+"){1}";
+public static final String REGEX_RANGENUMBERINPUT = "^(?<range1>" + REGEX_NUMBER + REGEX_OPTIONNALEXPONENT
+		+ "){1}\\s*(?<operator>" + REGEX_RANGEDELIMITERS + ")\\s*(?<range2>" + REGEX_NUMBER
+		+ REGEX_OPTIONNALEXPONENT + "){1}\\s*$";
+
+public static final String REGEX_RANGEINPUT = "^(?<range1>.*){1}\\s*(?<operator>" + REGEX_RANGEDELIMITERS + "){1}\\s*(?<range2>.*{1}){1}\\s*$";
+
+//public static final String REGEX_RANGEINPUT = "^(?<range1>"+REGEX_NUMBER+"){1}\\s*((?<operator>\\.\\.|,|and|AND|\\s+)\\s*(?<range2>"+REGEX_NUMBER+")_{1}";
+//public static final String REGEX_RANGEINPUT = "^(?<range1>"+REGEX_NUMBER+"){1}\\s*(?<operator>\\.\\.|,|and|AND|\\s+)\\s*(?<range2>"+REGEX_NUMBER+"){1}\\s*$";
+
+/** REGEX_OPNUM: ^\\s* - 0 or more space
+ * ((?<operator>=|!=|LIKE|NOT LIKE|IS NOT|IS)\\s+{0,1}) compare operator for string (1 or 0 times followed mandatorily by space)
+ * (?<value>[\\w\\s]+)$ - ending one or more words
+-valid matches: like liek, hubbel232
+-invalid matches: like, like3 like
+*/
+public static final String REGEX_OPALPHANUMOLD = "^\\s*((?<operator>=|!=|LIKE|NOT LIKE|IS NOT|IS)\\s+)?(?<value>[\\w\\s]+)$";
+public static final String REGEX_OPALPHANUM = "^\\s*((?<operator>=|!=|LIKE|NOT LIKE|IS NOT|IS)\\s+)?(?<value>(.*)(?!\\s))$";
+
+public static final String PROCESSED_REGEX_OPALPHANUM = "\'${value}\'";
+public static final String RANGE_DEFAULT_SPACEDDISPLAY = "${range1} ${range2}";
 public static final String ADQLVALUE_FORBETWEEN = "BETWEEN ${range1} AND ${range2}";
 public static final String REGEX_TIME_RANGEINPUT = "\\s*(?<delimiter>,|\\.\\.|\\s+\\band\\b\\s+|\\s+\\bAND\\b\\s+)\\s*";
 public static final String REGEX_BAND_RANGEINPUT = "\\s*(?<delimiter>,|\\.\\.|\\s+\\band\\b\\s+|\\s+\\bAND\\b\\s+|\\s+)\\s*";
@@ -165,16 +197,20 @@ public static final String CHECKQUERY = "CHECKQUERY";
 public static final String UPLOAD = "UPLOAD";
 public static final String SELECTALL = "SELECTALL";
 public static final String OPEN_SET_RADEC = "OPEN_SET_RADEC";
-public static final String SYNCGETRESULT = "%1$s/sync?REQUEST=doQuery&LANG=ADQL&QUERY=%2$s"; //As per TAP spec
+public static final String SETTINGS = "SETTINGS";
+public static final String GETRESULTPARAMS = "REQUEST=doQuery&LANG=ADQL&QUERY="; //As per TAP spec
+//public static final String SYNCGETRESULT = "%1$s/sync?REQUEST=doQuery&LANG=ADQL&QUERY=%2$s";
+public static final String POSQuery = "CONTAINS(POINT('ICRS', %1$s, %2$s), CIRCLE('ICRS', %3$s, %4$s, %5$s)) = 1";
 //public static final String UCD_RA_PATTERN1 = "pos.eq.ra;meta.main";//wont explicitely check for this. pos.eq.ra is allowed for now.
 public static final String UCD_RA_PATTERN2 = "pos.eq.ra";
-public static final String UCD_RA_PATTERN3 = "POS_EQ_RA_MAIN";
+public static final String UCD_RA_PATTERN3 = "pos_eq_ra_main";//"POS_EQ_RA_MAIN";
 //public static final String UCD_DEC_PATTERN1 = "pos.eq.dec;meta.main";
 public static final String UCD_DEC_PATTERN2 = "pos.eq.dec";
-public static final String UCD_DEC_PATTERN3 = "POS_EQ_DEC_MAIN";
+public static final String UCD_DEC_PATTERN3 = "pos_eq_dec_main";//"POS_EQ_DEC_MAIN";
 public static final String[] CIRCLEORSQUARE = { "CIRCLE"/*, "SQUARE"*/ };//TODO:: cirlce or sqaure dev. add sq when...
 public static final String[] SYNC_ASYNC = { "SYNC","ASYNC" };
-public static final Integer[] TAP_REC_LIMIT = { 100,200,500,1000,2000 };
+public static final String TAP_REC_LIMIT_UNLIMITED = "unlimited";
+public static final String[] TAP_REC_LIMIT = { "10","100","200","500","1000","2000", "9999","99999","999999", TAP_REC_LIMIT_UNLIMITED};
 public static final String AND = "AND";
 public static final String TAPv1 = "TAPv1";
 public static final String V1 = "V1";
@@ -250,22 +286,19 @@ public static final String ABORTJOB = "ABORTJOB";
 public static final String OLDJOBSELECTED = "OLDJOBSELECTED";
 /*public static final String RUNJOB = "RUNJOB";*/
 
-public static final int TAPFORM_STATUS_NOTCREATEDGUI = 1;//have metadata..not created gui
-public static final int TAPFORM_STATUS_NOTLOADED = 0;//no metadata
+public static final int TAPFORM_STATUS_NOTLOADED = 0;//have metadata..not created gui
+public static final int TAPFORM_STATUS_LOADING = 1;//metadata and gui in place
 public static final int TAPFORM_STATUS_LOADED = 2;//metadata and gui in place
 public static final int TAPFORM_STATUS_ERROR = -1;//error
 
-public static enum TapServerMode {//generic client modes
-	UPLOAD;
-}
-
 //modes correspond to the frame that host these servers
 public static enum TapClientMode {//Dialog is serverselector
-	DIALOG, TREEPANEL;
+	DIALOG, TREEPANEL, UPLOAD;
 }
 public static final String GLU = "GLU";
 public static final String GENERIC = "GENERIC";
-public static final String[] TAPSERVERMODES = { GENERIC , GLU };
+public static final String EXAMPLES = "EXAMPLES";
+public static final String OBSCORE = "OBSCORE";
 public static final String TAPMODECHANGETOOLTIP = "TAPMODECHANGETOOLTIP";
 public static final String LOADCLIENTTAPURL = "LOADCLIENTTAPURL";
 public static final String RELOAD = "RELOAD";
@@ -276,5 +309,37 @@ public static final String STR_QUERY_STATUS = "QUERY_STATUS";
 
 public static final String STCPREFIX_POLYGON = "POLYGON ICRS ";
 public static final String STCPREFIX_CIRCLE = "CIRCLE ICRS ";
+
+public static final String RADECBUTTON = "RADECBUTTON";
+
+public static final String CHANGESETTINGS = "CHANGESETTINGS";
+
+//Actions obstap client
+public static final String ADD_DATAPRODUCTTYPE = "ADD_DATAPRODUCTTYPE";
+public static final String ADD_SPATIALCONSTRAINT = "ADD_SPATIALCONSTRAINT";
+public static final String ADD_TIMECONSTRAINT = "ADD_TIMECONSTRAINT";
+public static final String ADD_SPECTRALCONSTRAINT = "ADD_SPECTRALCONSTRAINT";
+public static final String ADD_FREECONSTRAINT = "ADD_FREECONSTRAINT";
+public static final String TAP_EMPTYINPUT = "ALATAP_EMPTYINPUT";
+
+public static final String UCD_MAINIDQUALIFIER = "meta.main";
+
+//flagged columns
+public static final String RA = "ra", DEC = "dec";
+public static final String PARALLAX = "parallax", RADIALVELOCITY = "radialvelocity";
+public static final String BIBCODE = "bibCode", JOURNAL = "journal", DOCTITLE = "title";
+public static final String PMRA = "pmra", PMDEC = "pmdec";
+public static final String REDSHIFT = "redshift", MAG = "mag";
+public static final String MAINID = "id", SRCCLASS = "srcclass";
+
+//obscore columns
+public static final String DATAPRODUCT_TYPE = "dataproduct_type", OBSID = "obs_id";
+public static final String BIB_REFERENCE = "bib_reference", ACCESS_FORMAT = "access_format", ACCESS_ESTSIZE = "access_estsize";
+
+//tap schema ids strings for locating schema tables
+//hate using regex as performance is abysmal for simple string searches comapred to String.contains
+//looking for tables or just keys might exclude some imp tables?
+public static final String REGEX_TAPSCHEMATABLES = "schemas|TAP_SCHEMA.tables|TAP_SCHEMA.keys|key_columns|columns";
+public static final String PATHSYNC = "sync";
 
 }

@@ -79,6 +79,7 @@ public class DelimitedValFieldListener{
 		Pattern re = Pattern.compile(checkPattern, Pattern.CASE_INSENSITIVE);
 		Matcher m = re.matcher(selectedText);
 		boolean result = false;
+		highlighter.removeAllHighlights();
 		if (!m.find()) {
 			constraint.setToolTipText(toolTipText);
 			HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Aladin.LIGHTORANGE);

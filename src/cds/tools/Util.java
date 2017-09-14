@@ -2310,7 +2310,7 @@ public final class Util {
 			dateformat.setTimeZone(TimeZone.getTimeZone("UTC"));
 		    try {
 				date =  dateformat.parse(input);
-				System.out.println(date);
+//				System.out.println(date);
 			} catch (ParseException pe) {
 				throw pe;
 			} 
@@ -2391,8 +2391,8 @@ public final class Util {
 	 * @return La chaine correctement formattée
 	 * @author Mallory Marcot
 	 */
-	public static String formatterPourRequete(String str) {
-		if(isString(str) && !str.toLowerCase().equals("null") && !dejaQuote(str))
+	public static String formatterPourRequete(boolean considerAsString, String str) {
+		if((considerAsString || isString(str)) && !str.toLowerCase().equals("null") && !dejaQuote(str))
 			str = "'" + str + "'";
 		
 		return " "+ str;

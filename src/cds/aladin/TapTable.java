@@ -21,7 +21,38 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.ACCESSURL;
+import static cds.aladin.Constants.ACCESS_ESTSIZE;
+import static cds.aladin.Constants.ACCESS_FORMAT;
+import static cds.aladin.Constants.BIBCODE;
+import static cds.aladin.Constants.DATAPRODUCT_TYPE;
+import static cds.aladin.Constants.DEC;
+import static cds.aladin.Constants.DOCTITLE;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.EM_MAX;
+import static cds.aladin.Constants.EM_MIN;
+import static cds.aladin.Constants.JOURNAL;
+import static cds.aladin.Constants.MAG;
+import static cds.aladin.Constants.MAINID;
+import static cds.aladin.Constants.OBSID;
+import static cds.aladin.Constants.PARALLAX;
+import static cds.aladin.Constants.PMDEC;
+import static cds.aladin.Constants.PMRA;
+import static cds.aladin.Constants.RA;
+import static cds.aladin.Constants.RADIALVELOCITY;
+import static cds.aladin.Constants.REDSHIFT;
+import static cds.aladin.Constants.T_MAX;
+import static cds.aladin.Constants.T_MIN;
+import static cds.aladin.Constants.UCD_DEC_PATTERN2;
+import static cds.aladin.Constants.UCD_DEC_PATTERN3;
+import static cds.aladin.Constants.UCD_RA_PATTERN2;
+import static cds.aladin.Constants.UCD_RA_PATTERN3;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class is a model class for columns of tap services
@@ -35,10 +66,268 @@ public class TapTable {
 	private String table_type;
 	private String description;
 	private String utype;
-	private String raColumnName;
-	private String decColumnName; 
 	private Vector<TapTableColumn> columns;
+	public Map<String, TapTableColumn> flaggedColumns;
+	public Map<String, String> obsCoreColumns;
+	public static final int MAXOBSCORECOLSCOUNTED = 6;
 	
+	/**
+	 * Identifies certain columns
+	 * @param table
+	 * @param column
+	 */
+	public synchronized void parseUcds(TapTableColumn column) {
+		// some nice select statements..also set param names
+		String ucd = column.getUcd();
+		if (ucd != null && !ucd.isEmpty()) {
+			ucd = ucd.toLowerCase();
+			if (ucd.startsWith(UCD_RA_PATTERN2) || ucd.equalsIgnoreCase(UCD_RA_PATTERN3)) {
+				this.setFlaggedColumn(RA, column);
+			} else if (ucd.startsWith(UCD_DEC_PATTERN2) || ucd.equalsIgnoreCase(UCD_DEC_PATTERN3)) {
+				this.setFlaggedColumn(DEC, column);
+			} else if (ucd.startsWith("pos.parallax")) {
+				this.setFlaggedColumn(PARALLAX, column);
+			} else if (ucd.startsWith("spect.dopplerveloc")) {
+				this.setFlaggedColumn(RADIALVELOCITY, column);
+			} else if (ucd.equals("meta.bib.bibcode")) {
+				this.setFlaggedColumn(BIBCODE, column);
+			} else if (ucd.equals("meta.bib.journal")) {
+				this.setFlaggedColumn(JOURNAL, column);
+			} else if (ucd.equals("meta.title")) {
+				this.setFlaggedColumn(DOCTITLE, column);
+			} else if (ucd.startsWith("pos.pm;pos.eq.ra")) {
+				this.setFlaggedColumn(PMRA, column);
+			} else if (ucd.startsWith("pos.pm;pos.eq.dec")) {
+				this.setFlaggedColumn(PMDEC, column);
+			} /*else if (ucd.startsWith("sregion;") && ucd.contains("instr.fov")) {// phys.angSize;instr.fov
+				this.setFlaggedColumn(S_REGION, column);
+			}*/ else if (ucd.startsWith("meta.id")) {//"meta.id;meta.main"
+				this.setFlaggedColumn(MAINID, column);
+			} else if (ucd.contains("src.redshift")) {
+				this.setFlaggedColumn(REDSHIFT, column);
+			} else if (ucd.startsWith("phot.flux")) {
+				this.setFlaggedColumn(MAG, column);
+			} /*else if (ucd.startsWith("src.class")) {
+				this.setFlaggedColumn(SRCCLASS, column);
+			} */ 
+		}
+	}
+	
+	public boolean hasObscoreInTheName() {
+		boolean result = false;
+		Pattern pattern = Pattern.compile("obscore", Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(table_name);
+		if (matcher.find()) {
+			result = true;
+		}
+		return result;
+	}
+	
+	public boolean isObscore() {
+		boolean result = false;
+		if (hasObscoreInTheName() && this.obsCoreColumns != null && this.obsCoreColumns.size() > MAXOBSCORECOLSCOUNTED) {
+			result = true;
+		}
+		return result;
+	}
+	
+	public void initObsCoreColumns() {
+		if (this.obsCoreColumns == null) {
+			obsCoreColumns = new HashMap<String, String>();
+		}
+	}
+	
+	public synchronized void parseForObscore(boolean isUpload, TapTableColumn columnMeta) {
+		if (isUpload || hasObscoreInTheName()) {
+			initObsCoreColumns();
+			int mandatoryColumnCount = 0;
+			
+			//17 mandatory columns counted
+			String name = columnMeta.getColumn_name();
+			String utype = columnMeta.getUtype();
+			if (name == null && utype == null) {
+				return;
+			}
+			if (name == null) {
+				name = EMPTYSTRING;
+			}
+			if (utype == null) {
+				utype = EMPTYSTRING;
+			} else {
+				utype = getNoNamesSpaceUtype(utype);
+			}
+			synchronized (obsCoreColumns) {
+			if (utype.equalsIgnoreCase("ObsDataset.dataProductType") || name.equalsIgnoreCase("dataproduct_type")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(DATAPRODUCT_TYPE, name);
+			} else if (utype.equalsIgnoreCase("DataID.observationID") || name.equalsIgnoreCase("obs_id")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(OBSID, name);
+			} /*else if (utype.equals("obscore:DataID.title") || name.equalsIgnoreCase("obs_title")) {
+			} else if (utype.equals("obscore:Curation.reference") || name.equalsIgnoreCase("bib_reference")) {
+			}*/ else if (utype.equalsIgnoreCase("Access.reference") || name.equalsIgnoreCase("access_url")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ACCESSURL, name);
+			} else if (utype.equalsIgnoreCase("Access.format") || name.equalsIgnoreCase("access_format")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ACCESS_FORMAT, name);
+			} else if (utype.equalsIgnoreCase("Access.size") || name.equalsIgnoreCase("access_estsize")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ACCESS_ESTSIZE, name);
+			} else if (utype.equalsIgnoreCase("Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C1")
+					|| name.equalsIgnoreCase("s_ra")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(RA, name);
+			} else if (utype.equalsIgnoreCase("Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C2")
+					|| name.equalsIgnoreCase("s_dec")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(DEC, name);
+			} else if (utype.equalsIgnoreCase("Char.SpatialAxis.Coverage.Support.Area") || name.equals("s_region")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ServerObsTap.FIELDSIZE, name);
+			} else if (utype.equalsIgnoreCase("Char.SpatialAxis.Resolution.refval")
+					|| name.equalsIgnoreCase("s_resolution")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ServerObsTap.SPATIALRESOLUTION, name);
+			} else if (utype.equalsIgnoreCase("Char.TimeAxis.Coverage.Bounds.Limits.StartTime")
+					|| name.equalsIgnoreCase("t_min")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(T_MIN, name);
+			} else if (utype.equalsIgnoreCase("Char.TimeAxis.Coverage.Bounds.Limits.StopTime")
+					|| name.equalsIgnoreCase("t_max")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(T_MAX, name);
+			} else if (utype.equalsIgnoreCase("Char.TimeAxis.Coverage.Support.Extent")
+					|| name.equalsIgnoreCase("t_exptime")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ServerObsTap.EXPOSURETIME, name);
+			} else if (utype.equalsIgnoreCase("Char.TimeAxis.Resolution.Refval.valueResolution.Refval.value")
+					|| name.equalsIgnoreCase("t_resolution")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ServerObsTap.TIMERESOLUTION, name);
+			} else if (utype.equalsIgnoreCase("Char.SpectralAxis.Coverage.Bounds.Limits.LoLimit")
+					|| name.equalsIgnoreCase("em_min")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(EM_MIN, name);
+			} else if (utype.equalsIgnoreCase("Char.SpectralAxis.Coverage.Bounds.Limits.HiLimit")
+					|| name.equalsIgnoreCase("em_max")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(EM_MAX, name);
+			} else if (utype.equalsIgnoreCase("Char.SpectralAxis.Resolution.Refval.value")
+					|| name.equalsIgnoreCase("em_res")) {
+				obsCoreColumns.put(ServerObsTap.SPECTRALRESOLUTION, name);
+			} else if (utype.equalsIgnoreCase("Char.SpectralAxis.Resolution.ResolPower.refVal")
+					|| name.equalsIgnoreCase("em_res_power")) {
+				mandatoryColumnCount++;
+				obsCoreColumns.put(ServerObsTap.SPECTRALRESOLUTIONPOWER, columnMeta.getColumn_name());
+			} /*else if (utype.equals("obscore:Char.SpectralAxis.ucd") || name.equalsIgnoreCase("em_ucd")) {
+			} else if (utype.equals("obscore:Char.ObservableAxis.ucd") || name.equalsIgnoreCase("o_ucd")) {
+				mandatoryColumnCount++;
+			} else if (utype.equals("obscore:Char.ObservableAxis.unit") || name.equalsIgnoreCase("o_unit")) {
+			} else if (utype.equals("obscore:Char.PolarizationAxis.stateList")
+					|| name.equalsIgnoreCase("pol_states")) {
+			}*/
+		
+		}
+		}
+	}
+
+	private String getNoNamesSpaceUtype(String utype) {
+		// TODO Auto-generated method stub
+		String result = utype;
+		if (utype.startsWith("obscore:")) {
+			result = result.replace("obscore:", EMPTYSTRING);
+		}
+		return result;
+	}
+
+	/**
+	 * Selects the main out of the columns to be identified
+	 * @param flaggedColumns
+	 * @param key
+	 * @param col2
+	 */
+	public void compareAddMainFlaggedColumn(Map<String, TapTableColumn> flaggedColumns, String key,
+			TapTableColumn col2) {
+		// TODO Auto-generated method stub
+		TapTableColumn col1 = flaggedColumns.get(key);
+		if (!col1.isDefinedMain() && col2.isDefinedMain()) {
+			flaggedColumns.put(key, col2);
+		}
+	}
+	
+	public void setFlaggedColumn(String key, TapTableColumn flaggedColumn) {
+		initFlaggedColumns();
+		if (this.flaggedColumns.containsKey(key)) {
+			compareAddMainFlaggedColumn(this.flaggedColumns, key, flaggedColumn);
+		} else {
+			this.flaggedColumns.put(key, flaggedColumn);
+		}
+	}
+	
+	public void removeFlaggedColumn(String key) {
+		initFlaggedColumns();
+		if (this.flaggedColumns.containsKey(key)) {
+			this.flaggedColumns.remove(key);
+		}
+	}
+	
+	public String getFlaggedColumnName(String key) {
+		String result = null;
+		if (this.flaggedColumns != null && this.flaggedColumns.containsKey(key)) {
+			result = this.flaggedColumns.get(key).getColumn_name();
+		}
+		return result;
+	}
+	
+	public TapTableColumn getFlaggedColumn(String key) {
+		TapTableColumn result = null;
+		if (this.flaggedColumns != null && this.flaggedColumns.containsKey(key)) {
+			result = this.flaggedColumns.get(key);
+		}
+		return result;
+	}
+	
+	public String getObsColumnName(String key) {
+		String result = null;
+		if (this.obsCoreColumns != null && this.obsCoreColumns.containsKey(key)) {
+			result = this.obsCoreColumns.get(key);
+		}
+		return result;
+	}
+	
+	public String getRaColumnName() {
+		return getFlaggedColumnName(RA);
+	}
+
+	public String getDecColumnName() {
+		return getFlaggedColumnName(DEC);
+	}
+	
+	/**
+	 * directly sets and changes- w.n.r.t exxiting
+	 * @param flaggedColumn
+	 */
+	public void setRaColumn(TapTableColumn flaggedColumn) {
+		if (flaggedColumn == null) {
+			removeFlaggedColumn(RA);
+		} else {
+//			setFlaggedColumn(RA, flaggedColumn);
+			initFlaggedColumns();
+			this.flaggedColumns.put(RA, flaggedColumn);
+		}
+		
+	}
+
+	public void setDecColumn(TapTableColumn flaggedColumn) {
+		if (flaggedColumn == null) {
+			removeFlaggedColumn(RA);
+		} else {
+			initFlaggedColumns();
+			setFlaggedColumn(DEC, flaggedColumn);
+		}
+	}
+
 	public String getSchema_name() {
 		return schema_name;
 	}
@@ -78,22 +367,6 @@ public class TapTable {
 	public void setUtype(String utype) {
 		this.utype = utype;
 	}
-	
-	public String getRaColumnName() {
-		return raColumnName;
-	}
-
-	public void setRaColumnName(String raColumnName) {
-		this.raColumnName = raColumnName;
-	}
-
-	public String getDecColumnName() {
-		return decColumnName;
-	}
-
-	public void setDecColumnName(String decColumnName) {
-		this.decColumnName = decColumnName;
-	}
 
 	public Vector<TapTableColumn> getColumns() {
 		return columns;
@@ -102,6 +375,27 @@ public class TapTable {
 	public void setColumns(Vector<TapTableColumn> columns) {
 		this.columns = columns;
 	}
+
+	public Map<String, TapTableColumn> getFlaggedColumns() {
+		return flaggedColumns;
+	}
 	
+	public void initFlaggedColumns() {
+		if (this.flaggedColumns == null) {
+			this.flaggedColumns = new HashMap<String, TapTableColumn>();
+		}
+	}
+
+	public void setFlaggedColumns(Map<String, TapTableColumn> flaggedColumns) {
+		this.flaggedColumns = flaggedColumns;
+	}
+
+	public Map<String, String> getObsCoreColumns() {
+		return obsCoreColumns;
+	}
+
+	public void setObsCoreColumns(Map<String, String> obsCoreColumns) {
+		this.obsCoreColumns = obsCoreColumns;
+	}
 	
 }

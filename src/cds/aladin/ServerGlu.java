@@ -21,18 +21,16 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.ADQLVALUE_FORBETWEEN;
 import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.CHECKQUERY;
 import static cds.aladin.Constants.COMMA_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.GETRESULTPARAMS;
 import static cds.aladin.Constants.LASTPANEL;
 import static cds.aladin.Constants.LIMIT_UNKNOWN_MESSAGE;
 import static cds.aladin.Constants.NUMBEROFOPTIONS;
 import static cds.aladin.Constants.RANGE_DELIMITER;
 import static cds.aladin.Constants.REGEX_ARRAY_PRINT;
-import static cds.aladin.Constants.REGEX_OPNUM;
-import static cds.aladin.Constants.REGEX_RANGEINPUT;
 import static cds.aladin.Constants.SHOWAYNCJOBS;
 import static cds.aladin.Constants.SODA_IDINDEX;
 import static cds.aladin.Constants.SODA_POLINDEX;
@@ -63,8 +61,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -483,7 +479,6 @@ public class ServerGlu extends Server implements Runnable {
 			this.sync_async.setToolTipText(SYNCASYNCTOOLTIP);
 			this.sync_async.setOpaque(false);
 			linePanel.add(sync_async);
-			linePanel.setBounds(XTAB1,y,XWIDTH-2*XTAB1,HAUT+10); y+=HAUT+10;
 			
 			button = new JButton("Async jobs>>");
 			button.setToolTipText(SHOWASYNCTOOLTIP);
@@ -502,6 +497,7 @@ public class ServerGlu extends Server implements Runnable {
 			
 			this.tapTableMapping.put(LASTPANEL, new Vector());
 			this.tapTableMapping.get(LASTPANEL).add(linePanel);
+			linePanel.setBounds(XTAB1,y,XWIDTH-2*XTAB1,HAUT+10); y+=HAUT+10;
 		    add(linePanel);
 		}
     	  
@@ -690,7 +686,7 @@ public class ServerGlu extends Server implements Runnable {
 	public String getSODAParamHint(JComponent co, int paramFormIndex, String[] paramRange) {
 		String result = LIMIT_UNKNOWN_MESSAGE;
 		StringBuffer sodaHint = null;
-		if (paramFormIndex==SODA_POLINDEX-1 && paramRange!=null && paramRange[0]!=null) {// [0] check if there is atleast one value
+		if (paramFormIndex == SODA_POLINDEX-1 && paramRange != null && paramRange[0] != null) {// [0] check if there is atleast one value
 			sodaHint = new StringBuffer("Valid options are: ").append(Arrays.toString(paramRange).replaceAll(REGEX_ARRAY_PRINT, EMPTYSTRING).trim().replaceAll("\\s", " ,"));
 		} else {
 			if (paramRange != null) {
@@ -703,8 +699,8 @@ public class ServerGlu extends Server implements Runnable {
 			}
 		}
 		
-		if (co==date) {
-			if (sodaHint!=null) {
+		if (co == date) {
+			if (sodaHint != null) {
 				sodaHint.append("  . ").append(PARSEMJDFIELDHINT);
 			} else {
 				sodaHint = new StringBuffer(result).append("  . ").append(PARSEMJDFIELDHINT);
@@ -712,7 +708,7 @@ public class ServerGlu extends Server implements Runnable {
 			result = sodaHint.toString();
 		} else if ((paramFormIndex+1) == SODA_IDINDEX){
 			result = EMPTYSTRING;
-		} else if (sodaHint!=null){
+		} else if (sodaHint != null){
 			result = sodaHint.toString();
 		}
 		return result;
@@ -1491,9 +1487,9 @@ public class ServerGlu extends Server implements Runnable {
                 return;
              }
              if (flagTAPV2 && !s.isEmpty() && adqlOpInputs!=null && adqlOpInputs.contains(c)) {
-                String processedInput = getRangeInput(s);
+                String processedInput = TapClient.getRangeInput(s, null);
                 if (processedInput.isEmpty()) {
-                   processedInput = isInValidOperatorNumber(s, userReady || flagDoIt);
+                   processedInput = TapClient.isInValidOperatorNumber(this, s, userReady || flagDoIt);
                    if (processedInput==null) {
                       return;
                    } else {
@@ -1593,10 +1589,11 @@ public class ServerGlu extends Server implements Runnable {
     	  String queryString = EMPTYSTRING;
     	  if (gluQueryTemplate!=null) {
     		  queryString = gluQueryTemplate.getGluQuery(v, this.currentSelectedTapTable, this.adqlFunc, this.adqlFuncParams);
+    		  queryString = GETRESULTPARAMS+queryString;
     	  }
     	  String url = (String) aladin.glu.aladinDic.get(actionName);
     	  Aladin.trace(3, "URL for "+actionName+" is: "+url);
-    	  url = TapManager.getInstance(aladin).getSyncUrlUnEncoded(url, queryString);
+    	  url = TapManager.getInstance(aladin).getSyncUrlUnEncoded(this, url, queryString);
     	  Aladin.trace(3, "getSyncUrlUnEncoded: "+url);
     	  aladin.glu.aladinDic.put(actionName+"v1", url);// for setting all glu params
     	  u = aladin.glu.getURL(actionName+"v1",p==null?"" : p.toString(), true);
@@ -1676,7 +1673,7 @@ public class ServerGlu extends Server implements Runnable {
       if (flagTAPV2) {
     	  String url = (String) aladin.glu.aladinDic.get(actionName);
     	  boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-    	  this.submitTapServerRequest(sync, null, label, url);
+    	  this.submitTapServerRequest(sync, null, label, url, tap.getText());
 	  } else {
 		  lastPlan = aladin.calque.createPlan(u+"",label,"provided by "+institute,this);
 	  }
@@ -1688,18 +1685,18 @@ public class ServerGlu extends Server implements Runnable {
     * Method shows fov from the stc string
     */
 	private void showFOV() {
-		if (!dataLinkSource.isSetFootprint()) {
+		if (dataLinkSource!=null && !dataLinkSource.isSetFootprint()) {
 			cleanupFov = true;
 			dataLinkSource.setFootprint(boundaryAreaStcs);
 		}
-		if (!dataLinkSource.isShowingFootprint()) {
+		if (dataLinkSource!=null && !dataLinkSource.isShowingFootprint()) {
 			dataLinkSource.setShowFootprint(true, true);
 		}
 		
 	}
 	
-	private void cleanUpFOV() {
-		if (!dataLinkSource.isShowingFootprint()) {
+	protected void cleanUpFOV() {
+		if (dataLinkSource!=null && dataLinkSource.isShowingFootprint()) {
 			dataLinkSource.setShowFootprint(false, true);
 		}
 		dataLinkSource.resetFootprint();
@@ -1715,16 +1712,16 @@ public class ServerGlu extends Server implements Runnable {
 	public StringBuffer processCustomFields(JComponent c, boolean takeAction) throws Exception {
 		StringBuffer processedText = null;
 		if (isFieldDate(c)) {
-			if (date != null) {
+			if (date != null && modeDate == ParseToMJD) {
 				try {
 					processedText = setDateInMJDFormat(takeAction, date.getText().trim(),
-							rangeValues.get(Constants.SODA_TIMEINDEX - 1));
+							rangeValues.get(Constants.SODA_TIMEINDEX - 1), SPACESTRING);
 				} catch (Exception e1) {
 					throw e1;
 				}
 			}
 		} else if (isFieldBand(c)) {
-			if (band != null) {
+			if (band != null && modeBand == BANDINMETERS) {
 				try {
 					processedText = processSpectralBand(takeAction, band.getText().trim(),
 							rangeValues.get(Constants.SODA_BANDINDEX - 1));
@@ -1738,46 +1735,6 @@ public class ServerGlu extends Server implements Runnable {
 		return processedText;
 	}	
    
-   /**
-    * Method checks of operators are correctly used in the input
-    * @param input
-    * @return
-    */
-   private String isInValidOperatorNumber(String input, boolean showError) {
-	// TODO Auto-generated method stub
-	   String inputInProgress = null;
-		Pattern regex = Pattern.compile(REGEX_OPNUM);//find no special chars
-		Matcher matcher = regex.matcher(input);
-		if (matcher.find()){
-			if (matcher.group("operator") == null) {
-				inputInProgress = "=".concat(input);
-			} else {
-				inputInProgress = input;
-			}
-		} else if (showError) {
-			Aladin.warning(this, input+" is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
-			ball.setMode(Ball.NOK);
-		}
-		return inputInProgress;
-   }
-   
-   /**
-    * Method retrives the adql value for between operator from a range
-    * input 1..3 or 1 3 or 1,3
-    * output BETWEEN 1 and 3
-    * @param input
-    * @return
-    */
-   private String getRangeInput(String input) {
-	   String result = EMPTYSTRING;
-		Pattern regex = Pattern.compile(REGEX_RANGEINPUT);
-		Matcher matcher = regex.matcher(input);
-		if (matcher.find()){
-			result = matcher.replaceAll(ADQLVALUE_FORBETWEEN);
-		}
-		return result;
-   }
-
 /**
     * Very specific method in place to ensure that the query is encoded.
     * Assumtion: ADQL query in AlaGlu.dic are not in encoded form.
@@ -2052,7 +2009,7 @@ public class ServerGlu extends Server implements Runnable {
 				if (tapManager.uploadFrame == null) {
 					tapManager.uploadFrame = new FrameUploadServer(aladin, this.tapClient.tapBaseUrl);
 				}
-				tapManager.uploadFrame.show(this);
+				tapManager.uploadFrame.show(this.tapClient);
 				
 			}
 

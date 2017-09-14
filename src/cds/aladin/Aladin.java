@@ -579,7 +579,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    PlasticPreferences plasticPrefs; // Gere les preferences PLASTIC
    Help help;                    // Gere le "Help" en ligne
    public ServerDialog dialog;   // Gere l'interrogation des serveurs
-   public ServerDialog additionalServiceDialog;
    TreeView treeView;            // Gere l'arbre contenant l'historique des interrogations
    FrameColorMap frameCM;              // Gere la fenetre du controle de la table des couleurs
    FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB

@@ -21,7 +21,6 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.ALADINTABLEPREFIX;
 import static cds.aladin.Constants.DISCARDACTION;
 import static cds.aladin.Constants.DISCARDALLACTION;
 import static cds.aladin.Constants.EMPTYSTRING;
@@ -32,7 +31,6 @@ import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.UPLOADTABLEPREFIX;
 
 import java.awt.AWTEvent;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -59,8 +57,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-
-import cds.aladin.Constants.TapServerMode;
 import cds.tools.Util;
 
 
@@ -76,13 +72,13 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	private static final long serialVersionUID = 399753558953437543L;
 
 	static String TITLE, CLOSE, ERRORMSG, IDENTIFIER, TAPTABLEUPLOADPARSETIP, UPFILEINFO, BROWSE, DISCARDALL, DISCARDALLTIP,
-			NOTABLELOADEDMESSAGE, ALLDISCARDEDINFOMESSAGE;
+			NOTABLELOADEDMESSAGE, ALLDISCARDEDINFOMESSAGE, TABLEDISCARDINFO;
 	public static final String UPLOADFILEPREFIX = "file_";
 	private Aladin aladin;
 	protected Map<String, String> uploadingPlanCatalogs;
 	protected JComboBox<String> uploadOptions;
 	protected Map<String, File> uploadedTableFiles = new HashMap<String, File>();
-	protected ServerTap uploadServer;
+	TapClient uploadClient;
 	GridBagConstraints c;
 	JTextField tableName;
 	JLabel infoLabel;
@@ -103,6 +99,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		DISCARDALL = Aladin.chaine.getString("DISCARDALL");
 		DISCARDALLTIP = Aladin.chaine.getString("DISCARDALLTIP");
 		ALLDISCARDEDINFOMESSAGE = Aladin.chaine.getString("ALLDISCARDEDINFOMESSAGE");
+		TABLEDISCARDINFO = Aladin.chaine.getString("TABLEDISCARDINFO");
 	}
 
 	/**
@@ -116,14 +113,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		Util.setCloseShortcut(this, false, aladin);
 		
-		uploadServer = new ServerTap(aladin);
-		uploadServer.primaryColor = new Color(198,218,239);
-		uploadServer.secondColor = Aladin.COLOR_CONTROL_FOREGROUND;
-//		newServer.aladinLabel = this.selectedServerLabel.getLabel();
-		uploadServer.mode = TapServerMode.UPLOAD;
-		uploadServer.setName("LocalResources");
-		uploadServer.setUrl(mainServerUrl);
-		uploadServer.tablesMetaData = new HashMap<String, TapTable>();
+		this.uploadClient = TapClient.getUploadTapClient(aladin, "LocalResources", mainServerUrl);
 		    
 		createChaine();
 		setTitle(TITLE);
@@ -132,24 +122,24 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		setLocation(Aladin.computeLocation(this));
 		uploadingPlanCatalogs = new HashMap<String,String>();
 		setUploadFileForm();
-		aladin.grabUtilInstance.grabItServers.add(uploadServer);
+		aladin.grabUtilInstance.grabItServers.add(uploadClient.serverTap);
 		
 	}
 	
 	/** Affichage des infos associées à un serveur */
-	protected void show(Server s) {
-		setTitle("Upload to "+s.tapClient.tapLabel);
+	protected void show(TapClient tapClient) {
+		setTitle("Upload to "+tapClient.tapLabel);
 		boolean addServer = true;
 		for (int i = 0; i < uploadAvailableServers.getItemCount(); i++) {
-			if (uploadAvailableServers.getItemAt(i).equalsIgnoreCase(s.tapClient.tapLabel)) {
+			if (uploadAvailableServers.getItemAt(i).equalsIgnoreCase(tapClient.tapLabel)) {
 				addServer = false;
 			}
 		}
 		if (addServer) {
-			uploadAvailableServers.addItem(s.tapClient.tapLabel);
+			uploadAvailableServers.addItem(tapClient.tapLabel);
 		}
-		uploadAvailableServers.setSelectedItem(s.tapClient.tapLabel);
-		uploadServer.setUrl(s.tapClient.tapBaseUrl);
+		uploadAvailableServers.setSelectedItem(tapClient.tapLabel);
+		uploadClient.tapBaseUrl = tapClient.tapBaseUrl;
 		
 		setFont(Aladin.PLAIN);
 		pack();
@@ -190,7 +180,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 				// TODO Auto-generated method stub
 				Server sourceServerSelected = TapManager.getTapServerForLabel((String) uploadAvailableServers.getSelectedItem());
 				if (sourceServerSelected != null) {
-					show(sourceServerSelected);
+					show(sourceServerSelected.tapClient);
 				}
 			}
 		});
@@ -359,16 +349,16 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		
 		if (command.equals("SUBMIT")) {
 			Map<String, Object> requestParams = new HashMap<String, Object>();
-			if (uploadedTableFiles.get(uploadServer.selectedTableName) == null) {
-				Aladin.warning(this.getContentPane(), "Unable to submit " + uploadServer.selectedTableName + " data!");
+			if (uploadedTableFiles.get(uploadClient.serverTap.selectedTableName) == null) {
+				Aladin.warning(this.getContentPane(), "Unable to submit " + uploadClient.serverTap.selectedTableName + " data!");
 				return;
 			}
-			String uploadFileName = UPLOADFILEPREFIX+uploadServer.selectedTableName;
-			requestParams.put("upload", getUploadParam(uploadServer.selectedTableName, uploadFileName));
-			requestParams.put(uploadFileName, uploadedTableFiles.get(uploadServer.selectedTableName));
+			String uploadFileName = UPLOADFILEPREFIX+uploadClient.serverTap.selectedTableName;
+			requestParams.put("upload", getUploadParam(uploadClient.serverTap.selectedTableName, uploadFileName));
+			requestParams.put(uploadFileName, uploadedTableFiles.get(uploadClient.serverTap.selectedTableName));
 			
-			uploadServer.submit(requestParams);
-			this.infoLabel.setText("Submitting your query for table: "+uploadServer.selectedTableName);
+			uploadClient.serverTap.submit(requestParams);
+			this.infoLabel.setText("Submitting your query for table: "+uploadClient.serverTap.selectedTableName);
 			TapManager.getInstance(aladin).eraseNotification(this.infoLabel, EMPTYSTRING);
 		} else if (command.equals(UPLOAD)) {
 			//Just parse the selected table's metadata to create gui and store file version of it
@@ -377,12 +367,12 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			}
 			try {
 				TapManager tapManager = TapManager.getInstance(aladin);
-				uploadServer.showloading();
+//				uploadClient.serverTap.showloading();
 				String uploadTableName = UPLOADTABLEPREFIX.concat(tableName.getText());
 				String fileName = EMPTYSTRING;
 				switch (selectedFile) {
 				case 0:
-					Plan loadingPlan = aladin.calque.createPlan(systemFile.getText().trim(),"localTableData",null,uploadServer);
+					Plan loadingPlan = aladin.calque.createPlan(systemFile.getText().trim(), "localTableData", null, uploadClient.serverTap);
 					loadingPlan.addPlaneLoadListener(this);
 					if (loadingPlan instanceof PlanFree) {
 						Aladin.warning(this.getContentPane(), "Unable to upload " + systemFile.getText().trim() + " data!");
@@ -412,22 +402,23 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 				if(Aladin.levelTrace >= 3) e.printStackTrace();
 				Aladin.warning(this.getContentPane(), "Error unable upload your data!\n"+e.getMessage());
 			}
-			
 			pack();
 		} else if (command.equals(DISCARDACTION)) {
 			// TODO:: discard do delete tap metadata and also hiding entire lower panel on no table
-			String tableToDiscard = uploadServer.selectedTableName;
-			this.uploadServer.tablesMetaData.remove(tableToDiscard);
-			if (this.uploadServer.tablesMetaData.size() < 1) {
+			String tableToDiscard = (String) uploadClient.serverTap.tablesGui.getSelectedItem();
+			TapManager tapManager = TapManager.getInstance(aladin);
+			this.uploadClient.tablesMetaData.remove(tableToDiscard);
+			boolean enable = false;
+			if (this.uploadClient.tablesMetaData != null && !this.uploadClient.tablesMetaData.isEmpty()) {
+				enable = true;
+				this.uploadClient.serverTap.tablesGui.removeItem(tableToDiscard);
+			}
+			if (!enable) {
 				this.clearBottomPanel();
-				
-			} else {
-				this.uploadServer.tablesGui.removeItem(tableToDiscard);
-				this.uploadServer.tablesGui.revalidate();
-				this.uploadServer.tablesGui.repaint();
 			}
 			this.uploadedTableFiles.get(tableToDiscard).delete();
 			this.uploadedTableFiles.remove(tableToDiscard);
+			tapManager.refreshTapSettings(tableToDiscard, 2, this.uploadClient.tablesMetaData);
 			Aladin.info(this.getContentPane(), tableToDiscard + " is discarded");
 			return;
 		} else if (command.equals(DISCARDALLACTION)) {
@@ -438,6 +429,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 				}
 			}
 			this.clearBottomPanel();
+			TapManager.getInstance(aladin).refreshTapSettings(null, 2, null);
 			Aladin.info(this.getContentPane(), ALLDISCARDEDINFOMESSAGE);
 			return;
 		} else if (command.equals(BROWSE)) {
@@ -491,13 +483,12 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		}
 		if (aladin.save == null)
 			aladin.save = new Save(aladin);
-		aladin.save.saveCatVOTable(tmpFile, planCatalog, false,false);
+		aladin.save.saveCatVOTable(tmpFile, planCatalog, false, false);
 		tmpFile.deleteOnExit();
 		uploadedTableFiles.put(uploadTableName, tmpFile);
 		
 		TapManager tapManager = TapManager.getInstance(aladin);
 		tapManager.createTapServerFromAladinPlan(planCatalog, uploadTableName);
-		
 		this.tableName.setText(this.generateSuffix());
 		this.infoLabel.setText("New table(Name: "+uploadTableName+") from "+planCatalog.label+" is parsed in Aladin!");
 		tapManager.eraseNotification(this.infoLabel, EMPTYSTRING);
@@ -505,8 +496,9 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	
 	protected void createUploadServer() {
 //		tapManager.loadTapColumnSchemas("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap");
-		uploadServer.setOpaque(true);
-		uploadServer.createFormDefault(); //default choice is the first table
+		uploadClient.preprocessTapClient();
+		uploadClient.serverTap.setOpaque(true);
+		uploadClient.serverTap.createFormDefault(); //default choice is the first table
 		
 		c.insets = new Insets(5, 10, 10, 5);
 		c.gridx = 0;
@@ -515,7 +507,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		c.weighty = 0.94;
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.NORTH;
-		this.getContentPane().add(uploadServer, c);
+		this.getContentPane().add(uploadClient.serverTap, c);
 		
 		c.gridy++;
 		c.weighty = 0.01;
@@ -535,8 +527,8 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		
 		this.getContentPane().add(bottomButtonsPanel, c);
 		
-		uploadServer.revalidate();
-		uploadServer.repaint();
+		uploadClient.serverTap.revalidate();
+		uploadClient.serverTap.repaint();
 		
 	}
 	
@@ -544,10 +536,10 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 * removes all the uploaded table gui
 	 */
 	public void clearBottomPanel() {
-		this.uploadServer.tablesMetaData.clear();
-		this.uploadServer.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
-		this.uploadServer.removeAll();
-		this.remove(this.uploadServer);
+		this.uploadClient.tablesMetaData.clear();
+		this.uploadClient.serverTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+		this.uploadClient.serverTap.removeAll();
+		this.remove(this.uploadClient.serverTap);
 		this.remove(this.bottomButtonsPanel);
 		pack();
 	}
@@ -595,7 +587,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
     */
 	public boolean tableAlreadyExists(String input) {
 		String userInput = UPLOADTABLEPREFIX.concat(input);
-		Set<String> existingUploadedTables = this.uploadServer.tablesMetaData.keySet();
+		Set<String> existingUploadedTables = this.uploadClient.tablesMetaData.keySet();
 		Set<String> existingUploadingTables = this.uploadingPlanCatalogs.keySet();
 		return (existingUploadedTables.contains(userInput) || existingUploadingTables.contains(userInput));
 	}
@@ -625,12 +617,12 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 * @param uploadFrame
 	 * @return
 	 */
-	public String generateUploadTableName() {
-		String uploadTableName = ALADINTABLEPREFIX + new Random().nextInt(Integer.SIZE - 1);
+	public String generateUploadTableName(String prefix) {
+		String uploadTableName = prefix + new Random().nextInt(Integer.SIZE - 1);
 		if (!tableAlreadyExists(uploadTableName)) {
 			return uploadTableName;
 		}
-		return generateUploadTableName();
+		return generateUploadTableName(prefix);
 	}
 	
 	/**
@@ -649,12 +641,12 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 
 	@Override
 	public void setGrabItCoord(double x, double y) {
-		GrabUtil.setGrabItCoord(aladin, uploadServer, x, y);
+		GrabUtil.setGrabItCoord(aladin, uploadClient.serverTap, x, y);
 	}
 
 	@Override
 	public void stopGrabIt() {
-	    GrabUtil.stopGrabIt(aladin, this, uploadServer);
+	    GrabUtil.stopGrabIt(aladin, this, uploadClient.serverTap);
 	}
 	
 	/**
@@ -663,13 +655,13 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	    */
 	@Override
 	public boolean isGrabIt() {
-	      return (uploadServer.modeCoo != Server.NOMODE
-	            && uploadServer.grab != null && uploadServer.grab.getModel().isSelected());
+	      return (uploadClient.serverTap.modeCoo != Server.NOMODE
+	            && uploadClient.serverTap.grab != null && uploadClient.serverTap.grab.getModel().isSelected());
 	   }
 
 	@Override
 	public void setGrabItRadius(double x1, double y1, double x2, double y2) {
-		GrabUtil.setGrabItRadius(aladin, uploadServer, x1, y1, x2, y2);
+		GrabUtil.setGrabItRadius(aladin, uploadClient.serverTap, x1, y1, x2, y2);
 	}
 
 

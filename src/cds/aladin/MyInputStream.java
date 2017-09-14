@@ -110,6 +110,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long SIAV2   = 1L<<46;
    static final public long EPNTAP  = 1L<<47;
    static final public long DATALINK= 1L<<48;
+   static final public long DALIEX  = 1L<<49;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
@@ -117,7 +118,7 @@ public class MyInputStream extends FilterInputStream {
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
       "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP","DATALINK" };
+      "EPNTAP" ,"DATALINK", "DALIEX"};
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -574,7 +575,7 @@ public class MyInputStream extends FilterInputStream {
                      && lookForSignature("ID=\"c2min\"", true)>0
                      && lookForSignature("ID=\"c2max\"", true)>0) {
                  type |= EPNTAP;
-             }
+             } 
             }
          /* } */
 
@@ -604,6 +605,10 @@ public class MyInputStream extends FilterInputStream {
 
          // Bon a va tout de même parier pour du BSV
             else if( csv==2 ) type |= BSV;
+         
+            else if( lookForSignature("\"ivo://ivoa.net/std/DALI#examples\"", true)>0) {
+                type |= DALIEX;
+            }
 
          // Perdu
             else return NOTAVAILABLE;

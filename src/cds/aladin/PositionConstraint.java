@@ -22,13 +22,13 @@
 package cds.aladin;
 
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.POSQuery;
 
 import javax.swing.JLabel;
 
 public class PositionConstraint extends WhereGridConstraint{
 	private static final long serialVersionUID = 1L;
 	
-	private static String POSQuery = "CONTAINS(POINT('ICRS', %1$s, %2$s), CIRCLE('ICRS', %3$s, %4$s, %5$s)) = 1";
 	private String raConstraint;
 	private String decConstraint;
 	private String radiusConstraint;

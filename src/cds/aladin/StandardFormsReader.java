@@ -101,7 +101,7 @@ public class StandardFormsReader {
 	
 	public void setStdServerForms(String formName, StringBuilder record) {
 		this.stdServerForms.put(formName, record.toString());
-		record = new StringBuilder();
+		record.setLength(0);
 	}
 
 	public void setStdServerForms(Hashtable<String, String> stdServerForms) {

@@ -27,7 +27,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.Map;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
@@ -37,8 +37,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.PlainDocument;
-
-import cds.tools.Util;
 
 /**
  * <p>This class is inspired by Thomas Bierhance's auto-completion code.
@@ -52,16 +50,16 @@ import cds.tools.Util;
  * During search the user can clear the search input with backspace/delete to see the full list of options again.</p>
  * TODO:: tintin the sysouts 
  */
-public class TapTableFilterDocument extends PlainDocument{
+public class FilterDocument extends PlainDocument{
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 9106769181814191291L;
 	
-	ServerTap serverTap;
-	JComboBox<String> tablesGui;
-	Map<String, TapTable> tablesMetaData;
+	FilterActionClass actionClass;
+	JComboBox<String> comboBox;
+	List<String> keys;
 	
 	/**
 	 ** <p>
@@ -76,22 +74,47 @@ public class TapTableFilterDocument extends PlainDocument{
 	 */
 	int processLevelFlag = 0;
 
-	public TapTableFilterDocument() {
+	public FilterDocument() {
 		// TODO Auto-generated constructor stub
 	}
 
-	public TapTableFilterDocument(ServerTap server) throws BadLocationException {
-		this.serverTap = server;
-		this.tablesGui = server.tablesGui;
-		this.tablesMetaData = server.tablesMetaData;
-
-		JTextComponent editor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
+	public FilterDocument(FilterActionClass actClass, JComboBox<String> gui, List<String> keys, String defaultSelection) throws BadLocationException {
+		this.actionClass = actClass;
+		this.comboBox = gui;
+		this.keys = keys; //is the model that reflects your combobox. if you discard an entry then programmatically as you are already discarding table in tapmeta, 
+		//the filter will automatically pick up
+		//for now filter is only used for "tap tables"
+		//if it is needed for more.. i.e. keys cannot point to tap metadata but to something more generalized 
+		//and implement the below to ensure to update keys if you remove/add an item from gui
+		//TODO:: if we extend filter's usuage beyond tap
+		/*gui.getModel().addListDataListener(new ListDataListener() {
+			
+			@Override
+			public void intervalRemoved(ListDataEvent e) {
+				// TODO Auto-generated method stub
+				System.err.println("removed"+((DefaultComboBoxModel)e.getSource()).getElementAt(e.getIndex0()-1));
+			}
+			
+			@Override
+			public void intervalAdded(ListDataEvent e) {
+				// TODO Auto-generated method stub
+				System.err.println("added"+ ((DefaultComboBoxModel)e.getSource()).getElementAt(e.getIndex0()-1));
+			}
+			
+			@Override
+			public void contentsChanged(ListDataEvent e) {
+				// TODO Auto-generated method stub
+				System.err.println("changed");
+			}
+		});*/
+		
+		JTextComponent editor = (JTextComponent) comboBox.getEditor().getEditorComponent();
 		
 		editor.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 //				System.err.println("keyPressed");
-				if (tablesGui.isDisplayable())
-					tablesGui.setPopupVisible(true);
+				if (comboBox.isDisplayable())
+					comboBox.setPopupVisible(true);
 				
 				if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE || e.getKeyCode() == KeyEvent.VK_DELETE) {
 					String mask = getMask();
@@ -100,7 +123,8 @@ public class TapTableFilterDocument extends PlainDocument{
 					}
 				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					processLevelFlag = 0;
-					serverTap.changeTableSelection((String) serverTap.tablesGui.getSelectedItem());
+//					actionClass.tableSelectionChanged(comboBox);
+					actionClass.checkSelectionChanged(comboBox);
 				} else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
 					processLevelFlag = -1;// can put this to 0 if you want the table to change on key-up and down selections
 				} else {
@@ -123,7 +147,7 @@ public class TapTableFilterDocument extends PlainDocument{
 			}
 		});
 		
-		tablesGui.addActionListener(new ActionListener() {
+		comboBox.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -149,9 +173,15 @@ public class TapTableFilterDocument extends PlainDocument{
 			}
 		});*/
 		
-		
+		processLevelFlag = -1;
+		if (comboBox.getItemCount() > 0) {
+			if (defaultSelection == null) {
+				setDefault();
+			} else {
+				setDefault(defaultSelection);
+			}
+		}
 		processLevelFlag = 0;
-		setDefaultTable();
 	}
 	
 	@Override
@@ -161,8 +191,8 @@ public class TapTableFilterDocument extends PlainDocument{
 		}
 		super.remove(offs, len);
 		if (processLevelFlag == 2) {
-			searchTable();
-			tablesGui.setPopupVisible(true);
+			search();
+			comboBox.setPopupVisible(true);
 		}
 	}
 
@@ -175,12 +205,12 @@ public class TapTableFilterDocument extends PlainDocument{
 		super.insertString(offs, str, a);
 //		System.out.println("insertString called processLevelFlag: "+processLevelFlag);
 		if (processLevelFlag > 0) {
-			searchTable();
-			tablesGui.setPopupVisible(true);
+			search();
+			comboBox.setPopupVisible(true);
 		}
 //		Aladin.trace(3, "is it windows platform: "+Aladin.winPlateform);
 		if (Aladin.winPlateform) {//for windows issue
-			JTextComponent editor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
+			JTextComponent editor = (JTextComponent) comboBox.getEditor().getEditorComponent();
 			editor.setCaretPosition(getLength());
 		}
 		
@@ -200,32 +230,28 @@ public class TapTableFilterDocument extends PlainDocument{
 			String mask = getMask();
 			if (mask == null || mask.isEmpty()) {//when nothing is written on JComboBox
 				processLevelFlag = 0;
-				setDefaultTable();
+				setDefault();
 			} else if (!isValidSelection(mask)) {//when what is written on JComboBox is invalid/incomplete/not selected
 				processLevelFlag = 0;
-				setDefaultTable(getFirstItemOnJComboBox());
+				setDefault(getFirstItemOnJComboBox());
 			}
 //			System.err.println(tablesGui.getSelectedItem()+" ==? "+serverTap.selectedTableName);
 //			System.out.println(tablesGui.getSelectedItem() != null
 //					&& !serverTap.selectedTableName.equalsIgnoreCase(tablesGui.getSelectedItem().toString()));
-			if (tablesGui.getSelectedItem() != null
-					&& !serverTap.selectedTableName.equalsIgnoreCase(tablesGui.getSelectedItem().toString())) {
-				Aladin.trace(3, "Change table selection from within the document");
-				serverTap.changeTableSelection((String) serverTap.tablesGui.getSelectedItem());
-			}
+			actionClass.checkSelectionChanged(comboBox);
 		} catch (BadLocationException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
 	
-	private void searchTable(){
+	private void search(){
 		String mask = getMask();
 		processLevelFlag = -1;
 		if (mask == null || mask.trim().isEmpty()) {
 			resetPopUpMenu();
 		} else {
-			Vector<String> matches = getMatches(mask);
+			Vector<String> matches = actionClass.getMatches(mask, this.comboBox);
 			if (!matches.isEmpty()) {
 				resetPopUpMenu(matches);
 			}
@@ -238,7 +264,7 @@ public class TapTableFilterDocument extends PlainDocument{
 	 * @return
 	 */
 	public String getMask() {
-		Document tablesGuiDocument = ((JTextComponent) tablesGui.getEditor().getEditorComponent()).getDocument();
+		Document tablesGuiDocument = ((JTextComponent) comboBox.getEditor().getEditorComponent()).getDocument();
 		String mask = null;
 		try {
 			mask = tablesGuiDocument.getText(0, tablesGuiDocument.getLength()).trim();
@@ -251,7 +277,7 @@ public class TapTableFilterDocument extends PlainDocument{
 	
 	public boolean isValidSelection(String mask) {
 		boolean result = false;
-		if (mask != null && tablesMetaData.containsKey(mask)) {
+		if (mask != null && keys.contains(mask)) {
 			result = true;
 		}
 		return result;
@@ -261,17 +287,17 @@ public class TapTableFilterDocument extends PlainDocument{
 	 * Sets the options of the tablesGui to default tables
 	 */
 	public void resetPopUpMenu() {
-		Vector<String> tables = new Vector<String>(this.tablesMetaData.keySet().size());
-		tables.addAll(this.tablesMetaData.keySet());
-		resetPopUpMenu(tables);
+		Vector<String> resetKeys = new Vector<String>(this.keys.size());
+		resetKeys.addAll(this.keys);
+		resetPopUpMenu(resetKeys);
 	}
 	
 	/**
 	 * Sets the options of the tablesGui to tables param
 	 */
-	public void resetPopUpMenu(Vector<String> tables) {
-		DefaultComboBoxModel<String> items = new DefaultComboBoxModel<String>(tables);
-		tablesGui.removeAllItems();
+	public void resetPopUpMenu(Vector<String> keys) {
+		DefaultComboBoxModel items = new DefaultComboBoxModel(keys);
+		comboBox.removeAllItems();
 //		System.out.println("resetting popup menu options");
 		/*if (tables!=null) {
 			System.out.println("resetting popup menu options to something");
@@ -281,13 +307,13 @@ public class TapTableFilterDocument extends PlainDocument{
 			System.out.print(string+", ");
 		}
 		System.out.println();*/
-		tablesGui.setModel(items);
+		comboBox.setModel(items);
 	}
 
 	public String getFirstItemOnJComboBox() {
 //		System.err.println("tablesGui.getSelectedItem() ::"+tablesGui.getSelectedItem());
 //		System.err.println("tablesGui.getModel().getElementAt(0) ::"+tablesGui.getModel().getElementAt(0));
-		return (String) tablesGui.getModel().getElementAt(0);
+		return (String) comboBox.getModel().getElementAt(0);
 	}
 	
 	/**
@@ -295,11 +321,11 @@ public class TapTableFilterDocument extends PlainDocument{
 	 * @param tableName
 	 * @throws BadLocationException
 	 */
-	public void setDefaultTable(String tableName) throws BadLocationException {
-		if (tableName != null) {
+	public void setDefault(String tableName) throws BadLocationException {
+		if (tableName != null && this.keys.contains(tableName)) {
 			super.remove(0, getLength());
 			super.insertString(0, tableName, null);
-			tablesGui.setSelectedItem(tableName);
+			comboBox.setSelectedItem(tableName);
 		}
 	}
 	
@@ -308,32 +334,9 @@ public class TapTableFilterDocument extends PlainDocument{
 	 * @param tableName
 	 * @throws BadLocationException
 	 */
-	public void setDefaultTable() throws BadLocationException {
-		String defaultTableSelected = tablesMetaData.keySet().iterator().next();
-		setDefaultTable(defaultTableSelected);
+	public void setDefault() throws BadLocationException {
+		String defaultTableSelected = this.keys.get(0);
+		setDefault(defaultTableSelected);
 	}
-
-	/**
-	 * Checks the likeliness of the user input with table name and the description(if available)
-	 * @param mask
-	 * @return matches
-	 */
-	private Vector<String> getMatches(String mask) {
-		Vector<String> matches = new Vector<String>();
-		if (mask != null && !mask.isEmpty()) {
-			for (String tableName : this.tablesMetaData.keySet()) {
-				boolean checkDescription = false;
-				TapTable table = tablesMetaData.get(tableName);
-				if (table != null && table.getDescription() != null && !table.getDescription().isEmpty()) {
-					checkDescription = true;
-				}
-				if (!(Util.indexOfIgnoreCase(tableName, mask) >= 0
-						|| (checkDescription && Util.indexOfIgnoreCase(table.getDescription(), mask) >= 0))) {
-					continue;
-				}
-				matches.add(tableName);
-			}
-		}
-		return matches;
-	}
+	
 }

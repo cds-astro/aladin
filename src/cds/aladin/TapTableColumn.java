@@ -24,15 +24,8 @@
  */
 package cds.aladin;
 import static cds.aladin.Constants.EMPTYSTRING;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import static cds.aladin.Constants.UCD_MAINIDQUALIFIER;
 import java.util.Vector;
-
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
 
 
 /**
@@ -170,6 +163,23 @@ public class TapTableColumn {
 		return parsedValue;
 	}
 	
+	/**
+	 * Method to verify an int datatype
+	 * @param dataType
+	 * @param value
+	 * @return
+	 */
+	public boolean isDefinedMain() {
+		boolean result = false;
+		if (this.ucd != null) {
+			String[] words = this.ucd.split(";");
+			if (words.length > 1 && words[1].equalsIgnoreCase(UCD_MAINIDQUALIFIER)) {
+				result = true;
+			}
+		}
+		return result;
+	}
+
 	public String getIsPrincipal() {
 		return isPrincipal;
 	}
@@ -220,6 +230,21 @@ public class TapTableColumn {
 
 	public void setSize(int size) {
 		this.size = size;
+	}
+	
+	public String getFlaggedColumnToolTip() {
+		String tooltip = column_name;
+		if (this.unit != null) {
+			tooltip = "Unit: "+this.unit;
+		}
+		if (this.utype != null) {
+			if (this.unit != null) {
+				tooltip = tooltip+", ";
+			}
+			tooltip = tooltip+this.utype;
+		}
+		return column_name;
+		
 	}
 
 }

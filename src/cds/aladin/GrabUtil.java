@@ -32,6 +32,7 @@ public class GrabUtil {
 	public GrabItFrame grabFrame;
 	private static GrabUtil instance = null;
 	List<Server> grabItServers = new ArrayList<Server>();// JFrames with their own rest methods might not need to use this
+	List<JToggleButton> grabs = new ArrayList<JToggleButton>(); //some grabs are not on servers
 	
 	public static synchronized GrabUtil getInstance() {
 		if (instance == null) {
@@ -84,6 +85,7 @@ public class GrabUtil {
 		}
 	}
 
+	
 	/**
 	 * Arrete le GrabIt
 	 */
@@ -191,13 +193,23 @@ public class GrabUtil {
 			if (server.grab != null) {
 				server.grab.setEnabled(isEnabled);
 			}
-	      }
+		}
+		for (JToggleButton grab : grabs) {
+			if (grab != null) {
+				grab.setEnabled(isEnabled);
+			}
+		}
 	}
 
 	public void removeAndAdd(Server oldServer, Server newServer) {
 		// TODO Auto-generated method stub
 		this.grabItServers.remove(oldServer);
 		this.grabItServers.add(newServer);
+	}
+	
+	public void removeAndAdd(JToggleButton oldGrab, JToggleButton newGrab) {
+		this.grabs.remove(oldGrab);
+		this.grabs.add(newGrab);
 	}
 	
 

@@ -276,7 +276,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 		this.guiType = guiType;
 	}
 	
-	public boolean isOfTapServerType() {
+	public boolean isOfDynamicTapServerType() {
 		boolean typeIsTap = false;
 		if (this.guiType == 1) {
 			typeIsTap = true;

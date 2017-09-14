@@ -899,11 +899,6 @@ public class Plan implements Runnable {
             public void run() { aladin.dialog.resume(); }
          });
       
-      if( aladin.additionalServiceDialog!=null )
-          SwingUtilities.invokeLater(new Runnable() {
-             public void run() { aladin.additionalServiceDialog.resume(); }
-          });
-      
       if (aladin.grabUtilInstance!=null) {
     	  SwingUtilities.invokeLater(new Runnable() {
               public void run() { aladin.grabUtilInstance.resetAllGrabIts(aladin); }
@@ -2156,7 +2151,6 @@ public class Plan implements Runnable {
 
          // Mise à jour des formulaires serveurs (gratit et Choice input)
          if( aladin.dialog!=null ) aladin.dialog.resume();
-         if( aladin.additionalServiceDialog!=null ) aladin.additionalServiceDialog.resume();
          if (aladin.grabUtilInstance!=null) {
         	 aladin.grabUtilInstance.resetAllGrabIts(aladin);
 		}
