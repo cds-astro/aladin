@@ -176,6 +176,10 @@ import healpix.essentials.Vec3;
  * @beta    <LI> - properties file direct support
  * @beta    <LI> - planetary HiPS (longitude inversion)
  * @beta    <LI> - polarized HiPS (segments drawing)
+ * @beta    <LI> TAP full support
+ * @beta    <LI> - Gereneric TAP support
+ * @beta    <LI> - Simplifier mode (based on GLU constraint rules)
+ * @beta    <LI> - Direct access via the data discovery tree
  * @beta    <LI> MOC (coverage):
  * @beta    <LI> - perimeter drawing + set drawing=xxx script command
  * @beta    <LI> - probability sky map MOC extraction
@@ -240,7 +244,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.012";
+   static public final    String VERSION = "v10.013";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

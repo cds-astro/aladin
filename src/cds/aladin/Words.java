@@ -111,8 +111,10 @@ public final class Words implements Runnable {
       this.sort=sort;
       this.num=num;
       this.isDatalink = isDatalink;
-      char [] a = tag.toCharArray();
-      if( !(glu=tagGlu(a)) ) text=tag;
+      if( tag!=null ) {
+         char [] a = tag.toCharArray();
+         if( !(glu=tagGlu(a)) ) text=tag;
+      } else text="undefined";
       if( defText!=null ) text=defText;
       setRepere();
    }

@@ -706,7 +706,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                }
                
                // datalink uniquement basé sur le nom de la colonne (genre Markus)
-               if( flagArchive==null ) {
+               if( flagArchive==null && name!=null ) {
                   if( name.equalsIgnoreCase("datalink") ) flagArchive="data/???";
                }
             }

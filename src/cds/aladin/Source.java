@@ -1225,7 +1225,7 @@ public class Source extends Position implements Comparator {
    protected String getUnit(int pos) {
     	if(pos<0) return "";
     	String u = leg.field[pos].unit;
-    	u = u.replace("year","yr");   // pour faire plaisir à l'ESAC pour Gaia qui utilise des unités non conformes ni à l'IVOA, ni à l'UAI
+    	if( u!=null ) u = u.replace("year","yr");   // pour faire plaisir à l'ESAC pour Gaia qui utilise des unités non conformes ni à l'IVOA, ni à l'UAI
     	return u;
    }
 
