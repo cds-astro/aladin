@@ -105,7 +105,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		createChaine();
 		type = CATALOG;
 		aladinLabel = "TAP";
-//		aladinLogo = "tap.png";
+		aladinLogo    = "TAP.png";
 		this.adqlParser = new ADQLParser();
 	}
 	

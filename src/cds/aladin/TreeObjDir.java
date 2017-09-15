@@ -909,6 +909,11 @@ public class TreeObjDir extends TreeObj implements Propable {
       // If there is no TAP glu definition, we will use base TAP url
       String url = prop.get("tap_service_url");
       String id = prop.get("ID");
+      
+      // List of pre-selected tables (TAB separated)
+      // => CHAITRA, COULD YOU USE IT AS AN ADDITIONNAL PARAMETER OF YOUR loadTapServerForSimpleFrame METHOD ?
+      String defaultTables = prop.get("tap_tablename");
+      
       if( id!=null && url!=null ) {
     	  try {
 			TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url, null);
