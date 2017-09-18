@@ -164,6 +164,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> - fullscreen mode menu and widgets
  * @beta    <LI> - flexible panels management (split)
  * @beta    <LI> - file dialog window multi-platforms
+ * @beta    <LI> - history management (popup menu + arrow control)
  * @beta    <LI> Data discovery tree panel:
  * @beta    <LI> - integrated access to all CDS and other VO collections (>20,000 data sets)
  * @beta    <LI> - multi-protocol support & integration: HiPS, CS, SIA, SSA, TAP,...
@@ -244,7 +245,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.014";
+   static public final    String VERSION = "v10.015";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

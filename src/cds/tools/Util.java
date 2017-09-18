@@ -751,6 +751,15 @@ public final class Util {
       g.drawLine(x,y-1,x,y+1);
       g.drawLine(x-1,y,x+1,y);
    }
+   
+   /** Tracé d'un petit triangle plein */
+   static public void fillTriangle7(Graphics g, int x, int y) {
+      g.drawLine(x, y, x+8, y); x++; y++;
+      g.drawLine(x, y, x+6, y); x++; y++;
+      g.drawLine(x, y, x+4, y); x++; y++;
+      g.drawLine(x, y, x+2, y); x++; y++;
+      g.drawLine(x, y, x,   y);
+   }
 
    /** Tracé d'une flèche entre (x,y) et (x1,y1), avec un label éventuel et une taille d'empennage de L pixels */
    static private void drawFleche1(Graphics g,double x,double y,double x1,double y1,int L) {

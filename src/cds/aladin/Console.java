@@ -42,6 +42,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.Vector;
 
@@ -384,6 +385,23 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       if( indexArrowHistory==-1 ) return null;
       
       return cmd==null || !cmd.isCmd() ? null : cmd.getCommand();
+   }
+   
+   /** Retourne les "max" commandes les plus récentes */
+   public ArrayList<String> getRecentHistory(int max) { return getRecentHistory(0,max); }
+   public ArrayList<String> getRecentHistory(int indexInit, int max) {
+      if( indexInit<=0 ) indexInit = 0;
+      ArrayList<String> v = new ArrayList<String>(max);
+      int  i= cmdHistory.size()-1;
+      for( int j=0; i>=0 && v.size()<max; i-- ) {
+         Command cmd = cmdHistory.get(i);
+         if( !cmd.isCmd() ) continue;
+         if( j>=indexInit ) v.add( cmd.getCommand() );
+         j++;
+      }
+      if( i>0 ) v.set(max-1,"...");
+      
+      return v;
    }
    
    

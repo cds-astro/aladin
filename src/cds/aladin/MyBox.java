@@ -45,6 +45,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.plaf.basic.BasicTextFieldUI;
 
+import cds.tools.Util;
+
 
 /**
  * Classe gerant l'affichage conjoint d'un champ d'affichage et d'un champ
@@ -152,13 +154,15 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       c.setEnabled(flag);
    }
 
+   private Cursor cursor = null;
    public void mouseDragged(MouseEvent e) { }
    public void mouseMoved(MouseEvent e) {
-      Cursor nc,c = text.getCursor();
-      if( text.in(e.getX(),e.getY()) )  nc = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+      Cursor nc;
+      if( text.in(e.getX(),e.getY()) ) nc = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
       else nc = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
-      if( nc.equals(c) ) return;
+      if( nc.equals(cursor) ) return;
       text.setCursor(nc);
+      cursor=nc;
    }
 
    public void mouseClicked(MouseEvent e) {}
@@ -166,7 +170,7 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
    public void mouseEntered(MouseEvent e) { if( aladin.inHelp ) aladin.help.setText(aladin.chaine.getString("LCoord.HELP")); }
    public void mouseReleased(MouseEvent e) {
       if( aladin.inHelp ) aladin.helpOff();
-      if( text.in(e.getX(),e.getY()) ) reset();
+      if( text.in(e.getX(),e.getY()) ) triangleAction( e.getX() );
    }
    public void mouseExited(MouseEvent e) {}
 
@@ -201,6 +205,12 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       text.setText("");
       pos.setText("");
    }
+   
+   /** Action à opérer lorsque l'on clique sur le triangle au bout du champ de saisie */
+   protected void triangleAction(int x) {}
+   
+   /** Retourne true s'il faut afficher un petit triangle au bout du champ de saisie */
+   protected boolean hasTriangle() { return false; }
 
    /** Selection de tout le champ de saisie */
    protected void readyToClear() {  text.selectAll(); }
@@ -240,52 +250,31 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
          setFont(Aladin.BOLD);
          setForeground(Aladin.COLOR_LABEL);
       }
-
-      //      public Dimension getPreferredSize() {
-      //         return new Dimension(60,super.getPreferredSize().height);
-      //      }
    }
    
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
    class Text extends JTextField {
 //      private Dimension dim=null;
-      private Rectangle cross=null;
+      private Rectangle region=null;
 
       Text(String t,int width) {
          super(t,width);
          setUI( new BasicTextFieldUI() );
-
-//         dim = new Dimension(width,super.getPreferredSize().height-3);
       }
 
-//      public Dimension getPreferredSize() { return dim; }
-
-      boolean in(int x,int y) {
-         if( cross==null || text.getText().length()==0) return false;
-         return x>=cross.x;
-      }
+      boolean in(int x,int y) { return x>=region.x;  }
 
       public void paintComponent(Graphics g) {
     	  try {
     		  super.paintComponent(g);
-    		  drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
+    		  drawTriangle(g,getWidth()-15,getHeight()/2-2);
     	  } catch( Exception e ) { }
       }
 
-      static private final int X = 6;
-      private void drawCross(Graphics g, int x, int y) {
-         g.setColor( getBackground() );
-         g.fillOval(x-3, y-3, X+7, X+7);
-         if( text.getText().length()>0 ) {
-            g.setColor( text.getText().length()>0 ? Color.red.darker() : Color.gray );
-            g.drawLine(x,y,x+X,y+X);
-            g.drawLine(x+1,y,x+X+1,y+X);
-            g.drawLine(x+2,y,x+X+2,y+X);
-            g.drawLine(x+X,y,x,y+X);
-            g.drawLine(x+X+1,y,x+1,y+X);
-            g.drawLine(x+X+2,y,x+2,y+X);
-         }
-         cross = new Rectangle(x,y,X,X);
+      private void drawTriangle(Graphics g, int x, int y) {
+         g.setColor( Color.darkGray );
+         Util.fillTriangle7(g, x, y);
+         region = new Rectangle(x-2,y-2,10,10);
       }
       
       protected void processComponentKeyEvent(KeyEvent e) {

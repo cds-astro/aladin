@@ -2389,7 +2389,11 @@ final public class Fits {
    static public double getMax(int bitpixOrig) {
       return bitpixOrig==-64?Double.MAX_VALUE : bitpixOrig==-32? Float.MAX_VALUE
             : bitpixOrig==64?Long.MAX_VALUE : bitpixOrig==32?Integer.MAX_VALUE : bitpixOrig==16?Short.MAX_VALUE:255;
-
+   }
+   
+   /** Retourne la plus petite valeur codable en double en fonction du bitpix */
+   static public double getMin(int bitpixOrig) {
+      return bitpixOrig==8 ? 0: -getMax(bitpixOrig);
    }
 
    /** Coadditionne les pixels (pixels[] et rgb[], en faisant la moyenne ou par simple addition en bloquant sur la valeur max */

@@ -739,11 +739,16 @@ public class Context {
 
          //       cutOrig[2]=cutOrig[3]=0;  // ON NE MET PAS LE PIXELRANGE, TROP DANGEREUX... // J'HESITE DE FAIT !!!
 
-         // PLUTOT QUE DE NE PAS INITIALISER, ON VA DOUBLER LA TAILLE DE L'INTERVALLE
+         // PLUTOT QUE DE NE PAS INITIALISER, ON VA DOUBLER LA TAILLE DE L'INTERVALLE (sans dépasser les limites)
          double rangeData   = cutOrig[3] - cutOrig[2];
          double centerRange = cutOrig[2]/2 + cutOrig[3]/2;
          if( !Double.isInfinite( centerRange-rangeData ) ) cutOrig[2] = centerRange-rangeData;
          if( !Double.isInfinite( centerRange+rangeData ) ) cutOrig[3] = centerRange+rangeData;
+         
+         double max = Fits.getMax(file.bitpix);
+         double min = Fits.getMin(file.bitpix);
+         if( cutOrig[2]<min ) cutOrig[2]=min;
+         if( cutOrig[3]>max ) cutOrig[3]=max;
 
          setCutOrig(cutOrig);
       }

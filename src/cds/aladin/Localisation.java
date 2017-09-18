@@ -30,8 +30,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.ArrayList;
 
 import javax.swing.JComboBox;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
@@ -809,5 +812,54 @@ public class Localisation extends MyBox  {
    public void keyTyped(KeyEvent e) { }
    public void keyReleased(KeyEvent e) { }
    public void keyPressed(KeyEvent e) { }
+   
+   /** Action à opérer lorsque l'on clique sur le triangle au bout du champ de saisie */
+   protected void triangleAction(int x) { triangleAction(x,-1); }
+   protected void triangleAction( final int x, int initIndex ) {
+      int max=20;
+      ArrayList<String> v = aladin.console.getRecentHistory( initIndex, max );
+      if( v.size()==0 ) return;
+      
+      JPopupMenu popup = new JPopupMenu();
+      for( String s: v ) {
+         JMenuItem mi = null;
+         if( s.equals("...") ) {
+            mi = new JMenuItem(s);
+            mi.setActionCommand(""+(initIndex+max));
+            mi.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  try {
+                     int index = Integer.parseInt( ((JMenuItem)e.getSource()).getActionCommand() );
+                     triangleAction(x,index);
+                  }catch( Exception e1) {}
+               }
+            });
 
+         } else {
+            mi = new JMenuItem( s.length()>80 ? s.substring(0,78)+" ..." : s);
+            mi.setActionCommand(s);
+            mi.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  String s = ((JMenuItem)e.getSource()).getActionCommand();
+                  aladin.execAsyncCommand(s);
+               }
+            });
+         }
+         popup.add(mi);
+      }
+      setComponentPopupMenu(popup);
+      popup.show(this, x-200, getHeight());
+   }
+   
+   
+   private boolean flagCheckHistory = false;
+   
+   /** Retourne true s'il faut afficher un petit triangle au bout du champ de saisie */
+   protected boolean hasTriangle() {
+      if( !flagCheckHistory ) {
+         if( aladin.console.getRecentHistory(1).size()>0 ) flagCheckHistory=true;
+         return false;
+      }
+      return true;
+   }
 }
