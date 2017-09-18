@@ -146,57 +146,42 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 	}
 	
 	/** Affichage des infos associées à un serveur */
-	protected void show(ServerTapExamples s, String title, String secTableChoice) {
+	protected void show(ServerTapExamples s, String title) {
 		try {
 			setTitle(title);
 			if (this.serverEx == null) {
-				createFrame(s, secTableChoice);
+				createFrame(s);
 			} else {
 				if (s != this.serverEx || priTableName == null || !serverEx.selectedTableName.equalsIgnoreCase(priTableName)) {
 					setRaDecColumn(s.tapClient, s.selectedTableName, raColumn1, decColumn1);
 				}
 				
-				if (s != this.serverEx ||  (secTableChoice != null && !secTableChoice.equalsIgnoreCase(secondaryTable))) {
+				if (s != this.serverEx || (s.secondaryTable != null && !s.secondaryTable.equalsIgnoreCase(secondaryTable))) {
 					Vector<String> tables = new Vector<String>(s.tapClient.tablesMetaData.keySet());
-					if (secTableChoice  == null || !tables.contains(secTableChoice)) {
+					if (s.secondaryTable  == null || !tables.contains(s.secondaryTable)) {
 						if (tables.size() > 1) {
 							secondaryTable = tables.get(1);
 						} else {
 							secondaryTable = null;
 						}
 					} else {
-						secondaryTable = secTableChoice;
+						secondaryTable = s.secondaryTable;
 					}
 					DefaultComboBoxModel items = new DefaultComboBoxModel(tables);
 					JTextComponent tablesGuiEditor = (JTextComponent) secondaryTablesGui.getEditor().getEditorComponent();
-					try {
-						secondaryTablesGui.setEnabled(false);
-						secondaryTablesGui.removeAllItems();
-						secondaryTablesGui.setModel(items);
-						List<String> keys = new ArrayList<String>();
-						keys.addAll(s.tapClient.tablesMetaData.keySet());
-						tablesGuiEditor.setDocument(new FilterDocument(this, this.secondaryTablesGui, keys, secondaryTable));
-					} catch (BadLocationException e) {
-						// TODO Auto-generated catch block
-						if (Aladin.levelTrace >= 3) e.printStackTrace();
-						Aladin.warning("Could not set second table: "+e.getMessage());
-						secondaryTable = null;
-						setVisible(false);
-					} catch (Exception e) {
-						// TODO: handle exception
-						if (Aladin.levelTrace >= 3) e.printStackTrace();
-						secondaryTable = null;
-						Aladin.warning("Could not set second table: "+e.getMessage());
-						setVisible(false);
-					}
+					secondaryTablesGui.setEnabled(false);
+					secondaryTablesGui.removeAllItems();
+					secondaryTablesGui.setModel(items);
+					List<String> keys = new ArrayList<String>();
+					keys.addAll(s.tapClient.tablesMetaData.keySet());
+					tablesGuiEditor.setDocument(new FilterDocument(this, this.secondaryTablesGui, keys, secondaryTable));
+					
 					boolean enabled = false;
-					if (tableSelection > 0) {
+					if (secondaryTable != null || uploadTablesGui.isEnabled()) {
 						enabled = true;
 					}
-					secondaryTablesGui.setEnabled(enabled);
-					setSecondTableGui(enabled);
+					enableSecondTable.setSelected(enabled);
 					pack();
-//					checkSelectionChanged(secondaryTablesGui);
 					setRaDecColumn(s.tapClient, secondaryTable, raColumn2, decColumn2);
 				}
 			}
@@ -209,6 +194,10 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 			// TODO: handle exception
 			if (Aladin.levelTrace >= 3) e.printStackTrace();
 			Aladin.warning("Cannot open settings "+e.getMessage());
+			secondaryTable = null;
+			if (isVisible()) {
+				setVisible(false);
+			}
 		}
 	}
 	
@@ -217,21 +206,23 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		Vector<TapTableColumn> columns = new Vector<TapTableColumn>();
 		TapTableColumn dummyColumn = getDummyColumn();
 		columns.add(0, dummyColumn);
-		columns.addAll(getColumnSchemas(tapClient, tableName));
+		if (tableName != null) {
+			columns.addAll(getColumnSchemas(tapClient, tableName));
+		}
 		DefaultComboBoxModel items = new DefaultComboBoxModel(columns);
 		raSettingsGui.removeAllItems();
 		raSettingsGui.setModel(items);
-		TapTableColumn toSelect = table.getFlaggedColumn(RA);
-		if (toSelect == null) {
-			toSelect = dummyColumn;
+		TapTableColumn toSelect = dummyColumn;
+		if (table != null) {
+			toSelect = table.getFlaggedColumn(RA);
 		}
 		raSettingsGui.setSelectedItem(toSelect);
+		toSelect = dummyColumn;
 		items = new DefaultComboBoxModel(columns);
 		decSettingsGui.removeAllItems();
 		decSettingsGui.setModel(items);
-		toSelect = table.getFlaggedColumn(DEC);
-		if (toSelect == null) {
-			toSelect = dummyColumn;
+		if (table != null) {
+			toSelect = table.getFlaggedColumn(DEC);
 		}
 		decSettingsGui.setSelectedItem(toSelect);
 	}
@@ -280,11 +271,11 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 	 * @param server2 
 	 * @throws Exception 
 	 */
-	public void createFrame(ServerTapExamples s, String secTableChoice) throws Exception {
+	public void createFrame(ServerTapExamples s) throws Exception {
 //		this.getContentPane().setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 		this.getContentPane().removeAll();
 		this.getContentPane().setBackground(Aladin.COLOR_MAINPANEL_BACKGROUND);
-		this.getContentPane().add(createContents(s, secTableChoice), "Center");
+		this.getContentPane().add(createContents(s), "Center");
 		buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		JButton settingsButton = new JButton("Apply changes");
 		settingsButton.addActionListener(this);
@@ -308,7 +299,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		this.getRootPane().setSize(500, 500);
 	}
 	
-	public JPanel createContents(ServerTapExamples s, String secTableChoice) throws Exception {
+	public JPanel createContents(ServerTapExamples s) throws Exception {
 		JPanel contents = new JPanel();
 		contents.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -344,7 +335,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		c.gridy++;
 		c.gridwidth = 1;
 		c.weightx = 0.10;
-		TapTable table = s.tapClient.getServerExampleSelectedPrimaryTable();
+		
 		Vector<TapTableColumn> columnsToSet = new Vector<TapTableColumn>();
 		TapTableColumn dummyColumn = getDummyColumn();
 		columnsToSet.add(0, dummyColumn);
@@ -352,12 +343,14 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		raColumn1 = new JComboBox(columnsToSet);
 		raColumn1.setRenderer(new CustomListCellRenderer());
 		raColumn1.setSize(raColumn1.getWidth(), Server.HAUT);
+		TapTable table = s.tapClient.getServerExampleSelectedPrimaryTable();
 		TapTableColumn selectedItem = table.getFlaggedColumn(RA);
 		if (selectedItem != null) {
 			raColumn1.setSelectedItem(selectedItem);
 		} else {
 			raColumn1.setSelectedItem(dummyColumn);
 		}
+		selectedItem = null;
 		contents.add(new JLabel("Ra:"), c);
 		c.gridx = 1;
 		c.weightx = 0.90;
@@ -375,6 +368,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		} else {
 			decColumn1.setSelectedItem(dummyColumn);
 		}
+		selectedItem = null;
 		contents.add(new JLabel("Dec:"), c);
 		c.gridx = 1;
 		c.weightx = 0.90;
@@ -414,26 +408,28 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		ButtonGroup secondTableCheckGroup = new ButtonGroup();
 		Vector<String> tables = new Vector<String>(s.tapClient.tablesMetaData.keySet().size());
 		tables.addAll(s.tapClient.tablesMetaData.keySet());
-		if (secTableChoice  == null || !tables.contains(secTableChoice)) {
-			if (tables.size() > 1) {
+		if (s.secondaryTable == null || !tables.contains(s.secondaryTable)) {
+			if (tables.size() > 2) {
 				secondaryTable = tables.get(1);
 			} else {
 				secondaryTable = null;
 			}
 		} else {
-			secondaryTable = secTableChoice;
+			secondaryTable = s.secondaryTable;
 		}
 		columnsToSet = new Vector<TapTableColumn>();
 		columnsToSet.add(0, dummyColumn);
-		try {
-			columnsToSet.addAll(getColumnSchemas(s.tapClient, secondaryTable));
-		} catch (Exception e) {
-			// for second table errors, we do not provide the gui
-			if (Aladin.levelTrace >= 3) {
-				e.printStackTrace();
+		if (secondaryTable != null) {
+			try {
+				columnsToSet.addAll(getColumnSchemas(s.tapClient, secondaryTable));
+			} catch (Exception e) {
+				// for second table errors, we do not provide the gui
+				if (Aladin.levelTrace >= 3) {
+					e.printStackTrace();
+				}
 			}
 		}
-		table = s.tapClient.tablesMetaData.get(secondaryTable);
+		
 		c.insets = new Insets(15, 10, 3, 10);
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
@@ -470,9 +466,10 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 				// TODO Auto-generated method stub
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					tableSelection = 1;
+					pack();
+					checkSelectionChanged(secondaryTablesGui);
 				}
-				pack();
-				checkSelectionChanged(secondaryTablesGui);
+				
 			}
 		});
 		secondaryTablePanel.add(addSecondTable);
@@ -492,6 +489,9 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 			Aladin.warning(e.getMessage());
 			setVisible(false);//tintin TODO error handling
 			throw e;
+		}
+		if (secondaryTable == null) {
+			secondaryTablesGui.setEnabled(false);
 		}
 		secondaryTablesGui.setOpaque(false);
 		
@@ -527,9 +527,9 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 				// TODO Auto-generated method stub
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					tableSelection = 2;
+					pack();
+					checkSelectionChanged(uploadTablesGui);
 				}
-				pack();
-				checkSelectionChanged(uploadTablesGui);
 			}
 		});
 		uploadTablePanel.add(useUploadTable);	
@@ -581,12 +581,18 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		raColumn2 = new JComboBox(columnsToSet);
 		raColumn2.setRenderer(new CustomListCellRenderer());
 		raColumn2.setSize(raColumn2.getWidth(), Server.HAUT);
-		selectedItem = table.getFlaggedColumn(RA);
+		
+		if (secondaryTable != null) {
+			table = s.tapClient.tablesMetaData.get(secondaryTable);
+			selectedItem = table.getFlaggedColumn(RA);
+		}
+		
 		if (selectedItem != null) {
 			raColumn2.setSelectedItem(selectedItem);
 		} else {
 			raColumn2.setSelectedItem(dummyColumn);
 		}
+		selectedItem = null;
 
 		c.gridy++;
 		c.gridwidth = 1;
@@ -599,7 +605,9 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		decColumn2 = new JComboBox(columnsToSet);
 		decColumn2.setRenderer(new CustomListCellRenderer());
 		decColumn2.setSize(decColumn2.getWidth(), Server.HAUT);
-		selectedItem = table.getFlaggedColumn(DEC);
+		if (secondaryTable != null) {
+			selectedItem = table.getFlaggedColumn(DEC);
+		}
 		if (selectedItem != null) {
 			decColumn2.setSelectedItem(selectedItem);
 		} else {
@@ -740,7 +748,9 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 	}
 	
 	public void setSecondAllTableGui(boolean enable) {
-		this.secondaryTablesGui.setEnabled(enable);
+		if (secondaryTable != null) {
+			this.secondaryTablesGui.setEnabled(enable);
+		}
 		if (uploadTablesGui.getItemCount() > 0) {
 			uploadTablesGui.setEnabled(enable);
 		}

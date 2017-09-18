@@ -101,13 +101,8 @@ public class ServerTapExamples extends DynamicTapForm {
 	
 	public ServerTapExamples(Aladin aladin, TapClient tapClient) {
 		// TODO Auto-generated constructor stub
-		this.aladin = aladin;
-		createChaine();
-		formLoadStatus = TAPFORM_STATUS_NOTLOADED;
-		aladinLabel = "TAP";
-		type = CATALOG;
+		super(aladin);
 		this.tapClient = tapClient;
-		this.adqlParser = new ADQLParser();
 		
 		Coord defaultCoo = aladin.localisation.getLastCoord();
 		//Setting dummy for init.
@@ -334,7 +329,7 @@ public class ServerTapExamples extends DynamicTapForm {
 					if (tapManager.settingsFrame == null) {
 						tapManager.settingsFrame = new FrameTapSettings(aladin);
 					}
-					tapManager.settingsFrame.show(this, "Settings for " + this.tapClient.tapLabel, secondaryTable);
+					tapManager.settingsFrame.show(this, "Settings for " + this.tapClient.tapLabel);
 				} catch (Exception e) {
 					if (Aladin.levelTrace >= 3) e.printStackTrace();
 					Aladin.warning(this, TapClient.GENERICERROR);

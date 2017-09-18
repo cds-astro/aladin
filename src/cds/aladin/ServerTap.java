@@ -33,7 +33,6 @@ import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 import static cds.aladin.Constants.SELECTALL;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
-import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.TAP_REC_LIMIT;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.WRITEQUERY;
@@ -75,7 +74,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 
 import adql.db.DBChecker;
-import adql.parser.ADQLParser;
 import adql.parser.QueryChecker;
 import cds.aladin.Constants.TapClientMode;
 
@@ -100,13 +98,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
     JFrame setRaDecFrame;
     
 	protected ServerTap(Aladin aladin) {
-		this.aladin = aladin;
-		formLoadStatus = TAPFORM_STATUS_NOTLOADED;
-		createChaine();
-		type = CATALOG;
-		aladinLabel = "TAP";
-		aladinLogo    = "TAP.png";
-		this.adqlParser = new ADQLParser();
+		super(aladin);
 	}
 	
 	@Override

@@ -142,12 +142,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 
 	public ServerObsTap(Aladin aladin) {
 		// TODO Auto-generated constructor stub
-		this.aladin = aladin;
-		createChaine();
-		type = CATALOG;
-		aladinLabel = "TAP";
-//		aladinLogo = "tap.png";
-		this.adqlParser = new ADQLParser();
+		super(aladin);
 	}
 	
 	public void createForm(String tableChoice) {

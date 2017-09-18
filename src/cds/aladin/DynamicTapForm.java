@@ -88,6 +88,22 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	JComboBox tablesGui;
 	protected JComboBox<String> sync_async;
 	protected JComboBox<String> circleOrSquare;
+	
+	public DynamicTapForm() {
+		// TODO Auto-generated constructor stub
+		formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+		type = CATALOG;
+		aladinLabel = "TAP";
+		aladinLogo    = "TAP.png";
+		this.adqlParser = new ADQLParser();
+	}
+	
+	public DynamicTapForm(Aladin aladin) {
+		// TODO Auto-generated constructor stub
+		this();
+		this.aladin = aladin;
+		createChaine();
+	}
 
 	abstract void createFormDefault();
 	
