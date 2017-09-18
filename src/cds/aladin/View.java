@@ -2257,14 +2257,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne le nombre d'objets sélectionnés */
    protected int nbSelectedObjet() { return vselobj.size(); }
    
-   /** retourne true si le premier objet sélectionné peut être utilisé pour extraire un MOC
+   /** retourne true s'il y a un objet sélectionné qui peut être utilisé pour extraire un MOC
     * (càd soit un polygone, soit un cercle) */
    protected boolean hasMocPolSelected() {
       if( !hasSelectedObj() ) return false;
-      Obj o = vselobj.get(0);
-      if( o instanceof Ligne && ((Ligne)o).isPolygone() ) return true;
-      if( o instanceof SourceStat && ((SourceStat)o).hasRayon() )  return true;
-      
+      for( Obj o : vselobj ) {
+         if( o instanceof Ligne && ((Ligne)o).isPolygone() ) return true;
+         if( o instanceof SourceStat && ((SourceStat)o).hasRayon() )  return true;
+      }
       return false;
    }
 

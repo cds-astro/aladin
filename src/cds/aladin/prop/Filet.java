@@ -37,7 +37,8 @@ import javax.swing.JComponent;
 public final class Filet extends JComponent {
    int type;            // Type de filet
                         // 0 - du vide
-                        // 1 - un trait
+                        // 1 - un trait en noir et blanc
+                        // 2 - un trait en gris clair
    int w=60,h=1;
 
   /** Creation d'un filet.
@@ -66,12 +67,13 @@ public final class Filet extends JComponent {
       switch( type ) {
          case 0: return;
          case 1:
+         case 2:
             int w = getSize().width-20;
             int y = getSize().height/2;
             if( w<=0 ) return;
 
             // Je trace un filet bicolore
-            g.setColor( Color.gray );
+            g.setColor( type==1 ? Color.gray : Color.lightGray );
             g.drawLine(5,y,w,y);
             g.setColor( Color.white );
             g.drawLine(5,y+1,w,y+1);

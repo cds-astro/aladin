@@ -167,7 +167,11 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       exprArea.setLineWrap(true);
       exprArea.addKeyListener(new KeyListener() {
          public void keyTyped(KeyEvent e) { }
-         public void keyPressed(KeyEvent e) { flagFormEdit=true; updateWidget(); }
+         public void keyPressed(KeyEvent e) {
+            flagFormEdit=true;
+            aladin.directory.flagError=false;
+            updateWidget();
+         }
          public void keyReleased(KeyEvent e) {
             if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
          }
@@ -303,21 +307,14 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    private void activateAreaText(boolean flag) {
       if( flag ) {
-         exprArea.setForeground( Aladin.COLOR_GREEN.darker() );
+         exprArea.setForeground( aladin.directory.flagError ? Color.red : Aladin.COLOR_GREEN.darker() );
          exprArea.setBackground( Color.white );
          exprArea.getFont().deriveFont(Font.BOLD);
 
-//         mocArea.setForeground( Aladin.COLOR_GREEN.darker() );
-//         mocArea.setBackground( Color.white );
-//         mocArea.getFont().deriveFont(Font.BOLD);
      } else {
-         exprArea.setForeground( new Color(80,80,80) );
+         exprArea.setForeground( aladin.directory.flagError ? Color.red : new Color(80,80,80) );
          exprArea.setBackground( BGCOLOR );
          exprArea.getFont().deriveFont(Font.ITALIC);
-         
-//         mocArea.setForeground( new Color(80,80,80) );
-//         mocArea.setBackground( BGCOLOR );
-//         mocArea.getFont().deriveFont(Font.ITALIC);
       }
    }
    
@@ -706,7 +703,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //            mocFiltreSpatial=null;
 //         }
       }
-      updateWidget();
+      
+//      updateWidget();
       
       flagFormEdit=false;
       
@@ -716,6 +714,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( isVisible() ) aladin.makeCursor(this, Aladin.WAITCURSOR);
 
       aladin.directory.resumeFilter(expr, mocFiltreSpatial, getIntersect( mocFiltreSpatial) );
+      updateWidget();
       
       // mémorisation de l'expression s'il s'agit du MYLIST
       if( aladin.directory.comboFilter.getSelectedItem().equals(Directory.MYLISTHTML) ) {
@@ -1104,7 +1103,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    // Positionne un cadre de titre autour d'un panel
-   private void setTitleBorder(JPanel p, String title, Color foreground) {
+   static public void setTitleBorder(JPanel p, String title, Color foreground) {
       Border line = BorderFactory.createMatteBorder(1, 1, 1, 1, foreground);
       if( title==null ) p.setBorder( line );
       else p.setBorder( BorderFactory.createTitledBorder(line,title,

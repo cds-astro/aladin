@@ -82,6 +82,7 @@ public class Status extends JComponent implements MouseListener {
       if( lastText!=null && lastText.equals(s) ) return;
       if( s.length()==0 &&  aladin.dialog!=null && !aladin.command.isSync() ) s=aladin.chaine.getString("SEESTACK"); 
       text = s;
+      
       repaint();
    }
    

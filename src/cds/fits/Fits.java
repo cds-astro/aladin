@@ -679,19 +679,19 @@ final public class Fits {
       // Cas tordu on l'entête est tout de même vide (du genre NAXIS=1, et NAXIS1=0)
       if( naxis>0 ) {
          try {
+            int total = 0;
             for( int j=1; j<=naxis; j++ ) {
                int naxisn = headerFits.getIntFromHeader("NAXIS"+j);
-               if( naxisn>0 ) break;
+               if( naxisn>0 ) { total+= naxisn; break; }
             }
             // Bon c'était tout de même vide !
-            naxis=-1;
+            if( total==0 ) naxis=0;
          } catch( Exception e ) {}
       }
       if( ext==0 && naxis<=0 ) {
          if( !skipHDU0 ) return;
          headerFits = new HeaderFits(dis);
       }
-
 
       bitpix = headerFits.getIntFromHeader("BITPIX");
       width = headerFits.getIntFromHeader("NAXIS1");
@@ -914,12 +914,13 @@ final public class Fits {
             // Cas tordu on l'entête est tout de même vide (du genre NAXIS=1, et NAXIS1=0)
             if( naxis>0 ) {
                try {
+                  int total = 0;
                   for( int j=1; j<=naxis; j++ ) {
                      int naxisn = headerFits.getIntFromHeader("NAXIS"+j);
-                     if( naxisn>0 ) break;
+                     if( naxisn>0 ) { total+= naxisn; break; }
                   }
                   // Bon c'était tout de même vide !
-                  naxis=-1;
+                  if( total==0 ) naxis=0;
                } catch( Exception e ) {}
             }
             if( ext==0 && naxis<=0 ) {
