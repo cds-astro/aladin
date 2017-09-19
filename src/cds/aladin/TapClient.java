@@ -21,6 +21,7 @@
 
 package cds.aladin;
 import static cds.aladin.Constants.ADQLVALUE_FORBETWEEN;
+import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.EXAMPLES;
 import static cds.aladin.Constants.GENERIC;
@@ -83,7 +84,7 @@ public class TapClient{
 	public static String modesToolTip;
 	public static String[] modeIconToolTips = new String[4];
 	public DefaultComboBoxModel model = null;
-	public static String TAPGLUGENTOGGLEBUTTONTOOLTIP,RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND;
+	public static String TAPGLUGENTOGGLEBUTTONTOOLTIP,RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND, CHANGESERVERTOOLTIP;
 	
 	public TapManager tapManager;
 	public String tapLabel;
@@ -170,10 +171,26 @@ public class TapClient{
 		return tapClient;
 	}
 	
+	public static JButton getChangeServerButton() {
+		JButton button = null;
+		Image image = Aladin.aladin.getImagette("changeServerOptions.png");
+		if (image == null) {
+			button = new JButton("Change server");
+		} else {
+			button = new JButton(new ImageIcon(image));
+		}
+		button.setBorderPainted(false);
+		button.setMargin(new Insets(0, 0, 0, 0));
+		button.setContentAreaFilled(true);
+		button.setActionCommand(CHANGESERVER);
+		button.setToolTipText(CHANGESERVERTOOLTIP);
+		return button;
+	}
+	
 	public JPanel getOptionsPanel(Server server) {
 		JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0 , 0));
 		if (this.mode == TapClientMode.DIALOG) {
-			JButton button = ServerTap.getChangeServerButton();
+			JButton button = getChangeServerButton();
 			button.addActionListener(server);
 //			titlePanel.add(button);
 			optionsPanel.add(button);
@@ -801,6 +818,7 @@ public class TapClient{
 		}
 	    TARGETERROR = Aladin.chaine.getString("TARGETERROR");
 	    NOGLURECFOUND = Aladin.chaine.getString("NOGLURECFOUND");
+	    CHANGESERVERTOOLTIP = Aladin.chaine.getString("CHANGESERVERTOOLTIP");
 	}
 
 }

@@ -49,6 +49,12 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 		if (index < 0) {
 			setText("Mode");
 			option.setEnabled(true);
+			 if (list != null) {
+		            isSelected = list.isSelectedIndex(index);
+		            if (list.getSelectedValue() != null ) {
+		            	setText("Mode: "+list.getSelectedValue());
+			        }
+		        }
 		} else if (index == 0 && this.tapClient.serverGlu == null) {
 			makeDisabled(option, value, TapClient.NOGLURECFOUND);
 		} else if (index == 3 && this.tapClient.obscoreTables.isEmpty()) {

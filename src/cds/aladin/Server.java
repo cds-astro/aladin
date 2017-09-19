@@ -233,6 +233,7 @@ public class Server extends JPanel
    ADQLParser adqlParser;
    public TapClient tapClient;
    JComboBox modeChoice = null;
+   public int requestsSent = 0; //for last plane to set the ball rolling
    
    protected String getTitle() { return aladinLabel; }
    protected String getOrigin() { return institute; }

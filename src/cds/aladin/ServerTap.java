@@ -23,7 +23,6 @@ package cds.aladin;
 
 import static cds.aladin.Constants.ADDPOSCONSTRAINT;
 import static cds.aladin.Constants.ADDWHERECONSTRAINT;
-import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.CHECKQUERY;
 import static cds.aladin.Constants.COMMA_SPACECHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
@@ -34,6 +33,7 @@ import static cds.aladin.Constants.SELECTALL;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAP_REC_LIMIT;
+import static cds.aladin.Constants.TAP_REC_LIMIT_UNLIMITED;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.WRITEQUERY;
 import static cds.tools.CDSConstants.BOLD;
@@ -42,7 +42,6 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
@@ -58,7 +57,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -80,7 +79,7 @@ import cds.aladin.Constants.TapClientMode;
 public class ServerTap extends DynamicTapForm implements MouseListener {
 
 	private static final long serialVersionUID = 1L;
-	public static String LOAD, REFRESHQUERYTOOLTIP, CHANGESERVERTOOLTIP;
+	public static String LOAD, REFRESHQUERYTOOLTIP;
 	
     //these data are serverTap specific
     private String raColumnName;
@@ -144,7 +143,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 
 		QueryChecker checker = new DBChecker(this.tapClient.queryCheckerTables);
 		this.adqlParser.setQueryChecker(checker);
-		setBasics(this);
+		setBasics();
 		
 		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
 		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
@@ -153,7 +152,6 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		
-		info1 = new JLabel();
 		setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
 	    
 		JPanel tablesPanel = null;
@@ -241,7 +239,9 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 		
 		this.selectList.removeAll();
-		this.selectList.setListData(columnNames);
+		Vector<TapTableColumn> model = new Vector<TapTableColumn>();
+		model.addAll(columnNames);
+		this.selectList.setListData(model);
 		
 		if (this.selectAll != null) {
 			this.selectAll.setSelected(true);
@@ -280,6 +280,9 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		panel.add(selectAll);
 		
 		if (columnNames != null) {
+			Vector<TapTableColumn> model = new Vector<TapTableColumn>();
+			model.addAll(columnNames);
+			DefaultComboBoxModel combo = new DefaultComboBoxModel<TapTableColumn>(model);
 			this.selectList = new JList(columnNames);
 			this.selectList.setSelectionInterval(0, columnNames.size()-1);
 			this.selectList.setCellRenderer(new CustomListCellRenderer());
@@ -343,6 +346,13 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		panel.add(label);
 		
 		this.limit = new JComboBox<String>(TAP_REC_LIMIT);
+		if (TAPEXDEFAULTMAXROWS != null) {
+			if (!TAPEXDEFAULTMAXROWS.isEmpty()) {
+				this.limit.setSelectedItem(TAPEXDEFAULTMAXROWS);
+			} else {
+				this.limit.setSelectedItem(TAP_REC_LIMIT_UNLIMITED);
+			}
+		}
 		this.limit.setOpaque(false);
 		this.limit.addItemListener(new ItemListener() {
 	         public void itemStateChanged(ItemEvent e) {
@@ -507,13 +517,17 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	
 	@Override
 	protected void clear() {
-		if (this.sync_async!=null) {
+		if (this.sync_async != null) {
 			this.sync_async.setSelectedIndex(0);
 		}
-		if (this.limit!=null) {
-			this.limit.setSelectedIndex(0);
+		if (this.limit != null) {
+			if (!TAPEXDEFAULTMAXROWS.isEmpty()) {
+				this.limit.setSelectedItem(TAPEXDEFAULTMAXROWS);
+			} else {
+				this.limit.setSelectedIndex(0);
+			}
 		}
-		if (this.selectAll!=null) {
+		if (this.selectAll != null) {
 			this.selectAll.setSelected(false);
 		}
 		
@@ -523,7 +537,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 		this.raColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getRaColumnName();
 		this.decColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getDecColumnName();
-		if (resetTargetPanel && (this.raColumnName!=null && this.decColumnName!=null)) {
+		if (resetTargetPanel && (this.raColumnName != null && this.decColumnName != null)) {
 			resetTargetPanel = false;
 		}
 		if (resetTargetPanel) {
@@ -688,34 +702,17 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 	}
 	
-	public static JButton getChangeServerButton() {
-		JButton button = null;
-		Image image = Aladin.aladin.getImagette("changeServerOptions.png");
-		if (image == null) {
-			button = new JButton("Change server");
-		} else {
-			button = new JButton(new ImageIcon(image));
-		}
-		button.setBorderPainted(false);
-		button.setMargin(new Insets(0, 0, 0, 0));
-		button.setContentAreaFilled(true);
-		button.setActionCommand(CHANGESERVER);
-		button.setToolTipText(CHANGESERVERTOOLTIP);
-		return button;
-	}
-	
 	protected void createChaine() {
 		super.createChaine();
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
-		verboseDescr = Aladin.chaine.getString("TAPGENERICFORMDESC");
+		verboseDescr  = loadedServerDescription = Aladin.chaine.getString("TAPGENERICFORMDESC");
 		CLIENTINSTR  = Aladin.chaine.getString("TAPCLIENTINSTR");
 	}
 	
 	static {
 		LOAD = Aladin.chaine.getString("FSLOAD");
 		REFRESHQUERYTOOLTIP = Aladin.chaine.getString("REFRESHQUERYTOOLTIP");
-	    CHANGESERVERTOOLTIP = Aladin.chaine.getString("CHANGESERVERTOOLTIP");
 	}
 	
 

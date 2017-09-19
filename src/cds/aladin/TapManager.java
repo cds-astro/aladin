@@ -120,7 +120,8 @@ public class TapManager {
 	ExecutorService executor;
 	
 	public Aladin aladin;
-	protected static List<DataLabel> tapServerLabels;
+	protected static List<DataLabel> splTapServerLabels;
+	protected static List<DataLabel> allTapServerLabels;
 	protected TapFrameServer tapFrameServer=null;
 	protected FrameUploadServer uploadFrame;
 	
@@ -173,15 +174,32 @@ public class TapManager {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<DataLabel> getTapServerList(){
+	public List<DataLabel> getTapServerList(int mode) {
+		List<DataLabel> result = null;
 		if (initAllLoad) {
-			populateTapServerListFromLocalFile();
+//			populateTapServerListFromLocalFile(); //tintin comment this for commit
 			// load from glu here
-			
-			populateFromDirectory();//loading form directory
+			populateTapServerListFromLocalFile();// tintin here dummy as well
+			populateFromDirectory();//loading from directory
 		}
-		
-		return tapServerLabels;
+		switch (mode) {
+		case 0:
+			result = splTapServerLabels;
+			break;
+		case 1:
+			result = allTapServerLabels;
+			break;
+		default:
+			result = new ArrayList<DataLabel>();
+			if (allTapServerLabels != null) {
+				result.addAll(allTapServerLabels);
+			}
+			if (splTapServerLabels != null) {
+				result.addAll(splTapServerLabels);
+			}
+			break;
+		}
+		return result;
 	}
 	
 	/**
@@ -196,18 +214,18 @@ public class TapManager {
 	public void addTapService(String actionName, String label, String url, String description) {
 		if (actionName != null) {
 			DataLabel newDatalabel = new DataLabel(label, url, description);
-			if (tapServerLabels == null) {
-				tapServerLabels = new ArrayList<DataLabel>();
+			if (splTapServerLabels == null) {
+				splTapServerLabels = new ArrayList<DataLabel>();
 			}
 			removeOldEntries(label);
-			tapServerLabels.add(newDatalabel);
+			splTapServerLabels.add(newDatalabel);
 		}
 	}
 	
 	public void removeOldEntries(String actionName) {
-		for (DataLabel datalabel : tapServerLabels) {
+		for (DataLabel datalabel : splTapServerLabels) {
 			if (datalabel.getLabel().equals(actionName)) {
-				tapServerLabels.remove(datalabel);
+				splTapServerLabels.remove(datalabel);
 				break;
 			}
 		}
@@ -220,21 +238,20 @@ public class TapManager {
 	private void populateTapServerListFromLocalFile(){
 		BufferedReader bufReader = null;
 		try {
-			if (tapServerLabels == null) {
-				tapServerLabels = new ArrayList<DataLabel>();
+			if (allTapServerLabels == null) {
+				allTapServerLabels = new ArrayList<DataLabel>();
 			}
 			String fileLine;
 			String label;
 			String url;
 			String description;
 			bufReader = new BufferedReader(new InputStreamReader(aladin.getClass().getResourceAsStream("/"+Constants.TAPSERVERS)));
-			
 			while ((fileLine = bufReader.readLine()) != null) {
 				if (fileLine.equals("") || fileLine.charAt(0) == '#') continue;
 				label = fileLine.split("\\s+")[0];
 				url = fileLine.split("\\s+")[1];
 				description = fileLine.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
-				tapServerLabels.add(new DataLabel(label, url, description));
+				allTapServerLabels.add(new DataLabel(label, url, description));
 			}
 			
 		} catch (Exception e) {
@@ -259,8 +276,8 @@ public class TapManager {
 	 */
 	private void populateFromDirectory() {
 		try {
-			if (tapServerLabels == null) {
-				tapServerLabels = new ArrayList<DataLabel>();
+			if (splTapServerLabels == null) {
+				splTapServerLabels = new ArrayList<DataLabel>();
 			}
 			String label;
 			String url;
@@ -271,7 +288,7 @@ public class TapManager {
 				label = dirTapServerInfoLine.split("\\s+")[0];
 				url = dirTapServerInfoLine.split("\\s+")[1];
 				description = dirTapServerInfoLine.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
-				tapServerLabels.add(new DataLabel(label, url, description));
+				splTapServerLabels.add(new DataLabel(label, url, description));
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -377,10 +394,6 @@ public class TapManager {
 				throw new Exception("Tap server url not found");
 			}
 		}
-		newServer.setOpaque(true);
-		newServer.showloading();
-		tapClient.capabilities = this.getTapCapabilities(tapClient.tapBaseUrl);
-		
 		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
 		String vizierTable = processIfVizier(tapClient);
 		// just another control on the nodes feature
@@ -390,6 +403,9 @@ public class TapManager {
 			tapClient.secondColor = Color.white;
 			nodeOn = true;
 		}
+		newServer.setOpaque(true);
+		newServer.showloading();
+		tapClient.capabilities = this.getTapCapabilities(tapClient.tapBaseUrl);
 		if (nodeOn && vizierTable != null) {
 			//if you have a table name
 			this.loadTapColumnSchemasForATable(tapClient, vizierTable, newServer);
@@ -1849,7 +1865,10 @@ public class TapManager {
 	public String getSyncUrlUnEncoded(Server s, String url, String queryParam) {
 		String result = null;
 		try {
-			result = getUrl(url, queryParam, PATHSYNC).toString();
+			result = getUrl(url, null, PATHSYNC).toString();
+			if (queryParam != null) {
+				result = result+"?"+queryParam;
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace > 3) e.printStackTrace();
@@ -2015,7 +2034,8 @@ public class TapManager {
 	public void setSelectedServerLabel(){
 //		this.selectedServerLabel = tapServerLabels.get(DataLabel.selectedId);
 		this.tapFrameServer.selectedServerLabel = null;
-		for (DataLabel datalabel : getTapServerList()) {
+		int whichList = this.tapFrameServer.allRegistryPane.getSelectedIndex();
+		for (DataLabel datalabel : getTapServerList(whichList)) {
 			if (datalabel.gui.isSelected()) {
 				this.loadTapServerList();
 				this.tapFrameServer.selectedServerLabel = datalabel;

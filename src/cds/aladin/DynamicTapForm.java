@@ -33,13 +33,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -61,6 +57,7 @@ import adql.parser.QueryChecker;
 import adql.query.ADQLQuery;
 import adql.query.from.ADQLTable;
 import cds.aladin.Constants.TapClientMode;
+import cds.tools.ConfigurationReader;
 import cds.tools.Util;
 import cds.xml.VOSICapabilitiesReader;
 
@@ -77,11 +74,13 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	
 	public static String TIPRETRY, TAPTABLEUPLOADTIP, TAPTABLENOUPLOADTIP, REFRESHQUERYTOOLTIP, CHECKQUERYTOOLTIP,
 			SYNCASYNCTOOLTIP, SHOWASYNCTOOLTIP, TAPTABLEJOINTIP, DISCARD, DISCARDTIP, SETRADECBUTTONTIP,
-			SETTINGSTOOLTIP, TIPCLICKTOADD;
+			SETTINGSTOOLTIP, TIPCLICKTOADD, TAPEXDEFAULTMAXROWS, NORANGEERRORMESSAGE, TAPERRORSTATUSINFO, 
+			TAPLOADINGSTATUSINFO;
 	
 	public String CLIENTINSTR;
 
 	String selectedTableName;
+	String loadedServerDescription;
 	
 	protected int formLoadStatus;
 	protected JLabel info1;
@@ -96,6 +95,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		aladinLabel = "TAP";
 		aladinLogo    = "TAP.png";
 		this.adqlParser = new ADQLParser();
+		info1 = new JLabel();
 	}
 	
 	public DynamicTapForm(Aladin aladin) {
@@ -107,11 +107,12 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 
 	abstract void createFormDefault();
 	
-	public static void setBasics(Server server) {	server.type = Server.CATALOG;
-		server.setLayout(new BorderLayout());
-		server.setOpaque(true);
-		server.setBackground(server.tapClient.primaryColor);
-		server.setFont(Aladin.PLAIN);
+	public void setBasics() {	type = Server.CATALOG;
+		verboseDescr = loadedServerDescription;
+		setLayout(new BorderLayout());
+		setOpaque(true);
+		setBackground(tapClient.primaryColor);
+		setFont(Aladin.PLAIN);
 	}
 	
 	public static void setTopPanel(Server server, JPanel containerPanel, GridBagConstraints c, JLabel info1, String clientInstrucMessage) {
@@ -803,37 +804,25 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	 */
 	public void showLoadingError() {
 		this.removeAll();
+		
 		this.setLayout(new FlowLayout(FlowLayout.CENTER));
+		this.setBackground(this.tapClient.primaryColor);
+		GridBagConstraints c = new GridBagConstraints();
+		JPanel containerPanel = new JPanel(new GridBagLayout());
+		setTopPanel(this, containerPanel, c, info1, "Error: unable to load "+this.tapClient.tapLabel);
+		ball.setMode(Ball.NOK);
+		this.add(containerPanel);
+		verboseDescr = TAPERRORSTATUSINFO;
+		/*this.setLayout(new FlowLayout(FlowLayout.CENTER));
 		this.setBackground(this.tapClient.primaryColor);
 		JLabel planeLabel = new JLabel("Error: unable to load "+this.tapClient.tapLabel);
 		planeLabel.setFont(Aladin.ITALIC);
 		add(planeLabel);
 		if (this.tapClient.mode != TapClientMode.UPLOAD) {
-			
-			/*if (this.tapClient != null && this.tapClient.mode == TapClientMode.DIALOG) {
-				JButton button = ServerTap.getChangeServerButton();
-				button.addActionListener(this);
-				add(button);
-			}
-			
-			JButton reloadButton = null;
-			Image image = Aladin.aladin.getImagette("reload.png");
-			if (image == null) {
-				reloadButton = new JButton(RETRY);
-			} else {
-				reloadButton = new JButton(new ImageIcon(image));
-			}
-			reloadButton.setBorderPainted(false);
-			reloadButton.setMargin(new Insets(0, 0, 0, 0));
-			reloadButton.setContentAreaFilled(true);
-			reloadButton.setActionCommand(RELOAD);
-			reloadButton.setToolTipText(TIPRETRY);
-			reloadButton.addActionListener(this);
-			add(reloadButton);*/
 			JPanel optionsPanel = this.tapClient.getOptionsPanel(this);
 			optionsPanel.setBackground(this.tapClient.primaryColor);
 			add(optionsPanel);
-		}
+		}*/
 		
 		formLoadStatus = TAPFORM_STATUS_ERROR;
 		revalidate();
@@ -847,7 +836,16 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	public void showloading() {
 		this.removeAll();
 		this.formLoadStatus = TAPFORM_STATUS_LOADING;
+		
 		this.setLayout(new FlowLayout(FlowLayout.CENTER));
+		this.setBackground(this.tapClient.primaryColor);
+		GridBagConstraints c = new GridBagConstraints();
+		JPanel containerPanel = new JPanel(new GridBagLayout());
+		setTopPanel(this, containerPanel, c, info1, "loading "+this.tapClient.tapLabel+"...");
+		ball.setMode(Ball.WAIT);
+		this.add(containerPanel);
+		verboseDescr = TAPLOADINGSTATUSINFO;
+		/*this.setLayout(new FlowLayout(FlowLayout.CENTER));
 		this.setBackground(this.tapClient.primaryColor);
 		JLabel planeLabel = new JLabel("loading "+this.tapClient.tapLabel+"...");
 		planeLabel.setFont(Aladin.ITALIC);
@@ -856,7 +854,9 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			JPanel optionsPanel = this.tapClient.getOptionsPanel(this);
 			optionsPanel.setBackground(this.tapClient.primaryColor);
 			add(optionsPanel);
-		}
+		}*/
+		
+		
 		revalidate();
 		repaint();
 	}
@@ -884,6 +884,9 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		SETRADECBUTTONTIP = Aladin.chaine.getString("SETRADECBUTTONTIP");
 		SETTINGSTOOLTIP = Aladin.chaine.getString("TAPSETTINGSTOOLTIP");
 		TIPCLICKTOADD = Aladin.chaine.getString("TIPCLICKTOADD");
+		TAPEXDEFAULTMAXROWS = ConfigurationReader.getInstance().getPropertyValue("TAPEXDEFAULTMAXROWS");
+		TAPERRORSTATUSINFO = Aladin.chaine.getString("TAPERRORSTATUSINFO");
+		TAPLOADINGSTATUSINFO = Aladin.chaine.getString("TAPLOADINGSTATUSINFO");
 	}
 
 }

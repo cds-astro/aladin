@@ -26,6 +26,7 @@ import static cds.aladin.Constants.SELECTALL;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAP_REC_LIMIT;
+import static cds.aladin.Constants.TAP_REC_LIMIT_UNLIMITED;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
@@ -151,11 +152,10 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		}
 		QueryChecker checker = new DBChecker(this.tapClient.queryCheckerTables);
 		this.adqlParser.setQueryChecker(checker);
-		setBasics(this);
+		setBasics();
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		
-		info1 = new JLabel();
 		DynamicTapForm.setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
 		
 		JPanel panelScroll = new JPanel();
@@ -355,6 +355,13 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		panel.add(label);
 		
 		this.limit = new JComboBox<String>(TAP_REC_LIMIT);
+		if (TAPEXDEFAULTMAXROWS != null) {
+			if (!TAPEXDEFAULTMAXROWS.isEmpty()) {
+				this.limit.setSelectedItem(TAPEXDEFAULTMAXROWS);
+			} else {
+				this.limit.setSelectedItem(TAP_REC_LIMIT_UNLIMITED);
+			}
+		}
 		this.limit.setPreferredSize(new Dimension(80, Server.HAUT));
 		this.limit.setOpaque(false);
 		this.limit.addItemListener(this);
@@ -643,6 +650,17 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		defaultCursor();
 	}
 	
+	@Override
+	protected void clear() {
+		if (this.sync_async != null) {
+			this.sync_async.setSelectedIndex(0);
+		}
+		resetFields();
+		super.clear();
+		this.revalidate();
+		this.repaint();
+	}
+	
 	/**
 	 * Convenience method
 	 */
@@ -682,7 +700,10 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (columns != null && !columns.isEmpty() && this.free_andOrOp != null) {
 			this.free_andOrOp.setSelectedIndex(0);
 			this.free_fields.removeAllItems();
-			this.free_fields.setModel(new DefaultComboBoxModel<TapTableColumn>(columns));
+			Vector<TapTableColumn> model = new Vector<TapTableColumn>();
+			model.addAll(columns);
+			DefaultComboBoxModel combo = new DefaultComboBoxModel<TapTableColumn>(model);
+			this.free_fields.setModel(combo);
 			free_value.setText(EMPTYSTRING);
 		}
 		if (this.circleOrSquare != null) {
@@ -904,7 +925,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 					if (inRange) {
 						processedInput = TapClient.getRangeInput(value, constraint);
 						if (processedInput == null || processedInput.isEmpty()) {
-							Aladin.warning(this, "Range selected, please provide 2 values!");
+							Aladin.warning(this, NORANGEERRORMESSAGE);
 							this.ball.setMode(Ball.NOK);
 							return;
 						}
@@ -994,9 +1015,10 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		super.createChaine();
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
-		verboseDescr = Aladin.chaine.getString("TAPOBSFORMDESC");
+		verboseDescr = loadedServerDescription = Aladin.chaine.getString("TAPOBSFORMDESC");
 		CLIENTINSTR = Aladin.chaine.getString("TAPOBSCORECLIENTINSTR");
 		TIPCLICKTOADD = Aladin.chaine.getString("TIPCLICKTOADD");
+		NORANGEERRORMESSAGE = Aladin.chaine.getString("NORANGEERRORMESSAGE");
 	}
 
 }

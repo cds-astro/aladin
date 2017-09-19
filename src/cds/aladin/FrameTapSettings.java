@@ -30,6 +30,7 @@ import static cds.aladin.Constants.RA;
 import static cds.aladin.Constants.TAP_EMPTYINPUT;
 import static cds.aladin.Constants.TAP_REC_LIMIT;
 import static cds.aladin.Constants.TAP_REC_LIMIT_UNLIMITED;
+import static cds.aladin.Constants.SPACESTRING;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.AWTEvent;
@@ -184,6 +185,16 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 					pack();
 					setRaDecColumn(s.tapClient, secondaryTable, raColumn2, decColumn2);
 				}
+				if (s != this.serverEx) {
+					if (s.max != null) {
+						if (s.max.isEmpty()) {
+							this.limit.setSelectedItem(TAP_REC_LIMIT_UNLIMITED);
+						} else if (s.max.split(SPACESTRING).length > 1) {
+							String maxSelection = s.max.split(SPACESTRING)[1];
+							this.limit.setSelectedItem(maxSelection);
+						}
+					}
+				}
 			}
 			this.serverEx = s;
 			this.serverEx.updateWidgets(this);
@@ -317,8 +328,14 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		c.gridx = 1;
 		c.weightx = 0.90;
 		this.limit = new JComboBox<String>(TAP_REC_LIMIT);
-		/*if (s.max != null) {
-		}*/
+		if (s.max != null) {
+			if (s.max.isEmpty()) {
+				this.limit.setSelectedItem(TAP_REC_LIMIT_UNLIMITED);
+			} else if (s.max.split(SPACESTRING).length > 1) {
+				String maxSelection = s.max.split(SPACESTRING)[1];
+				this.limit.setSelectedItem(maxSelection);
+			}
+		}
 		this.limit.setOpaque(false);
 		contents.add(this.limit, c);
 		
@@ -669,7 +686,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 				if (this.limit.getSelectedItem().equals(TAP_REC_LIMIT_UNLIMITED)) {
 					serverEx.max = EMPTYSTRING;
 				} else {
-					serverEx.max = " TOP " + this.limit.getSelectedItem();
+					serverEx.max = (String) this.limit.getSelectedItem();
 				}
 
 				TapTable tableMetaData = serverEx.tapClient.tablesMetaData.get(serverEx.selectedTableName);

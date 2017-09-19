@@ -28,8 +28,6 @@ import static cds.aladin.Constants.SETTINGS;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.SRCCLASS;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
-import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
-import static cds.aladin.Constants.TAP_REC_LIMIT_UNLIMITED;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
@@ -49,7 +47,6 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -59,7 +56,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 
-import adql.parser.ADQLParser;
 import cds.aladin.Constants.TapClientMode;
 import cds.tools.ConfigurationReader;
 import cds.xml.DaliExamplesReader;
@@ -80,7 +76,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	private static final long serialVersionUID = -9113338791629047699L;
 	
 	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP;
-	public static final String TAPEXDEFAULTMAXROWS_INT = "TOP 2000";
+	public static final String TAPEXDEFAULTMAXROWS_INT = "2000";
 	DaliExamplesReader serviceExamples = null;
 	
 	Map<String, CustomListCell> basicExamples = new LinkedHashMap<String, CustomListCell>();
@@ -162,12 +158,11 @@ public class ServerTapExamples extends DynamicTapForm {
 			}
 		}
 		
-		setBasics(this);
+		setBasics();
 		
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		
-		info1 = new JLabel();
 		setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
 	    
 	    
@@ -376,14 +371,15 @@ public class ServerTapExamples extends DynamicTapForm {
 		TapTable priTableMetaData = this.tapClient.tablesMetaData.get(selectedTableName);
 		String tableSelectAllQuery = "Select %s *  from %s";
 		if (max == null) {
-			max =  TAPEXDEFAULTMAXROWS;//if you did not configure
-			if (max == null) {
-				max = TAPEXDEFAULTMAXROWS_INT;
-			} else if (max.equalsIgnoreCase(TAP_REC_LIMIT_UNLIMITED)) {
-				max = EMPTYSTRING;
+			if (TAPEXDEFAULTMAXROWS != null) {
+				max = TAPEXDEFAULTMAXROWS;
 			} else {
-				max = "TOP "+TAPEXDEFAULTMAXROWS;
-			}
+				max = TAPEXDEFAULTMAXROWS_INT;
+			} 
+		}
+		
+		if (!max.equalsIgnoreCase(EMPTYSTRING)) {
+			max = "TOP "+max;
 		}
 		String conesearchtemplate = " where 1=CONTAINS(POINT('ICRS', %s, %s), CIRCLE('ICRS', %f, %f, %f))";
 		String primaryTableSelectAllQuery = String.format(tableSelectAllQuery, max, priTableNameForQuery);
@@ -787,7 +783,7 @@ public class ServerTapExamples extends DynamicTapForm {
 					}	
 				}
 			} catch (Exception e) {
-				Aladin.warning(this, e.getMessage());
+				Aladin.warning(this, "No target set. "+e.getMessage());
 			}
 		}
 	}
@@ -853,11 +849,44 @@ public class ServerTapExamples extends DynamicTapForm {
 		}
 	}
 	
+	
+	@Override
+	protected void clear() {
+		if (this.sync_async != null) {
+			this.sync_async.setSelectedIndex(0);
+		}
+		resetFields();
+		super.clear();
+		this.revalidate();
+		this.repaint();
+	}
+	
+	/**
+	 * Convenience method
+	 */
+	protected void resetFields() {
+		if (this.circleOrSquare != null) {
+			this.circleOrSquare.setSelectedIndex(0);
+		}
+		if (this.tap != null) {
+			this.tap.setText(EMPTYSTRING);
+		}
+	};
+	
+	@Override
+	protected void reset() {
+		this.createFormDefault();
+		resetFields();
+		super.reset();
+		this.revalidate();
+		this.repaint();
+	}
+	
 	protected void createChaine() {
 		super.createChaine();
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
-		verboseDescr = Aladin.chaine.getString("TAPEXAMPLEFORMDESC");
+		verboseDescr = loadedServerDescription = Aladin.chaine.getString("TAPEXAMPLEFORMDESC");
 		CLIENTINSTR = Aladin.chaine.getString("TAPEXCLIENTINSTR");
 		TAPSERVICEEXAMPLESTOOLTIP = Aladin.chaine.getString("TAPSERVICEEXAMPLESTOOLTIP");
 		SETTARGETTOOLTIP = Aladin.chaine.getString("SETTARGETTOOLTIP");
