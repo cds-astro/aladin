@@ -1932,6 +1932,75 @@ public void layout() {
       }
       if( ball.isBlinking() ) ball.setMode(Ball.UNKNOWN);
    }
+   
+   public boolean ifTapIsCurrentRequest(int requestNumber) {
+	boolean result = true;
+	if (requestNumber > 0) {
+		result = false;
+		if (requestNumber == this.requestsSent) {
+			result = true;
+		}
+	 }
+	return result;
+   }
+   
+   /**
+	 * request sent are tallied by incrementing var requestsSent We disable
+	 * other requests and accomapnying plan loads to change the server status by
+	 * incrementing the tally
+	 * 
+	 * @return
+	 */
+	public synchronized void disableStatusForAllPlanes() {
+		if (this.requestsSent != 0) {
+			// remove server from all other planes getting loaded
+			Plan[] allPlan = aladin.calque.getPlans();
+			for (int i = 0; i < allPlan.length; i++) {
+				Plan p = allPlan[i];
+				if (p.server != this || p.type == Plan.NO) {
+					continue;
+				} else {
+					p.server = null; //or we could only set null for when Ball.wait and Ball.partial conditions
+				}
+			}
+		}
+	}
+   
+	/**
+	 * request sent are tallied by incrementing var requestsSent We disable
+	 * other requests and accomapnying plan loads to change the server status by
+	 * incrementing the tally
+	 * 
+	 * @return
+	 */
+	public synchronized int newRequestCreation() {
+		/*if (this.requestsSent != 0) {
+			// remove server from all other planes getting loaded
+			// set ball rolling again
+			Plan[] allPlan = aladin.calque.getPlans();
+			for (int i = 0; i < allPlan.length; i++) {
+				Plan p = allPlan[i];
+				if (p.server != this || p.type == Plan.NO) {
+					continue;
+				} else {
+					p.server = null; //or we could only set null for when Ball.wait and Ball.partial conditions
+				}
+			}
+		}*/
+		return ++this.requestsSent;
+	}
+	
+	/**
+	 * Set the ball rolling if it is the server's last request
+	 * @param requestNumber
+	 * @param mode
+	 */
+	public synchronized void setStatusForCurrentRequest(int requestNumber, int mode) {
+		if (this.requestsSent == requestNumber) {
+			//set ball to red
+			this.ball.setMode(mode);
+		}
+	}
 
    /**
     * Ajoute au Panel du server les commentaires indiquant que le serveur fournit
@@ -2052,9 +2121,9 @@ public void layout() {
 						/*+ "\n ADQLQuery: " + query.toADQL()*/ + "\n requestParams: " + requestParams);
 				if (sync) {
 					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					tapManager.fireSync(this.tapClient, name, url, queryString, query, requestParams);
+					tapManager.fireSync(this, queryString, query, requestParams);
 				} else {
-					tapManager.fireASync(this.tapClient, name, url, queryString, query, requestParams);
+					tapManager.fireASync(this, queryString, query, requestParams);
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

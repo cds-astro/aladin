@@ -918,10 +918,13 @@ public class TapManager {
 //		String host = baseurl.getHost();
 //		int port = baseurl.getPort();
 		String path = baseUrlStr;
-		if (!path.endsWith("/")) {
-			path = path+"/";
-		} 
-		path = path+subPath;
+		if (subPath != null) {
+			if (!path.endsWith("/")) {
+				path = path+"/";
+			} 
+			path = path+subPath;
+		}
+		
 		if (query != null) {
 			path = path+"?"+query;
 		}
@@ -931,29 +934,6 @@ public class TapManager {
 //		uri = new URI(uri+"?"+query);
 		genUrl = uri.toURL();
 		return genUrl;
-	}
-	
-	
-	//TODO:: tintin delete main
-	public static void main(String[] args) {
-		String tapServiceUrl = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
-		String tableName = "J/A+AS/142/347/table2";
-		tableName = URLEncoder.encode(tableName);
-		System.err.println(tableName);
-		System.err.println(URLEncoder.encode(tableName));
-		String file = "REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns+where+table_name+=+'"+tableName+"'+";
-		try {
-			URL url = getUrl(tapServiceUrl, file, "sync");
-			System.err.println(url);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
 	}
 	
 	/**
@@ -1728,9 +1708,10 @@ public class TapManager {
 	 * @param parserObj
 	 * @throws Exception 
 	 */
-	public void fireSync(final TapClient tapClient, final String name, final String url, final String query, final ADQLQuery parserObj,
+	public void fireSync(final Server server, final String query, final ADQLQuery parserObj,
 			final Map<String, Object> postParams) throws Exception {
 		// TODO Auto-generated method stub
+		final int requestNumber = server.newRequestCreation();
 		try {
 			executor.execute(new Runnable() {
 				@Override
@@ -1740,8 +1721,8 @@ public class TapManager {
 					final String oldTName = currentT.getName();
 					try {
 						if (postParams == null) {
-							String queryParam = GETRESULTPARAMS+URLEncoder.encode(query, UTF8);
-							URL syncUrl = getUrl(url, queryParam, PATHSYNC);
+							String queryParam = GETRESULTPARAMS + URLEncoder.encode(query, UTF8);
+							URL syncUrl = getUrl(server.tapClient.tapBaseUrl, queryParam, PATHSYNC);
 //									new URL(String.format(SYNCGETRESULT, url, queryParam));
 							currentT.setName("TsubmitSync: " + syncUrl);
 							//TODO:: tintin check for the query status before loading: and remove return- covert to execute
@@ -1755,10 +1736,10 @@ public class TapManager {
 							urlConn.setRequestProperty("Accept", "*/*");
 							urlConn.setRequestProperty("Connection", "Keep-Alive");
 							urlConn.setRequestProperty("Cache-Control", "no-cache");
-							handleSyncGetResponse(urlConn, name);
+							handleSyncGetResponse(aladin, urlConn, server.tapClient.tapLabel, requestNumber, server);
 							
 						} else {//currently this else part is used only for upload.
-							URL syncUrl = new URL(url + "/sync");
+							URL syncUrl = getUrl(server.tapClient.tapBaseUrl, null, PATHSYNC);
 							currentT.setName("TsubmitSync: " + syncUrl);
 							MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
 							String boundary = MultiPartPostOutputStream.createBoundary();
@@ -1796,25 +1777,25 @@ public class TapManager {
 								}
 							}
 							out.close();
-							handleSyncGetResponse(urlConn, name);
+							handleSyncGetResponse(aladin, urlConn, server.tapClient.tapLabel, requestNumber, server);
 						}
 
 					} catch (MalformedURLException e) {
 						if (Aladin.levelTrace >= 3) e.printStackTrace();
-						displayWarning(tapClient, e.getMessage());
+						displayWarning(server, requestNumber, e.getMessage());
 					} catch (IOException e) {
 						if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-						displayWarning(tapClient, e.getMessage());
+						displayWarning(server, requestNumber, e.getMessage());
 					} catch (Exception e) {
 						if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-						displayWarning(tapClient, e.getMessage());
+						displayWarning(server, requestNumber, e.getMessage());
 					} finally {
 						currentT.setName(oldTName);
 					}
 				}
 			});
 		} catch (RejectedExecutionException ex) {
-			displayWarning(tapClient, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
+			displayWarning(server, requestNumber, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
 		} 
 	}
 	
@@ -1823,10 +1804,11 @@ public class TapManager {
 	 * - creates plane for successful response
 	 * - shows error otherwise
 	 * @param conn
+	 * @param requestNumber 
 	 * @param planeName
 	 * @throws Exception 
 	 */
-	public void handleSyncGetResponse(URLConnection conn, String planeName) throws Exception {
+	public static void handleSyncGetResponse(Aladin aladin, URLConnection conn, String planeLabel, int requestNumber, Server server) throws Exception {
 		if (conn instanceof HttpURLConnection) {
 			HttpURLConnection httpConn = (HttpURLConnection) conn;
 			try {
@@ -1834,7 +1816,12 @@ public class TapManager {
 				httpConn.connect();
 				if (httpConn.getResponseCode() < 400) {
 					// is = httpConn.getInputStream();
-					aladin.calque.newPlanCatalog(httpConn, planeName);
+					if (requestNumber == -1 || server.requestsSent != requestNumber) {
+						server = null;
+					} else {
+						server.disableStatusForAllPlanes();
+					}
+					aladin.calque.newPlanCatalog(httpConn, planeLabel, server, requestNumber);
 					// stream is closed downstream when it is not an error scenario
 				} else {
 					is = httpConn.getErrorStream();
@@ -1888,18 +1875,19 @@ public class TapManager {
 	 * @param adqlParserObj
 	 * @throws Exception 
 	 */
-	public void fireASync(TapClient tapClient, final String name, final String serverUrl, final String query, final ADQLQuery adqlParserObj,
+	public void fireASync(final Server server, final String query, final ADQLQuery adqlParserObj,
 			final Map<String, Object> postParams) throws Exception {
+		final int requestNumber = server.newRequestCreation();
 		try {
 			executor.execute(new Runnable() {
 				@Override
 				public void run() {
 					final Thread currentT = Thread.currentThread();
 					final String oldTName = currentT.getName();
-					currentT.setName("TsubmitAsync: " + serverUrl);
+					currentT.setName("TsubmitAsync: " + server.tapClient.tapBaseUrl);
 					try {
 						showAsyncPanel();
-						uwsFacade.handleJob(name, serverUrl, query, adqlParserObj, postParams);
+						uwsFacade.handleJob(server, query, adqlParserObj, postParams, requestNumber);
 						currentT.setName(oldTName);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
@@ -1909,7 +1897,7 @@ public class TapManager {
 				}
 			});
 		} catch (RejectedExecutionException ex) {
-			displayWarning(tapClient, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
+			displayWarning(server, requestNumber, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
 		} 
 	}
 	
@@ -2160,12 +2148,18 @@ public class TapManager {
 		return result;
 	}
 	
+	//TODO:: tintin delete the below one method if it is not used as much
 	public void displayWarning(TapClient tapClient, String message) {
 		if (tapClient.mode == TapClientMode.TREEPANEL) {
 			Aladin.warning(this.tapPanelFromTree, message);
 		} else {
 			Aladin.warning(aladin.dialog, message);
 		}
+	}
+	
+	public void displayWarning(Server server, int requestNumber, String message) {
+		displayWarning(server.tapClient, message);
+		server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 	}
 	
 	/**

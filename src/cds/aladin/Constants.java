@@ -341,5 +341,7 @@ public static final String BIB_REFERENCE = "bib_reference", ACCESS_FORMAT = "acc
 //looking for tables or just keys might exclude some imp tables?
 public static final String REGEX_TAPSCHEMATABLES = "schemas|TAP_SCHEMA.tables|TAP_SCHEMA.keys|key_columns|columns";
 public static final String PATHSYNC = "sync";
-
+public static final String PATHASYNC = "async";
+public static final String PATHPHASE = "phase";
+public static final String PATHRESULTS = "/results/result";
 }

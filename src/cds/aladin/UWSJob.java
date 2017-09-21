@@ -21,8 +21,10 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.LOADJOBRESULT;
 import static cds.aladin.Constants.LOADDEFAULTTAPRESULT;
+import static cds.aladin.Constants.LOADJOBRESULT;
+import static cds.aladin.Constants.PATHPHASE;
+import static cds.aladin.Constants.PATHRESULTS;
 import static cds.aladin.Constants.UTF8;
 
 import java.awt.Dimension;
@@ -35,17 +37,14 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -162,7 +161,7 @@ public class UWSJob implements ActionListener{
 	public void abortJob() throws Exception {
 		HttpURLConnection httpClient = null;
 		try {
-			httpClient = createWritePostData(this.location.toString()+"/phase", "PHASE", PHASEACTION_ABORT);
+			httpClient = createWritePostData(this.location.toString(), PATHPHASE, "PHASE", PHASEACTION_ABORT);
 			String previousPhase = this.currentPhase;
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {
 				String locationString = httpClient.getHeaderField("Location");
@@ -195,7 +194,7 @@ public class UWSJob implements ActionListener{
 		if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
 			HttpURLConnection httpClient = null;
 			try {
-				httpClient = createWritePostData(this.location.toString()+"/phase", "PHASE", PHASEACTION_RUN);
+				httpClient = createWritePostData(this.location.toString(), PATHPHASE, "PHASE", PHASEACTION_RUN);
 				String previousPhase = this.currentPhase;
 				if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {
 					String locationString = httpClient.getHeaderField("Location");
@@ -221,15 +220,16 @@ public class UWSJob implements ActionListener{
 		Aladin.trace(3,"run finished. Job phase is:"+this.currentPhase);
 	}
 	
-	public HttpURLConnection createWritePostData(String url, String name, String value) throws IOException {
+	public HttpURLConnection createWritePostData(String baseUrl, String path, String paramName, String paramValue)
+			throws IOException, URISyntaxException {
 		HttpURLConnection httpClient = null;
-		URL writeUrl = new URL(url);
+		URL writeUrl = TapManager.getUrl(baseUrl, null, path);
 		URLConnection urlConn = MultiPartPostOutputStream.createConnection(writeUrl);
 		urlConn.setRequestProperty("Accept", "*/*");
 		urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 		// set some other request headers...
 		urlConn.setRequestProperty("Cache-Control", "no-cache");
-		String encodedPhaseRunParam = URLEncoder.encode(name, UTF8) + "=" + URLEncoder.encode(value, UTF8);
+		String encodedPhaseRunParam = URLEncoder.encode(paramName, UTF8) + "=" + URLEncoder.encode(paramValue, UTF8);
 		DataOutputStream os = new DataOutputStream(urlConn.getOutputStream());
 		os.writeBytes(encodedPhaseRunParam);
 		os.close();
@@ -237,7 +237,7 @@ public class UWSJob implements ActionListener{
 			httpClient = (HttpURLConnection) urlConn;
 			httpClient.setInstanceFollowRedirects(false);
 		} else {
-			throw new IOException("Error with job url. Please try again later!\nURL: "+this.location.toString());
+			throw new IOException("Error with job url. Please try again later!\nURL: " + this.location.toString());
 		}
 		return httpClient;
 	}
@@ -245,12 +245,14 @@ public class UWSJob implements ActionListener{
 	/**
 	 * Method polls every second for phase change of job
 	 * In case of UWS 1.1, blocking behavior can be used: blocks indefinitely until phase change
+	 * @param server 
 	 * @param useBlocking
 	 * @param uwsFacade 
+	 * @param requestNumber 
 	 * @throws IOException 
 	 * @throws InterruptedException 
 	 */
-	public void pollForCompletion(boolean useBlocking, UWSFacade uwsFacade) throws IOException, InterruptedException, Exception {
+	public void pollForCompletion(Server server, boolean useBlocking, UWSFacade uwsFacade, int requestNumber) throws IOException, InterruptedException, Exception {
 		try {
 			if (Aladin.levelTrace >= 3) System.out.println("pollForCompletion. Jon phase is:"+this.currentPhase);
 			URL jobInProgressUrl = this.location;
@@ -267,10 +269,11 @@ public class UWSJob implements ActionListener{
 					URLConnection conn = jobInProgressUrl.openConnection();
 					handleJobHttpInterface(conn, HttpURLConnection.HTTP_OK, "Error for job: \n", false);
 				} else if (this.currentPhase.equals(COMPLETED)) {
-					uwsFacade.loadResults(this, null);
+					uwsFacade.loadResults(this, null, requestNumber, server);
 					break;
 				} else if (this.currentPhase.equals(ERROR)) {
 					this.showAsErroneous();
+					server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 					break;
 				} else if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
 					this.run();
@@ -357,9 +360,15 @@ public class UWSJob implements ActionListener{
 	 * As per spec- better to have result at /base async url/results/result
 	 * @return
 	 * @throws MalformedURLException
+	 * @throws URISyntaxException 
 	 */
-	public String getDefaultResultsUrl() throws MalformedURLException {
-		return this.getLocation().toString()+"/results/result";
+	public String getDefaultResultsUrl() throws MalformedURLException, URISyntaxException {
+		String result = null;
+		URL defaultUrl = TapManager.getUrl(this.getLocation().toString(), null, PATHRESULTS);
+		if (defaultUrl != null) {
+			result = defaultUrl.toString();
+		}
+		return result;
 	}
 	
 	public void setInitialGui() {
@@ -559,7 +568,7 @@ public class UWSJob implements ActionListener{
 			String action = ((JButton)o).getActionCommand();
 			if (action.equals(LOADJOBRESULT)) {
 				try {
-					uwsFacade.loadResults(this, (String)displayResults.getSelectedItem());
+					uwsFacade.loadResults(this, (String)displayResults.getSelectedItem(), -1, null);
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					Aladin.warning(uwsFacade.asyncPanel, "Error in processing results url! Please try with the default tap results url also");
@@ -573,7 +582,7 @@ public class UWSJob implements ActionListener{
 				
 			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
 				try {
-					uwsFacade.loadResults(this, null);
+					uwsFacade.loadResults(this, null, -1, null);
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					Aladin.warning(uwsFacade.asyncPanel, "Error in processing results url!");

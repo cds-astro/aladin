@@ -31,6 +31,9 @@ import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETPREVIOUSSESSIONJOB;
 import static cds.aladin.Constants.LOADDEFAULTTAPRESULT;
 import static cds.aladin.Constants.NEWLINE_CHAR;
+import static cds.aladin.Constants.PATHASYNC;
+import static cds.aladin.Constants.PATHPHASE;
+
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -47,7 +50,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -130,25 +132,27 @@ public class UWSFacade implements ActionListener{
 	
 	/**
 	 * Method where an asyn job is created and handled 
-	 * @param query2 
+	 * @param server 
+	 * @param query 
 	 * @param postParams 
+	 * @param requestNumber 
 	 */
-	public void handleJob(String serverLabel, String url, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams) {
+	public void handleJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) {
 		UWSJob job = null;
 		try {
-			job = createJob(serverLabel, url, query, adqlQueryObj, postParams);
+			job = createJob(server, query, adqlQueryObj, postParams);
 //			printStringFromInputStream(job);
 			addNewJobToGui(job);
 			refreshGui();
 			job.run();
 //			printStringFromInputStream(job);
-			job.pollForCompletion(true, this);
+			job.pollForCompletion(server, true, this, requestNumber);
 //			printStringFromInputStream(job);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			StringBuffer errorMessageToUser = new StringBuffer(GENERICERROR1LINE);
-			if (job == null || job.gui==null) {
+			if (job == null || job.gui == null) {
 				errorMessageToUser.append("\n Unable to create job");
 			}
 			errorMessageToUser.append("\n For query: ").append(query).append(NEWLINE_CHAR).append(e.getMessage());
@@ -165,11 +169,13 @@ public class UWSFacade implements ActionListener{
 			if (job != null) {
 				job.showAsErroneous();
 			} 
+			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (job != null) {
 				job.showAsErroneous();
 			}
+			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 			Aladin.warning(aladin.dialog, "Error with async job! "+e.getMessage());
 		}
 		
@@ -177,18 +183,18 @@ public class UWSFacade implements ActionListener{
 	
 	/**
 	 * Method creates an sync job
-	 * @param query2 
+	 * @param query
 	 * @param newJobCreationUrl
 	 * @param adqlQueryObj
 	 * @param postParams 
 	 * @return
 	 * @throws Exception
 	 */
-	public UWSJob createJob(String serverLabel, String serverBaseUrl, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams) throws Exception {
+	public UWSJob createJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams) throws Exception {
 		UWSJob job = null;
 		try {
-			URL tapServerRequestUrl = new URL(serverBaseUrl+"/async");
-			Aladin.trace(3,"trying to createJob() uws for:: "+serverBaseUrl+"/async");
+			URL tapServerRequestUrl = TapManager.getUrl(server.tapClient.tapBaseUrl, null, PATHASYNC);
+			Aladin.trace(3,"trying to createJob() uws for:: "+tapServerRequestUrl.toString());
 //			URL tapServerRequestUrl = new URL("http://cdsportal.u-strasbg.fr/uwstuto/basic/timers");
 			MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
 			String boundary = MultiPartPostOutputStream.createBoundary();
@@ -251,7 +257,7 @@ public class UWSFacade implements ActionListener{
 			
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {// is accepted
 				String location = httpClient.getHeaderField("Location");
-				job = new UWSJob(this, serverLabel, new URL(location));
+				job = new UWSJob(this, server.tapClient.tapLabel, new URL(location));
 				populateJob(job.getLocation().openStream(), job);
 				job.setQuery(adqlQueryObj.toADQL());
 				job.setDeleteOnExit(true);
@@ -294,7 +300,7 @@ public class UWSFacade implements ActionListener{
 		if (sessionUWSJobs!=null && sessionUWSJobs.contains(job)) {
 			sessionUWSJobs.remove(job);
 			if (job.gui.isSelected()) {
-				if (sessionUWSJobs.size()>0) {
+				if (sessionUWSJobs.size() > 0) {
 					sessionUWSJobs.get(0).gui.setEnabled(true);
 					sessionUWSJobs.get(0).gui.doClick();
 				} else {
@@ -410,9 +416,11 @@ public class UWSFacade implements ActionListener{
 	 * Sets the phase of uws job
 	 * @param uwsJob
 	 * @throws IOException
+	 * @throws URISyntaxException 
 	 */
-	public static void getsetPhase(UWSJob uwsJob) throws IOException {
-		URL phaseUrl = new URL(uwsJob.getLocation().toString() + "/phase");
+	public static void getsetPhase(UWSJob uwsJob) throws IOException, URISyntaxException {
+		URL phaseUrl = TapManager.getUrl(uwsJob.getLocation().toString(), null, PATHPHASE);
+//		new URL(uwsJob.getLocation().toString() + "/phase");
 		StringBuffer result = getResponse(phaseUrl);
 		if (result != null) {
 			uwsJob.setCurrentPhase(result.toString().toUpperCase());
@@ -629,12 +637,14 @@ public class UWSFacade implements ActionListener{
 	
 	/**
 	 * loads the selected result(from the drop down by the user) of the job
+	 * @param requestNumber 
+	 * @param server 
 	 * @param uwsJob
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 * @throws Exception
 	 */
-	public void loadResults(UWSJob uwsJob, String chosen) throws MalformedURLException, IOException, Exception {
+	public void loadResults(UWSJob uwsJob, String chosen, int requestNumber, Server server) throws MalformedURLException, IOException, Exception {
 		if (UWSJob.COMPLETED.equals(uwsJob.getCurrentPhase())) {
 			String resultsUrl = null;
 			if (chosen != null) {
@@ -648,7 +658,13 @@ public class UWSFacade implements ActionListener{
 			} else {
 				resultsUrl = uwsJob.getDefaultResultsUrl();
 			}
-			aladin.calque.newPlan(resultsUrl, uwsJob.getServerLabel(), null);
+			URL urlToLoad = TapManager.getUrl(resultsUrl, null, null);
+			URLConnection urlConn = urlToLoad.openConnection();
+			urlConn.setRequestProperty("Accept", "*/*");
+			urlConn.setRequestProperty("Connection", "Keep-Alive");
+			urlConn.setRequestProperty("Cache-Control", "no-cache");
+			TapManager.handleSyncGetResponse(aladin, urlConn, uwsJob.getServerLabel(), requestNumber, server);
+//			aladin.calque.newPlan(resultsUrl, uwsJob.getServerLabel(), null);
 		}
 	}
 	
@@ -811,7 +827,7 @@ public class UWSFacade implements ActionListener{
 			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
 				try {
 					UWSJob selectedJob = processJobSelection(true);
-					loadResults(selectedJob, null);
+					loadResults(selectedJob, null, -1, null);
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					Aladin.warning(asyncPanel, "Error in processing results url!");

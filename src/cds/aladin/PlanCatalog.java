@@ -92,6 +92,13 @@ public class PlanCatalog extends Plan {
       flagWaitTarget=true;
       Suite(aladin,label,"","",null,null);
      }
+   
+	protected PlanCatalog(Aladin aladin, HttpURLConnection httpConn, String label, Server server) {
+		this.httpConn = httpConn;
+		if (label==null) label = "HttpConn";
+		flagWaitTarget = true;
+		Suite(aladin, label, "", "", null, server);
+	}
 
   /** Creation d'un plan de type CATALOG (sans info)
    */

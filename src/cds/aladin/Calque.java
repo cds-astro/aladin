@@ -3273,6 +3273,15 @@ public class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
+   
+   protected int newPlanCatalog(HttpURLConnection in,String label, Server server, int requestNumber) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = new PlanCatalog(aladin,in,label, server);
+      plan[n].tapRequestId = requestNumber;
+      suiteNew(plan[n]);
+      return n;
+   }
 
    /** Subtilité. Si le nom du plan désigne commence par =, Aladin
     * doit réutiliser une case de la pile.

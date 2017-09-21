@@ -201,6 +201,8 @@ public class Plan implements Runnable {
 
    // Les references aux autres objets
    Aladin aladin;                // Reference a l'objet Aladin
+   
+   int tapRequestId = 0;
 
    // Appelé par Chaine directement
    static protected void createChaine(Chaine chaine) {
@@ -924,7 +926,7 @@ public class Plan implements Runnable {
 
       if( server!=null ) {
          SwingUtilities.invokeLater(new Runnable() {
-            public void run() { if( server!=null ) server.setStatus(); server=null; }
+            public void run() { if( server!=null && server.ifTapIsCurrentRequest(tapRequestId)) server.setStatus(); server=null; }
          });
       }
 
@@ -2056,14 +2058,14 @@ public class Plan implements Runnable {
    /** Lance le chargement du plan */
    public void run() {
       Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
-      if( server!=null ) server.setStatus();
+      if( server!=null && server.ifTapIsCurrentRequest(this.tapRequestId)) server.setStatus();
       boolean rep=true;
       try { rep = waitForPlan();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
       planReady( rep );
-      if( server!=null ) server.setStatus();
+      if( server!=null && server.ifTapIsCurrentRequest(this.tapRequestId)) server.setStatus();
    }
 
    private long startTime;
