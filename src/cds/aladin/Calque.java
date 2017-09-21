@@ -2889,7 +2889,7 @@ public class Calque extends JPanel implements Runnable {
    // Retourne true si le plan passé en paramètre peut servir à ajouter des outils draws
    protected boolean planToolOk(Plan p, boolean flagWithFoV) {
       return (p.type==Plan.TOOL || flagWithFoV && p.type==Plan.APERTURE)
-            && p.isReady() && p.isSelectable();
+            && p.isReady() && p.isSelectable() && !(p instanceof PlanMoc);
    }
 
    /** sélectionne et retourne le plan tool le plus adéquat, où le crée si nécessaire */
@@ -3273,7 +3273,7 @@ public class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
-   
+
    protected int newPlanCatalog(HttpURLConnection in,String label, Server server, int requestNumber) {
       int n=getStackIndex(label);
       label = prepareLabel(label);

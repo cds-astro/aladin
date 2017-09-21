@@ -1124,11 +1124,11 @@ public class ServerGlu extends Server implements Runnable {
    
    /** Creation d'un plan de maniere generique */
    protected int createPlane(String target,String radius,String criteria,
-   				 String label, String origin) {
+         String label, String origin) {
       String s,objet="";
       Enumeration e;
       int i,j,k,m;
-      
+
       String serverTaskId = aladin.synchroServer.start("ServerGlu.createPlane/"+target);
       try {
 
@@ -1147,7 +1147,7 @@ public class ServerGlu extends Server implements Runnable {
 
          // Pré-remplissage du champ concernant la date
          if( date!=null && date.getText().trim().length()==0 ) resolveDate(getDefaultDate());
-         
+
          // Découpage des critères dans un tableau
          Tok st = new Tok(criteria.trim(),",");
          String crit[] = new String[st.countTokens()];
@@ -1173,7 +1173,7 @@ public class ServerGlu extends Server implements Runnable {
                String cName=cr.substring(0,posEgal).trim().toUpperCase();
                s = cr.substring(posEgal+1).trim();
                s = Tok.unQuote(s);
-               
+
                //System.out.print(".Recherche initiale pour "+cName+"="+s);
 
                // Recherche du paramètre correspondant
@@ -1248,7 +1248,7 @@ public class ServerGlu extends Server implements Runnable {
                setSelectedItem(c,crit[i]);		// Je positionne le Choice à la main sinon
                crit[i]=getInputUrl(c);         // le getInputUrl merdouille
                if( crit[i]==null ) {
-//                  setSync(true);
+                  //                  setSync(true);
                   return -1;
                }
             }
@@ -1284,125 +1284,156 @@ public class ServerGlu extends Server implements Runnable {
             vbis.setElementAt(s,j);
             //System.out.println();
          }
-         
+
          // Résolution d'un paramètre de type BaseUrl(URL|MOCID)
+         // Si effectivement il s'agit d'un ID et que celui-ci retourne une ou plusieurs URLs séparées par des TAB,
+         // on bouclera sur chaque URL en la remplaçant successivement dans le vecteur des paramètres qui va bien.
+         // En revanche, s'il n'y a qu'une URL retournée, ou directement passée en paramètre, la boucle se limitera
+         // à un seul tour.
+         Tok tokUrlList=null;
          if( baseUrlIndex>=0 ) {
             s = (String) v.get( baseUrlIndex );
             if( !s.startsWith("http://") && !s.startsWith("https://") ) {
-              s = aladin.directory.resolveServiceUrl(actionName,s);
-              if( s!=null ) v.setElementAt( s, baseUrlIndex);
+               String urlList = aladin.directory.resolveServiceUrl(actionName,s);
+               if( urlList!=null ) {
+                  tokUrlList = new Tok(urlList,"\t");
+                  v.setElementAt( tokUrlList.nextToken(), baseUrlIndex);
+               }
             }
          }
 
-         e = v.elements();
-         StringBuffer p=null;
-         StringBuffer p1=null;
-         while( e.hasMoreElements() ) {
-            s = (String)e.nextElement();
-            //System.out.println("Param ["+s+"]");
-            if( p==null ) { p=new StringBuffer(Glu.quote(s)); p1=new StringBuffer(s); }
-            else { p.append(" "+Glu.quote(s)); p1.append("/"+s); }
-         }
+         boolean encore=true;  // Détermine la sortie de la boucle
+         int n=-1;             // Numéro du dernier plan créé dans la pile, sinon -1
 
-         // Generation de l'URL par appel au GLU
-         URL u = aladin.glu.getURL(actionName,p.toString());
+         do { 
+
+            e = v.elements();
+            StringBuffer p=null;
+            StringBuffer p1=null;
+            while( e.hasMoreElements() ) {
+               s = (String)e.nextElement();
+               //System.out.println("Param ["+s+"]");
+               if( p==null ) { p=new StringBuffer(Glu.quote(s)); p1=new StringBuffer(s); }
+               else { p.append(" "+Glu.quote(s)); p1.append("/"+s); }
+            }
+
+            // Generation de l'URL par appel au GLU
+            URL u = aladin.glu.getURL(actionName,p.toString());
 
 
-         // S'agit-il d'une commande script provenant d'un serveur en 2 temps ? (SIAP/SSAP)
-         if( flagSIAIDHA && ( type==IMAGE || type==SPECTRUM ) ) {
+            // S'agit-il d'une commande script provenant d'un serveur en 2 temps ? (SIAP/SSAP)
+            if( flagSIAIDHA && ( type==IMAGE || type==SPECTRUM ) ) {
 
-            //          System.out.println(u);
-            //          for( int pff=0; pff<crit.length; pff++ ) System.out.println(crit[pff]);
-            TreeBuilder tb = new TreeBuilder(aladin, u, -1, null,  objet);
-            try {
-               ResourceNode rootNode = tb.build();
-               Vector leaves = new Vector();
-               BasicTree.getAllLeaves(rootNode, leaves);
-               SIAPruner pruner = new SIAPruner((ResourceNode[])leaves.toArray(new ResourceNode[leaves.size()]), crit);
-               ResourceNode[] nodesToLoad = pruner.prune();
-               if( nodesToLoad==null ) {
+               //          System.out.println(u);
+               //          for( int pff=0; pff<crit.length; pff++ ) System.out.println(crit[pff]);
+               TreeBuilder tb = new TreeBuilder(aladin, u, -1, null,  objet);
+               try {
+                  ResourceNode rootNode = tb.build();
+                  Vector leaves = new Vector();
+                  BasicTree.getAllLeaves(rootNode, leaves);
+                  SIAPruner pruner = new SIAPruner((ResourceNode[])leaves.toArray(new ResourceNode[leaves.size()]), crit);
+                  ResourceNode[] nodesToLoad = pruner.prune();
+                  if( nodesToLoad==null ) {
+                     return -1;
+                  }
+                  ResourceNode node;
+                  for( int idx=0; idx<nodesToLoad.length; idx++ ) {
+                     node = nodesToLoad[idx];
+                     if( type==IMAGE ) {
+                        // load image in aladin
+                        aladin.dialog.localServer.tree.load(node,label);
+                     }
+                     else if( type==SPECTRUM ) {
+                        // broadcast spectrum to whatever spectrum app is there
+                        aladin.getMessagingMgr().sendMessageLoadSpectrum(node.location, node.location, node.name, node.getMetadata(), null);
+                     }
+                  }
+               }
+               catch(Exception e2) {
+                  aladin.command.println("error : "+e2.getMessage());
+                  e2.printStackTrace();
+               }
+               return 1;
+            }
+
+
+            if( label==null ) {
+               if( planeLabel==null ) label=getDefaultLabelIfRequired(label);
+               else {
+                  String [] param = new String[vbis.size()];
+                  for( i=0; i<param.length; i++ ) {
+                     s = (String)vbis.elementAt(i);
+                     if( s.equals("-") ) s="";
+                     param[i] = s;
+                  }
+                  planeLabel = dollarQuerySet(planeLabel);
+                  label = getDefaultLabelIfRequired(label, aladin.glu.dollarSet(planeLabel,param,Glu.NOURL).trim());
+               }
+            }
+
+            String param = p1!=null ? p1.toString() : "";
+
+            // S'agit-il d'un serveur d'images
+            if( type==IMAGE ) {
+               if( !verif(Plan.IMAGE,objet,param) ) {
                   return -1;
                }
-               ResourceNode node;
-               for( int idx=0; idx<nodesToLoad.length; idx++ ) {
-                  node = nodesToLoad[idx];
-                  if( type==IMAGE ) {
-                     // load image in aladin
-                     aladin.dialog.localServer.tree.load(node,label);
-                  }
-                  else if( type==SPECTRUM ) {
-                     // broadcast spectrum to whatever spectrum app is there
-                     aladin.getMessagingMgr().sendMessageLoadSpectrum(node.location, node.location, node.name, node.getMetadata(), null);
-                  }
+               if( fmt==PlanImage.NATIVE ) {
+                  n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
+                        fmt,PlanImage.UNDEF,null,null);
+               } else {
+                  n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
+                        label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
                }
-            }
-            catch(Exception e2) {
-               aladin.command.println("error : "+e2.getMessage());
-               e2.printStackTrace();
-            }
-            return 1;
-         }
 
+               // Ou d'un serveur de MOC (on prend on compte les mirroirs)
+            } else if( type==MOC ) {
+               MyInputStream in=null;
+               try {
+                  try { in = Util.openStream(u); }
+                  catch( Exception e1 ) {
 
-         if( label==null ) {
-            if( planeLabel==null ) label=getDefaultLabelIfRequired(label);
-            else {
-               String [] param = new String[vbis.size()];
-               for( i=0; i<param.length; i++ ) {
-                  s = (String)vbis.elementAt(i);
-                  if( s.equals("-") ) s="";
-                  param[i] = s;
+                     // Peut être un miroir ?
+                     if( aladin.glu.checkIndirection(actionName, null) ) {
+                        u=aladin.glu.getURL(actionName,p.toString());
+                        in = Util.openStream(u);
+                     } else throw e1;
+                  }
+                  n = aladin.calque.newPlanMOC( in, label);
+
+               } catch( Exception e1 ) {
+                  if( aladin.levelTrace>=3 ) e1.printStackTrace(); 
+                  return -1;
                }
-               planeLabel = dollarQuerySet(planeLabel);
-               label = getDefaultLabelIfRequired(label, aladin.glu.dollarSet(planeLabel,param,Glu.NOURL).trim());
-            }
-         }
 
-         String param = p1!=null ? p1.toString() : "";
-
-         // S'agit-il d'un serveur d'images
-         if( type==IMAGE ) {
-            if( !verif(Plan.IMAGE,objet,param) ) {
-               return -1;
-            }
-            if( fmt==PlanImage.NATIVE ) {
-               int n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
-                     fmt,PlanImage.UNDEF,null,null);
-               return n;
+               // Ou d'un serveur de donnees
             } else {
-               int n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
-                     label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
-               return n;
-            }
-            
-         // Ou d'un serveur de MOC (on prend on compte les mirroirs)
-         } else if( type==MOC ) {
-            MyInputStream in=null;
-            try {
-               try { in = Util.openStream(u); }
-               catch( Exception e1 ) {
-                  
-                  // Peut être un miroir ?
-                  if( aladin.glu.checkIndirection(actionName, null) ) {
-                     u=aladin.glu.getURL(actionName,p.toString());
-                     in = Util.openStream(u);
-                  } else throw e1;
+               if( !verif(Plan.CATALOG,objet,param) ) { 
+                  return -1;
                }
-               return aladin.calque.newPlanMOC( in, label);
-               
-            } catch( Exception e1 ) {
-               if( aladin.levelTrace>=3 ) e1.printStackTrace(); 
-               return -1;
+               // IL est possible que l'url soit en fait une collection d'urls séparées par un TAB
+               // notamment lorsque la résolution de l'URL a été faite via MocServer
+               try {
+                  Tok tok = new Tok( u.toString(),"\t");
+                  while( tok.hasMoreTokens() ) {
+                     URL u1 = new URL( tok.nextToken() );
+                     n = aladin.calque.newPlanCatalog(u1,label,objet,param,"provided by "+institute,this);
+                  }
+               } catch( MalformedURLException e1 ) {
+                  if( aladin.levelTrace>=3 ) e1.printStackTrace(); 
+                  return -1;
+               }
             }
 
-            // Ou d'un serveur de donnees
-         } else {
-            if( !verif(Plan.CATALOG,objet,param) ) { 
-               return -1;
-            }
-            int n = aladin.calque.newPlanCatalog(u,label,objet,param,"provided by "+institute,this);
-            return n;
-         }
+            // On modifie dynamiquement l'URL à utiliser en vérifiant que ce n'est pas la fin de la liste
+            if( baseUrlIndex>=0 && tokUrlList!=null ) {
+               encore=tokUrlList.hasMoreTokens();
+               if( encore ) v.setElementAt( tokUrlList.nextToken(), baseUrlIndex);
+            } else encore=false;
+
+         } while( encore );
+
+         return n;
 
       } finally { aladin.synchroServer.stop(serverTaskId); }
    }

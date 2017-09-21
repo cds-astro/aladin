@@ -198,7 +198,7 @@ public class PlanMoc extends PlanBGCat {
       for( int i=a.size()-1; i>=0; i-- ) {
          double [] c = a.get(i);
          if( c==null ) continue;
-         if( res==null ) res = new StringBuilder();
+         if( res==null ) res = new StringBuilder(c[0]+","+c[1]);
          res.append(","+c[0]+","+c[1]);
       }
       return res.toString();
@@ -231,12 +231,9 @@ public class PlanMoc extends PlanBGCat {
    
    static private void parcoursBord(HealpixBase hpx, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
          int maxOrder, long pix, int sens, int rec ) throws Exception {
-//      for( int i=0; i<rec; i++ ) System.out.print("  ");
-//      System.out.println(maxOrder+"/"+pix+" sens="+sens);
       if( done.isIntersecting(maxOrder,pix) ) return;
       
       if( rec>10000 ) return;
-//      if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
       
       done.add(maxOrder,pix);
       
@@ -249,15 +246,6 @@ public class PlanMoc extends PlanBGCat {
          if( corners==null ) corners = getCorners(hpx,pix);
          
          boolean flagAdd=true;
-//         if( a.size()>1 ) {
-//            double [] bisCorner = a.get( a.size()-1 );
-//            double [] lastCorner = a.get( a.size()-2 );
-//            if( bisCorner==null && 
-//                  (lastCorner!=null && lastCorner[0]==corners[i][0] && lastCorner[1]==corners[i][1]) ) {
-//               a.remove(a.size()-1);
-//               flagAdd=false;
-//            }
-//         }
          if( flagAdd && a.size()>0 ) {
             double [] lastCorner = a.get( a.size()-1 );
             flagAdd = lastCorner==null || lastCorner[0]!=corners[i][0] || lastCorner[1]!=corners[i][1];

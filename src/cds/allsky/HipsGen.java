@@ -289,6 +289,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
          else if (arg.equalsIgnoreCase("-notouch") ) context.notouch=true;
          else if (arg.equalsIgnoreCase("-nocolor") ) context.ANSI=false;
+         else if (arg.equalsIgnoreCase("-color") ) context.ANSI=true;
          else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
          else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
@@ -437,11 +438,11 @@ public class HipsGen {
 
       if( context.getMode()==Mode.ADD  ) {
          context.setFading(false);
+         context.setLive(false);
          context.setPartitioning("false");
          context.setMixing("true");
-         context.info("Pixel mode=ADD => fading, partitioning and no mixing parameter ignored");
+         context.info("Pixel mode=ADD => fading, partitioning, no-mixing and live parameter ignored");
       }
-
 
       // Nettoyage avant ?
       if( force ) {
@@ -643,7 +644,7 @@ public class HipsGen {
                   "   target=ra +dec          Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad        Default HiPS radius view (deg)" + "\n"+
                   "   -notouch                Do not touch the hips_release_date" + "\n"+
-                  "   -nocolor                Do not colorized console log messages" + "\n" +
+                  "   -color                  Colorized console log messages" + "\n" +
                   "   -nice                   Slow download for avoiding to overload remote http server (dedicated " + "\n" +
                   "                           to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +

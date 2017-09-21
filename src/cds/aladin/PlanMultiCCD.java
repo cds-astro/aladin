@@ -176,7 +176,7 @@ public class PlanMultiCCD extends PlanImage {
          Enumeration<Plan> e = v.elements();
          while( e.hasMoreElements() ) {
             Plan p = e.nextElement();
-            if( !p.isImage() ) return false;
+            if( !p.isImage() || !Projection.isOk(p.projd)) return false;
             
             
             // Détermination d'un ordre de MOC approprié en fonction

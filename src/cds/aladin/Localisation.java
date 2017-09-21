@@ -29,6 +29,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -148,7 +149,7 @@ public class Localisation extends MyBox  {
    /** Creation de l'objet de localisation. */
    protected Localisation(Aladin aladin) {
       super(aladin,aladin.chaine.getString("POSITION"));
-      String tip = aladin.chaine.getString("TIPPOS");
+      String tip = aladin.chaine.getString("TIPCMD"); // "TIPPOS");
       Util.toolTip(pos, tip);
       Util.toolTip(label,tip);
       Util.toolTip(text, aladin.chaine.getString("TIPCMD"));
@@ -820,6 +821,8 @@ public class Localisation extends MyBox  {
       ArrayList<String> v = aladin.console.getRecentHistory( initIndex, max );
       if( v.size()==0 ) return;
       
+      // On crée un JPopupmenu contenant les 20 dernières commandes, et s'il y en a encore,
+      // ajoute à la fin de la liste une entrée "..." qui permet d'avoir les 20 suivantes
       JPopupMenu popup = new JPopupMenu();
       for( String s: v ) {
          JMenuItem mi = null;
@@ -836,7 +839,7 @@ public class Localisation extends MyBox  {
             });
 
          } else {
-            mi = new JMenuItem( s.length()>80 ? s.substring(0,78)+" ..." : s);
+            mi = new JMenuItemExt( s.length()>80 ? s.substring(0,78)+" ..." : s);
             mi.setActionCommand(s);
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
@@ -848,7 +851,20 @@ public class Localisation extends MyBox  {
          popup.add(mi);
       }
       setComponentPopupMenu(popup);
-      popup.show(this, x-200, getHeight());
+      popup.show(this, x-50, getHeight());
+   }
+   
+   class JMenuItemExt extends JMenuItem {
+      JMenuItemExt(String s) {
+         super(s);
+         addMouseMotionListener( new MouseMotionAdapter() {
+            public void mouseMoved(MouseEvent e) {
+               String s = ((JMenuItem)e.getSource()).getActionCommand(); 
+               setMode(SAISIE);
+               setTextSaisie(s);
+            }
+         });
+      }
    }
    
    
@@ -856,6 +872,8 @@ public class Localisation extends MyBox  {
    
    /** Retourne true s'il faut afficher un petit triangle au bout du champ de saisie */
    protected boolean hasTriangle() {
+      // Le non affichage du triangle n'a lieu qu'au premier lancement d'Aladin. Une fois
+      // qu'une commande a été passée, il n'y plus de raison de tester le contenu de l'historique
       if( !flagCheckHistory ) {
          if( aladin.console.getRecentHistory(1).size()>0 ) flagCheckHistory=true;
          return false;

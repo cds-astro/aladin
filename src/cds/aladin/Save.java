@@ -1964,7 +1964,7 @@ public final class Save extends JFrame implements ActionListener {
       try {
          fo = new PrintWriter(new FileOutputStream(new File(filename)));
          String s = PlanMoc.createPerimeterString(p.getMoc());
-         fo.print("#AJS\ndraw polyline("+s+")\n");
+         fo.print("#AJS\ndraw line("+s+")\n");
          fo.close();
          fo=null;
       } catch( Exception e ) { e.printStackTrace(); return false; }

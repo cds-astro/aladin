@@ -1581,7 +1581,7 @@ public class Context {
       return s1+" "+s+" "+(s.length()%2==0?"":" ")+s1;
    }
    
-   protected boolean ANSI = true;
+   protected boolean ANSI = false;
    
    private String rouge() { return ANSI ? "\033[32m" : ""; }
    private String brun()  { return ANSI ? "\033[33m" : ""; }

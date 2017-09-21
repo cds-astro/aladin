@@ -1,30 +1,28 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// Copyright 2011 - UDS/CNRS
+// The MOC API project is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of MOC API java project.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    MOC API java project is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    MOC API java project is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with MOC API java project.
 //
-
 
 
 package cds.moc;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,6 +35,7 @@ import healpix.essentials.RangeSet;
  * A MOC is used to define a sky region by using HEALPix sky tesselation
  *
  * @authors Pierre Fernique [CDS], Martin Reinecke [Max Plank]
+ * @version 5.0 Sept 2017 - JSON and ASCII full support, add(order,long[]) + add(order,Collection<Lon>), Check npix over max limit bug fix
  * @version 4.8 July 2017 - isEmpty(), isIncluding(..) methods
  * @version 4.7 Dec 2016 - Undeprecated new HealpicMoc(Inputstream in, int mode) + isAscendant(int order, Array a) bug fix
  * @version 4.6 Apr 2016 - MocLint - IVOA 1.0 MOC recommendation compatibility checker
@@ -61,7 +60,7 @@ import healpix.essentials.RangeSet;
 public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
 
    /** Healpix MOC API version number */
-   static public final String VERSION = "4.7";
+   static public final String VERSION = "5.0";
 
    /** FITS encoding format (IVOA REC 1.0 compliante) */
    static public final int FITS  = 0;
@@ -75,13 +74,15 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    /** JSON obsoleted encoding format (only reading supported for compatibility) */
    static public final int JSON0 = 3;
 
-
    /** Maximal HEALPix order supported by the library */
    static public final int MAXORDER = 29;
 
    static public final int SHORT = 0;
    static public final int INT   = 1;
    static public final int LONG  = 2;
+   
+   // Max insertions before a automatic checkAndFix()
+   static private final int MAXADDS = 500000;
 
    /** Provide the integer type for a given order */
    static public int getType(int order) { return order<6 ? SHORT : order<14 ? INT : LONG; }
@@ -336,14 +337,57 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       }
    }
 
-   /** Add directly a full Moc */
+   /** Add directly a full Moc.
+    * Note: The MOC consistency is checked and possibly fixed at the end of the insertion process
+    * @param moc The Moc to be added
+    */
    public void add(HealpixMoc moc) throws Exception {
-      setCheckConsistencyFlag(false);
+      if( moc.getSize()>MAXADDS/2 ) setCheckConsistencyFlag(false);
+      int nadds=0;
       for( int order=moc.nOrder-1; order>=0; order-- ) {
-         for( long npix : moc.getArray(order) ) add(order, npix);
+         for( long npix : moc.getArray(order) ) {
+            if( nadds>MAXADDS ) { checkAndFix(); nadds=0; }
+            add(order, npix);
+            nadds++;
+         }
       }
       setCheckConsistencyFlag(true);
    }
+   
+   /** Add a collection of npix, all of them at the same order.
+    * Note: The MOC consistency is checked and possibly fixed at the end of the insertion process
+    * @param order order of insertion
+    * @param npixs list of npix to be inserted
+    * @throws Exception
+    */
+   public void add(int order, long [] npixs) throws Exception {
+      if( npixs.length>MAXADDS/2 ) setCheckConsistencyFlag(false);
+      int nadds=0;
+      for( long npix : npixs ) {
+         if( nadds>MAXADDS ) { checkAndFix(); nadds=0; }
+         add(order, npix);
+         nadds++;
+      }
+      setCheckConsistencyFlag(true);
+   }
+
+   /** Add a collection of npix, all of them at the same order.
+    * Note: The MOC consistency is checked and possibly fixed at the end of the insertion process
+    * @param order order of insertion
+    * @param npixs list of npix to be inserted
+    * @throws Exception
+    */
+   public void add(int order, Collection<Long> a) throws Exception {
+      if( a.size()>MAXADDS/2 ) setCheckConsistencyFlag(false);
+      int nadds=0;
+      for( long npix : a ) {
+         if( nadds>MAXADDS ) { checkAndFix(); nadds=0; }
+         add(order, npix);
+         nadds++;
+      }
+      setCheckConsistencyFlag(true);
+   }
+
 
    /** Add a Moc pixel
     * Recursive addition : since with have the 3 brothers, we remove them and add recursively their father
@@ -377,7 +421,6 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    public boolean add(int order, long npix) throws Exception { return add(order,npix,true); }
    private boolean add(int order, long npix,boolean testHierarchy) throws Exception {
       rangeSet=null;
-      if( order<minLimitOrder ) return add2(order,npix,minLimitOrder);
 
       // Fast insertion
       if( !testConsistency ) {
@@ -386,8 +429,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       }
 
       if( npix>=0 ) {
-         if( maxLimitOrder!=-1 && order>maxLimitOrder ) return add(order-1, npix>>>2);
-
+         
          if( testHierarchy ) {
             // An ascendant is already inside ?
             if( order>minLimitOrder && isDescendant(order, npix) ) return false;
@@ -489,7 +531,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       for( int order=res.nOrder-1; order>=0; order-- ) {
          Array a = res.getArray(order);
          level[order]=a;
-         // On ne change pas le nOrder pour conserver le MocOrder implicite
+         // On ne change plus le nOrder pour conserver le MocOrder implicite
          //         if( flagTrim && a.getSize()!=0 ) { nOrder=order+1; flagTrim=false; }
       }
       nOrder= p.length; // res.nOrder;
@@ -595,7 +637,9 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       }
 
       // default
-      else property.put(key,value);
+      else {
+         property.put(key,value);
+      }
    }
 
    /** Provide MOC property value.
@@ -653,7 +697,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    public void trim() {
       for( int order=0; order<nOrder; order++ ) level[order].trim();
    }
-   
+
    // Juste pour du debogage
    public String todebug() {
       StringBuffer s = new StringBuffer();
@@ -903,9 +947,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       int order = getMaxOrder();
       long [] list = healpix.queryDisc(order, alpha, delta, radius);
       HealpixMoc mocA = new HealpixMoc(coordSys,minLimitOrder,maxLimitOrder);
-      mocA.setCheckConsistencyFlag(false);
-      for( int i=0; i<list.length; i++ ) mocA.add(order,list[i]);
-      mocA.setCheckConsistencyFlag(true);
+      mocA.add(order,list);
       return intersection(mocA);
    }
 
@@ -1186,6 +1228,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    // Low level npixel addition.
    private boolean add1(int order, long npix) throws Exception {
       if( order<minLimitOrder ) return add2(order,npix,minLimitOrder);
+      if( maxLimitOrder!=-1 && order>maxLimitOrder ) return add(maxLimitOrder, npix>>>((order-maxLimitOrder)<<1));
 
       if( order>MAXORDER ) throw new Exception("Out of MOC order");
       if( order>=nOrder ) nOrder=order+1;

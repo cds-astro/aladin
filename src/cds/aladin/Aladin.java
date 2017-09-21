@@ -204,6 +204,7 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> HiPS generation in ADD mode with a lot of overlays
  * @beta    <LI> MOC generation from clockwise polygons
  * @beta    <LI> Filter activation by script bug fixing
  * @beta    <LI> Polarisation segment size normalized bug fixing
@@ -245,7 +246,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.015";
+   static public final    String VERSION = "v10.017";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -285,7 +286,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // La couleur du fond
    
    static public boolean DARK_THEME = true;
-   static Color BACKGROUND      = new Color(235,235,255); //250,250,255); 
    
 //   static final Color COLOR_CONTROL_BACKGROUND = FUN ? new Color(10,10,10) : new Color(229,229,229);
    public static final Color BLUE =  new Color(214,214,255);
@@ -311,6 +311,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_CONTROL_FOREGROUND;
    static public Color COLOR_CONTROL_FOREGROUND_HIGHLIGHT;
    static public Color COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
+   static public Color COLOR_CONTROL_BACKGROUND_UNAVAILABLE;
    static public Color COLOR_CONTROL_FILL_IN;
    static public Color COLOR_BUTTON_BACKGROUND;
    static public Color COLOR_BUTTON_BACKGROUND_BORDER_UP;
@@ -351,19 +352,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_BLUE = Color.blue;
       COLOR_RED = Color.red;
       COLOR_GREEN = new Color(27,137,0);
-      COLOR_BACKGROUND = new Color(250,250,250); //Color.white;
+      COLOR_BACKGROUND = new Color(250,250,250);
       COLOR_FOREGROUND = Color.black;
-      COLOR_MAINPANEL_BACKGROUND = new Color(235,235,255);
-      COLOR_CONTROL_BACKGROUND = BETA ? new Color(229,229,229)  : (new JButton()).getBackground();
-      COLOR_CONTROL_FOREGROUND = new Color(60,60,60); //new Color(128, 128, 128); // Color.gray; 
+      COLOR_MAINPANEL_BACKGROUND = new Color(235,235,235);
+      COLOR_CONTROL_BACKGROUND = (new JButton()).getBackground();
+      COLOR_CONTROL_FOREGROUND = new Color(60,60,60);
       COLOR_CONTROL_FOREGROUND_HIGHLIGHT = Color.black;
       COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(180,183,187);
+      COLOR_CONTROL_BACKGROUND_UNAVAILABLE =  COLOR_MAINPANEL_BACKGROUND;
       COLOR_CONTROL_FILL_IN = Color.white;
       COLOR_BUTTON_BACKGROUND   = Color.lightGray;
       COLOR_BUTTON_FOREGROUND   = Color.black;
       COLOR_BUTTON_BACKGROUND_BORDER_UP = Color.white;
-      COLOR_STATUS_BACKGROUND = new Color(160,160,255);
-      COLOR_STATUS_LEFT_FOREGROUND = Color.white;
+      COLOR_STATUS_BACKGROUND = new Color(215,215,215);
+      COLOR_STATUS_LEFT_FOREGROUND = Color.darkGray;
       COLOR_BUTTON_BACKGROUND_BORDER_DOWN = Color.black;
       COLOR_MEASUREMENT_LINE = new Color(153,153,153);
       COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
@@ -373,6 +375,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(255,255,225);
       COLOR_MEASUREMENT_BACKGROUND = COLOR_BACKGROUND;
       COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
+      COLOR_MEASUREMENT_HEADER_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_BUTTON_BACKGROUND;
       COLOR_LABEL = new Color(102,102,153);
       COLOR_TOOL_DOWN = new Color(153,153,255);
@@ -388,6 +391,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_BACKGROUND = new Color(60,60,60);
          COLOR_FOREGROUND = new Color(250,250,250);
          COLOR_LABEL = new Color(172,172,213);
+         COLOR_CONTROL_BACKGROUND = new Color(229,229,229);
          COLOR_CONTROL_FOREGROUND = new Color(200,203,207);
          COLOR_CONTROL_FOREGROUND_HIGHLIGHT = COLOR_CONTROL_FOREGROUND.brighter();
          COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(80,83,87);
@@ -396,6 +400,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_TOOL_UP = new Color(80,80,80);
          COLOR_TEXT_BACKGROUND = new Color(205,205,215);
          COLOR_TEXT_FOREGROUND = Color.black;
+         COLOR_CONTROL_BACKGROUND_UNAVAILABLE =  COLOR_TEXT_BACKGROUND.darker();
          COLOR_STATUS_BACKGROUND = COLOR_BUTTON_BACKGROUND;
          COLOR_STATUS_LEFT_FOREGROUND = COLOR_TEXT_FOREGROUND;
          COLOR_RED = new Color(255,20,20);
@@ -404,7 +409,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_GREEN = new Color(57,167,0);
          COLOR_STACK_SELECT = new Color(40,50,150);
          COLOR_STACK_HIGHLIGHT = COLOR_CONTROL_FOREGROUND_UNAVAILABLE.brighter();
-         BACKGROUND = new Color(20,23,27);
          COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
          COLOR_MEASUREMENT_HEADER_FOREGROUND = COLOR_CONTROL_FOREGROUND;
          COLOR_MEASUREMENT_BACKGROUND = COLOR_BACKGROUND;
@@ -412,7 +416,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
          COLOR_MEASUREMENT_BORDERS_MOUSE_CELL = new Color(140,140,255);
          COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(215,215,225);
-         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_STACK_HIGHLIGHT; //COLOR_BACKGROUND.brighter();
+         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_STACK_HIGHLIGHT;
          COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_TEXT_FOREGROUND;
          COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       }
@@ -435,6 +439,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Les noms des fichiers GLU locaux additionnels passés en ligne de commande
    static String GLUFILE=null;
+
+   // Theme "forcé" de l'interface (cf option -theme=classic|dark) => ignore la config courante
+   // null:config courante, "dark", ou "classic"
+   static String THEME=null;
 
    // url pour passer un script à l'applet
    static String SCRIPTFILE=null;
@@ -558,6 +566,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
+   Tips urlStatus;               // Gere la ligne de l'info sur les URLs
    IconMatch match;                  // Gere le logo pour la grille
    IconStudy look;                    // Gere le logo pour l'outil Look (Simbad+Vizier SED)
    Grid grid;                    // Gere le logo pour la grille
@@ -565,7 +574,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    Northup northup;              // Gère le logo pour le Nord en haut
    Hdr pix;                      // Gère le logo pour le passage en full dynamique
    ViewControl viewControl;	     // Gere le logo de controle des views
-   Tips urlStatus;               // Gere la ligne de l'info sur les URLs
    MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
    Mesure mesure;                // Gere la "Frame of measurements"
 //   MySplitPaneMesure splitMesureHeight;     // Gère la séparation mesure/Vue
@@ -2164,8 +2172,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 //                       UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
          } catch( Exception e ) { e.printStackTrace(); }
-
-      } else DARK_THEME=false;
+         
+      // Dans le cas d'un lancement par une autre application, s'il n'y a pas d'indication
+      // explicite pour le thème de l'interface, on démarre alors en thème "classic" pour
+      // éviter de polluer APT et autres applications qui avaient l'habitude du "gris clair"
+      } else if( THEME==null ) DARK_THEME = false;
       
       aladinSession = (++ALADINSESSION);
       configuration = new Configuration(this);
@@ -5793,6 +5804,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -help: display this help\n"+
                "       -version: display the Aladin release number\n"+
                "       -local: without Internet test access\n"+
+               "       -theme=dark|classic: interface theme\n"+
                "       -screen=\"full|cinema|preview\": starts Aladin in full screen\n" +
                "               cinema mode or in a simple preview window\n"+
 //               "       -glufile=\"pathname|url[;...]\": local/remote GLU dictionaries describing\n"+
@@ -5804,9 +5816,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -nogui: no graphical interface (for script mode only)\n" +
                "               => noplugin, nobookmarks, nohub\n"+
                "       -noreleasetest: no Aladin new release test\n"+
-               "       -[no]hub: no usage of the internal PLASTIC hub\n"+
+               "       -[no]samp: no usage of the internal SAMP hub\n"+
                "       -[no]plugin: with/without plugin support\n"+
-               "       -[no]bookmarks: with/without bookmarks support\n"+
+//               "       -[no]bookmarks: with/without bookmarks support\n"+
 //               "       -[no]outreach: with/without outreach mode\n"+
                "       -[no]beta: with/without new features in beta test\n"+
                "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
@@ -5967,8 +5979,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-noconsole") )   { CONSOLE=false; lastArg=i+1; }
          else if( args[i].equals("-noreleasetest") )   { TESTRELEASE=false; lastArg=i+1; }
          else if( args[i].equals("-nonetworktest") )   { TESTNETWORK=false; lastArg=i+1; }
-         else if( args[i].equals("-nohub") )       { NOHUB=true; lastArg=i+1; }
-         else if( args[i].equals("-hub") )         { NOHUB=false; lastArg=i+1; }
+         else if( args[i].equals("-nohub") || args[i].equals("-nosamp") ) { NOHUB=true; lastArg=i+1; }
+         else if( args[i].equals("-hub") || args[i].equals("-samp") )     { NOHUB=false; lastArg=i+1; }
          else if( args[i].equals("-noplugin") )    { NOPLUGIN=true; lastArg=i+1; }
          else if( args[i].equals("-plugin") )      { NOPLUGIN=false; lastArg=i+1; }
          else if( args[i].equals("-open") ) lastArg=i+1;	//Simplement ignoré pour supporter protocol Windows
@@ -5981,6 +5993,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].startsWith("-rHost=") )  { RHOST=args[i].substring(7); lastArg=i+1; }
          else if( args[i].startsWith("-from=") )   { FROMDB=args[i].substring(6); lastArg=i+1; }
          else if( args[i].startsWith("-glufile=") ) { GLUFILE=args[i].substring(9); lastArg=i+1; }
+         else if( args[i].startsWith("-theme=") )  { THEME=args[i].substring(7); lastArg=i+1; }
          else if( args[i].startsWith("-registry=") ) { FrameServer.REGISTRY_BASE_URL=args[i].substring(10); lastArg=i+1; }
          else if( args[i].startsWith("-stringfile=") ) { STRINGFILE=args[i].substring(12); lastArg=i+1; }
          else if( args[i].startsWith("-scriptfile=") ) { SCRIPTFILE=args[i].substring(12); lastArg=i+1; }

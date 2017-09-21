@@ -771,8 +771,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Retourne true si on veut un thème sombre de l'interface graphique */
    protected boolean isDarkTheme() {
-//      if( !Aladin.PROTO ) return false;
-      String s =get(LOOKANDFEELTHEME);
+      String s = Aladin.THEME!=null ? Aladin.THEME : get(LOOKANDFEELTHEME);
       return s==null || s.equals("dark");
    }
 

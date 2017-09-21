@@ -2401,13 +2401,14 @@ final public class Fits {
       int taille = widthCell * heightCell * depthCell;
 
       if( a.pixels != null && pixels != null ) {
-         double max = getMax(bitpix);
+//         double max = getMax(bitpix);
          for( int i = 0; i < taille; i++ ) {
             double v1 = getPixValDouble(pixels, bitpix, i);
             double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
             double v;
             if( average ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
-            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : ((v1/2) + (v2/2) > max/2) ? max :  (v1 + v2);
+//            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : ((v1/2) + (v2/2) > max/2) ? max :  (v1 + v2);
+            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2);
             setPixValDouble(pixels, bitpix, i, v);
          }
       }

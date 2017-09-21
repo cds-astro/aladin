@@ -220,7 +220,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p.add(bt);
       mocPanel.add(p, BorderLayout.EAST );
       
-      
       p = new JPanel( new BorderLayout());
       p.setBackground( BGCOLOR );
       p.add( mocPanel, BorderLayout.CENTER);
@@ -303,6 +302,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       btReset.setEnabled( !isEmpty() );
       btApply.setEnabled( !hasBeenApplied() );
+      btMocShow.setEnabled( mocArea.getText().length()>0 );
    }
    
    private void activateAreaText(boolean flag) {

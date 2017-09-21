@@ -496,7 +496,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
       QuickFilterField(int nChar) {
          super(nChar);
-//         addMouseListener(this);
          addKeyListener(this);
          setUI( new BasicTextFieldUI() );
          updateWidgets();
@@ -562,13 +561,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          }).start();
       }
 
-//      public Dimension getPreferredSize() {  Dimension d = super.getPreferredSize(); d.height-=4; return d; } 
-      
       public Dimension getMaximumSize() { Dimension d = super.getMaximumSize(); d.width=150; return d; }
 
       void updateWidgets() {
          boolean actif = iconFilter!=null && iconFilter.isActivated();
-         setBackground( actif ? Aladin.COLOR_TEXT_BACKGROUND : Aladin.COLOR_TEXT_BACKGROUND.darker() );
+         setBackground( actif ? Aladin.COLOR_TEXT_BACKGROUND : Aladin.COLOR_CONTROL_BACKGROUND_UNAVAILABLE ); //Aladin.COLOR_TEXT_BACKGROUND.darker() );
          setForeground( actif ? Aladin.COLOR_TEXT_FOREGROUND : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
       }
 
@@ -972,31 +969,41 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
       // Recherche du champ correspondant au service_url indiqué
       String key = service_url.toLowerCase()+"_service_url";
-      String url = m.prop.get( key );
-      if( url==null ) return null;
+      String s = m.prop.get( key );
+      if( s==null ) return null;
+      
+      
+      // Il peut y avoir plusieurs URLs séparées par des TAB. Il faut donc les nettoyer toutes
+      StringBuilder url1 = null;
+      Tok tok = new Tok(s,"\t");
+      while( tok.hasMoreTokens() ) {
+         String url = tok.nextToken();
 
-      // Petit nettoyage de l'URL (le VO registry regorge d'imagination...)
-      if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
+         // Petit nettoyage de l'URL (le VO registry regorge d'imagination...)
+         if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
 
-      int pos;
-      String fmt;
+         int pos;
+         String fmt;
 
-      // On enlève un éventuel &REQUEST=queryData redondant
-      if( service_url.equalsIgnoreCase("ssa") ) {
-         fmt = "&REQUEST=queryData";
-         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
-            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+         // On enlève un éventuel &REQUEST=queryData redondant
+         if( service_url.equalsIgnoreCase("ssa") ) {
+            fmt = "&REQUEST=queryData";
+            if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
+               url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+            }
+
+         } else if( service_url.equalsIgnoreCase("sia") ) {
+            fmt = "&FORMAT=image/fits";
+            if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
+               url = url.substring(0,pos) + url.substring(pos+fmt.length() );
+            }
          }
-
-      } else if( service_url.equalsIgnoreCase("sia") ) {
-         fmt = "&FORMAT=image/fits";
-         if( (pos=Util.indexOfIgnoreCase(url, fmt))>=0 ) {
-            url = url.substring(0,pos) + url.substring(pos+fmt.length() );
-         }
+         
+         if( url1==null ) url1 = new StringBuilder(url);
+         else url1.append("\t"+url);
       }
 
-      return url;
-
+      return url1.toString();
    }
 
 
@@ -1688,6 +1695,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          return;
       }
       
+      // S'agit-il d'un hips privé ?
+      String status = prop.getProperty("hips_status");
+      if( status!=null && status.indexOf("private")>=0 ) return;
+      
       // Est-ce qu'il y a un "profile", et si oui, est-il compatible avec cette version d'Aladin
       if( !hasValidProfile(prop) ) return;
       
@@ -1758,9 +1769,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       boolean local = prop.getProperty("PROP_ORIGIN")!=null;
       
-      // Rangement dans la branche "local" si chargement local
-      if( local && !category.startsWith("Local/") ) {
-         category = "Local/"+ category;
+      // Rangement dans la branche "Adds" si chargement local
+      if( local && !category.startsWith("Adds/") ) {
+         category = "Adds/"+ category;
          prop.replaceValue(Constante.KEY_CLIENT_CATEGORY,category);
       }
       
@@ -2721,7 +2732,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             if( to.verboseDescr!=null || to.description!=null ) {
                s = to.verboseDescr==null ? "":to.verboseDescr;
-               a = new MyAnchor(aladin,to.description,200,s,null);
+               a = new MyAnchor(aladin,to.description,50,s,null);
                a.setFont(a.getFont().deriveFont(Font.BOLD));
                a.setFont(a.getFont().deriveFont( a.getFont().getSize2D()+1) );
                a.setForeground( Aladin.COLOR_GREEN );

@@ -217,7 +217,7 @@ final public class ThreadBuilderTile {
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
-         if( !context.live && (coaddMode==Mode.ADD || !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, nbThreads)) ) {
+         if( !context.live && (/*coaddMode==Mode.ADD ||*/ !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, nbThreads)) ) {
 
             statOnePass++;
             long mem = getReqMem(downFiles, 0, n);
@@ -226,13 +226,15 @@ final public class ThreadBuilderTile {
 
             // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
             // en mémorisant le poids de chaque pixel à chaque couche
+            // Dans le cas particulier d'un mode ADD, on forcera à null les tableaux de poids
+            // et on fera une simple addition
          } else {
 
             statMultiPass++;
 
             // poids déjà calculés
             double [] weight = null;
-            double [] fWeight = new double[tileSide*tileSide];
+            double [] fWeight = coaddMode==Mode.ADD ? null : new double[tileSide*tileSide];
 
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                int fin = deb+Constante.MAXOVERLAY;
@@ -246,8 +248,11 @@ final public class ThreadBuilderTile {
                   if( out==null ) {
                      out=f;
                      weight=fWeight;
-                     fWeight = new double[tileSide*tileSide];
-                  } else out.coadd(f,weight,fWeight);
+                     fWeight = coaddMode==Mode.ADD ? null : new double[tileSide*tileSide];
+                  } else {
+                     if( coaddMode==Mode.ADD ) out.coadd(f,false);
+                     else out.coadd(f,weight,fWeight);
+                  }
                }
 
                // On libère dès à présent les fichiers Fits déjà utilisés
