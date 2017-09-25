@@ -522,12 +522,16 @@ Runnable, SwingWidgetFinder, Widget {
          memoBoutonDroit = true;
          return;
       }
+      
+      // Pour faire défiler les messages pour les débutants
+      if( beginnerHelp && y<lastYMax ) {
+         nextBeginnerHelp();
+         repaint();
+      }
 
       // Fin du message d'accueil
       a.endMsg();
 
-      // Juste pour faire plaisir à Seb
-      if( a.calque.isFree() ) { a.dialog.show(); return; }
 
       //      // Gestion de l'oeil (selection de tous les plans simultanement, ou avec
       //      if( inEye(x,y) ) {
@@ -573,6 +577,9 @@ Runnable, SwingWidgetFinder, Widget {
 
       // Un plan non valide ne peut être pris comme référence
       if( !currentPlan.flagOk ) return false;
+      
+      // Un plan sans position ne peut être pris comme référence
+      if( currentPlan.hasNoPos ) return false;
 
       // les plans FILTER et CONTOUR ne peuvent PAS etre pris comme référence
       if( currentPlan.type==Plan.FILTER
@@ -1259,31 +1266,41 @@ Runnable, SwingWidgetFinder, Widget {
 
    protected void setBeginnerHelp(boolean flag) { beginnerHelp=flag; }
 
-   int lastBegin=-1;
-   int lastYMax;  // Dernière ordonnée mesurée de la fin de la pile
-
    /** Affichage d'un message au-dessus de la pile des plans
     * => arrête automatique les messages pour les débutants */
    protected void drawMessage(Graphics g,String s,Color c) {
       setBeginnerHelp(false);
       drawBeginnerHelp1(g,s,c,lastYMax);
    }
+   
+   private int lastBegin;
+   private int lastYMax;  // Dernière ordonnée mesurée de la fin de la pile
+   
+   // Passe au message suivant pour les débutants
+   private void nextBeginnerHelp() {
+      lastBegin++;
+      if( lastBegin==BEGIN.length ) beginnerHelp=false;
+   }
+   
+   private long t0=0;
 
    /** Affiche un message pour les débutants en fonction du nombre de plans en cours d'utilisation */
-   private void drawBeginnerHelp(Graphics g,int nbVisiblePlan,int yMax) {
+   private void drawBeginnerHelp(Graphics g, int yMax) {
       if( BEGIN==null ) {
-         BEGIN = new String[6];
+         BEGIN = new String[7];
          for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i);
+         lastBegin=0;
+         t0=System.currentTimeMillis();
       }
-      int begin = nbVisiblePlan+1;
-
-      // Pour n'afficher qu'une fois le même message
-      if( lastBegin!=-1 && lastBegin!=begin ) BEGIN[lastBegin]=null;
-      String s = BEGIN[begin];
-      lastBegin=begin;
-      if( s==null ) return;
-      int y= drawBeginnerHelp1(g,s,Aladin.COLOR_LABEL,yMax);
-      //      drawControlHelp(g,y);
+      if( lastBegin==0 ) {
+         long t=System.currentTimeMillis();
+         if( t-t0>4000 ) lastBegin=1;
+         else repaint(100);
+      }
+      
+      if( lastBegin<BEGIN.length && BEGIN[lastBegin]!=null ) {
+         drawBeginnerHelp1(g,BEGIN[lastBegin],Aladin.COLOR_LABEL,yMax);
+      }
    }
 
    //   private void drawControlHelp(Graphics g,int y) {
@@ -1612,7 +1629,7 @@ Runnable, SwingWidgetFinder, Widget {
       if( flagDrag==VERTICAL ) moveLogo(g);
 
       lastYMax = y;
-      if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
+      if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<4 ) drawBeginnerHelp( g, y);
       
       a.resumeVariousThinks();
 

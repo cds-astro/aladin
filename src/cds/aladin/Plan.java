@@ -51,7 +51,7 @@ import cds.xml.TableParser;
  */
 public class Plan implements Runnable {
 
-   static String NOREDUCTION;
+   static String NOREDUCTION,NOPOSITION;
 
    // Les différents états possibles d'un plan
    static final protected int STATUS_UNKNOWN              = 0x0;
@@ -64,10 +64,11 @@ public class Plan implements Runnable {
    static final protected int STATUS_EMPTYCAT             = 0x1<<6;
    static final protected int STATUS_LOADING              = 0x1<<7;
    static final protected int STATUS_READY                = 0x1<<8;
+   static final protected int STATUS_NOPOS                = 0x1<<9;
 
    static final private String STATUS[] = { "STATUS_UNKNOWN","STATUS_INPROGRESS","STATUS_MOREDETAILSAVAILABLE",
       "STATUS_ERROR","STATUS_EMPTYMOC","STATUS_OVERFLOW","STATUS_NOCALIB","STATUS_EMPTYCAT","STATUS_LOADING",
-   "STATUS_READY" };
+   "STATUS_READY","STATUS_NOPOS" };
 
    // Les valeurs decrivant les differents types de plan
    static final int NO       = 0;  // Le plan est vide
@@ -167,6 +168,7 @@ public class Plan implements Runnable {
    int        status;          // Code du status
    boolean    flagLocal;       // Le plan est issu d'un fichier local
    protected boolean hasXYorig;   // true si dans le cas d'un plan objet on bloque les xy
+   protected boolean hasNoPos;    // true si dans le cas d'un plan objet, on n'a auncune position
    protected boolean recalibrating; // true si on est en train de recalibrer le plan (catalogue)
    protected boolean isSelectable=true; // false si le plan n'a pas d'objets sélectionnable
    protected boolean doClose=true; // si false, ne pas fermer le flux une fois le plan créé
@@ -206,7 +208,8 @@ public class Plan implements Runnable {
 
    // Appelé par Chaine directement
    static protected void createChaine(Chaine chaine) {
-      NOREDUCTION = chaine.getString("NORED");
+      NOREDUCTION = "No astronomical reduction";
+      NOPOSITION = "No coordinate";
    }
 
    protected Plan() { type=X; aladin=Aladin.aladin; flagOk=false; label=""; startTime = System.currentTimeMillis(); }
@@ -252,6 +255,7 @@ public class Plan implements Runnable {
       p.flagLocal=flagLocal;
       p.hasPM = hasPM;
       p.hasXYorig=hasXYorig;
+      p.hasNoPos=hasNoPos;
       p.initZoom=initZoom;
       p.lastZoomView=lastZoomView;
       p.lastXZoomView=lastXZoomView;
@@ -726,8 +730,8 @@ public class Plan implements Runnable {
 
       recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
 
-      if( hasXYorig ) {
-         hasXYorig=false;
+      if( hasXYorig || hasNoPos ) {
+         hasNoPos=hasXYorig=false;
          error=null;
       }
 
@@ -756,6 +760,7 @@ public class Plan implements Runnable {
       }
 
       if( !hasXYorig ) {
+         hasNoPos=false;
          hasXYorig=true;
          error=Plan.NOREDUCTION;
       }
@@ -952,7 +957,7 @@ public class Plan implements Runnable {
       pcat = null;
       headerFits=null;
       memoClinDoeil=collapse=flagOk=selected=active=ref
-            =hasXYorig=underMouse=recalibrating = false;
+            =hasXYorig=underMouse=recalibrating=hasNoPos= false;
       resetProj();
       folder=0;
       initZoom=1;
@@ -1159,6 +1164,9 @@ public class Plan implements Runnable {
    /** Retourne true si la calib du plan n'est pas celle d'origine FITS */
    protected boolean hasSpecificCalib() { return hasSpecificCalib; }
    
+   /** retourne true si le plan dispose d'une projection spécifique et n'est plus
+    * asservi au sélecteur global (widget ProjSelector) */
+   protected boolean hasSpecificProj() { return false; }
    
    /** Memorisation d'une nouvelle projection possible pour le plan
     * qui devient la projection par defaut (projd)
@@ -1305,7 +1313,7 @@ public class Plan implements Runnable {
     * @return <I>true</I> si ok, <I>false</I> sinon.
     */
    protected boolean isViewable() {
-      if( hasXYorig || isSED() ) { setDebugFlag(VIEWABLE,true); return true; }
+      if( hasNoPos || hasXYorig || isSED() ) { setDebugFlag(VIEWABLE,true); return true; }
       if( type==NO || type==X || !flagOk ) { setDebugFlag(VIEWABLE,false); return false; }
       if( !isCatalog() && !isPlanBGOverlay()
             && !(isImage() || type==ALLSKYIMG) ) { setDebugFlag(VIEWABLE,true); return true; }
@@ -1952,7 +1960,10 @@ public class Plan implements Runnable {
       active=flag;
       //   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
       if( !active ) aladin.view.deSelect(this);
-      else aladin.view.addTaggedSource(this);
+      else {
+         if( hasNoPos ) aladin.view.selectAllInPlan(this);
+         else aladin.view.addTaggedSource(this);
+      }
       
       // Activation le cas échéant d'un filtre qui serait associé
       if( isCatalog() && active)  PlanFilter.updatePlan(this);

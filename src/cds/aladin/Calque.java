@@ -1216,6 +1216,7 @@ public class Calque extends JPanel implements Runnable {
     */
    protected boolean canBeRef(Plan p) {
       if( p==null ) return false;
+      if( p.hasNoPos ) return false;
       if( p.hasXYorig ) return true;
       // ajout thomas : PlanFov peut être un plan de référence
       return (p.isImage() || p.type==Plan.ALLSKYIMG || p.isPlanBGOverlay()
@@ -3804,10 +3805,22 @@ public class Calque extends JPanel implements Runnable {
 
    /** Change pour toute la pile la projection */
    protected void modifyProjection(String proj) {
-      Plan [] plan = getPlans();
-      for( int i=0; i<plan.length; i++ ) {
-         if( !(plan[i] instanceof PlanBG) ) continue;
-         plan[i].modifyProj(proj);
+      
+      // Dans le cas ou le plan de base est BG et a une projection spécifique, on ne
+      // modifie que lui
+      // => EN FAIT NE DEVRAIT JAMAIS ETRE POSSIBLE
+      Plan base = aladin.calque.getPlanBase();
+      if( base instanceof PlanBG && base.hasSpecificProj() ) {
+         base.modifyProj(proj);
+         
+         // Sinon on modifie tous les plans qui ne sont pas spécifiques
+      } else {
+         Plan [] plan = getPlans();
+         for( int i=0; i<plan.length; i++ ) {
+            if( !(plan[i] instanceof PlanBG) ) continue;
+            if( plan[i].hasSpecificProj() ) continue;
+            plan[i].modifyProj(proj);
+         }
       }
       aladin.view.newView();
       aladin.calque.repaintAll();
@@ -3877,6 +3890,11 @@ public class Calque extends JPanel implements Runnable {
       if( Aladin.SLIDERTEST ) {
          if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,true);
          return true;
+      }
+      
+      if( p!=null && p.hasNoPos ) {
+         p.setDebugFlag(Plan.CANBETRANSP,false);
+         return false;
       }
       
       boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();

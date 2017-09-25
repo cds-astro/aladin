@@ -227,7 +227,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     * en fonction des coordonnees x,y
     */
    protected void setCoord(Projection proj) {
-      if( !plan.hasXYorig ) {
+      if( !plan.hasXYorig || plan.hasNoPos ) {
          System.err.println("Recalibration on a no-XYlocked planed !!! Aborted");
          return;
       }
@@ -306,12 +306,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       // Mise en place de la forme des sources en fontions de nombre de sources
       // Non utilisé si on vient d'un plugin Aladin
       if( setSourceType ) ((PlanCatalog)plan).setSourceType(Source.getDefaultType(nb_o));
-
+      
       // Pas de projection associee
       if( flagXY ) {
 
          plan.hasXYorig=true;
-         plan.error=Plan.NOREDUCTION;
 
          //         aladin.info(aladin.chaine.getString("INFOXY"));
          //
@@ -373,7 +372,16 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       else if( name.equals("GROUP"))      addGroup(value);
 
       // La table aura des positions en XY uniquement
-      else if( name.equals("__XYPOS") && value.equals("true") ) flagXY=true;
+      else if( name.equals("__XYPOS") && value.equals("true") ) {
+         flagXY=true;
+         plan.error=Plan.NOREDUCTION;
+      }
+      
+      // La table n'a a priori aucune position
+      else if( name.equals("__NOCOO") && value.equals("true") ) {
+         plan.hasNoPos=true;
+         plan.error=Plan.NOPOSITION;
+      }
    }
 
    /** L'interface AstroRes */
@@ -1082,7 +1090,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                +Util.myRound(""+1000.*nb_o/duree)+" objects per sec)");
          tableParserInfo("\n"+s);
          Aladin.trace(3,s);
-         if( !flagXY && rm==0.0 ) plan.error = aladin.error = "no RA or DE rows";
+         if( !flagXY && rm==0.0 ) plan.error = aladin.error = "no RA or DE columns";
       } else plan.error = aladin.error = "Error: "+res.getError();
       if( plan.error!=null ) System.out.println("!!! "+plan.label+": "+plan.error);
       return ok && nb_o>=0?nb_o:-1;

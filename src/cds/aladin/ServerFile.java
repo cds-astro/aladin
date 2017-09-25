@@ -764,6 +764,10 @@ public class ServerFile extends Server implements XMLConsumer {
                int sourceType = Util.indexInArrayOf(s, Source.TYPENAME, true);
                if( sourceType!=-1 ) plan.sourceType=sourceType;
             }
+            if( (s=(String)atts.get("nopos"))!=null ) {
+               ((PlanTool)plan).hasNoPos = (new Boolean(s)).booleanValue();
+            }
+
             break;
          case Plan.APERTURE:
          case Plan.TOOL:

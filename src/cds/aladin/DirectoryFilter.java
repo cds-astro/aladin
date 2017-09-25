@@ -720,6 +720,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( aladin.directory.comboFilter.getSelectedItem().equals(Directory.MYLISTHTML) ) {
          aladin.configuration.setDirFilter(Directory.MYLIST, expr, mocFiltreSpatial);
       }
+      
    }
    
    

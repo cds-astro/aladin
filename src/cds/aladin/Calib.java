@@ -1471,9 +1471,9 @@ public final class Calib  implements Cloneable {
        
       if (type1.indexOf("COE")>= 0 && type2.indexOf("COE")>= 0) proj = TAN ;
       if (proj == -1) {
-         System.err.println(
-               "Calib warning:CTYPE "+type1+"/"+type2+" is not yet supported "
-                     +"by Aladin") ;
+//         System.err.println(
+//               "Calib warning:CTYPE "+type1+"/"+type2+" is not yet supported "
+//                     +"by Aladin") ;
          throw new Exception("CTYPE "+type1+"/"+type2+" is not yet supported "
                +"by Aladin") ;
       }

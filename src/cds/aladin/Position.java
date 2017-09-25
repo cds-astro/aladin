@@ -294,6 +294,8 @@ public class Position extends Obj {
       Projection proj;
       Coord c = new Coord();
       
+      if( plan!=null && plan.hasNoPos ) return;
+      
       // S'il n'y a pas de calibration, on prend les x,y natifs
       if( (plan!=null && plan.hasXYorig) || !Projection.isOk(proj=v.getProj()) ) {
          xv[v.n]=x-0.5;

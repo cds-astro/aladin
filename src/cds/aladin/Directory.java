@@ -1196,6 +1196,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return s.length()>0  || comboFilter.getSelectedIndex()>0;
    }
    
+   // Mémorisation du dernier filtre demandé (pour éviter de l'appliquer 2x de suite)
+   private String oExpr=null;
+   private int oIntersect=-1;
+   private HealpixMoc oMoc=null;
+   
    /** Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
     *  @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
     *  @param moc filtrage spatial, null si aucun
@@ -1204,8 +1209,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    protected void resumeFilter(String expr, HealpixMoc moc, int intersect) {
       try {
          
-//         System.out.println("resumeFilter iconFilter.isActivated="+iconFilter.isActivated());
-         
          // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
          String quick = getQuickFilterExpr();
          if( quick.length()>0 ) {
@@ -1213,9 +1216,23 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             else expr = "("+expr+") && "+quick;
          }
          
-         aladin.trace(4,"Directory.resumeFilter() => "+expr);
+         // On vient-ti pas de le faire ?
+         if( expr.equals(oExpr) && (moc==oMoc || moc!=null &&  moc.equals(oMoc) && intersect==oIntersect) ) {
+            return;
+         }
+         oExpr=expr;
+         oIntersect=intersect;
+         oMoc= moc==null?null:(HealpixMoc)moc.clone();
          
-//         System.out.println("resumeFilter("+expr+")");
+         
+         // logs
+         String smoc = moc==null ? "" : directoryFilter.getASCII(moc);
+         if( smoc.length()>0 || expr.length()>0 && !expr.equals("*") ) {
+            String log = expr+(smoc.length()>0?" AND MOC:"+smoc:"");
+            aladin.trace(4,"Directory.resumeFilter() => "+log);
+            aladin.glu.log("DirectoryFilter",log);
+         }
+         
          // Filtrage
          try {
             checkFilter(expr, moc, intersect);

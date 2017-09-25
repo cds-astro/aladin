@@ -25,6 +25,7 @@ package cds.aladin;
 import java.awt.Color;
 
 import javax.swing.JButton;
+import javax.swing.UIManager;
 import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 
@@ -34,6 +35,10 @@ public class MyComboBoxUI extends BasicComboBoxUI {
       super.installDefaults();
       comboBox.setBackground( Aladin.COLOR_TEXT_BACKGROUND );
       comboBox.setForeground( Aladin.COLOR_TEXT_FOREGROUND );
+      if( Aladin.DARK_THEME )  {
+         UIManager.put("ComboBox.disabledForeground",Aladin.COLOR_CONTROL_BACKGROUND_UNAVAILABLE.darker());
+         UIManager.put("ComboBox.disabledBackground",Aladin.COLOR_CONTROL_BACKGROUND_UNAVAILABLE);
+      }
    }
    
    protected JButton createArrowButton() {
@@ -48,3 +53,18 @@ public class MyComboBoxUI extends BasicComboBoxUI {
       return button;
   }
 }
+
+
+// UIManager.put("ComboBox.background", ...
+//ComboBox.ancestorInputMap        =javax.swing.plaf.InputMapUIResource@21c887
+//ComboBox.background              =javax.swing.plaf.ColorUIResource[r=204,g=204,b=204]
+//ComboBox.disabledBackground      =javax.swing.plaf.ColorUIResource[r=204,g=204,b=204]
+//ComboBox.disabledForeground      =javax.swing.plaf.ColorUIResource[r=153,g=153,b=153]
+//ComboBox.font                    =javax.swing.plaf.FontUIResource[family=dialog.bold,name=Dialog,style=bold,size=12]
+//ComboBox.foreground              =javax.swing.plaf.ColorUIResource[r=0,g=0,b=0]
+//ComboBox.listBackground          =javax.swing.plaf.ColorUIResource[r=204,g=204,b=204]
+//ComboBox.listForeground          =javax.swing.plaf.ColorUIResource[r=0,g=0,b=0]
+//ComboBox.selectionBackground     =javax.swing.plaf.ColorUIResource[r=153,g=153,b=204]
+//ComboBox.selectionForeground     =javax.swing.plaf.ColorUIResource[r=0,g=0,b=0]
+//ComboBoxUI                       =javax.swing.plaf.metal.MetalComboBoxUI
+

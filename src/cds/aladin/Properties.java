@@ -112,8 +112,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    JRadioButton scopeGlobal,scopeLocal;
    ButtonGroup xyLock=null;    // Pour le plan TOOl, mode de calcul des x,y
    JComboBox planRefChoice=null;    // Projections possibles pour le plan de reference
-   JComboBox defCatProj=null;    // Les projections possibles par défaut pour un catalogue sans image sous-jacente
-   JComboBox defFrame=null;     // Les frames possibles par défaut pour un planBG ou un catalogue sans image sous-jacente
+   JComboBox specificProj=null;    // Les projections possibles par défaut pour un catalogue sans image sous-jacente ou un planBG
+   JComboBox specificFrame=null;     // Les frames possibles par défaut pour un planBG ou un catalogue sans image sous-jacente
    Plan planRef[]=null;		 // Tableau associe a projsChoice
    JComboBox projsChoice=null;      // Plan de projections possibles
    Projection projs[]=null;	 // Tableau associe a planRefChoice
@@ -567,7 +567,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan.flagOk ) {
          // Les sourceType du Plan
-         if( plan.isCatalog() ) {
+         if( plan.isCatalog() && !plan.hasNoPos ) {
             sourceType = new JComboBox();
             for( int i=0; i<Source.TYPENAME.length; i++ ) sourceType.addItem(Source.TYPENAME[i]);
             sourceType.setSelectedIndex(plan.sourceType);
@@ -691,7 +691,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       } else centerField=null;
 
       // Dans le cas d'un catalogue nombre d'items
-      if( plan.isSimpleCatalog() ) {
+      if( plan.isSimpleCatalog() && !plan.hasNoPos) {
          PropPanel.addCouple(p,SOURCE+":",new JLabel(""+((PlanCatalog)plan).getCounts()), g,c);
       }
 
@@ -1174,28 +1174,41 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          // Les projections possibles par défaut s'il n'y a pas d'images dessous ou si PlanBG
          else if( plan.ref && Projection.isOk(plan.projd) )  {
-            defCatProj = new JComboBox( Projection.getAlaProj() );
+            specificProj = new JComboBox();
+            int index=-1;
+            
+            // Dans le cas dans PlanBG, on ajoute l'item Default en position 0
+            if( plan instanceof PlanBG ) {
+               if( !plan.hasSpecificProj() ) index=0;
+               else index= 1+Projection.getAlaProjIndex( Calib.getProjName(plan.projd.c.getProj()) );
+               specificProj.addItem("Default");
+            } else {
+               index= Projection.getAlaProjIndex( Calib.getProjName(plan.projd.c.getProj()) );
+            }
+            for( String s: Projection.getAlaProj() ) specificProj.addItem( s );
+            
             //            String pr[]=Projection.getAlaProj();
             //            for( int i=0; i<pr.length; i++ ) defCatProj.addItem(pr[i]);
             //            defCatProj.setSelectedIndex(plan.projd.c.getProjSys()-1);
-            defCatProj.setSelectedIndex( Projection.getAlaProjIndex( Calib.getProjName(plan.projd.c.getProj()) ) );
-            defCatProj.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) { actionDefCatProj(); }
+            
+            specificProj.setSelectedIndex( index );
+            specificProj.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) { actionSpecificProj(); }
             });
 
             PropPanel.addFilet(p,g,c);
             PropPanel.addSectionTitle(p,DEFCATPROJ,g,c);
             if( !(plan instanceof PlanBG) ) PropPanel.addCouple(p,CENTER, new JLabel(plan.projd.c.getProjCenter().getSexa()), g,c);
-            PropPanel.addCouple(p,METHOD, defCatProj, g,c);
+            PropPanel.addCouple(p,METHOD, specificProj, g,c);
             
             if( plan.ref && plan instanceof PlanBG ) {
                
-               defFrame = Localisation.createFrameCombo();
-               defFrame.setSelectedIndex( ((PlanBG)plan).getFrameDrawing() );
-               defFrame.addActionListener(new ActionListener() {
-                  public void actionPerformed(ActionEvent e) { actionFrameProj(); }
+               specificFrame = Localisation.createFrameCombo();
+               specificFrame.setSelectedIndex( ((PlanBG)plan).getFrameDrawing() );
+               specificFrame.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent e) { actionSpecificFrame(); }
                });
-               PropPanel.addCouple(p,".frame", defFrame, g,c);
+               PropPanel.addCouple(p,".frame", specificFrame, g,c);
                
                JPanel plong = new JPanel();
                plong.setBorder( BorderFactory.createEmptyBorder());
@@ -1219,7 +1232,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       boolean filet=false;
 
-      if( plan.isCatalog() ) {
+      if( plan.isCatalog() && !plan.hasNoPos ) {
 
          // Epoque pour un catalogue
          if( plan.flagOk && plan.projd!=null && plan.hasPM() ) {
@@ -1374,12 +1387,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // DANS LE CAS D'UN CATALOGUE, JE N'AFFICHE LE CHOICE QUE DANS LE CAS D'UNE
       // RECALIBRATION XY OU S'IL N'Y A PAS D'IMAGE EN DESSOUS
       if( plan.flagOk &&
-            (plan.isImage()
-                  || (plan.isSimpleCatalog() && plan.hasXYorig)) ) {
+            (plan.isImage() || (plan.isSimpleCatalog() && plan.hasXYorig)) ) {
 
          PropPanel.addFilet(p,g,c);
          String s = plan.isImage()?ASTRED:
-            plan.hasXYorig?XYRED:PROJ;
+            plan.hasNoPos?"No position":plan.hasXYorig?XYRED:PROJ;
          PropPanel.addSectionTitle(p,s,g,c);
 
          // Les plans de reference possibles pour le plan
@@ -1558,7 +1570,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          projsChoice.setSelectedIndex(j);
          if( modCalib!=null ) modCalib.setEnabled(j >= 0 && projs[j].isModifiable());
          projsChoice.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { actionDefCatProj(); }
+            public void actionPerformed(ActionEvent e) { actionSpecificProj(); }
          });
 
       }
@@ -1572,18 +1584,37 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       showProp(true);
    }
 
-   // Changement de projection par défaut d'un catalogue
-   private void actionDefCatProj() {
-      if( defCatProj==null || plan.projd.c.getProj()==Calib.getProjType( (String)defCatProj.getSelectedItem() ) ) return;
-      plan.modifyProj((String) defCatProj.getSelectedItem());
+   // Changement de projection spécifique d'un catalogue ou d'un planBG
+   private void actionSpecificProj() {
+      String sproj = (String) specificProj.getSelectedItem();
+      int  index = specificProj.getSelectedIndex();
+      
+      // Est-ce qu'on a changé quelque chose ?
+      if( specificProj==null ) return;
+      if( plan instanceof PlanBG ) {
+         if( index==0 && !plan.hasSpecificProj() ) return;
+      }
+      if( plan.projd.c.getProj()==Calib.getProjType( sproj ) ) return;
+      
+      if( plan instanceof PlanBG ) {
+         
+         // Dans le cas du "defaut", on récupère la projection "générale"
+         if( index==0 ) {
+            ((PlanBG)plan).setSpecificProj(false);
+            sproj = aladin.projSelector.getProjItem();
+         } else {
+            ((PlanBG)plan).setSpecificProj(true);
+         }
+      }
+      plan.modifyProj( sproj );
    }
 
    // Changement de la frame de traçage d'un planBG
-   private void actionFrameProj() {
-      if( !(plan instanceof PlanBG ) || defFrame==null
-            || ((PlanBG)plan).getFrameDrawing()==defFrame.getSelectedIndex() ) return;
-      ((PlanBG)plan).setFrameDrawing( defFrame.getSelectedIndex() );
-      if( defFrame.getSelectedIndex()!=0 ) aladin.info(this,aladin.chaine.getString("PROPFRAMEINFO"));
+   private void actionSpecificFrame() {
+      if( !(plan instanceof PlanBG ) || specificFrame==null
+            || ((PlanBG)plan).getFrameDrawing()==specificFrame.getSelectedIndex() ) return;
+      ((PlanBG)plan).setFrameDrawing( specificFrame.getSelectedIndex() );
+      if( specificFrame.getSelectedIndex()!=0 ) aladin.info(this,aladin.chaine.getString("PROPFRAMEINFO"));
    }
 
    // Util.indexInArrayOf(Localisation.REPERE[plan.projd.frame], Localisation.FRAMEBIS)
@@ -1714,10 +1745,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
       
       // Changement de projection catalogue par défaut ?
-      actionDefCatProj();
+      actionSpecificProj();
 
       // Changement du frame par défaut ?
-      actionFrameProj();
+      actionSpecificFrame();
       //      actionFrameProjCat();
 
       if( planRefChoice != null ) {

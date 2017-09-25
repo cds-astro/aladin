@@ -130,6 +130,7 @@ final public class TableParser implements XMLConsumer {
    //   private boolean knowFormat;	      // true si on a détecté le format des coordonnées
 
    private boolean flagXY;	          // true si il s'agit d'un catalogue en XYPOS
+   private boolean flagNOCOO;         // true si l s'agit d'un catalogue sans aucune position
    private String[] record;			  // Buffer pour lire chaque enregistrement
    private Vector<String> vRecord;			  // Idem mais lorsqu'on ne connait pas encore le nombre de champs
    private int row;                   // Numéro du champ courant
@@ -1382,9 +1383,20 @@ final public class TableParser implements XMLConsumer {
       srcAstroFrame=null;
       
       // Aucune colonne ne ressemble de près ou de loin à des coordonnées
+//      if( nRA<0 || nDEC<0 ) {
+//         if( !(flagXY=(nX>=0 && nY>=0))) { nRA=0; nDEC=1; }
+//         else consumer.setTableInfo("__XYPOS","true");
+//      }
+      
       if( nRA<0 || nDEC<0 ) {
-         if( !(flagXY=(nX>=0 && nY>=0))) { nRA=0; nDEC=1; }
-         else consumer.setTableInfo("__XYPOS","true");
+         if( nX>=0 && nY>=0  ){
+            flagXY=true;
+            consumer.setTableInfo("__XYPOS","true");
+         } else {
+            nRA=nDEC=-1;
+            flagNOCOO=true;
+            consumer.setTableInfo("__NOCOO","true");
+         }
       }
 
       // Si un COOSYS ref a été utilisé, on va se baser sur lui pour déterminer de façon certaine
@@ -1429,8 +1441,12 @@ final public class TableParser implements XMLConsumer {
 
       consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY,
             (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
-      if( flagXY ) consumer.tableParserInfo("   -assuming XY positions (column "+(nX+1)+" for X and "+(nY+1)+" for Y)");
-      else if( nRA>=0 ) {
+      if( flagXY ) {
+         consumer.tableParserInfo("   -assuming XY positions (column "+(nX+1)+" for X and "+(nY+1)+" for Y)");
+      } else if( flagNOCOO ) {
+         consumer.tableParserInfo("   -assuming table without position");
+
+      } else if( nRA>=0 && nDEC>=0 ) {
          consumer.tableParserInfo("   -assuming RADEC"+(format==FMT_UNKNOWN?" " : (format==FMT_SEXAGESIMAL?" in sexagesimal": (unit==UNIT_RADIANS ? " in radians":" in degrees")))+
                " (column "+(nRA+1)+" for RA and "+(nDEC+1)+" for DEC)");
          if( nPMRA>=0 ) {
@@ -1438,7 +1454,7 @@ final public class TableParser implements XMLConsumer {
                   " (column "+(nPMRA+1)+" for PMRA and "+(nPMDEC+1)+" for PMDEC)");
          }
       }
-      consumer.tableParserInfo("      [RA="+nRA+" ("+qualRA+") DE="+nDEC+" ("+qualDEC+") "+
+      if( !flagNOCOO ) consumer.tableParserInfo("      [RA="+nRA+" ("+qualRA+") DE="+nDEC+" ("+qualDEC+") "+
             "PMRA="+nPMRA+" ("+qualPMRA+") PMDEC="+nPMDEC+" ("+qualPMDEC+") "+
             "X="+nX+" ("+qualX+") Y="+nY+" ("+qualY+")]");
 
@@ -1476,7 +1492,7 @@ final public class TableParser implements XMLConsumer {
             else consumer.tableParserInfo("!!! Coordinate system assignation error... assuming ICRS");
          }
       } else {
-         consumer.tableParserInfo("   -No coordinate system reference found... assuming ICRS");
+         if( !flagNOCOO ) consumer.tableParserInfo("   -No coordinate system reference found... assuming ICRS");
       }
    }
 
@@ -2032,7 +2048,7 @@ final public class TableParser implements XMLConsumer {
       else if( depth==5 && name.equalsIgnoreCase("BINARY2") )     inBinary2=false;
       else if( depth==5 && name.equalsIgnoreCase("FITS") )        inFits=false;
 
-      // Ajustement de profonceur en fonction des GROUP
+      // Ajustement de profondeur en fonction des GROUP
       else if( depth==4 && name.equalsIgnoreCase("FIELD") ) {
          fieldSub=null;
          if( f.name==null ) f.name=f.ID;
@@ -2111,8 +2127,11 @@ final public class TableParser implements XMLConsumer {
 
       try {
 
+         if( flagNOCOO ) {
+            consumer.setRecord(0,0, rec);
+         
          // Coordonnées en XY
-         if( flagXY ) {
+         } else if( flagXY ) {
             double x = Double.parseDouble(rec[nX]);
             double y = Double.parseDouble(rec[nY]);
             consumer.setRecord(x,y, rec);

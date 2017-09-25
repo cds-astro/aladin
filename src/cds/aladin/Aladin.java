@@ -175,6 +175,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> HiPS (progressive survey):
  * @beta    <LI> - mirror sites management improvement
  * @beta    <LI> - properties file direct support
+ * @beta    <LI> - HiPS WCS HEALPix keyword addition in HiPS FITS tiles)
  * @beta    <LI> - planetary HiPS (longitude inversion)
  * @beta    <LI> - polarized HiPS (segments drawing)
  * @beta    <LI> TAP full support
@@ -246,7 +247,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.017";
+   static public final    String VERSION = "v10.018";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5534,6 +5535,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
          int nbPlans = calque.getNbPlans(true);
          boolean mode = nbPlans>0;
          boolean mode1 = nbPlans>1 || nbPlans==1 && !isBG;
+         
+         /** Il n'est pas possible de changer la projection globale pour certain plan */
+         boolean projEnabled = !isFree && !base.hasSpecificProj() && base instanceof PlanBG;
+         projSelector.setEnabled( projEnabled );
 
          //         if( console!=null ) console.clone.setEnabled(hasSelectedSrc);
          if( miView!=null ) miView.setEnabled( !isFullScreen() );

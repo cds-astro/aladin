@@ -198,6 +198,8 @@ public class PlanBG extends PlanImage {
 
    protected int RGBCONTROL[] = { 0,128, 255 , 0,128, 255 , 0,128, 255 };
    protected int RGBControl[];
+   
+   private boolean specificProj = false;  // true si on utilise une projection spécifique pour ce plan
 
 
    // Gestion du cache
@@ -851,10 +853,15 @@ public class PlanBG extends PlanImage {
          if( base instanceof PlanBG ) defaultProjType = base.projd.t;
       }
 
-      boolean longAsc = displayLongAsc();
+      // Choix spécifique d'une projection et d'un sens pour la longitude dans le cas
+      // d'une planète
+      boolean isAPlanet = isAPlanet();
+      boolean longAsc = isAPlanet;
+      int projection = isAPlanet ? Calib.SIN : defaultProjType ;
+      specificProj = isAPlanet;
       
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
-            defaultProjType,Calib.FK5);
+            projection,Calib.FK5);
 
       p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
@@ -874,11 +881,18 @@ public class PlanBG extends PlanImage {
       log();
    }
    
+   /** retourne true si le plan dispose d'une projection spécifique et n'est plus
+    * asservi au sélecteur global (widget ProjSelector) */
+   protected boolean hasSpecificProj() { return specificProj; }
+   
+   /** Positionne le flag d'une projection spécifique associée à ce plan */
+   protected void setSpecificProj(boolean flag) { specificProj = flag; }
+   
    /** Retourne le mode d'affichage par défaut de la longitude. S'il y a mention
-    * d'une référence spaciale, on suppose qu'il s'agit d'une planète et on affiche
+    * d'une référence spatiale, on suppose qu'il s'agit d'une planète et on affiche
     * avec la longitude ascendante
     */
-   protected boolean displayLongAsc() {
+   protected boolean isAPlanet() {
       if( prop==null ) return false;
       String refpos = prop.getProperty("hips_refpos");
       return refpos!=null;

@@ -77,7 +77,7 @@
 %Aladin.Menu       VO protocols..
 %Aladin.XLabel     Generic Cone Search query
 %Aladin.LabelPlane $4
-%Aladin.Profile    >9.6
+%Aladin.Profile    >10
 %DistribDomain     ALADIN
 
 %ActionName        SIA2
@@ -96,7 +96,7 @@
 %Aladin.Menu       VO protocols..
 %Aladin.XLabel     Generic Simple Image Access v2 query
 %Aladin.LabelPlane $4
-%Aladin.Profile    >9.6
+%Aladin.Profile    >10
 %DistribDomain     ALADIN
 
 %ActionName        SIA
@@ -115,7 +115,7 @@
 %Aladin.Menu       VO protocols..
 %Aladin.XLabel     Generic Simple Image Access v1 query
 %Aladin.LabelPlane $4
-%Aladin.Profile    >9.6
+%Aladin.Profile    >10
 %DistribDomain     ALADIN
 
 %ActionName        SSA
@@ -134,7 +134,7 @@
 %Aladin.Menu       VO protocols..
 %Aladin.XLabel     Generic Simple Spectra Access query
 %Aladin.LabelPlane $4
-%Aladin.Profile    >9.6
+%Aladin.Profile    >10
 %DistribDomain     ALADIN
 
 %ActionName        MOC

@@ -1172,6 +1172,7 @@ public final class Save extends JFrame implements ActionListener {
       if( p.isCatalog() ) {
          String shape = Source.TYPENAME[ p.sourceType ];
          append(CR+"     shape=\""+shape+"\"");
+         if( p.hasNoPos ) append(CR+"     nopos=\""+p.hasNoPos+"\"");
       }
       if( p.getScalingFactor()!=1 ) append(CR+"     scalingfactor=\""+p.getScalingFactor()+"\"");
       if( !p.isSelectable() )   append(CR+"     selectable=\"false\"");

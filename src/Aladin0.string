@@ -448,8 +448,6 @@ NODATA	The query returned no data for this position
 NODATA.fr	Cette requête ne retourne rien pour cette position
 NOCOOR	Coordinates columns not found for plane
 NOCOOR.fr	Aucune colonne de coordonnées trouvée pour le plan
-NORED	No astronomical reduction
-NORED.fr	No astronomical reduction
 NOYET	not yet used
 NOYET.fr	pas encore utilisé
 NOSUCHIMG	No such Aladin image for this target
@@ -1141,6 +1139,7 @@ PROPFILTERB	Edit this filter on the stack
 PROPASTRED	Astrometrical reduction
 PROPXYRED	XY to coordinates reduction
 PROPPROJ	Projection
+PROPPROJTIP Default projection applied if there is no specific projection
 PROPNONE	-- none --
 PROPMETHOD	.projection 
 PROPFRAME	.frame
@@ -1164,7 +1163,7 @@ PROPSEGMENTDENSITY Number of segments
 PROPSCALINGFACTOR Scaling factor
 PROPPOINTING Pointing centers
 PROPPOINTINGLABEL Export pointing centers
-PROPDEFCATPROJ	Drawing method
+PROPDEFCATPROJ	Specific drawing method
 PROPOPACITY	Overlay opacity/transparency
 PROPOPACITYLEVEL	Opacity level
 PROPDENSITY	Density correction
@@ -1224,6 +1223,7 @@ PROPFILTERB.fr	Editez ce filtre sur la pile
 PROPASTRED.fr	Réduction astrométrique
 PROPXYRED.fr	XY pour l'obtention des coord.
 PROPPROJ.fr	Projection
+PROPPROJTIP.fr	Projection appliquée par défaut en l'absence d'une projection spécifique
 PROPNONE.fr	-- aucune --
 PROPMETHOD.fr	.projection 
 PROPFRAME.fr	.repère
@@ -1247,7 +1247,7 @@ PROPSEGMENTDENSITY.fr Nombre de segments
 PROPSCALINGFACTOR.fr Facteur d'échelle
 PROPPOINTING.fr Pointages
 PROPPOINTINGLABEL.fr Exporter les positions des pointages
-PROPDEFCATPROJ.fr	Méthode d'affichage
+PROPDEFCATPROJ.fr	Méthode spécifique d'affichage
 PROPOPACITY.fr	Niveau d'Opacité/Transparence
 PROPOPACITYLEVEL.fr	Niveau d'opacité
 PROPDENSITY.fr	Correction de la densité
@@ -2923,6 +2923,7 @@ STATUS_ERROR Error
 STATUS_EMPTYMOC No coverage
 STATUS_OVERFLOW Partial response
 STATUS_NOCALIB No astrometrical reduction
+STATUS_NOPOS No coordinate
 STATUS_EMPTYCAT No source
 STATUS_READY Ready
 
@@ -2933,20 +2934,23 @@ STATUS_ERROR.fr Erreur
 STATUS_EMPTYMOC.fr Aucune couverture
 STATUS_OVERFLOW.fr Réponse partielle
 STATUS_NOCALIB.fr Aucune solution astrométrique
+STATUS_NOPOS.fr Aucune coordonnée
 STATUS_EMPTYCAT.fr Aucune source
 STATUS_READY.fr Ok
 
-BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...
-BEGIN2	Imagine your eye\nlooking through a stack of planes.\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them.\n \nUse File->Open for discovering all other data,\nor clic & drag your own files.
+BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...\n \nOr easier, clic in the main frame and enjoy the sky...
+BEGIN2	Imagine your eye\nlooking through a stack of planes (below).\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them in the main panel.\n \nFor accessing to other data, use the discovery tree in the left panel,\nor clic & drag your own local files.
 BEGIN3	Stack controls:\n \n*the icon: show/hide a plane\n*size: change object size\n*zoom: adjust field size.\n*Opacity: adjust transparency.\n \nThe view is drawn according to the projection of a reference plane.\n \nFor changing the reference, click on its check box.
-BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*Right: constrast adjustement.\n*Wheel: quick zoom on the reticle.\n*Simple-clic: move the reticle.\n*Double-clic: re-center.\n \nLet you mouse pointer on an object for discovering associated Simbad data.
-BEGIN5	Basic controls:\n \n-Type any object name or coordinates for moving on it.\n \n-Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controller.
+BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*Right: constrast adjustement.\n*Wheel: quick zoom on the reticle.\n*Simple-clic: move the reticle.\n*Double-clic: re-center.\n \nClick and let your mouse pointer a few seconds on an object for discovering advanced information about it.
+BEGIN5	Basic controls:\n \n*Type any object name or coordinates for moving on it.\n \n*Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controller.
+BEGIN6	Data discovery tree\nof available collections (left panel)\n \n*in green: the collections visible in the current view, in orange the outside collections\n \n*Type un key word, a mission name, etc in the "select" field to keep only relevant collections\n \n*Use the predefined filters to select more specifically the collections\n \n*Create and store your own filters thanks to the "+" button\n \nActivate the "view" mode to hide temporary the collections outside the view.
 
-BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professional du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propre données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...
-BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques.\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLa vue ci-contre est la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez le menu Fichier->Ouvrir,\nou glissez/déposez vos propres fichiers.
+BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professional du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propres données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...\n \nOu tout simplement, cliquez dans la fenêtre principale pour explorer le ciel.
+BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques (ci-dessous).\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLe panneau central affiche la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez l'arbre de découverte sur le panneau de gauche,\nou glissez/déposez vos propres fichiers locaux.
 BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: change la taille des objets\n*zoom: modifie l'agrandissement\n*opacité: ajuste la transparence.\n \nLa vue est dessinée en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
-BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les informations Simbad sur un objet, laissez dessus qq secondes le pointeur.
-BEGIN5.fr	Contrôle de base:\n \n- Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n- Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n- Visualiser simultanément plusieurs vues via le contrôle du"multivue".
+BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les données connues d'un objet, cliquez sur celui-ci, puis laissez le pointeur quelques secondes dessus.
+BEGIN5.fr	Contrôle de base:\n \n*Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n*Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n*Visualiser simultanément plusieurs vues via le contrôle du "multivue".
+BEGIN6.fr	Arbre de découverte\ndes collections disponibles (panneau de gauche)\n \n*En vert les collections visibles dans le champ courant, en orange celles qui ne le sont pas\n \n*Saisissez un mot clé, un nom de mission, etc dans le champ "select" pour n'afficher dans l'arbre que les collections relevantes\n \n*Utiliser les filtres prédéfinis pour sélectionner précisément les collections\n \n*Créer et mémoriser vos propres filtres via le bouton "+"\n \nBouton "vue" actif pour cacher temporairement les collections hors du champ courant
 
 #For datalink pop-ups- default texts
 DATALINK_THISDATASET This dataset
@@ -3051,7 +3055,6 @@ DISCARDALLTIP Click to discard all of the parsed tables
 NOTABLELOADEDMESSAGE Load new table to populate the gui!
 ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 TABLEDISCARDINFO One option removed from upload file choices!
-
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again

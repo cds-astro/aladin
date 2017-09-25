@@ -32,7 +32,9 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-/** Gère le sélecteur de la projection courante. Ce widget apparait dans l'interface
+import cds.tools.Util;
+
+/** Gère le sélecteur global de la projection courante. Ce widget apparait dans l'interface
  * principale à droite du champ de localisation, sous le menu.
  * @author Pierre Fernique [DS]
  * @version 1.0 Dec 2016 - création pour la version 10 d'Aladin
@@ -46,6 +48,8 @@ public class ProjSelector extends JPanel {
 
       // Construction du Panel (label + selector)
       JLabel lab = new JLabel( aladin.chaine.getString("PROPPROJ")+" " );
+      String tip = aladin.chaine.getString("PROPPROJTIP");
+      Util.toolTip(lab, tip);
       lab.setFont(lab.getFont().deriveFont(Font.BOLD));
       lab.setForeground(Aladin.COLOR_LABEL);
 
@@ -54,6 +58,7 @@ public class ProjSelector extends JPanel {
       combo.setUI( new MyComboBoxUI());
       combo.setMaximumRowCount(list.length);
       combo.setFont(Aladin.PLAIN);
+      Util.toolTip(combo, tip);
       
       // Positionnement de la projection par défaut
       String s = aladin.configuration.getProj();
@@ -66,10 +71,6 @@ public class ProjSelector extends JPanel {
       });
       combo.setPrototypeDisplayValue("12345678");
       
-//      JPanel pCombo = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
-//      pCombo.setBackground( aladin.getBackground() );
-//      pCombo.add(combo);
-      
       GridBagLayout g;
       JPanel pCombo = new JPanel( g=new GridBagLayout() );
       pCombo.setBackground( aladin.getBackground() );
@@ -81,6 +82,12 @@ public class ProjSelector extends JPanel {
       setBackground( aladin.getBackground() );
       add( lab, BorderLayout.WEST);
       add( pCombo, BorderLayout.CENTER);
+      
+      setEnabled(false);
+   }
+   
+   public void setEnabled( boolean enabled ) {
+      combo.setEnabled( enabled );
    }
    
    protected void setProjection(String s) { 
@@ -109,4 +116,7 @@ public class ProjSelector extends JPanel {
       i=Calib.getProjType(calibProj);
       return i;
    }
+   
+   /** Retourne le nom de la projection courante */
+   protected String getProjItem() { return (String)combo.getSelectedItem(); }
 }
