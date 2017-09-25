@@ -295,7 +295,8 @@ public static final int TAPFORM_STATUS_ERROR = -1;//error
 public static enum TapClientMode {//Dialog is serverselector
 	DIALOG, TREEPANEL, UPLOAD;
 }
-public static final String GLU = "GLU";
+public static final String GLU = "CUSTOMISED";
+public static final String NODE = "NODE";
 public static final String GENERIC = "GENERIC";
 public static final String EXAMPLES = "EXAMPLES";
 public static final String OBSCORE = "OBSCORE";

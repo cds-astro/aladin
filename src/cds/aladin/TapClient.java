@@ -32,6 +32,7 @@ import static cds.aladin.Constants.REGEX_OPNUM;
 import static cds.aladin.Constants.REGEX_RANGENUMBERINPUT;
 import static cds.aladin.Constants.REGEX_TAPSCHEMATABLES;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
+import static cds.aladin.Constants.NODE;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -82,14 +83,15 @@ public class TapClient{
 	public static String modeIconImage = "settings.png";
 	public static String modesLabel = "Modes";
 	public static String modesToolTip;
-	public static String[] modeIconToolTips = new String[4];
 	public DefaultComboBoxModel model = null;
 	public static String TAPGLUGENTOGGLEBUTTONTOOLTIP,RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND, CHANGESERVERTOOLTIP;
 	
 	public TapManager tapManager;
 	public String tapLabel;
 	public String tapBaseUrl;
+	public List<String> nodeTableNames;
 	public ServerGlu serverGlu;
+	public ServerTap serverTapNode;
 	public ServerTap serverTap;
 	public ServerObsTap serverObsTap;
 	public ServerTapExamples serverExamples;
@@ -111,15 +113,44 @@ public class TapClient{
     public TapClient() {
 		// TODO Auto-generated constructor stub
 	}
+    
+    public void updateNodeAndSetModes(String nodeTable) {
+		// TODO Auto-generated method stub
+    	boolean edit = false;
+    	if (this.nodeName == null) {
+    		edit = true;
+		}
+    	if (nodeTable != null) {
+    		this.nodeName = nodeTable;
+        	this.nodeTableNames = new ArrayList<String>();
+    		this.nodeTableNames.add(nodeTable);
+		}
+		
+		if (model != null) {
+			if (edit) {
+				editing = true;
+				model.insertElementAt(nodeName, 1);
+				editing = false;
+			}
+		} else {
+			String[] modesAllowed = null;
+			if (this.nodeName != null) {
+				modesAllowed = new String []{ GLU, nodeName, GENERIC, EXAMPLES, OBSCORE };
+			} else {
+				modesAllowed = new String []{ GLU, GENERIC, EXAMPLES, OBSCORE };
+			}
+			model = new DefaultComboBoxModel(modesAllowed); 
+		}
+	}
 	
-	public TapClient(TapClientMode mode, TapManager tapManager, String tapLabel, String tapBaseUrl) {
+	public TapClient(TapClientMode mode, TapManager tapManager, String tapLabel, String tapBaseUrl, String nodeTable) {
 		// TODO Auto-generated constructor stub
 		this.mode = mode;
 		this.tapManager = tapManager;
 		this.tapLabel = tapLabel;
 		this.tapBaseUrl = tapBaseUrl;
+		this.updateNodeAndSetModes(nodeTable);
 		
-		model = new DefaultComboBoxModel(new String []{ GLU, EXAMPLES, GENERIC, OBSCORE }); 
 		model.addListDataListener(new ListDataListener() {
 			@Override
 			public void intervalRemoved(ListDataEvent arg0) {
@@ -162,7 +193,7 @@ public class TapClient{
 	
 	public static TapClient getUploadTapClient(Aladin aladin, String tapLabel, String mainServerUrl) {
 		TapManager tapManager = TapManager.getInstance(aladin);
-		TapClient tapClient = new TapClient(TapClientMode.UPLOAD, tapManager, tapLabel, mainServerUrl);
+		TapClient tapClient = new TapClient(TapClientMode.UPLOAD, tapManager, tapLabel, mainServerUrl, null);
 		tapClient.serverTap = new ServerTap(aladin);
 		tapClient.serverTap.tapClient = tapClient;
 		tapClient.primaryColor = new Color(198,218,239);
@@ -253,18 +284,28 @@ public class TapClient{
 			resultServer = this.serverGlu;
 			model.setSelectedItem(GLU);
 		} else {
-			if (serverType == EXAMPLES) {
-				if (this.serverExamples == null) {
-					this.serverExamples = tapManager.getNewServerTapExamplesInstance(this);
+			boolean isFullServerCapability = true;
+			if (this.nodeName != null && this.nodeTableNames != null) {
+				isFullServerCapability = false;
+			}
+			if (serverType == nodeName) {
+				if (this.serverTapNode == null) {
+					this.serverTapNode = tapManager.getNewServerTapInstance(this, isFullServerCapability);
 				} 
-				dynamicTapForm = this.serverExamples;
-				model.setSelectedItem(EXAMPLES);
+				dynamicTapForm = this.serverTapNode;
+				model.setSelectedItem(nodeName);
 			} else if (serverType == GENERIC) {
 				if (this.serverTap == null) {
-					this.serverTap = tapManager.getNewServerTapInstance(this);
+					this.serverTap = tapManager.getNewServerTapInstance(this, true);
 				} 
 				dynamicTapForm = this.serverTap;
 				model.setSelectedItem(GENERIC);
+			} else if (serverType == EXAMPLES) {
+				if (this.serverExamples == null) {
+					this.serverExamples = tapManager.getNewServerTapExamplesInstance(this, isFullServerCapability);
+				} 
+				dynamicTapForm = this.serverExamples;
+				model.setSelectedItem(EXAMPLES);
 			} else if (serverType == OBSCORE) {
 				if (this.serverObsTap == null) {
 					this.serverObsTap = tapManager.getNewServerObsTapInstance(this); //tapManager.getNewServerObsTapInstance1(this);
@@ -272,25 +313,28 @@ public class TapClient{
 				dynamicTapForm = this.serverObsTap;
 				model.setSelectedItem(OBSCORE);
 			} else {//preference is for what is already loaded
-				if (this.serverExamples != null && this.serverExamples.isLoaded()) {
+				if (this.serverTapNode != null && this.serverTapNode.isLoaded()) {
+					dynamicTapForm = this.serverTapNode;
+					model.setSelectedItem(NODE);
+				} else if (this.serverTap != null && this.serverTap.isLoaded()) {
+					dynamicTapForm = this.serverTap;
+					model.setSelectedItem(GENERIC);
+				} else if (this.serverExamples != null && this.serverExamples.isLoaded()) {
 					dynamicTapForm = this.serverExamples;
 					model.setSelectedItem(EXAMPLES);
 				} else if (this.serverObsTap != null) {
 					dynamicTapForm = this.serverObsTap;
 					model.setSelectedItem(OBSCORE);
-				} else if (this.serverTap != null && this.serverTap.isLoaded()) {
+				} else {// by default we give priority to the generic: after discussing with Pierre
+					this.serverTap = tapManager.getNewServerTapInstance(this, isFullServerCapability);
 					dynamicTapForm = this.serverTap;
 					model.setSelectedItem(GENERIC);
-				} else {// by default we give priority to the template based tap client over generic tap client
-					this.serverExamples = tapManager.getNewServerTapExamplesInstance(this);
-					dynamicTapForm = this.serverExamples;
-					model.setSelectedItem(EXAMPLES);
 				} 
 			}
 			
 			if (dynamicTapForm != null && dynamicTapForm.formLoadStatus == TAPFORM_STATUS_NOTLOADED) {
 				if (this.tablesMetaData == null || this.tablesMetaData.isEmpty()) {
-					tapManager.createAndLoadServerTap(this, dynamicTapForm);
+					tapManager.createAndLoadATapServer(this, dynamicTapForm);
 					// when we are explicitly getting metadata for one cache, we try to update in the other as well
 					tapManager.updateServerMetaDataInCache(this);
 				} else {
@@ -720,7 +764,7 @@ public class TapClient{
 			this.serverObsTap.removeAll();
 			this.serverObsTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
 		}
-		tapManager.createAndLoadServerTap(this, dynamicTapForm);
+		tapManager.createAndLoadATapServer(this, dynamicTapForm);
 		if (this.mode == TapClientMode.TREEPANEL) {
 			tapManager.showTapPanelFromTree(tapLabel, dynamicTapForm);
 		} else {
@@ -808,10 +852,6 @@ public class TapClient{
 		RELOAD = Aladin.chaine.getString("FSRELOAD");
 	    TIPRELOAD = Aladin.chaine.getString("TIPRELOAD");
 	    modesToolTip = Aladin.chaine.getString("TAPMODESTOOLTIP");
-	    modeIconToolTips[0] = Aladin.chaine.getString("GLUTAPMODESTOOLTIP");
-	    modeIconToolTips[1] = Aladin.chaine.getString("EXAMPLETAPMODESTOOLTIP");
-	    modeIconToolTips[2] = Aladin.chaine.getString("GENERICTAPMODESTOOLTIP");
-	    modeIconToolTips[3] = Aladin.chaine.getString("OBSCORETAPMODESTOOLTIP");
 	    GENERICERROR = Aladin.chaine.getString("GENERICERROR");
 	    for (DBDatatype dbDatatype : DBDatatype.values()) {
 			DBDATATYPES.put(dbDatatype.name(), dbDatatype);
@@ -820,5 +860,6 @@ public class TapClient{
 	    NOGLURECFOUND = Aladin.chaine.getString("NOGLURECFOUND");
 	    CHANGESERVERTOOLTIP = Aladin.chaine.getString("CHANGESERVERTOOLTIP");
 	}
+
 
 }

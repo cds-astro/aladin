@@ -1205,7 +1205,7 @@ public final class Glu implements Runnable {
 				}
 	            TapClient tapClient = tapManager.getExistingTapClientForGluActionName(clientMode, actionName);
 	            if (tapClient == null) {
-	            	tapClient = new TapClient(clientMode, tapManager, actionName, null);
+	            	tapClient = new TapClient(clientMode, tapManager, actionName, null, null);
 	            	tapManager.addNewTapClientToCache(isForDialog, actionName, tapClient);
 				}
 	        	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,

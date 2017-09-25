@@ -30,7 +30,6 @@ import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETRESULTPARAMS;
 import static cds.aladin.Constants.INDEXED;
-import static cds.aladin.Constants.OBSCORE;
 import static cds.aladin.Constants.PATHSYNC;
 import static cds.aladin.Constants.PRINCIPAL;
 import static cds.aladin.Constants.SCHEMANAME;
@@ -104,7 +103,6 @@ import cds.savot.model.TDSet;
 import cds.savot.model.TRSet;
 import cds.savot.pull.SavotPullEngine;
 import cds.savot.pull.SavotPullParser;
-import cds.tools.ConfigurationReader;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
@@ -336,10 +334,10 @@ public class TapManager {
 				tapClient.tapBaseUrl = url;//in case there is any updates to the generic server url
 			} else {//not in cache..and does not have a glu record
 				if (tapServerTreeCache.containsKey(label)){//check in the other cache if there is a reference.
-					tapClient = copyTapClientAndDisplay(tapServerTreeCache.get(label), url, TapClientMode.DIALOG);
+					tapClient = copyTapClientAndDisplay(tapServerTreeCache.get(label), url, TapClientMode.DIALOG, null);
 				} else {
 					//final resort is to create generic form ServerTap
-					tapClient = new TapClient(TapClientMode.DIALOG, this, label, url);
+					tapClient = new TapClient(TapClientMode.DIALOG, this, label, url, null);
 				}
 				tapServerPanelCache.put(label, tapClient);
 			}
@@ -354,23 +352,30 @@ public class TapManager {
 	 * - server is either created from glu records or a generic panel is created
 	 * @param label
 	 * @param url
+	 * @param defaultTables 
 	 * @return resultant server tap panel
 	 * @throws Exception 
 	 */
-	public Server loadTapServerForSimpleFrame(String label, String url, String serverType) throws Exception {
+	public Server loadTapServerForSimpleFrame(String label, String url, String defaultTables) throws Exception {
 		TapClient tapClient = null;
 		if (tapServerTreeCache.containsKey(label)) {//get from cache
 			tapClient = tapServerTreeCache.get(label);
 			tapClient.tapBaseUrl = url;
+			defaultTables = processIfVizier(label, url); //TODO:: remove hack once we have table name
+			//tap_tables is still null. so hack still in place
+			if (defaultTables != null) {
+				tapClient.updateNodeAndSetModes(defaultTables);
+			}
 		} else {//not in cache..and does not have a glu record
+			defaultTables = processIfVizier(label, url); //TODO:: remove hack once we have table name
 			if (tapServerPanelCache.containsKey(label)){//try to create from the main cache
-				tapClient = copyTapClientAndDisplay(tapServerPanelCache.get(label), url, TapClientMode.TREEPANEL);
+				tapClient = copyTapClientAndDisplay(tapServerPanelCache.get(label), url, TapClientMode.TREEPANEL, defaultTables);
 			} else {
-				tapClient = new TapClient(TapClientMode.TREEPANEL, this, label, url);
+				tapClient = new TapClient(TapClientMode.TREEPANEL, this, label, url, defaultTables);
 			}
 			tapServerTreeCache.put(label, tapClient);
 		}
-		Server resultServer = tapClient.getServerToDisplay(serverType);
+		Server resultServer = tapClient.getServerToDisplay(defaultTables);
 		showTapPanelFromTree(label, resultServer);
 		return resultServer;
 	}
@@ -383,7 +388,7 @@ public class TapManager {
 	 * @return
 	 * @throws Exception
 	 */
-	public DynamicTapForm createAndLoadServerTap(TapClient tapClient, DynamicTapForm newServer) throws Exception {
+	public DynamicTapForm createAndLoadATapServer(TapClient tapClient, DynamicTapForm newServer) throws Exception {
 		newServer.setName(tapClient.tapLabel);
 		if (tapClient.tapBaseUrl == null) {
 			Object urlFromGlu = aladin.glu.aladinDic.get(tapClient.tapLabel);
@@ -393,25 +398,25 @@ public class TapManager {
 			if (tapClient.tapBaseUrl == null) {
 				throw new Exception("Tap server url not found");
 			}
-		}
+		}//TODO:: tintin remove all comments and methods in commented
 		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
-		String vizierTable = processIfVizier(tapClient);
+//		String vizierTable = processIfVizier(tapClient);
+		
 		// just another control on the nodes feature
-		boolean nodeOn = (ConfigurationReader.getInstance().getPropertyValue("TAPNODES").contains("enable"));
 		if (tapClient.mode != null && tapClient.mode == TapClientMode.TREEPANEL) {
 			tapClient.primaryColor = Aladin.COLOR_FOREGROUND;
 			tapClient.secondColor = Color.white;
-			nodeOn = true;
 		}
 		newServer.setOpaque(true);
 		newServer.showloading();
 		tapClient.capabilities = this.getTapCapabilities(tapClient.tapBaseUrl);
-		if (nodeOn && vizierTable != null) {
+		/*if (nodeOn && vizierTable != null) {
 			//if you have a table name
 			this.loadTapColumnSchemasForATable(tapClient, vizierTable, newServer);
 		} else {
 			this.loadTapColumnSchemas(tapClient, newServer);
-		}
+		}*/
+		this.loadTapColumnSchemas(tapClient, newServer);
 		return newServer;
 	}
 
@@ -424,7 +429,7 @@ public class TapManager {
 	 * because currently this is not the case for other servers.
 	 * @return
 	 */
-	private String processIfVizier(TapClient tapClient) {
+	/*private String processIfVizier(TapClient tapClient) {
 		// TODO Auto-generated method stub
 		String result = null;
 		String vizierTapServiceBaseUrl = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
@@ -438,9 +443,24 @@ public class TapManager {
 		}
 
 		return result;
+	}*/
+	private String processIfVizier(String label, String url) {
+		// TODO Auto-generated method stub
+		String result = null;
+		String vizierTapServiceBaseUrl = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
+		if (url != null && url.startsWith(vizierTapServiceBaseUrl)) {
+			try {
+				result = label.substring(4, label.length());
+			} catch (Exception e) {
+				// TODO: handle exception
+				// Won't do anything
+			}
+		}
+
+		return result;
 	}
 
-	public TapClient copyTapClientAndDisplay(TapClient original, String urlInput, TapClientMode mode) {
+	public TapClient copyTapClientAndDisplay(TapClient original, String urlInput, TapClientMode mode, String nodeTables) {
 		TapClient copy = null;
 		if (original.serverGlu != null) {
 			ServerGlu serverGluCopy = null;
@@ -455,10 +475,13 @@ public class TapManager {
 			}
 			serverGluCopy = getCopy(originalGluRecord, gluRecord);
 			copy = serverGluCopy.tapClient;
+			if (nodeTables != null) {
+				copy.updateNodeAndSetModes(nodeTables);
+			}
 		} 
 		
 		if (copy == null) {//only if serverglu is null yet
-			copy = new TapClient(mode, this, original.tapLabel, urlInput);
+			copy = new TapClient(mode, this, original.tapLabel, urlInput, nodeTables);
 		}
 		
 		copyMetadata(copy, original, mode);
@@ -494,7 +517,7 @@ public class TapManager {
 		if (toUpdate != null) {
 			copyMetadata(toUpdate, original, mode);
 			if (toUpdate.serverTap == null) {
-				toUpdate.serverTap = getNewServerTapInstance(toUpdate);
+				toUpdate.serverTap = getNewServerTapInstance(toUpdate, true);
 				toUpdate.serverTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
 			}
 		}
@@ -688,7 +711,7 @@ public class TapManager {
 	 * @param newServer 
 	 * @param tapServiceUrl
 	 */
-	public void loadTapColumnSchemasForATable(final TapClient clientToLoad, final String tableName, final DynamicTapForm newServer) {
+	/*public void loadTapColumnSchemasForATable(final TapClient clientToLoad, final String tableName, final DynamicTapForm newServer) {
 		try {
 			executor.execute(new Runnable(){
 				@Override
@@ -739,7 +762,7 @@ public class TapManager {
 			newServer.repaint();
 			displayWarning(clientToLoad, "Unable to get metadata for "+clientToLoad.tapLabel+"\n Request overload! Please wait and try again.");
 		}
-	}
+	}*/
 	
 	/**
 	 * Method to populate tap meta data
@@ -2087,47 +2110,33 @@ public class TapManager {
 		}
 	}
 	
-	public ServerTapExamples getNewServerTapExamplesInstance(TapClient tapClient) {
+	public ServerTapExamples getNewServerTapExamplesInstance(TapClient tapClient, boolean isFullServerCapability) {
 		// TODO Auto-generated method stub
-		ServerTapExamples newServer = new ServerTapExamples(aladin, tapClient);
-		newServer.setName(tapClient.tapLabel);
-		newServer.tapClient = tapClient;
-		newServer.setOpaque(true);
-		newServer.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+		ServerTapExamples newServer = new ServerTapExamples(aladin);
+		initNewServerTap(newServer, tapClient, isFullServerCapability);
 		return newServer;
 	}
 	
-	public ServerTap getNewServerTapInstance(TapClient tapClient) {
+	public void initNewServerTap(DynamicTapForm newServer, TapClient tapClient, boolean isFullServerCapability) {
+		// TODO Auto-generated method stub
+		newServer.setName(tapClient.tapLabel);
+		newServer.tapClient = tapClient;
+		newServer.setOpaque(true);
+		newServer.isFullServer = isFullServerCapability;
+		newServer.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+	}
+	
+	public ServerTap getNewServerTapInstance(TapClient tapClient, boolean isFullServerCapability) {
 		// TODO Auto-generated method stub
 		ServerTap newServer = new ServerTap(aladin);//final resort is to create generic form ServerTap
-		newServer.setName(tapClient.tapLabel);
-		newServer.tapClient = tapClient;
-		newServer.setOpaque(true);
-		newServer.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+		initNewServerTap(newServer, tapClient, isFullServerCapability);
 		return newServer;
-	}
-	
-	//TODO:: tintin remove below method
-	public ServerGlu getNewServerObsTapInstance2(TapClient tapClient) {
-		// TODO Auto-generated method stub
-		String sodaGluRecord = StandardFormsReader.getInstance().getStdServerForms().get(OBSCORE);
-		ByteArrayInputStream dicStream = new ByteArrayInputStream(sodaGluRecord.getBytes(StandardCharsets.UTF_8));
-		aladin.glu.vGluServer = new Vector(50);
-		aladin.glu.loadGluDic(new DataInputStream(dicStream),true,false);
-		Vector serverVector = aladin.glu.vGluServer;
-		int n = serverVector.size();
-        if( n == 0 ) return null;
-        ServerGlu obsTapServer = (ServerGlu) serverVector.get(0);
-		return obsTapServer;
 	}
 	
 	public ServerObsTap getNewServerObsTapInstance(TapClient tapClient) {
 		// TODO Auto-generated method stub
 		ServerObsTap newServer = new ServerObsTap(aladin);
-		newServer.setName(tapClient.tapLabel);
-		newServer.tapClient = tapClient;
-//		newServer.setOpaque(true);
-//		newServer.createForm(null);
+		initNewServerTap(newServer, tapClient, true);
 		return newServer;
 	}
 	

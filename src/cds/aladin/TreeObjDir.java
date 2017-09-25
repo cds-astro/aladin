@@ -913,10 +913,11 @@ public class TreeObjDir extends TreeObj implements Propable {
       // List of pre-selected tables (TAB separated)
       // => CHAITRA, COULD YOU USE IT AS AN ADDITIONNAL PARAMETER OF YOUR loadTapServerForSimpleFrame METHOD ?
       String defaultTables = prop.get("tap_tablename");
+//      defaultTables = "ivoa.ObsCore";//"B/hst/obscore";
       
       if( id!=null && url!=null ) {
     	  try {
-			TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url, null);
+			TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url, defaultTables);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -81,6 +81,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 
 	String selectedTableName;
 	String loadedServerDescription;
+	public boolean isFullServer = true;
 	
 	protected int formLoadStatus;
 	protected JLabel info1;
@@ -396,7 +397,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		bottomPanel.setBackground(this.tapClient.primaryColor);
 		JButton button = new JButton("Refresh query");
-		if (this instanceof ServerTap) {
+		if (this instanceof ServerTap || this instanceof ServerObsTap) {
 			button.setToolTipText(REFRESHQUERYTOOLTIP);
 			button.setActionCommand("WRITEQUERY");
 			button.addActionListener(this);
@@ -799,6 +800,18 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		}
 	}
 	
+	//Not bothering for ServerObscore.. yet!
+	public Vector<String> getTableNames() {
+		Vector<String> tableNames = new Vector<String>();
+		if (!isFullServer && this.tapClient.nodeTableNames != null) {
+			tableNames.addAll(this.tapClient.nodeTableNames);
+		} else {
+			tableNames.addAll(this.tapClient.tablesMetaData.keySet());
+		}
+		return tableNames;
+		
+	}
+	
 	/**
 	 * Tap client gui in case of loading error
 	 */
@@ -813,17 +826,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		ball.setMode(Ball.NOK);
 		this.add(containerPanel);
 		verboseDescr = TAPERRORSTATUSINFO;
-		/*this.setLayout(new FlowLayout(FlowLayout.CENTER));
-		this.setBackground(this.tapClient.primaryColor);
-		JLabel planeLabel = new JLabel("Error: unable to load "+this.tapClient.tapLabel);
-		planeLabel.setFont(Aladin.ITALIC);
-		add(planeLabel);
-		if (this.tapClient.mode != TapClientMode.UPLOAD) {
-			JPanel optionsPanel = this.tapClient.getOptionsPanel(this);
-			optionsPanel.setBackground(this.tapClient.primaryColor);
-			add(optionsPanel);
-		}*/
-		
 		formLoadStatus = TAPFORM_STATUS_ERROR;
 		revalidate();
 		repaint();
@@ -845,18 +847,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		ball.setMode(Ball.WAIT);
 		this.add(containerPanel);
 		verboseDescr = TAPLOADINGSTATUSINFO;
-		/*this.setLayout(new FlowLayout(FlowLayout.CENTER));
-		this.setBackground(this.tapClient.primaryColor);
-		JLabel planeLabel = new JLabel("loading "+this.tapClient.tapLabel+"...");
-		planeLabel.setFont(Aladin.ITALIC);
-		add(planeLabel,"Center");
-		if (this.tapClient != null) {
-			JPanel optionsPanel = this.tapClient.getOptionsPanel(this);
-			optionsPanel.setBackground(this.tapClient.primaryColor);
-			add(optionsPanel);
-		}*/
-		
-		
 		revalidate();
 		repaint();
 	}

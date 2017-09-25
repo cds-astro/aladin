@@ -112,8 +112,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	 */
 	protected void createForm(String tableChoice) {
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
-		Vector<String> tables = new Vector<String>(tablesMetaData.keySet().size());
-		tables.addAll(tablesMetaData.keySet());
+		Vector<String> tables = getTableNames();
 		if (tableChoice == null || !tables.contains(tableChoice)) {
 			selectedTableName = tables.get(0);
 		} else {

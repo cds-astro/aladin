@@ -2997,7 +2997,7 @@ TAPEXCLIENTINSTR Choose an example query to execute.
 TAPOBSCORECLIENTINSTR Add any obscore criteria and execute query.
 SELECTDIRTAPSERVERSLABEL Complete list
 SELECTDIRTAPSERVERSTOOLTIP Choose tap servers from the main directory tree you see in the left panel of Aladin's window
-SELECTSPLTAPSERVERSLABEL Few select servers
+SELECTSPLTAPSERVERSLABEL Preselected server
 SELECTSPLTAPSERVERSTOOLTIP A small selection of servers is shown below. For a more comprehensive list, go to the adjacent "Complete list".
 
 TAPTABLEJOINTIP Join table
@@ -3025,16 +3025,17 @@ TAPURLCLIENTFIELDLABEL Provide a TAP server URL
 TAPGLUGENTOGGLEBUTTONTOOLTIP Toggle between generic and glu tap forms
 CHANGESERVERTOOLTIP Choose a different tap server
 TAPMODESTOOLTIP Load a different TAP client to construct your queries
-GLUTAPMODESTOOLTIP Click to load GLU mode - this is a customised form  generated from a GLU record
-GENERICTAPMODESTOOLTIP Click to load a generic tap client
-EXAMPLETAPMODESTOOLTIP Click to load a template based tap client
-OBSCORETAPMODESTOOLTIP Click to load a custom client for obscore tables
+GLU_TAPMODESTOOLTIP Click to load GLU mode - this is a customised form  generated from a GLU record
+NODE_TAPMODESTOOLTIP Click to load a generic tap client for this node
+GENERIC_TAPMODESTOOLTIP Click to load a generic tap client
+EXAMPLE_TAPMODESTOOLTIP Click to load a template based tap client
+OBSCORE_TAPMODESTOOLTIP Click to load a custom client for obscore tables
 TAPSERVICEEXAMPLESTOOLTIP These are service provided examples!
 SETRADECBUTTONTIP Select columns of the tap table as right ascension and declination columns
 TAPSETTINGSTOOLTIP Set targets, max rows and other values.
 SETTARGETTOOLTIP Hint: Configure different target by clicking the "Settings" button
 CHANGESETTINGSTOOLTIP Hint: Configure second table by clicking the "Settings" button
-NOGLURECFOUND No glu records found to create the GLU client!
+NOGLURECFOUND No glu records found to create a customised client!
 NOTARGETSET No target set.
 NORANGEERRORMESSAGE Range selected, please provide 2 values!
 CHOOSEFROMTAPSERVERSTEXT Or choose from the lists below:
@@ -3050,6 +3051,7 @@ DISCARDALLTIP Click to discard all of the parsed tables
 NOTABLELOADEDMESSAGE Load new table to populate the gui!
 ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 TABLEDISCARDINFO One option removed from upload file choices!
+
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again

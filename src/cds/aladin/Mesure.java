@@ -227,7 +227,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)
 							|| contentType.equalsIgnoreCase(CONTENT_TYPE_PNG))) { //for now we just load plot image or votable in Aladin
 						aladin.glu.showDocument("Http", accessUrl, true);
-					}*/ else if (contentType != null && accessUrl != null
+					}*/ else if (true || contentType != null && accessUrl != null
 							&& contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)) {
 						aladin.glu.showDocument("Http", accessUrl, true);
 					} else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {

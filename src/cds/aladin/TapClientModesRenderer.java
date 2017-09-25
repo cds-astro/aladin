@@ -21,8 +21,16 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.EXAMPLES;
+import static cds.aladin.Constants.GENERIC;
+import static cds.aladin.Constants.GLU;
+import static cds.aladin.Constants.NODE;
+import static cds.aladin.Constants.OBSCORE;
+
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -36,7 +44,17 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 	private static final long serialVersionUID = -4372535217338044431L;
 	
 	TapClient tapClient;
-
+	public static Map<String, String> tooltipMap = null;
+	
+	static {
+		tooltipMap  = new HashMap<String, String>();
+		tooltipMap.put(GLU, Aladin.chaine.getString("GLU_TAPMODESTOOLTIP"));
+		tooltipMap.put(NODE, Aladin.chaine.getString("GENERIC_TAPMODESTOOLTIP"));
+		tooltipMap.put(GENERIC, Aladin.chaine.getString("GENERIC_TAPMODESTOOLTIP"));
+		tooltipMap.put(EXAMPLES, Aladin.chaine.getString("EXAMPLE_TAPMODESTOOLTIP"));
+		tooltipMap.put(OBSCORE, Aladin.chaine.getString("OBSCORE_TAPMODESTOOLTIP"));
+	}
+	
 	public TapClientModesRenderer(TapClient tapClient) {
 		// TODO Auto-generated constructor stub
 		this.tapClient = tapClient;
@@ -55,13 +73,13 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 		            	setText("Mode: "+list.getSelectedValue());
 			        }
 		        }
-		} else if (index == 0 && this.tapClient.serverGlu == null) {
+		} else if (value == GLU && this.tapClient.serverGlu == null) {
 			makeDisabled(option, value, TapClient.NOGLURECFOUND);
-		} else if (index == 3 && this.tapClient.obscoreTables.isEmpty()) {
+		} else if (value == OBSCORE && this.tapClient.obscoreTables.isEmpty()) {
 			makeDisabled(option, value, "Obscore client");
 		}  else {
 			setText((String) value);
-			setToolTipText(TapClient.modeIconToolTips[index]);
+			setToolTipText(tooltipMap.get(value));
 			setIcon(null);
 			option.setEnabled(true);
 		}

@@ -161,10 +161,11 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		JPanel panelScroll = new JPanel();
 		panelScroll.setBackground(tapClient.secondColor);
 		setConstraintsGui(tableChoice, panelScroll);
-		panelScroll.setPreferredSize(new Dimension(500, 320));
+//		panelScroll.setPreferredSize(new Dimension(500, 320));
+		panelScroll.setPreferredSize(new Dimension(565, 290));
 		JScrollPane scrolley = new JScrollPane(panelScroll);
-		scrolley.setPreferredSize(new Dimension(500, 200));
-		c.weighty = 0.45;
+		scrolley.setPreferredSize(new Dimension(565, 400));
+		c.weighty = 0.75;
 		c.insets = new Insets(0, -6, 0, 0);
 		c.anchor = GridBagConstraints.NORTHWEST;
 	    c.fill = GridBagConstraints.BOTH;
@@ -187,7 +188,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		tap.setEditable(true);
 		scrolley = new JScrollPane(tap);
 		c.weightx = 0.35;
-		c.weighty = 0.47;
+		c.weighty = 0.17;
 		c.insets = new Insets(0, 4, 0, 0);
 	    c.fill = GridBagConstraints.BOTH;
 	    c.gridy++;
@@ -232,10 +233,10 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			if (this.spatialFieldValueOptions == null) {
 				this.spatialFieldValueOptions = new HashMap<String, Map<String, String>>();
 			}
-			params.put(RA, obsCoreColumns.get(RA));
-			params.put(DEC, obsCoreColumns.get(DEC));
 			params.put(ServerObsTap.FIELDSIZE, "AREA("+obsCoreColumns.get(ServerObsTap.FIELDSIZE)+")");
 			params.put(ServerObsTap.SPATIALRESOLUTION, obsCoreColumns.get(ServerObsTap.SPATIALRESOLUTION));
+			params.put(RA, obsCoreColumns.get(RA));
+			params.put(DEC, obsCoreColumns.get(DEC));
 			this.spatialFieldValueOptions.put(tableName, params);
 			
 			
@@ -267,16 +268,13 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		GridBagLayout g = new GridBagLayout();
 		panelScroll.setLayout(g);
 		GridBagConstraints c = new GridBagConstraints();
-		c.gridx = 0;
-		c.gridy = 0;
 		
+		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		panel.setBackground(this.tapClient.secondColor);
 		JLabel label = new JLabel();
 		label.setText("Table:");
-		c.gridwidth = 3;
 		label.setFont(BOLD);
-		c.weightx = 0.09;
-		c.anchor = GridBagConstraints.EAST;
-		panelScroll.add(label, c);
+		panel.add(label);
 		Vector<String> tables = new Vector<String>(this.tapClient.obscoreTables.keySet().size());
 		tables.addAll(this.tapClient.obscoreTables.keySet());
 		if (tableChoice == null || !tables.contains(tableChoice)) {
@@ -329,16 +327,20 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		tablesGui.setOpaque(false);
 		tablesGui.setName("table");
 //		tablesGui.setActionCommand(TABLECHANGED);
-		c.weightx = 0.91;
-		c.gridwidth = 1;
-		c.gridx = 3;
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 1;
+		c.gridwidth = 4;
+		c.gridx = 0;
 		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
 //		tablesGui.setAlignmentY(SwingConstants.CENTER);
-		panelScroll.add(tablesGui, c);
+		panel.add(tablesGui);
+		panelScroll.add(panel, c);
 		
 		
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		panel.setBackground(this.tapClient.secondColor);
 		label = new JLabel("Select:");
 		label.setFont(BOLD);
@@ -379,33 +381,33 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (dataProductTypeParamName.get(selectedTableName) != null) {
 			c.gridy++;
 			c.gridx = 0;
-			c.gridwidth = 1;
-			c.anchor = GridBagConstraints.WEST;
-			add = new JButton("+");
-			add.setToolTipText("Click to add constraint");
-			add.setActionCommand(ADD_DATAPRODUCTTYPE);
-			add.addActionListener(this);
-			c.weightx = 0.02;
-			c.fill = GridBagConstraints.NONE;
-			panelScroll.add(add, c);
-			
-			c.weightx = 0.05;
-			c.gridx++;
-			dataProduct_types_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
-			panelScroll.add(dataProduct_types_andOrOp, c);
-			
 			label = new JLabel();
 			label.setText("Dataproduct type:");
 			label.setFont(BOLD);
 			c.weightx = 0.05;
-			c.gridx++;
 			panelScroll.add(label, c);
 			
 			dataProduct_types = new JComboBox<String>(DATAPRODUCT_TYPES);
-			c.weightx = 0.88;
+			c.weightx = 0.87;
 			c.gridx++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			panelScroll.add(dataProduct_types, c);
+			
+			c.weightx = 0.04;
+			c.gridx++;
+			dataProduct_types_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
+			panelScroll.add(dataProduct_types_andOrOp, c);
+			
+			c.gridwidth = 1;
+			c.gridx++;
+			c.anchor = GridBagConstraints.WEST;
+			add = new JButton("Add");
+			add.setToolTipText("Click to add constraint");
+			add.setActionCommand(ADD_DATAPRODUCTTYPE);
+			add.addActionListener(this);
+			c.weightx = 0.04;
+			c.fill = GridBagConstraints.NONE;
+			panelScroll.add(add, c);
 		}
 		
 		targetPanel = new JPanel();
@@ -417,6 +419,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		c.gridy++;
 		c.gridx = 0;
 		c.gridwidth = 4;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.anchor = GridBagConstraints.WEST;
 		panelScroll.add(this.targetPanel, c);
 		
@@ -425,63 +428,65 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			c.gridy++;
 			c.gridx = 0;
 			c.gridwidth = 1;
-			c.anchor = GridBagConstraints.WEST;
-			add = new JButton("+");
-			add.setActionCommand(ADD_SPATIALCONSTRAINT);
-			add.setToolTipText("Click to add constraint");
-			add.addActionListener(this);
-			c.weightx = 0.02;
-			c.fill = GridBagConstraints.NONE;
-			panelScroll.add(add, c);
-			
+			spatial_fields = new JComboBox(spatialFieldValueOptions.get(selectedTableName).keySet().toArray());
+			spatial_fields.setFont(BOLD);
 			c.weightx = 0.05;
+			panelScroll.add(spatial_fields, c);
+			
+			spatial_value = new JTextField();
+			c.weightx = 0.87;
+			c.gridx++;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			panelScroll.add(spatial_value, c);
+			
+			c.weightx = 0.04;
 			c.gridx++;
 			spatial_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
 			panelScroll.add(spatial_andOrOp, c);
 			
-			spatial_fields = new JComboBox(spatialFieldValueOptions.get(selectedTableName).keySet().toArray());
-			spatial_fields.setFont(BOLD);
-			c.weightx = 0.05;
 			c.gridx++;
-			panelScroll.add(spatial_fields, c);
-			
-			spatial_value = new JTextField();
-			c.weightx = 0.88;
-			c.gridx++;
-			c.fill = GridBagConstraints.HORIZONTAL;
-			panelScroll.add(spatial_value, c);
+			c.gridwidth = 1;
+			c.anchor = GridBagConstraints.WEST;
+			add = new JButton("Add");
+			add.setActionCommand(ADD_SPATIALCONSTRAINT);
+			add.setToolTipText("Click to add constraint");
+			add.addActionListener(this);
+			c.weightx = 0.04;
+			c.fill = GridBagConstraints.NONE;
+			panelScroll.add(add, c);
 		}
 		
 		//Spectral constraints
 		if (!spectralFieldValueOptions.get(selectedTableName).isEmpty()) {
 			c.gridy++;
 			c.gridx = 0;
-			c.gridwidth = 1;
-			c.anchor = GridBagConstraints.WEST;
-			add = new JButton("+");
-			add.setActionCommand(ADD_SPECTRALCONSTRAINT);
-			add.setToolTipText("Click to add constraint");
-			add.addActionListener(this);
-			c.weightx = 0.02;
-			c.fill = GridBagConstraints.NONE;
-			panelScroll.add(add, c);
-			
+			spectral_fields = new JComboBox(spectralFieldValueOptions.get(selectedTableName).keySet().toArray());
+			spectral_fields.setFont(BOLD);
 			c.weightx = 0.05;
+			panelScroll.add(spectral_fields, c);
+			
+			spectral_value = new JTextField();
+			c.weightx = 0.87;
+			c.gridx++;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			panelScroll.add(spectral_value, c);
+			
+			c.weightx = 0.04;
 			c.gridx++;
 			spectral_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
 			panelScroll.add(spectral_andOrOp, c);
 			
-			spectral_fields = new JComboBox(spectralFieldValueOptions.get(selectedTableName).keySet().toArray());
-			spectral_fields.setFont(BOLD);
-			c.weightx = 0.05;
+			c.gridwidth = 1;
 			c.gridx++;
-			panelScroll.add(spectral_fields, c);
+			c.anchor = GridBagConstraints.WEST;
+			add = new JButton("Add");
+			add.setActionCommand(ADD_SPECTRALCONSTRAINT);
+			add.setToolTipText("Click to add constraint");
+			add.addActionListener(this);
+			c.weightx = 0.04;
+			c.fill = GridBagConstraints.NONE;
+			panelScroll.add(add, c);
 			
-			spectral_value = new JTextField();
-			c.weightx = 0.88;
-			c.gridx++;
-			c.fill = GridBagConstraints.HORIZONTAL;
-			panelScroll.add(spectral_value, c);
 		}
 		
 		
@@ -489,32 +494,33 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (!timeFieldValueOptions.get(selectedTableName).isEmpty()) {
 			c.gridy++;
 			c.gridx = 0;
-			c.gridwidth = 1;
-			c.anchor = GridBagConstraints.WEST;
-			add = new JButton("+");
-			add.setActionCommand(ADD_TIMECONSTRAINT);
-			add.setToolTipText("Click to add constraint");
-			add.addActionListener(this);
-			c.weightx = 0.02;
-			c.fill = GridBagConstraints.NONE;
-			panelScroll.add(add, c);
-			
-			c.weightx = 0.05;
-			c.gridx++;
-			time_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
-			panelScroll.add(time_andOrOp, c);
 			
 			time_fields = new JComboBox(timeFieldValueOptions.get(selectedTableName).keySet().toArray());
 			time_fields.setFont(BOLD);
 			c.weightx = 0.05;
-			c.gridx++;
 			panelScroll.add(time_fields, c);
 			
 			time_value = new JTextField();
-			c.weightx = 0.88;
+			c.weightx = 0.87;
 			c.gridx++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			panelScroll.add(time_value, c);
+			
+			c.weightx = 0.04;
+			c.gridx++;
+			time_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
+			panelScroll.add(time_andOrOp, c);
+			
+			c.gridwidth = 1;
+			c.anchor = GridBagConstraints.WEST;
+			add = new JButton("Add");
+			add.setActionCommand(ADD_TIMECONSTRAINT);
+			add.setToolTipText("Click to add constraint");
+			add.addActionListener(this);
+			c.weightx = 0.04;
+			c.gridx++;
+			c.fill = GridBagConstraints.NONE;
+			panelScroll.add(add, c);
 		}
 		
 		//Free constraints
@@ -522,34 +528,34 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (columns != null && !columns.isEmpty()) {
 			c.gridy++;
 			c.gridx = 0;
-			c.gridwidth = 1;
-			c.anchor = GridBagConstraints.WEST;
-			add = new JButton("+");
-			add.setActionCommand(ADD_FREECONSTRAINT);
-			add.setToolTipText("Click to add constraint");
-			add.addActionListener(this);
-			c.weightx = 0.02;
-			c.fill = GridBagConstraints.NONE;
-			panelScroll.add(add, c);
-			
-			c.weightx = 0.05;
-			c.gridx++;
-			free_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
-			panelScroll.add(free_andOrOp, c);
-			
 			free_fields = new JComboBox(columns);
 			free_fields.setRenderer(new CustomListCellRenderer());
 			free_fields.setSize(free_fields.getWidth(), Server.HAUT);
 			free_fields.setFont(BOLD);
 			c.weightx = 0.05;
-			c.gridx++;
 			panelScroll.add(free_fields, c);
 			
 			free_value = new JTextField();
-			c.weightx = 0.88;
+			c.weightx = 0.87;
 			c.gridx++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			panelScroll.add(free_value, c);
+			
+			c.weightx = 0.04;
+			c.gridx++;
+			free_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
+			panelScroll.add(free_andOrOp, c);
+			
+			c.gridwidth = 1;
+			c.anchor = GridBagConstraints.WEST;
+			add = new JButton("Add");
+			add.setActionCommand(ADD_FREECONSTRAINT);
+			add.setToolTipText("Click to add constraint");
+			add.addActionListener(this);
+			c.weightx = 0.04;
+			c.gridx++;
+			c.fill = GridBagConstraints.NONE;
+			panelScroll.add(add, c);
 		}
 		
 		

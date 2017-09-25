@@ -95,10 +95,9 @@ public class ServerTapExamples extends DynamicTapForm {
 	JList examplesGui;
 	JList serviceExamplesGui;
 	
-	public ServerTapExamples(Aladin aladin, TapClient tapClient) {
+	public ServerTapExamples(Aladin aladin) {
 		// TODO Auto-generated constructor stub
 		super(aladin);
-		this.tapClient = tapClient;
 		
 		Coord defaultCoo = aladin.localisation.getLastCoord();
 		//Setting dummy for init.
@@ -127,8 +126,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	 */
 	protected void createForm(String priTableChoice, String secTableChoice) {
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
-		Vector<String> tables = new Vector<String>(tablesMetaData.keySet().size());
-		tables.addAll(tablesMetaData.keySet());
+		Vector<String> tables = getTableNames();
 		if (priTableChoice == null || !tables.contains(priTableChoice)) {
 			selectedTableName = tables.get(0);
 		} else {
