@@ -1987,6 +1987,7 @@ public void layout() {
 				}
 			}
 		}*/
+		this.ball.setMode(Ball.WAIT);
 		return ++this.requestsSent;
 	}
 	

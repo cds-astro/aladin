@@ -361,13 +361,10 @@ public class TapManager {
 		if (tapServerTreeCache.containsKey(label)) {//get from cache
 			tapClient = tapServerTreeCache.get(label);
 			tapClient.tapBaseUrl = url;
-			defaultTables = processIfVizier(label, url); //TODO:: remove hack once we have table name
-			//tap_tables is still null. so hack still in place
 			if (defaultTables != null) {
 				tapClient.updateNodeAndSetModes(defaultTables);
 			}
 		} else {//not in cache..and does not have a glu record
-			defaultTables = processIfVizier(label, url); //TODO:: remove hack once we have table name
 			if (tapServerPanelCache.containsKey(label)){//try to create from the main cache
 				tapClient = copyTapClientAndDisplay(tapServerPanelCache.get(label), url, TapClientMode.TREEPANEL, defaultTables);
 			} else {
@@ -400,7 +397,6 @@ public class TapManager {
 			}
 		}//TODO:: tintin remove all comments and methods in commented
 		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
-//		String vizierTable = processIfVizier(tapClient);
 		
 		// just another control on the nodes feature
 		if (tapClient.mode != null && tapClient.mode == TapClientMode.TREEPANEL) {
@@ -418,46 +414,6 @@ public class TapManager {
 		}*/
 		this.loadTapColumnSchemas(tapClient, newServer);
 		return newServer;
-	}
-
-	/**
-	 * Only tests out if the service is vizier. 
-	 * This is temporary workaround to treat vizier as a special case:
-	 * where only vizier's registry tables names are known to be same as the Tap.Schema tables
-	 * so for that registry node we can download metadata for that table only
-	 * We will enlarge the logic as and when we realize this about the other servers.
-	 * because currently this is not the case for other servers.
-	 * @return
-	 */
-	/*private String processIfVizier(TapClient tapClient) {
-		// TODO Auto-generated method stub
-		String result = null;
-		String vizierTapServiceBaseUrl = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
-		if (tapClient.tapBaseUrl != null && tapClient.tapBaseUrl.startsWith(vizierTapServiceBaseUrl)) {
-			try {
-				result = tapClient.tapLabel.substring(4, tapClient.tapLabel.length());
-			} catch (Exception e) {
-				// TODO: handle exception
-				// Won't do anything
-			}
-		}
-
-		return result;
-	}*/
-	private String processIfVizier(String label, String url) {
-		// TODO Auto-generated method stub
-		String result = null;
-		String vizierTapServiceBaseUrl = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
-		if (url != null && url.startsWith(vizierTapServiceBaseUrl)) {
-			try {
-				result = label.substring(4, label.length());
-			} catch (Exception e) {
-				// TODO: handle exception
-				// Won't do anything
-			}
-		}
-
-		return result;
 	}
 
 	public TapClient copyTapClientAndDisplay(TapClient original, String urlInput, TapClientMode mode, String nodeTables) {
@@ -482,9 +438,10 @@ public class TapManager {
 		
 		if (copy == null) {//only if serverglu is null yet
 			copy = new TapClient(mode, this, original.tapLabel, urlInput, nodeTables);
-		}
+		} 
 		
 		copyMetadata(copy, original, mode);
+		copy.tapBaseUrl = urlInput;
 		
 		if (original.serverTap != null && original.tapBaseUrl.equalsIgnoreCase(urlInput)) { //at this point generic form ui is not created. only metadata is copied
 			copy.serverTap =  new ServerTap(aladin);
@@ -821,7 +778,7 @@ public class TapManager {
 					} catch (Exception e) {
 						e.printStackTrace();
 						newServer.showLoadingError();
-						displayWarning(clientToLoad, "Error from tap server "+clientToLoad.tapLabel+" : unable to get metadata !");
+						displayWarning(clientToLoad, e.getMessage());
 					} finally {
 						newServer.revalidate();
 						newServer.repaint();
@@ -884,17 +841,18 @@ public class TapManager {
 	/**
 	 * Method updates the tap metadata and calls for a metadata gui update.
 	 * @param tableName
-	 * @param tapClient
+	 * @param dynamicTapForm
 	 * @param tableNames 
 	 * @return
 	 * @throws Exception
 	 */
-	public void updateTableColumnSchemas(TapClient tapClient, List<String> tableNames) throws Exception {
+	public void updateTableColumnSchemas(DynamicTapForm dynamicTapForm, List<String> tableNames) throws Exception {
+		dynamicTapForm.ball.setMode(Ball.WAIT);
 		if (tableNames == null || tableNames.isEmpty()) {
 			throw new Exception("Error no table name provided !\n");
 		}
 		try {
-			String tapServiceUrl = tapClient.tapBaseUrl;
+			String tapServiceUrl = dynamicTapForm.tapClient.tapBaseUrl;
 			
 			boolean isNotFirst = false;
 			StringBuffer whereCondition = new StringBuffer();
@@ -915,16 +873,17 @@ public class TapManager {
 			}
 			
 //			String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, whereCondition.toString());
-			SavotResource columnResults = getResults(tapClient.tapBaseUrl, gettablesColumnsQuery, PATHSYNC);
-			populateColumns(tapClient, columnResults);
+			SavotResource columnResults = getResults(dynamicTapForm.tapClient.tapBaseUrl, gettablesColumnsQuery, PATHSYNC);
+			populateColumns(dynamicTapForm.tapClient, columnResults);
 			
+			dynamicTapForm.updateQueryChecker(tableNames);
 			 //update info panel
-			Future<JPanel> infoPanel = this.createMetaInfoDisplay(tapServiceUrl, tapClient.tablesMetaData);
+			Future<JPanel> infoPanel = this.createMetaInfoDisplay(tapServiceUrl, dynamicTapForm.tapClient.tablesMetaData);
 			if (infoPanel != null) {
-				tapClient.tackleFrameInfoServerUpdate(aladin, infoPanel);
+				dynamicTapForm.tapClient.tackleFrameInfoServerUpdate(aladin, infoPanel);
 			}
-			Aladin.trace(3,"done updating tap info for : "+tableNames.toString()+"| server is : "+tapClient.tapBaseUrl);
-			
+			Aladin.trace(3,"done updating tap info for : "+tableNames.toString()+"| server is : "+dynamicTapForm.tapClient.tapBaseUrl);
+			dynamicTapForm.ball.setMode(Ball.OK);
 		} catch (RejectedExecutionException e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 			throw new Exception("Request overload! Please wait and try again.");
@@ -940,22 +899,25 @@ public class TapManager {
 //		String protocol = baseurl.getProtocol();
 //		String host = baseurl.getHost();
 //		int port = baseurl.getPort();
-		String path = baseUrlStr;
-		if (subPath != null) {
-			if (!path.endsWith("/")) {
-				path = path+"/";
-			} 
-			path = path+subPath;
+		if (baseUrlStr != null) {
+			String path = baseUrlStr;
+			if (subPath != null) {
+				if (!path.endsWith("/")) {
+					path = path+"/";
+				} 
+				path = path+subPath;
+			}
+			
+			if (query != null) {
+				path = path+"?"+query;
+			}
+			URI uri = new URI(path);
+			genUrl = uri.toURL();
+			
+//			uri = new URI(uri+"?"+query);
+			genUrl = uri.toURL();
 		}
 		
-		if (query != null) {
-			path = path+"?"+query;
-		}
-		URI uri = new URI(path);
-		genUrl = uri.toURL();
-		
-//		uri = new URI(uri+"?"+query);
-		genUrl = uri.toURL();
 		return genUrl;
 	}
 	
@@ -995,6 +957,34 @@ public class TapManager {
 		}
 	}
 	
+	public void activateWaitMode(final ServerTap serverTap) {
+		// TODO Auto-generated method stub
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						currentT.setName("TmakeWait: "+serverTap.tapClient.tapLabel);
+						currentT.setPriority(Thread.MIN_PRIORITY);
+						serverTap.waitCursor();
+						serverTap.info1.setText("Please wait while TAP metadata is updated");
+						serverTap.revalidate();
+						serverTap.repaint();
+					} finally {
+						currentT.setName(oldTName);
+					}
+				}
+			});
+		} catch (RejectedExecutionException ex) {
+			Aladin.trace(3, "RejectedExecutionException");
+			serverTap.ball.setMode(Ball.NOK);
+			serverTap.info1.setText("Could not update tap metadata..");
+		}
+	}
+	
 	/**
 	 * Method populates loads all tables from TAP_SCHEMA.tables
 	 * @param newServer 
@@ -1003,6 +993,11 @@ public class TapManager {
 	 */
 	public void populateTables(TapClient tapClient, SavotResource resultsResource) throws Exception {
 		if (resultsResource != null) {
+			if (resultsResource.getTableCount() <= 0) {
+				if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateTables! Did not read table data for "+tapClient.tapBaseUrl);
+				throw new Exception("ERROR while getting table information! Did not read table data from: "+tapClient.tapBaseUrl
+						+" .\n\n Perhaps TAP_SCHEMA is not available for this server.");
+			}
 			for (int i = 0; i < resultsResource.getTableCount(); i++) {
 				int type = getType(0, resultsResource);
 				switch (type) {
@@ -2190,6 +2185,15 @@ public class TapManager {
 		}
 		return tableName.toString();
 	}
+	
+	/*public static void main(String[] args) {
+		DefaultDBTable defaultDBTable = new DefaultDBTable("TAP_SCHEMA.TAP_SCHEMA.TAP_SCHEMA.schemas");
+		System.err.println(defaultDBTable.getADQLCatalogName());
+		System.err.println(defaultDBTable.getADQLSchemaName());
+		System.err.println(defaultDBTable.getADQLName());
+		System.err.println(getFullyQualifiedTableName(defaultDBTable));
+	}*/
+	
 	
 	public static boolean areSameQueryCheckerTables(DefaultDBTable input1, DefaultDBTable input2) {
 		boolean result = false;

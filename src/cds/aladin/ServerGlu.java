@@ -224,6 +224,13 @@ public class ServerGlu extends Server implements Runnable {
 			for (int i = 0; i < tapTables.length; i++) {
 				this.gluAdqlQueryTemplates.put(tapTables[i], new GluAdqlTemplate());
 			}
+			if (flagTAPV2) {
+				JButton changeServerButton = TapClient.getChangeServerButton(this);
+				changeServerButton.setBounds(5, 15, 20, 20);
+				add(changeServerButton);
+				tapTableMapping.put("GENERAL",new Vector());
+				tapTableMapping.get("GENERAL").add(changeServerButton);
+			}
 			// No setQueryChecker for ServerGlu. We only check syntax.
 		}
       // Le titre
@@ -235,27 +242,7 @@ public class ServerGlu extends Server implements Runnable {
       tp.setBounds(x,y,d.width,d.height); y+=d.height+10;
       tp.setName("titrePanel");
       if (flagTAPV2) {
-      	 tapTableMapping.put("GENERAL",new Vector());
       	 tapTableMapping.get("GENERAL").add(tp);
-      	/*if (this.tapClient.mode == TapClientMode.DIALOG) {
-      		JButton button = ServerTap.getChangeServerButton();
-    		button.addActionListener(this);
-//    		button.setBounds(x+d.width,y-d.height,85,HAUT);
-//    		button.setBounds(x+d.width+65, y-d.height, 30, 30);
-    		button.setBounds(XWIDTH-2*XTAB1-60, y-d.height+3, 35, 25);
-    		tapTableMapping.get("GENERAL").add(button);
-    		add(button);
-		}
-      		
-      	if (mode != TapServerMode.UPLOAD) {
-      		modeChoice = tapClient.getGluModeButton();
-      		modeChoice.setSelected(true);
-//      		modeChoice.setBounds(x+d.width+95,y-d.height+3,35,25);
-      		modeChoice.setBounds(XWIDTH-2*XTAB1-25, y-d.height+3, 35, 25);
-      		tapClient.enableModes();
-			add(modeChoice);
-		}*/
-      	
        }
       add(tp);
 
@@ -274,12 +261,13 @@ public class ServerGlu extends Server implements Runnable {
       }
       
       if (flagTAPV2) {
-    	  JPanel optionsPanel = this.tapClient.getOptionsPanel(this);
-      	optionsPanel.setName("optionsPanel");
+    	  JPanel optionsPanel = this.tapClient.getModes(this);
+      	optionsPanel.setName("modes");
       	optionsPanel.setBackground(Aladin.BLUE);
 //      	optionsPanel.setBounds(XWIDTH-2*XTAB1-60, y-d.height-5, 78, 30);
 //      	optionsPanel.setBounds(x+d.width, y-d.height-5, 78, 30);
-      	optionsPanel.setBounds(x+d.width, y-d.height-5, 150, 30);
+//      	optionsPanel.setBounds(x+d.width, y-d.height-5, 150, 30);
+      	optionsPanel.setBounds(x+d.width, y-d.height, 140, 30);
       	 add(optionsPanel);
       	tapTableMapping.get("GENERAL").add(optionsPanel);
 	}
@@ -565,7 +553,7 @@ public class ServerGlu extends Server implements Runnable {
 		if (tapTableMapping.get("GENERAL") != null) {
 			for (Object topPanelComponent : tapTableMapping.get("GENERAL")) {
 				add((Component) topPanelComponent);
-				if ("optionsPanel".equals(((Component) topPanelComponent).getName())) {
+				if ("modes".equals(((Component) topPanelComponent).getName())) {
 					y += 20;
 				}
 			}

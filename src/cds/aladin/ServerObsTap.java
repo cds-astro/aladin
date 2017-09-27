@@ -30,6 +30,7 @@ import static cds.aladin.Constants.TAP_REC_LIMIT_UNLIMITED;
 import static cds.aladin.Constants.TARGETNAN;
 import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
+import static cds.aladin.Constants.WRITEQUERY;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.Dimension;
@@ -147,6 +148,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 	}
 	
 	public void createForm(String tableChoice) {
+		CLIENTINSTR = Aladin.chaine.getString("TAPOBSCORECLIENTINSTR");
 		for (TapTable table : tapClient.obscoreTables.values()) {
 			setObsCore(table);
 		}
@@ -172,7 +174,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 	    c.gridy++;
 		containerPanel.add(scrolley, c);
 		
-		JPanel linePanel = getBottomPanel();
+		JPanel linePanel = getBottomPanel(true);
 		c.weightx = 0.10;
 		c.weighty = 0.02;
 		c.insets = new Insets(0, -6, 0, 0);
@@ -283,29 +285,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			selectedTableName = tableChoice;
 		}
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
-		Vector<TapTableColumn> columnNames = tablesMetaData.get(selectedTableName).getColumns();
-		if (columnNames == null) {
-			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				Aladin.warning("Error in uploaded data");
-				return;
-			}
-			try {
-				List<String> tableNamesToUpdate = new ArrayList<String>();
-				tableNamesToUpdate.add(selectedTableName);
-				this.tapClient.tapManager.updateTableColumnSchemas(this.tapClient, tableNamesToUpdate);
-				columnNames = tablesMetaData.get(selectedTableName).getColumns();
-				setObsCore(this.tapClient.obscoreTables.get(selectedTableName));
-//				tapClient.parseForObscore(selectedTableName, tablesMetaData.get(selectedTableName));
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				Aladin.warning(e.getMessage());
-				return;
-			}
-			if (columnNames == null) {
-				Aladin.warning("Error in updating the metadata for :"+selectedTableName);
-				return;
-			}
-		}
+		getColumnsToLoad(selectedTableName, tablesMetaData);
 		
 		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
 		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
@@ -381,6 +361,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (dataProductTypeParamName.get(selectedTableName) != null) {
 			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			label = new JLabel();
 			label.setText("Dataproduct type:");
 			label.setFont(BOLD);
@@ -398,7 +379,6 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			dataProduct_types_andOrOp = new JComboBox(WhereGridConstraint.andOrOptions);
 			panelScroll.add(dataProduct_types_andOrOp, c);
 			
-			c.gridwidth = 1;
 			c.gridx++;
 			c.anchor = GridBagConstraints.WEST;
 			add = new JButton("Add");
@@ -528,7 +508,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (columns != null && !columns.isEmpty()) {
 			c.gridy++;
 			c.gridx = 0;
-			free_fields = new JComboBox(columns);
+			Vector<TapTableColumn> model = new Vector<TapTableColumn>();
+			model.addAll(columns);
+			free_fields = new JComboBox(model);
 			free_fields.setRenderer(new CustomListCellRenderer());
 			free_fields.setSize(free_fields.getWidth(), Server.HAUT);
 			free_fields.setFont(BOLD);
@@ -744,7 +726,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
-			.append(ServerTap.getQueryPart(selectedTableName)).append(SPACESTRING);
+			.append(ServerTap.getQueryPart(this.tapClient.obscoreTables.get(selectedTableName), selectedTableName)).append(SPACESTRING);
 			
 			/*Component[] whereConstraints = this.whereClausesPanel.getComponents();
 			if (this.whereClausesPanel.getComponentCount() > 0) {
@@ -872,7 +854,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 				
 			} else if (action.equals(CHECKQUERY)) {
 				checkQueryFlagMessage();//TODO:: goes in dynamic form!
-			} 
+			} else if (action.equals(WRITEQUERY)) {
+				this.writeQuery();
+			}
 		}
 	}
 	
@@ -972,11 +956,10 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 	 */
 	public void submit(Map<String, Object> requestParams) {
 	      //check again
-		if (formLoadStatus != TAPFORM_STATUS_LOADED) {
-			return;
+		if (this.sync_async != null &&  this.tap != null) {
+			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
+	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
 		}
-		boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
 	}
 	
 	@Override
@@ -1022,7 +1005,6 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
 		verboseDescr = loadedServerDescription = Aladin.chaine.getString("TAPOBSFORMDESC");
-		CLIENTINSTR = Aladin.chaine.getString("TAPOBSCORECLIENTINSTR");
 		TIPCLICKTOADD = Aladin.chaine.getString("TIPCLICKTOADD");
 		NORANGEERRORMESSAGE = Aladin.chaine.getString("NORANGEERRORMESSAGE");
 	}

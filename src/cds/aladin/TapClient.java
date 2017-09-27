@@ -23,7 +23,7 @@ package cds.aladin;
 import static cds.aladin.Constants.ADQLVALUE_FORBETWEEN;
 import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.EMPTYSTRING;
-import static cds.aladin.Constants.EXAMPLES;
+import static cds.aladin.Constants.TEMPLATES;
 import static cds.aladin.Constants.GENERIC;
 import static cds.aladin.Constants.GLU;
 import static cds.aladin.Constants.OBSCORE;
@@ -33,6 +33,7 @@ import static cds.aladin.Constants.REGEX_RANGENUMBERINPUT;
 import static cds.aladin.Constants.REGEX_TAPSCHEMATABLES;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.NODE;
+import static cds.aladin.Constants.ALLACCESS;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -79,12 +80,11 @@ import cds.xml.VOSICapabilitiesReader;
  */
 public class TapClient{
 	
-	public static String[] modeIconImages = { "gluIconV2.png", "genericIconV2.png" };//tintin remove this
 	public static String modeIconImage = "settings.png";
 	public static String modesLabel = "Modes";
 	public static String modesToolTip;
 	public DefaultComboBoxModel model = null;
-	public static String TAPGLUGENTOGGLEBUTTONTOOLTIP,RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND, CHANGESERVERTOOLTIP;
+	public static String RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND, CHANGESERVERTOOLTIP;
 	
 	public TapManager tapManager;
 	public String tapLabel;
@@ -102,7 +102,7 @@ public class TapClient{
 	//metadata
 	Map<String, TapTable> tablesMetaData;
 	Future<VOSICapabilitiesReader> capabilities;
-    public String nodeName = null;//tintin:: TODO::for future
+    public String nodeName = null;
     public static Map<String, DBDatatype> DBDATATYPES = new HashMap();
 	List<DefaultDBTable> queryCheckerTables;
 	Color primaryColor = Aladin.BLUE;
@@ -135,9 +135,9 @@ public class TapClient{
 		} else {
 			String[] modesAllowed = null;
 			if (this.nodeName != null) {
-				modesAllowed = new String []{ GLU, nodeName, GENERIC, EXAMPLES, OBSCORE };
+				modesAllowed = new String []{ GLU, nodeName, ALLACCESS, TEMPLATES, OBSCORE };
 			} else {
-				modesAllowed = new String []{ GLU, GENERIC, EXAMPLES, OBSCORE };
+				modesAllowed = new String []{ GLU, GENERIC, TEMPLATES, OBSCORE };
 			}
 			model = new DefaultComboBoxModel(modesAllowed); 
 		}
@@ -202,7 +202,7 @@ public class TapClient{
 		return tapClient;
 	}
 	
-	public static JButton getChangeServerButton() {
+	public static JButton getChangeServerButton(Server server) {
 		JButton button = null;
 		Image image = Aladin.aladin.getImagette("changeServerOptions.png");
 		if (image == null) {
@@ -214,27 +214,14 @@ public class TapClient{
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setContentAreaFilled(true);
 		button.setActionCommand(CHANGESERVER);
+		button.addActionListener(server);
 		button.setToolTipText(CHANGESERVERTOOLTIP);
 		return button;
 	}
 	
-	public JPanel getOptionsPanel(Server server) {
+	public JPanel getModes(Server server) {
 		JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0 , 0));
-		if (this.mode == TapClientMode.DIALOG) {
-			JButton button = getChangeServerButton();
-			button.addActionListener(server);
-//			titlePanel.add(button);
-			optionsPanel.add(button);
-		}
-
 		if (this.mode != TapClientMode.UPLOAD) {
-			if (server instanceof DynamicTapForm) {
-				JButton reloadButton = getReloadButton();
-				reloadButton.addActionListener(server);
-//				titlePanel.add(reloadButton);
-				optionsPanel.add(reloadButton);
-			}
-			
 			server.modeChoice = new JComboBox(model);
 			server.modeChoice.setRenderer(new TapClientModesRenderer(this));
 //			server.modeChoice.setBackground(Aladin.BLUE);
@@ -285,27 +272,29 @@ public class TapClient{
 			model.setSelectedItem(GLU);
 		} else {
 			boolean isFullServerCapability = true;
+			String genericServerName = GENERIC;
 			if (this.nodeName != null && this.nodeTableNames != null) {
 				isFullServerCapability = false;
+				genericServerName = ALLACCESS;
 			}
-			if (serverType == nodeName) {
+			if (nodeName != null && serverType == nodeName) {
 				if (this.serverTapNode == null) {
 					this.serverTapNode = tapManager.getNewServerTapInstance(this, isFullServerCapability);
 				} 
 				dynamicTapForm = this.serverTapNode;
 				model.setSelectedItem(nodeName);
-			} else if (serverType == GENERIC) {
+			} else if (serverType == genericServerName) {
 				if (this.serverTap == null) {
 					this.serverTap = tapManager.getNewServerTapInstance(this, true);
 				} 
 				dynamicTapForm = this.serverTap;
-				model.setSelectedItem(GENERIC);
-			} else if (serverType == EXAMPLES) {
+				model.setSelectedItem(serverType);
+			} else if (serverType == TEMPLATES) {
 				if (this.serverExamples == null) {
 					this.serverExamples = tapManager.getNewServerTapExamplesInstance(this, isFullServerCapability);
 				} 
 				dynamicTapForm = this.serverExamples;
-				model.setSelectedItem(EXAMPLES);
+				model.setSelectedItem(TEMPLATES);
 			} else if (serverType == OBSCORE) {
 				if (this.serverObsTap == null) {
 					this.serverObsTap = tapManager.getNewServerObsTapInstance(this); //tapManager.getNewServerObsTapInstance1(this);
@@ -318,17 +307,17 @@ public class TapClient{
 					model.setSelectedItem(NODE);
 				} else if (this.serverTap != null && this.serverTap.isLoaded()) {
 					dynamicTapForm = this.serverTap;
-					model.setSelectedItem(GENERIC);
+					model.setSelectedItem(genericServerName);
 				} else if (this.serverExamples != null && this.serverExamples.isLoaded()) {
 					dynamicTapForm = this.serverExamples;
-					model.setSelectedItem(EXAMPLES);
+					model.setSelectedItem(TEMPLATES);
 				} else if (this.serverObsTap != null) {
 					dynamicTapForm = this.serverObsTap;
 					model.setSelectedItem(OBSCORE);
 				} else {// by default we give priority to the generic: after discussing with Pierre
 					this.serverTap = tapManager.getNewServerTapInstance(this, isFullServerCapability);
 					dynamicTapForm = this.serverTap;
-					model.setSelectedItem(GENERIC);
+					model.setSelectedItem(genericServerName);
 				} 
 			}
 			
@@ -751,6 +740,11 @@ public class TapClient{
 	 * @throws Exception 
 	 */
 	public void reload(DynamicTapForm dynamicTapForm) throws Exception {
+		if (this.serverTapNode != null) {
+			this.serverTapNode.removeAll();
+			this.serverTapNode.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+		}
+		
 		if (this.serverTap != null) {
 			this.serverTap.removeAll();
 			this.serverTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
@@ -796,7 +790,9 @@ public class TapClient{
 		// TODO Auto-generated method stub
 		if ((this.mode != TapClientMode.UPLOAD)) {
 			List<DefaultDBTable> queryCheckerTables = new ArrayList<DefaultDBTable>();
-			queryCheckerTables.addAll(this.queryCheckerTables);
+			if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
+				queryCheckerTables.addAll(this.queryCheckerTables);
+			}
 			if (tapManager.uploadFrame != null) {
 				List<String> uploadedTables = new ArrayList<String>();
 				uploadedTables.addAll(tapManager.uploadFrame.uploadClient.tablesMetaData.keySet());
@@ -811,6 +807,11 @@ public class TapClient{
 		}
 	}
 	
+	public void activateWaitMode(ServerTap serverTap) {
+		// TODO Auto-generated method stub
+		tapManager.activateWaitMode(serverTap);
+	}
+	
 	public String getVisibleLabel() {
 		// TODO Auto-generated method stub
 		String results = this.tapLabel;
@@ -823,11 +824,6 @@ public class TapClient{
 			}
 		} 
 		return results;
-	}
-	
-	public void updateTableColumnSchemas(List<String> tableNamesToUpdate) throws Exception {
-		// TODO Auto-generated method stub
-		this.tapManager.updateTableColumnSchemas(this, tableNamesToUpdate);
 	}
 	
 	public TapTable getServerExampleSelectedPrimaryTable() {
@@ -848,7 +844,6 @@ public class TapClient{
 	}
 	
 	static {
-		TAPGLUGENTOGGLEBUTTONTOOLTIP = Aladin.chaine.getString("TAPGLUGENTOGGLEBUTTONTOOLTIP");
 		RELOAD = Aladin.chaine.getString("FSRELOAD");
 	    TIPRELOAD = Aladin.chaine.getString("TIPRELOAD");
 	    modesToolTip = Aladin.chaine.getString("TAPMODESTOOLTIP");
@@ -860,6 +855,5 @@ public class TapClient{
 	    NOGLURECFOUND = Aladin.chaine.getString("NOGLURECFOUND");
 	    CHANGESERVERTOOLTIP = Aladin.chaine.getString("CHANGESERVERTOOLTIP");
 	}
-
-
+	
 }

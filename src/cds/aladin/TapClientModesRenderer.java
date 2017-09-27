@@ -21,11 +21,12 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.EXAMPLES;
+import static cds.aladin.Constants.TEMPLATES;
 import static cds.aladin.Constants.GENERIC;
 import static cds.aladin.Constants.GLU;
 import static cds.aladin.Constants.NODE;
 import static cds.aladin.Constants.OBSCORE;
+import static cds.aladin.Constants.ALLACCESS;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -49,9 +50,10 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 	static {
 		tooltipMap  = new HashMap<String, String>();
 		tooltipMap.put(GLU, Aladin.chaine.getString("GLU_TAPMODESTOOLTIP"));
-		tooltipMap.put(NODE, Aladin.chaine.getString("GENERIC_TAPMODESTOOLTIP"));
+		tooltipMap.put(NODE, Aladin.chaine.getString("NODE_TAPMODESTOOLTIP"));
 		tooltipMap.put(GENERIC, Aladin.chaine.getString("GENERIC_TAPMODESTOOLTIP"));
-		tooltipMap.put(EXAMPLES, Aladin.chaine.getString("EXAMPLE_TAPMODESTOOLTIP"));
+		tooltipMap.put(ALLACCESS, Aladin.chaine.getString("FULLSERVER_TAPMODESTOOLTIP"));
+		tooltipMap.put(TEMPLATES, Aladin.chaine.getString("EXAMPLE_TAPMODESTOOLTIP"));
 		tooltipMap.put(OBSCORE, Aladin.chaine.getString("OBSCORE_TAPMODESTOOLTIP"));
 	}
 	
@@ -78,12 +80,20 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 		} else if (value == OBSCORE && this.tapClient.obscoreTables.isEmpty()) {
 			makeDisabled(option, value, "Obscore client");
 		}  else {
-			setText((String) value);
-			setToolTipText(tooltipMap.get(value));
+			String tooltip = null;
+			String valueTxt = (String) value;
+			setText(valueTxt);
+			if (valueTxt.equalsIgnoreCase(this.tapClient.nodeName)) {
+				tooltip = tooltipMap.get(NODE);
+			} else {
+				tooltip = tooltipMap.get(value);
+			}
+			setToolTipText(tooltip);
 			setIcon(null);
 			option.setEnabled(true);
 		}
-		setPreferredSize(new Dimension(45, Server.HAUT));
+//		setPreferredSize(new Dimension(45, Server.HAUT));
+		setPreferredSize(new Dimension(105, Server.HAUT));
 		return this;
 	}
 	

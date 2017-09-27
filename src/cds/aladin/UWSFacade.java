@@ -140,7 +140,7 @@ public class UWSFacade implements ActionListener{
 	public void handleJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) {
 		UWSJob job = null;
 		try {
-			job = createJob(server, query, adqlQueryObj, postParams);
+			job = createJob(server, query, adqlQueryObj, postParams, requestNumber);
 //			printStringFromInputStream(job);
 			addNewJobToGui(job);
 			refreshGui();
@@ -162,14 +162,20 @@ public class UWSFacade implements ActionListener{
 					System.err.println("Job is not found, user did not ask for delete: \n"+job.getLocation().toString());
 //					removeJobUpdateGui(job); Not removing deleted jobs(deleted elsewhere) from gui. maybe user needs to view ? 
 					Aladin.warning(aladin.dialog, errorMessageToUser.toString());
+					if (job != null) {
+						job.showAsErroneous();
+					} 
+				} else {
+					if (job != null) {
+						job.resetStatusOnServer();
+					} 
 				}
 			} else {
 				Aladin.warning(aladin.dialog, errorMessageToUser.toString());
+				if (job != null) {
+					job.showAsErroneous();
+				} 
 			}
-			if (job != null) {
-				job.showAsErroneous();
-			} 
-			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (job != null) {
@@ -187,10 +193,11 @@ public class UWSFacade implements ActionListener{
 	 * @param newJobCreationUrl
 	 * @param adqlQueryObj
 	 * @param postParams 
+	 * @param requestNumber 
 	 * @return
 	 * @throws Exception
 	 */
-	public UWSJob createJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams) throws Exception {
+	public UWSJob createJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) throws Exception {
 		UWSJob job = null;
 		try {
 			URL tapServerRequestUrl = TapManager.getUrl(server.tapClient.tapBaseUrl, null, PATHASYNC);
@@ -273,6 +280,8 @@ public class UWSFacade implements ActionListener{
 			throw e;
 		}
 		Aladin.trace(3,"In createJob. Jon phase is:"+job.getCurrentPhase());
+		job.server = server;
+		job.requestNumber = requestNumber;
 		return job;
 	}
 	
@@ -839,19 +848,30 @@ public class UWSFacade implements ActionListener{
 					Aladin.warning(asyncPanel, e1.getMessage());
 				}
 			} else if (action.equals(DELETEJOB)) {
+				UWSJob selectedJob = null;
 				try {
-					UWSJob selectedJob = processJobSelection(false);
+					selectedJob = processJobSelection(false);
 					deleteJob(selectedJob, true);
 					if (prevJobRadio.isSelected()) {
 						Aladin.info(asyncPanel, selectedJob.getJobId()+" -job sucessfully deleted");
 					}
+					selectedJob.resetStatusOnServer();
 				} catch (ProtocolException e1) {
 					Aladin.warning(asyncPanel, e1.getMessage());
+					if (selectedJob != null) {
+						selectedJob.showErrorOnServer();
+					}
 				} catch (IOException e1) {
 					Aladin.warning(asyncPanel, e1.getMessage());
+					if (selectedJob != null) {
+						selectedJob.showErrorOnServer();
+					}
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					Aladin.warning(asyncPanel, e1.getMessage());
+					if (selectedJob != null) {
+						selectedJob.showErrorOnServer();
+					}
 				}
 			}
 			 else if (action.equals(ABORTJOB)) {
@@ -860,6 +880,7 @@ public class UWSFacade implements ActionListener{
 					selectedJob = processJobSelection(false);
 					if (selectedJob.canAbort()) {
 						selectedJob.abortJob();
+						selectedJob.resetStatusOnServer();
 						if (prevJobRadio.isSelected()) {
 							selectedJob.updateGui(null);
 							Aladin.info(asyncPanel, selectedJob.getJobId()+" -job sucessfully aborted");
@@ -873,12 +894,16 @@ public class UWSFacade implements ActionListener{
 					e1.printStackTrace();
 					if (selectedJob != null) {
 						Aladin.warning(asyncPanel, "Please try again. Error when aborting job: "+selectedJob.getJobId());
+						selectedJob.showErrorOnServer();
 					} else {
 						Aladin.warning(asyncPanel, e1.getMessage());
 					}
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					Aladin.warning(asyncPanel, e1.getMessage());
+					if (selectedJob != null) {
+						selectedJob.showErrorOnServer();
+					}
 				}
 			} /*else if (action.equals(RUNJOB)) {
 				UWSJob selectedJob = null;
@@ -919,8 +944,5 @@ public class UWSFacade implements ActionListener{
 			}
 		}
 	}
-	
-	
-
 	
 }

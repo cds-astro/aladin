@@ -80,7 +80,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	   STATUS = aladin.chaine.getString("ISSTATUS");
 	   ERRORMSG = aladin.chaine.getString("ERROR");
 	}
-
+	
 	protected FrameInfoServer(Aladin aladin) {
 	   super();
 	   this.aladin = aladin;

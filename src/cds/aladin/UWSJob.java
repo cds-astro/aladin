@@ -117,6 +117,8 @@ public class UWSJob implements ActionListener{
 	public static final String INCORRECTPROTOCOL = "Error incorrect protocol ";
 		
 	public UWSFacade uwsFacade;
+	public int requestNumber = -1;
+	public Server server;//just to setStatus. May be just convert to Ball.java?
 	
 	//job info: jobInfoXml not sure how it looks
 	
@@ -506,6 +508,21 @@ public class UWSJob implements ActionListener{
 		jobDetails.repaint();
 	}
 	
+
+	public void showErrorOnServer() {
+		// TODO Auto-generated method stub
+		if (server != null) {
+			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
+		}
+	}
+	
+	public void resetStatusOnServer() {
+		// TODO Auto-generated method stub
+		if (server != null) {
+			server.setStatusForCurrentRequest(requestNumber, Ball.UNKNOWN);
+		}
+	}
+	
 	private void populateDetailedErrorMessage() {
 		// TODO Auto-generated method stub
 		BufferedReader buffReader = null;
@@ -771,5 +788,6 @@ public class UWSJob implements ActionListener{
 	public void setJobInfoXml(StringBuffer jobInfoXml) {
 		this.jobInfoXml = jobInfoXml;
 	}
+
 
 }

@@ -154,7 +154,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 				createFrame(s);
 			} else {
 				if (s != this.serverEx || priTableName == null || !serverEx.selectedTableName.equalsIgnoreCase(priTableName)) {
-					setRaDecColumn(s.tapClient, s.selectedTableName, raColumn1, decColumn1);
+					setRaDecColumn(s, s.selectedTableName, raColumn1, decColumn1);
 				}
 				
 				if (s != this.serverEx || (s.secondaryTable != null && !s.secondaryTable.equalsIgnoreCase(secondaryTable))) {
@@ -183,7 +183,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 					}
 					enableSecondTable.setSelected(enabled);
 					pack();
-					setRaDecColumn(s.tapClient, secondaryTable, raColumn2, decColumn2);
+					setRaDecColumn(s, secondaryTable, raColumn2, decColumn2);
 				}
 				if (s != this.serverEx) {
 					if (s.max != null) {
@@ -212,13 +212,13 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		}
 	}
 	
-	private void setRaDecColumn(TapClient tapClient, String tableName, JComboBox raSettingsGui, JComboBox decSettingsGui) throws Exception {
-		TapTable table = tapClient.tablesMetaData.get(tableName);
+	private void setRaDecColumn(DynamicTapForm s, String tableName, JComboBox raSettingsGui, JComboBox decSettingsGui) throws Exception {
+		TapTable table = s.tapClient.tablesMetaData.get(tableName);
 		Vector<TapTableColumn> columns = new Vector<TapTableColumn>();
 		TapTableColumn dummyColumn = getDummyColumn();
 		columns.add(0, dummyColumn);
 		if (tableName != null) {
-			columns.addAll(getColumnSchemas(tapClient, tableName));
+			columns.addAll(getColumnSchemas(s, tableName));
 		}
 		DefaultComboBoxModel items = new DefaultComboBoxModel(columns);
 		raSettingsGui.removeAllItems();
@@ -356,7 +356,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		Vector<TapTableColumn> columnsToSet = new Vector<TapTableColumn>();
 		TapTableColumn dummyColumn = getDummyColumn();
 		columnsToSet.add(0, dummyColumn);
-		columnsToSet.addAll(getColumnSchemas(s.tapClient, s.selectedTableName));
+		columnsToSet.addAll(getColumnSchemas(s, s.selectedTableName));
 		raColumn1 = new JComboBox(columnsToSet);
 		raColumn1.setRenderer(new CustomListCellRenderer());
 		raColumn1.setSize(raColumn1.getWidth(), Server.HAUT);
@@ -438,7 +438,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		columnsToSet.add(0, dummyColumn);
 		if (secondaryTable != null) {
 			try {
-				columnsToSet.addAll(getColumnSchemas(s.tapClient, secondaryTable));
+				columnsToSet.addAll(getColumnSchemas(s, secondaryTable));
 			} catch (Exception e) {
 				// for second table errors, we do not provide the gui
 				if (Aladin.levelTrace >= 3) {
@@ -791,16 +791,16 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		return dummyColumn;
 	}
 
-	public Vector<TapTableColumn> getColumnSchemas(TapClient tapClient, String tableName) throws Exception {
-		Map<String, TapTable> tablesMetaData = tapClient.tablesMetaData;
+	public Vector<TapTableColumn> getColumnSchemas(DynamicTapForm s, String tableName) throws Exception {
+		Map<String, TapTable> tablesMetaData = s.tapClient.tablesMetaData;
 		Vector<TapTableColumn> columnNames = tablesMetaData.get(tableName).getColumns();
 		if (columnNames == null || columnNames.isEmpty()) {
-			if (tapClient.mode == TapClientMode.UPLOAD) {
+			if (s.tapClient.mode == TapClientMode.UPLOAD) {
 				throw new Exception("Error in uploaded data");
 			}
 			List<String> tableNamesToUpdate = new ArrayList<String>();
 			tableNamesToUpdate.add(tableName);
-			tapClient.updateTableColumnSchemas(tableNamesToUpdate);
+			TapManager.getInstance(aladin).updateTableColumnSchemas(s, tableNamesToUpdate);
 			columnNames = tablesMetaData.get(tableName).getColumns();
 			if (columnNames == null) {
 				throw new Exception("Error in updating the metadata for :" + tableName);
@@ -813,22 +813,22 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 	public void checkSelectionChanged(JComboBox<String> comboBox) {
 		// TODO Auto-generated method stub
 		String selectedTable = (String) comboBox.getSelectedItem();
-		TapClient tapClient = null;
+		DynamicTapForm s = null;
 		if (comboBox.isEnabled()/* && !selectedTable.equalsIgnoreCase(secondaryTable)*/) {
 			if (tableSelection == 1 && comboBox == this.secondaryTablesGui) {
-				tapClient = this.serverEx.tapClient;
+				s = this.serverEx;
 			} else if (tableSelection == 2 && comboBox == this.uploadTablesGui) {
 				if (this.uploadTablesGui.isEnabled()) {
-					tapClient = TapManager.getInstance(aladin).uploadFrame.uploadClient;
+					s = TapManager.getInstance(aladin).uploadFrame.uploadClient.serverTap;
 				} else {
 					uploadTablesGui.setEnabled(false);
 					setSecondAllTableGui(false);
 				}
 			}
 			
-			if (tapClient != null) {
+			if (s != null) {
 				try {
-					setRaDecColumn(tapClient, selectedTable, raColumn2, decColumn2);
+					setRaDecColumn(s, selectedTable, raColumn2, decColumn2);
 					raColumn2.revalidate();
 					raColumn2.repaint();
 					decColumn2.revalidate();

@@ -28,6 +28,7 @@ import static cds.aladin.Constants.BIBCODE;
 import static cds.aladin.Constants.DATAPRODUCT_TYPE;
 import static cds.aladin.Constants.DEC;
 import static cds.aladin.Constants.DOCTITLE;
+import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.EM_MAX;
 import static cds.aladin.Constants.EM_MIN;
@@ -53,6 +54,8 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import adql.db.DefaultDBTable;
 
 /**
  * Class is a model class for columns of tap services
@@ -135,6 +138,58 @@ public class TapTable {
 		if (this.obsCoreColumns == null) {
 			obsCoreColumns = new HashMap<String, String>();
 		}
+	}
+	
+	/**
+	 * Spec is not unambiguously interpreted, after discussing with Laurent
+	 * For some servers, table name mapping has a discrepancy between having a fully qualified name versus
+	 * just table name. So some mediocre, but necessary steps (like this method) 
+	 * will be added to go around this issue
+	 * @return
+	 */
+	public String getFullyQualifiedTableName(String schemaNameAsInSchema, String tableNameAsInSchema) {
+		String tableName = null;
+		
+		if (tableNameAsInSchema != null) {
+			if (schemaNameAsInSchema != null) {
+				tableName = schemaNameAsInSchema + Constants.DOT_CHAR;
+			}
+			if (tableName != null) {
+				tableName = tableName + tableNameAsInSchema;
+			} else {
+				tableName = tableNameAsInSchema;
+			}
+		}
+		if (tableName != null) {
+			DefaultDBTable table = new DefaultDBTable(tableName);
+			if (table.getADQLSchemaName() != null) {
+				tableName = table.getADQLSchemaName() + DOT_CHAR;
+			}
+
+			if (table.getADQLName() != null) {
+				tableName = tableName + table.getADQLName();
+			}
+		}
+		return tableName;
+	}
+	
+	public String getFullyQualifiedTableName() {
+		return getFullyQualifiedTableName(this.schema_name, this.table_name);
+	}
+	
+	public String getFullyQualifiedTableName(String tableNameInput) {
+		return getFullyQualifiedTableName(this.schema_name, tableNameInput);
+	}
+	
+	public String getAdqlName() {
+		String adqlName = null;
+		if (this.table_name != null) {
+			DefaultDBTable table = new DefaultDBTable(this.table_name);
+			if (table.getADQLName() != null) {
+				adqlName = table.getADQLName();
+			}
+		}
+		return adqlName;
 	}
 	
 	public synchronized void parseForObscore(boolean isUpload, TapTableColumn columnMeta) {

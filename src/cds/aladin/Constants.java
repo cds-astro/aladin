@@ -106,6 +106,7 @@ public static final String DEFAULT_CONTENTLENGTH_UNITS = "bytes";
 public static final String ACCESSURL = "access_url";
 public static final String CONTENT_TYPE_TEXTXML = "text/xml";
 public static final String CONTENT_TYPE_TEXTHTML = "text/html";
+public static final String CONTENT_TYPE_TEXTPLAIN = "text/plain";
 public static final String CONTENT_TYPE_HIPS = "content=hips";
 public static final String UNKNOWN = "UNKNOWN";
 public static final String SPACESTRING = " ";
@@ -295,11 +296,13 @@ public static final int TAPFORM_STATUS_ERROR = -1;//error
 public static enum TapClientMode {//Dialog is serverselector
 	DIALOG, TREEPANEL, UPLOAD;
 }
-public static final String GLU = "CUSTOMISED";
+public static final String GLU = "Basic";
 public static final String NODE = "NODE";
-public static final String GENERIC = "GENERIC";
-public static final String EXAMPLES = "EXAMPLES";
-public static final String OBSCORE = "OBSCORE";
+public static final String GENERIC = "Generic";
+public static final String ALLACCESS = "All access";
+public static final String TEMPLATES = "Templates";
+public static final String OBSCORE = "Obscore";
+
 public static final String TAPMODECHANGETOOLTIP = "TAPMODECHANGETOOLTIP";
 public static final String LOADCLIENTTAPURL = "LOADCLIENTTAPURL";
 public static final String RELOAD = "RELOAD";

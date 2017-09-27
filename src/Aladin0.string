@@ -3001,7 +3001,7 @@ TAPEXCLIENTINSTR Choose an example query to execute.
 TAPOBSCORECLIENTINSTR Add any obscore criteria and execute query.
 SELECTDIRTAPSERVERSLABEL Complete list
 SELECTDIRTAPSERVERSTOOLTIP Choose tap servers from the main directory tree you see in the left panel of Aladin's window
-SELECTSPLTAPSERVERSLABEL Preselected server
+SELECTSPLTAPSERVERSLABEL Preselected servers
 SELECTSPLTAPSERVERSTOOLTIP A small selection of servers is shown below. For a more comprehensive list, go to the adjacent "Complete list".
 
 TAPTABLEJOINTIP Join table
@@ -3026,20 +3026,20 @@ CHECKQUERY_ISBLANK Please generate/write a query
 NOTAPSERVERSCONFIGUREDMESSAGE No tap servers configured.
 TAPTIPRETRY Click to retry loading the tap services on this server
 TAPURLCLIENTFIELDLABEL Provide a TAP server URL
-TAPGLUGENTOGGLEBUTTONTOOLTIP Toggle between generic and glu tap forms
 CHANGESERVERTOOLTIP Choose a different tap server
 TAPMODESTOOLTIP Load a different TAP client to construct your queries
-GLU_TAPMODESTOOLTIP Click to load GLU mode - this is a customised form  generated from a GLU record
+GLU_TAPMODESTOOLTIP Click to load basic mode - this is a customised form  generated from a GLU record
 NODE_TAPMODESTOOLTIP Click to load a generic tap client for this node
 GENERIC_TAPMODESTOOLTIP Click to load a generic tap client
 EXAMPLE_TAPMODESTOOLTIP Click to load a template based tap client
 OBSCORE_TAPMODESTOOLTIP Click to load a custom client for obscore tables
+FULLSERVER_TAPMODESTOOLTIP Click to access all tables of the server
 TAPSERVICEEXAMPLESTOOLTIP These are service provided examples!
 SETRADECBUTTONTIP Select columns of the tap table as right ascension and declination columns
 TAPSETTINGSTOOLTIP Set targets, max rows and other values.
 SETTARGETTOOLTIP Hint: Configure different target by clicking the "Settings" button
 CHANGESETTINGSTOOLTIP Hint: Configure second table by clicking the "Settings" button
-NOGLURECFOUND No glu records found to create a customised client!
+NOGLURECFOUND No glu records found to create a customised basic client!
 NOTARGETSET No target set.
 NORANGEERRORMESSAGE Range selected, please provide 2 values!
 CHOOSEFROMTAPSERVERSTEXT Or choose from the lists below:

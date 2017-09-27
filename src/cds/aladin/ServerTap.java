@@ -48,7 +48,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -57,7 +56,6 @@ import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -74,7 +72,6 @@ import javax.swing.text.BadLocationException;
 
 import adql.db.DBChecker;
 import adql.parser.QueryChecker;
-import cds.aladin.Constants.TapClientMode;
 
 public class ServerTap extends DynamicTapForm implements MouseListener {
 
@@ -111,41 +108,43 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	 * @param tableChoice
 	 */
 	protected void createForm(String tableChoice) {
+		CLIENTINSTR  = Aladin.chaine.getString("TAPCLIENTINSTR");
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
 		Vector<String> tables = getTableNames();
+		TapTable chosenTable = null;
+		/*
+		if (tableChoice != null) {
+			for (TapTable tapTable : tables) {
+				DefaultDBTable ntable = new DefaultDBTable(tableChoice);
+				if (tablesMetaData.containsKey(TapManager.getFullyQualifiedTableName(ntable))) {
+					chosenTable = tapTable;
+					break;
+				} else if (tablesMetaData.containsKey(ntable.getADQLName())) {
+					chosenTable = tapTable;
+					break;
+				}
+			}
+		}
+		if (chosenTable == null) {
+			chosenTable = tables.get(0);
+		} 
+		selectedTableName = chosenTable.getTable_name();
+		*/
+		
 		if (tableChoice == null || !tables.contains(tableChoice)) {
-			selectedTableName = tables.get(0);
+			chosenTable = tablesMetaData.get(tables.firstElement());
 		} else {
-			selectedTableName = tableChoice;
+			chosenTable = tablesMetaData.get(tableChoice);
 		}
-		Vector<TapTableColumn> columnNames = tablesMetaData.get(selectedTableName).getColumns();
-		if (columnNames == null) {
-			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				Aladin.warning("Error in uploaded data");
-				return;
-			}
-			try {
-				List<String> tableNamesToUpdate = new ArrayList<String>();
-				tableNamesToUpdate.add(selectedTableName);
-				this.tapClient.tapManager.updateTableColumnSchemas(this.tapClient, tableNamesToUpdate);
-				columnNames = tablesMetaData.get(selectedTableName).getColumns();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				Aladin.warning(e.getMessage());
-				return;
-			}
-			if (columnNames == null) {
-				Aladin.warning("Error in updating the metadata for :"+selectedTableName);
-				return;
-			}
-		}
+		selectedTableName = chosenTable.getTable_name();
+		Vector<TapTableColumn> columnNames = getColumnsToLoad(selectedTableName, tablesMetaData);
 
 		QueryChecker checker = new DBChecker(this.tapClient.queryCheckerTables);
 		this.adqlParser.setQueryChecker(checker);
 		setBasics();
 		
-		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
-		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
+		this.raColumnName = chosenTable.getRaColumnName();
+		this.decColumnName = chosenTable.getDecColumnName();
 		
 	    
 		GridBagConstraints c = new GridBagConstraints();
@@ -156,7 +155,8 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		JPanel tablesPanel = null;
 		try {
 			tablesGui = new JComboBox(tables);
-			tablesPanel = getTablesPanel(tablesGui, selectedTableName, false);
+//			tablesGui.setRenderer(new CustomTableRenderer());
+			tablesPanel = getTablesPanel(tablesGui, chosenTable, false);
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
 			Aladin.warning(e.getMessage());
@@ -181,7 +181,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	    c.gridy++;
 	    containerPanel.add(this.queryComponentsGui, c);	
 		
-		JPanel linePanel = getBottomPanel();
+		JPanel linePanel = getBottomPanel(true);
 		c.weightx = 0.10;
 		c.weighty = 0.02;
 		c.insets = new Insets(0, -6, 0, 0);
@@ -216,6 +216,8 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	@Override
 	public void changeTableSelection(String tableChoice) {
 		waitCursor();
+		this.modeChoice.setVisible(true);
+		tapClient.activateWaitMode(this);
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
 		Vector<TapTableColumn> columnNames = this.setTableGetColumnsToLoad(tableChoice, tablesMetaData);
 		if (columnNames == null) {
@@ -254,6 +256,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		this.revalidate();
 		this.repaint();
 		defaultCursor();
+		this.info1.setText(CLIENTINSTR);
 	}
 	
 	/**
@@ -279,11 +282,10 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		panel.add(selectAll);
 		
 		if (columnNames != null) {
-			Vector<TapTableColumn> model = new Vector<TapTableColumn>();
-			model.addAll(columnNames);
-			DefaultComboBoxModel combo = new DefaultComboBoxModel<TapTableColumn>(model);
-			this.selectList = new JList(columnNames);
-			this.selectList.setSelectionInterval(0, columnNames.size()-1);
+			Vector<TapTableColumn> modelNames = new Vector<TapTableColumn>();
+			modelNames.addAll(columnNames);
+			this.selectList = new JList(modelNames);
+			this.selectList.setSelectionInterval(0, modelNames.size()-1);
 			this.selectList.setCellRenderer(new CustomListCellRenderer());
 			this.selectList.addListSelectionListener(new ListSelectionListener() {
 				@Override
@@ -477,7 +479,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
-			.append(getQueryPart(selectedTableName)).append(SPACESTRING);
+			.append(getQueryPart(this.tapClient.tablesMetaData.get(selectedTableName), selectedTableName)).append(SPACESTRING);
 			
 			Component[] whereConstraints = this.whereClausesPanel.getComponents();
 			if (this.whereClausesPanel.getComponentCount() > 0) {
@@ -502,15 +504,21 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	/**
 	 * Method only used for cases of table names with special chars.
 	 * Adds double quote to the names
+	 * @param tapTable 
 	 * @param queryPartInput
 	 * @return
 	 */
-	public static String getQueryPart(String queryPartInput) {
-		Pattern regex = Pattern.compile(REGEX_TABLENAME_SPECIALCHAR);
-		Matcher matcher = regex.matcher(queryPartInput);
-		if (matcher.find()){
-			queryPartInput = Glu.doubleQuote(queryPartInput);
+	public static String getQueryPart(TapTable tapTable, String queryPartInput) {
+		if (tapTable != null) {
+//			queryPartInput = tapTable.getAdqlName(); //TODO:: tintin : when we add schema name
+			Pattern regex = Pattern.compile(REGEX_TABLENAME_SPECIALCHAR);
+			Matcher matcher = regex.matcher(queryPartInput);
+			if (matcher.find()){
+				queryPartInput = Glu.doubleQuote(queryPartInput);
+			}
+//			queryPartInput = tapTable.getFullyQualifiedTableName(queryPartInput); //when we add schema name
 		}
+		
 		return queryPartInput;
 	}
 	
@@ -627,11 +635,10 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	 */
 	public void submit(Map<String, Object> requestParams) {
 	      //check again
-		if (formLoadStatus != TAPFORM_STATUS_LOADED) {
-			return;
+		if (this.sync_async != null &&  this.tap != null) {
+			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
+	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
 		}
-		boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
 	}
 	
 	@Override
@@ -706,7 +713,6 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
 		verboseDescr  = loadedServerDescription = Aladin.chaine.getString("TAPGENERICFORMDESC");
-		CLIENTINSTR  = Aladin.chaine.getString("TAPCLIENTINSTR");
 	}
 	
 	static {

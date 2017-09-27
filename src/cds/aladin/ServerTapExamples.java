@@ -56,7 +56,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 
-import cds.aladin.Constants.TapClientMode;
 import cds.tools.ConfigurationReader;
 import cds.xml.DaliExamplesReader;
 
@@ -116,6 +115,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		grabItY2 = grabItY1;
 		grabItR1 = Server.getRM("10'")/60.;
 		grabItR2 = Server.getRM("5'")/60.;
+		
 	}
 	
 	/**
@@ -125,38 +125,20 @@ public class ServerTapExamples extends DynamicTapForm {
 	 * @param secTableChoice 
 	 */
 	protected void createForm(String priTableChoice, String secTableChoice) {
-		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
+		CLIENTINSTR = Aladin.chaine.getString("TAPEXCLIENTINSTR");
 		Vector<String> tables = getTableNames();
+		TapTable chosenTable = null;
 		if (priTableChoice == null || !tables.contains(priTableChoice)) {
-			selectedTableName = tables.get(0);
+			chosenTable = this.tapClient.tablesMetaData.get(tables.firstElement());
 		} else {
-			selectedTableName = priTableChoice;
+			chosenTable = this.tapClient.tablesMetaData.get(priTableChoice);
 		}
-		Vector<TapTableColumn> columnNames1 = tablesMetaData.get(selectedTableName).getColumns();
+		selectedTableName = chosenTable.getTable_name();
 		
-		if (columnNames1 == null || columnNames1.isEmpty()) {
-			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				Aladin.warning("Error in uploaded data");
-				return;
-			}
-			try {
-				List<String> tableNamesToUpdate = new ArrayList<String>();
-				tableNamesToUpdate.add(selectedTableName);
-				this.tapClient.updateTableColumnSchemas(tableNamesToUpdate);
-				columnNames1 = tablesMetaData.get(selectedTableName).getColumns();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				Aladin.warning(e.getMessage());
-				this.showLoadingError();
-				return;
-			}
-			if (columnNames1 == null) {
-				Aladin.warning("Error in updating the metadata for :"+selectedTableName);
-				return;
-			}
-		}
+		getColumnsToLoad(chosenTable.getTable_name(), this.tapClient.tablesMetaData);
 		
 		setBasics();
+		max = null;
 		
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -167,7 +149,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		JPanel tablesPanel = null;
 		try {
 			tablesGui = new JComboBox(tables);
-			tablesPanel = getTablesPanel(tablesGui, selectedTableName, true);
+			tablesPanel = getTablesPanel(tablesGui, chosenTable, true);
 			tablesPanel.setBackground(this.tapClient.primaryColor);
 			tablesPanel.setFont(BOLD);
 			c.weighty = 0.02;
@@ -244,7 +226,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			containerPanel.add(scrolley, c);
 		}
 		
-		JPanel linePanel = getBottomPanel();
+		JPanel linePanel = getBottomPanel(true);
 		c.gridx = 0;
 		c.weightx = 1;
 		c.weighty = 0.02;
@@ -275,38 +257,38 @@ public class ServerTapExamples extends DynamicTapForm {
 	
 	@Override
 	public void submit() {
-		if (formLoadStatus != TAPFORM_STATUS_LOADED) {
-			return;
-		}
-		if (Aladin.levelTrace >= 3) System.err.println(tap.getText()+"\n");
-		String tapQuery = tap.getText();
-		Map<String, Object> requestParams = null;
-		if (secondaryTable != null) {
-			TapManager tapManager = TapManager.getInstance(aladin);
-			if (!this.tapClient.tablesMetaData.containsKey(secondaryTable)) {
-				if (tapManager.uploadFrame.uploadedTableFiles.containsKey(secondaryTable)) {
-					if (tap.getText().contains(secondaryTable)) {
-						requestParams = new HashMap<String, Object>();
-						FrameUploadServer uploadFrame = tapManager.uploadFrame;
-						if (uploadFrame.uploadedTableFiles.get(secondaryTable) == null) {
-							Aladin.warning(this, "Unable to submit " + secondaryTable + " data!");
-							return;
+		if (this.sync_async != null &&  this.tap != null) {
+			if (Aladin.levelTrace >= 3) System.err.println(tap.getText()+"\n");
+			String tapQuery = tap.getText();
+			Map<String, Object> requestParams = null;
+			if (secondaryTable != null) {
+				TapManager tapManager = TapManager.getInstance(aladin);
+				if (!this.tapClient.tablesMetaData.containsKey(secondaryTable)) {
+					if (tapManager.uploadFrame.uploadedTableFiles.containsKey(secondaryTable)) {
+						if (tap.getText().contains(secondaryTable)) {
+							requestParams = new HashMap<String, Object>();
+							FrameUploadServer uploadFrame = tapManager.uploadFrame;
+							if (uploadFrame.uploadedTableFiles.get(secondaryTable) == null) {
+								Aladin.warning(this, "Unable to submit " + secondaryTable + " data!");
+								return;
+							}
+							String uploadFileName = FrameUploadServer.UPLOADFILEPREFIX+secondaryTable;
+							requestParams.put("upload", uploadFrame.getUploadParam(secondaryTable, uploadFileName));
+							requestParams.put(uploadFileName, uploadFrame.uploadedTableFiles.get(secondaryTable));
 						}
-						String uploadFileName = FrameUploadServer.UPLOADFILEPREFIX+secondaryTable;
-						requestParams.put("upload", uploadFrame.getUploadParam(secondaryTable, uploadFileName));
-						requestParams.put(uploadFileName, uploadFrame.uploadedTableFiles.get(secondaryTable));
 					}
 				}
 			}
+			
+			String fullQuery = tapQuery.toUpperCase();
+			if (!fullQuery.startsWith("SELECT ")) {
+				tapQuery = fullQuery.substring(fullQuery.indexOf("SELECT", 0), fullQuery.length());
+				if (Aladin.levelTrace >= 3) System.err.println(tapQuery);
+			}
+			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
+	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, tapQuery);
 		}
 		
-		String fullQuery = tapQuery.toUpperCase();
-		if (!fullQuery.startsWith("SELECT ")) {
-			tapQuery = fullQuery.substring(fullQuery.indexOf("SELECT", 0), fullQuery.length());
-			if (Aladin.levelTrace >= 3) System.err.println(tapQuery);
-		}
-		boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, tapQuery);
 	}
 	
 	@Override
@@ -358,7 +340,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			info1.setText("Cannot select same table! No second table selected.");
 			TapManager.getInstance(aladin).eraseNotification(info1, CLIENTINSTR);
 		}
-		String priTableNameForQuery = ServerTap.getQueryPart(selectedTableName);
+		String priTableNameForQuery = ServerTap.getQueryPart(this.tapClient.tablesMetaData.get(selectedTableName), selectedTableName);
 		this.basicExamples.put("Select all", new CustomListCell("Select * from " + priTableNameForQuery, EMPTYSTRING));
 		this.basicExamples.put("Select top 1000", new CustomListCell("Select TOP 1000 * from " + priTableNameForQuery, EMPTYSTRING));
 		// this.basicExamples.put("Select few columns", "Select oidref, filter,
@@ -524,7 +506,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			}
 			secRaColumnName = secTableMetaData.getRaColumnName(); 
 			secDecColumnName = secTableMetaData.getDecColumnName();
-			secTableNameForQuery = ServerTap.getQueryPart(secondaryTable);
+			secTableNameForQuery = ServerTap.getQueryPart(this.tapClient.tablesMetaData.get(secondaryTable), secondaryTable);
 		}
 		boolean obscore = priTableMetaData.isObscore();
 		if (obscore) {
@@ -827,7 +809,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		if (spQuery.toString().isEmpty()) {
 			spQuery.append(" * ");
 		}
-		String priTableNameForQuery = ServerTap.getQueryPart(selectedTableName);
+		String priTableNameForQuery = ServerTap.getQueryPart(this.tapClient.tablesMetaData.get(selectedTableName), selectedTableName);
 		String queryToDisplay = String.format(tableSelectQuery, max, spQuery.toString(), priTableNameForQuery);
 		if (queryName == null) {
 			queryName = "Select " + spQuery.toString();
@@ -885,7 +867,6 @@ public class ServerTapExamples extends DynamicTapForm {
 		description = Aladin.chaine.getString("TAPFORMINFO");
 		title = Aladin.chaine.getString("TAPFORMTITLE");
 		verboseDescr = loadedServerDescription = Aladin.chaine.getString("TAPEXAMPLEFORMDESC");
-		CLIENTINSTR = Aladin.chaine.getString("TAPEXCLIENTINSTR");
 		TAPSERVICEEXAMPLESTOOLTIP = Aladin.chaine.getString("TAPSERVICEEXAMPLESTOOLTIP");
 		SETTARGETTOOLTIP = Aladin.chaine.getString("SETTARGETTOOLTIP");
 		TAPEXDEFAULTMAXROWS = ConfigurationReader.getInstance().getPropertyValue("TAPEXDEFAULTMAXROWS");
