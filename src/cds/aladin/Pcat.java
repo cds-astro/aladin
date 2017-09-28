@@ -952,6 +952,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       }
       tableParserInfo(msg);
    }
+   
+   /** Positionnement de l'époque originale */
+   public void setOriginalEpoch(String s ) throws Exception { plan.setOriginalEpoch(s); }
 
    /** This method is called by the TableParserConsumer for
     * delivering parsing information

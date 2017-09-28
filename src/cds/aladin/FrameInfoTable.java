@@ -21,15 +21,24 @@
 
 package cds.aladin;
 
-import cds.tools.*;
-import cds.xml.Field;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+
+import cds.tools.Util;
+import cds.xml.Field;
 
 /**
  * Gestion de la fenêtre d'affichage des infos sur les tables d'un plan catalogue
@@ -41,7 +50,7 @@ public class FrameInfoTable extends JFrame {
 	private Aladin aladin;
 	private Plan plan;
 
-	protected FrameInfoTable(Aladin aladin,Plan plan) {
+	protected FrameInfoTable(Aladin aladin,final Plan plan) {
 	   super();
 	   this.aladin = aladin;
 	   this.plan = plan;
@@ -61,7 +70,7 @@ public class FrameInfoTable extends JFrame {
 	   boolean multiTable = plan.getNbTable()>1;
 	   Enumeration<Legende> e = legs.elements();
 	   while( e.hasMoreElements() ) {
-	      Legende leg = (Legende)e.nextElement();
+	      Legende leg = e.nextElement();
 	      JPanel p1 = new JPanel( new BorderLayout(5,5) );
           if( multiTable )  p1.setBorder(BorderFactory.createTitledBorder(leg.name));
           else p1.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
@@ -101,6 +110,23 @@ public class FrameInfoTable extends JFrame {
           });
           p2.add(b);
           
+          if( !multiTable ) {
+             String epoch;
+             try {
+                epoch = "J"+plan.getOriginalEpoch().getJyr();
+             } catch( Exception e1 ) { epoch="J2000"; }
+             final String oEpoch = epoch;
+             final JTextField t = new JTextField(epoch);
+             p2.add( new JLabel( aladin.chaine.getString("PROPEPOCH")+" "));
+             p2.add(t);
+             t.addActionListener( new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                   String s = t.getText();
+                   if( !plan.modifyOriginalEpoch(s) ) t.setText(oEpoch);
+                }
+             });
+          }
+
           p2.add(new JLabel(" - "));
 
 	   }
@@ -127,7 +153,7 @@ public class FrameInfoTable extends JFrame {
        Vector<Legende> legs = plan.getLegende();
        Enumeration<Legende> e = legs.elements();
        while( e.hasMoreElements() ) {
-          Legende leg = (Legende)e.nextElement();
+          Legende leg = e.nextElement();
           for( Field f : leg.field ) f.visible=flag;
           leg.fireTableDataChanged();
        }

@@ -110,30 +110,11 @@ public class BuilderRgb extends BuilderTiles {
       initStat();
       super.build();
    }
-
    
-   // Transforme un path à la mode cube (ex: xxx/Allsky.fits[1]) par sa
-   // syntaxe HiPS (ex: xxx/Allsky_1.fits)
-   // sinon retourne le path original
-   private String pathCube2path(String path) {
-      if( !path.endsWith("]") ) return path;
-      int i = path.lastIndexOf('[');
-      if( i<=0 ) return path;
-      try {
-         int n = Integer.parseInt(path.substring(i+1, path.length()-1) );
-         String suff = n==0 ? "": ("_"+n);
-         int j = path.lastIndexOf(".",i);
-         if( j==-1 ) return path.substring(0,i)+suff;   // s'il n'y a pas d'extension, ou met _nnn à la fin
-         return path.substring(0,j)+suff+path.substring(j,i);  // sinon on l'insère juste avant l'extension
-         
-      } catch( Exception e) { }
-      
-      return path;
-   }
-
    // Supprime le suffixe d'un path à la mode cube (ex: xxx/Allsky.fits[1] => xxx/Allsky.fits
    // sinon retourne le path original
    private String removeCubeSuffixe( String path ) {
+      if( path==null ) return null;
       if( !path.endsWith("]") ) return path;
       int i = path.lastIndexOf('[');
       if( i<=0 ) return path;

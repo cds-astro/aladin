@@ -857,6 +857,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       String expr;
       
+      // si ça commence par ivo://xxx on le remplace par ID=xxx
+      if( s.startsWith("ivo://") ) s="ID="+s.substring(6);
+      
       int i = s.indexOf('=');
       if( i<0 ) i=s.indexOf('>');
       if( i<0 ) i=s.indexOf('<');
@@ -1675,6 +1678,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       }
       return true;
    }
+   
+   /** Retourne true si on a au moins une clé vers une url d'accès */
+   private boolean hasURLkey( MyProperties prop ) {
+      for( String k : prop.getKeys() ) {
+         if( k.indexOf("url")>=0 ) return true;
+      }
+      return false;
+   }
 
    // Conversion d'un profile à la "properties", en un profile à la "GLU"
    // Exemple: "Beta>9.6" sera converti en "beta >9.6"
@@ -1718,6 +1729,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       
       // Est-ce qu'il y a un "profile", et si oui, est-il compatible avec cette version d'Aladin
       if( !hasValidProfile(prop) ) return;
+      
+      // Y a-t-il au moins un moyen d'accès ?
+      if( !hasURLkey(prop) ) return;
       
       // Ajustement local des propriétés
       propAdjust( id, prop );
@@ -1773,7 +1787,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          boolean isSIA  = prop.getProperty("sia_service_url")!=null || prop.getProperty("sia2_service_url")!=null;
          boolean isSSA  = prop.getProperty("ssa_service_url")!=null;
          boolean isTAP  = prop.getProperty("tap_service_url")!=null;
-         String subCat = isHips ? "HiPS" : isCS ? "Catalog by CS" : isTAP ? "Table by TAP" : isSIA ? "Image by SIA" : isSSA ? "Spectrum by SSA" : "Miscellaneous";
+         String subCat = isHips ? "HiPS" 
+               : isSIA ? "Image" 
+               : isSSA ? "Spectrum" 
+               : isCS ? "Catalog" 
+               : isTAP ? "Table"
+               : "Miscellaneous";
          
          category = "Unsupervised/"+subCat+"/"+Util.getSubpath(id, 0,1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY,category);
@@ -1832,7 +1851,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          cleanLatexMacro(prop);
          
          // Ajout de l'entrée TAP (si elle n'existe pas)
-         prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+         if( prop.get("tap_service_url")==null ) {
+            prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+         }
          
          // Détermination de la catégorie
          String code = getCatCode(id);
@@ -1840,7 +1861,6 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
          String sortPrefix = "";
          String vizier = "/VizieR";
-//         String vizier = "";
          
          boolean flagJournal = code.equals("J");
          if( flagJournal ) {
@@ -2658,12 +2678,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                csBx = bx = new JCheckBox(AWCSLAB);
                bx.addActionListener(this);
                mocAndMore.add(bx);
-               bx.setSelected(hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj()) );
                String info = nbIn+nbInMayBe==0 ? "(no data in the field)" :
                   "("+(nbIn+nbInMayBe) +" collections "+(nbInMayBe>0?" may ":"should")+" have data in the field)";
                Util.toolTip(bx,Util.fold(AWMCSTIP+"\n"+info,100,true));
                bx.setEnabled( hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj()) 
                      && nbIn+nbInMayBe>0);
+               bx.setSelected(hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj())
+                     && bx.isEnabled() );
                bg.add(bx);
             }
             
@@ -2671,7 +2692,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                hipsBx = bx = new JCheckBox(AWPROGACC);
                bx.addActionListener(this);
                mocAndMore.add(bx);
-               bx.setSelected(true);
+               if( csBx==null || !csBx.isSelected() ) bx.setSelected( true );
                String info = "("+nbInHips+" coll. have data in the field)";
                Util.toolTip(bx,Util.fold(AWPROGACCTIP+"\n"+info,100,true));
             }
@@ -2686,7 +2707,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                
             }
 
-            if( (csBx!=null || hipsBx!=null || msBx!=null ) /* (hasCS || hasSIA || hasSSA) */ && (hasMoc) ) {
+            if( (csBx!=null || hipsBx!=null || msBx!=null ) && (hasMoc) ) {
                JLabel labelPlus = new JLabel(" + ");
                mocAndMore.add(labelPlus);
             }
@@ -2876,8 +2897,8 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                csBx = bx = new JCheckBox(AWCSLAB);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setSelected( hasSmallView && !to.hasHips() && !allCat);
                bx.setEnabled( hasSmallView );
+               bx.setSelected( hasSmallView && !to.hasHips() && !allCat);
                bx.setToolTipText(AWINVIEWTIP);
                bg.add(bx);
                
@@ -2908,19 +2929,25 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                bx.setSelected( !to.hasHips() );
                Util.toolTip(bx,AWINVIEWTIP);
                bg.add(bx);
-           }
-            
+            }
+
+            // Juste pour ne pas sélectioner un truc inactivé
+            if( csBx!=null && !csBx.isEnabled() ) csBx.setSelected(false);
+            if( siaBx!=null && !siaBx.isEnabled() ) siaBx.setSelected(false);
+            if( ssaBx!=null && !ssaBx.isEnabled() ) ssaBx.setSelected(false);
+
+
             if( to.hasTAP() ) {
                tapBx = bx = new JCheckBox(AWCRIT);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setSelected( csBx==null );
+               bx.setSelected( csBx==null && siaBx==null && ssaBx==null || !hasSmallView );
                Util.toolTip(bx,AWCRITTIP,true);
                bg.add(bx);
             }
-            
+
             JPanel productPanel = new JPanel( new FlowLayout(FlowLayout.CENTER,3,0));
-            
+
             if( to.hasMoc() ) {
                mocBx = bx = new JCheckBox(AWMOCX); 
                bx.addActionListener(this);
@@ -2949,6 +2976,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                   Util.toolTip(bx,AWPROGENTIP,true);
                }
             }
+            
            
             GridBagConstraints c1 = new GridBagConstraints();
             GridBagLayout g1 =  new GridBagLayout();

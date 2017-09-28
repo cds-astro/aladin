@@ -1586,11 +1586,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    // Changement de projection spécifique d'un catalogue ou d'un planBG
    private void actionSpecificProj() {
+      if( specificProj==null ) return;
       String sproj = (String) specificProj.getSelectedItem();
       int  index = specificProj.getSelectedIndex();
       
       // Est-ce qu'on a changé quelque chose ?
-      if( specificProj==null ) return;
       if( plan instanceof PlanBG ) {
          if( index==0 && !plan.hasSpecificProj() ) return;
       }

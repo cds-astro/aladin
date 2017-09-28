@@ -29,6 +29,7 @@ import java.util.Vector;
 
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
+import cds.aladin.Pcat;
 import cds.aladin.Save;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
@@ -126,6 +127,8 @@ final public class TableParser implements XMLConsumer {
 
    private int format;                // Format des coordonnées (FMT_UNKOWN | FMT_DECIMAL | FMT_SEXAGESIMAL)
    private int unit;                  // Unité des coordonnées (UNIT_UNKNOWN | UNIT_DEGREES | UNIT_RADIANS )
+   private String unitPMRA;           // Unité du mouvement propre en RA
+   private String unitPMDEC;          // Unité du mouvement propre en DEC
    //   private boolean flagSexa;	      // ture s'il s'agit de coordonnées sexagésimal
    //   private boolean knowFormat;	      // true si on a détecté le format des coordonnées
 
@@ -1563,6 +1566,12 @@ final public class TableParser implements XMLConsumer {
       } else {
          consumer.tableParserInfo("      => RA/DEC coordinate system used: ref=\""+ref+"\" => "+trgAstroFrame);
       }
+      
+      // mémorisation de l'époque originale des positions
+      if( srcAstroFrame!=null ) {
+         if( consumer instanceof Pcat ) ((Pcat)consumer).setOriginalEpoch(srcAstroFrame.getEpoch()+"");
+      }
+      
    }
 
    /** Positionne des noms de colonne par défaut pour palier à une absence d'entête */
@@ -1574,7 +1583,7 @@ final public class TableParser implements XMLConsumer {
          consumer.setField(f);
       }
    }
-
+   
    /** Parsing des coordonnées exprimée en décimales ou en sexagésimales. Prend en compte l'absence de signe
     * sur la déclinaison
     * @param c  Les coordonnées trouvées
@@ -1942,6 +1951,7 @@ final public class TableParser implements XMLConsumer {
       }
       if( qual>=0 &&  qualPMRA>qual ) {
          nPMRA=nField; qualPMRA=qual;
+         unitPMRA=unit;
          f.cooPossibleSignature = Field.PMRA;
       }
 
@@ -1963,6 +1973,7 @@ final public class TableParser implements XMLConsumer {
       }
       if( qual>=0 &&  qualPMDEC>qual ) {
          nPMDEC=nField; qualPMDEC=qual;
+         unitPMDEC=unit;
          f.cooPossibleSignature = Field.PMDE;
       }
 
@@ -2119,13 +2130,19 @@ final public class TableParser implements XMLConsumer {
       if( Util.indexOfIgnoreCase(s, "DEG")>=0 ) return UNIT_DEGREES;
       return UNIT_UNKNOWN;
    }
+   
+   static double J2000=Double.NaN;
 
    /** Préparation et appel au consumer.setRecord(alpha,delta,rec[]) en calculant
     * les coordonnées en fonction des valeurs nRA,nDEC ou nX,nY suivant le flagXY ou non
     */
    private void consumeRecord(String rec[],int nbRecord) {
+      
 
       try {
+         
+         // Initialisation de l'époque J2000
+         if( Double.isNaN(J2000) ) J2000 = (new Astrotime("J2000")).getJyr();
 
          if( flagNOCOO ) {
             consumer.setRecord(0,0, rec);
@@ -2139,7 +2156,7 @@ final public class TableParser implements XMLConsumer {
             // Coordonnées en RA/DEC
          } else {
             String ra,dec;
-
+            
             // Champs différents
             if( nRA!=nDEC ) { ra=rec[nRA]; dec=rec[nDEC]; }
 
@@ -2157,20 +2174,66 @@ final public class TableParser implements XMLConsumer {
             }
             
             format = getRaDec(c,ra,dec,format,unit);
-
+            
             //System.out.println("--> ["+t+"] knowFormat="+knowFormat+" flagSexa="+flagSexa);
             //System.out.println("rec=");
             //for( int w=0; w<rec.length; w++ ) System.out.println("   rec["+w+"]="+rec[w]);
             
-            // Changement de repere si nécessaire
+            // Changement de repere et d'époque si nécessaire
             if( srcAstroFrame!=null ) {
-               //               System.out.println("BEFORE c="+c);
-               c.convertTo(trgAstroFrame);
-               //               System.out.println("AFTER c="+c);
-               consumer.setRecord(c.getLon(),c.getLat(), rec);
-               c = new Astropos(srcAstroFrame);
+//               c.convertTo(trgAstroFrame);
+//               consumer.setRecord(c.getLon(),c.getLat(), rec);
+//               c = new Astropos(srcAstroFrame);
+               
+               // Y a-t-il des mouvements propres ?
+               double pmra=0, pmdec=0;
+               if( nPMRA!=-1 && nPMDEC!=-1 ) {
+                  String sPMRA = rec[nPMRA];
+                  String sPMDEC = rec[nPMDEC];
 
-            } else consumer.setRecord(c.getLon(),c.getLat(), rec);
+                  // Eventuel changement d'unité pour le PM
+                  // Attention pmdec peut être exprimé en mas/y ou ms/y si déjà multiplié par cosd
+                  if( sPMRA!=null && sPMDEC!=null ) {
+                     Unit mu1 = new Unit();
+                     try {
+                        mu1.setUnit(unitPMRA);
+                        mu1.setValue(sPMRA);
+                     } catch( Exception e1 ) { e1.printStackTrace(); }
+                     Unit mu2 = new Unit();
+
+                     try {
+                        mu2.setUnit(unitPMDEC);
+                        mu2.setValue(sPMDEC);
+                     } catch( Exception e1 ) { e1.printStackTrace();  }
+
+                     if( mu1.getValue()!=0 || mu2.getValue()!=0 ) {
+                        try {
+                           mu1.convertTo(new Unit("mas/yr"));
+                        } catch( Exception e) {
+                           // Il faut reinitialiser parce que mu1 a changé d'unité malgré l'échec !
+                           mu1.setUnit(sPMRA);
+                           mu1.setValue(rec[nPMRA]);
+                           mu1.convertTo(new Unit("ms/yr"));
+                           double v = 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180);
+                           mu1 = new Unit(v+"mas/yr");
+                        };
+
+                        pmra = mu1.getValue();
+                        mu2.convertTo(new Unit("mas/yr"));
+                        pmdec = mu2.getValue();
+                     }
+                  }
+               }
+
+               Astropos targetCoo = new Astropos(srcAstroFrame);
+               targetCoo.set(c.getLon(),c.getLat(),srcAstroFrame.getEpoch(),pmra,pmdec);
+//               if( pmra!=0 ) System.out.println("BEFORE c="+targetCoo);
+               targetCoo.toEpoch( trgAstroFrame.getEpoch() );
+               targetCoo.convertTo(trgAstroFrame);
+//               if( pmra!=0 ) System.out.println("AFTER c="+targetCoo);
+               consumer.setRecord(targetCoo.getLon(),targetCoo.getLat(), rec);
+
+            }  else consumer.setRecord(c.getLon(),c.getLat(), rec);
          }
 
 
@@ -2180,6 +2243,7 @@ final public class TableParser implements XMLConsumer {
       }
 
    }
+   
 
    /**
     * Retourne le caractère séparateur s'il s'agit de l'un des séparateurs spécifiés

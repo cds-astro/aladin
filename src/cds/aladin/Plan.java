@@ -126,6 +126,7 @@ public class Plan implements Runnable {
    //   protected Thread	sr;	         // Thread pour la resolution Simbad */
    protected Color c;            // La couleur associee au plan
    protected Astrotime epoch;    // Epoque pour catalogue (par défaut J2000)
+   protected Astrotime epochOrig;    // Epoque originale pour catalogue (par défaut J2000)
    protected Projection projd;   // La projection PAR DEFAUT associee au plan
    protected Projection projInit; // La projection initiale associee au plan
    protected Hashtable projD = null;  // La liste des projections associées au plan
@@ -480,12 +481,28 @@ public class Plan implements Runnable {
    protected int getNbTable() { return 0; }
    protected int getCounts() { return 0; }
    protected void reallocObjetCache() { if( pcat!=null ) pcat.reallocObjetCache(); }
+   
+   /** Retourne l'époque originale */
+   protected Astrotime getOriginalEpoch() {
+      try {
+         if( epochOrig==null ) epochOrig = new Astrotime("J2000");
+      } catch( ParseException e ) { }
+      return epochOrig;
+   }
 
+   /** Retourne l'époque de l'affichage */
    protected Astrotime getEpoch() {
       try {
          if( epoch==null ) epoch = new Astrotime("J2000");
       } catch( ParseException e ) { }
       return epoch;
+   }
+   
+   /** Positionne l'époque originale des coordonnées */
+    protected void setOriginalEpoch(String s) throws Exception {
+      if( Character.isDigit( s.charAt(0)) ) s = "J"+s;
+      if( epochOrig==null ) epochOrig = new Astrotime(s);
+      else epochOrig.set(s);
    }
 
    /** Positionne une nouvelle epoque, et recalcule les positions de tous les objets
@@ -645,14 +662,10 @@ public class Plan implements Runnable {
 
    /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
    public void recomputePosition(Iterator<Obj> it,Legende leg, int nra,int ndec,int npmra,int npmde) {
+      double originalEpoch=getOriginalEpoch().getJyr();
       double epoch = getEpoch().getJyr();
       int format = TableParser.FMT_UNKNOWN;
       int nError=0;
-
-      double J2000=Double.NaN;
-      try { J2000 = (new Astrotime("J2000")).getJyr(); }
-      catch( Exception e ) {}
-
       //       boolean first=true;
 
       Astropos c = new Astropos();
@@ -698,7 +711,7 @@ public class Plan implements Runnable {
                      double pmde = mu2.getValue();
                      //                   if( first ) System.out.println("pmde="+s1+" => mu2="+mu2+" => val="+pmde);
 
-                     c.set(c.getLon(),c.getLat(),J2000,pmra,pmde);
+                     c.set(c.getLon(),c.getLat(),originalEpoch,pmra,pmde);
                      //                   if( first ) System.out.println("set c : "+c);
                      c.toEpoch(epoch);
                      //                   if( first ) System.out.println("set epoch="+epoch+" : "+c);
@@ -722,6 +735,31 @@ public class Plan implements Runnable {
       }
 
    }
+   
+   /** Modification des champs utilisés pour la position céleste */
+   protected boolean modifyOriginalEpoch(String origEpoch) {
+      Astrotime at = getOriginalEpoch();
+      try {
+         aladin.trace(3,label+" new original epoch: "+getOriginalEpoch().getJyr()+" => "+origEpoch);
+
+         setOriginalEpoch(origEpoch);
+         recomputePosition();
+
+         aladin.view.newView(1);
+         aladin.view.repaintAll();
+
+         String s = "New original epoch for "+label+"\n=> J"+getOriginalEpoch().getJyr();
+         aladin.trace(2,s);
+         aladin.info(aladin,s);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         epochOrig=at;
+         aladin.warning(aladin,"New original epoch error\n=> ignored");
+         return false;
+      }
+      return true;
+   }
+
 
    /** Modification des champs utilisés pour la position céleste */
    public void modifyRaDecField(Legende leg, int nra,int ndec,int npmra,int npmde) {

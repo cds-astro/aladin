@@ -205,14 +205,15 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Original epoch != J2000 bug fix
  * @beta    <LI> HiPS generation in ADD mode with a lot of overlays
  * @beta    <LI> MOC generation from clockwise polygons
- * @beta    <LI> Filter activation by script bug fixing
- * @beta    <LI> Polarisation segment size normalized bug fixing
- * @beta    <LI> Phot tool clic&drag bug fixing
+ * @beta    <LI> Filter activation by script bug fix
+ * @beta    <LI> Polarisation segment size normalized bug fix
+ * @beta    <LI> Phot tool clic&drag bug fix
  * @beta    <LI> Correction for VOTable UTF-16 STREAM bug
  * @beta    <LI> Correction for Hipsgen mirror filenotfound bug
- * @beta    <LI> MOC stack bug fixing (introduced in v9.039)
+ * @beta    <LI> MOC stack bug fix (introduced in v9.039)
  * @beta    <LI> Bug correction for BLANK wrong value in Hipsgen MAPTILES action
  * @beta    <LI> Radians unit support for table coordinates
  * @beta    <LI> Bug correction for pmra and pmde detection
@@ -247,7 +248,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.018";
+   static public final    String VERSION = "v10.019";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5537,7 +5538,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          boolean mode1 = nbPlans>1 || nbPlans==1 && !isBG;
          
          /** Il n'est pas possible de changer la projection globale pour certain plan */
-         boolean projEnabled = !isFree && !base.hasSpecificProj() && base instanceof PlanBG;
+         boolean projEnabled = !isFree && base!=null && !base.hasSpecificProj() && base instanceof PlanBG;
          projSelector.setEnabled( projEnabled );
 
          //         if( console!=null ) console.clone.setEnabled(hasSelectedSrc);
