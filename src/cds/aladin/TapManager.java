@@ -280,7 +280,8 @@ public class TapManager {
 			String label;
 			String url;
 			String description;
-			ArrayList<String> tapServers = aladin.directory.getBigTAPServers(5);
+//            ArrayList<String> tapServers = aladin.directory.getBigTAPServers(5);
+            ArrayList<String> tapServers = aladin.directory.getPredefinedTAPServers(); // PF test
 			for (String dirTapServerInfoLine : tapServers) {
 				if (dirTapServerInfoLine.equals("") || dirTapServerInfoLine.charAt(0) == '#') continue;
 				label = dirTapServerInfoLine.split("\\s+")[0];
@@ -1949,8 +1950,8 @@ public class TapManager {
 						if (serverTap.getRaColumnName() == null || serverTap.getDecColumnName() == null) {
 							addTargetPanel = true;
 						}
-						serverTap.setRaColumnName(((TapTableColumn) ((JComboBox) raColumn).getSelectedItem()).getColumn_name());
-						serverTap.setDecColumnName(((TapTableColumn) ((JComboBox) decColumn).getSelectedItem()).getColumn_name());
+						serverTap.setRaColumnName(((TapTableColumn) raColumn.getSelectedItem()).getColumn_name());
+						serverTap.setDecColumnName(((TapTableColumn) decColumn.getSelectedItem()).getColumn_name());
 						if (addTargetPanel) {
 //							setWhereAddConstraintsGui(columnNames);
 //							this.queryComponentsGui.revalidate();

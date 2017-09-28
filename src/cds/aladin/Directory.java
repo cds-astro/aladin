@@ -61,7 +61,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -851,8 +850,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
    
    /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
    protected String getQuickFilterExpr() {
+      return getKeyWordExpr( quickFilter.getText().trim() );
+   }
+   
+   /** Génère une contrainte, soit en texte libre, soit cle=valeur */
+   protected String getKeyWordExpr( String s) {
       String s1;
-      String s = quickFilter.getText().trim();
       if( s.length()==0 ) return s;
       
       String expr;
@@ -2043,54 +2046,93 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return multiple.contains(path);
    }
    
-   protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
+   /** Provides the list of pre-selected TAP servers
+    * Output syntax: ID url description...
+    * @throws Exception
+    */
+   protected ArrayList<String> getPredefinedTAPServers() throws Exception {
+      return getTAPServersByMocServer("client_tap_mainlist=*");
+   }
       
-      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1, -1);
-
-      Map<String, Integer> map = new HashMap<String, Integer>();
-      for( String id : a) {
-         
-         // Cas particulier à écarter pour ne pas poser souci avec les catalogues VizieR
-         if( id.startsWith("CDS/Simbad") ) continue;
-
-         String auth = Util.getSubpath(id, 0);
-         int m;
-         Integer n = map.get(auth);
-         if( n==null ) m=0;
-         else m = n;
-         m++;
-         map.put(auth,m);
-      }
+   /** provides the list of Tap servers matching the keyword(s) - blank separated
+    * (AND logic, applied on ID, obs_title et obs_collection
+    * Output syntax: ID url description...
+    * @throws Exception
+    */
+   protected ArrayList<String> geTAPServers(String keyword) throws Exception {
+      if( keyword==null || keyword.trim().length()==0) return getPredefinedTAPServers();
+      return getTAPServersByMocServer("("+getKeyWordExpr(keyword)+")");
+   }
       
-      // On trie 
-      Map<String, Integer> map1  = DirectoryFilter.sortByValues(map, 1);
-      
-      // On prend uniquement les serveurs qui ont au moins limitNbCat collections
+   /** Provides the list of TAP server matching the MocServer query
+    * Output syntax: ID url description...
+    * @param query
+    * @return
+    * @throws Exception
+    */
+   protected ArrayList<String> getTAPServersByMocServer(String query) throws Exception {
       ArrayList<String> b = new ArrayList<String>();
-      for( String auth : map1.keySet() ) {
-         
-         Integer n = map.get(auth);
-         if( n<limitNbCat ) break;
-         
-         // On cherche la première entrée correspondante pour récupérer une URL TAP
-         for( String id : a ) {
-            String auth1 = Util.getSubpath(id, 0);
-            if( !auth1.equals(auth) ) continue;
-            
-            MocItem mi = multiProp.getItem(id);
-            String url = mi.prop.get("tap_service_url");
-            
-            // On mémorise pour le tableau résultat.
-            if( auth.equals("CDS") ) auth="cds.vizier";
-            String s = auth+"  "+url+" "+n+" collections";
-            b.add(s);
-            break;
-         }
+      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=* && "+query, false, -1, -1);
+      for( String id : a) {
+//         String auth = Util.getSubpath(id, 0);
+         MocItem mi = multiProp.getItem(id);
+         String url  = mi.prop.get("tap_service_url");
+         String desc = mi.prop.get("obs_title");
+         if( desc==null ) desc = mi.prop.get("obs_collection");
+         String s = id+"  "+url+" "+desc;
+         b.add(s);
       }
-      
       return b;
    }
 
+//   protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
+//      
+//      ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1, -1);
+//
+//      Map<String, Integer> map = new HashMap<String, Integer>();
+//      for( String id : a) {
+//         
+//         // Cas particulier à écarter pour ne pas poser souci avec les catalogues VizieR
+//         if( id.startsWith("CDS/Simbad") ) continue;
+//
+//         String auth = Util.getSubpath(id, 0);
+//         int m;
+//         Integer n = map.get(auth);
+//         if( n==null ) m=0;
+//         else m = n;
+//         m++;
+//         map.put(auth,m);
+//      }
+//      
+//      // On trie 
+//      Map<String, Integer> map1  = DirectoryFilter.sortByValues(map, 1);
+//      
+//      // On prend uniquement les serveurs qui ont au moins limitNbCat collections
+//      ArrayList<String> b = new ArrayList<String>();
+//      for( String auth : map1.keySet() ) {
+//         
+//         Integer n = map.get(auth);
+//         if( n<limitNbCat ) break;
+//         
+//         // On cherche la première entrée correspondante pour récupérer une URL TAP
+//         for( String id : a ) {
+//            String auth1 = Util.getSubpath(id, 0);
+//            if( !auth1.equals(auth) ) continue;
+//            
+//            MocItem mi = multiProp.getItem(id);
+//            String url = mi.prop.get("tap_service_url");
+//            
+//            // On mémorise pour le tableau résultat.
+//            if( auth.equals("CDS") ) auth="cds.vizier";
+//            String s = auth+"  "+url+" "+n+" collections";
+//            b.add(s);
+//            break;
+//         }
+//      }
+//      
+//      return b;
+//   }
+//
 
    
    /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */

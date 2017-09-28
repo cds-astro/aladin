@@ -3189,7 +3189,7 @@ public final class Command implements Runnable {
       //      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
       //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
-      else if( cmd.equalsIgnoreCase("tap") )   tap();
+      else if( cmd.equalsIgnoreCase("tap") )   tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") )   PlanBG.cleanCache();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
       else if( cmd.equalsIgnoreCase("testimg") )testCalib(label,param,0);
@@ -4977,9 +4977,9 @@ public final class Command implements Runnable {
    }
 
    // Just for testing tap list for Chaitra
-   private void tap () {
+   private void tap (String keyword) {
       try {
-         ArrayList<String> b = a.directory.getBigTAPServers(5);
+         ArrayList<String> b = a.directory.geTAPServers(keyword);
          for( String s : b ) System.out.println(s);
       } catch( Exception e ) {
          e.printStackTrace();
