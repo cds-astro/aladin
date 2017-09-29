@@ -2046,6 +2046,14 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       return multiple.contains(path);
    }
    
+   /** Provides the properties java object describing the collection identified by id
+    * @param id Identifier (ex: CDS/Simbad)
+    * @return The properties (very similar to basic java Properties object
+    */
+   protected MyProperties getProp(String id) {
+      return multiProp.getProperties(id);
+   }
+   
    /** Provides the list of pre-selected TAP servers
     * Output syntax: ID url description...
     * @throws Exception
@@ -2812,7 +2820,10 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             if( to.verboseDescr!=null || to.description!=null ) {
                s = to.verboseDescr==null ? "":to.verboseDescr;
-               a = new MyAnchor(aladin,to.description,50,s,null);
+               String s1 = to.description!=null && to.description.length()>60 
+                     ? (to.description.substring(0,58)+"...")
+                     : to.description;
+               a = new MyAnchor(aladin,s1,50,s,null);
                a.setFont(a.getFont().deriveFont(Font.BOLD));
                a.setFont(a.getFont().deriveFont( a.getFont().getSize2D()+1) );
                a.setForeground( Aladin.COLOR_GREEN );

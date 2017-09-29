@@ -1819,7 +1819,9 @@ public final class Glu implements Runnable {
                paramValue.put(num, v1);
             } else if (name.equals("TAPTables")) {// add more specific restrictions if required
 				String v = getValParam(value);
-            	tapTables = v.split("\\t");
+//                tapTables = v.split("\\t");  // Modif PF - Sept 2017 
+                tapTables = split(v);
+                
 			} else if (name.startsWith("ADQL")) {
             	String[] clauseElements = name.split(DOTREGEX);
             	String num = getNumParam(value);
@@ -1902,6 +1904,14 @@ public final class Glu implements Runnable {
       }
 
       return true;
+   }
+   
+   // Split a string of arguments, blank or Tab separated, possibly quoted (simple ou double)
+   static private String [] split(String s) {
+      Tok tok = new Tok(s," \t");
+      String [] rep = new String[ tok.countTokens() ];
+      for( int i=0; tok.hasMoreTokens(); i++ ) rep[i] = tok.nextToken();
+      return rep;
    }
 
    /** Méthode bas niveau pour modifier/ajouter une URL du dico GLU interne */
@@ -2308,7 +2318,9 @@ public final class Glu implements Runnable {
          if( num < param.length ) {
         	 if (isMultiple ) {
  				try {
- 					multipleParams = paramRaw[num].trim().split(" ");//TODO:: for now the assumed delimiter is space.
+// 				   MODIF PF Sept 2017
+//                 multipleParams = paramRaw[num].trim().split(" ");//TODO:: for now the assumed delimiter is space.
+                   multipleParams = split(paramRaw[num].trim());
  					if (multipleParams!=null) {
  						res.append(URLEncoder.encode(multipleParams[0], "UTF-8"));
  						for (int j = 1; j < multipleParams.length; j++) {
