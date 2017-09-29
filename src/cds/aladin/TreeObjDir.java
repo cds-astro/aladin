@@ -913,6 +913,14 @@ public class TreeObjDir extends TreeObj implements Propable {
       // List of pre-selected tables (TAB separated)
       // => CHAITRA, COULD YOU USE IT AS AN ADDITIONNAL PARAMETER OF YOUR loadTapServerForSimpleFrame METHOD ?
       String defaultTables = prop.get("tap_tablename");
+      
+      // Pierre's hack for providing a table name for VizieR table if there is no
+      // TO BE REMOVED WHEN THOMAS BOCH WILL HAVE FIX IT
+      if( defaultTables==null && id.startsWith("CDS/") && !id.equals("CDS/Simbad") ) {
+         defaultTables = id.substring(4);
+         System.err.println("Missing tablename for VizieR => assuming "+defaultTables);
+      }
+      
 //      defaultTables = "ivoa.ObsCore";//"B/hst/obscore";
       
       if( id!=null && url!=null ) {
