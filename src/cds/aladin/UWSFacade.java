@@ -85,6 +85,7 @@ public class UWSFacade implements ActionListener{
 	
 	private static UWSFacade instance = null;
 	public Aladin aladin;
+	public FrameSimple jobControllerGui;
 	public MySplitPane asyncPanel;
 	private JPanel inSessionAsyncJobsPanel;
 	public JPanel jobDetails;
@@ -96,7 +97,8 @@ public class UWSFacade implements ActionListener{
 	public JButton loadResultsbutton;
 	
 	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
-			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB, UWSJOBRADIOTOOLTIP;
+			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB, UWSJOBRADIOTOOLTIP,
+			JOBCONTROLLERTITLE;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
 	public static final int POLLINGDELAY = 1000;
 	
@@ -111,6 +113,7 @@ public class UWSFacade implements ActionListener{
 		UWSASKLOADDEFAULTRESULTS = Aladin.getChaine().getString("UWSASKLOADDEFAULTRESULTS");
 		CANTABORTJOB= Aladin.getChaine().getString("CANTABORTJOB");
 		UWSJOBRADIOTOOLTIP = Aladin.getChaine().getString("UWSJOBRADIOTOOLTIP");
+		JOBCONTROLLERTITLE = Aladin.getChaine().getString("JOBCONTROLLERTITLE");
 	}
 	
 	public UWSFacade() {

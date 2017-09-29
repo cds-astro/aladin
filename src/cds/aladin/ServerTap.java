@@ -27,7 +27,6 @@ import static cds.aladin.Constants.CHECKQUERY;
 import static cds.aladin.Constants.COMMA_SPACECHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.OPEN_SET_RADEC;
-import static cds.aladin.Constants.REGEX_TABLENAME_SPECIALCHAR;
 import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 import static cds.aladin.Constants.SELECTALL;
 import static cds.aladin.Constants.SPACESTRING;
@@ -51,8 +50,6 @@ import java.awt.event.MouseListener;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -216,7 +213,9 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	@Override
 	public void changeTableSelection(String tableChoice) {
 		waitCursor();
-		this.modeChoice.setVisible(true);
+		if (this.modeChoice != null) {
+			this.modeChoice.setVisible(true);
+		}
 		tapClient.activateWaitMode(this);
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
 		Vector<TapTableColumn> columnNames = this.setTableGetColumnsToLoad(tableChoice, tablesMetaData);
@@ -471,7 +470,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 				} else {
 					queryFromGui.append(SPACESTRING);
 					for (TapTableColumn selectedColumn : selectedColumns) {
-						queryFromGui.append(selectedColumn.getColumn_name()).append(COMMA_SPACECHAR);
+						queryFromGui.append(selectedColumn.getColumnNameForQuery()).append(COMMA_SPACECHAR);
 					}
 				}
 				
@@ -479,7 +478,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
-			.append(getQueryPart(this.tapClient.tablesMetaData.get(selectedTableName), selectedTableName)).append(SPACESTRING);
+			.append(TapTable.getQueryPart(selectedTableName)).append(SPACESTRING);
 			
 			Component[] whereConstraints = this.whereClausesPanel.getComponents();
 			if (this.whereClausesPanel.getComponentCount() > 0) {
@@ -499,27 +498,6 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
             ball.setMode(Ball.NOK);
 		}
 		
-	}
-	
-	/**
-	 * Method only used for cases of table names with special chars.
-	 * Adds double quote to the names
-	 * @param tapTable 
-	 * @param queryPartInput
-	 * @return
-	 */
-	public static String getQueryPart(TapTable tapTable, String queryPartInput) {
-		if (tapTable != null) {
-//			queryPartInput = tapTable.getAdqlName(); //TODO:: tintin : when we add schema name
-			Pattern regex = Pattern.compile(REGEX_TABLENAME_SPECIALCHAR);
-			Matcher matcher = regex.matcher(queryPartInput);
-			if (matcher.find()){
-				queryPartInput = Glu.doubleQuote(queryPartInput);
-			}
-//			queryPartInput = tapTable.getFullyQualifiedTableName(queryPartInput); //when we add schema name
-		}
-		
-		return queryPartInput;
 	}
 	
 	@Override
@@ -548,7 +526,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			resetTargetPanel = false;
 		}
 		if (resetTargetPanel) {
-			Vector<TapTableColumn> columnNames = this.tapClient.getServerTapSelectedTableColumns();
+			Vector<TapTableColumn> columnNames = this.tapClient.getServerTapSelectedTableColumns(selectedTableName);
 			setWhereAddConstraintsGui(columnNames);
 			this.queryComponentsGui.revalidate();
 			this.queryComponentsGui.repaint();
@@ -656,7 +634,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			if (action.equals(WRITEQUERY)) {
 				this.writeQuery();
 			} else if (action.equals(ADDWHERECONSTRAINT)) {
-				Vector<TapTableColumn> columnMetaData = this.tapClient.getServerTapSelectedTableColumns();
+				Vector<TapTableColumn> columnMetaData = this.tapClient.getServerTapSelectedTableColumns(selectedTableName);
 				WhereGridConstraint columnConstraint = new ColumnConstraint(this, columnMetaData);
 				addWhereConstraint(columnConstraint);
 				writeQuery();

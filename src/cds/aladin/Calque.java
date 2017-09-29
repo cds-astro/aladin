@@ -3170,7 +3170,9 @@ public class Calque extends JPanel implements Runnable {
       p.setActivated(true);
       p.pcat.createDefaultProj();
       //      p.setSourceType(Source.getDefaultType(vSources.size()));
-
+      if (Aladin.BETA) {//TODO:: tintinproto
+     	 TapManager.getInstance(aladin).updateAddUploadPlans(p);
+		}
       return p;
    }
 

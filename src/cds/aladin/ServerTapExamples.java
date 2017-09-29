@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
 
@@ -82,12 +83,12 @@ public class ServerTapExamples extends DynamicTapForm {
 	Map<String, String> serviceExamples2;
 
 	String secondaryTable; 
-	double grabItX1;
-	double grabItY1;
+	String grabItX1;
+	String grabItY1;
 	double grabItR1;
 	
-	double grabItX2;
-	double grabItY2;
+	String grabItX2;
+	String grabItY2;
 	double grabItR2;
 	String max;
 	
@@ -97,18 +98,20 @@ public class ServerTapExamples extends DynamicTapForm {
 	public ServerTapExamples(Aladin aladin) {
 		// TODO Auto-generated constructor stub
 		super(aladin);
-		
-		Coord defaultCoo = aladin.localisation.getLastCoord();
+        
+        Coord defaultCoo = aladin.localisation.getLastCoord();
+//        defaultCoo = aladin.localisation.frameToICRS(defaultCoo);
+        
 		//Setting dummy for init.
 		if (defaultCoo.al == 0.0) {
-			grabItX1 = 313.25097844474084;
+			grabItX1 = "313.25097844474084";
 		} else {
-			grabItX1 = defaultCoo.al;
+			grabItX1 = String.format(Locale.US, "%.5f", defaultCoo.al);
 		}
 		if (defaultCoo.del == 0.0) {
-			grabItY1 = 31.1768737946931;
+			grabItY1 = "31.1768737946931";
 		} else {
-			grabItY1 = defaultCoo.del;
+			grabItY1 = String.format(Locale.US, "%.5f", defaultCoo.del);
 		}
 		
 		grabItX2 = grabItX1;
@@ -340,7 +343,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			info1.setText("Cannot select same table! No second table selected.");
 			TapManager.getInstance(aladin).eraseNotification(info1, CLIENTINSTR);
 		}
-		String priTableNameForQuery = ServerTap.getQueryPart(this.tapClient.tablesMetaData.get(selectedTableName), selectedTableName);
+		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName);
 		this.basicExamples.put("Select all", new CustomListCell("Select * from " + priTableNameForQuery, EMPTYSTRING));
 		this.basicExamples.put("Select top 1000", new CustomListCell("Select TOP 1000 * from " + priTableNameForQuery, EMPTYSTRING));
 		// this.basicExamples.put("Select few columns", "Select oidref, filter,
@@ -358,14 +361,14 @@ public class ServerTapExamples extends DynamicTapForm {
 			} 
 		}
 		
-		if (!max.equalsIgnoreCase(EMPTYSTRING)) {
+		if (!max.equalsIgnoreCase(EMPTYSTRING) && !max.startsWith("TOP ")) {
 			max = "TOP "+max;
 		}
-		String conesearchtemplate = " where 1=CONTAINS(POINT('ICRS', %s, %s), CIRCLE('ICRS', %f, %f, %f))";
+		String conesearchtemplate = " where 1=CONTAINS(POINT('ICRS', %s, %s), CIRCLE('ICRS', %s, %s, %f))";
 		String primaryTableSelectAllQuery = String.format(tableSelectAllQuery, max, priTableNameForQuery);
 
-		String priRaColumnName = priTableMetaData.getRaColumnName();
-		String priDecColumnName = priTableMetaData.getDecColumnName();
+		String priRaColumnName = TapTable.getQueryPart(priTableMetaData.getRaColumnName());
+		String priDecColumnName = TapTable.getQueryPart(priTableMetaData.getDecColumnName());
 
 		String targetQuery = primaryTableSelectAllQuery + conesearchtemplate;
 		String coneSearchPart = null;
@@ -398,16 +401,16 @@ public class ServerTapExamples extends DynamicTapForm {
 		
 		// Bibliographic data
 		if (bibCode != null) {
-			mandateParamsToAdd.add(bibCode.getColumn_name());
+			mandateParamsToAdd.add(bibCode.getColumnNameForQuery());
 		}
 		if (journal != null) {
-			mandateParamsToAdd.add(journal.getColumn_name());
+			mandateParamsToAdd.add(journal.getColumnNameForQuery());
 		}
 		if (title != null) {
-			mandateParamsToAdd.add(title.getColumn_name());
+			mandateParamsToAdd.add(title.getColumnNameForQuery());
 		}
 		if (id != null) {
-			optionalParamsToAdd.add(0, id.getColumn_name());
+			optionalParamsToAdd.add(0, id.getColumnNameForQuery());
 		}
 		 
 		if (!mandateParamsToAdd.isEmpty()) {
@@ -420,12 +423,12 @@ public class ServerTapExamples extends DynamicTapForm {
 		mandateParamsToAdd.clear();
 		
 		if (parallax != null) {
-			mandateParamsToAdd.add(parallax.getColumn_name());
+			mandateParamsToAdd.add(parallax.getColumnNameForQuery());
 			queryName = "Get parallax ";
 			setHint(hints, parallax);
 		}
 		if (radialVelocity != null) {
-			mandateParamsToAdd.add(radialVelocity.getColumn_name());
+			mandateParamsToAdd.add(radialVelocity.getColumnNameForQuery());
 			if (queryName != null) {
 				queryName = queryName+" and radial velocity";
 			} else {
@@ -445,11 +448,11 @@ public class ServerTapExamples extends DynamicTapForm {
 		hints = new StringBuffer();
 		setCell = new CustomListCell();
 		if (pmra != null) {
-			mandateParamsToAdd.add(pmra.getColumn_name());
+			mandateParamsToAdd.add(pmra.getColumnNameForQuery());
 			setHint(hints, pmra);
 		}
 		if (pmdec != null) {
-			mandateParamsToAdd.add(pmdec.getColumn_name());
+			mandateParamsToAdd.add(pmdec.getColumnNameForQuery());
 			setHint(hints, pmdec);
 		}
 		if (!mandateParamsToAdd.isEmpty()) {// needed
@@ -464,7 +467,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			addSelectsToBasicExamples("Position and proper motion", mandateParamsToAdd, optionalParamsToAdd, setCell, null,
 					coneSearchPart);
 
-			String properMotionQuery = "SQRT(POWER(" + pmra.getColumn_name() + ",2)+POWER(" + pmdec.getColumn_name() + ",2))";
+			String properMotionQuery = "SQRT(POWER(" + pmra.getColumnNameForQuery() + ",2)+POWER(" + pmdec.getColumnNameForQuery() + ",2))";
 			mandateParamsToAdd.add(properMotionQuery + " as pm");
 			properMotionQuery = " WHERE " + properMotionQuery + " > 20";
 			setCell = new CustomListCell();
@@ -477,7 +480,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		spQuery = new StringBuffer();
 		mandateParamsToAdd.clear();
 		if (redshift != null) {
-			mandateParamsToAdd.add(redshift.getColumn_name());
+			mandateParamsToAdd.add(redshift.getColumnNameForQuery());
 			setCell = new CustomListCell();
 			hints = new StringBuffer();
 			setHint(hints, redshift);
@@ -489,7 +492,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		spQuery = new StringBuffer(primaryTableSelectAllQuery);
 		hints = new StringBuffer();
 		if (srcClass != null) {
-			spQuery.append(" where ").append(srcClass.getColumn_name()).append(" LIKE '%STAR%'");
+			spQuery.append(" where ").append(srcClass.getColumnNameForQuery()).append(" LIKE '%STAR%'");
 			setHint(hints, srcClass);
 			this.basicExamples.put("Based on source type ", new CustomListCell(spQuery.toString(), hints.toString()));
 		}
@@ -504,25 +507,25 @@ public class ServerTapExamples extends DynamicTapForm {
 				secTableMetaData = this.tapClient.tapManager.uploadFrame.uploadClient.tablesMetaData
 						.get(secondaryTable);
 			}
-			secRaColumnName = secTableMetaData.getRaColumnName(); 
-			secDecColumnName = secTableMetaData.getDecColumnName();
-			secTableNameForQuery = ServerTap.getQueryPart(this.tapClient.tablesMetaData.get(secondaryTable), secondaryTable);
+			secRaColumnName = TapTable.getQueryPart(secTableMetaData.getRaColumnName()); 
+			secDecColumnName = TapTable.getQueryPart(secTableMetaData.getDecColumnName());
+			secTableNameForQuery = TapTable.getQueryPart(secondaryTable);
 		}
 		boolean obscore = priTableMetaData.isObscore();
 		if (obscore) {
-			String dataproduct_type = priTableMetaData.getObsColumnName(DATAPRODUCT_TYPE);
-			String obs_id = priTableMetaData.getObsColumnName(OBSID);
-			String access_url = priTableMetaData.getObsColumnName(ACCESSURL),
-					access_format = priTableMetaData.getObsColumnName(ACCESS_FORMAT),
-					access_estsize = priTableMetaData.getObsColumnName(ACCESS_ESTSIZE);
-			sRegionColumnName = priTableMetaData.getObsColumnName(ServerObsTap.FIELDSIZE);
-			String s_resolution = priTableMetaData.getObsColumnName(ServerObsTap.SPATIALRESOLUTION);
-			String t_min = priTableMetaData.getObsColumnName(T_MIN), t_max = priTableMetaData.getObsColumnName(T_MAX),
-					t_exptime = priTableMetaData.getObsColumnName(ServerObsTap.EXPOSURETIME),
-					t_resolution = priTableMetaData.getObsColumnName(ServerObsTap.TIMERESOLUTION);
-			String em_min = priTableMetaData.getObsColumnName(EM_MIN),
-					em_max = priTableMetaData.getObsColumnName(EM_MAX),
-					em_res_power = priTableMetaData.getObsColumnName(ServerObsTap.SPECTRALRESOLUTIONPOWER);
+			String dataproduct_type = priTableMetaData.getObsColumnNameForQuery(DATAPRODUCT_TYPE);
+			String obs_id = priTableMetaData.getObsColumnNameForQuery(OBSID);
+			String access_url = priTableMetaData.getObsColumnNameForQuery(ACCESSURL),
+					access_format = priTableMetaData.getObsColumnNameForQuery(ACCESS_FORMAT),
+					access_estsize = priTableMetaData.getObsColumnNameForQuery(ACCESS_ESTSIZE);
+			sRegionColumnName = priTableMetaData.getObsColumnNameForQuery(ServerObsTap.FIELDSIZE);
+			String s_resolution = priTableMetaData.getObsColumnNameForQuery(ServerObsTap.SPATIALRESOLUTION);
+			String t_min = priTableMetaData.getObsColumnNameForQuery(T_MIN), t_max = priTableMetaData.getObsColumnNameForQuery(T_MAX),
+					t_exptime = priTableMetaData.getObsColumnNameForQuery(ServerObsTap.EXPOSURETIME),
+					t_resolution = priTableMetaData.getObsColumnNameForQuery(ServerObsTap.TIMERESOLUTION);
+			String em_min = priTableMetaData.getObsColumnNameForQuery(EM_MIN),
+					em_max = priTableMetaData.getObsColumnNameForQuery(EM_MAX),
+					em_res_power = priTableMetaData.getObsColumnNameForQuery(ServerObsTap.SPECTRALRESOLUTIONPOWER);
 			/*String o_ucd = null, o_unit = null;
 			String pol_states = null;*/
 			
@@ -647,7 +650,7 @@ public class ServerTapExamples extends DynamicTapForm {
 					secTableMetaData = this.tapClient.tapManager.uploadFrame.uploadClient.tablesMetaData
 							.get(secondaryTable);
 				}
-				String sec_t_min = secTableMetaData.getObsColumnName(T_MIN), sec_t_max = secTableMetaData.getObsColumnName(T_MAX);
+				String sec_t_min = secTableMetaData.getObsColumnNameForQuery(T_MIN), sec_t_max = secTableMetaData.getObsColumnNameForQuery(T_MAX);
 				
 				spQuery = new StringBuffer("Select ");
 				spQuery.append(max).append(SPACESTRING).append(priTableNameForQuery).append(".*,")
@@ -747,8 +750,8 @@ public class ServerTapExamples extends DynamicTapForm {
 				if( obj == null) throw new Exception(UNKNOWNOBJ);
 				else if (!obj.trim().equals(TARGETNAN)) {//we do not change the settings when nothing is provided
 					if (targetPanel.radius != null) {
-						double grabItX = Double.parseDouble(coo[0].getText());
-						double grabItY = Double.parseDouble(coo[1].getText());
+						String grabItX = coo[0].getText();
+						String grabItY = coo[1].getText();
 						double grabItR = Double.parseDouble(rad[0].getText());
 //						resolveRadius(targetPanel.radius.getText().trim(), false);
 						if (whichTarget == 0) {
@@ -809,7 +812,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		if (spQuery.toString().isEmpty()) {
 			spQuery.append(" * ");
 		}
-		String priTableNameForQuery = ServerTap.getQueryPart(this.tapClient.tablesMetaData.get(selectedTableName), selectedTableName);
+		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName);
 		String queryToDisplay = String.format(tableSelectQuery, max, spQuery.toString(), priTableNameForQuery);
 		if (queryName == null) {
 			queryName = "Select " + spQuery.toString();

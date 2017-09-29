@@ -223,6 +223,8 @@ public static final String GENERAL = "GENERAL";
 public static final String DISCARDACTION = "DISCARD";
 public static final String DISCARDALLACTION = "DISCARDALL";
 public static final String RETRYACTION = "RETRYACTION";
+public static final String SUBMITACTION = "SUBMIT";
+public static final String CLEARACTION = "CLEAR";
 public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: tintin
 
 /** Liste des caractère définissant une chaine de carac @author Mallory Marcot*/

@@ -100,6 +100,11 @@ public class TapTableColumn {
 	public String getColumn_name() {
 		return column_name;
 	}
+	
+	public String getColumnNameForQuery() {
+		return TapTable.getQueryPart(column_name);
+	}
+	
 	public void setColumn_name(String column_name) {
 		this.column_name = column_name;
 	}

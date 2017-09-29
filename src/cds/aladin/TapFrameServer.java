@@ -83,9 +83,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    
 	private static final long serialVersionUID = 1L;
 
-	static String FSSELECTTAP, INFO = " ? ", CLOSE, TIPSUBMIT, TIPCLOSE, FILTER, RESET, GO, LOAD, TIPLOAD,
-			TIPRELOAD, TAPNOFILELOAD, TAPNOFILERELOAD, SELECTSERVERLABEL, SELECTASYNCPANELLABEL, SELECTSERVERTOOLTIP,
-			SELECTASYNCPANELTOOLTIP, NOTAPSERVERSCONFIGUREDMESSAGE, TAPURLCLIENTFIELDLABEL, SELECTDIRTAPSERVERSTOOLTIP,
+	static String FSTAPCONTROLLER, INFO = " ? ", CLOSE, TIPSUBMIT, TIPCLOSE, FILTER, RESET, GO, LOAD, TIPLOAD,
+			TIPRELOAD, TAPNOFILELOAD, TAPNOFILERELOAD, SELECTSERVERLABEL, SELECTSERVERTOOLTIP,
+			NOTAPSERVERSCONFIGUREDMESSAGE, TAPURLCLIENTFIELDLABEL, SELECTDIRTAPSERVERSTOOLTIP,
 			SELECTSPLTAPSERVERSLABEL, SELECTSPLTAPSERVERSTOOLTIP, SELECTDIRTAPSERVERSLABEL, CHOOSEFROMTAPSERVERSTEXT;
 
    Aladin aladin;
@@ -95,12 +95,11 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    private JPanel completeListPanelScroll;
    GridBagLayout g;
    GridBagConstraints c;
-   JTabbedPane tabbedTapThings;
-   JPanel allRegistryPanel;
-   JPanel splRegistryPanel;
    JPanel registryPanel;
+   JPanel splRegistryPanel;
+   JPanel treeRegistryPanel;
    public DataLabel selectedServerLabel;
-   JTabbedPane allRegistryPane;
+   JTabbedPane options;
    
    //inputs
    JTextField userProvidedTapUrl;
@@ -114,14 +113,12 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
       TIPCLOSE = Aladin.chaine.getString("TIPCLOSE");
       LOAD = Aladin.chaine.getString("FSLOAD");
       TIPLOAD = Aladin.chaine.getString("TIPLOAD");
-      FSSELECTTAP = Aladin.chaine.getString("FSSELECTTAP");
+      FSTAPCONTROLLER = Aladin.chaine.getString("FSTAPCONTROLLER");
       TIPRELOAD = Aladin.chaine.getString("TIPRELOAD");
       TAPNOFILELOAD = Aladin.chaine.getString("TAPNOFILELOAD");
       TAPNOFILERELOAD = Aladin.chaine.getString("TAPNOFILERELOAD");
       SELECTSERVERLABEL = Aladin.chaine.getString("SELECTSERVERLABEL");
-      SELECTASYNCPANELLABEL = Aladin.chaine.getString("SELECTASYNCPANELLABEL");
       SELECTSERVERTOOLTIP = Aladin.chaine.getString("SELECTSERVERTOOLTIP");
-      SELECTASYNCPANELTOOLTIP = Aladin.chaine.getString("SELECTASYNCPANELTOOLTIP");
       NOTAPSERVERSCONFIGUREDMESSAGE = Aladin.chaine.getString("NOTAPSERVERSCONFIGUREDMESSAGE");
       TAPURLCLIENTFIELDLABEL = Aladin.chaine.getString("TAPURLCLIENTFIELDLABEL");
       SELECTDIRTAPSERVERSTOOLTIP = Aladin.chaine.getString("SELECTDIRTAPSERVERSTOOLTIP");
@@ -137,7 +134,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		this.aladin = aladin;
 		Aladin.setIcon(this);
 		createChaine();
-		setTitle(FSSELECTTAP);
+		setTitle(FSTAPCONTROLLER);
 		this.tapManager = tapManager;
 		this.aladin = aladin;
 		setLocation(Aladin.computeLocation(this));
@@ -152,34 +149,31 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		return new Dimension(650, 450);
 	}
 
-	private JTabbedPane createCenterPane(){
+	private JPanel createCenterPane(){
 		splRegistryPanel = new JPanel();
-		registryPanel = new JPanel();
+		treeRegistryPanel = new JPanel();
 		
-		allRegistryPane = new JTabbedPane();
-		allRegistryPanel = new JPanel();
-		allRegistryPanel.setLayout(new BorderLayout(0, 0));
-		allRegistryPanel.add(allRegistryPane, "Center");
-		allRegistryPanel.setFont(Aladin.PLAIN);
+		registryPanel = new JPanel(new BorderLayout());
 		createRegistryPanel();
-		MySplitPane asyncPanel = this.tapManager.uwsFacade.instantiateGui();
+		
+		options = new JTabbedPane();
+		registryPanel.add(options, "Center");
+		registryPanel.setFont(Aladin.PLAIN);
+//		MySplitPane asyncPanel = this.tapManager.uwsFacade.instantiateGui();
 
-		tabbedTapThings = new JTabbedPane();
-		tabbedTapThings.setFont(Aladin.PLAIN);
 		
-		allRegistryPane.addTab(SELECTSPLTAPSERVERSLABEL, null, splRegistryPanel, SELECTSPLTAPSERVERSTOOLTIP);
-		allRegistryPane.addTab(SELECTDIRTAPSERVERSLABEL, null, registryPanel, SELECTDIRTAPSERVERSTOOLTIP);
+		options.addTab(SELECTSPLTAPSERVERSLABEL, null, splRegistryPanel, SELECTSPLTAPSERVERSTOOLTIP);
+		options.addTab(SELECTDIRTAPSERVERSLABEL, null, treeRegistryPanel, SELECTDIRTAPSERVERSTOOLTIP);
 		
-		tabbedTapThings.addTab(SELECTSERVERLABEL, null, allRegistryPanel, SELECTSERVERTOOLTIP);
-		tabbedTapThings.addTab(SELECTASYNCPANELLABEL, null, asyncPanel, SELECTASYNCPANELTOOLTIP);
-		return tabbedTapThings;
+//		tabbedTapThings.addTab(SELECTSERVERLABEL, null, allRegistryPanel, SELECTSERVERTOOLTIP);
+		return registryPanel;
 	}
   
 	public void createRegistryPanel() {
 		splRegistryPanel.removeAll();
 		splRegistryPanel.setLayout(new BorderLayout(0, 0));
-		registryPanel.removeAll();
-		registryPanel.setLayout(new BorderLayout(0, 0));
+		treeRegistryPanel.removeAll();
+		treeRegistryPanel.setLayout(new BorderLayout(0, 0));
 
 		int scrollWidth = 400;
 		int scrollHeight = 350;
@@ -192,10 +186,10 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		c.gridx = 0;
 		c.gridwidth = 1;
 //		this.getContentPane().add(file, c);
-		c.insets = new Insets(1, 10, 1, 1);
+		c.insets = new Insets(10, 10, 1, 1);
 		
 		c.gridx = 0;
-		c.insets = new Insets(1,1,1,1);
+		c.insets = new Insets(10,1,1,1);
 		c.weightx = 0.05;
 		urlClientPanel.add(new JLabel(TAPURLCLIENTFIELDLABEL), c);
 		
@@ -212,17 +206,17 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		loadUserUrl.addActionListener(this);
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.WEST;
-		c.insets = new Insets(1, 1, 1, 35);
+		c.insets = new Insets(10, 1, 1, 35);
 		c.weightx = 0.05;
 		c.gridx = 2;
 		urlClientPanel.add(loadUserUrl, c);
 		try {
 			List<DataLabel> datalabels = tapManager.getTapServerList(-1);
 			if (datalabels != null && !datalabels.isEmpty()) {
-				JPanel header = new JPanel(new BorderLayout());
+				JPanel header = new JPanel(new BorderLayout(0, 7));
 				header.add(urlClientPanel, "North");
 				header.add(new JLabel(CHOOSEFROMTAPSERVERSTEXT), "West");
-				allRegistryPanel.add(header, "North");
+				registryPanel.add(header, "North");
 				
 				JButton b;
 				g = new GridBagLayout();
@@ -252,13 +246,13 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 					b.addActionListener(this);
 					check.add(b = new JButton(RESET));
 					b.addActionListener(this);
-					registryPanel.add(check, "North");
+					treeRegistryPanel.add(check, "North");
 				}
 				scroll = new JScrollPane(completeListPanelScroll);
 				scroll.setSize(scrollWidth, scrollHeight);
 				scroll.setBackground(Color.white);
 				scroll.getVerticalScrollBar().setUnitIncrement(70);
-				Aladin.makeAdd(registryPanel, scroll, "Center");
+				Aladin.makeAdd(treeRegistryPanel, scroll, "Center");
 
 				JPanel submit = new JPanel();
 				submit.setName(SUBMITPANEL);
@@ -268,23 +262,23 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 				submit.add(b = new JButton(CLOSE));
 				b.addActionListener(this);
 				b.setToolTipText(TIPCLOSE);
-				Aladin.makeAdd(allRegistryPanel, submit, "South");
+				Aladin.makeAdd(registryPanel, submit, "South");
 //				allRegistryPanel.add(submit, "South");
 			} else {
 				registryPanel.add(urlClientPanel, "North");
 				completeListPanelScroll = new JPanel();
 				completeListPanelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
-				Aladin.makeAdd(registryPanel, completeListPanelScroll, "Center");
+				Aladin.makeAdd(treeRegistryPanel, completeListPanelScroll, "Center");
 				splListPanelScroll = new JPanel();
 				splListPanelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
 				Aladin.makeAdd(splRegistryPanel, splListPanelScroll, "Center");
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
-			registryPanel.add(urlClientPanel, "North");
+			treeRegistryPanel.add(urlClientPanel, "North");
 			completeListPanelScroll = new JPanel();
 			completeListPanelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
-			Aladin.makeAdd(registryPanel, completeListPanelScroll, "Center");
+			Aladin.makeAdd(treeRegistryPanel, completeListPanelScroll, "Center");
 			splListPanelScroll = new JPanel();
 			splListPanelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
 			Aladin.makeAdd(splRegistryPanel, splListPanelScroll, "Center");
@@ -497,8 +491,8 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		}
 		splRegistryPanel.revalidate();
 		splRegistryPanel.repaint();
-		registryPanel.revalidate();
-		registryPanel.repaint();
+		treeRegistryPanel.revalidate();
+		treeRegistryPanel.repaint();
 	}
 
    public void keyPressed(KeyEvent e) { }

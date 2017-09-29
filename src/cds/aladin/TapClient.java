@@ -469,7 +469,7 @@ public class TapClient{
 	 * @param parserTable
 	 * @param columnsMeta
 	 */
-	private static void updateQueryCheckTableColumns(DefaultDBTable parserTable, Vector<TapTableColumn> columnsMeta) {
+	public static void updateQueryCheckTableColumns(DefaultDBTable parserTable, Vector<TapTableColumn> columnsMeta) {
 		if (parserTable != null && columnsMeta != null) {
 			for(TapTableColumn tapTableColumn : columnsMeta) {
 				DefaultDBColumn columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), parserTable);
@@ -834,8 +834,8 @@ public class TapClient{
 		return this.tablesMetaData.get(serverExamples.secondaryTable);
 	}
 	
-	public Vector<TapTableColumn> getServerTapSelectedTableColumns() {
-		return this.tablesMetaData.get(serverTap.selectedTableName).getColumns();
+	public Vector<TapTableColumn> getServerTapSelectedTableColumns(String selectedTableName) {
+		return this.tablesMetaData.get(selectedTableName).getColumns();
 	}
 	
 	public void setData(Map<String, TapTable> tablesMetaData) {

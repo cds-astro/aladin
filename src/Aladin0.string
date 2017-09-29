@@ -2073,7 +2073,7 @@ FSIMGSRV	Image servers
 FSCATSRC	Catalog servers
 FSSPECSRV	Spectra servers
 FSLOAD LOAD
-FSSELECTTAP	Select a tap server or job
+FSTAPCONTROLLER	Tap controller
 TIPLOAD Load tap server
 FSRELOAD RELOAD
 TIPRELOAD Reload tap server
@@ -2996,7 +2996,7 @@ TAPLOADINGSTATUSINFO Loading tap schemas from your selected server. Please wait!
 TAPERRORSTATUSINFO Unable to load tap server. Please try again later!
 TARGETERROR Please check target co-ordinates!
 SELECTSERVERLABEL Select server
-SELECTASYNCPANELLABEL Async jobs
+JOBCONTROLLERTITLE Job controller
 TAPEXCLIENTINSTR Choose an example query to execute.
 TAPOBSCORECLIENTINSTR Add any obscore criteria and execute query.
 SELECTDIRTAPSERVERSLABEL Complete list
@@ -3058,7 +3058,6 @@ TABLEDISCARDINFO One option removed from upload file choices!
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
-SELECTASYNCPANELTOOLTIP See all async jobs or load your old tap jobs
 UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the queries submitted from the TAP form with an "ASYNC" option selected.
 CANTSTARTJOB Unable to start the job. please try again later.
 STANDARDRESULTSLOAD Load Results

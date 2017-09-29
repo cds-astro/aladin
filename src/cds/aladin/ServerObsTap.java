@@ -726,7 +726,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
-			.append(ServerTap.getQueryPart(this.tapClient.obscoreTables.get(selectedTableName), selectedTableName)).append(SPACESTRING);
+			.append(TapTable.getQueryPart(selectedTableName)).append(SPACESTRING);
 			
 			/*Component[] whereConstraints = this.whereClausesPanel.getComponents();
 			if (this.whereClausesPanel.getComponentCount() > 0) {
@@ -744,7 +744,15 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			Aladin.warning(this, e.getMessage());
             ball.setMode(Ball.NOK);
 		}
-		
+	}
+	
+	public String getRangeDefaultString(String low, String high) {
+		StringBuffer result = new StringBuffer();
+		low = TapTable.getQueryPart(low);
+		high = TapTable.getQueryPart(high);
+		result.append(low).append(" IS NOT NULL AND ")
+		.append(high).append(" IS NOT NULL ");
+		return result.toString();
 	}
 	
 	@Override
@@ -757,12 +765,15 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			String defaultValue = ColumnConstraint.defaultValue;
 			boolean inRange = false;
 			if (action.equals(ADD_DATAPRODUCTTYPE)) {
-				appendConstraint(dataProduct_types_andOrOp, new String(dataProductTypeParamName.get(selectedTableName)), inRange, false, ((String)dataProduct_types.getSelectedItem()), ColumnConstraint.defaultValue);
+				appendConstraint(dataProduct_types_andOrOp, new String(dataProductTypeParamName.get(selectedTableName)),
+						inRange, false, ((String) dataProduct_types.getSelectedItem()), ColumnConstraint.defaultValue);
 			} else if (action.equals(ADD_SPATIALCONSTRAINT)) {
 				String constraintSelected = (String) spatial_fields.getSelectedItem();
 				constraintSelected = spatialFieldValueOptions.get(selectedTableName).get(constraintSelected);
 				if (constraintSelected != null) {
-					appendConstraint(spatial_andOrOp, constraintSelected, inRange, true, spatial_value.getText(), ColumnConstraint.defaultValue);
+					constraintSelected = TapTable.getQueryPart(constraintSelected);
+					appendConstraint(spatial_andOrOp, constraintSelected, inRange, true, spatial_value.getText(),
+							ColumnConstraint.defaultValue);
 				}
 			} else if (action.equals(ADD_SPECTRALCONSTRAINT)) {
 				try {
@@ -771,7 +782,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 					if (constraintSelected.equals(SPECTRALRANGE)) {
 						inRange = true;
 						processToMeters = true;
-						defaultValue = spectralFieldValueOptions.get(selectedTableName).get("em_min")+" != NULL && "+spectralFieldValueOptions.get(selectedTableName).get("em_max")+" != NULL ";
+						defaultValue = getRangeDefaultString(
+								spectralFieldValueOptions.get(selectedTableName).get("em_min"),
+								spectralFieldValueOptions.get(selectedTableName).get("em_max"));
 					} else if (constraintSelected.equals("em_min") || constraintSelected.equals("em_max")) {
 						processToMeters = true;
 					}
@@ -783,7 +796,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 							mText = processSpectralBand(false, valueInProcess.trim(), null);
 							valueInProcess = mText.toString();
 						}
-						appendConstraint(spectral_andOrOp, constraintSelected, inRange , true, valueInProcess, defaultValue);
+						constraintSelected = TapTable.getQueryPart(constraintSelected);
+						appendConstraint(spectral_andOrOp, constraintSelected, inRange, true, valueInProcess,
+								defaultValue);
 					}
 				} catch (NumberFormatException e) {
 					Aladin.warning(this, "Error! "+e.getMessage());
@@ -799,7 +814,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 					if (constraintSelected.equals(TIMERANGE)) {
 						inRange = true;
 						processToMjd = true;
-						defaultValue = timeFieldValueOptions.get(selectedTableName).get("t_min")+" != NULL && "+timeFieldValueOptions.get(selectedTableName).get("t_max")+" != NULL ";
+						defaultValue = getRangeDefaultString(
+								timeFieldValueOptions.get(selectedTableName).get("t_min"),
+								timeFieldValueOptions.get(selectedTableName).get("t_max"));
 					} else if (constraintSelected.equals("t_min") || constraintSelected.equals("t_max")) {
 						processToMjd = true;
 					}
@@ -809,8 +826,11 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 						String valueInProcess = time_value.getText();
 						if (processToMjd) {
 							mjdText = setDateInMJDFormat(false, valueInProcess, null, SPACESTRING);
-							valueInProcess = mjdText.toString();
+							if (mjdText != null) {
+								valueInProcess = mjdText.toString();
+							}
 						}
+						constraintSelected = TapTable.getQueryPart(constraintSelected);
 						appendConstraint(time_andOrOp, constraintSelected, inRange , true, valueInProcess, defaultValue);
 					}
 				} catch (Exception e) {
@@ -820,14 +840,17 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 	                return;
 				}
 			} else if (action.equals(ADD_FREECONSTRAINT)) {
-				TapTableColumn constraintSelected = (TapTableColumn) free_fields.getSelectedItem();
+				TapTableColumn columnSelected = (TapTableColumn) free_fields.getSelectedItem();
 				boolean processAsNumber = true;
-				if (constraintSelected != null) {
-					String dataType = constraintSelected.getDatatype();
+				if (columnSelected != null && columnSelected.getColumn_name() != null
+						&& !columnSelected.getColumn_name().isEmpty()) {
+					String dataType = columnSelected.getDatatype();
 					if (dataType != null && dataType.toUpperCase().contains("VARCHAR")) {
 						processAsNumber = false;
 					}
-					appendConstraint(free_andOrOp, constraintSelected.getColumn_name(), inRange, processAsNumber, free_value.getText(), defaultValue);
+					String constraintSelected = columnSelected.getColumnNameForQuery();
+					appendConstraint(free_andOrOp, constraintSelected, inRange, processAsNumber,
+							free_value.getText(), defaultValue);
 				}
 			} else if (action.equals(ADDPOSCONSTRAINT)) {
 				String objet = null;
@@ -848,7 +871,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		            return;
 				}
 				StringBuffer whereClause = new StringBuffer();
-				whereClause.append(String.format(POSQuery, this.raColumnName, this.decColumnName,
+				String raColumNameForQuery = TapTable.getQueryPart(this.raColumnName);
+				String decColumNameForQuery = TapTable.getQueryPart(this.decColumnName);
+				whereClause.append(String.format(POSQuery, raColumNameForQuery, decColumNameForQuery,
 						coo[0].getText(), coo[1].getText(), rad[0].getText())).append(SPACESTRING);
 				appendConstraint(free_andOrOp, null, true, false, null, whereClause.toString());
 				

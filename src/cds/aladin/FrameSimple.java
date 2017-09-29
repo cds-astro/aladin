@@ -23,6 +23,7 @@ package cds.aladin;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -38,6 +39,8 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
 import cds.tools.Util;
+import static cds.aladin.Constants.SUBMITACTION;
+import static cds.aladin.Constants.CLEARACTION;
 
 
 /**
@@ -54,10 +57,18 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	Aladin aladin;
 	Server server;
 	JPanel buttonsPanel;
+
+	protected String CLOSE, TIPSUBMIT, TIPCLOSE;
 	
 	protected FrameSimple() {
 		super();
 	}
+	
+	protected void createChaine() {
+	      CLOSE = Aladin.chaine.getString("CLOSE");
+	      TIPSUBMIT = Aladin.chaine.getString("TIPSUBMIT");
+	      TIPCLOSE = Aladin.chaine.getString("TIPCLOSE");
+	   }
 	
 	/**
 	 * All you have is only one tapserver frame. 
@@ -69,6 +80,7 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 		super();
 		this.aladin = aladin;
 		Aladin.setIcon(this);
+		createChaine();
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		Util.setCloseShortcut(this, false, aladin);
 		setLocation(Aladin.computeLocation(this));
@@ -88,7 +100,7 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	}
 	
 	/** Affichage des infos associées à un serveur */
-	protected void show(Server s, String title) {
+	/*protected void show(Server s, String title) {
 		if (s != this.server) {
 			setTitle(title);
 			if (this.server == null) {
@@ -97,9 +109,45 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 				aladin.grabUtilInstance.removeAndAdd(this.server, s);
 			}
 			this.server = s;
-			createFrame();
+			createServerFrame();
 			this.server.updateWidgets(this);// to make sure grab is instantiated right
 			pack();
+		}
+		setVisible(true);
+	}*/
+	
+	public Dimension getPreferredSize() {
+		return new Dimension(650, 450);
+	}
+	
+	protected void show(JComponent panel, String title) {
+		setTitle(title);
+		if (panel != null) {
+			if (panel instanceof Server ) {
+				Server s = (Server) panel;
+				if (s != this.server) {
+					setTitle(title);
+					if (this.server == null) {
+						aladin.grabUtilInstance.grabItServers.add(s);
+					} else {
+						aladin.grabUtilInstance.removeAndAdd(this.server, s);
+					}
+					this.server = s;
+					createServerFrame();
+					this.server.updateWidgets(this);// to make sure grab is instantiated right
+					pack();
+				}
+			} else {
+				this.server = null;
+				this.getContentPane().removeAll();
+				this.getContentPane().setBackground(Aladin.COLOR_MAINPANEL_BACKGROUND);
+				this.getContentPane().add(panel, "Center");
+				this.getContentPane().revalidate();
+				this.getContentPane().repaint();
+				this.getRootPane().setBorder(BorderFactory.createLineBorder(Color.gray));
+				this.getRootPane().getInsets().set(2, 2, 0, 2);
+				pack();
+			}
 		}
 		setVisible(true);
 	}
@@ -108,16 +156,28 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	 * Creates the first form for loading upload data
 	 * @param server2 
 	 */
-	public void createFrame() {
+	public void createServerFrame() {
 //		this.getContentPane().setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 		this.getContentPane().removeAll();
 		this.getContentPane().setBackground(Aladin.COLOR_MAINPANEL_BACKGROUND);
 		this.getContentPane().add(this.server, "Center");
 		buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		JButton submit = new JButton("Submit");
-		submit.addActionListener(this);
-		submit.setActionCommand("SUBMIT");
-		buttonsPanel.add(submit);
+		JButton button = new JButton("Clear");
+		button.addActionListener(this);
+		button.setActionCommand(CLEARACTION);
+		buttonsPanel.add(button);
+		
+		button = new JButton("Submit");
+		button.addActionListener(this);
+		button.setActionCommand(SUBMITACTION);
+		button.setToolTipText(TIPSUBMIT);
+		buttonsPanel.add(button);
+		
+		button = new JButton(CLOSE);
+		button.addActionListener(this);
+		button.setActionCommand(CLOSE);
+		button.setToolTipText(TIPCLOSE);
+		buttonsPanel.add(button);
 		
 		this.getContentPane().add(buttonsPanel, "South");
 		this.getContentPane().revalidate();
@@ -127,11 +187,21 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 //		setSize(700, 500);
 	}
 	
+	
 	public void actionPerformed(ActionEvent evt) {
 		String command = evt.getActionCommand();
-		if (command.equals("SUBMIT")) {
-			server.submit();
+		if (this.server != null) {
+			if (command.equals(SUBMITACTION)) {
+				server.submit();
+			} else if (command.equals(CLEARACTION)) {
+				server.clear();
+			}
 		}
+		
+		if (command.equals(CLOSE)) {
+			processAnyClosingActions();
+		}
+		
 	}
 
 	@Override
@@ -169,7 +239,7 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 
 	protected void processAnyClosingActions() {
 		try {
-			if (server instanceof ServerGlu) {
+			if (server != null && server instanceof ServerGlu) {
 				((ServerGlu) server).cleanUpFOV();
 			}
 		} catch (Exception e) {

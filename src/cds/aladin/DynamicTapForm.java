@@ -722,7 +722,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			
 			if (tablesMetaData.containsKey(tableName)) {//Get table metadata
 				Vector<TapTableColumn> columns = tablesMetaData.get(tableName).getColumns();
-				updateQueryCheckTableColumns(table, columns);
+				TapClient.updateQueryCheckTableColumns(table, columns);
 				
 				if (isUploadTable || (queryCheckerTable != null && queryCheckerTables.remove(queryCheckerTable))) {
 					queryCheckerTables.add(table);
@@ -754,36 +754,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 					|| (queryCheckerTable != null && queryCheckerTables.remove(queryCheckerTable))) {
 				QueryChecker checker = new DBChecker(queryCheckerTables);
 				this.adqlParser.setQueryChecker(checker);
-			}
-		}
-	}
-	
-	/**
-	 * Convenience method to set column to table for parser
-	 * @param parserTable
-	 * @param columnsMeta
-	 */
-	protected void updateQueryCheckTableColumns(DefaultDBTable parserTable, Vector<TapTableColumn> columnsMeta) {
-		if (parserTable != null && columnsMeta != null) {
-			for(TapTableColumn tapTableColumn : columnsMeta) {
-				DefaultDBColumn columnForParser = new DefaultDBColumn(tapTableColumn.getColumn_name(), parserTable);
-				if (tapTableColumn.getDatatype() != null && !tapTableColumn.getDatatype().isEmpty()) {
-					int offset = tapTableColumn.getDatatype().indexOf("adql:");
-					if (offset != -1 && offset + 5 < tapTableColumn.getDatatype().length()) {
-						String datatype = tapTableColumn.getDatatype().substring(offset + 5);
-						if (TapClient.DBDATATYPES.containsKey(datatype)) {
-							DBDatatype dbDataType = TapClient.DBDATATYPES.get(datatype);
-							DBType type = null;
-							if (tapTableColumn.getSize() > 0) {
-								type = new DBType(dbDataType, tapTableColumn.getSize());
-							} else {
-								type = new DBType(dbDataType);
-							}
-							columnForParser.setDatatype(type);
-						}
-					}
-				}
-				parserTable.addColumn(columnForParser);
 			}
 		}
 	}
@@ -852,7 +822,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	 */
 	public void showLoadingError() {
 		this.removeAll();
-		
 		this.setLayout(new BorderLayout());
 		this.setBackground(this.tapClient.primaryColor);
 		GridBagConstraints c = new GridBagConstraints();

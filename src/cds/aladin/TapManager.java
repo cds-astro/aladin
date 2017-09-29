@@ -120,7 +120,8 @@ public class TapManager {
 	public Aladin aladin;
 	protected static List<DataLabel> splTapServerLabels;
 	protected static List<DataLabel> allTapServerLabels;
-	protected TapFrameServer tapFrameServer=null;
+	protected TapFrameServer tapFrameServer = null;
+	protected FrameSimple jobController = null;
 	protected FrameUploadServer uploadFrame;
 	
 	protected static Map<String, TapClient> tapServerPanelCache = new HashMap<String, TapClient>();//main cache where all the ServerGlu's are loaded on init
@@ -809,7 +810,7 @@ public class TapManager {
 		}*/
 
 		loadTapServerList();
-		tapFrameServer.tabbedTapThings.setSelectedIndex(0);
+//		tapFrameServer.tabbedTapThings.setSelectedIndex(0);
 		// tapFrameServer = new TapFrameServer(aladin,this);
 		tapFrameServer.setVisible(true);
 		tapFrameServer.toFront();
@@ -820,10 +821,14 @@ public class TapManager {
 	 * @throws Exception 
 	 */
 	public void showAsyncPanel(){
-		loadTapServerList();
-		tapFrameServer.tabbedTapThings.setSelectedIndex(1);
-		tapFrameServer.setVisible(true);
-		tapFrameServer.toFront();
+		if (jobController == null) {
+			jobController = new FrameSimple(aladin);
+		}
+		MySplitPane asyncPanel = this.uwsFacade.instantiateGui();
+		jobController.show(asyncPanel, UWSFacade.JOBCONTROLLERTITLE);
+//		tapFrameServer.tabbedTapThings.setSelectedIndex(1);
+//		tapFrameServer.setVisible(true);
+		jobController.toFront();
 	}
 	
 	public void loadTapServerList() {
@@ -887,8 +892,10 @@ public class TapManager {
 			dynamicTapForm.ball.setMode(Ball.OK);
 		} catch (RejectedExecutionException e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+			dynamicTapForm.ball.setMode(Ball.NOK);
 			throw new Exception("Request overload! Please wait and try again.");
 		} catch (Exception e) {
+			dynamicTapForm.ball.setMode(Ball.NOK);
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 			throw e;
 		}
@@ -1401,19 +1408,73 @@ public class TapManager {
 	 */
 	public static SavotResource getResults(String tapServiceUrl, String file, String path) throws MalformedURLException, Exception {
 		SavotResource resultsResource = null;
+		HttpURLConnection httpConn = null;
 		try {
 			URL url = getUrl(tapServiceUrl, file, path);
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
-			SavotPullParser savotParser = new SavotPullParser(url, SavotPullEngine.FULL, null, false);
-			resultsResource = Util.populateResultsResource(savotParser);
-		} catch (MalformedURLException e) {
-			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-			throw e;
+			URLConnection urlConn = url.openConnection();
+			urlConn.setRequestProperty("Accept", "*/*");
+			urlConn.setRequestProperty("Connection", "Keep-Alive");
+			urlConn.setRequestProperty("Cache-Control", "no-cache");
+			if (urlConn instanceof HttpURLConnection) {
+				httpConn = (HttpURLConnection) urlConn;
+				InputStream is = null;
+				httpConn.connect();
+				if (httpConn.getResponseCode() < 400) {
+					is = httpConn.getInputStream();
+					SavotPullParser savotParser = new SavotPullParser(is, SavotPullEngine.FULL, null, false);
+					resultsResource = Util.populateResultsResource(savotParser);
+					// stream is closed downstream when it is not an error scenario
+					is.close();
+				} else {
+					is = httpConn.getErrorStream();
+					TapQueryResponseStatusReader queryStatusReader = new TapQueryResponseStatusReader();
+					queryStatusReader.load(is);
+					is.close();
+					String errorMessage = queryStatusReader.getQuery_status_message();
+					if (errorMessage == null || errorMessage.isEmpty()) {
+						errorMessage = "Error: "+httpConn.getResponseCode()+" from server. Unable to get response! Server : "+tapServiceUrl;
+					} else {
+						errorMessage = queryStatusReader.getQuery_status_value() + " " + errorMessage;
+					}
+					httpConn.disconnect();
+					throw new IOException(errorMessage);
+				}
+			}
+		} catch (MalformedURLException me) {
+			if( Aladin.levelTrace >= 3 ) me.printStackTrace();
+			throw me;
+		} catch (IOException ioe) {
+			Aladin.trace(3, "Error when getting job! Http response is: " + httpConn.getResponseCode());
+			if (httpConn != null) {
+				httpConn.disconnect();
+			}
+			throw ioe;
 		} catch (Exception e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+			if (httpConn != null) {
+				httpConn.disconnect();
+			}
 			throw e;
 		}
-
+		
+//		try {
+//			URL url = getUrl(tapServiceUrl, file, path);
+//			Aladin.trace(3, "TapManager.getResults() for: "+url);
+//			URLConnection urlConn = url.openConnection();
+//			urlConn.setRequestProperty("Accept", "*/*");
+//			urlConn.setRequestProperty("Connection", "Keep-Alive");
+//			urlConn.setRequestProperty("Cache-Control", "no-cache");
+//			SavotPullParser savotParser = new SavotPullParser(url, SavotPullEngine.FULL, null, false);
+//			resultsResource = Util.populateResultsResource(savotParser);
+//		} catch (MalformedURLException e) {
+//			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+//			throw e;
+//		} catch (Exception e) {
+//			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+//			throw e;
+//		}
+		
 		return resultsResource;
 	}
 	
@@ -1932,7 +1993,7 @@ public class TapManager {
 					currentT.setName("TsetRaDec: "+serverTap.tapClient.tapBaseUrl);
 					
 					boolean addTargetPanel = false;
-					Vector<TapTableColumn> columns = serverTap.tapClient.getServerTapSelectedTableColumns();
+					Vector<TapTableColumn> columns = serverTap.tapClient.getServerTapSelectedTableColumns(serverTap.selectedTableName);
 					JComboBox raColumn = new JComboBox(columns);
 					raColumn.setRenderer(new CustomListCellRenderer());
 					raColumn.setSize(raColumn.getWidth(), Server.HAUT);
@@ -2041,7 +2102,7 @@ public class TapManager {
 	public void setSelectedServerLabel(){
 //		this.selectedServerLabel = tapServerLabels.get(DataLabel.selectedId);
 		this.tapFrameServer.selectedServerLabel = null;
-		int whichList = this.tapFrameServer.allRegistryPane.getSelectedIndex();
+		int whichList = this.tapFrameServer.options.getSelectedIndex();
 		for (DataLabel datalabel : getTapServerList(whichList)) {
 			if (datalabel.gui.isSelected()) {
 				this.loadTapServerList();

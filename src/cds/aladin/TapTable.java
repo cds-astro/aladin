@@ -42,6 +42,7 @@ import static cds.aladin.Constants.PMRA;
 import static cds.aladin.Constants.RA;
 import static cds.aladin.Constants.RADIALVELOCITY;
 import static cds.aladin.Constants.REDSHIFT;
+import static cds.aladin.Constants.REGEX_TABLENAME_SPECIALCHAR;
 import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
 import static cds.aladin.Constants.UCD_DEC_PATTERN2;
@@ -192,6 +193,31 @@ public class TapTable {
 		return adqlName;
 	}
 	
+	/**
+	 * Method only used for cases of table names with special chars.
+	 * Adds double quote to the names
+	 * @param tapTable 
+	 * @param queryPartInput
+	 * @return
+	 */
+	public static String getQueryPart(String queryPartInput) {
+		if (queryPartInput != null) {
+//			queryPartInput = tapTable.getAdqlName(); //TODO:: tintin : when we add schema name
+			Pattern regex = Pattern.compile(REGEX_TABLENAME_SPECIALCHAR);
+			/*String[] tableName = queryPartInput.split("\\."); nope. Vizier can have dot inside a table adql name: J/other/BAJ/24.62/table5 
+			if (tableName.length > 1) {
+				queryPartInput = tableName[tableName.length];
+			}*/
+			Matcher matcher = regex.matcher(queryPartInput);
+			if (matcher.find()){
+				queryPartInput = Glu.doubleQuote(queryPartInput);
+			}
+//			queryPartInput = tapTable.getFullyQualifiedTableName(queryPartInput); //when we add schema name
+		}
+		
+		return queryPartInput;
+	}
+	
 	public synchronized void parseForObscore(boolean isUpload, TapTableColumn columnMeta) {
 		if (isUpload || hasObscoreInTheName()) {
 			initObsCoreColumns();
@@ -339,6 +365,14 @@ public class TapTable {
 		TapTableColumn result = null;
 		if (this.flaggedColumns != null && this.flaggedColumns.containsKey(key)) {
 			result = this.flaggedColumns.get(key);
+		}
+		return result;
+	}
+	
+	public String getObsColumnNameForQuery(String key) {
+		String result = getObsColumnName(key);
+		if (result != null) {
+			result = TapTable.getQueryPart(result);
 		}
 		return result;
 	}

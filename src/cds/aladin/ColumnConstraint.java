@@ -101,7 +101,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		String selectedWhereOperator = (String) whereOperator.getSelectedItem();
 		
 		TapTableColumn column = ((TapTableColumn)columns.getSelectedItem());
-		String columnName = column.getColumn_name();
+		String columnName = column.getColumnNameForQuery();
 		whereClause.append(columnName).append(SPACESTRING);
 		
 		if (constraintValue.getText().isEmpty()) {
@@ -134,7 +134,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 			} else{
 				String dataType = column.getDatatype();
 				boolean processAsNumber = true;
-				if (dataType!=null && !dataType.toUpperCase().contains("VARCHAR")) {
+				if (dataType != null && !dataType.toUpperCase().contains("VARCHAR")) {
 					processAsNumber = false;
 				}
 				whereClause.append(whereOperator.getSelectedItem()).append(SPACESTRING).append(Util.formatterPourRequete(processAsNumber, constraintValue.getText()))
