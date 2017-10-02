@@ -1607,6 +1607,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          }
       }
       plan.modifyProj( sproj );
+      
+      // Maj éventuelle du sélecteur global
+      if( aladin.view.getCurrentView().pref==plan ) {
+         aladin.projSelector.setProjectionSilently( sproj );
+      }
    }
 
    // Changement de la frame de traçage d'un planBG

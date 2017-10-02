@@ -291,6 +291,9 @@ public class PlanCatalog extends Plan {
             aladin.dialog.setDefaultTarget(objet);
             aladin.dialog.setDefaultTaille(this);
          }
+         
+         // Sélection de l'ordre d'affichage des champs
+         setFieldOrder();
 
          // Peut être un nom dans EXTNAME ?
          setExtName();

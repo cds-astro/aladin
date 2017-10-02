@@ -42,6 +42,8 @@ import cds.tools.Util;
 public class ProjSelector extends JPanel {
    private Aladin aladin;
    private JComboBox<String> combo;
+   private ActionListener actionListener;
+
 
    protected ProjSelector(Aladin aladin) {
       this.aladin = aladin;
@@ -63,12 +65,12 @@ public class ProjSelector extends JPanel {
       // Positionnement de la projection par défaut
       String s = aladin.configuration.getProj();
       initProjection(s);
-      
-      combo.addActionListener(new ActionListener() {
+      actionListener=new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             submitProjection( (String)combo.getSelectedItem());
          }
-      });
+      };
+      combo.addActionListener( actionListener);
       combo.setPrototypeDisplayValue("12345678");
       
       GridBagLayout g;
@@ -86,10 +88,21 @@ public class ProjSelector extends JPanel {
       setEnabled(false);
    }
    
+   
+   
    public void setEnabled( boolean enabled ) {
       combo.setEnabled( enabled );
    }
    
+   /** Affiche une projection spécifique sur la combo, sans entrainer une action */
+   protected void setProjectionSilently(String s) {
+      combo.removeActionListener(actionListener);
+      setProjection(s);
+      combo.addActionListener(actionListener);
+   }
+   
+   /** Met en place une projection spécifique sur la combo, et l'applique sur tous les
+    * plans concernés */
    protected void setProjection(String s) { 
       int index = Projection.getAlaProjIndex(s);
       if( index<0 ) return;

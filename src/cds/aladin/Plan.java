@@ -1475,6 +1475,14 @@ public class Plan implements Runnable {
       } catch( Exception e ) { return false; }
       return true;
    }
+   
+   /** Positionne l'ordre par défaut d'affichage des champs des mesures */
+   protected void setFieldOrder() {
+      for( Legende leg : getLegende() ) {
+         System.out.println("setFieldOrder sur Legende "+leg);
+         leg.setDefaultFieldOrder();
+      }
+   }
 
    /** Retourne true si le plan est synchronisé */
    protected boolean isSync() { return true; }

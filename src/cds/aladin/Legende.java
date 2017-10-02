@@ -65,17 +65,23 @@ public final class Legende extends AbstractTableModel  {
    boolean[] computed; // computed[i] true if field[i] is a computed column
    private int firstLink=-2;  // position du premier champ qui a un lien
    private boolean sorted=false;  // true s'il il y a tri posé sur un champ
-
+   
+   int fieldAt[] = null;     // Ordre d'affichage des Fields de la légende
+   
    protected Legende() {
       field = new Field[0];
+      computed = new boolean[0];
+      fieldAt = new int[0];
    }
 
    protected Legende(Vector<Field> vField) {
       field = new Field[ vField.size() ];
-      computed = new boolean[ vField.size() ];
+      fieldAt = new int[ field.length ];
+      computed = new boolean[ field.length ];
       Enumeration<Field> e = vField.elements();
       for( int i=0; e.hasMoreElements(); i++ ) {
          field[i]=e.nextElement();
+         fieldAt[i] = i;
          computed[i] = false;
       }
    }
@@ -94,16 +100,23 @@ public final class Legende extends AbstractTableModel  {
       }
       field = new Field[f.size()];
       computed = new boolean[field.length];
+      fieldAt = new int[ field.length ];
       name = "[Concatenated]";
-      for( int i=0; i<field.length; i++ ) field[i] = f.get(i);
+      for( int i=0; i<field.length; i++ ) {
+         field[i] = f.get(i);
+         computed[i] = false;
+         fieldAt[i] = i;
+      }
    }
 
    // constructeur par recopie (Thomas, 19/01/2005)
    // Modif pour Pierre jan 2009 pour copier également le name et computed[]
    protected Legende(Legende l) {
       this.field = new Field[l.field.length];
+      fieldAt = new int[ field.length ];
       for( int i=0; i<l.field.length; i++ ) {
          field[i] = l.field[i];
+         fieldAt[i] = l.fieldAt[i];
       }
       this.name=l.name;
       this.group = l.group;
@@ -123,6 +136,7 @@ public final class Legende extends AbstractTableModel  {
       if( leg==null || leg.field.length!=val.length ) {
          leg = new Legende();
          leg.field = new Field[val.length];
+         leg.fieldAt = new int[ val.length ];
          leg.computed = new boolean[val.length];
       }
       for( int i=0; i<val.length; i++ ) {
@@ -130,6 +144,7 @@ public final class Legende extends AbstractTableModel  {
          if( leg.field[i]==null ) {
             leg.field[i] = new Field("Col_"+i);
             leg.computed[i] = false;
+            leg.fieldAt[i] = i;
          }
          Field f = leg.field[i];
          switch(type) {
@@ -223,9 +238,17 @@ public final class Legende extends AbstractTableModel  {
    protected void addField(Field f) {
       int n=field.length;
       Field nField[] = new Field[n+1];
+      boolean nComputed[] = new boolean[n+1];
+      int nTri[] = new int[n+1];
       System.arraycopy(field,0,nField,0,n);
+      System.arraycopy(computed,0,nComputed,0,n);
+      System.arraycopy(fieldAt,0,nTri,0,n);
       nField[n]=f;
+      nTri[n]=n;
+      nComputed[n]=true;
       field=nField;
+      fieldAt=nTri;
+      computed=nComputed;
    }
 
    /** Modification du nom, unité, ucd ou taille d'affichage d'une colonne.
@@ -249,7 +272,9 @@ public final class Legende extends AbstractTableModel  {
          res = index-n;
          Field nField[] = new Field[index+1];
          boolean nComputed[] = new boolean[index+1];
+         int nTri[] = new int[index+1];
          System.arraycopy(field,0,nField,0,n);
+         System.arraycopy(fieldAt,0,nTri,0,n);
 
          if( computed!=null ) System.arraycopy(computed,0,nComputed,0,n);
          else for( int i=0; i<n; i++ ) nComputed[i]=false;
@@ -257,7 +282,9 @@ public final class Legende extends AbstractTableModel  {
          for(int i=n; i<index+1; i++ ) {
             nField[i] = new Field("Col_"+(i+1));
             nComputed[i]=true;
+            fieldAt[i]=i;
          }
+         fieldAt = nTri;
          computed = nComputed;
          field=nField;
       }
@@ -568,47 +595,49 @@ public final class Legende extends AbstractTableModel  {
    }
 
    public Object getValueAt(int row, int col) {
+      int i = fieldAt[row];
       switch(col) {
-         case N:           return (row+1)+"";
-         case COO:         return getCooSignature(row); //field[row].getCooSignature();
-         case VISIBLE:     return new Boolean(field[row].visible);
-         case NAME:        return field[row].name;
-         case UNIT:        return field[row].unit;
-         case DESCRIPTION: return field[row].description;
-         case UCD:         return field[row].ucd;
-         case UTYPE:       return field[row].utype;
-         case DATATYPE:    return Field.typeFits2VOTable(field[row].datatype);
-         case WIDTH:       return field[row].width;
-         case ARRAYSIZE:   return field[row].arraysize;
-         case PRECISION:   return field[row].precision;
+         case N:           return (i+1)+"";
+         case COO:         return getCooSignature(i); //field[row].getCooSignature();
+         case VISIBLE:     return new Boolean(field[i].visible);
+         case NAME:        return field[i].name;
+         case UNIT:        return field[i].unit;
+         case DESCRIPTION: return field[i].description;
+         case UCD:         return field[i].ucd;
+         case UTYPE:       return field[i].utype;
+         case DATATYPE:    return Field.typeFits2VOTable(field[i].datatype);
+         case WIDTH:       return field[i].width;
+         case ARRAYSIZE:   return field[i].arraysize;
+         case PRECISION:   return field[i].precision;
       }
       return "";
    }
    
-   private String getCooSignature(int row) {
-      if( field[row].isDe() && getRa()==-1 ) return "COO";
-      return field[row].getCooSignature();
+   private String getCooSignature(int i) {
+      if( field[i].isDe() && getRa()==-1 ) return "COO";
+      return field[i].getCooSignature();
    }
 
    public boolean isCellEditable(int row, int col) { return col>0; }
    public void setValueAt(Object value,int row, int col) {
+      int i = fieldAt[row];
       switch(col) {
-         case NAME:        field[row].name = (String)value; break;
+         case NAME:        field[i].name = (String)value; break;
          case COO:         String s = (String) value;
-         if( !s.equals( field[row].getCooSignature() ) ) {
+         if( !s.equals( field[i].getCooSignature() ) ) {
             int coo = Util.indexInArrayOf(s, Field.COOSIGN);
-            modifyRaDecXYField(row,coo);
+            modifyRaDecXYField(i,coo);
          }
          break;
-         case VISIBLE:     field[row].visible = ((Boolean)value).booleanValue(); break;
-         case UNIT:        field[row].unit = (String)value; break;
-         case DESCRIPTION: field[row].description = (String)value; break;
-         case UCD:         field[row].ucd = (String)value; break;
-         case UTYPE:       field[row].utype = (String)value; break;
-         case DATATYPE:    field[row].datatype = Field.typeVOTable2Fits( (String)value); break;
-         case WIDTH:       field[row].width = (String)value; field[row].computeColumnSize(); break;
-         case ARRAYSIZE:   field[row].arraysize = (String)value; field[row].computeColumnSize(); break;
-         case PRECISION:   field[row].precision = (String)value; break;
+         case VISIBLE:     field[i].visible = ((Boolean)value).booleanValue(); break;
+         case UNIT:        field[i].unit = (String)value; break;
+         case DESCRIPTION: field[i].description = (String)value; break;
+         case UCD:         field[i].ucd = (String)value; break;
+         case UTYPE:       field[i].utype = (String)value; break;
+         case DATATYPE:    field[i].datatype = Field.typeVOTable2Fits( (String)value); break;
+         case WIDTH:       field[i].width = (String)value; field[i].computeColumnSize(); break;
+         case ARRAYSIZE:   field[i].arraysize = (String)value; field[i].computeColumnSize(); break;
+         case PRECISION:   field[i].precision = (String)value; break;
       }
       aladin.mesure.redisplay();
    }
@@ -695,6 +724,54 @@ public final class Legende extends AbstractTableModel  {
       }
 
       fireTableDataChanged();
+   }
+   
+   /** remonte ou descend d'un cran le champ affiché en position row */
+   protected boolean upDown(int row,int sens) {
+      
+      // En bout de tableau => impossible
+      if( sens==-1 && row==0 || sens==1 && row==field.length-1 ) return false;
+      
+      // Recherche du champ qui s'affiche en position pos
+      int i=fieldAt[row];
+      
+      // Recherche du champ qui s'affiche en position pos+sens
+      int i0=fieldAt[row+sens];
+      
+      if( i==-1 || i0==-1 ) return false;   // Bizarre
+      
+      fieldAt[row] = i0;
+      fieldAt[row+sens] = i;
+
+      return true;
+   }
+   
+   /** Affiche en première position le champ nField */
+   protected void showFirst(int nField) {
+      
+      // Actuellement le champ s'affiche où ?
+      int posNField = -1;
+      for( posNField=0; posNField<field.length; posNField++ ) {
+         if( fieldAt[posNField]==nField ) break;
+      }
+      
+      // Tous les champs qui étaient affichés avant vont être poussé d'un cran
+      for( int pos=posNField; pos>0; pos-- ) upDown(pos,-1);
+      
+   }
+   
+   /** Positionne l'ordre d'affichage par défaut des champs de la légende.
+    * Le premier champ ayant un lien permettant de charger quelque chose dans Aladin lui-même
+    * sera placé en première colonne d'affichage (pratique pour SSA et SIA)
+    */
+   protected void setDefaultFieldOrder() {
+      for( int i=0; i<field.length; i++ ) {
+         if( field[i].visible && field[i].flagArchive ) {
+            showFirst(i);
+            aladin.trace(4,"Legende: move field["+i+"] ("+field[i].name+") at first position");
+            break;
+         }
+      }
    }
 
    // Juste pour de debuging

@@ -29,8 +29,9 @@ package cds.aladin;
 import java.util.Iterator;
 import java.util.Vector;
 
-import cds.tools.parser.*;
-import cds.savot.model.*;
+import cds.savot.model.SavotField;
+import cds.tools.parser.Parser;
+import cds.tools.parser.ParserException;
 import cds.xml.Field;
 
 /** This class aims at providing manipulations on table columns
@@ -216,12 +217,16 @@ public class ColumnCalculator {
         else {
             Field[] newFields = new Field[s.leg.field.length+1];
             boolean[] newComputed = new boolean[s.leg.computed.length+1];
+            int[] newTri = new int[s.leg.computed.length+1];
             System.arraycopy(s.leg.field, 0, newFields, 0, s.leg.field.length);
             System.arraycopy(s.leg.computed, 0, newComputed, 0, s.leg.computed.length);
+            System.arraycopy(s.leg.fieldAt, 0, newTri, 0, s.leg.fieldAt.length);
             newFields[s.leg.field.length] = field;
             newComputed[s.leg.computed.length] = true;
+            newTri[s.leg.computed.length] = s.leg.computed.length;
             s.leg.field = newFields;
             s.leg.computed = newComputed;
+            s.leg.fieldAt = newTri;
         }
         
         // ajout de la nouvelle valeur

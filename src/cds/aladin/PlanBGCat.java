@@ -394,7 +394,7 @@ public class PlanBGCat extends PlanBG {
 
    protected Vector<Legende> getLegende() {
       Vector<Legende> v = new Vector<Legende>();
-      v.addElement(getFirstLegende());
+      v.addElement( getFirstLegende() );
       return v;
    }
 

@@ -35,6 +35,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import cds.tools.Util;
@@ -83,6 +84,20 @@ public class FrameInfoTable extends JFrame {
 	   JPanel p2 = new JPanel();
 	   JButton b;
 	   if( plan.pcat!=null && plan.pcat.hasCatalogInfo() ) {
+	      
+          b = new JButton(" ^ ");
+          b.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) { up(); }
+          });
+          p2.add(b);
+          
+          b = new JButton(" v ");
+          b.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) { down(); }
+          });
+          p2.add(b);
+         
+
 	      
           b = new JButton(aladin.chaine.getString("CHECK"));
           b.addActionListener(new ActionListener() {
@@ -158,5 +173,37 @@ public class FrameInfoTable extends JFrame {
           leg.fireTableDataChanged();
        }
        aladin.mesure.redisplay();
+	}
+	
+	// Remonte d'un cran l'affichage de la ligne sélectionnée
+    private void up()   { upDown(-1); }
+    
+    // Descend d'un cran l'affichage de la ligne sélectionnée
+    private void down() { upDown(+1); }
+    
+    // Remonte ou descend d'un cran l'affichage de la ligne sélectionnée
+    // LE CODE EST DEJA PREVU POUR SUPPORTER DE MULTI-SELECTION (SUPPRIMER LES BREAK)
+    private void upDown(int sens) {
+	   boolean trouve=false;
+       Vector<Legende> legs = plan.getLegende();
+       Enumeration<Legende> e = legs.elements();
+       while( e.hasMoreElements() ) {
+          Legende leg = e.nextElement();
+          boolean trouve0 = false;
+          JTable table = leg.getTable();
+          int pos=-1;
+          for( int oos : table.getSelectedRows() ) {
+             if( pos==-1 ) pos =oos;
+             trouve0 |= leg.upDown( oos,sens );
+             trouve |= trouve0;
+             break;
+          }
+          if( trouve0 ) {
+             leg.fireTableDataChanged();
+             if( pos!=-1 ) table.setRowSelectionInterval(pos+sens, pos+sens);
+             break;
+          }
+       }
+       if( trouve ) aladin.mesure.redisplay();
 	}
 }

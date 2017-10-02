@@ -1102,6 +1102,13 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       currentView = v.n;
       setMouseView(v);
       if( !v.isFree() ) v.pref.selected=true;
+      
+      // On indique la projection sur le sélecteur globale de projection
+      if( !v.isFree() && Projection.isOk(v.getProj()) ) {
+         String s1 =  Calib.getProjName(v.getProj().c.getProj());
+         aladin.projSelector.setProjectionSilently(s1); // Pour garder la cohérence du popup menu dans la v10
+      }
+      
       aladin.calque.zoom.reset();
       aladin.calque.select.repaint();
       if( v.isFree() || aladin.toolBox.tool[ToolBox.SELECT].mode==Tool.UNAVAIL ) aladin.toolBox.toolMode();

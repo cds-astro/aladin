@@ -24,12 +24,12 @@ import static cds.aladin.Constants.ACCESSFORMAT_UCD;
 import static cds.aladin.Constants.ACCESSURL;
 import static cds.aladin.Constants.CONTENTTYPE;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTHTML;
+import static cds.aladin.Constants.CONTENT_TYPE_TEXTPLAIN;
 import static cds.aladin.Constants.DATATYPE_DATALINK;
 import static cds.aladin.Constants.SEMANTICS;
 import static cds.aladin.Constants.SEMANTIC_ACCESS;
 import static cds.aladin.Constants.SEMANTIC_CUTOUT;
 import static cds.aladin.Constants.SEMANTIC_PROC;
-import static cds.aladin.Constants.CONTENT_TYPE_TEXTPLAIN;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
@@ -706,10 +706,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       wordLine.addElement(new Words("",-1)); // A la place du repère
 
       for( int i=0; i<leg.field.length; i++ )  {
-         if( !leg.isVisible(i) ) continue;
-         Words w = new Words(leg.field[i].name,null,o.leg.getWidth(i),o.leg.getPrecision(i),
-               Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[i],
-                     leg.field[i].sort,-1,false);
+         int nField = leg.fieldAt[i];
+         if( !leg.isVisible(nField) ) continue;
+         Words w = new Words(leg.field[nField].name,null,o.leg.getWidth(nField),o.leg.getPrecision(nField),
+               Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[nField],
+                     leg.field[nField].sort,-1,false);
          w.pin = i==0;
          wordLine.addElement(w);
       }
@@ -736,33 +737,45 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       String s =(o.info!=null)?o.info:o.id; // Faute de grive...
 
       StringTokenizer st = new StringTokenizer(s,"\t");
-      wordLine = new Vector(st.countTokens()+1);
+      int n = st.countTokens();
+      wordLine = new Vector(n+1);
       wordLine.addElement(o);           // L'objet lui-meme est tjrs en premiere place
 
       int indexFootPrint = o.getIdxFootprint(); // position d'un Fov, -1 si aucun
 
       boolean isDatalink= isValueOfSpecifiedUcdField(o, ACCESSFORMAT_UCD, DATATYPE_DATALINK);
+      
+      String [] tags = new String[ n-1 ];
+      String triangle = st.nextToken();  
+      for (int i = 0; i<tags.length; i++) tags[i] = st.nextToken();
 
-      for (int i = 0; st.hasMoreTokens(); i++) {
+      for (int i = 0; i<n; i++) {
+         String tag;
 
-         String tag = st.nextToken();
          Words w;
-         if( i==0 ) w = new Words(tag,num);	// Le triangle n'a pas de taille
-         else {
+         if( i==0 ) {
+            tag=triangle;
+            w = new Words(tag,num);	// Le triangle n'a pas de taille
+         } else {
+            int nField = o.leg.fieldAt[i-1];
+            tag = tags[nField];
 
-            if( !o.leg.isVisible(i-1) ) continue;
+            if( !o.leg.isVisible(nField) ) continue;
 
             // Determination de l'alignement en fonction du type de donnees
-            int align= o.leg.isNumField(i-1) ? Words.RIGHT : Words.LEFT;
+            int align= o.leg.isNumField(nField) ? Words.RIGHT : Words.LEFT;
 
             // Creation d'un mot dans le cas d'un footprint associé (Thomas, VOTech)
-            if( indexFootPrint==i-1 ) {
-               w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(i-1),Words.LEFT,false,true,num);
+            if( indexFootPrint==nField ) {
+               w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(nField),Words.LEFT,
+                     false,true,num);
             }
             // Creation du nouveau mot
             else {
                if( o.leg.isNullValue(tag, i-1) ) tag="";
-               w = new Words(tag,o.leg.getRefText(i-1),o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT,num,isDatalink);
+               w = new Words(tag,o.leg.getRefText(nField),o.leg.getWidth(nField),
+                     o.leg.getPrecision(nField),align,
+                     o.leg.computed.length==0?false:o.leg.computed[nField],Field.UNSORT,num,isDatalink);
             }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );

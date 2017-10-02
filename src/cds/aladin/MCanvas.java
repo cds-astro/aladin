@@ -1395,13 +1395,22 @@ MouseWheelListener, Widget
    // Calcule le véritable indice du champ dans la légende associée à la source
    // en fonction de l'indice dans la table affichée car certains champs peuvent être cachée
    // et il y a un décalage d'une valeur pour tenir compte de la case à cocher en début de ligne
-   // IDEE : C'EST ICI QU'IL FAUDRA PRENDRE EN COMPTE LE CHANGEMENT D'ORDRE DE L'AFFICHAGE
    private int getRealIndice(Source s,int indice) {
-      if( s.leg==null ) return indice-1;
-      for( int i=0; i<indice; i++ ) {
-         if( !s.leg.isVisible(i) ) indice++;
+      indice--;
+      if( s.leg==null ) return indice;
+      
+      // Comme si on affichait à nouveau
+      int pos=-1;
+      for( int i=0; i<s.leg.field.length; i++ ) {
+         int nField = s.leg.fieldAt[ i ];
+         if( s.leg.isVisible(nField) ) {
+            pos++;
+            if( pos==indice ) return nField;
+         }
       }
-      return indice-1;
+      
+      // Bizarre !!
+      return indice;
    }
 
    /** Deplacement de la souris sur les mesures.

@@ -1718,7 +1718,7 @@ public class ServerGlu extends Server implements Runnable {
 		if (dataLinkSource!=null && dataLinkSource.isShowingFootprint()) {
 			dataLinkSource.setShowFootprint(false, true);
 		}
-		dataLinkSource.resetFootprint();
+		if (dataLinkSource!=null ) dataLinkSource.resetFootprint();
 	}
 
 /**

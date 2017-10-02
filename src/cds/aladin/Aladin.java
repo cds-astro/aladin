@@ -5538,7 +5538,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          boolean mode1 = nbPlans>1 || nbPlans==1 && !isBG;
          
          /** Il n'est pas possible de changer la projection globale pour certain plan */
-         boolean projEnabled = !isFree && base!=null && !base.hasSpecificProj() && base instanceof PlanBG;
+         boolean projEnabled = !isFree && base!=null && /* !base.hasSpecificProj() && */ base instanceof PlanBG;
          projSelector.setEnabled( projEnabled );
 
          //         if( console!=null ) console.clone.setEnabled(hasSelectedSrc);

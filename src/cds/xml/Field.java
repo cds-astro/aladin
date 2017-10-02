@@ -23,8 +23,6 @@ package cds.xml;
 
 import java.util.Hashtable;
 
-import cds.aladin.Aladin;
-import cds.tools.ConfigurationReader;
 import cds.tools.Util;
 
 /** Field description according to the Astrores XML standard.
@@ -37,7 +35,7 @@ final public class Field {
 
    /** Numeric datatype keys */
    static private String NUMDATATYPE = "JKEFGDI";
-
+   
    /** Field Identifier */
    public String ID;
 
@@ -95,9 +93,6 @@ final public class Field {
    /** null value */
    public String nullValue;
 
-   /** true if it is a RA or DE field */
-   //   public boolean coo;
-
    /** Column size (edition only) */
    public int columnSize=10;
 
@@ -110,6 +105,8 @@ final public class Field {
    static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4;
    static public final String SEDLABEL[] = { "","SED_FREQ","SED_FLUX","SED_FLUXERR","SED_SEDID" };
    public int sed;
+   
+   public boolean flagArchive=false;   // Ce champ va servir à un bouton vers une archive (SIA, SSA...)
 
    //   /** True if it is the DE coordinate field */
    //   public boolean isDE;

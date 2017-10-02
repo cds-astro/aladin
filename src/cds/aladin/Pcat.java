@@ -718,15 +718,17 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   if( name.equalsIgnoreCase("datalink") ) flagArchive="data/???";
                }
             }
-
+            
             String tag = (gref != null) ? gref : (href != null) ? "Http " + href : null;
 
             // JE LE REMETS ACTIF DE MANIERE GENERIQUE POUR N'IMPORTE QUEL SPECTRE - PF sept 2012
             if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="£"+tag;
-
             else if( tag != null && flagArchive != null && flagArchive.indexOf('/')>0  ) tag = "^" + tag;
             
-            // utype "a la obscore"
+            // Juste pour se rappeler que ce champ va porter un bouton vers une archive
+            if( tag!=null && (tag.charAt(0)=='^' || tag.charAt(0)=='£') ) leg.field[j].flagArchive=true;
+            
+             // utype "a la obscore"
             if( indexAccessUrl==-1 && Util.indexOfIgnoreCase(utype,"Access.Reference")>=0 ) indexAccessUrl=j;
             if( indexAccessFormat==-1 && Util.indexOfIgnoreCase(utype,"Access.Format")>=0 ) indexAccessFormat=j;
 
@@ -807,6 +809,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
                   val = "<&"+tag+val.substring(2);
                   source.setValue(indexAccessUrl, val);
+                  source.leg.field[indexAccessUrl].flagArchive=true;
                }
             } catch( Exception e ) {
                e.printStackTrace();
