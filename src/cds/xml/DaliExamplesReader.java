@@ -68,9 +68,9 @@ public class DaliExamplesReader extends DefaultHandler {
 	    	SAXParserFactory parserFactor = SAXParserFactory.newInstance();
 	    	SAXParser parser = parserFactor.newSAXParser();
 		    DaliExamplesReader handler = new DaliExamplesReader();
-		    URL examplesUrl = new URL("http://130.79.129.54:8080/view-source_gaia.ari.uni-heidelberg.de_tap_examples.xhtml");
+		    URL examplesUrl = new URL("http://130.79.129.54:8080/simbadExamples.xhtml"); //works
+//		    		new URL("http://130.79.129.54:8080/view-source_gaia.ari.uni-heidelberg.de_tap_examples.xhtml");
 //		    URL examplesUrl = new URL("http://gaia.ari.uni-heidelberg.de/tap/examples");
-//		    new URL("http://130.79.129.54:8080/simbadExamples.xhtml"); //works
 			parser.parse(examplesUrl.openStream(), handler);
 			for (Object string : handler.examples.keySet().toArray()) {
 				System.out.println(string);

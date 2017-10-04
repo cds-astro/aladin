@@ -360,7 +360,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		raColumn1 = new JComboBox(columnsToSet);
 		raColumn1.setRenderer(new CustomListCellRenderer());
 		raColumn1.setSize(raColumn1.getWidth(), Server.HAUT);
-		TapTable table = s.tapClient.getServerExampleSelectedPrimaryTable();
+		TapTable table = s.tapClient.tablesMetaData.get(s.selectedTableName);
 		TapTableColumn selectedItem = table.getFlaggedColumn(RA);
 		if (selectedItem != null) {
 			raColumn1.setSelectedItem(selectedItem);
@@ -729,7 +729,8 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 							return;
 						}
 					}
-					if (TAP_EMPTYINPUT.equals(raColumn.getUtype()) || TAP_EMPTYINPUT.equals(decColumn.getUtype())) {
+					if (raColumn == null || decColumn == null || TAP_EMPTYINPUT.equals(raColumn.getUtype())
+							|| TAP_EMPTYINPUT.equals(decColumn.getUtype())) {
 						tableMetaData.setRaColumn(null);
 						tableMetaData.setDecColumn(null);
 					} else {

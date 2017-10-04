@@ -77,7 +77,7 @@ public class DataLabel {
 	public void setUi() {
 		gui = new JRadioButton(this.label+"  ::"+this.value);
 		if (this.description!=null && !this.description.isEmpty()) {
-			gui.setToolTipText("<html><p width=\"500\">"+this.description+"</p></html>");
+			gui.setToolTipText("<html><p width=\"400\">"+this.description+"</p></html>");
 		}
 	}
 	

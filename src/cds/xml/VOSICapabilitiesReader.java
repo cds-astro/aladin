@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Hashtable;
 
+import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
+import cds.aladin.TapManager;
 
 public class VOSICapabilitiesReader implements XMLConsumer {
 	//tag flags
@@ -40,11 +42,16 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 		XMLParser xmlParser = new XMLParser(this);
 		boolean result = false;
 		MyInputStream inputStream = null;
-		
 		resetFlags();
 		try {
+			long startTime = TapManager.getTimeToLog();
 			inputStream = new MyInputStream(capabilitiesUrl.openStream());
+			long time = TapManager.getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println("getTapCapabilities got inputstream: "+time+" total time taken: "+(time - startTime));
+			startTime = TapManager.getTimeToLog();
 			result = xmlParser.parse(inputStream);
+			time = TapManager.getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println("getTapCapabilities parsed: "+time+" total time taken: "+(time - startTime));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

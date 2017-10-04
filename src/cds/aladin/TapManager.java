@@ -26,6 +26,7 @@ import static cds.aladin.Constants.COLUMNNAME;
 import static cds.aladin.Constants.COUNT;
 import static cds.aladin.Constants.DATATYPE;
 import static cds.aladin.Constants.DESCRIPTION;
+import static cds.aladin.Constants.DIRQUERY_GETALLTAPSERVERS;
 import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETRESULTPARAMS;
@@ -34,9 +35,11 @@ import static cds.aladin.Constants.PATHSYNC;
 import static cds.aladin.Constants.PRINCIPAL;
 import static cds.aladin.Constants.SCHEMANAME;
 import static cds.aladin.Constants.SIZE;
+import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.STD;
 import static cds.aladin.Constants.TABLENAME;
 import static cds.aladin.Constants.TABLETYPE;
+import static cds.aladin.Constants.TAP;
 import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
@@ -52,13 +55,11 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -94,6 +95,8 @@ import org.xml.sax.SAXException;
 import adql.db.DefaultDBTable;
 import adql.query.ADQLQuery;
 import cds.aladin.Constants.TapClientMode;
+import cds.allsky.Constante;
+import cds.mocmulti.MocItem2;
 import cds.savot.binary.DataBinaryReader;
 import cds.savot.model.FieldSet;
 import cds.savot.model.SavotBinary;
@@ -129,6 +132,7 @@ public class TapManager {
 	public static final String GETTAPSCHEMACOLUMNCOUNT = "REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+COUNT(*)+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMACOLUMNS = "REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMATABLES = "REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.tables";
+	public static final String GETTAPSCHEMATABLENAMES = "REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+table_name+FROM+TAP_SCHEMA.tables";
 	public static final String GETTAPSCHEMACOLUMN = "REQUEST=doQuery&LANG=ADQL&QUERY=SELECT+*+FROM+TAP_SCHEMA.columns+where+table_name+=+'%1$s'+";
 	public static final String GETTAPCAPABILITIES = "capabilities";
 	public static final String GETTAPSCHEMATABLE = GETTAPSCHEMATABLES+"+where+table_name+=+'%1$s'+";
@@ -176,10 +180,8 @@ public class TapManager {
 	public List<DataLabel> getTapServerList(int mode) {
 		List<DataLabel> result = null;
 		if (initAllLoad) {
-//			populateTapServerListFromLocalFile(); //tintin comment this for commit
-			// load from glu here
-			populateTapServerListFromLocalFile();// tintin here dummy as well
-			populateFromDirectory();//loading from directory
+			populateTapServersFromTree(null);// loading all tap from tree
+			populateSplFromDirectory();//loading spl list directory
 		}
 		switch (mode) {
 		case 0:
@@ -230,11 +232,40 @@ public class TapManager {
 		}
 	}
 
+	public void populateTapServersFromTree(String mask){
+		try {
+			if (allTapServerLabels == null) {
+				allTapServerLabels = new ArrayList<DataLabel>();
+			} else {
+				allTapServerLabels.clear();
+			}
+			String label;
+			String url;
+			String description;
+			if (mask == null || mask.isEmpty()) {
+				mask = DIRQUERY_GETALLTAPSERVERS;
+			}
+			ArrayList<String> tapServersInfos = aladin.directory.getTAPServers(mask);
+			for (String tapServersInfo : tapServersInfos) {
+				if (tapServersInfo.trim().equals("")) continue;
+				label = tapServersInfo.split("\\s+")[0];
+				url = tapServersInfo.split("\\s+")[1];
+				description = tapServersInfo.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
+				allTapServerLabels.add(new DataLabel(label, url, description));
+			}
+			
+		} catch (Exception e) {
+			System.err.println("Tree servers not loaded error:"+e);
+            e.printStackTrace();
+			Aladin.warning("Tree tap servers not loaded !", 1);
+		}
+	}
+	
 	/**
 	 * Method to populate all the tap servers in the configuration file into a tap frame server
 	 * @throws Exception 
 	 */
-	private void populateTapServerListFromLocalFile(){
+	/*private void populateTapServerListFromLocalFile(){
 		BufferedReader bufReader = null;
 		try {
 			if (allTapServerLabels == null) {
@@ -268,12 +299,12 @@ public class TapManager {
 				}
 			}
 		}
-	}
+	}*/
 	
 	/**
 	 * To populate the tap servers configured in the directory tree
 	 */
-	private void populateFromDirectory() {
+	private void populateSplFromDirectory() {
 		try {
 			if (splTapServerLabels == null) {
 				splTapServerLabels = new ArrayList<DataLabel>();
@@ -322,61 +353,104 @@ public class TapManager {
 	
 	/**
 	 * Loads tap server in the server dialog
-	 * @param label
+	 * @param cacheId
 	 * @param url
 	 * @param modeSelected
 	 * @throws Exception
 	 */
-	public void loadTapServer(String label, String url, String modeSelected) throws Exception {
+	public void loadTapServer(String gluActionName, String label, String url, String defaultTables) throws Exception {
 		//either get exixitng details form the configuration file or call url to get tap server details.
 		if (label != null) {//not a necessary condition. But adding just in case.
 			TapClient tapClient = null;
-			if (tapServerPanelCache.containsKey(label)) {
-				tapClient = tapServerPanelCache.get(label);
+			String cacheId = labelInCache(gluActionName, label, tapServerPanelCache);
+			if (cacheId != null) {
+				tapClient = tapServerPanelCache.get(cacheId);
 				tapClient.tapBaseUrl = url;//in case there is any updates to the generic server url
+				if (defaultTables != null) {
+					tapClient.updateNodeAndSetModes(defaultTables);
+				}
 			} else {//not in cache..and does not have a glu record
-				if (tapServerTreeCache.containsKey(label)){//check in the other cache if there is a reference.
-					tapClient = copyTapClientAndDisplay(tapServerTreeCache.get(label), url, TapClientMode.DIALOG, null);
+				cacheId = labelInCache(gluActionName, label, tapServerTreeCache);
+				if (cacheId != null){//check in the other cache if there is a reference.
+					tapClient = copyTapClientAndDisplay(tapServerTreeCache.get(cacheId), url, TapClientMode.DIALOG, defaultTables);
 				} else {
 					//final resort is to create generic form ServerTap
-					tapClient = new TapClient(TapClientMode.DIALOG, this, label, url, null);
+					cacheId = label;
+					tapClient = new TapClient(TapClientMode.DIALOG, this, label, url, defaultTables);
 				}
-				tapServerPanelCache.put(label, tapClient);
+				tapServerPanelCache.put(cacheId, tapClient);
 			}
-			Server resultServer = tapClient.getServerToDisplay(modeSelected);
+			Server resultServer = tapClient.getServerToDisplay(null);
 			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, resultServer);
 			aladin.dialog.tapServer = resultServer;
+			
+			//log below
+			StringBuffer params = new StringBuffer("Displaying ");
+			if (tapClient.model.getSelectedItem() != null) {
+				params.append(tapClient.model.getSelectedItem()).append(SPACESTRING)
+				.append(tapClient.tapBaseUrl);
+			}
+			aladin.glu.log(TAP, params.toString());
 		}
 	}
 	
 	/**
 	 * Method creates a tap server from label(primary ID) and url
 	 * - server is either created from glu records or a generic panel is created
-	 * @param label
+	 * @param cacheId
 	 * @param url
 	 * @param defaultTables 
 	 * @return resultant server tap panel
 	 * @throws Exception 
 	 */
-	public Server loadTapServerForSimpleFrame(String label, String url, String defaultTables) throws Exception {
+	public Server loadTapServerForSimpleFrame(String gluActionName, String label, String url, String defaultTables) throws Exception {
 		TapClient tapClient = null;
-		if (tapServerTreeCache.containsKey(label)) {//get from cache
-			tapClient = tapServerTreeCache.get(label);
+		String cacheId = labelInCache(gluActionName, label, tapServerTreeCache);
+		if (cacheId != null) {//get from cache
+			tapClient = tapServerTreeCache.get(cacheId);
 			tapClient.tapBaseUrl = url;
 			if (defaultTables != null) {
 				tapClient.updateNodeAndSetModes(defaultTables);
 			}
 		} else {//not in cache..and does not have a glu record
-			if (tapServerPanelCache.containsKey(label)){//try to create from the main cache
-				tapClient = copyTapClientAndDisplay(tapServerPanelCache.get(label), url, TapClientMode.TREEPANEL, defaultTables);
+			cacheId = labelInCache(gluActionName, label, tapServerPanelCache);
+			if (cacheId != null){//try to create from the main cache
+				tapClient = copyTapClientAndDisplay(tapServerPanelCache.get(cacheId), url, TapClientMode.TREEPANEL, defaultTables);
 			} else {
+				cacheId = label;
 				tapClient = new TapClient(TapClientMode.TREEPANEL, this, label, url, defaultTables);
 			}
-			tapServerTreeCache.put(label, tapClient);
+			tapServerTreeCache.put(cacheId, tapClient);
 		}
-		Server resultServer = tapClient.getServerToDisplay(defaultTables);
-		showTapPanelFromTree(label, resultServer);
+		Server resultServer = tapClient.getServerToDisplay(null);
+		showTapPanelFromTree(cacheId, resultServer);
+		
+		//log below
+		StringBuffer params = new StringBuffer("Displaying ");
+		if (tapClient.model.getSelectedItem() != null) {
+			params.append(tapClient.model.getSelectedItem()).append(SPACESTRING)
+			.append(tapClient.tapBaseUrl);
+		}
+		aladin.glu.log(TAP, params.toString());
+		
 		return resultServer;
+	}
+	
+	/**
+	 * its Glu's action ID or tree label that becomes the primary key for tap cache
+	 * based on whether there is a glu record for the gluActionName or not
+	 * @param gluActionName
+	 * @param actionName
+	 * @return
+	 */
+	public String labelInCache(String gluActionName, String actionName, Map<String, TapClient> cache) {
+		String label = null;
+		if (gluActionName != null && cache.containsKey(gluActionName)) {
+			label = gluActionName;
+		} else if (actionName != null && cache.containsKey(actionName)) {
+			label = actionName;
+		}
+		return label;
 	}
 	
 	/**
@@ -554,7 +628,9 @@ public class TapManager {
 		if (aladin.glu.lastTapGluServer == null && tapServer instanceof ServerTap
 				&& ((ServerTap) tapServer).isNotLoaded()) {
 			try {
+				tapServer.makeCursor(Aladin.WAITCURSOR);
 				this.showTapRegistryForm();
+				tapServer.makeCursor(Aladin.DEFAULTCURSOR);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				Aladin.warning(aladin.dialog, GENERICERROR);
@@ -564,6 +640,56 @@ public class TapManager {
 		}
 		return result;
 	}
+	
+	/**
+	 * Idea is to set some known FOVs from moc server.
+	 * If not we'l set a dummy one.
+	 * @param tc
+	 */
+	protected void setTargetDimensions(TapClient tc) {
+		MocItem2 mocItem = aladin.directory.multiProp.getItem(tc.tapLabel);
+		if (mocItem != null) {
+			MyProperties prop = aladin.directory.multiProp.getItem(tc.tapLabel).prop;
+			
+			String s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
+//			s = prop.getProperty("obs_initial_ra");
+		      if( s!=null) {
+		         String s1 = prop.getProperty(Constante.KEY_HIPS_INITIAL_DEC);
+//		         s1 = prop.getProperty("obs_initial_dec");
+		         if( s1!=null ) s = s+" "+s1;
+		         else s=null;
+		      }
+			if( s==null ) tc.target=null;
+		      else {
+		         try { tc.target = new Coord(s); }
+		         catch( Exception e) { aladin.trace(3,"target error!"); tc.target=null; }
+		      }
+		      double div2=2;
+		      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
+//		      s = prop.getProperty("obs_initial_fov");
+			if( s==null ) tc.radius=-1;
+		      else {
+		         try { tc.radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2; }
+		         catch( Exception e) { aladin.trace(3,"radius error!"); tc.radius=-1; }
+		      }
+		}
+	}
+	
+	/*private String getDefaultTarget() {
+	      Coord coo;
+	      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+	         String s = aladin.localisation.getTextSaisie();
+	         if( s.length()!=0 ) return s;
+	         coo = getTarget();
+	         s = coo==null ? null : coo.toString();
+	         if( s!=null ) return s;
+	         return null;
+//	         aladin.info("Pas encore implanté, il faudrait demander Target+Radius");
+	      }
+	      coo = aladin.view.getCurrentView().getCooCentre();
+	      coo = aladin.localisation.ICRSToFrame( coo );
+	      return coo.getDeg();
+	   }*/
 	
 	/**
 	 * Method checks if tap server is on no-loaded state 
@@ -737,6 +863,8 @@ public class TapManager {
 					final String oldTName = currentT.getName();
 					String tapServiceUrl = clientToLoad.tapBaseUrl;
 					currentT.setName("TgetMetaInfo: "+tapServiceUrl);
+					final long startTime = getTimeToLog();
+					if (Aladin.levelTrace >= 4) System.out.println("loadTapColumnSchemas starting: "+startTime);
 					try {
 						int count = MAXTAPCOLUMNDOWNLOADVOLUME;
 						try {
@@ -753,7 +881,7 @@ public class TapManager {
 						clientToLoad.setData(new HashMap<String,TapTable>());
 						if (count >= MAXTAPCOLUMNDOWNLOADVOLUME) {
 							//download only table names and first table's columns
-							SavotResource resultsResource = getResults(tapServiceUrl,GETTAPSCHEMATABLES, PATHSYNC);
+							SavotResource resultsResource = getResults("getAllTables", tapServiceUrl,GETTAPSCHEMATABLENAMES, PATHSYNC);
 							populateTables(clientToLoad, resultsResource);
 							String defaultTable = clientToLoad.tablesMetaData.keySet().iterator().next();
 							String tableNameQueryParam = defaultTable;
@@ -761,15 +889,12 @@ public class TapManager {
 							
 							//get single table data and populate it to front end
 							String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, tableNameQueryParam);
-							SavotResource columnResults = getResults(tapServiceUrl, gettablesColumnsQuery, PATHSYNC);
+							SavotResource columnResults = getResults("getOneTableColums", tapServiceUrl, gettablesColumnsQuery, PATHSYNC);
 							populateColumns(clientToLoad, columnResults);
-							clientToLoad.infoPanel = createMetaInfoDisplay(tapServiceUrl, clientToLoad.tablesMetaData);
 						} else if (count > 0) {
 							// download all
-							SavotResource resultsResource = getResults(tapServiceUrl, GETTAPSCHEMACOLUMNS, PATHSYNC);
+							SavotResource resultsResource = getResults("getAllTableColums", tapServiceUrl, GETTAPSCHEMACOLUMNS, PATHSYNC);
 							populateColumns(clientToLoad, resultsResource);
-							//update table meta anyway and then create the info panel
-							updateTableMetadata(clientToLoad, tapServiceUrl);
 						} else {
 							newServer.showLoadingError();
 							displayWarning(clientToLoad, "Error from tap server "+clientToLoad.tapLabel+" : unable to get metadata !");
@@ -777,6 +902,10 @@ public class TapManager {
 						}
 						clientToLoad.preprocessTapClient();
 						newServer.createFormDefault(); //default choice is the first table
+						long time = getTimeToLog();
+						if (Aladin.levelTrace >= 4) System.out.println("all done at: "+time+" time taken: "+(time - startTime));
+						//update table meta anyway and then create the info panel
+						updateTableMetadata(clientToLoad, tapServiceUrl);
 					} catch (Exception e) {
 						e.printStackTrace();
 						newServer.showLoadingError();
@@ -879,7 +1008,7 @@ public class TapManager {
 			}
 			
 //			String gettablesColumnsQuery = String.format(GETTAPSCHEMACOLUMN, whereCondition.toString());
-			SavotResource columnResults = getResults(dynamicTapForm.tapClient.tapBaseUrl, gettablesColumnsQuery, PATHSYNC);
+			SavotResource columnResults = getResults("updateTableColumnSchemas", dynamicTapForm.tapClient.tapBaseUrl, gettablesColumnsQuery, PATHSYNC);
 			populateColumns(dynamicTapForm.tapClient, columnResults);
 			
 			dynamicTapForm.updateQueryChecker(tableNames);
@@ -1006,6 +1135,7 @@ public class TapManager {
 				throw new Exception("ERROR while getting table information! Did not read table data from: "+tapClient.tapBaseUrl
 						+" .\n\n Perhaps TAP_SCHEMA is not available for this server.");
 			}
+			long startTime = getTimeToLog();
 			for (int i = 0; i < resultsResource.getTableCount(); i++) {
 				int type = getType(0, resultsResource);
 				switch (type) {
@@ -1020,6 +1150,8 @@ public class TapManager {
 					throw new Exception("ERROR in populateTables! Did not read table data"+tapClient.tapBaseUrl);
 				}
 			}
+			long time = getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println("populateTables parsing: "+time+" time taken : "+(time - startTime));
 		}
 	}
 	
@@ -1041,13 +1173,13 @@ public class TapManager {
 					SavotField field = fieldSet.getItemAt(k);
 					String fieldName = field.getName();
 					if (fieldName != null && !fieldName.isEmpty()) {
-						if (fieldName.equalsIgnoreCase(TABLETYPE)) {
+						if (fieldName.equalsIgnoreCase(TABLENAME)) {
+							tableName = theTDs.getContent(k);
+							table.setTable_name(tableName);
+						} else if (fieldName.equalsIgnoreCase(TABLETYPE)) {
 							table.setTable_type(theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(SCHEMANAME)) {
 							table.setSchema_name(theTDs.getContent(k));
-						} else if (fieldName.equalsIgnoreCase(TABLENAME)) {
-							tableName = theTDs.getContent(k);
-							table.setTable_name(tableName);
 						} else if (fieldName.equalsIgnoreCase(UTYPE)) {
 							table.setUtype(theTDs.getContent(k));
 						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
@@ -1102,13 +1234,13 @@ public class TapManager {
 					SavotField field = fields.getItemAt(j);
 					String fieldName = field.getName();
 					if (fieldName != null && !fieldName.isEmpty()) {
-						if (fieldName.equalsIgnoreCase(TABLETYPE)) {
+						if (fieldName.equalsIgnoreCase(TABLENAME)) {
+							tableName = parser.getCellAsString(j);
+							table.setTable_name(tableName);
+						} else if (fieldName.equalsIgnoreCase(TABLETYPE)) {
 							table.setTable_type(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(SCHEMANAME)) {
 							table.setSchema_name(parser.getCellAsString(j));
-						} else if (fieldName.equalsIgnoreCase(TABLENAME)) {
-							tableName = parser.getCellAsString(j);
-							table.setTable_name(tableName);
 						} else if (fieldName.equalsIgnoreCase(UTYPE)) {
 							table.setUtype(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
@@ -1175,6 +1307,7 @@ public class TapManager {
 	 */
 	public void populateColumns(TapClient tapClient, SavotResource resultsResource) throws Exception {
 		if (resultsResource != null) {
+			long startTime = getTimeToLog();
 			for (int i = 0; i < resultsResource.getTableCount(); i++) {
 				int type = getType(0, resultsResource);
 				switch (type) {
@@ -1189,6 +1322,8 @@ public class TapManager {
 					throw new Exception("ERROR in populateColumns! Did not read table column data for "+tapClient.tapBaseUrl);
 				}
 			}
+			long time = getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println("populateColumns parsing: "+time+" time taken : "+(time - startTime));
 		}
 	}
 	
@@ -1406,76 +1541,45 @@ public class TapManager {
 	 * @return
 	 * @throws MalformedURLException, Exception 
 	 */
-	public static SavotResource getResults(String tapServiceUrl, String file, String path) throws MalformedURLException, Exception {
+	public static SavotResource getResults(String what, String tapServiceUrl, String file, String path) throws MalformedURLException, Exception {
 		SavotResource resultsResource = null;
-		HttpURLConnection httpConn = null;
+		MyInputStream is = null;
 		try {
 			URL url = getUrl(tapServiceUrl, file, path);
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
-			URLConnection urlConn = url.openConnection();
-			urlConn.setRequestProperty("Accept", "*/*");
-			urlConn.setRequestProperty("Connection", "Keep-Alive");
-			urlConn.setRequestProperty("Cache-Control", "no-cache");
-			if (urlConn instanceof HttpURLConnection) {
-				httpConn = (HttpURLConnection) urlConn;
-				InputStream is = null;
-				httpConn.connect();
-				if (httpConn.getResponseCode() < 400) {
-					is = httpConn.getInputStream();
-					SavotPullParser savotParser = new SavotPullParser(is, SavotPullEngine.FULL, null, false);
-					resultsResource = Util.populateResultsResource(savotParser);
-					// stream is closed downstream when it is not an error scenario
-					is.close();
-				} else {
-					is = httpConn.getErrorStream();
-					TapQueryResponseStatusReader queryStatusReader = new TapQueryResponseStatusReader();
-					queryStatusReader.load(is);
-					is.close();
-					String errorMessage = queryStatusReader.getQuery_status_message();
-					if (errorMessage == null || errorMessage.isEmpty()) {
-						errorMessage = "Error: "+httpConn.getResponseCode()+" from server. Unable to get response! Server : "+tapServiceUrl;
-					} else {
-						errorMessage = queryStatusReader.getQuery_status_value() + " " + errorMessage;
-					}
-					httpConn.disconnect();
-					throw new IOException(errorMessage);
-				}
-			}
+			long startTime = getTimeToLog();
+			is = Util.openStreamForTap(url, true, 10000);
+			long time = getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults got inputstream: "+time+" time taken: "+(time - startTime));
+			startTime = getTimeToLog();
+			SavotPullParser savotParser = new SavotPullParser(is, SavotPullEngine.FULL, null, false);
+			resultsResource = Util.populateResultsResource(savotParser);
+			time = getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults parsing: "+time+" time taken : "+(time - startTime));
+			// stream is closed downstream when it is not an error scenario
+			is.close();
+			
 		} catch (MalformedURLException me) {
 			if( Aladin.levelTrace >= 3 ) me.printStackTrace();
 			throw me;
 		} catch (IOException ioe) {
-			Aladin.trace(3, "Error when getting job! Http response is: " + httpConn.getResponseCode());
-			if (httpConn != null) {
-				httpConn.disconnect();
+			Aladin.trace(3, ioe.getMessage());
+			if (is != null) {
+				is.close();
 			}
 			throw ioe;
 		} catch (Exception e) {
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-			if (httpConn != null) {
-				httpConn.disconnect();
+			if (is != null) {
+				is.close();
 			}
 			throw e;
 		}
-		
-//		try {
-//			URL url = getUrl(tapServiceUrl, file, path);
-//			Aladin.trace(3, "TapManager.getResults() for: "+url);
-//			URLConnection urlConn = url.openConnection();
-//			urlConn.setRequestProperty("Accept", "*/*");
-//			urlConn.setRequestProperty("Connection", "Keep-Alive");
-//			urlConn.setRequestProperty("Cache-Control", "no-cache");
-//			SavotPullParser savotParser = new SavotPullParser(url, SavotPullEngine.FULL, null, false);
-//			resultsResource = Util.populateResultsResource(savotParser);
-//		} catch (MalformedURLException e) {
-//			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-//			throw e;
-//		} catch (Exception e) {
-//			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-//			throw e;
-//		}
-		
 		return resultsResource;
+	}
+	
+	public static long getTimeToLog() {
+		return System.nanoTime();
 	}
 	
 	/**
@@ -1526,7 +1630,7 @@ public class TapManager {
 	 */
 	public String getFutureResultsVolume(String tapServiceUrl) throws Exception {
 		String count = null;
-		SavotResource resultsResource = getResults(tapServiceUrl, GETTAPSCHEMACOLUMNCOUNT, PATHSYNC);
+		SavotResource resultsResource = getResults("getCount ", tapServiceUrl, GETTAPSCHEMACOLUMNCOUNT, PATHSYNC);
 		if (resultsResource != null) {
 			for (int i = 0; i < 1; i++) {
 				int type = getType(0, resultsResource);
@@ -1621,7 +1725,7 @@ public class TapManager {
 					currentT.setName("TupdateTableMetadata: "+tapServiceUrl);
 					currentT.setPriority(Thread.NORM_PRIORITY-2);
 					try {
-						SavotResource resultsResource = getResults(tapServiceUrl, GETTAPSCHEMATABLES, PATHSYNC);
+						SavotResource resultsResource = getResults("gettableInfos",tapServiceUrl, GETTAPSCHEMATABLES, PATHSYNC);
 						populateTables(clientToLoad, resultsResource);
 						//update info panel
 						Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, clientToLoad.tablesMetaData);
@@ -1993,7 +2097,7 @@ public class TapManager {
 					currentT.setName("TsetRaDec: "+serverTap.tapClient.tapBaseUrl);
 					
 					boolean addTargetPanel = false;
-					Vector<TapTableColumn> columns = serverTap.tapClient.getServerTapSelectedTableColumns(serverTap.selectedTableName);
+					Vector<TapTableColumn> columns = serverTap.getSelectedTableColumns();
 					JComboBox raColumn = new JComboBox(columns);
 					raColumn.setRenderer(new CustomListCellRenderer());
 					raColumn.setSize(raColumn.getWidth(), Server.HAUT);

@@ -98,6 +98,8 @@ public class TapClient{
 	
 	public TapClientMode mode;
 	public Future<JPanel> infoPanel;
+	Coord target;
+	double radius;
 	
 	//metadata
 	Map<String, TapTable> tablesMetaData;
@@ -139,7 +141,13 @@ public class TapClient{
 			} else {
 				modesAllowed = new String []{ GLU, GENERIC, TEMPLATES, OBSCORE };
 			}
-			model = new DefaultComboBoxModel(modesAllowed); 
+			model = new DefaultComboBoxModel(modesAllowed){//TODO:: tintin
+				@Override
+				public void setSelectedItem(Object anObject) {
+					// TODO Auto-generated method stub
+					super.setSelectedItem(anObject);
+				}
+			}; 
 		}
 	}
 	
@@ -451,6 +459,8 @@ public class TapClient{
 		}
 		sorted.putAll(tapSchemaMeta);
 		this.tablesMetaData = sorted;
+		
+		this.tapManager.setTargetDimensions(this);
 	}
 
 	public boolean isSchemaTable(String tableName) {
@@ -826,18 +836,6 @@ public class TapClient{
 		return results;
 	}
 	
-	public TapTable getServerExampleSelectedPrimaryTable() {
-		return this.tablesMetaData.get(serverExamples.selectedTableName);
-	}
-	
-	public TapTable getServerExampleSelectedSecondaryTable() {
-		return this.tablesMetaData.get(serverExamples.secondaryTable);
-	}
-	
-	public Vector<TapTableColumn> getServerTapSelectedTableColumns(String selectedTableName) {
-		return this.tablesMetaData.get(selectedTableName).getColumns();
-	}
-	
 	public void setData(Map<String, TapTable> tablesMetaData) {
 		// TODO Auto-generated method stub
 		this.tablesMetaData = tablesMetaData;
@@ -855,5 +853,7 @@ public class TapClient{
 	    NOGLURECFOUND = Aladin.chaine.getString("NOGLURECFOUND");
 	    CHANGESERVERTOOLTIP = Aladin.chaine.getString("CHANGESERVERTOOLTIP");
 	}
+
+	
 	
 }

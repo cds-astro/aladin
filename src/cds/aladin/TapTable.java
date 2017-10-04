@@ -212,7 +212,7 @@ public class TapTable {
 			if (matcher.find()){
 				queryPartInput = Glu.doubleQuote(queryPartInput);
 			}
-//			queryPartInput = tapTable.getFullyQualifiedTableName(queryPartInput); //when we add schema name
+//			queryPartInput = tapTable.getFullyQualifiedTableName(queryPartInput); //if add schema name
 		}
 		
 		return queryPartInput;
@@ -410,7 +410,7 @@ public class TapTable {
 
 	public void setDecColumn(TapTableColumn flaggedColumn) {
 		if (flaggedColumn == null) {
-			removeFlaggedColumn(RA);
+			removeFlaggedColumn(DEC);
 		} else {
 			initFlaggedColumns();
 			setFlaggedColumn(DEC, flaggedColumn);

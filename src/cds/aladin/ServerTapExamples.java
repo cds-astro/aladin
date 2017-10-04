@@ -98,27 +98,19 @@ public class ServerTapExamples extends DynamicTapForm {
 	public ServerTapExamples(Aladin aladin) {
 		// TODO Auto-generated constructor stub
 		super(aladin);
-        
-        Coord defaultCoo = aladin.localisation.getLastCoord();
-//        defaultCoo = aladin.localisation.frameToICRS(defaultCoo);
-        
-		//Setting dummy for init.
-		if (defaultCoo.al == 0.0) {
-			grabItX1 = "313.25097844474084";
+	}
+	
+	protected Coord getDefaultTargetCoo() {
+		Coord coo = null;
+		if (this.tapClient.target != null)
+			coo = this.tapClient.target;
+		else if (aladin.view.isFree() || !Projection.isOk(aladin.view.getCurrentView().getProj())) {
+			coo = null;
 		} else {
-			grabItX1 = String.format(Locale.US, "%.5f", defaultCoo.al);
+			coo = aladin.view.getCurrentView().getCooCentre();
+			coo = aladin.localisation.ICRSToFrame(coo);
 		}
-		if (defaultCoo.del == 0.0) {
-			grabItY1 = "31.1768737946931";
-		} else {
-			grabItY1 = String.format(Locale.US, "%.5f", defaultCoo.del);
-		}
-		
-		grabItX2 = grabItX1;
-		grabItY2 = grabItY1;
-		grabItR1 = Server.getRM("10'")/60.;
-		grabItR2 = Server.getRM("5'")/60.;
-		
+		return coo;
 	}
 	
 	/**
@@ -129,6 +121,36 @@ public class ServerTapExamples extends DynamicTapForm {
 	 */
 	protected void createForm(String priTableChoice, String secTableChoice) {
 		CLIENTINSTR = Aladin.chaine.getString("TAPEXCLIENTINSTR");
+		
+		Coord defaultCoo = getDefaultTargetCoo();
+ 		
+// 		aladin.localisation.getLastCoord();
+ 		// defaultCoo = aladin.localisation.frameToICRS(defaultCoo);
+
+		//Setting dummy for init.
+		if (defaultCoo == null || defaultCoo.al == 0.0) {
+			grabItX1 = "313.25097844474084";
+		} else {
+			grabItX1 = String.format(Locale.US, "%.5f", defaultCoo.al);
+		}
+		if (defaultCoo == null || defaultCoo.del == 0.0) {
+			grabItY1 = "31.1768737946931";
+		} else {
+			grabItY1 = String.format(Locale.US, "%.5f", defaultCoo.del);
+		}
+		
+		grabItX2 = grabItX1;
+		grabItY2 = grabItY1;
+		
+		double defaultRadius = this.tapClient.radius;
+		if (defaultRadius < 0) {
+			grabItR1 = Server.getRM("10'")/60.;
+			grabItR2 = Server.getRM("5'")/60.;
+		} else {
+			grabItR1 = defaultRadius * 2;
+			grabItR2 = defaultRadius;
+		}
+	
 		Vector<String> tables = getTableNames();
 		TapTable chosenTable = null;
 		if (priTableChoice == null || !tables.contains(priTableChoice)) {
@@ -637,7 +659,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				
 				
 				spQuery = new StringBuffer(primaryTableSelectAllQuery);
-				String targetSearch = " WHERE 1=CONTAINS(POINT('ICRS', %f, %f), %s)";
+				String targetSearch = " WHERE 1=CONTAINS(POINT('ICRS', %s, %s), %s)";
 				targetSearch = String.format(targetSearch, grabItX1, grabItY1, sRegionColumnName);
 				spQuery.append(targetSearch);
 				this.basicExamples.put("Specific target search", new CustomListCell(spQuery.toString(), SETTARGETTOOLTIP));

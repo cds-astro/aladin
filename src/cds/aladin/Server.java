@@ -29,6 +29,7 @@ import static cds.aladin.Constants.REGEX_NUMBERNOEXP;
 import static cds.aladin.Constants.REGEX_OPANYVAL;
 import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.TAP;
 import static cds.aladin.Constants.TIME;
 
 import java.awt.Color;
@@ -2126,6 +2127,7 @@ public void layout() {
 				} else {
 					tapManager.fireASync(this, queryString, query, requestParams);
 				}
+				aladin.glu.log(TAP, "Submit query at "+this.getClass().getSimpleName());//log
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				if( Aladin.levelTrace >= 3 ) e.printStackTrace();

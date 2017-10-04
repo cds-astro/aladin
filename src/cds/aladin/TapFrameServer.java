@@ -72,6 +72,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import cds.mocmulti.MocItem2;
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
 
@@ -291,8 +292,8 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	}
 	
 	private boolean fillWithRegistryServers(String mask) {
-		List<DataLabel> datalabels = tapManager.getTapServerList(1);
-		return fillWithRegistryServers(datalabels, mask);
+		tapManager.populateTapServersFromTree(mask);
+		return fillWithRegistryServers();
 	}
 	
 	/**
@@ -348,8 +349,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	 * 
 	 * @throws Exception
 	 */
-	private boolean fillWithRegistryServers(List<DataLabel> datalabels, String mask) {
+	private boolean fillWithRegistryServers() {
 		completeListPanelScroll.removeAll();
+		List<DataLabel> datalabels = TapManager.allTapServerLabels;
 		boolean result = false;
 		if (datalabels != null && !datalabels.isEmpty()) {
 			int h = 0;
@@ -360,14 +362,6 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			c.anchor = GridBagConstraints.PAGE_START;
 
 			for (DataLabel dataLabel : datalabels) {
-				if (mask != null)
-					if (!(Util.indexOfIgnoreCase(dataLabel.getLabel(), mask) >= 0
-							|| (dataLabel.getValue() != null && Util.indexOfIgnoreCase(dataLabel.getValue(), mask) >= 0)
-							|| (dataLabel.getDescription() != null
-									&& Util.indexOfIgnoreCase(dataLabel.getDescription(), mask) >= 0))) {
-						radioGroup.add(dataLabel.gui);
-						continue;
-					}
 				h++;
 
 				dataLabel.setUi();
@@ -422,14 +416,24 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		} else if (s.equals(LOAD)) {
 			try {
 				Aladin.makeCursor(this, WAIT);
+				final long startTime = TapManager.getTimeToLog();
+				if (Aladin.levelTrace >= 4) System.out.println("In tapframeserver starting to load: "+startTime);
 				this.tapManager.setSelectedServerLabel();
 				if (this.selectedServerLabel != null) {
 					if (this.selectedServerLabel == null || this.selectedServerLabel.getLabel() == null
 							|| this.selectedServerLabel.getValue() == null) {// not a necessary condition. But adding just in case.
 						this.tapManager.showTapRegistryForm();
 					} else {
-						this.tapManager.loadTapServer(this.selectedServerLabel.getLabel(),
-								this.selectedServerLabel.getValue(), null);
+						String nodeTable = null;
+						String gluActionName = null;
+						MocItem2 mocItem = aladin.directory.multiProp.getItem(this.selectedServerLabel.getLabel());
+						if (mocItem != null) {
+							MyProperties prop = aladin.directory.multiProp.getItem(this.selectedServerLabel.getLabel()).prop;
+							nodeTable = prop.get("tap_tablename");
+							gluActionName = prop.get("tap_glutag");
+						}
+						this.tapManager.loadTapServer(gluActionName, this.selectedServerLabel.getLabel(),
+								this.selectedServerLabel.getValue(), nodeTable);
 						this.aladin.dialog.show(this.aladin.dialog.tapServer);
 					}
 				} else {
@@ -455,7 +459,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			if (userProvidedTapUrl.getText() != null && !userProvidedTapUrl.getText().isEmpty()) {
 				URL tapUrl = new URL(userProvidedTapUrl.getText());
 				Aladin.trace(3, "Will create tap client for: " + tapUrl);
-				tapManager.loadTapServer(tapUrl.toString(), tapUrl.toString(), null);
+				tapManager.loadTapServer(null, tapUrl.toString(), tapUrl.toString(), null);
 				this.aladin.dialog.show(this.aladin.dialog.tapServer);
 			}
 		} catch (MalformedURLException e1) {
@@ -472,17 +476,21 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	}
 
 	private void go() {
+		Aladin.makeCursor(this, WAIT);
 		String mask = filter.getText().trim();
 		if (mask.length() == 0) {
 			mask = null;
 		}
 		fillWithRegistryServers(mask);
 		pack();
+		Aladin.makeCursor(this, DEFAULT);
 	}
 
 	public void reset() {
+		Aladin.makeCursor(this, WAIT);
 		fillWithRegistryServers(EMPTYSTRING);
 		reloadRegistryPanel();
+		Aladin.makeCursor(this, DEFAULT);
 	}
 	
 	public void reloadRegistryPanel() {

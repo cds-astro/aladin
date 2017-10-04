@@ -350,4 +350,6 @@ public static final String PATHSYNC = "sync";
 public static final String PATHASYNC = "async";
 public static final String PATHPHASE = "phase";
 public static final String PATHRESULTS = "/results/result";
+
+public static final String DIRQUERY_GETALLTAPSERVERS = "*";
 }

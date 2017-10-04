@@ -526,7 +526,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			resetTargetPanel = false;
 		}
 		if (resetTargetPanel) {
-			Vector<TapTableColumn> columnNames = this.tapClient.getServerTapSelectedTableColumns(selectedTableName);
+			Vector<TapTableColumn> columnNames = getSelectedTableColumns();
 			setWhereAddConstraintsGui(columnNames);
 			this.queryComponentsGui.revalidate();
 			this.queryComponentsGui.repaint();
@@ -634,7 +634,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			if (action.equals(WRITEQUERY)) {
 				this.writeQuery();
 			} else if (action.equals(ADDWHERECONSTRAINT)) {
-				Vector<TapTableColumn> columnMetaData = this.tapClient.getServerTapSelectedTableColumns(selectedTableName);
+				Vector<TapTableColumn> columnMetaData = getSelectedTableColumns();
 				WhereGridConstraint columnConstraint = new ColumnConstraint(this, columnMetaData);
 				addWhereConstraint(columnConstraint);
 				writeQuery();
@@ -686,6 +686,11 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 	}
 	
+	public Vector<TapTableColumn> getSelectedTableColumns() {
+		// TODO Auto-generated method stub
+		return this.tapClient.tablesMetaData.get(selectedTableName).getColumns();
+	}
+
 	protected void createChaine() {
 		super.createChaine();
 		description = Aladin.chaine.getString("TAPFORMINFO");

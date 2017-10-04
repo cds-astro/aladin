@@ -1216,7 +1216,7 @@ public final class Glu implements Runnable {
 	      		 g.setAdqlFuncParams(adqlFuncParams);
 	      		 
 	      		 g.HIDDEN = true;
-	      		 if (localFile) {//changing tapserver here wont work. ServerDialog that contraints the instance of tapserver is reloaded at glu reload.
+	      		 if (localFile) {//changing tapserver here wont work. ServerDialog that contains the instance of tapserver is reloaded at glu reload.
 	      			if (!isForDialog) {
 		      			tapManager.showTapPanelFromTree(actionName, g);
 		      		} else {
@@ -1820,7 +1820,7 @@ public final class Glu implements Runnable {
             } else if (name.equals("TAPTables")) {// add more specific restrictions if required
 				String v = getValParam(value);
 //                tapTables = v.split("\\t");  // Modif PF - Sept 2017 
-                tapTables = split(v);
+                tapTables = splitNoProcess(v);
                 
 			} else if (name.startsWith("ADQL")) {
             	String[] clauseElements = name.split(DOTREGEX);
@@ -1909,6 +1909,14 @@ public final class Glu implements Runnable {
    // Split a string of arguments, blank or Tab separated, possibly quoted (simple ou double)
    static private String [] split(String s) {
       Tok tok = new Tok(s," \t");
+      String [] rep = new String[ tok.countTokens() ];
+      for( int i=0; tok.hasMoreTokens(); i++ ) rep[i] = tok.nextToken();
+      return rep;
+   }
+   
+// Split a string of arguments, blank or Tab separated
+   static private String [] splitNoProcess(String s) {
+	   StringTokenizer tok = new StringTokenizer(s," \t");
       String [] rep = new String[ tok.countTokens() ];
       for( int i=0; tok.hasMoreTokens(); i++ ) rep[i] = tok.nextToken();
       return rep;

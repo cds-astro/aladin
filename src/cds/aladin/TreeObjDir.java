@@ -899,13 +899,6 @@ public class TreeObjDir extends TreeObj implements Propable {
       // GLU TAP tag
       String gluTag = prop.get("tap_glutag");
       
-      // Generation of simplified TAP form by GLU definition 
-     /* if( gluTag==null ) {
-         aladin.info("Simplified TAP form based on GLU definition "+gluTag+"\n(Not yet implemented)");
-         // Chaitra ...
-         return;
-      } */
-      
       // If there is no TAP glu definition, we will use base TAP url
       String url = prop.get("tap_service_url");
       String id = prop.get("ID");
@@ -921,11 +914,11 @@ public class TreeObjDir extends TreeObj implements Propable {
          System.err.println("Missing tablename for VizieR => assuming "+defaultTables);
       }
       
-//      defaultTables = "ivoa.ObsCore";//"B/hst/obscore";
-      
       if( id!=null && url!=null ) {
     	  try {
-			TapManager.getInstance(aladin).loadTapServerForSimpleFrame(id, url, defaultTables);
+    		  final long startTime = TapManager.getTimeToLog();
+    		  if (Aladin.levelTrace >= 4) System.out.println("In queryByTap starting to load: "+startTime);
+			TapManager.getInstance(aladin).loadTapServerForSimpleFrame(gluTag, id, url, defaultTables);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -935,7 +928,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 //         // Chaitra ...
 //         return;
       } else {
-    	  aladin.warning("Error! No TAP form configured for "+gluTag);
+    	  aladin.warning("Error! No TAP form configured for "+id);
       }
       
       //TODO:: tintin remove the below just for demo

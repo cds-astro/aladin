@@ -112,6 +112,7 @@ import cds.image.EPSGraphics;
 import cds.savot.model.ResourceSet;
 import cds.savot.model.SavotResource;
 import cds.savot.pull.SavotPullParser;
+import cds.xml.TapQueryResponseStatusReader;
 import healpix.essentials.FastMath;
 
 /**
@@ -159,6 +160,37 @@ public final class Util {
       //       MyInputStream mis = new MyInputStream(conn.getInputStream());
       return mis.startRead();
    }
+   
+   static public MyInputStream openStreamForTap(URL u, boolean useCache,int timeOut) throws Exception {
+	      URLConnection conn = u.openConnection();
+	      if( !useCache ) conn.setUseCaches(false);
+	      if( timeOut>0 ) conn.setConnectTimeout(timeOut);
+	      // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
+	      if( conn instanceof HttpURLConnection ) {
+	         HttpURLConnection http = (HttpURLConnection)conn;
+	         http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
+	         http.setRequestProperty("Accept-Encoding", "gzip");
+	         InputStream is = null;
+	         if (http.getResponseCode() >= 400) {
+	        	is = http.getErrorStream();
+				TapQueryResponseStatusReader queryStatusReader = new TapQueryResponseStatusReader();
+				queryStatusReader.load(is);
+				is.close();
+				String errorMessage = queryStatusReader.getQuery_status_message();
+				if (errorMessage == null || errorMessage.isEmpty()) {
+					errorMessage = "Error: "+http.getResponseCode()+" from server. Unable to get response! Server : "+u;
+				} else {
+					errorMessage = queryStatusReader.getQuery_status_value() + " " + errorMessage;
+				}
+				http.disconnect();
+				throw new IOException(errorMessage);
+			}
+	      }
+
+	      MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
+	      //       MyInputStream mis = new MyInputStream(conn.getInputStream());
+	      return mis.startRead();
+	   }
    
    /** Je suis obligé de passer par un Thread indépendant pour qu'un timeout soit effectivement pris en compte
     * -1 si timeout indéfini

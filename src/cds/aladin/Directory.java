@@ -2071,6 +2071,13 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( keyword==null || keyword.trim().length()==0) return getPredefinedTAPServers();
       return getTAPServersByMocServer("("+getKeyWordExpr(keyword)+")");
    }
+   
+	// For tap server list, slight change
+	protected ArrayList<String> getTAPServers(String keyword) throws Exception {
+		if (keyword == null || keyword.trim().length() == 0)
+			return getTAPServersByMocServer("(*)");
+		return getTAPServersByMocServer("(" + getKeyWordExpr(keyword) + ")");
+	}
       
    /** Provides the list of TAP server matching the MocServer query
     * Output syntax: ID url description...

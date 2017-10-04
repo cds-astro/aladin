@@ -61,7 +61,7 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 		// TODO Auto-generated constructor stub
 		this.tapClient = tapClient;
 	}
-
+	
 	@Override
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
 			boolean cellHasFocus) {

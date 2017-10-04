@@ -51,7 +51,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 	
 	public ColumnConstraint(ServerTap serverTap, Vector columnNames) {
 		// TODO Auto-generated constructor stub
-		super(serverTap, new JComboBox(columnNames), new JComboBox(operators), new JTextField(6));
+		super(serverTap, new JComboBox(columnNames), new JComboBox(operators), new JTextField(14));
 		JComboBox columns = (JComboBox) this.firstGridComponent;
 		columns.setRenderer(new CustomListCellRenderer());
 		columns.setSize(columns.getWidth(), Server.HAUT);

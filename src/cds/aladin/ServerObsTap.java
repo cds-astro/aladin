@@ -707,6 +707,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		this.createFormDefault();
 		resetFields();
 		super.reset();
+		writeQuery();
 		this.revalidate();
 		this.repaint();
 	};
