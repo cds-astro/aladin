@@ -104,6 +104,9 @@ import cds.tools.Util;
  */
 public class Directory extends JPanel implements Iterable<MocItem>{
    
+   // Nombre de collections appelables individuellement en parallèle
+   static private final int MAX_PARALLEL_QUERY = 30;
+   
    static private String DIRECTORY, MULTICOL;
    
    static protected String AWCSLAB,AWCSTIP,AWMCSTIP,AWSIATIP,AWSSATIP,AWMOCQLAB,AWMOCQLABTIP,AWMOCTITLE,
@@ -2735,43 +2738,49 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             JCheckBox bx;
             mociBx = mocBx = csBx = null;
             
-            // On utilise le checkbox CS pour cumuler à la fois les accès CS,SIA et SSA
-            if( hasCS || hasSIA || hasSSA || hasCDScat || hasGlobalAccess ) {
-               csBx = bx = new JCheckBox(AWCSLAB);
-               bx.addActionListener(this);
-               mocAndMore.add(bx);
-               String info = nbIn+nbInMayBe==0 ? "(no data in the field)" :
-                  "("+(nbIn+nbInMayBe) +" collections "+(nbInMayBe>0?" may ":"should")+" have data in the field)";
-               Util.toolTip(bx,Util.fold(AWMCSTIP+"\n"+info,100,true));
-               bx.setEnabled( hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj()) 
-                     && nbIn+nbInMayBe>0);
-               bx.setSelected(hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj())
-                     && bx.isEnabled() );
-               bg.add(bx);
-            }
-            
-            if( hasHips ) {
-               hipsBx = bx = new JCheckBox(AWPROGACC);
-               bx.addActionListener(this);
-               mocAndMore.add(bx);
-               if( csBx==null || !csBx.isSelected() ) bx.setSelected( true );
-               String info = "("+nbInHips+" coll. have data in the field)";
-               Util.toolTip(bx,Util.fold(AWPROGACCTIP+"\n"+info,100,true));
-            }
+            // S'il n'y a pas trop de collections, on pourra les appeler en parallèle
+            boolean flagTooMany=false;
+            if( treeObjs.size()>MAX_PARALLEL_QUERY ) flagTooMany=true;
+            else {
 
-            if( hasCDScat && hasRegion ) {
-               msBx = bx = new JCheckBox(AWMOCQLAB);
-               bx.addActionListener(this);
-               mocAndMore.add(bx);
-               Util.toolTip(bx,AWMOCQLABTIP);
-               bx.setEnabled( hasRegion );
-               bg.add(bx);
-               
-            }
+               // On utilise le checkbox CS pour cumuler à la fois les accès CS,SIA et SSA
+               if( hasCS || hasSIA || hasSSA || hasCDScat || hasGlobalAccess ) {
+                  csBx = bx = new JCheckBox(AWCSLAB);
+                  bx.addActionListener(this);
+                  mocAndMore.add(bx);
+                  String info = nbIn+nbInMayBe==0 ? "(no data in the field)" :
+                     "("+(nbIn+nbInMayBe) +" collections "+(nbInMayBe>0?" may ":"should")+" have data in the field)";
+                  Util.toolTip(bx,Util.fold(AWMCSTIP+"\n"+info,100,true));
+                  bx.setEnabled( hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj()) 
+                        && nbIn+nbInMayBe>0);
+                  bx.setSelected(hasSmallView && Projection.isOk( aladin.view.getCurrentView().getProj())
+                        && bx.isEnabled() );
+                  bg.add(bx);
+               }
 
-            if( (csBx!=null || hipsBx!=null || msBx!=null ) && (hasMoc) ) {
-               JLabel labelPlus = new JLabel(" + ");
-               mocAndMore.add(labelPlus);
+               if( hasHips ) {
+                  hipsBx = bx = new JCheckBox(AWPROGACC);
+                  bx.addActionListener(this);
+                  mocAndMore.add(bx);
+                  if( csBx==null || !csBx.isSelected() ) bx.setSelected( true );
+                  String info = "("+nbInHips+" coll. have data in the field)";
+                  Util.toolTip(bx,Util.fold(AWPROGACCTIP+"\n"+info,100,true));
+               }
+
+               if( hasCDScat && hasRegion ) {
+                  msBx = bx = new JCheckBox(AWMOCQLAB);
+                  bx.addActionListener(this);
+                  mocAndMore.add(bx);
+                  Util.toolTip(bx,AWMOCQLABTIP);
+                  bx.setEnabled( hasRegion );
+                  bg.add(bx);
+
+               }
+
+               if( (csBx!=null || hipsBx!=null || msBx!=null ) && (hasMoc) ) {
+                  JLabel labelPlus = new JLabel(" + ");
+                  mocAndMore.add(labelPlus);
+               }
             }
             
             if( hasMoc ) {
@@ -2780,10 +2789,12 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                labelMoc.setForeground( Color.gray );
                mocAndMore.add( labelMoc );
                
-               mocBx = bx = new JCheckBox(AWMOC1); 
-               bx.addActionListener(this);
-               mocAndMore.add(bx); 
-               Util.toolTip(bx,AWMOC1TIP);
+               if( !flagTooMany ) {
+                  mocBx = bx = new JCheckBox(AWMOC1); 
+                  bx.addActionListener(this);
+                  mocAndMore.add(bx); 
+                  Util.toolTip(bx,AWMOC1TIP);
+               }
 
                mocuBx = bx = new JCheckBox(AWMOC2); 
                bx.addActionListener(this);
@@ -2820,7 +2831,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                JPanel loadPanel = new JPanel(g1);
                
                PropPanel.addFilet(p,g, c, 5,2);
-               PropPanel.addCouple(null, loadPanel, label1, null, mocAndMore, g1,c1,GridBagConstraints.CENTER);
+               PropPanel.addCouple(null, loadPanel, flagTooMany ? null : label1, null, mocAndMore, g1,c1,GridBagConstraints.CENTER);
                PropPanel.addCouple(p,"", loadPanel, g,c);
 
             }

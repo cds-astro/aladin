@@ -244,7 +244,7 @@ public final class Search extends JPanel implements MouseListener {
          public void run() {
             Color cp = left.getParent().getBackground();
             boolean mode = false;
-            for( int i=0; i<6; i++ ) {
+            for( int i=0; i<8; i++ ) {
                left.getParent().setBackground( mode ? cp : Color.green);
                mode = !mode;
                Util.pause(500);
