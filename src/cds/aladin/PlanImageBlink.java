@@ -204,6 +204,9 @@ public class PlanImageBlink extends PlanImage {
          pourcent= -1;
          changeImgID();
          aladin.calque.repaintAll();
+         
+         // N'A PAS L'AIR DE MARCHER - PF sept 2017 => IL FAUT ENCORE FERMER ET OUVRIR LA FENETRE DES PROPRIETES !!
+         Properties.majProp();
       }
    }
 

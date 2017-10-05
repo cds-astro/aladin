@@ -182,7 +182,7 @@ MouseWheelListener, Widget
       JMenu m;
       popMenu.add( menuUnselect=j=new JMenuItem(c.getString("MFUNSELECT")));
       j.addActionListener(this);
-      popMenu.add( menuInfo=j=new JMenuItem("Display source record")); //c.getString("MFEDIT")));
+      popMenu.add( menuInfo=j=new JMenuItem(c.getString("MFDISPLAY"))); //c.getString("MFEDIT")));
       j.addActionListener(this);
       popMenu.add( menuEdit=j=new JMenuItem(c.getString("MFEDIT")));
       j.addActionListener(this);

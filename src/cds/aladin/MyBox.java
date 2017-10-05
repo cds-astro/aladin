@@ -98,7 +98,7 @@ public abstract class MyBox extends JPanel {
       pos = new Text("",30);
       pos.setFont(FONT);
       pos.setBackground( Aladin.COLOR_TEXT_BACKGROUND );
-      pos.setForeground( Aladin.COLOR_TEXT_FOREGROUND );
+      pos.setForeground( Aladin.COLOR_TEXT_FOREGROUND_INFO);
 
       // Creation d'un champ de saisie
       text = new Text("",30);
@@ -231,6 +231,7 @@ public abstract class MyBox extends JPanel {
    class Text extends JTextField implements MouseMotionListener, MouseListener {
 //      private Dimension dim=null;
       private Rectangle region=null;
+      private Color colorTriangle = Color.darkGray;
 
       Text(String t,int width) {
          super(t,width);
@@ -239,7 +240,7 @@ public abstract class MyBox extends JPanel {
          addMouseListener(this);
       }
 
-      boolean in(int x,int y) { return x>=region.x;  }
+      boolean in(int x,int y) { return region!=null && x>=region.x;  }
 
       public void paintComponent(Graphics g) {
     	  try {
@@ -249,7 +250,7 @@ public abstract class MyBox extends JPanel {
       }
 
       private void drawTriangle(Graphics g, int x, int y) {
-         g.setColor( Color.darkGray );
+         g.setColor( colorTriangle );
          Util.fillTriangle7(g, x, y);
          region = new Rectangle(x-2,y-2,10,10);
       }
@@ -273,7 +274,9 @@ public abstract class MyBox extends JPanel {
 
       public void mouseClicked(MouseEvent e) {}
       public void mousePressed(MouseEvent e) {}
-      public void mouseEntered(MouseEvent e) { if( aladin.inHelp ) aladin.help.setText(aladin.chaine.getString("LCoord.HELP")); }
+      public void mouseEntered(MouseEvent e) {
+         if( aladin.inHelp ) aladin.help.setText(aladin.chaine.getString("LCoord.HELP"));
+      }
       public void mouseReleased(MouseEvent e) {
          if( aladin.inHelp ) aladin.helpOff();
          if( text.in(e.getX(),e.getY()) ) triangleAction( e.getX() );

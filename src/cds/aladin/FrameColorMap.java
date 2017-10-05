@@ -1019,6 +1019,22 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       if( ignoreMouse(e) ) return;
       resumeWidgets();
    }
+   
+   private boolean flagHelp=true;
+   
+   /** Affichage d'une aide - premier affichage */
+   protected void help() {
+      if( flagHelp && aladin.configuration.isHelp() ) {
+         aladin.configuration.showHelpIfOk(this,"HPIXEL",500);
+         flagHelp=false;
+      }
+   }
+   
+   public void show() {
+      super.show();
+      help();
+   }
+
 
    @Override
    public void mouseExited(MouseEvent e) {

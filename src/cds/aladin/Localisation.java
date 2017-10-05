@@ -750,7 +750,7 @@ public class Localisation extends MyBox  {
          aladin.console.printInPad(s+"\n");
       }
    }
-
+   
    /** Localisation de la source en fonction du frame courant */
    protected String getLocalisation(Obj o) {
       String s="";

@@ -128,7 +128,7 @@ public class ServerHips extends ServerTree  {
       }
 
       TreeObjDir gSky = aladin.glu.getHips(j);
-
+      
       try {
          if( defaultMode!=PlanBG.UNKNOWN ) gSky.setDefaultMode(defaultMode);
       } catch( Exception e ) {

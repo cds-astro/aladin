@@ -594,7 +594,10 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                   return;
                }
                proj.getXY(c);
-               gbuf.setColor(Color.red);
+               gbuf.setColor( Color.magenta );
+//               int w=5;
+//               gbuf.drawLine((int)c.x-w,(int)c.y,(int)c.x+w,(int)c.y);
+//               gbuf.drawLine((int)c.x,(int)c.y-w,(int)c.x,(int)c.y+w);
                Util.fillCircle7(gbuf,(int)c.x,(int)c.y);
             }
 
@@ -607,16 +610,14 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 //            gbuf.translate(xc-width/2,yc-height/2);
 
             String s;
-            gbuf.setFont(Aladin.SPLAIN);
+            gbuf.setFont(Aladin.SBOLD);
             FontMetrics fm = gbuf.getFontMetrics();
             s="Frame: "+Localisation.REPERE[aladin.localisation.getFrame()];
             gbuf.drawString(s,getWidth()-fm.stringWidth(s)-2,10);
-            gbuf.setColor(Color.red);
+            gbuf.setColor( Aladin.COLOR_BLUE );
             s=aladin.localisation.J2000ToString(c.al, c.del);
             gbuf.drawString(s,width/2-fm.stringWidth(s)/2,height-16);
-            gbuf.setColor( Aladin.COLOR_BLUE );
             s=v.getTaille(0);
-            
             
             gbuf.drawString(s,width/2-fm.stringWidth(s)/2,height-4);
 

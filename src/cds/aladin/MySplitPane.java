@@ -225,8 +225,11 @@ public class MySplitPane extends JSplitPane {
       public void mouseClicked(MouseEvent e) { }
       public void mouseReleased(MouseEvent e) { 
          if( flagMesure ) {
-            // On cache ou on montre le bandeau de recherche suivant la taille de la fenêtre des mesures
-            if( aladin.search.hideSearch( isReduced() ) ) revalidate();
+            if( aladin.mesure.isMesureOut() ) aladin.mesure.split();
+            else {
+               // On cache ou on montre le bandeau de recherche suivant la taille de la fenêtre des mesures
+               if( aladin.search.hideSearch( isReduced() ) ) revalidate();
+            }
          }
       }
       public void mouseEntered(MouseEvent e) { }

@@ -309,8 +309,11 @@ public class Plan implements Runnable {
    protected boolean hasOriginalPixels() { return false; };
 
    /** Retourne true s'il s'agit d'un plan qui n'a pas de réduction astrométrique */
-   final protected boolean hasNoReduction() { return error==Plan.NOREDUCTION /* || !Projection.isOk(projd)*/ ; }
+   final protected boolean hasNoReduction() { return error==Plan.NOREDUCTION  ||  !Projection.isOk(projd) ; }
 
+   /** Retourne true s'il s'agit d'un plan sans positionnement spatiale */
+  final protected boolean hasNoPosition() { return error==Plan.NOPOSITION; }
+   
    /** Retourne true si le plan est prêt */
    protected boolean isReady() { return type!=NO && flagOk && (error==null || hasNoReduction()); }
 
@@ -339,7 +342,8 @@ public class Plan implements Runnable {
     * astrométrique */
    public boolean hasError() {
       if( !flagOk ) return false;   // pas encore prêt
-      if( hasNoReduction() && error!=null ) return false;  // Exception
+      if( hasNoReduction() ) return false;  // Exception
+      if( hasNoPosition() ) return false;  // Exception
       return error!=null;
    }
 
@@ -380,10 +384,6 @@ public class Plan implements Runnable {
    /** Retourne true si le plan dispose d'une header Fits */
    protected boolean hasFitsHeader() {
       return headerFits!=null;
-      //      if( this instanceof PlanImage   && ((PlanImage)this).headerFits!=null )   return true;
-      //      if( this instanceof PlanCatalog && ((PlanCatalog)this).headerFits!=null ) return true;
-      //      if( this instanceof PlanFolder  && ((PlanFolder)this).headerFits!=null )  return true;
-      //      return false;
    }
 
    /** retourne true si le plan a des sources */
@@ -1478,10 +1478,7 @@ public class Plan implements Runnable {
    
    /** Positionne l'ordre par défaut d'affichage des champs des mesures */
    protected void setFieldOrder() {
-      for( Legende leg : getLegende() ) {
-         System.out.println("setFieldOrder sur Legende "+leg);
-         leg.setDefaultFieldOrder();
-      }
+      for( Legende leg : getLegende() ) leg.setDefaultFieldOrder();
    }
 
    /** Retourne true si le plan est synchronisé */
@@ -1994,6 +1991,7 @@ public class Plan implements Runnable {
 
    /** Demande d'activation suivant le dernier choix mémorisé */
    protected boolean setActivated() {
+      
       boolean flag=askActive;
 
       // Vérification que l'activation est possible en fonction des vues visibles
@@ -2005,10 +2003,13 @@ public class Plan implements Runnable {
       // Activation/Desactivation effective
       active=flag;
       //   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
+      
       if( !active ) aladin.view.deSelect(this);
       else {
-         if( hasNoPos ) aladin.view.selectAllInPlan(this);
-         else aladin.view.addTaggedSource(this);
+//         if( !noBestPlacePost ) {
+            if( hasNoPos ) aladin.view.selectAllInPlan(this);
+            else aladin.view.addTaggedSource(this);
+//         }
       }
       
       // Activation le cas échéant d'un filtre qui serait associé

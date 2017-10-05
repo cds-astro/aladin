@@ -165,6 +165,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> - flexible panels management (split)
  * @beta    <LI> - file dialog window multi-platforms
  * @beta    <LI> - history management (popup menu + arrow control)
+ * @beta    <LI> - Coordinate grid color and font control
  * @beta    <LI> Data discovery tree panel:
  * @beta    <LI> - integrated access to all CDS and other VO collections (>20,000 data sets)
  * @beta    <LI> - multi-protocol support & integration: HiPS, CS, SIA, SSA, TAP,...
@@ -195,6 +196,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> - script commands dedicated to VO protocol access: CS, SIA (1&2), SSA, MOC
  * @beta    <LI> - new script commands: cmoc, ccat
  * @beta    <LI> Miscellaneous:
+ * @beta    <LI> - Full column control for source measurements
  * @beta    <LI> - support to multiCCD as MEF FITS image
  * @beta    <LI> - EPNTAP support (c1min,c2min,s_region)
  * @beta    <LI> - deprecated PLASTIC lib and dependencies removed 
@@ -248,7 +250,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.019";
+   static public final    String VERSION = "v10.021";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -342,9 +344,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_RED;
    static public Color COLOR_BLUE;
    static public Color COLOR_GREEN;
+   static public Color COLOR_GREEN_LIGHT;
+   static public Color COLOR_GREEN_LIGHTER;
    static public Color COLOR_STACK_SELECT;
    static public Color COLOR_STACK_HIGHLIGHT;
    static public Color COLOR_FOREGROUND_ANCHOR;
+   static public Color COLOR_TEXT_FOREGROUND_INFO;
   
 
    private void initColors() {
@@ -354,6 +359,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_BLUE = Color.blue;
       COLOR_RED = Color.red;
       COLOR_GREEN = new Color(27,137,0);
+      COLOR_GREEN_LIGHT = new Color(27,177,0);
+      COLOR_GREEN_LIGHTER = new Color(27,197,0);
       COLOR_BACKGROUND = new Color(250,250,250);
       COLOR_FOREGROUND = Color.black;
       COLOR_MAINPANEL_BACKGROUND = new Color(235,235,235);
@@ -384,6 +391,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       COLOR_TOOL_UP = new Color(214,214,255);
       COLOR_TEXT_BACKGROUND = Color.white;
       COLOR_TEXT_FOREGROUND = Color.black;
+      COLOR_TEXT_FOREGROUND_INFO = new Color(100,100,100);
       COLOR_STACK_SELECT = new Color(140,140,255);
       COLOR_STACK_HIGHLIGHT = new Color(150,150,150);
       COLOR_FOREGROUND_ANCHOR = COLOR_BLUE;
@@ -405,7 +413,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_CONTROL_BACKGROUND_UNAVAILABLE =  COLOR_TEXT_BACKGROUND.darker();
          COLOR_STATUS_BACKGROUND = COLOR_BUTTON_BACKGROUND;
          COLOR_STATUS_LEFT_FOREGROUND = COLOR_TEXT_FOREGROUND;
-         COLOR_RED = new Color(255,20,20);
+         COLOR_RED = new Color(214,45,0);
          COLOR_BLUE = new Color(120,149,220);
          COLOR_FOREGROUND_ANCHOR = new Color(0,136,204);
          COLOR_GREEN = new Color(57,167,0);

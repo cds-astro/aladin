@@ -260,7 +260,7 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Verrou d'accès à plan[] */
-   volatile protected Object pile = new Object();
+   protected Object pile = new Object();
 
    /** Retourne la taille de la pile */
    protected int getNbPlan() { return plan.length; }
@@ -2183,6 +2183,7 @@ public class Calque extends JPanel implements Runnable {
     * @param val place actuelle du plan a placer
     */
    protected void bestPlacePost(Plan p) {
+      
       int i;
       if( p.noBestPlacePost || p instanceof PlanBG /* || p.isImage() */ || !Projection.isOk(p.projd) ) return;
       //System.out.println("BestPlacePost pour "+p+" "+Thread.currentThread().getId());
@@ -2461,6 +2462,7 @@ public class Calque extends JPanel implements Runnable {
          return true;
       }
    }
+   
 
    public void run() {
       newFitsExtThread();
@@ -2468,15 +2470,17 @@ public class Calque extends JPanel implements Runnable {
    }
    
    /** Suppression des plans vides intermédiaires dans la pile */
+   // IL FAUT FAIRE ATTENTION AU PLAN QUI SE RETROUVE TOUT SEUL DANS UN FOLDER
+   // ET CEUX DONT DES OBJETS ONT ETE SELECTIONNE
    protected void stack() {
       synchronized( pile ) {
          int j=plan.length-1;
          for( int i=plan.length-1; i>=0; i-- ) {
-            if( plan[i].isEmpty() || plan[i].type==Plan.NO ) continue; 
+            if( plan[i].isEmpty() || plan[i].type==Plan.NO ) continue;
             plan[j--] = plan[i];
          }
          for( ; j>=0; j-- ) {
-            if( plan[j].isEmpty() || plan[j].type==Plan.NO ) continue; 
+            if( plan[j].isEmpty() || plan[j].type==Plan.NO ) continue;
            plan[j]= new PlanFree(aladin);
          }
       }
@@ -2615,7 +2619,7 @@ public class Calque extends JPanel implements Runnable {
                      synchronized( pile ) {
                         int n = getIndex(firstPlan);
                         if( step==0 ) firstPlan = plan[n]= p;
-                        else if( step==1 ) plan[n] =folder;
+                        else if( step==1 ) plan[n] = folder;
                         step++;
                      }
                      select.repaint();
@@ -2633,9 +2637,9 @@ public class Calque extends JPanel implements Runnable {
          }
       } catch( Exception e) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
+      } finally {
+         try { in.close(); } catch(Exception e) { e.printStackTrace(); }
       }
-
-      try { in.close(); } catch(Exception e) { e.printStackTrace(); }
       
       // Test MultiCCD
       if( PlanMultiCCD.isMultiCCD(v) ) {
@@ -2654,20 +2658,26 @@ public class Calque extends JPanel implements Runnable {
 
       // Aucun plan dans ce fits extension
       if( v.size()==0 ) return;
+      
+      int nbPlanInserted = 0;
 
       // On met tout ça dans la pile
       if( v.size()>1 ) {
          synchronized( pile ) {
             Enumeration<Plan> e = v.elements();
             while( e.hasMoreElements() ) {
+               p = e.nextElement();
+               if( p.isEmpty() ) continue;
+               if( p.type==Plan.NO ) continue;
+               if( p.error!=null && p.error.equals("_HEAD_XFITS_") ) continue;
                int n=getStackIndex();
-               plan[n] = e.nextElement();
+               nbPlanInserted++;
+               plan[n] = p;
                plan[n].setLabel(plan[n].label);    // Pour s'assurer que son nom est unique dans la pile
                permute(plan[n],folder);
             }
          }
       }
-      
       
       // Plan actif par défaut
       p = v.elementAt(0);
@@ -2678,7 +2688,7 @@ public class Calque extends JPanel implements Runnable {
       p.doClose=true;
       p.planReady(true);
       
-      if( v.size()>6 ) aladin.calque.select.switchCollapseFolder( folder );
+      if( nbPlanInserted>6 ) aladin.calque.select.switchCollapseFolder( folder );
    }
 
    /**
@@ -3954,6 +3964,15 @@ public class Calque extends JPanel implements Runnable {
    protected void addOnStack(Plan p) {
       int n = aladin.calque.getStackIndex();
       aladin.calque.plan[n]=p;
+   }
+   
+   /** Retourne true si un planBG de même identificateur est déjà présent dans la pile */
+   protected boolean isBGAlreadyLoaded(String id) {
+      for( Plan p : getPlans() ) {
+         if( !(p instanceof PlanBG ) ) continue;
+         if( ((PlanBG)p).id.equals(id) ) return true;
+      }
+      return false;
    }
 
    /** Retourne l'emplacement à utiliser dans la pile. Si on passe un label préfixé

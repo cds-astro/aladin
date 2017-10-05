@@ -190,28 +190,32 @@ final public class TableParser implements XMLConsumer {
    private void hrefCall(String uri) throws Exception{
 
       // Ouverture du flux pour les données
-      MyInputStream in = aladin.glu.getMyInputStream(uri,false);
+      //      MyInputStream in = aladin.glu.getMyInputStream(uri,false);
+      MyInputStream in=null;
+      try {
 
-      // Cas BINARY HREF
-      if( inBinary || inBinary2 ) {
-         consumer.tableParserInfo("\nParsing VOTable data from an external"+(inBinary2?" BINARY2":" BINARY")+" stream:\n => "+uri);
-         byte [] buf = in.readFully();
-         parseBin(buf,0,buf.length,inBinary2);
+         in = Util.openAnyStream(uri);
 
-         //         byte [] buf = new byte[100000];
-         //         int n;
-         //         while( (n=in.readFully(buf))>0 ) parseBin(buf,0,n,inBinary2);
+         // Cas BINARY HREF
+         if( inBinary || inBinary2 ) {
+            consumer.tableParserInfo("\nParsing VOTable data from an external"+(inBinary2?" BINARY2":" BINARY")+" stream:\n => "+uri);
+            byte [] buf = in.readFully();
+            parseBin(buf,0,buf.length,inBinary2);
 
-         // Cas FITS HREF
-      } else if( inFits ) {
+            //         byte [] buf = new byte[100000];
+            //         int n;
+            //         while( (n=in.readFully(buf))>0 ) parseBin(buf,0,n,inBinary2);
 
-         aladin.calque.seekFitsExt(in,fitsExtNum);
-         consumer.tableParserInfo("\nParsing VOTable data from a FITS stream:\n => "+uri+(fitsExtNum>0?" (ext="+fitsExtNum+")":""));
-         in.resetType(); in.getType();
-         headerFits = new HeaderFits(in);
-         parseFits(in,true);
-      }
-      in.close();
+            // Cas FITS HREF
+         } else if( inFits ) {
+
+            aladin.calque.seekFitsExt(in,fitsExtNum);
+            consumer.tableParserInfo("\nParsing VOTable data from a FITS stream:\n => "+uri+(fitsExtNum>0?" (ext="+fitsExtNum+")":""));
+            in.resetType(); in.getType();
+            headerFits = new HeaderFits(in);
+            parseFits(in,true);
+         }
+      } finally { in.close(); }
    }
 
    /**
@@ -1395,7 +1399,9 @@ final public class TableParser implements XMLConsumer {
          if( nX>=0 && nY>=0  ){
             flagXY=true;
             consumer.setTableInfo("__XYPOS","true");
-         } else {
+         } if( flagTSV ) {
+            nRA=0; nDEC=1;
+         }else {
             nRA=nDEC=-1;
             flagNOCOO=true;
             consumer.setTableInfo("__NOCOO","true");
@@ -1404,7 +1410,7 @@ final public class TableParser implements XMLConsumer {
 
       // Si un COOSYS ref a été utilisé, on va se baser sur lui pour déterminer de façon certaine
       // les colonnes utilisant le même COOSYS
-      if( coosys!=null && nRA!=-1) {
+      if( coosys!=null && nRA!=-1 && !flagTSV ) {
          
          // On recherche le "ref" du champ de coordonnées le plus probable pour RA
          Field f = memoField.elementAt( nRA );
@@ -2480,7 +2486,9 @@ final public class TableParser implements XMLConsumer {
             consumer.tableParserInfo("   -found CSV DATA (field sep="+colSepInfo(cs)
                   +" record sep="+(rs=='\n'?"\\n":"["+(byte)rs+"]")
                   +")");
-            if( h==0 ) consumer.tableParserInfo("   -No CSV header");
+            if( h==0 ) {
+               consumer.tableParserInfo("   -No CSV header");
+            }
          }
          flagNewTable=false;
       }

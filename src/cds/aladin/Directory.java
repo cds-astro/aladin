@@ -949,6 +949,11 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          Aladin.warning(this,"Progressive survey (HiPS) unknown ["+survey+"]",1);
          return -1;
       }
+      
+      // Pour éviter de charger 2x le même plan HiPS
+      if( !Aladin.NOGUI && aladin.calque.isBGAlreadyLoaded(to.internalId) ) {
+         if( !aladin.confirmation(aladin,aladin.chaine.getString("HIPSALREADYLOADED"))) return -1;
+      }
 
       try {
          if( defaultMode!=PlanBG.UNKNOWN ) to.setDefaultMode(defaultMode);
@@ -2071,7 +2076,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       if( keyword==null || keyword.trim().length()==0) return getPredefinedTAPServers();
       return getTAPServersByMocServer("("+getKeyWordExpr(keyword)+")");
    }
-   
+      
 	// For tap server list, slight change
 	protected ArrayList<String> getTAPServers(String keyword) throws Exception {
 		if (keyword == null || keyword.trim().length() == 0)

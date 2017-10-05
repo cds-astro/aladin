@@ -2912,7 +2912,7 @@ public class PlanBG extends PlanImage {
          if( isOutMoc(order,pix[i]) || healpix.isOutView(v) ) continue;
          //         healpix.drawRealBorders(g, v);
          try {
-            healpix.drawLosangeBorder(g, v);
+            healpix.drawLosangeBorder(g, v, null,null,null );
          } catch( Exception e ) {
             e.printStackTrace();
          }

@@ -23,6 +23,7 @@ package cds.aladin;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -73,6 +74,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -101,6 +103,7 @@ import cds.tools.Util;
  * formulaire: createPanel() b) mettre à jour l'action associée: apply()
  *
  * @author Pierre Fernique [CDS]
+ * @version sept 2017 - Ajout couleur de grille
  * @version fév 2007 - Ajout de Simbad pointer
  * @version nov 2005 - création
  */
@@ -175,6 +178,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String LASTRUN    = "LastRun";
    protected static String STOPHELP   = "StopHelp";
    protected static String LOOKANDFEELTHEME      = "LookAndFeelTheme";
+   protected static String GRIDC      = "GridColor";
+   protected static String GRIDCRA    = "GridColorRA";
+   protected static String GRIDCDE    = "GridColorDE";
+   protected static String GRIDF      = "GridColorFont";
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
    
@@ -193,7 +200,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
-   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP;
+   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,
+   GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR;
+
 
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
    static private String CSVITEMLONG[];
@@ -253,9 +262,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JCheckBox        bxCube;               // Pour l'activation du slider de controle des cubes
    private JCheckBox        bxOpac;               // Pour l'activation du slider du controle de la transparence
    private JCheckBox        bxZoom;               // Pour l'activation du slider du controle du zoom
+   
+   private JComboBox gridFontCombo;
+   private CouleurBox gridColorBox,gridColorRABox,gridColorDEBox;
 
    static private Langue lang[];                  // La liste des langues installées
    private Vector remoteLang = null;              // Lal iste des langues connues mais non installées
+   private int previousTheme=0;                   // Indice du thème au démarrage
 
 
    protected void createChaine() {
@@ -330,7 +343,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       FILEDIALOGNATIVE = aladin.chaine.getString("FILEDIALOGNATIVE");
       THEME = aladin.chaine.getString("THEME");
       THEMEHELP = aladin.chaine.getString("THEMEHELP");
-      
+      GRID=aladin.chaine.getString("UPGRID");
+      GRIDH=aladin.chaine.getString("UPGRIDH");
+      GRIDFONT=aladin.chaine.getString("UPGRIDFONT");
+      GRIDCOLOR=aladin.chaine.getString("UPGRIDCOLOR");
+      GRIDRACOLOR=aladin.chaine.getString("UPGRIDRACOLOR");
+      GRIDDECOLOR=aladin.chaine.getString("UPGRIDDECOLOR");
 
       //      TAGCENTER = aladin.chaine.getString("UPTAGCENTER");
       //      TAGCENTERH = aladin.chaine.getString("UPTAGCENTERH");
@@ -715,12 +733,18 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Affichage du help associé à la clé
     * @return true si le help a été affiché
     */
-   protected boolean showHelpIfOk(String key) { return showHelpIfOk(null,key); }
-   protected boolean showHelpIfOk(Component c,String key) {
+   protected boolean showHelpIfOk(String key) { return showHelpIfOk(null,key,500); }
+   protected boolean showHelpIfOk(final Component c,final String key, int delay) {
       if( stopHelp==null ) stopHelp = new Vector<String>();
       if( stopHelp.contains(key) ) return false;
-      if( !aladin.confirmation(c==null?aladin:c,aladin.chaine.getString(key)
-            +"\n \n"+aladin.chaine.getString("STOPHELP"))) stopHelp.add(key);
+      Timer t = new Timer(delay, new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            if( !aladin.confirmation(c==null?aladin:c,aladin.chaine.getString(key)
+                  +"\n \n"+aladin.chaine.getString("STOPHELP"))) stopHelp.add(key);
+        }
+      });
+      t.setRepeats(false);
+      t.start();
       return true;
    }
 
@@ -883,6 +907,30 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       String s = getLang();
       if( s.length()==0 ) return "en";
       return s.substring(1);
+   }
+   
+   /** Retourne la couleur de la grille */
+   protected Color getGridColor() {
+      try { return CouleurBox.getCouleur( get(GRIDC)); } catch( Exception e ) { }
+      return Aladin.COLOR_GREEN;
+   }
+
+   /** Retourne la couleur des labels de la longitude de la grille */
+   protected Color getGridColorRA() {
+      try { return CouleurBox.getCouleur( get(GRIDCRA)); } catch( Exception e ) { }
+      return Aladin.COLOR_GREEN_LIGHT;
+   }
+
+   /** Retourne la couleur des labels de la latitude de la grille */
+   protected Color getGridColorDE() {
+      try { return CouleurBox.getCouleur( get(GRIDCDE)); } catch( Exception e ) { }
+      return Aladin.COLOR_GREEN_LIGHTER;
+   }
+   
+   /** Retourne la taille de la fonte des labels de la grille */
+   protected int getGridFontSize() {
+      try { return Integer.parseInt( get(GRIDF)); } catch( Exception e ) { }
+      return Aladin.SSIZE;
    }
 
    /** Retourne true si le mode log est activé */
@@ -1385,7 +1433,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          (l = new JLabel(CMB)).setFont(l.getFont().deriveFont(Font.BOLD));
          PropPanel.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
       }
-
+      
       //      csvChoice = new JComboBox();
       //      for( int i=0; i<CSVITEM.length; i++ ) csvChoice.addItem(CSVITEMLONG[i]);
       //      (l = new JLabel(CSVCHAR)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1402,7 +1450,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          PropPanel.addCouple(this, p, l, FILTERH, filterChoice, g, c, GridBagConstraints.EAST);
       }
 
-      // Transparence des footprints
+     // Transparence des footprints
       transparencyChoice = new JComboBox();
       transparencyChoice.addItem(NOTACTIVATED);
       transparencyChoice.addItem(ACTIVATED);
@@ -1474,7 +1522,22 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          themeChoice.addActionListener(this);
          PropPanel.addCouple(this, p, l, THEMEHELP, themeChoice, g, c, GridBagConstraints.EAST);
 
-         // Le Look&Feel des FileDialog
+         // Les paramètres de la grille
+         CouleurBox y;
+         panel = new JPanel(new GridLayout(2,2,4,4));
+         gridFontCombo = new JComboBox( new String[]{"6","7","8","9","10","11","12","13","14","26"} );
+         gridFontCombo.setSelectedItem( getGridFontSize()+"" );
+         panel.add(new JLabel("- "+GRIDFONT,JLabel.LEFT)); panel.add( gridFontCombo );
+         gridColorBox = y = new CouleurBox( Aladin.COLOR_GREEN, aladin.view.gridColor );
+         panel.add(new JLabel("  - "+GRIDCOLOR,JLabel.LEFT)); panel.add(y);
+         gridColorRABox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHT, aladin.view.gridColorRA );
+         panel.add(new JLabel("- "+GRIDRACOLOR,JLabel.LEFT)); panel.add(y);
+         gridColorDEBox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHTER, aladin.view.gridColorDEC );
+         panel.add(new JLabel("  - "+GRIDDECOLOR,JLabel.LEFT)); panel.add(y);
+         (l = new JLabel(GRID)).setFont(l.getFont().deriveFont(Font.BOLD));
+         PropPanel.addCouple(this, p, l, GRIDH, panel, g, c, GridBagConstraints.EAST);
+
+             // Le Look&Feel des FileDialog
          (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
          lfChoice = new JComboBox();
          lfChoice.addItem(FILEDIALOGJAVA);
@@ -1707,6 +1770,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
     * @param value la (nouvelle) valeur associée à la clé
     */
    protected void set(String key, String value) {
+      if( value==null ) { remove(key); return; }
+      
       key.replace(' ', '_');
       flagModif = true;
       ConfigurationItem item = getItem(key);
@@ -2030,6 +2095,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          for( j = i; j < a.length && Character.isSpace(a[j]); j++ );
          String value = new String(a, j, a.length - j);
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
+         if( key.equals(LOOKANDFEELTHEME) && !value.equals("dark") ) previousTheme=1;
          aladin.trace(4, "Configuration.load() [" + key + "] = [" + value + "]");
 
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
@@ -2119,6 +2185,17 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       //         set(TAG,s);
       //         setCENTEREDTAG(s);
       //      }
+      
+      // Pour les paramètres de la grille
+      if( gridColorBox!=null )   set(GRIDC,   gridColorBox.getCouleur() );
+      if( gridColorRABox!=null ) set(GRIDCRA, gridColorRABox.getCouleur() );
+      if( gridColorDEBox!=null ) set(GRIDCDE, gridColorDEBox.getCouleur() );
+      if( gridFontCombo!=null )  {
+         s = gridFontCombo.getSelectedItem()+"";
+         if( (Aladin.SSIZE+"").equals(s) ) s=null;
+         set(GRIDF,s);
+      }
+      aladin.view.initGridParam(true);
 
       // Pourle log
       if( logChoice!=null ) {
@@ -2147,8 +2224,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
       // Pour le Look & Feel
       if( themeChoice!=null ) {
-         if( themeChoice.getSelectedIndex()!=0 ) set(LOOKANDFEELTHEME, (String) themeChoice.getSelectedItem() );
+         int t = themeChoice.getSelectedIndex();
+         if( t!=0 ) set(LOOKANDFEELTHEME, (String) themeChoice.getSelectedItem() );
          else remove(LOOKANDFEELTHEME);
+         if( t!=previousTheme ) Aladin.info(this,aladin.chaine.getString("RESTART"));
       }
 
       // Les sliders de controle

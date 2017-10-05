@@ -1686,13 +1686,6 @@ public void layout() {
       updateWidgets();
    }
 
-//   // Je mange l'évènement pour pas qu'il se propage
-//   public boolean action(Event evt, Object what) {
-//      if( evt.target instanceof Choice && tree!=null && !tree.isEmpty() ) tree.clear();
-//   	  if( what.equals(FrameServer.INFO)) showStatusReport();
-//      return true;
-//   }
-
   /** Gestion du ENTER.
    * Pour pouvoir gerer le ENTER comme si on appuyait sur le bouton SUBMIT
    *

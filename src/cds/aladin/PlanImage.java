@@ -263,8 +263,7 @@ public class PlanImage extends Plan {
       this.imgNode = imgNode;
       flagSkip = skip;
       this.forPourcent = forPourcent;
-      //       if( forPourcent!=null ) isOldPlan=true;  // Subtilité pour éviter un Calque.bestPlacePost()
-      if( forPourcent!=null ) noBestPlacePost=true;
+      if( forPourcent!=null ) noBestPlacePost=true;   // Subtilité pour éviter un Calque.bestPlacePost()
       flagWaitTarget=true;  // voir Command.waitingPlanInProgress
 
       // Recuperation du nom du plan a partir du nom du fichier
@@ -1798,7 +1797,7 @@ public class PlanImage extends Plan {
          if( !flagSkip ) {
             setExtName();
             changeImgID();
-            aladin.view.setRepere(this);
+            if( !noBestPlacePost ) aladin.view.setRepere(this);
          }
 
 

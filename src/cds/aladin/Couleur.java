@@ -252,7 +252,7 @@ public final class Couleur extends JComponent implements MouseListener {
     * de ne pas choisir de couleur, par exemple pour prendre celle par défaut
     * @param flag
     */
-   protected void setNoColorFlag(boolean flag) { noColor=flag; }
+   public void setNoColorFlag(boolean flag) { noColor=flag; }
     
 
   /** Retourne la prochaine couleur par defaut.

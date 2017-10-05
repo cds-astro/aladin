@@ -1718,8 +1718,19 @@ THEME	Interface theme
 THEMEHELP	Graphical interface theme. Required to restart.
 THEME.fr	Thème de l'interface
 THEMEHELP.fr	Thème de l'interface graphique. Nécessite un redémarrage.
-
-
+UPGRID Coordinate grid
+UPGRID.fr Grille de coord.
+UPGRIDH Grid coordinate color and font controls
+UPGRIDH.fr Contrôle des paramètres de la grille de coordonnées (couleurs, taille de la police)
+UPGRIDFONT font size
+UPGRIDFONT.fr taille police
+UPGRIDCOLOR grid color
+UPGRIDCOLOR.fr couleur grille
+UPGRIDRACOLOR longitude label
+UPGRIDRACOLOR.fr label longitude
+UPGRIDDECOLOR latitude label
+UPGRIDDECOLOR.fr label latitude
+      
 UPTITLE.fr	Préférences utilisateur
 UPDEFDIR.fr	Rép. de travail
 UPDEFDIRH.fr	Spécifiez le répertoire de travail.\nSi ce champ est laissé vide, Aladin utilisera le répertoire courant.
@@ -2132,6 +2143,7 @@ MFGOTOIMG	Focus on this source
 MFUNSELECT	Unselect this source (SHIFT click)
 MFDEL	Delete this source
 MFEDIT  Edit this source
+MFDISPLAY Display source record
 MTAGINFO	Check the boxes below for tagging the corresponding lines\nand by this way, to keep them in the measurement frame even if the associated sources will be deselected.
 
 MFASCSORT.fr	Trier sens ascendant
@@ -2170,6 +2182,7 @@ MFGOTOIMG.fr	Se centrer sur cette source
 MFUNSELECT.fr	Déselectionner cette source (MAJ clic)
 MFDEL.fr	Supprimer cette source
 MFEDIT.fr   Editer cette source
+MFDISPLAY.fr Afficher l'enregistrement
 MTAGINFO.fr	Cochez les cases ci-dessous correspondantes aux lignes\nque vous souhaitez marquer, et de ce fait, les conserver dans la fenêtre des mesures,\nmême quand les sources correspondances seront désélectionnées.
 
 
@@ -2609,6 +2622,8 @@ INFOHIPSFITS The drawing of a progressive sky in "true" pixel mode requires a la
 INFOHIPSFITS.fr L'affichage d'un ciel progressif en "vrai" pixels requière un bon réseau.\nVotre ciel est entrain d'être rechargé...
 
 # Info and warning strings
+HPIXEL Pixel mapping controler:\n \nTip: The pixel mapping may be adjusted directly in the main panel thanks to a clic&drag action with the right-mouse button. The mouse pointer position determines the constrast and the luminosity of the view (a la "DS9").\n \nAlso, the usage of the "hdr" button in the main panel allows you to switch from the "preview" mode (256 levels) to the "full dynamic" mode offering the full dynamicity of the image.
+HPIXEL.fr Contrôle du rendu des pixels:\n \nAstuce: le rendu des pixels peut être ajustée directement dans la fenêtre principale par un simple cliqué/étiré avec le bouton de droite de la souris. Le déplacement du curseur détermine le constrate et la luminosité de la table des couleurs (à la "DS9").\n \nA noter également le bouton "hdr" dans la fenêtre principale qui permet de passer du mode "prévisualisation" 256 niveaux à un mode "dynamique complète" des pixels de l'image.
 HAUTODIST Automatic distance measurer:\n \nWith this function activated, the distance is automatically computed and drawn for the two current selected catalog sources.
 HAUTODIST.fr Mesure de distance automatique:\n \nUne fois cette fonction activée, la sélection de deux sources de catalogues entraine le calcul automatique et l'affichage de leur distance.
 HFINGER	Simbad pointer:\n \nIf this function is activated, point your mouse on any astronomical object and wait 3 seconds to see if this object is known by Simbad.\n \nIf there are several objects around the position,\nonly the object with the largest bibliographical reference number will be displayed.\n \nClick on the displayed label for accessing directly to the corresponding Simbad record.
@@ -2741,6 +2756,8 @@ ALLSKYDESC The "progressive sky" mode (HiPS mode) allows you to visualise a surv
 ALLSKYDESC.fr Le mode "ciel progressif" (HiPS) vous permet de visualiser un relevé à n'importe quelle échelle (depuis le ciel dans son ensemble jusqu'à la limite de la résolution fournie). Il peut s'agir d'images, de catalogues ou de cartes de densité. Les relevés images en mode "ciel progressif" sont fournis en composition colorée, ou en pixel 8 bits (JPEG|PNG), ou encore en "vrai" pixels" (FITS). Utilisez le bouton "Pixel" pour passer d'un mode pixel à l'autre).\n \nAttention : le mode "ciel progressif" ne donne pas accès aux pixels originaux, mais un rééchantillonnages bilinéaire de ceux-ci.
 TARGETNOTVISIBLE Target out of field.\nSelect another plane before.
 TARGETNOTVISIBLE.fr Cible hors champ.\nSélectionnez au préalable un autre plan.
+HIPSALREADYLOADED A plane with the same identifier is already loaded in the stack.\n \nDo you really want to loaded again ?
+HIPSALREADYLOADED.fr Un plan de même identificateur est déjà présent dans la pile.\n \nSouhaitez-vous réellement le charger en double ?
 
 #ServerAlmaFootprint strings
 ALTITLE ALMA footprints

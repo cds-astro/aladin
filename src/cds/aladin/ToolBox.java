@@ -539,12 +539,15 @@ SwingWidgetFinder, Widget {
             if( exc[j]!=i && tool[ exc[j] ].mode==Tool.DOWN ) tool[ exc[j] ].setMode(Tool.UP);
          }
       }
+      
+      
 
       // On inverse le bouton
       tool[i].Push();
 
       repaint();
    }
+   
 
 //   protected void newPlanTool() {
 //      aladin.calque.selectPlanTool();

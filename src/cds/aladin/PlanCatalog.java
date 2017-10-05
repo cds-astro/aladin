@@ -61,6 +61,9 @@ public class PlanCatalog extends Plan {
          int i = file.lastIndexOf(Util.FS);
          label=(i>=0)?file.substring(i+1):file;	// Nom du fichier
       }
+      
+      // Subtilité: Si on ne doit pas fermer le flux, c'est que c'est un MEF.
+      if( !doClose ) noBestPlacePost=true;
 
       flagLocal=true;
       flagWaitTarget=true;  // Voir Command.waitingPlanInProgress

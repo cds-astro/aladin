@@ -2088,7 +2088,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
 
    /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix */
-   final protected void drawLosangeBorder(Graphics g,ViewSimple v) {
+   final protected void drawLosangeBorder(Graphics g,ViewSimple v, Color gridColor, Color gridLabel1, Color gridLabel2) {
       PointD b [] = getProjViewCorners(v);
       if( b==null || b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return;
       double c0 = dist(b,0,1);
@@ -2097,16 +2097,18 @@ public class HealpixKey implements Comparable<HealpixKey> {
       double c3 = dist(b,2,3);
       double min = Math.min(Math.min(c0,c1),Math.min(c2,c3));
       double min2 = 20*min;
+      
+      if( gridColor!=null ) g.setColor( gridColor );
       if( c0<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[1].x,(int)b[1].y);
       if( c1<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[2].x,(int)b[2].y);
       if( c2<min2 ) g.drawLine((int)b[1].x,(int)b[1].y,(int)b[3].x,(int)b[3].y);
       if( c3<min2 ) g.drawLine((int)b[2].x,(int)b[2].y,(int)b[3].x,(int)b[3].y);
 
-      drawNumber(g,v,b);
+      drawNumber(g,v,b, gridLabel1, gridLabel2);
    }
 
    // Affichage du label (order/npix)
-   final private void drawNumber(Graphics g,ViewSimple v,PointD [] b) {
+   final private void drawNumber(Graphics g,ViewSimple v,PointD [] b, Color colorLabel1, Color colorLabel2 ) {
       if( v.isAllSky() ) return;
       String s=getStringNumber();
       FontMetrics m = g.getFontMetrics();
@@ -2140,10 +2142,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //         Util.drawStringOutline(g, s, x,y, Color.green, Color.black);
          
          int w = m.stringWidth(order+"");
-         Util.drawStringOutline(g, order+"", x,y-4, Color.green, Color.black);
-         Util.drawStringOutline(g, npix+"", x+w+4,y+4, Color.green, Color.black);
-//         g.drawString(order+"", x,y-4);
-//         g.drawString(npix+"", x+w+4,y+4);
+//         Util.drawStringOutline(g, order+"", x,y-4, colorLabel1, Color.black);
+//         Util.drawStringOutline(g, npix+"", x+w+4,y+4, colorLabel2, Color.black);
+         if( colorLabel1!=null ) g.setColor( colorLabel1 );
+         g.drawString(order+"", x,y-4);
+         if( colorLabel2!=null ) g.setColor( colorLabel2);
+         g.drawString(npix+"", x+w+4,y+4);
          g.drawString("/",x+w,y);
       }
    }

@@ -140,10 +140,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    Font F = Aladin.SPLAIN;
    static protected int INITW = 512;
    static protected int INITH = 512;
-   protected Color gridColor = Aladin.COLOR_GREEN;
-   protected Color gridColorRA  = gridColor.brighter();
-   protected Color gridColorDEC = gridColor.brighter().brighter();
-   protected int gridFontSize = Aladin.SSIZE;
+   protected Color gridColor;
+   protected Color gridColorRA;
+   protected Color gridColorDEC;
+   protected int gridFontSize;
 
    // Les references aux autres objets
    Aladin aladin;
@@ -283,6 +283,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       adjustPanel(modeView);
       setCurrentNumView(0);
       setBackground(Color.white);
+      
 
       registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { next(1); }
@@ -296,6 +297,17 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
             );
+      
+      initGridParam(false);
+   }
+   
+   /** (Re)initialise les paramètres de la grille */
+   protected void initGridParam( boolean repaint ) {
+      gridColor    = aladin.configuration.getGridColor();
+      gridColorRA  = aladin.configuration.getGridColorRA();
+      gridColorDEC = aladin.configuration.getGridColorDE();
+      gridFontSize = aladin.configuration.getGridFontSize();
+      if( repaint ) repaintAll();
    }
 
    /** Pour déterminer par la suite si la dernière sélection d'un SimpleView
@@ -2267,11 +2279,13 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** retourne true s'il y a un objet sélectionné qui peut être utilisé pour extraire un MOC
     * (càd soit un polygone, soit un cercle) */
    protected boolean hasMocPolSelected() {
-      if( !hasSelectedObj() ) return false;
-      for( Obj o : vselobj ) {
-         if( o instanceof Ligne && ((Ligne)o).isPolygone() ) return true;
-         if( o instanceof SourceStat && ((SourceStat)o).hasRayon() )  return true;
-      }
+      try {
+         if( !hasSelectedObj() ) return false;
+         for( Obj o : vselobj ) {
+            if( o instanceof Ligne && ((Ligne)o).isPolygone() ) return true;
+            if( o instanceof SourceStat && ((SourceStat)o).hasRayon() )  return true;
+         }
+      } catch( Exception e ) { }
       return false;
    }
 

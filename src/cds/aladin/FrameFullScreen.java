@@ -723,12 +723,12 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    /** Affichage en surimpression des mesures associées à la première source sélectionnée */
    protected void showMesures() {
       int nbSource = aladin.mesure.getNbSrc();
-      if( nbSource==0 || aladin.mesure.f!=null && aladin.mesure.f.isVisible() ) return;
+      if( nbSource==0 || aladin.mesure.frameMesure!=null && aladin.mesure.frameMesure.isVisible() ) return;
 
-      if( aladin.mesure.f==null ) aladin.mesure.split();
+      if( aladin.mesure.frameMesure==null ) aladin.mesure.split();
       else if( !aladin.mesure.isVisible() ) {
          aladin.mesure.setReduced(false);
-         aladin.mesure.f.setVisible(true);
+         aladin.mesure.frameMesure.setVisible(true);
       }
    }
 

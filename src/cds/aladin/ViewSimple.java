@@ -5674,7 +5674,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
    
    /** Dessine la grille HEALPix */
-   private void drawGridHpx(Graphics g,Rectangle clip,int dx,int dy) {
+   private void drawGridHpx(Graphics g,Rectangle clip,int dx,int dy,
+         Color gridColor, Color gridLabel1, Color gridLabel2) {
       
       // Récupération de l'ordre le plus approprié
       int order=3;
@@ -5729,7 +5730,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          long pix = npix==null ? i : npix[i];
          HealpixKey hpix = new HealpixKey(order, pix, frame);
          if( hpix.isOutView(this) ) continue;
-         hpix.drawLosangeBorder(g, this);
+         hpix.drawLosangeBorder(g, this, gridColor, gridLabel1, gridLabel2);
 //         hpix.drawRealBorders(g, this);
       }
       
@@ -5747,17 +5748,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isFree() || (proj=getProj())==null ) return;
 
       Font f = g.getFont();
-      g.setColor(view.gridColor);
       long t = Util.getTime();
+      g.setFont( new Font("SansSerif",Font.PLAIN,view.gridFontSize) );
       
       if( calque!=null && calque.gridMode==2 ) {
-         g.setFont( new Font("SansSerif",Font.PLAIN,view.gridFontSize) );
-         drawGridHpx(g, clip, dx, dy);
+         drawGridHpx(g, clip, dx, dy, view.gridColor, view.gridColorRA, view.gridColorDEC);
          g.setFont(f);
          return;
       }
       
-      g.setFont( new Font("SansSerif",Font.ITALIC,view.gridFontSize) );
+      g.setColor(view.gridColor);
 
       // (Re)calcul de la grille
       if( oiz!=iz ) {

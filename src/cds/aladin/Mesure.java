@@ -82,7 +82,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    static private int MAXBLOC = 100000;
    protected Source src[] = new Source[DEFAULTBLOC];   // Sources gérées
    protected int nbSrc=0;                            // Nb de sources gérées
-   protected FrameMesure f=null;
+   protected FrameMesure frameMesure=null;
 
    // Mémorisation des WordLines qui ont été affichées dans MCanvas afin
    // d'éviter de les regénérer à chaque fois et de perdre du coup
@@ -247,12 +247,12 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 		}
 		
 	}
-   
 
+   protected boolean isMesureOut() { return frameMesure!=null; }
+   
    protected void split() {
-      if( f==null ) {
-         f = new FrameMesure(aladin);
-      } else { f.close(); f=null; }
+      if( frameMesure==null ) frameMesure = new FrameMesure(aladin);
+      else { frameMesure.close(); frameMesure=null; }
    }
 
    private boolean isSorting=false;
@@ -548,7 +548,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    /** Ajout d'une source (tableau dynamique) */
    synchronized private void addSrc(Source s) {
-      if( f==null ) setReduced(false);
+      if( frameMesure==null ) setReduced(false);
       if( nbSrc==src.length ) {
          Source srcBis[] = new Source[ src.length>MAXBLOC?src.length+MAXBLOC:src.length*2];
          System.arraycopy(src,0,srcBis,0,src.length);
