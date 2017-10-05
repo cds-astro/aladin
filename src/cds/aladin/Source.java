@@ -1261,7 +1261,19 @@ public class Source extends Position implements Comparator {
    }
    
    protected void resetFootprint() {
-	   sourceFootprint = null;
+	   sourceFootprint = new SourceFootprint(); //just in case. because setting to null results in a null pointer elsewhere
+	   //when the stc is "" then the table initialises sourceFootprint with "". So redoing the instantiation. 
+	   int idxSTCS = findUtype(TreeBuilder.UTYPE_STCS_REGION1);
+       if( idxSTCS<0 ) idxSTCS = findUtype(TreeBuilder.UTYPE_STCS_REGION2);
+//       if( idxSTCS<0 ) idxSTCS = indexSTC;
+       if (idxSTCS>=0) {
+          try {
+             setFootprint(getValue(idxSTCS));
+             setIdxFootprint(idxSTCS);
+          } catch(Exception e) {
+             e.printStackTrace();
+          }
+       }
    }
    
 	protected boolean isSetFootprint() {

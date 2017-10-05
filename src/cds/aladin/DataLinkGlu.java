@@ -205,7 +205,7 @@ public final class DataLinkGlu {
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 				
 			} else {
-//				urlString.append("?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6&ID=$7");
+//				urlString.append("?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6&ID=$7");//cadc works with this not CIRCLE...
 				urlString.append(SODA_URL_PARAM);
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
 			}

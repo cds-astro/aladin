@@ -2328,8 +2328,9 @@ public final class Glu implements Runnable {
  				try {
 // 				   MODIF PF Sept 2017
 //                 multipleParams = paramRaw[num].trim().split(" ");//TODO:: for now the assumed delimiter is space.
-                   multipleParams = split(paramRaw[num].trim());
- 					if (multipleParams!=null) {
+//                   multipleParams = split(paramRaw[num].trim());
+                   multipleParams = splitNoProcess(paramRaw[num].trim());
+ 					if (multipleParams!=null && multipleParams.length > 0) {
  						res.append(URLEncoder.encode(multipleParams[0], "UTF-8"));
  						for (int j = 1; j < multipleParams.length; j++) {
  							res.append(paramName).append(URLEncoder.encode(multipleParams[j], "UTF-8"));
