@@ -26,7 +26,6 @@ import static cds.aladin.Constants.GENERIC;
 import static cds.aladin.Constants.GLU;
 import static cds.aladin.Constants.NODE;
 import static cds.aladin.Constants.OBSCORE;
-import static cds.aladin.Constants.ALLACCESS;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -52,7 +51,6 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 		tooltipMap.put(GLU, Aladin.chaine.getString("GLU_TAPMODESTOOLTIP"));
 		tooltipMap.put(NODE, Aladin.chaine.getString("NODE_TAPMODESTOOLTIP"));
 		tooltipMap.put(GENERIC, Aladin.chaine.getString("GENERIC_TAPMODESTOOLTIP"));
-		tooltipMap.put(ALLACCESS, Aladin.chaine.getString("FULLSERVER_TAPMODESTOOLTIP"));
 		tooltipMap.put(TEMPLATES, Aladin.chaine.getString("EXAMPLE_TAPMODESTOOLTIP"));
 		tooltipMap.put(OBSCORE, Aladin.chaine.getString("OBSCORE_TAPMODESTOOLTIP"));
 	}

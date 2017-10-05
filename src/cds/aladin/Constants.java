@@ -301,7 +301,6 @@ public static enum TapClientMode {//Dialog is serverselector
 public static final String GLU = "Basic";
 public static final String NODE = "NODE";
 public static final String GENERIC = "Generic";
-public static final String ALLACCESS = "All access";
 public static final String TEMPLATES = "Templates";
 public static final String OBSCORE = "Obscore";
 

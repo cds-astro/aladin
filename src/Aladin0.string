@@ -3050,7 +3050,6 @@ NODE_TAPMODESTOOLTIP Click to load a generic tap client for this node
 GENERIC_TAPMODESTOOLTIP Click to load a generic tap client
 EXAMPLE_TAPMODESTOOLTIP Click to load a template based tap client
 OBSCORE_TAPMODESTOOLTIP Click to load a custom client for obscore tables
-FULLSERVER_TAPMODESTOOLTIP Click to access all tables of the server
 TAPSERVICEEXAMPLESTOOLTIP These are service provided examples!
 SETRADECBUTTONTIP Select columns of the tap table as right ascension and declination columns
 TAPSETTINGSTOOLTIP Set targets, max rows and other values.

@@ -33,7 +33,6 @@ import static cds.aladin.Constants.REGEX_RANGENUMBERINPUT;
 import static cds.aladin.Constants.REGEX_TAPSCHEMATABLES;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.NODE;
-import static cds.aladin.Constants.ALLACCESS;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -137,7 +136,7 @@ public class TapClient{
 		} else {
 			String[] modesAllowed = null;
 			if (this.nodeName != null) {
-				modesAllowed = new String []{ GLU, nodeName, ALLACCESS, TEMPLATES, OBSCORE };
+				modesAllowed = new String []{ GLU, nodeName, GENERIC, TEMPLATES, OBSCORE };
 			} else {
 				modesAllowed = new String []{ GLU, GENERIC, TEMPLATES, OBSCORE };
 			}
@@ -280,10 +279,8 @@ public class TapClient{
 			model.setSelectedItem(GLU);
 		} else {
 			boolean isFullServerCapability = true;
-			String genericServerName = GENERIC;
 			if (this.nodeName != null && this.nodeTableNames != null) {
 				isFullServerCapability = false;
-				genericServerName = ALLACCESS;
 			}
 			if (nodeName != null && serverType == nodeName) {
 				if (this.serverTapNode == null) {
@@ -291,7 +288,7 @@ public class TapClient{
 				} 
 				dynamicTapForm = this.serverTapNode;
 				model.setSelectedItem(nodeName);
-			} else if (serverType == genericServerName) {
+			} else if (serverType == GENERIC) {
 				if (this.serverTap == null) {
 					this.serverTap = tapManager.getNewServerTapInstance(this, true);
 				} 
@@ -315,7 +312,7 @@ public class TapClient{
 					model.setSelectedItem(NODE);
 				} else if (this.serverTap != null && this.serverTap.isLoaded()) {
 					dynamicTapForm = this.serverTap;
-					model.setSelectedItem(genericServerName);
+					model.setSelectedItem(GENERIC);
 				} else if (this.serverExamples != null && this.serverExamples.isLoaded()) {
 					dynamicTapForm = this.serverExamples;
 					model.setSelectedItem(TEMPLATES);
@@ -323,9 +320,16 @@ public class TapClient{
 					dynamicTapForm = this.serverObsTap;
 					model.setSelectedItem(OBSCORE);
 				} else {// by default we give priority to the generic: after discussing with Pierre
-					this.serverTap = tapManager.getNewServerTapInstance(this, isFullServerCapability);
-					dynamicTapForm = this.serverTap;
-					model.setSelectedItem(genericServerName);
+					if (nodeName != null) {
+						this.serverTapNode = tapManager.getNewServerTapInstance(this, isFullServerCapability); 
+						dynamicTapForm = this.serverTapNode;
+						model.setSelectedItem(nodeName);
+					} else {
+						this.serverTap = tapManager.getNewServerTapInstance(this, isFullServerCapability);
+						dynamicTapForm = this.serverTap;
+						model.setSelectedItem(GENERIC);
+					}
+					
 				} 
 			}
 			
