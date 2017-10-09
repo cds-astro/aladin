@@ -118,8 +118,8 @@ public final class Logo extends JComponent implements MouseListener {
          if( n>Aladin.MAXLEVELTRACE ) n=0;
          aladin.setTraceLevel(n);
       }
-      // pour rire
-      else if(key=='t') aladin.view.taquin("3");
+//      // pour rire
+//      else if(key=='t') aladin.view.taquin("3");
    }
 
  /** Gestion de l'affichage.

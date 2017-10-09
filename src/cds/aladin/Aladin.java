@@ -5894,8 +5894,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( r==null || r.x>SCREENSIZE.width || r.y>SCREENSIZE.height ) {
          a.f.setLocation(computeLocation(a.f));
 //         a.f.setSize(732,679);
-         int w = 1024;
-         int h = 800;
+         int w = 1250;
+         int h = 900;
          if( w>SCREENSIZE.width ) w=SCREENSIZE.width-40;
          if( h>SCREENSIZE.height ) h=SCREENSIZE.height-40;
          a.f.setSize(w,h);

@@ -21,12 +21,6 @@
 
 package cds.aladin;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -34,14 +28,24 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.text.DefaultStyledDocument;
@@ -517,7 +521,7 @@ public class Chaine {
    private boolean testUTF(String s) {
       int n = s.length();
       for( int i=0; i<n; i++ ) {
-         if( (( (int)s.charAt(i) ) & 0xFF00 )!=0 ) return true;
+         if( (( s.charAt(i) ) & 0xFF00 )!=0 ) return true;
       }
       return false;
    }
@@ -601,22 +605,24 @@ public class Chaine {
           File [] list = fdir.listFiles(filter);
           
           // Recherche des langues ajoutées localement (extension -perso.string...)
-          for( int i=0; i<list.length; i++ ) {
-             String name = list[i].getName();
-             if( !name.endsWith("-perso.string.utf") && !name.endsWith("-perso.string") ) continue;
-             if( Aladin.STRINGFILE==null ) Aladin.STRINGFILE="";
-             else Aladin.STRINGFILE=";"+Aladin.STRINGFILE;
-             Aladin.STRINGFILE=list[i].getAbsolutePath()+Aladin.STRINGFILE;
-          }
-          
-          // Recherche des langues installées à distance (normalement une seule)
-          for( int i=0; i<list.length; i++ ) {
-             String name = list[i].getName();
-             if( !name.endsWith(".utf") && !name.endsWith(".string") ) continue;
-             if( name.endsWith("-perso.string.utf") || name.endsWith("-perso.string") ) continue;
-             if( Aladin.STRINGFILE==null ) Aladin.STRINGFILE="";
-             else Aladin.STRINGFILE=";"+Aladin.STRINGFILE;
-             Aladin.STRINGFILE=list[i].getAbsolutePath()+Aladin.STRINGFILE;
+          if( list!=null ) {
+             for( int i=0; i<list.length; i++ ) {
+                String name = list[i].getName();
+                if( !name.endsWith("-perso.string.utf") && !name.endsWith("-perso.string") ) continue;
+                if( Aladin.STRINGFILE==null ) Aladin.STRINGFILE="";
+                else Aladin.STRINGFILE=";"+Aladin.STRINGFILE;
+                Aladin.STRINGFILE=list[i].getAbsolutePath()+Aladin.STRINGFILE;
+             }
+
+             // Recherche des langues installées à distance (normalement une seule)
+             for( int i=0; i<list.length; i++ ) {
+                String name = list[i].getName();
+                if( !name.endsWith(".utf") && !name.endsWith(".string") ) continue;
+                if( name.endsWith("-perso.string.utf") || name.endsWith("-perso.string") ) continue;
+                if( Aladin.STRINGFILE==null ) Aladin.STRINGFILE="";
+                else Aladin.STRINGFILE=";"+Aladin.STRINGFILE;
+                Aladin.STRINGFILE=list[i].getAbsolutePath()+Aladin.STRINGFILE;
+             }
           }
        } catch( Exception e ) {
           if( Aladin.levelTrace>=3 ) e.printStackTrace();

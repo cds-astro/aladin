@@ -876,8 +876,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected boolean getSimbadFlag() {
 //      if( Aladin.OUTREACH ) return true;
       String flag = get(SIMBAD);
-      if( flag==null ) return false;
-      return flag.equalsIgnoreCase("On");
+      if( flag==null ) return true;
+      return !flag.equalsIgnoreCase("Off");
    }
 
    /** Retourne le flag de VizieRSED Quick - par défaut inactif */
@@ -885,7 +885,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 //      if( Aladin.OUTREACH ) return false;
       String flag = get(VIZIERSED);
       if( flag==null ) return false;
-      return flag.equalsIgnoreCase("On");
+      return !flag.equalsIgnoreCase("On");
    }
 
    /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */

@@ -207,7 +207,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    private Plan megaDragPlanSource=null;        // Plan de stack source, ou null si aucun
    private ViewSimple megaDragViewTarget=null;  // Vue destination ou null si non encore connue
    protected boolean flagMegaDrag=false;        // true si on a commencé un flagDrag dans une vue ou dans la pile
-   protected boolean flagTaquin=false;          // true si on est en mode taquin
+//   protected boolean flagTaquin=false;          // true si on est en mode taquin
 
    protected boolean flagHighlight=false;       // true si on est en mode highlight des sources (voir hist[] dans ZommView)
 
@@ -625,18 +625,18 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return false;
    }
 
-   /** Retourne true si on a fini le taquin */
-   private boolean isTaquinOk() {
-      boolean rep=true;
-      int m=getNbView();
-      for( int i=0; i<m-1; i++ ) {
-         System.out.print(" "+viewSimple[i].ordreTaquin);
-         if( viewSimple[i].ordreTaquin!=i ) rep=false;
-      }
-      System.out.println(" => "+rep);
-      compute();
-      return rep;
-   }
+//   /** Retourne true si on a fini le taquin */
+//   private boolean isTaquinOk() {
+//      boolean rep=true;
+//      int m=getNbView();
+//      for( int i=0; i<m-1; i++ ) {
+//         System.out.print(" "+viewSimple[i].ordreTaquin);
+//         if( viewSimple[i].ordreTaquin!=i ) rep=false;
+//      }
+//      System.out.println(" => "+rep);
+//      compute();
+//      return rep;
+//   }
 
    private void compute() {
       int perm=0,n,on=0;
@@ -679,7 +679,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( rep && megaDragViewTarget==megaDragViewSource ) rep=false;
 
       // En mode Taquin la source doit être vide et juste à coté
-      if( rep && flagTaquin &&
+      if( rep && /* flagTaquin && */
             (megaDragPlanSource!=null
             || !megaDragViewTarget.isFree()
             || !isAcote(megaDragViewSource.n,megaDragViewTarget.n)) ) rep=false;
@@ -762,7 +762,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.calque.select.repaint();
 
          // Fin du taquin
-         if( flagTaquin && isTaquinOk() ) taquinOk();
+//         if( flagTaquin && isTaquinOk() ) taquinOk();
       }
 
       megaDragViewSource=null;
@@ -1755,131 +1755,131 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return num;
    }
 
-   protected void endTaquin() {
-      flagTaquin=false;
-      freeAll();
-      aladin.calque.Free(taquinP);
-      setModeView(ViewControl.MVIEW1);
-      getCurrentView().setPlanRef(taquinRef, true);
-      aladin.calque.selectPlan(taquinRef);
-      taquinRef=taquinP=null;
-      aladin.calque.repaintAll();
-      if( record!=null ) {
-         aladin.log("Taquin",record);
-         aladin.warning("Taquin's done in " + record);
-      }
-   }
-
-   PlanImage taquinRef,taquinP;
-   String record=null;
-
-   protected void taquinOk() {
-      new Thread("TaquinOk"){
-         public void run() {
-            record = aladin.calque.zoom.zoomView.getTaquinTime();
-            unSelectAllView();
-            int m=getNbView();
-            for( int i=0; i<m; i++ ) {
-               int j;
-               do { j = (int)(Math.random()*m); }
-               while( viewSimple[j].selected );
-               mouseView=j;
-               paintBordure();
-               Util.pause(50);
-               viewSimple[j].selected=true;
-            }
-            unSelectAllView();
-            mouseView=-1;
-            for( int i=0; i<6; i++ ) {
-               viewSimple[0].pref.underMouse=(i%2==0);
-               paintBordure();
-               Util.pause(200);
-            }
-            endTaquin();
-         }
-      }.start();
-   }
-
-   /** Fabrication d'un taquin, juste pour rire
-    * @param val niveau de difficulté
-    */
-   protected boolean taquin(String s) {
-      if( flagTaquin ) { endTaquin(); return false; }
-      ViewSimple vc = getCurrentView();
-      if( isMultiView() || vc.sticked || vc.hasBord() || vc.northUp ||
-            vc.isFree() || !vc.pref.isImage() || !vc.pref.flagOk ) return false;
-      taquinRef=(PlanImage)vc.pref;
-      try {
-         taquinP = (PlanImage)aladin.command.execCropCmd("","Taquin");
-         vc.setPlanRef(taquinP, true);
-         aladin.calque.selectPlan(taquinP);
-      } catch( Exception e ) {
-         e.printStackTrace();
-         return false;
-      }
-
-      if( taquinP.hasNoReduction() ) {
-         taquinP.projd = new Projection("taquin",Projection.SIMPLE,
-               0,0,15,15,taquinP.width/2,taquinP.height/2,
-               taquinP.width,taquinP.height,0,false,Calib.TAN,Calib.FK5);
-      }
-      int niveau=2;
-      try { niveau=Integer.parseInt(s); } catch( Exception e) { niveau=3; }
-
-      int m = niveau<=1?4:niveau==2?9:16;
-      double z = vc.zoom;
-      double W = aladin.calque.zoom.zoomView.getWidth();
-      double delta = W/Math.sqrt(m);
-      double debut = delta/2.;
-      double x=debut,y=debut;
-      setModeView(m);
-      ViewSimple v;
-
-      int ordre[] = new int[m];
-      for( int i=0; i<m; i++ ) ordre[i]=m-i-1;
-
-      // on mélange
-      int n = (int)(Math.random()*1000)+100;
-      int w = (int)Math.sqrt(m);
-      int pos,npos;
-      npos = pos=0;
-      int sens,osens=-1;
-      for( int i=0; i<n; i++ ) {
-         while( (sens = (int)(Math.random()*4))==osens);
-         switch(sens) {
-            case 0 : if( pos>w ) { npos=pos-w; break; }
-            case 3 : if( pos<m-w ) { npos=pos+w; break; }
-            case 1 : if( pos%w!=0 ) { npos=pos-1; break; }
-            case 2 : if( (pos+1)%w!=0 ) { npos=pos+1; break; }
-         }
-         osens = sens==0 ? 3 : sens==3 ? 0 : sens==1 ? 2 : 1;
-         int t = ordre[npos]; ordre[npos]=ordre[pos]; ordre[pos]=t;
-         pos=npos;
-      }
-
-
-      for( int i=0; i<m; i++, x+=delta ) {
-         int rang=0;
-         while( i!=ordre[rang] ) rang++;
-         v=viewSimple[rang];
-         if( x>W ) { x=debut; y+=delta; }
-         vc.copyIn(v);
-         v.setZoomXY(z,x,y);
-         v.ordreTaquin=i;
-         v.locked=true;
-         if( i==m-1 ) v.free();
-      }
-
-      sauvegarde();
-      calque.flagOverlay=false;
-      flagTaquin=true;
-      aladin.calque.zoom.zoomView.startTaquinTime=0L;
-      record=null;
-      startTimer();
-      repaintAll();
-      aladin.status.setText("*** For Your Pleasure - offered by the Aladin Team **** ");
-      return true;
-   }
+//   protected void endTaquin() {
+//      flagTaquin=false;
+//      freeAll();
+//      aladin.calque.Free(taquinP);
+//      setModeView(ViewControl.MVIEW1);
+//      getCurrentView().setPlanRef(taquinRef, true);
+//      aladin.calque.selectPlan(taquinRef);
+//      taquinRef=taquinP=null;
+//      aladin.calque.repaintAll();
+//      if( record!=null ) {
+//         aladin.log("Taquin",record);
+//         aladin.warning("Taquin's done in " + record);
+//      }
+//   }
+//
+//   PlanImage taquinRef,taquinP;
+//   String record=null;
+//
+//   protected void taquinOk() {
+//      new Thread("TaquinOk"){
+//         public void run() {
+//            record = aladin.calque.zoom.zoomView.getTaquinTime();
+//            unSelectAllView();
+//            int m=getNbView();
+//            for( int i=0; i<m; i++ ) {
+//               int j;
+//               do { j = (int)(Math.random()*m); }
+//               while( viewSimple[j].selected );
+//               mouseView=j;
+//               paintBordure();
+//               Util.pause(50);
+//               viewSimple[j].selected=true;
+//            }
+//            unSelectAllView();
+//            mouseView=-1;
+//            for( int i=0; i<6; i++ ) {
+//               viewSimple[0].pref.underMouse=(i%2==0);
+//               paintBordure();
+//               Util.pause(200);
+//            }
+//            endTaquin();
+//         }
+//      }.start();
+//   }
+//
+//   /** Fabrication d'un taquin, juste pour rire
+//    * @param val niveau de difficulté
+//    */
+//   protected boolean taquin(String s) {
+//      if( flagTaquin ) { endTaquin(); return false; }
+//      ViewSimple vc = getCurrentView();
+//      if( isMultiView() || vc.sticked || vc.hasBord() || vc.northUp ||
+//            vc.isFree() || !vc.pref.isImage() || !vc.pref.flagOk ) return false;
+//      taquinRef=(PlanImage)vc.pref;
+//      try {
+//         taquinP = (PlanImage)aladin.command.execCropCmd("","Taquin");
+//         vc.setPlanRef(taquinP, true);
+//         aladin.calque.selectPlan(taquinP);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//         return false;
+//      }
+//
+//      if( taquinP.hasNoReduction() ) {
+//         taquinP.projd = new Projection("taquin",Projection.SIMPLE,
+//               0,0,15,15,taquinP.width/2,taquinP.height/2,
+//               taquinP.width,taquinP.height,0,false,Calib.TAN,Calib.FK5);
+//      }
+//      int niveau=2;
+//      try { niveau=Integer.parseInt(s); } catch( Exception e) { niveau=3; }
+//
+//      int m = niveau<=1?4:niveau==2?9:16;
+//      double z = vc.zoom;
+//      double W = aladin.calque.zoom.zoomView.getWidth();
+//      double delta = W/Math.sqrt(m);
+//      double debut = delta/2.;
+//      double x=debut,y=debut;
+//      setModeView(m);
+//      ViewSimple v;
+//
+//      int ordre[] = new int[m];
+//      for( int i=0; i<m; i++ ) ordre[i]=m-i-1;
+//
+//      // on mélange
+//      int n = (int)(Math.random()*1000)+100;
+//      int w = (int)Math.sqrt(m);
+//      int pos,npos;
+//      npos = pos=0;
+//      int sens,osens=-1;
+//      for( int i=0; i<n; i++ ) {
+//         while( (sens = (int)(Math.random()*4))==osens);
+//         switch(sens) {
+//            case 0 : if( pos>w ) { npos=pos-w; break; }
+//            case 3 : if( pos<m-w ) { npos=pos+w; break; }
+//            case 1 : if( pos%w!=0 ) { npos=pos-1; break; }
+//            case 2 : if( (pos+1)%w!=0 ) { npos=pos+1; break; }
+//         }
+//         osens = sens==0 ? 3 : sens==3 ? 0 : sens==1 ? 2 : 1;
+//         int t = ordre[npos]; ordre[npos]=ordre[pos]; ordre[pos]=t;
+//         pos=npos;
+//      }
+//
+//
+//      for( int i=0; i<m; i++, x+=delta ) {
+//         int rang=0;
+//         while( i!=ordre[rang] ) rang++;
+//         v=viewSimple[rang];
+//         if( x>W ) { x=debut; y+=delta; }
+//         vc.copyIn(v);
+//         v.setZoomXY(z,x,y);
+//         v.ordreTaquin=i;
+//         v.locked=true;
+//         if( i==m-1 ) v.free();
+//      }
+//
+//      sauvegarde();
+//      calque.flagOverlay=false;
+//      flagTaquin=true;
+//      aladin.calque.zoom.zoomView.startTaquinTime=0L;
+//      record=null;
+//      startTimer();
+//      repaintAll();
+//      aladin.status.setText("*** For Your Pleasure - offered by the Aladin Team **** ");
+//      return true;
+//   }
 
    public boolean isOpaque() { return false; }
 
@@ -3811,13 +3811,13 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    private void runC() {
       long debut = -1;
       long t,lastT=-1;
-      boolean tagBlink,editBlink,planBlink,sourceBlink,/*simbadBlink,*/scrolling,sablierBlink,taquinBlink;
+      boolean tagBlink,editBlink,planBlink,sourceBlink,/*simbadBlink,*/scrolling,sablierBlink; //,taquinBlink;
       int delais=getDefaultDelais();
 
       for( int tour=0; _flagTimer; tour++ ) {
          try {
             delais=getDefaultDelais();
-            planBlink=sourceBlink=scrolling=sablierBlink=taquinBlink=editBlink=tagBlink=false;
+            planBlink=sourceBlink=scrolling=sablierBlink=/*taquinBlink=*/editBlink=tagBlink=false;
             int t0,t1,t2,t3,t4,t5,t6;
             t0=t1=t2=t3=t4=t5=t6=0;
 
@@ -3831,7 +3831,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                boolean source = v.isSourceBlink();
                boolean scroll = v.isScrolling();
                boolean sablier = v.isSablier();
-               boolean taquin = flagTaquin;
+//               boolean taquin = flagTaquin;
                boolean flagEdit = crop!=null && crop.isEditing()
                      || cv.isPlanBlink() && cv.cubeControl.isEditing();
                boolean flagtag = isTagEditing();
@@ -3865,11 +3865,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                   t4=300;
                   if( t4<delais ) delais=t4;
                }
-               if( taquin ) {
-                  aladin.calque.zoom.zoomView.repaint();
-                  t5=1000;
-                  if( t5<delais ) delais=t5;
-               }
+//               if( taquin ) {
+//                  aladin.calque.zoom.zoomView.repaint();
+//                  t5=1000;
+//                  if( t5<delais ) delais=t5;
+//               }
 
                tagBlink|=flagtag;
                editBlink|=flagEdit;
@@ -3877,7 +3877,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                sourceBlink|=source;
                scrolling|=scroll;
                sablierBlink|=sablier;
-               taquinBlink|=taquin;
+//               taquinBlink|=taquin;
             }
 
 //            simbadBlink = calque.flagSimbad || calque.flagVizierSED;
@@ -3901,7 +3901,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
             // Arrêt au bout de 5 secondes sans blinking nécessaire
             if( tagBlink|editBlink|planBlink|sourceBlink
-                  /*|simbadBlink*/|scrolling|sablierBlink|taquinBlink ) debut=-1;
+                  /*|simbadBlink*/|scrolling|sablierBlink/*|taquinBlink*/ ) debut=-1;
             else {
                if( debut==-1 ) debut=System.currentTimeMillis();
                else if( System.currentTimeMillis()-debut>5000 ) stopTimer();

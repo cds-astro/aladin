@@ -3189,9 +3189,9 @@ public final class Command implements Runnable {
 
       a.trace(4,"Command.exec() : execute now \""+cmd+" "+param+"\"...");
 
-      if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
+//      if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
       //      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
-      else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
+      if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
       //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("tap") )   tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") )   PlanBG.cleanCache();

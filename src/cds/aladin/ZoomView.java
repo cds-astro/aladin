@@ -23,7 +23,6 @@ package cds.aladin;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -1303,13 +1302,13 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
    private int owidth,oheight;
 
-   protected long startTaquinTime=0L;
+//   protected long startTaquinTime=0L;
 
 
-   String getTaquinTime() {
-      long time = (System.currentTimeMillis()-startTaquinTime)/1000;;
-      return Util.align2((int)time/60)+":"+Util.align2((int)time%60);
-   }
+//   String getTaquinTime() {
+//      long time = (System.currentTimeMillis()-startTaquinTime)/1000;;
+//      return Util.align2((int)time/60)+":"+Util.align2((int)time%60);
+//   }
 
    protected boolean isPixelTable() {
       return WENZOOM>=32;
@@ -1401,14 +1400,14 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       else gr.clearRect(0,0,w,h);
 
       // Compteur pour le taquin
-      if( aladin.view.flagTaquin ) {
-         gr.setFont(new Font("Helvetica",Font.BOLD,30));
-         gr.setColor(Color.red);
-         if( startTaquinTime==0L ) startTaquinTime=System.currentTimeMillis();
-         gr.drawString(getTaquinTime(),38,w/2+15);
-         drawBord(gr);
-         return;
-      }
+//      if( aladin.view.flagTaquin ) {
+//         gr.setFont(new Font("Helvetica",Font.BOLD,30));
+//         gr.setColor(Color.red);
+//         if( startTaquinTime==0L ) startTaquinTime=System.currentTimeMillis();
+//         gr.drawString(getTaquinTime(),38,w/2+15);
+//         drawBord(gr);
+//         return;
+//      }
 
       // Affichage du rectangle du zoom et des infos sur le champ
       if( !v.isFree() && !flagwen && !flagCut && rectzoom!=null ) {
