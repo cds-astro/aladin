@@ -266,8 +266,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
-   static final String WELCOME           = "Bienvenue sur "+TITRE+
-         " - "+getReleaseNumber();
+   static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
    static String COPYRIGHT         = "(c) 2017 Université de Strasbourg/CNRS - by CDS - Distributed under GNU GPL v3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
