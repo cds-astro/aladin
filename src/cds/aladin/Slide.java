@@ -22,6 +22,8 @@
 package cds.aladin;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.util.Vector;
 
@@ -390,6 +392,44 @@ public final class Slide {
       Grid.fillBG(g,x,y,Color.white);
       Grid.drawPolar(g, x, y, c);
    }
+   
+   // Affichage d'un label en diminuant la luminosité des séparateurs "/" le cas échéant
+   static protected void drawLabel( Graphics g, String label, int x, int y, Color fg) {
+      
+      // Pas de /, méthode rapide
+      if( label.indexOf('/')<0 ) {
+         g.setColor(fg);
+         g.drawString(label,x,y);
+         return;
+      }
+      
+      int lumin = fg.getBlue()+fg.getRed()+fg.getGreen();
+      Color c = lumin>255 ? fg.darker() : fg.brighter();
+      FontMetrics fm = g.getFontMetrics();
+      Font f = g.getFont();
+      Font f1 = f.deriveFont( f.getSize2D()-1);
+      Tok tok = new Tok(label,"/");
+      int w=0;
+      int i=1;
+      while( tok.hasMoreTokens() ) {
+         String s = tok.nextToken();
+         w = fm.stringWidth(s);
+         g.setFont(f);
+         g.setColor( s.equals("P") && i==2 ? c : fg );
+         g.drawString(s, x, y);
+         x+=w+2;
+         i++;
+         
+         if( tok.hasMoreTokens() ) {
+            g.setFont( f1 );
+            g.setColor( c );
+            g.drawString("/",x,y);
+            x+= fm.stringWidth("/")+2;
+         }
+      }
+      
+      g.setFont(f);
+   }
 
    // Dessine le blink d'etat vert/blanc
    static protected void drawBlink(Graphics g, int x,int y) {
@@ -703,8 +743,8 @@ public final class Slide {
             int px1 = px;//4;
             x = dx+xLabel;
             
+            Color fg=p.c;
             try {
-               Color fg=p.c;
                if( (labelBG==Aladin.COLOR_STACK_HIGHLIGHT
                      || labelBG==Aladin.COLOR_STACK_SELECT) && (p.c.equals(Couleur.DC[2])) ) fg=Aladin.COLOR_GREEN;
                else if( Aladin.DARK_THEME && labelBG==Aladin.COLOR_STACK_SELECT && (p.c.equals(Couleur.DC[1])) ) fg=Color.black;
@@ -714,9 +754,10 @@ public final class Slide {
                   if( p.c==null || p.c.equals(Color.black) ) fg=Aladin.COLOR_CONTROL_FOREGROUND;
                }
                if( inLabel ) fg=fg.brighter();
-               g.setColor(fg);
+//               g.setColor(fg);
             } catch( Exception e) {}
-            g.drawString(p.getLabel(),x,py-1);
+            drawLabel(g,p.getLabel(), x,py-1,fg);
+//            g.drawString(p.getLabel(),x,py-1);
             
            //le voyant d'état
             if( mode!=DRAG ) {

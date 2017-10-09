@@ -95,7 +95,7 @@ public final class FrameMesure extends JFrame  {
       a.mesure.setPreferredSize(new Dimension(100,150));
       a.mesure.setMinimumSize(new Dimension(100,0));
       a.mesure.setReduced(false);
-      if( !Aladin.OUTREACH ) a.search.hideSearch(false);
+      /* if( !Aladin.OUTREACH ) */ a.search.hideSearch(false);
       a.getContentPane().validate();
 //      a.search.setIcon();
       a.f.validate(); // pour maj frame principale sous Mac

@@ -835,8 +835,9 @@ public class PlanBG extends PlanImage {
    protected void suite() {
 
       if( this.label==null || this.label.trim().length()==0) setLabel( id!=null ? id : survey);
-      int defaultProjType = Aladin.BETA ? aladin.projSelector.getProjType() 
-               : aladin.configuration.getProjAllsky();
+      int defaultProjType = aladin.projSelector.getProjType();
+//      int defaultProjType = Aladin.BETA ? aladin.projSelector.getProjType() 
+//               : aladin.configuration.getProjAllsky();
       if( co==null  ) {
          flagNoTarget=true;
          co = new Coord(0,0);
@@ -848,10 +849,8 @@ public class PlanBG extends PlanImage {
       objet = co+"";
 
       // On va garder le même type de projection que le plan de base.
-      if( Aladin.BETA ) {
-         Plan base = aladin.calque.getPlanBase();
-         if( base instanceof PlanBG ) defaultProjType = base.projd.t;
-      }
+//      Plan base = aladin.calque.getPlanBase();
+//      if( base instanceof PlanBG ) defaultProjType = base.projd.t;
 
       // Choix spécifique d'une projection et d'un sens pour la longitude dans le cas
       // d'une planète
@@ -864,7 +863,7 @@ public class PlanBG extends PlanImage {
             projection,Calib.FK5);
 
       p.frame = getCurrentFrameDrawing();
-      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
+//      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
       
       typeCM = aladin.configuration.getCMMap();
@@ -927,7 +926,7 @@ public class PlanBG extends PlanImage {
          double z = taille/radius;
          initZoom = aladin.calque.zoom.getNearestZoomFct(z);
       }
-      if( initZoom==-1 ) initZoom = c==null ? 1./(Aladin.OUTREACH?64:32) : 16;
+      if( initZoom==-1 ) initZoom = c==null ? 1./(/*Aladin.OUTREACH?64:*/32) : 16;
       aladin.trace(4,"PlanBG.setDefaultZoom("+c+","+Coord.getUnit(radius)+") => zoom = "+initZoom);
    }
 
@@ -3327,7 +3326,7 @@ public class PlanBG extends PlanImage {
       if( pixMode!=PIX_ARGB && pixMode!=PIX_RGB && video==VIDEO_INVERSE ) {
          m=0;
          g.setStroke(new BasicStroke(2));
-         g.setColor( new Color(210,220,255) );
+//         g.setColor( new Color(210,220,255) );
          if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
             g.drawOval(x-m,y-m,(rayon+m)*2,(rayon+m)*2);
          } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {

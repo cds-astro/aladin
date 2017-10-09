@@ -3970,6 +3970,7 @@ public class Calque extends JPanel implements Runnable {
    protected boolean isBGAlreadyLoaded(String id) {
       for( Plan p : getPlans() ) {
          if( !(p instanceof PlanBG ) ) continue;
+         if( ((PlanBG)p).id==null ) continue;
          if( ((PlanBG)p).id.equals(id) ) return true;
       }
       return false;
@@ -4029,7 +4030,7 @@ public class Calque extends JPanel implements Runnable {
          zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();
-         if( Aladin.BETA ) aladin.directory.repaint();
+         aladin.directory.repaint();
          aladin.toolBox.toolMode();
       }
    }

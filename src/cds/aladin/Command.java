@@ -1009,19 +1009,19 @@ public final class Command implements Runnable {
       StringTokenizer st = new StringTokenizer(s,",(");
       String server = st.nextToken();
       if( server.equalsIgnoreCase("allsky") ) server="hips";   // pour compatibilité
-      if( !withServer || a.dialog.getServer(server)<0 
-            && (!Aladin.BETA || Aladin.BETA && !server.equalsIgnoreCase("HiPS"))) {
+      if( !withServer || a.dialog.getServer(server)<0 && !server.equalsIgnoreCase("HiPS")) {
+//            && (!Aladin.BETA || Aladin.BETA && !server.equalsIgnoreCase("HiPS"))) {
 
          // Si la vue courante est vide il faut prendre
          // la liste des serveurs par defaut
          if( a.view.getCurrentView().isFree() /* || a.isFullScreen() */ ) {
             t=cmd;
-            if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"CDS/P/DSS2/color\")";
-            else {
+//            if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"CDS/P/DSS2/color\")";
+//            else {
                s=a.configuration.getServer();
                String p = a.configuration.getSurvey();
                if( p!=null && p.trim().length()>0 ) s=s+"("+p+")";
-            }
+//            }
 
             String rep = a.view.sesameResolve(cmd,true);
             if( rep==null ) {
@@ -1226,14 +1226,18 @@ public final class Command implements Runnable {
       String radius = radiusX.toString();
 
       if( isTargetRequired(serversX) ) {
+         boolean flagTargetChange=true;
          if( target.length()==0 ) {
             if( syncMode==SYNCON ) sync();
             target=a.dialog.getDefaultTargetJ2000();
+            flagTargetChange=false;
          }
          if( target.length()==0 ) {
             Aladin.warning(a.chaine.getString("WNEEDOBJ"),1);
             return null;
-         } else a.dialog.setDefaultTarget(targetX.toString() );  // Attention 
+         } else {
+            if( flagTargetChange ) a.dialog.setDefaultTarget(targetX.toString() );
+         }
 
          // On verifie immediatement que l'identificateur est bien
          // reconnu par Simbad
@@ -1265,7 +1269,7 @@ public final class Command implements Runnable {
          Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] criteria=["+criteria+"] target=["+target+"] radius=["+radius+"])");
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
 
-         if( Aladin.BETA && server.equalsIgnoreCase("hips") ) {
+         if( server.equalsIgnoreCase("hips") ) {
             int n=a.directory.createPlane(target,radius,criteria,label,null);
             if( n!=-1 ) {
                a.calque.getPlan(n).setBookmarkCode("get "+server+(criteria.length()>0?"("+criteria+")":"")+" $TARGET $RADIUS");
@@ -2992,7 +2996,7 @@ public final class Command implements Runnable {
             }
             i++;
          } catch( Exception e ) {
-            if( a.levelTrace==3 ) e.printStackTrace();
+            if( a.levelTrace>=3 ) e.printStackTrace();
          }
       }
       return rep.toString();
@@ -4547,7 +4551,7 @@ public final class Command implements Runnable {
                "mv Magn Fold;" +
                "set Fold scope=local;" +
                "rm USNO;" +
-               "XMatch = xmatch Simbad NED 45;" +
+               "XMatch = xmatch CDS/Simbad NED 45;" +
                "addcol XMatch,B-V,${B_tab1}-${V_tab1};" +
                "select XMatch;" +
                "search -B-V=\"\";" +
@@ -4556,10 +4560,10 @@ public final class Command implements Runnable {
                "rm XMatch;" +
                "get Fov(HST);" +
                "mv HST Fold;" +
-               "export Simbad Cat.xml;" +
+               "export CDS/Simbad Cat.xml;" +
                "export NED Cat1.tsv;" +
                "export Crop Img.jpg;" +
-               "rm Simbad NED Crop;" +
+               "rm CDS/Simbad NED Crop;" +
                "load Img.jpg;" +
                "grey Img.jpg;" +
                "rm A2;" +
@@ -4579,7 +4583,7 @@ public final class Command implements Runnable {
                "zoom 15';" +
                "rm B1;" +
                "set Melling* opacity=30;" +
-               "get hips(\"Simbad density\");" +
+//               "get hips(\"Simbad density\");" +
                "set proj=CARTESIAN;" +
                "cm eosb reverse log;" +
                "M1;" +

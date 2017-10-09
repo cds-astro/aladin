@@ -735,6 +735,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             // DESORMAIS LE TEXTE FORCE EST MIS A LA VISUALISATION DES MESURES (A FAIRE)
 //            String text = (refText != null) ? refText : value[i];
             String text = value[i];
+            
+            // Les TABs ne peuvent être présents dans les valeurs individuelles (au risque de ne plus pouvoir relire les données
+            // correctement). Je les remplace par un espace
+            if( text.indexOf('\t')>=0 ) text=text.replace("\t"," ");
 
             line.append('\t');
             if( tag != null ) {

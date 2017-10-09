@@ -21,8 +21,7 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.io.IOException;
+import java.awt.Dimension;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,7 +32,10 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import cds.tools.MultiPartPostOutputStream;
 
@@ -85,7 +87,7 @@ public class ServerSWarp extends Server  {
       setBackground(Aladin.BLUE);
       setLayout(null);
       setFont(Aladin.PLAIN);
-      int y=Aladin.OUTREACH ? YOUTREACH : 50;
+      int y=/* Aladin.OUTREACH ? YOUTREACH : */ 50;
       int X=150;
 
       // Le titre

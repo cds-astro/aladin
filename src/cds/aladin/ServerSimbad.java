@@ -42,8 +42,8 @@ public class ServerSimbad extends Server  {
    protected double maxRadius=60; // Rayon maximal autorisé par défaut
   
    // retourne le tagGLU à utiliser en fonction du choix du serveur test ou non
-   private String getTagGlu() {
-      if( TESTSERVER && !testServer.isSelected() ) return tagGlu.substring(0,tagGlu.length()-1);
+   private String getTagGlu(boolean testServer) {
+      if( TESTSERVER && !testServer ) return tagGlu.substring(0,tagGlu.length()-1);
       return tagGlu;
    }
    
@@ -213,7 +213,7 @@ public class ServerSimbad extends Server  {
       setBackground(Aladin.BLUE);
       setLayout(null);
       setFont(Aladin.PLAIN);
-      int y=Aladin.OUTREACH ? YOUTREACH : 50;
+      int y=/* Aladin.OUTREACH ? YOUTREACH : */ 50;
       int X=150;
 
       // Le titre
@@ -279,7 +279,7 @@ public class ServerSimbad extends Server  {
          double rm = getRM(radius);
          target = resolveTarget(target);
          String s = Glu.quote(target)+" "+Glu.quote(rm+"");
-         if( (u=aladin.glu.getURL(getTagGlu(),s))==null ) return null;
+         if( (u=aladin.glu.getURL(getTagGlu(false),s))==null ) return null;
          infoUrl.append(u+"");
          return getMetaDataForCat(u);
       } catch( Exception e ) {
@@ -305,10 +305,13 @@ public class ServerSimbad extends Server  {
       
       String s = Glu.quote(target)+" "+Glu.quote(radius);
 
-//      if( label==null ) label=getNom();
       label = getDefaultLabelIfRequired(label,"CDS/Simbad");
 
-      if( (u=aladin.glu.getURL(getTagGlu(),s))==null ) {
+      // S'agit-il d'un accès au Simbad Live ?
+      boolean cdstest=false;
+      if( criteria!=null && criteria.indexOf("live")>=0 || testServer!=null && testServer.isSelected() ) cdstest=true;
+      
+      if( (u=aladin.glu.getURL(getTagGlu(cdstest),s))==null ) {
          ball.setMode(Ball.HS);
          Aladin.warning(this,WERROR,1);
          return -1;

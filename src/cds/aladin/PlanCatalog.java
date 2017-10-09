@@ -311,6 +311,9 @@ public class PlanCatalog extends Plan {
       }
 
       if( getNbTable()>1 ) aladin.calque.splitCatalog(this);
+      
+      setActivated(true);
+      aladin.view.setRepere(this);
 
      callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.SUCCESS, null));
      return true;

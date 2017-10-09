@@ -92,6 +92,7 @@ public class ServerFile extends Server implements XMLConsumer {
    protected void init() {
       type = APPLI;
       aladinLogo = "MyDataLogo.gif";
+      aladinLabel = "file";
    }
 
 

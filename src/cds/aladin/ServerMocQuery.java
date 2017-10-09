@@ -88,7 +88,7 @@ public class ServerMocQuery extends Server  {
       setBackground(Aladin.BLUE);
       setLayout(null);
       setFont(Aladin.PLAIN);
-      int y=Aladin.OUTREACH ? YOUTREACH : 50;
+      int y=/* Aladin.OUTREACH ? YOUTREACH : */ 50;
       int X=150;
 
       // Le titre

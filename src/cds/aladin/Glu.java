@@ -141,18 +141,18 @@ public final class Glu implements Runnable {
    protected static Vector vGluApp;
 
    /** Mémorisation des HiPS définis par le dictionnaire GLU */
-   protected static Vector<TreeObjDir> vHips;
+//   protected static Vector<TreeObjDir> vHips;
 
    /** Mémorisation des items des Tree outreach définis par le dictionnaire GLU */
-   protected static Vector vGluCategory;
+//   protected static Vector vGluCategory;
    
    protected TapManager tapManager;
    
    /** Tri des listes */
    protected void tri() {
       Comparator c = TreeObj.getComparator();
-      Collections.sort(vHips,c);
-      Collections.sort(vGluCategory,c);
+//      Collections.sort(vHips,c);
+//      Collections.sort(vGluCategory,c);
 
       c = Server.getComparator();
       //      Collections.sort(vGluApp,c);
@@ -171,8 +171,8 @@ public final class Glu implements Runnable {
       aladinDicT   = new Hashtable();
       vGluServer   = new Vector(50);
       vGluApp      = new Vector(10);
-      vHips       = new Vector(10);
-      vGluCategory = new Vector(10);
+//      vHips       = new Vector(10);
+//      vGluCategory = new Vector(10);
       this.tapManager = TapManager.getInstance(aladin);
 
       // Peut être un site GLU défini dans la configuration utilisateur
@@ -258,7 +258,7 @@ public final class Glu implements Runnable {
          d = aladin.dialog.getSize();
       } catch( Exception e ) { p=null; }
       VizieRQuery.resetKeywords();
-      aladin.hipsReload();
+//      aladin.hipsReload();
 
       aladin.dialog = new ServerDialog(aladin);
       if( showLastGlu ) {
@@ -799,40 +799,40 @@ public final class Glu implements Runnable {
       return (i < a.length) ? new String(a, i + 1, a.length - i - 1) : s;
    }
 
-   /**
-    * Retourne l'indice du HiPS dans la liste des HiPS connus
-    * @param A l'identificateur du HiPS à chercher
-    * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
-    * @param mode 0 - match exact
-    *             1 - substring sur label
-    *             2 - match exact puis substring sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
-    *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
-    * @return l'indice du ciel dans Glu.vHips, sinon -1
-    */
-   protected int findHips(String A) { return findHips(A,0); }
-   protected int findHips(String A,int mode) {
-      for( int i = vHips.size()-1; i >=0; i-- ) {
-         TreeObjDir gs = vHips.elementAt(i);
-         if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
-         if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
-         if( mode==2 ) {
-            if( gs.internalId!=null && gs.internalId.endsWith(A) ) return i;
-//            if( Util.indexOfIgnoreCase(gs.internalId, A)>=0 ) return i;
-
-            int offset = gs.label.lastIndexOf('/');
-            if( A.equals(gs.label.substring(offset+1)) ) return i;
-         }
-      }
-
-      if( mode==2 ) {
-         for( int i = vHips.size()-1; i >=0; i-- ) {
-            TreeObjDir gs = vHips.elementAt(i);
-            int offset = gs.label.lastIndexOf('/');
-            if( Util.indexOfIgnoreCase(gs.label.substring(offset+1),A)>=0 ) return i;
-         }
-      }
-      return -1;
-   }
+//   /**
+//    * Retourne l'indice du HiPS dans la liste des HiPS connus
+//    * @param A l'identificateur du HiPS à chercher
+//    * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
+//    * @param mode 0 - match exact
+//    *             1 - substring sur label
+//    *             2 - match exact puis substring sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
+//    *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
+//    * @return l'indice du ciel dans Glu.vHips, sinon -1
+//    */
+//   protected int findHips(String A) { return findHips(A,0); }
+//   protected int findHips(String A,int mode) {
+//      for( int i = vHips.size()-1; i >=0; i-- ) {
+//         TreeObjDir gs = vHips.elementAt(i);
+//         if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
+//         if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
+//         if( mode==2 ) {
+//            if( gs.internalId!=null && gs.internalId.endsWith(A) ) return i;
+////            if( Util.indexOfIgnoreCase(gs.internalId, A)>=0 ) return i;
+//
+//            int offset = gs.label.lastIndexOf('/');
+//            if( A.equals(gs.label.substring(offset+1)) ) return i;
+//         }
+//      }
+//
+//      if( mode==2 ) {
+//         for( int i = vHips.size()-1; i >=0; i-- ) {
+//            TreeObjDir gs = vHips.elementAt(i);
+//            int offset = gs.label.lastIndexOf('/');
+//            if( Util.indexOfIgnoreCase(gs.label.substring(offset+1),A)>=0 ) return i;
+//         }
+//      }
+//      return -1;
+//   }
 
    //   /** Ajout ou remplacement d'un glusky */
    //   public void addGluSky(TreeNodeAllsky gsky) {
@@ -854,11 +854,11 @@ public final class Glu implements Runnable {
    //      return true;
    //   }
 
-   /** Retourne la description du ciel d'indice i */
-   protected TreeObjDir getHips(int i) {
-      TreeObjDir gSky = vHips.elementAt(i);
-      return gSky;
-   }
+//   /** Retourne la description du ciel d'indice i */
+//   protected TreeObjDir getHips(int i) {
+//      TreeObjDir gSky = vHips.elementAt(i);
+//      return gSky;
+//   }
 
    /**
     * Retourne l'indice du serveur GLU dans la liste des serveurs GLU connus
@@ -946,13 +946,13 @@ public final class Glu implements Runnable {
             out.writeBytes(vo.getGluDic());
          }
 
-         // On en profite pour ajouter les GSky (vGluSky)
-         e = vHips.elements();
-         while( e.hasMoreElements() ) {
-            TreeObjDir gs = (TreeObjDir)e.nextElement();
-            if( !gs.isLocalDef()  ) continue;
-            out.writeBytes(gs.getGluDic());
-         }
+//         // On en profite pour ajouter les GSky (vGluSky)
+//         e = vHips.elements();
+//         while( e.hasMoreElements() ) {
+//            TreeObjDir gs = (TreeObjDir)e.nextElement();
+//            if( !gs.isLocalDef()  ) continue;
+//            out.writeBytes(gs.getGluDic());
+//         }
 
          aladin.trace(3,file+" successfully saved");
          return true;
@@ -1023,47 +1023,47 @@ public final class Glu implements Runnable {
       return menu;
    }
 
-   /**
-    * Génère la liste des menus HiPS décrits par le GLU
-    */
-   protected String[] getHipsMenu() {
-      String menu[] = new String[ vHips.size() ];
-      Enumeration e = vHips.elements();
-      for( int i=0; e.hasMoreElements(); i++ ) {
-         TreeObjDir ga = (TreeObjDir)e.nextElement();
-         menu[i] = ga.path!=null ? ga.path : ga.label;
-      }
-      return menu;
-   }
+//   /**
+//    * Génère la liste des menus HiPS décrits par le GLU
+//    */
+//   protected String[] getHipsMenu() {
+//      String menu[] = new String[ vHips.size() ];
+//      Enumeration e = vHips.elements();
+//      for( int i=0; e.hasMoreElements(); i++ ) {
+//         TreeObjDir ga = (TreeObjDir)e.nextElement();
+//         menu[i] = ga.path!=null ? ga.path : ga.label;
+//      }
+//      return menu;
+//   }
 
 
-   /**
-    * Memorisation dans le Vecteur vHiPS d'un HiPS défini au moyen du
-    * dictionnaire GLU propre a Aladin
-    */
-   private void memoHips(boolean withLog,String actionName,String id,String aladinLabel,String aladinMenuNumber,String url,String description,
-         String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,
-         String aladinSurvey,String aladinHpxParam,String skyFraction,String origin) {
-
-      // Pour éviter les doublons
-      int find = findHips(actionName);
-      if( find>=0 && withLog ) {
-         System.err.println("HiPS [" + actionName + ":" + description + "] redefined => Aladin will use the last one (remote)");
-      }
-
-      // Construction du path pour l'arbre (noeud terminal inclus)
-      String s = aladinLabel.replace("/","\\/");
-      String path = aladinTree==null ? s : aladinTree+"/"+s;
-      
-      // Ajout de l'origine en préfixe de l'id
-      if( origin!=null && !id.startsWith(origin) ) id = origin+"/"+id;
-
-      TreeObjDir tn =  new TreeObjDir(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
-            description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam,skyFraction);
-
-      if( find<0 ) vHips.addElement(tn);
-      else vHips.setElementAt(tn,find);
-   }
+//   /**
+//    * Memorisation dans le Vecteur vHiPS d'un HiPS défini au moyen du
+//    * dictionnaire GLU propre a Aladin
+//    */
+//   private void memoHips(boolean withLog,String actionName,String id,String aladinLabel,String aladinMenuNumber,String url,String description,
+//         String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,
+//         String aladinSurvey,String aladinHpxParam,String skyFraction,String origin) {
+//
+//      // Pour éviter les doublons
+//      int find = findHips(actionName);
+//      if( find>=0 && withLog ) {
+//         System.err.println("HiPS [" + actionName + ":" + description + "] redefined => Aladin will use the last one (remote)");
+//      }
+//
+//      // Construction du path pour l'arbre (noeud terminal inclus)
+//      String s = aladinLabel.replace("/","\\/");
+//      String path = aladinTree==null ? s : aladinTree+"/"+s;
+//      
+//      // Ajout de l'origine en préfixe de l'id
+//      if( origin!=null && !id.startsWith(origin) ) id = origin+"/"+id;
+//
+//      TreeObjDir tn =  new TreeObjDir(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
+//            description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam,skyFraction);
+//
+//      if( find<0 ) vHips.addElement(tn);
+//      else vHips.setElementAt(tn,find);
+//   }
 
 //   /**
 //    * Memorisation dans le Vecteur vHiPS d'un HiPS décrit par ses properties
@@ -1078,23 +1078,23 @@ public final class Glu implements Runnable {
 //      else vHips.setElementAt(tn,find);
 //   }
 
-   /** Memorisation des noeuds pour l'arbre d'outreach (cf TreeServer)
-    * Si ID déjà existant, on remplace le précédent
-    */
-   private void memoTree(String actionName,String description,String aladinTree,String url,
-         String docUser, String aladinUrlDemo) {
-      // POUR LE MOMENT ON NE TRAITE QUE LES TREE AVEC WP5:/ EN PREFIXE
-      if( aladinTree==null || !aladinTree.startsWith("WP5:/") ) return;
-      aladinTree=aladinTree.substring(5);
-
-      Enumeration e=vGluCategory.elements();
-      while( e.hasMoreElements() ) {
-         TreeObj n = (TreeObj)e.nextElement();
-         if( n.id.equals(actionName) ) { vGluCategory.remove(n); break; }
-      }
-      vGluCategory.addElement(new TreeObjCategory(aladin,actionName,description,
-            aladinTree,url,docUser,aladinUrlDemo));
-   }
+//   /** Memorisation des noeuds pour l'arbre d'outreach (cf TreeServer)
+//    * Si ID déjà existant, on remplace le précédent
+//    */
+//   private void memoTree(String actionName,String description,String aladinTree,String url,
+//         String docUser, String aladinUrlDemo) {
+//      // POUR LE MOMENT ON NE TRAITE QUE LES TREE AVEC WP5:/ EN PREFIXE
+//      if( aladinTree==null || !aladinTree.startsWith("WP5:/") ) return;
+//      aladinTree=aladinTree.substring(5);
+//
+//      Enumeration e=vGluCategory.elements();
+//      while( e.hasMoreElements() ) {
+//         TreeObj n = (TreeObj)e.nextElement();
+//         if( n.id.equals(actionName) ) { vGluCategory.remove(n); break; }
+//      }
+//      vGluCategory.addElement(new TreeObjCategory(aladin,actionName,description,
+//            aladinTree,url,docUser,aladinUrlDemo));
+//   }
    
    
    // Retourne la plus grande valeur d'une hashtable (sur des entiers)
@@ -1561,7 +1561,7 @@ public final class Glu implements Runnable {
       String seeAction = null; // Dans le cas d'indirection
       String institute = null;// Mention de l'institut d'origine
       String aladinLogo = null;// Le nom du logo associé
-      String aladinTree = null;// L'arborescence dans le cas d'un Tree Outreach (ex: WP5:/Nebulae/HII)
+//      String aladinTree = null;// L'arborescence dans le cas d'un Tree Outreach (ex: WP5:/Nebulae/HII)
       String aladinUrlDemo = null;//Url renvoyant un exemple (catalog ou image)
       String aladinProtocol = null;//Protocole sous-jacent (TAP, CONESEARCH...)
       Vector recI = new Vector(); // Dans le cas d'indirections
@@ -1588,7 +1588,7 @@ public final class Glu implements Runnable {
       boolean flagLabel = false; // true si on a un champ %Aladin.Label
       String aladinProfile=null;  // indications d'usage (undergraduate, beta, 5.9+...)
       boolean flagPlastic = false; // true si on a un champ %Aladin.Plastic
-      boolean flagGluSky = false;  // true si on a "hpx" dans le profile => GluSky background
+//      boolean flagGluSky = false;  // true si on a "hpx" dans le profile => GluSky background
       boolean flagTapServices = false;
       boolean flagTapUpload = false;
 
@@ -1640,7 +1640,7 @@ public final class Glu implements Runnable {
             }
 
             if( isKey(name,"Aladin.Menu",true) )  aladinMenu = subCR(value);
-            else if( isKey(name,"Aladin.Tree",true) )  aladinTree=subCR(value);
+//            else if( isKey(name,"Aladin.Tree",true) )  aladinTree=subCR(value);
             else if( isKey(name,"Aladin.UrlDemo") )    aladinUrlDemo=subCR(value);
             else if( isKey(name,"Aladin.Protocol") )   aladinProtocol=subCR(value);
             else if( isKey(name,"SkyFraction") )       skyFraction=subCR(value);
@@ -1655,7 +1655,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"Dir") )               dir=value;
             else if( isKey(name,"Aladin.Activated") )  aladinActivated=subCR(value);
             else if( isKey(name,"Aladin.Survey") )     aladinSurvey=subCR(value);
-            else if( isKey(name,"Aladin.HpxParam") )   { aladinHpxParam=subCR(value); flagGluSky=true; }
+//            else if( isKey(name,"Aladin.HpxParam") )   { aladinHpxParam=subCR(value); flagGluSky=true; }
             else if( isKey(name,"Aladin.Bookmarks") )  aladinBookmarks=subCR(value);
             else if( isKey(name,"System") )            system=subCR(value);
             else if( isKey(name,"M.C",true) || isKey(name,"Copyright",true) )  copyright=subCR(value);
@@ -1683,17 +1683,17 @@ public final class Glu implements Runnable {
                }
 
                try {
-                  if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
+                  if( hasValidProfile(aladinProfile,null/*aladinTree*/,flagPlastic) && distribAladin ) {
                      if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                     else if( flagGluSky && !Aladin.BETA ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
-                           aladinSurvey,aladinHpxParam,skyFraction,origin);
-                     else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
+//                     else if( flagGluSky && !Aladin.BETA ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+//                           aladinSurvey,aladinHpxParam,skyFraction,origin);
+//                     else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
                            copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
                      else if (flagTapServices && flagLabel) {
  						tapManager.addTapService(actionName, aladinLabel,url,description);
  					 }
-                     else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
+                     else if( flagLabel && paramDescription.size()>0 ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                              aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
                              resultDataType,institute,aladinFilter,aladinLogo,dir,localFile, localFile?system:null,record,aladinProtocol,
                              tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams, flagTapUpload);
@@ -1706,8 +1706,10 @@ public final class Glu implements Runnable {
             	   }
                }
                distribAladin = !testDomain;
-               flagGluSky=flagPlastic=flagLabel=flagTapServices = false;
-               aladinUrlDemo=aladinTree=aladinProfile=aladinProtocol=null;
+               flagPlastic=flagLabel=flagTapServices = false;
+//               flagGluSky=false;
+               aladinUrlDemo=aladinProfile=aladinProtocol=null;
+//               aladinTree=null;
 
                // On mémorise le filtre pour le serveurs non GLU
                if( !flagLabel ) putAladinFilter(actionName,aladinFilter);
@@ -1796,7 +1798,7 @@ public final class Glu implements Runnable {
             } else if( name.equals("Aladin.Profile") ) {
                aladinProfile=value;
                flagLabel = true;
-               flagGluSky |= value.indexOf("hpx")>=0;
+//               flagGluSky |= value.indexOf("hpx")>=0;
             } else if( name.equals("Aladin.VOLabel") ) {
                aladinLabel = subCR(value);
                flagPlastic = true;
@@ -1859,17 +1861,17 @@ public final class Glu implements Runnable {
                aladinDic.put(aST.nextToken(), "%I " + seeAction);
             }
          }
-         if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
+         if( hasValidProfile(aladinProfile,null/*aladinTree*/,flagPlastic) && distribAladin ) {
             if( aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-            else if( flagGluSky ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
-                  aladinSurvey,aladinHpxParam,skyFraction,origin);
-            else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
+//            else if( flagGluSky ) memoHips(withLog,actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+//                  aladinSurvey,aladinHpxParam,skyFraction,origin);
+//            else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
                   copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
             else if (flagTapServices && flagLabel) {
 					tapManager.addTapService(actionName, aladinLabel,url,description);
 			}
-            else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
+            else if( flagLabel && paramDescription.size()>0 ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                   aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
                   resultDataType,institute,aladinFilter,aladinLogo,dir,localFile,localFile?system:null,record,aladinProtocol, 
                   tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams, flagTapUpload);

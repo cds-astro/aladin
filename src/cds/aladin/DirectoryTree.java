@@ -373,6 +373,7 @@ public class DirectoryTree extends JTree {
             else if( isIn== 1 ) fg = Aladin.COLOR_GREEN;
             if( aladin.directory.iconInside.isActivated() 
                   && !node.isLeaf() && n.nb!=n.nbRef ) fg = Aladin.COLOR_CONTROL_FOREGROUND;
+//            if( aladin.directory.iconInside.isActivated() ) fg = Aladin.COLOR_GREEN;
             if( flagHighLighted || selected ) fg = fg.brighter();
             c.setForeground( fg );
 
@@ -384,8 +385,8 @@ public class DirectoryTree extends JTree {
                icon = getIcon( to.internalId,to.isColored() ? 1 : 0);
                if( icon==null ) icon = getIcon("defaut",0);
             } else if( !node.isLeaf() ) {
-               if( n.path.endsWith("/CDS VizieR") ) icon=getIcon( "FolderVizieR", 0);
-               else icon=getIcon( "Folder", 0);
+               /* if( n.path.endsWith("/VizieR") ) icon=getIcon( "FolderVizieR", 0);
+               else */ icon=getIcon( "Folder", 0);
             }
             if( icon!=null ) {
                icon.setColor( n.isInStack() );

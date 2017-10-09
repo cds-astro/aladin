@@ -1925,7 +1925,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
 
-      if( tool==ToolBox.SELECT && !Aladin.OUTREACH && !aladin.calque.hasSelectableObjects() ) {
+      if( tool==ToolBox.SELECT /* && !Aladin.OUTREACH */ && !aladin.calque.hasSelectableObjects() ) {
 
          // En multiview, on garde la possibilité de déplacer les vues en attrapant
          // leur bord
@@ -6936,7 +6936,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * détecter un clic dedans */
    private void drawLanguette(Graphics g) {
       rLanguette = null;
-      if( !Aladin.BETA ) return;
+//      if( !Aladin.BETA ) return;
       if( aladin.splitHiPSWidth.getCompSize()>10 ) return;
       int nb = view.getModeView();
       int ok = nb==ViewControl.MVIEW1 ? 0 : nb==ViewControl.MVIEW2C ? 1 : nb==ViewControl.MVIEW2L ? 0 
@@ -7015,7 +7015,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          int x;
 
          // Affichage de la valeur du pixel
-         if( !Aladin.OUTREACH && pixel!=null && pixel.length()>0 ) {
+         if( /* !Aladin.OUTREACH && */ pixel!=null && pixel.length()>0 ) {
             if( pixel.indexOf("unknown")>=0 ) return;
             g.setFont(Aladin.BOLD);
             int len = pixel.charAt(0)=='R' ? 150 : g.getFontMetrics().stringWidth(pixel);

@@ -56,19 +56,18 @@ public class ImageMaker {
       // Generation d'un PlanBG de travail
       PlanBG p = new PlanBGStatic(aladin, label, url);
 
-//      ViewSimpleStatic vs = (ViewSimpleStatic) aladin.view.getCurrentView();
+      // Génération de la vue de travail
       ViewSimpleStatic vs = new ViewSimpleStatic(aladin);
       ((ViewStatic)aladin.view).setViewSimple(vs);
       vs.setViewParam(p, width,height, c,radius);
 
-      // Il me faut un BufferImage de travail
+      // Il me faut un BufferImage de sortie
       BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
       Graphics2D g = (Graphics2D) img.getGraphics();
 
       // L'arrière fond
       p.drawBackground(g, vs);
 
-      // Génération d'une vue de travail
       // Dessin de l'image de fond
       p.drawLosangesNow(g, vs);
 
@@ -82,7 +81,7 @@ public class ImageMaker {
 //      vs.drawSize(g,0, 0);
 //      vs.drawNE(g,p.projd,0, 0);
 
-      // Je génère le flux de l'image finale
+      // Je publie le flux de l'image finale
       ImageIO.write(img, fmt, output);
    }
 

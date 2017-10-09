@@ -687,7 +687,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne les bookmarks particuliers, null si aucun */
    public String getBookmarks() {
-      if( Aladin.OUTREACH ) return null;
+//      if( Aladin.OUTREACH ) return null;
       return get(BOOKMARKS);
    }
 
@@ -801,7 +801,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne l'indice de la frame mémorisée par l'utilisateur, ICRS par défaut */
    protected int getFrame() {
-      if( Aladin.OUTREACH ) return Localisation.ICRS;
+//      if( Aladin.OUTREACH ) return Localisation.ICRS;
       try {
          String frame = get(FRAME);
          int i = Util.indexInArrayOf(frame, Localisation.REPERE);
@@ -811,7 +811,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
    
    protected String getProj() { 
-      if( Aladin.OUTREACH ) return "Sinus";
+//      if( Aladin.OUTREACH ) return "Sinus";
       String s = get(PROJALLSKY);
       if( s==null ) return "Aitoff";
       else if( aladin.isCinema() ) return "Arc";
@@ -821,8 +821,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne le code Calib de la projection par défaut pour les plans
     * en mode all-sky */
    protected int getProjAllsky() {
-      if( Aladin.OUTREACH ) return Calib.SIN;
-      else if( aladin.isCinema() ) return Calib.ARC;
+//      if( Aladin.OUTREACH ) return Calib.SIN;
+      if( aladin.isCinema() ) return Calib.ARC;
       try {
          String proj = get(PROJALLSKY);
          int i= Projection.getAlaProjIndex(proj);
@@ -858,7 +858,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne true si l'absisse du SED est en longueur d'onde plutôt qu'en fréquence
     * - par défaut false */
    protected boolean getSEDWave() {
-      if( Aladin.OUTREACH ) return false;
+//      if( Aladin.OUTREACH ) return false;
       String flag = get(SEDWAVE);
       if( flag==null ) return false;
       return flag.equalsIgnoreCase("On");
@@ -866,7 +866,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne le flag de l'outil autodist - par défaut inactif */
    protected boolean getAutoDist() {
-      if( Aladin.OUTREACH ) return false;
+//      if( Aladin.OUTREACH ) return false;
       String flag = get(AUTODIST);
       if( flag==null ) return false;
       return flag.equalsIgnoreCase("On");
@@ -874,7 +874,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne le flag de Simbad Quick - par défaut inactif */
    protected boolean getSimbadFlag() {
-      if( Aladin.OUTREACH ) return true;
+//      if( Aladin.OUTREACH ) return true;
       String flag = get(SIMBAD);
       if( flag==null ) return false;
       return flag.equalsIgnoreCase("On");
@@ -882,7 +882,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne le flag de VizieRSED Quick - par défaut inactif */
    protected boolean getVizierSEDFlag() {
-      if( Aladin.OUTREACH ) return false;
+//      if( Aladin.OUTREACH ) return false;
       String flag = get(VIZIERSED);
       if( flag==null ) return false;
       return flag.equalsIgnoreCase("On");
@@ -890,7 +890,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */
    protected int getFrameDrawing() {
-      if( Aladin.OUTREACH ) return 3;   // GAL
+//      if( Aladin.OUTREACH ) return 3;   // GAL
       //      if( !Aladin.PROTO ) return 0;   // Pour le moment le frame par défaut pour les allsky n'est supporté qu'en mode PROTO
 
       if( setConfFrame ) return getFrame();   // L'utilisateur a modifié le cas par défaut via une commande setconf frame=
@@ -990,13 +990,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
 
 
-   /** Retourne le mode repéré dans le fichier de config */
-   protected boolean isOutReach() {
-      return false;    // A partir de la version 10
-//      String s = get(MOD);
-//      if( s!=null && s.charAt(0)=='u' ) return true;
-//      return false;
-   }
+//   /** Retourne le mode repéré dans le fichier de config */
+//   protected boolean isOutReach() {
+//      return false;    // A partir de la version 10
+////      String s = get(MOD);
+////      if( s!=null && s.charAt(0)=='u' ) return true;
+////      return false;
+//   }
 
    /** Retourne le mode repéré dans le fichier de config */
    protected boolean isBeginner() {
@@ -1313,7 +1313,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
 
    protected JPanel createPanel() {
-      if( Aladin.OUTREACH ) return createPanel1();
+//      if( Aladin.OUTREACH ) return createPanel1();
       JPanel p = new JPanel( new BorderLayout());
       JScrollPane sc = new JScrollPane(createPanel1());
       p.add(sc,BorderLayout.CENTER);
@@ -1342,11 +1342,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       for( int i=0; i<lang.length; i++ ) langChoice.addItem(lang[i].langue);
       (l = new JLabel(LANGUE)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel.add(langChoice,BorderLayout.CENTER);
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          b=new JButton(LANGCONTRIB); b.addActionListener(this);
          b.setMargin( new Insets(2,4,2,4));
          panel.add(b,BorderLayout.EAST);
-      }
+//      }
       PropPanel.addCouple(this, p, l, LANGUEH, panel, g, c, GridBagConstraints.EAST);
 
       addRemoteLanguage();
@@ -1358,11 +1358,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       modeChoice.addItem(UNDERGRADUATE);
       if( aladin.PROTO ) modeChoice.addItem(PREVIEW);
       (l = new JLabel(MODE)).setFont(l.getFont().deriveFont(Font.BOLD));
-      if( !aladin.setOUTREACH && !Aladin.BETA) {
-         PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);
-      }
+//      if( !aladin.setOUTREACH && !Aladin.BETA) {
+//         PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);
+//      }
 
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          (l = new JLabel(HELPS)).setFont(l.getFont().deriveFont(Font.BOLD));
          helpChoice = new JComboBox();
          helpChoice.addItem(ACTIVATED);
@@ -1378,7 +1378,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          sliderPanel.add( bxOpac  = new JCheckBox(SLIDEROPAC));
          sliderPanel.add( bxZoom  = new JCheckBox(SLIDERZOOM));
          PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
-      }
+//      }
 
       // Le Répertoire par défaut
       dir = new JTextField(35);
@@ -1400,9 +1400,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       panel.add(new JLabel(" - "+FRAMEALLSKYB));
       panel.add(frameAllskyChoice);
       //      }
-      if( !aladin.OUTREACH ) {
+//      if( !aladin.OUTREACH ) {
          PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
-      }
+//      }
 
       // La projection par défaut pour les allsky
       projAllskyChoice = new JComboBox( Projection.getAlaProj() );
@@ -1410,9 +1410,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       (l = new JLabel(PROJALLSKYB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(projAllskyChoice);
-      if( !aladin.OUTREACH ) {
+//      if( !aladin.OUTREACH ) {
          PropPanel.addCouple(this, p, l, PROJALLSKYH, panel, g, c, GridBagConstraints.EAST);
-      }
+//      }
 
       // Le mode pixel
       //      pixelChoice = new JComboBox();
@@ -1424,7 +1424,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       mapChoice = x = FrameColorMap.createComboCM();
       cutChoice = x=new JComboBox();   x.addItem("autocut"); x.addItem("noautocut");
       fctChoice = x=new JComboBox();   for( int i=0; i<PlanImage.TRANSFERTFCT.length; i++ ) x.addItem(PlanImage.TRANSFERTFCT[i]);
-      if( !aladin.OUTREACH ) {
+//      if( !aladin.OUTREACH ) {
          panel = new JPanel(new GridLayout(2,2,4,4));
          panel.add(new JLabel("- "+CMV,JLabel.LEFT)); panel.add(videoChoice);
          panel.add(new JLabel("  - "+CMM,JLabel.LEFT)); panel.add(mapChoice);
@@ -1432,7 +1432,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          panel.add(new JLabel("  - "+CMF,JLabel.LEFT)); panel.add(fctChoice);
          (l = new JLabel(CMB)).setFont(l.getFont().deriveFont(Font.BOLD));
          PropPanel.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
-      }
+//      }
       
       //      csvChoice = new JComboBox();
       //      for( int i=0; i<CSVITEM.length; i++ ) csvChoice.addItem(CSVITEMLONG[i]);
@@ -1445,10 +1445,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       filterChoice = new JComboBox();
       filterChoice.addItem(NOTACTIVATED);
       filterChoice.addItem(ACTIVATED);
-      if( !aladin.OUTREACH ) {
+//      if( !aladin.OUTREACH ) {
          (l = new JLabel(FILTERB)).setFont(l.getFont().deriveFont(Font.BOLD));
          PropPanel.addCouple(this, p, l, FILTERH, filterChoice, g, c, GridBagConstraints.EAST);
-      }
+//      }
 
      // Transparence des footprints
       transparencyChoice = new JComboBox();
@@ -1481,7 +1481,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       //      }
 
       // Le Web Browser
-      if( isUnixStandalone() && !aladin.OUTREACH ) {
+      if( isUnixStandalone() /* && !aladin.OUTREACH */ ) {
          PropPanel.addFilet(p, g, c);
          browser = new JTextField(30);
          (l = new JLabel(WEBB)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1491,20 +1491,20 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // Le survey par défaut
       serverTxt = new JTextField(10);
       surveyTxt = new JTextField(10);
-      if( !aladin.OUTREACH ) {
+//      if( !aladin.OUTREACH ) {
          JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
          p1.add(new JLabel(IMGS,JLabel.LEFT)); p1.add(serverTxt);
          p1.add(new JLabel(IMGC,JLabel.LEFT)); p1.add(surveyTxt);
          (l = new JLabel(IMGB)).setFont(l.getFont().deriveFont(Font.BOLD));
          PropPanel.addCouple(this, p, l, IMGH, p1, g, c,GridBagConstraints.EAST);
-      }
+//      }
 
       // Le GLU
       (l = new JLabel(REGB)).setFont(l.getFont().deriveFont(Font.BOLD));
       reload = b = new JButton(RELOAD);
       createGluChoice();
 
-      if( !aladin.OUTREACH ) {
+//      if( !aladin.OUTREACH ) {
 
          // Le glu
          panel = new JPanel(new BorderLayout(5,5));
@@ -1564,7 +1564,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          b.setMargin( new Insets(2,4,2,4));
          panel.add( b );
          PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
-      }
+//      }
 
       return p;
    }
@@ -1606,7 +1606,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       else modeChoice.setSelectedItem(s);
       modeItem = modeChoice.getSelectedIndex();
 
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          s = get(LOOKANDFEEL);
          if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
          if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
@@ -1615,7 +1615,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          s = get(LOOKANDFEELTHEME);
          if( s!=null ) themeChoice.setSelectedItem("classic");
          else themeChoice.setSelectedIndex(0);
-      }
+//      }
 
       //      s = get(PIXEL);
       //      if( s == null || s.charAt(0)!='8' ) pixelChoice.setSelectedIndex(0);
@@ -1694,7 +1694,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       s = get(TRANSLEVEL);
       if( s==null ) transparencyLevel.setValue(15);
 
-      if( isUnixStandalone() && !Aladin.OUTREACH ) {
+      if( isUnixStandalone() /* && !Aladin.OUTREACH */ ) {
          s = get(BROWSER);
          if( s == null ) s = "";
          browser.setText(s);
@@ -1848,7 +1848,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( aladin.splitZoomWidth!=null ) {
          n = aladin.splitZoomWidth.getCompSize();     if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    else remove(ZWIDTH);
       }
-      if( aladin.BETA && aladin.splitHiPSWidth!=null ) {
+      if( aladin.splitHiPSWidth!=null ) {
          n = aladin.splitHiPSWidth.getCompSize();     if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    else remove(HWIDTH);
       }
       if( aladin.splitMesureHeight!=null ) {
@@ -1861,7 +1861,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 //      set(MHEIGHT,""+aladin.splitMesureHeight.getSplit());
 
       // On mémorise les bookmarks si nécessaire
-      if( !Aladin.OUTREACH && aladin.bookmarks.canBeSaved() ) {
+      if( /* !Aladin.OUTREACH && */ aladin.bookmarks.canBeSaved() ) {
          String list = aladin.bookmarks.getBookmarkList();
          Aladin.trace(4,"Configuration.save(): updating bookmark list => "+list);
          if( aladin.bookmarks.isDefaultList() ) remove(BOOKMARKS);
@@ -1891,7 +1891,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( s!=null && s.equals("dark") ) remove(LOOKANDFEELTHEME);
 
       // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          if( aladin.calque.flagSimbad && !getSimbadFlag() ) set(SIMBAD,"On");    //remove(SIMBAD);
          if( !aladin.calque.flagSimbad && getSimbadFlag() ) remove(SIMBAD);      //set(SIMBAD,"Off");
 
@@ -1904,7 +1904,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             if( aladin.calque.zoom.zoomView.sed.getSEDWave() ) set(SEDWAVE,"On");
             else remove(SEDWAVE);
          } catch( Exception e1 ) { }
-      }
+//      }
 
       // On conserve la position de la fenêtre
       if( !flagModif && sameWinParam() ) return;

@@ -421,7 +421,7 @@ public class PlanHealpix extends PlanBG {
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5);
 
       p.frame = getCurrentFrameDrawing();
-      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
+//      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
 
       typeCM = aladin.configuration.getCMMap();

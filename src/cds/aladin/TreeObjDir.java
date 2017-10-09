@@ -489,10 +489,10 @@ public class TreeObjDir extends TreeObj implements Propable {
 
       if( color && !inJPEG && !inPNG ) inJPEG=true;
       
-      if( !Aladin.BETA ) {
-         if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
-         setMoc();
-      }
+//      if( !Aladin.BETA ) {
+//         if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
+//         setMoc();
+//      }
    }
    
    protected boolean isHiPS() {
@@ -568,7 +568,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    protected JPanel createPanel() {
       
-      if( !Aladin.BETA ) return super.createPanel(); 
+//      if( !Aladin.BETA ) return super.createPanel(); 
       
       JLabel lab = new JLabel(label);
       lab.setBackground( background );
@@ -618,6 +618,9 @@ public class TreeObjDir extends TreeObj implements Propable {
 
    /** Retourne true s'il s'agit d'un catalogue */
    protected boolean isCatalog() { return cat; }
+   
+   /** Retourne true s'il s'agit de Simbad et quu'on doit montrer un accès un mode live */
+   protected boolean isSimbadLive() { return Aladin.CDS && internalId.equals("CDS/Simbad"); }
 
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCDSCatalog() { return cat && internalId.startsWith("CDS/"); }
@@ -1006,6 +1009,12 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected void loadCS(Coord c,double radius) {
       aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius )));
    }
+   
+   /** Du sur-mesure pour le live Simbad */
+   protected void loadLiveSimbad() { aladin.execAsyncCommand( addBrowse(  getLiveSimbadCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15))); }
+   protected String getLiveSimbadBkm() { return addBrowse( getLiveSimbadCmd()+" $TARGET $RADIUS" ); }
+   private String getLiveSimbadCmd() { return "get Simbad(live)"; }
+   
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
    protected void loadCS() { aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15))); }
    protected String getCSBkm() { return addBrowse( getCSCmd()+" $TARGET $RADIUS" ); }
@@ -1017,7 +1026,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( isCDSCatalog() ) {
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
-         if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad";
+         if( internalId.startsWith("CDS/Simbad") ) cmd = Tok.quote(internalId)+"=get Simbad";
          else {
             String s = allcolumns.equals("all") ? ",allcolumns":"";
             cmd = "get VizieR("+cat+s+")";

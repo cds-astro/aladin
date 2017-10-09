@@ -187,7 +187,7 @@ public class DirectoryModel extends DefaultTreeModel {
          
          // On n'est pas au bout du path, il faut donc continuer récursivement
          // (en fait, une boucle serait plus adaptée, mais comme on ne descend jamais
-         // bien profond, ça ne va pas gérer
+         // bien profond, ça ne va pas gêner
          if( pos!=-1 ) return createTreeBranch(model, subNode, treeObj, pos + 1, parentUp, childIndex);
          
          // Retourne le noeud parent

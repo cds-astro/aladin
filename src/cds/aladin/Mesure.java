@@ -757,7 +757,14 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             tag=triangle;
             w = new Words(tag,num);	// Le triangle n'a pas de taille
          } else {
-            int nField = o.leg.fieldAt[i-1];
+            int nField=0;
+            try {
+               nField = o.leg.fieldAt[i-1];
+            } catch( Exception e ) {
+               // Y a un problème
+               System.out.println("Y a un prob. =>"+s);
+               continue;
+            }
             tag = tags[nField];
 
             if( !o.leg.isVisible(nField) ) continue;

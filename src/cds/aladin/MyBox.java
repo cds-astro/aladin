@@ -118,7 +118,7 @@ public abstract class MyBox extends JPanel {
       add( label,BorderLayout.WEST );
       add( cardPanel, BorderLayout.CENTER );
 
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          JPanel p1 = new JPanel( new BorderLayout(0,0));
          p1.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
          p1.add( new Lab(aladin.chaine.getString("FRAME")+" "),BorderLayout.WEST );
@@ -133,7 +133,7 @@ public abstract class MyBox extends JPanel {
          p1.add( pCombo,BorderLayout.CENTER );
          p1.setBackground( aladin.getBackground());
          add(p1,BorderLayout.EAST);
-      }
+//      }
 
       setBorder(BorderFactory.createEmptyBorder(0,10,0,10));
    }

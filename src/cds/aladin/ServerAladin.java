@@ -113,7 +113,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       // Panel pour la memorisationdu target (+bouton DRAG)
       JPanel tPanel = new JPanel();
       tPanel.setBackground(Aladin.BLUE);
-      int h = makeTargetPanel(tPanel,Aladin.OUTREACH? NORADIUS : FORALADIN);
+      int h = makeTargetPanel(tPanel,/* Aladin.OUTREACH? NORADIUS : */ FORALADIN);
       tPanel.setBounds(0,y,XWIDTH,h); y+=h;
       add(tPanel);
       
@@ -165,7 +165,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       formatPanel.add( fitsCb = new JRadioButton("FITS",false));fitsCb.setActionCommand("FITS");
       fitsCb.setBackground(Aladin.BLUE);
       format.add(fitsCb);
-      if( !Aladin.OUTREACH ) add(formatPanel);
+      /* if( !Aladin.OUTREACH ) */ add(formatPanel);
       
       // positionnement de l'étape courante
       setStepColor(step1,step2);

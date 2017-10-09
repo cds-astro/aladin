@@ -114,8 +114,8 @@ public class Server extends JPanel
    static final int STATUS_ABORT    = 4;
 
    // Les variables statiques
-   static int WIDTH = Aladin.OUTREACH ? 430 : 500; 	// Largeur du Panel
-   static int HEIGHT = Aladin.OUTREACH ? 300 : 400;	// Hauteur du Panel
+   static int WIDTH = /* Aladin.OUTREACH ? 430 : */ 500; 	// Largeur du Panel
+   static int HEIGHT = /* Aladin.OUTREACH ? 300 : */ 400;	// Hauteur du Panel
    static final int YOUTREACH = 60; // Ordonnée du premier label en mode OUTREACH
    static final int MAXSELECTEDPLANE = 10; // Nombre max d'images à charger avant affichage un warning
 
@@ -1763,17 +1763,18 @@ public void layout() {
     * (voir ArchiveServer) */
    protected boolean setParam(String param) { return false; }
 
-// /** Retourne le premier mot du nom */
-//   protected String getNom() {
-//      StringTokenizer st = new StringTokenizer(aladinLabel);
-//      return st.nextToken();
-//   }
+ /** Retourne le premier mot du nom */
+   protected String getNom() {
+      StringTokenizer st = new StringTokenizer(aladinLabel);
+      return st.nextToken();
+   }
    
    /** Retourne un label associé au plan généré par ce serveur.
     * Si s est vide ou null, ou ne contient qu'un identificateur technique "as id" retourne 
     * un label par défaut. Dans le dernier cas le label par défaut sera inséré en préfixe.
     * Dans tous les autres cas retourne le label proposé. */
-   protected String getDefaultLabelIfRequired(String s) { return getDefaultLabelIfRequired(s,aladinLabel); }
+//   protected String getDefaultLabelIfRequired(String s) { return getDefaultLabelIfRequired(s,aladinLabel); }
+   protected String getDefaultLabelIfRequired(String s) { return getDefaultLabelIfRequired(s,getNom()); }
    protected String getDefaultLabelIfRequired(String s,String defaut) {
       if( s==null || s.length()==0 ) return defaut;
       return s;

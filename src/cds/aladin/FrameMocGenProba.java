@@ -70,7 +70,7 @@ public final class FrameMocGenProba extends FrameMocGenImg {
       pp.add( threshold=new JTextField(5));
       c.gridwidth=GridBagConstraints.REMAINDER;
       g.setConstraints(pp,c);
-      if( Aladin.BETA ) p.add(pp);      
+      p.add(pp);      
    }
    
    private double getThreshold() throws Exception {

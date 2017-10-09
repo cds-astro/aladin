@@ -48,7 +48,7 @@ final public class Banner extends Window implements Runnable {
 
   public Banner(Aladin a) {
      super(a.f);
-     if( Aladin.BETA && !Aladin.OUTREACH ) number= "Beta";
+     if( Aladin.BETA /* && !Aladin.OUTREACH */ ) number= "Beta";
      else {
         int virgule = Aladin.VERSION.indexOf('.');
         number = Aladin.VERSION.substring(0,virgule);
@@ -98,7 +98,7 @@ final public class Banner extends Window implements Runnable {
               RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
      } catch( Exception e ) {}
      g.drawString(number,320,250);
-     if( Aladin.BETA && !Aladin.OUTREACH ) {
+     if( Aladin.BETA /* && !Aladin.OUTREACH */ ) {
         g.setFont(F1);
         g.drawString(Aladin.VERSION,320,290);
      }

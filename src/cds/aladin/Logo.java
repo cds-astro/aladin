@@ -153,9 +153,9 @@ public final class Logo extends JComponent implements MouseListener {
             "!"+Aladin.FULLTITRE+" - prototype based on "+Aladin.getReleaseNumber()+"\n"
             +aladin.chaine.getString("PUBPROTO") :
             
-            (Aladin.OUTREACH|Aladin.BETA? 
+            (/*Aladin.OUTREACH|*/Aladin.BETA? 
          "!"+Aladin.FULLTITRE+" - "+Aladin.getReleaseNumber()+"\n"
-            +aladin.chaine.getString(Aladin.OUTREACH?"PUBOUTREACH":"PUBBETA") :
+            +aladin.chaine.getString(/*Aladin.OUTREACH?"PUBOUTREACH":*/"PUBBETA") :
 
          "! \n!"+Aladin.FULLTITRE+" - "+Aladin.getReleaseNumber()+"\n"
          	+aladin.chaine.getString("PUB"))+"\n*"+Aladin.COPYRIGHT;

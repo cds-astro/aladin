@@ -874,7 +874,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          toGenFilterButton = b=new JButton("This filter on the stack for editing");
          b.addActionListener(this);
-         if( !Aladin.OUTREACH )PropPanel.addCouple(p,"",toGenFilterButton,g,c);
+         /* if( !Aladin.OUTREACH ) */PropPanel.addCouple(p,"",toGenFilterButton,g,c);
          toGenFilterButton.setEnabled(plan.hasDedicatedFilter());
 
       }

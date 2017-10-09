@@ -21,26 +21,16 @@
 
 package cds.aladin;
 
-import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.KeyStroke;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
@@ -218,9 +208,9 @@ public class MySplitPane extends JSplitPane {
          switchReduced();
       }
       
-      public void external() {
-         new FrameExternal(aladin);
-      }
+//      public void external() {
+//         new FrameExternal(aladin);
+//      }
       
       public void mouseClicked(MouseEvent e) { }
       public void mouseReleased(MouseEvent e) { 
@@ -311,75 +301,75 @@ public class MySplitPane extends JSplitPane {
 //         
 //      }
 //   }
-   
-   
-   public final class FrameExternal extends JFrame  {
-
-      // Les references aux objets
-      Aladin a;
-
-     /** Creation du Frame gerant les mesures lorsqu'elles sont dans une fenêtre externe
-      * @param aladin Reference
-      */
-      protected FrameExternal(Aladin aladin) {
-         super("Aladin Java measurements frame");
-         this.a = aladin;
-         Aladin.setIcon(this);
-         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-         getRootPane().registerKeyboardAction(new ActionListener() {
-               public void actionPerformed(ActionEvent e) { close(); }
-            }, 
-            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),
-            JComponent.WHEN_IN_FOCUSED_WINDOW
-         );
-         // pour le bug sous KDE
-//       super.show();
-         // test (bug KDE) , le move est effectué entre un show() et un hide()
-         if( !Aladin.LSCREEN ) setLocation(200,300);
-         else setLocation(200,400);
-//       super.hide();
-
-//         a.mesurePanel.remove(a.mesure);
-         if( a.splitMesureHeight.getBottomComponent()!=null ) aladin.splitMesureHeight.remove(a.mesure);
-         a.mesure.scrollV.setValue(0);
-         a.validate();
-         a.f.validate(); // pour maj frame principale sous Mac
-         a.repaint();
-         
-         JPanel p = (JPanel)getContentPane();
-         p.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 5));
-         p.add(a.mesure,"Center");
-         a.mesure.split(true);
-         pack();
-         setVisible(true);
-      }
-      
-      public Dimension getPreferredSize() {
-         return new Dimension(800,512);
-      }
-      
-      protected void close() {
-         remove(a.mesure);
-         dispose();
-         a.mesure.split(false);
-//         Aladin.makeAdd(a.mesurePanel,a.mesure,"Center");
-         if( a.splitMesureHeight.getBottomComponent()==null ) a.splitMesureHeight.setBottomComponent(a.mesure);
-         a.mesure.setPreferredSize(new Dimension(100,150));
-         a.mesure.setMinimumSize(new Dimension(100,0));
-         a.mesure.setReduced(false);
-         if( !Aladin.OUTREACH ) a.search.hideSearch(false);
-         a.getContentPane().validate();
-//         a.search.setIcon();
-         a.f.validate(); // pour maj frame principale sous Mac
-         a.getContentPane().repaint();
-//         a.split.in();
-      }
-      
-      protected void processWindowEvent(WindowEvent e) {
-         if( e.getID()==WindowEvent.WINDOW_CLOSING ) close();
-         super.processWindowEvent(e);
-      }
-   }
+//   
+//   
+//   public final class FrameExternal extends JFrame  {
+//
+//      // Les references aux objets
+//      Aladin a;
+//
+//     /** Creation du Frame gerant les mesures lorsqu'elles sont dans une fenêtre externe
+//      * @param aladin Reference
+//      */
+//      protected FrameExternal(Aladin aladin) {
+//         super("Aladin Java measurements frame");
+//         this.a = aladin;
+//         Aladin.setIcon(this);
+//         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+//         getRootPane().registerKeyboardAction(new ActionListener() {
+//               public void actionPerformed(ActionEvent e) { close(); }
+//            }, 
+//            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),
+//            JComponent.WHEN_IN_FOCUSED_WINDOW
+//         );
+//         // pour le bug sous KDE
+////       super.show();
+//         // test (bug KDE) , le move est effectué entre un show() et un hide()
+//         if( !Aladin.LSCREEN ) setLocation(200,300);
+//         else setLocation(200,400);
+////       super.hide();
+//
+////         a.mesurePanel.remove(a.mesure);
+//         if( a.splitMesureHeight.getBottomComponent()!=null ) aladin.splitMesureHeight.remove(a.mesure);
+//         a.mesure.scrollV.setValue(0);
+//         a.validate();
+//         a.f.validate(); // pour maj frame principale sous Mac
+//         a.repaint();
+//         
+//         JPanel p = (JPanel)getContentPane();
+//         p.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 5));
+//         p.add(a.mesure,"Center");
+//         a.mesure.split(true);
+//         pack();
+//         setVisible(true);
+//      }
+//      
+//      public Dimension getPreferredSize() {
+//         return new Dimension(800,512);
+//      }
+//      
+//      protected void close() {
+//         remove(a.mesure);
+//         dispose();
+//         a.mesure.split(false);
+////         Aladin.makeAdd(a.mesurePanel,a.mesure,"Center");
+//         if( a.splitMesureHeight.getBottomComponent()==null ) a.splitMesureHeight.setBottomComponent(a.mesure);
+//         a.mesure.setPreferredSize(new Dimension(100,150));
+//         a.mesure.setMinimumSize(new Dimension(100,0));
+//         a.mesure.setReduced(false);
+//         if( !Aladin.OUTREACH ) a.search.hideSearch(false);
+//         a.getContentPane().validate();
+////         a.search.setIcon();
+//         a.f.validate(); // pour maj frame principale sous Mac
+//         a.getContentPane().repaint();
+////         a.split.in();
+//      }
+//      
+//      protected void processWindowEvent(WindowEvent e) {
+//         if( e.getID()==WindowEvent.WINDOW_CLOSING ) close();
+//         super.processWindowEvent(e);
+//      }
+//   }
 
 }
 

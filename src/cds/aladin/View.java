@@ -1116,10 +1116,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( !v.isFree() ) v.pref.selected=true;
       
       // On indique la projection sur le sélecteur globale de projection
-      if( !v.isFree() && Projection.isOk(v.getProj()) ) {
-         String s1 =  Calib.getProjName(v.getProj().c.getProj());
-         aladin.projSelector.setProjectionSilently(s1); // Pour garder la cohérence du popup menu dans la v10
-      }
+      try {
+         if( !v.isFree() && Projection.isOk(v.getProj()) ) {
+            String s1 =  Calib.getProjName(v.getProj().c.getProj());
+            aladin.projSelector.setProjectionSilently(s1); // Pour garder la cohérence du popup menu dans la v10
+         }
+      } catch( Exception e ) { }
       
       aladin.calque.zoom.reset();
       aladin.calque.select.repaint();
@@ -3382,9 +3384,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Nouvelle position du repere courant (sans réaffichage) */
-   protected void moveRepere(Coord coo) { {
-      moveRepere(coo.al,coo.del); }
-   }
+   protected void moveRepere(Coord coo) { moveRepere(coo.al,coo.del); }
    protected void moveRepere(double ra, double dec) {
       repere.raj=ra;
       repere.dej=dec;
@@ -3392,6 +3392,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
 
       aladin.localisation.setLastCoord(ra,dec);
+      
+      // Si on a bougé le repère, on en profite pour mettre à jour les widgets
+      if( aladin.directory!=null ) aladin.directory.resumeFrameInfo();
       
       // comme on a bougé le réticule, on pourra regénérer un nouveau QuickSimbad
 //      flagAllowSimrep=true;
@@ -4820,7 +4823,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.northup.repaint();
          aladin.pix.repaint();
          aladin.oeil.repaint();
-         aladin.directory.resumeFrameInfo();
 
          // Ajustement de la configuration d'affichage en fonction de la position
          // de la scrollbar verticale si elle a changé.

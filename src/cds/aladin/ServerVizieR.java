@@ -156,7 +156,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       cbGetAll.setEnabled(false);
       cbGetAll.setBackground(Aladin.BLUE);
       cbGetAll.setBounds(xGetAll,yGetAll,120,20); yGetAll+=20;
-      if( !Aladin.OUTREACH ) add(cbGetAll);
+      /* if( !Aladin.OUTREACH ) */ add(cbGetAll);
 
       // La checkbox du getAllCat
       cbGetAllCat=new JCheckBox(GETALL1,false);
@@ -172,7 +172,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       });
       
 
-      if( !Aladin.OUTREACH ) add(cbGetAllCat);
+      /* if( !Aladin.OUTREACH ) */ add(cbGetAllCat);
 
       // Catalog + Radius
       JLabel label1 = new JLabel(addDot(CAT));
@@ -228,7 +228,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       catControl.add(getReadMe);
       catControl.add(getMoc);
       if( aladin.BETA ) catControl.add(getDMap);
-      if( !Aladin.OUTREACH ) add(catControl);
+      /* if( !Aladin.OUTREACH ) */ add(catControl);
       y+=HAUT+MARGE+5;
 
 

@@ -1093,13 +1093,28 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          wasExpanded = new HashSet<String>();
          backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
       }
-
+      
+      // Mémorisation temporaire du premier noeud sélectionné
+      TreePath tp = dirTree.getSelectionPath();
+      
       // Génération d'un nouveau model prenant en compte les filtres
       DirectoryModel model = new DirectoryModel(aladin);
+      
+      // S'il y a des noeuds à cacher, on va regénérer un tableau intermédiaire des noeuds restants,
+      // mais en le post-triant pour que les branches de l'arbre restent dans le même ordre que précédemment
+      ArrayList<TreeObjDir> tmpDirList1 = new ArrayList<TreeObjDir>( tmpDirList.size() );
       for( TreeObjDir to : tmpDirList ) {
          boolean mustBeActivated = !to.isHidden() && (!insideActivated || insideActivated && to.getIsIn()!=0 );
-         if( mustBeActivated ) model.createTreeBranch( to );
+         if( mustBeActivated ) tmpDirList1.add( to );
       }
+      Collections.sort(tmpDirList1, TreeObj.getComparator() );
+      for( TreeObjDir to : tmpDirList1 ) model.createTreeBranch( to );
+    
+// ANCIENNE METHODE QUI AVAIT TENDANCE A CHANGER L'ORDRE D'APPARITION DES BRANCHES
+//      for( TreeObjDir to : tmpDirList ) {
+//         boolean mustBeActivated = !to.isHidden() && (!insideActivated || insideActivated && to.getIsIn()!=0 );
+//         if( mustBeActivated ) model.createTreeBranch( to );
+//      }
       
       if( initCounter ) initCounter( model );
       else updateTitre( model.countDescendance() );
@@ -1115,6 +1130,9 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          
       // Restauration des états expanded/collapses + compteurs de référence
       restoreState( new TreePath(model.root), defaultExpand ? null : wasExpanded, counter, dirTree);
+      
+      // Restauration des noeuds sélectionnées
+      if( tp!=null ) showTreePath( getPathString(tp) );
    }
    
    /** Retourne le path sous forme de chaine - sans le premier "/" et "" pour la racine
@@ -1657,7 +1675,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
     * Les URLs HiPS seront mémorisées dans le Glu afin de pouvoir gérer les sites miroirs
     */
    private ArrayList<TreeObjDir> populateMultiProp() {
-      ArrayList<TreeObjDir> listReg = new ArrayList<TreeObjDir>(25000);
+      ArrayList<TreeObjDir> listReg = new ArrayList<TreeObjDir>(30000);
       for( MocItem mi : this ) populateProp(listReg, mi.prop);
       Collections.sort(listReg, TreeObj.getComparator() );
       return listReg;
@@ -2274,7 +2292,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
          // L'initialisation se fait en deux temps pour pouvoir laisser
          // l'utilisateur travailler plus rapidement
-         String s = "client_application=AladinDesktop"+(Aladin.BETA && !Aladin.PROTO?"*":"")
+         String s = "client_application=AladinDesktop"+(!Aladin.PROTO?"*":"")
                +"&hips_service_url=*&fields=!obs_description,!hipsgen*&fmt=gzip-ascii&get=record";
          loadFromMocServer(s);
          
@@ -2551,7 +2569,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
       JPanel panelInfo=null;                // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
       JCheckBox hipsBx=null,mocBx=null,mociBx=null,mocuBx,progBx=null,
                 dmBx=null, siaBx=null, ssaBx=null, csBx=null, msBx=null, allBx=null, tapBx=null,xmatchBx=null,
-                globalBx=null;
+                globalBx=null, liveBx=null;
       JButton load=null;
       
       FrameInfo() {
@@ -2590,6 +2608,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( siaBx!=null)    activate |= siaBx.isSelected();
          if( ssaBx!=null)    activate |= ssaBx.isSelected();
          if( csBx!=null)     activate |= csBx.isSelected();
+         if( liveBx!=null)   activate |= liveBx.isSelected();
          if( msBx!=null)     activate |= msBx.isSelected();
          if( allBx!=null)    activate |= allBx.isSelected();
          if( tapBx!=null)    activate |= tapBx.isSelected();
@@ -2659,6 +2678,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          public void mouseExited(MouseEvent e) { }
          public void mouseDragged(MouseEvent e) { }
          public void mouseMoved(MouseEvent e) {
+            if( cross==null ) return;
             boolean in1 = cross.contains( e.getPoint() );
             if( in1!=in ) repaint();
             in=in1;
@@ -2736,7 +2756,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             
             JPanel mocAndMore = new JPanel( new FlowLayout(FlowLayout.CENTER,5,0));
             JCheckBox bx;
-            mociBx = mocBx = csBx = null;
+            mociBx = mocBx = csBx = liveBx = null;
             
             // S'il n'y a pas trop de collections, on pourra les appeler en parallèle
             boolean flagTooMany=false;
@@ -2917,7 +2937,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
             JPanel accessPanel = new JPanel( new FlowLayout(FlowLayout.CENTER,3,0));
             JCheckBox bx;
-            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = siaBx = ssaBx = allBx = 
+            hipsBx = mocBx = mociBx = progBx = dmBx = csBx = liveBx = siaBx = ssaBx = allBx = 
                   globalBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox(AWPROGACC);
@@ -2978,6 +2998,15 @@ public class Directory extends JPanel implements Iterable<MocItem>{
                bx.setToolTipText(AWINVIEWTIP);
                bg.add(bx);
                
+               if( to.isSimbadLive() ) {
+                  liveBx = bx = new JCheckBox("live");
+                  bx.addActionListener(this);
+                  accessPanel.add(bx);
+                  bx.setEnabled( hasSmallView );
+                  bx.setToolTipText("Access to Simbad \"live\" (slower but with no cache)");
+                  bg.add(bx);
+               }
+               
                msBx = bx = new JCheckBox(AWMOCQLAB);
                bx.addActionListener(this);
                accessPanel.add(bx);
@@ -3009,6 +3038,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
 
             // Juste pour ne pas sélectioner un truc inactivé
             if( csBx!=null && !csBx.isEnabled() ) csBx.setSelected(false);
+            if( liveBx!=null && !liveBx.isEnabled() ) liveBx.setSelected(false);
             if( siaBx!=null && !siaBx.isEnabled() ) siaBx.setSelected(false);
             if( ssaBx!=null && !ssaBx.isEnabled() ) ssaBx.setSelected(false);
 
@@ -3079,7 +3109,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             int nbProduct = productPanel.getComponentCount();
             if( nbProduct>0 ) {
                
-               // Ca va fare trop de checkboxes sur une ligne => on replie sur 2 lignes
+               // Ca va faire trop de checkboxes sur une ligne => on replie sur 2 lignes
                if( nbAccess+nbProduct>5 ) PropPanel.addCouple(null, loadPanel,label2, null, productPanel, g1,c1,GridBagConstraints.EAST);
                
                // Sinon on ajoute au bout de la précédente ligne
@@ -3327,6 +3357,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
          if( siaBx!=null  && siaBx.isSelected() )   addBkm( bkm, to.getSIABkm() );
          if( ssaBx!=null  && ssaBx.isSelected() )   addBkm( bkm, to.getSSABkm() );
          if( csBx!=null   && csBx.isSelected() )    addBkm( bkm, to.getCSBkm() );
+         if( liveBx!=null && liveBx.isSelected() )  addBkm( bkm, to.getLiveSimbadBkm() );
          if( hipsBx!=null && hipsBx.isSelected() )  addBkm( bkm, to.getHipsBkm() );
          if( mocBx!=null  && mocBx.isSelected() )   addBkm( bkm, to.getMocBkm() );
          if( progBx!=null && progBx.isSelected() )  addBkm( bkm, to.getProgenitorsBkm() );
@@ -3439,6 +3470,7 @@ public class Directory extends JPanel implements Iterable<MocItem>{
             if( siaBx!=null  && siaBx.isSelected() )   to.loadSIA();
             if( ssaBx!=null  && ssaBx.isSelected() )   to.loadSSA();
             if( csBx!=null   && csBx.isSelected() )    to.loadCS();
+            if( liveBx!=null && liveBx.isSelected() )  to.loadLiveSimbad();
             if( msBx!=null   && msBx.isSelected() )    to.queryByMoc(planMoc);
             if( hipsBx!=null && hipsBx.isSelected() )  to.loadHips();
             if( mocBx!=null  && mocBx.isSelected() )   to.loadMoc();

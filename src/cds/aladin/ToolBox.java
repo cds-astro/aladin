@@ -148,7 +148,7 @@ SwingWidgetFinder, Widget {
       DRAWING = aladin.chaine.getString("TBDRAW");
 
       // Quels sont les boutons à afficher ?
-      if( Aladin.OUTREACH ) drawn = OUTREACHDRAWN;
+//      if( Aladin.OUTREACH ) drawn = OUTREACHDRAWN;
 
       calcConf(500-ICONEGAP);   //Calcul de la conf initiale
 

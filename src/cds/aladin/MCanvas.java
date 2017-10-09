@@ -141,7 +141,7 @@ MouseWheelListener, Widget
       // Determination des tailles des lettres
       wblanc = getToolkit().getFontMetrics(FONT).stringWidth("M");
 
-      if( Aladin.OUTREACH ) NBLIGNE=3;
+//      if( Aladin.OUTREACH ) NBLIGNE=3;
 
       TIPHEAD = aladin.chaine.getString("TIPHEAD");
       //      TIPREP  = aladin.chaine.getString("TIPREP");

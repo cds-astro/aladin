@@ -148,9 +148,9 @@ import healpix.essentials.Vec3;
  * flags d'etat permettant de savoir si on est en mode debug,
  * standalone...
  * <BR>
- * Elle fonctionne a la fois en Applet ou en Standalone via la fonction main()
+ * Elle fonctionne a la fois en Applet (historique) ou en Standalone via la fonction main()
  *
- * @author   Pierre Fernique [CDS], Thomas Boch [CDS], Anaïs Oberto[CDS], François Bonnarel [CDS]
+ * @author   Pierre Fernique [CDS], Thomas Boch [CDS], Anaïs Oberto[CDS], François Bonnarel [CDS], Chaitra [CDS] et bien d'autres contributeurs
  *
  * The beta version incorporates new features in test phase for the next official Aladin version.<BR>
  * The stability of these features is not totally guaranteed.
@@ -181,7 +181,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> - polarized HiPS (segments drawing)
  * @beta    <LI> TAP full support
  * @beta    <LI> - Gereneric TAP support
- * @beta    <LI> - Simplifier mode (based on GLU constraint rules)
+ * @beta    <LI> - Basic mode (based on GLU constraint rules)
  * @beta    <LI> - Direct access via the data discovery tree
  * @beta    <LI> MOC (coverage):
  * @beta    <LI> - perimeter drawing + set drawing=xxx script command
@@ -194,16 +194,17 @@ import healpix.essentials.Vec3;
  * @beta    <LI> - pilot=nnn parameter for generating HiPS pilot limited to nnn images
  * @beta    <LI> Script:
  * @beta    <LI> - script commands dedicated to VO protocol access: CS, SIA (1&2), SSA, MOC
- * @beta    <LI> - new script commands: cmoc, ccat
+ * @beta    <LI> - new script commands: cmoc, ccat, browse
  * @beta    <LI> Miscellaneous:
  * @beta    <LI> - Full column control for source measurements
  * @beta    <LI> - support to multiCCD as MEF FITS image
  * @beta    <LI> - EPNTAP support (c1min,c2min,s_region)
- * @beta    <LI> - deprecated PLASTIC lib and dependencies removed 
+ * @beta    <LI> - deprecated PLASTIC lib and dependencies removed
+ * @beta    <LI> - "applet" and "outreach" mode no longer supported 
  * @beta    <LI> - UTF-8 BOM support
  * @beta    <LI> - additionnal colormaps: Red, Green and Blue
- * @beta    <LI> - datalink, SODA and TAP supports
- * @beta    <LI> - tags tool improvements
+ * @beta    <LI> - datalink, SODA supports
+ * @beta    <LI> - tags and spect tool improvements
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
@@ -250,9 +251,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.021";
+   static public final    String VERSION = "v10.022";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
-   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
+//   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
    static protected final String PROTO_VERSION    = "    *** PROTOTYPE VERSION (based on "+VERSION+") ***";
    static protected  String currentVersion = null;	// Version courante dispo
@@ -282,9 +283,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
-   static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
+   static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
    static public boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
-   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
+//   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
 
    // La couleur du fond
@@ -515,7 +516,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Rq: le mode proto active automatiquement le mode beta
    static final String BETAPREFIX = "BETA:";
    static final String PROTOPREFIX = "PROTO:";
-   static final String OUTREACHPREFIX = "OUTREACH:";
+//   static final String OUTREACHPREFIX = "OUTREACH:";
    static final String NOAPPLETPREFIX = "NOAPPLET:";
 
    // Si une image est plus petite que cette limite, on préférera garder les pixels
@@ -1282,61 +1283,74 @@ DropTargetListener, DragSourceListener, DragGestureListener
       String meta = macPlateform?"meta":"ctrl";
       String alt = macPlateform?"meta shift":"alt";
 
-      // TODO : meta ne fonctionne pas sous windows
-      if( OUTREACH ) {
-         return new String[][][]{
-               { {MFILE},
-                  {OPENLOAD+"|"+meta+" L"},{OPENFILE+"|"+meta+" O"},
-                  {},{LOADIMG,"-"},{LOADCAT,"-"},{BACKUP},{MPRINT+"|"+meta+" P"},
-                  {},{ extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
-               },
-               { {MEDIT},
-                  {"?"+PAN+"|"+alt+" Z"},
-                  {ZOOM,"?"+ZOOMPT+"|F6","",ZOOMM+"|F7",ZOOMP+"|F8"},
-                  {},{COPIER+"|"+meta+" C"},{COLLER+"|"+meta+" V"},
-                  {},{SELECTALL+"|"+meta+" A"},{UNSELECT+"|"+meta+" U"},
-                  {},{DEL+"|DELETE"},{DELALL+"|shift DELETE"},
-                  {},{HEAD+"|"+alt+" H"},{PROP+"|"+alt+" ENTER"}, {}, {PREF},
-               },
-               { {MIMAGE},
-                  {PIXEL+"|"+meta+" M"},{"?"+GLASS+"|"+meta+" G"},
-                  //           {},{TRANSP},
-                  {},{RGB},{GREY},{BLINK},
-                  {},{CALIMG},
-                  {},{FLIP,TOPBOTTOM,RIGHTLEFT},
-               },
-               { {MCATALOG},
-                  {XMATCH},{ADDCOL},{FILTERB,"-"},
-                  {},{CLONE},
-               },
-               { {MOVERLAY},
-                  {CONTOUR},
-                  {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
-                  {},{"?"+GRID+"|"+alt+" G"},{"?"+CONST},{"?"+OVERLAY+"|"+alt+" O"},
-               },
-               { {MTOOLS},
-                  {SESAME+"|"+meta+" R"},{VOTOOL,VOINFO},
-               },
-               { {MVIEW},
-                  {"?"+FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
-                  {},{MOREVIEWS+"|F9"}, {"?"+LOCKVIEW},
-               },
-               { {MHELP},
-                  {HELP},{ABOUT},
-               },
-         };
+//      // TODO : meta ne fonctionne pas sous windows
+//      if( OUTREACH ) {
+//         return new String[][][]{
+//               { {MFILE},
+//                  {OPENLOAD+"|"+meta+" L"},{OPENFILE+"|"+meta+" O"},
+//                  {},{LOADIMG,"-"},{LOADCAT,"-"},{BACKUP},{MPRINT+"|"+meta+" P"},
+//                  {},{ extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
+//               },
+//               { {MEDIT},
+//                  {"?"+PAN+"|"+alt+" Z"},
+//                  {ZOOM,"?"+ZOOMPT+"|F6","",ZOOMM+"|F7",ZOOMP+"|F8"},
+//                  {},{COPIER+"|"+meta+" C"},{COLLER+"|"+meta+" V"},
+//                  {},{SELECTALL+"|"+meta+" A"},{UNSELECT+"|"+meta+" U"},
+//                  {},{DEL+"|DELETE"},{DELALL+"|shift DELETE"},
+//                  {},{HEAD+"|"+alt+" H"},{PROP+"|"+alt+" ENTER"}, {}, {PREF},
+//               },
+//               { {MIMAGE},
+//                  {PIXEL+"|"+meta+" M"},{"?"+GLASS+"|"+meta+" G"},
+//                  //           {},{TRANSP},
+//                  {},{RGB},{GREY},{BLINK},
+//                  {},{CALIMG},
+//                  {},{FLIP,TOPBOTTOM,RIGHTLEFT},
+//               },
+//               { {MCATALOG},
+//                  {XMATCH},{ADDCOL},{FILTERB,"-"},
+//                  {},{CLONE},
+//               },
+//               { {MOVERLAY},
+//                  {CONTOUR},
+//                  {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
+//                  {},{"?"+GRID+"|"+alt+" G"},{"?"+CONST},{"?"+OVERLAY+"|"+alt+" O"},
+//               },
+//               { {MTOOLS},
+//                  {SESAME+"|"+meta+" R"},{VOTOOL,VOINFO},
+//               },
+//               { {MVIEW},
+//                  {"?"+FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
+//                  {},{MOREVIEWS+"|F9"}, {"?"+LOCKVIEW},
+//               },
+//               { {MHELP},
+//                  {HELP},{ABOUT},
+//               },
+//         };
+//
+//      }
 
-      }
-
+      SHOWASYNCJOBS = "Show async jobs";
 
       String[][][] menu = new String[][][] {
-            { {MFILE},
+            { /*{MFILE},
                {OPENLOAD+"|"+meta+" L"},{OPENFILE+"|"+meta+" O"},{OPENURL},
                {LASTFILE,"???"},
                {},{MBGKG,"???"},
                {},{LOADIMG,"-"},{LOADCAT,"-"}, {LOADVO}, {LOADFOV},
                {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
                //                  {},{HISTORY+"|"+(macPlateform?alt:meta)+" H"},
+               {},{MPRINT+"|"+meta+" P"},
+               {},{NEW+"|"+meta+" N"},
+               {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT} */
+               
+               
+               {MFILE},
+               {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
+                    {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
+               {},{SEARCHDIR+"|"+meta+" E"},{FILTERDIR},
+               {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
+               {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
+               {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
                {},{MPRINT+"|"+meta+" P"},
                {},{NEW+"|"+meta+" N"},
                {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
@@ -1383,9 +1397,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
             },
-            { {MTOOLS},
+            { /*{MTOOLS},
                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
-               {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
+               {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},
                {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
                {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
                {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
@@ -1397,7 +1411,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
                   "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
                   {},{FOVEDITOR},
 
-                  {JUNIT},
+                  {JUNIT},*/
+                  
+                  {MTOOLS},
+                  {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
+                  {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},
+                  {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
+                  {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
+                  {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
+                  { BETAPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
+                     "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
+                     "%Mouse NSIDE 2^12","%Mouse NSIDE 2^13","%Mouse NSIDE 2^14","%Mouse NSIDE 2^15","%Mouse NSIDE 2^16",
+                     "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
+                     "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
+                     "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
+                     {},{FOVEDITOR},
+
+                     {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+SHOWASYNCJOBS}
             },
             { {MVIEW},
                {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
@@ -1425,42 +1455,42 @@ DropTargetListener, DragSourceListener, DragGestureListener
             },
       };
       
-      if( BETA ) {
-         
-         SHOWASYNCJOBS = "Show async jobs";
-         
-         String[][] menu1 = new String[][] {  {MFILE},
-            {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
-                 {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
-            {},{SEARCHDIR+"|"+meta+" E"},{FILTERDIR},
-            {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
-            {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
-            {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
-            {},{MPRINT+"|"+meta+" P"},
-            {},{NEW+"|"+meta+" N"},
-            {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
-         };
-         menu[0] = menu1;
-         
-         menu1 = new String[][] {
-        	 {MTOOLS},
-             {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
-             {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
-             {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
-             {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
-             {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
-             { BETAPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
-                "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
-                "%Mouse NSIDE 2^12","%Mouse NSIDE 2^13","%Mouse NSIDE 2^14","%Mouse NSIDE 2^15","%Mouse NSIDE 2^16",
-                "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
-                "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
-                "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-                {},{FOVEDITOR},
-
-                {JUNIT},{"TAP", ACCESSTAP, SHOWASYNCJOBS}
-         };
-         menu[6] = menu1;
-      }
+//      if( BETA ) {
+//         
+//         SHOWASYNCJOBS = "Show async jobs";
+//         
+//         String[][] menu1 = new String[][] {  {MFILE},
+//            {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
+//                 {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
+//            {},{SEARCHDIR+"|"+meta+" E"},{FILTERDIR},
+//            {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
+//            {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
+//            {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
+//            {},{MPRINT+"|"+meta+" P"},
+//            {},{NEW+"|"+meta+" N"},
+//            {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
+//         };
+//         menu[0] = menu1;
+//         
+//         menu1 = new String[][] {
+//        	 {MTOOLS},
+//             {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
+//             {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
+//             {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
+//             {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
+//             {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
+//             { BETAPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
+//                "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
+//                "%Mouse NSIDE 2^12","%Mouse NSIDE 2^13","%Mouse NSIDE 2^14","%Mouse NSIDE 2^15","%Mouse NSIDE 2^16",
+//                "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
+//                "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
+//                "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
+//                {},{FOVEDITOR},
+//
+//                {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+SHOWASYNCJOBS}
+//         };
+//         menu[6] = menu1;
+//      }
 
       // ajout menu interop
       if( PLASTIC_SUPPORT ) {
@@ -1779,8 +1809,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }).start();
       }
 
-      // Pour les Cieux
-      hipsReload();
+//      // Pour les Cieux
+//      hipsReload();
 
       // Pour les applications VO
       VOReload();
@@ -1951,9 +1981,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( sm.startsWith(PROTOPREFIX,len) ) {
          if( !PROTO ) return null;
          return (flagSwitch?c+"":"")+sm.substring(len+PROTOPREFIX.length());
-      } else if( sm.startsWith(OUTREACHPREFIX,len) ) {
-         if( !OUTREACH ) return null;
-         return (flagSwitch?c+"":"")+sm.substring(len+OUTREACHPREFIX.length());
+//      } else if( sm.startsWith(OUTREACHPREFIX,len) ) {
+//         if( !OUTREACH ) return null;
+//         return (flagSwitch?c+"":"")+sm.substring(len+OUTREACHPREFIX.length());
       } else if( sm.startsWith(NOAPPLETPREFIX,len) ) {
          if( isApplet() ) return null;
          return (flagSwitch?c+"":"")+sm.substring(len+NOAPPLETPREFIX.length());
@@ -2141,18 +2171,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   /** Regénère le popup menu associé aux Ciels */
-   public void hipsReload() {
-      if( isNonCertifiedApplet() || miGluSky==null ) return;
-
-      String m[] = glu.getHipsMenu();
-
-      if( m.length==0 ) return;
-      miGluSky.removeAll();
-      appendJMenu((JMenu)miGluSky,m);
-      //       sky(m[0].substring(1));  // POUR LE MOMENT JE SELECTIONNE LE PREMIER, IL FAUDRA PRENDRE EN COMPTE LES PREF
-
-   }
+//   /** Regénère le popup menu associé aux Ciels */
+//   public void hipsReload() {
+//      if( isNonCertifiedApplet() || miGluSky==null ) return;
+//
+//      String m[] = glu.getHipsMenu();
+//
+//      if( m.length==0 ) return;
+//      miGluSky.removeAll();
+//      appendJMenu((JMenu)miGluSky,m);
+//      //       sky(m[0].substring(1));  // POUR LE MOMENT JE SELECTIONNE LE PREMIER, IL FAUDRA PRENDRE EN COMPTE LES PREF
+//
+//   }
 
    /** Regénère le popup menu associé aux VOtools */
    protected void VOReload() {
@@ -2203,7 +2233,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       setBackground( COLOR_MAINPANEL_BACKGROUND );
       ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(0,3,0,2));
       
-      if( !setOUTREACH ) OUTREACH = configuration.isOutReach();
+//      if( !setOUTREACH ) OUTREACH = configuration.isOutReach();
       ENABLE_FOOTPRINT_OPACITY = configuration.isTransparent();
       DEFAULT_FOOTPRINT_OPACITY_LEVEL = configuration.getTransparencyLevel();
       if( configuration.isBeginner() && !flagScreen ) { SCREEN="preview"; flagScreen=true; }
@@ -2310,9 +2340,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //      saisie.add(saisie1,BorderLayout.SOUTH);
       saisie.add(localisation, BorderLayout.CENTER);
       
-      if( !OUTREACH && BETA )  saisie.add(projSelector, BorderLayout.EAST);
-      
       //       if( !OUTREACH && !BETA ) saisie.add(pixel);
+      saisie.add(projSelector, BorderLayout.EAST);
 
       // creation widget plastic (doit se faire avant la creation du menu)
       if( PLASTIC_SUPPORT ) plasticWidget = new PlasticWidget(this);
@@ -2380,9 +2409,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       y.setBackground( getBackground());
       y.setBorder(BorderFactory.createEmptyBorder());
       y.add(grid);
-      if( !OUTREACH ) { y.add(look); y.add(oeil); y.add(northup); y.add(pix); }
+      y.add(look); y.add(oeil); y.add(northup); y.add(pix);
       y.add(viewControl);
-      if( !OUTREACH ) y.add(match);
+      y.add(match);
 
       makeAdd(searchPanel,y,"West");
       makeAdd(searchPanel,status,"Center");
@@ -2448,37 +2477,27 @@ DropTargetListener, DragSourceListener, DragGestureListener
       px.add(splitMesureHeight, BorderLayout.CENTER );
       px.setBorder( BorderFactory.createEmptyBorder(0, 0, 3, 0));
       
-      final MySplitPane splitV = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, px, droite2,1);
-      splitV.setResizeWeight(1);
+      splitZoomWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, px, droite2,1);
+      splitZoomWidth.setResizeWeight(1);
       droite2.setMinimumSize(new Dimension(180,100));
       droite2.setPreferredSize(new Dimension(getStackWidth(),100));
-      splitZoomWidth = splitV;
       
       JPanel mainRight = new JPanel( new BorderLayout(0,0));
       mainRight.add(haut,BorderLayout.NORTH);
-      mainRight.add(splitV,BorderLayout.CENTER);
+      mainRight.add(splitZoomWidth,BorderLayout.CENTER);
       
-      if( BETA ) {
-         directory = new Directory(aladin, COLOR_DIRECTORY_BACKGROUND );
-         splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, mainRight,0);
-         directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
-         directory.setMinimumSize( new Dimension(0,200));
+      directory = new Directory(aladin, COLOR_DIRECTORY_BACKGROUND );
+      splitHiPSWidth = new MySplitPane(this,JSplitPane.HORIZONTAL_SPLIT, directory, mainRight,0);
+      directory.setPreferredSize(new Dimension(getHiPSWidth(),200));
+      directory.setMinimumSize( new Dimension(0,200));
+
+      splitHiPSWidth.setBackground( COLOR_DIRECTORY_BACKGROUND );
+      splitHiPSWidth.setBorder( BorderFactory.createEmptyBorder());
+      ct.add( splitHiPSWidth, BorderLayout.CENTER);
+      ct.add( infoPanel, BorderLayout.SOUTH);
          
-         splitHiPSWidth.setBackground( COLOR_DIRECTORY_BACKGROUND );
-         splitHiPSWidth.setBorder( BorderFactory.createEmptyBorder());
-         ct.add( splitHiPSWidth, BorderLayout.CENTER);
-         ct.add( infoPanel, BorderLayout.SOUTH);
-         
-      } else {
-         mainRight.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0));
-         mainRight.setBackground( getBackground());
-         ct.add( mainRight, BorderLayout.CENTER);
-         ct.add( infoPanel, BorderLayout.SOUTH);
-      }
-      
-      
       // Pour les filtres sauvegardés
-      if( directory!=null ) directory.updateDirFilter();
+      directory.updateDirFilter();
 
       // Dernier objet a creer et traitement des parametres
       co.creatLastObj();
@@ -3081,10 +3100,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return true;
    }
 
-   protected int allsky() {
-      TreeObjDir gSky = glu.getHips(0);
-      return allsky(gSky);
-   }
+//   protected int allsky() {
+//      TreeObjDir gSky = glu.getHips(0);
+//      return allsky(gSky);
+//   }
 
    /** Activation d'un background */
    protected int allsky(TreeObjDir gSky) { return hips(gSky,null,null,null); }
@@ -3097,14 +3116,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Mise en place du ciel s */
-   protected boolean allsky(String s) {
-      int i = glu.findHips(s,2);
-      if( i<0 ) return false;
-      TreeObjDir ga = glu.getHips(i);
-      console.printCommand("get hips(\""+ga.aladinLabel+"\")");
-      allsky(ga);
-      return true;
-   }
+//   protected boolean allsky(String s) {
+//      int i = glu.findHips(s,2);
+//      if( i<0 ) return false;
+//      TreeObjDir ga = glu.getHips(i);
+//      console.printCommand("get hips(\""+ga.aladinLabel+"\")");
+//      allsky(ga);
+//      return true;
+//   }
 
    /** Lancement de l'appli PLASTIC s */
    protected boolean appli(String s) {
@@ -3188,7 +3207,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             || (t.startsWith(NOAPPLETPREFIX) && s.equals(t.substring(NOAPPLETPREFIX.length()) ))
             || (t.startsWith(BETAPREFIX) && s.equals(t.substring(BETAPREFIX.length()) ))
             || (t.startsWith(PROTOPREFIX) && s.equals(t.substring(PROTOPREFIX.length()) ))
-            || (t.startsWith(OUTREACHPREFIX) && s.equals(t.substring(OUTREACHPREFIX.length()) ))
+//            || (t.startsWith(OUTREACHPREFIX) && s.equals(t.substring(OUTREACHPREFIX.length()) ))
 
             ;
    }
@@ -3267,7 +3286,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected boolean execute(String s) {
 
       // En mode Outreach, le save ne fait qu'une sauvegarde PNG
-      if( OUTREACH && isMenu(s,MSAVE) ) s="PNG";
+//      if( OUTREACH && isMenu(s,MSAVE) ) s="PNG";
 
       if( s.indexOf("NSIDE")>=0 ) { lastOrder=-2; aladin.calque.repaintAll(); }
 
@@ -3473,8 +3492,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          // Peut être un save
       } else if( save(s) ) { return true;
 
-      // Peut être un fond de ciel
-      } else if( allsky(s) ) { return true;
+//      // Peut être un fond de ciel
+//      } else if( allsky(s) ) { return true;
 
       // Peut être une application VO plastic
       } else if( appli(s) ) { return true;
@@ -4083,22 +4102,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       ((PlanBG)p).loadMoc();
    }
 
-   private boolean loadMocFirst=true;
+//   private boolean loadMocFirst=true;
 
    /** Mise à jour de la fenêtre pour les operations des MOCs */
    protected void loadMoc() {
-      if( BETA ) {
-         directory.focusSearch();
-         return;
-      }
+      directory.focusSearch();
+      return;
       
-      dialog.show("VizieR");
-      if( loadMocFirst ) SwingUtilities.invokeLater(new Runnable() {
-         public void run() {
-            info(dialog,chaine.getString("MMOCLOADHELP"));
-         }
-      });
-      loadMocFirst=false;
+//      dialog.show("VizieR");
+//      if( loadMocFirst ) SwingUtilities.invokeLater(new Runnable() {
+//         public void run() {
+//            info(dialog,chaine.getString("MMOCLOADHELP"));
+//         }
+//      });
+//      loadMocFirst=false;
    }
 
    /** Mise à jour de la fenêtre pour les operations des MOCs */
@@ -4940,8 +4957,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Retourne true si Aladin est en mode PROTO */
    public boolean isProto() { return PROTO; }
 
-   /** Retourne true si Aladin est en mode OUTREACH */
-   public boolean isOutreach() { return OUTREACH; }
+//   /** Retourne true si Aladin est en mode OUTREACH */
+//   public boolean isOutreach() { return OUTREACH; }
 
 
    /** Dès que je saurai le faire */
@@ -5870,7 +5887,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.myInit();
       int id = a.getInstanceId();
       a.f.setTitle(TITRE+" "+getReleaseNumber()
-            +(OUTREACH?OUTREACH_VERSION : PROTO?PROTO_VERSION : BETA?BETA_VERSION:"")
+            +(/*OUTREACH?OUTREACH_VERSION : */PROTO?PROTO_VERSION : BETA?BETA_VERSION:"")
             +(id>0?" ("+(id)+")":""));
       a.f.pack(); // Même en mode script, le pack est indipensable pour créer les peer classes
       if( NOGUI ) return;
@@ -5895,8 +5912,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.offsetLocation();
       
       a.f.setVisible(true);
+      
+      // Positionnement initiales des splits
       a.mesure.setReduced(true);
       a.splitHiPSWidth.setDividerLocation( a.getHiPSWidth() );
+      a.splitZoomHeight.setDividerLocation( a.calque.getHeight() -  a.getZoomViewHeight() );
+      
       //      trace(2,"Aladin window size: "+a.getWidth()+"x"+a.getHeight());
    }
   
@@ -5976,7 +5997,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-proto") )       { PROTO=BETA=true; lastArg=i+1; }
          else if( args[i].equals("-nobeta") )      { BETA=false; lastArg=i+1; }
          else if( args[i].equals("-noproto") )     { PROTO=BETA=false; lastArg=i+1; }
-         else if( args[i].equals("-nooutreach") )  { OUTREACH=false; setOUTREACH=true; lastArg=i+1; }
+         else if( args[i].equals("-nooutreach") )  { /* OUTREACH=false; setOUTREACH=true;  */lastArg=i+1; }
          else if( args[i].equals("-nogui") || args[i].equals("-script")) { NOGUI=true; BOOKMARKS=false; NOHUB=true; NOPLUGIN=true; lastArg=i+1; }
          else if( args[i].equals("-local") )       { NETWORK=false; lastArg=i+1; }
          else if( args[i].equals("-cds") )         { CDS=true; lastArg=i+1; }
@@ -6087,8 +6108,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Retourne true si le dialog est prêt */
    protected boolean dialogOk() {
-      if( Aladin.BETA ) return dialog!=null && calque!=null && directory!=null && directory.dialogOk() ;
-      return dialog!=null && calque!=null;
+      return dialog!=null && calque!=null && directory!=null && directory.dialogOk() ;
    }
 
    /** Chargement d'un fichier passé en paramètre */

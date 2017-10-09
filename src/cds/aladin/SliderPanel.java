@@ -22,7 +22,6 @@
 package cds.aladin;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridLayout;
 
 import javax.swing.JPanel;
@@ -86,12 +85,12 @@ public class SliderPanel extends JPanel {
    protected void adjustSliderPanel() {
       JPanel p = new JPanel(new GridLayout(0,1,1,1));
       p.setBackground( aladin.getBackground());
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          if( aladin.configuration.isSliderEpoch() )   p.add(epochSlider);
          if( aladin.configuration.isSliderSize() )    p.add(sizeSlider);
          if( aladin.configuration.isSliderDensity() ) p.add(densitySlider);
          if( aladin.configuration.isSliderCube() )    p.add(cubeSlider);
-      }
+//      }
       if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
       if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);
       boolean flagValidate=false;

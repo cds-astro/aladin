@@ -355,32 +355,27 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       status.setForeground( Color.blue );
 
       // Les serveurs Images par programme
-      if( !Aladin.OUTREACH && Aladin.NETWORK ) sv.addElement(aladinServer = new ServerAladin(aladin));
+      if( Aladin.NETWORK ) sv.addElement(aladinServer = new ServerAladin(aladin));
 
       // Les serveurs Images via GLU
       if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.IMAGE);
 
-      if( Aladin.OUTREACH && Aladin.NETWORK ) sv.addElement(aladinServer = new ServerAladin(aladin));
 
 
       // Les serveurs Data par programme
       if( Aladin.NETWORK ) {
          Server svizier;
          vizierServer = svizier = new ServerVizieR(aladin, this, actions);
-         if( !Aladin.OUTREACH ) {
+//         if( !Aladin.OUTREACH ) {
             sv.addElement(svizier);
-            if( !Aladin.BETA ) {
-               sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
-                     ((ServerVizieR) svizier).vSurveys));
-               sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
-                     ((ServerVizieR) svizier).vArchives));
-            }
+//               sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
+//                     ((ServerVizieR) svizier).vSurveys));
+//               sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
+//                     ((ServerVizieR) svizier).vArchives));
             sv.addElement(new ServerSimbad(aladin));
             sv.addElement(new ServerNED(aladin));
-            if( !Aladin.BETA ) {
 //               sv.addElement(new ServerSWarp(aladin));
-               sv.addElement(new ServerMocQuery(aladin));
-            }
+//               sv.addElement(new ServerMocQuery(aladin));
 //            if( Aladin.PROTO) sv.addElement(new ServerXmatch(aladin));
             if( Aladin.BETA ) {//TODO:: tintinproto
             	this.tapManager = TapManager.getInstance(aladin);
@@ -399,14 +394,14 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
     			}*/
             }
             
-         } else {
-            sv.addElement(new ServerSimbad(aladin));
-            sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
-                  ((ServerVizieR) svizier).vSurveys));
-            sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
-                  ((ServerVizieR) svizier).vArchives));
-            sv.addElement(svizier);
-         }
+//         } else {
+//            sv.addElement(new ServerSimbad(aladin));
+////            sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
+////                  ((ServerVizieR) svizier).vSurveys));
+////            sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
+////                  ((ServerVizieR) svizier).vArchives));
+////            sv.addElement(svizier);
+//         }
       }
 
       // Les serveurs Catalog via GLU
@@ -414,45 +409,39 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       // Tri des serveurs pour mettre ceux qui sont sous "others" en fin de
       // liste
-      if( !Aladin.OUTREACH ) sv = triServer(sv);
+      sv = triServer(sv);
 
       // L'arbre des HiPS
-      if( !Aladin.BETA ) sv.addElement(hipsServer = new ServerHips(aladin));
+//      sv.addElement(hipsServer = new ServerHips(aladin));
 
       // L'acces local/url
       sv.addElement(localServer = new ServerFile(aladin));
 
       // Juste pour savoir s'il y a un discoveryServer
-      discoveryServer = null;
-
-      // Le mode discovery
-      if( !Aladin.OUTREACH && Aladin.NETWORK && !Aladin.BETA) {
-         discoveryServer = new ServerAllVO(aladin);
-         sv.addElement(discoveryServer);
-      }
+//      discoveryServer = null;
+//
+//      // Le mode discovery
+//         discoveryServer = new ServerAllVO(aladin);
+//         sv.addElement(discoveryServer);
 
       // L'arbre des catégories
-      if( !Aladin.BETA ) sv.addElement(new ServerWatch(aladin));
+//      sv.addElement(new ServerWatch(aladin));
 
       // Les serveurs Spectra via GLU
-      if( !Aladin.OUTREACH && Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.SPECTRUM);
+      if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.SPECTRUM);
 
       // Les FoV
-      if( !Aladin.OUTREACH ) {
-         sv.addElement(fovServer = new ServerFoV(aladin));
-         int n = sv.size();
-         ServerFolder fovFolder = new ServerFolder(aladin, fovServer.aladinMenu, n, ServerFolder.TOP );
-         sv.addElement( fovFolder );
-         fovFolder.addItem(fovServer.aladinLabel);
+      sv.addElement(fovServer = new ServerFoV(aladin));
+      int n = sv.size();
+      ServerFolder fovFolder = new ServerFolder(aladin, fovServer.aladinMenu, n, ServerFolder.TOP );
+      sv.addElement( fovFolder );
+      fovFolder.addItem(fovServer.aladinLabel);
 
-         sv.addElement(almaFovServer = new ServerAlmaFootprint(aladin));
-         fovFolder.addItem(almaFovServer.aladinLabel);
-
-      }
+      sv.addElement(almaFovServer = new ServerAlmaFootprint(aladin));
+      fovFolder.addItem(almaFovServer.aladinLabel);
 
       // Les serveurs d'application via GLU
-      if( !Aladin.OUTREACH && Aladin.NETWORK )
-         addGluServer(sv, Glu.vGluServer, Server.APPLI | Server.APPLIIMG);
+      if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.APPLI | Server.APPLIIMG);
 
       // Serveurs obtenus via PLASTIC
       //      if( !Aladin.OUTREACH && Aladin.PROTO && Aladin.PLASTIC_SUPPORT ) {
@@ -532,23 +521,23 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          else if( server[i] instanceof ServerFoV )  FIELD = i;
          else if( server[i] instanceof ServerVizieR ) {
             VIZIER = i;
-            if( Aladin.OUTREACH ) {
-               gcdat.insets.top=45;
-               lastRight.setLastInColumn();
-            }
+//            if( Aladin.OUTREACH ) {
+//               gcdat.insets.top=45;
+//               lastRight.setLastInColumn();
+//            }
          }
          else if( server[i] instanceof ServerAladin ) {
             ALADIN = i;
-            if( Aladin.OUTREACH && lastLeft!=null ) {
-               lastLeft.setLastInColumn();
-            }
+//            if( Aladin.OUTREACH && lastLeft!=null ) {
+//               lastLeft.setLastInColumn();
+//            }
          }
          else if( server[i] instanceof ServerNED )    NED = i;
          else if( server[i] instanceof ServerSimbad ) SIMBAD = i;
 
-         else if( Aladin.OUTREACH && server[i].aladinLabel.startsWith("Hubble" ) ) {
-            gcimg.insets.top=45;
-         }
+//         else if( Aladin.OUTREACH && server[i].aladinLabel.startsWith("Hubble" ) ) {
+//            gcimg.insets.top=45;
+//         }
 
          // Un bouton a part entiere
          if( server[i].aladinMenu == null ) {
@@ -676,8 +665,9 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       aladin.manageDrop();
 
-      if( !Aladin.BETA ) setCurrent("hips");
-      else setCurrent("file");
+//      if( !Aladin.BETA ) setCurrent("hips");
+//      else 
+         setCurrent("file");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
       //      Thread th = new Thread(this,"AladinServerPack");
@@ -1143,7 +1133,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       if( i<0 ) return false;
       setCurrent(i);
-      if( !Aladin.OUTREACH || getDefaultTarget().length()==0 ) toFront();
+      if( /* !Aladin.OUTREACH || */ getDefaultTarget().length()==0 ) toFront();
       else server[i].submit();
       return true;
    }
@@ -1416,50 +1406,50 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    }
 
 
-   public void show() {
-      super.show();
-//      if( !aladin.PROTO ) startHipsUpdater();
-   }
-
-   public void hide() {
-      if( !aladin.BETA ) stopHipsUpdater();
-      super.hide();
-   }
-
-   private Thread threadUpdater=null;
-   private boolean encore=true;
-
-   private void startHipsUpdater() {
-      if( threadUpdater==null ) {
-         threadUpdater = new Updater("HipsUpdater");
-         threadUpdater.start();
-      } else encore=true;
-   }
-
-   private void stopHipsUpdater() { encore=false; }
-
-   class Updater extends Thread {
-      public Updater(String s) { super(s); }
-
-      public void run() {
-         encore=true;
-         //         System.out.println("Hips updater running");
-         while( encore ) {
-            try {
-               //               System.out.println("Hips updater checking...");
-               if( isOpened() ) ((ServerHips)aladin.dialog.hipsServer).hipsUpdate();
-               Thread.currentThread().sleep(1000);
-            } catch( Exception e ) { }
-         }
-         //         System.out.println("Hips updater stopped");
-         threadUpdater=null;
-      }
-   }
-
-   private boolean isOpened() {
-//      Window window = SwingUtilities.windowForComponent(this);
-      return isVisible();
-   }
+//   public void show() {
+//      super.show();
+////      if( !aladin.PROTO ) startHipsUpdater();
+//   }
+//
+//   public void hide() {
+//      if( !aladin.BETA ) stopHipsUpdater();
+//      super.hide();
+//   }
+//
+//   private Thread threadUpdater=null;
+//   private boolean encore=true;
+//
+//   private void startHipsUpdater() {
+//      if( threadUpdater==null ) {
+//         threadUpdater = new Updater("HipsUpdater");
+//         threadUpdater.start();
+//      } else encore=true;
+//   }
+//
+//   private void stopHipsUpdater() { encore=false; }
+//
+//   class Updater extends Thread {
+//      public Updater(String s) { super(s); }
+//
+//      public void run() {
+//         encore=true;
+//         //         System.out.println("Hips updater running");
+//         while( encore ) {
+//            try {
+//               //               System.out.println("Hips updater checking...");
+//               if( isOpened() ) ((ServerHips)aladin.dialog.hipsServer).hipsUpdate();
+//               Thread.currentThread().sleep(1000);
+//            } catch( Exception e ) { }
+//         }
+//         //         System.out.println("Hips updater stopped");
+//         threadUpdater=null;
+//      }
+//   }
+//
+//   private boolean isOpened() {
+////      Window window = SwingUtilities.windowForComponent(this);
+//      return isVisible();
+//   }
 
 
 }

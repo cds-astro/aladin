@@ -561,21 +561,24 @@ public class Localisation extends MyBox  {
    }
 
 
-   //   static protected Coord frameToFrame1(Coord c, int frameSrc,int frameDst) {
-   //      if( frameSrc==frameDst ) return c;
-   //      Astrocoo aft = new Astrocoo(Localisation.getAstroframe(frameSrc),c.al,c.del);
-   //      aft.convertTo(Localisation.getAstroframe(frameDst));
-   //      c.al=aft.getLon();
-   //      c.del=aft.getLat();
-   //      return c;
-   //   }
+//   public static Coord frameToFrame(Coord c, int frameSrc, int frameDst) {
+//      if( frameSrc==frameDst )  return c;
+//      Astrocoo coo = new Astrocoo( getAstroframe(frameSrc), c.al, c.del );
+//      coo.setPrecision(Astrocoo.MAS+3);
+//
+//      coo.convertTo( getAstroframe(frameDst) );
+//
+//      c.al = coo.getLon();
+//      c.del= coo.getLat();
+//      return c;
+//   }
 
 
    public static Coord frameToFrame(Coord c, int frameSrc,int frameDst) {
       if( frameSrc==frameDst ) return c;
       Coo cTmp = new Coo(c.al,c.del);
-      if( frameSrc!=ICRS && frameSrc!=ICRSD ) Localisation.getAstroframe(frameSrc).toICRS(cTmp);
-      if( frameDst!=ICRS && frameDst!=ICRSD ) Localisation.getAstroframe(frameDst).fromICRS(cTmp);
+      if( frameSrc!=ICRS && frameSrc!=ICRSD ) getAstroframe(frameSrc).toICRS(cTmp);
+      if( frameDst!=ICRS && frameDst!=ICRSD ) getAstroframe(frameDst).fromICRS(cTmp);
       c.al = cTmp.getLon();
       c.del= cTmp.getLat();
       return c;
@@ -632,9 +635,10 @@ public class Localisation extends MyBox  {
 
       // Edition et conversion si nécessaire
       try {
+         
          Astrocoo aft = new Astrocoo( getAstroframe(frameSource) );
-         aft.setPrecision(Astrocoo.MAS+3);
          aft.set(coo);
+         aft.setPrecision(Astrocoo.MAS+3);
          if( frameSource!=frameTarget ) aft.convertTo( getAstroframe(frameTarget) );
 
          String s = (frameTarget==J2000D || frameTarget==B1950D || frameTarget==ICRSD

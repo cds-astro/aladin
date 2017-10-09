@@ -33,7 +33,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Label;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -347,7 +346,7 @@ public final class FrameContour extends JFrame implements ActionListener {
 
           p.add(getTopPanel());
           JPanel optionsPanel = getOptionsPanel();
-          if( !Aladin.OUTREACH ) p.add(optionsPanel);
+          /* if( !Aladin.OUTREACH ) */ p.add(optionsPanel);
           getContentPane().add(p, BorderLayout.CENTER);
           getContentPane().add(getBottomPanel(), BorderLayout.SOUTH);
 
@@ -386,7 +385,7 @@ public final class FrameContour extends JFrame implements ActionListener {
        protected void majContour() {
           if( a.toolBox.tool[ToolBox.CONTOUR].mode==Tool.DOWN ) {
              
-             PlanImage p = (PlanImage)a.calque.getFirstSelectedPlanImage();
+             PlanImage p = a.calque.getFirstSelectedPlanImage();
              
 //             Plan p1 = a.calque.getPlanBase();
 //             if( !(p1 instanceof PlanImage) ) return;

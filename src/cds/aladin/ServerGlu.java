@@ -213,7 +213,7 @@ public class ServerGlu extends Server implements Runnable {
 
       boolean flagInfo=true;
       int y=HEIGHT/2-(paramDescription.length*35+50+60+(docUser!=null?30:0)+(flagSIAIDHA?180:0))/2;
-      if( Aladin.OUTREACH ) y=YOUTREACH;
+//      if( Aladin.OUTREACH ) y=YOUTREACH;
       if( y<10 ) { y=5; flagInfo=false; }
 
 		if (flagTAPV2) {

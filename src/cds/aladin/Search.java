@@ -144,7 +144,7 @@ public final class Search extends JPanel implements MouseListener {
 
       JPanel genericSearchPanel = new JPanel( new BorderLayout(0,0) );
       genericSearchPanel.setBackground( aladin.getBackground());
-      if( !Aladin.OUTREACH ) genericSearchPanel.add(searchPanel,"West");
+      /* if( !Aladin.OUTREACH ) */ genericSearchPanel.add(searchPanel,"West");
       genericSearchPanel.add(searchControlPanel,"Center");
 
       panelSearch.add(genericSearchPanel,"West");

@@ -44,7 +44,6 @@ import cds.aladin.Command;
 import cds.aladin.Function;
 import cds.aladin.Glu;
 import cds.aladin.MyInputStream;
-import cds.aladin.MyToolbarUI;
 import cds.aladin.Tok;
 import cds.aladin.Widget;
 import cds.aladin.WidgetControl;
@@ -162,7 +161,7 @@ public class Bookmarks extends JToolBar implements Widget {
          toolBar.add(bkm);
       }
 
-      if( !Aladin.OUTREACH ) {
+//      if( !Aladin.OUTREACH ) {
          JButton plus = new JButton("+");
          plus.setBackground( aladin.getBackground());
          plus.setForeground( Aladin.COLOR_LABEL );
@@ -173,7 +172,7 @@ public class Bookmarks extends JToolBar implements Widget {
             public void actionPerformed(ActionEvent e) { editFrame(); }
          });
          toolBar.add(plus);
-      }
+//      }
    }
 
    /** Remet à jour la toolbar des signets suite à des modifs internes */
@@ -306,7 +305,7 @@ public class Bookmarks extends JToolBar implements Widget {
       }
 
       File f = new File(aladin.getConfiguration().getLocalBookmarksFileName());
-      if( !aladin.isOutreach() && f.canRead() ) {
+      if( /* !aladin.isOutreach() && */ f.canRead() ) {
          try {
             aladin.trace(3,"Local bookmarks loaded ["+f.getCanonicalPath()+"]...");
             command.setFunctionLocalDefinition(true);  // Toutes ces fonctions sont considérées comme locales

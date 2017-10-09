@@ -102,6 +102,7 @@ public final class ServerNED extends ServerSimbad  {
       try {
          target=sesameIfRequired(target," ");
       } catch( Exception e ) { }
+      label = getDefaultLabelIfRequired(label);
       return super.createPlane(target,radius,criteria,label,origin);
    }
 }
