@@ -58,7 +58,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 
 import cds.tools.ConfigurationReader;
-import cds.xml.DaliExamplesReader;
 
 /**
  * Server that works as "template" based tap client. 
@@ -77,7 +76,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	
 	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP;
 	public static final String TAPEXDEFAULTMAXROWS_INT = "2000";
-	DaliExamplesReader serviceExamples = null;
+	Map serviceExamples = null;
 	
 	Map<String, CustomListCell> basicExamples = new LinkedHashMap<String, CustomListCell>();
 	Map<String, String> serviceExamples2;
@@ -94,6 +93,9 @@ public class ServerTapExamples extends DynamicTapForm {
 	
 	JList examplesGui;
 	JList serviceExamplesGui;
+	JPanel queryDisplays;
+
+	public boolean initExamples = true;
 	
 	public ServerTapExamples(Aladin aladin) {
 		// TODO Auto-generated constructor stub
@@ -174,7 +176,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		JPanel tablesPanel = null;
 		try {
 			tablesGui = new JComboBox(tables);
-			tablesPanel = getTablesPanel(tablesGui, chosenTable, true);
+			tablesPanel = getTablesPanel(tablesGui, chosenTable, tables, true);
 			tablesPanel.setBackground(this.tapClient.primaryColor);
 			tablesPanel.setFont(BOLD);
 			c.weighty = 0.02;
@@ -213,43 +215,15 @@ public class ServerTapExamples extends DynamicTapForm {
 			}
 		});
 		
+		queryDisplays = new JPanel();
 		JScrollPane scrolley = new JScrollPane(this.examplesGui);
+		
+		queryDisplays.setLayout(new GridLayout(1, 1));
+		queryDisplays.add(scrolley);
 		c.fill = GridBagConstraints.BOTH;
 		c.gridy++;
 		c.insets = new Insets(0, 4, 0, 0);
-		
-		if (false && this.serviceExamples == null) {
-			// we might never need to get the examples if user won't choose this mode. 
-			// so we load here as this one is very specific to loading of this gui
-			this.serviceExamples = this.tapClient.tapManager.getTapExamples(this.tapClient.tapBaseUrl);
-		} 
-		if (false && serviceExamples.getExamples() != null && !serviceExamples.getExamples().isEmpty()) {
-			JPanel queryDisplays = new JPanel(new GridLayout(1, 2));
-			queryDisplays.add(scrolley);
-			
-			this.serviceExamplesGui = new JList(serviceExamples.getExamples().keySet().toArray());
-			this.serviceExamplesGui.setVisibleRowCount(4);
-			this.serviceExamplesGui.setToolTipText(TAPSERVICEEXAMPLESTOOLTIP);
-			this.serviceExamplesGui.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			this.serviceExamplesGui.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					// TODO Auto-generated method stub
-					//tintin todo
-					String queryLabel = (String) serviceExamplesGui.getSelectedValue();
-					tap.setText(serviceExamples.getExamples().get(queryLabel));
-					if (!serviceExamplesGui.isSelectionEmpty()) {
-						examplesGui.clearSelection();
-					}
-				}
-			});
-			
-			scrolley = new JScrollPane(this.serviceExamplesGui);
-			queryDisplays.add(scrolley);
-			containerPanel.add(queryDisplays, c);
-		} else {
-			containerPanel.add(scrolley, c);
-		}
+		containerPanel.add(queryDisplays, c);
 		
 		JPanel linePanel = getBottomPanel(true);
 		c.gridx = 0;
@@ -278,6 +252,48 @@ public class ServerTapExamples extends DynamicTapForm {
 	    add(containerPanel);
 	    
 	    formLoadStatus = TAPFORM_STATUS_LOADED;
+	    this.tapClient.tapManager.initTapExamples(this);
+	}
+	
+	public void loadTapExamples() {
+		if (initExamples) {
+			// we might never need to get the examples if user won't choose this mode. 
+			// so we load here as this one is very specific to loading of this gui
+			this.serviceExamples = this.tapClient.tapManager.getTapExamples(this.tapClient.tapBaseUrl);
+			initExamples = false;
+		} 
+		if (serviceExamples != null && !serviceExamples.isEmpty()) {
+			this.serviceExamplesGui = new JList(serviceExamples.keySet().toArray());
+			this.serviceExamplesGui.setVisibleRowCount(4);
+			this.serviceExamplesGui.setToolTipText(TAPSERVICEEXAMPLESTOOLTIP);
+			this.serviceExamplesGui.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			this.serviceExamplesGui.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					// TODO Auto-generated method stub
+					//tintin todo
+					String queryLabel = (String) serviceExamplesGui.getSelectedValue();
+					tap.setText(serviceExamples.get(queryLabel).toString());
+					if (!serviceExamplesGui.isSelectionEmpty()) {
+						examplesGui.clearSelection();
+					}
+				}
+			});
+			waitCursor();
+			synchronized (queryDisplays) {
+				JScrollPane scrolley = new JScrollPane(this.examplesGui);
+				queryDisplays.removeAll();
+				queryDisplays.setLayout(new GridLayout(1, 2));
+				queryDisplays.add(scrolley);
+				scrolley = new JScrollPane(this.serviceExamplesGui);
+				queryDisplays.add(scrolley);
+				queryDisplays.revalidate();
+				queryDisplays.repaint();
+			}
+			defaultCursor();
+		}
+		ball.setMode(Ball.OK);
+		info1.setText(CLIENTINSTR);
 	}
 	
 	@Override

@@ -336,8 +336,6 @@ public class TapClient{
 			if (dynamicTapForm != null && dynamicTapForm.formLoadStatus == TAPFORM_STATUS_NOTLOADED) {
 				if (this.tablesMetaData == null || this.tablesMetaData.isEmpty()) {
 					tapManager.createAndLoadATapServer(this, dynamicTapForm);
-					// when we are explicitly getting metadata for one cache, we try to update in the other as well
-					tapManager.updateServerMetaDataInCache(this);
 				} else {
 					dynamicTapForm.showloading();
 					if (this.mode == TapClientMode.TREEPANEL) {
@@ -397,6 +395,7 @@ public class TapClient{
 			}
 			}
 			this.infoPanel = newInfoPanel;
+			tapManager.updateServerMetaDataInCache(this, true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace >= 3)
@@ -766,6 +765,7 @@ public class TapClient{
 		if (this.serverExamples != null) {
 			this.serverExamples.removeAll();
 			this.serverExamples.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+			this.serverExamples.initExamples = true;
 		}
 		
 		if (this.serverObsTap != null) {

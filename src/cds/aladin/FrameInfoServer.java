@@ -292,5 +292,17 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 		this.server = server;
 	}
 
+	public boolean isThisInfoPanel(TapClient tapClient) {
+		// TODO Auto-generated method stub
+		boolean result = false;
+		if (this.isOfDynamicTapServerType() && this.server != null && this.server.tapClient != null) {
+			if (this.additionalComponent != null && tapClient.infoPanel != null
+					&& this.additionalComponent.equals(tapClient.infoPanel)) {
+				result = true;
+			}
+		}
+		return result;
+	}
+
 
 }

@@ -153,7 +153,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		try {
 			tablesGui = new JComboBox(tables);
 //			tablesGui.setRenderer(new CustomTableRenderer());
-			tablesPanel = getTablesPanel(tablesGui, chosenTable, false);
+			tablesPanel = getTablesPanel(tablesGui, chosenTable, tables, false);
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
 			Aladin.warning(e.getMessage());

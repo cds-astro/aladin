@@ -2436,7 +2436,7 @@ public final class Util {
 		if((considerAsString || isString(str)) && !str.toLowerCase().equals("null") && !dejaQuote(str))
 			str = "'" + str + "'";
 		
-		return " "+ str;
+		return ""+ str;
 	}
 	
 	

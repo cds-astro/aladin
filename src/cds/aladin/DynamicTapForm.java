@@ -196,7 +196,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	 * @return
 	 * @throws BadLocationException 
 	 */
-	public JPanel getTablesPanel(final JComboBox tablesGui, TapTable chosenTable, boolean showSettings) throws BadLocationException {
+	public JPanel getTablesPanel(final JComboBox tablesGui, TapTable chosenTable, List<String> keys, boolean showSettings) throws BadLocationException {
     	JPanel tablesPanel = new JPanel();
 		GridBagLayout gridbag = new GridBagLayout();
 		tablesPanel.setLayout(gridbag);
@@ -224,8 +224,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		if (this.tapClient.mode != TapClientMode.UPLOAD) {
 			tablesGui.setEditable(true);
 			JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
-			List<String> keys = new ArrayList<String>();
-			keys.addAll(this.tapClient.tablesMetaData.keySet());
 			FilterDocument document = new FilterDocument(this, tablesGui, keys, chosenTable.getTable_name());
 			tablesGuiEditor.setDocument(document);
 		} else {
@@ -571,7 +569,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	@Override
 	protected void showStatusReport() {
 		if (aladin.frameInfoServer == null || !aladin.frameInfoServer.isOfDynamicTapServerType()
-				|| !aladin.frameInfoServer.getServer().equals(this)) {
+				|| !aladin.frameInfoServer.isThisInfoPanel(this.tapClient)) {
 			if (aladin.frameInfoServer != null) {
 				aladin.frameInfoServer.dispose();
 			}
@@ -580,7 +578,8 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			} else {// incase the table info is not populated or some issues..
 				aladin.frameInfoServer = new FrameInfoServer(aladin);
 			}
-		} else if (aladin.frameInfoServer.isFlagUpdate() == 1) {
+		} 
+		if (aladin.frameInfoServer.isFlagUpdate() == 1) {
 			try {
 				aladin.frameInfoServer.updateInfoPanel();
 			} catch (Exception e) {
@@ -596,7 +595,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	public Vector<String> getMatches(String mask, JComboBox<String> comboBox) {
 		Vector<String> matches = new Vector<String>();
 		if (/*this.tablesGui ==  comboBox && */mask != null && !mask.isEmpty()) {
-			for (String key : this.tapClient.tablesMetaData.keySet()) {
+			for (String key : getTableNames()) {
 				boolean checkDescription = false;
 				TapTable table = this.tapClient.tablesMetaData.get(key);
 				if (table != null && table.getDescription() != null && !table.getDescription().isEmpty()) {

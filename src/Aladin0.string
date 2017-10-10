@@ -3059,6 +3059,7 @@ NOGLURECFOUND No glu records found to create a customised basic client!
 NOTARGETSET No target set.
 NORANGEERRORMESSAGE Range selected, please provide 2 values!
 CHOOSEFROMTAPSERVERSTEXT Or choose from the lists below:
+WAITLOADINGTAPSERVERSLIST Loading tap servers list...
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables

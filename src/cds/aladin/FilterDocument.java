@@ -27,6 +27,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -81,7 +82,9 @@ public class FilterDocument extends PlainDocument{
 	public FilterDocument(FilterActionClass actClass, JComboBox<String> gui, List<String> keys, String defaultSelection) throws BadLocationException {
 		this.actionClass = actClass;
 		this.comboBox = gui;
-		this.keys = keys; //is the model that reflects your combobox. if you discard an entry then programmatically as you are already discarding table in tapmeta, 
+		this.keys = new ArrayList<String>(); 
+		this.keys.addAll(keys);
+		//is the model that reflects your combobox. if you discard an entry then programmatically as you are already discarding table in tapmeta, 
 		//the filter will automatically pick up
 		//for now filter is only used for "tap tables"
 		//if it is needed for more.. i.e. keys cannot point to tap metadata but to something more generalized 

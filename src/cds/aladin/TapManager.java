@@ -109,7 +109,7 @@ import cds.savot.pull.SavotPullParser;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
-import cds.xml.DaliExamplesReader;
+import cds.xml.ExamplesReader;
 import cds.xml.Field;
 import cds.xml.TapQueryResponseStatusReader;
 import cds.xml.VOSICapabilitiesReader;
@@ -516,7 +516,7 @@ public class TapManager {
 			copy = new TapClient(mode, this, original.tapLabel, urlInput, nodeTables);
 		} 
 		
-		copyMetadata(copy, original, mode);
+		copyMetadata(copy, original, mode, false);
 		copy.tapBaseUrl = urlInput;
 		
 		if (original.serverTap != null && original.tapBaseUrl.equalsIgnoreCase(urlInput)) { //at this point generic form ui is not created. only metadata is copied
@@ -534,9 +534,10 @@ public class TapManager {
 	 * be updated
 	 * 
 	 * @param original
+	 * @param b 
 	 * @return
 	 */
-	public void updateServerMetaDataInCache(TapClient original) {
+	public void updateServerMetaDataInCache(TapClient original, boolean onlyInfoPanel) {
 		TapClientMode mode = null;
 		TapClient toUpdate = null;
 		if (original.mode == TapClientMode.DIALOG) {
@@ -548,28 +549,30 @@ public class TapManager {
 		}
 
 		if (toUpdate != null) {
-			copyMetadata(toUpdate, original, mode);
-			if (toUpdate.serverTap == null) {
+			copyMetadata(toUpdate, original, mode, onlyInfoPanel);
+			/*if (toUpdate.serverTap == null) {
 				toUpdate.serverTap = getNewServerTapInstance(toUpdate, true);
 				toUpdate.serverTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
-			}
+			}*/
 		}
 	}
 	
 	//we wont deepcopy the data and metadata or the infopanel. we will only duplicate the main form using the metadata
-	public void copyMetadata(TapClient copy, TapClient original, TapClientMode mode) {
+	public void copyMetadata(TapClient copy, TapClient original, TapClientMode mode, boolean onlyInfoPanel) {
 		// copy most metadata
-		copy.tapLabel = original.tapLabel;
-		copy.tapBaseUrl = original.tapBaseUrl;
-		copy.capabilities = original.capabilities;
-		copy.setData(original.tablesMetaData);
-		copy.queryCheckerTables = original.queryCheckerTables;
-		copy.obscoreTables = original.obscoreTables;
-		copy.infoPanel = original.infoPanel;
-		if (mode == TapClientMode.TREEPANEL) {
-			copy.primaryColor = Aladin.COLOR_FOREGROUND;
-			copy.secondColor = Color.white;
+		if (!onlyInfoPanel) {
+			copy.tapLabel = original.tapLabel;
+			copy.tapBaseUrl = original.tapBaseUrl;
+			copy.capabilities = original.capabilities;
+			copy.setData(original.tablesMetaData);
+			copy.queryCheckerTables = original.queryCheckerTables;
+			copy.obscoreTables = original.obscoreTables;
+			if (mode == TapClientMode.TREEPANEL) {
+				copy.primaryColor = Aladin.COLOR_FOREGROUND;
+				copy.secondColor = Color.white;
+			}
 		}
+		copy.infoPanel = original.infoPanel;
 	}
 	
 	
@@ -760,34 +763,42 @@ public class TapManager {
 		return capabilities;
 	}
 	
-	public DaliExamplesReader getTapExamples(String tapServiceUrl) {
-		DaliExamplesReader daliExamplesReader = new DaliExamplesReader();
+	public Map getTapExamples(String tapServiceUrl) {
+		ExamplesReader daliExamplesReader = new ExamplesReader();
+		MyInputStream is = null;
+		Map examples = null;
 		try {//tintin
-			URL examplesUrl = getUrl(tapServiceUrl, null, GETTAPEXAMPLES);//new URL(tapServiceUrl+GETTAPEXAMPLES);
+			URL url = getUrl(tapServiceUrl, null, GETTAPEXAMPLES);//new URL(tapServiceUrl+GETTAPEXAMPLES);
 //			URL examplesUrl = new URL("http://gaia.ari.uni-heidelberg.de/tap/examples");
 //			URL examplesUrl = new URL("http://130.79.129.54:8080/simbadExamples.xhtml");
 //			URL examplesUrl = new URL("http://130.79.129.54:8080/view-source_gaia.ari.uni-heidelberg.de_tap_examples.xhtml");
-			URLConnection urlConnection = examplesUrl.openConnection();
-	        urlConnection.setConnectTimeout(getRequest_timeout);
-	        urlConnection.setReadTimeout(getRequest_timeout);
-			daliExamplesReader.parseStream(urlConnection.getInputStream());
+			Aladin.trace(3, "TapManager.getResults() for: "+url);
+			long startTime = getTimeToLog();
+			is = Util.openStreamForTap(url, true, 10000);
+			long time = getTimeToLog();
+			if (Aladin.levelTrace >= 4) System.out.println("DaliExamples got inputstream: "+time+" time taken: "+(time - startTime));
+			startTime = getTimeToLog();
+			examples = daliExamplesReader.parse(is);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (Aladin.levelTrace > 3) e.printStackTrace();
 		} catch (ParserConfigurationException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (Aladin.levelTrace > 3) e.printStackTrace();
 		} catch (SAXException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (Aladin.levelTrace > 3) e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (Aladin.levelTrace > 3) e.printStackTrace();
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (Aladin.levelTrace > 3) e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			if (Aladin.levelTrace > 3) e.printStackTrace();
 		}
-		return daliExamplesReader;
+		return examples;
 	}
 	
 	/**
@@ -906,6 +917,8 @@ public class TapManager {
 						if (Aladin.levelTrace >= 4) System.out.println("all done at: "+time+" time taken: "+(time - startTime));
 						//update table meta anyway and then create the info panel
 						updateTableMetadata(clientToLoad, tapServiceUrl);
+						// when we are explicitly getting metadata for one cache, we try to update in the other as well
+						updateServerMetaDataInCache(clientToLoad, false);
 					} catch (Exception e) {
 						e.printStackTrace();
 						newServer.showLoadingError();
@@ -963,13 +976,91 @@ public class TapManager {
 	public void loadTapServerList() {
 		if (tapFrameServer == null) {
 			tapFrameServer = new TapFrameServer(aladin, this);
+			tapFrameServer.createCenterPane();
+			Aladin.makeCursor(tapFrameServer.options, Aladin.WAITCURSOR);
+			loadPreselectedServers();
+		}
+	}
+	
+	public void loadPreselectedServers() {
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						currentT.setName("TinitPreselectedServers: ");
+						tapFrameServer.initPreselectedServers();
+						Aladin.makeCursor(tapFrameServer.options, Aladin.DEFAULTCURSOR);
+						Aladin.makeCursor(tapFrameServer.treeRegistryPanel, Aladin.WAITCURSOR);
+						loadAllServers();
+					} finally {
+						currentT.setName(oldTName);
+					}
+				}
+			});
+		} catch (RejectedExecutionException ex) {
+			Aladin.trace(3, "RejectedExecutionException");
+			tapFrameServer.showRegistryNotLoaded();
+			Aladin.makeCursor(tapFrameServer.options, Aladin.DEFAULTCURSOR);
+			Aladin.makeCursor(tapFrameServer.treeRegistryPanel, Aladin.DEFAULTCURSOR);
+		}
+	}
+	
+	public void loadAllServers() {
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						currentT.setName("TinitAllServers: ");
+						tapFrameServer.initAllServers();
+						Aladin.makeCursor(tapFrameServer.treeRegistryPanel, Aladin.DEFAULTCURSOR);
+					} finally {
+						currentT.setName(oldTName);
+					}
+				}
+			});
+		} catch (RejectedExecutionException ex) {
+			Aladin.trace(3, "RejectedExecutionException");
+			tapFrameServer.showCompleteListNotLoaded();
+			Aladin.makeCursor(tapFrameServer.treeRegistryPanel, Aladin.DEFAULTCURSOR);
 		}
 	}
 	
 	public void reloadTapServerList() {
 		if (tapFrameServer != null) {
-			tapFrameServer.createRegistryPanel();
+			tapFrameServer.initPreselectedServers();
 			tapFrameServer.reloadRegistryPanel();
+		}
+	}
+	
+	public void initTapExamples(final ServerTapExamples serverTapExamples) {
+		try {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					try {
+						currentT.setName("TinitTapExamples: "+serverTapExamples.tapClient.tapLabel);
+						serverTapExamples.ball.setMode(Ball.WAIT);
+						serverTapExamples.info1.setText("Loading service examples...");
+						serverTapExamples.loadTapExamples();
+					} finally {
+						currentT.setName(oldTName);
+					}
+				}
+			});
+		} catch (RejectedExecutionException ex) {
+			Aladin.trace(3, "RejectedExecutionException");
+			// we do not display server examples.
 		}
 	}
 	
@@ -1049,7 +1140,6 @@ public class TapManager {
 				path = path+"?"+query;
 			}
 			URI uri = new URI(path);
-			genUrl = uri.toURL();
 			
 //			uri = new URI(uri+"?"+query);
 			genUrl = uri.toURL();
