@@ -268,13 +268,15 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			c.gridx++;
 			tablesPanel.add(button,c);
 		
-			button = new JButton("Join");
-			c.weightx = 0.05;
-			c.gridx++;
-			tablesPanel.add(button, c);
-			button.setEnabled(false);
-			button.addActionListener(this);
-			button.setToolTipText(TAPTABLEJOINTIP);
+			if (Aladin.PROTO) {//TODO:: tintinproto
+				button = new JButton("Join");
+				c.weightx = 0.05;
+				c.gridx++;
+				tablesPanel.add(button, c);
+				button.setEnabled(false);
+				button.addActionListener(this);
+				button.setToolTipText(TAPTABLEJOINTIP);
+			}
 		} else if (showSettings) {
 			JButton button = new JButton("Settings");
 			button.setActionCommand(SETTINGS);
@@ -448,8 +450,10 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
-		if (this.tapClient.mode != TapClientMode.UPLOAD) {
-			bottomPanel.add(getUploadButtonIfAvailable());
+		if (Aladin.BETA) {
+			if (this.tapClient.mode != TapClientMode.UPLOAD) {
+				bottomPanel.add(getUploadButtonIfAvailable());
+			}
 		}
 		return bottomPanel;
 	}

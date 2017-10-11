@@ -476,9 +476,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 		} else if (s.equals(GO)) {
 			go();
 		} else if (s.equals(RESET)) {
-			Aladin.makeCursor(this, WAIT);
+			Aladin.makeCursor(registryPanel, WAIT);
 			reset();
-			Aladin.makeCursor(this, DEFAULT);
+			Aladin.makeCursor(registryPanel, DEFAULT);
 		} else if (s.equals(LOAD)) {
 			try {
 				Aladin.makeCursor(this, WAIT);
@@ -553,10 +553,8 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	}
 
 	public void reset() {
-		Aladin.makeCursor(this, WAIT);
 		fillWithRegistryServers(EMPTYSTRING);
 		reloadRegistryPanel();
-		Aladin.makeCursor(this, DEFAULT);
 	}
 	
 	public void reloadRegistryPanel() {

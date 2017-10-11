@@ -117,7 +117,7 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	}*/
 	
 	public Dimension getPreferredSize() {
-		return new Dimension(500, 450);
+		return new Dimension(520, 450);
 	}
 	
 	protected void show(JComponent panel, String title) {

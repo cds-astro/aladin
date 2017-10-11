@@ -377,22 +377,20 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 //               sv.addElement(new ServerSWarp(aladin));
 //               sv.addElement(new ServerMocQuery(aladin));
 //            if( Aladin.PROTO) sv.addElement(new ServerXmatch(aladin));
-            if( Aladin.BETA ) {//TODO:: tintinproto
-            	this.tapManager = TapManager.getInstance(aladin);
-            	
-            	tapServer = new ServerTap(aladin);
+            
+            this.tapManager = TapManager.getInstance(aladin);
+        	
+        	tapServer = new ServerTap(aladin);
+			sv.addElement(tapServer);
+			
+			/*if (aladin.glu.lastTapGluServer != null) {//drag drop of new server take priority
+        	tapServer = aladin.glu.lastTapGluServer;
+        	tapServer.HIDDEN = false;
+        	if( !tapServer.isVisible() ) tapServer.setVisible(true);
+			} else{//initial aladin load
+				tapServer = new ServerTap(aladin);
 				sv.addElement(tapServer);
-            	
-            	
-                /*if (aladin.glu.lastTapGluServer != null) {//drag drop of new server take priority
-                	tapServer = aladin.glu.lastTapGluServer;
-                	tapServer.HIDDEN = false;
-                	if( !tapServer.isVisible() ) tapServer.setVisible(true);
-    			} else{//initial aladin load
-    				tapServer = new ServerTap(aladin);
-    				sv.addElement(tapServer);
-    			}*/
-            }
+			}*/
             
 //         } else {
 //            sv.addElement(new ServerSimbad(aladin));
@@ -1143,7 +1141,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       int i = findIndiceServer(nom);
       if( i<0 ) return false;
       
-      if (Aladin.BETA && "TAP".equals(nom)) {//TODO::tintinproto
+      if ("TAP".equals(nom)) {
     	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
   			return false;
       	  };
@@ -1366,7 +1364,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       // Changement du formulaire
       server[current].memTarget(); // Memorisation du precedent target
-      if (Aladin.BETA && "TAP".equals(what)) {//TODO::tintinproto
+      if ("TAP".equals(what)) {
     	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
 			return false;
     	  };

@@ -201,7 +201,7 @@ public class ServerGlu extends Server implements Runnable {
       flagSIAIDHA = resultDataType!=null && (resultDataType.indexOf("sia")>=0 
             || resultDataType.indexOf("idha")>=0  || resultDataType.indexOf("ssa")>=0 );
       flagTAP = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tap")==0; 
-      flagTAPV2 = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tapv1")==0 && Aladin.BETA;//TODO:: tintinproto
+      flagTAPV2 = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tapv1")==0;
 
       if( flagSIAIDHA && type!=SPECTRUM ) type=IMAGE;
       DISCOVERY=flagSIAIDHA || type==SPECTRUM || type==CATALOG;

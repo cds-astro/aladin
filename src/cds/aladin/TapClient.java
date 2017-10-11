@@ -136,9 +136,19 @@ public class TapClient{
 		} else {
 			String[] modesAllowed = null;
 			if (this.nodeName != null) {
-				modesAllowed = new String []{ GLU, nodeName, GENERIC, TEMPLATES, OBSCORE };
+				if (Aladin.PROTO) {//TODO:: tintinproto
+					modesAllowed = new String []{ GLU, nodeName, GENERIC, TEMPLATES, OBSCORE };
+				} else {
+					modesAllowed = new String []{ GLU, nodeName, GENERIC};
+				}
+				
 			} else {
-				modesAllowed = new String []{ GLU, GENERIC, TEMPLATES, OBSCORE };
+				if (Aladin.PROTO) {//TODO:: tintinproto
+					modesAllowed = new String []{ GLU, GENERIC, TEMPLATES, OBSCORE };
+				} else {
+					modesAllowed = new String []{ GLU, GENERIC};
+				}
+				
 			}
 			model = new DefaultComboBoxModel(modesAllowed){//TODO:: tintin
 				@Override

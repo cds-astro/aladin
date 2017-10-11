@@ -4624,9 +4624,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          // Deselection des objets en cours dans le cas ou une application
          // type VOPlot est utilisee en parallele
-         if (Aladin.BETA) {//TODO:: tintinproto
-            glu.tapManager.cleanUp();
-         }
+         glu.tapManager.cleanUp();
          
          // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
          try {
@@ -4668,9 +4666,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try { plugins.cleanup(); } catch( Exception e ) {}
       }
       
-      if (Aladin.BETA) {//TODO:: tintinproto
-    	  glu.tapManager.finalCleanUp();
-      }
+      glu.tapManager.finalCleanUp();
 
       if( aladinSession>0 || flagLaunch ) { // Si Aladin demarre par launch() cacher la fenetre
          //          System.out.println("Aladin.action: flagLaunch true => dispose");
