@@ -620,7 +620,9 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	public ADQLQuery checkQuery()  throws UnresolvedIdentifiersException {
 		ADQLQuery query = null;
 		try {
-			this.tapClient.updateUploadedTablesToParser(this);
+			if (Aladin.PROTO) {
+				this.tapClient.updateUploadedTablesToParser(this);
+			}
 			query = super.checkQuery();
 //			DefaultDBTable table = new DefaultDBTable(selectedTableName);
 //			System.err.println("getADQLCatalogName "+table.getADQLCatalogName()+"\ngetADQLSchemaName "+table.getADQLSchemaName()+"\ngetADQLName "+table.getADQLName()+"\ntoString "+table.toString());
