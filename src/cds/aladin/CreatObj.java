@@ -57,7 +57,7 @@ public final class CreatObj implements Runnable {
       a.synchroServer = new Synchro(10000);
       a.synchroPlan = new Synchro(60000);
       a.command=new Command(a);
-      trace(1,"Creating Command interface");
+      trace(1,"Creating Command");
 
       a.vButton = new Vector(10);
 //      trace(1,"Creating Button menu");

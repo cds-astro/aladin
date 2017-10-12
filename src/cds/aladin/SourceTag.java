@@ -116,7 +116,7 @@ public class SourceTag extends Source  {
    protected void suite() {
       leg=legende;
       setShape(Obj.PLUS);
-      setTag(true);
+//      setTag(true);
       setWithLabel(true);
       resumeMesures();
    }

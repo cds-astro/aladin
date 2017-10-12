@@ -3438,7 +3438,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
          coord = aladin.localisation.getICRSCoord(coord);
 
-         if( notCoord(coord) ) {
+         if( Localisation.notCoord(coord) ) {
 
             // resolution synchrone
             if( flagNow ) {
@@ -3664,7 +3664,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                c = coordXYLinear(saisie);
                break;
             default:
-               c = new Coord(aladin.localisation.getICRSCoord(saisie));
+               c = new Coord(aladin.localisation.getICRSCoord(saisie ));
          }
          rep = setRepere(c,true);
          aladin.sendObserver();
@@ -3681,7 +3681,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void setRepere(Plan p) {
       if( p.objet==null || p.objet.length()==0 ) return;
       if( p.co==null ) {
-         if( notCoord(p.objet) ) {
+         if( Localisation.notCoord(p.objet) ) {
             if( !sesameResolveForPlan(p) ) return;
          } else {
             try { p.co=new Coord(p.objet); }
@@ -4245,15 +4245,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       v.repaint();
    }
 
-
-   /** Retourne vrai si la chaine contient au moins une lettre */
-   static protected boolean notCoord(String s) {
-      char a[] = s.toCharArray();
-      for( int i=0; i<a.length; i++ ) {
-         if( a[i]>='a' && a[i]<='z' ||  a[i]>='A' && a[i]<='Z' ) return true;
-      }
-      return false;
-   }
 
    /** Affichage rapide des bordures des vues */
    public void paintBordure() {

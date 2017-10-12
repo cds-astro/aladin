@@ -27,12 +27,6 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DragSourceListener;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetListener;
 
 import javax.swing.JPanel;
 
@@ -89,6 +83,7 @@ public final class SelectDialog extends JPanel {
       g.drawLine(w-1,0,w-1,h);
 
       MyButton c = serverDialog.buttons[serverDialog.bcurrent];
+      if( c==null )  return;
 
       if( c.type==MyButton.LEFT || c.type==MyButton.RIGHT ) {
       	 int y = c.getLocation().y;

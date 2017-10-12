@@ -85,6 +85,13 @@ public class Localisation extends MyBox  {
       "XY Fits","XY image","XY linear","Planet","Planet deg"
    };
 
+  // Le label pour chaque frame dans le vocabulaire FoX
+   static final String [] FRAMEFOX = {
+         "ICRS","ICRS","ECL","GAL","SGAL",
+         "J2000","J2000","B1950","B1950","B1900","B1875",
+         "","","","",""
+      };
+
    // Le mot clé RADECSYS Fits correspondant au système de coordonnée
    static final String [] RADECSYS = {
       "ICRS","ICRS",null,null,null,
@@ -411,13 +418,49 @@ public class Localisation extends MyBox  {
       this.frame=frame;
       setChoiceIndex(frame);
    }
-
+   
+   /** Retourne le nom du frame courant sous la forme d'un code compatible avec la librairie Fox */
+   protected String getFrameFox() { return FRAMEFOX[frame]; }
+   
+   /** Retourne true si le mot est un frame à la FOX */
+   static protected boolean isFrameFox(String s) {
+      return s!=null && s.length()>0 && Util.indexInArrayOf(s, FRAMEFOX, true)>=0;
+   }
+   
    /** Retourne le nom du frame passé en paramètre */
    protected String getFrameName() { return getFrameName(frame); }
    static public String getFrameName(int frame) { return frame<0 ? "" : REPERE[frame]; }
 
    /** Retourne la position du menu deroulant */
    protected int getFrame() { return frame; }
+   
+   /** Retourne true si la coordonnée est suffixée par le frame à la Fox (ex: 134 +89 ICRS) */
+   static protected boolean hasFoxSuffix(String s) {
+      int i = s.lastIndexOf(' ');
+      if( i>0 ) {
+         String w = s.substring(i+1);
+         if( Localisation.isFrameFox(w) ) return true;
+      }
+      return false;
+   }
+   
+   /** Retourne vrai si la chaine n'est pas une coordonnées */
+   static protected boolean notCoord(String s) {
+      
+      // La coordonnée peut être suffixé par un nom de frame (ICRS, GAL ...)
+      int i = s.lastIndexOf(' ');
+      if( i>0 ) {
+         String w = s.substring(i+1);
+         if( Localisation.isFrameFox(w) ) s = s.substring(0,i).trim();
+      }
+      
+      char a[] = s.toCharArray();
+      for( i=0; i<a.length; i++ ) {
+         if( a[i]>='a' && a[i]<='z' ||  a[i]>='A' && a[i]<='Z' ) return true;
+      }
+      return false;
+   }
+   
    
 //   static final public int ICRS   = 0;
 //   static final public int ICRSD  = 1;
@@ -442,7 +485,8 @@ public class Localisation extends MyBox  {
              frame==SGAL ? SGAL :
              (frame!=XY || frame!=XYNAT || frame!=XYLINEAR || frame!=PLANET) ? ICRS : -1;
    }
-
+   
+   
    /** Insère le résultat d'une résolution Sésame dans le champ de commande avec le label
     * POSITION histoire que cela se comprenne */
    protected void setSesameResult(String s) {
@@ -615,7 +659,7 @@ public class Localisation extends MyBox  {
    protected String getFrameCoord(String coo) {
       return convert(coo, ICRS, frame);
    }
-
+   
    /** Conversion et/ou mise en forme de coordonnées
     * @param coo coordonnées ou identificateur
     * @param frameSource numéro du système de référence source : ICRS, ICRSd...
@@ -624,13 +668,27 @@ public class Localisation extends MyBox  {
     */
    static protected String convert(String coo,int frameSource,int frameTarget) {
 
+      String coo1=coo;
+      
       // Champ vide => Rien à faire
       if( coo==null || coo.length()==0 || coo.indexOf("--")>=0 ) return "";
-
+      
+      // Y a-t-il un frame spécifique indiqué en suffixe => override le frame courant
+      int i = coo.lastIndexOf(' ');
+      if( i>=0 ) {
+         String s = coo.substring(i+1);
+         int f = Util.indexInArrayOf(s, FRAMEFOX, true);
+         if( f>=0 ) {
+            frameSource=f;
+            coo = coo.substring(0,i).trim();
+//            System.out.println("Bingo: "+s+" => "+coo);
+         }
+      }
+      
       // Identificateur à la place d'une coordonnée => Rien à faire
-      for( int i=0; i<coo.length(); i++) {
+      for( i=0; i<coo.length(); i++) {
          char ch = coo.charAt(i);
-         if( (ch>='A' && ch<='Z') || (ch>='a' && ch<='z') ) return coo;
+         if( (ch>='A' && ch<='Z') || (ch>='a' && ch<='z') ) return coo1;
       }
 
       // Edition et conversion si nécessaire

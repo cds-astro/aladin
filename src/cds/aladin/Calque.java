@@ -3448,7 +3448,7 @@ public class Calque extends JPanel implements Runnable {
       Coord c=null;
       if( target!=null && target.length()>0) {
          try {
-            if( !View.notCoord(target) ) c = new Coord(target);
+            if( !Localisation.notCoord(target) ) c = new Coord(target);
             else c = aladin.view.sesame(target);
          } catch( Exception e ) { e.printStackTrace(); }
 

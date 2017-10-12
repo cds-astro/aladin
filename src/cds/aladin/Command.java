@@ -1035,9 +1035,13 @@ public final class Command implements Runnable {
             setSyncNeedRepaint(true);
             setSyncNeedSesame(true);
             
+            
             // Notamment pour prendre en compte les identificateurs du genre "* alf Cen"
             // Sinon il va tenter une multiplication
             cmd = Tok.unQuote(cmd);
+            
+            // La commande est dont une position que l'on va tout de même mémoriser
+            target.append(cmd);
 
             // Via une adresse healpix norder/npi
             if( execHpxCmd(cmd) ) return false;
@@ -1221,7 +1225,10 @@ public final class Command implements Runnable {
       StringBuffer erreur=new StringBuffer();	 // Liste des erreurs
 
       // Extraction des trois champs de la commande
-      if( !splitGetCmd(serversX,targetX,radiusX,cmd,withServer) ) return null;
+      boolean res = splitGetCmd(serversX,targetX,radiusX,cmd,withServer);
+      a.targetHistory.add(targetX+"");
+      
+      if( !res ) return null;
       String target = a.localisation.getICRSCoord(targetX.toString().trim());
       String radius = radiusX.toString();
 
@@ -1241,7 +1248,7 @@ public final class Command implements Runnable {
 
          // On verifie immediatement que l'identificateur est bien
          // reconnu par Simbad
-         if( View.notCoord(target) ) {
+         if( Localisation.notCoord(target) ) {
             int csr = Aladin.WAITCURSOR;
             Aladin.makeCursor(a,csr);
             Coord coo=null;
@@ -1252,6 +1259,7 @@ public final class Command implements Runnable {
                if( coo==null ) Aladin.warning("\""+target+"\": "+a.chaine.getString("OBJUNKNOWN"),1);
             } catch( Exception e ) { Aladin.warning(e.getMessage(),1); }
             if( coo==null )  return null;
+            
          }
       }
 

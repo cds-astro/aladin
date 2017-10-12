@@ -1190,7 +1190,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
    static String resolveTarget(String s, Aladin aladinInst) {
        Coord c;
        try {
-           if( !View.notCoord(s) ) c = new Coord(s);
+           if( !Localisation.notCoord(s) ) c = new Coord(s);
            else  c=aladinInst.view.sesame(s);
        } catch( Exception e ) { return null; }
 

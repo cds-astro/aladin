@@ -382,7 +382,7 @@ public class Server extends JPanel
    /** Interprête la coordonnées et exécute Sésame si nécessaire */
    protected String sesameIfRequired(String s,String sep) throws Exception {
        Coord c;
-       if( !View.notCoord(s) ) c = new Coord(s);
+       if( !Localisation.notCoord(s) ) c = new Coord(s);
        else c=aladin.view.sesame(s);
        return c==null?null:c.getSexa(sep);
    }
@@ -401,7 +401,7 @@ public class Server extends JPanel
          }
 
          Coord c=null;
-         if( !View.notCoord(t) ) c = new Coord(t);
+         if( !Localisation.notCoord(t) ) c = new Coord(t);
          else c=aladin.view.sesame(t);
          if( c==null ) return null;
 

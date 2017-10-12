@@ -175,6 +175,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String SEDWAVE    = "SEDWave";
    protected static String DIRFILER   = "DirFilter";
    protected static String LASTFILE   = "LastFile";
+   protected static String LASTTARGET = "LastTarget";
    protected static String LASTRUN    = "LastRun";
    protected static String STOPHELP   = "StopHelp";
    protected static String LOOKANDFEELTHEME      = "LookAndFeelTheme";
@@ -1963,8 +1964,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
 
       // Je sauvegarde les paths des fichiers récemment ouverts
+      int i=1;
       if( lastFile!=null ) {
-         int i=1;
          for( String path : lastFile ) {
             String key = LASTFILE+(i++);
             bw.write(Util.align(key, 20) + path);
@@ -1972,6 +1973,15 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          }
       }
       
+      // Je sauvergarde les 20 dernières target
+      i=1;
+      for( String target : aladin.targetHistory.list ) {
+         String key = LASTTARGET+(i++);
+         bw.write(Util.align(key, 20) + target);
+         bw.newLine();
+         if( i>40 ) break;
+      }
+
       // Je sauvegarde les filtres du répertoire des collections
       // sous la forme : DirFilterNN   name : filter_rule
       // et j'en profite pour sauvegarder les MOCs correspondants (et nettoyer les vieux)
@@ -1983,7 +1993,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       
       if( filterExpr.size()>0) {
          
-         int i=1;
+         i=1;
          try {
             for( String name : filterExpr.keySet() ) {
                if( name.equals(Directory.ALLCOLL) ) continue;
@@ -2096,9 +2106,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          String value = new String(a, j, a.length - j);
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
          if( key.equals(LOOKANDFEELTHEME) && !value.equals("dark") ) previousTheme=1;
-         aladin.trace(4, "Configuration.load() [" + key + "] = [" + value + "]");
+         aladin.trace(6, "Configuration.load() [" + key + "] = [" + value + "]");
 
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
+         else if( key.startsWith(LASTTARGET) ) setLastTarget(value);
          else if( key.startsWith(DIRFILER) ) loadDirFilter(value);
          else set(key, value);
       }
@@ -2561,6 +2572,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
       if( lastFile.size()==MAXLASTFILE ) lastFile.removeFirst();
       lastFile.add(path);
+   }
+   
+   /** Mémorise les dernières targets */
+   protected void setLastTarget(String target ) {
+      if( aladin.targetHistory==null ) aladin.targetHistory = new TargetHistory(aladin);
+      aladin.targetHistory.add(target);
    }
 
    /** Positionnement du répertoire par défaut, avec vérification d'existence */

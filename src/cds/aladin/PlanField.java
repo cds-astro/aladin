@@ -32,7 +32,11 @@ import java.util.Vector;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
-import cds.astro.*;
+import cds.astro.AstroMath;
+import cds.astro.Astrocoo;
+import cds.astro.Coo;
+import cds.astro.ICRS;
+import cds.astro.Proj3;
 import cds.tools.Util;
 import cds.tools.VOApp;
 
@@ -272,7 +276,7 @@ public final class PlanField extends Plan {
       // Target computing. In case of astronomical object name, the instrument FoV will
       // be built when the CDS sesame resolver will provide the corresponding coordinates
       // via the PlanField.setCenter() method
-      if( target.length()==0 || View.notCoord(target) ) {
+      if( target.length()==0 || Localisation.notCoord(target) ) {
          needTarget=true;
          setActivated(false);
          this.roll=roll;
@@ -390,7 +394,7 @@ public final class PlanField extends Plan {
       // Target computing. In case of astronomical object name, the instrument FoV will
       // be built when the CDS sesame resolver will provide the corresponding coordinates
       // via the PlanField.setCenter() method
-      if( target==null || target.length()==0 || View.notCoord(target) ) {
+      if( target==null || target.length()==0 || Localisation.notCoord(target) ) {
          needTarget=true;
          setActivated(false);
          this.roll=roll;

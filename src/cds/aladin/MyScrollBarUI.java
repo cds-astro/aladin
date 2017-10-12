@@ -41,7 +41,7 @@ public class MyScrollBarUI extends BasicScrollBarUI {
        trackColor = Aladin.COLOR_BACKGROUND;                      // UIManager.getColor("ScrollBar.track");
        trackHighlightColor = UIManager.getColor("ScrollBar.trackHighlight");
        
-       scrollBarWidth=16;
+       try { scrollBarWidth=16; } catch( Throwable e ) { }
    }
    
    protected JButton createDecreaseButton(int orientation)  {

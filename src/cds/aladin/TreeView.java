@@ -33,7 +33,11 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 
 
@@ -269,7 +273,7 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
 	protected static String resolveTarget(String s, Aladin a) {
 		Coord c;
 		try {
-			if( !View.notCoord(s) )
+			if( !Localisation.notCoord(s) )
 				c = new Coord(s);
 			else
 				c = a.view.sesame(s);
@@ -282,7 +286,7 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
 	   protected static Coord resolveTargetCoo(String s, Aladin a) {
 	        Coord c=null;
 	        try {
-	            if( !View.notCoord(s) )
+	            if( !Localisation.notCoord(s) )
 	                c = new Coord(s);
 	            else
 	                c = a.view.sesame(s);

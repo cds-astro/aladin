@@ -92,7 +92,7 @@ public abstract class MyBox extends JPanel {
 
       // Creation du selecteur du repere
       c = createChoice();
-      c.setFont(c.getFont().deriveFont((float)c.getFont().getSize()-1));
+//      c.setFont(c.getFont().deriveFont((float)c.getFont().getSize()-1));
 
       // Creation du label contenant la valeur de la position courant
       pos = new Text("",30);

@@ -57,6 +57,31 @@ public final class Coord {
 
    /** Creation et affection al,del en fonction d'une chaine sexagesimale
     * ou degre */
+//   public Coord(Aladin aladin,String sexa) throws Exception {
+//      
+//      // La coordonnée peut être précédé par le frame à la FOX (ex: ICRS: 12 34 1.9 +5 4 5.6)
+//      int frameSrc=aladin.localisation.getFrame();
+//      int frameDst=frameSrc;
+//      int i = sexa.indexOf(':');
+//      if( i>0 ) {
+//         String prefix = sexa.substring(0,i);
+//         if( Localisation.isFrameFox(prefix) ) {
+//            frameSrc = Localisation.getFrameComboValue(prefix);
+//            sexa = sexa.substring(i+1).trim();
+//         }
+//      }
+//      
+//      coo.set(sexa);
+//      al  = coo.getLon();
+//      del = coo.getLat();
+//      
+//      if( frameSrc!=frameDst ) {
+//         Coord c = Localisation.frameToFrame(this, frameSrc, frameDst);
+//         al=c.al;
+//         del=c.del;
+//      }
+//   }
+   
    public Coord(String sexa) throws Exception {
       coo.set(sexa);
       al  = coo.getLon();

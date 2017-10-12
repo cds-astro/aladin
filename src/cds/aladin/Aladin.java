@@ -160,6 +160,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> User interface:
  * @beta    <LI> - new theme (dark background...)
  * @beta    <LI> - new panels/facilities (data discovery tree...)
+ * @beta    <LI> - Target history control
  * @beta    <LI> - Simbad + VizieR "pointers" improvements
  * @beta    <LI> - fullscreen mode menu and widgets
  * @beta    <LI> - flexible panels management (split)
@@ -251,7 +252,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.022";
+   static public final    String VERSION = "v10.023";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -626,9 +627,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameVOTool frameVOTool;      // Gère les applications VO accessibles par Aladin
    protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
    public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
-   public Console console;                  // Gere la fenetre de la console
-   public Command command=null;	      // Gere les commandes asynchrones
-   Synchro synchroServer;              // Gère les synchronisations des servers
+   public Console console;       // Gere la fenetre de la console
+   public Command command=null;	 // Gere les commandes asynchrones
+   public TargetHistory targetHistory; // Gère l'historique des targets successives
+   Synchro synchroServer;        // Gère les synchronisations des servers
    Synchro synchroPlan;              // Gère les synchronisations des Plans
    FrameNewCalib frameNewCalib=null; // Gere la fenetre de recalibration astrometrique
    public Configuration configuration;	      // Configuration utilisateur
@@ -4624,7 +4626,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          // Deselection des objets en cours dans le cas ou une application
          // type VOPlot est utilisee en parallele
-         glu.tapManager.cleanUp();
+            glu.tapManager.cleanUp();
          
          // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
          try {
@@ -4666,7 +4668,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try { plugins.cleanup(); } catch( Exception e ) {}
       }
       
-      glu.tapManager.finalCleanUp();
+    	  glu.tapManager.finalCleanUp();
 
       if( aladinSession>0 || flagLaunch ) { // Si Aladin demarre par launch() cacher la fenetre
          //          System.out.println("Aladin.action: flagLaunch true => dispose");
@@ -7507,7 +7509,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Coord c1 = v.getCooCentre();
          double srcZoom = v.zoom;
          Coord c;
-         if( !View.notCoord(target) ) c = new Coord(target);
+         if( !Localisation.notCoord(target) ) c = new Coord(target);
          else c = view.sesame(target);
          
          if( radius==null ) radius="30";

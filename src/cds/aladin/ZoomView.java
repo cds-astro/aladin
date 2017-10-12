@@ -27,16 +27,22 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
+import java.util.ArrayList;
 
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 import cds.tools.Util;
 
@@ -56,6 +62,7 @@ import cds.tools.Util;
  * @see aladin.View()
  * @author Pierre Fernique [CDS]
  * @author Anais Oberto [CDS]
+ * @version 1.5 : (oct 2017) Incorporation de l'historique des targets
  * @version 1.4 : (nov 2004) Incorporation du cut Graph
  * @version 1.4 : (mars 2004) utilisation du setPixels() pour la loupe + les flêches
  * @version 1.3 : (janv 2004) Incorporation du trace des coupes
@@ -112,7 +119,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    SED sed=null;                    // SED courant
    protected boolean flagHist=false;  // true si l'histogramme est actif
    protected boolean flagSED=false;   // true s'il faut afficher le SED courant
-
+   private boolean flagTargetControl=false; // true si on affiche le controle des targets
+   
    // Gestion de la synchronization des vues compatibles
    private boolean flagSynchronized=false;  // true - indique que l'on a déjà fait un synchronize des vues (SHIFT)
 
@@ -169,13 +177,88 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
 
    public void mouseClicked(MouseEvent e) {};
+   
+   class JMenuItemExt extends JMenuItem {
+      JMenuItemExt(String s) {
+         super(s);
+         addMouseMotionListener( new MouseMotionAdapter() {
+            public void mouseMoved(MouseEvent e) {
+               String s = ((JMenuItem)e.getSource()).getActionCommand(); 
+//               System.out.println("Je suis sur l'item "+s);
+            }
+         });
+      }
+   }
+   
+   /** Mémorisation de la position courante du réticule dans l'historique des targets */
+   private void memoLoc() {
+      aladin.targetHistory.add( aladin.localisation.getLocalisation(aladin.view.repere) );
+   }
+   
+   /** Action à opérer lorsque l'on clique sur le triangle */
+   protected void triangleAction(int x,int y) { triangleAction(x,y,0); }
+   protected void triangleAction( final int x, final int y, int initIndex ) {
+      int max=20;
+      ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max );
+      if( v.size()==0 ) return;
+      
+      // On crée un JPopupmenu contenant les 10 dernières targets, et s'il y en a encore,
+      // ajoute à la fin de la liste une entrée "..." qui permet d'avoir les suivantes
+      JPopupMenu popup = new JPopupMenu();
+      for( String s: v ) {
+         JMenuItem mi = null;
+         if( s.equals("...") ) {
+            mi = new JMenuItem(s);
+            mi.setActionCommand(""+(initIndex+max));
+            mi.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  try {
+                     int index = Integer.parseInt( ((JMenuItem)e.getSource()).getActionCommand() );
+                     triangleAction(x,y,index);
+                  }catch( Exception e1) {}
+               }
+            });
+
+         } else {
+            mi = new JMenuItemExt( s.length()>40 ? s.substring(0,38)+" ..." : s);
+            mi.setActionCommand(s);
+            mi.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  String s = ((JMenuItem)e.getSource()).getActionCommand();
+                  aladin.execAsyncCommand(s);
+               }
+            });
+         }
+         popup.add(mi);
+      }
+      setComponentPopupMenu(popup);
+      popup.show(this, x ,y);
+   }
+
 
    public void mousePressed(MouseEvent e) {
       if( aladin.inHelp ) return;
       if( flagCut || flagHist || flagSED ) return;
+      
+      // Actions liées à la liste des targets
+      if( flagTargetControl ) {
+         if( rectTarget.contains(e.getPoint() ) ) {
+            aladin.execAsyncCommand( aladin.targetHistory.getLast() );
+
+         } else if( rectHistory.contains(e.getPoint()) ) {
+            triangleAction(e.getX(), e.getY());
+            
+         } else if( rectLoc.contains(e.getPoint()) ) {
+            memoLoc();
+            repaint();
+         }
+         return;
+      }
+
+      
       ViewSimple v = aladin.view.getCurrentView();
       v.stopAutomaticScroll();
-
+      
       or = null;
       if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY());
       else {
@@ -240,6 +323,28 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    /** Dans le cas de l'affichage d'un cut Graph, affichage du de FWHM */
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
+      
+      // S'il y a affichage du controle de l'historique des targets, mise à jour
+      // des flags si la souris est dessus
+      if( rectHistory!=null ) {
+         boolean in1,in2,in3;
+         boolean repaint=false;
+         in1=rectHistory.contains( e.getPoint() );
+         if( in1!=flagHistoryIn ) { flagHistoryIn=in1; repaint=true; }
+         if( in1 ) Util.toolTip(this, "List of previous targets");
+
+         in2=rectTarget.contains( e.getPoint());
+         if( in2!=flagTargetHistoryIn ) { flagTargetHistoryIn=in2; repaint=true; }
+         if( in2 ) Util.toolTip(this, "Go back to this target");
+
+         in3=rectLoc.contains( e.getPoint());
+         if( in3!=flagLocHistoryIn ) { flagLocHistoryIn=in3; repaint=true; }
+         if( in3 ) Util.toolTip(this, "Store the current reticle location in the list of targets");
+
+         flagTargetControl = in1 || in2 || in3;
+         if( !flagTargetControl ) Util.toolTip(this, "");
+         if( repaint ) repaint();
+      }
 
       if( flagSED ) {
          sed.mouseMove(e.getX(),e.getY());
@@ -339,7 +444,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    /** Deplacement du rectangle de zoom */
    public void mouseReleased(MouseEvent e) {
       if( aladin.inHelp ) { aladin.helpOff(); return; }
-
+      
+      if( flagTargetControl ) return;
+      
       if( flagSED ) { sed.mouseRelease(e.getX(), e.getY() ); return; }
 
       if( flagCut ) {
@@ -611,15 +718,16 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             String s;
             gbuf.setFont(Aladin.SBOLD);
             FontMetrics fm = gbuf.getFontMetrics();
-            s="Frame: "+Localisation.REPERE[aladin.localisation.getFrame()];
-            gbuf.drawString(s,getWidth()-fm.stringWidth(s)-2,10);
+//            s="Frame: "+Localisation.REPERE[aladin.localisation.getFrame()];
+//            gbuf.drawString(s,getWidth()-fm.stringWidth(s)-2,10);
             gbuf.setColor( Aladin.COLOR_BLUE );
             s=aladin.localisation.J2000ToString(c.al, c.del);
             gbuf.drawString(s,width/2-fm.stringWidth(s)/2,height-16);
             s=v.getTaille(0);
             
             gbuf.drawString(s,width/2-fm.stringWidth(s)/2,height-4);
-
+            
+            
             drawBord(gbuf);
 
             //         t = Util.getTime()-t;
@@ -627,6 +735,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          }
 
          g.drawImage(imgbuf, 0,0, this);
+         drawTargetHistoryControl(g);
+         
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -635,6 +745,62 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    // Trace les bords avec un effet de relief
    private void drawBord(Graphics g) {
       Util.drawEdge(g,getWidth(),getHeight());
+   }
+   
+   
+   private Rectangle rectLoc=null;
+   private Rectangle rectHistory=null;
+   private Rectangle rectTarget=null;
+   private boolean flagHistoryIn=false;
+   private boolean flagTargetHistoryIn=false;
+   private boolean flagLocHistoryIn=false;
+   
+   private void drawTargetHistoryControl(Graphics g) {
+      Color c =  Aladin.COLOR_CONTROL_FOREGROUND;
+      
+      // Dessin du logo de localisation
+      int x=5, y=10;
+      g.setColor( flagLocHistoryIn ? c.brighter() : c);
+      drawLoc(g,x,y-5);
+      rectLoc = new Rectangle(x,y-5,15,15);
+      x+=25;
+      
+      // Affichage du dernier target
+      String target = aladin.targetHistory.getLast();
+      int w = g.getFontMetrics().stringWidth(target);
+      g.setColor( flagTargetHistoryIn ? c.brighter() : c);
+      g.drawString(target,x,y+6);
+      rectTarget = new Rectangle(x,y,w,15);
+      x+=w+10;
+      
+      // Dessin du triangle
+      g.setColor( flagHistoryIn ? c.brighter() : c);
+      Util.fillTriangle7(g, x,y);
+      rectHistory = new Rectangle(x,y,15,15);
+      
+   }
+   
+   // Barres horizontales du dessin 
+   static final private int LOCX[][] = {
+      {0, 5,9 },
+      {1, 4,10},
+      {2, 3,11},
+      {3, 2,5}, {3, 9,12},
+      {4, 2,4}, {4, 10,12},
+      {5, 2,4}, {5, 10,12},
+      {6, 2,4}, {6, 10,12},
+      {7, 2,5}, {7, 9,12},
+      {8, 3,11},
+      {9, 4,10},
+      {10, 5,9 },
+      {11, 5,9 },
+      {12, 6,8 },
+      {13, 7,7 },
+   };
+   
+   /** Dessine l'icone de mémorisation de la localisation  */
+   protected void drawLoc(Graphics g, int x,int y) {
+      for( int i=0; i<LOCX.length; i++ ) g.drawLine(LOCX[i][1]+x,LOCX[i][0]+y,LOCX[i][2]+x,LOCX[i][0]+y);
    }
 
    /** Changement de table des couleurs
@@ -1325,6 +1491,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
    public void paintComponent(Graphics gr) {
       if( Aladin.NOGUI ) return;
+      
+      rectHistory=null;
       
       // AntiAliasing
       aladin.setAliasing(gr);
