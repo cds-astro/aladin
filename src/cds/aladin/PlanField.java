@@ -1007,14 +1007,14 @@ public final class PlanField extends Plan {
    protected String getProjCenter() {
       Position c = getProjCenterObjet();
       if( c==null ) return "";
-      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3);
+      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3,false);
    }
 
    /** Return FoV rotation center in the current Aladin coordinate frame */
    protected String getRotCenter() {
       Position c = getRotCenterObjet();
       if( c==null ) return "";
-      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3);
+      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3,false);
    }
 
    private Astrocoo afs = new Astrocoo(new ICRS());    // Frame ICRS (la reference de base)

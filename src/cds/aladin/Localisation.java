@@ -554,7 +554,7 @@ public class Localisation extends MyBox  {
                         r > 0.00001 ?Astrocoo.MAS-1 :
                            Astrocoo.MAS+1;
 
-                        s=J2000ToString(coo.al,coo.del,precision);
+                        s=J2000ToString(coo.al,coo.del,precision,false);
                         if( Aladin.PLASTIC_SUPPORT && sendPlasticMsg ) {
                            aladin.getMessagingMgr().pointAtCoords(coo.al, coo.del);
                         }
@@ -718,20 +718,29 @@ public class Localisation extends MyBox  {
     * @param al,del : coordonnees (ICRS)
     * @return La chaine decrivant la position
     */
-   protected String J2000ToString(double al,double del) { return J2000ToString(al,del,Astrocoo.ARCSEC+1); }
-   protected String J2000ToString(double al,double del,int precision) {
+   protected String J2000ToString(double al,double del) { return J2000ToString(al,del,Astrocoo.ARCSEC+1,false); }
+   protected String J2000ToString(double al,double del,int precision,boolean withFox) {
       Coord cTmp = new Coord(al,del);
       cTmp = ICRSToFrame(cTmp);
       afs.setPrecision(precision);
-      return frameToString(cTmp.al,cTmp.del,precision);
+      String rep = frameToString(cTmp.al,cTmp.del,precision);
+      if( withFox ) rep = rep+" "+getFrameFox();
+      return rep;
    }
+   
+   /** Retourne la position d'un objet en fonction du frame
+    * courant et ajoute ce frame en suffixe
+    * @param al,del : coordonnees (ICRS)
+    * @return La chaine decrivant la position
+    */
+   protected String foxString(double al, double del) { return J2000ToString(al,del,Astrocoo.ARCSEC+1,true); }
 
    protected String frameToString(double al,double del) { return frameToString(al,del,Astrocoo.ARCSEC+1); }
    protected String frameToString(double al,double del,int precision) {
       int i = getFrame();
       
-      afs.setPrecision(precision);
       afs.set(al,del);
+      afs.setPrecision(precision);
       try {
          return (i==J2000D || i==B1950D || i==ICRSD
                || i==ECLIPTIC || i==GAL || i==SGAL )?

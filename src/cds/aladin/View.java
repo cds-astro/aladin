@@ -46,6 +46,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -3427,10 +3428,13 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       long lastDelai = Util.getTime() - lastRepaint;
       return lastDelai > 500;
    }
+   
+   private HashMap<String, String> miniCache = new HashMap<String, String>();
 
    /** Action sur le ENTER dans la boite de localisation */
    protected void sesameResolve(String coord) { sesameResolve(coord,false); }
    protected String sesameResolve(String coord,boolean flagNow) {
+      
       saisie=coord;
       setRepereId(coord);
       boolean result=true;
@@ -3439,18 +3443,30 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          coord = aladin.localisation.getICRSCoord(coord);
 
          if( Localisation.notCoord(coord) ) {
-
-            // resolution synchrone
-            if( flagNow ) {
-               result=(new SesameThread(saisie,null)).resolveSourceName();
-
-               // resolution a-synchrone
+            
+            // Dans le cache ?
+            // Est-ce que je l'ai déjà en cache ?
+            String s = miniCache.get( coord );
+            if( s!=null ) {
+               saisie=aladin.localisation.getFrameCoord(s);
+               Aladin.trace(2,"Sesame: "+coord+" in local cache -> "+saisie);
+               result=true;
+               
             } else {
-               String sesameSyncID = sesameSynchro.start("sesame/"+coord,7000);
-               SesameThread sesameThread = new  SesameThread(saisie, sesameSyncID);
-               Util.decreasePriority(Thread.currentThread(), sesameThread);
-               sesameThread.start();
-               return null;
+
+
+               // resolution synchrone
+               if( flagNow ) {
+                  result=(new SesameThread(saisie,null)).resolveSourceName();
+
+                  // resolution a-synchrone
+               } else {
+                  String sesameSyncID = sesameSynchro.start("sesame/"+coord,7000);
+                  SesameThread sesameThread = new  SesameThread(saisie, sesameSyncID);
+                  Util.decreasePriority(Thread.currentThread(), sesameThread);
+                  sesameThread.start();
+                  return null;
+               }
             }
          }
 
@@ -3526,7 +3542,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                saisie=sourceName;
                rep=false;
             } else {
+               // Mise en cache
+//               miniCache.put( sourceName, aladin.localisation.foxString(c.al,c.del) );
+               
                saisie=aladin.localisation.J2000ToString(c.al,c.del);
+
                aladin.console.printInPad(sourceName+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
                if( !setRepereByString() && !aladin.NOGUI ) {
                   Vector<Plan> v = aladin.calque.getPlanBG();
@@ -3958,6 +3978,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                oco = new Coord(st1.nextToken()+" "+st1.nextToken());
                oobjet=objet;
                Aladin.trace(2,"Sesame: "+objet+" -> "+oco.getSexa());
+               miniCache.put( objet, oco.getSexa()+" ICRS" );
                return oco;
             }
          }
