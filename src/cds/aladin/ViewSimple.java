@@ -72,7 +72,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
@@ -1776,7 +1775,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 		   grabItDialog = uploadFrame;
 	   } else if (aladin.grabUtilInstance.grabFrame != null && aladin.grabUtilInstance.grabFrame.isGrabIt() ) {
 		   grabItDialog = aladin.grabUtilInstance.grabFrame;
-	   } 
+	   } else if( aladin.directory.isGrabIt() ) {
+	      grabItDialog = aladin.directory;
+	   }
       return grabItDialog;
    }
 
@@ -2637,7 +2638,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          modeGrabIt=false;
          grabItDialog.setGrabItRadius(grabItX,grabItY,x,y);
          stopGrabIt();
-         ((JFrame)grabItDialog).toFront();
+         grabItDialog.toFront();
          flagMoveRepere=false;
       }
 
@@ -4621,7 +4622,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             orz = new RectangleD(rzoom.x,rzoom.y,rzoom.width,rzoom.height);
             pHashCode = p.hashCode();
             lastImgID = imgID;
-         }
+        }
 
          if( p instanceof PlanImageBlink ) {
             double currentFrameLevel = getCurrentFrameLevel();
@@ -4699,7 +4700,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          this.dx = (int)Math.floor(imgDx);
          this.dy = (int)Math.floor(imgDy);
-
+         
+         
          return true;
 
       } catch( OutOfMemoryError e ) {
@@ -6763,6 +6765,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          modeGrabIt=false;
          pref.flagProcessing=false;
       }
+      
+      // Pour éviter un double affichage en mode grab it
+      if( modeGrabIt ) pGrabItX=-1;
 
       boolean fullScreen = isFullScreen();
 

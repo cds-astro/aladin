@@ -121,8 +121,8 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    // déjà été calculée
 
    // pour robot
-   Server curServer, localServer, vizierServer,vizierArchives,vizierSurveys,
-   vizierBestof,discoveryServer, aladinServer, fovServer, almaFovServer, vizierSED, hipsServer, tapServer;
+   Server curServer, localServer, vizierServer,/* vizierArchives,vizierSurveys,
+   vizierBestof,discoveryServer, */aladinServer, fovServer, almaFovServer, vizierSED, /* hipsServer, */tapServer;
    JButton submit;
 
    // Les references aux autres objets
@@ -837,10 +837,9 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          if( Aladin.NETWORK ) ((ServerVizieR) server[VIZIER]).hideSFrame();
          FrameInfo f = aladin.getFrameInfo();
          if( f != null ) f.setVisible(false);
-         if( discoveryServer != null
-               && ((ServerAllVO) discoveryServer).frameServer != null ) {
-            ((ServerAllVO) discoveryServer).frameServer.setVisible(false);
-         }
+//         if( discoveryServer != null && ((ServerAllVO) discoveryServer).frameServer != null ) {
+//            ((ServerAllVO) discoveryServer).frameServer.setVisible(false);
+//         }
       } catch( Exception e ) { }
       setVisible(false);
    }
@@ -894,6 +893,11 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    public void startGrabIt() {
       if( server[current].grab == null
             || !server[current].grab.getModel().isSelected() ) return;
+      
+      if( aladin.firstGrab && aladin.configuration.isHelp() && aladin.configuration.showHelpIfOk("GRABINFO") ) {
+         aladin.firstGrab=false;
+      }
+
       aladin.f.toFront();
    }
 
@@ -1122,12 +1126,12 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       int i = findIndiceServer(nom);
 
       // Les cas particuliers VizieR
-      if( vizierSurveys!=null ) {
-         if( i<0 && vizierSurveys.setParam(nom) )  i=findIndiceServer(vizierSurveys);
-      }
-      if( vizierSurveys!=null ) {
-         if( i<0 && vizierArchives.setParam(nom) ) i=findIndiceServer(vizierArchives);
-      }
+//      if( vizierSurveys!=null ) {
+//         if( i<0 && vizierSurveys.setParam(nom) )  i=findIndiceServer(vizierSurveys);
+//      }
+//      if( vizierSurveys!=null ) {
+//         if( i<0 && vizierArchives.setParam(nom) ) i=findIndiceServer(vizierArchives);
+//      }
 
       if( i<0 ) return false;
       setCurrent(i);

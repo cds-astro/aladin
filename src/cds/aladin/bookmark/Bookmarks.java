@@ -295,7 +295,7 @@ public class Bookmarks extends JToolBar implements Widget {
                cache.putInCache(u);
             }
             MyInputStream in =  new MyInputStream(cache.get(glu.getURL(gluTag,"",false,false)));
-            aladin.getCommand().execScript(new String(in.readFully()),false,true);
+            aladin.getCommand().execScript(new String(in.readFully()),false,true,false);
             in.close();
             remoteBookmarksLoaded=true;
          } catch( Exception e ) {
@@ -310,7 +310,7 @@ public class Bookmarks extends JToolBar implements Widget {
             aladin.trace(3,"Local bookmarks loaded ["+f.getCanonicalPath()+"]...");
             command.setFunctionLocalDefinition(true);  // Toutes ces fonctions sont considérées comme locales
             MyInputStream in = new MyInputStream(new FileInputStream(f));
-            command.execScript(new String(in.readFully()),false,true);
+            command.execScript(new String(in.readFully()),false,true,false);
             in.close();
          } catch( Exception e ) {
             e.printStackTrace();

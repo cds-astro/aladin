@@ -225,14 +225,23 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   String s = ((JMenuItem)e.getSource()).getActionCommand();
-                  aladin.execAsyncCommand(s);
+                  aladin.command.execNow(s);
                }
             });
          }
          popup.add(mi);
       }
-      setComponentPopupMenu(popup);
-      popup.show(this, x ,y);
+      
+      if( aladin.isFullScreen() ) {
+         JComponent c = ((JComponent)aladin.fullScreen.getContentPane());
+         c.setComponentPopupMenu(popup);
+         WidgetControl wc = getWidgetControl();
+         popup.show(c, wc.getX()+x , wc.getY()+y);
+        
+      } else {
+         setComponentPopupMenu(popup);
+         popup.show(this, x ,y);
+      }
    }
 
 
@@ -243,7 +252,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       // Actions liées à la liste des targets
       if( flagTargetControl ) {
          if( rectTarget.contains(e.getPoint() ) ) {
-            aladin.execAsyncCommand( aladin.targetHistory.getLast() );
+            aladin.command.execNow( aladin.targetHistory.getLast() );
 
          } else if( rectHistory.contains(e.getPoint()) ) {
             triangleAction(e.getX(), e.getY());
@@ -318,11 +327,18 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    private int cutX=-1;
    private int cutY=-1;
 
-   private String INFO=null;
+   private String INFO=null,TIPTARGET=null,TIPLISTTARGET=null,TIPSTORETARGET=null;
 
    /** Dans le cas de l'affichage d'un cut Graph, affichage du de FWHM */
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
+      
+      if( INFO==null ) {
+         INFO = aladin.chaine.getString("ZINFO");
+         TIPTARGET = aladin.chaine.getString("TIPTARGET");
+         TIPLISTTARGET = aladin.chaine.getString("TIPLISTTARGET");
+         TIPSTORETARGET = aladin.chaine.getString("TIPSTORETARGET");
+      }
       
       // S'il y a affichage du controle de l'historique des targets, mise à jour
       // des flags si la souris est dessus
@@ -331,15 +347,15 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          boolean repaint=false;
          in1=rectHistory.contains( e.getPoint() );
          if( in1!=flagHistoryIn ) { flagHistoryIn=in1; repaint=true; }
-         if( in1 ) Util.toolTip(this, "List of previous targets");
+         if( in1 ) Util.toolTip(this, TIPTARGET);
 
          in2=rectTarget.contains( e.getPoint());
          if( in2!=flagTargetHistoryIn ) { flagTargetHistoryIn=in2; repaint=true; }
-         if( in2 ) Util.toolTip(this, "Go back to this target");
+         if( in2 ) Util.toolTip(this, TIPLISTTARGET);
 
          in3=rectLoc.contains( e.getPoint());
          if( in3!=flagLocHistoryIn ) { flagLocHistoryIn=in3; repaint=true; }
-         if( in3 ) Util.toolTip(this, "Store the current reticle location in the list of targets");
+         if( in3 ) Util.toolTip(this, TIPSTORETARGET);
 
          flagTargetControl = in1 || in2 || in3;
          if( !flagTargetControl ) Util.toolTip(this, "");
@@ -352,7 +368,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
 
-      if( INFO==null ) INFO = aladin.chaine.getString("ZINFO");
       aladin.status.setText(INFO);
       cutX=e.getX();cutY=e.getY();
       if( flagHist && hist.setOnMouse(e.getX(),e.getY()) ) {
@@ -762,7 +777,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       int x=5, y=10;
       g.setColor( flagLocHistoryIn ? c.brighter() : c);
       drawLoc(g,x,y-5);
-      rectLoc = new Rectangle(x,y-5,15,15);
+      rectLoc = new Rectangle(x,y-5,15,20);
       x+=25;
       
       // Affichage du dernier target
@@ -770,13 +785,13 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       int w = g.getFontMetrics().stringWidth(target);
       g.setColor( flagTargetHistoryIn ? c.brighter() : c);
       g.drawString(target,x,y+6);
-      rectTarget = new Rectangle(x,y,w,15);
+      rectTarget = new Rectangle(x,y-5,w,20);
       x+=w+10;
       
       // Dessin du triangle
       g.setColor( flagHistoryIn ? c.brighter() : c);
       Util.fillTriangle7(g, x,y);
-      rectHistory = new Rectangle(x,y,15,15);
+      rectHistory = new Rectangle(x,y-5,15,20);
       
    }
    
@@ -1545,7 +1560,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       }
 
       if( v.isPlotView()  ) {
-         gr.clearRect(0,0,w,h);
+         gr.setColor( BGD );
+         gr.fillRect(0,0,w,h);
          drawBord(gr);
          return;
       }

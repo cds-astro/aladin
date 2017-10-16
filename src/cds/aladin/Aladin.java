@@ -159,7 +159,7 @@ import healpix.essentials.Vec3;
  * @beta <UL>
  * @beta    <LI> User interface:
  * @beta    <LI> - new theme (dark background...)
- * @beta    <LI> - new panels/facilities (data discovery tree...)
+ * @beta    <LI> - new panels/facilities (data discovery tree, access selector...)
  * @beta    <LI> - Target history control
  * @beta    <LI> - Simbad + VizieR "pointers" improvements
  * @beta    <LI> - fullscreen mode menu and widgets
@@ -252,7 +252,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.023";
+   static public final    String VERSION = "v10.025";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -653,6 +653,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private String lastDir=null;  // Le dernier répertoire utilisé
    private final long startTime = System.currentTimeMillis();  // Date de démarrage
    private long sizeCache=0L;    // Taille du cache disque pour les grosses images
+   protected boolean firstGrab=true; // Pour repérer le premier usage d'un grab
 
    // plugin VOSpec
    Object vospec;
@@ -2201,6 +2202,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Retourne le numéro de session d'Aladin. N'a d'intéret que dans le
     * cas d'instanciation multiple d'Aladin */
    public int getInstanceId() { return aladinSession; }
+   
+   // Nécessaire pour récupérer la largeur du panel afin de post positionner le split
+   private JPanel mainRight;
 
    /** Creation des objets et mise en place de l'interface.
     * On utilisera la plupart du temps des Panels hierarchises
@@ -2483,7 +2487,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       droite2.setMinimumSize(new Dimension(180,100));
       droite2.setPreferredSize(new Dimension(getStackWidth(),100));
       
-      JPanel mainRight = new JPanel( new BorderLayout(0,0));
+      mainRight = new JPanel( new BorderLayout(0,0));
       mainRight.add(haut,BorderLayout.NORTH);
       mainRight.add(splitZoomWidth,BorderLayout.CENTER);
       
@@ -3321,7 +3325,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( isMenu(s,OPENLOAD) ) dialog.setVisible(true);
          else {
             Server server = /* isMenu(s,OPENFILE) || */isMenu(s,OPENURL)? dialog.localServer
-                  : isMenu(s,LOADVO) ? dialog.discoveryServer
+//                  : isMenu(s,LOADVO) ? dialog.discoveryServer
                         : isMenu(s,ALADIN_IMG_SERVER) ? dialog.aladinServer
                               : dialog.fovServer ;
 
@@ -3594,7 +3598,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Exécute une normalisation sur le plan de base */
    protected void norm() {
-      command.execLater("norm");
+      command.execNow("norm");
    }
 
    /** Exécute une opération arithmétique sur les deux plans images sélectionnés */
@@ -3671,7 +3675,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Activation du COPY depuis la JBar */
    protected void copy() {
       PlanImage pi = calque.getFirstSelectedSimpleImage();
-      command.execLater("copy "+Tok.quote(pi.getLabel()));
+      command.execNow("copy "+Tok.quote(pi.getLabel()));
    }
 
    /** Activation du DUMP depuis la JBar */
@@ -5914,6 +5918,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.mesure.setReduced(true);
       a.splitHiPSWidth.setDividerLocation( a.getHiPSWidth() );
       a.splitZoomHeight.setDividerLocation( a.calque.getHeight() -  a.getZoomViewHeight() );
+      a.splitZoomWidth.setDividerLocation( a.mainRight.getWidth() -  a.getStackWidth() );
       
       //      trace(2,"Aladin window size: "+a.getWidth()+"x"+a.getHeight());
    }
@@ -7266,7 +7271,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       ActionExecutor.ready = true;
       command.stackStream.removeAllElements();
       command.setStream(null);
-      command.execLater("robot off");
+      command.execNow("robot off");
 
       command.curTuto = null;
    }

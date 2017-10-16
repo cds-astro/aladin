@@ -51,5 +51,7 @@ public interface GrabItFrame {
 	 *            Position dans la vue
 	 */
 	void setGrabItRadius(double x1, double y1, double x2, double y2);
+	
+	public void toFront();
 
 }

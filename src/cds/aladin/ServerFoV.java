@@ -196,6 +196,7 @@ public final class ServerFoV extends Server implements TableModel {
 
       initDynamicFoV();
 
+      aladin.targetHistory.add( target );
       return creatFieldPlane(target,roll,instrument,label);
    }
 
@@ -220,6 +221,7 @@ public final class ServerFoV extends Server implements TableModel {
 
 //      if( label==null ) label=instrument;
       label = getDefaultLabelIfRequired(label,instrument);
+      aladin.targetHistory.add( target );
       if( fpBean!=null ) return aladin.calque.newPlanField(fpBean, target, label,roll);
       else return aladin.calque.newPlanField(target,roll,instrument,label);
    }

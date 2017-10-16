@@ -1421,6 +1421,7 @@ public class ServerGlu extends Server implements Runnable {
 
          } while( encore );
 
+         if( n!=-1 ) aladin.targetHistory.add(objet);
          return n;
 
       } finally { aladin.synchroServer.stop(serverTaskId); }
@@ -1648,7 +1649,8 @@ public class ServerGlu extends Server implements Runnable {
          if( r==null ) r="";
          else r = " "+Coord.getUnit(getRM(r)/60.);
          code = "get "+actionName + (criteres.length()==0?" ":"("+criteres+") ");
-         aladin.console.printCommand(code+this.getTarget()+r);
+         aladin.targetHistory.add( getTarget() );
+         aladin.console.printCommand(code+getTarget()+r);
       }
 
       

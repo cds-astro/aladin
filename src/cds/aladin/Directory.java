@@ -21,6 +21,7 @@
 
 package cds.aladin;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -101,7 +102,7 @@ import cds.tools.Util;
  * @version 1.0 décembre 2016 - création
  * @author Pierre Fernique [CDS]
  */
-public class Directory extends JPanel implements Iterable<MocItem> {
+public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame {
 
    // Nombre de collections appelables individuellement en parallèle
    static private final int MAX_PARALLEL_QUERY = 30;
@@ -109,11 +110,12 @@ public class Directory extends JPanel implements Iterable<MocItem> {
    static private String DIRECTORY, MULTICOL;
 
    static protected String AWCSLAB, AWCSTIP, AWMCSTIP, AWSIATIP, AWSSATIP, AWMOCQLAB, AWMOCQLABTIP, AWMOCTITLE, AWMOC1, AWMOC1TIP,
-         AWMOC2, AWMOC2TIP, AWMOC3, AWMOC3TIP;
+         AWMOC2, AWMOC2TIP, AWMOC3, AWMOC3TIP ;
 
    static protected String ALLCOLL, MYLIST, ALLCOLLHTML, MYLISTHTML, AWSKYCOV, AWMOCUNK, AWHIPSRES, AWNBROWS, AWREFPUB, AWPROGACC,
          AWPROGACCTIP, AWDATAACC, AWDATAACCTIP, AWDATAACCTIP1, AWINVIEWTIP, AWMOCQLABTIP2, AWXMATCH, AWXMATCHTIP, AWCRIT,
-         AWCRITTIP, AWMOCX, AWMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE;
+         AWCRITTIP, AWMOCX, AWMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
+         AWFRAMEINFOTITLE,AWCGRAPTIP,AWCONE,AWCONETIP,AWACCMODE,AWACCMODETIP,AwDERPROD,AwDERPRODTIP,AWINFOTIP,AWPROPTIP,AWBOOKMARKTIP,AWPARAMTIP,AWSTICKTIP;
 
    static private final String UPDATING = "  updating...";
 
@@ -175,8 +177,22 @@ public class Directory extends JPanel implements Iterable<MocItem> {
       MYLISTHTML = "-- " + S("DTWORKLIST") + " --";
       ALLCOLLHTML = "-- " + S("DTALLCOLL") + " --";
       ALLCOLL = ALLCOLLHTML;
+      AWFRAMEINFOTITLE = S("AWFRAMEINFOTITLE");
       AWCSLAB = S("AWCSLAB");
       AWMCSTIP = S("AWMCSTIP");
+      AWCGRAPTIP = S("AWCGRAPTIP");
+      AWCONE = S("AWCONE");
+      AWCONETIP = S("AWCONETIP");
+      AWACCMODE = S("AWACCMODE");
+      AWACCMODETIP = S("AWACCMODETIP");
+      AwDERPROD = S("AwDERPROD");
+      AwDERPRODTIP = S("AwDERPRODTIP");
+      AWINFOTIP = S("AWINFOTIP");
+      AWPROPTIP = S("AWPROPTIP");
+      AWBOOKMARKTIP = S("AWBOOKMARKTIP");
+      AWPARAMTIP = S("AWPARAMTIP");
+      AWSTICKTIP = S("AWSTICKTIP");
+      AWCONETIP = S("AWCONETIP");
       AWSIATIP = S("AWSIATIP");
       AWSSATIP = S("AWSSATIP");
       AWMOCQLAB = S("AWMOCQLAB");
@@ -378,6 +394,11 @@ public class Directory extends JPanel implements Iterable<MocItem> {
       dirTree.addMouseMotionListener(new MouseMotionListener() {
          public void mouseMoved(MouseEvent e) {
             if( frameInfo == null || !frameInfo.isVisible() ) return;
+            
+            // La maj automatique de la fenêtre d'accès est invalidée si elle a été épinglée
+            // il faut explicitement cliqué sur les noeuds
+            if( decorated ) return;
+            
             TreePath tp = dirTree.getPathForLocation(e.getX(), e.getY());
             if( tp == null ) return;
             if( getSelectedTreeObjDir().size() > 1 ) return;
@@ -678,6 +699,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
    // La frame d'affichage des informations du HiPS cliqué à la souris
    private FrameInfo frameInfo = null;
+   private boolean isDecorated = false;
 
    /** Cache la fenêtre des infos du HiPS */
    private void hideInfo() {
@@ -713,19 +735,51 @@ public class Directory extends JPanel implements Iterable<MocItem> {
          frameInfo.setVisible(false);
          return false;
       }
-      if( frameInfo == null ) frameInfo = new FrameInfo();
-      Point p = e.getLocationOnScreen();
+      boolean created = false;
+      if( frameInfo == null ) {
+         created=true;
+         frameInfo = new FrameInfo(decorated);
+      }
       if( !frameInfo.setCollections(treeObjs) ) return false;
 
+      Point p = e.getLocationOnScreen();
       int w = 350;
       int h = 120;
-      int x = p.x + 50;
+      //      int x = p.x + 50;
+      int x = aladin.getLocationOnScreen().x+aladin.splitHiPSWidth.getDividerLocation();
       int y = p.y - 30;
-
       if( y < 0 ) y = 0;
-      frameInfo.setBounds(x, y, Math.max(w, frameInfo.getWidth()), Math.max(h, frameInfo.getHeight()));
+
+      // Calcul de la position de la fenêtre si elle n'était pas "décorée"
+      rectFrameInfo = new Rectangle( x, y, Math.max(w, frameInfo.getWidth()), Math.max(h, frameInfo.getHeight()) );
+      
+      // Positionnement de la fenêtre si elle n'est pas "décorée", ou si elle vient d'être créée
+      if( !decorated || created )  frameInfo.setBounds( rectFrameInfo );
+
+      frameInfo.setVisible(true);
+      if( decorated ) frameInfo.toFront();
+      
+      this.decorated = decorated;
+      treeObjsShown = treeObjs;
+
+      return true;
+   }
+   
+   private boolean decorated=false;
+   private Rectangle rectFrameInfo = null;
+   private ArrayList<TreeObjDir> treeObjsShown = null;
+   
+   private boolean reshowInfo(boolean decorated) {
+      if( frameInfo==null || !frameInfo.isVisible() ) return false;
+      Rectangle bounds = frameInfo.getBounds();
+      frameInfo.dispose();
+      frameInfo = new FrameInfo(decorated);
+      this.decorated=decorated;
+      if( !frameInfo.setCollections(treeObjsShown) ) return false;
+      frameInfo.setBounds( !decorated ? rectFrameInfo : bounds );
       frameInfo.setVisible(true);
       return true;
+      
    }
 
    // Gestion du scanning
@@ -939,7 +993,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
          StringBuilder s2 = null;
          Tok tok = new Tok(s);
          while( tok.hasMoreTokens() ) {
-            expr = "obs_title,obs_collection,ID=" + DirectoryFilter.jokerize(tok.nextToken());
+            expr = "obs_title,obs_collection,obs_collection_label,ID=" + DirectoryFilter.jokerize(tok.nextToken());
             if( s2 == null ) s2 = new StringBuilder(expr);
             else s2.append(" && " + expr);
          }
@@ -1947,7 +2001,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
          boolean isSSA = prop.getProperty("ssa_service_url") != null;
          boolean isTAP = prop.getProperty("tap_service_url") != null;
          String subCat = isHips ? "HiPS"
-               : isSIA ? "Image" : isSSA ? "Spectrum" : isCS ? "Catalog" : isTAP ? "Table" : "Miscellaneous";
+               : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
 
          category = "Unsupervised/" + subCat + "/" + Util.getSubpath(id, 0, 1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
@@ -2733,8 +2787,9 @@ public class Directory extends JPanel implements Iterable<MocItem> {
    protected void resumeFrameInfo() {
       if( frameInfo == null || !frameInfo.isVisible() ) return;
       frameInfo.resumePanel();
+      frameInfo.updateWidget();
    }
-
+   
    /********* Classe gérant une fenêtre d'information associée au HiPS cliqué dans l'arbre des HiPS ***************/
 
    private class FrameInfo extends JFrame implements ActionListener {
@@ -2745,16 +2800,22 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
       JCheckBox hipsBx = null, mocBx = null, mociBx = null, mocuBx, progBx = null, dmBx = null, siaBx = null, ssaBx = null,
             csBx = null, msBx = null, allBx = null, tapBx = null, xmatchBx = null, globalBx = null, liveBx = null;
+      ConeField target = null;
+      JPanel targetPanel = null;
+      JButton load = null, grab = null;
 
-      JButton load = null;
-
-      FrameInfo() {
-         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      FrameInfo(boolean decorated) {
+         
+         Aladin.setIcon(this);
+         setTitle(AWFRAMEINFOTITLE);
+         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+         Util.setCloseShortcut(this, false, aladin);
+         
          JPanel contentPane = (JPanel) getContentPane();
          contentPane.setLayout(new BorderLayout(5, 5));
          contentPane.setBackground(new Color(240, 240, 250));
          contentPane.setBorder(BorderFactory.createLineBorder(Color.black));
-         setUndecorated(true);
+         setUndecorated(!decorated);
          pack();
       }
 
@@ -2762,9 +2823,10 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
          // Si on efface la fenêtre popup, on resete aussi la mémorisation
          // de la liste des TreeObj concerné par le dernier affichage
-         if( !flag ) treeObjs = null;
-
-         if( flag ) updateWidget();
+         if( !flag ) {
+            treeObjs = null;
+            setTarget(null);
+         } else updateWidget();
 
          super.setVisible(flag);
       }
@@ -2773,28 +2835,78 @@ public class Directory extends JPanel implements Iterable<MocItem> {
       public void actionPerformed(ActionEvent e) {
          updateWidget();
       }
+      
+      String sTarget=null;
+      String sRadius=null;
+      
+      protected void setTarget(String s) { sTarget = s; }
+      protected void setRadius(String s) { sRadius = s; }
 
       private void updateWidget() {
          if( load == null ) return;
-         boolean activate = false;
-         if( hipsBx != null ) activate |= hipsBx.isSelected();
-         if( mocBx != null ) activate |= mocBx.isSelected();
-         if( mociBx != null ) activate |= mociBx.isSelected();
-         if( mocuBx != null ) activate |= mocuBx.isSelected();
-         if( progBx != null ) activate |= progBx.isSelected();
-         if( dmBx != null ) activate |= dmBx.isSelected();
-         if( siaBx != null ) activate |= siaBx.isSelected();
-         if( ssaBx != null ) activate |= ssaBx.isSelected();
-         if( csBx != null ) activate |= csBx.isSelected();
-         if( liveBx != null ) activate |= liveBx.isSelected();
-         if( msBx != null ) activate |= msBx.isSelected();
-         if( allBx != null ) activate |= allBx.isSelected();
-         if( tapBx != null ) activate |= tapBx.isSelected();
-         if( xmatchBx != null ) activate |= xmatchBx.isSelected();
-         if( globalBx != null ) activate |= globalBx.isSelected();
-         load.setEnabled(activate);
+         boolean activateLoad = false;
+         boolean activateTarget = false;
+         if( hipsBx != null )   activateLoad |= hipsBx.isSelected();
+         if( mocBx != null )    activateLoad |= mocBx.isSelected();
+         if( mociBx != null )   activateLoad |= mociBx.isSelected();
+         if( mocuBx != null )   activateLoad |= mocuBx.isSelected();
+         if( progBx != null )   activateLoad |= progBx.isSelected();
+         if( dmBx != null )     activateLoad |= dmBx.isSelected();
+         if( siaBx != null )  { activateLoad |= siaBx.isSelected();  activateTarget |= siaBx.isSelected(); }
+         if( ssaBx != null )  { activateLoad |= ssaBx.isSelected();  activateTarget |= ssaBx.isSelected(); }
+         if( csBx != null )   { activateLoad |= csBx.isSelected();   activateTarget |= csBx.isSelected(); }
+         if( liveBx != null ) { activateLoad |= liveBx.isSelected(); activateTarget |= liveBx.isSelected(); }
+         if( msBx != null )     activateLoad |= msBx.isSelected();
+         if( allBx != null )    activateLoad |= allBx.isSelected();
+         if( tapBx != null )    activateLoad |= tapBx.isSelected();
+         if( xmatchBx != null ) activateLoad |= xmatchBx.isSelected();
+         if( globalBx != null ) activateLoad |= globalBx.isSelected();
+         load.setEnabled(activateLoad);
+         
+         if( activateTarget ) {
+            if( sTarget!=null && sTarget.trim().length()==0  ) sTarget=null;
+            String s = sTarget==null?"":sTarget;
+            if( s.length()>0 && sRadius!=null && sRadius.trim().length()>0 ) s=s+"   "+sRadius;
+            target.setText(s);
+            int n = targetPanel.getComponentCount();
+            if( n<2 ) {
+               targetPanel.removeAll();
+               targetPanel.add( target );
+               if( Projection.isOk( aladin.view.getCurrentView().getProj()) ) targetPanel.add( grab );
+               validate();
+            }
+            String info = getDefaultCone();
+            target.setInfo(info==null ? "Object or coordinates ?":info);
+         } else {
+            if( targetPanel!=null && targetPanel.getComponentCount()>0 ) {
+               targetPanel.removeAll();
+               validate();
+            }
+         }
+         
+         // Changement de nom et de tooltip sur les checkbox "in view"
+         if( target!=null && targetPanel!=null ) {
+            boolean inView = (targetPanel.getComponentCount()==0 || target.getText().trim().length()==0) && getDefaultCone()!=null;
+            for( JCheckBox cb : new JCheckBox[]{ csBx, siaBx, ssaBx }) {
+               if( cb==null ) continue;
+               cb.setText( inView  ? AWCSLAB : AWCONE );
+               Util.toolTip(cb, inView ? AWCSTIP : AWCONETIP);
+            }
+         }
       }
-
+      
+      protected String getDefaultCone() {
+         Coord coo;
+         if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+            return null;
+         }
+         coo = aladin.view.getCurrentView().getCooCentre();
+         String target = aladin.localisation.aladin.localisation.getFrameCoord( coo.getDeg() );
+         
+         double radius = aladin.view.getCurrentView().getTaille();
+         return target+"   "+Coord.getUnit( radius );
+      }
+      
       boolean isSame(ArrayList<TreeObjDir> a1, ArrayList<TreeObjDir> a2) {
          if( a1 == null && a2 == null ) return true;
          if( a1 == null || a2 == null ) return false;
@@ -2830,7 +2942,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
          Rectangle cross = null;
 
-         boolean in;
+         boolean inCross;
 
          MyInfoPanel() {
             super();
@@ -2838,16 +2950,15 @@ public class Directory extends JPanel implements Iterable<MocItem> {
             setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 7));
             addMouseListener(this);
             addMouseMotionListener(this);
-            ;
          }
 
          public void paint(Graphics g) {
             super.paint(g);
-            drawCross(g, getWidth() - W - 6, 4);
+            if( !decorated ) drawCross(g, getWidth() - W - 6, 4);
          }
 
          private void drawCross(Graphics g, int x, int y) {
-            g.setColor(in ? Color.red : Color.gray);
+            g.setColor(inCross ? Color.red : Color.gray);
             g.drawLine(x, y, x + W, y + W);
             g.drawLine(x + 1, y, x + W + 1, y + W);
             g.drawLine(x + 2, y, x + W + 2, y + W);
@@ -2857,32 +2968,27 @@ public class Directory extends JPanel implements Iterable<MocItem> {
             cross = new Rectangle(x, y - 2, W + 2, W + 2);
          }
 
-         public void mouseClicked(MouseEvent e) {
-         }
 
          public void mousePressed(MouseEvent e) {
-            if( in ) hideInfo();
-         }
-
-         public void mouseReleased(MouseEvent e) {
-         }
-
-         public void mouseEntered(MouseEvent e) {
-         }
-
-         public void mouseExited(MouseEvent e) {
-         }
-
-         public void mouseDragged(MouseEvent e) {
+            if( inCross ) hideInfo();
          }
 
          public void mouseMoved(MouseEvent e) {
-            if( cross == null ) return;
-            boolean in1 = cross.contains(e.getPoint());
-            if( in1 != in ) repaint();
-            in = in1;
+            if( cross!=null ) {
+               boolean in1 = cross.contains(e.getPoint());
+               if( in1 != inCross ) repaint();
+               inCross = in1;
+            }
          }
+         
+         public void mouseClicked(MouseEvent e) { }
+         public void mouseReleased(MouseEvent e) { }
+         public void mouseEntered(MouseEvent e) { }
+         public void mouseExited(MouseEvent e) { }
+         public void mouseDragged(MouseEvent e) { }
       }
+      
+      private void epingle() { reshowInfo( !decorated ); }
 
       /** Reconstruit le panel des informations en fonction des collections courantes */
       void resumePanel() {
@@ -2903,7 +3009,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
          TreeObjDir to = null;
          boolean hasView = !aladin.view.isFree();
-         boolean hasSmallView = hasView && aladin.view.getCurrentView().getTaille() < 30;
+//         boolean hasSmallView = hasView && aladin.view.getCurrentView().getTaille() < 30;
          boolean hasMocPol = aladin.view.hasMocPolSelected();
          boolean hasRegion = aladin.calque.getNbPlanMoc() > 0 || hasMocPol;
          boolean hasLoadedCat = aladin.calque.getNbPlanCat() > 0;
@@ -2970,8 +3076,10 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                         : "(" + (nbIn + nbInMayBe) + " collections " + (nbInMayBe > 0 ? " may " : "should")
                               + " have data in the field)";
                   Util.toolTip(bx, Util.fold(AWMCSTIP + "\n" + info, 100, true));
-                  bx.setEnabled(hasSmallView && Projection.isOk(aladin.view.getCurrentView().getProj()) && nbIn + nbInMayBe > 0);
-                  bx.setSelected(hasSmallView && Projection.isOk(aladin.view.getCurrentView().getProj()) && bx.isEnabled());
+//                  bx.setEnabled(hasSmallView && Projection.isOk(aladin.view.getCurrentView().getProj()) && nbIn + nbInMayBe > 0);
+//                  bx.setSelected(hasSmallView && Projection.isOk(aladin.view.getCurrentView().getProj()) && bx.isEnabled());
+                  bx.setEnabled(true);
+                  bx.setSelected(true);
                   bg.add(bx);
                }
 
@@ -3160,8 +3268,9 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                siaBx = bx = new JCheckBox(AWCSLAB);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setSelected(!to.hasHips());
-               bx.setEnabled(hasSmallView);
+//               bx.setSelected(!to.hasHips());
+//               bx.setEnabled(hasSmallView);
+               bx.setSelected(true);
                String proto = to.hasSIAv2() ? "SIAv2" : "SIA";
                String s1 = AWSIATIP;
                s1 = s1.replace("SIA", proto);
@@ -3172,8 +3281,9 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                ssaBx = bx = new JCheckBox(AWCSLAB);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setSelected(!to.hasHips());
-               bx.setEnabled(hasSmallView);
+//               bx.setSelected(!to.hasHips());
+//               bx.setEnabled(hasSmallView);
+               bx.setSelected(true);
                Util.toolTip(bx, AWSSATIP, true);
             }
 
@@ -3193,8 +3303,9 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                csBx = bx = new JCheckBox(AWCSLAB);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setEnabled(hasSmallView);
-               bx.setSelected(hasSmallView && !to.hasHips() && !allCat);
+//               bx.setEnabled(hasSmallView);
+//               bx.setSelected(hasSmallView && !to.hasHips() && !allCat);
+               bx.setSelected(!to.hasHips() && !allCat);
                bx.setToolTipText(AWINVIEWTIP);
                bg.add(bx);
 
@@ -3202,7 +3313,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                   liveBx = bx = new JCheckBox("live");
                   bx.addActionListener(this);
                   accessPanel.add(bx);
-                  bx.setEnabled(hasSmallView);
+//                  bx.setEnabled(hasSmallView);
                   bx.setToolTipText("Access to Simbad \"live\" (slower but with no cache)");
                   bg.add(bx);
                }
@@ -3246,7 +3357,8 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                tapBx = bx = new JCheckBox(AWCRIT);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setSelected(csBx == null && siaBx == null && ssaBx == null || !hasSmallView);
+//               bx.setSelected(csBx == null && siaBx == null && ssaBx == null || !hasSmallView);
+               bx.setSelected(csBx == null && siaBx == null && ssaBx == null);
                Util.toolTip(bx, AWCRITTIP, true);
                bg.add(bx);
             }
@@ -3259,13 +3371,13 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                productPanel.add(bx);
                Util.toolTip(bx, AWMOCXTIP, true);
 
-               if( hipsBx != null ) {
-                  boolean isAlreadyLoaded = aladin.calque.getPlans(to.internalId) != null;
-                  if( isAlreadyLoaded ) {
-                     mocBx.setSelected(true);
-                     hipsBx.setSelected(false);
-                  }
-               }
+//               if( hipsBx != null ) {
+//                  boolean isAlreadyLoaded = aladin.calque.getPlans(to.internalId) != null;
+//                  if( isAlreadyLoaded ) {
+//                     mocBx.setSelected(true);
+//                     hipsBx.setSelected(false);
+//                  }
+//               }
             }
 
             if( to.isCDSCatalog() && nbRows != -1 && nbRows >= 10000 ) {
@@ -3288,12 +3400,11 @@ public class Directory extends JPanel implements Iterable<MocItem> {
             c1.insets = new Insets(0, 0, 0, 0);
             JPanel loadPanel = new JPanel(g1);
 
-            JLabel label1 = new JLabel("Access mode");
-            JLabel label2 = new JLabel("derived prod. ");
-            String tip = "Access protocols available for this collection. According to your current "
-                  + "view and/or the selected stack planes, some access protocols may or may " + "not be activated.";
+            JLabel label1 = new JLabel(AWACCMODE+" ");
+            JLabel label2 = new JLabel(AwDERPROD+" ");
+            String tip = AWACCMODETIP;
             Util.toolTip(label1, Util.fold(tip, 100, true));
-            String tip2 = "Derived products available for this collection.";
+            String tip2 = AwDERPRODTIP;
             Util.toolTip(label2, Util.fold(tip2, 100, true));
             label1.setForeground(Color.gray.brighter());
             label2.setForeground(Color.gray.brighter());
@@ -3329,6 +3440,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
          Preview preview = null;
          JButton b = null;
+         JTextField t = null;
          JPanel submitPanel = new JPanel(new FlowLayout());
 
          if( treeObjs.size() == 1 ) {
@@ -3338,7 +3450,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
             // Info
             if( to.hasInfo() ) {
                b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Info.png")));
-               b.setToolTipText("Information on this collection");
+               b.setToolTipText(AWINFOTIP);
                b.setMargin(new Insets(0, 0, 0, 0));
                b.setBorderPainted(false);
                b.setContentAreaFilled(false);
@@ -3352,7 +3464,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
             // Properties
             b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Prop.png")));
-            b.setToolTipText("Collection properties");
+            b.setToolTipText(AWPROPTIP);
             b.setMargin(new Insets(0, 0, 0, 0));
             b.setBorderPainted(false);
             b.setContentAreaFilled(false);
@@ -3365,7 +3477,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
             // Bookmark
             b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Bookmark.png")));
-            Util.toolTip(b, "Bookmarks this collection query");
+            Util.toolTip(b, AWBOOKMARKTIP);
             b.setMargin(new Insets(0, 0, 0, 0));
             b.setBorderPainted(false);
             b.setContentAreaFilled(false);
@@ -3379,7 +3491,7 @@ public class Directory extends JPanel implements Iterable<MocItem> {
             // Paramètres
             if( to.hasProp() ) {
                b = new JButton(new ImageIcon(Aladin.aladin.getImagette("settings.png")));
-               b.setToolTipText("Generic parameters for queries");
+               b.setToolTipText(AWPARAMTIP);
                b.setMargin(new Insets(0, 0, 0, 0));
                b.setBorderPainted(false);
                b.setContentAreaFilled(false);
@@ -3410,17 +3522,70 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                });
             }
          }
+         
+         // Epinglette
+         b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Pin.png")));
+         b.setToolTipText(AWSTICKTIP);
+         b.setMargin(new Insets(0, 0, 0, 0));
+         b.setBorderPainted(false);
+         b.setContentAreaFilled(false);
+         b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { epingle(); }
+         });
+         control.add(b);
 
+
+         
          load = b = new JButton(AWLOAD);
          b.setFont(b.getFont().deriveFont(Font.BOLD));
          b.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                submit();
-               hideInfo();
+               if( !decorated ) hideInfo();
+               else aladin.f.toFront();
             }
          });
          submitPanel.add(b);
 
+
+         if( siaBx!=null || ssaBx!=null || csBx!=null ) {
+            
+            targetPanel = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0) );
+            t = target = new ConeField();
+            Util.toolTip(t, AWCONETIP);
+            t.addKeyListener( new KeyListener() {
+               public void keyPressed(KeyEvent e) { }
+               public void keyTyped(KeyEvent e) { }
+               public void keyReleased(KeyEvent e) {
+                  if( grabIt ) aladin.view.getCurrentView().stopGrabIt();
+                  if( e.getKeyCode()==KeyEvent.VK_ENTER ) {
+                    if( ((JTextField)e.getSource()).getText().trim().length()==0 ) {
+                       setTarget(null);
+                    } else {
+                       submit();
+                       setVisible(false);
+                    }
+                 }
+               }
+            });
+            targetPanel.add( t );
+           
+            // Grab
+            grab = b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Grab.png")));
+            Util.toolTip(b, AWCGRAPTIP);
+            b.setMargin(new Insets(0, 0, 0, 0));
+            b.setBorderPainted(false);
+            b.setContentAreaFilled(false);
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  startGrabIt();
+               }
+            });
+            if( hasView ) targetPanel.add( b );
+            
+            submitPanel.add(targetPanel);
+         }
+         
          JPanel bas = new JPanel(new BorderLayout(0, 0));
          bas.add(submitPanel, BorderLayout.CENTER);
          bas.add(control, BorderLayout.EAST);
@@ -3440,6 +3605,20 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
          if( preview != null ) panelInfo.add(preview, BorderLayout.WEST);
          contentPane.validate();
+      }
+      
+      protected void startGrabIt() {
+         grabIt=true;
+         targetPanel.removeAll();
+         targetPanel.add( target );
+         targetPanel.add( grab );
+         validate();
+         aladin.getFrame(aladin).toFront();
+         
+         if( aladin.firstGrab && aladin.configuration.isHelp() && aladin.configuration.showHelpIfOk("GRABINFO") ) {
+            aladin.firstGrab=false;
+         }
+
       }
 
       class Preview extends JPanel {
@@ -3562,7 +3741,24 @@ public class Directory extends JPanel implements Iterable<MocItem> {
             if( hi < hs ) g.translate(0, -(hs - hi) / 2);
          }
       }
-
+      
+      class ConeField extends JTextField {
+         String info=null;
+         ConeField() { super(26); }
+         
+         void setInfo(String s) { info=s; }
+         
+         public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if( info!=null && getText().length()==0 ) {
+               g.setColor( Color.lightGray );
+               g.setFont( getFont().deriveFont(Font.ITALIC) );
+               g.drawString(info,5,getHeight()-6);
+            }
+         }
+         
+      }
+      
       private class NoneSelectedButtonGroup extends ButtonGroup {
          public void setSelected(ButtonModel model, boolean selected) {
             if( selected ) super.setSelected(model, selected);
@@ -3694,22 +3890,26 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                return;
             }
          }
+         
+         // Y a-t-il un cone spécifique ?
+         String cone = target==null ? null : target.getText().trim();
+         if( cone!=null && cone.length()==0 ) cone=null;
 
          // Accès à une collection
          if( treeObjs.size() == 1 ) {
             TreeObjDir to = treeObjs.get(0);
             if( globalBx != null && globalBx.isSelected() ) to.loadGlobalAccess();
-            if( allBx != null && allBx.isSelected() ) to.loadAll();
-            if( siaBx != null && siaBx.isSelected() ) to.loadSIA();
-            if( ssaBx != null && ssaBx.isSelected() ) to.loadSSA();
-            if( csBx != null && csBx.isSelected() ) to.loadCS();
-            if( liveBx != null && liveBx.isSelected() ) to.loadLiveSimbad();
-            if( msBx != null && msBx.isSelected() ) to.queryByMoc(planMoc);
-            if( hipsBx != null && hipsBx.isSelected() ) to.loadHips();
-            if( mocBx != null && mocBx.isSelected() ) to.loadMoc();
-            if( progBx != null && progBx.isSelected() ) to.loadProgenitors();
-            if( dmBx != null && dmBx.isSelected() ) to.loadDensityMap();
-            if( tapBx != null && tapBx.isSelected() ) to.queryByTap();
+            if( allBx != null    && allBx.isSelected() )    to.loadAll();
+            if( siaBx != null    && siaBx.isSelected() )    to.loadSIA(cone);
+            if( ssaBx != null    && ssaBx.isSelected() )    to.loadSSA(cone);
+            if( csBx != null     && csBx.isSelected() )     to.loadCS(cone);
+            if( liveBx != null   && liveBx.isSelected() )   to.loadLiveSimbad(cone);
+            if( msBx != null     && msBx.isSelected() )     to.queryByMoc(planMoc);
+            if( hipsBx != null   && hipsBx.isSelected() )   to.loadHips();
+            if( mocBx != null    && mocBx.isSelected() )    to.loadMoc();
+            if( progBx != null   && progBx.isSelected() )   to.loadProgenitors();
+            if( dmBx != null     && dmBx.isSelected() )     to.loadDensityMap();
+            if( tapBx != null    && tapBx.isSelected() )    to.queryByTap();
             if( xmatchBx != null && xmatchBx.isSelected() ) to.queryByXmatch();
 
             // Accès à plusieurs collections simultanément
@@ -3720,10 +3920,10 @@ public class Directory extends JPanel implements Iterable<MocItem> {
                if( tooMany(treeObjs.size()) ) return;
                for( TreeObjDir to : treeObjs ) {
                   if( to.getIsIn() == 0 ) continue; // Je n'interroge pas les collections hors champs
-                  if( to.hasSIA() ) to.loadSIA();
-                  else if( to.hasSSA() ) to.loadSSA();
+                  if( to.hasSIA() ) to.loadSIA(cone);
+                  else if( to.hasSSA() ) to.loadSSA(cone);
                   else if( to.hasGlobalAccess() ) to.loadGlobalAccess();
-                  else to.loadCS();
+                  else to.loadCS(cone);
                }
             }
 
@@ -3774,8 +3974,24 @@ public class Directory extends JPanel implements Iterable<MocItem> {
 
       }
    }
-
    static private enum MultiMocMode {
       EACH, UNION, INTER
-   };
+   }
+   
+   protected boolean grabIt=false;
+   public boolean isGrabIt() { return grabIt; }
+   public void stopGrabIt() { grabIt=false; }
+   public void setGrabItCoord(double x, double y) {
+      String sexaCoord = GrabUtil.getGrabItCoord(aladin, x, y);
+      frameInfo.setTarget( aladin.localisation.getFrameCoord(sexaCoord) );
+      frameInfo.updateWidget();
+
+   }
+   public void setGrabItRadius(double x1, double y1, double x2, double y2) {
+      String radius = GrabUtil.setGrabItRadius(aladin, null, x1,y1, x2,y2);
+      frameInfo.setRadius( radius );
+      frameInfo.updateWidget();
+   }
+   
+   public void toFront() { frameInfo.toFront(); }
 }

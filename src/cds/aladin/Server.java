@@ -119,7 +119,7 @@ public class Server extends JPanel
    static final int YOUTREACH = 60; // Ordonnée du premier label en mode OUTREACH
    static final int MAXSELECTEDPLANE = 10; // Nombre max d'images à charger avant affichage un warning
 
-	protected String TARGET, RAD, GRABIT = "", DEFAULT_METHODE, TARGET_EX, RADIUS_EX, WNEEDOBJ, WNEEDRAD, WNEEDDATE,
+	protected String TARGET, RAD, /* GRABIT = "", */ DEFAULT_METHODE, TARGET_EX, RADIUS_EX, WNEEDOBJ, WNEEDRAD, WNEEDDATE,
 			WNEEDCAT, WERROR, WTOOLARGE, WERRORDATE, WDEJA, HASFILTER1, HASFILTER2, NOINPUTITEM, WNEEDCHECK, UNKNOWNOBJ,
 			NOTTOOMANY, DATEFORMATINCORRECT, BANDFORMATINCORRECT, TARGETOUTOFBOUNDSMESSAGE, CHECKQUERY_SUCCESS,
 			CHECKQUERY_ISBLANK;
@@ -267,7 +267,7 @@ public class Server extends JPanel
       TARGET_EX      =aladin.chaine.getString("TARGET_EX");
       RAD            =aladin.chaine.getString("RADIUS");
       RADIUS_EX      =aladin.chaine.getString("RADIUS_EX");
-      GRABIT         =aladin.chaine.getString("GRABIT");
+//      GRABIT         =aladin.chaine.getString("GRABIT");
       WNEEDCHECK     =aladin.chaine.getString("WNEEDCHECK");
       WNEEDOBJ       =aladin.chaine.getString("WNEEDOBJ");
       WNEEDDATE      =aladin.chaine.getString("WNEEDDATE");
@@ -592,7 +592,7 @@ public class Server extends JPanel
     */
    protected int makeTargetPanel(JPanel p,int mode) {
       int x=0,y=0,l;
-      int pickL=75;
+      int pickL=20; //75;
       boolean pickView  = (mode & NOPICK)   ==0;
       boolean forVizieR = (mode & FORVIZIER)!=0;
       boolean noRadius  = (mode & NORADIUS) !=0;
@@ -625,27 +625,49 @@ public class Server extends JPanel
          Util.toolTip(target, TARGET_EX);
 
          if( pickView )  {
-            grab = new JToggleButton(GRABIT);
-            Insets m = grab.getMargin();
-            grab.setMargin(new Insets(m.top,2,m.bottom,2));
-            grab.setOpaque(false);
-            grab.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					aladin.dialog.startGrabIt();
-					// ABOVE NOT REALLY NEEDED, BEACUSE OF THE BELOW.
-					aladin.f.toFront();
-					JPanel server = Server.this;
-					aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
+//            grab = new JToggleButton(GRABIT);
+//            Insets m = grab.getMargin();
+//            grab.setMargin(new Insets(m.top,2,m.bottom,2));
+//            grab.setOpaque(false);
+//            grab.addActionListener(new ActionListener() {
+//				public void actionPerformed(ActionEvent e) {
+//					aladin.dialog.startGrabIt();
+//					// ABOVE NOT REALLY NEEDED, BEACUSE OF THE BELOW.
+//					aladin.f.toFront();
+//					JPanel server = Server.this;
+//					aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
+//
+//				}
+//            });
+//            grab.setFont(Aladin.SBOLD);
+//            grab.setBounds(x+l+3,y+2,pickL-2,HAUT-4);
 
-				}
+            // Grab
+            
+            JToggleButton b = grab = new JToggleButton(new ImageIcon(Aladin.aladin.getImagette("Grab.png")));
+            Util.toolTip(b, "Grab a position/radius in the view");
+            b.setMargin(new Insets(0, 0, 0, 0));
+            b.setBorderPainted(false);
+            b.setContentAreaFilled(false);
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  aladin.dialog.startGrabIt();
+                  // ABOVE NOT REALLY NEEDED, BEACUSE OF THE BELOW.
+                  aladin.f.toFront();
+                  JPanel server = Server.this;
+                  aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
+               }
             });
-            grab.setFont(Aladin.SBOLD);
+            grab.setBounds(x+l+3,y+2,pickL-2,HAUT-4);
+
+            
             grab.setEnabled(false);
             if (this.aladinLabel.equalsIgnoreCase(Constants.DATALINK_CUTOUT_FORMLABEL)) {//TODO:change this logic?
             	grab.setEnabled(true);//deefault true for datalink forms
 			}
-            grab.setBounds(x+l+3,y+2,pickL-2,HAUT-4);
             p.add(grab);
+            
+            
          }
 
          y+=HAUT+MARGE;

@@ -437,7 +437,7 @@ public class PlanHealpix extends PlanBG {
 
    /** Commence la creation de la boule Healpix à partir du flux passé en param
     *
-    * @param in le flux du fichier Healpix
+    * @param inCross le flux du fichier Healpix
     */
    private void startHealpixCreation() throws Exception {
       Aladin.trace(2,"Loading HEALPIX FITS image");

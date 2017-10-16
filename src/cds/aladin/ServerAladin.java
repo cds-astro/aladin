@@ -438,7 +438,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
           else if(qual.indexOf("2MASS")>=0 ) origin="UMass/IRSA - provided by CDS image server";
           else origin="STScI - provided by CDS";
       }
-
+      aladin.targetHistory.add( target );
       return aladin.calque.newPlanImage(u,PlanImage.ALADIN,label,
                                    target,qual,origin,
                                    PlanImage.getFmt(format),

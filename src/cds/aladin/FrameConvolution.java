@@ -271,11 +271,11 @@ protected void createChaine() {
                "CD2_1   = 0\n"+
                "CD2_2   = "+cd+"\n";
             ad.setFitsHeader( s );
-            a.command.execLater("set "+name+" opacity=75");
-            a.command.execLater("set "+name+" shown");
-            a.command.execLater("cm "+name+" asinh reverse autocut");
+            a.command.execNow("set "+name+" opacity=75");
+            a.command.execNow("set "+name+" shown");
+            a.command.execNow("cm "+name+" asinh reverse autocut");
             
-         } else a.command.execLater("show "+name);
+         } else a.command.execNow("show "+name);
       } catch( Exception e ) {
          e.printStackTrace();
       }

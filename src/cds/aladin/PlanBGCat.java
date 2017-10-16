@@ -339,6 +339,7 @@ public class PlanBGCat extends PlanBG {
 
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {
+      System.out.println("askForRepaint...");
       updateFilter();
       aladin.view.repaintAll();
    }

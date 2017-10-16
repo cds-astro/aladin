@@ -250,7 +250,7 @@ class Hist implements Runnable {
       }
 
       // Calcul des hauteurs et des proportions
-      int hautMax = height-30;
+      int hautMax = height-40;
       double coef = (double)hautMax/maxNb;
       for( int i=0; i<hist.length; i++ ) {
          hist[i].haut = (int)( hist[i].nb * coef);
@@ -318,7 +318,7 @@ class Hist implements Runnable {
       }
 
       // Calcul des hauteurs
-      int hautMax = height-30;
+      int hautMax = height-40;
       double coef = (double)hautMax/maxNb;
       for( int i=0; i<hist.length; i++ ) {
          hist[i].haut = (int)( hist[i].nb * coef);

@@ -2217,6 +2217,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       else repaintAll();
 
       aladin.dialog.adjustParameters();
+      if( aladin.directory!=null ) aladin.directory.resumeFrameInfo();
 
       if( zoomRepaint ) {
          aladin.calque.zoom.newZoom();
@@ -3394,9 +3395,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       aladin.localisation.setLastCoord(ra,dec);
       
-      // Si on a bougé le repère, on en profite pour mettre à jour les widgets
-      if( aladin.directory!=null ) aladin.directory.resumeFrameInfo();
-      
       // comme on a bougé le réticule, on pourra regénérer un nouveau QuickSimbad
 //      flagAllowSimrep=true;
 
@@ -3539,6 +3537,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                   //                  aladin.command.printConsole(s);
                   aladin.warning(s,1);
                }
+               
+               // On ne garde pas une cible non résolu
+               aladin.targetHistory.remove(sourceName);
+               
                saisie=sourceName;
                rep=false;
             } else {
@@ -4184,10 +4186,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             simRep.setId(s1);
             simRep.setWithLabel(true);
             aladin.console.printInPad(s1+"\n");
+            
+            
+            String source = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
+            aladin.targetHistory.add(source);
+            aladin.view.zoomview.repaint();
 
             // Et on cherche le SED correspondant
             if( flagSED ) {
-               String source = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
                aladin.trace(2,"Loading VizieR phot. for \""+source+"\" => ("+position+") ...");
                aladin.view.zoomview.setSED(position,source,simRep);
             }

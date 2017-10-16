@@ -258,6 +258,8 @@ public class DirectoryTree extends JTree {
          mapIcon = new HashMap<String, MyImageIcon>();
          img = aladin.getImagette("Folder.png");
          mapIcon.put("Folder",new MyImageIcon(img));
+         img = aladin.getImagette("FolderUnsupervised.png");
+         mapIcon.put("FolderUnsupervised",new MyImageIcon(img));
          img = aladin.getImagette("FolderVizieR.png");
          mapIcon.put("FolderVizieR",new MyImageIcon(img));
          img = aladin.getImagette("cds.png");
@@ -386,7 +388,9 @@ public class DirectoryTree extends JTree {
                if( icon==null ) icon = getIcon("defaut",0);
             } else if( !node.isLeaf() ) {
                /* if( n.path.endsWith("/VizieR") ) icon=getIcon( "FolderVizieR", 0);
-               else */ icon=getIcon( "Folder", 0);
+               else */ 
+               if( n.path.startsWith("Unsupervised") ) icon=getIcon( "FolderUnsupervised", 0);
+               else icon=getIcon( "Folder", 0);
             }
             if( icon!=null ) {
                icon.setColor( n.isInStack() );

@@ -1844,22 +1844,25 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // On conserve la taille des différents panels si nécessaire
       int n;
       if( aladin.splitZoomHeight!=null ) {
-         n = aladin.splitZoomHeight.getCompSize();    if( n!=DEF_ZHEIGHT ) set(ZHEIGHT,""+n );   else remove(ZHEIGHT);
+         n = aladin.splitZoomHeight.getCompSize();    
+         if( n!=DEF_ZHEIGHT ) set(ZHEIGHT,""+n );   
+         else remove(ZHEIGHT);
       }
       if( aladin.splitZoomWidth!=null ) {
-         n = aladin.splitZoomWidth.getCompSize();     if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    else remove(ZWIDTH);
+         n = aladin.splitZoomWidth.getCompSize();     
+         if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    
+         else remove(ZWIDTH);
       }
       if( aladin.splitHiPSWidth!=null ) {
-         n = aladin.splitHiPSWidth.getCompSize();     if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    else remove(HWIDTH);
+         n = aladin.splitHiPSWidth.getCompSize();   
+         if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    
+         else remove(HWIDTH);
       }
       if( aladin.splitMesureHeight!=null ) {
-         n = aladin.splitMesureHeight.getCompSize();  if( n!=DEF_MHEIGHT ) set(MHEIGHT,""+n );   else remove(MHEIGHT);
+         n = aladin.splitMesureHeight.getCompSize();  
+         if( n!=DEF_MHEIGHT ) set(MHEIGHT,""+n );   
+         else remove(MHEIGHT);
       }
-//      set(ZHEIGHT,""+aladin.splitZoomHeight.getPos());
-//      set(ZWIDTH,""+aladin.splitZoomWidth.getPos());
-//      set(HWIDTH,""+aladin.splitHiPSWidth.getPos());
-            
-//      set(MHEIGHT,""+aladin.splitMesureHeight.getSplit());
 
       // On mémorise les bookmarks si nécessaire
       if( /* !Aladin.OUTREACH && */ aladin.bookmarks.canBeSaved() ) {

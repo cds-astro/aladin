@@ -709,7 +709,7 @@ public class Position extends Obj {
           Color c1=g.getColor();
           Color c2=c1==Color.red || c1==Color.blue?Color.white:null;
           Rectangle r = getStatPosition(v);
-          if( r!=null && (isWithLabel() || v.aladin.view.isMultiView()) ) {
+          if( r!=null && (isWithLabel() || v.aladin.view.isMultiView() || this instanceof Ligne) ) {
              r.x+=dx;
              r.y+=dy;
              g.drawLine(r.x,r.y,r.x,r.y+HAUTSTAT);

@@ -317,6 +317,7 @@ public class ServerSimbad extends Server  {
          return -1;
       }
       if( !verif(Plan.CATALOG,target,label+" "+radius) ) return -1;
+      aladin.targetHistory.add(target);
       return aladin.calque.newPlanCatalog(u,label,target,label+" "+radius,origin,this);
    }
 

@@ -24,6 +24,8 @@ package cds.aladin;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -124,8 +126,8 @@ public final class Search extends JPanel implements MouseListener {
       setLayout( new BorderLayout(0,0) );
       JPanel searchPanel = new JPanel( new BorderLayout(0,0) );
       searchPanel.setBackground( aladin.getBackground());
-      searchPanel.add(label=Aladin.createLabel(aladin.chaine.getString("MFSEARCHL")),"West");
-      label.setToolTipText(aladin.chaine.getString("MFSEARCHHELP"));
+//      searchPanel.add(label=Aladin.createLabel(aladin.chaine.getString("MFSEARCHL")),"West");
+//      label.setToolTipText(aladin.chaine.getString("MFSEARCHHELP"));
 
       JPanel pText = new JPanel(new BorderLayout());
       pText.setBackground( aladin.getBackground());
@@ -272,7 +274,7 @@ public final class Search extends JPanel implements MouseListener {
       oEnable=flag;
       text.setEnabled(flag);
       setColor( flag ? DEFAULT : DISABLE);
-      label.setForeground(flag?Aladin.COLOR_LABEL:Color.lightGray);
+//      label.setForeground(flag?Aladin.COLOR_LABEL:Color.lightGray);
       if(aladin.mesure!=null ) flag=aladin.mesure.nbSrc>0;
       right.setEnabled(flag);
       left.setEnabled(flag);
@@ -389,6 +391,22 @@ public final class Search extends JPanel implements MouseListener {
             text.selectAll();
          }
       }
+      
+      String info=null;
+      
+      void setInfo(String s) { info=s; }
+      
+      public void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         if( isEnabled() && getText().length()==0 && !isFocusOwner()) {
+            if( info==null ) info = aladin.chaine.getString("MFSEARCHL");
+            g.setColor( Aladin.COLOR_BUTTON_FOREGROUND );
+            g.setFont( getFont().deriveFont(Font.ITALIC) );
+            g.drawString(info,5,getHeight()-5);
+         }
+      }
+      
+
 
       public void keyPressed(KeyEvent e) { setColor(DEFAULT); }
       public void keyTyped(KeyEvent e) { }

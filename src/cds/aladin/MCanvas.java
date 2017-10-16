@@ -1337,8 +1337,8 @@ MouseWheelListener, Widget
       StringBuffer res = new StringBuffer();
       if( o.leg!=null && o.leg.field!=null && i>=0 && i<o.leg.field.length ) {
          Field f = o.leg.field[i];
-         res.append((o.leg.name!=null ? o.leg.name+" - " : "")+f.name);
-         if( f.unit!=null && f.unit.length()>0 || f.description!=null) res.append(" - ");
+//         res.append((o.leg.name!=null ? o.leg.name+" - " : "")+f.name);
+//         if( f.unit!=null && f.unit.length()>0 || f.description!=null) res.append(" - ");
          if( f.unit!=null && f.unit.length()>0 ) res.append("["+f.unit+"] ");
          if( f.description!=null ) res.append(f.description);
       }

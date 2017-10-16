@@ -1273,7 +1273,7 @@ Runnable, SwingWidgetFinder, Widget {
       drawBeginnerHelp1(g,s,c,lastYMax);
    }
    
-   private int lastBegin;
+   private int lastBegin; // Indice du message du Help Beginner
    private int lastYMax;  // Dernière ordonnée mesurée de la fin de la pile
    
    // Passe au message suivant pour les débutants
@@ -1292,6 +1292,8 @@ Runnable, SwingWidgetFinder, Widget {
          lastBegin=0;
          t0=System.currentTimeMillis();
       }
+      
+      // Le premier message n'arrive que quelques secondes après le démarrage
       if( lastBegin==0 ) {
          long t=System.currentTimeMillis();
          if( t-t0>4000 ) lastBegin=1;
@@ -1299,46 +1301,23 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       if( lastBegin<BEGIN.length && BEGIN[lastBegin]!=null ) {
-         drawBeginnerHelp1(g,BEGIN[lastBegin],Aladin.COLOR_LABEL,yMax);
+         int y = drawBeginnerHelp1(g,BEGIN[lastBegin],Aladin.COLOR_LABEL,yMax);
+         
+         // Dessin d'un petit triangle pour suggérer la suite
+         if( lastBegin<BEGIN.length-1 ) {
+            y -= 10;
+            int x = getWidth()-10;
+            Polygon pol = new Polygon();
+            pol.addPoint(x, y-6);
+            pol.addPoint(x,y);
+            pol.addPoint(x+5,y-3);
+            g.fillPolygon(pol);
+            g.drawPolygon(pol);
+         }
       }
    }
 
-   //   private void drawControlHelp(Graphics g,int y) {
-   //      drawCross(g,Color.red.darker(),145,20);
-   //      drawArrow(g,Color.lightGray,130,y-10,-1);
-   //      drawArrow(g,Color.gray,142,y-10,1);
-   //   }
-   //
-   //   static private final int X = 6;
-   //   private void drawCross(Graphics g, Color c, int x, int y) {
-   //    g.setColor(c);
-   //      g.setColor( Color.red.darker() );
-   //      g.drawLine(x,y,x+X,y+X);
-   //      g.drawLine(x+1,y,x+X+1,y+X);
-   //      g.drawLine(x+2,y,x+X+2,y+X);
-   //      g.drawLine(x+X,y,x,y+X);
-   //      g.drawLine(x+X+1,y,x+1,y+X);
-   //      g.drawLine(x+X+2,y,x+2,y+X);
-   ////      cross = new Rectangle(x,y,X,X);
-   //   }
-   //
-   //   private void drawArrow(Graphics g, Color c, int x, int y,int sens) {
-   //      int h=4;
-   //      int w=8;
-   //      g.setColor(c);
-   //      g.fillRect(x, y, w, h);
-   //      if( sens==1 ) {
-   //         g.drawLine(x+w-3,y-2,x+w-3,y+h+2);
-   //         g.drawLine(x+w-2,y-1,x+w-2,y+h+1);
-   //         g.drawLine(x+w,y+h/2,x+w,y+h/2);
-   //      } else {
-   //         g.drawLine(x+2,y-2,x+2,y+h+2);
-   //         g.drawLine(x+1,y-1,x+1,y+h+1);
-   //         g.drawLine(x-1,y+h/2,x-1,y+h/2);
-   //      }
-   //   }
-
-
+   /** Affiche la phrase courante du Help Beginner au-dessus de la pile */
    private int drawBeginnerHelp1(Graphics g,String s,Color c,int yMax) {
       int x=10;
       int xMax=getWidth()-x;
@@ -1377,12 +1356,6 @@ Runnable, SwingWidgetFinder, Widget {
          if( first ) { first=false; g.setFont(FI); }
          if( newLine ) y-=h/2;
       }
-
-      // Bordure en marge gauche si on a écrit au-moins une ligne
-//      if( !first ) {
-//         g.setColor( Color.lightGray );
-//         g.drawLine(2,y0-10,2,y);
-//      }
 
       return y;
    }

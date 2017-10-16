@@ -58,7 +58,7 @@ public class TargetHistory {
    
    protected int find( String target ) {
       for( int i=0; i<list.size(); i++ ) {
-         if( target.toUpperCase().equals( list.get(i).toUpperCase()) ) return i;
+         if( target.equals( list.get(i)) ) return i;
       }
       return -1;
    }

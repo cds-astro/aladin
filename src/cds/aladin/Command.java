@@ -276,7 +276,7 @@ public final class Command implements Runnable {
    protected boolean hasCommand() {
       try {
          //         System.out.println("stream="+stream+" available="+stream.available()+" isSyncServer="+isSyncServer());
-         return stream!=System.in && stream.available()>-1 || stream.available()>0 || !isSyncServer();
+         return stream!=System.in && stream.available()>-1 || !isSyncServer();
       } catch( Exception e ) { e.printStackTrace(); }
       return false;
    }
@@ -292,7 +292,7 @@ public final class Command implements Runnable {
       do {
          // Une commande qui provient du pad et prioritaire sur stdin
          if( (stream==null || stream==System.in) &&
-               a.console!=null && a.console.hasWaitingCmd() ) return a.console.popCmd();
+               a.console!=null && a.console.hasWaitingCmd() ) return NOW+a.console.popCmd();
 
          // Commandes provenant d'un stream (STDIN et/ou autres)
          try {
@@ -341,6 +341,9 @@ public final class Command implements Runnable {
 
    //** Retourne true si Aladin attend la suite de la commande (filtre, fonction....) */
    protected boolean waitingMore() { return !filterMode && fonct==null; }
+   
+   
+   static final private String NOW = "_NOW_";
 
    /** Lecture d'un script
     * @param dis InputStream
@@ -1023,13 +1026,19 @@ public final class Command implements Runnable {
                if( p!=null && p.trim().length()>0 ) s=s+"("+p+")";
 //            }
 
+            // Est-ce bien un objet résolvable par Sésame ?
             String rep = a.view.sesameResolve(cmd,true);
             if( rep==null ) {
                a.warning(a.dialog.server[0].UNKNOWNOBJ);
                return false;
             } else t=rep;
-            a.console.printCommand("get "+s+" "+cmd);
-
+            
+            // Quelle commande get faut-il passer ?
+            String s1 = "get "+s+" "+cmd;
+//            a.console.printCommand(s1);
+            execNow(s1);
+            return false;
+            
             // sinon il s'agit d'un simple deplacement du repere
          } else {
             setSyncNeedRepaint(true);
@@ -1040,7 +1049,7 @@ public final class Command implements Runnable {
             // Sinon il va tenter une multiplication
             cmd = Tok.unQuote(cmd);
             
-            // La commande est dont une position que l'on va tout de même mémoriser
+            // La commande est donc une position que l'on va tout de même mémoriser
             target.append(cmd);
 
             // Via une adresse healpix norder/npi
@@ -1056,15 +1065,6 @@ public final class Command implements Runnable {
 
       // On memorise les serveurs
       servers.append(s);
-
-      //       // Si le target n'est pas mentionne,
-      //       // on prend la position du dernier repere dans View
-      //       if( t.length()==0 ) {
-      //          waitingPlanInProgress();
-      //          t=a.dialog.getDefaultTarget();
-      //
-      //       // Sinon on regarde si le dernier champ ne serait pas un radius
-      //       } else {
 
       if( t.length()!=0 ) {
          StringBuffer tX = new StringBuffer();
@@ -2978,9 +2978,14 @@ public final class Command implements Runnable {
     * @return null si la premiere commande n'est pas trouvee
     */
    public String execScript(String s) {
-      return execScript(s,true,false);
+      boolean flagUrgent=false;
+      if( s.startsWith(NOW) ) {
+         flagUrgent=true;
+         s=s.substring( NOW.length() );
+      }
+      return execScript(s,true,false,flagUrgent);
    }
-   synchronized public String execScript(String s,boolean verbose,boolean flagOnlyFunction) {
+   synchronized public String execScript(String s,boolean verbose,boolean flagOnlyFunction,boolean flagUrgent) {
       
       //      StringTokenizer st = new StringTokenizer(s,";\n\r");
       // thomas, 16/11/06 : permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
@@ -2994,8 +2999,8 @@ public final class Command implements Runnable {
          try {
             String cmd = commands[k].trim();
             if( cmd.length()>0 ) {
-               if( i==0 ) { if( (s1=exec(cmd,verbose,flagOnlyFunction))==null ) return null; }
-               else s1=exec(cmd,verbose,flagOnlyFunction);
+               if( i==0 ) { if( (s1=exec(cmd,verbose,flagOnlyFunction,flagUrgent))==null ) return null; }
+               else s1=exec(cmd,verbose,flagOnlyFunction,flagUrgent);
             }
 
             if( s1!=null && s1.length()>0 ) {
@@ -3015,10 +3020,21 @@ public final class Command implements Runnable {
 
    /** Retourne le code du calcul algébrique ou -1 si non trouvé */
    private int findAlgebre(String s) {
-      if( s.startsWith("+") ) return PlanImageAlgo.ADD;
-      if( s.startsWith("-") ) return PlanImageAlgo.SUB;
-      if( s.startsWith("* ") ) return PlanImageAlgo.MUL;
-      if( s.startsWith("/") ) return PlanImageAlgo.DIV;
+      int rep=-1;
+      
+      if( s.startsWith("+") ) rep=PlanImageAlgo.ADD;
+      else if( s.startsWith("-") ) rep=PlanImageAlgo.SUB;
+      else if( s.startsWith("*") ) rep=PlanImageAlgo.MUL;
+      else if( s.startsWith("/") ) rep=PlanImageAlgo.DIV;
+      
+      // On vérifie que le paramètre est soit un scalaire, soit un nom de plan
+      // Si ce n'est pas le cas, il peut s'agit d'un identificateur d'objet astro
+      if( rep!=-1 ) {
+         String param=s.substring(1).trim();
+         try { Double.parseDouble(param); return rep; } catch( Exception e) {}
+         if( getPlanFromParam(s.substring(1),0,true)==null ) return -1;
+         return rep;
+      }
 
       if( s.indexOf(" + ")>0 ) return PlanImageAlgo.ADD;
       if( s.indexOf(" - ")>0 ) return PlanImageAlgo.SUB;
@@ -3045,25 +3061,20 @@ public final class Command implements Runnable {
    StringBuffer comment=null;           // Last comment
    Function fonct=null;
 
-   /** Traitement d'une commande aladin
+   /** Traitement d'une commande aladin en mode immédiat (pas d'attente de synchronization)
     * @param s la commande a traiter
-    * @param verbose true si ca doit etre bavard
-    * @return null si la commande n'existe pas
     */
-
-   protected void execLater(String s) {
+   protected void execNow(String s) {
       if( SwingUtilities.isEventDispatchThread() ) {
-         exec(s);
+         exec(s,true,false,true);
       } else {
          final String [] param = new String[1];
          param[0]=s;
          SwingUtilities.invokeLater(new Runnable() {
-            public void run() { exec(param[0]); }
+            public void run() { exec(param[0],true,false,true); }
          });
       }
    }
-   
-   protected String exec(String s) { return exec(s,true,false); }
    
 //      PROBABLEMENT TROP VERBEUX POUR APT.... JE NE LE METS PAS
 //   protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
@@ -3072,7 +3083,7 @@ public final class Command implements Runnable {
 //      return s;
 //   }
    
-   private String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
+   private String exec(String s1,boolean verbose,boolean flagOnlyFunction,boolean flagUrgent) {
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
       
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
@@ -3099,7 +3110,7 @@ public final class Command implements Runnable {
          String s2 = ds9.translate(s1);
          if( s2!=null ) {
             if( s2.length()==0 ) return ""; // Commande jugée inutile (par exemple changement de frame)
-            return execScript(s2, verbose, flagOnlyFunction);
+            return execScript(s2, verbose, flagOnlyFunction,flagUrgent);
          }
       } catch( Exception e) { printConsole(e.getMessage()); return "";}
 
@@ -3131,7 +3142,7 @@ public final class Command implements Runnable {
       if( echo  || Aladin.NOGUI ) println("["+s1+"]...");
 
       // sync automatique pour les commandes concernées
-      if( syncMode==SYNCON && needSync(cmd) ) {
+      if( !flagUrgent && syncMode==SYNCON && needSync(cmd) ) {
          if( !isSync() ) a.trace(4,"Command.exec() : command \""+cmd+"\" needs sync...");
          sync();
       }
@@ -3195,7 +3206,7 @@ public final class Command implements Runnable {
          if( robot.executeCommand(cmd, param) ) return "";
       }
 
-      a.trace(4,"Command.exec() : execute now \""+cmd+" "+param+"\"...");
+      a.trace(4,"Command.exec() : execute "+(flagUrgent?"immediately ":"")+" \""+cmd+" "+param+"\"...");
 
 //      if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
       //      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);

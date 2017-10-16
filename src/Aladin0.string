@@ -418,14 +418,14 @@ STOPDEMO	Do you want to stop the demonstration ?\nClick NO to resume
 STOPDEMO.fr	Désirez-vous interrompre la démonstration ?\nCliquez NON pour poursuivre
 MB	Mb
 MB.fr	Mo
-PUB	*ALADIN is an interactive software sky atlas.\n* It allows one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n!Quick start...\n*Just type your target in the text field above\n*(ex: M1  or  13:29:53 +47:11:48)\n \n*%CDSLogo.png\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch,  Anaïs Oberto, François Bonnarel and Chaitra.
-PUB.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe\n*quelle partie du ciel, d'y superposer des objets issus de catalogues\n*astronomiques, et, interactivement, d'accéder aux informations relatives.\n \n!Démarrage rapide...\n*Saisissez simplement votre cible dans le champ de saisie ci-dessus.\n*(ex: M1  ou  13:29:53 +47:11:48)\n \n*%CDSLogo.png\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
+PUB	*ALADIN is an interactive software sky atlas.\n* It allows one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n \n \n \n*%CDSLogo.png\n \n \n \n \n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch,  Anaïs Oberto, François Bonnarel and Chaitra.
+PUB.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe\n*quelle partie du ciel, d'y superposer des objets issus de catalogues\n*astronomiques, et, interactivement, d'accéder aux informations relatives.\n \n \n \n \n \n*%CDSLogo.png\n \n \n \n \n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
 PUBBETA	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A BETA RELEASE\n*Send bug report and comments to cds-question@unistra.fr\n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n*%CDSLogo.png\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto and François Bonnarel.
 PUBBETA.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE VERSION EST EN BETA TEST\n*Envoyez vos commentaires et bogues à cds-question@unistra.fr\n*Ou télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n*%CDSLogo.png\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
 PUBPROTO	ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A PROTOTYPE RELEASE\n*SOME FEATURES HAVE BEEN ADDED FOR DEMONSTRATION PURPOSES.\n*USE IT AT YOUR OWN RISKS\n \n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n*%CDSLogo.png\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
 PUBPROTO.fr	ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE MISE-A-JOUR EST UNE VERSION PROTOTYPE\n*CERTAINES FONCTIONNALITES QUI ONT ETE AJOUTEES\n*EN DEMONSTRATION SONT SANS GARANTIE\n \n*Vous pouvez télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n*%CDSLogo.png\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.\n
-PUBOUTREACH	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!You are running ALADIN in UNDERGRADUATE mode\n \n*%EuroVOAIDA.jpg\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.\n \n*The "undergraduate" Aladin extension has been developed\nin the framework of the AIDA European project.
-PUBOUTREACH.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!Vous utilisez actuellement ALADIN en mode SCOLAIRE\n \n*%EuroVOAIDA.jpg\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.\n \n*L'extension "scolaire" d'Aladin a été développée\ndans le cadre du projet européen AIDA.
+#PUBOUTREACH	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!You are running ALADIN in UNDERGRADUATE mode\n \n*%EuroVOAIDA.jpg\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.\n \n*The "undergraduate" Aladin extension has been developed\nin the framework of the AIDA European project.
+#PUBOUTREACH.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!Vous utilisez actuellement ALADIN en mode SCOLAIRE\n \n*%EuroVOAIDA.jpg\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.\n \n*L'extension "scolaire" d'Aladin a été développée\ndans le cadre du projet européen AIDA.
 PUBINPROG	*ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of\n*the sky, to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n \n!YOUR DATA ARE BEING DOWNLOADED...\n!Please wait...\n \n*%CDSLogo.png\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel and Chaitra.
 PUBINPROG.fr	*ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n \n!VOS DONNEES SONT EN COURS DE CHARGEMENT\n!Veuillez patienter...\n \n*%CDSLogo.png\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto, François Bonnarel et Chaitra.
 MVIEWDESC	Split the main window into 2, 4, 9 or 16 panels
@@ -535,6 +535,12 @@ NORTHUPHELP	Turn the image North up, Est left
 NORTHUPHELP.fr	Oriente l'image le Nord en haut, l'Est à gauche
 PIXHELP	High Dynamic pixel Range
 PIXHELP.fr	HDR: visualisation de la dynamique complète des pixels
+TIPTARGET List of previous targets
+TIPTARGET.fr  Liste des précédentes cibles
+TIPLISTTARGET Go back to this target
+TIPLISTTARGET.fr Retourner sur cette cible
+TIPSTORETARGET Store the current reticle location in the list of targets
+TIPSTORETARGET.fr Mémoriser la position du réticule dans la liste des cibles
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key
@@ -605,7 +611,7 @@ CLOSE	Close
 IMG	Image\nservers
 CAT	Catalog\nservers
 OTHER	Others
-GRABIT	Grab coord
+#GRABIT	Grab coord
 DEFAULT_METHODE	Specify a target (object or ICRS coordinates) and press SUBMIT
 TARGET_EX	ex: 05 47 17.0 -51 04 03   or   M99
 RADIUS_EX	ex: 14'  or  1.5deg  or  12'x16'
@@ -638,7 +644,7 @@ CLOSE.fr	Fermer
 IMG.fr	Serveurs\nd'images
 CAT.fr	Serveurs\nde tables
 OTHER.fr	Autres
-GRABIT.fr	Pointer
+#GRABIT.fr	Pointer
 DEFAULT_METHODE.fr	Indiquez une position (objet ou coordonnées ICRS) et appuyez CHERCHER
 TARGET_EX.fr	ex: 05 47 17.0 -51 04 03   ou   M99
 RADIUS_EX.fr	ex: 14'  ou  1.5deg  ou  12'x16'
@@ -2684,6 +2690,9 @@ TAGINFO Clic anywhere for creating a positional tag, use a clic-and-drag for gen
 TAGINFO.fr Utilisez le clic simple pour créer un tag de positionnement, cliquer-étendre pour créer un repère complet avec du texte...
 REPEREINFO Use a simple clic on a source for getting its photometrical parameters, or clic-and-drag for generating yourself a manual photometrical spherical tool. 
 REPEREINFO.fr Utilisez le clic simple sur un source astronomique pour en mesurer automatiquement ses caractéristiques, on un cliquer-étendre pour générer un cercle de mesure manuel
+GRABINFO Specify the query circular area thanks to a mouse click&drag in the current view
+GRABINFO.fr Désignez la région circulaire de votre requête par un "cliquer/étirer" de votre souris effectué directement dans la vue
+
 STOPHELP Redisplay this help?
 STOPHELP.fr Réafficher ce message d'aide ?
 
@@ -2962,7 +2971,7 @@ BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*R
 BEGIN5	Basic controls:\n \n*Type any object name or coordinates for moving on it.\n \n*Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controller.
 BEGIN6	Data discovery tree\nof available collections (left panel)\n \n*in green: the collections visible in the current view, in orange the outside collections\n \n*Type un key word, a mission name, etc in the "select" field to keep only relevant collections\n \n*Use the predefined filters to select more specifically the collections\n \n*Create and store your own filters thanks to the "+" button\n \nActivate the "view" mode to hide temporary the collections outside the view.
 
-BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professional du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propres données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...\n \nOu tout simplement, cliquez dans la fenêtre principale pour explorer le ciel.
+BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professionel du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propres données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...\n \nOu tout simplement, cliquez dans la fenêtre principale pour explorer le ciel.
 BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques (ci-dessous).\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLe panneau central affiche la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez l'arbre de découverte sur le panneau de gauche,\nou glissez/déposez vos propres fichiers locaux.
 BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: change la taille des objets\n*zoom: modifie l'agrandissement\n*opacité: ajuste la transparence.\n \nLa vue est dessinée en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
 BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les données connues d'un objet, cliquez sur celui-ci, puis laissez le pointeur quelques secondes dessus.
@@ -3269,7 +3278,7 @@ FPHIPSPIXEL.fr	Format des pixels
 FPHIPSPIXELTIP	Hide the HiPS images which are not able to provide the pixels in the specified format.
 FPHIPSPIXELTIP.fr	Cache les HiPS images ne pouvant fournit les pixels dans le format spécifié.
 FPHIPSPIXEL1	FITS tile HIPS only
-FPHIPSPIXEL1	que les HiPS à tuiles FITS
+FPHIPSPIXEL1.fr	que les HiPS à tuiles FITS
 FPHIPSPIXEL2	color HiPS only
 FPHIPSPIXEL2.fr	que les HiPS couleurs
 FPRULELABEL	expression & MOC generated by the filter
@@ -3300,8 +3309,34 @@ AWMULTICOL Selected collections
 AWMULTICOL.fr	Collections sélectionnées
 AWCSLAB	in view
 AWCSLAB.fr	dans la vue
+AWFRAMEINFOTITLE Access selector
+AWFRAMEINFOTITLE.fr Sélecteur d'accès
+AWCGRAPTIP Specify or grab a position/radius
+AWCGRAPTIP.fr Saisissez ou désigner une position et un rayon
+AWCONE by cone
+AWCONE.fr par cône
+AWCONETIP Specific cone search (syntax: target [radiusUnit], ex: Andromeda 1°)
+AWCONETIP.fr Requête par un cône spécifique (syntaxe: cible [radiusUnit], ex: Andromeda 1°)
+AWACCMODE Access mode
+AWACCMODE.fr Mode d'accès
+AWACCMODETIP Access protocols available for this collection. According to your current view and/or the selected stack planes, some access protocols may or may not be activated.
+AWACCMODETIP.fr Modes d'accès disponibles pour cette collection. En fonction de la vue courante et des plans sélectionnés dans la pile, certains mode d'accès peuvent ne pas être possibles
+AwDERPROD derived prod.
+AwDERPROD.fr Produit dériv.
+AwDERPRODTIP Derived products available for this collection.
+AwDERPRODTIP.fr Produits dérivées disponibles pour cette collection.
+AWINFOTIP Display information on this collection
+AWINFOTIP.fr Afficher des information complémentaires sur cette collection
+AWPROPTIP Technical properties associated to this collection
+AWPROPTIP.fr Propriétés techniques associées à cette collection
+AWBOOKMARKTIP Bookmarks this collection query
+AWBOOKMARKTIP.fr Crée un signet pour le mode d'accès ou le produit dérivé désigné
+AWPARAMTIP Generic parameters for queries
+AWPARAMTIP.fr Paramètres génériques des requêtes
+AWSTICKTIP Stick/unstick the access selector window
+AWSTICKTIP.fr Epingle/Libère la fenêtre du sélecteur d'accès
 AWCSTIP	Cone search (CS) covering the current view\nfor the selected collections
-AWCSTIP.fr	Recherche par cônes (CS) couvrant la vue courante\npour les collections sélectionnées
+AWCSTIP.fr	Recherche par cône (CS) couvrant la vue courante\npour les collections sélectionnées
 AWSIATIP	Simple Image Access (SIA) query\ncovering the current view for the selected collections
 AWSIATIP.fr	Interrogation "Simple Image Access (SIA)\ncouvrant la vue courante pour les collections sélectionnées
 AWSSATIP	Simple Spectra Access (SSA) query\ncovering the current view for the selected collections

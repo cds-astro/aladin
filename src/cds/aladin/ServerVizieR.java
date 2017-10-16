@@ -364,6 +364,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
 
       String param = label+" "+radius+(allColumns?" (all columns)":"");
       if( !verif(Plan.CATALOG,target,param) ) return -1;
+      aladin.targetHistory.add( target );
       return aladin.calque.newPlanCatalog(u,label,target,param,origin,this);
    }
    

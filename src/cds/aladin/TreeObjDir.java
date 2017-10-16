@@ -949,7 +949,11 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
-   protected void loadSSA() { aladin.execAsyncCommand( addBrowse( getSSACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1)) ); }
+   protected void loadSSA() { loadSSA( getDefaultTarget()+" "+getDefaultRadius(1) ); }
+   protected void loadSSA( String cone ) {
+      if( cone==null ) { loadSSA(); return; }
+      aladin.execAsyncCommand( addBrowse( getSSACmd()+" "+cone) );
+   }
    protected String getSSABkm() { return addBrowse( getSSACmd()+" $TARGET $RADIUS"); }
    protected String getSSACmd() {
       // Glu tags spécifiques ?
@@ -965,7 +969,11 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    
    /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
-   protected void loadSIA() { aladin.execAsyncCommand( addBrowse( getSIACmd()+" "+getDefaultTarget()+" "+getDefaultRadius(1)) ); }
+   protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(1)); }
+   protected void loadSIA( String cone ) { 
+      if( cone==null ) { loadSIA(); return; }
+      aladin.execAsyncCommand( addBrowse( getSIACmd()+" "+cone) );
+   }
    protected String getSIABkm() { return addBrowse( getSIACmd()+" $TARGET $RADIUS"); }
    private String getSIACmd() {
       // Glu tags spécifiques ?
@@ -1006,17 +1014,24 @@ public class TreeObjDir extends TreeObj implements Propable {
       return s;
    }
    
-   protected void loadCS(Coord c,double radius) {
-      aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius )));
-   }
-   
    /** Du sur-mesure pour le live Simbad */
-   protected void loadLiveSimbad() { aladin.execAsyncCommand( addBrowse(  getLiveSimbadCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15))); }
+   protected void loadLiveSimbad() { loadLiveSimbad(getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected void loadLiveSimbad( String cone ) {
+      if( cone==null ) { loadLiveSimbad(); return; }
+      aladin.execAsyncCommand( addBrowse(  getLiveSimbadCmd()+" "+cone));
+   }
    protected String getLiveSimbadBkm() { return addBrowse( getLiveSimbadCmd()+" $TARGET $RADIUS" ); }
    private String getLiveSimbadCmd() { return "get Simbad(live)"; }
    
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
-   protected void loadCS() { aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+getDefaultTarget()+" "+getDefaultRadius(15))); }
+   protected void loadCS() { loadCS(getDefaultTarget()+" "+getDefaultRadius(15)); }
+   protected void loadCS(Coord c,double radius) {
+      loadCS( aladin.localisation.ICRSToFrame( c ).getDeg()+" "+Coord.getUnit( radius ) );
+   }
+   protected void loadCS(String cone) {
+      if( cone==null ) { loadCS(); return; }
+      aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+cone));
+   }
    protected String getCSBkm() { return addBrowse( getCSCmd()+" $TARGET $RADIUS" ); }
    private String getCSCmd() {
       String cmd = null;
@@ -1026,7 +1041,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( isCDSCatalog() ) {
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
-         if( internalId.startsWith("CDS/Simbad") ) cmd = Tok.quote(internalId)+"=get Simbad";
+         if( internalId.startsWith("CDS/Simbad") ) cmd = /* Tok.quote(internalId)+"=*/ "get Simbad";
          else {
             String s = allcolumns.equals("all") ? ",allcolumns":"";
             cmd = "get VizieR("+cat+s+")";
@@ -1086,31 +1101,23 @@ public class TreeObjDir extends TreeObj implements Propable {
       return "get VizieR("+cat+",allsky,allcolumns)";
    }
    
-   private String getDefaultTarget() {
+   protected String getDefaultTarget() {
       Coord coo;
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
-         String s = aladin.localisation.getTextSaisie();
-         if( s.length()!=0 ) return s;
-         coo = getTarget();
-         s = coo==null ? null : coo.toString();
-         if( s!=null ) return s;
+//         String s = aladin.localisation.getTextSaisie();
+//         if( s.length()!=0 ) return s;
+//         coo = getTarget();
+//         s = coo==null ? null : coo.toString();
+//         if( s!=null ) return s;
          return null;
-//         aladin.info("Pas encore implanté, il faudrait demander Target+Radius");
       }
       coo = aladin.view.getCurrentView().getCooCentre();
       coo = aladin.localisation.ICRSToFrame( coo );
       return coo.getDeg();
    }
    
-//   private double getDefaultRadiusInDeg() {
-//      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
-//         return 14./60;
-//      }
-//      return  aladin.view.getCurrentView().getTaille();
-//   }
-//   
-   private String getDefaultRadius() { return getDefaultRadius(-1); }
-   private String getDefaultRadius(double maxRad) {
+   protected String getDefaultRadius() { return getDefaultRadius(-1); }
+   protected String getDefaultRadius(double maxRad) {
       if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
          return "14'";
       }

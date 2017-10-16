@@ -1605,7 +1605,6 @@ public final class Glu implements Runnable {
       adqlFunc = new Hashtable();
       adqlFuncParams = new Hashtable();
       aladinFilter = new Vector(10);
-      
 
       try {
 

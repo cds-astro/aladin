@@ -56,18 +56,15 @@ public class GrabUtil {
 	protected static String getGrabItCoord(Aladin aladin, double x, double y) {
 		ViewSimple v = aladin.view.getCurrentView();
 		Plan pr = v.pref;
-		if (pr == null)
-			return null;
+		if (pr == null) return null;
 		Projection proj = pr.projd;
-		if (proj == null)
-			return null;
+		if (proj == null) return null;
 		PointD p = v.getPosition(x, y);
 		Coord c = new Coord();
 		c.x = p.x;
 		c.y = p.y;
 		proj.getCoord(c);
-		if (Double.isNaN(c.al))
-			return null;
+		if (Double.isNaN(c.al)) return null;
 		return c.getSexa();
 	}
 	
@@ -127,35 +124,30 @@ public class GrabUtil {
 	 * @param x,y
 	 *            Position dans la vue
 	 */
-	public static void setGrabItRadius(Aladin aladin, Server server, double x1, double y1, double x2, double y2) {
-		if (server.modeRad == Server.NOMODE)
-			return;
-		if (Math.abs(x1 - x2) < 3 && Math.abs(y1 - y2) < 3)
-			return;
+	public static String setGrabItRadius(Aladin aladin, Server server, double x1, double y1, double x2, double y2) {
+		if (server!=null && server.modeRad == Server.NOMODE) return null;
+		if (Math.abs(x1 - x2) < 3 && Math.abs(y1 - y2) < 3) return null;
 		
 		ViewSimple v = aladin.view.getCurrentView();
 		Plan pr = v.pref;
-		if (pr == null)
-			return;
+		if (pr == null) return null;
 		Projection proj = pr.projd;
-		if (proj == null)
-			return;
+		if (proj == null) return null;
 		PointD p1 = v.getPosition(x1, y1);
 		PointD p2 = v.getPosition(x2, y2);
 		Coord c1 = new Coord();
 		c1.x = p1.x;
 		c1.y = p1.y;
 		proj.getCoord(c1);
-		if (Double.isNaN(c1.al))
-			return;
+		if (Double.isNaN(c1.al)) return null;
 		Coord c2 = new Coord();
 		c2.x = p2.x;
 		c2.y = p2.y;
 		proj.getCoord(c2);
-		if (Double.isNaN(c2.al))
-			return;
-		server.resolveRadius(Coord.getUnit( /* Math.sqrt(2)* */
-				Coord.getDist(c1, c2)), true);
+		if (Double.isNaN(c2.al)) return null;
+		String radius = Coord.getUnit( Coord.getDist(c1, c2) );
+		if( server!=null ) server.resolveRadius( radius, true);
+	    return radius;
 	}
 	
 	//TODO:: tintin 

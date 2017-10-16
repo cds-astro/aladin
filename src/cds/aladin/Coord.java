@@ -109,7 +109,7 @@ public final class Coord {
    public static String getSexa(double al, double del, String c) {
       Astrocoo coo = new Astrocoo();
       coo.set(al,del);
-      coo.setPrecision(Astrocoo.ARCSEC+1);
+//      coo.setPrecision(Astrocoo.ARCSEC+1);
       try{
          String o = "2s"+(!c.equals(" ")?c:"");
          //System.out.println("al="+al+" del="+del+" Options="+o+" coo="+coo.toString(o+"f"));

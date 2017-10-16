@@ -44,6 +44,7 @@ import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -81,7 +82,7 @@ import cds.tools.pixtools.CDSHealpix;
 public class Properties extends JFrame implements ActionListener, ChangeListener {
 
    String SEEFITS,SEEHIPSPROP,SEEPARSING,TABLEINFO,/* LOADURL, */NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
-   TITLE,BANNER,APPLY,BOOKMARK,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
+   TITLE,BANNER,APPLY,/* BOOKMARK, */CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
    LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
    ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
    LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
@@ -173,7 +174,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       TITLE = aladin.chaine.getString("PROPTITLE");
       BANNER = aladin.chaine.getString("PROPBANNER");
       APPLY = aladin.chaine.getString("PROPAPPLY");
-      BOOKMARK = aladin.chaine.getString("PROPBOOKMARK");
+//      BOOKMARK = aladin.chaine.getString("PROPBOOKMARK");
       CLOSE = aladin.chaine.getString("PROPCLOSE");
       NOFILTER = aladin.chaine.getString("PROPNOFILTER");
       LABEL = aladin.chaine.getString("PROPLABEL");
@@ -331,13 +332,35 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       JPanel p = new JPanel();
       p.setLayout( new FlowLayout(FlowLayout.CENTER));
       JButton b;
+      
+      
       p.add( b=new JButton(APPLY)); b.addActionListener(this);
       b.setFont( b.getFont().deriveFont(Font.BOLD) );
-      if( plan.getBookmarkCode()!=null ) {
-         p.add( new JLabel(" ") );
-         p.add( b=new JButton(BOOKMARK)); b.addActionListener(this);
-      }
+//      if( plan.getBookmarkCode()!=null ) {
+//         p.add( new JLabel(" ") );
+//         p.add( b=new JButton(BOOKMARK)); b.addActionListener(this);
+//      }
       p.add( b=new JButton(CLOSE)); b.addActionListener(this);
+      
+      // On ajoute l'icone permettant la mise en bookmark de la requête
+      if( plan.getBookmarkCode()!=null ) {
+         JPanel p1 = new JPanel( new BorderLayout(2,2) );
+         p1.add( p, BorderLayout.CENTER );
+         
+         b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Bookmark.png")));
+         Util.toolTip(b, "Bookmarks this server query");
+         b.setMargin(new Insets(0, 0, 0, 0));
+         b.setBorderPainted(false);
+         b.setContentAreaFilled(false);
+         p1.add(b, BorderLayout.EAST );
+         b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               bookmark();
+            }
+         });
+         p=p1;
+      }
+               
       return p;
    }
 
@@ -1948,7 +1971,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       } else if( APPLY.equals(what) ) apply();
 
       // Creation d'un bookmark
-      else if( BOOKMARK.equals(what) ) bookmark();
+//      else if( BOOKMARK.equals(what) ) bookmark();
 
       // Visualisation du header fits
       else if( SEEFITS.equals(what) ) aladin.header(plan);
