@@ -658,6 +658,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected boolean stopMegaDrag(Object target,int x, int y,boolean ctrlPressed) {
       boolean rep=true;
+      
 
       if( !isMegaDrag() ) return false;
 
@@ -668,6 +669,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int i = getTargetViewForEvent(target,x,y);
       megaDragViewTarget = i<0?null:viewSimple[i];
 
+      System.out.println("stopMegaDrag in "+megaDragViewTarget);
+      
       if( !flagMegaDrag
             || megaDragViewSource==null && megaDragPlanSource==null
             || megaDragViewTarget==null ) {
@@ -680,10 +683,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( rep && megaDragViewTarget==megaDragViewSource ) rep=false;
 
       // En mode Taquin la source doit être vide et juste à coté
-      if( rep && /* flagTaquin && */
-            (megaDragPlanSource!=null
-            || !megaDragViewTarget.isFree()
-            || !isAcote(megaDragViewSource.n,megaDragViewTarget.n)) ) rep=false;
+//      if( rep && flagTaquin && 
+//            (megaDragPlanSource!=null
+//            || !megaDragViewTarget.isFree()
+//            || !isAcote(megaDragViewSource.n,megaDragViewTarget.n)) ) rep=false;
 
       flagMegaDrag=false;
 
