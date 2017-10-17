@@ -1290,7 +1290,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       off1 = internalId.indexOf("CDS/");
       if( off1>=0 ) label = "CDS/P/DM/"+catId;
       
-      aladin.calque.newPlanBG(url, label, null, null);
+      int n = aladin.calque.newPlanBG(url, label, null, null);
+//      if( n!=-1 ) {
+//         ((PlanBG)aladin.calque.plan[n]).setCmParam("eosb noreverse all nocut");
+//      }
       
       String cmd = Glu.quote(label)+"=load "+url;
       aladin.console.printCommand(cmd);

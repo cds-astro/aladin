@@ -617,6 +617,8 @@ public class Calque extends JPanel implements Runnable {
       setGrid(mode!=0,false);
    }
    
+   protected int getGrid() { return gridMode; }
+   
    protected void setConstellation(boolean mode) {
       setOverlayFlag("const", mode);
    }

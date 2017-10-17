@@ -466,8 +466,10 @@ public class MyInputStreamCached extends MyInputStream {
          long freeSpace = (long)( cachedir.getFreeSpace()/(1024*1024.) );
          if( freeSpace<cacheLimit ) {
             long newsize = (3L*freeSpace)/5L;
-            context.warning("Cache disk: not enoug space on partition for "+Util.getUnitDisk(cacheLimit+"MB")
-            +" => assume "+Util.getUnitDisk(newsize+"MB"));
+            String s = "Cache disk: not enoug space on partition for "+Util.getUnitDisk(cacheLimit+"MB")
+            +" => assume "+Util.getUnitDisk(newsize+"MB");
+            if( context!=null ) context.warning(s);
+            else System.err.println(s);
             cacheLimit = newsize;
 //            throw new MyInputStreamCachedException("Cache disk: not enough space on partition ("
 //                  +Util.getUnitDisk(cacheLimit+"MB")+"/"+Util.getUnitDisk(freeSpace+"MB")+") "

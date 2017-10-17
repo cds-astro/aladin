@@ -3886,6 +3886,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Activation ou désactivation de la grille via la Jbar */
    protected void grid(int mode) {
+      if( mode!=0 && calque.getGrid()==mode ) mode=0;  // On switche off
       calque.setGrid(mode);
       view.repaintAll();
    }
