@@ -262,7 +262,8 @@ SwingWidgetFinder, Widget {
       // supprime les tools qui ne peuvent lui etre associes
       for( i=0; i<allPlan.length; i++ ) {
          if( allPlan[i].type==Plan.NO || !allPlan[i].flagOk ) continue;
-         if( allPlan[i].isPixel() || allPlan[i] instanceof PlanImageRGB )  nbSimpleImg++;
+//         if( allPlan[i].isPixel() || allPlan[i] instanceof PlanImageRGB )  nbSimpleImg++;
+         if( allPlan[i].isPixel() && allPlan[i].isSimpleImage() )  nbSimpleImg++;
          if( allPlan[i] instanceof PlanImageBlink )  nbBlinkImg++;
          if( allPlan[i].type==Plan.CATALOG ) nbSimpleCat++;
          if( allPlan[i].isCatalog() ) nbCat++;
@@ -309,7 +310,7 @@ SwingWidgetFinder, Widget {
 
       // S'il n'y a pas au-moins deux images on invalide RGB, BLINK, RESAMP
       if( nbSimpleImg<2 ) {
-         mode[ToolBox.RGB]=/*mode[ToolBox.RESAMP]=*/mode[ToolBox.BLINK]=Tool.UNAVAIL;
+         mode[ToolBox.RGB]=mode[ToolBox.RESAMP]=mode[ToolBox.BLINK]=Tool.UNAVAIL;
       }
 
       // S'il n'y a pas au-moins un MOC on invalide
