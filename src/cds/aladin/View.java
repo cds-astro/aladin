@@ -615,16 +615,16 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       flagMegaDrag=true;
    }
 
-   /** Retourne true s'il s'agit d'indices de vues adjacentes */
-   private boolean isAcote(int s, int t) {
-      int n = (int)Math.sqrt(modeView);
-      int s1 = s%n;
-      if( t==s-1 && s1>0 ) return true;
-      if( t==s+1 && s1<n-1 ) return true;
-      if( t==s+n && s<modeView-n ) return true;
-      if( t==s-n && s>n-1 ) return true;
-      return false;
-   }
+//   /** Retourne true s'il s'agit d'indices de vues adjacentes */
+//   private boolean isAcote(int s, int t) {
+//      int n = (int)Math.sqrt(modeView);
+//      int s1 = s%n;
+//      if( t==s-1 && s1>0 ) return true;
+//      if( t==s+1 && s1<n-1 ) return true;
+//      if( t==s+n && s<modeView-n ) return true;
+//      if( t==s-n && s>n-1 ) return true;
+//      return false;
+//   }
 
 //   /** Retourne true si on a fini le taquin */
 //   private boolean isTaquinOk() {
@@ -669,7 +669,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int i = getTargetViewForEvent(target,x,y);
       megaDragViewTarget = i<0?null:viewSimple[i];
 
-      System.out.println("stopMegaDrag in "+megaDragViewTarget);
       
       if( !flagMegaDrag
             || megaDragViewSource==null && megaDragPlanSource==null

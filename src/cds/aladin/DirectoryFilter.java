@@ -822,6 +822,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       if( bxHiPS.isSelected() )      special.append(" && hips_service_url=*"); 
       if( bxSIA.isSelected() )       special.append(" && sia*=*");  
+      if( bxSIA2.isSelected() )      special.append(" && sia2*=*");  
       if( bxSSA.isSelected() )       special.append(" && ssa*=*");  
       if( bxTAP.isSelected() )       special.append(" && tap*=*");  
       if( bxCS.isSelected() )        special.append(" && cs*=*");   
@@ -999,7 +1000,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    private JCheckBox cbMocPlane,cbMocInLine,cbStcInLine,cbSelectedGraph;
-   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSSA,bxTAP,bxCS,bxMOC,bxProg,bxSuperseded;
+   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSIA2,bxSSA,bxTAP,bxCS,bxMOC,bxProg,bxSuperseded;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    private JTextArea tMoc,tSTC;
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
@@ -1055,6 +1056,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxPixFull.setSelected(false);
       bxHiPS.setSelected(false);
       bxSIA.setSelected(false);
+      bxSIA2.setSelected(false);
       bxSSA.setSelected(false);
       bxTAP.setSelected(false);
       bxCS.setSelected(false);
@@ -1170,7 +1172,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
       subPanel.add( bx=bxHiPS = new JCheckBox("HiPS")); bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOHIPS"));
-      subPanel.add( bx=bxSIA  = new JCheckBox("SIA"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      subPanel.add( bx=bxSIA  = new JCheckBox("SIA(1&2)"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText(S("FPPROTOSIA"));
+      subPanel.add( bx=bxSIA2  = new JCheckBox("SIA2"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOSIA"));
       subPanel.add( bx=bxSSA  = new JCheckBox("SSA"));  bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOSSA"));

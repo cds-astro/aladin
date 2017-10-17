@@ -1275,14 +1275,30 @@ public class TreeObjDir extends TreeObj implements Propable {
       gb.setConstraints(b,gc);
       getPanel().add(b);
    }
+   
+   static final String  DMAPGLUHIPS = "getDMapHiPS";
 
    void loadDensityMap() {
       int off1 = internalId.indexOf('/');
-      int off2 = internalId.lastIndexOf('/');
-      String catId = internalId.substring(off1+1, off2);
+      String catId = internalId.substring(off1+1);
+      URL url = aladin.glu.getURL(DMAPGLUHIPS,Glu.quote(catId));
       
-      try {  aladin.calque.newPlanDMap(internalId,catId);
-      } catch( Exception e ) { }
+      // label par défaut
+      String label = internalId+" DMAP";
+      
+      // Si on est sûr que c'est du CDS
+      off1 = internalId.indexOf("CDS/");
+      if( off1>=0 ) label = "CDS/P/DM/"+catId;
+      
+      aladin.calque.newPlanBG(url, label, null, null);
+      
+      String cmd = Glu.quote(label)+"=load "+url;
+      aladin.console.printCommand(cmd);
+
+      
+//      try {  aladin.calque.newPlanDMap(internalId,catId);
+//      } catch( Exception e ) { }
+         
 //      String url = aladin.glu.gluResolver("getDMap",catId,false);
 //      aladin.execAsyncCommand("'DM "+internalId+"'=load "+url);
    }

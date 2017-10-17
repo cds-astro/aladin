@@ -3372,8 +3372,8 @@ AWNBROWS	Nb rows:
 AWNBROWS.fr	Nb de col.:
 AWREFPUB	Reference pub. year:
 AWREFPUB.fr	Année pub.réf.
-AWPROGACC	progr.access
-AWPROGACC.fr	acces.progr.
+AWPROGACC	progressive
+AWPROGACC.fr	progressif 
 AWPROGACCTIP	Progressive access to the collection\n(HiPS: Hierarchical Progressive Survey)
 AWPROGACCTIP.fr	Accès progressif à la collection\n(HiPS: Hierarchical Progressive Survey)
 AWDATAACC	Whole data

@@ -413,7 +413,7 @@ public class PlanBG extends PlanImage {
       boolean alternative=true;
       
       // Vérifie qu'il y a au-moins une alternative
-      URL u = aladin.glu.getURL(gluTag,"",false,false,2);
+      URL u = gluTag==null ? null : aladin.glu.getURL(gluTag,"",false,false,2);
       if( u==null ) alternative=false;
       
       // Pas de réponse immédiate => on cherche un autre site tout de suite

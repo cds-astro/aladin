@@ -645,7 +645,9 @@ public class Context {
          i++;
       }
       if( i<4 ) throw new Exception("Missing dataCut parameter");
-      //         setCutOrig(cutOrig);
+      
+      // BIZARRE !
+//      setCutOrig(cutOrig);
    }
 
 

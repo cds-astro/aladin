@@ -2579,7 +2579,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Mémorise les dernières targets */
    protected void setLastTarget(String target ) {
-      if( aladin.targetHistory==null ) aladin.targetHistory = new TargetHistory(aladin);
       aladin.targetHistory.add(target);
    }
 

@@ -778,7 +778,13 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       g.setColor( flagLocHistoryIn ? c.brighter() : c);
       drawLoc(g,x,y-5);
       rectLoc = new Rectangle(x,y-5,15,20);
-      x+=25;
+      x+=20;
+      
+      // Dessin du triangle
+      g.setColor( flagHistoryIn ? c.brighter() : c);
+      Util.fillTriangle7(g, x,y);
+      rectHistory = new Rectangle(x,y-5,15,20);
+      x+=15;
       
       // Affichage du dernier target
       String target = aladin.targetHistory.getLast();
@@ -786,12 +792,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       g.setColor( flagTargetHistoryIn ? c.brighter() : c);
       g.drawString(target,x,y+6);
       rectTarget = new Rectangle(x,y-5,w,20);
-      x+=w+10;
-      
-      // Dessin du triangle
-      g.setColor( flagHistoryIn ? c.brighter() : c);
-      Util.fillTriangle7(g, x,y);
-      rectHistory = new Rectangle(x,y-5,15,20);
       
    }
    
@@ -807,7 +807,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       {7, 2,5}, {7, 9,12},
       {8, 3,11},
       {9, 4,10},
-      {10, 5,9 },
+      {10, 4,10 },
       {11, 5,9 },
       {12, 6,8 },
       {13, 7,7 },
