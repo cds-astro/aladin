@@ -256,7 +256,7 @@ public class UWSJob implements ActionListener{
 	 */
 	public void pollForCompletion(Server server, boolean useBlocking, UWSFacade uwsFacade, int requestNumber) throws IOException, InterruptedException, Exception {
 		try {
-			if (Aladin.levelTrace >= 3) System.out.println("pollForCompletion. Jon phase is:"+this.currentPhase);
+			if (Aladin.levelTrace >= 3) System.out.println("pollForCompletion. Jon phase is: "+this.currentPhase);
 			URL jobInProgressUrl = this.location;
 			String previousPhase = this.currentPhase;
 			while (true) {
@@ -322,7 +322,7 @@ public class UWSJob implements ActionListener{
 					}*/
 					UWSFacade.populateJob(httpConn.getInputStream(), this);
 				} else if(httpConn.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND){
-					System.out.println("Job is not found, user probably asked for delete: \n"+this.location.toString());
+					Aladin.trace(3, "Job is not found, user probably asked for delete: \n"+this.location.toString());
 					this.currentPhase = JOBNOTFOUND;//Not found Error_404
 					notificationText = UWSFacade.JOBNOTFOUNDMESSAGE;
 					throw new IOException(UWSFacade.JOBNOTFOUNDMESSAGE);

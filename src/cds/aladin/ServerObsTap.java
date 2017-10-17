@@ -67,6 +67,7 @@ import adql.parser.TokenMgrError;
 import adql.query.ADQLQuery;
 import adql.query.ClauseConstraints;
 import cds.aladin.Constants.TapClientMode;
+import cds.tools.Util;
 
 /**
  * @author chaitra
@@ -158,7 +159,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		
-		DynamicTapForm.setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
+		setTopPanel(containerPanel, c, info1, CLIENTINSTR);
 		
 		JPanel panelScroll = new JPanel();
 		panelScroll.setBackground(tapClient.secondColor);
@@ -300,7 +301,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			tablesGuiEditor.setDocument(new FilterDocument(this, this.tablesGui, keys, selectedTableName));
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(e.getMessage());
+			Aladin.warning(this, e.getMessage());
 			showLoadingError();
 			return;
 		}
@@ -797,7 +798,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 							mText = processSpectralBand(false, valueInProcess.trim(), null);
 							valueInProcess = mText.toString();
 						}
-						constraintSelected = TapTable.getQueryPart(constraintSelected);
+						if (!inRange) {
+							constraintSelected = TapTable.getQueryPart(constraintSelected);
+						}
 						appendConstraint(spectral_andOrOp, constraintSelected, inRange, true, valueInProcess,
 								defaultValue);
 					}
@@ -831,7 +834,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 								valueInProcess = mjdText.toString();
 							}
 						}
-						constraintSelected = TapTable.getQueryPart(constraintSelected);
+						if (!inRange) {
+							constraintSelected = TapTable.getQueryPart(constraintSelected);
+						}
 						appendConstraint(time_andOrOp, constraintSelected, inRange , true, valueInProcess, defaultValue);
 					}
 				} catch (Exception e) {
@@ -875,7 +880,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 				String raColumNameForQuery = TapTable.getQueryPart(this.raColumnName);
 				String decColumNameForQuery = TapTable.getQueryPart(this.decColumnName);
 				whereClause.append(String.format(POSQuery, raColumNameForQuery, decColumNameForQuery,
-						coo[0].getText(), coo[1].getText(), rad[0].getText())).append(SPACESTRING);
+						Util.myRound(coo[0].getText(), 5), Util.myRound(coo[1].getText(), 5),
+						Util.myRound(rad[0].getText(), 5))).append(SPACESTRING);
+				
 				appendConstraint(free_andOrOp, null, true, false, null, whereClause.toString());
 				
 			} else if (action.equals(CHECKQUERY)) {

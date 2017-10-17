@@ -198,7 +198,6 @@ public static final String CHECKQUERY = "CHECKQUERY";
 public static final String UPLOAD = "UPLOAD";
 public static final String SELECTALL = "SELECTALL";
 public static final String OPEN_SET_RADEC = "OPEN_SET_RADEC";
-public static final String SETTINGS = "SETTINGS";
 public static final String GETRESULTPARAMS = "REQUEST=doQuery&LANG=ADQL&QUERY="; //As per TAP spec
 //public static final String SYNCGETRESULT = "%1$s/sync?REQUEST=doQuery&LANG=ADQL&QUERY=%2$s";
 public static final String POSQuery = "CONTAINS(POINT('ICRS', %1$s, %2$s), CIRCLE('ICRS', %3$s, %4$s, %5$s)) = 1";
@@ -296,13 +295,14 @@ public static final int TAPFORM_STATUS_ERROR = -1;//error
 
 //modes correspond to the frame that host these servers
 public static enum TapClientMode {//Dialog is serverselector
-	DIALOG, TREEPANEL, UPLOAD;
+	DIALOG, TREEPANEL, UPLOAD, STANDALONE;
 }
 public static final String GLU = "Basic";
 public static final String NODE = "NODE";
 public static final String GENERIC = "Generic";
 public static final String TEMPLATES = "Templates";
 public static final String OBSCORE = "Obscore";
+public static final String ACCESSALL = "Access all";
 
 public static final String TAPMODECHANGETOOLTIP = "TAPMODECHANGETOOLTIP";
 public static final String LOADCLIENTTAPURL = "LOADCLIENTTAPURL";

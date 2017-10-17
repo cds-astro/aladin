@@ -126,7 +126,7 @@ public class TapClient{
         	this.nodeTableNames = new ArrayList<String>();
     		this.nodeTableNames.add(nodeTable);
 		}
-		
+    	
 		if (model != null) {
 			if (edit) {
 				editing = true;
@@ -135,6 +135,7 @@ public class TapClient{
 			}
 		} else {
 			String[] modesAllowed = null;
+			
 			if (this.nodeName != null) {
 				if (Aladin.PROTO) {//TODO:: tintinproto
 					modesAllowed = new String []{ GLU, nodeName, GENERIC, TEMPLATES, OBSCORE };
@@ -150,13 +151,7 @@ public class TapClient{
 				}
 				
 			}
-			model = new DefaultComboBoxModel(modesAllowed){//TODO:: tintin
-				@Override
-				public void setSelectedItem(Object anObject) {
-					// TODO Auto-generated method stub
-					super.setSelectedItem(anObject);
-				}
-			}; 
+			model = new DefaultComboBoxModel(modesAllowed); 
 		}
 	}
 	
@@ -166,46 +161,50 @@ public class TapClient{
 		this.tapManager = tapManager;
 		this.tapLabel = tapLabel;
 		this.tapBaseUrl = tapBaseUrl;
-		this.updateNodeAndSetModes(nodeTable);
-		
-		model.addListDataListener(new ListDataListener() {
-			@Override
-			public void intervalRemoved(ListDataEvent arg0) {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			public void intervalAdded(ListDataEvent arg0) {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			public void contentsChanged(ListDataEvent arg0) {
-				// TODO Auto-generated method stub
-				try {
-					if (!editing) {
-						String selected = (String) model.getSelectedItem();
-						if ((selected.equals(GLU) && serverGlu == null)
-								|| selected.equals(OBSCORE) && obscoreTables.isEmpty()) {
-							return;
-						}
-						Server serverToDisplay = getServerToDisplay(selected);
-						if (Aladin.levelTrace >= 3) System.out.println("contentsChanged" + TapClient.this.mode + "  " + selected);
-						if (TapClient.this.mode == TapClientMode.TREEPANEL) {
-							TapClient.this.tapManager.showTapPanelFromTree(TapClient.this.tapLabel, serverToDisplay);
-						} else {
-							TapClient.this.tapManager.showTapServerOnServerSelector(serverToDisplay);
-						}
-
-					}
-				} catch (Exception ex) {
-					if (Aladin.levelTrace >= 3)
-						ex.printStackTrace();
-					Aladin.warning("Error! unable load tap server!" + ex.getMessage());
+		if (mode != TapClientMode.STANDALONE) {
+			this.updateNodeAndSetModes(nodeTable);
+			
+			model.addListDataListener(new ListDataListener() {
+				@Override
+				public void intervalRemoved(ListDataEvent arg0) {
+					// TODO Auto-generated method stub
 				}
-			}
 
-		});
+				@Override
+				public void intervalAdded(ListDataEvent arg0) {
+					// TODO Auto-generated method stub
+				}
+
+				@Override
+				public void contentsChanged(ListDataEvent arg0) {
+					// TODO Auto-generated method stub
+					Server serverToDisplay = null;
+					try {
+						if (!editing) {
+							String selected = (String) model.getSelectedItem();
+							serverToDisplay = getServerToDisplay(selected);
+							if (Aladin.levelTrace >= 3) System.out.println("contentsChanged" + TapClient.this.mode + "  " + selected);
+							if (TapClient.this.mode == TapClientMode.TREEPANEL) {
+								TapClient.this.tapManager.showTapPanelFromTree(TapClient.this.tapLabel, serverToDisplay);
+							} else {
+								TapClient.this.tapManager.showTapServerOnServerSelector(serverToDisplay);
+							}
+
+						}
+					} catch (Exception ex) {
+						if (Aladin.levelTrace >= 3)
+							ex.printStackTrace();
+						if (serverToDisplay == null) {
+							Aladin.warning("Error! unable load tap server!" + ex.getMessage());
+						} else {
+							Aladin.warning(serverToDisplay, "Error! unable load tap server!" + ex.getMessage());
+						}
+						
+					}
+				}
+
+			});
+		}
 	}
 	
 	public static TapClient getUploadTapClient(Aladin aladin, String tapLabel, String mainServerUrl) {
@@ -219,26 +218,29 @@ public class TapClient{
 		return tapClient;
 	}
 	
-	public static JButton getChangeServerButton(Server server) {
+	public JButton getChangeServerButton(Server server) {
 		JButton button = null;
-		Image image = Aladin.aladin.getImagette("changeServerOptions.png");
-		if (image == null) {
-			button = new JButton("Change server");
-		} else {
-			button = new JButton(new ImageIcon(image));
+		if (this.mode != TapClientMode.UPLOAD && this.mode != TapClientMode.STANDALONE) {
+			Image image = Aladin.aladin.getImagette("changeServerOptions.png");
+			if (image == null) {
+				button = new JButton("Change server");
+			} else {
+				button = new JButton(new ImageIcon(image));
+			}
+			button.setBorderPainted(false);
+			button.setMargin(new Insets(0, 0, 0, 0));
+			button.setContentAreaFilled(true);
+			button.setActionCommand(CHANGESERVER);
+			button.addActionListener(server);
+			button.setToolTipText(CHANGESERVERTOOLTIP);
 		}
-		button.setBorderPainted(false);
-		button.setMargin(new Insets(0, 0, 0, 0));
-		button.setContentAreaFilled(true);
-		button.setActionCommand(CHANGESERVER);
-		button.addActionListener(server);
-		button.setToolTipText(CHANGESERVERTOOLTIP);
 		return button;
 	}
 	
 	public JPanel getModes(Server server) {
-		JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0 , 0));
-		if (this.mode != TapClientMode.UPLOAD) {
+		JPanel optionsPanel = null;
+		if (this.mode != TapClientMode.UPLOAD && this.mode != TapClientMode.STANDALONE) {
+			optionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0 , 0));
 			server.modeChoice = new JComboBox(model);
 			server.modeChoice.setRenderer(new TapClientModesRenderer(this));
 //			server.modeChoice.setBackground(Aladin.BLUE);
@@ -310,7 +312,7 @@ public class TapClient{
 				} 
 				dynamicTapForm = this.serverExamples;
 				model.setSelectedItem(TEMPLATES);
-			} else if (serverType == OBSCORE) {
+			} else if (serverType == OBSCORE && !obscoreTables.isEmpty()) {
 				if (this.serverObsTap == null) {
 					this.serverObsTap = tapManager.getNewServerObsTapInstance(this); //tapManager.getNewServerObsTapInstance1(this);
 				} 
@@ -326,7 +328,7 @@ public class TapClient{
 				} else if (this.serverExamples != null && this.serverExamples.isLoaded()) {
 					dynamicTapForm = this.serverExamples;
 					model.setSelectedItem(TEMPLATES);
-				} else if (this.serverObsTap != null) {
+				} else if (this.serverObsTap != null && !obscoreTables.isEmpty()) {
 					dynamicTapForm = this.serverObsTap;
 					model.setSelectedItem(OBSCORE);
 				} else {// by default we give priority to the generic: after discussing with Pierre

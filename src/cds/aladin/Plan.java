@@ -119,6 +119,7 @@ public class Plan implements Runnable {
    protected String ack=null;    // L'acknowledgement
    protected String copyright=null;      // L'origine du plan (mention du copyright)
    protected String copyrightUrl=null;   // Lien vers l'origine ou vers le copyright
+   protected String query = null; //query that generated this plane (only the query written in tap text area)
 
    protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
    protected Coord co;           // Les coordonnees J2000 du target de l'interrogation

@@ -663,6 +663,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          // Une ligne de separation
          if( plan.isCatalog() || plan.isImage() ) PropPanel.addFilet(p,g,c);
+         
+         if (plan.isCatalog() && plan.query != null) {
+        	 PropPanel.addCouple(p,"Query", new JLabel(plan.query), g,c);
+		}
       }
 
       // Centre du champ de l'instrument

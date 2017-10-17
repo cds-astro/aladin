@@ -293,6 +293,7 @@ VOTOOLINFO	VO tool controller...
 NEWS	What's new in this Aladin release ?...
 ABOUT	About Aladin...
 ACCESSTAP Access TAP
+OPENTAPJOBCONTROLLER Open job controller
 
 CMD.fr	Console de commandes...
 XMATCH.fr	Corréler des catalogues...
@@ -328,6 +329,7 @@ VOTOOLINFO.fr	Gestionnaire des applications VO...
 NEWS.fr	Quoi de neuf dans cette version d'Aladin ?...
 ABOUT.fr	A propos d'Aladin...
 ACCESSTAP.fr Access TAP
+OPENTAPJOBCONTROLLER.fr Open job controller
 
 # Aladin.java - One line menu help
 HLOAD	Access to the images, catalogs, FoV
@@ -3029,6 +3031,8 @@ SELECTDIRTAPSERVERSLABEL Complete list
 SELECTDIRTAPSERVERSTOOLTIP Choose tap servers from the main directory tree you see in the left panel of Aladin's window
 SELECTSPLTAPSERVERSLABEL Preselected servers
 SELECTSPLTAPSERVERSTOOLTIP A small selection of servers is shown below. For a more comprehensive list, go to the adjacent "Complete list".
+INCORRECTTAPURLMESSAGE Error! please check the url provided
+MESSAGEUNKNOWNPARAMSINQUERY Are you sure of the highlighted identifiers?
 
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message
@@ -3059,9 +3063,10 @@ NODE_TAPMODESTOOLTIP Click to load a generic tap client for this node
 GENERIC_TAPMODESTOOLTIP Click to load a generic tap client
 EXAMPLE_TAPMODESTOOLTIP Click to load a template based tap client
 OBSCORE_TAPMODESTOOLTIP Click to load a custom client for obscore tables
+#ACCESSALL_TAPMODESTOOLTIP Click to load all tables of this server
 TAPSERVICEEXAMPLESTOOLTIP These are service provided examples!
 SETRADECBUTTONTIP Select columns of the tap table as right ascension and declination columns
-TAPSETTINGSTOOLTIP Set targets, max rows and other values.
+TAPTARGETSETTINGSTOOLTIP Change target used in the templates.
 SETTARGETTOOLTIP Hint: Configure different target by clicking the "Settings" button
 CHANGESETTINGSTOOLTIP Hint: Configure second table by clicking the "Settings" button
 NOGLURECFOUND No glu records found to create a customised basic client!
@@ -3069,6 +3074,7 @@ NOTARGETSET No target set.
 NORANGEERRORMESSAGE Range selected, please provide 2 values!
 CHOOSEFROMTAPSERVERSTEXT Or choose from the lists below:
 WAITLOADINGTAPSERVERSLIST Loading tap servers list...
+NODUPLICATESELECTION Cannot select same table! No second table selected.
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables
@@ -3081,6 +3087,8 @@ DISCARDALLTIP Click to discard all of the parsed tables
 NOTABLELOADEDMESSAGE Load new table to populate the gui!
 ALLDISCARDEDINFOMESSAGE All that were loaded are now discarded.
 TABLEDISCARDINFO One option removed from upload file choices!
+NEWOPTIONADDEDMESSAGE New option added to upload file choices!
+
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again

@@ -11,7 +11,6 @@ import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.OPEN_SET_RADEC;
 import static cds.aladin.Constants.RADECBUTTON;
 import static cds.aladin.Constants.RELOAD;
-import static cds.aladin.Constants.SETTINGS;
 import static cds.aladin.Constants.SHOWAYNCJOBS;
 import static cds.aladin.Constants.SYNC_ASYNC;
 import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
@@ -35,8 +34,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -49,9 +50,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 
 import adql.db.DBChecker;
-import adql.db.DBType;
-import adql.db.DBType.DBDatatype;
-import adql.db.DefaultDBColumn;
 import adql.db.DefaultDBTable;
 import adql.db.exception.UnresolvedIdentifiersException;
 import adql.parser.ADQLParser;
@@ -77,8 +75,8 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	
 	public static String TIPRETRY, TAPTABLEUPLOADTIP, TAPTABLENOUPLOADTIP, REFRESHQUERYTOOLTIP, CHECKQUERYTOOLTIP,
 			SYNCASYNCTOOLTIP, SHOWASYNCTOOLTIP, TAPTABLEJOINTIP, DISCARD, DISCARDTIP, SETRADECBUTTONTIP,
-			SETTINGSTOOLTIP, TIPCLICKTOADD, TAPEXDEFAULTMAXROWS, NORANGEERRORMESSAGE, TAPERRORSTATUSINFO, 
-			TAPLOADINGSTATUSINFO;
+			CHANGETARGETSETTINGSTOOLTIP, TIPCLICKTOADD, TAPEXDEFAULTMAXROWS, NORANGEERRORMESSAGE, TAPERRORSTATUSINFO, 
+			TAPLOADINGSTATUSINFO, MESSAGEUNKNOWNPARAMSINQUERY;
 	
 	public String CLIENTINSTR;
 
@@ -119,41 +117,41 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		setFont(Aladin.PLAIN);
 	}
 	
-	public static void setTopPanel(Server server, JPanel containerPanel, GridBagConstraints c, JLabel info1, String clientInstrucMessage) {
-		containerPanel.setBackground(server.tapClient.primaryColor);
+	public void setTopPanel(JPanel containerPanel, GridBagConstraints c, JLabel info1, String clientInstrucMessage) {
+		containerPanel.setBackground(this.tapClient.primaryColor);
 		
 		JPanel addingPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints tc = new GridBagConstraints();
-		addingPanel.setBackground(server.tapClient.primaryColor);
+		addingPanel.setBackground(this.tapClient.primaryColor);
 		
 		tc.gridx = 0;
 		tc.weightx = 0.01;
 		tc.gridy = 0;
 		c.anchor = GridBagConstraints.NORTH;
 		c.fill = GridBagConstraints.NONE;
-		if (server.tapClient.mode == TapClientMode.DIALOG) {
-			JButton button = TapClient.getChangeServerButton(server);
+		if (this.tapClient.mode == TapClientMode.DIALOG) {
+			JButton button = this.tapClient.getChangeServerButton(this);
 			addingPanel.add(button, tc);
 			tc.gridx++;
 		}
 		
-		if (server.tapClient.mode != TapClientMode.UPLOAD) {
-			if (server instanceof DynamicTapForm) {
+		if (this.tapClient.mode != TapClientMode.UPLOAD) {
+			if (this instanceof DynamicTapForm) {
 				JButton reloadButton = TapClient.getReloadButton();
-				reloadButton.addActionListener(server);
+				reloadButton.addActionListener(this);
 				addingPanel.add(reloadButton, tc);
 				tc.gridx++;
 			}
 		}
 		
 		JPanel titlePanel = new JPanel();
-		titlePanel.setBackground(server.tapClient.primaryColor);
+		titlePanel.setBackground(this.tapClient.primaryColor);
 		titlePanel.setAlignmentY(SwingConstants.CENTER);
-		if (server.tapClient.mode != TapClientMode.UPLOAD) {
-			server.makeTitle(titlePanel, server.tapClient.getVisibleLabel());
+		if (this.tapClient.mode != TapClientMode.UPLOAD) {
+			this.makeTitle(titlePanel, this.tapClient.getVisibleLabel());
 //			this.aladinLabel = this.name;
 		} else {
-			server.makeTitle(titlePanel, "Upload server");
+			this.makeTitle(titlePanel, "Upload server");
 		}
 		tc.weightx = 0.88;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -161,11 +159,13 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	    tc.gridx++;
 //		containerPanel.add(titlePanel, c);
 		
-		JPanel optionsPanel = server.tapClient.getModes(server);
-	    optionsPanel.setBackground(server.tapClient.primaryColor);
-	    tc.weightx = 0.10;
-	    c.fill = GridBagConstraints.NONE;
-	    addingPanel.add(optionsPanel, tc);
+		JPanel optionsPanel = this.tapClient.getModes(this);
+		if (optionsPanel != null) {
+			optionsPanel.setBackground(this.tapClient.primaryColor);
+		    tc.weightx = 0.10;
+		    c.fill = GridBagConstraints.NONE;
+		    addingPanel.add(optionsPanel, tc);
+		}
 	    
 	    c.gridx = 0;
 	    c.gridy = 0;
@@ -196,7 +196,8 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	 * @return
 	 * @throws BadLocationException 
 	 */
-	public JPanel getTablesPanel(final JComboBox tablesGui, TapTable chosenTable, List<String> keys, boolean showSettings) throws BadLocationException {
+	public JPanel getTablesPanel(String labelText, final JComboBox tablesGui, TapTable chosenTable, List<String> keys,
+			List<JComponent> smallPrefixComponents, boolean isFirstTable) throws BadLocationException {
     	JPanel tablesPanel = new JPanel();
 		GridBagLayout gridbag = new GridBagLayout();
 		tablesPanel.setLayout(gridbag);
@@ -209,22 +210,36 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.WEST;
 		c.weightx = 0.05;
+		if (smallPrefixComponents!=null && !smallPrefixComponents.isEmpty()) {
+			for (JComponent smallPrefixComponent : smallPrefixComponents) {
+				tablesPanel.add(smallPrefixComponent, c);
+				c.gridx++;
+			}
+		}
 		
 		JLabel label = new JLabel();
-		label.setText("Table:");
+		if (labelText == null) {
+			labelText = "Table:";
+		}
+		label.setText(labelText);
 		label.setFont(BOLD);
 		tablesPanel.add(label, c);
 		
-		String tableToolTip = chosenTable.getDescription();
+		String tableToolTip = null;
+		String selectedName = null;
+		if (chosenTable != null) {
+			tableToolTip = chosenTable.getDescription();
+			selectedName = chosenTable.getTable_name();
+		}
 		if (tableToolTip != null && !tableToolTip.isEmpty()) {
 			tablesGui.setToolTipText("<html><p width=\"500\">"+tableToolTip+"</p></html>");
 		} else {
 			tablesGui.setToolTipText(null);
 		}
-		if (this.tapClient.mode != TapClientMode.UPLOAD) {
+		if (this.tapClient.mode != TapClientMode.UPLOAD && keys != null &&!keys.isEmpty()) {
 			tablesGui.setEditable(true);
 			JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
-			FilterDocument document = new FilterDocument(this, tablesGui, keys, chosenTable.getTable_name());
+			FilterDocument document = new FilterDocument(this, tablesGui, keys, selectedName);
 			tablesGuiEditor.setDocument(document);
 		} else {
 			tablesGui.addActionListener(new ActionListener() {
@@ -277,18 +292,59 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				button.addActionListener(this);
 				button.setToolTipText(TAPTABLEJOINTIP);
 			}
-		} else if (showSettings) {
-			JButton button = new JButton("Settings");
-			button.setActionCommand(SETTINGS);
-			button.addActionListener(this);
-			button.setToolTipText(SETTINGSTOOLTIP);
+		} else if (this instanceof ServerTapExamples) {
 			c.insets = new Insets(1, 3, 1, 3);
 			c.weightx = 0.10;
 			c.gridx++;
-			tablesPanel.add(button,c);
+			if (isFirstTable) {
+				JToggleButton grab = getGrab();
+				grab.setToolTipText(CHANGETARGETSETTINGSTOOLTIP);
+				tablesPanel.add(grab,c);
+			} else {
+				tablesPanel.add(getUploadButtonIfAvailable("Upload tables.."), c);
+			}
+			
 		}
-		
 		return tablesPanel;
+	}
+	
+	public JToggleButton getGrab() {
+		this.target = new JTextField(40);
+		JToggleButton b = grab = new JToggleButton(new ImageIcon(Aladin.aladin.getImagette("Grab.png")));
+        Util.toolTip(b, "Grab a position/radius in the view");
+        b.setMargin(new Insets(0, 0, 0, 0));
+        b.setBorderPainted(false);
+        b.setContentAreaFilled(false);
+        
+//        Insets m = grab.getMargin();
+//        grab.setMargin(new Insets(m.top,2,m.bottom,2));
+//        grab.setOpaque(false);
+        grab.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				aladin.f.toFront();
+				JPanel server = DynamicTapForm.this;
+				aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
+
+			}
+        });
+        grab.setFont(Aladin.SBOLD);
+        grab.setEnabled(false);
+		
+		radius = new JTextField(50);
+	    
+		modeCoo = RADEd; // just ra and dec
+		modeRad = STRINGd;
+		if (coo == null) {
+			coo = new JTextField[2];
+			coo[0] = new JTextField();
+			coo[1] = new JTextField();
+		}
+		if (rad == null) {
+			rad = new JTextField[2];
+			rad[0] = new JTextField();
+			rad[1] = new JTextField();
+		}
+		return grab;
 	}
 	
 	/**
@@ -327,10 +383,16 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		gridbag.setConstraints(target, c);
 		targetPanel.add(target);
 
-		this.grab = new JToggleButton("Grab");
-		Insets m = grab.getMargin();
-        grab.setMargin(new Insets(m.top,2,m.bottom,2));
-        grab.setOpaque(false);
+//		this.grab = new JToggleButton("Grab");
+		JToggleButton b = grab = new JToggleButton(new ImageIcon(Aladin.aladin.getImagette("Grab.png")));
+        Util.toolTip(b, "Grab a position/radius in the view");
+        b.setMargin(new Insets(0, 0, 0, 0));
+        b.setBorderPainted(false);
+        b.setContentAreaFilled(false);
+        
+//		Insets m = grab.getMargin();
+//        grab.setMargin(new Insets(m.top,2,m.bottom,2));
+//        grab.setOpaque(false);
 		grab.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				aladin.f.toFront();
@@ -452,15 +514,15 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		
 		if (Aladin.BETA) {
 			if (this.tapClient.mode != TapClientMode.UPLOAD) {
-				bottomPanel.add(getUploadButtonIfAvailable());
+				bottomPanel.add(getUploadButtonIfAvailable("Upload"));
 			}
 		}
 		return bottomPanel;
 	}
 	
-	public JButton getUploadButtonIfAvailable() {
+	public JButton getUploadButtonIfAvailable(String label) {
 		String uploadTipText = TAPTABLEUPLOADTIP;
-		JButton button = new JButton("Upload");
+		JButton button = new JButton(label);
 		button.setActionCommand(UPLOAD);
 		if (this.tapClient.capabilities != null) {
 			try {
@@ -526,7 +588,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		Vector<TapTableColumn> columnNames = tablesMetaData.get(tableName).getColumns();
 		if (columnNames == null) {
 			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				Aladin.warning("Error in uploaded data");
+				Aladin.warning(this, "Error in uploaded data");
 				return null;
 			}
 			try {
@@ -540,7 +602,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				Aladin.warning(e.getMessage());
+				Aladin.warning(this, e.getMessage());
 				String revertTable = tablesMetaData.keySet().iterator().next();
 				if (tablesMetaData.get(revertTable).getColumns() != null) {
 					JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
@@ -561,7 +623,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				return null;
 			}
 			if (columnNames == null) {
-				Aladin.warning("Error in updating the metadata for :"+selectedTableName);
+				Aladin.warning(this, "Error in updating the metadata for :"+selectedTableName);
 				showLoadingError();
 				defaultCursor();
 				return null;
@@ -650,8 +712,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 					ex = it.next();
 					highlightQueryError(tap.getHighlighter(), ex);
 				}
-				info1.setText("Are you sure of the highlighted identifiers?");
-				this.tapClient.tapManager.eraseNotification(info1, CLIENTINSTR);
+				this.tapClient.tapManager.eraseNotification(info1, MESSAGEUNKNOWNPARAMSINQUERY, CLIENTINSTR);
 				throw uie2;// this is just for showing message
 			} catch (ParseException e) {
 				//this one should not occur, but anyway error from this is highlighted. so do nothing
@@ -832,7 +893,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		CLIENTINSTR = "Error: unable to load "+this.tapClient.tapLabel;
-		setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
+		setTopPanel(containerPanel, c, info1, CLIENTINSTR);
 		prepNoMetaDataScreen(containerPanel, c);
 		ball.setMode(Ball.NOK);
 		this.add(containerPanel);
@@ -854,7 +915,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		CLIENTINSTR = "loading "+this.tapClient.tapLabel+"...";
-		setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
+		setTopPanel(containerPanel, c, info1, CLIENTINSTR);
 		
 		prepNoMetaDataScreen(containerPanel, c);
 		ball.setMode(Ball.WAIT);
@@ -911,11 +972,12 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		DISCARD = Aladin.chaine.getString("DISCARD");
 		DISCARDTIP = Aladin.chaine.getString("DISCARDTIP");
 		SETRADECBUTTONTIP = Aladin.chaine.getString("SETRADECBUTTONTIP");
-		SETTINGSTOOLTIP = Aladin.chaine.getString("TAPSETTINGSTOOLTIP");
+		CHANGETARGETSETTINGSTOOLTIP = Aladin.chaine.getString("TAPTARGETSETTINGSTOOLTIP");
 		TIPCLICKTOADD = Aladin.chaine.getString("TIPCLICKTOADD");
 		TAPEXDEFAULTMAXROWS = ConfigurationReader.getInstance().getPropertyValue("TAPEXDEFAULTMAXROWS");
 		TAPERRORSTATUSINFO = Aladin.chaine.getString("TAPERRORSTATUSINFO");
 		TAPLOADINGSTATUSINFO = Aladin.chaine.getString("TAPLOADINGSTATUSINFO");
+		MESSAGEUNKNOWNPARAMSINQUERY = Aladin.chaine.getString("MESSAGEUNKNOWNPARAMSINQUERY");
 	}
 
 }

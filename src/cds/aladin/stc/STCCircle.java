@@ -57,14 +57,14 @@ public class STCCircle extends STCObj {
 		this.frame =  frame;
 	}
 	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		String stc = "circle icrs 84.23 -10.95 0.0005 circle icrs 90.32 -10.95 0.0005";
 		STCStringParser parser = new STCStringParser();
 		List<STCObj> stcobj = parser.parse(stc);
 		for (STCObj stcObj2 : stcobj) {
 			System.out.println(stcObj2.toString());
 		}
-	}
+	}*/
 
 	/* (non-Javadoc)
 	 * @see cds.aladin.stc.STCObj#getShapeType()

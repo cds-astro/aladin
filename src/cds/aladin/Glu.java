@@ -27,6 +27,7 @@ import static cds.aladin.Constants.GLU_FROM;
 import static cds.aladin.Constants.GLU_SELECT;
 import static cds.aladin.Constants.GLU_WHERE;
 import static cds.aladin.Constants.TAPv1;
+import static cds.aladin.Constants.TAP;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -1194,20 +1195,30 @@ public final class Glu implements Runnable {
                   resultDataType, institute, aladinFilter, aladinLogo, record);
          } else {
             if(aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, TAPv1) == 0) {
+            	boolean hidden = true;
 	            GluAdqlTemplate gluAdqlTemplate = new GluAdqlTemplate(adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);
 	            TapClientMode clientMode = null;
 	            boolean isForDialog = true;
 	            if (aladinProtocol.endsWith("TREEPANEL")) {
 	            	clientMode = TapClientMode.TREEPANEL;
 	            	isForDialog = false;
-	            } else {
+	            } else if (aladinLabel.equalsIgnoreCase(TAP)) {
 	            	clientMode = TapClientMode.DIALOG;
+	            } else {
+	            	clientMode = TapClientMode.STANDALONE;
 				}
-	            TapClient tapClient = tapManager.getExistingTapClientForGluActionName(clientMode, actionName);
-	            if (tapClient == null) {
-	            	tapClient = new TapClient(clientMode, tapManager, actionName, null, null);
-	            	tapManager.addNewTapClientToCache(isForDialog, actionName, tapClient);
+	            TapClient tapClient = null;
+	            if (aladinLabel.equalsIgnoreCase(TAP)) {
+	            	tapClient = tapManager.getExistingTapClientForGluActionName(clientMode, actionName);
+		            if (tapClient == null) {
+		            	tapClient = new TapClient(clientMode, tapManager, actionName, null, null);
+		            	tapManager.addNewTapClientToCache(isForDialog, actionName, tapClient);
+					}
+				} else {
+					tapClient = new TapClient(clientMode, tapManager, actionName, null, null);
+					hidden = false;
 				}
+	            
 	        	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
 	                    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
 	                    null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, 
@@ -1215,11 +1226,11 @@ public final class Glu implements Runnable {
 	           	 g.setAdqlFunc(adqlFunc);
 	      		 g.setAdqlFuncParams(adqlFuncParams);
 	      		 
-	      		 g.HIDDEN = true;
+	      		 g.HIDDEN = hidden;
 	      		 if (localFile) {//changing tapserver here wont work. ServerDialog that contains the instance of tapserver is reloaded at glu reload.
-	      			if (!isForDialog) {
+	      			if (clientMode == TapClientMode.TREEPANEL) {
 		      			tapManager.showTapPanelFromTree(actionName, g);
-		      		} else {
+		      		} else if (clientMode == TapClientMode.DIALOG){
 		      			lastTapGluServer = g;
 					}
 //	      			tapManager.loadTapServer(g);

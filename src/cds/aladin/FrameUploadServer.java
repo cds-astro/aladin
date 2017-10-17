@@ -42,10 +42,10 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,6 +57,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+
 import cds.tools.Util;
 
 
@@ -72,7 +73,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	private static final long serialVersionUID = 399753558953437543L;
 
 	static String TITLE, CLOSE, ERRORMSG, IDENTIFIER, TAPTABLEUPLOADPARSETIP, UPFILEINFO, BROWSE, DISCARDALL, DISCARDALLTIP,
-			NOTABLELOADEDMESSAGE, ALLDISCARDEDINFOMESSAGE, TABLEDISCARDINFO;
+			NOTABLELOADEDMESSAGE, ALLDISCARDEDINFOMESSAGE, TABLEDISCARDINFO, NEWOPTIONADDEDMESSAGE;
 	public static final String UPLOADFILEPREFIX = "file_";
 	private Aladin aladin;
 	protected Map<String, String> uploadingPlanCatalogs;
@@ -100,6 +101,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		DISCARDALLTIP = Aladin.chaine.getString("DISCARDALLTIP");
 		ALLDISCARDEDINFOMESSAGE = Aladin.chaine.getString("ALLDISCARDEDINFOMESSAGE");
 		TABLEDISCARDINFO = Aladin.chaine.getString("TABLEDISCARDINFO");
+		NEWOPTIONADDEDMESSAGE = Aladin.chaine.getString("NEWOPTIONADDEDMESSAGE");
 	}
 
 	/**
@@ -358,8 +360,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			requestParams.put(uploadFileName, uploadedTableFiles.get(uploadClient.serverTap.selectedTableName));
 			
 			uploadClient.serverTap.submit(requestParams);
-			this.infoLabel.setText("Submitting your query for table: "+uploadClient.serverTap.selectedTableName);
-			TapManager.getInstance(aladin).eraseNotification(this.infoLabel, EMPTYSTRING);
+			TapManager.getInstance(aladin).eraseNotification(this.infoLabel, "Submitting your query for table: "+uploadClient.serverTap.selectedTableName, EMPTYSTRING);
 		} else if (command.equals(UPLOAD)) {
 			//Just parse the selected table's metadata to create gui and store file version of it
 			if (checkInputs()) {
@@ -411,7 +412,8 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			boolean enable = false;
 			if (this.uploadClient.tablesMetaData != null && !this.uploadClient.tablesMetaData.isEmpty()) {
 				enable = true;
-				this.uploadClient.serverTap.tablesGui.removeItem(tableToDiscard);
+//				this.uploadClient.serverTap.tablesGui.removeItem(tableToDiscard);
+				tapManager.uploadTablesModel.removeElement(tableToDiscard);
 			}
 			if (!enable) {
 				this.clearBottomPanel();
@@ -478,7 +480,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		final File tmpFile;
 		if ((tmpFile = aladin.createTempFile(UPLOADFILEPREFIX+uploadTableName, ".xml")) == null) {
 			// TODO:: tintin when doing join need to send more files
-			System.err.println("ERROR in aladin.createTempFile for "+uploadTableName);
+			Aladin.trace(3, "ERROR in aladin.createTempFile for "+uploadTableName);
 			throw new Exception("Unable to parse " + planCatalog.label + " data for upload!");
 		}
 		if (aladin.save == null)
@@ -490,8 +492,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		TapManager tapManager = TapManager.getInstance(aladin);
 		tapManager.createTapServerFromAladinPlan(planCatalog, uploadTableName);
 		this.tableName.setText(this.generateSuffix());
-		this.infoLabel.setText("New table(Name: "+uploadTableName+") from "+planCatalog.label+" is parsed in Aladin!");
-		tapManager.eraseNotification(this.infoLabel, EMPTYSTRING);
+		tapManager.eraseNotification(this.infoLabel, "New table(Name: "+uploadTableName+") from "+planCatalog.label+" is parsed in Aladin!", EMPTYSTRING);
 	}
 	
 	protected void createUploadServer() {
@@ -538,6 +539,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	public void clearBottomPanel() {
 		this.uploadClient.tablesMetaData.clear();
 		this.uploadClient.serverTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
+		this.uploadClient.serverTap.tablesGui.removeAllItems();
 		this.uploadClient.serverTap.removeAll();
 		this.remove(this.uploadClient.serverTap);
 		this.remove(this.bottomButtonsPanel);

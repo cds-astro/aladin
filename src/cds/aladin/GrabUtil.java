@@ -95,6 +95,9 @@ public class GrabUtil {
 			Server serverToEdit = server;
 			if (serverToEdit.tree != null && !serverToEdit.tree.isEmpty())
 				serverToEdit.tree.clear();
+			if (server instanceof ServerTapExamples) {
+				((ServerTapExamples)server).targetSettingsChangedAction();
+			}
 		}
 		serverDialog.toFront();
 	}

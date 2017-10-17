@@ -161,15 +161,21 @@ public final class Util {
       return mis.startRead();
    }
    
-   static public MyInputStream openStreamForTap(URL u, boolean useCache,int timeOut) throws Exception {
-	      URLConnection conn = u.openConnection();
+   static public MyInputStream openStreamForTap(URL u, URLConnection conn, boolean useCache,int timeOut) throws Exception {
+	   boolean alreadyConnected = true;
+	   if (conn == null) {
+		   conn = u.openConnection();
+		   alreadyConnected = false;
+	   }
 	      if( !useCache ) conn.setUseCaches(false);
 	      if( timeOut>0 ) conn.setConnectTimeout(timeOut);
 	      // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
 	      if( conn instanceof HttpURLConnection ) {
 	         HttpURLConnection http = (HttpURLConnection)conn;
-	         http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
-	         http.setRequestProperty("Accept-Encoding", "gzip");
+			if (!alreadyConnected) {
+	        	 http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
+		         http.setRequestProperty("Accept-Encoding", "gzip");
+	         }
 	         InputStream is = null;
 	         if (http.getResponseCode() >= 400) {
 	        	is = http.getErrorStream();
@@ -190,7 +196,12 @@ public final class Util {
 	      MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
 	      //       MyInputStream mis = new MyInputStream(conn.getInputStream());
 	      return mis.startRead();
-	   }
+	   
+   }
+   
+//	static public MyInputStream openStreamForTap(URL u, boolean useCache, int timeOut) throws Exception {
+//		return openStreamForTap(u.toString(), u.openConnection(), useCache, timeOut, false);
+//	}
    
    /** Je suis obligé de passer par un Thread indépendant pour qu'un timeout soit effectivement pris en compte
     * -1 si timeout indéfini

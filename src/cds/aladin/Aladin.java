@@ -733,7 +733,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Les menus;
    String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,SEARCHDIR,
           LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
-   MIMAGE,MCATALOG,MOVERLAY,MDOC,SHOWASYNCJOBS ;
+   MIMAGE,MCATALOG,MOVERLAY,MDOC,JOBCONTROLLER ;
    String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
    String MBGKG; // menus pour les backgrounds
 
@@ -1274,6 +1274,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       //for TAP
       ACCESSTAP = Aladin.chaine.getString("ACCESSTAP");
+      JOBCONTROLLER = Aladin.chaine.getString("OPENTAPJOBCONTROLLER");
    }
 
    /** Création du menu principal sous la forme d'un tableau à trois dimensions permettant
@@ -1331,7 +1332,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //
 //      }
 
-      SHOWASYNCJOBS = "Show async jobs";
+//      JOBCONTROLLER = "Show async jobs";
 
       String[][][] menu = new String[][][] {
             { /*{MFILE},
@@ -1429,7 +1430,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                      "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
                      {},{FOVEDITOR},
 
-                     {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+SHOWASYNCJOBS}
+                     {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+JOBCONTROLLER}
             },
             { {MVIEW},
                {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
@@ -3518,7 +3519,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		} catch (Exception e) {
 			warning(this, Aladin.chaine.getString("GENERICERROR"));
 		}
-      } else if (isMenu(s, SHOWASYNCJOBS)) {
+      } else if (isMenu(s, JOBCONTROLLER)) {
 		try {
 			dialog.tapManager.showAsyncPanel();
 		} catch (Exception e) {

@@ -137,13 +137,14 @@ public class UWSFacade implements ActionListener{
 	 * Method where an asyn job is created and handled 
 	 * @param server 
 	 * @param query 
+	 * @param queryString 
 	 * @param postParams 
 	 * @param requestNumber 
 	 */
-	public void handleJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) {
+	public void handleJob(Server server, String url, String queryString, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) {
 		UWSJob job = null;
 		try {
-			job = createJob(server, query, adqlQueryObj, postParams, requestNumber);
+			job = createJob(server, url, queryString, adqlQueryObj, postParams, requestNumber);
 //			printStringFromInputStream(job);
 			addNewJobToGui(job);
 			refreshGui();
@@ -158,13 +159,13 @@ public class UWSFacade implements ActionListener{
 			if (job == null || job.gui == null) {
 				errorMessageToUser.append("\n Unable to create job");
 			}
-			errorMessageToUser.append("\n For query: ").append(query).append(NEWLINE_CHAR).append(e.getMessage());
+			errorMessageToUser.append("\n For query: ").append(queryString).append(NEWLINE_CHAR).append(e.getMessage());
 			
 			if (job != null && UWSJob.JOBNOTFOUND.equals(job.getCurrentPhase())) {//specific case of job not found
 				if (checkIfJobInCache(job)) {
-					System.err.println("Job is not found, user did not ask for delete: \n"+job.getLocation().toString());
+					Aladin.trace(3, "Job is not found, user did not ask for delete: \n"+job.getLocation().toString());
 //					removeJobUpdateGui(job); Not removing deleted jobs(deleted elsewhere) from gui. maybe user needs to view ? 
-					Aladin.warning(aladin.dialog, errorMessageToUser.toString());
+					Aladin.warning(asyncPanel, errorMessageToUser.toString());
 					if (job != null) {
 						job.showAsErroneous();
 					} 
@@ -174,7 +175,7 @@ public class UWSFacade implements ActionListener{
 					} 
 				}
 			} else {
-				Aladin.warning(aladin.dialog, errorMessageToUser.toString());
+				Aladin.warning(asyncPanel, errorMessageToUser.toString());
 				if (job != null) {
 					job.showAsErroneous();
 				} 
@@ -185,7 +186,7 @@ public class UWSFacade implements ActionListener{
 				job.showAsErroneous();
 			}
 			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
-			Aladin.warning(aladin.dialog, "Error with async job! "+e.getMessage());
+			Aladin.warning(asyncPanel, "Error with async job! "+e.getMessage());
 		}
 		
 	}
@@ -193,6 +194,7 @@ public class UWSFacade implements ActionListener{
 	/**
 	 * Method creates an sync job
 	 * @param query
+	 * @param queryString 
 	 * @param newJobCreationUrl
 	 * @param adqlQueryObj
 	 * @param postParams 
@@ -200,10 +202,10 @@ public class UWSFacade implements ActionListener{
 	 * @return
 	 * @throws Exception
 	 */
-	public UWSJob createJob(Server server, String query, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) throws Exception {
+	public UWSJob createJob(Server server, String url, String queryString, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) throws Exception {
 		UWSJob job = null;
 		try {
-			URL tapServerRequestUrl = TapManager.getUrl(server.tapClient.tapBaseUrl, null, PATHASYNC);
+			URL tapServerRequestUrl = TapManager.getUrl(url, null, PATHASYNC);
 			Aladin.trace(3,"trying to createJob() uws for:: "+tapServerRequestUrl.toString());
 //			URL tapServerRequestUrl = new URL("http://cdsportal.u-strasbg.fr/uwstuto/basic/timers");
 			MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
@@ -237,8 +239,8 @@ public class UWSFacade implements ActionListener{
 				}
 			}
 			
-			out.writeField("QUERY", query);
-			Aladin.trace(3,"createJob() QUERY :: "+query);
+			out.writeField("QUERY", queryString);
+			Aladin.trace(3,"createJob() QUERY :: "+queryString);
 			
 			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
 			Aladin.trace(3,"createJob() PHASE :: "+"RUN");
@@ -458,7 +460,7 @@ public class UWSFacade implements ActionListener{
 						removeJobUpdateGui(job);
 					}
 				} else {
-					System.err.println("Error when deleting job! Http response is: "+httpConn.getResponseCode());
+					Aladin.trace(3, "Error when deleting job! Http response is: "+httpConn.getResponseCode());
 					throw new IOException("Error when deleting job!");
 				}
 			}
@@ -671,11 +673,7 @@ public class UWSFacade implements ActionListener{
 				resultsUrl = uwsJob.getDefaultResultsUrl();
 			}
 			URL urlToLoad = TapManager.getUrl(resultsUrl, null, null);
-			URLConnection urlConn = urlToLoad.openConnection();
-			urlConn.setRequestProperty("Accept", "*/*");
-			urlConn.setRequestProperty("Connection", "Keep-Alive");
-			urlConn.setRequestProperty("Cache-Control", "no-cache");
-			TapManager.handleSyncGetResponse(aladin, urlConn, uwsJob.getServerLabel(), requestNumber, server);
+			TapManager.handleResponse(aladin, urlToLoad, null, uwsJob.getServerLabel(), server, uwsJob.getQuery(), requestNumber);
 //			aladin.calque.newPlan(resultsUrl, uwsJob.getServerLabel(), null);
 		}
 	}
@@ -732,12 +730,12 @@ public class UWSFacade implements ActionListener{
 			try {
 				resultsUrl.toURI();
 			} catch (URISyntaxException e) {
-				System.err.println("URISyntaxException "+e.getMessage());
+				Aladin.trace(3, "URISyntaxException "+e.getMessage());
 				resultsUrl = null;
 			}
 			
 			if (resultsUrl.getAuthority() == null) {
-				System.err.println("no authority " + resultsUrl);
+				Aladin.trace(3, "no authority " + resultsUrl);
 				resultsUrl = null;
 			}
 		}

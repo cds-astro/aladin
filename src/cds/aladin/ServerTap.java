@@ -69,6 +69,8 @@ import javax.swing.text.BadLocationException;
 
 import adql.db.DBChecker;
 import adql.parser.QueryChecker;
+import cds.aladin.Constants.TapClientMode;
+import cds.tools.Util;
 
 public class ServerTap extends DynamicTapForm implements MouseListener {
 
@@ -143,20 +145,25 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		this.raColumnName = chosenTable.getRaColumnName();
 		this.decColumnName = chosenTable.getDecColumnName();
 		
-	    
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel containerPanel = new JPanel(new GridBagLayout());
 		
-		setTopPanel(this, containerPanel, c, info1, CLIENTINSTR);
+		setTopPanel(containerPanel, c, info1, CLIENTINSTR);
 	    
 		JPanel tablesPanel = null;
 		try {
-			tablesGui = new JComboBox(tables);
+			if (this.tapClient.mode == TapClientMode.UPLOAD) {
+				tablesGui = new JComboBox();
+				tablesGui.setModel(this.tapClient.tapManager.getUploadClientModel());
+			} else {
+				tablesGui = new JComboBox(tables);
+			}
+			
 //			tablesGui.setRenderer(new CustomTableRenderer());
-			tablesPanel = getTablesPanel(tablesGui, chosenTable, tables, false);
+			tablesPanel = getTablesPanel(null, tablesGui, chosenTable, tables, null, false);
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(e.getMessage());
+			Aladin.warning(this, e.getMessage());
 			return;
 		}
 		tablesPanel.setBackground(this.tapClient.primaryColor);
@@ -665,7 +672,9 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		            ball.setMode(Ball.NOK);
 		            return;
 				}
-				WhereGridConstraint positionConstraint = new PositionConstraint(this, coo[0].getText(), coo[1].getText(), rad[0].getText(), this.raColumnName, this.decColumnName);
+				WhereGridConstraint positionConstraint = new PositionConstraint(this, Util.myRound(coo[0].getText(), 5),
+						Util.myRound(coo[1].getText(), 5), Util.myRound(rad[0].getText(), 5), this.raColumnName,
+						this.decColumnName);
 				addWhereConstraint(positionConstraint);
 				writeQuery();
 			} else if (action.equals(CHECKQUERY)) {
@@ -690,7 +699,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		// TODO Auto-generated method stub
 		return this.tapClient.tablesMetaData.get(selectedTableName).getColumns();
 	}
-
+	
 	protected void createChaine() {
 		super.createChaine();
 		description = Aladin.chaine.getString("TAPFORMINFO");
@@ -718,6 +727,31 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 
 	public void setDecColumnName(String decColumnName) {
 		this.decColumnName = decColumnName;
+	}
+	
+	
+	public TapTableColumn getDefaultRa() {
+		// TODO Auto-generated method stub
+		return getDefault(this.raColumnName);
+	}
+	
+	public TapTableColumn getDefaultDec() {
+		// TODO Auto-generated method stub
+		return getDefault(this.decColumnName);
+	}
+	
+	public TapTableColumn getDefault(String columnName) {
+		// TODO Auto-generated method stub
+		TapTableColumn result = null;
+		if (columnName != null) {
+			for (TapTableColumn columnMeta : this.tapClient.tablesMetaData.get(selectedTableName).getColumns()) {
+				if (columnMeta.getColumn_name().equals(columnName)) {
+					result = columnMeta;
+					break;
+				}
+			}
+		}
+		return result;
 	}
 	
 	@Override

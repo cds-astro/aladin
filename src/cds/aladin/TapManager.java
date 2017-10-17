@@ -59,7 +59,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -82,12 +81,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.MutableComboBoxModel;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
@@ -111,7 +113,6 @@ import cds.tools.TwoColorJTable;
 import cds.tools.Util;
 import cds.xml.ExamplesReader;
 import cds.xml.Field;
-import cds.xml.TapQueryResponseStatusReader;
 import cds.xml.VOSICapabilitiesReader;
 
 public class TapManager {
@@ -124,7 +125,6 @@ public class TapManager {
 	protected static List<DataLabel> splTapServerLabels;
 	protected static List<DataLabel> allTapServerLabels;
 	protected TapFrameServer tapFrameServer = null;
-	protected FrameSimple jobController = null;
 	protected FrameUploadServer uploadFrame;
 	
 	protected static Map<String, TapClient> tapServerPanelCache = new HashMap<String, TapClient>();//main cache where all the ServerGlu's are loaded on init
@@ -144,9 +144,9 @@ public class TapManager {
 	
 	public UWSFacade uwsFacade;
 	public FrameSimple tapPanelFromTree;
-	private int getRequest_timeout = 1000;
 	
 	FrameTapSettings settingsFrame;
+	MutableComboBoxModel uploadTablesModel = new DefaultComboBoxModel();
 	
 	static {
 		GENERICERROR = null;//Aladin.getChaine().getString("GENERICERROR");
@@ -255,9 +255,8 @@ public class TapManager {
 			}
 			
 		} catch (Exception e) {
-			System.err.println("Tree servers not loaded error:"+e);
-            e.printStackTrace();
-			Aladin.warning("Tree tap servers not loaded !", 1);
+			if (Aladin.levelTrace >= 3) e.printStackTrace();
+			Aladin.warning(tapFrameServer, "Tap servers not loaded from directory tree!", 1);
 		}
 	}
 	
@@ -321,13 +320,13 @@ public class TapManager {
 				description = dirTapServerInfoLine.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
 				splTapServerLabels.add(new DataLabel(label, url, description));
 			}
+			Aladin.trace(3, "populateFromDirectory():: Done loading from directory...");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if(Aladin.levelTrace >=3) e.printStackTrace();
-			Aladin.warning("Unable to load tap servers from directory !", 1);
+			Aladin.warning(tapFrameServer, "Unable to load tap servers from directory !", 1);
 		} finally {
 			initAllLoad = false;
-			Aladin.trace(3, "populateFromDirectory():: Done loading from directory...");
 		}
 	}
 	
@@ -633,11 +632,12 @@ public class TapManager {
 			try {
 				tapServer.makeCursor(Aladin.WAITCURSOR);
 				this.showTapRegistryForm();
-				tapServer.makeCursor(Aladin.DEFAULTCURSOR);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				Aladin.warning(aladin.dialog, GENERICERROR);
 				e.printStackTrace();
+			} finally {
+				tapServer.makeCursor(Aladin.DEFAULTCURSOR);
 			}
 			result = false;
 		}
@@ -745,7 +745,7 @@ public class TapManager {
 						vosiCapabilitiesReader.load(capabilitiesUrl);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						System.err.println("Unable to get capabilitites for.."+tapServiceUrl);
+						Aladin.trace(3, "Unable to get capabilitites for.."+tapServiceUrl);
 						if (Aladin.levelTrace >= 3) {//Upload won't be allowed. thats all. no warnings
 							e.printStackTrace();
 						}
@@ -774,7 +774,7 @@ public class TapManager {
 //			URL examplesUrl = new URL("http://130.79.129.54:8080/view-source_gaia.ari.uni-heidelberg.de_tap_examples.xhtml");
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
 			long startTime = getTimeToLog();
-			is = Util.openStreamForTap(url, true, 10000);
+			is = Util.openStreamForTap(url, null, true, 10000);
 			long time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println("DaliExamples got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();
@@ -963,14 +963,14 @@ public class TapManager {
 	 * @throws Exception 
 	 */
 	public void showAsyncPanel(){
-		if (jobController == null) {
-			jobController = new FrameSimple(aladin);
+		if (this.uwsFacade.jobControllerGui == null) {
+			this.uwsFacade.jobControllerGui = new FrameSimple(aladin);
 		}
 		MySplitPane asyncPanel = this.uwsFacade.instantiateGui();
-		jobController.show(asyncPanel, UWSFacade.JOBCONTROLLERTITLE);
+		this.uwsFacade.jobControllerGui.show(asyncPanel, UWSFacade.JOBCONTROLLERTITLE);
 //		tapFrameServer.tabbedTapThings.setSelectedIndex(1);
 //		tapFrameServer.setVisible(true);
-		jobController.toFront();
+		this.uwsFacade.jobControllerGui.toFront();
 	}
 	
 	public void loadTapServerList() {
@@ -1154,7 +1154,8 @@ public class TapManager {
 	 * @param notificationBar
 	 * @param message
 	 */
-	public void eraseNotification(final JLabel notificationBar, final String resetText) {
+	public void eraseNotification(final JLabel notificationBar, final String message, final String resetText) {
+		notificationBar.setText(message);
 		try {
 			executor.execute(new Runnable() {
 				@Override
@@ -1360,7 +1361,7 @@ public class TapManager {
 				}
 			}
 		} catch (IOException e) {
-			System.err.println("ERROR in binaryTableReader! Did not read table data for " + tapClient.tapBaseUrl);
+			Aladin.trace(3, "ERROR in binaryTableReader! Did not read table data for " + tapClient.tapBaseUrl);
 			if (Aladin.levelTrace >= 3) e.printStackTrace();
 			throw e;
 		} finally {
@@ -1567,7 +1568,7 @@ public class TapManager {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-			System.err.println("ERROR in binaryColumnReader! Did not read column column data for "+tapClient.tapBaseUrl);
+			Aladin.trace(3, "ERROR in binaryColumnReader! Did not read column column data for "+tapClient.tapBaseUrl);
 			throw e;
 		} finally {
 			if (parser!=null) {
@@ -1638,7 +1639,7 @@ public class TapManager {
 			URL url = getUrl(tapServiceUrl, file, path);
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
 			long startTime = getTimeToLog();
-			is = Util.openStreamForTap(url, true, 10000);
+			is = Util.openStreamForTap(url, null, true, 10000);
 			long time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();
@@ -1693,6 +1694,7 @@ public class TapManager {
 				}
 //				uploadServer.tablesGui.invalidate();
 				populateColumnsFromPlan(planToLoad, tableName , uploadFrame.uploadClient.tablesMetaData);
+				uploadTablesModel.addElement(tableName);
 //				uploadFrame.setUploadFileForm();
 				if (firstUpload || (uploadFrame.uploadClient.serverTap.formLoadStatus == TAPFORM_STATUS_NOTLOADED
 						|| uploadFrame.uploadClient.serverTap.formLoadStatus == TAPFORM_STATUS_ERROR)) {
@@ -1702,7 +1704,7 @@ public class TapManager {
 				if (!firstUpload && uploadFrame.uploadClient.serverTap.formLoadStatus == TAPFORM_STATUS_LOADED) {
 //					uploadFrame.uploadServer.createFormDefault();
 //					uploadFrame.uploadServer.revalidate();
-					uploadFrame.uploadClient.serverTap.tablesGui.addItem(tableName);
+//					uploadFrame.uploadClient.serverTap.tablesGui.addItem(tableName);
 					uploadFrame.uploadClient.serverTap.updateQueryChecker(tableName);
 					uploadFrame.uploadClient.serverTap.tablesGui.setSelectedItem(tableName);
 				} 
@@ -1835,7 +1837,7 @@ public class TapManager {
 				}
 			});
 		} catch (RejectedExecutionException e) {
-			System.err.println("RejectedExecutionException. Unable to update table metadata.."+tapServiceUrl);
+			Aladin.trace(3, "RejectedExecutionException. Unable to update table metadata.."+tapServiceUrl);
 			//Nothing doing
 		}
 	}
@@ -1963,7 +1965,7 @@ public class TapManager {
  				}
  			});
 		} catch (RejectedExecutionException ex) {
-			System.err.println("RejectedExecutionException. Unable to create the metainfo display for.."+tapServiceUrl);
+			Aladin.trace(3, "RejectedExecutionException. Unable to create the metainfo display for.."+tapServiceUrl);
 			//Nothing doing
 		}
  		return result;
@@ -1976,13 +1978,14 @@ public class TapManager {
 	 * 		<li>Populate results(votable) on Aladin</li>
 	 * </ol>
 	 * if postParams are null then it executes GET, else this method executes a POST
+	 * @param queryString 
 	 * @param serverExamples 
 	 * @param url 
 	 * @param string 
 	 * @param parserObj
 	 * @throws Exception 
 	 */
-	public void fireSync(final Server server, final String query, final ADQLQuery parserObj,
+	public void fireSync(final Server server, final String url, final String queryString, final ADQLQuery parserObj,
 			final Map<String, Object> postParams) throws Exception {
 		// TODO Auto-generated method stub
 		final int requestNumber = server.newRequestCreation();
@@ -1995,8 +1998,8 @@ public class TapManager {
 					final String oldTName = currentT.getName();
 					try {
 						if (postParams == null) {
-							String queryParam = GETRESULTPARAMS + URLEncoder.encode(query, UTF8);
-							URL syncUrl = getUrl(server.tapClient.tapBaseUrl, queryParam, PATHSYNC);
+							String queryParam = GETRESULTPARAMS + URLEncoder.encode(queryString, UTF8);
+							URL syncUrl = getUrl(url, queryParam, PATHSYNC);
 //									new URL(String.format(SYNCGETRESULT, url, queryParam));
 							currentT.setName("TsubmitSync: " + syncUrl);
 							//TODO:: tintin check for the query status before loading: and remove return- covert to execute
@@ -2006,14 +2009,11 @@ public class TapManager {
 							contain the entire query result, one INFO element with value=\94OVERFLOW\94 or
 							value=\94ERROR\94 must be included after the table.*/
 							
-							URLConnection urlConn = syncUrl.openConnection();
-							urlConn.setRequestProperty("Accept", "*/*");
-							urlConn.setRequestProperty("Connection", "Keep-Alive");
-							urlConn.setRequestProperty("Cache-Control", "no-cache");
-							handleSyncGetResponse(aladin, urlConn, server.tapClient.tapLabel, requestNumber, server);
+							handleResponse(aladin, syncUrl, null, server.tapClient.tapLabel, server, queryString,
+									requestNumber);
 							
 						} else {//currently this else part is used only for upload.
-							URL syncUrl = getUrl(server.tapClient.tapBaseUrl, null, PATHSYNC);
+							URL syncUrl = getUrl(url, null, PATHSYNC);
 							currentT.setName("TsubmitSync: " + syncUrl);
 							MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
 							String boundary = MultiPartPostOutputStream.createBoundary();
@@ -2023,7 +2023,10 @@ public class TapManager {
 							urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
 							// set some other request headers...
 							urlConn.setRequestProperty("Connection", "Keep-Alive");
-							urlConn.setRequestProperty("Cache-Control", "no-cache");
+							HttpURLConnection http = (HttpURLConnection)urlConn;
+							http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
+					        http.setRequestProperty("Accept-Encoding", "gzip");
+							
 							MultiPartPostOutputStream out = new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
 
 							// standard request parameters
@@ -2039,7 +2042,7 @@ public class TapManager {
 								}
 							}
 							
-							out.writeField("query", query);
+							out.writeField("query", queryString);
 
 							if (postParams != null) {// this part only for upload as of now
 								for (Entry<String, Object> postParam : postParams.entrySet()) {
@@ -2051,7 +2054,8 @@ public class TapManager {
 								}
 							}
 							out.close();
-							handleSyncGetResponse(aladin, urlConn, server.tapClient.tapLabel, requestNumber, server);
+							handleResponse(aladin, syncUrl, urlConn, server.tapClient.tapLabel, server,
+									queryString, requestNumber);
 						}
 
 					} catch (MalformedURLException e) {
@@ -2069,57 +2073,61 @@ public class TapManager {
 				}
 			});
 		} catch (RejectedExecutionException ex) {
-			displayWarning(server, requestNumber, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
+			displayWarning(server, requestNumber, "Unable to submit: "+queryString+"\n Request overload! Please wait and try again.");
 		} 
 	}
 	
 	/**
-	 * Convenience method
+	 Convenience method
 	 * - creates plane for successful response
-	 * - shows error otherwise
-	 * @param conn
-	 * @param requestNumber 
-	 * @param planeName
-	 * @throws Exception 
+	 * - shows error otherwise 
+	 * @param aladin
+	 * @param url
+	 * @param planeLabel
+	 * @param server
+	 * @param query - to display on plane properties
+	 * @param requestNumber - for status updates on Ball.java
+	 * @throws Exception
 	 */
-	public static void handleSyncGetResponse(Aladin aladin, URLConnection conn, String planeLabel, int requestNumber, Server server) throws Exception {
-		if (conn instanceof HttpURLConnection) {
-			HttpURLConnection httpConn = (HttpURLConnection) conn;
-			try {
-				InputStream is;
-				httpConn.connect();
-				if (httpConn.getResponseCode() < 400) {
-					// is = httpConn.getInputStream();
-					if (requestNumber == -1 || server.requestsSent != requestNumber) {
-						server = null;
-					} else {
-						server.disableStatusForAllPlanes();
-					}
-					aladin.calque.newPlanCatalog(httpConn, planeLabel, server, requestNumber);
-					// stream is closed downstream when it is not an error scenario
-				} else {
-					is = httpConn.getErrorStream();
-					TapQueryResponseStatusReader queryStatusReader = new TapQueryResponseStatusReader();
-					queryStatusReader.load(is);
-					is.close();
-					String errorMessage = queryStatusReader.getQuery_status_message();
-					if (errorMessage == null || errorMessage.isEmpty()) {
-						errorMessage = "Error. unable to get response for this request.";
-					} else {
-						errorMessage = queryStatusReader.getQuery_status_value() + " " + errorMessage;
-					}
-					httpConn.disconnect();
-					throw new IOException(errorMessage);
-				}
-			} catch (IOException e) {
-				Aladin.trace(3, "Error when getting job! Http response is: " + httpConn.getResponseCode());
-				if (httpConn != null) {
-					httpConn.disconnect();
-				}
-				throw e;
-			} /*
-				 * finally { if (httpConn!=null) { httpConn.disconnect(); } }
-				 */
+//	public static void handleResponse(Aladin aladin, URL url, String planeLabel, Server server, String query,
+//			int requestNumber) throws Exception {
+//		MyInputStream is = null;
+//		try {
+//			is = Util.openStreamForTap(url, null, true, 10000);
+//			if (requestNumber == -1 || server.requestsSent != requestNumber) {
+//				server = null;
+//			} else {
+//				server.disableStatusForAllPlanes();
+//			}
+//			aladin.calque.newPlanCatalog(is, planeLabel, server, query, requestNumber);
+//			// stream is closed downstream when it is not an error scenario
+//		} catch (Exception e) {
+//			Aladin.trace(3, "Error when getting job!" + e.getMessage());
+//			if (is != null) {
+//				is.close();
+//			}
+//			throw e;
+//		}
+//	}
+	
+	public static void handleResponse(Aladin aladin, URL url, URLConnection conn, String planeLabel,
+			Server server, String query, int requestNumber) throws Exception {
+		MyInputStream is = null;
+		try {
+			is = Util.openStreamForTap(url, conn, true, 10000);
+			if (requestNumber == -1 || server.requestsSent != requestNumber) {
+				server = null;
+			} else {
+				server.disableStatusForAllPlanes();
+			}
+			aladin.calque.newPlanCatalog(is, planeLabel, server, query, requestNumber);
+			// stream is closed downstream when it is not an error scenario
+		} catch (Exception e) {
+			Aladin.trace(3, "Error when getting job!" + e.getMessage());
+			if (is != null) {
+				is.close();
+			}
+			throw e;
 		}
 	}
 	
@@ -2144,12 +2152,13 @@ public class TapManager {
 	 * 		<li>Query tap server asynchronously</li>
 	 * 		<li>Populate results on Aladin</li>
 	 * </ol>
+	 * @param queryString 
 	 * @param serverExamples 
 	 * @param string 
 	 * @param adqlParserObj
 	 * @throws Exception 
 	 */
-	public void fireASync(final Server server, final String query, final ADQLQuery adqlParserObj,
+	public void fireASync(final Server server, final String url, final String queryString, final ADQLQuery adqlParserObj,
 			final Map<String, Object> postParams) throws Exception {
 		final int requestNumber = server.newRequestCreation();
 		try {
@@ -2161,17 +2170,17 @@ public class TapManager {
 					currentT.setName("TsubmitAsync: " + server.tapClient.tapBaseUrl);
 					try {
 						showAsyncPanel();
-						uwsFacade.handleJob(server, query, adqlParserObj, postParams, requestNumber);
+						uwsFacade.handleJob(server, url, queryString, adqlParserObj, postParams, requestNumber);
 						currentT.setName(oldTName);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						e.printStackTrace();
-						Aladin.warning(aladin.dialog, Aladin.getChaine().getString("GENERICERROR"));
+						if (Aladin.levelTrace >= 3 )  e.printStackTrace();
+						displayWarning(server, requestNumber,  Aladin.getChaine().getString("GENERICERROR"));
 					}
 				}
 			});
 		} catch (RejectedExecutionException ex) {
-			displayWarning(server, requestNumber, "Unable to submit: "+query+"\n Request overload! Please wait and try again.");
+			displayWarning(server, requestNumber, "Unable to submit: "+queryString+"\n Request overload! Please wait and try again.");
 		} 
 	}
 	
@@ -2187,12 +2196,25 @@ public class TapManager {
 					currentT.setName("TsetRaDec: "+serverTap.tapClient.tapBaseUrl);
 					
 					boolean addTargetPanel = false;
-					Vector<TapTableColumn> columns = serverTap.getSelectedTableColumns();
+					Vector<TapTableColumn> columns = new Vector<TapTableColumn>();
+					columns.addAll(serverTap.getSelectedTableColumns());
 					JComboBox raColumn = new JComboBox(columns);
 					raColumn.setRenderer(new CustomListCellRenderer());
+					TapTableColumn selectColumn = serverTap.getDefaultRa();
+					if (selectColumn != null) {
+						raColumn.setSelectedItem(selectColumn);
+						selectColumn = null;
+					}
 					raColumn.setSize(raColumn.getWidth(), Server.HAUT);
+					
+					columns = new Vector<TapTableColumn>();
+					columns.addAll(serverTap.getSelectedTableColumns());
 					JComboBox decColumn = new JComboBox(columns);
 					decColumn.setRenderer(new CustomListCellRenderer());
+					selectColumn = serverTap.getDefaultDec();
+					if (selectColumn != null) {
+						decColumn.setSelectedItem(selectColumn);
+					}
 					decColumn.setSize(decColumn.getWidth(), Server.HAUT);
 					
 					Object[] raAndDec = {
@@ -2215,10 +2237,15 @@ public class TapManager {
 								serverTap.targetPanel = new JPanel();
 								serverTap.createTargetPanel(serverTap.targetPanel);
 							}
+							serverTap.targetPanel.setVisible(true);
 							serverTap.queryComponentsGui.revalidate();
 							serverTap.queryComponentsGui.repaint();
 						}
 						serverTap.writeQuery();
+//						if (serverTap.tapClient.mode == TapClientMode.UPLOAD) {
+//							//trigger changes for ones using the table already
+//							serverTap.tablesGui.actionPerformed(null);
+//						}
 					}
 					currentT.setName(oldTName);
 				}
@@ -2331,8 +2358,7 @@ public class TapManager {
 				this.uploadFrame.uploadOptions.addItem(newPlan.label);
 				this.uploadFrame.uploadOptions.setEnabled(true);
 				if (this.uploadFrame.isVisible()) {
-					this.uploadFrame.infoLabel.setText("New option added to upload file choices!");
-					this.eraseNotification(this.uploadFrame.infoLabel, EMPTYSTRING);
+					this.eraseNotification(this.uploadFrame.infoLabel, FrameUploadServer.NEWOPTIONADDEDMESSAGE, EMPTYSTRING);
 					this.uploadFrame.uploadOptions.revalidate();
 					this.uploadFrame.uploadOptions.repaint();
 				}
@@ -2351,8 +2377,7 @@ public class TapManager {
 					this.uploadFrame.uploadOptions.setEnabled(true);
 				}
 				if (this.uploadFrame.isVisible()) {
-					this.uploadFrame.infoLabel.setText(FrameUploadServer.TABLEDISCARDINFO);
-					this.eraseNotification(this.uploadFrame.infoLabel, EMPTYSTRING);
+					this.eraseNotification(this.uploadFrame.infoLabel, FrameUploadServer.TABLEDISCARDINFO, EMPTYSTRING);
 					this.uploadFrame.uploadOptions.revalidate();
 					this.uploadFrame.uploadOptions.repaint();
 				}
@@ -2480,6 +2505,19 @@ public class TapManager {
 				break;
 			}
 		}
+	}
+	
+	public Map<String, TapTable> getUploadedTables() {
+		Map<String, TapTable> results = null; 
+		if (this.uploadFrame != null && this.uploadFrame.uploadClient != null) {
+			results = this.uploadFrame.uploadClient.tablesMetaData;
+		}
+		return results;
+	}
+
+	public ComboBoxModel getUploadClientModel() {
+		// TODO Auto-generated method stub
+		return uploadTablesModel;
 	}
 
 }

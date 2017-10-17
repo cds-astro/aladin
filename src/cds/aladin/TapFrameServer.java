@@ -89,7 +89,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			TIPRELOAD, TAPNOFILELOAD, TAPNOFILERELOAD, SELECTSERVERLABEL, SELECTSERVERTOOLTIP,
 			NOTAPSERVERSCONFIGUREDMESSAGE, TAPURLCLIENTFIELDLABEL, SELECTDIRTAPSERVERSTOOLTIP,
 			SELECTSPLTAPSERVERSLABEL, SELECTSPLTAPSERVERSTOOLTIP, SELECTDIRTAPSERVERSLABEL, CHOOSEFROMTAPSERVERSTEXT,
-			WAITLOADINGTAPSERVERSLIST;
+			WAITLOADINGTAPSERVERSLIST, INCORRECTTAPURLMESSAGE;
 
    Aladin aladin;
    TapManager tapManager;
@@ -129,6 +129,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
       SELECTDIRTAPSERVERSLABEL = Aladin.chaine.getString("SELECTDIRTAPSERVERSLABEL");
       CHOOSEFROMTAPSERVERSTEXT = Aladin.chaine.getString("CHOOSEFROMTAPSERVERSTEXT");
       WAITLOADINGTAPSERVERSLIST = Aladin.chaine.getString("WAITLOADINGTAPSERVERSLIST");
+      INCORRECTTAPURLMESSAGE = Aladin.chaine.getString("INCORRECTTAPURLMESSAGE");
    }
 
 	protected TapFrameServer(Aladin aladin, TapManager tapManager){
@@ -503,11 +504,11 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 						this.aladin.dialog.show(this.aladin.dialog.tapServer);
 					}
 				} else {
-					Aladin.warning(TAPNOFILELOAD);
+					Aladin.warning(this, TAPNOFILELOAD);
 				}
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
-				Aladin.warning(e1.getMessage());
+				Aladin.warning(this, e1.getMessage());
 			} finally {
 				Aladin.makeCursor(this, DEFAULT);
 			}
@@ -532,10 +533,11 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace >= 3)
 				e1.printStackTrace();
-			Aladin.warning("Error! please check the url provided");
+			Aladin.warning(this, INCORRECTTAPURLMESSAGE);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (Aladin.levelTrace >= 3)
+				e.printStackTrace();
 		} finally {
 			Aladin.makeCursor(this, DEFAULT);
 		}

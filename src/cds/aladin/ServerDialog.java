@@ -883,6 +883,9 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          grab.setEnabled(pref != null && Projection.isOk(pref.projd));
          Server s = server[current];
          if( s.tree!=null && !s.tree.isEmpty() ) s.tree.clear();
+         if (s instanceof ServerTapExamples) {
+				((ServerTapExamples)s).targetSettingsChangedAction();
+		 }
       }
       toFront();
    }

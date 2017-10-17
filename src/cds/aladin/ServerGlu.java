@@ -225,11 +225,13 @@ public class ServerGlu extends Server implements Runnable {
 				this.gluAdqlQueryTemplates.put(tapTables[i], new GluAdqlTemplate());
 			}
 			if (flagTAPV2) {
-				JButton changeServerButton = TapClient.getChangeServerButton(this);
-				changeServerButton.setBounds(5, 15, 20, 20);
-				add(changeServerButton);
 				tapTableMapping.put("GENERAL",new Vector());
-				tapTableMapping.get("GENERAL").add(changeServerButton);
+				JButton changeServerButton = this.tapClient.getChangeServerButton(this);
+				if (changeServerButton != null) {
+					changeServerButton.setBounds(5, 15, 20, 20);
+					add(changeServerButton);
+					tapTableMapping.get("GENERAL").add(changeServerButton);
+				}
 			}
 			// No setQueryChecker for ServerGlu. We only check syntax.
 		}
@@ -260,16 +262,18 @@ public class ServerGlu extends Server implements Runnable {
 //         add(l);
       }
       
-      if (flagTAPV2) {
-    	  JPanel optionsPanel = this.tapClient.getModes(this);
-      	optionsPanel.setName("modes");
-      	optionsPanel.setBackground(Aladin.BLUE);
-//      	optionsPanel.setBounds(XWIDTH-2*XTAB1-60, y-d.height-5, 78, 30);
-//      	optionsPanel.setBounds(x+d.width, y-d.height-5, 78, 30);
-//      	optionsPanel.setBounds(x+d.width, y-d.height-5, 150, 30);
-      	optionsPanel.setBounds(x+d.width, y-d.height, 140, 30);
-      	 add(optionsPanel);
-      	tapTableMapping.get("GENERAL").add(optionsPanel);
+		if (flagTAPV2) {
+			JPanel optionsPanel = this.tapClient.getModes(this);
+			if (optionsPanel != null) {
+				optionsPanel.setName("modes");
+				optionsPanel.setBackground(Aladin.BLUE);
+				// optionsPanel.setBounds(XWIDTH-2*XTAB1-60, y-d.height-5, 78, 30);
+				// optionsPanel.setBounds(x+d.width, y-d.height-5, 78, 30);
+				// optionsPanel.setBounds(x+d.width, y-d.height-5, 150, 30);
+				optionsPanel.setBounds(x + d.width, y - d.height, 140, 30);
+				add(optionsPanel);
+				tapTableMapping.get("GENERAL").add(optionsPanel);
+			}
 	}
 
       // Y a-t-il un champ dont le type est baseUrl(URL|MOCID)
@@ -346,6 +350,9 @@ public class ServerGlu extends Server implements Runnable {
 					if (paramDataType != null && paramDataType[i] != null){
 						setDedicatedFields(i, paramDataType[i], ch, gluAdqlTemplate);
 						if(paramDataType[i].contains("Tables")) {
+//							if (this.tapClient.nodeTableNames != null && !this.tapClient.nodeTableNames.isEmpty()) {
+//								ch.setSelectedItem(this.tapClient.nodeTableNames.get(0));
+//							}
 						ch.setActionCommand(TABLECHANGED);
 					}}
 			}
@@ -550,13 +557,14 @@ public class ServerGlu extends Server implements Runnable {
 		}
 		removeAll();
 		
-		if (tapTableMapping.get("GENERAL") != null) {
+		if (tapTableMapping.get("GENERAL") != null && !tapTableMapping.get("GENERAL").isEmpty()) {
 			for (Object topPanelComponent : tapTableMapping.get("GENERAL")) {
 				add((Component) topPanelComponent);
-				if ("modes".equals(((Component) topPanelComponent).getName())) {
-					y += 20;
-				}
+//				if ("modes".equals(((Component) topPanelComponent).getName())) {
+//					y += 20;
+//				}
 			}
+			y += 20;
 		}
 		y += 20;
 		Vector<Component> components = new Vector<Component>();
@@ -1965,7 +1973,7 @@ public class ServerGlu extends Server implements Runnable {
    
    protected boolean updateWidgets() {
       if( flagTAP ) {
-         System.out.println("Je dois rééditer la chaine ADQL");
+//         System.out.println("Je dois rééditer la chaine ADQL");
          submit1(false, false);
       }
       return super.updateWidgets();

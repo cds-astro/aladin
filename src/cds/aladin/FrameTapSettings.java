@@ -204,7 +204,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		} catch (Exception e) {
 			// TODO: handle exception
 			if (Aladin.levelTrace >= 3) e.printStackTrace();
-			Aladin.warning("Cannot open settings "+e.getMessage());
+			Aladin.warning(this, "Cannot open settings "+e.getMessage());
 			secondaryTable = null;
 			if (isVisible()) {
 				setVisible(false);
@@ -503,7 +503,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 			tablesGuiEditor.setDocument(new FilterDocument(this, this.secondaryTablesGui, keys, secondaryTable));
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(e.getMessage());
+			Aladin.warning(this, e.getMessage());
 			setVisible(false);//tintin TODO error handling
 			throw e;
 		}
@@ -580,7 +580,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		uploadTablePanel.setFont(BOLD);
 		uploadTablePanel.add(uploadTablesGui);
 		
-		uploadTablePanel.add(s.getUploadButtonIfAvailable());
+		uploadTablePanel.add(s.getUploadButtonIfAvailable("Upload:"));
 		
 		contents.add(uploadTablePanel, c );
 		
@@ -700,7 +700,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 					tableMetaData.setDecColumn(decColumn);
 				}
 				
-				serverEx.changeTargetSettings(targetPanel1, 0);
+//				serverEx.changeTargetSettings(targetPanel1, 0);
 
 				if (this.enableSecondTable.isSelected() && tableSelection > 0) {
 //					serverEx.changeTargetSettings(targetPanel2, 1);
@@ -742,8 +742,8 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 					serverEx.secondaryTable = null;
 				}
 				serverEx.changeTableSelection(serverEx.selectedTableName);
-				serverEx.info1.setText("Queries regenerated as per new settings!");
-				TapManager.getInstance(aladin).eraseNotification(serverEx.info1, serverEx.CLIENTINSTR);
+//				serverEx.info1.setText("Queries regenerated as per new settings!");
+//				TapManager.getInstance(aladin).eraseNotification(serverEx.info1, serverEx.CLIENTINSTR);
 
 			} catch (Exception e) {
 				// TODO: handle exception
@@ -759,7 +759,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 	private Map<String, TapTable> getUploadedTables() {
 		Map<String, TapTable> results = null; 
 		TapManager tapManager = TapManager.getInstance(aladin);
-		if (tapManager.uploadFrame != null) {
+		if (tapManager.uploadFrame != null && tapManager.uploadFrame.uploadClient != null) {
 			results = tapManager.uploadFrame.uploadClient.tablesMetaData;
 		}
 		return results;
@@ -840,7 +840,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 					uploadTablesGui.setEnabled(false);
 					setSecondAllTableGui(false);
 					if (Aladin.levelTrace >= 3) e.printStackTrace();
-					Aladin.warning("Error: " + e.getMessage());
+					Aladin.warning(this, "Error: " + e.getMessage());
 				}
 				
 			}
@@ -929,8 +929,6 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		System.err.println("mouse released");
 		this.getContentPane().requestFocusInWindow();
 	}
 	

@@ -822,6 +822,7 @@ public void layout() {
 	}
     
     public List<Coord> getRectVertices() {
+    	//todo:: consider rounding? Util.myRound(coo[1].getText(), 9);
     	String radiusInput  = radius.getText().trim();
     	double width = getWM(radiusInput)/60.;
 		double height = getHM(radiusInput)/60.;
@@ -2139,9 +2140,9 @@ public void layout() {
 						/*+ "\n ADQLQuery: " + query.toADQL()*/ + "\n requestParams: " + requestParams);
 				if (sync) {
 					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					tapManager.fireSync(this, queryString, query, requestParams);
+					tapManager.fireSync(this, url, queryString, query, requestParams);
 				} else {
-					tapManager.fireASync(this, queryString, query, requestParams);
+					tapManager.fireASync(this, url, queryString, query, requestParams);
 				}
 				aladin.glu.log(TAP, "Submit query at "+this.getClass().getSimpleName());//log
 			} catch (Exception e) {
