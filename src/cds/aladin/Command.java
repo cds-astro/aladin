@@ -1208,6 +1208,7 @@ public final class Command implements Runnable {
             || server.equalsIgnoreCase("MyData")
             || server.equalsIgnoreCase("VizieRX")
             || server.equalsIgnoreCase("MOC")
+            || server.equalsIgnoreCase("TAP")
             || (server.equalsIgnoreCase("VizieR")
                   && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
                   || server.equalsIgnoreCase("allsky")

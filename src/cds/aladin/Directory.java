@@ -1092,6 +1092,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    protected String resolveServiceUrl(String service_url, String mocId) {
 
+      service_url = service_url.toLowerCase();
+      
       // un éventuel préfixe ivo:// doit être ignoré
       if( mocId.startsWith("ivo://") ) mocId = mocId.substring(6);
 
@@ -1099,7 +1101,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( m == null ) return null;
 
       // Recherche du champ correspondant au service_url indiqué
-      String key = service_url.toLowerCase() + "_service_url";
+      String key = service_url + "_service_url";
       String s = m.prop.get(key);
       if( s == null ) return null;
 
@@ -1110,7 +1112,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          String url = tok.nextToken();
 
          // Petit nettoyage de l'URL (le VO registry regorge d'imagination...)
-         if( !url.endsWith("?") && !url.endsWith("&") ) url += "?";
+         if( service_url.equals("tap") ) {
+            if( url.endsWith("/") ) url = url.substring(0,url.length()-1);
+         } else {
+            if( !url.endsWith("?") && !url.endsWith("&") ) url += "?";
+         }
 
          int pos;
          String fmt;

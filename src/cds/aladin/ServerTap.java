@@ -623,8 +623,44 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		if (this.sync_async != null &&  this.tap != null) {
 			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
 	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
+
+	  	  	// Echo of the equivalent script command
+	  	  	aladin.command.printConsole("get TAP("+Tok.quote(this.tapClient.tapLabel)+","+Tok.quote(this.tap.getText())+")");
 		}
 	}
+	
+	/** Sync TAP query via the script command: get TAP(URL|ID,queryString)
+	 * @param target Not used here
+	 * @param radius Not used here
+	 * @param criteria two parameters: 1) the baseUrl or the ID of the MocServer record, 2) the TAP query
+	 * @param label The plane label
+	 * @param origin not Used here
+	 * @return 0 ok, -1 si erreur
+	 */
+	protected int createPlane(String target,String radius,String criteria, String label, String origin) {
+
+	   try {
+         Tok tok = new Tok(criteria,", ");
+         String baseUrl = tok.nextToken();
+         String query = tok.nextToken();
+          if( !baseUrl.startsWith("http://") && !baseUrl.startsWith("https://") ) {
+             if( label==null ) label=baseUrl;
+             baseUrl = aladin.directory.resolveServiceUrl("tap",baseUrl);
+          }
+          ball = new Ball();
+          tapClient = new TapClient();
+          tapClient.tapLabel=label;
+          TapManager tapManager = TapManager.getInstance(aladin);
+          tapManager.fireSync(this, baseUrl, query, null, null);
+         
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         return -1;
+      }
+	   return 0;
+	}
+
+
 	
 	@Override
 	public void submit() {
