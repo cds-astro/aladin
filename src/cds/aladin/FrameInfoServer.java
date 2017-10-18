@@ -235,7 +235,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
      (s.type!=Server.APPLI && s.type!=Server.APPLIIMG && s.statusUrl!=null ? A(LASTQUERY)+s.statusUrl+"\n":"")+
 (s.type==Server.APPLI || s.type==Server.APPLIIMG? "":A(STATUS)+(s.statusAllVO!=null ? s.statusAllVO.getText()+"\n":"Not yet tested\n"))+
                            (s.statusError!=null ? A(ERRORMSG)+s.statusError+"\n":"")+
-                           (s instanceof ServerGlu ? A(IDENTIFIER)+((ServerGlu)s).actionName+"\n" : "")+
+                           (s instanceof ServerGlu ? A(IDENTIFIER)+((ServerGlu)s).gluTag+"\n" : "")+
                            (s.verboseDescr!=null ? "\n"+Util.fold(s.verboseDescr)+"\n":"")+
                            (gluRecord!=null ? "\n\n"+gluRecord:"")
                     );

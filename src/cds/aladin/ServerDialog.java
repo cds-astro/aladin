@@ -1142,8 +1142,17 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       else server[i].submit();
       return true;
    }
+   
+   /** Montre le formulaire server dont le tagGlu (ActionName) est passé en paramètre */
+   public boolean showByGlutag(String gluTag) {
+      int i = findIndiceServerByGluTag(gluTag);
+      if( i<0 ) return false;
+      setCurrent(i);
+      toFront();
+      return true;
+   }
 
-   /** Montre le formulaire du server passé en paramètre */
+   /** Montre le formulaire server dont le nom est passé en paramètre */
    public boolean show(String nom) {
       int i = findIndiceServer(nom);
       if( i<0 ) return false;
@@ -1219,6 +1228,17 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    protected int findIndiceServer(String s) {
       for( int i = 0; i < server.length; i++ ) {
          if( server[i].sameNom(s) ) return i;
+      }
+      return -1;
+   }
+   
+   /**
+    * retourne l'indice d'un serveur en fonction de son nom
+    * @return l'indice du serveur s,sinon -1
+    */
+   protected int findIndiceServerByGluTag(String s) {
+      for( int i = 0; i < server.length; i++ ) {
+         if( s.equals(server[i].gluTag) ) return i;
       }
       return -1;
    }

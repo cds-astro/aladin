@@ -653,6 +653,14 @@ public class TreeObjDir extends TreeObj implements Propable {
       return prop.get("tap_glutag")!=null || prop.get("tap_service_url")!=null;
    }
    
+   /** Retourne true si la collection dispose d'un formulaire customisé à la GLU */
+   protected boolean hasCustom() {
+      return prop!=null && (prop.get("glutag")!=null
+            || prop.get("cs_glutag")!=null  || prop.get("tap_glutag")!=null
+            || prop.get("sia_glutag")!=null || prop.get("ssa_glutag")!=null);
+   }
+
+   
    /** Retourne true si la collection dispose d'un accès cone search */
    protected boolean hasCS() {
       return isCDSCatalog() || prop!=null && prop.get("cs_service_url")!=null;
@@ -735,6 +743,10 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Retourne l'URL d'un Cone search ou null si aucun */
    protected String getCSUrl() {
       if( prop==null ) return null;
+      
+      // J'ai un mode custom qui remplace le simple CS
+      if( prop.get("cs_glutag")!=null ) return null;
+      
       String u = prop.get("cs_service_url");
       if( u!=null && !(u.endsWith("?") || u.endsWith("&")) ) u+='?';
       return u;
@@ -1054,6 +1066,23 @@ public class TreeObjDir extends TreeObj implements Propable {
       }
       
       return cmd;
+   }
+   
+   protected void loadCustom() {
+      String glutag = prop.get("glutag");
+      if( glutag==null ) glutag = prop.get("cs_glutag");
+      if( glutag==null ) glutag = prop.get("sia_glutag");
+      if( glutag==null ) glutag = prop.get("ssa_glutag");
+      if( glutag==null ) glutag = prop.get("tap_glutag");
+      if( !aladin.dialog.showByGlutag(glutag) ) {
+         aladin.warning(aladin,"Mission GLU record ["+glutag+"]");
+      }
+   }
+   protected String getCustomBkm() {
+      String glutag = prop.get("glutag");
+      Server server = aladin.dialog.server[aladin.dialog.findIndiceServer(glutag)];
+      System.out.println("Je dois retourner le bookmark de "+server.title);
+      return "get "+glutag+"(....) $TARGET $RADIUS";
    }
    
    /** Génération et exécution de la requête script correspondant au protocole MOC */

@@ -26,7 +26,7 @@ import java.io.DataInputStream;
 import java.net.URL;
 import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.swing.JButton;
 
 /** Spécialisation de la classe GluServer pour le cas particulier de SKYBOT
  * @version 1.0 - 8 dec 2005 - création
@@ -53,7 +53,7 @@ public class ServerSkybot extends ServerGlu {
 
       super(aladin,A,D,MV,MP,ML,LP,PP,FU,PD,PK,PV,null, R,MI,AF,AL,null,null,record,null,null, null, null, false);
       aladinLogo = "SkyBotLogo.gif";
-
+      
       // Resolver d'astéroid
       JButton b = new JButton(RESOLVIT);
       b.setOpaque(false);

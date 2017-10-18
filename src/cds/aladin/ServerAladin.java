@@ -80,6 +80,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       createChaine();
       type = IMAGE;
       aladinLogo="AladinLogo.gif";
+      gluTag = "Aladin";
       DISCOVERY=true;
       
       // Juste pour revenir au serveur Aladin normal si on n'a pas 

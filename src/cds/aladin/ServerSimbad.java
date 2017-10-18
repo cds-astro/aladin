@@ -38,20 +38,20 @@ import cds.aladin.prop.Filet;
  */
 public class ServerSimbad extends Server  {
    	
-   String tagGlu,info1,/* info2,*/filter;
+   String info1,/* info2,*/filter;
    protected double maxRadius=60; // Rayon maximal autorisé par défaut
   
    // retourne le tagGLU à utiliser en fonction du choix du serveur test ou non
    private String getTagGlu(boolean testServer) {
-      if( TESTSERVER && !testServer ) return tagGlu.substring(0,tagGlu.length()-1);
-      return tagGlu;
+      if( TESTSERVER && !testServer ) return gluTag.substring(0,gluTag.length()-1);
+      return gluTag;
    }
    
   /** Initialisation des variables propres a Simbad */
    protected void init() {
       type    = CATALOG;
       aladinLabel     = "Simbad database";
-      tagGlu  = "SimbadXML1";
+      gluTag  = "SimbadXML1";
       aladinLogo    = "SimbadLogo.gif";
       docUser = "http://simbad.u-strasbg.fr/guide/ch15.htx";
 //      maxRadius=30*60;
@@ -59,8 +59,8 @@ public class ServerSimbad extends Server  {
 
       // Juste pour revenir au serveur Simbad normal si on n'a pas 
       // la surcharge GLU pour le nouveau serveur
-      if( !aladin.CDS || aladin.glu.getURL(tagGlu,"",false,false)==null ) {
-         tagGlu = tagGlu.substring(0,tagGlu.length()-1);
+      if( !aladin.CDS || aladin.glu.getURL(gluTag,"",false,false)==null ) {
+         gluTag = gluTag.substring(0,gluTag.length()-1);
       } else TESTSERVER=true;
       
       filters = 
@@ -247,7 +247,7 @@ public class ServerSimbad extends Server  {
       modeCoo = COO|SIMBAD;
       modeRad = RADIUS;
       
-      getGluFilters(tagGlu);
+      getGluFilters(gluTag);
       
       // Pas de filtre dédiée en mode Outreach      
 //      if( Aladin.OUTREACH ) filters=null;

@@ -869,7 +869,7 @@ public final class Glu implements Runnable {
    private int findGluServer(String actionName) {
       for( int i = vGluServer.size()-1; i >=0; i-- ) {
          ServerGlu gs = (ServerGlu) vGluServer.elementAt(i);
-         if( gs!=null && gs.actionName!=null && actionName.equals(gs.actionName) ) return i;
+         if( gs!=null && gs.gluTag!=null && actionName.equals(gs.gluTag) ) return i;
       }
       return -1;
    }

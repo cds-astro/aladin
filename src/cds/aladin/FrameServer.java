@@ -293,7 +293,7 @@ public final class FrameServer extends JFrame implements ActionListener,KeyListe
             c.insets.left=gap;
 
             // mise en relief des serveurs provenant réellement du registry VO
-            if( ! (s instanceof ServerGlu && ((ServerGlu)s).actionName.startsWith("IVOA")) ) {
+            if( ! (s instanceof ServerGlu && ((ServerGlu)s).gluTag.startsWith("IVOA")) ) {
                s.cbAllVO.setFont(s.cbAllVO.getFont().deriveFont(Font.BOLD));
             }
          }
@@ -963,7 +963,7 @@ public final class FrameServer extends JFrame implements ActionListener,KeyListe
 	   int i;
 	   for( i=0; i<servers.length; i++ ) {
 		   if( ! (servers[i] instanceof ServerGlu) ) continue;
-		   if( ((ServerGlu)servers[i]).actionName.startsWith("IVOA") ) break;
+		   if( ((ServerGlu)servers[i]).gluTag.startsWith("IVOA") ) break;
 	   }
 
 	   Server[] newServers = new Server[i];

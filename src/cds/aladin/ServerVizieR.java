@@ -56,7 +56,7 @@ import cds.xml.XMLParser;
  * @version 0.9 : (??) creation
  */
 public final class ServerVizieR extends Server implements CDSConstants,Runnable {
-   String CATDESC,CATMOC,CATDMAP,INFO1,TAGGLU,GETALL,GETALL1,CAT;
+   String CATDESC,CATMOC,CATDMAP,INFO1,GETALL,GETALL1,CAT;
    
    static final String  MOCGLU = "getMOC";
    static final String  MOCERROR = "Catalog unknown or MOC server error";
@@ -100,13 +100,13 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       type = CATALOG;
       aladinLogo = "VizieRLogo.gif";
       docUser="http://vizier.u-strasbg.fr";
-      TAGGLU = "VizieRXML++1";
+      gluTag = "VizieRXML++1";
       aladinLabel="VizieR";
       
       // Juste pour revenir au serveur Vizier normal si on n'a pas 
       // la surcharge GLU pour le nouveau serveur
-      if( !aladin.CDS || aladin.glu.getURL(TAGGLU,"",false,false)==null ) {
-         TAGGLU = TAGGLU.substring(0,TAGGLU.length()-1);
+      if( !aladin.CDS || aladin.glu.getURL(gluTag,"",false,false)==null ) {
+         gluTag = gluTag.substring(0,gluTag.length()-1);
       } else TESTSERVER=true;
 
       setBackground(Aladin.BLUE);
@@ -272,8 +272,8 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    
    // retourne le tagGLU à utiliser en fonction du choix du serveur test ou non
    private String getTagGlu() {
-      if( TESTSERVER && !testServer.isSelected() ) return TAGGLU.substring(0,TAGGLU.length()-1);
-      return TAGGLU;
+      if( TESTSERVER && !testServer.isSelected() ) return gluTag.substring(0,gluTag.length()-1);
+      return gluTag;
    }
 
 

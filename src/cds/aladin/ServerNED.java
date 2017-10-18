@@ -34,7 +34,7 @@ public final class ServerNED extends ServerSimbad  {
    protected void init() {
       aladinLabel = "NED database";
       type = CATALOG;
-      tagGlu = "NedXML";
+      gluTag = "NedXML";
       aladinLogo = "NedLogo.gif";
       docUser = "http://nedwww.ipac.caltech.edu/help/intro.html";
       maxRadius=3*60;

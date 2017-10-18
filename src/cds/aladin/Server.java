@@ -204,6 +204,7 @@ public class Server extends JPanel
    int type;                      // Le type de serveur (IMAGE, CATALOG, SPECTRUM)
    protected double aladinMenuNumber=0;      // Numéro d'ordre du serveur (ordre d'apparition dans le serveur selector)
    protected String title;		  // Le titre de la fenêtre
+   protected String gluTag;          // Le Tag GLU (ActionName) associé au serveur (ou null si aucun)
    protected String aladinLabel="";       // le nom du serveur
    protected String description;         // les infos (une ligne) decrivant le serveur
    protected String verboseDescr;         // Description détaillée du serveur
@@ -1066,7 +1067,7 @@ public void layout() {
 	public boolean setDateForServerGluIsDateLinkForms() {
 		boolean result = false;
 		if (this instanceof ServerGlu) {
-			if (((ServerGlu) this).actionName.equals(DATALINK_FORM)
+			if (((ServerGlu) this).gluTag.equals(DATALINK_FORM)
 					&& (date.getText() != null || !date.getText().isEmpty())) {
 				result = true;
 			}

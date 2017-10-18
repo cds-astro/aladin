@@ -98,7 +98,7 @@ public class ServerGlu extends Server implements Runnable {
    private boolean flagTAP=false;
    private boolean flagTAPV2=false;
    int fmt;		// Format de retour (PlanImage.fmt)
-	String actionName, info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP,
+   String info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP,
 			SHOWASYNCTOOLTIP;
    String system;       // appel système dans le cas d'un enregistrement concernant une application locale, null sinon
    String dir;          // Répertoire d'exécution du system, null sinon
@@ -166,7 +166,7 @@ public class ServerGlu extends Server implements Runnable {
       setBackground(Aladin.BLUE);
       
       this.record      = record;
-      this.actionName  = actionName;
+      this.gluTag      = actionName;
       this.aladinLogo  = aladinLogo;
       this.aladinLabel = (aladinLabel!=null)?aladinLabel:(description!=null)?description:actionName;
       this.description = description;
@@ -1082,7 +1082,7 @@ public class ServerGlu extends Server implements Runnable {
     * en détail les chaines de descriptions
     */
    protected boolean is(String s) {
-      return s.equalsIgnoreCase(actionName) || super.is(s);
+      return s.equalsIgnoreCase(gluTag) || super.is(s);
    }
    
 
@@ -1290,7 +1290,7 @@ public class ServerGlu extends Server implements Runnable {
          if( baseUrlIndex>=0 ) {
             s = (String) v.get( baseUrlIndex );
             if( !s.startsWith("http://") && !s.startsWith("https://") ) {
-               String urlList = aladin.directory.resolveServiceUrl(actionName,s);
+               String urlList = aladin.directory.resolveServiceUrl(gluTag,s);
                if( urlList!=null ) {
                   tokUrlList = new Tok(urlList,"\t");
                   v.setElementAt( tokUrlList.nextToken(), baseUrlIndex);
@@ -1314,7 +1314,7 @@ public class ServerGlu extends Server implements Runnable {
             }
 
             // Generation de l'URL par appel au GLU
-            URL u = aladin.glu.getURL(actionName,p.toString());
+            URL u = aladin.glu.getURL(gluTag,p.toString());
 
 
             // S'agit-il d'une commande script provenant d'un serveur en 2 temps ? (SIAP/SSAP)
@@ -1390,8 +1390,8 @@ public class ServerGlu extends Server implements Runnable {
                   catch( Exception e1 ) {
 
                      // Peut être un miroir ?
-                     if( aladin.glu.checkIndirection(actionName, null) ) {
-                        u=aladin.glu.getURL(actionName,p.toString());
+                     if( aladin.glu.checkIndirection(gluTag, null) ) {
+                        u=aladin.glu.getURL(gluTag,p.toString());
                         in = Util.openStream(u);
                      } else throw e1;
                   }
@@ -1619,16 +1619,16 @@ public class ServerGlu extends Server implements Runnable {
     		  queryString = gluQueryTemplate.getGluQuery(v, this.currentSelectedTapTable, this.adqlFunc, this.adqlFuncParams);
     		  queryString = GETRESULTPARAMS+queryString;
     	  }
-    	  String url = (String) aladin.glu.aladinDic.get(actionName);
-    	  Aladin.trace(3, "URL for "+actionName+" is: "+url);
+    	  String url = (String) aladin.glu.aladinDic.get(gluTag);
+    	  Aladin.trace(3, "URL for "+gluTag+" is: "+url);
     	  url = TapManager.getInstance(aladin).getSyncUrlUnEncoded(this, url, queryString);
     	  Aladin.trace(3, "getSyncUrlUnEncoded: "+url);
-    	  aladin.glu.aladinDic.put(actionName+"v1", url);// for setting all glu params
-    	  u = aladin.glu.getURL(actionName+"v1",p==null?"" : p.toString(), true);
+    	  aladin.glu.aladinDic.put(gluTag+"v1", url);// for setting all glu params
+    	  u = aladin.glu.getURL(gluTag+"v1",p==null?"" : p.toString(), true);
     	  Aladin.trace(3, "getURL u: "+u);
     	  try {
 			u = addQueryEncodedUrl(u.toString());
-			aladin.glu.aladinDic.put(actionName+"v1", u.toString());//update the properly encoded query
+			aladin.glu.aladinDic.put(gluTag+"v1", u.toString());//update the properly encoded query
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			if( !flagDoIt ) return;
@@ -1638,7 +1638,7 @@ public class ServerGlu extends Server implements Runnable {
 		}
       } else {
     	// Generation de l'URL par appel au GLU
-    	  u = aladin.glu.getURL(actionName,p==null?"" : p.toString());
+    	  u = aladin.glu.getURL(gluTag,p==null?"" : p.toString());
       }
       
       // C'est juste pour avoir le texte ADQL
@@ -1656,7 +1656,7 @@ public class ServerGlu extends Server implements Runnable {
          String r = getRadius(false);
          if( r==null ) r="";
          else r = " "+Coord.getUnit(getRM(r)/60.);
-         code = "get "+actionName + (criteres.length()==0?" ":"("+criteres+") ");
+         code = "get "+gluTag + (criteres.length()==0?" ":"("+criteres+") ");
          aladin.targetHistory.add( getTarget() );
          aladin.console.printCommand(code+getTarget()+r);
       }
@@ -1700,7 +1700,7 @@ public class ServerGlu extends Server implements Runnable {
       } else defaultCursor();
 
       if (flagTAPV2) {
-    	  String url = (String) aladin.glu.aladinDic.get(actionName);
+    	  String url = (String) aladin.glu.aladinDic.get(gluTag);
     	  boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
     	  this.submitTapServerRequest(sync, null, label, url, tap.getText());
 	  } else {
@@ -1786,7 +1786,7 @@ public class ServerGlu extends Server implements Runnable {
  			  System.out.println("adqlQueryEncoded: "+adqlQueryEncoded);
  			  System.out.println("Tryin to decode again: "+URLDecoder.decode(adqlQueryEncoded, UTF8));
  		  }
- 		  aladin.glu.aladinDic.put(actionName+"v1", url);
+ 		  aladin.glu.aladinDic.put(gluTag+"v1", url);
  		  u = new URL(url);
 		} catch (UnsupportedEncodingException e1) {
 			// TODO Auto-generated catch block
@@ -1812,12 +1812,12 @@ public class ServerGlu extends Server implements Runnable {
    
    /** Lance l'éxécution de l'application system */
    private boolean exec(final String label,String params) {
-      aladin.log("exec",actionName);
+      aladin.log("exec",gluTag);
       final String dir = this.dir;
       final String command = Util.concatDir(dir,getCommand(params));
       Aladin.trace(1,"Exec: "+(dir!=null?"cd "+dir+";":"") +command);
       try {
-           new Thread(actionName){
+           new Thread(gluTag){
             public void run() {
                try { 
                   Process p = Runtime.getRuntime().exec(command,null,dir==null?null : new File(dir));
@@ -1911,7 +1911,7 @@ public class ServerGlu extends Server implements Runnable {
       }
 
       // Generation de l'URL par appel au GLU, et ouverture du Stream
-      URL u = aladin.glu.getURL(actionName,p.toString());
+      URL u = aladin.glu.getURL(gluTag,p.toString());
       infoUrl.append(u+"");
       if( type==CATALOG ) return getMetaDataForCat(u);
 //      return new MyInputStream(u.openStream());

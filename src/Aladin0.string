@@ -681,24 +681,24 @@ ALLSKYSWFITS Get full pixel dynamic (fits)
 ALLSKYSWFITS.fr Mode dynamique complète  (fits)
 
 # AladinServer.java strings
-ALADINTITLE	Aladin image server
+ALADINTITLE	Legacy Aladin image server
 ALADINNAME	Aladin\nimage\nserver
 ALADINBYTREE	Hierarchical view
 ALADINDEFFMT	Default format:
-ALADININFO	The Aladin image server (CDS/Strasbourg) - DSS/MAMA/2MASS/IRAS
+ALADININFO	The legacy Aladin image server (CDS/Strasbourg) - DSS/MAMA/2MASS/IRAS
 ALADINSTEP1	Step 1: Specify a target/radius and press SUBMIT
 ALADINSTEP2	Step 2: load one or several images
-ALADINDESC	Aladin server is the dedicated image server for Aladin. It provides images such as DSS1,DSS2,2MASS,IRAS(IRIS).\n \nAlternatively, you can access the Aladin image server via un "get" command line (menu "Tools -> Aladin console"). It follows these syntax:\n   get Aladin[(keywords,...)] [target] [radiusUnit]\n \nThe keywords can be:\n   .a survey: DSS1,DSS2,SERC,2MASS,POSSI,POSSII,IRAS,...\n   .a color code: O,J,F,N,K,E,...\n   .a resolution: FULL,LOW,PLATE\n   .a format: FITS,JPEG
+ALADINDESC	This Legacy Aladin server is the historical dedicated image server to Aladin. It provides images from a few reference surveys DSS1,DSS2,2MASS,IRAS(IRIS).\n \nAlternatively, you can access the Legacy Aladin image server via un "get" command line (menu "Tools -> Aladin console"). It follows these syntax:\n   get Aladin[(keywords,...)] [target] [radiusUnit]\n \nThe keywords can be:\n   .a survey: DSS1,DSS2,SERC,2MASS,POSSI,POSSII,IRAS,...\n   .a color code: O,J,F,N,K,E,...\n   .a resolution: FULL,LOW,PLATE\n   .a format: FITS,JPEG
 ALADINSERVERR	!Aladin image server error !
 
-ALADINTITLE.fr	Serveur d'images Aladin
+ALADINTITLE.fr	Serveur d'images Aladin (legacy)
 ALADINNAME.fr	Serveur\nAladin
 ALADINBYTREE.fr	Vue hiérarchique
 ALADINDEFFMT.fr	Format par défaut:
-ALADININFO.fr	Le serveur d'images Aladin (CDS/Strasbourg) - DSS/MAMA/2MASS/IRAS
+ALADININFO.fr	Le serveur d'images "Legacy Aladin" (CDS/Strasbourg) - DSS/MAMA/2MASS/IRAS
 ALADINSTEP1.fr	Etape 1: Indiquez une position et appuyez CHERCHER
 ALADINSTEP2.fr	Etape 2: Sélectionnez une ou plusieurs images
-ALADINDESC.fr	Le serveur d'images Aladin est spécialement dédié à Aladin. Il peut lui fournir entre autres les images DSS1,DSS2,2MASS,IRAS(IRIS).\n \nVous pouvez également accéder au serveur d'images Aladin par une commande en ligne "get" (menu "Outils -> Console Aladin"). Elle doit suivre la syntaxe suivante;\n   get Aladin[(keywords,...)] [target] [radiusUnit]\n \nLes mots-clés peuvent être:\n   .un nom de relevé : DSS1,DSS2,SERC,2MASS,POSSI,POSSII,IRAS,...;\n   .un code couleur : O,J,F,N,K,E,...\n   .une résolution : FULL,LOW,PLATE\n   .un format : FITS,JPEG
+ALADINDESC.fr	Le serveur d'images Legacy Aladin est le serveur historique dédié à Aladin. Il fournit des images de quelques relevés de référence DSS1,DSS2,2MASS,IRAS(IRIS).\n \nVous pouvez également accéder au serveur Legacy Aladin par une commande en ligne "get" (menu "Outils -> Console Aladin"). Elle doit suivre la syntaxe suivante;\n   get Aladin[(keywords,...)] [target] [radiusUnit]\n \nLes mots-clés peuvent être:\n   .un nom de relevé : DSS1,DSS2,SERC,2MASS,POSSI,POSSII,IRAS,...;\n   .un code couleur : O,J,F,N,K,E,...\n   .une résolution : FULL,LOW,PLATE\n   .un format : FITS,JPEG
 ALADINSERVERR.fr	!Erreur du serveur d'images Aladin !
 
 # VizieRServer.java strings
