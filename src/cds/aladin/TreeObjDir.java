@@ -706,6 +706,14 @@ public class TreeObjDir extends TreeObj implements Propable {
       return isNewHips() || isNewObsRelease();
    }
    
+   /** Retourne le type de données auquel on va accéder */
+   protected String getDataType() {
+      if( hasCS() || hasTAP() ) return "Tabular";
+      if( hasHips() || hasSIA() ) return "Image";
+      if( hasSSA() ) return "Spectrum";
+      return "";
+   }
+   
    /** Retourne true si la collection (hors HiPS) a été créée/maj récemment */
    protected boolean isNewObsRelease() {
       if( prop==null ) return false;

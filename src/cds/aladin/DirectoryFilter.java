@@ -105,7 +105,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       
       JPanel contentPane = (JPanel)getContentPane();
       contentPane.setLayout( new BorderLayout(5,5)) ;
-      setAlwaysOnTop(true);
+//      setAlwaysOnTop(true);
       
       contentPane.add( getHeaderPanel(), BorderLayout.NORTH );
       contentPane.add( getMainFilterPanel(), BorderLayout.CENTER );
@@ -303,6 +303,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       btReset.setEnabled( !isEmpty() );
       btApply.setEnabled( !hasBeenApplied() );
       btMocShow.setEnabled( mocArea.getText().length()>0 );
+      
+      if( isVisible() ) aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
    }
    
    private void activateAreaText(boolean flag) {
@@ -704,7 +706,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //         }
       }
       
-//      updateWidget();
+      // updateWidget();
       
       flagFormEdit=false;
       
@@ -984,11 +986,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p.y+=20;
       setLocation( p );
       setVisible(true);
+      toFront();
    }
    
    class JTextFieldX extends JTextField {
       JTextFieldX(int n) {
          super(n);
+         setColumns(n);
          addKeyListener(new KeyListener() {
             public void keyTyped(KeyEvent e) { }
             public void keyPressed(KeyEvent e) { }

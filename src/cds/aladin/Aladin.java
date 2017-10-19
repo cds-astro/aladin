@@ -3145,9 +3145,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private void about() {
       Aladin.info(TITRE+" ("+VERSION+(BETA?" beta":PROTO?" proto":"")+") "+
             chaine.getString("CDS")+
-            "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel\n" +
+            "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel, Chaitra\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
-            "* Copyright: Unistra/CNRS - distributed under GNU GPL v3\n  \n" +
+            "* Copyright: Université de Strasbourg/CNRS - distributed under GNU GPL v3\n  \n" +
             "Portions of the code (HiPS & MOCs) have been developped  in the framework of ASTERICS project (2015-2018)." +
             "Progressive catalogs, PM facility, have been developped  in the framework of GAIA CU9 (2012-2022)." +
             "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +

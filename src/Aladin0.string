@@ -292,8 +292,8 @@ PLUGINFO	Plugin controller...
 VOTOOLINFO	VO tool controller...
 NEWS	What's new in this Aladin release ?...
 ABOUT	About Aladin...
-ACCESSTAP Access TAP
-OPENTAPJOBCONTROLLER Open job controller
+ACCESSTAP Access TAP...
+OPENTAPJOBCONTROLLER Job controller...
 
 CMD.fr	Console de commandes...
 XMATCH.fr	Corréler des catalogues...
@@ -328,8 +328,8 @@ PLUGINFO.fr	Gestionnaire de Plugins...
 VOTOOLINFO.fr	Gestionnaire des applications VO...
 NEWS.fr	Quoi de neuf dans cette version d'Aladin ?...
 ABOUT.fr	A propos d'Aladin...
-ACCESSTAP.fr Access TAP
-OPENTAPJOBCONTROLLER.fr Open job controller
+ACCESSTAP.fr Accès TAP...
+OPENTAPJOBCONTROLLER.fr Controleur de tâches...
 
 # Aladin.java - One line menu help
 HLOAD	Access to the images, catalogs, FoV
@@ -2110,7 +2110,7 @@ FSIMGSRV.fr	Serveurs d'images
 FSCATSRC.fr	Serveurs de catalogues
 FSSPECSRV.fr	Serveurs de spectres
 FSLOAD.fr CHARGER
-TIPLOAD.fr CHARGER TAP serveur
+TIPLOAD.fr CHARGER les serveurs TAP
 FSRELOAD.fr Recharger
 TIPRELOAD.fr Rechargez serveur sélectionné
 
@@ -2966,7 +2966,7 @@ STATUS_NOPOS.fr Aucune coordonnée
 STATUS_EMPTYCAT.fr Aucune source
 STATUS_READY.fr Ok
 
-BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...\n \nOr easier, clic in the main frame and enjoy the sky...
+BEGIN1	Welcome to Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...\n \nOr easier, clic in the main frame and enjoy the sky...
 BEGIN2	Imagine your eye\nlooking through a stack of planes (below).\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them in the main panel.\n \nFor accessing to other data, use the discovery tree in the left panel,\nor clic & drag your own local files.
 BEGIN3	Stack controls:\n \n*the icon: show/hide a plane\n*size: change object size\n*zoom: adjust field size.\n*Opacity: adjust transparency.\n \nThe view is drawn according to the projection of a reference plane.\n \nFor changing the reference, click on its check box.
 BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*Right: constrast adjustement.\n*Wheel: quick zoom on the reticle.\n*Simple-clic: move the reticle.\n*Double-clic: re-center.\n \nClick and let your mouse pointer a few seconds on an object for discovering advanced information about it.
@@ -2999,6 +2999,26 @@ DATALINK_PROC	Data processing service
 DATALINK_CUTOUT	Cutout service
 DATALINK_HIPS Hips
 DATALINK Datalink
+
+DATALINK_THISDATASET.fr  Cette collection
+DATALINK_PROGENITOR.fr  Les progéniteurs
+DATALINK_DERIVATION.fr 	Produit dérivé
+DATALINK_AUXILIARY.fr 	Données auxiliaires
+DATALINK_WEIGHT.fr 	Carte de poids
+DATALINK_ERROR.fr 	Carte d'erreurs
+DATALINK_NOISE.fr 	Carte de bruits
+DATALINK_CALIBRATION.fr 	Données de calibration
+DATALINK_BIAS.fr 	Données de calibration du "bias"
+DATALINK_DARK.fr 	Données de calibration du "dark"
+DATALINK_FLAT.fr 	Calibration du "flat field"
+DATALINK_PREVIEW.fr  Prévisualisation
+DATALINK_PREVIEW_IMAGE.fr  Image de prévisualisation
+DATALINK_PREVIEW_PLOT.fr 	Graphique de prévisualisation
+DATALINK_PROC.fr 	Service de calcul sur les données
+DATALINK_CUTOUT.fr 	Serice d'extraction de données
+DATALINK_HIPS.fr  Hips
+DATALINK.fr  Datalink
+
 
 #For SIAv2 simple readable column labels
 t_min Observation Starttime
@@ -3033,6 +3053,25 @@ SELECTSPLTAPSERVERSLABEL Preselected servers
 SELECTSPLTAPSERVERSTOOLTIP A small selection of servers is shown below. For a more comprehensive list, go to the adjacent "Complete list".
 INCORRECTTAPURLMESSAGE Error! please check the url provided
 MESSAGEUNKNOWNPARAMSINQUERY Are you sure of the highlighted identifiers?
+
+TAPFORMTITLE.fr	Client TAP
+TAPFORMINFO.fr	Interroge les serveurs TAP via Aladin.
+TAPCLIENTINSTR Générez, vérifiez et exécutez votre requête.
+SELECTSERVERTOOLTIP Liste des serveurs TAP disponibles...
+TAPGENERICFORMDESC.fr	TAPGENERICFORMDESC.fr	Accès aux serveurs compatibles TAP.\n Vous pouvez, soit écrire directement une requête ADQL dans le champ de saisie du bas soit utiliser l'interface GUI de la manière suivante: En premier lieu sélectionnez la table concernée dans le menu déroulant du haut. Sélectionnez ensuite dans le panneau de gauche les colonnes de cette table que vous souhaitez récupérer. Cliquez sur sur le bouton "Ajouter" afin de définir une contrainte sur une colonne. Celle-ci s'affichera dans le panneau de droite. Spécifiez les valeurs souhaitées puis complétez la requête en cours de rédaction en cliquant sur le bouton "Rafraichir". Dans le cas d'une contrainte de position, si les colonnes contenant la longitude et la latitude n'ont pas été reconnues automatiquement, vous utiliserez le bouton "Positionner ra,dec". Enfin pour indiquer une contrainte de position, vous disposez d'un champ spécifique. Utilisez le bouton "Ajouter" comme pour une contrainte classique. Vous pouvez supprimer une contrainte déjà mémorisée via le bouton "X" tout à droite de chaque contrainte. Dès lors que votre requête sera prête, vérifiez sa syntaxe (notamment si vous l'avez éditée manuellement) via le bouton "Vérifier", puis soumettez-là via le bouton "Charger".
+TAPLOADINGSTATUSINFO.fr En cours de chargement des schémas TAP du serveur que vous avez sélectionné. Patientez quelques instants
+TAPERRORSTATUSINFO.fr Impossible de contacter le serveur TAP. Veuillez essayer ultérieurement
+TARGETERROR.fr Veuillez vérifiez les coordonnées de votre cible !
+SELECTSERVERLABEL. Sélectionnez un serveur
+JOBCONTROLLERTITLE.fr Contrôleur de tâches
+TAPEXCLIENTINSTR.fr Choississez un exemple à exécuter
+TAPOBSCORECLIENTINSTR.fr Ajouter des critères Obscore, puis soumettez votre requête.
+SELECTDIRTAPSERVERSLABEL.fr Liste exhaustive
+SELECTDIRTAPSERVERSTOOLTIP.fr Choississez les serveurs TAP depuis l'arbre de découverte des collections (fenêtre principale)
+SELECTSPLTAPSERVERSLABEL.fr Serveurs présélectionnés
+SELECTSPLTAPSERVERSTOOLTIP.fr Une présélection de serveurs TAP est présenté ci-dessous. La liste exhaustive est disponible dans l'onglet adjacent.
+INCORRECTTAPURLMESSAGE.fr Erreur de connection ! Vérifiez l'URL
+MESSAGEUNKNOWNPARAMSINQUERY.fr Les identificateurs surlignées sont-ils corrects ?
 
 TAPTABLEJOINTIP Join table
 TAPTABLEJOINTIP.fr Join table --configure message
@@ -3076,6 +3115,48 @@ CHOOSEFROMTAPSERVERSTEXT Or choose from the lists below:
 WAITLOADINGTAPSERVERSLIST Loading tap servers list...
 NODUPLICATESELECTION Cannot select same table! No second table selected.
 
+TAPTABLEJOINTIP.fr  Jointure de table
+TAPTABLEJOINTIP.fr .fr Jointure de table -configure message
+TAPTABLEUPLOADPARSETIP.fr  Charger ces données dans l'interface.
+TAPTABLEUPLOADTIP.fr  Télécharger la table (Upload).
+TAPTABLENOUPLOADTIP.fr  Le téléchargement de tables n'est pas disponible sur ce serveur
+TAPTABLEUPLOADTIP.fr .fr Téléchargement de tables  --configure message
+TAPTABLENOUPLOADTIP.fr .fr Le téléchargement de tables n'est pas disponible sur ce serveur	--configure message
+TIPCLICKTOADD.fr  Cliquez pour ajouter
+TIPCLICKTOADD.fr .fr Cliquez pour ajouter --configure message
+TAPNOFILELOAD.fr  Sélectionner un serveur TAP à accéder!
+TAPNOFILERELOAD.fr  Sélectionner un serveur TAP à recharger!
+ADDFILE.fr  Ajouter un fichier:
+GENERICERROR.fr  Erreur. Essayer ultérieurement
+REFRESHQUERYTOOLTIP.fr  Regénérez la requête en fonction du formulaire. Cette action écrasera les éventuelles modifications manuelles que vous auriez apporté.
+CHECKQUERYTOOLTIP.fr  Cliquez pour vérifier la syntaxe ADQL de la requête ci-dessous
+SYNCASYNCTOOLTIP.fr  Sélectionnez le mode d'accès au serveur TAP: synchronisé ou non. Préférez le mode non synchronisé pour les tâches potentiellement longues.
+SHOWASYNCTOOLTIP.fr  Cliquez pour accéder au contrôleur de tâches
+CHECKQUERY_SUCCESS.fr  La syntaxe de votre requête ADQL est correcte.
+CHECKQUERY_ISBLANK.fr  Veuillez générer ou rédiger une requête
+NOTAPSERVERSCONFIGUREDMESSAGE.fr  Aucun serveur TAP configuré
+TAPTIPRETRY.fr  Cliquez pour recharger la configuration du serveur TAP
+TAPURLCLIENTFIELDLABEL.fr  Spécifier l'URL de base d'un serveur TAP
+CHANGESERVERTOOLTIP.fr  Sélectionnez un autre serveur TAP
+TAPMODESTOOLTIP.fr  Sélectionner un autre mode d'accès TAP
+GLU_TAPMODESTOOLTIP.fr  Cliquez pour accéder au formulaire simplifié dédié à ce serveur
+NODE_TAPMODESTOOLTIP.fr  Cliquez pour accéder au formulaire TAP générique de ce serveur
+GENERIC_TAPMODESTOOLTIP.fr  Cliquez pour recharger la configuration du formualire générique
+#EXAMPLE_TAPMODESTOOLTIP.fr  Click to load a template based tap client
+#OBSCORE_TAPMODESTOOLTIP.fr  Click to load a custom client for obscore tables
+#ACCESSALL_TAPMODESTOOLTIP Click to load all tables of this server
+#TAPSERVICEEXAMPLESTOOLTIP.fr  These are service provided examples!
+#SETRADECBUTTONTIP.fr  Select columns of the tap table as right ascension and declination columns
+#TAPTARGETSETTINGSTOOLTIP.fr  Change target used in the templates.
+#SETTARGETTOOLTIP.fr  Hint: Configure different target by clicking the "Settings" button
+#CHANGESETTINGSTOOLTIP.fr  Hint: Configure second table by clicking the "Settings" button
+NOGLURECFOUND.fr La configuration du formulaire simplifié est innaccessible (GLU record not found).
+NOTARGETSET.fr  Aucune cible spécifiée !
+NORANGEERRORMESSAGE.fr  Requière un interval de valeurs. Veuillez indiquer deux valeurs !
+CHOOSEFROMTAPSERVERSTEXT.fr  Ou choississez dans la liste ci-dessous :
+WAITLOADINGTAPSERVERSLIST.fr  Chargement de la liste des serveurs TAP en cours...
+#NODUPLICATESELECTION.fr  Cannot select same table! No second table selected.
+
 # FrameUploadServer.java strings
 UPTITLE	Upload tables
 UPFILEINFO Choose either your local system file or an already loaded file in Aladin.
@@ -3099,6 +3180,16 @@ STANDARDRESULTSLOADTIP Loads results from "/results/result" path
 UWSASKLOADDEFAULTRESULTS Unable to parse results url. Try to download from the tap results path?
 CANTABORTJOB Unable to abort the job. please try again later.
 UWSJOBRADIOTOOLTIP Click to load job details
+
+JOBERRORTOOLTIP.fr  Erreur d'exécution de la requête. Consultez le rapport d'exécution pour les détails
+JOBNOTFOUNDMESSAGE.fr  Impossible de poursuire l'exécution de la requête car la tâche n'est plus accessible sur le serveur. Veuillez relancer la requête.
+UWSNOJOBMESSAGE.fr  Aucune tâches dans la session active. \nCette fenêtre affiche les requêtes soumises en mode asynchrone (ASYNC).
+CANTSTARTJOB.fr  Démarrage de la tâche impossible. Veuillez essayer à nouveau
+STANDARDRESULTSLOAD.fr  Charger les résultat
+STANDARDRESULTSLOADTIP.fr  Charger les résultats depuis "/results/result"
+UWSASKLOADDEFAULTRESULTS.fr  Récupération des résultats impossible. Essayez de les accéder directement ?
+CANTABORTJOB.fr  Interruption de la tâche impossible. Veuillez essayer à nouveau
+UWSJOBRADIOTOOLTIP.fr  Cliquez pour consulter le status de la tâche
 
 #V10
 DTLABEL	Available data
@@ -3317,6 +3408,10 @@ AWMULTICOL Selected collections
 AWMULTICOL.fr	Collections sélectionnées
 AWCSLAB	in view
 AWCSLAB.fr	dans la vue
+AWCUSTOM	custom
+AWCUSTOM.fr	custom
+AWCUSTOMTIP	Access to a form specifically dedicated to this data collection
+AWCUSTOMTIP.fr	Accès à un formulaire dédiée spécifiquement à cette collection de données
 AWFRAMEINFOTITLE Access selector
 AWFRAMEINFOTITLE.fr Sélecteur d'accès
 AWCGRAPTIP Specify or grab a position/radius

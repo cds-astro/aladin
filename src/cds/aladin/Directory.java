@@ -107,7 +107,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    // Nombre de collections appelables individuellement en parallèle
    static private final int MAX_PARALLEL_QUERY = 30;
 
-   static private String DIRECTORY, MULTICOL;
+   static private String DIRECTORY, MULTICOL, HELP;
 
    static protected String AWCSLAB, AWCSTIP, AWMCSTIP, AWSIATIP, AWSSATIP, AWMOCQLAB, AWMOCQLABTIP, AWMOCTITLE, AWMOC1, AWMOC1TIP,
          AWMOC2, AWMOC2TIP, AWMOC3, AWMOC3TIP ;
@@ -115,7 +115,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    static protected String ALLCOLL, MYLIST, ALLCOLLHTML, MYLISTHTML, AWSKYCOV, AWMOCUNK, AWHIPSRES, AWNBROWS, AWREFPUB, AWPROGACC,
          AWPROGACCTIP, AWDATAACC, AWDATAACCTIP, AWDATAACCTIP1, AWINVIEWTIP, AWMOCQLABTIP2, AWXMATCH, AWXMATCHTIP, AWCRIT,
          AWCRITTIP, AWMOCX, AWMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
-         AWFRAMEINFOTITLE,AWCGRAPTIP,AWCONE,AWCONETIP,AWACCMODE,AWACCMODETIP,AwDERPROD,AwDERPRODTIP,AWINFOTIP,AWPROPTIP,AWBOOKMARKTIP,AWPARAMTIP,AWSTICKTIP;
+         AWFRAMEINFOTITLE,AWCGRAPTIP,AWCONE,AWCONETIP,AWACCMODE,AWACCMODETIP,AwDERPROD,AwDERPRODTIP,AWINFOTIP,AWPROPTIP,
+         AWBOOKMARKTIP,AWPARAMTIP,AWSTICKTIP,AWCUSTOM,AWCUSTOMTIP;
 
    static private final String UPDATING = "  updating...";
 
@@ -173,11 +174,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private void loadString() {
       DIRECTORY = S("DTLABEL");
       MULTICOL = S("AWMULTICOL");
+      HELP = S("Datatree.HELP");
       MYLIST = "";
       MYLISTHTML = "-- " + S("DTWORKLIST") + " --";
       ALLCOLLHTML = "-- " + S("DTALLCOLL") + " --";
       ALLCOLL = ALLCOLLHTML;
       AWFRAMEINFOTITLE = S("AWFRAMEINFOTITLE");
+      AWCUSTOM = S("AWCUSTOM");
+      AWCUSTOMTIP = S("AWCUSTOMTIP");
       AWCSLAB = S("AWCSLAB");
       AWMCSTIP = S("AWMCSTIP");
       AWCGRAPTIP = S("AWCGRAPTIP");
@@ -293,13 +297,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       plus.setFont(Aladin.LBOLD);
       plus.setForeground(Aladin.COLOR_LABEL);
       plus.addMouseListener(new MouseListener() {
-         public void mouseReleased(MouseEvent e) { }
+         public void mouseReleased(MouseEvent e) { openAdvancedFilterFrame(); }
          public void mousePressed(MouseEvent e) { }
          public void mouseExited(MouseEvent e) { }
          public void mouseEntered(MouseEvent e) { }
-         public void mouseClicked(MouseEvent e) {
-            openAdvancedFilterFrame();
-         }
+         public void mouseClicked(MouseEvent e) { }
       });
 
       // Pour que le quickFilter et le popupFilter aient même taille et soient alignés, je les place
@@ -385,6 +387,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       dirTree.addMouseMotionListener(new MouseMotionListener() {
          public void mouseMoved(MouseEvent e) {
+            
+            if( Aladin.aladin.inHelp  ) Aladin.aladin.help.setText(HELP);
+
             if( frameInfo == null || !frameInfo.isVisible() ) return;
             
             // La maj automatique de la fenêtre d'accès est invalidée si elle a été épinglée
@@ -499,6 +504,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( current != null ) comboFilter.setSelectedItem(current);
 
       if( a != null ) {
+         for( ActionListener a1 : a ) comboFilter.addActionListener(a1);
       }
    }
 
@@ -691,7 +697,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    // La frame d'affichage des informations du HiPS cliqué à la souris
    private FrameInfo frameInfo = null;
-   private boolean isDecorated = false;
 
    /** Cache la fenêtre des infos du HiPS */
    private void hideInfo() {
@@ -908,8 +913,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** Création/ouverture/fermeture du formulaire de filtrage de l'arbre des Collections */
    protected void openAdvancedFilterFrame() {
       if( directoryFilter == null ) directoryFilter = new DirectoryFilter(aladin);
-      if( directoryFilter.isVisible() ) directoryFilter.setVisible(false);
-      else {
+//      if( directoryFilter.isVisible() ) directoryFilter.setVisible(false);
+//      else {
          String name = (String) comboFilter.getSelectedItem();
          if( name.equals(ALLCOLLHTML) ) {
             name = MYLIST;
@@ -919,7 +924,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
 
          directoryFilter.showFilter();
-      }
+//      }
    }
 
    /** Filtrage de l'arbre des Collections */
@@ -954,6 +959,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          int intersect = DirectoryFilter.getIntersect(moc);
          directoryFilter.setSpecificalFilter(name, expr, moc, intersect);
       }
+      
+      directoryFilter.toFront();
    }
 
    /** Positionne une contrainte, soit en texte libre, soit cle=valeur */
@@ -3343,11 +3350,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             } 
                
             if( to.hasCustom() ) {
-               customBx = bx = new JCheckBox("custom");
+               customBx = bx = new JCheckBox(AWCUSTOM);
+               Util.toolTip(bx, AWCUSTOMTIP);
                bx.addActionListener(this);
                accessPanel.add(bx);
                bx.setSelected(true);
-               bx.setToolTipText("Dedicated form associated to this collection");
                bg.add(bx);
             }
 
@@ -3684,25 +3691,34 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             paintComponent1(g);
             int w = getWidth();
             int h = getHeight();
-
+            int x,y;
+            String s;
+            
             if( to.isNew() ) {
                g.setFont(Aladin.ITALIC);
-               String s = "New " + (to.isNewObsRelease() ? "release" : to.isNewHips() ? "HiPS" : "!");
-               int x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + 3;
-               int y = 13;
+               s = "New " + (to.isNewObsRelease() ? "release" : to.isNewHips() ? "HiPS" : "!");
+               x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + 3;
+               y = 12;
                Util.drawStar(g, x - 4, y - 6, Color.yellow);
                g.drawString(s, x, y);
             }
 
+            boolean in = to.getIsIn() == 1;
+            g.setFont(Aladin.SPLAIN);
+            Color c = in ? Aladin.COLOR_GREEN.brighter().brighter() : Aladin.ORANGE.brighter();
+            s = to.getDataType();
+            x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + 3;
+            y = h-16;
+            g.setColor( c );
+            g.drawString(s, x, y);
+
             if( to.getIsIn() != -1 ) {
-               boolean in = to.getIsIn() == 1;
                g.setFont(Aladin.SPLAIN);
-               String s = in ? "data in view" : "out of view";
-               int x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + (in ? 0 : 3);
-               int y = h - 4;
-               Color c = in ? Aladin.COLOR_GREEN.brighter().brighter() : Aladin.ORANGE.brighter();
+               s = in ? "data in view" : "out of view";
+               x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + (in ? 0 : 3);
+               y = h - 4;
                if( !in ) Util.drawWarning(g, x - 10, y - 7, c, Color.black);
-               g.setColor(c);
+               g.setColor( c );
                g.drawString(s, x, y);
             }
          }
@@ -3715,7 +3731,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             g.fillRect(0, 0, ws, hs);
 
             if( to.previewError || to.imPreview == null ) {
-               g.setColor(Color.white);
+               g.setColor(Color.lightGray);
                String s = to.previewError ? "no preview" : "loading...";
                g.setFont(Aladin.ITALIC);
                java.awt.FontMetrics fm = g.getFontMetrics();
@@ -3778,7 +3794,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( siaBx != null && siaBx.isSelected() ) addBkm(bkm, to.getSIABkm());
          if( ssaBx != null && ssaBx.isSelected() ) addBkm(bkm, to.getSSABkm());
          if( csBx != null && csBx.isSelected() ) addBkm(bkm, to.getCSBkm());
-         if( customBx != null && customBx.isSelected() ) addBkm(bkm, to.getCustomBkm());
+//         if( customBx != null && customBx.isSelected() ) addBkm(bkm, to.getCustomBkm());
          if( liveBx != null && liveBx.isSelected() ) addBkm(bkm, to.getLiveSimbadBkm());
          if( hipsBx != null && hipsBx.isSelected() ) addBkm(bkm, to.getHipsBkm());
          if( mocBx != null && mocBx.isSelected() ) addBkm(bkm, to.getMocBkm());
