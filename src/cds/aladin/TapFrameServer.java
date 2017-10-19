@@ -31,6 +31,7 @@ import static cds.tools.CDSConstants.WAIT;
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -39,6 +40,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -46,6 +49,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -56,7 +60,14 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import cds.mocmulti.MocItem2;
 import cds.tools.TwoColorJTable;
@@ -84,6 +95,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    JTable preselectedServersTable;
    JTable allServersTable;
    DataLabelTable allServersDataLabelTable;
+   DataLabelTable2 splServersDataLabelTable;
    int idxSortedCol = 1; // indice de la colonne sur laquelle on trie
    boolean ascSort;
    TableModelListener tableListener;
@@ -101,6 +113,8 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
    
    //inputs
    JTextField userProvidedTapUrl;
+
+
 
    protected void createChaine() {
       GO = Aladin.chaine.getString("FSGO");
@@ -355,15 +369,16 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			splListPanelScroll.removeAll();
 			splListPanelScroll.setLayout(new BorderLayout(1, 1));
 			if (datalabels != null && !datalabels.isEmpty()) {
-				preselectedServersTable = new TwoColorJTable(datalabels, getTapListColumnLabels());
+				splServersDataLabelTable = new DataLabelTable2(aladin, datalabels);
+				preselectedServersTable = new TwoColorJTable(splServersDataLabelTable);
 				preselectedServersTable.setGridColor(Color.lightGray);
 				preselectedServersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 				preselectedServersTable.getColumnModel().getColumn(0).setPreferredWidth(150);
 				preselectedServersTable.getColumnModel().getColumn(1).setPreferredWidth(320);
 				preselectedServersTable.getColumnModel().getColumn(2).setPreferredWidth(700);
-				preselectedServersTable.setRowSelectionInterval(0, 0);
-//				preselectedServersTable.getTableHeader().setDefaultRenderer(new TableHeaderRenderer(preselectedServersTable.getTableHeader().getDefaultRenderer()));
-//				preselectedServersTable.getTableHeader().addMouseListener(new TableHeaderListener());
+//				preselectedServersTable.setRowSelectionInterval(0, 0);
+				preselectedServersTable.getTableHeader().setDefaultRenderer(new TableHeaderRenderer(preselectedServersTable.getTableHeader().getDefaultRenderer()));
+				preselectedServersTable.getTableHeader().addMouseListener(new TableHeaderListener());
 				splListPanelScroll.add(preselectedServersTable, BorderLayout.CENTER);
 				splListPanelScroll.add(preselectedServersTable.getTableHeader(), BorderLayout.NORTH);
 //			    splListPanelScroll.add(preselectedServersTable);
@@ -400,11 +415,11 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			allServersTable.getColumnModel().getColumn(1).setPreferredWidth(320);
 			allServersTable.getColumnModel().getColumn(2).setPreferredWidth(700);
 			allServersTable.setRowSelectionInterval(0, 0);
-//			allServersTable.getTableHeader().setDefaultRenderer(new TableHeaderRenderer(allServersTable.getTableHeader().getDefaultRenderer()));
-//			allServersTable.getTableHeader().addMouseListener(new TableHeaderListener());
+			allServersTable.getTableHeader().setDefaultRenderer(new TableHeaderRenderer(allServersTable.getTableHeader().getDefaultRenderer()));
+			allServersTable.getTableHeader().addMouseListener(new TableHeaderListener());
 //		    completeListPanelScroll.add(allServersTable);
 		    completeListPanelScroll.add(allServersTable, BorderLayout.CENTER);
-//		    completeListPanelScroll.add(allServersTable.getTableHeader(), BorderLayout.NORTH);
+		    completeListPanelScroll.add(allServersTable.getTableHeader(), BorderLayout.NORTH);
 			result = true;
 		} else {
 			completeListPanelScroll.add(new JLabel(NOTAPSERVERSCONFIGUREDMESSAGE));
@@ -417,7 +432,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	 /** Renderer pour le header de la JTable
 	    *  Permet d'afficher les triangles de tri
 	    */
-	   /*class TableHeaderRenderer extends DefaultTableCellRenderer {
+	   class TableHeaderRenderer extends DefaultTableCellRenderer {
 
 	       TableCellRenderer renderer;
 
@@ -425,9 +440,9 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	                   renderer = defaultRenderer;
 	       }
 
-	       *//**
+	       /**
 	        * Overwrites DefaultTableCellRenderer.
-	        *//*
+	        */
 	       public Component getTableCellRendererComponent(JTable table, Object
 	               value, boolean isSelected,
 	               boolean hasFocus, int row,
@@ -448,25 +463,29 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	           }
 	           return comp;
 	       }
-	   }*/
+	   }
 	   
 	   /** Classe interne pour le header de la table
 	    *  Permet le tri lorsqu'on clique sur un des bandeaux
 	    */
-	   /*class TableHeaderListener extends MouseAdapter {
+	   class TableHeaderListener extends MouseAdapter {
 
 	       public void mouseClicked(MouseEvent e) {
 	    	   JTable table = preselectedServersTable; 
 	    	   TableModel model = null;
+	    	   TableModelListener listNer = null;
 	    	   Vector data = TapManager.splTapServerLabels;
 	       	if (preselectedServersTable.getTableHeader().equals(e.getSource())) {
 	       		table = preselectedServersTable;
 	       		data = TapManager.splTapServerLabels;
+	       		model = splServersDataLabelTable;
+	       		listNer = splServersDataLabelTable.tableListener;
 			} else {
 				table = allServersTable;
 				data = (Vector) TapManager.allTapServerLabels;
+				model = allServersDataLabelTable;
+				listNer = allServersDataLabelTable.tableListener;
 			}
-	       	model = table.getModel();
 	           TableColumnModel columnModel = table.getColumnModel();
 	           int viewColumn = columnModel.getColumnIndexAtX(e.getX());
 	           final int column = table.convertColumnIndexToModel(viewColumn);
@@ -479,7 +498,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	                   int idx = table.getSelectedRow();
 	                   final Object selected = idx>=0?data.get(idx):null;
 	                   defaultSortPreselectedServers();
-	                   notifyTableChanged(model, data);
+	                   notifyTableChanged(model, listNer, data);
 	                   selectItem(selected, table, data);
 	                   return;
 	               }
@@ -506,7 +525,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	               Collections.sort(data, comp);
 	               if( ! ascSort ) Collections.reverse(data);
 	               ascSort = !ascSort;
-	               notifyTableChanged(model, data);
+	               notifyTableChanged(model, listNer, data);
 
 	               // update selection so to keep initial selection after sorting is done
 	               selectItem(selected, table, data);
@@ -525,7 +544,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	           });
 	       }
 
-	   }*/ // end of inner class TableHeaderListener
+	   } // end of inner class TableHeaderListener
 	
 	private Vector<String> getTapListColumnLabels() {
 		// TODO Auto-generated method stub
@@ -550,11 +569,13 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 	      ascSort = !ascSort;
 	   }
 	
-	/*private void notifyTableChanged(TableModel table, Vector data) {
+	private void notifyTableChanged(TableModel model, TableModelListener listNer, Vector data) {
 	       int n=data.size();
-	       tableListener.tableChanged(new TableModelEvent(table, n, n,
-	             TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT));
-	   }*/
+	       if (listNer != null) {
+	    	   listNer.tableChanged(new TableModelEvent(model, n, n,
+	  	             TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT));
+		}
+	   }
 
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();

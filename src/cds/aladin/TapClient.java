@@ -137,16 +137,16 @@ public class TapClient{
 			
 			if (this.nodeName != null) {
 				if (Aladin.PROTO) {//TODO:: tintinproto
-					modesAllowed = new String []{ GLU, nodeName, GENERIC, TEMPLATES, OBSCORE };
+					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC, TEMPLATES, OBSCORE };
 				} else {
-					modesAllowed = new String []{ GLU, nodeName, GENERIC};
+					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC};
 				}
 				
 			} else {
 				if (Aladin.PROTO) {//TODO:: tintinproto
-					modesAllowed = new String []{ GLU, GENERIC, TEMPLATES, OBSCORE };
+					modesAllowed = new String []{ /*GLU, */GENERIC, TEMPLATES, OBSCORE };
 				} else {
-					modesAllowed = new String []{ GLU, GENERIC};
+					modesAllowed = new String []{ /*GLU, */ GENERIC};
 				}
 				
 			}
@@ -285,9 +285,9 @@ public class TapClient{
 		Server resultServer = null;
 		DynamicTapForm dynamicTapForm = null;
 		editing = true;
-		if ((serverType == null || serverType == GLU ) && this.serverGlu != null ) {
+		if (serverType == GLU && this.serverGlu != null ) {
 			resultServer = this.serverGlu;
-			model.setSelectedItem(GLU);
+//			model.setSelectedItem(GLU);
 		} else {
 			boolean isFullServerCapability = true;
 			if (this.nodeName != null && this.nodeTableNames != null) {

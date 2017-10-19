@@ -1,27 +1,25 @@
 package cds.aladin;
 
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-import cds.mocmulti.MocItem;
-
-public class DataLabelTable implements TableModel {
+public class DataLabelTable2 implements TableModel {
 	Aladin aladin;
-	List<String> dataLabels;
+	Vector<Vector<String>> fullData;
 	public TableModelListener tableListener;
 	
-	public DataLabelTable() {
+	public DataLabelTable2() {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public DataLabelTable(Aladin aladin, List<String> dataLabels) {
+	public DataLabelTable2(Aladin aladin, Vector<Vector<String>> dataLabels) {
 		// TODO Auto-generated constructor stub
 		this.aladin = aladin;
-		this.dataLabels = dataLabels;
+		this.fullData = dataLabels;
 	}
+
 
 	@Override
 	public void addTableModelListener(TableModelListener l) {
@@ -56,8 +54,8 @@ public class DataLabelTable implements TableModel {
 	public int getRowCount() {
 		// TODO Auto-generated method stub
 		int result = 0;
-		if (this.dataLabels != null) {
-			result = this.dataLabels.size();
+		if (this.fullData != null) {
+			result = this.fullData.size();
 		}
 		return result;
 	}
@@ -65,33 +63,16 @@ public class DataLabelTable implements TableModel {
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		// TODO Auto-generated method stub
-		MocItem mi = aladin.directory.multiProp.getItem(this.dataLabels.get(rowIndex));
-		switch (columnIndex) {
-		case 0:
-			return this.dataLabels.get(rowIndex);
-		case 1: {
-			String desc = mi.prop.get("obs_title");
-			if (desc == null)
-				desc = mi.prop.get("obs_collection");
-			return desc;
-		}
-		case 2: return mi.prop.get("tap_service_url");
+		Vector<String> data = this.fullData.get(rowIndex);
+		if (columnIndex <= data.size()) {
+			return data.elementAt(columnIndex);
 		}
 		return "";
 	}
 	
 	public Vector<String> getDataLabelAt(int rowIndex) {
 		// TODO Auto-generated method stub
-		Vector<String> result = null;
-		MocItem mi = aladin.directory.multiProp.getItem(this.dataLabels.get(rowIndex));
-		String desc = mi.prop.get("obs_title");
-		if (desc == null)
-			desc = mi.prop.get("obs_collection");
-		result = new Vector<String>();
-		result.add(TapFrameServer.labelId, this.dataLabels.get(rowIndex));
-		result.add(TapFrameServer.descriptionId, desc);
-		result.add(TapFrameServer.urlId, mi.prop.get("tap_service_url"));
-		return result;
+		return this.fullData.get(rowIndex);
 	}
 	
 	@Override
