@@ -124,7 +124,7 @@ public class TapManager {
 	
 	public Aladin aladin;
 	protected static Vector<Vector<String>> splTapServerLabels;
-	protected static List<String> allTapServerLabels;
+	protected static Vector<String> allTapServerLabels;
 	protected TapFrameServer tapFrameServer = null;
 	protected FrameUploadServer uploadFrame;
 	
@@ -219,9 +219,9 @@ public class TapManager {
 	public void addTapService(String actionName, String label, String url, String description) {
 		if (actionName != null) {
 			Vector<String> newDatalabel = new Vector<String>();
-			newDatalabel.addElement(label);
-			newDatalabel.addElement(url);
-			newDatalabel.addElement(description);
+			newDatalabel.add(TapFrameServer.labelId, label);
+			newDatalabel.add(TapFrameServer.descriptionId, description);
+			newDatalabel.add(TapFrameServer.urlId, url);
 			if (splTapServerLabels == null) {
 				splTapServerLabels = new Vector<Vector<String>>();
 			}
@@ -242,7 +242,7 @@ public class TapManager {
 	public void populateTapServersFromTree(String mask){
 		try {
 			if (allTapServerLabels == null) {
-				allTapServerLabels = new ArrayList<String>();
+				allTapServerLabels = new Vector<String>();
 			} else {
 				allTapServerLabels.clear();
 			}
@@ -275,9 +275,9 @@ public class TapManager {
                 description = mi.prop.get("obs_title");
                 if( description == null ) description = mi.prop.get("obs_collection");
                 Vector<String> tapServer = new Vector<String>();
-                tapServer.addElement(id);
-                tapServer.addElement(url);
-                tapServer.addElement(description);
+                tapServer.add(TapFrameServer.labelId, id);
+                tapServer.add(TapFrameServer.descriptionId, description);
+                tapServer.add(TapFrameServer.urlId, url);
                 splTapServerLabels.add(tapServer);
              }
 			Aladin.trace(3, "populateFromDirectory():: Done loading from directory...");

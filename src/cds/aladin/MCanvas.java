@@ -938,7 +938,7 @@ MouseWheelListener, Widget
          wButton.haspushed=true;
 
          wButton.callArchive(aladin,oButton, wButton.isDatalink);
-         if (Aladin.BETA && wButton.isDatalink) {//TODO:: tintinproto
+         if (wButton.isDatalink) {
         	 aladin.makeCursor(this, Aladin.WAITCURSOR);
         	 aladin.mesure.isEnabledDatalinkPopUp = true;
         	 aladin.mesure.datalinkshowX = x;

@@ -53,10 +53,11 @@ import cds.tools.Util;
  */
 public class DatalinkManager {
 	
-	public static String PARAMDISABLEDTOOLTIP;
+	public static String PARAMDISABLEDTOOLTIP, NOCUTOUTCLIENTSUPPORT;
 	
 	static {
 		PARAMDISABLEDTOOLTIP = Aladin.getChaine().getString("PARAMDISABLEDTOOLTIP");
+		NOCUTOUTCLIENTSUPPORT = Aladin.getChaine().getString("NOCUTOUTCLIENTSUPPORT");
 	}
 	
 	SavotPullParser savotParser;

@@ -162,7 +162,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 	*/
    public void datalinkPopupShow(List<SimpleData> datalinksInfo) {
 	   
-		if (Aladin.BETA && aladin.mesure.isEnabledDatalinkPopUp) {//TODO tintinproto
+		if (aladin.mesure.isEnabledDatalinkPopUp) {
 
 			if (datalinksInfo != null && !datalinksInfo.isEmpty()) {
 				aladin.makeCursor(mcanvas, Aladin.DEFAULTCURSOR);
@@ -221,10 +221,14 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 					
 					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS)
 							|| semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
-						if (aladin.datalinkGlu == null) {
-							aladin.datalinkGlu = new DataLinkGlu(aladin);
+						if (Aladin.BETA) {
+							if (aladin.datalinkGlu == null) {
+								aladin.datalinkGlu = new DataLinkGlu(aladin);
+							}
+							aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
+						} else {
+							Aladin.warning(DatalinkManager.NOCUTOUTCLIENTSUPPORT, 1);
 						}
-						aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
 					} /*else if (semantics.startsWith(SEMANTIC_PREVIEW) && accessUrl != null
 							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)
 							|| contentType.equalsIgnoreCase(CONTENT_TYPE_PNG))) { //for now we just load plot image or votable in Aladin

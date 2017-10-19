@@ -62,14 +62,13 @@ public class DataLabelTable implements TableModel {
 		switch (columnIndex) {
 		case 0:
 			return this.dataLabels.get(rowIndex);
-		case 1:
-			return mi.prop.get("tap_service_url");
-		case 2: {
+		case 1: {
 			String desc = mi.prop.get("obs_title");
 			if (desc == null)
 				desc = mi.prop.get("obs_collection");
 			return desc;
 		}
+		case 2: return mi.prop.get("tap_service_url");
 		}
 		return "";
 	}
@@ -82,9 +81,9 @@ public class DataLabelTable implements TableModel {
 		if (desc == null)
 			desc = mi.prop.get("obs_collection");
 		result = new Vector<String>();
-		result.addElement(this.dataLabels.get(rowIndex));
-		result.addElement(mi.prop.get("tap_service_url"));
-		result.addElement(desc);
+		result.add(TapFrameServer.labelId, this.dataLabels.get(rowIndex));
+		result.add(TapFrameServer.descriptionId, desc);
+		result.add(TapFrameServer.urlId, mi.prop.get("tap_service_url"));
 		return result;
 	}
 	
