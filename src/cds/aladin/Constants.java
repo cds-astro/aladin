@@ -107,6 +107,7 @@ public static final String ACCESSURL = "access_url";
 public static final String CONTENT_TYPE_TEXTXML = "text/xml";
 public static final String CONTENT_TYPE_TEXTHTML = "text/html";
 public static final String CONTENT_TYPE_TEXTPLAIN = "text/plain";
+public static final String CONTENT_TYPE_PDF = "application/pdf";
 public static final String CONTENT_TYPE_HIPS = "content=hips";
 public static final String UNKNOWN = "UNKNOWN";
 public static final String SPACESTRING = " ";

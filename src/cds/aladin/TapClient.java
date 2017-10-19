@@ -79,7 +79,6 @@ import cds.xml.VOSICapabilitiesReader;
  */
 public class TapClient{
 	
-	public static String modeIconImage = "settings.png";
 	public static String modesLabel = "Modes";
 	public static String modesToolTip;
 	public DefaultComboBoxModel model = null;

@@ -2292,6 +2292,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected ArrayList<String> getPredefinedTAPServers() throws Exception {
       return getTAPServersByMocServer("client_tap_mainlist=*");
    }
+   
+   //returns multiPropId
+   protected ArrayList<String> getPredefinedTAPServersMultiProp() throws Exception {
+	      return getTAPServersMultiPropByMocServer("client_tap_mainlist=*");
+   }
 
    /**
     * provides the list of Tap servers matching the keyword(s) - blank separated (AND logic, applied on ID, obs_title et
@@ -2306,7 +2311,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    // For tap server list, slight change
    protected ArrayList<String> getTAPServers(String keyword) throws Exception {
       if( keyword == null || keyword.trim().length() == 0 ) return getTAPServersByMocServer("(*)");
-      return getTAPServersByMocServer("(" + getKeyWordExpr(keyword) + ")");
+      return getTAPServersMultiPropByMocServer("(" + getKeyWordExpr(keyword) + ")");
    }
 
    /**
@@ -2329,6 +2334,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
       return b;
    }
+   
+ //returns multiPropId
+	protected ArrayList<String> getTAPServersMultiPropByMocServer(String query) throws Exception {
+		ArrayList<String> a = multiProp.scan((HealpixMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
+		return a;
+	}
 
    // protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
    //

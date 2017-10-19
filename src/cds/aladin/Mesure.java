@@ -30,6 +30,7 @@ import static cds.aladin.Constants.SEMANTICS;
 import static cds.aladin.Constants.SEMANTIC_ACCESS;
 import static cds.aladin.Constants.SEMANTIC_CUTOUT;
 import static cds.aladin.Constants.SEMANTIC_PROC;
+import static cds.aladin.Constants.CONTENT_TYPE_PDF;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
@@ -229,7 +230,9 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 							|| contentType.equalsIgnoreCase(CONTENT_TYPE_PNG))) { //for now we just load plot image or votable in Aladin
 						aladin.glu.showDocument("Http", accessUrl, true);
 					}*/ else if (contentType != null && accessUrl != null
-							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML) || contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTPLAIN))) {
+							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)
+									|| contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTPLAIN)
+									|| contentType.equalsIgnoreCase(CONTENT_TYPE_PDF))) {
 						aladin.glu.showDocument("Http", accessUrl, true);
 					} else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {
 						aladin.mesure.isEnabledDatalinkPopUp = true;

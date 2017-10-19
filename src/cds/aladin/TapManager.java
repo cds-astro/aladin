@@ -98,6 +98,7 @@ import adql.db.DefaultDBTable;
 import adql.query.ADQLQuery;
 import cds.aladin.Constants.TapClientMode;
 import cds.allsky.Constante;
+import cds.mocmulti.MocItem;
 import cds.mocmulti.MocItem2;
 import cds.savot.binary.DataBinaryReader;
 import cds.savot.model.FieldSet;
@@ -122,8 +123,8 @@ public class TapManager {
 	ExecutorService executor;
 	
 	public Aladin aladin;
-	protected static List<DataLabel> splTapServerLabels;
-	protected static List<DataLabel> allTapServerLabels;
+	protected static Vector<Vector<String>> splTapServerLabels;
+	protected static List<String> allTapServerLabels;
 	protected TapFrameServer tapFrameServer = null;
 	protected FrameUploadServer uploadFrame;
 	
@@ -177,31 +178,34 @@ public class TapManager {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<DataLabel> getTapServerList(int mode) {
-		List<DataLabel> result = null;
+	public void instantiateTapServers() {
 		if (initAllLoad) {
 			populateTapServersFromTree(null);// loading all tap from tree
 			populateSplFromDirectory();//loading spl list directory
 		}
-		switch (mode) {
-		case 0:
-			result = splTapServerLabels;
-			break;
-		case 1:
-			result = allTapServerLabels;
-			break;
-		default:
-			result = new ArrayList<DataLabel>();
-			if (allTapServerLabels != null) {
-				result.addAll(allTapServerLabels);
-			}
-			if (splTapServerLabels != null) {
-				result.addAll(splTapServerLabels);
-			}
-			break;
+	}
+	
+	public Vector<Vector<String>> getPreSelectedTapServers() {
+		instantiateTapServers();
+		return splTapServerLabels;
+	}
+	
+	public List<String> getRegistryTapServers() {
+		instantiateTapServers();
+		return allTapServerLabels;
+	}
+	
+	public boolean isValidTapServerList() {
+		boolean result = false;
+		instantiateTapServers();
+		if (splTapServerLabels != null && !splTapServerLabels.isEmpty()) {
+			result = true;
+		} else if (allTapServerLabels != null && !allTapServerLabels.isEmpty()) {
+			result = true;
 		}
 		return result;
 	}
+	
 	
 	/**
 	 * Adds new tap server to tapserver list
@@ -214,9 +218,12 @@ public class TapManager {
 	 */
 	public void addTapService(String actionName, String label, String url, String description) {
 		if (actionName != null) {
-			DataLabel newDatalabel = new DataLabel(label, url, description);
+			Vector<String> newDatalabel = new Vector<String>();
+			newDatalabel.addElement(label);
+			newDatalabel.addElement(url);
+			newDatalabel.addElement(description);
 			if (splTapServerLabels == null) {
-				splTapServerLabels = new ArrayList<DataLabel>();
+				splTapServerLabels = new Vector<Vector<String>>();
 			}
 			removeOldEntries(label);
 			splTapServerLabels.add(newDatalabel);
@@ -224,8 +231,8 @@ public class TapManager {
 	}
 	
 	public void removeOldEntries(String actionName) {
-		for (DataLabel datalabel : splTapServerLabels) {
-			if (datalabel.getLabel().equals(actionName)) {
+		for (Vector<String> datalabel : splTapServerLabels) {
+			if (datalabel.get(0) != null && datalabel.get(0).equals(actionName)) {
 				splTapServerLabels.remove(datalabel);
 				break;
 			}
@@ -235,24 +242,14 @@ public class TapManager {
 	public void populateTapServersFromTree(String mask){
 		try {
 			if (allTapServerLabels == null) {
-				allTapServerLabels = new ArrayList<DataLabel>();
+				allTapServerLabels = new ArrayList<String>();
 			} else {
 				allTapServerLabels.clear();
 			}
-			String label;
-			String url;
-			String description;
 			if (mask == null || mask.isEmpty()) {
 				mask = DIRQUERY_GETALLTAPSERVERS;
 			}
-			ArrayList<String> tapServersInfos = aladin.directory.getTAPServers(mask);
-			for (String tapServersInfo : tapServersInfos) {
-				if (tapServersInfo.trim().equals("")) continue;
-				label = tapServersInfo.split("\\s+")[0];
-				url = tapServersInfo.split("\\s+")[1];
-				description = tapServersInfo.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
-				allTapServerLabels.add(new DataLabel(label, url, description));
-			}
+			allTapServerLabels.addAll(aladin.directory.getTAPServers(mask));
 			
 		} catch (Exception e) {
 			if (Aladin.levelTrace >= 3) e.printStackTrace();
@@ -261,65 +258,28 @@ public class TapManager {
 	}
 	
 	/**
-	 * Method to populate all the tap servers in the configuration file into a tap frame server
-	 * @throws Exception 
-	 */
-	/*private void populateTapServerListFromLocalFile(){
-		BufferedReader bufReader = null;
-		try {
-			if (allTapServerLabels == null) {
-				allTapServerLabels = new ArrayList<DataLabel>();
-			}
-			String fileLine;
-			String label;
-			String url;
-			String description;
-			bufReader = new BufferedReader(new InputStreamReader(aladin.getClass().getResourceAsStream("/"+Constants.TAPSERVERS)));
-			while ((fileLine = bufReader.readLine()) != null) {
-				if (fileLine.equals("") || fileLine.charAt(0) == '#') continue;
-				label = fileLine.split("\\s+")[0];
-				url = fileLine.split("\\s+")[1];
-				description = fileLine.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
-				allTapServerLabels.add(new DataLabel(label, url, description));
-			}
-			
-		} catch (Exception e) {
-			System.err.println("TapServer.txt not loaded error:"+e);
-            e.printStackTrace();
-			Aladin.warning("TapServer.txt not loaded !", 1);
-		} finally {
-			initAllLoad = false;
-			if (bufReader!=null) {
-				try {
-					bufReader.close();
-				} catch (IOException e) {
-					System.err.println("error when closing TapServer.txt:"+e);
-		            e.printStackTrace();
-				}
-			}
-		}
-	}*/
-	
-	/**
 	 * To populate the tap servers configured in the directory tree
 	 */
 	private void populateSplFromDirectory() {
 		try {
 			if (splTapServerLabels == null) {
-				splTapServerLabels = new ArrayList<DataLabel>();
+				splTapServerLabels = new Vector<Vector<String>>();
 			}
-			String label;
 			String url;
 			String description;
-//            ArrayList<String> tapServers = aladin.directory.getBigTAPServers(5);
-            ArrayList<String> tapServers = aladin.directory.getPredefinedTAPServers(); // PF test
-			for (String dirTapServerInfoLine : tapServers) {
-				if (dirTapServerInfoLine.equals("") || dirTapServerInfoLine.charAt(0) == '#') continue;
-				label = dirTapServerInfoLine.split("\\s+")[0];
-				url = dirTapServerInfoLine.split("\\s+")[1];
-				description = dirTapServerInfoLine.replaceFirst(label, "").replaceFirst(url, "").replaceFirst("\\s+", "");
-				splTapServerLabels.add(new DataLabel(label, url, description));
-			}
+            ArrayList<String> tapServersMocId = aladin.directory.getPredefinedTAPServersMultiProp(); // PF test
+            for( String id : tapServersMocId ) {
+                // String auth = Util.getSubpath(id, 0);
+                MocItem mi = aladin.directory.multiProp.getItem(id);
+                url = mi.prop.get("tap_service_url");
+                description = mi.prop.get("obs_title");
+                if( description == null ) description = mi.prop.get("obs_collection");
+                Vector<String> tapServer = new Vector<String>();
+                tapServer.addElement(id);
+                tapServer.addElement(url);
+                tapServer.addElement(description);
+                splTapServerLabels.add(tapServer);
+             }
 			Aladin.trace(3, "populateFromDirectory():: Done loading from directory...");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -2324,13 +2284,29 @@ public class TapManager {
 //		this.selectedServerLabel = tapServerLabels.get(DataLabel.selectedId);
 		this.tapFrameServer.selectedServerLabel = null;
 		int whichList = this.tapFrameServer.options.getSelectedIndex();
-		for (DataLabel datalabel : getTapServerList(whichList)) {
-			if (datalabel.gui.isSelected()) {
-				this.loadTapServerList();
-				this.tapFrameServer.selectedServerLabel = datalabel;
-				break;
+		if (whichList == 0) {
+			int index = this.tapFrameServer.preselectedServersTable.getSelectedRow();
+			if (index >= 0) {
+				this.tapFrameServer.selectedServerLabel = splTapServerLabels.get(index);
+			} else {
+				this.tapFrameServer.selectedServerLabel = null;
+			}
+		} else if (whichList == 1) {
+			int index = this.tapFrameServer.allServersTable.getSelectedRow();
+			if (index >= 0) {
+				Vector<String> dataLabel = this.tapFrameServer.allServersDataLabelTable.getDataLabelAt(index);
+				this.tapFrameServer.selectedServerLabel = dataLabel;
+			} else {
+				this.tapFrameServer.selectedServerLabel = null;
 			}
 		}
+//		for (DataLabel datalabel : instantiateTapServers(whichList)) {
+//			if (datalabel.gui.isSelected()) {
+//				this.loadTapServerList();
+//				this.tapFrameServer.selectedServerLabel = datalabel;
+//				break;
+//			}
+//		}
 	}
 	
 	/**
