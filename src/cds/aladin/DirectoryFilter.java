@@ -992,7 +992,6 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    class JTextFieldX extends JTextField {
       JTextFieldX(int n) {
          super(n);
-         setColumns(n);
          addKeyListener(new KeyListener() {
             public void keyTyped(KeyEvent e) { }
             public void keyPressed(KeyEvent e) { }
@@ -1001,6 +1000,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             }
          });
       }
+      public Dimension getMinimumSize() { return new Dimension( 200, super.getMinimumSize().height); }
+   }
+   
+   class JLabelX extends JLabel {
+      JLabelX(String s) { super(s); }
+      public Dimension getMinimumSize() { return new Dimension( 400, super.getMinimumSize().height); }
    }
    
    private JCheckBox cbMocPlane,cbMocInLine,cbStcInLine,cbSelectedGraph;
@@ -1297,7 +1302,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 
       p = spacePanel = new JPanel( g );
 
-      JLabel desc = new JLabel("<html>"+S("FPSPACEDESC")+"</html>");
+      JLabelX desc = new JLabelX("<html>"+S("FPSPACEDESC")+"</html>");
       PropPanel.addCouple(this, p, "  ", null, desc, g, c, GridBagConstraints.EAST);
       desc.setFont( desc.getFont().deriveFont(Font.ITALIC));
       

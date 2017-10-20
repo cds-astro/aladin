@@ -2999,7 +2999,6 @@ DATALINK_PROC	Data processing service
 DATALINK_CUTOUT	Cutout service
 DATALINK_HIPS Hips
 DATALINK Datalink
-NOCUTOUTCLIENTSUPPORT Cutout clients are not supported in this Aladin version yet. Please use Aladin BETA to access the current implementation of them.
 
 DATALINK_THISDATASET.fr  Cette collection
 DATALINK_PROGENITOR.fr  Les progéniteurs
@@ -3157,6 +3156,8 @@ NORANGEERRORMESSAGE.fr  Requière un interval de valeurs. Veuillez indiquer deux 
 CHOOSEFROMTAPSERVERSTEXT.fr  Ou choississez dans la liste ci-dessous :
 WAITLOADINGTAPSERVERSLIST.fr  Chargement de la liste des serveurs TAP en cours...
 #NODUPLICATESELECTION.fr  Cannot select same table! No second table selected.
+NOCUTOUTCLIENTSUPPORT Cutout clients are not supported in this Aladin version yet. Please use Aladin BETA to access the current implementation of them.
+NOCUTOUTCLIENTSUPPORT.fr Le Cutout service n'est pas encore supporté par cette version d'Aladin. Veuillez utiliser la dernière version Aladin BETA pour utiliser l'implémentation en cours d'élaboration pour ce service.
 
 # FrameUploadServer.java strings
 UPTITLE	Upload tables

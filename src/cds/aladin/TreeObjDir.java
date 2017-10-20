@@ -1041,7 +1041,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       aladin.execAsyncCommand( addBrowse(  getLiveSimbadCmd()+" "+cone));
    }
    protected String getLiveSimbadBkm() { return addBrowse( getLiveSimbadCmd()+" $TARGET $RADIUS" ); }
-   private String getLiveSimbadCmd() { return "get Simbad(live)"; }
+   private String getLiveSimbadCmd() {
+      if( aladin.glu.get("SimbadLive")!=null ) return "get SimbadLive";
+      return "get Simbad(live)";
+   }
    
    /** Génération et exécution de la requête script correspondant au protocole CS ou assimilé ASU */
    protected void loadCS() { loadCS(getDefaultTarget()+" "+getDefaultRadius(15)); }

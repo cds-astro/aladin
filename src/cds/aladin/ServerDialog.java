@@ -361,7 +361,6 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.IMAGE);
 
 
-
       // Les serveurs Data par programme
       if( Aladin.NETWORK ) {
          Server svizier;
@@ -372,8 +371,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 //                     ((ServerVizieR) svizier).vSurveys));
 //               sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
 //                     ((ServerVizieR) svizier).vArchives));
-            sv.addElement(new ServerSimbad(aladin));
-            sv.addElement(new ServerNED(aladin));
+            
+            if( aladin.glu.get("Simbad")==null ) sv.addElement(new ServerSimbad(aladin));
+            if( aladin.glu.get("Ned")==null ) sv.addElement(new ServerNED(aladin));
+            
 //               sv.addElement(new ServerSWarp(aladin));
 //               sv.addElement(new ServerMocQuery(aladin));
 //            if( Aladin.PROTO) sv.addElement(new ServerXmatch(aladin));
@@ -402,14 +403,14 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 //         }
       }
 
-      // Les serveurs Catalog via GLU
+       // Les serveurs Catalog via GLU
       if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.CATALOG | Server.MOC);
 
       // Tri des serveurs pour mettre ceux qui sont sous "others" en fin de
       // liste
       sv = triServer(sv);
 
-      // L'arbre des HiPS
+     // L'arbre des HiPS
 //      sv.addElement(hipsServer = new ServerHips(aladin));
 
       // L'acces local/url
