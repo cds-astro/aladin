@@ -728,7 +728,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
-			.append(TapTable.getQueryPart(selectedTableName)).append(SPACESTRING);
+			.append(TapTable.getQueryPart(selectedTableName, true)).append(SPACESTRING);
 			
 			/*Component[] whereConstraints = this.whereClausesPanel.getComponents();
 			if (this.whereClausesPanel.getComponentCount() > 0) {
@@ -750,8 +750,8 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 	
 	public String getRangeDefaultString(String low, String high) {
 		StringBuffer result = new StringBuffer();
-		low = TapTable.getQueryPart(low);
-		high = TapTable.getQueryPart(high);
+		low = TapTable.getQueryPart(low, false);
+		high = TapTable.getQueryPart(high, false);
 		result.append(low).append(" IS NOT NULL AND ")
 		.append(high).append(" IS NOT NULL ");
 		return result.toString();
@@ -773,7 +773,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 				String constraintSelected = (String) spatial_fields.getSelectedItem();
 				constraintSelected = spatialFieldValueOptions.get(selectedTableName).get(constraintSelected);
 				if (constraintSelected != null) {
-					constraintSelected = TapTable.getQueryPart(constraintSelected);
+					constraintSelected = TapTable.getQueryPart(constraintSelected, false);
 					appendConstraint(spatial_andOrOp, constraintSelected, inRange, true, spatial_value.getText(),
 							ColumnConstraint.defaultValue);
 				}
@@ -799,7 +799,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 							valueInProcess = mText.toString();
 						}
 						if (!inRange) {
-							constraintSelected = TapTable.getQueryPart(constraintSelected);
+							constraintSelected = TapTable.getQueryPart(constraintSelected, false);
 						}
 						appendConstraint(spectral_andOrOp, constraintSelected, inRange, true, valueInProcess,
 								defaultValue);
@@ -835,7 +835,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 							}
 						}
 						if (!inRange) {
-							constraintSelected = TapTable.getQueryPart(constraintSelected);
+							constraintSelected = TapTable.getQueryPart(constraintSelected, false);
 						}
 						appendConstraint(time_andOrOp, constraintSelected, inRange , true, valueInProcess, defaultValue);
 					}
@@ -877,8 +877,8 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		            return;
 				}
 				StringBuffer whereClause = new StringBuffer();
-				String raColumNameForQuery = TapTable.getQueryPart(this.raColumnName);
-				String decColumNameForQuery = TapTable.getQueryPart(this.decColumnName);
+				String raColumNameForQuery = TapTable.getQueryPart(this.raColumnName, false);
+				String decColumNameForQuery = TapTable.getQueryPart(this.decColumnName, false);
 				whereClause.append(String.format(POSQuery, raColumNameForQuery, decColumNameForQuery,
 						Util.myRound(coo[0].getText(), 5), Util.myRound(coo[1].getText(), 5),
 						Util.myRound(rad[0].getText(), 5))).append(SPACESTRING);

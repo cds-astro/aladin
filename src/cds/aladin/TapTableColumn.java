@@ -102,7 +102,7 @@ public class TapTableColumn {
 	}
 	
 	public String getColumnNameForQuery() {
-		return TapTable.getQueryPart(column_name);
+		return TapTable.getQueryPart(column_name, false);
 	}
 	
 	public void setColumn_name(String column_name) {

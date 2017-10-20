@@ -18,6 +18,7 @@ import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADING;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.UPLOAD;
+import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.BorderLayout;
@@ -872,6 +873,12 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 //					tables.add(this.tapClient.tablesMetaData.get(nodeTableName));
 				} else if (this.tapClient.tablesMetaData.containsKey(ntable.getADQLName())) {
 					tables.add(ntable.getADQLName());
+//					tables.addElement(this.tapClient.tablesMetaData.get(nodeTableName));
+				} else {//for something like this: J/other/BAJ/24.62/table5 or having even more '.'s
+					String potentialTableName = nodeTableName.replaceFirst(REGEX_VALIDTABLEPREFIX, EMPTYSTRING);
+					if (this.tapClient.tablesMetaData.containsKey(potentialTableName)) {
+						tables.add(potentialTableName);
+					}
 //					tables.addElement(this.tapClient.tablesMetaData.get(nodeTableName));
 				}
 			}

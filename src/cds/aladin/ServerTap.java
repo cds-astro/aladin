@@ -485,7 +485,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
-			.append(TapTable.getQueryPart(selectedTableName)).append(SPACESTRING);
+			.append(TapTable.getQueryPart(selectedTableName, true)).append(SPACESTRING);
 			
 			Component[] whereConstraints = this.whereClausesPanel.getComponents();
 			if (this.whereClausesPanel.getComponentCount() > 0) {

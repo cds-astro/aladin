@@ -119,6 +119,10 @@ public static final String SEMANTIC_ACCESS = "#access";
 public static final String SEMANTIC_PROC = "#proc";
 public static final String SEMANTIC_PREVIEW = "#preview";
 public static final String REGEX_TABLENAME_SPECIALCHAR = "[$&+,:;=?@#/\\\\|]";
+public static final String REGEX_VALIDTABLENAMECONSTRUCT = "(?<tableName>[\\p{L}_][\\p{L}\\p{N}@$#_]{0,127})";
+public static final String REGEX_VALIDTABLEPREFIX = "^(?<prefix>"+REGEX_VALIDTABLENAMECONSTRUCT+"?\\.)";
+public static final String REGEX_VALIDTABLENAME = "^"+REGEX_VALIDTABLENAMECONSTRUCT+"$";//msdn site
+
 public static final String REGEX_ONLYALPHANUM = "[^A-Za-z0-9]";
 public static final String REGEX_ALPHA = "[A-Za-z]";
 

@@ -522,7 +522,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			secondaryTable = null;
 			TapManager.getInstance(aladin).eraseNotification(info1, NODUPLICATESELECTION, CLIENTINSTR);
 		}
-		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName);
+		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName, true);
 		this.basicExamples.put("Select all", new CustomListCell("Select * from " + priTableNameForQuery, EMPTYSTRING));
 		this.basicExamples.put("Select top 1000", new CustomListCell("Select TOP 1000 * from " + priTableNameForQuery, EMPTYSTRING));
 		// this.basicExamples.put("Select few columns", "Select oidref, filter,
@@ -546,8 +546,8 @@ public class ServerTapExamples extends DynamicTapForm {
 		String conesearchtemplate = " where 1=CONTAINS(POINT('ICRS', %s, %s), CIRCLE('ICRS', %s, %s, %s))";
 		String primaryTableSelectAllQuery = String.format(tableSelectAllQuery, max, priTableNameForQuery);
 
-		String priRaColumnName = TapTable.getQueryPart(priTableMetaData.getRaColumnName());
-		String priDecColumnName = TapTable.getQueryPart(priTableMetaData.getDecColumnName());
+		String priRaColumnName = TapTable.getQueryPart(priTableMetaData.getRaColumnName(), false);
+		String priDecColumnName = TapTable.getQueryPart(priTableMetaData.getDecColumnName(), false);
 
 		String targetQuery = primaryTableSelectAllQuery + conesearchtemplate;
 		String coneSearchPart = null;
@@ -686,9 +686,9 @@ public class ServerTapExamples extends DynamicTapForm {
 			if (uploadedTables != null) {
 				secTableMetaData = uploadedTables.get(secondaryTable);
 				if (secTableMetaData != null) {
-					secRaColumnName = TapTable.getQueryPart(secTableMetaData.getRaColumnName()); 
-					secDecColumnName = TapTable.getQueryPart(secTableMetaData.getDecColumnName());
-					secTableNameForQuery = TapTable.getQueryPart(secondaryTable);
+					secRaColumnName = TapTable.getQueryPart(secTableMetaData.getRaColumnName(), false); 
+					secDecColumnName = TapTable.getQueryPart(secTableMetaData.getDecColumnName(), false);
+					secTableNameForQuery = TapTable.getQueryPart(secondaryTable, true);
 				}
 			}
 		}
@@ -1029,7 +1029,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		if (spQuery.toString().isEmpty()) {
 			spQuery.append(" * ");
 		}
-		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName);
+		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName, true);
 		String queryToDisplay = String.format(tableSelectQuery, max, spQuery.toString(), priTableNameForQuery);
 		if (queryName == null) {
 			queryName = "Select " + spQuery.toString();

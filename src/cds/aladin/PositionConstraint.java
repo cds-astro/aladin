@@ -56,8 +56,8 @@ public class PositionConstraint extends WhereGridConstraint{
 		if (this.andOrOperator != null) {
 			whereClause.append(this.andOrOperator.getSelectedItem()).append(SPACESTRING);
 		}
-		whereClause.append(String.format(POSQuery, TapTable.getQueryPart(this.selectedRaColumnName),
-				TapTable.getQueryPart(this.selectedDecColumnName), this.raConstraint, this.decConstraint,
+		whereClause.append(String.format(POSQuery, TapTable.getQueryPart(this.selectedRaColumnName, false),
+				TapTable.getQueryPart(this.selectedDecColumnName, false), this.raConstraint, this.decConstraint,
 				this.radiusConstraint)).append(SPACESTRING);
 
 		return whereClause.toString();

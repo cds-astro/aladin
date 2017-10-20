@@ -49,6 +49,8 @@ import static cds.aladin.Constants.UCD_DEC_PATTERN2;
 import static cds.aladin.Constants.UCD_DEC_PATTERN3;
 import static cds.aladin.Constants.UCD_RA_PATTERN2;
 import static cds.aladin.Constants.UCD_RA_PATTERN3;
+import static cds.aladin.Constants.REGEX_VALIDTABLENAME;
+import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -200,7 +202,7 @@ public class TapTable {
 	 * @param queryPartInput
 	 * @return
 	 */
-	public static String getQueryPart(String queryPartInput) {
+	public static String getQueryPart1(String queryPartInput) {//keeping for reference
 		if (queryPartInput != null) {
 //			queryPartInput = tapTable.getAdqlName(); //TODO:: tintin : when we add schema name
 			Pattern regex = Pattern.compile(REGEX_TABLENAME_SPECIALCHAR);
@@ -216,6 +218,37 @@ public class TapTable {
 		}
 		
 		return queryPartInput;
+	}
+	
+	public static String getQueryPart(String queryPartInput, boolean isForTableName) {
+//		 String queryPartInput = "J/other./BAJ/24.62/table5";
+		 Pattern regex = Pattern.compile(REGEX_VALIDTABLENAME);
+			/*String[] tableName = queryPartInput.split("\\."); nope. Vizier can have dot inside a table adql name: J/other/BAJ/24.62/table5 
+			if (tableName.length > 1) {
+				queryPartInput = tableName[tableName.length];
+			}*/
+			Matcher matcher = regex.matcher(queryPartInput);
+			if (!matcher.find()){
+				if (!isForTableName) {
+					queryPartInput = Glu.doubleQuote(queryPartInput);
+				} else {
+					String prefix = EMPTYSTRING;
+					String potentialTableName = queryPartInput;
+					Pattern prefixPattern = Pattern.compile(REGEX_VALIDTABLEPREFIX);
+					matcher = prefixPattern.matcher(queryPartInput);
+					if (matcher.find()){
+						prefix = matcher.group("prefix");
+						potentialTableName = queryPartInput.replaceFirst(prefix, EMPTYSTRING);
+					}
+					matcher = regex.matcher(potentialTableName);
+					if (!matcher.find()){
+						queryPartInput = Glu.doubleQuote(potentialTableName);
+						queryPartInput = prefix+queryPartInput;
+					}
+				}
+				
+			}
+			 return queryPartInput;
 	}
 	
 	public synchronized void parseForObscore(boolean isUpload, TapTableColumn columnMeta) {
@@ -372,7 +405,7 @@ public class TapTable {
 	public String getObsColumnNameForQuery(String key) {
 		String result = getObsColumnName(key);
 		if (result != null) {
-			result = TapTable.getQueryPart(result);
+			result = TapTable.getQueryPart(result, false);
 		}
 		return result;
 	}
