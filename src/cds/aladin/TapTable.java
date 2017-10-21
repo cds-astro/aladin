@@ -222,7 +222,8 @@ public class TapTable {
 	
 	public static String getQueryPart(String queryPartInput, boolean isForTableName) {
 //		 String queryPartInput = "J/other./BAJ/24.62/table5";
-		 Pattern regex = Pattern.compile(REGEX_VALIDTABLENAME);
+		if (queryPartInput != null) {
+			Pattern regex = Pattern.compile(REGEX_VALIDTABLENAME);
 			/*String[] tableName = queryPartInput.split("\\."); nope. Vizier can have dot inside a table adql name: J/other/BAJ/24.62/table5 
 			if (tableName.length > 1) {
 				queryPartInput = tableName[tableName.length];
@@ -246,8 +247,8 @@ public class TapTable {
 						queryPartInput = prefix+queryPartInput;
 					}
 				}
-				
 			}
+		} 
 			 return queryPartInput;
 	}
 	
