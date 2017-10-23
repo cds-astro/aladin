@@ -926,6 +926,10 @@ public class ServerGlu extends Server implements Runnable {
          if( rad==null ) rad = new JTextField[nbField];
          rad[ind] = (JTextField)f;
 //System.out.println("      modeRad="+modeRad);
+         
+      // Pour un champ contenant une baseURL
+      } else if( prefixe.equalsIgnoreCase("BaseUrl") ) {
+         baseUrl = (JTextField)f;
 
       // Pour la date
       } else if( prefixe.equalsIgnoreCase("Date") ) {
@@ -1501,6 +1505,16 @@ public class ServerGlu extends Server implements Runnable {
             v.addElement( getInputUrl(c) );
             vbis.addElement( getInputPlaneName(c) );
             flagScriptEquiv=false;
+            
+         } else if( isBaseUrl(c) ) {
+            s = ((JTextField)c).getText();
+            vbis.add(crit=s);
+            if( !s.startsWith("http://") && !s.startsWith("https://") ) {
+               String urlList = aladin.directory.resolveServiceUrl(gluTag,s);
+               s = (new Tok(urlList,"\t")).nextToken();
+            }
+            v.add(s);
+            
          } else if( c instanceof JTextField ) {
             s = ((JTextField)c).getText();
             try {

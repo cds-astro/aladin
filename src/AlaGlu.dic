@@ -147,16 +147,16 @@
 %T II/294::
 %R Mime(image/png)
 
-%A Simbad
-%D Simbad Data Base
-%U http://simbad.u-strasbg.fr/simbad/sim-all?Ident=$1&Radius=$2&\Radius.unit=arcmin&Votable=main_id,otype,ra(s),dec(s),\coo_err_maja,coo_err_mina,coo_err_angle,pmra,pmdec,flux(B),\flux(V),sp,dim_majaxis,dim_minaxis,dim_angle,bibcodelist(N)
-%Param.Description $1=Target
-%Param.Description $2=Radius
-%Param.DataType    $1=Target(COO|ID)
-%Param.DataType    $2=Field(RADIUS)
-%Aladin.Label Simbad
-%Aladin.logo SimbadLogo.gif
-%R Mime(votable/xml)
+#%A Simbad
+#%D Simbad Data Base
+#%U http://simbad.u-strasbg.fr/simbad/sim-all?Ident=$1&Radius=$2&\Radius.unit=arcmin&Votable=main_id,otype,ra(s),dec(s),\coo_err_maja,coo_err_mina,coo_err_angle,pmra,pmdec,flux(B),\flux(V),sp,dim_majaxis,dim_minaxis,dim_angle,bibcodelist(N)
+#%Param.Description $1=Target
+#%Param.Description $2=Radius
+#%Param.DataType    $1=Target(COO|ID)
+#%Param.DataType    $2=Field(RADIUS)
+#%Aladin.Label Simbad
+#%Aladin.logo SimbadLogo.gif
+#%R Mime(votable/xml)
 #--------------------- à copier dans Aladin.dic -----------------
 
 

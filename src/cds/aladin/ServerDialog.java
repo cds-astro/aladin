@@ -959,7 +959,8 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
     *           Idem 2 mais la priorité sur le rayon est le champ courant (pour
     *           Server.reset())
     */
-   synchronized protected void setDefaultParameters(int i, int mode) {
+   synchronized protected void setDefaultParameters(int i, int mode) { setDefaultParameters(i,mode,null); }
+   synchronized protected void setDefaultParameters(int i, int mode, String internalId) {
       String lastTarget = null;
       String lastTaille = null;
       String radec = null; // pour le formulaire des instruments
@@ -1041,6 +1042,9 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          }
          setDefaultDate(epoch);
       }
+      
+      // Positionnement de baseUrl
+      if( internalId!=null ) server[i].setBaseUrl(internalId);
 
       // Si le formulaire a un arbre de métadata non vide, on ne met pas
       // à jour le target à moins que le target soit vide
@@ -1056,7 +1060,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       }
 
    }
-
+   
    /**
     * activation ou non du bouton grab
     * @param flag true ou false
@@ -1145,10 +1149,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
    }
    
    /** Montre le formulaire server dont le tagGlu (ActionName) est passé en paramètre */
-   public boolean showByGlutag(String gluTag) {
+   public boolean showByGlutag(String gluTag, String internalId) {
       int i = findIndiceServerByGluTag(gluTag);
       if( i<0 ) return false;
-      setCurrent(i);
+      setCurrent(i,internalId);
       toFront();
       return true;
    }
@@ -1303,20 +1307,22 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
     * Positionne le formulaire courant
     * @param s le nom du formulaire
     */
-   protected void setCurrent(String s) {
-      setCurrent(findIndiceServer(s));
+   protected void setCurrent(String s) { setCurrent(s,null); }
+   protected void setCurrent(String s, String internalId) {
+      setCurrent(findIndiceServer(s),internalId);
    }
 
    /**
     * Positionne le formulaire courant
     * @param i indice du formulaire
     */
-   protected void setCurrent(int i) {
+   protected void setCurrent(int i) { setCurrent(i,null); }
+   protected void setCurrent(int i, String internalId) {
       if( i < 0 || i >= server.length ) return;
 
 
       if( buttons[i] != null ) buttons[i].push();
-      setDefaultParameters(i, 2);
+      setDefaultParameters(i, 2, internalId);
       current = i;
       // robot
       curServer = server[current];
@@ -1330,8 +1336,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       // maj de la taille des Choice (thomas pour randy)
       // TODO : ce n'est certainement plus necessaire
-      if( server[i] instanceof ServerGlu ) ((ServerGlu) server[i])
-      .majChoiceSize();
+      if( server[i] instanceof ServerGlu ) ((ServerGlu) server[i]).majChoiceSize();
 
       card.show(mp, server[i].aladinLabel);
 

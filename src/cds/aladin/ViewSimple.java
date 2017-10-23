@@ -220,7 +220,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    private boolean flagSimRepClic=false; // true si on a cliqué sur une marque Simbad
 
    private Plan planRecalibrating=null; // Plan catalogue en cours de recalibration, null si aucun
-   protected Plan oldPlanBord=null;       // Précédent plan dont on affiche le bord
+//   protected Plan oldPlanBord=null;       // Précédent plan dont on affiche le bord
 
    // Dédiés au planBG => voir PlanBG.getImage(...)
    protected int owidthBG=-1,oheightBG=-1;
@@ -6366,18 +6366,19 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       // Le bord de l'image en couleur rouge (plan pointé dans la pile par la souris)
-      boolean drawBord=false;
+//      boolean drawBord=false;
       if( planUnderMouse!=null && aladin.view.getMouseView()==null
             && aladin.calque.select.canDrawFoVImg() && g instanceof Graphics2D ) {
 
-         if( planUnderMouse!=oldPlanBord ) aladin.view.activeFoV();
+//         if( planUnderMouse!=oldPlanBord ) aladin.view.activeFoV();
 
-         boolean aplat = planUnderMouse.getOpacityLevel()==0f; // On ne fait pas les aplats pour les images en transparence
-         aplat=false;
+//         boolean aplat = planUnderMouse.getOpacityLevel()==0f; // On ne fait pas les aplats pour les images en transparence
+//         aplat=false;
+         boolean aplat=true;
          planUnderMouse.drawBord(g,vs,dx,dy,1f,aplat);
-         drawBord=true;
+//         drawBord=true;
       }
-      if( !drawBord ) oldPlanBord=null;
+//      if( !drawBord ) oldPlanBord=null;
 
       if( (mode & 0x2)==0 ) {
          drawForeGround(g,mode,flagBordure);

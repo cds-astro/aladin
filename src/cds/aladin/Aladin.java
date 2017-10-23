@@ -252,7 +252,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.030";
+   static public final    String VERSION = "v10.031";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1416,7 +1416,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
                   {JUNIT},*/
                   
-                  {MTOOLS},
+                {MTOOLS},
                   {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
                   {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},
                   {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
@@ -1430,7 +1430,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                      "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
                      {},{FOVEDITOR},
 
-                     {JUNIT},{"TAP", ACCESSTAP, BETAPREFIX+JOBCONTROLLER}
+                     {JUNIT},{BETAPREFIX+JOBCONTROLLER}
             },
             { {MVIEW},
                {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
@@ -1562,7 +1562,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Iterator<String> it = configuration.lastFile.descendingIterator();
       while( it.hasNext() ) {
          String a = it.next();
-         miLastFile.add(item = new JMenuItem( Util.getShortPath(a,50)));
+         miLastFile.add(item = new JMenuItem( Util.getShortPath(a,70)));
          item.setActionCommand(a);
          item.addActionListener( new ActionListener() {
             public void actionPerformed(ActionEvent e) {

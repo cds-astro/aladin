@@ -354,6 +354,7 @@ public class Ligne extends Position {
       if( !isVisible() ) return false;
       PointD p1 = v.getViewCoordDble(x, y);
       PointD p2 = v.getViewCoordDble(xv[v.n], yv[v.n]);
+      if( p1==null || p2==null ) return false;
       
       double ddx = p1.x-p2.x;
       double ddy = p1.y-p2.y;

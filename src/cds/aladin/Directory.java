@@ -2693,7 +2693,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
       return n;
    }
-
+   
    private String getId(String ivoid) {
       if( ivoid.startsWith("ivo://") ) return ivoid.substring(6);
       return ivoid;

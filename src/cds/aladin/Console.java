@@ -227,7 +227,8 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    private void execute() {
       String cmd = fieldCmd.getText();
       if( (cmd=isCmdComplete(cmd))!=null ) {
-         pushCmd(cmd);
+//         pushCmd(cmd);
+         aladin.command.execScriptAsStream(cmd);
          fieldCmd.setText("");
       }
    }

@@ -706,6 +706,7 @@ public final class Save extends JFrame implements ActionListener {
             if( !p.isReady() ) continue;
 
             switch(p.type) {
+//               case Plan.ALLSKYIMG: appendPlanBGXML(p);    break;
                case Plan.FILTER:  appendPlanFilterXML(p);  break;
                case Plan.FOLDER:  appendPlanFolderXML(p);  break;
                case Plan.CATALOG: appendPlanCatalogXML(p); break;
@@ -1039,6 +1040,15 @@ public final class Save extends JFrame implements ActionListener {
 
       // Fin de la derniere table
       if( pcat.hasObj() ) append(getXMLTailTable());
+   }
+   
+   /** Sauvegarde du plan BG p sous forme XML (utilise le buffer f) */
+   protected void appendPlanBGXML(Plan p) throws java.io.IOException {
+      appendXMLHeadPlan(p);
+      append("    <AJS>"+CR);
+      append( XMLParser.XMLEncode("get HiPS("+((PlanBG)p).id+")")+CR);
+      append("    </AJS>"+CR);
+      append("  </PLANE>"+CR);
    }
 
    /** Sauvegarde du plan Filter p sous forme XML (utilise le buffer f) */

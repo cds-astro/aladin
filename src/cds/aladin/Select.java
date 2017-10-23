@@ -705,7 +705,7 @@ Runnable, SwingWidgetFinder, Widget {
     * et que l'utilisateur n'est pas entrain de modifier la transparence
     * d'une image */
    //   protected boolean canDrawFoVImg() { return x>frMax && oldSlide==null; }
-   protected boolean canDrawFoVImg() { return x>gapL  && oldSlide==null;  }
+   protected boolean canDrawFoVImg() { return x>gapL && oldSlide==null;  }
 
    private Slide oldSlide=null;
    private float oldTransp;
@@ -1209,13 +1209,14 @@ Runnable, SwingWidgetFinder, Widget {
    /** Gestion de la souris */
    public void mouseExited(MouseEvent e) {
       a.calque.unSelectUnderMouse();
-      a.view.resetBorder();
+//      a.view.resetBorder();
       defaultCursor();
       planIn=null;
 
       // Peut etre s'agit-il d'un MegaDrag ?
-      if( a.view.isMegaDrag() ) { flagDrag=0;
-      Aladin.makeCursor(a, Aladin.PLANCURSOR);
+      if( a.view.isMegaDrag() ) {
+         flagDrag=0;
+         Aladin.makeCursor(a, Aladin.PLANCURSOR);
       }
 
       // Effacement des surcharges vertes eventuelles

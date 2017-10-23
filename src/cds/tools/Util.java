@@ -82,7 +82,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
 
@@ -459,7 +458,45 @@ public final class Util {
       }
       return (j>=0 || num==-1 ) && posDeb>=0 ? path.substring(posDeb) : null;
    }
-
+   
+   /** Transforme une URL ou un filename en un label, éventuellement plus court en remplaçant une
+    * partie du path par /.../ jusqu'à ce que ça taille soit inférieur à len
+    * @param u l'url ou le path à raccourcir
+    * @param len nombre de caractères max demandés
+    */
+   static public String getShortPath( String u, int len  ) {
+      int n;
+      if( u==null || (n=u.length())<len ) return u;
+      
+      char sep = '/';
+      if( u.indexOf(sep)<0 ) sep='\\';
+      if( u.indexOf(sep)<0 ) return u;
+      
+      int end=u.lastIndexOf('?');
+      if( end>0 ) {
+         int et = u.indexOf(end+1,'&');
+         if( et>0 ) end=et;
+      }
+      int fin=u.lastIndexOf(sep, end>0 ? end : n-1 );
+      int deb=fin-1;
+      int odeb=deb;
+      
+      for( deb = u.lastIndexOf(sep,deb-1); deb>=0 ; deb= u.lastIndexOf(sep,deb-1) ) {
+         if( deb+(n-fin)+3<len ) return u.substring(0,deb+1)+"..."+u.substring(fin);
+         if( end>0 && deb+(end-fin)+5<len) {
+            return u.substring(0,deb+1)+"..."+u.substring(fin,end+1)+"...";
+         }
+         odeb=deb;
+      }
+      
+      // sinon, découpage xxx/.../xxx?...
+      int finSlash=fin;
+      fin = u.lastIndexOf("?");
+      if( fin>0 ) return u.substring(0,deb+1)+"..."+u.substring(finSlash,fin+1)+"...";
+      
+     return u.substring(0,odeb+1)+"..."+u.substring(fin);
+   }
+   
    /**
     * Tokenizer spécialisé : renvoie le tableau des chaines séparés par sep ssi freq(c1) dans s == freq(c2) dans s
     * exemple : tokenize...("xmatch 2MASS( RA , DE ) GSC( RA2000 , DE2000 )", ' ', '(', ')' ) renvoie :
@@ -1434,34 +1471,6 @@ public final class Util {
       int n = s.length();
       if( n==0 ) return;
       s.delete(0,n);
-   }
-
-   /** Retourne un path sous une forme plus compact.
-    * Insére si nécessaire des /.../ au milieu du path si sa taille dépasse width
-    */
-   static public String getShortPath(String path,int width) {
-      try {
-         if( path.length()>width ) {
-            File f = new File(path);
-            StringTokenizer st = new StringTokenizer(f.getCanonicalPath(),Util.FS,true);
-            StringBuffer s = new StringBuffer();
-            width -= f.getName().length();
-            String w=null;
-            while( s.length()<width && st.hasMoreTokens() ) {
-               w = st.nextToken();
-               s.append(w);
-            }
-            if( st.hasMoreTokens() ) {
-               if( w!=null && !w.equals(Util.FS) ) s.append(st.nextToken());
-               w = st.nextToken();  // Pour vérifier si par hasard il ne reste que le nom
-               if( st.hasMoreElements() ) s.append("..."+Util.FS);
-               s.append(f.getName());
-            }
-            return s.toString();
-         }
-      } catch( IOException e ) { }
-
-      return path;
    }
 
 

@@ -150,6 +150,7 @@ public class Server extends JPanel
    protected JTextField coo[];	 // Pointe les champs du target
    protected JTextField rad[];	 // Pointe les champs du field (radius...)
    protected JTextField date;	 // Pointe sur le champ de la date (s'il y a lieu)
+   protected JTextField baseUrl; // Pointe sur le champ d'une URL de base (s'il y a lieu)
    protected JTextField band;
    protected JComponent input[];	 // Pointe sur les champs des inputs (TextField pour IMGs et CATs, sinon Choice)
    protected int nbInput=0;      // nombre de champs input
@@ -491,8 +492,7 @@ public class Server extends JPanel
    protected void resolveDate(String s) {
       setDate(s==null ? "" : s);
    }
-
-
+   
   /** Mise en place des differents de curseurs */
    protected void waitCursor() { ball.setMode(Ball.WAIT); makeCursor(Aladin.WAITCURSOR); }
    protected void defaultCursor() { ball.setMode(Ball.OK); makeCursor(Aladin.DEFAULTCURSOR); }
@@ -725,6 +725,8 @@ public class Server extends JPanel
        }
        initDone = true;
    }
+   
+   
 
    /**
     * Mémorise le component qui sera toujours maximisé
@@ -1073,6 +1075,12 @@ public void layout() {
 			}
 		}
 		return result;
+	}
+	
+	/** Pré-remplissage du champ baseUrl */
+	protected void setBaseUrl(String s) {
+	   if( baseUrl==null ) return;
+	   baseUrl.setText(s);
 	}
 
    /** Pre-remplissage du champ Date. Si c'est une valeur double, on considère
@@ -1531,6 +1539,10 @@ public void layout() {
      /*protected boolean isFieldDate(JComponent c) {
         return date!=null;
      }*/
+     
+     protected boolean isBaseUrl(JComponent c) {
+        return baseUrl==c;
+     }
 
      /** Retourne true si le Component passé en paramètre est input */
      protected boolean isFieldInput(JComponent c) {

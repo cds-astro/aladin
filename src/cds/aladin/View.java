@@ -569,12 +569,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       for( int i=0; i<viewSimple.length; i++ ) viewSimple[i].selected=false;
    }
 
-   /** Reset du tracage des bords des autres images en cours de visualisation
-    * (souris sort de la pile) */
-   protected void resetBorder() {
-      int m=getNbView();
-      for( int i=0; i<m; i++ ) viewSimple[i].oldPlanBord=null;
-   }
+//   /** Reset du tracage des bords des autres images en cours de visualisation
+//    * (souris sort de la pile) */
+//   protected void resetBorder() {
+//      int m=getNbView();
+//      for( int i=0; i<m; i++ ) viewSimple[i].oldPlanBord=null;
+//   }
 
    /** Force la recreation de tous les buffers MemoryImage qui affiche
     * une portion de l'image passée en paramètre. Sert à palier un bug sous Linux
@@ -4728,25 +4728,29 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Niveau d'opacité des FoV des plans*/
-   protected float opaciteFoV=0f;
-   boolean activeFoV=false;
-   private Object lock1 = new Object();
+   
+   protected float opaciteFoV=1.0f;
+   boolean activeFoV=true;
 
-   /** Activation progressive des FoV des plans */
-   protected void activeFoV() {
-      opaciteFoV=0.1f;
-      if( activeFoV ) return;
-      synchronized( lock1 ) { activeFoV=true; }
-      (new Thread("ActiveFoV"){
-         public void run() {
-            Util.pause(100);
-            while( opaciteFoV<1f ) { repaintAll(); Util.pause(50); opaciteFoV+=0.1f; }
-            opaciteFoV=1f;
-            repaintAll();
-            synchronized(lock1) { activeFoV=false; }
-         }
-      }).start();
-   }
+//   protected float opaciteFoV=0f;
+//   boolean activeFoV=false;
+//   private Object lock1 = new Object();
+
+//   /** Activation progressive des FoV des plans */
+//   protected void activeFoV() {
+//      opaciteFoV=0.1f;
+//      if( activeFoV ) return;
+//      synchronized( lock1 ) { activeFoV=true; }
+//      (new Thread("ActiveFoV"){
+//         public void run() {
+//            Util.pause(100);
+//            while( opaciteFoV<1f ) { repaintAll(); Util.pause(50); opaciteFoV+=0.1f; }
+//            opaciteFoV=1f;
+//            repaintAll();
+//            synchronized(lock1) { activeFoV=false; }
+//         }
+//      }).start();
+//   }
 
    /** Niveau d'opacité de la grille de coordonnées */
    protected float opaciteGrid=1f;

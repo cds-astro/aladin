@@ -657,7 +657,8 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected boolean hasCustom() {
       return prop!=null && (prop.get("glutag")!=null
             || prop.get("cs_glutag")!=null  || prop.get("tap_glutag")!=null
-            || prop.get("sia_glutag")!=null || prop.get("ssa_glutag")!=null);
+            || prop.get("sia_glutag")!=null || prop.get("sia2_glutag")!=null 
+            || prop.get("ssa_glutag")!=null);
    }
 
    
@@ -967,12 +968,17 @@ public class TreeObjDir extends TreeObj implements Propable {
 //         return;
       }*/
    }
+   
+   private void exec(String cmd) {
+      aladin.execAsyncCommand( cmd );
+//      aladin.command.execScriptAsStream( cmd );
+   }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
    protected void loadSSA() { loadSSA( getDefaultTarget()+" "+getDefaultRadius(1) ); }
    protected void loadSSA( String cone ) {
       if( cone==null ) { loadSSA(); return; }
-      aladin.execAsyncCommand( addBrowse( getSSACmd()+" "+cone) );
+     exec( addBrowse( getSSACmd()+" "+cone) );
    }
    protected String getSSABkm() { return addBrowse( getSSACmd()+" $TARGET $RADIUS"); }
    protected String getSSACmd() {
@@ -982,7 +988,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       // URL de base ?
       // On passe tout de même par le ID afin d'avoir une commande script clean
       // => voir GluServer pour la résolution internalId => Url de base
-      if( gluTag==null && prop.get("ssa_service_url")!=null )  gluTag = "SSA("+internalId+")";
+      if( prop.get("ssa_service_url")!=null )  gluTag = "SSA("+internalId+")";
 
       return "get "+gluTag;
    }
@@ -992,7 +998,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(1)); }
    protected void loadSIA( String cone ) { 
       if( cone==null ) { loadSIA(); return; }
-      aladin.execAsyncCommand( addBrowse( getSIACmd()+" "+cone) );
+     exec( addBrowse( getSIACmd()+" "+cone) );
    }
    protected String getSIABkm() { return addBrowse( getSIACmd()+" $TARGET $RADIUS"); }
    private String getSIACmd() {
@@ -1003,15 +1009,15 @@ public class TreeObjDir extends TreeObj implements Propable {
       // URL de base ?
       // On passe tout de même par le ID afin d'avoir une commande script clean
       // => voir GluServer pour la résolution internalId => Url de base
-      if( gluTag==null && prop.get("sia2_service_url")!=null ) gluTag = "SIA2("+internalId+")";
-      if( gluTag==null && prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
+      if( prop.get("sia2_service_url")!=null ) gluTag = "SIA2("+internalId+")";
+      if( prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
       
       return "get "+gluTag;
    }
    
    
    /** Génération et exécution de la requête script correspondant à un accès global */
-   protected void loadGlobalAccess() { aladin.execAsyncCommand( addBrowse( getGlobalAccessCmd(), false ) ); }
+   protected void loadGlobalAccess() {exec( addBrowse( getGlobalAccessCmd(), false ) ); }
    protected String getGlobalAccessBkm() { return addBrowse( getGlobalAccessCmd(), false ); }
    private String getGlobalAccessCmd() {
       String cmd = null;
@@ -1038,7 +1044,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected void loadLiveSimbad() { loadLiveSimbad(getDefaultTarget()+" "+getDefaultRadius(15)); }
    protected void loadLiveSimbad( String cone ) {
       if( cone==null ) { loadLiveSimbad(); return; }
-      aladin.execAsyncCommand( addBrowse(  getLiveSimbadCmd()+" "+cone));
+     exec( addBrowse(  getLiveSimbadCmd()+" "+cone));
    }
    protected String getLiveSimbadBkm() { return addBrowse( getLiveSimbadCmd()+" $TARGET $RADIUS" ); }
    private String getLiveSimbadCmd() {
@@ -1053,7 +1059,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    protected void loadCS(String cone) {
       if( cone==null ) { loadCS(); return; }
-      aladin.execAsyncCommand( addBrowse(  getCSCmd()+" "+cone));
+     exec( addBrowse(  getCSCmd()+" "+cone));
    }
    protected String getCSBkm() { return addBrowse( getCSCmd()+" $TARGET $RADIUS" ); }
    private String getCSCmd() {
@@ -1083,9 +1089,11 @@ public class TreeObjDir extends TreeObj implements Propable {
       String glutag = prop.get("glutag");
       if( glutag==null ) glutag = prop.get("cs_glutag");
       if( glutag==null ) glutag = prop.get("sia_glutag");
+      if( glutag==null ) glutag = prop.get("sia2_glutag");
       if( glutag==null ) glutag = prop.get("ssa_glutag");
       if( glutag==null ) glutag = prop.get("tap_glutag");
-      if( !aladin.dialog.showByGlutag(glutag) ) {
+      
+      if( !aladin.dialog.showByGlutag(glutag, internalId) ) {
          aladin.warning(aladin,"Mission GLU record ["+glutag+"]");
       }
    }
@@ -1097,7 +1105,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant au protocole MOC */
-   protected void loadMoc( ) { aladin.execAsyncCommand( getMocCmd() ); }
+   protected void loadMoc( ) {exec( getMocCmd() ); }
    protected String getMocBkm() { return getMocCmd(); }
    private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+")"; }
 
@@ -1105,7 +1113,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected void loadHips() {
       String trg = getDefaultTarget();
       String s = trg==null ? "" : " "+trg+" "+getDefaultRadius();
-      aladin.execAsyncCommand( getHipsCmd()+s );
+     exec( getHipsCmd()+s );
    }
    protected String getHipsBkm() { return getHipsCmd()+" $TARGET $RADIUS"; }
    protected String getHipsCmd() {
@@ -1124,7 +1132,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Génération et exécution de la requête script correspondant à l'accès aux progéniteurs */
-   protected void loadProgenitors() { aladin.execAsyncCommand( getProgenitorsCmd() ); }
+   protected void loadProgenitors() {exec( getProgenitorsCmd() ); }
    protected String getProgenitorsBkm() { return getProgenitorsCmd(); }
    private String getProgenitorsCmd() {
       String progen = getProgenitorsUrl();
@@ -1133,7 +1141,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
 
    /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */
-   protected void loadAll() { aladin.execAsyncCommand( addBrowse( getLoadAllCmd() )); }
+   protected void loadAll() {exec( addBrowse( getLoadAllCmd() )); }
    protected String getAllBkm() { return addBrowse( getLoadAllCmd() ); }
    private String getLoadAllCmd() {
       int i = internalId.indexOf('/');
@@ -1343,7 +1351,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 //      } catch( Exception e ) { }
          
 //      String url = aladin.glu.gluResolver("getDMap",catId,false);
-//      aladin.execAsyncCommand("'DM "+internalId+"'=load "+url);
+//     exec("'DM "+internalId+"'=load "+url);
    }
    
    void queryByMoc(PlanMoc planMoc) {
