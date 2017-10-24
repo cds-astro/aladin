@@ -127,6 +127,7 @@ import cds.aladin.stc.STCPolygon;
 import cds.allsky.Context;
 import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
+import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
@@ -252,7 +253,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.031";
+   static public final    String VERSION = "v10.034";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4457,37 +4458,60 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Coord c1=null;
       boolean first=true;
 
-      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
-      Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
-      while( a!=null ) {
+      // Détermination du moc order en fonction du diamèttre
+      if( order==-1 ) {
+         for( Ligne a = o.getFirstBout(); a!=null; a = a.finligne ) {
 
-         // Mémorisation de la plus grande diagonale
-         if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
-         else {
-            double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
-            if( size>maxSize ) maxSize=size;
+            // Mémorisation de la plus grande diagonale
+            if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
+            else {
+               double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
+               if( size>maxSize ) maxSize=size;
+            }
          }
 
-         double theta = Math.PI/2 - Math.toRadians( a.dej );
-         double phi = Math.toRadians( a.raj );
+         order=getAppropriateOrder(maxSize);
          
+         if( order<10 ) order=10;
+         else if( order>29 ) order=29;
+
+         trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+      }
+      
+      
+      Healpix hpx = new Healpix();
+      
+      // Création de la liste des sommets dans le sens counterclock
+      // avec suppression éventuelle des doublons de deux sommets consécutifs dans le même pixel Healpix
+      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+      Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
+      long onpix=-1;
+      while( a!=null ) {
+         long npix = hpx.ang2pix(order, a.raj, a.dej);
+         if( npix!=onpix ) {
+            onpix=npix;
+
+            double theta = Math.PI/2 - Math.toRadians( a.dej );
+            double phi = Math.toRadians( a.raj );
+            cooList.add(new Vec3(new Pointing(theta,phi)));
+         }
+
          // Prochain sommet ?
          a = isCounterClock ? a.debligne : a.finligne;
-         
-         if( a!=null ) cooList.add(new Vec3(new Pointing(theta,phi)));
-
       }
-
-      // L'ordre est déterminé automatiquement par la largeur du polygone
-      if( order==-1 ) order=getAppropriateOrder(maxSize);
-      trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
-      if( order<10 ) order=10;
-      else if( order>29 ) order=29;
-
-      Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-      moc = new HealpixMoc();
-      moc.rangeSet = m.getRangeSet();
-      moc.toHealpixMoc();
+      
+      // On enlève le dernier élément car il revient sur le premier
+      cooList.remove( cooList.size()-1 );
+     
+      try {
+         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+         moc = new HealpixMoc();
+         moc.rangeSet = m.getRangeSet();
+         moc.toHealpixMoc();
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         throw new Exception("Degenerated polygon");
+      }
 
       // plus de la moitié du ciel => y a un prob
       // Il faudrait également tester si le résultat donne des zones disjointes => prob

@@ -468,33 +468,36 @@ public final class Util {
       int n;
       if( u==null || (n=u.length())<len ) return u;
       
-      char sep = '/';
-      if( u.indexOf(sep)<0 ) sep='\\';
-      if( u.indexOf(sep)<0 ) return u;
-      
-      int end=u.lastIndexOf('?');
-      if( end>0 ) {
-         int et = u.indexOf(end+1,'&');
-         if( et>0 ) end=et;
-      }
-      int fin=u.lastIndexOf(sep, end>0 ? end : n-1 );
-      int deb=fin-1;
-      int odeb=deb;
-      
-      for( deb = u.lastIndexOf(sep,deb-1); deb>=0 ; deb= u.lastIndexOf(sep,deb-1) ) {
-         if( deb+(n-fin)+3<len ) return u.substring(0,deb+1)+"..."+u.substring(fin);
-         if( end>0 && deb+(end-fin)+5<len) {
-            return u.substring(0,deb+1)+"..."+u.substring(fin,end+1)+"...";
+      try {
+         char sep = '/';
+         if( u.indexOf(sep)<0 ) sep='\\';
+         if( u.indexOf(sep)<0 ) return u;
+
+         int end=u.lastIndexOf('?');
+         if( end>0 ) {
+            int et = u.indexOf(end+1,'&');
+            if( et>0 ) end=et;
          }
-         odeb=deb;
-      }
-      
-      // sinon, découpage xxx/.../xxx?...
-      int finSlash=fin;
-      fin = u.lastIndexOf("?");
-      if( fin>0 ) return u.substring(0,deb+1)+"..."+u.substring(finSlash,fin+1)+"...";
-      
-     return u.substring(0,odeb+1)+"..."+u.substring(fin);
+         int fin=u.lastIndexOf(sep, end>0 ? end : n-1 );
+         int deb=fin-1;
+         int odeb=deb;
+
+         for( deb = u.lastIndexOf(sep,deb-1); deb>=0 ; deb= u.lastIndexOf(sep,deb-1) ) {
+            if( deb+(n-fin)+3<len ) return u.substring(0,deb+1)+"..."+u.substring(fin);
+            if( end>0 && deb+(end-fin)+5<len) {
+               return u.substring(0,deb+1)+"..."+u.substring(fin,end+1)+"...";
+            }
+            odeb=deb;
+         }
+
+         // sinon, découpage xxx/.../xxx?...
+         int finSlash=fin;
+         fin = u.lastIndexOf("?");
+         if( fin>0 ) return u.substring(0,deb+1)+"..."+u.substring(finSlash,fin+1)+"...";
+
+         return u.substring(0,odeb+1)+"..."+u.substring(fin);
+      } catch( Exception e ) { }
+      return u.substring(0,len)+"...";
    }
    
    /**

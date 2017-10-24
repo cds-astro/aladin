@@ -1153,6 +1153,7 @@ public class ServerGlu extends Server implements Runnable {
          String crit[] = new String[st.countTokens()];
          for( i=0; st.hasMoreTokens(); i++ ) {
             crit[i] = st.nextToken();
+            
             //System.out.println("Critère "+(i+1)+" ["+crit[i]+"]");
          }
 
@@ -1372,7 +1373,7 @@ public class ServerGlu extends Server implements Runnable {
             }
 
             String param = p1!=null ? p1.toString() : "";
-
+            
             // S'agit-il d'un serveur d'images
             if( type==IMAGE ) {
                if( !verif(Plan.IMAGE,objet,param) ) {

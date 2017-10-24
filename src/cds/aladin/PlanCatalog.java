@@ -319,9 +319,10 @@ public class PlanCatalog extends Plan {
       aladin.view.setRepere(this);
 
      callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.SUCCESS, null));
+     
      return true;
    }
-
+   
    /** Désactive tous les filtres dédiées */
    static protected void desactivateAllDedicatedFilters(Aladin aladin) {
       Plan [] allPlan = aladin.calque.getPlans();
