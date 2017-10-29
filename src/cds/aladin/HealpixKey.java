@@ -477,19 +477,19 @@ public class HealpixKey implements Comparable<HealpixKey> {
             //            e.printStackTrace();
 
             // Le test sur FileNotFoundException ne peut suffire car en keepAlive il n'est pas généré
-            boolean notFoundError = e instanceof FileNotFoundException ||
-                  e.getMessage()!=null && e.getMessage().indexOf("HTTP response code: 40")>=0;
+            boolean notFoundError = e instanceof FileNotFoundException
+                  || e.getMessage()!=null && e.getMessage().indexOf("HTTP response code: 40")>=0;
 
-                  // Peut-on retenter sur un autre site mirroir
-                  if( !notFoundError && !retry && planBG.checkSite(true) ) {
-                     retry=true;
-                     loadFromNet();
-                     return;
-                  }
+            // Peut-on retenter sur un autre site mirroir
+            if( !notFoundError && !retry && planBG.checkSite(true) ) {
+               retry=true;
+               loadFromNet();
+               return;
+            }
 
-                  setStatus(ERROR);
-                  if( this instanceof HealpixAllsky ) planBG.askForRepaint();
-                  //            if( Aladin.levelTrace>=3 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
+            setStatus(ERROR);
+            if( this instanceof HealpixAllsky ) planBG.askForRepaint();
+            //            if( Aladin.levelTrace>=3 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
          }
       }
    }

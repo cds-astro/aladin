@@ -56,6 +56,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -176,6 +177,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String DIRFILER   = "DirFilter";
    protected static String LASTFILE   = "LastFile";
    protected static String LASTTARGET = "LastTarget";
+   protected static String LASTGLU    = "LastGlu";
    protected static String LASTRUN    = "LastRun";
    protected static String STOPHELP   = "StopHelp";
    protected static String LOOKANDFEELTHEME      = "LookAndFeelTheme";
@@ -224,7 +226,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected HashMap<String, HealpixMoc>   filterMoc;  // Liste des régions associées aux filtres
 
    // Les variables pour la gestion des champs de préférences
-   private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
+//   private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
    private JTextField       dir;                  // Pour la saisie du répertoire par défaut
    private JTextField       maxCache;             // Pour la saisie de la taille du cache
    private JLabel           cache;                // Pour indiquer la valeur du cache
@@ -1482,12 +1484,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       //      }
 
       // Le Web Browser
-      if( isUnixStandalone() /* && !aladin.OUTREACH */ ) {
-         PropPanel.addFilet(p, g, c);
-         browser = new JTextField(30);
-         (l = new JLabel(WEBB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         PropPanel.addCouple(this, p, l, WEBH, browser, g, c, GridBagConstraints.EAST);
-      }
+//      if( isUnixStandalone()  ) {
+//         PropPanel.addFilet(p, g, c);
+//         browser = new JTextField(30);
+//         (l = new JLabel(WEBB)).setFont(l.getFont().deriveFont(Font.BOLD));
+//         PropPanel.addCouple(this, p, l, WEBH, browser, g, c, GridBagConstraints.EAST);
+//      }
 
       // Le survey par défaut
       serverTxt = new JTextField(10);
@@ -1695,11 +1697,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       s = get(TRANSLEVEL);
       if( s==null ) transparencyLevel.setValue(15);
 
-      if( isUnixStandalone() /* && !Aladin.OUTREACH */ ) {
-         s = get(BROWSER);
-         if( s == null ) s = "";
-         browser.setText(s);
-      }
+//      if( isUnixStandalone() ) {
+//         s = get(BROWSER);
+//         if( s == null ) s = "";
+//         browser.setText(s);
+//      }
 
       s = getServer();
       serverTxt.setText(s);
@@ -1976,7 +1978,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          }
       }
       
-      // Je sauvergarde les 20 dernières target
+      // Je sauvegarde les 20 meilleures indirections (les plus récentes)
+      try { aladin.glu.saveGluHistory( bw); } catch( Exception e1 ) {
+         if( Aladin.levelTrace>=3 ) e1.printStackTrace();
+      }
+      
+      // Je sauvergarde les 40 dernières target
       i=1;
       for( String target : aladin.targetHistory.list ) {
          String key = LASTTARGET+(i++);
@@ -2114,6 +2121,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
          else if( key.startsWith(LASTTARGET) ) setLastTarget(value);
          else if( key.startsWith(DIRFILER) ) loadDirFilter(value);
+         else if( key.startsWith(LASTGLU) ) memoLastGlu(value);
          else set(key, value);
       }
       br.close();
@@ -2366,11 +2374,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
 
       // Pour le browser
-      if( browser != null ) {
-         s = browser.getText().trim();
-         if( s.length() != 0 ) set(BROWSER, s);
-         else remove(BROWSER);
-      }
+//      if( browser != null ) {
+//         s = browser.getText().trim();
+//         if( s.length() != 0 ) set(BROWSER, s);
+//         else remove(BROWSER);
+//      }
 
       // Pour le répertoire par défaut
       if( dir != null ) {
@@ -2580,6 +2588,23 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Mémorise les dernières targets */
    protected void setLastTarget(String target ) {
       aladin.targetHistory.add(target);
+   }
+   
+   // Juste pour mémoriser temporairement l'historique passée des indirections Glu
+   private ArrayList<String> memoGlu = null;
+   
+   /** Memorise les derniers tests GLU passer dans les sessions précédentes
+    * on les traitera par la suite dans la classe Glu lorsqu'elle sera créée */
+   private void memoLastGlu(String gluSerialized) {
+      if( memoGlu==null ) memoGlu = new ArrayList<String>();
+      memoGlu.add(gluSerialized);
+   }
+   
+   /** Mise en place des éléments historiques de résolution GLu (appelé par GLu quand il sera créé) */
+   protected void proceedLastGlu() {
+      if( memoGlu==null ) return;
+      for( String s : memoGlu ) aladin.glu.setGluHistory(s);
+      memoGlu=null;
    }
 
    /** Positionnement du répertoire par défaut, avec vérification d'existence */

@@ -3205,13 +3205,15 @@ DTSELECTTIP.fr	Filtrage par mot clés (logique ET, séparateur ESPACE, sous-expres
 DTCOMBOTIP	List of predefined filters. Use '+' button to edit it, or create a new one
 DTCOMBOTIP.fr	Liste des filtres prédéfinis. Utiliser le bouton '+' afin de les éditer, ou pour créer un nouveau filtre.
 DTPLUSTIP	Edit the current filter or create a new one
-DTPLUSTIP.fr	Editer le filtre courante, ou créer un nouveau filtre
+DTPLUSTIP.fr	Editer le filtre courant, ou créer un nouveau filtre
 DTFROM	from
 DTFROM.fr	dans
 DTYRKW	Your keyword ?
 DTYRKW.fr	Votre mot clé ?
 DTTOOMANY	Do you really want to query so many data set collections ?
 DTTOOMANY.fr	Voulez-vous réellement interroger autant collection de données ?
+SCANTIP Reset the filter
+SCANTIP.fr Supprimer le filtre
 DTSCANRUN	Another scan is still running.\nWait the end if this previous scan\nor stop it before launching another one (button stop).
 DTSCANRUN.fr	Un scan est déjà en cours d'exécution.\nVeuillez atteindre la fin de son exécution ou forcer son arrêt (bouton "stop").
 COLLAPSE	coll.
@@ -3242,6 +3244,8 @@ DTWORKLIST.fr	liste de travail
 #V10 - Filter Panel
 FPTITLE	Data discovery tree filter
 FPTITLE.fr	Filtre sur l'arbre de découverte des données
+FPHELP This panel allows you to filter the data collection tree on various criteria. The tabs are dedicated to pre-defined constraints. The bottom field shows the rule corresponding to the filter. Yoy can modify it manually in order to obtain a more specific rule. By providing a name to the filter, you will be able to store it in order to reuse it.
+FPHELP.fr Ce panneau vous permet de filtrer l'arbre des collections de données sur de nombreux critères. Les onglets vous permettent de poser des contraintes prédéfinies. Le panneau du bas vous affiche la règle de filtrage correspondante. Vous pouvez modifier manuellement cette règle afin d'effectuer des filtrages plus avancées. Si vous nommez le filtre que vous avez créé, vous serez en mesure de le sauvegarder afin de le réutiliser ultérieurement. 
 FPNAME	Filter name
 FPNAME.fr	Nom du filtre
 FPSTORE	Save

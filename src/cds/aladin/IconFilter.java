@@ -94,7 +94,7 @@ public class IconFilter extends MyIcon {
       aladin.directory.fullReset();
    }
       
-   protected String getHelpTip() { return "Reset the filter"; } //aladin.chaine.getString("SCANTIP"); }
+   protected String getHelpTip() { return aladin.chaine.getString("SCANTIP"); }
    protected String Help()       { return aladin.chaine.getString("Scan.HELP");  }
 
 }

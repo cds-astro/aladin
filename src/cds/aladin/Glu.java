@@ -26,11 +26,13 @@ import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GLU_FROM;
 import static cds.aladin.Constants.GLU_SELECT;
 import static cds.aladin.Constants.GLU_WHERE;
-import static cds.aladin.Constants.TAPv1;
 import static cds.aladin.Constants.TAP;
+import static cds.aladin.Constants.TAPv1;
 
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,14 +40,20 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import cds.aladin.Constants.TapClientMode;
@@ -533,7 +541,30 @@ public final class Glu implements Runnable {
       if( url == null ) return;
       showDocument(url);
    }
-   private  void showDocument(URL url) {
+   
+   private void showDocument(URL url) {
+      try  {
+         Desktop desktop = Desktop.getDesktop();
+         URI uri = new URI( url.toString() );
+         desktop.browse(uri);
+         
+      } catch( Exception e ) {
+         
+         // Bon, on essaye l'ancienne méthode...
+         if( firstError ) {
+            System.err.println("Browser launching Desktop method not supported, using old method...");
+            firstError=false;
+         }
+         showDocumentOld(url);
+         
+//         if( aladin.levelTrace>=3 ) e.printStackTrace();
+//         System.out.println("Browser launching problem : " + e);
+      }
+   }
+
+   private boolean firstError = true;
+   
+   private void showDocumentOld(URL url) {
       String window = "";
 
       if( !Aladin.isApplet() ) {
@@ -549,7 +580,7 @@ public final class Glu implements Runnable {
          // On determine le type de plate-forme
          String syst = System.getProperty("os.name");
          Aladin.trace(1, "Launching the browser for [" + syst + "]");
-
+         
          // Dans le cas Windows
          if( syst != null && syst.startsWith("Windows") ) {
 
@@ -2468,7 +2499,43 @@ public final class Glu implements Runnable {
 
       return url;
    }
-
+   
+   /** Retourne toutes les URLs possibles pour un tag en commençant par celle qui
+    * est actuellement utilisée */
+   protected ArrayList<String> getAllUrls(String id) {
+      ArrayList<String> a = new ArrayList<String>();
+      int i=1;
+      URL u;
+      boolean oChut=chut;
+      chut=true;
+      do {
+         u = getURL(id,"",false,false,i);
+         if( u!=null ) a.add(u+"");
+         i++;
+      } while( u!=null);
+      chut=oChut;
+      return a;
+   }
+   
+   /** Positionne le mirroir courant en indiquant l'URL correspondante
+    * @param id
+    * @param url
+    * @return true si le mirroir a été trouvé et positionné, sinon false
+    */
+   protected boolean setIndirectionByUrl(String id, String url) {
+      // Cherche le rang du mirroir correspondant à l'url indiquée
+      int i=1;
+      URL u;
+      do {
+         u = getURL(id,"",false,false,i);
+         if( u!=null && u.toString().equals( url ) ) {
+            setIndirectionOrder(id,i-1);
+            return true;
+         }
+         i++;
+      } while( u!=null);
+      return false;
+   }
 
    /** Teste les indirections possibles d'une marque GLU et replace un des plus rapides en première position dans la liste %I tag\ttag...
     * @param urlSuffix permet d'ajouter un suffixe (tel que) à l'URL qui va être testé, null si aucun suffixe
@@ -2478,6 +2545,7 @@ public final class Glu implements Runnable {
       lastId=null;
       indId=null;
       chut=true;
+      
       try {
 
          // Vérifie qu'il y a au-moins une alternative
@@ -2548,7 +2616,8 @@ public final class Glu implements Runnable {
             if( tps!=-1 && tps<minTime ) { minTime=tps; indice=n; }
          }
 
-         if( indice!=0 ) setIndirectionOrderOnLastId(indice);
+         setIndirectionOrderOnLastId(indice);
+         
       }finally {
          lastId = null;
          indId = null;
@@ -2557,31 +2626,197 @@ public final class Glu implements Runnable {
 
       return true;
    }
+   
+   
+   private static String IP = null;
+   
+   // Liste des aliases déjà résolus (dans cette session ou les précédentes
+   private HashMap<String,GluHistory> gluHistory;
+   
+   static protected <K extends Comparable<K>, V> Map<K, V> sortGluHistory(final Map<K, V> map, int ascending) {
+      Comparator<K> valueComparator =  new Comparator<K>() {         
+         private int ascending;
+         public int compare(K k1, K k2) {
+            int compare = k2.compareTo(k1);
+            if (compare == 0) return 1;
+            else return ascending*compare;
+         }
+         public Comparator<K> setParam(int ascending) {
+            this.ascending = ascending;
+            return this;
+         }
+      }.setParam(ascending);
+
+      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      sortedByValues.putAll(map);
+      return sortedByValues;
+   }
+
+   
+   // Structure permettant de conserver la meilleure indirections GLU
+   class GluHistory implements Comparator {
+      long time;   // Date de l'instanciation (pour ne garder que les plus récents)
+      String ip;   // Adresse IP (tronquée pour avoir le domaine) d'où a été testé la marque GLU
+      String tag;      // Le tag
+      String aliases;  // Liste des aliases sous la forme "%I best\tnext1\nnext2"..
+      
+      GluHistory() {};
+      GluHistory(String tag,String aliases) {
+         try { if( IP==null ) IP=getIP(); } catch( Exception e ) { IP="UnknownIP"; }
+         ip=IP;
+         time=time = System.currentTimeMillis()/1000L;
+         this.tag=tag;
+         this.aliases=aliases;
+      }
+      
+      String getIP() throws Exception {
+         String IP=InetAddress.getLocalHost().getHostAddress();
+         int i = IP.lastIndexOf('.');
+         if( i>0 ) IP = IP.substring(0,i)+".*";
+         return IP;
+      }
+      
+      // Fournit la serialisation d'un GluHistory (une ligne, séparateur ':'
+      // ex: ip:time:tag:itag1,itag2,...
+      String getSerialized() { return ip+":"+time+":"+ tag+":"+aliases.substring(3).replace('\t',','); }
+      
+      // Retourne vrai si le test de la version précédente peut être réutilisé à la place
+      // de l'ordre actuel histoire de ne pas refaire les tests à chaque démarrage
+      boolean isBetterThan( String aliases) {
+         
+         try { if( IP==null ) IP=getIP(); } catch( Exception e ) { IP="UnknownIP"; }
+         
+         // moins d'une journée, on garde le même
+         long delai = (System.currentTimeMillis()/1000L - time);
+         if( delai<86400 ) return true;  
+         
+         // Plus d'un mois, on refait le test
+         if( delai>86400*30 ) return false;
+         
+         // Pas la même localisation (différents domaines IP), ou IP translaté => on refait
+         if( !IP.equals(ip) || IP.startsWith("192.") ) return false;
+         
+         // S'agit-il bien des mêmes indirections (ordre éventuellement différents)
+         String [] a = aliases.substring(3).split("\t");
+         String [] b = this.aliases.substring(3).split("\t");
+         if( a.length!=b.length ) return false;
+         for( String s : b ) {
+            if( Util.indexInArrayOf(s, a)<0 ) return false;
+         }
+         return true;
+      }
+      
+      public int compare(Object o1, Object o2) {
+         return (int)( ((GluHistory)o1).time - ((GluHistory)o2).time );
+      }
+   }
+   
+   // Permet de créer un GLuHistory à partir d'une sérialisation issue du fichier de config
+   // ex: tag:ip:time:itag1,itag2,...
+   private GluHistory GluHistoryFactory(String serialized) throws Exception {
+      StringTokenizer tok = new StringTokenizer(serialized, ":");
+      GluHistory gh = new GluHistory();
+      gh.ip = tok.nextToken();
+      gh.time = Long.parseLong( tok.nextToken() );
+      gh.tag = tok.nextToken();
+      gh.aliases = "%I "+tok.nextToken().replace(',','\t');
+      return gh;
+   }
+
+   /** Rechargement d'une entrée historique GLU qui avait été sauvegardée dans le fichier de config */
+   protected void setGluHistory(String serialized) {
+      if( gluHistory==null ) gluHistory = new HashMap<String,GluHistory>();
+      try {
+         GluHistory gh = GluHistoryFactory(serialized);
+         gluHistory.put( gh.tag, gh );
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+   }
+   
+   // Mémorisation des aliases d'un tag GLU
+   private void setGluHistory(String tag, String aliases) {
+      if( !aliases.startsWith("%I") ) return;
+      if( gluHistory==null ) gluHistory = new HashMap<String,GluHistory>();
+//      System.out.println("setGluHistory "+tag+" -> "+aliases);
+      gluHistory.put( tag, new GluHistory(tag,aliases) );
+   }
+   
+   /** Sauvegarde dans le fichier de configuration l'historique des meilleurs indirections GLU */
+   protected void saveGluHistory( BufferedWriter bw ) throws Exception {
+      if( gluHistory==null ) return;
+      int i=1;
+      for( GluHistory gh : sortGluHistory(gluHistory,1).values() ) {
+         String key = Configuration.LASTGLU+(i++);
+         bw.write(Util.align(key, 20) + gh.getSerialized() );
+         bw.newLine();
+         if( i>20 ) break;
+      }
+   }
+   
+   /** Reprend si possible le dernier test de mirroir effectué dans les sessions précédentes
+    * Retourne true si cela a été possible, sinon false */
+   protected boolean checkSiteHistory(String tag) {
+      try {
+         if( gluHistory==null ) return false;
+         GluHistory gh = gluHistory.get(tag);
+         if( gh==null ) return false;   // aucun historique pour ce tag
+         String actualAliases = (String) aladinDic.get(tag);
+         
+         // Pas mieux, ou localisation différente
+         if( !gh.isBetterThan( actualAliases ) ) return false;
+         
+         StringTokenizer st = new StringTokenizer(gh.aliases, "\t");
+         Aladin.trace(3,"Glu mirror by session history "+tag+" => "+st.nextToken());
+         aladinDic.put(tag,gh.aliases);
+         return true;
+         
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+      return false;
+   }
 
    private boolean chut=false; // pour éviter trop de baratin à l'écran lors d'un checkIndirection
    private String lastId=null;   // Dernière entrée utilisée dans le GLU
    private String indId=null;    // Dernière indirection utilisée dans le GLU (%I xxxx)
-
+   
    // Change l'ordre des indirections en mettant en premier celle d'indice "indiceOfTheBest"
+   // et en se basant sur le dernier lastId
    private void setIndirectionOrderOnLastId(int indiceOfTheBest) {
-      if( lastId==null ) return;        // Y a un problème, pas d'entrée mémorisée
-      if( indiceOfTheBest==0 ) return;  // déjà la meilleure en première position
+      setIndirectionOrder(lastId,indiceOfTheBest);
+   }
 
-      String iTags = (String) aladinDic.get(lastId);
+   // Change l'ordre des indirections du tag "id" en mettant en premier celle d'indice "indiceOfTheBest"
+   private void setIndirectionOrder(String id, int indiceOfTheBest) {
+      if( id==null ) return;        // Y a un problème, pas d'entrée mémorisée
+
+      String iTags = (String) aladinDic.get(id);
       if( !iTags.startsWith("%I ") ) return;  // pas d'indirection sur cet enregistrement
+      
+      if( indiceOfTheBest==0 ) {
+         
+         // Mémorisation à long terme
+         setGluHistory(id, iTags);
+
+         return;  // déjà la meilleure en première position
+      }
       iTags = iTags.substring(3);
 
       StringTokenizer st = new StringTokenizer(iTags,"\t");
       String tags[] = new String[st.countTokens()];
       for( int i=0; i<tags.length; i++ ) tags[i] = st.nextToken();
 
-      StringBuffer seeActions = new StringBuffer("%I "+tags[indiceOfTheBest]);
+      StringBuilder seeActions = new StringBuilder("%I "+tags[indiceOfTheBest]);
       for( int i=0; i<tags.length; i++ ) if( i!=indiceOfTheBest ) seeActions.append("\t"+tags[i]);
 
       // Mémorisation du nouvel ordre
-      aladinDic.put(lastId,seeActions+"");
-
-      Aladin.trace(4,"Glu.CheckIndirections("+lastId+") => %I "+tags[indiceOfTheBest]+" => "+getURL(lastId,"",false,false,1));
+      aladinDic.put(id,seeActions+"");
+      
+      // Mémorisation à long terme
+      setGluHistory(id, seeActions+"");
+      
+      Aladin.trace(4,"Glu.CheckIndirections("+id+") => %I "+tags[indiceOfTheBest]+" => "+getURL(id,"",false,false,1));
 
    }
 

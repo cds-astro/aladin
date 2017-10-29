@@ -412,6 +412,19 @@ public class PlanBG extends PlanImage {
       boolean rep=true;
       boolean alternative=true;
       
+      // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
+      boolean lookForFaster = !aladin.glu.checkSiteHistory(gluTag);
+      
+      // On positionne la meilleure solution qu'on avait détecté
+      if( !lookForFaster ) {
+         try {
+            URL u = aladin.glu.getURL(gluTag, "", false,true,1);
+            if( u!=null ) {
+               url=u.toString();
+            }
+         } catch( Exception e ) { }
+      }
+      
       // Vérifie qu'il y a au-moins une alternative
       URL u = gluTag==null ? null : aladin.glu.getURL(gluTag,"",false,false,2);
       if( u==null ) alternative=false;
@@ -423,7 +436,7 @@ public class PlanBG extends PlanImage {
          rep = scanProperties1();
          
       // Une réponse, mais peut être y a-t-il plus rapide => on teste en parallèle
-      } else if( alternative ) {
+      } else if( alternative && lookForFaster ) {
          Aladin.trace(3,"HiPS server OK ["+url+"], looking for a faster...");
          (new Thread() { public void run() { checkSite(false); } }).start();
       }
@@ -968,7 +981,15 @@ public class PlanBG extends PlanImage {
       url=url1;
       return true;
    }
-
+   
+   /** Retourne la liste des URLs pour tous les sites (en commençant par la courante) */
+   public ArrayList<String> getMirrorsUrl() {
+      if( gluTag==null || gluTag.startsWith("__")) return null;
+      ArrayList<String> a = aladin.glu.getAllUrls(gluTag);
+      if( a.size()<2 ) return null;
+      return a;
+   }
+   
    @Override
    public String getUrl() { return url; }
 
@@ -1247,7 +1268,7 @@ public class PlanBG extends PlanImage {
    
    static public synchronized void cleanCache() {
       if( scanCache!=null) {
-         Aladin.trace(4,"Scan cache already running !");
+//         Aladin.trace(4,"Scan cache already running !");
          return;
       }
       

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -1688,6 +1689,9 @@ public class Plan implements Runnable {
 
    /** Retourne l'url qui a permis de générer le plan */
    protected String getUrl() { return u==null ? null : u.toString(); }
+   
+   /** Retourne la liste des URLs pour tous les sites (en commençant par la courante) */
+   public ArrayList<String> getMirrorsUrl() { return null; }
 
    /** Retourne true ssi l'url qui a permis de générer le plan ssi existe
     * et n'est pas un fichier locale */

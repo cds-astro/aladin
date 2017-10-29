@@ -459,6 +459,15 @@ public final class Util {
       return (j>=0 || num==-1 ) && posDeb>=0 ? path.substring(posDeb) : null;
    }
    
+   /** Pour une URL, retourne le préfixe http://host.domain */
+   static public String getUrlHost(String s) {
+      int i = s.indexOf("//");
+      if( i<0 ) return s;
+      i = s.indexOf('/',i+2);
+      if( i<0 ) return s;
+      return s.substring(0,i);
+   }
+   
    /** Transforme une URL ou un filename en un label, éventuellement plus court en remplaçant une
     * partie du path par /.../ jusqu'à ce que ça taille soit inférieur à len
     * @param u l'url ou le path à raccourcir

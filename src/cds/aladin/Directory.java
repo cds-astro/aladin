@@ -292,12 +292,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       comboFilter = new FilterCombo(s);
 
-      JLabel plus = new JLabel("  + ");
+//      JLabel plus = new JLabel("  + ");
+      JLabel plus = new JLabel(new ImageIcon(aladin.getImagette("editplus.png")));
+      plus.setBorder( BorderFactory.createEmptyBorder(26, 2,0,0));
       Util.toolTip(plus, S("DTPLUSTIP"), true);
       plus.setFont(Aladin.LBOLD);
       plus.setForeground(Aladin.COLOR_LABEL);
+      final Aladin a = aladin;
       plus.addMouseListener(new MouseListener() {
-         public void mouseReleased(MouseEvent e) { openAdvancedFilterFrame(); }
+         public void mouseReleased(MouseEvent e) { 
+            Aladin.makeCursor(a, Aladin.WAITCURSOR);
+            openAdvancedFilterFrame();
+            Aladin.makeCursor(a, Aladin.DEFAULTCURSOR);
+         }
          public void mousePressed(MouseEvent e) { }
          public void mouseExited(MouseEvent e) { }
          public void mouseEntered(MouseEvent e) { }
@@ -314,7 +321,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       //
       JPanel plusFilter = new JPanel(new BorderLayout(0, 0));
       plusFilter.setBackground(cbg);
-      plusFilter.add(plus, BorderLayout.SOUTH);
+      plusFilter.add(plus, BorderLayout.EAST); //BorderLayout.SOUTH);
 
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g = new GridBagLayout();
@@ -1962,7 +1969,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( !hasURLkey(prop) ) return;
 
       // Ajustement local des propriétés
-      propAdjust(id, prop);
+      try {
+         propAdjust(id, prop);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         return;
+      }
 
       String HIPSU = Constante.KEY_HIPS_SERVICE_URL;
 
@@ -2003,7 +2015,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
       String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
 
-      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
+//      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
 
       // Sans catégorie => dans la branche "Unsupervised" suivi du protocole puis de l'authority
       if( category == null ) {
@@ -2015,7 +2027,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          String subCat = isHips ? "HiPS"
                : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
 
-         category = "Unsupervised/" + subCat + "/" + Util.getSubpath(id, 0, 1);
+         category = UNSUPERVISED+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
 
          // On trie un peu les branches
@@ -2027,8 +2039,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       boolean local = prop.getProperty("PROP_ORIGIN") != null;
 
       // Rangement dans la branche "Adds" si chargement local
-      if( local && !category.startsWith("Adds/") ) {
-         category = "Adds/" + category;
+      if( local && !category.startsWith(ADDS+"/") ) {
+         category = ADDS+"/" + category;
          prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
       }
 
@@ -2036,8 +2048,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       if( key == null ) key = "Z";
       String cat = prop.get(Constante.KEY_CLIENT_CATEGORY);
-      int c = Util.indexInArrayOf(Util.getSubpath(cat, 0), CAT);
-      if( c == -1 ) c = CAT.length;
+      int c = Util.indexInArrayOf(Util.getSubpath(cat, 0), CATEGORY);
+      if( c == -1 ) c = CATEGORY.length;
       key = String.format("%02d", c) + "/" + key;
       prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, key);
 
@@ -2398,6 +2410,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** retourne l'abbréviation du journal (ex: CDS/J/A+A/171/261/table1 => A+A) */
    private String getJournalCode(String id) {
       return Util.getSubpath(id, 2);
+//      String s = Util.getSubpath(id, 2,3);
+//      return s;
    }
 
    /**
@@ -2417,14 +2431,18 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( i > 0 ) return id.substring(0, i);
       return null;
    }
+   
+   public static final String UNSUPERVISED = "Others";
+   public static final String ADDS = "Adds";
 
-   private final String[] CAT = { "Image", "Data base", "Catalog", "Cube", "Outreach", "Unsupervised" };
+   private final String[] CATEGORY = { "Image", "Data base", "Catalog", "Cube", "Outreach", UNSUPERVISED };
 
-   private final String[] CAT_CODE = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "B" };
+   private final String[] CAT_CODE = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "B", "J" };
 
    private final String[] CAT_LIB = { "I-Astrometric Data", "II-Photometric Data", "III-Spectroscopic Data",
          "IV-Cross-Identifications", "V-Combined data", "VI-Miscellaneous", "VII-Non-stellar Objects",
-         "VIII-Radio and Far-IR data", "IX-High-Energy data", "B-External databases, regularly updated" };
+         "VIII-Radio and Far-IR data", "IX-High-Energy data", "B-External databases, regularly updated",
+         "Journal tables"};
 
    static protected final String MMOC = "Multiprop.bin";
 

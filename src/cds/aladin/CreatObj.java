@@ -63,6 +63,7 @@ public final class CreatObj implements Runnable {
 //      trace(1,"Creating Button menu");
 
       a.glu = new Glu(a);
+      aladin.configuration.proceedLastGlu();
       trace(1,"Creating Glu gateway");
       
       a.logo = new Logo(a);

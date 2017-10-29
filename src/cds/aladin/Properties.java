@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -37,8 +38,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -48,12 +52,16 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
@@ -665,7 +673,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( plan.isCatalog() || plan.isImage() ) PropPanel.addFilet(p,g,c);
          
          if (plan.isCatalog() && plan.query != null) {
-        	 PropPanel.addCouple(p,"Query", new JLabel(plan.query), g,c);
+            JTextArea ta = new JTextArea(plan.query, 5, 40);
+            JScrollPane sc = new JScrollPane( ta );
+        	PropPanel.addCouple(p,"ADQL query ", sc, g,c);
 		}
       }
 
@@ -856,8 +866,16 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Url de déchargement
       String s1 = plan.getUrl();
-      if( s1!=null && (s1.startsWith("http://") || s1.startsWith("ftp://") )) {
-         PropPanel.addCouple(p,"Url: ", new MyAnchor(aladin,s1,50,null,s1), g,c);
+      if( s1!=null && (s1.startsWith("http://") || s1.startsWith("https://") || s1.startsWith("ftp://") )) {
+         JComponent a = new MyAnchor(aladin,s1,50,null,s1);
+         if( plan.getMirrorsUrl()!=null ) {
+            JButtonTriangle b1 = new JButtonTriangle();
+            JPanel p1 = new JPanel( new FlowLayout(FlowLayout.LEFT, 4, 0));
+            p1.add(a);
+            p1.add(b1);
+            a=p1;
+         } 
+         PropPanel.addCouple(p,"Url: ", a , g,c);
       }
 
       // Panel pour les informations techniques
@@ -1470,6 +1488,48 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       return p;
    }
+   
+   // Création et affichage d'un popup présentant les URLs alternatives pour les mirroirs */
+   private void showPopupMirrors( MouseEvent e, final PlanBG plan ) {
+      ArrayList<String> a = plan.getMirrorsUrl();
+      if( a==null ) return;
+      JPopupMenu popup = new JPopupMenu();
+      for( String s: a ) {
+         JMenuItem mi = null;
+         mi = new JMenuItem( Util.getUrlHost(s)+"/..." );
+         mi.setActionCommand(s);
+         mi.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               String s = ((JMenuItem)e.getSource()).getActionCommand();
+               if( aladin.glu.setIndirectionByUrl(plan.gluTag, s) ) {
+                  plan.url = s;
+                  showProp(true);
+               }
+            }
+         });
+         popup.add(mi);
+      }
+      ((JComponent)e.getSource()).setComponentPopupMenu(popup);
+      popup.show((JComponent)e.getSource(), e.getX(), e.getY());
+   }
+   
+   // Bouton en forme de triangle pour afficher les mirroirs alternatifs
+   class JButtonTriangle extends JPanel implements MouseListener {
+      boolean in=false;
+      JButtonTriangle() { super(); addMouseListener(this);}
+      public Dimension getPreferredSize() { return new Dimension(15,15); }
+      public void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         g.setColor( in ? Color.black : Color.darkGray.brighter() );
+         Util.fillTriangle7(g, 5, 5);
+      }
+      public void mouseClicked(MouseEvent e) { }
+      public void mousePressed(MouseEvent e) { }
+      public void mouseReleased(MouseEvent e) { showPopupMirrors(e, (PlanBG)plan); in=false; }
+      public void mouseEntered(MouseEvent e) { in=true; repaint(); }
+      public void mouseExited(MouseEvent e) { in=false; repaint(); }
+   }
+
 
    private String getCoverageTime(String s1,String s2) {
       return "[ "+ (s1==null ? " " : Util.getDateFromMJD(s1)) + " .. "+ (s2==null ? " " : Util.getDateFromMJD(s2)) + " ]";

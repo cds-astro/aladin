@@ -389,7 +389,7 @@ public class DirectoryTree extends JTree {
             } else if( !node.isLeaf() ) {
                /* if( n.path.endsWith("/VizieR") ) icon=getIcon( "FolderVizieR", 0);
                else */ 
-               if( n.path.startsWith("Unsupervised") ) icon=getIcon( "FolderUnsupervised", 0);
+               if( n.path.startsWith(Directory.UNSUPERVISED) ) icon=getIcon( "FolderUnsupervised", 0);
                else icon=getIcon( "Folder", 0);
             }
             if( icon!=null ) {

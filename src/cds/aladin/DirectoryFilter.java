@@ -146,6 +146,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { delete(); }
       });
+      
+      storePanel.add(new JLabel("      "));
+      storePanel.add(Util.getHelpButton(this,S("FPHELP")));
+
 
       return storePanel;
    }
