@@ -3114,6 +3114,9 @@ NORANGEERRORMESSAGE Range selected, please provide 2 values!
 CHOOSEFROMTAPSERVERSTEXT Or choose from the lists below:
 WAITLOADINGTAPSERVERSLIST Loading tap servers list...
 NODUPLICATESELECTION Cannot select same table! No second table selected.
+FORMATFORBETWEENTOOLTIP Format should be as: value1 AND value2
+FORMATFORBETWEEN Format for between operator: value1 AND value2. Ex: 2 and 3. 
+INCORRECTCONSTRAINTVALUE Please input a number constraint value
 
 TAPTABLEJOINTIP.fr  Jointure de table
 TAPTABLEJOINTIP.fr .fr Jointure de table -configure message

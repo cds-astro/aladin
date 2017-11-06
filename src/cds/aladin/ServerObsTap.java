@@ -66,7 +66,6 @@ import adql.parser.QueryChecker;
 import adql.parser.TokenMgrError;
 import adql.query.ADQLQuery;
 import adql.query.ClauseConstraints;
-import cds.aladin.Constants.TapClientMode;
 import cds.tools.Util;
 
 /**
@@ -851,7 +850,8 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 				if (columnSelected != null && columnSelected.getColumn_name() != null
 						&& !columnSelected.getColumn_name().isEmpty()) {
 					String dataType = columnSelected.getDatatype();
-					if (dataType != null && dataType.toUpperCase().contains("VARCHAR")) {
+					if (dataType != null && (dataType.toUpperCase().contains("VARCHAR") ||
+							dataType.toUpperCase().contains("CHAR"))) {
 						processAsNumber = false;
 					}
 					String constraintSelected = columnSelected.getColumnNameForQuery();

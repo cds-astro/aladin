@@ -130,7 +130,6 @@ public class ServerTapExamples extends DynamicTapForm {
 	 */
 	protected void createForm(String priTableChoice, String secTableChoice) {
 		CLIENTINSTR = Aladin.chaine.getString("TAPEXCLIENTINSTR");
-		TapManager tapManager = TapManager.getInstance(aladin);
 		Coord defaultCoo = getDefaultTargetCoo();
  		
 // 		aladin.localisation.getLastCoord();
@@ -553,11 +552,18 @@ public class ServerTapExamples extends DynamicTapForm {
 		String coneSearchPart = null;
 		try {
 			if (priRaColumnName != null && priDecColumnName != null) {
+				if (grab != null) {
+					grab.setVisible(true);
+				}
 				targetQuery = String.format(targetQuery, priRaColumnName, priDecColumnName, grabItX1, grabItY1,
 						grabItR1);
 				this.basicExamples.put("Cone search query", new CustomListCell(targetQuery, SETTARGETTOOLTIP));
 				coneSearchPart = String.format(conesearchtemplate, priRaColumnName, priDecColumnName, grabItX1, grabItY1,
 						grabItR1);
+			} else {
+				if (grab != null) {
+					grab.setVisible(false);
+				}
 			}
 
 		} catch (Exception e) {

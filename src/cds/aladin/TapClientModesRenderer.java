@@ -74,8 +74,9 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 		            	setText("Mode: "+list.getSelectedValue());
 			        }
 		        }
-		} else if (value == GLU && this.tapClient.serverGlu == null) {
+		} else if (value == GLU && this.tapClient.serverGlu == null) {//not removing here
 			makeDisabled(option, value, TapClient.NOGLURECFOUND);
+			option.setSize(0,0);
 		} else if (value == OBSCORE && this.tapClient.obscoreTables.isEmpty()) {
 			makeDisabled(option, value, "Obscore client");
 		}  else {

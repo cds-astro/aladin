@@ -272,24 +272,20 @@ public final class Glu implements Runnable {
       aladin.dialog = new ServerDialog(aladin);
       if( showLastGlu ) {
          int c1 = aladin.dialog.getLastGluServerIndice();
-         if (Aladin.BETA) {
-        	 if (lastTapGluServer != null) {
-            	 c1 = aladin.dialog.getTapServerIndex();
-            	 aladin.dialog.findReplaceServer(aladin.dialog.tapServer, lastTapGluServer);
-     			 aladin.dialog.tapServer = lastTapGluServer;
-            	 lastTapGluServer = null;
-//            	 aladin.dialog.setCurrent("TAP");
-     		} else if (oldDialog.tapServer != null) {
-     			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, oldDialog.tapServer);
-    			aladin.dialog.tapServer = oldDialog.tapServer;
-     		}
-		}
+         if (lastTapGluServer != null) {
+        	 c1 = aladin.dialog.getTapServerIndex();
+        	 aladin.dialog.findReplaceServer(aladin.dialog.tapServer, lastTapGluServer);
+ 			 aladin.dialog.tapServer = lastTapGluServer;
+        	 lastTapGluServer = null;
+//        	 aladin.dialog.setCurrent("TAP");
+ 		} else if (oldDialog.tapServer != null) {
+ 			aladin.dialog.findReplaceServer(aladin.dialog.tapServer, oldDialog.tapServer);
+			aladin.dialog.tapServer = oldDialog.tapServer;
+ 		}
          
          if( c1!=-1 ) c=c1;
       }
-      if (Aladin.BETA) {
-    	  tapManager.reloadTapServerList();
-      }
+      tapManager.reloadTapServerList();
       
       aladin.dialog.setCurrent(c);
       if( p!=null ) {

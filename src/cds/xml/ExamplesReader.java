@@ -18,9 +18,10 @@ import cds.aladin.Aladin;
  * Reader for an xhtml stream.
  * We are only interested reading "example"
  * For now, closing tag of parent tag with vocab is not detected, only the starting of this tag is detected.
+ * //discussion with Markus Demleitner at the ADASS/IVOA interop Santiago 2017: no need to check for vocab. ( we were not able to see gavo examples without it.)
  * 
- * <div vocab="ivo://ivoa.net/std/DALI-examples"> 
- * 		<div typeof="example"> 
+ * <div vocab="ivo://ivoa.net/std/DALI-examples"> - not checked
+ * 		<div typeof="example"> - this is what we look for
  * 			<div property="name"> </div>
  * 			<div property="query"> </div>
  * 		</div>
@@ -193,16 +194,23 @@ public class ExamplesReader {
 		private Stack tagStack;	
 		private StringBuffer content = null;
 		
+		public DaliExamplesReader() {
+			// TODO Auto-generated constructor stub
+			inExamplesTag = true;
+			examples = new Hashtable<String, String>();
+		}
+		
 		//data
 		private Map<String, String> examples;
 		
 		public void startElement(String qName, Map<String, String> attributes){
 			// TODO Auto-generated method stub
 //			super.startElement(uri, localName, qName, attributes);
-			if (attributes.get("vocab") != null && attributes.get("vocab").equals("ivo://ivoa.net/std/DALI-examples")) {
+			//discussion with Markus Demleitner at the ADASS/IVOA interop Santiago 2017: no need to check for vocab. ( we were not able to see gavo examples without it.)
+			/*if (attributes.get("vocab") != null && attributes.get("vocab").equals("ivo://ivoa.net/std/DALI-examples")) {
 				inExamplesTag = true;
 				examples = new Hashtable<String, String>();
-			} else if (inExamplesTag) {
+			} else */if (inExamplesTag) {
 				if (inExampleTag) {
 					tagStack.push(qName);
 					if (attributes.get("property") != null) {

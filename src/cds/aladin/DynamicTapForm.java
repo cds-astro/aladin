@@ -311,6 +311,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	
 	public JToggleButton getGrab() {
 		this.target = new JTextField(40);
+
 		JToggleButton b = grab = new JToggleButton(new ImageIcon(Aladin.aladin.getImagette("Grab.png")));
         Util.toolTip(b, "Grab a position/radius in the view");
         b.setMargin(new Insets(0, 0, 0, 0));
@@ -328,9 +329,13 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 
 			}
         });
+        
         grab.setFont(Aladin.SBOLD);
-        grab.setEnabled(false);
-		
+        Component rootFrame = SwingUtilities.getRoot(this);
+        if (rootFrame instanceof GrabItFrame) {
+        	updateWidgets((GrabItFrame) rootFrame);
+		}
+        
 		radius = new JTextField(50);
 	    
 		modeCoo = RADEd; // just ra and dec
@@ -443,22 +448,16 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 //		this.circleOrSquare.addActionListener(this);
 		c.gridx = 2;
 		
-		if (!(this instanceof ServerTapExamples)) {
-			c.weightx = 0.05;
-			targetPanel.add(circleOrSquare, c);
-			JButton button = new JButton("Add");
-			button.setActionCommand(ADDPOSCONSTRAINT);
-			button.addActionListener(this);
-			button.setToolTipText(TIPCLICKTOADD);
-			c.weightx = 0.05;
-			c.gridx = 3;
-			gridbag.setConstraints(button, c);
-			targetPanel.add(button);
-		} else {
-			c.gridwidth = 2;
-			c.weightx = 0.10;
-			targetPanel.add(circleOrSquare, c);
-		}
+		c.weightx = 0.05;
+		targetPanel.add(circleOrSquare, c);
+		JButton button = new JButton("Add");
+		button.setActionCommand(ADDPOSCONSTRAINT);
+		button.addActionListener(this);
+		button.setToolTipText(TIPCLICKTOADD);
+		c.weightx = 0.05;
+		c.gridx = 3;
+		gridbag.setConstraints(button, c);
+		targetPanel.add(button);
 		
 		Util.toolTip(label, RADIUS_EX);
 	    Util.toolTip(radius, RADIUS_EX);

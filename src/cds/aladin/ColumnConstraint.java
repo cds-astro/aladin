@@ -23,6 +23,8 @@ package cds.aladin;
 
 import static cds.aladin.Constants.REGEX_RANGEINPUT;
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.REGEX_NUMBERWITHEXP;
 
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -33,6 +35,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.text.BadLocationException;
@@ -48,6 +51,16 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 	public static final String NOTBETWEEN = "NOT BETWEEN";
 	public static final String REGEX_BETWEENINPUT = "(?<range1>[A-Za-z0-9]+)\\s+and\\s+(?<range1>[A-Za-z0-9]+)";
 	private static final String toolTipText = "Format should be as: value1 AND value2";
+	protected static final String[] charOperators = { "=", "!=", "IS NULL", "IS NOT NULL", "LIKE", "NOT LIKE" };
+	protected static final String[] numOperators = { "=", "!=", "<", ">", "<=", ">=", "BETWEEN", "NOT BETWEEN", "IS NULL",
+			"IS NOT NULL"};
+	public static final String FORMATFORBETWEEN, FORMATFORBETWEENTOOLTIP, INCORRECTCONSTRAINTVALUE;
+	
+	static {
+		FORMATFORBETWEEN = Aladin.chaine.getString("FORMATFORBETWEEN");
+		FORMATFORBETWEENTOOLTIP = Aladin.chaine.getString("FORMATFORBETWEENTOOLTIP");
+		INCORRECTCONSTRAINTVALUE = Aladin.chaine.getString("INCORRECTCONSTRAINTVALUE");
+	}
 	
 	public ColumnConstraint(ServerTap serverTap, Vector columnNames) {
 		// TODO Auto-generated constructor stub
@@ -55,8 +68,8 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		JComboBox columns = (JComboBox) this.firstGridComponent;
 		columns.setRenderer(new CustomListCellRenderer());
 		columns.setSize(columns.getWidth(), Server.HAUT);
+		setWhereOperators();
 		columns.addItemListener(this);
-		
 		
 		((JTextField) this.thirdGridComponent).addFocusListener(new FocusListener () {
 			@Override
@@ -72,6 +85,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 			}
 		});
 		
+		((JComboBox) this.firstGridComponent).addItemListener(this);
 		((JComboBox) this.secondGridComponent).addItemListener(this);
 	}
 	
@@ -104,18 +118,21 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		String columnName = column.getColumnNameForQuery();
 		whereClause.append(columnName).append(SPACESTRING);
 		
-		if (constraintValue.getText().isEmpty()) {
+		if (selectedWhereOperator.equals("IS NULL")) {
+			whereClause.append(selectedWhereOperator).append(SPACESTRING);
+		} else if (constraintValue.getText().isEmpty()) {
 			whereClause.append(defaultValue).append(SPACESTRING);
 		} else {
 			if (selectedWhereOperator.equals(BETWEEN) || selectedWhereOperator.equals(NOTBETWEEN)) {
 				String selectedText = constraintValue.getText();
 				Highlighter highlighter = constraintValue.getHighlighter();
 //				Pattern re = Pattern.compile(REGEX_BETWEENINPUT, Pattern.CASE_INSENSITIVE);
-				Pattern regex = Pattern.compile(REGEX_RANGEINPUT);
-				Matcher matcher = regex.matcher(selectedText);
-				if (!matcher.find()) {
+//				Pattern regex = Pattern.compile(REGEX_RANGEINPUT);
+//				Matcher matcher = regex.matcher(selectedText);
+				String processedInput = TapClient.getRangeInput(selectedText, null);
+				/*if (!matcher.find())*/ if(processedInput.isEmpty()){
 					Aladin.trace(3, "No 'AND' used for the between operator!");
-					constraintValue.setToolTipText("Format should be as: value1 AND value2");
+					constraintValue.setToolTipText(FORMATFORBETWEENTOOLTIP);
 					HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Aladin.LIGHTORANGE);
 					try {
 						highlighter.addHighlight(0, selectedText.length(), painter);
@@ -124,20 +141,29 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 							e1.printStackTrace();
 						//Don't do anything if this feature fails
 					}
-					throw new Exception("Error for column contraint: "+columnName+". \nFormat for between operator: value1 AND value2. Ex: 2 and 3. ");
+					throw new Exception("Error for column contraint: "+columnName+". \n"+FORMATFORBETWEEN);
 				} else {
-					if (matcher.group("range1") != null && matcher.group("range2") != null) {
+					/*if (matcher.group("range1") != null && matcher.group("range2") != null) {
 						whereClause.append(selectedWhereOperator).append(SPACESTRING).append(Util.formatterPourRequete(false, matcher.group("range1")))
 						.append(" AND ").append(Util.formatterPourRequete(false, matcher.group("range2"))).append(SPACESTRING);
-					}
+					}*/
+					whereClause.append(processedInput);
 				}
 			} else{
 				String dataType = column.getDatatype();
-				boolean processAsNumber = true;
-				if (dataType != null && !dataType.toUpperCase().contains("VARCHAR")) {
-					processAsNumber = false;
+				boolean considerAsString = true;
+				if (dataType != null && !dataType.toUpperCase().contains("VARCHAR")
+						&& !dataType.toUpperCase().contains("CHAR")) {
+					considerAsString = false;
 				}
-				whereClause.append(whereOperator.getSelectedItem()).append(SPACESTRING).append(Util.formatterPourRequete(processAsNumber, constraintValue.getText()))
+				if (!considerAsString) {
+					Pattern pattern = Pattern.compile(REGEX_NUMBERWITHEXP);
+					Matcher matcher = pattern.matcher(constraintValue.getText());
+					if (!matcher.find()) {
+						throw new Exception(INCORRECTCONSTRAINTVALUE);
+					}
+				}
+				whereClause.append(whereOperator.getSelectedItem()).append(SPACESTRING).append(Util.formatterPourRequete(considerAsString, constraintValue.getText()))
 				.append(SPACESTRING);
 			}
 			
@@ -151,10 +177,48 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 	         
 	      }
 	   }
+	
+	public void setWhereOperators() {
+		JComboBox columns = (JComboBox) this.firstGridComponent;
+		JComboBox whereOperator = (JComboBox) this.secondGridComponent;
+		TapTableColumn column = ((TapTableColumn)columns.getSelectedItem());
+		String dataType = column.getDatatype();
+		if (dataType != null && !dataType.toUpperCase().contains("VARCHAR")
+				&& !dataType.toUpperCase().contains("CHAR")) {
+			whereOperator.removeAllItems();
+			DefaultComboBoxModel items = new DefaultComboBoxModel(numOperators);
+			whereOperator.setModel(items);
+		} else {
+			whereOperator.removeAllItems();
+			DefaultComboBoxModel items = new DefaultComboBoxModel(charOperators);
+			whereOperator.setModel(items);
+		}
+		setIsNullGui();
+		
+	}
+	
+	public void setIsNullGui() {
+		JComboBox whereOperator = (JComboBox) this.secondGridComponent;
+		JTextField constraintValue = (JTextField) this.thirdGridComponent;
+		if (whereOperator.getSelectedItem() != null && (whereOperator.getSelectedItem().equals("IS NULL")
+				|| whereOperator.getSelectedItem().equals("IS NOT NULL"))) {
+			constraintValue.setText(EMPTYSTRING);
+			constraintValue.setEnabled(false);
+		} else {
+			constraintValue.setEnabled(true);
+		}
+	}
 
 	@Override
 	public void itemStateChanged(ItemEvent e) {
 		// TODO Auto-generated method stub
+		if (e != null && e.getSource().equals(this.firstGridComponent)) {
+			//change second grid component
+			setWhereOperators();
+		} else {
+			setIsNullGui(); //already done for first
+		}
+		
 		serverTap.writeQuery();
 	}
 }
