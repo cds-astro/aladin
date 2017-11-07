@@ -1992,8 +1992,8 @@ public class TapManager {
 							// standard request parameters
 							out.writeField("request", "doQuery");
 							out.writeField("lang", "adql");
-							out.writeField("version", "1.0");
-							out.writeField("format", "votable");
+//							out.writeField("version", "1.0");
+//							out.writeField("format", "votable");
 
 							if (parserObj != null) {
 								int limit = parserObj.getSelect().getLimit();
