@@ -156,7 +156,7 @@ public class Save extends JFrame implements ActionListener {
    static String [] CHOICE;
 
    static String TITLE,INFO,FISTINFO,SECONDINFO,CLOSE,EXPORT,DIR,
-   CANNOT,CANNOT1,INFOIMG,SAVEIN,SAVERGBIN,SAVEMOC,ENCODER;
+   CANNOT,CANNOT1,INFOIMG,SAVEIN,SAVERGBIN,SAVEMOC,ENCODER,BROWSE;
 
    // Memorisation temporaire
    JTextField directory;
@@ -187,6 +187,7 @@ public class Save extends JFrame implements ActionListener {
       SAVEMOC = aladin.chaine.getString("SFSAVEMOCIN");
       SAVERGBIN = aladin.chaine.getString("SFSAVERGBIN");
       ENCODER = aladin.chaine.getString("SFJPEGENCODER");
+      BROWSE = aladin.chaine.getString("FILEBROWSE");
 
       if( Aladin.BETA ) {
          CHOICE = new String[] {
@@ -346,8 +347,19 @@ public class Save extends JFrame implements ActionListener {
 
       // Le répertoire par défaut
       directory = new JTextField(aladin.getDefaultDirectory(),30);
+      JButton b=new JButton(BROWSE);
+      b.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            String initDir = directory.getText();
+            if( initDir.length()==0 ) initDir=null;
+            String path = Util.dirBrowser("", initDir, directory, 3);
+            if( path!=null ) directory.setText(path);
+         }
+      });
+
       basg.add(new JLabel(DIR));
       basg.add(directory);
+      basg.add(b);
 
       Aladin.makeAdd(bas,basg,"West");
       JPanel basd = new JPanel();

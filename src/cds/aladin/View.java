@@ -3409,7 +3409,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean mustDrawFast() {
       
       ViewSimple v = getCurrentView();
-      if( v instanceof ViewSimpleStatic ) return true;
+      if( v instanceof ViewSimpleStatic ) return false;
       
       //      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
       return v.flagScrolling || aladin.calque.zoom.zoomView.flagdrag;

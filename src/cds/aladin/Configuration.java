@@ -2673,27 +2673,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       }
       // Affichage du selecteur de répertoires
       else if( BROWSE.equals(what) ) {
-
-
-//         FileDialog fd = new FileDialog(aladin.dialog);
-//         aladin.setDefaultDirectory(fd);
-//
-//         // (thomas) astuce pour permettre la selection d'un repertoire
-//         // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
-//         fd.setFile(DEFAULT_FILENAME);
-//
-//         fd.show();
-//         String directory = fd.getDirectory();
-//         aladin.memoDefaultDirectory(directory);
-//         String name =  fd.getFile();
-//         // si on n'a pas changé le nom, on a selectionne un repertoire
-//         boolean isDir = false;
-//         if( name!=null && name.equals(DEFAULT_FILENAME) ) {
-//            name = "";
-//            isDir = true;
-//         }
-//         if( (name!=null && name.length()>0) || isDir ) dir.setText(directory);
-//         
          String initDir = dir.getText();
          if( initDir.length()==0 ) initDir=null;
          String path = Util.dirBrowser("", initDir, dir, 3);
