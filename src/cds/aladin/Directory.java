@@ -2015,7 +2015,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
       String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
 
-//      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
+      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
 
       // Sans catégorie => dans la branche "Unsupervised" suivi du protocole puis de l'authority
       if( category == null ) {
@@ -2069,12 +2069,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
       if( type == null || type.indexOf("catalog") < 0 ) return;
+      
+      // Déjà fait en amont
+//      if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) return;
 
       String category = null;
 
       if( !id.startsWith("CDS/") ) {
-         category = prop.get(Constante.KEY_CLIENT_CATEGORY);
-         if( category.equals("Catalog") ) prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, null);
+//         category = prop.get(Constante.KEY_CLIENT_CATEGORY);
+//         if( category.equals("Catalog") ) prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, null);
          return;
       }
 
@@ -2433,9 +2436,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
    
    public static final String UNSUPERVISED = "Others";
+   public static final String PROBLEMATIC = "Problematic";
    public static final String ADDS = "Adds";
 
-   private final String[] CATEGORY = { "Image", "Data base", "Catalog", "Cube", "Outreach", UNSUPERVISED };
+   private final String[] CATEGORY = { "Image", "Data base", "Catalog", "Cube", "Outreach", UNSUPERVISED, PROBLEMATIC };
 
    private final String[] CAT_CODE = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "B", "J" };
 

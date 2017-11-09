@@ -256,27 +256,101 @@ public class DirectoryTree extends JTree {
       
       try {
          mapIcon = new HashMap<String, MyImageIcon>();
+         
          img = aladin.getImagette("Folder.png");
-         mapIcon.put("Folder",new MyImageIcon(img));
+         mapIcon.put("folder",new MyImageIcon(img));
+         
          img = aladin.getImagette("FolderUnsupervised.png");
-         mapIcon.put("FolderUnsupervised",new MyImageIcon(img));
+         mapIcon.put("folderunsupervised",new MyImageIcon(img));
+         
+         img = aladin.getImagette("FolderProblematic.png");
+         mapIcon.put("folderproblematic",new MyImageIcon(img));
+         
          img = aladin.getImagette("FolderVizieR.png");
-         mapIcon.put("FolderVizieR",new MyImageIcon(img));
+         mapIcon.put("foldervizieR",new MyImageIcon(img));
+         
          img = aladin.getImagette("cds.png");
-         mapIcon.put("CDS",new MyImageIcon(img));
-         mapIcon.put("CDS/color",new MyImageIcon(setIconTag(img)));
+         mapIcon.put("cds",new MyImageIcon(img));
+         mapIcon.put("cds.vizier",new MyImageIcon(img));
+         mapIcon.put("cds/color",new MyImageIcon(setIconTag(img)));
+         
+         img = aladin.getImagette("nasa.png");
+         mapIcon.put("nasa.heasarc",new MyImageIcon(img));
+         mapIcon.put("nasa.heasarc/color",new MyImageIcon(setIconTag(img)));
+         
+         img = aladin.getImagette("eso.png");
+         mapIcon.put("eso.org",new MyImageIcon(img));
+         mapIcon.put("eso.org/color",new MyImageIcon(setIconTag(img)));
+         
+         img = aladin.getImagette("ipac.png");
+         mapIcon.put("ned.ipac",new MyImageIcon(img));
+         mapIcon.put("irsa.ipac",new MyImageIcon(img));
+         mapIcon.put("irsa.ipac/color",new MyImageIcon(setIconTag(img)));
+         
+         img = aladin.getImagette("mast.png");
+         mapIcon.put("mast.stsci",new MyImageIcon(img));
+         mapIcon.put("mast.stsci/color",new MyImageIcon(setIconTag(img)));
+         mapIcon.put("archive.stsci.edu",new MyImageIcon(img));
+         mapIcon.put("archive.stsci.edu/color",new MyImageIcon(setIconTag(img)));
+         
+         img = aladin.getImagette("cadc.png");
+         mapIcon.put("cadc.nrc.ca",new MyImageIcon(img));
+         mapIcon.put("cadc.nrc.ca/color",new MyImageIcon(setIconTag(img)));
+         
          img = aladin.getImagette("esa.png");
-         mapIcon.put("ESAVO",new MyImageIcon(img));
-         mapIcon.put("ESAVO/color",new MyImageIcon(setIconTag(img)));
+         mapIcon.put("esavo",new MyImageIcon(img));
+         mapIcon.put("esavo/color",new MyImageIcon(setIconTag(img)));
+         
          img = aladin.getImagette("jaxa.png");
-         mapIcon.put("JAXA",new MyImageIcon(img));
-         mapIcon.put("JAXA/color",new MyImageIcon(setIconTag(img)));
+         mapIcon.put("jaxa",new MyImageIcon(img));
+         mapIcon.put("jaxa/color",new MyImageIcon(setIconTag(img)));
+         
          img = aladin.getImagette("irap.png");
          mapIcon.put("ov-gso",new MyImageIcon(img));
          mapIcon.put("ov-gso/color",new MyImageIcon(setIconTag(img)));
+         
          img = aladin.getImagette("xcatdb.png");
          mapIcon.put("xcatdb",new MyImageIcon(img));
          mapIcon.put("xcatdb/color",new MyImageIcon(setIconTag(img)));
+         
+         img = aladin.getImagette("wfau.png");
+         mapIcon.put("wfau.roe.ac.uk",new MyImageIcon(img));
+         mapIcon.put("wfau.roe.ac.uk/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("inaf.png");
+         mapIcon.put("ia2.inaf.it",new MyImageIcon(img));
+         mapIcon.put("ia2.inaf.it/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("cfa.png");
+         mapIcon.put("cfa.tdc",new MyImageIcon(img));
+         mapIcon.put("cfa.tdc/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("nrao.png");
+         mapIcon.put("nrao",new MyImageIcon(img));
+         mapIcon.put("nrao/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("cvo.png");
+         mapIcon.put("cvo.naoc",new MyImageIcon(img));
+         mapIcon.put("cvo.naoc/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("nova.png");
+         mapIcon.put("ar.nova",new MyImageIcon(img));
+         mapIcon.put("ar.nova/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("svo.png");
+         mapIcon.put("svo.cab",new MyImageIcon(img));
+         mapIcon.put("svo.cab/color",new MyImageIcon(img));
+         mapIcon.put("svo.ifca",new MyImageIcon(img));
+              
+         img = aladin.getImagette("ucl.png");
+         mapIcon.put("mssl.ucl.ac.uk",new MyImageIcon(img));
+         mapIcon.put("mssl.ucl.ac.uk/color",new MyImageIcon(img));
+         
+         img = aladin.getImagette("gavo.png");
+         mapIcon.put("org.gavo.dc",new MyImageIcon(img));
+         mapIcon.put("org.gavo.dc/color",new MyImageIcon(img));
+         
+        
          mapIcon.put("f",new MyImageIcon(img));
          
          mapIcon.put("defaut",new MyImageIcon());
@@ -294,7 +368,7 @@ public class DirectoryTree extends JTree {
       int i = id.indexOf('/');
       if( i==-1 ) i=id.length();
       String key = id.substring(0,i) + (mode==1?"/color":mode==2?"/fits":"");
-      return mapIcon.get(key);
+      return mapIcon.get(key.toLowerCase());
    }
    
    private static final Color r = new Color(255,100,100);
@@ -390,7 +464,8 @@ public class DirectoryTree extends JTree {
                /* if( n.path.endsWith("/VizieR") ) icon=getIcon( "FolderVizieR", 0);
                else */ 
                if( n.path.startsWith(Directory.UNSUPERVISED) ) icon=getIcon( "FolderUnsupervised", 0);
-               else icon=getIcon( "Folder", 0);
+               else if( n.path.startsWith(Directory.PROBLEMATIC) ) icon=getIcon( "FolderProblematic", 0);
+               else icon=getIcon("Folder", 0);
             }
             if( icon!=null ) {
                icon.setColor( n.isInStack() );

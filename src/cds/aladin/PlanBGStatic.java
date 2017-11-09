@@ -26,11 +26,11 @@ import java.util.Hashtable;
 
 public class PlanBGStatic extends PlanBG {
    
-   PlanBGStatic(Aladin aladin, String label, String url) {
+   PlanBGStatic(Aladin aladin, String url, boolean fits) throws Exception {
       super(aladin);
       
       this.url = url;
-      this.label = label;
+      this.label = "foo";
       
       dataMin=pixelMin=0;
       dataMax=pixelMax=255;
@@ -51,8 +51,16 @@ public class PlanBGStatic extends PlanBG {
 
       scanProperties();
       
+      if( fits ) {
+         truePixels=true;
+         color=false;
+      }
+      
+      local = !url.startsWith("http://") && !url.startsWith("https://");
+      if( local ) useCache=false;
+      
 //      int defaultProjType = Projection.getProjType(sProj);
-      int defaultProjType = Calib.SIN;
+      int defaultProjType = Calib.AIT;
       
       projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5);
       projd.frame = getCurrentFrameDrawing();
@@ -61,7 +69,9 @@ public class PlanBGStatic extends PlanBG {
       transfertFct = aladin.configuration.getCMFct();
       video = aladin.configuration.getCMVideo();
       
+      flagOk=true;
    }
    
+   protected boolean checkSite() { return true; }
    protected void askForRepaint() { }
 }

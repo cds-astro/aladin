@@ -866,7 +866,7 @@ public class Localisation extends MyBox  {
       String s = getTextSaisie();
       if( s.length()>0 ) {
          s=shortCutLoad(s);
-         aladin.console.pushCmd(s);
+         aladin.console.addCmd(s);
       }
       readyToClear();
    }

@@ -2453,7 +2453,7 @@ public final class Glu implements Runnable {
 
       // Pas d'indirection, ni de récursitivité alors qu'on demande une alternative
       // => ça va pas le faire
-      if( !url.startsWith("%I ") && url.indexOf("<&")<0 && indirectionIndex>1 ) return null;
+      if( indirectionIndex>1 && (url==null || !url.startsWith("%I ") && url.indexOf("<&")<0)  ) return null;
 
       // Dans le cas d'indirections dans le dico GLU inside
       // J'avais remplacé l'URL par "%I tagGLU\ttagGLU...", il faut donc que je

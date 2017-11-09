@@ -100,7 +100,7 @@ import cds.xml.XMLParser;
  * @version 1.1 : 11 avril 2000 - contournement "out of memory"
  * @version 1.0 : (26 nov 99) creation
  */
-public final class Save extends JFrame implements ActionListener {
+public class Save extends JFrame implements ActionListener {
 
    static final String CR = Util.CR;
 
@@ -226,6 +226,11 @@ public final class Save extends JFrame implements ActionListener {
    protected Save(Aladin aladin,boolean show) {
       super();
       this.aladin = aladin;
+      suite();
+      if( show ) show();
+   }
+   
+   protected void suite() {
       Aladin.setIcon(this);
       createChaine();
       setTitle(TITLE);
@@ -237,7 +242,6 @@ public final class Save extends JFrame implements ActionListener {
       setLocation( Aladin.computeLocation(this) );
 
       pack();
-      if( show ) show();
    }
 
 

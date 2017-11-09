@@ -444,7 +444,7 @@ public class MyProperties {
          // ajout normal de la propriété
          if( s.indexOf('=')<0 ) {
             String id = MultiMoc.getID(this);
-            System.out.println("propertie file line syntax error (missing '=')"+(id!=null?" in "+id:"")+" ignored: "+s);
+//            System.out.println("propertie file line syntax error (missing '=')"+(id!=null?" in "+id:"")+" ignored: "+s);
             continue;
          }
          add(s);

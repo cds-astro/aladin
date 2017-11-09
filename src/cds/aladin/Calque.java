@@ -3243,10 +3243,11 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Generation d'un plan Image à partir d'un crop de la vue passée en paramètre (doit être un PlanBG) */
-   PlanImage createCropImage(ViewSimple v ) throws Exception {
+   PlanImage createCropImage(ViewSimple v, boolean fullRes ) throws Exception {
       if( !(v.pref instanceof PlanBG) ) throw new Exception("Cropping only on HiPS");
       PointD p1 = v.getPosition(0.,0.);
-      return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),"Crop."+v.pref.label,v.zoom,1.,false,false);
+      return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),
+            "Crop."+v.pref.label,v.zoom,1.,fullRes,false);
    }
 
    protected Plan createPlanCatalog(MyInputStream in,String label) {

@@ -72,7 +72,7 @@ import cds.tools.Util;
  * @version 0.91 - 30 novembre 1998 (relecture du code)
  * @version 0.9 - 30 mars 1998
  */
-public final class ZoomView extends JComponent
+public class ZoomView extends JComponent
 implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
    // Les valeurs generiques
@@ -142,6 +142,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       WENZOOM=8;
    }
+   
+   protected ZoomView() { super(); }
    
    private void resumeSize() {
       int w = getWidth();
@@ -221,7 +223,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          } else {
             mi = new JMenuItemExt( s.length()>40 ? s.substring(0,38)+" ..." : s);
-            mi.setActionCommand(s);
+            mi.setActionCommand( TargetHistory.getTarget(s) );
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   String s = ((JMenuItem)e.getSource()).getActionCommand();

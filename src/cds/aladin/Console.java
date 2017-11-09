@@ -43,6 +43,8 @@ import java.io.FileWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.TimeZone;
 import java.util.Vector;
 
@@ -65,6 +67,7 @@ import cds.tools.Util;
  * Gestion de la fenetre de la console Aladin
  *
  * @author Pierre Fernique [CDS]
+ * @version 3.1 : nov 17 ajout des commandes par lots
  * @version 3.0 : juil 10 refonte de la console sous forme d'une table
  * @version 2.0 : fév 05  Ajout de la gestion d'une console
  * @version 1.1 : 29 oct 04  Ajout du clonage du contenu de la measurement frame
@@ -91,6 +94,10 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    private  Vector<Command> cmdHistory = new Vector<Command>();  // L'historique des commandes traitées
    
    private String currentCmd = null;  // La dernière commande en cours de saisie 
+   
+   private ArrayList<Lot> lots = new ArrayList<Lot>(); // Liste des lots de commandes en attente de traitement
+   private Lot currentLot=null;                        // Lot courant, càd qui correspond à la commande 
+                                                       // qui est entrain d'être traitée
 
    // Les différents types de "commandes" mémorisées
    static final private int CMD = 0;
@@ -201,14 +208,121 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       cmdHistory.clear();
       resumeTable();
    }
-
+   
+   static int LOT = 0;
+   
+   // Class gèrant un lot de commandes à exécuter séquentiellement
+   class Lot {
+      int name = ++LOT;
+      long waitingId=-1;  // Si >=0 correspond à l'id du thread dont il faut attendre la fin
+                          // pour exécuter la commande suivante du lot
+                          // -2 est une valeur spéciale pour indiquer l'attente du lancement imminent d'un thread
+      
+      // Fifo des commandes du lot
+      Queue<String> cmds=new LinkedList<String>();
+      
+      // Ajout d'une commande
+      void add(String s) {
+         cmds.add(s); 
+//         System.out.println("Ajout ["+s+"] lot"+name);
+      }
+      
+      // Exécution d'une commande
+      String poll() {
+         String s = cmds.poll(); 
+//         System.out.println("Exécution ["+s+"] lot"+name);
+         return s;
+      }
+      
+      // La fifo est vide
+      boolean isEmpty() { return cmds.isEmpty(); }
+   }
+   
+   /** Ajout d'un lot de commandes (séparées par des ; ou des CR) et demande d'exécution */
+   synchronized public void addLot(String s) {
+      Lot lot = new Lot();
+      //Permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
+      String[] commands = Util.split(s, ";\n\r", '[', ']');
+      for( int i=0; i<commands.length; i++ ) lot.add(commands[i]);
+      lots.add( lot);
+      aladin.command.readNow();
+   }
+   
+   /** Retrait (exécution) d'une commande dans la liste des lots en attente
+    * @return la commande à traiter, null si aucune
+    */
+   synchronized protected String pollLot() {
+      String cmd = null;
+      if( lots.size()==0 ) return null;
+      
+      for( Lot lot : lots) {
+         if( lot.isEmpty() ) continue;
+         
+         if( lot.waitingId==-2L ) {
+//            System.out.println("Lot"+lot.name+" en attente de lancement de thread...");
+            continue;
+         }
+         
+         // Si ce lot attend la fin d'un thread particulier, vérifie si celui-ci ne serait
+         // pas achevé. Si oui, autorise le traitement de la commande suivante dans ce lot
+         if( lot.waitingId>=0L ) {
+            boolean trouve=false;
+            for( Thread th : Thread.getAllStackTraces().keySet() ) {
+               if( th.getId()==lot.waitingId ) { trouve=true; break; }
+            }
+            if( !trouve ) {
+//               System.out.println("Lot"+lot.name+" thread "+lot.waitingId+" achevé");
+               lot.waitingId=-1L;
+            }
+            else {
+//               System.out.println("Lot"+lot.name+" tjrs en attente de thread "+lot.waitingId);
+               continue;
+            }
+         }
+         
+         // Ce lot peut-il fournir une commande à exécuter maintenant ?
+         if( lot.waitingId==-1L ) {
+            currentLot = lot;
+            cmd = lot.poll();
+            break;
+         } 
+      }
+      
+      // Suppression des lots vides
+      ArrayList<Lot> lotsBis = new ArrayList<Console.Lot>();
+      for( Lot lot : lots ) if( !lot.isEmpty() ) lotsBis.add(lot);
+      lots=lotsBis;
+      
+      return cmd;
+   }
+   
+   
+   /** Mémorise l'id du thread correspondant à l'exécution du lot en cours
+    * (uniquement dans le cas d'une exécution avec thread particulier
+    * @param threadId
+    */
+   public void memoThreadId(long threadId) {
+      if( currentLot==null ) return;
+      currentLot.waitingId = threadId;
+//      System.out.println("Lot"+currentLot.name+" désormais en attente de thread "+threadId);
+   }
+   
+   // Retourne true s'il y a au-moins une commande encore en attente dans un lot
+   private boolean hasWaitingLot() {
+      if( lots.size()==0 ) return false;
+      for( Lot lot : lots) if( !lot.isEmpty() ) return true;
+      return false;
+   }
+   
    /** Retourne true si une commande est en attente de traitement */
-   synchronized public boolean hasWaitingCmd() { return cmd.size()>0; }
+   synchronized public boolean hasWaitingCmd() {
+      return cmd.size()>0 || hasWaitingLot() ;
+   }
 
    /** Empile la prochaine commande à traiter et réveille command pour la traiter */
-   synchronized public void pushCmd(String s) {
+   synchronized public void addCmd(String s) {
       // thomas, 16/11/06 : permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
-      String[] commands = Util.split(s, "\n;", '[', ']');
+      String[] commands = Util.split(s, ";\n\r", '[', ']');
       for( int i=0; i<commands.length; i++ ) {
          cmd.addElement(commands[i]);
       }
@@ -216,7 +330,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    }
 
    /** Dépile la prochaine commande à traiter */
-   synchronized public String popCmd() {
+   synchronized public String pollCmd() {
       if( cmd.size()==0 ) return "";
       String s = cmd.elementAt(0);
       cmd.removeElementAt(0);
@@ -227,8 +341,8 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    private void execute() {
       String cmd = fieldCmd.getText();
       if( (cmd=isCmdComplete(cmd))!=null ) {
-//         pushCmd(cmd);
-         aladin.command.execScriptAsStream(cmd);
+         addCmd(cmd);
+//         aladin.command.execScriptAsStream(cmd);
          fieldCmd.setText("");
       }
    }

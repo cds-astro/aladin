@@ -405,13 +405,8 @@ public class PlanBG extends PlanImage {
       return s;
    }
    
-   /** Chargement des propriétés du HiPS.
-    * On en profite pour vérifier s'il n'y aurait pas un site miroirs plus rapide
-    */
-   protected boolean scanProperties() {
-      boolean rep=true;
-      boolean alternative=true;
-      
+   // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
+   protected boolean checkSite() {
       // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
       boolean lookForFaster = !aladin.glu.checkSiteHistory(gluTag);
       
@@ -424,6 +419,19 @@ public class PlanBG extends PlanImage {
             }
          } catch( Exception e ) { }
       }
+      
+      return lookForFaster;
+   }
+   
+   /** Chargement des propriétés du HiPS.
+    * On en profite pour vérifier s'il n'y aurait pas un site miroirs plus rapide
+    */
+   protected boolean scanProperties() {
+      boolean rep=true;
+      boolean alternative=true;
+      
+      // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
+      boolean lookForFaster = checkSite();
       
       // Vérifie qu'il y a au-moins une alternative
       URL u = gluTag==null ? null : aladin.glu.getURL(gluTag,"",false,false,2);
@@ -515,6 +523,13 @@ public class PlanBG extends PlanImage {
 //         if( s==null ) s = prop.getProperty(Constante.OLD_PUBLISHER_DID);
 //         id = s;
 //         if( id.startsWith("ivo://") ) id = s.substring(6);
+         
+         s = prop.getProperty(Constante.KEY_HIPS_ORDER);
+         if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER);
+         if( s!=null ) {
+            try { maxOrder=Integer.parseInt(s);
+            } catch( Exception e ) {};
+         }
 
          s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
          if( s!=null ) {

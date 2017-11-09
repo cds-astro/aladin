@@ -21,10 +21,13 @@
 
 package cds.aladin;
 
-public class ZoomStatic extends Zoom {
-   
-   protected ZoomStatic(Aladin aladin) {
+public final class ZoomViewStatic extends ZoomView {
+
+   protected ZoomViewStatic(Aladin aladin) {
+      super();
       this.aladin = aladin;
-      zoomView = new ZoomViewStatic(aladin);
-   }   
+   }
+   
+   public int getWidth()  { return 200; }
+   public int getHeight() { return 200; }
 }

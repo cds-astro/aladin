@@ -177,6 +177,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String DIRFILER   = "DirFilter";
    protected static String LASTFILE   = "LastFile";
    protected static String LASTTARGET = "LastTarget";
+   protected static String LASTTARGETNAME = "LastTargetName";
    protected static String LASTGLU    = "LastGlu";
    protected static String LASTRUN    = "LastRun";
    protected static String STOPHELP   = "StopHelp";
@@ -2587,7 +2588,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Mémorise les dernières targets */
    protected void setLastTarget(String target ) {
-      aladin.targetHistory.add(target);
+      if( aladin.targetHistory!=null ) aladin.targetHistory.add(target);
    }
    
    // Juste pour mémoriser temporairement l'historique passée des indirections Glu

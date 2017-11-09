@@ -302,8 +302,9 @@ public class PlanHealpix extends PlanBG {
          if (needProcessing) { // pour eviter de charger un flux distant alors qu'on a deja les donnees
 
             try {
-               this.isGZ = dis.isGZ();
-               this.isARGB = (dis.getType() & MyInputStream.ARGB) != 0;
+               long type = dis.getType();
+               this.isGZ = (type & MyInputStream.GZ)!=0;
+               this.isARGB = (type & MyInputStream.ARGB) != 0;
             } catch (IOException e1) {
                // TODO Auto-generated catch block
                e1.printStackTrace();

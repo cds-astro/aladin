@@ -292,7 +292,9 @@ public final class Command implements Runnable {
       do {
          // Une commande qui provient du pad et prioritaire sur stdin
          if( (stream==null || stream==System.in) &&
-               a.console!=null && a.console.hasWaitingCmd() ) return NOW+a.console.popCmd();
+               a.console!=null && a.console.hasWaitingCmd() ) return a.console.pollCmd();
+         
+         
 
          // Commandes provenant d'un stream (STDIN et/ou autres)
          try {
@@ -343,8 +345,6 @@ public final class Command implements Runnable {
    protected boolean waitingMore() { return !filterMode && fonct==null; }
    
    
-   static final private String NOW = "_NOW_";
-
    /** Lecture d'un script
     * @param dis InputStream
     */
@@ -356,14 +356,25 @@ public final class Command implements Runnable {
       while(!stop /* && true */) {
          try {
             if( robotMode ) robotSync();
-            s = readLine();
-            //         System.out.println("===> ["+s+"]");
-            if( s==null )  return;
+            
+            // Une commande via un lot ?
+            s = a.console.pollLot();
+            if( s!=null ) {
+               execNow(s);
+               setFlagSleep(true);
+               Util.pause(100);
+               setFlagSleep(false);
+               
+            // Une commande classique ?
+            } else {
 
-            if( s.trim().length()!=0 ) {
-               // thomas : quand on definit un filtre, les lignes de commentaires ne doivent pas être ignorées
-               //            if( s.charAt(0)=='#' && !filterMode ) continue;
-               execScript(s);
+               s = readLine();
+               //         System.out.println("===> ["+s+"]");
+               if( s==null )  return;
+
+               if( s.trim().length()!=0 ) {
+                  execScript(s);
+               }
             }
             if( prompt ) print(getPrompt());
          } catch( Exception e ) {
@@ -2978,14 +2989,7 @@ public final class Command implements Runnable {
     * @param verbose true si on baratine
     * @return null si la premiere commande n'est pas trouvee
     */
-   public String execScript(String s) {
-      boolean flagUrgent=false;
-      if( s.startsWith(NOW) ) {
-         flagUrgent=true;
-         s=s.substring( NOW.length() );
-      }
-      return execScript(s,true,false,flagUrgent);
-   }
+   public String execScript(String s) { return execScript(s,true,false,false); }
    synchronized public String execScript(String s,boolean verbose,boolean flagOnlyFunction,boolean flagUrgent) {
       
       //      StringTokenizer st = new StringTokenizer(s,";\n\r");
@@ -3066,15 +3070,15 @@ public final class Command implements Runnable {
     * @param s la commande a traiter
     */
    protected void execNow(String s) {
-      if( SwingUtilities.isEventDispatchThread() ) {
+//      if( SwingUtilities.isEventDispatchThread() ) {
          exec(s,true,false,true);
-      } else {
-         final String [] param = new String[1];
-         param[0]=s;
-         SwingUtilities.invokeLater(new Runnable() {
-            public void run() { exec(param[0],true,false,true); }
-         });
-      }
+//      } else {
+//         final String [] param = new String[1];
+//         param[0]=s;
+//         SwingUtilities.invokeLater(new Runnable() {
+//            public void run() { exec(param[0],true,false,true); }
+//         });
+//      }
    }
    
 //      PROBABLEMENT TROP VERBEUX POUR APT.... JE NE LE METS PAS

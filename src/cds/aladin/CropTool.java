@@ -124,6 +124,10 @@ public class CropTool  {
       return false;
    }
    
+   public PlanImage manualCrop( ViewSimple v ) throws Exception {
+      return v.cropAreaBG(getRectangle(),null,v.zoom,getResMult(),true,false);
+   }
+   
    /** Effectue le crop sur l'image courante */
    public void doCrop(ViewSimple v) {
       if( doMocCrop(v) ) return;
@@ -160,8 +164,8 @@ public class CropTool  {
       Coord coo1 = new Coord();
       Coord coo2 = new Coord();
       Projection proj = v.getProj();
-      coo1.x = r.x+r.width/2; coo1.y = r.y+r.height/2;
-      coo2.x = r.x+r.width/2; coo2.y = r.y+r.height;
+      coo1.x = r.x+r.width/2.; coo1.y = r.y+r.height/2.;
+      coo2.x = r.x+r.width/2.; coo2.y = r.y+r.height;
       proj.getCoord(coo1);
       proj.getCoord(coo2);
       tailleDE=Coord.getDist(coo1,coo2)*2;

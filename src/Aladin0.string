@@ -527,13 +527,13 @@ GRIDH	Activate/unactivate the coordinate grid
 GRIDH.fr	Active/désactive la grille de coordonnées
 OEIL	wink
 OEIL.fr	cligne
-OEILH	Activate/unactivate the overlayed planes
+OEILH	Activate/unactivate the overlaid planes
 OEILH.fr	Active/désactive les plans superposés
 BKGD	allsky
 BKGD.fr	ciel
 #BKGDH	Click to activate/unactivate the background sky
 #BKGDH.fr	Cliquer pour activer/désactiver le ciel d'arrière plan
-NORTHUPHELP	Turn the image North up, Est left
+NORTHUPHELP	Turn the image North up, East left
 NORTHUPHELP.fr	Oriente l'image le Nord en haut, l'Est à gauche
 PIXHELP	High Dynamic pixel Range
 PIXHELP.fr	HDR: visualisation de la dynamique complète des pixels
@@ -546,11 +546,11 @@ TIPSTORETARGET.fr Mémoriser la position du réticule dans la liste des cibles
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key
-HDRAW	Overplot drawer - click or drag to append lines
-#HTEXT	Overplot text editor - click and type text
-HTAG	Overplot tag with/without label - click and write
-HPHOT	Overplot photometry measurement - click or click&drag
-HDIST	Overplot measurer and cut graph - click or drag to set a cut graph
+HDRAW	Line drawing tool - click (& drag) for straight (curved) lines
+#HTEXT	Text editor - click and type text
+HTAG	Tag - click and write
+HPHOT	Photometry measurement tool - click or click&drag
+HDIST	Measurer and cut graph - click or drag to set a cut graph
 HDEL	Clear/remove current selected elements (graph.overlays, views or planes)
 HMGLSS	Activate the magnifying glass around the mouse position
 HPROP	Open the property windows of the selected planes
@@ -558,15 +558,15 @@ HZOOM	Zoom forwards or backwards (with SHIFT) on the current field
 HPAN	Click and drag to pan the field (Ctrl for rolling)
 HHIST	Pixel histogram and contrast controller
 HPAD	Open the pad - to cut-and-paste, memorize
-HRGB	Create an RGB image
+HRGB	Create an colored composite image (RGB)
 HCONT	Create an isocontour plane
 HFILTER	Create a filter plane
 HSYNC	Automatical pan synchronization (only in multiview mode)
-HBLINK	Create a image association (mosaic or blink sequence)
+HBLINK	Create an image association (mosaic or blink sequence)
 HRSAMP	Resample selected images
-HXMATCH	Cross match two catalogue sources
+HXMATCH	Cross match two catalogue planes
 HCROP	Image cropping
-HPLOT	Scatter plot for catalog sources
+HPLOT	Scatter plot for catalogue sources
 HSPECT  Spectrum extractor for cubes
 HMOC    Multi-Order Coverage map operations
 
@@ -2971,14 +2971,14 @@ BEGIN2	Imagine your eye\nlooking through a stack of planes (below).\n \nEach pla
 BEGIN3	Stack controls:\n \n*the icon: show/hide a plane\n*size: change object size\n*zoom: adjust field size.\n*Opacity: adjust transparency.\n \nThe view is drawn according to the projection of a reference plane.\n \nFor changing the reference, click on its check box.
 BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*Right: constrast adjustement.\n*Wheel: quick zoom on the reticle.\n*Simple-clic: move the reticle.\n*Double-clic: re-center.\n \nClick and let your mouse pointer a few seconds on an object for discovering advanced information about it.
 BEGIN5	Basic controls:\n \n*Type any object name or coordinates for moving on it.\n \n*Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controller.
-BEGIN6	Data discovery tree\nof available collections (left panel)\n \n*in green: the collections visible in the current view, in orange the outside collections\n \n*Type un key word, a mission name, etc in the "select" field to keep only relevant collections\n \n*Use the predefined filters to select more specifically the collections\n \n*Create and store your own filters thanks to the "+" button\n \nActivate the "view" mode to hide temporary the collections outside the view.
+BEGIN6	Data discovery tree\nof available collections (left panel)\n \n*in green: the collections visible in the current view, in orange the outside collections\n \n*Type un key word, a mission name, etc in the "select" field to keep only relevant collections\n \n*Use the predefined filters to select more specifically the collections\n \n*Create and store your own filters thanks to the right button\n \nActivate the "view" mode to hide temporary the collections outside the view.
 
 BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professionel du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propres données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...\n \nOu tout simplement, cliquez dans la fenêtre principale pour explorer le ciel.
 BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques (ci-dessous).\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLe panneau central affiche la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez l'arbre de découverte sur le panneau de gauche,\nou glissez/déposez vos propres fichiers locaux.
 BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: change la taille des objets\n*zoom: modifie l'agrandissement\n*opacité: ajuste la transparence.\n \nLa vue est dessinée en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
 BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les données connues d'un objet, cliquez sur celui-ci, puis laissez le pointeur quelques secondes dessus.
 BEGIN5.fr	Contrôle de base:\n \n*Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n*Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n*Visualiser simultanément plusieurs vues via le contrôle du "multivue".
-BEGIN6.fr	Arbre de découverte\ndes collections disponibles (panneau de gauche)\n \n*En vert les collections visibles dans le champ courant, en orange celles qui ne le sont pas\n \n*Saisissez un mot clé, un nom de mission, etc dans le champ "select" pour n'afficher dans l'arbre que les collections relevantes\n \n*Utiliser les filtres prédéfinis pour sélectionner précisément les collections\n \n*Créer et mémoriser vos propres filtres via le bouton "+"\n \nBouton "vue" actif pour cacher temporairement les collections hors du champ courant
+BEGIN6.fr	Arbre de découverte\ndes collections disponibles (panneau de gauche)\n \n*En vert les collections visibles dans le champ courant, en orange celles qui ne le sont pas\n \n*Saisissez un mot clé, un nom de mission, etc dans le champ "select" pour n'afficher dans l'arbre que les collections relevantes\n \n*Utiliser les filtres prédéfinis pour sélectionner précisément les collections\n \n*Créer et mémoriser vos propres filtres via le bouton à droite\n \nBouton "vue" actif pour cacher temporairement les collections hors du champ courant
 
 #For datalink pop-ups- default texts
 DATALINK_THISDATASET This dataset
@@ -3233,8 +3233,9 @@ SCAN	scan
 SCAN.fr	scan
 STOP	stop
 STOP.fr	stop
-SCANTIP	Amongst the selected collections\nscans those of them which do not provide a coverage (MOC) to know\nif they contain results in the current view.
-SCANTIP.fr	Parmi les collections sélectionnées,\ninterroge celles qui ne fournissent pas de courverture (MOC)\nafin de déterminer lesquelles ont des résultats dans le champ de vue courant.
+Tests if selected collections missing MOC coverage contain data in the current view
+SCANTIP	Tests if selected collections missing MOC coverage contain data in the current view.
+SCANTIP.fr	Teste les collections pour lesquelles il n'y a pas de MOC disponible afin de déterminer celles qui contiennent des données dans la vue courante.
 DTFILTER	filter
 DTFILTER.fr	filtre
 DTFILTERTIP	Indicate if a filter is presently activated.\nClic on to remove the active filter

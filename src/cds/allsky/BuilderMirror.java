@@ -198,10 +198,19 @@ public class BuilderMirror extends BuilderTiles {
       } else {
          build();
 
-         if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
          if( !context.isTaskAborting() ) {
 
             copyX(context.getInputPath()+"/index.html",context.getOutputPath()+"/index.html");
+            copyX(context.getInputPath()+"/preview.jpg",context.getOutputPath()+"/preview.jpg");
+            
+            // On recopie simplement le MOC, sauf si copie partielle, ou erreur
+            // et dans ce cas, on le recalcule.
+            try {
+               if( isSmaller ) throw new Exception();
+               copy(context.getInputPath()+"/Moc.fits",context.getOutputPath()+"/Moc.fits");
+            } catch( Exception e ) {
+               (b=new BuilderMoc(context)).run(); b=null;
+            }
             copyAllsky();
 
             //  regeneration de la hierarchie si nécessaire

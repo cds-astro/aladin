@@ -2107,12 +2107,15 @@ public class Plan implements Runnable {
 
    /** Détermine s'il faut threader au non */
    protected void threading() {
-      if( Thread.currentThread().getName().equals(ALADINQUERY) ) run();
-      else {
+      Thread th = Thread.currentThread();
+      if( th.getName().equals(ALADINQUERY) ) {
+         run();
+      } else {
          runme = new Thread(this,"AladinQueryBis");
-         Util.decreasePriority(Thread.currentThread(), runme);
+         Util.decreasePriority(th, runme);
          //         runme.setPriority( Thread.NORM_PRIORITY -1);
          aladinQueryThread(runme);
+         aladin.console.memoThreadId( -2L ) ;
          runme.start();
       }
 
@@ -2120,6 +2123,8 @@ public class Plan implements Runnable {
 
    /** Lance le chargement du plan */
    public void run() {
+      aladin.console.memoThreadId( Thread.currentThread().getId() );
+      
       Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
       if( server!=null && server.ifTapIsCurrentRequest(this.tapRequestId)) server.setStatus();
       boolean rep=true;

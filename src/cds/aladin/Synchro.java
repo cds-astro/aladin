@@ -47,6 +47,7 @@ public final class Synchro {
    class Task {
       String taskId;        // identificateur unique de la tâche
       long endTime;         // date max de fin de tâche ou 0 si pas de borne
+      String cmd;           // Commande associée à cette tache s'il y a lieu
       
       public String toString() { return taskId+(endTime==0 ? "" : " (watchdog in "+(endTime-System.currentTimeMillis())/1000+"s)"); }
    }
@@ -72,15 +73,18 @@ public final class Synchro {
    /** Indique qu'une tâche est en cours d'exécution
     * @param proposedTaskId Nom de la tache proposé
     * @param delay durée max de la tâche en millisecondes (<=0 pour infini)
+    * @param cmd une commande associée à cette tache (optionel)
     * @return taskId retenue (proposedTaskId + un éventuel suffixe)
     */
-   public String start(String proposedTaskId) { return start(proposedTaskId,0); }
-   public String start(String proposedTaskId,long delay) {
+   public String start(String proposedTaskId) { return start(proposedTaskId,0,null); }
+   public String start(String proposedTaskId,long delay) { return start(proposedTaskId,delay,null); }
+   public String start(String proposedTaskId,long delay,String cmd) {
       try {
          waitLock();
          Task t = new Task();
 //         sleep(300);
          t.taskId = getUniqueTaskId(proposedTaskId);
+         t.cmd = cmd;
          t.endTime = delay>0 ? System.currentTimeMillis()+delay 
                    : defaultDelay>0 ? System.currentTimeMillis()+defaultDelay 
                    : 0;

@@ -253,8 +253,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.036";
-   static protected final String AUTHORS = "P.Ferniques, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
+   static public final    String VERSION = "v10.039";
+   static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
    static protected final String PROTO_VERSION    = "    *** PROTOTYPE VERSION (based on "+VERSION+") ***";
@@ -354,7 +354,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_TEXT_FOREGROUND_INFO;
   
 
-   private void initColors() {
+   protected void initColors() {
       
       DARK_THEME = configuration.isDarkTheme();
       
@@ -2720,7 +2720,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private boolean cacheUpdaterRunning=false;
 
    /** Demande d'arrêt du thread de mise à jour de la date de dernière modif du cache */
-   private void stopCacheUpdater() {
+   protected void stopCacheUpdater() {
       cacheUpdaterRunning=false;
       if( updaterCache!=null ) updaterCache.interrupt();
    }
@@ -4657,7 +4657,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          // Deselection des objets en cours dans le cas ou une application
          // type VOPlot est utilisee en parallele
-            glu.tapManager.cleanUp();
+         glu.tapManager.cleanUp();
          
          // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
          try {
@@ -6320,7 +6320,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Arrêt de l'animation en cours
       while( isAnimated() ) stopAnimation();
 
-      console.pushCmd(cmd);
+      console.addCmd(cmd);
    }
 
    protected static Class DEFAULT_MESSAGING_MGR = SAMPManager.class;
@@ -7590,7 +7590,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
          switch(mode) {
             case 0:
-               if( z<0.4 ) { i+=0.5; m++; }
+//               if( z<0.4 ) { i+=0.5; m++; }
                if( z>0.08 ) z=z/1.02;
                else mode=1;
                break;
@@ -7635,8 +7635,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             if( t1-t>3000 ) flagGoto=false;
             Util.pause(4);
          }
-//         System.out.println("goto time: z="+z+" i="+i+"/"+n+" => "+(t1-t)+"ms");
-         System.out.println("goto time: z="+z+" => "+(t1-t)+"ms");
+//         System.out.println("goto time: z="+z+" => "+(t1-t)+"ms");
       }
       calque.setReticle(modeReticule);
       flagGoto=false;

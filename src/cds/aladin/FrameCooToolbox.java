@@ -29,6 +29,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.text.ParseException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -397,6 +398,7 @@ public class FrameCooToolbox extends JFrame {
          rv = getField(rvField);
       } catch( Exception e ) { }
       resume();
+      moveRepere();      
    }
    
    // Retourne la valeur numérique du champ qui peut être une expression algébrique
@@ -437,6 +439,16 @@ public class FrameCooToolbox extends JFrame {
       if( flagLog ) aladin.glu.log("CoordToolbox","");
    }
    
+   
+   /** Déplace le réticule à la position courante */
+   private void moveRepere() {
+      try {
+         Coo c = new Coo(cooField[0].getText() );
+         aladin.view.gotoThere( new Coord(c.getLon(),c.getLat()) );
+      } catch( ParseException e ) {
+         if( Aladin.levelTrace>=3 )  e.printStackTrace();
+      }
+   }
    
    
    static private double PARSEC2AL = 3.2614945566008;

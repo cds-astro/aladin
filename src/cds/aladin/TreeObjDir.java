@@ -970,8 +970,10 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    private void exec(String cmd) {
-      if( cmd.indexOf("browse")>=0  ) aladin.command.execScriptAsStream( cmd );
-      else aladin.execAsyncCommand( cmd );
+//      if( cmd.indexOf("browse")>=0  ) aladin.command.execScriptAsStream( cmd );
+//      else aladin.execAsyncCommand( cmd );
+      
+      aladin.console.addLot( cmd );
    }
  
    /** Génération et exécution de la requête script correspondant au protocole SSA */
@@ -1137,7 +1139,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    private String getProgenitorsCmd() {
       String progen = getProgenitorsUrl();
       if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
-      return Tok.quote(internalId+" PNG")+"=load "+progen;
+      return Tok.quote(internalId+" PGN")+"=load "+progen;
    }
 
    /** Génération et exécution de la requête script permettant le chargement de la totalité d'un catalogue VizieR */

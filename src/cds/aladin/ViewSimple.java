@@ -638,10 +638,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    //   }
 
    /** Génération d'un plan à partir des pixels repérés par le rectangle crop pour un plan allsky */
-   protected PlanImage cropAreaBG(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean inStack) {
+   protected PlanImage cropAreaBG(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean inStack)
+   throws Exception {
       PlanImage pi=null;
       PlanBG pref = (PlanBG)this.pref;
-      pref.projd = projLocal.copy();
+//      pref.projd = projLocal.copy();
+      pref.projd = this.pref.projd.copy();
 
       try {
          if( label==null ) label = pref.label;
@@ -651,7 +653,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             else pi = new PlanImage(aladin,pref);
          }
          pi.flagOk=false;
-         pi.setLabel(label);
+         try { pi.setLabel(label); } catch( Exception e ) {}
          pi.pourcent=1;
          pi.type=Plan.IMAGE;
          boolean cropped;
@@ -689,9 +691,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
 
-         PointD pA = getPosition(getWidth()/2.,getHeight()/2);
-         double deltaX = (pA.x-Math.floor(pA.x))*zoomFct;
-         double deltaY = (pA.y-Math.floor(pA.y))*zoomFct;
+//         PointD pA = getPosition(getWidth()/2.,getHeight()/2);
+//         double deltaX = (pA.x-Math.floor(pA.x))*zoomFct;
+//         double deltaY = (pA.y-Math.floor(pA.y))*zoomFct;
+         
+         double deltaX = 0.5*zoomFct;
+         double deltaY = 0.5*zoomFct;
          pi.projd.deltaProjXYCenter(-deltaX,-deltaY);
 
          // Beurk !! en attendant BOF
@@ -725,10 +730,17 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Génération d'un plan à partir des pixels repérés par le rectangle crop (éventuellement extraction de la frame
     * courante dans le cas d'un plan Blink et possibilité de recadrage sur la portion visible
     */
-   protected PlanImage cropArea(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean verbose) {
+   protected PlanImage cropArea(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean verbose) 
+     {
       PlanImage pi=null;
 
-      if( pref.type==Plan.ALLSKYIMG ) return cropAreaBG(rcrop,label,zoom,resMult,fullRes,true);
+      if( pref.type==Plan.ALLSKYIMG ) {
+         try {
+         return cropAreaBG(rcrop,label,zoom,resMult,fullRes,true);
+         } catch( Exception e ) {
+            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
 
       try {
          int frame=0;
@@ -5805,7 +5817,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
          }
 
-         // Est-ce que le Nord et sur le coté ?
+         // Est-ce que le Nord est sur le coté ?
          try { c = proj.c.getImgCenter(); }
          catch( Exception e ) { e.printStackTrace(); return; }
          double ndel = c.del+pasd;

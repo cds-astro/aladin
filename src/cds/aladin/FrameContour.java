@@ -438,7 +438,7 @@ public final class FrameContour extends JFrame implements ActionListener {
           if( !(p instanceof PlanBG) ) throw new Exception("Contour cropping only on all-sky image");
           ViewSimple v = a.view.getCurrentView();
           if( v.pref!=p )  throw new Exception("All-sky image contour is only available on current view !");
-          return a.calque.createCropImage(v);
+          return a.calque.createCropImage(v,false);
        }
 
 

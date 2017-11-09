@@ -403,7 +403,10 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    public void setVisible(boolean visible) {
       // Si on ferme la fenêtre des filtres sans qu'il n'y ait aucune contrainte, on remet le selecteur
       // de filtres de la fenêtre principale au choix par défaut
-      if( !visible && isEmpty() ) aladin.directory.comboFilter.setSelectedIndex(0);
+      if( !visible && isEmpty() ) {
+         aladin.directory.comboFilter.setSelectedIndex(0);
+         aladin.directory.iconFilter.repaint();
+      }
       super.setVisible(visible);
    }
    
