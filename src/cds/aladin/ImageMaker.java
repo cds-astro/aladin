@@ -166,6 +166,9 @@ public class ImageMaker {
       
       // Je publie le flux de l'image finale
       ImageIO.write(img, fmt, output);
+      
+      // Je libère les ressources
+      p.Free();
    }
    
    /**
@@ -236,6 +239,9 @@ public class ImageMaker {
       // Sauvegarde dans le flux de sortie au format FITS
       Save save = new SaveStatic(aladin);
       save.saveImageFITS(output, pi);
+      
+      // Je libère les ressources
+      pi.Free();
    }
    
    /************************************************* Pour exemple et debug *****************************************/

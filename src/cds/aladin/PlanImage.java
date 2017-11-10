@@ -862,7 +862,7 @@ public class PlanImage extends Plan {
     * cad met toutes ses variables a <I>null</I> ou a <I>false</I>
     */
    protected boolean Free() {
-      aladin.view.free(this);
+      if( (this instanceof PlanBGStatic) ) aladin.view.free(this);
       super.Free();
       //      close();
       if( dis!=null ) { try{ dis.close(); dis=null; } catch( Exception e ) {} }
