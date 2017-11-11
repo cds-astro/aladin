@@ -34,7 +34,7 @@ class AladinStatic extends Aladin {
     */
    AladinStatic(int trace) throws Exception {
       super();
-      creatFonts();
+//      creatFonts();
       levelTrace=trace;
       aladin=this;
       configuration = new Configuration(aladin);

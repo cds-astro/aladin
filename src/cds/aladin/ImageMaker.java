@@ -250,7 +250,7 @@ public class ImageMaker {
    static public void main(String [] argv) {
       try {
 
-         ImageMaker im  = new ImageMaker(6);         
+         ImageMaker im  = new ImageMaker(3);         
 //         System.out.println("Génération d'un preview de M101 pour le HiPS DSS couleur distant...");
 //         im.preview( "http://alasky.u-strasbg.fr/DSS/DSSColor", 210.80242,+54.34875,130., 
 //               "D:/Test.png", 512,512,"png", "grid label=M101 size NE reticle");
@@ -259,7 +259,7 @@ public class ImageMaker {
 //         im.fits( "D:/HalphaNorthHips", 084.93891,-01.96410,10, "D:/Test.fits", 1024,512);
          
          long t = System.currentTimeMillis();
-         im.fits( "http://alasky.u-strasbg.fr/MAMA/CDS_P_MAMA_srcj", 247.55114, -25.12124, 0.5, "D:/Test.fits", 1800,1800);
+         im.fits( "http://alasky.u-strasbg.fr/MAMA/CDS_P_MAMA_srcj", 247.55114, -25.12124, 0.2, "D:/Test.fits", 900,900);
 //         im.fitsFull( "D:/SkymapperHips", 057.57646,-07.93148, 0.2, "D:/Test.fits", 512,1024);
          long t1 = System.currentTimeMillis();
          System.out.println("C'est terminé en "+(t1-t)/1000.+"s");

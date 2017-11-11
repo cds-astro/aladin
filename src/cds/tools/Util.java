@@ -858,6 +858,16 @@ public final class Util {
       g.drawLine(x, y, x+2, y); x++; y++;
       g.drawLine(x, y, x,   y);
    }
+   
+   /** Tracé d'une croix oblique */
+   static public void drawCross(Graphics g, int x, int y, int w) {
+      g.drawLine(x, y, x + w, y + w);
+      g.drawLine(x + 1, y, x + w + 1, y + w);
+      g.drawLine(x + 2, y, x + w + 2, y + w);
+      g.drawLine(x + w, y, x, y + w);
+      g.drawLine(x + w + 1, y, x + 1, y + w);
+      g.drawLine(x + w + 2, y, x + 2, y + w);
+   }
 
    /** Tracé d'une flèche entre (x,y) et (x1,y1), avec un label éventuel et une taille d'empennage de L pixels */
    static private void drawFleche1(Graphics g,double x,double y,double x1,double y1,int L) {

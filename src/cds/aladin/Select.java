@@ -69,7 +69,7 @@ MouseMotionListener, MouseListener, MouseWheelListener,
 Runnable, SwingWidgetFinder, Widget {
 
    String HSTACK0,HSTACK,HEYE,WAITMIN,NOPROJ,MSELECT,MBROADCASTALL,MALLAPPS,MBROADCASTTABLE,MBROADCASTIMAGE,
-   MDEL,MDELALL,MDELEMPTY,MCREATFOLD,HSTACK2,
+   MDEL,MDELALL,MDELALLOTHERS,MDELEMPTY,MCREATFOLD,HSTACK2,
    MINSFOLD,MCOL,MEXP,MPROP,SHOW,GOTO,BROWSE,HIDE,WARNING,WARNINGSLIDER;
    String [] BEGIN;
 
@@ -151,6 +151,7 @@ Runnable, SwingWidgetFinder, Widget {
       MBROADCASTIMAGE = a.chaine.getString("SLMBDCASTIMAGES");
       MDEL = a.chaine.getString("SLMDEL");
       MDELALL = a.chaine.getString("SLMDELALL");
+      MDELALLOTHERS = a.chaine.getString("SLMDELALLOTHERS");
       MDELEMPTY = a.chaine.getString("SLMDELEMPTY");
       MCREATFOLD = a.chaine.getString("SLMCREATFOLD");
       MINSFOLD = a.chaine.getString("SLMINSFOLD");
@@ -228,7 +229,7 @@ Runnable, SwingWidgetFinder, Widget {
    //   public Dimension getPreferredSize() { return new Dimension(ws+5,hs); }
       public Dimension getPreferredSize() { return new Dimension(100,100); }
 
-   JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuShow,menuGoto,menuBrowse,
+   JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuDelAllOthers,menuShow,menuGoto,menuBrowse,
    menuColl,menuCreatFold,menuInsertFold,menuProp,menuSelect,menuUnselect,
    menuConcat1,menuConcat2,menuTableInfo,menuPlot,menuCreateMulti,menuCreateUniq;
 
@@ -261,6 +262,8 @@ Runnable, SwingWidgetFinder, Widget {
       popMenu.add( menuDel=j=new JMenuItem(MDEL));
       j.addActionListener(this);
       popMenu.add( menuDelEmpty=j=new JMenuItem(MDELEMPTY));
+      j.addActionListener(this);
+      popMenu.add( menuDelAllOthers=j=new JMenuItem(MDELALLOTHERS));
       j.addActionListener(this);
       popMenu.add( menuDelAll=j=new JMenuItem(MDELALL));
       j.addActionListener(this);
@@ -317,6 +320,7 @@ Runnable, SwingWidgetFinder, Widget {
       else if( src==menuDel )        a.calque.FreeSet(true);
       else if( src==menuDelEmpty )   a.calque.FreeEmpty();
       else if( src==menuDelAll )     a.calque.FreeAll();
+      else if( src==menuDelAllOthers )     a.calque.FreeSetExcept(true);
       else if( src==menuBroadcast )  a.broadcastSelectedPlanes(null);
       else if( src==menuProp )       propertiesOfSelectedPlanes();
       else if( src==menuColl ) {
@@ -425,6 +429,7 @@ Runnable, SwingWidgetFinder, Widget {
       menuProp.setEnabled(menuPlan.size()>0);
       menuDel.setEnabled(menuPlan.size()>0);
       menuDelAll.setEnabled(menuPlan.size()>0);
+      menuDelAllOthers.setEnabled(plan.length>1);
       menuDelEmpty.setEnabled(hasEmpty);
       menuShow.setEnabled(menuPlan.size()>0);
       menuSelect.setEnabled(nbCatalog>0 || nbTool>0);

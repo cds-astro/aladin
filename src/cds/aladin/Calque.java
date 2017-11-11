@@ -811,6 +811,7 @@ public class Calque extends JPanel implements Runnable {
       if( (n=getFirstSelected())<0 ) return;
       Free(n);
    }
+   
 
    /**  Libère le plan passé en paramètre */
    protected void Free(Plan p) { Free( getIndex(p)); }
@@ -904,10 +905,47 @@ public class Calque extends JPanel implements Runnable {
       aladin.view.findBestDefault();
       repaintAll();
    }
+   
+   /** Libère tous les plans exceptés ceux qui sont sélectionnés */
+   protected void FreeSetExcept(boolean verbose) {
+      int i,j;
 
+      synchronized( pile ) {
+         // Gestion des folders (sélection de tous les plans qui s'y trouvent)
+         for( i=plan.length-1; i>=0; i-- ) {
+            if( plan[i].type==Plan.FOLDER ) {
+               Plan p[] = getFolderPlan(plan[i]);
+               boolean flagAllUnselected=false;
+               for( j=0; j<p.length; j++ ) {
+                  if( p[j].selected ) { flagAllUnselected=false; break; }
+               }
+               plan[j].selected=!flagAllUnselected;
+            }
+         }
 
+         // Suppression effective (par décalage)
+         for( i=plan.length-1; i>=0; i-- ) {
+            if( !plan[i].selected ) {
+               if( plan[i].type==Plan.NO) continue; // on ne supprime pas un plan vide
+               if( verbose ) aladin.console.printCommand("rm "+Tok.quote(plan[i].label));
+               if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
+               scroll.rm(i);
+               //               Plan ptmp = plan[i];
+               for( j=i; j>1; j-- ) plan[j]=plan[j-1];
+               i++;
+               //               plan[1]=ptmp;
+               plan[0]=new PlanFree(aladin);
+            }
+         }
+      }
 
-   /** Libère tous les plans du groupe en cours en les decalant vers le bas */
+      if( isFree() ) zoom.zoomView.free();
+      aladin.view.findBestDefault();
+      repaintAll();
+      aladin.gc();
+   }
+
+   
    protected void FreeSet(boolean verbose) {
       int i,j;
 

@@ -184,8 +184,14 @@ public abstract class MyBox extends JPanel {
    /** Action à opérer lorsque l'on clique sur le triangle au bout du champ de saisie */
    protected void triangleAction(int x) {}
    
+   /** Action à opérer lorsque l'on clique sur la croix => effacement du champ */
+   protected void crossAction() { text.setText(""); }
+   
    /** Retourne true s'il faut afficher un petit triangle au bout du champ de saisie */
    protected boolean hasTriangle() { return false; }
+   
+   /** Retourne true s'il faut afficher la petite croix permettant d'effacer le champ */
+   protected boolean hasCross() { return text.getText().length()>0 ; }
 
    /** Selection de tout le champ de saisie */
    protected void readyToClear() {  text.selectAll(); }
@@ -231,6 +237,7 @@ public abstract class MyBox extends JPanel {
    class Text extends JTextField implements MouseMotionListener, MouseListener {
 //      private Dimension dim=null;
       private Rectangle region=null;
+      private Rectangle regionCross=null;
       private Color colorTriangle = Color.darkGray;
 
       Text(String t,int width) {
@@ -241,12 +248,28 @@ public abstract class MyBox extends JPanel {
       }
 
       boolean in(int x,int y) { return region!=null && x>=region.x;  }
+      boolean inCross(int x,int y) { return regionCross!=null && x>=regionCross.x && x<=regionCross.x+regionCross.width;  }
 
       public void paintComponent(Graphics g) {
     	  try {
     		  super.paintComponent(g);
-    		  if( hasTriangle() ) drawTriangle(g,getWidth()-15,getHeight()/2-2);
+    		  if( hasCross() ) {
+    		     g.setColor( getBackground() );
+    		     g.fillRect(getWidth()-30,0,getWidth()-16,getHeight());
+    		     drawCross(g,getWidth()-28,8);
+    		  }
+    		  if( hasTriangle() ) {
+                 g.setColor( getBackground() );
+                 g.fillRect(getWidth()-16,0,getWidth()-1,getHeight());
+    		     drawTriangle(g,getWidth()-15,getHeight()/2-2);
+    		  }
     	  } catch( Exception e ) { }
+      }
+      
+      private void drawCross(Graphics g, int x, int y) {
+         g.setColor( colorTriangle );
+         Util.drawCross(g,x,y,6);
+         regionCross = new Rectangle(x-2,y-2,10,10);
       }
 
       private void drawTriangle(Graphics g, int x, int y) {
@@ -266,6 +289,7 @@ public abstract class MyBox extends JPanel {
       public void mouseMoved(MouseEvent e) {
          Cursor nc;
          if( text.in(e.getX(),e.getY()) ) nc = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+         else if( text.inCross(e.getX(),e.getY()) ) nc = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
          else nc = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
          if( nc.equals(cursor) ) return;
          setCursor(nc);
@@ -280,6 +304,7 @@ public abstract class MyBox extends JPanel {
       public void mouseReleased(MouseEvent e) {
          if( aladin.inHelp ) aladin.helpOff();
          if( text.in(e.getX(),e.getY()) ) triangleAction( e.getX() );
+         if( text.inCross(e.getX(),e.getY()) ) crossAction( );
       }
       public void mouseExited(MouseEvent e) {}
 

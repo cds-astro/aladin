@@ -1283,6 +1283,7 @@ SLMALLAPPS	... all SAMP applications
 SLMDEL	Delete
 SLMDELEMPTY	Delete empty/error planes
 SLMDELALL	Delete all planes
+SLMDELALLOTHERS	Delete all others planes
 SLMXMATCH	Cross match objects...
 SLMNEWCOL	Add a new column...
 SLMFILTER	Create a filter...
@@ -1314,6 +1315,7 @@ SLMALLAPPS.fr		... toutes les applications SAMP
 SLMDEL.fr	Supprimer
 SLMDELEMPTY.fr	Supprimer les plans vides/erronés
 SLMDELALL.fr	Supprimer tous les plans
+SLMDELALLOTHERS.fr Supprimer tous les autres plans
 SLMXMATCH.fr	Corréler les catalogues sélectionnés
 SLMNEWCOL.fr	Ajouter une nouvelle colonne...
 SLMFILTER.fr	Créer un nouveau filtre...
@@ -3199,8 +3201,8 @@ UWSJOBRADIOTOOLTIP.fr  Cliquez pour consulter le status de la tâche
 #V10
 DTLABEL	Available data
 DTLABEL.fr	Données disponibles
-DTLABELTIP	Tree of available data set collections from CDS and other IVOA compliant providers.\nBrowse, filter, select, and load the collections you want to display...
-DTLABELTIP.fr	Arbre des collections de données fournies par le CDS et autres fournisseurs compatibles IVOA.\n Visualisez, filtrez, sélectionnez et enfin charger les collections que vous voulez afficher
+DTLABELTIP	Tree of available data set collections from CDS and other IVOA compliant providers.\nBrowse, filter, select, and load the collections you want to display...\nThe blue folders contain collections unsorted/unsupervised by CDS, the red folders contain problematic collections (prototype or unmaintained service, or based on a rarely working server, etc).
+DTLABELTIP.fr	Arbre des collections de données fournies par le CDS et autres fournisseurs compatibles IVOA.\n Visualisez, filtrez, sélectionnez et enfin charger les collections que vous voulez afficher.\nLes répertoires en bleu contiennent des collections non organisées/triées par le CDS, ceux en rouge contiennent des collections dont l'accès ou le contenu est problématique (service prototype ou non maintenu, ou dont le serveur n'est que rarement accessible, etc)
 DTSELECT	select
 DTSELECT.fr	sélect.
 DTSELECTTIP	Filter by free keywords (AND logic, blank separated, quote sub-expr supported) or by any advanced filter expression (ex: nb_rows&lt;1000).

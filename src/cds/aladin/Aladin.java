@@ -253,7 +253,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.039";
+   static public final    String VERSION = "v10.040";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -771,7 +771,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    private boolean flagFrame=false;
    public GrabUtil grabUtilInstance = GrabUtil.getInstance();
-
+   
    /** Va tester s'il s'agit d'une applet signé ou non et va lancer l'applet dans une fenêtre à part si le parametre
     * inFrame est présent */
    @Override
@@ -8066,6 +8066,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    public void creatLocalPlane(String filepath, String name) {
       calque.newPlan(filepath,name,null);
+   }
+
+   @Override
+   public void setVisible(boolean flag) {
+      if( f!=null ) f.setVisible(flag);
+      else super.setVisible(flag);
+      
    }
 
 }

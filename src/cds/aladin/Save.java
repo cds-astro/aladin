@@ -1674,7 +1674,7 @@ public class Save extends JFrame implements ActionListener {
          bufferedImage = new BufferedImage(
                img.getWidth(null),
                img.getHeight(null),
-               RGB ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_BYTE_GRAY );
+               RGB ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_BYTE_GRAY );  // Le ARGB est nécessaire, me demandez pas pourquoi
          Graphics g = bufferedImage.createGraphics();
          g.drawImage(img,0,0,aladin);
          g.dispose();

@@ -3482,6 +3482,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          panelInfo.add(p, BorderLayout.CENTER);
 
          JPanel control = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+         JPanel precontrol = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
          control.setBackground(contentPane.getBackground());
 
          Preview preview = null;
@@ -3551,15 +3552,32 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             }
 
          } else {
+            
+            b = new JButton(new ImageIcon( Aladin.aladin.getImagette("Expand.png")));
+            b.setMargin(new Insets(0, 0, 0, 0));
+            b.setBorderPainted(false);
+            b.setContentAreaFilled(false);
+            Util.toolTip(b, aladin.chaine.getString("COLLAPSETIP"), true);
+            b.setFont(b.getFont().deriveFont(Font.BOLD));
 
+            precontrol.add(b);
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  iconCollapse.submit();
+               }
+            });
+           
+            
             if( flagScan ) {
-               b = new JButton(AWSCANONLY);
-               // b.setMargin( new Insets(2,4,2,4));
+               b = new JButton(new ImageIcon( Aladin.aladin.getImagette("icon_searchAitoff.png"))); // AWSCANONLY);
+               b.setMargin(new Insets(0, 0, 0, 0));
+               b.setBorderPainted(false);
+               b.setContentAreaFilled(false);
                b.setEnabled(hasView);
                Util.toolTip(b, AWSCANONLYTIP, true);
                b.setFont(b.getFont().deriveFont(Font.BOLD));
 
-               submitPanel.add(b);
+               precontrol.add(b);
                b.addActionListener(new ActionListener() {
                   public void actionPerformed(ActionEvent e) {
                      scan();
@@ -3630,6 +3648,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
          
          JPanel bas = new JPanel(new BorderLayout(0, 0));
+         if( precontrol.getComponentCount()>0 ) bas.add(precontrol, BorderLayout.WEST);
          bas.add(submitPanel, BorderLayout.CENTER);
          bas.add(control, BorderLayout.EAST);
 
