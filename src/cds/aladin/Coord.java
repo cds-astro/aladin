@@ -143,23 +143,23 @@ public final class Coord {
    
    /** Retourne les coordonnées sous forme degrés planétaires
     * ex: N 12.2345, E 1.6378*/
-   public String getDegPlanet(boolean longitudeCroissante) {
+   public String getDegPlanet() {
       String lat = Util.myRound(Math.abs(del));
       String latL = del<0 ? "S" : "N";
-      double al1 = al>180 ? al - 360 : al;
+      double al1 = al>180 ? al - 360 : al<-180 ? al + 360 : al;
       String lng = Util.myRound(Math.abs(al1));
-      String lngL = longitudeCroissante && al1<0 || !longitudeCroissante && al1>=0 ? "W" : "E";
+      String lngL = al1<0 ? "W" : "E";
       return lat+" "+latL+", "+lng+" "+lngL;
    }
    
    /** Retourne les coordonnées sous forme sexagésimal (degrés) planétaire
-    * ex: N 12°34'5.23", E 1°3'2.22" */
-   public String getSexaPlanet(boolean longitudeCroissante) {
+    * ex: 12°34'5.23 N", 1°3'2.22 E" */
+   public String getSexaPlanet() {
       String lat = getSexaD(del);
       String latL = del<0 ? "S" : "N";
-      double al1 = al>180 ? al - 360 : al;
+      double al1 = al>180 ? al - 360 : al<-180 ? al + 360 : al;
       String lng = getSexaD(al1);
-      String lngL = longitudeCroissante && al1<0 || !longitudeCroissante && al1>=0 ? "W" : "E";
+      String lngL = al1<0 ? "W" : "E";
       return lat+" "+latL+", "+lng+" "+lngL;
    }
    

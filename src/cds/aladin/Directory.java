@@ -2015,7 +2015,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
       String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
 
-      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
+//      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
 
       // Sans catégorie => dans la branche "Unsupervised" suivi du protocole puis de l'authority
       if( category == null ) {
@@ -2070,19 +2070,16 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
       if( type == null || type.indexOf("catalog") < 0 ) return;
       
-      // Déjà fait en amont
-//      if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) return;
+      // Déjà fait en amont => on ne bidouille plus dans le client
+      if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) return;
 
       String category = null;
 
-      if( !id.startsWith("CDS/") ) {
-//         category = prop.get(Constante.KEY_CLIENT_CATEGORY);
-//         if( category.equals("Catalog") ) prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, null);
-         return;
-      }
+      // Ne concerne pas VizieR => on ne bidouille pas dans le client
+      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;
 
-      if( id.equals("CDS/Simbad") ) category = "Data base";
-      else {
+//      if( id.equals("CDS/Simbad") ) category = "Data base";
+//      else {
          // Nettoyage des macros latex qui trainent
          cleanLatexMacro(prop);
 
@@ -2164,7 +2161,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             suffix = suffix == null ? "" : "/" + suffix;
             category += suffix;
          }
-      }
 
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
    }

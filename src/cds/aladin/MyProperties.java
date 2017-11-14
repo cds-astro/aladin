@@ -232,14 +232,27 @@ public class MyProperties {
       return s==null ? defaut : s;
    }
    
-   /** Retourne la valeur associée à une clé, ou null si absente (identique à get(key))*/
+   /** Retourne la valeur associée à une clé, ou null si absente 
+    * S'il y a plusieurs valuers (clé redondante), les valeurs seront séparées
+    * par un TAB */
    public String getProperty(String key) { return get(key); }
 
-   /** Retourne la valeur associée à une clé, ou null si absente */
+   /** Retourne la valeur associée à une clé, ou null si absente 
+    * S'il y a plusieurs valuers (clé redondante), les valeurs seront séparées
+    * par un TAB */
    public String get(String key) {
       PropItem item = getItem(key);
       if( item!=null ) return item.value;
       return null;
+   }
+   
+   /** Retourne la PREMIERE valeur associée à une clé, ou null si absente */
+   public String getFirst(String key) {
+      PropItem item = getItem(key);
+      if( item==null ) return null;
+      int i;
+      if( (i=item.value.indexOf('\t'))>=0 ) return item.value.substring(0,i);
+      return item.value;
    }
    
    /** Retourne la liste des valeurs pour une clé (découpage des xxx\txxx\txxx...

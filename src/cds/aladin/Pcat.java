@@ -762,7 +762,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             if( dec > maxDec ) maxDec = dec;
          }
 
-
          // Determination de label de la source
          String lab = (nId >= 0) ? value[nId] : "Source #" + (nb_o+1);
 
@@ -795,7 +794,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          if( idxSTCS<0 ) idxSTCS = indexSTC;
          if (idxSTCS>=0) {
             try {
-               source.setFootprint(source.getValue(idxSTCS));
+               String val = source.getValue(idxSTCS);
+               
+               // Attention des petits rigolos utilisent parfois des tableaux de réels où ils alternent lon/at
+               if( leg.isNumField(idxSTCS) && leg.field[idxSTCS].arraysize!=null ) {
+                  val="Polygon UNKNOWNFrame UNKNOWNREFPOS SPHERICAL2 "+val;
+                  source.setValue(idxSTCS, val);
+               }
+               source.setFootprint(val);
                source.setIdxFootprint(idxSTCS);
             } catch(Exception e) {
                e.printStackTrace();

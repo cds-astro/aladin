@@ -537,9 +537,9 @@ public class Localisation extends MyBox  {
 
             if( Double.isNaN(coo.al) ) s="";
             else if( frame==PLANET ) {
-               s = coo.getSexaPlanet(proj.sym);
+               s = coo.getSexaPlanet();
             } else if( frame==PLANETD ) {
-               s = coo.getDegPlanet(proj.sym);
+               s = coo.getDegPlanet();
             } else if( frame==XYLINEAR ) {
                if( !proj.isXYLinear() ) s=NOXYLINEAR;
                else s=Util.myRound(coo.al+"",4)+" : "+Util.myRound(coo.del+"",4);
@@ -753,16 +753,15 @@ public class Localisation extends MyBox  {
     * @param al
     * @param del
     * @param indice 0-premier élément de la coord, 1-deuxième élément
-    * @param longitudeCroissante
     * @return
     */
-   protected String getGridLabel(double al, double del, int indice, boolean longitudeCroissante) {
+   protected String getGridLabel(double al, double del, int indice) {
       int i=getFrame();
       String s;
       int offset;
       if( i==PLANET || i==PLANETD) {
-         if( i==PLANETD ) s = (new Coord(al,del)).getDegPlanet(longitudeCroissante);
-         else s = (new Coord(al,del)).getSexaPlanet(longitudeCroissante);
+         if( i==PLANETD ) s = (new Coord(al,del)).getDegPlanet();
+         else s = (new Coord(al,del)).getSexaPlanet();
          if( s.length()==0 ) return "";
          offset = s.indexOf(',');
          return  zeroSec( indice==1 ? s.substring(0,offset) : s.substring(offset+2) );
@@ -794,11 +793,18 @@ public class Localisation extends MyBox  {
       for( int i=a.length-1; i>0 && (a[i]<'1' || a[i]>'9'); i--) {
          if( a[i]=='.') flagDecimal=i;
          else if( a[i]=='0' ) flagZero=i;
-         else if( a[i]==':') return s.substring(0,i);
-         else if( a[i]=='\'') return s.substring(0,i+1);
+         else if( a[i]==':') {
+            s = s.substring(0,i);
+            return s;
+         }
+         else if( a[i]=='\'') {
+            s = s.substring(0,i+1);
+            if( s.endsWith("°0'") ) s=s.substring(0,s.length()-2);    // On enlève aussi les minutes nulles
+            return s;
+         }
             }
       if( flagDecimal>0 ) return s.substring(0,flagDecimal);
-      if( flagZero>0 ) return s.substring(0,flagZero);
+      if( flagZero>0 ) return s.substring(0,flagZero+1);
       return s;
    }
 

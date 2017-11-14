@@ -5996,6 +5996,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       String chart=null;		// en cas de demande de carte de champ
       int lastArg;		// Prochain indice des arguments a loader
       String SCREEN=null;
+      String TTL=null;
       if( extApplet==null ) STANDALONE = true;
       String scriptParam=null;
 
@@ -6062,12 +6063,31 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].startsWith("-registry=") ) { FrameServer.REGISTRY_BASE_URL=args[i].substring(10); lastArg=i+1; }
          else if( args[i].startsWith("-stringfile=") ) { STRINGFILE=args[i].substring(12); lastArg=i+1; }
          else if( args[i].startsWith("-scriptfile=") ) { SCRIPTFILE=args[i].substring(12); lastArg=i+1; }
+         else if( args[i].startsWith("-ttl=") ) { TTL=args[i].substring(5); lastArg=i+1; }
          else if( args[i].startsWith("-font=") )   {
             try { SIZE= Integer.parseInt(args[i].substring(6)); } catch( Exception e ) { e.printStackTrace(); }
             trace(2,"default font size = "+SIZE);
             lastArg=i+1;
          }
          else if( args[i].charAt(0)=='-' ) { System.err.println("Aladin option unknown ["+args[i]+"]"); lastArg=i+1; }
+      }
+      
+      // Dans le cas d'une indication de TTL -en nombre de seconde depuis le 1970, il s'agit
+      // d'un démarrage via une config JNLP. Si le time-TTL est sup à 30s, on ignore le script
+      // et le mode screen passé en paramètre (démarrage à blanc). Normalement ce cas n'arrive jamais
+      // sauf si une config JNLP n'a pu être checkée à distance
+      try {
+         if( TTL!=null ) {
+            long t=System.currentTimeMillis()/1000;
+            long t0 = Long.parseLong(TTL);
+            if( t-t0>30 ) {
+               scriptParam=null;
+               SCREEN=null;
+            }
+         }
+      } catch( NumberFormatException e ) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
       }
 
       //      if( chart!=null ) NOGUI=true;

@@ -924,7 +924,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       String gluTag = prop.get("tap_glutag");
       
       // If there is no TAP glu definition, we will use base TAP url
-      String url = prop.get("tap_service_url");
+      String url = prop.getFirst("tap_service_url");
       String id = prop.get("ID");
       
       // List of pre-selected tables (TAB separated)
@@ -1152,18 +1152,17 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    protected String getDefaultTarget() {
-      Coord coo;
-      if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
-//         String s = aladin.localisation.getTextSaisie();
-//         if( s.length()!=0 ) return s;
-//         coo = getTarget();
-//         s = coo==null ? null : coo.toString();
-//         if( s!=null ) return s;
-         return null;
+      try {
+         Coord coo;
+         if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
+            return null;
+         }
+         coo = aladin.view.getCurrentView().getCooCentre();
+         coo = aladin.localisation.ICRSToFrame( coo );
+         return coo.getDeg();
+      } catch( Exception e ) {
+        return null;
       }
-      coo = aladin.view.getCurrentView().getCooCentre();
-      coo = aladin.localisation.ICRSToFrame( coo );
-      return coo.getDeg();
    }
    
    protected String getDefaultRadius() { return getDefaultRadius(-1); }

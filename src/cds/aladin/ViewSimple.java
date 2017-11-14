@@ -5471,7 +5471,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //            int i = seg.label.indexOf(' ');
 //            seg.label = zeroSec(seg.label.substring(i+1));
 
-            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1,getProj().sym);
+            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
 
          } else if(  seg.iso==Segment.ISORA && (b1*b2<0 || (b1*b2==0 && (b1>0 || b2>0))) ) {
             seg.labelMode=northUpDown?Segment.HAUT:Segment.GAUCHE;
@@ -5479,7 +5479,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //            int i = seg.label.indexOf(' ');
 //            seg.label = zeroSec(seg.label.substring(0,i));
             
-            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0,getProj().sym);
+            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
          }
       }
       grille.addElement(seg);
@@ -5580,13 +5580,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
 //               int i = seg.label.indexOf(' ');
 //               seg.label = zeroSec(seg.label.substring(i+1));
-               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1,getProj().sym);
+               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
             } else if( seg.del2==dejc && seg.del1==dejc ) {
                seg.labelMode=Segment.MILIEUDE;
 //               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
 //               int i = seg.label.indexOf(' ');
 //               seg.label = zeroSec(seg.label.substring(0,i));
-               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0,getProj().sym);
+               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
 
 
             }

@@ -374,10 +374,12 @@ public final class Util {
 
       // cas particulier de la notation scientifique
       String s = x+"";
-      int posV; // position de la virgule
+      int posV=s.indexOf('.'); // position de la virgule
+      if( posV==-1 ) return s; // Il ne s'agit pas d'une valeur avec des décimales
+      
       int posE; // position de l'exposant
       if( (posE=s.indexOf('E'))>0 ) {
-         if( (posV=s.indexOf('.'))>0) {
+         if( posV>0) {
             if( posV+4>posE ) return s;   // déjà pas bcp de décimales
             return s.substring(0,posV+4)+s.substring(posE);
          }
