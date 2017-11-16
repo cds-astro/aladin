@@ -29,7 +29,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class IconInside extends MyIcon {
+public class IconInside extends Icon {
    static final int L = 12;      // Taille d'un logo
    static String INSIDE;
    
@@ -107,6 +107,5 @@ public class IconInside extends MyIcon {
    }
       
    protected String getHelpTip() { return aladin.chaine.getString("INSIDETIP"); }
-   protected String Help()       { return aladin.chaine.getString("Inside.HELP");  }
-
+   protected String getHelpKey() { return "Inside.HELP"; }
 }

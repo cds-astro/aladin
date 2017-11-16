@@ -81,12 +81,14 @@ public final class FrameMocGenCat extends FrameMocGenImg {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
          int res=getOrder();
          double radius = getRadius();
-         String sRadius = "";
-         if( radius!=0 ) {
-            sRadius=" -radius="+Coord.getUnit(radius);
-         }
-         a.console.printCommand("cmoc -order="+res+sRadius+" "+labelList(ps));
-         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0,Double.NaN);
+         boolean fov = radius<0;  // Subtilité en attendant de modifier l'interface
+         String param = "";
+         if( radius>0 ) {
+            param=" -radius="+Coord.getUnit(radius);
+         } else if( radius<0 ) param=" -fov";
+         
+         a.console.printCommand("cmoc -order="+res+param+" "+labelList(ps));
+         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0,Double.NaN,fov);
          hide();
 
       } catch ( Exception e ) {

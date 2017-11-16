@@ -1833,7 +1833,7 @@ public class Context {
       setPropriete("#"+Constante.KEY_HIPS_COPYRIGHT,"Copyright mention of the HiPS");
       
       if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
-      setPropriete(Constante.KEY_OBS_COLLECTION,getLabel());
+      setPropriete(Constante.KEY_OBS_TITLE,getLabel());
       setPropriete("#"+Constante.KEY_OBS_COLLECTION,"Dataset collection name");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
       setPropriete("#"+Constante.KEY_OBS_ACK,"Acknowledgement mention");
@@ -1996,7 +1996,7 @@ public class Context {
 //            publisher_id         = ivo://ivo:
 //            obs_collection       = toto-meta
 
-      prop.setProperty(Constante.KEY_OBS_COLLECTION, label);
+      prop.setProperty(Constante.KEY_OBS_TITLE, label);
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
       prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");

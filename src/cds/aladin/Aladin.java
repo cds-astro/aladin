@@ -159,6 +159,7 @@ import healpix.essentials.Vec3;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> User interface:
+ * @beta    <LI> - Intuitive help in line
  * @beta    <LI> - new theme (dark background...)
  * @beta    <LI> - new panels/facilities (data discovery tree, access selector...)
  * @beta    <LI> - Target history control
@@ -253,7 +254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.040";
+   static public final    String VERSION = "v10.041";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2841,16 +2842,40 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } catch( Exception e ) { e.printStackTrace(); }
       Aladin.trace(3,"Remove cache directory: "+cacheDir);
    }
-
+   
+   /** Mémorisation du dernier message du CDS. Suit la syntaxe suivante:
+    * tttt message sur une ligne  (le tttt est en secondes Unix => http://www.unixtime.fr/ )
+    */
+   protected void setCDSMessage( String s ) {
+      if( s==null ) return;
+      trace(3,"Last CDS message: "+s);
+      String lastMessage = configuration.getCDSMessage();
+      
+   // Déjà affiché une fois et acquitté ?
+      if( lastMessage!=null && lastMessage.equals(s) ) return;
+      
+      try {
+         int i = s.indexOf(' ');
+         if( i>0 ) {
+            long t = Long.parseLong( s.substring(0,i));
+            if( System.currentTimeMillis()/1000L - t > 30L*86400L ) return; // message trop vieux
+         } 
+      } catch( Exception e) {  }
+      
+      calque.select.setCDSMessage( s );
+   }
+   
    /** Memorisation de la derniere version disponible (transmis par Glu.log)
     * En cas de modification, on efface le cache, notamment le dico GLU */
    protected void setCurrentVersion(String s )  {
       currentVersion = s;
       
+      trace(3,"Last CDS official version: "+s);
+      
       // En cas de défaillance réseau, ou si on n'obtient pas l'info
       // (format: v9.010 - mar. mars 1 14:44:13 CET 2016)
       // => vaut mieux s'abstenir
-      if( !NETWORK || !s.startsWith("v") ) return;
+      if( !NETWORK || s==null || !s.startsWith("v") ) return;
 
       // Banner de demande de maj de la version si nécessaire
       testUpgrade();
@@ -3306,10 +3331,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
             return true;
          }
          openDirTab();
-         directory.showTreePath( isMenu(s,OPENDIRIMG) ? "Image" 
+         if( !directory.showTreePath( isMenu(s,OPENDIRIMG) ? "Image" 
                : isMenu(s,OPENDIRCAT) ? "Catalog/VizieR" 
                      : isMenu(s,OPENDIRDB) ? "Data base" 
-                     : isMenu(s,OPENDIRCUBE) ? "Cube" : "");
+                     : isMenu(s,OPENDIRCUBE) ? "Cube" : "") ) {
+            Aladin.warning(chaine.getString("NOTVISIBLE"));
+            return true;
+         }
       }
       
       // Interface d'interrogation des serveurs
@@ -4299,10 +4327,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		STCObj stcobj = stcObjects.get(0);
 		if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
 			moc = createMocRegionPol((STCPolygon)stcobj);
-			moc.toRangeSet();
+			if( moc!=null ) moc.toRangeSet();
 		} else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
 			moc = createMocRegionCircle((STCCircle)stcobj);
-			moc.toRangeSet();
+			if( moc!=null ) moc.toRangeSet();
 		}
 		return moc;
 
@@ -4380,68 +4408,34 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		return maxSize;
 	}
 	protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon) throws Exception {
-	      HealpixMoc moc=null;
-	      double maxSize=0;
-	      Coord c1=null;
-	      boolean first=true;
-	      int order=0;
-	      double firstRa = 0.0d,firstDec = 0.0d;
-	      
-	      for( int sens=0; sens<2; sens++ ) {
-	         ArrayList<Vec3> cooList = new ArrayList<Vec3>();
-	         if( sens==1 ) trace(3,"createMocRegion("+stcPolygon+") trying reverse polygon order...");
-	         try {
-                 STCFrame frame = stcPolygon.getFrame();
-                 // currently, we only support FK5, ICRS and J2000 frames
-                 if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)) {
-                	 return null;
-                 }
-                 
-                 for (int i=0; i < stcPolygon.getxCorners().size(); i++) {
-						if (first) {
-							firstRa = stcPolygon.getxCorners().get(i);
-							firstDec = stcPolygon.getyCorners().get(i);
-							c1 = new Coord(firstRa, firstDec);
-							first = false;
-						} else {
-							double size = Coord.getDist(c1,
-									new Coord(stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i)));
-							if (size > maxSize)
-								maxSize = size;
-						}
-						
-						addVec3(cooList, stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i));
-					}
-                 
-                 addVec3(cooList, firstRa, firstDec);
+	      double ra,de;
+	      Ligne oo=null;
 
-	            if( sens==0 ) {
-	               // L'ordre est déterminé automatiquement par la largeur du polygone
-	               order=getAppropriateOrder(maxSize);
-	               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
-	               if( order<10 ) order=10;
-	               else if( order>29 ) order=29;
-	               
-	            }
-
-	            Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-	            moc = new HealpixMoc();
-	            moc.rangeSet = m.getRangeSet();
-	            moc.toHealpixMoc();
-
-	            // moins de la moitié du ciel => ca doit être bon
-	            if( moc.getCoverage()<0.5 ) break;
-
-	            stcPolygon.reverseDrawDirection();
-	            
-	            // On va essayer dans l'autre sens avant d'estimer que ça ne fonctionne pas
-	         } catch( Throwable e ) {
-	            if( sens==1 && e instanceof Exception ) throw (Exception)e;
-	         }
+	      STCFrame frame = stcPolygon.getFrame();
+	      // currently, we only support FK5, ICRS and J2000 frames
+	      if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)
+	            && frame!=STCFrame.UNKNOWNFRAME ) {
+	         return null;
 	      }
 
+	      Ligne o,first=null;
+          ArrayList<Double> a = stcPolygon.getxCorners();
+          ArrayList<Double> b = stcPolygon.getyCorners();
+	      for (int i=0; i < a.size(); i++) {
+	         ra = a.get(i);
+	         de = b.get(i);
+	         o = new Ligne(ra,de);
+	         o.debligne = oo;
+	         if( oo!=null ) oo.finligne = o;
+	         else { first=o; first.bout=3; }
+	         oo = o;
+	      }
+	      o = new Ligne( first.raj, first.dej );
+	      o.bout = 3;
+	      o.debligne=oo;
+	      oo.finligne=o;
 	      
-	      return moc;
+          return createMocRegionPol(o, -1, false);
 	}
 	
 	public void addVec3(ArrayList<Vec3> cooList, double ra, double dec) {

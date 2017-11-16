@@ -30,7 +30,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Avril 2012) Creation
  */
-public class Oeil extends MyIcon {
+public class Oeil extends Icon {
    
    // Barres horizontales du dessin 
    static final private int TX[][] = {
@@ -93,6 +93,5 @@ public class Oeil extends MyIcon {
    }
    
    protected String getHelpTip() { return aladin.chaine.getString("OEILH"); }
-   protected String Help()       { return aladin.chaine.getString("OEILH"); }
-
+   protected String getHelpKey() { return "OEILH"; }
 }

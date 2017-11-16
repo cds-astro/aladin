@@ -24,7 +24,6 @@ package cds.aladin;
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -75,7 +74,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -162,6 +160,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String PROJALLSKY = "ProjAllsky";
    protected static String VERSION    = "Version";
    protected static String OFFICIALVERSION= "OfficialVersion";
+   protected static String CDSMESSAGE = "CDSMessage";
    protected static String CACHE      = "HpxCacheSize";
    protected static String MAXCACHE   = "HpxMaxCacheSize";
    protected static String LOG        = "Log";
@@ -710,6 +709,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return get(OFFICIALVERSION);
    }
 
+   /** Retourne la chaine décrivant la dernière annonce du CDS 
+    * Format:  tttt message... où tttt est en temps Unix => http://www.unixtime.fr/ */
+   protected String getCDSMessage() {
+      return get(CDSMESSAGE);
+   }
+
    /** Retourne la chaine décrivant la dernière version utilisée */
    protected String getVersion() {
       return get(VERSION);
@@ -737,19 +742,30 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Affichage du help associé à la clé
     * @return true si le help a été affiché
     */
-   protected boolean showHelpIfOk(String key) { return showHelpIfOk(null,key,500); }
-   protected boolean showHelpIfOk(final Component c,final String key, int delay) {
+   protected boolean showHelpIfOk(String key) { 
+//      return showHelpIfOk(null,key,500); }
+//   protected boolean showHelpIfOk(final Component c,final String key, int delay) {
       if( stopHelp==null ) stopHelp = new Vector<String>();
       if( stopHelp.contains(key) ) return false;
-      Timer t = new Timer(delay, new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            if( !aladin.confirmation(c==null?aladin:c,aladin.chaine.getString(key)
-                  +"\n \n"+aladin.chaine.getString("STOPHELP"))) stopHelp.add(key);
-        }
-      });
-      t.setRepeats(false);
-      t.start();
+      
+      aladin.calque.select.setMessage(key,aladin.chaine.getString(key));
+      
+//      Timer t = new Timer(delay, new ActionListener() {
+//         public void actionPerformed(ActionEvent e) {
+//            if( !aladin.confirmation(c==null?aladin:c,aladin.chaine.getString(key)
+//                  +"\n \n"+aladin.chaine.getString("STOPHELP"))) stopHelp.add(key);
+//        }
+//      });
+//      t.setRepeats(false);
+//      t.start();
       return true;
+   }
+   
+   /** Acquittement d'un message d'aide ponctuelle afin qu'elle n'apparaisse plus une seconde fois */
+   protected void showHelpDone(String key) {
+      if( stopHelp==null ) stopHelp = new Vector<String>();
+      stopHelp.add(key);
+      
    }
 
    // Initialisation de la liste des mots clés dont les HELPs ne doivent plus être affichés
@@ -853,6 +869,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Spécifie le mode d'affichage des positions (J2000, B1950...) */
    private void setPositionMode(String mode) throws Exception {
+      if( mode.equalsIgnoreCase( "UNKNOWNFrame" ) ) return;
       if( !aladin.localisation.setPositionMode(mode) ) {
          throw new Exception("Not available position mode ! ["+mode+"]");
       }
@@ -2619,6 +2636,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Positionne la chaine décrivrant la dernière version officielle */
    protected void setOfficialVersion(String s) {
       set(OFFICIALVERSION,s);
+   }
+   
+   /** Positionne la chaine décrivrant le dernier message d'annonce du CDS */
+   protected void setCDSMessage(String s) {
+      set(CDSMESSAGE,s);
    }
 
    /** Propriétés modifiables par la commande script "setconf xxx=valeur"

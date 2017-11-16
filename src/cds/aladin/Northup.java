@@ -29,7 +29,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Décembre 2009) Creation
  */
-public class Northup extends MyIcon {
+public class Northup extends Icon {
    static final int L = 13;      // Taille d'un logo
    static String NORTHUP;
 
@@ -75,5 +75,5 @@ public class Northup extends MyIcon {
    }
       
    protected String getHelpTip() { return aladin.chaine.getString("NORTHUPHELP"); }
-   protected String Help()       { return aladin.chaine.getString("Northup.HELP"); }
+   protected String getHelpKey() { return "Northup.HELP"; }
 }

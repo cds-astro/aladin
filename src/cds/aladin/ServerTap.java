@@ -625,7 +625,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
 
 	  	  	// Echo of the equivalent script command
-	  	  	aladin.command.printConsole("get TAP("+Tok.quote(this.tapClient.tapLabel)+","+Tok.quote(this.tap.getText())+")");
+	  	  	aladin.console.printCommand("get TAP("+Tok.quote(this.tapClient.tapLabel)+","+Tok.quote(this.tap.getText())+")");
 		}
 	}
 	

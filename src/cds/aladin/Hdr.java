@@ -29,7 +29,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Jan 2016) Creation
  */
-public class Hdr extends MyIcon {
+public class Hdr extends Icon {
    static final int L = 13;      // Taille d'un logo
    static String LABEL;
 
@@ -103,5 +103,5 @@ public class Hdr extends MyIcon {
    }
       
    protected String getHelpTip() { return aladin.chaine.getString("PIXHELP"); }
-   protected String Help()       { return aladin.chaine.getString("Pix.HELP"); }
+   protected String getHelpKey() { return "Hdr.HELP"; }
 }

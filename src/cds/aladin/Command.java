@@ -2312,6 +2312,7 @@ public final class Command implements Runnable {
          
          int order=-1;
          double radius=0;
+         boolean fov=false;
          double thresHold=Double.NaN;
          double pixMin=Double.NaN;
          double pixMax=Double.NaN;
@@ -2343,6 +2344,14 @@ public final class Command implements Runnable {
             radius = Server.getAngleInArcmin( param.substring(j,i),Server.RADIUSs );
             param = i==param.length() ? "" : param.substring(i).trim();
          }
+         
+         // Extraction d'un éventuel paramètre -fov
+         i = param.indexOf("-fov");
+         if( i>=0 ) {
+            fov=true;
+            param = i==param.length() ? "" : param.substring(i).trim();
+         }
+      
          
          // Extraction d'un éventuel paramètre -pixelCut="min max"
          i = param.indexOf("-pixelCut=");
@@ -2398,12 +2407,12 @@ public final class Command implements Runnable {
             
          // Pour les cartes de probabilités
          } else  if( !Double.isNaN(thresHold) && type==Plan.ALLSKYIMG ) {
-            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN,thresHold);
+            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN,thresHold,fov);
            
          // Pour des catalogues ou des images
          } else {
             if( order==-1 ) order=13;
-            a.calque.newPlanMoc(label,p,order,radius,pixMin,pixMax,Double.NaN);
+            a.calque.newPlanMoc(label,p,order,radius,pixMin,pixMax,Double.NaN,fov);
          }
          a.calque.repaintAll();
          

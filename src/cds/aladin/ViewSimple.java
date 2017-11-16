@@ -3359,6 +3359,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isFullScreen() && widgetControl!=null && widgetControl.mouseMoved(e) ) {
          repaint(); return;
       }
+      if( aladin.localisation.isPopupShown() ) return;
       mouseMoved1(e.getX(),e.getY(),e);
    }
    

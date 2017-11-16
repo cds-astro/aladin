@@ -297,7 +297,8 @@ public class BuilderRgb extends BuilderTiles {
    private String getLabelFromProp(MyProperties prop,String path) throws Exception {
       String s=null;
       if( prop!=null ) {
-         s = prop.getProperty( Constante.KEY_OBS_COLLECTION);
+         s = prop.getProperty( Constante.KEY_OBS_TITLE);
+         if( s==null ) prop.getProperty( Constante.KEY_OBS_COLLECTION);
          if( s==null ) prop.getProperty( Constante.OLD_OBS_COLLECTION);
       }
       if( s==null ) {

@@ -24,11 +24,14 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JComponent;
+import javax.swing.Timer;
 
 import cds.tools.Util;
 
@@ -197,6 +200,7 @@ public final class ViewControl extends JComponent implements
       Aladin.makeCursor(this,Aladin.HANDCURSOR);
    }
    public void mouseExited(MouseEvent e) {
+      if( timerTip!=null) { timerTip.stop(); timerTip=null; }
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       nMode=-1;
       repaint();
@@ -223,10 +227,24 @@ public final class ViewControl extends JComponent implements
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       repaint();
    }
+   
+   // Affichage du tip associé au bouton courant
+   private void showTip() { 
+      aladin.configuration.showHelpIfOk( "ViewControl.HELP" );
+   }
+   
+   private Timer timerTip = null;
+
 
   /** On se deplace sur le bouton du split */
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
+      
+      if( timerTip==null ) timerTip = new Timer(6000, new ActionListener() {
+         public void actionPerformed(ActionEvent e) { showTip(); }
+      }); 
+      timerTip.restart();
+
       int n = getN(e.getX());
       if( n!=nMode ) { nMode=n; repaint(); }
 //      aladin.status.setText(n==-2 ? INFOSYNC : INFOMVIEW);

@@ -24,7 +24,9 @@ package cds.aladin;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
+import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
@@ -38,6 +40,7 @@ public class PlanMocGen extends PlanMoc {
    
    private Plan [] p;       // Liste des plans à ajouter dans le MOC
    private double radius;   // Pour un plan catalogue, rayon autour de chaque source (en degres), sinon 0
+   private boolean fov;     // Plan un plan catalogue, true si on prend les FOVs associés
    private double pixMin;   // Pour un plan Image ou map Healpix, valeur minimale des pixels retenus (sinon NaN)
    private double pixMax;   // Pour un plan Image ou map Healpix, valeur maximale des pixels retenus (sinon NaN)
    private double threshold;// Pour un plan Image Healpix, seuil max de l'intégration (sinon NaN)
@@ -46,7 +49,7 @@ public class PlanMocGen extends PlanMoc {
    private double gapPourcent;  // Pourcentage de progression par plan (100 = tout est terminé)
    
    protected PlanMocGen(Aladin aladin,String label,Plan[] p,int res,double radius,
-         double pixMin,double pixMax,double threshold) {
+         double pixMin,double pixMax,double threshold,boolean fov) {
       super(aladin,null,null,label,p[0].co,30);
       this.p = p;
       this.order=res;
@@ -54,6 +57,7 @@ public class PlanMocGen extends PlanMoc {
       this.pixMin=pixMin;
       this.pixMax=pixMax;
       this.threshold=threshold;
+      this.fov=fov;
       
       pourcent=0;
       gapPourcent = 100/p.length;
@@ -64,6 +68,31 @@ public class PlanMocGen extends PlanMoc {
    }
    
    protected void suite1() {}
+   
+   private void addMocFromCatFov(Plan p1) {
+      System.out.println("Je dois créer le MOC à partir des FoVs du catalogue "+p1.label);
+      Iterator<Obj> it = p1.iterator();
+      int m= p1.getCounts();
+      int n=0;
+      double incrPourcent = gapPourcent/m;
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         if( m<100 || n%100==0 ) pourcent+=incrPourcent;
+         Source s = (Source)o;
+         SourceFootprint sf = s.getFootprint();
+         if( sf==null ) continue;
+         List<STCObj> listStcs = sf.getStcObjects();
+         if( listStcs==null ) continue;
+         try {
+            HealpixMoc m1 = aladin.createMocRegion(listStcs);
+            if( m1!=null ) moc.add(m1);
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
+      System.out.println("Fin de génération "+moc);
+   }
       
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(Plan p1,double radius) {
@@ -413,7 +442,10 @@ public class PlanMocGen extends PlanMoc {
          frameOrigin=Localisation.ICRS;
          moc.setCheckConsistencyFlag(false);
          for( Plan p1 : p ) {
-            if( p1.isCatalog() ) addMocFromCatalog(p1,radius);
+            if( p1.isCatalog() ) {
+               if( fov ) addMocFromCatFov(p1);
+               else addMocFromCatalog(p1,radius);
+            }
             else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
             else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,threshold);
             else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,order,pixMin,pixMax);

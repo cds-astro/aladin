@@ -491,7 +491,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       try {
          for( indexArrowHistory+=sens; indexArrowHistory>=0 || indexArrowHistory<=cmdHistory.size(); indexArrowHistory+=sens ) {
             cmd = cmdHistory.get(indexArrowHistory);
-            if( cmd.isCmd() ) break;
+            if( cmd.isCmd() && !cmd.isFilter() ) break;
          }
       } catch( Exception e ) { }
       
@@ -511,6 +511,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       for( int j=0; i>=0 && v.size()<max; i-- ) {
          Command cmd = cmdHistory.get(i);
          if( !cmd.isCmd() ) continue;
+         if( cmd.isFilter() ) continue;
          if( j>=indexInit ) v.add( cmd.getCommand() );
          j++;
       }
@@ -835,6 +836,11 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       
       // Retourne true s'il s'agit d'une vraie commande (pas une erreur, ni une info)
       public boolean isCmd() { return type==CMD; }
+      
+      // return true s'il sagit (probablement) d'une ligne associée à un filtre
+      public boolean isFilter() {
+         return type==CMD && (cmd.trim().startsWith("filter") || date==0 );
+      }
       
       // Postionnement de la date exprimée sous la forme JJ/MM/AA HH/MM/SS
       private boolean setDate(String s) { 

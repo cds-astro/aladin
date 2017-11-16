@@ -30,7 +30,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Mars 2007) Creation
  */
-public class Grid extends MyIcon {
+public class Grid extends Icon {
    
    // Barres verticales du dessin
    static final private int TX[][] = {
@@ -181,6 +181,5 @@ public class Grid extends MyIcon {
    }
    
    protected String getHelpTip() { return aladin.chaine.getString("GRIDH"); }
-   protected String Help()       { return aladin.chaine.getString("Grid.HELP"); }
-
+   protected String getHelpKey() { return "Grid.HELP"; }
 }

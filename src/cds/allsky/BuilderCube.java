@@ -117,7 +117,7 @@ public class BuilderCube extends Builder {
 
          // Récupération des noms des bandes
          String lab= getALabel(path,null);
-         context.setPropriete(Constante.KEY_OBS_COLLECTION+"_"+i, lab);
+         context.setPropriete(Constante.KEY_OBS_TITLE+"_"+i, lab);
 
          // Estimation du MOC final (union)
          try {

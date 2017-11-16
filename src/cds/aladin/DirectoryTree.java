@@ -88,12 +88,15 @@ public class DirectoryTree extends JTree {
       super.setModel(model);
    }
    
-   /** Ouvre l'arbre en montrant la branche/le noeud associé au path donnée */
-   protected void showBranch(String p) {
-      if( p==null ) return;
+   /** Ouvre l'arbre en montrant la branche/le noeud associé au path donnée
+    * @param p le path à montrer
+    * @return true si possible, false si non visible pour le moment
+    */
+   protected boolean showBranch(String p) {
+      if( p==null ) return false;
       
       TreePath path = findBranch(new TreePath(root),p);
-      if( path==null ) return;
+      if( path==null ) return false;
          
       // Et on ouvre uniquement les sous-branches
       collapseRec(new TreePath(root));
@@ -106,6 +109,8 @@ public class DirectoryTree extends JTree {
       Rectangle bounds = getPathBounds(path);
       bounds.height = getVisibleRect().height;
       scrollRectToVisible(bounds);
+      
+      return true;
    }
    
    /** Retourne le path de la branche/noeud associé au "path", ou null si non trouvé */

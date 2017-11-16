@@ -796,9 +796,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             try {
                String val = source.getValue(idxSTCS);
                
-               // Attention des petits rigolos utilisent parfois des tableaux de réels où ils alternent lon/at
+               // Attention des petits rigolos utilisent parfois des tableaux de réels où ils alternent lon/lat
                if( leg.isNumField(idxSTCS) && leg.field[idxSTCS].arraysize!=null ) {
-                  val="Polygon UNKNOWNFrame UNKNOWNREFPOS SPHERICAL2 "+val;
+                  val="Polygon UNKNOWNFrame UNKNOWNREFPOS "+val;
+//                  val="Polygon ICRS "+val;
                   source.setValue(idxSTCS, val);
                }
                source.setFootprint(val);

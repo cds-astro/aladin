@@ -146,7 +146,9 @@ public class Localisation extends MyBox  {
    static final String NOXYLINEAR = "No XY linear trans.";
    static protected String POSITION,YOUROBJ;
 
-   private int previousFrame=-1; // Frame précédent;
+   private int previousFrame=-1;   // Frame précédent;
+   private JPopupMenu popup=null;  // Le popup de l'historique des commandes
+
 
    /* Pour gerer les changements de frame */
    Astrocoo afs = new Astrocoo(AF_ICRS);	// Frame ICRS (la reference de base)
@@ -890,7 +892,7 @@ public class Localisation extends MyBox  {
    public void keyTyped(KeyEvent e) { }
    public void keyReleased(KeyEvent e) { }
    public void keyPressed(KeyEvent e) { }
-   
+      
    /** Action à opérer lorsque l'on clique sur le triangle au bout du champ de saisie */
    protected void triangleAction(int x) { triangleAction(x,-1); }
    protected void triangleAction( final int x, int initIndex ) {
@@ -900,7 +902,7 @@ public class Localisation extends MyBox  {
       
       // On crée un JPopupmenu contenant les 20 dernières commandes, et s'il y en a encore,
       // ajoute à la fin de la liste une entrée "..." qui permet d'avoir les 20 suivantes
-      JPopupMenu popup = new JPopupMenu();
+      popup = new JPopupMenu();
       for( String s: v ) {
          JMenuItem mi = null;
          if( s.equals("...") ) {
@@ -929,6 +931,14 @@ public class Localisation extends MyBox  {
       }
       setComponentPopupMenu(popup);
       popup.show(this, x-50, getHeight());
+   }
+   
+   protected boolean isPopupVisible() { return c.isPopupVisible() || isPopupShown(); }
+   
+   /** retourne true si le menu de l'historique des commandes est actuellement ouvert (visible) */
+   protected boolean isPopupShown() {
+      if( popup==null ) return false;
+      return popup.isVisible();
    }
    
    class JMenuItemExt extends JMenuItem {

@@ -24,11 +24,14 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JComponent;
+import javax.swing.Timer;
 
 import cds.tools.Util;
 
@@ -37,7 +40,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Mars 2007) Creation
  */
-abstract public class MyIcon extends JComponent implements
+abstract public class Icon extends JComponent implements
          MouseMotionListener, MouseListener
          {
    
@@ -51,7 +54,7 @@ abstract public class MyIcon extends JComponent implements
    protected int W,H;
 
   /** Creation */
-   protected MyIcon(Aladin aladin,int width,int height) {
+   protected Icon(Aladin aladin,int width,int height) {
       W=width;
       H=height;
       this.aladin=aladin;
@@ -89,13 +92,16 @@ abstract public class MyIcon extends JComponent implements
    }
    
    /** Recuperation de la chaine de help (une page) */
-   abstract protected String Help();
+   protected String Help() { return aladin.chaine.getString( getHelpKey()); }
 
    /** Action a effectuer lorsque l'on clique dessus */
    abstract protected void submit();
 
    /** Recuperation de la chaine de help (Tooltip) */
    abstract protected String getHelpTip();
+   
+   /** Recuperation de la clé d'accès à la chaine du Help */
+   abstract protected String getHelpKey();
  
    protected void in() { up=true; repaint(); }
 
@@ -109,15 +115,32 @@ abstract public class MyIcon extends JComponent implements
       submit();
    }
    
+   // Affichage du tip associé au bouton courant
+   private void showTip() { 
+      aladin.configuration.showHelpIfOk( getHelpKey() );
+   }
+   
+   private Timer timerTip = null;
+
   /** On se deplace sur le bouton du split */
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
+      
+      // Aide Tip sur ce bouton ?
+      if( getHelpKey()!=null ) {
+         if( timerTip==null ) timerTip = new Timer(6000, new ActionListener() {
+            public void actionPerformed(ActionEvent e) { showTip(); }
+         }); 
+         timerTip.restart();
+      } else if( Aladin.levelTrace>=3  )System.err.println("Missing getHelpKey !!");
+
       if( DESCRIPTION==null ) DESCRIPTION = getHelpTip();
       Util.toolTip(this,DESCRIPTION,true);
    }
 
   /** On quitte le bouton du split*/
    public void mouseExited(MouseEvent e) {
+      if( timerTip!=null) { timerTip.stop(); timerTip=null; }
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       aladin.status.setText("");
       in=false;

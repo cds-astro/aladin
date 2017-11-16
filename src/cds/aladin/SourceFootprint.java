@@ -59,6 +59,12 @@ public class SourceFootprint {
 	protected void setFootprint(PlanField footprint) {
 		this.footprint = footprint;
 	}
+	
+	/** PF - Nov 2017 - retourne la liste des STCs qui forment le footprint */
+	protected List<STCObj> getStcObjects() {
+	   if( stcsFov==null ) return null;
+	   return stcsFov.getStcObjects();
+	}
 
 	protected void setStcs(double ra, double dec, String stcs) {
 	    STCStringParser parser = new STCStringParser();

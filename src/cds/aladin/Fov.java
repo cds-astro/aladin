@@ -389,7 +389,9 @@ public class Fov {
             for (STCObj stcObj : this.stcObjects) {
             	STCFrame frame = stcObj.getFrame();
                 // currently, we only support FK5, ICRS and J2000 frames
-                if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)) {
+            	// PF - modif 14 nov 2017 - On suppose que UNKNOWNFrame est considéré comme du ICRS
+                if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)
+                      && frame!=STCFrame.UNKNOWNFRAME) {
                     continue;
                 }
                 if ( stcObj.getShapeType() == STCObj.ShapeType.POLYGON ) {

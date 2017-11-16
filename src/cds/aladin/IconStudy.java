@@ -23,9 +23,6 @@ package cds.aladin;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.MouseEvent;
-
-import cds.tools.Util;
 
 /**
  * Bouton pour l'activation du Simbad Pointer + VizieR SED
@@ -33,7 +30,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class IconStudy extends MyIcon {
+public class IconStudy extends Icon {
    static final int L = 12;      // Taille d'un logo
    static String LOOK;
 
@@ -123,16 +120,15 @@ public class IconStudy extends MyIcon {
       aladin.cycleLook();
    }
    
-   /** On se deplace sur l'icone */
-   public void mouseMoved(MouseEvent e) {
-      if( aladin.inHelp ) return;
-      Util.toolTip(this,getHelpTip(),true);
-   }
+//   /** On se deplace sur l'icone */
+//   public void mouseMoved(MouseEvent e) {
+//      if( aladin.inHelp ) return;
+//      Util.toolTip(this,getHelpTip(),true);
+//   }
       
    protected String getHelpTip() {
       if( !isAvailable() ) return aladin.chaine.getString("LOOKTIP");
       return MODE[ getMode() ]+ " "+aladin.chaine.getString("LOOKTIP1");
    }
-   protected String Help()       { return aladin.chaine.getString("Look.HELP");  }
-
+   protected String getHelpKey() { return "Look.HELP"; }
 }

@@ -751,7 +751,7 @@ public class Source extends Position implements Comparator {
     private void drawAssociatedFootprint(Graphics g, ViewSimple v, int dx, int dy) {
         // dessin du FoV éventuellement associé à la source
         if (sourceFootprint != null) {
-            sourceFootprint.draw(v.getProj(), g, v, dx, dy, plan.c);
+            sourceFootprint.draw(v.getProj(), g, v, dx, dy, getColor());
         }
     }
 

@@ -29,7 +29,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class IconScan extends MyIcon {
+public class IconScan extends Icon {
    static final int L = 12;      // Taille d'un logo
    private boolean abort=false;
    private String STOP,SCAN;
@@ -130,6 +130,5 @@ public class IconScan extends MyIcon {
    }
       
    protected String getHelpTip() { return aladin.chaine.getString("SCANTIP"); }
-   protected String Help()       { return aladin.chaine.getString("Scan.HELP");  }
-
+   protected String getHelpKey() { return "Scan.HELP"; }
 }

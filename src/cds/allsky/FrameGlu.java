@@ -39,8 +39,13 @@ package cds.allsky;
 //    The GNU General Public License is available in COPYING file
 //    along with Aladin.
 //
-
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -48,7 +53,12 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.RandomAccessFile;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import cds.aladin.Aladin;
 import cds.aladin.prop.PropPanel;
@@ -257,7 +267,7 @@ public class FrameGlu extends JFrame implements KeyListener {
       s.append( Util.align("%Aladin.Profile",15) +" >6.1"+Util.CR);
       s.append( Util.align("%Aladin.HpxParam",15)+" "+getHpxParam()+Util.CR);
 
-      context.setPropriete(Constante.KEY_OBS_COLLECTION,id);
+      context.setPropriete(Constante.KEY_OBS_TITLE,id);
 
       return s.toString();
    }

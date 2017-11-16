@@ -39,9 +39,11 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.JComponent;
@@ -529,8 +531,8 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       // Pour faire défiler les messages pour les débutants
-      if( beginnerHelp && y<lastYMax ) {
-         nextBeginnerHelp();
+      if( (beginnerHelp || currentMessage!=null )  && y<lastYMax ) {
+         nextBeginnerHelp(e.getX(),e.getY());
          repaint();
       }
 
@@ -1143,6 +1145,12 @@ Runnable, SwingWidgetFinder, Widget {
 
       int x = e.getX();
       int y = e.getY();
+      
+      if( (currentMessage!=null || beginnerHelp) && y<lastYMax ) {
+         if( onUrl(e.getX(),e.getY()) ) a.makeCursor(this, a.HANDCURSOR);
+         else a.makeCursor(this, a.DEFAULTCURSOR);
+         return;
+      }
 
       Slide s = getSlide(y);
       Plan p = s==null?null:s.getPlan();
@@ -1283,35 +1291,83 @@ Runnable, SwingWidgetFinder, Widget {
    private int lastYMax;  // Dernière ordonnée mesurée de la fin de la pile
    
    // Passe au message suivant pour les débutants
-   private void nextBeginnerHelp() {
+   private void nextBeginnerHelp(int x, int y) {
+      
+      // Cliqué sur un lien ?
+      String s=callUrl(x, y);
+      
+      // En cas d'affichage d'un message CDS ou d'une aide ponctuelle
+      if( currentMessage!=null ) {
+         if( s!=null && s.length()>0 ) return;   // on a cliqué sur un lien
+         
+         // On a cliqué sur la coche ou la fleche
+         if( s!=null ) {
+
+            // Mémorisation dans la config pour éviter de le réafficher
+            if( cdsMessage  ) a.configuration.setCDSMessage( currentMessage );
+
+            // Idem mais pour un message d'aide ponctuelle
+            else {
+               if( msgKey!=null ) a.configuration.showHelpDone(msgKey);
+            }
+         }
+         
+         msgKey=null;
+         cdsMessage=false;
+         currentMessage=null;
+         return;
+      }
+      
+//      if( s.length()>0 ) return;   // on a cliqué sur un lien 
+      
       lastBegin++;
-      if( lastBegin==BEGIN.length ) beginnerHelp=false;
+      if( BEGIN!=null && lastBegin==BEGIN.length ) beginnerHelp=false;
    }
    
    private long t0=0;
 
    /** Affiche un message pour les débutants en fonction du nombre de plans en cours d'utilisation */
    private void drawBeginnerHelp(Graphics g, int yMax) {
-      if( BEGIN==null ) {
-         BEGIN = new String[7];
-         for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i);
-         lastBegin=0;
-         t0=System.currentTimeMillis();
+      String msg;
+      
+      resetUrl();
+      
+      if( currentMessage!=null ) msg=splitCDSMessage(currentMessage);
+      else {
+         if( BEGIN==null ) {
+            BEGIN = new String[7];
+            for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i);
+            lastBegin=0;
+            t0=System.currentTimeMillis();
+         }
+
+         // Le premier message n'arrive que quelques secondes après le démarrage
+         if( lastBegin==0 ) {
+            long t=System.currentTimeMillis();
+            if( t-t0>4000 ) lastBegin=1;
+            else repaint(100);
+         }
+         
+         msg = lastBegin<BEGIN.length && BEGIN[lastBegin]!=null ? BEGIN[lastBegin] : null;
       }
       
-      // Le premier message n'arrive que quelques secondes après le démarrage
-      if( lastBegin==0 ) {
-         long t=System.currentTimeMillis();
-         if( t-t0>4000 ) lastBegin=1;
-         else repaint(100);
-      }
-      
-      if( lastBegin<BEGIN.length && BEGIN[lastBegin]!=null ) {
-         int y = drawBeginnerHelp1(g,BEGIN[lastBegin],Aladin.COLOR_LABEL,yMax);
+      if( msg!=null ) {
+         int y = drawBeginnerHelp1(g,msg,currentMessage!=null ?   
+               (cdsMessage ? Aladin.COLOR_LABEL.brighter() : Color.yellow.darker() ) //Aladin.COLOR_GREEN_LIGHT )
+               : Aladin.COLOR_LABEL,yMax);
+         
+         // Dessin d'une coche pour acquitter le message
+         
+         if( currentMessage!=null && (cdsMessage || msgKey!=null) ) {
+            y -= 5;
+            int x = getWidth()-35;
+            Util.drawCheck( g, x,y, g.getColor().brighter() );
+            g.drawString("Ok",x+12,y+10);
+            addUrl("", new Rectangle(x-5,y-2,30,15));
          
          // Dessin d'un petit triangle pour suggérer la suite
-         if( lastBegin<BEGIN.length-1 ) {
-            y -= 10;
+          } else if( lastBegin<BEGIN.length-1 && currentMessage==null ) {
+            y -= 5;
             int x = getWidth()-10;
             Polygon pol = new Polygon();
             pol.addPoint(x, y-6);
@@ -1319,13 +1375,91 @@ Runnable, SwingWidgetFinder, Widget {
             pol.addPoint(x+5,y-3);
             g.fillPolygon(pol);
             g.drawPolygon(pol);
+            addUrl("", new Rectangle(x-5,y-8,15,10));
          }
       }
    }
+   
+   private String currentMessage=null;   // Le message courant
+   private boolean cdsMessage=false;     // true si le message courant est une annonce CDS
+   private String msgKey=null;           // cle associé au message courant (dans le cas d'une aide ponctuelle)
+   
+   protected void setCDSMessage(String s) {
+      currentMessage=s;
+      cdsMessage=true;
+      repaint();
+   }
+   
+   /** Positionnement d'un message
+    * FORMAT [ttt] [§en:]This is an <&http://aladin.fr|link>\\n...[§fr:Ceci est ....]
+    * @param message
+    */
+   protected void setMessage(String msgKey,String message) {
+      currentMessage=message;
+      this.msgKey=msgKey;
+      repaint();
+   }
+   
+   // Mise en forme du message CDS
+   // Syntaxe d'entrée [timeUnix] Message avec des \\n etc
+   // Le message peut être précédé d'un code de langue §xx: (ex: §en:), et dans ce cas il peut y avoir
+   // plusieurs versions à la queue leu leu en langues différentes
+   // @return CDS news (jj/mm/aa)\n \n message...
+   private String splitCDSMessage(String s) {
+
+      // On enlève l'éventuellement timeUnix en préfixe
+      String date="";
+      int i = s.indexOf(' ');
+      try {
+         long t = Long.parseLong( s.substring(0,i) );
+         Date d = new Date(t*1000L);
+         DateFormat format = new SimpleDateFormat("dd MMM yyyy");
+         date = "  ("+format.format(d)+")";
+         s = s.substring(i+1);
+      } catch( Exception e) {}
+      
+      // Plusieurs langues à la queue leu leu ?
+      if( s.startsWith("§") ) {
+         
+         // Code du langage actuellement utilisé
+         String localCode=a.configuration.getLang();
+         if( localCode==null || localCode.length()==0 ) localCode="en";
+         else localCode=localCode.substring(1);
+         
+         // Recherche du message dans la même langue, sinon on prend la première (anglais)
+         Tok tok = new Tok(s,"§");
+         tok.nextToken();
+         String first=null;
+         while( tok.hasMoreTokens() ) {
+            String s1 = tok.nextToken();
+            i=s1.indexOf(':');
+            String code = s1.substring(0,i);
+            String msg = s1.substring(i+1);
+            if( first==null || code.equals(localCode) ) first=msg;
+         }
+         if( first!=null ) s=first;
+      }
+
+      // On ajoute un titre, et on remplace les '\\' 'n'
+      String title="";
+      if( s.charAt(0)=='!' ) {
+        i = s.indexOf("\n");
+        title =  s.substring(0,i);
+        s = s.substring(i+1);
+      } 
+      else if( cdsMessage ) title = "Last news"+date;
+      else title = TIP;
+      
+      return title+"\n \n"+s.replace("\\n", "\n");
+   }
+   
+   static final private String TIP = "Tips and tricks";
+   private Image tipImg = null;
 
    /** Affiche la phrase courante du Help Beginner au-dessus de la pile */
    private int drawBeginnerHelp1(Graphics g,String s,Color c,int yMax) {
-      int x=10;
+      int x0=10;
+      int x=x0;
       int xMax=getWidth()-x;
       Font FI = Help.FI.deriveFont(Help.FI.getSize2D()-2);
       Font FG = Help.FG.deriveFont(Help.FG.getSize2D()-2);
@@ -1334,42 +1468,103 @@ Runnable, SwingWidgetFinder, Widget {
       FontMetrics fm = g.getFontMetrics(FI);
       int h=fm.getHeight()+1;
       boolean first=true;
-      StringBuffer line = new StringBuffer();
-      int w=0;
-      StringTokenizer st = new StringTokenizer(s,"\n");
+      int space=4;
+      boolean flagExcla=false;
+      Tok st = new Tok(s,"\n");
       int y,y0 = 30;
       for( y=y0 ; y+3*h<yMax && st.hasMoreTokens(); y+=h ) {
-         StringTokenizer st1 = new StringTokenizer(st.nextToken()," ");
-         boolean newLine=true;
+         if( first && y==y0 ) {
+            if( s.startsWith(TIP) || s.startsWith("!") ) {
+               if( tipImg==null ) tipImg = a.getImagette("tip.png");
+               g.drawImage( tipImg, getWidth()-60, y-30, a);
+               flagExcla=s.startsWith("!");
+            }
+         }
+         if( first && y>y0 ) {
+            first=false; g.setFont(FI);
+         }
+         x=x0;
+         
+         String line = st.nextToken();
+         if( line.trim().length()==0 ) { y-=h/2; continue; }
+         
+         Tok st1 = new Tok(line," ");
          for( ; y<yMax && st1.hasMoreTokens(); ) {
             String s1 = st1.nextToken().trim();
-            if( s1.length()>0 ) newLine=false;
-            int w1 = fm.stringWidth(" "+s1);
-            if( w1+w>xMax ) {
-               drawString(g,line.toString(),x,y);
-               y+=h;
-               line = new StringBuffer(s1);
-               w=0;
-               if( first ) { first=false; g.setFont(FI); }
-            } else line.append( (line.length()>0 ? " ":"")+s1);
-            w+=w1;
+            if( flagExcla ) { s1=s1.substring(1); flagExcla=false; }
+            
+            // Cas d'un ancre genre <&http://url|texte>
+            int i=-1;
+            String url=null;
+            if( s1.startsWith("<&") && s1.endsWith(">") && (i=s1.indexOf('|'))>0 ) {
+               url = s1.substring(2,i);
+               s1 = s1.substring(i+1,s1.length()-1);
+            }
+//            if( s1.length()==0 ) {   y+=h/2;  x=x0-space; continue; }
+            
+            int w1 = fm.stringWidth(s1);
+            if( x+w1>xMax ) { y+=h; x=x0-space; }
+            if( url!=null ) x=drawUrl(g,s1,url,x+space,y);
+            else x=drawString(g,s1,c,x+space,y);
          }
-         if( y<yMax && line.length()>0 ) {
-            drawString(g,line.toString(),x,y);
-            line = new StringBuffer();
-            w=0;
-         }
-         if( first ) { first=false; g.setFont(FI); }
-         if( newLine ) y-=h/2;
       }
 
       return y;
    }
+   
+   // Positions et url d'un lien présent dans le message CDS
+   class ActionUrl {
+      String url;
+      Rectangle rect;
+      ActionUrl(String u, Rectangle r) { url=u; rect=r; }
+   }
+   
+   ArrayList<ActionUrl> listUrl = null;   // Liste des liens présents dans le message CDS
+   
+   private void resetUrl() { listUrl=null; }
+   private void addUrl(String url, Rectangle r) {
+      if( listUrl==null ) listUrl = new ArrayList<ActionUrl>();
+      listUrl.add( new ActionUrl(url, r ) );
+   }
+   
+   // Appel du navigateur pour un lien cliqué dans le message CDS
+   private String callUrl(int x, int y) {
+      if( listUrl==null ) return null;
+      for( ActionUrl au : listUrl ) {
+         if( au.rect.contains(x, y) ) {
+            if( au.url!=null && au.url.length()>0 ) a.glu.showDocument(au.url);
+            return au.url;
+         }
+      }
+      return null;
+   }
+   
+   private boolean onUrl(int x, int y) {
+      if( listUrl==null ) return false;
+      for( ActionUrl au : listUrl ) {
+         if( au.rect.contains(x, y) ) return true;
+      }
+      return false;
+   }
+   
+   private int drawUrl(Graphics g,String s, String url,int x, int y) {
+      if( s.length()==0 ) return x;
+      
+      g.setColor( Aladin.COLOR_BLUE );
+      g.drawString(s,x,y);
+      int w = g.getFontMetrics().stringWidth(s);
+      g.drawLine(x, y+2, x+w, y+2);
+      
+      addUrl(url, new Rectangle(x,y-12,w,15) );
+      return x + w;
+   }
 
-   private void drawString(Graphics g,String s,int x, int y) {
-      if( s.length()==0 ) return;
+   private int drawString(Graphics g,String s,Color c,int x, int y) {
+      if( s.length()==0 ) return x;
+      g.setColor(c);
       if( s.charAt(0)=='*' ) { Util.fillCircle5(g, x+2, y-4); g.drawString(s.substring(1),x+7,y); }
       else g.drawString(s,x,y);
+      return x + g.getFontMetrics().stringWidth(s);
    }
 
    //   long timeTips=0L;
@@ -1608,7 +1803,8 @@ Runnable, SwingWidgetFinder, Widget {
       if( flagDrag==VERTICAL ) moveLogo(g);
 
       lastYMax = y;
-      if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<4 ) drawBeginnerHelp( g, y);
+      if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<4 
+            || currentMessage!=null ) drawBeginnerHelp( g, y);
       
       a.resumeVariousThinks();
 

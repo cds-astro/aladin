@@ -29,7 +29,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (déc 2016) Creation
  */
-public class IconCollapse extends MyIcon {
+public class IconCollapse extends Icon {
    static final int L = 12;      // Taille d'un logo
    static String COLLAPSE,EXPAND;
    
@@ -92,6 +92,5 @@ public class IconCollapse extends MyIcon {
    }
       
    protected String getHelpTip() { return aladin.chaine.getString("COLLAPSETIP"); }
-   protected String Help()       { return aladin.chaine.getString("Collapse.HELP");  }
-
+   protected String getHelpKey() { return "Collapse.HELP"; }
 }

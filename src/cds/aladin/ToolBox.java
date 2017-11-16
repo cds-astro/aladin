@@ -24,11 +24,14 @@ package cds.aladin;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JComponent;
+import javax.swing.Timer;
 
 import cds.tools.Util;
 
@@ -580,9 +583,11 @@ SwingWidgetFinder, Widget {
       oc=-1;
       //      inRedim=false;
       currentButton=-1;
+      if( timerTip!=null ) { timerTip.stop(); timerTip=null; }
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       repaint();
    }
+   
 
    // Info sur le plan
    public void mouseMoved(MouseEvent e) {
@@ -602,6 +607,12 @@ SwingWidgetFinder, Widget {
       int i = getToolNumber(x,y);
       if( i<0 ) return;
 
+      // Aide Tip sur ce bouton ?
+      if( timerTip==null ) timerTip = new Timer(6000, new ActionListener() {
+         public void actionPerformed(ActionEvent e) { showTip(); }
+      }); 
+      timerTip.restart();
+      
       if( tool[i].mode!=Tool.UNAVAIL /* || isForTool(i)*/ ) handCursor();
       else defaultCursor();
 
@@ -610,8 +621,24 @@ SwingWidgetFinder, Widget {
 
       // Montre le bouton courant
       showCurrentButton(i);
-
    }
+   
+   private int lastTipShown=-1;   // Numéro du bouton du dernier tip affiché
+   
+   // Affichage du tip associé au bouton courant
+   private void showTip() {
+      if( lastTipShown==currentButton ) return;   // on ne remet pas le même tip 2x de suite
+//      if( tool[currentButton].mode==Tool.UNAVAIL ) return;  // le tip s'affiche que si le bouton est activable
+      String key = "Tool."+Tool.label[currentButton];
+      String tip =  aladin.chaine.getString(key);
+      if( !Aladin.BETA && tip.startsWith("[") ) return;   // pas de tip prévu => problème
+      aladin.calque.select.setMessage(null,tip);
+      Util.toolTip(this, null);                          // Pour éviter un tooltip en même temps
+      lastTipShown=currentButton;
+   }
+   
+   
+   private Timer timerTip = null;
 
    /** Retourne le numéro du bouton sous la position x,y, ou -1 si aucun */
    protected int getToolNumber(int x,int y) {

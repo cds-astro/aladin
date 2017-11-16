@@ -109,7 +109,11 @@ public class Ligne extends Position {
    protected Ligne(ViewSimple v,double ra, double dec) {
       super(null,v,0.0,0.0,ra,dec,RADE_COMPUTE,null);
    }
-
+   
+   protected Ligne(double ra, double dec) {
+      this.raj=ra;
+      this.dej=dec;
+   }
 
    protected Ligne(double ra, double dec, Plan plan, ViewSimple v, Ligne debligne) {
       this(ra,dec,plan,v,null,debligne);

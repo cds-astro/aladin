@@ -30,7 +30,7 @@ import java.awt.Graphics;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (Mars 2007) Creation
  */
-public class IconMatch extends MyIcon {
+public class IconMatch extends Icon {
    static final int L = 12;      // Taille d'un logo
    static String MATCH;
    protected boolean megaMatch=false;
@@ -103,5 +103,5 @@ public class IconMatch extends MyIcon {
    protected void submit() { aladin.cycleMatch(); }
       
    protected String getHelpTip() { return aladin.chaine.getString("MVIEWSYNC"); }
-   protected String Help()       { return aladin.chaine.getString("Sync.HELP"); }
+   protected String getHelpKey() { return "Sync.HELP"; }
 }

@@ -89,7 +89,7 @@ public final class FrameMocGenProba extends FrameMocGenImg {
          int res= ((PlanBG)ps[0]).getMaxHealpixOrder();
          double threshold=getThreshold();
          a.console.printCommand("cmoc -threshold="+threshold+" "+labelList(ps));
-         a.calque.newPlanMoc("MOC "+threshold+" "+ps[0].label,ps,res,0,Double.NaN,Double.NaN,threshold);
+         a.calque.newPlanMoc("MOC "+threshold+" "+ps[0].label,ps,res,0,Double.NaN,Double.NaN,threshold,false);
          hide();
 
       } catch ( Exception e ) {

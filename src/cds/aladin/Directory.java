@@ -250,6 +250,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       setBackground(cbg);
       setLayout(new BorderLayout(0, 0));
       setBorder(BorderFactory.createEmptyBorder(8, 3, 10, 0));
+      
+//      JLabel legende = new JLabel("<html>    ° <font color=\"green\">in view</font>  -  "
+//            + "° <font color=\"orange\">outside</font>  -  "
+//            + "° <font color=\"white\">undetermined</font><html>");
 
       JPanel pTitre = new JPanel(new FlowLayout(FlowLayout.LEFT, 35, 0));
       pTitre.setBackground(cbg);
@@ -363,13 +367,16 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       panelTree.setBackground(cbg);
       panelTree.add(pTitre, BorderLayout.NORTH);
       panelTree.add(scrollTree, BorderLayout.CENTER);
+//      panelTree.add(legende, BorderLayout.SOUTH);
 
       add(panelTree, BorderLayout.CENTER);
       add(panelControl, BorderLayout.SOUTH);
 
       // Actions sur le clic d'un noeud de l'arbre
       dirTree.addMouseListener(new MouseAdapter() {
+         public void mouseExited(MouseEvent e) { if( timerTip!=null ) { timerTip.stop(); timer=null; } }
          public void mousePressed(MouseEvent e) {
+            if( timerTip!=null ) timerTip.stop();
             toHighLighted = null;
             TreePath tp = dirTree.getPathForLocation(e.getX(), e.getY());
             if( tp == null ) hideInfo();
@@ -393,9 +400,17 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       });
 
       dirTree.addMouseMotionListener(new MouseMotionListener() {
+
          public void mouseMoved(MouseEvent e) {
             
             if( Aladin.aladin.inHelp  ) Aladin.aladin.help.setText(HELP);
+            
+            // Aide Tip sur ce bouton ?
+            if( timerTip==null ) timerTip = new Timer(6000, new ActionListener() {
+               public void actionPerformed(ActionEvent e) { showTip(); }
+            }); 
+            timerTip.restart();
+
 
             if( frameInfo == null || !frameInfo.isVisible() ) return;
             
@@ -439,15 +454,21 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
       }).start();
    }
+   
+   // Affichage du tip associé au bouton courant
+   private void showTip() {  aladin.configuration.showHelpIfOk("Datatree.HELP"); }
+   
+   private Timer timerTip = null;
+
 
    protected void selectInStack(String id) {
       aladin.calque.selectPlan(id);
    }
 
    /** Ouvre l'arbre en montrant le noeud associé au path spécifié */
-   protected void showTreePath(String path) {
-      if( !isVisible() || !hasCollections() || path == null ) return;
-      dirTree.showBranch(path);
+   protected boolean showTreePath(String path) {
+      if( !isVisible() || !hasCollections() || path == null ) return false;
+      return dirTree.showBranch(path);
    }
 
    /** Ouvre l'arbre en montrant le noeud associé à l'id spécifié */
@@ -2942,8 +2963,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( aladin.view.isFree() || !Projection.isOk( aladin.view.getCurrentView().getProj()) ) {
             return null;
          }
-         coo = aladin.view.getCurrentView().getCooCentre();
-         String target = aladin.localisation.aladin.localisation.getFrameCoord( coo.getDeg() );
+         String target;
+         try {
+            coo = aladin.view.getCurrentView().getCooCentre();
+            target = aladin.localisation.aladin.localisation.getFrameCoord( coo.getDeg() );
+         } catch( Exception e ) {
+            e.printStackTrace();
+            return null;
+         }
          
          double radius = aladin.view.getCurrentView().getTaille();
          return target+"   "+Coord.getUnit( radius );

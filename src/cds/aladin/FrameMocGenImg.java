@@ -211,7 +211,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
             pixelCut = " -pixelCut=\""+pixMin+" "+pixMax+"\"";
          }
          a.console.printCommand("cmoc -order="+res+pixelCut+" "+labelList(ps));
-         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,0,pixMin,pixMax,Double.NaN);
+         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,0,pixMin,pixMax,Double.NaN,false);
          hide();
 
       } catch ( Exception e ) {

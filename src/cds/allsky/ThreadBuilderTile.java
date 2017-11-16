@@ -465,7 +465,14 @@ final public class ThreadBuilderTile {
                      }
 
                      // Détermination du pixel dans l'image à traiter
-                     file.fitsfile.calib.GetXY(coo,false);
+                     try {
+                        file.fitsfile.calib.GetXY(coo,false);
+                        
+                     // gasp !
+                     } catch( Exception e ) {
+                        System.err.println("Problem calib.getXY("+coo+") => exception "+e.getMessage());
+                        continue;
+                     }
                      coo.y = file.fitsfile.height-coo.y -1;
                      coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
 
