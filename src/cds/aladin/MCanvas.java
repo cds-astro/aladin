@@ -1499,7 +1499,11 @@ MouseWheelListener, Widget
          aladin.mesure.setStatus("");
          Util.toolTip(this, tip);
          
-         bindDatalinkPopupFunctionality(-1, -1, -1);
+         try {
+            bindDatalinkPopupFunctionality(-1, -1, -1);
+         } catch( Exception e1 ) {
+            if( Aladin.levelTrace>=3 ) e1.printStackTrace();
+         }
          
          drawIconOut(g);
          return;
@@ -1516,13 +1520,14 @@ MouseWheelListener, Widget
       if( oo!=oshow ) {
          aladin.view.showSource(oshow);
 
-         //         PlanField pf = oshow.getFootprint().getFootprint();
-         //         if (pf != null) {
-         //            pf.setActivated(true);
-         //            pf.flagOk = true;
-         //         }
-         //         oshow.switchFootprint();
-         //         if( oo!=null ) oo.switchFootprint();
+         // On affiche le FoV associé s'il en existe un
+//         PlanField pf = oshow.getFootprint().getFootprint();
+//         if (pf != null) {
+//            pf.setActivated(true);
+//            pf.flagOk = true;
+//         }
+         oshow.setShowFootprintTransient(true,true);
+         if( oo!=null ) oo.setShowFootprintTransient(false,true);
 
          oo=oshow;
       }
@@ -1657,7 +1662,13 @@ MouseWheelListener, Widget
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 
       // Traitement de l'objet dans la vue
-      if( oo!=null ) { aladin.view.hideSource(); oo=null; }
+      if( oo!=null ) { 
+         
+         oo.setShowFootprintTransient(false,true);
+         
+         aladin.view.hideSource();
+         oo=null; 
+      }
 
       // Petit nettoyage
       if( ow!=null ) ow.onMouse=false;

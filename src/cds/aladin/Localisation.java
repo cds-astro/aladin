@@ -874,7 +874,8 @@ public class Localisation extends MyBox  {
       String s = getTextSaisie();
       if( s.length()>0 ) {
          s=shortCutLoad(s);
-         aladin.console.addCmd(s);
+         aladin.console.addLot(s);
+//         aladin.console.addCmd(s);
       }
       readyToClear();
    }
@@ -923,7 +924,7 @@ public class Localisation extends MyBox  {
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   String s = ((JMenuItem)e.getSource()).getActionCommand();
-                  aladin.execAsyncCommand(s);
+                  aladin.console.addLot(s);
                }
             });
          }

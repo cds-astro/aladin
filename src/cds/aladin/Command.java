@@ -123,8 +123,8 @@ public final class Command implements Runnable {
                "   @crop [x|v] [[X,Y] WxH]                  @search {expr|+|-}\n" +
                "   @flipflop [x|v] [V|H]                    @tag|@untag\n" +
                "   @contour [nn] [nosmooth] [zoom]          @select [-tag]\n" +
-               "   @grey|@bitpix [-cut] [x] BITPIX         @browse [x]\n" +
-               " \n" +
+               "   @grey|@bitpix [-cut] [x] BITPIX           @browse [x]\n" +
+               " \n \n" +
                "#GRAPHIC# #TOOL:#                            #FOLDER:#\n" +
                "   @draw [color] fct(param)                 @md [-localscope] [name]\n" +
                "   @grid [on|off]                           @mv|@rm [name]\n" +
@@ -259,16 +259,18 @@ public final class Command implements Runnable {
       a.trace(2,"Command interpreter stopped !");
    }
 
+   private Object lockSleep = new Object();
    private boolean sleepFlag=false;
-   synchronized protected void readNow() {
-
-      //      // Contournement Bug Windows JAVA 1.1.8 sur le read bloquant après available()==1
-      //      if( Aladin.BUGPARAD118 ) { execScript(a.pad.popCmd()); return; }
-
-      if( sleepFlag ) thread.interrupt();
+   
+   protected void readNow() {
+      synchronized( lockSleep ) {
+         if( sleepFlag ) thread.interrupt();
+      }
    }
 
-   synchronized private void setFlagSleep(boolean flag) { sleepFlag=flag; }
+   private void setFlagSleep(boolean flag) { 
+      synchronized( lockSleep ) { sleepFlag=flag; }
+   }
 
    int X = 0;
 
@@ -284,18 +286,25 @@ public final class Command implements Runnable {
    // Procedure un peu tordue pour lire une commande provenant
    // d'un flux (STDIN ou autre) ou éventuellement de la console Aladin (Pad)
    private String readLine() {
-      StringBuffer s = new StringBuffer();
+      StringBuilder s = new StringBuilder();
       boolean encore=true;
       int b=0;
       int acc=0;  // Profondeur de crochets pour éviter les fausses détections de ';' au sein d'une UCD
       
       do {
-         // Une commande qui provient du pad et prioritaire sur stdin
-         if( (stream==null || stream==System.in) &&
-               a.console!=null && a.console.hasWaitingCmd() ) return a.console.pollCmd();
          
+         // Une commande qui provient du pad ou d'un lot n'est pas prioritaire sur stdin
+         if( (stream==null || stream==System.in) && a.console!=null) {
+            if( a.console.hasWaitingCmd() ) {
+//               System.out.println("Command pop à exécuter");
+               return a.console.pollCmd();
+            }
+            if( a.console.hasWaitingLot() ) {
+//               System.out.println("Lot à prendre en compte");
+               return null;   // A traiter en amont
+            }
+         }
          
-
          // Commandes provenant d'un stream (STDIN et/ou autres)
          try {
 
@@ -330,6 +339,8 @@ public final class Command implements Runnable {
          }
 
       } while( encore && !stop && b!=10 && !(b==';' && acc==0) );
+      
+//      System.out.println("Command stream à exécuter");
       return s.toString();
    }
 
@@ -360,6 +371,7 @@ public final class Command implements Runnable {
             // Une commande via un lot ?
             s = a.console.pollLot();
             if( s!=null ) {
+//               System.out.println("PollLot ["+s+"]");
                execNow(s);
                setFlagSleep(true);
                Util.pause(100);
@@ -369,12 +381,9 @@ public final class Command implements Runnable {
             } else {
 
                s = readLine();
-               //         System.out.println("===> ["+s+"]");
-               if( s==null )  return;
-
-               if( s.trim().length()!=0 ) {
-                  execScript(s);
-               }
+               if( s==null )  continue;
+//               System.out.println("===> ["+s+"]");
+               if( s.trim().length()!=0  ) execScript(s);
             }
             if( prompt ) print(getPrompt());
          } catch( Exception e ) {
@@ -685,6 +694,9 @@ public final class Command implements Runnable {
       if( !inSync ) return;
       killSync = true;
    }
+   
+   /** Attend un sync */
+   protected boolean isWaitingSync() { return inSync; }
 
    private boolean inSync = false; // true si un sync est en cours
 

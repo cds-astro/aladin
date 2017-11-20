@@ -97,6 +97,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    boolean badRaDecDetection;       // true si la détection des colonnes RA et DEC est plus qu'incertaine
    boolean flagVOTable=false;       // True si on est sûr a priori que c'est du VOTable (évite le test)
    boolean flagSIAV2 = false;
+   boolean flagSIA = false;
    boolean flagEPNTAP = false;
    boolean flagLabelFromData=false; // True si on laisse possible le renommage du plan par le contenu
 
@@ -252,7 +253,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    public Legende leg=null;
    Vector vField= new Vector(10);
    boolean flagXY;			// true si la table est passee en XY
-   boolean flagTarget;
+   boolean flagTarget=false;
    boolean flagEndResource;
    boolean flagFirstRecord=true;		// True si on n'a pas encore traite le premier enr.
    double minRa,maxRa,minDec,maxDec;
@@ -504,6 +505,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    boolean firstTrace=true;	         // Pour afficher la premiere source en cas de trace
    private int indexAccessUrl=-1;    // Position de la colonne pour in access_url éventuel
    private int indexAccessFormat=-1; // Position de la colonne pour un access_format éventuel
+   private int indexDataProductType=-1; // Position de la colonne pour un dataproduct_type éventuel
    private int indexSTC=-1;          // Position de la colonne pour un FOV STC éventuel
    private int indexOID=-1;          // Position de la colonne OID eventuelle
    private TableParser res;          // Parser utilisé pour créer les objets
@@ -530,7 +532,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
          if( flagFirstRecord ) {
             firstTrace = true; // Pour afficher la premiere source en cas de trace
-            indexAccessFormat=indexAccessUrl=-1;
+            indexAccessFormat=indexAccessUrl=indexDataProductType=-1;
             n = vField.size();
             Vector v = new Vector(n); // Ne contiendra que les champs conserves
 
@@ -731,6 +733,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
              // utype "a la obscore"
             if( indexAccessUrl==-1 && Util.indexOfIgnoreCase(utype,"Access.Reference")>=0 ) indexAccessUrl=j;
             if( indexAccessFormat==-1 && Util.indexOfIgnoreCase(utype,"Access.Format")>=0 ) indexAccessFormat=j;
+            if( indexDataProductType==-1 && Util.indexOfIgnoreCase(utype,"Obs.dataProductType")>=0 ) indexDataProductType=j;
 
             // DESORMAIS LE TEXTE FORCE EST MIS A LA VISUALISATION DES MESURES (A FAIRE)
 //            String text = (refText != null) ? refText : value[i];
@@ -779,6 +782,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             if( indexAccessUrl==-1 )    indexAccessUrl    = leg.find("access_url");
             if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("access_format");
             if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("content_type");
+            if( indexDataProductType==-1 ) indexDataProductType = leg.find("dataproduct_type");
          }
 
          // Creation de la source, soit en XY, soit en alph,delta
@@ -796,28 +800,38 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             try {
                String val = source.getValue(idxSTCS);
                
-               // Attention des petits rigolos utilisent parfois des tableaux de réels où ils alternent lon/lat
+               // Attention des petits rigolos (Markus) utilisent parfois des tableaux de réels où ils alternent lon/lat
                if( leg.isNumField(idxSTCS) && leg.field[idxSTCS].arraysize!=null ) {
                   val="Polygon UNKNOWNFrame UNKNOWNREFPOS "+val;
-//                  val="Polygon ICRS "+val;
-                  source.setValue(idxSTCS, val);
+//                  source.setValue(idxSTCS, val);
                }
                source.setFootprint(val);
                source.setIdxFootprint(idxSTCS);
             } catch(Exception e) {
                e.printStackTrace();
             }
+            
+         // Peut être un FoV peut être tout de même généré par SIA1 ou SSA ?
+         } else if( flagSIA && !flagSIAV2 ) {
+            String fov = source.createSIAFoV();
+            if( fov!=null ) {
+               source.setFootprint(fov);
+               int iScale = leg.findUCD("VOX:Image_Scale");
+               source.setIdxFootprint(iScale);  // on l'associe manu militari sur le colonne des tailles des pixels
+            }
          }
 
          // Post-traitement ObsTap => on remplace le <&xxx par <^xxx ou <£xxx e la colonne "access_url"
-         // en fonction du MIME type de la colonne "access_format"
-         if( indexAccessUrl>=0 ) {
+         // en fonction du type de donnée de la colonne dataproduct_type et sinon du MIME type de la colonne "access_format"
+         if( indexAccessUrl>=0 || indexDataProductType>=0 ) {
             try {
+               String type = indexDataProductType==-1 ? "" : source.getCodedValue(indexDataProductType);
                String fmt = indexAccessFormat==-1 ? "" : source.getCodedValue(indexAccessFormat);
                String val = source.getCodedValue(indexAccessUrl);
-               if( val.startsWith("<&") && /* fmt.length()>0 && */ fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) {
+               if( val.startsWith("<&") && fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) {
                   String tag="^";
-                  if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
+                  if( type.length()>=0 && type.startsWith("spectr")) tag="£";
+                  else if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
                   val = "<&"+tag+val.substring(2);
                   source.setValue(indexAccessUrl, val);
                   source.leg.field[indexAccessUrl].flagArchive=true;
@@ -1008,6 +1022,18 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       flagTarget = true;		// Il sera inutile de calculer le target en fct des donnees
       rajc=tmp[0]; dejc=tmp[1]; rm=tmp[2];
    }
+   
+   /** Positionnement à l'avance du target finale => nécessairement en ICRS */
+   public boolean setTargetCoord( String target ) {
+      if( Localisation.notCoord(target) ) return false;
+      aladin.trace(6,"Pcat.setTargetCoord("+target+")");
+      Coord c;
+      try { c = new Coord(target); } catch( Exception e ) { return false; }
+      if( Double.isNaN(c.al) || Double.isNaN(c.del) ) return false;
+      rajc=c.al; dejc=c.del; rm=14;
+      flagTarget=true;
+      return true;
+   }
 
    /** Data access via XML/VOTable
     *
@@ -1065,14 +1091,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          table=plan.label;
       }
       leg=null;
-      flagTarget=false;
+//      flagTarget=false;
       minRa=minDec = Double.MAX_VALUE;
       maxRa=maxDec = -Double.MAX_VALUE;
       hiddenField=null;
       flagEndResource = false;
 
       long d = System.currentTimeMillis();
-      long type=dis.getType();
+      long type = dis.getType();
       boolean ok;
 
       // Parsing FITS table
@@ -1132,9 +1158,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     * met a jour rajc, dejc et rm en fonction
     */
    private void computeTarget() {
-      if( maxDec-minDec>90 ) {
+//      if( maxDec-minDec>90 ) {
+      if( maxDec-minDec>90 || maxRa-minRa>180.) {
          dejc=rajc=0;
-         rm=120*60.;
+         rm=180*60.;
       } else {
          if( maxRa-minRa>180. ) {
             double alpha = 360-maxRa;
@@ -1172,10 +1199,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
       try {
          st.nextToken();        // On passe sur rm/bm sans s'inquieter
-         tmp[2]=11;
          tmp[2] = Double.valueOf(st.nextToken().trim()).doubleValue();
          if( target.indexOf("bm")>0 ) tmp[2] /= 2;   // Une boite
-      } catch( Exception e3 ) { return null; }
+      } catch( Exception e3 ) { tmp[2]=11; }
 
       return tmp;
    }
@@ -1229,6 +1255,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          flagVOTable=(type & MyInputStream.VOTABLE)!=0;
          flagFootprint = (type & MyInputStream.FOV)!=0;
          flagSIAV2 = (type & MyInputStream.SIAV2)!= 0;
+         flagSIA = (type & MyInputStream.SIA)!= 0;
          flagEPNTAP = (type & MyInputStream.EPNTAP)!= 0;
          if( flagFootprint ) {
             // devrait etre RESOURCE, mais il y a un bug dans getUnreadBuffer (mange un tag trop en avant)

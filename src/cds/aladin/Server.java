@@ -425,7 +425,7 @@ public class Server extends JPanel
          } else if( (modeCoo & RADEb)!=0 ) {
             coo[0].setText(c.getRA(' '));
             coo[1].setText(c.getDE(' '));
-            System.out.println("c.getSexa="+c.getSexa()+" coo[0]= "+c.getRA(' ')+" coo[1]="+c.getDE(' '));
+//            System.out.println("c.getSexa="+c.getSexa()+" coo[0]= "+c.getRA(' ')+" coo[1]="+c.getDE(' '));
          } else if( (modeCoo & RADEd)!=0 ) {
             coo[0].setText(c.al+"");
             //            coo[1].setText((c.del>=0?"+":"")+c.del+"");

@@ -191,6 +191,18 @@ public final class Legende extends AbstractTableModel  {
       return -1;
    }
 
+   /** Retourne l'indice du premier champ qui a l'UCD indiqué */
+   protected int findUCD(String ucd) {
+      for( int i=0; i<field.length; i++ ) if( ucd.equals(field[i].ucd) ) return i;
+      return -1;
+   }
+
+   /** Retourne l'indice du premier champ qui a l'utype indiqué */
+   protected int findUtype(String utype) {
+      for( int i=0; i<field.length; i++ ) if( utype.equals(field[i].utype) ) return i;
+      return -1;
+   }
+
    /** Retourne l'indice du champ RA, sinon -1 */
    protected int getRa() {
       for( int i=0; i<field.length; i++ ) if( field[i].isRa() ) return i;

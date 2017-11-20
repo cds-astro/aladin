@@ -1201,15 +1201,21 @@ public class TreeObjDir extends TreeObj implements Propable {
          url += "RA="+c.al+"&DEC="+c.del+"&SR="+radius+"&VERB=2";
          
       } else if( hasSIA() ) {
+         int qm;   // position du '?' dans l'URL
+         boolean flagFormat=false; // l'indication du format a déjà été fourni dans l'URL ?
          url = prop.get("sia_service_url");
          if( url!=null ) {
+            qm = url.indexOf('?');
+            flagFormat = qm>=0 && url.lastIndexOf("FORMAT=")>qm;
             if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-            url+="POS="+c.al+","+c.del+"&SIZE="+radius+"&FORMAT=image/fits";
+            url+="POS="+c.al+","+c.del+"&SIZE="+radius+(flagFormat?"":"&FORMAT=image/fits");
          } else {
             url = prop.get("sia2_service_url");
+            qm = url.indexOf('?');
+            flagFormat = qm>=0 && url.lastIndexOf("FORMAT=")>qm;
             if( url!=null ) {
                if( !url.endsWith("?") && !url.endsWith("&") ) url+="?";
-               url+="REQUEST=query&POS=CIRCLE="+c.al+" "+c.del+" "+radius+"&FORMAT=image/fits";
+               url+="REQUEST=query&POS=CIRCLE="+c.al+" "+c.del+" "+radius+(flagFormat?"":"&FORMAT=image/fits");
             }
          }
 

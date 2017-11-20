@@ -82,7 +82,7 @@ public class Source extends Position implements Comparator {
    protected Action[][] actions;
 
    /**** objet wrappant les infos relatives au footprint associé à la source ****/
-   private SourceFootprint sourceFootprint;
+   protected SourceFootprint sourceFootprint;
    
    /** For plugin */
    protected Source() {}
@@ -1233,6 +1233,66 @@ public class Source extends Position implements Comparator {
    public InputStream getVOTable() throws Exception {
       return plan.aladin.writeObjectInVOTable(null, this, null, true, false, false,false).getInputStream();
    }
+   
+   /** Retourne le FoV extrait des colonnes SIA, null sinon
+    * => cf TreeBuilder.createSIAPNode() de TB
+    * @return une chaine STC-S 
+    */
+   public String createSIAFoV() {
+      if( leg==null ) return null;
+      try {
+         int iScale = leg.findUCD("VOX:Image_Scale");
+         int iNaxis = leg.findUCD("VOX:Image_Naxes");
+         int iSize  = leg.findUCD("VOX:Image_Naxis");
+         int iCD    = leg.findUCD("VOX:WCS_CDMatrix");
+         
+         // Nombre de dimensions ?
+         String val[] = getValues();
+         if( iNaxis>=0 ) {
+            int axis = Integer.parseInt( val[ iNaxis ]);
+            if( axis!=2 ) return null;  // Pas une image
+         }
+         
+         // Taille en pixels de l'image ?
+         String s = val[ iSize ];
+         Tok st = new Tok(s, ", ");
+         int width = Integer.parseInt( st.nextToken() );
+         int height = Integer.parseInt( st.nextToken() );
+         
+         // Taille angulaire du pixel ?
+         s = val[ iScale ];
+         st = new Tok(s, ", ");
+         double scaleW = Double.parseDouble( st.nextToken() );
+         double scaleH;
+         try { scaleH = Double.parseDouble( st.nextToken() ); } 
+         catch( Exception e1 ) { scaleH=scaleW; }  // une seule composante comme pour SDSS SIA
+         
+         // Et donc de l'image
+         scaleW *= width;
+         scaleH *= height;
+         
+         // Détermination de l'angle par la matrice CD ?
+         double angle=0;
+         if( iCD>=0 ) {
+            try {
+               st = new Tok(val[ iCD ], ", ");
+               double cd01 = Double.parseDouble( st.nextToken() );
+               st.nextToken();
+               double cd11 = Double.parseDouble( st.nextToken() );
+               angle = Math.atan2(cd01, cd11)*180.0/Math.PI;
+               if( Double.isNaN(angle) ) angle=0;
+            } catch( Exception e ) { angle=0; }
+         }
+         
+         // Construction du FOV
+         Fov fov = new Fov(raj,dej,scaleW,scaleH,angle);
+         StringBuilder s1 = new StringBuilder("Polygon ICRS");
+         for( PointD p : fov.getPoints() ) s1.append(" "+p.x+" "+p.y);
+         
+         return s1.toString();
+         
+      } catch( Exception e ) { return null; }
+   }
 
   /**
     * Crée l'objet sourceFootprint s'il n'a pas déja été créé
@@ -1296,6 +1356,12 @@ public class Source extends Position implements Comparator {
    	  createSourceFootprint();
    	  sourceFootprint.setShowFootprint(show);
    	  if( withRepaint ) plan.aladin.calque.repaintAll();
+   }
+   
+   protected void setShowFootprintTransient(boolean show,boolean withRepaint) {
+      createSourceFootprint();
+      sourceFootprint.setShowFootprintTransient(show);
+      if( withRepaint ) plan.aladin.calque.repaintAll();
    }
    
    /** True is a footprint is associated to this source and displayed */

@@ -254,7 +254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.041";
+   static public final    String VERSION = "v10.044";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4425,15 +4425,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
 	         ra = a.get(i);
 	         de = b.get(i);
 	         o = new Ligne(ra,de);
-	         o.debligne = oo;
-	         if( oo!=null ) oo.finligne = o;
+	         o.finligne = oo;
+	         if( oo!=null ) oo.debligne = o;
 	         else { first=o; first.bout=3; }
 	         oo = o;
 	      }
 	      o = new Ligne( first.raj, first.dej );
 	      o.bout = 3;
-	      o.debligne=oo;
-	      oo.finligne=o;
+	      o.finligne=oo;
+	      oo.debligne=o;
 	      
           return createMocRegionPol(o, -1, false);
 	}
@@ -6625,6 +6625,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public void info(Component c,String s) {
       if( NOGUI ) return;
       if( aladin.isFullScreen() && c==aladin.f ) c=aladin.fullScreen;
+      if( c==null ) c=Aladin.aladin;
       Message.showMessage(c,s);
    }
    static public void warning(String s) { warning(Aladin.aladin.f,s,0); }

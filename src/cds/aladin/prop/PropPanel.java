@@ -90,6 +90,7 @@ public class PropPanel extends JPanel {
    
    /********************************** Methodes statitiques de mise en forme ******************************************/
    
+   
    public static void addCouple(JFrame frame, JPanel p, Object titre, String help, Component valeur,
             GridBagLayout g, GridBagConstraints c) {
         addCouple(frame, p, titre, help, valeur, g, c, GridBagConstraints.WEST);

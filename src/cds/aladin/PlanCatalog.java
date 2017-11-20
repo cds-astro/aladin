@@ -161,6 +161,8 @@ public class PlanCatalog extends Plan {
          filterIndex=aladin.configuration.getFilter()==0? server.getFilterChoiceIndex() : -1;
       }
       pcat       = new Pcat(this,c,aladin.calque,aladin.status,aladin);
+      if( objet!=null && objet.trim().length()>0 ) pcat.setTargetCoord(objet);
+      
       aladin.calque.unSelectAllPlan();
       selected   = true;
 

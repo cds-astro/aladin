@@ -21,13 +21,20 @@
 
 package cds.aladin;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+import cds.aladin.prop.PropPanel;
 
 /**
  * Gestion de la fenetre associee a la creation d'un MOC à partir d'un catalogue
@@ -52,14 +59,38 @@ public final class FrameMocGenCat extends FrameMocGenImg {
    }
    
    private JTextField radius;
+   private JCheckBox boxRad, boxFov;
    
    protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) { 
-      JPanel pp = new JPanel();
-      pp.add( new JLabel("Radius (in arcsec):") );
-      pp.add( radius=new JTextField(5));
-      c.gridwidth=GridBagConstraints.REMAINDER;
-      g.setConstraints(pp,c);
-      p.add(pp);
+//      JPanel pp = new JPanel();
+//      pp.add( new JLabel("Radius (in arcsec):") );
+//      pp.add( radius=new JTextField(5));
+//      c.gridwidth=GridBagConstraints.REMAINDER;
+//      g.setConstraints(pp,c);
+//      p.add(pp);
+      
+      JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+      
+      ButtonGroup bg = new ButtonGroup();
+      JCheckBox box = new JCheckBox();
+      bg.add( box);
+      box.setSelected( true );
+      PropPanel.addCouple(frame,p, " - Only the central position:", "Only the source position (lon,lat) is used to populate the MOC", box, g,c);
+
+      JPanel p2 = new JPanel( new BorderLayout(0,0));
+      radius=new JTextField("3", 5);
+      box =boxRad= new JCheckBox();
+      bg.add( box);
+      p2.add(box,BorderLayout.WEST);
+      p2.add(radius,BorderLayout.CENTER);
+      p2.add(new JLabel(" in arcsec"),BorderLayout.EAST);
+      PropPanel.addCouple(frame,p, " -Radius around position:","A circle of the disgnated radius centered on each source is used to populate the MOC", p2, g,c);
+      
+      if( Aladin.BETA ) {
+         box =boxFov= new JCheckBox();
+         bg.add( box);
+         PropPanel.addCouple(frame,p, " - Source associated FoV:", "The Field of View (for instance s_region information) associated to each source is used to populate the MOC.", box, g,c);
+      }
    }
    
    private double getRadius() throws Exception {
@@ -80,12 +111,13 @@ public final class FrameMocGenCat extends FrameMocGenImg {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
          int res=getOrder();
-         double radius = getRadius();
-         boolean fov = radius<0;  // Subtilité en attendant de modifier l'interface
+         double radius = boxRad.isSelected() ? getRadius() : 0;
+         boolean fov = boxFov.isSelected();
          String param = "";
-         if( radius>0 ) {
-            param=" -radius="+Coord.getUnit(radius);
-         } else if( radius<0 ) param=" -fov";
+         if( fov ) param=" -fov";
+         else {
+            if( radius>0 ) param=" -radius="+Coord.getUnit(radius);
+         }
          
          a.console.printCommand("cmoc -order="+res+param+" "+labelList(ps));
          a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0,Double.NaN,fov);

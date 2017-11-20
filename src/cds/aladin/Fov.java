@@ -456,6 +456,9 @@ public class Fov {
 	        for( int i=0; i<bordsXY.length; i++ ) {
 	            iNext = (i+1)%bordsXY.length;
 	            g.drawLine(xCoord[i], yCoord[i], xCoord[iNext], yCoord[iNext]);
+//	            if( Aladin.BETA ) {
+//	               g.drawString(i+"",xCoord[i]+5, yCoord[i]+5);
+//	            }
 	        }
         }
 	}

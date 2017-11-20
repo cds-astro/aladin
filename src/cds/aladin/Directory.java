@@ -589,7 +589,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       public void keyReleased(KeyEvent e) {
          if( e.getKeyCode() == KeyEvent.VK_ENTER ) {
             if( timer != null ) timer.stop();
-            timer = null;
+//            timer = null;
             doFiltre();
          } else filtre();
       }
@@ -1919,7 +1919,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // Si j'ai une mention de AladinDesktop, j'analyse le suffixe éventuel (ex: AladinDesktopBeta>9.6)
             if( profile.length() > 0 ) {
                String gluProfile = getGluProfile(profile);
-               // System.out.println("Profile = "+gluProfile);
+//                System.out.println("Profile = "+gluProfile);
                return aladin.glu.hasValidProfile(gluProfile);
 
                // System.out.println("valide="+aladin.glu.hasValidProfile(gluProfile));
@@ -1947,14 +1947,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          switch( mode ) {
             case 0: // Avant un nouveau token ou dans un mot
                if( Character.isUpperCase(c) ) rep.append(" " + Character.toLowerCase(c));
-               else if( Character.isDigit(c) || c == '<' || c == '>' ) {
+               else if( isDigit(c) || c == '<' || c == '>' ) {
                   mode = 1;
                   rep.append(" " + c);
                } else rep.append(c);
                break;
             case 1: // Dans un numéro de version (token numérique)
                if( c == '<' || c == '>' ) rep.append(" " + c);
-               else if( !Character.isDigit(c) && c != '=' ) {
+               else if( !isDigit(c) && c != '=' ) {
                   mode = 0;
                   rep.append(" " + Character.toLowerCase(c));
                } else rep.append(c);
@@ -1963,6 +1963,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
       return rep.toString();
    }
+   
+   private boolean isDigit(char c) { return Character.isDigit(c) || c=='.'; }
 
    /**
     * Ajout d'une collection correspondant à un enregistrement prop, ainsi que des entrées GLU associées

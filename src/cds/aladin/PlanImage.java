@@ -895,6 +895,7 @@ public class PlanImage extends Plan {
       image=null;
       forPourcent=null;
       planMultiCCD=null;
+      if( o!=null && o instanceof Source ) aladin.view.deSelect((Source)o);
       changeImgID();
       return true;
    }

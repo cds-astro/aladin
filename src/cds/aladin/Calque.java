@@ -3182,11 +3182,13 @@ public class Calque extends JPanel implements Runnable {
             newSource.values = s.values;
             newSource.actions = s.actions;
             newSource.leg = s.leg;
+            newSource.sourceFootprint = s.sourceFootprint.copy();
             if( !legs.contains(s.leg) ) legs.addElement(s.leg);
          }
          p.pcat.nbTable= legs.size();
 
-         // Fusion en une table unique homogène
+      // Fusion en une table unique homogène
+      // Note: on va perder les FOV associés => A creuser
       } else {
 
          // Génération d'une légende générique

@@ -915,14 +915,25 @@ public class PlanBG extends PlanImage {
    /** Positionne le flag d'une projection spécifique associée à ce plan */
    protected void setSpecificProj(boolean flag) { specificProj = flag; }
    
-   /** Retourne le mode d'affichage par défaut de la longitude. S'il y a mention
-    * d'une référence spatiale, on suppose qu'il s'agit d'une planète et on affiche
-    * avec la longitude ascendante
+   
+   static private final String [] SKYFRAME = { "g","gal","galactic","e","ecl","ecliptic","c","equ","equatorial" };
+   
+   /** Retourne le frame indiqué dans les fichiers de properties, ou à défaut le frame interne d'affichage */
+   protected String getHipsFrame() {
+      String frame;
+      if( prop!=null && (frame = prop.getProperty("hips_frame"))!=null ) {
+        return frame;
+      }
+      return Localisation.getFrameName(frameOrigin);
+   }
+      
+   /** Retourne le mode d'affichage par défaut de la longitude. Si le frame n'est pas céleste,
+    * on suppose qu'il s'agit d'une planète et on affiche avec la longitude ascendante
     */
    protected boolean isAPlanet() {
       if( prop==null ) return false;
-      String refpos = prop.getProperty("hips_refpos");
-      return refpos!=null;
+      String frame = prop.getProperty("hips_frame");
+      return frame!=null && Util.indexInArrayOf(frame, SKYFRAME, true)<0;
    }
 
    protected void suiteSpecific() {

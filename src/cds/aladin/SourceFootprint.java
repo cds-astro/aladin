@@ -42,11 +42,21 @@ public class SourceFootprint {
 	private PlanField footprint; // objet PlanField associé à la source
 	private Fov stcsFov;
 	private boolean showFootprint = false; // doit-on montrer le footprint associé
+	private boolean transientShow = false; // Le footprint n'est montré que temporairement (mouseMove dessus par exemple) (PF- nov 17)
 	private int idxFootprint = -1; // index du footprint
 
 	/** Constructeur */
 	public SourceFootprint() {}
 
+	/** Clonage basique (sans reprendre les flags d'affichage */
+	public SourceFootprint copy() {
+	   SourceFootprint s = new SourceFootprint();
+	   s.footprint = footprint;
+	   s.stcsFov = stcsFov;
+	   s.idxFootprint = idxFootprint;
+	   return s;
+	}
+	
 	/**
 	 * @return Returns the footprint.
 	 */
@@ -73,7 +83,7 @@ public class SourceFootprint {
 	}
 
 	protected void draw(Projection proj, Graphics g, ViewSimple v, int dx, int dy, Color c) {
-	    if ( ! showFootprint) {
+	    if ( ! showFootprint && !transientShow ) {
 	        return;
 	    }
 
@@ -114,7 +124,12 @@ public class SourceFootprint {
 	/**
 	 * @param showFootprint The showFootprint to set.
 	 */
-	protected void setShowFootprint(boolean showFootprint) {
+    protected void setShowFootprint(boolean showFootprint) {
 		this.showFootprint = showFootprint;
 	}
+    
+    protected void setShowFootprintTransient(boolean transientShow) {
+       this.transientShow = transientShow;
+   }
+
 }

@@ -216,7 +216,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       PROJ = aladin.chaine.getString("PROPPROJ");
       NONE = aladin.chaine.getString("PROPNONE");
       METHOD = aladin.chaine.getString("PROPMETHOD");
-      FRAME = aladin.chaine.getString("PROPFRAME");
       CENTER = aladin.chaine.getString("PROPCENTER");
       SELECTFIELD = aladin.chaine.getString("PROPSELECTFIELD");
       DEFCATPROJ = aladin.chaine.getString("PROPDEFCATPROJ");
@@ -1097,7 +1096,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
-         PropPanel.addCouple(p, "Coord.sys.:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
+         PropPanel.addCouple(p, "Coord.sys.:", new JLabel(pbg.getHipsFrame()), g, c);
 
          if( plan.type==Plan.ALLSKYIMG ) {
             int level = pbg.getMaxFileOrder();

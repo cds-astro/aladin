@@ -244,6 +244,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       //Permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
       String[] commands = Util.split(s, ";\n\r", '[', ']');
       for( int i=0; i<commands.length; i++ ) lot.add(commands[i]);
+//      System.out.println("Ajout Lot "+s);
       lots.add( lot);
       aladin.command.readNow();
    }
@@ -308,19 +309,51 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    }
    
    // Retourne true s'il y a au-moins une commande encore en attente dans un lot
-   private boolean hasWaitingLot() {
+//   private boolean hasWaitingLot() {
+//      if( lots.size()==0 ) return false;
+//      for( Lot lot : lots) if( !lot.isEmpty() ) return true;
+//      return false;
+//   }
+   
+   // Retourne true s'il y a au-moins une commande consommable immédiatement dans un lot
+   synchronized protected boolean hasWaitingLot() {
       if( lots.size()==0 ) return false;
-      for( Lot lot : lots) if( !lot.isEmpty() ) return true;
+      
+      for( Lot lot : lots) {
+         if( lot.isEmpty() ) continue;
+         
+         if( lot.waitingId==-2L ) {
+//            System.out.println("Lot"+lot.name+" en attente de lancement de thread...");
+            continue;
+         }
+         
+         // Si ce lot attend la fin d'un thread particulier, vérifie si celui-ci ne serait
+         // pas achevé. Si oui, autorise le traitement de la commande suivante dans ce lot
+         if( lot.waitingId>=0L ) {
+            boolean trouve=false;
+            for( Thread th : Thread.getAllStackTraces().keySet() ) {
+               if( th.getId()==lot.waitingId ) { trouve=true; break; }
+            }
+            if( !trouve ) return true;
+            else continue;
+         }
+         
+         // Ce lot peut-il fournir une commande à exécuter maintenant ?
+         if( lot.waitingId==-1L ) return true;
+      }
+      
       return false;
    }
+
    
    /** Retourne true si une commande est en attente de traitement */
    synchronized public boolean hasWaitingCmd() {
-      return cmd.size()>0 || hasWaitingLot() ;
+      return cmd.size()>0;
    }
 
    /** Empile la prochaine commande à traiter et réveille command pour la traiter */
    synchronized public void addCmd(String s) {
+//      System.out.println("Ajout command pop "+s);
       // thomas, 16/11/06 : permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
       String[] commands = Util.split(s, ";\n\r", '[', ']');
       for( int i=0; i<commands.length; i++ ) {

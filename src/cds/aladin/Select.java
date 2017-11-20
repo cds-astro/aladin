@@ -1149,8 +1149,12 @@ Runnable, SwingWidgetFinder, Widget {
       if( (currentMessage!=null || beginnerHelp) && y<lastYMax ) {
          if( onUrl(e.getX(),e.getY()) ) a.makeCursor(this, a.HANDCURSOR);
          else a.makeCursor(this, a.DEFAULTCURSOR);
+         if( !flagInMessage ) repaint();
+         flagInMessage=true;
          return;
       }
+      
+      flagInMessage=false;
 
       Slide s = getSlide(y);
       Plan p = s==null?null:s.getPlan();
@@ -1221,6 +1225,7 @@ Runnable, SwingWidgetFinder, Widget {
 
    /** Gestion de la souris */
    public void mouseExited(MouseEvent e) {
+      flagInMessage=false;
       a.calque.unSelectUnderMouse();
 //      a.view.resetBorder();
       defaultCursor();
@@ -1325,6 +1330,7 @@ Runnable, SwingWidgetFinder, Widget {
    }
    
    private long t0=0;
+   private boolean flagInMessage=false;   // true si la souris est sur le message
 
    /** Affiche un message pour les débutants en fonction du nombre de plans en cours d'utilisation */
    private void drawBeginnerHelp(Graphics g, int yMax) {
@@ -1354,28 +1360,38 @@ Runnable, SwingWidgetFinder, Widget {
       if( msg!=null ) {
          int y = drawBeginnerHelp1(g,msg,currentMessage!=null ?   
                (cdsMessage ? Aladin.COLOR_LABEL.brighter() : Color.yellow.darker() ) //Aladin.COLOR_GREEN_LIGHT )
-               : Aladin.COLOR_LABEL,yMax);
+               : Aladin.COLOR_LABEL,flagInMessage ? getHeight() : yMax);
          
-         // Dessin d'une coche pour acquitter le message
-         
-         if( currentMessage!=null && (cdsMessage || msgKey!=null) ) {
-            y -= 5;
-            int x = getWidth()-35;
-            Util.drawCheck( g, x,y, g.getColor().brighter() );
-            g.drawString("Ok",x+12,y+10);
-            addUrl("", new Rectangle(x-5,y-2,30,15));
-         
-         // Dessin d'un petit triangle pour suggérer la suite
-          } else if( lastBegin<BEGIN.length-1 && currentMessage==null ) {
-            y -= 5;
-            int x = getWidth()-10;
-            Polygon pol = new Polygon();
-            pol.addPoint(x, y-6);
-            pol.addPoint(x,y);
-            pol.addPoint(x+5,y-3);
-            g.fillPolygon(pol);
-            g.drawPolygon(pol);
-            addUrl("", new Rectangle(x-5,y-8,15,10));
+         // On affiche des ... pour indiquer que le message est plus long que la zone d'affichage
+         if( y>=yMax && !flagInMessage ) {
+            for( int i=0; i<3; i++ ) {
+               Util.fillCircle2(g, getWidth()-8-5*i, y-8);
+            }
+         } else {
+            
+            if( y<yMax ) {
+
+               // Dessin d'une coche pour acquitter le message
+               if( currentMessage!=null && (cdsMessage || msgKey!=null) ) {
+                  y -= 5;
+                  int x = getWidth()-35;
+                  Util.drawCheck( g, x,y, g.getColor().brighter() );
+                  g.drawString("Ok",x+12,y+10);
+                  addUrl("", new Rectangle(x-5,y-2,30,15));
+
+                  // Dessin d'un petit triangle pour suggérer la suite
+               } else if( lastBegin<BEGIN.length-1 && currentMessage==null ) {
+                  y -= 5;
+                  int x = getWidth()-10;
+                  Polygon pol = new Polygon();
+                  pol.addPoint(x, y-6);
+                  pol.addPoint(x,y);
+                  pol.addPoint(x+5,y-3);
+                  g.fillPolygon(pol);
+                  g.drawPolygon(pol);
+                  addUrl("", new Rectangle(x-5,y-8,15,10));
+               }
+            }
          }
       }
    }
@@ -1455,6 +1471,16 @@ Runnable, SwingWidgetFinder, Widget {
    
    static final private String TIP = "Tips and tricks";
    private Image tipImg = null;
+   
+   // Efface le fond de la ligne courante
+   private void clearBackgroundLine(Graphics g, int y, int h) {
+      int w= getWidth()-2;
+      if(y<50) w-=60;      // Il y a l'ampoule tout en haut qu'il ne faut pas effacer
+      Color c1 = g.getColor();
+      g.setColor( getBackground());
+      g.fillRect(1, y-8, w, h);
+      g.setColor( c1 );
+   }
 
    /** Affiche la phrase courante du Help Beginner au-dessus de la pile */
    private int drawBeginnerHelp1(Graphics g,String s,Color c,int yMax) {
@@ -1472,7 +1498,7 @@ Runnable, SwingWidgetFinder, Widget {
       boolean flagExcla=false;
       Tok st = new Tok(s,"\n");
       int y,y0 = 30;
-      for( y=y0 ; y+3*h<yMax && st.hasMoreTokens(); y+=h ) {
+      for( y=y0 ; y<yMax /* y+3*h<yMax */ && st.hasMoreTokens(); y+=h ) {
          if( first && y==y0 ) {
             if( s.startsWith(TIP) || s.startsWith("!") ) {
                if( tipImg==null ) tipImg = a.getImagette("tip.png");
@@ -1485,6 +1511,8 @@ Runnable, SwingWidgetFinder, Widget {
          }
          x=x0;
          
+         clearBackgroundLine(g,y,h);  // On efface ce qu'il y a sous la ligne
+          
          String line = st.nextToken();
          if( line.trim().length()==0 ) { y-=h/2; continue; }
          
@@ -1500,10 +1528,15 @@ Runnable, SwingWidgetFinder, Widget {
                url = s1.substring(2,i);
                s1 = s1.substring(i+1,s1.length()-1);
             }
-//            if( s1.length()==0 ) {   y+=h/2;  x=x0-space; continue; }
             
             int w1 = fm.stringWidth(s1);
-            if( x+w1>xMax ) { y+=h; x=x0-space; }
+            if( x+w1>xMax ) {
+               y+=h;
+               x=x0-space;
+               clearBackgroundLine(g,y,h);  // On efface ce qu'il y a sous la ligne
+           }
+           if( y>=yMax ) return y;
+            
             if( url!=null ) x=drawUrl(g,s1,url,x+space,y);
             else x=drawString(g,s1,c,x+space,y);
          }
