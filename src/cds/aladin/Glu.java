@@ -3079,7 +3079,8 @@ public final class Glu implements Runnable {
 //                     + "Do not hesitate to download it.\\n"
 //                     + "<&http://aladin.u-strasbg.fr/java/Aladin-V10-Avant-Premiere.html|more> info..."
 //                     + "§fr:Une nouvelle version d'Aladin est disponible sur le site du CDS.\\n"
-//                     + "N'hésitez pas à la télécharger.");
+//                     + "=> '<&http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading|Aladin v10>'\\n \\n"
+//                    + "N'hésitez pas à la télécharger.");
 //               else {
                   try { 
                      String msg=null;
@@ -3088,8 +3089,8 @@ public final class Glu implements Runnable {
                      } while( msg.trim().length()==0 || msg.startsWith("#") );
                      if( msg!=null ) aladin.setCDSMessage(msg);
                   } catch( Exception e) {}
-//               }
-            }
+               }
+//            }
             is.close();
             is=null;
          } finally {

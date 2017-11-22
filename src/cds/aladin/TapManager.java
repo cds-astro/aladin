@@ -101,8 +101,10 @@ import cds.allsky.Constante;
 import cds.mocmulti.MocItem;
 import cds.mocmulti.MocItem2;
 import cds.savot.binary.DataBinaryReader;
+import cds.savot.binary2.DataBinary2Reader;
 import cds.savot.model.FieldSet;
 import cds.savot.model.SavotBinary;
+import cds.savot.model.SavotBinary2;
 import cds.savot.model.SavotField;
 import cds.savot.model.SavotResource;
 import cds.savot.model.TDSet;
@@ -1193,9 +1195,14 @@ public class TapManager {
 				case 0:
 					tableReader(tapClient, resultsResource.getTRSet(i), resultsResource.getFieldSet(i));
 					break;
-				case 1:
-					binaryTableReader(tapClient, resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(i));
-					break;
+                case 1:
+                   binaryTableReader(tapClient, resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(i));
+                   break;
+                   
+                // MODIF PF 20 nov 2017
+                case 2:
+                   binary2TableReader(tapClient, resultsResource.getData(i).getBinary2(), resultsResource.getFieldSet(i));
+                   break;
 				default:
 					if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateTables! Did not read table data for "+tapClient.tapBaseUrl);
 					throw new Exception("ERROR in populateTables! Did not read table data"+tapClient.tapBaseUrl);
@@ -1272,10 +1279,10 @@ public class TapManager {
 	 * @param fields
 	 * @throws IOException
 	 */
-	protected void binaryTableReader(TapClient tapClient, SavotBinary binaryData, FieldSet fields) throws IOException {
+    protected void binaryTableReader(TapClient tapClient, SavotBinary binaryData, FieldSet fields) throws IOException {
 		DataBinaryReader parser = null;
 		try {
-			parser = new DataBinaryReader(binaryData.getStream(), fields);
+           parser = new DataBinaryReader(binaryData.getStream(), fields);
 			TapTable table = null;
 			while (parser.next()) {
 				table = new TapTable();
@@ -1331,6 +1338,73 @@ public class TapManager {
 		}
 	}
 	
+    /**
+     * Tap Table Reader for Savot binary resource
+     * @param newServer
+     * @param binaryData
+     * @param fields
+     * @throws IOException
+     */
+    // INSERTION PF nov 2017 - A REPRENDRE AVEC CHAITRA
+    protected void binary2TableReader(TapClient tapClient, SavotBinary2 binaryData, FieldSet fields) throws IOException {
+        DataBinary2Reader parser = null;
+        try {
+           parser = new DataBinary2Reader(binaryData.getStream(), fields);
+            TapTable table = null;
+            while (parser.next()) {
+                table = new TapTable();
+                String tableName = null;
+                for (int j = 0; j < fields.getItemCount(); j++) {
+                    table.setTable_type(parser.getCellAsString(j));
+                    SavotField field = fields.getItemAt(j);
+                    String fieldName = field.getName();
+                    if (fieldName != null && !fieldName.isEmpty()) {
+                        if (fieldName.equalsIgnoreCase(TABLENAME)) {
+                            tableName = parser.getCellAsString(j);
+                            table.setTable_name(tableName);
+                        } else if (fieldName.equalsIgnoreCase(TABLETYPE)) {
+                            table.setTable_type(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(SCHEMANAME)) {
+                            table.setSchema_name(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(UTYPE)) {
+                            table.setUtype(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
+                            table.setDescription(parser.getCellAsString(j));
+                        }
+                    }
+                }
+                if (tableName != null) {
+                    synchronized (tapClient.tablesMetaData) {
+                        if (tapClient.tablesMetaData.containsKey(tableName)) {
+                            //conserve columns if already set. but other details are updated
+                            TapTable oldEntry = tapClient.tablesMetaData.get(tableName);
+                            if (oldEntry.getColumns() != null) {
+                                table.setColumns(oldEntry.getColumns());
+                            }
+                            
+                            if (oldEntry.getFlaggedColumns() != null) {
+                                table.setFlaggedColumns(oldEntry.getFlaggedColumns());
+                            }
+                            
+                            if (oldEntry.getObsCoreColumns() != null) {
+                                table.setObsCoreColumns(oldEntry.getObsCoreColumns());
+                            }
+                        } 
+                        tapClient.tablesMetaData.put(tableName, table);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            Aladin.trace(3, "ERROR in binaryTableReader! Did not read table data for " + tapClient.tapBaseUrl);
+            if (Aladin.levelTrace >= 3) e.printStackTrace();
+            throw e;
+        } finally {
+            if (parser != null) {
+                parser.close();
+            }
+        }
+    }
+    
 	/**
 	 * Method tries to categorize savot resultsResource as either in binary or table format
 	 * @param tableIndex
@@ -1339,14 +1413,27 @@ public class TapManager {
 	 */
 	protected int getType(int tableIndex, SavotResource resultsResource) {
 		int type = -1;
+// CODE ORIGINAL CHAITRA
+//		if (resultsResource.getTables() == null || resultsResource.getTables().getItemAt(tableIndex) == null
+//				|| resultsResource.getTables().getItemAt(tableIndex).getData() == null
+//				|| (resultsResource.getTables().getItemAt(tableIndex).getData().getTableData() == null
+//						&& resultsResource.getTables().getItemAt(tableIndex).getData().getBinary() != null)) {
+//			type = 1; // for binary
+//		} else if (resultsResource.getTables().getItemAt(tableIndex).getData().getTableData().getTRs() != null) {
+//			type = 0; // for table
+//		}
+		
+		// MODIF PF 20 nov 2017
 		if (resultsResource.getTables() == null || resultsResource.getTables().getItemAt(tableIndex) == null
-				|| resultsResource.getTables().getItemAt(tableIndex).getData() == null
-				|| (resultsResource.getTables().getItemAt(tableIndex).getData().getTableData() == null
-						&& resultsResource.getTables().getItemAt(tableIndex).getData().getBinary() != null)) {
-			type = 1; // for binary
+		      || resultsResource.getTables().getItemAt(tableIndex).getData() == null
+		      || resultsResource.getTables().getItemAt(tableIndex).getData().getTableData() == null ) {
+		   if( resultsResource.getTables().getItemAt(tableIndex).getData().getBinary2() != null) type = 2; // for binary2
+		   else if( resultsResource.getTables().getItemAt(tableIndex).getData().getBinary() != null) type = 1; // for binary
+
 		} else if (resultsResource.getTables().getItemAt(tableIndex).getData().getTableData().getTRs() != null) {
-			type = 0; // for table
+		   type = 0; // for table
 		}
+
 		return type;
 	}
 
@@ -1365,9 +1452,14 @@ public class TapManager {
 				case 0:
 					tableColumnReader(tapClient, resultsResource.getTRSet(i), resultsResource.getFieldSet(i));
 					break;
-				case 1:
-					binaryColumnReader(tapClient, resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(i));
-					break;
+                case 1:
+                   binaryColumnReader(tapClient, resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(i));
+                   break;
+                   
+                // MODIF PF 20 nov 2017 - prise en compte du binary2
+                case 2:
+                   binary2ColumnReader(tapClient, resultsResource.getData(i).getBinary2(), resultsResource.getFieldSet(i));
+                   break;
 				default:
 					if (Aladin.levelTrace >= 3)	System.err.println("ERROR in populateColumns! Did not read table column data for "+tapClient.tapBaseUrl);
 					throw new Exception("ERROR in populateColumns! Did not read table column data for "+tapClient.tapBaseUrl);
@@ -1486,11 +1578,11 @@ public class TapManager {
 	 * @param fields
 	 * @throws IOException
 	 */
-	protected void binaryColumnReader(TapClient tapClient, SavotBinary binaryData, FieldSet fields) throws IOException {
+    protected void binaryColumnReader(TapClient tapClient, SavotBinary binaryData, FieldSet fields) throws IOException {
 		TapTableColumn tableColumn = null; 
 		DataBinaryReader parser = null;
 		try {
-			parser = new DataBinaryReader(binaryData.getStream(), fields);
+           parser = new DataBinaryReader(binaryData.getStream(), fields);
 			while (parser.next()) {
 				tableColumn = new TapTableColumn();
                 for (int j = 0; j < fields.getItemCount(); j++) {
@@ -1537,6 +1629,65 @@ public class TapManager {
 		}
 	}
 	
+    /**
+     * Method populates column information from savot binary resource 
+     * @param serverToLoad
+     * @param binaryData
+     * @param fields
+     * @throws IOException
+     */
+    // INSERTION PF nov 2017 - A REPRENDRE AVEC CHAITRA
+    protected void binary2ColumnReader(TapClient tapClient, SavotBinary2 binaryData, FieldSet fields) throws IOException {
+        TapTableColumn tableColumn = null; 
+        DataBinary2Reader parser = null;
+        try {
+           parser = new DataBinary2Reader(binaryData.getStream(), fields);
+            while (parser.next()) {
+                tableColumn = new TapTableColumn();
+                for (int j = 0; j < fields.getItemCount(); j++) {
+                    SavotField field = fields.getItemAt(j);
+                    String fieldName = field.getName();
+                    if (fieldName != null && !fieldName.isEmpty()) {
+                        if (fieldName.equalsIgnoreCase(TABLENAME)) {
+                            tableColumn.setTable_name(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(COLUMNNAME)) {
+                            tableColumn.setColumn_name(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
+                            tableColumn.setDescription(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(UNIT)) {
+                            tableColumn.setUnit(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(UCD)) {
+                            tableColumn.setUcd(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(UTYPE)) {
+                            tableColumn.setUtype(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(DATATYPE)) {
+                            tableColumn.setDatatype(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(SIZE)) {
+                            tableColumn.setSize(field.getDataType(), parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(PRINCIPAL)) {
+                            tableColumn.setIsPrincipal(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(INDEXED)) {
+                            tableColumn.setIsIndexed(parser.getCellAsString(j));
+                        } else if (fieldName.equalsIgnoreCase(STD)) {
+                            tableColumn.setIsStandard(parser.getCellAsString(j));
+                        }
+                    }
+                }
+                setTableIntoTapMetaData(tapClient, tableColumn);
+            }
+            obscorePostProcess(tapClient);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+            Aladin.trace(3, "ERROR in binaryColumnReader! Did not read column column data for "+tapClient.tapBaseUrl);
+            throw e;
+        } finally {
+            if (parser!=null) {
+                parser.close();
+            }
+        }
+    }
+    
 	/**
 	 * Method populates all column metainfo from one of Aladin's loaded plan
 	 * @param planToUpload
@@ -1691,9 +1842,14 @@ public class TapManager {
 				case 0:
 					count = getTableRowParam(index, resultsResource.getTRSet(index), resultsResource.getFieldSet(index), COUNT);
 					break;
-				case 1:
-					count = getBinarySingleParam(index , resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(index), COUNT);
-					break;
+                case 1:
+                   count = getBinarySingleParam(index , resultsResource.getData(i).getBinary(), resultsResource.getFieldSet(index), COUNT);
+                   break;
+                   
+                // MODIF PF 20 nov 2017
+                case 2:
+                   count = getBinary2SingleParam(index , resultsResource.getData(i).getBinary2(), resultsResource.getFieldSet(index), COUNT);
+                   break;
 
 				default:
 					if( Aladin.levelTrace >= 3 ) System.err.println("ERROR in getFutureResultsVolume()! Did not read count. url:"+tapServiceUrl);
@@ -1739,11 +1895,11 @@ public class TapManager {
 	 * @param paramName - not in use. see comment below //checking COUNT... 
 	 * @return
 	 */
-	protected String getBinarySingleParam(int index, SavotBinary binaryData, FieldSet fieldSet, String paramName) {
+    protected String getBinarySingleParam(int index, SavotBinary binaryData, FieldSet fieldSet, String paramName) {
 		String count = String.valueOf(MAXTAPCOLUMNDOWNLOADVOLUME);//set to max. If we can't read the column number, we won't download all the metadata
 		DataBinaryReader parser = null;
 		try {
-			parser = new DataBinaryReader(binaryData.getStream(), fieldSet);
+           parser = new DataBinaryReader(binaryData.getStream(), fieldSet);
 			while (parser.next()) {
 				SavotField field = fieldSet.getItemAt(index);
 				String fieldName = field.getName().toUpperCase();
@@ -1760,6 +1916,36 @@ public class TapManager {
 		return count;
 	}
 	
+    /**
+     * Gets the value of the single param expected in the votable
+     * @param index
+     * @param tableRows
+     * @param fieldSet
+     * @param paramName - not in use. see comment below //checking COUNT... 
+     * @return
+     */
+    // INSERTION PF nov 2017 - A REPRENDRE AVEC CHAITRA
+    protected String getBinary2SingleParam(int index, SavotBinary2 binaryData, FieldSet fieldSet, String paramName) {
+        String count = String.valueOf(MAXTAPCOLUMNDOWNLOADVOLUME);//set to max. If we can't read the column number, we won't download all the metadata
+        DataBinary2Reader parser = null;
+        try {
+           parser = new DataBinary2Reader(binaryData.getStream(), fieldSet);
+            while (parser.next()) {
+                SavotField field = fieldSet.getItemAt(index);
+                String fieldName = field.getName().toUpperCase();
+                if (fieldName != null && !fieldName.isEmpty()) {//checking COUNT fieldname is no use, servers send the param in many diff names
+                    count = parser.getCellAsString(index);
+                }
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            if (Aladin.levelTrace >= 3) System.err.println("IOError.. Count not known");
+            if (Aladin.levelTrace >= 3) e.printStackTrace();
+        }
+        
+        return count;
+    }
+    
 	/**
 	 * Method to lazily gets table metadata.
 	 * @param clientToLoad

@@ -753,7 +753,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          
          else if( cbStcInLine.isSelected() ) {
             List<STCObj> stcObjects = new STCStringParser().parse( tSTC.getText().trim() );
-            moc = aladin.createMocRegion(stcObjects);
+            moc = aladin.createMocRegion(stcObjects,-1);
          }
          
          else if( cbMocPlane.isSelected() ) {

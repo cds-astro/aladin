@@ -1,5 +1,7 @@
-package cds.savot.binary;
+package cds.savot.binary2;
 
+import cds.savot.binary.Base64OutputStream;
+import cds.savot.binary.SavotDataWriter;
 //Copyright 2002-2014 - UDS/CNRS
 //The SAVOT library is distributed under the terms
 //of the GNU General Public License version 3.
@@ -44,7 +46,7 @@ import java.util.zip.GZIPOutputStream;
  * @author Gregory Mantelet
  * @since 09/2011
  */
-public final class DataBinaryWriter implements SavotDataWriter {
+public final class DataBinary2Writer implements SavotDataWriter {
 
     /** Stream in which binary data will be written encoded. */
     private OutputStream output;
@@ -62,7 +64,7 @@ public final class DataBinaryWriter implements SavotDataWriter {
      * 
      * @see #DataBinaryWriter(OutputStream, FieldSet, String)
      */
-    public DataBinaryWriter(final OutputStream rawStream, final FieldSet fields) throws BinaryInterpreterException, IOException {
+    public DataBinary2Writer(final OutputStream rawStream, final FieldSet fields) throws BinaryInterpreterException, IOException {
         this(rawStream, fields, null);
     }
 
@@ -78,7 +80,7 @@ public final class DataBinaryWriter implements SavotDataWriter {
      * @see #getEncodedStream(OutputStream, String)
      * @see BinaryFieldInterpreter#createInterpreter(SavotField)
      */
-    public DataBinaryWriter(final OutputStream rawStream, final FieldSet fields, final String encoding) throws IOException {
+    public DataBinary2Writer(final OutputStream rawStream, final FieldSet fields, final String encoding) throws IOException {
         if (rawStream == null) {
             throw new NullPointerException("The given output stream is NULL !");
         }
@@ -106,7 +108,7 @@ public final class DataBinaryWriter implements SavotDataWriter {
      * 
      * @throws IOException		If there is an error while building the output stream.
      * @throws cds.savot.cds.savot.model.interpreter.BinaryInterpreterException
-     * @see Base64OutputStream
+     * @see Base64OutputStream2
      * @see GZIPOutputStream
      */
     OutputStream getEncodedStream(final OutputStream rawStream, final String encoding) throws IOException, BinaryInterpreterException {

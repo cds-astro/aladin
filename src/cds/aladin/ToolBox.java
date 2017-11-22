@@ -632,7 +632,7 @@ SwingWidgetFinder, Widget {
       String key = "Tool."+Tool.label[currentButton];
       String tip =  aladin.chaine.getString(key);
       if( !Aladin.BETA && tip.startsWith("[") ) return;   // pas de tip prévu => problème
-      aladin.calque.select.setMessage(null,tip);
+      aladin.calque.select.setMessageTip(null,tip);
       Util.toolTip(this, null);                          // Pour éviter un tooltip en même temps
       lastTipShown=currentButton;
    }

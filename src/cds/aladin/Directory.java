@@ -125,6 +125,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private Aladin aladin; // Référence
 
    protected MultiMoc2 multiProp; // Le multimoc de stockage des properties des collections
+   private Color cbg;             // La couleur du fond
 
    private DirectoryFilter directoryFilter = null; // Formulaire de filtrage de l'arbre des collections
 
@@ -235,11 +236,41 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       AWLOAD = S("AWLOAD");
       FPCLOSE = S("FPCLOSE");
    }
+   
+   // Fournit une légende pour les couleurs de l'arbre
+   class LegIn extends JPanel {
+      
+      public Dimension getPreferredsize() {
+         return new Dimension( super.getPreferredSize().width, 45);
+      }
+      
+      public void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         g.setColor( cbg );
+         g.fillRect(0, 0, getWidth(), getHeight());
+         if( !isCheckIn ) return;
+         g.setFont(g.getFont().deriveFont(Font.ITALIC));
+         
+         int x=45;
+         int y=10;
+         g.setColor(Aladin.COLOR_GREEN);
+         Util.fillCircle7(g, x, y-4);
+         g.setColor( Aladin.COLOR_LABEL );
+         g.drawString("in view",x+7,y);
+         
+         x+=50;
+         g.setColor(Aladin.ORANGE);
+         Util.fillCircle7(g, x, y-4);
+         g.setColor( Aladin.COLOR_LABEL );
+         g.drawString("out view",x+7,y);
+      }
+   }
 
    public Directory(Aladin aladin, Color cbg) {
       this.aladin = aladin;
       loadString();
       multiProp = new MultiMoc2();
+      this.cbg = cbg;
 
       // POUR LES TESTS => Surcharge de l'URL du MocServer
       // if( aladin.levelTrace>=3 ) {
@@ -249,24 +280,27 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       setBackground(cbg);
       setLayout(new BorderLayout(0, 0));
-      setBorder(BorderFactory.createEmptyBorder(8, 3, 10, 0));
+      setBorder(BorderFactory.createEmptyBorder(9, 3, 12, 0));
       
-//      JLabel legende = new JLabel("<html>    ° <font color=\"green\">in view</font>  -  "
-//            + "° <font color=\"orange\">outside</font>  -  "
-//            + "° <font color=\"white\">undetermined</font><html>");
-
-      JPanel pTitre = new JPanel(new FlowLayout(FlowLayout.LEFT, 35, 0));
-      pTitre.setBackground(cbg);
+      JPanel pTitre1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 35, 0));
+      pTitre1.setBackground(cbg);
       dir = new JLabel(DIRECTORY);
       Util.toolTip(dir, S("DTLABELTIP"), true);
       dir.setFont(dir.getFont().deriveFont(Font.BOLD));
       dir.setForeground(Aladin.COLOR_LABEL);
-      pTitre.add(dir);
+      pTitre1.add(dir);
+      
+      LegIn inLeg = new LegIn();
+      
+      JPanel pTitre = new JPanel( new BorderLayout(0,0) );
+      pTitre.setBackground(cbg);
+      pTitre.add( pTitre1, BorderLayout.NORTH );
+      pTitre.add( inLeg, BorderLayout.CENTER );
 
       // L'arbre avec sa scrollbar
       dirTree = new DirectoryTree(aladin, cbg);
       scrollTree = new JScrollPane(dirTree, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-      scrollTree.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+      scrollTree.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
       scrollTree.setBackground(cbg);
       // scrollTree.getViewport().setOpaque(true);
       // scrollTree.getViewport().setBackground(cbg);
@@ -367,8 +401,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       panelTree.setBackground(cbg);
       panelTree.add(pTitre, BorderLayout.NORTH);
       panelTree.add(scrollTree, BorderLayout.CENTER);
-//      panelTree.add(legende, BorderLayout.SOUTH);
-
+ 
       add(panelTree, BorderLayout.CENTER);
       add(panelControl, BorderLayout.SOUTH);
 
@@ -488,7 +521,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** Reset du filtre (combobox) possitionné */
    protected void reset() {
       directoryFilter.reset();
-//      dirTree.defaultExpand();
    }
 
    /** Reset complet du filtrage (quickFilter+combobox) */
@@ -1614,6 +1646,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private double osize = -1;
 
    private HashSet<String> previousSet = null;
+   
+   private boolean isCheckIn = false;
 
    /**
     * Interroge le MocServer pour connaître les Collections disponibles dans le champ. Met à jour l'arbre en conséquence
@@ -1631,6 +1665,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( !modif && to.getIsIn() != -1 ) modif = true;
             to.setIn(-1);
          }
+         isCheckIn=false;
          return modif;
       }
 
@@ -1715,6 +1750,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( !to.hasMoc() && !hasLocalMoc(to.internalId, mocQuery) ) to.setIn(-1);
             else to.setIn(set.contains(to.internalId) ? 1 : 0);
          }
+         isCheckIn=true;
 
       } catch( Exception e1 ) {
          if( Aladin.levelTrace >= 3 ) e1.printStackTrace();
@@ -1896,8 +1932,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    private ArrayList<TreeObjDir> populateMultiProp() {
       ArrayList<TreeObjDir> listReg = new ArrayList<TreeObjDir>(30000);
-      for( MocItem mi : this )
-         populateProp(listReg, mi.prop);
+      multiple=null;  // Il faut reseter la liste des collections à plusieurs "feuilles"
+      for( MocItem mi : this ) populateProp(listReg, mi.prop);
       Collections.sort(listReg, TreeObj.getComparator());
       return listReg;
    }
@@ -2040,7 +2076,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
 //      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
 
-      // Sans catégorie => dans la branche "Unsupervised" suivi du protocole puis de l'authority
+      // Sans catégorie => dans la branche "Others" suivi du protocole puis de l'authority
       if( category == null ) {
          boolean isHips = prop.getProperty("hips_service_url") != null;
          boolean isCS = prop.getProperty("cs_service_url") != null;
@@ -2050,7 +2086,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          String subCat = isHips ? "HiPS"
                : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
 
-         category = UNSUPERVISED+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
+         category = OTHERS+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
 
          // On trie un peu les branches
@@ -2089,7 +2125,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    private void propAdjust1(String id, MyProperties prop) {
-
+      
       String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
       if( type == null || type.indexOf("catalog") < 0 ) return;
       
@@ -2101,89 +2137,87 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Ne concerne pas VizieR => on ne bidouille pas dans le client
       if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;
 
-//      if( id.equals("CDS/Simbad") ) category = "Data base";
-//      else {
-         // Nettoyage des macros latex qui trainent
-         cleanLatexMacro(prop);
+      // Nettoyage des macros latex qui trainent
+      cleanLatexMacro(prop);
 
-         // Ajout de l'entrée TAP (si elle n'existe pas)
-         if( prop.get("tap_service_url") == null ) {
-            prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
-         }
+      // Ajout de l'entrée TAP (si elle n'existe pas)
+      if( prop.get("tap_service_url") == null ) {
+         prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+      }
 
-         // Détermination de la catégorie
-         String code = getCatCode(id);
-         if( code == null ) return;
+      // Détermination de la catégorie
+      String code = getCatCode(id);
+      if( code == null ) return;
 
-         String sortPrefix = "";
-         String vizier = "/VizieR";
+      String sortPrefix = "";
+      String vizier = "/VizieR";
 
-         boolean flagJournal = code.equals("J");
-         if( flagJournal ) {
-            String journal = getJournalCode(id);
-            category = "Catalog" + vizier + "/Journal table/" + journal;
-            sortPrefix = journal;
+      boolean flagJournal = code.equals("J");
+      if( flagJournal ) {
+         String journal = getJournalCode(id);
+         category = "Catalog" + vizier + "/Journal table/" + journal;
+         sortPrefix = journal;
 
-         } else {
-            int c = Util.indexInArrayOf(code, CAT_CODE);
-            if( c == -1 ) category = "Catalog" + vizier + "/" + code; // Catégorie inconnue
+      } else {
+         int c = Util.indexInArrayOf(code, CAT_CODE);
+         if( c == -1 ) category = "Catalog" + vizier + "/" + code; // Catégorie inconnue
 
-            else {
-               category = "Catalog" + vizier + "/" + CAT_LIB[c];
-               sortPrefix = String.format("%02d", c);
-
-            }
-         }
-
-         // Tri par popularité et catégorie
-         String popularity = prop.get("vizier_popularity");
-         if( popularity != null ) {
-            popularity = String.format("%04d", 1000 - Long.parseLong(popularity));
-         } else popularity = getCatSuffix(id);
-         String sortKey = sortPrefix + "/" + popularity;
-         prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, sortKey);
-
-         // Détermination du suffixe (on ne va pas créer un folder pour un élément unique)
-         String parent = getCatParent(id);
-         boolean hasMultiple = hasMultiple(parent);
-         if( !hasMultiple ) {
-            parent = getCatParent(parent);
-
-            if( !flagJournal ) {
-               // Je vire le nom de la table a la fin du titre
-               String titre = prop.get(Constante.KEY_OBS_TITLE);
-               int i;
-               if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
-                  titre = titre.substring(0, i - 1);
-                  prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
-               }
-            }
-
-         } else {
-            String titre = prop.get(Constante.KEY_OBS_TITLE);
-            if( titre != null ) {
-
-               // Je remonte le nom du catalog sur la branche
-               int i = titre.lastIndexOf('(');
-               int j = titre.indexOf(')', i);
-               if( i > 0 && j > i ) {
-                  int k = parent.lastIndexOf('/');
-                  parent = (k == -1 ? "" : parent.substring(0, k + 1)) + titre.substring(0, i - 1);
-
-                  String desc = prop.get(Constante.KEY_OBS_DESCRIPTION);
-                  if( desc != null ) {
-                     String newTitre = desc + titre.substring(i - 1, j + 1);
-                     prop.replaceValue(Constante.KEY_OBS_TITLE, newTitre);
-                  }
-               }
-            }
+         else {
+            category = "Catalog" + vizier + "/" + CAT_LIB[c];
+            sortPrefix = String.format("%02d", c);
 
          }
+      }
+
+      // Tri par popularité et catégorie
+      String popularity = prop.get("vizier_popularity");
+      if( popularity != null ) {
+         popularity = String.format("%04d", 1000 - Long.parseLong(popularity));
+      } else popularity = getCatSuffix(id);
+      String sortKey = sortPrefix + "/" + popularity;
+      prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, sortKey);
+
+      // Détermination du suffixe (on ne va pas créer un folder pour un élément unique)
+      String parent = getCatParent(id);
+      boolean hasMultiple = hasMultiple(parent);
+      if( !hasMultiple ) {
+         parent = getCatParent(parent);
+
          if( !flagJournal ) {
-            String suffix = getCatSuffix(parent);
-            suffix = suffix == null ? "" : "/" + suffix;
-            category += suffix;
+            // Je vire le nom de la table a la fin du titre
+            String titre = prop.get(Constante.KEY_OBS_TITLE);
+            int i;
+            if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
+               titre = titre.substring(0, i - 1);
+               prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
+            }
          }
+
+      } else {
+         String titre = prop.get(Constante.KEY_OBS_TITLE);
+         if( titre != null ) {
+
+            // Je remonte le nom du catalog sur la branche
+            int i = titre.lastIndexOf('(');
+            int j = titre.indexOf(')', i);
+            if( i > 0 && j > i ) {
+               int k = parent.lastIndexOf('/');
+               parent = (k == -1 ? "" : parent.substring(0, k + 1)) + titre.substring(0, i - 1);
+
+               String desc = prop.get(Constante.KEY_OBS_DESCRIPTION);
+               if( desc != null ) {
+                  String newTitre = desc + titre.substring(i - 1, j + 1);
+                  prop.replaceValue(Constante.KEY_OBS_TITLE, newTitre);
+               }
+            }
+         }
+
+      }
+      if( !flagJournal ) {
+         String suffix = getCatSuffix(parent);
+         suffix = suffix == null ? "" : "/" + suffix;
+         category += suffix;
+      }
 
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
    }
@@ -2454,11 +2488,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       return null;
    }
    
-   public static final String UNSUPERVISED = "Others";
+   public static final String OTHERS = "Others";
    public static final String PROBLEMATIC = "Problematic";
    public static final String ADDS = "Adds";
 
-   private final String[] CATEGORY = { "Image", "Data base", "Catalog", "Cube", "Outreach", UNSUPERVISED, PROBLEMATIC };
+   private final String[] CATEGORY = { "Image", "Data base", "Catalog", "Cube", "Outreach", OTHERS, PROBLEMATIC };
 
    private final String[] CAT_CODE = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "B", "J" };
 

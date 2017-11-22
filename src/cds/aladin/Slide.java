@@ -537,8 +537,7 @@ public final class Slide {
          int W = Select.ws-x;
          
          // Tracage du fond particulier sur le label
-         if(  mode!=DRAG && (
-               ref || p.selected  || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
+         if(  mode!=DRAG && ( ref || p.selected  || p.isHighlighted || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
             labelBG=(p.selected ? Aladin.COLOR_STACK_SELECT : Aladin.COLOR_STACK_HIGHLIGHT );
             g.setColor(labelBG.brighter());
             g.fillRect(x,y,W,H-2);

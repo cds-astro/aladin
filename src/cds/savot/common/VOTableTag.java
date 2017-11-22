@@ -29,6 +29,7 @@ public enum VOTableTag {
 
     UNDEFINED,
     BINARY,
+    BINARY2,
     COOSYS,
     DATA,
     DEFINITIONS,
@@ -142,6 +143,9 @@ public enum VOTableTag {
             case 'b':
                 if (Markups.BINARY.equalsIgnoreCase(name)) {
                     return BINARY;
+                }
+                if (Markups.BINARY2.equalsIgnoreCase(name)) {
+                    return BINARY2;
                 }
                 break;
 

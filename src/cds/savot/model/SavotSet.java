@@ -36,7 +36,7 @@ import java.util.List;
 public class SavotSet<E> {
 
     /** storage of the set elements */
-    private ArrayList<E> set = null;
+    public ArrayList<E> set = null;
 
     /**
      * Constructor

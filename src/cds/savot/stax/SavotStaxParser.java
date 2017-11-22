@@ -37,6 +37,7 @@ import cds.savot.common.Markups;
 import cds.savot.common.SavotStatistics;
 import cds.savot.common.VOTableTag;
 import cds.savot.model.SavotBinary;
+import cds.savot.model.SavotBinary2;
 import cds.savot.model.SavotCoosys;
 import cds.savot.model.SavotData;
 import cds.savot.model.SavotDefinitions;
@@ -168,6 +169,7 @@ public final class SavotStaxParser implements Markups {
     private SavotCoosys currentCoosys = null;
     private SavotDefinitions currentDefinitions = null;
     private SavotBinary currentBinary = null;
+    private SavotBinary2 currentBinary2 = null;
     private SavotFits currentFits = null;
     private SavotStream currentStream = null;
 
@@ -616,6 +618,7 @@ public final class SavotStaxParser implements Markups {
 
         final XMLStreamReader parser = this.xmlParser;
 
+
         if (parser == null) {
             return;
         }
@@ -646,6 +649,7 @@ public final class SavotStaxParser implements Markups {
             currentCoosys = new SavotCoosys();
             currentDefinitions = new SavotDefinitions();
             currentBinary = new SavotBinary();
+            currentBinary2 = new SavotBinary2();
             currentFits = new SavotFits();
             currentStream = new SavotStream();
         }
@@ -717,6 +721,8 @@ public final class SavotStaxParser implements Markups {
                             if (trace) {
                                 System.err.println(tag + " begin");
                             }
+                            System.err.println("TAG -> " + tag);
+
                             // use most probable tags FIRST (performance) i.e TD / TR first :
                             switch (tag) {
                                 case TD:
@@ -1021,7 +1027,11 @@ public final class SavotStaxParser implements Markups {
                                 case BINARY:
                                     currentBinary = new SavotBinary();
                                     break;
-
+                                    
+                                case BINARY2:
+                                    currentBinary2 = new SavotBinary2();
+                                    break;
+                                    
                                 case FITS:
                                     currentFits = new SavotFits();
 
@@ -1650,6 +1660,12 @@ public final class SavotStaxParser implements Markups {
                                                 System.err.println("STREAM from BINARY father = " + father);
                                             }
                                             break;
+                                        case BINARY2:
+                                            currentBinary2.setStream(currentStream);
+                                            if (trace) {
+                                                System.err.println("STREAM from BINARY2 father = " + father);
+                                            }
+                                            break;
                                         case FITS:
                                             currentFits.setStream(currentStream);
                                             if (trace) {
@@ -1663,7 +1679,11 @@ public final class SavotStaxParser implements Markups {
                                 case BINARY:
                                     currentData.setBinary(currentBinary);
                                     break;
-
+                                    
+                                case BINARY2:
+                                    currentData.setBinary2(currentBinary2);
+                                    break;
+                                    
                                 case FITS:
                                     currentData.setFits(currentFits);
                                     break;

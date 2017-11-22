@@ -531,7 +531,7 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       // Pour faire défiler les messages pour les débutants
-      if( (beginnerHelp || currentMessage!=null )  && y<lastYMax ) {
+      if( (beginnerHelp || message!=null )  && y<lastYMax ) {
          nextBeginnerHelp(e.getX(),e.getY());
          repaint();
       }
@@ -1146,7 +1146,7 @@ Runnable, SwingWidgetFinder, Widget {
       int x = e.getX();
       int y = e.getY();
       
-      if( (currentMessage!=null || beginnerHelp) && y<lastYMax ) {
+      if( (message!=null || beginnerHelp) && y<lastYMax ) {
          if( onUrl(e.getX(),e.getY()) ) a.makeCursor(this, a.HANDCURSOR);
          else a.makeCursor(this, a.DEFAULTCURSOR);
          if( !flagInMessage ) repaint();
@@ -1302,24 +1302,24 @@ Runnable, SwingWidgetFinder, Widget {
       String s=callUrl(x, y);
       
       // En cas d'affichage d'un message CDS ou d'une aide ponctuelle
-      if( currentMessage!=null ) {
+      if( message!=null ) {
          if( s!=null && s.length()>0 ) return;   // on a cliqué sur un lien
          
          // On a cliqué sur la coche ou la fleche
          if( s!=null ) {
 
             // Mémorisation dans la config pour éviter de le réafficher
-            if( cdsMessage  ) a.configuration.setCDSMessage( currentMessage );
+            if( messageType==MESSAGE_CDS  ) a.configuration.setCDSMessage( message );
 
             // Idem mais pour un message d'aide ponctuelle
             else {
-               if( msgKey!=null ) a.configuration.showHelpDone(msgKey);
+               if( messageKey!=null ) a.configuration.showHelpDone(messageKey);
             }
          }
          
-         msgKey=null;
-         cdsMessage=false;
-         currentMessage=null;
+         messageKey=null;
+         messageType=MESSAGE_UNKNOWN;
+         message=null;
          return;
       }
       
@@ -1338,7 +1338,7 @@ Runnable, SwingWidgetFinder, Widget {
       
       resetUrl();
       
-      if( currentMessage!=null ) msg=splitCDSMessage(currentMessage);
+      if( message!=null ) msg=splitCDSMessage(message);
       else {
          if( BEGIN==null ) {
             BEGIN = new String[7];
@@ -1358,9 +1358,7 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       if( msg!=null ) {
-         int y = drawBeginnerHelp1(g,msg,currentMessage!=null ?   
-               (cdsMessage ? Aladin.COLOR_LABEL.brighter() : Color.yellow.darker() ) //Aladin.COLOR_GREEN_LIGHT )
-               : Aladin.COLOR_LABEL,flagInMessage ? getHeight() : yMax);
+         int y = drawBeginnerHelp1(g,msg, getMessageColor(),flagInMessage || messageType== MESSAGE_INFO ? getHeight() : yMax);
          
          // On affiche des ... pour indiquer que le message est plus long que la zone d'affichage
          if( y>=yMax && !flagInMessage ) {
@@ -1372,7 +1370,7 @@ Runnable, SwingWidgetFinder, Widget {
             if( y<yMax ) {
 
                // Dessin d'une coche pour acquitter le message
-               if( currentMessage!=null && (cdsMessage || msgKey!=null) ) {
+               if( message!=null && (messageType==MESSAGE_CDS || messageKey!=null) ) {
                   y -= 5;
                   int x = getWidth()-35;
                   Util.drawCheck( g, x,y, g.getColor().brighter() );
@@ -1380,7 +1378,7 @@ Runnable, SwingWidgetFinder, Widget {
                   addUrl("", new Rectangle(x-5,y-2,30,15));
 
                   // Dessin d'un petit triangle pour suggérer la suite
-               } else if( lastBegin<BEGIN.length-1 && currentMessage==null ) {
+               } else if( lastBegin<BEGIN.length-1 && message==null ) {
                   y -= 5;
                   int x = getWidth()-10;
                   Polygon pol = new Polygon();
@@ -1396,23 +1394,61 @@ Runnable, SwingWidgetFinder, Widget {
       }
    }
    
-   private String currentMessage=null;   // Le message courant
-   private boolean cdsMessage=false;     // true si le message courant est une annonce CDS
-   private String msgKey=null;           // cle associé au message courant (dans le cas d'une aide ponctuelle)
    
-   protected void setCDSMessage(String s) {
-      currentMessage=s;
-      cdsMessage=true;
+   static public final int MESSAGE_UNKNOWN = 0;
+   static public final int MESSAGE_CDS     = 1;
+   static public final int MESSAGE_TIP     = 2;
+   static public final int MESSAGE_INFO    = 3;
+   
+   
+   private String message=null;              // Le message courant
+   private String messageKey=null;           // cle associé au message courant (dans le cas d'un TIP)
+   private int messageType=MESSAGE_UNKNOWN;  // type de message courant
+   
+   // Retourne la couleur d'affichage du message en fonction de son type et du thème
+   private Color getMessageColor() {
+      return message==null ?  Aladin.COLOR_LABEL
+            : messageType==MESSAGE_CDS ? Aladin.COLOR_LABEL.brighter() 
+            : messageType==MESSAGE_TIP ? Color.yellow.darker()
+            : Aladin.COLOR_LABEL;
+   }
+   
+   /** Positionnement d'un message d'annonce CDS
+    * FORMAT [ttt] [§en:]This is an <&http://aladin.fr|link>\\n...[§fr:Ceci est ....]
+    * @param s
+    */
+   protected void setMessageCDS(String s) {
+      message=s;
+      messageType=MESSAGE_CDS;
+      messageKey=null;
       repaint();
    }
    
-   /** Positionnement d'un message
-    * FORMAT [ttt] [§en:]This is an <&http://aladin.fr|link>\\n...[§fr:Ceci est ....]
-    * @param message
+   /** Positionnement d'un message Tip
+    * @param s
     */
-   protected void setMessage(String msgKey,String message) {
-      currentMessage=message;
-      this.msgKey=msgKey;
+   protected void setMessageTip(String key,String s) {
+      message=s;
+      messageType=MESSAGE_TIP;
+      messageKey=key;
+      repaint();
+   }
+   
+   /** Positionnement d'un message d'info
+    * @param s
+    */
+   protected void setMessageInfo(String s) {
+      message=s;
+      messageType=MESSAGE_INFO;
+      messageKey=null;
+      repaint();
+   }
+   
+   /** Arrête l'affichage du message courant */
+   protected void hideMessage() {
+      message=null;
+      messageType=MESSAGE_UNKNOWN;
+      messageKey=null;
       repaint();
    }
    
@@ -1458,18 +1494,22 @@ Runnable, SwingWidgetFinder, Widget {
 
       // On ajoute un titre, et on remplace les '\\' 'n'
       String title="";
-      if( s.charAt(0)=='!' ) {
-        i = s.indexOf("\n");
-        title =  s.substring(0,i);
-        s = s.substring(i+1);
-      } 
-      else if( cdsMessage ) title = "Last news"+date;
-      else title = TIP;
+      if( messageType==MESSAGE_CDS )  title = "Last news"+date;
+      else if( messageType==MESSAGE_TIP )  {
+         if( s.charAt(0)=='!' ) {
+            i = s.indexOf("\n");
+            title =  s.substring(0,i);
+            s = s.substring(i+1);
+          }  else title = TIP;
+      }
       
-      return title+"\n \n"+s.replace("\\n", "\n");
+      if( title.length()>0 ) title+="\n \n";
+      
+      return title+s.replace("\\n", "\n");
    }
    
-   static final private String TIP = "Tips and tricks";
+   static final private String TIP  = "Tips & tricks";
+   
    private Image tipImg = null;
    
    // Efface le fond de la ligne courante
@@ -1500,7 +1540,7 @@ Runnable, SwingWidgetFinder, Widget {
       int y,y0 = 30;
       for( y=y0 ; y<yMax /* y+3*h<yMax */ && st.hasMoreTokens(); y+=h ) {
          if( first && y==y0 ) {
-            if( s.startsWith(TIP) || s.startsWith("!") ) {
+            if( messageType == MESSAGE_TIP ) {
                if( tipImg==null ) tipImg = a.getImagette("tip.png");
                g.drawImage( tipImg, getWidth()-60, y-30, a);
                flagExcla=s.startsWith("!");
@@ -1837,7 +1877,7 @@ Runnable, SwingWidgetFinder, Widget {
 
       lastYMax = y;
       if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<4 
-            || currentMessage!=null ) drawBeginnerHelp( g, y);
+            || message!=null ) drawBeginnerHelp( g, y);
       
       a.resumeVariousThinks();
 

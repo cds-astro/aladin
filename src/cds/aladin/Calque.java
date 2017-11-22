@@ -1978,7 +1978,7 @@ public class Calque extends JPanel implements Runnable {
 
 
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
-   protected int newPlanMoc(String label,Plan [] p,int res,double radius, 
+   protected int newPlanMoc(String label,Plan [] p,int order,double radius, 
          double pixMin, double pixMax,double threshold,boolean fov) {
       int n;
       PlanMoc pa;
@@ -1987,7 +1987,7 @@ public class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMocGen(aladin,label,p,res,radius,pixMin,pixMax,threshold,fov);
+      plan[n] = pa = new PlanMocGen(aladin,label,p,order,radius,pixMin,pixMax,threshold,fov);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -3182,7 +3182,7 @@ public class Calque extends JPanel implements Runnable {
             newSource.values = s.values;
             newSource.actions = s.actions;
             newSource.leg = s.leg;
-            newSource.sourceFootprint = s.sourceFootprint.copy();
+            newSource.sourceFootprint = s.sourceFootprint==null ? null : s.sourceFootprint.copy();
             if( !legs.contains(s.leg) ) legs.addElement(s.leg);
          }
          p.pcat.nbTable= legs.size();

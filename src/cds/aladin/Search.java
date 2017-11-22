@@ -414,9 +414,9 @@ public final class Search extends JPanel implements MouseListener {
 
    void setColorAndStatus(int rep ) {
       setColor( rep==0 ? NO : rep==1 ? IN : OUT );
-      if( rep==0 ) aladin.mesure.setStatus(MFSEARCHNO);
-      else if( rep==-1 ) aladin.mesure.setStatus(MFSEARCHOUT);
-      else aladin.mesure.setStatus(MFSEARCHIN);
+      if( rep==0 ) aladin.mesure.showStatus(MFSEARCHNO);
+      else if( rep==-1 ) aladin.mesure.showStatus(MFSEARCHOUT);
+      else aladin.mesure.showStatus(MFSEARCHIN);
    }
 
 }

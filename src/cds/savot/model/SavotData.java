@@ -34,6 +34,8 @@ public final class SavotData extends MarkupComment {
     private SavotTableData tableData = null;
     // BINARY element
     private SavotBinary binary = null;
+    // BINARY2 element
+    private SavotBinary2 binary2 = null;
     // FITS element
     private SavotFits fits = null;
 
@@ -79,6 +81,24 @@ public final class SavotData extends MarkupComment {
         return binary;
     }
 
+    /**
+     * Set the BINARY2 element
+     * 
+     * @param binary
+     */
+    public void setBinary2(final SavotBinary2 binary2) {
+        this.binary2 = binary2;
+    }
+
+    /**
+     * Get the BINARY2 element
+     * 
+     * @return SavotBinary
+     */
+    public SavotBinary2 getBinary2() {
+        return binary2;
+    }
+    
     /**
      * Set the FITS element
      * 

@@ -23,6 +23,7 @@ package cds.aladin;
 import static cds.aladin.Constants.ACCESSFORMAT_UCD;
 import static cds.aladin.Constants.ACCESSURL;
 import static cds.aladin.Constants.CONTENTTYPE;
+import static cds.aladin.Constants.CONTENT_TYPE_PDF;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTHTML;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTPLAIN;
 import static cds.aladin.Constants.DATATYPE_DATALINK;
@@ -30,7 +31,6 @@ import static cds.aladin.Constants.SEMANTICS;
 import static cds.aladin.Constants.SEMANTIC_ACCESS;
 import static cds.aladin.Constants.SEMANTIC_CUTOUT;
 import static cds.aladin.Constants.SEMANTIC_PROC;
-import static cds.aladin.Constants.CONTENT_TYPE_PDF;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
@@ -267,7 +267,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    synchronized protected boolean isSorting() { return isSorting; }
 
    public void run() {
-      setStatus("...sorting...");
+      showStatus("...sorting...");
       setSorting(true);
       try {
          Util.pause(100);
@@ -275,7 +275,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       } catch( Exception e ) {}
       setSorting(false);
       scrollV.setValue(0);
-      setStatus("");
+      showStatus("");
       aladin.makeCursor(mcanvas,Aladin.DEFAULTCURSOR);
       memoWordLineClear();
       mcanvas.repaint();
@@ -408,10 +408,10 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    /** Affichage des infos sur la dernière recherche dans le status aladin */
    private void infoSearch(int nOccurence) {
-      if( nOccurence>=0) setStatus(MFSEARCH+" => "
+      if( nOccurence>=0) showStatus(MFSEARCH+" => "
             + nOccurence+" "+MFSEARCHO+(nOccurence>1?"s":"")/*+"        "
              + MFSEARCHINFO*/);
-      else setStatus(MFSEARCHBAD);
+      else showStatus(MFSEARCHBAD);
    }
 
    //    String text;
@@ -885,9 +885,22 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
     * Update the status string
     * @param text
     */
-   protected void setStatus(String text) {
+   protected void showStatus(String text) {
       if( flagSplit ) status.setText(text);
       else aladin.status.setText(text);
+   }
+   
+   private Plan oldPlanHighlighted=null;
+   
+   /** Affichage d'une info au dessous de la pile */
+   protected void showInfo(String s, Plan p) {
+      if( s==null || s.length()==0 ) aladin.calque.select.hideMessage();
+      else aladin.calque.select.setMessageInfo( s );
+
+      if( oldPlanHighlighted!=p ) aladin.calque.select.repaint();
+      if( oldPlanHighlighted!=null ) oldPlanHighlighted.isHighlighted=false;
+      if( p!=null ) p.isHighlighted=true;
+      oldPlanHighlighted = p;
    }
 
    /** Ajout des mesures d'une source.

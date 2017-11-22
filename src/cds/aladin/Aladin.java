@@ -254,7 +254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.044";
+   static public final    String VERSION = "v10.048";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -421,7 +421,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_FOREGROUND_ANCHOR = new Color(0,136,204);
          COLOR_GREEN = new Color(57,167,0);
          COLOR_STACK_SELECT = new Color(40,50,150);
-         COLOR_STACK_HIGHLIGHT = COLOR_CONTROL_FOREGROUND_UNAVAILABLE.brighter();
+         COLOR_STACK_HIGHLIGHT = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
          COLOR_MEASUREMENT_HEADER_BACKGROUND = COLOR_CONTROL_FOREGROUND_UNAVAILABLE;
          COLOR_MEASUREMENT_HEADER_FOREGROUND = COLOR_CONTROL_FOREGROUND;
          COLOR_MEASUREMENT_BACKGROUND = COLOR_BACKGROUND;
@@ -429,7 +429,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_MEASUREMENT_FOREGROUND_COMPUTED = new Color(221,91,53);
          COLOR_MEASUREMENT_BORDERS_MOUSE_CELL = new Color(140,140,255);
          COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL = new Color(215,215,225);
-         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_STACK_HIGHLIGHT;
+         COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE = COLOR_CONTROL_FOREGROUND_UNAVAILABLE.brighter();
          COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE = COLOR_TEXT_FOREGROUND;
          COLOR_MEASUREMENT_FOREGROUND = COLOR_CONTROL_FOREGROUND;
       }
@@ -2862,7 +2862,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          } 
       } catch( Exception e) {  }
       
-      calque.select.setCDSMessage( s );
+      calque.select.setMessageCDS( s );
    }
    
    /** Memorisation de la derniere version disponible (transmis par Glu.log)
@@ -3751,6 +3751,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       localisation.reset();
       //       pixel.reset();
       dialog.setGrab(); // Desactivation du GrabIt ?
+      directory.fullReset();
       command.reset();
       dialog.setDefaultTarget("");
       dialog.setDefaultTaille(ServerDialog.DEFAULTTAILLE);
@@ -4322,22 +4323,22 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return m;
    }
    
-	protected HealpixMoc createMocRegion(List<STCObj> stcObjects) throws Exception {
+	protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
 		HealpixMoc moc = null;
 		STCObj stcobj = stcObjects.get(0);
 		if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
-			moc = createMocRegionPol((STCPolygon)stcobj);
+			moc = createMocRegionPol((STCPolygon)stcobj,order);
 			if( moc!=null ) moc.toRangeSet();
 		} else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
-			moc = createMocRegionCircle((STCCircle)stcobj);
+			moc = createMocRegionCircle((STCCircle)stcobj, order);
 			if( moc!=null ) moc.toRangeSet();
 		}
 		return moc;
 
 	}
 	
-	protected HealpixMoc createMocRegionCircle(STCCircle stcCircle) throws Exception {
-		return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), -1);
+	protected HealpixMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {
+		return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order);
 	}
 	
 	public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
@@ -4407,7 +4408,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 			maxSize = size;
 		return maxSize;
 	}
-	protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon) throws Exception {
+	protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon, int order) throws Exception {
 	      double ra,de;
 	      Ligne oo=null;
 
@@ -4435,7 +4436,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 	      o.finligne=oo;
 	      oo.debligne=o;
 	      
-          return createMocRegionPol(o, -1, false);
+          return createMocRegionPol(o, order, false);
 	}
 	
 	public void addVec3(ArrayList<Vec3> cooList, double ra, double dec) {
@@ -5874,7 +5875,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //               "       -[no]bookmarks: with/without bookmarks support\n"+
 //               "       -[no]outreach: with/without outreach mode\n"+
                "       -[no]beta: with/without new features in beta test\n"+
-               "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
+//               "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
                "       -trace: trace mode for debugging purpose\n"+
                "       -debug: debug mode (very verbose)\n"+
 //               "       -chart=: build a png field chart directly on stdout\n"+
@@ -5885,6 +5886,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "   The files specified in the command line can be :\n"+
                "       - images: FITS (gzipped,RICE,MEF,...), HEALPix maps, JPEG,GIF,PNG\n"+
                "       - tables: FITS, XML/VOTable, CSV, TSV, S-extractor, IPAC-TBL, Skycat or ASCII tables\n"+
+               "       - properties: propertie record list for populating the data discovery tree\n"+
                "       - graphics: Aladin or IDL or DS9 regions, MOCs\n"+
                "       - directories: HiPS\n"+
                "       - Aladin backup : \".aj\" extension\n"+

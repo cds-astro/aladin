@@ -310,21 +310,12 @@ public final class Help extends JComponent implements
       if( flagLink ) {
          c = g.getColor();
          g.setColor( Aladin.COLOR_FOREGROUND_ANCHOR );
-//         g.drawLine(x,y+2,x+w,y+2);
       }
       g.drawString(word,x,y);
       if( c!=null ) g.setColor(c);
       return x+w;
    }
 
-//   static final int NRANDOM = 300;
-//   Random r = new Random();
-//   boolean flagR = false;
-//   byte [] xR  = new byte[NRANDOM];
-//   byte [] yR  = new byte[NRANDOM];
-//   byte [] zR  = new byte[NRANDOM];
-//   Color BLUE = new Color(225,225,255);
-   
    private int owidth=-1;
    private int oheight=-1;
 
@@ -355,9 +346,8 @@ public final class Help extends JComponent implements
       g.fillRect(2,2,ws-3,hs-3);
       Util.drawEdge(g,ws,hs);
       
-      
       // tracé du Banner d'accueil
-      boolean flagBanner = center; //aladin.OUTREACH && center;
+      boolean flagBanner = center; 
       if( flagBanner ) {
          try {
             Image img = aladin.getImagette("Background.jpg");
@@ -429,15 +419,6 @@ public final class Help extends JComponent implements
 
    }
    
-//   /** Calcul l'indentation d'une chaine */
-//   private int indent(String s) {
-//      if( !flagFold ) return 0;
-//      int x=0;
-//      int i;
-//      char a[] = s.toCharArray();
-//      for( i=0; i<a.length && a[i]==' '; i++) x+=6;
-//      return x;
-//   }
    
    public void mouseDragged(MouseEvent e) { }
    public void mouseClicked(MouseEvent e) { }

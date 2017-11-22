@@ -1466,7 +1466,7 @@ public class ServerGlu extends Server implements Runnable {
             	if (this.posBounds == null) {
             		STCStringParser parser = new STCStringParser();
 					List<STCObj> stcObjects = parser.parse(this.boundaryAreaStcs);
-					this.posBounds = aladin.createMocRegion(stcObjects);
+					this.posBounds = aladin.createMocRegion(stcObjects,-1);
 				}
                 String error = isWithinBounds(this.posBounds, rectVertices);
                 if( error != null ) {

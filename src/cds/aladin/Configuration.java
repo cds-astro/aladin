@@ -748,7 +748,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( stopHelp==null ) stopHelp = new Vector<String>();
       if( stopHelp.contains(key) ) return false;
       
-      aladin.calque.select.setMessage(key,aladin.chaine.getString(key));
+      aladin.calque.select.setMessageTip(key,aladin.chaine.getString(key));
       
 //      Timer t = new Timer(delay, new ActionListener() {
 //         public void actionPerformed(ActionEvent e) {
@@ -905,8 +905,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected boolean getVizierSEDFlag() {
 //      if( Aladin.OUTREACH ) return false;
       String flag = get(VIZIERSED);
-      if( flag==null ) return false;
-      return !flag.equalsIgnoreCase("On");
+      if( flag==null ) return true;
+      return !flag.equalsIgnoreCase("Off");
    }
 
    /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */

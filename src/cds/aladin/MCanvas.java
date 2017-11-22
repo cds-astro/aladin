@@ -1333,16 +1333,50 @@ MouseWheelListener, Widget
    protected void unselect() { objSelect=null; }
 
    /** Construit la description du champ i de l'objet o */
-   private String getDescription(Source o,int i) {
-      StringBuffer res = new StringBuffer();
+   private String getDescription(Source o,int i,boolean flagShort) {
+      StringBuilder res = new StringBuilder();
       if( o.leg!=null && o.leg.field!=null && i>=0 && i<o.leg.field.length ) {
          Field f = o.leg.field[i];
-//         res.append((o.leg.name!=null ? o.leg.name+" - " : "")+f.name);
-//         if( f.unit!=null && f.unit.length()>0 || f.description!=null) res.append(" - ");
-         if( f.unit!=null && f.unit.length()>0 ) res.append("["+f.unit+"] ");
-         if( f.description!=null ) res.append(f.description);
+         A(res,o.leg.name);
+         if( !flagShort ) {
+            A(res," - ",f.name);
+            A(res,": ",adjustVizier(f.description));
+            if( f.unit!=null ) A(res," ("+f.unit+")");
+         }
       }
       return res.toString();
+   }
+
+   /** Construit la description longue (info) du champ i de l'objet o */
+   private String getInfo(Source o,int i) {
+      StringBuilder res = new StringBuilder();
+      if( o.leg!=null && o.leg.field!=null && i>=0 && i<o.leg.field.length ) {
+         Field f = o.leg.field[i];
+         if( f.description==null && f.unit==null && f.ucd==null && f.utype==null ) return "";
+         
+         if( o.leg.name!=null ) A(res,o.leg.name);
+         A(res,"\n",f.name);
+         A(res," - ",adjustVizier(f.description));
+         if( f.unit!=null || f.ucd!=null || f.utype!=null ) res.append("\n ");
+         if( f.unit!=null ) A(res,"\n","* Unit: "+f.unit);
+         if( f.ucd!=null ) A(res,"\n","* UCD: "+f.ucd);
+         if( f.utype!=null ) A(res,"\n","* Utype: "+f.utype);
+      }
+      return res.toString();
+   }
+   
+   // Enlève cette cochonnerie de "? " en préfixe de certaines descriptions VizieR
+   private String adjustVizier( String description ) {
+      if( description==null || !description.startsWith("? ") ) return description;
+      return description.substring(2);
+   }
+   
+   // Ajoute à un String builder un mot, avec un éventuel suffixe
+   private void A(StringBuilder res, String s) { A(res," ",s); }
+   private void A(StringBuilder res, String sep, String s) {
+      if( s==null || s.length()==0 ) return;
+      if( res.length()==0 ) res.append(s);
+      else { res.append(sep); res.append(s); }
    }
 
    //   /** Retourne le numéro du champ où se trouve la souris */
@@ -1463,8 +1497,8 @@ MouseWheelListener, Widget
                mouseLigne=ligneHead;
                ow=w;
                Util.drawEdge(g,W,H);
-               s=getDescription(o,indice);
-               aladin.mesure.setStatus( s );
+               aladin.mesure.showStatus( getDescription(o,indice, !aladin.mesure.flagSplit ) );
+               aladin.mesure.showInfo( getInfo(o,indice), o.plan );
                break;
             }
          }
@@ -1496,7 +1530,8 @@ MouseWheelListener, Widget
          ow=null;
          Util.drawEdge(g,W,H);
          aladin.urlStatus.setText("");
-         aladin.mesure.setStatus("");
+         aladin.mesure.showStatus("");
+         aladin.mesure.showInfo(null,null);
          Util.toolTip(this, tip);
          
          try {
@@ -1586,20 +1621,15 @@ MouseWheelListener, Widget
             else if( w.glu )      tip=TIPGLU;
             else if( w.archive )  tip=TIPARCH;
             else if( w.footprint)  tip=TIPFOV;
-            s=getDescription(o,indice);
-            if( s==null ) s="";
-            // On change le curseur et on affiche eventuellement
-            // l'URL ou la marque GLU
             try {
                if( w.glu ) w.urlStatus(aladin.urlStatus);
-               else {
-                  String ucd=o.leg.getUCD(indice);
-                  if( ucd.length()>0 )  aladin.urlStatus.setText("UCD: "+ucd);
-                  else aladin.urlStatus.setText("");
-               }
+               else aladin.urlStatus.setText("");
             } catch(Exception ecurs) {}
             Util.drawEdge(g,W,H);
-            aladin.mesure.setStatus(s);   // Mise a jour du status
+            
+            // Les affichages de status et d'info
+            aladin.mesure.showStatus( getDescription(o,indice, !aladin.mesure.flagSplit) );   // Mise a jour du status
+            aladin.mesure.showInfo( getInfo(o,indice), o.plan );   // Mise a jour des infos au dessus du stack
             
             mouseLigne=ligne;
             ow=w;
@@ -1657,6 +1687,7 @@ MouseWheelListener, Widget
       if( aladin.inHelp ) return;
       if( timer!=null ) timer.stop();
       if( datalinktimer!=null ) datalinktimer.stop(); trackedHoverRowIndex =-1; //resetting popups for datalinks in the dataset
+      aladin.mesure.showInfo(null,null);
       aladin.urlStatus.setText(aladin.COPYRIGHT);   // Remet le copyright
       currentsee=-1;                                // Plus aucune ligne courante
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);

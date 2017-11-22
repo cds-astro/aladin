@@ -110,7 +110,7 @@ public final class FrameMocGenCat extends FrameMocGenImg {
    protected void submit() {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int res=getOrder();
+         int order=getOrder();
          double radius = boxRad.isSelected() ? getRadius() : 0;
          boolean fov = boxFov.isSelected();
          String param = "";
@@ -119,8 +119,8 @@ public final class FrameMocGenCat extends FrameMocGenImg {
             if( radius>0 ) param=" -radius="+Coord.getUnit(radius);
          }
          
-         a.console.printCommand("cmoc -order="+res+param+" "+labelList(ps));
-         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0,Double.NaN,fov);
+         a.console.printCommand("cmoc -order="+order+param+" "+labelList(ps));
+         a.calque.newPlanMoc(ps[0].label+" MOC",ps,order,radius,0,0,Double.NaN,fov);
          hide();
 
       } catch ( Exception e ) {

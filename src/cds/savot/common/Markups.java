@@ -58,6 +58,7 @@ public interface Markups {
     final static String FITS = "FITS";
     final static String STREAM = "STREAM";
     final static String BINARY = "BINARY";
+    final static String BINARY2 = "BINARY2";
     final static String VALUES = "VALUES";
 
     // attributes

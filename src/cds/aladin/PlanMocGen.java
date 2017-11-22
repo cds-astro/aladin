@@ -48,11 +48,11 @@ public class PlanMocGen extends PlanMoc {
    
    private double gapPourcent;  // Pourcentage de progression par plan (100 = tout est terminé)
    
-   protected PlanMocGen(Aladin aladin,String label,Plan[] p,int res,double radius,
+   protected PlanMocGen(Aladin aladin,String label,Plan[] p,int order,double radius,
          double pixMin,double pixMax,double threshold,boolean fov) {
       super(aladin,null,null,label,p[0].co,30);
       this.p = p;
-      this.order=res;
+      this.order=order;
       this.radius=radius;
       this.pixMin=pixMin;
       this.pixMax=pixMax;
@@ -69,8 +69,7 @@ public class PlanMocGen extends PlanMoc {
    
    protected void suite1() {}
    
-   private void addMocFromCatFov(Plan p1) {
-      System.out.println("Je dois créer le MOC à partir des FoVs du catalogue "+p1.label);
+   private void addMocFromCatFov(Plan p1,int order) {
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
       int n=0;
@@ -85,17 +84,16 @@ public class PlanMocGen extends PlanMoc {
          List<STCObj> listStcs = sf.getStcObjects();
          if( listStcs==null ) continue;
          try {
-            HealpixMoc m1 = aladin.createMocRegion(listStcs);
+            HealpixMoc m1 = aladin.createMocRegion(listStcs,order);
             if( m1!=null ) moc.add(m1);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
-      System.out.println("Fin de génération "+moc);
    }
       
    // Ajout d'un plan catalogue au moc en cours de construction
-   private void addMocFromCatalog(Plan p1,double radius) {
+   private void addMocFromCatalog(Plan p1,double radius,int order) {
       Iterator<Obj> it = p1.iterator();
       Healpix hpx = new Healpix();
       int o1 = order;
@@ -443,8 +441,8 @@ public class PlanMocGen extends PlanMoc {
          moc.setCheckConsistencyFlag(false);
          for( Plan p1 : p ) {
             if( p1.isCatalog() ) {
-               if( fov ) addMocFromCatFov(p1);
-               else addMocFromCatalog(p1,radius);
+               if( fov ) addMocFromCatFov(p1,order);
+               else addMocFromCatalog(p1,radius,order);
             }
             else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
             else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,threshold);

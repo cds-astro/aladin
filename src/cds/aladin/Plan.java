@@ -162,6 +162,7 @@ public class Plan implements Runnable {
    boolean    selected;        // vrai si le plan est selectionne
    boolean    isLastVisible;   // vrai si c'est le dernier visible dans la pile (en fct du scroll)
    boolean    underMouse;      // vrai si le plan est actuellement sous la souris
+   boolean    isHighlighted;   // vrai si le plan doit être highlighté dans la pile (juste pour le repérer)
    boolean    ref;             // vrai si c'est le plan de reference pour la projection courante
    int hasPM=-1;               // le plan a du PM : -1 - on ne sait pas encore, 0 - non,  1 - oui
    protected boolean memoClinDoeil; // Vrai si ce plan devra être réactivé si on clique sur l'oeil
