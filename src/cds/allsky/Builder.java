@@ -123,7 +123,7 @@ public abstract class Builder {
    }
 
    // Vérifie que le répertoire Output a été passé en paramètre, sinon essaye de le déduire
-   // du répertoire Input en ajoutant le suffixe ALLSKY
+   // du répertoire Input en ajoutant le suffixe HiPS
    // S'il existe déjà, vérifie qu'il s'agit bien d'un répertoire utilisable
    protected void validateOutput() throws Exception { 
       String output = context.getOutputPath();

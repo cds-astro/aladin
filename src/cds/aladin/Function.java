@@ -117,11 +117,16 @@ public class Function {
    }
    
    /** Execution de la fonction avec les paramètres passés en ligne de commande
-    * Attention aux cas $TARGET et $RADIUS => voir targetRadiusSpecialCase()    */
-   public String exec(Aladin aladin,String param,boolean async) throws Exception {
+    * Attention aux cas $TARGET et $RADIUS => voir targetRadiusSpecialCase()
+    * @param aladin
+    * @param param paramètres éventuelles de la fonction
+    * @param flagLot Exécution en mode "lot" (garantie la séquentialité, mais pas l'autosync global
+    */
+   public String exec(Aladin aladin,String param,boolean flagLot) throws Exception {
       String codeWithParam = getCodeWithParam(aladin,param);
-      if( async ) aladin.execAsyncCommand(codeWithParam);
-      else aladin.execCommand(codeWithParam);
+      if( !flagLot ) aladin.execAsyncCommand(codeWithParam);
+      else aladin.console.addLot(codeWithParam);
+//      else aladin.execCommand(codeWithParam);
       return "";
    }
    

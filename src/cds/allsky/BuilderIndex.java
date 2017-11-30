@@ -450,6 +450,7 @@ public class BuilderIndex extends Builder {
       ArrayList<double[]> cooList = new ArrayList<double[]>(4);
       Coord coo = new Coord();
       Coord corner[] = new Coord[4];
+      Coord cornerCell[] = new Coord[4];
       StringBuffer stc = new StringBuffer("POLYGON J2000");
       boolean hasCell = fitsfile.hasCell();
 //      System.out.print("draw blue polygon");
@@ -463,6 +464,7 @@ public class BuilderIndex extends Builder {
 //         System.out.print(" "+coo.al+" "+coo.del);
 
          cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
+         cornerCell[i] = new Coord(coo.al,coo.del);
 
          // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
          if( hasCell ) {
@@ -537,14 +539,30 @@ public class BuilderIndex extends Builder {
                if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
                   center.y = fitsfile.height - center.y -1;
                c.GetCoord(center);
-               
-               c1.x=fitsfile.xCell;
-               c1.y=fitsfile.yCell;
-               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-                  c1.y = fitsfile.height - c1.y -1;
-               c.GetCoord(c1);
-               radius = Coord.getDist(center,c1 );
+
+               double maxRadius=0;
+               for( Coord c2 : cornerCell ) {
+                  double dist = Coord.getDist(center,c2 );
+                  if( dist>maxRadius ) maxRadius=dist;
+               }
+               radius=maxRadius;
             }
+            
+//            // On calcule le centre et le rayon de la cellule (sauf si on travaille en image complète)
+//            if( hasCell ) {
+//               center.x = fitsfile.xCell+fitsfile.widthCell/2;
+//               center.y = fitsfile.yCell+fitsfile.heightCell/2;
+//               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
+//                  center.y = fitsfile.height - center.y -1;
+//               c.GetCoord(center);
+//               
+//               c1.x=fitsfile.xCell;
+//               c1.y=fitsfile.yCell;
+//               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
+//                  c1.y = fitsfile.height - c1.y -1;
+//               c.GetCoord(c1);
+//               radius = Coord.getDist(center,c1 );
+//            }
 
             double cent[] = context.ICRS2galIfRequired(center.al, center.del);
             npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], Math.toRadians(radius));
@@ -589,7 +607,7 @@ public class BuilderIndex extends Builder {
                coo.del = radec[1];
             }
             // Pour éviter de récupérer la coordonnée X de l'autre coté du ciel
-            if( isCAR && coo.al==0 ) coo.al-=0.0000001;
+//            if( isCAR && coo.al==0 ) coo.al-=0.0000001;
             
             f.getCalib().GetXY(coo);
 

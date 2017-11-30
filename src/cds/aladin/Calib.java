@@ -2862,8 +2862,10 @@ public final class Calib  implements Cloneable {
       //              System.out.println("GetCoord "+c.al+" " +c.del);
 
 
-      if(c.al >= 360.) c.al -= 360.;
-      if(c.al <   0.) c.al += 360.;
+      // PF. 26 nov 2017 - SURTOUT PAS !!
+//      if(c.al >= 360.) c.al -= 360.;
+//      if(c.al <   0.) c.al += 360.;
+      
       //   System.out.println("coord "+c.al+" " +c.del);
    }
    }
@@ -3625,6 +3627,7 @@ public final class Calib  implements Cloneable {
                //   entre les limites de l'image. On teste modulo 360 et modulo -360
                //                      System.out.println("Xcen "+CD[0][0]*Xcen + CD[0][1]*Ycen+"   "+
                //                             CD[0][0]*(Xcen-xnpix) +CD[0][1]*Ycen+" "+x_stand) ;
+               
                if (((x_stand+ 360.) > Math.min(CD[0][0]*(-Xcen) + CD[0][1]*Ycen,
                      CD[0][0]*(xnpix-Xcen) +CD[0][1]*Ycen))
                      &&
@@ -3635,6 +3638,7 @@ public final class Calib  implements Cloneable {
                      ((x_stand -360.) < Math.max(CD[0][0]*(-Xcen) +CD[0][1]*Ycen,CD[0][0]*(xnpix-Xcen) +CD[0][1]*Ycen)) )
                   xshift = -360.; 
                x_stand += xshift ;
+               
                //                  System.out.println("Xshift "+ xshift) ;
                //                        if (x_stand > 180.) x_stand -= 360. ;
                //                        if (x_stand < -180.)x_stand += 360. ;

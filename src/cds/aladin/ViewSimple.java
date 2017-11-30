@@ -636,6 +636,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    //         aladin.view.createViewForPlan(pi);
    //      } catch( Exception e ) {}
    //   }
+   
 
    /** Génération d'un plan à partir des pixels repérés par le rectangle crop pour un plan allsky */
    protected PlanImage cropAreaBG(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean inStack)

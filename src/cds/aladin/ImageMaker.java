@@ -233,8 +233,11 @@ public class ImageMaker {
       // Positionnement de la zone de travail
       vs.setViewParam(p, width,height, new Coord(raICRS,deICRS),radDeg);
       
-      // Extraction/rééchantillonnage des pixels de la vue
+//       Extraction/rééchantillonnage des pixels de la vue
       PlanImage pi = aladin.calque.createCropImage(vs,true);
+      
+      
+//      PlanImage pi = p.crop( new Coord(raICRS,deICRS), radDeg, width, height);
       
       // Sauvegarde dans le flux de sortie au format FITS
       Save save = new SaveStatic(aladin);

@@ -462,7 +462,7 @@ public class PlanBG extends PlanImage {
          // Frame
          int frame=-1;
          String strFrame = prop.getProperty(Constante.KEY_HIPS_FRAME,"X");
-         if( strFrame.equals("equatorial"))  frame=Localisation.ICRS;
+         if( strFrame.equals("equatorial") || isPlanet(strFrame) )  frame=Localisation.ICRS;
          else if( strFrame.equals("galactic"))  frame=Localisation.GAL;
          else if( strFrame.equals("ecliptic"))  frame=Localisation.ECLIPTIC;
 
@@ -882,7 +882,7 @@ public class PlanBG extends PlanImage {
 
       // Choix spécifique d'une projection et d'un sens pour la longitude dans le cas
       // d'une planète
-      boolean isAPlanet = isAPlanet();
+      boolean isAPlanet = isPlanet();
       boolean longAsc = isAPlanet;
       int projection = isAPlanet ? Calib.SIN : defaultProjType ;
       specificProj = isAPlanet;
@@ -930,9 +930,12 @@ public class PlanBG extends PlanImage {
    /** Retourne le mode d'affichage par défaut de la longitude. Si le frame n'est pas céleste,
     * on suppose qu'il s'agit d'une planète et on affiche avec la longitude ascendante
     */
-   protected boolean isAPlanet() {
+   protected boolean isPlanet() {
       if( prop==null ) return false;
-      String frame = prop.getProperty("hips_frame");
+      return isPlanet( prop.getProperty("hips_frame") );
+   }
+      
+   protected boolean isPlanet(String frame) {
       return frame!=null && Util.indexInArrayOf(frame, SKYFRAME, true)<0;
    }
 
@@ -2421,6 +2424,54 @@ public class PlanBG extends PlanImage {
       }
       return hasDrawnSomething;
    }
+   
+//   protected PlanImage crop( double ra, double de, double sizeRa, double sizeDe, double factor) {
+//      
+//      double pixRes = getPixelResolution();
+//      int width = sizeRa/pixRes;
+//      
+//      
+//      PlanImage pi = new PlanImage(aladin);
+//      pi.width = pi.naxis1 = width;
+//      pi.height = pi.naxis2 = height;
+//      pi.bitpix = bitpix;
+//      pi.pixelsOrigin = new byte[ Math.abs( (bitpix/8) ) * width*height ];
+//      
+//      pi.projd = new Projection(,Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
+//            projection,Calib.FK5);
+//   
+//      AladinData ad = aladin.createAladinData("My Image");
+//      
+//      // Pixels
+//      double [][] pix = new double[200][300];
+//      for( int x=0; x<200; x++ ) {
+//         for( int y=0; y<300; y++ ) pix[x][y] = (x*y);
+//      }
+//      ad.setPixels(pix,16);
+//      
+//      // Calibration 
+//      String header = 
+//         "SIMPLE  = T\n"+
+//         "BITPIX  = 16\n"+
+//         "NAXIS   = 2\n"+
+//         "NAXIS1  = 200\n"+
+//         "NAXIS2  = 300\n"+
+//         "CRPIX1  = 100\n"+
+//         "CRPIX2  = 150\n"+
+//         "CRVAL1  = 83.63310542835717\n"+
+//         "CRVAL2  = 22.014486753213667\n"+
+//         "CTYPE1  = RA---TAN\n"+
+//         "CTYPE2  = DEC--TAN\n"+
+//         "CD1_1   = -2.8004558788238224E-4\n"+
+//         "CD1_2   = -3.078969511615841E-6\n"+
+//         "CD2_1   = -3.078969511615841E-6\n"+
+//         "CD2_2   = 2.8004558788238224E-4\n"+
+//         "RADECSYS= FK5\n";
+//      ad.setFitsHeader(header);
+//
+//      
+//      
+//   }
 
 
    /** Retourne un tableau de pixels d'origine couvrant la vue courante */
@@ -2439,7 +2490,6 @@ public class PlanBG extends PlanImage {
       boolean testClosest = false;
 
       int order = fullRes ? maxOrder : (int)(getOrder()*resMult);
-      int a=order;
       if( order<3 ) order=3;
       else if( order>maxOrder ) order=maxOrder;
 

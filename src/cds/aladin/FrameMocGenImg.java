@@ -83,7 +83,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    }
 
    protected boolean isPlanOk(Plan p) {
-      if( p instanceof PlanBG && !((PlanBG)p).isLocalAllSky() ) return false;
+//      if( p instanceof PlanBG && !((PlanBG)p).isLocalAllSky() ) return false;
       if( p instanceof PlanImage && ((PlanImage)p).isPixel() ) return true;
       if( p.isCatalog() ) return true;
       return false;
@@ -202,7 +202,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    protected void submit() {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int res=getOrder();
+         int order=getOrder();
          double pixMin=getMin();
          double pixMax=getMax();
          
@@ -210,8 +210,8 @@ public class FrameMocGenImg extends FrameRGBBlink {
          if( !Double.isNaN(pixMin) || !Double.isNaN(pixMax) ) {
             pixelCut = " -pixelCut=\""+pixMin+" "+pixMax+"\"";
          }
-         a.console.printCommand("cmoc -order="+res+pixelCut+" "+labelList(ps));
-         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,0,pixMin,pixMax,Double.NaN,false);
+         a.console.printCommand("cmoc -order="+order+pixelCut+" "+labelList(ps));
+         a.calque.newPlanMoc(ps[0].label+" MOC",ps,order,0,pixMin,pixMax,Double.NaN,false);
          hide();
 
       } catch ( Exception e ) {

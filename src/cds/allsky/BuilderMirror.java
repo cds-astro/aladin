@@ -381,7 +381,7 @@ public class BuilderMirror extends BuilderTiles {
             URL u = new URL(fileIn);
             URLConnection conn = u.openConnection();
             HttpURLConnection httpc = (HttpURLConnection)conn;
-//            httpc.setRequestMethod("HEAD");
+            httpc.setRequestMethod("HEAD");
             lastModified = httpc.getLastModified();
 
             fOut = new File(fileOut);
@@ -389,15 +389,27 @@ public class BuilderMirror extends BuilderTiles {
                size = httpc.getContentLength();
                if( size==fOut.length() && lastModified<=fOut.lastModified() ) {
 //                  httpc.disconnect();   => Coupe le keep-alive
+                  
+                  // On doit tout de même vider le buffer
                   InputStream es = httpc.getInputStream();
-                  byte [] buf1 = new byte[512];
-                  while( es.read(buf1) > 0) { }
-                  es.close();  
+                  try {
+                     byte [] buf1 = new byte[512];
+                     while( es.read(buf1) > 0) { }
+                     es.close();  
+                     
+                  // Et le buffer d'erreur éventuel
+                  } catch( IOException e ) {
+                     es = httpc.getErrorStream();
+                     byte [] buf1 = new byte[512];
+                     while( es.read(buf1) > 0) { }
+                     es.close();  
+                  }
                   return 0;  // déjà fait
                }
             }
             
-//            httpc.setRequestMethod("GET");
+            httpc = (HttpURLConnection)u.openConnection();
+            httpc.setRequestMethod("GET");
             dis = new MyInputStream(httpc.getInputStream());
             try {
                buf = dis.readFully();

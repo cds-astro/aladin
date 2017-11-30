@@ -451,7 +451,18 @@ public class PlanMoc extends PlanBGCat {
          while( tok.hasMoreTokens() ) {
             String v = tok.nextToken();
             if( (a=Util.indexOfIgnoreCase(v,"perimeter"))>=0 ) setDrawingPerimeter(a>0 && v.charAt(a-1)=='-'? false : true);
-            if( (b=Util.indexOfIgnoreCase(v,"fill"))>=0 )      setDrawingFillIn   (b>0 && v.charAt(b-1)=='-'? false : true);
+            if( (b=Util.indexOfIgnoreCase(v,"fill"))>=0 )  {
+               setDrawingFillIn   (b>0 && v.charAt(b-1)=='-'? false : true);
+               b=v.indexOf(":",b);
+               if( b>0 ) {
+                  try {
+                     float f = Float.parseFloat(v.substring(b+1));
+                     if( f<0.1f || f>1f ) throw new Exception();
+                     factorOpacity = f;
+                  } catch( Exception e ) { throw new Exception("set drawing parameter unknown ["+v+"]");
+                  }
+               }
+            }
             if( (c=Util.indexOfIgnoreCase(v,"border"))>=0 )    setDrawingBorder   (c>0 && v.charAt(c-1)=='-'? false : true);
             if( a<0 && b<0 && c<0 ) throw new Exception("set drawing parameter unknown ["+v+"]"); 
          }
@@ -617,28 +628,26 @@ public class PlanMoc extends PlanBGCat {
             oFlagPeri=flagPeri;
             oGapOrder=gapOrder;
          }
+         
+         // Tracé en aplat avec demi-niveau d'opacité
+         if( flagFill && arrayHpix!=null && g instanceof Graphics2D ) {
+            Graphics2D g2d = (Graphics2D)g;
+            Composite saveComposite = g2d.getComposite();
+            try {
+               g2d.setComposite( Util.getImageComposite(getOpacityLevel()*getFactorOpacity()) );
+               for( Hpix p : arrayHpix ) {
+                  boolean small = isDrawingBorder() && p.getDiag2(v)<25;
+                  if( !small ) p.fill(g, v);
+               }
+            } finally {
+               g2d.setComposite(saveComposite);
+            }
+         }
+
 
          // Tracé des Hpix concernés par le champ de vue
-         if( (flagBorder || flagFill) && arrayHpix!=null ) {
-            for( Hpix p : arrayHpix ) {
-               boolean small = p.getDiag2(v)<25 && isDrawingBorder();
-
-               // Tracé en aplat avec demi-niveau d'opacité
-               if( flagFill && !small )  {
-                  if( g instanceof Graphics2D ) {
-                     Graphics2D g2d = (Graphics2D)g;
-                     Composite saveComposite = g2d.getComposite();
-                     try {
-                        g2d.setComposite( Util.getImageComposite(getOpacityLevel()/5f) );
-                        p.fill(g, v);
-                     } finally {
-                        g2d.setComposite(saveComposite);
-                     }
-                  } else p.fill(g, v);
-               }
-
-               if( flagBorder )  p.draw(g, v);
-            }
+         if( flagBorder && arrayHpix!=null ) {
+            for( Hpix p : arrayHpix ) p.draw(g, v);
          }
 
          // Tracé des périmètres
@@ -656,5 +665,8 @@ public class PlanMoc extends PlanBGCat {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
    }
+   
+   protected float factorOpacity = 0.5f;
+   protected float getFactorOpacity() { return factorOpacity; }
 }
 

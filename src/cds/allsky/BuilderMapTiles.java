@@ -75,8 +75,6 @@ public class BuilderMapTiles extends Builder {
       build();
 
       if( !context.isTaskAborting() ) {
-         (b = new BuilderMoc(context)).run();
-         b = null;
 
          if( context.getOrder() <= 3 ) {
             (new BuilderAllsky(context)).run();
@@ -87,6 +85,9 @@ public class BuilderMapTiles extends Builder {
          }
 
          context.setProgressLastNorder3(1);
+         
+         (b = new BuilderMoc(context)).run();
+
       }
    }
 

@@ -1618,8 +1618,8 @@ MouseWheelListener, Widget
 
             // Recuperation de la description du champ et d'un éventuel tooltip
             if( w.repere ) { /* tip=TIPREP; */ s=w.text; }
-            else if( w.glu )      tip=TIPGLU;
             else if( w.archive )  tip=TIPARCH;
+            else if( w.glu )      tip=TIPGLU;
             else if( w.footprint)  tip=TIPFOV;
             try {
                if( w.glu ) w.urlStatus(aladin.urlStatus);

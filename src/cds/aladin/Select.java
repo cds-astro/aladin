@@ -1378,7 +1378,7 @@ Runnable, SwingWidgetFinder, Widget {
                   addUrl("", new Rectangle(x-5,y-2,30,15));
 
                   // Dessin d'un petit triangle pour suggérer la suite
-               } else if( lastBegin<BEGIN.length-1 && message==null ) {
+               } else if( BEGIN!=null && lastBegin<BEGIN.length-1 && message==null ) {
                   y -= 5;
                   int x = getWidth()-10;
                   Polygon pol = new Polygon();

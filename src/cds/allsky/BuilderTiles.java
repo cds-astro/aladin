@@ -511,12 +511,12 @@ public class BuilderTiles extends Builder {
       //      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
       int nbThread = (int) (size / maxMemPerThread);
 
-      //    int nbThread=nbProc;
+      if( this instanceof BuilderMirror ) nbThread=6;
 
       int maxNbThread = context.getMaxNbThread();
       if( maxNbThread>0 && nbThread>maxNbThread ) nbThread=maxNbThread;
       if (nbThread==0) nbThread=1;
-      if( nbThread>nbProc ) nbThread=nbProc;
+      if( nbThread>nbProc && !(this instanceof BuilderMirror) ) nbThread=nbProc;
 
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
       context.info("Will use "+nbThread+" thread"+(nbThread>1?"s":""));

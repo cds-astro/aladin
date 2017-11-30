@@ -524,10 +524,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    /** Reset complet du filtrage (quickFilter+combobox) */
-   protected void fullReset() {
+   protected void fullReset() { fullReset(false); }
+   protected void fullReset(boolean flagDefaultExpand ) {
       quickFilter.setText("");
       comboFilter.setSelectedIndex(0);
       reset();
+      if( flagDefaultExpand ) dirTree.defaultExpand();
+
    }
 
    // Mémorisation de la dernière position de la souris en mouseMoved()

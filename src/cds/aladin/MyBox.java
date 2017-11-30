@@ -30,6 +30,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -233,6 +234,8 @@ public abstract class MyBox extends JPanel {
       }
    }
    
+   static final private int POSCROSS=30;
+   
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
    class Text extends JTextField implements MouseMotionListener, MouseListener {
 //      private Dimension dim=null;
@@ -245,27 +248,34 @@ public abstract class MyBox extends JPanel {
          setUI( new BasicTextFieldUI() );
          addMouseMotionListener(this);
          addMouseListener(this);
+         
+         // Pour ne pas passer sous la petite croix et le triangle
+         // au bout du champ
+         Insets i = getMargin();
+         i.right=POSCROSS+1;
+         setMargin(i);
       }
 
       boolean in(int x,int y) { return region!=null && x>=region.x;  }
       boolean inCross(int x,int y) { return regionCross!=null && x>=regionCross.x && x<=regionCross.x+regionCross.width;  }
 
       public void paintComponent(Graphics g) {
-    	  try {
-    		  super.paintComponent(g);
-    		  if( hasCross() ) {
-    		     g.setColor( getBackground() );
-    		     g.fillRect(getWidth()-30,0,getWidth()-16,getHeight());
-    		     drawCross(g,getWidth()-28,8);
-    		  }
-    		  if( hasTriangle() ) {
-                 g.setColor( getBackground() );
-                 g.fillRect(getWidth()-16,0,getWidth()-1,getHeight());
-    		     drawTriangle(g,getWidth()-15,getHeight()/2-2);
-    		  }
-    	  } catch( Exception e ) { }
+         
+         try {
+            super.paintComponent(g);
+            if( hasCross() ) {
+               g.setColor( getBackground() );
+               g.fillRect(getWidth()-POSCROSS,0,getWidth()-16,getHeight());
+               drawCross(g,getWidth()-(POSCROSS-2),8);
+            }
+            if( hasTriangle() ) {
+               g.setColor( getBackground() );
+               g.fillRect(getWidth()-POSCROSS+14,0,getWidth()-1,getHeight());
+               drawTriangle(g,getWidth()-POSCROSS+15,getHeight()/2-2);
+            }
+         } catch( Exception e ) { }
       }
-      
+
       private void drawCross(Graphics g, int x, int y) {
          g.setColor( colorTriangle );
          Util.drawCross(g,x,y,6);

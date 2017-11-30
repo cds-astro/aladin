@@ -1915,20 +1915,19 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( s!=null && s.equals("dark") ) remove(LOOKANDFEELTHEME);
 
       // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
-//      if( !Aladin.OUTREACH ) {
-         if( aladin.calque.flagSimbad && !getSimbadFlag() ) set(SIMBAD,"On");    //remove(SIMBAD);
-         if( !aladin.calque.flagSimbad && getSimbadFlag() ) remove(SIMBAD);      //set(SIMBAD,"Off");
+      if( !aladin.calque.flagSimbad ) set(SIMBAD,"Off");
+      else remove(SIMBAD);
 
-         if( aladin.calque.flagAutoDist && !getAutoDist() ) set(AUTODIST,"On");  //remove(AUTODIST);
-         if( !aladin.calque.flagAutoDist && getAutoDist() ) remove(AUTODIST);    //set(AUTODIST,"Off");
+      if( !aladin.calque.flagVizierSED ) set(VIZIERSED,"Off");
+      else remove(VIZIERSED);
 
-         if( aladin.calque.flagVizierSED && !getVizierSEDFlag() ) set(VIZIERSED,"On");
-         if( !aladin.calque.flagVizierSED && getVizierSEDFlag() ) remove(VIZIERSED);
-         try {
-            if( aladin.calque.zoom.zoomView.sed.getSEDWave() ) set(SEDWAVE,"On");
-            else remove(SEDWAVE);
-         } catch( Exception e1 ) { }
-//      }
+      if( aladin.calque.flagAutoDist && !getAutoDist() ) set(AUTODIST,"On");  //remove(AUTODIST);
+      if( !aladin.calque.flagAutoDist && getAutoDist() ) remove(AUTODIST);    //set(AUTODIST,"Off");
+
+      try {
+         if( aladin.calque.zoom.zoomView.sed.getSEDWave() ) set(SEDWAVE,"On");
+         else remove(SEDWAVE);
+      } catch( Exception e1 ) { }
 
       // On conserve la position de la fenêtre
       if( !flagModif && sameWinParam() ) return;
@@ -1958,13 +1957,15 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( p.x<0 ) p.x=0;
          if( p.y<0 ) p.y=0;
 
-         // Test pour éviter les valeurs incongrues
-         if( Math.abs(p.x)>aladin.SCREENSIZE.width
-               || Math.abs(p.y)>aladin.SCREENSIZE.height
-               || d.width<100 || d.width>aladin.SCREENSIZE.width*1.5
-               || d.height<100 || d.height>aladin.SCREENSIZE.height*1.5
-               ) remove(WINLOC);
-         else set(WINLOC,p.x+" "+p.y+" "+(max?-d.width:d.width)+" "+(max?-d.height:d.height));
+         if( aladin.LOCATION==null ) {
+            // Test pour éviter les valeurs incongrues
+            if( Math.abs(p.x)>aladin.SCREENSIZE.width
+                  || Math.abs(p.y)>aladin.SCREENSIZE.height
+                  || d.width<100 || d.width>aladin.SCREENSIZE.width*1.5
+                  || d.height<100 || d.height>aladin.SCREENSIZE.height*1.5
+                  ) remove(WINLOC);
+            else set(WINLOC,p.x+" "+p.y+" "+(max?-d.width:d.width)+" "+(max?-d.height:d.height));
+         }
       }
 
       // Je sauvegarde les propriétés de la configuration

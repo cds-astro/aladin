@@ -254,7 +254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.048";
+   static public final    String VERSION = "v10.052";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -289,6 +289,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
 //   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
+   static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
 
    // La couleur du fond
    
@@ -3751,7 +3752,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       localisation.reset();
       //       pixel.reset();
       dialog.setGrab(); // Desactivation du GrabIt ?
-      directory.fullReset();
+      directory.fullReset(true);
       command.reset();
       dialog.setDefaultTarget("");
       dialog.setDefaultTaille(ServerDialog.DEFAULTTAILLE);
@@ -4255,7 +4256,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    
    
-   /**Creation d'un MOC à partir de tous les polygones sélectionnés */
+   /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
    protected HealpixMoc createMocByRegions(int order) {
       HealpixMoc moc = new HealpixMoc();
       HashSet<Obj> set = new HashSet<Obj>();
@@ -5916,6 +5917,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.f.pack(); // Même en mode script, le pack est indipensable pour créer les peer classes
       if( NOGUI ) return;
       Rectangle r = a.configuration.getWinLocation();
+      if( LOCATION!=null ) {
+         try {
+            Tok tok = new Tok(LOCATION,",");
+            int x = Integer.parseInt(tok.nextToken());
+            int y = Integer.parseInt(tok.nextToken());
+            int w = Integer.parseInt(tok.nextToken());
+            int h = Integer.parseInt(tok.nextToken());
+            r = new Rectangle(x, y, w, h);
+         } catch( Exception e) { }
+      }
       if( r==null || r.x>SCREENSIZE.width || r.y>SCREENSIZE.height ) {
          a.f.setLocation(computeLocation(a.f));
 //         a.f.setSize(732,679);
@@ -6020,7 +6031,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
          else if( args[i].equals("-nolog") )       { LOG=false; lastArg=i+1; }
-//         else if( args[i].equals("-outreach") )    { OUTREACH=true; setOUTREACH=true; lastArg=i+1; }
+         else if( args[i].equals("-outreach") )    { /* OUTREACH=true; setOUTREACH=true; */ lastArg=i+1; }
          else if( args[i].equals("-proto") )       { PROTO=BETA=true; lastArg=i+1; }
          else if( args[i].equals("-nobeta") )      { BETA=false; lastArg=i+1; }
          else if( args[i].equals("-noproto") )     { PROTO=BETA=false; lastArg=i+1; }
@@ -6034,6 +6045,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-bookmarks") )   { BOOKMARKS=true; lastArg=i+1; }
          else if( args[i].equals("-samp") )        { USE_SAMP_REQUESTED=true; lastArg=i+1; }
          else if( args[i].equals("-antialiasing") )    { ALIASING=1; lastArg=i+1; }
+         else if( args[i].startsWith("-location=") )   { LOCATION=args[i].substring(10); lastArg=i+1; }
          else if( args[i].equals("-noantialiasing") )  { ALIASING=-1; lastArg=i+1; }
          else if( args[i].equals("-plastic") )     { USE_PLASTIC_REQUESTED=true; lastArg=i+1; }
          else if( args[i].equals("-noplastic")
