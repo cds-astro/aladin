@@ -251,14 +251,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( !isCheckIn ) return;
          g.setFont(g.getFont().deriveFont(Font.ITALIC));
          
-         int x=45;
+         int x=40;
          int y=10;
          g.setColor(Aladin.COLOR_GREEN);
          Util.fillCircle7(g, x, y-4);
          g.setColor( Aladin.COLOR_LABEL );
          g.drawString("in view",x+7,y);
          
-         x+=50;
+         x+=55;
          g.setColor(Aladin.ORANGE);
          Util.fillCircle7(g, x, y-4);
          g.setColor( Aladin.COLOR_LABEL );
@@ -504,7 +504,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       return dirTree.showBranch(path);
    }
 
-   /** Ouvre l'arbre en montrant le noeud associé à l'id spécifié */
+   /** Ouvre l'arbre en montrant le noeud associé à l'id (venant du stack) spécifié */
    protected void showTreeObj(String id) {
       if( !isVisible() || !hasCollections() || id == null ) return;
       int i = id.indexOf('~');
@@ -512,7 +512,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( i > 0 ) id = id.substring(0, i);
       dirTree.showTreeObj(id);
    }
-
+   
    /** Retourne true si le directory contient quelque chose (avant filtrage éventuel) */
    protected boolean hasCollections() {
       return dirList != null && dirList.size() > 0;
@@ -2350,10 +2350,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /**
     * Provides the properties java object describing the collection identified by id
     * @param id Identifier (ex: CDS/Simbad)
-    * @return The properties (very similar to basic java Properties object
+    * @return The properties (very similar to basic java Properties object)
     */
    protected MyProperties getProp(String id) {
       return multiProp.getProperties(id);
+   }
+   
+   /** Retourne les properties associées à l'id (venant du stack) spécifié */
+   protected MyProperties getProperties(String id) {
+      if( id==null ) return null;
+      int i = id.indexOf('~');
+      if( i < 0 ) i = id.indexOf(' ');
+      if( i > 0 ) id = id.substring(0, i);
+      return getProp(id);
    }
 
    /**
@@ -3813,7 +3822,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                s = "New " + (to.isNewObsRelease() ? "release" : to.isNewHips() ? "HiPS" : "!");
                x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + 3;
                y = 12;
-               Util.drawStar(g, x - 4, y - 6, Color.yellow);
+               Util.drawNew(g, x - 4, y - 6, Color.yellow);
                g.drawString(s, x, y);
             }
 

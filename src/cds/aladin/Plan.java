@@ -1637,6 +1637,33 @@ public class Plan implements Runnable {
       } catch( Exception e ) {}
       return "";
    }
+   
+   /** Retourne une chaine décrivant le plan qui va s'afficher au-dessus de la pile
+    * => cf Select.setMessageInfo(...) */
+   protected String getMessageInfo() {
+      MyProperties prop = aladin.directory.getProperties( id );
+      if( prop==null ) return null;
+      
+      String s = prop.getFirst("obs_collection_label");
+      if( s==null ) s=label;
+      StringBuilder buf = new StringBuilder(s);
+      
+      if( (s=prop.getFirst("obs_title"))!=null ) ADD( buf, "\n",s+"\n ");
+      if( (s=prop.get("obs_regime"))!=null ) ADD( buf, "\n* Regime: ",s.replace("\t",", "));
+      if( (s=prop.get("prov_progenitor"))!=null ) ADD( buf, "\n* Provenance: ",s.replace("\t",", "));
+      
+      addMessageInfo(buf,prop);
+      return buf.toString();
+   }
+   
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) { }
+   
+   
+   static protected void ADD(StringBuilder buf,String prefix, String s) {
+      if( s==null ) return;
+      if( prefix!=null ) buf.append(prefix);
+      buf.append(s);
+   }
 
    /** Ajout d'info de debugging et de stat */
    protected String addDebugInfo() {

@@ -537,7 +537,7 @@ public class DirectoryTree extends JTree {
          
          if( color!=null ) Util.drawCheck(g,-3,-2,color==Color.black ? color.lightGray : color);
          if( !hasMoc ) Util.drawWarning(g,0,8,Aladin.ORANGE,Color.black);
-         if( isNew ) Util.drawStar(g,9,3/*getIconHeight()-2*/,Color.yellow);
+         if( isNew ) Util.drawNew(g,9,3/*getIconHeight()-2*/,Color.yellow);
       }
    }
 }

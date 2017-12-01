@@ -85,7 +85,16 @@ public class PlanBGCat extends PlanBG {
    
    /** Retourne true si l'image a été entièrement "drawé" à la résolution attendue */
    protected boolean isFullyDrawn() { return readyDone && allWaitingKeysDrawn; }
-
+   
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      String s;
+      int n;
+      if( (n=getCounts())>0 ) {
+         ADD( buf, "\n* Sources loaded: ",String.format("%,d", n));
+      }
+      try { if( (s=prop.getFirst("nb_rows"))!=null ) ADD( buf,"\n* Total: ",String.format("%,d", Long.parseLong(s))); } catch( Exception e ) {}
+   }
    
    protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op,boolean now) {
       if( v==null ) return;

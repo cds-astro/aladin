@@ -254,7 +254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.052";
+   static public final    String VERSION = "v10.053";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -6081,14 +6081,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       
       // Dans le cas d'une indication de TTL -en nombre de seconde depuis le 1970, il s'agit
-      // d'un démarrage via une config JNLP. Si le time-TTL est sup à 30s, on ignore le script
+      // d'un démarrage via une config JNLP. Si le time-TTL est sup à 3mn, on ignore le script
       // et le mode screen passé en paramètre (démarrage à blanc). Normalement ce cas n'arrive jamais
       // sauf si une config JNLP n'a pu être checkée à distance
       try {
          if( TTL!=null ) {
             long t=System.currentTimeMillis()/1000;
             long t0 = Long.parseLong(TTL);
-            if( t-t0>30 ) {
+            if( t-t0>180 ) {
                scriptParam=null;
                SCREEN=null;
             }

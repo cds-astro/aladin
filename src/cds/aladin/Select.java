@@ -1193,8 +1193,8 @@ Runnable, SwingWidgetFinder, Widget {
       else Util.toolTip(this,p==null ? null : Util.fold(p.getInfo(),30,true));
 
       // Infos sur les plans
-      if( p==null ) { defaultCursor(); return; }
-
+      if( p==null ) { defaultCursor(); hideMessage(); return; }
+      
       // Cas particulier d'un plan d'une image d'archive
       // on va automatiquement montrer la source associee si elle est dans les mesures
       if( p.type==Plan.IMAGE && ((PlanImage)p).o!=null ) {
@@ -1213,7 +1213,8 @@ Runnable, SwingWidgetFinder, Widget {
          if( !p.flagOk &&p.error==null ) waitCursor();
          else handCursor();
          setInfo(p);
-      } else { defaultCursor(); a.status.setText(""); }
+         setMessageInfo( p );
+      } else { defaultCursor(); a.status.setText(""); hideMessage(); }
    }
 
    /** Affichage des infos (tooltip + status) concernant le plan */
@@ -1226,6 +1227,7 @@ Runnable, SwingWidgetFinder, Widget {
    /** Gestion de la souris */
    public void mouseExited(MouseEvent e) {
       flagInMessage=false;
+      setMessageInfo( (Plan)null ) ;
       a.calque.unSelectUnderMouse();
 //      a.view.resetBorder();
       defaultCursor();
@@ -1358,7 +1360,8 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       if( msg!=null ) {
-         int y = drawBeginnerHelp1(g,msg, getMessageColor(),flagInMessage || messageType== MESSAGE_INFO ? getHeight() : yMax);
+         int y = drawBeginnerHelp1(g,msg, getMessageColor(),flagInMessage ||
+               messageType== MESSAGE_INFO || messageType== MESSAGE_INFO_PLAN ? getHeight() : yMax);
          
          // On affiche des ... pour indiquer que le message est plus long que la zone d'affichage
          if( y>=yMax && !flagInMessage ) {
@@ -1395,10 +1398,11 @@ Runnable, SwingWidgetFinder, Widget {
    }
    
    
-   static public final int MESSAGE_UNKNOWN = 0;
-   static public final int MESSAGE_CDS     = 1;
-   static public final int MESSAGE_TIP     = 2;
-   static public final int MESSAGE_INFO    = 3;
+   static public final int MESSAGE_UNKNOWN   = 0;
+   static public final int MESSAGE_CDS       = 1;
+   static public final int MESSAGE_TIP       = 2;
+   static public final int MESSAGE_INFO      = 3;
+   static public final int MESSAGE_INFO_PLAN = 4;
    
    
    private String message=null;              // Le message courant
@@ -1410,6 +1414,8 @@ Runnable, SwingWidgetFinder, Widget {
       return message==null ?  Aladin.COLOR_LABEL
             : messageType==MESSAGE_CDS ? Aladin.COLOR_LABEL.brighter() 
             : messageType==MESSAGE_TIP ? Color.yellow.darker()
+//            : messageType==MESSAGE_INFO ? Aladin.COLOR_LABEL.brighter()
+//            : messageType==MESSAGE_INFO_PLAN ? Aladin.COLOR_LABEL.brighter()
             : Aladin.COLOR_LABEL;
    }
    
@@ -1432,6 +1438,19 @@ Runnable, SwingWidgetFinder, Widget {
       messageType=MESSAGE_TIP;
       messageKey=key;
       repaint();
+   }
+   
+   /** Positionnement d'un message d'info associé à un plan */
+   protected void setMessageInfo( Plan p) {
+      if( p==null ) { if( messageType==MESSAGE_INFO_PLAN ) hideMessage(); }
+      else {
+         String s = p.getMessageInfo();
+         if( s==null ) hideMessage();
+         else {
+            setMessageInfo( s );
+            messageType=MESSAGE_INFO_PLAN;
+         }
+      }
    }
    
    /** Positionnement d'un message d'info

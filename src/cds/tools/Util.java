@@ -1069,8 +1069,20 @@ public final class Util {
       g.drawArc(x+w-r*2,y,r*2,r*2,45,-45);
       g.drawArc(x,y+h-r*2,r*2,r*2,180+45,45);
    }
-
-   /**Tracage d'une petite étoile */
+   
+   /** Tracage d'une petite "star" pour dire "New" */
+   static public void drawNew(Graphics g,int x, int y,Color c) {
+      g.setColor( Color.black );
+      g.fillRect(x-3, y-3, 7, 7);
+      g.setColor( c );
+      Font f = g.getFont();
+      g.setFont( Aladin.BOLD );
+      g.drawString("*",x-2,y+7);
+      g.setFont(f);
+      
+   }
+   
+   /** Tracage d'une petite étoile */
    static public void drawStar(Graphics g,int x, int y,Color c) {
       g.setColor(c);
       g.drawLine(x,y-3,x,y-2);
@@ -1081,6 +1093,25 @@ public final class Util {
       g.drawLine(x-2,y+3,x-2,y+3);
       g.drawLine(x+2,y+3,x+2,y+3);
    }
+   
+   /** Tracage d'un petit signet (bookmark) */
+   static public void drawSignet(Graphics g,int x, int y,Color c) {
+      g.setColor(c);
+
+      // Pourtour
+      g.drawLine(x-2,y-3,x+1,y-3);
+      g.drawLine(x-3,y-2,x-3,y+5);
+      g.drawLine(x+2,y-2,x+2,y+5);
+      g.drawLine(x-3,y+5,x-1,y+3);
+      g.drawLine(x+2,y+5,x,y+3);
+
+      // Remplissage
+      g.drawLine( x-2, y-2, x-2, y+3 );
+      g.drawLine( x-1, y-2, x-1, y+3 );
+      g.drawLine( x  , y-2, x  , y+3 );
+      g.drawLine( x+1, y-2, x+1, y+3 );
+   }
+
    
    /** Dessin d'un triangle "warning" */
    static public void drawWarning(Graphics g,int x,int y, Color bg, Color fg) {

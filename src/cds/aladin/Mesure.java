@@ -997,7 +997,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
          if( !leg.field[i].visible ) continue;
          if( json ) {
             if( !first ) sb.append(", ");
-            sb.append( "\""+Util.escapeJSON(leg.field[i].name)+"\": "+Util.escapeJSON(values[i])+"\"");
+            sb.append( "\""+Util.escapeJSON(leg.field[i].name)+"\": \""+Util.escapeJSON(values[i])+"\"");
             
          } else {
             if( !first ) sb.append('\t');

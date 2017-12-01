@@ -23,7 +23,6 @@ package cds.aladin.bookmark;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -437,7 +436,9 @@ public class FrameBookmarks extends JFrame {
       /** Affichage du bouton "bookmark", avec une petite étoile en préfixe */
       public void paintComponent(Graphics g) {
          super.paintComponent(g);
-         Util.drawStar(g, 6,7, f.isLocalDefinition() ? Color.blue : ButtonBookmark.Orange);
+         Util.drawSignet(g, 6,7, f.isLocalDefinition() ? 
+               Aladin.COLOR_BLUE : Aladin.COLOR_GREEN_LIGHT);
+//               Color.blue : ButtonBookmark.Orange);
       }
    }
    

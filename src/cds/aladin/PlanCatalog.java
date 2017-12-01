@@ -231,6 +231,19 @@ public class PlanCatalog extends Plan {
       if( pcat.description==null ) return null;
       return pcat.description.toString();
    }
+   
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      String s;
+      int n;
+
+      if( (n=getNbTable())>1 ) ADD( buf, "\n* Tables: ",n+"");
+      if( (n=getCounts())>0 ) {
+         ADD( buf, "\n* Sources loaded: ",String.format("%,d", n));
+      }
+      try { if( (s=prop.getFirst("nb_rows"))!=null ) ADD( buf,"\n* Total: ",String.format("%,d", Long.parseLong(s))); } catch( Exception e ) {}
+
+   }
 
    /** Retourne le nombre d'objects */
    protected int getCounts() { return pcat==null ? 0 : pcat.getCount(); }

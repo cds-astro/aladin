@@ -1073,7 +1073,7 @@ MouseWheelListener, Widget
       Vector ligne = aladin.mesure.getWordLine(currentsee);
       Enumeration e = ligne.elements();      // Pour faciliter la manip.
       Source o = (Source)e.nextElement();    // L'objet lui-meme
-
+      
       // Pour déselectionner la source correspondant à la ligne sous
       // la souris (shift appuyé). Il faut mettre ow=null pour éviter
       // des ghosts par la suite
@@ -1094,7 +1094,7 @@ MouseWheelListener, Widget
       if( !flagPopup ) {
          if( ev.getClickCount()==2 || aladin.calque.getPlanBase() instanceof PlanBG ) {
             rep=aladin.view.setRepere(o);
-
+            
             // Centrage de la vue courante uniquement sans changement de zoom
          } else  rep=aladin.view.syncSimple(o);
 
@@ -1117,6 +1117,10 @@ MouseWheelListener, Widget
             Words w = (Words) e.nextElement(); // Analyse mot par mot
 
             if( w.inside(x,y) ) {              // C'est gagne
+               
+               // On fait un copier de la valeur sous la souris dans le presse papier
+               if( ev.getClickCount()==2 ) aladin.copyToClipBoard(w.text);
+               
                if( !w.glu && !w.footprint ) continue;             // Inutile si ce n'est pas une marque GLU
 
                // Mémorisation du lien qui aura été cliqué
