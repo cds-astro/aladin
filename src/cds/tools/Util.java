@@ -106,6 +106,7 @@ import cds.aladin.Coord;
 import cds.aladin.Forme;
 import cds.aladin.MyInputStream;
 import cds.aladin.Plan;
+import cds.aladin.SED;
 import cds.aladin.Tok;
 import cds.image.EPSGraphics;
 import cds.savot.model.ResourceSet;
@@ -2057,6 +2058,24 @@ public final class Util {
       }catch( Exception e) {}
       return "";
    }
+   
+   /** retourne dans une unité lisible l'énergie passée en mètres */
+   static public String getWaveFromMeter(String meter) {
+      try {
+         return SED.getUnitWave( Double.parseDouble(meter)*1000000 );
+      } catch( Exception e ) {
+         return meter+"m";
+      }
+   }
+
+//   /** retourne dans une unité lisible l'énergie passée en mètres */
+//   static public String getFreqFromMeter(String meter) {
+//      try {
+//         return SED.getUnitFreq( SED.wave2Freq( Double.parseDouble(meter)*1000000 ) );
+//      } catch( Exception e ) {
+//         return meter+"m";
+//      }
+//   }
 
    /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
    static public String getTemps(long ms) { return getTemps(ms,false);  }

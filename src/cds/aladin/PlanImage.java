@@ -2653,6 +2653,25 @@ public class PlanImage extends Plan {
    protected byte getPixel8Byte(int x,int y) {
       return pixels==null ? 0 : pixels[y*width+x];
    }
+   
+//   ORIGIN  = 'POSSII'                / Centre de Donnees astronomiques de Strasbour
+//         NUMESO  = 'POSSIIj554J'            /
+//         INSTRUME= 'STScI'              /
+
+   
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      if( naxis1==0 ) return;
+      if( bitpix!=0 ) ADD( buf,"\n* Pixel: ",getPixelCodingInfo(bitpix));
+      else ADD( buf,"\n* Pixel: ","color RGB");
+      ADD( buf,"\n* Size: ",naxis1+"x"+naxis2);
+      ADD( buf,"\n* Date: ",getDateObs());
+      if( headerFits!=null ) {
+         ADD( buf,"\n* Provenance: ",headerFits.getStringFromHeader("ORIGIN"));
+         ADD( buf,"\n* Survey: ",    headerFits.getStringFromHeader("SURVEY"));
+         ADD( buf,"\n* Instrument: ",headerFits.getStringFromHeader("INSTRUME"));
+      }
+   }
 
 
    /** INUTILE POUR LE MOMENT

@@ -67,7 +67,7 @@ public class DirectoryTree extends JTree {
       setOpaque(true);
 //      setRootVisible(false);
       
-      setBorder( BorderFactory.createEmptyBorder(10, 0, 5, 0));
+      setBorder( BorderFactory.createEmptyBorder(0, 0, 5, 0));
       setShowsRootHandles(true);
       NoeudRenderer nr = new NoeudRenderer();
       setCellRenderer(nr);

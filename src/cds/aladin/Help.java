@@ -61,10 +61,9 @@ public final class Help extends JComponent implements
    Aladin aladin;
 
    // Les variables de travail
-   static Font FI = Aladin.LPLAIN;  // Font par defaut
-   static Font FG = Aladin.LBOLD;	// Font grasse
+   static Font FI = Aladin.JOLI;    // Font par defaut
+   static Font FG = Aladin.BJOLI;	// Font grasse
    static Font FTITRE = FG;
-   static Font TEST;
    static int dy=-1;			// Espace entre deux lignes
    
    static private Color BGD;
@@ -75,9 +74,6 @@ public final class Help extends JComponent implements
    */
    protected Help(Aladin aladin) {
       this.aladin = aladin;
-      
-      FI = font = new Font("Trebuchet MS"/*"Segoe UI"*/,Font.PLAIN,Aladin.LSIZE);
-      FG=FTITRE = new Font("Trebuchet MS",Font.BOLD,Aladin.LSIZE+2);
       
       BGD = Aladin.COLOR_BACKGROUND;
       
@@ -318,8 +314,23 @@ public final class Help extends JComponent implements
 
    private int owidth=-1;
    private int oheight=-1;
+   
+   private boolean first=true;
+   
+   // Vérifie que la fonte choisie est bien de taille fixe, sinon on change
+   private void testFont(Graphics g) {
+      first=false;
+      FontMetrics fm = g.getFontMetrics(Aladin.COURIER);
+      int w1 = fm.stringWidth("ceci est un test");
+      int w2 = fm.stringWidth("wwwwwwwwwwwwwwww");
+      if( w1!=w2 ) {
+         Aladin.COURIER  = new Font("Monospaced",Font.PLAIN,Aladin.SIZE);
+         Aladin.BCOURIER  = new Font("Monospaced",Font.PLAIN+Font.BOLD,Aladin.SIZE);
+      }
+   }
 
    public void paintComponent(Graphics g) {
+      if( first ) testFont(g);
       super.paintComponent(g);
       g.setFont(font);
       

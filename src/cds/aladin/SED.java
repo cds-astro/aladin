@@ -35,6 +35,7 @@ import java.net.URL;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -47,7 +48,7 @@ import cds.xml.Field;
  * @author Pierre Fernique [CDS]
  * @version 1.0 nov 2012
  */
-class SED extends JPanel {
+public class SED extends JPanel {
    
    static private final String SEDGLUTAG = "VizieR.sed"; 
 
@@ -606,8 +607,8 @@ class SED extends JPanel {
 
    }
    
-   static double freq2Wave(double freq) { return 2.998E5/freq; }
-   static double wave2Freq(double wave) { return 2.998E5/wave; }
+   static public double freq2Wave(double freq) { return 2.998E5/freq; }
+   static public double wave2Freq(double wave) { return 2.998E5/wave; }
    
    // Trace l'icone de fermeture du graphique
    private void drawCroix(Graphics g) {
@@ -833,14 +834,14 @@ class SED extends JPanel {
    }
 
    /** Affichage en longueur d'onde : val donnée en micron-mètre */
-   static final public String getUnitWave(double val) {
+   static public String getUnitWave(double val) {
       return getUnit(val*1000.,UNITWAVE);
    }
 
-   static final private String getUnit(double val,String [] unit) {
+   static private String getUnit(double val,String [] unit) {
       int u = 0;
       while (val >= 1000 && u<unit.length-1) { u++; val /= 1000L; }
-      NumberFormat nf = NumberFormat.getInstance();
+      NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
       nf.setMaximumFractionDigits(1);
       return nf.format(val)+unit[u];
    }

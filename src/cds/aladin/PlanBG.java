@@ -677,7 +677,14 @@ public class PlanBG extends PlanImage {
    }
 
    private boolean testHpxFinder=false; // true : la présence d'un HpxFinder a été testé
+   
+   
 
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      String s;
+      if( (s=prop.get("moc_sky_fraction"))!=null ) ADD( buf,"\n* Coverage: ",getCoverageSpace(s));
+   }
 
    // Juste pour se simplifier la vie sur le test de prop==null
    protected String getProperty(String key) { return prop==null ? null : prop.getProperty(key); }

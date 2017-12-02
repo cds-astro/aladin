@@ -110,6 +110,15 @@ public class PlanMoc extends PlanBGCat {
       pm.arrayHpix = arrayPeri = null;
       pm.arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
    }
+   
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      double cov = moc.getCoverage();
+      double degrad = Math.toDegrees(1.0);
+      double skyArea = 4.*Math.PI*degrad*degrad;
+      ADD( buf, "\n* Best ang.res: ",Coord.getUnit(moc.getAngularRes())+", order="+moc.getMocOrder());
+      ADD( buf, "\n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+   }
 
    /** Changement de référentiel si nécessaire */
    public HealpixMoc toReferenceFrame(String coordSys) throws Exception {

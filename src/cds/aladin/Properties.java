@@ -1535,7 +1535,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    }
 
    private String getCoverageEnergy(String s1,String s2) {
-      return "[ "+ (s1==null ? " " : s1) + " .. "+ (s2==null ? " " : s2) + " ]";
+      return "[ "+ (s1==null ? " " : Util.getWaveFromMeter(s1)) + " .. "+ (s2==null ? " " : Util.getWaveFromMeter(s2)) + " ]";
    }
 
    // implementation d'EventListener pour les differents sliders

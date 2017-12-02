@@ -1358,13 +1358,26 @@ MouseWheelListener, Widget
          Field f = o.leg.field[i];
          if( f.description==null && f.unit==null && f.ucd==null && f.utype==null ) return "";
          
-         if( o.leg.name!=null ) A(res,o.leg.name);
-         A(res,"\n",f.name);
-         A(res," - ",adjustVizier(f.description));
-         if( f.unit!=null || f.ucd!=null || f.utype!=null ) res.append("\n ");
-         if( f.unit!=null ) A(res,"\n","* Unit: "+f.unit);
-         if( f.ucd!=null ) A(res,"\n","* UCD: "+f.ucd);
-         if( f.utype!=null ) A(res,"\n","* Utype: "+f.utype);
+         // Récupération du titre de la légende et du petit nom du obs_collection
+         String s = o.leg.name!=null ? o.leg.name : "";
+         if( o.plan!=null ) {
+            MyProperties prop = aladin.directory.getProperties( o.plan.id );
+            if( prop!=null ) {
+               if( s.equals("CDSCatFileQuery") ) s=o.plan.id;   // Cochonnerie de FX
+               String s1 = prop.getFirst("obs_collection_label");
+               if( s1!=null ) {
+                  if( s.length()>0 ) s= s1+" - "+s;
+                  else s = s1;
+               }
+            }
+         }
+         A(res,s);
+         A(res,"\n \n* Field: ",f.name);
+         A(res,"\n* Value: ",o.getValue(i));
+         A(res,"\n* Unit: ",f.unit);
+         A(res,"\n* UCD: ",f.ucd);
+         A(res,"\n* Utype: ",f.utype);
+         A(res,"\n \n",adjustVizier(f.description));
       }
       return res.toString();
    }
@@ -1585,7 +1598,11 @@ MouseWheelListener, Widget
       // Affichage du texte (legende ou texte) associee a la mesure
       e = ligne.elements();
       
-      bindDatalinkPopupFunctionality(currentsee, x, y);
+      try {
+         bindDatalinkPopupFunctionality(currentsee, x, y);
+      } catch( Exception e1 ) {
+         if( aladin.levelTrace>=3 ) e1.printStackTrace();
+      }
       
       o=(Source)e.nextElement();   // Je saute l'objet lui-meme
       boolean trouve=false;        // true si on trouve un mot a selectionner

@@ -254,7 +254,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.053";
+   static public final    String VERSION = "v10.054";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -347,6 +347,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_TEXT_FOREGROUND;
    static public Color COLOR_RED;
    static public Color COLOR_BLUE;
+   static public Color COLOR_VERTDEAU;
    static public Color COLOR_GREEN;
    static public Color COLOR_GREEN_LIGHT;
    static public Color COLOR_GREEN_LIGHTER;
@@ -362,6 +363,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       COLOR_BLUE = Color.blue;
       COLOR_RED = Color.red;
+      COLOR_VERTDEAU = new Color(85,161,137);
       COLOR_GREEN = new Color(27,137,0);
       COLOR_GREEN_LIGHT = new Color(27,177,0);
       COLOR_GREEN_LIGHTER = new Color(27,197,0);
@@ -419,6 +421,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_STATUS_LEFT_FOREGROUND = COLOR_TEXT_FOREGROUND;
          COLOR_RED = new Color(214,45,0);
          COLOR_BLUE = new Color(120,149,220);
+         COLOR_VERTDEAU = COLOR_VERTDEAU.brighter();
          COLOR_FOREGROUND_ANCHOR = new Color(0,136,204);
          COLOR_GREEN = new Color(57,167,0);
          COLOR_STACK_SELECT = new Color(40,50,150);
@@ -565,7 +568,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Les fontes associees a Aladin
    static int  SSIZE,SSSIZE,LSIZE  ;
    static public Font BOLD,PLAIN,ITALIC,SBOLD,SSBOLD,SPLAIN,SSPLAIN,SITALIC,
-   LPLAIN,LBOLD,LITALIC,LLITALIC,L,COURIER,BCOURIER;
+   LPLAIN,LBOLD,LITALIC,LLITALIC,L,COURIER,BCOURIER,JOLI,BJOLI;
 
    // L'instance d'aladin lui-meme, pour la methode main() et
    // l'utilisation par une autre application java (voir methode launch() );
@@ -1070,6 +1073,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       LLITALIC= LBOLD;
       COURIER= new Font(s1,Font.PLAIN,Aladin.SIZE);
       BCOURIER= new Font(s1,Font.PLAIN+Font.BOLD,Aladin.SIZE);
+      JOLI    = new Font("Trebuchet MS",Font.PLAIN,Aladin.LSIZE);
+      BJOLI   = new Font("Trebuchet MS",Font.BOLD,Aladin.LSIZE+2);
    }
 
    /** Création des chaines dans la langue */

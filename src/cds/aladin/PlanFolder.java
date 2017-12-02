@@ -88,6 +88,15 @@ public class PlanFolder extends Plan {
       }
    }
    
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      if( headerFits!=null ) {
+         ADD( buf,"\n* Provenance: ",headerFits.getStringFromHeader("ORIGIN"));
+         ADD( buf,"\n* Survey: ",    headerFits.getStringFromHeader("SURVEY"));
+         ADD( buf,"\n* Instrument: ",headerFits.getStringFromHeader("INSTRUME"));
+      }
+   }
+
    /** Retourne sous forme de paragraphe dédié à la commande "status" la liste des plans
     * contenus dans le folder (sans récursivité) ou null si aucun */
    protected String getStatusItems() {

@@ -1638,21 +1638,61 @@ public class Plan implements Runnable {
       return "";
    }
    
+   private String getCoverageTime(String s1,String s2) {
+      if( s1.equals(s2) ) return Util.getDateFromMJD(s1);
+      return Util.getDateFromMJD(s1) + " .. "+ Util.getDateFromMJD(s2);
+   }
+   
+   private String getCoverageEnergy(String s1,String s2) {
+      if( s1.equals(s2) ) return Util.getWaveFromMeter(s1);
+      return Util.getWaveFromMeter(s1) + " .. "+ Util.getWaveFromMeter(s2);
+   }
+   
+   protected String getCoverageSpace(String s) {
+      try {
+         double cov = Double.parseDouble(s);
+         if( cov<0.1 ) {
+            double degrad = Math.toDegrees(1.0);
+            double skyArea = 4.*Math.PI*degrad*degrad;
+            return Coord.getUnit(skyArea*cov, false, true)+"^2";
+         }
+         return Util.round(cov*100, 3)+"%";
+      } catch( Exception e ) { }
+      return null;
+   }
+   
    /** Retourne une chaine décrivant le plan qui va s'afficher au-dessus de la pile
     * => cf Select.setMessageInfo(...) */
    protected String getMessageInfo() {
       MyProperties prop = aladin.directory.getProperties( id );
-      if( prop==null ) return null;
       
-      String s = prop.getFirst("obs_collection_label");
+      String s1;
+      String s = prop==null ? null : prop.getFirst("obs_collection_label");
       if( s==null ) s=label;
-      StringBuilder buf = new StringBuilder(s);
+      StringBuilder buf = new StringBuilder(s+"\n ");
       
-      if( (s=prop.getFirst("obs_title"))!=null ) ADD( buf, "\n",s+"\n ");
-      if( (s=prop.get("obs_regime"))!=null ) ADD( buf, "\n* Regime: ",s.replace("\t",", "));
-      if( (s=prop.get("prov_progenitor"))!=null ) ADD( buf, "\n* Provenance: ",s.replace("\t",", "));
+      if( prop!=null ) {
+         if( (s=prop.get("obs_regime"))!=null ) ADD( buf, "\n* Regime: ",s.replace("\t",", "));
+         if( (s=prop.get("em_min"))!=null && (s1=prop.get("em_max"))!=null ) {
+            ADD( buf,"\n* Wavelength: ",getCoverageEnergy(s,s1));
+         }
+         if( (s=prop.get("t_min"))!=null && (s1=prop.get("t_max"))!=null ) {
+            ADD( buf,"\n* Time: ",getCoverageTime(s,s1));
+         }
+         if( (s=prop.get("prov_progenitor"))!=null ) ADD( buf, "\n* Provenance: ",s.replace("\t",", "));
+      } else {
+         if( filename==null ) ADD( buf, "\n* Provenance: ",copyright);
+      }
       
       addMessageInfo(buf,prop);
+      
+      // La description du plan
+      if( prop!=null ) {
+         s = prop.getFirst("obs_title");
+         if( s==null ) s=prop.getFirst("obs_collection");
+      } else s=description;
+      if( s!=null ) ADD( buf, "\n \n",s);
+      
       return buf.toString();
    }
    

@@ -240,8 +240,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    // Fournit une légende pour les couleurs de l'arbre
    class LegIn extends JPanel {
       
-      public Dimension getPreferredsize() {
-         return new Dimension( super.getPreferredSize().width, 45);
+      public Dimension getPreferredSize() {
+         return new Dimension( super.getPreferredSize().width, 18);
       }
       
       public void paintComponent(Graphics g) {
@@ -252,7 +252,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          g.setFont(g.getFont().deriveFont(Font.ITALIC));
          
          int x=40;
-         int y=10;
+         int y=14;
          g.setColor(Aladin.COLOR_GREEN);
          Util.fillCircle7(g, x, y-4);
          g.setColor( Aladin.COLOR_LABEL );
@@ -300,7 +300,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // L'arbre avec sa scrollbar
       dirTree = new DirectoryTree(aladin, cbg);
       scrollTree = new JScrollPane(dirTree, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-      scrollTree.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+      scrollTree.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
       scrollTree.setBackground(cbg);
       // scrollTree.getViewport().setOpaque(true);
       // scrollTree.getViewport().setBackground(cbg);

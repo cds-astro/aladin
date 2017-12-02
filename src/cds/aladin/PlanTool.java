@@ -144,7 +144,16 @@ public class PlanTool extends PlanCatalog {
       }
       return super.Free();
    }
-
+   
+   /** Ajoute des infos sur le plan */
+   protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
+      String s;
+      int n;
+      if( (n=getCounts())>0 ) {
+         ADD( buf, "\n* Objects: ",String.format("%,d", n));
+      }
+   }
+   
    public SourceTag addTag(ViewSimple v,double ra, double dec) {
       SourceTag o = new SourceTag(this, v, new Coord(ra,dec),null);
       pcat.insertSource(o);

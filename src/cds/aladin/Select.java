@@ -1366,7 +1366,9 @@ Runnable, SwingWidgetFinder, Widget {
          // On affiche des ... pour indiquer que le message est plus long que la zone d'affichage
          if( y>=yMax && !flagInMessage ) {
             for( int i=0; i<3; i++ ) {
-               Util.fillCircle2(g, getWidth()-8-5*i, y-8);
+               int xm = getWidth()-8-5*i;
+               g.drawLine(8,y-12, getWidth()/2, y-12);
+               Util.fillCircle2(g, xm, y-10);
             }
          } else {
             
@@ -1414,8 +1416,8 @@ Runnable, SwingWidgetFinder, Widget {
       return message==null ?  Aladin.COLOR_LABEL
             : messageType==MESSAGE_CDS ? Aladin.COLOR_LABEL.brighter() 
             : messageType==MESSAGE_TIP ? Color.yellow.darker()
-//            : messageType==MESSAGE_INFO ? Aladin.COLOR_LABEL.brighter()
-//            : messageType==MESSAGE_INFO_PLAN ? Aladin.COLOR_LABEL.brighter()
+            : messageType==MESSAGE_INFO ? Aladin.COLOR_VERTDEAU
+            : messageType==MESSAGE_INFO_PLAN ? Aladin.COLOR_VERTDEAU
             : Aladin.COLOR_LABEL;
    }
    
@@ -1529,7 +1531,7 @@ Runnable, SwingWidgetFinder, Widget {
    
    static final private String TIP  = "Tips & tricks";
    
-   private Image tipImg = null;
+   private Image tipImg = null, infoImg = null;
    
    // Efface le fond de la ligne courante
    private void clearBackgroundLine(Graphics g, int y, int h) {
@@ -1537,7 +1539,9 @@ Runnable, SwingWidgetFinder, Widget {
       if(y<50) w-=60;      // Il y a l'ampoule tout en haut qu'il ne faut pas effacer
       Color c1 = g.getColor();
       g.setColor( getBackground());
-      g.fillRect(1, y-8, w, h);
+      if( y>30 ) { y-=12; h+=5; }
+      else { h+=y; y=0; }
+      g.fillRect(1, y, w, h);
       g.setColor( c1 );
    }
 
@@ -1546,8 +1550,8 @@ Runnable, SwingWidgetFinder, Widget {
       int x0=10;
       int x=x0;
       int xMax=getWidth()-x;
-      Font FI = Help.FI.deriveFont(Help.FI.getSize2D()-2);
-      Font FG = Help.FG.deriveFont(Help.FG.getSize2D()-2);
+      Font FI = Aladin.JOLI.deriveFont(Aladin.JOLI.getSize2D()-2);
+      Font FG = Aladin.BJOLI.deriveFont(Aladin.BJOLI.getSize2D()-2);
       g.setColor(c);
       g.setFont(FG);//Aladin.BOLD);
       FontMetrics fm = g.getFontMetrics(FI);
@@ -1563,13 +1567,17 @@ Runnable, SwingWidgetFinder, Widget {
                if( tipImg==null ) tipImg = a.getImagette("tip.png");
                g.drawImage( tipImg, getWidth()-60, y-30, a);
                flagExcla=s.startsWith("!");
+            } else if( messageType == MESSAGE_INFO_PLAN || messageType == MESSAGE_INFO ) {
+               if( infoImg==null ) infoImg = a.getImagette("info1.png");
+               g.drawImage( infoImg, getWidth()-60, y-30, a);
+               flagExcla=s.startsWith("!");
+
             }
          }
          if( first && y>y0 ) {
             first=false; g.setFont(FI);
          }
          x=x0;
-         
          clearBackgroundLine(g,y,h);  // On efface ce qu'il y a sous la ligne
           
          String line = st.nextToken();
