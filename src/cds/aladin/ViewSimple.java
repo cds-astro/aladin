@@ -3580,7 +3580,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // détermine si la souris est sur le bord de la vue pour un éventuel déplacement ou une copie de vue
          int marge = rv.width/40;
          boolean flagMarge = view.isMultiView() && (tool==ToolBox.SELECT || tool==ToolBox.PAN)
-               && (x<=marge || x>=rv.width-marge || y<=marge || y>=rv.height-marge);
+               && (x<=marge || x>=rv.width-marge || y<=marge || y>=rv.height-marge)
+               && !inNE((int)x-8, (int)y-8);
+         
+         if( e.isControlDown() && (tool==ToolBox.SELECT || tool==ToolBox.PAN)) flagRollable=true;
 
          // Je change le curseur si necessaire
          if( !aladin.lockCursor && isSelectOrTool ) {
@@ -3738,6 +3741,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public void mouseEntered(MouseEvent e) {
 
       if( aladin.menuActivated() ) return;
+      
+      // Fermeture de la frameInfo du directory => GENANT EN CAS DE GRAB
+//      aladin.directory.hideInfoIfPossible();
 
       // Notification a view que c'est moi qui ait la souris
       aladin.view.setMouseView(this);
@@ -5116,8 +5122,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int y=rv.height-marge+3;
       //      Util.drawCartouche(g, x+dx, y-11+dy, taille, 14, CARTOUCHE, null, Color.white);
       //      g.setColor( Aladin.BLACKBLUE);
-      //      g.drawString(s, x+dx, y+dy);
-      Util.drawStringOutline(g, s, x+dx, y+dy, Color.cyan,null);
+      
+      if( !view.infoBorder ) {
+         g.setColor( view.infoColor );
+         g.drawString(s, x+dx, y+dy);
+      } else Util.drawStringOutline(g, s, x+dx, y+dy, view.infoColor,null);
 
    }
 
@@ -5206,13 +5215,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Affichage du label de la vue */
    protected void drawLabel(Graphics g,int dx,int dy) {
       if( !aladin.calque.hasLabel() ) return;
-      Color c = g.getColor();
-      String s=isPlotView() ? plot.getPlotLabel() :
-         pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.label;
+      Font f1 = g.getFont();
+      Font f = f1.deriveFont( f1.getSize2D()+2);
+      int fontSize = (int) f.getSize2D();
+      g.setFont( f );
+      Color c1 = g.getColor();
+      String s=isPlotView() ? plot.getPlotLabel() : pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.label;
          if( s==null ) return;
 
          int x=getMarge()+dx;
-         int y=5+getMarge()+dy;
+         int y=7+getMarge()+Math.max(0,(fontSize-12))+dy;
 
          //      int len;
          //      FontMetrics fm = g.getFontMetrics();
@@ -5222,8 +5234,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          //      g.drawString(s,x, y);
          //      g.setColor(c);
 
-         Util.drawStringOutline(g, s, x, y, Color.yellow, locked ? Color.red : null);
+         if( !view.infoBorder ) {
+            g.setColor( view.infoLabelColor );
+            g.drawString(s,x, y);
+            g.setColor( c1 );
+         } else Util.drawStringOutline(g, s, x, y, view.infoLabelColor, locked ? Color.red : null);
 
+         g.setFont( f1 );
    }
 
    /** Affichage du target de la vue */
@@ -5403,14 +5420,17 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          y1 += rv.height-maxY;
          y2 += rv.height-maxY;
 
-         if( northUp ) {
-            g.setColor(Color.red);
+         Color c2 = g.getColor();
+         g.setColor( northUp ? Color.red : view.infoColor );
+         
+         if(view.infoBorder ) {
+            Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
+            Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
          } else {
-            g.setColor( Color.cyan);
-            //            g.setColor( getGoodColor((int)Math.min(dx+x,dx+x1)-(int)L,(int)Math.min(dy+y,dy+y1),(int)L,(int)L));
+            Util.drawFleche(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
+            Util.drawFleche(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
          }
-         Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
-         Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
+         g.setColor( c2 );
       } catch( Exception e ) { return; }
    }
 
@@ -6013,6 +6033,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       double w = rv.width/4.;
 
       if( aladin.calque.hasScale() ) {
+         
+         Color c1 = g.getColor();
 
          // Determination de la taille du repere (au max d'1/4 de la vue)
 
@@ -6045,20 +6067,23 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                   int bord = aladin.view.getModeView()>4?2:4;
                   X+=dx; Y+=dy;
 
-                  g.setColor( Color.black ) ;
-                  g.fillRect(X-1,Y-bord-1,3,bord+2);
-                  g.fillRect(X-1,Y-1,(int)w+2,3);
-                  g.fillRect(X+(int)w-1,Y-bord-1,3,bord+2);
+                  if( view.infoBorder ) {
+                     g.setColor( Color.black ) ;
+                     g.fillRect(X-1,Y-bord-1,3,bord+2);
+                     g.fillRect(X-1,Y-1,(int)w+2,3);
+                     g.fillRect(X+(int)w-1,Y-bord-1,3,bord+2);
+                  }
 
-                  //                   g.setColor( getGoodColor(X,Y-bord,(int)w,bord)) ;
-                  g.setColor( Color.cyan ) ;
+                  g.setColor( view.infoColor ) ;
                   g.drawLine(X,Y-bord,X,Y);
                   g.drawLine(X,Y,X+(int)w,Y);
                   g.drawLine(X+(int)w,Y,X+(int)w,Y-bord);
 
 
-                  //                   g.drawString(s,X+3,Y-bord+1);
-                  Util.drawStringOutline(g,s,X+3,Y-bord+1, null, Color.black);
+                  if( !view.infoBorder ) g.drawString(s,X+3,Y-bord+1);
+                  else Util.drawStringOutline(g,s,X+3,Y-bord+1, null, Color.black);
+                  
+                  g.setColor( c1 ) ;
                }
             }
          }
@@ -6381,7 +6406,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Le bord de l'image en couleur rouge (plan pointé dans la pile par la souris)
 //      boolean drawBord=false;
-      if( planUnderMouse!=null && aladin.view.getMouseView()==null
+      if( planUnderMouse!=null && aladin.view.getMouseView()==null && planUnderMouse!=pref
             && aladin.calque.select.canDrawFoVImg() && g instanceof Graphics2D ) {
 
 //         if( planUnderMouse!=oldPlanBord ) aladin.view.activeFoV();
@@ -6402,9 +6427,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( vs.isPlotView() ) vs.plot.drawPlotGrid(g,dx,dy);
       else if( calque.hasGrid() && !proj.isXYLinear() ) vs.drawGrid(g,clip,dx,dy);
 
-      if( fullScreen ) g.setFont( Aladin.BOLD);
-      else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
-      else  g.setFont(Aladin.SSBOLD);
+      int fontSize = view.infoFontSize;
+      if( fullScreen ) fontSize++;
+      else if( rv.width<=200 ) fontSize--;
+      g.setFont( new Font( "SansSerif", Font.BOLD, fontSize ) );
+      
+//      if( fullScreen ) g.setFont( Aladin.BOLD);
+//      else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
+//      else  g.setFont(Aladin.SSBOLD);
 
       if( !vs.isPlotView() ) {
          
@@ -7031,13 +7061,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          //         if( aladin.view.getMouseView()!=this || ) return;
          String pos = aladin.localisation.getLastPosition();
          String pixel = lastPixel;
-         int y=15;
+         int fontSize = view.infoFontSize+2;
+         int y=fontSize+4;
          int x;
-
+         
+         Font f1 = g.getFont();
+         Font font = new Font( "Sans serif",Font.BOLD, fontSize );
+         
+         
          // Affichage de la valeur du pixel
          if( /* !Aladin.OUTREACH && */ pixel!=null && pixel.length()>0 ) {
             if( pixel.indexOf("unknown")>=0 ) return;
-            g.setFont(Aladin.BOLD);
+            g.setFont( font );
             int len = pixel.charAt(0)=='R' ? 150 : g.getFontMetrics().stringWidth(pixel);
             x = getWidth()-(28+len);
 
@@ -7045,22 +7080,26 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( pixel.charAt(0)=='R' ) {
                StringTokenizer st = new StringTokenizer(pixel);
                for( int i=0; i<3; i++ ) {
-                  String c = st.nextToken().substring(2);
+                  String s1 = st.nextToken().substring(2);
                   g.setColor( i==0 ? Color.red : i==1 ? Aladin.COLOR_GREEN : Color.blue );
-                  Util.drawStringOutline(g, c,x+i*50,y, null,null);
+                  if( view.infoBorder ) Util.drawStringOutline(g, s1,x+i*50,y, null,null);
+                  else g.drawString(s1,x+i*50,y);
                }
             } else {
-               Util.drawStringOutline(g, pixel, x, y, Color.cyan,null);
+               if( view.infoBorder ) Util.drawStringOutline(g, pixel, x, y, view.infoColor,null);
+               else g.drawString(pixel, x, y);
             }
 
          }
 
          // Affichage de la position
          if( isFullScreen() && pos!=null && pos.length()>0 ) {
-            g.setFont(Aladin.BOLD);
+            g.setFont( font );
             x = getWidth()-260;
-            Util.drawStringOutline(g, pos, x, y, Color.cyan,null);
+            if( view.infoBorder ) Util.drawStringOutline(g, pos, x, y, view.infoColor,null);
+            else g.drawString(pos, x, y);
          }
+         g.setFont( f1);
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }
 

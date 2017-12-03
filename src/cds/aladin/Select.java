@@ -1571,7 +1571,6 @@ Runnable, SwingWidgetFinder, Widget {
                if( infoImg==null ) infoImg = a.getImagette("info1.png");
                g.drawImage( infoImg, getWidth()-60, y-30, a);
                flagExcla=s.startsWith("!");
-
             }
          }
          if( first && y>y0 ) {

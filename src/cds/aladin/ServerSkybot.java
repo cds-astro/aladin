@@ -37,14 +37,10 @@ public class ServerSkybot extends ServerGlu {
 
    static String RESOLVIT,ERR;
 
-
-   private JButton resolv;
-
    static protected void createChaine(Chaine chaine) {
       RESOLVIT = chaine.getString("SBRESOLVIT");
       ERR = chaine.getString("SBERR");
    }
-
 
    protected ServerSkybot(Aladin aladin, String A, String D, String MV,
          String MP, String ML, String LP, String PP, String FU,
@@ -61,9 +57,7 @@ public class ServerSkybot extends ServerGlu {
       b.setFont(Aladin.BOLD);
       b.setBounds(10,lastY,250,HAUT);
       add(b);
-
    }
-
 
    // Pas utilisable dans le bouton "ALL VO"
    protected boolean isDiscovery() { return false; }

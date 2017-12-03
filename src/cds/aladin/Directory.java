@@ -271,7 +271,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       loadString();
       multiProp = new MultiMoc2();
       this.cbg = cbg;
-
+      
       // POUR LES TESTS => Surcharge de l'URL du MocServer
       // if( aladin.levelTrace>=3 ) {
       // aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
@@ -407,7 +407,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       // Actions sur le clic d'un noeud de l'arbre
       dirTree.addMouseListener(new MouseAdapter() {
-         public void mouseExited(MouseEvent e) { if( timerTip!=null ) { timerTip.stop(); timer=null; } }
+         public void mouseExited(MouseEvent e) {
+            if( timerTip!=null ) { timerTip.stop(); timer=null; }
+         }
          public void mousePressed(MouseEvent e) {
             if( timerTip!=null ) timerTip.stop();
             toHighLighted = null;
@@ -4138,4 +4140,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
    
    public void toFront() { frameInfo.toFront(); }
+   
+   /** Cache la fenêtre des infos si possible */
+   public void hideInfoIfPossible() {
+      System.out.println("Bip");
+      if( frameInfo==null || !frameInfo.isVisible() ) return;
+      if( decorated ) return;
+      frameInfo.setVisible(false);
+
+   }
 }

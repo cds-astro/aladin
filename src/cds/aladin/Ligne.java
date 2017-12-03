@@ -392,7 +392,7 @@ public class Ligne extends Position {
       return nearArrow(v,x,y);
    }
 
-   /** Redessine tout le polygone avec un aplat - ne fonctionne que pour le dernier segment */
+   /** Retourne true si x,y est dans le polygone - ne marche que sur le dernier segment */
    protected boolean inPolygon(ViewSimple v,int x, int y) {
       if( bout!=3 ) return false;
       Ligne tmp = this;
@@ -404,6 +404,20 @@ public class Ligne extends Position {
       return pol.contains(x, y);
    }
 
+//   /** Retourne true si x,y est sur le périmètre du polygone  */
+//   protected boolean inPolygonBord(ViewSimple v,int x, int y) {
+//      if( !isPolygone() ) return false;
+//      Ligne tmp = getLastBout();
+//      while( tmp.debligne!=null ) {
+//         PointD p1 = v.getViewCoordDble(debligne.xv[v.n],debligne.yv[v.n]);
+//         PointD p2 = v.getViewCoordDble(xv[v.n],yv[v.n]);
+//         PointD p = v.getViewCoordDble(x,y);
+//         if( inLigne(p1.x,p1.y,p2.x,p2.y,p.x,p.y,mouseDist(v)) || inBout(v,x,y) ) return true;
+//         
+//         tmp=tmp.debligne;
+//      }
+//      return false;
+//   }
 
    /** Coordonnees dans la vue courante.
     * Retourne la position dans les coord. de la vue courante

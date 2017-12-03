@@ -43,6 +43,7 @@ import java.util.zip.Inflater;
 
 import cds.image.Hdecomp;
 import cds.image.Iqefunc;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 import healpix.essentials.FastMath;
 
@@ -2665,7 +2666,14 @@ public class PlanImage extends Plan {
       if( bitpix!=0 ) ADD( buf,"\n* Pixel: ",getPixelCodingInfo(bitpix));
       else ADD( buf,"\n* Pixel: ","color RGB");
       ADD( buf,"\n* Size: ",naxis1+"x"+naxis2);
-      ADD( buf,"\n* Date: ",getDateObs());
+      String s = getDateObs();
+      if( s!=null && s.startsWith("J") ) {
+         try {
+            double d = Double.parseDouble(s.substring(1));
+            s=Astrodate.JDToDate(Astrodate.YdToJD(d));
+         } catch( Exception e) {}
+      }
+      ADD( buf,"\n* Date: ",s);
       if( headerFits!=null ) {
          ADD( buf,"\n* Provenance: ",headerFits.getStringFromHeader("ORIGIN"));
          ADD( buf,"\n* Survey: ",    headerFits.getStringFromHeader("SURVEY"));

@@ -185,6 +185,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String GRIDCRA    = "GridColorRA";
    protected static String GRIDCDE    = "GridColorDE";
    protected static String GRIDF      = "GridColorFont";
+   protected static String INFOC      = "InfoColor";
+   protected static String INFOCL     = "InfoColorLabel";
+   protected static String INFOF      = "InfoFont";
+   protected static String INFOB      = "InfoBorder";
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
    
@@ -204,7 +208,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
    FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,
-   GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR;
+   GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
 
 
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
@@ -268,6 +272,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    private JComboBox gridFontCombo;
    private CouleurBox gridColorBox,gridColorRABox,gridColorDEBox;
+
+   private JComboBox infoFontCombo,infoFontBorderCombo;
+   private CouleurBox infoColorBox,infoLabelColorBox;
 
    static private Langue lang[];                  // La liste des langues installées
    private Vector remoteLang = null;              // Lal iste des langues connues mais non installées
@@ -352,6 +359,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       GRIDCOLOR=aladin.chaine.getString("UPGRIDCOLOR");
       GRIDRACOLOR=aladin.chaine.getString("UPGRIDRACOLOR");
       GRIDDECOLOR=aladin.chaine.getString("UPGRIDDECOLOR");
+      INFO=aladin.chaine.getString("UPINFO");
+      INFOH=aladin.chaine.getString("UPINFOH");
+      INFOFONT=aladin.chaine.getString("UPINFOFONT");
+      INFOCOLOR=aladin.chaine.getString("UPINFOCOLOR");
+      INFOLABELCOLOR=aladin.chaine.getString("UPINFOLABELCOLOR");
+      INFOFONTBORDER=aladin.chaine.getString("UPINFOFONTBORDER");
 
       //      TAGCENTER = aladin.chaine.getString("UPTAGCENTER");
       //      TAGCENTERH = aladin.chaine.getString("UPTAGCENTERH");
@@ -954,6 +967,30 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return Aladin.SSIZE;
    }
 
+   /** Retourne la taille de la fonte de référence des infos de la vue */
+   protected int getInfoFontSize() {
+      try { return Integer.parseInt( get(INFOF)); } catch( Exception e ) { }
+      return Aladin.SIZE;
+   }
+   
+   /** Retourne true si on doit détourer les infos de la vue */
+   protected boolean isInfoBorder() {
+      String s = get(INFOB);
+      return s==null || !s.equals("off");
+   }
+   
+   /** Retourne la couleur des infos de la vue */
+   protected Color getInfoColor() {
+      try { return CouleurBox.getCouleur( get(INFOC)); } catch( Exception e ) { }
+      return Color.cyan;
+   }
+   
+   /** Retourne la couleur du label de la vue */
+   protected Color getInfoLabelColor() {
+      try { return CouleurBox.getCouleur( get(INFOCL)); } catch( Exception e ) { }
+      return Color.yellow;
+   }
+   
    /** Retourne true si le mode log est activé */
    protected boolean isLog() {
       String s = get(LOG);
@@ -1546,7 +1583,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          // Les paramètres de la grille
          CouleurBox y;
          panel = new JPanel(new GridLayout(2,2,4,4));
-         gridFontCombo = new JComboBox( new String[]{"6","7","8","9","10","11","12","13","14","26"} );
+         gridFontCombo = new JComboBox( new String[]{"6","7","8","9","10","11","12","13","14","16"} );
+         gridFontCombo.setPrototypeDisplayValue(new Integer(100000000));
          gridFontCombo.setSelectedItem( getGridFontSize()+"" );
          panel.add(new JLabel("- "+GRIDFONT,JLabel.LEFT)); panel.add( gridFontCombo );
          gridColorBox = y = new CouleurBox( Aladin.COLOR_GREEN, aladin.view.gridColor );
@@ -1557,6 +1595,22 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          panel.add(new JLabel("  - "+GRIDDECOLOR,JLabel.LEFT)); panel.add(y);
          (l = new JLabel(GRID)).setFont(l.getFont().deriveFont(Font.BOLD));
          PropPanel.addCouple(this, p, l, GRIDH, panel, g, c, GridBagConstraints.EAST);
+
+         // Les paramètres des infos
+         panel = new JPanel(new GridLayout(2,2,4,4));
+         infoFontCombo = new JComboBox( new String[]{"8","9","10","11","12","13","14","16","18","20"} );
+         infoFontCombo.setPrototypeDisplayValue(new Integer(100000000));
+         infoFontCombo.setSelectedItem( getInfoFontSize()+"" );
+         panel.add(new JLabel("- "+INFOFONT,JLabel.LEFT)); panel.add( infoFontCombo );
+         infoFontBorderCombo = new JComboBox( new String[]{"on","off"} );
+         infoFontBorderCombo.setSelectedIndex( isInfoBorder()?0:1 );
+         panel.add(new JLabel("- "+INFOFONTBORDER,JLabel.LEFT)); panel.add( infoFontBorderCombo );
+         infoColorBox = y = new CouleurBox( Color.cyan, getInfoColor() );
+         panel.add(new JLabel("- "+INFOCOLOR,JLabel.LEFT)); panel.add(y);
+         infoLabelColorBox = y = new CouleurBox( Color.yellow, getInfoLabelColor() );
+         panel.add(new JLabel("  - "+INFOLABELCOLOR,JLabel.LEFT)); panel.add(y);
+         (l = new JLabel(INFO)).setFont(l.getFont().deriveFont(Font.BOLD));
+         PropPanel.addCouple(this, p, l, INFOH, panel, g, c, GridBagConstraints.EAST);
 
              // Le Look&Feel des FileDialog
          (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -2237,6 +2291,17 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          set(GRIDF,s);
       }
       aladin.view.initGridParam(true);
+
+      // Pour les paramètres des infos de la ue
+      if( infoFontBorderCombo!=null ) set(INFOB, (String)infoFontBorderCombo.getSelectedItem() );
+      if( infoColorBox!=null ) set(INFOC, infoColorBox.getCouleur() );
+      if( infoLabelColorBox!=null ) set(INFOCL, infoLabelColorBox.getCouleur() );
+      if( infoFontCombo!=null )  {
+         s = infoFontCombo.getSelectedItem()+"";
+         if( (Aladin.SIZE+"").equals(s) ) s=null;
+         set(INFOF,s);
+      }
+      aladin.view.initInfoParam(true);
 
       // Pourle log
       if( logChoice!=null ) {

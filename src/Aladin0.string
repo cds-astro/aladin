@@ -1743,6 +1743,18 @@ UPGRIDRACOLOR longitude label
 UPGRIDRACOLOR.fr label longitude
 UPGRIDDECOLOR latitude label
 UPGRIDDECOLOR.fr label latitude
+UPINFO Overlay info
+UPINFOH Control of the info overlaid on the view (color, font, effect...)
+UPINFOFONT  font size
+UPINFOCOLOR info color
+UPINFOLABELCOLOR  label color
+UPINFOFONTBORDER border effect
+UPINFO.fr Info en surcharge
+UPINFOH.fr Contrôle du rendu des informations en surcharge de la vue (couleur, police, effets visuels, ...)
+UPINFOFONT.fr taille police
+UPINFOCOLOR.fr couleur info
+UPINFOLABELCOLOR.fr couleur titre
+UPINFOFONTBORDER.fr bordure police
       
 UPTITLE.fr	Préférences utilisateur
 UPDEFDIR.fr	Rép. de travail

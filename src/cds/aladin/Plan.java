@@ -1619,7 +1619,7 @@ public class Plan implements Runnable {
             String from = getFrom();
             String progress = getProgress();
             if( progress.length()>0 ) s=label+progress;
-            else {
+            else if( aladin.levelTrace>=3 ) {
                try {
                   if( isCatalog() ) s=label+" - "+getStats();
                } catch( Exception e ) { e.printStackTrace(); }

@@ -145,6 +145,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected Color gridColorRA;
    protected Color gridColorDEC;
    protected int gridFontSize;
+   protected Color infoColor;
+   protected Color infoLabelColor;
+   protected boolean infoBorder;
+   protected int infoFontSize;
 
    // Les references aux autres objets
    Aladin aladin;
@@ -300,6 +304,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             );
       
       initGridParam(false);
+      initInfoParam(false);
    }
    
    /** (Re)initialise les paramètres de la grille */
@@ -308,6 +313,15 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       gridColorRA  = aladin.configuration.getGridColorRA();
       gridColorDEC = aladin.configuration.getGridColorDE();
       gridFontSize = aladin.configuration.getGridFontSize();
+      if( repaint ) repaintAll();
+   }
+
+   /** (Re)initialise les paramètres des infos de la vue */
+   protected void initInfoParam( boolean repaint ) {
+      infoColor      = aladin.configuration.getInfoColor();
+      infoLabelColor = aladin.configuration.getInfoLabelColor();
+      infoBorder     = aladin.configuration.isInfoBorder();
+      infoFontSize   = aladin.configuration.getInfoFontSize();
       if( repaint ) repaintAll();
    }
 

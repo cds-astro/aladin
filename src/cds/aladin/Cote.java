@@ -278,6 +278,7 @@ public class Cote extends Ligne {
       Color c = g.getColor();
       Color c1 = (c==Color.red || c==Color.blue) ? Color.white : Color.black;
 //      Util.drawCartouche(g, x, y-11, w, 15, 0.75f, null, Color.white);
+      
       Util.drawStringOutline(g, s,x,y,c,c1);
 //      g.drawString(s,x,y);
       g.setColor(c);

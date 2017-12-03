@@ -1489,8 +1489,39 @@ public final class Command implements Runnable {
          a.calque.repaintAll();
          return "";
       }
+      
+      else if( propertie.equalsIgnoreCase("infocolor") ) {
+         Color c = Action.getColor(value);
+         if( c == null ) return "!!! Unknown color";
+         a.view.infoColor = c;
+         a.calque.repaintAll();
+         return "";
+      } else if( propertie.equalsIgnoreCase("labelcolor") ) {
+         Color c = Action.getColor(value);
+         if( c == null ) return "!!! Unknown color";
+         a.view.infoLabelColor = c;
+         a.calque.repaintAll();
+         return "";
+      } else if( propertie.equalsIgnoreCase("infoborder") ) {
+         a.view.infoBorder = !value.equalsIgnoreCase("off");
+         a.calque.repaintAll();
+         return "";
+      } else if( propertie.equalsIgnoreCase("infoFontSize") ) {
+         boolean flagPlus = false;
+         int n;
+         if( value.startsWith("+") ) {
+            flagPlus = true;
+            value = value.substring(1);
+         }
+         try {  n = Integer.parseInt(value); }
+         catch( Exception e ) { return "!!! infoFontSize syntax error"; }
+         if( flagPlus || n < 0 ) a.view.infoFontSize += n;
+         else a.view.infoFontSize = n;
+         a.calque.repaintAll();
+         return "";
 
-      else if( propertie.equalsIgnoreCase("gridcolor") ) {
+
+      } else if( propertie.equalsIgnoreCase("gridcolor") ) {
          Color c = Action.getColor(value);
          if( c == null ) return "!!! Unknown color";
          a.view.gridColor = c;
@@ -1509,11 +1540,8 @@ public final class Command implements Runnable {
             flagPlus = true;
             value = value.substring(1);
          }
-         try {
-            n = Integer.parseInt(value);
-         } catch( Exception e ) {
-            return "!!! gridFontSize syntax error";
-         }
+         try { n = Integer.parseInt(value); }
+         catch( Exception e ) { return "!!! gridFontSize syntax error"; }
          if( flagPlus || n < 0 ) a.view.gridFontSize += n;
          else a.view.gridFontSize = n;
          a.calque.repaintAll();
