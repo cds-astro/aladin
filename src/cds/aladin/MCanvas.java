@@ -1373,7 +1373,9 @@ MouseWheelListener, Widget
          }
          A(res,s);
          A(res,"\n \n* Field: ",f.name);
-         A(res,"\n* Value: ",o.getValue(i));
+         s=o.getValue(i);
+         if( s.length()>50 ) s=s.substring(0,47)+"...";
+         A(res,"\n* Value: ",s);
          A(res,"\n* Unit: ",f.unit);
          A(res,"\n* UCD: ",f.ucd);
          A(res,"\n* Utype: ",f.utype);
@@ -1528,6 +1530,12 @@ MouseWheelListener, Widget
 		}
 		trackedHoverRowIndex = -1;
 		
+        if( oo!=null ) {
+           aladin.view.hideSource();
+           oo.setShowFootprintTransient(false,true);
+           oo=null;
+        }
+		
 		drawIconOut(g);
         return;
       }
@@ -1541,7 +1549,11 @@ MouseWheelListener, Widget
       // de la meme maniere que si l'on sort de la fenetre
       if ( currentsee>=aladin.mesure.getNbSrc() ) {
          indiceCourant=-1;
-         if( oo!=null ) { aladin.view.hideSource(); oo=null; }
+         if( oo!=null ) {
+            aladin.view.hideSource();
+            oo.setShowFootprintTransient(false,true);
+            oo=null;
+         }
          if( objSelect==null && showLigne!=null ) clearShowLigne(g);
          if( mouseLigne!=null ) clearMouseLigne(g);
          ow=null;

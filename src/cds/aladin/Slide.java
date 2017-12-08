@@ -882,7 +882,6 @@ public final class Slide {
       if( p.isCheckBoxBlink() ) {
          Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.red, blinkState );
          setBlink(true);
-         a.calque.select.drawMessage(g, a.calque.select.getLastMessage(), Color.red);
       } else {
          Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.black, 
                /* p.ref */p.isRefForVisibleView() );

@@ -229,7 +229,7 @@ SwingWidgetFinder, Widget {
    /** Positionne un des boutons d'ajout de graphiques, et remonte tous les autres */
    protected void setGraphicButton(int n) {
       tool[DRAW].mode = tool[TAG].mode = tool[PHOT].mode
-            = tool[DIST].mode = tool[SELECT].mode = tool[SPECT].mode =Tool.UP;
+            = tool[DIST].mode = tool[SELECT].mode = tool[PAN].mode = tool[SPECT].mode =Tool.UP;
       tool[n].mode=Tool.DOWN;
       repaint();
    }

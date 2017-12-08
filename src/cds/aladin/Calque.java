@@ -1417,11 +1417,17 @@ public class Calque extends JPanel implements Runnable {
    }
 
    private boolean memoClinDoeil=false; // Vrai si on a mémorisé un état via le clin d'oeil
+   private Vector<Obj> memoVselobj = null;
+   private Source [] memoSrcList = null;
 
    protected boolean hasClinDoeil() { return memoClinDoeil; }
 
    /** Pour "oublier" qu'on utilisait l'oeil */
-   protected void resetClinDoeil() { memoClinDoeil=false; }
+   protected void resetClinDoeil() {
+      memoClinDoeil=false;
+      memoVselobj = null;
+      memoSrcList = null;
+   }
 
    /** Lorsque l'oeil est cliqué, il y aura mémorisation de l'état d'activation
     * ou non des plans (qui ne sont pas de référence), puis désactivation de ces
@@ -1433,6 +1439,17 @@ public class Calque extends JPanel implements Runnable {
     * chaque état de plan.
     */
    protected void clinDoeil() {
+      
+      if( !memoClinDoeil ) {
+         // Mémo des objets sélectionnés dans la vue
+         memoVselobj = (Vector<Obj>)aladin.view.vselobj.clone();
+         
+         // Mémo des sources dans la fenêtre des mesures
+         int nbSrc = aladin.mesure.getNbSrc();
+         memoSrcList = new Source [ nbSrc ];
+         aladin.mesure.memoSrcList( memoSrcList );
+      }
+      
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          Plan pc = plan[i];
@@ -1440,15 +1457,26 @@ public class Calque extends JPanel implements Runnable {
          if( pc.ref ) continue;
          if( memoClinDoeil ) {
             pc.setActivated(pc.memoClinDoeil);
+            
          } else {
             pc.memoClinDoeil=pc.active;
             pc.setActivated(false);
          }
       }
+      
+      if( memoClinDoeil ) {
+         // Restauration des objets sélectionnés dans la vue
+         aladin.view.vselobj = memoVselobj;
+         for( Obj o: memoVselobj ) o.setSelect(true);
+         
+         // Restauration des objets de la fenêtre des mesures
+         aladin.mesure.restoreSrcList(memoSrcList, memoSrcList.length);
+      }
+      
       memoClinDoeil=!memoClinDoeil;
       aladin.view.newView();
    }
-
+   
    /** Demande l'activation de tous les plans possibles */
    protected void activateAll() {
       boolean atLeastOne=false;

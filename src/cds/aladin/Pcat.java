@@ -679,9 +679,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String utype = leg.getUtype(j);
             String name = leg.getName(j);
             
-            if( indexSTC==-1 && flagEPNTAP && leg.getID(j).equals("s_region") ) {
-               indexSTC=j;
-            }
+            try {
+               if( indexSTC==-1 && /* flagEPNTAP && */ leg.getID(j).equals("s_region") ) {
+                  indexSTC=j;
+               }
+            } catch( Exception e ) { }
             
             if( indexSTC==-1 && Util.indexOfIgnoreCase( value[i], "Polygon ")==0 ) {
                indexSTC=j;

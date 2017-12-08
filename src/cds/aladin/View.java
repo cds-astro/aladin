@@ -3571,7 +3571,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                   Vector<Plan> v = aladin.calque.getPlanBG();
                   if( v!=null && v.size()>0 ) {
                      for( Plan p : v ) p.startCheckBoxBlink();
-                     aladin.calque.select.setLastMessage(aladin.getChaine().getString("TARGETNOTVISIBLE"));
+                     aladin.calque.select.setMessageError(aladin.getChaine().getString("TARGETNOTVISIBLE"));
                      aladin.calque.select.repaint();
                   }
                }
@@ -4193,21 +4193,35 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          try {
             coo = new Coord(st.nextToken());
             simRep = new Repere(null,coo);
-            simRep.setType(Repere.CARTOUCHE);
-            simRep.setSize(TAILLEARROW);
+            
             simRep.projection(v);
             int i = s.indexOf('/');
             String position = s.substring(0,i).trim();
             String s1=s.substring(i+1);
             aladin.status.setText(s1+"    [by Simbad]");
+            simRep.setType(Repere.CARTOUCHE);
+            simRep.setSize(TAILLEARROW);
             simRep.setId(s1);
             simRep.setWithLabel(true);
-            aladin.console.printInPad(s1+"\n");
             
+            aladin.console.printInPad(s1+"\n");
             
             String source = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
             aladin.targetHistory.add(source);
             aladin.view.zoomview.repaint();
+            
+//            if( !aladin.isFullScreen() ) {
+//               i = s.lastIndexOf('(');
+//               int j = s.indexOf(',',i+1);
+//               int k = s.lastIndexOf(')');
+//               String mag = s.substring(i+1,j);
+//               String otype = s.substring(j+1,k);
+//               String infoMessage = "\\"+source+"\n \n* Type: "+otype+"\n* Mag: "+mag+
+//                     "\n* "+position+
+//                     "\n \n-> more <&http://simbad.u-strasbg.fr/simbad/sim-id?Ident="+URLEncoder.encode(source)
+//                     +"|info> by Simbad";
+//               aladin.calque.select.setMessageInfo(infoMessage);
+//            }
 
             // Et on cherche le SED correspondant
             if( flagSED ) {

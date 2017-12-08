@@ -807,7 +807,7 @@ Runnable, SwingWidgetFinder, Widget {
                      p.startCheckBoxBlink();
                      a.calque.unSelectAllPlan();
                      p.selected=true;
-                     setLastMessage(WARNINGSLIDER);
+                     setMessageError(WARNINGSLIDER);
                      return true;
                   }
                   //                  System.out.println("switchShow: déjà activé mais transparence max => je rends opaque");
@@ -843,15 +843,16 @@ Runnable, SwingWidgetFinder, Widget {
          if( !p[i].isReady() ) continue;
          if( p[i] instanceof PlanBG || p1.isCompatibleWith(p[i]) ) p[i].startCheckBoxBlink();
       }
-      setLastMessage(WARNING);
+      setMessageError(WARNING);
    }
 
 
-   private String lastMessage="";
-   protected void setLastMessage(String s) { lastMessage=s; }
-   protected String getLastMessage() {
-      return lastMessage;
-   }
+//   private String lastMessage="";
+//   protected void setLastMessage(String s) { lastMessage=s; }
+//   protected void setLastMessage(String s) { setMessageError(s); }
+//   protected String getLastMessage() {
+//      return lastMessage;
+//   }
 
    // Postionne le plan courant et met le repère en son centre si hors champs
    // => sinon problème par la suite en cas de zoom via le slider
@@ -1289,10 +1290,10 @@ Runnable, SwingWidgetFinder, Widget {
 
    /** Affichage d'un message au-dessus de la pile des plans
     * => arrête automatique les messages pour les débutants */
-   protected void drawMessage(Graphics g,String s,Color c) {
-      setBeginnerHelp(false);
-      drawBeginnerHelp1(g,s,c,lastYMax);
-   }
+//   protected void drawMessage(Graphics g,String s,Color c) {
+//      setBeginnerHelp(false);
+//      drawBeginnerHelp1(g,s,c,lastYMax);
+//   }
    
    private int lastBegin; // Indice du message du Help Beginner
    private int lastYMax;  // Dernière ordonnée mesurée de la fin de la pile
@@ -1360,7 +1361,7 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       if( msg!=null ) {
-         int y = drawBeginnerHelp1(g,msg, getMessageColor(),flagInMessage ||
+         int y = drawBeginnerHelp1(g,msg, getColorMessage(),flagInMessage ||
                messageType== MESSAGE_INFO || messageType== MESSAGE_INFO_PLAN ? getHeight() : yMax);
          
          // On affiche des ... pour indiquer que le message est plus long que la zone d'affichage
@@ -1405,6 +1406,7 @@ Runnable, SwingWidgetFinder, Widget {
    static public final int MESSAGE_TIP       = 2;
    static public final int MESSAGE_INFO      = 3;
    static public final int MESSAGE_INFO_PLAN = 4;
+   static public final int MESSAGE_ERROR     = 5;
    
    
    private String message=null;              // Le message courant
@@ -1412,10 +1414,11 @@ Runnable, SwingWidgetFinder, Widget {
    private int messageType=MESSAGE_UNKNOWN;  // type de message courant
    
    // Retourne la couleur d'affichage du message en fonction de son type et du thème
-   private Color getMessageColor() {
+   private Color getColorMessage() {
       return message==null ?  Aladin.COLOR_LABEL
             : messageType==MESSAGE_CDS ? Aladin.COLOR_LABEL.brighter() 
             : messageType==MESSAGE_TIP ? Color.yellow.darker()
+            : messageType==MESSAGE_ERROR ? Color.red
             : messageType==MESSAGE_INFO ? Aladin.COLOR_VERTDEAU
             : messageType==MESSAGE_INFO_PLAN ? Aladin.COLOR_VERTDEAU
             : Aladin.COLOR_LABEL;
@@ -1444,7 +1447,7 @@ Runnable, SwingWidgetFinder, Widget {
    
    /** Positionnement d'un message d'info associé à un plan */
    protected void setMessageInfo( Plan p) {
-      if( p==null ) { if( messageType==MESSAGE_INFO_PLAN ) hideMessage(); }
+      if( p==null ) { if( messageType==MESSAGE_INFO_PLAN || messageType==MESSAGE_ERROR ) hideMessage(); }
       else {
          String s = p.getMessageInfo();
          if( s==null ) hideMessage();
@@ -1461,6 +1464,17 @@ Runnable, SwingWidgetFinder, Widget {
    protected void setMessageInfo(String s) {
       message=s;
       messageType=MESSAGE_INFO;
+      messageKey=null;
+      repaint();
+   }
+   
+   /** Positionnement d'un message d'erreur
+    * @param s
+    */
+   protected void setMessageError(String s) {
+      if( s!=null ) s=WARN+"\n \n"+s;
+      message=s;
+      messageType=MESSAGE_ERROR;
       messageKey=null;
       repaint();
    }
@@ -1529,9 +1543,10 @@ Runnable, SwingWidgetFinder, Widget {
       return title+s.replace("\\n", "\n");
    }
    
-   static final private String TIP  = "Tips & tricks";
+   static final private String TIP      = "Tips & tricks";
+   static final private String WARN     = "Warning";
    
-   private Image tipImg = null, infoImg = null;
+   private Image tipImg = null, infoImg = null, errorImg = null;
    
    // Efface le fond de la ligne courante
    private void clearBackgroundLine(Graphics g, int y, int h) {
@@ -1571,6 +1586,10 @@ Runnable, SwingWidgetFinder, Widget {
                if( infoImg==null ) infoImg = a.getImagette("info1.png");
                g.drawImage( infoImg, getWidth()-60, y-30, a);
                flagExcla=s.startsWith("!");
+            } else if( messageType == MESSAGE_ERROR ) {
+               if( errorImg==null ) errorImg = a.getImagette("Warning.png");
+               g.drawImage( errorImg, getWidth()-60, y-30, a);
+               flagExcla=s.startsWith("!");
             }
          }
          if( first && y>y0 ) {
@@ -1583,8 +1602,9 @@ Runnable, SwingWidgetFinder, Widget {
          if( line.trim().length()==0 ) { y-=h/2; continue; }
          
          Tok st1 = new Tok(line," ");
+         boolean firstWorld=true;
          for( ; y<yMax && st1.hasMoreTokens(); ) {
-            String s1 = st1.nextToken().trim();
+            String s1 =(!firstWorld?"\\":"")+ st1.nextToken().trim();
             if( flagExcla ) { s1=s1.substring(1); flagExcla=false; }
             
             // Cas d'un ancre genre <&http://url|texte>
@@ -1661,7 +1681,8 @@ Runnable, SwingWidgetFinder, Widget {
    private int drawString(Graphics g,String s,Color c,int x, int y) {
       if( s.length()==0 ) return x;
       g.setColor(c);
-      if( s.charAt(0)=='*' ) { Util.fillCircle5(g, x+2, y-4); g.drawString(s.substring(1),x+7,y); }
+      if( s.charAt(0)=='\\' ) g.drawString(s.substring(1),x,y);
+      else if( s.charAt(0)=='*' ) { Util.fillCircle5(g, x+2, y-4); g.drawString(s.substring(1),x+7,y); }
       else g.drawString(s,x,y);
       return x + g.getFontMetrics().stringWidth(s);
    }

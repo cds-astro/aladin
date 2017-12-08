@@ -970,7 +970,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne la taille de la fonte de référence des infos de la vue */
    protected int getInfoFontSize() {
       try { return Integer.parseInt( get(INFOF)); } catch( Exception e ) { }
-      return Aladin.SIZE;
+      return Aladin.SSIZE;
    }
    
    /** Retourne true si on doit détourer les infos de la vue */
@@ -2298,7 +2298,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( infoLabelColorBox!=null ) set(INFOCL, infoLabelColorBox.getCouleur() );
       if( infoFontCombo!=null )  {
          s = infoFontCombo.getSelectedItem()+"";
-         if( (Aladin.SIZE+"").equals(s) ) s=null;
+         if( (Aladin.SSIZE+"").equals(s) ) s=null;
          set(INFOF,s);
       }
       aladin.view.initInfoParam(true);

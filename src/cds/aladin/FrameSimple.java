@@ -21,6 +21,9 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.CLEARACTION;
+import static cds.aladin.Constants.SUBMITACTION;
+
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -39,8 +42,6 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
 import cds.tools.Util;
-import static cds.aladin.Constants.SUBMITACTION;
-import static cds.aladin.Constants.CLEARACTION;
 
 
 /**
@@ -180,13 +181,13 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 		buttonsPanel.add(button);
 		
 		this.getContentPane().add(buttonsPanel, "South");
-		this.getContentPane().revalidate();
+		try { this.getContentPane().revalidate();
+        } catch( Throwable e ) { pack(); }  // Not yet implemented in 1.6
 		this.getContentPane().repaint();
 		this.getRootPane().setBorder(BorderFactory.createLineBorder(Color.gray));
 		this.getRootPane().getInsets().set(2, 2, 0, 2);
 //		setSize(700, 500);
 	}
-	
 	
 	public void actionPerformed(ActionEvent evt) {
 		String command = evt.getActionCommand();

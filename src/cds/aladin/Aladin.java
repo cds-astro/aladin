@@ -158,79 +158,12 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> User interface:
- * @beta    <LI> - Intuitive help in line
- * @beta    <LI> - new theme (dark background...)
- * @beta    <LI> - new panels/facilities (data discovery tree, access selector...)
- * @beta    <LI> - Target history control
- * @beta    <LI> - Simbad + VizieR "pointers" improvements
- * @beta    <LI> - fullscreen mode menu and widgets
- * @beta    <LI> - flexible panels management (split)
- * @beta    <LI> - file dialog window multi-platforms
- * @beta    <LI> - history management (popup menu + arrow control)
- * @beta    <LI> - Coordinate grid color and font control
- * @beta    <LI> Data discovery tree panel:
- * @beta    <LI> - integrated access to all CDS and other VO collections (>20,000 data sets)
- * @beta    <LI> - multi-protocol support & integration: HiPS, CS, SIA, SSA, TAP,...
- * @beta    <LI> - derived data product access (coverages, density maps, progenitors)
- * @beta    <LI> - fast collection filter (by any properties and/or regions)
- * @beta    <LI> - remote CDS X-match integration
- * @beta    <LI> - MOC constraints integration (filtering by MOC, querying by MOC)
- * @beta    <LI> HiPS (progressive survey):
- * @beta    <LI> - mirror sites management improvement
- * @beta    <LI> - properties file direct support
- * @beta    <LI> - HiPS WCS HEALPix keyword addition in HiPS FITS tiles)
- * @beta    <LI> - planetary HiPS (longitude inversion)
- * @beta    <LI> - polarized HiPS (segments drawing)
- * @beta    <LI> TAP full support
- * @beta    <LI> - Gereneric TAP support
- * @beta    <LI> - Basic mode (based on GLU constraint rules)
- * @beta    <LI> - Direct access via the data discovery tree
- * @beta    <LI> MOC (coverage):
- * @beta    <LI> - perimeter drawing + set drawing=xxx script command
- * @beta    <LI> - probability sky map MOC extraction
- * @beta    <LI> Hipsgen (HiPS generator):
- * @beta    <LI> - IVOA 1.0 standard compliance (Aladin + Hipsgen + Hipsserverlint)
- * @beta    <LI> - gzip, bzip2 and rice image support (via cache disk)
- * @beta    <LI> - HiPS color multithread code, 
- * @beta    <LI> - new actions: local MIRROR, APPEND, MAP
- * @beta    <LI> - pilot=nnn parameter for generating HiPS pilot limited to nnn images
- * @beta    <LI> Script:
- * @beta    <LI> - script commands dedicated to VO protocol access: CS, SIA (1&2), SSA, MOC
- * @beta    <LI> - new script commands: cmoc, ccat, browse
- * @beta    <LI> Miscellaneous:
- * @beta    <LI> - Full column control for source measurements
- * @beta    <LI> - support to multiCCD as MEF FITS image
- * @beta    <LI> - EPNTAP support (c1min,c2min,s_region)
- * @beta    <LI> - deprecated PLASTIC lib and dependencies removed
- * @beta    <LI> - "applet" and "outreach" mode no longer supported 
- * @beta    <LI> - UTF-8 BOM support
- * @beta    <LI> - additionnal colormaps: Red, Green and Blue
- * @beta    <LI> - datalink, SODA supports
- * @beta    <LI> - tags and spect tool improvements
+ * @beta    <LI> still nothing
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
- * @beta    <LI> Original epoch != J2000 bug fix
- * @beta    <LI> HiPS generation in ADD mode with a lot of overlays
- * @beta    <LI> MOC generation from clockwise polygons
- * @beta    <LI> Filter activation by script bug fix
- * @beta    <LI> Polarisation segment size normalized bug fix
- * @beta    <LI> Phot tool clic&drag bug fix
- * @beta    <LI> Correction for VOTable UTF-16 STREAM bug
- * @beta    <LI> Correction for Hipsgen mirror filenotfound bug
- * @beta    <LI> MOC stack bug fix (introduced in v9.039)
- * @beta    <LI> Bug correction for BLANK wrong value in Hipsgen MAPTILES action
- * @beta    <LI> Radians unit support for table coordinates
- * @beta    <LI> Bug correction for pmra and pmde detection
- * @beta    <LI> Bug correction for ZEA and ARC projection in HiPS context
- * @beta    <LI> Graphical object mouse selection over a HiPS
- * @beta    <LI> HiPS catalog "ghost" source selection
- * @beta    <LI> File dialog window directory selection on MacOs and Linux
- * @beta    <LI> HiPS RGB -f flag
- * @beta    <LI> GLU watchdog timer (sesame mirrors)
- * @beta    <LI> Blink initial delay
- * @beta    <LI> HiPS cache cleaning
+ * @beta <UL>
+ * @beta    <LI> A few minor bugs
  * @beta <UL>
  * @beta </UL>
  *
@@ -254,7 +187,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.055";
+   static public final    String VERSION = "v10.058";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -691,7 +624,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miTarget,miOverlay,miConst,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
    /* miPrevPos,miNextPos, */
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
-   miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
+   miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
@@ -751,7 +684,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
    SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
    DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,COPIER,COLLER,
-   RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
+   RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
@@ -1138,6 +1071,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       RGB     = chaine.getString("MRGB");
       MOSAIC  = chaine.getString("MMOSAIC");
       BLINK   = chaine.getString("MBLINK");
+      SPECTRUM= chaine.getString("MSPECTRUM");
       GREY    = chaine.getString("SLMGREY");
       SELECT  = chaine.getString("SLMSELECT");
       SELECTTAG=chaine.getString("SELECTTAG");
@@ -1381,7 +1315,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {PIXEL+"|"+meta+" M"},{"?"+GLASS+"|"+meta+" G"},{"?"+GLASSTABLE},
                {},{STATSURF, STATSURFCIRC, STATSURFPOLY},{CUT},
                //                {},{TRANSP},{"?"+TRANSPON},
-               {},{RGB},{GREY},{MOSAIC},{BLINK},
+               {},{RGB},{GREY},{MOSAIC},{BLINK},{SPECTRUM},
                {},{RSAMP},{CALIMG},
                {},{FLIP,TOPBOTTOM,RIGHTLEFT},{ARITHM},{HEALPIXARITHM},{CONV},{NORM},{BITPIX},{PIXEXTR},
                {},{COPY},{CROP},
@@ -2060,6 +1994,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,RGB))     miRGB     = ji;
       else if( isMenu(m,MOSAIC))  miMosaic  = ji;
       else if( isMenu(m,BLINK))   miBlink   = ji;
+      else if( isMenu(m,SPECTRUM))   miSpectrum   = ji;
       else if( isMenu(m,GLASS))   miGlass   = ji;
       else if( isMenu(m,GLASSTABLE))   miGlassTable   = ji;
       else if( isMenu(m,PANEL1))  miPanel1  = ji;
@@ -3432,6 +3367,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,RGB))    { RGB();
       } else if( isMenu(s,MOSAIC)) { blink(1);
       } else if( isMenu(s,BLINK))  { blink(0);
+      } else if( isMenu(s,SPECTRUM))  { spectrum();
       } else if( isMenu(s,GREY))   { grey();
       } else if( isMenu(s,GLASS))  { glass();
       } else if( isMenu(s,GLASSTABLE))  { glassTable();
@@ -4484,31 +4420,46 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       // Création de la liste des sommets dans le sens counterclock
       // avec suppression éventuelle des doublons de deux sommets consécutifs dans le même pixel Healpix
-      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+//      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+//      Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
+//      long onpix=-1;
+//      while( a!=null ) {
+//         long npix = hpx.ang2pix(order, a.raj, a.dej);
+//         if( npix!=onpix ) {
+//            onpix=npix;
+//
+//            double theta = Math.PI/2 - Math.toRadians( a.dej );
+//            double phi = Math.toRadians( a.raj );
+//            cooList.add(new Vec3(new Pointing(theta,phi)));
+//         }
+//
+//         // Prochain sommet ?
+//         a = isCounterClock ? a.debligne : a.finligne;
+//      }
+
+      ArrayList<double[]> cooList = new ArrayList<double[]>();
       Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
       long onpix=-1;
       while( a!=null ) {
          long npix = hpx.ang2pix(order, a.raj, a.dej);
          if( npix!=onpix ) {
             onpix=npix;
-
-            double theta = Math.PI/2 - Math.toRadians( a.dej );
-            double phi = Math.toRadians( a.raj );
-            cooList.add(new Vec3(new Pointing(theta,phi)));
+            cooList.add( new double[]{a.raj,a.dej});
          }
 
          // Prochain sommet ?
          a = isCounterClock ? a.debligne : a.finligne;
       }
-      
+
       // On enlève le dernier élément car il revient sur le premier
       cooList.remove( cooList.size()-1 );
      
       try {
-         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-         moc = new HealpixMoc();
-         moc.rangeSet = m.getRangeSet();
-         moc.toHealpixMoc();
+         moc = CDSHealpix.createHealpixMoc(cooList,order);
+//         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+//         moc = new HealpixMoc();
+//         moc.rangeSet = m.getRangeSet();
+//         moc.toHealpixMoc();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception("Degenerated polygon");
@@ -4567,6 +4518,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
          frameBitpix = new FrameBitpix(aladin);
       }
       frameBitpix.maj();
+   }
+   
+   /** Active la fonction d'extraction d'un spectre depuis un cube */
+   protected void spectrum() {
+      toolBox.setGraphicButton(ToolBox.SPECT);
+      aladin.view.repaintAll();
    }
 
    /** Ouverture de la fenêtre des blinks avec maj du bouton associé */
@@ -5627,6 +5584,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miRGB!=null ) miRGB.setEnabled(nbPlanImgWithoutBG>1);
          if( miMosaic!=null ) miMosaic.setEnabled(nbPlanImgWithoutBG>1);
          if( miBlink!=null ) miBlink.setEnabled(nbPlanImgWithoutBG>1);
+         if( miSpectrum!=null ) miSpectrum.setEnabled(isCube);
          
          if( !calque.hasGrid() ) { if( miNoGrid!=null ) miNoGrid.setSelected( true ); }
          else if( calque.gridMode==1 || miHpxGrid==null ) miGrid.setSelected( true );
@@ -5865,6 +5823,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -version: display the Aladin release number\n"+
                "       -local: without Internet test access\n"+
                "       -theme=dark|classic: interface theme\n"+
+               "       -location=x,y,w,h: window position & size\n"+
                "       -screen=\"full|cinema|preview\": starts Aladin in full screen\n" +
                "               cinema mode or in a simple preview window\n"+
 //               "       -glufile=\"pathname|url[;...]\": local/remote GLU dictionaries describing\n"+
@@ -6096,6 +6055,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             if( t-t0>180 ) {
                scriptParam=null;
                SCREEN=null;
+               LOCATION=null;
             }
          }
       } catch( NumberFormatException e ) {

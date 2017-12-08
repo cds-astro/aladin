@@ -470,6 +470,7 @@ public class PlanImageBlink extends PlanImage {
 
    /** Retourne true si on dispose (ou peut disposer) des pixels originaux */
    protected boolean hasOriginalPixels() {
+      if( vFrames==null ) return false;
       PlanImageBlinkItem p = vFrames.elementAt(0);
       return p.pixelsOrigin!=null || p.cacheID!=null;
    }

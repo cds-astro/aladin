@@ -552,6 +552,30 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       mcanvas.reloadHead();
       mcanvas.repaint();
    }
+   
+   /** Mémorise la liste des sourses sélectionnées
+    * @param memoSrcList Tableau qui va accueillir les sources
+    * @return le nombre de sources
+    */
+   protected int memoSrcList(Source [] memoSrcList) {
+      System.arraycopy(this.src, 0, memoSrcList, 0, nbSrc);
+      return nbSrc;
+   }
+   
+   /** Retaure la liste des sources sélectionnées, préalablement sauvegardée */
+   synchronized protected void restoreSrcList(Source [] memoSrcList,int nbSrc) {
+      this.src=memoSrcList;
+      this.nbSrc=nbSrc;
+      
+      scrollV.setMaximum(nbSrc);
+
+      mcanvas.unselect();
+      aladin.calque.zoom.zoomView.stopHist();
+      aladin.calque.zoom.zoomView.resumeSED();
+      aladin.console.setEnabledDumpButton(true);
+      if( mcanvas.triTag!=Field.UNSORT ) mcanvas.triTag=Field.UNSORT;
+
+   }
 
    /** Ajout d'une source (tableau dynamique) */
    synchronized private void addSrc(Source s) {

@@ -23,7 +23,10 @@ package cds.tools.pixtools;
 
 import java.util.ArrayList;
 
+import cds.moc.HealpixMoc;
 import healpix.essentials.HealpixBase;
+import healpix.essentials.Moc;
+import healpix.essentials.MocQuery;
 import healpix.essentials.Pointing;
 import healpix.essentials.RangeSet;
 import healpix.essentials.Scheme;
@@ -73,14 +76,6 @@ public final class CDSHealpix {
       return list.toArray();
    }
 
-   //   static public long[] query_disc(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
-   //      SpatialVector vector = new SpatialVector(ra,dec);
-   //      int order = init(nside);
-   //      LongRangeSet list = hpxBase[order].queryDisc(new Pointing(vector),radius,inclusive);
-   //      if( list==null ) return new long[0];
-   //      return list.toArray();
-   //   }
-
    static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
       int order = init(nside);
       Pointing[] vertex = new Pointing[cooList.size()];
@@ -90,114 +85,6 @@ public final class CDSHealpix {
       if( list==null ) return new long[0];
       return list.toArray();
    }
-
-   //   static public long[] query_region(long nside,ArrayList<double[]>cooList) throws Exception {
-   //      int order = init(nside);
-   //      ArrayList<Pointing[]> triangles = triangulate(cooList);
-   //      RangeSet total = new RangeSet();
-   //      for( Pointing [] vertex : triangles ) {
-   //         RangeSet list = hpxBase[order].queryPolygonInclusive(vertex,4);
-   //         if( list!=null ) total = total.union(list);
-   //      }
-   //      return total.toArray();
-   //   }
-   //
-   //   static private ArrayList<Pointing[]> triangulate(ArrayList<double[]>cooList) {
-   //      Polygon p = new Polygon();
-   //      for( int i=0; i<cooList.size(); i++ ) {
-   //         double [] a = cooList.get(i);
-   //         p.p[i].x = a[0];
-   //         p.p[i].y = a[1];
-   //      }
-   //      p.n=cooList.size();
-   //
-   //      Triangulation triangulation = Triangulate(p);
-   //
-   //      ArrayList<Pointing[]> tr = new ArrayList<Pointing[]>();
-   //      for( int i=0; i<triangulation.t.size(); i++ ) {
-   //         int [] t = triangulation.t.get(i);
-   //         Pointing [] a = new Pointing[] {
-   //               new Pointing( p.p[ t[0] ].x,  p.p[ t[0] ].y ),
-   //               new Pointing( p.p[ t[1] ].x,  p.p[ t[1] ].y ),
-   //               new Pointing( p.p[ t[2] ].x,  p.p[ t[2] ].y ),
-   //         };
-   //         tr.add(a);
-   //      }
-   //      return tr;
-   //   }
-   //
-   //
-   //   static final int MAXPOLY = 200;
-   //   static final double EPSILON = 0.000001;
-   //   static class Point {
-   //      double x,y;
-   //
-   //      boolean inside(Point a, Point b, Point c) {
-   //         java.awt.Polygon pol = new java.awt.Polygon();
-   //         pol.addPoint((int)a.x, (int)a.y);
-   //         pol.addPoint((int)b.x, (int)b.y);
-   //         pol.addPoint((int)c.x, (int)c.y);
-   //         return pol.contains(x,y);
-   //      }
-   //   }
-   //
-   //   static class Polygon {
-   //      Point p[] = new Point[MAXPOLY];
-   //      int n;
-   //      Polygon() {
-   //         for(int i=0;i<MAXPOLY;i++) p[i] = new Point();
-   //      }
-   //   }
-   //
-   //
-   //   static class Triangulation {
-   //      ArrayList<int[]> t = new ArrayList<int[]>();;
-   //   }
-   //
-   //
-   //   static Triangulation Triangulate(Polygon p) {
-   //      Triangulation t = new Triangulation();
-   //      int N = p.n;
-   //
-   //      // determine if i-j-k is a circle with no interior points
-   //      for (int i = 0; i < N; i++) {
-   //         for (int j = i+1; j < N; j++) {
-   //            for (int k = j+1; k < N; k++) {
-   //               boolean isTriangle = true;
-   //               for (int a = 0; a < N; a++) {
-   //                  if (a == i || a == j || a == k) continue;
-   //                  if (p.p[a].inside(p.p[i], p.p[j], p.p[k])) {
-   //                     isTriangle = false;
-   //                     break;
-   //                  }
-   //               }
-   //
-   //
-   //               if (isTriangle) {
-   //                  t.t.add( new int[] { i,j,k } );
-   //               }
-   //            }
-   //         }
-   //      }
-   //
-   //      return t;
-   //   }
-
-
-   //   static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
-   //      ArrayList vlist = new ArrayList(cooList.size());
-   //      Iterator<double[]> it = cooList.iterator();
-   //      while( it.hasNext() ) {
-   //         double coo[] = it.next();
-   //         vlist.add(new SpatialVector(coo[0], coo[1]));
-   //      }
-   //      int order = init(nside);
-   //      Pointing[] vertex = new Pointing[vlist.size()];
-   //      for (int i=0; i<vlist.size(); ++i) vertex[i]=new Pointing((Vec3)vlist.get(i));
-   //      LongRangeSet list = hpxBase[order].queryPolygon(vertex,true);
-   //      if( list==null ) return new long[0];
-   //      return list.toArray();
-   //   }
 
 
    /** The Constant cPr. */
@@ -229,17 +116,6 @@ public final class CDSHealpix {
       }
       return corners;
    }
-   //   static public double[][] corners(long nside,long npix) throws Exception {
-   //      Vec3[] tvec = hpxBase[ init(nside) ].corners(npix,1);
-   //      double [][] corners = new double[tvec.length][2];
-   //      for (int i=0; i<tvec.length; ++i) {
-   //         SpatialVector v = new SpatialVector(tvec[i]);
-   //         int j=A[i];
-   //         corners[j][0] = v.ra();
-   //         corners[j][1] = v.dec();
-   //      }
-   //      return corners;
-   //   }
 
    static public double[][] borders(long nside,long npix,int step) throws Exception {
       Vec3[] tvec = hpxBase[ init(nside) ].boundaries(npix,step);
@@ -251,16 +127,6 @@ public final class CDSHealpix {
       }
       return borders;
    }
-   //   static public double[][] borders(long nside,long npix,int step) throws Exception {
-   //      Vec3[] tvec = hpxBase[ init(nside) ].corners(npix,step);
-   //      double [][] borders = new double[tvec.length][2];
-   //      for (int i=0; i<tvec.length; ++i) {
-   //         SpatialVector v = new SpatialVector(tvec[i]);
-   //         borders[i][0] = v.ra();
-   //         borders[i][1] = v.dec();
-   //      }
-   //      return borders;
-   //   }
 
    static public long [] neighbours(long nside, long npix) throws Exception  {
       return hpxBase[ init(nside) ].neighbours(npix);
@@ -322,7 +188,32 @@ public final class CDSHealpix {
       radec[0] = polar[1]*180./Math.PI;
       return radec;
    }
+   
+   
+   /**
+    * Génération d'un MOC à partir d'un polygone sphérique décrit par la liste de ses sommets en ICRS
+    * bobiné dans le sens anti-horaire. Le dernier sommet ne reprend pas le premier. 
+    * @param radecList
+    * @param order
+    * @return
+    * @throws Exception
+    */
+   static public HealpixMoc createHealpixMoc(ArrayList<double[]> radecList, int order ) throws Exception {
+      HealpixMoc moc=null;
 
+      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+      for( double radec[] : radecList ) {
+         double theta = Math.PI/2 - Math.toRadians( radec[1] );
+         double phi = Math.toRadians( radec[0] );
+         cooList.add(new Vec3(new Pointing(theta,phi)));
+      }
+
+      Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+      moc = new HealpixMoc();
+      moc.rangeSet = m.getRangeSet();
+      moc.toHealpixMoc();
+      return moc;
+   }
 
 
 //   public static void main(String argv[]) {
@@ -350,43 +241,5 @@ public final class CDSHealpix {
 //         }
 //      } catch( Exception e) { e.printStackTrace(); }
 //   }
-
-
-
-
-   // ------------------------------- CDS
-
-   //   /** Approximation des coordonnées RA,DEC des 4 angles du losange
-   //    * Je recherche les coord (centrales) des losanges des 4 coins dans la résolution
-   //    * Healpix maximale */
-   //   private static double [][] corners_nestCDS(long nside, long pixid) {
-   //      double [][] corners;
-   //      try {
-   //         int order = (int)log2(nside);
-   //         corners = new double[4][2];
-   //         int orderFile = getMaxOrder() - order; // Je ne dois pas dépasser la limite Healpix
-   //         long nSidePix = pow2(orderFile);
-   //         // Numéro des pixels des 4 coins
-   //         long c0, c1, c2, c3;
-   //         c0 = c1 = c2 = 0;
-   //         c3 = (nSidePix * nSidePix) - 1;
-   //         for( int i = 0; i < orderFile; i++ ) c1 = (c1 << 2) | 1;
-   //         for( int i = 0; i < orderFile; i++ ) c2 = (c2 << 2) | 2;
-   //         // Chaque pixel "interne" va être remplacé par nsidePix*nsidePix pixels
-   //         // d'où l'offset suivant
-   //         long offset = pixid * nSidePix * nSidePix;
-   //         c0 += offset;
-   //         c1 += offset;
-   //         c2 += offset;
-   //         c3 += offset;
-   //         long nSideFile = (long) pow2(order + orderFile);
-   //         polarToRadec(pix2ang_nest(nSideFile, c0) , corners[0]);
-   //         polarToRadec(pix2ang_nest(nSideFile, c1) , corners[1]);
-   //         polarToRadec(pix2ang_nest(nSideFile, c2) , corners[2]);
-   //         polarToRadec(pix2ang_nest(nSideFile, c3) , corners[3]);
-   //       } catch( Exception e ) { return null; }
-   //      return corners;
-   //   }
-
 
 }
