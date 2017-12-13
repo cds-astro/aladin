@@ -104,6 +104,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    private int oframe;         // Précédente frame de la loupe si image blink
    boolean zoomok;             // Vrai si on a fini de calculer le zoom
    int xmwen,ymwen;            // Position de la loupe sous la souris
+   int xWenrect,yWenrect;      // Coin haut gauche du repère central de la table des pixels
    boolean memInv;             // Memorisation du cas INVERSE pour un plan RGB
    boolean flagRGB;            // true s'il s'agit d'un plan RGB
    boolean flagwen;            // Vrai si c'est la loupe qu'il faut afficher
@@ -252,7 +253,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( flagCut || flagHist || flagSED ) return;
       
       // Actions liées à la liste des targets
-      if( flagTargetControl ) {
+      if( rectHistory!=null && flagTargetControl ) {
          if( rectTarget.contains(e.getPoint() ) ) {
             aladin.command.execNow( aladin.targetHistory.getLast() );
 
@@ -462,7 +463,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    public void mouseReleased(MouseEvent e) {
       if( aladin.inHelp ) { aladin.helpOff(); return; }
       
-      if( flagTargetControl ) return;
+      if( flagTargetControl && rectHistory!=null ) return;
       
       if( flagSED ) { sed.mouseRelease(e.getX(), e.getY() ); return; }
 
@@ -1339,6 +1340,11 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       /*anais*/
       int x1 = xmwen-w/2;
       int y1 = ymwen-w/2;
+      
+      // Mémorisation du coin haut gauche du repère rectangulaire central
+      xWenrect = (xmwen-x1)*WENZOOM;
+      yWenrect = (ymwen-y1)*WENZOOM;
+      
       PlanImage p = (PlanImage)v.pref;
       boolean isPlanRGB = p.type==Plan.IMAGERGB;
 
@@ -1605,22 +1611,23 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       // Repere dans la loupe et les flèches dans les 4 directions
       if( flagwen && imgok ) {
-         int n = (int)Math.ceil((double)getWidth()/WENZOOM);
-         int c = (n/2)*WENZOOM;
+//         int n = (int)Math.ceil((double)getWidth()/WENZOOM);
+//         int c = (n/2)*WENZOOM;
          int W2 = WENZOOM/2;
          gr.setColor( Aladin.COLOR_BLUE );
-         gr.drawRect(c,c,WENZOOM,WENZOOM);
+//         gr.drawRect(c,c,WENZOOM,WENZOOM);
+         gr.drawRect(xWenrect,yWenrect,WENZOOM,WENZOOM);
 
          if( WENZOOM<=16 ) {
-            drawFleche(gr,c+W2,c-WENZOOM,'N');
-            drawFleche(gr,c+W2,c+2*WENZOOM,'S');
-            drawFleche(gr,c-WENZOOM,c+W2,'W');
-            drawFleche(gr,c+2*WENZOOM,c+W2,'E');
+            drawFleche(gr,xWenrect+W2,yWenrect-WENZOOM,'N');
+            drawFleche(gr,xWenrect+W2,yWenrect+2*WENZOOM,'S');
+            drawFleche(gr,xWenrect-WENZOOM,yWenrect+W2,'W');
+            drawFleche(gr,xWenrect+2*WENZOOM,yWenrect+W2,'E');
          }
          gr.setFont(Aladin.LBOLD);
          gr.setColor(Color.red);
-         if( WENZOOM>8  ) gr.drawString("-",w-11,h-15);
-         if( WENZOOM<64 )gr.drawString("+",w-12,h-5);
+//         if( WENZOOM>8  ) gr.drawString("-",w-11,h-15);
+//         if( WENZOOM<64 )gr.drawString("+",w-12,h-5);
 
          // Affichage des valeurs individuelles des pixels
          if( isPixelTable() && v.pref.type!=Plan.IMAGERGB ) {
@@ -1629,12 +1636,14 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             int step= WENZOOM==32 ? 4 : 1;
             gr.setFont( Aladin.BOLD );
             gr.setColor( Color.black );
-            for( j=0, y1=ymwen-step; y1<=ymwen+step; y1++,j++) {
-               for( i=0, x1=xmwen-step; x1<=xmwen+step; x1++,i++) {
-                  int xx = i*WENZOOM+8;
-                  int yy = j*WENZOOM+2*WENZOOM/3-7+(i%2)*WENZOOM/2;
+            for( j=0, y1=ymwen-step-1; y1<=ymwen+step; y1++,j++) {
+               for( i=0, x1=xmwen-step-1; x1<=xmwen+step; x1++,i++) {
+                  int xx = (i-1)*WENZOOM+8;
+                  int yy = (j-1)*WENZOOM+2*WENZOOM/3-7+(i%2)*WENZOOM/2;
+                  
                   String pix = ((PlanImage)v.pref).getPixelInfo(x1, y1, View.REALX);
-                  Util.drawStringOutline(gr, pix, xx, yy, y1==ymwen && x1==xmwen ? Color.cyan : Color.white,Color.black);
+                  Util.drawStringOutline(gr, pix, xx, yy, 
+                        y1==ymwen && x1==xmwen ? Color.cyan : Color.white,Color.black);
                }
             }
          }

@@ -1057,7 +1057,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          StringBuilder s2 = null;
          Tok tok = new Tok(s);
          while( tok.hasMoreTokens() ) {
-            expr = "obs_title,obs_collection,obs_collection_label,ID=" + DirectoryFilter.jokerize(tok.nextToken());
+            expr = "obs_title,obs_collection,obs_collection_label,client_category,bib_reference,ID=" + DirectoryFilter.jokerize(tok.nextToken());
             if( s2 == null ) s2 = new StringBuilder(expr);
             else s2.append(" && " + expr);
          }
@@ -2170,7 +2170,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          else {
             category = "Catalog" + vizier + "/" + CAT_LIB[c];
             sortPrefix = String.format("%02d", c);
-
          }
       }
 
@@ -2192,16 +2191,25 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // Je vire le nom de la table a la fin du titre
             String titre = prop.get(Constante.KEY_OBS_TITLE);
             int i;
+            boolean modif=false;
             if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
                titre = titre.substring(0, i - 1);
-               prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
+               modif=true;
             }
+            
+            // J'ajoute le petit nom de la collection en suffixe si nécessaire
+            String label = prop.getFirst("obs_collection_label");
+            if( label!=null && titre!=null ) {
+               titre = addLabelPrefix(label,titre);
+               modif=true;
+            }
+            if( modif ) prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
          }
 
       } else {
          String titre = prop.get(Constante.KEY_OBS_TITLE);
          if( titre != null ) {
-
+            
             // Je remonte le nom du catalog sur la branche
             int i = titre.lastIndexOf('(');
             int j = titre.indexOf(')', i);
@@ -2216,15 +2224,46 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                }
             }
          }
-
       }
       if( !flagJournal ) {
          String suffix = getCatSuffix(parent);
-         suffix = suffix == null ? "" : "/" + suffix;
+         
+         // J'ajoute le petit nom de la collection en suffixe si
+         // absent du titre du catalogue
+         String label = prop.getFirst("obs_collection_label");
+         if( label!=null && suffix!=null  ) {
+            suffix=addLabelPrefix(label,suffix);
+         }
+
+         suffix = suffix == null ? "" : "/" +suffix;
          category += suffix;
       }
 
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
+      prop.remove(Constante.KEY_OBS_DESCRIPTION);
+   }
+   
+   static private boolean isSep(char c) { return c==' ' || c=='-' || c=='_'; }
+   
+   // Ajoute le label en préfixe si les premiers mots sont différents
+   // Supprime éventuellement l'article The en début de titre
+   private String addLabelPrefix(String label, String title) {
+      if( label==null ) return title;
+      
+      String title1 = title;
+      if( title.startsWith("The ") ) title = title.substring(4);
+     
+      char [] a1 = label.toCharArray();
+      char [] a2 = title.toCharArray();
+      
+      for( int i=0, j=-1; i<a1.length; i++ ) {
+         if( isSep( a1[i] ) ) continue;
+         while( ++j<a2.length && isSep( a2[j] ) );
+         if( j==a2.length || Character.toUpperCase( a1[i] ) != Character.toUpperCase( a2[j] ) ) {
+            return label+" - "+title1;
+         }
+      }
+      return title;
    }
 
    static private final String[] TEXTKEYS = { "obs_title", "obs_description", "obs_label", "obs_collection" };
@@ -3284,7 +3323,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             to = treeObjs.get(0);
 
             if( to.verboseDescr != null || to.description != null ) {
-               s = to.verboseDescr == null ? "" : to.verboseDescr;
+               s = to.verboseDescr == null ? null : to.verboseDescr;
                String s1 = to.description != null && to.description.length() > 60 ? (to.description.substring(0, 58) + "...")
                      : to.description;
                a = new MyAnchor(aladin, s1, 50, s, null);

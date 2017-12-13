@@ -187,7 +187,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.058";
+   static public final    String VERSION = "v10.059";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -203,7 +203,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2017 Université de Strasbourg/CNRS - by CDS - Distributed under GNU GPL v3";
+   static String COPYRIGHT         = "(c) 2000-2017 Université de Strasbourg/CNRS - developed by CDS from Strasbourg Observatory";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -3114,9 +3114,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
             chaine.getString("CDS")+
             "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel, Chaitra\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
-            "* Copyright: Université de Strasbourg/CNRS - distributed under GNU GPL v3\n  \n" +
-            "Portions of the code (HiPS & MOCs) have been developped  in the framework of ASTERICS project (2015-2018)." +
-            "Progressive catalogs, PM facility, have been developped  in the framework of GAIA CU9 (2012-2022)." +
+            "* Copyright: Université de Strasbourg/CNRS - developed by the Centre de Données de Strasbourg "
+            + "from the Observatoire astronomique de Strasbourg\n  \n" +
+            "Portions of the code (HiPS & MOCs) have been developed  in the framework of ASTERICS project (2015-2018)." +
+            "Progressive catalogs, PM facility, have been developed  in the framework of GAIA CU9 (2012-2022)." +
             "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +
             "WCS in JPEG, extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, SAMP " +
             "integration have been developed in the framework of the EuroVO VOTech project (2005-2008). " +

@@ -339,7 +339,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         params = new Vector();
         Map map = new Hashtable();
         map.put("samp.name", "Aladin");
-        map.put("samp.description.text", "The Aladin sky atlas and VO Portal");
+        map.put("samp.description.text", "The Aladin sky atlas");
         map.put("samp.icon.url", ICON_URL);
         map.put("samp.documentation.url", "http://aladin.u-strasbg.fr/java/FAQ.htx");
         map.put("author.name", "Pierre Fernique, Thomas Boch");

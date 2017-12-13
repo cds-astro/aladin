@@ -1339,6 +1339,9 @@ Runnable, SwingWidgetFinder, Widget {
    private void drawBeginnerHelp(Graphics g, int yMax) {
       String msg;
       
+      // Pas d'affichage sur la pile est trop petite
+      if( (messageType== MESSAGE_INFO || messageType== MESSAGE_INFO_PLAN) && getHeight()<200 ) return;
+      
       resetUrl();
       
       if( message!=null ) msg=splitCDSMessage(message);

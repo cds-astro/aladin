@@ -1842,10 +1842,10 @@ public class Context {
       setPropriete("#"+Constante.KEY_BIB_REFERENCE_URL,"URL to bibliographic reference");
       setPropriete("#"+Constante.KEY_OBS_COPYRIGHT,"Copyright mention of the original data");
       setPropriete("#"+Constante.KEY_OBS_COPYRIGHT_URL,"URL to copyright page of the original data");
-      setPropriete("#"+Constante.KEY_T_MIN,"Start time in MJD");
+      setPropriete("#"+Constante.KEY_T_MIN,"Start time in MJD ( =(Unixtime/86400)+40587  or https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/xTime/xTime.pl)");
       setPropriete("#"+Constante.KEY_T_MAX,"Stop time in MJD");
       setPropriete("#"+Constante.KEY_OBS_REGIME,"Waveband keyword (Radio Infrared Optical UV X-ray Gamma-ray)");
-      setPropriete("#"+Constante.KEY_EM_MIN,"Start in spectral coordinates in meters");
+      setPropriete("#"+Constante.KEY_EM_MIN,"Start in spectral coordinates in meters ( =2.998E8/freq in Hz, or =1.2398841929E-12*energy in MeV )");
       setPropriete("#"+Constante.KEY_EM_MAX,"Stop in spectral coordinates in meters");
       //      setPropriete("#"+Constante.KEY_CLIENT_CATEGORY,"ex: Image/Gas-lines/Halpha/VTSS");
       //      setPropriete("#"+Constante.KEY_CLIENT_SORT_KEY,"ex: 06-03-01");

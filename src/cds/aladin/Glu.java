@@ -3082,13 +3082,13 @@ public final class Glu implements Runnable {
 //                     + "=> '<&http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading|Aladin v10>'\\n \\n"
 //                    + "N'hésitez pas à la télécharger.");
 //               else {
-                  try { 
+                 try { 
                      String msg=null;
                      do {
                         msg=dis.readLine();
                      } while( msg.trim().length()==0 || msg.startsWith("#") );
                      if( msg!=null ) aladin.setCDSMessage(msg);
-                  } catch( Exception e) {}
+                  } catch( Exception e) { e.printStackTrace(); }
                }
 //            }
             is.close();
