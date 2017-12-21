@@ -35,7 +35,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -127,7 +126,7 @@ MouseMotionListener,MouseListener,Widget {
 
    /** Positionne la valeur courante du slider */
    public void setValue(int v) { slider.setValue(v); }
-
+   
    /** Action appelée lors de la modification du slider par l'utilisateur */
    abstract void submit(int inc);
 
@@ -141,9 +140,32 @@ MouseMotionListener,MouseListener,Widget {
       slider.setEnabled(m);
       label.setForeground( m ? Aladin.COLOR_CONTROL_FOREGROUND 
             : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
+      label.addMouseListener(new MouseListener() {
+         public void mouseReleased(MouseEvent e) { setDefault(); }
+         public void mousePressed(MouseEvent e) { }
+         public void mouseExited(MouseEvent e) { }
+         public void mouseEntered(MouseEvent e) { }
+         public void mouseClicked(MouseEvent e) { }
+      });
       plus.setEnabled(m);
       moins.setEnabled(m);
    }
+   
+   private int defaut=Integer.MAX_VALUE;
+   
+   /** Positionne la valeur par défaut */
+   public void setDefaultValue( int defaut ) {
+      this.defaut = defaut;
+   }
+   
+   /** Remet la valeur par défaut */
+   protected void setDefault() {
+      // Si pas encore initialisé => rien
+      if( defaut==Integer.MAX_VALUE ) return;
+      
+      slider.setValue(slider.min);
+      submit(0);
+   };
 
    /** Positionne le tip */
    void setTooltip(String tip) {

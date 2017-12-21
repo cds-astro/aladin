@@ -3073,12 +3073,12 @@ public final class Glu implements Runnable {
                aladin.setCurrentVersion(dis.readLine());
                
                // Lecture d'un éventuel message CDS
-               // Format: 1510738587 §en:A new major Aladin version\\nat CDS.§fr:Une nouvelle...
-//               if( Aladin.BETA ) aladin.setCDSMessage("1510738587 §en:A new major release is available at CDS\\n"
+               // Format: 1510738587 ^en:A new major Aladin version\\nat CDS.^fr:Une nouvelle...
+//               if( Aladin.BETA ) aladin.setCDSMessage("1510738587 ^en:A new major release is available at CDS\\n"
 //                     + "=> '<&http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading|Aladin v10>'\\n \\n"
 //                     + "Do not hesitate to download it.\\n"
 //                     + "<&http://aladin.u-strasbg.fr/java/Aladin-V10-Avant-Premiere.html|more> info..."
-//                     + "§fr:Une nouvelle version d'Aladin est disponible sur le site du CDS.\\n"
+//                     + "^fr:Une nouvelle version d'Aladin est disponible sur le site du CDS.\\n"
 //                     + "=> '<&http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading|Aladin v10>'\\n \\n"
 //                    + "N'hésitez pas à la télécharger.");
 //               else {

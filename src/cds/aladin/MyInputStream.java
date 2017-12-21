@@ -307,6 +307,7 @@ public class MyInputStream extends FilterInputStream {
       if(  (type&XFITS)!=0 ) {
          findFitsEnd2();
          if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
+//         else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
          
          // Detection de HCOMP
       } else {
@@ -450,6 +451,7 @@ public class MyInputStream extends FilterInputStream {
 
             // Compression RICE
             if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
+//            else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
 
             // Pour répérer les tables AIPS CC de calculs intermédiaires
             else if( hasFitsKey("EXTNAME","AIPS CC") && hasFitsKey("TFIELDS","3")

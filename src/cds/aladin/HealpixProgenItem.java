@@ -21,11 +21,8 @@
 
 package cds.aladin;
 
-import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCPolygon;
@@ -83,9 +80,18 @@ public class HealpixProgenItem {
       int first=-1;
       path = cds.tools.Util.extractJSON("path", json);
       if( path==null ) path=json;
+      
+      // Y a-t-il un suffixe [xxx] à enlever ?
       if( path.charAt(path.length()-1)==']' ) first = path.lastIndexOf('[');
-      if( first>0 ) path = path.substring(0, first);
-      return path;
+      String s = path;
+      if( first>0 ) {
+         s = path.substring(0, first);
+         
+         // Ce suffixe concerne-t-il une extension MEF ? => on garde juste ça
+         int mef = path.lastIndexOf(':');
+         if( mef>first ) s = path.substring(0,mef)+"]";
+      }
+      return s;
    }
 
    /** Retourne le STC propre à cette image, ou null s'il n'y en a pas */

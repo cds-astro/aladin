@@ -48,13 +48,22 @@ public class IconMatch extends Icon {
 
    protected boolean isAvailable() { return aladin.view.isMultiView() && getMode()>=1; }
    
+   /** Retourne la couleur pour le mode de synchronisation actuelle
+    * 0 - pas possible
+    * 1 - possible 
+    * 2 - activé 
+    * 3 - activé + megaSync 
+    */
    protected Color getFillColor() {
       int mode=getMode();
-      Color c = mode==0 ? getBackground() :
-         mode==1 ? Color.green :
-         mode==2 ? new Color(80,80,255) /* ViewSimple.ORANGE*/ :
-            Aladin.COLOR_ICON_ACTIVATED;
+      Color c = mode==0 || mode==1 ? getBackground() :
+         mode==2 ? Color.blue : Aladin.COLOR_RED;
       return c;
+   }
+   
+   protected Color getLogoColor() {
+      if( getMode()>1 ) return Aladin.COLOR_ICON_ACTIVATED;
+     return super.getLogoColor();
    }
    
   /** Affichage du logo */

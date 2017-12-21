@@ -683,6 +683,7 @@ public class PlanBG extends PlanImage {
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
       String s;
+      if( prop==null ) return;
       if( (s=prop.get("moc_sky_fraction"))!=null ) ADD( buf,"\n* Coverage: ",getCoverageSpace(s));
    }
 

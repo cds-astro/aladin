@@ -253,7 +253,8 @@ public class ImageMaker {
    static public void main(String [] argv) {
       try {
 
-         ImageMaker im  = new ImageMaker(3);         
+         ImageMaker im  = new ImageMaker(3);
+         
 //         System.out.println("Génération d'un preview de M101 pour le HiPS DSS couleur distant...");
 //         im.preview( "http://alasky.u-strasbg.fr/DSS/DSSColor", 210.80242,+54.34875,130., 
 //               "D:/Test.png", 512,512,"png", "grid label=M101 size NE reticle");

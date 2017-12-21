@@ -19,7 +19,6 @@
 //    along with Aladin.
 //
 
-
 package cds.aladin;
 
 public class CustomListCell {

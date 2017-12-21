@@ -81,7 +81,7 @@ public class FrameCooToolbox extends JFrame {
       super();
       this.aladin = aladin;
       Aladin.setIcon(this);
-      setTitle("Coordinate toolbox");
+      setTitle(aladin.chaine.getString("COOTOOL"));
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, true, aladin);
       setLocation( Aladin.computeLocation(this) );
@@ -111,7 +111,11 @@ public class FrameCooToolbox extends JFrame {
       p.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
       p.setLayout(g);
       
-      int n=Localisation.REPERE.length-3;
+      int n;
+      
+      // On ne prend pas en compte les systèmes cartésiens
+      for( n=0; n<Localisation.REPERE.length && !Localisation.REPERE[n].startsWith("XY"); n++ );
+      
       JLabel [] label = new JLabel[n];
       cooField = new JTextField[n];
       for( int i=0; i<n; i++ ) {

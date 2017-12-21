@@ -19,8 +19,6 @@
 //    along with Aladin.
 //
 
-
-
 package cds.aladin;
 
 import static cds.aladin.Constants.CHANGESETTINGS;

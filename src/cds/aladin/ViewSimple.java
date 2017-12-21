@@ -451,7 +451,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Reactions aux differents boutons du menu */
    public void actionPerformed(ActionEvent e) {
-
+      
       Object src = e.getSource();
 
       if( src==menuLabel )  view.setSourceLabel();
@@ -488,7 +488,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected void copierReticule() { aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del)); }
 
    /** Copie la vue courante dans le Clipboard */
-   protected void copierVue() { aladin.copyToClipBoard(getImage(-1,-1)); }
+   protected void copierVue() {
+      aladin.copier();
+   }
 
    /** Permute l'état lock de la vue */
    protected boolean switchLock() {
@@ -558,25 +560,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Retourne true si la vue n'est pas utilisée */
    protected boolean isFree() { return pref==null || pref.type==Plan.NO || pref.type==Plan.X; }
 
-   /** Retourne true si la vue est synchronisée */
-   //   protected boolean isSync() {
-   //      if( isFree() || !(pref.type==Plan.ALLSKYIMG) ) return true;
-   ////      System.out.println("ViewSimple="+this+" ovizBG="+ovizBG+" iz="+iz);
-   //      return ovizBG==iz;
-   //   }
-
-   /** Attend que la vue soit synchronisée - pour les PlanBG */
-   //   protected void sync() {
-   //      if( isSync() ) return;
-   //      while( !isSync() ) {
-   //         Util.pause(25);
-   //         aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.sync() waiting image PlanBG buffer...");
-   //      }
-   //   }
-
    /** Libère la vue  */
    protected void free() {
-      //      unlockRepaint("free");
       sticked=selected=locked=northUp=false;
       pref=null;
       memImgCM=null;
@@ -3590,7 +3575,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             resetDefaultCursor(tool, e.isShiftDown() );
             if( flagOnFirstLine ) {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
-            } else if( flagRollable || inNE((int)x,(int)y) ) {
+            } else if( flagRollable || inNE((int)x,(int)y) && pref instanceof PlanBG ) {
                if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( view.isSimbadOrVizieRPointing() ) {
                if( oc!=Aladin.LOOKCURSOR ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));

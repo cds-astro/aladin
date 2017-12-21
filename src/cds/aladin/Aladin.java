@@ -149,7 +149,8 @@ import healpix.essentials.Vec3;
  * flags d'etat permettant de savoir si on est en mode debug,
  * standalone...
  * <BR>
- * Elle fonctionne a la fois en Applet (historique) ou en Standalone via la fonction main()
+ * Elle fonctionnait a la fois en Applet (historique) ou en Standalone via la fonction main()
+ * Le support Applet n'est plus garanti (depuis la version 10)
  *
  * @author   Pierre Fernique [CDS], Thomas Boch [CDS], Anaïs Oberto[CDS], François Bonnarel [CDS], Chaitra [CDS] et bien d'autres contributeurs
  *
@@ -163,7 +164,7 @@ import healpix.essentials.Vec3;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
- * @beta    <LI> A few minor bugs
+ * @beta    <LI> Hipsgen DETAILS action on MEF file (FoV bug)
  * @beta <UL>
  * @beta </UL>
  *
@@ -187,7 +188,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.059";
+   static public final    String VERSION = "v10.060";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -203,7 +204,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2000-2017 Université de Strasbourg/CNRS - developed by CDS from Strasbourg Observatory";
+   static String COPYRIGHT         = "(c) 2000-2018 Université de Strasbourg/CNRS - developed by CDS from Strasbourg Observatory";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -4972,7 +4973,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    protected void copier() {
       ViewSimple v = view.getCurrentView();
-      v.copierVue();
+      aladin.copyToClipBoard( v.getImage(-1,-1) );
    }
 
    protected void coller() {

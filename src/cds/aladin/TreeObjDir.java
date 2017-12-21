@@ -1101,8 +1101,8 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    protected String getCustomBkm() {
       String glutag = prop.get("glutag");
-      Server server = aladin.dialog.server[aladin.dialog.findIndiceServer(glutag)];
-      System.out.println("Je dois retourner le bookmark de "+server.title);
+//      Server server = aladin.dialog.server[aladin.dialog.findIndiceServer(glutag)];
+//      System.out.println("Je dois retourner le bookmark de "+server.title);
       return "get "+glutag+"(....) $TARGET $RADIUS";
    }
    

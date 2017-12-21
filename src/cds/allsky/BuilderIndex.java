@@ -346,7 +346,7 @@ public class BuilderIndex extends Builder {
          boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
          int cellSize = Constante.ORIGCELLWIDTH;
          int firstDepth=0;
-
+         
          // Multi Extension ou non ?
          for( int j=0; flagAllHDU || flagDefaultHDU ||  j<hdu.length; j++ ) {
             int ext = flagDefaultHDU ? 0 : flagAllHDU ? j : hdu[j];

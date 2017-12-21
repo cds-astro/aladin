@@ -30,6 +30,7 @@ package cds.astro;
  * @version 1.1 02-Sep-2006: Unicode symbols
  * @version 1.2 02-Nov-2006: Conversion of dates
  * @version 1.3 02-May-2012: Correct log scales
+ * @version 1.4 16-Dec-2017: Correct conversions with _MJD
  *==========================================================================
  */
 
@@ -148,7 +149,7 @@ public class Unit {
   static int DEBUG = 0;
   static final private byte _e0 = 0x30 ;		// Unitless MKSA
   static final private byte _m0 = 0x02 ;		// Unitless mag
-  static final private long _    = 0x0230303030303030L;	// Unitless
+  static final private long _1   = 0x0230303030303030L;	// Unitless
   static final private long _LOG = 0x8100000000000000L;	// Mag or Log (~02)
   static final private long _log = 0x8000000000000000L;	// Log scale
   static final private long _mag = 0x0100000000000000L;	// Mag scale
@@ -370,7 +371,7 @@ public class Unit {
     new Udef("\"datime\"",  "Fully qualified date/time (ISO-8601)",
 			     0x0230303130303030L|_MJD, 86400.),
     new Udef("\"YYYYMMDD\"" , "Fully qualified date (without separator)",
-			     0x0230303130303030L, 86400.),
+			     0x0230303130303030L|_MJD|_pic, 86400.),
     new Udef("\"month\""  , "Month name or number (range 1..12)",
 			     0x0230303030303030L, 86400.),
     new Udef("\"MM/YY\""  , "Month/Year(from 1900)",
@@ -733,7 +734,7 @@ public class Unit {
      * @return	the representation of a unitless dimension.
     **/
     static public long unitless() {
-	return(_);
+	return(_1);
     }
 
     /** 
@@ -847,7 +848,7 @@ public class Unit {
 	if ((mksa&_LOG) != 0) throw new ArithmeticException
 	    ("****Unit: mag(" + symbol + ")") ;
 	value = -2.5*AstroMath.log(value);
-	if ((mksa == _) && (factor == 1)) {	// Now we've mag
+	if ((mksa == _1) && (factor == 1)) {	// Now we've mag
 	    mksa |= _mag;
 	    if (symbol != null) symbol = "mag";
 	} else {
@@ -890,18 +891,18 @@ public class Unit {
       int i = expo; 
       double r = 1;
       double v = 1; 
-      long u = _;
+      long u = _1;
     	if ((mksa&(_log|_mag)) != 0) throw new ArithmeticException
 	    ("****Unit: can't power log[unit]: " + symbol );
     	while (i > 0) { 
 	    r *= factor; v *= value; 
-	    u += mksa; u -= _;  
+	    u += mksa; u -= _1;  
 	    if ((u&0x8480808080808080L) != 0) error++;
 	    i--; 
 	}
     	while (i < 0) { 
 	    r /= factor; v /= value; 
-	    u += _; u -= mksa;
+	    u += _1; u -= mksa;
 	    if ((u&0x8480808080808080L) != 0) error++;
 	    i++; 
 	}
@@ -939,7 +940,7 @@ public class Unit {
 	    ("****Unit: sqrt(" + symbol + ") is impossible");
 	value = Math.sqrt(value);
 	factor = Math.sqrt(factor);
-	mksa = (mksa+_)>>1;
+	mksa = (mksa+_1)>>1;
 	/* Try to remove the squared edition */
 	if ((symbol != null) && (symbol.length()>1)) {
           Parsing t = new Parsing(symbol);
@@ -966,7 +967,7 @@ public class Unit {
      * @return	true if unit has no associated dimension
     **/
     public final boolean isUnitless () {
-	return((mksa&(~_log)) == _);
+	return((mksa&(~_log)) == _1);
     }
 
     /** 
@@ -1058,7 +1059,7 @@ public class Unit {
 	    target_unit.dump("...convert:target="); 
 	}
 
-	if (target_unit.mksa == source_unit.mksa) {
+	if ((target_unit.mksa&(~(_pic|_sex))) == (source_unit.mksa&(~(_pic|_sex)))) {
 	    /*if ((target_unit.mksa&_log) == 0) */
 		target_unit.value = f*source_unit.value 
 		+ (source_unit.offset-target_unit.offset)/target_unit.factor;
@@ -1252,8 +1253,8 @@ public class Unit {
         if (((mksa&_abs)!=0) && (unit.factor != 1)) throw	// On a date
 	    new ArithmeticException("****Unit.mult on a date!");
         if (((mksa|unit.mksa)&_log) != 0) {
-	    if ((mksa == _) && (factor == 1.)) ;
-	    else if ((unit.mksa == _) && (unit.factor == 1.)) ;
+	    if ((mksa == _1) && (factor == 1.)) ;
+	    else if ((unit.mksa == _1) && (unit.factor == 1.)) ;
 	    else throw new ArithmeticException
 	    ("****Unit: can't multiply logs: " + symbol + " x " + unit.symbol);
 	}
@@ -1261,13 +1262,13 @@ public class Unit {
 	 * except if one of the factors is unity.
 	 */
         if ((offset!=0) || (unit.offset!=0)) {
-	    if (mksa == _) offset = unit.offset;
-	    else if (unit.mksa == _) ;
+	    if (mksa == _1) offset = unit.offset;
+	    else if (unit.mksa == _1) ;
 	    else offset = 0;
 	}
 	v *= unit.value; 
 	r *= unit.factor;
-      	u += unit.mksa; u -= _;
+      	u += unit.mksa; u -= _1;
 	if ((u&0x0c80808080808080L) != 0) throw new ArithmeticException
 	    ("****too large powers in: " + symbol + " x " + unit.symbol);
 	mksa = u;
@@ -1275,8 +1276,8 @@ public class Unit {
 	value  = v;
 	/* Decision for the new symbol */
 	if ((symbol != null) && (unit.symbol != null)) {
-	    if ((unit.mksa == _) && (unit.factor == 1)) return;	// No unit ...
-	    if ((     mksa == _) && (     factor == 1)) symbol = unit.symbol;
+	    if ((unit.mksa == _1) && (unit.factor == 1)) return;	// No unit ...
+	    if ((     mksa == _1) && (     factor == 1)) symbol = unit.symbol;
 	    else if ((symbol.equals(unit.symbol)) && (factor == unit.factor))
 		 symbol = toExpr(symbol) + "2" ;
 	    else symbol = toExpr(symbol) + "." + toExpr(unit.symbol) ;
@@ -1294,8 +1295,8 @@ public class Unit {
         if (((mksa&_abs)!=0) && (unit.factor != 1)) throw	// On a date
 	    new ArithmeticException("****Unit.div  on a date!");
         if (((mksa|unit.mksa)&_log) != 0) {
-	    if ((mksa == _) && (factor == 1.)) ;
-	    else if ((unit.mksa == _) && (unit.factor == 1.)) ;
+	    if ((mksa == _1) && (factor == 1.)) ;
+	    else if ((unit.mksa == _1) && (unit.factor == 1.)) ;
 	    else throw new ArithmeticException
 	    ("****Unit: can't divide logs: " + symbol + " x " + unit.symbol);
 	}
@@ -1303,13 +1304,13 @@ public class Unit {
 	 * except if one of the factors is unity.
 	 */
         if ((offset!=0) || (unit.offset!=0)) {
-	    if (mksa == _) offset = unit.offset;
-	    else if (unit.mksa == _) ;
+	    if (mksa == _1) offset = unit.offset;
+	    else if (unit.mksa == _1) ;
 	    else offset = 0;
 	}
 	v /= unit.value; 
 	r /= unit.factor; 
-      	u += _; u -= unit.mksa;
+      	u += _1; u -= unit.mksa;
 	if ((u&0x8c80808080808080L) != 0) throw new ArithmeticException
 	    ("****too large powers in: " + symbol + " / " + unit.symbol);
 	mksa = u;
@@ -1317,8 +1318,8 @@ public class Unit {
 	value  = v;
 	/* Decision for the new symbol */
 	if ((symbol != null) && (unit.symbol != null)) {
-	    if ((unit.mksa == _) && (unit.factor == 1)) return;	// No unit ...
-	    if ((     mksa == _) && (     factor == 1))
+	    if ((unit.mksa == _1) && (unit.factor == 1)) return;	// No unit ...
+	    if ((     mksa == _1) && (     factor == 1))
 		symbol = toExpr(unit.symbol) + "-1";
 	    else if (symbol.equals(unit.symbol)) symbol = edf(factor);
 	    else symbol = toExpr(symbol) + "/" + toExpr(unit.symbol) ;
@@ -1387,7 +1388,7 @@ public class Unit {
       int i, s;
     
     	/* Initialize the Unit to unitless */
-    	mksa = _; factor = 1.;
+    	mksa = _1; factor = 1.;
     	if (text.pos >= text.length) return(0);	// Unitless
 
 	if (DEBUG>0) System.out.println("....unit1(" + text + ")");
@@ -1540,7 +1541,7 @@ public class Unit {
       int i, s;
 
     	/* Initialize the Unit to unitless */
-    	mksa = _; 
+    	mksa = _1; 
 
 	if (DEBUG>0) System.out.print("....unitec(" + text + "): factor=");
 	//System.out.println("..unitec(0): edited=<" + edited + ">");
@@ -1675,7 +1676,7 @@ public class Unit {
     **/
     public final void set () {	
 	symbol = null;	
-    	mksa = _; factor = 1;
+    	mksa = _1; factor = 1;
 	value = 0./0.;			// NaN
 	offset = 0.;
     }
@@ -1745,6 +1746,7 @@ public class Unit {
 	    if (o instanceof String) symbol = (String)o;
 	    if (has_value & (mksa&_pic) != 0) {	// A misinterpretation ? Rescan
 		int pos_end = t.pos;
+                if (DEBUG>0) System.out.print("    parsing via parseComplex(" + symbol + ")");
 		t.set(posini); t.gobbleSpaces();
 		try { t.parseComplex(symbol); t.set(pos_end); }
 		catch(Exception e) { 
@@ -1844,7 +1846,7 @@ public class Unit {
 		}
 	    }
 	    if (has_symbol && (t.pos<t.length)) {
-	    if (DEBUG>0) System.out.println("....parsing: symbol=" + symbol 
+	        if (DEBUG>0) System.out.println("....parsing: symbol=" + symbol 
 		    + ", interpret: " + t);
 		if (mksa == _MJD) {		// Get Date + Time
 		    if (DEBUG>0) System.out.print("    parsing via Astrotime(");
@@ -1984,12 +1986,29 @@ public class Unit {
     **/
     public int parseValue (String text, int offset) {
       Parsing t = new Parsing(text, offset);
-      int posini;
         /* Ignore the leading blanks */
 	t.gobbleSpaces();
-	posini = t.pos;
+	int posini = t.pos;
+	if (DEBUG>0) System.out.println("....parsing: symbol=" + symbol + ", interpret: " + t);
+	if (mksa == _MJD) {		// Get Date + Time
+	    if (DEBUG>0) System.out.print("    parsing via Astrotime(");
+	    Astrotime datime = new Astrotime();
+	    if (Character.isLetter(symbol.charAt(0)))
+		t.set(posini);		// JD or MJD followed by number
+	    if (DEBUG>0) System.out.print(t + ") symbol=" + symbol);
+	    if (datime.parsing(t)) value = datime.getMJD();
+            else t.set(posini);
+	    if (DEBUG>0) {
+                System.out.println( " => MJD=" + value);
+		datime.dump("datime ");
+	    }
+	}
 	/* Take care of units requiring data in Sexagesimal */
-	if ((mksa&_sex) != 0)
+	else if ((mksa&_pic) != 0) {	// Interpret complex
+	    try { value = t.parseComplex(symbol); }
+	    catch (Exception e) { value=0./0.; t.set(posini); }
+        }
+        else if ((mksa&_sex) != 0)
 	     value  = t.parseSexa();
 	else value  = t.parseFactor();
 	if (t.pos == posini) 		// Nothing (NaN checked in Parsing)
@@ -2043,7 +2062,7 @@ public class Unit {
 	//this.dump("SetUnit(1)");
 	this.setUnit();
 	//this.dump("SetUnit(2)");
-	DEBUG=0;
+	//DEBUG=0;
     }
 
     /** 
@@ -2056,23 +2075,14 @@ public class Unit {
      *		represent a number
     **/
     public void setValue (String text) throws ParseException {
-      Parsing t = new Parsing(text);
-      int posini;
-        /* Ignore the leading blanks */
-	t.gobbleSpaces();
-	posini = t.pos;
-	/* Take care of units requiring data in Sexagesimal */
-	if ((symbol.charAt(0) == '"') && (symbol.indexOf(':')>0)) 	// "
-	     value  = t.parseSexa();
-	else value  = t.parseFactor();
-	if (t.pos == posini) {		// Nothing (NaN checked in Parsing)
-	    value = 0./0. ;
-	    // while ((t.pos < t.length) && (t.a[t.pos] == '-')) t.pos++;
-	}
-	/* Skip the trailing blanks */
-	t.gobbleSpaces();
-	if (t.pos < t.length) throw new ParseException
-           ("****Unit: setValue '" + text + "'+" + t.pos, t.pos);
+      int length = text.length();
+      int pos = parseValue(text, 0);
+      if (pos == 0) value = 0./0. ;
+      else {    /* Skip the trailing blanks */
+          while ((pos < length) && Character.isWhitespace(text.charAt(pos))) pos++;
+      }
+      if(pos < length) throw new ParseException
+           ("****Unit: setValue '" + text + "'+" +pos, pos);
     }
 
     /** 
@@ -2135,7 +2145,7 @@ public class Unit {
 	}
 
     	/* Check unitless -- edited as empty string */
-    	if (mksa == _) return(0);
+    	if (mksa == _1) return(0);
 
 	/* Find the best symbol for the physical dimension */
 	if (option > 0) {
@@ -2327,7 +2337,7 @@ public class Unit {
         if ((!Double.isNaN(value)) || (symlen == 0)) {
 	    editValue(buf);
 	}
-	if ((mksa == _) && (factor == 1));
+	if ((mksa == _1) && (factor == 1));
 	else if (!symb_edited) {
 	    if (symlen > 0) {
 		boolean add_bracket = Character.isDigit(symbol.charAt(0));
@@ -2454,7 +2464,7 @@ public class Unit {
 	    editValue(b); 		// Value '1' not edited
 	    if (b.length() == 0) b.append((mksa&_log)!=0 ? '0' : '1');
 	}
-	if ((mksa == _) && (factor == 1));
+	if ((mksa == _1) && (factor == 1));
 	else if (!symb_edited) {
 	    if (symbol != null) {
 		boolean add_bracket = Character.isDigit(symbol.charAt(0));

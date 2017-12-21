@@ -802,6 +802,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          set(STOPHELP,s.toString());
       }
    }
+   
+   protected void stopWizard() {
+      set(HELP,NOTACTIVATED);
+   }
 
    /** retourne le suffixe de la langue courante. En première approximation
     * on utilise simplement les deux premières lettres précédées d'un point,

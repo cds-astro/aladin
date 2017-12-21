@@ -128,6 +128,7 @@ public class BuilderRgb extends BuilderTiles {
    // Retourne l'indice cube d'un path  à la mode cube (ex: xxx/Allsky.fits[1] => xxx/Allsky.fits
    // sinon retourne 0
    int getCubeIndex( String path ) {
+      if( path==null ) return 0;
       if( !path.endsWith("]") ) return 0;
       int i = path.lastIndexOf('[');
       if( i<=0 ) return 0;

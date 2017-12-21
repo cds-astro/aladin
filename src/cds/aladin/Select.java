@@ -1329,7 +1329,10 @@ Runnable, SwingWidgetFinder, Widget {
 //      if( s.length()>0 ) return;   // on a cliqué sur un lien 
       
       lastBegin++;
-      if( BEGIN!=null && lastBegin==BEGIN.length ) beginnerHelp=false;
+      if( BEGIN!=null && lastBegin==BEGIN.length ) {
+         a.configuration.stopWizard();
+         beginnerHelp=false;
+      }
    }
    
    private long t0=0;
@@ -1381,26 +1384,34 @@ Runnable, SwingWidgetFinder, Widget {
                // Dessin d'une coche pour acquitter le message
                if( message!=null && (messageType==MESSAGE_CDS || messageKey!=null) ) {
                   y -= 5;
-                  int x = getWidth()-35;
-                  Util.drawCheck( g, x,y, g.getColor().brighter() );
-                  g.drawString("Ok",x+12,y+10);
-                  addUrl("", new Rectangle(x-5,y-2,30,15));
+                  drawOk(g,y, g.getColor().brighter());
 
                   // Dessin d'un petit triangle pour suggérer la suite
-               } else if( BEGIN!=null && lastBegin<BEGIN.length-1 && message==null ) {
+               } else if( BEGIN!=null && lastBegin<BEGIN.length && message==null ) {
                   y -= 5;
-                  int x = getWidth()-10;
-                  Polygon pol = new Polygon();
-                  pol.addPoint(x, y-6);
-                  pol.addPoint(x,y);
-                  pol.addPoint(x+5,y-3);
-                  g.fillPolygon(pol);
-                  g.drawPolygon(pol);
-                  addUrl("", new Rectangle(x-5,y-8,15,10));
+                  if( lastBegin==BEGIN.length-1 ) drawOk(g,y, g.getColor() );
+                  else {
+                     int x = getWidth()-10;
+                     Polygon pol = new Polygon();
+                     pol.addPoint(x, y-6);
+                     pol.addPoint(x,y);
+                     pol.addPoint(x+5,y-3);
+                     g.fillPolygon(pol);
+                     g.drawPolygon(pol);
+                     addUrl("", new Rectangle(x-5,y-8,15,10));
+                  }
                }
             }
          }
       }
+   }
+   
+   private void drawOk(Graphics g, int y, Color c ) {
+      int x = getWidth()-35;
+      Util.drawCheck( g, x,y, c );
+      g.drawString("Ok",x+12,y+10);
+      addUrl("", new Rectangle(x-5,y-2,30,15));
+ 
    }
    
    
@@ -1428,7 +1439,7 @@ Runnable, SwingWidgetFinder, Widget {
    }
    
    /** Positionnement d'un message d'annonce CDS
-    * FORMAT [ttt] [§en:]This is an <&http://aladin.fr|link>\\n...[§fr:Ceci est ....]
+    * FORMAT [ttt] [^en:]This is an <&http://aladin.fr|link>\\n...[^fr:Ceci est ....]
     * @param s
     */
    protected void setMessageCDS(String s) {
@@ -1492,7 +1503,7 @@ Runnable, SwingWidgetFinder, Widget {
    
    // Mise en forme du message CDS
    // Syntaxe d'entrée [timeUnix] Message avec des \\n etc
-   // Le message peut être précédé d'un code de langue §xx: (ex: §en:), et dans ce cas il peut y avoir
+   // Le message peut être précédé d'un code de langue ^xx: (ex: ^en:), et dans ce cas il peut y avoir
    // plusieurs versions à la queue leu leu en langues différentes
    // @return CDS news (jj/mm/aa)\n \n message...
    private String splitCDSMessage(String s) {
@@ -1509,7 +1520,7 @@ Runnable, SwingWidgetFinder, Widget {
       } catch( Exception e) {}
       
       // Plusieurs langues à la queue leu leu ?
-      if( s.startsWith("§") ) {
+      if( s.startsWith("§") || s.startsWith("^")) {
          
          // Code du langage actuellement utilisé
          String localCode=a.configuration.getLang();
@@ -1517,7 +1528,7 @@ Runnable, SwingWidgetFinder, Widget {
          else localCode=localCode.substring(1);
          
          // Recherche du message dans la même langue, sinon on prend la première (anglais)
-         Tok tok = new Tok(s,"§");
+         Tok tok = new Tok(s,"§^");
          tok.nextToken();
          String first=null;
          while( tok.hasMoreTokens() ) {

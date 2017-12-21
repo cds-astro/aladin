@@ -4,19 +4,19 @@
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-// This file is part of Aladin.
+//This file is part of Aladin.
 //
-// Aladin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 3 of the License.
+//    Aladin is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
 //
-// Aladin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+//    Aladin is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
 //
-// The GNU General Public License is available in COPYING file
-// along with Aladin.
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin.
 //
 
 package cds.aladin;
@@ -3455,7 +3455,7 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("setconf") ) return execSetconfCmd(param);
       else if( cmd.equalsIgnoreCase("status") ) return execStatusCmd(param);
       else if( cmd.equalsIgnoreCase("info") ) execInfo(param);// a.status.setText(param);
-      else if( cmd.equalsIgnoreCase("help") ) execHelpCmd(param, false);
+      else if( cmd.equalsIgnoreCase("help") ) execHelpCmd(param, true);
       else if( cmd.equalsIgnoreCase("reset") ) a.reset();
       else if( cmd.equalsIgnoreCase("new") ) a.windows();
       else if( cmd.equalsIgnoreCase("search") ) a.search.execute(param);
@@ -4587,9 +4587,10 @@ public final class Command implements Runnable {
    // le mot clé " to " est repéré => insertion de la commande "convert" en préfixe
    private String convertAdjust(String s) {
       if( s.indexOf("convert") == 0 ) return s;
-      int n = s.indexOf(" to ");
+      int n = s.indexOf(" into ");
+      if( n<0 ) n = s.indexOf(" to ");
       if( n <= 0 ) return s;
-      return "convert " + s.substring(0, n) + " to " + s.substring(n + 4);
+      return "convert " + s.substring(0, n) + " into " + s.substring(n + 4);
    }
 
    // Traitement d'une commande de conversion d'unité
@@ -4607,16 +4608,26 @@ public final class Command implements Runnable {
          print(res);
          a.console.printInPad(res);
       } else {
-         int n = s.indexOf(" to ");
+         int len=6;
+         int n = s.indexOf(" into ");
+         if( n<0 ) { n = s.indexOf(" to "); len=4; }
          String from = s.substring(0, n);
          char c;
          int m = from.length() - 1;
-         while( m > 0 && !Character.isDigit(c = from.charAt(m)) && c != ')'/* && !Character.isSpaceChar(c) */ )
-            m--;
-         String to = s.substring(n + 4);
+         while( m > 0 && !Character.isDigit(c = from.charAt(m)) && c != ')'/* && !Character.isSpaceChar(c) */ ) m--;
+         String to = s.substring(n + len);
          try {
-            from = Computer.compute(from.substring(0, m + 1)) + from.substring(m + 1);
-            Unit m1 = new Unit(from);
+            String val = computeConvert(from.substring(0, m + 1));
+            String unit = from.substring(m + 1).trim();
+//            from = Computer.compute(from.substring(0, m + 1)) + from.substring(m + 1);
+            Unit m1;
+//            if( unit.startsWith("\"") ) {
+//               m1 = new Unit();
+//               m1.set(unit+" "+val);
+//            } else {
+               m1 = new Unit(unit);
+               m1.setValue(val);
+//            }
             Unit m2 = new Unit();
             m2.setUnit(to);
             m1.convertTo(m2);
@@ -4630,7 +4641,16 @@ public final class Command implements Runnable {
       }
       return res;
    }
-
+   
+   // Conversion d'une valeur pour une conversion, uniquement si c'est nécessaire,
+   // S'il n'y a qu'une suite de chiffre, on laisse tel que
+   static private String computeConvert( String s ) throws Exception {
+      for( char c : s.toCharArray() ) {
+         if( !(Character.isDigit(c) || c==':') ) return Computer.compute(s)+"";
+      }
+      return s;
+   }
+   
    // Traitement de l'évaluation d'une expression arithmétique
    private String execEval(String p) {
       String res;

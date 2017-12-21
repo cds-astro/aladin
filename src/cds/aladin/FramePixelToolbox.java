@@ -21,13 +21,25 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.image.ColorModel;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
@@ -71,7 +83,7 @@ public class FramePixelToolbox extends JFrame {
       super();
       this.aladin = aladin;
       Aladin.setIcon(this);
-      setTitle("Pixel toolbox");
+      setTitle(aladin.chaine.getString("PIXELTOOL"));
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, true, aladin);
       setLocation( Aladin.computeLocation(this) );

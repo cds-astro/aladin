@@ -22,8 +22,6 @@
 package cds.aladin;
 
 import java.awt.Graphics;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 import cds.astro.Astrotime;
 
@@ -40,18 +38,19 @@ public class SliderEpoch extends SliderPlusMoins {
       super(aladin,aladin.getChaine().getString("SLIDEREPOCH"),1500,2500,1,100);
       setTooltip(aladin.getChaine().getString("SLIDEREPOCHTIP"));
       defaultLabel=label.getText();
-      label.addMouseListener(new MouseListener() {
-         public void mouseReleased(MouseEvent e) { setDefaultEpoch(); }
-         public void mousePressed(MouseEvent e) { }
-         public void mouseExited(MouseEvent e) { }
-         public void mouseEntered(MouseEvent e) { }
-         public void mouseClicked(MouseEvent e) { }
-      });
+//      label.addMouseListener(new MouseListener() {
+//         public void mouseReleased(MouseEvent e) { setDefaultEpoch(); }
+//         public void mousePressed(MouseEvent e) { }
+//         public void mouseExited(MouseEvent e) { }
+//         public void mouseEntered(MouseEvent e) { }
+//         public void mouseClicked(MouseEvent e) { }
+//      });
       label.setToolTipText(aladin.getChaine().getString("SLIDEREPOCHLABELTIP"));
    }
    
    /** Positionne l'époque en fonction de l'image de fond */
-   protected void setDefaultEpoch() {
+//   protected void setDefaultEpoch() {
+   protected void setDefault() {
       double yr=2000;
       try {
          Plan pi = aladin.calque.getPlanBase();

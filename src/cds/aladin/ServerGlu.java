@@ -1412,6 +1412,7 @@ public class ServerGlu extends Server implements Runnable {
                if( !verif(Plan.CATALOG,objet,param) ) { 
                   return -1;
                }
+               
                // IL est possible que l'url soit en fait une collection d'urls séparées par un TAB
                // notamment lorsque la résolution de l'URL a été faite via MocServer
                try {

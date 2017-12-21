@@ -272,7 +272,7 @@ public class Bookmarks extends JToolBar implements Widget {
 
    // Mémorise les infos pour générer les bookmarks (voir createBookmarks() */
    public void memoGluBookmarks(String actionName, String aladinBookmarks) {
-      Aladin.trace(4,"Bookmarks.memoBookmarks() %A="+actionName+" %Aladin.Bookmarks="+aladinBookmarks);
+      Aladin.trace(3,"Bookmarks.memoBookmarks() %A="+actionName+" %Aladin.Bookmarks="+aladinBookmarks);
       gluTag=actionName;
       defaultBookmarkListByGlu=aladinBookmarks;
    }
