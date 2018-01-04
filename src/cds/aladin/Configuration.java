@@ -2223,6 +2223,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       try {
          aladin.makeCursor(this, Aladin.WAITCURSOR);
          aladin.glu.reload(true,false);
+         aladin.directory.reload();
          aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
       } catch(Exception e) { e.printStackTrace(); }
    }

@@ -52,7 +52,7 @@ public class Astrodate {
       if( M<3 ) {  A--; M+=12; }
       if( A>1582 || (A==1582 && M>10) || A==1582 && M==10 && J>=15 ) {
          long C = (long)(A/100);
-         B = 2-C+(long)(C/4);
+         B = 2-C+C/4;
       } else B=0;
       T = HH/24. + MM/1440. + SS/86400.;
       
@@ -108,6 +108,14 @@ public class Astrodate {
    static public double JDToYd(double JD) {
       return (JD-2451545.0)/365.25 +2000;
    }
-
-
+   
+   /** Conversion d'une date Unix (sec depuis 1/1/1970) en JD */
+   static public double UnixToJD( long time ) {
+      return time/86400. + 2440587.5;
+   }
+   
+   /** Conversion d'une date JD en Unix (sec depuis 1/1/1970) */
+   static public long JDToUnix( double JD ) {
+      return (long)((JD - 2440587.5) * 86400.);
+   }
 }

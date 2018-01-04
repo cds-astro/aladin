@@ -28,6 +28,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.net.URL;
 
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -61,7 +62,7 @@ class MyAnchor extends JLabel {
          if( more.length()>width ) {
             int n = more.lastIndexOf(' ',width);
             if( n<=0 ) n=width;
-            text=more.substring(0,n)+"...";
+            text=more.substring(0,n); //+"...";
          }
          else { text=more; more=null; }
       }
@@ -76,9 +77,14 @@ class MyAnchor extends JLabel {
       }
       if( url!=null ) {
          text = "<html><A HREF=\"\">"+text+"</A></html>";
-         setToolTipText(url);
+//         setToolTipText(url);
       }
-      if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
+      if( more!=null ) {
+         text = "<html>"+text+" <A HREF=\"\">...</A></html>";
+      }
+      if( url!=null ) setToolTipText(url);
+      else if( more!=null && more.startsWith("http") ) setToolTipText(more);
+      
       setText(text);
       setFont(getFont().deriveFont(Font.ITALIC));
       final String more1 = more;
@@ -107,15 +113,15 @@ class MyAnchor extends JLabel {
    }
    
    /**
-    * Texte suivi d'un "(more)" auquel on a associé une action qui sera effectué
-    * si on clique sur le "more" ou le texte
+    * Texte suivi d'un " ..." auquel on a associé une action qui sera effectué
+    * si on clique sur le "..." ou le texte
     * @param aladin
     * @param text
     * @param action
     */
    MyAnchor(Aladin aladin,String text, final ActionListener action) {
       super();
-      text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
+      text = "<html>"+text+" <A HREF=\"\">...</A></html>";
       setText(text);
       setFont(getFont().deriveFont(Font.ITALIC));
       final Component c = this;
@@ -140,8 +146,15 @@ class MyAnchor extends JLabel {
    // Affiche dans un navigateur Web
    private void showDocument(String url) { aladin.glu.showDocument(url); }
    
-   // Affiche dans un fenêtre popup
-   private void showInfo(Component c, String s) { aladin.info(c,s); }
+   // Affiche dans un fenêtre popup, à moins que ce soit une URL, alors dans un navigateur
+   private void showInfo(Component c, String s) { 
+      try {
+         new URL(s);
+         showDocument(s);
+      } catch( Exception e ) {
+         aladin.info(c,s); 
+      }
+   }
    
    // Affiche le Menu popup
    private void showPopMenu(int x,int y) {

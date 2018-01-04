@@ -331,10 +331,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( s==null ) s="Others";
       path = s+"/"+label.replace("/","\\/");
       
-      // l'ordre de tri
-      ordre=prop.getProperty(Constante.KEY_CLIENT_SORT_KEY);
-      if( ordre==null ) ordre="Z";
 
+      // Initialisation de la clé de tri
+      setTri();
+      
       // Divers champs de descriptions
       description = prop.getProperty(Constante.KEY_OBS_TITLE);
       if( description==null ) description = prop.getProperty(Constante.KEY_OBS_COLLECTION);
@@ -415,6 +415,14 @@ public class TreeObjDir extends TreeObj implements Propable {
 
       if( color && !inJPEG && !inPNG) inJPEG=true;
 //      aladin.trace(4,toString1());
+   }
+   
+   // Positionnement de la clé de tri
+   protected void setTri() {
+      ordre=prop.getProperty(Constante.KEY_CLIENT_SORT_KEY);
+      String ordre2=prop.getProperty("internal_sort_key");
+      if( ordre2!=null ) ordre = ordre==null ? ordre2 : ordre2+"//"+ordre;
+      if( ordre==null ) ordre="Z";
    }
 
    /** Création à partir d'un enregistrement GLU */
@@ -522,6 +530,21 @@ public class TreeObjDir extends TreeObj implements Propable {
       else if( isHiPS() ) return getUrl()+"/Moc.fits";
       
       return u;
+   }
+   
+   protected String getCoverage() {
+      if( prop==null ) return null;
+      return Plan.getCoverageSpace( prop.getFirst("moc_sky_fraction") );
+   }
+   
+   protected String getEnergy() {
+      if( prop==null ) return null;
+      return Plan.getCoverageEnergy(prop.getFirst("em_min"),prop.getFirst("em_max"));
+   }
+   
+   protected String getPeriod() {
+      if( prop==null ) return null;
+      return Plan.getCoverageTime(prop.getFirst("t_min"),prop.getFirst("t_max"));
    }
    
    protected String getProperty(String key) {

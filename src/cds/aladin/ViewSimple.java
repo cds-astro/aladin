@@ -152,7 +152,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    int xHuge,yHuge,wHuge,hHuge;  // Position de la zone Haute définition si image Huge (coord dans l'image sous-échantillonnée)
    int w,h;                      // largeur et hauteur de l'image dans pixels[]
    int dx,dy;                    // memo de la marge en blanc
-   boolean northUpDown;          // true si le North est en haut/bas (pour l'affichage de la grille)
+//   boolean northUpDown;          // true si le North est en haut/bas (pour l'affichage de la grille)
    //   boolean flagCM = false;       // True si on s'amuse avec la table des couleurs
    //   byte [] pixelsCM = new byte[CMSIZE*CMSIZE]; // pixels de la portion test de la table des couleurs
    //   int [] pixelsCMRGB = new int[CMSIZE*CMSIZE]; // pixels de la portion test de la table des couleurs
@@ -5408,6 +5408,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          Color c2 = g.getColor();
          g.setColor( northUp ? Color.red : view.infoColor );
          
+         // On en profite pour repérer si le Nord est plutôt en haut
+         setGridNorthtUp( Math.abs(x1-x) < Math.abs(y1-y) );
+         
          if(view.infoBorder ) {
             Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
             Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
@@ -5421,17 +5424,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Pas d'incréments en déclinaison */
    static final double [] PASD = {
-      1./(60*10),1./(60*5),1./(60*3),1./(60*2),
+         1./3600, 1./(60*30), 1./(60*10),1./(60*5),1./(60*3),1./(60*2),
       1./60, 2./60, 5./60, 10.0/60, 15.0/60, 20.0/60, 30.0/60,
       1, 2, 3, 5, 10, 15, 20, 30,
-      1*60, 2*60, 5*60, 10*60, 15*60, };
+      1*60, 2*60, 5*60, 10*60, 15*60, 30*60, };
 
    /** Pas d'incréments en ascension droite */
    static final double [] PASA = {
-      1./(60*10),1./(60*5),1./(60*3),1./(60*2),
+         1./3600, 1./(60*30), 1./(60*10),1./(60*5),1./(60*3),1./(60*2),
       1./60, 2./60, 5./60, 10.0/60, 15.0/60, 30.0/60, 75.0/60, 150.0/60, 225.0/60,
       5, 7.5, 15, 20, 25, 30, 45, 75, 150, 225,
-      5*60, 7.5*60, 15*60, 30*60, };
+      5*60, 7.5*60, 15*60, 30*60, 
+      3600 };
 
    /** Dans le calcul d'une grille de coordonnées, cherche le meilleur
     * pas d'incrément
@@ -5439,10 +5443,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param PAS le tableau des incréments possibles
     * @return le la valeur du meilleur pas
     */
-   private double goodPas(double x,double PAS[] ) {
+      private double goodPas(double x,double PAS[] ) {
       int cran=0;
       double min = Double.MAX_VALUE;
-      for( int i=1; i<PAS.length; i++ ) {
+      int i;
+      for( i=1; i<PAS.length; i++ ) {
          double diff = Math.abs(PAS[i]-x);
          if( min>diff ) { min=diff; cran=i; }
       }
@@ -5460,6 +5465,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( oseg==null ) return rep;
       return rep && oseg.horsChamp;
    }
+   
+   
+   private boolean flagGridNorthUp = false;   // Se base sur le dernier dessin de la rose NE
+   private void setGridNorthtUp( boolean flag ) {
+      flagGridNorthUp = flag;
+   }
 
    /** Ajout d'un segment de traçage dans la grille. Si le segment
     * mord sur la marge de gauche ou du haut, il lui associe un
@@ -5467,25 +5478,17 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param seg
     */
    private void addGrilleSeg(Segment seg,boolean allsky) {
-      int a1 = northUpDown ? seg.x1 : seg.y1;
-      int a2 = northUpDown ? seg.x2 : seg.y2;
-      int b1 = !northUpDown ? seg.x1 : seg.y1;
-      int b2 = !northUpDown ? seg.x2 : seg.y2;
+      int a1 = flagGridNorthUp ? seg.x1 : seg.y1;
+      int a2 = flagGridNorthUp ? seg.x2 : seg.y2;
+      int b1 = !flagGridNorthUp ? seg.x1 : seg.y1;
+      int b2 = !flagGridNorthUp ? seg.x2 : seg.y2;
       if( !allsky ) {
          if(  seg.iso==Segment.ISODE && (a1*a2<0 || (a1*a2==0 && (a1>0 || a2>0))) ) {
-            seg.labelMode=northUpDown?Segment.GAUCHE:Segment.HAUT;
-//            seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-//            int i = seg.label.indexOf(' ');
-//            seg.label = zeroSec(seg.label.substring(i+1));
-
+            seg.labelMode=flagGridNorthUp?Segment.GAUCHE:Segment.HAUT;
             seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
 
          } else if(  seg.iso==Segment.ISORA && (b1*b2<0 || (b1*b2==0 && (b1>0 || b2>0))) ) {
-            seg.labelMode=northUpDown?Segment.HAUT:Segment.GAUCHE;
-//            seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-//            int i = seg.label.indexOf(' ');
-//            seg.label = zeroSec(seg.label.substring(0,i));
-            
+            seg.labelMode=flagGridNorthUp?Segment.HAUT:Segment.GAUCHE;
             seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
          }
       }
@@ -5544,7 +5547,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       memoSeg.put(cle,ok);
       return true;
    }
-
+   
    /** Méthode récursive de calcul des 3 voisins d'un segment
     * d'une grille de coordonnées. Ajoute les segments retenus dans Vector grille
     * Ne retient que les segments ayant au moins un bout dans le champ
@@ -5561,7 +5564,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     */
    private void calcul3Voisins(Segment oseg, int osens,double dra, double dde,
          double rajc,double dejc,boolean labelAllSky,int depth,double limiteSegmentSize) {
-      if( depth>1000 ) return;
+      
+      if( depth>100 ) return;   // sécurité
       for( int sens=0; sens<4; sens++ ) {
          Segment seg = oseg.createNextSegment();
          switch(sens) {
@@ -5570,13 +5574,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             case 2: seg.al2+=dra;  seg.iso=Segment.ISODE; if( seg.al2>=360. )  seg.al2-=360.;  break;
             case 3: seg.al2-=dra;  seg.iso=Segment.ISODE; if( seg.al2<=0   )    seg.al2+=360.;  break;
          }
-         if( oseg.del2<= -91. || oseg.del2>= 91. ) return; // On ne traverse pas les pôles
+//         if( oseg.del2<= -91. || oseg.del2>= 91. ) return; // On ne traverse pas les pôles
+         if( oseg.del2<= -90 || oseg.del2>= 90 ) return; // On ne traverse pas les pôles
          if( seg.del2==oseg.del1 && seg.al2==oseg.al1 ) continue; // Je reviens sur mes pas
-         //         if( !seg.projection(this) ) continue;
 
          // On triche pour pouvoir continuer la récursivité afin de s'approcher du bord
          if( !seg.projection(this) ){
-            seg.x2=-1; seg.y2=-1;
+            seg.x2=-1; 
+            seg.y2=-1;
          }
          if( horsChamp(oseg,seg) ) continue;
          if( !memoSegment(seg) ) continue;
@@ -5584,26 +5589,20 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( labelAllSky ) {
             if( seg.al2==rajc && seg.al1==rajc ) {
                seg.labelMode=Segment.MILIEURA;
-//               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-//               int i = seg.label.indexOf(' ');
-//               seg.label = zeroSec(seg.label.substring(i+1));
                seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
             } else if( seg.del2==dejc && seg.del1==dejc ) {
                seg.labelMode=Segment.MILIEUDE;
-//               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-//               int i = seg.label.indexOf(' ');
-//               seg.label = zeroSec(seg.label.substring(0,i));
                seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
-
-
             }
          }
 
-         if( !seg.horsChamp && !subdivise(sens==osens?oseg:null,seg,0,labelAllSky,limiteSegmentSize) ) continue;
+         if( !seg.horsChamp 
+               && !subdivise(sens==osens?oseg:null,seg,0,labelAllSky,limiteSegmentSize) ) continue;
 
          calcul3Voisins(seg,sens,dra,dde,rajc,dejc,labelAllSky,depth+1,limiteSegmentSize);
       }
    }
+   
 
    /** Insére un segment dans la grille en le subdivisant si besoin est
     * dans le cas où le rayon de courbure serait trop grand.
@@ -5618,7 +5617,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     */
    private boolean subdivise(Segment oseg,Segment seg,int p,boolean allsky,double limiteSegmentSize) {
       Segment s0,s1;
-
+       
+      double memoLimiteSegmentSize=limiteSegmentSize;
+      
       try {
          // Le segment précédent est inconnu, on va subdiviser le segment à insérer
          // afin de connaitre le rayon de courbure
@@ -5647,21 +5648,21 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // Cas où on ne connait pas le segment précédent, on va lancer
          // récursivement la subdivision sur les 2 moitiés du segment à insérer
          if( oseg==null ) {
-            boolean rep=subdivise(null,s0,p+1,allsky,limiteSegmentSize);
-            return subdivise(s0,s1,p+1,allsky,limiteSegmentSize) && rep;
+            boolean rep=subdivise(null,s0,p+1,allsky,memoLimiteSegmentSize);
+            return subdivise(s0,s1,p+1,allsky,memoLimiteSegmentSize) && rep;
          }
 
          // Idem mais dans le cas où l'on connait le segment précédent
          Segment s[] = seg.subdivise(this);
          if( s==null ) return false;
-         boolean rep=subdivise(oseg,s[0],p+1,allsky,limiteSegmentSize);
-         return subdivise(s[0],s[1],p+1,allsky,limiteSegmentSize) && rep;
+         boolean rep=subdivise(oseg,s[0],p+1,allsky,memoLimiteSegmentSize);
+         return subdivise(s[0],s[1],p+1,allsky,memoLimiteSegmentSize) && rep;
       } catch( Exception e ) { return false; }
    }
 
    /** Nombre de cellules de la grille de coordonnées en fonction
     * du niveau de multivue */
-   static final int NBCELL[] = {5,4,2,2,2};
+   static final int NBCELL[] = {5,3,3,2,2,2};
 
    // True si je trace la grille en antialias (dépend de la vitesse du dernier tracé)
    private boolean antiAliasGrid=true;
@@ -5823,18 +5824,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                pasa = goodPas(ra/nb,PASA)/60.;
             }
          }
-
+         
          // Est-ce que le Nord est sur le coté ?
-         try { c = proj.c.getImgCenter(); }
-         catch( Exception e ) { e.printStackTrace(); return; }
-         double ndel = c.del+pasd;
-         if( ndel>90 ) ndel=c.del-pasd;
-         Coord c1 = new Coord(c.al,ndel);
-         proj.getXYNative(c1);
-         if( Double.isNaN(c1.x) ) return;
-         double x1 = c1.x-c.x;
-         double y1 = c1.y-c.y;
-         northUpDown= Math.abs(x1)<= 0.707*Math.sqrt(x1*x1+y1*y1);
+//         try { c = proj.c.getImgCenter(); }
+//         catch( Exception e ) { e.printStackTrace(); return; }
+//         double ndel = c.del+pasd;
+//         if( ndel>90 ) ndel=c.del-pasd;
+//         Coord c1 = new Coord(c.al,ndel);
+//         proj.getXYNative(c1);
+//         if( Double.isNaN(c1.x) ) return;
+//         double x1 = c1.x-c.x;
+//         double y1 = c1.y-c.y;
+//         northUpDown= Math.abs(x1)<= 0.707*Math.sqrt(x1*x1+y1*y1);
 
 
          // Détermination du point de départ
@@ -5854,10 +5855,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          c = aladin.localisation.ICRSToFrame(c);
          double rajc = c.al - c.al%pasa;
          double dejc = c.del - c.del%pasd;
-
-         //System.out.println("Computing grid: center on "+c.getSexa()+" ("+c.getUnit(ra/60.)+"x"+c.getUnit(rd/60.)+" cells: "+
-         //                c.getUnit(pasa)+" x "+c.getUnit(pasd)+") "+(northUpDown?"North left/right":"North up/down"));
-
+         
+//         System.out.println("Computing grid: center on "+c.getSexa()+" ("+
+//                         c.getUnit(pasa)+" x "+c.getUnit(pasd)+") "+(flagGridNorthUp?"North left/right":"North up/down"));
+//         if( (c.getUnit(pasd)+"").equals("2\"") ) {
+//            System.out.println("J'y suis");
+//         }
          // On initialise avec un segment de taille nulle sur
          // le point d'origine de la grille
          Segment seg = new Segment();
@@ -5869,6 +5872,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // en proche).
          //         double limiteSegmentSize = proj.t==Calib.AIT || proj.t==Calib.MOL ? 50 : proj.t==Calib.TAN || proj.t==Calib.SIP ? 4000 : 2000;
          double limiteSegmentSize=50;
+         
          calcul3Voisins(seg,-1,pasa,pasd,rajc,dejc,isAllSky() && getFullSkySize()>200,0,limiteSegmentSize);
          freeMemoSegment();
       }

@@ -683,8 +683,8 @@ public class PlanBG extends PlanImage {
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
       String s;
-      if( prop==null ) return;
-      if( (s=prop.get("moc_sky_fraction"))!=null ) ADD( buf,"\n* Coverage: ",getCoverageSpace(s));
+      if( prop!=null && (s=prop.get("moc_sky_fraction"))!=null ) ADD( buf,"\n* Coverage: ",getCoverageSpace(s));
+      ADD( buf,"\n","* HiPS order: "+getOrder()+"/"+maxOrder);
    }
 
    // Juste pour se simplifier la vie sur le test de prop==null

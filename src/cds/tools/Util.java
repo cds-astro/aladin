@@ -2068,15 +2068,15 @@ public final class Util {
       }
    }
 
-//   /** retourne dans une unité lisible l'énergie passée en mètres */
-//   static public String getFreqFromMeter(String meter) {
-//      try {
-//         return SED.getUnitFreq( SED.wave2Freq( Double.parseDouble(meter)*1000000 ) );
-//      } catch( Exception e ) {
-//         return meter+"m";
-//      }
-//   }
-
+   /** retourne dans une unité lisible l'énergie passée en mètres */
+   static public String getFreqFromMeter(String meter) {
+      try {
+         return SED.getUnitFreq( SED.wave2Freq( Double.parseDouble(meter)*1000000) );
+      } catch( Exception e ) {
+         return meter+"m";
+      }
+   }
+   
    /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
    static public String getTemps(long ms) { return getTemps(ms,false);  }
    static public String getTemps(long ms,boolean round) {

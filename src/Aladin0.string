@@ -3242,6 +3242,10 @@ EXPAND	exp.
 EXPAND.fr	dév.
 COLLAPSETIP	Expand/collapse the Data Discovery tree
 COLLAPSETIP.fr	Développe/réduit l'arbre de découverte des données
+SORT	sort
+SORT.fr	tri
+SORTTIP	Modify the order applied on the collection tree branches
+SORTTIP.fr	Modifie l'ordonnancement des branches de l'arbre de découverte
 INSIDE	view
 INSIDE.fr	vue
 INSIDETIP	Hide/show the collections without\nany observation in the current view
@@ -3492,14 +3496,14 @@ AWMOC3.fr	l'intersection
 AWMOC3TIP	Load the intersection of MOCs of the selected collections
 AWMOC3TIP.fr	Charge l'intersection des couvertures (MOC) des collections sélectionnées
 
-AWSKYCOV	Sky coverage:
-AWSKYCOV.fr	Couverture du ciel:
+AWSKYCOV	Coverage:
+AWSKYCOV.fr	Couverture:
 AWMOCUNK	Coverage unknown (no available MOC)
 AWMOCUNK.fr	Couverture inconnue (aucun MOC disponible)
-AWHIPSRES	HiPS pixel scale:
-AWHIPSRES.fr	Rés.pixel HiPS:
+AWHIPSRES	Res:
+AWHIPSRES.fr	Rés:
 AWNBROWS	Nb rows:
-AWNBROWS.fr	Nb de col.:
+AWNBROWS.fr	Nb de lig.:
 AWREFPUB	Reference pub. year:
 AWREFPUB.fr	Année pub.réf.
 AWPROGACC	progressive

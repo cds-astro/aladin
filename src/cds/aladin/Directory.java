@@ -75,6 +75,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -103,23 +104,21 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  */
 public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame {
+   
+   static protected final String MMOC = "Multiprop.bin";
 
    // Nombre de collections appelables individuellement en parallèle
    static private final int MAX_PARALLEL_QUERY = 30;
 
    static private String DIRECTORY, MULTICOL, HELP;
-
    static protected String AWCSLAB, AWCSTIP, AWMCSTIP, AWSIATIP, AWSSATIP, AWMOCQLAB, AWMOCQLABTIP, AWMOCTITLE, AWMOC1, AWMOC1TIP,
          AWMOC2, AWMOC2TIP, AWMOC3, AWMOC3TIP ;
-
    static protected String ALLCOLL, MYLIST, ALLCOLLHTML, MYLISTHTML, AWSKYCOV, AWMOCUNK, AWHIPSRES, AWNBROWS, AWREFPUB, AWPROGACC,
          AWPROGACCTIP, AWDATAACC, AWDATAACCTIP, AWDATAACCTIP1, AWINVIEWTIP, AWMOCQLABTIP2, AWXMATCH, AWXMATCHTIP, AWCRIT,
          AWCRITTIP, AWMOCX, AWMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
          AWFRAMEINFOTITLE,AWCGRAPTIP,AWCONE,AWCONETIP,AWACCMODE,AWACCMODETIP,AwDERPROD,AwDERPRODTIP,AWINFOTIP,AWPROPTIP,
          AWBOOKMARKTIP,AWPARAMTIP,AWSTICKTIP,AWCUSTOM,AWCUSTOMTIP;
-
    static private final String UPDATING = "  updating...";
-
    static protected final String ROOT_LABEL = "Collections";
 
    private Aladin aladin; // Référence
@@ -128,37 +127,25 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private Color cbg;             // La couleur du fond
 
    private DirectoryFilter directoryFilter = null; // Formulaire de filtrage de l'arbre des collections
-
-   protected boolean mocServerLoading = false; // true si on est en train de charger le directory initial
-
-   protected boolean mocServerUpdating = false; // true si on est en train de mettre à jour le directory
-
-   private boolean flagScanLocal = false; // true si on a des MOCs dans le multiprop local
-
-   protected boolean flagError = false; // true si l'expression de filtrage est buggée
-
-   private DirectoryTree dirTree; // Le JTree du directory
-
-   protected ArrayList<TreeObjDir> dirList; // La liste des collections connues
+   private DirectorySort directorySort = null;     // Gestion du tri de l'arbre des collections
+   protected boolean mocServerLoading = false;     // true si on est en train de charger le directory initial
+   protected boolean mocServerUpdating = false;    // true si on est en train de mettre à jour le directory
+   private boolean flagScanLocal = false;          // true si on a des MOCs dans le multiprop local
+   protected boolean flagError = false;            // true si l'expression de filtrage est buggée
+   private DirectoryTree dirTree;                  // Le JTree du directory
+   protected ArrayList<TreeObjDir> dirList;        // La liste des collections connues
 
    // Composantes de l'interface
-   private QuickFilterField quickFilter; // Champ de filtrage rapide
-
-   protected FilterCombo comboFilter; // Menu popup des filtres
-
-   protected IconFilter iconFilter; // L'icone d'activation du filtrage
-
-   protected IconInside iconInside; // L'icone d'activation du mode "inside"
-
-   protected IconScan iconScan; // L'icone d'activation du scan
-
-   private IconCollapse iconCollapse; // L'icone pour développer/réduire l'arbre
-
-   private Timer timer = null; // Timer pour le réaffichage lors du chargement
-
-   private JLabel dir = null; // Le titre qui apparait au-dessus de l'arbre
-
-   private FrameProp frameProp = null; // Frame des paramètres pour les différents types d'interrogation
+   private QuickFilterField quickFilter;           // Champ de filtrage rapide
+   protected FilterCombo comboFilter;              // Menu popup des filtres
+   protected IconFilter iconFilter;                // L'icone d'activation du filtrage
+   protected IconInside iconInside;                // L'icone d'activation du mode "inside"
+   protected IconScan iconScan;                    // L'icone d'activation du scan
+   private IconCollapse iconCollapse;              // L'icone pour développer/réduire l'arbre
+   private IconSort iconSort;                      // L'icone pour trier l'arbre
+   private Timer timer = null;                     // Timer pour le réaffichage lors du chargement
+   private JLabel dir = null;                      // Le titre qui apparait au-dessus de l'arbre
+   private FrameProp frameProp = null;             // Frame des paramètres pour les différents types d'interrogation
 
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
    private static String MOCSERVER_INIT = "*&fields=!hipsgen*&get=record&fmt=asciic";
@@ -381,12 +368,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Les icones de controle tout en bas
       iconFilter = new IconFilter(aladin);
       iconCollapse = new IconCollapse(aladin);
+      iconSort = new IconSort(aladin);
       iconInside = new IconInside(aladin);
       iconScan = new IconScan(aladin);
 
       JPanel pControl = new JPanel(new FlowLayout(FlowLayout.LEFT, 1, 1));
       pControl.setBackground(cbg);
       pControl.add(iconCollapse);
+      pControl.add(iconSort);
       pControl.add(iconInside);
       pControl.add(iconScan);
       pControl.add(iconFilter);
@@ -429,6 +418,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             }
 
             iconCollapse.repaint();
+            iconSort.repaint();
             resetWasExpanded();
             repaint();
          }
@@ -723,6 +713,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** Retourne true si on a sélectionné quelque chose de scannable */
    protected boolean isScannable() {
       return getSelectedTreeObjDirScannable().size() >= 1;
+   }
+   
+   /** Retourne true si on a sélectionné quelque chose qui est triable */
+   protected boolean isSortable() {
+      TreePath tp = dirTree.getSelectionPath();
+      if( tp==null ) return false;
+      DefaultMutableTreeNode to = (DefaultMutableTreeNode) tp.getLastPathComponent();
+      return to.getChildCount()>1;
    }
 
    /** Récupération de la liste des TreeObj sélectionnées qui n'ont pas de MOC à disposition */
@@ -1213,11 +1211,23 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    // False lorsque la première initialisation de l'arbre est faite
    private boolean init = true;
+   
+// CA NE FONCTIONNE PAS CORRECTEMENT ACTUELLEMENT - PF DEC 2017
+   protected void reload() {
+//      init = true;
+//      try {
+//         initMultiProp(true);
+//         buildTree();
+//      } finally {
+//         postTreeProcess(true);
+//         init = false;
+//      }
+   }
 
    /** Maj initiale de l'arbre - et maj des menus Aladin correspondants */
    protected void updateTree() {
       try {
-         initMultiProp();
+         initMultiProp(false);
          buildTree();
       } finally {
          postTreeProcess(true);
@@ -1233,8 +1243,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    private void buildTree() {
       DirectoryModel model = (DirectoryModel) dirTree.getModel();
-      for( TreeObjDir to : dirList )
-         model.createTreeBranch(to);
+      for( TreeObjDir to : dirList ) model.createTreeBranch(to);
       int n = initCounter(model);
       updateTitre(n);
    }
@@ -1275,6 +1284,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected void resetWasExpanded() {
       wasExpanded = null;
    }
+   
+   /** Réaffichage de l'arbre avec un nouveau tri */
+   protected void resumeSort() {
+      wasExpanded = null;
+      resumeTree(dirList, false, false);
+   }
 
    /**
     * Reconstruction de l'arbre en utilisant à chaque fois un nouveau model pour éviter les conflits d'accès et éviter la lenteur
@@ -1302,17 +1317,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       ArrayList<TreeObjDir> tmpDirList1 = new ArrayList<TreeObjDir>(tmpDirList.size());
       for( TreeObjDir to : tmpDirList ) {
          boolean mustBeActivated = !to.isHidden() && (!insideActivated || insideActivated && to.getIsIn() != 0);
-         if( mustBeActivated ) tmpDirList1.add(to);
+         if( mustBeActivated ) {
+            directorySort.setInternalSortKey(to.id,to.prop);
+            to.setTri();
+            tmpDirList1.add(to);
+         }
       }
       Collections.sort(tmpDirList1, TreeObj.getComparator());
-      for( TreeObjDir to : tmpDirList1 )
-         model.createTreeBranch(to);
-
-      // ANCIENNE METHODE QUI AVAIT TENDANCE A CHANGER L'ORDRE D'APPARITION DES BRANCHES
-      // for( TreeObjDir to : tmpDirList ) {
-      // boolean mustBeActivated = !to.isHidden() && (!insideActivated || insideActivated && to.getIsIn()!=0 );
-      // if( mustBeActivated ) model.createTreeBranch( to );
-      // }
+      for( TreeObjDir to : tmpDirList1 ) model.createTreeBranch(to);
 
       if( initCounter ) initCounter(model);
       else updateTitre(model.countDescendance());
@@ -1364,11 +1376,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
    }
 
-   private String parent(String path) {
-      int i = path.lastIndexOf('/');
-      if( i < 0 ) return "";
-      return path.substring(0, i);
-   }
+//   private String parent(String path) {
+//      int i = path.lastIndexOf('/');
+//      if( i < 0 ) return "";
+//      return path.substring(0, i);
+//   }
 
    /**
     * Restaure l'état des branches en fonction d'une hashSet des branches qui étaient expanded, ainsi que d'une hashmap donnant
@@ -1397,7 +1409,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
       }
    }
-
+   
    /** Réaffichage de l'arbre en fonction des flags courants */
    protected void resumeTree() {
       resumeTree(dirList, false, false);
@@ -1535,8 +1547,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( ids1 != null && !ids1.contains(s) ) continue;
          set.add(s);
       }
-      for( TreeObjDir to : dirList )
-         to.setHidden(!set.contains(to.internalId));
+      for( TreeObjDir to : dirList ) to.setHidden(!set.contains(to.internalId));
    }
 
    private HealpixMoc oldMocSpatial = null;
@@ -1768,6 +1779,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected boolean isDefaultExpand() {
       return dirTree.isDefaultExpand();
    }
+   
+   protected void tri(Component parent, int x, int y) {
+      TreePath tps = dirTree.getSelectionPath();
+      if( tps==null ) return;
+      DefaultMutableTreeNode to = (DefaultMutableTreeNode) tps.getLastPathComponent();
+      TreeObj t = (TreeObj)to.getUserObject();
+      JPopupMenu popup = directorySort.createPopup( t.path );
+      popup.show(parent,x,y);
+   }
 
    /** Collapse/Expande l'arbre en fonction du noeud courant et de l'état de l'arbre */
    protected void collapseOrNot() {
@@ -1930,7 +1950,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected void interruptMocServerReading() {
       interruptServerReading = true;
    }
-
+   
    /**
     * Génération de la liste des collections en fonction du contenu du MultiProp La liste est triée Les URLs HiPS seront
     * mémorisées dans le Glu afin de pouvoir gérer les sites miroirs
@@ -2070,63 +2090,52 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Ajout dans la liste des noeuds d'arbre
       listReg.add(new TreeObjDir(aladin, id, prop));
    }
-
+   
+   
    /**
     * Ajustement des propriétés, notamment pour ajouter le bon client_category s'il s'agit d'un catalogue
     */
    private void propAdjust(String id, MyProperties prop) {
-      propAdjust1(id, prop);
-      String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
-      String key = prop.get(Constante.KEY_CLIENT_SORT_KEY);
-
-//      if( id.equals("CDS/Model.SED/sed") || id.equals("CDS/METAobj") || id.equals("CDS/ReadMeObj") ) category = null;
-
-      // Sans catégorie => dans la branche "Others" suivi du protocole puis de l'authority
-      if( category == null ) {
-         boolean isHips = prop.getProperty("hips_service_url") != null;
-         boolean isCS = prop.getProperty("cs_service_url") != null;
-         boolean isSIA = prop.getProperty("sia_service_url") != null || prop.getProperty("sia2_service_url") != null;
-         boolean isSSA = prop.getProperty("ssa_service_url") != null;
-         boolean isTAP = prop.getProperty("tap_service_url") != null;
-         String subCat = isHips ? "HiPS"
-               : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
-
-         category = OTHERS+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
-         prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
-
-         // On trie un peu les branches
-         int k = isHips ? 4 : isCS ? 1 : isTAP ? 2 : isSIA ? 0 : isSSA ? 3 : 5;
-         key = key == null ? k + "" : k + "/" + key;
-         prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, key);
-      }
-
-      boolean local = prop.getProperty("PROP_ORIGIN") != null;
-
-      // Rangement dans la branche "Adds" si chargement local
-      if( local && !category.startsWith(ADDS+"/") ) {
-         category = ADDS+"/" + category;
-         prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
-      }
-
-      // Tri de la catégorie générale
-
-      if( key == null ) key = "Z";
-      String cat = prop.get(Constante.KEY_CLIENT_CATEGORY);
-      int c = Util.indexInArrayOf(Util.getSubpath(cat, 0), CATEGORY);
-      if( c == -1 ) c = CATEGORY.length;
-      key = String.format("%02d", c) + "/" + key;
-      prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, key);
-
+      
       // Insertion de la date de publication de l'article de référence
       String bib = prop.get("bib_reference");
       if( bib != null ) {
          try {
             int year = Integer.parseInt(bib.substring(0, 4));
             prop.replaceValue("bib_year", "" + year);
-         } catch( Exception e ) {
-         }
+         } catch( Exception e ) { }
       }
 
+      // Traitement spécifique CDS
+      propAdjust1(id, prop);
+      
+      String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
+      boolean isHips = prop.getProperty("hips_service_url") != null;
+      
+      // Sans catégorie => dans la branche "Others" suivi du protocole puis de l'authority
+      if( category == null ) {
+         boolean isCS  = prop.getProperty("cs_service_url")   != null;
+         boolean isSIA = prop.getProperty("sia_service_url")  != null 
+                      || prop.getProperty("sia2_service_url") != null;
+         boolean isSSA = prop.getProperty("ssa_service_url")  != null;
+         boolean isTAP = prop.getProperty("tap_service_url")  != null;
+         String subCat = isHips ? "HiPS"
+               : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
+
+         category = DirectorySort.OTHERS+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
+         prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
+      }
+
+      boolean local = prop.getProperty("PROP_ORIGIN") != null;
+
+      // Rangement dans la branche "Adds" si chargement local
+      if( local && !category.startsWith(DirectorySort.ADDS+"/") ) {
+         category = DirectorySort.ADDS+"/" + category;
+         prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
+      }
+      
+      // Génération de la clé de tri
+      directorySort.setInternalSortKey(id,prop);
    }
 
    private void propAdjust1(String id, MyProperties prop) {
@@ -2154,32 +2163,18 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       String code = getCatCode(id);
       if( code == null ) return;
 
-      String sortPrefix = "";
       String vizier = "/VizieR";
 
       boolean flagJournal = code.equals("J");
       if( flagJournal ) {
          String journal = getJournalCode(id);
-         category = "Catalog" + vizier + "/Journal table/" + journal;
-         sortPrefix = journal;
+         category = "Catalog" + vizier + "/Journal table/" + journal; 
 
       } else {
-         int c = Util.indexInArrayOf(code, CAT_CODE);
+         int c = Util.indexInArrayOf(code, DirectorySort.CATCODE);
          if( c == -1 ) category = "Catalog" + vizier + "/" + code; // Catégorie inconnue
-
-         else {
-            category = "Catalog" + vizier + "/" + CAT_LIB[c];
-            sortPrefix = String.format("%02d", c);
-         }
+         else category = "Catalog" + vizier + "/" + DirectorySort.CATLIB[c];
       }
-
-      // Tri par popularité et catégorie
-      String popularity = prop.get("vizier_popularity");
-      if( popularity != null ) {
-         popularity = String.format("%04d", 1000 - Long.parseLong(popularity));
-      } else popularity = getCatSuffix(id);
-      String sortKey = sortPrefix + "/" + popularity;
-      prop.replaceValue(Constante.KEY_CLIENT_SORT_KEY, sortKey);
 
       // Détermination du suffixe (on ne va pas créer un folder pour un élément unique)
       String parent = getCatParent(id);
@@ -2512,22 +2507,25 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    //
 
    /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */
-   private String getCatCode(String id) {
+   static protected String getCatCode(String id) {
       return Util.getSubpath(id, 1);
    }
 
    /** retourne l'abbréviation du journal (ex: CDS/J/A+A/171/261/table1 => A+A) */
-   private String getJournalCode(String id) {
+   static protected String getJournalCode(String id) {
       return Util.getSubpath(id, 2);
-//      String s = Util.getSubpath(id, 2,3);
-//      return s;
+   }
+
+   /** retourne numéro du journal (ex: CDS/J/A+A/171/261/table1 => 171/261 ) */
+   static protected String getJournalNum(String id) {
+      return Util.getSubpath(id, 3,2);
    }
 
    /**
     * Retourne le suffixe de l'identificateur d'un catalogue => tous ce qui suit le code de catégorie (ex: CDS/I/246/out =>
     * 246/out)
     */
-   private String getCatSuffix(String id) {
+   static protected String getCatSuffix(String id) {
       return Util.getSubpath(id, 2, 2);
    }
 
@@ -2535,27 +2533,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * Retourne le préfixe parent d'un identificateur de catalgoue => tout ce qui précède le dernier mot (ex: CDS/I/246/out =>
     * CDS/I/246)
     */
-   private String getCatParent(String id) {
+   static protected String getCatParent(String id) {
       int i = id.lastIndexOf('/');
       if( i > 0 ) return id.substring(0, i);
       return null;
    }
    
-   public static final String OTHERS = "Others";
-   public static final String PROBLEMATIC = "Problematic";
-   public static final String ADDS = "Adds";
-
-   private final String[] CATEGORY = { "Image", "Data base", "Catalog", "Cube", "Outreach", OTHERS, PROBLEMATIC };
-
-   private final String[] CAT_CODE = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "B", "J" };
-
-   private final String[] CAT_LIB = { "I-Astrometric Data", "II-Photometric Data", "III-Spectroscopic Data",
-         "IV-Cross-Identifications", "V-Combined data", "VI-Miscellaneous", "VII-Non-stellar Objects",
-         "VIII-Radio and Far-IR data", "IX-High-Energy data", "B-External databases, regularly updated",
-         "Journal tables"};
-
-   static protected final String MMOC = "Multiprop.bin";
-
    // Sauvegarde dans le cache du MultiMoc sous forme binaire
    private boolean cacheWrite() {
       try {
@@ -2608,7 +2591,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    /** Chargement des descriptions de l'arbre par le MocServer */
-   private void initMultiProp() {
+   private void initMultiProp(final boolean flagReload) {
 
       // Tentative de rechargement depuis le cache
       if( cacheRead() ) {
@@ -2620,7 +2603,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                try {
                   quickFilter.setEditable(false);
                   quickFilter.setText(UPDATING);
-                  if( updateFromMocServer() > 0 ) {
+                  if( updateFromMocServer(flagReload) > 0 ) {
                      cacheWrite();
                      final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
                      SwingUtilities.invokeLater(new Runnable() {
@@ -2688,7 +2671,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * date d'estampillage pour chacune d'elles. Si ça ne fonctionne pas, on tentera une maj plus basique
     * @return le nombre de records chargés
     */
-   private int updateFromMocServer() {
+   private int updateFromMocServer(boolean flagReload) {
       long t0 = System.currentTimeMillis();
       URL url;
       try {
@@ -2716,7 +2699,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          BufferedWriter fo = new BufferedWriter(new FileWriter(tmpMoc));
          try {
             for( MocItem mi : this ) {
-               String s = mi.mocId + "=" + mi.getPropTimeStamp() + "\n";
+               String s = mi.mocId + "=" + (flagReload ? "0":mi.getPropTimeStamp()) + "\n";
                fo.write(s.toCharArray());
             }
          } finally {
@@ -2924,6 +2907,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private void initParams() {
       TreeObjDir.loadString(aladin.chaine);
       params = TreeObjDir.paramsFactory();
+      directorySort = new DirectorySort(aladin);
    }
 
    protected void setParam(String key, String val) {
@@ -3336,25 +3320,40 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             String provenance = to.getProperty("prov_progenitor");
             String copyright = to.copyright == null ? to.copyrightUrl : to.copyright;
             if( provenance != null || copyright != null ) {
+               String url=null;
                s = null;
-               if( copyright != null ) s = copyright + " ";
-               if( provenance != null ) s = "Provenance: " + provenance + (s == null ? " " : ", " + s);
-               else s = "Copyright: " + s;
-               a = new MyAnchor(aladin, null, 50, s, null);
+               
+               if( provenance!=null && provenance.startsWith("http") ) { url = provenance; provenance=null; }
+               else url=to.copyrightUrl;
+               if( url==null ) url = to.getProperty("prov_progenitor_url");
+               
+               s = provenance;
+               if( provenance!=null ) s=provenance;
+               if( s==null && copyright!=null ) s=copyright;
+               if( s!=null && s.startsWith("http") ) {
+                  if( url==null ) url=s;
+                  s=null;
+               }
+               if( s==null ) s=Util.getSubpath(to.id, 0);
+               s = "Provenance: "+s+" ";
+               
+               a = new MyAnchor(aladin, s, 50, url, null);
                a.setForeground(Color.gray);
                PropPanel.addCouple(p, null, a, g, c);
             }
 
-            JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
-            s = to.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+            JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0,0));
+//            s = to.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+            s = to.getCoverage();
             if( s != null ) {
                boolean isIn = to.getIsIn() == 1;
-               try {
-                  s = Util.myRound(Double.parseDouble(s) * 100);
-               } catch( Exception e ) {
-               }
-               s = AWSKYCOV + " " + s + "% ";
-               a = new MyAnchor(aladin, s, 50, null, null);
+//               try {
+//                  s = Util.myRound(Double.parseDouble(s) * 100);
+//               } catch( Exception e ) {
+//               }
+//               s = AWSKYCOV + " " + s + "% ";
+               s = AWSKYCOV + " " + s + " ";
+                             a = new MyAnchor(aladin, s, 50, null, null);
                a.setForeground(Color.gray);
                p1.add(a);
 
@@ -3369,37 +3368,55 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                p1.add(a);
 
             }
-            s = to.getProperty(Constante.KEY_HIPS_PIXEL_SCALE);
+            s = to.getEnergy();
             if( s != null ) {
-               try {
-                  s = Coord.getUnit(Double.parseDouble(s));
-               } catch( Exception e ) {
-               }
-               s = "    " + AWHIPSRES + " " + s + " ";
+               s = "    "  + s + " ";
                a = new MyAnchor(aladin, s, 50, null, null);
                a.setForeground(Color.gray);
                p1.add(a);
             }
-            s = to.getProperty(Constante.KEY_NB_ROWS);
-            if( s != null ) {
-               try {
-                  nbRows = Long.parseLong(s);
-               } catch( Exception e ) {
+            
+            s = to.getPeriod();
+            if( s!=null ) {
+               s = "    "  + s + " ";
+               a = new MyAnchor(aladin, s, 50, null, null);
+               a.setForeground(Color.gray);
+               p1.add(a);
+
+            } else {
+               s = to.getProperty("bib_year");
+               if( s != null ) {
+                  s = "    " + AWREFPUB + " " + s + " ";
+                  a = new MyAnchor(aladin, s, 50, null, null);
+                  a.setForeground(Color.gray);
+                  p1.add(a);
                }
-               s = String.format("%,d", nbRows);
-               s = "    " + AWNBROWS + " " + s + " ";
-               a = new MyAnchor(aladin, s, 50, null, null);
-               a.setForeground(Color.gray);
-               p1.add(a);
-            }
-            s = to.getProperty("bib_year");
-            if( s != null ) {
-               s = "    " + AWREFPUB + " " + s + " ";
-               a = new MyAnchor(aladin, s, 50, null, null);
-               a.setForeground(Color.gray);
-               p1.add(a);
             }
 
+          s = to.getProperty(Constante.KEY_HIPS_PIXEL_SCALE);
+          if( s != null ) {
+             try {
+                s = Coord.getUnit(Double.parseDouble(s));
+             } catch( Exception e ) {
+             }
+             s = "    " + AWHIPSRES + " " + s + " ";
+             a = new MyAnchor(aladin, s, 50, null, null);
+             a.setForeground(Color.gray);
+             p1.add(a);
+          }
+          s = to.getProperty(Constante.KEY_NB_ROWS);
+          if( s != null ) {
+             try {
+                nbRows = Long.parseLong(s);
+             } catch( Exception e ) {
+             }
+             s = String.format("%,d", nbRows);
+             s = "    " + AWNBROWS + " " + s + " ";
+             a = new MyAnchor(aladin, s, 50, null, null);
+             a.setForeground(Color.gray);
+             p1.add(a);
+          }
+          
             if( p1.getComponentCount() > 0 ) PropPanel.addCouple(p, null, p1, g, c);
 
             JPanel accessPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
@@ -3679,6 +3696,20 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                }
             });
            
+            b = new JButton(new ImageIcon( Aladin.aladin.getImagette("Sort.png")));
+            b.setMargin(new Insets(0, 0, 0, 0));
+            b.setBorderPainted(false);
+            b.setContentAreaFilled(false);
+            Util.toolTip(b, aladin.chaine.getString("SORTTIP"), true);
+            b.setFont(b.getFont().deriveFont(Font.BOLD));
+
+            precontrol.add(b);
+            final JButton bfinal = b;
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  aladin.directory.tri( bfinal, 5,5);
+               }
+            });
             
             if( flagScan ) {
                b = new JButton(new ImageIcon( Aladin.aladin.getImagette("icon_searchAitoff.png"))); // AWSCANONLY);
@@ -4045,8 +4076,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                   double rad = aladin.calque.getRadiusBG(null, null, null);
                   planMoc = new PlanMoc(aladin, moc, "moc", c, rad);
                } else {
-                  aladin.warning(
-                        "MOC creation failed !\nYour graphical region must be circles, and/or polygons counter-clock oriented");
+                  aladin.warning("MOC creation failed !\nYour graphical region must be circles, "
+                        + "and/or polygons counter-clock oriented");
                   return;
                }
 

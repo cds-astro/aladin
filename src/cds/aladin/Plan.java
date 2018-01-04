@@ -1638,25 +1638,69 @@ public class Plan implements Runnable {
       return "";
    }
    
-   private String getCoverageTime(String s1,String s2) {
-      if( s1.equals(s2) ) return Util.getDateFromMJD(s1);
-      return Util.getDateFromMJD(s1) + " .. "+ Util.getDateFromMJD(s2);
+   static public String getCoverageTime(String s1,String s2) {
+      if( s2==null ) s2=s1;
+      if( s1==null ) return null;
+     if( s1.equals(s2) ) return Util.getDateFromMJD(s1);
+     String y1 = Util.getDateFromMJD(s1);
+     String y2 = Util.getDateFromMJD(s2);
+      return Y1(y1,y2) + " .. "+ Y2(y1,y2);
    }
    
-   private String getCoverageEnergy(String s1,String s2) {
-      if( s1.equals(s2) ) return Util.getWaveFromMeter(s1);
-      return Util.getWaveFromMeter(s1) + " .. "+ Util.getWaveFromMeter(s2);
+   // Supprime le mois-jour si 1er janvier (début d'intervalle)
+   static private String Y1( String y1, String y2 ) {
+      if( y1.endsWith("-01-01") ) {
+         String a1 = y1.substring(0,4);
+         String a2 = y2.substring(0,4);
+         if( !a1.equals(a2) ) return a1;
+      }
+      return y1;
    }
    
-   protected String getCoverageSpace(String s) {
+   // Supprime le mois-jour si 1er janvier ou 31 déc (fin d'intervalle)
+   static private String Y2( String y1, String y2 ) {
+      try {
+         if( y2.endsWith("-12-31") ) {
+            String a1 = y1.substring(0,4);
+            String a2 = y2.substring(0,4);
+            if( !a2.equals(a1) ) return a2;
+         }
+         if( y2.endsWith("-01-01") ) return ""+(Integer.parseInt(y2.substring(0,4))-1);
+      } catch( NumberFormatException e ) { }
+      return y2;
+   }
+
+   static public String getCoverageEnergy(String s1,String s2) {
+      if( s2==null ) s2=s1;
+      if( s1==null ) return null;
+      
+      
+      
+//      // On affiche aussi la fréquence si <10nm || > 100microns
+//      boolean flagFreq=false;
+//      try { 
+//         double c = Double.parseDouble(s1);
+//         flagFreq = c<10E-9 || c>1E-3;
+//      } catch( Exception e ) {} 
+      boolean flagFreq=true;
+      
+      if( s1.equals(s2) ) return Util.getWaveFromMeter(s1)+( flagFreq? "/"+Util.getFreqFromMeter(s1):"");
+      return Util.getWaveFromMeter(s1)+( flagFreq? "/"+Util.getFreqFromMeter(s1):"") 
+           + " .. "+ Util.getWaveFromMeter(s2)+( flagFreq? "/"+Util.getFreqFromMeter(s2):"");
+
+   }
+   
+   static public String getCoverageSpace(String s) {
       try {
          double cov = Double.parseDouble(s);
          if( cov<0.1 ) {
             double degrad = Math.toDegrees(1.0);
             double skyArea = 4.*Math.PI*degrad*degrad;
-            return Coord.getUnit(skyArea*cov, false, true)+"^2";
+            return Coord.getUnit(skyArea*cov, false, true)+"²";
          }
-         return Util.round(cov*100, 3)+"%";
+         s = ""+Util.round(cov*100, 3);
+         if( s.equals("100.0") ) s="100";
+         return s+"%";
       } catch( Exception e ) { }
       return null;
    }
@@ -1674,7 +1718,7 @@ public class Plan implements Runnable {
       if( prop!=null ) {
          if( (s=prop.get("obs_regime"))!=null ) ADD( buf, "\n* Regime: ",s.replace("\t",", "));
          if( (s=prop.get("em_min"))!=null && (s1=prop.get("em_max"))!=null ) {
-            ADD( buf,"\n* Wavelength: ",getCoverageEnergy(s,s1));
+            ADD( buf,"\n* Energy: ",getCoverageEnergy(s,s1));
          }
          if( (s=prop.get("t_min"))!=null && (s1=prop.get("t_max"))!=null ) {
             ADD( buf,"\n* Time: ",getCoverageTime(s,s1));

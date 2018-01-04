@@ -766,7 +766,7 @@ public class Localisation extends MyBox  {
          else s = (new Coord(al,del)).getSexaPlanet();
          if( s.length()==0 ) return "";
          offset = s.indexOf(',');
-         return  zeroSec( indice==1 ? s.substring(0,offset) : s.substring(offset+2) );
+         return zeroSec( indice==1 ? s.substring(0,offset) : s.substring(offset+2) );
          
       } else {
          s = frameToString(al,del);

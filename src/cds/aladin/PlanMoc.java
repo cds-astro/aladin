@@ -116,8 +116,12 @@ public class PlanMoc extends PlanBGCat {
       double cov = moc.getCoverage();
       double degrad = Math.toDegrees(1.0);
       double skyArea = 4.*Math.PI*degrad*degrad;
-      ADD( buf, "\n* Best ang.res: ",Coord.getUnit(moc.getAngularRes())+", order="+moc.getMocOrder());
       ADD( buf, "\n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+      ADD( buf, "\n* Best ang.res: ",Coord.getUnit(moc.getAngularRes()));
+      
+      int order = getRealMaxOrder(moc);
+      int drawOrder = getDrawOrder();
+      ADD( buf,"\n","* MOC order: "+ (order==drawOrder ? order+"" : drawOrder+"/"+order));
    }
 
    /** Changement de référentiel si nécessaire */
@@ -419,6 +423,20 @@ public class PlanMoc extends PlanBGCat {
             return false;
          }
       }
+      
+      // Je rectifie une éventuelle erreur de déclaration du maxOrder
+      int maxOrder = getRealMaxOrder(moc);
+      int o = moc.getMaxOrder();
+      if( maxOrder!=o ) {
+         try {
+            moc.setMocOrder(maxOrder);
+            aladin.console.printError("Moc order probably wrong ("+o+"), assuming "+maxOrder);
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            return false;
+         }
+         
+      }
 
       return true;
    }
@@ -533,6 +551,9 @@ public class PlanMoc extends PlanBGCat {
    protected boolean hasMoreDetails() {
       return moc!=null && lastOrderDrawn < moc.getMaxOrder();
    }
+   
+   /** Retourne l'ordre du dernier MOC dessiné effectivement */
+   protected int getDrawOrder() { return lastOrderDrawn; }
 
    protected double getCompletude() { return -1; }
    

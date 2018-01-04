@@ -1160,8 +1160,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addFilet(p, g, c);
             PropPanel.addSectionTitle(p,"Coverage",g,c);
 
-            if( sTmin!=null  || sTmax!=null )  PropPanel.addCouple(p,"Time range", new JLabel( getCoverageTime(sTmin,sTmax)), g,c);
-            if( sEMmin!=null || sEMmax!=null ) PropPanel.addCouple(p,"Energy range", new JLabel( getCoverageEnergy(sEMmin,sEMmax)), g,c);
+            if( sTmin!=null  || sTmax!=null )  PropPanel.addCouple(p,"Time range", new JLabel( pbg.getCoverageTime(sTmin,sTmax)), g,c);
+            if( sEMmin!=null || sEMmax!=null ) PropPanel.addCouple(p,"Energy range", new JLabel( pbg.getCoverageEnergy(sEMmin,sEMmax)), g,c);
             if( hasMoc || sS!=null ) {
                if( sS==null && pbg.moc!=null ) sS = pbg.moc.getCoverage()+"";
                JPanel p1 = new JPanel();
@@ -1530,13 +1530,13 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    }
 
 
-   private String getCoverageTime(String s1,String s2) {
-      return "[ "+ (s1==null ? " " : Util.getDateFromMJD(s1)) + " .. "+ (s2==null ? " " : Util.getDateFromMJD(s2)) + " ]";
-   }
-
-   private String getCoverageEnergy(String s1,String s2) {
-      return "[ "+ (s1==null ? " " : Util.getWaveFromMeter(s1)) + " .. "+ (s2==null ? " " : Util.getWaveFromMeter(s2)) + " ]";
-   }
+//   private String getCoverageTime(String s1,String s2) {
+//      return "[ "+ (s1==null ? " " : Util.getDateFromMJD(s1)) + " .. "+ (s2==null ? " " : Util.getDateFromMJD(s2)) + " ]";
+//   }
+//
+//   private String getCoverageEnergy(String s1,String s2) {
+//      return "[ "+ (s1==null ? " " : Util.getWaveFromMeter(s1)) + " .. "+ (s2==null ? " " : Util.getWaveFromMeter(s2)) + " ]";
+//   }
 
    // implementation d'EventListener pour les differents sliders
    public void stateChanged(ChangeEvent e) {

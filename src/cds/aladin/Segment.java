@@ -96,13 +96,13 @@ public class Segment {
       Segment seg[] = new Segment[2];
       seg[0] = copy(true);
       seg[1] = copy(false);
-      double al = (al2+al1 - (Math.abs(al2-al1)>180 ? 360:0))/2;
-      double del = (del2+del1)/2;
+      double al = (al2+al1 - (Math.abs(al2-al1)>180 ? 360:0))/2.;
+      double del = (del2+del1)/2.;
       seg[0].al2=seg[1].al1 = al;
       seg[0].del2=seg[1].del1 = del;
       Point p = getXY(v,al,del);
       //      if(p ==null ) return null;
-      if(p==null ) p = new Point(-1,-1);
+      if( p==null ) p = new Point(-1,-1);
       seg[0].x2=seg[1].x1=p.x;
       seg[0].y2=seg[1].y1=p.y;
       return seg;
@@ -131,9 +131,9 @@ public class Segment {
    }
 
    /** Retourne vrai si l'angle entre les 2 segments est supérieur
-    * à 5° */
-   //   static final double ALPHA = 5*Math.PI/180;
-   static final int BETA = (int)(1./Math.tan(5*Math.PI/180));
+    * à 7° */
+   //   static final double ALPHA = 7*Math.PI/180;
+   static final int BETA = (int)(1./Math.tan(7*Math.PI/180));
    static protected boolean courbe(Segment s1,Segment s2) {
       double dx1 = s1.x2-s1.x1;
       double dx2 = s2.x2-s2.x1;
@@ -161,22 +161,9 @@ public class Segment {
 
       if( label==null && !inClip(clip) ) return;
 
-      //      if( Aladin.levelTrace>=3 ) { g.setColor(col?Color.blue:Color.red); col=!col; }
-
-
-      //      g.setColor( iso==ISORA ? Color.red : iso==ISODE ? Color.green : Color.blue );
-      //      if( labelMode==GAUCHE ) g.setColor(Color.white);
-      //      if( labelMode==HAUT ) g.setColor(Color.yellow);
-
       g.drawLine(x1+dx,y1+dy,x2+dx,y2+dy);
-
-      //    g.setColor(Color.black);
-      //    g.drawString(i+"",(int)(x1+x2)/2,(int)(y1+y2)/2);
-
-      //      int d = (int)(Math.round(del2*10)/10.);
-      //      if( del2!=del1 ) g.drawString(d+"",(int)(x1+x2)/2,(int)(y1+y2)/2);
-
       if( label==null ) return;
+      
       Color  c = g.getColor();
       if( labelMode==MILIEURA || labelMode==GAUCHE ) g.setColor( v.view.gridColorDEC );
       else g.setColor( v.view.gridColorRA );
