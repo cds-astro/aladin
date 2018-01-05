@@ -278,8 +278,10 @@ public class DirectorySort {
 
       int [] mode = getSortRule(branch);
       if( mode!=null ) {
-         for( int m : mode ) {
-            String k = getSortKey(id, prop, m);
+         for( int i=0; i<mode.length; i++ ) {
+            int m = mode[i];
+            boolean flagLast = i==mode.length-1;
+            String k = getSortKey(id, prop, m, flagLast );
             if( k!=null ) k1.append("/"+k);
          }
       }
@@ -306,7 +308,7 @@ public class DirectorySort {
          if( i>=len ) key.append('.');
          else {
             char c = Character.toUpperCase( s.charAt(i) );
-            if( flagReverse ) {
+            if( flagReverse ) {               
                if( Character.isDigit(c) ) c = (char)( '9' - c );
                else if( Character.isAlphabetic(c) ) c = (char)( 'Z' - c );
             }
@@ -316,8 +318,33 @@ public class DirectorySort {
       return key.toString();
    }
    
+   // Décompte du nombre de slashes
+   private int countSlash(String s) {
+      int i=0;
+      for( char c : s.toCharArray() ) {
+         if( c=='/' ) i++;
+      }
+      return i;
+   }
+   
    // Retourne une clé de tri en fonction du mode demandé
-   private String getSortKey(String id, MyProperties prop, int mode ) {
+   private String getSortKey(String id, MyProperties prop, int mode, boolean flagLast ) {
+      String branch = prop.getFirst("client_category");
+      String key = getSortKey1(id, prop, branch, mode);
+      
+      // Si c'est le dernier tri de la règle, ou va ajouter un élément à la clé de tri
+      // pour qu'à égalité, les branches les plus profondes arrivent en premier
+      // (évite l'insertion d'un folder au milieu d'une série ex: 2MASS6X)
+      if( flagLast ) {
+         int c = countSlash(branch);
+         assert c<=9;
+         key = key+(9-c);
+      }
+      return key;
+   }
+   
+   // Retourne une clé de tri en fonction du mode demandé
+   private String getSortKey1(String id, MyProperties prop, String branch, int mode ) {
       int c;
       
       // Sens inverse ?
@@ -331,7 +358,7 @@ public class DirectorySort {
          
          // Tri sur la catégorie principale (Image, Data base, Catalog ...)
          case BRANCH:
-            c = getBranchIndex( prop.getFirst("client_category"));
+            c = getBranchIndex( branch );
             if( c == -1 ) c = 99;
             else if( flagReverse ) c=98-c;
             return String.format("%02d", c);
@@ -423,7 +450,7 @@ public class DirectorySort {
 
         // Tri sur le régime HiPS, ou obs_regime (dans l'ordre de REGIMEHIPS[])
          case REGIME:
-            String regime = Util.getSubpath( prop.getFirst("client_category") , 1);
+            String regime = Util.getSubpath( branch , 1);
             if( regime==null ) regime = prop.getFirst("obs_regime");
             c = Util.indexInArrayOf(regime, REGIMEHIPS);
             if( c==-1 ) c=9;
@@ -432,7 +459,7 @@ public class DirectorySort {
 
             // Tri sur le régime HiPS, ou obs_regime (dans l'ordre de REGIMEHIPS[])
          case PLANET:
-            String planet = Util.getSubpath( prop.getFirst("client_category") , 1);
+            String planet = Util.getSubpath( branch , 1);
             c = Util.indexInArrayOf(planet, PLANETS);
             if( c==-1 ) c=9;
             else if( flagReverse ) c = 8-c;
