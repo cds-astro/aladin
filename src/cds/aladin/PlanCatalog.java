@@ -53,7 +53,7 @@ public class PlanCatalog extends Plan {
          url = new URL("file:"+(new File(file)).getCanonicalPath());
       } catch( Exception e ) {
          String s =file+" not found";
-         Aladin.warning(s,1);
+         Aladin.error(s,1);
          return;
       }
 

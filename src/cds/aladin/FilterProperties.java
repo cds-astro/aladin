@@ -1479,7 +1479,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 				out.writeBytes(Util.CR+"}"+Util.CR);
 				out.close();
 		}
-		catch(IOException e) {Aladin.warning(this,IOERR+" : "+e);}
+		catch(IOException e) {Aladin.error(this,IOERR+" : "+e);}
 
 	  }
 
@@ -1503,7 +1503,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 			}
 			dis.close();
 	  	}
-	  	catch(IOException e) {Aladin.warning(this,IOERR+" : "+e,1);return;}
+	  	catch(IOException e) {Aladin.error(this,IOERR+" : "+e,1);return;}
 
 //        if( showHelp ) removeHelp();
 

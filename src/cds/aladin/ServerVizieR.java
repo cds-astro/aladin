@@ -358,7 +358,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       if( allColumns ) s = s+" -out.all";
 
       if( (u=aladin.glu.getURL(getTagGlu(),s))==null ) {
-         Aladin.warning(this,WERROR,1);
+         Aladin.error(this,WERROR,1);
          return -1;
       }
 
@@ -440,7 +440,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       cata = catalog.getText().trim();
 
       if( objet==null || objet.length()==0 ) {
-         if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
+         if( cata.length()==0 ) { Aladin.error(this,WNEEDCAT); return; }
          if( !Aladin.confirmation(this,"Do you really want to download\n"+
                "all \""+cata+"\" ?") ) return;
          objet="";
@@ -604,7 +604,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
             
             try {
                String cata = catalog.getText().trim();
-               if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+               if( cata.equals("") ) { Aladin.error(this,WNEEDCAT); return; }
                
                // Affichage du README
                if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",Glu.quote(cata));
@@ -620,7 +620,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
                defaultCursor();
                return;
             } catch( Exception e1 ) {
-               aladin.warning("Error: cannot load this product\n"+e1.getMessage());
+               aladin.error("Error: cannot load this product\n"+e1.getMessage());
             }
          }
          

@@ -209,7 +209,7 @@ public final class Glu implements Runnable {
                //               } else flagNoGlu=true;
             }
          } catch( Exception e ) {
-            Aladin.warning("AlaGlu.dic not found !", 1);
+            Aladin.error("AlaGlu.dic not found !", 1);
          }
 
          // Un Dico GLu pour décrire les applications VOtools ?
@@ -484,7 +484,7 @@ public final class Glu implements Runnable {
          } catch( Exception e ) {
          }
       }
-      Aladin.warning(aladin.chaine.getString("NOBROWSER"));
+      Aladin.error(aladin.chaine.getString("NOBROWSER"));
       BROWSER = "";
    }
 
@@ -592,7 +592,7 @@ public final class Glu implements Runnable {
                // Creation du process associe au browser
                p = Runtime.getRuntime().exec(cmd);
             } catch( Exception e1 ) {
-               Aladin.warning(aladin.chaine.getString("ERRORBROWSER")+" " + e1);
+               Aladin.error(aladin.chaine.getString("ERRORBROWSER")+" " + e1);
             }
 
             // Pour les macs
@@ -605,7 +605,7 @@ public final class Glu implements Runnable {
                }
                openURL.invoke(null, new Object[] { url.toString() });
             } catch( Exception emac ) {
-               Aladin.warning(aladin.chaine.getString("ERRORBROWSER")+" " + emac);
+               Aladin.error(aladin.chaine.getString("ERRORBROWSER")+" " + emac);
             }
 
             // Dans le cas Unix (on prend le premier browser compatible qui est
@@ -2170,7 +2170,7 @@ public final class Glu implements Runnable {
 
       // Utilisation pour la session courante
       if( !(flagNoGlu=testCurrentAlaSite()) ) {
-         aladin.warning(aladin.chaine.getString("NOGLU1")+" \n" + NPHGLUALADIN
+         aladin.error(aladin.chaine.getString("NOGLU1")+" \n" + NPHGLUALADIN
                + " "+aladin.chaine.getString("NOGLU2"));
          testAlaSites(true, false);
          return NPHGLUALADIN;

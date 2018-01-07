@@ -110,7 +110,7 @@ public class FrameProp extends JFrame implements ActionListener {
                 aladin.view.newView(1);
                 aladin.calque.repaintAll();
              }
-          } catch( Exception e ) { Aladin.warning(this," "+e.getMessage(),1); }
+          } catch( Exception e ) { Aladin.error(this," "+e.getMessage(),1); }
        }
     }
 }

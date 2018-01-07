@@ -837,7 +837,7 @@ e.printStackTrace();
 e.printStackTrace();
          if( error==null ) error="Calibration error: \n"+e;
          else error="Calibration error\non \""+error+"\" field";
-         Aladin.warning(this,error,1);
+         Aladin.error(this,error,1);
       }
       
 //      if( a.calque.getIndex(drawPlan)==-1) {
@@ -1264,7 +1264,7 @@ e.printStackTrace();
          // Mode catalogue
          if( plan.hasXYorig ) {
             if( o==null ) {
-               a.warning(ERRNOXY);
+               a.error(ERRNOXY);
                return null;
             }
             x=o.x;
@@ -1276,7 +1276,7 @@ e.printStackTrace();
 //            x+=0.5; y-=0.5;         // Demi pixel
             //            if( pix!=null ) {
             if( pi!=plan ) {
-               a.warning(ERRIMG);
+               a.error(ERRIMG);
                return null;
             }
             prevObj=null;
@@ -1337,7 +1337,7 @@ e.printStackTrace();
               Plan pl = a.calque.getPlanRef();
               Projection p = pl==null || pl.projd==null?null:pl.projd;
               if( p==null ) {
-                 a.warning("No RA/DEC reference plane !");
+                 a.error("No RA/DEC reference plane !");
                  return null;
               }
               try {
@@ -1371,7 +1371,7 @@ e.printStackTrace();
 //            }
          } else {
             if( o==null || o==prevObj ) {
-               a.warning("No object near the pointer, try again !!");
+               a.error("No object near the pointer, try again !!");
                return null;
             }
             s=Coord.getSexa(o.raj,o.dej);

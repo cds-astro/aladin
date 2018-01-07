@@ -408,7 +408,7 @@ public final class FrameContour extends JFrame implements ActionListener {
                         } else return;
                      } else this.pimg = p;
                   } catch( Exception e ) {
-                    a.warning(this,e.getMessage());
+                    a.error(this,e.getMessage());
                     return;
                   }
                    createAllPanels();

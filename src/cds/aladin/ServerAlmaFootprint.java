@@ -143,7 +143,7 @@ public class ServerAlmaFootprint extends Server {
              height = Double.parseDouble(this.heightField.getText())/60.;
          }
          catch(NumberFormatException nfe) {
-             Aladin.warning("Incorrect value for width/height !");
+             Aladin.error("Incorrect value for width/height !");
              return;
          }
 

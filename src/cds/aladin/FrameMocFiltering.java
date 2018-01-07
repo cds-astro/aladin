@@ -191,7 +191,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("Catalog filtering by MOC failed !");
+         Aladin.error("Catalog filtering by MOC failed !");
       }
    }
 

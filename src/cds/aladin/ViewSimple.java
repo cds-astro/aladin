@@ -4712,7 +4712,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       } catch( OutOfMemoryError e ) {
          e.printStackTrace();
          if( System.currentTimeMillis()-OUTOFMEMTIME > 10000L ) {
-            aladin.warning("Out of memory error !!\nPlease restart Aladin with more memory\n\n(ex: java -Xmx1024m -jar Aladin.jar", 1);
+            aladin.error("Out of memory error !!\nPlease restart Aladin with more memory\n\n(ex: java -Xmx1024m -jar Aladin.jar", 1);
             OUTOFMEMTIME=System.currentTimeMillis();
          }
          return false;

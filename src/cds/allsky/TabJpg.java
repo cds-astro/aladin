@@ -287,7 +287,7 @@ public class TabJpg extends JPanel implements ActionListener {
                PlanBG p = (PlanBG) mainPanel.aladin.calque.getPlanBase();
                if( !p.isTruePixels() ) throw new Exception();
             } catch( Exception e1 ) {
-               mainPanel.aladin.warning(mainPanel,"<html>There is no current view,<br>or the current view is not an all-sky view in true pixel mode");
+               mainPanel.aladin.error(mainPanel,"<html>There is no current view,<br>or the current view is not an all-sky view in true pixel mode");
                return;
             }
          }

@@ -179,7 +179,7 @@ public final class FrameBlink extends FrameRGBBlink {
       
       // Vérification que cela correspond à quelque chose
       if( first<0 || first>=ch.length  ) {
-         Aladin.warning(this,ERR1+" [1.."+(ch.length-1)+"] !");
+         Aladin.error(this,ERR1+" [1.."+(ch.length-1)+"] !");
          return;
       }
       
@@ -193,7 +193,7 @@ public final class FrameBlink extends FrameRGBBlink {
       }
       
       if( v.size()==1 ) {
-         Aladin.warning(this,ERR2);
+         Aladin.error(this,ERR2);
          return;
       }
       

@@ -991,7 +991,7 @@ public class PlanBG extends PlanImage {
       }
 
       if( Aladin.MAXMEM<50 ) {
-         aladin.warning("Full sky Aladin mode requires atleast 64MB of RAM\n" +
+         aladin.error("Full sky Aladin mode requires atleast 64MB of RAM\n" +
                "We strongly suggest to adjust the JAVA memory parameter and relaunch Aladin.\n" +
                "See the corresponding Aladin FAQ entry available via the Help menu");
       }

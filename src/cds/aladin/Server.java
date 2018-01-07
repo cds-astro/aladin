@@ -841,7 +841,7 @@ public void layout() {
       String s = target.getText().trim();
       if( confirm && s.length()==0 ) {
          if( ball!=null ) ball.setMode(Ball.NOK);
-         Aladin.warning(this,WNEEDOBJ);
+         Aladin.error(this,WNEEDOBJ);
          return null;
       }
       return aladin.localisation.getICRSCoord(s);
@@ -857,7 +857,7 @@ public void layout() {
         if( !confirm ) return s;
         if( confirm && (s.length()==0 || getRM(s)<=0) ) {
            ball.setMode(Ball.NOK);
-           Aladin.warning(this,WNEEDRAD);
+           Aladin.error(this,WNEEDRAD);
            return null;
         }
         return s;
@@ -872,7 +872,7 @@ public void layout() {
 
          if( s.length()==0 ) {
             ball.setMode(Ball.NOK);
-            if( confirm ) Aladin.warning(this,WNEEDDATE);
+            if( confirm ) Aladin.error(this,WNEEDDATE);
             return null;
          }
 //        try {
@@ -2092,7 +2092,7 @@ public void layout() {
 				ex = it.next();
 				highlightQueryError(tap.getHighlighter(), ex);
 			}
-			Aladin.warning(this, "Not sure about the highlighted words : " + ex.getMessage());
+			Aladin.error(this, "Not sure about the highlighted words : " + ex.getMessage());
 		}
 	}
    /**
@@ -2103,7 +2103,7 @@ public void layout() {
 	 */
 	public ADQLQuery checkQuery() throws UnresolvedIdentifiersException {
 		if (tap.getText().isEmpty()) {
-			Aladin.warning(this, CHECKQUERY_ISBLANK);
+			Aladin.error(this, CHECKQUERY_ISBLANK);
 			return null;
 		}
 		ADQLQuery query = null;
@@ -2116,10 +2116,10 @@ public void layout() {
 			throw ie;
 		} catch (adql.parser.ParseException pe) {
 			highlightQueryError(highlighter, pe);
-			Aladin.warning(this, "Check the syntax around the highlighted words : " + pe.getMessage());
+			Aladin.error(this, "Check the syntax around the highlighted words : " + pe.getMessage());
 		} catch (TokenMgrError e) {
 			// TODO: handle exception
-			Aladin.warning(this, "Incorrect query: " + e.getMessage());
+			Aladin.error(this, "Incorrect query: " + e.getMessage());
 		}
 		return query;
 	}
@@ -2161,7 +2161,7 @@ public void layout() {
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-				Aladin.warning(aladin.dialog, "Server error!");
+				Aladin.error(aladin.dialog, "Server error!");
 			}
 		}
 	}

@@ -324,16 +324,11 @@ public class TreeObjDir extends TreeObj implements Propable {
 //      if( s==null ) s=prop.getProperty( !cat ? Constante.KEY_OBS_TITLE : Constante.KEY_OBS_COLLECTION );
       s=prop.getProperty( Constante.KEY_OBS_TITLE );
       if( s==null ) s=prop.getProperty( Constante.KEY_OBS_COLLECTION );
-      aladinLabel = label = s!=null ? s : createLabel(id,cat);
-      
-      // Le path de l'arbre
-      s=prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
-      if( s==null ) s="Others";
-      path = s+"/"+label.replace("/","\\/");
-      
+      aladinLabel = label = s!=null ? s : createLabel(id,cat);      
 
-      // Initialisation de la clé de tri
+      // Initialisation de la clé de tri et du path
       setTri();
+      setPath();
       
       // Divers champs de descriptions
       description = prop.getProperty(Constante.KEY_OBS_TITLE);
@@ -423,6 +418,17 @@ public class TreeObjDir extends TreeObj implements Propable {
       String ordre2=prop.getProperty("internal_sort_key");
       if( ordre2!=null ) ordre = ordre==null ? ordre2 : ordre2+"//"+ordre;
       if( ordre==null ) ordre="Z";
+   }
+
+   // Positionnement de la clé de tri
+   protected void setPath() {
+      String s=prop.getProperty("internal_category");
+      if( !aladin.directory.isGlobalSorted() ) {
+         if( s==null ) s=prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
+         if( s==null ) s="Others";
+      }
+      if( s==null ) path = label.replace("/","\\/");
+      else path = s+"/"+label.replace("/","\\/");
    }
 
    /** Création à partir d'un enregistrement GLU */
@@ -927,7 +933,7 @@ public class TreeObjDir extends TreeObj implements Propable {
          }
       }
       if( plan==null ) {
-         aladin.warning("You need to select or have a catalog plane in the stack");
+         aladin.error("You need to select or have a catalog plane in the stack");
          return;
       }
       serverXmatch.setPlan(plan);
@@ -969,13 +975,13 @@ public class TreeObjDir extends TreeObj implements Propable {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			aladin.warning("Error unable to load "+url+"\n"+e.getMessage());
+			aladin.error("Error unable to load "+url+"\n"+e.getMessage());
 		}
 //         aladin.info("Generic TAP form for "+url+"\n(Not yet implemented)");
 //         // Chaitra ...
 //         return;
       } else {
-    	  aladin.warning("Error! No TAP form configured for "+id);
+    	  aladin.error("Error! No TAP form configured for "+id);
       }
       
       //TODO:: tintin remove the below just for demo
@@ -1119,7 +1125,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( glutag==null ) glutag = prop.get("tap_glutag");
       
       if( !aladin.dialog.showByGlutag(glutag, internalId) ) {
-         aladin.warning(aladin,"Mission GLU record ["+glutag+"]");
+         aladin.error(aladin,"Mission GLU record ["+glutag+"]");
       }
    }
    protected String getCustomBkm() {

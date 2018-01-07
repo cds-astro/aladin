@@ -80,7 +80,7 @@ public class StandardFormsReader {
 	            System.err.println("Standardforms.dic not loaded error: " + e);
 	            e.printStackTrace();
 	         }
-			Aladin.warning("Standardforms.dic not loaded !", 1);
+			Aladin.error("Standardforms.dic not loaded !", 1);
 		} finally {
 			if (inputStream!=null) {
 				try {

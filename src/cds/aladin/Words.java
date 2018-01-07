@@ -386,7 +386,7 @@ public final class Words implements Runnable {
          
       } catch (MalformedURLException e) {
          // TODO: handle exception
-         aladin.warning(aladin, "Error in loading url");
+         aladin.error(aladin, "Error in loading url");
          if (Aladin.levelTrace >= 3)
             e.printStackTrace();
       }
@@ -408,7 +408,7 @@ public final class Words implements Runnable {
       } else {
          try { url = aladin.glu.getURL(id,param,flagHttp)+""; }
          catch( Exception e) {
-            aladin.warning(aladin,"URL error");
+            aladin.error(aladin,"URL error");
             if( Aladin.levelTrace>=3 ) e.printStackTrace();
             return "";
          }

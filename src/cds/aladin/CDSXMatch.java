@@ -128,14 +128,14 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
         if( coordTab1==null ) {
             coordTab1 = findCoord(p1);
             if( coordTab1==null ) {
-                Aladin.warning(Aladin.chaine.getString("NOCOOR")+" "+p1.label);
+                Aladin.error(Aladin.chaine.getString("NOCOOR")+" "+p1.label);
                 return;
             }
         }
         if( coordTab2==null ) {
             coordTab2 = findCoord(p2);
             if( coordTab2==null ) {
-                Aladin.warning(Aladin.chaine.getString("NOCOOR")+" "+p2.label);
+                Aladin.error(Aladin.chaine.getString("NOCOOR")+" "+p2.label);
                 return;
             }
         }
@@ -183,14 +183,14 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
         if( coordTab1==null ) {
             coordTab1 = findCoord(p1);
             if( coordTab1==null ) {
-                Aladin.warning("Coordinates columns not found for plane "+p1.label);
+                Aladin.error("Coordinates columns not found for plane "+p1.label);
                 return;
             }
         }
         if( coordTab2==null ) {
             coordTab2 = findCoord(p2);
             if( coordTab2==null ) {
-                Aladin.warning("Coordinates columns not found for plane "+p2.label);
+                Aladin.error("Coordinates columns not found for plane "+p2.label);
                 return;
             }
         }

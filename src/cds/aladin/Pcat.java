@@ -1270,7 +1270,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          aladin.error = OUTOFMEMORY;;
          if( verbose )  {
             System.out.println("!!! "+(plan==null ? "":plan.label+": ")+aladin.error);
-            Aladin.warning(aladin.error);
+            Aladin.error(aladin.error);
          }
          o= new Obj[DEFAULTBLOC];
          nb_o = 0;
@@ -1284,7 +1284,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          aladin.gc();
          if( verbose ) {
             System.out.println("!!! "+(plan==null ? "":plan.label+": ")+aladin.error);
-            Aladin.warning(aladin.error);
+            Aladin.error(aladin.error);
          }
          //         if( plan!=null ) plan.sendLog("Error","setPlanCat() ["+e+"] u="+(plan.u==null?"null":plan.u.toString()));
          nb=-1;

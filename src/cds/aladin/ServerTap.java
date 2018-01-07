@@ -163,7 +163,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			tablesPanel = getTablesPanel(null, tablesGui, chosenTable, tables, null, false);
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(this, e.getMessage());
+			Aladin.error(this, e.getMessage());
 			return;
 		}
 		tablesPanel.setBackground(this.tapClient.primaryColor);
@@ -501,7 +501,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			ball.setMode(Ball.OK);
 		} catch (Exception e) {
 			// TODO: handle exception
-			Aladin.warning(this, e.getMessage());
+			Aladin.error(this, e.getMessage());
             ball.setMode(Ball.NOK);
 		}
 		
@@ -698,13 +698,13 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			            if( objet == null) throw new Exception(UNKNOWNOBJ);
 			            ball.setMode(Ball.OK);
 			         } catch( Exception e1 ) {
-			            Aladin.warning(this, e1.getMessage());
+			            Aladin.error(this, e1.getMessage());
 			            ball.setMode(Ball.NOK);
 			            return;
 			         }
 			      }
 				if (objet.trim().equals(TARGETNAN)) {//resolve obj for empty field
-					Aladin.warning(this, TapClient.TARGETERROR);
+					Aladin.error(this, TapClient.TARGETERROR);
 		            ball.setMode(Ball.NOK);
 		            return;
 				}

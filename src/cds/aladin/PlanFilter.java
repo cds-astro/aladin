@@ -266,7 +266,7 @@ public final class PlanFilter extends Plan {
 
       if( !isValid() ) {
          if( fp==null || !fp.isShowing() ) {
-            Aladin.warning(aladin.chaine.getString("BADFILTER"),1);
+            Aladin.error(aladin.chaine.getString("BADFILTER"),1);
          }
          this.setActivated(false);
          aladin.calque.select.repaint();
@@ -316,7 +316,7 @@ public final class PlanFilter extends Plan {
       //System.out.println("update state");
       if( isOn() ) {
          if( !isValid() ) {
-            Aladin.warning(aladin.chaine.getString("BADFILTER"),1);
+            Aladin.error(aladin.chaine.getString("BADFILTER"),1);
             this.setActivated(false);
             aladin.calque.select.repaint();
             aladin.view.setMesure();

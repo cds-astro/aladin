@@ -328,7 +328,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private void store() {
       String name = nameField.getText().trim();
       if( name.equals(Directory.ALLCOLL) || name.equals(Directory.MYLIST) ) {
-         aladin.warning(this,S("FPSTOREWARNING"));
+         aladin.error(this,S("FPSTOREWARNING"));
          return;
       }
       String expr = exprArea.getText().trim();

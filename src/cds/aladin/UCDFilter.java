@@ -197,13 +197,13 @@ public class UCDFilter {
 		// basic check
 		if (Action.countNbOcc('{', def) != Action.countNbOcc('}', def)) {
 			badSyntax = true;
-			Aladin.warning(ERR1, 1);
+			Aladin.error(ERR1, 1);
 			return;
 		}
 
 		if (Action.countNbOcc('[', def) != Action.countNbOcc(']', def)) {
 			badSyntax = true;
-			Aladin.warning(ERR2, 1);
+			Aladin.error(ERR2, 1);
 			return;
 		}
 
@@ -231,7 +231,7 @@ public class UCDFilter {
 			endAction = getClosingBracket(def, beginAction + 1);
 			if (endAction < 0) {
 				badSyntax = true;
-				Aladin.warning(ERR3, 1);
+				Aladin.error(ERR3, 1);
 				return;
 			}
 
@@ -305,7 +305,7 @@ public class UCDFilter {
 				// Processing for a classic constraint
 				else {
 					if (!containsOperator(conditions[i])) {
-						Aladin.warning(ERR9,1);
+						Aladin.error(ERR9,1);
 						badSyntax = true;
 						return;
 					}
@@ -436,7 +436,7 @@ public class UCDFilter {
 		end = constraint.indexOf(")");
 
 		if (begin < 0 || end < 0 || begin > end) {
-			Aladin.warning(ERR10+" " + UNDEFINED + " "+ERR11, 1);
+			Aladin.error(ERR10+" " + UNDEFINED + " "+ERR11, 1);
 			badSyntax = true;
 			return null;
 		}
@@ -471,7 +471,7 @@ public class UCDFilter {
 				isStringConstraint = true;
 			} else {
 				//System.out.println(valueStr);
-				Aladin.warning(ERR12,1);
+				Aladin.error(ERR12,1);
 				badSyntax = true;
 				return null;
 			}
@@ -481,13 +481,13 @@ public class UCDFilter {
 				unit = new Unit(valueStr);
 			}
 			catch( ParseException e ) {
-				Aladin.warning(ERR12,1);
+				Aladin.error(ERR12,1);
 				badSyntax = true;
 				return null;
 			}
 			catch (ArithmeticException aExc) {
 				badSyntax = true;
-				Aladin.warning(ERR4, 1);
+				Aladin.error(ERR4, 1);
 				return null;
 			}
 		}
@@ -516,7 +516,7 @@ public class UCDFilter {
 		if (isStringConstraint) {
 			int nQuote = Action.countNbOcc('\"', strValue);
 			if (nQuote != 0 && nQuote != 2) {
-				Aladin.warning(ERR5, 1);
+				Aladin.error(ERR5, 1);
 				badSyntax = true;
 				return null;
 			}
@@ -529,7 +529,7 @@ public class UCDFilter {
 		try {
 			parser = createParser(strToParse, a);
 		} catch (ParserException e) {
-			Aladin.warning(ERR13+"\n" + e.getMessage(),1);
+			Aladin.error(ERR13+"\n" + e.getMessage(),1);
 			badSyntax = true;
 			return null;
 		}
@@ -672,7 +672,7 @@ public class UCDFilter {
 						variable = str.substring(begin, end + 1);
 					}
 				} catch (StringIndexOutOfBoundsException e) {
-					Aladin.warning(ERR6, 1);
+					Aladin.error(ERR6, 1);
 					return null;
 				}
 
@@ -692,7 +692,7 @@ public class UCDFilter {
 						variable = str.substring(begin, end + 1);
 					}
 				} catch (StringIndexOutOfBoundsException e) {
-					Aladin.warning(ERR7);
+					Aladin.error(ERR7);
 					return null;
 				}
 			}
@@ -771,7 +771,7 @@ public class UCDFilter {
 		if ( def.indexOf("}")<0
 			|| (posBeginDef = def.indexOf("{")) < 0) {
 			badSyntax = true;
-			Aladin.warning(ERR8,1);
+			Aladin.error(ERR8,1);
 			return;
 		}
 
@@ -779,7 +779,7 @@ public class UCDFilter {
 		int posBeginName = def.indexOf("filter") + 6;
 		if( posBeginName<0 ) {
 			badSyntax = true;
-			Aladin.warning(ERR8,1);
+			Aladin.error(ERR8,1);
 			return;
 		}
 		this.name = skipSpaces(def.substring(posBeginName, posBeginDef));
@@ -855,7 +855,7 @@ public class UCDFilter {
 		}
 
 		if (nbConvertProblem > 0) {
-			Aladin.warning(
+			Aladin.error(
 				"Warning : there were conversion problems for "
 					+ nbConvertProblem
 					+ " sources",
@@ -989,7 +989,7 @@ public class UCDFilter {
 		//System.out.println("nb selected sources: "+sourceArray.length);
 
 		if (nbConvertProblem > 0)
-			Aladin.warning(
+			Aladin.error(
 				"Warning : there were conversion problems for "
 					+ nbConvertProblem
 					+ " sources",

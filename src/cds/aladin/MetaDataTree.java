@@ -694,7 +694,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
   		}
 
   		if( spectra.size()==0 ) {
-  			Aladin.warning(this, "No spectrum/image found in this tree !");
+  			Aladin.error(this, "No spectrum/image found in this tree !");
   		}
   		else {
   			ResourceNode[] spectraTab = new ResourceNode[spectra.size()];
@@ -1452,7 +1452,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
 					return resolveLocation("file://"+location, node, imgParam);
 				}
 
-				Aladin.warning("Can't interpret location "+location);
+				Aladin.error("Can't interpret location "+location);
 				return null;}
 		}
 
@@ -1464,7 +1464,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
 	       if( coo!=null ) {
 	            if( node.cutout ) {
 	                if( !checkCutoutAvailability(node,coo.al,coo.del,aladin) ) {
-	                    Aladin.warning(IMAGE+" "+node.name+" "+NOIMAGE_WARNING,1);
+	                    Aladin.error(IMAGE+" "+node.name+" "+NOIMAGE_WARNING,1);
 	                    return null;
 	                }
 	            }
@@ -1541,12 +1541,12 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
        String gluLink = node.gluLink;
 
        if( location==null && gluLink==null ) {
-           Aladin.warning(NOLOC);
+           Aladin.error(NOLOC);
            return;
        }
        if( location==null ) location="";
        if( location.equalsIgnoreCase("NoData") && gluLink==null ) {
-           Aladin.warning(NOIMG);
+           Aladin.error(NOIMG);
            return;
        }
 
@@ -1570,7 +1570,7 @@ public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyLis
        if( coo!=null ) {
             if( node.cutout ) {
                 if( !checkCutoutAvailability(node,coo.al,coo.del,aladin) ) {
-                    Aladin.warning(IMAGE+" "+node.name+" "+NOIMAGE_WARNING,1);
+                    Aladin.error(IMAGE+" "+node.name+" "+NOIMAGE_WARNING,1);
                     return;
                 }
             }

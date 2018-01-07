@@ -224,7 +224,7 @@ public class FrameHeaderFits extends JFrame {
       try {
         applyThisHeader(s);
       } catch( Exception e ) {
-         Aladin.warning(this,"Not a valid FITS header: "+e.getMessage());
+         Aladin.error(this,"Not a valid FITS header: "+e.getMessage());
          return;
       }
       

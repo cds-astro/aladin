@@ -188,7 +188,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.062";
+   static public final    String VERSION = "v10.063";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2496,7 +2496,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Message d'avertissement pour le mode applet bridée
       if( !STANDALONE && v>=120 && !warningRestricted) {
          warningRestricted = true;
-         warning(chaine.getString("RESTRICTED"));
+         error(chaine.getString("RESTRICTED"));
       }
 
       manageDrop();
@@ -3270,7 +3270,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(s,OPENDIRIMG) || isMenu(s,OPENDIRCAT) || isMenu(s,OPENDIRDB) 
             || isMenu(s,OPENDIRCUBE) ) {
          if( dialog==null ) {
-            Aladin.warning(chaine.getString("NOTYET"));
+            Aladin.error(chaine.getString("NOTYET"));
             return true;
          }
          openDirTab();
@@ -3278,7 +3278,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                : isMenu(s,OPENDIRCAT) ? "Catalog/VizieR" 
                      : isMenu(s,OPENDIRDB) ? "Data base" 
                      : isMenu(s,OPENDIRCUBE) ? "Cube" : "") ) {
-            Aladin.warning(chaine.getString("NOTVISIBLE"));
+            Aladin.error(chaine.getString("NOTVISIBLE"));
             return true;
          }
       }
@@ -3287,7 +3287,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(s,OPENFILE) || isMenu(s,OPENLOAD) || isMenu(s,OPENURL) || isMenu(s,LOADVO)
             || isMenu(s,LOADFOV) || isMenu(s,ALADIN_IMG_SERVER) ) {
          if( dialog==null ) {
-            Aladin.warning(chaine.getString("NOTYET"));
+            Aladin.error(chaine.getString("NOTYET"));
             return true;
          }
          if( firstLoad ) {
@@ -3461,7 +3461,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,JUNIT) ) { test();
       } else if( isMenu(s,MQUIT) )  {
          if( isPrinting() ) {
-            Aladin.warning(chaine.getString("PRINTING"));
+            Aladin.error(chaine.getString("PRINTING"));
             return true;
          }
          quit(0);
@@ -3490,20 +3490,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		try {
 			dialog.show("TAP");
 		} catch (Exception e) {
-			warning(this, Aladin.chaine.getString("GENERICERROR"));
+			error(this, Aladin.chaine.getString("GENERICERROR"));
 		}
       } else if (isMenu(s, JOBCONTROLLER)) {
 		try {
 			dialog.tapManager.showAsyncPanel();
 		} catch (Exception e) {
-			warning(this, Aladin.chaine.getString("GENERICERROR"));
+			error(this, Aladin.chaine.getString("GENERICERROR"));
 		}
       } else if( plugins!=null ) {
          AladinPlugin ap = plugins.find(s);
          if( ap!=null ) {
             try { ap.start(); } catch( AladinException e1 ) {
                e1.printStackTrace();
-               warning(this,chaine.getString("PLUGERROR")+"\n\n"+e1.getMessage());
+               error(this,chaine.getString("PLUGERROR")+"\n\n"+e1.getMessage());
             }
          }
        }
@@ -4161,7 +4161,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected int createPlanMocByRegions(int order) {
       HealpixMoc moc = createMocByRegions(order);
       if( moc==null ) {
-         warning("MOC creation error !\n",1);
+         error("MOC creation error !\n",1);
          return -1;
       }
       int n = calque.newPlanMOC(moc,"Moc reg");
@@ -6297,7 +6297,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       try { return command.execScript(cmd); }
       catch( Exception e ) {
-         aladin.warning("Error: "+e,1);
+         aladin.error("Error: "+e,1);
          //         System.out.println("Error: "+e);
          return("Error: "+e);
       }
@@ -6601,7 +6601,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Dernier objet (Source) transmis à un observer */
    //   private Objet oVOApp=null;
 
-
+   public void warning(String s) {
+      if( isFullScreen() ) error(s);
+      else calque.select.setMessageError(s);
+   }
+   
    static protected void info(String s) { info(Aladin.aladin.f,s); }
    static public void info(Component c,String s) {
       if( NOGUI ) return;
@@ -6609,10 +6613,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( c==null ) c=Aladin.aladin;
       Message.showMessage(c,s);
    }
-   static public void warning(String s) { warning(Aladin.aladin.f,s,0); }
-   static public void warning(Component c,String s) { warning(c,s,0); }
-   static protected void warning(String s,int methode) { warning(Aladin.aladin.f,s,methode); }
-   static protected void warning(Component c,String s,int methode) {
+   static public void error(String s) { error(Aladin.aladin.f,s,0); }
+   static public void error(Component c,String s) { error(c,s,0); }
+   static protected void error(String s,int methode) { error(Aladin.aladin.f,s,methode); }
+   static protected void error(Component c,String s,int methode) {
       if( s==null ) return;
       if( methode==1 ) aladin.command.printConsole("!!! "+s);
       if( NOGUI ) return;
@@ -6649,7 +6653,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected boolean testNbImgLoad(int n) {
       if( n<6 ) return true;
       if( n>16 ) {
-         aladin.warning(chaine.getString("TOOMANYIMG")+" (<=16)");
+         aladin.error(chaine.getString("TOOMANYIMG")+" (<=16)");
          return false;
       }
       return aladin.confirmation(chaine.getString("NOTTOOMANY")+" ("+n+")");

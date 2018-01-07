@@ -491,7 +491,7 @@ public class TabBuild extends JPanel implements ActionListener {
 
          new Task(context, actions, false);
       } catch( Exception e1 ) {
-         Aladin.warning(e1.getMessage());
+         Aladin.error(e1.getMessage());
          if( Aladin.levelTrace>=3 ) e1.printStackTrace();
       }
    }

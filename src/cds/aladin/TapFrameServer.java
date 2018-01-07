@@ -595,11 +595,11 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 						this.aladin.dialog.show(this.aladin.dialog.tapServer);
 					}
 				} else {
-					Aladin.warning(this, TAPNOFILELOAD);
+					Aladin.error(this, TAPNOFILELOAD);
 				}
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
-				Aladin.warning(this, e1.getMessage());
+				Aladin.error(this, e1.getMessage());
 			} finally {
 				Aladin.makeCursor(this, DEFAULT);
 			}
@@ -624,7 +624,7 @@ public final class TapFrameServer extends JFrame implements ActionListener,KeyLi
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace >= 3)
 				e1.printStackTrace();
-			Aladin.warning(this, INCORRECTTAPURLMESSAGE);
+			Aladin.error(this, INCORRECTTAPURLMESSAGE);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace >= 3)

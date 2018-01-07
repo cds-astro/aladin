@@ -218,7 +218,7 @@ public class PluginDescription extends JPanel {
                ap.start();
             } catch( AladinException e1 ) {
                e1.printStackTrace();
-               aladin.warning(aladin, aladin.chaine.getString("PLUGERROR")
+               aladin.error(aladin, aladin.chaine.getString("PLUGERROR")
                      + "\n\n" + e1.getMessage());
             }
             Util.pause(100);

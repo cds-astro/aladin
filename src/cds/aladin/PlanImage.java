@@ -205,7 +205,7 @@ public class PlanImage extends Plan {
 
       } catch( Exception e ) {
          String s=file+" "+ERROR+" !\n"+e;
-         Aladin.warning(s,1);
+         Aladin.error(s,1);
          return;
       }
 
@@ -295,7 +295,7 @@ public class PlanImage extends Plan {
       } catch( Exception e ) {
          error="_END_XFITS_";
          String s=file+" error !\n"+e;
-         Aladin.warning(s,1);
+         Aladin.error(s,1);
          return;
       }
 
@@ -1651,7 +1651,7 @@ public class PlanImage extends Plan {
          } catch(Exception e1) {
             if( u!=null ) System.err.println("Pb with: "+u);
             error=aladin.error=HTTPERR;
-            Aladin.warning(error,1);
+            Aladin.error(error,1);
             close();
             return false;
          }
@@ -1818,7 +1818,7 @@ public class PlanImage extends Plan {
 
          ex.printStackTrace();
          error=aladin.error!=null?aladin.error:ex.toString();
-         Aladin.warning(error,1);
+         Aladin.error(error,1);
          close();
          callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.ERROR, error));
          return false;
@@ -1826,7 +1826,7 @@ public class PlanImage extends Plan {
       } catch( Error eall ) {
          eall.printStackTrace();
          error=aladin.error = eall.toString();
-         Aladin.warning(error+" ",1);
+         Aladin.error(error+" ",1);
          close();
          callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.ERROR, error));
          return false;
@@ -3220,13 +3220,13 @@ public class PlanImage extends Plan {
 
       if (naxis <= 1 || width<=0 || height<=0) {
          error=aladin.error=ONEDIM;
-         Aladin.warning(error,1);
+         Aladin.error(error,1);
          close();
          return false;
       }
       if (bitpix==0) {
          error=aladin.error="FITS format error: BITPIX=0 !";
-         Aladin.warning(error,1);
+         Aladin.error(error,1);
          close();
          return false;
       }

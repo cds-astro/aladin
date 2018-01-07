@@ -298,7 +298,7 @@ public class ServerSimbad extends Server  {
       double r=getRM(radius);
       if( maxRadius>0 && r>maxRadius ) {
          ball.setMode(Ball.HS);
-         Aladin.warning(this,WTOOLARGE+" (>"+Coord.getUnit(maxRadius/60.)+")",1);
+         Aladin.error(this,WTOOLARGE+" (>"+Coord.getUnit(maxRadius/60.)+")",1);
          return -1;
       }
       radius = r+"";
@@ -313,7 +313,7 @@ public class ServerSimbad extends Server  {
       
       if( (u=aladin.glu.getURL(getTagGlu(cdstest),s))==null ) {
          ball.setMode(Ball.HS);
-         Aladin.warning(this,WERROR,1);
+         Aladin.error(this,WERROR,1);
          return -1;
       }
       if( !verif(Plan.CATALOG,target,label+" "+radius) ) return -1;

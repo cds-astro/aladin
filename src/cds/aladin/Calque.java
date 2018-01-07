@@ -2081,7 +2081,7 @@ public class Calque extends JPanel implements Runnable {
       System.out.println(p2.getNSideFile());
       if(p2!=null) {
          if(p1.getNSideFile()!=p2.getNSideFile() || p1.getCoordsys()!=p2.getCoordsys()) {
-            Aladin.warning("Operation on planes with different nside or coordinate system not available yet !", 1);
+            Aladin.error("Operation on planes with different nside or coordinate system not available yet !", 1);
             return -1;
          }
       }
@@ -2461,12 +2461,12 @@ public class Calque extends JPanel implements Runnable {
                for( i=a1; i<=a2; i++ ) x[nx++] = i;
             } else x[nx++] = Integer.parseInt(t);
             if( nx==1000 ) {
-               aladin.warning(this,"Too many Fits extension/frame designation ");
+               aladin.error(this,"Too many Fits extension/frame designation ");
                return null;
             }
          }
       } catch( Exception e ) {
-         aladin.warning(this,"Bad FITS extension/frame designation "+s);
+         aladin.error(this,"Bad FITS extension/frame designation "+s);
          return null;
       }
       int y[] = new int[nx];

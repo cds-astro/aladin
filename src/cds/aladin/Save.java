@@ -429,7 +429,7 @@ public class Save extends JFrame implements ActionListener {
       }
 
       if( !res ) {
-         Aladin.warning(this,CANNOT+"\n "+errorFile,1);
+         Aladin.error(this,CANNOT+"\n "+errorFile,1);
       } else {
          setVisible(false);
          if( flagFits && firstFlagFits ) { firstFlagFits=false; Aladin.info(this,INFOIMG); }
@@ -499,7 +499,7 @@ public class Save extends JFrame implements ActionListener {
       }
 
       if( j==0 ) {
-         aladin.warning(this,"There is no available plan to export !");
+         aladin.error(this,"There is no available plan to export !");
          return null;
       }
 
@@ -650,7 +650,7 @@ public class Save extends JFrame implements ActionListener {
       } finally { aladin.makeCursor(this, Aladin.DEFAULTCURSOR ); }
 
       if( !res ) {
-         Aladin.warning(this,CANNOT+"\n"+s+"\n"+CANNOT1,1);
+         Aladin.error(this,CANNOT+"\n"+s+"\n"+CANNOT1,1);
       } else {
          if(mode!=2 ) {
             setVisible(false);
@@ -767,7 +767,7 @@ public class Save extends JFrame implements ActionListener {
 
       }catch(Exception e) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
-         aladin.warning(this,CANNOT+"\n"+file+"\n--> "+e,1);
+         aladin.error(this,CANNOT+"\n"+file+"\n--> "+e,1);
          return false;
       }
       return true;

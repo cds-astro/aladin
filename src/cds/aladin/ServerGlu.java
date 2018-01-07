@@ -1138,7 +1138,7 @@ public class ServerGlu extends Server implements Runnable {
             objet=resolveTarget(target);
             if( objet==null ) throw new Exception(UNKNOWNOBJ);
          } catch( Exception e1 ) {
-            Aladin.warning(this,e1.getMessage(),1);
+            Aladin.error(this,e1.getMessage(),1);
             return -1;
          }
 
@@ -1487,7 +1487,7 @@ public class ServerGlu extends Server implements Runnable {
 
          } catch( Exception e1 ) {
             if( !flagDoIt ) return;
-            Aladin.warning(this,e1.getMessage());
+            Aladin.error(this,e1.getMessage());
             ball.setMode(Ball.NOK);
             return;
          }
@@ -1526,7 +1526,7 @@ public class ServerGlu extends Server implements Runnable {
                 }
              } catch (Exception e1) {
                 if( !flagDoIt ) return;
-                Aladin.warning(this, e1.getMessage());
+                Aladin.error(this, e1.getMessage());
                 ball.setMode(Ball.NOK);
                 return;
              }
@@ -1596,7 +1596,7 @@ public class ServerGlu extends Server implements Runnable {
          }
          
          if (limitViolation!=null && limitViolation.length()!= 0 && !isFieldDate(c) && !isFieldBand(c)) {//Skip in case of date and band.
-        	 Aladin.warning(c, limitViolation.toString());
+        	 Aladin.error(c, limitViolation.toString());
 			return;
 		}
          
@@ -1648,7 +1648,7 @@ public class ServerGlu extends Server implements Runnable {
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			if( !flagDoIt ) return;
-            Aladin.warning(this,e1.getMessage());
+            Aladin.error(this,e1.getMessage());
             ball.setMode(Ball.NOK);
             return;
 		}
@@ -1689,7 +1689,7 @@ public class ServerGlu extends Server implements Runnable {
                       tree.loadSelected();
                       tree.resetCb();
                    }
-               } else Aladin.warning(this,WNEEDCHECK);
+               } else Aladin.error(this,WNEEDCHECK);
 
 			   // Chargement des descriptions des images disponibles dans thread séparé
 			   } else {
@@ -1706,7 +1706,7 @@ public class ServerGlu extends Server implements Runnable {
           } catch( Exception e1) {
  		    String message = e1.getMessage();
 		    if( message==null ) message="unknown error";
-            Aladin.warning(this,ERR+"\n["+message+"]");
+            Aladin.error(this,ERR+"\n["+message+"]");
 			if (Aladin.levelTrace>=3) e1.printStackTrace();
 			defaultCursor();
             ball.setMode(Ball.HS);
@@ -1842,7 +1842,7 @@ public class ServerGlu extends Server implements Runnable {
                }catch( Exception e1) { 
                   String message = e1.getMessage();
                   if( message==null ) message="unknown error";
-                  Aladin.warning(ERR+"\n["+message+"]");
+                  Aladin.error(ERR+"\n["+message+"]");
                   if (Aladin.levelTrace>=3) e1.printStackTrace();
                   defaultCursor();
                   ball.setMode(Ball.HS);
@@ -1885,7 +1885,7 @@ public class ServerGlu extends Server implements Runnable {
 		catch (Exception e1) {
 		    String message = e1.getMessage();
 		    if( message==null ) message="unknown error";
-            Aladin.warning(this,ERR+"\n["+message+"]");
+            Aladin.error(this,ERR+"\n["+message+"]");
 			if (Aladin.levelTrace>=3) e1.printStackTrace();
 		defaultCursor();
             ball.setMode(Ball.HS);
@@ -2040,14 +2040,14 @@ public class ServerGlu extends Server implements Runnable {
   				try {
 					tapManager.showTapRegistryForm();
 				} catch (Exception e1) {
-					Aladin.warning(this, GENERICERROR);
+					Aladin.error(this, GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
 			} else if (action.equals(SHOWAYNCJOBS)) {
 				try {
 					tapManager.showAsyncPanel();
 				} catch (Exception e1) {
-					Aladin.warning(this, GENERICERROR);
+					Aladin.error(this, GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
 			} else if (action.equals(UPLOAD)) {

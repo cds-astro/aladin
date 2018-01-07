@@ -255,7 +255,7 @@ public class TapManager {
 			
 		} catch (Exception e) {
 			if (Aladin.levelTrace >= 3) e.printStackTrace();
-			Aladin.warning(tapFrameServer, "Tap servers not loaded from directory tree!", 1);
+			Aladin.error(tapFrameServer, "Tap servers not loaded from directory tree!", 1);
 		}
 	}
 	
@@ -286,7 +286,7 @@ public class TapManager {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if(Aladin.levelTrace >=3) e.printStackTrace();
-			Aladin.warning(tapFrameServer, "Unable to load tap servers from directory !", 1);
+			Aladin.error(tapFrameServer, "Unable to load tap servers from directory !", 1);
 		} finally {
 			initAllLoad = false;
 		}
@@ -596,7 +596,7 @@ public class TapManager {
 				this.showTapRegistryForm();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				Aladin.warning(aladin.dialog, GENERICERROR);
+				Aladin.error(aladin.dialog, GENERICERROR);
 				e.printStackTrace();
 			} finally {
 				tapServer.makeCursor(Aladin.DEFAULTCURSOR);
@@ -2287,7 +2287,7 @@ public class TapManager {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace > 3) e.printStackTrace();
-			Aladin.warning(s, e.getMessage());
+			Aladin.error(s, e.getMessage());
 		}
 		return result;
 	}
@@ -2598,9 +2598,9 @@ public class TapManager {
 	//TODO:: tintin delete the below one method if it is not used as much
 	public void displayWarning(TapClient tapClient, String message) {
 		if (tapClient.mode == TapClientMode.TREEPANEL) {
-			Aladin.warning(this.tapPanelFromTree, message);
+			Aladin.error(this.tapPanelFromTree, message);
 		} else {
-			Aladin.warning(aladin.dialog, message);
+			Aladin.error(aladin.dialog, message);
 		}
 	}
 	

@@ -248,7 +248,7 @@ public class ServerMocQuery extends Server  {
 
        Plan localPlan = getPlan();
        if (localPlan==null) {
-           Aladin.warning("No local plane selected !");
+           Aladin.error("No local plane selected !");
            return;
        }
        
@@ -272,7 +272,7 @@ public class ServerMocQuery extends Server  {
        } catch(Exception e) {
            defaultCursor();
            e.printStackTrace();
-           Aladin.warning("An error occured while contacting the remote service");
+           Aladin.error("An error occured while contacting the remote service");
            return;
        }
        defaultCursor();

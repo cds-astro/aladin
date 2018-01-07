@@ -318,7 +318,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			}
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(this, e.getMessage());
+			Aladin.error(this, e.getMessage());
 			return;
 		}
 		c.weighty = 0.55;
@@ -431,7 +431,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		if (this.sync_async != null &&  this.tap != null) {
 			String tapQuery = tap.getText();
 			if (tap.getText().isEmpty()) {
-				Aladin.warning(this, CHECKQUERY_ISBLANK);
+				Aladin.error(this, CHECKQUERY_ISBLANK);
 				return;
 			}
 			Map<String, Object> requestParams = null;
@@ -443,7 +443,7 @@ public class ServerTapExamples extends DynamicTapForm {
 							requestParams = new HashMap<String, Object>();
 							FrameUploadServer uploadFrame = tapManager.uploadFrame;
 							if (uploadFrame.uploadedTableFiles.get(secondaryTable) == null) {
-								Aladin.warning(this, "Unable to submit " + secondaryTable + " data!");
+								Aladin.error(this, "Unable to submit " + secondaryTable + " data!");
 								return;
 							}
 							String uploadFileName = FrameUploadServer.UPLOADFILEPREFIX+secondaryTable;
@@ -981,7 +981,7 @@ public class ServerTapExamples extends DynamicTapForm {
 					}	
 				}
 			} catch (Exception e) {
-				Aladin.warning(this, "No target set. "+e.getMessage());
+				Aladin.error(this, "No target set. "+e.getMessage());
 			}
 		}
 	}

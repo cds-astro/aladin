@@ -202,7 +202,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 		} catch (Exception e) {
 			// TODO: handle exception
 			if (Aladin.levelTrace >= 3) e.printStackTrace();
-			Aladin.warning(this, "Cannot open settings "+e.getMessage());
+			Aladin.error(this, "Cannot open settings "+e.getMessage());
 			secondaryTable = null;
 			if (isVisible()) {
 				setVisible(false);
@@ -501,7 +501,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 			tablesGuiEditor.setDocument(new FilterDocument(this, this.secondaryTablesGui, keys, secondaryTable));
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(this, e.getMessage());
+			Aladin.error(this, e.getMessage());
 			setVisible(false);//tintin TODO error handling
 			throw e;
 		}
@@ -711,7 +711,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 						//do not call getColumnsToLoad with the upload table, 
 						//because this is not on upload frame for the tap client to know that this is an uploaded table
 						if (tableSelected.equalsIgnoreCase(serverEx.selectedTableName)) {
-							Aladin.warning(this.getContentPane(), "Cannot select same table! No second table selected.");
+							Aladin.error(this.getContentPane(), "Cannot select same table! No second table selected.");
 							tableSelected = null;
 						}
 						serverEx.secondaryTable = tableSelected;
@@ -723,7 +723,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 							decColumn = ((TapTableColumn) decColumn2.getSelectedItem());
 							serverEx.secondaryTable = tableSelected;
 						} else {
-							Aladin.warning(this.getContentPane(), "Please upload a table!");
+							Aladin.error(this.getContentPane(), "Please upload a table!");
 							return;
 						}
 					}
@@ -746,7 +746,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 			} catch (Exception e) {
 				// TODO: handle exception
 				e.printStackTrace();
-				Aladin.warning(this.serverEx, "Unable to change settings! " + e.getMessage());
+				Aladin.error(this.serverEx, "Unable to change settings! " + e.getMessage());
 				setVisible(false);
 				return;
 			}
@@ -838,7 +838,7 @@ public class FrameTapSettings extends JFrame implements ActionListener, GrabItFr
 					uploadTablesGui.setEnabled(false);
 					setSecondAllTableGui(false);
 					if (Aladin.levelTrace >= 3) e.printStackTrace();
-					Aladin.warning(this, "Error: " + e.getMessage());
+					Aladin.error(this, "Error: " + e.getMessage());
 				}
 				
 			}

@@ -886,7 +886,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          double min = pimg.getPixelValue(pixelCutMinField.getText());
          double max = pimg.getPixelValue(pixelCutMaxField.getText());
          if( min>max ) {
-            Aladin.warning(this,CMERRORRANGE);
+            Aladin.error(this,CMERRORRANGE);
             return;
          }
          aladin.console.printCommand("cm "+pixelCutMinField.getText()+".."+pixelCutMaxField.getText() );

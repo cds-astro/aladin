@@ -1128,7 +1128,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       TreeObjDir to = getTreeObjDir(survey, 2);
       if( to == null ) {
-         Aladin.warning(this, "Progressive survey (HiPS) unknown [" + survey + "]", 1);
+         Aladin.error(this, "Progressive survey (HiPS) unknown [" + survey + "]", 1);
          return -1;
       }
 
@@ -1287,9 +1287,18 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
    /** Réaffichage de l'arbre avec un nouveau tri */
    protected void resumeSort() {
+      aladin.makeCursor(aladin, Aladin.WAITCURSOR);
+      if( frameInfo!=null ) aladin.makeCursor(frameInfo, Aladin.WAITCURSOR);
+      
       wasExpanded = null;
-      resumeTree(dirList, false, false);
+      resumeTree(dirList, false, true, true);
+      
+      aladin.makeCursor(aladin, Aladin.DEFAULTCURSOR);
+      if( frameInfo!=null ) aladin.makeCursor(frameInfo, Aladin.DEFAULTCURSOR);
    }
+   
+   /** retourne true si le mode de tri actuel est global */
+   protected boolean isGlobalSorted() { return directorySort.isGlobalSorted(); }
 
    /**
     * Reconstruction de l'arbre en utilisant à chaque fois un nouveau model pour éviter les conflits d'accès et éviter la lenteur
@@ -1297,7 +1306,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * même si elle peut paraitre étonnante à première vue.)
     * @param tmpDirList
     */
-   private void rebuildTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter) {
+   private void rebuildTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter,boolean initSort) {
       boolean insideActivated = iconInside.isActivated();
 
       // Mémorisation temporaire des états expanded/collapsed
@@ -1317,11 +1326,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       ArrayList<TreeObjDir> tmpDirList1 = new ArrayList<TreeObjDir>(tmpDirList.size());
       for( TreeObjDir to : tmpDirList ) {
          boolean mustBeActivated = !to.isHidden() && (!insideActivated || insideActivated && to.getIsIn() != 0);
-         if( mustBeActivated ) {
+         if( initSort ) {
             directorySort.setInternalSortKey(to.id,to.prop);
             to.setTri();
-            tmpDirList1.add(to);
+            to.setPath();
          }
+         if( mustBeActivated ) tmpDirList1.add(to);
       }
       Collections.sort(tmpDirList1, TreeObj.getComparator());
       for( TreeObjDir to : tmpDirList1 ) model.createTreeBranch(to);
@@ -1412,20 +1422,20 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
    /** Réaffichage de l'arbre en fonction des flags courants */
    protected void resumeTree() {
-      resumeTree(dirList, false, false);
+      resumeTree(dirList, false, false, false);
    }
 
    /** Remplacement et réaffichage de l'arbre avec une nouvelle liste de noeuds */
    protected void replaceTree(ArrayList<TreeObjDir> tmpDirList) {
-      resumeTree(tmpDirList, true, true);
+      resumeTree(tmpDirList, true, true, true);
       dirList = tmpDirList;
    }
 
    /** Réaffichage de l'arbre */
-   private void resumeTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter) {
+   private void resumeTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter,boolean initSort) {
       try {
          // long t0 = System.currentTimeMillis();
-         rebuildTree(tmpDirList, defaultExpand, initCounter);
+         rebuildTree(tmpDirList, defaultExpand, initCounter, initSort);
          validate();
          postTreeProcess(defaultExpand);
          // System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
@@ -1780,12 +1790,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       return dirTree.isDefaultExpand();
    }
    
-   protected void tri(Component parent, int x, int y) {
+   /** Affichage du popupmenu de tri par branches */
+   protected void triBranch(Component parent, int x, int y) {
       TreePath tps = dirTree.getSelectionPath();
       if( tps==null ) return;
       DefaultMutableTreeNode to = (DefaultMutableTreeNode) tps.getLastPathComponent();
       TreeObj t = (TreeObj)to.getUserObject();
-      JPopupMenu popup = directorySort.createPopup( t.path );
+      JPopupMenu popup = directorySort.createBranchPopup( t.path );
+      popup.show(parent,x,y);
+   }
+
+   /** Affichage du popupmenu de tri global */
+   protected void triGlobal(Component parent, int x, int y) {
+      JPopupMenu popup = directorySort.createGlobalPopup( );
       popup.show(parent,x,y);
    }
 
@@ -2110,21 +2127,26 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       propAdjust1(id, prop);
       
       String category = prop.getProperty(Constante.KEY_CLIENT_CATEGORY);
-      boolean isHips = prop.getProperty("hips_service_url") != null;
-      
-      // Sans catégorie => dans la branche "Others" suivi du protocole puis de l'authority
-      if( category == null ) {
-         boolean isCS  = prop.getProperty("cs_service_url")   != null;
-         boolean isSIA = prop.getProperty("sia_service_url")  != null 
-                      || prop.getProperty("sia2_service_url") != null;
-         boolean isSSA = prop.getProperty("ssa_service_url")  != null;
-         boolean isTAP = prop.getProperty("tap_service_url")  != null;
-         String subCat = isHips ? "HiPS"
-               : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
-
-         category = DirectorySort.OTHERS+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
+      if( category==null ) {
+         category = DirectorySort.OTHERS;
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
       }
+      
+//      boolean isHips = prop.getProperty("hips_service_url") != null;
+//      
+//      // Sans catégorie => dans la branche "Others" suivi du protocole puis de l'authority
+//      if( category == null ) {
+//         boolean isCS  = prop.getProperty("cs_service_url")   != null;
+//         boolean isSIA = prop.getProperty("sia_service_url")  != null 
+//                      || prop.getProperty("sia2_service_url") != null;
+//         boolean isSSA = prop.getProperty("ssa_service_url")  != null;
+//         boolean isTAP = prop.getProperty("tap_service_url")  != null;
+//         String subCat = isHips ? "HiPS"
+//               : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
+//
+//         category = DirectorySort.OTHERS+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
+//         prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
+//      }
 
       boolean local = prop.getProperty("PROP_ORIGIN") != null;
 
@@ -2146,8 +2168,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Déjà fait en amont => on ne bidouille plus dans le client
       if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) return;
 
-      String category = null;
-
       // Ne concerne pas VizieR => on ne bidouille pas dans le client
       if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;
 
@@ -2160,89 +2180,77 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
 
       // Détermination de la catégorie
-      String code = getCatCode(id);
-      if( code == null ) return;
+      prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, "Catalog/VizieR");
+      
+      // Réorganisation des champs en attendant que Thomas le fasse en amont
+      //
+      // exemple: 
+      //
+      // ID                    = CDS/I/337/gaia
+      // obs_collection        = Gaia-DR1
+      // obs_title             = Gaia DR1 (Gaia Collaboration, 2016) (gaia)
+      // obs_description       = GaiaSource data
+      // obs_collection_label  = Gaia-DR1
+      //
+      // S'il s'agit d'une table unique d'un catalogue (CDS/I/337/* == 1)
+      //    1) je vire le nom de la table à la fin de obs_title si présent
+      //    2) j'ajoute en préfixe l'alias principal si nécessaire (obs_collection_label ajouté à obs_title)
+      //    3) je mémorise le nouveau titre (obs_title)
+      //
+      // En revanche, s'il s'agit d'une table d'un catalogue ayant plusieurs table (CDS/I/337/* > 1)
+      //    1) Je vire le nom de la table à la fin de obs_title => (gaia)
+      //    2) Je remplace la obs_collection par ce titre => Gaia DR1 (Gaia Collaboration, 2016)
+      //    3) Je récupère le obs_description, ajoute en suffixe le nom de la table récupéré en 1 et l'enregistre
+      //       comme nouveau obs_title => GaiaSource data (gaia)
+      
 
-      String vizier = "/VizieR";
-
-      boolean flagJournal = code.equals("J");
-      if( flagJournal ) {
-         String journal = getJournalCode(id);
-         category = "Catalog" + vizier + "/Journal table/" + journal; 
-
-      } else {
-         int c = Util.indexInArrayOf(code, DirectorySort.CATCODE);
-         if( c == -1 ) category = "Catalog" + vizier + "/" + code; // Catégorie inconnue
-         else category = "Catalog" + vizier + "/" + DirectorySort.CATLIB[c];
-      }
-
-      // Détermination du suffixe (on ne va pas créer un folder pour un élément unique)
-      String parent = getCatParent(id);
-      boolean hasMultiple = hasMultiple(parent);
+      boolean hasMultiple = hasMultiple( getCatParent(id) );
       if( !hasMultiple ) {
-         parent = getCatParent(parent);
 
-         if( !flagJournal ) {
-            // Je vire le nom de la table a la fin du titre
-            String titre = prop.get(Constante.KEY_OBS_TITLE);
-            int i;
-            boolean modif=false;
-            if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
-               titre = titre.substring(0, i - 1);
-               modif=true;
-            }
-            
-            // J'ajoute le petit nom de la collection en suffixe si nécessaire
-            String label = prop.getFirst("obs_collection_label");
-            if( label!=null && titre!=null ) {
-               titre = addLabelPrefix(label,titre);
-               modif=true;
-            }
-            if( modif ) prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
+         // Je vire le nom de la table a la fin du titre
+         String titre = prop.get(Constante.KEY_OBS_TITLE);
+         int i;
+         boolean modif=false;
+         if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
+            titre = titre.substring(0, i - 1);
+            modif=true;
          }
+
+         // J'ajoute le petit nom de la collection en suffixe si nécessaire
+         String label = prop.getFirst("obs_collection_label");
+         if( label!=null && titre!=null ) {
+            titre = addLabelPrefix(label,titre);
+            modif=true;
+         }
+         if( modif ) prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
 
       } else {
          String titre = prop.get(Constante.KEY_OBS_TITLE);
          if( titre != null ) {
-            
-            // Je remonte le nom du catalog sur la branche
+
+            // Je remonte le nom du catalog (obs_description sans la parenthèse finale) sur la branche (obs_collection)
             int i = titre.lastIndexOf('(');
             int j = titre.indexOf(')', i);
             if( i > 0 && j > i ) {
-               int k = parent.lastIndexOf('/');
-               parent = (k == -1 ? "" : parent.substring(0, k + 1)) + titre.substring(0, i - 1);
 
                String desc = prop.get(Constante.KEY_OBS_DESCRIPTION);
                if( desc != null ) {
                   String newTitre = desc + titre.substring(i - 1, j + 1);
                   prop.replaceValue(Constante.KEY_OBS_TITLE, newTitre);
+                  prop.remove(Constante.KEY_OBS_DESCRIPTION);
                }
+               prop.replaceValue("obs_collection",titre.substring(0, i-1));
             }
          }
       }
-      if( !flagJournal ) {
-         String suffix = getCatSuffix(parent);
-         
-         // J'ajoute le petit nom de la collection en suffixe si
-         // absent du titre du catalogue
-         String label = prop.getFirst("obs_collection_label");
-         if( label!=null && suffix!=null  ) {
-            suffix=addLabelPrefix(label,suffix);
-         }
 
-         suffix = suffix == null ? "" : "/" +suffix;
-         category += suffix;
-      }
-
-      prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, category);
-      prop.remove(Constante.KEY_OBS_DESCRIPTION);
-   }
+    }
    
    static private boolean isSep(char c) { return c==' ' || c=='-' || c=='_'; }
    
    // Ajoute le label en préfixe si les premiers mots sont différents
    // Supprime éventuellement l'article The en début de titre
-   private String addLabelPrefix(String label, String title) {
+   protected String addLabelPrefix(String label, String title) {
       if( label==null ) return title;
       
       String title1 = title;
@@ -2370,7 +2378,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private HashSet<String> multiple = null;
 
    /** Retourne true si le path contient plusieurs feuilles */
-   private boolean hasMultiple(String path) {
+   protected boolean hasMultiple(String path) {
       if( multiple == null ) {
          multiple = new HashSet<String>(multiProp.size());
          HashSet<String> un = new HashSet<String>(multiProp.size());
@@ -2530,7 +2538,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    /**
-    * Retourne le préfixe parent d'un identificateur de catalgoue => tout ce qui précède le dernier mot (ex: CDS/I/246/out =>
+    * Retourne le préfixe parent d'un identificateur de catalogue => tout ce qui précède le dernier mot (ex: CDS/I/246/out =>
     * CDS/I/246)
     */
    static protected String getCatParent(String id) {
@@ -2657,7 +2665,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          // System.out.println("addHipsProp => "+path);
          loadMultiProp(in, addition, path);
          ArrayList<TreeObjDir> tmpDirList = populateMultiProp();
-         rebuildTree(tmpDirList, false, true);
+         rebuildTree(tmpDirList, false, true, true);
          dirList = tmpDirList;
       } catch( Exception e ) {
          if( aladin.levelTrace > 3 ) e.printStackTrace();
@@ -3707,7 +3715,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             final JButton bfinal = b;
             b.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) {
-                  aladin.directory.tri( bfinal, 5,5);
+                  aladin.directory.triBranch( bfinal, 5,5);
                }
             });
             

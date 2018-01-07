@@ -285,7 +285,7 @@ public class PlanImageAlgo extends PlanImage {
             if( error==null ) error="conv error";
          }
          if( k==null ) {
-            aladin.warning(error);
+            aladin.error(error);
             flagOk=true;
             return false; 
          }

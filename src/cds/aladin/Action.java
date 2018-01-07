@@ -456,7 +456,7 @@ public class Action {
 			endParam = getClosingParenthesis(s, beginParam+1);
 			if( endParam < 0 ) {
 				badSyntax = true;
-				Aladin.warning(ERR1,1);
+				Aladin.error(ERR1,1);
 				return;
 			}
 			paramStr = s.substring(beginParam+1, endParam);
@@ -527,7 +527,7 @@ public class Action {
             int index = s.indexOf("\"", 1);
             if( index<0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR2,1);
+				Aladin.error(ERR2,1);
 				return -1;
             }
             else {
@@ -542,7 +542,7 @@ public class Action {
             int end = s.startsWith("[")?s.indexOf("]"):s.indexOf("}");
             if( end<0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR3,1);
+				Aladin.error(ERR3,1);
                 return -1;
             }
             else {
@@ -573,13 +573,13 @@ public class Action {
             before = s.indexOf("(");
             if( before<0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR4,1);
+				Aladin.error(ERR4,1);
 				return -1;
             }
             int end = getClosingParenthesis(s,before+1);
             if( end < 0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR5,1);
+				Aladin.error(ERR5,1);
 				return -1;
             }
 			decodeRGB(s.substring(Math.max(0,before), end+1));
@@ -589,13 +589,13 @@ public class Action {
             before = s.indexOf("(");
             if( before<0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR6,1);
+				Aladin.error(ERR6,1);
 				return -1;
             }
             int end = getClosingParenthesis(s,before+1);
             if( end < 0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR7,1);
+				Aladin.error(ERR7,1);
 				return -1;
             }
 			decodeRainbow(s.substring(Math.max(0,before), end+1));
@@ -605,13 +605,13 @@ public class Action {
             before = s.indexOf("(");
             if( before<0 ) {
                 badSyntax = true;
-                Aladin.warning(ERR6,1);
+                Aladin.error(ERR6,1);
                 return -1;
             }
             int end = getClosingParenthesis(s,before+1);
             if( end < 0 ) {
                 badSyntax = true;
-                Aladin.warning(ERR7,1);
+                Aladin.error(ERR7,1);
                 return -1;
             }
             decodeSaturation(s.substring(Math.max(0,before), end+1));
@@ -643,13 +643,13 @@ public class Action {
             before = s.indexOf("(");
             if( before<0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR8,1);
+				Aladin.error(ERR8,1);
 				return -1;
             }
             int end = getClosingParenthesis(s,before+1);
             if( end < 0 ) {
                 badSyntax = true;
-				Aladin.warning(ERR9,1);
+				Aladin.error(ERR9,1);
 				return -1;
             }
             //System.out.println(s.substring(0, end+1));
@@ -672,7 +672,7 @@ public class Action {
 
 
         badSyntax = true;
-		Aladin.warning(ERR10 + "["+s+"]",1);
+		Aladin.error(ERR10 + "["+s+"]",1);
         return -1;
     }
 
@@ -728,14 +728,14 @@ public class Action {
         // there can be 1 or 3 parameters
         if( st.countTokens()!=1 && st.countTokens()!=3 ) {
             badSyntax = true;
-            Aladin.warning(ERR11+" " + SATURATION + " rainbow(exp[,minValue,maxValue])",1);
+            Aladin.error(ERR11+" " + SATURATION + " rainbow(exp[,minValue,maxValue])",1);
             return;
         }
 
         try {
             saturationParser = UCDFilter.createParser(st.nextToken(),a);
         }
-        catch(ParserException e) {Aladin.warning(ERR12,1);badSyntax=true;return;}
+        catch(ParserException e) {Aladin.error(ERR12,1);badSyntax=true;return;}
 
         // if value is constant
         if( saturationParser.isConstant() ) {
@@ -750,7 +750,7 @@ public class Action {
                 saturationMaxValue = Double.valueOf(st.nextToken()).doubleValue();
             }
             catch(NumberFormatException e) {
-                Aladin.warning(ERR13,1);
+                Aladin.error(ERR13,1);
                 badSyntax=true;
                 return;
             }
@@ -776,14 +776,14 @@ public class Action {
 		if( st.countTokens()!=1 && st.countTokens()!=3 ) {
 			badSyntax = true;
 			//System.out.println("Incorrect syntax for "+RAINBOW+" function. Syntax is "+RAINBOW+" rainbow(exp[,minValue,maxValue])");
-			Aladin.warning(ERR11+" " + RAINBOW + " rainbow(exp[,minValue,maxValue])",1);
+			Aladin.error(ERR11+" " + RAINBOW + " rainbow(exp[,minValue,maxValue])",1);
 			return;
 		}
 
     	try {
 			rainbowParser = UCDFilter.createParser(st.nextToken(),a);
 		}
-    	catch(ParserException e) {Aladin.warning(ERR12,1);badSyntax=true;return;}
+    	catch(ParserException e) {Aladin.error(ERR12,1);badSyntax=true;return;}
 
 		// if value is constant
 		if( rainbowParser.isConstant() ) {
@@ -798,7 +798,7 @@ public class Action {
 				rainbowMaxValue = Double.valueOf(st.nextToken()).doubleValue();
 			}
 			catch(NumberFormatException e) {
-				Aladin.warning(ERR13,1);
+				Aladin.error(ERR13,1);
 				badSyntax=true;
 				return;
 			}
@@ -838,7 +838,7 @@ public class Action {
 		if( st.countTokens() != 3 ) {
 			badSyntax = true;
 			//System.out.println("rgb function should have exactly 3 parameters");
-			Aladin.warning(ERR14,1);
+			Aladin.error(ERR14,1);
 			return;
 		}
 
@@ -848,7 +848,7 @@ public class Action {
 			greenParser = UCDFilter.createParser(st.nextToken(),a);
 			blueParser = UCDFilter.createParser(st.nextToken(),a);
 		}
-    	catch(ParserException e) {Aladin.warning(ERR15,1);badSyntax=true;return;}
+    	catch(ParserException e) {Aladin.error(ERR15,1);badSyntax=true;return;}
 
 		// if RGB values are constant
 		if( redParser.isConstant() && greenParser.isConstant() && blueParser.isConstant() ) {
@@ -1008,7 +1008,7 @@ public class Action {
 						curStr += ","+st.nextToken();
 					}
 				}
-    	    	catch(NoSuchElementException e) {Aladin.warning(ERR16,1);badSyntax=true;return;}
+    	    	catch(NoSuchElementException e) {Aladin.error(ERR16,1);badSyntax=true;return;}
     	    	processColor(curStr.substring(COLOR.length()));
     	    }
 			// sinon on recupere le texte a afficher
@@ -1039,7 +1039,7 @@ public class Action {
 						curStr += ","+st.nextToken();
 					}
 				}
-    	    	catch(NoSuchElementException e) {Aladin.warning(ERR16,1);badSyntax=true;return;}
+    	    	catch(NoSuchElementException e) {Aladin.error(ERR16,1);badSyntax=true;return;}
     	    	processColor(curStr.substring(COLOR.length()));
     	    }
 
@@ -1055,7 +1055,7 @@ public class Action {
     	    	    	    curStr += ","+st.nextToken();
     	    	    	}
     	    	    }
-    	    	    catch(NoSuchElementException e) {Aladin.warning(ERR17,1);badSyntax=true;return;}
+    	    	    catch(NoSuchElementException e) {Aladin.error(ERR17,1);badSyntax=true;return;}
 
     	    	}
     	    	decodeShape(curStr);
@@ -1087,7 +1087,7 @@ public class Action {
 				if( st.countTokens()!=1 && st.countTokens()!=3 && st.countTokens()!=5 ) {
 					badSyntax = true;
 					//System.out.println("Incorrect syntax for "+SIZE+" function. Syntax is "+SIZE+" (exp[,minRadius,maxRadius])");
-					Aladin.warning(ERR11+" "+SIZE+" (exp[,minRadius,maxRadius])",1);
+					Aladin.error(ERR11+" "+SIZE+" (exp[,minRadius,maxRadius])",1);
 					return;
 				}
 
@@ -1095,7 +1095,7 @@ public class Action {
     	    	try {
     	    	    this.sizeParser = UCDFilter.createParser(st.nextToken(),a);
     	    	}
-    	    	catch(ParserException e) {Aladin.warning(ERR19,1);badSyntax=true;}
+    	    	catch(ParserException e) {Aladin.error(ERR19,1);badSyntax=true;}
 
 				// in this case, the user has given minRadius and maxRadius values
 				if( st.hasMoreTokens() ) {
@@ -1104,7 +1104,7 @@ public class Action {
 						maxRadius = Integer.valueOf(st.nextToken().trim()).intValue();
 					}
 					catch(NumberFormatException e) {
-						Aladin.warning(ERR20,1);
+						Aladin.error(ERR20,1);
 						badSyntax=true;
 						return;
 					}
@@ -1117,7 +1117,7 @@ public class Action {
 						maxValue = Integer.valueOf(st.nextToken().trim()).intValue();
 					}
 					catch(NumberFormatException e) {
-						Aladin.warning(ERR21,1);
+						Aladin.error(ERR21,1);
 						badSyntax=true;
 						return;
 					}
@@ -1145,7 +1145,7 @@ public class Action {
     	    if( shape.equals(LINE) || shape.equals(ELLIPSE) || shape.equals(FILLELLIPSE )
     	    		|| shape.equals(RECTANGLE) || shape.equals(SIZE) || shape.equals(FILLSIZE)
 					|| shape.equals(FIXEDCIRCLE) || shape.equals(PM)) {
-    	    	Aladin.warning(ERR22+" "+shape,1);badSyntax=true;
+    	    	Aladin.error(ERR22+" "+shape,1);badSyntax=true;
     	    }
     	}
     }
@@ -1164,7 +1164,7 @@ public class Action {
     	    ra2 = st.nextToken();
     	    dec2 = st.nextToken();
     	}
-    	catch(NoSuchElementException e) {Aladin.warning("Missing parameter for the line function !",1);badSyntax=true;}
+    	catch(NoSuchElementException e) {Aladin.error("Missing parameter for the line function !",1);badSyntax=true;}
 
     	lineRa1Parser = UCDFilter.createParser(ra1,a);
     	lineDec1Parser = UCDFilter.createParser(dec1,a);
@@ -1185,7 +1185,7 @@ public class Action {
     	    pmra = st.nextToken();
     	    pmdec = st.nextToken();
     	}
-    	catch(NoSuchElementException e) {Aladin.warning(ERR23,1);badSyntax=true;}
+    	catch(NoSuchElementException e) {Aladin.error(ERR23,1);badSyntax=true;}
 
     	//System.out.println(pmdec);
     	//System.out.println(pmra);
@@ -1215,7 +1215,7 @@ public class Action {
     	    minAxis = st.nextToken();
     	    posAngle = st.nextToken();
     	}
-    	catch(NoSuchElementException e) {Aladin.warning(ERR24,1);badSyntax=true;}
+    	catch(NoSuchElementException e) {Aladin.error(ERR24,1);badSyntax=true;}
 
     	//System.out.println(majAxis);
     	//System.out.println(minAxis);

@@ -59,7 +59,7 @@ public final class FrameMocGenRes extends FrameMocGenImg {
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("MOC generation failed !");
+         Aladin.error("MOC generation failed !");
       }
 
    }

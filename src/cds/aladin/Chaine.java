@@ -258,7 +258,7 @@ public class Chaine {
        }
        
        if( suf.length()==0 ) {
-          aladin.warning("Missing parameters !");
+          aladin.error("Missing parameters !");
           return;
        }
        testLanguage(suf,lang);

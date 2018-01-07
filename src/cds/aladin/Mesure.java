@@ -227,7 +227,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 							}
 							aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
 						} else {
-							Aladin.warning(DatalinkManager.NOCUTOUTCLIENTSUPPORT, 1);
+							Aladin.error(DatalinkManager.NOCUTOUTCLIENTSUPPORT, 1);
 						}
 					} /*else if (semantics.startsWith(SEMANTIC_PREVIEW) && accessUrl != null
 							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)
@@ -245,12 +245,12 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 					} else if (accessUrl!=null && !accessUrl.isEmpty()) {
 						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null);//TODO::change to access
 					} else {
-						Aladin.warning("Error in loading datalink",1);
+						Aladin.error("Error in loading datalink",1);
 					}
 				}
 			} 
 		} catch (Exception e) {
-			Aladin.warning("Error in loading datalink",1);
+			Aladin.error("Error in loading datalink",1);
 		}
 		
 	}

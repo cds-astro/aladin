@@ -1011,7 +1011,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       // trop proches ou les objets hors champ
       Position src[] = getSourceList(vsel,vca,tailleRadius==0?3./3600:tailleRadius/2);
       if( src.length==0 ) {
-         aladin.warning(ROIWNG);
+         aladin.error(ROIWNG);
          return 0;
       } else {
          if( !Aladin.NOGUI && dialog ) {
@@ -2465,7 +2465,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       vselobj.removeAllElements();
       if( flagCote ) aladin.calque.zoom.zoomView.setCut(null);
-      if( tags>1 ) aladin.warning(aladin.chaine.getString("REMOVETAG"));
+      if( tags>1 ) aladin.error(aladin.chaine.getString("REMOVETAG"));
       if( ok ) repaintAll();
       return ok;
    }
@@ -3550,9 +3550,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             }
             if( c==null ) {
                if( sourceName.length()>0 ) {
-                  String s = "Command or object identifier unknown ("+sourceName+") !";
+                  String s = "Command or object identifier unknown\n \n   "+sourceName;
                   //                  aladin.command.printConsole(s);
-                  aladin.warning(s,1);
+                  aladin.warning(s);
                }
                
                // On ne garde pas une cible non résolu
@@ -3708,7 +3708,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          rep = setRepere(c,true);
          aladin.sendObserver();
       } catch( Exception e) {
-         aladin.warning("New reticle position error ("+saisie+")",1);
+         aladin.error("New reticle position error ("+saisie+")",1);
          if( aladin.levelTrace>=3 ) System.err.println(e.getMessage());
       }
       nextSaisie=true;

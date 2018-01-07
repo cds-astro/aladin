@@ -909,7 +909,7 @@ public class FrameCDSXMatch extends JFrame implements Runnable, ActionListener {
         //System.out.println(methodeT);
         // vérification qu'une méthode a été choisie
         if( methodeT==0 ) {
-            Aladin.warning(this, ERR1, 1);
+            Aladin.error(this, ERR1, 1);
             return;
         }
 
@@ -922,7 +922,7 @@ public class FrameCDSXMatch extends JFrame implements Runnable, ActionListener {
             seuilsT[1] = Double.valueOf(maxDist.getText()).doubleValue();
         }
         catch(NumberFormatException e) {
-            Aladin.warning(this,ERR2,1);
+            Aladin.error(this,ERR2,1);
             return;
         }
 
@@ -955,7 +955,7 @@ public class FrameCDSXMatch extends JFrame implements Runnable, ActionListener {
         //System.out.println(methodeT);
         // vérification qu'une méthode a été choisie
         if( methodeT==0 ) {
-            Aladin.warning(this, "No cross-match method chosen !", 1);
+            Aladin.error(this, "No cross-match method chosen !", 1);
             return;
         }
 
@@ -966,7 +966,7 @@ public class FrameCDSXMatch extends JFrame implements Runnable, ActionListener {
             seuilsT[1] = Double.valueOf(nbSigmaMax.getText()).doubleValue();
         }
         catch(NumberFormatException e) {
-            Aladin.warning(this,"Could not parse min or max distance !",1);
+            Aladin.error(this,"Could not parse min or max distance !",1);
             return;
         }
 

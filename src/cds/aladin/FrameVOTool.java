@@ -274,9 +274,9 @@ public class FrameVOTool extends JFrame implements ActionListener,KeyListener {
                    "\n - Url: "+ap.jarUrl+"\n - Target: "+aladin.getVOPath()+"\n") ) return;
        int rep = ap.install();
        switch( rep ) {
-          case 0 : aladin.warning(this,CANNOT); break;
+          case 0 : aladin.error(this,CANNOT); break;
           case -1: Util.pause(1000); aladin.info(this,DOWNLOADMAN); break;
-          case -2: aladin.warning(this,NOYET); break;
+          case -2: aladin.error(this,NOYET); break;
        }
        aladin.glu.writeGluAppDic();
        aladin.log("VOinstall", ap.tagGlu+" "+(rep==1?"Ok":"Error"));

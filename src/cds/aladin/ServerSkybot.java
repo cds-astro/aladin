@@ -103,7 +103,7 @@ public class ServerSkybot extends ServerGlu {
          if( epoch==null ) return;
          try { setTarget(skybotResolver(target,epoch).getSexa(":")); }
          catch( Exception e1) {
-            aladin.warning(this,ERR+":\n["+e1.getMessage()+"]");
+            aladin.error(this,ERR+":\n["+e1.getMessage()+"]");
             if( aladin.levelTrace>=3 ) e1.printStackTrace();
          }
          return;

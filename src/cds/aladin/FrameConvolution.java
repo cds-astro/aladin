@@ -326,7 +326,7 @@ protected void submit() {
 //         hide();
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("Convolution failed !");
+         Aladin.error("Convolution failed !");
       }
     }
    

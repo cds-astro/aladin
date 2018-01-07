@@ -460,18 +460,18 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
        
         // le nom de la nouvelle colonne ne doit pas être vide
        if( name.length()==0 ) {
-           Aladin.warning(this, NEEDNAME, 1);
+           Aladin.error(this, NEEDNAME, 1);
            return;
        }
        
        if( expr.length()==0 ) {
-           Aladin.warning(this, NOEXPR, 1);
+           Aladin.error(this, NOEXPR, 1);
            return;
        }
        
         // on vérifie que le nom de la colonne n'existe pas déja
         if( colExist(name) ) {
-        	Aladin.warning(this, ALLREADYEXIST+name+"]");
+        	Aladin.error(this, ALLREADYEXIST+name+"]");
         	return;
         }
        
@@ -487,7 +487,7 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
         
         ColumnCalculator cc = new ColumnCalculator(new SavotField[] {f}, new String[] {expr}, pc, nbDec, a);
         if( !cc.createParser() ) {
-            Aladin.warning(this, ERROR+" : "+cc.getError(), 1);
+            Aladin.error(this, ERROR+" : "+cc.getError(), 1);
             return;
         }
        

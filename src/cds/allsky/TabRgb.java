@@ -336,7 +336,7 @@ public class TabRgb extends JPanel implements ActionListener {
          }
          // verifie si le champ du répertoire de sorie n'est pas vide ou invalide
          if ("".equals(outputField.getText()) || !(new File(outputField.getText())).isDirectory() ) {
-            Aladin.warning("Choose an output directory");
+            Aladin.error("Choose an output directory");
             return;
          }
 

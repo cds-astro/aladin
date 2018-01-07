@@ -1908,7 +1908,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                   ((PlanField)plan).setParameters(projCenter.al,projCenter.del, rotCenter.al,rotCenter.del,roll);
                }
                aladin.view.newView();
-            } catch( Exception e ) { e.printStackTrace(); Aladin.warning(this,aladin.chaine.getString("COORDERR"));}
+            } catch( Exception e ) { e.printStackTrace(); Aladin.error(this,aladin.chaine.getString("COORDERR"));}
          }
       }
 
@@ -1932,7 +1932,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                aladin.view.newView(1);
 
             } catch(Exception e ) {
-               Aladin.warning(this,"Proper motion adjustement error\n=>"+e.getMessage());
+               Aladin.error(this,"Proper motion adjustement error\n=>"+e.getMessage());
                epField.setForeground(Color.red);
             }
 

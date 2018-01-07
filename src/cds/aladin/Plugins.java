@@ -335,7 +335,7 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
                 ok=f.delete();
              }
 if( ok ) Aladin.trace(3,"Remove "+f.getCanonicalPath());
-else aladin.warning("Cannot arrive to remove ["+f.getCanonicalPath()+"]");
+else aladin.error("Cannot arrive to remove ["+f.getCanonicalPath()+"]");
           } catch( Exception e ) { e.printStackTrace(); }
        }
        reload();
@@ -358,7 +358,7 @@ Aladin.trace(3,"Copy "+file.getCanonicalPath());
      * et remet à jour le sous-menu plugin */
     private void reload() {
        if( flagErrorDir ) {
-          Aladin.warning(controleur,"No access to the Aladin plugin directory !");
+          Aladin.error(controleur,"No access to the Aladin plugin directory !");
           return;
        }
        plugDesc.setPlugin(null);

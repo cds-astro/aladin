@@ -327,7 +327,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
             // l'image de cette derniere
             FrameInfo fi = aladin.getFrameInfo();
             if(  fi.isVisible() ) fi.load();
-            else Aladin.warning(this,WNEEDCHECK);
+            else Aladin.error(this,WNEEDCHECK);
          }
          return;
       }
@@ -419,7 +419,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
       String s = target.getText().trim();
       if( confirm && s.length()==0 ) {
          if( ball!=null ) ball.setMode(Ball.NOK);
-         Aladin.warning(this,WNEEDOBJ);
+         Aladin.error(this,WNEEDOBJ);
          return null;
       }
       return s;
@@ -475,7 +475,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
 
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning(this,ERR,1);
+         Aladin.error(this,ERR,1);
          aladin.log("Error","Discovery tool error.submit()");
       }
 

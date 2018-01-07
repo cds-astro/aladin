@@ -168,7 +168,7 @@ public final class FrameBitpix extends FrameRGBBlink {
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("Bitpix convertion failed !");
+         Aladin.error("Bitpix convertion failed !");
       }
    }
    

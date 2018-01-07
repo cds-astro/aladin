@@ -117,7 +117,7 @@ public class FootprintParser {
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			Aladin.warning("Problem during parsing of footprints !");
+			Aladin.error("Problem during parsing of footprints !");
 			return null;
 		}
 		finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} };

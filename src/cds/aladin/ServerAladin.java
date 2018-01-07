@@ -393,7 +393,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
                format=cat.readLine();
             } catch( Exception e ) {}
 
-            if( qual==null || qual.length()==0 ) Aladin.warning(this,aladin.chaine.getString("NOSUCHIMG")
+            if( qual==null || qual.length()==0 ) Aladin.error(this,aladin.chaine.getString("NOSUCHIMG")
                   +" ["+criteria+"] ["+target+"]",1);
 
             else creatAladinPlane(target,format,resol,qual,label,origin);
@@ -421,7 +421,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       if( qual!=null && qual.length()>0 ) s = s+" "+Glu.quote(qual);
 
       if( (u=aladin.glu.getURL(getTagGlu(GLUIMAGE),s))==null ) {
-         Aladin.warning(this,WERROR,1);
+         Aladin.error(this,WERROR,1);
          return -1;
       }
 
@@ -466,7 +466,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
             objc = sesameIfRequired(obj,":");
             if( objc==null ) throw new Exception(UNKNOWNOBJ+" ["+obj+"]");
          } catch( Exception e1 ) {
-            Aladin.warning(this,e1.getMessage(),1);
+            Aladin.error(this,e1.getMessage(),1);
             defaultCursor();
             ball.setMode(Ball.NOK);
             return;
@@ -479,7 +479,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
          MyInputStream is = Util.openStream(url);
          if( (is.getType() & (MyInputStream.IDHA|MyInputStream.SIA|MyInputStream.SSA))==0 ) {
             String err = is.readLine().trim();
-            Aladin.warning(this,SERVERR+
+            Aladin.error(this,SERVERR+
                            "\n\""+err+"\"");
             defaultCursor();
             ball.setMode(Ball.HS);
@@ -488,7 +488,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
          updateMetaData(is,this,obj,null);
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning(this,SERVERR,1);
+         Aladin.error(this,SERVERR,1);
       }
       defaultCursor();
       if( tree.isEmpty() ) ball.setMode(Ball.NOK);
@@ -572,7 +572,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
             // l'image de cette derniere
             FrameInfo fi = aladin.getFrameInfo();
             if(  fi.isVisible() ) fi.load();
-            else Aladin.warning(this,WNEEDCHECK);
+            else Aladin.error(this,WNEEDCHECK);
          }
          defaultCursor();
          return;

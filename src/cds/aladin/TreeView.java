@@ -172,11 +172,11 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
 
         // on affiche une eventuelle erreur
         if( error!=null ) {
-            Aladin.warning(tree, error);
+            Aladin.error(tree, error);
             return false;
         //  patch pour Pierre, au cas où on a zéro resource retournée
         } else if( newBranch.nbChildren<=0 ) {
-            Aladin.warning(tree, NODATA);
+            Aladin.error(tree, NODATA);
             return false;
         }
 
@@ -315,7 +315,7 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
         if( url==null && is==null ) {
           targetCoo = resolveTarget(target,aladin);
           if( targetCoo==null ) {
-              Aladin.warning(UNKNOWNOBJ+" "+target,1);
+              Aladin.error(UNKNOWNOBJ+" "+target,1);
               return null;
           }
         }

@@ -60,9 +60,9 @@ public class IconSort extends Icon {
       for( int i=0; i<TX.length; i++ ) g.drawLine(TX[i][1]+x,TX[i][0]+y,TX[i][2]+x,TX[i][0]+y);
    }
    
-   protected boolean isAvailable() { 
-      return aladin.directory.isSortable(); 
-   }
+   protected boolean isAvailable() { return !aladin.directory.isFree(); }
+
+//   protected boolean isAvailable() {  return aladin.directory.isSortable(); }
    
    protected boolean isActivated() { return false; }
    
@@ -89,7 +89,7 @@ public class IconSort extends Icon {
    
    protected void submit() {
       if( !isAvailable() ) return;
-      aladin.directory.tri( getParent(), 5,5);
+      aladin.directory.triGlobal( getParent(), 5,5);
       repaint();
    }
       

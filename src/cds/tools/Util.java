@@ -453,7 +453,7 @@ public final class Util {
     * Rq: le / initial présent ou absent n'a pas d'incidence
     * @param path le path
     * @param deb l'indice de l'élément (commence à 0)
-    * @param num le nombre d'éléments (par défaut 1)
+    * @param num le nombre d'éléments (par défaut 1), -1 tout le reste
     * @return ex: CDS/P/DSS2/color,2,2  => DSS2/color
     */
    static public String getSubpath(String path,int deb ) { return getSubpath(path,deb,1); }

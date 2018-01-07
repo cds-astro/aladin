@@ -209,7 +209,7 @@ public final class ServerFoV extends Server implements TableModel {
     */
    protected int creatFieldPlane(String target,double roll,String instrument,String label) {
       if( instrument==null || instrument.equals("") ) {
-         Aladin.warning(WNEEDCHECK,1);
+         Aladin.error(WNEEDCHECK,1);
          return -1;
       }
 

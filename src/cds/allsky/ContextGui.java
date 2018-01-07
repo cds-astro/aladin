@@ -399,8 +399,8 @@ public class ContextGui extends Context {
    public void nldone(String string)  { trace(3,"DONE  : "+string);  }
    public void done(String string)    { trace(3,"DONE  : "+string); }
    public void info(String string)    { trace(3,"INFO  : "+string); }
-   public void warning(String string) { mainPanel.aladin.warning(mainPanel, string); trace(3,"WARN  : "+string); }
-   public void error(String string)   { mainPanel.aladin.warning(mainPanel, string); trace(3,"ERROR : "+string);}
+   public void warning(String string) { mainPanel.aladin.error(mainPanel, string); trace(3,"WARN  : "+string); }
+   public void error(String string)   { mainPanel.aladin.error(mainPanel, string); trace(3,"ERROR : "+string);}
    public void action(String string)  { trace(3,"ACTION: "+string); }
    public void nlstat(String string)  { trace(3,"STAT  : "+string); }
 

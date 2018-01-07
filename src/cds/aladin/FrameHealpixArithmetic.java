@@ -184,7 +184,7 @@ public final class FrameHealpixArithmetic extends FrameRGBBlink {
             if (a.levelTrace>=3) {
                 e.printStackTrace();
             }
-            Aladin.warning("Healpix arithmetic operation failed !");
+            Aladin.error("Healpix arithmetic operation failed !");
         }
 
     }

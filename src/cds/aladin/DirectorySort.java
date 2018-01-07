@@ -48,15 +48,32 @@ public class DirectorySort {
    
    public static final String[] BRANCHES   = { 
          "Image", "Data base", "Catalog", "Cube", "Outreach", OTHERS, PROBLEMATIC };
+   
+   public static final String[] PROTOCOLS = { "HiPS", "SIA2 (image|cube)", "SIA (image)",
+         "SSA (spectrum)","CS (table)","TAP (table)"};
+   public static final int HIPS=0, SIA2=1, SIA=2, SSA=3, CS=4, TAP=5;
+   
+   public static final String[] DATATYPES = { "Image","Cube","Table","Spectra" };
+   public static final int IMAGE= 0, CUBE=1, TABLE=2, SPECTRUM=3;
+   
+   public static final String[] COVRANGES = {  "Whole sky" , "75% to 100%", "50% to 75%", ">25% to 50%" ,
+         "10% to 25%", "1% to 10%", "less than 1%" };
+   public static final int COV100=0, COV75=1, COV50=2, COV25=3, COV10=4, COV1=5, COV0=6;
+   
    public static final String[] REGIMEHIPS = { 
-         "Gamma-ray","X","UV","Optical","Infrared","Radio","Gas-lines" };
+         "Gamma-ray","X-ray","EUV","UV","Optical","Infrared","Millimeter","Radio","Gas-lines" };
+   public static final String [][] REGIMEALIAS = {
+         {"gammaray","gamma"},{"xray","x"},{"euv","extremeultraviolet","extremeuv"},{"uv","ultraviolet"},
+         {"optical","optic","visible"},{"ir","infrared"},{"mm","millimeter"},
+         {"radio","rad"},{"gaslines","gasline"} };
+   
    public static final String[] CATCODE   = { 
          "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "B", "J" };
    public static final String[] CATLIB = { 
          "I-Astrometric Data", "II-Photometric Data", "III-Spectroscopic Data",
          "IV-Cross-Identifications", "V-Combined data", "VI-Miscellaneous", "VII-Non-stellar Objects",
          "VIII-Radio and Far-IR data", "IX-High-Energy data", "B-External databases, regularly updated",
-         "Journal tables"};
+         "Journal table"};
    public static final String[] PLANETS   = { 
          "Mercury","Venus","Earth","Mars","Saturn","Jupiter","Uranus","Neptune","Pluton","Charon" };
   
@@ -80,18 +97,22 @@ public class DirectorySort {
    static final public int CDS        = 17;
    static final public int ROWS       = 18;
    static final public int COLOR      = 19;
-   
-   public static final String [] SORTNAME = {
-      "default","category","name","wavelen","date","coverage","resol",
-      "regime","size","popular","origin","id","protocol","vizcode","journal","jnlvol",
-      "planet","cds","rows","color"
-   };
+   static final public int YEAR       = 20;
+   static final public int VIZIER     = 21;
+   static final public int VIZCAT     = 22;
+   static final public int BRANCH1    = 23;
+   static final public int BRANCH2    = 24;
+   static final public int DATATYPE   = 25;
    
    private Aladin aladin;
    
    // Liste des règles de tri associées à des branches (branche -> listes des règles de tri)
    // ex: "Catalog/Vizier/J -> (BRANCH, JOURNAL, -JNLVOL), (BRANCH, JOURNAL, DATE), etc..
    private SortedMap<String, BranchRules > AllRules;
+   
+   // Liste des règles de tri global
+   private SortRule [] globalRules;
+   private int currentGlobal = 0;
    
    /** Règle de tri : liste des tris à appliquer successivement */
    class SortRule {
@@ -119,17 +140,22 @@ public class DirectorySort {
       int [] getCurrentRule() { return rules.get(current).rule; }
       
       // Positionne la règle de tri courante
-      void setCurrent( int index ) { assert index>=0 && index<rules.size(); current=index; }
+      void setCurrent( int index ) {
+         assert index>=0 && index<rules.size();
+         current=index;
+         setCurrentGlobal( 0 );
+      }
    }
    
    protected DirectorySort(Aladin aladin) {
       this.aladin = aladin;
       initRules();
+      initGlobal();
    }
    
    /** Construit la combobox des règles de tris associées à une branche
     * en sélectionnant la courante */
-   protected JPopupMenu createPopup( String branch ) {
+   protected JPopupMenu createBranchPopup( String branch ) {
       final BranchRules br = getBranchRules(branch);
       assert branch!=null;
       JPopupMenu c = new JPopupMenu();
@@ -154,12 +180,68 @@ public class DirectorySort {
       return c;
    }
    
+   /** Construit la combobox des règles de tri global */
+   protected JPopupMenu createGlobalPopup( ) {
+      JPopupMenu c = new JPopupMenu();
+     int i=0;
+      ButtonGroup bg = new ButtonGroup();
+      for( SortRule r : globalRules ) {
+         JRadioButtonMenuItem mi = new JRadioButtonMenuItem( r.label );
+         Util.toolTip(mi, r.description );
+         mi.setActionCommand( i+"" );
+         mi.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               int index = Integer.parseInt( e.getActionCommand() );
+               setCurrentGlobal(index);
+               aladin.directory.resumeSort();
+            }
+         });
+         bg.add(mi);
+         if( i==currentGlobal ) mi.setSelected(true);
+         c.add(mi);
+         i++;
+      }
+      return c;
+   }
+   
+   protected void setCurrentGlobal(int index ) { currentGlobal = index; }
+   
    /** Positionne la règle de tri à appliquer pour une branche donnée */
    protected void setCurrentRule( String branch, int index ) {
       BranchRules br = getBranchRules(branch);
       assert branch!=null;
       br.setCurrent( index );
    }
+   
+   // Initialise les règles de tri global
+   private void initGlobal() {
+      globalRules = new SortRule[] {
+            new SortRule("Default (branch by branch)","Default sort/hierarchy based on branch rules managed by CDS",
+                  new int[] { } ),
+            new SortRule("Origin","By ascending name, grouped by origin",
+                  new int[] { ORIGIN, NAME} ),
+            new SortRule("Regime","By ascending wave lenght, grouped by regime",
+                  new int[] { REGIME, WAVELEN} ),
+            new SortRule("Protocol","By ascending name, grouped by protocol",
+                  new int[] { PROTOCOL, NAME} ),
+            new SortRule("Data type","By ascending name, grouped by data type",
+                  new int[] { DATATYPE, NAME} ),
+            new SortRule("Year","By descending date, grouped by year",
+                  new int[] { -YEAR, -DATE, NAME} ),
+            new SortRule("Flat name","By ascending name",
+                  new int[] { NAME} ),
+            new SortRule("Flat date","By descending date",
+                  new int[] { -DATE} ),
+            new SortRule("Flat wave lenght","By ascending wavelen",
+                  new int[] { WAVELEN} ),
+//            new SortRule("ID/flat","By ascending identifier",
+//                  new int[] { ID} ),
+//            new SortRule("ID/origin","By ascending identifier, grouped by origin",
+//                  new int[] { ORIGIN, ID} ),
+      };
+      currentGlobal = 0;
+   }
+
    
    // Initialise les règles de tris par défaut
    private void initRules() {
@@ -171,72 +253,88 @@ public class DirectorySort {
       AllRules = new TreeMap<String, BranchRules>(comparator);
       initBranchRules("",  
             new SortRule[] {
-                  new SortRule("CDS default","Alpha sorted, grouped by origin, CDS first",
+                  new SortRule("Name","By name, grouped by origin, CDS first",
                         new int[] { BRANCH, CDS, ORIGIN, NAME} ),
-                  new SortRule("Regime","Sorted by regime, grouped by origin",
-                        new int[] { BRANCH, ORIGIN, REGIME, WAVELEN} ),
+                  new SortRule("Regime","By regime, grouped by origin",
+                        new int[] { BRANCH, ORIGIN, REGIME, NAME} ),
                   new SortRule("Date","Descending date, grouped by origin",
-                        new int[] { BRANCH, ORIGIN, -DATE} ),
-                  new SortRule("Date (reverse)","Ascending date, grouped by origin",
-                        new int[] { BRANCH, ORIGIN, DATE} )
+                        new int[] { BRANCH, ORIGIN, -DATE} )
+      } );
+      initBranchRules("Data base",  
+            new SortRule[] {
+                  new SortRule("Name","By name sorted, CDS first",
+                        new int[] { BRANCH, CDS, NAME} ),
+                  new SortRule("Origin","By name, grouped by origin",
+                        new int[] { BRANCH, ORIGIN, BRANCH1, NAME } )
       } );
       initBranchRules("Image",  
             new SortRule[] {
-                  new SortRule("Wave lenght","Ascending ave length, grouped by regime", 
-                        new int[] { BRANCH, REGIME , WAVELEN  } ),
-//                  new SortRule("Wave lenght (reverse)","Descending wave length, grouped by regime", 
-//                        new int[] { BRANCH, -REGIME , -WAVELEN  } ),
-                  new SortRule("Color","Ascending wave lenght, but colored first, grouped by regime", 
-                        new int[] { BRANCH,  REGIME , COLOR, WAVELEN  } ),
-                  new SortRule("Resolution","Resolution ascending, grouped by regime", 
-                        new int[] { BRANCH, REGIME , RESOL , WAVELEN  } )
+                  new SortRule("Regime","Ascending wavelength, grouped by regime", 
+                        new int[] { BRANCH, REGIME, BRANCH2, WAVELEN  } ),
+                  new SortRule("Origin","Ascending wavelength, grouped by origin", 
+                        new int[] { BRANCH, ORIGIN, BRANCH2, WAVELEN  } ),
+                  new SortRule("Coverage","Ascending wavelength, grouped by coverage range", 
+                        new int[] { BRANCH, COVERAGE, BRANCH2, WAVELEN  } )
+      } );
+      initBranchRules("Cube",  
+            new SortRule[] {
+                  new SortRule("Regime","Ascending wavelength, grouped by regime", 
+                        new int[] { BRANCH, REGIME, WAVELEN  } ),
+                  new SortRule("Origin","Ascending wavelength, grouped by origin", 
+                        new int[] { BRANCH, ORIGIN, WAVELEN  } ),
+                  new SortRule("Coverage","Ascending wavelength, grouped by coverage range", 
+                        new int[] { BRANCH, COVERAGE, WAVELEN  } )
+      } );
+      initBranchRules("Catalog",  
+            new SortRule[] {
+                  new SortRule("Regime","By name, grouped by origin and regime, CDS first",
+                        new int[] { BRANCH, CDS, ORIGIN, REGIME, NAME} ),
+                  new SortRule("Date","Descending date, grouped by origin",
+                        new int[] { BRANCH, CDS, ORIGIN, -YEAR, -DATE} )
       } );
       initBranchRules("Catalog/VizieR",  
             new SortRule[] {
-                  new SortRule("VizieR default",
-                        "based on size, popularity and date (all descending), grouped by VizieR category",
-                        new int[] { BRANCH, VIZCODE, SIZE, POPULAR, -DATE } ),
-                  new SortRule("Size","Descending size, grouped by VizieR category",
-                        new int[] { BRANCH, VIZCODE, SIZE } ),
-                  new SortRule("Popularity","By popularity, grouped by VizieR category",
-                        new int[] { BRANCH, VIZCODE, POPULAR } ),
-                  new SortRule("Date","Descending date, grouped by VizieR category",
-                        new int[] { BRANCH, VIZCODE, -DATE } ),
-//                  new SortRule("Date (reverse)","Ascending date, grouped by VizieR category",
-//                        new int[] { BRANCH, VIZCODE, DATE } ),
-                  new SortRule("VizieR ID","Descending VizieR ID, grouped by VizieR category",
-                        new int[] { BRANCH, VIZCODE, -ID } )
+                  new SortRule("Default",
+                        "based on size, popularity and date (all descending), grouped by VizieR category and catalogue name",
+                        new int[] { BRANCH, VIZIER, VIZCODE, JOURNAL, VIZCAT, -JNLVOL, SIZE, POPULAR, -DATE } ),
+                  new SortRule("Regime",
+                        "based on size, popularity and date (all descending), grouped by regime and catalogue name",
+                        new int[] { BRANCH, VIZIER, REGIME, VIZCAT,SIZE, POPULAR, -DATE } ),
+                  new SortRule("Size","Descending table size",
+                        new int[] { BRANCH, VIZIER, ROWS } ),
+                  new SortRule("Popularity","Descending popularity",
+                        new int[] { BRANCH, VIZIER, POPULAR } ),
+                  new SortRule("Date","Descending date, grouped by year and catalogue name",
+                        new int[] { BRANCH, VIZIER, -YEAR, -DATE, VIZCAT } ),
+                  new SortRule("Coverage","Descending coverage, grouped by coverage range",
+                        new int[] { BRANCH, VIZIER, COVERAGE, ID } ),
       } );
-      initBranchRules("Catalog/VizieR/Journal",  
+      initBranchRules("Outreach",  
             new SortRule[] {
-                  new SortRule("Journal default","Descending date, grouped by journal name",
-                        new int[] { BRANCH, JOURNAL, -JNLVOL } ),
-                  new SortRule("Date","Ascending date, grouped by journal name",
-                        new int[] { BRANCH, JOURNAL, JNLVOL } ),
-                  new SortRule("Size","Descending size, grouped by journal name",
-                        new int[] { BRANCH, JOURNAL, SIZE } ),
-                  new SortRule("Popularity","by popularity, grouped by journal name",
-                        new int[] { BRANCH, JOURNAL, POPULAR } )
+                  new SortRule("Name","By acending name",
+                        new int[] { BRANCH, NAME } ),
+                  new SortRule("Origin","By name, grouped by origin",
+                        new int[] { BRANCH, ORIGIN, BRANCH1, NAME } )
       } );
       initBranchRules("Others",  
             new SortRule[] {
-                  new SortRule("Protocol default","Alpha sorted, grouped by protocol and origin",
+                  new SortRule("Protocol","By name, grouped by protocol and origin",
                         new int[] { BRANCH, PROTOCOL, ORIGIN, NAME } ),
+                  new SortRule("Data type","By name, grouped by data type and origin",
+                        new int[] { BRANCH, DATATYPE, ORIGIN, NAME } ),
                   new SortRule("Regime","Sorted by regime, grouped by protocol and origin",
-                        new int[] { BRANCH, PROTOCOL, ORIGIN, REGIME, WAVELEN } ),
+                        new int[] { BRANCH, REGIME, ORIGIN, PROTOCOL, NAME } ),
+                  new SortRule("Origin","Descending date, grouped by protocol and origin",
+                        new int[] { BRANCH, ORIGIN, PROTOCOL, NAME } ),
                   new SortRule("Date","Descending date, grouped by protocol and origin",
-                        new int[] { BRANCH, PROTOCOL, ORIGIN, -DATE } ),
-                  new SortRule("Date (reverse)","Ascending date, grouped by protocol and origin",
-                        new int[] { BRANCH, PROTOCOL, ORIGIN, DATE } )
+                        new int[] { BRANCH, -YEAR, -DATE, ORIGIN, PROTOCOL, NAME } )
       } );
       initBranchRules("Planet",  
             new SortRule[] {
-                  new SortRule("Planet default","by resolution, grouped by Planet name",
+                  new SortRule("Planet","by resolution, grouped by Planet name",
                         new int[] { BRANCH, PLANET, RESOL, NAME } ),
-                  new SortRule("Date","Descending date, grouped by Planet name",
-                        new int[] { BRANCH, PLANET, RESOL, -DATE } ),
-                  new SortRule("Date (reverse)","Asscending date, grouped by Planet name",
-                        new int[] { BRANCH, PLANET, RESOL, DATE } )
+                  new SortRule("Date","Descending date, grouped by year",
+                        new int[] { BRANCH, YEAR, DATE } )
       } );
    }
    
@@ -264,6 +362,8 @@ public class DirectorySort {
       return rules.getCurrentRule();
    }
    
+   /** Retourne true si le mode de tri actuel est global et non spécifique à chaque branche */
+   protected boolean isGlobalSorted() { return currentGlobal>0; }
    
    /** Génération de la clé de tri => mémorisation dans les prop sous le mot clé "internal_sort_key"
     * @param id   Identificateur
@@ -271,12 +371,21 @@ public class DirectorySort {
     * @return false si aucune clé de tri n'a été générée
     */
    protected boolean setInternalSortKey(String id, MyProperties prop) {
-
+      int [] mode;
       StringBuilder k1 = new StringBuilder( );
       String branch = prop.getFirst("client_category");
-      if( branch==null ) branch="";
+      
+      // Règle global de tri ?
+      if( currentGlobal>0 ) {
+         mode = globalRules[ currentGlobal].rule;
+         
+      // ou règle par branche ?
+      } else {
+         if( branch==null ) branch="";
+         mode = getSortRule(branch);
+      }
 
-      int [] mode = getSortRule(branch);
+      // Construction de la clé de tri
       if( mode!=null ) {
          for( int i=0; i<mode.length; i++ ) {
             int m = mode[i];
@@ -285,12 +394,29 @@ public class DirectorySort {
             if( k!=null ) k1.append("/"+k);
          }
       }
-      if( k1.length()>0  ) {
-         prop.replaceValue("internal_sort_key", k1.toString() );
-         return true;
+      if( k1.length()>0  ) prop.replaceValue("internal_sort_key", k1.toString() );
+      else prop.remove("internal_sort_key");
+      
+      // Construction de la branche
+      k1 = new StringBuilder();
+      if( mode!=null ) {
+         for( int m : mode ) {
+            String k = getBranchKey(id, prop, branch, m);
+            if( k!=null ) {
+               if( k1.length()>0 ) k1.append('/');
+               k1.append(k);
+            }
+         }
       }
       
-      return false;
+      prop.remove("internal_category");
+      if( k1.length()>0 ) {
+         String suffix = branch.startsWith(k1.toString()) ? branch.substring(k1.length()) : "";
+         String s = k1.toString()+suffix;
+         if( isGlobalSorted() || !s.equals(branch) ) prop.put("internal_category", s );
+      }
+     
+      return true;
    }
    
    static boolean first=true;
@@ -300,6 +426,62 @@ public class DirectorySort {
       return Util.indexInArrayOf(Util.getSubpath(branch, 0), BRANCHES);
    }
    
+//   private int getRegimeIndex(String branch) {
+//      return Util.indexInArrayOf(Util.getSubpath(branch, 1), REGIMEHIPS);
+//   }
+   
+   // Retourne l'indice du régime (ex: Image/Optical... => 3), -1 si non trouvé
+   static public int getRegimeIndex(String s ) {
+      
+      if( s==null ) return -1;
+      
+      // Mise en minuscules, sans tiret et autres séparateurs éventuels
+      StringBuilder s2 = new StringBuilder();
+      for( char c : s.toCharArray() ) {
+         if( Character.isAlphabetic(c) ) s2.append( Character.toLowerCase(c));
+      }
+     String s3 = s2.toString();
+      
+      // Recherche d'un alias
+      for( int i=0; i<REGIMEALIAS.length; i++ ) {
+         for( String s1 : REGIMEALIAS[i] ) {
+            if( s3.equals(s1) ) return i;
+         }
+      }
+      return -1;
+   }
+   
+   // Retourne l'indice du datatype, -1 si non trouvé
+   static public int getDataTypeIndex(MyProperties prop) {
+      if( prop.getProperty("hips_service_url") != null ) {
+         String s = prop.getFirst("dataproduct_type");
+         if( s!=null ) {
+            if( Util.indexOfIgnoreCase(s, "catalog")>=0 ) return TABLE;
+            if( Util.indexOfIgnoreCase(s, "cube")>=0 ) return CUBE;
+         }
+         return IMAGE;
+      }
+      if( prop.getProperty("sia_service_url") != null 
+            || prop.getProperty("sia2_service_url") != null ) return IMAGE;
+      if( prop.getProperty("ssa_service_url") != null ) return SPECTRUM;
+      if( prop.getProperty("cs_service_url") != null
+            || prop.getProperty("access_url") != null
+            || prop.getProperty("tap_service_url") != null ) return TABLE;
+      return -1;
+   }
+   
+   // Retourne l'indice du protocole, -1 si non trouvé
+   static public int getProtocolIndex(MyProperties prop) {
+      if( prop.getProperty("hips_service_url") != null ) return HIPS;
+      if( prop.getProperty("sia_service_url") != null  ) return SIA;
+      if( prop.getProperty("sia2_service_url") != null ) return SIA2;
+      if( prop.getProperty("ssa_service_url") != null  ) return SSA;
+      if( prop.getProperty("cs_service_url") != null
+            || prop.getProperty("access_url") != null  ) return CS;
+      if( prop.getProperty("tap_service_url") != null  ) return TAP;
+      return -1;
+   }
+
    // Retourne une clé alphabétique sur nbDigit complétée par des Z si trop courte
    private String keyAlpha( String s, boolean flagReverse,int nbDigit ) {
       int len = s==null ? 0 : s.length();
@@ -335,7 +517,7 @@ public class DirectorySort {
       // Si c'est le dernier tri de la règle, ou va ajouter un élément à la clé de tri
       // pour qu'à égalité, les branches les plus profondes arrivent en premier
       // (évite l'insertion d'un folder au milieu d'une série ex: 2MASS6X)
-      if( flagLast ) {
+      if( branch!=null && flagLast ) {
          int c = countSlash(branch);
          assert c<=9;
          key = key+(9-c);
@@ -346,6 +528,7 @@ public class DirectorySort {
    // Retourne une clé de tri en fonction du mode demandé
    private String getSortKey1(String id, MyProperties prop, String branch, int mode ) {
       int c;
+      String s;
       
       // Sens inverse ?
       boolean flagReverse=false;
@@ -371,6 +554,7 @@ public class DirectorySort {
             
          // Selon la date (début d'observation - resp fin d'observation en reverse
          // , et à défaut date de publication de l'article de ref)
+         case YEAR:
          case DATE:
             double mjd = 99999;
             try {
@@ -397,24 +581,24 @@ public class DirectorySort {
             } catch( Exception e1 ) { }
             return String.format("%05d", (int)mjd);
           
-            // Selon le pourcentage de couverture
-            case COVERAGE:
-               double cov=9;
-               try {
-                  double w = Double.parseDouble( prop.getFirst("moc_sky_fraction") );
-                  cov =  Math.log( 1+w );
-                  if( flagReverse ) cov = 8-cov;
-               } catch( Exception e1 ) { }
-               return String.format("%01.6f", cov);
+         // Selon le pourcentage de couverture
+         case COVERAGE:
+            double cov=9;
+            try {
+               double w = Double.parseDouble( prop.getFirst("moc_sky_fraction") );
+               cov =  Math.log( 1+w );
+               if( !flagReverse ) cov = 8-cov;
+            } catch( Exception e1 ) { }
+            return String.format("%01.6f", cov);
 
-               // Selon la résolution angulaire du pixel HiPS
-            case RESOL:
-               int order=99;
-               try {
-                  order = Integer.parseInt( prop.getFirst("hips_order") );
-                  if( !flagReverse ) order = 98-order;
-               } catch( Exception e1 ) { }
-               return String.format("%02d", order);
+            // Selon la résolution angulaire du pixel HiPS
+         case RESOL:
+            int order=99;
+            try {
+               order = Integer.parseInt( prop.getFirst("hips_order") );
+               if( !flagReverse ) order = 98-order;
+            } catch( Exception e1 ) { }
+            return String.format("%02d", order);
 
             // Selon la taille approximative (par quantiles en log)
          case SIZE:
@@ -428,31 +612,47 @@ public class DirectorySort {
 
             // Selon le nombre de lignes pour un catalogue
          case ROWS:
-            double rows=9;
+            long rows=0L;
             try {
-               long r = Long.parseLong( prop.getFirst("nb_rows") );
-               rows = Math.log( r+1 );
-               if( !flagReverse ) rows =8-rows;
+               rows = Long.parseLong( prop.getFirst("nb_rows") );
+               if( !flagReverse ) rows =99999999999999L - rows;
             } catch( Exception e1 ) { }
-            return String.format("%01.6f", rows);
+            return String.format("%014d", rows);
 
             // tri sur le log de 1+(em_min+em_max)/2  sur 14 digits
          case WAVELEN:
             double wl=9;  // valeur max par défaut
-            try {
-               double w = Double.parseDouble( prop.getFirst("em_min") );
-               String wavelen = prop.getFirst("em_max");
-               if( wavelen!=null ) w = (w+Double.parseDouble(wavelen))/2;
-               wl =  Math.log( 1+w );
-               if( flagReverse ) wl = 9-wl;
-            } catch( Exception e1 ) { }
+            String sw = prop.getFirst("em_min");
+            
+            // En se basant sur em_* ?
+            if( sw!=null ) {
+               try {
+                  double w = Double.parseDouble( sw );
+                  String wavelen = prop.getFirst("em_max");
+                  if( wavelen!=null ) w = (w+Double.parseDouble(wavelen))/2;
+                  wl =  Math.log( 1+w );
+                  if( flagReverse ) wl = 9-wl;
+               } catch( Exception e1 ) { }
+
+               // sinon en se basant sur obs_regime ?
+            } else {
+               wl = getRegimeIndex( prop.getFirst("obs_regime") );
+               if( wl==-1 ) wl=9;
+               else if( flagReverse ) wl = 8-wl;
+            }
             return String.format("%01.14f", wl);
 
-        // Tri sur le régime HiPS, ou obs_regime (dans l'ordre de REGIMEHIPS[])
+            // Tri sur le régime HiPS, ou obs_regime (dans l'ordre de REGIMEHIPS[])
          case REGIME:
-            String regime = Util.getSubpath( branch , 1);
-            if( regime==null ) regime = prop.getFirst("obs_regime");
-            c = Util.indexInArrayOf(regime, REGIMEHIPS);
+            // Si c'est un HiPS image, on cherche le régime dans la branche
+            boolean isHips = prop.getProperty("hips_service_url") != null;
+            boolean isImage = (s=prop.getFirst("dataproduct_type"))!=null && 
+                  (s.indexOf("image")>=0 || (s.indexOf("catalog")<0 && s.indexOf("cube")<0));
+            c=-1;
+            if( isHips && isImage ) c = getRegimeIndex( Util.getSubpath(branch, 1) );
+            
+            // Sinon dans le mot clé obs_regime
+            if( c<0 ) c = getRegimeIndex( prop.getFirst("obs_regime") );
             if( c==-1 ) c=9;
             else if( flagReverse ) c = 8-c;
             return c+"";
@@ -467,13 +667,8 @@ public class DirectorySort {
 
          // Tri sur le protocole (SIA2,SIA,CS,TAP,SSA,HiPS)
          case PROTOCOL:
-            c = 9;
-                 if( prop.getProperty("sia2_service_url")!=null ) c=0;
-            else if( prop.getProperty("sia_service_url")!=null )  c=1;
-            else if( prop.getProperty("cs_service_url")!=null )   c=2;
-            else if( prop.getProperty("tap_service_url")!=null )  c=3;
-            else if( prop.getProperty("ssa_service_url")!=null )  c=4;
-            else if( prop.getProperty("hips_service_url")!=null ) c=5;
+            c = getProtocolIndex(prop);
+            if( c==-1 ) c=9;
             if( flagReverse ) c = 8-c;
             return c+"";
             
@@ -500,10 +695,20 @@ public class DirectorySort {
 
             // Alphabétique suivant le nom du journal
          case JOURNAL:
+            // Concerne bien un journal ?
+            if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) break;
+            code = Directory.getCatCode(id);
+            if( code == null  || !code.equals("J") ) break;
+
             return keyAlpha( Directory.getJournalCode(id), flagReverse,6);
             
             // Alphabétique suivant le numéro de vol et de page de la table du journal
          case JNLVOL:
+            // Concerne bien un journal ?
+            if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) break;
+            code = Directory.getCatCode(id);
+            if( code == null  || !code.equals("J") ) break;
+
             String num = Directory.getJournalNum(id);
             int vol=9999;
             int page=9999;
@@ -522,6 +727,11 @@ public class DirectorySort {
             // Alphabétique suivant l'origine
          case ORIGIN:
             return keyAlpha( Util.getSubpath(id,0), flagReverse, 6);
+           
+         case DATATYPE:
+            c = getDataTypeIndex(prop);
+            if( c==-1 ) c=9;
+            return c+"";
             
             // Alphabétique suivant l'ID
          case ID:
@@ -536,6 +746,120 @@ public class DirectorySort {
             String color = prop.getFirst("dataproduct_subtype");
             return color!=null && color.indexOf("color")>=0 ? "0" : "1";
 
+      }
+      
+      return null;
+   }
+   
+   // Backslash le résultat de getBranchKey1
+   private String getBranchKey(String id, MyProperties prop, String branch, int mode ) {
+      String s = getBranchKey1(id,prop,branch,mode);
+      if( s!=null && mode!=BRANCH1 && mode!=BRANCH2 ) s=s.replace("/","\\/");
+      return s;
+   }
+   
+   // Retourne le morceau de la branche associé au mode de tri
+   private String getBranchKey1(String id, MyProperties prop, String branch, int mode ) {
+      int c;
+      String code;
+      boolean isHips;
+      String s;
+
+      if( mode<0 ) { mode = -mode; }
+
+      switch( mode ) {
+
+         case BRANCH:
+            c = getBranchIndex( branch );
+            return c==-1 ? Util.getSubpath(branch, 0) : BRANCHES[c];
+            
+         case REGIME:
+            // Si c'est un HiPS image, on cherche le régime dans la branche
+            isHips = prop.getProperty("hips_service_url") != null;
+            boolean isImage = (s=prop.getFirst("dataproduct_type"))!=null && 
+                  (s.indexOf("image")>=0 || (s.indexOf("catalog")<0 && s.indexOf("cube")<0));
+            c=-1;
+            if( isHips && isImage ) c = getRegimeIndex( Util.getSubpath(branch, 1) );
+            
+            // Sinon dans le mot clé obs_regime
+            if( c<0 ) c = getRegimeIndex( prop.getFirst("obs_regime") );
+            if( c>=0 ) return REGIMEHIPS[c];
+            return "Unknown regime";
+
+         case ORIGIN:
+            return Util.getSubpath(id, 0);
+            
+         case COVERAGE:
+            try {
+               double w = Double.parseDouble( prop.getFirst("moc_sky_fraction") )*100;
+               c = w==100 ? COV100 : w>=75 ? COV75 : w>=50 ? COV50 : w>=25 ? COV25 
+                     : w>=10 ? COV10 : w>=1 ? COV1 : COV0;
+               return COVRANGES[ c ]; 
+            } catch( Exception e1 ) { }
+            return "Unknown coverage";
+            
+         case VIZIER:
+            // Pas Vizier ? -> Retourne l'ORIGIN
+            if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return Util.getSubpath(id, 0);
+            
+            return "VizieR";
+            
+         case PLANET:
+            return Util.getSubpath(branch, 1);
+            
+         case DATATYPE:
+            c = getDataTypeIndex(prop);
+            return c>=0 ? DATATYPES[ c ] : "Unknown datatype";
+
+         case PROTOCOL:
+            c = getProtocolIndex(prop);
+            return c>=0 ? PROTOCOLS[ c ] : "Unknown protocol";
+
+         case JOURNAL:
+            // Concerne bien un journal ?
+            if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) break;
+            code = Directory.getCatCode(id);
+            if( code == null  || !code.equals("J") ) break;
+            
+            String journal = Directory.getJournalCode(id);
+            return journal; 
+
+         case VIZCODE:
+            // Concerne bien VizieR ?
+           if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) break;
+            code = Directory.getCatCode(id);
+            if( code == null ) break;
+            c = Util.indexInArrayOf(code, DirectorySort.CATCODE);
+            return c==-1 ? "Unknown cat" : DirectorySort.CATLIB[c];
+            
+         case VIZCAT:
+            // Concerne bien VizieR ?
+            if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) break;
+            code = Directory.getCatCode(id);
+            if( code == null  ) break;
+
+            String parent = Directory.getCatParent(id);
+            boolean hasMultiple = aladin.directory.hasMultiple(parent);
+            if( hasMultiple ) return prop.get("obs_collection");
+            return null;
+         
+         case YEAR:
+            String year = prop.getFirst("bib_year");
+            if( year==null ) {
+               try {
+                  String date;
+                  date = prop.getFirst("t_min");
+                  double mjd = Double.parseDouble(date);
+                  year = ""+(int)( Astrodate.JDToYd( Astrodate.MJDToJD( mjd )) );
+               } catch( Exception e1 ) { }
+            }
+            return year==null ? "Unknown date" : year;
+            
+         case BRANCH1:
+            return Util.getSubpath(branch, 1,-1);
+            
+         case BRANCH2:
+            return Util.getSubpath(branch, 2,-1);
       }
       
       return null;

@@ -175,7 +175,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("MOC operation failed !");
+         Aladin.error("MOC operation failed !");
       }
 
    }

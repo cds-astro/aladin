@@ -189,7 +189,7 @@ protected void submit() {
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("Arithmetic operation failed !");
+         Aladin.error("Arithmetic operation failed !");
       }
 
     }

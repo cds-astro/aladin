@@ -118,7 +118,8 @@ public class DirectoryModel extends DefaultTreeModel {
     * si l'insertion est effectivement possible, false sinon */
    private boolean createLeafWithLastParent(DefaultTreeModel model, TreeObj treeObj) {
       if( lastParentNode==null ) return false;
-      int pos = treeObj.path.lastIndexOf('/');
+      int pos = lastSlash(treeObj.path);
+      if( pos==-1 ) return true;
       String path = treeObj.path.substring(0, pos);
       
       TreeObj pere = (TreeObj) lastParentNode.getUserObject();
@@ -127,6 +128,19 @@ public class DirectoryModel extends DefaultTreeModel {
       lastParentNode.add( new DefaultMutableTreeNode(treeObj) );
       
       return true;
+   }
+   
+   private int lastSlash( String s ) {
+      return s.lastIndexOf('/');
+      
+      // BIZARRE, CA NE MARCHE PAS  !!
+//      for( int i=s.length()-1; i>=0; i-- ) {
+//         if( s.charAt(i)=='/' ) {
+//            if( i>0 && s.charAt(i-1)=='\\' ) continue;
+//            return i;
+//         }
+//      }
+//      return -1;
    }
 
    /** Méthode interne - Insertion récursive d'un noeud en fonction du "path" du noeud à insérer.

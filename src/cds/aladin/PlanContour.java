@@ -201,7 +201,7 @@ public final class PlanContour extends PlanTool {
          setPourcent(0);
 
          if (!getAllContours()) {
-           Aladin.warning(aladin.error+ OutOfMemoryMESSAGE);
+           Aladin.error(aladin.error+ OutOfMemoryMESSAGE);
            return false;
 
          }
@@ -213,8 +213,8 @@ public final class PlanContour extends PlanTool {
 
      } // fin try
 
-     catch (OutOfMemoryError e) {aladin.error = e.toString();Aladin.warning(e + OutOfMemoryMESSAGE);return false;}
-     catch (Exception exc) {aladin.error = exc.toString();Aladin.warning(aladin.error);return false;}
+     catch (OutOfMemoryError e) {aladin.error = e.toString();Aladin.error(e + OutOfMemoryMESSAGE);return false;}
+     catch (Exception exc) {aladin.error = exc.toString();Aladin.error(aladin.error);return false;}
    }
 
 

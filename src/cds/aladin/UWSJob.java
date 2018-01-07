@@ -588,13 +588,13 @@ public class UWSJob implements ActionListener{
 					uwsFacade.loadResults(this, (String)displayResults.getSelectedItem(), -1, null);
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, "Error in processing results url! Please try with the default tap results url also");
+					Aladin.error(uwsFacade.asyncPanel, "Error in processing results url! Please try with the default tap results url also");
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
+					Aladin.error(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, e1.getMessage());
+					Aladin.error(uwsFacade.asyncPanel, e1.getMessage());
 				}
 				
 			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
@@ -602,13 +602,13 @@ public class UWSJob implements ActionListener{
 					uwsFacade.loadResults(this, null, -1, null);
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, "Error in processing results url!");
+					Aladin.error(uwsFacade.asyncPanel, "Error in processing results url!");
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
+					Aladin.error(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					Aladin.warning(uwsFacade.asyncPanel, e1.getMessage());
+					Aladin.error(uwsFacade.asyncPanel, e1.getMessage());
 				}
 			}
 		}

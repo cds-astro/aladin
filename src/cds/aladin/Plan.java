@@ -724,7 +724,7 @@ public class Plan implements Runnable {
                   nError++;
                   if( nError>100 ) {
                      if( aladin.levelTrace>=3 ) e.printStackTrace();
-                     aladin.warning("Too many error during proper motion computation !\n"
+                     aladin.error("Too many error during proper motion computation !\n"
                            + e.getMessage());
                      break;
                   }
@@ -757,7 +757,7 @@ public class Plan implements Runnable {
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          epochOrig=at;
-         aladin.warning(aladin,"New original epoch error\n=> ignored");
+         aladin.error(aladin,"New original epoch error\n=> ignored");
          return false;
       }
       return true;

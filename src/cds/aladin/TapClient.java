@@ -194,9 +194,9 @@ public class TapClient{
 						if (Aladin.levelTrace >= 3)
 							ex.printStackTrace();
 						if (serverToDisplay == null) {
-							Aladin.warning("Error! unable load tap server!" + ex.getMessage());
+							Aladin.error("Error! unable load tap server!" + ex.getMessage());
 						} else {
-							Aladin.warning(serverToDisplay, "Error! unable load tap server!" + ex.getMessage());
+							Aladin.error(serverToDisplay, "Error! unable load tap server!" + ex.getMessage());
 						}
 						
 					}
@@ -709,7 +709,7 @@ public class TapClient{
 				inputInProgress = input;
 			}
 		} else if (showError) {
-			Aladin.warning(s, input + " is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+			Aladin.error(s, input + " is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
 			s.ball.setMode(Ball.NOK);
 		}
 		return inputInProgress;

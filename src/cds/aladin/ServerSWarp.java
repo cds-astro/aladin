@@ -167,7 +167,7 @@ public class ServerSWarp extends Server  {
            selectedImages.add(planes[0]);
        }
        if( selectedImages.size()==0 ) {
-           Aladin.warning(atLeastOne);
+           Aladin.error(atLeastOne);
            return;
        }
        Iterator it = selectedImages.iterator();
@@ -229,7 +229,7 @@ public class ServerSWarp extends Server  {
        catch(Exception ioe) {
            defaultCursor();
            ioe.printStackTrace();
-           Aladin.warning("An error occured while contacting the SWarp service");
+           Aladin.error("An error occured while contacting the SWarp service");
            return;
        }
        defaultCursor();

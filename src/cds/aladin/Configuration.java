@@ -2755,7 +2755,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       else if( RELOAD.equals(what) ) reloadGlu();
       else if( APPLY.equals(what) ) {
          try { if( apply() ) { aladin.calque.repaintAll(); /* dispose(); */ } }
-         catch( Exception e ) { Aladin.warning(this," "+e.getMessage(),1); }
+         catch( Exception e ) { Aladin.error(this," "+e.getMessage(),1); }
       }
       //      else if( GLUTEST.equals(what) ) startGluTest();
       //      else if( GLUSTOP.equals(what) ) stopGluTest();

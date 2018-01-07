@@ -130,7 +130,7 @@ public class Plot {
    public void addPlotTable(final Plan plan, int indexX, int indexY,boolean openProp) {
       if( plotTable==null ) initPlot();
       if( plan.getLegende().size()>1 ) {
-         aladin.warning("Only the first table of this plane\ncan be drawn in a scatter plot.");
+         aladin.error("Only the first table of this plane\ncan be drawn in a scatter plot.");
       }
       PlotItem p = findPlotTable(plan);
       boolean modify=true;

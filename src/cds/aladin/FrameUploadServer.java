@@ -352,7 +352,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		if (command.equals("SUBMIT")) {
 			Map<String, Object> requestParams = new HashMap<String, Object>();
 			if (uploadedTableFiles.get(uploadClient.serverTap.selectedTableName) == null) {
-				Aladin.warning(this.getContentPane(), "Unable to submit " + uploadClient.serverTap.selectedTableName + " data!");
+				Aladin.error(this.getContentPane(), "Unable to submit " + uploadClient.serverTap.selectedTableName + " data!");
 				return;
 			}
 			String uploadFileName = UPLOADFILEPREFIX+uploadClient.serverTap.selectedTableName;
@@ -376,7 +376,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 					Plan loadingPlan = aladin.calque.createPlan(systemFile.getText().trim(), "localTableData", null, uploadClient.serverTap);
 					loadingPlan.addPlaneLoadListener(this);
 					if (loadingPlan instanceof PlanFree) {
-						Aladin.warning(this.getContentPane(), "Unable to upload " + systemFile.getText().trim() + " data!");
+						Aladin.error(this.getContentPane(), "Unable to upload " + systemFile.getText().trim() + " data!");
 					} else {
 						uploadingPlanCatalogs.put(loadingPlan.label, uploadTableName);
 					}
@@ -387,21 +387,21 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 					try {
 						saveUploadFile(uploadTableName, planToLoad);
 					} catch (RejectedExecutionException ex) {
-						Aladin.warning(this.getContentPane(), "Unable to get load "+fileName+"\n Request overload! Please wait and try again.");
+						Aladin.error(this.getContentPane(), "Unable to get load "+fileName+"\n Request overload! Please wait and try again.");
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						if(Aladin.levelTrace >= 3) e.printStackTrace();
-						Aladin.warning(this.getContentPane(), "Unable to upload " + planToLoad.label + " data!");
+						Aladin.error(this.getContentPane(), "Unable to upload " + planToLoad.label + " data!");
 					}
 					break;
 				default:
-					Aladin.warning(this.getContentPane(), "Please select your upload data!");
+					Aladin.error(this.getContentPane(), "Please select your upload data!");
 					return;
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				if(Aladin.levelTrace >= 3) e.printStackTrace();
-				Aladin.warning(this.getContentPane(), "Error unable upload your data!\n"+e.getMessage());
+				Aladin.error(this.getContentPane(), "Error unable upload your data!\n"+e.getMessage());
 			}
 			pack();
 		} else if (command.equals(DISCARDACTION)) {
@@ -452,14 +452,14 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			try {
 				saveUploadFile(uploadTableName, ple.plane);
 			} catch (RejectedExecutionException ex) {
-				Aladin.warning(this.getContentPane(), "Unable to get load "+ple.plane.label+"\n Request overload! Please wait and try again.");
+				Aladin.error(this.getContentPane(), "Unable to get load "+ple.plane.label+"\n Request overload! Please wait and try again.");
 			}  catch (Exception e) {
 				// TODO Auto-generated catch block
 				if(Aladin.levelTrace >= 3) e.printStackTrace();
-				Aladin.warning(this.getContentPane(), "Unable to parse " + ple.plane.label + " data!");
+				Aladin.error(this.getContentPane(), "Unable to parse " + ple.plane.label + " data!");
 			}
 		} else {
-			Aladin.warning(this.getContentPane(), "Cannot load " + ple.plane.label + " data for upload. Error!");
+			Aladin.error(this.getContentPane(), "Cannot load " + ple.plane.label + " data for upload. Error!");
 			uploadingPlanCatalogs.remove(uploadingPlanCatalogs.get(ple.plane.label));
 		}
 		
@@ -549,15 +549,15 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	protected boolean checkInputs() {
 		boolean hasError = true;
 		if (selectedFile == -1) {
-			Aladin.warning(this.getContentPane(), "Please select your upload data!");
+			Aladin.error(this.getContentPane(), "Please select your upload data!");
 		} else if (tableName.getText().isEmpty()  ||  !isTableNameValid(tableName.getText())) {
-			Aladin.warning(this.getContentPane(), "Please input a valid table name (with no special characters)!");
+			Aladin.error(this.getContentPane(), "Please input a valid table name (with no special characters)!");
 		} else if (tableAlreadyExists(tableName.getText())) {
-			Aladin.warning(this.getContentPane(), "This table name is already submitted for upload. Please edit the table name!");
+			Aladin.error(this.getContentPane(), "This table name is already submitted for upload. Please edit the table name!");
 		} else if (selectedFile == 0 && systemFile.getText().trim().isEmpty() ) {
-			Aladin.warning(this.getContentPane(), "Please choose a file!");
+			Aladin.error(this.getContentPane(), "Please choose a file!");
 		} else if (selectedFile == 1 && uploadOptions.getSelectedItem()==null ) {
-			Aladin.warning(this.getContentPane(), "Please choose a file!");
+			Aladin.error(this.getContentPane(), "Please choose a file!");
 		} else {
 			hasError = false;
 		}

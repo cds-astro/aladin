@@ -106,7 +106,7 @@ public class SIAPruner {
 
         // return the number of nodes requested
         if( nodesToKeep.size()==0 ) {
-            Aladin.warning("Could not find any data corresponding to your request");
+            Aladin.error("Could not find any data corresponding to your request");
             return null;
         }
 
@@ -179,7 +179,7 @@ public class SIAPruner {
                         }
                     }
                     catch(NumberFormatException nfe) {
-                        Aladin.warning("Can't parse "+value+" as an integer !\nConstraint ignored");
+                        Aladin.error("Can't parse "+value+" as an integer !\nConstraint ignored");
                     }
                 }
                 // constraint on a field

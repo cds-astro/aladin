@@ -130,7 +130,7 @@ public class FramePixelExtraction extends JFrame {
                 catch( Exception e1 ) {
                    if( aladin.levelTrace>=3 ) e1.printStackTrace();
                    cat.plan.error="Pixel extraction error !";
-                   aladin.warning(cat.plan.error);
+                   aladin.error(cat.plan.error);
                 } finally { 
                    cat.plan.flagProcessing = false; 
                 }
@@ -138,7 +138,7 @@ public class FramePixelExtraction extends JFrame {
           }).start();
        } catch( Exception e2 ) {
           if( aladin.levelTrace>=3 ) e2.printStackTrace();
-          aladin.warning("Pixel extraction error !");
+          aladin.error("Pixel extraction error !");
        }
     }
     

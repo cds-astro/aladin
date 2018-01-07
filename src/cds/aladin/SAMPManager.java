@@ -974,7 +974,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                 else startHub = true;
 
                 if( startHub ) {
-                    if( !startInternalHub() && !silent ) Aladin.warning(CANT_LAUNCH_HUB);
+                    if( !startInternalHub() && !silent ) Aladin.error(CANT_LAUNCH_HUB);
                     // tout s'est bien déroulé, on attend 1 seconde, et on tente de se connecter au hub créé
                     else {
                         Util.pause(1000);
@@ -1002,14 +1002,14 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         hubUrl = (String)map.get(SAMP_HUB_URL_KEY);
         if( hubUrl==null ) {
             trace("Can not find key '"+SAMP_HUB_URL_KEY+"' !");
-            if( !silent ) Aladin.warning(CANT_CONNECT);
+            if( !silent ) Aladin.error(CANT_CONNECT);
             return false;
         }
 
         sampSecret = (String)map.get(SAMP_SECRET_KEY);
         if( sampSecret==null ) {
             trace("Can not find key '"+SAMP_HUB_URL_KEY+"' !");
-            if( !silent ) Aladin.warning(SAMP_SECRET_KEY);
+            if( !silent ) Aladin.error(SAMP_SECRET_KEY);
             return false;
         }
 
@@ -1032,7 +1032,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                      return getHubListener(silent, launchHubIfNeeded);
                   }
                   else {
-                     if( !silent ) Aladin.warning(CANT_CONNECT);
+                     if( !silent ) Aladin.error(CANT_CONNECT);
                      return false;
                   }
                }
@@ -1051,7 +1051,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                  return getHubListener(silent, launchHubIfNeeded);
               }
               else {
-                 if( !silent ) Aladin.warning(CANT_CONNECT);
+                 if( !silent ) Aladin.error(CANT_CONNECT);
                  return false;
               }
            }

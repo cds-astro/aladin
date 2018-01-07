@@ -163,7 +163,7 @@ public class PlasticPreferences extends JFrame implements ActionListener {
 		if( CLOSE.equals(what) ) setVisible(false);
 		else if( APPLY.equals(what) ) {
 		try { if( apply() ) setVisible(false); }	   
-		   catch( Exception e ) { Aladin.warning(this," "+e.getMessage(),1); }
+		   catch( Exception e ) { Aladin.error(this," "+e.getMessage(),1); }
 		}
 	}
 	

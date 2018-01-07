@@ -320,7 +320,7 @@ MouseWheelListener, Widget
          aladin.glu.log(mMgr.getProtocolName(), "sending data or spectrum URL");
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
-         aladin.warning("SAMP error: "+e.getMessage());
+         aladin.error("SAMP error: "+e.getMessage());
       }
    }
    

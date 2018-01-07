@@ -321,7 +321,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			tablesGuiEditor.setDocument(new FilterDocument(this, this.tablesGui, keys, selectedTableName));
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
-			Aladin.warning(this, e.getMessage());
+			Aladin.error(this, e.getMessage());
 			showLoadingError();
 			return;
 		}
@@ -763,7 +763,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			tap.setText(queryFromGui.toString());
 		} catch (Exception e) {
 			// TODO: handle exception
-			Aladin.warning(this, e.getMessage());
+			Aladin.error(this, e.getMessage());
             ball.setMode(Ball.NOK);
 		}
 	}
@@ -825,10 +825,10 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 								defaultValue);
 					}
 				} catch (NumberFormatException e) {
-					Aladin.warning(this, "Error! "+e.getMessage());
+					Aladin.error(this, "Error! "+e.getMessage());
 					ball.setMode(Ball.NOK);
 				} catch (Exception e) {
-					Aladin.warning(this, "Error! "+e.getMessage());
+					Aladin.error(this, "Error! "+e.getMessage());
 					ball.setMode(Ball.NOK);
 				}
 			} else if (action.equals(ADD_TIMECONSTRAINT)) {
@@ -861,7 +861,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 					}
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					Aladin.warning(this, "Error! "+e.getMessage());
+					Aladin.error(this, "Error! "+e.getMessage());
 	                ball.setMode(Ball.NOK);
 	                return;
 				}
@@ -887,13 +887,13 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			            if( objet == null) throw new Exception(UNKNOWNOBJ);
 			            ball.setMode(Ball.OK);
 			         } catch( Exception e1 ) {
-			            Aladin.warning(this, e1.getMessage());
+			            Aladin.error(this, e1.getMessage());
 			            ball.setMode(Ball.NOK);
 			            return;
 			         }
 			      }
 				if (objet.trim().equals(TARGETNAN)) {//resolve obj for empty field
-					Aladin.warning(this, TapClient.TARGETERROR);
+					Aladin.error(this, TapClient.TARGETERROR);
 		            ball.setMode(Ball.NOK);
 		            return;
 				}
@@ -969,7 +969,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 					if (inRange) {
 						processedInput = TapClient.getRangeInput(value, constraint);
 						if (processedInput == null || processedInput.isEmpty()) {
-							Aladin.warning(this, NORANGEERRORMESSAGE);
+							Aladin.error(this, NORANGEERRORMESSAGE);
 							this.ball.setMode(Ball.NOK);
 							return;
 						}
@@ -983,7 +983,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 				} else {
 					processedInput = TapClient.getStringInput(value, true);
 					if (processedInput == null || processedInput.isEmpty()) {
-						Aladin.warning(this, value+" is invalid input, please check");
+						Aladin.error(this, value+" is invalid input, please check");
 						this.ball.setMode(Ball.NOK);
 						return;
 					}

@@ -609,7 +609,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		Vector<TapTableColumn> columnNames = tablesMetaData.get(tableName).getColumns();
 		if (columnNames == null) {
 			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				Aladin.warning(this, "Error in uploaded data");
+				Aladin.error(this, "Error in uploaded data");
 				return null;
 			}
 			try {
@@ -623,7 +623,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				Aladin.warning(this, e.getMessage());
+				Aladin.error(this, e.getMessage());
 				String revertTable = tablesMetaData.keySet().iterator().next();
 				if (tablesMetaData.get(revertTable).getColumns() != null) {
 					JTextComponent tablesGuiEditor = (JTextComponent) tablesGui.getEditor().getEditorComponent();
@@ -644,7 +644,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				return null;
 			}
 			if (columnNames == null) {
-				Aladin.warning(this, "Error in updating the metadata for :"+selectedTableName);
+				Aladin.error(this, "Error in updating the metadata for :"+selectedTableName);
 				showLoadingError();
 				defaultCursor();
 				return null;
@@ -856,7 +856,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				try {
 					this.tapClient.tapManager.showTapRegistryForm();
 				} catch (Exception e) {
-					Aladin.warning(this, TapClient.GENERICERROR);
+					Aladin.error(this, TapClient.GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
 			} else if (action.equals(UPLOAD)) {
@@ -867,7 +867,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				try {
 					this.tapClient.tapManager.showAsyncPanel();
 				} catch (Exception e) {
-					Aladin.warning(this, TapClient.GENERICERROR);
+					Aladin.error(this, TapClient.GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
 			} else if (action.equals(RELOAD)) {
@@ -876,7 +876,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					if (Aladin.levelTrace >=3) e.printStackTrace();
-					Aladin.warning(this, e.getMessage());
+					Aladin.error(this, e.getMessage());
 				}
 			}
 		}

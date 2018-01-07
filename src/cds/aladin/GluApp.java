@@ -345,7 +345,7 @@ public class GluApp implements Comparator {
                }
             } catch( Exception e ) {
                if( aladin.levelTrace>=3 ) e.printStackTrace();
-               aladin.warning("Installation error");
+               aladin.error("Installation error");
             }
             setDownloading(-1);
             aladin.frameVOTool.downloadEnd();

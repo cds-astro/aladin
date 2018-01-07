@@ -135,7 +135,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
           Plan p1 = a.calque.getFirstCatalog();
           if( p1!=null ) { p = new Vector<Plan>(); p.add(p1); }
        }
-       if( p.size()==0 ) a.warning(frameMacro,a.chaine.getString("NEEDCAT"));
+       if( p.size()==0 ) a.error(frameMacro,a.chaine.getString("NEEDCAT"));
 
        ptm.reset();
        int n=0;
@@ -170,7 +170,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 			    try {
 			        script = getScriptFromReader(new BufferedReader(new FileReader(file)));
 			  	}
-			  	catch(IOException e) {a.warning(frameMacro,a.chaine.getString("FTIOERR")+" : "+e,1);return;}
+			  	catch(IOException e) {a.error(frameMacro,a.chaine.getString("FTIOERR")+" : "+e,1);return;}
 			  	
 				frameMacro.setScript(script);
 			}
@@ -192,7 +192,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 		                out.writeBytes(script.replaceAll("\\n", Util.CR));
 						out.close();
 				}
-				catch(IOException e) {a.warning(frameMacro,a.chaine.getString("FTIOERR")+" : "+e);}
+				catch(IOException e) {a.error(frameMacro,a.chaine.getString("FTIOERR")+" : "+e);}
 			}
 		}
 		
@@ -209,7 +209,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
                     BufferedReader reader = new BufferedReader(new FileReader(file));
 					loadParams(reader);
 			  	}
-			  	catch(IOException e) {a.warning(frameMacro,a.chaine.getString("FTIOERR")+" : "+e,1);return;}
+			  	catch(IOException e) {a.error(frameMacro,a.chaine.getString("FTIOERR")+" : "+e,1);return;}
 			}
         }
         
@@ -240,7 +240,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 						}
 						out.close();
 				}
-				catch(IOException e) {a.warning(frameMacro,a.chaine.getString("FTIOERR")+" : "+e);}
+				catch(IOException e) {a.error(frameMacro,a.chaine.getString("FTIOERR")+" : "+e);}
 			}
 		}
 		
@@ -263,7 +263,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
             }
             catch(IOException ioe) {
                 ioe.printStackTrace();
-                a.warning("Can't load example parameters !");
+                a.error("Can't load example parameters !");
             }
         }
 		
@@ -387,7 +387,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 	 */
 	private synchronized void execCurrentParams() {
 		if( execThread!=null && execThread.isAlive() ) {
-			a.warning(frameMacro, "Previous execution not finished yet !", 1);
+			a.error(frameMacro, "Previous execution not finished yet !", 1);
 			return;
 		}
         execThread = new Thread("AladinMacroExeParam") {
@@ -419,7 +419,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 			frameMacro.getParamTable().setRowSelectionInterval(row, row);
 		}
 		else {
-			a.warning(frameMacro, "No next params row to execute, stop execution !", 1);
+			a.error(frameMacro, "No next params row to execute, stop execution !", 1);
 			return;
 		}
 		
@@ -434,12 +434,12 @@ public class MacroController implements ActionListener, MouseMotionListener,
 		if( execThread!=null && execThread.isAlive() ) {
 			
 			// TODO : passer ces msgs en français aussi !
-			a.warning(frameMacro, "Previous execution not finished yet !", 1);
+			a.error(frameMacro, "Previous execution not finished yet !", 1);
 			return;
 		}
 		// vérification de la validité de row
 		if( row==-1 ) {
-			a.warning(frameMacro, "No parameter row selected, stop execution !", 1);
+			a.error(frameMacro, "No parameter row selected, stop execution !", 1);
 			return;
 		}
 		
@@ -492,7 +492,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 				if( stopThread ) {
 					stopThread = false;
 					frameMacro.hilightScriptLine(-1);
-					a.warning(frameMacro, "Execution interrupted !", 1);
+					a.error(frameMacro, "Execution interrupted !", 1);
 					return;
 				}
 				frameMacro.hilightScriptLine(j);
@@ -511,7 +511,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
 		int nbCol = macroModel.getParamTableModel().getColumnCount();
 		
 		if( row==-1 ) {
-			Aladin.warning(frameMacro, "No parameter row selected, stop execution !", 1);
+			Aladin.error(frameMacro, "No parameter row selected, stop execution !", 1);
 			return null;
 		}
 		

@@ -523,7 +523,7 @@ public class ServerFile extends Server implements XMLConsumer {
             }
          } catch(Exception e) {
             e.printStackTrace();
-            Aladin.warning(this,""+e,1);
+            Aladin.error(this,""+e,1);
             defaultCursor();
             ball.setMode(Ball.NOK);
             //            setSync(true);
@@ -563,7 +563,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   tree.loadSelected();
                   tree.resetCb();
                }
-            } else Aladin.warning(this,WNEEDCHECK);
+            } else Aladin.error(this,WNEEDCHECK);
             defaultCursor();
          } else {
             String code = "load "+f;

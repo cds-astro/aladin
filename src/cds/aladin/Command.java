@@ -1083,7 +1083,7 @@ public final class Command implements Runnable {
             // Est-ce bien un objet résolvable par Sésame ?
             String rep = a.view.sesameResolve(cmd, true);
             if( rep == null ) {
-               a.warning(a.dialog.server[0].UNKNOWNOBJ);
+               a.error(a.dialog.server[0].UNKNOWNOBJ);
                return false;
             } else t = rep;
 
@@ -1300,7 +1300,7 @@ public final class Command implements Runnable {
             flagTargetChange = false;
          }
          if( target.length() == 0 ) {
-            Aladin.warning(a.chaine.getString("WNEEDOBJ"), 1);
+            Aladin.error(a.chaine.getString("WNEEDOBJ"), 1);
             return null;
          } else {
             if( flagTargetChange ) a.dialog.setDefaultTarget(targetX.toString());
@@ -1316,9 +1316,9 @@ public final class Command implements Runnable {
                coo = a.view.sesame(target);
                csr = Aladin.DEFAULTCURSOR;
                Aladin.makeCursor(a, csr);
-               if( coo == null ) Aladin.warning("\"" + target + "\": " + a.chaine.getString("OBJUNKNOWN"), 1);
+               if( coo == null ) Aladin.error("\"" + target + "\": " + a.chaine.getString("OBJUNKNOWN"), 1);
             } catch( Exception e ) {
-               Aladin.warning(e.getMessage(), 1);
+               Aladin.error(e.getMessage(), 1);
             }
             if( coo == null ) return null;
 
@@ -1366,8 +1366,8 @@ public final class Command implements Runnable {
 
       // Affichage des erreurs
       if( erreur.length() > 0 ) {
-         if( !Aladin.NETWORK ) Aladin.warning("No network for: " + erreur, 1);
-         else Aladin.warning(a.chaine.getString("WERROR") + " " + erreur, 1);
+         if( !Aladin.NETWORK ) Aladin.error("No network for: " + erreur, 1);
+         else Aladin.error(a.chaine.getString("WERROR") + " " + erreur, 1);
       }
 
       return "";
@@ -1444,7 +1444,7 @@ public final class Command implements Runnable {
          }
       } catch( Exception e ) {
          if( a.levelTrace >= 3 ) e.printStackTrace();
-         a.warning("macro error !" + e.getMessage() + "\n", 1);
+         a.error("macro error !" + e.getMessage() + "\n", 1);
       } finally {
          if( scriptStream != null ) try {
             scriptStream.close();
@@ -2674,7 +2674,7 @@ public final class Command implements Runnable {
       }
       ViewSimple v = a.view.getView(pi);
       if( pi instanceof PlanBG && (!pi.active || !pi.ref && pi.getOpacityLevel() == 0f) ) {
-         Aladin.warning("crop error: HiPS plane [" + pi.label + "] must be visible to be cropped!", 1);
+         Aladin.error("crop error: HiPS plane [" + pi.label + "] must be visible to be cropped!", 1);
          System.err.println("crop error: HiPS plane [" + pi.label + "] must be visible to be cropped!");
          return null;
       }
@@ -2719,7 +2719,7 @@ public final class Command implements Runnable {
             + (flagPos ? "(provided) " : " (" + c1 + " on reticle) ") + w + "x" + h + (flagDim ? "( provided)" : "(view size)"));
 
       if( v.cropArea(new RectangleD(x, pi.naxis2 - (y + h), w, h), label, v.zoom, 1, true, false) == null ) {
-         Aladin.warning("crop error: view [" + v + "] not usable!", 1);
+         Aladin.error("crop error: view [" + v + "] not usable!", 1);
          ;
          System.err.println("crop error: view [" + v + "] not usable!");
          return null;
@@ -3992,7 +3992,7 @@ public final class Command implements Runnable {
 
             if( file == null && !a.NOGUI ) {
                tmp = "saving on standard output required NOGUI mode (-nogui parameter)";
-               a.warning("save error: " + tmp, 1);
+               a.error("save error: " + tmp, 1);
                return tmp;
             } else file = Tok.unQuote(file);
 
@@ -4180,7 +4180,7 @@ public final class Command implements Runnable {
       // pour mise on/off du robot
       else if( cmd.equalsIgnoreCase("demo") || cmd.equalsIgnoreCase("robot") ) {
          if( !Aladin.ROBOTSUPPORT ) {
-            Aladin.warning(a.chaine.getString("NOROBOT"), 1);
+            Aladin.error(a.chaine.getString("NOROBOT"), 1);
             return "";
          }
          if( param.trim().equals("end") && robotInfo != null ) {
