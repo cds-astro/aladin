@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -1367,8 +1367,7 @@ Runnable, SwingWidgetFinder, Widget {
       }
       
       if( msg!=null ) {
-         int y = drawBeginnerHelp1(g,msg, getColorMessage(),flagInMessage ||
-               messageType== MESSAGE_INFO || messageType== MESSAGE_INFO_PLAN ? getHeight() : yMax);
+         int y = drawBeginnerHelp1(g,msg, getColorMessage(),flagInMessage ? getHeight() : yMax);
          
          // On affiche des ... pour indiquer que le message est plus long que la zone d'affichage
          if( y>=yMax && !flagInMessage ) {
@@ -1937,8 +1936,7 @@ Runnable, SwingWidgetFinder, Widget {
       if( flagDrag==VERTICAL ) moveLogo(g);
 
       lastYMax = y;
-      if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<4 
-            || message!=null ) drawBeginnerHelp( g, y);
+      if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<4  || message!=null ) drawBeginnerHelp( g, y);
       
       a.resumeVariousThinks();
 

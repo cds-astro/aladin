@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -34,6 +34,7 @@ import java.awt.Point;
 public final class CoteDist extends Cote {
    
    private Obj a,b;
+   
 
    protected CoteDist(Obj a, Obj b, ViewSimple v) {
       super(a.raj,a.dej,a.plan,v,new Ligne(b.raj,b.dej,b.plan,v));
@@ -56,6 +57,9 @@ public final class CoteDist extends Cote {
    protected boolean draw(Graphics g,ViewSimple v,int dx, int dy) {
       if( a.plan.isFree() || b.plan.isFree() ) return false;
       if( !a.isSelected() || !b.isSelected() ) return false;
-      return super.draw(g,v,dx,dy);
+      
+      boolean rep = super.draw(g,v,dx,dy);
+      if( rep ) drawCoteBase(g,v,dx,dy);
+      return rep;
    }
 }

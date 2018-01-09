@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -2479,7 +2479,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Enumeration<Obj> e = vselobj.elements();
       while( e.hasMoreElements() ) {
          Obj o = e.nextElement();
-         if( !(o instanceof Source || o instanceof Repere) ) continue;
+         if( !(o instanceof Source || o instanceof Repere || o instanceof Cote) ) continue;
          if( !((Position)o).isWithLabel() ) return true;
       }
       return false;
@@ -2532,7 +2532,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       enleve=true;
       for( i=vselobj.size()-1; i>=0; i-- ) {
          Position o = (Position) vselobj.elementAt(i);
-         if( !(o instanceof Source || o instanceof Repere) ) continue;
+         if( !(o instanceof Source || o instanceof Repere || o instanceof Cote) ) continue;
          if( !o.isWithLabel() ) enleve=false;
          o.setWithLabel(true);                // Par defaut on met le label
       }
@@ -2541,7 +2541,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( enleve ) {
          for( i=vselobj.size()-1; i>=0; i-- ) {
             Position o = (Position) vselobj.elementAt(i);
-            if( !(o instanceof Source || o instanceof Repere) ) continue;
+            if( !(o instanceof Source || o instanceof Repere || o instanceof Cote) ) continue;
             o.setWithLabel(false);
          }
       }

@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -37,8 +37,6 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
@@ -159,7 +157,8 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Data discovery tree sort support
+ * @beta    <LI> Data discovery tree: sort and hiearchy control
+ * @beta    <LI> Distance tool improvement
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
@@ -188,7 +187,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.063";
+   static public final    String VERSION = "v10.065";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -204,7 +203,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2000-2018 Université de Strasbourg/CNRS - developed by CDS from Strasbourg Observatory";
+   static String COPYRIGHT         = "(c) 2018 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -2369,36 +2368,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
       makeAdd(searchPanel,search,"East");
       search.hideSearch(true);
 
-      GridBagLayout g = new GridBagLayout();
-      infoPanel = new JPanel(g);
+      infoPanel = new JPanel( new BorderLayout(0,0) );
       infoPanel.setBackground( COLOR_STATUS_BACKGROUND );
       urlStatus.setBackground( COLOR_STATUS_BACKGROUND );
       memStatus.setBackground( COLOR_STATUS_BACKGROUND );
       
       urlStatus.setForeground( COLOR_STATUS_LEFT_FOREGROUND );
-      
-      GridBagConstraints gc = new GridBagConstraints();
-      gc.gridwidth = 3;
-      gc.weightx = 1;
-      gc.anchor=GridBagConstraints.WEST;
-      gc.fill=GridBagConstraints.HORIZONTAL;
-      g.setConstraints(urlStatus, gc);
-      infoPanel.add(urlStatus);
+      infoPanel.add(urlStatus, BorderLayout.CENTER );
 
-      gc.weightx = 0;
-      gc.anchor=GridBagConstraints.EAST;
-      g.setConstraints(memStatus, gc);
-      infoPanel.add(memStatus);
+      JPanel pm = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0));
+      pm.setBackground( COLOR_STATUS_BACKGROUND );
+      if( macPlateform ) pm.setBorder( BorderFactory.createEmptyBorder(0,0,0,14));
+      pm.add(memStatus);
 
       if( PLASTIC_SUPPORT ) {
          getMessagingMgr().setPlasticWidget(plasticWidget);
-
-         if( macPlateform ) gc.insets.right = 14;
-         g.setConstraints(plasticWidget, gc);
-         infoPanel.add(plasticWidget);
-
+         pm.add(plasticWidget);
          plasticPrefs = new PlasticPreferences(this);
       }
+      infoPanel.add(pm,BorderLayout.EAST);
 
       // Le panel principal
 
@@ -3730,6 +3718,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Pour sélectionner tous les objets */
    protected void selectAll() {
+      if( view.isMultiView() ) view.selectAllViews();
       calque.selectAllObject(0);
    }
 
@@ -5651,7 +5640,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miFilterB!=null ) miFilterB.setEnabled(nbPlanCat>0);
          if( miSearch!=null ) miSearch.setEnabled(nbPlanCat>0);
          if( miSelect!=null ) miSelect.setEnabled(nbPlanCat>0 || nbPlanObj>0);
-         if( miSelectAll!=null )  miSelectAll.setEnabled(nbPlanCat>0 || nbPlanObj>0);
+         if( miSelectAll!=null )  miSelectAll.setEnabled(nbPlanCat>0 || nbPlanObj>0 || m>1 );
          if( miSelectTag!=null )  miSelectTag.setEnabled(hasTagSrc);
          if( miDetag!=null ) miDetag.setEnabled(hasTagSrc);
          if( miUnSelect!=null ) miUnSelect.setEnabled(hasSelectedObj);

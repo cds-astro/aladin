@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -450,7 +450,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // Si on se déplace davantage vers la droite que vers le bas ou le haut
             // => on ne change pas
             Point p = e.getPoint();
-            if( lastMove != null && 1.5 * (p.x - lastMove.x) > Math.abs(p.y - lastMove.y) ) return;
+            if( lastMove != null && 1.5 * (p.x - lastMove.x) > Math.abs(p.y - lastMove.y) ) {
+               lastMove = p;
+               return;
+            }
             lastMove = p;
 
             ArrayList<TreeObjDir> treeObjs = new ArrayList<TreeObjDir>();
@@ -2132,22 +2135,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
       }
       
-//      boolean isHips = prop.getProperty("hips_service_url") != null;
-//      
-//      // Sans catégorie => dans la branche "Others" suivi du protocole puis de l'authority
-//      if( category == null ) {
-//         boolean isCS  = prop.getProperty("cs_service_url")   != null;
-//         boolean isSIA = prop.getProperty("sia_service_url")  != null 
-//                      || prop.getProperty("sia2_service_url") != null;
-//         boolean isSSA = prop.getProperty("ssa_service_url")  != null;
-//         boolean isTAP = prop.getProperty("tap_service_url")  != null;
-//         String subCat = isHips ? "HiPS"
-//               : isSIA ? "Image (by SIA)" : isSSA ? "Spectrum (by SSA)" : isCS ? "Catalog (by CS)" : isTAP ? "Table (by TAP)" : "Miscellaneous";
-//
-//         category = DirectorySort.OTHERS+"/" + subCat + "/" + Util.getSubpath(id, 0, 1);
-//         prop.setProperty(Constante.KEY_CLIENT_CATEGORY, category);
-//      }
-
       boolean local = prop.getProperty("PROP_ORIGIN") != null;
 
       // Rangement dans la branche "Adds" si chargement local
@@ -2237,9 +2224,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( desc != null ) {
                   String newTitre = desc + titre.substring(i - 1, j + 1);
                   prop.replaceValue(Constante.KEY_OBS_TITLE, newTitre);
-                  prop.remove(Constante.KEY_OBS_DESCRIPTION);
+//                  prop.remove(Constante.KEY_OBS_DESCRIPTION);
                }
                prop.replaceValue("obs_collection",titre.substring(0, i-1));
+               prop.replaceValue(Constante.KEY_OBS_DESCRIPTION,titre.substring(0, i-1));
             }
          }
       }
@@ -3149,6 +3137,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          String s;
          boolean flagScan = false;
+         boolean flagSort = false;
          long nbRows = -1;
          MyAnchor a;
          GridBagConstraints c = new GridBagConstraints();
@@ -3163,6 +3152,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          boolean hasMocPol = aladin.view.hasMocPolSelected();
          boolean hasRegion = aladin.calque.getNbPlanMoc() > 0 || hasMocPol;
          boolean hasLoadedCat = aladin.calque.getNbPlanCat() > 0;
+         
+         TreePath tp = dirTree.getSelectionPath();
+         if( tp!=null ) {
+            String branch = ((TreeObj)((DefaultMutableTreeNode) tp.getLastPathComponent()).getUserObject()).path;
+            flagSort = directorySort.hasBranchesRules(branch);
+         }
 
          NoneSelectedButtonGroup bg = new NoneSelectedButtonGroup();
 
@@ -3704,12 +3699,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                }
             });
            
-            b = new JButton(new ImageIcon( Aladin.aladin.getImagette("Sort.png")));
-            b.setMargin(new Insets(0, 0, 0, 0));
-            b.setBorderPainted(false);
-            b.setContentAreaFilled(false);
-            Util.toolTip(b, aladin.chaine.getString("SORTTIP"), true);
-            b.setFont(b.getFont().deriveFont(Font.BOLD));
+            if( flagSort ) {
+               b = new JButton(new ImageIcon( Aladin.aladin.getImagette("Sort.png")));
+               b.setMargin(new Insets(0, 0, 0, 0));
+               b.setBorderPainted(false);
+               b.setContentAreaFilled(false);
+               Util.toolTip(b, aladin.chaine.getString("SORTTIP"), true);
+               b.setFont(b.getFont().deriveFont(Font.BOLD));
+            }
 
             precontrol.add(b);
             final JButton bfinal = b;

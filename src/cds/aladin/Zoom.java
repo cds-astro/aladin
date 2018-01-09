@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -42,14 +42,8 @@ import javax.swing.JPanel;
  */
 public class Zoom extends JPanel {
 
-   // Les valeurs generiques
-   //   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
-   //   static int mzd[] = {  128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
-   //   static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-   //   static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
-
-   static int mzn[] = {     1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
-   static int mzd[] = {  1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
+   static int mzn[] = {     1,    1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
+   static int mzd[] = {  2048, 1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
    static final int MAXZOOM=67;   // en puissance de 2, valeur maximal du zoom
 
@@ -63,16 +57,8 @@ public class Zoom extends JPanel {
    ZoomView   zoomView;          // Le canvas associe au Zoom
    JComboBox   cZoom;               // Le Choice des differentes valeurs de zoom
    protected ZoomChoice zoomChoicePanel;
-//   protected SliderSize sizeSlider;
-//   protected SliderOpacity opacitySlider;
-//   protected SliderZoom zoomSlider;
-//   protected SliderEpoch epochSlider;
-//   protected SliderCube  cubeSlider;
-//   protected SliderDensity densitySlider;
-//   protected JPanel sliderPanel;
 
    // Les references aux objets
-   //   protected ViewSimple v;      // La vue associée au zoom
    Aladin aladin;
    
    protected Zoom() { super(); }
@@ -94,46 +80,8 @@ public class Zoom extends JPanel {
 
       cZoom.setSelectedIndex(MINZOOM);   // Selectionne par defaut le zoom a 1x
       zoomChoicePanel = new ZoomChoice(aladin,cZoom);
-      //      cZoom.addActionListener(new ActionListener() {
-      //         public void actionPerformed(ActionEvent e) { submit(); }
-      //      });
-      //      cZoom.addMouseWheelListener( zoomView );
-
-//      cubeSlider    = new SliderCube(aladin);
-//      epochSlider   = new SliderEpoch(aladin);
-//      sizeSlider    = new SliderSize(aladin);
-//      densitySlider = new SliderDensity(aladin);
-//      opacitySlider = new SliderOpacity(aladin);
-//      zoomSlider    = new SliderZoom(this);
-//
-//      sliderPanel = new JPanel( new BorderLayout(0, 0));
-//      adjustSliderPanel();
-//      
-//      MySplitPane splitH = new MySplitPane(JSplitPane.VERTICAL_SPLIT, true, sliderPanel, zoomView);
-//      zoomView.setPreferredSize( ZoomView.DIM );
-//      zoomView.setMinimumSize(new Dimension(100,100));
-//      splitH.setBorder(BorderFactory.createEmptyBorder());
-//      add(splitH,BorderLayout.NORTH);
-
-//      add(sliderPanel,BorderLayout.NORTH);
       add(zoomView,BorderLayout.CENTER);
    }
-
-//   private JPanel slp=null;
-//   protected void adjustSliderPanel() {
-//      JPanel p = new JPanel( new GridLayout(0,1,1,1));
-//      if( !Aladin.OUTREACH ) {
-//         if( aladin.configuration.isSliderEpoch() )   p.add(epochSlider);
-//         if( aladin.configuration.isSliderSize() )    p.add(sizeSlider);
-//         if( aladin.configuration.isSliderDensity() ) p.add(densitySlider);
-//         if( aladin.configuration.isSliderCube() )    p.add(cubeSlider);
-//      }
-//      if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
-//      if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);
-//      if( slp!=null ) sliderPanel.remove(slp);
-//      sliderPanel.add(p,BorderLayout.CENTER);
-//      slp=p;
-//   }
 
    /** Retourne le JPanel contenant le menu déroulant du sélecteur
     *  du facteur du zoom
@@ -160,14 +108,6 @@ public class Zoom extends JPanel {
     * @param sZoom libelle du zoom (1/16x, ... , 1x, ... 32x)
     * @return index dans le selecteur, -1 si non trouve
     */
-   //   protected int getIndex(String sZoom) {
-   //      for( int i=cZoom.getItemCount()-1; i>=0; i-- ) {
-   //         String s=(String)cZoom.getItemAt(i);
-   //         if( s.equals(sZoom) ) return i;
-   //      }
-   //      return -1;
-   //   }
-
    protected double getNearestZoom(String sZoom) {
       double z;
       if( sZoom.indexOf('x')>0 ) z=parseZoomString(sZoom);

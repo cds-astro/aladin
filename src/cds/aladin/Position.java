@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -186,7 +186,7 @@ public class Position extends Obj {
    final protected boolean isVisible() { return (flags & VISIBLE) !=0; /* == VISIBLE;*/ }
 
    /** Positionne le flag LABEL */
-   protected final void setWithLabel(boolean withLabel) {
+   protected void setWithLabel(boolean withLabel) {
       if( withLabel ) flags |= WITHLABEL;
       else flags &= ~WITHLABEL;
    }
@@ -204,7 +204,7 @@ public class Position extends Obj {
    }
 
    /** Retourne true si la source a le flag WITHLABEL positionné */
-   final protected boolean isWithLabel() { return (flags & WITHLABEL) !=0; }
+   protected boolean isWithLabel() { return (flags & WITHLABEL) !=0; }
 
    /** Retourne true si la source a le flag WITHSTAT positionné */
    final protected boolean isWithStat() { return (flags & WITHSTAT) !=0; }

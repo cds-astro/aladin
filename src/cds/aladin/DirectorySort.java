@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -343,6 +343,15 @@ public class DirectorySort {
    private void initBranchRules(String branch, SortRule [] rule) {
       AllRules.put(branch, new BranchRules( rule ) );
    }
+   
+   /** Retourne true si on est sur un noeud qui dispose d'un menu de tri */
+   protected boolean hasBranchesRules(String branch) {
+      for( String cat : AllRules.keySet() ) {
+         if( branch.equals(cat) ) return true;
+      }
+      return false;
+
+   }
 
    /** Retourne la liste des règles de tris pour la branche désignée */
    private BranchRules getBranchRules(String branch) {
@@ -552,22 +561,23 @@ public class DirectorySort {
             if( name==null ) name = prop.getFirst("obs_collection");
             return keyAlpha(name,flagReverse,4);
             
-         // Selon la date (début d'observation - resp fin d'observation en reverse
+         // Selon la date (début d'observation)
          // , et à défaut date de publication de l'article de ref)
          case YEAR:
          case DATE:
             double mjd = 99999;
             try {
                String date;
-               if( !flagReverse ) date = prop.getFirst("t_min");
-               else {
-                  date = prop.getFirst("t_max");
-                  
-                  // Observations encore en cours  => date courante
-                  if( date==null && prop.getFirst("t_min")!=null ) {
-                     date = ""+Astrodate.JDToMJD( Astrodate.UnixToJD( System.currentTimeMillis()/1000L ) );
-                  }
-               }
+               date = prop.getFirst("t_min");
+//               if( !flagReverse ) date = prop.getFirst("t_min");
+//               else {
+//                  date = prop.getFirst("t_max");
+//                  
+//                  // Observations encore en cours  => date courante
+//                  if( date==null && prop.getFirst("t_min")!=null ) {
+//                     date = ""+Astrodate.JDToMJD( Astrodate.UnixToJD( System.currentTimeMillis()/1000L ) );
+//                  }
+//               }
                if( date!=null ) {
                   mjd = Double.parseDouble(date);
                   if( flagReverse ) mjd = 99998-mjd;
@@ -844,15 +854,15 @@ public class DirectorySort {
             return null;
          
          case YEAR:
-            String year = prop.getFirst("bib_year");
-            if( year==null ) {
+            String year=null;
+            String date = prop.getFirst("t_min");
+            if( date!=null ) {
                try {
-                  String date;
-                  date = prop.getFirst("t_min");
                   double mjd = Double.parseDouble(date);
                   year = ""+(int)( Astrodate.JDToYd( Astrodate.MJDToJD( mjd )) );
                } catch( Exception e1 ) { }
             }
+            if( year==null ) year = prop.getFirst("bib_year");
             return year==null ? "Unknown date" : year;
             
          case BRANCH1:

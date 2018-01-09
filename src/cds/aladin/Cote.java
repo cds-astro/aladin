@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -24,9 +24,12 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
+
+import javax.swing.JComboBox;
 
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
@@ -45,7 +48,10 @@ import cds.tools.Util;
 public class Cote extends Ligne {
 
    protected double dist=-1;    // Dist angulaire de la cote (ou -1 si non encore calculée)
+   protected double distRA=-1;    // Dist RA de la cote (ou -1 si non encore calculée)
+   protected double distDE=-1;    // Dist DE de la cote (ou -1 si non encore calculée)
    private double distXY=-1;    // Dist de la cote (ou -1 si non encore calculée)
+   private boolean withTriangle=false; // True si affichage de la base et de la hauteur conjointe avec affichage label
 
   /** Constructeurs du premier bout.
    * @param plan plan d'appartenance de la cote
@@ -118,9 +124,37 @@ public class Cote extends Ligne {
          public void actionPerformed(ActionEvent e) { changeCouleur.action(); plan.aladin.view.repaintAll(); }
       });
       propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
+      
+      
+      final JComboBox pole =  new JComboBox(LABELMODES);
+      final PropAction updatePole = new PropAction() {
+         public int action() {
+            labelMode = isWithLabel() ? (isWithTriangle() ? 2 : 1) : 0;
+            pole.setSelectedIndex(labelMode);
+            return PropAction.SUCCESS;
+         }
+      };
+      final PropAction changeLabel = new PropAction() {
+         public int action() {
+            int mode = pole.getSelectedIndex();
+            if( labelMode==mode ) return PropAction.NOTHING;
+            setWithLabel( mode>0 );
+            setWithTriangle(mode==2);
+            return PropAction.SUCCESS;
+         }
+      };
+      pole.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changeLabel.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("Labels","Labels","Distance labels control",pole,updatePole,changeLabel) );
+
+      
       return propList;
    }
-
+   
+   private int labelMode=-1;
+   static private final String [] LABELMODES = { "No label when unselected","Only distance label when unselected","Triangle distance lines and labels" };
+   
    public Vector getProp1() {
       Vector propList = super.getProp();
       Prop.remove(propList, "color");
@@ -161,19 +195,19 @@ public class Cote extends Ligne {
 
    protected void deltaPosition(ViewSimple v,double x, double y) {
       super.deltaPosition(v,x,y);
-      if( finligne!=null ) ((Cote)finligne).setId(v);
+      if( finligne!=null && finligne instanceof Cote) ((Cote)finligne).setId(v);
       else setId(v);
    }
 
    protected void deltaRaDec(double dra, double dde) {
       super.deltaRaDec(dra,dde);
-      if( finligne!=null ) ((Cote)finligne).setId();
+      if( finligne!=null && finligne instanceof Cote ) ((Cote)finligne).setId();
       else setId();
    }
 
    protected void setPosition(ViewSimple v,double x, double y) {
       super.setPosition(v,x,y);
-      if( finligne!=null ) ((Cote)finligne).setId();
+      if( finligne!=null && finligne instanceof Cote ) ((Cote)finligne).setId();
       setId();
    }
 
@@ -196,7 +230,7 @@ public class Cote extends Ligne {
       }
       if( v==null ) v = plan.aladin.view.getCurrentView();
       if( v==null ) return;
-
+      
       int frame = plan.aladin.localisation.getFrame();
       if( frame!=Localisation.XY && frame!=Localisation.XYNAT && frame!=Localisation.XYLINEAR ) {
          try {
@@ -215,6 +249,8 @@ public class Cote extends Ligne {
                   dra = Math.abs(dra);
                   if( dra>180 ) dra-=360;
                   double drac = dra*AstroMath.cosd(c1.del);
+                  distRA=drac;
+                  distDE=dde;
                   dist = Coord.getDist(c1,c2);
                   if( dist==0 ) id="Null distance";
                   else id= "Dist = "+ Coord.getUnit(dist) +
@@ -235,8 +271,8 @@ public class Cote extends Ligne {
 
       // Si on ne peut pas calculer les coordonnees, on donne juste
       // le dx et le dy
-      dx = v.HItoI(p1.xv[v.n]) - v.HItoI(p2.xv[v.n]);
-      dy = v.HItoI(p1.yv[v.n]) - v.HItoI(p2.yv[v.n]);
+      distRA=dx = v.HItoI(p1.xv[v.n]) - v.HItoI(p2.xv[v.n]);
+      distDE=dy = v.HItoI(p1.yv[v.n]) - v.HItoI(p2.yv[v.n]);
       dist=distXY = Math.sqrt(dx*dx+dy*dy);
       id= Util.myRound(distXY+"",1)+ " (delta x="+Util.myRound(dx+"",2)+", delta y="+Util.myRound(dy+"",2)+")";
    }
@@ -256,32 +292,48 @@ public class Cote extends Ligne {
       else { autreCote=debligne; bout=this; }
       return bout.in(v,x,y) && !autreCote.nearArrow(v,x,y);
    }
+   
+   /** Positionne le flag LABEL */
+   protected final void setWithLabel(boolean withLabel) {
+      Ligne bout, autreCote;
+      if( debligne==null ) { autreCote=bout=finligne; }
+      else { autreCote=debligne; bout=this; }
+      
+      if( withLabel ) {
+         bout.flags |= WITHLABEL;
+         autreCote.flags |= WITHLABEL;
+      } else {
+         bout.flags &= ~WITHLABEL;
+         autreCote.flags &= ~WITHLABEL;
+      }
+   }
+   
+   /** Retourne true si la source a le flag WITHLABEL positionné */
+   protected boolean isWithLabel() {
+      Ligne bout, autreCote;
+      if( debligne==null ) { autreCote=bout=finligne; }
+      else { autreCote=debligne; bout=this; }
+      
+      return (bout.flags & WITHLABEL) !=0 || (autreCote.flags & WITHLABEL) !=0;
+   }
+   
+   /** Retourne true si on doit dessiner la hauteur et la base du triangle */
+   protected boolean isWithTriangle() { return withTriangle; }
+   
+   
+   /** Positionne le flag d'affichage de la hauteur et de la base du triangle */
+   protected void setWithTriangle(boolean withTriangle ) { this.withTriangle = withTriangle; }
 
    protected void drawID(Graphics g, ViewSimple v,Point p1,Point p2) {
-      if( !isCoteSelected() ) return;
-      drawID1(g,v,p1,p2);
+         if( !(isCoteSelected() || isWithLabel())  ) return;
+         drawID1(g,v,p1,p2);
    }
+   
    protected void drawID1(Graphics g, ViewSimple v,Point p1,Point p2) {
-      double dy=p2.y-p1.y;
-      double dx=p2.x-p1.x;
-      if( Math.sqrt(dy*dy + dx*dx)<20 && v.getTaille()>10 ) return; // trop petit
-      int a = (p1.x+p2.x)/2;
-      int b = (p1.y+p2.y)/2;
-      g.setFont( Aladin.BOLD );
       int frame = plan.aladin.localisation.getFrame();
       String s = raj==Double.NaN || (frame==Localisation.XY 
-            || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )? 
-                  Util.myRound(dist+"", 2) : Coord.getUnit(dist);
-      int x = a+3;
-      int y = b+(dy*dx>0?-2:12);
-      int w = g.getFontMetrics().stringWidth(s);
-      Color c = g.getColor();
-      Color c1 = (c==Color.red || c==Color.blue) ? Color.white : Color.black;
-//      Util.drawCartouche(g, x, y-11, w, 15, 0.75f, null, Color.white);
-      
-      Util.drawStringOutline(g, s,x,y,c,c1);
-//      g.drawString(s,x,y);
-      g.setColor(c);
+            || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )?  Util.myRound(dist+"", 2) : Coord.getUnit(dist);
+      drawLabel(g,v,p1,p2,s,Aladin.BOLD);            
    }
 
    private boolean isCoteSelected() {
@@ -301,12 +353,49 @@ public class Cote extends Ligne {
       
       if( !isVisible() ) return false;
       if( !super.draw(g,v,dx,dy) ) { cutOff(); return false; }
+      
+      drawCoteBase(g,v,dx,dy);
 
-      if( (isSelected() || debligne!=null && debligne.isSelected()
-                            || finligne!=null && finligne.isSelected())
+      if( (isSelected() || debligne!=null && debligne.isSelected() || finligne!=null && finligne.isSelected())
             && plan.aladin.view.hasOneCoteSelected() ) cutOn();
       else cutOff();
+      
       return true;
+   }
+   
+   private boolean isDrawingTriangle() { return isCoteSelected() || withTriangle; }
+   
+   /** Dessin de la hauteur et de la base du triangle de la cote */
+   protected void drawCoteBase(Graphics g, ViewSimple v,int dx,int dy) {
+      if( !isDrawingTriangle() ) return;
+      
+      if( debligne==null ) return;
+      
+      double lon = raj;
+      double lat = debligne.dej;
+      // IL FAUDRAIT PASSER PAR LE FRAME COURANT
+//      Localisation.frameToFrame(c, frameSrc, frameDst)
+      
+      CoteBase base = new CoteBase(lon, lat, plan, v, new CoteBase(debligne,v), Coord.getUnit(distRA));
+      base.draw(g, v, dx, dy);
+      
+      CoteBase hauteur = new CoteBase(lon, lat, plan, v, new CoteBase(this,v), Coord.getUnit(distDE));
+      hauteur.draw(g, v, dx, dy);
+   }
+   
+   protected Rectangle extendClip(ViewSimple v,Rectangle clip) {
+      if( !isVisible() ) return clip;
+      clip = super.extendClip(v,clip);
+      if( !isDrawingTriangle() ) return clip;
+      
+      // Si on dessine la base et la hauteur du triangle, il faut étendre le clip avec ce point
+      double lon = debligne==null ? finligne.raj : raj;
+      double lat = debligne==null ? dej : debligne.dej;
+      // IL FAUDRAIT PASSER PAR LE FRAME COURANT
+//      Localisation.frameToFrame(c, frameSrc, frameDst)
+      Position a = new Position(plan, v, 0, 0, lon, lat, RADE, null);
+      a.projection(v);
+      return a.extendClip(v, clip);
    }
 
    /** Suppression de la coupe memorise dans le zoomView

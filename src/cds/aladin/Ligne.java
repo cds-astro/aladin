@@ -1,16 +1,16 @@
-// Copyright 1999-2017 - Université de Strasbourg/CNRS
-// The Aladin program is developped by the Centre de Données
+// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
-// The Aladin program is distributed under the terms
+// The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
 //This file is part of Aladin.
 //
-//    Aladin is free software: you can redistribute it and/or modify
+//    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, version 3 of the License.
 //
-//    Aladin is distributed in the hope that it will be useful,
+//    Aladin Desktop is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
@@ -867,7 +868,22 @@ public class Ligne extends Position {
    }
 
    protected void drawID(Graphics g , ViewSimple v,Point p1,Point p2) { }
-
+   
+   /** Affichage du label indiqué au milieu du segment */
+   protected void drawLabel(Graphics g, ViewSimple v,Point p1,Point p2, String label, Font font) {
+      double dy=p2.y-p1.y;
+      double dx=p2.x-p1.x;
+      if( Math.sqrt(dy*dy + dx*dx)<20 && v.getTaille()>10 ) return; // trop petit
+      int a = (p1.x+p2.x)/2;
+      int b = (p1.y+p2.y)/2;
+      g.setFont( font );
+      int x = a+3;
+      int y = b+(dy*dx>0?-2:12);
+      Color c = g.getColor();
+      Color c1 = (c==Color.red || c==Color.blue) ? Color.white : Color.black;
+      Util.drawStringOutline(g, label,x,y,c,c1);
+      g.setColor(c);
+   }
 
    /** Retourne la fin de la polyligne */
    protected Ligne getLastBout() {
@@ -941,6 +957,11 @@ public class Ligne extends Position {
 
       return dist/v.rv.width>1/2.;
    }
+   
+   /** Dessin du segment à proprement parlé */
+   protected void drawLine(Graphics g, ViewSimple v, Point p1, Point p2) {
+      g.drawLine(p1.x,p1.y, p2.x,p2.y);
+   }
 
    /** Trace de la portion de la ligne.
     * @param g        le contexte graphique
@@ -949,7 +970,6 @@ public class Ligne extends Position {
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       if( !isVisible() ) return false;
 
-
       //      if( outOfSky(v) ) return false;
 
       if( !hidden ) {
@@ -957,7 +977,7 @@ public class Ligne extends Position {
          g.setColor( getColor() );
 
          if( debligne!=null ) {
-
+            
             // Le segment
             p2 = getViewCoord(v);
             Point p1 = debligne.getViewCoord(v);
@@ -966,8 +986,8 @@ public class Ligne extends Position {
             p2.x+=dx; p2.y+=dy;
 
             if( tooLarge(v,p1,p2) ) return false;
-
-            g.drawLine(p1.x,p1.y, p2.x,p2.y);
+            
+            drawLine(g,v,p1,p2);
             if( bout==3 && hasPhot(v.pref) ){
                fillPolygon(g, v, dx, dy);
                if( hasOneSelected() ) statDraw(g,v,dx,dy);
@@ -1015,6 +1035,8 @@ public class Ligne extends Position {
       }
       return true;
    }
+   
+   protected void drawCoteBase(Graphics g, ViewSimple v,int dx,int dy) {}
 
    // Recupération d'un itérator sur les objets qui compose la forme (Ligne, Cote)
    public Iterator<Obj> iterator() { return new ObjetIterator(); }
