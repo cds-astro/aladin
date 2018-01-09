@@ -3073,13 +3073,13 @@ MESSAGEUNKNOWNPARAMSINQUERY Are you sure of the highlighted identifiers?
 
 TAPFORMTITLE.fr	Client TAP
 TAPFORMINFO.fr	Interroge les serveurs TAP via Aladin.
-TAPCLIENTINSTR Générez, vérifiez et exécutez votre requête.
-SELECTSERVERTOOLTIP Liste des serveurs TAP disponibles...
-TAPGENERICFORMDESC.fr	TAPGENERICFORMDESC.fr	Accès aux serveurs compatibles TAP.\n Vous pouvez, soit écrire directement une requête ADQL dans le champ de saisie du bas soit utiliser l'interface GUI de la manière suivante: En premier lieu sélectionnez la table concernée dans le menu déroulant du haut. Sélectionnez ensuite dans le panneau de gauche les colonnes de cette table que vous souhaitez récupérer. Cliquez sur sur le bouton "Ajouter" afin de définir une contrainte sur une colonne. Celle-ci s'affichera dans le panneau de droite. Spécifiez les valeurs souhaitées puis complétez la requête en cours de rédaction en cliquant sur le bouton "Rafraichir". Dans le cas d'une contrainte de position, si les colonnes contenant la longitude et la latitude n'ont pas été reconnues automatiquement, vous utiliserez le bouton "Positionner ra,dec". Enfin pour indiquer une contrainte de position, vous disposez d'un champ spécifique. Utilisez le bouton "Ajouter" comme pour une contrainte classique. Vous pouvez supprimer une contrainte déjà mémorisée via le bouton "X" tout à droite de chaque contrainte. Dès lors que votre requête sera prête, vérifiez sa syntaxe (notamment si vous l'avez éditée manuellement) via le bouton "Vérifier", puis soumettez-là via le bouton "Charger".
+TAPCLIENTINSTR.fr Générez, vérifiez et exécutez votre requête.
+SELECTSERVERTOOLTIP.fr Liste des serveurs TAP disponibles...
+TAPGENERICFORMDESC.fr	Accès aux serveurs compatibles TAP.\n Vous pouvez, soit écrire directement une requête ADQL dans le champ de saisie du bas soit utiliser l'interface GUI de la manière suivante: En premier lieu sélectionnez la table concernée dans le menu déroulant du haut. Sélectionnez ensuite dans le panneau de gauche les colonnes de cette table que vous souhaitez récupérer. Cliquez sur sur le bouton "Ajouter" afin de définir une contrainte sur une colonne. Celle-ci s'affichera dans le panneau de droite. Spécifiez les valeurs souhaitées puis complétez la requête en cours de rédaction en cliquant sur le bouton "Rafraichir". Dans le cas d'une contrainte de position, si les colonnes contenant la longitude et la latitude n'ont pas été reconnues automatiquement, vous utiliserez le bouton "Positionner ra,dec". Enfin pour indiquer une contrainte de position, vous disposez d'un champ spécifique. Utilisez le bouton "Ajouter" comme pour une contrainte classique. Vous pouvez supprimer une contrainte déjà mémorisée via le bouton "X" tout à droite de chaque contrainte. Dès lors que votre requête sera prête, vérifiez sa syntaxe (notamment si vous l'avez éditée manuellement) via le bouton "Vérifier", puis soumettez-là via le bouton "Charger".
 TAPLOADINGSTATUSINFO.fr En cours de chargement des schémas TAP du serveur que vous avez sélectionné. Patientez quelques instants
 TAPERRORSTATUSINFO.fr Impossible de contacter le serveur TAP. Veuillez essayer ultérieurement
-TARGETERROR.fr Veuillez vérifiez les coordonnées de votre cible !
-SELECTSERVERLABEL. Sélectionnez un serveur
+TARGETERROR.fr Veuillez vérifiez les coordonnées de votre cible!
+SELECTSERVERLABEL.fr Sélectionnez un serveur
 JOBCONTROLLERTITLE.fr Contrôleur de tâches
 TAPEXCLIENTINSTR.fr Choississez un exemple à exécuter
 TAPOBSCORECLIENTINSTR.fr Ajouter des critères Obscore, puis soumettez votre requête.
@@ -3088,17 +3088,13 @@ SELECTDIRTAPSERVERSTOOLTIP.fr Choississez les serveurs TAP depuis l'arbre de déc
 SELECTSPLTAPSERVERSLABEL.fr Serveurs présélectionnés
 SELECTSPLTAPSERVERSTOOLTIP.fr Une présélection de serveurs TAP est présenté ci-dessous. La liste exhaustive est disponible dans l'onglet adjacent.
 INCORRECTTAPURLMESSAGE.fr Erreur de connection ! Vérifiez l'URL
-MESSAGEUNKNOWNPARAMSINQUERY.fr Les identificateurs surlignées sont-ils corrects ?
+MESSAGEUNKNOWNPARAMSINQUERY.fr Les identificateurs surlignées sont-ils corrects?
 
 TAPTABLEJOINTIP Join table
-TAPTABLEJOINTIP.fr Join table --configure message
 TAPTABLEUPLOADPARSETIP Load this data on the gui. 
 TAPTABLEUPLOADTIP Upload table. 
 TAPTABLENOUPLOADTIP Table uploads are not available for this server
-TAPTABLEUPLOADTIP.fr Upload table.  --configure message
-TAPTABLENOUPLOADTIP.fr No table uploads are available for this server	--configure message
 TIPCLICKTOADD Click to add
-TIPCLICKTOADD.fr Click to add --configure message
 TAPNOFILELOAD Please select a tapserver to load!
 TAPNOFILERELOAD Please select a tapserver to reload!
 ADDFILE Add file:
@@ -3136,14 +3132,10 @@ FORMATFORBETWEEN Format for between operator: value1 AND value2. Ex: 2 and 3.
 INCORRECTCONSTRAINTVALUE Please input a number constraint value
 
 TAPTABLEJOINTIP.fr  Jointure de table
-TAPTABLEJOINTIP.fr .fr Jointure de table -configure message
 TAPTABLEUPLOADPARSETIP.fr  Charger ces données dans l'interface.
 TAPTABLEUPLOADTIP.fr  Télécharger la table (Upload).
 TAPTABLENOUPLOADTIP.fr  Le téléchargement de tables n'est pas disponible sur ce serveur
-TAPTABLEUPLOADTIP.fr .fr Téléchargement de tables  --configure message
-TAPTABLENOUPLOADTIP.fr .fr Le téléchargement de tables n'est pas disponible sur ce serveur	--configure message
 TIPCLICKTOADD.fr  Cliquez pour ajouter
-TIPCLICKTOADD.fr .fr Cliquez pour ajouter --configure message
 TAPNOFILELOAD.fr  Sélectionner un serveur TAP à accéder!
 TAPNOFILERELOAD.fr  Sélectionner un serveur TAP à recharger!
 ADDFILE.fr  Ajouter un fichier:
@@ -3171,8 +3163,8 @@ GENERIC_TAPMODESTOOLTIP.fr  Cliquez pour recharger la configuration du formualir
 #SETTARGETTOOLTIP.fr  Hint: Configure different target by clicking the "Settings" button
 #CHANGESETTINGSTOOLTIP.fr  Hint: Configure second table by clicking the "Settings" button
 NOGLURECFOUND.fr La configuration du formulaire simplifié est innaccessible (GLU record not found).
-NOTARGETSET.fr  Aucune cible spécifiée !
-NORANGEERRORMESSAGE.fr  Requière un interval de valeurs. Veuillez indiquer deux valeurs !
+NOTARGETSET.fr  Aucune cible spécifiée!
+NORANGEERRORMESSAGE.fr  Requière un interval de valeurs. Veuillez indiquer deux valeurs!
 CHOOSEFROMTAPSERVERSTEXT.fr  Ou choississez dans la liste ci-dessous :
 WAITLOADINGTAPSERVERSLIST.fr  Chargement de la liste des serveurs TAP en cours...
 #NODUPLICATESELECTION.fr  Cannot select same table! No second table selected.
@@ -3209,7 +3201,7 @@ UWSNOJOBMESSAGE.fr  Aucune tâches dans la session active. \nCette fenêtre affich
 CANTSTARTJOB.fr  Démarrage de la tâche impossible. Veuillez essayer à nouveau
 STANDARDRESULTSLOAD.fr  Charger les résultat
 STANDARDRESULTSLOADTIP.fr  Charger les résultats depuis "/results/result"
-UWSASKLOADDEFAULTRESULTS.fr  Récupération des résultats impossible. Essayez de les accéder directement ?
+UWSASKLOADDEFAULTRESULTS.fr  Récupération des résultats impossible. Essayez de les accéder directement?
 CANTABORTJOB.fr  Interruption de la tâche impossible. Veuillez essayer à nouveau
 UWSJOBRADIOTOOLTIP.fr  Cliquez pour consulter le status de la tâche
 
