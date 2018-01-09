@@ -37,6 +37,8 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
@@ -2368,25 +2370,36 @@ DropTargetListener, DragSourceListener, DragGestureListener
       makeAdd(searchPanel,search,"East");
       search.hideSearch(true);
 
-      infoPanel = new JPanel( new BorderLayout(0,0) );
+      GridBagLayout g = new GridBagLayout();
+      infoPanel = new JPanel(g);
       infoPanel.setBackground( COLOR_STATUS_BACKGROUND );
       urlStatus.setBackground( COLOR_STATUS_BACKGROUND );
       memStatus.setBackground( COLOR_STATUS_BACKGROUND );
       
       urlStatus.setForeground( COLOR_STATUS_LEFT_FOREGROUND );
-      infoPanel.add(urlStatus, BorderLayout.CENTER );
+      
+      GridBagConstraints gc = new GridBagConstraints();
+      gc.gridwidth = 3;
+      gc.weightx = 1;
+      gc.anchor=GridBagConstraints.WEST;
+      gc.fill=GridBagConstraints.HORIZONTAL;
+      g.setConstraints(urlStatus, gc);
+      infoPanel.add(urlStatus);
 
-      JPanel pm = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0));
-      pm.setBackground( COLOR_STATUS_BACKGROUND );
-      if( macPlateform ) pm.setBorder( BorderFactory.createEmptyBorder(0,0,0,14));
-      pm.add(memStatus);
+      gc.weightx = 0;
+      gc.anchor=GridBagConstraints.EAST;
+      g.setConstraints(memStatus, gc);
+      infoPanel.add(memStatus);
 
       if( PLASTIC_SUPPORT ) {
          getMessagingMgr().setPlasticWidget(plasticWidget);
-         pm.add(plasticWidget);
+
+         if( macPlateform ) gc.insets.right = 14;
+         g.setConstraints(plasticWidget, gc);
+         infoPanel.add(plasticWidget);
+
          plasticPrefs = new PlasticPreferences(this);
       }
-      infoPanel.add(pm,BorderLayout.EAST);
 
       // Le panel principal
 
