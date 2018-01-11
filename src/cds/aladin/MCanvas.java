@@ -244,7 +244,6 @@ MouseWheelListener, Widget
    /** Reactions aux differents boutons du menu */
    public void actionPerformed(ActionEvent e) {
       Object src = e.getSource();
-      if( src == datalinktimer  ) { populateDataLinkInfos(); return; }
       if( src instanceof Timer ) { endTimerHist(); return; }
 
       //      if( src instanceof JMenuItem ) System.out.println("ActionCommand = "+((JMenuItem)src).getActionCommand());
@@ -401,7 +400,6 @@ MouseWheelListener, Widget
       menuCopyMeasurement.setEnabled(flag);
       menuCopyURL.setEnabled( aladin.mesure.getCurObjURL().length()>0 );
       popMenu.show(this,x,y);
-      bindDatalinkPopupFunctionality(-1, -1,-1);
    }
 
 
@@ -936,14 +934,11 @@ MouseWheelListener, Widget
       if( wButton!=null ) {
          wButton.pushed=false;
          wButton.haspushed=true;
-
-         wButton.callArchive(aladin,oButton, wButton.isDatalink);
-         if (wButton.isDatalink) {
-        	 aladin.makeCursor(this, Aladin.WAITCURSOR);
-        	 aladin.mesure.isEnabledDatalinkPopUp = true;
-        	 aladin.mesure.datalinkshowX = x;
-			 aladin.mesure.datalinkshowY = y;
-		}
+         
+         aladin.mesure.datalinkshowX = x;
+		 aladin.mesure.datalinkshowY = y;
+         wButton.callArchive(aladin, oButton);
+         
          wButton=null; oButton=null;
          repaint();
       }
@@ -1209,11 +1204,6 @@ MouseWheelListener, Widget
       if( n+mode>=scrollV.getMaximum() ) return;
       if( n+mode<0 ) return;
       scrollV.setValue(n+mode);
-      
-      int x = e.getX();
-      int y = e.getY();
-      
-      bindDatalinkPopupFunctionality(firstsee+ (y-MH)/HL, x, y);
    }
 
 
@@ -1525,11 +1515,6 @@ MouseWheelListener, Widget
          if( onBordField!=-1 ) setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
          else aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 
-		if (datalinktimer != null) {
-			datalinktimer.stop();
-		}
-		trackedHoverRowIndex = -1;
-		
         if( oo!=null ) {
            aladin.view.hideSource();
            oo.setShowFootprintTransient(false,true);
@@ -1562,12 +1547,6 @@ MouseWheelListener, Widget
          aladin.mesure.showStatus("");
          aladin.mesure.showInfo(null,null);
          Util.toolTip(this, tip);
-         
-         try {
-            bindDatalinkPopupFunctionality(-1, -1, -1);
-         } catch( Exception e1 ) {
-            if( Aladin.levelTrace>=3 ) e1.printStackTrace();
-         }
          
          drawIconOut(g);
          return;
@@ -1609,12 +1588,6 @@ MouseWheelListener, Widget
 
       // Affichage du texte (legende ou texte) associee a la mesure
       e = ligne.elements();
-      
-      try {
-         bindDatalinkPopupFunctionality(currentsee, x, y);
-      } catch( Exception e1 ) {
-         if( aladin.levelTrace>=3 ) e1.printStackTrace();
-      }
       
       o=(Source)e.nextElement();   // Je saute l'objet lui-meme
       boolean trouve=false;        // true si on trouve un mot a selectionner
@@ -1698,9 +1671,6 @@ MouseWheelListener, Widget
       if( s.leg!=null && s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
    }
 
-   Timer datalinktimer = null;
-   int trackedHoverRowIndex;
-
    //   public boolean mouseEnter(Event e, int x, int y) {
    public void mouseEntered(MouseEvent e) {
       ow=null;
@@ -1719,7 +1689,6 @@ MouseWheelListener, Widget
    public void mouseExited(MouseEvent e) {// Clear du status
       if( aladin.inHelp ) return;
       if( timer!=null ) timer.stop();
-      if( datalinktimer!=null ) datalinktimer.stop(); trackedHoverRowIndex =-1; //resetting popups for datalinks in the dataset
       aladin.mesure.showInfo(null,null);
       aladin.urlStatus.setText(aladin.COPYRIGHT);   // Remet le copyright
       currentsee=-1;                                // Plus aucune ligne courante
@@ -1739,76 +1708,6 @@ MouseWheelListener, Widget
       repaint();
    }
 
-	/**
-    * Method that populates datalink pop-up when action is on any part of the row containing a datalink element
-    */
-	public void populateDataLinkInfos() {
-		Vector currentHoverLigne = aladin.mesure.getWordLine(trackedHoverRowIndex);
-	    Enumeration trackedHoverRow= currentHoverLigne.elements();
-	    
-		Source currentHoverSource = (Source) trackedHoverRow.nextElement();
-		
-		if (ligneHead == null)
-			return;
-
-		Words linkWord = null;
-		boolean isDatalink = false;
-
-		while (trackedHoverRow.hasMoreElements()) {
-			Words word = (Words) trackedHoverRow.nextElement();
-			if (word.archive) {
-				linkWord = word;
-			} if (word.isDatalink) {
-				isDatalink = true;
-			}
-		}
-
-		if (isDatalink) {
-			try {
-				aladin.mesure.isEnabledDatalinkPopUp = true;
-				URL url = new URL(linkWord.text);
-				this.aladin.mesure.datalinkManager = new DatalinkManager(url);
-				linkWord.callArchive(aladin, currentHoverSource, true);
-			} catch (MalformedURLException e) {
-				if (Aladin.levelTrace >= 3)
-					e.printStackTrace();
-			}
-			repaint();
-			trackedHoverRowIndex =-1;
-			currentsee = -1;
-			return;
-		}
-	}
-	
-	/**
-	 * Funtion to trigger the datalink funtionality on hover actions
-	 * @param currentseeparam
-	 * @param x
-	 * @param y
-	 */
-	public void bindDatalinkPopupFunctionality(int currentseeparam, int x, int y) {
-		if (ConfigurationReader.getInstance().getPropertyValue("DATALINKHOVEREVENT").contains("enable")) {
-			if (currentseeparam != -1) {
-				if (trackedHoverRowIndex != currentseeparam) {//logic to check current hover row for populating datalinks
-			    	trackedHoverRowIndex = currentseeparam;
-					if (datalinktimer == null) {
-						datalinktimer = new Timer(1500, this);
-						datalinktimer.setRepeats(false);
-						datalinktimer.start();
-					} else
-						datalinktimer.restart();
-			    }
-				aladin.mesure.datalinkshowX = x;
-			    aladin.mesure.datalinkshowY = y;
-			} else {
-				if (datalinktimer != null) {
-					datalinktimer.stop();
-				}
-				trackedHoverRowIndex = -1; // resetting popups for datalinks in the dataset
-			}
-		}
-	}
-   
    /** Ouverture de l'outil de manipulation des coordonnées pour la source indiquée */
    protected void openCooToolbox(Source o) {
       if( aladin.frameCooTool==null ) aladin.frameCooTool = new FrameCooToolbox(aladin);

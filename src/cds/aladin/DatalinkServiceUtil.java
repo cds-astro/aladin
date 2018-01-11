@@ -21,12 +21,12 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.CONTENTLENGTH;
+import static cds.aladin.Constants.CONTENTLENGTH_DISPLAY;
+import static cds.aladin.Constants.DEFAULT_CONTENTLENGTH_UNITS;
 import static cds.aladin.Constants.INPUTPARAM_NAME;
 import static cds.aladin.Constants.SERVICE_DEF;
 import static cds.aladin.Constants.SPACESTRING;
-import static cds.aladin.Constants.CONTENTLENGTH;
-import static cds.aladin.Constants.DEFAULT_CONTENTLENGTH_UNITS;
-import static cds.aladin.Constants.CONTENTLENGTH_DISPLAY;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -51,35 +51,23 @@ import cds.tools.Util;
  * @author chaitra
  *
  */
-public class DatalinkManager {
+public class DatalinkServiceUtil {
 	
-	public static String PARAMDISABLEDTOOLTIP, NOCUTOUTCLIENTSUPPORT;
 	
-	static {
-		PARAMDISABLEDTOOLTIP = Aladin.getChaine().getString("PARAMDISABLEDTOOLTIP");
-		NOCUTOUTCLIENTSUPPORT = Aladin.getChaine().getString("NOCUTOUTCLIENTSUPPORT");
-	}
-	
-	SavotPullParser savotParser;
-	URL accessUrl;
-	SavotResource resultsResource;
-	
-	public DatalinkManager() {
+	public DatalinkServiceUtil() {
 		// TODO Auto-generated constructor stub
 	}
-	
-	public DatalinkManager(URL accessUrl) {
-		this.accessUrl = accessUrl;
-	}
-	
+
 	/**
 	 * This method calls the access url to retrieve the datalinks
+	 * @param datalinkUrl 
 	 * @return SavotPullParser
 	 */
-	public SavotPullParser getDataSets() {
+	public static SavotPullParser getDataSets(URL accessUrl) {
+		SavotPullParser savotParser = null;
 		try {
-			if (this.accessUrl!=null) {
-				savotParser = new SavotPullParser(this.accessUrl, SavotPullEngine.FULL, null, false);
+			if (accessUrl != null) {
+				savotParser = new SavotPullParser(accessUrl, SavotPullEngine.FULL, null, false);
 				
 			}
 		} catch (Exception e) {
@@ -87,16 +75,6 @@ public class DatalinkManager {
 			e.printStackTrace();
 		}
 		return savotParser;
-	}
-	
-	/**
-	 * Method to get a resource related to a service
-	 * @param id
-	 * @return SavotResource
-	 */
-	public SavotResource getResourceById(String id) {
-		return this.savotParser.getResourceFromRef(id);
-		
 	}
 	
 	public static SavotGroup getInputParams(GroupSet groups) {
@@ -131,15 +109,16 @@ public class DatalinkManager {
 	 * Here both the method to make the backend call as well as
 	 * method to populate the model object are called.
 	 * SimpleData list from xml.
+	 * @param datalinkUrl 
 	 * @param datalinksInfo - List to populate
 	 */
-	public void populateDataLinksInfo(List<SimpleData> datalinksInfo) {
+	public static void populateDataLinksInfo(URL datalinkUrl, List<SimpleData> datalinksInfo) {
 		if (datalinksInfo==null) {
 			return;
 		}
-		SavotPullParser accessUrlResult = this.getDataSets();
-		if (accessUrlResult!=null) {		
-			populateResultsResource();
+		SavotPullParser accessUrlResult = getDataSets(datalinkUrl);
+		if (accessUrlResult != null) {	
+			SavotResource resultsResource = Util.populateResultsResource(accessUrlResult);
 			if (resultsResource != null) {
 				SimpleData data = null;
 				Map<String,String> params = null;
@@ -185,7 +164,7 @@ public class DatalinkManager {
 							}
 							data.setParams(params);
 							if (service_def!=null && !service_def.isEmpty()) {
-								data.setMetaResource(this.getResourceById(service_def));
+								data.setMetaResource(accessUrlResult.getResourceFromRef(service_def));
 								service_def = null;
 							}
 							
@@ -196,16 +175,6 @@ public class DatalinkManager {
 			}
 		}
 		
-	}
-	
-	/**
-	 * Method to extract resource of type="results"
-	 * @param resourceSet
-	 * @return results typed SavotResource
-	 */
-	public SavotResource populateResultsResource() {
-		this.resultsResource = Util.populateResultsResource(this.savotParser);
-		return this.resultsResource;
 	}
 	
 	/**
@@ -227,26 +196,5 @@ public class DatalinkManager {
 			}
 		}
 	}
-	
-	
-	public URL getAccessUrl() {
-		return accessUrl;
-	}
-
-	public void setAccessUrl(URL accessUrl) {
-		this.accessUrl = accessUrl;
-	}
-
-	public SavotResource getResultsResource() {
-		if (resultsResource == null) {
-			populateResultsResource();
-		}
-		return resultsResource;
-	}
-
-	public void setResultsResource(SavotResource resultsResource) {
-		this.resultsResource = resultsResource;
-	}
-
 
 }

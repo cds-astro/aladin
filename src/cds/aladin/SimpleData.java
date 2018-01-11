@@ -73,7 +73,7 @@ public class SimpleData {
 			} else if (/*this.type.equals("DATALINK_CUTOUT") ||*/ this.type.equals("DATALINK_PROC")){//only for proc demo we show 
 				//get id
 				ParamSet inputParams = metaResource.getParams();
-				SavotParam idParam = DatalinkManager.getInputParams(inputParams, STANDARDID);
+				SavotParam idParam = DatalinkServiceUtil.getInputParams(inputParams, STANDARDID);
 				String standardId = null;
 				if (idParam != null) {
 					standardId = SimpleData.processStandardIdDisplayString(idParam.getValue());
@@ -86,9 +86,6 @@ public class SimpleData {
 				
 			} else {
 				defaultLinkLabel.append(Aladin.chaine.getString(this.type));
-				if (this.type.equals("DATALINK")){
-					defaultLinkLabel.append(SPACESTRING).append(this.getParams().get(SEMANTICS));
-				} 
 			}
 			
 		}
@@ -154,14 +151,11 @@ public class SimpleData {
 			this.type = "DATALINK_PROC";
 		} else if (semantic.equalsIgnoreCase("#cutout")) {
 			this.type = "DATALINK_CUTOUT";
-		} else if (contentType != null) {
-			if (contentType.contains(CONTENT_TYPE_HIPS)) {
-				this.type = "DATALINK_HIPS";
-			} else if (contentType.contains(DATATYPE_DATALINK)) {
+		} else if (contentType != null && contentType.contains(CONTENT_TYPE_HIPS)) {
+			this.type = "DATALINK_HIPS";
+			/*else if (contentType.contains(DATATYPE_DATALINK)) {//can't be. identification logic at stream level
 				this.type = "DATALINK";
-			}
-			
-			
+			}*/
 		}
 	}
 	

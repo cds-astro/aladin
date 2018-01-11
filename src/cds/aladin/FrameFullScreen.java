@@ -824,7 +824,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
                   rep=true;
                   if( !w.glu ) continue;
                   w.haspushed=true;
-                  if( w.archive ) { end(); w.callArchive(aladin,o,false); }
+                  if( w.archive ) { end(); w.callArchive(aladin,o); }
                   else w.callGlu(aladin.glu,aladin.mesure.mcanvas);
                   return true;
                }

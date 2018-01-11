@@ -90,6 +90,7 @@ public final class DataLinkGlu {
 	public Aladin aladin;
 
 	protected static Vector vGluDLServer;
+	public static String PARAMDISABLEDTOOLTIP;
 	
 	FrameSimple serviceClientFrame;
 	
@@ -101,6 +102,11 @@ public final class DataLinkGlu {
 		this.aladin = aladin;
 		vGluDLServer = new Vector(10);
 	}
+	
+	static {
+		PARAMDISABLEDTOOLTIP = Aladin.getChaine().getString("PARAMDISABLEDTOOLTIP");
+	}
+	
 
 	public String getStandardActionGlu(String formName) {
 		return StandardFormsReader.getInstance().getStdServerForms().get(formName);
@@ -109,12 +115,11 @@ public final class DataLinkGlu {
 	/**
 	 * Creates glu related to invoking services linked to a datalink
 	 * In case of a SODA sync, a specialized form is generated.
-	 * @param resultsResource
 	 * @param activeDataLinkSource
 	 * @param selectedDatalink
 	 * @throws Exception
 	 */
-	protected void createDLGlu(SavotResource resultsResource, Source activeDataLinkSource, SimpleData selectedDatalink) throws Exception {
+	protected void createDLGlu(Source activeDataLinkSource, SimpleData selectedDatalink) throws Exception {
 		boolean isNonStandardService = true;
 		
 		Hashtable<String,String> paramDescription = new Hashtable<String,String>();
@@ -142,8 +147,8 @@ public final class DataLinkGlu {
 				if (resourceParam.getName().equalsIgnoreCase(STANDARDID) && resourceParam.getValue().equalsIgnoreCase(SODA_STANDARDID)) {
 					String sodaGluRecord = aladin.datalinkGlu.getStandardActionGlu(SODA_SYNC_FORM);
 					
-					inputParams = DatalinkManager.getInputParams(metaResource.getGroups()).getParams();
-					SavotParam idParam = DatalinkManager.getInputParams(inputParams, ID);
+					inputParams = DatalinkServiceUtil.getInputParams(metaResource.getGroups()).getParams();
+					SavotParam idParam = DatalinkServiceUtil.getInputParams(inputParams, ID);
 					paramValue.put(String.valueOf(SODA_IDINDEX), getParamValue(idParam, selectedDatalink));
 					
 					boolean noParamSet = true;
@@ -189,7 +194,7 @@ public final class DataLinkGlu {
 			
 			if (isNonStandardService) {
 				//Generic service
-				inputParams = DatalinkManager.getInputParams(metaResource.getGroups()).getParams();
+				inputParams = DatalinkServiceUtil.getInputParams(metaResource.getGroups()).getParams();
 				urlString.append(QUESTIONMARK_CHAR);
 				String index;
 				SavotParam param = null;
@@ -256,7 +261,7 @@ public final class DataLinkGlu {
 	        		
 				}
 	        	if (disableTime) {
-	        		dlGlu.disableDateField(String.format(DatalinkManager.PARAMDISABLEDTOOLTIP, TIME));
+	        		dlGlu.disableDateField(String.format(PARAMDISABLEDTOOLTIP, TIME));
 				}
 	        	
 			}
@@ -292,9 +297,9 @@ public final class DataLinkGlu {
 		// TODO Auto-generated method stub
 		String stcString = null;
 		String shape = STCPREFIX_POLYGON;
-		SavotParam param = DatalinkManager.getInputParams(inputParamSet, "POLYGON");
+		SavotParam param = DatalinkServiceUtil.getInputParams(inputParamSet, "POLYGON");
 		if (param == null) {
-			param = DatalinkManager.getInputParams(inputParamSet, "CIRCLE");
+			param = DatalinkServiceUtil.getInputParams(inputParamSet, "CIRCLE");
 			shape = STCPREFIX_CIRCLE;
 		}
 		
@@ -406,8 +411,8 @@ public final class DataLinkGlu {
 
 		paramDescription.put(paramFormIndex, paramName);
 
-		ParamSet inputParams = DatalinkManager.getInputParams(selectedDatalink.getMetaResource().getGroups()).getParams();
-		SavotParam ipParam = DatalinkManager.getInputParams(inputParams, paramName);
+		ParamSet inputParams = DatalinkServiceUtil.getInputParams(selectedDatalink.getMetaResource().getGroups()).getParams();
+		SavotParam ipParam = DatalinkServiceUtil.getInputParams(inputParams, paramName);
 		
 		if (paramDataTypeDefault == null) {
 			if (ipParam != null && ipParam.getDataType() != null && !ipParam.getDataType().isEmpty()) {

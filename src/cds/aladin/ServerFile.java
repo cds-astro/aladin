@@ -431,7 +431,9 @@ public class ServerFile extends Server implements XMLConsumer {
                   aladin.dialog.setCurrent(ServerDialog.FIELD);
                   ((ServerFoV)aladin.dialog.server[ServerDialog.FIELD]).selectFOV(ServerFoV.idLastRegistered);
                }
-            }
+            } else if( (type & MyInputStream.DATALINK) != 0 && aladin.mesure.activeDataLinkWord != null) {
+            	aladin.mesure.showAssociatedDatalinks(f, o);
+             }
             else if( (type & (MyInputStream.ASTRORES|MyInputStream.VOTABLE|
                   MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
                if( u!=null ) n=aladin.calque.newPlanCatalog(u,in,label,"",f,null,server);

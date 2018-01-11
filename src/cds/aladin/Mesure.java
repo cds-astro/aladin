@@ -20,13 +20,11 @@
 //
 
 package cds.aladin;
-import static cds.aladin.Constants.ACCESSFORMAT_UCD;
 import static cds.aladin.Constants.ACCESSURL;
 import static cds.aladin.Constants.CONTENTTYPE;
 import static cds.aladin.Constants.CONTENT_TYPE_PDF;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTHTML;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTPLAIN;
-import static cds.aladin.Constants.DATATYPE_DATALINK;
 import static cds.aladin.Constants.SEMANTICS;
 import static cds.aladin.Constants.SEMANTIC_ACCESS;
 import static cds.aladin.Constants.SEMANTIC_CUTOUT;
@@ -37,6 +35,8 @@ import java.awt.Graphics;
 import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -91,7 +91,6 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    private Hashtable memoWL = new Hashtable(DEFAULTBLOC);
    private JButton cross;
    
-   protected DatalinkManager datalinkManager;
    public Words activeDataLinkWord = null;
    public Source activeDataLinkSource = null;
    public  SimpleData activeDataLinkGlu;
@@ -153,27 +152,61 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       MFSEARCHO=aladin.chaine.getString("MFSEARCHO");
       MFSEARCHBAD=aladin.chaine.getString("MFSEARCHBAD");
       
-      this.datalinkManager = new DatalinkManager();
+      NOCUTOUTCLIENTSUPPORT = Aladin.getChaine().getString("NOCUTOUTCLIENTSUPPORT");
    }
+   
+   /**
+    * Method calls downstream to show a datalink pop-up
+    * @param url
+    * @param o
+    * @throws MalformedURLException
+    */
+   public void showAssociatedDatalinks(String url, Obj o) throws MalformedURLException {
+		// TODO Auto-generated method stub
+		aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
+   	
+      	URL datalinkUrl = null;
+       // aladin.calque.newPlan(url,label,"provided by the original
+       // archive
+       // server", o, true);
+       if (this.activeDataLinkWord.datalinksInfo == null || this.activeDataLinkWord.datalinksInfo.isEmpty()) {//just instantiating
+    	   this.activeDataLinkWord.datalinksInfo = new ArrayList<SimpleData>();
+    	   datalinkUrl = new URL(url);
+       } else if (this.activeDataLinkGlu!=null && this.activeDataLinkWord.datalinksInfo.contains(this.activeDataLinkGlu)) {
+
+          //Code part1: incase of datalink result again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
+          /*dataLinkInfoCopy = new ArrayList<>();
+				dataLinkInfoCopy.addAll(datalinksInfo);
+				dataLinkInfoCopy.remove(aladin.mesure.activeDataLinkGlu);*/
+
+    	  this.activeDataLinkWord.datalinksInfo = new ArrayList<SimpleData>();
+          SimpleData activeDatalinkLabel = this.activeDataLinkGlu;
+          datalinkUrl = new URL(activeDatalinkLabel.getParams().get(Constants.ACCESSURL));
+       }
+
+       this.activeDataLinkSource = (Source) o;
+       DatalinkServiceUtil.populateDataLinksInfo(datalinkUrl, this.activeDataLinkWord.datalinksInfo);
+
+       //Code part2: incase of datalink reult again: original pop-up is updated with new datalinks; uncomment the 2 code parts when we encounter such cases
+       /*if (dataLinkInfoCopy!=null && !dataLinkInfoCopy.isEmpty()) {
+				aladin.mesure.datalinkManager.addOriginalItems(dataLinkInfoCopy, datalinksInfo);
+			}*/
+       this.datalinkPopupShow(this.activeDataLinkWord.datalinksInfo);
+       this.activeDataLinkGlu = null;
+	}
    
    /**
 	* Method to display a datalink pop-up for the particular dataset user hovers on
 	* @param datalinksInfo
 	*/
    public void datalinkPopupShow(List<SimpleData> datalinksInfo) {
-	   
-		if (aladin.mesure.isEnabledDatalinkPopUp) {
-
-			if (datalinksInfo != null && !datalinksInfo.isEmpty()) {
-				aladin.makeCursor(mcanvas, Aladin.DEFAULTCURSOR);
-				createAdditionalServiceMenu(datalinksInfo);
-				additionalServiceMenu.show(this, this.datalinkshowX, this.datalinkshowY);
-				//this.datalinkshowX = -1;
-				//this.datalinkshowY = -1;
-				aladin.mesure.isEnabledDatalinkPopUp = false;
-			}
+	   if (datalinksInfo != null && !datalinksInfo.isEmpty()) {
+			aladin.makeCursor(mcanvas, Aladin.DEFAULTCURSOR);
+			createAdditionalServiceMenu(datalinksInfo);
+			additionalServiceMenu.show(this, this.datalinkshowX, this.datalinkshowY);
+			//this.datalinkshowX = -1;
+			//this.datalinkshowY = -1;
 		}
-      
    }
    
    /**
@@ -201,8 +234,6 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 		add(additionalServiceMenu);
 	 }
    
-   protected boolean isEnabledDatalinkPopUp;
-   
    /**
     * Method to handle datasets which are linked to a datalink
     * Images,cutout,html/text,tables are handled.
@@ -225,9 +256,9 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 							if (aladin.datalinkGlu == null) {
 								aladin.datalinkGlu = new DataLinkGlu(aladin);
 							}
-							aladin.datalinkGlu.createDLGlu(this.datalinkManager.resultsResource, this.activeDataLinkSource, activeDataLinkGlu);
+							aladin.datalinkGlu.createDLGlu(this.activeDataLinkSource, activeDataLinkGlu);
 						} else {
-							Aladin.error(DatalinkManager.NOCUTOUTCLIENTSUPPORT, 1);
+							Aladin.error(NOCUTOUTCLIENTSUPPORT, 1);
 						}
 					} /*else if (semantics.startsWith(SEMANTIC_PREVIEW) && accessUrl != null
 							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)
@@ -238,11 +269,11 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 									|| contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTPLAIN)
 									|| contentType.equalsIgnoreCase(CONTENT_TYPE_PDF))) {
 						aladin.glu.showDocument("Http", accessUrl, true);
-					} else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {
+					} /*else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {// we won't be detecting this here. but will occur downstream at ServerFile
 						aladin.mesure.isEnabledDatalinkPopUp = true;
 						aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
 						this.activeDataLinkWord.callArchive(aladin, activeDataLinkSource, true);
-					} else if (accessUrl!=null && !accessUrl.isEmpty()) {
+					}*/ else if (accessUrl!=null && !accessUrl.isEmpty()) {
 						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null);//TODO::change to access
 					} else {
 						Aladin.error("Error in loading datalink",1);
@@ -395,7 +426,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    private String oMasq=null;
 
    static private String MFSEARCH,/*MFSEARCHINFO,*/
-   MFSEARCHO,MFSEARCHBAD;
+   MFSEARCHO,MFSEARCHBAD,
+   NOCUTOUTCLIENTSUPPORT;
 
    /** Recherche d'une chaine.  */
    protected int searchString(String s,int mode) {
@@ -741,7 +773,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
          if( !leg.isVisible(nField) ) continue;
          Words w = new Words(leg.field[nField].name,null,o.leg.getWidth(nField),o.leg.getPrecision(nField),
                Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[nField],
-                     leg.field[nField].sort,-1,false);
+                     leg.field[nField].sort,-1);
          w.pin = i==0;
          wordLine.addElement(w);
       }
@@ -774,8 +806,6 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
       int indexFootPrint = o.getIdxFootprint(); // position d'un Fov, -1 si aucun
 
-      boolean isDatalink= isValueOfSpecifiedUcdField(o, ACCESSFORMAT_UCD, DATATYPE_DATALINK);
-      
       String [] tags = new String[ n-1 ];
       String triangle = st.nextToken();  
       for (int i = 0; i<tags.length; i++) tags[i] = st.nextToken();
@@ -813,7 +843,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
                if( o.leg.isNullValue(tag, i-1) ) tag="";
                w = new Words(tag,o.leg.getRefText(nField),o.leg.getWidth(nField),
                      o.leg.getPrecision(nField),align,
-                     o.leg.computed.length==0?false:o.leg.computed[nField],Field.UNSORT,num,isDatalink);
+                     o.leg.computed.length==0?false:o.leg.computed[nField],Field.UNSORT,num);
             }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );
@@ -1131,7 +1161,5 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    @Override
    public void paintCollapsed(Graphics g) { }
-
-
 
 }

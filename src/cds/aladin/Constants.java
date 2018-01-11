@@ -112,8 +112,7 @@ public static final String CONTENT_TYPE_HIPS = "content=hips";
 public static final String UNKNOWN = "UNKNOWN";
 public static final String SPACESTRING = " ";
 public static final String S_REGION = "s_region";
-public static final String DATATYPE_DATALINK = "content=datalink";//"application/x-votable+xml;content=datalink"; we'l just check for content=datalink
-public static final String ACCESSFORMAT_UCD = "obscore:Access.Format";
+//public static final String DATATYPE_DATALINK = "content=datalink";//"application/x-votable+xml;content=datalink"; we'l just check for content=datalink
 public static final String SEMANTIC_CUTOUT = "#cutout";
 public static final String SEMANTIC_ACCESS = "#access";
 public static final String SEMANTIC_PROC = "#proc";
