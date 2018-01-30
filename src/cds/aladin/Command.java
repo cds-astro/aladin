@@ -1133,7 +1133,8 @@ public final class Command implements Runnable {
       target.append(t);
 
       // On recherche le rayon par défaut si nécessaire
-      if( radius.length() == 0 ) {
+      // Rq: Pas pour les HiPS car la taille par défaut est indiqué dans le fichier properties, et sera donc résolue plus tard
+      if( radius.length() == 0 && !server.equalsIgnoreCase("hips") ) {
          waitingPlanInProgress();
          radius.append(Server.getRM(a.dialog.getDefaultTaille()) + "'");
       }
@@ -1344,8 +1345,7 @@ public final class Command implements Runnable {
          if( server.equalsIgnoreCase("hips") ) {
             int n = a.directory.createPlane(target, radius, criteria, label, null);
             if( n != -1 ) {
-               a.calque.getPlan(n)
-                     .setBookmarkCode("get " + server + (criteria.length() > 0 ? "(" + criteria + ")" : "") + " $TARGET $RADIUS");
+               a.calque.getPlan(n).setBookmarkCode("get " + server + (criteria.length() > 0 ? "(" + criteria + ")" : "") + " $TARGET $RADIUS");
             }
             if( a.isFullScreen() ) a.fullScreen.repaint();
 
@@ -1353,8 +1353,7 @@ public final class Command implements Runnable {
             a.dialog.server[j].flagToFront = false; // Pour eviter le toFront d'Aladin
             int n = a.dialog.server[j].createPlane(target, radius, criteria, label, a.dialog.server[j].institute);
             if( n != -1 ) {
-               a.calque.getPlan(n)
-                     .setBookmarkCode("get " + server + (criteria.length() > 0 ? "(" + criteria + ")" : "") + " $TARGET $RADIUS");
+               a.calque.getPlan(n).setBookmarkCode("get " + server + (criteria.length() > 0 ? "(" + criteria + ")" : "") + " $TARGET $RADIUS");
             }
             if( a.isFullScreen() ) a.fullScreen.repaint();
          } else {
@@ -3431,10 +3430,8 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("=") ) execEval(param);
       else if( cmd.equalsIgnoreCase("convert") ) execConvert(param);
       else if( cmd.equalsIgnoreCase("list") ) return listFunction(param);
-      else if( s.trim().startsWith("addcol") ) {
-         execAddCol(s);
-         return "";
-      } else if( cmd.equalsIgnoreCase("select") ) execSelectCmd(param);
+      else if( s.trim().startsWith("addcol") ) { execAddCol(s); return ""; }
+      else if( cmd.equalsIgnoreCase("select") ) execSelectCmd(param);
       else if( cmd.equalsIgnoreCase("tag") ) a.tagselect();
       else if( cmd.equalsIgnoreCase("untag") ) a.untag();
       else if( cmd.equalsIgnoreCase("reloadglu") ) a.glu = new Glu(a);

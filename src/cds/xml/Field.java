@@ -97,10 +97,13 @@ final public class Field {
    public int columnSize=10;
 
    /** Positional field signature */
-   static public final int RA=1,DE=2,PMRA=3,PMDE=4,X=5,Y=6;
-   static public final String [] COOSIGN = { "", "RA","DE","PMRA","PMDE","X","Y" };
+   static public final int RA=1,DE=2,PMRA=3,PMDE=4,GLON=5,GLAT=6,SGLON=7,SGLAT=8,ELON=9,ELAT=10,X=11,Y=12;
+   static public final String [] COOSIGN = { "", "RA","DE","PMRA","PMDE","GLON","GLAT","SGLON","SGLAT","ELON","ELAT","X","Y" };
    public int cooPossibleSignature;    // Role probable de ce champ dans le système de coordonnées
    public int coo;                     // Role définitif de ce champ dans le systeme de coordonnées
+   
+   // True s'il s'agit d'un champ équatorial
+   static public boolean isEquatorial(int coo) { return coo==RA || coo==DE || coo==PMRA || coo==PMDE; }
 
    static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4;
    static public final String SEDLABEL[] = { "","SED_FREQ","SED_FLUX","SED_FLUXERR","SED_SEDID" };

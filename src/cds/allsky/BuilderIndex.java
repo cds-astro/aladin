@@ -279,9 +279,12 @@ public class BuilderIndex extends Builder {
          // 2.Suppression d'une extension ?
          int o2 = filename.lastIndexOf('.');
 
-         // 3.Suppression du suffixe [x,y-wxh] si nécessaire
-         int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
-         if( o3>o2 ) o2=o3;
+         // 3.Suppression du suffixe [x,y-wxh] si nécessaire (dans le cas où il n'y a pas d'extension
+         // car sinon ce suffixe aura déjà été supprimé)
+         if( o2==-1 || o2<=o1 ) {
+            int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
+            if( o3>o2 ) o2=o3;
+         }
 
          if( o2==-1 || o2<=o1 ) o2 = filename.length();
          String name = filename.substring(o1+1,o2);
@@ -310,7 +313,7 @@ public class BuilderIndex extends Builder {
          out.write( line.getBytes() );
       } finally { if( out!=null ) out.close(); }
    }
-
+   
    // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
    // les fichiers FITS
@@ -340,7 +343,7 @@ public class BuilderIndex extends Builder {
          context.setProgress(i++);
          if( !context.isInputFile && file.isDirectory() ) { dir.add(file); continue; }
          currentfile = file.getPath();
-
+         
          Fits fitsfile = new Fits();
          boolean flagDefaultHDU = hdu==null;
          boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
@@ -458,7 +461,7 @@ public class BuilderIndex extends Builder {
          coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
          coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
          if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-            coo.y = fitsfile.height - coo.y -1;
+            coo.y = fitsfile.height - coo.y; 
          c.GetCoord(coo);
          
 //         System.out.print(" "+coo.al+" "+coo.del);
@@ -471,7 +474,7 @@ public class BuilderIndex extends Builder {
             coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
             coo.y = (i<2 ? 0 : fitsfile.height);
             if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-               coo.y = fitsfile.height - coo.y -1;
+               coo.y = fitsfile.height - coo.y;
             c.GetCoord(coo);
          }
          stc.append(" "+coo.al+" "+coo.del);
@@ -490,10 +493,10 @@ public class BuilderIndex extends Builder {
       }
 
       // On calcul également les coordonnées du centre de l'image
-      center.x = fitsfile.width/2;
-      center.y = fitsfile.height/2;
+      center.x = fitsfile.width/2.;
+      center.y = fitsfile.height/2.;
       if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-         center.y = fitsfile.height - center.y -1;
+         center.y = fitsfile.height - center.y;
       c.GetCoord(center);
 
       // Faut-il récupérer des infos dans l'entête fits, ou dans la première HDU
@@ -517,12 +520,16 @@ public class BuilderIndex extends Builder {
 
       long[] npixs=null;
       long nside = CDSHealpix.pow2(order);
-//      Coord c1 = new Coord(cooList.get(0)[0],cooList.get(0)[1]);
-      Coord c1 = corner[0];
-      double radius = Coord.getDist(center,c1 );
+      
+      double maxRadius=0;
+      for( Coord c2 : corner ) {
+         double dist = Coord.getDist(center,c2 );
+         if( dist>maxRadius ) maxRadius=dist;
+      }
+      double radius=maxRadius;
       
       // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
-      if( radius<30 ) {
+      if( radius<30 && !isCAR ) {
          try {
             npixs = CDSHealpix.query_polygon(nside, cooList);
          } catch( Exception e ) { }
@@ -532,42 +539,36 @@ public class BuilderIndex extends Builder {
       if( npixs==null ) {
          try {
             
-            // On calcule le centre et le rayon de la cellule (sauf si on travaille en image complète)
-            if( hasCell ) {
-               center.x = fitsfile.xCell+fitsfile.widthCell/2;
-               center.y = fitsfile.yCell+fitsfile.heightCell/2;
+            // On calcule le centre et le rayon de la cellule
+            if( hasCell || isCAR ) {
+               center.x = fitsfile.xCell+fitsfile.widthCell/2.;
+               center.y = fitsfile.yCell+fitsfile.heightCell/2.;
                if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-                  center.y = fitsfile.height - center.y -1;
+                  center.y = fitsfile.height - center.y;
                c.GetCoord(center);
 
-               double maxRadius=0;
+               maxRadius=0;
                for( Coord c2 : cornerCell ) {
                   double dist = Coord.getDist(center,c2 );
                   if( dist>maxRadius ) maxRadius=dist;
                }
+               
+               if( isCAR ) {
+                  Coord c2 = new Coord();
+                  c2.x = fitsfile.xCell;
+                  c2.y = center.y;
+                  c.GetCoord(c2);
+                  double dist = Coord.getDist(center,c2 );
+                  if( dist>maxRadius ) maxRadius=dist;
+               }
+               
                radius=maxRadius;
             }
-            
-//            // On calcule le centre et le rayon de la cellule (sauf si on travaille en image complète)
-//            if( hasCell ) {
-//               center.x = fitsfile.xCell+fitsfile.widthCell/2;
-//               center.y = fitsfile.yCell+fitsfile.heightCell/2;
-//               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-//                  center.y = fitsfile.height - center.y -1;
-//               c.GetCoord(center);
-//               
-//               c1.x=fitsfile.xCell;
-//               c1.y=fitsfile.yCell;
-//               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
-//                  c1.y = fitsfile.height - c1.y -1;
-//               c.GetCoord(c1);
-//               radius = Coord.getDist(center,c1 );
-//            }
 
             double cent[] = context.ICRS2galIfRequired(center.al, center.del);
             npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], Math.toRadians(radius));
          } catch( Exception e ) {
-          throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" center="+center+" corner="+c1+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
+          throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" center="+center+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
          }
       }
       
@@ -577,9 +578,9 @@ public class BuilderIndex extends Builder {
          
          // Suis-je dans la région de travail ?
          if( area!=null && !area.isIntersecting(order, npix) ) continue;
-
+         
          // vérifie la validité du losange trouvé
-         if (!isInImage(fitsfile, Util.getCorners(order, npix), isCAR))  continue;
+         if( !isInImage(fitsfile, Util.getCorners(order, npix), isCAR)) continue;
 
          hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
          out = openFile(hpxname);
@@ -601,20 +602,23 @@ public class BuilderIndex extends Builder {
          int marge = 2;
          for (int i = 0; i < corners.length; i++) {
             Coord coo = corners[i];
+            
+            // Pour éviter de récupérer la coordonnée X de l'autre coté du ciel
+            if( isCAR && coo.al==180 ) return true;
+                        
             if (context.getFrame() != Localisation.ICRS) {
                double[] radec = context.gal2ICRSIfRequired(coo.al, coo.del);
                coo.al = radec[0];
                coo.del = radec[1];
             }
-            // Pour éviter de récupérer la coordonnée X de l'autre coté du ciel
-//            if( isCAR && coo.al==0 ) coo.al-=0.0000001;
             
             f.getCalib().GetXY(coo);
 
             if (Double.isNaN(coo.x)) continue;
-            coo.y = f.height - coo.y -1;
+            coo.y = f.height - coo.y;// -1;
             int width = f.widthCell+marge;
             int height = f.heightCell+marge;
+            
             if( coo.x >= f.xCell - marge/2 && coo.x <= f.xCell + width
                   && coo.y >= f.yCell - marge/2 && coo.y <= f.yCell + height ) {
                return true;

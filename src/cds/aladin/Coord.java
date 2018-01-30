@@ -149,7 +149,7 @@ public final class Coord {
       double al1 = al>180 ? al - 360 : al<-180 ? al + 360 : al;
       String lng = Util.myRound(Math.abs(al1));
       String lngL = al1<0 ? "W" : "E";
-      return lat+" "+latL+", "+lng+" "+lngL;
+      return lat+latL+", "+lng+lngL;
    }
    
    /** Retourne les coordonnées sous forme sexagésimal (degrés) planétaire

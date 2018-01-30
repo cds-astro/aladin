@@ -450,14 +450,25 @@ public class Localisation extends MyBox  {
    static protected boolean notCoord(String s) {
       
       // La coordonnée peut être suffixé par un nom de frame (ICRS, GAL ...)
+      boolean flagFox=false;
       int i = s.lastIndexOf(' ');
       if( i>0 ) {
          String w = s.substring(i+1);
-         if( Localisation.isFrameFox(w) ) s = s.substring(0,i).trim();
+         if( Localisation.isFrameFox(w) ) {
+            s = s.substring(0,i).trim();
+            flagFox=true;
+         }
       }
       
+      // La coordonnée peut être suffixé par une lettre (N,S,E ou W) indiquant la direction
       char a[] = s.toCharArray();
-      for( i=0; i<a.length; i++ ) {
+      int n = a.length;
+      if( !flagFox && n>1 ) {
+         char c = a[ n-1 ];
+         if( c=='N' || c=='S' || c=='E' || c=='W' ) n--;
+      }
+      
+      for( i=0; i<n; i++ ) {
          if( a[i]>='a' && a[i]<='z' ||  a[i]>='A' && a[i]<='Z' ) return true;
       }
       return false;
@@ -667,10 +678,13 @@ public class Localisation extends MyBox  {
     * @param frameSource numéro du système de référence source : ICRS, ICRSd...
     * @param frameTarget numéro du système de référence cible
     * @return les coordonnées éditées dans le système cible, ou l'identificateur inchangé
+    * Rq: si coordonnées planéto pas de modif.
     */
    static protected String convert(String coo,int frameSource,int frameTarget) {
 
       String coo1=coo;
+      boolean flagFox = false;
+      boolean flagPlaneto = false;
       
       // Champ vide => Rien à faire
       if( coo==null || coo.length()==0 || coo.indexOf("--")>=0 ) return "";
@@ -683,15 +697,31 @@ public class Localisation extends MyBox  {
          if( f>=0 ) {
             frameSource=f;
             coo = coo.substring(0,i).trim();
+            flagFox=true;
 //            System.out.println("Bingo: "+s+" => "+coo);
          }
       }
       
-      // Identificateur à la place d'une coordonnée => Rien à faire
-      for( i=0; i<coo.length(); i++) {
-         char ch = coo.charAt(i);
-         if( (ch>='A' && ch<='Z') || (ch>='a' && ch<='z') ) return coo1;
+      // Y a-t-il une indication de directino NSEW en suffixe ?
+      char a [] = coo.toCharArray();
+      int n = a.length;
+      if( !flagFox && n>1 ) {
+         char c = a[ n-1 ];
+         if( c=='N' || c=='S' || c=='E' || c=='W' ) {
+            n--;
+            flagPlaneto=true;
+         }
       }
+      
+      // Identificateur à la place d'une coordonnée => Rien à faire
+      for( i=0; i<n; i++) {
+         char c = a[i];
+         if( (c>='A' && c<='Z') || (c>='a' && c<='z') ) return coo1;
+         if( c==',' ) flagPlaneto=true;
+      }
+      
+      // Coordonnées planéto ? => rien à faire
+      if( flagPlaneto ) return coo1;
 
       // Edition et conversion si nécessaire
       try {

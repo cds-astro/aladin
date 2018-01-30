@@ -531,7 +531,7 @@ public final class Legende extends AbstractTableModel  {
       "","Visible","Coo","Name","Description","Unit","Datatype","UCD","Utype","Width","Arraysize","Precision"
    };
 
-   static final private int [] WHEAD = { 30, 50, 30,100, 190, 50, 70, 110, -1, 40,40,40 };
+   static final private int [] WHEAD = { 30, 50, 50,100, 190, 50, 70, 110, -1, 40,40,40 };
 
    static final private int N=0;
    static final private int VISIBLE=1;
@@ -548,11 +548,13 @@ public final class Legende extends AbstractTableModel  {
 
    private JTable table;
    private Aladin aladin;
+   private FrameInfoTable frameInfo;
    public Plan plan=null;
 
    /** Génère le JPanel de la table */
-   protected JPanel getTablePanel(Aladin aladin,Plan plan) {
+   protected JPanel getTablePanel(Aladin aladin,FrameInfoTable frameInfo,Plan plan) {
       this.aladin=aladin;
+      this.frameInfo = frameInfo;
       this.plan=plan;
       JPanel p = new JPanel( new BorderLayout());
       JScrollPane sc = new JScrollPane(createTable());
@@ -639,6 +641,7 @@ public final class Legende extends AbstractTableModel  {
          if( !s.equals( field[i].getCooSignature() ) ) {
             int coo = Util.indexInArrayOf(s, Field.COOSIGN);
             modifyRaDecXYField(i,coo);
+            frameInfo.epochFieldActivate( Field.isEquatorial(coo) );
          }
          break;
          case VISIBLE:     field[i].visible = ((Boolean)value).booleanValue(); break;
@@ -679,7 +682,7 @@ public final class Legende extends AbstractTableModel  {
       if( plan==null || plan.pcat==null ) return;
       plan.hasPM=-1;
 
-      // Pour les coordonnées célestes
+      // Pour les coordonnées célestes equatoriales
       if( coo==Field.RA || coo==Field.DE || coo==Field.PMRA || coo==Field.PMDE ) {
          int nra=-1,ndec=-1,npmra=-1,npmde=-1;
          if( coo==Field.RA )   nra=index;
@@ -705,11 +708,84 @@ public final class Legende extends AbstractTableModel  {
                if( coo==Field.PMDE ) f.coo=0;
                if( npmde==-1 ) npmde=i;
             }
-            if( f.coo==Field.X || f.coo==Field.Y ) f.coo=0;
+            if( f.coo==Field.X || f.coo==Field.Y || f.coo==Field.GLON || f.coo==Field.GLAT 
+                  || f.coo==Field.ELON || f.coo==Field.ELAT 
+                  || f.coo==Field.SGLON || f.coo==Field.SGLAT ) f.coo=0;
          }
          field[index].coo = coo;
          //         System.out.println("nra="+nra+" ndec="+ndec);
          if( nra>=0 && ndec>=0 && coo!=0 ) plan.modifyRaDecField(this, nra, ndec,npmra,npmde);
+         
+         // Pour les coordonnées célestes galactiques
+         } else if( coo==Field.GLON || coo==Field.GLAT ) {
+            int nlon=-1,nlat=-1;
+            if( coo==Field.GLON ) nlon=index;
+            else if( coo==Field.GLAT ) nlat=index;
+            for( int i=0; i<field.length; i++ ) {
+               Field f = field[i];
+               if( f.coo==Field.GLON ) {
+                  if( coo==Field.GLON ) f.coo=0;
+                  if( nlon==-1 ) nlon = i;
+               }
+               if( f.coo==Field.GLAT ) {
+                  if( coo==Field.GLAT ) f.coo=0;
+                  if( nlat==-1 ) nlat = i;
+               }
+               if( f.coo==Field.X || f.coo==Field.Y || f.coo==Field.RA || f.coo==Field.DE
+                     || f.coo==Field.PMRA || f.coo==Field.PMDE
+                     || f.coo==Field.ELON || f.coo==Field.ELAT 
+                     || f.coo==Field.SGLON || f.coo==Field.SGLAT ) f.coo=0;
+            }
+            field[index].coo=coo;
+            if( nlon>=0 && nlat>=0 && coo!=0 ) plan.modifyLonLatField(this, nlon,nlat, Localisation.GAL);
+
+
+            // Pour les coordonnées célestes super galactiques
+         } else if( coo==Field.SGLON || coo==Field.SGLAT ) {
+            int nlon=-1,nlat=-1;
+            if( coo==Field.SGLON ) nlon=index;
+            else if( coo==Field.SGLAT ) nlat=index;
+            for( int i=0; i<field.length; i++ ) {
+               Field f = field[i];
+               if( f.coo==Field.SGLON ) {
+                  if( coo==Field.SGLON ) f.coo=0;
+                  if( nlon==-1 ) nlon = i;
+               }
+               if( f.coo==Field.SGLAT ) {
+                  if( coo==Field.SGLAT ) f.coo=0;
+                  if( nlat==-1 ) nlat = i;
+               }
+               if( f.coo==Field.X || f.coo==Field.Y || f.coo==Field.RA || f.coo==Field.DE
+                     || f.coo==Field.PMRA || f.coo==Field.PMDE
+                     || f.coo==Field.ELON || f.coo==Field.ELAT 
+                     || f.coo==Field.GLON || f.coo==Field.GLAT ) f.coo=0;
+            }
+            field[index].coo=coo;
+            if( nlon>=0 && nlat>=0 && coo!=0 ) plan.modifyLonLatField(this, nlon,nlat, Localisation.SGAL);
+
+
+         // Pour les coordonnées célestes ecliptiques
+      } else if( coo==Field.ELON || coo==Field.ELAT ) {
+         int nlon=-1,nlat=-1;
+         if( coo==Field.ELON ) nlon=index;
+         else if( coo==Field.ELAT ) nlat=index;
+         for( int i=0; i<field.length; i++ ) {
+            Field f = field[i];
+            if( f.coo==Field.ELON ) {
+               if( coo==Field.ELON ) f.coo=0;
+               if( nlon==-1 ) nlon = i;
+            }
+            if( f.coo==Field.ELAT ) {
+               if( coo==Field.ELAT ) f.coo=0;
+               if( nlat==-1 ) nlat = i;
+            }
+            if( f.coo==Field.X || f.coo==Field.Y || f.coo==Field.RA || f.coo==Field.DE
+                  || f.coo==Field.PMRA || f.coo==Field.PMDE
+                  || f.coo==Field.GLON || f.coo==Field.GLAT 
+                  || f.coo==Field.SGLON || f.coo==Field.SGLAT ) f.coo=0;
+         }
+         field[index].coo=coo;
+         if( nlon>=0 && nlat>=0 && coo!=0 ) plan.modifyLonLatField(this, nlon,nlat, Localisation.ECLIPTIC);
 
          // Pour les coordonnées cartésiennes
       } else {
@@ -727,7 +803,10 @@ public final class Legende extends AbstractTableModel  {
                if( coo==Field.Y ) f.coo=0;
                if( ny==-1 ) ny=i;
             }
-            if( f.coo==Field.RA || f.coo==Field.DE || f.coo==Field.PMRA || f.coo==Field.PMDE) f.coo=0;
+            if( f.coo==Field.RA || f.coo==Field.DE || f.coo==Field.PMRA || f.coo==Field.PMDE
+                  || f.coo==Field.GLON || f.coo==Field.GLAT 
+                  || f.coo==Field.ELON || f.coo==Field.ELAT 
+                  || f.coo==Field.SGLON || f.coo==Field.SGLAT ) f.coo=0;
          }
          field[index].coo = coo;
          //         System.out.println("nx="+nx+" ny="+ny);

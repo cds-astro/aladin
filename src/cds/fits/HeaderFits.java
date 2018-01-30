@@ -270,7 +270,7 @@ public final class HeaderFits {
 
    /** Lecture d'une entête Fits quelque soit sa structure. Soit des lignes ASCII séparées
     * par des \n, soit des lignes de 80 caractères sans \n. Le = n'est pas obligatoirement
-    * en 8ième position.
+    * en 8ème position.
     * Mise a jour de tableau associatif header
     * @param s La chaine contenant le header Fits
     * @return true si OK, false sinon
@@ -282,13 +282,24 @@ public final class HeaderFits {
       char buf [] = s.toCharArray();
       int i=0;
       String key,value,com;
+      boolean first=true;
       int a,b,c;
       while( i<buf.length ) {
+         
+         // Si on ne commence pas par SIMPLE, on l'ajoute sinon ça posera souci au cas
+         // où l'on sauvegarde en FITS par la suite une image PNG ou JPEG avec entête par .hhh
+         if( first ) {
+            first=false;
+            if( buf.length>i+7 && !(new String(buf,i,6)).equals("SIMPLE") ) {
+               appendMHF((new String(Save.getFitsLine("SIMPLE","T",null))).trim());
+            }
+         }
          
          // Cas particulier d'une ligne vide
          c=getPos(buf,i,i+len,'\n');
          if( (new String(buf,i,c-i)).trim().length()==0 ) {
             appendMHF("");
+            
 
          // Cas particulier pour COMMENT XXXX
          } else if( buf.length>i+7 && (new String(buf,i,7)).equals("COMMENT") ) {

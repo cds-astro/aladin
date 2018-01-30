@@ -256,6 +256,7 @@ public final class LongArray extends Array {
       if( array==null || size==array.length ) return;
       long [] nArray = new long[ size ];
       System.arraycopy(array, 0, nArray, 0, size);
+      array=nArray;
    }
 
    // Adjust the size of the array for adding n values. In if it is too small, copy the array

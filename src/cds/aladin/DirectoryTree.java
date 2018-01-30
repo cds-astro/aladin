@@ -28,19 +28,17 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.UIManager;
-import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
@@ -223,18 +221,38 @@ public class DirectoryTree extends JTree {
       collapsePath(parent);
    }
    
+//   private List<TreeExpansionListener> expListeners = null;
    
+   protected void suspendListener(){
+      suspended=true;
+//      System.out.println("suspendListener()...");
+//      if( expListeners!=null ) throw new Exception("SuspendListener already invocate without restoreListerner()");
+//      expListeners = Arrays.asList( getTreeExpansionListeners() );
+//      for( TreeExpansionListener listener : expListeners) removeTreeExpansionListener(listener);
+   }
+   
+   protected void restoreListener() {
+      suspended=false;
+//      System.out.println("restoreListener()...");
+//      if( expListeners==null ) throw new Exception("Should be preceeded by suspendListener()");
+//      for( TreeExpansionListener listener : expListeners) addTreeExpansionListener(listener);
+//      expListeners=null;
+   }
+   
+   private boolean suspended=false;
+   
+   public void fireTreeExpanded(TreePath path) { if( !suspended ) super.fireTreeExpanded(path); }
+   public void fireTreeCollapsed(TreePath path) { if( !suspended ) super.fireTreeCollapsed(path); }
+   public void fireTreeWillExpand(TreePath path) throws ExpandVetoException { if( !suspended ) super.fireTreeWillExpand(path); }
+   public void fireTreeWillCollapse(TreePath path) throws ExpandVetoException { if( !suspended ) super.fireTreeWillCollapse(path); }
    
    /** Ouverture de toutes les branches de l'arbre */
    protected void allExpand() { allExpand( new TreePath(root) ); } 
    protected void allExpand(TreePath path) {
 
-      List<TreeExpansionListener> expListeners = Arrays.asList( getTreeExpansionListeners() );
-      for( TreeExpansionListener listener : expListeners) removeTreeExpansionListener(listener);
-
+      suspendListener();
       expandAll( path );
-
-      for( TreeExpansionListener listener : expListeners) addTreeExpansionListener(listener);
+      restoreListener();
 
       collapsePath(path);
       expandPath(path);

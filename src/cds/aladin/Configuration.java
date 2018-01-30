@@ -774,6 +774,15 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return true;
    }
    
+   /**
+    * Retourne true s'il faut afficher le message d'aides (ou autre)
+    * @param key
+    * @return
+    */
+   protected boolean mustShowHelp(String key) {
+      return stopHelp==null || !stopHelp.contains(key);
+   }
+   
    /** Acquittement d'un message d'aide ponctuelle afin qu'elle n'apparaisse plus une seconde fois */
    protected void showHelpDone(String key) {
       if( stopHelp==null ) stopHelp = new Vector<String>();
@@ -995,10 +1004,20 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return Color.yellow;
    }
    
+   /** Positionnement du log de la conf via programmation */
+   protected void setLog(boolean flag) {
+      set(LOG, flag ? ACTIVATED : NOTACTIVATED );
+   }
+   
    /** Retourne true si le mode log est activé */
    protected boolean isLog() {
+      if( aladin.SETLOG ) return Default.LOG;
       String s = get(LOG);
-      return s==null || s.equals(ACTIVATED);
+      if( s==null ) return Default.LOG;
+      return s.equals(ACTIVATED);
+      
+//      String s = get(LOG);
+//      return s==null || s.equals(ACTIVATED);
    }
 
    /** Retourne true s'il faut un slider d'époque */
@@ -1265,7 +1284,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected int getSplitMesureHeight() {
       try {
          int m=Integer.parseInt( get(MHEIGHT));
-         if( m<10 ) throw new Exception();
+         if( m<20 ) throw new Exception();
          return m;
       } catch( Exception e ) {}
       return DEF_MHEIGHT; 
@@ -1625,7 +1644,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          PropPanel.addCouple(this, p, l, FILEDIALOGHELP, lfChoice, g, c, GridBagConstraints.EAST);
 
          // Les logs
-         if( Aladin.LOG ) {
+         if( !Aladin.SETLOG ) {
             (l = new JLabel(LOGS)).setFont(l.getFont().deriveFont(Font.BOLD));
             logChoice = new JComboBox();
             logChoice.addItem(ACTIVATED);
@@ -1931,7 +1950,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( n!=DEF_ZWIDTH )  set(ZWIDTH,""+n );    
          else remove(ZWIDTH);
       }
-      if( aladin.splitHiPSWidth!=null ) {
+      if( aladin.TREEWIDTH==null && aladin.splitHiPSWidth!=null ) {
          n = aladin.splitHiPSWidth.getCompSize();   
          if( n!=DEF_HWIDTH )  set(HWIDTH,""+n );    
          else remove(HWIDTH);
@@ -1960,8 +1979,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       String s1 = PlanBG.MAXCACHE+"";
       if( ocache==null || !s1.equals(ocache) ) set(MAXCACHE,s1);
 
-      String s = get(LOG);
-      if( s!=null && s.equals(ACTIVATED) ) remove(LOG);
+      String s;
+//      s = get(LOG);
+//      if( s!=null && s.equals(ACTIVATED) ) remove(LOG);
 
       s = get(HELP);
       if( s!=null && s.equals(ACTIVATED) ) remove(HELP);
@@ -2194,6 +2214,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
          if( key.equals(LOOKANDFEELTHEME) && !value.equals("dark") ) previousTheme=1;
          aladin.trace(6, "Configuration.load() [" + key + "] = [" + value + "]");
+         
+         if( Aladin.TREEWIDTH!=null && key.equals(HWIDTH) ) value=Aladin.TREEWIDTH;
 
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
          else if( key.startsWith(LASTTARGET) ) setLastTarget(value);
@@ -2309,16 +2331,17 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       aladin.view.initInfoParam(true);
 
       // Pourle log
-      if( logChoice!=null ) {
-         if( logChoice.getSelectedIndex()==1 ) {
-            if( get(LOG)==null ) aladin.glu.log("Log", "off");
-            set(LOG,(String)logChoice.getSelectedItem());
-         }
-         else {
-            boolean pub = get(LOG)!=null && get(LOG).equals(NOTACTIVATED);
-            remove(LOG);
-            if( pub ) aladin.glu.log("Log", "on");
-         }
+      if( logChoice!=null  ) {
+//         if( logChoice.getSelectedIndex()==1 ) {
+//            if( get(LOG)==null ) aladin.glu.log("Log", "off");
+//            set(LOG,(String)logChoice.getSelectedItem());
+//         }
+//         else {
+//            boolean pub = get(LOG)!=null && get(LOG).equals(NOTACTIVATED);
+//            remove(LOG);
+//            if( pub ) aladin.glu.log("Log", "on");
+//         }
+         set(LOG,(String)logChoice.getSelectedItem());
       }
 
       // Pour l'assistant débutant

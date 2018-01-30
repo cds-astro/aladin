@@ -662,6 +662,39 @@ public class Plan implements Runnable {
 
       return rep;
    }
+   
+   /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
+   public void recomputePositionByFrame(Iterator<Obj> it,Legende leg, int nlon,int nlat,int originFrame) {
+      int nError=0;
+
+      Coord c = new Coord();
+      while( it.hasNext() ) {
+         try {
+            Source s = (Source)it.next();
+            if( s.leg!=leg ) continue;
+            try {
+               c.al = Double.parseDouble( s.getValue(nlon) );
+               c.del = Double.parseDouble( s.getValue(nlat) );
+               Localisation.frameToFrame(c, originFrame, Localisation.ICRS);
+            } catch( Exception e ) {
+               c.al=c.del=Double.NaN;
+               nError++;
+               if( nError>100 ) {
+                  if( aladin.levelTrace>=3 ) e.printStackTrace();
+                  aladin.error("Too many error during coordinate computation !\n"
+                        + e.getMessage());
+                  break;
+               }
+            }
+
+            s.raj = c.al;
+            s.dej = c.del;
+
+         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      }
+   }
+
+
 
    /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
    public void recomputePosition(Iterator<Obj> it,Legende leg, int nra,int ndec,int npmra,int npmde) {
@@ -762,11 +795,30 @@ public class Plan implements Runnable {
       }
       return true;
    }
+   
+   /** Modification des champs utilisés pour la position céleste */
+   public void modifyLonLatField(Legende leg, int nlon,int nlat,int frame) {
+      String sFrame = Localisation.getFrameName(frame);
+      aladin.trace(3,label+" new "+sFrame+" => LON pos="+(nlon+1)+" LAT pos="+(nlat+1) );
 
+      recomputePositionByFrame( iterator(),leg,nlon,nlat, frame);
+
+      if( hasXYorig || hasNoPos ) {
+         hasNoPos=hasXYorig=false;
+         error=null;
+      }
+
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+
+      String s = "New "+sFrame+" fields for "+label+"\n=> LON column "+(nlon+1)+" -  LAT column "+(nlat+1);
+      aladin.trace(2,s);
+      aladin.info(aladin,s);
+   }
 
    /** Modification des champs utilisés pour la position céleste */
    public void modifyRaDecField(Legende leg, int nra,int ndec,int npmra,int npmde) {
-      aladin.trace(3,label+" new J2000 => RA pos="+(nra+1)+" DE pos="+(ndec+1)
+      aladin.trace(3,label+" new ICRS => RA pos="+(nra+1)+" DE pos="+(ndec+1)
             +" PMRA pos="+(npmra+1)+" PMDE pos="+(npmde+1));
 
       recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
@@ -779,7 +831,7 @@ public class Plan implements Runnable {
       aladin.view.newView(1);
       aladin.view.repaintAll();
 
-      String s = "New J2000 fields for "+label+"\n=> RA column "+(nra+1)+" -  DE column "+(ndec+1)
+      String s = "New ICRS fields for "+label+"\n=> RA column "+(nra+1)+" -  DE column "+(ndec+1)
             +(npmra>0 ? " -  PMRA column "+(npmra+1):"")
             +(npmde>0 ? " -  PMDEC column "+(npmde+1):"");
       aladin.trace(2,s);

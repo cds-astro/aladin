@@ -363,7 +363,7 @@ public class Cote extends Ligne {
       return true;
    }
    
-   private boolean isDrawingTriangle() { return isCoteSelected() || withTriangle; }
+   private boolean isDrawingTriangle() { return withTriangle; }
    
    /** Dessin de la hauteur et de la base du triangle de la cote */
    protected void drawCoteBase(Graphics g, ViewSimple v,int dx,int dy) {

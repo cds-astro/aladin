@@ -3014,8 +3014,9 @@ public final class Glu implements Runnable {
     * @return null ou eventuellement le retour du log si Id=="Start"
     */
    protected void log(String id, String params) {
-
-      if( !Aladin.NETWORK || !Aladin.LOG || !aladin.configuration.isLog() ) return;
+      
+      flagVers = (Aladin.STANDALONE && id.equals("Start"));
+      if( !Aladin.NETWORK || !flagVers && !aladin.configuration.isLog() ) return;
 
       // les trucs inutiles ou un peu trop indiscrets
       if( id.equals("VizX") ) return;
@@ -3026,7 +3027,6 @@ public final class Glu implements Runnable {
          waitLock(); // verrouillage
          param = ALADINLOG + "?id=" + (id==null ? "":URLEncoder.encode(id)) + "&params="
                + (params==null ? "" : URLEncoder.encode(params));
-         flagVers = (Aladin.STANDALONE && id.equals("Start"));
 
          thread = new Thread(this,"AladinLog");
          Util.decreasePriority(Thread.currentThread(), thread);
@@ -3046,7 +3046,6 @@ public final class Glu implements Runnable {
       unlock(); // liberation du verrou
 
       try {
-
 
          // Construction de l'URL par defaut
          if( Aladin.APPLETSERVER == null && Aladin.RHOST == null ) {
@@ -3086,6 +3085,7 @@ public final class Glu implements Runnable {
                      String msg=null;
                      do {
                         msg=dis.readLine();
+                        if( msg==null ) break;
                      } while( msg.trim().length()==0 || msg.startsWith("#") );
                      if( msg!=null ) aladin.setCDSMessage(msg);
                   } catch( Exception e) { e.printStackTrace(); }

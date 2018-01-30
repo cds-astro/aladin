@@ -35,6 +35,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.CacheFits;
@@ -47,7 +48,7 @@ import healpix.essentials.Pointing;
 final public class ThreadBuilderTile {
 
    private Context context;
-   private BuilderTiles builderTiles;
+   protected BuilderTiles builderTiles;
    private int bitpix;
    private Mode coaddMode;
    private double max;
@@ -68,6 +69,7 @@ final public class ThreadBuilderTile {
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
    private int tileSide;
+   
 
    static protected HashMap<File, Polygon> hashPolygon=null;   // Polygones associés à chaque fichier ou répertoire
 
@@ -129,7 +131,7 @@ final public class ThreadBuilderTile {
    
    private Object objRel = new Object();
 
-   private void checkMem(int nbProgen, long rqMem ) throws Exception {
+   private void checkMem(int nbProgen, long rqMem, boolean monopass ) throws Exception {
       rqMem += 2*tileSide*tileSide*context.getNpix();
       if( nbProgen>Constante.MAXOVERLAY ) {
          rqMem += 2*tileSide*tileSide*8;
@@ -155,12 +157,11 @@ final public class ThreadBuilderTile {
             return;
          }
          try {
-            if( !builderTiles.arret(this) ) {
+            if( !builderTiles.arret(this,"not enough free RAM => thread temporary suspended by ThreadBuilder.checkMem(nbProgen="+nbProgen+",rqMem="+cds.tools.Util.getUnitDisk(rqMem)+",monopass="+monopass+")") ) {
                if( context.getVerbose()>3 ) context.warning(Thread.currentThread().getName()+" needs "+
                      cds.tools.Util.getUnitDisk(rqMem)+" but can not stop (sub thread) !");
                return;
-              
-            }
+            } 
             if( context.getVerbose()>3 ) context.info(Thread.currentThread().getName()+" suspended");
             while( needMem(rqMem) ) {
                try {
@@ -217,11 +218,11 @@ final public class ThreadBuilderTile {
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
-         if( !context.live && (/*coaddMode==Mode.ADD ||*/ !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, nbThreads)) ) {
+         if( !context.live && (!mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, nbThreads)) ) {
 
             statOnePass++;
             long mem = getReqMem(downFiles, 0, n);
-            checkMem(mixing ? n : 1, mem);
+            checkMem(mixing ? n : 1, mem, true);
             out = buildHealpix1(bt,order,npix_file,z,downFiles,0,n,null);
 
             // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
@@ -240,8 +241,8 @@ final public class ThreadBuilderTile {
                int fin = deb+Constante.MAXOVERLAY;
                if( fin>=n ) fin=n;
                
-               long mem = getReqMem(downFiles,deb,n);
-               checkMem(n,mem);
+               long mem = getReqMem(downFiles,deb,fin); //n);
+               checkMem( fin-deb, mem, false);
                
                f = buildHealpix1(bt,order,npix_file,z,downFiles,deb,fin,fWeight);
                if( f!=null ) {
@@ -259,7 +260,8 @@ final public class ThreadBuilderTile {
                // pour qu'ils puissent être supprimés du cache le cas échéant
                for( int i=deb; i<fin; i++ ) {
                   SrcFile f1 = downFiles.get(i);
-                  f1.fitsfile.rmUser();
+//                  f1.fitsfile.rmUser();
+                  try { if( f1!=null ) f1.release(); } catch( Exception e ) { }
                   downFiles.set(i,null);
                }
             }
@@ -414,6 +416,7 @@ final public class ThreadBuilderTile {
 
          // cherche la valeur à affecter dans chacun des pixels healpix
          int overlay = fin-deb;
+         boolean isCAR=false;
          double [] pixvalG=null,pixvalB=null;
          double [] pixval = new double[overlay];
          double [] pixcoef = new double[overlay];
@@ -444,8 +447,11 @@ final public class ThreadBuilderTile {
                      if( file.flagRemoved ) continue;
                      try {
                         file.open(z, flagGauss);
+
                      } catch( Exception e ) {
-                        if( context.getVerbose()>=3 ) context.warning("One original file retired: "+file.name);
+                        if( context.getVerbose()>=3 ) {
+                           context.warning("Problem on open => file retired: "+file.name+" => exception"+e.getMessage());
+                        }
                         
                         // Cas complexe où l'image originale est un JPEG ou un PNG et que JAVA
                         // tente de l'ouvrir sur une portion uniquement. Il va en interne
@@ -466,15 +472,18 @@ final public class ThreadBuilderTile {
 
                      // Détermination du pixel dans l'image à traiter
                      try {
+                        isCAR = file.fitsfile.calib.getProj()==Calib.CAR;
                         file.fitsfile.calib.GetXY(coo,false);
                         
                      // gasp !
                      } catch( Exception e ) {
-                        System.err.println("Problem calib.getXY("+coo+") => exception "+e.getMessage());
+                        System.err.println("Problem on calib: "+file.name+" => exception "+e.getMessage());
                         continue;
                      }
-                     coo.y = file.fitsfile.height-coo.y -1;
-                     coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
+                      
+                     // Inversion ordonnée et ajustement pour le calcul bilinéaire
+                     coo.y = file.fitsfile.height-coo.y-1;
+                     coo.x -=1;
 
                      // Cas RGB
                      if( flagColor ) {
@@ -601,6 +610,8 @@ final public class ThreadBuilderTile {
 
 
    // détermine si le pixel doit être pris en compte, ou s'il est dans la marge
+   // prend en compte x=-1 et y=-1 pour ne pas écarter des mesures bilinéaires
+   // juste sur la ligne=-1 ou colonne=-1 et laisser une ligne éventuellement non calculée
    private boolean isIn(SrcFile srcFile, Coord coo) {
       Fits f = srcFile.fitsfile;
       if( circle>0 ) {
@@ -611,8 +622,8 @@ final public class ThreadBuilderTile {
          double d = dx*dx + dy*dy;
          if( d>circle*circle ) return false;
       }
-      if( coo.x<borderSize[1] || coo.x>f.width-borderSize[3] ) return false;
-      if( coo.y<borderSize[0] || coo.y>f.height-borderSize[2] ) return false;
+      if( coo.x<borderSize[1] -1.5  || coo.x>f.width-borderSize[3] ) return false;
+      if( coo.y<borderSize[0] -1.5  || coo.y>f.height-borderSize[2] ) return false;
       if( polygon!=null && !polygon.contains(coo.x, coo.y) ) return false;
       if( srcFile.polygon!=null && !srcFile.polygon.contains(coo.x, coo.y) ) return false;
       return true;
@@ -792,7 +803,7 @@ final public class ThreadBuilderTile {
       int ox2= x2;
       int oy2= y2;
 
-      if( x2<f.xCell || y2<f.yCell ||
+      if(  x2<f.xCell || y2<f.yCell || 
             x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return 0;
 
       // Sur le bord, on dédouble le dernier pixel

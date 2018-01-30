@@ -93,8 +93,24 @@ public class DirectoryModel extends DefaultTreeModel {
       return n;
    }
 
-   // Dernier noeud parent ayant eu une instertion => permet éventuellement un ajout ultérieur plus rapide
-   private DefaultMutableTreeNode lastParentNode=null;
+   // Mémorisation des noeuds parents dans une hashmap pour les retrouver rapidement
+   private HashMap<String, DefaultMutableTreeNode> fastAccess=null;
+   
+   /** Réinitialisation des éléments accélérateurs de la création de l'arbre */
+   protected void resetCreate() {
+      fastAccess = new HashMap<String, DefaultMutableTreeNode>();
+   }
+   
+   // Mémorisation d'un noeud par son path afin de le retrouver rapidement
+   private void memoFast( DefaultMutableTreeNode node ) {
+      TreeObj to = (TreeObj) node.getUserObject();
+      fastAccess.put( to.path, node );
+   }
+   
+   // Retourne le noeud correspondant au path, null sinon
+   private DefaultMutableTreeNode findFast( String path ) {
+      return fastAccess.get( path );
+   }
    
    /** Insertion d'un noeud, éventuellement avec les différents éléments de sa branche
     * si ceux-ci n'existent pas encore. Conserve le noeud parent de l'insertion
@@ -103,29 +119,25 @@ public class DirectoryModel extends DefaultTreeModel {
     */
    protected void createTreeBranch(TreeObj treeObj) {
       // Création immédiate car c'est le même parent que la précédente insertion
-      if( createLeafWithLastParent( this, treeObj) ) return;
+      if( createWithExistingParent( treeObj) ) return;
       
       // Création récursive (éventuellement pour la branche)
       DefaultMutableTreeNode nodeUp [] = new DefaultMutableTreeNode[1];
       int index [] = new int[1];
-      lastParentNode = createTreeBranch( this, root, treeObj, 0, nodeUp, index);
-      
-      // Indication aux listeners du modèle qu'une branche a été inséré
-//      if( nodeUp[0]!=null ) nodesWereInserted( nodeUp[0], index);
+      DefaultMutableTreeNode lastParentNode = createTreeBranch( this, root, treeObj, 0, nodeUp, index);
+      memoFast(lastParentNode);
    }
    
    /** Méthode interne - Tentative d'insertion d'un noeud sur le parent de la dernière insertion. Retourne true
     * si l'insertion est effectivement possible, false sinon */
-   private boolean createLeafWithLastParent(DefaultTreeModel model, TreeObj treeObj) {
-      if( lastParentNode==null ) return false;
+   private boolean createWithExistingParent( TreeObj treeObj) {
       int pos = lastSlash(treeObj.path);
       if( pos==-1 ) return true;
       String path = treeObj.path.substring(0, pos);
       
-      TreeObj pere = (TreeObj) lastParentNode.getUserObject();
-      if( !path.equals(pere.path) ) return false;
-      
-      lastParentNode.add( new DefaultMutableTreeNode(treeObj) );
+      DefaultMutableTreeNode node = findFast( path );
+      if( node==null ) return false;
+      node.add( new DefaultMutableTreeNode(treeObj) );
       
       return true;
    }

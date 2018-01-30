@@ -50,6 +50,7 @@ public class FrameInfoTable extends JFrame {
 
 	private Aladin aladin;
 	private Plan plan;
+	private JTextField epochField;
 
 	protected FrameInfoTable(Aladin aladin,final Plan plan) {
 	   super();
@@ -75,7 +76,7 @@ public class FrameInfoTable extends JFrame {
 	      JPanel p1 = new JPanel( new BorderLayout(5,5) );
           if( multiTable )  p1.setBorder(BorderFactory.createTitledBorder(leg.name));
           else p1.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-	      p1.add( leg.getTablePanel(aladin,plan), BorderLayout.CENTER);
+	      p1.add( leg.getTablePanel(aladin,this,plan), BorderLayout.CENTER);
 	      p.add(p1);
 	   }
 	   pgen.add(sc,BorderLayout.CENTER);
@@ -131,7 +132,8 @@ public class FrameInfoTable extends JFrame {
                 epoch = "J"+plan.getOriginalEpoch().getJyr();
              } catch( Exception e1 ) { epoch="J2000"; }
              final String oEpoch = epoch;
-             final JTextField t = new JTextField(epoch);
+             epochField = new JTextField(epoch);
+             final JTextField t = epochField;
              p2.add( new JLabel( aladin.chaine.getString("PROPEPOCH")+" "));
              p2.add(t);
              t.addActionListener( new ActionListener() {
@@ -174,6 +176,9 @@ public class FrameInfoTable extends JFrame {
        }
        aladin.mesure.redisplay();
 	}
+	
+	
+	protected void epochFieldActivate( boolean flag ) { epochField.setEnabled(flag); }
 	
 	// Remonte d'un cran l'affichage de la ligne sélectionnée
     private void up()   { upDown(-1); }

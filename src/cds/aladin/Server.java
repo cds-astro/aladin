@@ -514,7 +514,7 @@ public class Server extends JPanel
       return i+60;
    }
 
-   static protected int HAUT=25;    // Hauteur des components classiques
+   static protected int HAUT=28;    // 25 Hauteur des components classiques
    static protected int MARGE=1;      // Marge entre les components
    static protected int LIST_HAUT=80; 
    
@@ -626,25 +626,7 @@ public class Server extends JPanel
          Util.toolTip(target, TARGET_EX);
 
          if( pickView )  {
-//            grab = new JToggleButton(GRABIT);
-//            Insets m = grab.getMargin();
-//            grab.setMargin(new Insets(m.top,2,m.bottom,2));
-//            grab.setOpaque(false);
-//            grab.addActionListener(new ActionListener() {
-//				public void actionPerformed(ActionEvent e) {
-//					aladin.dialog.startGrabIt();
-//					// ABOVE NOT REALLY NEEDED, BEACUSE OF THE BELOW.
-//					aladin.f.toFront();
-//					JPanel server = Server.this;
-//					aladin.grabUtilInstance.grabFrame = (GrabItFrame) SwingUtilities.getRoot(server);
-//
-//				}
-//            });
-//            grab.setFont(Aladin.SBOLD);
-//            grab.setBounds(x+l+3,y+2,pickL-2,HAUT-4);
-
             // Grab
-            
             JToggleButton b = grab = new JToggleButton(new ImageIcon(Aladin.aladin.getImagette("Grab.png")));
             Util.toolTip(b, "Grab a position/radius in the view");
             b.setMargin(new Insets(0, 0, 0, 0));
@@ -667,8 +649,6 @@ public class Server extends JPanel
             	grab.setEnabled(true);//deefault true for datalink forms
 			}
             p.add(grab);
-            
-            
          }
 
          y+=HAUT+MARGE;

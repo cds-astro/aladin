@@ -78,6 +78,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -245,7 +246,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          g.setColor( Aladin.COLOR_LABEL );
          g.drawString("in view",x+7,y);
          
-         x+=55;
+         x+=60;
          g.setColor(Aladin.ORANGE);
          Util.fillCircle7(g, x, y-4);
          g.setColor( Aladin.COLOR_LABEL );
@@ -259,11 +260,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       multiProp = new MultiMoc2();
       this.cbg = cbg;
       
-      // POUR LES TESTS => Surcharge de l'URL du MocServer
-      // if( aladin.levelTrace>=3 ) {
-      // aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
-      // aladin.trace(0,"WARNING: use local MocServer for test => http://localhost:8080/MocServer/query !!!");
-      // }
+//       POUR LES TESTS => Surcharge de l'URL du MocServer
+//       if( aladin.levelTrace>=3 ) {
+//       aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
+//       aladin.glu.aladinDic.put("MocServer","http://alaskybis.u-strasbg.fr/MocServer/query?$1");
+//       aladin.trace(0,"WARNING: use local MocServer for test => http://localhost:8080/MocServer/query !!!");
+//       }
+      
 
       setBackground(cbg);
       setLayout(new BorderLayout(0, 0));
@@ -326,10 +329,16 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       final Aladin a = aladin;
       plus.addMouseListener(new MouseListener() {
          public void mouseReleased(MouseEvent e) { 
-            Aladin.makeCursor(a, Aladin.WAITCURSOR);
-            openAdvancedFilterFrame();
-            Aladin.makeCursor(a, Aladin.DEFAULTCURSOR);
-         }
+            
+            SwingUtilities.invokeLater(new Runnable() {
+               public void run() {
+                  Aladin.makeCursor(a, Aladin.WAITCURSOR);
+                  openAdvancedFilterFrame();
+                  Aladin.makeCursor(a, Aladin.DEFAULTCURSOR);
+              }
+            });
+
+          }
          public void mousePressed(MouseEvent e) { }
          public void mouseExited(MouseEvent e) { }
          public void mouseEntered(MouseEvent e) { }
@@ -1193,11 +1202,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                url = url.substring(0, pos) + url.substring(pos + fmt.length());
             }
 
-         } else if( service_url.equalsIgnoreCase("sia") ) {
+            // On trouve vraiment n'importe quoi dans le VO registry !
+            url = removeURLParam(url,"POS");
+            url = removeURLParam(url,"SIZE");
+            
+        } else if( service_url.equalsIgnoreCase("sia") ) {
             fmt = "&FORMAT=image/fits";
             if( (pos = Util.indexOfIgnoreCase(url, fmt)) >= 0 ) {
                url = url.substring(0, pos) + url.substring(pos + fmt.length());
             }
+            
+            // On trouve vraiment n'importe quoi dans le VO registry !
+            url = removeURLParam(url,"POS");
+            url = removeURLParam(url,"SIZE");
          }
 
          if( url1 == null ) url1 = new StringBuilder(url);
@@ -1205,6 +1222,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
 
       return url1.toString();
+   }
+   
+   // Supprime d'une URL un paramètre spécifique. Enlève le ? si plus nécessaire
+   private String removeURLParam(String url,String paramName) {
+      if( url==null || paramName==null ) return url;
+      boolean lastParam=false;
+      int i = url.indexOf(paramName);
+      if( i==-1 ) return url;
+      int j = url.indexOf('&',i+1);
+      if( j<0 ) lastParam=true;
+      boolean firstParam=(i>0 && url.charAt(i-1)=='?');
+      if( firstParam && lastParam ) i--;   // pour manger le ?
+      return url.substring(0,i) + (lastParam ? "" : url.substring(j+1,url.length()) );
    }
 
    @Override
@@ -1246,6 +1276,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    private void buildTree() {
       DirectoryModel model = (DirectoryModel) dirTree.getModel();
+      model.resetCreate();
       for( TreeObjDir to : dirList ) model.createTreeBranch(to);
       int n = initCounter(model);
       updateTitre(n);
@@ -1311,12 +1342,17 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    private void rebuildTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter,boolean initSort) {
       boolean insideActivated = iconInside.isActivated();
+      
+      long t0 = System.currentTimeMillis();
+//      T(null);
 
       // Mémorisation temporaire des états expanded/collapsed
       if( wasExpanded == null ) {
          wasExpanded = new HashSet<String>();
          backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
       }
+      
+//      T("backupState");
 
       // Mémorisation temporaire du premier noeud sélectionné
       TreePath tp = dirTree.getSelectionPath();
@@ -1336,27 +1372,66 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
          if( mustBeActivated ) tmpDirList1.add(to);
       }
+      
+//      T("Select nodes");
+      
       Collections.sort(tmpDirList1, TreeObj.getComparator());
+      
+//      T("Sort nodes");
+      
+      model.resetCreate();
       for( TreeObjDir to : tmpDirList1 ) model.createTreeBranch(to);
+      
+//      T("Create tree");
 
       if( initCounter ) initCounter(model);
       else updateTitre(model.countDescendance());
+      
+//      T("Init counters");
 
       // Répercussion des états des feuilles sur les branches
       model.populateFlagIn();
+      
+//      T("Populate flags");
 
-      // Remplacement du model dans l'arbre affiché
-      dirTree.setModel(model);
+      try {
+         dirTree.suspendListener();
 
-      // Ouverture minimal des noeuds
-      if( defaultExpand ) dirTree.defaultExpand();
+         // Ouverture minimal des noeuds
+         if( defaultExpand ) dirTree.defaultExpand();
+         
+         // Remplacement du model dans l'arbre affiché
+         dirTree.setModel(model);
 
-      // Restauration des états expanded/collapses + compteurs de référence
-      restoreState(new TreePath(model.root), defaultExpand ? null : wasExpanded, counter, dirTree);
+//         T("setModel");
+
+         dirTree.restoreListener();
+         
+         // Restauration des états expanded/collapses + compteurs de référence
+         restoreState(new TreePath(model.root), defaultExpand ? null : wasExpanded, counter, dirTree);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+
+//      T("Restore tree state");
+      
 
       // Restauration des noeuds sélectionnées
       if( tp != null ) showTreePath(getPathString(tp));
+      
+      aladin.trace(4,"ResumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
+
    }
+   
+//   private boolean TEST=true;
+//   private long t0;
+//   private void T(String s) {
+//      if( !TEST ) return;
+//      long t = System.currentTimeMillis();
+//      if( s==null ) { t0=t; return; }
+//      System.out.println(s+" => "+(t-t0));
+//      t0=t;
+//   }
 
    /**
     * Retourne le path sous forme de chaine - sans le premier "/" et "" pour la racine ex => Image/Optical/DSS
@@ -1437,11 +1512,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** Réaffichage de l'arbre */
    private void resumeTree(ArrayList<TreeObjDir> tmpDirList, boolean defaultExpand, boolean initCounter,boolean initSort) {
       try {
-         // long t0 = System.currentTimeMillis();
          rebuildTree(tmpDirList, defaultExpand, initCounter, initSort);
          validate();
          postTreeProcess(defaultExpand);
-         // System.out.println("resumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
       } finally {
 
          // Pour permettre le changement du curseur d'attente de la fenêtre de filtrage
@@ -2618,6 +2691,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          // Le cache est vide => il faut charger depuis le MocServer
       } else {
+         
 
          // L'initialisation se fait en deux temps pour pouvoir laisser
          // l'utilisateur travailler plus rapidement
@@ -2626,8 +2700,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          loadFromMocServer(s);
 
          startTimer();
-         while( !init )
-            Util.pause(100);
+         while( !init ) Util.pause(100);
          (new Thread("updateFromMocServer") {
             public void run() {
                if( loadFromMocServer(MOCSERVER_INIT) > 0 ) {
@@ -2945,6 +3018,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          JPanel contentPane = (JPanel) getContentPane();
          contentPane.setLayout(new BorderLayout(5, 5));
          contentPane.setBackground(new Color(240, 240, 250));
+         setBackground( contentPane.getBackground() );
          contentPane.setBorder(BorderFactory.createLineBorder(Color.black));
          setUndecorated(!decorated);
          pack();
@@ -3082,14 +3156,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          boolean inCross;
 
-         MyInfoPanel() {
+         MyInfoPanel( Color background ) {
             super();
+            setBackground( background );
             setLayout(new BorderLayout());
             setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 7));
             addMouseListener(this);
             addMouseMotionListener(this);
          }
-
+         
          public void paint(Graphics g) {
             super.paint(g);
             if( !decorated ) drawCross(g, getWidth() - W - 6, 4);
@@ -3133,7 +3208,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          JPanel contentPane = (JPanel) getContentPane();
          if( panelInfo != null ) contentPane.remove(panelInfo);
 
-         panelInfo = new MyInfoPanel();
+         panelInfo = new MyInfoPanel( contentPane.getBackground() );
 
          String s;
          boolean flagScan = false;
@@ -3187,7 +3262,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( !hasHips && to1.hasHips() ) hasHips = true;
                if( !hasGlobalAccess && to1.hasGlobalAccess() ) hasGlobalAccess = true;
                if( !hasCDScat && to1.isCDSCatalog() ) hasCDScat = true;
-               if( !flagScan && !to1.hasMoc() ) flagScan = true;
+               if( !flagScan && !to1.hasMoc() ) flagScan = true; 
                int inFlag = to1.getIsIn();
                if( inFlag == 1 ) nbIn++;
                else if( inFlag == -1 ) nbInMayBe++;
@@ -3203,7 +3278,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( sList != null ) more = list.toString();
             else sList = list.toString();
 
-            JPanel mocAndMore = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+            JPanel mocAndMore = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
             JCheckBox bx;
             mociBx = mocBx = csBx = liveBx = customBx = null;
 
@@ -3346,15 +3421,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             }
 
             JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0,0));
-//            s = to.getProperty(Constante.KEY_MOC_SKY_FRACTION);
             s = to.getCoverage();
             if( s != null ) {
                boolean isIn = to.getIsIn() == 1;
-//               try {
-//                  s = Util.myRound(Double.parseDouble(s) * 100);
-//               } catch( Exception e ) {
-//               }
-//               s = AWSKYCOV + " " + s + "% ";
                s = AWSKYCOV + " " + s + " ";
                              a = new MyAnchor(aladin, s, 50, null, null);
                a.setForeground(Color.gray);
@@ -3801,12 +3870,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          bas.add(control, BorderLayout.EAST);
 
          if( to != null && to.internalId != null ) {
-            JTextField x = new JTextField(to.internalId + " "); // JTextField pour un label "copiable"
-            x.setEditable(false);
-            x.setBackground(getBackground());
-            x.setBorder(BorderFactory.createEmptyBorder());
-            x.setForeground(Aladin.COLOR_BLUE);
-            x.setFont(x.getFont().deriveFont(Font.BOLD + Font.ITALIC));
+            LabelCopy x = new LabelCopy(to.internalId, getBackground());
             bas.add(x, BorderLayout.WEST);
          }
 
@@ -3829,6 +3893,29 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             aladin.firstGrab=false;
          }
 
+      }
+      
+      // Label copiable, qui se centre verticalement
+      class LabelCopy extends JPanel {
+         LabelCopy(String label, Color background) {
+            super(new FlowLayout(FlowLayout.CENTER,0,0));
+            setBackground(background);
+            final JTextPane x = new JTextPane();
+            x.setText(label+" ");
+            x.setEditable(false);
+            x.setBackground(background);
+            x.setBorder(null);
+            x.setForeground(Aladin.COLOR_BLUE);
+            x.setFont(x.getFont().deriveFont(Font.BOLD + Font.ITALIC));
+            x.addMouseListener( new MouseAdapter() {
+               public void mousePressed(MouseEvent e) {
+                  x.setSelectionStart(0);
+                  x.setSelectionEnd(x.getText().length()-1 );
+               }
+            });
+            add(x);
+            setBorder( BorderFactory.createEmptyBorder(8,0,0,0));
+         }
       }
 
       class Preview extends JPanel {
@@ -3972,9 +4059,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( info!=null && getText().length()==0 ) {
                g.setColor( Color.lightGray );
                g.setFont( getFont().deriveFont(Font.ITALIC) );
-               g.drawString(info,5,getHeight()-6);
+               g.drawString(info,5,getHeight()/2+ g.getFontMetrics().getAscent()/2-2 );
             }
          }
+         
          
       }
       

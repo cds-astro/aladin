@@ -88,13 +88,16 @@ public class BuilderMoc extends Builder {
             mocOrder = context.getOrder()+context.getTileOrder()-Constante.DIFFMOCORDER;
          }
          if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
+         
+         // Couleur
+         if( context.isColor() ) mocOrder=fileOrder;
       }
       
       // On ne peut prendre un MOC order supérieur à la résolution nomimale
-      if( mocOrder>tileOrder+fileOrder ) mocOrder=tileOrder+fileOrder;
-      
-      // Couleur
-      if( context.isColor() ) mocOrder=fileOrder;
+      if( mocOrder>tileOrder+fileOrder ) {
+         context.warning("Too high mocOrder ("+mocOrder+") => assume "+(tileOrder+fileOrder));
+         mocOrder=tileOrder+fileOrder;
+      }
       
       // Quel type de tuile utiliser ?
       ext = getDefaultExt(path);
@@ -112,7 +115,7 @@ public class BuilderMoc extends Builder {
       String outputFile = path + FS + Constante.FILE_MOC;
       
       long t = System.currentTimeMillis();
-      context.info("MOC generation ("+(isMocHight?"hight resolution":"low resolution")+" mocOrder="+moc.getMocOrder()+")...");
+      context.info("MOC generation ("+(isMocHight?"deep resolution":"regular resolution")+" mocOrder="+moc.getMocOrder()+")...");
       moc.setCoordSys(getFrame());
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,fileOrder, path);

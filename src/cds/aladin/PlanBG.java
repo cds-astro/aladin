@@ -874,6 +874,7 @@ public class PlanBG extends PlanImage {
       int defaultProjType = aladin.projSelector.getProjType();
 //      int defaultProjType = Aladin.BETA ? aladin.projSelector.getProjType() 
 //               : aladin.configuration.getProjAllsky();
+      
       if( co==null  ) {
          flagNoTarget=true;
          co = new Coord(0,0);

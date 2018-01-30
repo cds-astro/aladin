@@ -23,6 +23,8 @@ package cds.aladin;
 
 import java.awt.Graphics;
 
+import javax.swing.SwingUtilities;
+
 /**
  * Bouton pour gérer les filtres de collection
  *
@@ -89,9 +91,13 @@ public class IconFilter extends Icon {
    
    protected void submit() {
       if( !isAvailable() ) return;
-//      activated = !activated;
-//      aladin.directory.doFiltre();
-      aladin.directory.fullReset();
+      
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            aladin.directory.fullReset();
+         }
+      });
+
    }
       
    protected String getHelpTip() { return aladin.chaine.getString("DTFILTERTIP"); }

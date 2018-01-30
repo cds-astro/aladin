@@ -417,9 +417,11 @@ public class PlanMoc extends PlanBGCat {
       // Je force le MOC minOrder à 3 pour que l'affichage soit propre
       if( moc!=null && moc.getMinLimitOrder()<3 ) {
          try {
+            if( moc.getMocOrder()<3 ) moc.setMocOrder(3);   
             moc.setMinLimitOrder(3);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
+            error="MOC error";
             return false;
          }
       }
@@ -502,6 +504,9 @@ public class PlanMoc extends PlanBGCat {
    // retourne/construit la liste du MOC
    // à l'ordre courant (mode progressif)
    private HealpixMoc getHealpixMocLow(int order,int gapOrder) {
+      
+      // On fournit le meilleur MOC dans le cas de la génération d'une image
+      if( aladin.NOGUI ) return moc;
 
       int mo = moc.getMaxOrder();
       if( mo<3 ) mo=3;
@@ -604,18 +609,18 @@ public class PlanMoc extends PlanBGCat {
          boolean flagPeri = isDrawingPerimeter();
          boolean flagBorder = isDrawingBorder();
          boolean flagFill = isDrawingFillIn();
-         
+
          int gapOrder = this.gapOrder;
          if( mustDrawFast() ) {
             gapOrder--;
          }
-         
+
          // Génération des Hpix concernées par le champ de vue
          if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder ) {
             lowMoc = getHealpixMocLow(myOrder,gapOrder);
             drawingOrder = getRealMaxOrder(lowMoc);
             if( drawingOrder==-1 ) return;
-//            System.out.println("Récupération Hpix order "+drawingOrder);
+            //            System.out.println("Récupération Hpix order "+drawingOrder);
             hpx= CDSHealpix.getHealpixBase(drawingOrder);
             ArrayList<Hpix> a1 = new ArrayList<Hpix>(10000);
             ArrayList<Hpix> a2 = !flagPeri ? null : new ArrayList<Hpix>(10000);
@@ -626,21 +631,21 @@ public class PlanMoc extends PlanBGCat {
                Hpix p = new Hpix(c.order, c.npix, frameOrigin);
                if( p.isOutView(v) ) continue;
                a1.add(p);
-               
+
                if( flagPeri )  {
                   long [] vo = getVoisinsSameOrder(CDSHealpix.getHealpixBase(p.order), lowMoc, p.order, p.npix);
                   if( vo[0]!=-1 && vo[1]!=-1 && vo[2]!=-1 && vo[3]!=-1 ) continue;
 
-//                  long deb = p.npix << 2*(drawingOrder-p.order);
-//                  long fin = (p.npix+1) << 2*(drawingOrder-p.order);
-//                  for( long pix=deb; pix<fin; pix++ ) {
-                     
+                  //                  long deb = p.npix << 2*(drawingOrder-p.order);
+                  //                  long fin = (p.npix+1) << 2*(drawingOrder-p.order);
+                  //                  for( long pix=deb; pix<fin; pix++ ) {
+
                   long base = p.npix << 2*(drawingOrder-p.order);
                   Bord bord = new Bord((int)CDSHealpix.pow2(drawingOrder-p.order));
                   while( bord.hasNext() ) {
                      long b = bord.next();
                      long pix = base | b;
-                     
+
                      vo = getVoisins(hpx, lowMoc, drawingOrder, pix);
                      int mask = (vo[0]==-1?0x1:0) | (vo[1]==-1?0x2:0) | (vo[2]==-1?0x4:0) | (vo[3]==-1?0x8:0);
                      if( mask!=0 ) {

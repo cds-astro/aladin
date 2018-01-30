@@ -1712,7 +1712,8 @@ UPFRAMEH	Specify the default coordinate frame.\nIn case of progressive mode (HiP
 UPCACHE	Permanent disk cache
 UPCACHEH	Aladin requires local disk space for keeping data from one session to the other. More it has, better it runs. It is localized in your $HOME/.aladin directory.
 UPLOG CDS log
-UPLOGH You will help the CDS team to improve Aladin by keeping the log mechanism activated. These "logs" are anonymous and do not transmit any local information (paths, file names,...) just some usage statistics and possibly bug reports. Thanks !
+UPLOGH You are freely using Aladin developed by the Centre de Données astronomiques de Strasbourg (France). You will help a lot the developer team by activating the Aladin usage statistic mechanism (short reports automatically sent to CDS). These logs are anonymous and do not contain any local or personal information (paths, file names, ...).\n \nThese statistics are highly valuable for us to justify our activity and to decide next developements.
+UPLOGH1 Do you accept anonymous statistics logs (you will always be able to change this choice via the menu Edit -> Preferrences) ?
 UPHELP Wizard
 UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progressively the Aladin graphical interface.
 #UPTAGCENTER	Centered tag
@@ -1821,7 +1822,8 @@ UPFRAMEH.fr	Indiquez le système de référence céleste par défaut.\nLe tracé d'un 
 UPCACHE.fr	Mémoire tampon
 UPCACHEH.fr	Aladin requière de la place sur le disque local afin de conserver les données d'une session à l'autre. Plus il en dispose, mieux il s'exécutera. Ce cache est localisé dans votre répertoire $HOME/.aladin
 UPLOG.fr Log CDS
-UPLOGH.fr Vous aiderez l'équipe de CDS à améliorer Aladin en laissant actif ce mécanisme de logs. Ceux-ci sont anonymes et ne contiennent aucune information locale (noms de fichier, répertoires,...), uniquement des statistiques d'utilisation et d'éventuels rapports de bogues . Merci !
+UPLOGH.fr Vous utilisez gratuitement Aladin développé par le Centre de Données astronomiques de Strasbourg (France).Vous aiderez grandement l'équipe de développement en activant le mécanisme de statistiques d'utilisation (courts rapports d'utilisations (logs) transmis automatiquement au CDS). Ils sont anonymes et ne contiennent aucune information locale ou personnelle (noms de fichier, répertoires, ...).\n \nCes statistiques nous sont précieuses pour justifier de notre activité, et décider des futurs développements.
+UPLOGH1.fr Autorisez-vous ces statistiques anonymes (vous pourrez toujours changer ce choix via le menu Editer -> Préférences) ?
 UPHELP.fr Assistant
 UPHELPH.fr Active/désactive l'assistant pour les débutatns. Celui-ci permet aux nouveaux utilisateurs d'Aaldin de se familiariser avec l'interface graphique
 #UPTAGCENTER.fr	Marque centrée
@@ -2701,8 +2703,8 @@ UNCHECK Unselect all
 UNCHECK.fr Décoche tout
 COORDCOLUMN	Coord. columns
 COORDCOLUMN.fr Colonnes des coord.
-COORDCOLUMNDETAIL The column called "Coo" allows you to modify the selection of the object coordinate columns. Either in a celestial reference (J2000), or in a cartesian reference (XY fits convention). Clic into the concerned cell.
-COORDCOLUMNDETAIL.fr La colonne intitulée "Coo" vous permet de modifier la sélection des colonnes des coordonnées des objets, soit dans un référentiel céleste (J2000), soit dans un référentiel cartésien (XY convention FITS).\nCliquez sur la case désirée.
+COORDCOLUMNDETAIL The column called "Coo" allows you to modify the selection of the object coordinate columns. Either in a celestial reference, or in a cartesian reference (XY fits convention). Clic into the concerned cell.
+COORDCOLUMNDETAIL.fr La colonne intitulée "Coo" vous permet de modifier la sélection des colonnes des coordonnées des objets, soit dans un référentiel céleste, soit dans un référentiel cartésien (XY convention FITS).\nCliquez sur la case désirée.
 REMOVETAG For removing a specifical pointing tag, use the contextual menu on its associated measurement line
 REMOVETAG.fr Pour supprimer un tag de pointage spécifique, utilisez le menu contextuel de ses mesures associées
 TAGINFO Clic anywhere for creating a positional tag, use a clic-and-drag for generating a full text tag with arrow...
@@ -3078,7 +3080,7 @@ SELECTSERVERTOOLTIP.fr Liste des serveurs TAP disponibles...
 TAPGENERICFORMDESC.fr	Accès aux serveurs compatibles TAP.\n Vous pouvez, soit écrire directement une requête ADQL dans le champ de saisie du bas soit utiliser l'interface GUI de la manière suivante: En premier lieu sélectionnez la table concernée dans le menu déroulant du haut. Sélectionnez ensuite dans le panneau de gauche les colonnes de cette table que vous souhaitez récupérer. Cliquez sur sur le bouton "Ajouter" afin de définir une contrainte sur une colonne. Celle-ci s'affichera dans le panneau de droite. Spécifiez les valeurs souhaitées puis complétez la requête en cours de rédaction en cliquant sur le bouton "Rafraichir". Dans le cas d'une contrainte de position, si les colonnes contenant la longitude et la latitude n'ont pas été reconnues automatiquement, vous utiliserez le bouton "Positionner ra,dec". Enfin pour indiquer une contrainte de position, vous disposez d'un champ spécifique. Utilisez le bouton "Ajouter" comme pour une contrainte classique. Vous pouvez supprimer une contrainte déjà mémorisée via le bouton "X" tout à droite de chaque contrainte. Dès lors que votre requête sera prête, vérifiez sa syntaxe (notamment si vous l'avez éditée manuellement) via le bouton "Vérifier", puis soumettez-là via le bouton "Charger".
 TAPLOADINGSTATUSINFO.fr En cours de chargement des schémas TAP du serveur que vous avez sélectionné. Patientez quelques instants
 TAPERRORSTATUSINFO.fr Impossible de contacter le serveur TAP. Veuillez essayer ultérieurement
-TARGETERROR.fr Veuillez vérifiez les coordonnées de votre cible!
+TARGETERROR.fr Veuillez vérifiez les coordonnées de votre cible !
 SELECTSERVERLABEL.fr Sélectionnez un serveur
 JOBCONTROLLERTITLE.fr Contrôleur de tâches
 TAPEXCLIENTINSTR.fr Choississez un exemple à exécuter
@@ -3088,7 +3090,7 @@ SELECTDIRTAPSERVERSTOOLTIP.fr Choississez les serveurs TAP depuis l'arbre de déc
 SELECTSPLTAPSERVERSLABEL.fr Serveurs présélectionnés
 SELECTSPLTAPSERVERSTOOLTIP.fr Une présélection de serveurs TAP est présenté ci-dessous. La liste exhaustive est disponible dans l'onglet adjacent.
 INCORRECTTAPURLMESSAGE.fr Erreur de connection ! Vérifiez l'URL
-MESSAGEUNKNOWNPARAMSINQUERY.fr Les identificateurs surlignées sont-ils corrects?
+MESSAGEUNKNOWNPARAMSINQUERY.fr Les identificateurs surlignées sont-ils corrects ?
 
 TAPTABLEJOINTIP Join table
 TAPTABLEUPLOADPARSETIP Load this data on the gui. 
@@ -3163,8 +3165,8 @@ GENERIC_TAPMODESTOOLTIP.fr  Cliquez pour recharger la configuration du formualir
 #SETTARGETTOOLTIP.fr  Hint: Configure different target by clicking the "Settings" button
 #CHANGESETTINGSTOOLTIP.fr  Hint: Configure second table by clicking the "Settings" button
 NOGLURECFOUND.fr La configuration du formulaire simplifié est innaccessible (GLU record not found).
-NOTARGETSET.fr  Aucune cible spécifiée!
-NORANGEERRORMESSAGE.fr  Requière un interval de valeurs. Veuillez indiquer deux valeurs!
+NOTARGETSET.fr  Aucune cible spécifiée !
+NORANGEERRORMESSAGE.fr  Requière un interval de valeurs. Veuillez indiquer deux valeurs !
 CHOOSEFROMTAPSERVERSTEXT.fr  Ou choississez dans la liste ci-dessous :
 WAITLOADINGTAPSERVERSLIST.fr  Chargement de la liste des serveurs TAP en cours...
 #NODUPLICATESELECTION.fr  Cannot select same table! No second table selected.
@@ -3201,7 +3203,7 @@ UWSNOJOBMESSAGE.fr  Aucune tâches dans la session active. \nCette fenêtre affich
 CANTSTARTJOB.fr  Démarrage de la tâche impossible. Veuillez essayer à nouveau
 STANDARDRESULTSLOAD.fr  Charger les résultat
 STANDARDRESULTSLOADTIP.fr  Charger les résultats depuis "/results/result"
-UWSASKLOADDEFAULTRESULTS.fr  Récupération des résultats impossible. Essayez de les accéder directement?
+UWSASKLOADDEFAULTRESULTS.fr  Récupération des résultats impossible. Essayez de les accéder directement ?
 CANTABORTJOB.fr  Interruption de la tâche impossible. Veuillez essayer à nouveau
 UWSJOBRADIOTOOLTIP.fr  Cliquez pour consulter le status de la tâche
 

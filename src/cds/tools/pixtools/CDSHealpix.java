@@ -70,6 +70,15 @@ public final class CDSHealpix {
 
    static public long[] query_disc(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
       int order = init(nside);
+      
+//      // La totalité du ciel ? Ne fonctionne pas avec la lib HEALPix,
+//      // je le fait à la main
+//      if( radius>=Math.toRadians(180) ) {
+//         long [] res = new long[ (int)(12*nside*nside) ];
+//         for( int i=0; i<res.length; i++ ) res[i]=i;
+//         return res;
+//      }
+      
       RangeSet list = inclusive ? hpxBase[order].queryDiscInclusive(pointing(ra,dec),radius,4)
             : hpxBase[order].queryDisc(pointing(ra,dec),radius);
       if( list==null ) return new long[0];

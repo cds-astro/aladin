@@ -137,18 +137,18 @@ public class Message extends Panel {
         c.insets = new Insets(10,20,10,20);
         JPanel pb = new JPanel();
         if( type==CONFIRME ) {
-           oui = new Button("Yes");
-           oui.addActionListener(new ActionListener()  {
-              public void actionPerformed(ActionEvent e) { value=OUI; dialog.dispose(); }
-           });
-//           oui.setFont( new Font("Helvetica",Font.PLAIN,12));
-           pb.add(oui);
            non = new Button("No");
            non.addActionListener(new ActionListener()  {
               public void actionPerformed(ActionEvent e) { value=NON; dialog.dispose(); }
            });
 //           non.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(non);
+           oui = new Button("Yes");
+           oui.addActionListener(new ActionListener()  {
+              public void actionPerformed(ActionEvent e) { value=OUI; dialog.dispose(); }
+           });
+//           oui.setFont( new Font("Helvetica",Font.PLAIN,12));
+           pb.add(oui);
         } else if( type==PASSWORD ) {
            user = new TextField(15);
            passwd = new TextField(15);

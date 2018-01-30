@@ -354,8 +354,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
       if( s==null ) radius=-1;
       else {
-         try { radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2; }
-         catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
+         try {
+            radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2;
+            if( radius>180 ) radius=180;
+         } catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
       }
 
       // La taille de la tuile Hips

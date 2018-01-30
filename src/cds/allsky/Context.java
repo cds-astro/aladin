@@ -103,6 +103,7 @@ public class Context {
    protected boolean fading=false;           // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
+   protected boolean cdsLint=false;          // Activation du mode "cds" pour LINT (plus de vérif)
    protected boolean flagRecomputePartitioning=true; // true si hipsgen doit déterminer automatiquement la taille du partitionnement
    protected boolean partitioning=true;      // Activation de la lecture par blocs des fimages originales
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
@@ -245,6 +246,7 @@ public class Context {
    public int getTileOrder() { return tileOrder==-1 ? Constante.ORDER : tileOrder; }
    public int getTileSide() { return (int) CDSHealpix.pow2( getTileOrder() ); }
    public int getDepth() { return depth; }
+   public boolean isCDSLint() { return cdsLint; }
 
    // Setters
    public void setLive(boolean flag) { live=flag; }
@@ -310,6 +312,7 @@ public class Context {
       }
    }
    
+   
    private String addendum_id=null;
    public void setAddendum(String addId) { addendum_id=addId; }
    public void addAddendum(String addId) throws Exception {
@@ -368,7 +371,7 @@ public class Context {
       if( s==null || s.trim().length()==0 ) {
          verbose=false;
          s=getLabel()!=null?getLabel():"";
-         if( withException ) throw new Exception("Missing ID (ex: id=CDS/P/DSS2/color)");
+         if( withException ) throw new Exception("Missing ID (ex: creator_did=CDS/P/DSS2/color)");
       }
 
       if( s.startsWith("ivo://")) s=s.substring(6);
@@ -386,7 +389,7 @@ public class Context {
       if( offset==-1) {
          auth="UNK.AUTH";
 //         if( verbose ) warning("Id error => missing authority => assuming "+auth);
-         if( withException ) throw new Exception("ID error => missing authority (ex: id=CDS/P/DSS2/color)");
+         if( withException ) throw new Exception("ID error => missing authority (ex: creator_did=CDS/P/DSS2/color)");
 
       } else {
          auth = s.substring(0,offset);
@@ -394,7 +397,7 @@ public class Context {
          if( auth.length()<3) {
             while( auth.length()<3) auth=auth+"_";
 //            if( verbose ) warning("Creator ID error => at least 3 characters are required => assuming "+auth);
-            if( withException ) throw new Exception("ID error => at least 3 authority characters are required (ex: id=CDS/P/DSS2/color)");
+            if( withException ) throw new Exception("ID error => at least 3 authority characters are required (ex: creator_did=CDS/P/DSS2/color)");
          }
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -405,7 +408,7 @@ public class Context {
          if( bug ) {
             auth=a.toString();
 //            if( verbose ) warning("Creator ID error => some characters are not allowed => assuming "+auth);
-            if( withException ) throw new Exception("ID error => some characters are not allowed (ex: id=CDS/P/DSS2/color)");
+            if( withException ) throw new Exception("ID error => some characters are not allowed (ex: creator_did=CDS/P/DSS2/color)");
          }
       }
 
@@ -416,7 +419,7 @@ public class Context {
       if( id.length()==0) {
          id="ID"+(System.currentTimeMillis()/1000);
 //         if( verbose ) warning("Id error => missing ID => assuming "+id);
-         if( withException ) throw new Exception("ID error: suffix Id missing (ex: id=CDS/P/DSS2/color)");
+         if( withException ) throw new Exception("ID error: suffix Id missing (ex: creator_did=CDS/P/DSS2/color)");
       } else {
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -427,7 +430,7 @@ public class Context {
          if( bug ) {
             id=a.toString();
 //            if( verbose ) warning("Id identifier error => some characters are not allowed => assuming "+id);
-            if( withException ) throw new Exception("ID suffix error: some characters are not allowed (ex: id=CDS/P/DSS2/color)");
+            if( withException ) throw new Exception("ID suffix error: some characters are not allowed (ex: creator_did=CDS/P/DSS2/color)");
          }
       }
 
@@ -1303,6 +1306,7 @@ public class Context {
                      +(statMaxDepth>1?"x"+statMaxDepth:"")+" x"+statMaxNbyte+"]");
       }
       stat(s);
+      
    }
 
    // Demande d'affichage des stats (dans le TabBuild)
@@ -1362,6 +1366,7 @@ public class Context {
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
+      setProgress(statNbFile,nbLowCells);
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
@@ -1386,6 +1391,7 @@ public class Context {
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
+      setProgress(statNbFile,nbLowCells);
    }
    
    // Demande d'affichage des stats (dans le TabJpeg)
@@ -1405,6 +1411,7 @@ public class Context {
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
+      setProgress(statNbFile,nbLowCells);
    }
 
 

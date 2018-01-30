@@ -4950,9 +4950,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    static double ZOOMBGMIN = 1/64.;
 
    /** Retourne la taille en RA en degrés de la vue courante */
-   protected double getTailleRA() {
+   protected double getTailleRA() { return getTailleRA( getProj() ); }
+   protected double getTailleRA( Projection proj ) {
       if( oTailleRA!=iz ) {
-         Projection proj=getProj();
+         
          double max = proj.getRaMax();
          if( (zoom<=ZOOMBGMIN || proj.t==Calib.MOL && zoom<=ZOOMBGMIN*2) && pref instanceof PlanBG ) {
             tailleRA=max;
@@ -4979,9 +4980,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    /** Retourne la taille en DE en degrées de la vue courante */
-   protected double getTailleDE() {
+   protected double getTailleDE() { return getTailleDE( getProj() ); }
+   protected double getTailleDE( Projection proj) {
       if( oTailleDE!=iz ) {
-         Projection proj=getProj();
          double max = proj.getDeMax();
          if( (zoom<=ZOOMBGMIN || proj.t==Calib.MOL && zoom<=ZOOMBGMIN*2) && pref instanceof PlanBG ) {
             tailleDE=max;
@@ -5018,8 +5019,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    /** Retourne la taille en degrés de la vue courante */
-   protected double getTaille() {
-      return Math.max(getTailleRA(),getTailleDE());
+   protected double getTaille() { return getTaille( getProj()); }
+   protected double getTaille( Projection proj ) {
+      return Math.max(getTailleRA( proj ),getTailleDE( proj ));
    }
 
    /* Retourne la taille angulaire (en deg) d'un pixel de la vue */
@@ -5799,16 +5801,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          boolean fullScreen = isFullScreen();
 
          // Détermination du pas en RA et en DE en fonction du champ de vue
+         double tailleRA=getTailleRA();
+         double tailleDE=getTailleDE();
          double pasa, pasd;
-         if( isAllSky() ) {
+         if( tailleRA>120 || tailleDE>120 /* isAllSky() */ ) {
             pasa=30;
             pasd=15;
          } else {
             int nb = fullScreen ? 6 : NBCELL[ViewControl.getLevel(aladin.view.getModeView())];
-            double rd = getTailleDE()*60.;
+            double rd = tailleDE*60.;
             if( rd==0. || Double.isNaN(rd) ) rd=60*360.;
             pasd = goodPas(rd/nb,PASD)/60.;
-            double ra=getTailleRA()*60.;
+            double ra=tailleRA*60.;
             if( Math.abs(cosd)<0.000001 ) ra=360*60;
             else ra = rd/cosd;
 
@@ -5818,7 +5822,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             boolean in1 = isInView(c.al,c.del,500);
             c.al = 0; c.del = -90; c = aladin.localisation.frameToICRS(c);
             boolean in2 = isInView(c.al,c.del,500);
-            if( in1 || in2 )  pasa=30;
+            if( in1 || in2 )  pasa= 30;
             else {
                if( ra>360*60. ) ra=360*60.;
                pasa = goodPas(ra/nb,PASA)/60.;
@@ -5880,11 +5884,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Affichage de la grille en semi transparence
       //      g.setColor(view.gridColor);
       Stroke st = null;
+      
       if( g instanceof Graphics2D ) {
          ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                RenderingHints.VALUE_ANTIALIAS_ON);
          st = ((Graphics2D)g).getStroke();
-         ((Graphics2D)g).setStroke(new BasicStroke(0.5f));
+         float epaisseur = rv.width<1500 ? 0.5f : rv.width/1500f;
+         if( epaisseur<0.5f ) epaisseur=0.5f;
+         else if( epaisseur>2f ) epaisseur=2f;
+         
+         ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
       }
 
       if( aladin.view.opaciteGrid!=1f ) {

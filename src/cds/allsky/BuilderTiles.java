@@ -529,15 +529,8 @@ public class BuilderTiles extends Builder {
       // Attente de la fin du travail
       while( /* !stopped && */ !fifo.isEmpty() || stillWorking() ) {
          cds.tools.Util.pause(1000);
+         infoInCaseOfProblem();
       }
-      
-      // Pour débogage
-//      System.out.println("End of multithreaded computation:");
-//      Iterator<ThreadBuilder> it = threadList.iterator();
-//      while( it.hasNext() ) {
-//         ThreadBuilder tb = it.next();
-//         System.out.println(".thread "+tb.getName()+" => "+tb.getMode());
-//      }
       
       destroyThreadBuilderHpx();
 //      if( stopped ) return;
@@ -553,6 +546,40 @@ public class BuilderTiles extends Builder {
       }
 
       if( context.cacheFits!=null ) context.cacheFits.reset();
+   }
+
+   private static final long MAXCHECKTIME = 3*60*1000L;   // 3mn
+   private long lastCheckTime=-1;
+   private double lastProgress=-1;
+   
+   // Affiche des infos de debug si rien n'a été calculé depuis un bail
+   private void infoInCaseOfProblem() {
+      long t = System.currentTimeMillis();
+      if( t==-1 ) { lastCheckTime=t; return; }
+      
+      // On attend un certain temps avant de tester la progression
+      if( t-lastCheckTime<MAXCHECKTIME ) return;
+      lastCheckTime=t;
+//      System.out.println("Check 10s progress="+context.progress);
+      
+      // Premier test
+      if( lastProgress==-1 ) { lastProgress=context.progress; return; }
+      
+      // Il y a eu du progres => c'est bon
+      if( context.progress!=lastProgress ) { lastProgress=context.progress; return; }
+      
+      context.warning("ALERT !!!");
+      context.warning("Nothing done since a while. Here a short report to understand the problem:");
+      Iterator<ThreadBuilder> it = threadList.iterator();
+      while( it.hasNext() ) {
+         ThreadBuilder tb = it.next();
+         String info = tb.getInfo();
+         context.warning(".thread "+tb.getName()+": "+tb.getMode()+ (info!=null?" => "+info:""));
+      }
+      CacheFits cache = context.getCache();
+      if( cache!=null ) context.warning(cache.toString());
+      else context.warning("No cache. FreeRAM="+cds.tools.Util.getUnitDisk(CacheFits.getFreeMem()));
+      
    }
    
    protected void activateCache(long size,long sizeCache) {
@@ -670,9 +697,9 @@ public class BuilderTiles extends Builder {
       static final int DIED  =3;
       static final int SUSPEND = 4;
       
-
       ThreadBuilderTile threadBuilderTile;
       private int mode=START;
+      private String info;      // Message expliquant l'état courant
       private boolean encore=true;
 
       public ThreadBuilder(String name,ThreadBuilderTile threadBuilderTile) {
@@ -680,6 +707,10 @@ public class BuilderTiles extends Builder {
          this.threadBuilderTile = threadBuilderTile;
          Aladin.trace(3,"Creating "+getName());
       }
+      
+      // Pour du débogage, possiblité d'indiquer pourquoi le thread
+      // se trouve dans tel ou tel état
+      public String getInfo() { return info; }
       
       public String getMode() { return MODE[mode]; }
 
@@ -707,14 +738,16 @@ public class BuilderTiles extends Builder {
          return true;
       }
       
-      public boolean arret() {
+      public boolean arret(String info) {
          if( !suspendable ) return false;
          mode=SUSPEND;
+         this.info=info;
          return true;
       }
       public boolean reprise() { 
          if( mode!=SUSPEND ) return false;
          mode=EXEC;
+         info=null;
          wakeUp();
          return true;
       }
@@ -734,14 +767,16 @@ public class BuilderTiles extends Builder {
             }
             while( encore && (item = getNextNpix())==null ) {
                mode=WAIT;
+               info="No more HEALPix cell branch to compute => thread by waiting another task";
                try { Thread.currentThread().sleep(100); } catch( Exception e) { };
             }
             if( encore ) {
                suspendable= item.order==3;
                mode=EXEC;
+               info=null;
                updateStat(+1,0,0,0,0,0);
                try {
-                  Aladin.trace(4,Thread.currentThread().getName()+" process high level cell "+item+"...");
+                  Aladin.trace(4,Thread.currentThread().getName()+" process HEALPix cell branch "+item.npix+"...");
 
                   // si le process a été arrêté on essaie de ressortir au plus vite
 //                  if (stopped) break;
@@ -764,6 +799,7 @@ public class BuilderTiles extends Builder {
          }
 
          mode=DIED;
+         info="Thread died";
          rmThread(Thread.currentThread());
          //         Aladin.trace(3,Thread.currentThread().getName()+" died !");
       }
@@ -817,11 +853,11 @@ public class BuilderTiles extends Builder {
       }
    }
    
-   boolean arret(ThreadBuilderTile tbt ) {
+   boolean arret(ThreadBuilderTile tbt, String info ) {
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) {
          ThreadBuilder tb = it.next();
-         if( tb.threadBuilderTile==tbt ) return tb.arret();
+         if( tb.threadBuilderTile==tbt ) return tb.arret(info);
       }
       return false;
    }

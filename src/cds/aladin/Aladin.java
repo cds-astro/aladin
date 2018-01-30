@@ -161,10 +161,16 @@ import healpix.essentials.Vec3;
  * @beta <UL>
  * @beta    <LI> Data discovery tree: sort and hiearchy control
  * @beta    <LI> Distance tool improvement
+ * @beta    <LI> Log control adapted to Debian policy
+ * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
+ * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Hipsgen multithread dead lock (multipass bug)
+ * @beta    <LI> Grid stroke line adjustement (for very huge images in NOGUI mode)
+ * @beta    <LI> Debian+GNOME context (Jtree, TextField, SwingInvokeLater...)
  * @beta    <LI> Hipsgen DETAILS action on MEF file (FoV bug)
  * @beta <UL>
  * @beta </UL>
@@ -189,7 +195,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.065";
+   static public final    String VERSION = "v10.073";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -216,7 +222,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
    // Gère le mode particuliers
-   static boolean LOG=true;  // false si on inhibe les logs
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
@@ -225,6 +230,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
    static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
+   static boolean SETLOG=false; // true si on a forcé le positionnement du LOG
 
    // La couleur du fond
    
@@ -391,6 +397,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Les noms des fichiers GLU locaux additionnels passés en ligne de commande
    static String GLUFILE=null;
+   
+   // Une largeur de démarrage pour le panneau de l'arbre des collections
+   static String TREEWIDTH=null;
 
    // Theme "forcé" de l'interface (cf option -theme=classic|dark) => ignore la config courante
    // null:config courante, "dark", ou "classic"
@@ -2837,7 +2846,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Doit-on nettoyer le cache et recharger les bookmarks officielles
       // car le numéro de version Aladin a changé par rapport à la dernière utilisation
       else if( configuration.getVersion()==null || !configuration.getVersion().equals(VERSION) ) {
-         System.out.println("In Aladin.conf ["+configuration.getVersion()+"] and in code ["+VERSION+"]");
+//         System.out.println("In Aladin.conf ["+configuration.getVersion()+"] and in code ["+VERSION+"]");
          trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
          cache.clear();
 //         if( bookmarks!=null ) bookmarks.reload();
@@ -2859,8 +2868,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          @Override
          public void run() {
             try {
-               Thread.currentThread().sleep(5000);
-               testVersion();
+               Thread.currentThread().sleep(6000);
+               if( Default.VERSIONTEST ) testVersion();
+               testLog();
             } catch( Exception e) { }
          }
       }).start();
@@ -2954,6 +2964,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    static protected String getReleaseNumber() {
       return VERSION.substring(0,VERSION.indexOf('.')+2);
+   }
+   
+   
+   static final private String LOGDEMAND = "LOGDEMAND";
+   
+   /** Si le log est inhibé par défaut on va demander l'avis de l'utilisateur */
+   protected void testLog() {
+      if( SETLOG ) return;
+      if( configuration.isLog() ) return;
+      if( !configuration.mustShowHelp(LOGDEMAND) ) return;
+      
+      // On ne posera qu'une fois la question
+      configuration.showHelpDone(LOGDEMAND);
+      
+      if( confirmation(chaine.getString("UPLOGH")+"\n \n"+chaine.getString("UPLOGH1") ) ) {
+         configuration.setLog(true);
+      }
    }
 
    /** Test du numero de version */
@@ -4422,25 +4449,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       Healpix hpx = new Healpix();
       
-      // Création de la liste des sommets dans le sens counterclock
-      // avec suppression éventuelle des doublons de deux sommets consécutifs dans le même pixel Healpix
-//      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
-//      Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
-//      long onpix=-1;
-//      while( a!=null ) {
-//         long npix = hpx.ang2pix(order, a.raj, a.dej);
-//         if( npix!=onpix ) {
-//            onpix=npix;
-//
-//            double theta = Math.PI/2 - Math.toRadians( a.dej );
-//            double phi = Math.toRadians( a.raj );
-//            cooList.add(new Vec3(new Pointing(theta,phi)));
-//         }
-//
-//         // Prochain sommet ?
-//         a = isCounterClock ? a.debligne : a.finligne;
-//      }
-
+      // Création de la liste des sommets
       ArrayList<double[]> cooList = new ArrayList<double[]>();
       Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
       long onpix=-1;
@@ -4460,10 +4469,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
      
       try {
          moc = CDSHealpix.createHealpixMoc(cooList,order);
-//         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-//         moc = new HealpixMoc();
-//         moc.rangeSet = m.getRangeSet();
-//         moc.toHealpixMoc();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception("Degenerated polygon");
@@ -5828,6 +5833,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -local: without Internet test access\n"+
                "       -theme=dark|classic: interface theme\n"+
                "       -location=x,y,w,h: window position & size\n"+
+               "       -treewidth=w: default tree panel width (0=closed)\n"+
                "       -screen=\"full|cinema|preview\": starts Aladin in full screen\n" +
                "               cinema mode or in a simple preview window\n"+
 //               "       -glufile=\"pathname|url[;...]\": local/remote GLU dictionaries describing\n"+
@@ -5839,10 +5845,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -nogui: no graphical interface (for script mode only)\n" +
                "               => noplugin, nobookmarks, nohub\n"+
                "       -noreleasetest: no Aladin new release test\n"+
-               "       -[no]samp: no usage of the internal SAMP hub\n"+
-               "       -[no]plugin: with/without plugin support\n"+
+               "       -nosamp: no usage of the internal SAMP hub\n"+
+               "       -noplugin: no plugin support\n"+
 //               "       -[no]bookmarks: with/without bookmarks support\n"+
 //               "       -[no]outreach: with/without outreach mode\n"+
+               "       -[no]log: with/without anonymous statistic reports\n"+
                "       -[no]beta: with/without new features in beta test\n"+
 //               "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
                "       -trace: trace mode for debugging purpose\n"+
@@ -5853,7 +5860,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -mocgen: build MOC by script (see -mocgen -h for help)\n"+
                "\n"+
                "   The files specified in the command line can be :\n"+
-               "       - images: FITS (gzipped,RICE,MEF,...), HEALPix maps, JPEG,GIF,PNG\n"+
+               "       - images: FITS (gzipped,bzipped,RICE,MEF,...), HEALPix maps, JPEG,GIF,PNG\n"+
                "       - tables: FITS, XML/VOTable, CSV, TSV, S-extractor, IPAC-TBL, Skycat or ASCII tables\n"+
                "       - properties: propertie record list for populating the data discovery tree\n"+
                "       - graphics: Aladin or IDL or DS9 regions, MOCs\n"+
@@ -5871,7 +5878,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Affichage d'Aladin dans sa propre Frame */
-   static protected void startInFrame(Aladin a) {
+   static protected void startInFrame(final Aladin a) {
       a.f = new MyFrame(a,"");
       a.f.setIconImage(a.getImagette("AladinIconSS.gif"));
       JPanel p = (JPanel)a.f.getContentPane();
@@ -5915,15 +5922,29 @@ DropTargetListener, DragSourceListener, DragGestureListener
       a.offsetLocation();
       
       a.f.setVisible(true);
-      Util.pause(100);
       
       // Positionnement initiales des splits
+      Util.pause(10);
+      resumeSplit(a);
+      
+      // Reositionnement car nécessaires pour Linux GNOME
+      (new Thread(){
+         public void run() {
+            Util.pause(1000);
+            SwingUtilities.invokeLater(new Runnable() {
+               public void run() { resumeSplit(a); }
+            });
+         }
+      }).start();
+
+      //      trace(2,"Aladin window size: "+a.getWidth()+"x"+a.getHeight());
+   }
+   
+   static private void resumeSplit(Aladin a) {
       a.mesure.setReduced(true);
       a.splitHiPSWidth.setDividerLocation( a.getHiPSWidth() );
       a.splitZoomHeight.setDividerLocation( a.calque.getHeight() -  a.getZoomViewHeight() );
       a.splitZoomWidth.setDividerLocation( a.mainRight.getWidth() -  a.getStackWidth() );
-      
-      //      trace(2,"Aladin window size: "+a.getWidth()+"x"+a.getHeight());
    }
   
 
@@ -5998,7 +6019,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
-         else if( args[i].equals("-nolog") )       { LOG=false; lastArg=i+1; }
+         else if( args[i].equals("-nolog") )       { Default.LOG=false; SETLOG=true; lastArg=i+1; }
+         else if( args[i].equals("-log") )         { Default.LOG=true; SETLOG=true; lastArg=i+1; }
          else if( args[i].equals("-outreach") )    { /* OUTREACH=true; setOUTREACH=true; */ lastArg=i+1; }
          else if( args[i].equals("-proto") )       { PROTO=BETA=true; lastArg=i+1; }
          else if( args[i].equals("-nobeta") )      { BETA=false; lastArg=i+1; }
@@ -6035,6 +6057,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].startsWith("-rHost=") )  { RHOST=args[i].substring(7); lastArg=i+1; }
          else if( args[i].startsWith("-from=") )   { FROMDB=args[i].substring(6); lastArg=i+1; }
          else if( args[i].startsWith("-glufile=") ) { GLUFILE=args[i].substring(9); lastArg=i+1; }
+         else if( args[i].startsWith("-treewidth=") ) { TREEWIDTH=args[i].substring(11); lastArg=i+1; }
          else if( args[i].startsWith("-theme=") )  { THEME=args[i].substring(7); lastArg=i+1; }
          else if( args[i].startsWith("-registry=") ) { FrameServer.REGISTRY_BASE_URL=args[i].substring(10); lastArg=i+1; }
          else if( args[i].startsWith("-stringfile=") ) { STRINGFILE=args[i].substring(12); lastArg=i+1; }

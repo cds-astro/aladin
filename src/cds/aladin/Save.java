@@ -2256,7 +2256,6 @@ public class Save extends JFrame implements ActionListener {
          try { naxis = headerFits.getIntFromHeader("NAXIS"); }
          catch( Exception e1 ) { }
          boolean flagModif=false;
-
          Hashtable origKeys = new Hashtable(100);
 
          // Récupération de l'ancienne entete
@@ -2273,6 +2272,7 @@ public class Save extends JFrame implements ActionListener {
             String k = HeaderFits.getKey(s);
 
             if( k!=null ){
+               
 
                // Traitement simplifié pour les COMMENT et HISTORY
                if( k.equals("COMMENT") ) {

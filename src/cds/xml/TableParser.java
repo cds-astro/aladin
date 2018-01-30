@@ -82,6 +82,7 @@ final public class TableParser implements XMLConsumer {
    static final public int FMT_UNKNOWN=0;
    static final public int FMT_DECIMAL=1;
    static final public int FMT_SEXAGESIMAL=2;
+   static final public int FMT_NSEW=4;
    
    // Différentes unités pour les coordonées célestes
    static final public int UNIT_UNKNOWN=0;
@@ -95,6 +96,8 @@ final public class TableParser implements XMLConsumer {
    private int nRA,nDEC;              // Numéro de la colonne RA et DEC (-1 si non encore trouvée)
    private int nPMRA,nPMDEC;          // Numéro de la colonne PMRA et PMDEC (-1 si non encore trouvée)
    private int nX,nY;	      	      // Numéro de la colonne X et Y (-1 si non encore trouvée)
+   private int nRADEC;                // Alternative pour les coordonnées dans une seule colonne
+   private int formatx=-1;            // Alternative pour les coordonnées dans une seule colonne
    private String sFreq,sFlux,sFluxErr,sSedId; // ID des colonnes portant les valeurs d'un point SED
    private int nFreq,nFlux,nFluxErr,nSedId; // Numéro des colonnes correspondantes
    private int qualRA,qualDEC;        // La qualité de détection des colonnes RA et DEC (1000 mauvais, 0 excellent)
@@ -982,9 +985,9 @@ final public class TableParser implements XMLConsumer {
     * à parser.
     */
    private void initTable() {
-      nRA=nDEC=nPMRA=nPMDEC=nX=nY=-1;
+      nRA=nDEC=nPMRA=nPMDEC=nX=nY=nRADEC=-1;
       qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=qualPMRA=qualPMDEC=1000; // 1000 correspond au pire
-      format = FMT_UNKNOWN;
+      format = formatx = FMT_UNKNOWN;
       unit = UNIT_UNKNOWN;
       //      flagSexa=false;	// Par défaut on suppose des coord. en degrés
       //      knowFormat=false; // Par défaut on ne connait pas le format des coord.
@@ -1395,6 +1398,12 @@ final public class TableParser implements XMLConsumer {
 //         else consumer.setTableInfo("__XYPOS","true");
 //      }
       
+      // Peut être une alternative sur une seule colonne
+      if( nRA<0 && nDEC<0 && nRADEC>=0 ) {
+         nRA=nDEC=nRADEC;
+         format=formatx;
+      }
+      
       if( nRA<0 || nDEC<0 ) {
          if( nX>=0 && nY>=0  ){
             flagXY=true;
@@ -1602,21 +1611,52 @@ final public class TableParser implements XMLConsumer {
     */
    static public int getRaDec(Astrocoo c, String ra, String dec, int format,int unit) throws Exception {
 
+      double signRa=1, signDec=1;
+      
       // Détermination du format si non spécifié
       if( format==FMT_UNKNOWN ) {
+         String ra1=ra;
+         String dec1=dec;
+         
+         // On repère puis enlève l'éventuelle orientation N,S,E ou W en suffixe
+         if( isNSEW(ra) ) {
+            ra1=ra.substring(0, ra.length()-1 );
+            dec1=dec.substring(0, dec.length()-1 );
+            format = FMT_NSEW;
+         }
+         
          try {
             char ss = dec.charAt(0);
-            format= isSexa(ra+( ss!='-' && ss!='+' ? " +":" " )+dec) ? FMT_SEXAGESIMAL : FMT_DECIMAL;
+            format |= isSexa(ra1+( ss!='-' && ss!='+' ? " +":" " )+dec1) ? FMT_SEXAGESIMAL : FMT_DECIMAL;
          }catch( Exception e ) {
             if( Aladin.levelTrace>3 ) e.printStackTrace();
          }
       }
+      
+      // On enlève l'éventuelle orientation N,S,E ou W en suffixe
+      // et on mémorise la modif de signe éventuelle
+      if( (format&FMT_NSEW)!=0 ) {
+         int n = ra.length()-1;
+         signRa = ra.charAt( n )=='W' ? -1 : 1;
+         ra=ra.substring(0, n );
+         
+         n = dec.length()-1;
+         signDec = dec.charAt( n )=='S' ? -1 : 1;
+         dec=dec.substring(0, n );
+         format = FMT_NSEW;
+      }
 
       // Parsing en sexagésimal
-      if( format==FMT_SEXAGESIMAL ) {
+      if( (format&FMT_SEXAGESIMAL)!=0 ) {
          try {
             char ss = dec.charAt(0);
             String s;
+            
+            if( (format&FMT_NSEW)!=0 ) {
+               if( signDec==-1 ) ss = ss=='-' ? '+' : '-';  // inversion du signe
+               if( signRa==-1 ) ra = "-"+ra;
+            }
+            
             if( ss=='-' || ss=='+' ) s=ra+" "+dec;
             else s=ra+" +"+dec;
             c.set(s); }
@@ -1629,6 +1669,11 @@ final public class TableParser implements XMLConsumer {
          try { 
             double rax = Double.parseDouble(ra);
             double dex = Double.parseDouble(dec);
+            
+            if( (format&FMT_NSEW)!=0 ) {
+               rax *= signRa;
+               dex *= signDec;
+            }
 
             // Conversion éventuelle d'unités
             if( unit==UNIT_RADIANS ) {
@@ -1649,6 +1694,7 @@ final public class TableParser implements XMLConsumer {
    /** Retourne true si la coord. passée en paramètre est du sexagésimal.
     * Test simplement s'il y a plus d'un séparateur de champ */
    static private boolean isSexa(String s) {
+      
       int n = s.length();
       int nbb;		// Nombre de separateurs
 
@@ -1657,6 +1703,15 @@ final public class TableParser implements XMLConsumer {
          if( c==':' ||c==' ' || c=='\t' ) nbb++;
          if( nbb>1 ) return true;
       }
+      return false;
+   }
+   
+   /** Retourne true si la coordonnée indique la direction en suffixe */
+   static private boolean isNSEW(String s) {
+      int n = s.length();
+      if( n<2 ) return false;
+      char c = s.charAt(n-1);
+      if( c=='N' || c=='S' || c=='E' || c=='W' ) return true;
       return false;
    }
 
@@ -1670,6 +1725,8 @@ final public class TableParser implements XMLConsumer {
       if( s.equalsIgnoreCase("_RA") )      { setEq(); return 2; }
       if( s.equalsIgnoreCase("RA(ICRS)") ) { setEq(); return 3; }
       if( s.equalsIgnoreCase("RA") )       { setEq(); return 4; }
+      if( s.equalsIgnoreCase("LON") )      { setEq(); return 5; }
+      if( s.equalsIgnoreCase("LONG") )     { setEq(); return 5; }
       if( s.equalsIgnoreCase("ALPHA_J2000") ) { setEq(); return 5; }
       if( s.equalsIgnoreCase("GLON") )  { setGal(); return 6; }
       if( s.equalsIgnoreCase("SGLON") ) { setSGal(); return 6; }
@@ -1686,6 +1743,7 @@ final public class TableParser implements XMLConsumer {
       if( s.startsWith("_ra") ) { setEq(); return 0; }
       if( s.startsWith("ra") )   { setEq(); return 1; }
       if( s.startsWith("alpha") ) { setEq(); return 2; }
+      if( s.startsWith("LON") )   { setEq(); return 3; }
       if( s.startsWith("GLON") )  { setGal();  return 0; }
       if( s.startsWith("SGLON") ) { setSGal(); return 0; }
       if( s.startsWith("SLON") )  { setSGal(); return 0; }
@@ -1709,6 +1767,7 @@ final public class TableParser implements XMLConsumer {
       if( s.equalsIgnoreCase("DEC") )       { setEq(); return 7; }
       if( s.equalsIgnoreCase("DE") )        { setEq(); return 8; }
       if( s.equalsIgnoreCase("DELTA_J2000") ) { setEq(); return 8; }
+      if( s.equalsIgnoreCase("LAT") )       { setEq(); return 8; }
       if( s.equalsIgnoreCase("GLAT") )  { setGal();  return 9; }
       if( s.equalsIgnoreCase("SGLAT") ) { setSGal(); return 9; }
       if( s.equalsIgnoreCase("SLAT") )  { setSGal(); return 9; }
@@ -1726,6 +1785,7 @@ final public class TableParser implements XMLConsumer {
       if( s.startsWith("de") )   { setEq(); return 3; }
       if( s.indexOf("de")>0 )    { setEq(); return 4; }
       if( s.startsWith("delta") ){ setEq(); return 5; }
+      if( s.startsWith("LAT") )  { setEq();  return 6; }
       if( s.startsWith("GLAT") )  { setGal();  return 0; }
       if( s.startsWith("SGLAT") ) { setSGal(); return 0; }
       if( s.startsWith("SLAT") )  { setSGal(); return 0; }
@@ -1892,7 +1952,8 @@ final public class TableParser implements XMLConsumer {
          nRA=nField; qualRA=qual;
          f.cooPossibleSignature = Field.RA;
          this.unit = getUnit(unit);
-         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
+         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 
+               && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
          validLastCoordSys();
       }
 
@@ -2018,16 +2079,16 @@ final public class TableParser implements XMLConsumer {
       
       // Cas vraiment particulier d'une colonne unique pour les coordonnées
       if( nRA==-1 && (ucd.equals("pos.eq") ||  ucd.equals("pos.eq;meta.main")) ) {
-         nRA=nDEC = nField;
+         nRADEC = nField;
          this.unit = getUnit(unit);
-         format= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
+         formatx= unit.length()==0 ? FMT_UNKNOWN : unit.indexOf("h")>=0 
+               && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
          validLastCoordSys();
-         qualRA=qualDEC=0;
+//         qualRA=qualDEC=0;
          return;
       }
-
    }
-
+   
    /** XMLparser interface */
    public void endElement (String name) {
       if( inError ) inError=false;
@@ -2108,7 +2169,13 @@ final public class TableParser implements XMLConsumer {
             if( f!=null ) f.addInfo("DESCRIPTION",getStringTrim(ch,start,length));
          }
          else if( inCSV || flagTSV )  dataParse(ch,start,length);
-         else if( inTD )              { record[row] = getStringTrim(ch,start,length); valueInTD=length>0; }
+         else if( inTD ) {
+            if( row>=record.length) {
+               error="VOTable error: too many TD elements compared to FIELDs definition";
+               valueInTD=true;  // pour éviter une exception par la suite
+            }
+            else { record[row] = getStringTrim(ch,start,length); valueInTD=length>0; }
+         }
          else if( inError )           error = getStringTrim(ch,start,length);
          else if( f!=null && fieldSub!=null )    f.addInfo(fieldSub,getStringTrim(ch,start,length));
          else if( filter!=null ) consumeFilter(getStringTrim(ch,start,length));

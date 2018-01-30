@@ -229,11 +229,11 @@ public class CacheFits {
       f.fits = new Fits();
       if( context!=null && context.skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
 
-      // Il faut lire deux fichiers, le HHH, puis le JPEG ou PNG suivant le cas
+      // Il faut lire deux fichiers, le HHH, puis le JPEG ou PNG, voire FITS suivant le cas
       if( (mode&HHH)!=0 ) {
          f.fits.loadHeaderFITS(fileName);
-         String pngFile = fileName.replaceAll("\\.hhh",".png");
-         String jpgFile = fileName.replaceAll("\\.hhh",".jpg");
+         String pngFile  = fileName.replaceAll("\\.hhh",".png");
+         String jpgFile  = fileName.replaceAll("\\.hhh",".jpg");
 
          // On ne connait pas le type de fichier pour les pixels,
          // => on va voir ce qui existe
@@ -241,15 +241,15 @@ public class CacheFits {
             String racJpgFile = jpgFile;
             String racPngFile = pngFile;
             int i;
-            if( (i=jpgFile.indexOf(".jpg["))>0 ) racJpgFile = jpgFile.substring(0,i+4);
-            if( (i=pngFile.indexOf(".png["))>0 ) racPngFile = pngFile.substring(0,i+4);
+            if( (i= jpgFile.indexOf(".jpg["))>0 )   racJpgFile  = jpgFile.substring(0,i+4);
+            if( (i= pngFile.indexOf(".png["))>0 )   racPngFile  = pngFile.substring(0,i+4);
 
             if( (new File(racJpgFile)).exists() ) mode |= JPEG;
             else if( (new File(racPngFile)).exists() ) mode |= PNG;
          }
          if( (mode&PNG)!=0  ) fileName=pngFile;
          else if( (mode&JPEG)!=0 ) fileName=jpgFile;
-         else throw new Exception(".hhh file without associated .jpg or .png file");
+         else throw new Exception(".hhh file without associated .jpg, .png file");
       }
 
       if( (mode&(PNG|JPEG))!=0 ) {

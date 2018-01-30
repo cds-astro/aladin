@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import javax.swing.ButtonGroup;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.SwingUtilities;
 
 import cds.tools.Astrodate;
 import cds.tools.Util;
@@ -47,7 +48,7 @@ public class DirectorySort {
    public static final String ADDS        = "Adds";
    
    public static final String[] BRANCHES   = { 
-         "Image", "Data base", "Catalog", "Cube", "Outreach", OTHERS, PROBLEMATIC };
+         "Image", "Data base", "Catalog", "Cube", "Solar system", "Ancillary", "Outreach", OTHERS, PROBLEMATIC };
    
    public static final String[] PROTOCOLS = { "HiPS", "SIA2 (image|cube)", "SIA (image)",
          "SSA (spectrum)","CS (table)","TAP (table)"};
@@ -75,7 +76,7 @@ public class DirectorySort {
          "VIII-Radio and Far-IR data", "IX-High-Energy data", "B-External databases, regularly updated",
          "Journal table"};
    public static final String[] PLANETS   = { 
-         "Mercury","Venus","Earth","Mars","Saturn","Jupiter","Uranus","Neptune","Pluton","Charon" };
+         "Sun", "Mercury","Venus","Earth","Mars","Saturn","Jupiter","Uranus","Neptune","Pluton" };
   
    static final public int DEFAULT    = 0;
    static final public int BRANCH     = 1;
@@ -167,10 +168,18 @@ public class DirectorySort {
          mi.setActionCommand( i+"" );
          mi.addActionListener( new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               int index = Integer.parseInt( e.getActionCommand() );
-               br.setCurrent(index);
-               aladin.directory.resumeSort();
-            }
+               
+               final String action = e.getActionCommand();
+               
+               SwingUtilities.invokeLater(new Runnable() {
+                  public void run() {
+                     int index = Integer.parseInt( action );
+                     br.setCurrent(index);
+                     aladin.directory.resumeSort();
+                 }
+               });
+
+             }
          });
          bg.add(mi);
          if( i==br.current ) mi.setSelected(true);
@@ -316,6 +325,13 @@ public class DirectorySort {
                   new SortRule("Origin","By name, grouped by origin",
                         new int[] { BRANCH, ORIGIN, BRANCH1, NAME } )
       } );
+      initBranchRules("Ancillary",  
+            new SortRule[] {
+                  new SortRule("Name","By acending name",
+                        new int[] { BRANCH, NAME } ),
+                  new SortRule("Origin","By name, grouped by origin",
+                        new int[] { BRANCH, ORIGIN, BRANCH1, NAME } )
+      } );
       initBranchRules("Others",  
             new SortRule[] {
                   new SortRule("Protocol","By name, grouped by protocol and origin",
@@ -329,7 +345,7 @@ public class DirectorySort {
                   new SortRule("Date","Descending date, grouped by protocol and origin",
                         new int[] { BRANCH, -YEAR, -DATE, ORIGIN, PROTOCOL, NAME } )
       } );
-      initBranchRules("Planet",  
+      initBranchRules("Solar system",  
             new SortRule[] {
                   new SortRule("Planet","by resolution, grouped by Planet name",
                         new int[] { BRANCH, PLANET, RESOL, NAME } ),
@@ -347,7 +363,8 @@ public class DirectorySort {
    /** Retourne true si on est sur un noeud qui dispose d'un menu de tri */
    protected boolean hasBranchesRules(String branch) {
       for( String cat : AllRules.keySet() ) {
-         if( branch.equals(cat) ) return true;
+//         if( branch.equals(cat) ) return true;
+         if( branch.startsWith(cat) ) return true;
       }
       return false;
 
@@ -447,7 +464,7 @@ public class DirectorySort {
       // Mise en minuscules, sans tiret et autres séparateurs éventuels
       StringBuilder s2 = new StringBuilder();
       for( char c : s.toCharArray() ) {
-         if( Character.isAlphabetic(c) ) s2.append( Character.toLowerCase(c));
+         if( Character.isLetterOrDigit(c) ) s2.append( Character.toLowerCase(c));
       }
      String s3 = s2.toString();
       
@@ -501,7 +518,7 @@ public class DirectorySort {
             char c = Character.toUpperCase( s.charAt(i) );
             if( flagReverse ) {               
                if( Character.isDigit(c) ) c = (char)( '9' - c );
-               else if( Character.isAlphabetic(c) ) c = (char)( 'Z' - c );
+               else if( Character.isLetter(c) ) c = (char)( 'Z' - c );
             }
             key.append( c );
          }

@@ -120,7 +120,7 @@ public final class Projection {
 
    protected double getDeMax() {
       return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.AIT || t==Calib.CAR || t==Calib.MOL
-            || t==Calib.ZEA || t==Calib.ARC ? 180 : 360;
+            || t==Calib.ZEA /*|| t==Calib.ARC */ ? 180 : 360;
    }
 
    protected Projection(double refX,double refY,double x, double y, double refW, double refH, double w, double h,

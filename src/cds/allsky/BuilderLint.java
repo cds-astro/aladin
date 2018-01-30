@@ -51,6 +51,7 @@ public class BuilderLint extends Builder {
    private boolean flagCatalog; // true pour un HiPS catalogue
    private boolean flagCube;    // true pour un HiPS cube
    private boolean flagICRS;    // true si la référence spatiale est ICRS
+   private boolean flagCDS;     // true si on fait en plus des vérifs propres au CDS
    private double skyFraction;  // portion de couverture du ciel [0..1]
    private int order;           // ordre du HiPS 
    private int version;         // numéro de version (1.4 => 140)
@@ -147,6 +148,7 @@ public class BuilderLint extends Builder {
       skyFraction=-1;
       depth=1;
       id="null";
+      flagCDS = context.isCDSLint();
       
       extensions = new ArrayList<String>();
       
@@ -801,6 +803,12 @@ public class BuilderLint extends Builder {
             context.warning("Lint[4.4.1] unreferenced obs_regime ["+unrefObsRegime+"]");
             flagWarning=true;
          }
+      }
+      
+      // Vérifications propres au CDS
+      if( flagCDS ) {
+         s = prop.get("client_category");
+         if( s==null ) context.warning("Lint[CDS] client_category missing");
       }
       
       // Génération de l'identificateur du HiPS

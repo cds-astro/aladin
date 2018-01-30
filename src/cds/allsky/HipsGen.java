@@ -22,9 +22,12 @@
 package cds.allsky;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -134,6 +137,7 @@ public class HipsGen {
       if( s.equalsIgnoreCase("order") )      return "hips_order";
       if( s.equalsIgnoreCase("minOrder") )   return "hips_min_order";
       if( s.equalsIgnoreCase("frame") )      return "hips_frame";
+      if( s.equalsIgnoreCase("bitpix") )     return "hips_pixel_bitpix";
       
       return null;
    }
@@ -169,7 +173,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("cache"))              { cache=val;
       } else if (opt.equalsIgnoreCase("cacheSize"))          { cacheSize = Long.parseLong(val);
       } else if (opt.equalsIgnoreCase("cacheRemoveOnExit"))  { cacheRemoveOnExit = Boolean.parseBoolean(val);
-
+      } else if (opt.equalsIgnoreCase("hhh"))          { generateHHH(val);
       } else if (opt.equalsIgnoreCase("verbose"))      { Context.setVerbose(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("pilot"))        { context.setPilot(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
@@ -178,7 +182,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("nside"))        { context.setMapNside(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("tileOrder"))    { context.setTileOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("hips_tile_width"))  { context.setTileOrder((int)CDSHealpix.log2( Integer.parseInt(val)));
-      } else if (opt.equalsIgnoreCase("bitpix"))       { context.setBitpix(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("hips_pixel_bitpix")) { context.setBitpix(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("hips_frame"))   { context.setFrameName(val);
       } else if (opt.equalsIgnoreCase("maxThread"))    { context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval"))       { context.setSkyval(val);
@@ -232,7 +236,118 @@ public class HipsGen {
          try { context.setBorderSize(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
       } else throw new Exception("Option unknown [" + opt + "]");
    }
+   
+   
+   // Génération des fichiers .hhh qui vont bien
+   // ex: [path/]Titan[.ext] 46080x23040 [23040x23040] [0]
+   // le dernier chiffre indique la colonne origine des longitudes, par défaut le milieu de l'image
+   private void generateHHH( String s1 ) throws Exception {
+      int width,height;
+      int wCell,hCell;
+      int nlig,ncol;
+      String path,name,ext;
+      int origLon= -1;   // => -1 = origine des longitudes au centre de l'image (comme d'hab)
+      double cd;
+      
+      // Parsing des arguments
+      Tok tok = new Tok(s1);
+      
+      // Parsing du nom de fichier  => path/image.ext
+      String s = tok.nextToken();
+      int i = s.lastIndexOf(File.separator);
+      path = i==-1 ? "" : s.substring(0,i+1);
+      int j = s.lastIndexOf('.');
+      if( j==-1 ) j=s.length();
+      name = s.substring(i+1,j);
+      ext = s.substring(j);
+      
+      // Parsing de la taille globale de l'image
+      s = tok.nextToken();
+      i = s.indexOf('x');
+      width = Integer.parseInt(s.substring(0,i) );
+      height = Integer.parseInt(s.substring(i+1) );
+      
+      // Parsing de la taille des imagettes (si requis)
+      if( tok.hasMoreTokens() ) {
+         s = tok.nextToken();
+         i = s.indexOf('x');
+         wCell = Integer.parseInt(s.substring(0,i) );
+         hCell = Integer.parseInt(s.substring(i+1) );
+         
+         // Parsing d'une éventuelle origine des longitudes différentes de width/2
+         if( tok.hasMoreTokens() ) {
+            s = tok.nextToken();
+            origLon = Integer.parseInt( s );
+         }
+         
+      } else {
+         wCell = width;
+         hCell = height;
+      }
 
+      // On génère les fichiers .hhh
+      boolean flagUniq = false;
+      if( width==wCell && height==hCell ) {
+         flagUniq = true;
+         ncol=nlig=1;
+      } else {
+         ncol = (int)( Math.ceil( (double)width/wCell) );
+         nlig = (int)( Math.ceil( (double)height/hCell) );
+      }
+      cd = 360.0 / width;
+
+      context.info("Generation of .hhh files for CAR "+ncol+"x"+nlig+" image(s) orig="+origLon);
+      
+      boolean flagLonInverse = true;  // false si longitude céleste, true pour les planètes
+      
+      int index=0;
+      for( int lig=0; lig<nlig; lig++) {
+         for( int col=0; col<ncol; col++, index++) {
+            String suffix = flagUniq?"":"-"+index;
+            String filename = path+name+suffix+ext;
+            File f = new File( filename );
+            if( !f.exists() ) context.warning("Missing file => "+filename);
+            String filehhh = path+name+suffix+".hhh";
+            
+            int w = col==ncol-1 ? width-col*wCell  : wCell;
+            int h = lig==nlig-1 ? height-lig*hCell : hCell;
+            
+            int crpix1 = w/2;
+            int crpix2 = h/2;
+            int xc = col*wCell + crpix1;
+            int yc = lig*hCell + crpix2;
+            
+            int deltaX = (origLon==-1 ? width/2 : origLon) -xc;
+            int deltaY = height/2 -yc;
+            double crval1 = -deltaX*cd +(flagLonInverse?-cd/2.:cd/2.);   // Ne pas oublier le demi pixel de l'origine
+            double crval2 = deltaY*cd -cd/2;     // Ne pas oublier le demi pixel de l'origine
+            if( crval1<=-180 ) crval1+=360.;
+            if( crval1>180 ) crval1-=360;
+            
+            BufferedWriter t = null;
+            try {
+               t = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(filehhh)));
+               t.write("NAXIS1  = "+w);       t.newLine();
+               t.write("NAXIS2  = "+h);       t.newLine();
+               t.write("CRPIX1  = "+crpix1);  t.newLine();
+               t.write("CRPIX2  = "+crpix2);  t.newLine();
+               t.write("CRVAL1  = "+crval1);  t.newLine();
+               t.write("CRVAL2  = "+crval2);  t.newLine();
+               t.write("CTYPE1  = RA---CAR"); t.newLine();
+               t.write("CTYPE2  = RA---CAR"); t.newLine();
+               t.write("CD1_1   = "+(flagLonInverse?cd:-cd));      t.newLine();
+               t.write("CD1_2   = 0");        t.newLine();
+               t.write("CD2_1   = 0");        t.newLine();
+               t.write("CD2_2   = "+cd);      t.newLine();
+            }
+            finally {
+               if( t!=null ) t.close();
+            }
+            
+         }
+      }
+   }
+   
    static public SimpleDateFormat SDF;
    static {
       SDF = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
@@ -293,6 +408,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
          else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
+         else if (arg.equalsIgnoreCase("-cds") )  context.cdsLint=true;
 
          // toutes les autres options écrasent les précédentes
          else if (arg.contains("=")) {
@@ -355,10 +471,10 @@ public class HipsGen {
          catch( Exception e ) { context.error(e.getMessage()); }
          return;
       }
-
+      
       // Les tâches à faire si aucune n'est indiquées
       boolean all=false;
-      if( actions.size()==0 ) {
+      if( actions.size()==0 && context.getInputPath()!=null ) {
          all=true;
 
          // S'agirait-il de la génération d'un HiPS RGB
@@ -490,7 +606,7 @@ public class HipsGen {
             // Suppression du cache disque si nécessaire
             if( cacheRemoveOnExit ) MyInputStreamCached.removeCache();
             
-            if( !flagMirror ) {
+            if( !flagMirror && !flagLint ) {
                String id = context.getHipsId();
                if( id==null || id.startsWith("ivo://UNK.AUT") ) {
                   context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
@@ -592,6 +708,7 @@ public class HipsGen {
                   "   pilot=nnn               Pilot test limited to the nnn first original images." + "\n" +
                   "   verbose=n               Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
                   "   -live                   incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
+//                  "   -cds                    Specifical CDS treatement (LINT action)" + "\n"+
                   "   -f                      clear previous computations\n"+
                   "   -n                      Just print process information, but do not execute it.\n"+
                   "\n"+
@@ -640,6 +757,8 @@ public class HipsGen {
                   "   cmBlue                  Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
                   "   filter=gauss            Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
                   "   tileTypes               List of tile format to copy (MIRROR action)" + "\n" +
+//                  "   hhh=[path/]image[.ext] widthxheigth [wCellxhCell] Generation of .hhh files for CAR image"+ "\n" +
+//                  "                           possibly splitted as an array of cells"+ "\n" +
                   "   maxThread=nn            Max number of computing threads" + "\n" +
                   "   target=ra +dec          Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad        Default HiPS radius view (deg)" + "\n"+

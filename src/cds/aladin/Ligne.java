@@ -724,7 +724,6 @@ public class Ligne extends Position {
 
       if( isHiPS ) {
 
-
          PlanBG pbg = (PlanBG) v.pref;
          double d = CDSHealpix.pixRes( CDSHealpix.pow2( pbg.getOrder() + pbg.getTileOrder() ) ) / 3600;
          d /= 2;   // Pour être sur de ne pas sauter une ligne

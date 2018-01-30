@@ -23,6 +23,8 @@ package cds.aladin;
 
 import java.awt.Graphics;
 
+import javax.swing.SwingUtilities;
+
 /**
  * Bouton pour ne conserver que les collections visibles dans le champ de vue courant
  *
@@ -102,7 +104,11 @@ public class IconInside extends Icon {
    protected void submit() {
       if( !isAvailable() ) return;
       activated = !activated;
-      aladin.directory.resumeTree();
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            aladin.directory.resumeTree();
+         }
+      });
       repaint();
    }
       
