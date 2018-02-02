@@ -159,7 +159,9 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Data discovery tree: sort and hiearchy control
+ * @beta    <LI> Data discovery tree: <br>
+ * @beta          - sort and hiearchy control <br>
+ * @beta          - drag & drop to view panels
  * @beta    <LI> Distance tool improvement
  * @beta    <LI> Log control adapted to Debian policy
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
@@ -195,7 +197,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.073";
+   static public final    String VERSION = "v10.075";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2595,6 +2597,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public synchronized void drop(DropTargetDropEvent dropTargetDropEvent) {
       try {
          DataFlavor uriList = new DataFlavor("text/uri-list; class=java.lang.String");
+         DataFlavor objref = new DataFlavor("application/x-java-serialized-object; class=java.lang.String");
          Transferable tr = dropTargetDropEvent.getTransferable();
 
          // On préfère tout d'abord charger via une URL si possible
@@ -2629,8 +2632,29 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //               console.printCommand("load "+file.getAbsolutePath());
             }
             dropTargetDropEvent.getDropTargetContext().dropComplete(true);
-
-         } else dropTargetDropEvent.rejectDrop();
+            
+         // Pas très propre mais ça marche pour faire un glisser déposer depuis l'arbre des collections
+         } else if( tr.isDataFlavorSupported(objref) ) { 
+            Object data = tr.getTransferData( objref );
+            if( data.toString().equals( DirectoryTree.TREEDROP ) ) {
+               aladin.directory.doDrop();
+               dropTargetDropEvent.getDropTargetContext().dropComplete(true);
+            } else dropTargetDropEvent.rejectDrop();
+            
+         } else {
+            
+//            System.out.println("tr="+tr);
+//            boolean first=true;
+//            for( DataFlavor df : tr.getTransferDataFlavors() ) {
+//               System.out.println("df="+df);
+//               if( first ) {
+//                  Object data = tr.getTransferData( df );
+//                  System.out.println("data="+data);
+//               }
+//            }
+            
+            dropTargetDropEvent.rejectDrop();
+         }
 
       } catch( Exception e ) {
          e.printStackTrace();

@@ -405,7 +405,6 @@ public final class Slide {
       
       int lumin = fg.getBlue()+fg.getRed()+fg.getGreen();
       Color c = lumin>255 ? fg.darker() : fg.brighter();
-      FontMetrics fm = g.getFontMetrics();
       Font f = g.getFont();
       Font f1 = f.deriveFont( f.getSize2D()-1);
       Tok tok = new Tok(label,"/");
@@ -413,9 +412,11 @@ public final class Slide {
       int i=1;
       while( tok.hasMoreTokens() ) {
          String s = tok.nextToken();
+         boolean flagLow = i==1 || (s.equals("P") || s.equals("C")) && i==2;
+         g.setFont( flagLow ? f1 : f);
+         FontMetrics fm = g.getFontMetrics();
          w = fm.stringWidth(s);
-         g.setFont(f);
-         g.setColor( s.equals("P") && i==2 ? c : fg );
+         g.setColor( flagLow ? c : fg );
          g.drawString(s, x, y);
          x+=w+2;
          i++;
@@ -536,8 +537,10 @@ public final class Slide {
          int H = ht+7;
          int W = Select.ws-x;
          
+         boolean flagMouseIn = in(yMouse) && inLabel(xMouse);
+         
          // Tracage du fond particulier sur le label
-         if(  mode!=DRAG && ( ref || p.selected  || p.isHighlighted || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
+         if(  mode!=DRAG && ( ref || p.selected  || p.isHighlighted || p.type!=Plan.NO && flagMouseIn ) ) {
             labelBG=(p.selected ? Aladin.COLOR_STACK_SELECT : Aladin.COLOR_STACK_HIGHLIGHT );
             g.setColor(labelBG.brighter());
             g.fillRect(x,y,W,H-2);
@@ -756,7 +759,6 @@ public final class Slide {
 //               g.setColor(fg);
             } catch( Exception e) {}
             drawLabel(g,p.getLabel(), x,py-1,fg);
-//            g.drawString(p.getLabel(),x,py-1);
             
            //le voyant d'état
             if( mode!=DRAG ) {

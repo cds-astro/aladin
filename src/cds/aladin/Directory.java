@@ -408,7 +408,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          public void mouseExited(MouseEvent e) {
             if( timerTip!=null ) { timerTip.stop(); timer=null; }
          }
-         public void mousePressed(MouseEvent e) {
+//         public void mousePressed(MouseEvent e) {
+         public void mouseReleased(MouseEvent e) {
             if( timerTip!=null ) timerTip.stop();
             toHighLighted = null;
             TreePath tp = dirTree.getPathForLocation(e.getX(), e.getY());
@@ -490,6 +491,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             updateTree();
          }
       }).start();
+   }
+   
+   // Le drop par défaut considère que cela vient de l'arbre des collections => cf DirectoryTree
+   protected void doDrop() {
+      ArrayList<TreeObjDir> treeObjs = getSelectedTreeObjDir();
+      loadMulti(treeObjs);
    }
    
    // Affichage du tip associé au bouton courant
@@ -1344,7 +1351,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       boolean insideActivated = iconInside.isActivated();
       
       long t0 = System.currentTimeMillis();
-//      T(null);
+      T(null);
 
       // Mémorisation temporaire des états expanded/collapsed
       if( wasExpanded == null ) {
@@ -1352,7 +1359,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
       }
       
-//      T("backupState");
+      T("backupState");
 
       // Mémorisation temporaire du premier noeud sélectionné
       TreePath tp = dirTree.getSelectionPath();
@@ -1373,26 +1380,26 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( mustBeActivated ) tmpDirList1.add(to);
       }
       
-//      T("Select nodes");
+      T("Select nodes");
       
       Collections.sort(tmpDirList1, TreeObj.getComparator());
       
-//      T("Sort nodes");
+      T("Sort nodes");
       
       model.resetCreate();
       for( TreeObjDir to : tmpDirList1 ) model.createTreeBranch(to);
       
-//      T("Create tree");
+      T("Create tree");
 
       if( initCounter ) initCounter(model);
       else updateTitre(model.countDescendance());
       
-//      T("Init counters");
+      T("Init counters");
 
       // Répercussion des états des feuilles sur les branches
       model.populateFlagIn();
       
-//      T("Populate flags");
+      T("Populate flags");
 
       try {
          dirTree.suspendListener();
@@ -1403,35 +1410,40 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          // Remplacement du model dans l'arbre affiché
          dirTree.setModel(model);
 
-//         T("setModel");
+         T("setModel");
 
          dirTree.restoreListener();
          
          // Restauration des états expanded/collapses + compteurs de référence
          restoreState(new TreePath(model.root), defaultExpand ? null : wasExpanded, counter, dirTree);
+         
+         T("Restore tree state");
+
+         // Restauration des noeuds sélectionnées
+         if( tp != null ) {
+            dirTree.suspendListener();
+            showTreePath(getPathString(tp));
+            dirTree.restoreListener();
+        }
+         
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
 
-//      T("Restore tree state");
-      
-
-      // Restauration des noeuds sélectionnées
-      if( tp != null ) showTreePath(getPathString(tp));
       
       aladin.trace(4,"ResumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
 
    }
    
-//   private boolean TEST=true;
-//   private long t0;
-//   private void T(String s) {
-//      if( !TEST ) return;
-//      long t = System.currentTimeMillis();
-//      if( s==null ) { t0=t; return; }
-//      System.out.println(s+" => "+(t-t0));
-//      t0=t;
-//   }
+   private boolean TEST=false;
+   private long t0;
+   private void T(String s) {
+      if( !TEST ) return;
+      long t = System.currentTimeMillis();
+      if( s==null ) { t0=t; return; }
+      System.out.println(s+" => "+(t-t0));
+      t0=t;
+   }
 
    /**
     * Retourne le path sous forme de chaine - sans le premier "/" et "" pour la racine ex => Image/Optical/DSS
@@ -2232,7 +2244,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;
 
       // Nettoyage des macros latex qui trainent
-      cleanLatexMacro(prop);
+      if( cleanLatexMacro(prop) ) {
+         Aladin.trace(4,"Directory.propAdjust1(...) => VizieR macro in ["+id+"]");
+      }
 
       // Ajout de l'entrée TAP (si elle n'existe pas)
       if( prop.get("tap_service_url") == null ) {
@@ -2333,14 +2347,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    static private final String[] TEXTKEYS = { "obs_title", "obs_description", "obs_label", "obs_collection" };
 
    /** Nettoyage des macros Latex oublié par VizieR */
-   private void cleanLatexMacro(MyProperties prop) {
+   private boolean cleanLatexMacro(MyProperties prop) {
+      boolean rep=false;
       for( String key : TEXTKEYS ) {
          String s = prop.get(key);
          if( s == null ) continue;
          if( s.indexOf('\\') < 0 ) continue;
-         s = cleanLatexMacro(s);
-         prop.replaceValue(key, s);
+         String s1 = cleanLatexMacro(s);
+         if( !s.equals(s1) ) {
+            prop.replaceValue(key, s1);
+            rep = true;
+         }
       }
+      return rep;
    }
 
    static final private int AVANT = 0, MACRO = 1, IN = 2, NEXT = 3, MACRO1 = 4, NAMEMACRO = 5, INMACRO = 6;

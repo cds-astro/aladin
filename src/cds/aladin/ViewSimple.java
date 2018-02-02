@@ -5207,7 +5207,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int fontSize = (int) f.getSize2D();
       g.setFont( f );
       Color c1 = g.getColor();
-      String s=isPlotView() ? plot.getPlotLabel() : pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.label;
+      String s=isPlotView() ? plot.getPlotLabel() : pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.getLabel(true);
          if( s==null ) return;
 
          int x=getMarge()+dx;

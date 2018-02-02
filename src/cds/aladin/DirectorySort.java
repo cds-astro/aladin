@@ -31,7 +31,6 @@ import java.util.TreeMap;
 import javax.swing.ButtonGroup;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.SwingUtilities;
 
 import cds.tools.Astrodate;
 import cds.tools.Util;
@@ -168,18 +167,10 @@ public class DirectorySort {
          mi.setActionCommand( i+"" );
          mi.addActionListener( new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               
-               final String action = e.getActionCommand();
-               
-               SwingUtilities.invokeLater(new Runnable() {
-                  public void run() {
-                     int index = Integer.parseInt( action );
-                     br.setCurrent(index);
-                     aladin.directory.resumeSort();
-                 }
-               });
-
-             }
+               int index = Integer.parseInt( e.getActionCommand() );
+               br.setCurrent(index);
+               aladin.directory.resumeSort();
+            }
          });
          bg.add(mi);
          if( i==br.current ) mi.setSelected(true);

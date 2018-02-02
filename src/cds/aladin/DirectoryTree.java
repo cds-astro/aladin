@@ -27,14 +27,19 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.util.Enumeration;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTree;
+import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -61,6 +66,9 @@ public class DirectoryTree extends JTree {
 
       setModel( new DirectoryModel(aladin) );
       
+      setDragEnabled(true);
+      setTransferHandler(new TreeTransfertHandler());
+      
 //      setBackground( cbg );
       setOpaque(true);
 //      setRootVisible(false);
@@ -77,9 +85,19 @@ public class DirectoryTree extends JTree {
       setRowHeight(rowHeight);
    }
    
+   static final String TREEDROP = "__ALADIN/TREE__";
+   
+   class TreeTransfertHandler extends TransferHandler {
+      public TreeTransfertHandler() { }
+      protected Transferable createTransferable(JComponent component) { return new StringSelection(TREEDROP); }
+      public int getSourceActions(JComponent component) { return COPY_OR_MOVE; }
+      public boolean canImport(JComponent component, DataFlavor[] flavors) { return false; }
+      public boolean importData(JComponent component, Transferable t) { return false; }
+   }
+   
    public boolean hasBeenExpanded(TreePath path) {
       return false;
-  }
+   }
    
    public void setModel( TreeModel model ) {
       root = (DefaultMutableTreeNode) model.getRoot();

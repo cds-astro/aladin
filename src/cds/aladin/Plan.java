@@ -1829,21 +1829,40 @@ public class Plan implements Runnable {
     * Retourne le label en fonction de l'etat courant du plan
     * Il s'agit simplement d'ajouter des "..." quand le plan est en
     * cours de construction
+    * @param flagShort true si on veut qu'un éventuel préfixe soit enlevé (CDS/P/MAMA/J => MAMA/J)
     * @return Le label genere
     */
-   protected String getLabel() {
-      String s=label;
+   protected String getLabel() { return getLabel(false); }
+   protected String getLabel(boolean flagShort) {
+      String s= flagShort ? getShortLabel() : label;
+      
       int p= (int)getPourcent();
-      //      int c= (int)getCompletude();
       if( p>0 && p<100) {
          int w = aladin.view.zoomview.getWidth();
          int c  = w/15;
          if( c<6 ) c=6;
-         s=Util.align((label.length()>c ? label.substring(0,c):label)+"... ",c+3)+p+"%";
+         s=Util.align((s.length()>c ? s.substring(0,c):s)+"... ",c+3)+p+"%";
       }
-      else if( error==null && !flagOk ) s= label+"...";
-      //      else if( c>0 && c<100) s=Util.align((label.length()>9 ? label.substring(0,9):label),11)+c+"%";
+      else if( error==null && !flagOk ) s= s+"...";
+      
       return s;
+   }
+   
+   
+   /** retourne le label sans son préfixe CDS/P/MAMA/J => MAMA/J */
+   protected String getShortLabel() {
+      
+      // si le label n'est pas un identificateur XX/XX/XX, je le retourne tel que
+      if( id==null ) return label;
+      
+      // On enlève l'éventuel suffixe ~nn pour la comparaison
+      int i = label.lastIndexOf('~');
+      String s = i>0 ? label.substring(0,i) : label;
+      if( !id.equals(s) ) return label;
+      
+      String type = Util.getSubpath(label, 1);
+      if( type.equals("P") || type.equals("C" ) ) return Util.getSubpath(label,2,-1).replace('/',' ');
+      return Util.getSubpath(label,1,-1).replace('/',' ');
    }
 
    // Prévu pour les cubes
