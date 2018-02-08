@@ -21,7 +21,7 @@
 
 package cds.allsky;
 
-import java.awt.Polygon;
+import java.awt.Shape;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -833,7 +833,7 @@ public class BuilderTiles extends Builder {
       initStat(nbThreads);
       context.createHealpixOrder(context.getTileOrder());
       ThreadBuilderTile.nbThreads=nbThreads;
-      ThreadBuilderTile.hashPolygon = new HashMap<File, Polygon>();
+      ThreadBuilderTile.hasShape = new HashMap<File, Shape>();
 
       for( int i=0; i<nbThreads; i++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");

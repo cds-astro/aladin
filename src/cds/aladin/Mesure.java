@@ -633,13 +633,17 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    /** Suppression de toutes les sources */
    synchronized private void rmAllSrc() {
-      if( nbSrc>MAXBLOC ) src = new Source[DEFAULTBLOC];
-      else for( int i=0; i<nbSrc; i++ ) src[i]=null;	// Pour le GC
-      nbSrc=0;
-      mcanvas.unselect();
-      aladin.calque.zoom.zoomView.stopHist();
-      aladin.calque.zoom.zoomView.resumeSED();
-      aladin.console.setEnabledDumpButton(false);
+      try {
+         if( nbSrc>MAXBLOC ) src = new Source[DEFAULTBLOC];
+         else for( int i=0; i<nbSrc; i++ ) src[i]=null;	// Pour le GC
+         nbSrc=0;
+         mcanvas.unselect();
+         aladin.calque.zoom.zoomView.stopHist();
+         aladin.calque.zoom.zoomView.resumeSED();
+         aladin.console.setEnabledDumpButton(false);
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
    }
 
    /** Suppresssion de toutes les sources d'un plan particulier */

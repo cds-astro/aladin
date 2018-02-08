@@ -4616,15 +4616,10 @@ public final class Command implements Runnable {
          try {
             String val = computeConvert(from.substring(0, m + 1));
             String unit = from.substring(m + 1).trim();
-//            from = Computer.compute(from.substring(0, m + 1)) + from.substring(m + 1);
+            
             Unit m1;
-//            if( unit.startsWith("\"") ) {
-//               m1 = new Unit();
-//               m1.set(unit+" "+val);
-//            } else {
-               m1 = new Unit(unit);
-               m1.setValue(val);
-//            }
+            m1 = new Unit(unit);
+            m1.setValue(val);
             Unit m2 = new Unit();
             m2.setUnit(to);
             m1.convertTo(m2);

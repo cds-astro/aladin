@@ -21,6 +21,8 @@
 
 package cds.astro;
 
+// for parseException
+import java.text.ParseException;
 /**
  *==========================================================================
  * @author  Fran&ccedil;ois Ochsenbein -- francois@astro.u-strasbg.fr
@@ -33,9 +35,9 @@ package cds.astro;
  * @version 1.4 16-Dec-2017: Correct conversions with _MJD
  *==========================================================================
  */
-
-import java.util.*;
-import java.text.*;	// for parseException
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 /*==================================================================
                 Unit class
@@ -498,7 +500,7 @@ public class Unit {
       Udef u;
 	if (!initialized) init();
         Object o = hUnit.get(symbol) ;	// hUnit may contain aliases
-	if (o instanceof String) o = hUnit.get((String)o);
+	if (o instanceof String) o = hUnit.get(o);
         if (o instanceof Integer) ; else return(null);
 	i = ((Integer)o).intValue();
 	if (i < uDef.length) 		// In basic list

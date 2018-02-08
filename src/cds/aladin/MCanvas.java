@@ -40,8 +40,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Formatter;
@@ -56,7 +54,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 
-import cds.tools.ConfigurationReader;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.xml.Field;
 
@@ -1363,15 +1361,30 @@ MouseWheelListener, Widget
          }
          A(res,s);
          A(res,"\n \n* Field: ",f.name);
-         s=o.getValue(i);
+         String v = s=o.getValue(i);
          if( s.length()>50 ) s=s.substring(0,47)+"...";
-         A(res,"\n* Value: ",s);
+         A(res,"\n* Value: ", s );
          A(res,"\n* Unit: ",f.unit);
+         if( (s = convert( v, f.unit))!=null ) A(res,"\n => ",s);
          A(res,"\n* UCD: ",f.ucd);
          A(res,"\n* Utype: ",f.utype);
          A(res,"\n \n",adjustVizier(f.description));
       }
       return res.toString();
+   }
+   
+   // Conversion éventuelle, sinon null
+   private String convert( String val, String unit) {
+      if( unit==null || val==null ) return null;
+
+      // Une date en JD ou MJD => ISO
+      boolean mjd=false;
+      if( unit.equalsIgnoreCase("jd") || (mjd=unit.equalsIgnoreCase("mjd")) )  {
+         double x = Double.parseDouble(val);
+         if( mjd ) x = Astrodate.MJDToJD( x );
+         return Astrodate.JDToDate( x );
+      }
+      return null;
    }
    
    // Enlève cette cochonnerie de "? " en préfixe de certaines descriptions VizieR

@@ -22,6 +22,8 @@
 package cds.allsky;
 
 import java.awt.Polygon;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -95,9 +97,9 @@ public class Context {
    public double[] pixelGood=null;           // Plage des valeurs des pixels conservés (valeurs physiques)
    public double[] good=null;                // Plage des valeurs de pixels conservés (raw)
    public int[] borderSize = {0,0,0,0};      // Bords à couper sur les images originales
-   public Polygon polygon = null;            // Polygone global des pixels observés
+   public Shape globalShape = null;            // Polygone global des pixels observés
    public boolean scanFov=false;             // true s'il faut rechercher des fichiers xxxx.fov
-   protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
+//   protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    public int dataArea = Constante.SHAPE_UNKNOWN; // Type d'observable (totalité, en ellipse ou en rectangle)
    public double maxRatio = Constante.PIXELMAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
    protected boolean fading=false;           // Activation du fading entre les images originales
@@ -270,7 +272,7 @@ public class Context {
          partitioning = s.equalsIgnoreCase("false") ? false : true;
       }
    }
-   public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
+//   public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
    public void setMaxRatio(String r) throws Exception { maxRatio = Double.parseDouble(r); }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
@@ -329,8 +331,8 @@ public class Context {
    public JpegMethod getRgbMethod() { return getJpegMethod(); }
    public int getRgbFormat() { return targetColorMode; }
 
-   public void setPolygon(String r) throws Exception {
-      scanFov = r.equalsIgnoreCase("true") || (polygon = createPolygon(r))!=null;
+   public void setFov(String r) throws Exception {
+      scanFov = r.equalsIgnoreCase("true") || (globalShape = createFov(r))!=null;
       if( scanFov ) info("FoV files associated to the original images");
    }
    
@@ -456,9 +458,21 @@ public class Context {
       return s1;
    }
 
-   static public Polygon createPolygon(String r) throws Exception {
+   static public Shape createFov(String s) throws Exception {
+      
+      Tok tok = new Tok(s," ,;\t");
+      
+      // S'il y a 3 valeurs c'est un cercle (xc,yc,rayon)
+      if( tok.countTokens()==3 ) {
+         double x =  Double.parseDouble(tok.nextToken());
+         double y =  Double.parseDouble(tok.nextToken());
+         double r =  Double.parseDouble(tok.nextToken());
+         return new Ellipse2D.Double(x-r, y-r, r*2, r*2);
+      }
+      
+      
+      // sinon c'est un polygone
       Polygon p = new Polygon();
-      Tok tok = new Tok(r," ,;\t");
       while( tok.hasMoreTokens()) {
          int x = (int)( Double.parseDouble(tok.nextToken()) +0.5);
          int y = (int)( Double.parseDouble(tok.nextToken()) +0.5);

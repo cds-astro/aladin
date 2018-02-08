@@ -132,7 +132,7 @@ public class HipsGen {
       if( s.equalsIgnoreCase("publisher") )  return "hips_creator";
       if( s.equalsIgnoreCase("creator") )    return "hips_creator";
       if( s.equalsIgnoreCase("pixel") )      return "mode";
-      if( s.equalsIgnoreCase("circle") )     return "radius";
+//      if( s.equalsIgnoreCase("circle") )     return "radius";
       if( s.equalsIgnoreCase("status") )     return "hips_status";
       if( s.equalsIgnoreCase("order") )      return "hips_order";
       if( s.equalsIgnoreCase("minOrder") )   return "hips_min_order";
@@ -228,10 +228,10 @@ public class HipsGen {
          } else context.setMocArea(val);
       } else if( opt.equalsIgnoreCase("maxRatio")) {
          try {  context.setMaxRatio(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
-      } else if( opt.equalsIgnoreCase("radius")) {
-         try {  context.setCircle(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
+//      } else if( opt.equalsIgnoreCase("radius")) {
+//         try {  context.setCircle(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
       } else if( opt.equalsIgnoreCase("fov") ) {
-         try {  context.setPolygon(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
+         try {  context.setFov(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
       } else if (opt.equalsIgnoreCase("border")) {
          try { context.setBorderSize(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
       } else throw new Exception("Option unknown [" + opt + "]");
@@ -239,8 +239,12 @@ public class HipsGen {
    
    
    // Génération des fichiers .hhh qui vont bien
-   // ex: [path/]Titan[.ext] 46080x23040 [23040x23040] [0]
+   // ex CAR: [path/]Titan[.ext] 46080x23040 [23040x23040] [0]
    // le dernier chiffre indique la colonne origine des longitudes, par défaut le milieu de l'image
+   //
+   // ex STEREO: [path/]Titan[.ext] 20000 60
+   // le premier chiffre indique la largeur de l'image en pixel, le deuxième la taille angulaire
+   // correspondante en degrés
    private void generateHHH( String s1 ) throws Exception {
       int width,height;
       int wCell,hCell;
@@ -248,6 +252,8 @@ public class HipsGen {
       String path,name,ext;
       int origLon= -1;   // => -1 = origine des longitudes au centre de l'image (comme d'hab)
       double cd;
+      
+      boolean flagLonInverse = true;  // false si longitude céleste, true pour les planètes
       
       // Parsing des arguments
       Tok tok = new Tok(s1);
@@ -264,77 +270,120 @@ public class HipsGen {
       // Parsing de la taille globale de l'image
       s = tok.nextToken();
       i = s.indexOf('x');
-      width = Integer.parseInt(s.substring(0,i) );
-      height = Integer.parseInt(s.substring(i+1) );
       
-      // Parsing de la taille des imagettes (si requis)
-      if( tok.hasMoreTokens() ) {
-         s = tok.nextToken();
-         i = s.indexOf('x');
-         wCell = Integer.parseInt(s.substring(0,i) );
-         hCell = Integer.parseInt(s.substring(i+1) );
-         
-         // Parsing d'une éventuelle origine des longitudes différentes de width/2
+      // Le cas CARTESIAN
+      if( i>0 ) {
+         width = Integer.parseInt(s.substring(0,i) );
+         height = Integer.parseInt(s.substring(i+1) );
+
+         // Parsing de la taille des imagettes (si requis)
          if( tok.hasMoreTokens() ) {
             s = tok.nextToken();
-            origLon = Integer.parseInt( s );
+            i = s.indexOf('x');
+            wCell = Integer.parseInt(s.substring(0,i) );
+            hCell = Integer.parseInt(s.substring(i+1) );
+
+            // Parsing d'une éventuelle origine des longitudes différentes de width/2
+            if( tok.hasMoreTokens() ) {
+               s = tok.nextToken();
+               origLon = Integer.parseInt( s );
+            }
+
+         } else {
+            wCell = width;
+            hCell = height;
+         }
+
+         // On génère les fichiers .hhh
+         boolean flagUniq = false;
+         if( width==wCell && height==hCell ) {
+            flagUniq = true;
+            ncol=nlig=1;
+         } else {
+            ncol = (int)( Math.ceil( (double)width/wCell) );
+            nlig = (int)( Math.ceil( (double)height/hCell) );
+         }
+         cd = 360.0 / width;
+
+         context.info("Generation of .hhh files for CAR "+ncol+"x"+nlig+" image(s) orig="+origLon);
+
+         int index=0;
+         for( int lig=0; lig<nlig; lig++) {
+            for( int col=0; col<ncol; col++, index++) {
+               String suffix = flagUniq?"":"-"+index;
+               String filename = path+name+suffix+ext;
+               File f = new File( filename );
+               if( !f.exists() ) context.warning("Missing file => "+filename);
+               String filehhh = path+name+suffix+".hhh";
+
+               int w = col==ncol-1 ? width-col*wCell  : wCell;
+               int h = lig==nlig-1 ? height-lig*hCell : hCell;
+
+               int crpix1 = w/2;
+               int crpix2 = h/2;
+               int xc = col*wCell + crpix1;
+               int yc = lig*hCell + crpix2;
+
+               int deltaX = (origLon==-1 ? width/2 : origLon) -xc;
+               int deltaY = height/2 -yc;
+               double crval1 = -deltaX*cd +(flagLonInverse?-cd/2.:cd/2.);   // Ne pas oublier le demi pixel de l'origine
+               double crval2 = deltaY*cd -cd/2;     // Ne pas oublier le demi pixel de l'origine
+               if( crval1<=-180 ) crval1+=360.;
+               if( crval1>180 ) crval1-=360;
+
+               BufferedWriter t = null;
+               try {
+                  t = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(filehhh)));
+                  t.write("NAXIS1  = "+w);       t.newLine();
+                  t.write("NAXIS2  = "+h);       t.newLine();
+                  t.write("CRPIX1  = "+crpix1);  t.newLine();
+                  t.write("CRPIX2  = "+crpix2);  t.newLine();
+                  t.write("CRVAL1  = "+crval1);  t.newLine();
+                  t.write("CRVAL2  = "+crval2);  t.newLine();
+                  t.write("CTYPE1  = RA---CAR"); t.newLine();
+                  t.write("CTYPE2  = DEC--CAR"); t.newLine();
+                  t.write("CD1_1   = "+(flagLonInverse?cd:-cd));      t.newLine();
+                  t.write("CD1_2   = 0");        t.newLine();
+                  t.write("CD2_1   = 0");        t.newLine();
+                  t.write("CD2_2   = "+cd);      t.newLine();
+               }
+               finally {
+                  if( t!=null ) t.close();
+               }
+
+            }
          }
          
+      // Le cas STEREOGRAPHIC
       } else {
-         wCell = width;
-         hCell = height;
-      }
+         width = Integer.parseInt(s);
+         double radius = Double.parseDouble( tok.nextToken() );
+         cd = (2.*Math.tan( Math.toRadians( (90-radius)/2 )) * (360/Math.PI)) /width;
+         
+         double crval1 =(flagLonInverse?-cd/2.:cd/2.);   // Ne pas oublier le demi pixel de l'origine
+         
+         // Le pole Nord et Sud
+         for( int k=0; k<2; k++ ) {
 
-      // On génère les fichiers .hhh
-      boolean flagUniq = false;
-      if( width==wCell && height==hCell ) {
-         flagUniq = true;
-         ncol=nlig=1;
-      } else {
-         ncol = (int)( Math.ceil( (double)width/wCell) );
-         nlig = (int)( Math.ceil( (double)height/hCell) );
-      }
-      cd = 360.0 / width;
+            double crval2 = (k==0 ? 90 : -90) -cd/2;   // Ne pas oublier le demi pixel de l'origine
 
-      context.info("Generation of .hhh files for CAR "+ncol+"x"+nlig+" image(s) orig="+origLon);
-      
-      boolean flagLonInverse = true;  // false si longitude céleste, true pour les planètes
-      
-      int index=0;
-      for( int lig=0; lig<nlig; lig++) {
-         for( int col=0; col<ncol; col++, index++) {
-            String suffix = flagUniq?"":"-"+index;
+            String suffix = k==0 ? "-N":"-S";
             String filename = path+name+suffix+ext;
             File f = new File( filename );
             if( !f.exists() ) context.warning("Missing file => "+filename);
             String filehhh = path+name+suffix+".hhh";
-            
-            int w = col==ncol-1 ? width-col*wCell  : wCell;
-            int h = lig==nlig-1 ? height-lig*hCell : hCell;
-            
-            int crpix1 = w/2;
-            int crpix2 = h/2;
-            int xc = col*wCell + crpix1;
-            int yc = lig*hCell + crpix2;
-            
-            int deltaX = (origLon==-1 ? width/2 : origLon) -xc;
-            int deltaY = height/2 -yc;
-            double crval1 = -deltaX*cd +(flagLonInverse?-cd/2.:cd/2.);   // Ne pas oublier le demi pixel de l'origine
-            double crval2 = deltaY*cd -cd/2;     // Ne pas oublier le demi pixel de l'origine
-            if( crval1<=-180 ) crval1+=360.;
-            if( crval1>180 ) crval1-=360;
-            
+
             BufferedWriter t = null;
             try {
                t = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(filehhh)));
-               t.write("NAXIS1  = "+w);       t.newLine();
-               t.write("NAXIS2  = "+h);       t.newLine();
-               t.write("CRPIX1  = "+crpix1);  t.newLine();
-               t.write("CRPIX2  = "+crpix2);  t.newLine();
+               t.write("NAXIS1  = "+width);   t.newLine();
+               t.write("NAXIS2  = "+width);   t.newLine();
+               t.write("CRPIX1  = "+width/2); t.newLine();
+               t.write("CRPIX2  = "+width/2); t.newLine();
                t.write("CRVAL1  = "+crval1);  t.newLine();
                t.write("CRVAL2  = "+crval2);  t.newLine();
-               t.write("CTYPE1  = RA---CAR"); t.newLine();
-               t.write("CTYPE2  = RA---CAR"); t.newLine();
+               t.write("CTYPE1  = RA---STG"); t.newLine();
+               t.write("CTYPE2  = DEC--STG"); t.newLine();
                t.write("CD1_1   = "+(flagLonInverse?cd:-cd));      t.newLine();
                t.write("CD1_2   = 0");        t.newLine();
                t.write("CD2_1   = 0");        t.newLine();
@@ -344,10 +393,24 @@ public class HipsGen {
                if( t!=null ) t.close();
             }
             
+            String filefov = path+name+suffix+".fov";
+            try {
+               t = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(filefov)));
+               double xc = width/2.;
+               double yc = width/2.;
+               double r = width/2. ;
+               t.write(xc+" "+yc+" "+r);   t.newLine();
+            }
+            finally {
+               if( t!=null ) t.close();
+            }
+
          }
+         
+         context.info("Generation of .hhh & .fov files for STG North and South image");
       }
    }
-   
+
    static public SimpleDateFormat SDF;
    static {
       SDF = new SimpleDateFormat("dd/MM/yy HH:mm:ss");

@@ -22,6 +22,8 @@
 package cds.allsky;
 
 import java.awt.Polygon;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -35,7 +37,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.CacheFits;
@@ -64,14 +65,14 @@ final public class ThreadBuilderTile {
    private double[] cutOrig;
    private double[] cut;
    private int[] borderSize;
-   private int circle;
-   private Polygon polygon;
+//   private int circle;
+   private Shape globalShape;
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
    private int tileSide;
    
 
-   static protected HashMap<File, Polygon> hashPolygon=null;   // Polygones associés à chaque fichier ou répertoire
+   static protected HashMap<File, Shape> hasShape=null;   // Polygones associés à chaque fichier ou répertoire
 
    public ThreadBuilderTile(Context context,BuilderTiles builderTiles) {
       this.context = context;
@@ -100,8 +101,8 @@ final public class ThreadBuilderTile {
       }
       fading = context.getFading();
       borderSize = context.getBorderSize();
-      circle = context.circle;
-      polygon=context.polygon;
+//      circle = context.circle;
+      globalShape=context.globalShape;
       hpxFinderPath = context.getHpxFinderPath();
       tileSide = context.getTileSide();
 
@@ -195,7 +196,7 @@ final public class ThreadBuilderTile {
       }
       return mem;
    }
-
+   
    //   static private long totalDelay=0L;
    //   static private long nRead=0L;
    //   static private long totalDelay1=0L;
@@ -204,7 +205,7 @@ final public class ThreadBuilderTile {
    Fits buildHealpix(BuilderTiles bt, String path, int order, long npix_file, int z) throws Exception {
       ArrayList<SrcFile> downFiles = null;
       Fits out=null;
-
+      
       try {
          // initialisation de la liste des fichiers originaux pour ce losange
          downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY*2);
@@ -416,7 +417,7 @@ final public class ThreadBuilderTile {
 
          // cherche la valeur à affecter dans chacun des pixels healpix
          int overlay = fin-deb;
-         boolean isCAR=false;
+//         boolean isCAR=false;
          double [] pixvalG=null,pixvalB=null;
          double [] pixval = new double[overlay];
          double [] pixcoef = new double[overlay];
@@ -444,13 +445,15 @@ final public class ThreadBuilderTile {
                for( int i=deb; i<fin; i++ ) {
                   try {
                      file = downFiles.get(i);
-                     if( file.flagRemoved ) continue;
+                     if( file.flagRemoved ) {
+                        continue;
+                     }
                      try {
                         file.open(z, flagGauss);
 
                      } catch( Exception e ) {
                         if( context.getVerbose()>=3 ) {
-                           context.warning("Problem on open => file retired: "+file.name+" => exception"+e.getMessage());
+                           context.warning("Problem on open => file retired: "+file.name+" => exception "+e.getMessage());
                         }
                         
                         // Cas complexe où l'image originale est un JPEG ou un PNG et que JAVA
@@ -472,7 +475,7 @@ final public class ThreadBuilderTile {
 
                      // Détermination du pixel dans l'image à traiter
                      try {
-                        isCAR = file.fitsfile.calib.getProj()==Calib.CAR;
+//                        isCAR = file.fitsfile.calib.getProj()==Calib.CAR;
                         file.fitsfile.calib.GetXY(coo,false);
                         
                      // gasp !
@@ -551,6 +554,7 @@ final public class ThreadBuilderTile {
                   //                  if( pixelFinal!=0 ) empty=false;
                   //                  int alpha = pixelFinal==0 ?  0 : 0xFF000000;
                   //                  out.setPixelRGBJPG(x, y, alpha | pixelFinal);
+                  
                   out.setPixelRGBJPG(x, y, pixelFinal);
 
                   // Cas normal
@@ -607,6 +611,7 @@ final public class ThreadBuilderTile {
    }
 
    static private final double OVERLAY_PROPORTION = 1/6.;
+   
 
 
    // détermine si le pixel doit être pris en compte, ou s'il est dans la marge
@@ -614,18 +619,25 @@ final public class ThreadBuilderTile {
    // juste sur la ligne=-1 ou colonne=-1 et laisser une ligne éventuellement non calculée
    private boolean isIn(SrcFile srcFile, Coord coo) {
       Fits f = srcFile.fitsfile;
-      if( circle>0 ) {
-         double cx = f.width/2;
-         double cy = f.height/2;
-         double dx = coo.x-cx;
-         double dy = coo.y-cy;
-         double d = dx*dx + dy*dy;
-         if( d>circle*circle ) return false;
-      }
+//      if( circle>0 ) {
+//         double cx = f.width/2;
+//         double cy = f.height/2;
+//         double dx = coo.x-cx;
+//         double dy = coo.y-cy;
+//         double d = dx*dx + dy*dy;
+//         if( d>circle*circle ) return false;
+//      }
+      
+      
+      // Il faut une marge assez large pour que les coutures ne merdouillent pas 
+      // lors du calcul bilinéaire (particulièrement visible pour les cartes mosaiquées CAR
       if( coo.x<borderSize[1] -1.5  || coo.x>f.width-borderSize[3] ) return false;
       if( coo.y<borderSize[0] -1.5  || coo.y>f.height-borderSize[2] ) return false;
-      if( polygon!=null && !polygon.contains(coo.x, coo.y) ) return false;
-      if( srcFile.polygon!=null && !srcFile.polygon.contains(coo.x, coo.y) ) return false;
+      
+      if( context.scanFov ) {
+         if( globalShape!=null && !globalShape.contains(coo.x, coo.y) ) return false;
+         if( srcFile.shape!=null && !srcFile.shape.contains(coo.x, coo.y) ) return false;
+      }
       return true;
    }
 
@@ -648,15 +660,15 @@ final public class ThreadBuilderTile {
 
       double c=0;
       try {
-         if( circle>0 ) {
-            double cx = f.width/2;
-            double cy = f.height/2;
-            double dx = coo.x-cx;
-            double dy = coo.y-cy;
-            double d = Math.sqrt(dx*dx + dy*dy);
-            if( d<circle-circle*OVERLAY_PROPORTION ) c=1;
-            else c = (circle - d)/circle;
-         } else {
+//         if( circle>0 ) {
+//            double cx = f.width/2;
+//            double cy = f.height/2;
+//            double dx = coo.x-cx;
+//            double dy = coo.y-cy;
+//            double d = Math.sqrt(dx*dx + dy*dy);
+//            if( d<circle-circle*OVERLAY_PROPORTION ) c=1;
+//            else c = (circle - d)/circle;
+//         } else {
             double width  = f.width -(borderSize[1]+borderSize[3]);
             double height = f.height-(borderSize[0]+borderSize[2]);
             double mx = width *OVERLAY_PROPORTION;
@@ -670,7 +682,7 @@ final public class ThreadBuilderTile {
             else if( y>height-my ) coefy = (height-y)/my;
             //         c = Math.min(coefx,coefy);
             c = coefx*coefy;
-         }
+//         }
       } catch( Exception e ) {
          c=0;
       }
@@ -788,7 +800,10 @@ final public class ThreadBuilderTile {
 
    private int getBilinearPixelRGB(SrcFile srcFile,Coord coo) {
       Fits f = srcFile.fitsfile;
-      if( !isIn(srcFile,coo) ) return 0;
+      if( !isIn(srcFile,coo) ) {
+         return 0;
+      }
+      
 
       double x = coo.x;
       double y = coo.y;
@@ -987,39 +1002,45 @@ final public class ThreadBuilderTile {
    }
 
 
-   // retourne le polygone associé au fichier ou null si aucun
+   // retourne le polygone|cercle associé au fichier ou null si aucun
    // Soit il s'agit du même nom de fichier avec l'extension ".fov"
    // soit c'est le premier répertoire parent qui a un fichier associé avec l'extension ".fov"
    // sinon null
-   private Polygon getPolygon(Fits fits) {
-      File last = (new File( context.getInputPath() )).getParentFile();
-      File dir = (new File( fits.getFilename() ));
-      Polygon p;
-      for( p=null; p==null && !dir.equals(last); dir = dir.getParentFile() ) {
-         p = getPolygon(fits,dir);
+   private Shape getShape(Fits fits) {
+      Shape sh=null;
+      try {
+         File parent = (new File( context.getInputPath() )).getParentFile();
+         String last = parent==null ? null : parent.getCanonicalPath();
+         File dir = (new File( fits.getFilename() ));   
+         for( ; sh==null && dir!=null && !dir.getCanonicalPath().equals(last); dir = dir.getParentFile() )  {
+            sh = getShape(dir);
+         }
+      } catch( Exception e ) {
+         e.printStackTrace();
       }
-      return p;
+      return sh;
    }
 
 
    // retourne le Polygone associé au nom de fichier ou de répertoire (extension ".fov")
    // (utilise une hashmap comme cache pour éviter les accès disques répétitifs)
-   private Polygon getPolygon(Fits fits,File dir) {
+   private Shape getShape(File dir) {
+      Shape sh = null;
 
-      if( hashPolygon.containsKey(dir) ) return hashPolygon.get(dir);
-      synchronized( hashPolygon ) {
-         if( hashPolygon.containsKey(dir) ) return hashPolygon.get(dir);
-         Polygon pol = null;
+      if( hasShape.containsKey(dir) ) return hasShape.get(dir);
+      synchronized( hasShape ) {
+         if( hasShape.containsKey(dir) ) return hasShape.get(dir);
          String file;
          if( dir.isDirectory() ) file = dir.getAbsoluteFile()+".fov";
          else {
             String name = dir.getName();
             int dot = name.lastIndexOf('.');
             if( dot>0 ) name = name.substring(0,dot);
-            file = dir.getParent()+Util.FS+name+".fov";
+            String parent = dir.getParent();
+            file = parent==null ? null : parent+Util.FS+name+".fov";
          }
-         File f = new File(file);
-         if( f.isFile() ) {
+         File f = file==null ? null : new File(file);
+         if( f!=null && f.isFile() ) {
             FileInputStream fr = null;
             try {
                fr = new FileInputStream(f);
@@ -1033,25 +1054,38 @@ final public class ThreadBuilderTile {
                }
                dis.close();
                in.close();
-               pol = Context.createPolygon(res.toString());
-               if( pol!=null ) context.info("FoV detected: "+f.getName()+" => "+pol2String(pol));
+               sh = Context.createFov(res.toString());
+               if( sh!=null ) context.info("FoV detected: "+f.getName()+" => "+shape2String(sh));
             }
             catch( Exception e) { e.printStackTrace(); }
             finally { if( fr!=null ) { try { fr.close(); } catch( Exception e1) {} } }
-         }
-         hashPolygon.put(dir,pol);
-         return pol;
+         } 
+//         else {
+//            context.info("FoV none detected: "+(f!=null?f.getName():"f=null")+" shape="+sh);
+//         }
+         hasShape.put(dir,sh);
+         return sh;
       }
    }
 
-   private String pol2String(Polygon pol) {
+   private String shape2String(Shape shape) {
       int i;
       StringBuilder rep= new StringBuilder();
-      for( i=0; i<pol.npoints && i<5; i++ ) {
-         if( i>0 ) rep.append(' ');
-         rep.append(pol.xpoints[i]+","+pol.ypoints[i]);
+      
+      // Un polygone ?
+      if( shape instanceof Polygon ) {
+         Polygon pol = (Polygon)shape;
+         for( i=0; i<pol.npoints && i<5; i++ ) {
+            if( i>0 ) rep.append(' ');
+            rep.append(pol.xpoints[i]+","+pol.ypoints[i]);
+         }
+         if( i<pol.npoints ) rep.append("...");
+         
+      // ou un cercle ?
+      } else if( shape instanceof Ellipse2D ) {
+         Ellipse2D ell = (Ellipse2D)shape;
+         rep.append( "circle("+ell.getCenterX()+","+ell.getCenterY()+","+(ell.getWidth()/2)+")");
       }
-      if( i<pol.npoints ) rep.append("...");
       return rep.toString();
    }
 
@@ -1061,7 +1095,7 @@ final public class ThreadBuilderTile {
       int isOpened=-1;     // numero du frame ouvert, -1 si aucun
       String name=null;
       double blank;
-      Polygon polygon=null;
+      Shape shape=null;
       boolean flagRemoved=false;   // true si ce fichier est supprimé a posteriori
 
       SrcFile(String name,long cellMem) {
@@ -1104,13 +1138,13 @@ final public class ThreadBuilderTile {
             }
 
             // Faut-il associer un Polygon particulier
-            if( context.scanFov ) polygon = getPolygon(fitsfile);
+            if( context.scanFov ) shape = getShape(fitsfile);
 
-            isOpened=frame;
             fitsfile.addUser();
             MyInputStreamCached.incActiveFile(name);
 
             blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
+            isOpened=frame;
          }
       }
       

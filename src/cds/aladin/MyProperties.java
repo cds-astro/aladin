@@ -750,7 +750,7 @@ public class MyProperties {
                pos = item.value.indexOf('\t',pos+1);
                if( pos==-1 ) pos=item.value.length();
                String v = item.value.substring(opos+1,pos);
-               if( v.startsWith("http://")) v = "<A HREF=\""+v+"\" target=\"_top\">"+v+"</A>";
+               if( v.startsWith("http://") || v.startsWith("https://") ) v = "<A HREF=\""+v+"\" target=\"_top\">"+v+"</A>";
                String k = item.key;
                if( k.startsWith("hips_") ) c="grey";
                else if( k.startsWith("obs_") ) c="blue";

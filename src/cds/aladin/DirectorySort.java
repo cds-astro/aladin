@@ -56,7 +56,7 @@ public class DirectorySort {
    public static final String[] DATATYPES = { "Image","Cube","Table","Spectra" };
    public static final int IMAGE= 0, CUBE=1, TABLE=2, SPECTRUM=3;
    
-   public static final String[] COVRANGES = {  "Whole sky" , "75% to 100%", "50% to 75%", ">25% to 50%" ,
+   public static final String[] COVRANGES = {  "Whole sky" , "75% to 100%", "50% to 75%", "25% to 50%" ,
          "10% to 25%", "1% to 10%", "less than 1%" };
    public static final int COV100=0, COV75=1, COV50=2, COV25=3, COV10=4, COV1=5, COV0=6;
    
@@ -226,6 +226,8 @@ public class DirectorySort {
                   new int[] { PROTOCOL, NAME} ),
             new SortRule("Data type","By ascending name, grouped by data type",
                   new int[] { DATATYPE, NAME} ),
+            new SortRule("Coverage","Descending coverage, grouped by coverage range",
+                  new int[] { COVERAGE, ID } ),
             new SortRule("Year","By descending date, grouped by year",
                   new int[] { -YEAR, -DATE, NAME} ),
             new SortRule("Flat name","By ascending name",
@@ -290,7 +292,9 @@ public class DirectorySort {
                   new SortRule("Regime","By name, grouped by origin and regime, CDS first",
                         new int[] { BRANCH, CDS, ORIGIN, REGIME, NAME} ),
                   new SortRule("Date","Descending date, grouped by origin",
-                        new int[] { BRANCH, CDS, ORIGIN, -YEAR, -DATE} )
+                        new int[] { BRANCH, CDS, ORIGIN, -YEAR, -DATE} ),
+                  new SortRule("Coverage","Descending coverage, grouped by coverage range",
+                        new int[] { BRANCH, CDS, ORIGIN, COVERAGE, ID } ),
       } );
       initBranchRules("Catalog/VizieR",  
             new SortRule[] {
