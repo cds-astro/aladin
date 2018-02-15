@@ -134,8 +134,8 @@ import cds.tools.Util;
  */
 public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, PlaneLoadListener {
 
-   // PF Mai 2017 : remplacement interface XmlRpcHandler par SampXmlRpcHandler
-   
+    // PF Mai 2017 : remplacement interface XmlRpcHandler par SampXmlRpcHandler
+
     static final protected String NOTIFY = "samp.hub.notify";
     static final protected String NOTIFY_ALL = "samp.hub.notifyAll";
 
@@ -155,7 +155,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
     ///////////////////// List of SAMP messages /////////////////////////////////
 
-               ////       List of SAMP Hub messages /////
+    ////       List of SAMP Hub messages /////
     static final protected String HUB_MSG_REGISTER = "samp.hub.register";
     static final protected String HUB_MSG_DECLARE_METADATA = "samp.hub.declareMetadata";
     static final protected String HUB_MSG_DECLARE_SUBSCRIPTIONS = "samp.hub.declareSubscriptions";
@@ -197,11 +197,11 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
     // liste des messages supportés (i.e auxquels on répond)
     static final protected String[] SUPPORTED_MESSAGES = {MSG_LOAD_FITS_IMAGE, MSG_POINT_AT_COORDS, MSG_GET_COORDS,MSG_GET_SNAPSHOT,
-                                    MSG_LOAD_VOT_FROM_URL,
-                                    MSG_LOAD_FITS_TABLE_FROM_URL, MSG_HIGHLIGHT_OBJECT, MSG_SELECT_OBJECTS,
-                                    MSG_PING, MSG_SEND_ALADIN_SCRIPT_CMD,
-                                    HUB_MSG_SHUTDOWN, HUB_MSG_REGISTRATION, HUB_MSG_UNREGISTRATION,
-                                    HUB_MSG_SUBSCRIPTIONS, HUB_MSG_DISCONNECT};
+            MSG_LOAD_VOT_FROM_URL,
+            MSG_LOAD_FITS_TABLE_FROM_URL, MSG_HIGHLIGHT_OBJECT, MSG_SELECT_OBJECTS,
+            MSG_PING, MSG_SEND_ALADIN_SCRIPT_CMD,
+            HUB_MSG_SHUTDOWN, HUB_MSG_REGISTRATION, HUB_MSG_UNREGISTRATION,
+            HUB_MSG_SUBSCRIPTIONS, HUB_MSG_DISCONNECT};
 
     // strings associated to reply to a message
     static final protected String MSG_REPLY_SAMP_STATUS = "samp.status";
@@ -231,13 +231,13 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     // TODO: on pourrait récupérer cette description par la classe Chaine (Aladin.string0)
     // description of what Aladin is and does
     static final protected String ALADIN_DESC = "ALADIN is an interactive software "+
-        "sky atlas developed by the CDS, allowing one to visualize digitized images"+
-        "of any part of the sky, to superimpose entries from astronomical catalogs,"+
-        "and to interactively access related data and information.";
+            "sky atlas developed by the CDS, allowing one to visualize digitized images"+
+            "of any part of the sky, to superimpose entries from astronomical catalogs,"+
+            "and to interactively access related data and information.";
 
     // les différentes chaines nécessaires
     static String LAUNCH_INTERNAL_HUB, CANT_CONNECT, CANT_LAUNCH_HUB, HUB_STOP,
-                  EXCEPTION, CONFIRM_STOP_HUB;
+    EXCEPTION, CONFIRM_STOP_HUB;
 
     // référence à Aladin
     private Aladin a;
@@ -252,10 +252,10 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     private String hubUrl;
     private String sampSecret;
     // handle to contact the hub
-//    private XmlRpcClient hubClient;  //PF Mai 2017 - Remplacement par SampXmlRpcClient
+    //    private XmlRpcClient hubClient;  //PF Mai 2017 - Remplacement par SampXmlRpcClient
     private SampXmlRpcClient hubClient;
     // Aladin's XML-RPC Server to be reached by other apps
-//    private WebServer aladinXmlRpcServer; //PF Mai 2017 - Remplacement par SampXmlRpcServer
+    //    private WebServer aladinXmlRpcServer; //PF Mai 2017 - Remplacement par SampXmlRpcServer
     private SampXmlRpcServer aladinXmlRpcServer;
 
 
@@ -318,7 +318,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         Object result;
         try {
             // PF Mai 2017 - Tous les execute(...) ont été remplacés par callAndWait(...)
-//           Map resultMap = (Map)hubClient.execute(HUB_MSG_REGISTER, params);
+            //           Map resultMap = (Map)hubClient.execute(HUB_MSG_REGISTER, params);
             Map resultMap = (Map)hubClient.callAndWait(HUB_MSG_REGISTER, params);
             // TODO : se prévenir contre les pbs de cast incorrect et de clé absentes !!
             myPrivateKey = resultMap.get(KEY_PRIVATE_KEY).toString();
@@ -350,7 +350,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         params.add(myPrivateKey);
         params.add(map);
         try {
-           // PF Mai 2017 - execute(...) -> callAndWait(...)
+            // PF Mai 2017 - execute(...) -> callAndWait(...)
             result = hubClient.callAndWait(HUB_MSG_DECLARE_METADATA, params);
         }
         catch(Exception e) {
@@ -359,21 +359,21 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         // PF Mai 2017 - Utilisation du InternalServer()
         // start XML-RPC server
-//        int xmlRpcPort = findFreePort();
-//        aladinXmlRpcServer = new WebServer(xmlRpcPort);
-//        aladinXmlRpcServer.start();
-//        String callbackAddress = "http://"+getLocalhost()+":"+xmlRpcPort+"/";
-        
+        //        int xmlRpcPort = findFreePort();
+        //        aladinXmlRpcServer = new WebServer(xmlRpcPort);
+        //        aladinXmlRpcServer.start();
+        //        String callbackAddress = "http://"+getLocalhost()+":"+xmlRpcPort+"/";
 
-//        trace(" Aladin callback address is: "+callbackAddress);
-//        aladinXmlRpcServer.addHandler("samp.client", this);
-        
+
+        //        trace(" Aladin callback address is: "+callbackAddress);
+        //        aladinXmlRpcServer.addHandler("samp.client", this);
+
         try {
-           aladinXmlRpcServer = new InternalServer();
-             aladinXmlRpcServer.addHandler(this);
+            aladinXmlRpcServer = new InternalServer();
+            aladinXmlRpcServer.addHandler(this);
         } catch( IOException e1 ) {
-           // TODO Auto-generated catch block
-           e1.printStackTrace();
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         }
 
         String callbackAddress = aladinXmlRpcServer.getEndpoint().toString();
@@ -627,7 +627,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                 }
                 catch(Exception e) {
                     String errorMsg = "Error while processing SAMP message "+MSG_POINT_AT_COORDS+":"
-                    +"Missing 'ra' or 'dec' parameter or incorrect type for params";
+                            +"Missing 'ra' or 'dec' parameter or incorrect type for params";
                     a.command.println(errorMsg);
                     retValue = FALSE;
                     e.printStackTrace();
@@ -828,9 +828,9 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
                 // arrêt serveur XMLRPC
                 if( aladinXmlRpcServer!=null ) {
-                   // PF Mai 2017
-                   ((InternalServer)aladinXmlRpcServer).getHttpServer().stop();
-//                    aladinXmlRpcServer.shutdown();
+                    // PF Mai 2017
+                    ((InternalServer)aladinXmlRpcServer).getHttpServer().stop();
+                    //                    aladinXmlRpcServer.shutdown();
                 }
 
                 if( widget!=null ) widget.animateWidgetReceive(true, false);
@@ -858,8 +858,8 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         // arrêt serveur XMLRPC
         if( aladinXmlRpcServer!=null ) {
-           ((InternalServer)aladinXmlRpcServer).getHttpServer().stop();
-//            aladinXmlRpcServer.shutdown();
+            ((InternalServer)aladinXmlRpcServer).getHttpServer().stop();
+            //            aladinXmlRpcServer.shutdown();
         }
 
         if( widget!=null ) widget.animateWidgetReceive(true, false);
@@ -1017,51 +1017,51 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         try  {
             // testing if the hub is alive (by pinging it)
             URL url = new URL(hubUrl);
-//            hubClient = new XmlRpcClient(url);
+            //            hubClient = new XmlRpcClient(url);
             hubClient = new InternalClient(url);
 
             try {
                 hubClient.callAndWait(HUB_MSG_PING, new Vector());
             }
             catch(ConnectException xre) {
-               Aladin.trace(3, "ConnectException: Unable to connect to the hub, deleting the .samp file");
-               // on efface le fichier ".samp" qui, apparemment, pointe vers un hub ne tournant plus
-               try {
-                  if( confFile.delete() ) {
-                     updateState();
-                     return getHubListener(silent, launchHubIfNeeded);
-                  }
-                  else {
-                     if( !silent ) Aladin.error(CANT_CONNECT);
-                     return false;
-                  }
-               }
-               catch(Exception e) {
-                  e.printStackTrace();
-                  return false;
-               }
+                Aladin.trace(3, "ConnectException: Unable to connect to the hub, deleting the .samp file");
+                // on efface le fichier ".samp" qui, apparemment, pointe vers un hub ne tournant plus
+                try {
+                    if( confFile.delete() ) {
+                        updateState();
+                        return getHubListener(silent, launchHubIfNeeded);
+                    }
+                    else {
+                        if( !silent ) Aladin.error(CANT_CONNECT);
+                        return false;
+                    }
+                }
+                catch(Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
             }
         }
         catch(java.rmi.ConnectException ce) {
-           Aladin.trace(3, "rmi.ConnectException: Unable to connect to the hub, deleting the .samp file");
-           // on efface le fichier ".plastic" qui, apparemment, pointe vers un hub ne tournant plus
-           try {
-              if( confFile.delete() ) {
-                 updateState();
-                 return getHubListener(silent, launchHubIfNeeded);
-              }
-              else {
-                 if( !silent ) Aladin.error(CANT_CONNECT);
-                 return false;
-              }
-           }
-           catch(Exception e) {return false;}
+            Aladin.trace(3, "rmi.ConnectException: Unable to connect to the hub, deleting the .samp file");
+            // on efface le fichier ".plastic" qui, apparemment, pointe vers un hub ne tournant plus
+            try {
+                if( confFile.delete() ) {
+                    updateState();
+                    return getHubListener(silent, launchHubIfNeeded);
+                }
+                else {
+                    if( !silent ) Aladin.error(CANT_CONNECT);
+                    return false;
+                }
+            }
+            catch(Exception e) {return false;}
         }
         catch(Exception e) {
-           trace("Unable to create the HubListener object");
+            trace("Unable to create the HubListener object");
 
-           //            if( !silent ) Aladin.warning(CANT_CONNECT);
-           return false;
+            //            if( !silent ) Aladin.warning(CANT_CONNECT);
+            return false;
         }
 
         return true;
@@ -1147,27 +1147,27 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         sendNotification(message, (String[])recipients.toArray(new String[recipients.size()]));
     }
-    
-    
+
+
     // Bricolage PIERRE pour Petr Skoda - nov 2015
     // TOPcat refuse de recevoir un spectre ou une série temporelle, je lui envoie comme une table simple
     public void sendMessageLoadVOTable(String url, String id, String name, Map metadata, List recipients) {
-       Map paramMap = new Hashtable();
-       // ajout de l'url
-       paramMap.put("url", url);
-       // ajout du spectrum-id
-       paramMap.put("table-id", id);
-       // ajout des métadonnées
-       paramMap.put("meta", metadata);
-       // ajout du name
-       paramMap.put("name", name);
+        Map paramMap = new Hashtable();
+        // ajout de l'url
+        paramMap.put("url", url);
+        // ajout du spectrum-id
+        paramMap.put("table-id", id);
+        // ajout des métadonnées
+        paramMap.put("meta", metadata);
+        // ajout du name
+        paramMap.put("name", name);
 
-       Map message = new Hashtable();
-       message.put(KEY_MTYPE, MSG_LOAD_VOT_FROM_URL);
-       message.put(KEY_PARAMS, paramMap);
+        Map message = new Hashtable();
+        message.put(KEY_MTYPE, MSG_LOAD_VOT_FROM_URL);
+        message.put(KEY_PARAMS, paramMap);
 
-       sendNotification(message, recipients==null?null:(String[])recipients.toArray(new String[recipients.size()]));
-   }
+        sendNotification(message, recipients==null?null:(String[])recipients.toArray(new String[recipients.size()]));
+    }
 
 
     public void sendMessageLoadSpectrum(String url, String spectrumId, String spectrumName, Map metadata, List recipients) {
@@ -1258,7 +1258,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         String appId;
         Iterator<String> it = appsMap.keySet().iterator();
         while( it.hasNext() ) {
-//        for( int i=0; i<listApps.length; i++ ) {
+            //        for( int i=0; i<listApps.length; i++ ) {
             appId = it.next();
 
             // on ne retourne pas son propre ID
@@ -1342,7 +1342,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         String osName = System.getProperty("os.name");
 
         return    osName.toLowerCase().indexOf("windows")>=0
-               || osName.toLowerCase().indexOf("microsoft")>=0;
+                || osName.toLowerCase().indexOf("microsoft")>=0;
     }
 
     /**
@@ -1363,7 +1363,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         }
         catch(IOException e) {
             throw (IOException)
-                  new IOException("Execution failed: " + argv).initCause(e);
+            new IOException("Execution failed: " + argv).initCause(e);
         }
         if( process.exitValue() == 0 ) {
             return readStream(process.getInputStream());
@@ -1411,9 +1411,9 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
      *
      * @param oid
      */
-//    private synchronized void selectObjects(String[] oid, Object[] argArray) {
-//        selectSources(argArray);
-//    }
+    //    private synchronized void selectObjects(String[] oid, Object[] argArray) {
+    //        selectSources(argArray);
+    //    }
 
     /** Traitement du message MSG_SELECT_OBJECTS
      *
@@ -1426,7 +1426,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         }
 
 
-//       on cherche le plan concerné
+        //       on cherche le plan concerné
         Plan p = findPlaneByPlasticID(tableId);
         if( p==null ) {
             trace("Could not find plane with plastic ID "+tableId);
@@ -1474,7 +1474,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         oid = id;
         oidx = idx;
-//       on cherche le plan concerné
+        //       on cherche le plan concerné
         Plan p = findPlaneByPlasticID(id);
 
         if( p==null ) {
@@ -1492,9 +1492,9 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         // PF - sept 2010 - c'est plus propre via gotoThere(...)
         a.view.gotoThere(src);
-//        a.view.repaintAll();
-//        // make the object blink
-//        a.view.showSource(src);
+        //        a.view.repaintAll();
+        //        // make the object blink
+        //        a.view.showSource(src);
 
         return true;
     }
@@ -1745,7 +1745,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                 }
 
                 sendNotification(message, recipients==null?null:(String[])recipientsList.toArray(new String[recipientsList.size()]));
-//                sendAsyncMessage(PlasticManager.MSG_LOAD_VOT_FROM_URL, paramList, recipientsList);
+                //                sendAsyncMessage(PlasticManager.MSG_LOAD_VOT_FROM_URL, paramList, recipientsList);
                 a.log("SAMP", "broadcast table");
             }
         }.start();
@@ -1849,9 +1849,9 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         String[] uris = (String[])((List)args[0]).toArray(new String[((List)args[0]).size()]);
 
         resourceChooser.updateFrame(uris, senderId);
-//        for (int i = 0; i < uris.length; i++) {
-//            System.out.println(uris[i]);
-//        }
+        //        for (int i = 0; i < uris.length; i++) {
+        //            System.out.println(uris[i]);
+        //        }
 
         return true;
     }
@@ -1949,9 +1949,9 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         // TODO : rendre tout cela thread-safe
 
         public void actionPerformed(ActionEvent e) {
-           if( ! Aladin.PROTO ) return;
+            if( ! Aladin.PROTO ) return;
 
-           String s = e.getActionCommand();
+            String s = e.getActionCommand();
 
             if( s.equals("Close") ) this.setVisible(false);
             else if( s.equals("OK") ) {
@@ -1985,8 +1985,8 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                 System.arraycopy(a.dialog.buttons, 0, newButton, 0, a.dialog.buttons.length);
 
                 for( int i = 0; i < n; i++ ) {
-                   newServer[a.dialog.server.length + i] = (Server) a.glu.vGluServer
-                         .elementAt(i);
+                    newServer[a.dialog.server.length + i] = (Server) a.glu.vGluServer
+                            .elementAt(i);
                 }
 
 
@@ -1999,11 +1999,11 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                 Enumeration eServers = a.glu.vGluServer.elements();
                 while( eServers.hasMoreElements() ) {
                     Server curServer = ((Server)eServers.nextElement());
-//                    System.out.println("type: "+curServer.type);
-//                    System.out.println("mypopup: "+curServer.myPopup);
+                    //                    System.out.println("type: "+curServer.type);
+                    //                    System.out.println("mypopup: "+curServer.myPopup);
                     a.dialog.voResPopup.addItem(curServer.aladinLabel);
-//                    if( curServer.type==Server.CATALOG ) a.dialog.plasticPopupCat.addItem(curServer.nom);
-//                    else a.dialog.plasticPopupImg.addItem(curServer.nom);
+                    //                    if( curServer.type==Server.CATALOG ) a.dialog.plasticPopupCat.addItem(curServer.nom);
+                    //                    else a.dialog.plasticPopupImg.addItem(curServer.nom);
                     curServer.setOpaque(true);
                     a.dialog.mp.add(curServer.aladinLabel, curServer);
                 }
@@ -2042,7 +2042,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
 
         if( !isRegistered() ) {
-//          Aladin.trace(3, "Aladin is not registered with a PLASTIC hub, will not send a 'select objects' message");
+            //          Aladin.trace(3, "Aladin is not registered with a PLASTIC hub, will not send a 'select objects' message");
             return;
         }
 
@@ -2126,12 +2126,13 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
                 // TODO : enlever log SAMP, sauf en mode SAMP trace
 
-//              TODO : String plasticId ?? que faire si plasticId est null ? --> en crer un !!
+                //              TODO : String plasticId ?? que faire si plasticId est null ? --> en crer un !!
                 // TODO : plasticId est par exemple null pour les tables issues d'exportation de filtre
                 // TODO : pas besoin d'envoyer ce message si le plan correspondant n'a jamais été broadcasté
                 paramMap.put("table-id", p.getPlasticID());
                 trace("envoi id : "+p.getPlasticID());
-                paramMap.put("row-list", idxItems);
+                // this parameter needs to be casted as an ArrayList in order to be properly serialized
+                paramMap.put("row-list", Arrays.asList(idxItems));
 
                 sendNotification(message, null);
             }
@@ -2151,24 +2152,24 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         return (sources==null || sources.length==0)?null:sources[0].plan;
 
-//      Plan p = null;
-//
-//      // Pour chaque OID à trouver, parcours de tous les plans CATALOG
-//      for( int k=0; k<a.calque.plan.length; k++ ) {
-//         if( sources.length==0 ) break;
-//
-//         Plan pTmp = a.calque.plan[k];
-//         if( pTmp.type!=Plan.CATALOG || pTmp.pcat==null ) continue;
-//         for( int j=0; j<pTmp.pcat.nb_o; j++ ) {
-//            Source sTmp = ((Source)pTmp.pcat.o[j]);
-//            if( sTmp!=null && sTmp.equals(sources[0]) ) {
-//               p = pTmp;
-//               break;
-//            }
-//         }
-//      }
-//
-//      return p;
+        //      Plan p = null;
+        //
+        //      // Pour chaque OID à trouver, parcours de tous les plans CATALOG
+        //      for( int k=0; k<a.calque.plan.length; k++ ) {
+        //         if( sources.length==0 ) break;
+        //
+        //         Plan pTmp = a.calque.plan[k];
+        //         if( pTmp.type!=Plan.CATALOG || pTmp.pcat==null ) continue;
+        //         for( int j=0; j<pTmp.pcat.nb_o; j++ ) {
+        //            Source sTmp = ((Source)pTmp.pcat.o[j]);
+        //            if( sTmp!=null && sTmp.equals(sources[0]) ) {
+        //               p = pTmp;
+        //               break;
+        //            }
+        //         }
+        //      }
+        //
+        //      return p;
     }
 
     /** Recherche d'un plan catalogue par son PlasticID
@@ -2201,7 +2202,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         // On recherche numéros d'ordre des Source dans p.pcat
         Iterator<Obj> it = p.iterator();
         for( int i=0; it.hasNext(); i++ ) {
-           Obj o = it.next();
+            Obj o = it.next();
             for( int j=0; j<sources.length; j++ ) {
                 if( o==null ) continue;
                 Source sTmp = (Source)o;
@@ -2287,7 +2288,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         if( ! a.plasticPrefs.getBooleanValue(PlasticPreferences.PREF_HIGHLIGHT) )
             return;
 
-//      Aladin.trace(3, "Sending message "+MSG_HIGHLIGHT_OBJECT+" for source "+source);
+        //      Aladin.trace(3, "Sending message "+MSG_HIGHLIGHT_OBJECT+" for source "+source);
 
 
         // TODO : que faire si source==null ? envoi de null pour ne plus hilighter le dernier objet hilighté ?
@@ -2296,7 +2297,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         }
 
         if( !isRegistered() ) {
-//          Aladin.trace(3, "Aladin is not registered with a SAMP hub, will not send a 'highlight object' message");
+            //          Aladin.trace(3, "Aladin is not registered with a SAMP hub, will not send a 'highlight object' message");
             return;
         }
 
@@ -2355,7 +2356,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         }
         return null;
     }
-    */
+     */
 
 
 
@@ -2435,7 +2436,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
 
     private boolean sampTrace = false;
-    
+
     // mode "trace" pour débugging PLASTIC
     public void trace(String s) {
         if( !sampTrace ) return;
@@ -2484,16 +2485,16 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
     }
 
-   @Override
-   // PF 25 mai 2017
-   public boolean canHandleCall(String arg0) {
-      return true;
-   }
+    @Override
+    // PF 25 mai 2017
+    public boolean canHandleCall(String arg0) {
+        return true;
+    }
 
-   @Override
-   // PF 25 mai 2017
-   public Object handleCall(String arg0, List arg1, Object arg2) throws Exception {
-      return execute(arg0, new Vector(arg1) );
-   }
+    @Override
+    // PF 25 mai 2017
+    public Object handleCall(String arg0, List arg1, Object arg2) throws Exception {
+        return execute(arg0, new Vector(arg1) );
+    }
 
 }
