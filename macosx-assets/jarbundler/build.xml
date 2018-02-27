@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="Aladin" default="buildDMG" basedir=".">
+
+  <property name="name" value="Aladin"/>
+  <property name="version" value="10.0"/>
+  <property name="copyright" value=" &#xa9; UdS/CNRS, 1999-2018"/>
+  <property name="releasedir" value="release"/>
+  <property name="dmgreleasedir" value="dmg"/>
+
+  <!-- define jarbundler task -->
+  <taskdef name="jarbundler"
+      classname="net.sourceforge.jarbundler.JarBundler" classpath="jarbundler-2.5.0.jar" />
+
+  <!-- target building the .app file -->
+  <target name="buildAppBundle" description="Build a bundle for Mac OS X">
+    <mkdir dir="${releasedir}" />
+    <jarbundler dir="${releasedir}" verbose="true" showPlist="true"
+                mainclass="cds.aladin.Aladin"
+                jar="${ant.project.name}.jar"
+                name="${name}"
+                shortname="${name}"
+		icon="${basedir}/AladinIcon.icns"
+		jvmversion="1.5+"
+		vmoptions="-Xms64M -Xmx1024M"
+        stubfile="${basedir}/universalJavaApplicationStub"
+        useJavaXKey="true"
+		version="${version}">
+
+
+    </jarbundler>
+
+  </target>
+
+  <!-- target building the DMG disk image -->
+  <target name="buildDMG" depends="buildAppBundle" description="Build an application disk image for Aladin">
+    <!-- copy README.txt, COPYRIGHT and FAQ.html to the package -->
+    <copy file="README.txt" todir="${releasedir}" />
+    <copy file="COPYRIGHT" todir="${releasedir}" />
+    <copy file="FAQ.html" todir="${releasedir}" />
+
+    <!-- execute hdiutil util to create disk image -->
+    <exec executable="/usr/bin/hdiutil" os="Mac OS X">
+      <arg value="create"/>
+      <arg value="-srcfolder"/>
+      <arg value="${releasedir}"/>
+      <arg value="-volname"/>
+      <arg value="${name} ${version}"/>
+      <arg value="-ov"/>
+      <arg value="${name}.dmg"/>
+      <arg value="-fs"/>
+      <arg value="HFS+"/>
+    </exec>
+
+    <!-- move DMG image to ${dmgreleasedir} -->
+    <mkdir dir="${dmgreleasedir}" />
+    <move file="${name}.dmg" todir="${dmgreleasedir}"/>
+
+  </target>
+
+</project>
