@@ -53,7 +53,7 @@ import static cds.aladin.Constants.SODA_POSINDEX1;
 import static cds.aladin.Constants.SODA_POSINDEX2;
 import static cds.aladin.Constants.SODA_POSINDEX3;
 import static cds.aladin.Constants.SODA_STANDARDID;
-import static cds.aladin.Constants.SODA_SYNC_FORM;
+import static cds.aladin.Constants.SODA_FORM;
 import static cds.aladin.Constants.SODA_TIMEINDEX;
 import static cds.aladin.Constants.SODA_URL_PARAM;
 import static cds.aladin.Constants.SPACESTRING;
@@ -65,11 +65,15 @@ import static cds.aladin.Constants.T_MIN;
 import static cds.aladin.Constants.T_XEL;
 import static cds.aladin.Constants.STCPREFIX_CIRCLE;
 import static cds.aladin.Constants.STCPREFIX_POLYGON;
+import static cds.aladin.Constants.SODAASYNC_STANDARDID;
+import static cds.aladin.Constants.DATALINK_FORM_SYNC;
+import static cds.aladin.Constants.DATALINK_FORM_ASYNC;
 
 import static cds.aladin.Constants.UTF8;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -83,6 +87,7 @@ import cds.savot.model.SavotOption;
 import cds.savot.model.SavotParam;
 import cds.savot.model.SavotResource;
 import cds.savot.model.SavotValues;
+import cds.tools.Util;
 import cds.xml.Field;
 
 public final class DataLinkGlu {
@@ -121,6 +126,7 @@ public final class DataLinkGlu {
 	 */
 	protected void createDLGlu(Source activeDataLinkSource, SimpleData selectedDatalink) throws Exception {
 		boolean isNonStandardService = true;
+		boolean isSODAASync = false;
 		
 		Hashtable<String,String> paramDescription = new Hashtable<String,String>();
 		Hashtable<String,String> paramDataType = new Hashtable<String,String>();
@@ -134,24 +140,32 @@ public final class DataLinkGlu {
 		ParamSet inputParams = null;
 		String boundaryArea_stcs = null;
 		ByteArrayInputStream dicStream = null;
+		int syncAsyncMode = -1;
 		
 		try {
 			for (int i = 0; i < resourceParams.getItemCount(); i++) {
 				resourceParam = resourceParams.getItemAt(i);
-				if(resourceParam.getName().equalsIgnoreCase("accessURL") || resourceParam.getName().equalsIgnoreCase("U") || resourceParam.getName().equalsIgnoreCase("Url") ) {
+				if (resourceParam.getName().equalsIgnoreCase("accessURL")
+						|| resourceParam.getName().equalsIgnoreCase("U")
+						|| resourceParam.getName().equalsIgnoreCase("Url")) {
 					urlString = new StringBuilder(resourceParam.getValue());
-				}
-				
-				//Check if this is a standard SODA service
-				//TODO:: handle SODA async as well.
-				if (resourceParam.getName().equalsIgnoreCase(STANDARDID) && resourceParam.getValue().equalsIgnoreCase(SODA_STANDARDID)) {
-					String sodaGluRecord = aladin.datalinkGlu.getStandardActionGlu(SODA_SYNC_FORM);
+				} else if (resourceParam.getName().equalsIgnoreCase(STANDARDID)
+						&& (resourceParam.getValue().equalsIgnoreCase(SODA_STANDARDID)
+								|| resourceParam.getValue().equalsIgnoreCase(SODAASYNC_STANDARDID))) {
+					
+					String sodaGluRecord = aladin.datalinkGlu.getStandardActionGlu(SODA_FORM);
 					
 					inputParams = DatalinkServiceUtil.getInputParams(metaResource.getGroups()).getParams();
 					SavotParam idParam = DatalinkServiceUtil.getInputParams(inputParams, ID);
 					paramValue.put(String.valueOf(SODA_IDINDEX), getParamValue(idParam, selectedDatalink));
 					
 					boolean noParamSet = true;
+					if (resourceParam.getValue().equalsIgnoreCase(SODAASYNC_STANDARDID)) {
+						isSODAASync = true;
+					}
+					syncAsyncMode = setSyncAsyncMode(isSODAASync);
+					sodaGluRecord = addSyncAsyncParam(sodaGluRecord, syncAsyncMode);
+					
 					if (sodaGluRecord != null) {
 						dicStream = new ByteArrayInputStream(sodaGluRecord.getBytes(StandardCharsets.UTF_8));
 						noParamSet = this.setSODAFormParams(activeDataLinkSource, paramDescription, paramDataType, paramValue, paramRange);
@@ -208,11 +222,17 @@ public final class DataLinkGlu {
 //					System.out.println(urlString.toString());
 				}
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
-				
 			} else {
 //				urlString.append("?POS=circle+$1+$2+$3&TIME=$4&BAND=$5&POL=$6&ID=$7");//cadc works with this not CIRCLE...
 				urlString.append(SODA_URL_PARAM);
 				aladin.glu.aladinDic.put(DATALINK_FORM, urlString.toString());
+				if (syncAsyncMode > 0) {
+					if (isSODAASync) {
+						aladin.glu.aladinDic.put(DATALINK_FORM_ASYNC, urlString.toString());
+					} else {
+						aladin.glu.aladinDic.put(DATALINK_FORM_SYNC, urlString.toString());
+					}
+				}
 			}
 			
 			Vector serverVector = null;
@@ -223,11 +243,14 @@ public final class DataLinkGlu {
 			} else {
 				Vector  aladinFilter = new Vector(10);
 				StringBuffer record =new StringBuffer(1000);
-			    record.append("%A ").append(DATALINK_FORM).append("\n%D Cutout prototype for SODA sync server");
-			    serverDataLinks(DATALINK_FORM, "Cutout service", null, null, null, DATALINK_CUTOUT_FORMLABEL,
-		   	         "Cutout service", null, paramDescription, paramDataType, paramValue, paramRange,
-		   	         "Mime(application/xml)", null, aladinFilter, null, null, null, record, null);
+			    record.append("%A ").append(DATALINK_FORM).append("\n%D Cutout interface for SODA server");
+			    ServerGlu g = serverDataLinks(DATALINK_FORM, "Cutout service", null, null, null, DATALINK_CUTOUT_FORMLABEL,
+			    		"Cutout service", null, paramDescription, paramDataType, paramValue, paramRange,
+		   	         "Mime(application/xml)", syncAsyncMode, null, aladinFilter, null, null, null, record, null);
 				serverVector = vGluDLServer;
+				if (g != null && g.grab != null) {
+					g.grab.setEnabled(true);//Default true for datalink forms
+				}
 			}
 			
 			int n = serverVector.size();
@@ -263,8 +286,18 @@ public final class DataLinkGlu {
 	        	if (disableTime) {
 	        		dlGlu.disableDateField(String.format(PARAMDISABLEDTOOLTIP, TIME));
 				}
-	        	
 			}
+	        String label = getFormLabel(urlString.toString());
+		    String planeLabel = null;
+		    if (label != null) {
+				if (!isNonStandardService || isSODAASync) {
+					planeLabel = "[SODA]" + label;
+				} else {
+					planeLabel = "[Cutout]"+ label;
+				}
+			}
+		    dlGlu.aladinLabel = label;
+		    dlGlu.planeLabel = planeLabel;
 //			aladin.datalinkGlu.reload(false, serverVector);
 			
 			if (serviceClientFrame == null) {
@@ -279,6 +312,81 @@ public final class DataLinkGlu {
 			throw e;
 		}
 	    
+	}
+
+	private String getFormLabel(String url) {
+		// TODO Auto-generated method stub
+		String result = null;
+		try {
+			result = Util.getDomainNameFromUrl(url);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	public String addSyncAsyncParam(String gluRecord, int syncAsyncMode) {
+		gluRecord = gluRecord.concat("%ResultSubmitType ")+syncAsyncMode;
+		return gluRecord;
+	}
+	
+	public int setSyncAsyncMode(boolean isSODAASync) {
+		int syncAsyncMode = -1;
+		if (isSODAASync) {
+			String url = checkOtherOptionExistsAndGetUrl(SODA_STANDARDID);
+			if (url != null) {
+				syncAsyncMode = 2;
+				url = url.concat(SODA_URL_PARAM);
+				aladin.glu.aladinDic.put(DATALINK_FORM_SYNC, url);
+			} else {
+				syncAsyncMode = 0;
+			}
+		} else {
+			String url = checkOtherOptionExistsAndGetUrl(SODAASYNC_STANDARDID); 
+			if (url != null) {
+				syncAsyncMode = 1;
+				url = url.concat(SODA_URL_PARAM);
+				aladin.glu.aladinDic.put(DATALINK_FORM_ASYNC, url);
+			}
+			
+		}
+		return syncAsyncMode;
+	}
+	
+	/**
+	 * Checks if the resource with input standardId exists in the datalink options
+	 * @param standardId
+	 * @return
+	 */
+	public String checkOtherOptionExistsAndGetUrl(String standardId) {
+		boolean exists = false;
+		String urlString = null;
+		
+		datalinkInfoLoop:
+		for (SimpleData datalinkInfo : this.aladin.mesure.activeDataLinkWord.datalinksInfo) {
+			urlString = null;
+			SavotResource metaResource = datalinkInfo.getMetaResource();
+			if (metaResource != null) {
+				ParamSet resourceParams = metaResource.getParams();
+				SavotParam resourceParam = null;
+				for (int i = 0; i < resourceParams.getItemCount(); i++) {
+					resourceParam = resourceParams.getItemAt(i);
+					if (resourceParam.getName().equalsIgnoreCase("accessURL")
+							|| resourceParam.getName().equalsIgnoreCase("U")
+							|| resourceParam.getName().equalsIgnoreCase("Url")) {
+						urlString = resourceParam.getValue();
+					} else if (resourceParam.getName().equalsIgnoreCase(STANDARDID)
+							&& resourceParam.getValue().equalsIgnoreCase(standardId)) {
+						exists = true;
+					}
+					if (exists && urlString != null) {
+						break datalinkInfoLoop;
+					}
+				}
+			}
+		}
+		return urlString;
 	}
 
 	/**
@@ -564,14 +672,14 @@ public final class DataLinkGlu {
 			return result;
 		}
 	
-	public void serverDataLinks(String actionName, String description, String verboseDescr,
-	         String aladinMenu, String aladinMenuNumber,String aladinLabel,
-	         String aladinLabelPlane, String docUser, Hashtable paramDescription1,
-	         Hashtable paramDataType1, Hashtable paramValue1,
-	         HashMap<String, String[]> paramRange2, String resultDataType, String institute, Vector aladinFilter1,
-	         String aladinLogo,String dir,String system,StringBuffer record,String aladinProtocol) {
+	public ServerGlu serverDataLinks(String actionName, String description, String verboseDescr, String aladinMenu,
+			String aladinMenuNumber, String aladinLabel, String aladinLabelPlane, String docUser,
+			Hashtable paramDescription1, Hashtable paramDataType1, Hashtable paramValue1,
+			HashMap<String, String[]> paramRange2, String resultDataType, int showSyncAsync, String institute,
+			Vector aladinFilter1, String aladinLogo, String dir, String system, StringBuffer record,
+			String aladinProtocol) {
 	   int i;
-	   if( paramDescription1 == null ) return;
+	   if( paramDescription1 == null ) return null;
 	      int n = paramDescription1.size();
 	      String[] paramDescription = new String[n];
 	      for( i = 1; i <= n; i++ )
@@ -615,10 +723,12 @@ public final class DataLinkGlu {
 		if (aladin != null) {
 			g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, aladinMenuNumber, aladinLabel,
 					aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, paramRange, resultDataType,
-					institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, null, false);
+					showSyncAsync, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, null, 
+					null, false);
 			vGluDLServer.clear();
 			vGluDLServer.addElement(g);
 		}
+		return g;
   }
 	
 	/**

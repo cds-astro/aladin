@@ -31,9 +31,7 @@ import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETPREVIOUSSESSIONJOB;
 import static cds.aladin.Constants.LOADDEFAULTTAPRESULT;
 import static cds.aladin.Constants.NEWLINE_CHAR;
-import static cds.aladin.Constants.PATHASYNC;
 import static cds.aladin.Constants.PATHPHASE;
-
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -72,7 +70,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 
-import adql.query.ADQLQuery;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.Util;
 import cds.xml.UWSReader;
@@ -98,7 +95,8 @@ public class UWSFacade implements ActionListener{
 	
 	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
 			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB, UWSJOBRADIOTOOLTIP,
-			JOBCONTROLLERTITLE;
+			JOBCONTROLLERTITLE, UWSPANELCURRECTSESSIONTITLE, UWSPANELPREVIOUSSESSIONTITLE, JOBNOTSELECTED, JOBNOTFOUNDGIVENURL,
+			NOJOBURLMESSAGE, JOBDELETEERRORMESSAGE, DELETEONCLOSEBUTTONLABEL ;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
 	public static final int POLLINGDELAY = 1000;
 	
@@ -114,6 +112,13 @@ public class UWSFacade implements ActionListener{
 		CANTABORTJOB= Aladin.getChaine().getString("CANTABORTJOB");
 		UWSJOBRADIOTOOLTIP = Aladin.getChaine().getString("UWSJOBRADIOTOOLTIP");
 		JOBCONTROLLERTITLE = Aladin.getChaine().getString("JOBCONTROLLERTITLE");
+		UWSPANELCURRECTSESSIONTITLE = Aladin.getChaine().getString("UWSPANELCURRECTSESSIONTITLE");
+		UWSPANELPREVIOUSSESSIONTITLE = Aladin.getChaine().getString("UWSPANELPREVIOUSSESSIONTITLE");
+		JOBNOTSELECTED = Aladin.getChaine().getString("JOBNOTSELECTED");
+		JOBNOTFOUNDGIVENURL = Aladin.getChaine().getString("JOBNOTFOUNDGIVENURL");
+		NOJOBURLMESSAGE = Aladin.getChaine().getString("NOJOBURLMESSAGE");
+		JOBDELETEERRORMESSAGE = Aladin.getChaine().getString("JOBDELETEERRORMESSAGE");
+		DELETEONCLOSEBUTTONLABEL = Aladin.getChaine().getString("DELETEONCLOSEBUTTONLABEL");
 	}
 	
 	public UWSFacade() {
@@ -134,24 +139,47 @@ public class UWSFacade implements ActionListener{
 	}
 	
 	/**
+	 * Handles async request for server panels
+	 * @param aladin
+	 * @param server
+	 * @param label
+	 * @param url
+	 * @param requestParams
+	 * @param requestNumber
+	 */
+	public static synchronized void fireAsync(Aladin aladin, Server server, String label, String url,
+			Map<String, Object> requestParams, int requestNumber) {
+		UWSFacade instance = getInstance(aladin);
+		instance.instantiateGui();
+		try {
+			URL requestUrl = TapManager.getUrl(url, null, null);
+			instance.handleJob(server, label, requestUrl, null, requestParams, false, requestNumber); //gavo gives error with PHASE = RUN on create job
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Method where an asyn job is created and handled 
 	 * @param server 
 	 * @param query 
 	 * @param queryString 
-	 * @param postParams 
+	 * @param requestParams 
 	 * @param requestNumber 
 	 */
-	public void handleJob(Server server, String url, String queryString, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) {
+	public void handleJob(Server server, String label, URL url, String queryString,
+			Map<String, Object> requestParams, boolean doRun, int requestNumber) {
 		UWSJob job = null;
 		try {
-			job = createJob(server, url, queryString, adqlQueryObj, postParams, requestNumber);
-//			printStringFromInputStream(job);
+			job = createJob(server, label, url, queryString, requestParams, doRun, requestNumber);
 			addNewJobToGui(job);
 			refreshGui();
 			job.run();
-//			printStringFromInputStream(job);
 			job.pollForCompletion(server, true, this, requestNumber);
-//			printStringFromInputStream(job);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -159,7 +187,11 @@ public class UWSFacade implements ActionListener{
 			if (job == null || job.gui == null) {
 				errorMessageToUser.append("\n Unable to create job");
 			}
-			errorMessageToUser.append("\n For query: ").append(queryString).append(NEWLINE_CHAR).append(e.getMessage());
+			if (queryString != null) {
+				errorMessageToUser.append("\n For query: ").append(queryString).append(NEWLINE_CHAR).append(e.getMessage());
+			} else {
+				errorMessageToUser.append("\n at: ").append(url.toString()).append(NEWLINE_CHAR).append(e.getMessage());
+			}
 			
 			if (job != null && UWSJob.JOBNOTFOUND.equals(job.getCurrentPhase())) {//specific case of job not found
 				if (checkIfJobInCache(job)) {
@@ -188,29 +220,27 @@ public class UWSFacade implements ActionListener{
 			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 			Aladin.error(asyncPanel, "Error with async job! "+e.getMessage());
 		}
-		
 	}
 	
 	/**
-	 * Method creates an sync job
+	 * Method creates an async job
 	 * @param query
 	 * @param queryString 
 	 * @param newJobCreationUrl
-	 * @param adqlQueryObj
 	 * @param postParams 
 	 * @param requestNumber 
 	 * @return
 	 * @throws Exception
 	 */
-	public UWSJob createJob(Server server, String url, String queryString, ADQLQuery adqlQueryObj, Map<String, Object> postParams, int requestNumber) throws Exception {
+	public UWSJob createJob(Server server, String jobLabel, URL requestUrl, String queryString,
+			Map<String, Object> postParams, boolean doRun, int requestNumber) throws Exception {
 		UWSJob job = null;
 		try {
-			URL tapServerRequestUrl = TapManager.getUrl(url, null, PATHASYNC);
-			Aladin.trace(3,"trying to createJob() uws for:: "+tapServerRequestUrl.toString());
+			Aladin.trace(3,"trying to createJob() uws for:: "+requestUrl.toString());
 //			URL tapServerRequestUrl = new URL("http://cdsportal.u-strasbg.fr/uwstuto/basic/timers");
 			MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
 			String boundary = MultiPartPostOutputStream.createBoundary();
-			URLConnection urlConn = MultiPartPostOutputStream.createConnection(tapServerRequestUrl);
+			URLConnection urlConn = MultiPartPostOutputStream.createConnection(requestUrl);
 			urlConn.setRequestProperty("Accept", "*/*");
 			urlConn.setRequestProperty("Content-Type", MultiPartPostOutputStream.getContentType(boundary));
 			// set some other request headers...
@@ -225,27 +255,15 @@ public class UWSFacade implements ActionListener{
 //			out.writeField("format", "votable");
 			
 			
-			out.writeField( "REQUEST", "doQuery" );
-			out.writeField( "LANG", "ADQL" );
+//			out.writeField( "REQUEST", "doQuery" );
+//			out.writeField( "LANG", "ADQL" );
+//			
+//			Aladin.trace(3,"createJob() REQUEST :: doQuery");
+//			Aladin.trace(3,"createJob() LANG :: ADQL");
+//			
+//			out.writeField("QUERY", queryString);
+//			Aladin.trace(3,"createJob() QUERY :: "+queryString);
 			
-			Aladin.trace(3,"createJob() REQUEST :: doQuery");
-			Aladin.trace(3,"createJob() LANG :: ADQL");
-			
-			if (adqlQueryObj != null) {
-				int limit = adqlQueryObj.getSelect().getLimit();
-				if (limit > 0) {
-					out.writeField("MAXREC", String.valueOf(limit));
-					Aladin.trace(3,"createJob() MAXREC :: "+String.valueOf(limit));
-				}
-			}
-			
-			out.writeField("QUERY", queryString);
-			Aladin.trace(3,"createJob() QUERY :: "+queryString);
-			
-			out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
-			Aladin.trace(3,"createJob() PHASE :: "+"RUN");
-//			out.writeField("time", "10");
-//			out.writeField("name", "ti");
 			
 			if (postParams != null) {//this part only for upload as of now
 				for (Entry<String, Object> postParam : postParams.entrySet()) {
@@ -259,6 +277,14 @@ public class UWSFacade implements ActionListener{
 				}
 			}
 			
+			if (doRun) { //gavo won't allow in case of async soda service.
+				out.writeField("PHASE", "RUN"); // remove this if we start comparing quotes
+				Aladin.trace(3,"createJob() PHASE :: "+"RUN");
+			}
+
+//			out.writeField("time", "10");
+//			out.writeField("name", "ti");
+			
 			out.close();
 			if (!(urlConn instanceof HttpURLConnection)) {
 				throw new Exception("Error url is not http!");
@@ -269,22 +295,25 @@ public class UWSFacade implements ActionListener{
 			
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {// is accepted
 				String location = httpClient.getHeaderField("Location");
-				job = new UWSJob(this, server.tapClient.tapLabel, new URL(location));
+				job = new UWSJob(this, jobLabel, new URL(location));
 				populateJob(job.getLocation().openStream(), job);
-				job.setQuery(adqlQueryObj.toADQL());
+				if (postParams.containsKey("QUERY")) {
+					job.setQuery((String) postParams.get("QUERY"));
+				}
+				
 				job.setDeleteOnExit(true);
 //				getsetPhase(job);
 				job.setInitialGui();
 			} else {
 				Aladin.trace(3,"createJob() ERROR !! did not get a url redirect. reponse code "+httpClient.getResponseCode());
-				throw new Exception("Error in calling tap server: "+tapServerRequestUrl+"\n"+httpClient.getResponseMessage());
+				throw new Exception("Error in calling server: "+requestUrl+"\n"+httpClient.getResponseMessage());
 			}
 			httpClient.disconnect();
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw e;
 		}
-		Aladin.trace(3,"In createJob. Jon phase is:"+job.getCurrentPhase());
+		Aladin.trace(3,"In createJob. Job phase is:"+job.getCurrentPhase());
 		job.server = server;
 		job.requestNumber = requestNumber;
 		return job;
@@ -461,7 +490,7 @@ public class UWSFacade implements ActionListener{
 					}
 				} else {
 					Aladin.trace(3, "Error when deleting job! Http response is: "+httpConn.getResponseCode());
-					throw new IOException("Error when deleting job!");
+					throw new IOException(JOBDELETEERRORMESSAGE);
 				}
 			}
 		} catch (ProtocolException e) {
@@ -484,6 +513,9 @@ public class UWSFacade implements ActionListener{
 	 * @return
 	 */
 	public MySplitPane instantiateGui() {
+		if (this.jobControllerGui == null) {
+			this.jobControllerGui = new FrameSimple(aladin);
+		}
 		if (asyncPanel == null) {
 			JPanel topPanel = new JPanel(new GridBagLayout());
 			
@@ -512,7 +544,7 @@ public class UWSFacade implements ActionListener{
 //			c.anchor = GridBagConstraints.NONE;
 			c.fill = GridBagConstraints.BOTH;
 			c.insets = new Insets(4, 7, 0, 4);
-			jobsScroll.setBorder(BorderFactory.createTitledBorder("Asynchronous jobs of current session:"));
+			jobsScroll.setBorder(BorderFactory.createTitledBorder(UWSPANELCURRECTSESSIONTITLE));
 			topPanel.add(jobsScroll,c);
 			
 			JPanel searchPanel = new JPanel();
@@ -534,7 +566,7 @@ public class UWSFacade implements ActionListener{
 			c.insets = new Insets(7, 7, 0, 4);
 			c.fill = GridBagConstraints.HORIZONTAL;
 //			c.anchor = GridBagConstraints.BASELINE;
-			searchPanel.setBorder(BorderFactory.createTitledBorder("Or choose an already submitted job:"));
+			searchPanel.setBorder(BorderFactory.createTitledBorder(UWSPANELPREVIOUSSESSIONTITLE));
 			topPanel.add(searchPanel,c);
 			
 			JPanel actionPanel = new JPanel();
@@ -558,7 +590,7 @@ public class UWSFacade implements ActionListener{
 			button.setActionCommand(DELETEJOB);
 			button.addActionListener(this);
 			actionPanel.add(button);
-			deleteOnExit = new JCheckBox("Delete on closing Aladin");
+			deleteOnExit = new JCheckBox(DELETEONCLOSEBUTTONLABEL);
 			deleteOnExit.setActionCommand(DELETEONEXIT);
 			deleteOnExit.addActionListener(this);
 			deleteOnExit.setSelected(true);
@@ -748,7 +780,7 @@ public class UWSFacade implements ActionListener{
 		try {
 			if (prevJobRadio.isSelected()) {
 				if (previousSessionJob.getText().isEmpty()) {
-					throw new Exception("Please enter the job url!");
+					throw new Exception(NOJOBURLMESSAGE);
 				} else {
 					URL jobUrl = new URL(previousSessionJob.getText());
 					selectedJob = getJobFromCache(jobUrl.toString());
@@ -768,7 +800,7 @@ public class UWSFacade implements ActionListener{
 				selectedJob = getSelectedInSessionJob();
 			}
 			if (selectedJob == null) {
-				throw new Exception("Cannot process results for selection! Please select again.");
+				throw new Exception(JOBNOTSELECTED);
 			}
 		} catch (MalformedURLException e1) {
 			// TODO Auto-generated catch block
@@ -777,7 +809,7 @@ public class UWSFacade implements ActionListener{
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			if (Aladin.levelTrace >= 3) e1.printStackTrace();
-			throw new IOException("No job found for the given url \n"+e1.getMessage());
+			throw new IOException(JOBNOTFOUNDGIVENURL+ " \n"+e1.getMessage());
 		}
 		return selectedJob;
 	}
@@ -944,6 +976,18 @@ public class UWSFacade implements ActionListener{
 				Aladin.error(asyncPanel, e1.getMessage());
 			}
 		}
+	}
+	
+	/**
+	 * Method shows the async panel
+	 * @throws Exception 
+	 */
+	public void showAsyncPanel(){
+		MySplitPane asyncPanel = this.instantiateGui();
+		this.jobControllerGui.show(asyncPanel, JOBCONTROLLERTITLE);
+//		tapFrameServer.tabbedTapThings.setSelectedIndex(1);
+//		tapFrameServer.setVisible(true);
+		this.jobControllerGui.toFront();
 	}
 	
 }

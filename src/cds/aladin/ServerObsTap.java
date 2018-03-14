@@ -308,8 +308,8 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
 		getColumnsToLoad(selectedTableName, tablesMetaData);
 		
-		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
-		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
+		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName(false);
+		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName(false);
 		
 		tablesGui = new JComboBox(tables);
 		tablesGui.setToolTipText(this.tapClient.tablesMetaData.get(selectedTableName).getDescription());
@@ -628,8 +628,8 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (columnNames == null) {
 			return;
 		}
-		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
-		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
+		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName(false);
+		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName(false);
 		if(Aladin.levelTrace >= 3) System.out.println("ra and dec: "+(this.raColumnName!=null && this.decColumnName!=null));
 		if(Aladin.levelTrace >= 3) System.out.println("and target panel: "+target);
 		if  (this.raColumnName != null && this.decColumnName != null) {
@@ -900,7 +900,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 				StringBuffer whereClause = new StringBuffer();
 				String raColumNameForQuery = TapTable.getQueryPart(this.raColumnName, false);
 				String decColumNameForQuery = TapTable.getQueryPart(this.decColumnName, false);
-				whereClause.append(String.format(POSQuery, raColumNameForQuery, decColumNameForQuery,
+				whereClause.append(String.format(POSQuery, EMPTYSTRING, raColumNameForQuery, decColumNameForQuery,
 						Util.myRound(coo[0].getText(), 5), Util.myRound(coo[1].getText(), 5),
 						Util.myRound(rad[0].getText(), 5))).append(SPACESTRING);
 				
@@ -922,7 +922,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			String value, String defaultValue) {
 		ADQLQuery query = null;
 		try {
-			query = this.checkQuery();
+			query = this.checkQuery(null);
 		} catch (UnresolvedIdentifiersException uie) {
 			// TODO Auto-generated catch block
 			Iterator<adql.parser.ParseException> it = uie.getErrors();
@@ -1003,22 +1003,26 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 
 	}
 	
+//	@Override
+//	public void submit() {
+//		submit(null);//no request params
+//	}
+	
 	/**
 	 * Method fires sync or async submissions based on what is selected by user
 	 * Incase of upload as file is posted, diff sync methods are followed
 	 * @param requestParams
 	 */
-	public void submit(Map<String, Object> requestParams) {
+	@Override
+	public void submit() {
 	      //check again
 		if (this.sync_async != null &&  this.tap != null) {
 			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
+	  	  	this.submitTapServerRequest(sync, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
+
+	  	  	// Echo of the equivalent script command
+	  	  	aladin.console.printCommand("get TAP("+Tok.quote(this.tapClient.tapLabel)+","+Tok.quote(this.tap.getText())+")");
 		}
-	}
-	
-	@Override
-	public void submit() {
-		submit(null);//no request params
 	}
 	
 	/**

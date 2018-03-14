@@ -22,7 +22,9 @@
 package cds.aladin;
 
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.POSQuery;
+import static cds.aladin.Constants.EMPTYSTRING;
 
 import javax.swing.JLabel;
 
@@ -34,13 +36,14 @@ public class PositionConstraint extends WhereGridConstraint{
 	private String radiusConstraint;
 	private String selectedDecColumnName;
 	private String selectedRaColumnName;
+	private String tableName;
 	
 	public PositionConstraint(ServerTap serverTap) {
 		// TODO Auto-generated constructor stub
 		super(serverTap);
 	}
 	
-	public PositionConstraint(ServerTap serverTap, String raConstraint, String decConstraint, String radiusConstraint, String selectedRaColumnName, String selectedDecColumnName) {
+	public PositionConstraint(ServerTap serverTap, String raConstraint, String decConstraint, String radiusConstraint, String tableName, String selectedRaColumnName, String selectedDecColumnName) {
 		// TODO Auto-generated constructor stub
 		super(serverTap, new JLabel("Ra= "+raConstraint), new JLabel("Dec= "+decConstraint), new JLabel("Radius= "+radiusConstraint));
 		this.raConstraint = raConstraint;
@@ -48,6 +51,7 @@ public class PositionConstraint extends WhereGridConstraint{
 		this.radiusConstraint = radiusConstraint;
 		this.selectedRaColumnName = selectedRaColumnName;
 		this.selectedDecColumnName = selectedDecColumnName;
+		this.tableName = tableName;
 	}
 	
 	@Override
@@ -56,8 +60,14 @@ public class PositionConstraint extends WhereGridConstraint{
 		if (this.andOrOperator != null) {
 			whereClause.append(this.andOrOperator.getSelectedItem()).append(SPACESTRING);
 		}
-		whereClause.append(String.format(POSQuery, TapTable.getQueryPart(this.selectedRaColumnName, false),
-				TapTable.getQueryPart(this.selectedDecColumnName, false), this.raConstraint, this.decConstraint,
+		String alias = serverTap.tapClient.tablesMetaData.get(tableName).getAlias();
+		if (alias != null) {
+			alias = alias + DOT_CHAR;
+		} else {
+			alias = EMPTYSTRING;
+		}
+		whereClause.append(String.format(POSQuery, alias, this.selectedRaColumnName,
+				this.selectedDecColumnName, this.raConstraint, this.decConstraint,
 				this.radiusConstraint)).append(SPACESTRING);
 
 		return whereClause.toString();
@@ -77,6 +87,14 @@ public class PositionConstraint extends WhereGridConstraint{
 
 	public void setSelectedDecColumnName(String selectedDecColumnName) {
 		this.selectedDecColumnName = selectedDecColumnName;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
 	}
 
 	

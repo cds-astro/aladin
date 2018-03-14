@@ -21,6 +21,8 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.DOT_CHAR;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.Map;
@@ -36,8 +38,15 @@ public class CustomListCellRenderer extends JLabel implements ListCellRenderer {
 	
 	private Map<String, CustomListCell> model; 
 	
+	public ServerTap serverTap;
+	
 	public CustomListCellRenderer() {
 		// TODO Auto-generated constructor stub
+	}
+	
+	public CustomListCellRenderer(ServerTap serverTap) {
+		// TODO Auto-generated constructor stub
+		this.serverTap = serverTap;
 	}
 	
 	public CustomListCellRenderer(Map<String, CustomListCell> model) {
@@ -55,8 +64,15 @@ public class CustomListCellRenderer extends JLabel implements ListCellRenderer {
 		String tooltip = null;
 		
 		if (value instanceof TapTableColumn) {
-			textToSet = ((TapTableColumn) value).getColumn_name();
-			tooltip = ((TapTableColumn) value).getDescription();
+			TapTableColumn tapTableColumn = (TapTableColumn) value;
+			textToSet = tapTableColumn.getColumn_name();
+			if (this.serverTap != null) {
+				String alias = this.serverTap.getRelevantAlias(tapTableColumn);
+				if (alias != null) {
+					textToSet = alias + DOT_CHAR + textToSet;
+				}
+			}
+			tooltip = tapTableColumn.getDescription();
 		} else if (model != null && model.get(value) != null) {
 //			textToSet = model.get(value).label;
 			tooltip = model.get(value).tooltip;
@@ -71,7 +87,7 @@ public class CustomListCellRenderer extends JLabel implements ListCellRenderer {
 		if (tooltip == null || tooltip.isEmpty()) {
 			column.setToolTipText(null);
 		} else {
-			texter = new StringBuffer("<html><p width=\"500\">").append(tooltip).append("</p></html>");
+			tooltip = new StringBuffer("<html><p width=\"500\">").append(tooltip).append("</p></html>").toString();
 			column.setToolTipText(tooltip);
 		}
 		

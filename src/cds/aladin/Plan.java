@@ -121,6 +121,7 @@ public class Plan implements Runnable {
    protected String copyright=null;      // L'origine du plan (mention du copyright)
    protected String copyrightUrl=null;   // Lien vers l'origine ou vers le copyright
    protected String query = null; //query that generated this plane (only the query written in tap text area)
+   protected String tapUrl = null; //url that generated this plane
 
    protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
    protected Coord co;           // Les coordonnees J2000 du target de l'interrogation
@@ -208,7 +209,7 @@ public class Plan implements Runnable {
    // Les references aux autres objets
    Aladin aladin;                // Reference a l'objet Aladin
    
-   int tapRequestId = 0;
+   int requestId = 0;
 
    // Appelé par Chaine directement
    static protected void createChaine(Chaine chaine) {
@@ -1021,12 +1022,6 @@ public class Plan implements Runnable {
          SwingUtilities.invokeLater(new Runnable() {
             public void run() { aladin.frameNewCalib.hide(); }
          });
-
-      if( server!=null ) {
-         SwingUtilities.invokeLater(new Runnable() {
-            public void run() { if( server!=null && server.ifTapIsCurrentRequest(tapRequestId)) server.setStatus(); server=null; }
-         });
-      }
 
       if( pcat!=null ) pcat.free();
       if( headerFits!=null ) headerFits.free();
@@ -2272,6 +2267,10 @@ public class Plan implements Runnable {
    protected synchronized boolean removeListener(PlaneLoadListener listener) {
       return this.listeners.remove(listener);
    }
+   
+   protected boolean isThisListening(PlaneLoadListener listener) {
+		return this.listeners.contains(listener);
+   }
 
    protected void callAllListeners(PlaneLoadEvent ple) {
       Enumeration eListeners = this.listeners.elements();
@@ -2309,14 +2308,14 @@ public class Plan implements Runnable {
       aladin.console.memoThreadId( Thread.currentThread().getId() );
       
       Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
-      if( server!=null && server.ifTapIsCurrentRequest(this.tapRequestId)) server.setStatus();
+      if( server!=null && server.ifTapIsCurrentRequest(this.requestId)) server.setStatus();
       boolean rep=true;
       try { rep = waitForPlan();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
       planReady( rep );
-      if( server!=null && server.ifTapIsCurrentRequest(this.tapRequestId)) server.setStatus();
+      if( server!=null && server.ifTapIsCurrentRequest(this.requestId)) server.setStatus();
    }
 
    private long startTime;

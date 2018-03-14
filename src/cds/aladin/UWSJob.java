@@ -256,7 +256,7 @@ public class UWSJob implements ActionListener{
 	 */
 	public void pollForCompletion(Server server, boolean useBlocking, UWSFacade uwsFacade, int requestNumber) throws IOException, InterruptedException, Exception {
 		try {
-			if (Aladin.levelTrace >= 3) System.out.println("pollForCompletion. Jon phase is: "+this.currentPhase);
+			if (Aladin.levelTrace >= 3) System.out.println("pollForCompletion. Job phase is: "+this.currentPhase);
 			URL jobInProgressUrl = this.location;
 			String previousPhase = this.currentPhase;
 			while (true) {
@@ -275,6 +275,8 @@ public class UWSJob implements ActionListener{
 					break;
 				} else if (this.currentPhase.equals(ERROR)) {
 					this.showAsErroneous();
+					this.uwsFacade.showAsyncPanel();
+					Aladin.error(uwsFacade.asyncPanel, UWSFacade.JOBERRORTOOLTIP);
 					server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 					break;
 				} else if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
@@ -387,8 +389,11 @@ public class UWSJob implements ActionListener{
 	 */
 	public String getJobLabel() {
 		StringBuffer radioLabel =  new StringBuffer("<html><p width=\"1600\">").append(this.currentPhase);
-		radioLabel.append(" , Start time: ").append(this.startTime)
-		.append(" , Query: ").append(this.query).append(" ( server: ").append(this.serverLabel).append(")</p></html>");
+		radioLabel.append(" , Start time: ").append(this.startTime);
+		if (this.query != null) {
+			radioLabel.append(" , Query: ").append(this.query);
+		}
+		radioLabel.append(" ( server: ").append(this.serverLabel).append(")</p></html>");
 		return radioLabel.toString();
 	}
 	
@@ -617,7 +622,9 @@ public class UWSJob implements ActionListener{
 	public String getResponsetoDisplay() {
 		// TODO Auto-generated method stub
 		responseBody = new StringBuffer("<html><p>");
-		responseBody.append("Job created to execute query: <b>").append(query);
+		if (query != null) {
+			responseBody.append("Job created to execute query: <b>").append(query);
+		}
 		responseBody.append("</b><br>Job ID: ").append(this.jobId).append("<br>Run ID: ").append(this.runId)
 				.append("<br>URL: <b>").append(this.location.toString()).append("<br></b>Owner ID: ")
 				.append(this.ownerId).append("<br>Phase: ").append(this.currentPhase).append("<br>Quote: ")

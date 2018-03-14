@@ -68,7 +68,7 @@ public class PlanCatalog extends Plan {
       flagLocal=true;
       flagWaitTarget=true;  // Voir Command.waitingPlanInProgress
 
-      Suite(aladin,label,"","",null,null, null);
+      Suite(aladin,label,"","",null,null, null, null);
    }
 
   /** Creation d'un plan de type CATALOG (via un InputStream)
@@ -76,15 +76,15 @@ public class PlanCatalog extends Plan {
    * @param label le label du plan (proposé)
    * @param origin origine du catalogue
    */
-   protected PlanCatalog(Aladin aladin, MyInputStream in,String label,String origin) {
+   protected PlanCatalog(Aladin aladin, MyInputStream in,String label,String origin, Server server) {
       this.dis = in;
       if( label==null) label="VOApp";
       flagWaitTarget=true;
-      Suite(aladin,label,"","",origin,null, null);
+      Suite(aladin,label,"","",origin,server, null, null);
    }
 
    protected PlanCatalog(Aladin aladin, MyInputStream in,String label) {
-   	this(aladin,in,label,null);
+   	this(aladin,in,label,null, null);
    }
 
    private HttpURLConnection httpConn;
@@ -93,15 +93,16 @@ public class PlanCatalog extends Plan {
       this.httpConn = httpConn;
       if( label==null) label="HttpConn";
       flagWaitTarget=true;
-      Suite(aladin,label,"","",null,null, null);
+      Suite(aladin,label,"","",null,null, null, null);
      }
 	
-	protected PlanCatalog(Aladin aladin, MyInputStream in, String label, Server server, String query) {
+	protected PlanCatalog(Aladin aladin, MyInputStream in, String label,String origin, Server server, URL url, String query, int requestId) {
 		this.dis = in;
 		if (label == null)
 			label = "VOApp";
 		flagWaitTarget = true;
-		Suite(aladin, label, "", "", null, server, query);
+		this.requestId = requestId;
+		Suite(aladin, label, "", "", origin, server, url, query);
 	}
 
   /** Creation d'un plan de type CATALOG (sans info)
@@ -130,7 +131,7 @@ public class PlanCatalog extends Plan {
       this.u     = u;
       flagLocal  = false;
 
-      Suite(aladin,label,objet,param,from,server, null);
+      Suite(aladin,label,objet,param,from,server, null, null);
 
    }
 
@@ -143,7 +144,7 @@ public class PlanCatalog extends Plan {
    * @param server le serveur d'origine
  * @param query 
    */
-   protected void Suite(Aladin aladin, String label,String objet,String param,String from,Server server, String query ) {
+   protected void Suite(Aladin aladin, String label,String objet,String param,String from,Server server, URL url, String query ) {
       setLogMode(true);
       this.aladin= aladin;
       type       = CATALOG;
@@ -156,6 +157,7 @@ public class PlanCatalog extends Plan {
       headerFits=null;
       this.server=server;
       this.query = query;
+      this.u = url;
       if( server!=null ) {
          filters=server.filters;
          filterIndex=aladin.configuration.getFilter()==0? server.getFilterChoiceIndex() : -1;

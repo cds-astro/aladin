@@ -1172,9 +1172,10 @@ public final class Glu implements Runnable {
 	private void memoServer(String actionName, String description, String verboseDescr, String aladinMenu,
 			String aladinMenuNumber, String aladinLabel, String aladinLabelPlane, String docUser,
 			Hashtable paramDescription1, Hashtable paramDataType1, Hashtable paramValue1, String resultDataType,
-			String institute, Vector aladinFilter1, String aladinLogo, String dir, boolean localFile, String system,
-			StringBuffer record, String aladinProtocol, String[] tapTables, Hashtable<String, String> adqlSelect,
-			Hashtable<String, String> adqlFrom, Hashtable<String, String> adqlWhere, Hashtable<String, String> adqlFunc,
+			int resultSubmitType, String institute, Vector aladinFilter1, String aladinLogo, String dir,
+			boolean localFile, String system, StringBuffer record, String aladinProtocol, String[] tapTables,
+			Hashtable<String, String> adqlSelect, Hashtable<String, String> adqlFrom,
+			Hashtable<String, String> adqlWhere, Hashtable<String, String> adqlFunc,
 			Hashtable<String, String> adqlFuncParams, boolean flagTapUpload) {
       int i;
 
@@ -1248,7 +1249,7 @@ public final class Glu implements Runnable {
 	            
 	        	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
 	                    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
-	                    null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, 
+	                    null, resultDataType, resultSubmitType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, tapTables, 
 	                    gluAdqlTemplate, tapClient, flagTapUpload);
 	           	 g.setAdqlFunc(adqlFunc);
 	      		 g.setAdqlFuncParams(adqlFuncParams);
@@ -1266,7 +1267,7 @@ public final class Glu implements Runnable {
             } else {
             	g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu,
                         aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
-                        null, resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, 
+                        null, resultDataType, resultSubmitType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol, null, 
                         null, null, false);
 			}
          }
@@ -1629,6 +1630,7 @@ public final class Glu implements Runnable {
 //      boolean flagGluSky = false;  // true si on a "hpx" dans le profile => GluSky background
       boolean flagTapServices = false;
       boolean flagTapUpload = false;
+      int resultSubmitType = -1;// 0- show disabled drop-down with async, 1- show drop-down with sync selected,	2-show drop-down with async selected
 
       int maxIndir = Integer.MAX_VALUE; // Pour repérer la meilleure indirection
       String tablesIndex = EMPTYSTRING;
@@ -1706,6 +1708,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"M.D",true) || isKey(name,"M.V",true) || isKey(name,"VD",true) || isKey(name,"VerboseDescr",true) ) verboseDescr = value;
             else if( isKey(name,"Acknowledgement",true) || isKey(name,"Ack",true) ) ack = value;
             else if( isKey(name,"R") || isKey(name,"ResultDataType")) resultDataType = value;
+            else if( isKey(name,"ResultSubmitType")) resultSubmitType = getNum(value);
             else if( isKey(name,"A") || isKey(name,"ActionName") ) {
                // Dans le cas d'un enregistrement d'indirection on mémorise la meilleure
                // indirection directement dans aladinDic sous la syntaxe "%I gluID\tgluID..." (le meilleur en premier)
@@ -1732,7 +1735,7 @@ public final class Glu implements Runnable {
  					 }
                      else if( flagLabel && paramDescription.size()>0 ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                              aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
-                             resultDataType,institute,aladinFilter,aladinLogo,dir,localFile, localFile?system:null,record,aladinProtocol,
+                             resultDataType,resultSubmitType,institute,aladinFilter,aladinLogo,dir,localFile, localFile?system:null,record,aladinProtocol,
                              tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams, flagTapUpload);
                      
                     }
@@ -1910,7 +1913,7 @@ public final class Glu implements Runnable {
 			}
             else if( flagLabel && paramDescription.size()>0 ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                   aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
-                  resultDataType,institute,aladinFilter,aladinLogo,dir,localFile,localFile?system:null,record,aladinProtocol, 
+                  resultDataType,resultSubmitType, institute,aladinFilter,aladinLogo,dir,localFile,localFile?system:null,record,aladinProtocol, 
                   tapTables, adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams, flagTapUpload);
             /*else if (stdForm != null && !stdForm.isEmpty()) {//may be use this to load standardforms directly.
 				serverDataLinks(actionName, description, verboseDescr, aladinMenu, aladinMenuNumber, aladinLabel,
@@ -1945,7 +1948,18 @@ public final class Glu implements Runnable {
       return true;
    }
    
-   // Split a string of arguments, blank or Tab separated, possibly quoted (simple ou double)
+   private int getNum(String value) {
+	// TODO Auto-generated method stub
+	   int number = -1;
+	   try {
+           number = Integer.parseInt(value);
+        } catch( Exception e ) {
+           //do nothing
+        }
+	return number;
+}
+
+// Split a string of arguments, blank or Tab separated, possibly quoted (simple ou double)
    static private String [] split(String s) {
       Tok tok = new Tok(s," \t");
       String [] rep = new String[ tok.countTokens() ];

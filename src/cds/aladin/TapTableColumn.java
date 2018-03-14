@@ -25,7 +25,14 @@
 package cds.aladin;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.UCD_MAINIDQUALIFIER;
+import static cds.aladin.Constants.DBColumnType.*;
+import static cds.aladin.Constants.REGEX_DIGITS;
+import static cds.aladin.Constants.DOT_CHAR;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import cds.xml.Field;
 
 
 /**
@@ -37,15 +44,37 @@ import java.util.Vector;
 public class TapTableColumn {
 	private String table_name;
 	private String column_name;
+	private String datatype; //adql datatype
+//	private String arraysize; 1.1v Will add
+	private String xtype; //1.1v not yet added already as v1.1 upgrade is not yet done. but needed datatype logic will be complete
+	private int size; //"size" in 1.1v
 	private String description;
+	private String utype;
 	private String unit;
 	private String ucd;
-	private String utype;
-	private String datatype; //adql datatype
-	private int size;
-	private String isPrincipal; 
-	private String isIndexed;	
-	private String isStandard;
+	private String isIndexed; //1.1v change to indexed
+	private String isPrincipal; //1.1v change to principal
+	private String isStandard; //1.1v change to std
+//	private String column_index; 1.1v
+	
+	public TapTableColumn() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	public TapTableColumn(TapTableColumn ref, String alais) {
+		// TODO Auto-generated constructor stub
+		this.table_name = ref.getTable_name()+DOT_CHAR+alais;
+		this.column_name = ref.column_name;
+		this.description = ref.description;
+		this.unit = ref.unit;
+		this.ucd = ref.ucd;
+		this.utype = ref.utype;
+		this.datatype = ref.datatype;
+		this.size = ref.size;
+		this.isPrincipal = ref.isPrincipal;
+		this.isIndexed = ref.isIndexed;
+		this.isStandard = ref.isStandard;
+	}
 	
 	/**
 	 * Method to convert represent all properties as row vectors
@@ -142,6 +171,69 @@ public class TapTableColumn {
 	}
 	public void setDatatype(String datatype) {
 		this.datatype = datatype;
+	}
+	
+	/**
+	 * Method tries to set the database equivalent type to that of votable parsed in Aladin
+	 * @param f
+	 * 
+	 datatype		Meaning			FITS Bytes	db translation
+	"boolean"		Logical			"L"	1	not supported
+	"bit"			Bit				"X"	*	donno is it VARBINARY/ unsignedbyte no size
+	"unsignedByte"	Byte(0 to 255)	"B"	1	VARBINARY, VARBINARY(n), BINARY(n), BLOB
+	"short"			Short Integer	"I"	2	smallint
+	"int"			Integer			"J"	4	INTEGER
+	"long"			Long integer	"K"	8	BIGINT
+	"char"			ASCII Character	"A"	1	If arraysize is 1 : CHAR(1), 
+	Aladin string							if array size is not [1]: VARCHAR. VARCHAR(n), CHAR(n),BLOB, TIMESTAMP, POINT, POINT, REGION 
+	"unicodeChar"	Unicode Character	2	donno. No equivalent
+	"float"			Floating point	"E"	4	REAL
+	"double"		Double			"D"	8	DOUBLE
+	"floatComplex"	Float Complex	"C"	8	not supported
+	"doubleComplex"	Double Complex	"M"	16	not supported
+	
+	type is set based on arraysize and xtype information, if available
+	 *
+	 */
+	public void setDataType(Field f) {
+		// TODO Auto-generated method stub
+		String datatype = Field.typeFits2VOTable(f.datatype);
+		if (datatype.equalsIgnoreCase("int")) {
+			this.datatype = INTEGER.name();
+		} else if (datatype.equalsIgnoreCase("long")) {
+			this.datatype = BIGINT.name();
+		} else if (datatype.equalsIgnoreCase("char")) {
+			this.datatype = CHAR.name();
+		} else if (datatype.equalsIgnoreCase("string")) {
+			this.datatype = VARCHAR.name();
+//			if (f.arraysize == null || f.arraysize.isEmpty()) {
+//				this.datatype = VARCHAR.name();
+//			} else if (f.arraysize.endsWith("*")) {
+//				this.datatype = VARCHARn.name();
+//			} else if(isInteger(f.arraysize)) {
+//				this.datatype = CHARn.name();
+//			} else {
+//				this.datatype = VARCHAR.name();
+//			}
+		} else if (datatype.equalsIgnoreCase("float")) {
+			this.datatype = REAL.name();
+		} else if (datatype.equalsIgnoreCase("double")) {
+			this.datatype = DOUBLE.name();
+		} else if (datatype.equalsIgnoreCase("short")) {
+			this.datatype = SMALLINT.name();
+		} else if (datatype.equalsIgnoreCase("unsignedByte")) {
+			this.datatype = VARBINARY.name();
+//			if (f.arraysize == null || f.arraysize.isEmpty()) {
+//				this.datatype = VARBINARY.name();
+//			} else if (f.arraysize.endsWith("*")) {
+//				this.datatype = VARBINARYn.name();
+//			} else if(isInteger(f.arraysize)) {
+//				this.datatype = BINARYn.name();
+//			} else {
+//				this.datatype = VARBINARY.name();
+//			}
+		}
+		//bit, boolean, floatComplex, doubleComplex, unicodeChar not supported
 	}
 	
 	public void setSize(String dataType, String value) {
@@ -250,6 +342,38 @@ public class TapTableColumn {
 		}
 		return column_name;
 		
+	}
+	
+	public boolean isNumeric() {
+		boolean result = false;
+		if (datatype != null) {
+			if (datatype.toUpperCase().contains("SMALLINT") || datatype.toUpperCase().contains("INTEGER")
+					|| datatype.toUpperCase().contains("BIGINT") || datatype.toUpperCase().contains("REAL")
+					|| datatype.toUpperCase().contains("DOUBLE")) {
+				result = true;
+			}
+		}
+		return result;
+	}
+	
+	public static boolean isInteger(String input) {
+		boolean result = false;
+		Pattern pattern = Pattern.compile(REGEX_DIGITS);
+		Matcher matcher = pattern.matcher(input);
+		if (matcher.find()) {
+			result = true;
+		} else {
+			result = false;
+		}
+		return result;
+	}
+
+	public String getXtype() {
+		return xtype;
+	}
+
+	public void setXtype(String xtype) {
+		this.xtype = xtype;
 	}
 
 }

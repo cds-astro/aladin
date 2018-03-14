@@ -36,7 +36,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
-class TapClientModesRenderer extends BasicComboBoxRenderer {
+public class TapClientModesRenderer extends BasicComboBoxRenderer {
 
 	/**
 	 * 
@@ -65,13 +65,13 @@ class TapClientModesRenderer extends BasicComboBoxRenderer {
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
 			boolean cellHasFocus) {
 		JLabel option = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+//		System.err.println("Mode: "+list.getSelectedValue()+" isSelected "+isSelected+" tapclient model: "+tapClient.model.getSelectedItem());
 		if (index < 0) {
 			setText("Mode");
 			option.setEnabled(true);
-			 if (list != null) {
-		            isSelected = list.isSelectedIndex(index);
-		            if (list.getSelectedValue() != null ) {
-		            	setText("Mode: "+list.getSelectedValue());
+			 if (tapClient.model != null && tapClient.model.getSelectedItem() != null) {
+		            if (tapClient.model.getSelectedItem() != null ) {
+		            	setText("Mode: "+tapClient.model.getSelectedItem());
 			        }
 		        }
 		} else if (value == GLU && this.tapClient.serverGlu == null) {//not removing here

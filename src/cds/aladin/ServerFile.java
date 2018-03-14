@@ -236,8 +236,12 @@ public class ServerFile extends Server implements XMLConsumer {
     * @param f path du fichier
     * @param resNode noeud décrivant le fichier à charger, peut être <i>null</i>
     */
-   protected int creatLocalPlane(String f,String label,String origin, Obj o,
-         ResourceNode resNode,InputStream is,Server server,String target,String radius) {
+   protected int creatLocalPlane(String f, String label, String origin, Obj o, ResourceNode resNode, InputStream is,
+			Server server, String target, String radius) {
+	   return creatLocalPlane(f, label, origin, o, resNode, is, server, target, radius, null, null, -1);
+   }
+	protected int creatLocalPlane(String f, String label, String origin, Obj o, ResourceNode resNode, InputStream is,
+			Server server, String target, String radius, URL url, String query, int requestId) {
       String serverTaskId = aladin.synchroServer.start("ServerFile.creatLocalPlane/"+label);
       try {
          //         setSync(false);
@@ -370,7 +374,7 @@ public class ServerFile extends Server implements XMLConsumer {
                in = in.startRead();
                type = in.getType();
             } else type=MyInputStream.UNKNOWN;
-
+            
             // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
             if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
 
@@ -438,7 +442,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
                if( u!=null ) n=aladin.calque.newPlanCatalog(u,in,label,"",f,null,server);
                else if( f!=null) n=aladin.calque.newPlanCatalog(f,in);
-               else n=aladin.calque.newPlanCatalog(in,label,origin);
+               else n=aladin.calque.newPlanCatalog(in,label,origin, server, url, query, requestId);
 
                // C'est peut être une image native ?
             } else if( (type & MyInputStream.NativeImage())!=0 ) {

@@ -246,7 +246,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 			
 			if (activeDataLinkGlu != null) {
 				Map<String,String> params = activeDataLinkGlu.getParams();
-				if (params!=null) {
+				if (params != null) {
 					String semantics = activeDataLinkGlu.getParams().get(SEMANTICS);
 					String contentType = activeDataLinkGlu.getParams().get(CONTENTTYPE);
 					
@@ -273,7 +273,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 						aladin.mesure.isEnabledDatalinkPopUp = true;
 						aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
 						this.activeDataLinkWord.callArchive(aladin, activeDataLinkSource, true);
-					}*/ else if (accessUrl!=null && !accessUrl.isEmpty()) {
+					}*/ else if (accessUrl != null && !accessUrl.isEmpty()) {
 						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null);//TODO::change to access
 					} else {
 						Aladin.error("Error in loading datalink",1);

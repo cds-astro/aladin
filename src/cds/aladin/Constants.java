@@ -57,6 +57,7 @@ public static final String EM_MAX = "em_max";
 public static final String SETFORMVALUES = "SETFORMVALUES";
 public static final String SODAINPUTPARAMS_POL = "pol_states";
 public static final String SODA_STANDARDID = "ivo://ivoa.net/std/SODA#sync-1.0";
+public static final String SODAASYNC_STANDARDID = "ivo://ivoa.net/std/SODA#async-1.0";
 public static final int SODA_IDINDEX = 7;
 public static final int SODA_POSINDEX1 = 1;
 public static final int SODA_POSINDEX2 = 2;
@@ -73,6 +74,8 @@ public static final String SODA_URL_PARAM = "?POS=CIRCLE+$1+$2+$3&TIME=$4&BAND=$
 public static final String SODA_CIRCLE_URL_PARAM = "?POS=CIRCLE+$1+$2+$3&TIME=$4&BAND=$5&POL=$6*&ID=$7";
 public static final String SODA_POLY_URL_PARAM = "?POS=POLYGON+$1&TIME=$2&BAND=$3&POL=$4*&ID=$5";
 public static final String DATALINK_FORM = "Datalink_Form";
+public static final String DATALINK_FORM_SYNC = "Datalink_Form_sync";
+public static final String DATALINK_FORM_ASYNC = "Datalink_Form_async";
 public static final String DATALINK_SODACIRCLE_FORM = "Datalink_SodaCircle_Form";
 public static final String DATALINK_SODAPOLY_FORM = "Datalink_SodaPoly_Form";
 public static final String DOT_CHAR = ".";
@@ -95,6 +98,7 @@ public static final Map<String, String> DATE_FORMATS = new HashMap<String, Strin
 //wont allow .0
 //if allowing exponent:: REGEX_NUMBER = "^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$";
 public static final String REGEX_NUMBER = "[-+]?\\d+(\\.\\d+)?";//integer plus decimal
+public static final String REGEX_DIGITS = "^\\d*[1-9]\\d*$";
 public static final String REGEX_NUMBERNOEXP = "^"+REGEX_NUMBER+"$";// = "^[-+]?[0-9]\\d*(\\.\\d+)?$";//^\\d{1,5}$"; //\\s?-?[0-9]*\\s?";
 public static final String SERVICE_DEF = "service_def";
 public static final String DESCRIPTION = "description";
@@ -121,6 +125,7 @@ public static final String REGEX_TABLENAME_SPECIALCHAR = "[$&+,:;=?@#/\\\\|]";
 public static final String REGEX_VALIDTABLENAMECONSTRUCT = "(?<tableName>[\\p{L}_][\\p{L}\\p{N}@$#_]{0,127})";
 public static final String REGEX_VALIDTABLEPREFIX = "^(?<prefix>"+REGEX_VALIDTABLENAMECONSTRUCT+"?\\.)";
 public static final String REGEX_VALIDTABLENAME = "^"+REGEX_VALIDTABLENAMECONSTRUCT+"$";//msdn site
+public static final String REGEX_TABLENAMEALREADYQUOTED = "^\"[^\"]+\"$";
 
 public static final String REGEX_ONLYALPHANUM = "[^A-Za-z0-9]";
 public static final String REGEX_ALPHA = "[A-Za-z]";
@@ -172,7 +177,7 @@ public static final String REGEX_TIME_RANGEINPUT = "\\s*(?<delimiter>,|\\.\\.|\\
 public static final String REGEX_BAND_RANGEINPUT = "\\s*(?<delimiter>,|\\.\\.|\\s+\\band\\b\\s+|\\s+\\bAND\\b\\s+|\\s+)\\s*";
 
 public static final String DATALINK_CUTOUT_FORMLABEL = "Cutout";
-public static final String SODA_SYNC_FORM = "SODA_SYNC_FORM";
+public static final String SODA_FORM = "SODA_FORM";
 public static final String TAP_MAIN_FORM ="TAP_MAIN_FORM";
 public static final String STANDARDGLUs = "StandardForms.dic";
 public static final String TAPSERVERS = "TapServices.txt";
@@ -202,9 +207,10 @@ public static final String CHECKQUERY = "CHECKQUERY";
 public static final String UPLOAD = "UPLOAD";
 public static final String SELECTALL = "SELECTALL";
 public static final String OPEN_SET_RADEC = "OPEN_SET_RADEC";
+public static final String JOIN_TABLE = "JOIN_TABLE";
 public static final String GETRESULTPARAMS = "REQUEST=doQuery&LANG=ADQL&QUERY="; //As per TAP spec
 //public static final String SYNCGETRESULT = "%1$s/sync?REQUEST=doQuery&LANG=ADQL&QUERY=%2$s";
-public static final String POSQuery = "CONTAINS(POINT('ICRS', %1$s, %2$s), CIRCLE('ICRS', %3$s, %4$s, %5$s)) = 1";
+public static final String POSQuery = "CONTAINS(POINT('ICRS', %1$s%2$s, %1$s%3$s), CIRCLE('ICRS', %4$s, %5$s, %6$s)) = 1";
 //public static final String UCD_RA_PATTERN1 = "pos.eq.ra;meta.main";//wont explicitely check for this. pos.eq.ra is allowed for now.
 public static final String UCD_RA_PATTERN2 = "pos.eq.ra";
 public static final String UCD_RA_PATTERN3 = "pos_eq_ra_main";//"POS_EQ_RA_MAIN";
@@ -223,8 +229,6 @@ public static final String TABLETYPE = "table_type";
 public static final String SCHEMANAME = "schema_name";
 public static final String LASTPANEL = "LASTPANEL";
 public static final String GENERAL = "GENERAL";
-public static final String DISCARDACTION = "DISCARD";
-public static final String DISCARDALLACTION = "DISCARDALL";
 public static final String RETRYACTION = "RETRYACTION";
 public static final String SUBMITACTION = "SUBMIT";
 public static final String CLEARACTION = "CLEAR";
@@ -355,4 +359,20 @@ public static final String PATHPHASE = "phase";
 public static final String PATHRESULTS = "/results/result";
 
 public static final String DIRQUERY_GETALLTAPSERVERS = "*";
+
+//join
+public static final String SERVERJOINTABLESELECTED = "SERVERJOINTABLESELECTED";
+public static final String UPLOADJOINTABLESELECTED = "UPLOADJOINTABLESELECTED";
+//public static final String KEY_ID = "key_id";
+public static final String FROM_TABLE = "from_table";
+public static final String TARGET_TABLE = "target_table";
+public static final String FROM_COLUMN = "from_column";
+public static final String TARGET_COLUMN = "target_column";
+
+public static enum DBColumnType {
+	SMALLINT, INTEGER, BIGINT, REAL, DOUBLE, VARBINARYnum, 
+	CHAR, VARCHAR, VARCHARn, CHARn, VARBINARY, VARBINARYn, 
+	BINARYn, BLOB, CLOB, TIMESTAMP, POINT, REGION;
+}
+
 }

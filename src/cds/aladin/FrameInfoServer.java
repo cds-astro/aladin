@@ -179,7 +179,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	    getContentPane().add(this.centerPanel,"Center");
 	    getContentPane().add(submit,"South");
 	    
-		setLocation(aladin.computeLocation(this));
+		setLocation(Aladin.computeLocation(this));
 	}
 	
 	

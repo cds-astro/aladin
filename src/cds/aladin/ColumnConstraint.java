@@ -23,6 +23,7 @@ package cds.aladin;
 
 import static cds.aladin.Constants.REGEX_RANGEINPUT;
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.REGEX_NUMBERWITHEXP;
 
@@ -45,7 +46,7 @@ import javax.swing.text.Highlighter.HighlightPainter;
 
 import cds.tools.Util;
 
-public class ColumnConstraint extends WhereGridConstraint implements ItemListener{
+public class ColumnConstraint extends WhereGridConstraint implements ItemListener {
 	private static final long serialVersionUID = 1L;
 	public static final String BETWEEN = "BETWEEN";
 	public static final String NOTBETWEEN = "NOT BETWEEN";
@@ -66,7 +67,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		// TODO Auto-generated constructor stub
 		super(serverTap, new JComboBox(columnNames), new JComboBox(operators), new JTextField(14));
 		JComboBox columns = (JComboBox) this.firstGridComponent;
-		columns.setRenderer(new CustomListCellRenderer());
+		columns.setRenderer(new CustomListCellRenderer(serverTap));
 		columns.setSize(columns.getWidth(), Server.HAUT);
 		setWhereOperators();
 		columns.addItemListener(this);
@@ -101,7 +102,6 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		}
 	}
 	
-	
 	@Override
 	public String getAdqlString() throws Exception {
 		// TODO Auto-generated method stub
@@ -115,7 +115,13 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		String selectedWhereOperator = (String) whereOperator.getSelectedItem();
 		
 		TapTableColumn column = ((TapTableColumn)columns.getSelectedItem());
+		
+		String alias = null;
 		String columnName = column.getColumnNameForQuery();
+		alias = serverTap.getRelevantAlias(column);
+		if (alias != null) {
+			whereClause.append(alias).append(DOT_CHAR);
+		}
 		whereClause.append(columnName).append(SPACESTRING);
 		
 		if (selectedWhereOperator.equals("IS NULL")) {
@@ -171,6 +177,11 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		return whereClause.toString();
 	}
 	
+	public TapTableColumn getSelectedItem() {
+		// TODO Auto-generated method stub
+		return (TapTableColumn) ((JComboBox) this.firstGridComponent).getSelectedItem();
+	}
+	
 
 	public void keyReleased(KeyEvent e) {
 	      if( e.getSource() instanceof JTextField ) {
@@ -183,8 +194,7 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		JComboBox whereOperator = (JComboBox) this.secondGridComponent;
 		TapTableColumn column = ((TapTableColumn)columns.getSelectedItem());
 		String dataType = column.getDatatype();
-		if (dataType != null && !dataType.toUpperCase().contains("VARCHAR")
-				&& !dataType.toUpperCase().contains("CHAR")) {
+		if (column.isNumeric()) {
 			whereOperator.removeAllItems();
 			DefaultComboBoxModel items = new DefaultComboBoxModel(numOperators);
 			whereOperator.setModel(items);
@@ -221,4 +231,13 @@ public class ColumnConstraint extends WhereGridConstraint implements ItemListene
 		
 		serverTap.writeQuery();
 	}
+
+	public void setWhereModel(Vector<TapTableColumn> displayColumns, TapTableColumn selectedItem) {
+		// TODO Auto-generated method stub
+		DefaultComboBoxModel model = new DefaultComboBoxModel(displayColumns);
+		JComboBox columns = (JComboBox) this.firstGridComponent;
+		columns.setModel(model);
+		columns.setSelectedItem(selectedItem);
+	}
+	
 }

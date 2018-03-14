@@ -122,31 +122,35 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	}
 	
 	protected void show(JComponent panel, String title) {
-		setTitle(title);
 		if (panel != null) {
-			if (panel instanceof Server ) {
-				Server s = (Server) panel;
-				if (s != this.server) {
-					setTitle(title);
-					if (this.server == null) {
-						aladin.grabUtilInstance.grabItServers.add(s);
-					} else {
-						aladin.grabUtilInstance.removeAndAdd(this.server, s);
-					}
-					this.server = s;
-					createServerFrame();
-					this.server.updateWidgets(this);// to make sure grab is instantiated right
-					pack();
-				}
-			} else {
+			if (panel.getRootPane() == null || !panel.getParent().equals(this.getContentPane())) {
+				setTitle(title);
 				this.server = null;
 				this.getContentPane().removeAll();
-				this.getContentPane().setBackground(Aladin.COLOR_MAINPANEL_BACKGROUND);
 				this.getContentPane().add(panel, "Center");
 				this.getContentPane().revalidate();
 				this.getContentPane().repaint();
 				this.getRootPane().setBorder(BorderFactory.createLineBorder(Color.gray));
 				this.getRootPane().getInsets().set(2, 2, 0, 2);
+				pack();
+			}
+		}
+		setVisible(true);
+	}
+	
+	protected void show(Server server, String title) {
+		setTitle(title);
+		if (server != null) {
+			if (server != this.server) {
+				setTitle(title);
+				if (this.server == null) {
+					aladin.grabUtilInstance.grabItServers.add(server);
+				} else {
+					aladin.grabUtilInstance.removeAndAdd(this.server, server);
+				}
+				this.server = server;
+				createServerFrame();
+				this.server.updateWidgets(this);// to make sure grab is instantiated right
 				pack();
 			}
 		}

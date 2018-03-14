@@ -24,6 +24,7 @@ package cds.aladin;
 import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.CHECKQUERY;
 import static cds.aladin.Constants.COMMA_CHAR;
+import static cds.aladin.Constants.DATALINK_FORM;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETRESULTPARAMS;
 import static cds.aladin.Constants.LASTPANEL;
@@ -39,10 +40,14 @@ import static cds.aladin.Constants.SYNC_ASYNC;
 import static cds.aladin.Constants.TABLECHANGED;
 import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.UTF8;
+import static cds.aladin.Constants.DATALINK_FORM_SYNC;
+import static cds.aladin.Constants.DATALINK_FORM_ASYNC;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -61,6 +66,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.concurrent.RejectedExecutionException;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -98,8 +104,8 @@ public class ServerGlu extends Server implements Runnable {
    private boolean flagTAP=false;
    private boolean flagTAPV2=false;
    int fmt;		// Format de retour (PlanImage.fmt)
-   String info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP,
-			SHOWASYNCTOOLTIP;
+   String info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP, SYNCASYNCSELECTIONCHANGE,
+			SHOWASYNCTOOLTIP, ASYNCTOOLTIP;
    String system;       // appel système dans le cas d'un enregistrement concernant une application locale, null sinon
    String dir;          // Répertoire d'exécution du system, null sinon
    StringBuffer record;
@@ -128,6 +134,10 @@ public class ServerGlu extends Server implements Runnable {
    JComboBox sync_async;
    String LISTDELIMITER = SPACESTRING;
    private boolean cleanupFov;
+	// -1 - do not show this gui, 0- show disabled drop-down with async, 
+	// 1- show drop-down with sync selected,
+	// 2-show drop-down with async selected
+   int showSyncAsync = -1;
 
    protected void createChaine() {
       super.createChaine();
@@ -141,6 +151,8 @@ public class ServerGlu extends Server implements Runnable {
       CHECKQUERYTOOLTIP = Aladin.chaine.getString("CHECKQUERYTOOLTIP");
       SYNCASYNCTOOLTIP = Aladin.chaine.getString("SYNCASYNCTOOLTIP");
       SHOWASYNCTOOLTIP = Aladin.chaine.getString("SHOWASYNCTOOLTIP");
+      SYNCASYNCSELECTIONCHANGE = Aladin.chaine.getString("SYNCASYNCSELECTIONCHANGE");
+      ASYNCTOOLTIP = Aladin.chaine.getString("ASYNCTOOLTIP");
    }
 
    /**
@@ -156,10 +168,10 @@ public class ServerGlu extends Server implements Runnable {
     */
 	protected ServerGlu(Aladin aladin, String actionName, String description, String verboseDescr, String aladinMenu,
 			String aladinMenuNumber, String aladinLabel, String planeLabel, String docUser, String[] paramDescription,
-			String[] paramDataType, String[] paramValue, String[][] paramRange, String resultDataType, String institute,
-			String[] aladinFilter, String aladinLogo, String dir, String system, StringBuffer record,
-			String aladinProtocol, String[] tapTables, GluAdqlTemplate gluAdqlTemplate, TapClient tapClient,
-			boolean flagTapUpload) {
+			String[] paramDataType, String[] paramValue, String[][] paramRange, String resultDataType,
+			int showSyncAsync, String institute, String[] aladinFilter, String aladinLogo, String dir,
+			String system, StringBuffer record, String aladinProtocol, String[] tapTables,
+			GluAdqlTemplate gluAdqlTemplate, TapClient tapClient, boolean flagTapUpload) {
 
       this.aladin = aladin;
       createChaine();
@@ -178,6 +190,7 @@ public class ServerGlu extends Server implements Runnable {
       this.ordre       = aladinMenuNumber;
       this.system      = system;
       this.dir         = dir;
+      
       JScrollPane sc=null;
 //      try { this.aladinMenuNumber=Double.parseDouble(aladinMenuNumber); } catch( Exception e) { }
 
@@ -207,7 +220,8 @@ public class ServerGlu extends Server implements Runnable {
       DISCOVERY=flagSIAIDHA || type==SPECTRUM || type==CATALOG;
 
       fmt = getFmt(resultDataType);
-
+      this.showSyncAsync = showSyncAsync;
+      
       setLayout(null);
       setFont(Aladin.PLAIN);
 
@@ -506,7 +520,15 @@ public class ServerGlu extends Server implements Runnable {
          y+=15;
          sc.setBounds(XTAB1,y,XWIDTH-2*XTAB1,180); y+=180;
          add(sc);
-      }
+	} else if (showSyncAsync > -1) {
+		setSyncAsyncOption();
+		if (this.sync_async != null) {
+			this.sync_async.setBounds(XTAB2, y, XWIDTH - 2 * XTAB2, HAUT);
+//			co.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
+			y += HAUT ;
+			add(this.sync_async);
+		}
+	}
 
       // Gestion des filtres prédéfinis s'il y a lieu
       if( aladinFilter!=null ) {
@@ -539,7 +561,42 @@ public class ServerGlu extends Server implements Runnable {
 
    }
    
-  /**
+	private void setSyncAsyncOption() {
+		// TODO Auto-generated method stub
+		this.sync_async = new JComboBox<String>(SYNC_ASYNC);
+		this.sync_async.setOpaque(false);
+		
+		if (showSyncAsync > 0) {
+			if (SYNCASYNCTOOLTIP != null && !SYNCASYNCTOOLTIP.isEmpty()) {
+				this.sync_async.setToolTipText("<html><p width=\"500\">"+SYNCASYNCTOOLTIP+"</p></html>");
+			}
+			if (showSyncAsync == 2) {
+				this.sync_async.setSelectedIndex(1);
+			}
+		} else {
+			this.sync_async.setSelectedIndex(1);
+			this.sync_async.setEnabled(false);
+			this.sync_async.setToolTipText(ASYNCTOOLTIP);
+		}
+		this.sync_async.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				// TODO Auto-generated method stub
+				Object url = null;
+				if (ServerGlu.this.sync_async.getSelectedItem().equals("SYNC")) {
+					url = aladin.glu.aladinDic.get(DATALINK_FORM_SYNC);
+				} else {
+					url = aladin.glu.aladinDic.get(DATALINK_FORM_ASYNC);
+				}
+				if (url != null) {
+					aladin.glu.aladinDic.put(DATALINK_FORM, url);
+				}
+				Aladin.info(ServerGlu.this, SYNCASYNCSELECTIONCHANGE);
+			}
+		});
+	}
+
+/**
    * Method for TAP : change table: to reset fields and columns as per the first table
    * @param tableSelected
    */
@@ -1715,13 +1772,17 @@ public class ServerGlu extends Server implements Runnable {
 
       } else defaultCursor();
 
-      if (flagTAPV2) {
-    	  String url = (String) aladin.glu.aladinDic.get(gluTag);
-    	  boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-    	  this.submitTapServerRequest(sync, null, label, url, tap.getText());
-	  } else {
-		  lastPlan = aladin.calque.createPlan(u+"",label,"provided by "+institute,this);
-	  }
+		if (flagTAPV2) {
+			String url = (String) aladin.glu.aladinDic.get(gluTag);
+			boolean isSync = this.sync_async.getSelectedItem().equals("SYNC");
+			this.submitTapServerRequest(isSync, label, url, tap.getText());
+		} else {
+			if (showSyncAsync > -1 && this.sync_async != null && this.sync_async.getSelectedItem().equals("ASYNC")) {
+				this.fireASync(label, u);
+			} else {
+				lastPlan = aladin.calque.createPlan(u + "", label, "provided by " + institute, this);
+			}
+		}
       
       if( code!=null && lastPlan!=null ) lastPlan.setBookmarkCode(code+" $TARGET $RADIUS");
     }
@@ -1741,7 +1802,7 @@ public class ServerGlu extends Server implements Runnable {
 	}
 	
 	protected void cleanUpFOV() {
-		if (dataLinkSource!=null && dataLinkSource.isShowingFootprint()) {
+		if (dataLinkSource != null && dataLinkSource.isShowingFootprint()) {
 			dataLinkSource.setShowFootprint(false, true);
 		}
 		if (dataLinkSource!=null && cleanupFov) dataLinkSource.resetFootprint();
@@ -1987,6 +2048,55 @@ public class ServerGlu extends Server implements Runnable {
       super.clear();
    }
    
+   /**
+	 * Submits async requests
+	 * @param name
+	 * @param url
+	 */
+	public void fireASync(String name, final URL url) {
+		final int requestNumber = -1;//newRequestCreation(); 
+		try {
+			final Map<String, Object> requestParams = new HashMap<String, Object>();
+			String query = url.getQuery();
+			String[] pairs = query.split("&");
+			for (String pair : pairs) {
+				int pairIndex = pair.indexOf("=");
+				requestParams.put(URLDecoder.decode(pair.substring(0, pairIndex), UTF8),
+						URLDecoder.decode(pair.substring(pairIndex + 1), UTF8));
+			}
+			Aladin.trace(3, "Firing async for " + name + " url: " + url + "\n requestParams: " + requestParams);
+			aladin.initThreadPool();
+			aladin.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					final Thread currentT = Thread.currentThread();
+					final String oldTName = currentT.getName();
+					currentT.setName("TsubmitAsync: " + url.toString());
+					try {
+						int index = url.toString().indexOf("?");
+						String urlString = url.toString().substring(0, index);
+						UWSFacade.fireAsync(aladin, ServerGlu.this, ServerGlu.this.planeLabel, urlString, requestParams,
+								requestNumber);
+						currentT.setName(oldTName);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						if (Aladin.levelTrace >= 3)
+							e.printStackTrace();
+						displayWarning(ServerGlu.this, requestNumber, Aladin.getChaine().getString("GENERICERROR"));
+					}
+				}
+			});
+		} catch (RejectedExecutionException ex) {
+			displayWarning(ServerGlu.this, requestNumber,
+					"Unable to submit\n Request overload! Please wait and try again.");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			if (Aladin.levelTrace >= 3)
+				e.printStackTrace();
+			Aladin.error(aladin.dialog, "Server error!");
+		}
+	}
+	
    protected boolean updateWidgets() {
       if( flagTAP ) {
 //         System.out.println("Je dois rééditer la chaine ADQL");
@@ -1996,11 +2106,11 @@ public class ServerGlu extends Server implements Runnable {
    }
    
 	@Override
-	public ADQLQuery checkQuery() throws UnresolvedIdentifiersException {
+	public ADQLQuery checkQuery(Map<String, Object> requestParams) throws UnresolvedIdentifiersException {
 		// TODO Auto-generated method stub
 		ADQLQuery result = null;
 		try {
-			result = super.checkQuery();
+			result = super.checkQuery(requestParams);
 		} catch (UnresolvedIdentifiersException uie) {
 			Aladin.trace(3, "Number of errors in the query:"+uie.getNbErrors());
 			Iterator<adql.parser.ParseException> it = uie.getErrors();
@@ -2045,17 +2155,13 @@ public class ServerGlu extends Server implements Runnable {
 				}
 			} else if (action.equals(SHOWAYNCJOBS)) {
 				try {
-					tapManager.showAsyncPanel();
+					UWSFacade.getInstance(aladin).showAsyncPanel();
 				} catch (Exception e1) {
 					Aladin.error(this, GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
 			} else if (action.equals(UPLOAD)) {
-				if (tapManager.uploadFrame == null) {
-					tapManager.uploadFrame = new FrameUploadServer(aladin, this.tapClient.tapBaseUrl);
-				}
-				tapManager.uploadFrame.show(this.tapClient);
-				
+				this.tapClient.showOnUploadFrame();
 			}
 
   		} else if (o instanceof JComboBox) {

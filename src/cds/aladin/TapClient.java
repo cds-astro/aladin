@@ -182,13 +182,13 @@ public class TapClient{
 						if (!editing) {
 							String selected = (String) model.getSelectedItem();
 							serverToDisplay = getServerToDisplay(selected);
+							TapClient.this.tapManager.closeJoinFacade();
 							if (Aladin.levelTrace >= 3) System.out.println("contentsChanged" + TapClient.this.mode + "  " + selected);
 							if (TapClient.this.mode == TapClientMode.TREEPANEL) {
 								TapClient.this.tapManager.showTapPanelFromTree(TapClient.this.tapLabel, serverToDisplay);
 							} else {
 								TapClient.this.tapManager.showTapServerOnServerSelector(serverToDisplay);
 							}
-
 						}
 					} catch (Exception ex) {
 						if (Aladin.levelTrace >= 3)
@@ -417,6 +417,10 @@ public class TapClient{
 	
 	public void	showOnUploadFrame() {
 		this.tapManager.showOnUploadFrame(this);
+	}
+	
+	public FrameUploadServer initUploadFrame() {
+		return this.tapManager.initUploadFrame(this);
 	}
 	
 	/**
@@ -771,6 +775,7 @@ public class TapClient{
 		
 		if (this.serverTap != null) {
 			this.serverTap.removeAll();
+			this.serverTap.resetJoin();
 			this.serverTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
 		} 
 		if (this.serverExamples != null) {
@@ -811,25 +816,103 @@ public class TapClient{
 		return result;
 	}
 	
-	public void updateUploadedTablesToParser(DynamicTapForm server) {
+	/**
+	 * Method trying to update upload meta needed to validate query and submit it.
+	 * Parsing and other issues are not tackled here
+	 * @param server
+	 * @param requestParams
+	 */
+	public void updateUploadedTablesToParser(DynamicTapForm server, Map<String, Object> requestParams) {
 		// TODO Auto-generated method stub
-		if ((this.mode != TapClientMode.UPLOAD)) {
-			List<DefaultDBTable> queryCheckerTables = new ArrayList<DefaultDBTable>();
-			if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
-				queryCheckerTables.addAll(this.queryCheckerTables);
-			}
-			if (tapManager.uploadFrame != null) {
-				List<String> uploadedTables = new ArrayList<String>();
-				uploadedTables.addAll(tapManager.uploadFrame.uploadClient.tablesMetaData.keySet());
-				if (!uploadedTables.isEmpty()) {
-					for (String uploadedTable : uploadedTables) {
-						server.updateQueryChecker(true, uploadedTable, tapManager.uploadFrame.uploadClient.tablesMetaData, queryCheckerTables);
+		/*Map<String, Object> requestParams = null; //added off in  updateUploadedTablesToParser. keeping for ref
+		if (secondaryTable != null) {
+			TapManager tapManager = TapManager.getInstance(aladin);
+			if (!this.tapClient.tablesMetaData.containsKey(secondaryTable)) {
+				if (tapManager.uploadFrame.uploadedTableFiles.containsKey(secondaryTable)) {
+					if (tap.getText().contains(secondaryTable)) {
+						requestParams = new HashMap<String, Object>();
+						FrameUploadServer uploadFrame = tapManager.uploadFrame;
+						if (uploadFrame.uploadedTableFiles.get(secondaryTable) == null) {
+							Aladin.error(this, "Unable to submit " + secondaryTable + " data!");
+							return;
+						}
+						String uploadFileName = FrameUploadServer.UPLOADFILEPREFIX+secondaryTable;
+						requestParams.put("upload", uploadFrame.getUploadParam(secondaryTable, uploadFileName));
+						requestParams.put(uploadFileName, uploadFrame.uploadedTableFiles.get(secondaryTable));
 					}
 				}
 			}
-			QueryChecker checker = new DBChecker(queryCheckerTables);
-			server.adqlParser.setQueryChecker(checker);
+		}*/
+		//if there are no uploaded table?
+		//check if query has any of those references
+		//if yes update
+		
+		List<DefaultDBTable> queryCheckerTablesUpdate = new ArrayList<DefaultDBTable>();
+		if ((this.mode != TapClientMode.UPLOAD)) {
+			if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
+				queryCheckerTablesUpdate.addAll(this.queryCheckerTables);
+			}
 		}
+		
+		Map<String, TapTable> uploadedTables = tapManager.getUploadedTables();
+		FrameUploadServer uploadFrame = null;
+		List<String> uploadTablesReferenced = new ArrayList<String>();
+		if (uploadedTables != null) {
+			uploadFrame = tapManager.uploadFrame;
+			for (String uploadtable : uploadedTables.keySet()) {
+				if (server.tap.getText().toUpperCase().contains(uploadtable.toUpperCase())) {
+					if (requestParams != null && uploadFrame.uploadedTableFiles.get(uploadtable) == null) {
+						Aladin.error(server, "Unable to submit " + uploadtable + " data!");
+						Aladin.trace(3, "No file found for "+uploadtable);
+					} else{
+						uploadTablesReferenced.add(uploadtable);
+					}
+					if ((this.mode != TapClientMode.UPLOAD)) { 
+						server.updateQueryChecker(true, uploadtable, tapManager.uploadFrame.uploadClient.tablesMetaData, queryCheckerTablesUpdate);
+					}
+				}
+			}
+			
+			uploadFrame.addUploadToSubmitParams(uploadTablesReferenced, requestParams);
+			
+			if ((this.mode != TapClientMode.UPLOAD)) {
+				QueryChecker checker = new DBChecker(queryCheckerTablesUpdate);
+				server.adqlParser.setQueryChecker(checker);
+			}
+			
+		}
+		
+		
+		/*try {
+			ADQLQuery query =  server.adqlParser.parseQuery(server.tap.getText());
+		} catch (UnresolvedIdentifiersException e) {
+			// TODO Auto-generated catch block
+			List<String> tableNames = server.getTableNamesofNoMetadataInQuery(server.tap.getText());
+			if (requestParams != null && tableNames != null && !tableNames.isEmpty()) {
+				this.tapManager.getUploadSubmitParams(tableNames, requestParams);
+			}
+			
+			if ((this.mode != TapClientMode.UPLOAD)) {
+				List<DefaultDBTable> queryCheckerTables = new ArrayList<DefaultDBTable>();
+				if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
+					queryCheckerTables.addAll(this.queryCheckerTables);
+				}
+				if (tapManager.uploadFrame != null) {
+					List<String> uploadedTables = new ArrayList<String>();
+					uploadedTables.addAll(tapManager.uploadFrame.uploadClient.tablesMetaData.keySet());
+					if (!uploadedTables.isEmpty()) {
+						for (String uploadedTable : uploadedTables) {
+							server.updateQueryChecker(true, uploadedTable, tapManager.uploadFrame.uploadClient.tablesMetaData, queryCheckerTables);
+						}
+					}
+				}
+				QueryChecker checker = new DBChecker(queryCheckerTables);
+				server.adqlParser.setQueryChecker(checker);
+			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 	}
 	
 	public void activateWaitMode(ServerTap serverTap) {
@@ -868,7 +951,5 @@ public class TapClient{
 	    NOGLURECFOUND = Aladin.chaine.getString("NOGLURECFOUND");
 	    CHANGESERVERTOOLTIP = Aladin.chaine.getString("CHANGESERVERTOOLTIP");
 	}
-
-	
 	
 }

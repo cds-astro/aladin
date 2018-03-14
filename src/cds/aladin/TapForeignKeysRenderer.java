@@ -21,22 +21,37 @@
 
 package cds.aladin;
 
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
+import java.awt.Component;
+import java.awt.Dimension;
 
-//TODO:: tintin delete this class if it is confirmed that second target panel will not be used
-public class TargetPanel extends JPanel {
-	
+import javax.swing.JList;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+
+public class TapForeignKeysRenderer extends BasicComboBoxRenderer {
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1713822532928979812L;
+	private static final long serialVersionUID = -4372535217338044431L;
 	
-	JTextField target;
-	JTextField radius;
-	JToggleButton grab;
-	JComboBox circleOrSquare;
+	public TapForeignKeysRenderer() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	@Override
+	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+			boolean cellHasFocus) {
+		super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+		if (value instanceof ForeignKeyColumn) {
+			ForeignKeyColumn forRel = (ForeignKeyColumn) value;
+			StringBuffer textToSet = new StringBuffer(forRel.getTarget_column());
+			textToSet.append(" = ").append(forRel.getFrom_column());
+			setText(textToSet.toString());
+		}
+		setPreferredSize(new Dimension(45, Server.HAUT));
+		return this;
+	}
+	
 
 }

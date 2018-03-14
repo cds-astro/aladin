@@ -24,9 +24,12 @@ package cds.aladin;
 import static cds.aladin.Constants.AND;
 import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 
+import java.awt.FlowLayout;
+import java.awt.Image;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Vector;import javax.swing.ImageIcon;
+import java.util.Vector;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -65,7 +68,12 @@ public abstract class WhereGridConstraint extends JPanel{
 	        	 write();
 	          }
 	       });
-		this.removeButton = new JButton(new ImageIcon(Aladin.aladin.getImagette("delete_button.png")));
+		Image image = Aladin.aladin.getImagette("delete_button.png");
+		if (image == null) {
+			this.removeButton = new JButton("X");
+		} else {
+			this.removeButton = new JButton(new ImageIcon(image));
+		}
 		this.removeButton.setToolTipText(DELETEBUTTON_TOOLTIP);
 		this.removeButton.setActionCommand(REMOVEWHERECONSTRAINT);
 	}
@@ -87,6 +95,7 @@ public abstract class WhereGridConstraint extends JPanel{
 	}
 	
 	public void addWhereConstraints() {
+		setLayout(new FlowLayout(FlowLayout.LEFT));
 		add(this.andOrOperator);
 		add(this.firstGridComponent);
 		add(this.secondGridComponent);

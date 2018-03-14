@@ -3342,13 +3342,13 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
-   protected int newPlanCatalog(MyInputStream in,String label,String origin) {
+/*   protected int newPlanCatalog(MyInputStream in,String label,String origin) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = new PlanCatalog(aladin,in,label,origin);
       suiteNew(plan[n]);
       return n;
-   }
+   }*/
 
    protected int newPlanCatalog(HttpURLConnection in,String label) {
       int n=getStackIndex(label);
@@ -3358,11 +3358,10 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
-   protected int newPlanCatalog(MyInputStream in, String label, Server server, String query, int requestNumber) {
+   protected int newPlanCatalog(MyInputStream in, String label, String origin, Server server, URL url, String query, int requestNumber) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = new PlanCatalog(aladin,in,label, server, query);
-      plan[n].tapRequestId = requestNumber;
+      plan[n] = new PlanCatalog(aladin,in,label, origin,server, url, query, requestNumber);
       suiteNew(plan[n]);
       return n;
    }
@@ -3660,6 +3659,16 @@ public class Calque extends JPanel implements Runnable {
       if( n<0 ) throw new Exception("plane creation error");
       return plan[n];
    }
+   
+//new method to have all parameters in plane properties and for status update
+	protected Plan createPlan(InputStream inputStream, String label, String origin, Server server, URL url, String query,
+			int requestId) throws Exception {
+		int n = ((ServerFile) aladin.dialog.localServer).creatLocalPlane(null, label, origin, null, null, inputStream,
+				server, null, null, url, query, requestId);
+		if (n == -2) return null; // De fait aucune création de plan (cas du FOV)
+		if (n < 0) throw new Exception("plane creation error");
+		return plan[n];
+	}
 
    /** Actions a faire apres la demande de creation d'un nouveau plan */
    protected void suiteNew(Plan p) {

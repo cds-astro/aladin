@@ -98,6 +98,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -722,6 +724,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    private boolean flagFrame=false;
    public GrabUtil grabUtilInstance = GrabUtil.getInstance();
+   public ExecutorService executor;
    
    /** Va tester s'il s'agit d'une applet signé ou non et va lancer l'applet dans une fenêtre à part si le parametre
     * inFrame est présent */
@@ -3546,7 +3549,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 		}
       } else if (isMenu(s, JOBCONTROLLER)) {
 		try {
-			dialog.tapManager.showAsyncPanel();
+			UWSFacade.getInstance(this).showAsyncPanel();
 		} catch (Exception e) {
 			error(this, Aladin.chaine.getString("GENERICERROR"));
 		}
@@ -4648,7 +4651,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          
          // Deselection des objets en cours dans le cas ou une application
          // type VOPlot est utilisee en parallele
-         glu.tapManager.cleanUp();
+         this.cleanUpThreadPool();
          
          // PF Mai 2017 - nécessaire pour permettre l'arrêt - à voir avec Thomas
          try {
@@ -4690,7 +4693,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try { plugins.cleanup(); } catch( Exception e ) {}
       }
       
-    	  glu.tapManager.finalCleanUp();
+      if (this.executor != null && !this.executor.isShutdown()) {
+    	  this.executor.shutdownNow();//Shuts down all lingering tap threads
+    	  Aladin.trace(3,"Shutdown of threads, tap service...");
+      }
 
       if( aladinSession>0 || flagLaunch ) { // Si Aladin demarre par launch() cacher la fenetre
          //          System.out.println("Aladin.action: flagLaunch true => dispose");
@@ -4724,7 +4730,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void preferences() {
       configuration.show();
    }
-
+   
+   /**
+	 * Gentle shut down of all threads
+	 * plus async job clean up
+	 */
+	public void cleanUpThreadPool() {
+		if (this.executor != null) {
+			this.executor.shutdown();
+			Aladin.trace(3, "soft shutdown of tap/uws thread pool....");
+			UWSFacade.getInstance(this).deleteAllSetToDeleteJobs();
+			Aladin.trace(3, "deleting all(set to delete) uws jobs....");
+		}
+	}
+   
 
    /** retourne l'instance de FrameInfo actuellement utilisée
     * En crée une si nécessaire */
@@ -8123,5 +8142,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else super.setVisible(flag);
       
    }
+
+	public void initThreadPool() {
+		// TODO Auto-generated method stub
+		if (aladin.executor == null) {
+			aladin.executor = Executors.newFixedThreadPool(10);
+		}
+	}
 
 }

@@ -51,8 +51,10 @@ import static cds.aladin.Constants.UCD_RA_PATTERN2;
 import static cds.aladin.Constants.UCD_RA_PATTERN3;
 import static cds.aladin.Constants.REGEX_VALIDTABLENAME;
 import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
+import static cds.aladin.Constants.REGEX_TABLENAMEALREADYQUOTED;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -72,10 +74,13 @@ public class TapTable {
 	private String table_type;
 	private String description;
 	private String utype;
+//	private String table_index; v1.1
 	private Vector<TapTableColumn> columns;
 	public Map<String, TapTableColumn> flaggedColumns;
 	public Map<String, String> obsCoreColumns;
 	public static final int MAXOBSCORECOLSCOUNTED = 6;
+	public List<ForeignKeyColumn> foreignKeyColumns;
+	public String alias;
 	
 	/**
 	 * Identifies certain columns
@@ -243,8 +248,12 @@ public class TapTable {
 					}
 					matcher = regex.matcher(potentialTableName);
 					if (!matcher.find()){
-						queryPartInput = Glu.doubleQuote(potentialTableName);
-						queryPartInput = prefix+queryPartInput;
+						Pattern isQuotedpattern = Pattern.compile(REGEX_TABLENAMEALREADYQUOTED);
+						Matcher isQuotedMatcher =isQuotedpattern.matcher(potentialTableName);
+						if (!isQuotedMatcher.find()) {
+							queryPartInput = Glu.doubleQuote(potentialTableName);
+							queryPartInput = prefix+queryPartInput;
+						}
 					}
 				}
 			}
@@ -387,10 +396,14 @@ public class TapTable {
 		}
 	}
 	
-	public String getFlaggedColumnName(String key) {
+	public String getFlaggedColumnName(String key, boolean withAlias) {
 		String result = null;
-		if (this.flaggedColumns != null && this.flaggedColumns.containsKey(key)) {
-			result = this.flaggedColumns.get(key).getColumn_name();
+		TapTableColumn column = getFlaggedColumn(key);
+		if (column != null) {
+			result = this.flaggedColumns.get(key).getColumnNameForQuery();
+			if (withAlias && this.alias != null) {
+				result = this.alias + DOT_CHAR + result;
+			}
 		}
 		return result;
 	}
@@ -419,12 +432,12 @@ public class TapTable {
 		return result;
 	}
 	
-	public String getRaColumnName() {
-		return getFlaggedColumnName(RA);
+	public String getRaColumnName(boolean withAlias) {
+		return getFlaggedColumnName(RA, withAlias);
 	}
 
-	public String getDecColumnName() {
-		return getFlaggedColumnName(DEC);
+	public String getDecColumnName(boolean withAlias) {
+		return getFlaggedColumnName(DEC, withAlias);
 	}
 	
 	/**
@@ -520,5 +533,13 @@ public class TapTable {
 	public void setObsCoreColumns(Map<String, String> obsCoreColumns) {
 		this.obsCoreColumns = obsCoreColumns;
 	}
-	
+
+	public String getAlias() {
+		return alias;
+	}
+
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
+
 }

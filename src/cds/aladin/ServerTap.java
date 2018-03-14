@@ -25,7 +25,9 @@ import static cds.aladin.Constants.ADDPOSCONSTRAINT;
 import static cds.aladin.Constants.ADDWHERECONSTRAINT;
 import static cds.aladin.Constants.CHECKQUERY;
 import static cds.aladin.Constants.COMMA_SPACECHAR;
+import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.JOIN_TABLE;
 import static cds.aladin.Constants.OPEN_SET_RADEC;
 import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 import static cds.aladin.Constants.SELECTALL;
@@ -38,6 +40,7 @@ import static cds.aladin.Constants.WRITEQUERY;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -53,6 +56,7 @@ import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -91,6 +95,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	JPanel queryComponentsGui;
 	JPanel targetPanel;
     JFrame setRaDecFrame;
+    JoinFacade joinPanel;
     
 	protected ServerTap(Aladin aladin) {
 		super(aladin);
@@ -142,8 +147,8 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		this.adqlParser.setQueryChecker(checker);
 		setBasics();
 		
-		this.raColumnName = chosenTable.getRaColumnName();
-		this.decColumnName = chosenTable.getDecColumnName();
+		this.raColumnName = chosenTable.getRaColumnName(false);
+		this.decColumnName = chosenTable.getDecColumnName(false);
 		
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel containerPanel = new JPanel(new GridBagLayout());
@@ -155,12 +160,13 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			if (this.tapClient.mode == TapClientMode.UPLOAD) {
 				tablesGui = new JComboBox();
 				tablesGui.setModel(this.tapClient.tapManager.getUploadClientModel());
+				tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, null, null, false);
 			} else {
 				tablesGui = new JComboBox(tables);
+				tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, tables, null, false);
 			}
 			
 //			tablesGui.setRenderer(new CustomTableRenderer());
-			tablesPanel = getTablesPanel(null, tablesGui, chosenTable, tables, null, false);
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
 			Aladin.error(this, e.getMessage());
@@ -217,6 +223,94 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	    
 	}
 	
+	public void joinConstraintUpdated() {
+		waitCursor();
+		tapClient.activateWaitMode(this);
+		
+		Map<String, TapTable> tablesMetaData = this.tapClient.tablesMetaData;
+		TapTable mainTable = tablesMetaData.get(this.selectedTableName);
+		
+		if (!this.joinPanel.constraints.isEmpty()) {//is first join
+			String alias = TapTable.getQueryPart(this.selectedTableName, true);
+			mainTable.setAlias(alias);
+		} else {
+			mainTable.setAlias(null);
+		}
+		
+		Vector<TapTableColumn> displayColumns = null;
+		try {
+			displayColumns = getSelectedTablesColumns();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			defaultCursor();
+			if (Aladin.levelTrace >= 3) e.printStackTrace();
+			Aladin.error(this, e.getMessage());
+			return;
+		}
+		
+		// check if each where constraints has selected something that aint in the model
+		// ya? then delete that thing off.
+		// if not just set new model to this new thing : with the previously item preselected item
+		if (this.whereClausesPanel.getComponentCount() > 0) {
+			ColumnConstraint columnConstraint = null;
+			boolean changed = false;
+			Component[] whereConstraints = this.whereClausesPanel.getComponents();
+			for (Component component : whereConstraints) {
+				if (component instanceof ColumnConstraint) {
+					columnConstraint = (ColumnConstraint) component;
+					TapTableColumn selectedItem = columnConstraint.getSelectedItem();
+					if (!displayColumns.contains(selectedItem)) {
+						this.whereClausesPanel.remove(columnConstraint);
+						changed = true;
+					} else {
+						columnConstraint.setWhereModel(displayColumns, selectedItem);
+					}
+				}
+			}
+			if (changed) {
+				ColumnConstraint.removeFirstAndOrOperator(this.whereClausesPanel);
+			}
+		}
+		
+		
+		int[] selectedSelectListColumns = null;
+		if (!this.selectAll.isSelected()) {
+			selectedSelectListColumns = this.selectList.getSelectedIndices();
+		} 
+		
+
+//		this.selectList.removeAll();
+		DefaultListModel model = new DefaultListModel();
+//		Vector<TapTableColumn> model = new Vector<TapTableColumn>();
+//		model.addAll(displayColumns);
+		for (TapTableColumn displayColumn : displayColumns) {
+			model.addElement(displayColumn);
+		}
+		this.selectList.setModel(model);
+		if (selectedSelectListColumns == null) {
+			this.selectAll.setSelected(true);
+			resetColumnSelection();
+		} else {
+			this.selectList.setSelectedIndices(selectedSelectListColumns);
+		}
+		
+//		if (this.selectAll != null) {
+//			this.selectAll.setSelected(true);
+//		}
+		
+		
+//		resetFields();
+		ball.setMode(Ball.UNKNOWN);
+//	    aladin.dialog.setDefaultParameters(aladin.dialog.getCurrent(),5);
+	    formLoadStatus = TAPFORM_STATUS_LOADED;
+		
+		writeQuery();
+		this.revalidate();
+		this.repaint();
+		defaultCursor();
+		this.info1.setText(CLIENTINSTR);
+	}
+	
 	@Override
 	public void changeTableSelection(String tableChoice) {
 		waitCursor();
@@ -229,11 +323,11 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		if (columnNames == null) {
 			return;
 		}
-		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName();
-		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName();
-		if(Aladin.levelTrace >= 3) System.out.println("ra and dec: "+(this.raColumnName!=null && this.decColumnName!=null));
-		if(Aladin.levelTrace >= 3) System.out.println("and target panel: "+target);
-		if  (this.raColumnName != null && this.decColumnName != null) {
+		this.raColumnName = tablesMetaData.get(selectedTableName).getRaColumnName(false);
+		this.decColumnName = tablesMetaData.get(selectedTableName).getDecColumnName(false);
+		if (Aladin.levelTrace >= 3) System.out.println("ra and dec: "+(this.raColumnName!=null && this.decColumnName!=null));
+		if (Aladin.levelTrace >= 3) System.out.println("and target panel: "+target);
+		if (this.raColumnName != null && this.decColumnName != null) {
 			if (Aladin.levelTrace >= 3) System.out.println("target: "+(target));
 			if (target == null) {
 				createTargetPanel(targetPanel);
@@ -255,6 +349,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 		
 		resetFields();
+		changeJoin();
 		ball.setMode(Ball.UNKNOWN);
 //	    aladin.dialog.setDefaultParameters(aladin.dialog.getCurrent(),5);
 	    formLoadStatus = TAPFORM_STATUS_LOADED;
@@ -265,6 +360,13 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		this.info1.setText(CLIENTINSTR);
 	}
 	
+	private void changeJoin() {
+		// TODO Auto-generated method stub
+		if (this.joinPanel != null) {
+			this.tapClient.tapManager.loadForeignKeyRelationsForSelectedTable(this.tapClient, this.joinPanel, selectedTableName);
+		}
+	}
+
 	/**
 	 * Creates where constraints panel. Displays columns, where constraints addition interface(Column and position constraints)
 	 * @param columnNames
@@ -292,7 +394,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			modelNames.addAll(columnNames);
 			this.selectList = new JList(modelNames);
 			this.selectList.setSelectionInterval(0, modelNames.size()-1);
-			this.selectList.setCellRenderer(new CustomListCellRenderer());
+			this.selectList.setCellRenderer(new CustomListCellRenderer(this));
 			this.selectList.addListSelectionListener(new ListSelectionListener() {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
@@ -449,6 +551,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		// Col-- end
 		whereConstraintPanel.setBackground(this.tapClient.secondColor);
 		whereConstraintPanel.addWhereConstraints();
+		whereConstraintPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, whereConstraintPanel.getMinimumSize().height));
 		this.whereClausesPanel.add(whereConstraintPanel, Component.TOP_ALIGNMENT);
 		ColumnConstraint.removeFirstAndOrOperator(this.whereClausesPanel);
 		
@@ -477,19 +580,28 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 				} else {
 					queryFromGui.append(SPACESTRING);
 					for (TapTableColumn selectedColumn : selectedColumns) {
+						String alias = this.getRelevantAlias(selectedColumn);
+						if (alias != null) {
+							queryFromGui.append(alias).append(DOT_CHAR);
+						}
 						queryFromGui.append(selectedColumn.getColumnNameForQuery()).append(COMMA_SPACECHAR);
 					}
 				}
-				
 			}
 			//queryFromGui.append(((List<TapTableColumn>) this.selectList.getSelectedValuesList()).toString().replaceAll("[\\[\\]]", ""))
 			queryFromGui = new StringBuffer(queryFromGui.toString().trim().replaceAll(",$", EMPTYSTRING));
 			queryFromGui.append(" FROM ")
 			.append(TapTable.getQueryPart(selectedTableName, true)).append(SPACESTRING);
 			
-			Component[] whereConstraints = this.whereClausesPanel.getComponents();
+			if (this.joinPanel != null && this.joinPanel.constraints != null && !this.joinPanel.constraints.isEmpty()) {
+				for (JoinConstraint joinConstraint : this.joinPanel.constraints) {
+					queryFromGui.append(joinConstraint.getADQLString()).append(SPACESTRING);
+				}
+			}
+			
 			if (this.whereClausesPanel.getComponentCount() > 0) {
 				WhereGridConstraint whereConstraint;
+				Component[] whereConstraints = this.whereClausesPanel.getComponents();
 				queryFromGui.append("WHERE ");
 				for (int i = 0; i < whereConstraints.length; i++) {
 					whereConstraint = (WhereGridConstraint) whereConstraints[i];
@@ -502,6 +614,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		} catch (Exception e) {
 			// TODO: handle exception
 			Aladin.error(this, e.getMessage());
+			Aladin.trace(3, e.getMessage());
             ball.setMode(Ball.NOK);
 		}
 		
@@ -527,13 +640,21 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		if (this.raColumnName != null && this.decColumnName != null) {
 			resetTargetPanel = true;
 		}
-		this.raColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getRaColumnName();
-		this.decColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getDecColumnName();
+		this.raColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getRaColumnName(false);
+		this.decColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getDecColumnName(false);
 		if (resetTargetPanel && (this.raColumnName != null && this.decColumnName != null)) {
 			resetTargetPanel = false;
 		}
 		if (resetTargetPanel) {
-			Vector<TapTableColumn> columnNames = getSelectedTableColumns();
+			Vector<TapTableColumn> columnNames = null;
+			try {
+				columnNames = getSelectedTableColumns();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				if (Aladin.levelTrace >= 3) e.printStackTrace();
+				Aladin.error(this, e.getMessage());
+				return;
+			}
 			setWhereAddConstraintsGui(columnNames);
 			this.queryComponentsGui.revalidate();
 			this.queryComponentsGui.repaint();
@@ -541,11 +662,22 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		
 		resetColumnSelection();
 		resetFields();
+		resetJoin();
 		super.clear();
 		this.revalidate();
 		this.repaint();
 	}
 	
+	public void resetJoin() {
+		// TODO Auto-generated method stub
+		if (this.joinPanel != null) {
+			this.joinPanel.constraints.clear();
+			joinConstraintUpdated();
+			this.tapClient.tapManager.clearJoinPanel();
+			this.joinPanel = null;
+		}
+	}
+
 	/**
 	 * Convenience method
 	 */
@@ -613,21 +745,6 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 	}*/
 	
-	/**
-	 * Method fires sync or async submissions based on what is selected by user
-	 * Incase of upload as file is posted, diff sync methods are followed
-	 * @param requestParams
-	 */
-	public void submit(Map<String, Object> requestParams) {
-	      //check again
-		if (this.sync_async != null &&  this.tap != null) {
-			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
-
-	  	  	// Echo of the equivalent script command
-	  	  	aladin.console.printCommand("get TAP("+Tok.quote(this.tapClient.tapLabel)+","+Tok.quote(this.tap.getText())+")");
-		}
-	}
 	
 	/** Sync TAP query via the script command: get TAP(URL|ID,queryString)
 	 * @param target Not used here
@@ -651,7 +768,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
           tapClient = new TapClient();
           tapClient.tapLabel=label;
           TapManager tapManager = TapManager.getInstance(aladin);
-          tapManager.fireSync(this, baseUrl, query, null, null);
+          tapManager.fireSync(this, baseUrl, query, null);
          
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
@@ -662,9 +779,26 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 
 
 	
+//	@Override
+//	public void submit() {
+//		submit(null);//no request params
+//	}
+	
+	/**
+	 * Method fires sync or async submissions based on what is selected by user
+	 * Incase of upload as file is posted, diff sync methods are followed
+	 * @param requestParams
+	 */
 	@Override
 	public void submit() {
-		submit(null);//no request params
+	      //check again
+		if (this.sync_async != null &&  this.tap != null) {
+			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
+	  	  	this.submitTapServerRequest(sync, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, this.tap.getText());
+
+	  	  	// Echo of the equivalent script command
+	  	  	aladin.console.printCommand("get TAP("+Tok.quote(this.tapClient.tapLabel)+","+Tok.quote(this.tap.getText())+")");
+		}
 	}
 
 	@Override
@@ -677,10 +811,17 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			if (action.equals(WRITEQUERY)) {
 				this.writeQuery();
 			} else if (action.equals(ADDWHERECONSTRAINT)) {
-				Vector<TapTableColumn> columnMetaData = getSelectedTableColumns();
-				WhereGridConstraint columnConstraint = new ColumnConstraint(this, columnMetaData);
-				addWhereConstraint(columnConstraint);
-				writeQuery();
+				try {
+					Vector<TapTableColumn> columnMetaData = getSelectedTablesColumns();
+					WhereGridConstraint columnConstraint = new ColumnConstraint(this, columnMetaData);
+					addWhereConstraint(columnConstraint);
+					writeQuery();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					if (Aladin.levelTrace >= 3) e.printStackTrace();
+					Aladin.error(this, e.getMessage());
+					return;
+				}
 			} else if (action.equals(REMOVEWHERECONSTRAINT)) {
 				JButton button = ((JButton) source);
 		    	JPanel thisComponent = (JPanel) button.getParent();
@@ -709,7 +850,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		            return;
 				}
 				WhereGridConstraint positionConstraint = new PositionConstraint(this, Util.myRound(coo[0].getText(), 5),
-						Util.myRound(coo[1].getText(), 5), Util.myRound(rad[0].getText(), 5), this.raColumnName,
+						Util.myRound(coo[1].getText(), 5), Util.myRound(rad[0].getText(), 5), this.selectedTableName, this.raColumnName,
 						this.decColumnName);
 				addWhereConstraint(positionConstraint);
 				writeQuery();
@@ -717,6 +858,12 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 				checkQueryFlagMessage();
 			} else if (action.equals(OPEN_SET_RADEC)) {
 				this.tapClient.tapManager.setRaDecForTapServer(this, selectedTableName);
+			} else if (action.equals(JOIN_TABLE)) {
+				if (this.joinPanel == null) {
+					this.joinPanel = new JoinFacade(aladin, this);
+				}
+				this.tapClient.tapManager.showOnJoinFrame(this.joinPanel);
+				this.tapClient.tapManager.loadForeignKeyRelationsForSelectedTable(this.tapClient, this.joinPanel, selectedTableName);
 			}
 		} else if(source instanceof JCheckBox){// check command- SELECTALL
 			Aladin.trace(3, "actionperformed for SELECTALL was triggered");
@@ -731,9 +878,100 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 	}
 	
+	public TapTable getSuitableJoinTable() {
+		// TODO Auto-generated method stub
+		TapTable potentialJoinTable = null;
+		TapTable chosenTable = this.tapClient.tablesMetaData.get(selectedTableName);
+		if (chosenTable.foreignKeyColumns != null && !chosenTable.foreignKeyColumns.isEmpty()) {
+			String potentialJoinTableName = chosenTable.foreignKeyColumns.get(0).getFrom_table();
+			potentialJoinTable = this.tapClient.tablesMetaData.get(potentialJoinTableName);
+		} else {
+			String joinTableName = getNextUnselectedTableName();
+			potentialJoinTable = this.tapClient.tablesMetaData.get(joinTableName);
+		}
+		return potentialJoinTable;
+	}
+	
+	/**
+	 * Tables are already sorted to the understanding of metadata. Method tries to choose one which is not the selected table in the main gui
+	 * @return
+	 */
+	public String getNextUnselectedTableName() {
+		String notSelectedTopTable = selectedTableName;
+		Vector<String> tables = this.getTableNames();
+		for (String table : tables) {
+			if (selectedTableName.equalsIgnoreCase(table)) {
+				continue;
+			} else {
+				notSelectedTopTable = table;
+				break;
+			}
+		}
+		return notSelectedTopTable;
+	}
+	
+	/**
+	 * Just the selected table's columns in the main gui
+	 * @return
+	 */
 	public Vector<TapTableColumn> getSelectedTableColumns() {
 		// TODO Auto-generated method stub
 		return this.tapClient.tablesMetaData.get(selectedTableName).getColumns();
+	}
+	
+	public static Vector<TapTableColumn> getPotentialRaOrDecColumns(Vector<TapTableColumn> allColumns) {
+		Vector<TapTableColumn> displayColumns = new Vector<TapTableColumn>();
+		for (TapTableColumn tapTableColumn : allColumns) {
+			if (tapTableColumn.isNumeric()) {
+				displayColumns.add(tapTableColumn);
+			}
+		}
+		return displayColumns;
+	}
+	
+	/**
+	 * All the selected tables's columns(main plu join)
+	 * @return
+	 * @throws Exception 
+	 */
+	public Vector<TapTableColumn> getSelectedTablesColumns() throws Exception {
+		// TODO Auto-generated method stub
+		Vector<TapTableColumn> displayColumns = new Vector<TapTableColumn>();
+		if (this.joinPanel != null && this.joinPanel.constraints != null && !this.joinPanel.constraints.isEmpty()) {
+			displayColumns.addAll(this.getSelectedTableColumns());
+//			this.raColumnName = this.joinPanel.mainRaColumnName;
+//			this.decColumnName = this.joinPanel.mainDecColumnName;
+			
+			for (JoinConstraint joinConstraint : this.joinPanel.constraints) {
+				Vector<TapTableColumn> columnNames = joinConstraint.columns;
+				if (columnNames == null) {
+					throw new Exception(JoinFacade.ERROR_NOJOINCOLUMNS);
+				}
+				displayColumns.addAll(joinConstraint.columns);
+			}
+		} else {
+			displayColumns = this.tapClient.tablesMetaData.get(selectedTableName).getColumns();
+//			this.raColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getRaColumnName();
+//			this.decColumnName = this.tapClient.tablesMetaData.get(selectedTableName).getDecColumnName();
+		}
+		return displayColumns;
+	}
+	
+	public String getRelevantAlias(TapTableColumn column) {
+		// TODO Auto-generated method stub
+		String alias = null;
+		TapTable table = this.tapClient.tablesMetaData.get(column.getTable_name());
+		if (table != null) {
+			alias = table.getAlias();
+		} else if (this.joinPanel != null && !this.joinPanel.constraints.isEmpty()) {
+			for (JoinConstraint constraint : this.joinPanel.constraints) {
+				if (constraint.hasThisColumn(column)) {
+					alias = constraint.alias;
+					break;
+				}
+			}
+		} 
+		return alias;
 	}
 	
 	protected void createChaine() {

@@ -61,7 +61,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -102,7 +101,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	 */
 	private static final long serialVersionUID = -9113338791629047699L;
 	
-	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP, NODUPLICATESELECTION;
+	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP, NODUPLICATESELECTION, JOINTABLETOOLTIP;
 	public static final String TAPEXDEFAULTMAXROWS_INT = "2000";
 	Map serviceExamples = null;
 	
@@ -187,23 +186,25 @@ public class ServerTapExamples extends DynamicTapForm {
 		selectedTableName = chosenTable.getTable_name();
 		getColumnsToLoad(selectedTableName, this.tapClient.tablesMetaData);
 		
-		Map<String, TapTable> uploadMeta = this.tapClient.tapManager.getUploadedTables();
+		TapManager tapManager = TapManager.getInstance(aladin);
 		
 		TapTable chosenTable2 = null;
-		if (this.tapClient.isUploadAllowed() && uploadMeta != null && !uploadMeta.isEmpty()) {
-			if (secTableChoice == null || !uploadMeta.containsKey(secTableChoice)) {
-				if (uploadMeta.size() > 1) {
-					secondaryTable = uploadMeta.keySet().iterator().next();
+		if (this.tapClient.isUploadAllowed()) {
+			Map<String, TapTable> uploadMeta = tapManager.initUploadFrameAndGetUploadedTables(tapClient);
+			if (uploadMeta != null && !uploadMeta.isEmpty()) {
+				if (secTableChoice == null || !uploadMeta.containsKey(secTableChoice)) {
+					if (uploadMeta.size() > 1) {
+						secondaryTable = uploadMeta.keySet().iterator().next();
+					} else {
+						secondaryTable = null;
+					}
 				} else {
-					secondaryTable = null;
+					secondaryTable = secTableChoice;
 				}
-			} else {
-				secondaryTable = secTableChoice;
+				if (secondaryTable != null) {
+					chosenTable2 = uploadMeta.get(secondaryTable);
+				}
 			}
-		}
-		
-		if (secondaryTable != null) {
-			chosenTable2 = uploadMeta.get(secondaryTable);
 		}
 		
 		setBasics();
@@ -217,7 +218,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		JPanel tablesPanel = null;
 		try {
 			tablesGui = new JComboBox(tables);
-			tablesPanel = getTablesPanel(null, tablesGui, chosenTable, tables, null, true);
+			tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, tables, null, true);
 			tablesPanel.setBackground(this.tapClient.primaryColor);
 			tablesPanel.setFont(BOLD);
 			c.weighty = 0.02;
@@ -232,11 +233,38 @@ public class ServerTapExamples extends DynamicTapForm {
 		    if (this.tapClient.isUploadAllowed()) {
 			    JPanel secondaryTablePanel = new JPanel();
 				secondaryTablePanel.setLayout(new BoxLayout(secondaryTablePanel, BoxLayout.PAGE_AXIS));
-				MutableComboBoxModel uploadModel = (MutableComboBoxModel) this.tapClient.tapManager.getUploadClientModel();
+				MutableComboBoxModel uploadModel = (MutableComboBoxModel) tapManager.getUploadClientModel();
 				
 				addSecondTable = new JCheckBox();
-				addSecondTable.setToolTipText("Join with an uploaded table");
+				addSecondTable.setToolTipText(JOINTABLETOOLTIP);
 				addSecondTable.setEnabled((uploadModel.getSize() > 0));
+				
+//				Vector uploadTableNames = new Vector();
+//				if (uploadMeta != null) {
+//					uploadTableNames.addAll(uploadMeta.keySet());
+//				}
+				secondaryTablesGui = new JComboBox(uploadModel);
+				ArrayList<JComponent> compToPrefix = new ArrayList<JComponent>();
+				compToPrefix.add(addSecondTable);
+				tablesPanel = getTablesPanel(this.tapClient, this, "Join:", secondaryTablesGui, chosenTable2, null, compToPrefix, false);
+				UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.tapClient);
+				secondaryTablesGui.setRenderer(uploadTableRenderer);
+				if (secondaryTablesGui.getSelectedItem() != null) {
+					String uploadTable = (String) secondaryTablesGui.getSelectedItem();
+					String planeName = uploadTableRenderer.getUploadPlaneName((String) secondaryTablesGui.getSelectedItem());
+					secondaryTablesGui.setToolTipText(UploadTablesRenderer.getToolTip(planeName, uploadTable));
+				}
+				tablesPanel.setBackground(this.tapClient.primaryColor);
+				tablesPanel.setFont(BOLD);
+				if (secondaryTable != null) {
+					secondaryTablesGui.setSelectedItem(secondaryTable);
+					addSecondTable.setSelected(true);
+				} else {
+					addSecondTable.setSelected(false);
+					secondaryTablesGui.setEnabled(false);
+				}
+				secondaryTablePanel.add(tablesPanel);
+				
 				addSecondTable.addItemListener(new ItemListener() {
 					@Override
 					public void itemStateChanged(ItemEvent e) {
@@ -253,59 +281,6 @@ public class ServerTapExamples extends DynamicTapForm {
 						regenerateBasicExamplesRepaint();
 					}
 				});	
-//				Vector uploadTableNames = new Vector();
-//				if (uploadMeta != null) {
-//					uploadTableNames.addAll(uploadMeta.keySet());
-//				}
-				secondaryTablesGui = new JComboBox();
-				secondaryTablesGui.setModel(uploadModel);
-//				model.addListDataListener(new ListDataListener() {
-//					
-//					@Override
-//					public void intervalRemoved(ListDataEvent e) {
-//						// TODO Auto-generated method stub
-//						if (((MutableComboBoxModel)e.getSource()).getSize() > 0) {
-//							secondaryTablesGui.setEnabled(true);
-//							secondaryTable = (String) secondaryTablesGui.getSelectedItem();
-//						} else {
-//							secondaryTable = null;
-//							secondaryTablesGui.setEnabled(false);
-//						}
-//						changeTableSelection(selectedTableName);
-//					}
-//					
-//					@Override
-//					public void intervalAdded(ListDataEvent e) {
-//						// TODO Auto-generated method stub
-//						if (((MutableComboBoxModel)e.getSource()).getSize() > 0) {
-//							secondaryTablesGui.setEnabled(true);
-//							secondaryTable = (String) secondaryTablesGui.getSelectedItem();
-//						} else {
-//							secondaryTable = null;
-//							secondaryTablesGui.setEnabled(false);
-//						}
-//						changeTableSelection(selectedTableName);
-//					}
-//					
-//					@Override
-//					public void contentsChanged(ListDataEvent e) {
-//						// TODO Auto-generated method stub
-//						
-//					}
-//				});
-				ArrayList<JComponent> compToPrefix = new ArrayList<JComponent>();
-				compToPrefix.add(addSecondTable);
-				tablesPanel = getTablesPanel("Join:", secondaryTablesGui, chosenTable2, null, compToPrefix, false);
-				tablesPanel.setBackground(this.tapClient.primaryColor);
-				tablesPanel.setFont(BOLD);
-				if (secondaryTable != null) {
-					secondaryTablesGui.setSelectedItem(secondaryTable);
-					addSecondTable.setSelected(true);
-				} else {
-					addSecondTable.setSelected(false);
-					secondaryTablesGui.setEnabled(false);
-				}
-				secondaryTablePanel.add(tablesPanel);
 				
 				c.weightx = 0.12;
 				c.weighty = 0.02;
@@ -380,7 +355,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	    add(containerPanel);
 	    
 	    formLoadStatus = TAPFORM_STATUS_LOADED;
-	    this.tapClient.tapManager.initTapExamples(this);
+	    tapManager.initTapExamples(this);
 	}
 	
 	public void loadTapExamples() {
@@ -434,7 +409,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				Aladin.error(this, CHECKQUERY_ISBLANK);
 				return;
 			}
-			Map<String, Object> requestParams = null;
+			/*Map<String, Object> requestParams = null; //added off in  updateUploadedTablesToParser. keeping for ref
 			if (secondaryTable != null) {
 				TapManager tapManager = TapManager.getInstance(aladin);
 				if (!this.tapClient.tablesMetaData.containsKey(secondaryTable)) {
@@ -452,7 +427,7 @@ public class ServerTapExamples extends DynamicTapForm {
 						}
 					}
 				}
-			}
+			}*/
 			
 			String fullQuery = tapQuery.toUpperCase();
 			if (!fullQuery.startsWith("SELECT ")) {
@@ -460,7 +435,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				Aladin.trace(3,tapQuery);
 			}
 			boolean sync = this.sync_async.getSelectedItem().equals("SYNC");
-	  	  	this.submitTapServerRequest(sync, requestParams, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, tapQuery);
+	  	  	this.submitTapServerRequest(sync, this.tapClient.tapLabel, this.tapClient.tapBaseUrl, tapQuery);
 		}
 		
 	}
@@ -520,6 +495,12 @@ public class ServerTapExamples extends DynamicTapForm {
 						secondaryTable = chosen;
 					}
 					addSecondTable.setEnabled(true);
+					if (secondaryTablesGui.getSelectedItem() != null) {
+						String uploadTable = (String) secondaryTablesGui.getSelectedItem();
+						UploadTablesRenderer uploadTableRenderer = (UploadTablesRenderer) secondaryTablesGui.getRenderer();
+						String planeName = uploadTableRenderer.getUploadPlaneName((String) secondaryTablesGui.getSelectedItem());
+						secondaryTablesGui.setToolTipText(UploadTablesRenderer.getToolTip(planeName, uploadTable));
+					}
 				} else {
 					secondaryTable = null;
 					addSecondTable.setEnabled(false);
@@ -566,8 +547,8 @@ public class ServerTapExamples extends DynamicTapForm {
 		String conesearchtemplate = " where 1=CONTAINS(POINT('ICRS', %s, %s), CIRCLE('ICRS', %s, %s, %s))";
 		String primaryTableSelectAllQuery = String.format(tableSelectAllQuery, max, priTableNameForQuery);
 
-		String priRaColumnName = TapTable.getQueryPart(priTableMetaData.getRaColumnName(), false);
-		String priDecColumnName = TapTable.getQueryPart(priTableMetaData.getDecColumnName(), false);
+		String priRaColumnName = TapTable.getQueryPart(priTableMetaData.getRaColumnName(false), false);
+		String priDecColumnName = TapTable.getQueryPart(priTableMetaData.getDecColumnName(false), false);
 
 		String targetQuery = primaryTableSelectAllQuery + conesearchtemplate;
 		String coneSearchPart = null;
@@ -713,8 +694,8 @@ public class ServerTapExamples extends DynamicTapForm {
 			if (uploadedTables != null) {
 				secTableMetaData = uploadedTables.get(secondaryTable);
 				if (secTableMetaData != null) {
-					secRaColumnName = TapTable.getQueryPart(secTableMetaData.getRaColumnName(), false); 
-					secDecColumnName = TapTable.getQueryPart(secTableMetaData.getDecColumnName(), false);
+					secRaColumnName = TapTable.getQueryPart(secTableMetaData.getRaColumnName(false), false); 
+					secDecColumnName = TapTable.getQueryPart(secTableMetaData.getDecColumnName(false), false);
 					secTableNameForQuery = TapTable.getQueryPart(secondaryTable, true);
 				}
 			}
@@ -885,8 +866,6 @@ public class ServerTapExamples extends DynamicTapForm {
 			}
 		}
 		
-		 
-		
 		/**
 		 * Join queries for target in table2 contained in region of table1
 		 */
@@ -918,8 +897,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				
 				
 				spQuery.append(" AND 1=CONTAINS(POINT('ICRS',")
-						.append(priTableNameForQuery).append(DOT_CHAR).append(priRaColumnName).append(", ")
-						.append(priTableNameForQuery).append(DOT_CHAR).append(priDecColumnName)
+						.append(priRaColumnName).append(", ").append(priDecColumnName)
 						.append("), CIRCLE('ICRS', ").append(grabItX1).append(COMMA_CHAR).append(grabItY1)
 						.append(COMMA_CHAR).append(grabItR1).append("))");
 						
@@ -1119,6 +1097,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		TAPEXDEFAULTMAXROWS = ConfigurationReader.getInstance().getPropertyValue("TAPEXDEFAULTMAXROWS");
 		CHANGESETTINGSTOOLTIP = Aladin.chaine.getString("CHANGESETTINGSTOOLTIP");
 		NODUPLICATESELECTION = Aladin.chaine.getString("NODUPLICATESELECTION");
+		JOINTABLETOOLTIP = Aladin.chaine.getString("JOINTABLETOOLTIP");
 	}
 
 }

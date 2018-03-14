@@ -31,7 +31,6 @@ import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.TAP;
 import static cds.aladin.Constants.TIME;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -52,6 +51,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -645,9 +645,6 @@ public class Server extends JPanel
 
             
             grab.setEnabled(false);
-            if (this.aladinLabel.equalsIgnoreCase(Constants.DATALINK_CUTOUT_FORMLABEL)) {//TODO:change this logic?
-            	grab.setEnabled(true);//deefault true for datalink forms
-			}
             p.add(grab);
          }
 
@@ -1320,8 +1317,8 @@ public void layout() {
 	}
 	
 	public static void appendRangeInvalidMessage(StringBuffer output, String[] range) {
-		String lowerLimitString = (isValidNumberRange(range[0])) ? EMPTYSTRING: range[0];
-		String upperLimitString = (isValidNumberRange(range[0])) ? EMPTYSTRING: range[1];
+		String lowerLimitString = (isValidNumberRange(range[0])) ? range[0]: EMPTYSTRING;
+		String upperLimitString = (isValidNumberRange(range[1])) ? range[1]: EMPTYSTRING;
 		if (!(lowerLimitString.isEmpty() && upperLimitString.isEmpty())) {
 			output.append(" within limits. Valid range: ").append(lowerLimitString);
 			output.append(RANGE_DELIMITER).append(upperLimitString);
@@ -2061,7 +2058,7 @@ public void layout() {
     */
 	public void checkQueryFlagMessage() {
 		try {
-			if (this.checkQuery() != null) {
+			if (this.checkQuery(null) != null) {
 				Aladin.info(this, CHECKQUERY_SUCCESS);
 			}
 		} catch (UnresolvedIdentifiersException uie) {
@@ -2081,7 +2078,7 @@ public void layout() {
 	 * @return the adql query
 	 * @throws UnresolvedIdentifiersException 
 	 */
-	public ADQLQuery checkQuery() throws UnresolvedIdentifiersException {
+	public ADQLQuery checkQuery(Map<String, Object> requestParams) throws UnresolvedIdentifiersException {
 		if (tap.getText().isEmpty()) {
 			Aladin.error(this, CHECKQUERY_ISBLANK);
 			return null;
@@ -2111,10 +2108,11 @@ public void layout() {
 	 * @param name
 	 * @param url
 	 */
-	public void submitTapServerRequest(boolean sync, Map<String, Object> requestParams, String name, String url, String queryString) {
+	public void submitTapServerRequest(boolean sync, String name, String url, String queryString) {
 		ADQLQuery query = null;
+		Map<String, Object> requestParams = new HashMap<String, Object>();
 		try {
-			query = checkQuery();
+			query = checkQuery(requestParams);
 		} catch (UnresolvedIdentifiersException e) {
 			//error is handled in the respective checkQuery() methods
 			ADQLParser syntaxParser = new ADQLParser();
@@ -2133,9 +2131,9 @@ public void layout() {
 						/*+ "\n ADQLQuery: " + query.toADQL()*/ + "\n requestParams: " + requestParams);
 				if (sync) {
 					//Spec: Synchronous requests may issue a redirect to the result using HTTP code 303: See Other.
-					tapManager.fireSync(this, url, queryString, query, requestParams);
+					tapManager.fireSync(this, url, queryString, requestParams);
 				} else {
-					tapManager.fireASync(this, url, queryString, query, requestParams);
+					tapManager.fireASync(this, url, queryString, requestParams);
 				}
 				aladin.glu.log(TAP, "Submit query at "+this.getClass().getSimpleName());//log
 			} catch (Exception e) {
@@ -2144,6 +2142,11 @@ public void layout() {
 				Aladin.error(aladin.dialog, "Server error!");
 			}
 		}
+	}
+	
+	public void displayWarning(Server server, int requestNumber, String message) {
+		Aladin.error(aladin.dialog, message);
+		server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
 	}
 	
 	public void highlightQueryError(Highlighter highlighter, adql.parser.ParseException pe) {
