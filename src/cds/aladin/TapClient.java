@@ -182,7 +182,6 @@ public class TapClient{
 						if (!editing) {
 							String selected = (String) model.getSelectedItem();
 							serverToDisplay = getServerToDisplay(selected);
-							TapClient.this.tapManager.closeJoinFacade();
 							if (Aladin.levelTrace >= 3) System.out.println("contentsChanged" + TapClient.this.mode + "  " + selected);
 							if (TapClient.this.mode == TapClientMode.TREEPANEL) {
 								TapClient.this.tapManager.showTapPanelFromTree(TapClient.this.tapLabel, serverToDisplay);

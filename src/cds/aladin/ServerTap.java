@@ -67,6 +67,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -861,6 +863,30 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			} else if (action.equals(JOIN_TABLE)) {
 				if (this.joinPanel == null) {
 					this.joinPanel = new JoinFacade(aladin, this);
+					
+					this.addAncestorListener(new AncestorListener() {
+						
+						@Override
+						public void ancestorRemoved(AncestorEvent event) {
+							// TODO Auto-generated method stub
+							if (!ServerTap.this.isShowing()) {
+								if (ServerTap.this.joinPanel.isShowing()) {
+									ServerTap.this.tapClient.tapManager.closeMyJoinFacade(joinPanel);
+								}
+							}
+						}
+						
+						@Override
+						public void ancestorMoved(AncestorEvent event) {
+							// TODO Auto-generated method stub
+						}
+						
+						@Override
+						public void ancestorAdded(AncestorEvent event) {
+							// TODO Auto-generated method stub
+							//good idea to show join facade? perhaps not if user has opened another one from dir tree..
+						}
+					});
 				}
 				this.tapClient.tapManager.showOnJoinFrame(this.joinPanel);
 				this.tapClient.tapManager.loadForeignKeyRelationsForSelectedTable(this.tapClient, this.joinPanel, selectedTableName);

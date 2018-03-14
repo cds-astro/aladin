@@ -88,12 +88,14 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.MutableComboBoxModel;
+import javax.swing.SwingUtilities;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
@@ -2605,10 +2607,12 @@ public class TapManager {
 		this.joinFrame.show(panel, JoinFacade.JOINFRAMETITLE);
 	}
 	
-	public void closeJoinFacade() {
+	public void closeMyJoinFacade(JoinFacade joinPanel) {
 		// TODO Auto-generated method stub
 		if (this.joinFrame != null && this.joinFrame.isVisible()) {
-			this.joinFrame.setVisible(false);
+			if ((JFrame) SwingUtilities.getAncestorOfClass(JFrame.class, joinPanel) == this.joinFrame) {
+				this.joinFrame.setVisible(false);
+			}
 		}
 	}
 	
