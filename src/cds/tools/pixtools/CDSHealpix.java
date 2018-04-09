@@ -34,8 +34,11 @@ import healpix.essentials.Vec3;
 
 /** Wrapper Healpix CDS pour ne pas réinitialiser systématiquement l'objet HealpixBase pour chaque NSIDE
  * @author Pierre Fernique [CDS] with the help of Martin Reinecke
+ * @version 1.1 Avril 2018 - passage librairie FX
  */
 public final class CDSHealpix {
+   
+   static public boolean FX = false;
 
    static final public int MAXORDER=29;
 
@@ -55,13 +58,17 @@ public final class CDSHealpix {
    }
 
    static public double[] pix2ang_nest(long nside,long ipix) throws Exception {
+      if( FX ) return pix2ang_nestFX(nside,ipix);
       Pointing res = hpxBase[ init(nside) ].pix2ang(ipix);
       return new double[]{ res.theta, res.phi };
    }
+   static public double[] pix2ang_nestFX(long nside,long ipix) throws Exception { return null; }
 
    static public long ang2pix_nest(long nside,double theta, double phi) throws Exception {
+      if( FX ) return ang2pix_nestFX(nside,theta,phi);
       return hpxBase[ init(nside) ].ang2pix(new Pointing(theta,phi));
    }
+   static public long ang2pix_nestFX(long nside,double theta, double phi) throws Exception { return 0L; }
 
    // ATTNENTION LE RAYON EST EN RADIAN
    static public long[] query_disc(long nside,double ra, double dec, double radius) throws Exception {
@@ -69,24 +76,20 @@ public final class CDSHealpix {
    }
 
    static public long[] query_disc(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
+      if( FX ) return query_discFX(nside,ra,dec,radius,inclusive);
       int order = init(nside);
-      
-//      // La totalité du ciel ? Ne fonctionne pas avec la lib HEALPix,
-//      // je le fait à la main
-//      if( radius>=Math.toRadians(180) ) {
-//         long [] res = new long[ (int)(12*nside*nside) ];
-//         for( int i=0; i<res.length; i++ ) res[i]=i;
-//         return res;
-//      }
-      
       RangeSet list = inclusive ? hpxBase[order].queryDiscInclusive(pointing(ra,dec),radius,4)
             : hpxBase[order].queryDisc(pointing(ra,dec),radius);
       if( list==null ) return new long[0];
       return list.toArray();
    }
+   static public long[] query_discFX(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
+      return null;
+   }
 
    static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
-      int order = init(nside);
+      if( FX ) return query_polygonFX(nside,cooList);
+     int order = init(nside);
       Pointing[] vertex = new Pointing[cooList.size()];
       int i=0;
       for(double [] coo : cooList) vertex[i++]=pointing(coo[0], coo[1]);
@@ -94,6 +97,7 @@ public final class CDSHealpix {
       if( list==null ) return new long[0];
       return list.toArray();
    }
+   static public long[] query_polygonFX(long nside,ArrayList<double[]>cooList) throws Exception { return null; }
 
 
    /** The Constant cPr. */
@@ -115,6 +119,7 @@ public final class CDSHealpix {
 
    static final private int [] A = { 3, 2, 0, 1 };
    static public double[][] corners(long nside,long npix) throws Exception {
+      if( FX ) return cornersFX(nside,npix);
       Vec3[] tvec = hpxBase[ init(nside) ].boundaries(npix,1);
       double [][] corners = new double[tvec.length][2];
       for (int i=0; i<tvec.length; ++i) {
@@ -125,8 +130,10 @@ public final class CDSHealpix {
       }
       return corners;
    }
+   static public double[][] cornersFX(long nside,long npix) throws Exception { return null; }
 
    static public double[][] borders(long nside,long npix,int step) throws Exception {
+      if( FX ) return bordersFX(nside,npix,step);
       Vec3[] tvec = hpxBase[ init(nside) ].boundaries(npix,step);
       double [][] borders = new double[tvec.length][2];
       for (int i=0; i<tvec.length; ++i) {
@@ -136,18 +143,25 @@ public final class CDSHealpix {
       }
       return borders;
    }
+   static public double[][] bordersFX(long nside,long npix,int step) throws Exception { return null; }
 
    static public long [] neighbours(long nside, long npix) throws Exception  {
+      if( FX ) return neighbours(nside,npix);
       return hpxBase[ init(nside) ].neighbours(npix);
    }
+   static public long [] neighboursFX(long nside, long npix) throws Exception  { return null; }
 
    static public long nest2ring(long nside, long npix) throws Exception  {
+      if( FX ) return nest2ringFX(nside,npix);
       return hpxBase[ init(nside) ].nest2ring(npix);
    }
+   static public long nest2ringFX(long nside, long npix) throws Exception  { return 0L; }
 
    static public long ring2nest(long nside, long npix) throws Exception  {
+      if( FX ) return ring2nestFX(nside,npix);
       return hpxBase[ init(nside) ].ring2nest(npix);
    }
+   static public long ring2nestFX(long nside, long npix) throws Exception  { return 0L; }
 
    /** Voir Healpix documentation */
    static public double pixRes(long nside) {
@@ -208,6 +222,7 @@ public final class CDSHealpix {
     * @throws Exception
     */
    static public HealpixMoc createHealpixMoc(ArrayList<double[]> radecList, int order ) throws Exception {
+      if( FX ) return createHealpixMocFX(radecList,order);
       HealpixMoc moc=null;
 
       ArrayList<Vec3> cooList = new ArrayList<Vec3>();
@@ -223,6 +238,7 @@ public final class CDSHealpix {
       moc.toHealpixMoc();
       return moc;
    }
+   static public HealpixMoc createHealpixMocFX(ArrayList<double[]> radecList, int order ) throws Exception { return null; }
 
 
 //   public static void main(String argv[]) {

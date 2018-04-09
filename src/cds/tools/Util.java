@@ -152,7 +152,7 @@ public final class Util {
       // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
       if( conn instanceof HttpURLConnection ) {
          HttpURLConnection http = (HttpURLConnection)conn;
-         http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
+         http.setRequestProperty("User-Agent", "Aladin/"+Aladin.VERSION);
          http.setRequestProperty("Accept-Encoding", "gzip");
       }
 
@@ -2079,14 +2079,23 @@ public final class Util {
       }
    }
    
+   static private long Y =  (long)( 86400 * 365.25) * 1000L;
+   static private long D =  86400L * 1000L;
+   static private long H =  3600L * 1000L;
+   static private long M =  60L * 1000L;
+   
    /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
    static public String getTemps(long ms) { return getTemps(ms,false);  }
    static public String getTemps(long ms,boolean round) {
       StringBuffer s = new StringBuffer();
-      if( ms>86400000 ) { long j = ms/86400000; ms -= j*86400000; s.append(j+"j"); }
-      if( ms>3600000 ) { long h = ms/3600000; ms -= h*3600000; if( s.length()>0 ) s.append(' '); s.append(h+"h"); }
-      if( ms>60000 ) { long m = ms/60000; ms -= m*60000; if( s.length()>0 ) s.append(' '); s.append(m+"m"); }
-      if( s.length()>0 ) s.append(' '); s.append( (round ? ""+ms/1000 : ""+ms/1000.)+"s");
+      if( ms>Y ) { long j = ms/Y; ms -= j*Y; s.append(j+"y"); }
+      if( ms>D ) { long j = ms/D; ms -= j*D; if( s.length()>0 ) s.append(' '); s.append(j+"d"); }
+      if( ms>H ) { long h = ms/H; ms -= h*H; if( s.length()>0 ) s.append(' '); s.append(h+"h"); }
+      if( ms>M ) { long m = ms/M; ms -= m*M; if( s.length()>0 ) s.append(' '); s.append(m+"m"); }
+      if( ms>0 ) {
+         if( s.length()>0 ) s.append(' '); 
+         s.append( (round ? ""+ms/1000 : ""+ms/1000.)+"s");
+      }
       return s.toString();
    }
 

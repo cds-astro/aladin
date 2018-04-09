@@ -1959,7 +1959,7 @@ public final class Glu implements Runnable {
 	return number;
 }
 
-// Split a string of arguments, blank or Tab separated, possibly quoted (simple ou double)
+   // Split a string of arguments, blank or Tab separated, possibly quoted (simple ou double)
    static private String [] split(String s) {
       Tok tok = new Tok(s," \t");
       String [] rep = new String[ tok.countTokens() ];
@@ -2760,7 +2760,7 @@ public final class Glu implements Runnable {
          String key = Configuration.LASTGLU+(i++);
          bw.write(Util.align(key, 20) + gh.getSerialized() );
          bw.newLine();
-         if( i>20 ) break;
+         if( i>30 ) break;
       }
    }
    

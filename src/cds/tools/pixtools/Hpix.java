@@ -37,7 +37,7 @@ import cds.moc.MocCell;
  * @author Pierre Fernique [CDS]
  * @version 1.0 March 2011
  */
-public final class Hpix extends MocCell {
+public class Hpix extends MocCell {
    
    private int frame;       // Le système de coordonnées (Localisation.GAL, Localisation.ECLIPTIC, Localisation.ICRS)
    
@@ -47,6 +47,8 @@ public final class Hpix extends MocCell {
    private int nNull;              // Nombre de coins ou corners indéfinis (derrière le ciel)
    
    private boolean computeCorners; // True si corners[] a déjà été calculé
+   
+   public Hpix() { super(); }
    
    /** Création à partir d'une chaine selon la syntaxe "order/npix" */
    public Hpix(String s) throws Exception {

@@ -147,6 +147,7 @@ public class BuilderIndex extends Builder {
          try {
             Fits file = new Fits();
             file.loadHeaderFITS(img);
+            if( file.getCalib()==null ) throw new Exception("null calib");
             long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
             order = (Util.order((int) nside) - context.getTileOrder() );
             if( order<3 ) order=3;

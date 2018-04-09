@@ -117,6 +117,7 @@ public class Context {
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
    protected boolean notouch=false;          // true si on ne doit pas modifier la date du hips_release_date
+   protected boolean mirrorCheck=false;      // true si on relance un hipsgen MIRROR => pas de vérif sur les tuiles déjà là
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
@@ -215,6 +216,7 @@ public class Context {
    public String getFrameCode() { return getFrameCode( getFrame() ); }
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
+   public boolean getMirrorCheck() { return mirrorCheck; }
    public String getOutputPath() { return outputPath; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_HPXFINDER); }
    public String getImgEtalon() { return imgEtalon; }
@@ -251,6 +253,7 @@ public class Context {
    public boolean isCDSLint() { return cdsLint; }
 
    // Setters
+   public void setMirrorCheck(boolean flag) { this.mirrorCheck = flag; }
    public void setLive(boolean flag) { live=flag; }
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
@@ -338,6 +341,7 @@ public class Context {
    
    // retourne l'identificateur du HiPS à partir des propriétés passées en paramètre
    public String getIdFromProp(MyProperties prop) {
+      if( prop==null ) return null;
       String s = prop.getProperty(Constante.KEY_CREATOR_DID);
       if( s!=null ) return s;
       s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
@@ -1385,7 +1389,7 @@ public class Context {
 
    // Demande d'affichage des stats (dans le TabJpeg)
    protected void showMirrorStat(int statNbFile, long cumul, long lastCumulPerSec,
-         long cTime,int statNbThread,int statNbThreadRunning) {
+         long cTime,int statNbThread,int statNbThreadRunning, long timeIP) {
       long nbLowCells = getNbLowCells();
 
       double pourcent = nbLowCells<=0 ? 0 : (double)statNbFile/nbLowCells;
@@ -1402,7 +1406,8 @@ public class Context {
       else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
             +pourcentNbCells+"endsIn:"+Util.getTemps(endsIn,true)
             +" speed:"+ debitI + " avg:"+debit +" for "+Util.getUnitDisk(cumul)
-            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
+            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
+            +(timeIP==0 ? "":" IPTime:"+timeIP+"ms");
 
       stat(s);
       setProgress(statNbFile,nbLowCells);
@@ -1878,6 +1883,7 @@ public class Context {
 
       setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
+      if( minOrder!=-1  ) setPropriete(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
       // L'url
@@ -2021,7 +2027,7 @@ public class Context {
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
       prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");
-      if( minOrder>3 ) prop.setProperty(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
+      if( minOrder!=-1  ) prop.setProperty(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
       if( !notouch ) prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, getNow());
       prop.setProperty(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
       prop.setProperty(Constante.KEY_HIPS_BUILDER, "Aladin/HipsGen "+Aladin.VERSION);

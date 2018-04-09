@@ -729,30 +729,37 @@ public class MultiMoc implements Iterable<MocItem> {
       
       // L'ID est donné explicitement (ex: CDS/P/DSS2/color)
       String id = prop.getProperty("ID");
-      if( id!=null ) return id;
-      
-      // l'ID doit être construit à partir des différents champs possibles
-      id = prop.get("creator_did");
-      if( id==null ) id = prop.get("publisher_did");
       if( id==null ) {
-         String o =  prop.get("obs_id");
-         if( o==null && filename!=null ) id = "ivo://"+filename.replace("_","/");
-         else {
-            if( o==null ) o="id"+(System.currentTimeMillis()/1000);
-            String p = prop.get("creator_id");
-            if( p==null ) p = prop.get("publisher_id");
-            if( p==null ) {
-               return null;
-//               p = "ivo://UNK.AUT";
+
+         // l'ID doit être construit à partir des différents champs possibles
+         id = prop.get("creator_did");
+         if( id==null ) id = prop.get("publisher_did");
+         if( id==null ) {
+            String o =  prop.get("obs_id");
+            if( o==null && filename!=null ) id = "ivo://"+filename.replace("_","/");
+            else {
+               if( o==null ) o="id"+(System.currentTimeMillis()/1000);
+               String p = prop.get("creator_id");
+               if( p==null ) p = prop.get("publisher_id");
+               if( p==null ) {
+                  return null;
+                  //               p = "ivo://UNK.AUT";
+               }
+               id = p+"/"+o;
             }
-            id = p+"/"+o;
          }
+         // On enlève le préfixe ivo://
+         if( id.startsWith("ivo://") ) id = id.substring(6);
+
+         // On remplace les éventuels ? par des / (merci Markus !)
+         id = id.replace('?', '/');
       }
-      // On enlève le préfixe ivo://
-      if( id.startsWith("ivo://") ) id = id.substring(6);
       
-      // On remplace les éventuels ? par des / (merci Markus !)
-      id = id.replace('?', '/');
+      // On met en minuscules l'authority
+//      int i = id.indexOf('/');
+//      if( i==-1 ) i=id.length();
+//      id = id.substring(0,i).toLowerCase()+id.substring(i);
+      
       return id;
    }
    

@@ -66,7 +66,7 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -78,6 +78,8 @@ import javax.swing.KeyStroke;
 
 import cds.astro.AstroMath;
 import cds.moc.Healpix;
+import cds.moc.TMoc;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import healpix.essentials.FastMath;
@@ -293,6 +295,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       PointD p=null;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
       int mult=1;
+      
+      // Changement d'échelle de la bande temporelle
+      if( tpsInTpsArea ) {
+         tpsIncrZoom( e.getWheelRotation() );
+         aladin.view.repaintAll();
+         return;
+      }
       
       // Pour éviter un View.quickSimbadOnReticle(...) intempestif
       lastMove=null;
@@ -1543,24 +1552,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected Image getImage(int w, int h) { return getImage(w,h,true); }
    protected Image getImage(int w, int h, boolean withOverlays) {
 
-      // Si on est en mode script, il faut creer manuellement l'image
-      // de la vue. La taille sera fonction de l'image de base
-      //      if( Aladin.NOGUI ) {
-      //         if( isFree() ) return null;
-      //         if( w==-1 || h==-1 ) {
-      //            setDimension(((PlanImage)pref).width,((PlanImage)pref).height);
-      //            setZoomXY(1, -1, -1);
-      //         } else setDimension(w,h);
-      //      }
+      // Si on est en mode script, il faut creer manuellement l'image de la vue. 
       BufferedImage img = new BufferedImage(rv.width, rv.height,
             pref.isImage() && ((PlanImage)pref).isTransparent() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
       Graphics2D g = (Graphics2D)img.getGraphics();
       if( aladin.NOGUI ) {
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
-         getImgView(g,pi);
+         getImgView(pi);
 
       }
-      drawBackground(g);
+      drawBackground(g,rv.width, rv.height);
 
       // Tout ?
       if( withOverlays ) {
@@ -1569,7 +1570,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // ou uniquement les images
       } else paintOverlays(g,null,0,0,true,0x1);
-
+      
       aladin.waitImage(img);
       //      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
       //      if( aladin.NOGUI ) aladin.command.syncNeedRepaint=false;
@@ -1948,6 +1949,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       mousePressed1(e.getX(),e.getY(),e);
    }
 
+   private int tpsXDrag=-1,tpsYDrag=-1;
    private int xDrag=-1,yDrag=-1;
    private boolean rainbowUsed=false;
 
@@ -1969,7 +1971,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          xDrag=e.getX();
          yDrag=e.getY();
       }
-
+      
       boolean boutonDroit = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 && fullScreen;
       int tool = getTool(e);
       boolean flagshift = e.isShiftDown() ;
@@ -1992,6 +1994,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             rainbow.startDrag(x,y);
          }
          repaint();
+      }
+      
+      // Dans la bande temporelle ?
+      if( tpsInTpsArea ) {
+         tpsXDrag=e.getX();
+         tpsYDrag=e.getY();
+
       }
 
       // Gestion de l'outil de rainbow filter
@@ -2023,6 +2032,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( tool==ToolBox.SELECT  || tool==-1  || tool==ToolBox.PAN  || tool==ToolBox.CROP ) {
+         
+         // Dans la bande temporelle ?
+         if( tpsInTpsArea ) {
+            tpsXDrag=e.getX();
+            tpsYDrag=e.getY();
+         }
 
          if( !isProjSync ) {
             if( !flagshift && (!selected || !view.isMultiView()) ) {
@@ -2444,6 +2459,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isFullScreen() && widgetControl!=null && widgetControl.mouseReleased(e) ) {
          repaint(); return;
       }
+      
+      // Dans la zone des graphiques temporels ?
+      tpsInTpsArea=inTpsArea(e.getX(),e.getY());
+
       mouseReleased1(e.getX(),e.getY(),e);
       if( createCoteDist() ) repaint();
    }
@@ -2451,6 +2470,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public void mouseReleased1(double x, double y,MouseEvent e) {
 
       //      if( Aladin.levelTrace>=3 ) testConvertion(x,y);
+      
+      // fin du déplacement de la bande temporelle
+      if( tpsInTpsArea ) {
+         tpsInTpsArea=false;
+         tpsXDrag=tpsYDrag=-1;
+         mousePressed1(x, y, e);
+         return;
+      }
 
       calque.resetDrawFastDetection();
 
@@ -2462,7 +2489,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( hasRainbow() && rainbow.endDrag() ) repaint();
       if( rainbowF!=null && rainbowF.endDrag() ) repaint();
       if( rainbowUsed ) return;
-
+      
+      if( tpsInTpsArea ) { flagClicAndDrag=false; repaint(); return; }
+      
       if( flagSimRepClic )  {
          flagSimRepClic=false;
          view.simRep.couleur = Color.red; //MCanvas.C2;
@@ -3014,12 +3043,22 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             return;
          }
       }
+      
+      flagClicAndDrag=true;
+      
+      // Déplacement horizontale de la bande temporelle
+      if( tpsInTpsArea && tpsXDrag!=-1) {
+         tpsMove(x-tpsXDrag, y-tpsYDrag);
+         tpsXDrag=x; tpsYDrag=y;
+         aladin.view.newView();
+         aladin.view.repaintAll();
+         return;
+      }
 
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
       boolean isProjSync = isProjSync();
 
-      flagClicAndDrag=true;
 
       if( !isProjSync ) {
          if( tool==ToolBox.PAN && e.isShiftDown() && selected ) aladin.view.selectCompatibleViews();
@@ -3345,7 +3384,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isFullScreen() && widgetControl!=null && widgetControl.mouseMoved(e) ) {
          repaint(); return;
       }
+      
       if( aladin.localisation.isPopupShown() ) return;
+      
+      // Dans la zone des graphiques temporels ?
+      tpsInTpsArea=inTpsArea(e.getX(),e.getY());
+      
       mouseMoved1(e.getX(),e.getY(),e);
    }
    
@@ -3404,6 +3448,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( tool==ToolBox.SELECT || tool==ToolBox.PAN ) {
+         
+         if( tpsInTpsArea ) setTemporelLabel( getTpsUnderMouse() );
          
          // (thomas) affichage dans l'arbre des images disponibles
          vs.showAvailableImages(x,y);
@@ -3576,9 +3622,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( flagOnFirstLine ) {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
             } else if( flagRollable || inNE((int)x,(int)y) && pref instanceof PlanBG ) {
-               if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
+               if( oc!=Aladin.TURNCURSOR && !tpsInTpsArea ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( view.isSimbadOrVizieRPointing() ) {
-               if( oc!=Aladin.LOOKCURSOR ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));
+               if( oc!=Aladin.LOOKCURSOR && !tpsInTpsArea ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));
             } else if( trouve ) {
                if( oc!=Aladin.HANDCURSOR ) Aladin.makeCursor(this,(oc=Aladin.HANDCURSOR));
             } else if( flagMarge ) {
@@ -3653,6 +3699,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       g.setClip(a,3,w-20,13);
       g.drawImage(imgbuf,0,0,this);
       drawPixelInfo(g);
+
       g.dispose();
    }
 
@@ -4529,12 +4576,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Preparation de l'image.
     * Prepare l'image de la vue courante en fonction du plan
     * de base et du zoom.
-    * @param gr Le contexte graphique servira a afficher
-    *          un eventuel message d'attente, ou null sinon
     * @param p le plan concerné
     * @return <I>true</I> si l'[iamge est prete, <I>false</I> sinon
     */
-   protected boolean getImgView(Graphics gr,PlanImage p) {
+   protected boolean getImgView( PlanImage p) {
       try {
          int [] nPixelsRGB=null;
          byte [] nPixels=null;
@@ -4728,33 +4773,45 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Retourne true si la vue est plus grande que l'image (présence de bords) */
    protected boolean hasBord() { return flagBord; }
+   
+   protected Color getCouleurFond() { return couleurFond; }
+   private Color couleurFond=null;
 
    /** Remplissage du fond suivant la bonne couleur */
-   protected void drawBackground(Graphics g) {
-      if( g==null ) return;
+   protected void drawBackground(Graphics g) { drawBackground(g,getWidth(),getHeight()); }
+   protected void drawBackground(Graphics g, int w, int h) {
+      if( g==null )  return;
+      
+      if( aladin.NOGUI ) {
+         couleurFond = Color.white;
+         g.setColor( couleurFond );
+         g.fillRect(0,0,w,h);
+         return;
+      }
       
       if( aladin.isCinema() ) {
          aladin.makeCursor(this, aladin.BLANKCURSOR );
-         g.setColor(Color.black);
-         g.fillRect(0,0,getWidth(),getHeight());
+         g.setColor(couleurFond=Color.black);
+         g.fillRect(0,0,w,h);
          return;
       }
       try {
          if( pref!=null && pref.colorBackground!=null) {
-            g.setColor(pref.colorBackground);
+            g.setColor(couleurFond=pref.colorBackground);
          } else {
-            g.setColor( pref!=null && (pref.type==Plan.IMAGE || pref.type==Plan.IMAGEHUGE)
+            couleurFond = pref!=null && (pref.type==Plan.IMAGE || pref.type==Plan.IMAGEHUGE)
                   && pref.active
-                  && ((PlanImage)pref).video==PlanImage.VIDEO_NORMAL ? Aladin.COLOR_BACKGROUND : BGD );
+                  && ((PlanImage)pref).video==PlanImage.VIDEO_NORMAL ? Aladin.COLOR_BACKGROUND : BGD;
+            g.setColor( couleurFond );
          }
-         g.fillRect(1,1,getWidth()-2,getHeight()-2);
+         g.fillRect(1,1,w-2,h-2);
 
          if( pref!=null && pref instanceof PlanBG && pref.active ) {
             ((PlanBG)pref).drawBackground(g, this);
          }
       } catch( Exception e ) {
-         g.setColor( BGD );
-         g.fillRect(1,1,getWidth()-2,getHeight()-2);
+         g.setColor( couleurFond=BGD );
+         g.fillRect(1,1,w-2,h-2);
       }
    }
 
@@ -5459,10 +5516,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Détecte si un segment de grille de coordonnées et en dehors du champ. */
    protected boolean horsChamp(Segment oseg,Segment seg) {
       boolean rep=true;
-      if( seg.x1>=0-100 && seg.x1<rv.width+100 &&
-            seg.y1>=0-100 && seg.y1<rv.height+100 ) rep=false;
-      if( seg.x2>=0-100 && seg.x2<rv.width+100 &&
-            seg.y2>=0-100 && seg.y2<rv.height+100 ) rep=false;
+      if( seg.x1>= -100 && seg.x1<rv.width+100 &&
+            seg.y1>= -100 && seg.y1<rv.height+100 ) rep=false;
+      if( seg.x2>= -100 && seg.x2<rv.width+100 &&
+            seg.y2>= -100 && seg.y2<rv.height+100 ) rep=false;
       seg.horsChamp=rep;
       if( oseg==null ) return rep;
       return rep && oseg.horsChamp;
@@ -5487,14 +5544,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !allsky ) {
          if(  seg.iso==Segment.ISODE && (a1*a2<0 || (a1*a2==0 && (a1>0 || a2>0))) ) {
             seg.labelMode=flagGridNorthUp?Segment.GAUCHE:Segment.HAUT;
-            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
+            seg.label1 = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
 
          } else if(  seg.iso==Segment.ISORA && (b1*b2<0 || (b1*b2==0 && (b1>0 || b2>0))) ) {
             seg.labelMode=flagGridNorthUp?Segment.HAUT:Segment.GAUCHE;
-            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
+            seg.label1 = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
          }
       }
-      grille.addElement(seg);
+      grille.add(seg);
    }
 
 //   /** Tronque les centièmes de secondes, voire les secondes afin que les labels
@@ -5515,17 +5572,19 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //   }
 
 
-   private Hashtable memoSeg; // Table de hachage de mémorisation des noeuds de la grille
-   private final Boolean ok = new Boolean(true);  // Valeur bidon pour memoSeg
+   private HashSet<String> memoSeg; // Table de hachage de mémorisation des noeuds de la grille
    protected long oiz=-1;
-   private Vector grille = null;  // Memorise les segments de la grille de coordonnées
+   private ArrayList<Segment> grille = null;  // Memorise les segments de la grille de coordonnées
+   private HashSet<String> labelRA, labelDE;
 
 
    /** Initialisation de la grille de coordonnées et
     * de la Hashtable de mémorisation des noeuds */
    private void initMemoSegment() {
-      grille = new Vector(4000);
-      memoSeg=new Hashtable(4000);
+      grille = new ArrayList<Segment>(4000);
+      memoSeg=new HashSet<String>(4000);
+      labelRA=new HashSet<String>(100);
+      labelDE=new HashSet<String>(100);
    }
 
    /** Libération de la mémorisation des noeuds de la grille de coord */
@@ -5539,14 +5598,20 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @return true si le segment n'a pas déjà été mémorisé
     */
    private boolean memoSegment(Segment seg) {
-      int x1,y1,x2,y2;
-      if( seg.x1>seg.x2 ) { x1=seg.x2; x2=seg.x1; }
-      else { x1=seg.x1; x2=seg.x2; }
-      if( seg.y1>seg.y2 ) { y1=seg.y2; y2=seg.y1; }
-      else { y1=seg.y1; y2=seg.y2; }
-      String cle  = x1+":"+y1+"/"+x2+":"+y2;
-      if( memoSeg.get(cle)!=null ) return false;
-      memoSeg.put(cle,ok);
+//      int x1,y1,x2,y2;
+//      if( seg.x1>seg.x2 ) { x1=seg.x2; x2=seg.x1; }
+//      else { x1=seg.x1; x2=seg.x2; }
+//      if( seg.y1>seg.y2 ) { y1=seg.y2; y2=seg.y1; }
+//      else { y1=seg.y1; y2=seg.y2; }
+//      String cle  = x1+":"+y1+"/"+x2+":"+y2;
+      
+      String cle1 = seg.x1+","+seg.y1+"/"+seg.x2+","+seg.y2;
+      if( memoSeg.contains(cle1) ) return false;
+      memoSeg.add(cle1);
+      String cle2 = seg.x2+","+seg.y2+"/"+seg.x1+","+seg.y1;
+      memoSeg.add(cle2);
+      
+//      memoSeg.add(cle);
       return true;
    }
    
@@ -5565,7 +5630,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param rajc,dejc point d'origine de la grille
     */
    private void calcul3Voisins(Segment oseg, int osens,double dra, double dde,
-         double rajc,double dejc,boolean labelAllSky,int depth,double limiteSegmentSize) {
+         double rajc,double dejc,boolean labelAllsky,int depth,double limiteSegmentSize) {
       
       if( depth>100 ) return;   // sécurité
       for( int sens=0; sens<4; sens++ ) {
@@ -5573,36 +5638,74 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          switch(sens) {
             case 0: seg.del2+=dde; seg.iso=Segment.ISORA; break;
             case 1: seg.del2-=dde; seg.iso=Segment.ISORA; break;
-            case 2: seg.al2+=dra;  seg.iso=Segment.ISODE; if( seg.al2>=360. )  seg.al2-=360.;  break;
-            case 3: seg.al2-=dra;  seg.iso=Segment.ISODE; if( seg.al2<=0   )    seg.al2+=360.;  break;
+            case 2: seg.al2+=dra;  seg.iso=Segment.ISODE; 
+                    if( seg.al2>=360. )  seg.al2-=360.;  break;
+            case 3: seg.al2-=dra;  seg.iso=Segment.ISODE; 
+                    if( seg.al2<0   )   seg.al2+=360.;  break;
          }
-//         if( oseg.del2<= -91. || oseg.del2>= 91. ) return; // On ne traverse pas les pôles
-         if( oseg.del2<= -90 || oseg.del2>= 90 ) return; // On ne traverse pas les pôles
+         if( oseg.del2<= -91. || oseg.del2>= 91. ) return; // On ne traverse pas les pôles
+//         if( oseg.del2<= -90 || oseg.del2>= 90 ) return; // On ne traverse pas les pôles
          if( seg.del2==oseg.del1 && seg.al2==oseg.al1 ) continue; // Je reviens sur mes pas
 
          // On triche pour pouvoir continuer la récursivité afin de s'approcher du bord
-         if( !seg.projection(this) ){
-            seg.x2=-1; 
-            seg.y2=-1;
-         }
+         if( !seg.projection(this) ) { seg.x2=-1;  seg.y2=-1; }
+         
+//         if( labelAllsky && seg.al1==0 && seg.al2==0 && (seg.del1==-30 || seg.del2==-30) ) {
+//            System.out.println("j'y suis rajc="+rajc+" de1="+seg.del1+",de2="+seg.del2);
+//         }
+
          if( horsChamp(oseg,seg) ) continue;
          if( !memoSegment(seg) ) continue;
 
-         if( labelAllSky ) {
-            if( seg.al2==rajc && seg.al1==rajc ) {
-               seg.labelMode=Segment.MILIEURA;
-               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
-            } else if( seg.del2==dejc && seg.del1==dejc ) {
-               seg.labelMode=Segment.MILIEUDE;
-               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
+         if( labelAllsky ) {
+            String label;
+            if( egalRA(seg,rajc) ) {
+               label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1);
+               if( Math.abs(seg.del1)<=90 && !labelRA.contains(label) )  {
+                  seg.labelMode=Segment.MILIEURA;
+                  seg.label1 = label;
+                  labelRA.add( label );
+               }
+               label = aladin.localisation.getGridLabel(seg.al1,seg.del2,1);
+               if( Math.abs(seg.del2)<=90 && !labelRA.contains(label) )  {
+                  seg.labelMode=Segment.MILIEURA;
+                  seg.label2 = label;
+                  labelRA.add( label );
+               }
+
+            } else if( egalDE(seg,dejc) ) {
+               label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0);
+               if( !labelDE.contains(label) )  {
+                  seg.labelMode=Segment.MILIEUDE;
+                  seg.label1 = label;
+                  labelDE.add( label );
+               }
+               label = aladin.localisation.getGridLabel(seg.al2,seg.del1,0);
+               if( !labelDE.contains(label) )  {
+                  seg.labelMode=Segment.MILIEUDE;
+                  seg.label2 = label;
+                  labelDE.add( label );
+               }
             }
          }
 
-         if( !seg.horsChamp 
-               && !subdivise(sens==osens?oseg:null,seg,0,labelAllSky,limiteSegmentSize) ) continue;
 
-         calcul3Voisins(seg,sens,dra,dde,rajc,dejc,labelAllSky,depth+1,limiteSegmentSize);
+//         if( !seg.horsChamp && seg.distXY()<300 ) addGrilleSeg(seg,labelAllsky); // Juste pour tester sans subdivision
+         if( !seg.horsChamp && !subdivise(sens==osens?oseg:null,seg,0,labelAllsky,limiteSegmentSize) ) continue;
+
+         calcul3Voisins(seg,sens,dra,dde,rajc,dejc,labelAllsky,depth+1,limiteSegmentSize);
       }
+   }
+   
+   
+   static private final double EPSILON = 1E-10;
+   
+   private boolean egalRA(Segment seg, double ra) {
+      return Math.abs(seg.al2%360-ra)<EPSILON && Math.abs(seg.al1%360-ra)<EPSILON;
+   }
+   
+   private boolean egalDE(Segment seg, double de) {
+      return Math.abs(seg.del2-de)<EPSILON && Math.abs(seg.del1-de)<EPSILON;
    }
    
 
@@ -5617,7 +5720,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param p La profondeur de la récursivité
     * @return false si le segment n'est pas traçable
     */
-   private boolean subdivise(Segment oseg,Segment seg,int p,boolean allsky,double limiteSegmentSize) {
+   private boolean subdivise(Segment oseg,Segment seg,int p,boolean labelAllsky,double limiteSegmentSize) {
       Segment s0,s1;
        
       double memoLimiteSegmentSize=limiteSegmentSize;
@@ -5642,7 +5745,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( limiteSegmentSize<20 ) limiteSegmentSize=20;
 
          if( p>5 || !Segment.courbe(s0,s1) && taille<limiteSegmentSize ) {
-            if( taille<limiteSegmentSize ) addGrilleSeg(seg,allsky);
+            if( taille<limiteSegmentSize ) addGrilleSeg(seg,labelAllsky);
             if( grille.size()>4000 ) return false; // Y a sans doute un problème
             return true;
          }
@@ -5650,15 +5753,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // Cas où on ne connait pas le segment précédent, on va lancer
          // récursivement la subdivision sur les 2 moitiés du segment à insérer
          if( oseg==null ) {
-            boolean rep=subdivise(null,s0,p+1,allsky,memoLimiteSegmentSize);
-            return subdivise(s0,s1,p+1,allsky,memoLimiteSegmentSize) && rep;
+            boolean rep=subdivise(null,s0,p+1,labelAllsky,memoLimiteSegmentSize);
+            return subdivise(s0,s1,p+1,labelAllsky,memoLimiteSegmentSize) && rep;
          }
 
          // Idem mais dans le cas où l'on connait le segment précédent
          Segment s[] = seg.subdivise(this);
          if( s==null ) return false;
-         boolean rep=subdivise(oseg,s[0],p+1,allsky,memoLimiteSegmentSize);
-         return subdivise(s[0],s[1],p+1,allsky,memoLimiteSegmentSize) && rep;
+         boolean rep=subdivise(oseg,s[0],p+1,labelAllsky,memoLimiteSegmentSize);
+         return subdivise(s[0],s[1],p+1,labelAllsky,memoLimiteSegmentSize) && rep;
       } catch( Exception e ) { return false; }
    }
 
@@ -5875,9 +5978,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // Calcul de tous les segments de la grille (méthode récursive de proche
          // en proche).
          //         double limiteSegmentSize = proj.t==Calib.AIT || proj.t==Calib.MOL ? 50 : proj.t==Calib.TAN || proj.t==Calib.SIP ? 4000 : 2000;
-         double limiteSegmentSize=50;
          
-         calcul3Voisins(seg,-1,pasa,pasd,rajc,dejc,isAllSky() && getFullSkySize()>200,0,limiteSegmentSize);
+         double limiteSegmentSize=50;
+         boolean labelAllsky=false;
+         if( isAllSky() ) {
+            int fullSkySize = getFullSkySize();
+            if( fullSkySize>200 ) {
+               labelAllsky=true;
+               if( fullSkySize<Integer.MAX_VALUE ) limiteSegmentSize = fullSkySize/12;
+            }
+         }
+         
+         calcul3Voisins(seg,-1,pasa,pasd,rajc,dejc,labelAllsky,0,limiteSegmentSize);
          freeMemoSegment();
       }
 
@@ -5897,33 +6009,31 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( aladin.view.opaciteGrid!=1f ) {
-         Enumeration e = grille.elements();
          int j=0;
          Graphics2D g2d = null;
          Composite saveComposite = null;
-         if(  (g instanceof Graphics2D) ) {
-            g2d = (Graphics2D)g;
-            saveComposite = g2d.getComposite();
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aladin.view.opaciteGrid));
+         try {
+            if( g instanceof Graphics2D ) {
+               g2d = (Graphics2D)g;
+               saveComposite = g2d.getComposite();
+               g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aladin.view.opaciteGrid));
+            }
+            if( g2d!=null ) {
+               for( Segment seg : grille ) seg.draw(g2d,this,clip,j++,dx,dy);
+            } else {
+               for( Segment seg : grille ) seg.draw(g,this,clip,j++,dx,dy);
+            }
+            drawGridBord(g2d,dx,dy);
+            
+         } finally {
+            // on restaure le composite
+            if( g2d!=null ) g2d.setComposite(saveComposite);
          }
-         while( e.hasMoreElements() ) {
-            Segment seg = (Segment)e.nextElement();
-            if( g2d!=null ) seg.draw(g2d,this,clip,j++,dx,dy);
-            else seg.draw(g,this,clip,j++,dx,dy);
-         }
-         drawGridBord(g2d,dx,dy);
-
-         // on restaure le composite
-         if( g2d!=null ) g2d.setComposite(saveComposite);
 
          // Activation sans semi transparence
       } else {
-         Enumeration e = grille.elements();
          int j=0;
-         while( e.hasMoreElements() ) {
-            Segment seg = (Segment)e.nextElement();
-            seg.draw(g,this,clip,j++,dx,dy);
-         }
+         for( Segment seg : grille ) seg.draw(g,this,clip,j++,dx,dy);
          drawGridBord(g,dx,dy);
       }
       if( st!=null ) {
@@ -6109,6 +6219,44 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       return x;
 
    }
+   
+   
+   private String lastTemporelLabel = null;
+   
+   /** Passage de la valeur du pixel qu'il faut afficher en surimpression de l'image */
+   protected void setTemporelLabel(String s) {
+      if( lastTemporelLabel!=null && lastTemporelLabel.equals(s) ) return;  // pas de changement
+      lastTemporelLabel=s;
+      quickInfo=true;
+      repaint();
+   }
+   
+   
+   private void drawTemporelLabel(Graphics g ) {
+      if( tpsArea==null ) return;
+      String s = lastTemporelLabel;
+      
+      if( s!=null && s.length()>0 && !flagClicAndDrag ) {
+         FontMetrics fm = g.getFontMetrics();
+         int w = fm.stringWidth(s);
+         g.setColor( view.infoColor );
+         int x = (int)lastView.x-w/2;
+         if( x<2 ) x=2;
+         if( x+w>getWidth()-2 ) x = getWidth() - w -2;
+         Util.drawStringOutline(g,s,x,tpsArea.y-4, null, Color.black);
+         g.drawLine((int)lastView.x,tpsArea.y-3,(int)lastView.x,tpsArea.y+tpsArea.height+3);
+      }
+   }
+   
+   // Dessin des plans temporels dans la bande destinée à cela
+   private boolean drawTemporel( Graphics g, ViewSimple v, ArrayList<Plan> planTps ) {
+      resetTpsY();
+      if( planTps==null || planTps.size()==0 ) return false;
+//      for( int i=planTps.size()-1; i>=0; i-- ) planTps.get(i).draw(g,v,dx,dy,-1);
+      for( Plan p : planTps ) p.draw(g,v,dx,dy,-1);
+
+      return true;
+   }
 
    // Message d'attente de l'image dans la vue
    void waitImg(Graphics gr ) {
@@ -6161,16 +6309,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public void update(Graphics gr ) {
       if( aladin.view.getNbView()<=n ) return;
 
-      //      if( isLockRepaint() ) return;   // Pas de repaint() pendant un saveView()
-
-      //      waitLockRepaint("update");
       try {
          // Affichage rapide des bordures
          if( quickBordure ) { drawBordure(gr); quickBordure=false; }
 
          // Affichage rapide du blinkControl
          else if( flagBlinkControl ) { drawBlinkControl(gr); flagBlinkControl=false; }
-
+         
          // Traitement pour le Grabit
          else if( modeGrabIt && cGrabItX!=-1) {
             gr.setXORMode( Color.green );
@@ -6189,10 +6334,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // Traitement pour montrer/cacher une source
          else if( !Aladin.NOGUI && quickBlink ) { paintBlinkSource(gr); quickBlink=false; }
+         
 
       } catch( Exception e ) { }
 
-      //      unlockRepaint("update");
       resetClip();
    }
 
@@ -6223,7 +6368,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param clip le cliprect s'il existe, sinon null
     * @param dx,dy l'offset d'affichage uniquement utilise pour les impressions
     * @param now true pour avoir immédiatement un affichage complet (mode allsky notamment)
-    * @param mode 0x1 - image, 0x2 - overlays, 0x3 - both
+    * @param acceleration 0x1 - image, 0x2 - overlays, 0x3 - both
     * @return true si au moins un plan a ete affiche
     */
    protected boolean paintOverlays(Graphics g,Rectangle clip,int dx,int dy,boolean now) {
@@ -6268,6 +6413,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Pour afficher des checkboxs associés aux plans directement dans la vue
       if( fullScreen ) aladin.fullScreen.startMemo();
+      
+      // Liste des plans temporels qu'on affichera éventuellement en post-traitement dans une deuxième boucle.
+      ArrayList<Plan> planTps = null;
 
       // Affichage en 2 passes, d'abord les images, puis tout le reste
       for( int passe=1; passe <= (OVERLAYFORCEDISPLAY ? 2 : 1); passe++ ) {
@@ -6350,6 +6498,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
                
+               // Les plans temporels seront traités par la suite
+               if( p.type==Plan.ALLSKYTMOC && flagActive ) {
+                  if( planTps == null ) planTps = new ArrayList<Plan>(10);
+                  planTps.add( p );
+                  continue;
+                }
+               
                if( Aladin.SLIDERTEST ) {
                   if( flagActive && (p==pref || p!=pref && !p.isRefForVisibleView()) ) {
                      ((PlanImage)p).draw(g,vs,dx,dy,-1);
@@ -6374,8 +6529,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                if( !(p instanceof PlanMoc) && p.pcat==null || !p.active ) continue;
                float opacity = p.getOpacityLevel();
                if( opacity >0.05 ) {
-                  if( p.getOpacityLevel()<0.9 && g instanceof Graphics2D
-                        && !(p instanceof PlanField) ) {
+                  if( p.getOpacityLevel()<0.9 && g instanceof Graphics2D && !(p instanceof PlanField) ) {
                      Graphics2D g2d = (Graphics2D)g;
                      Composite saveComposite = g2d.getComposite();
                      Composite myComposite = Util.getImageComposite(opacity);
@@ -6394,7 +6548,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( dx>0 || dy>0 ) newView(1);
          }
       } // Fin du for de l'affichage en 2 passes
-
+      
+      
       // Rien de plus si aucune projection
       if( !Projection.isOk(proj) ) {
          if( dx==0 ) drawBlinkControl(g);      // Eh oui !
@@ -6441,6 +6596,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // Pourtour cache misère
          drawForeGround(g,mode,flagBordure);
+         
+         // Affichage des plans temporels
+         tpsDrawingFlag = drawTemporel(g,vs,planTps);
       }
 
       if( calque.flagOverlay  ) {
@@ -6491,6 +6649,97 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       return flagDisplay;
    }
    
+   /** Retourne true si on a une surcharge graphique temporelle */
+   protected boolean hasTps() { return tpsDrawingFlag; }
+   
+   /** true si la coordonnée se trouve dans la zone de surcharge graphique temporelle */
+   protected boolean inTpsArea(int x, int y) { 
+      return tpsArea!=null && tpsArea.contains(x, y); 
+   }
+   
+   /** Re-initialisation des ymin et ymax de la zone de surcharge graphique temporelle */
+   protected void resetTpsY() { tpsArea=null; }
+   
+   /** Maj des valeurs ymin et ymax de la zone de surcharge graphique temporelle */
+   protected void updateTpsArea(Rectangle clip) {
+      if( clip==null ) return;
+      if( tpsArea==null ) tpsArea = clip;
+      else tpsArea = tpsArea.union( clip );
+   }
+   
+   protected void initTpsZoomIfRequired(PlanTMoc p) {
+      if( tpsZoom!=-1 ) return;
+      if( p.moc==null ) return;
+      initTpsZoom( (TMoc) p.moc);
+   }
+   
+   /** Initialisation des paramètres de zoom temporel en fonction du TMoc passé en paramètre */
+   private void initTpsZoom(TMoc tmoc) {
+      double min = tmoc.getTimeMin();
+      double max = tmoc.getTimeMax();
+      
+      /// On prend un peu de marge
+      double delta = max-min;
+      double marge = delta/12.;
+      min -= marge;
+      max += marge;
+      
+      tpsX = min;
+      tpsZoom = getWidth()/(max-min);   // =pixel (ou fraction de pixel) pour une seconde JD
+      
+//      aladin.trace(4,"initTpsZoom() min="+min+" ("+Astrodate.JDToDate( min)+") max="+max+" ("+Astrodate.JDToDate( max)+")");
+//      aladin.trace(4,"initTpsZoom() tpX="+min+" tpsZoom="+tpsZoom);
+   }
+   
+   /** Retourne la date sous la souris dans la bande temporelle */
+   public String getTpsUnderMouse() {
+      if( !tpsInTpsArea ) return "";
+      return Astrodate.JDToDate( getTpsXview( (int)lastView.x ));
+   }
+   
+   /** Retourne le temps min (en JD) affiché actuellement dans la vue (bord à gauche) */
+   public double getTpsMin() { return tpsX; }
+   
+   /** retourne le temps max affiché actuellement dans la vue (bord à droite) */
+   public double getTpsMax() { return tpsX + getWidth()/tpsZoom; }
+   
+   /** Retourne le temps correspondant à la position de la souris */
+   public double getTpsXview(int xview) { return tpsX + xview/tpsZoom; }
+   
+   /** Retourne le facteur de zoom temporel (pixel ou fraction de pixel par un jour JD) */
+   public double getTpsZoom() { return tpsZoom; }
+   
+   /** Augmentation/diminution du facteur de zoom de la bande temporelle */
+   protected void tpsIncrZoom(int sens ) {
+      double xView = lastView.x;
+      double tpsCurrent = getTpsXview( (int) xView );
+      
+      if( sens<0 ) tpsZoom *=2;
+      else tpsZoom /=2;
+      
+      // Ajustement de l'origine pour que la position sous la souris conserve la même valeur temporelle
+      tpsX = tpsCurrent - xView/tpsZoom;
+//      aladin.trace(4,"tpsIncrZoo/m("+sens+") tpsX="+Astrodate.JDToDate( tpsX )+" tpsZoom="+tpsZoom+" range="+Astrodate.JDToDate( getTpsMin() )+" .. "+Astrodate.JDToDate( getTpsMax() ));
+   }
+   
+   /** Glissement de la bande temporelle */
+   private void tpsMove(int deltaXView, int deltaYView) {
+      tpsX -= deltaXView/tpsZoom;
+      tpsYViewOrigin += deltaYView;
+//      aladin.trace(4,"tpsMove("+deltaXView+") tpsZoom="+/tpsZoom+" range="+Astrodate.JDToDate( getTpsMin() )+" .. "+Astrodate.JDToDate( getTpsMax() ));
+  }
+   
+   /** Retourne la position en Y sur la vue de la bande temporelle. 
+    * Les valeurs négatives se comptent depuis le bas de la vue */
+   public int getTpsYviewOrig() { return tpsYViewOrigin; }
+   
+   protected Rectangle tpsArea=null;       // Rectangle sur la vue dans lequel est dessiné la bande temporelle
+   protected double tpsZoom = -1;          // portion de pixel représentant une seconde JD
+   protected double tpsX = 0;              // Temps JD (en secondes) correspondant à xview=0
+   protected int tpsYViewOrigin=-100;      // la position en Y sur la vue de la bande temporelle. les valeurs négatives se comptent depuis le bas de la vue
+   protected boolean tpsInTpsArea=false;   // vrai si la souris est placé sur la zone d'affichage des plans temporels
+   protected boolean tpsDrawingFlag=false; // Vrai s'il y a un affichage d'une bande temporelle
+   
    /** Affichage de la bordure rouge et des deux petits triangles
     * indiquant que la vue est stickée */
    protected void drawStick(Graphics g) {
@@ -6498,7 +6747,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       g.setColor(Color.red);
       g.drawRect(1,1,rv.width-3,rv.height-3);
       int M=rv.width/12;
-      if( M>10 )M=15;
+      if( M>10 ) M=15;
       int x=rv.width-1;
       int y=rv.height-1;
       p = new Polygon(new int[]{x,x,x-M},new int[]{1,M,1},3);
@@ -6838,7 +7087,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
 
-      if( !getImgView(gr,pi) || isFree() ) {
+      if( !getImgView(pi) || isFree() ) {
          drawBackground(gr);
          drawBordure(gr);
 
@@ -6885,9 +7134,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                newView();
                paintOverlays(gbuf,clip,0,0,false);
             }
-         } else 
-
-            paintOverlays(gbuf,clip,0,0,false);
+         } else paintOverlays(gbuf,clip,0,0,false);
          //System.out.println("paint");
       }
 
@@ -6929,7 +7176,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( view.crop!=null && isFree()
             || aladin.toolBox.tool[ToolBox.CROP].mode!=Tool.DOWN ) view.crop=null;
       else if( hasCrop() ) view.crop.draw(g,this);
-
+      
       // Dessin des bordures
       drawBordure(g);
 
@@ -6941,9 +7188,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( !rainbowUsed()  ) {
 
+         // Date courante sous la souris (dans le bandeau temporel)
+         if( tpsInTpsArea ) drawTemporelLabel(g);
+
          // Dessin en sur impression de la valeur de pixel, et de la position pour FullScreen
          if( pref!=null && aladin.calque.hasPixel() ) drawPixelInfo(g);
          quickInfo=false;
+         
       }
 
       if( fullScreen )  {

@@ -84,7 +84,7 @@ public class BuilderRgb extends BuilderTiles {
    
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showRGBStat(statNbFile, totalTime,statNbThread,statNbThreadRunning);
+      context.showRGBStat(statNbFile, totalTime,getNbThreads(), getNbThreadRunning());
 //      if( !(context instanceof ContextGui ) ) super.showStatistics();
    }
    

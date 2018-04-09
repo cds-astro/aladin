@@ -933,7 +933,7 @@ public class PlanImage extends Plan {
    protected boolean rewriteInCache(byte []buf) { return setInCache(1,buf); }
 
    /** Mémorisation dans le cache des pixels d'origine (via buf[])
-    * @param mode 1 si on force la sauvegarde, même si cacheID!=null
+    * @param acceleration 1 si on force la sauvegarde, même si cacheID!=null
     *  @return true si la mémorisation a fonctionné, sinon false
     */
    private boolean setInCache(byte [] buf) { return setInCache(0,buf); }

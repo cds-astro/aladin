@@ -270,7 +270,7 @@ SwingWidgetFinder, Widget {
          if( allPlan[i] instanceof PlanImageBlink )  nbBlinkImg++;
          if( allPlan[i].type==Plan.CATALOG ) nbSimpleCat++;
          if( allPlan[i].isCatalog() ) nbCat++;
-         if( allPlan[i].type==Plan.ALLSKYMOC ) nbMoc++;
+         if( allPlan[i].isMoc() ) nbMoc++;
          aucun=false;
          if( !allPlan[i].selected ) continue;
 

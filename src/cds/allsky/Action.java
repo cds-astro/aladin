@@ -36,6 +36,7 @@ public enum Action {
    GZIP      ("Compress some FITS tiles and Allsky.fits"),
    GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
    CLEAN     ("Delete all Hips files (except properties file)"),
+   CLEANALL  ("Delete all Hips files"),
    CLEANINDEX("Delete index (HpxFinder dir)"),
    CLEANDETAILS("Delete detail index (HpxFinder tree except last order dir)"),
    CLEANTILES("Delete all HiPS files except index (tiles, dir, Allsky, MOC, ...)"),
@@ -57,7 +58,8 @@ public enum Action {
    //   INFO      ("Generate properties and index.html information files"),
    MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité
-   ABORT, PAUSE, RESUME;
+   ABORT, PAUSE, RESUME,
+   TMOC;
 
    Action() {}
    Action(String s ) { doc=s; }

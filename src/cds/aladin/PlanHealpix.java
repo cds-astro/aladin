@@ -1776,7 +1776,7 @@ public class PlanHealpix extends PlanBG {
     * @param survey nom du survey
     * @param order order Healpix
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
-    * @param mode FIRST, MAX, MEDIANE, MOYENNE, SIGMA
+    * @param acceleration FIRST, MAX, MEDIANE, MOYENNE, SIGMA
     */
    public void createAllSky(String path,String survey,int order,int outLosangeWidth) throws Exception {
       long t=System.currentTimeMillis();
@@ -1965,7 +1965,7 @@ public class PlanHealpix extends PlanBG {
     * @param order Ordre Healpix du losange
     * @param npix Numéro Healpix du losange
     * @param fils les 4 fils du losange
-    * @param mode méthode de cumul des pixels (FIRST, MOYENNE, MEDIANE...)
+    * @param acceleration méthode de cumul des pixels (FIRST, MOYENNE, MEDIANE...)
     */
    //    Fits createNodeHpx(String file,int order,long npix,Fits fils[], int mode) throws Exception {
    Fits createNodeHpx(String file,int order,long npix,Fits fils[], int bitpix, double blank) throws Exception {

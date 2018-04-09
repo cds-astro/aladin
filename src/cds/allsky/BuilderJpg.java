@@ -126,7 +126,7 @@ public class BuilderJpg extends BuilderTiles {
 
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showJpgStat(statNbFile, totalTime,statNbThread,statNbThreadRunning);
+      context.showJpgStat(statNbFile, totalTime, getNbThreads(), getNbThreadRunning() );
       if( !(context instanceof ContextGui ) ) super.showStatistics();
    }
 

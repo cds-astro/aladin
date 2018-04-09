@@ -1357,7 +1357,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
         return 1;           // Pour faire plaisir à ImageMaker
       }
    }
-
+   
    /** Retourne le nombre de vues sélectionnées */
    protected  int getNbSelectedView() {
       int n=0;
@@ -1987,6 +1987,19 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return true;
    }
    
+   /** Augmente ou diminue de facteur de zoom de la bande temporelle sous la souris.
+    * @param sens -1 ou 1
+    * @return true si ça a marché
+    */
+   protected boolean tpsIncrZoom(int sens) {
+      ViewSimple v = getCurrentView();
+      if( v==null || v.isFree() || !v.tpsInTpsArea ) return false;
+      v.tpsIncrZoom(sens);
+      v.newView();
+      repaintAll();
+      return true;
+   }
+   
    /** Ajustement de la position de référence xzoomview,yzoomview de toutes les vues après un changement de taille du zoomView.
     * Si l'image est verticale ou horizontale, cela jouera en ordonnée, resp. en abscisse
     * @param lastWidth précédente largeur du zoomview
@@ -2250,7 +2263,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Demande de rafraichissement des buffers de calculs de position
-    *  @param mode 0 (defaut) juste pour les images
+    *  @param acceleration 0 (defaut) juste pour les images
     *              1 également pour les overlays
     */
    protected void newView() { newView(1); }
@@ -4477,7 +4490,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     * ATTENTION : LE SAVE NE MARCHE PAS ENCORE !!!! (JUILLET 2006)
     *
     * @param prefix préfixe utilisé pour les noms de fichiers ("ROI" par défaut)
-    * @param mode 0 pour exportation en FITS, 1 pour sauvegarde des vues avec surcharges graphiques
+    * @param acceleration 0 pour exportation en FITS, 1 pour sauvegarde des vues avec surcharges graphiques
     * @param w,h en mode 1, dimension des images à générer
     * @param fmt en mode 1, format des images (Save.JPEG ou Save.BMP)
     */
@@ -4697,7 +4710,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     * @param n la nouvelle position initiale du scroll
     * @param current l'indice de la vue courante dans viewSimple[],
     *                0 si non indiqué
-    * @param mode 0 avec sauvegarde dans ViewMemo au préalable,
+    * @param acceleration 0 avec sauvegarde dans ViewMemo au préalable,
     *             1, sans sauvegarde (pour rechargement AJ)
     */
    protected void scrollOn(int n) { scrollOn(n,0,0); }

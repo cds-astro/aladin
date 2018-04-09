@@ -21,7 +21,8 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import javax.swing.JPanel;
 
@@ -45,7 +46,7 @@ public final class FrameMocGenRes extends FrameMocGenImg {
       PLANE = a.chaine.getString("MOCFILTERINGMOC");
    }
 
-   protected boolean isPlanOk(Plan p) { return p.type==Plan.ALLSKYMOC; }
+   protected boolean isPlanOk(Plan p) { return p.isMoc(); }
    
    protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) { }
    

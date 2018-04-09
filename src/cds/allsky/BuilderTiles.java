@@ -70,8 +70,8 @@ public class BuilderTiles extends Builder {
    static { FS = System.getProperty("file.separator"); }
 
    // Pour les stat
-   protected int statNbThreadRunning=-1;     // Nombre de Thread qui sont en train de calculer
-   protected int statNbThread;               // Nombre max de Thread de calcul
+//   protected int statNbThreadRunning=-1;     // Nombre de Thread qui sont en train de calculer
+//   protected int statNbThread;               // Nombre max de Thread de calcul
    protected int statNbTile;                 // Nombre de tuiles terminales déjà calculés
    protected long statMinTime,statMaxTime,statTotalTime,statAvgTime;
    protected int statEmptyTile;               // Nombre de tuiles terminales de fait vides
@@ -99,9 +99,9 @@ public class BuilderTiles extends Builder {
             context.info("Map original raw pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
          }
          else context.info("BITPIX = "+b1+" (no conversion)");
-         if( context.getDiskMem()!=-1 ) {
-            context.info("Disk requirement (upper approximation) : "+cds.tools.Util.getUnitDisk((long)(context.getDiskMem()*1.25)));
-         }
+//         if( context.getDiskMem()!=-1 ) {
+//            context.info("Disk requirement (upper approximation) : "+cds.tools.Util.getUnitDisk((long)(context.getDiskMem()*1.25)));
+//         }
          double bs=context.getBScale(), bz=context.getBZero();
          if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
          double bl0 = context.getBlankOrig();
@@ -243,7 +243,8 @@ public class BuilderTiles extends Builder {
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
       if( b!=null ) { b.showStatistics(); return; }
-      statNbThreadRunning = nbThreadRunning();
+      int statNbThreadRunning = getNbThreadRunning();
+      int statNbThread = getNbThreads();
       if( statNbThreadRunning==0 || statNbTile==0 ) return;
       long now = System.currentTimeMillis();
       totalTime = now-startTime;
@@ -264,7 +265,7 @@ public class BuilderTiles extends Builder {
 
    // Initialisation des statistiques
    private void initStat(int nbThread) {
-      statNbThread=nbThread; statNbThreadRunning=0;
+//      statNbThread=nbThread; statNbThreadRunning=0;
       statNbTile=statNodeTile=0;
       statTotalTime=statNodeTotalTime=0L;
       startTime = System.currentTimeMillis();
@@ -307,6 +308,7 @@ public class BuilderTiles extends Builder {
          ArrayList<Fits> m = memPerThread.get(key);
          if( m!=null ) for( Fits f : m ) f.free();
          memPerThread.remove(key);
+//         ThreadBuilderTile.nbThreads--;
       }
    }
 
@@ -394,7 +396,7 @@ public class BuilderTiles extends Builder {
 
    // Mise à jour des stats
    protected void updateStat(int deltaNbThread,int deltaTile,int deltaEmptyTile,long timeTile,int deltaNodeTile,long timeNodeTile) {
-      statNbThreadRunning+=deltaNbThread;
+//      statNbThreadRunning+=deltaNbThread;
       statNbTile+=deltaTile;
       statNodeTile+=deltaNodeTile;
       statEmptyTile+=deltaEmptyTile;
@@ -421,40 +423,37 @@ public class BuilderTiles extends Builder {
       Fits fits;
       boolean ready;
       Thread th;
+      boolean suspendable;
       
-      Item(int order, long npix, int z,Thread th ) {
+      Item() { ready=true; order=-1; }
+      
+      Item(int order, long npix, int z,Thread th, boolean suspendable ) {
          this.order=order;
          this.npix=npix;
          this.z=z;
          this.th=th;
          ready=false;
+         this.suspendable=suspendable;
       }
       
-      private boolean isReady() {
-         synchronized( objItem ) { 
-            return ready; 
-         }
-      }
+      protected boolean hasBeenUsed() { return order!=-1; }
       
-      private Fits getFits() {
-         synchronized( objItem ) { return fits; }
-      }
+      private synchronized boolean isReady() { return ready; }
+      
+      private synchronized Fits getFits() { return fits; }
       
       private void setFits(Fits fits) throws Exception {
-         if( th==null ) return;
-         synchronized( objItem ) { 
-            this.fits=fits;
+         synchronized( this ) { 
             ready=true;
+            this.fits=fits;
          }
+         if( th==null ) return;
          th.interrupt();
       }
       
-      public String toString() { return order+"/"+npix+(z>0?"-"+z:"")+(isReady()?"R":""); }
+      public String toString() { return order+"/"+npix+(z>0?"-"+z:"")+(isReady()?"R":"")+(suspendable?"s":""); }
       
    }
-   
-   static final private Object objItem = new Object();
-   
    
    protected int getBitpix0() { return context.getBitpix(); }
    
@@ -466,7 +465,10 @@ public class BuilderTiles extends Builder {
       HealpixMoc m = context.getRegion();
       if( m==null ) m = new HealpixMoc("0/1-11");
       moc.add( m );
-      moc.setMocOrder(3);
+      int minorder=0; //3;
+      context.setMinOrder( minorder );
+      
+      moc.setMocOrder(minorder);
       int depth = context.getDepth();
       fifo = new LinkedList<Item>();
       
@@ -482,7 +484,7 @@ public class BuilderTiles extends Builder {
          Iterator<Long> it = moc.pixelIterator();
          while( it.hasNext() ) {
             long npix=it.next();
-            fifo.add( new Item(3, npix,z,null ) );
+            fifo.add( new Item(minorder, npix,z,null,true ) );
          }
       }
       
@@ -509,9 +511,8 @@ public class BuilderTiles extends Builder {
       long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);
       //      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
-      int nbThread = (int) (size / maxMemPerThread);
+      int nbThread = this instanceof BuilderMirror ? 16 : (int) (size / maxMemPerThread);
 
-      if( this instanceof BuilderMirror ) nbThread=6;
 
       int maxNbThread = context.getMaxNbThread();
       if( maxNbThread>0 && nbThread>maxNbThread ) nbThread=maxNbThread;
@@ -519,7 +520,7 @@ public class BuilderTiles extends Builder {
       if( nbThread>nbProc && !(this instanceof BuilderMirror) ) nbThread=nbProc;
 
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
-      context.info("Will use "+nbThread+" thread"+(nbThread>1?"s":""));
+      context.info("Starts with "+nbThread+" thread"+(nbThread>1?"s":""));
 
       activateCache(size,2L*size/3L);
 
@@ -558,7 +559,7 @@ public class BuilderTiles extends Builder {
       if( t==-1 ) { lastCheckTime=t; return; }
       
       // On attend un certain temps avant de tester la progression
-      if( t-lastCheckTime<MAXCHECKTIME ) return;
+      if( t-lastCheckTime<MAXCHECKTIME || context.getVerbose()>=3 && t-lastCheckTime<20*1000L ) return;
       lastCheckTime=t;
 //      System.out.println("Check 10s progress="+context.progress);
       
@@ -568,14 +569,17 @@ public class BuilderTiles extends Builder {
       // Il y a eu du progres => c'est bon
       if( context.progress!=lastProgress ) { lastProgress=context.progress; return; }
       
-      context.warning("ALERT !!!");
+      context.warning("ALERT !!! (fifosize="+fifo.size()+")");
       context.warning("Nothing done since a while. Here a short report to understand the problem:");
+      int nbDied=0;
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) {
          ThreadBuilder tb = it.next();
          String info = tb.getInfo();
-         context.warning(".thread "+tb.getName()+": "+tb.getMode()+ (info!=null?" => "+info:""));
+         if( tb.isDied() ) nbDied++;
+         context.warning(".thread "+tb.getName()+": "+tb.getMode()+(info!=null?" => "+info:""));
       }
+      if( nbDied>0 ) context.warning(".and "+nbDied+" threads DIED");
       CacheFits cache = context.getCache();
       if( cache!=null ) context.warning(cache.toString());
       else context.warning("No cache. FreeRAM="+cds.tools.Util.getUnitDisk(CacheFits.getFreeMem()));
@@ -628,6 +632,7 @@ public class BuilderTiles extends Builder {
 
       // Création d'un losange terminal
       if( order==ordermax )  {
+         hpx.threadBuilder.setInfo("createLeavveHpx "+file+"...");
          try { f = createLeaveHpx(hpx,file,path,order,npix,z); }
          catch( Exception e ) {
             System.err.println("BuilderTiles.createLeave error: "+file);
@@ -639,18 +644,38 @@ public class BuilderTiles extends Builder {
       } else {
 
          Fits fils[] = new Fits[4];
-         
-         if( fifo.isEmpty() && oneWaiting() ) {
-            multiThreadCreateHpx(hpx, fils, path,order,npix, z);
-            
-         } else {
-         
-            for( int i =0; /* !stopped && */ i<4; i++ ) {
-               if( context.isTaskAborting() ) throw new Exception("Task abort !");
-               fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
-            }
+         Item item[] = new Item[4];
+         for( int i=0; i<4; i++ ) item[i]=new Item();
+
+         int nbDelegate=0;  // Nombre de fils délégués à d'autres threads
+         for( int i =0; i<4; i++ ) {
+            if( context.isTaskAborting() ) throw new Exception("Task abort !");
+
+            // Si je peux déléguer des calculs à d'autres threads libres, je le fais
+            // sauf pour au-moins une tuile fille
+            if( nbDelegate<3 && fifo.isEmpty() && oneWaiting() ) {
+               item[i] = addNpix(order+1,npix*4+i, z,Thread.currentThread());
+               nbDelegate++;
+               wakeUp();
+
+            } else fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
          }
 
+         // Attente et récupération des fils si besoin
+         while( !(item[0].isReady() && item[1].isReady() && item[2].isReady() && item[3].isReady()) ) {
+            hpx.threadBuilder.setWaitingChildren(true);
+            StringBuilder t = new StringBuilder();
+            for( int i=0; i<item.length; i++ ) t.append( item[i].isReady()?".": (item[i].hasBeenUsed()?"x":"o"));
+            hpx.threadBuilder.setInfo("CreateHpx still waiting children of "+order+"/"+npix+" ["+t+"]...");
+            try { Thread.currentThread().sleep(300); } catch( Exception e ) { }
+            if( context.isTaskAborting() ) throw new Exception("Task abort !");
+         }
+         hpx.threadBuilder.setWaitingChildren(false);
+         for( int i=0; i<4; i++ ) {
+            if( item[i].hasBeenUsed() ) fils[i] = item[i].getFits();
+         }
+
+         hpx.threadBuilder.setInfo("createNodeHpx "+file+"...");
          try { f = createNodeHpx(file,path,order,npix,fils,z); }
          catch( Exception e ) {
             System.err.println("BuilderTiles.createNodeHpx error: "+file);
@@ -665,32 +690,40 @@ public class BuilderTiles extends Builder {
       return f;
    }
    
-   // Génération des 4 fils en parallèle
-   private void multiThreadCreateHpx(ThreadBuilderTile hpx, Fits [] fils, String path,int order,long npix, int z) throws Exception {
-      Item [] item = new Item[3];
-      
-      // Ajout des travaux dans la file d'attente des threads de travail
-      for( int i=0; i<3; i++ ) {
-         item[i] = addNpix(order+1,npix*4+i, z,Thread.currentThread());
-      }
-      
-      // Il faudrait ici réveiller les threads de calculs en attente
-      wakeUp();
-            
-      // Un des fils est calculé par le thread courant lui-même
-      fils[3] = createHpx(hpx, path,order+1,npix*4+3, z);
-      
-      // Attente et récupération des fils
-      while( !(item[0].isReady() && item[1].isReady() && item[2].isReady()) ) {
-         try { Thread.currentThread().sleep(500); } catch( Exception e ) { }
-      }
-      for( int i=0; i<3; i++ ) fils[i] = item[i].getFits();
-   }
+//   // Génération des 4 fils en parallèle
+//   private void multiThreadCreateHpx(ThreadBuilderTile hpx, Fits [] fils, String path,int order,long npix, int z) throws Exception {
+//      Item [] item = new Item[3];
+//      
+//      // Ajout des travaux dans la file d'attente des threads de travail
+//      for( int i=0; i<3; i++ ) {
+//         item[i] = addNpix(order+1,npix*4+i, z,Thread.currentThread());
+//      }
+//      
+//      // Il faudrait ici réveiller les threads de calculs en attente
+//      wakeUp();
+//            
+//      // Un des fils est calculé par le thread courant lui-même
+//      fils[3] = createHpx(hpx, path,order+1,npix*4+3, z);
+//      
+//      // Attente et récupération des fils
+//      while( !(item[0].isReady() && item[1].isReady() && item[2].isReady()) ) {
+//         hpx.threadBuilder.setWaitingChildren(true);
+//         StringBuilder t = new StringBuilder();
+//         for( int i=0; i<item.length; i++ ) t.append( item[i].isReady()?".":"x");
+//         hpx.threadBuilder.setInfo("multiThreadCreateHpx still waiting children of "+order+"/"+npix+" ["+t+"]...");
+//         try { Thread.currentThread().sleep(100); } catch( Exception e ) { }
+//         if( context.isTaskAborting() ) throw new Exception("Task abort !");
+//      }
+//      hpx.threadBuilder.setWaitingChildren(false);
+//      for( int i=0; i<3; i++ ) fils[i] = item[i].getFits();
+//   }
    
    static final String [] MODE =  { "START","WAIT","EXEC","DIED","SUSPEND" };
    
+   protected Object lockStop = new Object();
+   
    // Classe des threads de calcul
-   private class ThreadBuilder extends Thread {
+   public class ThreadBuilder extends Thread {
       static final int START =0;
       static final int WAIT  =1;
       static final int EXEC  =2;
@@ -701,10 +734,12 @@ public class BuilderTiles extends Builder {
       private int mode=START;
       private String info;      // Message expliquant l'état courant
       private boolean encore=true;
+      protected Item item=null;   // Item en cours de calcul
 
       public ThreadBuilder(String name,ThreadBuilderTile threadBuilderTile) {
          super(name);
          this.threadBuilderTile = threadBuilderTile;
+         threadBuilderTile.threadBuilder = this;   // pour faire des remontées de debug
          Aladin.trace(3,"Creating "+getName());
       }
       
@@ -722,6 +757,12 @@ public class BuilderTiles extends Builder {
 
       /** Le thread est suspendu */
       public boolean isSuspend() { return mode==SUSPEND; }
+      
+      
+      /** Les thread est en attente du résultat d'un ou plusieurs fils */
+      private boolean waitingChildren=false;
+      public void setWaitingChildren( boolean flag ) { waitingChildren = flag; }
+      public boolean isWaitingChildren() { return waitingChildren; }
 
       /** Le thread est en attente pour un nouveau boulot */
       public boolean isWait() { return mode==WAIT; }
@@ -732,11 +773,13 @@ public class BuilderTiles extends Builder {
          if( mode!=WAIT ) return false;
          if( checkMem ) {
             try {
-               return !threadBuilderTile.requiredMem(Constante.MAXOVERLAY,3 ); 
+               return !threadBuilderTile.requiredMem(Constante.MAXOVERLAY,1 ); 
             } catch( Exception e ) {}
          }
          return true;
       }
+      
+      public void setInfo(String info) { this.info = info; }
       
       public boolean arret(String info) {
          if( !suspendable ) return false;
@@ -757,11 +800,22 @@ public class BuilderTiles extends Builder {
       
       /** Demande la mort du thread */
       public void tue() { encore=false; }
-
+      
       public void run() {
 
          while( encore ) {
-            Item item=null;
+            item=null;
+            
+            // arrêt du thread de calcul
+            if( ThreadBuilderTile.nbThreadsToStop>0 ) {
+               synchronized( lockStop ) {
+                  if( ThreadBuilderTile.nbThreadsToStop>0 ) {
+                     ThreadBuilderTile.nbThreadsToStop--;
+                     break;
+                  }
+               }
+            }
+            
             while( encore && mode==SUSPEND ) {
                try { Thread.currentThread().sleep(100); } catch( Exception e) { };
             }
@@ -769,20 +823,22 @@ public class BuilderTiles extends Builder {
                mode=WAIT;
                info="No more HEALPix cell branch to compute => thread by waiting another task";
                try { Thread.currentThread().sleep(100); } catch( Exception e) { };
+               if( context.isTaskAborting() ) { encore=false; break; }
             }
             if( encore ) {
-               suspendable= item.order==3;
+//               suspendable= item.order==0; //  3;
+               suspendable= item.suspendable;
                mode=EXEC;
                info=null;
-               updateStat(+1,0,0,0,0,0);
                try {
-                  Aladin.trace(4,Thread.currentThread().getName()+" process HEALPix cell branch "+item.npix+"...");
+                  Aladin.trace(4,Thread.currentThread().getName()+" process HEALPix cell branch "+item.order+"/"+item.npix+"...");
 
                   // si le process a été arrêté on essaie de ressortir au plus vite
 //                  if (stopped) break;
                   if( context.isTaskAborting() ) break;
 
                   Fits fits = createHpx(threadBuilderTile, context.getOutputPath(), item.order, item.npix, item.z);
+                  setInfo("Tile ready");
                   item.setFits(fits);
                   
                   rmFits(Thread.currentThread(), fits);
@@ -794,7 +850,6 @@ public class BuilderTiles extends Builder {
                   e.printStackTrace();
                   context.taskAbort();
                }
-               updateStat(-1,0,0,0,0,0);
             }
          }
 
@@ -804,7 +859,8 @@ public class BuilderTiles extends Builder {
          //         Aladin.trace(3,Thread.currentThread().getName()+" died !");
       }
    }
-
+   
+   
    /** Mise à jour de la barre de progression en mode GUI */
    protected void setProgressBar(int npix) { context.setProgressLastNorder3(npix); }
 
@@ -813,37 +869,98 @@ public class BuilderTiles extends Builder {
       Item pix=null;
       synchronized( lockObj ) {
          if( fifo.isEmpty() ) return null;
-         pix = fifo.removeFirst();
+         pix = fifo.removeLast();
       }
       return pix;
    }
    
    private Item addNpix(int order, long npix,int z,Thread th) {
-      Item item=new Item(order,npix,z,th);
+      Item item=new Item(order,npix,z,th,false);
       synchronized( lockObj ) { fifo.add(item); }
       return item;
    }
    
    private Object lockObj = new Object();
-
+   
+   private int threadId = 0;
 
    // Crée une série de threads de calcul
    private void launchThreadBuilderHpx(int nbThreads) throws Exception {
 
       initStat(nbThreads);
       context.createHealpixOrder(context.getTileOrder());
-      ThreadBuilderTile.nbThreads=nbThreads;
+//      ThreadBuilderTile.nbThreads=nbThreads;
       ThreadBuilderTile.hasShape = new HashMap<File, Shape>();
 
       for( int i=0; i<nbThreads; i++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          ThreadBuilderTile threadBuilderTile = new ThreadBuilderTile(context,this);
-         ThreadBuilder t = new ThreadBuilder("Builder"+i,threadBuilderTile);
+         ThreadBuilder t = new ThreadBuilder("Builder"+threadId++,threadBuilderTile);
          threadList.add( t );
          t.start();
+         if( i==0 ) cds.tools.Util.pause(100);   // Juste pour que la fifo se remplisse plus efficacement (profondeur d'abord)
       }
    }
+   
+   /** Augmente le nombre de threads de calcul (notamment pour BuilderMirror) */
+   protected boolean addThreadBuilderHpx(int nbThreads) throws Exception {
+      
+      // On ne peut à la fois ralentir et accélerer
+      if( ThreadBuilderTile.nbThreadsToStop>0 ) return false;
+      
+      context.info("Probably not enough threads => ask to launch "+nbThreads+" thread(s) asap...");
+      
+      synchronized( lockObj ) {
+         
+         // On récupère d'éventuelles places libres ?
+         for( int i=0; nbThreads>0 && i<threadList.size(); i++ ) {
+            ThreadBuilder tb = threadList.get(i);
+            if( tb.isDied() ) {
+               ThreadBuilderTile threadBuilderTile = new ThreadBuilderTile(context,this);
+               ThreadBuilder t = new ThreadBuilder(tb.getName(),threadBuilderTile);
+               threadList.set(i, t);
+               t.start();
+               nbThreads--;
+            }
+         }
+         if( nbThreads==0 ) return true;
+         
+         // On augmente la liste
+//         int lastnbThreads = ThreadBuilderTile.nbThreads;
+//         ThreadBuilderTile.nbThreads+=nbThreads;
 
+         for( int i=0; i<nbThreads; i++ ) {
+            if( context.isTaskAborting() ) throw new Exception("Task abort !");
+            ThreadBuilderTile threadBuilderTile = new ThreadBuilderTile(context,this);
+            ThreadBuilder t = new ThreadBuilder("Builder"+threadId++,threadBuilderTile);
+            threadList.add( t );
+            t.start();
+         }
+      }
+      return true;
+   }
+   
+   /** Retourne le nombre de threads actifs */
+   protected int getNbThreads() {
+      int nb=0;
+      try {
+         for( ThreadBuilder tb : threadList ) {
+            if( !tb.isDied() ) nb++;
+         }
+      } catch( Exception e ) { return -1; }
+      return nb;
+   }
+   
+   /** Demande d'arrêt de threads de calcul (notamment pour BuilderMirror) */
+   protected boolean removeThreadBuilderHpx(int nbThreads) {
+      if( ThreadBuilderTile.nbThreadsToStop>0 ) return false;
+      synchronized( lockObj ) {
+         ThreadBuilderTile.nbThreadsToStop=nbThreads;
+         context.info("Probably too many threads => ask to stop "+nbThreads+" thread(s) asap...");
+      }
+      return true;
+   }
+   
    // Demande l'arrêt de tous les threads de calcul
    void destroyThreadBuilderHpx() {
       Iterator<ThreadBuilder> it = threadList.iterator();
@@ -871,7 +988,7 @@ public class BuilderTiles extends Builder {
       return false;
    }
 
-   int nbThreadRunning() {
+   int getNbThreadRunning() {
       int n=0;
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) {

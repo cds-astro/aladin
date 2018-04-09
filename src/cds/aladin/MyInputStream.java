@@ -111,6 +111,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long EPNTAP  = 1L<<47;
    static final public long DATALINK= 1L<<48;
    static final public long DALIEX  = 1L<<49;
+   static final public long TMOC    = 1L<<50;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
@@ -118,7 +119,7 @@ public class MyInputStream extends FilterInputStream {
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
       "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP" ,"DATALINK", "DALIEX"};
+      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC"};
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -299,7 +300,10 @@ public class MyInputStream extends FilterInputStream {
 
       // Healpix
       if( (type & XFITS) !=0 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
-            || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) type |= HPXMOC;
+            || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) {
+         type |= HPXMOC;
+         if( hasFitsKey("TIMESYS",null) ) type |= TMOC;
+      }
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
 
@@ -385,7 +389,10 @@ public class MyInputStream extends FilterInputStream {
          else if( c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
                && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=HPXMOC;
 
-         // Détection MOC JSON (une ligne de blanc \n{"  )
+         // Détection #TMOC...)
+         else if( c[0]=='#' && c[1]=='T' && c[2]=='M' && c[3]=='O' && c[4]=='C') type |= TMOC;
+
+        // Détection MOC JSON (une ligne de blanc \n{"  )
          else if( isJsonMoc(c) ) type |=HPXMOC;
          
          //         // Detection de BMP

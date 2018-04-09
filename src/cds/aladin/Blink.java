@@ -21,7 +21,9 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
 
 /**
  *  Le blinking consiste à désigner une source pour la repérer aisément.
@@ -105,6 +107,7 @@ public final class Blink {
 
    /** Demande le démarrage du blink pour une source donnée s */
    synchronized protected void start(Source s) {
+      if( s==null ) return;
       this.s=s;
       c = v.getProjSyncView().getProj().c;
       p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());

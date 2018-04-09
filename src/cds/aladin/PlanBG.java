@@ -531,6 +531,13 @@ public class PlanBG extends PlanImage {
             } catch( Exception e ) {};
          }
 
+         s = prop.getProperty(Constante.KEY_HIPS_ORDER_MIN);
+         if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER_MIN);
+         if( s!=null ) {
+            try { minOrder=Integer.parseInt(s);
+            } catch( Exception e ) {};
+         }
+
          s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
          if( s!=null ) {
             try {
@@ -1589,9 +1596,9 @@ public class PlanBG extends PlanImage {
 
    // Si la map n'est pas profonde, les losanges Allsky feront l'affaire */
    protected HealpixKey getHealpixFromAllSky(int order,long npix) {
-      if( order!=3 /* || allsky==null */ ) return null;
+      if( order>3 /* || allsky==null */ ) return null;
 
-      HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1) );
+      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1) );
       if( allsky==null || allsky.getStatus()!=HealpixKey.READY ) return null;
 
       int orderLosange= getTileOrder();
@@ -1618,7 +1625,10 @@ public class PlanBG extends PlanImage {
    //      return null;
    //   }
 
+   static final private long [] ALLSKY = { 0L,1L,2L,3L,4L,5L,6L,7L,8L,9L,10L,11L };
+   
    static long [] getNpixList(int order, Coord center, double radius) throws Exception {
+      if( order==0 ) return ALLSKY;
       return CDSHealpix.query_disc(CDSHealpix.pow2(order),center.al, center.del, Math.toRadians(radius));
    }
 
@@ -1669,17 +1679,8 @@ public class PlanBG extends PlanImage {
       
       try {
          if( center==null ) center = getCooCentre(v);
- 
-         double radius;
-         double r2 = Math.max(v.getTailleRA(),v.getTailleDE());
-         
-         // C'ETAIT BCP TROP LARGE, JE ME RESTREINS DESORMAIS AU CHAMP DE VUE COURANT 
-//         long nside = CDSHealpix.pow2(order);
-//         double r1 = CDSHealpix.pixRes(nside)/3600;
-//         radius = Math.max(r1,r2);
-         radius=r2;
-
-         return filterByMoc( getNpixList(order,center,radius), order ).clone();
+         double radius = v.getTaille();
+         return filterByMoc( getNpixList(order,center,radius).clone(), order );
          
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
       
@@ -1690,12 +1691,10 @@ public class PlanBG extends PlanImage {
       if( moc==null ) return pix;
       int j=0;
       for( int i=0; i<pix.length; i++ ) {
-         if( !moc.isIntersecting(order,pix[i]) ) {
-            //            System.out.println("filterByMoc "+order+"/"+pix[i]);
-            continue;
+         if( moc.isIntersecting(order,pix[i]) ) {
+            if( i!=j ) pix[j]=pix[i];
+            j++;
          }
-         if( j<i ) pix[j] = pix[i];
-         j++;
       }
       if( j==pix.length ) return pix;
       long [] p = new long[j];
@@ -1742,7 +1741,9 @@ public class PlanBG extends PlanImage {
 
    /** Retourne l'order de l'affichage actuel */
    protected int getOrder() {
-      return Math.max(3,Math.min(maxOrder(),maxOrder));
+      int o = Math.min(maxOrder(),maxOrder);
+      if( o<getMinOrder() ) o = getMinOrder();
+      return o;
    }
 
    protected int maxOrder() {
@@ -2053,14 +2054,14 @@ public class PlanBG extends PlanImage {
          }
       }
       double pixSize = v.getPixelSize();
-      for( lastMaxOrder=1; lastMaxOrder<RES.length && RES[lastMaxOrder]>pixSize; lastMaxOrder++ );
+      for( lastMaxOrder=0; lastMaxOrder<RES.length && RES[lastMaxOrder]>pixSize; lastMaxOrder++ );
       lastMaxOrder=adjustMaxOrder(lastMaxOrder,pixSize);
       
       return lastMaxOrder;
    }
 
    protected int adjustMaxOrder(int lastMaxOrder,double pixSize) {
-      if( lastMaxOrder<=2 && pixSize<0.06 ) lastMaxOrder=3;
+      if( lastMaxOrder<=2 && pixSize<0.06 && getMinOrder()==3) lastMaxOrder=3;
       return lastMaxOrder;
    }
 
@@ -2342,14 +2343,14 @@ public class PlanBG extends PlanImage {
    //   }
 
 
-   protected final int ALLSKYORDER = 3;
-
+   protected int getMinOrder() { return minOrder==-1 ? 3 : minOrder; }
+   
    /** Chargement synchrone du allsky (nécessaire dans le cas d'une modif de la table des couleurs (Densité map),
     * avant même le premier affichage) */
    protected void loadAllSkyNow() {
-      HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1) );
+      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1) );
       if( allsky==null ) {
-         allsky =  new HealpixAllsky(this,ALLSKYORDER);
+         allsky =  new HealpixAllsky(this,getMinOrder());
          pixList.put( key(allsky) /* key(ALLSKYORDER,-1)*/, allsky);
          try { allsky.loadNow(); } catch( Exception e ) { e.printStackTrace(); }
       }
@@ -2359,17 +2360,20 @@ public class PlanBG extends PlanImage {
    protected boolean drawAllSky(Graphics g,ViewSimple v) {
       boolean hasDrawnSomething=false;
       int z = (int)getZ(v);
-      HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1, z) );
+      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1, z) );
       
       flagWaitAllSky=false;
 
       if( allsky==null ) {
-         if( drawMode==DRAWPOLARISATION ) allsky = new HealpixAllskyPol(this,ALLSKYORDER);
-         else allsky =  new HealpixAllsky(this,ALLSKYORDER,z);
+         if( drawMode==DRAWPOLARISATION ) allsky = new HealpixAllskyPol(this,getMinOrder());
+         else allsky =  new HealpixAllsky(this,getMinOrder(),z);
          pixList.put( key(allsky) , allsky);
 
-         if( local ) allsky.loadFromNet();
-         else {
+         if( local ) {
+            allsky.waitLock();
+            if( allsky.getStatus()==HealpixKey.TOBELOADFROMNET ) allsky.loadFromNet();
+            allsky.unLock();
+         } else {
             if( !useCache || !allsky.isCached() ) {
                tryWakeUp();
                if( v.pref==this ) drawBackground(g, v);
@@ -2395,7 +2399,7 @@ public class PlanBG extends PlanImage {
          // Petite portion du ciel => recherche des losanges spécifiquement
          boolean partial=taille<40 && !v.isAllSky();
          if( partial ) {
-            long [] pixList = getPixList(v, null, ALLSKYORDER);
+            long [] pixList = getPixList(v, null, getMinOrder());
             for( int i=0; i<pixList.length; i++ ) {
                HealpixKey healpix = (allsky.getPixList())[ (int)pixList[i] ];
                if( healpix==null || isOutMoc(healpix.order,healpix.npix)
@@ -2626,10 +2630,9 @@ public class PlanBG extends PlanImage {
    @Override
    protected Image getImage(ViewSimple v,boolean now) {
       if( now ) {
-         //         Image img = aladin.createImage(v.rv.width,v.rv.height);
          BufferedImage img = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB_PRE);
          Graphics g = img.getGraphics();
-         v.drawBackground(g);
+//         v.drawBackground(g);    // impossible si NOGUI
          drawLosanges(g,v,now);
          adjustCM( img );
          g.dispose();
@@ -2674,8 +2677,10 @@ public class PlanBG extends PlanImage {
       // Pour pouvoir détecter s'il y a un objet sous la souris
       //      v.pixelsRGB = ((DataBufferInt)v.imageBG.getRaster().getDataBuffer()).getData();
 
-      v.w=v.imageBG.getWidth();
-      v.h=v.imageBG.getHeight();
+      try {
+         v.w=v.imageBG.getWidth();
+         v.h=v.imageBG.getHeight();
+      } catch( Exception e ) { }
 
       return v.imageBG;
    }
@@ -3005,7 +3010,7 @@ public class PlanBG extends PlanImage {
 
 
    protected void drawHealpixGrid(Graphics g, ViewSimple v) {
-      int order = Math.max(ALLSKYORDER, Math.min(maxOrder(v),maxOrder) );
+      int order = Math.max(getMinOrder(), Math.min(maxOrder(v),maxOrder) );
       long [] pix;
       if( v.isAllSky() ) {
          pix = new long[12*(int)CDSHealpix.pow2(order)*(int)CDSHealpix.pow2(order)];
@@ -3027,14 +3032,14 @@ public class PlanBG extends PlanImage {
    /** Tracé des losanges à la résolution adéquate dans la vue
     * mais en mode synchrone */
    protected void drawLosangesNow(Graphics g,ViewSimple v) {
-      int order = Math.max(ALLSKYORDER, Math.min(maxOrder(v),maxOrder) );
-      boolean lowResolution = v.isAllSky() && order==ALLSKYORDER;
+      int order = Math.max(getMinOrder(), Math.min(maxOrder(v),maxOrder) );
+      boolean lowResolution = v.isAllSky() && order==getMinOrder();
 
-      HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1) );
+      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1) );
 
       if( lowResolution ) {
          if( allsky==null ) {
-            allsky =  new HealpixAllsky(this,ALLSKYORDER);
+            allsky =  new HealpixAllsky(this,getMinOrder());
             try { allsky.loadNow();
             } catch( Exception e ) { e.printStackTrace(); }
          }
@@ -3087,21 +3092,21 @@ public class PlanBG extends PlanImage {
       int nb=0;
       long [] pix=null;
       int z = (int)getZ(v);
-      int min = Math.max(ALLSKYORDER,minOrder);
+      int min = Math.max(getMinOrder(),minOrder);
       int max = Math.min(maxOrder(v),maxOrder);
       boolean allKeyReady = false;
       boolean oneKeyReady = false;
       boolean allskyDrawn=false;           // true si on a déjà essayé de tracer un allsky
-      StringBuilder debug=new StringBuilder(" ");
-      HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1, z) );
+//      StringBuilder debug=new StringBuilder(" ");
+      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1, z) );
 
-      if( z>0 ) debug.append(" z="+z);
+//      if( z>0 ) debug.append(" z="+z);
 
       // On dessine le ciel entier à basse résolution
-      if( min<ALLSKYORDER ) {
+      if( min<getMinOrder() ) {
          if( drawAllSky(g,v) ) {
             nb++;
-            debug.append(" allsky1");
+//            debug.append(" allsky1");
          }
          allskyDrawn=true;
       } else {
@@ -3121,7 +3126,7 @@ public class PlanBG extends PlanImage {
          // Recherche des losanges qui couvrent la vue à la résolution max
          // uniquement si on est au-dela de l'order 3 (sauf si c'est le dernier)
          allKeyReady=true;
-         if( max<ALLSKYORDER ) allKeyReady=false;
+         if( max<getMinOrder() ) allKeyReady=false;
          else {
             pix = getPixList(v,center,max);
             for( int i=0; i<pix.length; i++ ) {
@@ -3157,11 +3162,11 @@ public class PlanBG extends PlanImage {
             //            if( !allKeyReady ) pix=null;
          }
 
-         if( nb==0 && max<=ALLSKYORDER  && (!allKeyReady  || (!oneKeyReady && allsky!=null))
+         if( nb==0 && max<=getMinOrder()  && (!allKeyReady  || (!oneKeyReady && allsky!=null))
                /* && (!isCube() || isCube() && !oneKeyReady) */ ) {
             if( drawAllSky(g,v) ) {
                nb++;
-               debug.append(" allsky2");
+//               debug.append(" allsky2");
             }
             allskyDrawn=true;
          }
@@ -3176,7 +3181,7 @@ public class PlanBG extends PlanImage {
             if( cmin<max-1) { cmin=max-1; oneKeyReady=true; }
          }
 
-         if( max>=ALLSKYORDER )
+         if( max>=getMinOrder() )
             for( int order=cmin; order<=max || !oneKeyReady && order<=max+2 && order<=maxOrder; order++ ) {
 
                //               if( !allKeyReady ) {
@@ -3201,7 +3206,7 @@ public class PlanBG extends PlanImage {
                } catch( Exception e ) { }
                //               }
 
-               boolean debugOrder=false; // passe à true si on a dessiné au-moins un losange de cet ordre
+//               boolean debugOrder=false; // passe à true si on a dessiné au-moins un losange de cet ordre
                for( int i=0; i<pix.length; i++ ) {
                   if( pix[i]==-1 ) continue;
                   healpix = getHealpix(order,pix[i],z, false);
@@ -3272,12 +3277,12 @@ public class PlanBG extends PlanImage {
                      resetHist();
                   }
 
-                  if( !debugOrder ) { debug.append(" "+order); debugOrder=true; }
+//                  if( !debugOrder ) { debug.append(" "+order); debugOrder=true; }
                }
             }
 
          //essai
-         allWaitingKeysDrawn = allKeyReady || (max<=ALLSKYORDER && hasDrawnSomething);
+         allWaitingKeysDrawn = allKeyReady || (max<=getMinOrder() && hasDrawnSomething);
 
       }
 
@@ -3285,7 +3290,7 @@ public class PlanBG extends PlanImage {
       if( isPause() && nb==0 && !allskyDrawn && allsky!=null && allsky.getStatus()==HealpixKey.READY
             && drawAllSky(g, v) ) {
          nb++;
-         debug.append(" allsky3");
+//         debug.append(" allsky3");
       }
 
       hasDrawnSomething= nb>0;
@@ -3293,8 +3298,8 @@ public class PlanBG extends PlanImage {
       tryWakeUp();
 
       // Vitesse de tracé - sur les MAXSTAT derniers tracé
-      long t2 = Util.getTime(0);
-      long statTime = statTimeDisplayArray[nStat++] = (t2-t1)/1000000L;;
+//      long t2 = Util.getTime(0);
+//      long statTime = statTimeDisplayArray[nStat++] = (t2-t1)/1000000L;
       if( nStat==statTimeDisplayArray.length ) nStat=0;
       long totalStatTime=0;
       int nbStat=0;
@@ -3368,21 +3373,28 @@ public class PlanBG extends PlanImage {
 
       if( v.getTaille()<15 ) return;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      g.setColor( Aladin.COLOR_BACKGROUND );
+      
+      
+//      Color bckCol = color ? Color.black : cm==null ? Color.white : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
+      Color bckCol = v.getCouleurFond();
+      g.setColor( bckCol );
+      
+//      g.setColor( Aladin.COLOR_BACKGROUND );
       Stroke st = g.getStroke();
 
-      int epaisseur = 200;
+      int epaisseur = 100;
       g.setStroke(new BasicStroke(epaisseur));
 
       Projection projd = v.getProj().copy();
       projd.setProjCenter(0, 0);
       projd.frame=0;
 
-      //      g.setColor( Color.yellow );
+//            g.setColor( Color.yellow );
       rayon=0;
       int m=epaisseur/2;
-      int chouilla = (int)( (v.getWidth()/800. -1)*6 );
-      if( chouilla<0 ) chouilla=0;
+//      int chouilla = (int)( (v.getWidth()/800. -1)*6 );
+//      if( chouilla<0 ) chouilla=0;
+      int chouilla = 1;
 
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
@@ -3460,7 +3472,8 @@ public class PlanBG extends PlanImage {
       int x=0,y=0,rayon=0,grandAxe=0;
       double angle=0;
 
-      Color bckCol = color ? Color.black : cm==null ? Color.white : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
+      Color bckCol = color ? Color.black : cm==null ? Color.white : 
+         new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
       g.setColor( bckCol );
       rayon=0;
       
@@ -3536,8 +3549,7 @@ public class PlanBG extends PlanImage {
          if( isTransparent() ) {
             Graphics2D g2d = (Graphics2D)g;
             Paint paint = g2d.getPaint();
-            Paint gradient = new GradientPaint(0, 0,new Color(0,0,70),
-                  w,h, new Color(180,190,200));
+            Paint gradient = new GradientPaint(0, 0,new Color(0,0,70), w,h, new Color(180,190,200));
             g2d.setPaint(gradient);
             g.fillRect(0, 0, w,h);
             g2d.setPaint(paint);
@@ -3690,18 +3702,28 @@ public class PlanBG extends PlanImage {
     * Gère le chargement des losanges de manière asynchrone
     */
    class HealpixLoader implements Runnable {
+      static final int POOLSIZE = 8;
+      boolean POOLTEST = true;   // EN COURS DE DEVELOPPEMENT POUR METTRE NE PLACE UN POOL DE THREADS DE CHARGEMENT DE TUILES
       static final int DELAI =1000;   // delai en ms entre deux demandes de chargement des losanges
 
       private boolean loading;      // false s'il n'y a plus de losange en cours de chargement
       private boolean purging;      // false s'il n'y a plus aucun losange à purger
       private Thread thread=null;
-      private Loader cacheLoader,netLoader;
+      private Loader cacheLoader, netLoader;
+      private Loader [] netPool;
 
       HealpixLoader() {
          loading=false;
          purging=false;
          cacheLoader = new Loader(0);
-         netLoader = new Loader(1);
+         
+//         POOLTEST = aladin.view.getNbView()<=2;
+//         if( POOLTEST ) {
+            netPool = new Loader[POOLSIZE];
+            for( int i=0; i<netPool.length; i++ ) netPool[i] = new Loader(1);
+//         } else {
+            netLoader = new Loader(1);
+//         }
          wakeUp();
       }
 
@@ -3755,7 +3777,12 @@ public class PlanBG extends PlanImage {
       public void run() {
          Util.pause(100);
          if( useCache ) cacheLoader.start();
-         netLoader.start();
+         POOLTEST = !local && aladin.view.getNbView()<=2;
+         if( POOLTEST ) {
+            for( Loader a : netPool ) a.start();
+         } else {
+            netLoader.start();
+         }
          do {
             sleep=true;
             try {
@@ -3777,7 +3804,11 @@ public class PlanBG extends PlanImage {
             } catch( Throwable e1 ) { e1.printStackTrace(); }
          } while ( shouldRun() );
          if( useCache ) cacheLoader.stop();
-         netLoader.stop();
+         if( POOLTEST ) {
+            for( Loader a : netPool ) a.stop();
+         } else {
+            netLoader.stop();
+         }
          thread=null;
          Aladin.trace(5,"PlanBG.HealpixLoader died");
          nbFlush=0;
@@ -3842,10 +3873,8 @@ public class PlanBG extends PlanImage {
 
                nb[status]++;
 
-               if( healpix.priority<250 &&
-                     !(status==HealpixKey.READY || status==HealpixKey.ERROR) ) n++;
-               else if( healpix.npix==-1 &&
-                     !(status==HealpixKey.READY || status==HealpixKey.ERROR) ) n+=10;
+               if( healpix.priority<250 && !(status==HealpixKey.READY || status==HealpixKey.ERROR) ) n++;
+               else if( healpix.npix==-1 && !(status==HealpixKey.READY || status==HealpixKey.ERROR) ) n+=10;
 
             }
          } catch( Exception e) { e.printStackTrace(); return; }
@@ -3890,7 +3919,13 @@ public class PlanBG extends PlanImage {
          if( healpixNet!=null && healpixNet!=healpixMin ) healpixNet.abort();
 
          if( nb[HealpixKey.TOBELOADFROMCACHE]>0 ) cacheLoader.wakeUp();
-         if( nb[HealpixKey.TOBELOADFROMNET]>0 )   netLoader.wakeUp();
+         if( nb[HealpixKey.TOBELOADFROMNET]>0 )   {
+            if( POOLTEST ) {
+               for( Loader a : netPool ) if( a.isPause() ) a.wakeUp();
+            } else {
+               netLoader.wakeUp();
+            }
+         }
 
          // Pour faire blinker le plan
          if( aladin.calque!=null && oLoading!=loading ) {
@@ -3928,6 +3963,7 @@ public class PlanBG extends PlanImage {
       }
    }
 
+   static private int THREADID = 0;
    private boolean oLoading = false;
    static private final int MAXTIMETOBELOADFROMNET = 1000;      // Temps maximum autorisé pour prendre en charge plus d'un losange distant
 
@@ -3943,7 +3979,7 @@ public class PlanBG extends PlanImage {
 
       Loader(int type) {
          this.type=type;
-         label=type==0?"LoaderCache":"LoaderNet";
+         label=(type==0?"LoaderCache-":"LoaderNet-")+THREADID++;
       }
 
       void start() {
@@ -3961,6 +3997,8 @@ public class PlanBG extends PlanImage {
 
       private boolean pause=false;
       synchronized void setPause(boolean flag) { pause=flag; }
+      
+      boolean isPause() { return pause; };
 
       void stop() {
          encore=false;
@@ -4012,16 +4050,22 @@ public class PlanBG extends PlanImage {
                      if( list.size()>0 ) {
                         Collections.sort(list);
                         for( HealpixKey h :  list ) {
-                           if( h.getStatus()!=HealpixKey.TOBELOADFROMNET) continue;   // ca a changé, tant pis !
+                           h.waitLock();
+                           if( h.getStatus()!=HealpixKey.TOBELOADFROMNET) {
+                              h.unLock();
+                              continue;   // ca a changé, tant pis !
+                           }
 
                            //System.out.println("   Load "+h);
                            if( type==0 ) h.loadFromCache();
                            else h.loadFromNet();
+                           h.unLock();
+
                            if( !h.allSky ) setTileOrder(h.getLosangeOrder());
-//                           Aladin.trace(5,"PlanBG.Loader ("+label+") loading "+h);
+                           //                           Aladin.trace(5,"PlanBG.Loader ("+label+") loading "+h);
 
                            // Trop long pour un autre ? =>  ça sera pour le prochain tour
-                           if( System.currentTimeMillis() - t > MAXTIMETOBELOADFROMNET ) break;
+//                           if( System.currentTimeMillis() - t > MAXTIMETOBELOADFROMNET ) break;
                         }
                         flagLoad = true;
                      }
@@ -4040,7 +4084,7 @@ public class PlanBG extends PlanImage {
                }
             } catch( Throwable t ) { if( Aladin.levelTrace>=3 ) t.printStackTrace(); }
          }
-//            Aladin.trace(5,"PlanBG.Loader ("+label+") died !");
+            Aladin.trace(5,"PlanBG.Loader ("+label+") died !");
          thread=null;
 
       }

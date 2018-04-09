@@ -569,7 +569,7 @@ public class Calque extends JPanel implements Runnable {
       int n=0;
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
-         if( plan[i].type==Plan.ALLSKYMOC && plan[i].flagOk ) n++;
+         if( plan[i].isMoc() && plan[i].flagOk ) n++;
       }
       return n;
    }
@@ -1984,7 +1984,8 @@ public class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMocAlgo(aladin,label,pList,op,order);
+      if( pList[0] instanceof PlanTMoc ) plan[n] = pa = new PlanTMocAlgo(aladin,label,pList,op,order);
+      else plan[n] = pa = new PlanMocAlgo(aladin,label,pList,op,order);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -3560,6 +3561,19 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
+   /** Création d'un plan Healpix Multi-Order Coverage Temporel à partir d'un flux */
+   protected int newPlanTMOC(MyInputStream in,String label) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      
+      plan[n] = new PlanTMoc(aladin,in,label);
+//      plan[n] = new PlanTMoc(aladin,label);
+      
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
+
    /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
    protected int newPlanMOC(HealpixMoc moc,String label) {
       int n=getStackIndex(label);
@@ -3659,7 +3673,7 @@ public class Calque extends JPanel implements Runnable {
       if( n<0 ) throw new Exception("plane creation error");
       return plan[n];
    }
-   
+
 //new method to have all parameters in plane properties and for status update
 	protected Plan createPlan(InputStream inputStream, String label, String origin, Server server, URL url, String query,
 			int requestId) throws Exception {

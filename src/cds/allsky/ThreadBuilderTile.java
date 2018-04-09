@@ -50,6 +50,7 @@ final public class ThreadBuilderTile {
 
    private Context context;
    protected BuilderTiles builderTiles;
+   protected BuilderTiles.ThreadBuilder threadBuilder;   // just pour faire des remontées de debug sur setInfo(...)
    private int bitpix;
    private Mode coaddMode;
    private double max;
@@ -70,6 +71,8 @@ final public class ThreadBuilderTile {
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
    private int tileSide;
+   
+   static protected int nbThreadsToStop=0;
    
 
    static protected HashMap<File, Shape> hasShape=null;   // Polygones associés à chaque fichier ou répertoire
@@ -122,7 +125,7 @@ final public class ThreadBuilderTile {
       return mem-40*1024L*1024L<rqMem;
    }
    
-   static public int nbThreads;
+//   static public int nbThreads;
 
    protected boolean requiredMem(long nbProgen,int nbThreads ) throws Exception {
       long rqMem = 4 * nbProgen * Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH*context.getNpixOrig();
@@ -151,7 +154,7 @@ final public class ThreadBuilderTile {
             if( !needMem(rqMem) ) return;
          }
 
-         if( builderTiles.nbThreadRunning()<=1 ) {
+         if( builderTiles.getNbThreadRunning()<=1 ) {
             context.cacheFits.forceClean();
             if( context.getVerbose()>3 ) context.warning(Thread.currentThread().getName()+" needs "+
                   cds.tools.Util.getUnitDisk(rqMem)+" but can not stop (last thread running) !");
@@ -171,7 +174,7 @@ final public class ThreadBuilderTile {
 
                   cds.tools.Util.pause((int)( 1000*(1+Math.random()*5)));
                   context.cacheFits.forceClean();
-                  if( builderTiles.nbThreadRunning()<=0 ) {
+                  if( builderTiles.getNbThreadRunning()<=0 ) {
                      if( context.getVerbose()>3 ) context.warning(Thread.currentThread().getName()+" resumes (last thread)");
                      break;
                   }
@@ -219,7 +222,7 @@ final public class ThreadBuilderTile {
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
-         if( !context.live && (!mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, nbThreads)) ) {
+         if( !context.live && (!mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1, 1 /*nbThreads */)) ) {
 
             statOnePass++;
             long mem = getReqMem(downFiles, 0, n);

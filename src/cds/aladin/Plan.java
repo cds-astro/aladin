@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -95,13 +96,14 @@ public class Plan implements Runnable {
    static final int IMAGECUBERGB =20;  // Le plan contient un cube d'images homogènes couleurs
    static final int ALLSKYFINDEX=21; // Plan HiPS Finder (de fait pas un vrai plan => voir PlanBG)
    static final int ALLSKYCUBE=22; // Plan HiPS cube
+   static final int ALLSKYTMOC=23; // Le plan contient un Multi-Order Coverage map Temporel
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
       "Catalog",
       "Tool","Aperture","Folder","Filter",
       "Image FoV","In progress","ImageHuge",
       "HipsImage","HipsPolarisation","HipsCatalog",
-      "MOC","CubeColor","HipsFinder","HipsCube"
+      "MOC","CubeColor","HipsFinder","HipsCube","TMOC",
    };
 
    protected String id=null;     // Identification unique (ex: CDS/I/231...)
@@ -406,6 +408,9 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() { return false; }
+   
+   /** Il s'agit d'un plan de type MOC */
+   protected boolean isMoc() { return type==ALLSKYMOC || type==ALLSKYTMOC; }
 
    /** Retourne true si le plan est un cube */
    protected boolean isCube() { return false; }
@@ -440,7 +445,7 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan de type Tools */
    protected boolean isTool() {
-      return type==TOOL || type==ALLSKYMOC || type==APERTURE || type==Plan.FOV;
+      return type==TOOL || type==ALLSKYMOC || type==ALLSKYTMOC || type==APERTURE || type==Plan.FOV;
    }
 
    /** Il s'agit d'un plan catalogue non progressif */
@@ -1688,9 +1693,9 @@ public class Plan implements Runnable {
    static public String getCoverageTime(String s1,String s2) {
       if( s2==null ) s2=s1;
       if( s1==null ) return null;
-     if( s1.equals(s2) ) return Util.getDateFromMJD(s1);
-     String y1 = Util.getDateFromMJD(s1);
-     String y2 = Util.getDateFromMJD(s2);
+      if( s1.equals(s2) ) return Util.getDateFromMJD(s1);
+      String y1 = Util.getDateFromMJD(s1);
+      String y2 = Util.getDateFromMJD(s2);
       return Y1(y1,y2) + " .. "+ Y2(y1,y2);
    }
    
@@ -2213,7 +2218,8 @@ public class Plan implements Runnable {
       //      runme.stop();
       runme = null;
    }
-
+   
+   
    /** Dessin du plan
     * @param op niveau d'opacité forcé, -1 si prendre celui du plan
     */
@@ -2237,7 +2243,7 @@ public class Plan implements Runnable {
    //      } else draw(g, v, dx, dy);
    //   };
    //
-   //   protected void draw(Graphics g,ViewSimple v,int dx, int dy) { }
+      protected void draw(Graphics g,ViewSimple v,int dx, int dy, float op) { }
 
 
    /** Attente pendant la construction du plan.
@@ -2267,7 +2273,7 @@ public class Plan implements Runnable {
    protected synchronized boolean removeListener(PlaneLoadListener listener) {
       return this.listeners.remove(listener);
    }
-   
+
    protected boolean isThisListening(PlaneLoadListener listener) {
 		return this.listeners.contains(listener);
    }

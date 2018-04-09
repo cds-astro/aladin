@@ -374,7 +374,7 @@ public class ServerFile extends Server implements XMLConsumer {
                in = in.startRead();
                type = in.getType();
             } else type=MyInputStream.UNKNOWN;
-            
+
             // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
             if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
 
@@ -397,9 +397,10 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
 //            else if( (type & MyInputStream.SIA_SSA)!=0)  n=updateMetaData(in,server,"",null)?1:0;
-
-            else if( (type & MyInputStream.HPXMOC)!=0 ) {
-               n=aladin.calque.newPlanMOC(in,label);
+ 
+            else if( (type & (MyInputStream.HPXMOC|MyInputStream.TMOC))!=0 ) {
+               if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label);
+               else n=aladin.calque.newPlanMOC(in,label);
             }
             else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
                if( u!=null ) {

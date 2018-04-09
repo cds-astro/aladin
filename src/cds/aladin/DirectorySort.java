@@ -494,8 +494,8 @@ public class DirectorySort {
    // Retourne l'indice du protocole, -1 si non trouvé
    static public int getProtocolIndex(MyProperties prop) {
       if( prop.getProperty("hips_service_url") != null ) return HIPS;
-      if( prop.getProperty("sia_service_url") != null  ) return SIA;
       if( prop.getProperty("sia2_service_url") != null ) return SIA2;
+      if( prop.getProperty("sia_service_url") != null  ) return SIA;
       if( prop.getProperty("ssa_service_url") != null  ) return SSA;
       if( prop.getProperty("cs_service_url") != null
             || prop.getProperty("access_url") != null  ) return CS;
@@ -748,7 +748,7 @@ public class DirectorySort {
             
             // Alphabétique suivant l'origine
          case ORIGIN:
-            return keyAlpha( Util.getSubpath(id,0), flagReverse, 6);
+            return keyAlpha( Util.getSubpath(id,0).toLowerCase(), flagReverse, 6);
            
          case DATATYPE:
             c = getDataTypeIndex(prop);
@@ -809,7 +809,7 @@ public class DirectorySort {
             return "Unknown regime";
 
          case ORIGIN:
-            return Util.getSubpath(id, 0);
+            return Util.getSubpath(id, 0).toLowerCase();
             
          case COVERAGE:
             try {

@@ -1093,14 +1093,14 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
 
    public float getTransparencyLevel() {
-      //	   String s = get(TRANSLEVEL);
-      //	   if( s==null ) return 0.15f+0.000111f; // valeur par défaut
-      //
-      //	   try {
-      //		   float f = Float.parseFloat(s);
-      //		   return f;
-      //	   }
-      //	   catch(NumberFormatException nfe) {}
+      String s = get(TRANSLEVEL);
+      if( s==null ) return 0.15f+0.000111f; // valeur par défaut
+
+      try {
+         float f = Float.parseFloat(s);
+         return f;
+      }
+      catch(NumberFormatException nfe) {}
       return 0.15f+0.000111f;
    }
 
@@ -1532,12 +1532,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 //      }
 
      // Transparence des footprints
-      transparencyChoice = new JComboBox();
-      transparencyChoice.addItem(NOTACTIVATED);
-      transparencyChoice.addItem(ACTIVATED);
+//      transparencyChoice = new JComboBox();
+//      transparencyChoice.addItem(NOTACTIVATED);
+//      transparencyChoice.addItem(ACTIVATED);
       JPanel transparencyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       // TODO : créer une classe TransparencySlider (utilisé à plusieurs endroits)
-      transparencyPanel.add(transparencyChoice);
+//      transparencyPanel.add(transparencyChoice);
       transparencyLevel = new JSlider(0, 100);
       transparencyLevel.setValue((int)(100*Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL));
       transparencyLevel.setMajorTickSpacing(20);
@@ -1550,8 +1550,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       transparencyPanel.add(transparencyLevel);
 
       //      if( !aladin.OUTREACH ) {
-      //         (l = new JLabel(TRANSB)).setFont(l.getFont().deriveFont(Font.BOLD));
-      //         PropPanel.addCouple(this, p, l, TRANSH, transparencyPanel, g, c, GridBagConstraints.EAST);
+               (l = new JLabel(TRANSB)).setFont(l.getFont().deriveFont(Font.BOLD));
+               PropPanel.addCouple(this, p, l, TRANSH, transparencyPanel, g, c, GridBagConstraints.EAST);
 
       //         // Les centrage des tags
       //         (l = new JLabel(TAGCENTER)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1778,16 +1778,16 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( s != null && s.charAt(0)=='N' ) filterChoice.setSelectedIndex(0);
       else filterChoice.setSelectedIndex(1);
 
-      s = get(TRANS);
-      if( s != null && s.charAt(0)=='N' ) {
-         transparencyChoice.setSelectedIndex(0);
-         transparencyLevel.setEnabled(false);
-      }
-      else {
-         transparencyChoice.setSelectedIndex(1);
-         transparencyLevel.setEnabled(true);
-      }
-      transparencyChoice.addItemListener(this);
+//      s = get(TRANS);
+//      if( s != null && s.charAt(0)=='N' ) {
+//         transparencyChoice.setSelectedIndex(0);
+//         transparencyLevel.setEnabled(false);
+//      }
+//      else {
+//         transparencyChoice.setSelectedIndex(1);
+//         transparencyLevel.setEnabled(true);
+//      }
+//      transparencyChoice.addItemListener(this);
 
       s = get(TRANSLEVEL);
       if( s==null ) transparencyLevel.setValue(15);
@@ -2451,7 +2451,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( level>=1 ) level -= 0.000111f;
       else level += 0.000111f; // le '+/-0.000111f' me permet de distinguer les plans footprints ayant encore la valeur par défaut
 
-      set(TRANS,(String)transparencyChoice.getSelectedItem());
+//      set(TRANS,(String)transparencyChoice.getSelectedItem());
       set(TRANSLEVEL,level+"");
       setTransparency((String)transparencyChoice.getSelectedItem(), level);
 
@@ -2803,7 +2803,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       else level += 0.000111f;
 
       if( Math.abs(level-Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL)>0.02 ) {
-         setTransparency((String)transparencyChoice.getSelectedItem(), level);
+//         setTransparency((String)transparencyChoice.getSelectedItem(), level);
+         setTransparency(ACTIVATED, level);
          set(TRANSLEVEL, level+"");
       }
    }

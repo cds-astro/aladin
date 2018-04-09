@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -57,7 +58,8 @@ public class Segment {
    protected int iso=ISOUNKNOWN;// soit ISORA, soit ISODE, soit ISOUNKNOWN
    protected int x1,y1;         // 1er bout en coord projetées
    protected int x2,y2;         // 2ème bout en coord projetées
-   protected String label=null; // Label du segment
+   protected String label1=null; // Label du segment
+   protected String label2=null; // Label du segment
    protected int labelMode=NOLABEL;// Mode d'affichage du label
    protected boolean horsChamp; // true si on est en-dehors du champ de vue
    private Rectangle clip=null; // Rectangle contenant le segment
@@ -72,7 +74,7 @@ public class Segment {
    }
 
    /** Génération d'un segment qui va prolonger le segment courant */
-   protected Segment copy(boolean withLabel) {
+   protected Segment copy() {
       Segment seg = new Segment();
       seg.al1=al1; seg.al2=al2;
       seg.del1=del1; seg.del2=del2;
@@ -80,10 +82,6 @@ public class Segment {
       seg.y1=y1; seg.y2=y2;
       seg.iso=iso;
       seg.clip=clip;
-      if( withLabel ) {
-         seg.labelMode = labelMode;
-         seg.label = label;
-      }
       return seg;
    }
 
@@ -94,8 +92,8 @@ public class Segment {
     */
    protected Segment[] subdivise(ViewSimple v) throws Exception {
       Segment seg[] = new Segment[2];
-      seg[0] = copy(true);
-      seg[1] = copy(false);
+      seg[0] = copy();
+      seg[1] = copy();
       double al = (al2+al1 - (Math.abs(al2-al1)>180 ? 360:0))/2.;
       double del = (del2+del1)/2.;
       seg[0].al2=seg[1].al1 = al;
@@ -105,6 +103,12 @@ public class Segment {
       if( p==null ) p = new Point(-1,-1);
       seg[0].x2=seg[1].x1=p.x;
       seg[0].y2=seg[1].y1=p.y;
+      
+      seg[0].label1=label1;
+      seg[1].label2=label2;
+      seg[0].labelMode = label1!=null ? labelMode : NOLABEL;
+      seg[1].labelMode = label2!=null ? labelMode : NOLABEL;
+      
       return seg;
    }
 
@@ -112,8 +116,8 @@ public class Segment {
     * correspondant aux coordonnées al,del qui sont supposées être
     * dans le système de référence courant (Choice J2000,B1950,GAL...)
     */
-   private Coord c = new Coord();
    private Point getXY(ViewSimple v,double al,double del) {
+      Coord c = new Coord();
       c.al=al; c.del=del;
       c = v.aladin.localisation.frameToICRS(c);
       v.getProj().getXY(c);
@@ -154,23 +158,35 @@ public class Segment {
             Math.abs(x2-x1)+4,Math.abs(y2-y1)+4);
    }
 
-   static private boolean col;
-
    /** Dessin du segment */
    protected void draw(Graphics g,ViewSimple v,Rectangle clip,int i,int dx,int dy) {
 
-      if( label==null && !inClip(clip) ) return;
+      if( label1==null && label2==null && !inClip(clip) ) return;
 
       g.drawLine(x1+dx,y1+dy,x2+dx,y2+dy);
-      if( label==null ) return;
+      if( label1==null && label2==null) return;
+      
+      FontMetrics fm = g.getFontMetrics();
+      int h = fm.getHeight();
       
       Color  c = g.getColor();
       if( labelMode==MILIEURA || labelMode==GAUCHE ) g.setColor( v.view.gridColorDEC );
       else g.setColor( v.view.gridColorRA );
-      if( labelMode==MILIEURA ) g.drawString(label,(x1+x2)/2+dx,y1+dy-5);
-      else if( labelMode==MILIEUDE ) g.drawString(label,x1-30+dx,(y1+y2)/2+dy-2);
-      else if( labelMode==GAUCHE && y2>30 )g.drawString(label,5+dx,(y1+y2)/2+dy-2);
-      else if( labelMode==HAUT ) g.drawString(label,(x1+x2)/2+dx,25+dy);
+      
+      if( labelMode==MILIEURA ) {
+         if( label1!=null ) g.drawString(label1,x1+dx+3,y1+dy-2);
+         if( label2!=null ) g.drawString(label2,x2+dx+3,y2+dy-2);
+         
+      } else if( labelMode==MILIEUDE ) {
+         if( x1+y1>10 && label1!=null ) g.drawString(label1,x1+dx-h,y1+dy+h );
+         if( x2+y2>10 && label2!=null ) g.drawString(label2,x2+dx-h,y2+dy+h );
+         
+      } else if( labelMode==GAUCHE && y2>30 ) {
+         g.drawString(label1,5+dx,(y1+y2)/2+dy-2);
+         
+      } else if( labelMode==HAUT ) {
+         g.drawString(label1,(x1+x2)/2+dx+2,h+2+dy);
+      }
       g.setColor(c);
    }
 }

@@ -1093,7 +1093,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * Retourne le node correspondant à une identiciation
     * @param A l'identificateur de la collection à chercher
     * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
-    * @param mode 0 - match exact 1 - substring sur label 2 - match exact puis substring sur l'IVOID (ex: Simbad ok pour
+    * @param acceleration 0 - match exact 1 - substring sur label 2 - match exact puis substring sur l'IVOID (ex: Simbad ok pour
     *           CDS/Simbad) puis du menu (ex DssColored ok pour Optical/DSS/DssColored)
     * @return le Hips node trouvé, null sinon NECESSAIRE POUR get Hips(XXX) MAIS IL FAUDRA CHANGER CELA
     */
@@ -1104,7 +1104,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected TreeObjDir getTreeObjDir(String A, int mode) {
       for( TreeObjDir to : dirList ) {
          if( !to.isHiPS() ) continue;
-         if( A.equals(to.id) || A.equals(to.label) || A.equals(to.internalId) ) return to;
+         if( idEquals(A,to.id) || A.equals(to.label) || idEquals(A,to.internalId) ) return to;
          if( mode == 1 && Util.indexOfIgnoreCase(to.label, A) >= 0 ) return to;
          if( mode == 2 ) {
             if( to.internalId != null && to.internalId.endsWith(A) ) return to;
@@ -1122,6 +1122,18 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
       }
       return null;
+   }
+   
+   /** Teste l'égalité de deux ID, sachant que la case n'a pas d'incidence pour l'authority */
+   protected boolean idEquals(String id1, String id2) {
+      // je teste en insensitive case l'authority
+      int i1= id1.indexOf('/');
+      int i2= id2.indexOf('/');
+      if( i1==i2 && i1>0 ) {
+         if( !id1.substring(0,i1).equalsIgnoreCase(id2.substring(0,i2)) ) return false;
+         return id1.substring(i1+1).equals(id2.substring(i2+1));
+      }
+      return id1.equals(id2);
    }
 
    /**

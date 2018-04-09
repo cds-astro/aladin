@@ -54,6 +54,7 @@ public abstract class Builder {
          case MOCERROR:  return new BuilderMocError(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
          case CLEAN:     return new BuilderClean(context);
+         case CLEANALL:  return new BuilderCleanAll(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
          case CLEANDETAILS:return new BuilderCleanDetails(context);
          case CLEANTILES:return new BuilderCleanTiles(context);
@@ -76,6 +77,7 @@ public abstract class Builder {
          case PROP:      return new BuilderProp(context);
          case MIRROR:    return new BuilderMirror(context);
          case MAP:       return new BuilderMap(context);
+         case TMOC:      return new BuilderTMoc(context);
          default: break;
       }
       throw new Exception("No builder associated to this action");
@@ -121,49 +123,110 @@ public abstract class Builder {
       }
       context.setValidateInput(true);
    }
-
+   
+   
+   static private String FS = cds.tools.Util.FS;
+   
+   
    // Vérifie que le répertoire Output a été passé en paramètre, sinon essaye de le déduire
    // du répertoire Input en ajoutant le suffixe HiPS
    // S'il existe déjà, vérifie qu'il s'agit bien d'un répertoire utilisable
    protected void validateOutput() throws Exception { 
       String output = context.getOutputPath();
-      if( output==null ) {
-         output = context.getInputPath();
-         if( output!=null && (output.startsWith("http://") || output.startsWith("https://"))) {
-            output = context.getInputPath();
-            int n = output.length();
-            if( output.charAt(n-1)=='/' ) n--;
-            int offset = output.lastIndexOf('/',n);
-            output = output.substring(offset+1,n);
-         } else {
-            
-            String id = context.getHipsId();
-            
-            // Pas d'id => On ajoute simplement le suffixe HiPS au répertoire d'origine
-            if( id==null ) {
-               output = (output==null?"":output) + Constante.HIPS;
-               
-            // Un Id => on l'utilise comme nom de répertoire cible (avec des _ à la place des / et ?)
-            } else {
-               output = context.getInputPath();
-               output = output.replace('\\', '/');
-               int n = output.length();
-               if( output.charAt(n-1)=='/' ) n--;
-               int offset = output.lastIndexOf('/',n);
-               output = output.substring(0,offset+1);
-               id = id.substring(6);
-               id = id.replace('/','_');
-               id = id.replace('?','_');
-               output = output+id;
-            }
-            
-         }
-         context.setOutputPath(output);
+
+      String name = null;
+      String path = null;
+      int i = output==null ? -1 : output.lastIndexOf(FS);
+
+      // Path indiqué spécifiquement ?
+      if( i>=0 ) path = output.substring(0,i);
+
+      // non ! donc par défaut le répertoire contenant l'image ou le répertoire des images originales
+      else {
+         String input = context.getInputPath();
+         if( input!=null && !input.startsWith("http://") && !input.startsWith("https://") ) {
+            int j = input.lastIndexOf(FS);
+            if( j>=0 ) path = input.substring(0, j);
+            else path = ".";
+
+            // Sauf en cas de mirroir => le répertoire courant   
+         } else path = ".";
       }
+
+      // Nom indiqué spécifiquement ?
+      if( output!=null && i<output.length()-1 ) name = output.substring(i+1);
+
+      // non ! alors on le fabrique depuis l'ID
+      else {
+         String id = context.getHipsId();
+
+         // Pas d'id => On ajoute simplement le suffixe HiPS au répertoire d'origine
+         if( id==null ) {
+            String input = context.getInputPath();
+            if( input!=null && !input.startsWith("http://") && !input.startsWith("https://") ) {
+               int j = input.lastIndexOf(FS);
+               name = input.substring(j+1)+Constante.HIPS;
+
+               // sauf s'il s'agit d'un MIRROR, ou alors on le prend tel que
+            } else {
+               int j = input.lastIndexOf('/');
+               name = input.substring(j+1);
+            }
+
+            // Un Id => on l'utilise comme nom de répertoire cible (avec des _ à la place des / et ?)
+         } else {
+            id = id.substring(6);
+            id = id.replace('/','_');
+            id = id.replace('?','_');
+            name = id;
+         }
+      }
+
+      output = path+FS+name;
+      context.setOutputPath( output );
+
+      
+      
+//      if( output==null ) {
+//         output = context.getInputPath();
+//         if( output!=null && (output.startsWith("http://") || output.startsWith("https://"))) {
+//            output = context.getInputPath();
+//            int n = output.length();
+//            if( output.charAt(n-1)=='/' ) n--;
+//            int offset = output.lastIndexOf('/',n);
+//            output = output.substring(offset+1,n);
+//         } else {
+//            
+//            String id = context.getHipsId();
+//            
+//            // Pas d'id => On ajoute simplement le suffixe HiPS au répertoire d'origine
+//            if( id==null ) {
+//               output = (output==null?"":output) + Constante.HIPS;
+//               
+//            // Un Id => on l'utilise comme nom de répertoire cible (avec des _ à la place des / et ?)
+//            } else {
+//               output = context.getInputPath();
+//               output = output.replace('\\', '/');
+//               int n = output.length();
+//               if( output.charAt(n-1)=='/' ) n--;
+//               int offset = output.lastIndexOf('/',n);
+//               output = output.substring(0,offset+1);
+//               id = id.substring(6);
+//               id = id.replace('/','_');
+//               id = id.replace('?','_');
+//               output = output+id;
+//            }
+//            
+//         }
+//         context.setOutputPath(output);
+//      }
+      
       File f = new File(output);
       if( f.exists() && (!f.isDirectory()  || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
       context.info("the output directory will be "+output);
       context.setValidateOutput(true);
+      
+//      if( true ) System.exit(0);
    }
 
    // Récupère l'ordre en fonction d'un répertoire. Si un order particulier a été passé en paramètre,

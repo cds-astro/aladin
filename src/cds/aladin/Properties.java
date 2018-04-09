@@ -72,6 +72,8 @@ import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
 import cds.astro.Astrotime;
+import cds.moc.HealpixMoc;
+import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -751,7 +753,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          // Format d'image
          JLabel fmtl = new JLabel(
                plan instanceof PlanHealpix ? "HEALPix map" :
-                  plan instanceof PlanMoc ? "Multi-Order Coverage map (MOC)" :
+                  plan instanceof PlanTMoc ? "Temporal Multi-Order Coverage map (TMOC)" :
+                  plan instanceof PlanMoc ? "Spatial Multi-Order Coverage map (MOC)" :
                      plan instanceof PlanBG ? "HiPS" :
                         PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
@@ -1020,17 +1023,31 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
       }
 
-      if( plan.type==Plan.ALLSKYMOC ) {
+      if( plan.isMoc() ) {
          final PlanMoc pmoc = (PlanMoc)plan;
 //         final Frame frameProp = this;
-         double cov = pmoc.getMoc().getCoverage();
-         double degrad = Math.toDegrees(1.0);
-         double skyArea = 4.*Math.PI*degrad*degrad;
-//         final long mocSize = pmoc.getMoc().getSize();
-         PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
-         PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
-               +" (moc order="+pmoc.getMoc().getMocOrder()+")"),g,c);
-//         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
+         
+         if( plan.type==Plan.ALLSKYMOC ) {
+            double cov = pmoc.getMoc().getCoverage();
+            double degrad = Math.toDegrees(1.0);
+            double skyArea = 4.*Math.PI*degrad*degrad;
+            //         final long mocSize = pmoc.getMoc().getSize();
+            PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+            PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
+                  +" (moc order="+pmoc.getMoc().getMocOrder()+")"),g,c);
+            //         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
+         }
+
+         if( plan.type==Plan.ALLSKYTMOC ) {
+            TMoc moc = (TMoc) ((PlanTMoc)plan).moc;
+            long nbSec = moc.getUsedArea();
+            int order = moc.getMocOrder();
+            PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( moc.getTimeMin()) ), g,c);
+            PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( moc.getTimeMax()) ), g,c);
+            PropPanel.addCouple(p,"Accuracy", new JLabel( Util.getTemps(  1000*( 1<<(2*(HealpixMoc.MAXORDER-order))))+" (order="+order+")" ), g,c);
+            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000, true) ), g,c);
+         }
+
 
          final JCheckBox b1 = new JCheckBox("cell borders");
          final JCheckBox b3 = new JCheckBox("perimeter");
@@ -1094,7 +1111,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       //         PropPanel.addCouple(p,cat+" coverage map",p1,g,c);
       //      }
 
-      if( plan instanceof PlanBG ) {
+      if( plan instanceof PlanBG && !(plan instanceof PlanTMoc) ) {
          final PlanBG pbg = (PlanBG) plan;
          PropPanel.addCouple(p, "Coord.sys.:", new JLabel(pbg.getHipsFrame()), g, c);
 

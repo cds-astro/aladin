@@ -88,7 +88,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
    /** Recupere la liste des plans images et catalogues valides */
    @Override
    protected Plan[] getPlan() {
-      Vector<Plan> v  = a.calque.getPlans(Plan.ALLSKYMOC);
+      Vector<Plan> v  = a.calque.getPlans( Plan.ALLSKYMOC);
       Vector<Plan> v2  =a.calque.getPlans(Plan.CATALOG);
       if( v==null ) v=v2;
       else if( v2!=null ) v.addAll(v2);

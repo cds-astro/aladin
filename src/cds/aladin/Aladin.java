@@ -161,6 +161,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Temporal MOC support (prototype implementation) <br>
  * @beta    <LI> Data discovery tree: <br>
  * @beta          - sort and hiearchy control <br>
  * @beta          - drag & drop to view panels
@@ -168,10 +169,12 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Log control adapted to Debian policy
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
  * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
+ * @beta    <LI> HiPSgen MIRROR improvements (network speed auto adaptation)
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Grid missing label bug fixing
  * @beta    <LI> Hipsgen multithread dead lock (multipass bug)
  * @beta    <LI> Grid stroke line adjustement (for very huge images in NOGUI mode)
  * @beta    <LI> Debian+GNOME context (Jtree, TextField, SwingInvokeLater...)
@@ -199,7 +202,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.076";
+   static public final    String VERSION = "v10.085";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3408,8 +3411,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,HPXGRID)){ grid(2);
 //      } else if( isMenu(s,HPXGRID)){ hpxGrid();
       //      } else if( isMenu(s,HISTORY)){ history();
-      } else if( isMenu(s,ZOOMP))  { calque.zoom.setZoom("+");
-      } else if( isMenu(s,ZOOMM))  { calque.zoom.setZoom("-");
+      } else if( isMenu(s,ZOOMP))  { zoom(-1);
+      } else if( isMenu(s,ZOOMM))  { zoom(1); 
       } else if( isMenu(s,ZOOMPT)) { zoom();
       } else if( isMenu(s,COPIER)) { copier();
       } else if( isMenu(s,COLLER)) { coller();
@@ -4006,6 +4009,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
          toolBox.tool[ToolBox.ZOOM].mode=Tool.UP;
       }
       toolBox.repaint();
+   }
+   
+   /**
+    * Zoome dans la vue en fonction de la position du cursuer
+    * @param sens 1 zoom+, -1 zoom-
+    */
+   protected void zoom(int sens) {
+      if( view.tpsIncrZoom(sens) ) return;
+      calque.zoom.setZoom( sens==1 ? "+" : "-" );
    }
 
    /** Activation ou désactivation du panning via la Jbar */
@@ -4730,7 +4742,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void preferences() {
       configuration.show();
    }
-   
+
    /**
 	 * Gentle shut down of all threads
 	 * plus async job clean up

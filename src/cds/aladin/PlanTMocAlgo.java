@@ -21,18 +21,15 @@
 
 package cds.aladin;
 
-import java.util.ArrayList;
-
-import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
-import cds.tools.pixtools.CDSHealpix;
 
 /** Génération d'un MOC de manière algorythmique
  * @author P.Fernique [CDS]
  * @version 1.0 - nov 2012
  */
-public class PlanMocAlgo extends PlanMoc {
+public class PlanTMocAlgo extends PlanTMoc {
    
    static final int UNION        = 0;
    static final int INTERSECTION = 1;
@@ -59,7 +56,7 @@ public class PlanMocAlgo extends PlanMoc {
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */
-   public PlanMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
+   public PlanTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
@@ -69,7 +66,7 @@ public class PlanMocAlgo extends PlanMoc {
       if( label==null ) label = s;
       setLabel(label);
       
-      aladin.trace(3,"MOC computation: "+Plan.Tp[type]+" => "+s);
+      aladin.trace(3,"TMOC computation: "+Plan.Tp[type]+" => "+s);
       
       try {
          moc = (HealpixMoc)p1.getMoc().clone();
@@ -87,7 +84,7 @@ public class PlanMocAlgo extends PlanMoc {
                }
             }
          }
-         moc.setMinLimitOrder(3);
+         if( !(moc instanceof TMoc) ) moc.setMinLimitOrder(3);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -100,60 +97,7 @@ public class PlanMocAlgo extends PlanMoc {
       flagProcessing=false;
       flagOk=true;
       setActivated(flagOk);
-      if( moc.getSize()==0 ) error="Empty MOC";
-      aladin.calque.repaintAll();
-
-      sendLog("Compute"," [" + this + " = "+s+"]");
-   }
-   
-   /** Création d'un Plan MOC par un "crop" polygone convexe sur un MOC existant (mocSource)
-    * @param aladin
-    * Rq : méthode synchrone (pas de threading)
-    *
-    * @param label
-    * @param mocSource Le MOC à cropper
-    * @param cooPolygon la liste des coordonnées J2000 qui décrivent le polygone convexe
-    */
-   protected PlanMocAlgo(Aladin aladin,String label,PlanMoc mocSource,Coord [] cooPolygon) {
-      super(aladin);
-      mocSource.copy(this);
-      this.c = Couleur.getNextDefault(aladin.calque);
-      setOpacityLevel(1.0f);
-      String s = "crop";
-      if( label==null ) label = s;
-      setLabel(label);
-      
-      aladin.trace(3,"MOC cropping: "+Plan.Tp[type]+" => "+s);
-      
-      try {
-         CDSHealpix hpx = new CDSHealpix();
-         int order = mocSource.moc.getMaxOrder();
-         long nside = Healpix.pow2(order);
-         ArrayList<double[]> a = new ArrayList<double[]>();
-         for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
-         long [] npix = hpx.query_polygon(nside, a);
-         
-         moc.clear();
-         moc.setCheckConsistencyFlag(false);
-         for( long pix : npix ) moc.add(order,pix);
-         moc.setCheckConsistencyFlag(true);
-         
-         moc = moc.intersection(mocSource.moc);
-         
-      } catch( Exception e ) {
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-         moc.clear();
-         aladin.error = error = e.getMessage();
-         flagOk=false;
-      }
-      
-      copyright = "Computed by Aladin";
-      flagProcessing=false;
-      if( moc.getSize()==0 ) {
-         error="Empty MOC";
-         flagOk=true;
-      } else flagOk=true;
-      setActivated(flagOk);
+      if( moc.getSize()==0 ) error="Empty TMOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");

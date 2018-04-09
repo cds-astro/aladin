@@ -150,16 +150,20 @@ public class DirectoryTree extends JTree {
    /** Ouvre l'arbre en montrant le noeud associé à l'id spécifié */
    protected void showTreeObj(String id) { 
       if( id==null ) return;
-      TreePath path = findTreeObj(new TreePath(root),id);
-      if( path==null ) return;
+      try {
+         TreePath path = findTreeObj(new TreePath(root),id);
+         if( path==null ) return;
+            
+         // Selection du noeud trouvé
+         setSelectionPath(path);
          
-      // Selection du noeud trouvé
-      setSelectionPath(path);
-      
-      // Scrolling s'il n'est pas visible
-      Rectangle bounds = getPathBounds(path);
-      bounds.height = getVisibleRect().height;
-      scrollRectToVisible(bounds);
+         // Scrolling s'il n'est pas visible
+         Rectangle bounds = getPathBounds(path);
+         bounds.height = getVisibleRect().height;
+         scrollRectToVisible(bounds);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
    }
    
    /** Retourne le path du noeud associé à l'id, ou null si non trouvé */

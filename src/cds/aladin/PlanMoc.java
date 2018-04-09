@@ -57,8 +57,8 @@ public class PlanMoc extends PlanBGCat {
    protected HealpixMoc moc = null;                 // Le MOC
    private int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
 
-   private HealpixMoc [] arrayMoc =null;          // Le MOC à tous les ordres */
-   private ArrayList<Hpix> arrayHpix = null;      // Liste des cellules correspondant aux cellules tracés (order courant)
+   protected HealpixMoc [] arrayMoc =null;        // Le MOC à tous les ordres */
+   protected ArrayList<Hpix> arrayHpix = null;    // Liste des cellules correspondant aux cellules tracés (order courant)
    private ArrayList<Hpix> arrayPeri = null;      // Liste des cellules correspondant au périmètre tracé (ordre courant)
    
    public PlanMoc(Aladin a) { super(a); }
@@ -167,7 +167,7 @@ public class PlanMoc extends PlanBGCat {
    
    /** Retourne le Moc.maxOrder réel, même pour les vieux MOCs dont le Norder est généralement
     * faux */
-   static private int getRealMaxOrder(HealpixMoc m) {
+   static protected int getRealMaxOrder(HealpixMoc m) {
       int nOrder = m.getMaxOrder();
       if( nOrder<=0 ) return nOrder;
       Array a;
@@ -449,7 +449,7 @@ public class PlanMoc extends PlanBGCat {
    protected boolean isDrawn() { return true; }
 
    // Fournit le MOC qui couvre le champ de vue courant
-   private HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
+   protected HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
       Coord center = getCooCentre(v);
       long [] pix = getPixList(v,center,order);
 
@@ -462,10 +462,10 @@ public class PlanMoc extends PlanBGCat {
    }
 
    static int MAXGAPORDER=3;
-   private int gapOrder=0;
+   protected int gapOrder=0;
    
    protected void setMaxGapOrder() { setGapOrder(MAXGAPORDER); }
-
+   
    protected int getGapOrder() { return gapOrder; }
    protected void setGapOrder(int gapOrder) {
       if( Math.abs(gapOrder)>MAXGAPORDER ) return;
@@ -503,7 +503,7 @@ public class PlanMoc extends PlanBGCat {
    
    // retourne/construit la liste du MOC
    // à l'ordre courant (mode progressif)
-   private HealpixMoc getHealpixMocLow(int order,int gapOrder) {
+   protected HealpixMoc getHealpixMocLow(int order,int gapOrder) {
       
       // On fournit le meilleur MOC dans le cas de la génération d'une image
       if( aladin.NOGUI ) return moc;
@@ -547,10 +547,10 @@ public class PlanMoc extends PlanBGCat {
       return arrayMoc[order];
    }
 
-   private boolean isLoading=false;
+   protected boolean isLoading=false;
    protected boolean isLoading() { return isLoading; }
 
-   private int lastOrderDrawn=-1;   // Dernier order tracé
+   protected int lastOrderDrawn=-1;   // Dernier order tracé
 
    /** Retourne true si tout a été dessinée, sinon false */
    protected boolean hasMoreDetails() {
@@ -596,7 +596,7 @@ public class PlanMoc extends PlanBGCat {
       int max = Math.min(maxOrder(v),maxOrder)+1;
       
       try {
-         HealpixMoc m = v.isAllSky() ? null : getViewMoc(v,max);
+         HealpixMoc viewMoc = v.isAllSky() ? null : getViewMoc(v,max);
          
          long t=0;
          int myOrder = max+ (v.isAllSky()?0:1);
@@ -627,7 +627,7 @@ public class PlanMoc extends PlanBGCat {
             Iterator<MocCell> it = lowMoc.iterator();
             while( it.hasNext() ) {
                MocCell c = it.next();
-               if( m!=null && !m.isIntersecting(c.order, c.npix)) continue;
+               if( viewMoc!=null && !viewMoc.isIntersecting(c.order, c.npix)) continue;
                Hpix p = new Hpix(c.order, c.npix, frameOrigin);
                if( p.isOutView(v) ) continue;
                a1.add(p);
@@ -703,5 +703,6 @@ public class PlanMoc extends PlanBGCat {
    
    protected float factorOpacity = 0.5f;
    protected float getFactorOpacity() { return factorOpacity; }
+   
 }
 

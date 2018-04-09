@@ -274,7 +274,7 @@ public class PlanBGCube extends PlanBG {
          //         int o = Math.max(ALLSKYORDER, Math.min(maxOrder(v),maxOrder) );
          int o = Math.min(maxOrder(v),maxOrder);
          if( o!=initOrder ) return false;
-         if( o<ALLSKYORDER || v.isAllSky() ) return true;
+         if( o<getMinOrder() || v.isAllSky() ) return true;
          Coord c = getCooCentre(v);
          if( c.al!=center.al || c.del!=center.del ) return false;
          return true;
@@ -297,7 +297,7 @@ public class PlanBGCube extends PlanBG {
             //            System.out.println("loading immediatelyThread loop (z="+z1+" order="+initOrder+" center="+center+")");
 
             long [] pix = null;
-            boolean lowResolution = v.isAllSky() || order<=ALLSKYORDER;
+            boolean lowResolution = v.isAllSky() || order<=getMinOrder();
 
             if( !lowResolution ) {
                pix = getPixList(v,center,order);
@@ -328,7 +328,7 @@ public class PlanBGCube extends PlanBG {
 
                // Je charge les allsky ?
                if( pix==null ) {
-                  HealpixKey h = new HealpixAllsky(plan, ALLSKYORDER, z1, HealpixKey.SYNC);
+                  HealpixKey h = new HealpixAllsky(plan, getMinOrder(), z1, HealpixKey.SYNC);
                   //                  System.out.println("load allsky: "+h);
 
                   // Ou je charge les losanges individuels ?

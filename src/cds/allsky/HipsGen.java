@@ -52,6 +52,7 @@ public class HipsGen {
    private boolean flagMirror=false;
    private boolean flagUpdate=false;
    private boolean flagLint=false;
+   private boolean flagTMoc=false;
    private boolean flagMocError=false;
    private boolean flagProp=false;
    private boolean flagMethod=false;
@@ -59,6 +60,8 @@ public class HipsGen {
    private boolean flagMapFits=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
+   
+   public boolean endOfWork=true;
    
    private String cache = null; // Path alternatif pour un cache disque (dans le cas d'images compressées)
    private long cacheSize = -1;  // Taille alternative du cache disque (en Mo)
@@ -472,6 +475,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
          else if (arg.equalsIgnoreCase("-cds") )  context.cdsLint=true;
+         else if (arg.equalsIgnoreCase("-check")) context.setMirrorCheck(true);
 
          // toutes les autres options écrasent les précédentes
          else if (arg.contains("=")) {
@@ -497,6 +501,7 @@ public class HipsGen {
                if( a==Action.MIRROR ) flagMirror=true;
                if( a==Action.UPDATE ) flagUpdate=true;
                if( a==Action.LINT )   flagLint=true;
+               if( a==Action.TMOC )   flagTMoc=true;
                if( a==Action.PROP )   flagProp=true;
                if( a==Action.MOCERROR ) flagMocError=true;
                if( a==Action.CONCAT ) {
@@ -597,10 +602,23 @@ public class HipsGen {
             } catch( Exception e ) { }
          }
          
-         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint && !flagMocError && !flagProp) {
+         if( !flagConcat && !flagMirror && !flagUpdate && !flagLint && !flagMocError && !flagProp && !flagTMoc) {
             String s = context.checkHipsId(context.hipsId);
             context.setHipsId(s);
+            
+         // dans le cas d'un mirroir l'ID est nécessairement fourni par les properties distantes
+         } else if( flagMirror ) {
+            InputStreamReader in1=null;
+            try {
+               MyProperties prop = new MyProperties();
+               in1 = new InputStreamReader( Util.openAnyStream( context.getInputPath()+"/properties"), "UTF-8" );
+               prop.load(in1);
+               context.setHipsId( context.getIdFromProp(prop) );
+            } catch( Exception e ) {
+               context.warning("remote properties file missing");
+            } finally{  if( in1!=null ) in1.close(); }
          }
+
       } catch (Exception e) {
          context.error(e.getMessage());
          return;
@@ -630,8 +648,8 @@ public class HipsGen {
          else {
             for( int i=0; i<actions.size() ;i++ ) {
                Action a = actions.get(i);
-               if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
-               else if( a==Action.MIRROR )  { actions.add(i, Action.CLEAN); i++; }
+                    if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
+               else if( a==Action.MIRROR )  { actions.add(i, Action.CLEANALL);     i++; }
                else if( a==Action.DETAILS ) { actions.add(i, Action.CLEANDETAILS); i++; }
                else if( a==Action.TILES )   { actions.add(i, Action.CLEANTILES);   i++; }
                else if( a==Action.MAPTILES ){ actions.add(i, Action.CLEANTILES);   i++; }
@@ -654,7 +672,7 @@ public class HipsGen {
 
       // C'est parti
       try {
-
+         endOfWork=false;
 
          // Création d'un cache disque si nécessaire
          MyInputStreamCached.context = context;
@@ -688,7 +706,10 @@ public class HipsGen {
          if( cacheRemoveOnExit && cache!=null ) MyInputStreamCached.removeCache();
          
          context.error(e.getMessage());
+      } finally {
+         endOfWork=true;
       }
+      
       
    }
 
@@ -752,7 +773,7 @@ public class HipsGen {
                   "                           unique image or HEALPix map file" + "\n" +
                   "\n"+
                   "Basic optional parameters:\n"+
-                  "   out=dir                 HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
+                  "   out=dir                 HiPS target directory (default ./+\"AUTHORITY_internalID\")" + "\n" +
                   "   obs_title=name          Name of the survey (by default, input directory name)" + "\n"+
                   "   creator_did=id          HiPS identifier (syntax: [ivo://]AUTHORITY/internalID)" + "\n"+
                   "   hips_creator=name       Name of the person|institute who builds the HiPS" + "\n"+
@@ -825,6 +846,7 @@ public class HipsGen {
                   "   maxThread=nn            Max number of computing threads" + "\n" +
                   "   target=ra +dec          Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad        Default HiPS radius view (deg)" + "\n"+
+                  "   -check                  Force to fully check date&size of local tiles in case of MIRROR action" + "\n"+
                   "   -notouch                Do not touch the hips_release_date" + "\n"+
                   "   -color                  Colorized console log messages" + "\n" +
                   "   -nice                   Slow download for avoiding to overload remote http server (dedicated " + "\n" +
@@ -873,6 +895,7 @@ public class HipsGen {
    }
 
    public static void main(String[] args) {
+      
       HipsGen generator = new HipsGen();
       generator.launcher="HipsGen";
       generator.execute(args);

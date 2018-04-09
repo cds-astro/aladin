@@ -2528,7 +2528,7 @@ public final class Command implements Runnable {
             if( label != null ) pMoc.setLabel(label);
 
             // Pour les MOCs
-         } else if( type == Plan.ALLSKYMOC ) {
+         } else if( type == Plan.ALLSKYMOC || type == Plan.ALLSKYTMOC) {
             boolean flagCheckOrder = order == -1;
             PlanMoc[] pList = new PlanMoc[p.length];
             for( int j = 0; j < p.length; j++ ) {
@@ -3418,6 +3418,7 @@ public final class Command implements Runnable {
       // else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       if( cmd.equalsIgnoreCase("macro") ) execMacro(param);
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
+      else if( cmd.equalsIgnoreCase("fx") ) fx(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
@@ -5208,6 +5209,11 @@ public final class Command implements Runnable {
       } catch( Exception e ) {
          e.printStackTrace();
       }
+   }
+   
+   private void fx(String param) {
+      CDSHealpix.FX = !CDSHealpix.FX;
+      System.out.println("Utilisation librairie HEALPix => "+(CDSHealpix.FX ? "FX":"Reinecke"));
    }
 
    // Just for testing tap list for Chaitra

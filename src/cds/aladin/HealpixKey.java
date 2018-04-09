@@ -466,7 +466,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.cumulTimeJPEG += timeJPEG;
          planBG.cumulTimePixel += timePixel;
          planBG.askForRepaint();
-         Aladin.trace(5,"HealpixKey.LoadFromNet() in "+(System.currentTimeMillis()-t)+"ms : "+this);
+         Aladin.trace(5,"HealpixKey.LoadFromNet() by "+Thread.currentThread().getName()+" in "+(System.currentTimeMillis()-t)+"ms : "+this);
 
       } catch( Throwable e ) {
          pixels=null;
@@ -1437,6 +1437,19 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected int getStatus() {
       synchronized( lockStatus ) { return status; }
    }
+   
+   private boolean lockX=false;
+   
+   protected void waitLock() {
+      do {
+         while( lockX ) { Util.pause(10); }
+         synchronized( lockStatus ) {
+            if( !lockX ) lockX=true;
+         }
+      } while( !lockX );
+   }
+   
+   protected void unLock() { lockX=false; }
 
    /** Retourne le status sous forme d'une string */
    protected String getStatusString() { return STATUS[getStatus()]; }
@@ -1534,7 +1547,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( width>1 && order<limitOrder && parente<maxParente ) {
          fils = getChild();
          if( fils!=null ) {
-            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente);
+            for( int i=0; i<4; i++ ) {
+               if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente);
+            }
          }
       }
       return n;
@@ -1752,6 +1767,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
    //   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
    protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1); }
    protected int draw(Graphics g, ViewSimple v,int maxParente) {
+      
+      // Si méthode sans Allsky.xxx, la récursion est obligatoire pour les order<3
+      if( order<3 ) return drawFils(g, v, 8);
+      
       long t1 = Util.getTime(0);
       int n=0;  // nombre d'images java que l'on va tracer (valeur du return)
       PointD[] b = getProjViewCorners(v);
@@ -1768,8 +1787,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       // Agrandissement du losange d'un pixel pour cacher les coutures
       try { b = grow(b, 1); } catch( Exception e ) {  }
       boolean drawFast = planBG.mustDrawFast();
-      boolean animated = planBG.aladin.isAnimated();
-
+//      boolean animated = planBG.aladin.isAnimated();
       
       // On a les 4 coins
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
@@ -1802,7 +1820,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             try {
 
                boolean mayCrossTheSky = mayCrossTheSky(v);
-               boolean methodeRecursive = 
+               boolean methodeRecursive =  
                      ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC ) ||
                      planBG.projd.t==Calib.MOL || planBG.projd.t==Calib.AIT ) && mayCrossTheSky 
                      || planBG.projd.t==Calib.CAR;
@@ -1832,7 +1850,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          }
       }
 
-      // Tratement spécifique pour les coins des poles
+      // Traitement spécifique pour les coins des poles
       if( !drawFast && (maxParente==-1 || parente<maxParente) && hpix.isPoleCorner() ) {
          if( (n=drawFils(g,v,parente+1))>0 ) return n;
       }

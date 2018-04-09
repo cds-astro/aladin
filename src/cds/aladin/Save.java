@@ -404,6 +404,7 @@ public class Save extends JFrame implements ActionListener {
          aladin.console.printCommand("export "+Tok.quote(p.label)+" "+f.getAbsolutePath());
          switch( p.type ) {
             case Plan.ALLSKYMOC:
+            case Plan.ALLSKYTMOC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
                res &= saveMoc(s,(PlanMoc)p,jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.ASCII : HealpixMoc.FITS);
                break;
@@ -463,7 +464,7 @@ public class Save extends JFrame implements ActionListener {
       for( i=0; i<allPlan.length; i++ ) {
          Plan pl =allPlan[i];
          if( pl.type==Plan.NO || pl.type==Plan.APERTURE || pl.type==Plan.FOLDER || !pl.flagOk ) continue;
-         if( pl instanceof PlanBG && pl.type!=Plan.ALLSKYMOC ) continue;
+         if( pl instanceof PlanBG && !(pl.isMoc()) ) continue;
          if( pl.isSimpleCatalog() && noCatalog ) noCatalog = false;
          if( pl.isImage() && noImage) noImage = false;
          if( pl instanceof PlanMoc && noMoc ) noMoc = false;
@@ -1704,7 +1705,7 @@ public class Save extends JFrame implements ActionListener {
     * @param h la hauteur de l'image de destination (uniquement mode nogui)
     * @param format JPEG, PNG ou BMP ou EPS
     * @param qual qualité (pour JPEG uniquement) [0..1]
-    * @param mode CURRENTVIEW, ALLVIEWS, ALLROIS
+    * @param acceleration CURRENTVIEW, ALLVIEWS, ALLROIS
     * @return True si Ok false sinon
     *
     * REMARQUE : ACTUELLEMENT SEUL LE MODE CURRENTVIEW EST SUPPORTE. LE PROBLEME
@@ -1801,22 +1802,23 @@ public class Save extends JFrame implements ActionListener {
          o = filename==null ?
                (OutputStream)System.out :
                   (OutputStream)new FileOutputStream(aladin.getFullFileName(filename));
-               if( (format&EPS)==EPS  ) saveEPS(v,w,h,o);
-               else {
-                  Image img = v.getImage(w,h);
-                  if( (format&JPEG)==JPEG )  {
-                     String s = generateFitsHeaderString(v);
-                     ImageWriter(img,"jpg",qual,true,new JpegOutputFilter(o,s));
-                  }
-                  else if( (format&PNG)==PNG )  {
-                     String s = generateFitsHeaderString(v);
-                     ImageWriter(img,"png",-1,true,new PNGOutputFilter(o,s));
-                  }
-                  //            else if( (format&PNG)==PNG ) ImageWriter( img ,"png",-1,true,o);
-                  else if( (format&BMP)==BMP  ) BMPWriter.write( img ,o);
-                  else throw new Exception("Unsupported output image format !");
-               }
-               rep=true;
+               
+         if( (format&EPS)==EPS  ) saveEPS(v,w,h,o);
+         else {
+            Image img = v.getImage(w,h);
+            if( (format&JPEG)==JPEG )  {
+               String s = generateFitsHeaderString(v);
+               ImageWriter(img,"jpg",qual,true,new JpegOutputFilter(o,s));
+            }
+            else if( (format&PNG)==PNG )  {
+               String s = generateFitsHeaderString(v);
+               ImageWriter(img,"png",-1,true,new PNGOutputFilter(o,s));
+            }
+            //            else if( (format&PNG)==PNG ) ImageWriter( img ,"png",-1,true,o);
+            else if( (format&BMP)==BMP  ) BMPWriter.write( img ,o);
+            else throw new Exception("Unsupported output image format !");
+         }
+         rep=true;
       } catch(Exception e) {
          if( filename!=null ) System.out.println("!!! image error ["+filename+"]");
          System.err.println(e.getMessage());
@@ -2083,7 +2085,7 @@ public class Save extends JFrame implements ActionListener {
     * et d'une entête FITS originale
     * @param file Fichier FITS à créer
     * @param p Plan de l'image à sauvegarder
-    * @param mode 0 - Fits classique, 1 - FITS HEALPIX
+    * @param acceleration 0 - Fits classique, 1 - FITS HEALPIX
     * @return true si Ok, false sinon
     */
    protected boolean saveImageFITS(File file,PlanImage p) { return saveImageFITS(file,p,0); }

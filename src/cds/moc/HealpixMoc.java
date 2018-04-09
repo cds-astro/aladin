@@ -36,6 +36,7 @@ import healpix.essentials.RangeSet;
  * A MOC is used to define a sky region by using HEALPix sky tesselation
  *
  * @authors Pierre Fernique [CDS], Martin Reinecke [Max Plank]
+ * @version 5.1 Feb 2019 - TMOC implementation (temporal MOC)
  * @version 5.0 Sept 2017 - JSON and ASCII full support, add(order,long[]) + add(order,Collection<Lon>), Check npix over max limit bug fix
  * @version 4.8 July 2017 - isEmpty(), isIncluding(..) methods
  * @version 4.7 Dec 2016 - Undeprecated new HealpicMoc(Inputstream in, int mode) + isAscendant(int order, Array a) bug fix
@@ -61,7 +62,7 @@ import healpix.essentials.RangeSet;
 public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
 
    /** Healpix MOC API version number */
-   static public final String VERSION = "5.0";
+   static public final String VERSION = "5.1";
 
    /** FITS encoding format (IVOA REC 1.0 compliante) */
    static public final int FITS  = 0;
@@ -156,6 +157,11 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    /** Deep copy */
    public Object clone() {
       HealpixMoc moc = new HealpixMoc();
+      return clone1(moc);
+   }
+
+   /** Deep copy - internal method */
+   protected Object clone1( HealpixMoc moc) {
       moc.coordSys=coordSys;
       moc.maxLimitOrder=maxLimitOrder;
       moc.minLimitOrder=minLimitOrder;
@@ -798,8 +804,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
          long ofs=(1L<<shift)-1;
          r3.clear();
          for( int iv=0; iv<r2.nranges(); ++iv ) {
-            long a=(r2.ivbegin(iv)+ofs)>>>shift,
-            b=r2.ivend(iv)>>>shift;
+            long a=(r2.ivbegin(iv)+ofs)>>>shift, b=r2.ivend(iv)>>>shift;
          r3.append(a<<shift, b<<shift);
          for( long c=a; c<b; ++c ) add1(o,c);
          }
@@ -875,7 +880,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    }
 
    // Generic operation
-   private HealpixMoc operation(HealpixMoc moc,int op) throws Exception {
+   protected HealpixMoc operation(HealpixMoc moc,int op) throws Exception {
       testCompatibility(moc);
       toRangeSet();
       moc.toRangeSet();
@@ -1204,7 +1209,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
 
 
    // Internal initialisations => array of levels allocation
-   private void init(String coordSys,int minLimitorder,int maxLimitOrder) {
+   protected void init(String coordSys,int minLimitorder,int maxLimitOrder) {
       this.coordSys=coordSys;
       this.minLimitOrder=minLimitorder;
       this.maxLimitOrder=maxLimitOrder;
@@ -1227,7 +1232,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    }
 
    // Low level npixel addition.
-   private boolean add1(int order, long npix) throws Exception {
+   protected boolean add1(int order, long npix) throws Exception {
       if( order<minLimitOrder ) return add2(order,npix,minLimitOrder);
       if( maxLimitOrder!=-1 && order>maxLimitOrder ) return add(maxLimitOrder, npix>>>((order-maxLimitOrder)<<1));
 
@@ -1308,7 +1313,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    }
 
    // Throw an exception if the coordsys of the parameter moc differs of the coordsys
-   private void testCompatibility(HealpixMoc moc) throws Exception {
+   protected void testCompatibility(HealpixMoc moc) throws Exception {
       if( getCoordSys().charAt(0)!=moc.getCoordSys().charAt(0) ) throw new Exception("Incompatible MOC coordsys");
    }
 

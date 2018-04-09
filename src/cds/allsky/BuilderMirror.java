@@ -24,15 +24,15 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
+import java.util.Iterator;
 
+import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
@@ -45,6 +45,9 @@ import cds.tools.Util;
  * @version 1.0 juin 2015 création
  */
 public class BuilderMirror extends BuilderTiles {
+   
+   static private final int TIMEOUT = 15000;    // 15 sec sans nouvelle on réinitialise la connection HTTP
+   static private final int MAXRETRY = 10;      // Nombre max de réinitialisations possibles avant panique
 
    private Fits bidon;                  // Ne sert qu'à renvoyer quelque chose pour faire plaisir à BuilderTiles
    private MyProperties prop;           // Correspond aux propriétés distantes
@@ -54,22 +57,24 @@ public class BuilderMirror extends BuilderTiles {
    private boolean flagIsUpToDate=false;      // true s'il s'agit d'une maj d'un HiPS déjà copié et déjà à jour
    private String dateRelease="";       // Date of last release date of the local copy
    private boolean isLocal=false;       // true s'il s'agit d'une copie locale
+   private long timeIP;
+   private boolean check=false;       // true si on redémarre une session => pas de test de taille sur les tuiles déjà arrivées
 
    public BuilderMirror(Context context) {
       super(context);
    }
 
    public Action getAction() { return Action.MIRROR; }
-
+   
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
-      validateOutput();
       
       // Détermination d'une éventuelle copie locale
       String dir = context.getInputPath();
-      isLocal = !dir.startsWith("http://") && !dir.startsWith("https://") 
-            && !dir.startsWith("ftp://");
+      check = context.getMirrorCheck();
+      isLocal = !dir.startsWith("http://") && !dir.startsWith("https://") && !dir.startsWith("ftp://");
       if( isLocal ) context.info("Local mirror copy");
+      if( !isLocal && check ) context.info("Will check all date and size for already loaded tiles");
 
       // Chargement des propriétés distantes
       prop = new MyProperties();
@@ -80,11 +85,20 @@ public class BuilderMirror extends BuilderTiles {
          in1 = new InputStreamReader( Util.openAnyStream( context.getInputPath()+"/properties"), "UTF-8" );
          prop.load(in1);
       } finally{  if( in1!=null ) in1.close(); }
-
+      
+      // On valide le répertoire de destination
+      validateOutput();
+      
       // Détermination du statut
       String s = prop.getProperty(Constante.KEY_HIPS_STATUS);
       if( s!=null && context.testClonable && s.indexOf("unclonable")>=0 ) {
          throw new Exception("This HiPS is unclonable => status: "+s);
+      }
+
+      // Détermination du type de HiPS
+      s = prop.getProperty("dataproduct_type");
+      if( s!=null && s.indexOf("catalog")>=0 ) {
+         throw new Exception("Hipsgen mirror not usable for catalog HiPS");
       }
 
       // Détermination de l'ordre max: si non précisé, récupéré depuis
@@ -272,10 +286,19 @@ public class BuilderMirror extends BuilderTiles {
 
    }
 
-   int statNbFile=0;
-   long statCumul=0L;
-   long lastCumul=0L;
-   long lastTime=0L;
+   private int statNbFile=0;
+   private long statCumul=0L;
+   private long lastCumul=0L;
+   private long lastTime=0L;
+   private long timeIPArray[];
+   private int timeIPindex=0;
+   private final int MAXTIMEIP=50;
+   
+   private final int MAXMESURE=3;
+   private int nbMesure=0;
+   private long mesure[] = new long[ MAXMESURE ];
+   boolean acceleration = true;    // true= accélération, false = déccélération
+   private long lastMesure=0L;
 
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
@@ -285,8 +308,57 @@ public class BuilderMirror extends BuilderTiles {
       long lastCumulPerSec = delai>1000L && lastTime>0 ? lastCumul/(delai/1000L) : 0L;
       lastTime=t;
       lastCumul=0;
-      context.showMirrorStat(statNbFile, statCumul, lastCumulPerSec, totalTime,
-            statNbThread,statNbThreadRunning);
+      long lastTimeIP=0L;
+      if( statNbFile>=MAXTIMEIP ) {
+         t=0L;
+         for( long a : timeIPArray ) t+=a;
+         lastTimeIP = t/MAXTIMEIP;
+      }
+      
+      int nbThreads = getNbThreads();
+      int statNbThreadRunning = getNbThreadRunning();
+      
+      int maxThreads = (lastTimeIP==0?20:64);
+      int max = context.getMaxNbThread();
+      if( max!=-1 && maxThreads>max ) maxThreads=max;
+      int minThreads=16;
+      
+      // Ajustement du nombre de threads pour optimiser le débit
+      if( !isLocal && statNbFile>1 && nbThreads>=0 && maxThreads>minThreads ) {
+         
+         // PLUS ou MOINS de threads ?
+         // 1) on mérorise le débit instantanné
+         // 2) on change le nombre de threads en fonction du mode courant
+         // 3) on mesure le nouveau débit instantanné sur une période de temps suffisante longue
+         // 4) si moins bien qu'avant on inverse le mode
+         // 5) en bout de cours (max ou min) on inverse le mode
+         
+         if( nbMesure<MAXMESURE ) mesure[ nbMesure++ ] = lastCumulPerSec;
+         else {
+            long moyenne=0L;
+            for( long m : mesure ) moyenne += m/nbMesure;
+            if( lastMesure!=0 && moyenne<lastMesure ) acceleration = !acceleration;   // Changement de sens
+            try {
+               if( context.getVerbose()>=3 ) context.info("MODE "+(acceleration?"acceleration":"deceleration")
+                     +" lastMeasure="+Util.getUnitDisk(lastMesure)+" newMeasure="+Util.getUnitDisk(moyenne));
+               if( acceleration ) {
+                  if( nbThreads<maxThreads ) addThreadBuilderHpx( nbThreads+4<=maxThreads? 4 : maxThreads-nbThreads);
+               } else {
+                  if( nbThreads>minThreads ) removeThreadBuilderHpx(2);
+               }
+            } catch( Exception e) { e.printStackTrace(); }
+            
+            // Si on est au max (resp. au min) on change de sens
+            if( nbThreads<=minThreads ) acceleration=true;
+            if( nbThreads>=maxThreads ) acceleration=false;
+            
+            lastMesure=moyenne;
+            nbMesure=0;
+         }
+
+      }
+      
+      context.showMirrorStat(statNbFile, statCumul, lastCumulPerSec, totalTime, nbThreads,statNbThreadRunning, lastTimeIP);
    }
 
    public void build() throws Exception {
@@ -307,9 +379,9 @@ public class BuilderMirror extends BuilderTiles {
          for( String ext : context.tileTypes ) {
             String fileIn = fileInX+ext;
             String fileOut = file+ext;
-            size+=copy(fileIn,fileOut);
+            size+=copy(hpx,order,fileIn,fileOut);
          }
-         if( stat ) updateStat(size);
+         if( stat ) updateStat(size,timeIP);
       } catch( Exception e ) {
          e.printStackTrace();
          context.taskAbort();
@@ -335,13 +407,14 @@ public class BuilderMirror extends BuilderTiles {
       return 0;
    }
    
-   private int copy(String fileIn, String fileOut) throws Exception {
+   private int copy(String fileIn, String fileOut) throws Exception { return copy(null,-1,fileIn,fileOut); }
+   private int copy(ThreadBuilderTile hpx, int order,String fileIn, String fileOut) throws Exception {
       try {
          if( isLocal ) return copyLocal(fileIn,fileOut);
-         return copyRemote(fileIn,fileOut);
+         return copyRemote(hpx,fileIn,fileOut);
          
       } catch( FileNotFoundException e ) {
-         context.warning("File not found ["+fileIn+"] => ignored (may be out of the MOC)");
+         if( order>=3 ) context.warning("File not found ["+fileIn+"] => ignored (may be out of the MOC)");
       }
       return 0;
    }
@@ -360,90 +433,150 @@ public class BuilderMirror extends BuilderTiles {
 //      
 //   }
 
+   
+   class TimeOut extends Thread {
+      HttpURLConnection con;
+      long lastSize=0;
+      long size=0;
+      boolean encore=true;
+      int timeout;
+      String file;
+
+      TimeOut(HttpURLConnection con,String file, int timeout) { this.timeout=timeout; this.file=file; this.con = con; }
+
+      void end() { encore=false; this.interrupt(); }
+
+      private long getBytes() { return size; }
+      void setSize(long size) { this.size=size; }
+
+      public void run() {
+         while( encore ) {
+            try { Thread.sleep(timeout); } catch (InterruptedException e) { }
+            if( encore ) {
+               long size = getBytes();
+               
+               // Rien lu depuis la dernière fois ?
+               if( size==lastSize ) {
+                  con.disconnect();
+                  encore=false;
+               }
+               lastSize=size;
+            }
+         }
+      }
+   }
+   
    // Copie d'un fichier distant (url) vers un fichier local, uniquement si la copie locale évenutelle
    // et plus ancienne et/ou de taille différente à l'originale.
    // Vérifie si possible que la taille du fichier copié est correct.
    // Effectue 3 tentatives consécutives avant d'abandonner
-   private int copyRemote(String fileIn, String fileOut) throws Exception {
-      File fOut;
-      long lastModified;
-      long size=-1;
-      byte [] buf=null;
+   private int copyRemote(ThreadBuilderTile hpx, String fileIn, String fileOut) throws Exception {
+      File fOut=null;
+      long lastModified=0L;
+      int size=0;
+      int sizeRead=0;
+      int n;
+      long len;
+      byte [] buf = new byte[512];
 
       // Laisse-t-on souffler un peu le serveur HTTP ?
       try {
          if( context.mirrorDelay>0 ) Thread.currentThread().wait(context.mirrorDelay);
       } catch( Exception e ) { }
 
-      for( int i=0; i<3; i++ ) {
-         MyInputStream dis=null;
+      for( int i=0; i<MAXRETRY; i++ ) {
+         InputStream dis=null;
+         RandomAccessFile f = null;
+         TimeOut timeout = null;
+         HttpURLConnection httpc=null;
+         
          try {
-            URL u = new URL(fileIn);
-            URLConnection conn = u.openConnection();
-            HttpURLConnection httpc = (HttpURLConnection)conn;
-            httpc.setRequestMethod("HEAD");
-            lastModified = httpc.getLastModified();
+            lastModified=-1;
 
+            URL u = new URL(fileIn);
             fOut = new File(fileOut);
-            if( fOut.exists() && fOut.length()>0 ) {
+            
+//            if( i>0 ) context.warning("Reopen connection for "+fileIn+" ...");
+   
+            // Si on a déjà la tuile, on vérifie qu'elle est à jour (date et taille)
+            if( fOut.exists() && (len=fOut.length())>0 ) {
+               
+               // reprise => pas de vérif date&size des tuiles déjà arrivées
+               // On garde un vieux doute sur les fichiers vraiments petits
+               // ON POURRAIT VERIFIER QUE LE FICHIER N'EST PAS TRONQUE EN CHARGEANT LA TUILE SANS ERREUR MAIS CA VA PRENDRE DES PLOMBES...
+               if( !check && len>1024L)  return 0;
+               
+               httpc = (HttpURLConnection)u.openConnection();
+               timeout = new TimeOut(httpc,fileIn,TIMEOUT);
+               timeout.start();
+               httpc.setReadTimeout(TIMEOUT-500);
+               httpc.setConnectTimeout(TIMEOUT-500);
+               httpc.setRequestProperty("User-Agent", "Aladin/Hipsgen/"+Aladin.VERSION);
+               httpc.setRequestMethod("HEAD");
+               lastModified = httpc.getLastModified();
                size = httpc.getContentLength();
                if( size==fOut.length() && lastModified<=fOut.lastModified() ) {
-//                  httpc.disconnect();   => Coupe le keep-alive
-                  
+
                   // On doit tout de même vider le buffer
-                  InputStream es = httpc.getInputStream();
-                  try {
-                     byte [] buf1 = new byte[512];
-                     while( es.read(buf1) > 0) { }
-                     es.close();  
-                     
-                  // Et le buffer d'erreur éventuel
-                  } catch( IOException e ) {
-                     es = httpc.getErrorStream();
-                     byte [] buf1 = new byte[512];
-                     while( es.read(buf1) > 0) { }
-                     es.close();  
-                  }
-                  return 0;  // déjà fait
+                  dis = httpc.getInputStream();
+                  while( (n=dis.read(buf)) > 0) { sizeRead+=n; }
+                  dis.close();  
+                  dis=null;
+                  return 256; // sizeRead;  // déjà fait  (à la louche la taille du HEAD http)
                }
             }
-            
-            httpc = (HttpURLConnection)u.openConnection();
-            httpc.setRequestMethod("GET");
-            dis = new MyInputStream(httpc.getInputStream());
-            try {
-               buf = dis.readFully();
-               dis.close();
-               dis=null;
-               
-            // Vidange du flux d'erreur => nécessaire pour Keepalive
-            } catch( IOException e ) {
-               InputStream es = httpc.getErrorStream();
-               byte [] buf1 = new byte[512];
-               while( es.read(buf1) > 0) { }
-               es.close();  
-            }
-         
-         } finally { if( dis!=null ) try{ dis.close(); } catch( Exception e) {}  }
 
-         RandomAccessFile f = null;
-         try {
+            long t0 = System.currentTimeMillis();
+            httpc = (HttpURLConnection)u.openConnection();
+            timeout = new TimeOut(httpc,fileIn,TIMEOUT);
+            timeout.start();
+            httpc.setReadTimeout(TIMEOUT-500);
+            httpc.setConnectTimeout(TIMEOUT-500);
+            httpc.setRequestProperty("User-Agent", "Aladin/Hipsgen/"+Aladin.VERSION);
+            httpc.setRequestMethod("GET");
+            if( lastModified==-1 ) lastModified = httpc.getLastModified();
+//            if( hpx!=null ) hpx.threadBuilder.setInfo("copyRemote opening inputstream from  "+fileIn+"...");
+            dis = httpc.getInputStream();
+            long t1 = System.currentTimeMillis();
+            timeIP=t1-t0;
+            
             Util.createPath(fileOut);
             f = new RandomAccessFile(fileOut, "rw");
-            f.write(buf);
-            f.close();
-            f=null;
-         } finally { if( f!=null ) try{ f.close(); } catch( Exception e) {} }
-         fOut.setLastModified(lastModified);
+            while( (n=dis.read(buf))>0 ) {
+               sizeRead+=n;
+               timeout.setSize(sizeRead);
+//               if( hpx!=null ) hpx.threadBuilder.setInfo("loading try:"+i+" "+n+" bytes from tile "+fileIn+"...");
+               f.write(buf,0,n);
+            }
+            timeout.end(); timeout=null;
+            dis.close(); dis=null;
+            f.close(); f=null;
 
-         if( size>0 && (new File(fileOut)).length()<size) {
-            if( i==2 ) throw new Exception("Truncated file copy");
+         } catch( Exception e ) {
+            if( e instanceof FileNotFoundException ) throw e;
+
+//            e.printStackTrace();
+            fOut.delete();
+            if( i<MAXRETRY-1 ) context.warning("File copy error  => try again ("+(i+1)+"x) ["+fileIn+"]");
+            else throw new Exception("File copy error ["+fileIn+"]");
+            continue;
+            
+         } finally {
+            if( timeout!=null ) timeout.end();
+            if( dis!=null ) try{ dis.close(); } catch( Exception e) {} 
+            if( f!=null ) try{ f.close(); } catch( Exception e) {}
+         }
+
+         if( lastModified!=0L ) fOut.setLastModified(lastModified);
+
+         if( sizeRead>0 && (new File(fileOut)).length()<size) {
+            if( i==MAXRETRY-1 ) throw new Exception("Truncated file copy ["+fileIn+"]");
             context.warning("Truncated file copy => try again ["+fileIn+"]");
          }
          else break;  // a priori c'est bon
       }
 
-      return buf==null ? 0 : buf.length;
+      return sizeRead;
 
    }
    
@@ -488,7 +621,14 @@ public class BuilderMirror extends BuilderTiles {
       return (int)size;
 
    }
-
+   
+   boolean oneWaiting() {
+      try {
+         Iterator<ThreadBuilder> it = threadList.iterator();
+         while( it.hasNext() ) if( it.next().isWaitingAndUsable(false) ) return true;
+      } catch( Exception e ) { }
+      return false;
+   }
 
    // Dans le cas d'un mirroir complet, on copie également les noeuds. En revanche pour un miroir partiel
    // on regénérera l'arborescence à la fin
@@ -507,13 +647,20 @@ public class BuilderMirror extends BuilderTiles {
       statNbFile=0;
       statCumul=0L;
       startTime = System.currentTimeMillis();
+      timeIPArray = new long[MAXTIMEIP ];
+      timeIPindex=0;
    }
 
    // Mise à jour des stats
-   private void updateStat(long size) {
+   private void updateStat(long size,long timeIP) {
       statNbFile++;
       lastCumul+=size;
       statCumul+=size;
       totalTime = System.currentTimeMillis()-startTime;
+      try {
+         timeIPArray[timeIPindex++]=timeIP;
+      } catch( Exception e ) { }
+      if( timeIPindex>=MAXTIMEIP ) timeIPindex=0;
+      
    }
 }

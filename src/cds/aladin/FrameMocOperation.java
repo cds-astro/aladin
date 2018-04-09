@@ -88,7 +88,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
    /** Recupere la liste des plans images valides */
    @Override
    protected Plan[] getPlan() {
-      Vector<Plan> v  =a.calque.getPlans(Plan.ALLSKYMOC);
+      Vector<Plan> v  = a.calque.getPlans( PlanMoc.class );
       if( v==null ) return new PlanImage[0];
       Plan pi [] = new PlanImage[v.size()];
       v.copyInto(pi);
@@ -170,7 +170,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
          Plan [] ps = new Plan[ pList.length ];
          for( int i=0; i<ps.length; i++ ) ps[i] = pList[i];
          a.console.printCommand("cmoc -"+PlanMocAlgo.getOpName(fct)+" "+FrameMocGenImg.labelList(ps));
-                  a.calque.newPlanMoc(label,pList,fct,0);
+         a.calque.newPlanMoc(label,pList,fct,0);
          hide();
 
       } catch ( Exception e ) {

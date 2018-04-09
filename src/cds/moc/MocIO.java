@@ -42,6 +42,7 @@ import java.util.StringTokenizer;
  *           (new IO(moc).read(String filename);
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.5 Mar 2018 - TMOC patch
  * @version 1.4 Nov 2015 - JSON #MOCORDER patching
  * @version 1.3 Sep 2013 - WD 1.0 10/9/2013 compliante
  * @version 1.2 Avr 2012 - JSON ASCII support
@@ -166,6 +167,10 @@ public final class MocIO {
     *     ...
     *     "MAXORDER":[]
     *    }
+    *    
+    * TMOC (in JD ranges)
+    *    #TMOC
+    *    jdmin jdmax jdmin jdmax...
     *
     * @param in input stream
     * @throws Exception
@@ -175,22 +180,49 @@ public final class MocIO {
       moc.clear();
       moc.setCheckConsistencyFlag(false); // We assume that the input MOC is well formed
       String s;
+      int mocOrder=HealpixMoc.MAXORDER;
+      boolean flagTMoc = false;
       boolean flagMocOrder=false;
       for( int line=0; (s=dis.readLine())!=null; line++ ) {
          if( firstChar!=0 ) { s=(char)firstChar+s; firstChar=0; }
          if( s.length()==0 ) continue;
-         if( line==0 && s.startsWith("#MOCORDER ") ) {
-            String v = s.substring(10);
-            if( v.length()>0 ) { flagMocOrder=true; moc.setProperty("MOCORDER", v); }
-
-         }
-         parseASCIILine(s);
+         if( line==0 ) {
+            if( s.startsWith("#MOCORDER ") ) {
+               String v = s.substring(10);
+               if( v.length()>0 ) { flagMocOrder=true; moc.setProperty("MOCORDER", v); }
+            } else if( s.startsWith("#TMOC") ) {
+               String v = s.substring(5);
+               try {
+                  mocOrder = Integer.parseInt(v.trim());
+                  if( mocOrder<29 ) flagMocOrder=true;
+               } catch( Exception e ) {}
+               flagTMoc=true;
+               continue;
+            }
+         } 
+         if( flagTMoc ) parseTMocASCIILine(s);
+         else parseASCIILine(s);
       }
       
-      // If the MocOrder is found by the containts
+      // If the MocOrder is found by the content
       if( !flagMocOrder ) moc.setProperty("MORORDER", moc.getMaxOrder()+"" );
+      
+      if( flagTMoc ) {
+         moc.toHealpixMoc();
+         if( mocOrder!=29 ) moc.setMocOrder(mocOrder);
+      }
    }
-
+   
+   // Parse une ligne d'un flux TMOC par intervalles JD en notation floattante
+   private void parseTMocASCIILine(String s) throws Exception {
+      StringTokenizer st = new StringTokenizer(s," ;,\n\r\t");
+      while( st.hasMoreTokens() ) {
+         String s1 = st.nextToken();
+         String s2 = st.nextToken();
+         ((TMoc)moc).add( Double.parseDouble(s1), Double.parseDouble(s2));
+      }
+   }
+   
    /** Read HEALPix MOC from an Binary FITS stream */
    public void readFits(InputStream in) throws Exception {
       moc.clear();
@@ -484,7 +516,11 @@ public final class MocIO {
       out.write( getFitsLine("TTYPE1","UNIQ","HEALPix UNIQ pixel number") ); n+=80;
       out.write( getFitsLine("PIXTYPE","HEALPIX","HEALPix magic code") );    n+=80;
       out.write( getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;      
-      out.write( getFitsLine("COORDSYS",""+moc.getCoordSys(),"reference frame (C=ICRS)") );    n+=80;      
+     
+      if( moc instanceof TMoc ) out.write( getFitsLine("TIMESYS","JD","ref system JD BARYCENTRIC, 1 microsec level 29") );
+      else out.write( getFitsLine("COORDSYS",""+moc.getCoordSys(),"reference frame (C=ICRS)") );    
+      n+=80;
+      
       out.write( getFitsLine("MOCORDER",""+moc.getMocOrder(),"MOC resolution (best order)") );    n+=80;      
       out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+HealpixMoc.VERSION,"Name of the MOC generator") );    n+=80;      
 

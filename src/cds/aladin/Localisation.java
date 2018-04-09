@@ -503,10 +503,10 @@ public class Localisation extends MyBox  {
    /** Insère le résultat d'une résolution Sésame dans le champ de commande avec le label
     * POSITION histoire que cela se comprenne */
    protected void setSesameResult(String s) {
-      aladin.localisation.setTextSaisie(s);
-      aladin.localisation.readyToClear();
+      setTextSaisie(s);
+      readyToClear();
    }
-
+   
    /** Affiche la position, en fonction du frame defini
     * dans le menu deroulant
     * @param x,y Les coordonnees de la souris dans la View
@@ -580,7 +580,6 @@ public class Localisation extends MyBox  {
 
       //Affichage du resultat
       if( methode==1 ) {
-         //         Aladin.copyToClipBoard(s);   C'EST VRAIMENT TROP GONFLANT
          setTextSaisie(s);
          setMode(SAISIE);
       } else {
