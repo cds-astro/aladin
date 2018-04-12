@@ -22,13 +22,12 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.ADDWHERECONSTRAINT;
 import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 import static cds.aladin.Constants.SERVERJOINTABLESELECTED;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.UPLOADJOINTABLESELECTED;
-import static cds.aladin.Constants.ADDWHERECONSTRAINT;
-import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.BorderLayout;
@@ -120,28 +119,6 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		this.serverTap = server;		
 		showloading();
 		this.serverTap.tapClient.initUploadFrame();
-	}
-	
-	static {
-		JOINCONTRAINTSTIP = Aladin.chaine.getString("JOINCONTRAINTSTIP");
-		JOINCONSTRAINTASKRADIUS = Aladin.chaine.getString("JOINCONSTRAINTASKRADIUS");
-		JOINCONSTRAINTASKRADIUSTIP = Aladin.chaine.getString("JOINCONSTRAINTASKRADIUSTIP");
-		JOINCONSTRAINTASKCOL = Aladin.chaine.getString("JOINCONSTRAINTASKCOL");
-		JOINCONSTRAINTASKCOLTIP = Aladin.chaine.getString("JOINCONSTRAINTASKCOLTIP");
-		JOINCONSTRAINTASKEQCOLTIP = Aladin.chaine.getString("JOINCONSTRAINTASKEQCOLTIP");
-		GENERCIERROR_JOIN = Aladin.chaine.getString("GENERCIERROR_JOIN");
-		ERROR_NOJOINCOLUMNS = Aladin.chaine.getString("ERROR_NOJOINCOLUMNS");
-		ERROR_NOJOINRADUIS = Aladin.chaine.getString("ERROR_NOJOINRADUIS");
-		JOINFRAMETITLE = Aladin.chaine.getString("JOINFRAMETITLE");
-		ERROR_NOINTERFACEMESSAGE = Aladin.chaine.getString("ERROR_NOINTERFACEMESSAGE");
-		LOADING_JOININTERFACEMESSAGE = Aladin.chaine.getString("LOADING_JOININTERFACEMESSAGE");
-		JOINUPLOADEDTABLETIP = Aladin.chaine.getString("JOINUPLOADEDTABLETIP");
-		JOINTABLELABEL = Aladin.chaine.getString("JOINTABLELABEL");
-		ERROR_NOJOINCOLUMN = Aladin.chaine.getString("ERROR_NOJOINCOLUMN");
-		UPLOADJOINTABLENAMETOOLTIP = Aladin.chaine.getString("UPLOADJOINTABLENAMETOOLTIP");
-		WRITEJOINBUTTONLABEL = Aladin.chaine.getString("WRITEJOINBUTTONLABEL");
-		JOINRADIUSTOOLTIP = Aladin.chaine.getString("JOINRADIUSTOOLTIP");
-		JOINUPLOADTABLELABEL = Aladin.chaine.getString("JOINUPLOADTABLELABEL");
 	}
 	
 	public Dimension getPreferredSize() {
@@ -498,7 +475,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			positionJoin.setSelected(false);
 			positionJoin.setEnabled(false);
 			radius.setEnabled(false);
-			positionJoin.setToolTipText(EMPTYSTRING);
+			positionJoin.setToolTipText(null);
 		}
 		
 		if (!allowRefJoin && !allowPositionJoin) {
@@ -837,6 +814,28 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	public TapTable getTable(String joinTableName) {
 		// TODO Auto-generated method stub
 		return this.serverTap.tapClient.tablesMetaData.get(joinTableName);
+	}
+	
+	static {
+		JOINCONTRAINTSTIP = Aladin.chaine.getString("JOINCONTRAINTSTIP");
+		JOINCONSTRAINTASKRADIUS = Aladin.chaine.getString("JOINCONSTRAINTASKRADIUS");
+		JOINCONSTRAINTASKRADIUSTIP = Aladin.chaine.getString("JOINCONSTRAINTASKRADIUSTIP");
+		JOINCONSTRAINTASKCOL = Aladin.chaine.getString("JOINCONSTRAINTASKCOL");
+		JOINCONSTRAINTASKCOLTIP = Aladin.chaine.getString("JOINCONSTRAINTASKCOLTIP");
+		JOINCONSTRAINTASKEQCOLTIP = Aladin.chaine.getString("JOINCONSTRAINTASKEQCOLTIP");
+		GENERCIERROR_JOIN = Aladin.chaine.getString("GENERCIERROR_JOIN");
+		ERROR_NOJOINCOLUMNS = Aladin.chaine.getString("ERROR_NOJOINCOLUMNS");
+		ERROR_NOJOINRADUIS = Aladin.chaine.getString("ERROR_NOJOINRADUIS");
+		JOINFRAMETITLE = Aladin.chaine.getString("JOINFRAMETITLE");
+		ERROR_NOINTERFACEMESSAGE = Aladin.chaine.getString("ERROR_NOINTERFACEMESSAGE");
+		LOADING_JOININTERFACEMESSAGE = Aladin.chaine.getString("LOADING_JOININTERFACEMESSAGE");
+		JOINUPLOADEDTABLETIP = Aladin.chaine.getString("JOINUPLOADEDTABLETIP");
+		JOINTABLELABEL = Aladin.chaine.getString("JOINTABLELABEL");
+		ERROR_NOJOINCOLUMN = Aladin.chaine.getString("ERROR_NOJOINCOLUMN");
+		UPLOADJOINTABLENAMETOOLTIP = Aladin.chaine.getString("UPLOADJOINTABLENAMETOOLTIP");
+		WRITEJOINBUTTONLABEL = Aladin.chaine.getString("WRITEJOINBUTTONLABEL");
+		JOINRADIUSTOOLTIP = Aladin.chaine.getString("JOINRADIUSTOOLTIP");
+		JOINUPLOADTABLELABEL = Aladin.chaine.getString("JOINUPLOADTABLELABEL");
 	}
 
 

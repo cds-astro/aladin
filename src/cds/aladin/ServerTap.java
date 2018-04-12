@@ -67,6 +67,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.event.ListSelectionEvent;
@@ -415,6 +416,8 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		JScrollPane scrolley = new JScrollPane(this.selectList);
 		this.selectList.setVisibleRowCount(4);
 		this.selectList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		scrolley.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		scrolley.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
@@ -704,6 +707,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 		resetFields();
 		super.reset();
+		writeQuery();
 		this.revalidate();
 		this.repaint();
 	};
@@ -869,7 +873,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 						@Override
 						public void ancestorRemoved(AncestorEvent event) {
 							// TODO Auto-generated method stub
-							if (!ServerTap.this.isShowing()) {
+							if (!ServerTap.this.isShowing() && ServerTap.this.joinPanel != null) {
 								if (ServerTap.this.joinPanel.isShowing()) {
 									ServerTap.this.tapClient.tapManager.closeMyJoinFacade(joinPanel);
 								}
@@ -888,7 +892,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 						}
 					});
 				}
-				this.tapClient.tapManager.showOnJoinFrame(this.joinPanel);
+				this.tapClient.tapManager.showOnJoinFrame(this.tapClient.getVisibleLabel(), this.selectedTableName, this.joinPanel);
 				this.tapClient.tapManager.loadForeignKeyRelationsForSelectedTable(this.tapClient, this.joinPanel, selectedTableName);
 			}
 		} else if(source instanceof JCheckBox){// check command- SELECTALL

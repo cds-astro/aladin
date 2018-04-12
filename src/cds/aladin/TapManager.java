@@ -149,7 +149,7 @@ public class TapManager {
 //	public static final String GETTAPSCHEMATABLE = GETTAPSCHEMATABLES+"+where+table_name+%3D+'%1$s'+";
 	public static final String GETTAPEXAMPLES = "examples";
 	public static final String GETTAPFOREIGNRELFORTABLE = "SELECT target_table, from_table, target_column, from_column FROM TAP_SCHEMA.keys JOIN TAP_SCHEMA.key_columns ON TAP_SCHEMA.keys.key_id = TAP_SCHEMA.key_columns.key_id WHERE target_table ='%1$s'";
-	public static final String GENERICERROR, TAPLOADINGMESSAGE, TAPLOADERRORMESSAGE;
+	public static final String GENERICERROR, TAPLOADINGMESSAGE, TAPLOADERRORMESSAGE, UPLOADTABLECHANGEWARNING;
 	public static final int MAXTAPCOLUMNDOWNLOADVOLUME = 1000;//limit for the table columns that will be downloaded together. 409 cadc;1000 decided limit
 	
 	protected List<String> eligibleUploadServers;//URls of servers loaded and allow uploads
@@ -161,6 +161,7 @@ public class TapManager {
 		GENERICERROR = Aladin.getChaine().getString("GENERICERROR");
 		TAPLOADINGMESSAGE = Aladin.getChaine().getString("TAPLOADINGMESSAGE");
 		TAPLOADERRORMESSAGE = Aladin.getChaine().getString("TAPLOADERRORMESSAGE");
+		UPLOADTABLECHANGEWARNING = Aladin.getChaine().getString("UPLOADTABLECHANGEWARNING");
 	}
 	
 	public TapManager() {
@@ -429,7 +430,7 @@ public class TapManager {
 	 * Creates a generic tap server
 	 * Slight changes in resultant server w.r.t to the container: TreePanel or ServerDialog
 	 * @param tapClient
-	 * @param acceleration
+	 * @param newServer
 	 * @return
 	 * @throws Exception
 	 */
@@ -569,7 +570,6 @@ public class TapManager {
 	/**
 	 * Thread to create tap form
 	 * @param newServer
-	 * @param acceleration
 	 */
 	public void createGenericTapFormFromMetaData(final DynamicTapForm newServer) {
 		try {
@@ -1171,7 +1171,7 @@ public class TapManager {
 					break;
 				default:
 					break;
-				} 
+				}
 				path = path+subPath;
 			}
 			
@@ -1194,6 +1194,7 @@ public class TapManager {
 	 * @param message
 	 */
 	public void eraseNotification(final JLabel notificationBar, final String message, final String resetText) {
+		notificationBar.setFont(Aladin.LITALIC);
 		notificationBar.setText(message);
 		try {
 			aladin.executor.execute(new Runnable() {
@@ -1206,6 +1207,7 @@ public class TapManager {
 						currentT.setName("TeraseNotification: ");
 						currentT.setPriority(Thread.MIN_PRIORITY);
 						TimeUnit.SECONDS.sleep(3);
+						notificationBar.setFont(Aladin.LPLAIN);
 						notificationBar.setText(resetText);
 						notificationBar.revalidate();
 						notificationBar.repaint();
@@ -1220,6 +1222,7 @@ public class TapManager {
 			});
 		} catch (RejectedExecutionException ex) {
 			Aladin.trace(3, "RejectedExecutionException");
+			notificationBar.setFont(Aladin.LPLAIN);
 			notificationBar.setText(resetText);
 		}
 	}
@@ -1256,7 +1259,7 @@ public class TapManager {
 	 * Method populates loads all tables from TAP_SCHEMA.tables
 	 * @param tapClient
 	 * @param resultsResource
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void populateTables(TapClient tapClient, SavotResource resultsResource) throws Exception {
 		if (resultsResource != null) {
@@ -1511,24 +1514,24 @@ public class TapManager {
 	}
 	
 	/**
-     * Tap Table Reader for Savot binary resource
-     * @param newServer
-     * @param binaryData
-     * @param fields
-     * @throws IOException
-     */
+	 * Tap Table Reader for Savot binary resource
+	 * @param newServer
+	 * @param binaryData
+	 * @param fields
+	 * @throws IOException
+	 */
     protected void foreignKeysbinaryReader(TapClient tapClient, String selectedTableName, SavotDataReader parser, FieldSet fields) throws IOException {
-        try {
+		try {
            ForeignKeyColumn keyColumn = null;
-            while (parser.next()) {
+			while (parser.next()) {
 				keyColumn = new ForeignKeyColumn();
-                String tableName = null;
-                for (int j = 0; j < fields.getItemCount(); j++) {
-                    SavotField field = fields.getItemAt(j);
-                    String fieldName = field.getName();
-                    if (fieldName != null && !fieldName.isEmpty()) {
+				String tableName = null;
+				for (int j = 0; j < fields.getItemCount(); j++) {
+					SavotField field = fields.getItemAt(j);
+					String fieldName = field.getName();
+					if (fieldName != null && !fieldName.isEmpty()) {
 						if (fieldName.equalsIgnoreCase(TARGET_TABLE)) {
-                            tableName = parser.getCellAsString(j);
+							tableName = parser.getCellAsString(j);
 						} else if (fieldName.equalsIgnoreCase(FROM_TABLE)) {
 							keyColumn.setFrom_table(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(TARGET_COLUMN)) {
@@ -1548,26 +1551,27 @@ public class TapManager {
 		} finally {
 			if (parser != null) {
 				parser.close();
-                        }
-                    }
-                }
+			}
+		}
+	}
     
 	public synchronized void setForeignKeyColumn(TapClient tapClient, String tableName, ForeignKeyColumn keyColumn) {
-                if (tableName != null) {
-                    synchronized (tapClient.tablesMetaData) {
-                        if (tapClient.tablesMetaData.containsKey(tableName)) {
-                            //conserve columns if already set. but other details are updated
+		if (tableName != null) {
+			synchronized (tapClient.tablesMetaData) {
+				if (tapClient.tablesMetaData.containsKey(tableName)) {
+					//conserve columns if already set. but other details are updated
 					TapTable tableToUpdate = tapClient.tablesMetaData.get(tableName);
 					if (tableToUpdate.foreignKeyColumns == null) {
 						tableToUpdate.foreignKeyColumns = new ArrayList<ForeignKeyColumn>();
-                            }
+					}
 					if (keyColumn != null) {
 						tableToUpdate.foreignKeyColumns.add(keyColumn);
-                            }
-                            }
-                        } 
-                    }
-                }
+					}
+				}
+			}
+		}
+	}
+	
     
 	/**
 	 * Method tries to categorize savot resultsResource as either in binary or table format
@@ -1735,72 +1739,72 @@ public class TapManager {
 		}
 	}
 	
-    protected void binaryColumnReader(TapClient tapClient, SavotBinary binaryData, FieldSet fields) throws IOException {
+	protected void binaryColumnReader(TapClient tapClient, SavotBinary binaryData, FieldSet fields) throws IOException {
 		SavotDataReader dataReader =  new DataBinaryReader(binaryData.getStream(), fields);
 		binaryColumnReader(tapClient, dataReader, fields);
-						}
+	}
 
 	protected void binaryColumnReader(TapClient tapClient, SavotBinary2 binaryData, FieldSet fields) throws IOException {
 		SavotDataReader dataReader =  new DataBinary2Reader(binaryData.getStream(), fields);
 		binaryColumnReader(tapClient, dataReader, fields);
-					}
+	}
 	
-    /**
-     * Method populates column information from savot binary resource 
-     * @param serverToLoad
-     * @param binaryData
-     * @param fields
-     * @throws IOException
-     */
+	/**
+	 * Method populates column information from savot binary resource 
+	 * @param serverToLoad
+	 * @param binaryData
+	 * @param fields
+	 * @throws IOException
+	 */
     protected void binaryColumnReader(TapClient tapClient, SavotDataReader parser, FieldSet fields) throws IOException {
-        TapTableColumn tableColumn = null; 
-        try {
-            while (parser.next()) {
-                tableColumn = new TapTableColumn();
+		TapTableColumn tableColumn = null; 
+		try {
+			while (parser.next()) {
+				tableColumn = new TapTableColumn();
                 for (int j = 0; j < fields.getItemCount(); j++) {
                     SavotField field = fields.getItemAt(j);
-                    String fieldName = field.getName();
-                    if (fieldName != null && !fieldName.isEmpty()) {
-                        if (fieldName.equalsIgnoreCase(TABLENAME)) {
-                            tableColumn.setTable_name(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(COLUMNNAME)) {
-                            tableColumn.setColumn_name(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
-                            tableColumn.setDescription(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(UNIT)) {
-                            tableColumn.setUnit(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(UCD)) {
-                            tableColumn.setUcd(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(UTYPE)) {
-                            tableColumn.setUtype(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(DATATYPE)) {
-                            tableColumn.setDatatype(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(SIZE)) {
-                            tableColumn.setSize(field.getDataType(), parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(PRINCIPAL)) {
-                            tableColumn.setIsPrincipal(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(INDEXED)) {
-                            tableColumn.setIsIndexed(parser.getCellAsString(j));
-                        } else if (fieldName.equalsIgnoreCase(STD)) {
-                            tableColumn.setIsStandard(parser.getCellAsString(j));
-                        }
-                    }
+					String fieldName = field.getName();
+					if (fieldName != null && !fieldName.isEmpty()) {
+						if (fieldName.equalsIgnoreCase(TABLENAME)) {
+							tableColumn.setTable_name(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(COLUMNNAME)) {
+							tableColumn.setColumn_name(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
+							tableColumn.setDescription(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(UNIT)) {
+							tableColumn.setUnit(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(UCD)) {
+							tableColumn.setUcd(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(UTYPE)) {
+							tableColumn.setUtype(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(DATATYPE)) {
+							tableColumn.setDatatype(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(SIZE)) {
+							tableColumn.setSize(field.getDataType(), parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(PRINCIPAL)) {
+							tableColumn.setIsPrincipal(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(INDEXED)) {
+							tableColumn.setIsIndexed(parser.getCellAsString(j));
+						} else if (fieldName.equalsIgnoreCase(STD)) {
+							tableColumn.setIsStandard(parser.getCellAsString(j));
+						}
+					}
                 }
                 setTableIntoTapMetaData(tapClient, tableColumn);
             }
-            obscorePostProcess(tapClient);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-            Aladin.trace(3, "ERROR in binaryColumnReader! Did not read column column data for "+tapClient.tapBaseUrl);
-            throw e;
-        } finally {
-            if (parser!=null) {
-                parser.close();
-            }
-        }
-    }
-    
+			obscorePostProcess(tapClient);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+			Aladin.trace(3, "ERROR in binaryColumnReader! Did not read column column data for "+tapClient.tapBaseUrl);
+			throw e;
+		} finally {
+			if (parser!=null) {
+				parser.close();
+			}
+		}
+	}
+	
 	/**
 	 * Method populates all column metainfo from one of Aladin's loaded plan
 	 * @param planToUpload
@@ -1849,6 +1853,7 @@ public class TapManager {
 //		table.setDecColumnName(((Field) plancatalog.pcat.vField.get(plancatalog.pcat.leg.getDe())).name);
 		tablesMetaData.put(tableName, table);
 	}
+	
 
 	/**
 	 * Method to create parser to access the web info
@@ -1909,9 +1914,11 @@ public class TapManager {
 				// TODO Auto-generated method stub
 				boolean firstUpload = false;
 				String tableName = uploadTableName;
+				
 				if (uploadTableName == null || uploadTableName.isEmpty()) {
 					tableName = uploadFrame.generateUploadTableName(ALADINTABLEPREFIX);
 				}
+				
 				if (uploadFrame.uploadClient.tablesMetaData.isEmpty()) {
 					firstUpload = true;
 					uploadFrame.uploadClient.serverTap.showloading();
@@ -1954,7 +1961,7 @@ public class TapManager {
 			table.setTable_name(tableName);
 			uploadTablesModel.removeElement(oldTableName);
 			uploadTablesModel.addElement(tableName);
-			
+			uploadTablesModel.setSelectedItem(tableName);
 			//edit mthod name add "reference" at the end
 			//loop through join constraints..of jeez.. all the servers in the cache
 				//if there are join constraints of the name
@@ -2428,7 +2435,7 @@ public class TapManager {
 				server = null;
 			} else {
 				server.disableStatusForAllPlanes();
-	}
+			}
 			String institute = null;
 			if (server != null) {
 				institute = server.institute;
@@ -2464,9 +2471,9 @@ public class TapManager {
 	 * </ol>
 	 * @param server
 	 * @param url
-	 * @param queryString 
+	 * @param queryString
 	 * @param postParams
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void fireASync(final Server server, final String url, final String queryString,
 			final Map<String, Object> postParams) throws Exception {
@@ -2595,11 +2602,18 @@ public class TapManager {
 		}
 	}
 	
-	public void	showOnJoinFrame(JoinFacade panel) {
+	public void	showOnJoinFrame(String label, String selectedTableName, JoinFacade panel) {
 		if (this.joinFrame == null) {
 			this.joinFrame = new FrameSimple(aladin);
 		}
-		this.joinFrame.show(panel, JoinFacade.JOINFRAMETITLE);
+		String displayTitle = "";
+		try {
+			displayTitle = String.format(JoinFacade.JOINFRAMETITLE, selectedTableName, label);
+		} catch (Exception e) {
+			// TODO: handle exception
+			displayTitle = "Create simple join constraints with "+selectedTableName+" of "+label;
+		}
+		this.joinFrame.show(panel, displayTitle);
 	}
 	
 	public void closeMyJoinFacade(JoinFacade joinPanel) {
@@ -2805,7 +2819,7 @@ public class TapManager {
 		}
 		return result;
 	}
-
+	
 	/**
 	 * Adds newly loaded plancatalogue into upload options
 	 * @param newPlan
@@ -2813,18 +2827,8 @@ public class TapManager {
 	public void updateAddUploadPlans(Plan newPlan) {
 		if (this.uploadFrame != null && this.uploadFrame.uploadOptions != null) {
 			if (/*newPlan.flagOk && */newPlan.pcat != null && newPlan instanceof PlanCatalog && newPlan.pcat.flagVOTable) {
-				/*this.uploadFrame.uploadOptions.addItem(newPlan.label);
-				String uploadTableName = UPLOADTABLEPREFIX.concat(TapTable.getQueryPart(newPlan.label, false));
-				this.uploadFrame.uploadTableNameDict.put(newPlan.label, uploadTableName);
-				this.uploadFrame.setStateForUploadedComponents();
-				createTapServerFromAladinPlan(newPlan, uploadTableName);
-				if (this.uploadFrame.isVisible()) {
-					this.eraseNotification(this.uploadFrame.infoLabel, FrameUploadServer.NEWOPTIONADDEDMESSAGE, EMPTYSTRING);
-					this.uploadFrame.pack();
-				}*/
-				
 				try {
-					this.uploadFrame.saveUploadFile(newPlan);
+					this.uploadFrame.allowPlanIntoUploadFacade(newPlan);
 					if (this.uploadFrame.uploadOptions != null) {
 						this.uploadFrame.uploadOptions.addItem(newPlan.label);
 						PlanCatalog planCatalog = (PlanCatalog) newPlan;
@@ -2837,17 +2841,7 @@ public class TapManager {
 					// TODO Auto-generated catch block
 					if(Aladin.levelTrace >= 3) e.printStackTrace();
 					Aladin.trace(3, "Unable to parse " + newPlan.label + " data for upload");
-					if (newPlan.isThisListening(this.uploadFrame)) {
-						if (e instanceof RejectedExecutionException) {
-							Aladin.error(this.uploadFrame, "Unable to get load "+newPlan.label+"\n Request overload! Please wait and try again.");
-						} else {
-							Aladin.error(this.uploadFrame, "Unable to parse " + newPlan.label + " data for upload");
-						}
-						
-					}
 				}
-			} else if (newPlan.isThisListening(this.uploadFrame)) {
-				Aladin.error(this.uploadFrame, "Unable to parse " + newPlan.label + " data for upload");
 			}
 		}
 	}
@@ -2855,6 +2849,14 @@ public class TapManager {
 	public void updateDeleteUploadPlans(Plan planInDeletion) {
 		if (this.uploadFrame != null && this.uploadFrame.uploadOptions != null) {
 			this.uploadFrame.deleteAvailableUploadTable(planInDeletion);
+		}
+	}
+	
+	public void reAddPlan(Plan plan) {
+		updateDeleteUploadPlans(plan);
+		updateAddUploadPlans(plan);
+		if (this.joinFrame != null) {
+			Aladin.info(this.joinFrame, UPLOADTABLECHANGEWARNING);
 		}
 	}
 	
@@ -2870,9 +2872,9 @@ public class TapManager {
 		if (this.uploadFrame == null) {
 			this.uploadFrame = new FrameUploadServer(this.aladin, tapClient.tapBaseUrl);
 			this.uploadFrame.setGui();
-			}
-		return this.uploadFrame.uploadClient.tablesMetaData;
 		}
+		return this.uploadFrame.uploadClient.tablesMetaData;
+	}
 	
 	public void	showOnUploadFrame(TapClient tapClient) {
 		initUploadFrame(tapClient);
@@ -2890,6 +2892,7 @@ public class TapManager {
 	public ComboBoxModel getUploadClientModel() {
 		// TODO Auto-generated method stub
 		return uploadTablesModel;
+		
 	}
 
 }

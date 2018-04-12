@@ -3075,6 +3075,7 @@ SELECTSPLTAPSERVERSLABEL Preselected servers
 SELECTSPLTAPSERVERSTOOLTIP A small selection of servers is shown below. For a more comprehensive list, go to the adjacent "Complete list".
 INCORRECTTAPURLMESSAGE Error! please check the url provided
 MESSAGEUNKNOWNPARAMSINQUERY Are you sure of the highlighted identifiers?
+INVALIDNUMBERINPUT %1$s is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-0.0788 etc... \n With no space/blank between the number and the operator.
 
 TAPFORMTITLE.fr	Client TAP
 TAPFORMINFO.fr	Interroge les serveurs TAP via Aladin.
@@ -3097,7 +3098,7 @@ MESSAGEUNKNOWNPARAMSINQUERY.fr Les identificateurs surlignées sont-ils corrects 
 
 TAPTABLEJOINTIP Join table
 TAPTABLEUPLOADPARSETIP Load the table(s) on the gui. 
-TAPTABLEUPLOADTIP Upload settings. 
+TAPTABLEUPLOADTIP Edit table name. 
 TAPTABLENOUPLOADTIP Table uploads are not available for this server
 TIPCLICKTOADD Click to add
 TAPNOFILELOAD Please select a tapserver to load!
@@ -3123,9 +3124,9 @@ OBSCORE_TAPMODESTOOLTIP Click to load a custom client for obscore tables
 #ACCESSALL_TAPMODESTOOLTIP Click to load all tables of this server
 TAPSERVICEEXAMPLESTOOLTIP These are service provided examples!
 SETRADECBUTTONTIP Select columns of the tap table as right ascension and declination columns
-TAPTARGETSETTINGSTOOLTIP Change target used in the templates.
-SETTARGETTOOLTIP Hint: Configure different target by clicking the "Settings" button
-CHANGESETTINGSTOOLTIP Hint: Configure second table by clicking the "Settings" button
+TAPTARGETSETTINGSTOOLTIP Change the target used in the templates.
+SETTARGETTOOLTIP Hint: Configure a different target by using the Grab button
+CHANGESETTINGSTOOLTIP Hint: Configure the second table by clicking the "Settings" button
 NOGLURECFOUND No glu records found to create a customised basic client!
 NOTARGETSET No target set.
 NORANGEERRORMESSAGE Range selected, please provide 2 values!
@@ -3136,10 +3137,11 @@ FORMATFORBETWEENTOOLTIP Format should be as: value1 AND value2
 FORMATFORBETWEEN Format for between operator: value1 AND value2. Ex: 2 and 3. 
 INCORRECTCONSTRAINTVALUE Please input a number constraint value
 JOINTABLETOOLTIP Join with an uploaded table
+QUERIESREFRESHED Queries refreshed as per your selection!
 
 TAPTABLEJOINTIP.fr  Jointure de table
 TAPTABLEUPLOADPARSETIP.fr  Charger ces données dans l'interface.
-TAPTABLEUPLOADTIP.fr  télécharger les paramètres (Upload).
+TAPTABLEUPLOADTIP.fr  Modifier le nom de la table (Upload).
 TAPTABLENOUPLOADTIP.fr  Le téléchargement de tables n'est pas disponible sur ce serveur
 TIPCLICKTOADD.fr  Cliquez pour ajouter
 TAPNOFILELOAD.fr  Sélectionner un serveur TAP à accéder!
@@ -3166,7 +3168,7 @@ GENERIC_TAPMODESTOOLTIP.fr  Cliquez pour recharger la configuration du formualir
 #TAPSERVICEEXAMPLESTOOLTIP.fr  These are service provided examples!
 #SETRADECBUTTONTIP.fr  Select columns of the tap table as right ascension and declination columns
 #TAPTARGETSETTINGSTOOLTIP.fr  Change target used in the templates.
-#SETTARGETTOOLTIP.fr  Hint: Configure different target by clicking the "Settings" button
+#SETTARGETTOOLTIP.fr  Hint: Configure different target by clicking the Grab button
 #CHANGESETTINGSTOOLTIP.fr  Hint: Configure second table by clicking the "Settings" button
 NOGLURECFOUND.fr La configuration du formulaire simplifié est innaccessible (GLU record not found).
 NOTARGETSET.fr  Aucune cible spécifiée !
@@ -3189,7 +3191,7 @@ NOTABLELOADEDMESSAGE Load new table to populate the gui!
 TABLEDISCARDINFO One option removed from upload file choices!
 NEWOPTIONADDEDMESSAGE New option added to upload file choices!
 UPLOADNOLOCALFILECHOSENEMESSAGE Please choose a file!
-TABLENAMEINPUTTIP Please enter without a TAP_UPLOAD." prefix. This will be added automatically
+TABLENAMEINPUTTIP Please enter without a "TAP_UPLOAD." prefix. This will be added automatically
 UPLOADINVALIDTABLENAME Please input a valid table name (with no special characters)!
 UPLOADDPLICATETABLENAME This table name is already submitted for upload. Please edit the table name!
 TAPTABLEUPLOADLIMITTOOLTIP Hard limit =%1$s rows
@@ -3235,7 +3237,7 @@ JOINUPLOADEDTABLETIP Join with an uploaded table
 GENERCIERROR_JOIN Error, could not join!
 ERROR_NOJOINCOLUMNS Unable to retrieve join columns information!
 ERROR_NOJOINRADUIS Please enter a radius value for position constraint
-JOINFRAMETITLE Create simple join constraints
+JOINFRAMETITLE Create simple join constraints with %1$s of %2$s
 ERROR_NOINTERFACEMESSAGE Error: unable to load join interface for
 LOADING_JOININTERFACEMESSAGE loading join interface for
 TAPLOADINGMESSAGE Please wait while TAP metadata is updated
@@ -3251,6 +3253,8 @@ WRITEJOINBUTTONLABEL Write this join query
 LOADUPLOADCLIENTTIP Load local file as a tap table
 JOINRADIUSTOOLTIP in degrees
 JOINUPLOADTABLELABEL With uploaded tables:
+UPLOADTABLECHANGEWARNING Upload table changed! While any of your existing join constraints are not removed, you are adviced to regenerate them if they refer to the old table.
+NOSTACKTABLES No tables available for upload from Aladin stack.
 
 #V10
 DTLABEL	Available data

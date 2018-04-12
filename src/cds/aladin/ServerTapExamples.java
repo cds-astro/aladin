@@ -101,7 +101,8 @@ public class ServerTapExamples extends DynamicTapForm {
 	 */
 	private static final long serialVersionUID = -9113338791629047699L;
 	
-	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP, NODUPLICATESELECTION, JOINTABLETOOLTIP;
+	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP,
+			NODUPLICATESELECTION, JOINTABLETOOLTIP, QUERIESREFRESHED;
 	public static final String TAPEXDEFAULTMAXROWS_INT = "2000";
 	Map serviceExamples = null;
 	
@@ -270,7 +271,9 @@ public class ServerTapExamples extends DynamicTapForm {
 					public void itemStateChanged(ItemEvent e) {
 						// TODO Auto-generated method stub
 						ComboBoxModel uploadModel = tapClient.tapManager.getUploadClientModel();
+						boolean doScroll = false;
 						if (e.getStateChange() == ItemEvent.SELECTED && uploadModel.getSize() > 0) {
+							doScroll = true;
 							secondaryTablesGui.setEnabled(true);
 							secondaryTable = (String) secondaryTablesGui.getSelectedItem();
 						} else {
@@ -279,6 +282,12 @@ public class ServerTapExamples extends DynamicTapForm {
 						}
 //						resetExamplesGui();
 						regenerateBasicExamplesRepaint();
+						if (doScroll) {
+							int index = examplesGui.getModel().getSize() - 1;
+							if (index >= 0) {
+								examplesGui.ensureIndexIsVisible(index);
+							}
+						}
 					}
 				});	
 				
@@ -601,7 +610,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		}
 		 
 		if (!mandateParamsToAdd.isEmpty()) {
-			addSelectsToBasicExamples("Get bibliographic data", mandateParamsToAdd, optionalParamsToAdd, null, null, null);
+			addSelectsToBasicExamples("Get bibliographic data", mandateParamsToAdd, optionalParamsToAdd, null, null, null, null);
 		}
 
 		// radial velocity and parallax
@@ -627,7 +636,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			setCell = new CustomListCell();
 			setCell.tooltip = hints.toString();
 			addSelectsToBasicExamples(queryName, mandateParamsToAdd, optionalParamsToAdd, setCell, null,
-					coneSearchPart);
+					coneSearchPart, SETTARGETTOOLTIP);
 		}
 
 		// position and proper motion
@@ -652,7 +661,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			}
 			setCell.tooltip = hints.toString();
 			addSelectsToBasicExamples("Position and proper motion", mandateParamsToAdd, optionalParamsToAdd, setCell, null,
-					coneSearchPart);
+					coneSearchPart, SETTARGETTOOLTIP);
 
 			String properMotionQuery = "SQRT(POWER(" + pmra.getColumnNameForQuery() + ",2)+POWER(" + pmdec.getColumnNameForQuery() + ",2))";
 			mandateParamsToAdd.add(properMotionQuery + " as pm");
@@ -660,7 +669,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			setCell = new CustomListCell();
 			setCell.tooltip = hints.toString();
 			addSelectsToBasicExamples("Proper motion", mandateParamsToAdd, optionalParamsToAdd, setCell, 
-					"Proper motion limits ", properMotionQuery);
+					"Proper motion limits ", properMotionQuery, "");
 		}
 
 		// red shift
@@ -672,7 +681,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			hints = new StringBuffer();
 			setHint(hints, redshift);
 			setCell.tooltip = hints.toString();
-			addSelectsToBasicExamples(null, mandateParamsToAdd, optionalParamsToAdd, setCell, null, coneSearchPart);
+			addSelectsToBasicExamples(null, mandateParamsToAdd, optionalParamsToAdd, setCell, null, coneSearchPart, SETTARGETTOOLTIP);
 		}
 
 		// operations with those params
@@ -752,7 +761,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				optionalParamsToAdd.add(0, obs_id);
 			}
 			if (!mandateParamsToAdd.isEmpty()) {
-				addSelectsToBasicExamples("Get access_url, access_formats...", mandateParamsToAdd, optionalParamsToAdd, null, null, null);
+				addSelectsToBasicExamples("Get access_url, access_formats...", mandateParamsToAdd, optionalParamsToAdd, null, null, null, null);
 			}
 			
 			/**
@@ -939,6 +948,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		this.examplesGui.setListData(this.basicExamples.keySet().toArray());
 		this.examplesGui.revalidate();
 		this.examplesGui.repaint();
+		tapClient.tapManager.eraseNotification(info1, QUERIESREFRESHED, CLIENTINSTR);
 	}
 	
 	public void changeTargetSettings() {
@@ -1024,7 +1034,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	 * @param wherePart
 	 */
 	public void addSelectsToBasicExamples(String queryName, List<String> mandatoryParams,
-			List<String> optionalParamsToAdd, CustomListCell setCell, String whereLabel, String wherePart) {
+			List<String> optionalParamsToAdd, CustomListCell setCell, String whereLabel, String wherePart, String wherePartToolTip) {
 		String tableSelectQuery = "Select %s %s from %s";
 		StringBuffer spQuery = new StringBuffer();
 		List<String> selectParamsToAdd = new ArrayList<String>();
@@ -1050,7 +1060,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			if (whereLabel == null) {
 				whereLabel = queryName + " plus conesearch";
 			}
-			this.basicExamples.put(whereLabel, new CustomListCell(queryToDisplay + wherePart, SETTARGETTOOLTIP));
+			this.basicExamples.put(whereLabel, new CustomListCell(queryToDisplay + wherePart, wherePartToolTip));
 		}
 	}
 	
@@ -1098,6 +1108,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		CHANGESETTINGSTOOLTIP = Aladin.chaine.getString("CHANGESETTINGSTOOLTIP");
 		NODUPLICATESELECTION = Aladin.chaine.getString("NODUPLICATESELECTION");
 		JOINTABLETOOLTIP = Aladin.chaine.getString("JOINTABLETOOLTIP");
+		QUERIESREFRESHED = Aladin.chaine.getString("QUERIESREFRESHED");
 	}
 
 }

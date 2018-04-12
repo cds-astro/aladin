@@ -82,7 +82,7 @@ public class TapClient{
 	public static String modesLabel = "Modes";
 	public static String modesToolTip;
 	public DefaultComboBoxModel model = null;
-	public static String RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND, CHANGESERVERTOOLTIP;
+	public static String RELOAD, TIPRELOAD, GENERICERROR, TARGETERROR, NOGLURECFOUND, CHANGESERVERTOOLTIP, INVALIDNUMBERINPUT;
 	
 	public TapManager tapManager;
 	public String tapLabel;
@@ -712,7 +712,7 @@ public class TapClient{
 				inputInProgress = input;
 			}
 		} else if (showError) {
-			Aladin.error(s, input + " is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+			Aladin.error(s, s.getNumberIncorrectMessage(input));
 			s.ball.setMode(Ball.NOK);
 		}
 		return inputInProgress;
@@ -820,8 +820,9 @@ public class TapClient{
 	 * Parsing and other issues are not tackled here
 	 * @param server
 	 * @param requestParams
+	 * @throws Exception 
 	 */
-	public void updateUploadedTablesToParser(DynamicTapForm server, Map<String, Object> requestParams) {
+	public void updateUploadedTablesToADQLParser(DynamicTapForm server, Map<String, Object> requestParams) throws Exception {
 		// TODO Auto-generated method stub
 		/*Map<String, Object> requestParams = null; //added off in  updateUploadedTablesToParser. keeping for ref
 		if (secondaryTable != null) {
@@ -860,7 +861,7 @@ public class TapClient{
 			uploadFrame = tapManager.uploadFrame;
 			for (String uploadtable : uploadedTables.keySet()) {
 				if (server.tap.getText().toUpperCase().contains(uploadtable.toUpperCase())) {
-					if (requestParams != null && uploadFrame.uploadedTableFiles.get(uploadtable) == null) {
+					if (requestParams != null && !uploadFrame.uploadTableNameDict.containsValue(uploadtable)) {
 						Aladin.error(server, "Unable to submit " + uploadtable + " data!");
 						Aladin.trace(3, "No file found for "+uploadtable);
 					} else{

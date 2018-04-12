@@ -25,9 +25,11 @@ import static cds.aladin.Constants.CONTENTTYPE;
 import static cds.aladin.Constants.CONTENT_TYPE_PDF;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTHTML;
 import static cds.aladin.Constants.CONTENT_TYPE_TEXTPLAIN;
+import static cds.aladin.Constants.CONTENT_TYPE_VOTABLE;
 import static cds.aladin.Constants.SEMANTICS;
 import static cds.aladin.Constants.SEMANTIC_ACCESS;
 import static cds.aladin.Constants.SEMANTIC_CUTOUT;
+import static cds.aladin.Constants.SEMANTIC_PREVIEWPLOT;
 import static cds.aladin.Constants.SEMANTIC_PROC;
 
 import java.awt.BorderLayout;
@@ -224,7 +226,6 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 			j.setActionCommand(String.valueOf(i));
 			j.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent clickEvent) {
-					clickEvent.getSource();
 					int menuIndex = Integer.parseInt(clickEvent.getActionCommand());
 					aladin.mesure.getFormInfo(menuIndex);
 					
@@ -260,21 +261,18 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 						} else {
 							Aladin.error(NOCUTOUTCLIENTSUPPORT, 1);
 						}
-					} /*else if (semantics.startsWith(SEMANTIC_PREVIEW) && accessUrl != null
-							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_JPEG)
-							|| contentType.equalsIgnoreCase(CONTENT_TYPE_PNG))) { //for now we just load plot image or votable in Aladin
-						aladin.glu.showDocument("Http", accessUrl, true);
-					}*/ else if (contentType != null && accessUrl != null
+					} else if (semantics.startsWith(SEMANTIC_PREVIEWPLOT) && accessUrl != null 
+							&& contentType.equalsIgnoreCase(CONTENT_TYPE_VOTABLE)) {
+						int x = this.activeDataLinkWord.x + this.activeDataLinkWord.w/2;
+						//to display at the popup menu click location  y = wordy* menuIndex *Server.HAUT 
+						aladin.mesure.mcanvas.toSamp(accessUrl, x, this.activeDataLinkWord.y);
+					} else if (contentType != null && accessUrl != null
 							&& (contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTHTML)
 									|| contentType.equalsIgnoreCase(CONTENT_TYPE_TEXTPLAIN)
 									|| contentType.equalsIgnoreCase(CONTENT_TYPE_PDF))) {
 						aladin.glu.showDocument("Http", accessUrl, true);
-					} /*else if (contentType!=null && accessUrl!=null && contentType.contains(DATATYPE_DATALINK)) {// we won't be detecting this here. but will occur downstream at ServerFile
-						aladin.mesure.isEnabledDatalinkPopUp = true;
-						aladin.makeCursor(mcanvas, Aladin.WAITCURSOR);
-						this.activeDataLinkWord.callArchive(aladin, activeDataLinkSource, true);
-					}*/ else if (accessUrl != null && !accessUrl.isEmpty()) {
-						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null);//TODO::change to access
+					} else if (accessUrl != null && !accessUrl.isEmpty()) {
+						aladin.calque.newPlan(activeDataLinkGlu.getParams().get(ACCESSURL), null, null, activeDataLinkSource);//TODO::change to access
 					} else {
 						Aladin.error("Error in loading datalink",1);
 					}

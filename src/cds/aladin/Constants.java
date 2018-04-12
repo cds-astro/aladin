@@ -113,6 +113,7 @@ public static final String CONTENT_TYPE_TEXTHTML = "text/html";
 public static final String CONTENT_TYPE_TEXTPLAIN = "text/plain";
 public static final String CONTENT_TYPE_PDF = "application/pdf";
 public static final String CONTENT_TYPE_HIPS = "content=hips";
+public static final String CONTENT_TYPE_VOTABLE = "application/x-votable+xml";
 public static final String UNKNOWN = "UNKNOWN";
 public static final String SPACESTRING = " ";
 public static final String S_REGION = "s_region";
@@ -121,6 +122,7 @@ public static final String SEMANTIC_CUTOUT = "#cutout";
 public static final String SEMANTIC_ACCESS = "#access";
 public static final String SEMANTIC_PROC = "#proc";
 public static final String SEMANTIC_PREVIEW = "#preview";
+public static final String SEMANTIC_PREVIEWPLOT = "#preview-plot";
 public static final String REGEX_TABLENAME_SPECIALCHAR = "[$&+,:;=?@#/\\\\|]";
 public static final String REGEX_VALIDTABLENAMECONSTRUCT = "(?<tableName>[\\p{L}_][\\p{L}\\p{N}@$#_]{0,127})";
 public static final String REGEX_VALIDTABLEPREFIX = "^(?<prefix>"+REGEX_VALIDTABLENAMECONSTRUCT+"?\\.)";
@@ -231,8 +233,11 @@ public static final String LASTPANEL = "LASTPANEL";
 public static final String GENERAL = "GENERAL";
 public static final String RETRYACTION = "RETRYACTION";
 public static final String SUBMITACTION = "SUBMIT";
+public static final String RESETACTION = "RESET";
 public static final String CLEARACTION = "CLEAR";
+public static final String EDITUPLOADTABLENAMEACTION = "EDITUPLOADTABLENAMEACTION";
 public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: tintin
+public static final String TABLEGUINAME = "table";
 
 /** Liste des caractère définissant une chaine de carac @author Mallory Marcot*/
 public static final String LISTE_CARACTERE_STRING = "AZRTYUIOPQSDFGHJKLMWXCVBN%_[]^";

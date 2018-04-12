@@ -27,19 +27,21 @@ package cds.aladin;
 import static cds.aladin.Constants.ADDPOSCONSTRAINT;
 import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.CIRCLEORSQUARE;
+import static cds.aladin.Constants.EDITUPLOADTABLENAMEACTION;
 import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.JOIN_TABLE;
 import static cds.aladin.Constants.OPEN_SET_RADEC;
 import static cds.aladin.Constants.RADECBUTTON;
+import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
 import static cds.aladin.Constants.RELOAD;
 import static cds.aladin.Constants.SHOWAYNCJOBS;
 import static cds.aladin.Constants.SYNC_ASYNC;
+import static cds.aladin.Constants.TABLEGUINAME;
 import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADING;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.UPLOAD;
-import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
-import static cds.aladin.Constants.JOIN_TABLE;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.BorderLayout;
@@ -51,6 +53,8 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -99,7 +103,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	public static String TIPRETRY, TAPTABLEUPLOADTIP, TAPTABLENOUPLOADTIP, REFRESHQUERYTOOLTIP, CHECKQUERYTOOLTIP,
 			SYNCASYNCTOOLTIP, SHOWASYNCTOOLTIP, TAPTABLEJOINTIP, DISCARD, DISCARDTIP, SETRADECBUTTONTIP,
 			CHANGETARGETSETTINGSTOOLTIP, TIPCLICKTOADD, TAPEXDEFAULTMAXROWS, NORANGEERRORMESSAGE, TAPERRORSTATUSINFO, 
-			TAPLOADINGSTATUSINFO, MESSAGEUNKNOWNPARAMSINQUERY, TAPTABLEUPLOADLIMITTOOLTIP;
+			TAPLOADINGSTATUSINFO, MESSAGEUNKNOWNPARAMSINQUERY, TAPTABLEUPLOADLIMITTOOLTIP, NOSTACKTABLES;
 	
 	public String CLIENTINSTR;
 
@@ -280,7 +284,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		}
 		
 		tablesGui.setOpaque(false);
-		tablesGui.setName("table");
+		tablesGui.setName(TABLEGUINAME);
 //		tablesGui.setActionCommand(TABLECHANGED);
 		tablesGui.setAlignmentY(SwingConstants.CENTER);
 		c.insets = new Insets(1, 0, 1, 0);
@@ -331,7 +335,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 					tablesPanel.add(grab,c);
 				}
 			} else {
-				tablesPanel.add(server.getUploadButtonIfAvailable(null), c);
+				tablesPanel.add(server.getUploadButtonIfAvailable(null, tablesGui), c);
 			}
 		}
 		
@@ -538,16 +542,16 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
-		if (Aladin.BETA) {
-			if (isForLoaded && this.tapClient.mode != TapClientMode.UPLOAD && !(this instanceof ServerTapExamples)) {
-				bottomPanel.add(getUploadButtonIfAvailable("Upload"));
-			}
-		}
+//		if (Aladin.BETA) {//TODO:: tintin remove comments and methods inside
+//			if (isForLoaded && this.tapClient.mode != TapClientMode.UPLOAD && !(this instanceof ServerTapExamples)) {
+//				bottomPanel.add(getUploadButtonIfAvailable("Upload"));
+//			}
+//		}
 		return bottomPanel;
 	}
 	
-	public JButton getUploadButtonIfAvailable(String label) {
-		String defaultLanel = "Upload settings";
+	public JButton getUploadButtonIfAvailable(String label, JComboBox tablesGui) {
+		String defaultLanel = "Edit table name";
 		String uploadTipText = TAPTABLEUPLOADTIP;
 		JButton button = null;
 		
@@ -565,14 +569,32 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			button = new JButton(label);
 		}
 		
-		button.setActionCommand(UPLOAD);
+		button.setActionCommand(EDITUPLOADTABLENAMEACTION);
 		
 		
 		if (this.tapClient.capabilities != null) {
 			try {
 				VOSICapabilitiesReader meta = this.tapClient.capabilities.get();
 				button.setEnabled(meta.isUploadAllowed());
-				button.addActionListener(this);
+				
+				final JButton editVutton = button;
+				tablesGui.addPropertyChangeListener(new PropertyChangeListener() {
+					
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						// TODO Auto-generated method stub
+						if (evt.getPropertyName().equals("enabled")) {
+							if (((Boolean) evt.getNewValue())) {
+								editVutton.setEnabled(true);
+							} else {
+								editVutton.setEnabled(false);
+							}
+							((JComboBox)evt.getSource()).setToolTipText(NOSTACKTABLES);
+						}
+					}
+				});
+				
+				button.addActionListener(this.tapClient.tapManager.uploadFrame);
 				if (meta.isUploadAllowed() && meta.getUploadHardLimit() > 0L) {
 					String tip = String.format(TAPTABLEUPLOADLIMITTOOLTIP, meta.getUploadHardLimit());
 					uploadTipText = uploadTipText.concat(tip);
@@ -730,7 +752,12 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		ADQLQuery query = null;
 		try {
 			if (Aladin.PROTO) {
-				this.tapClient.updateUploadedTablesToParser(this, requestParams);
+				try {
+					this.tapClient.updateUploadedTablesToADQLParser(this, requestParams);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					Aladin.trace(3, "error trying to update adql parser" +e.getMessage());
+				}
 			}
 			query = super.checkQuery(null);
 //			DefaultDBTable table = new DefaultDBTable(selectedTableName);
@@ -1032,6 +1059,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		TAPLOADINGSTATUSINFO = Aladin.chaine.getString("TAPLOADINGSTATUSINFO");
 		MESSAGEUNKNOWNPARAMSINQUERY = Aladin.chaine.getString("MESSAGEUNKNOWNPARAMSINQUERY");
 		TAPTABLEUPLOADLIMITTOOLTIP = Aladin.chaine.getString("TAPTABLEUPLOADLIMITTOOLTIP");
+		NOSTACKTABLES = Aladin.chaine.getString("NOSTACKTABLES");
 	}
 
 }

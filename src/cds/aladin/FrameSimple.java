@@ -23,6 +23,7 @@ package cds.aladin;
 
 import static cds.aladin.Constants.CLEARACTION;
 import static cds.aladin.Constants.SUBMITACTION;
+import static cds.aladin.Constants.RESETACTION;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
@@ -167,7 +168,13 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 		this.getContentPane().setBackground(Aladin.COLOR_MAINPANEL_BACKGROUND);
 		this.getContentPane().add(this.server, "Center");
 		buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		JButton button = new JButton("Clear");
+		
+		JButton button = new JButton("Reset");
+		button.addActionListener(this);
+		button.setActionCommand(RESETACTION);
+		buttonsPanel.add(button);
+		
+		button = new JButton("Clear");
 		button.addActionListener(this);
 		button.setActionCommand(CLEARACTION);
 		buttonsPanel.add(button);
@@ -198,6 +205,8 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 		if (this.server != null) {
 			if (command.equals(SUBMITACTION)) {
 				server.submit();
+			} else if (command.equals(RESETACTION)) {
+				server.reset();
 			} else if (command.equals(CLEARACTION)) {
 				server.clear();
 			}

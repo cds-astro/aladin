@@ -29,6 +29,7 @@ import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -138,7 +139,7 @@ public class JoinConstraint extends JPanel {
 		alias = getAlais(mainTableName, joinTableName, otherConstraints);
 	}
 	
-	public static String getAlais(String mainTableName, String joinTableName, List<JoinConstraint> otherConstraints) {
+	/*public static String getAlais(String mainTableName, String joinTableName, List<JoinConstraint> otherConstraints) {
 		int aliasIndex = 0;
 		String alias = null;
 		if (mainTableName.equalsIgnoreCase(joinTableName)) {
@@ -161,6 +162,47 @@ public class JoinConstraint extends JPanel {
 		
 		alias = TapTable.getQueryPart(alias, false);
 		return alias;
+	}*/
+	
+	public static String getAlais(String mainTableName, String joinTableName, List<JoinConstraint> otherConstraints) {
+		int aliasIndex = 0;
+		String alias = joinTableName;
+		
+		if (joinTableName.startsWith("TAP_UPLOAD.")) {
+			alias = joinTableName.replace("TAP_UPLOAD.", "");
+		}
+		if (TapTable.isUnQuotedPattern(TapTable.getQueryPart(joinTableName, true))) {
+			alias = alias.replaceAll("\\.", "");
+		}
+		String aliasNameInWorks = alias;
+		if (mainTableName.equalsIgnoreCase(joinTableName)) {
+			aliasIndex++;
+			aliasNameInWorks = alias + aliasIndex;
+		}
+		List<String> tableNames = new ArrayList<String>();
+		tableNames.add(mainTableName);
+		for (JoinConstraint otherConstraint : otherConstraints) {
+			tableNames.add(otherConstraint.alias);
+		}
+		
+		aliasNameInWorks = TapTable.getQueryPart(aliasNameInWorks, false);
+		
+		alias = getUniqueTableName(aliasIndex, alias, aliasNameInWorks, tableNames);
+		
+		
+		return alias;
+	}
+	
+	private static String getUniqueTableName(int index, String init, String input, List<String> takenValues) {
+		String resultInWorks = input;
+		if (!takenValues.contains(input)) {
+			return input;
+		} else {
+			index++;
+			resultInWorks = init + index;
+			resultInWorks = TapTable.getQueryPart(resultInWorks 	, false);
+		}
+		return getUniqueTableName(index, init, resultInWorks, takenValues);
 	}
 	
 	public String getADQLString() {

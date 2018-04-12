@@ -122,7 +122,7 @@ public class Server extends JPanel
 	protected String TARGET, RAD, /* GRABIT = "", */ DEFAULT_METHODE, TARGET_EX, RADIUS_EX, WNEEDOBJ, WNEEDRAD, WNEEDDATE,
 			WNEEDCAT, WERROR, WTOOLARGE, WERRORDATE, WDEJA, HASFILTER1, HASFILTER2, NOINPUTITEM, WNEEDCHECK, UNKNOWNOBJ,
 			NOTTOOMANY, DATEFORMATINCORRECT, BANDFORMATINCORRECT, TARGETOUTOFBOUNDSMESSAGE, CHECKQUERY_SUCCESS,
-			CHECKQUERY_ISBLANK;
+			CHECKQUERY_ISBLANK, INVALIDNUMBERINPUT;
 
    // Pour le positionnement des widgets en absolu
    static final int XTAB1=10;		// Abscisse des labels des champs à saisir
@@ -289,7 +289,8 @@ public class Server extends JPanel
       TARGETOUTOFBOUNDSMESSAGE = aladin.chaine.getString("TARGETOUTOFBOUNDSMESSAGE");
       CHECKQUERY_ISBLANK = Aladin.chaine.getString("CHECKQUERY_ISBLANK");
       CHECKQUERY_SUCCESS = Aladin.chaine.getString("CHECKQUERY_SUCCESS");
-
+      INVALIDNUMBERINPUT = Aladin.chaine.getString("INVALIDNUMBERINPUT");
+      
       statusAllVO=new JLabel(" "); // Le status pour le mode ALLVO
 
    }
@@ -1103,10 +1104,11 @@ public void layout() {
     public StringBuffer setDateInMJDFormat(boolean replaceUserField, String input, String[] range, String outputDelimiter) throws Exception {
 		StringBuffer error = null;
 		StringBuffer processedText = null;
-		if(input != null && !input.isEmpty()) {
+		if(input != null && !input.trim().isEmpty()) {
 			processedText = new StringBuffer();
 			
 			String delimiterRegex = REGEX_TIME_RANGEINPUT;
+			input = input.replaceAll("\\s+"," ").trim();
 			String delimiter = getDelimiter(delimiterRegex, input);
 			String split = delimiter;
 			if (split.equals("..")) {
@@ -1116,10 +1118,10 @@ public void layout() {
 			}
 			String[] time = input.split(split);
 			Pattern p = Pattern.compile(REGEX_NUMBERNOEXP);
+			Pattern regexOpValue = Pattern.compile(REGEX_OPANYVAL);// find no special chars
 			for (int i = 0; i < time.length; i++) {
 				time[i] = time[i].trim();
 				String op = null;
-				Pattern regexOpValue = Pattern.compile(REGEX_OPANYVAL);// find no special chars
 				Matcher matcherOpValue = regexOpValue.matcher(time[i]);
 				if (matcherOpValue.find()) {
 					if (matcherOpValue.group("operator") != null) {
@@ -1195,9 +1197,10 @@ public void layout() {
 		StringBuffer result = null;
 		String op = null;
 		String valueToProcess = null;
-		if (input != null && !input.isEmpty()) {
+		if (input != null && !input.trim().isEmpty()) {
 			result = new StringBuffer();
 			String delimiterRegex = REGEX_BAND_RANGEINPUT;
+			input = input.trim().replaceAll("\\s+"," ");
 			String delimiter = getDelimiter(delimiterRegex, input);
 			String split = delimiter;
 			if (split != null && !split.isEmpty()) {
@@ -1208,21 +1211,22 @@ public void layout() {
 				}
 			}
 			String[] spectralBand = input.split(split);
+			String errorMessage = this.getNumberIncorrectMessage(input);
+			Pattern regexOpValue = Pattern.compile(REGEX_OPANYVAL);// find no special chars
 			for (int i = 0; i < spectralBand.length; i++) {
 				valueToProcess = spectralBand[i].trim();
-				Pattern regexOpValue = Pattern.compile(REGEX_OPANYVAL);// find no special chars
 				Matcher matcherOpValue = regexOpValue.matcher(valueToProcess);
 				if (matcherOpValue.find()) {
 					if (matcherOpValue.group("operator") != null) {
 						op = matcherOpValue.group("operator");
 						if (spectralBand.length > 1) {
-							throw new Exception(input+" is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+							throw new Exception(errorMessage);
 						}
 					}
 					if (matcherOpValue.group("value") != null) {
 						valueToProcess = matcherOpValue.group("value");
 					} else {
-						throw new Exception(input+" is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-788 etc..");
+						throw new Exception(errorMessage);
 					}
 				}
 //				op = TapClient.getValidOperatorNumber(spectralBand[i]);
@@ -1253,13 +1257,26 @@ public void layout() {
 		return result;
 	}
 	
+	public String getNumberIncorrectMessage(String input) {
+		String errorMessage = null;
+		try {
+			errorMessage = String.format(INVALIDNUMBERINPUT, input);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		if (errorMessage == null) {
+			errorMessage = input + " is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-0.0788 etc...With no space/blank between the number and the operator.";
+		}
+		return errorMessage;
+	}
+	
 	/**
 	 * Extract delimiter or return default -1;
 	 * \\s*(?<delimiter>,|\\.\\.|\\s+\\band\\b\\s+|\\s+\\bAND\\b\\s+)\\s*
 	 * @param matcher
 	 * @return
 	 */
-	public String getDelimiter(String delimiterRegex, String input) {
+	public static String getDelimiter(String delimiterRegex, String input) {
 		String delimiter = null;
 		Pattern regex = Pattern.compile(delimiterRegex);
 		Matcher matcher = regex.matcher(input);

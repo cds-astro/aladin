@@ -28,8 +28,11 @@ import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.UPLOADTABLEPREFIX;
+import static cds.aladin.Constants.EDITUPLOADTABLENAMEACTION;
+import static cds.aladin.Constants.TABLEGUINAME;
 
 import java.awt.AWTEvent;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -57,6 +60,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import cds.tools.Util;
 
@@ -79,7 +83,6 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 //	public static final String FILEPREFIX = "file_";
 	private Aladin aladin;
 	protected JComboBox<String> uploadOptions;
-	protected Map<String, File> uploadedTableFiles = new HashMap<String, File>();
 	protected Map<String, String> uploadTableNameDict = new HashMap<String, String>();
 	TapClient uploadClient;
 	GridBagConstraints c;
@@ -311,6 +314,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		c.weightx = 0.01;
 		c.insets = new Insets(1,1,1,2);
 		editButton = new JButton("EDIT");
+		editButton.setActionCommand(EDITUPLOADTABLENAMEACTION);
 		editButton.addActionListener(this);
 		containerPanel.add(editButton, c);
 		
@@ -369,7 +373,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 				String uploadTableName = generateSuffix();//UPLOADTABLEPREFIX.concat(TapTable.getQueryPart(uploadFilesName, false));
 				this.uploadTableNameDict.put(plan[i].label, uploadTableName);
 				try {
-					this.saveUploadFile(plan[i]);
+					this.allowPlanIntoUploadFacade(plan[i]);
 					planCatalog = (PlanCatalog) plan[i];
 					updateUploadGuiWithNewUpload(planCatalog);
 				} /*catch (RejectedExecutionException ex) { //no warning at init/drag drop plane load. warning of why a plane cannot be used for upload is done when it is loaded specifically from upload gui. 
@@ -388,8 +392,9 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 * Appends upload parameters for http request
 	 * @param referencedUploadTables
 	 * @param requestParams
+	 * @throws Exception 
 	 */
-	public void addUploadToSubmitParams(List<String> referencedUploadTables, Map<String, Object> requestParams) {
+	public void addUploadToSubmitParams(List<String> referencedUploadTables, Map<String, Object> requestParams) throws Exception {
 		StringBuffer uploadParam = null;
 		for (String referencedTable : referencedUploadTables) {
 			if (this.uploadTableNameDict.containsValue(referencedTable)) {
@@ -411,7 +416,21 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 				
 				if (requestParams!= null && uploadParam != null && uploadFileName != null) {
 					requestParams.put("UPLOAD", uploadParam.toString());
-					requestParams.put(uploadFileName, uploadedTableFiles.get(referencedTable));
+					
+					final File tmpFile;
+					if ((tmpFile = aladin.createTempFile(SAMPUtil.sanitizeFilename(referencedTable), ".xml")) == null) {
+						// TODO:: tintin when doing join need to send more files
+						Aladin.trace(3, "ERROR in aladin.createTempFile for "+uploadFileName);
+						throw new Exception("Unable to parse " + uploadFileName + " data for upload!");
+					}
+					if (aladin.save == null)
+						aladin.save = new Save(aladin);
+					
+					Plan plan = aladin.calque.getPlan(uploadFileName, 1);
+					PlanCatalog planCatalog = (PlanCatalog) plan;
+					aladin.save.saveCatVOTable(tmpFile, planCatalog, false, false);
+					tmpFile.deleteOnExit();
+					requestParams.put(uploadFileName, tmpFile);
 				}
 			}
 		}
@@ -425,7 +444,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		String command = evt.getActionCommand();
 		
 		if (command.equals("SUBMIT")) {
-			if (uploadedTableFiles.get(uploadClient.serverTap.selectedTableName) == null) {
+			if (!uploadTableNameDict.containsValue(uploadClient.serverTap.selectedTableName)) {
 				Aladin.error(this.getContentPane(), "Unable to submit " + uploadClient.serverTap.selectedTableName + " data!");
 				return;
 			}
@@ -456,7 +475,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			return;
 		} else if (command.equals(CLOSE)) {
 			setVisible(false);
-		} else if (evt.getSource() == editButton) {
+		} else if (command.equals(EDITUPLOADTABLENAMEACTION)) {
 			JTextField userInput = new JTextField();
 			JLabel tip = new JLabel(TABLENAMEINPUTTIP);
 
@@ -476,11 +495,9 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 					return;
 				}
 
-				String fileName = (String) uploadOptions.getSelectedItem();
+//				String fileName = (String) uploadOptions.getSelectedItem();
+				String fileName = getCorrespondingUploadTableName((JButton) evt.getSource());
 				String oldTableName = this.uploadTableNameDict.get(fileName);
-				File uploadFile = uploadedTableFiles.get(oldTableName);
-				uploadedTableFiles.remove(oldTableName);
-				uploadedTableFiles.put(tableNameConstr, uploadFile);
 				this.uploadTableNameDict.put(fileName, tableNameConstr);
 				setStateForUploadedComponents();
 				TapManager tapManager = TapManager.getInstance(aladin);
@@ -491,6 +508,29 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			}
 
 		}
+	}
+	
+	public String getCorrespondingUploadTableName(JButton button) {
+		String result = null;
+		JPanel wrapper = (JPanel) SwingUtilities.getAncestorOfClass(JPanel.class, button);
+		if (wrapper != null) {
+			componentLoop:
+			for (Component component : wrapper.getComponents()) {
+				if (component instanceof JComboBox && component.getName().equals(TABLEGUINAME)) {
+					JComboBox tablesGui = (JComboBox) component;
+					String tableName = (String) tablesGui.getSelectedItem();
+					if (this.uploadTableNameDict.containsValue(tableName)) {
+						for (Entry<String, String> entry : this.uploadTableNameDict.entrySet()) {
+							if (entry.getValue().equals(tableName)) {
+								result = entry.getKey();
+								break componentLoop;
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
 	}
 	
 	@Override
@@ -510,32 +550,13 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 * @param planCatalog
 	 * @throws Exception
 	 */
-	public void saveUploadFile(Plan plan) throws Exception {
+	public void allowPlanIntoUploadFacade(Plan plan) throws Exception {
 		if (!(plan instanceof PlanCatalog)) {
 			throw new Exception("Cannot parse " + plan.label + " data for upload. Please select a catalog!");
-		}
-		PlanCatalog planCatalog = (PlanCatalog) plan;
-		final File tmpFile;
-		
-        String suffix;
-		if (plan.label.endsWith(".xml")) {
-			suffix = "";
-		} else {
-			suffix = ".xml";
 		}
 	         
 //		String uploadTableName = UPLOADTABLEPREFIX.concat(TapTable.getQueryPart(plan.label, false));
 	    String uploadTableName = generateSuffix();
-		if ((tmpFile = aladin.createTempFile(uploadTableName, suffix)) == null) {
-			// TODO:: tintin when doing join need to send more files
-			Aladin.trace(3, "ERROR in aladin.createTempFile for "+uploadTableName);
-			throw new Exception("Unable to parse " + planCatalog.label + " data for upload!");
-		}
-		if (aladin.save == null)
-			aladin.save = new Save(aladin);
-		aladin.save.saveCatVOTable(tmpFile, planCatalog, false, false);
-		tmpFile.deleteOnExit();
-		this.uploadedTableFiles.put(uploadTableName, tmpFile);
 		this.uploadTableNameDict.put(plan.label, uploadTableName);
 	}
 	

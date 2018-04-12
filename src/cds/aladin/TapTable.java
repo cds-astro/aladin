@@ -248,9 +248,7 @@ public class TapTable {
 					}
 					matcher = regex.matcher(potentialTableName);
 					if (!matcher.find()){
-						Pattern isQuotedpattern = Pattern.compile(REGEX_TABLENAMEALREADYQUOTED);
-						Matcher isQuotedMatcher =isQuotedpattern.matcher(potentialTableName);
-						if (!isQuotedMatcher.find()) {
+						if (isUnQuotedPattern(potentialTableName)) {
 							queryPartInput = Glu.doubleQuote(potentialTableName);
 							queryPartInput = prefix+queryPartInput;
 						}
@@ -259,6 +257,16 @@ public class TapTable {
 			}
 		} 
 			 return queryPartInput;
+	}
+	
+	public static boolean isUnQuotedPattern(String input) {
+		boolean result = true;
+		Pattern isQuotedPattern = Pattern.compile(REGEX_TABLENAMEALREADYQUOTED);
+		Matcher isQuotedMatcher =isQuotedPattern.matcher(input);
+		if (isQuotedMatcher.find()) {
+			result = false;
+		}
+		return result;
 	}
 	
 	public synchronized void parseForObscore(boolean isUpload, TapTableColumn columnMeta) {

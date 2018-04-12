@@ -655,6 +655,7 @@ public final class Legende extends AbstractTableModel  {
          case PRECISION:   field[i].precision = (String)value; break;
       }
       aladin.mesure.redisplay();
+      TapManager.getInstance(aladin).reAddPlan(plan);
    }
 
    class MyRenderer extends DefaultTableCellRenderer {

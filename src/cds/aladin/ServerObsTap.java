@@ -922,6 +922,9 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			String value, String defaultValue) {
 		ADQLQuery query = null;
 		try {
+			if (tap.getText().isEmpty()) {
+				writeQuery();
+			}
 			query = this.checkQuery(null);
 		} catch (UnresolvedIdentifiersException uie) {
 			// TODO Auto-generated catch block
