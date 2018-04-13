@@ -116,7 +116,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          AWMOC2, AWMOC2TIP, AWMOC3, AWMOC3TIP ;
    static protected String ALLCOLL, MYLIST, ALLCOLLHTML, MYLISTHTML, AWSKYCOV, AWMOCUNK, AWHIPSRES, AWNBROWS, AWREFPUB, AWPROGACC,
          AWPROGACCTIP, AWDATAACC, AWDATAACCTIP, AWDATAACCTIP1, AWINVIEWTIP, AWMOCQLABTIP2, AWXMATCH, AWXMATCHTIP, AWCRIT,
-         AWCRITTIP, AWMOCX, AWMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
+         AWCRITTIP, AWMOCX, AWMOCXTIP, AWTMOCX, AWTMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
          AWFRAMEINFOTITLE,AWCGRAPTIP,AWCONE,AWCONETIP,AWACCMODE,AWACCMODETIP,AwDERPROD,AwDERPRODTIP,AWINFOTIP,AWPROPTIP,
          AWBOOKMARKTIP,AWPARAMTIP,AWSTICKTIP,AWCUSTOM,AWCUSTOMTIP;
    static private final String UPDATING = "  updating...";
@@ -215,6 +215,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       AWCRITTIP = S("AWCRITTIP");
       AWMOCX = S("AWMOCX");
       AWMOCXTIP = S("AWMOCXTIP");
+      AWTMOCX = S("AWTMOCX");
+      AWTMOCXTIP = S("AWTMOCXTIP");
       AWDM = S("AWDM");
       AWDMTIP = S("AWDMTIP");
       AWPROGEN = S("AWPROGEN");
@@ -3033,7 +3035,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       JPanel panelInfo = null; // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
 
-      JCheckBox hipsBx = null, mocBx = null, mociBx = null, mocuBx, progBx = null, dmBx = null, siaBx = null, ssaBx = null,
+      JCheckBox hipsBx = null, tmocBx=null, mocBx = null, mociBx = null, mocuBx, progBx = null, dmBx = null, siaBx = null, ssaBx = null,
             customBx = null, csBx = null, msBx = null, allBx = null, tapBx = null, xmatchBx = null, globalBx = null, liveBx = null;
       ConeField target = null;
       JPanel targetPanel = null;
@@ -3084,6 +3086,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          boolean activateTarget = false;
          if( hipsBx != null )   activateLoad |= hipsBx.isSelected();
          if( mocBx != null )    activateLoad |= mocBx.isSelected();
+         if( tmocBx != null )   activateLoad |= tmocBx.isSelected();
          if( mociBx != null )   activateLoad |= mociBx.isSelected();
          if( mocuBx != null )   activateLoad |= mocuBx.isSelected();
          if( progBx != null )   activateLoad |= progBx.isSelected();
@@ -3311,7 +3314,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             JPanel mocAndMore = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
             JCheckBox bx;
-            mociBx = mocBx = csBx = liveBx = customBx = null;
+            mociBx = mocBx = tmocBx = csBx = liveBx = customBx = null;
 
             // S'il n'y a pas trop de collections, on pourra les appeler en parallèle
             boolean flagTooMany = false;
@@ -3370,6 +3373,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                   bx.addActionListener(this);
                   mocAndMore.add(bx);
                   Util.toolTip(bx, AWMOC1TIP);
+                  
+//                  tmocBx = bx = new JCheckBox(AWTMOC1);
+//                  bx.addActionListener(this);
+//                  mocAndMore.add(bx);
+//                  Util.toolTip(bx, AWTMOC1TIP);
                }
 
                mocuBx = bx = new JCheckBox(AWMOC2);
@@ -3524,7 +3532,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             JPanel accessPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
             JCheckBox bx;
-            customBx = hipsBx = mocBx = mociBx = progBx = dmBx = csBx = liveBx = siaBx = ssaBx = allBx = globalBx = tapBx = xmatchBx = msBx = null;
+            customBx = hipsBx = mocBx = tmocBx = mociBx = progBx = dmBx = csBx = liveBx = siaBx = ssaBx = allBx = globalBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox(AWPROGACC);
                bx.addActionListener(this);
@@ -3656,6 +3664,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                bx.addActionListener(this);
                productPanel.add(bx);
                Util.toolTip(bx, AWMOCXTIP, true);
+            }
+
+            if( to.hasTMoc() ) {
+               tmocBx = bx = new JCheckBox(AWTMOCX);
+               bx.addActionListener(this);
+               productPanel.add(bx);
+               Util.toolTip(bx, AWTMOCXTIP, true);
             }
 
             if( to.isCDSCatalog() && nbRows != -1 && nbRows >= 10000 ) {
@@ -4117,6 +4132,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( liveBx != null && liveBx.isSelected() ) addBkm(bkm, to.getLiveSimbadBkm());
          if( hipsBx != null && hipsBx.isSelected() ) addBkm(bkm, to.getHipsBkm());
          if( mocBx != null && mocBx.isSelected() ) addBkm(bkm, to.getMocBkm());
+         if( tmocBx != null && tmocBx.isSelected() ) addBkm(bkm, to.getTMocBkm());
          if( progBx != null && progBx.isSelected() ) addBkm(bkm, to.getProgenitorsBkm());
 
          // LES 3 AUTRES ACCES NE SONT PAS ACTUELLEMENT ACCESSIBLES PAR COMMANDE SCRIPT
@@ -4247,6 +4263,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( msBx != null     && msBx.isSelected() )     to.queryByMoc(planMoc);
             if( hipsBx != null   && hipsBx.isSelected() )   to.loadHips();
             if( mocBx != null    && mocBx.isSelected() )    to.loadMoc();
+            if( tmocBx != null   && tmocBx.isSelected() )   to.loadTMoc();
             if( progBx != null   && progBx.isSelected() )   to.loadProgenitors();
             if( dmBx != null     && dmBx.isSelected() )     to.loadDensityMap();
             if( tapBx != null    && tapBx.isSelected() )    to.queryByTap();
@@ -4286,6 +4303,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( tooMany(treeObjs.size()) ) return;
                multiMocLoad(treeObjs, MultiMocMode.EACH);
             }
+            
+            // Union desT MOCs
+            if( tmocBx != null && tmocBx.isSelected() ) {
+               if( tooMany(treeObjs.size()) ) return;
+               multiTMocLoad(treeObjs, MultiMocMode.EACH);
+            }
             if( mocuBx != null && mocuBx.isSelected() ) multiMocLoad(treeObjs, MultiMocMode.UNION);
             if( mociBx != null && mociBx.isSelected() ) multiMocLoad(treeObjs, MultiMocMode.INTER);
          }
@@ -4293,7 +4316,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
 
       /** Chargement de chaque MOC ou de l'union ou intersection des Mocs */
-      void multiMocLoad(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode) {
+      void multiTMocLoad(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode) { multiMocLoad1(treeObjs,mode,"TMoc"); }
+      void multiMocLoad(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode) { multiMocLoad1(treeObjs,mode,"Moc"); }
+      void multiMocLoad1(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode, String mocCmd ) {
 
          // Chaque MOC individuellement
          if( mode == MultiMocMode.EACH ) {
@@ -4308,7 +4333,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( params == null ) params = new StringBuilder(to.internalId);
             else params.append("," + to.internalId);
          }
-         String cmd = (mode == MultiMocMode.INTER ? "iMOCs" : "MOCs") + "=get Moc(" + Tok.quote(params.toString())
+         String cmd = (mode == MultiMocMode.INTER ? "iMOCs" : "MOCs") + "=get "+mocCmd+"(" + Tok.quote(params.toString())
                + (mode == MultiMocMode.INTER ? ",imoc" : "") + ")";
          aladin.execAsyncCommand(cmd);
 

@@ -3432,8 +3432,10 @@ FPPROTOTAP	Simple Table Access compatible collections
 FPPROTOTAP.fr	Collections supportant le protocol Simple Table Access
 FPPROTOCS	Cone Search compatible collections
 FPPROTOCS.fr	Collections supportant le protocol Cone Search
-FPPROTOMOC	Collections providing their coverage as a MOC (Multi-Order Coverage map)
-FPPROTOMOC.fr	Collections fournissant leur couverture sous forme d'un MOC (Multi-Order Coverage map)
+FPPROTOMOC	Collections providing their space coverage as a MOC (Multi-Order Coverage map)
+FPPROTOMOC.fr	Collections fournissant leur couverture spatiale sous forme d'un MOC (Multi-Order Coverage map)
+FPPROTOTMOC	Collections providing their time coverage as a TMOC (Temporal Multi-Order Coverage map)
+FPPROTOTMOC.fr	Collections fournissant leur couverture temporelle sous forme d'un TMOC (Temporal Multi-Order Coverage map)
 FPPROTOHIPSPRO	HiPS collections providing progenitors (original images links)
 FPPROTOHIPSPRO.fr	Collections HiPS fournissant les progéniteurs (les liens vers les images originales)
 FPPROTO	Protocol
@@ -3571,10 +3573,14 @@ AWCRIT	by criteria
 AWCRIT.fr	par critères
 AWCRITTIP	Advanced query by criteria\nby TAP protocol (Table Access Protocol).
 AWCRITTIP.fr	Interrogration avancée par critères\nvia le protocole TAP (Table Acccess Protocol).
-AWMOCX	coverage
-AWMOCX.fr	couverture
-AWMOCXTIP	Load the coverage associated to the collection\nas a MOC MultiOrder Coverage map).
-AWMOCXTIP.fr	Charge la couverture associée à la collection\nsous la forme d'un MOC (MultiOrder Coverage map).
+AWMOCX	space cov.
+AWMOCX.fr	couv.spatiale
+AWMOCXTIP	Load the spatiale coverage associated to the collection\nas a MOC MultiOrder Coverage map).
+AWMOCXTIP.fr	Charge la couverture spatiale associée à la collection\nsous la forme d'un MOC (MultiOrder Coverage map).
+AWTMOCX	time cov.
+AWTMOCX.fr	couv.temporelle
+AWTMOCXTIP	Load the temporal coverage associated to the collection\nas a TMOC (Temporal MultiOrder Coverage map).
+AWTMOCXTIP.fr	Charge la couverture temporelle associée à la collection\nsous la forme d'un TMOC (Temporal MultiOrder Coverage map).
 AWDM	density map
 AWDM.fr	carte de densité
 AWDMTIP	Load de density map associated to the catalog\nas a progressive view (HiPS).

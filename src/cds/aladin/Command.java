@@ -1040,8 +1040,7 @@ public final class Command implements Runnable {
       }
 
       // On passe les espaces en debut de chaine
-      for( d = 0; d < b.length && b[d] == ' '; d++ )
-         ;
+      for( d = 0; d < b.length && b[d] == ' '; d++ );
 
       // Parcours de tous les serveurs
       for( inPar = 0, i = d; i < b.length; i++ ) {
@@ -1055,8 +1054,7 @@ public final class Command implements Runnable {
       String s = new String(b, d, i - d);
 
       // On passe les espaces apres les serveurs
-      for( d = i; d < b.length && b[d] == ' '; d++ )
-         ;
+      for( d = i; d < b.length && b[d] == ' '; d++ );
 
       // On prend tout le reste pour le target
       String t = (new String(b, d, b.length - d)).trim();

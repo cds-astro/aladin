@@ -34,6 +34,7 @@ public class Constante {
    // Noms des différents fichiers HiPS
    static final public String FILE_PROPERTIES  = "properties";
    static final public String FILE_HPXFINDER   = "HpxFinder";
+   static final public String FILE_TIMEFINDER  = "TimeFinder";
    public static final String FILE_MOC         = "Moc.fits";
    public static final String FILE_MOCERROR    = "MocError.fits";
    static final public String FILE_METADATAXML = "metadata.xml";

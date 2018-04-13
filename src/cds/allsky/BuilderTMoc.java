@@ -74,14 +74,6 @@ public class BuilderTMoc extends Builder {
       context.initRegion();
    }
 
-   // Vérifie que le répertoire HpxIndex existe et peut être utilisé
-   private void validateIndex() throws Exception {
-      String path = context.getHpxFinderPath();
-      if( path==null ) throw new Exception("HEALPix index directory [HpxFinder] not defined => specify the output (or input) directory");
-      File f = new File(path);
-      if( !f.exists() || !f.isDirectory() || !f.canRead() ) throw new Exception("HEALPix index directory not available ["+path+"]");
-   }
-
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
       context.showJpgStat(statNbFile, totalTime,0,0);
@@ -91,13 +83,14 @@ public class BuilderTMoc extends Builder {
    static private final int UNKNOWN    = 0;
    static private final int TMINMAX    = 1;
    static private final int MJDEXPTIME = 2;
+   static private final int ISOTIME    = 3;
    
    private int mode=UNKNOWN;
 
    public void build() throws Exception {
       initStat();
 
-      String output = context.getHpxFinderPath();
+      String output = context.getOutputPath();
       
       HealpixMoc moc = new HealpixMoc();
       moc.read(output+Util.FS+"Moc.fits");
@@ -133,14 +126,13 @@ public class BuilderTMoc extends Builder {
                } else {
                   String s= cds.tools.Util.extractJSON("MJD-OBS", json);
                   if( s==null ) continue;
+                  tmin = Double .parseDouble( s );
                   s = cds.tools.Util.extractJSON("EXPTIME", json);
                   if( s==null ) continue;
                   exptime = Double.parseDouble( s );
-                  tmin = Double .parseDouble( s );
                   tmax = tmin+exptime;
 
                }
-//               System.out.println(maxOrder+"/"+npix+" => ["+tmin+" .. "+tmax+"]");
                
                double jdtmin = tmin+2400000.5;
                double jdtmax = tmax+2400000.5;
@@ -148,20 +140,13 @@ public class BuilderTMoc extends Builder {
                tmoc.add(jdtmin,jdtmax);
                
             } catch( Exception e ) {
-//               e.printStackTrace();
                context.warning("parsing error => "+json);
                continue;
             }
          }
          context.setProgress( progress++ );
-//         if( progress==10000 ) {
-//            tmoc.toHealpixMoc();
-//            System.out.println( "==> "+tmoc);
-//            System.exit(1);
-//         }
       }
       tmoc.toHealpixMoc();
-      System.out.println( "==> "+tmoc.todebug());
       tmoc.write(output+Util.FS+"TMoc.fits");
 
    }

@@ -23,7 +23,8 @@ package cds.allsky;
 
 public enum Action {
 
-   INDEX     ("Build index (in HpxFinder directory) + MOC index"),
+   INDEX     ("Build spatial index (in HpxFinder directory) + MOC index"),
+   TINDEX    ("Build time index (in TimeFinder directory) + TMOC index"),
    TILES     ("Build all true value pixel tiles (FITS) + Allsky.fits + MOC"),
    JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
    PNG       ("Build all preview tiles (PNG) + Allsky.png"),
@@ -37,7 +38,8 @@ public enum Action {
    GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
    CLEAN     ("Delete all Hips files (except properties file)"),
    CLEANALL  ("Delete all Hips files"),
-   CLEANINDEX("Delete index (HpxFinder dir)"),
+   CLEANINDEX("Delete spatial index (HpxFinder dir)"),
+   CLEANTINDEX("Delete temporal index (TimeFinder dir)"),
    CLEANDETAILS("Delete detail index (HpxFinder tree except last order dir)"),
    CLEANTILES("Delete all HiPS files except index (tiles, dir, Allsky, MOC, ...)"),
    CLEANFITS ("Delete all FITS tiles and Allsky.fits"),

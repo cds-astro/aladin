@@ -141,10 +141,11 @@ public final class Calib  implements Cloneable {
    static public final int FIE = 13 ;
    static public final int TPV = 14 ;
    static public final int SINSIP = 15 ;
+   static public final int GLS = 16 ;
 
    // Signature dans les mots clés FITS des différentes projections (l'indice dans le tableau doit correspondre
    // aux constantes statics ci-dessus
-   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP" };
+   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP", "GLS" };
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
    static int getProjType(String s) {//System.out.println("ssss "+s);
@@ -154,13 +155,23 @@ public final class Calib  implements Cloneable {
     * en se contentant éventuellement de ne trouver qu'une sous chaine, -1 si non trouvé */
    static int getSubProjType(String s1) { 
       int i = getProjType(s1);
-      if( i>=0 ) return i;
+      if( i>0 ) return i;
       String [] array = projType;
       String s = s1.toUpperCase();
+      
+      if( s.length()==0  ){
+         i=TAN;
+         String err = "!!! Undetermined projection: assume "+projType[i];
+         if( Aladin.aladin!=null && Aladin.aladin.command!=null ) Aladin.aladin.command.printConsole(err);
+         else Aladin.aladin.trace(3, err);
+         return i;
+      }
+      
       for( i=1; i<array.length; i++ ) {
 
          // En attendant de supporter TANSIP
          if( s.indexOf(array[i])>=0 ) {
+             
             String err = "!!! Unknown projection ["+s1+"] : assume "+projType[i];
             if( Aladin.aladin!=null && Aladin.aladin.command!=null ) Aladin.aladin.command.printConsole(err);
             else Aladin.aladin.trace(3, err);
@@ -1303,11 +1314,11 @@ public final class Calib  implements Cloneable {
 
       // PF - sept 2010 - C'est plus generique comme cela
       // PF - mai 2013 - on vérifie les deux axes (pour rotation cube)
-      try { proj = getSubProjType(type2.substring(5)); } 
+      try { proj = getSubProjType(type2.length()>=5 ? type2.substring(5):""); } 
       catch( Exception e ) { proj=-1; }
     
       if( proj!=-1 ) {
-         try { proj = getSubProjType(type1.substring(5)); } 
+         try { proj = getSubProjType(type1.length()>=5 ? type1.substring(5):""); } 
          catch( Exception e ) { proj=-1; }
       }
       // System.out.println("proj "+proj) ;
@@ -2676,6 +2687,28 @@ public final class Calib  implements Cloneable {
             c.al = alphai + rad_to_deg*Math.atan2(arg2,arg3) ;
 
             break;
+        case GLS:
+            
+            cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+            sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
+
+  
+             
+            Tetha = y_objr ;
+            Phi = x_objr/ Math.cos(y_objr);
+
+            c.del =  rad_to_deg* Math.asin((sdelp*FastMath.sin(Tetha)
+                  - cdelp*FastMath.cos(Tetha)*FastMath.cos(Phi)));
+
+            arg3 = (FastMath.sin(Tetha)*cdelp
+                    + FastMath.cos(Tetha)*sdelp*FastMath.cos(Phi));
+
+            arg2 = (FastMath.cos(Tetha)*FastMath.sin(Phi));
+
+            c.al = alphai + rad_to_deg*Math.atan2(arg2,arg3) ;
+
+            break;
+            
 
                //            double x =  x_objr;
                //            double y =  y_objr;
@@ -3494,6 +3527,31 @@ public final class Calib  implements Cloneable {
                //                        if(phi/2 > Math.PI) x_stand = -x_stand ;
                //                        System.out.println("xy deg"+x_stand+" "+y_stand+"\n");
                break ;
+            case GLS : // GLS proj
+                // dans le cas des projections pseudo-cylindriques comme AITOFF
+                // deltai, alphai n'est pas le pole des coordonÃ¯Â¿Â½es locales !!!
+                // (meme chose dans GetCoord ....)
+                 cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+                sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
+
+                phi = Math.atan2(cos_del *sin_dalpha,-(sin_del*cdelp - cos_del*sdelp *cos_dalpha));
+
+                tet =  Math.asin(sin_del*sdelp + cos_del*cdelp *cos_dalpha);
+                //                  System.out.println("phi tet"+phi+" "+tet);
+                if (phi > Math.PI )   phi = -2*Math.PI +phi ;
+                //                  if (phi < -Math.PI )  phi = + 2*Math.PI +phi ;
+
+                x_stand = phi*FastMath.cos(tet);
+                y_stand = tet ;
+                //                     System.out.println("xy "+x_stand+" "+y_stand+"\n");
+                //                     x_stand *= 180./Math.PI ;
+                //                     y_stand *= 180./Math.PI ;
+                x_stand *= rad_to_deg ;
+                y_stand *= rad_to_deg ;
+
+                //                        if(phi/2 > Math.PI) x_stand = -x_stand ;
+                //                        System.out.println("xy deg"+x_stand+" "+y_stand+"\n");
+                break ;
 
             case MOL:
                cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
@@ -3888,7 +3946,7 @@ public final class Calib  implements Cloneable {
 
    
  //  System.out.println("aladin "+aladin) ;
- //  System.out.println(xyapoly[0]+" "+ xydpoly[0]);
+ //  System.out.println(:qpoly[0]+" "+ xydpoly[0]);
    if(aladin == 1)
       // calcul du header WCS si l'image vient d'aladin
    {

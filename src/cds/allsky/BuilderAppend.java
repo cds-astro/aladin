@@ -51,6 +51,7 @@ public class BuilderAppend extends Builder {
    private String skyval;
    private String skyvalues;
    private String bitpix;
+   private String addendumId;
 
    public BuilderAppend(Context context) {
       super(context);
@@ -68,8 +69,9 @@ public class BuilderAppend extends Builder {
    private void createAddHips() throws Exception  {
       HipsGen hi = new HipsGen();
       String cmd = "in=\""+context.getInputPath()+"\" out=\""+addHipsPath
-            +"\" order="+order
-            +" bitpix="+bitpix
+            +"\" creator_did="+addendumId
+            +" hips_order="+order
+            +" hips_pixel_bitpix="+bitpix
             +" -live"
             +(skyvalues!=null ?" \"skyvalues="+skyvalues+"\"": skyval!=null ?" skyval="+skyval:"")
             +" INDEX TILES";
@@ -126,6 +128,9 @@ public class BuilderAppend extends Builder {
       if( mode==Mode.AVERAGE ) {
          if( !live ) context.warning("Target HiPS does not provide weight tiles => assuming weigth 1 for each output pixel");
       }
+      
+      // On s'invente un ID pour l'ajout
+      addendumId = "APPEND/P/"+System.currentTimeMillis()/1000;
    }
    
    /** Vérifie que les 2 hips disposent des cartes de poids */

@@ -71,8 +71,19 @@ public class Hpix extends MocCell {
       return corners;
    }
    
+   /** Retourne les 4 fils */
+   public Hpix [] getFils() {
+      Hpix [] fils = new Hpix[4];
+      int orderFils = order+1;
+      long npixFils = npix*4;
+      for( int i=0; i<4; i++ ) fils[i] = new Hpix(orderFils,npixFils+i,frame);
+      return fils;
+   }
+   
    /** Trace le losange en aplat */
-   public void fill(Graphics g,ViewSimple v) {
+   public void fill(Graphics g,ViewSimple v) { fill(g,v,0); }
+   private void fill(Graphics g,ViewSimple v,int prof) {
+      if( prof>6 ) return;
       PointD [] b = getProjViewCorners(v);
       if( b==null ) return;
 //      try { b=HealpixKey.grow(b,1); } catch( Exception e) {}
@@ -82,10 +93,21 @@ public class Hpix extends MocCell {
       
       Polygon pol = new Polygon();
       int d=-1;
+      double d1;
       for( int i=0; i<b.length; i++ ) {
          int f = ORDRE[i];
          if( b[f]==null ) continue;
-         if( d>=0 && HealpixKey.dist(b,d,f)>maxSize*maxSize ) continue;
+         if( d>=0 && (d1=HealpixKey.dist(b,d,f))>maxSize*maxSize ) {
+            
+            // Méthode récursive pour s'approcher du bord
+            if( d1>5 ) {
+               Hpix [] fils = getFils();
+               for( Hpix f1 : fils ) f1.fill(g, v,prof+1);
+               return;
+               
+            // Sinon on saute simplement le sommet
+            } else continue;
+         }
          pol.addPoint((int)b[f].x,(int)b[f].y);
          d=f;
       }
@@ -261,7 +283,7 @@ public class Hpix extends MocCell {
    
    // retourne la taille supposée max pour un segment à tracer
    private double getMaxSize(ViewSimple v) {
-      double maxSize=200;
+      double maxSize=150;
       if( !v.isAllSky() ) {
          double pixRes = CDSHealpix.pixRes(CDSHealpix.pow2(order))/3600;
          double pixelViewSize = v.getPixelSize();

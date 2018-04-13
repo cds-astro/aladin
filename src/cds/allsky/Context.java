@@ -76,7 +76,8 @@ public class Context {
 
    protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
-   protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
+   protected String hpxFinderPath;           // Répertoire de l'index spatial Healpix (null si défaut => dans outputPath/HpxFinder)
+   protected String timeFinderPath;          // Répertoire de l'index temporel (null si défaut => dans outputPath/TimeFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    protected HeaderFits header=null;         // Entête FITS associée
    protected boolean isInputFile=false;      // true si le paramètre input concerne un fichier unique
@@ -219,6 +220,7 @@ public class Context {
    public boolean getMirrorCheck() { return mirrorCheck; }
    public String getOutputPath() { return outputPath; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_HPXFINDER); }
+   public String getTimeFinderPath() { return timeFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_TIMEFINDER); }
    public String getImgEtalon() { return imgEtalon; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return isColor() ? bitpixOrig : bitpix; }

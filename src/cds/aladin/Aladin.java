@@ -165,6 +165,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Data discovery tree: <br>
  * @beta          - sort and hiearchy control <br>
  * @beta          - drag & drop to view panels
+ * @beta    <LI> FITS WCS GLS support
  * @beta    <LI> Distance tool improvement
  * @beta    <LI> Log control adapted to Debian policy
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
@@ -202,7 +203,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.085";
+   static public final    String VERSION = "v10.086";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

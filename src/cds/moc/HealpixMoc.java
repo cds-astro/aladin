@@ -805,14 +805,13 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
          r3.clear();
          for( int iv=0; iv<r2.nranges(); ++iv ) {
             long a=(r2.ivbegin(iv)+ofs)>>>shift, b=r2.ivend(iv)>>>shift;
-         r3.append(a<<shift, b<<shift);
-         for( long c=a; c<b; ++c ) add1(o,c);
+            r3.append(a<<shift, b<<shift);
+            for( long c=a; c<b; ++c ) add1(o,c);
          }
          if( !r3.isEmpty() ) r2 = r2.difference(r3);
       }
       setCheckConsistencyFlag(true);
    }
-
 
    /** Fast test for checking if the cell is intersecting
     * the current MOC object

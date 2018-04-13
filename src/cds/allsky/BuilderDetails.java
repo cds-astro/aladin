@@ -106,14 +106,6 @@ public class BuilderDetails extends Builder {
       context.initRegion();
    }
 
-   // Vérifie que le répertoire HpxIndex existe et peut être utilisé
-   private void validateIndex() throws Exception {
-      String path = context.getHpxFinderPath();
-      if( path==null ) throw new Exception("HEALPix index directory [HpxFinder] not defined => specify the output (or input) directory");
-      File f = new File(path);
-      if( !f.exists() || !f.isDirectory() || !f.canRead() ) throw new Exception("HEALPix index directory not available ["+path+"]");
-   }
-
    private void validateImgWidth() throws Exception {
       String img = context.getImgEtalon();
       if( img==null && context.getInputPath()!=null) {

@@ -131,7 +131,8 @@ public class PlanCatalog extends Plan {
       this.u     = u;
       flagLocal  = false;
 
-      Suite(aladin,label,objet,param,from,server, null, null);
+//      Suite(aladin,label,objet,param,from,server, null, null);  <= Chaitra bug
+      Suite(aladin,label,objet,param,from,server, u, null);
 
    }
 

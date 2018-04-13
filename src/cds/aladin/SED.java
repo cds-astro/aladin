@@ -734,7 +734,8 @@ public class SED extends JPanel {
 //      String target = URLEncoder.encode(source);
 //      target = target.replaceAll("[+]","%20");
 //      aladin.glu.showDocument("Widget.VizPhot", target+" "+radius);
-      aladin.glu.showDocument("Widget.VizPhot", Glu.quote(source)+" "+radius);
+//      aladin.glu.showDocument("Widget.VizPhot", Glu.quote(source)+" "+radius);
+      aladin.glu.showDocument("VizieR.sed.home", Glu.quote(source)+" "+radius);
    }
    
    // Affiche un message explicatif sur le SED

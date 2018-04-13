@@ -46,6 +46,7 @@ public abstract class Builder {
    static public Builder createBuilder(Context context,Action action) throws Exception {
       switch(action) {
          case INDEX:     return new BuilderIndex(context);
+         case TINDEX:    return new BuilderTIndex(context);
          case TILES:     return new BuilderTiles(context);
          case ALLSKY:    return new BuilderAllsky(context);
          case JPEG:      return new BuilderJpg(context);
@@ -56,6 +57,7 @@ public abstract class Builder {
          case CLEAN:     return new BuilderClean(context);
          case CLEANALL:  return new BuilderCleanAll(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
+         case CLEANTINDEX:return new BuilderCleanTIndex(context);
          case CLEANDETAILS:return new BuilderCleanDetails(context);
          case CLEANTILES:return new BuilderCleanTiles(context);
          case CLEANFITS: return new BuilderCleanFits(context);
@@ -227,6 +229,14 @@ public abstract class Builder {
       context.setValidateOutput(true);
       
 //      if( true ) System.exit(0);
+   }
+   
+   /** Vérifie que le répertoire HpxIndex existe et peut être utilisé */
+   protected void validateIndex() throws Exception {
+      String path = context.getHpxFinderPath();
+      if( path==null ) throw new Exception("HEALPix index directory [HpxFinder] not defined => specify the output (or input) directory");
+      File f = new File(path);
+      if( !f.exists() || !f.isDirectory() || !f.canRead() ) throw new Exception("HEALPix index directory not available ["+path+"]");
    }
 
    // Récupère l'ordre en fonction d'un répertoire. Si un order particulier a été passé en paramètre,

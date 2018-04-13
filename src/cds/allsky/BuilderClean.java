@@ -79,6 +79,7 @@ public class BuilderClean extends Builder {
 
       for( File f : dir.listFiles() ) {
          if( f.getName().equals(Constante.FILE_HPXFINDER) ) continue;
+         if( f.getName().equals(Constante.FILE_TIMEFINDER) ) continue;
          deleteDir(f);
       }
    }

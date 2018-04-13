@@ -37,8 +37,9 @@ public class TMoc extends HealpixMoc {
    static public final double MAXDAY = ( 1L<<(MAXORDER*2) ) / 86400L;
    
    
-   public TMoc() {
-      init("JD",0,-1);
+   public TMoc() { this(-1); }
+   public TMoc( int mocOrder) {
+      init("JD",0,mocOrder);
       rangeSet = new RangeSet(1024);
    }
    

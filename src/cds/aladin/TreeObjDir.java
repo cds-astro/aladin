@@ -522,21 +522,41 @@ public class TreeObjDir extends TreeObj implements Propable {
       return prop.getProperty(Constante.KEY_HIPS_PROGENITOR_URL);
    }
    
+//   /** Retourne l'URL d'accès au MOC, null sinon */
+//   protected String getMocUrl() {
+//      String u=null;
+//      
+//      // On dispose du MOC directement dans le MOC server qui a fourni les propriétés ?
+//      if( hasMocByMocServer() ) {
+//         String params = internalId+"&get=moc";
+//         u = aladin.glu.getURL("MocServer",params,true).toString();
+//         
+//      // Serait-il explicitement mentionné ?
+//      } else if( prop!=null ) u = prop.getProperty("moc_access_url");
+//      
+//      // Pour un HiPS on peut y accéder directement
+//      else if( isHiPS() ) return getUrl()+"/Moc.fits";
+//      
+//      return u;
+//   }
+//   
    /** Retourne l'URL d'accès au MOC, null sinon */
-   protected String getMocUrl() {
+   protected String getTMocUrl() {
       String u=null;
       
       // On dispose du MOC directement dans le MOC server qui a fourni les propriétés ?
-      if( hasMocByMocServer() ) {
-         String params = internalId+"&get=moc";
+      if( hasTMocByMocServer() ) {
+         String params = internalId+"&get=tmoc";
          u = aladin.glu.getURL("MocServer",params,true).toString();
          
       // Serait-il explicitement mentionné ?
-      } else if( prop!=null ) u = prop.getProperty("moc_access_url");
-      
-      // Pour un HiPS on peut y accéder directement
-      else if( isHiPS() ) return getUrl()+"/Moc.fits";
-      
+      } else  {
+         
+         if( prop!=null ) u = prop.getProperty("tmoc_access_url");
+
+         // Pour un HiPS on peut y accéder directement
+         if( u==null && isHiPS() ) return getUrl()+"/TMoc.fits";
+      }
       return u;
    }
    
@@ -776,9 +796,25 @@ public class TreeObjDir extends TreeObj implements Propable {
       return hasMocByMocServer() || prop!=null && prop.getProperty("moc_access_url")!=null || isHiPS();
    }
    
+   /** Retourne true si la collection dispose d'un TMOC */
+   protected  boolean hasTMoc() {
+      return hasTMocByMocServer() || prop!=null && prop.getProperty("tmoc_access_url")!=null || hasHiPSTMocFile();
+   }
+   
+   /** En attendant que ce soit dans le MocServer, je regarde l'existence du fichier HpxFinder/TMoc.fits */
+   private boolean hasHiPSTMocFile() {
+      if( !isHiPS() ) return false;
+      String url = getTMocUrl();
+      return Util.isUrlResponding( url );
+   }
+   
    /** Retourne true si la collection dispose d'un MOC via le MocServer
     * (=> celui-ci ayant ajouté le mot clé moc_sky_fraction) */
    private boolean hasMocByMocServer() { return prop!=null && prop.get("moc_sky_fraction")!=null; }
+   
+   /** Retourne true si la collection dispose d'un TMOC via le MocServer
+    * (=> celui-ci ayant ajouté le mot clé tmoc_total_time) */
+   private boolean hasTMocByMocServer() { return prop!=null && prop.get("tmoc_total_time")!=null; }
    
    /** Retourne l'URL d'un Cone search ou null si aucun */
    protected String getCSUrl() {
@@ -1137,6 +1173,15 @@ public class TreeObjDir extends TreeObj implements Propable {
       return "get "+glutag+"(....) $TARGET $RADIUS";
    }
    
+   /** Génération et exécution de la requête script correspondant au protocole TMOC */
+   protected void loadTMoc( ) {exec( getTMocCmd() ); }
+   protected String getTMocBkm() { return getTMocCmd(); }
+//   private String getTMocCmd() { return "get TMOC("+Tok.quote(internalId)+")"; }
+   private String getTMocCmd() {
+      String id = Tok.quote(internalId!=null?internalId:label);
+      return "TMoc_"+id+"=load "+getTMocUrl();
+   }
+
    /** Génération et exécution de la requête script correspondant au protocole MOC */
    protected void loadMoc( ) {exec( getMocCmd() ); }
    protected String getMocBkm() { return getMocCmd(); }

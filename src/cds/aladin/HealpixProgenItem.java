@@ -52,24 +52,7 @@ public class HealpixProgenItem {
     * et sinon la ligne en totalité (toujours sans l'extension optionnelle)
     */
    public String getID() {
-      
-      // Evite les problèmes si le même nom est redondant
       return getPath();
-      
-      
-//      String key = cds.tools.Util.extractJSON("name", json);
-//      if( key==null ) {
-//         int first=-1;
-//         key = cds.tools.Util.extractJSON("path", json);
-//         if( key==null ) key=json;
-//         if( key.charAt(key.length()-1)==']' ) first = key.lastIndexOf('[');
-//         if( first>0 ) key = key.substring(0, first);
-//      }
-//      
-//      // On ne garde que le dernier élément après le dernier '/' pour éviter de construire une arborescence
-//      int offset = key.lastIndexOf(SEP);
-//      if( offset>=0 ) key = key.substring(offset+1,key.length() );
-//      return key;
    }
 
    /** Retourne le path original associé à une entrée dans un fichier d'index Healpix

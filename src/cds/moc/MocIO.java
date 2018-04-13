@@ -517,7 +517,7 @@ public final class MocIO {
       out.write( getFitsLine("PIXTYPE","HEALPIX","HEALPix magic code") );    n+=80;
       out.write( getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;      
      
-      if( moc instanceof TMoc ) out.write( getFitsLine("TIMESYS","JD","ref system JD BARYCENTRIC, 1 microsec level 29") );
+      if( moc instanceof TMoc ) out.write( getFitsLine("TIMESYS","JD","ref system JD BARYCENTRIC TT, 1 microsec level 29") );
       else out.write( getFitsLine("COORDSYS",""+moc.getCoordSys(),"reference frame (C=ICRS)") );    
       n+=80;
       
