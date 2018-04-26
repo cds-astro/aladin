@@ -118,7 +118,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		this.aladin = aladin;
 		this.serverTap = server;		
 		showloading();
-		this.serverTap.tapClient.initUploadFrame();
+		TapManager.getInstance(aladin).initUploadFrame();
 	}
 	
 	public Dimension getPreferredSize() {
@@ -227,7 +227,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 					compToPrefix = new ArrayList<JComponent>();
 					compToPrefix.add(radio2);
 					tablesPanel = DynamicTapForm.getTablesPanel(null, this, JOINUPLOADTABLELABEL, uploadTablesGui, chosenTable2, null, compToPrefix, false);
-					UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.serverTap.tapClient);
+					UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.aladin);
 					uploadTablesGui.setRenderer(uploadTableRenderer);
 					if (uploadTablesGui.getSelectedItem() != null) {
 						String uploadTable = (String) uploadTablesGui.getSelectedItem();

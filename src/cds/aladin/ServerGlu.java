@@ -2160,8 +2160,6 @@ public class ServerGlu extends Server implements Runnable {
 					Aladin.error(this, GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
-			} else if (action.equals(UPLOAD)) {
-				this.tapClient.showOnUploadFrame();
 			}
 
   		} else if (o instanceof JComboBox) {

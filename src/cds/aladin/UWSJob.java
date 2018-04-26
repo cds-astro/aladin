@@ -277,7 +277,9 @@ public class UWSJob implements ActionListener{
 					this.showAsErroneous();
 					this.uwsFacade.showAsyncPanel();
 					Aladin.error(uwsFacade.asyncPanel, UWSFacade.JOBERRORTOOLTIP);
-					server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
+					if (server != null) {
+						server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
+					}
 					break;
 				} else if (this.currentPhase.equals(PENDING) || this.currentPhase.equals(HELD)) {
 					this.run();

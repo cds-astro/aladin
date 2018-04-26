@@ -308,7 +308,10 @@ public static final int TAPFORM_STATUS_ERROR = -1;//error
 
 //modes correspond to the frame that host these servers
 public static enum TapClientMode {//Dialog is serverselector
-	DIALOG, TREEPANEL, UPLOAD, STANDALONE;
+	DIALOG, TREEPANEL, @Deprecated/**
+	 * Upload mode is not used anymore. All tables synced to Aladin stack
+	 */
+	UPLOAD, STANDALONE;
 }
 public static final String GLU = "Basic";
 public static final String NODE = "NODE";

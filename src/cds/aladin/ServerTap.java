@@ -160,15 +160,8 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	    
 		JPanel tablesPanel = null;
 		try {
-			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				tablesGui = new JComboBox();
-				tablesGui.setModel(this.tapClient.tapManager.getUploadClientModel());
-				tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, null, null, false);
-			} else {
-				tablesGui = new JComboBox(tables);
-				tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, tables, null, false);
-			}
-			
+			tablesGui = new JComboBox(tables);
+			tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, tables, null, false);
 //			tablesGui.setRenderer(new CustomTableRenderer());
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block

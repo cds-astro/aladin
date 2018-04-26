@@ -1767,11 +1767,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Retourne l'etat du mode GrabIt */
    protected GrabItFrame isGrabIt() {
 	   GrabItFrame grabItDialog = null;
-	   FrameUploadServer uploadFrame = TapManager.getInstance(aladin).uploadFrame;
 	   if (aladin.dialog!=null && aladin.dialog.isGrabIt()) {
 		   grabItDialog = aladin.dialog;
-	   } else if (uploadFrame != null && uploadFrame.uploadClient.serverTap != null && uploadFrame.isGrabIt()) {
-		   grabItDialog = uploadFrame;
 	   } else if (aladin.grabUtilInstance.grabFrame != null && aladin.grabUtilInstance.grabFrame.isGrabIt() ) {
 		   grabItDialog = aladin.grabUtilInstance.grabFrame;
 	   } else if( aladin.directory.isGrabIt() ) {

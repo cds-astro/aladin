@@ -67,8 +67,11 @@ import cds.tools.Util;
 
 /**
  * This class is to show the upload frame for Tap servers
- *
+ * 
+ * @deprecated as of now the interface to load upload table on a tap client is removed. <br>
+ * All upload tables are synchronized to eligible tables on Aladin stack. Use {@link TapManager #uploadTablesModel }
  */
+@Deprecated 
 public class FrameUploadServer extends JFrame implements ActionListener, PlaneLoadListener, GrabItFrame {
 
    /**
@@ -564,7 +567,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		if (this.uploadTableNameDict.containsKey(planCatalog.label)) {
 			TapManager tapManager = TapManager.getInstance(aladin);
 			String uploadTableName = this.uploadTableNameDict.get(planCatalog.label);
-			tapManager.createTapServerFromAladinPlan(planCatalog, uploadTableName);
+//			tapManager.createTapServerFromAladinPlan(planCatalog, uploadTableName); //plan and ui creation removed. refer to svn v10994 TapManager version to get the method
 			tapManager.eraseNotification(this.infoLabel, "New table(Name: "+uploadTableName+") from "+planCatalog.label+" is parsed in Aladin!", EMPTYSTRING);
 		}
 		
@@ -584,7 +587,6 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 			if (!enable) {
 				this.clearBottomPanel();
 			}
-			this.uploadOptions.removeItem(planInDeletion.label);
 			this.uploadTableNameDict.remove(planInDeletion.label);
 			this.setStateForUploadedComponents();
 			if (this.isVisible()) {

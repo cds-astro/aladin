@@ -191,7 +191,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		
 		TapTable chosenTable2 = null;
 		if (this.tapClient.isUploadAllowed()) {
-			Map<String, TapTable> uploadMeta = tapManager.initUploadFrameAndGetUploadedTables(tapClient);
+			Map<String, TapTable> uploadMeta = tapManager.initUploadFrameAndGetUploadedTables();
 			if (uploadMeta != null && !uploadMeta.isEmpty()) {
 				if (secTableChoice == null || !uploadMeta.containsKey(secTableChoice)) {
 					if (uploadMeta.size() > 1) {
@@ -248,7 +248,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				ArrayList<JComponent> compToPrefix = new ArrayList<JComponent>();
 				compToPrefix.add(addSecondTable);
 				tablesPanel = getTablesPanel(this.tapClient, this, "Join:", secondaryTablesGui, chosenTable2, null, compToPrefix, false);
-				UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.tapClient);
+				UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.aladin);
 				secondaryTablesGui.setRenderer(uploadTableRenderer);
 				if (secondaryTablesGui.getSelectedItem() != null) {
 					String uploadTable = (String) secondaryTablesGui.getSelectedItem();

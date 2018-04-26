@@ -37,17 +37,16 @@ class UploadTablesRenderer extends BasicComboBoxRenderer {
 	
 	private static UploadTablesRenderer instance;
 	
-	FrameUploadServer uploadServer;
+	UploadFacade uploadFacade;
 	
-	public UploadTablesRenderer(FrameUploadServer uploadServer) {
+	public UploadTablesRenderer(Aladin aladin) {
 		// TODO Auto-generated constructor stub
-		this.uploadServer = uploadServer;
+		this.uploadFacade = TapManager.getInstance(aladin).initUploadFrame();
 	}
 	
-	public static synchronized UploadTablesRenderer getInstance(TapClient client) {
+	public static synchronized UploadTablesRenderer getInstance(Aladin aladin) {
 		if (instance == null) {
-			FrameUploadServer uploadServer = client.initUploadFrame(); //not really necessary as we make sure uploadServer is instantiated already. but it is logically better to have it anyway.
-			instance = new UploadTablesRenderer(uploadServer);
+			instance = new UploadTablesRenderer(aladin);
 		}
 		return instance;
 	}
@@ -79,9 +78,9 @@ class UploadTablesRenderer extends BasicComboBoxRenderer {
 	 */
 	public String getUploadPlaneName(String uploadTableName) {
 		String result = null;
-		if (!this.uploadServer.uploadTableNameDict.isEmpty()
-				&& this.uploadServer.uploadTableNameDict.containsValue(uploadTableName)) {
-			for (Entry<String, String> entry : this.uploadServer.uploadTableNameDict.entrySet()) {
+		if (!this.uploadFacade.uploadTableNameDict.isEmpty()
+				&& this.uploadFacade.uploadTableNameDict.containsValue(uploadTableName)) {
+			for (Entry<String, String> entry : this.uploadFacade.uploadTableNameDict.entrySet()) {
 				if (entry.getValue().equals(uploadTableName)) {
 					result = entry.getKey();
 					break;

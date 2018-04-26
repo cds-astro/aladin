@@ -205,6 +205,7 @@ public class TapClient{
 		}
 	}
 	
+	@Deprecated
 	public static TapClient getUploadTapClient(Aladin aladin, String tapLabel, String mainServerUrl) {
 		TapManager tapManager = TapManager.getInstance(aladin);
 		TapClient tapClient = new TapClient(TapClientMode.UPLOAD, tapManager, tapLabel, mainServerUrl, null);
@@ -218,7 +219,7 @@ public class TapClient{
 	
 	public JButton getChangeServerButton(Server server) {
 		JButton button = null;
-		if (this.mode != TapClientMode.UPLOAD && this.mode != TapClientMode.STANDALONE) {
+		if (this.mode != TapClientMode.STANDALONE) {
 			Image image = Aladin.aladin.getImagette("changeServerOptions.png");
 			if (image == null) {
 				button = new JButton("Change server");
@@ -237,7 +238,7 @@ public class TapClient{
 	
 	public JPanel getModes(Server server) {
 		JPanel optionsPanel = null;
-		if (this.mode != TapClientMode.UPLOAD && this.mode != TapClientMode.STANDALONE) {
+		if (this.mode != TapClientMode.STANDALONE) {
 			optionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0 , 0));
 			server.modeChoice = new JComboBox(model);
 			server.modeChoice.setRenderer(new TapClientModesRenderer(this));
@@ -412,14 +413,6 @@ public class TapClient{
 				e.printStackTrace();
 		}
 
-	}
-	
-	public void	showOnUploadFrame() {
-		this.tapManager.showOnUploadFrame(this);
-	}
-	
-	public FrameUploadServer initUploadFrame() {
-		return this.tapManager.initUploadFrame(this);
 	}
 	
 	/**
@@ -799,7 +792,7 @@ public class TapClient{
 	
 	public boolean isUploadAllowed() {
 		boolean result = false;
-		if (this.capabilities != null) {
+		if (this.capabilities != null && Aladin.PROTO) {//tintinproto
 			VOSICapabilitiesReader meta;
 			try {
 				meta = this.capabilities.get();
@@ -848,37 +841,30 @@ public class TapClient{
 		//if yes update
 		
 		List<DefaultDBTable> queryCheckerTablesUpdate = new ArrayList<DefaultDBTable>();
-		if ((this.mode != TapClientMode.UPLOAD)) {
-			if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
-				queryCheckerTablesUpdate.addAll(this.queryCheckerTables);
-			}
+		if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
+			queryCheckerTablesUpdate.addAll(this.queryCheckerTables);
 		}
 		
 		Map<String, TapTable> uploadedTables = tapManager.getUploadedTables();
-		FrameUploadServer uploadFrame = null;
 		List<String> uploadTablesReferenced = new ArrayList<String>();
 		if (uploadedTables != null) {
-			uploadFrame = tapManager.uploadFrame;
 			for (String uploadtable : uploadedTables.keySet()) {
 				if (server.tap.getText().toUpperCase().contains(uploadtable.toUpperCase())) {
-					if (requestParams != null && !uploadFrame.uploadTableNameDict.containsValue(uploadtable)) {
+					if (requestParams != null
+							&& !tapManager.uploadFacade.uploadTableNameDict.containsValue(uploadtable)) {
 						Aladin.error(server, "Unable to submit " + uploadtable + " data!");
 						Aladin.trace(3, "No file found for "+uploadtable);
 					} else{
 						uploadTablesReferenced.add(uploadtable);
 					}
-					if ((this.mode != TapClientMode.UPLOAD)) { 
-						server.updateQueryChecker(true, uploadtable, tapManager.uploadFrame.uploadClient.tablesMetaData, queryCheckerTablesUpdate);
-					}
+					server.updateQueryChecker(true, uploadtable, tapManager.uploadFacade.uploadTablesMetaData, queryCheckerTablesUpdate);
 				}
 			}
 			
-			uploadFrame.addUploadToSubmitParams(uploadTablesReferenced, requestParams);
+			tapManager.uploadFacade.addUploadToSubmitParams(uploadTablesReferenced, requestParams);
 			
-			if ((this.mode != TapClientMode.UPLOAD)) {
-				QueryChecker checker = new DBChecker(queryCheckerTablesUpdate);
-				server.adqlParser.setQueryChecker(checker);
-			}
+			QueryChecker checker = new DBChecker(queryCheckerTablesUpdate);
+			server.adqlParser.setQueryChecker(checker);
 			
 		}
 		

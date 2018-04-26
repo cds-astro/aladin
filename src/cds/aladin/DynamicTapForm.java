@@ -162,24 +162,18 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			tc.gridx++;
 		}
 		
-		if (this.tapClient.mode != TapClientMode.UPLOAD) {
-			if (this instanceof DynamicTapForm) {
-				JButton reloadButton = TapClient.getReloadButton();
-				reloadButton.addActionListener(this);
-				addingPanel.add(reloadButton, tc);
-				tc.gridx++;
-			}
+		if (this instanceof DynamicTapForm) {
+			JButton reloadButton = TapClient.getReloadButton();
+			reloadButton.addActionListener(this);
+			addingPanel.add(reloadButton, tc);
+			tc.gridx++;
 		}
 		
 		JPanel titlePanel = new JPanel();
 		titlePanel.setBackground(this.tapClient.primaryColor);
 		titlePanel.setAlignmentY(SwingConstants.CENTER);
-		if (this.tapClient.mode != TapClientMode.UPLOAD) {
-			this.makeTitle(titlePanel, this.tapClient.getVisibleLabel());
-//			this.aladinLabel = this.name;
-		} else {
-			this.makeTitle(titlePanel, "Upload server");
-		}
+		this.makeTitle(titlePanel, this.tapClient.getVisibleLabel());
+//		this.aladinLabel = this.name;
 		tc.weightx = 0.88;
 		c.fill = GridBagConstraints.HORIZONTAL;
 	    addingPanel.add(titlePanel, tc);
@@ -314,7 +308,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			c.gridx++;
 			tablesPanel.add(button,c);
 		
-			if (Aladin.PROTO && tapClient.mode != TapClientMode.UPLOAD) {//TODO:: tintinproto
+			if (Aladin.PROTO) {//TODO:: tintinproto
 				button = new JButton("Join");
 				c.weightx = 0.05;
 				c.gridx++;
@@ -594,7 +588,13 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 					}
 				});
 				
-				button.addActionListener(this.tapClient.tapManager.uploadFrame);
+				button.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						// TODO Auto-generated method stub
+						DynamicTapForm.this.tapClient.tapManager.uploadFacade.uploadSettingsClickAction((JButton) e.getSource());
+					}
+				});
 				if (meta.isUploadAllowed() && meta.getUploadHardLimit() > 0L) {
 					String tip = String.format(TAPTABLEUPLOADLIMITTOOLTIP, meta.getUploadHardLimit());
 					uploadTipText = uploadTipText.concat(tip);
@@ -656,10 +656,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	public Vector<TapTableColumn> getColumnsToLoad(String tableName, Map<String, TapTable> tablesMetaData) {
 		Vector<TapTableColumn> columnNames = tablesMetaData.get(tableName).getColumns();
 		if (columnNames == null) {
-			if (this.tapClient.mode == TapClientMode.UPLOAD) {
-				Aladin.error(this, "Error in uploaded data");
-				return null;
-			}
 			try {
 				List<String> tableNamesToUpdate = new ArrayList<String>();
 				tableNamesToUpdate.add(tableName);
@@ -840,8 +836,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	 * @param tableName
 	 */
 	public void updateQueryChecker(String tableName) {
-		boolean isUpload = this.tapClient.mode == TapClientMode.UPLOAD;
-		updateQueryChecker(isUpload, tableName, this.tapClient.tablesMetaData, this.tapClient.queryCheckerTables);
+		updateQueryChecker(false, tableName, this.tapClient.tablesMetaData, this.tapClient.queryCheckerTables);
 	}
 	
 	/**
@@ -890,8 +885,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				}
 			}
 			
-			if (this.tapClient.mode == TapClientMode.UPLOAD
-					|| (queryCheckerTable != null && queryCheckerTables.remove(queryCheckerTable))) {
+			if (queryCheckerTable != null && queryCheckerTables.remove(queryCheckerTable)) {
 				QueryChecker checker = new DBChecker(queryCheckerTables);
 				this.adqlParser.setQueryChecker(checker);
 			}
@@ -912,10 +906,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 					Aladin.error(this, TapClient.GENERICERROR);
 		            ball.setMode(Ball.NOK);
 				}
-			} else if (action.equals(UPLOAD)) {
-				//disabled based on capability and if user has not created a table
-				this.tapClient.showOnUploadFrame();
-				
 			} else if (action.equals(SHOWAYNCJOBS)) {
 				try {
 					UWSFacade.getInstance(aladin).showAsyncPanel();

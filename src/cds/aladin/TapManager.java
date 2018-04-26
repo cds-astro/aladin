@@ -133,7 +133,7 @@ public class TapManager {
 	protected static Vector<Vector<String>> splTapServerLabels;
 	protected static Vector<String> allTapServerLabels;
 	protected TapFrameServer tapFrameServer = null;
-	protected FrameUploadServer uploadFrame;
+	protected UploadFacade uploadFacade;
 	MutableComboBoxModel uploadTablesModel = new DefaultComboBoxModel();
 	protected FrameSimple joinFrame;
 	
@@ -1902,44 +1902,23 @@ public class TapManager {
 		return System.nanoTime();
 	}
 	
+	
 	/**
 	 * Method uploads table from PlanCatalog instance
 	 * @param planToLoad
 	 * @param uploadTableName
 	 */
-	public synchronized void createTapServerFromAladinPlan(final Plan planToLoad, final String uploadTableName) {
+	public synchronized void initialiseUploadFacadeFromAladinPlan(final Plan planToLoad, final String uploadTableName) {
 		aladin.executor.execute(new Runnable(){
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
-				boolean firstUpload = false;
 				String tableName = uploadTableName;
 				
 				if (uploadTableName == null || uploadTableName.isEmpty()) {
-					tableName = uploadFrame.generateUploadTableName(ALADINTABLEPREFIX);
+					tableName = uploadFacade.generateUploadTableName(ALADINTABLEPREFIX);
 				}
-				
-				if (uploadFrame.uploadClient.tablesMetaData.isEmpty()) {
-					firstUpload = true;
-					uploadFrame.uploadClient.serverTap.showloading();
-				}
-//				uploadServer.tablesGui.invalidate();
-				populateColumnsFromPlan(planToLoad, tableName , uploadFrame.uploadClient.tablesMetaData);
+				populateColumnsFromPlan(planToLoad, tableName , uploadFacade.uploadTablesMetaData);
 				uploadTablesModel.addElement(tableName);
-//				uploadFrame.setUploadFileForm();
-				if (firstUpload || (uploadFrame.uploadClient.serverTap.formLoadStatus == TAPFORM_STATUS_NOTLOADED
-						|| uploadFrame.uploadClient.serverTap.formLoadStatus == TAPFORM_STATUS_ERROR)) {
-					uploadFrame.createUploadServer();
-				}
-				
-				if (!firstUpload && uploadFrame.uploadClient.serverTap.formLoadStatus == TAPFORM_STATUS_LOADED) {
-//					uploadFrame.uploadServer.createFormDefault();
-//					uploadFrame.uploadServer.revalidate();
-//					uploadFrame.uploadClient.serverTap.tablesGui.addItem(tableName);
-					uploadFrame.uploadClient.serverTap.updateQueryChecker(tableName);
-					uploadFrame.uploadClient.serverTap.tablesGui.setSelectedItem(tableName);
-				} 
-				uploadFrame.pack();
 			}
 		});
 	}
@@ -2825,19 +2804,13 @@ public class TapManager {
 	 * @param newPlan
 	 */
 	public void updateAddUploadPlans(Plan newPlan) {
-		if (this.uploadFrame != null && this.uploadFrame.uploadOptions != null) {
+		if (this.uploadFacade != null && this.uploadTablesModel != null) {
 			if (/*newPlan.flagOk && */newPlan.pcat != null && newPlan instanceof PlanCatalog && newPlan.pcat.flagVOTable) {
 				try {
-					this.uploadFrame.allowPlanIntoUploadFacade(newPlan);
-					if (this.uploadFrame.uploadOptions != null) {
-						this.uploadFrame.uploadOptions.addItem(newPlan.label);
-						PlanCatalog planCatalog = (PlanCatalog) newPlan;
-						this.uploadFrame.updateUploadGuiWithNewUpload(planCatalog);
-						this.uploadFrame.setStateForUploadedComponents();
-					}
-				} /*catch (RejectedExecutionException ex) {
-					Aladin.error(this.uploadFrame, "Unable to get load "+newPlan.label+"\n Request overload! Please wait and try again.");
-				}*/  catch (Exception e) {
+					this.uploadFacade.allowPlanIntoUploadFacade(newPlan);
+					PlanCatalog planCatalog = (PlanCatalog) newPlan;
+					this.uploadFacade.updateUploadGuiWithNewUpload(planCatalog);
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					if(Aladin.levelTrace >= 3) e.printStackTrace();
 					Aladin.trace(3, "Unable to parse " + newPlan.label + " data for upload");
@@ -2847,8 +2820,8 @@ public class TapManager {
 	}
 
 	public void updateDeleteUploadPlans(Plan planInDeletion) {
-		if (this.uploadFrame != null && this.uploadFrame.uploadOptions != null) {
-			this.uploadFrame.deleteAvailableUploadTable(planInDeletion);
+		if (this.uploadFacade != null) {
+			this.uploadFacade.deleteAvailableUploadTable(planInDeletion);
 		}
 	}
 	
@@ -2860,31 +2833,22 @@ public class TapManager {
 		}
 	}
 	
-	public FrameUploadServer initUploadFrame(TapClient tapClient) {
-		if (this.uploadFrame == null) {
-			this.uploadFrame = new FrameUploadServer(this.aladin, tapClient.tapBaseUrl);
-			this.uploadFrame.setGui();
+	public UploadFacade initUploadFrame() {
+		if (this.uploadFacade == null) {
+			this.uploadFacade = new UploadFacade(this.aladin);
 		}
-		return this.uploadFrame;
+		return this.uploadFacade;
 	}
 	
-	public Map<String, TapTable> initUploadFrameAndGetUploadedTables(TapClient tapClient) {
-		if (this.uploadFrame == null) {
-			this.uploadFrame = new FrameUploadServer(this.aladin, tapClient.tapBaseUrl);
-			this.uploadFrame.setGui();
-		}
-		return this.uploadFrame.uploadClient.tablesMetaData;
-	}
-	
-	public void	showOnUploadFrame(TapClient tapClient) {
-		initUploadFrame(tapClient);
-		uploadFrame.show(tapClient);
+	public Map<String, TapTable> initUploadFrameAndGetUploadedTables() {
+		initUploadFrame();
+		return this.uploadFacade.uploadTablesMetaData;
 	}
 	
 	public Map<String, TapTable> getUploadedTables() {
 		Map<String, TapTable> results = null; 
-		if (this.uploadFrame != null && this.uploadFrame.uploadClient != null) {
-			results = this.uploadFrame.uploadClient.tablesMetaData;
+		if (this.uploadFacade != null && this.uploadFacade.uploadTablesMetaData != null) {
+			results = this.uploadFacade.uploadTablesMetaData;
 		}
 		return results;
 	}
@@ -2892,7 +2856,6 @@ public class TapManager {
 	public ComboBoxModel getUploadClientModel() {
 		// TODO Auto-generated method stub
 		return uploadTablesModel;
-		
 	}
 
 }

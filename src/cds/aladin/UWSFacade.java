@@ -98,7 +98,7 @@ public class UWSFacade implements ActionListener{
 			JOBCONTROLLERTITLE, UWSPANELCURRECTSESSIONTITLE, UWSPANELPREVIOUSSESSIONTITLE, JOBNOTSELECTED, JOBNOTFOUNDGIVENURL,
 			NOJOBURLMESSAGE, JOBDELETEERRORMESSAGE, DELETEONCLOSEBUTTONLABEL ;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
-	public static final int POLLINGDELAY = 1000;
+	public static final int POLLINGDELAY = 4000; //increasing the polling delay to 4secs after consulting Markus Demleitner and Mark Taylor (at Asterics TechForum4)
 	
 	static {
 		JOBNOTFOUNDMESSAGE = Aladin.chaine.getString("JOBNOTFOUNDMESSAGE");
@@ -297,7 +297,7 @@ public class UWSFacade implements ActionListener{
 				String location = httpClient.getHeaderField("Location");
 				job = new UWSJob(this, jobLabel, new URL(location));
 				populateJob(job.getLocation().openStream(), job);
-				if (postParams.containsKey("QUERY")) {
+				if (postParams != null && postParams.containsKey("QUERY")) {
 					job.setQuery((String) postParams.get("QUERY"));
 				}
 				
