@@ -157,7 +157,7 @@ public final class Util {
       }
 
       MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
-      //       MyInputStream mis = new MyInputStream(conn.getInputStream());
+//             MyInputStream mis = new M/yInputStream(conn.getInputStream());
       
 //      if( (mis.getType()&MyInputStream.GZ)!=0 ) {
 //         System.out.println("IN GZIP "+u);

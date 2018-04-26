@@ -168,7 +168,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       moc.nOrder=nOrder;
       moc.testConsistency=testConsistency;
       moc.currentOrder=currentOrder;
-      moc.rangeSet= (rangeSet==null) ? null : new RangeSet(rangeSet);
+      moc.rangeSet= (rangeSet==null) ? null : new Range(rangeSet);
       for( int order=0; order<nOrder; order++ ) {
          moc.level[order] = (Array)level[order].clone();
       }
@@ -775,14 +775,14 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
 
    /*************************** Operations on MOCs ************************************************/
 
-   public RangeSet rangeSet=null;
+   public Range rangeSet=null;
    
    // Store the MOC as a RangeSet if not yet done
    public void toRangeSet() {
       if( rangeSet!=null ) return;   // déjà fait
       
       sort();
-      rangeSet = new RangeSet( getSize() );
+      rangeSet = new Range( getSize() );
       RangeSet rtmp=new RangeSet();
       for (int order=0; order<nOrder; ++order) {
          rtmp.clear();
@@ -1205,6 +1205,71 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
          ready=true;
       }
    }
+
+   // Création d'un itérator sur la liste des ranges au max order (triés)
+   // Méthode : parcours en parallèle tous les niveaux, en conservant pour chacun d'eux l'indice de sa tête
+   //           prends la plus petite "tête", et pour celle-là, itère dans l'intervalle (fonction de la différence par rapport
+   //           à l'ordre max => 4 pour order-1, 16 pour order-2 ...).
+//   private class RangeIterator implements Iterator<long[]> {
+//      int deb,fin;
+//      RangeIterator(long valMin, long valMax) {
+//         deb = rangeSet.
+//      }
+//      
+//      
+//      
+//      private boolean ready=false;      // Le goNext() a été effectué et le pixel courant pas encore lu
+//      private long current;             // Pixel courant
+//      private int order=-1;             // L'ordre courant
+//      private long indice=0L;           // l'indice dans l'intervalle de l'ordre courant
+//      private long range=0L;            // Nombre d'éléments dans l'intervalle courant
+//      private long currentTete;         // Valeur de la tete courante
+//      private boolean hasNext=true;     // false si on a atteind la fin du de tous les ordres
+//      private int p[] = new int[getMocOrder()+1];// indice courant pour chaque ordre
+//
+//      public boolean hasNext() {
+//         goNext();
+//         return hasNext;
+//      }
+//
+//      public Long next() {
+//         if( !hasNext() ) return null;
+//         ready=false;
+//         return current;
+//      }
+//
+//      public void remove() {  }
+//
+//      private void goNext() {
+//         if( ready ) return;
+//
+//         // recherche de la plus petite tete parmi tous les orders
+//         if( indice==range ) {
+//            long min = Long.MAX_VALUE;
+//            long fct=1L;
+//            long tete=-1L;
+//            int mocOrder = getMocOrder();
+//            order=-1;
+//            for( int o=mocOrder; o>=minLimitOrder; o--, fct*=4 ) {
+//               Array a = level[o];
+//               if( a==null ) continue;
+//               tete = p[o]<a.getSize() ? a.get(p[o])*fct : -1;
+//               if( tete!=-1 && tete<min ) { min=tete; order=o; range=fct; }
+//            }
+//            if( order==-1 ) { hasNext=false; ready=true; return; }
+//            currentTete=min;
+//            indice=0L;
+//         }
+//
+//         // On énumère tous les pixels du range
+//         current = new Long(currentTete + indice);
+//         indice++;
+//
+//         // Si on a terminé le range courant, on avance l'indice de sa tete
+//         if( indice==range ) p[order]++;
+//         ready=true;
+//      }
+//   }
 
 
    // Internal initialisations => array of levels allocation

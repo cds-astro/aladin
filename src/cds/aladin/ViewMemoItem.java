@@ -21,8 +21,7 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.util.Hashtable;
+import java.awt.Rectangle;
 import java.util.Vector;
 
 public final class ViewMemoItem {
@@ -104,7 +103,7 @@ public final class ViewMemoItem {
       selected=v.selected;
       ordreTaquin=v.ordreTaquin;
       
-      if( v.isPlotView() ) plot = v.plot.copyIn(v);
+      if( v.plot!=null ) plot = v.plot.copyIn(v);
       else plot=null;   
       
       if( v.projLocal!=null ) projLocal = v.projLocal.copy();

@@ -228,8 +228,9 @@ public class PlanCatalog extends Plan {
    }
    
    protected boolean isCatalog() { return true; }
-
-
+   
+   protected boolean isTime() { return isCatalogTime(); }
+   
    protected String getDescription() {
       if( pcat.description==null ) return null;
       return pcat.description.toString();

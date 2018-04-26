@@ -55,7 +55,7 @@ public class PlanMoc extends PlanBGCat {
    static final public int DRAW_PERIMETER     = 0x8; // Tracé du périmètres
 
    protected HealpixMoc moc = null;                 // Le MOC
-   private int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
+   protected int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
 
    protected HealpixMoc [] arrayMoc =null;        // Le MOC à tous les ordres */
    protected ArrayList<Hpix> arrayHpix = null;    // Liste des cellules correspondant aux cellules tracés (order courant)
@@ -95,7 +95,7 @@ public class PlanMoc extends PlanBGCat {
       setLabel(label);
       co=c;
       coRadius=radius;
-      aladin.trace(3,"AllSky creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
+      aladin.trace(3,"MOC creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
       suite();
    }
 
@@ -380,6 +380,7 @@ public class PlanMoc extends PlanBGCat {
    public String getPropMocOrder() { return getRealMaxOrder(moc)+""; }
 
    protected boolean isCatalog() { return false; }
+   protected boolean isTime() { return false; }
    protected boolean hasSources() { return false; }
    protected int getCounts() { return 0; }
 

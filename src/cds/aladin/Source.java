@@ -158,7 +158,7 @@ public class Source extends Position implements Comparator {
     */
     protected void projection(ViewSimple v) {
 
-       if( v.isPlotView() ) {
+       if( v.isPlot() ) {
           double [] xy = v.plot.getXY(this);
           xv[v.n] = xy[0];
           yv[v.n] = xy[1];
@@ -860,7 +860,9 @@ public class Source extends Position implements Comparator {
     	int curPos;
     	String curUCD = null;
 
-    	Field[] fields = leg.field;
+        if( leg==null ) return -1;
+
+        Field[] fields = leg.field;
     	// ucd contient-elle des wildcards ?
     	boolean wildcard = useWildcard(ucd);
 
@@ -883,6 +885,8 @@ public class Source extends Position implements Comparator {
    protected int findUtype(String utype) {
        int curPos;
        String curUtype = null;
+       
+       if( leg==null ) return -1;
 
        Field[] fields = leg.field;
        // utype contient-il des wildcards ?
@@ -938,9 +942,10 @@ public class Source extends Position implements Comparator {
     	int curPos;
     	String curName = null;
 
+        if( leg==null ) return -1;
+
         // replace ajouté pour la démo AVO
         name = MetaDataTree.replace(name, " ", "", -1);
-
 
     	Field[] fields = leg.field;
     	// name contient-elle des wildcards ?

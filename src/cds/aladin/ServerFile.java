@@ -338,7 +338,11 @@ public class ServerFile extends Server implements XMLConsumer {
             //Obtention du stream (donnee locale ou distante)
             if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
                u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
-               try { in = Util.openStream(u); } catch( Exception e ) { }
+               
+               if( f.startsWith("https") ) {
+                  System.out.println("J'y suis");
+               }
+               try { in = Util.openStream(u); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
                mode="http";
             }
 

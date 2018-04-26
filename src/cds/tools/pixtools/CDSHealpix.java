@@ -24,6 +24,7 @@ package cds.tools.pixtools;
 import java.util.ArrayList;
 
 import cds.moc.HealpixMoc;
+import cds.moc.Range;
 import healpix.essentials.HealpixBase;
 import healpix.essentials.Moc;
 import healpix.essentials.MocQuery;
@@ -234,7 +235,7 @@ public final class CDSHealpix {
 
       Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
       moc = new HealpixMoc();
-      moc.rangeSet = m.getRangeSet();
+      moc.rangeSet = new Range( m.getRangeSet() );
       moc.toHealpixMoc();
       return moc;
    }

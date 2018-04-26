@@ -131,6 +131,7 @@ import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.moc.Range;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
 import cds.tools.Util;
@@ -170,7 +171,9 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Log control adapted to Debian policy
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
  * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
- * @beta    <LI> HiPSgen MIRROR improvements (network speed auto adaptation)
+ * @beta    <LI> HiPSgen improvements:
+ * @beta    <LI> - index.html HTTP/HTTPS compatibility
+ * @beta    <LI> - MIRROR network speed auto adaptation
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
@@ -203,7 +206,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.086";
+   static public final    String VERSION = "v10.087";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -572,6 +575,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameMocGenImg frameMocGenImg;   // Gere la fenetre pour la génération d'un MOC à partir d'images
    FrameMocGenProba frameMocGenProba;   // Gere la fenetre pour la génération d'un MOC à partir d'un map de proba
    FrameMocGenCat frameMocGenCat;   // Gere la fenetre pour la génération d'un MOC à partir de catalogues
+   FrameTMocGenCat frameTMocGenCat;   // Gere la fenetre pour la génération d'un T-MOC à partir de catalogues
    FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution
    FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
    FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
@@ -648,7 +652,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miMocOp,
+   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miTMocGenCat,miMocOp,
    miMocToOrder,miMocFiltering,miMocCrop,
    miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
    miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
@@ -706,7 +710,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
+   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGENCAT,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
    MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
@@ -795,8 +799,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // set user-agent (see RFC 2616, User-Agent section)
       try {
          System.setProperty("http.agent", "Aladin/"+Aladin.VERSION);
-      }
-      catch(Exception e) {e.printStackTrace();}
+//         System.setProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2"); 
+      } catch(Exception e) {e.printStackTrace();}
 
       // a bit of magic for supporting all HTTPS connections
       Util.httpsInit();
@@ -1152,6 +1156,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOCPOL =chaine.getString("MMOCGENPOL");
       MOCGENIMGS  =chaine.getString("MMOCGENIMGS");
       MOCGENCAT   =chaine.getString("MMOCGENCAT");
+      TMOCGENCAT   =chaine.getString("MTMOCGENCAT");
       MOCM     =chaine.getString("MMOCOP");
       MOCTOORDER     =chaine.getString("MMOCTOORDER");
       MOCFILTERING =chaine.getString("MMOCFILTERING");
@@ -1359,7 +1364,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
-               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA},
+               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA}, {TMOCGENCAT},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
             },
             { /*{MTOOLS},
@@ -2072,6 +2077,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOCHIPS) )   miMocHips  = ji;
       else if( isMenu(m,MOCPOL) )   miMocPol  = ji;
       else if( isMenu(m,MOCGENCAT) )   miMocGenCat  = ji;
+      else if( isMenu(m,TMOCGENCAT) )   miTMocGenCat  = ji;
       else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
       else if( isMenu(m,NORM) )   miNorm    = ji;
       else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -3020,9 +3026,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( cv==0 ) return;
       int v = numVersion(VERSION);
       if( v>=cv ) return;
-      String s = chaine.getString("MAJOR")
-            +"!Aladin Java "+currentVersion
-            +chaine.getString("MAJOR1");
+      String s = chaine.getString("MAJOR") +"!Aladin Java "+currentVersion +chaine.getString("MAJOR1");
       if( !confirmation(s) ) return;
       glu.showDocument("AladinJava.SA","");
    }
@@ -3035,7 +3039,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( isFullScreen() ) fullScreen.repaint();
       setHelp(false);
       
-      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips SAO70467 3deg");
+      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips NGC 2244 1.2deg");
    }
 
 
@@ -3489,6 +3493,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MOCPOL) ){ createPlanMocByRegions();
       } else if( isMenu(s,MOCGENIMGS) ){ updateMocGenImgs();
       } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
+      } else if( isMenu(s,TMOCGENCAT) ){ updateTMocGenCat();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
       } else if( isMenu(s,MOCCROP) )  { crop();
@@ -4017,7 +4022,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param sens 1 zoom+, -1 zoom-
     */
    protected void zoom(int sens) {
-      if( view.tpsIncrZoom(sens) ) return;
       calque.zoom.setZoom( sens==1 ? "+" : "-" );
    }
 
@@ -4186,6 +4190,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
          frameMocGenRes = new FrameMocGenRes(aladin);
       }
       frameMocGenRes.maj();
+   }
+
+   /** Mise à jour de la fenêtre pour la génération d'un T-MOC */
+   protected void updateTMocGenCat() {
+      if( frameTMocGenCat==null ) {
+         trace(1,"Creating the TMocGenCat window");
+         frameTMocGenCat = new FrameTMocGenCat(aladin);
+      }
+      frameTMocGenCat.maj();
    }
 
    /** Mise à jour de la fenêtre pour la génération d'un MOC */
@@ -4397,7 +4410,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
 	         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
 	         moc = new HealpixMoc();
-	         moc.rangeSet = m.getRangeSet();
+	         moc.rangeSet = new Range( m.getRangeSet() );
 	         moc.toHealpixMoc();
 
 	         // moins de la moitié du ciel => ca doit être bon
@@ -5585,6 +5598,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Plan base = calque.getPlanBase();
          boolean hasImage = base!=null;
          int nbPlanCat = calque.getNbPlanCat();
+         int nbPlanCatTime = calque.getNbPlanCatTime();
          int nbPlanObj = calque.getNbPlanTool();
          int nbPlanImg = calque.getNbPlanImg();
          int nbPlanMoc = calque.getNbPlanMoc();
@@ -5742,6 +5756,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
          if( miMocGenProba!=null ) miMocGenProba.setEnabled( nbPlanImgBG>0 );
          if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
+         if( miTMocGenCat!=null ) miTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miMocToOrder!=null ) miMocToOrder.setEnabled(nbPlanMoc>0);
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );

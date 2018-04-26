@@ -78,8 +78,6 @@ import javax.swing.KeyStroke;
 
 import cds.astro.AstroMath;
 import cds.moc.Healpix;
-import cds.moc.TMoc;
-import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import healpix.essentials.FastMath;
@@ -296,13 +294,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
       int mult=1;
       
-      // Changement d'échelle de la bande temporelle
-      if( tpsInTpsArea ) {
-         tpsIncrZoom( e.getWheelRotation() );
-         aladin.view.repaintAll();
-         return;
-      }
-      
       // Pour éviter un View.quickSimbadOnReticle(...) intempestif
       lastMove=null;
 
@@ -352,7 +343,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // Dans le cas d'un nuage de points, on prend simplement le centre de la vue
          // sinon le déplacement est trop complexe
-         if( isPlotView() ) {
+         if( isPlot() ) {
             p1 = getZoomCoord(rv.width/2, rv.height/2);
             xzoomView=p1.x;
             yzoomView=p1.y;
@@ -360,7 +351,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // Si le repere n'existe pas ou qu'il n'est pas dans la vue, on zoom au centre
          // (ou qu'on est en train de faire un crop)
-         else if( !isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
+         else if( !isPlot() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
                view.repere==null ||
                !(vs.pref instanceof PlanBG) && view.repere.getViewCoord(vs,0,0)==null
                || hasCrop() ) ) {
@@ -586,7 +577,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       projLocal=null;
       imageBG=null;
       if( g2BG!=null ) { g2BG.dispose(); g2BG=null; }
-      if( isPlotView() ) plot.free();
+      if( isPlot() ) plot.free();
       plot=null;
    }
 
@@ -597,7 +588,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       v.northUp=northUp;
       v.ordreTaquin=ordreTaquin;
       v.projLocal=projLocal==null ? null : projLocal.copy();
-      v.plot = isPlotView() ? plot.copyIn(v) : null;
+      v.plot = isPlot() ? plot.copyIn(v) : null;
 
       if( pref.isCube() ) v.cubeControl = cubeControl.copy();
       v.setZoomXY(zoom,xzoomView,yzoomView);
@@ -818,8 +809,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected PointD getPosition(double xview, double yview) {
 
       if( rzoom==null ) return new PointD(xview+0.5,yview+0.5);
+      
       double x= rzoom.x + xview/zoom;
       double y= rzoom.y + yview/zoom;
+      
+      if( isPlotTime() ) y = rzoom.y + yview;
 
       return new PointD(HItoI(x),HItoI(y));
    }
@@ -832,7 +826,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( rzoom==null ) return new PointD(ximg-0.5,ximg-0.5);
       ximg = ItoHI(ximg);
       yimg = ItoHI(yimg);
-      return new PointD( (ximg-rzoom.x)*zoom, (yimg-rzoom.y)*zoom );
+      double x = (ximg-rzoom.x)*zoom;
+      double y = (yimg-rzoom.y)*zoom;
+      
+      if( isPlotTime() ) y = yimg-rzoom.y;
+      
+      return new PointD( x, y );
    }
 
    private Coord coo = new Coord();
@@ -939,7 +938,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int newx,newy;
 
       if( Double.isNaN(x) || pref==null ) return null;
-
+      
       // Juste pour accélérer (profiling)
       //     x = ItoHI(x);
       //     y = ItoHI(y);
@@ -963,10 +962,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       else newx++;
       if( this.dy>=0 ) newy-=ddy;
       //       else newy++;
+      
+      if( isPlotTime() ) newy=(int)Math.round(y - rzoom.y);
 
       if( p==null ) return new Point(newx,newy);
       p.x=newx;
       p.y=newy;
+      
       return p;
    }
 
@@ -1001,8 +1003,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       else newx++;
       if( this.dy>=0 ) newy-=ddy;
       else newy++;
-
+      
       p.x=newx; p.y=newy;
+      
+      if( isPlotTime() ) p.y=y - rzoom.y;
+      
       return p;
    }
 
@@ -1346,7 +1351,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       double xzImg = xc/fct;
       double yzImg = yc/fct;
       double wzImg = rv.width/zoom;
-      double hzImg = rv.height/zoom;
+      double hzImg = isPlotTime() ? rv.height : rv.height/zoom;
       
       // Avec mémorisation des infos
       if( memorisation ) {
@@ -1396,8 +1401,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( pref instanceof PlanBG ) northUp=false;
 
-      if( !p.isCatalog() && isPlotView() ) { plot.free(); plot=null; }
-
+//      if( !p.isCatalog() && isPlot() ) { plot.free(); plot=null; }
+      if( !p.isTime() ) { 
+         if( plot!=null ) { plot.free(); plot=null; }
+      } else {
+         System.out.println("Création du Plot pour "+p);
+         plot = new Plot(this);
+      }
+      
       // Création du controleur de blink s'il s'agit d'un cube
       if( pref.isCube() ) {
          cubeControl = new CubeControl(this,pref,pref.getInitDelay(),pref.isPause());
@@ -1433,7 +1444,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected void reInitZoom() { reInitZoom(false); }
    protected void reInitZoom(boolean flagRepaint) {
 
-      if( isPlotView() ) plot.adjustPlot(null);
+      if( isPlot() ) plot.adjustPlot();
       else {
 
          // Positionnement des valeurs du zoom initial
@@ -1473,7 +1484,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     *  @return true si c'est possible, false sinon
     */
    protected boolean setZoomSource(double nzoom,Source s) {
-      if( !isPlotView() ) return setZoomRaDec(nzoom,s.raj,s.dej);
+      if( !isPlot() ) return setZoomRaDec(nzoom,s.raj,s.dej);
 
       double [] val = plot.getValues(s);
       return setZoomRaDec(nzoom,val[0],val[1]);
@@ -1501,7 +1512,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Zoom la vue sur la source passée en paramètre */
    protected void zoomOnSource(Source o) {
-      setZoomSource(isPlotView() ? 2 : 16,o);
+      setZoomSource(isPlot() ? 2 : 16,o);
       repaint();
    }
 
@@ -1993,13 +2004,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          repaint();
       }
       
-      // Dans la bande temporelle ?
-      if( tpsInTpsArea ) {
-         tpsXDrag=e.getX();
-         tpsYDrag=e.getY();
-
-      }
-
       // Gestion de l'outil de rainbow filter
       if( rainbowF!=null && rainbowF.isInside(x,y) ) {
          if( !rainbowF.submit(vs) ) {
@@ -2030,12 +2034,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( tool==ToolBox.SELECT  || tool==-1  || tool==ToolBox.PAN  || tool==ToolBox.CROP ) {
          
-         // Dans la bande temporelle ?
-         if( tpsInTpsArea ) {
-            tpsXDrag=e.getX();
-            tpsYDrag=e.getY();
-         }
-
          if( !isProjSync ) {
             if( !flagshift && (!selected || !view.isMultiView()) ) {
                aladin.calque.unSelectAllPlan();
@@ -2457,9 +2455,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          repaint(); return;
       }
       
-      // Dans la zone des graphiques temporels ?
-      tpsInTpsArea=inTpsArea(e.getX(),e.getY());
-
       mouseReleased1(e.getX(),e.getY(),e);
       if( createCoteDist() ) repaint();
    }
@@ -2468,14 +2463,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       //      if( Aladin.levelTrace>=3 ) testConvertion(x,y);
       
-      // fin du déplacement de la bande temporelle
-      if( tpsInTpsArea ) {
-         tpsInTpsArea=false;
-         tpsXDrag=tpsYDrag=-1;
-         mousePressed1(x, y, e);
-         return;
-      }
-
       calque.resetDrawFastDetection();
 
       if( hasCrop() ) {
@@ -2486,8 +2473,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( hasRainbow() && rainbow.endDrag() ) repaint();
       if( rainbowF!=null && rainbowF.endDrag() ) repaint();
       if( rainbowUsed ) return;
-      
-      if( tpsInTpsArea ) { flagClicAndDrag=false; repaint(); return; }
       
       if( flagSimRepClic )  {
          flagSimRepClic=false;
@@ -2643,7 +2628,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       GrabItFrame grabItDialog = isGrabIt();
       // Déplacement du repère
       if( (tool==ToolBox.SELECT || tool==ToolBox.PAN && (!flagClicAndDrag || e.getClickCount()>1) )
-            && flagMoveRepere && grabItDialog==null && !e.isShiftDown() && !isPlotView() ) {
+            && flagMoveRepere && grabItDialog==null && !e.isShiftDown() && !isPlot() ) {
          PointD p = vs.getPosition(x,y);
          vs.moveRepere(p.x,p.y,e.getClickCount()>1);
          
@@ -3043,15 +3028,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       
       flagClicAndDrag=true;
       
-      // Déplacement horizontale de la bande temporelle
-      if( tpsInTpsArea && tpsXDrag!=-1) {
-         tpsMove(x-tpsXDrag, y-tpsYDrag);
-         tpsXDrag=x; tpsYDrag=y;
-         aladin.view.newView();
-         aladin.view.repaintAll();
-         return;
-      }
-
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
       boolean isProjSync = isProjSync();
@@ -3384,9 +3360,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       
       if( aladin.localisation.isPopupShown() ) return;
       
-      // Dans la zone des graphiques temporels ?
-      tpsInTpsArea=inTpsArea(e.getX(),e.getY());
-      
       mouseMoved1(e.getX(),e.getY(),e);
    }
    
@@ -3445,8 +3418,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( tool==ToolBox.SELECT || tool==ToolBox.PAN ) {
-         
-         if( tpsInTpsArea ) setTemporelLabel( getTpsUnderMouse() );
          
          // (thomas) affichage dans l'arbre des images disponibles
          vs.showAvailableImages(x,y);
@@ -3619,9 +3590,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( flagOnFirstLine ) {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
             } else if( flagRollable || inNE((int)x,(int)y) && pref instanceof PlanBG ) {
-               if( oc!=Aladin.TURNCURSOR && !tpsInTpsArea ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
+               if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( view.isSimbadOrVizieRPointing() ) {
-               if( oc!=Aladin.LOOKCURSOR && !tpsInTpsArea ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));
+               if( oc!=Aladin.LOOKCURSOR ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));
             } else if( trouve ) {
                if( oc!=Aladin.HANDCURSOR ) Aladin.makeCursor(this,(oc=Aladin.HANDCURSOR));
             } else if( flagMarge ) {
@@ -3843,7 +3814,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Déplacement du repere courant dans toutes les vues en fonction
     *  de la position ximg,yimg (position dans l'image) */
    protected void moveRepere(double ximg,double yimg,boolean flagSync) {
-      if( isPlotView() ) return;
+      if( isPlot() ) return;
       try {
          repCoord = new Coord();
          repCoord.x=ximg; repCoord.y=yimg;
@@ -3857,7 +3828,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Déplacement du repere courant dans toutes les vues en fonction
     *  de la coordonnée passée en paramètre */
    protected void moveRepere(Coord repCoord,boolean flagSync) {
-      if( isPlotView() ) return;
+      if( isPlot() ) return;
       
       // Si on change de CCD, le flagSync est forcé à true
       if( pref instanceof PlanMultiCCD ) {
@@ -5261,7 +5232,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int fontSize = (int) f.getSize2D();
       g.setFont( f );
       Color c1 = g.getColor();
-      String s=isPlotView() ? plot.getPlotLabel() : pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.getLabel(true);
+      String s=isPlot() ? plot.getPlotLabel() : pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.getLabel(true);
          if( s==null ) return;
 
          int x=getMarge()+dx;
@@ -6217,44 +6188,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    }
    
-   
-   private String lastTemporelLabel = null;
-   
-   /** Passage de la valeur du pixel qu'il faut afficher en surimpression de l'image */
-   protected void setTemporelLabel(String s) {
-      if( lastTemporelLabel!=null && lastTemporelLabel.equals(s) ) return;  // pas de changement
-      lastTemporelLabel=s;
-      quickInfo=true;
-      repaint();
-   }
-   
-   
-   private void drawTemporelLabel(Graphics g ) {
-      if( tpsArea==null ) return;
-      String s = lastTemporelLabel;
-      
-      if( s!=null && s.length()>0 && !flagClicAndDrag ) {
-         FontMetrics fm = g.getFontMetrics();
-         int w = fm.stringWidth(s);
-         g.setColor( view.infoColor );
-         int x = (int)lastView.x-w/2;
-         if( x<2 ) x=2;
-         if( x+w>getWidth()-2 ) x = getWidth() - w -2;
-         Util.drawStringOutline(g,s,x,tpsArea.y-4, null, Color.black);
-         g.drawLine((int)lastView.x,tpsArea.y-3,(int)lastView.x,tpsArea.y+tpsArea.height+3);
-      }
-   }
-   
-   // Dessin des plans temporels dans la bande destinée à cela
-   private boolean drawTemporel( Graphics g, ViewSimple v, ArrayList<Plan> planTps ) {
-      resetTpsY();
-      if( planTps==null || planTps.size()==0 ) return false;
-//      for( int i=planTps.size()-1; i>=0; i-- ) planTps.get(i).draw(g,v,dx,dy,-1);
-      for( Plan p : planTps ) p.draw(g,v,dx,dy,-1);
-
-      return true;
-   }
-
    // Message d'attente de l'image dans la vue
    void waitImg(Graphics gr ) {
       if( gr==null ) return;
@@ -6353,7 +6286,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Retourne true si la vue est synchronisée par projection sur une autre vue */
    protected boolean isProjSync() {
       ViewSimple v=aladin.view.getCurrentView();
-      return !locked && !isPlotView()  && selected && (v==null || v!=this )
+      return !locked && !isPlot()  && selected && (v==null || v!=this )
             && aladin.match.isProjSync();
 
    }
@@ -6411,11 +6344,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Pour afficher des checkboxs associés aux plans directement dans la vue
       if( fullScreen ) aladin.fullScreen.startMemo();
       
-      // Liste des plans temporels qu'on affichera éventuellement en post-traitement dans une deuxième boucle.
-      ArrayList<Plan> planTps = null;
-
       // Affichage en 2 passes, d'abord les images, puis tout le reste
       for( int passe=1; passe <= (OVERLAYFORCEDISPLAY ? 2 : 1); passe++ ) {
+         
 
          // Dessin des plans les uns après les autres
          for( int i=allPlans.length-1; i>=0; i--) {
@@ -6430,10 +6361,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
             if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
             if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-
-
-            // Seuls les catalogues (et éventuellement les surcharges graphiques) sont traçables dans un plot
-            if( isPlotView() && !p.isCatalog() && !p.isTool() ) continue;
+            
+            // Seuls les catalogues (et éventuellement les surcharges graphiques et TMOC) sont traçables dans un plot
+            if( isPlot() && !p.isCatalog() && !p.isTool() && p.type!=Plan.ALLSKYTMOC ) continue;
 
             // Repérage d'un éventuel plan sous la souris dans le stack
             if( p.underMouse && p.isImage() ) planUnderMouse = (PlanImage)p;
@@ -6494,13 +6424,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-               
-               // Les plans temporels seront traités par la suite
-               if( p.type==Plan.ALLSKYTMOC && flagActive ) {
-                  if( planTps == null ) planTps = new ArrayList<Plan>(10);
-                  planTps.add( p );
-                  continue;
-                }
                
                if( Aladin.SLIDERTEST ) {
                   if( flagActive && (p==pref || p!=pref && !p.isRefForVisibleView()) ) {
@@ -6574,7 +6497,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          return flagDisplay;
       }
 
-      if( vs.isPlotView() ) vs.plot.drawPlotGrid(g,dx,dy);
+      if( vs.isPlot() ) vs.plot.drawPlotGrid(g,dx,dy);
       else if( calque.hasGrid() && !proj.isXYLinear() ) vs.drawGrid(g,clip,dx,dy);
 
       int fontSize = view.infoFontSize;
@@ -6586,16 +6509,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //      else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
 //      else  g.setFont(Aladin.SSBOLD);
 
-      if( !vs.isPlotView() ) {
+      if( !vs.isPlot() ) {
          
          // tracé des constellations
          drawConstellation(g,dx,dy);
 
          // Pourtour cache misère
          drawForeGround(g,mode,flagBordure);
-         
-         // Affichage des plans temporels
-         tpsDrawingFlag = drawTemporel(g,vs,planTps);
       }
 
       if( calque.flagOverlay  ) {
@@ -6603,7 +6523,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          drawTarget(g,dx,dy);
       }
 
-      if( !vs.isPlotView() && !aladin.isCinema())  {
+      if( !vs.isPlot() && !aladin.isCinema())  {
 
         if( !proj.isXYLinear() && calque.flagOverlay ) {
             int x=vs.drawScale(g,vs,dx,dy);
@@ -6645,97 +6565,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       return flagDisplay;
    }
-   
-   /** Retourne true si on a une surcharge graphique temporelle */
-   protected boolean hasTps() { return tpsDrawingFlag; }
-   
-   /** true si la coordonnée se trouve dans la zone de surcharge graphique temporelle */
-   protected boolean inTpsArea(int x, int y) { 
-      return tpsArea!=null && tpsArea.contains(x, y); 
-   }
-   
-   /** Re-initialisation des ymin et ymax de la zone de surcharge graphique temporelle */
-   protected void resetTpsY() { tpsArea=null; }
-   
-   /** Maj des valeurs ymin et ymax de la zone de surcharge graphique temporelle */
-   protected void updateTpsArea(Rectangle clip) {
-      if( clip==null ) return;
-      if( tpsArea==null ) tpsArea = clip;
-      else tpsArea = tpsArea.union( clip );
-   }
-   
-   protected void initTpsZoomIfRequired(PlanTMoc p) {
-      if( tpsZoom!=-1 ) return;
-      if( p.moc==null ) return;
-      initTpsZoom( (TMoc) p.moc);
-   }
-   
-   /** Initialisation des paramètres de zoom temporel en fonction du TMoc passé en paramètre */
-   private void initTpsZoom(TMoc tmoc) {
-      double min = tmoc.getTimeMin();
-      double max = tmoc.getTimeMax();
-      
-      /// On prend un peu de marge
-      double delta = max-min;
-      double marge = delta/12.;
-      min -= marge;
-      max += marge;
-      
-      tpsX = min;
-      tpsZoom = getWidth()/(max-min);   // =pixel (ou fraction de pixel) pour une seconde JD
-      
-//      aladin.trace(4,"initTpsZoom() min="+min+" ("+Astrodate.JDToDate( min)+") max="+max+" ("+Astrodate.JDToDate( max)+")");
-//      aladin.trace(4,"initTpsZoom() tpX="+min+" tpsZoom="+tpsZoom);
-   }
-   
-   /** Retourne la date sous la souris dans la bande temporelle */
-   public String getTpsUnderMouse() {
-      if( !tpsInTpsArea ) return "";
-      return Astrodate.JDToDate( getTpsXview( (int)lastView.x ));
-   }
-   
-   /** Retourne le temps min (en JD) affiché actuellement dans la vue (bord à gauche) */
-   public double getTpsMin() { return tpsX; }
-   
-   /** retourne le temps max affiché actuellement dans la vue (bord à droite) */
-   public double getTpsMax() { return tpsX + getWidth()/tpsZoom; }
-   
-   /** Retourne le temps correspondant à la position de la souris */
-   public double getTpsXview(int xview) { return tpsX + xview/tpsZoom; }
-   
-   /** Retourne le facteur de zoom temporel (pixel ou fraction de pixel par un jour JD) */
-   public double getTpsZoom() { return tpsZoom; }
-   
-   /** Augmentation/diminution du facteur de zoom de la bande temporelle */
-   protected void tpsIncrZoom(int sens ) {
-      double xView = lastView.x;
-      double tpsCurrent = getTpsXview( (int) xView );
-      
-      if( sens<0 ) tpsZoom *=2;
-      else tpsZoom /=2;
-      
-      // Ajustement de l'origine pour que la position sous la souris conserve la même valeur temporelle
-      tpsX = tpsCurrent - xView/tpsZoom;
-//      aladin.trace(4,"tpsIncrZoo/m("+sens+") tpsX="+Astrodate.JDToDate( tpsX )+" tpsZoom="+tpsZoom+" range="+Astrodate.JDToDate( getTpsMin() )+" .. "+Astrodate.JDToDate( getTpsMax() ));
-   }
-   
-   /** Glissement de la bande temporelle */
-   private void tpsMove(int deltaXView, int deltaYView) {
-      tpsX -= deltaXView/tpsZoom;
-      tpsYViewOrigin += deltaYView;
-//      aladin.trace(4,"tpsMove("+deltaXView+") tpsZoom="+/tpsZoom+" range="+Astrodate.JDToDate( getTpsMin() )+" .. "+Astrodate.JDToDate( getTpsMax() ));
-  }
-   
-   /** Retourne la position en Y sur la vue de la bande temporelle. 
-    * Les valeurs négatives se comptent depuis le bas de la vue */
-   public int getTpsYviewOrig() { return tpsYViewOrigin; }
-   
-   protected Rectangle tpsArea=null;       // Rectangle sur la vue dans lequel est dessiné la bande temporelle
-   protected double tpsZoom = -1;          // portion de pixel représentant une seconde JD
-   protected double tpsX = 0;              // Temps JD (en secondes) correspondant à xview=0
-   protected int tpsYViewOrigin=-100;      // la position en Y sur la vue de la bande temporelle. les valeurs négatives se comptent depuis le bas de la vue
-   protected boolean tpsInTpsArea=false;   // vrai si la souris est placé sur la zone d'affichage des plans temporels
-   protected boolean tpsDrawingFlag=false; // Vrai s'il y a un affichage d'une bande temporelle
    
    /** Affichage de la bordure rouge et des deux petits triangles
     * indiquant que la vue est stickée */
@@ -6873,7 +6702,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       Projection proj;
       if( pref==null ) return null;
 
-      if( isPlotView() ) return plot.getProj();
+      if( isPlot() ) return plot.getProj();
 
       proj = projLocal!=null ? projLocal : pref.projd;    // projLocal dans le cas d'un planBG
       //      proj = pref.projd;
@@ -7185,9 +7014,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( !rainbowUsed()  ) {
 
-         // Date courante sous la souris (dans le bandeau temporel)
-         if( tpsInTpsArea ) drawTemporelLabel(g);
-
          // Dessin en sur impression de la valeur de pixel, et de la position pour FullScreen
          if( pref!=null && aladin.calque.hasPixel() ) drawPixelInfo(g);
          quickInfo=false;
@@ -7394,7 +7220,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    Plot plot = null;
 
-   protected boolean isPlotView() { return plot!=null; }
+   protected boolean isPlot() { return plot!=null; }
+   protected boolean isPlotTime() { return plot!=null && plot.isPlotTime(); }
 
    /** Création d'une table. Le nom des colonnes peut être mentionné au moyen de jokers (*,?)
     * @param plan Nom du plan Catalog concerné

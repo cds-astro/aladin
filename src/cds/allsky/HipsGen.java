@@ -829,7 +829,7 @@ public class HipsGen {
                   "   hips_min_order=nn   Specifical HEALPix min order (only for DETAILS action)" + "\n" +
                   "   method=m            Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored " + "\n" +
                   "                       compressed tiles (JPEG|PNG)" + "\n" +
-                  "   hip_frame           Target coordinate frame (equatorial|galactic)" + "\n" +
+                  "   hips_frame          Target coordinate frame (equatorial|galactic)" + "\n" +
                   "   hips_tile_width=nn  Specifical tile width (pow of 2) - default 512" + "\n" +
                   "   mocOrder=nn         Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
                   "                       auto-adapted to the HiPS" + "\n" +

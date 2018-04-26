@@ -167,7 +167,7 @@ public class Zoom extends JPanel {
       ViewSimple v = aladin.view.getCurrentView();
       Plan p = aladin.calque.getPlanBase();
       if( !flagPow2 && (p!=null && p instanceof PlanBG
-            || v!=null && v.isPlotView()) ) return getValueTest(i);
+            || v!=null && v.isPlot()) ) return getValueTest(i);
       return getValuePow2(i);
    }
 

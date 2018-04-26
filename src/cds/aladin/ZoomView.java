@@ -317,7 +317,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
       ViewSimple v = aladin.view.getCurrentView();
-      if( v.isPlotView() ) return;
+      if( v.isPlot() ) return;
       flagdrag = true;
       if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY());
       else {
@@ -419,7 +419,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       // Calcul de la coordonnée dans la vue courante
       Coord coo = null;
-      if( !vc.isPlotView() ) {
+      if( !vc.isPlot() ) {
          try {
             Projection proj;
             if( Projection.isOk(proj=vc.getProj()) ) {
@@ -493,7 +493,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       ViewSimple v = aladin.view.getCurrentView();
 
       // Pour voir tout le champ initial
-      if( e.isControlDown() || v.isPlotView() ) {
+      if( e.isControlDown() || v.isPlot() ) {
          v.reInitZoom(true);
          return;
       }
@@ -1567,7 +1567,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
 
-      if( v.isPlotView()  ) {
+      if( v.isPlot()  ) {
          gr.setColor( BGD );
          gr.fillRect(0,0,w,h);
          drawBord(gr);

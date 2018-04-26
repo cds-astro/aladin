@@ -1787,7 +1787,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Le champ est trop grand ou que la vue n'a pas de réf spatiale ?
       // => on suppose que tous les HiPS sont a priori visibles
       ViewSimple v = aladin.view.getCurrentView();
-      if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) ) {
+      if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) || v.isPlot() ) {
          boolean modif = false;
          for( TreeObjDir to : dirList ) {
             if( !modif && to.getIsIn() != -1 ) modif = true;

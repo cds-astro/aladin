@@ -197,7 +197,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
       // Test sur le recouvrement des champs
       if( Projection.isOk(proj) && plan.type!=Plan.TOOL && plan.type!=Plan.APERTURE
-            && !(plan.isSimpleCatalog() && (plan.hasXYorig || v.isPlotView()) )
+            && !(plan.isSimpleCatalog() && (plan.hasXYorig || v.isPlot()) )
             && !proj.agree(plan.projd,v) ) return;
 
       // Memorisation de la projection courante appliquee

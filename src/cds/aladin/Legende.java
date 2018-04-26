@@ -202,6 +202,12 @@ public final class Legende extends AbstractTableModel  {
       for( int i=0; i<field.length; i++ ) if( utype.equals(field[i].utype) ) return i;
       return -1;
    }
+   
+   /** Retourne l'indice du champ TIME (JD,MJD ou ISOTIME), sinon -1 */
+   protected int getTime() {
+      for( int i=0; i<field.length; i++ ) if( field[i].isTime() ) return i;
+      return -1;
+   }
 
    /** Retourne l'indice du champ RA, sinon -1 */
    protected int getRa() {
@@ -787,6 +793,15 @@ public final class Legende extends AbstractTableModel  {
          }
          field[index].coo=coo;
          if( nlon>=0 && nlat>=0 && coo!=0 ) plan.modifyLonLatField(this, nlon,nlat, Localisation.ECLIPTIC);
+       
+         // Pour le temps
+      } else if( Field.isTime(coo) ) {
+         for( int i=0; i<field.length; i++ ) {
+            Field f = field[i];
+            if( f.isTime() ) { f.coo=0; break; }
+         }
+         field[index].coo=coo;
+         plan.modifyTimeField(this, index, coo);
 
          // Pour les coordonnées cartésiennes
       } else {

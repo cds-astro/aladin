@@ -70,6 +70,7 @@ public class Calque extends JPanel implements Runnable {
 
    //   Vector plan;
    int maxPlan=0; 	  // Nombre total de plan actuellement alloue
+   private int nbPlanTime=0;  // Nombre de plans à caractéristique temporelle actuellement affichable (cf. resumeTimeStackIndex())
 
    // Les valeurs a memoriser
    int current;         // Le plan courant
@@ -264,6 +265,10 @@ public class Calque extends JPanel implements Runnable {
 
    /** Retourne la taille de la pile */
    protected int getNbPlan() { return plan.length; }
+   
+   
+   /** Retourne le nombre de plans à caractéristiques temporels actuellement affichables dans une vue temporelle */
+   protected int getNbPlanTime() { return nbPlanTime; }
 
    /** Retourne le plan dont le hashcode correspond */
    protected Plan getPlanByHashCode(int hashCode) {
@@ -539,6 +544,31 @@ public class Calque extends JPanel implements Runnable {
          if( plan[i].isCatalog() && plan[i].flagOk ) n++;
       }
       return n;
+   }
+   
+   /** Retourne le nombre de plans Catalog et assimilés dont une légende contient une colonne timestamp */
+   protected int getNbPlanCatTime() {
+      int n=0;
+      for( Plan p : getPlans() ) {
+         if( !(p.isCatalog() && p.flagOk) ) continue;
+         if( p.isCatalogTime() ) { n++; continue; }
+      }
+      return n;
+   }
+   
+   /** Met à jour les indices d'affichage des plans à caractéristique temporelle affichables.
+    * L'index 0 correspond au premier plan temporel affiché en bas d'une vue temporelle, en 1 le deuxième, etc
+    * @return le nombre de plans à caractéristique temporelle
+    */
+   protected int resumeTimeStackIndex() {
+      Plan [] plan = getPlans();
+      int index=0;
+      for( int i=plan.length-1; i>=0; i-- ) {
+         Plan p = plan[i];
+         if( !p.flagOk || !p.active ) continue;
+         if( p.isTime() ) p.timeStackIndex = index++; 
+      }
+      return index;
    }
 
    /** Retourne true s'l y a au-moins un plan actif dont les objets
@@ -2005,7 +2035,6 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
-
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
    protected int newPlanMoc(String label,Plan [] p,int order,double radius, 
          double pixMin, double pixMax,double threshold,boolean fov) {
@@ -2017,6 +2046,21 @@ public class Calque extends JPanel implements Runnable {
       n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = pa = new PlanMocGen(aladin,label,p,order,radius,pixMin,pixMax,threshold,fov);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
+
+   /** Crée un plan TMOC à la résolution indiquée à partir d'une liste de catalogues avec timestamp. */
+   protected int newPlanTMoc(String label,Plan [] p,int order,double duration) {
+      int n;
+      PlanTMoc pa;
+
+      if( label==null ) label = "="+p[0].getUniqueLabel("["+p[0].getLabel()+"]");
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanTMocGen(aladin,label,p,order,duration);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -4121,6 +4165,7 @@ public class Calque extends JPanel implements Runnable {
    private void repaintAll1() {
       if( select!=null  ) {
          select.repaint();
+         nbPlanTime = resumeTimeStackIndex();
          zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();

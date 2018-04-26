@@ -21,6 +21,10 @@
 
 package cds.moc;
 
+import java.util.InputMismatchException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import cds.tools.Astrodate;
 import healpix.essentials.RangeSet;
 
@@ -40,7 +44,7 @@ public class TMoc extends HealpixMoc {
    public TMoc() { this(-1); }
    public TMoc( int mocOrder) {
       init("JD",0,mocOrder);
-      rangeSet = new RangeSet(1024);
+      rangeSet = new Range(1024);
    }
    
    /** Add JD range
@@ -61,16 +65,16 @@ public class TMoc extends HealpixMoc {
       return clone1(moc);
    }
    
-   public HealpixMoc complement() throws Exception {
-      TMoc allTime = new TMoc();
-      allTime.add(0.,MAXDAY);
-      allTime.toRangeSet();
-      toRangeSet();
-      HealpixMoc res = new TMoc();
-      res.rangeSet = allTime.rangeSet.difference(rangeSet);
-      res.toHealpixMoc();
-      return res;
-   }
+//   public HealpixMoc complement() throws Exception {
+//      TMoc allTime = new TMoc();
+//      allTime.add(0.,MAXDAY);
+//      allTime.toRangeSet();
+//      toRangeSet();
+//      HealpixMoc res = new TMoc();
+//      res.rangeSet = allTime.rangeSet.difference(rangeSet);
+//      res.toHealpixMoc();
+//      return res;
+//   }
    
    // Generic operation
    protected HealpixMoc operation(HealpixMoc moc,int op) throws Exception {
@@ -120,6 +124,42 @@ public class TMoc extends HealpixMoc {
       int shift = 2*(MAXORDER - order);
       return 1L<<shift;
    }
+   
+   /** Returns a rangeIterator, which iterates over all individual range
+    * @param jdStart JD start time
+    * @param jdStop JD end time
+    * @return iterator of range in microseconds
+    */
+   public Iterator<long[]> jdIterator(double jdStart, double jdStop) {
+      if( jdStart>jdStop ) throw new InputMismatchException();
+      toRangeSet();
+      return new JDIterator((long)(jdStart*DAYMICROSEC),(long)(jdStop*DAYMICROSEC));
+   }
+   
+   class JDIterator implements Iterator<long[]>{
+      int pos, endpos;
+      
+      JDIterator(long start, long end) {
+         pos = rangeSet.getIndex(start)/2+1;
+         if( pos<0 ) pos=0;
+         endpos = rangeSet.getIndex(end)/2+1;
+      }
+      
+      public boolean hasNext() { return pos<endpos; }
+
+      public long [] next() {
+         if( pos>endpos ) throw new NoSuchElementException();
+         long ret [] = new long[2];
+         ret[0] = rangeSet.ivbegin(pos);
+         ret[1] = rangeSet.ivend(pos);
+         pos++;
+         return ret;
+      }
+
+      public void remove() { }
+
+   }
+
    
    static public void main( String argv[] ) {
       try {

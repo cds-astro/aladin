@@ -90,6 +90,9 @@ public abstract class Obj implements Propable{
    /** J2000 DEC coordinate */
    public double dej;
    
+   /** JD time */
+   public double jdtime=Double.NaN;
+   
    public String id;         // Object id
    protected byte flags = VISIBLE;  // Le tableau de flags
    
@@ -157,6 +160,10 @@ public abstract class Obj implements Propable{
 
    /** Retourne true si la source a le flag sélect positionné  */
    final public boolean isSelected() { return (flags & SELECT) !=0; }
+   
+   
+   /** Provide JD time (if available) */
+   public double getJD() { return jdtime;}
    
    /** Provide RA J2000 position */
    public double getRa() { return raj; }

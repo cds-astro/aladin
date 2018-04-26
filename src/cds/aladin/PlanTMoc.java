@@ -29,13 +29,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import cds.moc.HealpixMoc;
-import cds.moc.MocCell;
 import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.Hpix;
-import cds.tools.pixtools.HpixT;
 
 /**
  * Génération d'un plan TMOC
@@ -47,35 +44,6 @@ public class PlanTMoc extends PlanMoc {
 
    public PlanTMoc(Aladin a) { super(a); }
    
-   
-   // Juste pour tester
-   protected PlanTMoc(Aladin aladin, String label) {
-      super(aladin);
-      arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
-
-      TMoc moc=null;
-      try {
-         moc = new TMoc();
-         //    2017-05-09T10:39:00  .. 2017-05-12T15:10:00
-         moc.add( 2457882.94375000, 2457886.13194444);
-         moc.toHealpixMoc();
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-      
-      this.moc = moc;
-      
-      useCache = false;
-      type = ALLSKYTMOC;
-      this.c = Couleur.getNextDefault(aladin.calque);
-      setOpacityLevel(1.0f);
-      if( label==null ) label="TMOC";
-      setLabel(label);
-      aladin.trace(3,"HiPS creation: "+Plan.Tp[type]);
-      suite();
-   }
-
-
    protected PlanTMoc(Aladin aladin, MyInputStream in, String label) {
       super(aladin);
       arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
@@ -86,7 +54,8 @@ public class PlanTMoc extends PlanMoc {
       setOpacityLevel(1.0f);
       if( label==null ) label="TMOC";
       setLabel(label);
-      aladin.trace(3,"HiPS creation: "+Plan.Tp[type]);
+      aladin.trace(3,"TMOC creation: "+Plan.Tp[type]);
+      wireFrame=DRAW_FILLIN;
       suite();
    }
 
@@ -102,7 +71,22 @@ public class PlanTMoc extends PlanMoc {
       ADD( buf,"\n","* Accuracy: "+ Util.getTemps(  ( 1L<<(2*(HealpixMoc.MAXORDER-order)))/1000L ));
       ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? order+"" : drawOrder+"/"+order));
    }
+   
+   protected boolean isTime() { return true; }
+   
+   /** Retourne le time stamp minimal */
+   protected double getTimeMin() { 
+      double tmin = ((TMoc)moc).getTimeMin();
+      if( tmin==-1 ) tmin=Double.NaN;
+      return tmin;
+   }
 
+   /** Retourne le time stamp maximal */
+   protected double getTimeMax() { 
+      double tmax = ((TMoc)moc).getTimeMax();
+      if( tmax==-1 ) tmax=Double.NaN;
+      return tmax;
+   }
 
    protected boolean waitForPlan() {
       if( dis!=null ) {
@@ -168,117 +152,101 @@ public class PlanTMoc extends PlanMoc {
       return arrayMoc[order];
    }
    
-   // Retourne l'ordre du TMoc le plus approprié en fonction du zoom temporel actuel
+   private double oz=-1;
+   
+   
+//   // Fournit le MOC qui couvre le champ de vue courant
+//   protected HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
+//      TMoc m = new TMoc();
+//      m.rangeSet.append( (long)(v.getTpsMin()*TMoc.DAYMICROSEC), (long)(v.getTpsMax()*TMoc.DAYMICROSEC) );
+//      m.toHealpixMoc();
+//      return m;
+//   }
+   
+   static private final int MAXDRAWCELL = 100;  // Nombre de cellules TMOC à tracer dans la vue temporelle
+   
+   // Retourne l'ordre du TMoc le plus approprié en fonction du zoom de la vue temporelle
    private int getDrawingOrder(ViewSimple v) {
+      Plot plot = v.plot;
+      double dureeView = plot.getMax() - plot.getMin();
       int o;
-      
-      double z = v.getTpsZoom();
-      
       for( o=TMoc.MAXORDER; o>=3; o-- ) {
-         double size = TMoc.getDuration(o)/1000000 * z;
-         if( size>=3*10000 ) return o;                  // Une case temporel doit faire au-moins 3 pixels de large
+         double nbCell = dureeView / ( TMoc.getDuration(o)/1000000.);
+         if( nbCell<MAXDRAWCELL ) return o;
       }
       return o;
    }
    
-   private double oz=-1;
-   
-   
-   // Fournit le MOC qui couvre le champ de vue courant
-   protected HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
-      TMoc m = new TMoc();
-      m.rangeSet.append( (long)(v.getTpsMin()*TMoc.DAYMICROSEC), (long)(v.getTpsMax()*TMoc.DAYMICROSEC) );
-      m.toHealpixMoc();
-      return m;
-   }
-
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
+      Plot plot = v.plot;
+      if( !v.isPlotTime() ) return;
       
-      v.initTpsZoomIfRequired(this);
+      boolean flagBorder = isDrawingBorder();
       
-      long t1 = Util.getTime();
+      long t = Util.getTime();
       g.setColor(c);
       
+      double tmin = plot.getMin();
+      double tmax = plot.getMax();
       
-      try {
-         long t=0;
-         int myOrder = getDrawingOrder(v);
-         double z = v.getTpsZoom();
-         t = System.currentTimeMillis();
-         
-         int drawingOrder = 0;
-         HealpixMoc lowMoc = null;
-         boolean flagBorder = isDrawingBorder();
-         boolean flagFill = isDrawingFillIn();
+      int drawingOrder = getDrawingOrder(v);
+      
+      TMoc lowMoc = (TMoc)getHealpixMocLow(drawingOrder,gapOrder);
+      System.out.println("tmin = "+Astrodate.JDToDate(tmin)+" tmax="+Astrodate.JDToDate(tmax)+" drawingOrder="+lowMoc.getMocOrder());
+      
+      Iterator<long[]> it = lowMoc.jdIterator(tmin, tmax);
+      long [] jdRange=null;
 
-         int gapOrder = this.gapOrder;
-         if( mustDrawFast() ) gapOrder--;
-
-         HealpixMoc m = getViewMoc(v,HealpixMoc.MAXORDER);
-         int n = aladin.calque.getIndex(this) - aladin.calque.plan.length;
-         
-         // Génération des Hpix concernées par le champ de vue
-         if( oz!=z || gapOrder!=oGapOrder ) {
-            lowMoc = getHealpixMocLow(myOrder,gapOrder);
-            drawingOrder = getRealMaxOrder(lowMoc);
-            if( drawingOrder==-1 ) return;
-            ArrayList<Hpix> a1 = new ArrayList<Hpix>(10000);
-            Iterator<MocCell> it = lowMoc.iterator();
-            while( it.hasNext() ) {
-               MocCell c = it.next();
-               if( m!=null && !m.isIntersecting(c.order, c.npix)) continue;
-               HpixT p = new HpixT(n, c.order, c.npix);
-               if( p.isOutView(v) ) continue;
-               a1.add(p);
-            }
-            arrayHpix=a1;
-            oz=z;
-            oGapOrder=gapOrder;
-         }
-         
-         // Tracé en aplat avec demi-niveau d'opacité
-         if( flagFill && arrayHpix!=null && g instanceof Graphics2D ) {
-            Graphics2D g2d = (Graphics2D)g;
-            Composite saveComposite = g2d.getComposite();
-            try {
-               g2d.setComposite( Util.getImageComposite(getOpacityLevel()*getFactorOpacity()) );
-               for( Hpix p : arrayHpix ) {
-                  boolean small = isDrawingBorder() && p.getDiag2(v)<25;
-                  if( !small ) p.fill(g, v);
-               }
-            } finally {
-               g2d.setComposite(saveComposite);
-            }
-         }
-
-
-         // Tracé des Hpix concernés par le champ de vue
-         if( flagBorder && arrayHpix!=null ) {
-            for( Hpix p1 : arrayHpix ) ((HpixT)p1).draw(g, v);
-         }
-         
-         // Mémorisation du rectangle englobant
-         Rectangle clip = null;
-         if( arrayHpix!=null ) {
-            for( Hpix p1 : arrayHpix ) {
-               Rectangle r = ((HpixT)p1).getClip(v);
-               if( clip==null ) clip=r;
-               else if( r!=null ) clip = clip.union( r );
-            }
-         }
-         v.updateTpsArea( clip );
-
-//         t1 = System.currentTimeMillis();
-//         System.out.println("draw " in "+(t1-t)+"ms"+(n>0 ? " => "+(double)n/(t1-t)+"/ms":"") );
-
-         t = Util.getTime();
-         statTimeDisplay = t-t1;
-         
-
-      } catch( Exception e ) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      ArrayList<Rectangle> a = new ArrayList<Rectangle>();
+      while( it.hasNext() ) {
+         jdRange = it.next();
+         a.add( computeRectangle(plot, jdRange[0]/TMoc.DAYMICROSEC,jdRange[1]/TMoc.DAYMICROSEC) );
       }
+      
+      // Tracé en aplat avec demi-niveau d'opacité
+      if( isDrawingFillIn() && g instanceof Graphics2D ) {
+         Graphics2D g2d = (Graphics2D)g;
+         Composite saveComposite = g2d.getComposite();
+         try {
+            g2d.setComposite( Util.getImageComposite(getOpacityLevel()*getFactorOpacity()) );
+            for( Rectangle r : a ) {
+               if( flagBorder && width<=1 ) continue;
+               g.fillRect(r.x,r.y, r.width, r.height);
+            }
+         } finally {
+            g2d.setComposite(saveComposite);
+         }
+      }
+      
+      // Tracé des bords
+      if( flagBorder ) {
+         for( Rectangle r : a ) g.drawRect(r.x,r.y, r.width, r.height);
+      }
+
+      System.out.println("draw in "+(System.currentTimeMillis()-t)+"ms");
+
+   }
+   
+   static public final int BAND = 20;
+   static public final int MARGE = 30;
+   
+   private Rectangle computeRectangle(Plot plot, double jdstart, double jdstop ) {
+      Rectangle r = new Rectangle();
+      Coord c = new Coord();
+      c.al = jdstart;
+      c.del = 0;
+      plot.getProj().getXY(c);
+      PointD a = plot.viewSimple.getPositionInView(c.x, c.y);
+      c.al = jdstop;
+      plot.getProj().getXY(c);
+      PointD b = plot.viewSimple.getPositionInView(c.x, c.y);
+      r.x=(int)a.x;
+      r.y= plot.viewSimple.getHeight() -(BAND-BAND/4)*(timeStackIndex+1)-MARGE;
+      r.width=(int)Math.abs(b.x-a.x);
+      if( r.width==0) r.width=1;
+      r.height=BAND;
+      return r;
    }
    
    protected void planReady(boolean ready) {

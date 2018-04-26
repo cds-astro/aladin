@@ -21,6 +21,8 @@
 
 package cds.tools;
 
+import cds.aladin.Tok;
+
 /**
  * Quelques fonctions pour la conversions des dates astronomiques.
  * Merci a : http://perso.wanadoo.fr/jean-paul.cornec/formule_jj.htm
@@ -36,7 +38,21 @@ public class Astrodate {
    /** Conversion d'une Jour Julien Modifié en jour Julien */
    static public double MJDToJD(double MJD) { return MJD+2400000.5; }
    
-   /** Conversion d'une date /M/A HH:MM:SS (UTC) en jour julien
+   
+   /** Conversion d'une date ISOTIME (UTC) en jour julien */
+   static public double dateToJD(String date) {
+      Tok tok = new Tok(date,"-T:");
+      double A = Double.parseDouble( tok.nextToken() );
+      double M = Double.parseDouble( tok.nextToken() );
+      double J = Double.parseDouble( tok.nextToken() );
+      double HH=0,MM=0,SS=0;
+      if( tok.hasMoreTokens() ) HH = Double.parseDouble( tok.nextToken() );
+      if( tok.hasMoreTokens() ) MM = Double.parseDouble( tok.nextToken() );
+      if( tok.hasMoreTokens() ) SS = Double.parseDouble( tok.nextToken() );
+      return dateToJD(A,M,J,HH,MM,SS);
+   }
+   
+   /** Conversion d'une date en jour julien
     * @param A année
     * @param M mois (janvier = 1)
     * @param J jour
@@ -117,5 +133,27 @@ public class Astrodate {
    /** Conversion d'une date JD en Unix (sec depuis 1/1/1970) */
    static public long JDToUnix( double JD ) {
       return (long)((JD - 2440587.5) * 86400.);
+   }
+   
+   
+   static public final int JD      = 13; 
+   static public final int MJD     = 14; 
+   static public final int ISOTIME = 15; 
+   static public final int YD      = 16; 
+   static public final int UNIX    = 18; 
+   
+   /** Conversion d'une chaine en JD */
+   static public double parseTime( String date, int timeMode ) {
+      try {
+         if( timeMode==JD )      return Double.parseDouble(date);
+         if( timeMode==MJD )     return MJDToJD( Double.parseDouble(date) );
+         if( timeMode==ISOTIME ) return dateToJD( date );
+         if( timeMode==YD )      return YdToJD( Double.parseDouble(date) );
+         if( timeMode==UNIX )    return UnixToJD( Long.parseLong(date) );
+         
+         // Date format inconnue
+         return MJDToJD( Util.ISOToMJD( Util.parseDate( date ) ) );
+      } catch( Exception e ) { }
+      return Double.NaN;
    }
 }

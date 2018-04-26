@@ -128,17 +128,23 @@ public final class Projection {
       modeCalib=PLOT;
       raj=alphai = refX;
       dej=deltai = refY;
-      cx = x; cy = y;
-      rm = refW; rm1 = refH;
+      cx = x; 
+      cy = y;
+      rm = refW; 
+      rm1 = refH;
       //       r = w; r1 = h;
-      r = w; r1 = w;
+      r = w; 
+      r1 = h;
       flipPlotX = flipX ? -1 : 1;
       flipPlotY = flipY ? -1 : 1;
       logPlotX = logX;
       logPlotY = logY;
       //       t=Calib.XYLINEAR;
-   }
+      
+      Aladin.trace(3,"Projection centre:Mesure=("+alphai+","+deltai+") Pixel=("+cx+","+cy+" taille:Mesure="+rm+"x"+rm1+" pixel="+r+"x"+r1);
 
+   }
+   
    private double log(double x) { return Math.log(x)/Math.log(10); }
    private double exp(double x) { return Math.exp(x * Math.log(10) ); }
 

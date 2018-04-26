@@ -3850,7 +3850,7 @@ public final class Command implements Runnable {
          } else nview = a.view.getLastNumView(p);
          if( nview < 0 ) return "";
 
-         if( !a.view.viewSimple[nview].isPlotView() ) {
+         if( !a.view.viewSimple[nview].isPlot() ) {
             // AJOUT LAURENT M. POUR ARCHES
             if( p instanceof PlanBG ) a.calque.setPlanRefOnSameTarget((PlanBG) p);
             else a.view.setPlanRef(nview, p);

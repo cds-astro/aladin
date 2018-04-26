@@ -38,7 +38,9 @@ import javax.swing.SwingUtilities;
 import cds.astro.Astropos;
 import cds.astro.Astrotime;
 import cds.astro.Unit;
+import cds.tools.Astrodate;
 import cds.tools.Util;
+import cds.xml.Field;
 import cds.xml.TableParser;
 
 /**
@@ -167,6 +169,7 @@ public class Plan implements Runnable {
    boolean    underMouse;      // vrai si le plan est actuellement sous la souris
    boolean    isHighlighted;   // vrai si le plan doit être highlighté dans la pile (juste pour le repérer)
    boolean    ref;             // vrai si c'est le plan de reference pour la projection courante
+   int        timeStackIndex;  // Indice d'apparition du plan dans une vue temporelle (doit être mis à jour via Calque.resumtTimeStackIndex())
    int hasPM=-1;               // le plan a du PM : -1 - on ne sait pas encore, 0 - non,  1 - oui
    protected boolean memoClinDoeil; // Vrai si ce plan devra être réactivé si on clique sur l'oeil
    Projection proj[] = new Projection[ViewControl.MAXVIEW];
@@ -409,6 +412,47 @@ public class Plan implements Runnable {
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() { return false; }
    
+   /** Il s'agit d'un plan de type catalogue qui contient des infos temporels */
+   protected boolean isCatalogTime() {
+      try {
+         for( Legende leg : getLegende() ) {
+            if( leg.getTime()>=0 ) return true; 
+         }
+      } catch( Exception e ) { }
+      return false;
+   }
+   
+   /** Retourne le time stamp minimal */
+   protected double getTimeMin() { 
+      if( !isTime() ) return Double.NaN;
+      double tmin = Double.NaN;
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         try {
+            Source src = (Source) it.next();
+            if( Double.isNaN( tmin ) || src.jdtime<tmin ) tmin=src.jdtime;
+         } catch (Exception e) { continue; }
+      }
+      return tmin;
+   }
+
+   /** Retourne le time stamp maximal */
+   protected double getTimeMax() { 
+      if( !isTime() ) return Double.NaN;
+      double tmax = Double.NaN;
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         try {
+            Source src = (Source) it.next();
+            if( Double.isNaN( tmax ) || src.jdtime>tmax ) tmax=src.jdtime;
+         } catch (Exception e) { continue; }
+      }
+      return tmax;
+   }
+   
+   /** Il s'agit d'un Plan avec une caractéristique temporelle */
+   protected boolean isTime() { return false; }
+  
    /** Il s'agit d'un plan de type MOC */
    protected boolean isMoc() { return type==ALLSKYMOC || type==ALLSKYTMOC; }
 
@@ -687,8 +731,7 @@ public class Plan implements Runnable {
                nError++;
                if( nError>100 ) {
                   if( aladin.levelTrace>=3 ) e.printStackTrace();
-                  aladin.error("Too many error during coordinate computation !\n"
-                        + e.getMessage());
+                  aladin.error("Too many error during coordinate computation !\n" + e.getMessage());
                   break;
                }
             }
@@ -700,7 +743,34 @@ public class Plan implements Runnable {
       }
    }
 
+   /** recalcule les temps internes de toutes les sources ayant la légende indiqué */
+   public void recomputeTime(Iterator<Obj> it,Legende leg, int ntime,int timeMode) {
+      int nError=0;
 
+      Coord c = new Coord();
+      double jdTime;
+      while( it.hasNext() ) {
+         try {
+            Source s = (Source)it.next();
+            if( s.leg!=leg ) continue;
+            try {
+               jdTime = Astrodate.parseTime( s.getValue(ntime), timeMode );
+            } catch( Exception e ) {
+               jdTime=Double.NaN;
+               nError++;
+               if( nError>100 ) {
+                  if( aladin.levelTrace>=3 ) e.printStackTrace();
+                  aladin.error("Too many error during time computation !\n" + e.getMessage());
+                  break;
+               }
+            }
+
+            s.jdtime = jdTime;
+
+         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      }
+   }
+   
 
    /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
    public void recomputePosition(Iterator<Obj> it,Legende leg, int nra,int ndec,int npmra,int npmde) {
@@ -818,6 +888,20 @@ public class Plan implements Runnable {
       aladin.view.repaintAll();
 
       String s = "New "+sFrame+" fields for "+label+"\n=> LON column "+(nlon+1)+" -  LAT column "+(nlat+1);
+      aladin.trace(2,s);
+      aladin.info(aladin,s);
+   }
+   
+   /** Modification des champs utilisés pour le temps timemode==Field.JD, ou Field.MJD ou Field.ISOTIME */
+   public void modifyTimeField(Legende leg, int ntime, int timeMode ) {
+      aladin.trace(3,label+" new epoch field => pos="+(ntime+1)+" mode="+Field.COOSIGN[ timeMode ] );
+      
+      recomputeTime( iterator(),leg,ntime, timeMode);
+
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+
+      String s = "New epoch field for "+label+"\n=> column "+(ntime+1)+" mode="+Field.COOSIGN[ timeMode ];
       aladin.trace(2,s);
       aladin.info(aladin,s);
    }
@@ -1861,6 +1945,7 @@ public class Plan implements Runnable {
       if( !id.equals(s) ) return label;
       
       String type = Util.getSubpath(label, 1);
+      if( type==null ) return label;
       if( type.equals("P") || type.equals("C" ) ) return Util.getSubpath(label,2,-1).replace('/',' ');
       return Util.getSubpath(label,1,-1).replace('/',' ');
    }

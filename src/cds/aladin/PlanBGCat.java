@@ -68,6 +68,8 @@ public class PlanBGCat extends PlanBG {
    
    protected boolean isCatalog() { return true; }
    
+   protected boolean isTime() { return isCatalogTime(); }
+
    protected boolean isSync() {
       boolean isSync = super.isSync();
       isSync = isSync && (planFilter==null || planFilter.isSync() );
@@ -111,7 +113,9 @@ public class PlanBGCat extends PlanBG {
             }
             draw(g2d, v);
 
-         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
          g2d.setComposite(saveComposite);
 
       } else draw(g, v);

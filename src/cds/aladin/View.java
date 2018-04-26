@@ -723,7 +723,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
 
       // Création ou ajout d'un plan catalogue à une vue Plot
-      else if( rep && (ctrlPressed && megaDragViewTarget.isFree() || megaDragViewTarget.isPlotView() )
+      else if( rep && (ctrlPressed && megaDragViewTarget.isFree() || megaDragViewTarget.isPlot() )
             && megaDragPlanSource!=null && megaDragPlanSource.isSimpleCatalog() ) {
          Plan p = megaDragPlanSource;
          ViewSimple v = megaDragViewTarget;
@@ -1441,7 +1441,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Si ce n'est pas possible, on prend la dernière case qui n'est pas un scatter plot
       if( n==-1 ) {
-         for( int i=nbViews-1; i>=0; i--) if( !viewSimple[i].isPlotView() ) { n=i; break; }
+         for( int i=nbViews-1; i>=0; i--) if( !viewSimple[i].isPlot() ) { n=i; break; }
       }
 
       // Si c'est pas possible, on écrase la dernière case
@@ -1551,9 +1551,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       viewSimple[nview].setPlanRef(p,true);
       viewMemo.set(previousScrollGetValue+nview,viewSimple[nview]);
       setCurrentView(viewSimple[nview]);
-
-      // Juste pour faire un test
-      //      if( p.type==Plan.CATALOG ) viewSimple[nview].addPlotTable(null, p, 0, 1);
    }
 
    /** Positionne le prochain plan image dans la vue courante */
@@ -1911,7 +1908,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean syncSimple(Source o) {
       Coord c = new Coord(o.raj,o.dej);
       ViewSimple v = aladin.view.getCurrentView();
-      if( v.isPlotView() ) {
+      if( v.isPlot() ) {
          double [] val = v.plot.getValues(o);
          c.al = val[0];
          c.del = val[1];
@@ -1984,19 +1981,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       aladin.calque.zoom.newZoom();
       aladin.view.zoomview.repaint();
 
-      return true;
-   }
-   
-   /** Augmente ou diminue de facteur de zoom de la bande temporelle sous la souris.
-    * @param sens -1 ou 1
-    * @return true si ça a marché
-    */
-   protected boolean tpsIncrZoom(int sens) {
-      ViewSimple v = getCurrentView();
-      if( v==null || v.isFree() || !v.tpsInTpsArea ) return false;
-      v.tpsIncrZoom(sens);
-      v.newView();
-      repaintAll();
       return true;
    }
    
@@ -2077,7 +2061,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int m=getNbView();
       for( int i=0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( v.isFree() || !v.pref.hasAvailablePixels() || v.isPlotView() ) continue;
+         if( v.isFree() || !v.pref.hasAvailablePixels() || v.isPlot() ) continue;
          s=null;
          Projection proj = v.pref.projd;
          if( Projection.isOk(proj) && coo!=null ) {
@@ -2177,7 +2161,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int m=getNbView();
       for( int i=0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( /* v.locked || */ !v.selected && v!=vc  || v.isPlotView()!=vc.isPlotView() ) continue;
+         if( /* v.locked || */ !v.selected && v!=vc  || v.isPlot()!=vc.isPlot() ) continue;
 
 
          // Calcul du facteur de zoom pour les vues en fonction de la taille
@@ -2194,7 +2178,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere
          if( isRecalibrating() && aladin.toolBox.getTool()==ToolBox.SELECT
-               || v.isPlotView() || v.locked ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+               || v.isPlot() || v.locked ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
 
          // Mode courant => Déplacement soit sur la coordonnée indiquée, soit sur le repere
          else {
@@ -2232,7 +2216,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             // on effectue un simple zoom si pas de calibration, sinon on déselectionne
             // la vue
             if( !flag && nz!=v.zoom && v.pref!=null ) {
-               if( !Projection.isOk(proj) || v.isPlotView() || proj.isXYLinear() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+               if( !Projection.isOk(proj) || v.isPlot() || proj.isXYLinear() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
                else v.selected=false;   // on déselectionne
             }
          }
@@ -3382,7 +3366,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int m=getNbView();
       for( int i=0 ;i<m; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( !v.isPlotView() ) continue;
+         if( !v.isPlot() ) continue;
          rep |= v.setZoomSource(0,s);
          viewSimple[i].repaint();
       }
@@ -4755,7 +4739,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int m=getNbView();
       for( int i =0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( v.isFree() || !v.isPlotView() ) continue;
+         if( v.isFree() || !v.isPlot() ) continue;
          p1 = v.plot.getPlotControlPanelForPlan(plan);
          if( p1==null ) continue;
          tab.add("View "+getIDFromNView(i),p1);
@@ -4869,7 +4853,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          });
       }
    }
-
 
 
    /**

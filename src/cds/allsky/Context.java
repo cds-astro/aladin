@@ -1678,8 +1678,8 @@ public class Context {
 
          "<HTML>\n" +
                "<HEAD>\n" +
-               "   <script type=\"text/javascript\" src=\"http://code.jquery.com/jquery-1.10.1.min.js\"></script>\n" +
-               "   <link rel=\"stylesheet\" href=\"http://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
+               "   <script type=\"text/javascript\" src=\"//code.jquery.com/jquery-1.10.1.min.js\"></script>\n" +
+               "   <link rel=\"stylesheet\" href=\"//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
                "   <script type=\"text/javascript\">var jqMenu = jQuery.noConflict();</script>\n" +
                "   <script type=\"text/javascript\">\n" +
                "var hipsDir=null;</script>\n" +
@@ -1695,7 +1695,7 @@ public class Context {
          "<TABLE>\n" +
          "<TR>\n" +
          "<TD>\n" +
-         "   <script type=\"text/javascript\" src=\"http://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
+         "   <script type=\"text/javascript\" src=\"//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
          "<div id=\"aladin-lite-div\" style=\"width:350px;height:350px;\"></div>\n" +
          "<script type=\"text/javascript\">\n" +
          "//var hipsDir = location.href;\n" +
@@ -1717,13 +1717,15 @@ public class Context {
          "</TR>\n" +
          "</TABLE>\n" +
 
-         "This survey can be displayed by <A HREF=\"http://aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
-         "by <A HREF=\"http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
-         "(just open the base URL)<BR>or any other HiPS aware clients .\n" +
+         "This survey can be displayed by <A HREF=\"//aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
+         "by <A HREF=\"//aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
+         "(just open the base URL)<BR>or any other HiPS aware clients.\n" +
          "<HR>\n" +
-         "<I>(*) The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
-         "HiPS is based on HEALPix sky tessellation and it is designed for astronomical scientifical usages (low distorsion, true pixel values...)." +
-         "HiPS technical documentation is available <A HREF=\"http://aladin.u-strasbg.fr/HiPS/HiPS%20technical%20doc.pdf\">here<A></I>\n" +
+         "<I>(*) HiPS is a recommended <A HREF=\"www.ivoa.net\">International Virtual Observatory Alliance</A> standard:"
+         + "<A HREF=\"www.ivoa.net/documents/HiPS\">HiPS REC</A>. \n" +
+         "The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
+         "HiPS has been invented by <A HREF=\"//aladin.u-strasbg.fr/hips\">CDS-Universit&eacute; de Strasbourg/CNRS</A> (<A HREF=\"//cdsads.u-strasbg.fr/abs/2015A%26A...578A.114F\">2015A&amp;A...578A.114F</A>). "
+         + "It is based on HEALPix sky tessellation and it is designed for astronomical scientifical usages (low distorsion, true pixel values...).</I>" +
          "<script type=\"text/javascript\">\n" +
          "document.getElementById(\"hipsBase\").innerHTML=hipsDir;\n" +
          "</script>\n" +

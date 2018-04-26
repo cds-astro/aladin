@@ -1045,7 +1045,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( moc.getTimeMin()) ), g,c);
             PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( moc.getTimeMax()) ), g,c);
             PropPanel.addCouple(p,"Accuracy", new JLabel( Util.getTemps(  1000*( 1<<(2*(HealpixMoc.MAXORDER-order))))+" (order="+order+")" ), g,c);
-            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000, true) ), g,c);
+            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000000, true) ), g,c);
          }
 
 
