@@ -3699,10 +3699,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void createPlotCat() {
       PlanCatalog p = calque.getFirstSelectedPlanCatalog();
       if( p==null ) return;
-      if( !view.getCurrentView().isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2L);
+      if( !view.getCurrentView().isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2C);
       int nview = aladin.view.getLastNumView(p);
       view.setPlanRef(nview, p);
-      view.viewSimple[nview].addPlotTable(p, 0, 1,true);
+      view.viewSimple[nview].addPlotTable(p, -1, -1,true);
    }
 
    /** Activation du CONCAT des objects depuis la JBar */

@@ -540,7 +540,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       v.setZoomXY(v.zoom,xc,yc);
 
       // Teste si le nouveau rect zoom a change
-      if( rectzoom!=null && v.rzoomView.equals(rectzoom) ) {
+      if( rectzoom!=null && v.rzoomView!=null && v.rzoomView.equals(rectzoom) ) {
          zoomok=true;
          return false; // pas modifie
       }

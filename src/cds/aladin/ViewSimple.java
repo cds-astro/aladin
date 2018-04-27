@@ -1405,8 +1405,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !p.isTime() ) { 
          if( plot!=null ) { plot.free(); plot=null; }
       } else {
-         System.out.println("Création du Plot pour "+p);
-         plot = new Plot(this);
+         if( p.type== Plan.ALLSKYTMOC ) {
+            System.out.println("Création du Plot pour "+p);
+            plot = new Plot(this);
+         }
       }
       
       // Création du controleur de blink s'il s'agit d'un cube
@@ -4763,6 +4765,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          g.fillRect(0,0,w,h);
          return;
       }
+      
+      if( isPlot() ) {
+         couleurFond = Aladin.COLOR_BACKGROUND;
+         g.setColor( couleurFond );
+         g.fillRect(0,0,w,h);
+         return;
+      }
+      
       try {
          if( pref!=null && pref.colorBackground!=null) {
             g.setColor(couleurFond=pref.colorBackground);
@@ -7244,10 +7254,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          plot = new Plot(this);
          aladin.log("ScatterPlot","");
       }
-      plot.addPlotTable(plan,indexX,indexY,openProp);
+      int [] index = plot.addPlotTable(plan,indexX,indexY,openProp);
       if( openProp ) {
          Legende leg = plan.getFirstLegende();
-         aladin.console.printCommand("cview -plot "+plan.label+"("+leg.getName(indexX)+","+leg.getName(indexY)+")");
+         aladin.console.printCommand("cview -plot "+plan.label+"("+leg.getName(index[0])+","+leg.getName(index[1])+")");
       }
 
    }

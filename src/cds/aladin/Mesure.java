@@ -948,7 +948,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    
    private Plan oldPlanHighlighted=null;
    
-   /** Affichage d'une info au dessous de la pile */
+   /** Affichage d'une info au dessus de la pile */
    protected void showInfo(String s, Plan p) {
       if( s==null || s.length()==0 ) aladin.calque.select.hideMessage();
       else aladin.calque.select.setMessageInfo( s );

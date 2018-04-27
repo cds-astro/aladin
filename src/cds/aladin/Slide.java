@@ -331,6 +331,21 @@ public final class Slide {
 
    }
    
+   // dessin d'une petite horloge
+   static void drawClock(Graphics g,int dx,int dy, Color c, Color bg) {
+      int x = dx+frX[2]-27;
+      int y = dy+frY[2]-12;
+      int r=4;
+      Color c1= g.getColor();
+      if( bg!=null ) g.setColor( bg );
+      g.fillOval(x-r, y-r, 2*r, 2*r);
+      if( c!=null ) g.setColor(c);
+      g.drawOval(x-r, y-r, 2*r, 2*r);
+      g.drawLine(x, y, x, y-r+2);
+      g.drawLine(x, y, x+r-3, y);
+      g.setColor(c1);
+   }
+   
    // Adaptation du logo pour un plan IMAGE
    static void drawLogoImg(Graphics g,int dx,int dy,Color c) {
       int i;
@@ -700,6 +715,8 @@ public final class Slide {
          
          // On dessine 4 CCD cote à cote
          if( p instanceof PlanMultiCCD )  drawFolderExt(g, ((PlanMultiCCD)p).getSize(), dx, dy, Color.yellow );
+         
+         if( p.isTime() ) drawClock(g,dx,dy,Color.black,Color.white);
                      
          // Affichage de la checkbox
 //         if( p.type!=Plan.NO && mode!=DRAG && p.flagOk && !p.hasError()

@@ -522,7 +522,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
    /** L'interface TableParserConsumer */
-   public void setRecord(double ra, double dec, String[] value) {
+   public void setRecord(double ra, double dec, double jdTime, String[] value) {
       int n;
       String oid = null; // OID trouve s'il y a lieu
 
@@ -776,7 +776,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             Aladin.trace(3, "setRecord "
                   + (oid != null ? "(oid=" + oid + ")" : "") + " \"" + lab
                   + "\" " + (flagXY ? "XY" : "pos") + "=(" + ra + "," + dec
-                  + ") [" + line + "]");
+                  + ")"+(!Double.isNaN(jdTime)?" time="+Astrodate.JDToDate(jdTime):"")+" [" + line + "]");
             firstTrace = false;
 
             // Dans le cas d'un résultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
@@ -791,6 +791,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          Source source;
          if( flagXY ) source = new Source(plan, ra, dec, 0, 0, Obj.XY, lab, line.toString(), leg);
          else source = new Source(plan, ra, dec, lab, line.toString(), leg);
+         source.jdtime = jdTime;
          if( oid != null ) source.setOID(oid);
          o[nb_o++] = source;
 
@@ -1124,7 +1125,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
       // Cas particulier pour un plan hiérarchique
       if( ok && plan instanceof PlanBGCat ) {
-         if( nb_o==0 ) setRecord(0, 0, null);  // pour initialiser tout de même la légende
+         if( nb_o==0 ) setRecord(0, 0, Double.NaN, null);  // pour initialiser tout de même la légende
          return nb_o;
       }
 

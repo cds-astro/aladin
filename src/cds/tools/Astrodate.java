@@ -135,11 +135,10 @@ public class Astrodate {
       return (long)((JD - 2440587.5) * 86400.);
    }
    
-   
    static public final int JD      = 13; 
    static public final int MJD     = 14; 
    static public final int ISOTIME = 15; 
-   static public final int YD      = 16; 
+   static public final int YEARS   = 16; 
    static public final int UNIX    = 18; 
    
    /** Conversion d'une chaine en JD */
@@ -148,7 +147,7 @@ public class Astrodate {
          if( timeMode==JD )      return Double.parseDouble(date);
          if( timeMode==MJD )     return MJDToJD( Double.parseDouble(date) );
          if( timeMode==ISOTIME ) return dateToJD( date );
-         if( timeMode==YD )      return YdToJD( Double.parseDouble(date) );
+         if( timeMode==YEARS )   return YdToJD( Double.parseDouble(date) );
          if( timeMode==UNIX )    return UnixToJD( Long.parseLong(date) );
          
          // Date format inconnue

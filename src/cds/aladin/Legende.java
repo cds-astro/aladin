@@ -568,11 +568,25 @@ public final class Legende extends AbstractTableModel  {
       return p;
    }
 
-   protected JComboBox createCombo() {
-      JComboBox combo = new JComboBox();
+   protected JComboBox<String> createCombo() { return createCombo(false); }
+   protected JComboBox<String> createCombo(boolean forPlot) {
+      JComboBox<String> combo = new JComboBox<String>();
       combo.setMaximumRowCount(15);
-      for( int i=0; i<field.length; i++ ) combo.addItem(field[i].name);
+      for( int i=0; i<field.length; i++ ) {
+         if( forPlot &&  !(field[i].coo>0 || field[i].isNumDataType()) ) continue;
+         combo.addItem(field[i].name);
+      }
       return combo;
+   }
+   
+   /** Retourne l'indice du n-ième champ numérique */
+   protected int getIndexNumericField(int rang) {
+      int n=0;
+      for( int i=0; i<field.length; i++ ) {
+         if( !field[i].isNumDataType() ) continue;
+         if( ++n==rang ) return i;
+      }
+      return -1;
    }
 
    protected JTable getTable() {

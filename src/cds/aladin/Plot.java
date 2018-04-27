@@ -71,14 +71,24 @@ public class Plot {
    /** Retourne le titre du plot */
    public String getPlotLabel() {
       StringBuffer s = new StringBuffer();
-      if( plotTable==null ) return "Time plot";
-      for( int i=0; i<2 && i<plotTable.size(); i++ ) { 
-         PlotItem p = plotTable.elementAt(i);
-         if( s.length()>0 ) s.append(" + ");
-         Legende leg = p.plan.getFirstLegende();
-         s.append(p.plan.label+"("+leg.getName(p.index[0])+","+ leg.getName(p.index[1])+")");
+      if( isPlotTime() ) {
+         s.append("Time graph");
+         if( hasTable() ) {
+            PlotItem p = plotTable.elementAt(0);
+            Legende leg = p.plan.getFirstLegende();
+            s.append(": "+p.plan.label+"("+leg.getName(p.index[1])+")");
+         }
+      } else {
+         if( hasTable() ) {
+            for( int i=0; i<2 && i<plotTable.size(); i++ ) { 
+               PlotItem p = plotTable.elementAt(i);
+               if( s.length()>0 ) s.append(" + ");
+               Legende leg = p.plan.getFirstLegende();
+               s.append(p.plan.label+"("+leg.getName(p.index[0])+","+ leg.getName(p.index[1])+")");
+            }
+            if( plotTable.size()>2 ) s.append("...");
+         }
       }
-      if( plotTable.size()>2 ) s.append("...");
       return s.toString();
    }
    
@@ -92,6 +102,9 @@ public class Plot {
          }
       });
    }
+   
+   /** retourne true si le plot concerne au moins une table */
+   public boolean hasTable() { return plotTable!=null && plotTable.size()>0; }
    
    /** Retourne true si le plot est temporel */
    public boolean isPlotTime() { return flagTime; }
@@ -122,7 +135,7 @@ public class Plot {
          double maxY,max1Y,minY,min1Y;
          maxX=max1X=minX=min1X=maxY=max1Y=minY=min1Y=0;
          
-         if( plotTable!=null && plotTable.size()>0 ) {
+         if( hasTable() ) {
             p = plotTable.elementAt(0);
 
             int n=0;
@@ -192,6 +205,8 @@ public class Plot {
          }
          viewSimple.newView(1);
          viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (min1Y+max1Y)/2);
+         adjustWidgets();
+         
       } catch( Exception e ) {
          // TODO Auto-generated catch block
          e.printStackTrace();
@@ -209,11 +224,13 @@ public class Plot {
          
          PlotItem p = findPlotTable(s.plan);
          int [] index =  p.index;
-         int mode = p.getModeIndex();
          
-         String sx = s.getValue( index[0] ).trim();
+         if( p.isTime() ) val[0] = s.jdtime;
+         else {
+            String sx = s.getValue( index[0] ).trim();
+            val[0] = Double.parseDouble(sx);
+         }
          String sy = s.getValue( index[1] ).trim();
-         val[0] = mode!=-1 ? Astrodate.parseTime(sx, mode ) : Double.parseDouble(sx);
          val[1] = Double.parseDouble(sy);
          
       } catch( Exception e ) {
@@ -260,9 +277,10 @@ public class Plot {
    }
 
    /** Ajout du plot du plan passé en paramètre pour les colonnes d'indice indexX et indexY
-    * Ouvre d'emblée les properties du plan
+    * Ouvre d'emblée les properties du plan. Si indexX ou indexY sont à -1, recherche automatique des deux premiers champs numériques
+    * @return les indices effectifs des colonnes désignées
     */
-   public void addPlotTable(final Plan plan, int indexX, int indexY,boolean openProp) {
+   public int [] addPlotTable(final Plan plan, int indexX, int indexY,boolean openProp) {
       if( plotTable==null ) initPlot();
       if( plan.getLegende().size()>1 ) {
          aladin.error("Only the first table of this plane\ncan be drawn in a scatter plot.");
@@ -270,6 +288,10 @@ public class Plot {
       PlotItem p = findPlotTable(plan);
       boolean modify=true;
       if( p==null ) { p = new PlotItem(); plotTable.addElement(p); modify=false; }
+      if( indexX==-1 || indexY==-1 ) {
+         indexX = plan.getFirstLegende().getIndexNumericField(1);
+         indexY = plan.getFirstLegende().getIndexNumericField(2);
+      }
       p.index[0] = indexX;
       p.index[1] = indexY;
       p.plan=plan;
@@ -284,6 +306,7 @@ public class Plot {
             }
          });
       }
+      return new int[] { indexX, indexY };
    }
    
    // retourne true s'il s'agit du plot principale (celui qui détermine la projection)
@@ -306,10 +329,46 @@ public class Plot {
       return panel;
    }
    
+   private JButton timePlotButton=null;
+   private JComboBox<String> comboX=null, comboY=null;
+   private JCheckBox flipX=null, flipLog=null;
+   
+   // Choisit automatiquement la colonne de temps en abscisse
+   private void toTimePlot(PlotItem p) {
+      Legende leg = p.plan.getFirstLegende();
+      int nindex=leg.getTime();
+      if( nindex<0 ) return;
+      p.setIndex(0,nindex);
+      comboX.setSelectedItem( leg.getName(nindex) );
+      flagTime = p.isTime();
+      adjustPlot(p);
+      viewSimple.repaint();
+   }
+   
+   // Mets à jour l'état des widgets de contrôle
+   private void adjustWidgets() {
+      if( timePlotButton!=null ) timePlotButton.setEnabled( !flagTime );
+      if( flipX!=null ) flipX.setEnabled( !flagTime );
+      if( flipLog!=null ) flipLog.setEnabled( !flagTime );
+   }
+   
    // Construit le panel des boutons de contrôle
    private JPanel getPlotButtonPanel(final PlotItem p) {
       JPanel panel = new JPanel();
       JButton b;
+      
+      if( p.plan.getFirstLegende().getTime()>=0 ) {
+         timePlotButton = b = new JButton("Time plot");
+         Util.toolTip(b, "Choose automatically the Time stamp column as X");
+         b.setMargin(new Insets(2,2,2,2) );
+         b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               toTimePlot(p);
+            }
+         });
+         panel.add(b);
+      }
+
       b = new JButton("zoom all");
       b.setMargin(new Insets(2,2,2,2) );
       b.addActionListener(new ActionListener() {
@@ -336,37 +395,27 @@ public class Plot {
       JPanel panel = new JPanel();
       
       final Plan plan = p.plan;
-      if( n==1 ) {
-         panel.add( new JLabel( "      Y     :  ") );
-      } else {
-         final JComboBox modeX = new JComboBox( MODE );
-         modeX.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               if( p.setMode( (String) modeX.getSelectedItem() ) ) {
-                  flagTime = p.isTime();
-                  adjustPlot(p);
-                  viewSimple.repaint();
-               }
-            }
-         });
-         modeX.setSelectedItem(p.getMode() );
-         panel.add(modeX);
-      }
-      final JComboBox combo = plan.getFirstLegende().createCombo();
+      panel.add( new JLabel( n==0?"X:":"Y:") );
+      Legende leg = plan.getFirstLegende();
+      final JComboBox<String> combo = leg.createCombo(true);
+      if( n==0 ) comboX=combo;
+      else comboY=combo;
       combo.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            int nindex = combo.getSelectedIndex();
+            int nindex = p.plan.getFirstLegende().find( (String)combo.getSelectedItem() );
 //            Aladin.trace(4,"getPlotControlPanelForOneIndex: plan="+p.plan.label+" table="+p.leg.name+" col="+n+" index="+nindex);
             if( nindex==p.index[ n ] ) return;
-            p.index[n]=nindex;
+            p.setIndex(n,nindex);
+            flagTime = p.isTime();
             adjustPlot(p);
             viewSimple.repaint();
          }
       });
-      combo.setSelectedIndex(p.index[n]);
+      combo.setSelectedItem( leg.getName( Math.abs(p.index[n])) );
       panel.add(combo);
       
       final JCheckBox b = new JCheckBox("Flip");
+      if( n==0 ) flipX = b;
       if( plotProj!=null ) b.setSelected( n==0 ? plotProj.isFlipXPlot() : plotProj.isFlipYPlot() );
       b.setEnabled( n==1 || !p.isTime() );
       b.addActionListener(new ActionListener() {
@@ -380,6 +429,7 @@ public class Plot {
       panel.add(b);
       
       final JCheckBox b1 = new JCheckBox("Log");
+      if( n==0 ) flipLog = b1;
       if( plotProj!=null ) b1.setSelected( n==0 ? plotProj.isLogXPlot() : plotProj.isLogYPlot() );
       b1.setEnabled( n==1 || !p.isTime() );
       b1.addActionListener(new ActionListener() {
@@ -417,7 +467,8 @@ public class Plot {
     */
    private double getIncr(double val,int index, int sens,int n) {
       double fct = index==0 ? plotProj.getFctXPlot() : plotProj.getFctYPlot(); 
-      double x = val * fct * viewSimple.getZoom();
+      double zoom = index==0 && isPlotTime() ? 1 : viewSimple.getZoom(); 
+      double x = val * fct * zoom;
       if( n>20 ) return 0;
       if( x>=50 && x<=200 ) return val;
       if( x<50 ) {
@@ -482,19 +533,21 @@ public class Plot {
             }
             if( plotProj.isLogXPlot() ) incrX*=10;
          }
-         c.al = plotProj.isLogXPlot() ? 0.1 : initValX;
-         for( c.del=initValY, i=-10; i<10; c.del = c.del + (plotProj.isLogYPlot() ? incrY : -incrY), i++ ) {
-            plotProj.getXY(c);
-            Point p1 = viewSimple.getViewCoord(c.x, c.y);
-            if( p1!=null ) {
-               g.setColor( Color.lightGray );
-               g.drawLine(0+dx,p1.y+dy,w+dx,p1.y+dy);
-//               g.setColor(Color.black);
-               if( plotProj.isLogYPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
-               else s1 = c.del+"";
-               g.drawString(Util.myRound(s1,nbRoundY),4+dx,p1.y-5+dy);
+         if( hasTable() ) {
+            c.al = plotProj.isLogXPlot() ? 0.1 : initValX;
+            for( c.del=initValY, i=-10; i<10; c.del = c.del + (plotProj.isLogYPlot() ? incrY : -incrY), i++ ) {
+               plotProj.getXY(c);
+               Point p1 = viewSimple.getViewCoord(c.x, c.y);
+               if( p1!=null ) {
+                  g.setColor( Color.lightGray );
+                  g.drawLine(0+dx,p1.y+dy,w+dx,p1.y+dy);
+                  //               g.setColor(Color.black);
+                  if( plotProj.isLogYPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
+                  else s1 = c.del+"";
+                  g.drawString(Util.myRound(s1,nbRoundY),4+dx,p1.y-5+dy);
+               }
+               if( plotProj.isLogYPlot() ) incrY*=10;
             }
-            if( plotProj.isLogYPlot() ) incrY*=10;
          }
          
       } catch( Exception e ) { e.printStackTrace(); }
@@ -502,6 +555,7 @@ public class Plot {
 
    // Retourne le PlotItem concernant le plan passé en paramètre sinon null
    protected PlotItem findPlotTable(Plan plan) {
+      if( ! hasTable() ) return null;
       Enumeration<PlotItem> e = plotTable.elements();
       while( e.hasMoreElements() ) {
          PlotItem p = e.nextElement();
@@ -529,31 +583,30 @@ public class Plot {
       return val;
    }
    
-   static protected String [] MODE = new String[] { "X","Time JD","Time MJD","Time ISO"};
-   
    // Contient les informations nécessaires au plot, à savoir le plan d'origine et les indices des deux colonnes
    // concernées. Attention, ne prend que la première table du plan.
    protected class PlotItem {
       Plan plan;
       int [] index = new int[2];
-      int mode=0;
+      boolean flagIsTime=false;
       
-      String getMode() { return mode==-1 ? null : MODE[mode]; }
-      boolean setMode( String s ) { 
-         int m=Util.indexInArrayOf(s, MODE); 
-         if( mode==m ) return false;
-         mode=m;
-         return true;
+      void setIndex(int n, int nindex) {
+         
+         // si c'est une ordonnée, cas trivial 
+         if( n==1 ) index[1] = nindex;
+         
+         // Sinon il faut vérifier que ce n'est pas le champ temporel, et si c'est le cas l'indiquer
+         else {
+            Legende leg = plan.getFirstLegende();
+            if( flagIsTime=(leg!=null && leg.getTime()==nindex) ) {
+               index[0] = -nindex;   // on l'enregistre alors en valeur négative (à tout hasard si besoin)
+            } else index[0]=nindex;
+         }
+
       }
       
-      boolean isTime() { return mode>0; }
+      boolean isTime() { return flagIsTime; }
       
-      int getModeIndex() {
-         if( mode==1 ) return Astrodate.JD;
-         if( mode==2 ) return Astrodate.MJD;
-         if( mode==3 ) return Astrodate.ISOTIME;
-         return -1;
-      }
       
    }
 

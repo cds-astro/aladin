@@ -180,11 +180,12 @@ public abstract interface TableParserConsumer {
 
   /** This method is called by the TableParser parser for each line
    * of a DATA element.
-   * @param ra the position of the astronomical object associated
+   * @param ra the position of the associated astronomical object 
    * @param dec
+   * @param jdtime an time-stamp associated to the associated astronomical object 
    * @param field each field of the line
    */
-   public abstract void setRecord(double ra,double dec,String [] field);
+   public abstract void setRecord(double ra,double dec,double jdtime, String [] field);
 
   /** This method is called by the TableParser parser when the XML
    * tag INFO ID="Target"... is encountered.

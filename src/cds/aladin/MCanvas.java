@@ -1365,7 +1365,8 @@ MouseWheelListener, Widget
          if( s.length()>50 ) s=s.substring(0,47)+"...";
          A(res,"\n* Value: ", s );
          A(res,"\n* Unit: ",f.unit);
-         if( (s = convert( v, f.unit))!=null ) A(res,"\n => ",s);
+         if( f.isTime() ) A(res,"\n => "+Astrodate.JDToDate( Astrodate.parseTime(s, f.coo)));
+         else if( (s = convert( v, f.unit))!=null ) A(res,"\n => ",s);
          A(res,"\n* UCD: ",f.ucd);
          A(res,"\n* Utype: ",f.utype);
          A(res,"\n \n",adjustVizier(f.description));
