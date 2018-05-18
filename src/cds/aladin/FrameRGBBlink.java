@@ -21,11 +21,18 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
-import java.util.*;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -200,7 +207,7 @@ public abstract class FrameRGBBlink extends JFrame
    }
 
    // Procedure interne utilisee par createImageChoice() et adjustImageChoice()
-   synchronized private void setItems(JComboBox c) {
+   synchronized protected void setItems(JComboBox c) {
       c.addItem(NONE);
       for (int i=0; i<choicePlan.length; i++) {
          c.addItem(choicePlan[i].label+" - \""+choicePlan[i].objet+"\"");
@@ -209,7 +216,7 @@ public abstract class FrameRGBBlink extends JFrame
 
    /** Recupere la liste des plans images valides */
    protected Plan[] getPlan() {
-      Vector<Plan> v = a.calque.getPlanImg();
+      Vector<Plan> v = a.calque.getPlanAllImg(); // a.calque.getPlanImg();
       if( v==null ) return new PlanImage[0];
       Plan pi [] = new PlanImage[v.size()];
       v.copyInto(pi);

@@ -45,7 +45,7 @@ import cds.moc.TMoc;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (nov 2011) Creation
  */
-public final class FrameTMocGenCat extends FrameMocGenImg {
+public class FrameTMocGenCat extends FrameMocGenImg {
 
    protected FrameTMocGenCat(Aladin aladin) {
       super(aladin);

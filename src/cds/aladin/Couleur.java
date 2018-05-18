@@ -60,9 +60,9 @@ public final class Couleur extends JComponent implements MouseListener {
    // Les premières couleurs par défaut sont en "dur", les autres random
    static Color [] DC1 = {
          
-         new Color(255,174,71),   // Orange clair
-         new Color(0,142,212),    // Bleu azur
          new Color(255,20,20),    // Rouge
+         new Color(0,142,212),    // Bleu azur
+         new Color(255,174,71),   // Orange clair
          new Color(180,196,45),   // Vert kaki
          new Color(255,154,204),  // Rose-violet
          new Color(223,225,36),   // Jaune-vert

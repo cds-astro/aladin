@@ -1166,7 +1166,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    /** Met à jour le SED si nécessaire, sinon le fait disparaitre */
    protected void resumeSED() {
       Source s = aladin.mesure.getFirstSrc();
-      if( (s==null || s.leg==null || !s.leg.isSED()) && !flagSED ) return;
+      if( (s==null || s.getLeg()==null || !s.getLeg().isSED()) && !flagSED ) return;
       setSED( s );
    }
 

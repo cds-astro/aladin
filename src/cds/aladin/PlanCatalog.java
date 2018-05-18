@@ -174,7 +174,7 @@ public class PlanCatalog extends Plan {
    
    /** retourne le nom de la table associée à une source */
    protected String getTableName(Source o) {
-      String s = o.leg==null ? null : o.leg.name;
+      String s = o.getLeg()==null ? null : o.getLeg().name;
       if( s==null ) {
          if( o.info==null ) return "Table";
          int i = o.info.indexOf('|');
@@ -373,8 +373,8 @@ public class PlanCatalog extends Plan {
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;
          Source s = (Source)o;
-         if( s.leg==null ) continue;
-         if( !leg.contains(s.leg) ) leg.addElement(s.leg);
+         if( s.getLeg()==null ) continue;
+         if( !leg.contains(s.getLeg()) ) leg.addElement(s.getLeg());
       }
       return leg;
    }
@@ -386,7 +386,7 @@ public class PlanCatalog extends Plan {
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;
          Source s = (Source)o;
-         if( s.leg!=null ) return s.leg;
+         if( s.getLeg()!=null ) return s.getLeg();
       }
       return null;
    }
@@ -400,6 +400,8 @@ public class PlanCatalog extends Plan {
 
 	 /** retourne true si le plan a des sources */
 	 protected boolean hasSources() { return pcat!=null && pcat.hasObj(); }
+	 
+	 protected boolean hasCatalogInfo() { return  pcat!=null && pcat.hasCatalogInfo(); }
 
 	 /******************************************************** QUELQUES TESTS UNITAIRES *******************************************************/
 

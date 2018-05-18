@@ -147,7 +147,7 @@ public class ServerSimbad extends Server  {
                   "${OTYPE}=\"Neb\"  || ${OTYPE}=\"PN*\" || ${OTYPE}=\"SNR*\" {draw square}\n" +
                   "${OTYPE}=\"HII\" { draw dot }" +
                   "${OTYPE}=\"X\" { draw cross }\n" +
-                  "${OTYPE}!=\"Unknown\" { draw ${OTYPE} }\n" +
+                  "${OTYPE}!=\"Unknown\" && ${OTYPE}!=\"\" { draw ${OTYPE} }\n" +
                   "{ draw dot }\n" +
                   "}",
                   "#Star\nfilter Star {\n" +

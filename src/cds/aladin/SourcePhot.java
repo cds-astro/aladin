@@ -79,7 +79,7 @@ public class SourcePhot extends SourceTag {
    
    /** Post-traitement lors de la création */
    protected void suite() {
-      leg=legende;
+      setLeg(legende);
       setId();
       setShape(Obj.RETICULE);
    }

@@ -49,6 +49,7 @@ public class MyLabel extends JPanel {
    FontMetrics fm;	// La metrique de la font courante
    int mode;		// mode d'alignement Label.CENTER,...
    String text;
+   int marge=0;     // Une éventuelle marge à gauche
 
   /** Creation d'un label multi-lignes VIDE. */
    protected MyLabel() { super(); }
@@ -113,12 +114,15 @@ public class MyLabel extends JPanel {
             if( max<w ) max=w;
          }
       }
-      if( mode==Label.RIGHT ) max+=MARGE;
+      if( mode==Label.RIGHT ) max+=MARGE+marge;
       int h=line.size()*fm.getHeight()+fm.getDescent();
       dim = new Dimension(max+4,h);
       validate();
       reaffiche();
    }
+   
+   /** Positionne une marge à gauche (en pixels) */
+   protected void setMarge(int size) { marge=size; }
 
    private Dimension dim;
    public Dimension getPreferredSize() { return dim; }
@@ -139,7 +143,7 @@ public class MyLabel extends JPanel {
       int w,x;
       int y=fm.getHeight();
       int n=line.size();
-      int width = getSize().width;
+      int width = getSize().width+marge;
       int height = getSize().height;
 
       if( flagReaffiche ) {
@@ -158,7 +162,7 @@ public class MyLabel extends JPanel {
          w=fm.stringWidth(s);
          x=(mode==Label.LEFT)?0:(mode==Label.RIGHT)?width-w-MARGE:width/2-w/2;
          if(x<0 ) x=0;
-         g.drawString(s,x,y);
+         g.drawString(s,x+marge,y);
          y+=fm.getHeight();
       }
    }

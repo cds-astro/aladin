@@ -579,12 +579,17 @@ public final class Legende extends AbstractTableModel  {
       return combo;
    }
    
-   /** Retourne l'indice du n-ième champ numérique */
-   protected int getIndexNumericField(int rang) {
-      int n=0;
-      for( int i=0; i<field.length; i++ ) {
+   /** Retourne l'indice du premier champ numérique */
+   protected int getIndexNumericField() { return getIndexNumericField(-1); }
+   
+   /** Retourne l'indice du premier champ numérique après l'indique indiqué
+    * @param after
+    * @return
+    */
+   protected int getIndexNumericField(int after) {
+      for( int i=after+1; i<field.length; i++ ) {
          if( !field[i].isNumDataType() ) continue;
-         if( ++n==rang ) return i;
+         return i;
       }
       return -1;
    }

@@ -525,7 +525,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
             planBG.cumulTimeLoadCache+=(System.currentTimeMillis()-t);
             planBG.askForRepaint();
             planBG.touchCache();
-         } catch( Exception e) { e.printStackTrace(); (new File(pathName)).delete(); throw e;}   // Sans doute fichier erroné
+         } catch( Exception e) {
+            System.err.println("Error on "+pathName);
+            e.printStackTrace(); 
+            (new File(pathName)).delete();
+            throw e;
+         }   // Sans doute fichier erroné
 
       } catch( Exception e ) {
          pixels=null;
@@ -1716,7 +1721,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static final double RAP=0.7;
 
    protected boolean mustBeDivided(PointD b[] ) throws Exception {
-      if( planBG.DEBUGMODE ) return false;
       double d1,d2,m;
       boolean animated = planBG.aladin.isAnimated();
       if( animated ) m = M*6;
@@ -2063,8 +2067,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    final protected void drawLosangeBorder(Graphics g,PointD b1[]) { drawLosangeBorder(g,b1,false); }
    final protected void drawLosangeBorder(Graphics g,PointD b1[], boolean force) {
       if( !planBG.ref ) return;
-      int debugIn = planBG.isDebugIn(npix);
-      if( !force && debugIn==0 && planBG.aladin.levelTrace<6 ) return;
+      if( !force && planBG.aladin.levelTrace<6 ) return;
       PointD b [] = new PointD[4];
       int j=0;
       for( int i=0; i<4; i++ ) if( b1[i]!=null ) b[j++]=b1[i];
@@ -2075,34 +2078,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
             new int[]{ (int)b[0].y,(int)b[1].y,(int)b[2].y}, 3);
       else return;
 
-      if( debugIn>0 ) {
-         g.setColor(debugIn==1 ? BLUE1 :debugIn==2 ? BLUE2 : BLUE3 );
-         g.fillPolygon(p);
-      }
-
       Color c= parente>0 ? new Color(100,100,0) : Color.green;
-      //      if( parente>0 ) {
-      //         int n=200-(parente*50);
-      //         if( n<0 ) c = Color.blue;
-      //         else c=new Color(n,n,0);
-      //      }
       g.setColor( j==3?Color.red:c);
       g.drawPolygon(p);
-
-//      if( j==4 ) drawNumber(g,b);
-
-//      for( int i=0; i<4; i++ ) {
-//         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
-//         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
-//         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
-//         g.drawString(i+"", x,y+10);
-//      }
-
-      //      if( st!=null ) {
-      //         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-      //            RenderingHints.VALUE_ANTIALIAS_OFF);
-      //         ((Graphics2D)g).setStroke(st);
-      //      }
    }
 
    /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix */

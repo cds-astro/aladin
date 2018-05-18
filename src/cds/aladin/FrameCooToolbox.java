@@ -244,7 +244,7 @@ public class FrameCooToolbox extends JFrame {
     * @param s La source dont on extrait la position
     */
    protected void setSource(Source s)  {
-      Legende leg = s.leg;
+      Legende leg = s.getLeg();
       
       // Récupération des coordonnées d'origines
       int nra   = leg.getRa();

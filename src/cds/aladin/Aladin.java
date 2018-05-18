@@ -576,6 +576,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameMocGenProba frameMocGenProba;   // Gere la fenetre pour la génération d'un MOC à partir d'un map de proba
    FrameMocGenCat frameMocGenCat;   // Gere la fenetre pour la génération d'un MOC à partir de catalogues
    FrameTMocGenCat frameTMocGenCat;   // Gere la fenetre pour la génération d'un T-MOC à partir de catalogues
+   FrameTMocGenObj frameTMocGenObj;   // Gere la fenetre pour la génération d'un T-MOC à partir des sources sélectionnées
    FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution
    FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
    FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
@@ -652,7 +653,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miTMocGenCat,miMocOp,
+   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miTMocGen,miTMocGenCat,miTMocGenObj,miMocOp,
    miMocToOrder,miMocFiltering,miMocCrop,
    miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
    miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
@@ -710,7 +711,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGENCAT,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
+   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
    MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
@@ -1156,7 +1157,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOCPOL =chaine.getString("MMOCGENPOL");
       MOCGENIMGS  =chaine.getString("MMOCGENIMGS");
       MOCGENCAT   =chaine.getString("MMOCGENCAT");
+      TMOCGEN     =chaine.getString("MTMOCGEN");
       TMOCGENCAT   =chaine.getString("MTMOCGENCAT");
+      TMOCGENOBJ   =chaine.getString("MTMOCGENOBJ");
       MOCM     =chaine.getString("MMOCOP");
       MOCTOORDER     =chaine.getString("MMOCTOORDER");
       MOCFILTERING =chaine.getString("MMOCFILTERING");
@@ -1364,7 +1367,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
-               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA}, {TMOCGENCAT},
+               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA}, {TMOCGEN,TMOCGENCAT,TMOCGENOBJ},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
             },
             { /*{MTOOLS},
@@ -2077,7 +2080,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOCHIPS) )   miMocHips  = ji;
       else if( isMenu(m,MOCPOL) )   miMocPol  = ji;
       else if( isMenu(m,MOCGENCAT) )   miMocGenCat  = ji;
+      else if( isMenu(m,TMOCGEN) )   miTMocGen  = ji;
       else if( isMenu(m,TMOCGENCAT) )   miTMocGenCat  = ji;
+      else if( isMenu(m,TMOCGENOBJ) )   miTMocGenObj  = ji;
       else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
       else if( isMenu(m,NORM) )   miNorm    = ji;
       else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -2847,7 +2852,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          int i = s.indexOf(' ');
          if( i>0 ) {
             long t = Long.parseLong( s.substring(0,i));
-            if( System.currentTimeMillis()/1000L - t > 30L*86400L ) return; // message trop vieux
+            if( t>0 && System.currentTimeMillis()/1000L - t > 30L*86400L ) return; // message trop vieux
          } 
       } catch( Exception e) {  }
       
@@ -3494,6 +3499,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MOCGENIMGS) ){ updateMocGenImgs();
       } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
       } else if( isMenu(s,TMOCGENCAT) ){ updateTMocGenCat();
+      } else if( isMenu(s,TMOCGENOBJ) ){ updateTMocGenObj();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
       } else if( isMenu(s,MOCCROP) )  { crop();
@@ -3692,17 +3698,35 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void cloneObj(boolean uniqTable) {
       calque.newPlanCatalogBySelectedObjet(uniqTable);
       console.printCommand("ccat"+(uniqTable?" -uniq ":""));
-
    }
 
    /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
    protected void createPlotCat() {
       PlanCatalog p = calque.getFirstSelectedPlanCatalog();
       if( p==null ) return;
-      if( !view.getCurrentView().isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2C);
-      int nview = aladin.view.getLastNumView(p);
+      
+      int nview=-1;
+      
+      // S'agit-il d'un plot temporel ? et si oui y a-t-il déjà au moins une vue
+      // avec uniquement des TMOC ? si oui, on prend cette vue
+      if( p.isCatalogTime() ) {
+         int m=view.getNbView();
+         for( int i=0; i<m; i++ ) {
+            if( view.viewSimple[i].isPlotTimeWithoutTable() ) { nview=i; break; }
+         }
+      }
+      
+      if( nview==-1 ) {
+         // Faut-il créer une nouvelle vue ?
+         ViewSimple cv = view.getCurrentView();
+         if( !cv.isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2C);
+         
+         nview = aladin.view.getLastNumView(p);
+      }
+      
       view.setPlanRef(nview, p);
       view.viewSimple[nview].addPlotTable(p, -1, -1,true);
+      view.repaintAll();
    }
 
    /** Activation du CONCAT des objects depuis la JBar */
@@ -4191,8 +4215,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       frameMocGenRes.maj();
    }
+   
+   /** Mise à jour de la fenêtre pour la génération d'un T-MOC à partir des sources sélectionnées */
+   protected void updateTMocGenObj() {
+      if( frameTMocGenObj==null ) {
+         trace(1,"Creating the TMocGenObj window");
+         frameTMocGenObj = new FrameTMocGenObj(aladin);
+      }
+      frameTMocGenObj.maj();
+   }
 
-   /** Mise à jour de la fenêtre pour la génération d'un T-MOC */
+   /** Mise à jour de la fenêtre pour la génération d'un T-MOC à partir des catalogues sélectionnés */
    protected void updateTMocGenCat() {
       if( frameTMocGenCat==null ) {
          trace(1,"Creating the TMocGenCat window");
@@ -5756,7 +5789,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
          if( miMocGenProba!=null ) miMocGenProba.setEnabled( nbPlanImgBG>0 );
          if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
+         if( miTMocGen!=null ) miTMocGen.setEnabled( nbPlanCatTime>0 );
          if( miTMocGenCat!=null ) miTMocGenCat.setEnabled( nbPlanCatTime>0 );
+         if( miTMocGenObj!=null ) miTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miMocToOrder!=null ) miMocToOrder.setEnabled(nbPlanMoc>0);
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );
@@ -6795,7 +6830,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          String linkSuffix,boolean addCoo, boolean addXY)
                throws IOException {
       int indent=4;
-      Legende leg = o.leg;
+      Legende leg = o.getLeg();
 
       // On recupere le nom de la table sur le premier element "info" de l'objet (le triangle)
       StringTokenizer st = new StringTokenizer(o.info,"\t");
@@ -7034,10 +7069,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
                throws IOException {
 
       // Nouvelle table dans le plan courant
-      if( o.leg!=oleg ) {
+      if( o.getLeg()!=oleg ) {
          if( oleg!=null ) writeBytes(s1, "      </TABLEDATA></DATA></TABLE>\n");    // fin de la table precedente
          writeVOTableStartTable(s1,o,writeOID,linkSuffix,addCoo,addXY);          //Nouvelle table
-         oleg=o.leg;
+         oleg=o.getLeg();
       }
 
       // Ecriture des donnees pour l'objet courant

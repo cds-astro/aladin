@@ -107,7 +107,9 @@ MMOCGENIMGS An image collection...
 MMOCGENCAT The selected catalog...
 MMOCGENCATFOV The FoV associated to each source of the selected catalog...
 MMOCGENPOL The selected drawing objects
-MTMOCGENCAT Generate a temporal MOC based on selected catalog...
+MTMOCGEN   Generate a temporal MOC based on...
+MTMOCGENCAT The selected catalog...
+MTMOCGENOBJ The selected sources...
 MMOCFILTERING Filter a table by MOC...
 MMOCCROP Rectangular crop...
 MMOCOP	Logical operations...
@@ -228,9 +230,11 @@ MMOCGEN.fr Génération d'un MOC spatial à partir de...
 MMOCGENIMG.fr	L'image courante, la carte HEALPix ou le HiPS...
 MMOCGENPROBA.fr	La carte courante de probabilités...
 MMOCGENIMGS.fr	Une collection d'images...
-MMOCGENCAT.fr	Le catalogue sélectionné...
+MMOCGENCAT.fr	Des catalogues sélectionnés...
 MMOCGENPOL.fr Des objets sélectionnés
-MTMOCGENCAT.fr Génération d'un MOC temporel à partir des catalogues sélectionnés...
+MTMOCGEN.fr Génération d'un MOC temporel à partir des catalogues sélectionnés...
+MTMOCGENCAT.fr Génération d'un MOC temporel à partir de...
+MTMOCGENCOBJ.fr Des sources sélectionnées...
 MMOCFILTERING.fr Filtrage d'un catalogue par MOC...
 MMOCCROP.fr	Découpage rectangulaire...
 MMOCOP.fr	Opérations logiques...
@@ -487,7 +491,7 @@ NORTHUP	north
 BLINK	assoc
 RSAMP	rsamp
 CROP	crop
-PLOT	t-y
+PLOT	x-y
 SPECT   spect
 MOC     moc
 
@@ -513,7 +517,7 @@ NORTHUP.fr	nord
 BLINK.fr	assoc
 RSAMP.fr	rsamp
 CROP.fr	coupe
-PLOT.fr	t-y
+PLOT.fr	x-y
 SPECT.fr   spect
 MOC.fr     moc
 
@@ -571,7 +575,7 @@ HBLINK	Create an image association (mosaic or blink sequence)
 HRSAMP	Resample selected images
 HXMATCH	Cross match two catalogue planes
 HCROP	Image cropping
-HPLOT	Scatter plot for catalogue sources
+HPLOT	Scatter/time plot for catalogue sources
 HSPECT  Spectrum extractor for cubes
 HMOC    Multi-Order Coverage map operations
 
@@ -596,7 +600,7 @@ HBLINK.fr	Crée une association d'images (soit une mosaïque, soit une séquence an
 HRSAMP.fr	Rééchantillonne les images sélectionnées
 HXMATCH.fr	Corrèle les sources de 2 catalogues 
 HCROP.fr	Copie une portion de l'image
-HPLOT.fr	Trace un diagramme de dispersion pour des sources de catalogues
+HPLOT.fr	Trace un diagramme de dispersion ou une série temporelle pour des sources de catalogues
 HSPECT.fr   Génère un spectre associé à un cube
 HMOC.fr     Opérations sur les Multi-Order Coverage
 
@@ -993,6 +997,7 @@ MOCGENIMGINFO	Specify image or an HEALPix map,\n choose a MOC resolution and\npr
 MOCGENIMGSINFO	Set the directory of your image collection,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
 MOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting spatial MOC.\n
 TMOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting temporal MOC.\n
+TMOCGENOBJINFO	Choose a MOC resolution and\npress the CREATE button to generate the resulting temporal MOC.\n
 MOCGENORDINFO	Specify a MOC,\n choose a new resolution and\npress the CREATE button to generate the resulting MOC.\n
 
 MOCGENOP.fr	Génération de MOC:
@@ -1003,6 +1008,7 @@ MOCGENIMGSINFO.fr	Indiquez le répertoire de votre collection d'images,\nainsi qu
 MOCGENIMGSINFO.fr	Indiquez le répertoire de votre collection d'images,\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.\n
 MOCGENCATINFO.fr	Désignez un catalogue\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC spatial résultant.\n
 TMOCGENCATINFO.fr	Désignez un catalogue\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC temporel résultant.\n
+TMOCGENOBJINFO.fr	Désignez la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC temporel résultant.\n
 MOCGENORDINFO.fr	Désignez un MOC,\n sélectionnez la nouvelle résolution et\nvalidez par le bouton CREE pour générer le MOC resultat.\n
 
 # FrameBitpix.java strings
@@ -1342,7 +1348,7 @@ SWARNING.fr Pour visualiser ce plan, activez au préalable un plan de reférence a
 SWARNINGSLIDER.fr Pour visualiser ce plan, utilisez le curseur de transparence.\nOu activez-le en tant que référence de projection
 
 # View.java Strings
-VWPLOTCAT	Create a scatter plot
+VWPLOTCAT	Create a scatter/time plot
 VWNOZOOM	You have reached the zoom limit
 VWCONCAT	Concatenate...
 VWCONCATUNIQ	in a new plane with one homogeneous table
@@ -1383,7 +1389,7 @@ VWHCLIC	   - Click on it to get details
 VWHCLIC1	superimposed objects - click on them to get details
 VWNIF	Target outside the image !
 
-VWPLOTCAT.fr	Crée un graphe de points
+VWPLOTCAT.fr	Crée un graphe de points, une série temporelle
 VWNOZOOM.fr	Vous avez atteint la limite du zoom
 VWCONCAT.fr	Fusionne les catalogues sélectionnés en un plan...
 VWCONCATUNIQ.fr	sous la forme d'une table homogène unique

@@ -328,14 +328,18 @@ public final class Slide {
          g.setColor( !button?Color.black:c);
          g.drawPolygon(bx,by,bx.length);
       }
-
    }
    
-   // dessin d'une petite horloge
-   static void drawClock(Graphics g,int dx,int dy, Color c, Color bg) {
+   // dessin d'une petite horloge en haut à gauche du logo
+   private void drawClock(Graphics g,int dx,int dy, Color c, Color bg) {
       int x = dx+frX[2]-27;
       int y = dy+frY[2]-12;
       int r=4;
+      drawClock(g,x,y,r,c,bg);
+   }
+   
+   /** Dessin d'une petit horloge */
+   static public void drawClock(Graphics g,int x,int y,int r, Color c, Color bg) {
       Color c1= g.getColor();
       if( bg!=null ) g.setColor( bg );
       g.fillOval(x-r, y-r, 2*r, 2*r);

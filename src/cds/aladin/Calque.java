@@ -1307,7 +1307,7 @@ public class Calque extends JPanel implements Runnable {
 
       // Seuls les plans images et catalogues peuvent etre de reference
       if( nview<0 || !canBeRef(p) )  return false;
-
+      
       // On positionne le flag de reference sur le plan d'indice n
       p.ref=true;
 
@@ -3231,15 +3231,28 @@ public class Calque extends JPanel implements Runnable {
    }
 
    protected PlanCatalog newPlanCatalogBySources(Vector vSources,String label,boolean uniqTable) {
+      return newPlanCatalogBySources(vSources, label, uniqTable,true);
+   }
+   protected PlanCatalog newPlanCatalogBySources(Vector vSources,String label,boolean uniqTable,boolean inStack) {
       Source s, newSource;
       if( vSources==null ) return null;
       
       if( label==null || label.length()==0 ) label = "New.cat";
       
-      int n=getStackIndex(label);
-      label = prepareLabel(label);
-      newPlanCatalog(n);
-      PlanCatalog p = (PlanCatalog)plan[n];
+      PlanCatalog p;
+      
+      // Creation du plan dans la pile ?
+      if( inStack ) {
+         int n=getStackIndex(label);
+         label = prepareLabel(label);
+         newPlanCatalog(n);
+         p = (PlanCatalog)plan[n];
+         
+      // ou simple creation d'un plan
+      } else {
+         p = new PlanCatalog(aladin);
+      }
+      
       p.setLabel(label);
 
       // Cas simple et rapide
@@ -3250,13 +3263,13 @@ public class Calque extends JPanel implements Runnable {
             Obj o = (Obj)e.nextElement();
             if( !(o instanceof Source) ) continue;
             s = (Source)o;
-            p.pcat.setObjetFast(newSource = new Source(p, s.raj, s.dej, s.id, s.info));
+            p.pcat.setObjetFast(newSource = new Source(p, s.raj, s.dej, s.jdtime, s.id, s.info));
             newSource.isSelected = s.isSelected;
             newSource.values = s.values;
             newSource.actions = s.actions;
-            newSource.leg = s.leg;
+            newSource.setLeg(s.getLeg());
             newSource.sourceFootprint = s.sourceFootprint==null ? null : s.sourceFootprint.copy();
-            if( !legs.contains(s.leg) ) legs.addElement(s.leg);
+            if( !legs.contains(s.getLeg()) ) legs.addElement(s.getLeg());
          }
          p.pcat.nbTable= legs.size();
 
@@ -3271,7 +3284,7 @@ public class Calque extends JPanel implements Runnable {
             Obj o = (Obj)e.nextElement();
             if( !(o instanceof Source) ) continue;
             s = (Source)o;
-            if( !leg.contains(s.leg) ) leg.add(s.leg);
+            if( !leg.contains(s.getLeg()) ) leg.add(s.getLeg());
          }
          Legende legGen = new Legende(leg);
 
@@ -3285,19 +3298,28 @@ public class Calque extends JPanel implements Runnable {
             // Création de la nouvelle ligne de mesures en fonction de la légende générique
             String info = createInfo(s,legGen);
 
-            p.pcat.setObjetFast(newSource = new Source(p, s.raj, s.dej, s.id, info));
+            p.pcat.setObjetFast(newSource = new Source(p, s.raj, s.dej, s.jdtime, s.id, info));
             p.pcat.nbTable=1;
-            newSource.leg=legGen;
+            newSource.setLeg(legGen);
          }
       }
 
-      if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
-      p.setActivated(true);
-      p.pcat.createDefaultProj();
       //      p.setSourceType(Source.getDefaultType(vSources.size()));
-      if (Aladin.PROTO) {//TODO:: tintinproto
-     	 TapManager.getInstance(aladin).updateAddUploadPlans(p);
-		}
+      
+      if( inStack ) {
+         p.pcat.createDefaultProj();
+         p.setActivated(true);
+         if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
+         
+         if( Aladin.PROTO) {//TODO:: tintinproto
+            TapManager.getInstance(aladin).updateAddUploadPlans(p);
+         }
+      } else {
+         p.flagOk=true;
+         p.active=true;
+      }
+             
+      
       return p;
    }
 
@@ -3309,7 +3331,7 @@ public class Calque extends JPanel implements Runnable {
       int start=offset+1;
       for( int i=0; offset!=-1; i++ ) {
          offset = s.info.indexOf('\t',start);
-         int j = leg.find(s.leg.field[i]);
+         int j = leg.find(s.getLeg().field[i]);
          if( j==-1 ) continue;
          v[j] = offset!=-1 ? s.info.substring(start,offset) : s.info.substring(start);
          start=offset+1;
@@ -3457,7 +3479,7 @@ public class Calque extends JPanel implements Runnable {
          Obj o1 = it.next();
          if( !(o1 instanceof Source) ) continue;
          Source o = (Source)o1;
-         if( o.leg!=leg ) {
+         if( o.getLeg()!=leg ) {
             p1 = new PlanCatalog(aladin);
             p1.server = p.server;
             p1.c = p.c;
@@ -3474,7 +3496,7 @@ public class Calque extends JPanel implements Runnable {
             p1.projd = p.projd.copy();
             p1.setLabel(p1.getTableName(o));
             v.addElement(p1);
-            leg=o.leg;
+            leg=o.getLeg();
          }
          o.plan=p1;
          p1.pcat.setObjetFast(o);

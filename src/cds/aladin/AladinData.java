@@ -624,7 +624,7 @@ public class AladinData {
          else s.append("\t"+value[i]);
       }
       Source o = new Source(plan,ra,dec,id,s.toString());
-      o.leg = leg;
+      o.setLeg(leg);
       plan.pcat.setObjetFast(o);
       return o;
    }

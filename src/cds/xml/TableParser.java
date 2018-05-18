@@ -96,6 +96,7 @@ final public class TableParser implements XMLConsumer {
    static final public int MJD=14;
    static final public int ISOTIME=15;
    static final public int YEARS=16;
+   static final public int YMD=17;
 
    private TableParserConsumer consumer; // Référence au consumer
    private XMLParser xmlparser;	      // parser XML
@@ -142,6 +143,8 @@ final public class TableParser implements XMLConsumer {
    private int unit;                  // Unité des coordonnées (UNIT_UNKNOWN | UNIT_DEGREES | UNIT_RADIANS )
    private String unitPMRA;           // Unité du mouvement propre en RA
    private String unitPMDEC;          // Unité du mouvement propre en DEC
+   private double timeOffset=0;        // décalage de time
+   
    //   private boolean flagSexa;	      // ture s'il s'agit de coordonnées sexagésimal
    //   private boolean knowFormat;	      // true si on a détecté le format des coordonnées
 
@@ -1001,6 +1004,7 @@ final public class TableParser implements XMLConsumer {
       qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=qualPMRA=qualPMDEC=qualTime=1000; // 1000 correspond au pire
       timeSystem = -1;
       timeField = null;
+      timeOffset = 0;
       format = formatx = FMT_UNKNOWN;
       unit = UNIT_UNKNOWN;
       //      flagSexa=false;	// Par défaut on suppose des coord. en degrés
@@ -1474,7 +1478,7 @@ final public class TableParser implements XMLConsumer {
       consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY,
             (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
       if( nTime>=0 ) {
-         consumer.tableParserInfo("   -assuming Time column "+(nTime+1)+" "+proba(qualTime)+" scale unknown");
+         consumer.tableParserInfo("   -assuming Time column "+(nTime+1)+" "+proba(qualTime)+" timesys unknown (assuming TDB/Barycentric)");
       }
       if( flagXY ) {
          consumer.tableParserInfo("   -assuming XY positions column "+(nX+1)+" for X and "+(nY+1)+" for Y");
@@ -1740,10 +1744,24 @@ final public class TableParser implements XMLConsumer {
     */
    private int timeName(String s) {
       s = s.toLowerCase();
-      if( s.equals("Epoch") )           { return 0; }
-      if( s.startsWith("Epoch") )       { return 1; }
-      if( s.startsWith("jd") )          { return 2; }
-      if( s.startsWith("mjd") )         { return 3; }
+      if( s.equals("epoch") )           { return 0; }
+      if( s.equals("date") )            { return 1; }
+      if( s.equals("date-obs") )        { return 2; }
+      return -1;
+   }
+   
+   /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
+    * ou non du nom d'une colonne en tant que Time,
+    * (-1 s'il ne s'agit a priori pas de cela)
+    */
+   private int timeSubName(String s) {
+      s = s.toLowerCase();
+      if( s.startsWith("epoch") )       { return 0; }
+      if( s.startsWith("jd") )          { return 1; }
+      if( s.startsWith("mjd") )         { return 2; }
+      if( s.startsWith("hjd") )         { return 3; }
+      if( s.startsWith("date") )        { return 4; }
+      if( s.startsWith("utc") )         { return 5; }
       return -1;
    }
 
@@ -1840,6 +1858,21 @@ final public class TableParser implements XMLConsumer {
    private void setSGal() { lastCoordSys = AF_SGAL; }
    private void setEcl()  { lastCoordSys = AF_ECLI; }
    private void setEq()   { lastCoordSys = null; }
+   
+   static private String UCDTIME [] = { "time.epoch","time.start","time.end","time.release","time.creation"
+         ,"time.processing" };
+
+   /** Retourne un indice entre 0 (meilleur) et 20 en fonction de la reconnaissance
+    * d'une UCD sur le temps
+    * (-1 s'il ne s'agit a priori pas de cela)
+    */
+   private int timeUcd(String s) {
+      int i=s.indexOf(';');
+      if( i>0 ) s = s.substring(0,i);
+      int n = Util.indexInArrayOf(s, UCDTIME);
+      if( n>=0 && s.endsWith("meta.main") ) n-=10;
+      return n;
+   }
 
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
     * ou non du nom d'une colonne en tant que PMRA,
@@ -1939,6 +1972,23 @@ final public class TableParser implements XMLConsumer {
       else if( sSedId!=null   && name.equals(sSedId)   ) { f.sed=Field.SEDID;   nSedId=nField; }
       else return;
    }
+   
+   // Cherche à déterminer le timeOffset éventuel
+   // Exemple syntaxe: Epoch of minimum (HJD-2450000)
+   private boolean scanTimeOffset( String s ) {
+      if( s==null ) return false;
+      int m = s.lastIndexOf('-');
+      int p = s.indexOf(')',m);
+      if( p==-1 ) p=s.length();
+      if( m!=-1) {
+         try {
+            double x = Double.parseDouble( s.substring(m+1,p) );
+            timeOffset=x;
+            return true;
+         } catch( Exception e) { }
+      }
+      return false;
+   }
 
    /** Cherche à determiner si f concerne RA,DE,PMRA,PMDEC, X ou Y en mettant à jour
     * les indices de qualité (qualRA, qualDEC, qualPMRA, qualPMDEC, qualX, qualY)
@@ -1964,11 +2014,14 @@ final public class TableParser implements XMLConsumer {
       
       // Détection du Time et évaluation de la qualité de cette détection + mémorisation du système temporel probable
       qual=-1;
-      if( ucd.startsWith("time.epoch") ) qual=250;
-      else if( (n=timeName(name))>=0 ) qual=500+n;
+      if( (n=timeUcd(ucd))>=0 ) qual=100+n;
+      else if( unit.indexOf("H:")>=0 || unit.indexOf("M:")>=0 ) qual=300;
+      else if( (n=timeName(name))>=0 ) qual=400+n;
+      else if( (n=timeSubName(name))>=0 ) qual=500+n;
       if( qual>=0 && qualTime>qual ) {
          nTime=nField; qualTime=qual;
          timeField = f;
+         if( !scanTimeOffset(name) ) scanTimeOffset(f.description);
       }
 
       // Détection du RA et évaluation de la qualité de cette détection
@@ -2245,6 +2298,8 @@ final public class TableParser implements XMLConsumer {
    }
    
    static double J2000=Double.NaN;
+   
+   private boolean hasSomething(String s) { return s!=null &&  s.trim().length()>0; }
 
    /** Préparation et appel au consumer.setRecord(alpha,delta,rec[]) en calculant
     * les coordonnées en fonction des valeurs nRA,nDEC ou nX,nY suivant le flagXY ou non
@@ -2254,7 +2309,7 @@ final public class TableParser implements XMLConsumer {
       // Un horadatage associé ?
       double jdTime = Double.NaN;
       boolean timeValue=false;
-      if( nTime!=-1 && (timeValue=rec[nTime].trim().length()>0) ) {
+      if( nTime>=0 && (timeValue=hasSomething(rec[nTime]) ) ) {
          
          // Première valeur de temps => on en profite pour détecter le codage temporel le plus probable
          if( timeSystem==-1 ) {
@@ -2270,21 +2325,29 @@ final public class TableParser implements XMLConsumer {
                try { t=Double.parseDouble( rec[nTime] ); numeric = true; } catch( Exception e1) {}
             }
             if( numeric ) {
+               if( timeOffset>0 ) t+=timeOffset;
                timeSystem = t<3000 ? YEARS : t<100000 ? MJD : JD;
                
             // Si c'est une chaine de caractères, la présence d'un "T" va faire penser à de l'ISO
             // sinon on ne sait pas trop...
             } else {
                if( rec[nTime].indexOf('T')>0 ) timeSystem=ISOTIME;
-               else timeSystem=TIME_UNKNOWN;
+               else timeSystem=YMD;
             }
             timeField.coo=timeSystem;
-            if( timeSystem>0 ) consumer.tableParserInfo("   -assuming Time format :"+Field.COOSIGN[ timeSystem ]);
+            if( timeSystem>0 ) consumer.tableParserInfo("   -assuming Time format:"+Field.COOSIGN[ timeSystem ]+(timeOffset!=0?" timeOffset: "+timeOffset:""));
          }
          
          if( timeValue ) {
+            String valTime = rec[nTime];
             try {
-               jdTime = Astrodate.parseTime(rec[nTime], timeSystem);
+               if( timeOffset!=0 ) {
+                  try { 
+                     double t=Double.parseDouble( rec[nTime] ); 
+                     valTime = (t + timeOffset)+"";
+                  } catch( Exception e1) {}
+               }
+               jdTime = Astrodate.parseTime(valTime, timeSystem);
             } catch( Exception e) {
                System.err.println("Table time parsing error "+ (nbRecord!=-1 ? "(record "+(nbRecord+1)+")":"") +": "+e);
             }

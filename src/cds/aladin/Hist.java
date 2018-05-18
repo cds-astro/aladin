@@ -130,7 +130,7 @@ class Hist implements Runnable {
       this.o=o;
       this.nField=nField;
       if( nField==-1 ) { hist=null; return false; }
-      titre=o.leg.field[nField].name;
+      titre=o.getLeg().field[nField].name;
       return init();
    }
 
@@ -157,7 +157,7 @@ class Hist implements Runnable {
    }
 
    protected boolean initThread() {
-      if( o.leg.isNumField(nField) ) {
+      if( o.getLeg().isNumField(nField) ) {
          double [] xHist = aladin.mesure.getFieldNumericValues(o, nField);
          nb=xHist.length;
          setHist(xHist);
@@ -368,7 +368,7 @@ class Hist implements Runnable {
       // Positionnement des nouvelles sources à hightlighter
       if( onMouse!=null ) {
          for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
-            if( aladin.mesure.src[i].leg!=o.leg ) continue;
+            if( aladin.mesure.src[i].getLeg()!=o.getLeg() ) continue;
 
             String s = aladin.mesure.src[i].getValue(nField);
             if( onMouse.categorie!=null && onMouse.categorie.equals(s)) {

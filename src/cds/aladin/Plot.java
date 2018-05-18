@@ -21,11 +21,17 @@
 
 package cds.aladin;
 
+import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Enumeration;
@@ -62,7 +68,6 @@ public class Plot {
    public Plot(ViewSimple viewSimple) {
       this.aladin=viewSimple.aladin;
       this.viewSimple = viewSimple;
-//      plotProj = new Projection(0,0,0,0,500,500,500,500,false,false,false,false);
    }
    
    /** Retourne la projection associée au plot */
@@ -72,19 +77,21 @@ public class Plot {
    public String getPlotLabel() {
       StringBuffer s = new StringBuffer();
       if( isPlotTime() ) {
-         s.append("Time graph");
-         if( hasTable() ) {
-            PlotItem p = plotTable.elementAt(0);
+         if( !hasTable() ) s.append("Time graph");
+         else {
+            PlotItem p = getFirstPlotItem();
             Legende leg = p.plan.getFirstLegende();
-            s.append(": "+p.plan.label+"("+leg.getName(p.index[1])+")");
+            s.append("Time x "+leg.getName(p.index[1]));
          }
       } else {
          if( hasTable() ) {
             for( int i=0; i<2 && i<plotTable.size(); i++ ) { 
                PlotItem p = plotTable.elementAt(i);
                if( s.length()>0 ) s.append(" + ");
-               Legende leg = p.plan.getFirstLegende();
-               s.append(p.plan.label+"("+leg.getName(p.index[0])+","+ leg.getName(p.index[1])+")");
+               try {
+                  Legende leg = p.plan.getFirstLegende();
+                  s.append(p.plan.label+"("+leg.getName(p.index[0])+","+ leg.getName(p.index[1])+")");
+               } catch( Exception e ) { }
             }
             if( plotTable.size()>2 ) s.append("...");
          }
@@ -108,6 +115,13 @@ public class Plot {
    
    /** Retourne true si le plot est temporel */
    public boolean isPlotTime() { return flagTime; }
+   public boolean isPlotTimeWithoutTable() { return flagTime && !hasTable(); }
+   
+   // Retourne le premier PlotItem du graphique
+   private PlotItem getFirstPlotItem() {
+      if( plotTable==null || plotTable.size()==0 ) return null;
+      return plotTable.get(0);
+   }
 
    // initialisation du plot
    protected void initPlot() {
@@ -123,9 +137,8 @@ public class Plot {
       return plot;
    }
   
-   /** Ajuste la projection et le zoom afin de contenir la totalité du nuage de point. Ne prend en comtpe
-    * que le plot principale (celui du premier plan)
-    * @param p
+   /** Ajuste la projection et le zoom afin de contenir la totalité du nuage de point.
+    * @param p si null, prend en compte toutes les tables du plot, sinon uniquement celle spécifiée
     */
    public void adjustPlot() { adjustPlot(null); }
    public void adjustPlot(PlotItem p) {
@@ -136,39 +149,49 @@ public class Plot {
          maxX=max1X=minX=min1X=maxY=max1Y=minY=min1Y=0;
          
          if( hasTable() ) {
-            p = plotTable.elementAt(0);
-
-            int n=0;
-            Iterator<Obj> it = p.plan.iterator();
-            double [] val = null;
-            while( it.hasNext() ) {
-               Obj o = it.next();
-               if( !(o instanceof Source) ) continue;
-               Source s = (Source)o;
-               val = getValues(val,s);
-               if( Double.isNaN(val[0]) || Double.isNaN(val[1]) ) continue;
-               double cX=val[0],cY=val[1];
-               n++;
-               if( first ) {
-                  maxX=max1X=minX=min1X=cX;
-                  maxY=max1Y=minY=min1Y=cY;
-                  first=false;
-               }
-
-               if( minX>cX ) minX=cX;
-               else if( maxX<cX ) maxX=cX;
-               if( cX<min1X && cX>minX || min1X==minX && cX<max1X ) min1X=cX;
-               else if( cX>max1X && cX<maxX || max1X==maxX && cX>min1X ) max1X=cX;
-
-               if( minY>cY ) minY=cY;
-               else if( maxY<cY ) maxY=cY;
-               if( cY<min1Y && cY>minY || min1Y==minY && cY<max1Y ) min1Y=cY;
-               else if( cY>max1Y && cY<maxY || max1Y==maxY && cY>min1Y ) max1Y=cY;
+//            p = getFirstPlotItem();
+            
+            PlotItem [] list;
+            if( p!=null ) list = new PlotItem[]{ p }; 
+            else {
+               list = new PlotItem[ plotTable.size() ];
+               plotTable.toArray(list);
             }
 
-            min1X=minX; max1X=maxX;
-            min1Y=minY; max1Y=maxY;
-         
+            int n=0;
+            for( PlotItem p1 : list ) {
+               Iterator<Obj> it = p1.plan.iterator();
+               if( it==null ) continue;
+               double [] val = null;
+               while( it.hasNext() ) {
+                  Obj o = it.next();
+                  if( !(o instanceof Source) ) continue;
+                  Source s = (Source)o;
+                  val = getValues(val,s);
+                  if( Double.isNaN(val[0]) || Double.isNaN(val[1]) ) continue;
+                  double cX=val[0],cY=val[1];
+                  n++;
+                  if( first ) {
+                     maxX=max1X=minX=min1X=cX;
+                     maxY=max1Y=minY=min1Y=cY;
+                     first=false;
+                  }
+
+                  if( minX>cX ) minX=cX;
+                  else if( maxX<cX ) maxX=cX;
+                  if( cX<min1X && cX>minX || min1X==minX && cX<max1X ) min1X=cX;
+                  else if( cX>max1X && cX<maxX || max1X==maxX && cX>min1X ) max1X=cX;
+
+                  if( minY>cY ) minY=cY;
+                  else if( maxY<cY ) maxY=cY;
+                  if( cY<min1Y && cY>minY || min1Y==minY && cY<max1Y ) min1Y=cY;
+                  else if( cY>max1Y && cY<maxY || max1Y==maxY && cY>min1Y ) max1Y=cY;
+               }
+
+               min1X=minX; max1X=maxX;
+               min1Y=minY; max1Y=maxY;
+            }
+
             aladin.trace(4,"ViewSimple.adjustPlot: "+(isPlotTime()?" [plotTime]":"")+" nsrc="+n+" X=["+minX+" ("+min1X+") .. ("+max1X+") "+maxX+"] Y=["+minY+" ("+min1Y+") .. ("+max1Y+") "+maxY+"]");
          }
          int w = viewSimple.getWidth();
@@ -287,22 +310,41 @@ public class Plot {
       }
       PlotItem p = findPlotTable(plan);
       boolean modify=true;
+      boolean isTime=false;
       if( p==null ) { p = new PlotItem(); plotTable.addElement(p); modify=false; }
       if( indexX==-1 || indexY==-1 ) {
-         indexX = plan.getFirstLegende().getIndexNumericField(1);
-         indexY = plan.getFirstLegende().getIndexNumericField(2);
+         Legende leg = plan.getFirstLegende();
+         indexX=leg.getTime();
+         isTime= indexX>=0;
+         if( !isTime ) {
+            indexX = leg.getIndexNumericField();
+            indexY = leg.getIndexNumericField(indexX);
+         } else {
+            p.flagIsTime=true;
+            indexY = leg.getIndexNumericField();
+            if( indexY==indexX ) indexY = leg.getIndexNumericField(indexY);
+         }
       }
       p.index[0] = indexX;
       p.index[1] = indexY;
+      System.out.println("index = "+p.index[0]+","+p.index[1]);
       p.plan=plan;
+      
       aladin.trace(4,"ViewSimple.addPlotTable: "+(modify?"modify":"add")+" plan="+plan.label+" indexX="+indexX+" indexY="+indexY);
-      if( isMainPlot(p) ) adjustPlot(p);
+      
+      final boolean flagMainPlot=isMainPlot(p);
+      final boolean flagIsTime=isTime;
+      adjustPlot();
+      if( flagMainPlot )  {
+         this.flagTime=isTime;
+      }
       viewSimple.newView(1);
       if( openProp ) {
          SwingUtilities.invokeLater( new Runnable() {
             public void run() {
                Properties.createProperties(plan);
                Properties.majProp(2);
+               if( flagMainPlot && flagIsTime ) timePlotButton.setEnabled(false);
             }
          });
       }
@@ -310,7 +352,7 @@ public class Plot {
    }
    
    // retourne true s'il s'agit du plot principale (celui qui détermine la projection)
-   private boolean isMainPlot(PlotItem p) { return p==plotTable.elementAt(0); }
+   private boolean isMainPlot(PlotItem p) { return p==getFirstPlotItem(); }
    
    
    /** Construit le Panel de contrôle pour le plan passé en paramètre */
@@ -341,7 +383,7 @@ public class Plot {
       p.setIndex(0,nindex);
       comboX.setSelectedItem( leg.getName(nindex) );
       flagTime = p.isTime();
-      adjustPlot(p);
+      adjustPlot();
       viewSimple.repaint();
    }
    
@@ -373,7 +415,7 @@ public class Plot {
       b.setMargin(new Insets(2,2,2,2) );
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-           adjustPlot(p);
+           adjustPlot();
            viewSimple.repaint();
          }
       });
@@ -407,7 +449,7 @@ public class Plot {
             if( nindex==p.index[ n ] ) return;
             p.setIndex(n,nindex);
             flagTime = p.isTime();
-            adjustPlot(p);
+            adjustPlot();
             viewSimple.repaint();
          }
       });
@@ -422,7 +464,7 @@ public class Plot {
          public void actionPerformed(ActionEvent e) {
            aladin.trace(4,"Plot.getPlotControlPanelForOneIndex: flipPlot("+n+" => "+b.isSelected());
            plotProj.flipPlot(n,b.isSelected());
-           adjustPlot(p);
+           adjustPlot();
            viewSimple.repaint();
          }
       });
@@ -436,7 +478,7 @@ public class Plot {
          public void actionPerformed(ActionEvent e) {
             aladin.trace(4,"Plot.getPlotControlPanelForOneIndex: flipLog("+n+" => "+b1.isSelected()+")");
             plotProj.logPlot(n,b1.isSelected());
-            adjustPlot(p);
+            adjustPlot();
             viewSimple.repaint();
          }
       });
@@ -467,7 +509,7 @@ public class Plot {
     */
    private double getIncr(double val,int index, int sens,int n) {
       double fct = index==0 ? plotProj.getFctXPlot() : plotProj.getFctYPlot(); 
-      double zoom = index==0 && isPlotTime() ? 1 : viewSimple.getZoom(); 
+      double zoom = index==1 && isPlotTime() ? 1 : viewSimple.getZoom(); 
       double x = val * fct * zoom;
       if( n>20 ) return 0;
       if( x>=50 && x<=200 ) return val;
@@ -486,7 +528,7 @@ public class Plot {
    private double getIncrY()  { return getIncr(1.,1,0,0); }
    
    /** Tracé de la grille */
-   public void drawPlotGrid(Graphics g,int dx,int dy) {
+   public void drawGrid(Graphics g,int dx,int dy) {
       try {
          double incrX = plotProj.isLogXPlot() ? 1e-10 : getIncrX();
          double incrY = plotProj.isLogYPlot() ? 1e-10 : getIncrY();
@@ -511,45 +553,72 @@ public class Plot {
          Coord c = new Coord();
          String s1;
          int i;
-         
-         c.del = plotProj.isLogYPlot() ? 0.1 :initValY;
-         for( c.al=initValX, i=-10; i<10; c.al+=incrX, i++ ) {
-            plotProj.getXY(c);
-            Point p1 = viewSimple.getViewCoord(c.x, c.y);
-            if( p1!=null ) {
-               g.setColor( Color.lightGray );
-               g.drawLine(p1.x+dx,0+dy,p1.x+dx,h+dy);
-//               g.setColor(Color.black);
-               if( isPlotTime() ) {
-                  s1 = Astrodate.JDToDate( c.al );
-                  int offset = s1.indexOf('T');
-                  if( offset>0 ) s1 = s1.substring(0,offset);
-               }
-               else {
-                  if( plotProj.isLogXPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
-                  else s1 = c.al+"";
-               }
-               g.drawString(Util.myRound(s1,nbRoundX),p1.x+2+dx, h-5+dy);
-            }
-            if( plotProj.isLogXPlot() ) incrX*=10;
-         }
-         if( hasTable() ) {
-            c.al = plotProj.isLogXPlot() ? 0.1 : initValX;
-            for( c.del=initValY, i=-10; i<10; c.del = c.del + (plotProj.isLogYPlot() ? incrY : -incrY), i++ ) {
+         Composite saveComposite = null;
+         Stroke st = null;
+
+         try {
+            if( g instanceof Graphics2D ) {
+               saveComposite = ((Graphics2D)g).getComposite();
+               ((Graphics2D)g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aladin.view.opaciteGrid));
+               ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,  RenderingHints.VALUE_ANTIALIAS_ON);
+               st = ((Graphics2D)g).getStroke();
+               float epaisseur = w<1500 ? 0.5f : w/1500f;
+               if( epaisseur<0.5f ) epaisseur=0.5f;
+               else if( epaisseur>2f ) epaisseur=2f;
+               ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
+           }
+
+            c.del = plotProj.isLogYPlot() ? 0.1 :initValY;
+            for( c.al=initValX, i=-10; i<200; c.al+=incrX, i++ ) {
                plotProj.getXY(c);
                Point p1 = viewSimple.getViewCoord(c.x, c.y);
                if( p1!=null ) {
                   g.setColor( Color.lightGray );
-                  g.drawLine(0+dx,p1.y+dy,w+dx,p1.y+dy);
+                  g.drawLine(p1.x+dx,0+dy,p1.x+dx,h+dy);
                   //               g.setColor(Color.black);
-                  if( plotProj.isLogYPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
-                  else s1 = c.del+"";
-                  g.drawString(Util.myRound(s1,nbRoundY),4+dx,p1.y-5+dy);
+                  if( isPlotTime() ) {
+                     s1 = Astrodate.JDToDate( c.al );
+                     int offset = s1.indexOf('T');
+                     if( offset>0 ) s1 = s1.substring(0,offset);
+                  }
+                  else {
+                     if( plotProj.isLogXPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
+                     else s1 = c.al+"";
+                  }
+                  g.drawString(Util.myRound(s1,nbRoundX),p1.x+2+dx, h-5+dy);
                }
-               if( plotProj.isLogYPlot() ) incrY*=10;
+               if( p1==null || p1.x+dx>w ) break;
+               if( plotProj.isLogXPlot() ) incrX*=10;
+            }
+            if( hasTable() ) {
+               c.al = plotProj.isLogXPlot() ? 0.1 : initValX;
+               for( c.del=initValY, i=-10; i<200; c.del = c.del + (plotProj.isLogYPlot() ? incrY : -incrY), i++ ) {
+                  plotProj.getXY(c);
+                  Point p1 = viewSimple.getViewCoord(c.x, c.y);
+                  if( p1!=null ) {
+                     g.setColor( Color.lightGray );
+                     g.drawLine(0+dx,p1.y+dy,w+dx,p1.y+dy);
+                     //               g.setColor(Color.black);
+                     if( plotProj.isLogYPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
+                     else s1 = c.del+"";
+                     g.drawString(Util.myRound(s1,nbRoundY),4+dx,p1.y-5+dy);
+                  }
+                  if( p1==null || p1.y+dy>h ) break;
+                  if( plotProj.isLogYPlot() ) incrY*=10;
+               }
+            }
+         } finally {
+            // on restaure le composite
+            if( g!=null ) {
+               ((Graphics2D)g).setComposite(saveComposite);
+               if( st!=null ) {
+                  ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                  ((Graphics2D)g).setStroke(st);
+               }
             }
          }
-         
+
+
       } catch( Exception e ) { e.printStackTrace(); }
    }
 

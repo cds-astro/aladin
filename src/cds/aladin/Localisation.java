@@ -46,6 +46,7 @@ import cds.astro.FK5;
 import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.astro.Supergal;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 
 /**
@@ -519,7 +520,11 @@ public class Localisation extends MyBox  {
 
       // Forcage pour les nuage de point
       ViewSimple view = aladin.view.getMouseView();
-      if( view!=null && view.isPlot() ) frame=XYLINEAR;
+      boolean isPlotTime = false;
+      if( view!=null && view.isPlot() ) {
+         frame=XYLINEAR;
+         isPlotTime = view.isPlotTime();
+      }
 
       Plan plan = v.pref;
       if( plan==null ) return;
@@ -555,7 +560,11 @@ public class Localisation extends MyBox  {
                s = coo.getDegPlanet();
             } else if( frame==XYLINEAR ) {
                if( !proj.isXYLinear() ) s=NOXYLINEAR;
-               else s=Util.myRound(coo.al+"",4)+" : "+Util.myRound(coo.del+"",4);
+               else {
+                  if( isPlotTime ) {
+                     s=Astrodate.JDToDate(coo.al)+" , "+Util.myRound(coo.del+"",4);
+                  } else s=Util.myRound(coo.al+"",4)+" , "+Util.myRound(coo.del+"",4);
+               }
             } else {
                if( proj.isXYLinear() ) s=NOPROJECTION;
                else {

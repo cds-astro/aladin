@@ -97,8 +97,8 @@ final public class Field {
    public int columnSize=10;
 
    /** Positional field signature */
-   static public final int RA=1,DE=2,PMRA=3,PMDE=4,GLON=5,GLAT=6,SGLON=7,SGLAT=8,ELON=9,ELAT=10,X=11,Y=12,JD=13,MJD=14,ISOTIME=15,YEARS=16;
-   static public final String [] COOSIGN = { "", "RA","DE","PMRA","PMDE","GLON","GLAT","SGLON","SGLAT","ELON","ELAT","X","Y","JD","MJD","ISOTIME","YEARS" };
+   static public final int RA=1,DE=2,PMRA=3,PMDE=4,GLON=5,GLAT=6,SGLON=7,SGLAT=8,ELON=9,ELAT=10,X=11,Y=12,JD=13,MJD=14,ISOTIME=15,YEARS=16,YMD=17;
+   static public final String [] COOSIGN = { "", "RA","DE","PMRA","PMDE","GLON","GLAT","SGLON","SGLAT","ELON","ELAT","X","Y","JD","MJD","ISOTIME","YEARS","DATE" };
    public int cooPossibleSignature;    // Role probable de ce champ dans le système de coordonnées et de temps
    public int coo;                     // Role définitif de ce champ dans le systeme de coordonnées et de temps
    

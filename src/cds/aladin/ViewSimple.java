@@ -75,6 +75,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import cds.astro.AstroMath;
 import cds.moc.Healpix;
@@ -217,7 +218,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    private double previousFrameLevel;   // Dernière frame affichée
    private boolean flagBlinkControl;    // Vrai pour un réaffichage rapide du blinkControl
    private boolean flagCube=false;      // True si on a cliqué sur le blink Control
-   private boolean flagSimRepClic=false; // true si on a cliqué sur une marque Simbad
 
    private Plan planRecalibrating=null; // Plan catalogue en cours de recalibration, null si aucun
 //   protected Plan oldPlanBord=null;       // Précédent plan dont on affiche le bord
@@ -899,7 +899,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       Dimension d = getPRefDimension();
 
       double dx = dxView * (WView/d.width) / zoom;
-      double dy = dyView * (HView/d.height) / zoom;
+//      double dy = dyView * (HView/d.height) / zoom;
+      double dy = dyView * (HView/d.height);
+      if( !isPlotTime() ) dy /=zoom;
       return new PointD(dx,dy);
    }
 
@@ -1109,7 +1111,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( locked ) return;
       int x = e.getX();
       int y = e.getY();
-
+      
       Plan pref = getProjSyncView().pref;
 
       int dxView = x-scrollX;
@@ -1118,7 +1120,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Rotation libre soit en appuyant CTRL, soit en pivotant la rose des vents
       int W=getNESize();
       boolean inNE = inNE(x,y);
-      if(  !flagMoveDrag /* && (inNE */ || e.isControlDown() && pref instanceof PlanBG /*)*/ ) {
+      if(  !flagMoveDrag || e.isControlDown() && pref instanceof PlanBG ) {
          int xc = inNE ? rv.width-W/2 : rv.width/2;;
          int yc = inNE ? rv.height-W/2 : rv.height/2;
          double a1 = Math.atan2(scrollY-yc,scrollX-xc);
@@ -1152,7 +1154,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          double deltaDe = cs.del-ct.del;
          //System.out.println("Changement de centre delta="+Coord.getUnit(deltaRa)+","+Coord.getUnit(deltaDe)  );
          proj.deltaProjCenter(deltaRa,deltaDe);
-         
 
          aladin.view.newView(1);
          aladin.view.setRepere(proj.getProjCenter());
@@ -1404,10 +1405,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //      if( !p.isCatalog() && isPlot() ) { plot.free(); plot=null; }
       if( !p.isTime() ) { 
          if( plot!=null ) { plot.free(); plot=null; }
+         
       } else {
          if( p.type== Plan.ALLSKYTMOC ) {
-            System.out.println("Création du Plot pour "+p);
             plot = new Plot(this);
+            SwingUtilities.invokeLater(new Runnable() {
+               public void run() { plot.adjustPlot(); }
+            });
          }
       }
       
@@ -2127,13 +2131,19 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // thomas
          // click en mode SELECT --> on marque les images disponibles dans le treeView
          vs.markAvailableImages(x,y,flagshift);
-
-         // Dans le cas d'un Repere temporaire Simbad
-         if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) {
-            view.showSimRep();
-            flagSimRepClic=true;
+         
+         if( view.simRep!=null && view.simRep.action() ) {
+            flagMoveRepere=false;
+            repaint();
             return;
          }
+
+         // Dans le cas d'un Repere temporaire Simbad
+//         if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) {
+//            view.showSimRep();
+//            flagSimRepClic=true;
+//            return;
+//         }
       }
 
       // Initialisation d'un clic-and-drag de la vue
@@ -2476,13 +2486,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( rainbowF!=null && rainbowF.endDrag() ) repaint();
       if( rainbowUsed ) return;
       
-      if( flagSimRepClic )  {
-         flagSimRepClic=false;
-         view.simRep.couleur = Color.red; //MCanvas.C2;
-         aladin.view.repaintAll();
-         return;
-      }
-
       // Rien à faire
       if( flagCube ) {
          flagCube=false;
@@ -5248,19 +5251,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          int x=getMarge()+dx;
          int y=7+getMarge()+Math.max(0,(fontSize-12))+dy;
 
-         //      int len;
-         //      FontMetrics fm = g.getFontMetrics();
-         //      for( len=fm.stringWidth(s); s.length()>4 && len>rv.width-100; s=s.substring(0,s.length()-2), len=fm.stringWidth(s) );
-         //      Util.drawCartouche(g, x, y-11, len, 15, CARTOUCHE, null, Color.white);
-         //      g.setColor( locked ? Color.red : Aladin.BLACKBLUE );
-         //      g.drawString(s,x, y);
-         //      g.setColor(c);
-
+         Color fg = view.infoLabelColor;
+         if( isPlot() ) fg = Color.green;
          if( !view.infoBorder ) {
-            g.setColor( view.infoLabelColor );
+            g.setColor( fg );
             g.drawString(s,x, y);
             g.setColor( c1 );
-         } else Util.drawStringOutline(g, s, x, y, view.infoLabelColor, locked ? Color.red : null);
+         } else Util.drawStringOutline(g, s, x, y, fg, locked ? Color.red : null);
 
          g.setFont( f1 );
    }
@@ -6507,7 +6504,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          return flagDisplay;
       }
 
-      if( vs.isPlot() ) vs.plot.drawPlotGrid(g,dx,dy);
+      if( vs.isPlot() ) vs.plot.drawGrid(g,dx,dy);
       else if( calque.hasGrid() && !proj.isXYLinear() ) vs.drawGrid(g,clip,dx,dy);
 
       int fontSize = view.infoFontSize;
@@ -7232,6 +7229,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    protected boolean isPlot() { return plot!=null; }
    protected boolean isPlotTime() { return plot!=null && plot.isPlotTime(); }
+   protected boolean isPlotTimeWithoutTable() { return plot!=null && plot.isPlotTimeWithoutTable(); }
 
    /** Création d'une table. Le nom des colonnes peut être mentionné au moyen de jokers (*,?)
     * @param plan Nom du plan Catalog concerné

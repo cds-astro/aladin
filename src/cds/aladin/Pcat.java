@@ -837,7 +837,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   else if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
                   val = "<&"+tag+val.substring(2);
                   source.setValue(indexAccessUrl, val);
-                  source.leg.field[indexAccessUrl].flagArchive=true;
+                  source.getLeg().field[indexAccessUrl].flagArchive=true;
                }
             } catch( Exception e ) {
                e.printStackTrace();
@@ -1408,7 +1408,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          if( !(o[i] instanceof Source) ) continue;
          
          // On a trouvé ?
-         if( ((Source)o[i]).leg==src.leg ) {
+         if( ((Source)o[i]).getLeg()==src.getLeg() ) {
             int n = nextIndex();
             for( int j=n; j>i+1; j--) o[j] = o[j-1];  // décalage
             o[i+1] = src;
@@ -1434,7 +1434,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       for( int i=0; i<nb_o; i++ ) {
          if( !(o[i] instanceof Source) ) continue;
          Source s = (Source)o[i];
-         if( s.leg==leg ) { s.fixInfo(); j++; }
+         if( s.getLeg()==leg ) { s.fixInfo(); j++; }
       }
       //System.out.println("FIX J'ai fixé "+j+" sources du plan "+plan);
    }

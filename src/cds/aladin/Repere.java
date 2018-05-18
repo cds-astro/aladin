@@ -59,7 +59,6 @@ public class Repere extends Position {
    static final int ARROW  =3;  // Graphisme pour l'objet demandé (flèche)
    static final int CENTER =4;  // Graphisme pour le centre d'un FoV (croix)
    static final int ROTCENTER =5;  // Graphisme pour le centre de rotationd'un FoV (rond)
-   static final int CARTOUCHE  =6;  // Graphisme pour un cartouche
    protected int L = 5;         // demi-taille du repere
    private double radius;      // Rayon en degrés image du cercle englobant
    protected int dw,dh;         // mesure du label
@@ -81,6 +80,11 @@ public class Repere extends Position {
    /** Creation d'un repere speciale de positionnement dans l'ecran */
    protected Repere(Plan plan,Coord c) {
       super(plan,null,0,0,c.al,c.del,RADE,null);
+   }
+
+   /** Creation d'un repere speciale de positionnement dans l'ecran */
+   protected Repere(Plan plan, ViewSimple v, Coord c) {
+      super(plan,v,0,0,c.al,c.del,RADE,null);
    }
 
    /** Creation d'un repere graphique en connaissant RA/DE.
@@ -195,24 +199,10 @@ public class Repere extends Position {
    }
 
    /** Determine le decalage pour ecrire l'id */
-   void setD() {
+   protected void setD() {
       FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(DF);
       dw = m.stringWidth(id)+25;
       dh=  HF;
-      if( type==CARTOUCHE ) { 
-         try {
-            dw = m.stringWidth( getId(id) )+25;
-            int w = m.stringWidth( "Type : "+getType(id) )+25;
-            if( w>dw ) dw = w;
-            w = m.stringWidth( "Mag : "+getMag(id) )+25;
-            if( w>dw ) dw = w;
-            dh*=5.4; 
-         } catch( Exception e ) { 
-            int w = m.stringWidth("unknown by Simbad")+20;
-            if( w>dw ) dw = w;
-            dh*=3; 
-         }
-      }
    }
 
    /** Set specifical color (dedicated for catalog sources) */
@@ -272,8 +262,6 @@ public class Repere extends Position {
          double xc,yc;
          xc = xv[v.n];
          yc = yv[v.n];
-
-         if( type==CARTOUCHE ) return(xc<=x+l+dw/2 && xc>=x-l-dw/2 && yc<=y+l+dh/2 && yc>=y-l-dh/2);
          return(xc<=x+l && xc>=x-l && yc<=y+l && yc>=y-l);
       }
    }
@@ -345,8 +333,7 @@ public class Repere extends Position {
       if( type==TARGET || type==TARGETL ) couleur=Color.magenta.darker();
       if( couleur!=null ) return couleur;
 
-      if( type==CARTOUCHE ) couleur = Color.blue;
-      else if( type==ARROW ) couleur = Color.red;
+      if( type==ARROW ) couleur = Color.red;
       else if( plan!=null ) {
          if( plan.type==Plan.APERTURE ) couleur = ((PlanField)plan).getColor(this);
          else return plan.c;
@@ -715,76 +702,11 @@ public class Repere extends Position {
             g.drawLine(p.x,   p.y-3,   p.x-3,   p.y-6);
             g.drawLine(p.x,   p.y-3,   p.x+3,   p.y-6);
             break;
-         case CARTOUCHE:
-            g.setColor(JAUNEPALE);
-            g.drawLine(p.x,   p.y-L, p.x,   p.y-3);
-            g.setColor(Color.black);
-            g.drawLine(p.x+1,   p.y-L, p.x+1,   p.y-3);
-            g.setColor(JAUNEPALE);
-            Util.drawCircle5(g, p.x, p.y);
-            g.setColor(Color.black);
-            Util.drawCircle7(g, p.x, p.y);
-            break;
-            //         case TARGET:
-            //            g.drawLine(p.x-L, p.y,   p.x-3, p.y);
-            //            g.drawLine(p.x+3, p.y,   p.x+L, p.y);
-            //            g.drawLine(p.x,   p.y-L, p.x,   p.y-3);
-            //            g.drawLine(p.x,   p.y+3, p.x,   p.y+L);
-            //            break;
       }
 
       if( isWithLabel() && !hasRayon() ) {
          if( id==null ) setId();
-         if( type==CARTOUCHE ) {
-//            Util.drawCartouche(g,p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 1f, Color.black,JAUNEPALE);
-//            g.setColor( getColor() );
-//            g.setFont(Aladin.SPLAIN);
-//            g.drawString(id,p.x-dw/2,p.y-L-1);
-            
-            g.setColor( CARTOUCHE_BACKGROUND );
-            g.fillRoundRect(p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 10, 10);
-//            g.setColor( CARTOUCHE_BACKGROUND.brighter().brighter() );
-//            g.drawRoundRect(p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 10, 10);
-            
-            try {
-               g.setColor( Aladin.COLOR_BLUE );
-               g.setFont(Aladin.BOLD);
-               int x=p.x-dw/2+5;
-               int y=p.y-4*L-6;
-               String s = getId(id);
-               g.drawString( s,x,y);
-               if( flagIn ) {
-                  int w = g.getFontMetrics().stringWidth(s);
-                  g.drawLine(x-1,y+3,x+w+2,y+3);
-                  g.drawLine(x-1,y+4,x+w+2,y+4);
-               }
-               
-               g.setFont(Aladin.ITALIC);
-               g.setColor( CARTOUCHE_FOREGROUND );
-               g.drawString( "Type: "+getType(id),p.x-dw/2+15,p.y-3*L-4);
-               g.drawString( "Mag : "+getMag(id),p.x-dw/2+15,p.y-2*L-4);
-               
-               g.setColor( CARTOUCHE_FOREGROUND.darker() );
-               s = "by Simbad";
-               g.setFont( g.getFont().deriveFont( g.getFont().getSize2D()-2));
-               x = p.x+dw/2-5 - g.getFontMetrics().stringWidth(s);
-               y = p.y-L-2;
-               g.drawString( s,x,y);
-               
-            } catch( Exception e ) {
-               g.setColor( CARTOUCHE_FOREGROUND );
-               g.drawString( id,p.x-dw/2+5,p.y-2*L-5);
-               g.setColor( CARTOUCHE_FOREGROUND.darker() );
-               g.setFont(Aladin.ITALIC);
-               g.setFont( g.getFont().deriveFont( g.getFont().getSize2D()-2));
-               String s = "unknown by Simbad";
-               int x = p.x+dw/2-5 - g.getFontMetrics().stringWidth(s);
-               int y = p.y-L-2;
-               g.drawString( s,x,y );
-            }
-            
-
-         } else g.drawString(id,p.x-dw/2,p.y-L-1);
+         g.drawString(id,p.x-dw/2,p.y-L-1);
       }
 
       if( isSelected()  ) {

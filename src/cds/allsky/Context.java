@@ -33,6 +33,7 @@ import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -69,6 +70,14 @@ import cds.tools.pixtools.CDSHealpix;
 public class Context {
    
    static final public String FORCOMPATIBILITY = "#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____";
+   
+   static private String [] FITSKEYS = { 
+         "DATE","MJD_OBS","UTC","LST","DATE-OBS","MJD-OBS","MJD-END",
+         "DATE-OBS","DATE-END","DATEOBS1","DATEOBS2","MIDOBS",
+         "ORDATE","TIMESYS","MJDREF","JD","EXPTIME","TEXPTIME","OBSTIME",
+         "WAVELMIN","WAVELMAX","WAVELEN","EQUINOX","EPOCH","TELESCOP","TELNAME"
+   };
+
    
    private static boolean verbose=false;
    protected String hipsId=null;             // Identificateur du HiPS (publisher_did, sinon publisher_id/obs_id sans le préfixe ivo://)
@@ -114,7 +123,8 @@ public class Context {
    public double pourcentMax=-1;             // Pourcentage de l'info à garder en fin d'histog. si autocut (ex: 0.9995), -1 = défaut
    public String expTimeName;                // Nom du champ à utiliser dans le header pour diviser par une valeur (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
-   protected ArrayList<String> fitsKeys=null;// Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
+   private ArrayList<String> defaultFitsKey; // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON par défaut
+   private ArrayList<String> fitsKeys=null;  // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON explicite
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
    protected boolean notouch=false;          // true si on ne doit pas modifier la date du hips_release_date
@@ -728,7 +738,6 @@ public class Context {
          Aladin.trace(4,"initFromImgEtalon :"+ e.getMessage());
       }
 
-
       // Positionnement initiale du HiPS par défaut
       if( target==null ) {
          Coord c = fitsfile.calib.getImgCenter();
@@ -740,12 +749,27 @@ public class Context {
             setTargetRadius(Util.round(r,5)+"");
          }
       }
+      
+      // Recherche des fitsKey à garder par défaut
+      defaultFitsKey = scanDefaultFitsKey( fitsfile.headerFits );
 
       // Mémorisation de la résolution initiale
       double [] res = fitsfile.calib.GetResol();
       resolution = Util.myRound(Math.min(res[0],res[1]));
 
       lastImgEtalon = imgEtalon;
+   }
+   
+   // Retourne la liste des Fits Keys de l'entête qui matchent la liste par défaut.
+   // Si aucun retourne null
+   private ArrayList<String> scanDefaultFitsKey( HeaderFits h ) {
+      ArrayList<String> a = new ArrayList<String>();
+      Enumeration<String> e = h.getKeys();
+      while( e.hasMoreElements() ) {
+         String s = e.nextElement();
+         if( Util.indexInArrayOf(s, FITSKEYS)>=0 ) a.add( s );
+      }
+      return a.size()>0 ? a : null;
    }
 
    /**
@@ -973,6 +997,11 @@ public class Context {
    public double getSkyArea() {
       if( moc==null ) return 1;
       return moc.getCoverage();
+   }
+   
+   public ArrayList<String> getFitsKeys() {
+      if( fitsKeys!=null ) return fitsKeys;
+      return defaultFitsKey;
    }
 
    public double getIndexSkyArea() {

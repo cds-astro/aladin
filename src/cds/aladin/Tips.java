@@ -26,8 +26,6 @@ import java.awt.Cursor;
 import java.awt.Label;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Random;
-import java.util.Vector;
 
 
 /**
@@ -38,58 +36,59 @@ import java.util.Vector;
  */
 public final class Tips extends MyLabel implements MouseListener {
       
-   static private final int TIPMAX=3;    // Nombre de fois où le message change avant d'afficher un TIPS
+//   static private final int TIPMAX=3;    // Nombre de fois où le message change avant d'afficher un TIPS
 
-   private Aladin aladin;
-   private long start;
-   private int tipCpt=0;
+//   private Aladin aladin;
+//   private long start;
+//   private int tipCpt=0;
    private String cTips=null;            // Le tips courant
-   private Random random;   
-   private Vector<String> TIPS = null;    // Les TIPS
+//   private Random random;   
+//   private Vector<String> TIPS = null;    // Les TIPS
    
-  /** Creation du label pour le copyright et les TIPS */
+//  /** Creation du label pour le copyright et les TIPS */
    protected Tips(Aladin aladin) {
       super(aladin.COPYRIGHT,Label.LEFT,Aladin.SPLAIN);
-      this.aladin = aladin;
+//      this.aladin = aladin;
       addMouseListener(this);
-      start=System.currentTimeMillis();
-      random = new Random(start);
+      setMarge(5);
+//      start=System.currentTimeMillis();
+//      random = new Random(start);
    }
    
-   /** Chargement des TIPS */
-   private void loadTips() {
-      TIPS = new Vector<String>(100);
-      String s;
-      for( int i=0; true; i++ ) {
-         s = aladin.chaine.getString("TIP"+i);
-         if( s==null ) break;
-         TIPS.add(s);
-      }
-   }
+//   /** Chargement des TIPS */
+//   private void loadTips() {
+//      TIPS = new Vector<String>(100);
+//      String s;
+//      for( int i=0; true; i++ ) {
+//         s = aladin.chaine.getString("TIP"+i);
+//         if( s==null ) break;
+//         TIPS.add(s);
+//      }
+//   }
    
    /** Retourne le tip courant, ou null si aucun */
    protected String getTips() { return cTips; }
    
-   /** Remplacement du Copyright par un TIPS de temps en temps */
-   private String pubNews(String text) {
-      if( text!=aladin.COPYRIGHT || random==null ) return text;
-      if( TIPS==null ) loadTips();
-      tipCpt++;
-      if( tipCpt>=1.5*TIPMAX ) { tipCpt=0; cTips=null; }
-      if( tipCpt<TIPMAX ) return text;
-      if( cTips==null )  cTips = getNextTips();
-      
-      return cTips;
-   }
+//   /** Remplacement du Copyright par un TIPS de temps en temps */
+//   private String pubNews(String text) {
+//      if( text!=aladin.COPYRIGHT || random==null ) return text;
+//      if( TIPS==null ) loadTips();
+//      tipCpt++;
+//      if( tipCpt>=1.5*TIPMAX ) { tipCpt=0; cTips=null; }
+//      if( tipCpt<TIPMAX ) return text;
+//      if( cTips==null )  cTips = getNextTips();
+//      
+//      return cTips;
+//   }
    
    public void setText(String text) {
       super.setText(text);
    }
 
-   private String getNextTips() {
-      int n = random.nextInt(TIPS.size());
-      return "TIP: "+TIPS.elementAt(n);
-   }
+//   private String getNextTips() {
+//      int n = random.nextInt(TIPS.size());
+//      return "TIP: "+TIPS.elementAt(n);
+//   }
    
    /** Changement de la couleur si c'est un TIPS */
    public Color getForeground() {
@@ -109,7 +108,7 @@ public final class Tips extends MyLabel implements MouseListener {
    }
 
    public void mousePressed(MouseEvent e) {
-      tipCpt=TIPMAX+1;
+//      tipCpt=TIPMAX+1;
       cTips=null;
       setText(Aladin.COPYRIGHT);
    }

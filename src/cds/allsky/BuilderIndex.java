@@ -181,9 +181,9 @@ public class BuilderIndex extends Builder {
 
       // Pour indiquer les listes des mots clés fits dont les valeurs vont être retenues
       // dans les fichiers d'index JSON afin d'être utiliser dans l'accès à la "Table des détails" (progéniteurs)
-      if( context.fitsKeys!=null ) {
+      if( context.getFitsKeys()!=null ) {
          StringBuilder res = null;
-         for( String key : context.fitsKeys ) {
+         for( String key : context.getFitsKeys() ) {
             if( res==null ) res = new StringBuilder();
             else res.append(", ");
             res.append(key);
@@ -501,9 +501,9 @@ public class BuilderIndex extends Builder {
       c.GetCoord(center);
 
       // Faut-il récupérer des infos dans l'entête fits, ou dans la première HDU
-      if( context.fitsKeys!=null ) {
+      if( context.getFitsKeys()!=null ) {
          StringBuilder res=null;
-         for( String key : context.fitsKeys ) {
+         for( String key : context.getFitsKeys() ) {
             String val;
             if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) {
                if( fitsfile.headerFits0==null

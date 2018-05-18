@@ -154,8 +154,7 @@ public class Plan implements Runnable {
    protected String filters[]; // Les filtres prédéfinis
    protected int filterIndex=-1;    // l'indice du filtre prédéfin à appliquer, -1 si aucun
    protected PlanFilter planFilter=null;
-
-
+   
    // Les parametres qui decrivent l'etat du plan
    boolean    flagOk;          // Vrai si le plan est disponible
    boolean    flagSkip;        // Vrai si le plan doit en fait être ignoré (cas d'un MEF dont on saute une extension)
@@ -285,7 +284,7 @@ public class Plan implements Runnable {
    protected boolean isSED() {
       if( getCounts()==0 ) return false;
       Obj s = iterator().next();
-      return s instanceof Source && ((Source)s).leg!=null && ((Source)s).leg.isSED();
+      return s instanceof Source && ((Source)s).getLeg()!=null && ((Source)s).getLeg().isSED();
    }
 
    // Il s'agit d'un plan qui s'applique en overlay d'une image */
@@ -534,6 +533,7 @@ public class Plan implements Runnable {
    protected int getNbTable() { return 0; }
    protected int getCounts() { return 0; }
    protected void reallocObjetCache() { if( pcat!=null ) pcat.reallocObjetCache(); }
+   protected boolean hasCatalogInfo() { return false; }
    
    /** Retourne l'époque originale */
    protected Astrotime getOriginalEpoch() {
@@ -721,7 +721,7 @@ public class Plan implements Runnable {
       while( it.hasNext() ) {
          try {
             Source s = (Source)it.next();
-            if( s.leg!=leg ) continue;
+            if( s.getLeg()!=leg ) continue;
             try {
                c.al = Double.parseDouble( s.getValue(nlon) );
                c.del = Double.parseDouble( s.getValue(nlat) );
@@ -752,7 +752,7 @@ public class Plan implements Runnable {
       while( it.hasNext() ) {
          try {
             Source s = (Source)it.next();
-            if( s.leg!=leg ) continue;
+            if( s.getLeg()!=leg ) continue;
             try {
                jdTime = Astrodate.parseTime( s.getValue(ntime), timeMode );
             } catch( Exception e ) {
@@ -784,7 +784,7 @@ public class Plan implements Runnable {
       while( it.hasNext() ) {
          try {
             Source s = (Source)it.next();
-            if( s.leg!=leg ) continue;
+            if( s.getLeg()!=leg ) continue;
             String ra = s.getValue(nra);
             String dec= s.getValue(ndec);
             int unit = TableParser.getUnit( s.getUnit(nra) );
@@ -936,7 +936,7 @@ public class Plan implements Runnable {
       while( it.hasNext() ) {
          try {
             Source s = (Source)it.next();
-            if( s.leg!=leg ) continue;
+            if( s.getLeg()!=leg ) continue;
             s.x = Double.parseDouble( s.getValue(nx) );
             s.y = Double.parseDouble( s.getValue(ny) );
          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }

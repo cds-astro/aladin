@@ -489,13 +489,6 @@ Runnable, SwingWidgetFinder, Widget {
       popMenu.show(this,x-15,y);
    }
 
-   //  /** Retourne vrai si on est dans l'oeil.
-   //   * @param x,y Position de la souris
-   //   * @return <I>true</I> si on est dans l'oeil <I>false</I> sinon
-   //   */
-   //   protected boolean inEye(int x, int y) { return(x-gapL<eyeWidth && y<eyeHeight); }
-
-
    /** Generation si necessaire du message "Image in progress...".
     * @param p le plan a attendre
     * @return <I>true</I> si c'est pret <I>false</I> sinon
@@ -504,10 +497,6 @@ Runnable, SwingWidgetFinder, Widget {
       String s;
       if( p.type!=Plan.NO && p.type!=Plan.FILTER && !p.flagOk ) {
          if( p.error==null ) {
-            //            if( p.isImage() ) s=WAITMIN+"\n \n"+((PlanImage)p).getStatus();
-            //            else s=WAITMIN;
-            //            Aladin.warning(s);
-
             a.status.setText("*** "+WAITMIN+" ***");
          }
          return false;
@@ -516,6 +505,7 @@ Runnable, SwingWidgetFinder, Widget {
    }
 
    boolean memoBoutonDroit = false;
+   
    /** Gestion de la souris */
    public void mousePressed(MouseEvent e) {
       if( a.inHelp ) return;
@@ -539,14 +529,6 @@ Runnable, SwingWidgetFinder, Widget {
       // Fin du message d'accueil
       a.endMsg();
 
-
-      //      // Gestion de l'oeil (selection de tous les plans simultanement, ou avec
-      //      if( inEye(x,y) ) {
-      //         a.calque.clinDoeil();
-      //         a.view.repaintAll();
-      //         clinDoeil();
-      //      }
-
       // Recherche du plan clique
       if( (currentPlan = getPlan(y))==null ) return;
       
@@ -555,11 +537,6 @@ Runnable, SwingWidgetFinder, Widget {
       oldy=y; oldx=x;
    }
 
-   //   /** Pour faire un clin d'oeil */
-   //   protected void clinDoeil() {
-   //      clinDoeil=true;
-   //      repaint();
-   //   }
 
    /** Permet de déterminer si le plan peut devenir de référence
     * comme si l'utilisateur avait cliqué sur le petit triangle */
@@ -587,7 +564,7 @@ Runnable, SwingWidgetFinder, Widget {
       
       // Un plan sans position ne peut être pris comme référence
       if( currentPlan.hasNoPos ) return false;
-
+      
       // les plans FILTER et CONTOUR ne peuvent PAS etre pris comme référence
       if( currentPlan.type==Plan.FILTER
             || currentPlan instanceof PlanContour
@@ -937,7 +914,7 @@ Runnable, SwingWidgetFinder, Widget {
 
       boolean itsDone=false;
 
-      if( !canBeNewRef(e,x,p) ||  (!a.view.isMultiView() && p.ref)  ) newRef=null;
+      if( !canBeNewRef(e,x,p) || (!a.view.isMultiView() && p.ref)  ) newRef=null;
       else newRef = p;
 
       if( !itsDone && p.type!=Plan.NO ) {
@@ -1042,7 +1019,7 @@ Runnable, SwingWidgetFinder, Widget {
          // Sélection de tous les objets du plan par double-clic
          if( x>gapL && !boutonDroit && e.getClickCount()==2 && (p.isCatalog() ||
                p instanceof PlanTool && !(p instanceof PlanContour) ) && p.active ) {
-            a.view.calque.selectAllObjectInPlans();
+            a.select();
 
             // On repasse en mode SELECT si nécessaire
             int i=a.toolBox.getTool();
@@ -1664,7 +1641,16 @@ Runnable, SwingWidgetFinder, Widget {
       if( listUrl==null ) return null;
       for( ActionUrl au : listUrl ) {
          if( au.rect.contains(x, y) ) {
-            if( au.url!=null && au.url.length()>0 ) a.glu.showDocument(au.url);
+            if( au.url!=null && au.url.length()>0 ) {
+               
+               // Une URL effectivement ?
+               if( au.url.startsWith("http") ) a.glu.showDocument(au.url);
+               
+               // En fait une commande script
+               else {
+                  a.execAsyncCommand( au.url);
+               }
+            }
             return au.url;
          }
       }
@@ -1674,15 +1660,19 @@ Runnable, SwingWidgetFinder, Widget {
    private boolean onUrl(int x, int y) {
       if( listUrl==null ) return false;
       for( ActionUrl au : listUrl ) {
-         if( au.rect.contains(x, y) ) return true;
+         if( au.rect.contains(x, y) ) {
+            a.urlStatus.setText(au.url);
+            return true;
+         }
       }
+      a.urlStatus.setText("");
       return false;
    }
    
    private int drawUrl(Graphics g,String s, String url,int x, int y) {
       if( s.length()==0 ) return x;
       
-      g.setColor( Aladin.COLOR_BLUE );
+      g.setColor( url.startsWith("http") ? Aladin.COLOR_BLUE : Aladin.COLOR_LABEL );
       g.drawString(s,x,y);
       int w = g.getFontMetrics().stringWidth(s);
       g.drawLine(x, y+2, x+w, y+2);

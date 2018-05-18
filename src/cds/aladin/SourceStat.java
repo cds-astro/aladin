@@ -101,7 +101,7 @@ public class SourceStat extends SourceTag {
    
    /** Post-traitement lors de la création */
    protected void suite() {
-      leg=legende;
+      setLeg(legende);
       setId();
       resumeMesures();
    }

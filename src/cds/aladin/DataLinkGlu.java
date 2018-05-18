@@ -598,7 +598,7 @@ public final class DataLinkGlu {
 		if (paramDataTypeDefault == null) {
 			if (activeDatalinkSource != null) {
 				if (lowerLimitIndex != -1) {
-					Field[] field = activeDatalinkSource.leg.field;
+					Field[] field = activeDatalinkSource.getLeg().field;
 					paramDataType.put(paramFormIndex, field[lowerLimitIndex].datatype);
 				}
 			}

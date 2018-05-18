@@ -38,6 +38,7 @@ public class PlanBGCat extends PlanBG {
    static final protected int MAXGAPORDER = 3;  // Décalage maximal autorisé
    private int gapOrder=0;                      // Décalage de l'ordre Max => changement de densité
    protected int allskyExt=HealpixAllsky.XML;   // L'extension des fichiers allsky (dépend de la version du HiPS catalog)
+   private Pcat genericPcat;
 
    protected PlanBGCat(Aladin aladin) {
       super(aladin);
@@ -370,6 +371,8 @@ public class PlanBGCat extends PlanBG {
    protected boolean Free() {
       aladin.view.deSelect(this);
       super.Free();
+      genericPcat=null;
+      System.out.println("Free: genericPcat reset => null");
       FilterProperties.notifyNewPlan();
       return true;
    }
@@ -412,13 +415,40 @@ public class PlanBGCat extends PlanBG {
       return v;
    }
 
-   protected Legende leg;
-   protected void setLegende(Legende leg) {
-      this.leg=leg;
-      setFilter(filterIndex);
-   }
-   protected Legende getFirstLegende() { return leg; }
+   protected Legende getFirstLegende() { return genericPcat==null ? null : genericPcat.leg; }
+   protected boolean hasGenericPcat() { return genericPcat!=null; }
+   protected Pcat getGenericPcat() { return genericPcat; }
+   protected boolean hasCatalogInfo() { return hasGenericPcat() && genericPcat.hasCatalogInfo(); }
    
+   
+   
+   
+   /** Mémorisation d'un pcat "étalon" qui va me servir pour connaître la légende générique
+    * ou spécifique à lapremière tuile chargée
+    */
+   protected void setGenericPcat(Pcat pcat) {
+      genericPcat = pcat;
+      if( pcat.hasObj() ) {
+         try {
+            Source src = (Source)pcat.iterator().next();
+            if( genericPcat.leg==null ) genericPcat.leg = src.getLeg();
+//            setPattern(s);
+            
+            // Affectation à la légende courante d'une liste de pattern à base d'expressions régulières
+            // pour effectuer l'extration des valeurs depuis le fichier JSON HpxFinder
+            if( genericPcat.leg==null ) throw new Exception("cannot store pattern in null leg !");
+            else {
+               String [] pattern = src.getValues();
+               for( int i=0; i<genericPcat.leg.field.length; i++ ) {
+                  if( pattern[i].trim().length()==0 ) continue;
+                  genericPcat.leg.field[i].hpxFinderPattern = pattern[i];
+               }
+            }
+
+         } catch( Exception e ) { e.printStackTrace(); }
+      }
+   }
+
    /** Affectation à la légende courante d'une liste de pattern à base d'expressions régulières
     * pour effectuer l'extration des valeurs depuis le fichier JSON HpxFinder vers une vue sous forme de
     * table VOTable correspondante au ficheir metadata.xml.
@@ -430,14 +460,15 @@ public class PlanBGCat extends PlanBG {
     * @param src
     * @throws Exception
     */
-   protected void setPattern(Source src) throws Exception {
-      if( leg==null ) throw new Exception("cannot store pattern in null leg !");
-      String [] pattern = src.getValues();
-      for( int i=0; i<leg.field.length; i++ ) {
-         if( pattern[i].trim().length()==0 ) continue;
-         leg.field[i].hpxFinderPattern = pattern[i];
-      }
-   }
+//   private void setPattern(Source src) throws Exception {
+//      Legende leg = getFirstLegende();
+//      if( leg==null ) throw new Exception("cannot store pattern in null leg !");
+//      String [] pattern = src.getValues();
+//      for( int i=0; i<leg.field.length; i++ ) {
+//         if( pattern[i].trim().length()==0 ) continue;
+//         leg.field[i].hpxFinderPattern = pattern[i];
+//      }
+//   }
 
    /** Charge la légende générique via le fichier metadata.xml (s'il existe) */
    protected void loadGenericLegende() {
@@ -446,10 +477,9 @@ public class PlanBGCat extends PlanBG {
       MyInputStream in = null;
       try {
           pcat.tableParsing(in=Util.openAnyStream(filename),null);
-          setLegende(pcat.leg);
-          if( pcat.hasObj() ) setPattern((Source)pcat.iterator().next());
+          setGenericPcat(pcat);
       }
-      catch( Exception e ) { }
+      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
    }
    

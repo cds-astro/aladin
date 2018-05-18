@@ -54,6 +54,7 @@ import cds.allsky.Context;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.mocmulti.MocItem2;
+import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
 /**
@@ -138,7 +139,8 @@ public class TreeObjDir extends TreeObj implements Propable {
          if( offset==end-1 && offset>0 ) { end=offset; offset = pathOrUrl.lastIndexOf(c,end-1); }
          label = pathOrUrl.substring(offset+1,end);
       }
-      id="__"+label;
+//      id="__"+label;
+      id= internalId = MultiMoc.getID(prop);
 
       s = prop.getProperty(Constante.OLD_VERSION);
       if( s!=null ) version=s;
@@ -250,6 +252,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       else {
          keyColor = prop.getProperty(Constante.OLD_ISCOLOR);
          if( keyColor==null ) keyColor = prop.getProperty("isColor");
+         if( keyColor==null ) keyColor = prop.getProperty("isColored");
          if( keyColor!=null ) color = new Boolean(keyColor);
       }
 

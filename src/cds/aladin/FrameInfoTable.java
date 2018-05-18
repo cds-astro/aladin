@@ -84,7 +84,7 @@ public class FrameInfoTable extends JFrame {
 	   // Le Panel des boutons de controle
 	   JPanel p2 = new JPanel();
 	   JButton b;
-	   if( plan.pcat!=null && plan.pcat.hasCatalogInfo() ) {
+	   if( plan.hasCatalogInfo() ) {
 	      
           b = new JButton(" ^ ");
           b.addActionListener(new ActionListener() {
@@ -163,7 +163,10 @@ public class FrameInfoTable extends JFrame {
 	   aladin.info(this, Util.fold( aladin.chaine.getString("COORDCOLUMNDETAIL"),50));
 	}
 	
-	private void seeCatalogInfo() { plan.pcat.seeCatalogInfo(); }
+	private void seeCatalogInfo() { 
+	   if( plan instanceof PlanBGCat ) ((PlanBGCat)plan).getGenericPcat().seeCatalogInfo();
+	   else plan.pcat.seeCatalogInfo();
+	}
 	
 	// Affiche/cache tous les champs
 	private void check(boolean flag) { 

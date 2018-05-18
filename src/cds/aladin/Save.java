@@ -1040,10 +1040,10 @@ public class Save extends JFrame implements ActionListener {
          Source o = (Source)o1;
 
          // Nouvelle table dans le plan courant
-         if( o.leg!=leg ) {
+         if( o.getLeg()!=leg ) {
             if( leg!=null ) append( getXMLTailTable()); // fin de la table precedente
-            append( getXMLHeadTable(o.leg) );           // Nouvelle table
-            leg=o.leg;
+            append( getXMLHeadTable(o.getLeg()) );           // Nouvelle table
+            leg=o.getLeg();
          }
 
          // Ajout de la position RA,DEC en J2000 et de l'identificateur
@@ -1458,7 +1458,7 @@ public class Save extends JFrame implements ActionListener {
             Source o = (Source)(i<nb?it.next():null);
 
             // Ecriture de la table courante (ou de sa fin)
-            if( o==null || o.leg!=leg ) {
+            if( o==null || o.getLeg()!=leg ) {
                if( i<nb ) s.append(CR);
                f=writeByteTSV(f,file,nbTable,s);
                if( o==null ) {
@@ -1470,7 +1470,7 @@ public class Save extends JFrame implements ActionListener {
                // Recherche de la la légende de la prochaine table
                if( o!=null ) {
                   s = new StringBuilder(MAXBUF);
-                  leg = (o).leg;
+                  leg = (o).getLeg();
                   s.append(getShortHeader(leg));
                }
             }
@@ -1519,7 +1519,7 @@ public class Save extends JFrame implements ActionListener {
             Source o = (Source)(i<nb?it.next():null);
 
             // Ecriture de la table courante (ou de sa fin)
-            if( o==null || o.leg!=leg ) {
+            if( o==null || o.getLeg()!=leg ) {
                s.append(CR+"]"+CR);
 
                if (o==null) {
@@ -1539,7 +1539,7 @@ public class Save extends JFrame implements ActionListener {
                // Recherche de la la légende de la prochaine table
                if( o!=null ) {
                   s = new StringBuilder(MAXBUF);
-                  leg = o.leg;
+                  leg = o.getLeg();
                   s.append(","+CR+"[");
                }
             }

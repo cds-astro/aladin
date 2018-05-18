@@ -339,9 +339,6 @@ public class ServerFile extends Server implements XMLConsumer {
             if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
                u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
                
-               if( f.startsWith("https") ) {
-                  System.out.println("J'y suis");
-               }
                try { in = Util.openStream(u); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
                mode="http";
             }
@@ -486,7 +483,7 @@ public class ServerFile extends Server implements XMLConsumer {
                TreeObjDir gSky=null;
                try { gSky = new TreeObjDir(aladin, f); }
                catch( Exception e ) {
-                  aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found => autodiscovery");
+                  aladin.trace(3, "ServerFile.creatLocalPlane(...) HiPS properties file not found => autodiscovery");
                }
                if( gSky!=null ) n=aladin.calque.newPlanBG(gSky,label,null,null);
 

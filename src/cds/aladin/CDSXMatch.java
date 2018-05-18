@@ -474,11 +474,11 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 			s2 = (dist==-1.0)?null:(Source)o2[idx2];
 
 			// doit-on créer une nouvelle légende ?
-			if( saveLeg1==null || saveLeg2==null || s1.leg!=saveLeg1 || (s2!=null && s2.leg!=saveLeg2)  ) {
-				saveLeg1 = s1.leg;
-				saveLeg2 = s2==null?null:s2.leg;
+			if( saveLeg1==null || saveLeg2==null || s1.getLeg()!=saveLeg1 || (s2!=null && s2.getLeg()!=saveLeg2)  ) {
+				saveLeg1 = s1.getLeg();
+				saveLeg2 = s2==null?null:s2.getLeg();
 
-				String id = s1.leg.toString()+(s2==null?"null":s2.leg.toString());
+				String id = s1.getLeg().toString()+(s2==null?"null":s2.getLeg().toString());
 				if( (leg=legMemory.get(id))==null ) {
 
 					leg = createLeg(xmatchType, ellXMatch, s1, s2, coordTab1);
@@ -592,8 +592,8 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
 
        Field f, curF;
        int k =0;
-       for( int i=0; i<s.leg.field.length; i++ ) {
-           curF = s.leg.field[i];
+       for( int i=0; i<s.getLeg().field.length; i++ ) {
+           curF = s.getLeg().field[i];
 
            // doit on conserver le field courant ?
            boolean keep = true;

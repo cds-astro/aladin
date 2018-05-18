@@ -325,7 +325,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       // Décompte
       int nb=0;
       for( int i=0; i<nbSrc; i++ ) {
-         if( src[i].leg!=o.leg ) continue;
+         if( src[i].getLeg()!=o.getLeg() ) continue;
          nb++;
       }
 
@@ -333,7 +333,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
       // Récupération des valeurs du champ indiqué
       for( int i=0,j=0; i<nbSrc; i++ ) {
-         if( src[i].leg!=o.leg ) continue;
+         if( src[i].getLeg()!=o.getLeg() ) continue;
          x[j]=Double.NaN;
          String s = src[i].getValue(nField);
          int n = s.length();
@@ -360,7 +360,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       // Décompte
       int nb=0;
       for( int i=0; i<nbSrc; i++ ) {
-         if( src[i].leg!=o.leg ) continue;
+         if( src[i].getLeg()!=o.getLeg() ) continue;
          nb++;
       }
 
@@ -368,7 +368,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
       // Récupération des valeurs du champ indiqué
       for( int i=0,j=0; i<nbSrc; i++ ) {
-         if( src[i].leg!=o.leg ) continue;
+         if( src[i].getLeg()!=o.getLeg() ) continue;
          x[j] = src[i].getValue(nField);
          j++;
       }
@@ -530,16 +530,16 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             lastOcc=s;
 
             // Y a-t-il un nom de colonne précisée ? dans le cas où je change de légende
-            if( col.length()>0 && oLeg!=s.leg) {
-               colIndex = s.leg.matchIgnoreCaseColIndex(col.toString());
+            if( col.length()>0 && oLeg!=s.getLeg()) {
+               colIndex = s.getLeg().matchIgnoreCaseColIndex(col.toString());
                if( colIndex==-1 ) break;  // Pas dans ce plan
-               numeric = s.leg.isNumField(colIndex);
+               numeric = s.getLeg().isNumField(colIndex);
                if( numeric ) {
                   try { numS = Double.parseDouble(masq); }
                   catch(Exception e) {}
                }
                //System.out.println(s.plan.label+" mode="+mode+" col="+col+" val="+v+" colIndex="+colIndex+" dataType="+dataType+" numeric="+numeric+" numS="+numS);
-               oLeg=s.leg;
+               oLeg=s.getLeg();
             }
 
             String val[] = s.getValues();
@@ -625,7 +625,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       aladin.calque.zoom.zoomView.stopHist();
       aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(true);
-      if( s.leg!=null && s.leg.isSorted() ) { s.leg.clearSort(); mcanvas.reloadHead(); }
+      if( s.getLeg()!=null && s.getLeg().isSorted() ) { s.getLeg().clearSort(); mcanvas.reloadHead(); }
       if( mcanvas.triTag!=Field.UNSORT ) mcanvas.triTag=Field.UNSORT;
    }
 
@@ -764,7 +764,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
    /** Génération de la HeadLine associée à la source passée en paramètre */
    protected Vector getHeadLine(Source o) {
       Vector wordLine;
-      Legende leg = o.leg;
+      Legende leg = o.getLeg();
       wordLine = new Vector(leg.field.length+2);
 
       wordLine.addElement(o);           // L'objet lui-meme est tjrs en premiere place
@@ -773,8 +773,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       for( int i=0; i<leg.field.length; i++ )  {
          int nField = leg.fieldAt[i];
          if( !leg.isVisible(nField) ) continue;
-         Words w = new Words(leg.field[nField].name,null,o.leg.getWidth(nField),o.leg.getPrecision(nField),
-               Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[nField],
+         Words w = new Words(leg.field[nField].name,null,o.getLeg().getWidth(nField),o.getLeg().getPrecision(nField),
+               Words.CENTER,o.getLeg().computed.length==0?false:o.getLeg().computed[nField],
                      leg.field[nField].sort,-1);
          w.pin = i==0;
          wordLine.addElement(w);
@@ -822,7 +822,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
          } else {
             int nField=0;
             try {
-               nField = o.leg.fieldAt[i-1];
+               nField = o.getLeg().fieldAt[i-1];
             } catch( Exception e ) {
                // Y a un problème
                System.out.println("Y a un prob. =>"+s);
@@ -830,22 +830,22 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             }
             tag = tags[nField];
 
-            if( !o.leg.isVisible(nField) ) continue;
+            if( !o.getLeg().isVisible(nField) ) continue;
 
             // Determination de l'alignement en fonction du type de donnees
-            int align= o.leg.isNumField(nField) ? Words.RIGHT : Words.LEFT;
+            int align= o.getLeg().isNumField(nField) ? Words.RIGHT : Words.LEFT;
 
             // Creation d'un mot dans le cas d'un footprint associé (Thomas, VOTech)
             if( indexFootPrint==nField ) {
-               w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(nField),Words.LEFT,
+               w = new Words("  FoV",o.getLeg().getWidth(i-1),o.getLeg().getPrecision(nField),Words.LEFT,
                      false,true,num);
             }
             // Creation du nouveau mot
             else {
-               if( o.leg.isNullValue(tag, i-1) ) tag="";
-               w = new Words(tag,o.leg.getRefText(nField),o.leg.getWidth(nField),
-                     o.leg.getPrecision(nField),align,
-                     o.leg.computed.length==0?false:o.leg.computed[nField],Field.UNSORT,num);
+               if( o.getLeg().isNullValue(tag, i-1) ) tag="";
+               w = new Words(tag,o.getLeg().getRefText(nField),o.getLeg().getWidth(nField),
+                     o.getLeg().getPrecision(nField),align,
+                     o.getLeg().computed.length==0?false:o.getLeg().computed[nField],Field.UNSORT,num);
             }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );
@@ -1043,7 +1043,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       StringBuilder sb = new StringBuilder();
       Source s = mcanvas.objSelect;
       
-      Legende leg = s.leg;
+      Legende leg = s.getLeg();
       String [] values = s.getValues();
       boolean first=true;
       
@@ -1126,7 +1126,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       mcanvas.currentselect=-2;
 
       Source s = aladin.mesure.getFirstSrc();
-      if( s==null && aladin.view.zoomview.flagSED || s!=null && s.leg!=null && s.leg.isSED() ) {
+      if( s==null && aladin.view.zoomview.flagSED || s!=null && s.getLeg()!=null && s.getLeg().isSED() ) {
          aladin.view.zoomview.setSED(s);
       }
       mcanvas.repaint();

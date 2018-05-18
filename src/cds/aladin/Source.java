@@ -66,7 +66,7 @@ public class Source extends Position implements Comparator {
 
    protected byte sourceType=SQUARE;    //Type de representation de la source par défaut (CARRE, ...)
    protected String info;       // Information supplementaire associee a la source (en plus de id)
-   protected Legende leg;       // La legende associee a la source
+   private Legende leg;       // La legende associee a la source
    private String oid=null;     // L'OID de la source s'il a ete defini
 
    /**** variables liés aux filtres ****/
@@ -107,6 +107,18 @@ public class Source extends Position implements Comparator {
       sourceType=(byte)plan.sourceType;
       fixInfo();
    }
+   
+   /** Creation d'un objet source
+    * @param plan plan d'appartenance de la ligne
+    * @param raj,dej  coordonnees de l'objet
+    * @param jdtime   date associée à l'objet
+    * @param id       identificateur de l'objet
+    * @param info     information supplementaire
+    */
+    protected Source(Plan plan, double raj, double dej, double jdtime, String id, String info) {
+       this(plan,raj,dej,id,info);
+       this.jdtime = jdtime;
+    }
 
   /** Creation d'un objet source
    * @param plan plan d'appartenance de la ligne
@@ -118,7 +130,7 @@ public class Source extends Position implements Comparator {
                     String info, Legende leg) {
       super(plan,null,0.,0.,raj,dej,RADE,id);
       this.info = info;
-      this.leg = leg;
+      this.leg=leg;
       sourceType=(byte)plan.sourceType;
 
       fixInfo();
@@ -137,13 +149,28 @@ public class Source extends Position implements Comparator {
                     String id, String info, Legende leg) {
       super(plan,null,x,y,raj,dej,methode,id);
       this.info = info;
-      this.leg = leg;
+      this.leg=leg;
       sourceType=(byte)plan.sourceType;
 
       fixInfo();
 
    }
    
+   /** Retourne la légende associée à la source */
+   public Legende getLeg() {
+      
+      // Dans le cas d'un plan HiPs catalogue, la légende peut être générique
+      if( plan!=null && plan instanceof PlanBGCat ) {
+         Legende l = plan.getFirstLegende();
+         if( l!=null ) return l;
+      }
+      
+      return leg;
+   }
+
+   /** Positionne la légende associée à la source */
+   protected void setLeg(Legende leg) { this.leg = leg; }
+
    /** Accroit ou décroit la taille du type de source */
    void increaseSourceSize(int sens) { 
       sourceType+=sens;
@@ -188,7 +215,7 @@ public class Source extends Position implements Comparator {
    final protected boolean isHighlighted() { return (flags & HIGHLIGHT) !=0; /* == HIGHLIGHT;*/ }
 
    /** Retourne true si l'objet contient des informations de photométrie  */
-   public boolean hasPhot() { return leg.hasGroup(); }
+   public boolean hasPhot() { return getLeg().hasGroup(); }
 
    /** Retourne le nom de la forme en fonction de l'indice */
    static protected final String getShape(int i) { return TYPENAME[i]; }
@@ -201,12 +228,12 @@ public class Source extends Position implements Comparator {
 
    /** fix for the AVO demo : sometimes, info is shorter than leg ! */
    protected void fixInfo() {
-       if( leg==null || leg.field==null || info==null ) return;
+       if( getLeg()==null || getLeg().field==null || info==null ) return;
 
        StringTokenizer st = new StringTokenizer(this.info,"\t");
        int nbInfo = st.countTokens()-1; // skip du triangle
        
-       int nbFields = leg.field.length;
+       int nbFields = getLeg().field.length;
 
        while( nbInfo<nbFields ) {
            this.info = new String(this.info)+"\t ";
@@ -287,7 +314,7 @@ public class Source extends Position implements Comparator {
   /** Modification de la legende associee a la source
    * @param leg la nouvelle legende
    */
-   protected void setLegende(Legende leg) { this.leg = leg; oid=""; }
+   protected void setLegende(Legende leg) {  this.leg=leg; oid=""; }
 
    // Affichage de l'info lie a la source
    protected void info(Aladin aladin) { aladin.mesure.setInfo(this); }
@@ -654,8 +681,8 @@ public class Source extends Position implements Comparator {
 
    /** Retourne le premier link associée à la source si il existe, sinon retourne "-" */
    protected String getFirstLink() {
-      if( leg==null ) return "-";
-      int i = leg.getFirstLink();
+      if( getLeg()==null ) return "-";
+      int i = getLeg().getFirstLink();
       if( i<0 ) return "-";
       String s;
       try {
@@ -860,9 +887,9 @@ public class Source extends Position implements Comparator {
     	int curPos;
     	String curUCD = null;
 
-        if( leg==null ) return -1;
+        if( getLeg()==null ) return -1;
 
-        Field[] fields = leg.field;
+        Field[] fields = getLeg().field;
     	// ucd contient-elle des wildcards ?
     	boolean wildcard = useWildcard(ucd);
 
@@ -886,9 +913,9 @@ public class Source extends Position implements Comparator {
        int curPos;
        String curUtype = null;
        
-       if( leg==null ) return -1;
+       if( getLeg()==null ) return -1;
 
-       Field[] fields = leg.field;
+       Field[] fields = getLeg().field;
        // utype contient-il des wildcards ?
        boolean wildcard = useWildcard(utype);
 
@@ -942,12 +969,12 @@ public class Source extends Position implements Comparator {
     	int curPos;
     	String curName = null;
 
-        if( leg==null ) return -1;
+        if( getLeg()==null ) return -1;
 
         // replace ajouté pour la démo AVO
         name = MetaDataTree.replace(name, " ", "", -1);
 
-    	Field[] fields = leg.field;
+    	Field[] fields = getLeg().field;
     	// name contient-elle des wildcards ?
 		boolean wildcard = useWildcard(name);
 
@@ -1022,7 +1049,7 @@ public class Source extends Position implements Comparator {
     	String ret;
       	try {
       	   ret = getCodedValue(index);
-      	   if( leg.isNullValue(ret, index) ) ret="";
+      	   if( getLeg().isNullValue(ret, index) ) ret="";
 
            // Pierre: En cas de marques GLU
            if( ret.startsWith("<&") ) {
@@ -1048,7 +1075,7 @@ public class Source extends Position implements Comparator {
        // sinon on passe par un Vector temporaire et on recopie à la fin
        String [] v = null;
        Vector tmp=null;
-       if( leg.field.length>0 ) v = new String[ leg.field.length ];
+       if( getLeg().field.length>0 ) v = new String[ getLeg().field.length ];
        else tmp = new Vector();
 
        st.nextElement();  // Skip le triangle
@@ -1122,9 +1149,9 @@ public class Source extends Position implements Comparator {
        setColumn(index,name,null,unit,ucd,width);
     }
     public void setColumn(int index, String name,String datatype,String unit,String ucd,int width) {
-       if( leg==null ) leg = new Legende();
-       int newCol = leg.setField(index,name,datatype,unit,ucd,width);
-       if( newCol>0 && plan!=null && plan.pcat!=null ) plan.pcat.fixInfo(leg);
+       if( leg==null ) leg=new Legende();
+       int newCol = getLeg().setField(index,name,datatype,unit,ucd,width);
+       if( newCol>0 && plan!=null && plan.pcat!=null ) plan.pcat.fixInfo(getLeg());
     }
 
     /** Return the index of a column (Source object). Proceed in 2 steps,
@@ -1135,19 +1162,19 @@ public class Source extends Position implements Comparator {
      * @return index of first column matching the key
      */
     public int indexOf(String key) {
-       if( leg==null ) return -1;
-       for( int i=0; i<leg.field.length; i++ ) {
-          if( Util.matchMask(key,leg.field[i].name) ) return i;
+       if( getLeg()==null ) return -1;
+       for( int i=0; i<getLeg().field.length; i++ ) {
+          if( Util.matchMask(key,getLeg().field[i].name) ) return i;
        }
-       for( int i=0; i<leg.field.length; i++ ) {
-          if( Util.matchMask(key,leg.field[i].ucd) ) return i;
+       for( int i=0; i<getLeg().field.length; i++ ) {
+          if( Util.matchMask(key,getLeg().field[i].ucd) ) return i;
        }
        return -1;
     }
 
     /** Return the number of columns associated to this object */
     public int getSize() {
-       if( leg!=null ) return leg.getSize();
+       if( getLeg()!=null ) return getLeg().getSize();
        if( info==null ) return 0;
        return new StringTokenizer(info,"\t").countTokens();
     }
@@ -1201,19 +1228,19 @@ public class Source extends Position implements Comparator {
      *  @param m 0:label, 1:unit,  2:ucd
      */
     private String [] getMeta(int m) {
-       if( leg==null ) return new String[0];
-       String [] u = new String[leg.getSize()];
+       if( getLeg()==null ) return new String[0];
+       String [] u = new String[getLeg().getSize()];
        for( int i=0; i<u.length; i++ ) {
           switch(m) {
-             case 0: u[i]=leg.field[i].name; break;
-             case 1: u[i]=leg.field[i].unit; break;
-             case 2: u[i]=leg.field[i].ucd;  break;
-             case 3: u[i]=leg.field[i].datatype;  break;
-             case 4: u[i]=leg.field[i].arraysize;  break;
-             case 5: u[i]=leg.field[i].width;  break;
-             case 6: u[i]=leg.field[i].precision;  break;
-             case 7: u[i]=leg.field[i].nullValue;  break;
-             case 8: u[i]=leg.field[i].description;  break;
+             case 0: u[i]=getLeg().field[i].name; break;
+             case 1: u[i]=getLeg().field[i].unit; break;
+             case 2: u[i]=getLeg().field[i].ucd;  break;
+             case 3: u[i]=getLeg().field[i].datatype;  break;
+             case 4: u[i]=getLeg().field[i].arraysize;  break;
+             case 5: u[i]=getLeg().field[i].width;  break;
+             case 6: u[i]=getLeg().field[i].precision;  break;
+             case 7: u[i]=getLeg().field[i].nullValue;  break;
+             case 8: u[i]=getLeg().field[i].description;  break;
           }
        }
        return u;
@@ -1223,13 +1250,13 @@ public class Source extends Position implements Comparator {
      * @return XML string, or null
      */
     public String getXMLMetaData() {
-       return leg.getGroup();
+       return getLeg().getGroup();
     }
 
    /** Returns the unit for the field at position pos */
    protected String getUnit(int pos) {
     	if(pos<0) return "";
-    	String u = leg.field[pos].unit;
+    	String u = getLeg().field[pos].unit;
     	if( u!=null ) u = u.replace("year","yr");   // pour faire plaisir à l'ESAC pour Gaia qui utilise des unités non conformes ni à l'IVOA, ni à l'UAI
     	return u;
    }
@@ -1244,12 +1271,12 @@ public class Source extends Position implements Comparator {
     * @return une chaine STC-S 
     */
    public String createSIAFoV() {
-      if( leg==null ) return null;
+      if( getLeg()==null ) return null;
       try {
-         int iScale = leg.findUCD("VOX:Image_Scale");
-         int iNaxis = leg.findUCD("VOX:Image_Naxes");
-         int iSize  = leg.findUCD("VOX:Image_Naxis");
-         int iCD    = leg.findUCD("VOX:WCS_CDMatrix");
+         int iScale = getLeg().findUCD("VOX:Image_Scale");
+         int iNaxis = getLeg().findUCD("VOX:Image_Naxes");
+         int iSize  = getLeg().findUCD("VOX:Image_Naxis");
+         int iCD    = getLeg().findUCD("VOX:WCS_CDMatrix");
          
          // Nombre de dimensions ?
          String val[] = getValues();
@@ -1406,8 +1433,8 @@ public class Source extends Position implements Comparator {
       }
 
       // Il s'agit d'une source non concernée, on met à la fin
-      if( a.leg!=sortSource.leg ) return 1;
-      if( b.leg!=sortSource.leg ) return -1;
+      if( a.getLeg()!=sortSource.getLeg() ) return 1;
+      if( b.getLeg()!=sortSource.getLeg() ) return -1;
 
       String aVal = a.getValue(sortNField);
       String bVal = b.getValue(sortNField);
@@ -1438,13 +1465,13 @@ public class Source extends Position implements Comparator {
     * @param sens 1 - ascendant, -1 descendant
     */
    static protected void setSort(Source s, int nField, int sens) {
-      sortNumeric = s.leg.isNumField(nField);
+      sortNumeric = s.getLeg().isNumField(nField);
       sortSource  = s;
       sortNField  = nField;
       sortSens    = sens;
       Aladin.trace(1,"Measurement "+(sortNumeric?"numerical ":"alphanumerical ")
             +(sens==1?"ascending":"descending")+" sort on "
-            +(s.leg==null||nField==-1?"field "+nField:"${"+s.leg.field[nField].name)+"}");
+            +(s.getLeg()==null||nField==-1?"field "+nField:"${"+s.getLeg().field[nField].name)+"}");
 
    }
 

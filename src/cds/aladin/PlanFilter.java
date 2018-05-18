@@ -472,6 +472,7 @@ public final class PlanFilter extends Plan {
          p = plans[i];
          //if( p.type == Plan.CATALOG && p.flagOk && p.active ) {
             Iterator<Obj> it = p.iterator();
+            if( it==null ) continue;
             while( it.hasNext() ) {
                Obj s= it.next();
 

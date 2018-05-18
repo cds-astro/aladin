@@ -91,8 +91,8 @@ public class HealpixKeyCat extends HealpixKey {
 
          int trace=planBG.aladin.levelTrace;
          planBG.aladin.levelTrace=0;
-         Legende leg = planBG.getFirstLegende();
-         if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
+//         Legende leg = planBG.getFirstLegende();
+//         if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
          
          in=new MyInputStream( getInputStreamFromStream() );
          in.setFileName(filename);
@@ -102,10 +102,11 @@ public class HealpixKeyCat extends HealpixKey {
          if( !planBG.useCache ) stream=null;
 
          // Positionnement de la légende du premier Allsky chargé
-         if( leg==null  ) ((PlanBGCat)planBG).setLegende( ((Source)pcat.iterator().next()).leg );
+//         if( leg==null  ) ((PlanBGCat)planBG).setLegende( ((Source)pcat.iterator().next()).leg );
+         if(  !((PlanBGCat)planBG).hasGenericPcat() )  ((PlanBGCat)planBG).setGenericPcat(pcat);
 
          // Dans le cas où l'époque aurait-été modifié
-         recomputePosition(leg,pcat);
+         recomputePosition(((PlanBGCat)planBG).getFirstLegende(),pcat);
       } finally { if( in!=null ) in.close(); }
    }
    

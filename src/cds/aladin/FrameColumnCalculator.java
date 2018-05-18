@@ -376,8 +376,8 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
                Obj o = it.next();
                if( !(o instanceof Source) ) continue;
                s = (Source)o;
-               for( int k=s.leg.field.length-1;k>=0;k-- ) {
-                  str = s.leg.field[k].name;
+               for( int k=s.getLeg().field.length-1;k>=0;k-- ) {
+                  str = s.getLeg().field[k].name;
                   if( vCol.indexOf(str)<0 ) vCol.addElement(str);
                }
             }
@@ -398,8 +398,8 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
            Obj o = it.next();
            if( !(o instanceof Source) ) continue;
            s = (Source)o;
-		   for (int k = s.leg.field.length - 1; k >= 0; k--) {
-		      str = s.leg.field[k].name;
+		   for (int k = s.getLeg().field.length - 1; k >= 0; k--) {
+		      str = s.getLeg().field[k].name;
 		      if (v.indexOf(str) < 0) v.addElement(str);
 		   }
 		}

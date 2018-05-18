@@ -835,7 +835,7 @@ MouseWheelListener, Widget
 
    /** Redessine l'entête qui si c'est nécessaire (sur un mouseMoved par exemple) */
    private void quickDrawHead(Graphics g,Source o) {
-      if( o!=null && o.leg==oleg  ) return;      // déjà fait
+      if( o!=null && o.getLeg()==oleg  ) return;      // déjà fait
       drawHead(g,o);
    }
 
@@ -853,10 +853,10 @@ MouseWheelListener, Widget
    protected void drawHead(Graphics g,Source o) { drawHead(g,0,0,o,W); }
    protected void drawHead(Graphics g,int X,int y,Source o,int W) {
       Vector head;
-      if( o==null && oleg==null || o!=null && oleg==o.leg ) head=ligneHead;
+      if( o==null && oleg==null || o!=null && oleg==o.getLeg() ) head=ligneHead;
       else {
          head= o==null ? null : aladin.mesure.getHeadLine(o);
-         oleg= o==null ? null : o.leg;
+         oleg= o==null ? null : o.getLeg();
          ligneHead=head;
       }
 
@@ -961,12 +961,12 @@ MouseWheelListener, Widget
       //      if( nField!=realNField ) System.out.println("nField="+nField+" realdNField="+realNField);
       //      nField = realNField;
       if( nField==-1 ) {
-         o.leg.clearSort();
+         o.getLeg().clearSort();
          triTag = Field.SORT_ASCENDING;
          ascending = true;
       } else {
          triTag = Field.UNSORT;
-         ascending = o.leg.switchSort(nField);
+         ascending = o.getLeg().switchSort(nField);
       }
       ligneHead = aladin.mesure.getHeadLine(o);
       aladin.mesure.tri(o,nField,ascending);
@@ -988,7 +988,7 @@ MouseWheelListener, Widget
    /** Tri des sources de même type que celle passée en paramètre. */
    protected void tri(Source o,int nField,boolean ascending) {
       //      nField=o.leg.getRealFieldNumber(nField);
-      o.leg.setSort(nField, ascending?Field.SORT_ASCENDING:Field.SORT_DESCENDING);
+      o.getLeg().setSort(nField, ascending?Field.SORT_ASCENDING:Field.SORT_DESCENDING);
       ligneHead = aladin.mesure.getHeadLine(o);
       aladin.mesure.tri(o,nField,ascending);
    }
@@ -1327,9 +1327,9 @@ MouseWheelListener, Widget
    /** Construit la description du champ i de l'objet o */
    private String getDescription(Source o,int i,boolean flagShort) {
       StringBuilder res = new StringBuilder();
-      if( o.leg!=null && o.leg.field!=null && i>=0 && i<o.leg.field.length ) {
-         Field f = o.leg.field[i];
-         A(res,o.leg.name);
+      if( o.getLeg()!=null && o.getLeg().field!=null && i>=0 && i<o.getLeg().field.length ) {
+         Field f = o.getLeg().field[i];
+         A(res,o.getLeg().name);
          if( !flagShort ) {
             A(res," - ",f.name);
             A(res,": ",adjustVizier(f.description));
@@ -1341,13 +1341,14 @@ MouseWheelListener, Widget
 
    /** Construit la description longue (info) du champ i de l'objet o */
    private String getInfo(Source o,int i) {
+      Legende leg = o.getLeg();
       StringBuilder res = new StringBuilder();
-      if( o.leg!=null && o.leg.field!=null && i>=0 && i<o.leg.field.length ) {
-         Field f = o.leg.field[i];
+      if( leg!=null && leg.field!=null && i>=0 && i<leg.field.length ) {
+         Field f = leg.field[i];
          if( f.description==null && f.unit==null && f.ucd==null && f.utype==null ) return "";
          
          // Récupération du titre de la légende et du petit nom du obs_collection
-         String s = o.leg.name!=null ? o.leg.name : "";
+         String s = leg.name!=null ? leg.name : "";
          if( o.plan!=null ) {
             MyProperties prop = aladin.directory.getProperties( o.plan.id );
             if( prop!=null ) {
@@ -1439,7 +1440,7 @@ MouseWheelListener, Widget
          return;
       }
 
-      if( oTimer.leg.isSED() ) {
+      if( oTimer.getLeg().isSED() ) {
          aladin.view.zoomview.setSED(oTimer);
       } else  {
          aladin.calque.zoom.zoomView.setHist(oTimer,onField);
@@ -1454,13 +1455,13 @@ MouseWheelListener, Widget
    // et il y a un décalage d'une valeur pour tenir compte de la case à cocher en début de ligne
    private int getRealIndice(Source s,int indice) {
       indice--;
-      if( s.leg==null ) return indice;
+      if( s.getLeg()==null ) return indice;
       
       // Comme si on affichait à nouveau
       int pos=-1;
-      for( int i=0; i<s.leg.field.length; i++ ) {
-         int nField = s.leg.fieldAt[ i ];
-         if( s.leg.isVisible(nField) ) {
+      for( int i=0; i<s.getLeg().field.length; i++ ) {
+         int nField = s.getLeg().fieldAt[ i ];
+         if( s.getLeg().isVisible(nField) ) {
             pos++;
             if( pos==indice ) return nField;
          }
@@ -1482,7 +1483,6 @@ MouseWheelListener, Widget
       Graphics g = getGraphics();
       if( g==null ) return;
       g.setFont(FONT);
-      String s=null;            // La chaine a afficher dans le status
       Words w=null;        // Mot courant (sous la souris)
       Enumeration e;
       Source o;
@@ -1577,14 +1577,8 @@ MouseWheelListener, Widget
       if( oo!=oshow ) {
          aladin.view.showSource(oshow);
 
-         // On affiche le FoV associé s'il en existe un
-//         PlanField pf = oshow.getFootprint().getFootprint();
-//         if (pf != null) {
-//            pf.setActivated(true);
-//            pf.flagOk = true;
-//         }
-         oshow.setShowFootprintTransient(true,true);
-         if( oo!=null ) oo.setShowFootprintTransient(false,true);
+         if( oshow.isSetFootprint() ) oshow.setShowFootprintTransient(true,true);
+         if( oo!=null && o.isSetFootprint() ) oo.setShowFootprintTransient(false,true);
 
          oo=oshow;
       }
@@ -1637,8 +1631,7 @@ MouseWheelListener, Widget
 //            Util.drawEdge(g,W,H);
 
             // Recuperation de la description du champ et d'un éventuel tooltip
-            if( w.repere ) { /* tip=TIPREP; */ s=w.text; }
-            else if( w.archive )  tip=TIPARCH;
+            if( w.archive )  tip=TIPARCH;
             else if( w.glu )      tip=TIPGLU;
             else if( w.footprint)  tip=TIPFOV;
             try {
@@ -1682,7 +1675,7 @@ MouseWheelListener, Widget
 
 
    protected void showSEDPoint(Source s) {
-      if( s.leg!=null && s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
+      if( s.getLeg()!=null && s.getLeg().isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
    }
 
    //   public boolean mouseEnter(Event e, int x, int y) {

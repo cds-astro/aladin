@@ -1250,9 +1250,9 @@ public final class FilterProperties extends Properties implements MouseListener,
 	  static protected boolean clickInMesure(Source s, int index) {
             if( pickupFP==null || !pickupFP.isShowing() ) return false;
             pickupHelper.setVisible(false);
-	  		if( index>=s.leg.field.length ) return true;
+	  		if( index>=s.getLeg().field.length ) return true;
 	  		if( pickColumnMode ) {
-	  			String col = s.leg.field[index].name;
+	  			String col = s.getLeg().field[index].name;
 	  			col = col!=null?col:"";
 
 	  			int pos = insertInTA(pickupFP.filterDef, "${"+col+"}", pickupFP.filterDef.getCaretPosition());
@@ -1266,7 +1266,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 				return true;
 	  		}
 			if( pickUCDMode ) {
-				String ucd = s.leg.field[index].ucd;
+				String ucd = s.getLeg().field[index].ucd;
 				ucd = ucd!=null?ucd:"";
 
 				int pos = insertInTA(pickupFP.filterDef, "$["+ucd+"]", pickupFP.filterDef.getCaretPosition());
@@ -1433,13 +1433,13 @@ public final class FilterProperties extends Properties implements MouseListener,
                   Obj o1 = it.next();
                   if( !(o1 instanceof Source) ) continue;
                   s = (Source)o1;
-                  if( s.leg==null || s.leg.field==null ) {
+                  if( s.getLeg()==null || s.getLeg().field==null ) {
                      System.out.println("Bizarre");
                   }
-                  for( int k=s.leg.field.length-1;k>=0;k-- ) {
-                     str = s.leg.field[k].name;
+                  for( int k=s.getLeg().field.length-1;k>=0;k-- ) {
+                     str = s.getLeg().field[k].name;
 //                            if( vCol.indexOf(str)<0 ) vCol.addElement(str);
-                     str = s.leg.field[k].ucd;
+                     str = s.getLeg().field[k].ucd;
                      if( str!=null && str.length()>0 && vUCD.indexOf(str)<0 ) vUCD.addElement(str);
                   }
                }
@@ -1679,7 +1679,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 	                  if( !(o instanceof Source) ) continue;
 	                  s = (Source)o;
 
-	                  leg = s.leg;
+	                  leg = s.getLeg();
 	                  if( oleg!=null && leg==oleg ) continue;
 
 	                  // on remplit si la ligne est incomplète
@@ -1690,9 +1690,9 @@ public final class FilterProperties extends Properties implements MouseListener,
 
 	                  // passer à la ligne ?
 	                  JButton btn;
-	                  for( int k=0;k<s.leg.field.length;k++ ) {
+	                  for( int k=0;k<s.getLeg().field.length;k++ ) {
 
-	                     btn = new JButton(s.leg.field[k].name);
+	                     btn = new JButton(s.getLeg().field[k].name);
 	                     btn.setMargin(BUTTON_INSETS);
 	                     btn.addActionListener(this);
 	                     btn.setFont(Aladin.PLAIN);

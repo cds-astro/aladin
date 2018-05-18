@@ -213,20 +213,20 @@ public class ColumnCalculator {
      */
     private void addCol(Field field, String value, Source s) {
         // on agrandit s.leg.field et on ajoute le nouveau champ si il n'a pas déja été créé
-        if( s.leg.field[s.leg.field.length-1]==field ) {}
+        if( s.getLeg().field[s.getLeg().field.length-1]==field ) {}
         else {
-            Field[] newFields = new Field[s.leg.field.length+1];
-            boolean[] newComputed = new boolean[s.leg.computed.length+1];
-            int[] newTri = new int[s.leg.computed.length+1];
-            System.arraycopy(s.leg.field, 0, newFields, 0, s.leg.field.length);
-            System.arraycopy(s.leg.computed, 0, newComputed, 0, s.leg.computed.length);
-            System.arraycopy(s.leg.fieldAt, 0, newTri, 0, s.leg.fieldAt.length);
-            newFields[s.leg.field.length] = field;
-            newComputed[s.leg.computed.length] = true;
-            newTri[s.leg.computed.length] = s.leg.computed.length;
-            s.leg.field = newFields;
-            s.leg.computed = newComputed;
-            s.leg.fieldAt = newTri;
+            Field[] newFields = new Field[s.getLeg().field.length+1];
+            boolean[] newComputed = new boolean[s.getLeg().computed.length+1];
+            int[] newTri = new int[s.getLeg().computed.length+1];
+            System.arraycopy(s.getLeg().field, 0, newFields, 0, s.getLeg().field.length);
+            System.arraycopy(s.getLeg().computed, 0, newComputed, 0, s.getLeg().computed.length);
+            System.arraycopy(s.getLeg().fieldAt, 0, newTri, 0, s.getLeg().fieldAt.length);
+            newFields[s.getLeg().field.length] = field;
+            newComputed[s.getLeg().computed.length] = true;
+            newTri[s.getLeg().computed.length] = s.getLeg().computed.length;
+            s.getLeg().field = newFields;
+            s.getLeg().computed = newComputed;
+            s.getLeg().fieldAt = newTri;
         }
         
         // ajout de la nouvelle valeur

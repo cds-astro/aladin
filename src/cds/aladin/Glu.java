@@ -3087,9 +3087,9 @@ public final class Glu implements Runnable {
                
                // Lecture d'un éventuel message CDS
                // Format: 1510738587 ^en:A new major Aladin version\\nat CDS.^fr:Une nouvelle...
-//               if( Aladin.BETA ) aladin.setCDSMessage("1510738587 ^en:A new major release is available at CDS\\n"
+//               if( Aladin.BETA ) aladin.setCDSMessage("-1 ^en:A new major release is available at CDS\\n"
 //                     + "=> '<&http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading|Aladin v10>'\\n \\n"
-//                     + "Do not hesitate to download it.\\n"
+//                     + "Do not hesitate to download it. Try \"<&get HiPS(gaia2)|gaia2 HiPS>\" and enjoy\\n"
 //                     + "<&http://aladin.u-strasbg.fr/java/Aladin-V10-Avant-Premiere.html|more> info..."
 //                     + "^fr:Une nouvelle version d'Aladin est disponible sur le site du CDS.\\n"
 //                     + "=> '<&http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading|Aladin v10>'\\n \\n"

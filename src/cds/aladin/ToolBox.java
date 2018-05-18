@@ -21,6 +21,7 @@
 
 package cds.aladin;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -665,6 +666,14 @@ SwingWidgetFinder, Widget {
       int x = (order/nb)*W;                // Position en abscisse du bouton
       int y = (order%nb)*H;                // Position en ordonnee du bouton
       tool[number].drawIcone(g,x,y,currentButton);
+      
+     // Ajout de l'horloge si nécessaire
+      if( number==ToolBox.PLOT && tool[number].mode!=Tool.UNAVAIL ) {
+         Plan p = aladin.calque.getFirstSelectedPlan();
+         if( p.hasSources() && p.isTime() ) {
+            Slide.drawClock(g, x+11, y+15, 4, Color.black, Color.white);
+         }
+      }
    }
 
    /** Adaptation de la taille de la Tool Bar.

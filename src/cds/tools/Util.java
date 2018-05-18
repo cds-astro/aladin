@@ -1530,6 +1530,7 @@ public final class Util {
 
    /** Nettoie un StringBuilder pour éviter des allocations inutiles */
    static public void resetString(StringBuilder s) {
+      if( s.length()==0 ) return;
       int n = s.length();
       if( n==0 ) return;
       s.delete(0,n);

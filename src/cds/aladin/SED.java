@@ -268,7 +268,7 @@ public class SED extends JPanel {
    
    // Procédure interne d'accès aux valeurs numériques du SED
    private double getSEDValue(Source s,int sed) {
-      Legende leg = s.leg;
+      Legende leg = s.getLeg();
       for( int i = 0; i<leg.field.length; i++ ) {
          if( leg.field[i].sed == sed ) {
             String val = s.getValue(i);
@@ -284,7 +284,7 @@ public class SED extends JPanel {
    
    /** Retourne l'identificateur du filtre associé à la source */
    protected String getSEDId(Source s) {
-      Legende leg = s.leg;
+      Legende leg = s.getLeg();
       String sId=null;
       for( int i = 0; i<leg.field.length; i++ ) {
          if( leg.field[i].sed == Field.SEDID ) sId = s.getValue(i);

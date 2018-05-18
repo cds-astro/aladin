@@ -384,6 +384,22 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       aladin.calque.select.repaint();
    }
+   
+   /** Création d'une vue Time si nécessaire pour accueillir un TMOC */
+   protected void createView4TMOC(PlanTMoc p) {
+      if( p==null ) return;
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
+         if( viewSimple[i].isPlotTime() ) return;   // il y a déjà une vue temporelle
+      }
+      
+      // On crée une vue supplémentaire si nécessaire
+      if( !getCurrentView().isFree() && !isMultiView() ) setModeView(ViewControl.MVIEW2C);
+      int nview = aladin.view.getLastNumView(p);
+      
+      setPlanRef(nview, p);
+   }
+
 
    /**
     * Positionnement d'une frame donnée pour une vue blink. Possibilité de
@@ -728,7 +744,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          Plan p = megaDragPlanSource;
          ViewSimple v = megaDragViewTarget;
          if( v.isFree() ) v.setPlanRef(p, false);
-         v.addPlotTable(p, 0, 1,true);
+         v.addPlotTable(p, -1,-1,true);
       }
 
       //      // Creation d'un plan MOSAIC
@@ -1952,7 +1968,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    public boolean gotoThere(Source s) {
       boolean rep = gotoThere(new Coord(s.raj,s.dej),0,false);
       setRepere(s);  // pour d'éventuels plots
-      showSource(s,false,false); // pour blinker la source   CA FAIT TOUT DE MEME UN CALLBACK EN BOULCE AVEC SAMP
+      showSource(s,false,false); // pour blinker la source   CA FAIT TOUT DE MEME UN CALLBACK EN BOUCLE AVEC SAMP
       return rep;
    }
 
@@ -1966,6 +1982,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       ViewSimple v = getCurrentView();
       if( v.locked || c==null ) return false;
+      
+      // Dans le cas d'un plot, les coordonnées passées en paramètres sont (la plupart du temps ?) ra,dec réels, et non
+      // les valeurs du plot, je ne peux donc pas me positionner dessus
+      if( v.isPlot() ) return false;
+      
       setRepere(c);
       if( !force && !v.shouldMove(c.al,c.del) ) return false;
 
@@ -2024,12 +2045,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void syncView(double fct,Coord coo,ViewSimple vOrig) { syncView(fct,coo,vOrig,false); }
    protected void syncView(double fct,Coord coo,ViewSimple vOrig,boolean force) {
       ViewSimple v;
-      Coord c = coo!=null ? coo : new Coord(repere.raj,repere.dej);
+      
+      boolean flagNull = coo==null;
+      Coord c = flagNull ? new Coord(repere.raj,repere.dej) : coo;
 
       // Ajustement des zooms des autres vues en fonction
       for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
          v = viewSimple[i];
-         if( v.locked || v.isFree() )    continue;
+         if( v.locked || v.isFree() || v.isPlot() )    continue;
          if( !force ) {
             if( v==vOrig && !(v.pref instanceof PlanBG) ) continue;
             if( !v.shouldMove(c.al,c.del) ) continue;
@@ -2622,7 +2645,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj s = it.next();
-         if( !(s instanceof Source) || !((Source)s).leg.isSED() ) continue;
+         if( !(s instanceof Source) || !((Source)s).getLeg().isSED() ) continue;
          //         if( ((Source)s).isSelected() ) return null;
          v.add( (Source) s);
       }
@@ -2984,11 +3007,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          boolean numeric=false;         // mode de recherche littéral ou numérique
          for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
             Source o = aladin.mesure.src[i];
-            if( o.leg!=oLeg && col.length()>0 ) {
-               oLeg=o.leg;
-               colIndex = o.leg.matchIgnoreCaseColIndex(col.toString());
+            if( o.getLeg()!=oLeg && col.length()>0 ) {
+               oLeg=o.getLeg();
+               colIndex = o.getLeg().matchIgnoreCaseColIndex(col.toString());
                if( colIndex==-1 ) break;  // Pas dans ce plan
-               numeric=o.leg.isNumField(colIndex);
+               numeric=o.getLeg().isNumField(colIndex);
                if( numeric ) {
                   try { numS = Double.parseDouble(s); }
                   catch(Exception e) {}
@@ -3038,11 +3061,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                Source o = (Source)it.next();
 
                // Y a-t-il un nom de colonne précisée ?
-               if( oLeg!=o.leg && col.length()>0 ) {
-                  oLeg=o.leg;
-                  colIndex = o.leg.matchIgnoreCaseColIndex(col.toString());
+               if( oLeg!=o.getLeg() && col.length()>0 ) {
+                  oLeg=o.getLeg();
+                  colIndex = o.getLeg().matchIgnoreCaseColIndex(col.toString());
                   if( colIndex==-1 ) break;  // Pas dans ce plan
-                  numeric=o.leg.isNumField(colIndex);
+                  numeric=o.getLeg().isNumField(colIndex);
                   if( numeric ) {
                      try { numS = Double.parseDouble(s); }
                      catch(Exception e) {}
@@ -3380,7 +3403,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean setRepere(Coord coo) { return setRepere(coo,false); }
    protected boolean setRepere(Coord coo,boolean force) {
       moveRepere(coo);
-
+      
       syncView(1,null,null,force);              // <= POUR THOMAS
       boolean rep=false;
       int m=getNbView();
@@ -3392,7 +3415,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          // à la place de pref.projd.
          if( currentView==i && !viewSimple[i].isFree()
                && viewSimple[i].pref instanceof PlanBG && viewSimple[i].projLocal!=null ) {
-            //            viewSimple[i].pref.projd = viewSimple[i].projLocal.copy();
             viewSimple[i].pref.projd.setProjCenter(coo.al, coo.del);
          }
       }
@@ -3408,12 +3430,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
 
       aladin.localisation.setLastCoord(ra,dec);
-      
-      // comme on a bougé le réticule, on pourra regénérer un nouveau QuickSimbad
-//      flagAllowSimrep=true;
-
-      // TEST : mise à jour des champs des formulaires de saisie en fonction de la position du repère
-      //      aladin.dialog.adjustParameters();
    }
 
 
@@ -4023,19 +4039,26 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    // Object pour afficher la distance entre 2 objets sélectionnés
    protected CoteDist coteDist = null;
 
-   protected Repere simRep = null;
+   protected RepereSimbad simRep = null;
 //   private long startQuickSimbad=0L;
 //   private double ox=0, oy=0;		// Pour vérifier qu'on déplace suffisemment
-
-   /** Ouverture de la page simbad pour l'objet indiqué par le repere SimRep */
-   protected void showSimRep() {
-      int offset = simRep.id.indexOf('(');
-      if( offset<0 ) return;
-      String obj = simRep.id.substring(0,offset).trim();
-      aladin.glu.showDocument("smb.query", Tok.quote(obj));
+   
+   
+   /** Cache le SED affiché dans le ZoomView.
+    * @param force false = uniquement s'il est en cours de chargement
+    */
+   protected void stopSED(boolean force) {
+      
+      // Cas 1: le SED est caché uniquement s'il est encore en train de charger
+      if( !force ) {
+         if( zoomview.sed==null || !zoomview.sed.isLoading() ) return;
+      }
+      
+      // Cas 2 : le SED est caché quelque soit son état
+      zoomview.setSED(null);
    }
-   
-   
+
+
    private Timer timerQuickSimbad = null;
    
    /** Lancement d'une attente de résolution QuickSimbad */
@@ -4084,8 +4107,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Arrêt de la procédure Quick Simbad */
 //   synchronized protected void suspendQuickSimbad(){ startQuickSimbad=0L; simRep=null;  }
-
-   static final int TAILLEARROW = 15;
 
 //   /** (Re)démarrage du compteur en attendant une requête quickSimbad */
 //   synchronized protected void waitQuickSimbad(ViewSimple v) {
@@ -4189,18 +4210,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          StringTokenizer st = new StringTokenizer(s,"/");
          try {
             coo = new Coord(st.nextToken());
-            simRep = new Repere(null,coo);
-            
-            simRep.projection(v);
+            simRep = new RepereSimbad(aladin,v,coo);
             int i = s.indexOf('/');
             String position = s.substring(0,i).trim();
             String s1=s.substring(i+1);
-            aladin.status.setText(s1+"    [by Simbad]");
-            simRep.setType(Repere.CARTOUCHE);
-            simRep.setSize(TAILLEARROW);
             simRep.setId(s1);
-            simRep.setWithLabel(true);
-            
+            aladin.status.setText(s1+"    [by Simbad]");
             aladin.console.printInPad(s1+"\n");
             
             String source = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
@@ -4283,12 +4298,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       try {
          coo = new Coord(target);
-         simRep = new Repere(null,coo);
-         simRep.setType(Repere.CARTOUCHE);
-         simRep.setSize(TAILLEARROW);
-         simRep.projection(v);
+         simRep = new RepereSimbad(aladin,v,coo);
          simRep.setId("Phot.: "+target);
-         simRep.setWithLabel(true);
          aladin.view.zoomview.setSED(target,target,simRep);
 
       } catch( Exception e ) {

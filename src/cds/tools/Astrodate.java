@@ -139,6 +139,7 @@ public class Astrodate {
    static public final int MJD     = 14; 
    static public final int ISOTIME = 15; 
    static public final int YEARS   = 16; 
+   static public final int DATE    = 17; 
    static public final int UNIX    = 18; 
    
    /** Conversion d'une chaine en JD */

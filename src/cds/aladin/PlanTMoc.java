@@ -209,7 +209,7 @@ public class PlanTMoc extends PlanMoc {
          Graphics2D g2d = (Graphics2D)g;
          Composite saveComposite = g2d.getComposite();
          try {
-            g2d.setComposite( Util.getImageComposite(getOpacityLevel()*getFactorOpacity()) );
+            g2d.setComposite( Util.getImageComposite(getOpacityLevel())); //getFactorOpacity()) );
             for( Rectangle r : a ) {
                if( flagBorder && width<=1 ) continue;
                g.fillRect(r.x,r.y, r.width, r.height);
@@ -256,7 +256,7 @@ public class PlanTMoc extends PlanMoc {
       aladin.synchroPlan.stop(startingTaskId);
       flagWaitTarget=false;
       flagProcessing = false;
-      aladin.calque.repaintAll();
+      aladin.view.createView4TMOC(this);
    }
 
 

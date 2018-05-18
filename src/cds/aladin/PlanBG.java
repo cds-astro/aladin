@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1633,7 +1634,6 @@ public class PlanBG extends PlanImage {
    }
 
    static protected String CURRENTMODE="";
-   static protected boolean DEBUGMODE=false;
 
    /** Retourne le centre de la vue. */
    protected Coord getCooCentre(ViewSimple v) {
@@ -2245,18 +2245,6 @@ public class PlanBG extends PlanImage {
    //      } catch( Exception e ) {}
    //   }
 
-   protected long [] pixDebugIn = new long[0];
-
-   protected int isDebugIn(long pix) {
-      if( !DEBUGMODE ) return 0;
-      int n=0;
-      if( pixDebugIn.length==0 ) return 0;
-      for( int i=0; i< pixDebugIn.length; i++ ) {
-         if( pix==pixDebugIn[i] ) n++;
-      }
-      return n;
-   }
-
    //   protected void setDebugIn(double raj,double dej,double radius) {
    //      if( !DEBUGMODE ) return;
    //      ViewSimple v = aladin.view.getCurrentView();
@@ -2847,20 +2835,6 @@ public class PlanBG extends PlanImage {
          long npix = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
          HealpixKey hk = new HealpixKey(this,norder,npix,HealpixKey.NOLOAD);
          hk.drawCtrl(g, v);
-
-         if( DEBUGMODE  ) {
-            double [][] corners = CDSHealpix.corners(nside, npix);
-            for( int i=0; i<4; i++ ) {
-               coo = new Coord(corners[i][0],corners[i][1]);
-               coo = Localisation.frameToFrame(coo,frameOrigin,Localisation.ICRS);
-               Repere r = new Repere(this, coo );
-               r.setType(Repere.CARTOUCHE);
-               r.setWithLabel(true);
-               r.id = ""+i;
-               r.projection(v);
-               r.draw(g,v,0,0);
-            }
-         }
       } catch( Exception e ) {
          e.printStackTrace();
       }
@@ -3238,6 +3212,8 @@ public class PlanBG extends PlanImage {
                   healpix.priority=order<max ? 500-(priority++) : priority++;
 
                   int status = healpix.status;
+                  
+                  ServerSocket s;
 
                   // Losange erroné ?
                   if( status==HealpixKey.ERROR ) continue;

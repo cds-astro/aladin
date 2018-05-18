@@ -93,7 +93,7 @@ public class SourceTag extends Source  {
     */
    protected SourceTag(Plan plan, ViewSimple v, double x, double y,String id) {
       super(plan,v,x,y,0,0,XY|RADE_COMPUTE,id);
-      leg=legende;
+      setLeg(legende);
       this.planBase = v.pref;
       plan.setSourceRemovable(true);
       suite();
@@ -114,7 +114,7 @@ public class SourceTag extends Source  {
 
    /** Post-traitement lors de la création */
    protected void suite() {
-      leg=legende;
+      setLeg(legende);
       setShape(Obj.PLUS);
 //      setTag(true);
       setWithLabel(true);

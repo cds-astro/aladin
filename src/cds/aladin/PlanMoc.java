@@ -382,6 +382,7 @@ public class PlanMoc extends PlanBGCat {
    protected boolean isCatalog() { return false; }
    protected boolean isTime() { return false; }
    protected boolean hasSources() { return false; }
+   protected boolean hasCatalogInfo() { return false; }
    protected int getCounts() { return 0; }
 
    protected boolean waitForPlan() {
