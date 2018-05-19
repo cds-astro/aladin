@@ -3702,7 +3702,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
    protected void createPlotCat() {
-      PlanCatalog p = calque.getFirstSelectedPlanCatalog();
+      Plan p = calque.getFirstSelectedPlanCatalog();
       if( p==null ) return;
       
       int nview=-1;

@@ -3884,9 +3884,10 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Retourne le premier plan Catalog sélectionné, ou null si aucun */
-   protected PlanCatalog getFirstSelectedPlanCatalog() {
+   protected Plan getFirstSelectedPlanCatalog() {
       for( int i=0; i<plan.length; i++ ) {
-         if( plan[i].selected && plan[i].isSimpleCatalog() ) return (PlanCatalog)plan[i];
+//         if( plan[i].selected && plan[i].isSimpleCatalog() ) return (PlanCatalog)plan[i];
+         if( plan[i].selected && plan[i].isCatalog() ) return plan[i];
       }
       return null;
    }

@@ -372,7 +372,6 @@ public class PlanBGCat extends PlanBG {
       aladin.view.deSelect(this);
       super.Free();
       genericPcat=null;
-      System.out.println("Free: genericPcat reset => null");
       FilterProperties.notifyNewPlan();
       return true;
    }

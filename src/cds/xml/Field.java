@@ -263,7 +263,7 @@ final public class Field {
    public boolean isNumDataType() {
       return datatype!=null && NUMDATATYPE.indexOf(datatype)>=0;
    }
-
+   
    /** Récupère le label du flag SED du champ, ou null si aucun sur ce champ */
    public String getSEDtag() {
       if( sed==0 || sed>=SEDLABEL.length ) return null;

@@ -513,13 +513,13 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    private Map<Integer, Field> standardisedColumns = new HashMap<Integer, Field>();
 
 
-   // Légende générique qui vient remplacer toutes les légendes propres
-   private Legende genericLeg=null;
-
-   /** Positionnement d'une légende générique pour tous les objets (concerne PlanBGCat) */
-   protected void setGenericLegende(Legende leg) {
-      genericLeg=leg;
-   }
+//   // Légende générique qui vient remplacer toutes les légendes propres
+//   private Legende genericLeg=null;
+//
+//   /** Positionnement d'une légende générique pour tous les objets (concerne PlanBGCat) */
+//   protected void setGenericLegende(Legende leg) {
+//      genericLeg=leg;
+//   }
 
    /** L'interface TableParserConsumer */
    public void setRecord(double ra, double dec, double jdTime, String[] value) {
@@ -609,8 +609,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                fRA.visible = fDE.visible = false;
             }
 
-            if( genericLeg!=null ) leg=genericLeg;
-            else {
+            // En cas de plan HiPS catalog, la légende est globale et externe
+            if( plan instanceof PlanBGCat ) leg=((PlanBGCat)plan).getFirstLegende();
+            if( leg==null ) {
                leg = new Legende(v);
                leg.name=table;
             }

@@ -1746,7 +1746,9 @@ final public class TableParser implements XMLConsumer {
       s = s.toLowerCase();
       if( s.equals("epoch") )           { return 0; }
       if( s.equals("date") )            { return 1; }
-      if( s.equals("date-obs") )        { return 2; }
+      if( s.equals("date_obs") )        { return 2; }
+      if( s.equals("t_min") )           { return 3; }
+      if( s.equals("t_max") )           { return 4; }
       return -1;
    }
    
@@ -2316,23 +2318,28 @@ final public class TableParser implements XMLConsumer {
             boolean numeric = false;
             double t=Double.NaN;
             
-            // S'il s'agit d'un champ numérique c'est probablement du JD, MJD ou YEARS
-            if( timeField.datatype!=null ) {
-               numeric=timeField.isNumDataType();
-               if( numeric ) try { t=Double.parseDouble( rec[nTime] ); } catch( Exception e1) {}
-               
-            } else {
-               try { t=Double.parseDouble( rec[nTime] ); numeric = true; } catch( Exception e1) {}
+            // Cas particulier d'unités spécifiques JD ou MJD
+            if( timeField.unit!=null ) {
+               if( timeField.unit.equalsIgnoreCase("JD") ) timeSystem=JD;
+               else if( timeField.unit.equalsIgnoreCase("MJD") ) timeSystem=MJD;
             }
-            if( numeric ) {
-               if( timeOffset>0 ) t+=timeOffset;
-               timeSystem = t<3000 ? YEARS : t<100000 ? MJD : JD;
-               
-            // Si c'est une chaine de caractères, la présence d'un "T" va faire penser à de l'ISO
-            // sinon on ne sait pas trop...
-            } else {
-               if( rec[nTime].indexOf('T')>0 ) timeSystem=ISOTIME;
-               else timeSystem=YMD;
+            
+            if( timeSystem==-1 ) {
+               try { t=Double.parseDouble( rec[nTime] ); } catch( Exception e1) {}
+               if( timeField.datatype!=null && timeField.isNumDataType() ) numeric=true;
+               else if( !Double.isNaN(t) ) numeric=true;
+
+               // S'il s'agit d'un champ numérique c'est probablement du JD, MJD ou YEARS
+               if( numeric ) {
+                  if( timeOffset>0 ) t+=timeOffset;
+                  timeSystem = t<3000 ? YEARS : t<100000 ? MJD : JD;
+
+                  // Si c'est une chaine de caractères, la présence d'un "T" va faire penser à de l'ISO
+                  // sinon on ne sait pas trop...
+               } else {
+                  if( rec[nTime].indexOf('T')>0 ) timeSystem=ISOTIME;
+                  else timeSystem=YMD;
+               }
             }
             timeField.coo=timeSystem;
             if( timeSystem>0 ) consumer.tableParserInfo("   -assuming Time format:"+Field.COOSIGN[ timeSystem ]+(timeOffset!=0?" timeOffset: "+timeOffset:""));

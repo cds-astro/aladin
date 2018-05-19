@@ -194,8 +194,8 @@ public class Plot {
 
             aladin.trace(4,"ViewSimple.adjustPlot: "+(isPlotTime()?" [plotTime]":"")+" nsrc="+n+" X=["+minX+" ("+min1X+") .. ("+max1X+") "+maxX+"] Y=["+minY+" ("+min1Y+") .. ("+max1Y+") "+maxY+"]");
          }
-         int w = viewSimple.getWidth();
-         int h = viewSimple.getHeight();
+         int w = (int)( viewSimple.getWidth() *0.9 );
+         int h = (int)( viewSimple.getHeight() *0.8 ); 
 //         plotProj = new Projection(0,0,0,0, (max1X-min1X)*1.1, (max1Y-min1Y)*1.1, w, h, 
 //               plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
          
@@ -216,8 +216,6 @@ public class Plot {
             // Pas de séries temporelles ? on donne tout de même une largeur pour que la projection
             // fonction pour les TMOC éventuels.
             if( flagNoSerie && !first ) {  max1Y = h; min1Y=0; flagTime=true; }
-            
-            h = (int)( h*2/3.);
          }
          
          if( plotProj!=null ) {
