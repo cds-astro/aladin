@@ -25,6 +25,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -511,6 +513,7 @@ public final class Legende extends AbstractTableModel  {
 
    protected String getID(int i)       { return i>=field.length?null:field[i].ID;     }
    protected String getName(int i)     { return i>=field.length?null:field[i].name;     }
+   protected String getDescription(int i) { return i>=field.length?null:field[i].description;     }
    protected String getHref(int i)     { return i>=field.length?null:field[i].href;     }
    protected String getGref(int i)     { return i>=field.length?null:field[i].gref;     }
    protected String getRefText(int i)  { return i>=field.length?null:field[i].refText;  }
@@ -571,12 +574,29 @@ public final class Legende extends AbstractTableModel  {
    protected JComboBox<String> createCombo() { return createCombo(false); }
    protected JComboBox<String> createCombo(boolean forPlot) {
       JComboBox<String> combo = new JComboBox<String>();
+      combo.setPrototypeDisplayValue("12345678901234567890123456789");
       combo.setMaximumRowCount(15);
       for( int i=0; i<field.length; i++ ) {
          if( forPlot &&  !(field[i].coo>0 || field[i].isNumDataType()) ) continue;
-         combo.addItem(field[i].name);
+         combo.addItem( getNameAndDescription(i) );
       }
+      combo.addMouseWheelListener( new MouseWheelListener() {
+         public void mouseWheelMoved(MouseWheelEvent e) {
+            JComboBox<String> c = (JComboBox)e.getSource();
+            int sens = e.getWheelRotation();
+            int i = c.getSelectedIndex();
+            i+=sens;
+            if( i<0 ) i=0;
+            if( i>=c.getItemCount() ) i=c.getItemCount()-1;
+            c.setSelectedIndex(i);
+         }
+      });
+
       return combo;
+   }
+   
+   protected String getNameAndDescription(int i) {
+      return field[i].name + (field[i].description!=null ? " - "+field[i].description:"");
    }
    
    /** Retourne l'indice du premier champ numérique */
@@ -588,7 +608,7 @@ public final class Legende extends AbstractTableModel  {
     */
    protected int getIndexNumericField(int after) {
       for( int i=after+1; i<field.length; i++ ) {
-         if( !field[i].isNumDataType() ) continue;
+         if( !field[i].isNumDataType() || field[i].coo>0 ) continue;
          return i;
       }
       return -1;

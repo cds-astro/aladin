@@ -77,11 +77,19 @@ public class Plot {
    public String getPlotLabel() {
       StringBuffer s = new StringBuffer();
       if( isPlotTime() ) {
-         if( !hasTable() ) s.append("Time graph");
+         if( !hasTable() ) s.append("Time plot");
          else {
             PlotItem p = getFirstPlotItem();
             Legende leg = p.plan.getFirstLegende();
-            s.append("Time x "+leg.getName(p.index[1]));
+            String name = leg.getName(p.index[1]);
+            String desc = leg.getDescription(p.index[1]);
+            String unit = leg.getUnit(p.index[1]);
+            if( name!=null && name.length()>0 ) s.append(name);
+            if( unit!=null && unit.length()>0 ) s.append(" ["+unit+"]");
+            if( desc!=null && desc.length()>0 ) {
+               if( desc.length()>40 ) desc = desc.substring(0,36)+"...";
+               s.append(": "+desc);
+            }
          }
       } else {
          if( hasTable() ) {
@@ -325,7 +333,6 @@ public class Plot {
       }
       p.index[0] = indexX;
       p.index[1] = indexY;
-      System.out.println("index = "+p.index[0]+","+p.index[1]);
       p.plan=plan;
       
       aladin.trace(4,"ViewSimple.addPlotTable: "+(modify?"modify":"add")+" plan="+plan.label+" indexX="+indexX+" indexY="+indexY);
@@ -379,7 +386,7 @@ public class Plot {
       int nindex=leg.getTime();
       if( nindex<0 ) return;
       p.setIndex(0,nindex);
-      comboX.setSelectedItem( leg.getName(nindex) );
+      comboX.setSelectedItem( leg.getNameAndDescription(nindex) );
       flagTime = p.isTime();
       adjustPlot();
       viewSimple.repaint();
@@ -430,6 +437,13 @@ public class Plot {
       return panel;
    }
    
+   // Récupère le nom du champ en supprimant la description qui peut suivre
+   // syntaxe ex:  RAJ2000 - Right ascension
+   private String getLegNameFromCombo( String s) {
+      int index = s.indexOf(" - ");
+      return index<0 ? s : s.substring(0,index);
+   }
+   
    // Construit le panel de contrôle concernant un axe pour un plot particulier
    private JPanel getPlotControlPanelForOneIndex(final PlotItem p,final int n) {
       JPanel panel = new JPanel();
@@ -438,11 +452,12 @@ public class Plot {
       panel.add( new JLabel( n==0?"X:":"Y:") );
       Legende leg = plan.getFirstLegende();
       final JComboBox<String> combo = leg.createCombo(true);
+
       if( n==0 ) comboX=combo;
       else comboY=combo;
       combo.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            int nindex = p.plan.getFirstLegende().find( (String)combo.getSelectedItem() );
+            int nindex = p.plan.getFirstLegende().find( getLegNameFromCombo( (String)combo.getSelectedItem() ) );
 //            Aladin.trace(4,"getPlotControlPanelForOneIndex: plan="+p.plan.label+" table="+p.leg.name+" col="+n+" index="+nindex);
             if( nindex==p.index[ n ] ) return;
             p.setIndex(n,nindex);
@@ -451,7 +466,7 @@ public class Plot {
             viewSimple.repaint();
          }
       });
-      combo.setSelectedItem( leg.getName( Math.abs(p.index[n])) );
+      combo.setSelectedItem( leg.getNameAndDescription( Math.abs(p.index[n])) );
       panel.add(combo);
       
       final JCheckBox b = new JCheckBox("Flip");

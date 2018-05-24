@@ -162,7 +162,9 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Temporal MOC support (prototype implementation) <br>
+ * @beta    <LI> Temporal support (prototype implementation) <br>
+ * @beta          - Time plots <br>
+ * @beta          - Time MOC <br>
  * @beta    <LI> Data discovery tree: <br>
  * @beta          - sort and hiearchy control <br>
  * @beta          - drag & drop to view panels
@@ -206,7 +208,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.087";
+   static public final    String VERSION = "v10.088";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -643,7 +645,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miAutoDist,miVizierSED,miXmatch,miROI,/*miTip,*/
    miVOtool,miGluSky,miGluTool,miPref,miPlasReg,miPlasUnreg,miPlasBroadcast,
    miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
-   miLock,miDelLock,miStick,miOne,miNorthUp,miView,
+   miLock,miPlot,miDelLock,miStick,miOne,miNorthUp,miView,
    miProp,miGrid,miNoGrid,miReticle,miReticleL,miNoReticle,
    miTarget,miOverlay,miConst,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
    /* miPrevPos,miNextPos, */
@@ -706,7 +708,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    COOTOOL,PIXELTOOL,CALCULATOR, SESAME,NEW,PREF,
    /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
    TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
-   SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
+   SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,PLOTVIEW,
    DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,COPIER,COLLER,
    RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
@@ -1087,6 +1089,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       SYNC    = chaine.getString("MSYNC");
       SYNCPROJ= chaine.getString("MSYNCPROJ");
       LOCKVIEW   = aladin.chaine.getString("VWMNEWROI");
+      PLOTVIEW   = aladin.chaine.getString("VWMPLOT");
       DELLOCKVIEW   = aladin.chaine.getString("VWMDELROI");
       STICKVIEW = BETAPREFIX+aladin.chaine.getString("VWMSTICKON");
       PAN     = chaine.getString("MPAN");
@@ -1406,7 +1409,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
                {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL2L,
                   "%"+PANEL4+"|shift F2","%"+PANEL9+"|shift F3","%"+PANEL16+"|shift F4"},
-                  {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW},
+                  {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW}, {"?"+PLOTVIEW},
                   //                {},{"?"+LOCKVIEW},{DELLOCKVIEW},
                   {},{"?"+STICKVIEW},
                   {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
@@ -1996,6 +1999,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,ONEVIEW)) miOne     = ji;
       else if( isMenu(m,NEXT))    miNext    = ji;
       else if( isMenu(m,LOCKVIEW))miLock    = ji;
+      else if( isMenu(m,PLOTVIEW))miPlot    = ji;
       else if( isMenu(m,NORTHUP)) miNorthUp = ji;
       else if( isMenu(m,DELLOCKVIEW)) miDelLock= ji;
       else if( isMenu(m,STICKVIEW)) miStick = ji;
@@ -3388,6 +3392,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,ONEVIEW) ) { view.oneView();
       } else if( isMenu(s,NEXT) )  { view.next(1);
       } else if( isMenu(s,LOCKVIEW) )  { view.getCurrentView().switchLock();
+      } else if( isMenu(s,PLOTVIEW) )  { view.getCurrentView().switchView();
       } else if( isMenu(s,NORTHUP) )  { view.getCurrentView().switchNorthUp();
       } else if( isMenu(s,DELLOCKVIEW) )  { view.freeLock(); calque.repaintAll();
       } else if( isMenu(s,STICKVIEW) ) { view.stickSelectedView(); calque.repaintAll();
@@ -5712,8 +5717,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMore!=null ) miMore.setEnabled(!view.allImageWithView());
          if( miOne!=null ) miOne.setEnabled(view.isMultiView() || view.getNbUsedView()>1 );
          if( miNext!=null ) miNext.setEnabled(nbPlanImg>1);
-         if( miLock!=null ) miLock.setEnabled(v!=null && !v.isProjSync());
-         if( miLock!=null ) miLock.setSelected(v!=null && v.locked);
+         if( miLock!=null ) {
+            miLock.setEnabled(v!=null && !v.isProjSync());
+            miLock.setSelected(v!=null && v.locked);
+         }
+         if( miPlot!=null ) {
+            miPlot.setEnabled(v!=null && !v.isFree() && v.pref.isCatalog());
+            miPlot.setSelected(v!=null && v.isPlot());
+         }
          if( miNorthUp!=null ) miNorthUp.setEnabled(v!=null && v.canBeNorthUp() );
          if( miNorthUp!=null ) miNorthUp.setSelected(v!=null && v.northUp);
          if( miDelLock!=null ) miDelLock.setEnabled( view.hasLock() );

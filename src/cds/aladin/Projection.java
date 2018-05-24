@@ -139,9 +139,8 @@ public final class Projection {
       flipPlotY = flipY ? -1 : 1;
       logPlotX = logX;
       logPlotY = logY;
-      //       t=Calib.XYLINEAR;
       
-      Aladin.trace(3,"Projection centre:Mesure=("+alphai+","+deltai+") Pixel=("+cx+","+cy+" taille:Mesure="+rm+"x"+rm1+" pixel="+r+"x"+r1);
+//      Aladin.trace(3,"Projection centre:Mesure=("+alphai+","+deltai+") Pixel=("+cx+","+cy+" taille:Mesure="+rm+"x"+rm1+" pixel="+r+"x"+r1);
 
    }
    

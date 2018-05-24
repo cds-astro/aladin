@@ -75,7 +75,7 @@ public class Context {
          "DATE","MJD_OBS","UTC","LST","DATE-OBS","MJD-OBS","MJD-END",
          "DATE-OBS","DATE-END","DATEOBS1","DATEOBS2","MIDOBS",
          "ORDATE","TIMESYS","MJDREF","JD","EXPTIME","TEXPTIME","OBSTIME",
-         "WAVELMIN","WAVELMAX","WAVELEN","EQUINOX","EPOCH","TELESCOP","TELNAME"
+         "WAVELMIN","WAVELMAX","WAVELEN",/*"EQUINOX","EPOCH",*/"TELESCOP","TELNAME"
    };
 
    
@@ -123,7 +123,7 @@ public class Context {
    public double pourcentMax=-1;             // Pourcentage de l'info à garder en fin d'histog. si autocut (ex: 0.9995), -1 = défaut
    public String expTimeName;                // Nom du champ à utiliser dans le header pour diviser par une valeur (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
-   private ArrayList<String> defaultFitsKey; // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON par défaut
+   protected ArrayList<String> defaultFitsKey; // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON par défaut
    private ArrayList<String> fitsKeys=null;  // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON explicite
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
@@ -749,9 +749,6 @@ public class Context {
             setTargetRadius(Util.round(r,5)+"");
          }
       }
-      
-      // Recherche des fitsKey à garder par défaut
-      defaultFitsKey = scanDefaultFitsKey( fitsfile.headerFits );
 
       // Mémorisation de la résolution initiale
       double [] res = fitsfile.calib.GetResol();
@@ -762,7 +759,7 @@ public class Context {
    
    // Retourne la liste des Fits Keys de l'entête qui matchent la liste par défaut.
    // Si aucun retourne null
-   private ArrayList<String> scanDefaultFitsKey( HeaderFits h ) {
+   protected ArrayList<String> scanDefaultFitsKey( HeaderFits h ) {
       ArrayList<String> a = new ArrayList<String>();
       Enumeration<String> e = h.getKeys();
       while( e.hasMoreElements() ) {

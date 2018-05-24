@@ -3144,10 +3144,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          try {
             coo = aladin.view.getCurrentView().getCooCentre();
             target = aladin.localisation.aladin.localisation.getFrameCoord( coo.getDeg() );
-         } catch( Exception e ) {
-            e.printStackTrace();
-            return null;
-         }
+         } catch( Exception e ) { return null; }
          
          double radius = aladin.view.getCurrentView().getTaille();
          return target+"   "+Coord.getUnit( radius );

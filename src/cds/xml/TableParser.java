@@ -1977,9 +1977,16 @@ final public class TableParser implements XMLConsumer {
    
    // Cherche à déterminer le timeOffset éventuel
    // Exemple syntaxe: Epoch of minimum (HJD-2450000)
+   // ou bien (+1000)
    private boolean scanTimeOffset( String s ) {
+      boolean rep = scanTimeOffset(s, '-');
+      if( !rep )  scanTimeOffset(s, '+');
+      return rep;
+   }
+   
+   private boolean scanTimeOffset( String s, char signe ) {
       if( s==null ) return false;
-      int m = s.lastIndexOf('-');
+      int m = s.lastIndexOf(signe);
       int p = s.indexOf(')',m);
       if( p==-1 ) p=s.length();
       if( m!=-1) {

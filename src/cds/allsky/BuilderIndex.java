@@ -130,14 +130,14 @@ public class BuilderIndex extends Builder {
       validateInput();
       validateOutput();
       validateLabel();
-
+      
       // S'il existe déjà un hpxFinder, on va vérifier qu'on inséère pas de doublons
       flagAppend = !context.isExistingIndexDir();
       if( !flagAppend ) context.info("Pre-existing HpxFinder index => will add new images only...");
       
       // Tests order
       int order = context.getOrder();
-      if( order==-1 ) {
+      if( order==-1 || context.getFitsKeys()==null ) {
          String img = context.getImgEtalon();
          if( img==null ) {
             img = context.justFindImgEtalon( context.getInputPath() );
@@ -148,9 +148,15 @@ public class BuilderIndex extends Builder {
             Fits file = new Fits();
             file.loadHeaderFITS(img);
             if( file.getCalib()==null ) throw new Exception("null calib");
-            long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
-            order = (Util.order((int) nside) - context.getTileOrder() );
-            if( order<3 ) order=3;
+
+            // Recherche des fitsKey à garder par défaut
+            context.defaultFitsKey = context.scanDefaultFitsKey( file.headerFits );
+
+            if( order==-1 ) {
+               long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+               order = (Util.order((int) nside) - context.getTileOrder() );
+               if( order<3 ) order=3;
+            }
             context.setOrder(order);
          } catch (Exception e) {
             e.printStackTrace();

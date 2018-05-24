@@ -71,6 +71,7 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -393,7 +394,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    JPopupMenu popMenu;
-   JMenuItem menuLabel,menuClone,menuCopy,menuCopyImg,menuLock, menuLook
+   JMenuItem menuLabel,menuClone,menuCopy,menuCopyImg,menuLock, menuLook, menuPlot
    //             ,menuROI,menuDel,menuDelROI,menuStick,menuSel,
    //              menuMore,menuNext,menuScreen
    ;
@@ -431,7 +432,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       popMenu.add( menuLabel=j=new JMenuItem(view.MLABELON));
       j.addActionListener(this);
       popMenu.addSeparator();
-      popMenu.add( menuLock=j=new JMenuItem(view.MNEWROI));
+      popMenu.add( menuLock=j=new JCheckBoxMenuItem(view.MNEWROI));
+      j.addActionListener(this);
+      popMenu.add( menuPlot=j=new JCheckBoxMenuItem(view.MPLOT));
       j.addActionListener(this);
       ////      popMenu.add( menuROI=j=new JMenuItem(view.MROI));
       ////      j.addActionListener(this);
@@ -461,6 +464,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       else if( src==menuLook ) look();
       //      else if( src==menuROI )    aladin.view.createROI();
       else if( src==menuLock )   switchLock();
+      else if( src==menuPlot )   switchView();
       //      else if( src==menuDel )    aladin.view.freeSelected();
       //      else if( src==menuDelROI ) aladin.view.freeLock();
       //      else if( src==menuSel )    aladin.view.selectAllViews();
@@ -498,6 +502,19 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       locked=!locked;
       repaint();
       return true;
+   }
+   
+   /** Permute entre la vue spatiale et la vue nuage de point */
+   protected void switchView() {
+      if( isPlot() ) {
+         plot.free();
+         plot=null;
+//         newView(1);
+         reInitZoom(true);
+         repaint();
+      } else {
+         addPlotTable(pref, -1, -1,true);
+      }
    }
 
    /** True si le mode Nord en haut est activé pour cette vue */
@@ -551,6 +568,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       menuLabel.setText( view.labelOn() ? view.MLABELON:view.MLABELOFF);
       menuLock.setEnabled( !isProjSync() );
       menuLock.setSelected(locked);
+      menuPlot.setEnabled(pref.isCatalog());
+      menuPlot.setSelected(isPlot());
       //      menuMore.setEnabled( !aladin.view.allImageWithView());
       //      menuNext.setEnabled( aladin.calque.getNbPlanImg()>1 );
 
@@ -1380,7 +1399,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Sans mémorisation
       return new RectangleD(xzImg-wzImg/2,yzImg-hzImg/2, wzImg,hzImg);
    }
-
+   
    /** Positionne le plan de référence de la vue
     *  en ajustant les paramètres du zoom pour que la portion visible
     *  corresponde au facteur de zoom initial indiqué dans le plan.
@@ -1391,7 +1410,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Sauvegarde des valeurs du zoom dans le plan afin de pouvoir y revenir
       if( flagMemo ) pref.memoInfoZoom(this);
-
+      
+      // Y a-t-il déjà une vue utilisant ce plan catalogue en référence , ou en simple affichage?
+      ViewSimple otherView = p.isCatalog() ? aladin.view.getView(p) : null;
+      boolean alreadyVisible = p.isCatalog() && p.active &&( otherView==null || !otherView.isPlot());
+      
       // Changement de plan de référence
       if( pref!=p ) {
          pref=p;
@@ -1412,6 +1435,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             SwingUtilities.invokeLater(new Runnable() {
                public void run() { plot.adjustPlot(); }
             });
+         } else if( otherView!=null && !otherView.isPlot() || alreadyVisible ) {
+            addPlotTable(p, -1, -1,true);
          }
       }
       

@@ -217,7 +217,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean flagHighlight=false;       // true si on est en mode highlight des sources (voir hist[] dans ZommView)
 
    static protected String NOZOOM,MSTICKON,MSTICKOFF,MOREVIEWS,
-   MLABELON,MCOPY,MCOPYIMG,MLOOK,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
+   MLABELON,MCOPY,MCOPYIMG,MLOOK,MLABELOFF,/*MROI,*/MNEWROI,MPLOT,MDELROI,MSEL,MDELV,
    VIEW,ROIWNG,ROIINFO,HCLIC,HCLIC1,NIF,NEXT;
 
    protected void createChaine() {
@@ -233,6 +233,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       NEXT      = aladin.chaine.getString("VWNEXT");
       //      MROI      = aladin.chaine.getString("VWMROI");
       MNEWROI   = aladin.chaine.getString("VWMNEWROI");
+      MPLOT     = aladin.chaine.getString("VWMPLOT");
       MDELROI   = aladin.chaine.getString("VWMDELROI");
       MSEL      = aladin.chaine.getString("VWMSEL");
       MDELV     = aladin.chaine.getString("VWMDELV");
@@ -390,7 +391,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( p==null ) return;
       int m=getNbView();
       for( int i=0; i<m; i++ ) {
-         if( viewSimple[i].isPlotTime() ) return;   // il y a déjà une vue temporelle
+         if( viewSimple[i].isPlotTime() ) {
+            repaintAll();
+            return;   // il y a déjà une vue temporelle
+         }
       }
       
       // On crée une vue supplémentaire si nécessaire
@@ -399,7 +403,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       
       setPlanRef(nview, p);
    }
-
+   
 
    /**
     * Positionnement d'une frame donnée pour une vue blink. Possibilité de
@@ -4746,7 +4750,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    public JPanel getPlotControlPanelForPlan(Plan plan) {
       JPanel p1 = null;
       int n=0;
+      int ct=-1; // Current tab to select
       JTabbedPane tab = new JTabbedPane();
+      ViewSimple cv = aladin.view.getCurrentView();
       int m=getNbView();
       for( int i =0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
@@ -4754,12 +4760,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          p1 = v.plot.getPlotControlPanelForPlan(plan);
          if( p1==null ) continue;
          tab.add("View "+getIDFromNView(i),p1);
+         if( v==cv ) ct=n;
          n++;
       }
       if( n==0 ) return null;
       if( n==1 ) return p1;
       JPanel p = new JPanel();
       p.add(tab);
+      if( ct>=0 ) tab.setSelectedIndex(ct);
       return p;
 
    }

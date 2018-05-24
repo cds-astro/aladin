@@ -193,7 +193,6 @@ public class PlanTMoc extends PlanMoc {
       int drawingOrder = getDrawingOrder(v);
       
       TMoc lowMoc = (TMoc)getHealpixMocLow(drawingOrder,gapOrder);
-      System.out.println("tmin = "+Astrodate.JDToDate(tmin)+" tmax="+Astrodate.JDToDate(tmax)+" drawingOrder="+lowMoc.getMocOrder());
       
       Iterator<long[]> it = lowMoc.jdIterator(tmin, tmax);
       long [] jdRange=null;
@@ -224,7 +223,7 @@ public class PlanTMoc extends PlanMoc {
          for( Rectangle r : a ) g.drawRect(r.x,r.y, r.width, r.height);
       }
 
-      System.out.println("draw in "+(System.currentTimeMillis()-t)+"ms");
+//      System.out.println("draw in "+(System.currentTimeMillis()-t)+"ms");
 
    }
    
