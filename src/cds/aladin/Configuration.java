@@ -207,7 +207,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
-   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,
+   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,RESTART,
    GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
 
 
@@ -353,6 +353,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       FILEDIALOGNATIVE = aladin.chaine.getString("FILEDIALOGNATIVE");
       THEME = aladin.chaine.getString("THEME");
       THEMEHELP = aladin.chaine.getString("THEMEHELP");
+      RESTART = aladin.chaine.getString("RESTART");
       GRID=aladin.chaine.getString("UPGRID");
       GRIDH=aladin.chaine.getString("UPGRIDH");
       GRIDFONT=aladin.chaine.getString("UPGRIDFONT");
@@ -2361,7 +2362,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          int t = themeChoice.getSelectedIndex();
          if( t!=0 ) set(LOOKANDFEELTHEME, (String) themeChoice.getSelectedItem() );
          else remove(LOOKANDFEELTHEME);
-         if( t!=previousTheme ) Aladin.info(this,aladin.chaine.getString("RESTART"));
+         if( t!=previousTheme ) Aladin.info(this,RESTART);
       }
 
       // Les sliders de controle
@@ -2453,7 +2454,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
 //      set(TRANS,(String)transparencyChoice.getSelectedItem());
       set(TRANSLEVEL,level+"");
-      setTransparency((String)transparencyChoice.getSelectedItem(), level);
+//         setTransparency((String)transparencyChoice.getSelectedItem(), level);
 
       // Pour le langage
       index = langChoice.getSelectedIndex();
@@ -2464,7 +2465,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          } else {
             setLang(index==0 ? null : (String)langChoice.getSelectedItem());
          }
-         Aladin.info(this,aladin.chaine.getString("RESTART"));
+         Aladin.info(this,RESTART);
       }
 
       // Pour le mode
@@ -2472,7 +2473,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( index!=modeItem ) {
          modeItem=index;
          setMode(index==0 ? null : (String)modeChoice.getSelectedItem());
-         Aladin.info(this,aladin.chaine.getString("RESTART"));
+         Aladin.info(this,RESTART);
       }
 
 

@@ -364,6 +364,8 @@ final public class ThreadBuilderTile {
 
    static private double toRad = 180./Math.PI;
    static private double PI2 = Math.PI/2.;
+   
+   static public int I = 0;
 
    /**
     * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
@@ -455,6 +457,8 @@ final public class ThreadBuilderTile {
                         file.open(z, flagGauss);
 
                      } catch( Exception e ) {
+                        e.printStackTrace();
+                        context.addFileRemoveList(file.name);
                         if( context.getVerbose()>=3 ) {
                            context.warning("Problem on open => file retired: "+file.name+" => exception "+e.getMessage());
                         }
@@ -1111,7 +1115,11 @@ final public class ThreadBuilderTile {
          return fitsfile.getFilename();
       }
 
-      /** Ouverture effective du fichier FITS */
+      /** Ouverture effective du fichier FITS
+       * @param frame
+       * @return true si ouverture effective, false si déjà ouvert
+       * @throws Exception
+       */
       protected void open(int frame) throws Exception { open(frame,false); }
       protected void open(int frame, boolean gauss) throws Exception {
          if( isOpened==frame ) return;

@@ -180,6 +180,8 @@ import healpix.essentials.Vec3;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Hipsgen BSCALE+specific skyvals use case bug
+ * @beta    <LI> XMM EPN FoV better definition
  * @beta    <LI> Grid missing label bug fixing
  * @beta    <LI> Hipsgen multithread dead lock (multipass bug)
  * @beta    <LI> Grid stroke line adjustement (for very huge images in NOGUI mode)
@@ -208,7 +210,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.088";
+   static public final    String VERSION = "v10.093";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5840,6 +5842,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          //         if( apres!=null ) apres.setEnabled(view.canActiveNextUndo());
 
       } catch( Exception e ) { e.printStackTrace(); }
+      
+      // Détermination des positions relatives des TMOC dans la pile
+      calque.resumeTimeStackIndex();
 
       // Test si le stack a évolué, et l'indique aux VO Observers correspondants
       if( VOObsEvent!=null ) {

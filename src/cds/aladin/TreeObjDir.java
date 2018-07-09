@@ -1074,15 +1074,17 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    protected String getSIABkm() { return addBrowse( getSIACmd()+" $TARGET $RADIUS"); }
    private String getSIACmd() {
-      // Glu tags spécifiques ?
-      String gluTag = prop.get("sia_glutag");
-      if( gluTag==null ) gluTag = prop.get("sia2_glutag");
+      String gluTag=null;
       
       // URL de base ?
       // On passe tout de même par le ID afin d'avoir une commande script clean
       // => voir GluServer pour la résolution internalId => Url de base
       if( prop.get("sia2_service_url")!=null ) gluTag = "SIA2("+internalId+")";
-      if( prop.get("sia_service_url")!=null )  gluTag = "SIA("+internalId+")";
+      else if( prop.get("sia_service_url")!=null ) gluTag = "SIA("+internalId+")";
+      
+      // Glu tags spécifiques ?
+      if( gluTag==null ) gluTag = prop.get("sia2_glutag");
+      if( gluTag==null ) gluTag = prop.get("sia_glutag");
       
       return "get "+gluTag;
    }

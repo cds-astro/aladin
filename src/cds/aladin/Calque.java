@@ -70,7 +70,6 @@ public class Calque extends JPanel implements Runnable {
 
    //   Vector plan;
    int maxPlan=0; 	  // Nombre total de plan actuellement alloue
-   private int nbPlanTime=0;  // Nombre de plans à caractéristique temporelle actuellement affichable (cf. resumeTimeStackIndex())
 
    // Les valeurs a memoriser
    int current;         // Le plan courant
@@ -266,10 +265,6 @@ public class Calque extends JPanel implements Runnable {
    /** Retourne la taille de la pile */
    protected int getNbPlan() { return plan.length; }
    
-   
-   /** Retourne le nombre de plans à caractéristiques temporels actuellement affichables dans une vue temporelle */
-   protected int getNbPlanTime() { return nbPlanTime; }
-
    /** Retourne le plan dont le hashcode correspond */
    protected Plan getPlanByHashCode(int hashCode) {
       synchronized( pile ) {
@@ -566,7 +561,7 @@ public class Calque extends JPanel implements Runnable {
       for( int i=plan.length-1; i>=0; i-- ) {
          Plan p = plan[i];
          if( !p.flagOk || !p.active ) continue;
-         if( p.isTime() ) p.timeStackIndex = index++; 
+         if( p instanceof PlanTMoc ) p.timeStackIndex = index++; 
       }
       return index;
    }
@@ -4188,7 +4183,6 @@ public class Calque extends JPanel implements Runnable {
    private void repaintAll1() {
       if( select!=null  ) {
          select.repaint();
-         nbPlanTime = resumeTimeStackIndex();
          zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();

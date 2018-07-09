@@ -21,21 +21,57 @@
 
 package cds.aladin;
 
-import java.util.*;
-import java.util.zip.*;
 import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.awt.Font;
 import java.awt.Insets;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.event.*;
-import java.io.*;
-import java.lang.reflect.*;
-import java.net.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ListModel;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 
 import cds.tools.Util;
 
@@ -160,12 +196,16 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
      */
     private void addInClassPath(String dir) throws Exception {
 //System.out.println("J'ajoute ["+dir+"] au CLASSPATH");          
-       URL u = new File(dir).toURL();
-       URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-       Class sysclass = URLClassLoader.class;
-       Method method = sysclass.getDeclaredMethod("addURL",new Class[]{URL.class});
-       method.setAccessible(true);
-       method.invoke(sysloader,new Object[]{ u });
+       try {
+         URL u = new File(dir).toURL();
+          URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+          Class sysclass = URLClassLoader.class;
+          Method method = sysclass.getDeclaredMethod("addURL",new Class[]{URL.class});
+          method.setAccessible(true);
+          method.invoke(sysloader,new Object[]{ u });
+      } catch( Exception e ) { 
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      }
     }
     
     /** Construit le répertoire des plugins et le crée si nécessaire */
@@ -455,7 +495,7 @@ Aladin.trace(3,"Scanning plugs in ["+dir+"]");
 //             path = name.substring(0,pos);
              try {
 //                Class plugin = (Class)loadClass(n);
-                Class plugin = (Class)ClassLoader.getSystemClassLoader().loadClass(n);
+                Class plugin = ClassLoader.getSystemClassLoader().loadClass(n);
                 tryToAdd(n,plugin);
              } catch( Throwable e ) {
                 System.err.println("Cannot load plugin "+name+"\n ==> "+e.getMessage());
@@ -516,7 +556,7 @@ Aladin.trace(3,"Scanning plugs in ["+dir+"]");
             
             try {
 //               Class plugin = (Class)loadClass(name);
-               Class plugin = (Class)ClassLoader.getSystemClassLoader().loadClass(name);
+               Class plugin = ClassLoader.getSystemClassLoader().loadClass(name);
                trouve= trouve || tryToAdd(name,plugin);
             } catch( Throwable e ) {
                e.printStackTrace();

@@ -39,6 +39,7 @@ public class PlanTMocGen extends PlanTMoc {
    
    protected PlanTMocGen(Aladin aladin,String label,Plan[] p,int order,double duration) {
       super(aladin,null,label);
+      this.c=null;
       this.p = p;
       this.order=order;
       this.duration=duration;
@@ -52,7 +53,7 @@ public class PlanTMocGen extends PlanTMoc {
    }
    
    protected void suite1() {}
-      
+   
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(Plan p1,double duration) {
       Iterator<Obj> it = p1.iterator();
@@ -64,6 +65,7 @@ public class PlanTMocGen extends PlanTMoc {
          if( m<100 ) pourcent+=incrPourcent;
          try {
             double jdtime = ((Position)o).jdtime;
+            if( Double.isNaN( jdtime ) ) continue;
             ((TMoc)moc).add(jdtime, jdtime+ duration/86400.);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -83,6 +85,10 @@ public class PlanTMocGen extends PlanTMoc {
          if( order!=-1) moc.setMocOrder(order);
          for( Plan p1 : p ) {
             if( p1.isCatalogTime() ) {
+               if( c==null ) {
+                  c = p1.c.darker();
+                  System.out.println("couleur="+c);
+               }
                addMocFromCatalog(p1,duration);
             }
          }

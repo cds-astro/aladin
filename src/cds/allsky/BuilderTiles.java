@@ -139,6 +139,8 @@ public class BuilderTiles extends Builder {
       
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
       if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
+      
+      context.removeListReport();
    }
 
    //   public boolean isAlreadyDone() {

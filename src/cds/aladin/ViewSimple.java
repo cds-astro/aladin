@@ -5277,12 +5277,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          int y=7+getMarge()+Math.max(0,(fontSize-12))+dy;
 
          Color fg = view.infoLabelColor;
-         if( isPlot() ) fg = Color.green;
-         if( !view.infoBorder ) {
+         if( !view.infoBorder || !aladin.DARK_THEME ) {
+            if( isPlot() ) fg = Aladin.COLOR_GREEN;
             g.setColor( fg );
             g.drawString(s,x, y);
             g.setColor( c1 );
-         } else Util.drawStringOutline(g, s, x, y, fg, locked ? Color.red : null);
+         } else {
+            if( isPlot() ) fg = Color.green;
+            Util.drawStringOutline(g, s, x, y, fg, locked ? Color.red : null);
+         }
 
          g.setFont( f1 );
    }

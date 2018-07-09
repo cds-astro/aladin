@@ -119,8 +119,8 @@ public class PlanTMoc extends PlanMoc {
       if( aladin.NOGUI ) return moc;
 
       order += gapOrder;
-      if( order<0 ) order=0;
       if( order>moc.getMocOrder() ) order=moc.getMocOrder();
+      if( order<0 ) order=0;
       if( arrayMoc[order]==null ) {
          arrayMoc[order] = new HealpixMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          final int myOrder = order;

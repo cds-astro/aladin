@@ -1787,15 +1787,17 @@ public final class Glu implements Runnable {
                StringTokenizer aST = new StringTokenizer(actionName);
                while( aST.hasMoreTokens() )
                   aladinDic.put(aST.nextToken(), url);
-               // Le %L overide le %U (BEURK) ,
-               // EN FAIT IL FAUDRAIT ETRE PLUS MALIN DANS
-               // LE CAS OU %L CONTIENT $url MAIS CE SERA POUR UNE PROCHAINE FOIS.
+               
             } else if( (name.equals("L") || name.equals("FullTextResult")) ) {
                url = value;
-               StringTokenizer aST = new StringTokenizer(actionName);
-               while( aST.hasMoreTokens() )
-                  aladinDic.put(aST.nextToken(), url);
-
+               
+               // Le %L overide le %U (BEURK) uniquement si c'est une URL
+               if( value.startsWith("http://") || value.startsWith("https://") ) {
+                  StringTokenizer aST = new StringTokenizer(actionName);
+                  while( aST.hasMoreTokens() ) {
+                     aladinDic.put(aST.nextToken(), url);
+                  }
+               }
                // On retient la meilleure indirection (voir après le while)
             } else if( name.equals("I") || name.equals("SeeAction") ) {
                int metric = 0;
@@ -2587,7 +2589,7 @@ public final class Glu implements Runnable {
 
             UrlLoader in=null;
             //            MyInputStream in=null;
-            long tps=-1;
+            long tps=-1,tps1=-1;
             try {
                long t1 = System.currentTimeMillis();
                in = new UrlLoader( new URL(url), CHECKTIMEOUT,pattern!=null ? 2: 1);
@@ -2611,7 +2613,8 @@ public final class Glu implements Runnable {
                }
 
                long t2 = System.currentTimeMillis();
-               tps = t2-t1;
+               tps1 = tps = t2-t1;
+               
 
                // on arrondit au 100 ms prêt, et on ajoute un facteur aléatoire pour
                // répartir entre serveurs en gros équivalents
@@ -2622,7 +2625,7 @@ public final class Glu implements Runnable {
                //            } finally {
                //               if( in!=null ) try { in.close(); } catch( Exception e) {}
             }
-            Aladin.trace(4,"Glu.checkIndirection(...): "+id+"/"+(n+1)+" => "+url+" => "+tps+"ms");
+            Aladin.trace(4,"Glu.checkIndirection(...): "+id+"/"+(n+1)+" => "+url+" => "+tps1+"ms");
             if( tps!=-1 && tps<minTime ) { minTime=tps; indice=n; }
          }
 

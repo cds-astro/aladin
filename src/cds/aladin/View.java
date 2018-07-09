@@ -389,6 +389,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Création d'une vue Time si nécessaire pour accueillir un TMOC */
    protected void createView4TMOC(PlanTMoc p) {
       if( p==null ) return;
+      calque.resumeTimeStackIndex();
       int m=getNbView();
       for( int i=0; i<m; i++ ) {
          if( viewSimple[i].isPlotTime() ) {

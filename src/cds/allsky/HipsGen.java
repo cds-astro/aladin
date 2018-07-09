@@ -699,6 +699,7 @@ public class HipsGen {
                if( context.nbPilot>0 ) context.warning("Pilot test limited to "+context.nbPilot+" images => partial HiPS");
                else context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
             }
+            context.removeListReport();
             context.done(context.getTitle("THE END (done in "+Util.getTemps(System.currentTimeMillis()-t),'='));
          }
 
@@ -709,6 +710,9 @@ public class HipsGen {
          if( cacheRemoveOnExit && cache!=null ) MyInputStreamCached.removeCache();
          
          context.error(e.getMessage());
+         
+         context.removeListReport();
+
       } finally {
          endOfWork=true;
       }

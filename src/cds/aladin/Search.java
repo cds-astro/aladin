@@ -383,10 +383,9 @@ public final class Search extends JPanel implements MouseListener {
             return;
          }
          int mode =  keyCode==KeyEvent.VK_UP ? -1
-               : keyCode==KeyEvent.VK_DOWN || keyCode==KeyEvent.VK_ENTER? 1
-                     : 0;
+               : keyCode==KeyEvent.VK_DOWN || keyCode==KeyEvent.VK_ENTER? 1 : 0;
          if( mode!=0 ) {
-            text.setText(s);
+            if( keyCode==KeyEvent.VK_ENTER ) text.setText(s);
             setColorAndStatus( aladin.mesure.searchString(s,mode) );
             text.selectAll();
          }

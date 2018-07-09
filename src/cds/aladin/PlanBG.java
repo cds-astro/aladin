@@ -3327,7 +3327,7 @@ public class PlanBG extends PlanImage {
    protected void drawForeground(Graphics gv, ViewSimple v) {
       drawForeground1(gv,v);
       
-      if( flagWaitAllSky && drawMode==DRAWPIXEL ) {
+      if( flagWaitAllSky && drawMode==DRAWPIXEL && getMinOrder()==3 ) {
          gv.setColor(Color.red);
          gv.drawString("Whole sky in progress...", 5,30);
       }

@@ -285,6 +285,7 @@ public class FootprintParser {
 		if( footprintHash.get(id)!=null ) {
 			Aladin.trace(1, "Footprint with ID "+id +"already exists ...\n Existing definition will be erased");
 		}
+		
 		Aladin.trace(3, "Footprint : add to footprintHash footprint with key "+id+"**");
 		footprintHash.put(id, fpBean);
 	}

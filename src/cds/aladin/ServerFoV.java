@@ -263,9 +263,9 @@ public final class ServerFoV extends Server implements TableModel {
       if( findFoVIndex(id)>=0 ) {
       	Aladin.trace(3, "PlanField "+id+" is already registered !! Existing definition will be erased");
       }
-      else {
+//      else {
     	  addFoV(id,pf);
-      }
+//      }
 
       idLastRegistered = id;
 
@@ -321,9 +321,12 @@ public final class ServerFoV extends Server implements TableModel {
    }
 
    boolean addFoV(String id, PlanField pf) {
-      if( findFoVIndex(id)!=-1 ) return false;
+//      if( findFoVIndex(id)!=-1 ) return false;
+      int i=findFoVIndex(id);
       FoVItem fov = new FoVItem(id,pf);
-      fovList.addElement(fov);
+//    fovList.addElement(fov);
+      if( i>=0 ) fovList.setElementAt(fov, i);
+      else fovList.addElement(fov);
       idxSortedCol = 1;
       ascSort = true;
       fireTable();
@@ -332,9 +335,12 @@ public final class ServerFoV extends Server implements TableModel {
 
    boolean addFoV(String instr,String telesc, String descr, String orig) {
       String id=makeID(instr,telesc);
-      if( findFoVIndex(id)!=-1 ) return false;
+//      if( findFoVIndex(id)!=-1 ) return false;
+      int i=findFoVIndex(id);
       FoVItem fov = new FoVItem(instr,telesc,descr,orig);
-      fovList.addElement(fov);
+//      fovList.addElement(fov);
+      if( i>=0 ) fovList.setElementAt(fov, i);
+      else fovList.addElement(fov);
       idxSortedCol = 1;
       ascSort = true;
       fireTable();

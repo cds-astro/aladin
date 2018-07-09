@@ -65,16 +65,16 @@ public class TMoc extends HealpixMoc {
       return clone1(moc);
    }
    
-//   public HealpixMoc complement() throws Exception {
-//      TMoc allTime = new TMoc();
-//      allTime.add(0.,MAXDAY);
-//      allTime.toRangeSet();
-//      toRangeSet();
-//      HealpixMoc res = new TMoc();
-//      res.rangeSet = allTime.rangeSet.difference(rangeSet);
-//      res.toHealpixMoc();
-//      return res;
-//   }
+   public HealpixMoc complement() throws Exception {
+      TMoc allTime = new TMoc();
+      allTime.add(0.,MAXDAY);
+      allTime.toRangeSet();
+      toRangeSet();
+      HealpixMoc res = new TMoc();
+      res.rangeSet = allTime.rangeSet.difference(rangeSet);
+      res.toHealpixMoc();
+      return res;
+   }
    
    // Generic operation
    protected HealpixMoc operation(HealpixMoc moc,int op) throws Exception {
@@ -140,7 +140,7 @@ public class TMoc extends HealpixMoc {
       int pos, endpos;
       
       JDIterator(long start, long end) {
-         pos = rangeSet.getIndex(start)/2+1;
+         pos = rangeSet.getIndex(start)/2;;
          if( pos<0 ) pos=0;
          endpos = rangeSet.getIndex(end)/2+1;
       }

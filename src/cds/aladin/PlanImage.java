@@ -33,6 +33,7 @@ import java.awt.image.ColorModel;
 import java.awt.image.ImageProducer;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
+import java.io.EOFException;
 import java.io.File;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -3316,6 +3317,8 @@ public class PlanImage extends Plan {
                   offsetLoad+=len;
                   setPourcent(offsetLoad*85./taille);
                }
+            } catch( EOFException e ) {
+               error=aladin.error="Loading error: truncated file";
             } catch( Exception e ) {
                error=aladin.error="Loading error: "+e.getMessage();
                e.printStackTrace();

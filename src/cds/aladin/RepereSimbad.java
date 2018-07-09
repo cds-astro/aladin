@@ -188,7 +188,7 @@ public class RepereSimbad extends Repere {
       int offset = id.indexOf('(');
       if( offset<0 ) return;
       String obj = id.substring(0,offset).trim();
-      aladin.glu.showDocument("SimbadIdRef", Tok.quote(obj));
+      aladin.glu.showDocument("simbad.score", Tok.quote(obj));
    }
    
    /** Suppression du cartouche */

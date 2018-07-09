@@ -2339,7 +2339,8 @@ final public class TableParser implements XMLConsumer {
                // S'il s'agit d'un champ numérique c'est probablement du JD, MJD ou YEARS
                if( numeric ) {
                   if( timeOffset>0 ) t+=timeOffset;
-                  timeSystem = t<3000 ? YEARS : t<100000 ? MJD : JD;
+                  boolean flagDay = timeField.unit!=null && timeField.unit.equals("d");
+                  timeSystem = t<3000 && !flagDay ? YEARS : t<100000 ? MJD : JD;
 
                   // Si c'est une chaine de caractères, la présence d'un "T" va faire penser à de l'ISO
                   // sinon on ne sait pas trop...

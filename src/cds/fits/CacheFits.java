@@ -171,14 +171,14 @@ public class CacheFits {
             try {
                f=add(fileName,mode,flagLoad,keepHeader);
             } catch( OutOfMemoryError e ) {
-               System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
+               System.out.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
                if( maxMem<0 ) maxMem*=2;
                else maxMem /= 2;
                try {
                   clean();
                   f=add(fileName,mode,flagLoad,keepHeader);
                } catch( OutOfMemoryError e1 ) {
-                  System.err.println("CacheFits.getFits("+fileName+") out of memory... double error... removing the cache...");
+                  System.out.println("CacheFits.getFits("+fileName+") out of memory... double error... removing the cache...");
                   e1.printStackTrace();
                   reset();
                   cacheOutOfMem=true;
@@ -604,9 +604,15 @@ public class CacheFits {
             } else {
                try {
                   skyval = f.headerFits.getDoubleFromHeader(context.skyvalName);
-                  skyval = (skyval - context.bZeroOrig)/context.bScaleOrig;
                   double cutOrig [] = context.getCutOrig();
-                  skyval = skyval - cutOrig[0];
+                  
+                  double refSkyVal = cutOrig[0]*context.bScaleOrig+context.bZeroOrig;
+                  skyval -= refSkyVal;
+                  skyval = (skyval - f.bzero)/f.bscale;
+                  
+//                  skyval = (skyval - context.bZeroOrig)/context.bScaleOrig;
+//                  skyval = skyval - cutOrig[0];
+                  
                   flagAuto=false;
                } catch( Exception e ) {
                   double cut [] = findAutocutRange(f,pourcentMin,pourcentMax);

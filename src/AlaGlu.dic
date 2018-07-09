@@ -103,9 +103,6 @@
 %A ConvertToJpg
 %U http://cdsweb.u-strasbg.fr/~boch-bin/format-conversion/convert-img.py?img-url=
 
-%A SimbadIdRef
-%U http://simbad.u-strasbg.fr/simbad/sim-id-refs?submit=sort+references&Ident=$1
-
 #TEST
 
 %A IVOAdic

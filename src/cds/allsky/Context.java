@@ -34,6 +34,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -1659,6 +1660,26 @@ public class Context {
    public void error(String s)    { nl(); System.out.println(rouge() +"*ERROR: "+s+end()); }
    public void action(String s)   { nl(); System.out.println(blue()  +"ACTION: "+s+end()); }
    public void stat(String s)     { nl(); System.out.println(bluec() +"STAT  : "+s+end()); }
+   
+   
+   static private final int MAXREMOVEDFILE=100;
+   private HashSet<String> removeList = null;
+   public void addFileRemoveList(String file) {
+      if( removeList==null ) removeList = new HashSet<String>();
+      if( removeList.size()>MAXREMOVEDFILE ) {
+         abort("Too many removed original files (>"+MAXREMOVEDFILE+")");
+         taskAbort();
+      }
+      removeList.add(file);
+   }
+   
+   public void removeListReport() {
+      if( removeList==null || removeList.size()==0 ) return;
+      warning("Report on problematic files:");
+      for( String s : removeList) {
+         nl(); System.out.println(violet()  +"  "+s+end());
+      }
+   }
 
    private boolean validateOutputDone=false;
    public boolean isValidateOutput() { return validateOutputDone; }

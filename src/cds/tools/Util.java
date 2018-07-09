@@ -1525,15 +1525,14 @@ public final class Util {
    static public void resetString(StringBuffer s) {
       int n = s.length();
       if( n==0 ) return;
-      s.delete(0,n);
+      try { s.delete(0,n); } catch( Exception e ) { }
    }
 
    /** Nettoie un StringBuilder pour éviter des allocations inutiles */
    static public void resetString(StringBuilder s) {
-      if( s.length()==0 ) return;
       int n = s.length();
       if( n==0 ) return;
-      s.delete(0,n);
+      try { s.delete(0,n); } catch( Exception e ) { }
    }
 
 
