@@ -174,6 +174,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
  * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
  * @beta    <LI> HiPSgen improvements:
+ * @beta    <LI> - progenitor keywords auto-extraction (-fitskey parameter no longer required)
  * @beta    <LI> - index.html HTTP/HTTPS compatibility
  * @beta    <LI> - MIRROR network speed auto adaptation
  * @beta </UL>
