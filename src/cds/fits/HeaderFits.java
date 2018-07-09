@@ -234,7 +234,7 @@ public final class HeaderFits {
       try {
          while (true) {
             dis.readFully(buffer);
-System.out.println(Thread.currentThread().getName()+":"+linesRead+":["+new String(buffer,0)+"]");
+//System.out.println(Thread.currentThread().getName()+":"+linesRead+":["+new String(buffer,0)+"]");
             key =  getKey(buffer);
             if( linesRead==0 && !key.equals("SIMPLE") && !key.equals("XTENSION") ) {
 //               System.out.println("pb: key="+key+" s="+new String(buffer,0));
