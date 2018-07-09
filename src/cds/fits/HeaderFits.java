@@ -35,6 +35,7 @@ import cds.aladin.Save;
  * Classe dediee a la gestion d'un header FITS.
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.7 : Jul 2018 : Prise en compte des descriptions des champs
  * @version 1.6 : Déc 2007 : Possibilité de surcharger les mots clés
  * @version 1.5 : 20 aout 2002 methode readFreeHeader
  * @version 1.4 : 19 juin 00 Utilisation du PushbackInputStream et
@@ -49,7 +50,8 @@ public final class HeaderFits {
    private StringBuffer   memoHeaderFits = null;  // Memorisation de l'entete FITS telle quelle (en Strings)
    
   /** Les elements de l'entete */
-   protected Hashtable header;
+   protected Hashtable header;     // Valeur pour chaque clé
+   protected Hashtable headDescr;  // Description de chaque clé
    protected Vector<String> keysOrder;
 
    /** La taille de l'entete FITS (en octets) */
@@ -145,6 +147,34 @@ public final class HeaderFits {
        return (new String(buffer, 0, offset, i-offset)).trim();
    }
 
+   /** Extraction de la description d'un champ FITS.
+    * @return La description, ou null si aucune
+    */
+   static public String getDescription(byte [] buffer) {
+      int mode=0;
+      int deb=-1;
+      char och=' ';
+      
+      for( int i=9; i<buffer.length && i<80 && deb<0; i++ ) {
+         char ch= (char) buffer[i];
+         switch(mode) {
+            case 0: // Dans le champ valeur
+               if( ch=='/' ) deb=i+1;
+               else if( ch=='\'' ) mode=1;
+               break;
+            case 1: // Dans une valeur quotée
+               if( ch=='\'' && och!='\\' ) mode=0;
+               break;
+         }
+         och=ch;
+      }
+      if( deb<0 ) return null;
+      String s = new String(buffer,deb,buffer.length-deb).trim();
+      if( s.length()==0 ) return null;
+      return s;
+   }
+
+
    /** retourne la clé d'une ligne d'entete FITS */
    static public  String getKey(byte [] buffer) {
       return new String(buffer, 0, 0, 8).trim();
@@ -192,7 +222,7 @@ public final class HeaderFits {
    public boolean readHeader(MyInputStream dis,FrameHeaderFits frameHeaderFits) throws Exception {
       int blocksize = 2880;
       int fieldsize = 80;
-      String key, value;
+      String key, value, desc;
       int linesRead = 0;
       sizeHeader=0;
       boolean firstLine=true;
@@ -204,7 +234,7 @@ public final class HeaderFits {
       try {
          while (true) {
             dis.readFully(buffer);
-//System.out.println(Thread.currentThread().getName()+":"+linesRead+":["+new String(buffer,0)+"]");
+System.out.println(Thread.currentThread().getName()+":"+linesRead+":["+new String(buffer,0)+"]");
             key =  getKey(buffer);
             if( linesRead==0 && !key.equals("SIMPLE") && !key.equals("XTENSION") ) {
 //               System.out.println("pb: key="+key+" s="+new String(buffer,0));
@@ -217,7 +247,9 @@ public final class HeaderFits {
             if( buffer[8] != '=' ) continue;
             value=getValue(buffer);
 //Aladin.trace(3,key+" ["+value+"]");
+            desc=getDescription(buffer);
             header.put(key, value);
+            if( desc!=null ) headDescr.put(key, desc);
             keysOrder.addElement(key);
          }
 
@@ -333,7 +365,9 @@ public final class HeaderFits {
                // Dans le cas d'une entête DSS dans un fichier ".hhh" il ne faut pas retenir les mots
                // clés concernant l'astrométrie de la plaque entière
                //            if( !( specialDSS && (key.startsWith("AMD") || key.startsWith("PLT"))) ) {
+               
                header.put(key, value);
+               if( com.length()>0 ) headDescr.put(key, com);
                keysOrder.addElement(key);
                //            }
                appendMHF((new String(Save.getFitsLine(key, value, com))).trim());
@@ -416,6 +450,12 @@ public final class HeaderFits {
       header.put(key,value);
    }
 
+   /** Surcharge ou ajout d'un mot clé */
+   public void setKeyword(String key,String value,String description) {
+      header.put(key,value);
+      headDescr.put(key,description);
+   }
+
   /** Recherche d'un element double par son mot cle
    * @param key le mot cle (inutile de l'aligner en 8 caractères)
    * @return la valeur recherchee
@@ -430,18 +470,26 @@ public final class HeaderFits {
       return result;
    }
 
-  /** Recherche d'une chaine par son mot cle
-   * @param key le mot cle  (inutile de l'aligner en 8 caractères)
-   * @return la valeur recherchee
-   */
-   public String getStringFromHeader(String key)
-                 throws NullPointerException {
-      String s = (String) header.get(key.trim());
-      if( s==null || s.length()==0 ) return s;
-      if( s.charAt(0)=='\'' ) return s.substring(1,s.length()-1).trim();
-      return s;
-//      return (String) header.get(key.trim());
-   }
+   /** Recherche d'une chaine par son mot cle
+    * @param key le mot cle  (inutile de l'aligner en 8 caractères)
+    * @return la valeur recherchee
+    */
+    public String getStringFromHeader(String key) throws NullPointerException {
+       String s = (String) header.get(key.trim());
+       if( s==null || s.length()==0 ) return s;
+       if( s.charAt(0)=='\'' ) return s.substring(1,s.length()-1).trim();
+       return s;
+//       return (String) header.get(key.trim());
+    }
+
+    /** Recherche de la description d'une entrée par son mot cle
+     * @param key le mot cle  (inutile de l'aligner en 8 caractères)
+     * @return la valeur recherchee
+     */
+     public String getDescriptionFromHeader(String key) throws NullPointerException {
+        String s = (String) headDescr.get(key.trim());
+        return s;
+     }
 
    /** Ajout, surcharge ou suppression d'un mot cle
     * @param key le mot clé (inutile de l'aligner en 8 caractères)
@@ -471,7 +519,7 @@ public final class HeaderFits {
    }
 
    /** Ecriture de l'entête FITS des mots clés mémorisés. L'ordre est conservé
-    * comme à l'origine - les commentaires ne sont pas restitués 
+    * comme à l'origine - les commentaires sont restitués 
     * @return le nombre d'octets écrits */
    public int writeHeader(OutputStream os ) throws Exception {
       int n=keysOrder.size()*80;
@@ -484,7 +532,8 @@ public final class HeaderFits {
          String key = (String)e.nextElement();
          String value = (String) header.get(key);
          if( value==null ) continue;
-         System.arraycopy(getFitsLine(key,value),0,buf,m,80 );
+         String desc = (String) headDescr.get(key);
+         System.arraycopy(getFitsLine(key,value,desc),0,buf,m,80 );
          m+=80;
       }
       System.arraycopy(b,0,buf,m,b.length);
@@ -624,6 +673,7 @@ public final class HeaderFits {
   protected void alloc() {
 //     if( header!=null && keysOrder!=null ) return;
      header = new Hashtable(200);
+     headDescr = new Hashtable(200);
      keysOrder = new Vector(200);
   }
   

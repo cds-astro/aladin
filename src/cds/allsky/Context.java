@@ -76,7 +76,7 @@ public class Context {
          "DATE","MJD_OBS","UTC","LST","DATE-OBS","MJD-OBS","MJD-END",
          "DATE-OBS","DATE-END","DATEOBS1","DATEOBS2","MIDOBS",
          "ORDATE","TIMESYS","MJDREF","JD","EXPTIME","TEXPTIME","OBSTIME",
-         "WAVELMIN","WAVELMAX","WAVELEN",/*"EQUINOX","EPOCH",*/"TELESCOP","TELNAME"
+         "WAVELMIN","WAVELMAX","WAVELEN","TELESCOP","TELNAME"
    };
 
    
@@ -754,7 +754,8 @@ public class Context {
       // Mémorisation de la résolution initiale
       double [] res = fitsfile.calib.GetResol();
       resolution = Util.myRound(Math.min(res[0],res[1]));
-
+      
+      
       lastImgEtalon = imgEtalon;
    }
    

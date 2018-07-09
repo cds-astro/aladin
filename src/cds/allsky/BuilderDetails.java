@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 
 import cds.aladin.HealpixProgen;
+import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
 /** Construction de la hiérarchie des tuiles d'index à partir des tuiles de plus bas
@@ -256,7 +257,7 @@ public class BuilderDetails extends Builder {
       return out;
    }
 
-   private static final String METADATA =
+   private static final String METADATA1 =
          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                "\n" +
                "<!-- VOTable HiPS hpxfinder mapping file.\n" +
@@ -299,6 +300,8 @@ public class BuilderDetails extends Builder {
                "          <DESCRIPTION>Instrument</DESCRIPTION>\n" +
                "       </FIELD \n" +
                "     -->\n" +
+               "";
+   private static final String METADATA2 =
                "<DATA>\n" +
                "   <TABLEDATA> \n" +
                "      <TR>\n" +
@@ -307,6 +310,8 @@ public class BuilderDetails extends Builder {
                "      <TD>$[name]</TD>\n" +
                "      <TD>$[path:([^\\[]*).*]</TD>\n" +
                "      <TD>$[stc]</TD>\n" +
+               "";
+    private static final String METADATA3 =
                "      <!-- Extended example via prefix and regular expression mapping\n" +
                "           (here, the instrument name is coded in the original path after \"data\" directory)\n" +
                "           <TD>Instrument: $[path:.*/data/(.+)/.*]</TD> \n" +
@@ -328,8 +333,12 @@ public class BuilderDetails extends Builder {
          context.info("Pre-existing "+Constante.FILE_METADATAXML+" file => keep it");
       } else {
          RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
-         String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
+         String s = METADATA1.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
          f.write(s.getBytes());
+         f.write( getAdditionalMetaFileFields().getBytes() );
+         f.write(METADATA2.getBytes());
+         f.write( getAdditionalMetaFileData().getBytes() );
+         f.write(METADATA3.getBytes());
          f.close();
          context.info("Mapping hpxFinder/"+Constante.FILE_METADATAXML+" file has been generated");
       }
@@ -337,6 +346,51 @@ public class BuilderDetails extends Builder {
       //      writeProperties();
       context.writeHpxFinderProperties();
       context.writeIndexHtml();
+   }
+   
+   // Génération des descriptions FIELD des champs additionnels indiqués via le paramètre
+   // -fitskeys=, ou automatiquement par le HEADER dans l'image étalon
+   private String getAdditionalMetaFileFields() {
+      if( context.getFitsKeys()==null ) return "";
+      
+      // chargement de l'entête de l'image étalon (si possible)
+      Fits fits = null;
+      String path=null;
+      try {
+         path = context.getImgEtalon();
+         fits = new Fits();
+         fits.loadHeaderFITS(path);
+      } catch( Exception e ) { 
+         context.warning("Reference image not available ["+path+"] => no metafile.xml FIELD description"); 
+         fits=null; 
+      }
+      
+      StringBuilder s = new StringBuilder();
+      for( String k : context.getFitsKeys() ) {
+         boolean flagNumeric = false;
+         try {
+            fits.headerFits.getDoubleFromHeader(k);
+            flagNumeric=true;
+         } catch( Exception e ) {}
+         String type = flagNumeric ? "datatype=\"double\"" : "datatype=\"char\" arraysize=\"*\"";
+         
+         String desc = fits==null ? null : fits.headerFits.getDescriptionFromHeader(k);
+         desc = desc==null ? "/>\n" : ">\n      <DESCRIPTION>"+desc+"</DESCRIPTION>\n   </FIELD>\n";
+         
+         s.append("   <FIELD name=\""+k+"\" "+type+desc);
+      }
+      return s.toString();
+   }
+
+   // Génération des descriptions DATA des champs additionnels indiqués via le paramètre
+   // -fitskeys=, ou automatiquement par le HEADER dans l'image étalon
+   private String getAdditionalMetaFileData() {
+      if( context.getFitsKeys()==null ) return "";
+      StringBuilder s = new StringBuilder();;
+      for( String k : context.getFitsKeys() ) {
+         s.append("      <TD>$["+k+"]</TD>\n");
+      }
+      return s.toString();
    }
 
    //   // On écrit le fichier des propriétés
