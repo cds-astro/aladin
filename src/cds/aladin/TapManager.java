@@ -72,6 +72,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -2333,6 +2334,9 @@ public class TapManager {
 					} catch (MalformedURLException e) {
 						if (Aladin.levelTrace >= 3) e.printStackTrace();
 						displayWarning(server, requestNumber, e.getMessage());
+					} catch (UnknownHostException e) {
+						if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+						displayWarning(server, requestNumber, "Cannot contact server! Please try again later"+e.getMessage());
 					} catch (IOException e) {
 						if( Aladin.levelTrace >= 3 ) e.printStackTrace();
 						displayWarning(server, requestNumber, e.getMessage());
@@ -2581,9 +2585,11 @@ public class TapManager {
 		}
 	}
 	
-	public void	showOnJoinFrame(String label, String selectedTableName, JoinFacade panel) {
+	public boolean	showOnJoinFrame(String label, String selectedTableName, JoinFacade panel) {
+		boolean showFirstTimeInfo = false;
 		if (this.joinFrame == null) {
 			this.joinFrame = new FrameSimple(aladin);
+			showFirstTimeInfo = true;
 		}
 		String displayTitle = "";
 		try {
@@ -2593,6 +2599,8 @@ public class TapManager {
 			displayTitle = "Create simple join constraints with "+selectedTableName+" of "+label;
 		}
 		this.joinFrame.show(panel, displayTitle);
+		return showFirstTimeInfo;
+		
 	}
 	
 	public void closeMyJoinFacade(JoinFacade joinPanel) {
@@ -2742,7 +2750,6 @@ public class TapManager {
 		return result;
 	}
 	
-	//TODO:: tintin delete the below one method if it is not used as much
 	public void displayWarning(TapClient tapClient, String message) {
 		if (tapClient.mode == TapClientMode.TREEPANEL) {
 			Aladin.error(this.tapPanelFromTree, message);

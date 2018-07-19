@@ -27,15 +27,20 @@ import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.REMOVEWHERECONSTRAINT;
 import static cds.aladin.Constants.SERVERJOINTABLESELECTED;
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.TABLESLABEL;
 import static cds.aladin.Constants.UPLOADJOINTABLESELECTED;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
+import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -49,24 +54,29 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.MutableComboBoxModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 
 /**
- * Class to manage changes in generic tap client w.r.t adding join constraint(s).
+ * Class to manage creation of join constraint(s).
  * @author chaitra
  *
  */
-public class JoinFacade extends JPanel implements FilterActionClass, ActionListener {
+public class JoinFacade extends JPanel implements FilterActionClass, ActionListener, ItemListener {
 
 	/**
 	 * 
@@ -97,11 +107,15 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	private JRadioButton otherJoin;
 	private String CLIENTINSTR;
 	public String mainTable;
+	private JCheckBox addOrReplace;
+	private JCheckBox noTypeFilter;
 	
 	public static String JOINCONTRAINTSTIP, JOINCONSTRAINTASKRADIUS, JOINCONSTRAINTASKRADIUSTIP, JOINCONSTRAINTASKCOL,
 			JOINCONSTRAINTASKCOLTIP, JOINCONSTRAINTASKEQCOLTIP, GENERCIERROR_JOIN, ERROR_NOJOINCOLUMNS,
 			ERROR_NOJOINRADUIS, JOINFRAMETITLE, ERROR_NOINTERFACEMESSAGE, LOADING_JOININTERFACEMESSAGE, JOINUPLOADEDTABLETIP,
-			JOINTABLELABEL, ERROR_NOJOINCOLUMN, UPLOADJOINTABLENAMETOOLTIP, WRITEJOINBUTTONLABEL, JOINRADIUSTOOLTIP, JOINUPLOADTABLELABEL;
+			JOINTABLELABEL, ERROR_NOJOINCOLUMN, UPLOADJOINTABLENAMETOOLTIP, WRITEJOINBUTTONLABEL, JOINUPLOADTABLELABEL,
+			JOINCONSTRAINTADDEDNOTIFICATION, JOINTIP, JOINADDORREPLACELABEL, JOINADDORREPLACETOOLTIP,JOINCOLFILTERLABEL,
+			JOINCOLFILTERTOOLTIP;
 	
 	protected static final String[] joinOperators = { "=", "<>"};
 	
@@ -122,7 +136,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	}
 	
 	public Dimension getPreferredSize() {
-		return new Dimension(700, 450);
+		return new Dimension(900, 700);
 	}
 	
 	/**
@@ -170,8 +184,30 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 				chosenTable2 = uploadMeta.get(secondaryTable);
 			}
 			
+			this.removeAll();
 			this.setLayout(new GridBagLayout());
-			GridBagConstraints c = new GridBagConstraints();
+		    CLIENTINSTR = Aladin.chaine.getString("TAPJOININSTR");
+		    
+		    JPanel toppanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		    JButton joinInfo = null;
+		    Image image = Aladin.aladin.getImagette("info1.png");
+			if (image == null) {
+				joinInfo = new JButton("Info");
+			} else {
+				joinInfo = new JButton(new ImageIcon(image));
+			}
+			joinInfo.setMargin(new Insets(0,0,0,0));
+			joinInfo.setBorderPainted(false);
+			joinInfo.setContentAreaFilled(false);
+			joinInfo.addActionListener( new ActionListener() {
+		    	public void actionPerformed(ActionEvent e) { showStatusReport(); }
+		    });
+		    toppanel.add(joinInfo);	
+		    
+		    info1 = new JLabel(CLIENTINSTR);
+		    toppanel.add(info1);
+		    
+		    GridBagConstraints c = new GridBagConstraints();
 			
 			c.gridx = 0;
 			c.gridy = 0;
@@ -179,11 +215,8 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	        c.weightx = 0.10;
 	        c.anchor = GridBagConstraints.NORTHWEST;
 		    c.fill = GridBagConstraints.NONE;
-		    c.insets = new Insets(10, 10, 10, 10);
-		    CLIENTINSTR = Aladin.chaine.getString("TAPJOININSTR");
-		    this.removeAll();
-		    info1 = new JLabel(CLIENTINSTR);
-		    this.add(info1, c);	
+		    c.insets = new Insets(0, 0, 0, 0);
+		    this.add(toppanel, c);	
 		    
 			JPanel tablesPanel = null;
 			try {
@@ -201,13 +234,30 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 				
 				tablesPanel = DynamicTapForm.getTablesPanel(null, this, JOINTABLELABEL, serverTablesGui, chosenTable, tables, compToPrefix, true);
 				tablesPanel.setFont(BOLD);
+				JButton tapMeta = null;
+				image = Aladin.aladin.getImagette("Help.png");
+				if (image == null) {
+					tapMeta = new JButton("Meta");
+				} else {
+					tapMeta = new JButton(new ImageIcon(image));
+				}
+				tapMeta.setMargin(new Insets(0, 0, 0, 0));
+				tapMeta.setBorderPainted(false);
+				tapMeta.setContentAreaFilled(false);
+				tapMeta.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						serverTap.showStatusReport(false);
+					}
+				});
+				tablesPanel.add(tapMeta);
+				
 				c.weighty = 0.01;
 		        c.weightx = 0.10;
 		        c.anchor = GridBagConstraints.NORTHWEST;
 			    c.fill = GridBagConstraints.NONE;
 			    c.insets = new Insets(0, 4, 0, 4);
 			    c.gridy++;
-			    this.add(tablesPanel, c);	
+			    this.add(tablesPanel, c);
 			    
 			    joinTableName = chosenTable.getTable_name();
 			    
@@ -296,7 +346,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			guic.weightx = 0.99;
 			guic.insets = new Insets(0, 5, 0, 0);
 			radius = new JTextField(30);
-			radius.setToolTipText(JOINRADIUSTOOLTIP);
+			radius.setToolTipText(this.serverTap.RADIUS_EX);
 			gui.add(radius, guic);
 			joinConstraintsPanel.add(gui);
 			positionJoin = gui;
@@ -335,51 +385,47 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			}
 			refCols.setRenderer(new CustomListCellRenderer());
 			
+			noTypeFilter = new JCheckBox(JOINCOLFILTERLABEL);
+			noTypeFilter.setToolTipText(JOINCOLFILTERTOOLTIP);
+			noTypeFilter.setSelected(false);
+			noTypeFilter.addItemListener(this);
+			noTypeFilter.setMargin(new Insets(0, 0, 0, 0));
+			noTypeFilter.setBorderPainted(false);
+			noTypeFilter.setContentAreaFilled(false);
+			
+			targetCols.addItemListener(this);
+			
 			JPanel unrelatedJoinConstraintPanel = new JPanel();
 			unrelatedJoinConstraintPanel.setLayout(new BoxLayout(unrelatedJoinConstraintPanel, BoxLayout.X_AXIS));
+			unrelatedJoinConstraintPanel.setBackground(Aladin.COLOR_CONTROL_BACKGROUND);
 			unrelatedJoinConstraintPanel.add(targetCols);
 			unrelatedJoinConstraintPanel.add(unrelJoinOperators);
 			unrelatedJoinConstraintPanel.add(refCols);
+			unrelatedJoinConstraintPanel.add(noTypeFilter);
 			gui.add(unrelatedJoinConstraintPanel, guic);
-			
-			targetCols.addItemListener(new ItemListener() {
-				@Override
-				public void itemStateChanged(ItemEvent e) {
-					// TODO Auto-generated method stub
-					TapTable secTableMetaData = serverTap.tapClient.tablesMetaData.get(joinTableName);
-					if (radio2.isSelected()) {
-						Map<String, TapTable> uploadedTables = serverTap.tapClient.tapManager.getUploadedTables();
-						if (uploadedTables != null) {
-							secTableMetaData = uploadedTables.get(joinTableName);
-						}
-					}
-					TapTableColumn selectedTargetCol = (TapTableColumn) targetCols.getSelectedItem();
-					Vector<TapTableColumn> sameTypeColumns = getSameTypeColumns(selectedTargetCol, secTableMetaData.getColumns());
-					refCols.removeAllItems();
-					if (!sameTypeColumns.isEmpty()) {
-						refCols.setEnabled(true);
-						DefaultComboBoxModel model = new DefaultComboBoxModel(sameTypeColumns);
-						refCols.setModel(model);
-					} else {
-						refCols.setEnabled(false);
-					}
-				}
-			});
 			
 			setFormState(joinConditions, serverJoinTable);
 			
 			joinConstraintsPanel.add(gui);
-			
-			JButton writeJoinButton = new JButton(WRITEJOINBUTTONLABEL);
-			writeJoinButton.setActionCommand(ADDWHERECONSTRAINT);
-			joinConstraintsPanel.add(writeJoinButton);
-			writeJoinButton.addActionListener(this);
-			
 			c.gridy++;
 			c.anchor = GridBagConstraints.NORTHWEST;
 			c.fill = GridBagConstraints.NONE;
 			c.insets = new Insets(2, 10, 2, 10);
 			this.add(joinConstraintsPanel, c);
+			
+			JPanel actionPanel = new JPanel();
+			actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.X_AXIS));
+			JButton writeJoinButton = new JButton(WRITEJOINBUTTONLABEL);
+			writeJoinButton.setActionCommand(ADDWHERECONSTRAINT);
+			actionPanel.add(writeJoinButton);
+			writeJoinButton.addActionListener(this);
+			addOrReplace = new JCheckBox(JOINADDORREPLACELABEL);
+			addOrReplace.setToolTipText(JOINADDORREPLACETOOLTIP);
+			addOrReplace.setSelected(true);
+			actionPanel.add(addOrReplace);
+			c.gridy++;
+			this.add(actionPanel, c);
+			
 			
 			this.constraintListPanel = new JPanel();
 			this.constraintListPanel.setLayout(new BoxLayout(constraintListPanel, BoxLayout.Y_AXIS));
@@ -529,8 +575,11 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			cond.append(priTableNameForQuery).append(DOT_CHAR).append(forRel.getTarget_column()).append(SPACESTRING)
 			.append(" = ").append(constraint.alias).append(DOT_CHAR).append(forRel.getFrom_column());
 		} else if (positionJoin.isSelected()) {
+			double radiusInput = 0.0d;
 			if (radius.getText().trim().isEmpty()) {
 				throw new Exception(ERROR_NOJOINRADUIS);
+			} else {
+				radiusInput = Server.getAngleInArcmin(radius.getText(),Server.RADIUS);
 			}
 			String secRaColumnName = null;
 			String secDecColumnName = null;
@@ -547,7 +596,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			.append(priTableNameForQuery).append(DOT_CHAR).append(priDecColumnName)
 			.append("), CIRCLE('ICRS', ").append(constraint.alias).append(DOT_CHAR)
 			.append(secRaColumnName).append(", ").append(constraint.alias).append(DOT_CHAR)
-			.append(secDecColumnName).append(", ").append(radius.getText()).append("/3600.))");
+			.append(secDecColumnName).append(", ").append(radiusInput).append("/3600.))");
 		} else {
 			if (!refCols.isEnabled()) {
 				throw new Exception(ERROR_NOJOINCOLUMN);
@@ -568,8 +617,26 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			constraint.setAlignmentX(Component.LEFT_ALIGNMENT);
 			this.constraintListPanel.add(constraint);
 		}
+		
+		addConstraintIntimation();
 	}
 	
+	/**
+	 * Method tries to highlight the changes that occur when a join condition is added
+	 */
+	private void addConstraintIntimation() {
+		// TODO Auto-generated method stub
+		if (JOINCONSTRAINTADDEDNOTIFICATION == null || JOINCONSTRAINTADDEDNOTIFICATION.isEmpty()) {
+			JOINCONSTRAINTADDEDNOTIFICATION = "Main tap form is now updated with the new join condition. You can verify and submit the updated query.";
+		}
+		String message = "<html><p style=\"word-wrap: break-word; width: 300px\">"+JOINCONSTRAINTADDEDNOTIFICATION+"</p></html>";
+		TapManager.getInstance(aladin).eraseNotification(info1, message, CLIENTINSTR);
+		Container frame = SwingUtilities.getAncestorOfClass(JFrame.class, this.serverTap);
+		if (frame != null) {
+			((JFrame) frame).toFront();
+		}
+	}
+
 	@Override
 	public void checkSelectionChanged(JComboBox<String> comboBox) {
 		if (comboBox.getSelectedItem() != null) {
@@ -585,14 +652,11 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 				Aladin.trace(3, "Change table selection from within the document");
 				boolean isServerJoin = false;
 				if (this.uploadTablesGui.getItemCount() > 0) {
-					this.uploadTablesGui.setEnabled(true);
+					setUploadState(true);
 					if (radio2.isSelected()) {
 						joinTableName = chosen;
 					} else {
 						isServerJoin = true;
-					}
-					if (!radio2.isEnabled()) {
-						radio2.setEnabled(true);
 					}
 					if (uploadTablesGui.getSelectedItem() != null) {
 						String uploadTable = (String) uploadTablesGui.getSelectedItem();
@@ -605,8 +669,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 						joinTableName = (String) this.serverTablesGui.getSelectedItem();
 						radio1.setSelected(true);
 					}
-					radio2.setEnabled(false);
-					this.uploadTablesGui.setEnabled(false);
+					setUploadState(false);
 					isServerJoin = true;
 				}
 				this.changeTableSelection(joinTableName, isServerJoin);
@@ -614,8 +677,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		} else if (comboBox.equals(this.uploadTablesGui)) {
 			joinTableName = (String) this.serverTablesGui.getSelectedItem();
 			radio1.setSelected(true);
-			radio2.setEnabled(false);
-			this.uploadTablesGui.setEnabled(false);
+			setUploadState(false);
 			this.changeTableSelection(joinTableName, true);
 		}
 	}
@@ -659,6 +721,47 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		}
 		
 		setFormState(joinConditions, table);
+	}
+	
+	@Override
+	public void itemStateChanged(ItemEvent e) {
+		if (e.getSource().equals(noTypeFilter) || !noTypeFilter.isSelected()) {
+			TapTable secTableMetaData = serverTap.tapClient.tablesMetaData.get(joinTableName);
+			if (radio2.isSelected()) {
+				Map<String, TapTable> uploadedTables = serverTap.tapClient.tapManager.getUploadedTables();
+				if (uploadedTables != null) {
+					secTableMetaData = uploadedTables.get(joinTableName);
+				}
+			}
+			TapTableColumn selectedTargetCol = (TapTableColumn) targetCols.getSelectedItem();
+			Vector<TapTableColumn> sameTypeColumns = getSameTypeColumns(selectedTargetCol, secTableMetaData.getColumns());
+			refCols.removeAllItems();
+			if (!sameTypeColumns.isEmpty()) {
+				refCols.setEnabled(true);
+				DefaultComboBoxModel model = new DefaultComboBoxModel(sameTypeColumns);
+				refCols.setModel(model);
+			} else {
+				refCols.setEnabled(false);
+			}
+		}
+	}
+	
+	public void setUploadState(boolean enabled) {
+		uploadTablesGui.setEnabled(enabled);
+		radio2.setEnabled(enabled);
+		Component[] component = uploadTablesGui.getParent().getComponents();
+		for (int i = 0; i < component.length; i++) {
+			if (TABLESLABEL.equals(component[i].getName())) {
+				if (enabled) {
+					component[i].setForeground(SystemColor.textText);
+				} else {
+					component[i].setForeground(SystemColor.textInactiveText);
+				}
+				component[i].setEnabled(enabled);
+				break;
+			}
+		}
+		
 	}
 
 	@Override
@@ -716,6 +819,11 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		repaint();
 	}
 	
+	public void removeAllConstraints() {
+		constraints.clear();
+		this.constraintListPanel.removeAll();
+	}
+	
 	public void removeConstraint(JoinConstraint constraint) {
 		constraints.remove(constraint);
 		this.constraintListPanel.remove(constraint);
@@ -731,8 +839,8 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	 */
 	public Vector<TapTableColumn> getSameTypeColumns(TapTableColumn ref, Vector<TapTableColumn> availableColumns) {
 		Vector<TapTableColumn> result = new Vector<TapTableColumn>();
-		for (TapTableColumn tapTableColumn : availableColumns) {
-			if (ref != null) {
+		if ((noTypeFilter == null || !noTypeFilter.isSelected()) && ref != null) {
+			for (TapTableColumn tapTableColumn : availableColumns) {
 				if (tapTableColumn.getDatatype() == null) {
 					result.addElement(tapTableColumn);
 				} else if (ref.isNumeric()) {
@@ -742,10 +850,9 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 				} else if (!tapTableColumn.isNumeric()) {
 					result.addElement(tapTableColumn);
 				}
-			} else {
-				result.addAll(availableColumns);
-				break;
 			}
+		} else {
+			result.addAll(availableColumns);
 		}
 		return result;
 	}
@@ -777,6 +884,9 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			if (action.equals(ADDWHERECONSTRAINT)) {
 				// check new query.
 				try {
+					if (addOrReplace.isSelected()) {
+						removeAllConstraints();
+					}
 					addConstraint();
 					this.constraintListPanel.revalidate();
 					this.constraintListPanel.repaint();
@@ -810,6 +920,11 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			}
 		}
 	}
+	
+	public static void showStatusReport() {
+		// TODO Auto-generated method stub
+		JOptionPane.showMessageDialog(new JFrame(), JOINTIP, "About join form", JOptionPane.INFORMATION_MESSAGE);
+	}
 
 	public TapTable getTable(String joinTableName) {
 		// TODO Auto-generated method stub
@@ -834,9 +949,13 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		ERROR_NOJOINCOLUMN = Aladin.chaine.getString("ERROR_NOJOINCOLUMN");
 		UPLOADJOINTABLENAMETOOLTIP = Aladin.chaine.getString("UPLOADJOINTABLENAMETOOLTIP");
 		WRITEJOINBUTTONLABEL = Aladin.chaine.getString("WRITEJOINBUTTONLABEL");
-		JOINRADIUSTOOLTIP = Aladin.chaine.getString("JOINRADIUSTOOLTIP");
 		JOINUPLOADTABLELABEL = Aladin.chaine.getString("JOINUPLOADTABLELABEL");
+		JOINCONSTRAINTADDEDNOTIFICATION = Aladin.chaine.getString("JOINCONSTRAINTADDEDNOTIFICATION");
+		JOINTIP = Aladin.chaine.getString("JOINTIP");
+		JOINADDORREPLACELABEL= Aladin.chaine.getString("JOINADDORREPLACELABEL"); 
+		JOINADDORREPLACETOOLTIP = Aladin.chaine.getString("JOINADDORREPLACETOOLTIP");
+		JOINCOLFILTERLABEL = Aladin.chaine.getString("JOINCOLFILTERLABEL");
+		JOINCOLFILTERTOOLTIP = Aladin.chaine.getString("JOINCOLFILTERTOOLTIP");
 	}
-
 
 }

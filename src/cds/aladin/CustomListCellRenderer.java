@@ -78,7 +78,11 @@ public class CustomListCellRenderer extends JLabel implements ListCellRenderer {
 			tooltip = model.get(value).tooltip;
 		}
 		StringBuffer texter = new StringBuffer("<html><p>").append(textToSet).append("</p></html>");
-    	column.setPreferredSize(new Dimension(150, Server.HAUT));//25(Server.HAUT) renders a little bit small. Had it at 28, but windows shows lot of height.
+		int width = column.getWidth();
+		if (width <= 0) {
+			width = 150;
+		}
+    	column.setPreferredSize(new Dimension(width, Server.HAUT));//25(Server.HAUT) renders a little bit small. Had it at 28, but windows shows lot of height.
 		
 		if (textToSet != null) {
 			column.setText(texter.toString());

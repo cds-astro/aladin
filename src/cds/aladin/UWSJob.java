@@ -377,6 +377,14 @@ public class UWSJob implements ActionListener{
 		return result;
 	}
 	
+	public String getIfSingleResult() {
+		String singleResultUrl = null;
+		if (this.results != null && this.results.size() == 1) {
+			singleResultUrl = results.values().iterator().next();
+		}
+		return singleResultUrl;
+	}
+	
 	public void setInitialGui() {
 //		this.gui = new JRadioButton(this.serverLabel+", Job: "+this.location+"     "+this.currentPhase);
 		this.gui = new JRadioButton(getJobLabel());
@@ -469,11 +477,6 @@ public class UWSJob implements ActionListener{
 		jobDetails.add(new JLabel("Destruction: "+this.destructionTime));
 		jobDetails.add(new JLabel("Parameters: "+this.parameters));*/
 		
-		JTextPane summary = new JTextPane();
-		summary.setContentType("text/html");
-		summary.setText(this.getResponsetoDisplay());
-		jobDetails.add(summary);
-		
 		if (this.results!=null && !this.results.isEmpty()) {
 			JPanel resultsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 			resultsPanel.add(new JLabel("Load on Aladin: "));
@@ -508,6 +511,12 @@ public class UWSJob implements ActionListener{
 			});
 			jobDetails.add(button);
 		}
+		
+		JTextPane summary = new JTextPane();
+		summary.setContentType("text/html");
+		summary.setText(this.getResponsetoDisplay());
+		jobDetails.add(summary);
+		
 		if (!jobDetails.isVisible()) {
 			jobDetails.setVisible(true);
 		}
@@ -596,20 +605,6 @@ public class UWSJob implements ActionListener{
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					Aladin.error(uwsFacade.asyncPanel, "Error in processing results url! Please try with the default tap results url also");
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					Aladin.error(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					Aladin.error(uwsFacade.asyncPanel, e1.getMessage());
-				}
-				
-			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
-				try {
-					uwsFacade.loadResults(this, null, -1, null);
-				} catch (MalformedURLException e1) {
-					// TODO Auto-generated catch block
-					Aladin.error(uwsFacade.asyncPanel, "Error in processing results url!");
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					Aladin.error(uwsFacade.asyncPanel, "Unable to get the job information, please try again!");

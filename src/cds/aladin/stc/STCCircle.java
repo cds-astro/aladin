@@ -21,8 +21,6 @@
 
 package cds.aladin.stc;
 
-import java.util.List;
-
 import cds.aladin.Coord;
 
 /**

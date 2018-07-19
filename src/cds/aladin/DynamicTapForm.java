@@ -41,7 +41,7 @@ import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADING;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
-import static cds.aladin.Constants.UPLOAD;
+import static cds.aladin.Constants.TABLESLABEL;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.BorderLayout;
@@ -245,6 +245,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		}
 		
 		JLabel label = new JLabel();
+		label.setName(TABLESLABEL);
 		if (labelText == null) {
 			labelText = "Table:";
 		}
@@ -536,11 +537,6 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
-//		if (Aladin.BETA) {//TODO:: tintin remove comments and methods inside
-//			if (isForLoaded && this.tapClient.mode != TapClientMode.UPLOAD && !(this instanceof ServerTapExamples)) {
-//				bottomPanel.add(getUploadButtonIfAvailable("Upload"));
-//			}
-//		}
 		return bottomPanel;
 	}
 	
@@ -699,6 +695,10 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	
 	@Override
 	protected void showStatusReport() {
+		showStatusReport(true);
+	}
+	
+	protected void showStatusReport(boolean showTapInfoText) {
 		if (aladin.frameInfoServer == null || !aladin.frameInfoServer.isOfDynamicTapServerType()
 				|| !aladin.frameInfoServer.isThisInfoPanel(this.tapClient)) {
 			if (aladin.frameInfoServer != null) {
@@ -719,6 +719,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 					e.printStackTrace();
 			}
 		}
+		aladin.frameInfoServer.showHidetapInfoText(showTapInfoText);
 		aladin.frameInfoServer.show(this);
 	}
 	

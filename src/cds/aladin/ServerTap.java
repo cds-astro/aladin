@@ -885,8 +885,11 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 						}
 					});
 				}
-				this.tapClient.tapManager.showOnJoinFrame(this.tapClient.getVisibleLabel(), this.selectedTableName, this.joinPanel);
+				boolean showInstr = this.tapClient.tapManager.showOnJoinFrame(this.tapClient.getVisibleLabel(), this.selectedTableName, this.joinPanel);
 				this.tapClient.tapManager.loadForeignKeyRelationsForSelectedTable(this.tapClient, this.joinPanel, selectedTableName);
+				if (showInstr) {
+					JoinFacade.showStatusReport();
+				}
 			}
 		} else if(source instanceof JCheckBox){// check command- SELECTALL
 			Aladin.trace(3, "actionperformed for SELECTALL was triggered");

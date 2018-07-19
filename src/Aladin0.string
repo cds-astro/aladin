@@ -3075,7 +3075,7 @@ TAPFORMTITLE	Tap client
 TAPFORMINFO	Query TAP servers via Aladin.
 TAPCLIENTINSTR Construct your query, verify and execute.
 SELECTSERVERTOOLTIP List of tap server that can be loaded...
-TAPGENERICFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints:In case there is no default ra and dec columns, then no position contraint gui will appear. In this case (or to set other ra,dec): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints with the "X" button. \nOnce you are ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\nChoose other flavours of tap clients with the "Mode" dropdown at the top right corner of form.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
+TAPGENERICFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor use the gui to generate the desired query: \nFirst, select the table you want from the "Table" dropdown at the top. \nSelect the columns to be displayed from the select list on the left.\nClick on "Add new" button to add column constraints.\n   The new contraint will be populated right next to the columns list. \nSet constraint value and click on "Refresh query" button (above the large white text area).\nFor position constraints: USe the target panel to add position constraints. If there no default ra and dec columns are identified in your selected table, then no target panel gui will appear. In this case (or change the ra,dec selection): click on the "Set ra,dec" button(next to the tables dropdown).To add position constraints click on "Add" button.\nNew position contraints are also populated right next to the columns list. You can set values or delete constraints. \nWhen ready, click the "Refresh query" button to generate the query. You can then verify the query for correctness with the "Check" button and then on "Submit"(at the bottom) to get the results.\nChoose other flavours of tap clients with the "Mode" dropdown at the top right corner of form.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the respective table on the main form in the "Table" dropdown. The new info will be refreshed here.
 TAPEXAMPLEFORMDESC	Access TAP servers via Aladin by filling the "Server selector" form. \nYou can write your tap query in the large white text area at the bottom of the panel\nor select the generated queries: \nFirst, select the table you want from the "Table" dropdown at the top. \nThe queries are generated w.r.t the selected table.\nClick on "Settings" button to change some basic settings like maximum rows, target selection, setting of right ascension and declination columns, a second table which includes a choice to upload local tables.\nYou can make any manual edits to the generated query and then verify the query for correctness with the "Check" button. To submit click on "Submit"(at the bottom) and get the results. \nChoose other flavours of tap clients with the "Mode" dropdown at the top right corner of form.\n\nThe metadata from the tap schema of the server is shown in this panel(Server status report). In case the metainfo of a particular table is unavailable, select the particular table on the gui in the "Table" dropdown. The new info will be refreshed here.
 TAPLOADINGSTATUSINFO Loading tap schemas from your selected server. Please wait!
 TAPERRORSTATUSINFO Unable to load tap server. Please try again later!
@@ -3091,6 +3091,12 @@ SELECTSPLTAPSERVERSTOOLTIP A small selection of servers is shown below. For a mo
 INCORRECTTAPURLMESSAGE Error! please check the url provided
 MESSAGEUNKNOWNPARAMSINQUERY Are you sure of the highlighted identifiers?
 INVALIDNUMBERINPUT %1$s is incorrect! Please rectify. Valid examples are: >3, 10..12, <=-0.0788 etc... \n With no space/blank between the number and the operator.
+TAPEXGENERATEDLABEL Client generated examples
+TAPEXGENERATEDTOOLTIP These are generated as per the table selected and other form selections
+TAPEXSERVICEPROVIDEDLABEL Service provided examples
+TAPEXSERVICEPROVIDEDTOOLTIP These are examples provided by the server. This list is static and does not change as per form selection
+SHOWSERVICEEXTIP You have a set of examples provided by the service! Click here to view them.
+HIDESERVICEEXAMPLES Click to hide service provided examples.
 
 TAPFORMTITLE.fr	Client TAP
 TAPFORMINFO.fr	Interroge les serveurs TAP via Aladin.
@@ -3153,6 +3159,7 @@ FORMATFORBETWEEN Format for between operator: value1 AND value2. Ex: 2 and 3.
 INCORRECTCONSTRAINTVALUE Please input a number constraint value
 JOINTABLETOOLTIP Join with an uploaded table
 QUERIESREFRESHED Queries refreshed as per your selection!
+JOINTIP You can construct join constraints from this form. \nThe table selected in the main tap form can be joined with one of tables in Aladin stack \nOR ..with one of the server's own table. \n3 types of join constraints can be constructed using this form:\n   1. Join where a foreign key relation exists\n   2. Join with a position constraints: specify radius to constrain a cone area within which the targets from the 2 tables should lie\n   3. Or join for any 2 columns you know are related(ensure they are of same datatype)\n\nClick on "Add this join query button" to add the join constraint.\nYou can review/delete your join constraints in the bottom panel.\nAll join constraints constructed in this "sub-form" are simultaneously updated in the main tap form.\nTherefore, you can review, validate and submit the query from the main tap form.\n\nClick on the info(i) button to see this message again.
 
 TAPTABLEJOINTIP.fr  Jointure de table
 TAPTABLEUPLOADPARSETIP.fr  Charger ces données dans l'interface.
@@ -3215,10 +3222,10 @@ UPLOADFILEBROWSERLABEL Choose file/URL to upload
 #UWS
 JOBERRORTOOLTIP Error in query execution, please check job summary for more details
 JOBNOTFOUNDMESSAGE Unable to continue execution because job is no longer found on server. please try again
-UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the queries submitted from the TAP form with an "ASYNC" option selected.
+UWSNOJOBMESSAGE No jobs from the active session. \nThis panel will show the queries submitted from the forms (probably TAP/SODA) with an "ASYNC" option selected.
 CANTSTARTJOB Unable to start the job. please try again later.
-STANDARDRESULTSLOAD Load Results
-STANDARDRESULTSLOADTIP Loads results from "/results/result" path
+STANDARDRESULTSLOAD Load from /results/result
+STANDARDRESULTSLOADTIP Tries to load results from "/results/result" path
 UWSASKLOADDEFAULTRESULTS Unable to parse results url. Try to download from the tap results path?
 CANTABORTJOB Unable to abort the job. please try again later.
 UWSJOBRADIOTOOLTIP Click to load job details
@@ -3229,6 +3236,7 @@ JOBNOTFOUNDGIVENURL No job found for the given url
 NOJOBURLMESSAGE Please enter the job url!
 JOBDELETEERRORMESSAGE Error when deleting job!
 DELETEONCLOSEBUTTONLABEL Delete on closing Aladin
+UWSMULTIJOBLOADMESSAGE Job completed. Please choose the result to load on Aladin!
 
 JOBERRORTOOLTIP.fr  Erreur d'exécution de la requête. Consultez le rapport d'exécution pour les détails
 JOBNOTFOUNDMESSAGE.fr  Impossible de poursuire l'exécution de la requête car la tâche n'est plus accessible sur le serveur. Veuillez relancer la requête.
@@ -3264,12 +3272,17 @@ BUTTONLABELLOADLOCALFILEUPLOADED Load this table
 UPLOADTABLENAMETIPLABEL as :
 ERROR_NOJOINCOLUMN No column of the selected target column datatype is available to perform join!
 UPLOADJOINTABLENAMETOOLTIP %1$s can be used as %2$s in your adql query. Click on the adjacent settings button to change the table name.
-WRITEJOINBUTTONLABEL Write this join query
+WRITEJOINBUTTONLABEL Add join query
 LOADUPLOADCLIENTTIP Load local file as a tap table
 JOINRADIUSTOOLTIP in degrees
-JOINUPLOADTABLELABEL With uploaded tables:
+JOINUPLOADTABLELABEL Tables in Aladin stack:
 UPLOADTABLECHANGEWARNING Upload table changed! While any of your existing join constraints are not removed, you are adviced to regenerate them if they refer to the old table.
 NOSTACKTABLES No tables available for upload from Aladin stack.
+JOINCONSTRAINTADDEDNOTIFICATION Main tap form is now updated with the new join condition. Verify and submit the query from the main tap form
+JOINADDORREPLACELABEL replace
+JOINADDORREPLACETOOLTIP Choose to replace if you intend to create single and not multiple join constraints.
+JOINCOLFILTERLABEL all
+JOINCOLFILTERTOOLTIP By default the join columns options(adjacent) are filtered based on the datatype of the selected column. Check this option to disable the filtering and show all columns.
 
 #V10
 DTLABEL	Available data

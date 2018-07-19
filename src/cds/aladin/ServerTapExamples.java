@@ -53,13 +53,20 @@ import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
 import static cds.tools.CDSConstants.BOLD;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,8 +74,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
 
-import javax.swing.BoxLayout;
+import javax.swing.BorderFactory;
 import javax.swing.ComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -76,9 +84,12 @@ import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.MutableComboBoxModel;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -102,7 +113,9 @@ public class ServerTapExamples extends DynamicTapForm {
 	private static final long serialVersionUID = -9113338791629047699L;
 	
 	public static String TAPSERVICEEXAMPLESTOOLTIP, SETTARGETTOOLTIP, TAPEXDEFAULTMAXROWS, CHANGESETTINGSTOOLTIP,
-			NODUPLICATESELECTION, JOINTABLETOOLTIP, QUERIESREFRESHED;
+			NODUPLICATESELECTION, JOINTABLETOOLTIP, QUERIESREFRESHED, TAPEXGENERATEDLABEL, TAPEXGENERATEDTOOLTIP,
+			TAPEXSERVICEPROVIDEDLABEL, TAPEXSERVICEPROVIDEDTOOLTIP, SHOWSERVICEEXTIP, HIDESERVICEEXAMPLES;
+	
 	public static final String TAPEXDEFAULTMAXROWS_INT = "2000";
 	Map serviceExamples = null;
 	
@@ -124,6 +137,10 @@ public class ServerTapExamples extends DynamicTapForm {
 	public boolean initExamples = true;
 
 	JComboBox secondaryTablesGui;
+
+	private MySplitPane centerPanel;
+
+	private JButton reduce;
 
 	public ServerTapExamples(Aladin aladin) {
 		// TODO Auto-generated constructor stub
@@ -222,6 +239,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			tablesPanel = getTablesPanel(this.tapClient, this, null, tablesGui, chosenTable, tables, null, true);
 			tablesPanel.setBackground(this.tapClient.primaryColor);
 			tablesPanel.setFont(BOLD);
+			
 			c.weighty = 0.02;
 	        c.weightx = 0.10;
 	        c.anchor = GridBagConstraints.NORTHWEST;
@@ -232,18 +250,11 @@ public class ServerTapExamples extends DynamicTapForm {
 		    c.weighty = 0.57;
 		    
 		    if (this.tapClient.isUploadAllowed()) {
-			    JPanel secondaryTablePanel = new JPanel();
-				secondaryTablePanel.setLayout(new BoxLayout(secondaryTablePanel, BoxLayout.PAGE_AXIS));
 				MutableComboBoxModel uploadModel = (MutableComboBoxModel) tapManager.getUploadClientModel();
-				
 				addSecondTable = new JCheckBox();
 				addSecondTable.setToolTipText(JOINTABLETOOLTIP);
 				addSecondTable.setEnabled((uploadModel.getSize() > 0));
 				
-//				Vector uploadTableNames = new Vector();
-//				if (uploadMeta != null) {
-//					uploadTableNames.addAll(uploadMeta.keySet());
-//				}
 				secondaryTablesGui = new JComboBox(uploadModel);
 				ArrayList<JComponent> compToPrefix = new ArrayList<JComponent>();
 				compToPrefix.add(addSecondTable);
@@ -264,7 +275,6 @@ public class ServerTapExamples extends DynamicTapForm {
 					addSecondTable.setSelected(false);
 					secondaryTablesGui.setEnabled(false);
 				}
-				secondaryTablePanel.add(tablesPanel);
 				
 				addSecondTable.addItemListener(new ItemListener() {
 					@Override
@@ -297,7 +307,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			    c.fill = GridBagConstraints.NONE;
 			    c.insets = new Insets(0, 4, 0, 0);
 			    c.gridy++;
-			    containerPanel.add(secondaryTablePanel, c);	
+			    containerPanel.add(tablesPanel, c);	
 			    c.weighty = 0.55;
 			}
 		} catch (BadLocationException e) {
@@ -328,10 +338,9 @@ public class ServerTapExamples extends DynamicTapForm {
 		});
 		
 		queryDisplays = new JPanel();
-		JScrollPane scrolley = new JScrollPane(this.examplesGui);
-		
+		queryDisplays.setBackground(this.tapClient.primaryColor);
 		queryDisplays.setLayout(new GridLayout(1, 1));
-		queryDisplays.add(scrolley);
+		queryDisplays.add(getScrollPane1());
 		c.fill = GridBagConstraints.BOTH;
 		c.gridy++;
 		c.insets = new Insets(0, 4, 0, 0);
@@ -351,7 +360,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		tap.setWrapStyleWord(true);
 		tap.setLineWrap(true);
 		tap.setEditable(true);
-		scrolley = new JScrollPane(tap);
+		JScrollPane scrolley = new JScrollPane(tap);
 //		c.weightx = 0.35;
 		c.weighty = 0.35;
 		c.weightx = 1;
@@ -367,6 +376,19 @@ public class ServerTapExamples extends DynamicTapForm {
 	    tapManager.initTapExamples(this);
 	}
 	
+	public Border getFancyTitleBorder(String title) {
+//		Border compound, raisedbevel, loweredbevel ;
+//		raisedbevel = BorderFactory.createBevelBorder(BevelBorder.RAISED, Aladin.COLOR_VERTDEAU, Aladin.COLOR_VERTDEAU);
+//		loweredbevel = BorderFactory.createBevelBorder(BevelBorder.LOWERED, Aladin.COLOR_VERTDEAU, Aladin.COLOR_BLUE);
+		Border colorLine = BorderFactory.createLineBorder(Aladin.COLOR_MEASUREMENT_BACKGROUND_SELECTED_LINE);
+//		compound = BorderFactory.createCompoundBorder(raisedbevel, loweredbevel);
+		TitledBorder titleb = BorderFactory.createTitledBorder(title);
+		titleb.setBorder(colorLine);
+//		compound = BorderFactory.createCompoundBorder(colorLine, compound);
+//		compound = BorderFactory.createTitledBorder(compound, title,TitledBorder.LEFT,TitledBorder.ABOVE_TOP);
+		return titleb;
+	}
+	
 	public void loadTapExamples() {
 		if (initExamples) {
 			// we might never need to get the examples if user won't choose this mode. 
@@ -376,6 +398,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		} 
 		if (serviceExamples != null && !serviceExamples.isEmpty()) {
 			this.serviceExamplesGui = new JList(serviceExamples.keySet().toArray());
+//			this.serviceExamplesGui.setBackground(this.tapClient.secondColor);
 			this.serviceExamplesGui.setVisibleRowCount(4);
 			this.serviceExamplesGui.setToolTipText(TAPSERVICEEXAMPLESTOOLTIP);
 			this.serviceExamplesGui.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -383,7 +406,6 @@ public class ServerTapExamples extends DynamicTapForm {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
 					// TODO Auto-generated method stub
-					//tintin todo
 					String queryLabel = (String) serviceExamplesGui.getSelectedValue();
 					if (queryLabel != null) {
 						tap.setText(serviceExamples.get(queryLabel).toString());
@@ -395,12 +417,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			});
 			waitCursor();
 			synchronized (queryDisplays) {
-				JScrollPane scrolley = new JScrollPane(this.examplesGui);
-				queryDisplays.removeAll();
-				queryDisplays.setLayout(new GridLayout(1, 2));
-				queryDisplays.add(scrolley);
-				scrolley = new JScrollPane(this.serviceExamplesGui);
-				queryDisplays.add(scrolley);
+				setOnlyClientGenExamples();
 				queryDisplays.revalidate();
 				queryDisplays.repaint();
 			}
@@ -410,6 +427,155 @@ public class ServerTapExamples extends DynamicTapForm {
 		info1.setText(CLIENTINSTR);
 	}
 	
+	/**
+	 * Show only generated examples. with an flag that you might have server provided examples.
+	 */
+	public void setOnlyClientGenExamples() {
+		queryDisplays.removeAll();
+		queryDisplays.setLayout(new GridBagLayout());
+		queryDisplays.setBackground(this.tapClient.primaryColor);
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 1;
+		c.insets = new Insets(-10, 0, 0, 0);
+		c.weightx = 0.01;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.NONE;
+		JButton button = null;
+		Image image = Aladin.aladin.getImagette("Load.gif");
+		if (image == null) {
+			button = new JButton("+");
+		} else {
+			button = new JButton(new ImageIcon(image));
+			button.setBorderPainted(false);
+			button.setMargin(new Insets(0, 0, 0, 0));
+			button.setContentAreaFilled(true);
+		}
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				showBothExamples();
+			}
+		});
+		button.setToolTipText(SHOWSERVICEEXTIP);
+		queryDisplays.add(button, c);
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(0, 0, 0, -15);
+		c.fill = GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.NORTH;
+		c.weightx = 0.99;
+		c.weighty = 1;
+		queryDisplays.add(getScrollPane1(), c);
+		
+		queryDisplays.revalidate();
+		queryDisplays.repaint();
+	}
+	
+	/**
+	 * Show both static(server provided) and dynamic(client generated) on a split pane
+	 */
+	public void showBothExamples() {
+		queryDisplays.removeAll();
+		queryDisplays.setLayout(new GridBagLayout());
+		queryDisplays.setBackground(this.tapClient.primaryColor);
+		
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 1;
+		c.insets = new Insets(-12, -12, 0, 0);
+		c.weightx = 0.01;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.NONE;
+		Image image = Aladin.aladin.getImagette("Reduire.gif");
+		if (image == null) {
+			reduce = new JButton("-");
+		} else {
+			reduce = new JButton(new ImageIcon(image));
+			reduce.setBorderPainted(false);
+			reduce.setMargin(new Insets(0, 0, 0, 0));
+			reduce.setContentAreaFilled(false);
+		}
+		reduce.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				setOnlyClientGenExamples();
+			}
+		});
+		reduce.setToolTipText(HIDESERVICEEXAMPLES);
+		queryDisplays.add(reduce,c);
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(0, 0, 0, 0);
+		c.fill = GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.NORTH;
+		c.weightx = 0.99;
+		c.weighty = 1;
+		
+		JScrollPane scrolley1 = getScrollPane1();
+		scrolley1.setMinimumSize(new Dimension(250, 100));
+		
+		JScrollPane scrolley2 = new JScrollPane(this.serviceExamplesGui);
+		scrolley2.setBackground(this.tapClient.primaryColor);
+		scrolley2.setToolTipText(TAPEXSERVICEPROVIDEDTOOLTIP);
+		scrolley2.setBorder(getFancyTitleBorder(TAPEXSERVICEPROVIDEDLABEL));
+		centerPanel = new MySplitPane(aladin, JSplitPane.HORIZONTAL_SPLIT, scrolley1, scrolley2 , 1);
+		centerPanel.setBackground(Aladin.BLUE);
+		centerPanel.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				// TODO Auto-generated method stub
+//				System.err.println("centerPanel propertyChange : "+evt.getPropertyName()+" "+evt.getNewValue()+" "+centerPanel.getRightComponent().getWidth()+"  "+centerPanel.getWidth());
+				reduce.revalidate();
+				reduce.repaint();
+			}
+		});
+		scrolley2.addComponentListener(new ComponentListener() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				// TODO Auto-generated method stub
+//				System.err.println("scrolley2 componentShown :"+serviceExamplesGui.getParent().getSize()+e.paramString());
+			}
+			
+			@Override
+			public void componentResized(ComponentEvent e) {
+				// TODO Auto-generated method stub
+//				System.err.println("scrolley2 componentResized :"+serviceExamplesGui.getParent().getSize()+e.paramString());
+				reduce.revalidate();
+				reduce.repaint();
+			}
+			
+			@Override
+			public void componentMoved(ComponentEvent e) {
+				// TODO Auto-generated method stub
+//				System.err.println("scrolley2 componentMoved :"+serviceExamplesGui.getParent().getSize()+e.paramString());
+				reduce.revalidate();
+				reduce.repaint();
+			}
+			
+			@Override
+			public void componentHidden(ComponentEvent e) {
+				// TODO Auto-generated method stub
+//				System.err.println("scrolley2 componentHidden :"+serviceExamplesGui.getParent().getSize()+e.paramString());
+			}
+		});
+		centerPanel.setDividerLocation(0.7);
+		queryDisplays.add(centerPanel, c);
+
+		queryDisplays.revalidate();
+		queryDisplays.repaint();
+	}
+	
+	private JScrollPane getScrollPane1() {
+		JScrollPane scrolley = new JScrollPane(this.examplesGui);
+		scrolley.setToolTipText(TAPEXGENERATEDTOOLTIP);
+		scrolley.setBorder(BorderFactory.createTitledBorder(TAPEXGENERATEDLABEL));
+		scrolley.setBackground(tapClient.primaryColor);
+		return scrolley;
+    }
+  
 	@Override
 	public void submit() {
 		if (this.sync_async != null &&  this.tap != null) {
@@ -456,19 +622,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		Object source = arg0.getSource();
 		if (source instanceof JButton) {
 			String action = ((JButton) source).getActionCommand();
-			/*if (action.equals(SETTINGS)) {//tintin remove comments
-				try {
-					TapManager tapManager = TapManager.getInstance(aladin);
-					if (tapManager.settingsFrame == null) {
-						tapManager.settingsFrame = new FrameTapSettings(aladin);
-					}
-					tapManager.settingsFrame.show(this, "Settings for " + this.tapClient.tapLabel);
-				} catch (Exception e) {
-					if (Aladin.levelTrace >= 3) e.printStackTrace();
-					Aladin.warning(this, TapClient.GENERICERROR);
-		            ball.setMode(Ball.NOK);
-				}
-			} else*/ if (action.equals(CHECKQUERY)) {
+			if (action.equals(CHECKQUERY)) {
 				checkQueryFlagMessage();
 			} 
 		}
@@ -535,8 +689,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		String priTableNameForQuery = TapTable.getQueryPart(selectedTableName, true);
 		this.basicExamples.put("Select all", new CustomListCell("Select * from " + priTableNameForQuery, EMPTYSTRING));
 		this.basicExamples.put("Select top 1000", new CustomListCell("Select TOP 1000 * from " + priTableNameForQuery, EMPTYSTRING));
-		// this.basicExamples.put("Select few columns", "Select oidref, filter,
-		// flux, bibcode from "+primaryTable);
+		// this.basicExamples.put("Select few columns", "Select oidref, filter, flux, bibcode from "+primaryTable);
 		this.basicExamples.put("Get the number of rows", new CustomListCell("Select count(*) from " + priTableNameForQuery, EMPTYSTRING));
 
 		String areaConstraint = "0.09";
@@ -1109,6 +1262,12 @@ public class ServerTapExamples extends DynamicTapForm {
 		NODUPLICATESELECTION = Aladin.chaine.getString("NODUPLICATESELECTION");
 		JOINTABLETOOLTIP = Aladin.chaine.getString("JOINTABLETOOLTIP");
 		QUERIESREFRESHED = Aladin.chaine.getString("QUERIESREFRESHED");
+		TAPEXGENERATEDLABEL = Aladin.chaine.getString("TAPEXGENERATEDLABEL");
+		TAPEXGENERATEDTOOLTIP = Aladin.chaine.getString("TAPEXGENERATEDTOOLTIP");
+		TAPEXSERVICEPROVIDEDLABEL = Aladin.chaine.getString("TAPEXSERVICEPROVIDEDLABEL");
+		TAPEXSERVICEPROVIDEDTOOLTIP = Aladin.chaine.getString("TAPEXSERVICEPROVIDEDTOOLTIP");
+		SHOWSERVICEEXTIP = Aladin.chaine.getString("SHOWSERVICEEXTIP");
+		HIDESERVICEEXAMPLES = Aladin.chaine.getString("HIDESERVICEEXAMPLES");
 	}
 
 }

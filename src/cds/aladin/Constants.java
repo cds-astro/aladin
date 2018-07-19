@@ -383,4 +383,6 @@ public static enum DBColumnType {
 	BINARYn, BLOB, CLOB, TIMESTAMP, POINT, REGION;
 }
 
+public static final String TABLESLABEL = "TABLESLABEL";
+
 }

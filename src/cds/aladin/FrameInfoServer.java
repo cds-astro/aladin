@@ -28,8 +28,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.ExecutionException;
@@ -42,6 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
 
 import cds.tools.Util;
 
@@ -151,6 +150,8 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 			mainScrollPane.getVerticalScrollBar().setUnitIncrement(4);
 			
 			this.centerPanel = new MySplitPane(aladin, JSplitPane.VERTICAL_SPLIT, js, mainScrollPane, 1);
+//			this.centerPanel.setDividerSize(3);
+			this.centerPanel.setBackground(Aladin.BLUE);
 			js.setMinimumSize(new Dimension(800, 200));
 			js.setPreferredSize(new Dimension(800, 300));
         } catch (InterruptedException e) {
@@ -225,7 +226,6 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	   if( s instanceof ServerGlu ) {
 	      gluRecord = "GLU record:\n"+((ServerGlu)s).record.toString();
 	   }
-	   
 	   ta.setText(
                                     "\n"+
                                  (s.description!=s.aladinLabel ? A(DESC)+Util.fold(s.description,70)+"\n":"")+
@@ -240,10 +240,11 @@ public class FrameInfoServer extends JFrame implements ActionListener {
                            (gluRecord!=null ? "\n\n"+gluRecord:"")
                     );
 	   ta.setCaretPosition(0);
+//	   tapInfoText(true);
 	   pack();
 	   setVisible(true);
 	}
-
+	
 	// Gestion des evenements
 	public void actionPerformed(ActionEvent evt) {
        String what = evt.getActionCommand();
@@ -302,6 +303,26 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Method facilitates hiding of server form specific component: tap description 
+	 * so the info panel can be repurposed to show just generic tap meta info
+	 * @param show
+	 */
+	public void showHidetapInfoText(boolean show) {
+		// TODO Auto-generated method stub
+		if (!isVisible() || (show != ta.isVisible())) {
+			this.centerPanel.getTopComponent().setVisible(show);
+			ta.setVisible(show);
+			if (!show) {
+				int dividerSize = (Integer) UIManager.get("SplitPane.dividerSize");
+				double proportionalLocation = this.centerPanel.getHeight() > 1500 ? 0.05 : 0.2; //Magic numbers based on info panel size
+				this.centerPanel.setDividerSize(dividerSize);
+				this.centerPanel.setDividerLocation(proportionalLocation);
+			} 
+			this.centerPanel.resetToPreferredSizes();
+		}
 	}
 
 

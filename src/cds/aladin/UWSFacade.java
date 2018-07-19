@@ -96,7 +96,7 @@ public class UWSFacade implements ActionListener{
 	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
 			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB, UWSJOBRADIOTOOLTIP,
 			JOBCONTROLLERTITLE, UWSPANELCURRECTSESSIONTITLE, UWSPANELPREVIOUSSESSIONTITLE, JOBNOTSELECTED, JOBNOTFOUNDGIVENURL,
-			NOJOBURLMESSAGE, JOBDELETEERRORMESSAGE, DELETEONCLOSEBUTTONLABEL ;
+			NOJOBURLMESSAGE, JOBDELETEERRORMESSAGE, DELETEONCLOSEBUTTONLABEL, UWSMULTIJOBLOADMESSAGE ;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
 	public static final int POLLINGDELAY = 4000; //increasing the polling delay to 4secs after consulting Markus Demleitner and Mark Taylor (at Asterics TechForum4)
 	
@@ -119,6 +119,7 @@ public class UWSFacade implements ActionListener{
 		NOJOBURLMESSAGE = Aladin.getChaine().getString("NOJOBURLMESSAGE");
 		JOBDELETEERRORMESSAGE = Aladin.getChaine().getString("JOBDELETEERRORMESSAGE");
 		DELETEONCLOSEBUTTONLABEL = Aladin.getChaine().getString("DELETEONCLOSEBUTTONLABEL");
+		UWSMULTIJOBLOADMESSAGE = Aladin.getChaine().getString("UWSMULTIJOBLOADMESSAGE");
 	}
 	
 	public UWSFacade() {
@@ -212,12 +213,17 @@ public class UWSFacade implements ActionListener{
 					job.showAsErroneous();
 				} 
 			}
+			if (server != null) {
+				server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			if (job != null) {
 				job.showAsErroneous();
 			}
-			server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
+			if (server != null) {
+				server.setStatusForCurrentRequest(requestNumber, Ball.NOK);
+			}
 			Aladin.error(asyncPanel, "Error with async job! "+e.getMessage());
 		}
 	}
@@ -702,10 +708,23 @@ public class UWSFacade implements ActionListener{
 					}
 				}
 			} else {
-				resultsUrl = uwsJob.getDefaultResultsUrl();
+				//try to load a single result 
+				//if multiple ask user to choose..show message
+				resultsUrl = uwsJob.getIfSingleResult();
+				if (resultsUrl == null) {
+					showAsyncPanel();
+					Aladin.info(asyncPanel, UWSMULTIJOBLOADMESSAGE);
+					return;
+				}
 			}
 			URL urlToLoad = TapManager.getUrl(resultsUrl, null, null);
-			TapManager.handleResponse(aladin, urlToLoad, null, uwsJob.getServerLabel(), server, uwsJob.getQuery(), requestNumber);
+			try {
+				TapManager.handleResponse(aladin, urlToLoad, null, uwsJob.getServerLabel(), server, uwsJob.getQuery(), requestNumber);
+			} catch (IOException e) {
+				// TODO: handle exception
+				showAsyncPanel();
+				throw e;
+			}
 //			aladin.calque.newPlan(resultsUrl, uwsJob.getServerLabel(), null);
 		}
 	}
@@ -718,7 +737,7 @@ public class UWSFacade implements ActionListener{
 			if (resultsUrl != null) {
 				resultsUrlString = resultsUrl.toString();
 			}
-		} else {//its path to be constructed from original url. we will assume located on the same server
+		} else {//if just path is provided and not full url: its path to be constructed from original url. we will assume located on the same server
 			try {
 				resultsUrl =  new URL(uwsJob.getLocation().getProtocol(), uwsJob.getLocation().getHost(), uwsJob.getLocation().getPort(), URLDecoder.decode(resultToLoad, Constants.UTF8));
 				resultsUrl.toURI();
@@ -869,7 +888,8 @@ public class UWSFacade implements ActionListener{
 			} else if (action.equals(LOADDEFAULTTAPRESULT)) {
 				try {
 					UWSJob selectedJob = processJobSelection(true);
-					loadResults(selectedJob, null, -1, null);
+					String resultsUrl = selectedJob.getDefaultResultsUrl();
+					loadResults(selectedJob, resultsUrl, -1, null);
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					Aladin.error(asyncPanel, "Error in processing results url!");

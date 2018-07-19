@@ -39,7 +39,7 @@ import cds.aladin.Aladin;
  * Reader for an xhtml stream.
  * We are only interested reading "example"
  * For now, closing tag of parent tag with vocab is not detected, only the starting of this tag is detected.
- * //discussion with Markus Demleitner at the ADASS/IVOA interop Santiago 2017: no need to check for vocab. ( we were not able to see gavo examples without it.)
+ * //discussion with Markus Demleitner at the ADASS/IVOA interop Santiago 2017: no need to check for vocab. ( not able to read gavo examples with vocab.)
  * 
  * <div vocab="ivo://ivoa.net/std/DALI-examples"> - not checked
  * 		<div typeof="example"> - this is what we look for
