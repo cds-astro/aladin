@@ -4285,12 +4285,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       double y2 = p1.y - p2.y; 
       double d1 = Math.sqrt( x2*x2 + y2*y2 );
       if( d1 > 10 ) {
-         System.out.println("Souris trop loin du repère => quickSED non fourni");
+//         System.out.println("Souris trop loin du repère => quickSED non fourni");
          return;
       }
 
       String target = coo.getSexa();
-      System.out.println("QuickVizieR sur "+target+"...");
+//      System.out.println("QuickVizieR sur "+target+"...");
 
       // Est-on sur un objet avec pixel ?
       //      if( !v.isMouseOnSomething() ) return;

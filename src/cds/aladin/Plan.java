@@ -2280,8 +2280,9 @@ public class Plan implements Runnable {
       if( !active ) aladin.view.deSelect(this);
       else {
 //         if( !noBestPlacePost ) {
-            if( hasNoPos ) aladin.view.selectAllInPlan(this);
-            else aladin.view.addTaggedSource(this);
+            if( hasNoPos ) {
+               if( !aladin.view.hasSelectedSource() ) aladin.view.selectAllInPlan(this);
+            } else aladin.view.addTaggedSource(this);
 //         }
       }
       

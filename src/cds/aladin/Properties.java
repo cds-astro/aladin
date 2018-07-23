@@ -1519,6 +1519,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                String s = ((JMenuItem)e.getSource()).getActionCommand();
                if( aladin.glu.setIndirectionByUrl(plan.gluTag, s) ) {
                   plan.url = s;
+                  plan.resetStats();
                   showProp(true);
                }
             }

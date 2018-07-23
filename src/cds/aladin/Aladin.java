@@ -162,6 +162,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> New HEALPix library (faster, better)
  * @beta    <LI> Temporal support (prototype implementation) <br>
  * @beta          - Time plots <br>
  * @beta          - Time MOC <br>
@@ -211,7 +212,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.093";
+   static public final    String VERSION = "v10.097";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4520,7 +4521,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Coord c1=null;
       boolean first=true;
 
-      // Détermination du moc order en fonction du diamèttre
+      // Détermination du moc order en fonction du diamètre
       if( order==-1 ) {
          for( Ligne a = o.getFirstBout(); a!=null; a = a.finligne ) {
 
@@ -4570,7 +4571,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // plus de la moitié du ciel => y a un prob
       // Il faudrait également tester si le résultat donne des zones disjointes => prob
-      if( moc.getCoverage()>0.5 ) throw new Exception("Polygon must be expressed in anti-clockwise direction");
+//      if( moc.getCoverage()>0.5 ) throw new Exception("Polygon must be expressed in anti-clockwise direction");
 
 
       return moc;

@@ -143,8 +143,7 @@ public class Constante {
    static public final String KEY_ADDENDUM_ID           = "addendum_id";
    static public final String KEY_HIPSGEN_DATE          = "hipsgen_date";
    static public final String KEY_HIPSGEN_PARAMS        = "hipsgen_params";
-
-
+   
    static public final String KEY_HIPS_RGB_RED          = "hips_rgb_red";
    static public final String OLD_HIPS_RGB_RED          = "red";
    static public final String KEY_HIPS_RGB_GREEN        = "hips_rgb_green";

@@ -4126,8 +4126,18 @@ public class Calque extends JPanel implements Runnable {
    protected boolean isBGAlreadyLoaded(String id) {
       for( Plan p : getPlans() ) {
          if( !(p instanceof PlanBG ) ) continue;
-         if( ((PlanBG)p).id==null ) continue;
-         if( ((PlanBG)p).id.equals(id) ) return true;
+         if( p.id==null ) continue;
+         if( p.id.equals(id) ) return true;
+      }
+      return false;
+   }
+
+   /** Retourne true si un planBG de même identificateur est déjà présent dans la pile */
+   protected boolean isCSAlreadyLoaded(String id) {
+      for( Plan p : getPlans() ) {
+         if( !p.isCatalog() && p instanceof PlanBG ) continue;
+         if( p.id==null ) continue;
+         if( p.id.equals(id) ) return true;
       }
       return false;
    }

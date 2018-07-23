@@ -409,7 +409,8 @@ public class Repere extends Position {
             Coord coo = new Coord(raj,dej);
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
             double radiusRadian = Math.toRadians(getRadius());
-            long [] npix = CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
+            long [] npix = CDSHealpix.FX ? CDSHealpix.query_discFXCenters(nside, coo.al, coo.del, radiusRadian)
+                  : CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
             //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
             for( int i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);

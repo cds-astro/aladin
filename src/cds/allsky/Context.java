@@ -1292,6 +1292,48 @@ public class Context {
       return order!=-1;
    }
    
+   protected boolean isExistingTiles() { return isExistingTiles( getOutputPath() ); }
+   protected boolean isExistingTiles(String path) {
+         File root = new File(path);
+         
+         // Recherche du premier NorderXX trouvé où XX est un nombre
+         File norder = null;
+         for( String s : root.list() ) {
+            if( s.startsWith("Norder") ) {
+               try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
+               norder= new File(path+"/"+s);
+               break;
+            }
+         }
+         if( norder==null ) return false;
+         
+         // Recherche du premier Dir trouvé où XX est un nombre
+         File dir = null;
+         for( String s : norder.list() ) {
+            if( s.startsWith("Dir") ) {
+               try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
+               dir = new File(norder.getAbsolutePath()+"/"+s);
+               break;
+            } 
+         }
+         if( dir==null ) return false;
+         
+         // Recherche du premier NpixXX.ext trouvé où XX est un nombre
+         String npix = null;
+         for( String s : dir.list() ) {
+            if( s.startsWith("Npix") ) {
+               int j = s.lastIndexOf('.');
+               if( j<0 ) continue;
+               try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
+               npix = dir.getAbsolutePath()+"/"+s;
+               break;
+            } 
+         }
+         if( npix==null ) return false;
+         
+         return (new File(npix)).exists();
+   }
+   
    protected boolean hasPropertyFile(String path) {
       File f = new File(path+Util.FS+Constante.FILE_PROPERTIES);
       return f.exists();
@@ -1897,10 +1939,25 @@ public class Context {
       // Ajout de l'IVORN si besoin
       if( hipsId==null ) setHipsId(null);
 
-      // Ajout de l'order si besoin
-      int order = getOrder();
-      if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
-
+//      // Ajout de l'order si besoin
+//      int order = getOrder();
+//      if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
+//      
+      // Recherche des orders si besoin est
+      int min = getMinOrder();
+      int max = getOrder();
+      int [] minMaxOrder = new int[] { min, max };
+      if( min==-1 || max==-1 ) {
+         int [] mm = findMinMaxOrder();
+         if( min==-1 ) minMaxOrder[0] = mm[0];
+         if( max<=0 ) minMaxOrder[1] = mm[1];
+      }
+      
+      // Recherche de la taille des tuiles si besoin est
+      long nSide;
+      if( tileOrder==-1 ) nSide = findTileNSide();
+      else nSide = CDSHealpix.pow2( tileOrder );
+      
       //      loadProperties();
 
       insertPropriete(Constante.KEY_CREATOR_DID,hipsId);
@@ -1934,9 +1991,9 @@ public class Context {
       if( !notouch ) setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
 
       setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
-      setPropriete(Constante.KEY_HIPS_ORDER,order+"");
-      if( minOrder!=-1  ) setPropriete(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
-      setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
+      setPropriete(Constante.KEY_HIPS_ORDER,minMaxOrder[1]+"");
+      setPropriete(Constante.KEY_HIPS_ORDER_MIN, minMaxOrder[0]+"");
+      setPropriete(Constante.KEY_HIPS_TILE_WIDTH,nSide+"");
 
       // L'url
       setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
@@ -2107,17 +2164,159 @@ public class Context {
    }
 
    // Retourne les types de tuiles déjà construites (en regardant l'existence de allsky.xxx associé)
+//   protected String getAvailableTileFormats() {
+//      String path = BuilderAllsky.getFileName(getOutputPath(),3,0);
+//      StringBuffer res = new StringBuffer();
+//      for( int i=0; i<Constante.TILE_EXTENSION.length; i++ ) {
+//         File f = new File(path+Constante.TILE_EXTENSION[i]);
+//         if( !f.exists() ) continue;
+//         if( res.length()>0 ) res.append(' ');
+//         res.append(Constante.TILE_MODE[i]);
+//      }
+//      return res.toString();
+//   }
+   
+// Retourne les types de tuiles déjà construites (en regardant les tuiles déjà construites)
    protected String getAvailableTileFormats() {
-      String path = BuilderAllsky.getFileName(getOutputPath(),3,0);
-      StringBuffer res = new StringBuffer();
+      
+      String path = getOutputPath();
+      File root = new File(path);
+      
+      // Recherche du premier NorderXX trouvé où XX est un nombre
+      File norder = null;
+      for( String s : root.list() ) {
+         if( s.startsWith("Norder") ) {
+            try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
+            norder= new File(path+"/"+s);
+            break;
+         }
+      }
+      if( norder==null ) return "";
+      
+      // Recherche du premier Dir trouvé où XX est un nombre
+      File dir = null;
+      for( String s : norder.list() ) {
+         if( s.startsWith("Dir") ) {
+            try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
+            dir = new File(norder.getAbsolutePath()+"/"+s);
+            break;
+         } 
+      }
+      if( dir==null ) return "";
+      
+      // Recherche du premier NpixXX.ext trouvé où XX est un nombre
+      String npix = null;
+      for( String s : dir.list() ) {
+         if( s.startsWith("Npix") ) {
+            int j = s.lastIndexOf('.');
+            if( j<0 ) continue;
+            try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
+            npix = dir.getAbsolutePath()+"/"+s.substring(0,j);
+            break;
+         } 
+      }
+      if( npix==null ) return "";
+      
+      
+      StringBuilder res = new StringBuilder();
       for( int i=0; i<Constante.TILE_EXTENSION.length; i++ ) {
-         File f = new File(path+Constante.TILE_EXTENSION[i]);
+         File f = new File(npix+Constante.TILE_EXTENSION[i]);
          if( !f.exists() ) continue;
          if( res.length()>0 ) res.append(' ');
          res.append(Constante.TILE_MODE[i]);
       }
       return res.toString();
    }
+   
+   // Retourne le min et le max order en fonction des tuiles présentes
+   private int [] findMinMaxOrder() {
+      
+      String path = getOutputPath();
+      File root = new File(path);
+      
+      // Recherche des NorderXX où XX est un nombre
+      int min=-1,max=-1;
+      for( String s : root.list() ) {
+         if( s.startsWith("Norder") ) {
+            try {
+               int n = Integer.parseInt( s.substring(6));
+               if( min==-1 || n<min ) min=n;
+               if( max==-1 || n>max ) max=n;
+            } catch( Exception e) { }
+         }
+      }
+      return new int[]{ min, max };
+   }
+   
+// Retourne le nside des tuiles présentes
+   private long findTileNSide() {
+      
+      String path = getOutputPath();
+      File root = new File(path);
+      
+      // Recherche du premier NorderXX trouvé où XX est un nombre
+      File norder = null;
+      for( String s : root.list() ) {
+         if( s.startsWith("Norder") ) {
+            try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
+            norder= new File(path+"/"+s);
+            break;
+         }
+      }
+      if( norder==null ) return -1;
+      
+      // Recherche du premier Dir trouvé où XX est un nombre
+      File dir = null;
+      for( String s : norder.list() ) {
+         if( s.startsWith("Dir") ) {
+            try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
+            dir = new File(norder.getAbsolutePath()+"/"+s);
+            break;
+         } 
+      }
+      if( dir==null ) return -1;
+      
+      // Recherche du premier NpixXX.ext trouvé où XX est un nombre
+      String npix = null;
+      for( String s : dir.list() ) {
+         if( s.startsWith("Npix") ) {
+            int j = s.lastIndexOf('.');
+            if( j<0 ) continue;
+            try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
+            npix = dir.getAbsolutePath()+"/"+s;
+            break;
+         } 
+      }
+      if( npix==null ) return -1;
+      
+//    Chargement de la tuile en fonction de son format
+      MyInputStream in = null;
+      try {
+         in=Util.openAnyStream( npix );
+         long type = in.getType();
+
+         Fits fits = null;
+         if( (type&MyInputStream.FITS)!=0 ) {
+            fits = new Fits();
+            fits.loadFITS(in);
+         } else {
+            fits = new Fits();
+            fits.loadPreview(in);
+         }
+         in.close();
+         in=null;
+         
+         // Retour de sa taille
+         return fits.width;
+
+      }
+      catch( Exception e ) {}
+      finally { try { if( in!=null) in.close(); } catch( Exception e1 ) {} }
+      
+      return -1;
+
+   }
+
 
    private void replaceKey(MyProperties prop, String oldKey, String key) {
       if( prop.getProperty(key)==null ) prop.replaceKey(oldKey,key);
@@ -2142,6 +2341,7 @@ public class Context {
       replaceKey(prop,Constante.OLD_HIPS_ORDER_MIN,Constante.KEY_HIPS_ORDER_MIN);
       replaceKey(prop,Constante.OLD_HIPS_TILE_FORMAT,Constante.KEY_HIPS_TILE_FORMAT);
       replaceKey(prop,Constante.OLD_HIPS_TILE_WIDTH,Constante.KEY_HIPS_TILE_WIDTH);
+      replaceKey(prop,Constante.OLD_NBPIXGENERATEDIMAGE,Constante.KEY_HIPS_TILE_WIDTH);
       replaceKey(prop,Constante.OLD_CLIENT_CATEGORY,Constante.KEY_CLIENT_CATEGORY);
       replaceKey(prop,Constante.OLD_HIPS_RGB_RED,Constante.KEY_HIPS_RGB_RED);
       replaceKey(prop,Constante.OLD_HIPS_RGB_GREEN,Constante.KEY_HIPS_RGB_GREEN);
@@ -2237,9 +2437,36 @@ public class Context {
          //         prop.remove(Constante.OLD_ISCUBE);
       }
 
+      // Nettoyage des vieux mots clés à la mode PlanHealpix
       prop.remove(Constante.OLD_ALADINVERSION);
+      prop.remove(Constante.OLD_LAST_MODIFICATON_DATE);
+      prop.remove(Constante.OLD_CURTFORMBITPIX);
+      prop.remove(Constante.OLD_NBPIXGENERATEDIMAGE);
+      prop.remove(Constante.OLD_ORDERING);
+      prop.remove(Constante.OLD_ISPARTIAL);
+      prop.remove(Constante.OLD_ISCOLOR);
+      prop.remove(Constante.OLD_ISIAU);
+      prop.remove(Constante.OLD_ARGB);
+      prop.remove(Constante.OLD_TYPEHPX);
+      prop.remove(Constante.OLD_LENHPX);
+      prop.remove(Constante.OLD_TTYPES);
+      prop.remove(Constante.OLD_TFIELDS);
+      prop.remove(Constante.OLD_TILEORDER);
+      prop.remove(Constante.OLD_NSIDE_FILE);
+      prop.remove(Constante.OLD_NSIDE_PIXEL);
+      prop.remove(Constante.OLD_ISMETA);
+      prop.remove(Constante.OLD_ISCAT);
+      prop.remove(Constante.KEY_SIZERECORD);
+      prop.remove(Constante.KEY_OFFSET);
+      prop.remove(Constante.KEY_GZ);
+      prop.remove(Constante.KEY_LOCAL_DATA);
+      prop.remove(Constante.KEY_ORIGINAL_PATH);
       prop.remove("hips_glu_tag");
-   }
+      prop.remove("imageSourcePath");
+      prop.remove("orderGeneratedImgs");
+   }   
+
+   
 
 
    /** Mise à jour du fichier des propriétés associées au survey HEALPix (propertie file dans la racine)
@@ -2312,7 +2539,7 @@ public class Context {
          String v;
          // Mise à jour des propriétés
          for( int i=0; i<key.length; i++ ) {
- 
+            
             if( !notouch && key[i].equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
                // Conservation de la première date de processing si nécessaire
                if( prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null

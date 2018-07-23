@@ -481,8 +481,9 @@ public class ServerFile extends Server implements XMLConsumer {
 
                // Cubes ?
                TreeObjDir gSky=null;
-               try { gSky = new TreeObjDir(aladin, f); }
-               catch( Exception e ) {
+               try {
+                  gSky = new TreeObjDir(aladin, f);
+               } catch( Exception e ) {
                   aladin.trace(3, "ServerFile.creatLocalPlane(...) HiPS properties file not found => autodiscovery");
                }
                if( gSky!=null ) n=aladin.calque.newPlanBG(gSky,label,null,null);

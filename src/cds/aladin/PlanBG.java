@@ -408,6 +408,7 @@ public class PlanBG extends PlanImage {
    
    // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
    protected boolean checkSite() {
+      
       // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
       boolean lookForFaster = !aladin.glu.checkSiteHistory(gluTag);
       
@@ -430,13 +431,18 @@ public class PlanBG extends PlanImage {
    protected boolean scanProperties() {
       boolean rep=true;
       boolean alternative=true;
+      boolean lookForFaster=false;
       
-      // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
-      boolean lookForFaster = checkSite();
-      
-      // Vérifie qu'il y a au-moins une alternative
-      URL u = gluTag==null ? null : aladin.glu.getURL(gluTag,"",false,false,2);
-      if( u==null ) alternative=false;
+      // Pas de mirroir pour un accès local ou direct URL
+      if( !( local || id!=null && id.startsWith(TreeObjDir.DIRECT) )) {
+
+         // Positionne l'ordre des mirroirs en fonction de la dernière session (si possible)
+         lookForFaster = checkSite();
+
+         // Vérifie qu'il y a au-moins une alternative
+         URL u = gluTag==null ? null : aladin.glu.getURL(gluTag,"",false,false,2);
+         if( u==null ) alternative=false;
+      }
       
       // Pas de réponse immédiate => on cherche un autre site tout de suite
       if( !scanProperties1() && alternative ) {
@@ -1025,6 +1031,7 @@ public class PlanBG extends PlanImage {
          Aladin.trace(2,"Plan "+label+" Dynamic Web server site switching: from "+url+" to "+url1);
       }
       url=url1;
+      resetStats();   // puisqu'on change de serveur, on resete les stats
       return true;
    }
    
@@ -1222,18 +1229,26 @@ public class PlanBG extends PlanImage {
       if( cacheName!=null ) return cacheName;
 
       // On prend désormais l'identificateur (sans le préfixe ivo://) qu'il faut aller
-      // pêcher dans le fichier properties.
+      // pêcher dans le fichier properties. Sauf si on a un id qui commence par TreeObjDir.DIRECT
       // on remplae les / et \ par des _
       try {
-         MyProperties prop = new MyProperties();
-         String urlFile = url+"/"+Constante.FILE_PROPERTIES;
-         InputStreamReader in = null;
-         try {
-            in= new InputStreamReader( Util.openAnyStream(urlFile), "UTF-8" );
-            prop.load(in);
-         } finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+         String s;
          
-         String s = getHiPSID(prop);
+         // Dans le cas d'un ID qui commence par DIRECT/, on ne va surtout pas réutiliser
+         // le même cache
+         if( id!=null && id.startsWith(TreeObjDir.DIRECT) ) s=id;
+         
+         else {
+            MyProperties prop = new MyProperties();
+            String urlFile = url+"/"+Constante.FILE_PROPERTIES;
+            InputStreamReader in = null;
+            try {
+               in= new InputStreamReader( Util.openAnyStream(urlFile), "UTF-8" );
+               prop.load(in);
+            } finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+
+            s = getHiPSID(prop);
+         }
 
          s = s.replace("/","_");
          s = s.replace("\\","_");
@@ -1680,7 +1695,9 @@ public class PlanBG extends PlanImage {
       try {
          if( center==null ) center = getCooCentre(v);
          double radius = v.getTaille();
-         return filterByMoc( getNpixList(order,center,radius).clone(), order );
+         if( CDSHealpix.FX ) radius= (radius/2)*1.43;
+         long [] listPix = getNpixList(order,center,radius).clone();
+         return filterByMoc( listPix, order );
          
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
       
@@ -1688,7 +1705,7 @@ public class PlanBG extends PlanImage {
 
    /** Supprime du tableau les losanges qui sont hors du MOC */
    private long [] filterByMoc(long [] pix,int order) {
-      if( moc==null ) return pix;
+      if( moc==null || moc.isAllSky() ) return pix;
       int j=0;
       for( int i=0; i<pix.length; i++ ) {
          if( moc.isIntersecting(order,pix[i]) ) {

@@ -29,6 +29,7 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -652,16 +653,17 @@ public class Ligne extends Position {
    protected boolean statCompute(Graphics g,ViewSimple v) {
 
       if( bout!=3 ) return false;
+      
 
-      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
-         //         ((PlanBG)v.pref).setDebugIn(this);
-         return false;
-      }
+//      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
+//         //         ((PlanBG)v.pref).setDebugIn(this);
+//         return false;
+//      }
 
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
 
       boolean isHiPS = (v.pref.type == Plan.ALLSKYIMG);
-
+      ArrayList<double[]> cooList = isHiPS ? new ArrayList<double[]>() : null;
 
       statInit();
 
@@ -678,6 +680,8 @@ public class Ligne extends Position {
       double minx1,maxx1,miny1,maxy1, mind,maxd, mina,maxa;
       mina=mind=minx1=miny1=Integer.MAX_VALUE;
       maxa=maxd=maxx1=maxy1=Integer.MIN_VALUE;
+
+      double pixelSurf = 0;
 
 
       tmp = deb=getFirstBout();
@@ -702,8 +706,14 @@ public class Ligne extends Position {
          a=tmp; b=tmp.finligne;
          if( tmp.yv[v.n]> tmp.finligne.yv[v.n] ) { b=tmp ; a=tmp.finligne; }
 
-         if( isHiPS ) seg[i] = new Segment(a.raj,a.dej, b.raj,b.dej);
-         else seg[i] = new Segment(a.xv[v.n]-0.5,a.yv[v.n]-0.5, b.xv[v.n]-0.5,b.yv[v.n]-0.5);
+         if( isHiPS ) {
+            seg[i] = new Segment(a.raj,a.dej, b.raj,b.dej);
+            
+            Coord coo = new Coord(a.raj,a.dej);
+            coo = Localisation.frameToFrame(coo,Localisation.ICRS,((PlanBG)v.pref).frameOrigin);
+            cooList.add( new double[]{ coo.al, coo.del });
+            
+         } else seg[i] = new Segment(a.xv[v.n]-0.5,a.yv[v.n]-0.5, b.xv[v.n]-0.5,b.yv[v.n]-0.5);
       }
 
       Arrays.sort(seg, seg[0]);
@@ -727,14 +737,45 @@ public class Ligne extends Position {
          PlanBG pbg = (PlanBG) v.pref;
          double d = CDSHealpix.pixRes( CDSHealpix.pow2( pbg.getOrder() + pbg.getTileOrder() ) ) / 3600;
          d /= 2;   // Pour être sur de ne pas sauter une ligne
-         System.out.println("From "+Coord.getUnit(mind)+" to "+Coord.getUnit(maxd)+" Delta = " + Coord.getUnit(d) );
+//         System.out.println("From "+Coord.getUnit(mind)+" to "+Coord.getUnit(maxd)+" Delta = " + Coord.getUnit(d) );
          Coord haut = new Coord( (maxa+mina)/2, mind);
          Coord bas  = new Coord( (maxa+mina)/2, maxd);
          double dist = Coord.getDist(haut, bas);
          int n = (int) (dist/d);
-         System.out.println("Distance entre "+haut+"  et "+bas+" => "+Coord.getUnit(dist)+" soit "+n+" itérations");
+//         System.out.println("Distance entre "+haut+"  et "+bas+" => "+Coord.getUnit(dist)+" soit "+n+" itérations");
 
-         return false;
+//         return false;
+         
+         try {
+            int orderFile = pbg.getOrder();
+            long nsideFile = CDSHealpix.pow2(orderFile);
+            long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
+            long nside = nsideFile * nsideLosange;
+            pixelSurf = CDSHealpix.pixRes(nside)/3600;
+            pixelSurf *= pixelSurf;
+            //            System.out.println("order="+CDSHealpix.log2(nside)+" => surf="
+            //                  +Coord.getUnit(pixelSurf, false, true));
+            
+            long [] npix = CDSHealpix.query_polygon(nside, cooList);
+//            System.out.println("npix="+npix.length+" nside="+nside+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
+            Coord coo = new Coord();
+            for( i=0; i<npix.length; i++ ) {
+               long npixFile = npix[i]/(nsideLosange*nsideLosange);
+               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
+               //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+               if( Double.isNaN(pix) ) continue;
+               pix = pix*pbg.bScale+pbg.bZero;
+               double polar[] = CDSHealpix.pix2ang_nest(nside, npix[i]);
+               polar = CDSHealpix.polarToRadec(polar);
+               coo.al = polar[0]; coo.del = polar[1];
+               coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
+               statPixel(g,pix,coo.al,coo.del,v,onMouse);
+               //               System.out.println("pix["+i+"]="+pix);
+               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
+            }
+//            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));
+         } catch( Exception e ) { e.printStackTrace(); }
+
 
       } else {
 
@@ -759,7 +800,10 @@ public class Ligne extends Position {
          }
 
          minx=minx1; maxx=maxx1; miny=miny1; maxy1=maxy;
-      }
+         try {
+            pixelSurf = plan.proj[v.n].getPixResAlpha()*plan.proj[v.n].getPixResDelta();
+         } catch( Exception e ) {}
+     }
 
       if( flagHist ) plan.aladin.view.zoomview.createPixelHist("Pixels");
 
@@ -767,7 +811,6 @@ public class Ligne extends Position {
       // Calculs des statistiques => sera utilisé immédiatement par le paint
       // Attention, il s'agit de variables statiques
       try {
-         double pixelSurf = plan.proj[v.n].getPixResAlpha()*plan.proj[v.n].getPixResDelta();
          surface = nombre*pixelSurf;
          moyenne = total/nombre;
          variance = carre/nombre - moyenne*moyenne;

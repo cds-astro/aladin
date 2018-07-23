@@ -102,6 +102,8 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    protected MyProperties prop=null; // Ensemble des propriétés associées au HiPS (via son fichier de properties ou MocServer)
 
+   public final static String DIRECT = "DIRECT/"; // préfixe ajouté à l'ID dans le cas d'un accès direct par URL explicite
+   
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
    public TreeObjDir(Aladin aladin,String pathOrUrl) throws Exception {
@@ -140,7 +142,7 @@ public class TreeObjDir extends TreeObj implements Propable {
          label = pathOrUrl.substring(offset+1,end);
       }
 //      id="__"+label;
-      id= internalId = MultiMoc.getID(prop);
+      id= internalId = DIRECT+System.currentTimeMillis()/1000+"/"+MultiMoc.getID(prop);
 
       s = prop.getProperty(Constante.OLD_VERSION);
       if( s!=null ) version=s;
@@ -903,6 +905,9 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** retourne l'URL de base pour accéder au serveur HTTP */
    protected String getUrl() {
       
+      // Accès direct ? (sans passer par le GLU)
+      if( id!=null && id.startsWith(TreeObjDir.DIRECT) && url!=null ) return url;
+      
       // HiPS local ?
       if( prop!=null ) {
          String path = prop.getProperty("hips_service_path");
@@ -1135,16 +1140,25 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( cone==null ) { loadCS(); return; }
      exec( addBrowse(  getCSCmd()+" "+cone));
    }
-   protected String getCSBkm() { return addBrowse( getCSCmd()+" $TARGET $RADIUS" ); }
-   private String getCSCmd() {
+   protected String getCSBkm() { return addBrowse( getCSCmd(false)+" $TARGET $RADIUS" ); }
+   private String getCSCmd() { return getCSCmd(true); }
+   private String getCSCmd(boolean flagReplace) {
       String cmd = null;
       String allcolumns = aladin.directory.getParam("QueryCatColumns");
+      String label="";
+      
+      // Pour éviter de charger 2x le même plan CS si ce n'est pas souhaité
+      if( !Aladin.NOGUI && flagReplace && aladin.calque.isCSAlreadyLoaded(internalId) ) {
+         if( aladin.confirmation(aladin, aladin.chaine.getString("CSALREADYLOADED")) ) {
+            label=Tok.quote( internalId)+"=";
+         }
+      }
 
       // On passe par VizieR/Simbad via la commande script adaptée
       if( isCDSCatalog() ) {
          int i = internalId.indexOf('/');
          String cat = internalId.substring(i+1);
-         if( internalId.startsWith("CDS/Simbad") ) cmd = /* Tok.quote(internalId)+"=*/ "get Simbad";
+         if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad";
          else {
             String s = allcolumns.equals("all") ? ",allcolumns":"";
             cmd = "get VizieR("+cat+s+")";
@@ -1156,7 +1170,7 @@ public class TreeObjDir extends TreeObj implements Propable {
          cmd = "get CS("+internalId+s+")";
       }
       
-      return cmd;
+      return label+cmd;
    }
    
    protected void loadCustom() {

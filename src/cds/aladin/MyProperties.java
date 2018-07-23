@@ -350,7 +350,7 @@ public class MyProperties {
       for( PropItem item : prop ) {
          if( item.key.equals(oldKey) ) {
             item.key=key; 
-            hash.remove(key);
+            hash.remove(oldKey);
             hash.put(key, item);
             return;
          }
