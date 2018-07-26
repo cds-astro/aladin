@@ -33,12 +33,23 @@ import cds.aladin.stc.STCObj.ShapeType;
 public class STCStringParser {
 	public final int mandatoryStcCircleWords = 5;
     public STCStringParser() {}
-
+    
     public List<STCObj> parse(String stcString) {
+        return parse(stcString, false);
+    }
+
+    /**
+     * 
+     * @param stcString
+     * @param reduced - signifies Siav2 and SODA input params which are similar to STC string except without reference positions, coordinate systems, units, or geometric operators (union,
+		intersection, not).
+     * @return
+     */
+    public List<STCObj> parse(String stcString, boolean reduced) {
         stcString = stcString.toUpperCase();
         List<STCObj> stcObjs = new ArrayList<STCObj>();
 
-        String[] shapesStrs = splitShapesStrings(stcString);
+        String[] shapesStrs = splitShapesStrings(stcString, reduced);
         for (String shapeStr : shapesStrs) {
         	List<String> stcWords = Arrays.asList(shapeStr.split("[ \t]+", -1));
             Iterator<String> itWords  = stcWords.iterator();
@@ -47,9 +58,9 @@ public class STCStringParser {
                 curWord = itWords.next();
                 try {
                 	if (curWord.equals("POLYGON")) {
-                		stcObjs.add(parsePolygon(itWords));
-                	} else if (curWord.equals("CIRCLE") && stcWords.size() == mandatoryStcCircleWords) {
-                		stcObjs.add(parseCircle(itWords));
+                		stcObjs.add(parsePolygon(itWords, reduced));
+                	} else if (curWord.equals("CIRCLE") && (reduced || stcWords.size() == mandatoryStcCircleWords)) {
+                		stcObjs.add(parseCircle(itWords, reduced));
     				}
                 }
                 catch(Exception e) {
@@ -66,7 +77,7 @@ public class STCStringParser {
      * @param stcString
      * @return
      */
-    private String[] splitShapesStrings(String stcString) {
+    private String[] splitShapesStrings(String stcString, boolean reduced) {
         ArrayList<String> result = new ArrayList<String>();
 
         String shapes = new String("(");
@@ -77,7 +88,12 @@ public class STCStringParser {
 
         String regexp = new String(shapes);
         //regexp += "( +[A-Za-z0-9]+)( +[-]?[0-9\\.]+)+";
-        regexp +="(\\s+[A-Za-z0-9]+)+(\\s+[-]?[0-9\\.]+)+";
+        if (reduced) {
+        	regexp +="(\\s+[A-Za-z0-9]+)?(\\s+[-]?[0-9\\.]+)+";
+//        	regexp +="(\\s+[A-Za-z0-9]+)?(\\s+[-]?[0-9\\.|+Inf|Inf]+)+";
+		} else {
+			regexp +="(\\s+[A-Za-z0-9]+)+(\\s+[-]?[0-9\\.]+)+";
+		}
         Pattern p = Pattern.compile(regexp);
         Matcher m = p.matcher(stcString);
         while (m.find()) {
@@ -87,9 +103,13 @@ public class STCStringParser {
         return result.toArray(new String[result.size()]);
     }
 
-    private STCPolygon parsePolygon(Iterator<String> itWords) throws Exception {
+    private STCPolygon parsePolygon(Iterator<String> itWords, boolean reduced) throws Exception {
         STCPolygon polygon = new STCPolygon();
-        polygon.setFrame(STCFrame.valueOf(itWords.next()));
+        if (!reduced) {
+        	polygon.setFrame(STCFrame.valueOf(itWords.next()));
+		} else {
+			polygon.setFrame(STCFrame.ICRS);
+		}
         while (itWords.hasNext()) {
             double ra, dec;
             ra = dec = Double.NaN;
@@ -112,9 +132,14 @@ public class STCStringParser {
         return polygon;
     }
     
-    private STCObj parseCircle(Iterator<String> stcWords) {
+    private STCObj parseCircle(Iterator<String> stcWords, boolean reduced) {
 		STCCircle circle = null;
-		STCFrame frame = STCFrame.valueOf(stcWords.next());
+		STCFrame frame = null;
+		if (!reduced) {
+			frame = STCFrame.valueOf(stcWords.next());
+		} else {
+			frame = STCFrame.ICRS;
+		}
 		double ra, dec, rad;
 		while (stcWords.hasNext()) {
             ra = dec = Double.NaN;

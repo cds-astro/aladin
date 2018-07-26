@@ -39,6 +39,7 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
+import cds.aladin.stc.STCObj;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -3379,6 +3380,13 @@ public class Calque extends JPanel implements Runnable {
       return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),
             "Crop."+v.pref.label,v.zoom,1.,fullRes,false);
    }
+   
+   PlanImage createCropImage(ViewSimple v, STCObj stcObj, boolean fullRes ) throws Exception {
+	   if( !(v.pref instanceof PlanBG) ) throw new Exception("Cropping only on HiPS");
+	      PointD p1 = v.getPosition(0.,0.);
+	      return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom), stcObj,
+  	            "Crop."+v.pref.label,v.zoom,1.,fullRes,false);
+	}
 
    protected Plan createPlanCatalog(MyInputStream in,String label) {
       int n =  newPlanCatalog(in,label);

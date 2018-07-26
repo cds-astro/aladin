@@ -630,5 +630,16 @@ public class Util {
       return res.toString();
    }
    
+   public static final double pixRes(long nside) {
+      double res = 0.;
+      double degrad = Math.toDegrees(1.0);
+      double skyArea = 4.*Math.PI*degrad*degrad;
+      double arcSecArea = skyArea*3600.*3600.;
+      long npixels = 12*nside*nside;
+      res = arcSecArea/npixels;
+      res = Math.sqrt(res);
+      return res;
+   }
+   
 
 }

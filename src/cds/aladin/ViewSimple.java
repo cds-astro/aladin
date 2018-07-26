@@ -78,6 +78,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
+import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
 import cds.moc.Healpix;
 import cds.tools.Util;
@@ -714,6 +715,68 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          pi.copyright = "Dumped from "+pref.label
                + (cropped?" cropped ("+rcrop+")":"");
 
+         pi.setHasSpecificCalib();
+         pi.pourcent=-1;
+         pi.isOldPlan=false;
+         pi.ref=false;
+         pi.selected=false;
+         pi.setOpacityLevel(1f);
+         pi.changeImgID();
+         if( inStack ) pi.resetProj();
+         pi.colorBackground=null;
+         pi.reverse();
+         pi.objet = pi.projd.getProjCenter().getSexa();
+         pi.flagOk=true;
+
+      } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
+      return pi;
+   }
+   
+   //work in progress
+   protected PlanImage cropAreaBG(RectangleD rcrop, STCObj stcObj, String label,double zoom,double resMult,boolean fullRes,boolean inStack)
+		   throws Exception {
+      PlanImage pi=null;
+      PlanBG pref = (PlanBG)this.pref;
+      pref.projd = this.pref.projd.copy();
+      
+      if( pref.color ) throw new Exception("Not a HiPS fits");
+      if( !pref.hasOriginalPixels() ) throw new Exception("No fits tiles");
+
+      try {
+		  if( label==null ) label = pref.label;
+		  if( inStack)  pi = (PlanImage)aladin.calque.dupPlan(pref, null,pref.type,false);
+		  else {
+		     if( pref.color ) pi = new PlanImageRGB(aladin,pref);
+		     else pi = new PlanImage(aladin,pref);
+		  }
+		  pi.flagOk=false;
+		  try { pi.setLabel(label); } catch( Exception e ) {}
+		  pi.pourcent=1;
+         pi.type=Plan.IMAGE;
+         boolean cropped;
+
+         double zoomFct = zoom*resMult;
+
+         pi.width = pi.naxis1 = (int)Math.round(rcrop.width*zoomFct);
+         pi.height = pi.naxis2 = (int)Math.round(rcrop.height*zoomFct);
+         pi.initZoom=1;
+         
+         pref.getCurrentBufPixels(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
+
+         pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
+
+         double deltaX= 0.5*zoomFct;
+         double deltaY= 0.5*zoomFct;
+         pi.projd.deltaProjXYCenter(-deltaX,-deltaY);
+
+      // Beurk !! en attendant BOF
+         try { pi.projd = Projection.getEquivalentProj(pi.projd); }
+         catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+         
+         pi.noCacheFromOriginalFile();
+         cropped=true;
+         pi.copyright = "Dumped from "+pref.label
+               + (cropped?" cropped ("+rcrop+")":"");
          pi.setHasSpecificCalib();
          pi.pourcent=-1;
          pi.isOldPlan=false;

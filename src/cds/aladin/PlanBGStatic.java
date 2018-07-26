@@ -74,4 +74,12 @@ public class PlanBGStatic extends PlanBG {
    
    protected boolean checkSite() { return true; }
    protected void askForRepaint() { }
+   
+   @Override
+   protected void modifyProj(String projName) {
+      int t = Projection.getProjType(projName);
+      Projection p = projd;
+      if( p==null || t==-1 ) return;
+      projd.modify(label,Projection.SIMPLE,p.alphai,p.deltai,p.rm1,p.rm1,p.cx,p.cy,p.r1,p.r1,p.rot,p.sym,t,p.system);
+   }
 }

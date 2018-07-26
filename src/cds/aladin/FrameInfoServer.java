@@ -312,9 +312,8 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	 */
 	public void showHidetapInfoText(boolean show) {
 		// TODO Auto-generated method stub
-		if (!isVisible() || (show != ta.isVisible())) {
+		if (!isVisible() || (show != this.centerPanel.getTopComponent().isVisible())) {
 			this.centerPanel.getTopComponent().setVisible(show);
-			ta.setVisible(show);
 			if (!show) {
 				int dividerSize = (Integer) UIManager.get("SplitPane.dividerSize");
 				double proportionalLocation = this.centerPanel.getHeight() > 1500 ? 0.05 : 0.2; //Magic numbers based on info panel size
@@ -322,6 +321,8 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 				this.centerPanel.setDividerLocation(proportionalLocation);
 			} 
 			this.centerPanel.resetToPreferredSizes();
+			this.centerPanel.revalidate();
+			this.centerPanel.repaint();
 		}
 	}
 

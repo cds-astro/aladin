@@ -2584,6 +2584,28 @@ public final class Util {
 	    result =  domain.startsWith("www.") ? domain.substring(4) : domain;
 	    return result;
 	}
+	
+	public static double[] getMinMax(List<Double> xs) {
+		double[] result = new double[2];
+		double min = 0, max = 0;
+		boolean init = true;
+		for (Double x : xs) {
+			if (init) {
+				min = max  = x;
+				init = false;
+			} else {
+				if (min > x) {
+					min = x;
+				}
+				if (x > max) {
+					max = x;
+				}
+			}
+		}
+		result[0] = min;
+		result[1] = max;
+		return result;
+	}
 
    // PAS ENCORE TESTE
    //    /** Extrait le premier nombre entier qui se trouve dans la chaine à partir

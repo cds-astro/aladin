@@ -21,7 +21,6 @@
 
 package cds.aladin;
 
-import static cds.aladin.Constants.LOADDEFAULTTAPRESULT;
 import static cds.aladin.Constants.LOADJOBRESULT;
 import static cds.aladin.Constants.PATHPHASE;
 import static cds.aladin.Constants.PATHRESULTS;

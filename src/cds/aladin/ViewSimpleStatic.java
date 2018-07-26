@@ -23,6 +23,8 @@ package cds.aladin;
 
 import java.awt.Color;
 
+import cds.aladin.stc.STCObj;
+
 public class ViewSimpleStatic extends ViewSimple {
 
    
@@ -64,6 +66,41 @@ public class ViewSimpleStatic extends ViewSimple {
          pi.initZoom=1;
          
          pref.getCurrentBufPixels(pi,rcrop,zoomFct,resMult,fullRes);
+
+         pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
+
+         double deltaX= 0.5*zoomFct;
+         double deltaY= 0.5*zoomFct;
+         pi.projd.deltaProjXYCenter(-deltaX,-deltaY);
+
+         pi.noCacheFromOriginalFile();
+         pi.setHasSpecificCalib();
+         pi.flagOk=true;
+
+      } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
+      return pi;
+   }
+   
+   protected PlanImage cropAreaBG(RectangleD rcrop, STCObj stcObj, String label,double zoom,double resMult,boolean fullRes,boolean inStack)
+		   throws Exception {
+      PlanImage pi=null;
+      PlanBG pref = (PlanBG)this.pref;
+      pref.projd = this.pref.projd.copy();
+      
+      if( pref.color ) throw new Exception("Not a HiPS fits");
+      if( !pref.hasOriginalPixels() ) throw new Exception("No fits tiles");
+
+      try {
+         pi = new PlanImage(aladin,pref);
+         pi.type=Plan.IMAGE;
+
+         double zoomFct = zoom*resMult;
+
+         pi.width = pi.naxis1 = (int)Math.round(rcrop.width*zoomFct);
+         pi.height = pi.naxis2 = (int)Math.round(rcrop.height*zoomFct);
+         pi.initZoom=1;
+         
+         pref.getCurrentBufPixels(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
 
          pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
 

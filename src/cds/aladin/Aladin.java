@@ -4391,18 +4391,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return m;
    }
    
-	protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
+   protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
+		return createMocRegion(stcObjects.get(0), order);
+	}
+	
+	protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
 		HealpixMoc moc = null;
-		STCObj stcobj = stcObjects.get(0);
 		if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
 			moc = createMocRegionPol((STCPolygon)stcobj,order);
-			if( moc!=null ) moc.toRangeSet();
 		} else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
 			moc = createMocRegionCircle((STCCircle)stcobj, order);
-			if( moc!=null ) moc.toRangeSet();
 		}
+		if( moc!=null ) moc.toRangeSet();
 		return moc;
-
 	}
 	
 	protected HealpixMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {

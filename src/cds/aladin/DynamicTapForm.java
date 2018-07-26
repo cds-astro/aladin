@@ -720,7 +720,10 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			}
 		}
 		aladin.frameInfoServer.showHidetapInfoText(showTapInfoText);
-		aladin.frameInfoServer.show(this);
+		if (!aladin.frameInfoServer.isVisible()) {
+			aladin.frameInfoServer.show(this);
+		}
+		aladin.frameInfoServer.toFront();
 	}
 	
 	@Override

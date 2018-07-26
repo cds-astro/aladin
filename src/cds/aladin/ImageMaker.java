@@ -27,9 +27,15 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import cds.aladin.stc.STCCircle;
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCPolygon;
+import cds.aladin.stc.STCStringParser;
+import cds.tools.pixtools.Util;
 
 /**
 * Generateur d'images statiques, soit des previews (JPEG o PNG), soit des FITS utilisant Aladin
@@ -45,6 +51,8 @@ import javax.imageio.ImageIO;
 public class ImageMaker {
    
    private Aladin aladin=null;
+   
+   public final static int PIXEL_MAX = 1014;
    
    /** Fournit une "fabrique" d'images, soit preview, soit fits. A utiliser en batch
     * ou en frontal sur un serveur, de préférence localisé directement sur le serveur HiPS
@@ -191,16 +199,28 @@ public class ImageMaker {
     * @throws Exception
     */
    public void fits(String hipsUrlOrPath, double raICRS, double deICRS, double radDeg, 
-         String filename, int width, int height) throws Exception {
+         String filename, int width, int height, Object...optionalParams) throws Exception {
       
       FileOutputStream output=null;
       try {
         output = new FileOutputStream( new File(filename) );
-        fits( hipsUrlOrPath,raICRS,deICRS,radDeg, output,width,height );
+        fits( hipsUrlOrPath,raICRS,deICRS,radDeg, output,width,height,optionalParams );
       } finally {
          if( output!=null ) output.close();
       }
    }
+   
+   public void fits(String hipsUrlOrPath, String pos, int order, boolean takeBoundingBox,
+	         String filename, Object...optionalParams) throws Exception {
+	      
+    FileOutputStream output=null;
+    try {
+      output = new FileOutputStream( new File(filename) );
+      fits( hipsUrlOrPath,pos,order, takeBoundingBox, output, optionalParams );
+    } finally {
+       if( output!=null ) output.close();
+    }
+ }
    
    /**
     * Genère une image FITS de la région indiquée pour le HiPS passé en
@@ -221,10 +241,25 @@ public class ImageMaker {
     * @throws Exception
     */
    public void fits(String hipsUrlOrPath, double raICRS, double deICRS, double radDeg, 
-         OutputStream output, int width, int height) throws Exception {
+         OutputStream output, int width, int height, Object...optionalParams) throws Exception {
       
       // Generation d'un PlanBG de travail
       PlanBG p = new PlanBGStatic(aladin, hipsUrlOrPath, true );
+      
+      //1.Optional parameters change start here--
+      double rotationAngle = 0.0d;
+      if (optionalParams.length > 0) {
+		if (optionalParams[0] instanceof String) {
+			String projection = (String) optionalParams[0];
+			if (!projection.trim().isEmpty()) {
+				p.modifyProj(projection);
+			}
+		} 
+		if (optionalParams.length > 1 && Double.class.isInstance(optionalParams[1])) {
+			rotationAngle = (Double) optionalParams[1];
+		}
+      }
+      //1.Optional parameters change end here
       
       // Génération de la vue de travail
       ViewSimpleStatic vs = new ViewSimpleStatic(aladin);
@@ -236,6 +271,11 @@ public class ImageMaker {
 //       Extraction/rééchantillonnage des pixels de la vue
       PlanImage pi = aladin.calque.createCropImage(vs,true);
       
+      //2.Optional parameters change start here--
+      if (rotationAngle != 0.0d) {
+    	  pi.projd.setProjRot(rotationAngle);
+      }
+      //2.optional parameters change end here
       
 //      PlanImage pi = p.crop( new Coord(raICRS,deICRS), radDeg, width, height);
       
@@ -246,6 +286,100 @@ public class ImageMaker {
       // Je libère les ressources
       pi.Free();
    }
+   
+   public void fits(String hipsUrlOrPath, String pos, int order, boolean takeBoundingBox,
+	         OutputStream output, Object...optionalParams) throws Exception {
+		// Generation d'un PlanBG de travail
+		PlanBG p = new PlanBGStatic(aladin, hipsUrlOrPath, true);
+		double rotationAngle = 0.0d;
+		double raICRS = 0;
+		double deICRS = 0;
+		int width = 0, height = 0;
+
+		if (optionalParams.length > 0) {
+			if (optionalParams[0] instanceof String) {
+				String projection = (String) optionalParams[0];
+				if (!projection.trim().isEmpty()) {
+					p.modifyProj(projection);
+				}
+			}
+			if (optionalParams.length > 1 && Double.class.isInstance(optionalParams[1])) {
+				rotationAngle = (Double) optionalParams[1];
+			}
+		}
+
+		double res = Util.pixRes(1 << ((order + 9)));
+		double size = 0;
+		double calc = 0;
+		STCObj stcObj = null;
+		
+		if (pos != null) {
+	      STCStringParser parser = new STCStringParser();
+	      List<STCObj> stcObjs = parser.parse(pos, true);
+	      if (stcObjs != null && !stcObjs.isEmpty()) {
+				if (stcObjs.get(0) instanceof STCCircle) {
+					STCCircle circle = (STCCircle) stcObjs.get(0);
+					raICRS = circle.getCenter().al;
+					deICRS = circle.getCenter().del;
+					size = 2 * circle.getRadius();
+					width = height = (int) (size *60. *60./res); //?? plus somother calc. fomlm
+					stcObj = circle;
+				} else if (stcObjs.get(0) instanceof STCPolygon) {
+					STCPolygon polygon = (STCPolygon) stcObjs.get(0);
+					double[] xminMax= cds.tools.Util.getMinMax(polygon.getxCorners());
+					double[] yminMax= cds.tools.Util.getMinMax(polygon.getyCorners());
+					
+					raICRS = (xminMax[0] + xminMax[1])/ 2.0 ;
+					Coord  c1 = new Coord(xminMax[1],yminMax[0]);
+		            Coord  c2 = new Coord(xminMax[0],yminMax[0]);
+		            size = Coord.getDist(c1,c2);
+					width = (int) (size *60.*60./res);
+					
+					deICRS = (yminMax[0] + yminMax[1])/ 2.0 ;
+					c1 = new Coord(xminMax[0],yminMax[1]);
+		            c2 = new Coord(xminMax[0],yminMax[0]);
+		            
+		            calc = Coord.getDist(c1,c2);
+					height = (int) (calc*60.*60./res);
+					size = (size > calc) ? size : calc;
+					stcObj = polygon;
+				}
+				
+				if (takeBoundingBox) {
+					stcObj = null;
+				}
+				int nbpoints = (int) (size * 60. / res);
+				if (nbpoints > PIXEL_MAX) {
+					throw new Exception("Generated FITS cannot exceed " + PIXEL_MAX + "Â² (" + nbpoints + "^2 requested)");
+			
+				}
+			} else {
+				throw new Exception("Unable to parse the position input!");
+			}
+	    } else {
+			throw new Exception("Target is mandatory!");
+		}
+    
+	    // Génération de la vue de travail
+	    ViewSimpleStatic vs = new ViewSimpleStatic(aladin);
+	    ((ViewStatic)aladin.view).setViewSimple(vs);
+	    
+		// Positionnement de la zone de travail
+	    vs.setViewParam(p, width,height, new Coord(raICRS,deICRS),size);
+	    
+	//	       Extraction/rééchantillonnage des pixels de la vue
+	    PlanImage pi = aladin.calque.createCropImage(vs, stcObj, true);
+	    if (rotationAngle != 0.0d) {
+	  	  pi.projd.setProjRot(rotationAngle);
+	    }
+	    
+	    // Sauvegarde dans le flux de sortie au format FITS
+	    Save save = new SaveStatic(aladin);
+	    save.saveImageFITS(output, pi);
+	    
+	    // Je libère les ressources
+	    pi.Free();
+	  }
    
    /************************************************* Pour exemple et debug *****************************************/
 
