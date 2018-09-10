@@ -214,7 +214,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.098";
+   static public final    String VERSION = "v10.100";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2114,7 +2114,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    int lastOrder=-2;  // -2:à calculer, -1:inutilisé, 0 et suivant:order courant
    boolean healpixCtrl=true;
-   Hashtable<Integer, JMenuItem> miNside = new Hashtable<Integer, JMenuItem>();
+   Hashtable<Integer, JMenuItem> miNside = new Hashtable<>();
 
    /** Dessin des losanges Healpix de controle */
    protected int getOrder() {
@@ -4328,7 +4328,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
    protected HealpixMoc createMocByRegions(int order) {
       HealpixMoc moc = new HealpixMoc();
-      HashSet<Obj> set = new HashSet<Obj>();
+      HashSet<Obj> set = new HashSet<>();
       for( Obj o : view.vselobj ) {
          
          // Ajout des cercles (Phot ou cercle)
@@ -4423,7 +4423,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 	   rectVertices = Util.getRectangleVertices(ra, dec, width, height); 
 
 	   for( int sens=0; sens<2; sens++ ) {
-	      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+	      ArrayList<Vec3> cooList = new ArrayList<>();
 	      if( sens==1 ) trace(3,"createMocRegion("+rectVertices.toString()+") trying reverse polygon order...");
 
 	      try {
@@ -4548,7 +4548,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Healpix hpx = new Healpix();
       
       // Création de la liste des sommets
-      ArrayList<double[]> cooList = new ArrayList<double[]>();
+      ArrayList<double[]> cooList = new ArrayList<>();
       Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
       long onpix=-1;
       while( a!=null ) {
