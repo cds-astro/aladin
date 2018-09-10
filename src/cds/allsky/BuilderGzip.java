@@ -142,6 +142,9 @@ public class BuilderGzip extends Builder {
            if( context.isTaskAborting() ) break;
         }
         
+        mis.close(); mis=null;
+        mos.close(); mos=null; fos=null;
+        
         if( context.isTaskAborting() ) out.delete();
         else {
 

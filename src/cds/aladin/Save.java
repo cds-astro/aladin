@@ -2568,12 +2568,15 @@ public class Save extends JFrame implements ActionListener {
 
    // Génération de la deuxième HDU d'un fichier FITS Healpix
    static public Vector generateHealpixHDU1(int norder,int bitpix,boolean ring, int lenLine,int frame) {
+      return generateHealpixHDU1(norder,bitpix,ring,lenLine,frame,Double.NaN);
+   }
+   static public Vector generateHealpixHDU1(int norder,int bitpix,boolean ring, int lenLine,int frame,double badData) {
       Vector v = new Vector(100);
       long nside = CDSHealpix.pow2(norder);
       long nbPix = 12*nside*nside;
       int npix = Math.abs(bitpix)/8;
       lenLine=1;
-      String tForm = bitpix==8 ? "XX" : bitpix==16 ? "I" : bitpix==32 ? "J" :
+      String tForm = bitpix==8 ? "I" : bitpix==16 ? "I" : bitpix==32 ? "J" :
          bitpix==-32 ? "E" : "D";
       v.addElement( getFitsLine("XTENSION","BINTABLE","binary table extension") );
       v.addElement( getFitsLine("BITPIX","8","array data type") );
@@ -2592,6 +2595,9 @@ public class Save extends JFrame implements ActionListener {
       v.addElement( getFitsLine("LASTPIX",(nbPix-1)+"","Last pixel (0 based)") );
       if( frame!=Localisation.GAL ) {
          v.addElement( getFitsLine("COORDSYS",frame==Localisation.ECLIPTIC ? "E": frame==Localisation.GAL ? "G" : "C","Coordinate system") );
+      }
+      if( !Double.isNaN(badData) ) {
+         v.addElement( getFitsLine("BAD_DATA",badData+"","Sentinel value given for bad pixels") );
       }
       //      v.addElement( getFitsLine("INDXSCHM","IMPLICIT","Indexing: IMPLICIT or EXPLICIT") );
       return v;
@@ -2883,8 +2889,10 @@ public class Save extends JFrame implements ActionListener {
       char c = s.charAt(0);
       if( s.length()==1 && (c=='T' || c=='F') ) return false;	// boolean
       if( !Character.isDigit(c) && c!='.' && c!='-' && c!='+' ) return true;
+      c = s.charAt( s.length()-1 );
+      if( !Character.isDigit(c) ) return true;
       try {
-         Double.valueOf(s);
+         Double.parseDouble(s);
          return false;
       } catch( Exception e ) { return true; }
    }

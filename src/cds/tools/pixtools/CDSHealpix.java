@@ -57,7 +57,7 @@ import healpix.essentials.Vec3;
  */
 public final class CDSHealpix {
    
-   static public boolean FX = true;
+   static public boolean FX = false;
 
    static final public int MAXORDER=29;
 
@@ -188,6 +188,9 @@ public final class CDSHealpix {
      }
 //     final HealpixNestedBMOC bmoc = pc.overlappingCells(vertices);
      final HealpixNestedBMOC bmoc = pc.overlappingCenters(vertices);
+//     for (final CurrentValueAccessor cva : bmoc) {
+//        cva.
+//     }
      final long[] res = toFlatArrayOfHash(bmoc); 
 //     long l2 = System.nanoTime();
 //     System.err.println("Poygon FX computed in " + (l2 - l1) /  (1e6d) + " ms");

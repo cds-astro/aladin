@@ -322,7 +322,8 @@ public final class HeaderFits {
          // où l'on sauvegarde en FITS par la suite une image PNG ou JPEG avec entête par .hhh
          if( first ) {
             first=false;
-            if( buf.length>i+7 && !(new String(buf,i,6)).equals("SIMPLE") ) {
+            if( buf.length>i+7 && !(new String(buf,i,6)).equals("SIMPLE") 
+                  && !(new String(buf,i,6)).equals("XTENSI")) {
                appendMHF((new String(Save.getFitsLine("SIMPLE","T",null))).trim());
             }
          }

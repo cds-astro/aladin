@@ -1884,7 +1884,7 @@ public class PlanBG extends PlanImage {
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
    protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int mode) {
-      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,(int)getZ(),mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
+      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,(int)getZ(),mode==HealpixKey.ASYNC ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
       if( h==null ) return Double.NaN;
       return h.getPixelValue(healpixIdxPixel,mode);
    }
@@ -2581,7 +2581,7 @@ public class PlanBG extends PlanImage {
       pi.colorBackground=Color.white;
 
    }
-   
+
    protected void getCurrentBufPixels(PlanImage pi,RectangleD rcrop, STCObj stcObj, double zoom,double resMult,boolean fullRes) {
       int w = (int)Math.round(rcrop.width*zoom);
       int h = (int)Math.round(rcrop.height*zoom);

@@ -490,7 +490,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
    
    /** Copie de la position courante dans le Clipboard */
-   protected void copierReticule() { aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del)); }
+   protected void copierReticule() {
+//      aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del));
+      aladin.copyToClipBoard(aladin.localisation.J2000ToString(aladin.view.repere.raj,aladin.view.repere.dej));
+   }
 
    /** Copie la vue courante dans le Clipboard */
    protected void copierVue() {
@@ -731,7 +734,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
       return pi;
    }
-   
+
    //work in progress
    protected PlanImage cropAreaBG(RectangleD rcrop, STCObj stcObj, String label,double zoom,double resMult,boolean fullRes,boolean inStack)
 		   throws Exception {

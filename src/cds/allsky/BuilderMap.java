@@ -49,6 +49,7 @@ final public class BuilderMap  extends Builder {
       output = context.getOutputPath();
       nside = context.getMapNside();
       bitpix = context.getBitpix();
+      blank = context.getBlank();
       if( bitpix==-1 ) {
          context.loadProperties();
          bitpix = Integer.parseInt( context.prop.getProperty("hips_pixel_bitpix") );
@@ -59,9 +60,14 @@ final public class BuilderMap  extends Builder {
          losangeWidth = context.getTileSide();
       }
       nside=4096;
+      if( bitpix>0 && (context.getBZero()!=0 || context.getBScale()!=1) ) {
+         bitpix=-32;
+         context.warning("Coding in real values due to BZERO/BSCALE factors");
+      }
    }
    
    private int bitpix;
+   private double blank;
    private String output;
    private int frame;
    private int losangeWidth;
@@ -69,8 +75,9 @@ final public class BuilderMap  extends Builder {
 
    public void run() throws Exception {
       exportHpx();
+      String tForm = bitpix==8 ? "I" : bitpix==16 ? "I" : bitpix==32 ? "J" : bitpix==-32 ? "E" : "D";
       context.info("HEALPix map generation in progress: NSIDE="+nside+" frame="+context.getFrameCode()
-          +" bitpix="+bitpix+" in "+ output+Util.FS+"Map.fits");
+          +" TFORM=1"+tForm+" in "+ output+Util.FS+"Map.fits");
    }
    
    protected void exportHpx() throws Exception {
@@ -96,7 +103,9 @@ final public class BuilderMap  extends Builder {
          size += end.length;
 
          // Generation de la deuxième HDU FITS
-         v = Save.generateHealpixHDU1(orderMap,bitpix,ring,lenLine,frame);
+         double badData = Double.NaN;
+         if( bitpix>0 && !Double.isNaN(blank) ) badData=blank;
+         v = Save.generateHealpixHDU1(orderMap,bitpix,ring,lenLine,frame,badData);
          size=Save.writeFitsLines(f,v,size);
          end = Save.getEndBourrage(size);
          f.write(end);
@@ -138,7 +147,9 @@ final public class BuilderMap  extends Builder {
                   int idx = hpx2xy[ipix];
                   int yy = idx/losangeWidth;
                   int xx = idx-yy*losangeWidth;
-                  val = los.getPixelDouble(xx,yy);
+                  val = los.getPixelFull(xx,yy);
+                  if( bitpix<0 && los.isBlankPixel(val) ) val=Double.NaN;
+//                  val = los.getPixelDouble(xx,yy);
                   PlanImage.setPixVal(buf, bitpix, pos++, val);
 
                   if( pos==lenLine ) {

@@ -2797,7 +2797,7 @@ public class Calque extends JPanel implements Runnable {
       p.doClose=true;
       p.planReady(true);
       
-      if( nbPlanInserted>6 ) aladin.calque.select.switchCollapseFolder( folder );
+//      if( nbPlanInserted>6 ) aladin.calque.select.switchCollapseFolder( folder );
    }
 
    /**
@@ -3380,7 +3380,7 @@ public class Calque extends JPanel implements Runnable {
       return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),
             "Crop."+v.pref.label,v.zoom,1.,fullRes,false);
    }
-   
+
    PlanImage createCropImage(ViewSimple v, STCObj stcObj, boolean fullRes ) throws Exception {
 	   if( !(v.pref instanceof PlanBG) ) throw new Exception("Cropping only on HiPS");
 	      PointD p1 = v.getPosition(0.,0.);

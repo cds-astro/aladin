@@ -195,6 +195,8 @@ public class ContextGui extends Context {
                      Coord.getSexa(radec[0], radec[1]), "30");
                Aladin.trace(4, "ContextGui.preview(): create "+mysky);
                mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(n);
+               mainPanel.planPreview.bScale=bscale;
+               mainPanel.planPreview.bZero=bzero;
             } else {
                mainPanel.planPreview.forceReload();
                mainPanel.aladin.calque.repaintAll();

@@ -758,7 +758,7 @@ public class Localisation extends MyBox  {
     * @param al,del : coordonnees (ICRS)
     * @return La chaine decrivant la position
     */
-   protected String J2000ToString(double al,double del) { return J2000ToString(al,del,Astrocoo.ARCSEC+1,false); }
+   protected String J2000ToString(double al,double del) { return J2000ToString(al,del,/* Astrocoo.ARCSEC+1*/Astrocoo.MAS+3 ,false); }
    protected String J2000ToString(double al,double del,int precision,boolean withFox) {
       Coord cTmp = new Coord(al,del);
       cTmp = ICRSToFrame(cTmp);

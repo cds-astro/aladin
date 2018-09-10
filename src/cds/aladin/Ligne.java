@@ -638,6 +638,8 @@ public class Ligne extends Position {
    //         e.printStackTrace();
    //      }
    //   }
+   
+   private static final int MAXSTATPIXELS = 1000000;
 
    /**
     * Méthode:
@@ -660,6 +662,9 @@ public class Ligne extends Position {
 //         return false;
 //      }
 
+      
+      if( v.flagClicAndDrag) return false;
+      
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
 
       boolean isHiPS = (v.pref.type == Plan.ALLSKYIMG);
@@ -751,18 +756,24 @@ public class Ligne extends Position {
             long nsideFile = CDSHealpix.pow2(orderFile);
             long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
             long nside = nsideFile * nsideLosange;
-            pixelSurf = CDSHealpix.pixRes(nside)/3600;
-            pixelSurf *= pixelSurf;
-            //            System.out.println("order="+CDSHealpix.log2(nside)+" => surf="
-            //                  +Coord.getUnit(pixelSurf, false, true));
+            long [] npix=null;
             
-            long [] npix = CDSHealpix.query_polygon(nside, cooList);
-//            System.out.println("npix="+npix.length+" nside="+nside+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
+            // Dégradation de la résolution si trop de pixel
+            for( long o = CDSHealpix.log2(nside); o>=pbg.getMinOrder(); o--) {
+               nside = CDSHealpix.pow2(o);
+               pixelSurf = CDSHealpix.pixRes(nside)/3600;
+               pixelSurf *= pixelSurf;
+               npix = CDSHealpix.query_polygon(nside, cooList);
+               if( npix.length<=MAXSTATPIXELS ) break;
+            }; 
+            
+            // Trop de pixels ?
+            if( npix.length>MAXSTATPIXELS ) return false;
+            
             Coord coo = new Coord();
             for( i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);
-               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
-               //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
                if( Double.isNaN(pix) ) continue;
                pix = pix*pbg.bScale+pbg.bZero;
                double polar[] = CDSHealpix.pix2ang_nest(nside, npix[i]);
@@ -770,7 +781,6 @@ public class Ligne extends Position {
                coo.al = polar[0]; coo.del = polar[1];
                coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
                statPixel(g,pix,coo.al,coo.del,v,onMouse);
-               //               System.out.println("pix["+i+"]="+pix);
                if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
             }
 //            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));

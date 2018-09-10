@@ -162,10 +162,11 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> New HEALPix library (faster, better)
  * @beta    <LI> Temporal support (prototype implementation) <br>
  * @beta          - Time plots <br>
- * @beta          - Time MOC <br>
+ * @beta          - Time MOC
+ * @beta    <LI> New HEALPix library (faster, better) <br>
+ * @beta          - polygonal photometry tool for HiPS
  * @beta    <LI> Data discovery tree: <br>
  * @beta          - sort and hiearchy control <br>
  * @beta          - drag & drop to view panels
@@ -182,6 +183,7 @@ import healpix.essentials.Vec3;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Reticle copy/paste (rounding bug)
  * @beta    <LI> Hipsgen BSCALE+specific skyvals use case bug
  * @beta    <LI> XMM EPN FoV better definition
  * @beta    <LI> Grid missing label bug fixing
@@ -212,7 +214,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.097";
+   static public final    String VERSION = "v10.098";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4391,19 +4393,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return m;
    }
    
-   protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
+	protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
 		return createMocRegion(stcObjects.get(0), order);
 	}
 	
 	protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
-		HealpixMoc moc = null;
-		if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
-			moc = createMocRegionPol((STCPolygon)stcobj,order);
-		} else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
-			moc = createMocRegionCircle((STCCircle)stcobj, order);
-		}
-		if( moc!=null ) moc.toRangeSet();
-		return moc;
+	   HealpixMoc moc = null;
+	   if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
+	      moc = createMocRegionPol((STCPolygon)stcobj,order);
+	   } else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
+	      moc = createMocRegionCircle((STCCircle)stcobj, order);
+	   }
+	   if( moc!=null ) moc.toRangeSet();
+	   return moc;
 	}
 	
 	protected HealpixMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {

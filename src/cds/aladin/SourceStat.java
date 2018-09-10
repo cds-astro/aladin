@@ -399,7 +399,7 @@ public class SourceStat extends SourceTag {
             //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
             for( int i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);
-               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
+               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
                //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
                if( Double.isNaN(pix) ) continue;
                pix = pix*pbg.bScale+pbg.bZero;
@@ -493,7 +493,7 @@ public class SourceStat extends SourceTag {
          for( int i=0; i<npix.length; i++ ) {
             long npixFile = npix[i]/(nsideLosange*nsideLosange);
             //            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
-            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
+            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
             if( Double.isNaN(pix) ) continue;
             pix = pix*pbg.bScale+pbg.bZero;
             if( nombre==0 ) { min=max=pix; total=0; }
