@@ -148,8 +148,9 @@ public final class CDSHealpix {
      final HealpixNested hn = Healpix.getNested(Healpix.depth((int) nside));
      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer(radius);
      // final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox(radius);
-//     final HealpixNestedBMOC bmoc = cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
-     final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
+     final HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec)) :
+           cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
+//     final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
 //     long l2 = System.nanoTime();
 //     System.err.println("Cone FX computed in " + (l2 - l1) / (1e6d) + " ms");
 
@@ -206,7 +207,7 @@ public final class CDSHealpix {
      } 
      final long[] res = new long[(int) nElems];
 // System.out.println("@@@@@@@@@@@@@@@ res size: " + res.length);
-     final FlatHashIterator it = bmoc.toFlatHashIterator();
+     final FlatHashIterator it = bmoc.flatHashIterator();
      for (int i = 0; it.hasNext(); i++) {
        res[i] = it.next();
      }
@@ -387,7 +388,7 @@ public final class CDSHealpix {
       if( FX ) return createHealpixMocFX(radecList,order);
       HealpixMoc moc=null;
 
-      ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+      ArrayList<Vec3> cooList = new ArrayList<>();
       for( double radec[] : radecList ) {
          double theta = Math.PI/2 - Math.toRadians( radec[1] );
          double phi = Math.toRadians( radec[0] );
