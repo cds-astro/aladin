@@ -714,7 +714,7 @@ public class Ligne extends Position {
          if( isHiPS ) {
             seg[i] = new Segment(a.raj,a.dej, b.raj,b.dej);
             
-            Coord coo = new Coord(a.raj,a.dej);
+            Coord coo = new Coord(tmp.raj,tmp.dej);
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,((PlanBG)v.pref).frameOrigin);
             cooList.add( new double[]{ coo.al, coo.del });
             
@@ -763,14 +763,7 @@ public class Ligne extends Position {
                nside = CDSHealpix.pow2(o);
                pixelSurf = CDSHealpix.pixRes(nside)/3600;
                pixelSurf *= pixelSurf;
-               try {
-                  System.out.println("J'y suis");
-                  npix = CDSHealpix.query_polygon(nside, cooList);
-               } catch( Exception e ) {
-                  System.err.println("order="+o+" nside="+nside);
-                  e.printStackTrace();
-                  throw e;
-               }
+               npix = CDSHealpix.query_polygon(nside, cooList);
                if( npix.length<=MAXSTATPIXELS ) break;
             }; 
             

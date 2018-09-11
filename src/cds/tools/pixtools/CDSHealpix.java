@@ -182,12 +182,15 @@ public final class CDSHealpix {
 //     long l1 = System.nanoTime();
 //      System.out.println("depth="+Healpix.depth((int) nside));
      final HealpixNested hn = Healpix.getNested(Healpix.depth((int) nside));
+     
      final HealpixNestedPolygonComputer pc = hn.newPolygonComputer();
-     final double[][] vertices = cooList.toArray(new double[][]{{}});
+//     final double[][] vertices = cooList.toArray(new double[][]{{}});
+     double[][] vertices = new double[cooList.size()][2];
+     cooList.toArray(vertices);
      for (int i = 0; i < vertices.length; i++) {
         vertices[i][0] = Math.toRadians(vertices[i][0]);
         vertices[i][1] = Math.toRadians(vertices[i][1]);
-//        System.out.print(" "+vertices[i][0]+" "+vertices[i][1]);
+//        System.out.println(" "+vertices[i][0]+" "+vertices[i][1]);
      }
      System.out.println();
 //     final HealpixNestedBMOC bmoc = pc.overlappingCells(vertices);
