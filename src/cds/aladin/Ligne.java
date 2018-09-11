@@ -763,7 +763,14 @@ public class Ligne extends Position {
                nside = CDSHealpix.pow2(o);
                pixelSurf = CDSHealpix.pixRes(nside)/3600;
                pixelSurf *= pixelSurf;
-               npix = CDSHealpix.query_polygon(nside, cooList);
+               try {
+                  System.out.println("J'y suis");
+                  npix = CDSHealpix.query_polygon(nside, cooList);
+               } catch( Exception e ) {
+                  System.err.println("order="+o+" nside="+nside);
+                  e.printStackTrace();
+                  throw e;
+               }
                if( npix.length<=MAXSTATPIXELS ) break;
             }; 
             

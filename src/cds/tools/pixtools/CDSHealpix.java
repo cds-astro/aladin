@@ -180,17 +180,21 @@ public final class CDSHealpix {
    }
    static public long[] query_polygonFX(long nside,ArrayList<double[]>cooList) throws Exception {
 //     long l1 = System.nanoTime();
+//      System.out.println("depth="+Healpix.depth((int) nside));
      final HealpixNested hn = Healpix.getNested(Healpix.depth((int) nside));
      final HealpixNestedPolygonComputer pc = hn.newPolygonComputer();
      final double[][] vertices = cooList.toArray(new double[][]{{}});
      for (int i = 0; i < vertices.length; i++) {
-       vertices[i][0] = Math.toRadians(vertices[i][0]);
-       vertices[i][1] = Math.toRadians(vertices[i][1]);
+        vertices[i][0] = Math.toRadians(vertices[i][0]);
+        vertices[i][1] = Math.toRadians(vertices[i][1]);
+//        System.out.print(" "+vertices[i][0]+" "+vertices[i][1]);
      }
+     System.out.println();
 //     final HealpixNestedBMOC bmoc = pc.overlappingCells(vertices);
      final HealpixNestedBMOC bmoc = pc.overlappingCenters(vertices);
+//     System.out.println("bmoc.size()="+bmoc.size());
 //     for (final CurrentValueAccessor cva : bmoc) {
-//        cva.
+//        System.out.println(cva);
 //     }
      final long[] res = toFlatArrayOfHash(bmoc); 
 //     long l2 = System.nanoTime();
