@@ -694,10 +694,10 @@ public class Ligne extends Position {
       Segment [] seg = new Segment[nb];
 
       for( i=0, tmp=deb; tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
-         int fx=(int)Math.floor(tmp.xv[v.n]-0.5);
-         int tx=(int)Math.ceil(tmp.xv[v.n]-0.5);
-         int fy=(int)Math.floor(tmp.yv[v.n]-0.5);
-         int ty=(int)Math.ceil(tmp.yv[v.n]-0.5);
+         double fx=tmp.xv[v.n];
+         double tx=tmp.xv[v.n];
+         double fy=tmp.yv[v.n];
+         double ty=tmp.yv[v.n];
          if( tx>maxx ) maxx=tx;
          if( fx<minx ) minx=fx;
          if( ty>maxy ) maxy=ty;
