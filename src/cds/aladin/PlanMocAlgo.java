@@ -129,9 +129,9 @@ public class PlanMocAlgo extends PlanMoc {
          CDSHealpix hpx = new CDSHealpix();
          int order = mocSource.moc.getMaxOrder();
          long nside = Healpix.pow2(order);
-         ArrayList<double[]> a = new ArrayList<double[]>();
+         ArrayList<double[]> a = new ArrayList<>();
          for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
-         long [] npix = hpx.query_polygon(nside, a);
+         long [] npix = hpx.query_polygon(nside, a,true);
          
          moc.clear();
          moc.setCheckConsistencyFlag(false);

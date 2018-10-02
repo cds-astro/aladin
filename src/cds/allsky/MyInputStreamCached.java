@@ -341,7 +341,7 @@ public class MyInputStreamCached extends MyInputStream {
     }
    
    /** Mémorise le nombre d'utilisateur de chaque fichier dans le cache disque */
-   static private HashMap<String, Integer> activeFile = new HashMap<String, Integer>();
+   static private HashMap<String, Integer> activeFile = new HashMap<>();
    
    static Object lock = new Object();
    
@@ -425,7 +425,7 @@ public class MyInputStreamCached extends MyInputStream {
          cachedir = null;
          cacheSize = 0.;
          cacheLimit = DEFAULTLIMIT;
-         activeFile = new HashMap<String, Integer>();
+         activeFile = new HashMap<>();
       }
    }
    

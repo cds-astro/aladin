@@ -311,7 +311,7 @@ public class MyInputStream extends FilterInputStream {
       if(  (type&XFITS)!=0 ) {
          findFitsEnd2();
          if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
-//         else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
+         else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
          
          // Detection de HCOMP
       } else {
@@ -458,7 +458,7 @@ public class MyInputStream extends FilterInputStream {
 
             // Compression RICE
             if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
-//            else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
+            else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
 
             // Pour répérer les tables AIPS CC de calculs intermédiaires
             else if( hasFitsKey("EXTNAME","AIPS CC") && hasFitsKey("TFIELDS","3")
@@ -791,8 +791,8 @@ public class MyInputStream extends FilterInputStream {
    public byte [] readFully() {
       int size=8192;
 
-      ArrayList<byte[]> v = new ArrayList<byte[]>(1000);
-      ArrayList<Integer> vSize = new ArrayList<Integer>(1000);
+      ArrayList<byte[]> v = new ArrayList<>(1000);
+      ArrayList<Integer> vSize = new ArrayList<>(1000);
       //      Vector v = new Vector(10);
       //      Vector vSize = new Vector(10);
       int n=0,m=0,i=0,j=0;
@@ -1476,7 +1476,7 @@ public class MyInputStream extends FilterInputStream {
    private void memoOneAVM(StringBuilder key, StringBuilder val) {
       String value = val.toString().trim();
       if( value.length()==0 ) return;
-      if( avm==null ) avm=new Hashtable<String,String>(30);
+      if( avm==null ) avm=new Hashtable<>(30);
       avm.put(key.toString().trim(),value);
       if( Aladin.levelTrace>=3 ) System.out.println("AVM tag: "+key+"=["+value+"] ");
    }

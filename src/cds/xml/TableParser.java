@@ -287,6 +287,7 @@ final public class TableParser implements XMLConsumer {
          pos = new int[nbField];
          len = new int[nbField];
          prec = new int[nbField];
+         
          if( inBinary2 ) nullMask = new byte[( nbField+7)/8 ];
          nField=nRecord = 0;
 
@@ -317,11 +318,12 @@ final public class TableParser implements XMLConsumer {
 
             prec[i]=6;
             try { prec[i] = Integer.parseInt(f.precision); } catch( Exception e ) { prec[i]=6; }
-//            System.out.println("Field "+i+" type="+type[i]+" pos="+pos[i]+" len="+len[i]+" prec="+prec[i]);
+            
+//            System.out.println("Field "+i+" type="+type[i]+" pos="+pos[i]+" len="+len[i]+" prec="+prec[i]+" tscale="+tscale[i]+" tzero="+tzero[i]);
          }
          pos[0]=0;
          memoField=null;    // va permettre de répérer un appel ultérieur à parseBin en continuation
-         System.out.println("length="+length+" sizeRecord="+sizeRecord);
+//         System.out.println("length="+length+" sizeRecord="+sizeRecord);
       }
 
 //      System.out.println("\nparseBin position="+offset+" length="+length+" nRecord="+nRecord+" nField="+nField);
@@ -394,14 +396,14 @@ final public class TableParser implements XMLConsumer {
          if( inBinary2 && isNull(nullMask,nField) ) record[nField]="null";
 
          // Sinon
-         else record[nField] = getBinField(b,position, len[nField]==-1 ? lenv /*nbBytes */ : len[nField], type[nField],prec[nField], 0.,1.,false,0);
+         else record[nField] = getBinField(b,position, len[nField]==-1 ? lenv /*nbBytes */ : len[nField], type[nField],prec[nField], 0., 1.,false,0);
 
 //         System.out.print(" "+nbBytes+"/"+record[nField]);
          position = nextPosition;
          nField++;
          if( nField==nbField ) {
             consumeRecord(record,nRecord++);
-            System.out.println();
+//            System.out.println();
          }
       }
 
@@ -434,10 +436,10 @@ final public class TableParser implements XMLConsumer {
 
       if( !hrefVotable ) {
          initTable();
-         coosys = new Hashtable<String,String>(10);
-         cooepoch = new Hashtable<String,String>(10);
-         cooequinox = new Hashtable<String,String>(10);
-         cooFieldref = new Hashtable<String,String>(10);
+         coosys = new Hashtable<>(10);
+         cooepoch = new Hashtable<>(10);
+         cooequinox = new Hashtable<>(10);
+         cooFieldref = new Hashtable<>(10);
       }
 
       try {
@@ -749,10 +751,10 @@ final public class TableParser implements XMLConsumer {
       return a+"";
    }
 
-   final private String getBinField(byte t[],int i, char type,int p,double z,double s,
+   final private String getBinField(byte t[],int i, char type,int prec,double tzero,double tscale,
          boolean hasNull, int n) {
 
-      String a = getBinField1(t,i,type,p,z,s,hasNull,n);
+      String a = getBinField1(t,i,type,prec,tzero,tscale,hasNull,n);
       return a;
    }
 
@@ -763,41 +765,41 @@ final public class TableParser implements XMLConsumer {
     * @param t le tableau des octets
     * @param i le premier octet concernés
     * @param type la lettre code FITS BINTABLE
-    * @param p la précision à afficher
-    * @param z pour un éventuel changement d'échelle
-    * @param s pour un éventuel changement d'échelle
+    * @param prec la précision à afficher
+    * @param tzero pour un éventuel changement d'échelle
+    * @param tscale pour un éventuel changement d'échelle
     * @param hasNull s'il y a une valeur indéfinie positionnée
     * @param n valeur indéfinie (uniquement pour les types B,I, et J
     * @return la chaine correspondante à la valeur
     */
-   final private String getBinField1(byte t[],int i, char type,int p,double z,double s,
+   final private String getBinField1(byte t[],int i, char type,int prec,double tzero,double tscale,
          boolean hasNull, int n) {
       long a,b;
       int c;
 
       switch(type) {
          case 'L': return t[i]!=0 ? "T":"F";
-         case 'B': return fmtInt( ((t[i])&0xFF),p,z,s,hasNull,n);
-         case 'I': return fmtInt( getShort(t,i),p,z,s,hasNull,n);
-         case 'J': return fmtInt( getInt(t,i),p,z,s,hasNull,n);
+         case 'B': return fmtInt( ((t[i])&0xFF),prec,tzero,tscale,hasNull,n);
+         case 'I': return fmtInt( getShort(t,i),prec,tzero,tscale,hasNull,n);
+         case 'J': return fmtInt( getInt(t,i),prec,tzero,tscale,hasNull,n);
          case 'K': a = (((long)getInt(t,i))<<32)
                | ((getInt(t,i+4))&0xFFFFFFFFL);
-         return fmtLong(a,p,z,s,hasNull,n);
-         case 'E': return fmt( Float.intBitsToFloat( getInt(t,i) ),p,z,s );
+         return fmtLong(a,prec,tzero,tscale,hasNull,n);
+         case 'E': return fmt( Float.intBitsToFloat( getInt(t,i) ),prec,tzero,tscale );
          case 'D': a = (((long)getInt(t,i))<<32)
                | ((getInt(t,i+4))& 0xFFFFFFFFL);
-         return fmt( Double.longBitsToDouble(a),p,z,s );
+         return fmt( Double.longBitsToDouble(a),prec,tzero,tscale );
          case 'C': c =  getInt(t,i+4);
-         return fmt( Float.intBitsToFloat( getInt(t,i) ),p,z,s )
+         return fmt( Float.intBitsToFloat( getInt(t,i) ),prec,tzero,tscale )
                +(c>=0?"+":"-")
-               +fmt( Float.intBitsToFloat(c),p,z,s )+"i";
+               +fmt( Float.intBitsToFloat(c),prec,tzero,tscale )+"i";
          case 'M': a = (((long)getInt(t,i))<<32)
                | ((getInt(t,i+4))&0xFFFFFFFFL);
          b = (((long)getInt(t,i+8))<<32)
                | ((getInt(t,i+12))&0xFFFFFFFFL);
-         return fmt( Double.longBitsToDouble(a),p,z,s )
+         return fmt( Double.longBitsToDouble(a),prec,tzero,tscale )
                +(b>=0?"+":"-")
-               +fmt( Double.longBitsToDouble(b),p,z,s )+"i";
+               +fmt( Double.longBitsToDouble(b),prec,tzero,tscale )+"i";
          case 'U': 
             try { return new String(t, i, 2, utf16); }
             catch( Exception e) { return "[??]"; }
@@ -984,10 +986,10 @@ final public class TableParser implements XMLConsumer {
       flagTSV=true;
       inError=false;
       ngroup=0;
-      coosys = new Hashtable<String,String>(10);
-      cooepoch = new Hashtable<String,String>(10);
-      cooequinox = new Hashtable<String,String>(10);
-      cooFieldref = new Hashtable<String,String>(10);
+      coosys = new Hashtable<>(10);
+      cooepoch = new Hashtable<>(10);
+      cooequinox = new Hashtable<>(10);
+      cooFieldref = new Hashtable<>(10);
       typeFmt = dis.getType();
 
       return (xmlparser.parse(dis,endTag) && error==null /* && nField>1 */ );
@@ -2018,7 +2020,7 @@ final public class TableParser implements XMLConsumer {
       //System.out.println("name=["+name+"]");
 
       // Mémorisation du type FITS de chaque champ en cas de parsing BINAIRE ultérieur
-      if( memoField==null ) memoField = new Vector<Field>();
+      if( memoField==null ) memoField = new Vector<>();
       memoField.addElement( f );
       
       // Détection du Time et évaluation de la qualité de cette détection + mémorisation du système temporel probable
@@ -2564,7 +2566,7 @@ final public class TableParser implements XMLConsumer {
          } else record[row]=value;
          
       } else {
-         if( vRecord==null ) vRecord = new Vector<String>();
+         if( vRecord==null ) vRecord = new Vector<>();
          vRecord.addElement(value);
       }
       row++;

@@ -77,6 +77,8 @@ final public class Field {
    /** Precision of field value: number of significant digits
        after the dot (ex: "3") */
    public String precision;
+   
+   public String tzero,tscale;   // used for FITS binary value scaling
 
    /** Template for the html link */
    public String href;

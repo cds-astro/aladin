@@ -2134,13 +2134,14 @@ public final class Util {
       return form.charAt(l-1);
    }
 
-   /** retourne la taille du champs FITS exprimé sous la forme nD(xxx) ou nPD(xxx) */
+   /** retourne la taille du champs FITS exprimé sous la forme nT(xxx) ou nPT(xxx) ou nQT(xxx) */
    static final public int binSizeOf(String form) throws Exception {
       try {
          int l=form.indexOf('(');
          if( l==-1 ) l=form.length();
          if( l==1 ) return binSizeOf(form.charAt(0),1);
-         if( l>1 && form.charAt(l-2)=='P' ) return 8;
+         if( l>1 && form.charAt(l-2)=='P' ) return 8;   // pos + size en 2x 32 bits
+         if( l>1 && form.charAt(l-2)=='Q' ) return 16;  // pos + size en 2x 64 bits
          int n = Integer.parseInt( form.substring(0,l-1) );
          return binSizeOf(form.charAt(l-1),n);
       } catch( Exception e ) {
@@ -2225,7 +2226,7 @@ public final class Util {
    }
 
    public static ArrayList<File> getFiles(String path, final String suffix) {
-      ArrayList<File> flist = new ArrayList<File>();
+      ArrayList<File> flist = new ArrayList<>();
       File[] files = (new File(path)).listFiles();
       for (File file : files) {
          if (file.isDirectory())
@@ -2436,9 +2437,9 @@ public final class Util {
 			int hourMinDelimiter = input.indexOf(":");
 			if (hourMinDelimiter != -1) {
 				if (input.indexOf(":", hourMinDelimiter + 1)==-1) {
-					timeFormat = new SimpleEntry<String, String>("-\\d{1,2}:\\d{1,2}$", "-HH:mm");
+					timeFormat = new SimpleEntry<>("-\\d{1,2}:\\d{1,2}$", "-HH:mm");
 				} else {
-					timeFormat = new SimpleEntry<String, String>("-\\d{1,2}:\\d{1,2}:\\d{1,2}$", "-HH:mm:ss");
+					timeFormat = new SimpleEntry<>("-\\d{1,2}:\\d{1,2}:\\d{1,2}$", "-HH:mm:ss");
 				}
 			}
 			
@@ -2489,7 +2490,7 @@ public final class Util {
 	}
 	
 	public static List<Coord> getRectangleVertices(double ra, double dec, double width, double height) {
-		List<Coord> rectVertices = new ArrayList<Coord>();
+		List<Coord> rectVertices = new ArrayList<>();
 		width = width/2;
 		height = height/2;
 		rectVertices.add(new Coord(ra-width, dec-height));

@@ -5650,10 +5650,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Initialisation de la grille de coordonnées et
     * de la Hashtable de mémorisation des noeuds */
    private void initMemoSegment() {
-      grille = new ArrayList<Segment>(4000);
-      memoSeg=new HashSet<String>(4000);
-      labelRA=new HashSet<String>(100);
-      labelDE=new HashSet<String>(100);
+      grille = new ArrayList<>(4000);
+      memoSeg=new HashSet<>(4000);
+      labelRA=new HashSet<>(100);
+      labelDE=new HashSet<>(100);
    }
 
    /** Libération de la mémorisation des noeuds de la grille de coord */
@@ -5903,12 +5903,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( taille>125 ) max = (int)( nside*nside*12 );
       else {
          Coord [] coo = getCooCorners();
-         ArrayList<double[]> a = new ArrayList<double[]>();
+         ArrayList<double[]> a = new ArrayList<>();
          for( Coord c : coo ) {
             c=Localisation.frameToFrame(c,Localisation.ICRS,frame);
             a.add(new double[]{c.al,c.del});
          }
-         try { npix = hpx.query_polygon(nside, a); }
+         try { npix = hpx.query_polygon(nside, a, true); }
          catch( Exception e ) { return; }
       }
       

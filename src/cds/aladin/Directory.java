@@ -468,7 +468,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             }
             lastMove = p;
 
-            ArrayList<TreeObjDir> treeObjs = new ArrayList<TreeObjDir>();
+            ArrayList<TreeObjDir> treeObjs = new ArrayList<>();
             DefaultMutableTreeNode to = (DefaultMutableTreeNode) tp.getLastPathComponent();
             if( !to.isLeaf() ) return;
             treeObjs.add((TreeObjDir) to.getUserObject());
@@ -746,7 +746,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    /** Récupération de la liste des TreeObj sélectionnées qui n'ont pas de MOC à disposition */
    private ArrayList<TreeObjDir> getSelectedTreeObjDirScannable() {
-      ArrayList<TreeObjDir> treeObjs = new ArrayList<TreeObjDir>();
+      ArrayList<TreeObjDir> treeObjs = new ArrayList<>();
       for( TreeObjDir to : getSelectedTreeObjDir() ) {
          if( !to.hasMoc() ) treeObjs.add(to);
       }
@@ -756,7 +756,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** Récupération de la liste des TreeObj sélectionnées */
    private ArrayList<TreeObjDir> getSelectedTreeObjDir() {
       TreePath[] tps = dirTree.getSelectionPaths();
-      ArrayList<TreeObjDir> treeObjs = new ArrayList<TreeObjDir>();
+      ArrayList<TreeObjDir> treeObjs = new ArrayList<>();
       if( tps != null ) {
          for( int i = 0; i < tps.length; i++ ) {
             DefaultMutableTreeNode to = (DefaultMutableTreeNode) tps[i].getLastPathComponent();
@@ -1311,7 +1311,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    // Initialisation du compteur de référence en fonction d'un TreeModel
    private int initCounter(DirectoryModel model) {
       // Initialisation du compteur de référence
-      HashMap<String, Integer> hs = new HashMap<String, Integer>();
+      HashMap<String, Integer> hs = new HashMap<>();
       int n = model.countDescendance(hs);
       counter = hs;
       return n;
@@ -1369,7 +1369,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       // Mémorisation temporaire des états expanded/collapsed
       if( wasExpanded == null ) {
-         wasExpanded = new HashSet<String>();
+         wasExpanded = new HashSet<>();
          backupState(new TreePath(dirTree.root), wasExpanded, dirTree);
       }
       
@@ -1383,7 +1383,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       // S'il y a des noeuds à cacher, on va regénérer un tableau intermédiaire des noeuds restants,
       // mais en le post-triant pour que les branches de l'arbre restent dans le même ordre que précédemment
-      ArrayList<TreeObjDir> tmpDirList1 = new ArrayList<TreeObjDir>(tmpDirList.size());
+      ArrayList<TreeObjDir> tmpDirList1 = new ArrayList<>(tmpDirList.size());
       for( TreeObjDir to : tmpDirList ) {
          boolean mustBeActivated = !to.isHidden() && (!insideActivated || insideActivated && to.getIsIn() != 0);
          if( initSort ) {
@@ -1654,7 +1654,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       ArrayList<String> ids1 = filtrageSpatial(moc, intersect);
 
       // Positionnement des flags isHidden() en fonction du filtrage
-      HashSet<String> set = new HashSet<String>(ids.size());
+      HashSet<String> set = new HashSet<>(ids.size());
       for( String s : ids ) {
          if( ids1 != null && !ids1.contains(s) ) continue;
          set.add(s);
@@ -1726,7 +1726,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       try {
          in = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
          String s;
-         ids = new ArrayList<String>();
+         ids = new ArrayList<>();
          while( (s = in.readLine()) != null )
             ids.add(getId(s));
       } finally {
@@ -2075,7 +2075,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * mémorisées dans le Glu afin de pouvoir gérer les sites miroirs
     */
    private ArrayList<TreeObjDir> populateMultiProp() {
-      ArrayList<TreeObjDir> listReg = new ArrayList<TreeObjDir>(30000);
+      ArrayList<TreeObjDir> listReg = new ArrayList<>(30000);
       multiple=null;  // Il faut reseter la liste des collections à plusieurs "feuilles"
       for( MocItem mi : this ) populateProp(listReg, mi.prop);
       Collections.sort(listReg, TreeObj.getComparator());
@@ -2474,8 +2474,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /** Retourne true si le path contient plusieurs feuilles */
    protected boolean hasMultiple(String path) {
       if( multiple == null ) {
-         multiple = new HashSet<String>(multiProp.size());
-         HashSet<String> un = new HashSet<String>(multiProp.size());
+         multiple = new HashSet<>(multiProp.size());
+         HashSet<String> un = new HashSet<>(multiProp.size());
          for( MocItem mi : multiProp ) {
             String parent = getCatParent(mi.mocId);
             if( un.contains(parent) ) multiple.add(parent);
@@ -2539,7 +2539,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @throws Exception
     */
    protected ArrayList<String> getTAPServersByMocServer(String query) throws Exception {
-      ArrayList<String> b = new ArrayList<String>();
+      ArrayList<String> b = new ArrayList<>();
       ArrayList<String> a = multiProp.scan((HealpixMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
       for( String id : a ) {
          // String auth = Util.getSubpath(id, 0);

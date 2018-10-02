@@ -11,8 +11,7 @@
 	   <property name="bin" value="${basedir}/bin"/>
 	   <property name="src" value="${basedir}/src"/>
 	   <property name="lib" value="${basedir}/lib"/>
-	   <!-- property name="mocjar" value="${basedir}/../Moc/Moc.jar"/ -->
-	   <!-- property name="mocjar" value="${lib}/Moc.jar"/ -->
+	   <property name="cert" value="/Users/Pierre/Documents/Aladin/Certificats"/>
    
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
@@ -20,17 +19,9 @@
 	    encoding="Cp1252" source="1.6" target="1.6" deprecation="off" >
      <classpath>
           <pathelement path="${java.class.path}/"/>
+        <pathelement path="${lib}/adql1.3.jar"/>
         <pathelement path="${lib}/jsamp.jar"/>
-        <!-- pathelement path="${lib}/jhealpixSmall.jar"/ -->
-        <pathelement path="${lib}/microhub.jar"/>
-        <pathelement path="${lib}/cds.savot.common.jar"/>
-        <pathelement path="${lib}/cds.savot.model.jar"/>
-        <pathelement path="${lib}/cds.savot.pull.jar"/>
-        <pathelement path="${lib}/cds.savot.sax.jar"/>
-        <pathelement path="${lib}/cds.savot.writer.jar"/>
         <pathelement path="${lib}/kxml2-2.3.0.jar"/>
-        <!-- pathelement path="${lib}/cds.astro.jar"/ -->
-        <!-- pathelement path="${lib}/Moc.jar"/ -->
       </classpath>
      </javac>
    </target>
@@ -38,17 +29,9 @@
    <target name="main" depends="compil" description="jar generation" >
       <jar destfile="Aladin.jar" duplicate="preserve">
         <fileset dir="${bin}"/>
+	    <zipfileset src="${lib}/adql1.3.jar"/>
 	    <zipfileset src="${lib}/jsamp.jar"/>
-	    <!-- zipfileset src="${lib}/jhealpixSmall.jar"/ -->
-	    <zipfileset src="${lib}/microhub.jar"/>
-        <zipfileset src="${lib}/cds.savot.common.jar"/>
-        <zipfileset src="${lib}/cds.savot.model.jar"/>
-        <zipfileset src="${lib}/cds.savot.pull.jar"/>
-        <zipfileset src="${lib}/cds.savot.sax.jar"/>
-        <zipfileset src="${lib}/cds.savot.writer.jar"/>
-        <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
-        <!-- zipfileset src="${lib}/cds.astro.jar"/ -->
-	    <!-- zipfileset src="${lib}/Moc.jar"/ -->
+	    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
            <attribute name="Permissions" value="all-permissions" />
@@ -58,9 +41,10 @@
          jar="Aladin.jar"
          signedjar="Aladin.jar"
          lazy="true"
-         alias="1"
-         keystore="${basedir}/Aladin.jks"
-         storepass="ura1280"
+         alias="server"
+         keystore="${cert}/Aladin.jks"
+         tsaurl="http://timestamp.digicert.com"
+         storepass="bal$bol"
          preservelastmodified="true">
       </signjar>
    </target>
@@ -68,17 +52,9 @@
    <target name="hipsgen" depends="compil" description="jar generation" >
       <jar destfile="Hipsgen.jar" duplicate="preserve">
         <fileset dir="${bin}"/>
+	    <zipfileset src="${lib}/adql1.3.jar"/>
 	    <zipfileset src="${lib}/jsamp.jar"/>
-	    <!-- zipfileset src="${lib}/jhealpixSmall.jar"/ -->
-	    <zipfileset src="${lib}/microhub.jar"/>
-        <zipfileset src="${lib}/cds.savot.common.jar"/>
-        <zipfileset src="${lib}/cds.savot.model.jar"/>
-        <zipfileset src="${lib}/cds.savot.pull.jar"/>
-        <zipfileset src="${lib}/cds.savot.sax.jar"/>
-        <zipfileset src="${lib}/cds.savot.writer.jar"/>
-        <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
-        <!-- zipfileset src="${lib}/cds.astro.jar"/ -->
-	    <!-- zipfileset src="${lib}/Moc.jar"/ -->
+	    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
         <manifest>
            <attribute name="Main-Class" value="cds.allsky.HipsGen" />
            <attribute name="Permissions" value="all-permissions" />
@@ -88,17 +64,24 @@
          jar="Hipsgen.jar"
          signedjar="Hipsgen.jar"
          lazy="true"
-         alias="1"
-         keystore="${basedir}/Aladin.jks"
-         storepass="ura1280"
+         alias="server"
+         keystore="${cert}/Aladin.jks"
+         tsaurl="http://timestamp.digicert.com"
+         storepass="bal$bol"
          preservelastmodified="true">
       </signjar>
    </target>
-   
+    
    <target name="clean" description="Remove building directory" >
       <delete includeEmptyDirs="true" quiet="true">
 	     <fileset dir="${bin}" />
       </delete>
+   </target>
+   
+   <target name="Src">
+      <jar destfile="${basedir}/AladinSrc.jar" >
+         <fileset dir="${basedir}" includes="src/**,lib/**"/>
+      </jar>
    </target>
    
 </project>

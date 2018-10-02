@@ -970,7 +970,7 @@ public class PlanBG extends PlanImage {
       active=selected=true;
       isOldPlan=false;
 
-      pixList = new Hashtable<String,HealpixKey>(1000);
+      pixList = new Hashtable<>(1000);
       if( error==null ) loader = new HealpixLoader();
 
       RGBControl = new int[RGBCONTROL.length];
@@ -1381,7 +1381,7 @@ public class PlanBG extends PlanImage {
             }
 
             // Parcours du cache
-            Vector<FileItem> listCache = new Vector<FileItem>(2000);
+            Vector<FileItem> listCache = new Vector<>(2000);
             size  = getCacheSize(new File(dir),listCache);
             size += getCacheSizePlanHealpix(new File(PlanHealpix.getCacheDirPath()), listCache);
             try {
@@ -1699,7 +1699,14 @@ public class PlanBG extends PlanImage {
          double radius = v.getTaille();
          if( CDSHealpix.FX ) radius= (radius/2)*1.43;
          long [] listPix = getNpixList(order,center,radius).clone();
-         return filterByMoc( listPix, order );
+         long [] out = CDSHealpix.FX ? listPix : filterByMoc( listPix, order );
+//         if( CDSHealpix.FX ) {
+//            System.out.println("\ndraw circle("+center.al+", "+center.del+", "+radius+")");
+//            System.out.print("draw moc "+order+"/");
+//            for( long a : listPix ) System.out.print(" "+a);
+//            System.out.println();
+//         }
+         return out;
          
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
       
@@ -3211,7 +3218,7 @@ public class PlanBG extends PlanImage {
          }
          allskyDrawn=true;
       } else {
-
+         
          // On accélère pendant un clic-and-drag
          boolean fast = mustDrawFast();
          if( fast ) min=max;
@@ -3231,6 +3238,9 @@ public class PlanBG extends PlanImage {
          else {
             pix = getPixList(v,center,max);
             for( int i=0; i<pix.length; i++ ) {
+               if( max==4 && pix[i]==2088 ) {
+                  System.out.println("J'y suis");
+               }
                HealpixKey healpix = getHealpix(max,pix[i],z, false);
                if( healpix==null ) {
                   if( isOutMoc(max,pix[i]) ||
@@ -3934,7 +3944,7 @@ public class PlanBG extends PlanImage {
 
          // Parcours de la liste en commençant par les résolutions les plus mauvaises
          try {
-            ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
+            ArrayList<HealpixKey> list = new ArrayList<>();
             Enumeration<HealpixKey> e = pixList.elements();
             while( e.hasMoreElements() ) list.add(e.nextElement());
             try { Collections.sort(list); } catch( Exception e1 ) { }
@@ -4120,7 +4130,7 @@ public class PlanBG extends PlanImage {
                // On ne charge que si on a le temps...
                if( !aladin.view.mustDrawFast() ) {
                   try {
-                     ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
+                     ArrayList<HealpixKey> list = new ArrayList<>();
                      //                     Enumeration<HealpixKey> e = pixList.elements();
                      Enumeration<HealpixKey> e = new MyEnum(pixList);
 

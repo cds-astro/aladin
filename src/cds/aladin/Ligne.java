@@ -668,7 +668,7 @@ public class Ligne extends Position {
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
 
       boolean isHiPS = (v.pref.type == Plan.ALLSKYIMG);
-      ArrayList<double[]> cooList = isHiPS ? new ArrayList<double[]>() : null;
+      ArrayList<double[]> cooList = isHiPS ? new ArrayList<>() : null;
 
       statInit();
 
@@ -763,7 +763,7 @@ public class Ligne extends Position {
                nside = CDSHealpix.pow2(o);
                pixelSurf = CDSHealpix.pixRes(nside)/3600;
                pixelSurf *= pixelSurf;
-               npix = CDSHealpix.query_polygon(nside, cooList);
+               npix = CDSHealpix.query_polygon(nside, cooList,false);
                if( npix.length<=MAXSTATPIXELS ) break;
             }; 
             

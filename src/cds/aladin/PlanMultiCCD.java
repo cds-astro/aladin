@@ -56,7 +56,7 @@ public class PlanMultiCCD extends PlanImage {
    protected void setCCD(Vector<Plan> v) {
       
       
-      HashSet<String> extName = new HashSet<String>(v.size());   // pour vérifier que EXTNAME contient des noms différents
+      HashSet<String> extName = new HashSet<>(v.size());   // pour vérifier que EXTNAME contient des noms différents
       
       ccd = new PlanImage[ v.size() ];
       Enumeration<Plan> e = v.elements();
@@ -80,7 +80,7 @@ public class PlanMultiCCD extends PlanImage {
    }
    
    protected Vector<PlanImage> getCCD() {
-      Vector<PlanImage> v = new Vector<PlanImage>(ccd.length);
+      Vector<PlanImage> v = new Vector<>(ccd.length);
       for( PlanImage p : ccd ) v.add(p);
       return v;
    }
@@ -209,7 +209,7 @@ public class PlanMultiCCD extends PlanImage {
    static private HealpixMoc buildMoc(Projection proj, int order) throws Exception {
       HealpixMoc moc = new HealpixMoc(0,order);
       Coord coo = new Coord();
-      ArrayList<double[]> cooList = new ArrayList<double[]>(10);
+      ArrayList<double[]> cooList = new ArrayList<>(10);
       Dimension dim = proj.c.getImgSize();
       for( int i=0; i<4; i++ ) {
          coo.x = (i==0 || i==3 ? 0 :dim.width);
@@ -217,7 +217,7 @@ public class PlanMultiCCD extends PlanImage {
          proj.c.GetCoord(coo);
          cooList.add(new double[]{coo.al,coo.del});
       }
-      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
+      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList, true);
       for( long npix : npixs ) moc.add(order,npix) ;
       return moc;
    }

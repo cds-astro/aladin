@@ -299,7 +299,7 @@ public class MocGen {
    private boolean addInMocBox(Fits f,HealpixMoc moc,int order) throws Exception {
       boolean res=true;
       Coord coo = new Coord();
-      ArrayList<double[]> cooList = new ArrayList<double[]>(10);
+      ArrayList<double[]> cooList = new ArrayList<>(10);
       Calib c = f.getCalib();
       Dimension dim = c.getImgSize();
       for( int i=0; i<4; i++ ) {
@@ -308,7 +308,7 @@ public class MocGen {
          c.GetCoord(coo);
          cooList.add(new double[]{coo.al,coo.del});
       }
-      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
+      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList,true);
       for( long npix : npixs ) moc.add(order,npix) ;
       return res;
    }

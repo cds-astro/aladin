@@ -84,7 +84,7 @@ public class BuilderIndex extends Builder {
    /** Ajout d'un fichier à la liste des fichiers images sources écartés lors de l'indexation
     * suivi de la raison de son éviction. */
    private void addBadFile(String file, String error) {
-      if( badFiles==null ) badFiles = new ArrayList<String>();
+      if( badFiles==null ) badFiles = new ArrayList<>();
       badFiles.add( file+(error!=null && error.length()>0 ? " => "+error:"") );
    }
 
@@ -329,7 +329,7 @@ public class BuilderIndex extends Builder {
       // pour chaque fichier dans le sous répertoire
       File main = new File(pathSource);
 
-      ArrayList<File> dir = new ArrayList<File>();
+      ArrayList<File> dir = new ArrayList<>();
       File[] list = context.isInputFile ? new File[]{ main } : main.listFiles();
       if (list == null) return true;
       
@@ -457,7 +457,7 @@ public class BuilderIndex extends Builder {
       // Recherche les 4 coins de l'image (cellule)
       Calib c = fitsfile.getCalib();
       boolean isCAR = c.getProj()==Calib.CAR;
-      ArrayList<double[]> cooList = new ArrayList<double[]>(4);
+      ArrayList<double[]> cooList = new ArrayList<>(4);
       Coord coo = new Coord();
       Coord corner[] = new Coord[4];
       Coord cornerCell[] = new Coord[4];
@@ -538,7 +538,7 @@ public class BuilderIndex extends Builder {
       // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
       if( radius<30 && !isCAR ) {
          try {
-            npixs = CDSHealpix.query_polygon(nside, cooList);
+            npixs = CDSHealpix.query_polygon(nside, cooList, true);
          } catch( Exception e ) { }
       }
          

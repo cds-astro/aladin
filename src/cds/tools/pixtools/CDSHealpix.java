@@ -57,7 +57,7 @@ import healpix.essentials.Vec3;
  */
 public final class CDSHealpix {
    
-   static public boolean FX = false;
+   static public boolean FX = true;
 
    static final public int MAXORDER=29;
 
@@ -129,6 +129,20 @@ public final class CDSHealpix {
    static public long[] query_disc(long nside,double ra, double dec, double radius) throws Exception {
       return query_disc(nside, ra, dec, radius, true);
    }
+   
+   public static void main(String [] arg) {
+      double ra=13.158329, dec=-72.80028, radius=5.64323;
+      int order=3;
+      
+      final HealpixNested hn = Healpix.getNested(order);
+      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer( Math.toRadians(radius) );
+      final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
+      long [] out = toFlatArrayOfHash(bmoc);
+      
+      System.out.print("overlappingCells checker:\ndraw circle("+ra+","+dec+","+radius+")\ndraw moc "+order+"/");
+      for( long a : out ) System.out.print(" "+a);
+      System.out.println();
+  }
 
    static public long[] query_disc(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
       if( FX ) return query_discFX(nside,ra,dec,radius,inclusive);
@@ -164,8 +178,10 @@ public final class CDSHealpix {
       return toFlatArrayOfHash(bmoc);
    }
 
-   static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
-      if( FX ) return query_polygonFX(nside,cooList);
+      
+   static public long[] query_polygon(long nside,ArrayList<double[]>cooList, boolean inclusive) throws Exception {
+
+      if( FX ) return query_polygonFX(nside,cooList,inclusive);
 //      long l1 = System.nanoTime();
       int order = init(nside);
       Pointing[] vertex = new Pointing[cooList.size()];
@@ -178,7 +194,8 @@ public final class CDSHealpix {
 //System.err.println("Poygon REN computed in " + (l2 - l1) /  (1e6d) + " ms");
       return res;
    }
-   static public long[] query_polygonFX(long nside,ArrayList<double[]>cooList) throws Exception {
+   
+   static public long[] query_polygonFX(long nside,ArrayList<double[]>cooList,boolean inclusive) throws Exception {
 //     long l1 = System.nanoTime();
 //      System.out.println("depth="+Healpix.depth((int) nside));
      final HealpixNested hn = Healpix.getNested(Healpix.depth((int) nside));
@@ -192,9 +209,7 @@ public final class CDSHealpix {
         vertices[i][1] = Math.toRadians(vertices[i][1]);
 //        System.out.println(" "+vertices[i][0]+" "+vertices[i][1]);
      }
-     System.out.println();
-//     final HealpixNestedBMOC bmoc = pc.overlappingCells(vertices);
-     final HealpixNestedBMOC bmoc = pc.overlappingCenters(vertices);
+     final HealpixNestedBMOC bmoc = inclusive ? pc.overlappingCells(vertices) : pc.overlappingCenters(vertices);
 //     System.out.println("bmoc.size()="+bmoc.size());
 //     for (final CurrentValueAccessor cva : bmoc) {
 //        System.out.println(cva);
@@ -414,7 +429,7 @@ public final class CDSHealpix {
    }
    static public HealpixMoc createHealpixMocFX(ArrayList<double[]> radecList, int order ) throws Exception {
      final HealpixMoc hmoc = new HealpixMoc(order);
-     hmoc.add(order, query_polygonFX(Healpix.nside(order), radecList));
+     hmoc.add(order, query_polygonFX(Healpix.nside(order), radecList, true));
      return hmoc;
    }
 
