@@ -1165,8 +1165,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          return -1;
       }
 
-      // Pour éviter de charger 2x le même plan HiPS
-      if( !Aladin.NOGUI && aladin.calque.isBGAlreadyLoaded(to.internalId) ) {
+      // Pour éviter de charger 2x le même plan HiPS (le test sur label==null permet de ne pas prendre
+      // en compte les commandes scripts du genre toto=get ... pour éviter un popup inutile et intempestif
+      if( label==null && !Aladin.NOGUI && aladin.calque.isBGAlreadyLoaded(to.internalId) ) {
          if( !aladin.confirmation(aladin, aladin.chaine.getString("HIPSALREADYLOADED")) ) return -1;
       }
 
@@ -1319,6 +1320,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    /** Mise à jour du titre au-dessus de l'arbre en fonction des compteurs */
    private void updateTitre(int nb) {
+//      try {
+//         throw new Exception();
+//      } catch( Exception e ) {
+//         System.err.println("updateTitre = "+nb);
+//         e.printStackTrace();
+//      }
       String t = DIRECTORY;
       if( nb != -1 && dirList != null && nb < dirList.size() ) {
          t = "<html>" + t + "<font color=\"#D0D0F0\"> &rarr; " + nb + " / " + dirList.size() + "</font></html>";
@@ -3102,6 +3109,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( xmatchBx != null ) activateLoad |= xmatchBx.isSelected();
          if( globalBx != null ) activateLoad |= globalBx.isSelected();
          load.setEnabled(activateLoad);
+         
          
          if( activateTarget ) {
             if( sTarget!=null && sTarget.trim().length()==0  ) sTarget=null;

@@ -33,6 +33,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 
 import cds.tools.Util;
 
@@ -539,25 +540,25 @@ class Hist implements Runnable {
          g.drawLine(width-w-3,w+3,width-3,3);
       }
 
-      // Des informations textuelles en surcharge
-//      if( texte!=null ) {
-//         g.setFont(Aladin.SBOLD);
-//         fm = g.getFontMetrics();
-//         g.setColor(Color.red);
-//         StringTokenizer st = new StringTokenizer(texte,"/");
-//         y = 17;
-//         int h= fm.getHeight();
-//         int h1 = fm.getAscent();
-//         //         Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
+      // Des informations textuelles en surcharge (on écarte Stat.. qui concerne les cercles)
+      if( texte!=null && !texte.startsWith("Stat")) {
+         g.setFont(Aladin.BOLD);
+         fm = g.getFontMetrics();
+         g.setColor( aladin.COLOR_RED );
+         StringTokenizer st = new StringTokenizer(texte,"/");
+         y = 17;
+         int h= fm.getHeight();
+         int h1 = fm.getAscent();
+//                  Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
 //         g.setColor(Color.black);
-//         while( st.hasMoreTokens() ) {
-//            s = st.nextToken().trim();
-//            int len = fm.stringWidth(s);
-//            int x1 = width - len-5;
-//            Util.drawCartouche(g, x1, y, len, h, 0.8f, null, Color.white);
-//            g.drawString(s, x1, y+h1);
-//            y+=h;
-//         }
-//      }
+         while( st.hasMoreTokens() ) {
+            s = st.nextToken().trim();
+            int len = fm.stringWidth(s);
+            int x1 = width - len-5;
+//            Util.drawCartouche(g, x1, y, len, h, 0.8f, null, aladin.DARK_THEME ? Color.gray : Color.white);
+            g.drawString(s, x1, y+h1);
+            y+=h;
+         }
+      }
    }
 }

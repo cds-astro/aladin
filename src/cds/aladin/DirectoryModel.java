@@ -88,7 +88,9 @@ public class DirectoryModel extends DefaultTreeModel {
          to.nb = to.nbRef = n;
          
       //Décompte temporaire
-      } else to.nb = n;
+      } else {
+         to.nb = n;
+     }
       
       return n;
    }
@@ -98,7 +100,7 @@ public class DirectoryModel extends DefaultTreeModel {
    
    /** Réinitialisation des éléments accélérateurs de la création de l'arbre */
    protected void resetCreate() {
-      fastAccess = new HashMap<String, DefaultMutableTreeNode>();
+      fastAccess = new HashMap<>();
    }
    
    // Mémorisation d'un noeud par son path afin de le retrouver rapidement
