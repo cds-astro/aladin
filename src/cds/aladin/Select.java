@@ -532,6 +532,9 @@ Runnable, SwingWidgetFinder, Widget {
       // Recherche du plan clique
       if( (currentPlan = getPlan(y))==null ) return;
       
+      //set current plan in all tap guis by default of what is chosen on plan stack.
+      TapManager.getInstance(a).setCurrentUploadPlane(currentPlan.label);
+      
       // Par defaut, memorisation de la position
       this.x=x; this.y=y;
       oldy=y; oldx=x;

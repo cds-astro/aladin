@@ -189,24 +189,26 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	 * @throws Exception 
 	 */
 	public void updateInfoPanel() throws Exception {
-		Component[] components = this.centerPanel.getComponents();
-		for (Component component : components) {
-			if (component.getName() != null && component.getName().equals(INFOGUI)) {
-				JScrollPane oldScrollPane = (JScrollPane) component;
-				try {
-					JScrollPane  mainScrollPane= new JScrollPane(this.additionalComponent.get());
-					mainScrollPane.setName(INFOGUI);
-					mainScrollPane.setBounds(10, 10, 800, 600);
-					mainScrollPane.getVerticalScrollBar().setUnitIncrement(4);
-					this.getContentPane().remove(this.centerPanel);
-					this.centerPanel.remove(oldScrollPane);
-					this.centerPanel.add(mainScrollPane);
-					this.getContentPane().add(this.centerPanel,"Center");
-					break;
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw e;
+		if (this.centerPanel != null && this.additionalComponent != null) {
+			Component[] components = this.centerPanel.getComponents();
+			for (Component component : components) {
+				if (component.getName() != null && component.getName().equals(INFOGUI)) {
+					JScrollPane oldScrollPane = (JScrollPane) component;
+					try {
+						JScrollPane  mainScrollPane= new JScrollPane(this.additionalComponent.get());
+						mainScrollPane.setName(INFOGUI);
+						mainScrollPane.setBounds(10, 10, 800, 600);
+						mainScrollPane.getVerticalScrollBar().setUnitIncrement(4);
+						this.getContentPane().remove(this.centerPanel);
+						this.centerPanel.remove(oldScrollPane);
+						this.centerPanel.add(mainScrollPane);
+						this.getContentPane().add(this.centerPanel, "Center");
+						break;
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						throw e;
+					}
 				}
 			}
 		}
@@ -312,17 +314,19 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	 */
 	public void showHidetapInfoText(boolean show) {
 		// TODO Auto-generated method stub
-		if (!isVisible() || (show != this.centerPanel.getTopComponent().isVisible())) {
-			this.centerPanel.getTopComponent().setVisible(show);
-			if (!show) {
-				int dividerSize = (Integer) UIManager.get("SplitPane.dividerSize");
-				double proportionalLocation = this.centerPanel.getHeight() > 1500 ? 0.05 : 0.2; //Magic numbers based on info panel size
-				this.centerPanel.setDividerSize(dividerSize);
-				this.centerPanel.setDividerLocation(proportionalLocation);
-			} 
-			this.centerPanel.resetToPreferredSizes();
-			this.centerPanel.revalidate();
-			this.centerPanel.repaint();
+		if (this.centerPanel != null) {
+			if (!isVisible() || (show != this.centerPanel.getTopComponent().isVisible())) {
+				this.centerPanel.getTopComponent().setVisible(show);
+				if (!show) {
+					int dividerSize = (Integer) UIManager.get("SplitPane.dividerSize");
+					double proportionalLocation = this.centerPanel.getHeight() > 1500 ? 0.05 : 0.2; //Magic numbers based on info panel size
+					this.centerPanel.setDividerSize(dividerSize);
+					this.centerPanel.setDividerLocation(proportionalLocation);
+				} 
+				this.centerPanel.resetToPreferredSizes();
+				this.centerPanel.revalidate();
+				this.centerPanel.repaint();
+			}
 		}
 	}
 

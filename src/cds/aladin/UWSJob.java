@@ -163,6 +163,7 @@ public class UWSJob implements ActionListener{
 		HttpURLConnection httpClient = null;
 		try {
 			httpClient = createWritePostData(this.location.toString(), PATHPHASE, "PHASE", PHASEACTION_ABORT);
+			httpClient.setConnectTimeout(7000);
 			String previousPhase = this.currentPhase;
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {
 				String locationString = httpClient.getHeaderField("Location");
@@ -170,9 +171,15 @@ public class UWSJob implements ActionListener{
 				httpClient.disconnect();
 				UWSFacade.populateJob(this.location.openStream(), this);
 			} else {
+				StringBuffer errorMessage = new StringBuffer("Error when aborting job:\n");
+				errorMessage.append("phase: ").append(this.currentPhase);
+				if (httpClient.getResponseCode() >= 400) {
+					errorMessage.append("\n")
+							.append(Util.handleErrorResponseForTapAndDL(this.location, httpClient));
+		        }
 				httpClient.disconnect();
 				notificationText = UWSFacade.CANTABORTJOB;
-				throw new IOException("Error when aborting job:\n"+this.location.toString()+"\n httpcode:"+httpClient.getResponseCode()+"\n phase: "+this.currentPhase);
+				throw new IOException(errorMessage.toString());
 			}
 			this.updateGui(previousPhase);
 		} catch (IOException e) {
@@ -203,10 +210,16 @@ public class UWSJob implements ActionListener{
 					httpClient.disconnect();
 					UWSFacade.populateJob(this.location.openStream(), this);
 				} else {
-					httpClient.disconnect();
 					this.currentPhase = UNEXPECTEDERROR+ "-Phase: "+this.currentPhase;//Unexpected Error(phase)
 					notificationText = UWSFacade.CANTSTARTJOB;
-					throw new IOException("Error when starting job:\n"+this.location.toString()+"\n httpcode:"+httpClient.getResponseCode()+"\n phase: "+this.currentPhase);
+					StringBuffer errorMessage = new StringBuffer("Error when starting job:\n");
+					errorMessage.append("\n phase: ").append(this.currentPhase);
+					if (httpClient.getResponseCode() >= 400) {
+						errorMessage.append("\n ")
+								.append(Util.handleErrorResponseForTapAndDL(this.location, httpClient));
+			        }
+					httpClient.disconnect();
+					throw new IOException(errorMessage.toString());
 				}
 				this.updateGui(previousPhase);
 			} catch (IOException e) {
@@ -332,7 +345,14 @@ public class UWSJob implements ActionListener{
 				} else {
 					notificationText = genericErrorMessage+this.location.toString()+"\n phase: "+this.currentPhase;
 					this.currentPhase = UNEXPECTEDERROR+ "-Phase: "+this.currentPhase;//Unexpected Error(phase)
-					throw new IOException(notificationText);
+					StringBuffer errorMessage = new StringBuffer(genericErrorMessage);
+					errorMessage.append("\n phase: ").append(this.currentPhase);
+					if (httpConn.getResponseCode() >= 400) {
+						errorMessage.append("\n")
+								.append(Util.handleErrorResponseForTapAndDL(this.location, httpConn));
+			        }
+					httpConn.disconnect();
+					throw new IOException(errorMessage.toString());
 				}
 				httpConn.disconnect();
 			} else {
@@ -400,7 +420,7 @@ public class UWSJob implements ActionListener{
 		StringBuffer radioLabel =  new StringBuffer("<html><p width=\"1600\">").append(this.currentPhase);
 		radioLabel.append(" , Start time: ").append(this.startTime);
 		if (this.query != null) {
-			radioLabel.append(" , Query: ").append(this.query);
+			radioLabel.append(" , Query: ").append(this.query.replaceAll("&", "&amp;").replaceAll(">", "&gt;").replaceAll("<", "&lt;"));
 		}
 		radioLabel.append(" ( server: ").append(this.serverLabel).append(")</p></html>");
 		return radioLabel.toString();
@@ -631,11 +651,11 @@ public class UWSJob implements ActionListener{
 			responseBody.append("<br>Parameters: ").append(this.parameters);
 		}
 		if (this.results != null && !this.results.isEmpty()) {
-			responseBody.append("<br>Results: ").append(this.results);
+			responseBody.append("<br>Results: ").append(this.results.toString().replaceAll("&", "&amp;").replaceAll(">", "&gt;").replaceAll("<", "&lt;"));
 		}
 		if (errorType != null) {
 			responseBody.append("<br>Error type: ").append(this.errorType).append("<br>Error message: ")
-					.append(this.errorMessage);
+					.append(this.errorMessage.replaceAll("&", "&amp;").replaceAll(">", "&gt;").replaceAll("<", "&lt;"));
 		}
 		if (jobInfoXml != null) {
 			responseBody.append("<br>Job info: ").append(this.jobInfoXml);

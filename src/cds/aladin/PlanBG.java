@@ -30,8 +30,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Paint;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
@@ -52,11 +55,14 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import cds.aladin.stc.STCCircle;
 import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCPolygon;
 import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
@@ -2719,6 +2725,23 @@ public class PlanBG extends PlanImage {
       rgb=null;
       return pixels;
    }
+	//Method repeated just to isolate existing from the new developments.   
+   protected byte [] getPixels8Area(ViewSimple v,RectangleD rcrop, STCObj stcObj, boolean now) {
+      int rgb [] = getPixelsRGBArea(v,rcrop, stcObj, now);
+      if( rgb==null ) return null;
+      int taille = rgb.length;
+      byte [] pixels = new byte[taille];
+      for( int i=0; i<taille; i++ ) {
+         if( ((rgb[i] >>> 24) & 0xFF)==0 ) pixels[i]=0;  // transparent
+         else {
+            int pix = rgb[i] & 0xFF;
+            if( pix<255 ) pix++;
+            pixels[i] = (byte)(pix & 0xFF);
+         }
+      }
+      rgb=null;
+      return pixels;
+   }
 
    /** Retourne un tableau de pixels couleurs de la zone délimitée par le rectangle rcrop (coordonnées de la vue)*/
    protected int [] getPixelsRGBArea(ViewSimple v,RectangleD rcrop,boolean now) {
@@ -2744,6 +2767,81 @@ public class PlanBG extends PlanImage {
 
       return rgb;
    }
+   
+   protected int [] getPixelsRGBArea(ViewSimple v,RectangleD rcrop, STCObj stcObj, boolean now) {
+      if( v==null ) return null;
+      BufferedImage imgBuf = new BufferedImage(v.rv.width,v.rv.height,BufferedImage.TYPE_INT_ARGB);
+      Graphics g = imgBuf.getGraphics();
+      Shape shape = getShape(v, stcObj);
+      if (shape != null) {
+          g.setClip(shape);
+      }
+      drawLosanges(g, v, now);
+      g.finalize(); 
+      if (shape != null) {
+          g.setClip(null);
+      }
+      g=null;
+      
+      int width = (int)Math.ceil(rcrop.width);
+      int height = (int)Math.ceil(rcrop.height);
+      int taille = width * height;
+      int rgb[] = new int[taille];
+
+      // En cas de problème d'arrondi négatif
+      int x = (int)Math.floor(rcrop.x);
+      if( x<0 ) x=0;
+      int y = (int)Math.floor(rcrop.y);
+      if( y<0 ) y=0;
+      
+      imgBuf.getRGB(x, y, width, height, rgb, 0,width);
+      imgBuf.flush(); imgBuf=null; 
+
+      return rgb;
+   }
+   
+   /**
+    * Gets a java.awt.Shape from an STCObj
+    * @param v
+    * @param stcObj
+    * @return
+    */
+	public Shape getShape(ViewSimple v, STCObj stcObj) {
+		Shape shape = null;
+		Coord coord = null;
+		PointD pt = null;
+		if (stcObj instanceof STCCircle) {
+			STCCircle circle = (STCCircle) stcObj;
+			coord = getCoodSetXY(circle.getCenter().al, circle.getCenter().del);
+            double radius = Server.getAngleInArcmin(String.valueOf(circle.getRadius()), Server.RADIUSd) / 60.;
+			int plotRadius = (int) Math.round(Fov.getPlotRadiusForCircleFromCoord(projd, coord, radius) * v.getZoom());
+			pt = v.getViewCoordDble(coord.x, coord.y);
+			shape = new Ellipse2D.Double((int) (pt.x-plotRadius), (int) (pt.y-plotRadius), plotRadius * 2, plotRadius * 2);
+		} else if (stcObj instanceof STCPolygon) {
+			STCPolygon poly = (STCPolygon) stcObj;
+			List<Double> xCorners = poly.getxCorners();
+			List<Double> yCorners = poly.getyCorners();
+			int xPoly[] = new int[xCorners.size()];
+		    int yPoly[] = new int[xCorners.size()];
+			for (int i = 0; i < xCorners.size(); i++) {
+				coord = getCoodSetXY(xCorners.get(i), yCorners.get(i));
+	            pt = v.getViewCoordDble(coord.x,coord.y);
+	            xPoly[i] = (int)Math.floor(pt.x);
+	            if( xPoly[i]<0 ) xPoly[i]=0;
+	            yPoly[i] = (int)Math.floor(pt.y);
+	            if( yPoly[i]<0 ) yPoly[i]=0;
+			}
+			shape = new Polygon(xPoly, yPoly, xPoly.length);
+		}
+		return shape;
+	}
+	
+	public Coord getCoodSetXY(double ra, double dec) {
+		Coord coord = new Coord(ra, dec);
+		coord = Localisation.frameToFrame(coord,Localisation.ICRS,frameOrigin);
+		coord = projd.getXY(coord);
+		return coord;
+	}
 
    /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
     * si ce n'est pas nécessaire

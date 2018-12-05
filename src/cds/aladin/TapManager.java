@@ -29,8 +29,11 @@ import static cds.aladin.Constants.DESCRIPTION;
 import static cds.aladin.Constants.DIRQUERY_GETALLTAPSERVERS;
 import static cds.aladin.Constants.DOT_CHAR;
 import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.FROM_COLUMN;
+import static cds.aladin.Constants.FROM_TABLE;
 import static cds.aladin.Constants.GETRESULTPARAMS;
 import static cds.aladin.Constants.INDEXED;
+import static cds.aladin.Constants.PATHASYNC;
 import static cds.aladin.Constants.PATHSYNC;
 import static cds.aladin.Constants.PRINCIPAL;
 import static cds.aladin.Constants.SCHEMANAME;
@@ -40,18 +43,13 @@ import static cds.aladin.Constants.STD;
 import static cds.aladin.Constants.TABLENAME;
 import static cds.aladin.Constants.TABLETYPE;
 import static cds.aladin.Constants.TAP;
-import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
-import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
+import static cds.aladin.Constants.TARGET_COLUMN;
+import static cds.aladin.Constants.TARGET_TABLE;
 import static cds.aladin.Constants.UCD;
 import static cds.aladin.Constants.UNIT;
 import static cds.aladin.Constants.UTF8;
 import static cds.aladin.Constants.UTYPE;
-import static cds.aladin.Constants.FROM_TABLE;
-import static cds.aladin.Constants.TARGET_TABLE;
-import static cds.aladin.Constants.TARGET_COLUMN;
-import static cds.aladin.Constants.FROM_COLUMN;
-import static cds.aladin.Constants.PATHASYNC;
 import static cds.tools.CDSConstants.DEFAULT;
 import static cds.tools.CDSConstants.WAIT;
 
@@ -157,6 +155,7 @@ public class TapManager {
 	
 	public UWSFacade uwsFacade;
 	public FrameSimple tapPanelFromTree;
+	public boolean hideTapSchema;
 	
 	static {
 		GENERICERROR = Aladin.getChaine().getString("GENERICERROR");
@@ -175,7 +174,7 @@ public class TapManager {
 		aladin.initThreadPool();
 		uwsFacade = UWSFacade.getInstance(aladin);
 		this.aladin = aladin;
-		
+		hideTapSchema = aladin.configuration.hideTapSchema();
 	}
 	
 	public static synchronized TapManager getInstance(Aladin aladin) {
@@ -748,7 +747,7 @@ public class TapManager {
 //			URL examplesUrl = new URL("http://130.79.129.54:8080/view-source_gaia.ari.uni-heidelberg.de_tap_examples.xhtml");
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
 			long startTime = getTimeToLog();
-			is = Util.openStreamForTap(url, null, true, 10000);
+			is = Util.openStreamForTapAndDL(url, null, true, 10000);
 			long time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println("DaliExamples got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();
@@ -868,7 +867,7 @@ public class TapManager {
 							//download only table names and first table's columns
 							SavotResource resultsResource = getResults("getAllTables", tapServiceUrl,GETTAPSCHEMATABLENAMES, PATHSYNC);
 							//update table meta anyway and then create the info panel
-							updateTableMetadata(clientToLoad, tapServiceUrl);
+							updateTableMetadata(newServer, tapServiceUrl);
 							populateTables(clientToLoad, resultsResource);
 							String defaultTable = clientToLoad.tablesMetaData.keySet().iterator().next();
 							String tableNameQueryParam = defaultTable;
@@ -884,7 +883,7 @@ public class TapManager {
 							// download all
 							SavotResource resultsResource = getResults("getAllTableColums", tapServiceUrl, GETTAPSCHEMACOLUMNS, PATHSYNC);
 							//update table meta anyway and then create the info panel
-							updateTableMetadata(clientToLoad, tapServiceUrl);
+							updateTableMetadata(newServer, tapServiceUrl);
 							populateColumns(clientToLoad, resultsResource);
 						} else {
 							newServer.showLoadingError();
@@ -1132,7 +1131,7 @@ public class TapManager {
 			 //update info panel
 			Future<JPanel> infoPanel = this.createMetaInfoDisplay(tapServiceUrl, dynamicTapForm.tapClient.tablesMetaData);
 			if (infoPanel != null) {
-				dynamicTapForm.tapClient.tackleFrameInfoServerUpdate(aladin, infoPanel);
+				dynamicTapForm.tapClient.tackleFrameInfoServerUpdate(aladin, dynamicTapForm, infoPanel);
 			}
 			Aladin.trace(3,"done updating tap info for : "+tableNames.toString()+"| server is : "+dynamicTapForm.tapClient.tapBaseUrl);
 			dynamicTapForm.ball.setMode(Ball.OK);
@@ -1606,7 +1605,7 @@ public class TapManager {
 		return type;
 	}
 
-	/**TODO::tintin think about this binary deal
+	/**
 	 * Method populates all column metainfo TAP_SCHEMA.columns from savot resource 
 	 * @param serverToLoad
 	 * @param resultsResource
@@ -1869,7 +1868,7 @@ public class TapManager {
 			URL url = getUrl(tapServiceUrl, file, path);
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
 			long startTime = getTimeToLog();
-			is = Util.openStreamForTap(url, null, true, 10000);
+			is = Util.openStreamForTapAndDL(url, null, true, 10000);
 			long time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();
@@ -2074,11 +2073,12 @@ public class TapManager {
     
 	/**
 	 * Method to lazily gets table metadata.
+	 * @param newServer 
 	 * @param clientToLoad
 	 * @param tapServiceUrl
 	 * @param tablesMetaData
 	 */
-	public void updateTableMetadata(final TapClient clientToLoad, final String tapServiceUrl) {
+	public void updateTableMetadata(final DynamicTapForm newServer, final String tapServiceUrl) {
 		try {
 			aladin.executor.execute(new Runnable() {
 				@Override
@@ -2090,11 +2090,11 @@ public class TapManager {
 					currentT.setPriority(Thread.NORM_PRIORITY-2);
 					try {
 						SavotResource resultsResource = getResults("gettableInfos",tapServiceUrl, GETTAPSCHEMATABLES, PATHSYNC);
-						populateTables(clientToLoad, resultsResource);
+						populateTables(newServer.tapClient, resultsResource);
 						//update info panel
-						Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, clientToLoad.tablesMetaData);
+						Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, newServer.tapClient.tablesMetaData);
 						if (infoPanel != null) {
-							clientToLoad.tackleFrameInfoServerUpdate(aladin, infoPanel);
+							newServer.tapClient.tackleFrameInfoServerUpdate(aladin, newServer, infoPanel);
 						}
 						
 					} catch (Exception e) {
@@ -2413,7 +2413,7 @@ public class TapManager {
 		InputStream is = null;
 		try {
 			Aladin.trace(3, "trying url : "+url);
-			is = Util.openStreamForTap(url, conn, true, 10000);
+			is = Util.openStreamForTapAndDL(url, conn, true, 10000);
 			if (requestNumber == -1 || server.requestsSent != requestNumber) {
 				server = null;
 			} else {
@@ -2601,6 +2601,28 @@ public class TapManager {
 		this.joinFrame.show(panel, displayTitle);
 		return showFirstTimeInfo;
 		
+	}
+	
+	/**
+	 * set current plan in all tap guis by default of what is chosen on plan stack.
+	 * or when new plane gets loaded.
+	 * @param currentSelectedPlanName
+	 */
+	public void setCurrentUploadPlane(String currentSelectedPlanName) {
+		if (this.uploadFacade != null && currentSelectedPlanName != null && !currentSelectedPlanName.isEmpty()) {
+			String valueToSelect = this.uploadFacade.getUploadTableName(currentSelectedPlanName);
+			if (valueToSelect != null) {
+				uploadTablesModel.setSelectedItem(valueToSelect);
+			}
+		}
+	}
+	
+	public boolean checkIsUploadablePlaneByLabel(String planLabel) {
+		boolean result = false;
+		if (this.uploadFacade.uploadTableNameDict.containsKey(planLabel)) {
+			result = true;
+		}
+		return result;
 	}
 	
 	public void closeMyJoinFacade(JoinFacade joinPanel) {
@@ -2825,7 +2847,7 @@ public class TapManager {
 			}
 		}
 	}
-
+	
 	public void updateDeleteUploadPlans(Plan planInDeletion) {
 		if (this.uploadFacade != null) {
 			this.uploadFacade.deleteAvailableUploadTable(planInDeletion);
@@ -2859,7 +2881,7 @@ public class TapManager {
 		}
 		return results;
 	}
-
+	
 	public ComboBoxModel getUploadClientModel() {
 		// TODO Auto-generated method stub
 		return uploadTablesModel;

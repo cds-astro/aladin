@@ -258,6 +258,14 @@ public class UploadFacade extends JFrame {
 		return (this.uploadTableNameDict.containsValue(input));
 	}
 	
+	public String getUploadTableName(String planeName) {
+		String result = null;
+		if (this.uploadTableNameDict.containsKey(planeName)) {
+			result = this.uploadTableNameDict.get(planeName);
+		}
+		return result;
+	}
+	
 	/**
 	 * Method checks if the tablename is valid.
 	 * @param input

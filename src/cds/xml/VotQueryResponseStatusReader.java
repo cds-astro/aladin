@@ -31,7 +31,7 @@ import java.util.Hashtable;
 import cds.aladin.MyInputStream;
 
 //Based on tap spec http://www.ivoa.net/documents/TAP/20100327/REC-TAP-1.0.pdf. Section 2.9
-public class TapQueryResponseStatusReader implements XMLConsumer {
+public class VotQueryResponseStatusReader implements XMLConsumer {
 	//tag flags
 	private boolean inVotable = false;
 	private boolean inResultsResource = false;

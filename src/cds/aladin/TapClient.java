@@ -366,9 +366,10 @@ public class TapClient{
 	/**
 	 * Method to update the frame info panel.
 	 * 	if the old frame is visible the method reloads it.
+	 * @param newServer 
 	 * @param newInfoPanel
 	 */
-	protected void tackleFrameInfoServerUpdate(Aladin aladin, Future<JPanel> newInfoPanel) {
+	protected void tackleFrameInfoServerUpdate(Aladin aladin, DynamicTapForm newServer, Future<JPanel> newInfoPanel) {
 		try {
 			FrameInfoServer frameInfoServer = null;
 			if (this.infoPanel!=null) {
@@ -388,9 +389,14 @@ public class TapClient{
 				} else {
 					this.infoPanel.cancel(true);
 				}
-			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer().equals(this)) {
+			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer().equals(newServer)) {
 				//this else part is for a specific case where generic status report is displayed before table meta can be obtained
-				frameInfoServer = new FrameInfoServer(aladin, newInfoPanel);
+				if (newInfoPanel == null) {
+					frameInfoServer = new FrameInfoServer(aladin);
+				} else {
+					frameInfoServer = new FrameInfoServer(aladin, newInfoPanel);
+				}
+				
 				if (aladin.frameInfoServer.isVisible()) {
 					frameInfoServer.updateInfoPanel();
 					aladin.frameInfoServer.dispose();
@@ -473,7 +479,7 @@ public class TapClient{
 		this.tapManager.setTargetDimensions(this);
 	}
 
-	public boolean isSchemaTable(String tableName) {
+	public static boolean isSchemaTable(String tableName) {
 		// TODO Auto-generated method stub
 		boolean result = false;
 		Pattern tapSchemaPattern = Pattern.compile(REGEX_TAPSCHEMATABLES, Pattern.CASE_INSENSITIVE);
@@ -780,6 +786,7 @@ public class TapClient{
 			this.serverObsTap.removeAll();
 			this.serverObsTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
 		}
+		this.infoPanel = null;
 		tapManager.createAndLoadATapServer(this, dynamicTapForm);
 		if (this.mode == TapClientMode.TREEPANEL) {
 			tapManager.showTapPanelFromTree(tapLabel, dynamicTapForm);

@@ -668,7 +668,7 @@ public class Ligne extends Position {
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
 
       boolean isHiPS = (v.pref.type == Plan.ALLSKYIMG);
-      ArrayList<double[]> cooList = isHiPS ? new ArrayList<>() : null;
+      ArrayList<double[]> cooList = isHiPS ? new ArrayList<double[]>() : null;
 
       statInit();
 

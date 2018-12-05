@@ -2480,6 +2480,8 @@ public class Plan implements Runnable {
          // Voir si ca marche
          aladin.calque.unSelectAllPlan();
          selected=true;
+       //set current plan in all tap guis by default of what is chosen on plan stack.
+         TapManager.getInstance(aladin).setCurrentUploadPlane(this.label);
       }
 
 

@@ -1030,7 +1030,7 @@ public class TreeObjDir extends TreeObj implements Propable {
     	  aladin.error("Error! No TAP form configured for "+id);
       }
       
-      //TODO:: tintin remove the below just for demo
+      //TODO:: below just for demo
      /* String url1 = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap";
       String id1 = "GAIA_VIZIER";
       url1 = "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap2";

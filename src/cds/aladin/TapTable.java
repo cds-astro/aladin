@@ -201,6 +201,7 @@ public class TapTable {
 	}
 	
 	/**
+	 * Unused. For reference
 	 * Method only used for cases of table names with special chars.
 	 * Adds double quote to the names
 	 * @param tapTable 

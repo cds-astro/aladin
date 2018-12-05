@@ -280,6 +280,11 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 					UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.aladin);
 					uploadTablesGui.setRenderer(uploadTableRenderer);
 					if (uploadTablesGui.getSelectedItem() != null) {
+//						String currentSelectedPlan = aladin.calque.select.currentPlan.label;
+//						if (currentSelectedPlan != null && !currentSelectedPlan.isEmpty()
+//								&& TapManager.getInstance(aladin).checkIsUploadablePlaneByLabel(currentSelectedPlan)) {
+//							uploadTablesGui.setSelectedItem(currentSelectedPlan);
+//						}
 						String uploadTable = (String) uploadTablesGui.getSelectedItem();
 						String planeName = uploadTableRenderer.getUploadPlaneName(uploadTable);
 						uploadTablesGui.setToolTipText(UploadTablesRenderer.getToolTip(planeName, uploadTable));
@@ -440,11 +445,14 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			c.weighty = 0.94;
 			this.add(constraintsScroller, c);	
 			
-			if (secondaryTable != null) {
-				uploadTablesGui.setSelectedItem(secondaryTable);
-			} else {
-				uploadTablesGui.setEnabled(false);
+			if(uploadTablesGui != null){
+				if (secondaryTable != null) {
+					uploadTablesGui.setSelectedItem(secondaryTable);
+				} else {
+					uploadTablesGui.setEnabled(false);
+				}
 			}
+			
 		}
 	}
 	
@@ -559,7 +567,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 		StringBuffer cond = new StringBuffer();
 		
 		TapTable secTableMetaData = this.serverTap.tapClient.tablesMetaData.get(joinTableName);
-		if (radio2.isSelected()) {
+		if (radio2 != null && radio2.isSelected()) {
 			Map<String, TapTable> uploadedTables = this.serverTap.tapClient.tapManager.getUploadedTables();
 			if (uploadedTables != null) {
 				secTableMetaData = uploadedTables.get(joinTableName);
@@ -648,12 +656,12 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 					radio1.setSelected(true);
 				}
 				this.changeTableSelection(joinTableName, true);
-			} else if (comboBox.equals(this.uploadTablesGui) && !chosen.equalsIgnoreCase(joinTableName)) {
+			} else if (this.uploadTablesGui != null && comboBox.equals(this.uploadTablesGui) && !chosen.equalsIgnoreCase(joinTableName)) {
 				Aladin.trace(3, "Change table selection from within the document");
 				boolean isServerJoin = false;
 				if (this.uploadTablesGui.getItemCount() > 0) {
 					setUploadState(true);
-					if (radio2.isSelected()) {
+					if (radio2 != null && radio2.isSelected()) {
 						joinTableName = chosen;
 					} else {
 						isServerJoin = true;
@@ -665,7 +673,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 						uploadTablesGui.setToolTipText(UploadTablesRenderer.getToolTip(planeName, uploadTable));
 					}
 				} else {
-					if (radio2.isSelected()) {
+					if (radio2 != null && radio2.isSelected()) {
 						joinTableName = (String) this.serverTablesGui.getSelectedItem();
 						radio1.setSelected(true);
 					}
@@ -674,7 +682,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 				}
 				this.changeTableSelection(joinTableName, isServerJoin);
 			}
-		} else if (comboBox.equals(this.uploadTablesGui)) {
+		} else if (this.uploadTablesGui != null && comboBox.equals(this.uploadTablesGui)) {
 			joinTableName = (String) this.serverTablesGui.getSelectedItem();
 			radio1.setSelected(true);
 			setUploadState(false);
@@ -727,7 +735,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	public void itemStateChanged(ItemEvent e) {
 		if (e.getSource().equals(noTypeFilter) || !noTypeFilter.isSelected()) {
 			TapTable secTableMetaData = serverTap.tapClient.tablesMetaData.get(joinTableName);
-			if (radio2.isSelected()) {
+			if (radio2 != null && radio2.isSelected()) {
 				Map<String, TapTable> uploadedTables = serverTap.tapClient.tapManager.getUploadedTables();
 				if (uploadedTables != null) {
 					secTableMetaData = uploadedTables.get(joinTableName);
@@ -747,18 +755,20 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 	}
 	
 	public void setUploadState(boolean enabled) {
-		uploadTablesGui.setEnabled(enabled);
-		radio2.setEnabled(enabled);
-		Component[] component = uploadTablesGui.getParent().getComponents();
-		for (int i = 0; i < component.length; i++) {
-			if (TABLESLABEL.equals(component[i].getName())) {
-				if (enabled) {
-					component[i].setForeground(SystemColor.textText);
-				} else {
-					component[i].setForeground(SystemColor.textInactiveText);
+		if (radio2 != null && uploadTablesGui != null) {
+			uploadTablesGui.setEnabled(enabled);
+			radio2.setEnabled(enabled);
+			Component[] component = uploadTablesGui.getParent().getComponents();
+			for (int i = 0; i < component.length; i++) {
+				if (TABLESLABEL.equals(component[i].getName())) {
+					if (enabled) {
+						component[i].setForeground(SystemColor.textText);
+					} else {
+						component[i].setForeground(SystemColor.textInactiveText);
+					}
+					component[i].setEnabled(enabled);
+					break;
 				}
-				component[i].setEnabled(enabled);
-				break;
 			}
 		}
 		
@@ -915,7 +925,7 @@ public class JoinFacade extends JPanel implements FilterActionClass, ActionListe
 			String action = button.getActionCommand();
 			if (action.equals(SERVERJOINTABLESELECTED)) {
 				checkSelectionChanged(serverTablesGui);
-			} else if (action.equals(UPLOADJOINTABLESELECTED)) {
+			} else if (uploadTablesGui != null && action.equals(UPLOADJOINTABLESELECTED)) {
 				checkSelectionChanged(uploadTablesGui);
 			}
 		}

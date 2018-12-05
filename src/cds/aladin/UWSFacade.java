@@ -96,9 +96,11 @@ public class UWSFacade implements ActionListener{
 	public static String JOBNOTFOUNDMESSAGE, JOBERRORTOOLTIP, UWSNOJOBMESSAGE, CANTSTARTJOB, GENERICERROR1LINE,
 			STANDARDRESULTSLOAD, STANDARDRESULTSLOADTIP, UWSASKLOADDEFAULTRESULTS, CANTABORTJOB, UWSJOBRADIOTOOLTIP,
 			JOBCONTROLLERTITLE, UWSPANELCURRECTSESSIONTITLE, UWSPANELPREVIOUSSESSIONTITLE, JOBNOTSELECTED, JOBNOTFOUNDGIVENURL,
-			NOJOBURLMESSAGE, JOBDELETEERRORMESSAGE, DELETEONCLOSEBUTTONLABEL, UWSMULTIJOBLOADMESSAGE ;
+			NOJOBURLMESSAGE, JOBDELETEERRORMESSAGE, DELETEONCLOSEBUTTONLABEL, UWSMULTIJOBLOADMESSAGE, UWSASKTOREMOVENOTFOUNDJOBS, 
+			UWSASKTOREMOVENOTFOUNDJOBSTITLE ;
 	public static String ERROR_INCORRECTPROTOCOL = "IOException. Job url not http protocol!";
 	public static final int POLLINGDELAY = 4000; //increasing the polling delay to 4secs after consulting Markus Demleitner and Mark Taylor (at Asterics TechForum4)
+	public static int DELETETIMEOUTTIME = 7000;
 	
 	static {
 		JOBNOTFOUNDMESSAGE = Aladin.chaine.getString("JOBNOTFOUNDMESSAGE");
@@ -120,6 +122,8 @@ public class UWSFacade implements ActionListener{
 		JOBDELETEERRORMESSAGE = Aladin.getChaine().getString("JOBDELETEERRORMESSAGE");
 		DELETEONCLOSEBUTTONLABEL = Aladin.getChaine().getString("DELETEONCLOSEBUTTONLABEL");
 		UWSMULTIJOBLOADMESSAGE = Aladin.getChaine().getString("UWSMULTIJOBLOADMESSAGE");
+		UWSASKTOREMOVENOTFOUNDJOBS = Aladin.getChaine().getString("UWSASKTOREMOVENOTFOUNDJOBS");
+		UWSASKTOREMOVENOTFOUNDJOBSTITLE = Aladin.getChaine().getString("UWSASKTOREMOVENOTFOUNDJOBSTITLE");
 	}
 	
 	public UWSFacade() {
@@ -241,6 +245,7 @@ public class UWSFacade implements ActionListener{
 	public UWSJob createJob(Server server, String jobLabel, URL requestUrl, String queryString,
 			Map<String, Object> postParams, boolean doRun, int requestNumber) throws Exception {
 		UWSJob job = null;
+		HttpURLConnection httpClient = null;
 		try {
 			Aladin.trace(3,"trying to createJob() uws for:: "+requestUrl.toString());
 //			URL tapServerRequestUrl = new URL("http://cdsportal.u-strasbg.fr/uwstuto/basic/timers");
@@ -296,7 +301,7 @@ public class UWSFacade implements ActionListener{
 				throw new Exception("Error url is not http!");
 			}
 			
-			HttpURLConnection httpClient = (HttpURLConnection) urlConn;
+			httpClient = (HttpURLConnection) urlConn;
 			httpClient.setInstanceFollowRedirects(false);
 			
 			if (httpClient.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {// is accepted
@@ -311,19 +316,26 @@ public class UWSFacade implements ActionListener{
 //				getsetPhase(job);
 				job.setInitialGui();
 			} else {
-				Aladin.trace(3,"createJob() ERROR !! did not get a url redirect. reponse code "+httpClient.getResponseCode());
-				throw new Exception("Error in calling server: "+requestUrl+"\n"+httpClient.getResponseMessage());
+				String errorMessage = Util.handleErrorResponseForTapAndDL(requestUrl, httpClient);
+				//also for erroneous scenarios where error code is <400
+				Aladin.trace(3,"createJob() ERROR !! did not get a url redirect. \n"+errorMessage);
+				throw new Exception(errorMessage);
+				
 			}
-			httpClient.disconnect();
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw e;
+		} finally {
+			if (httpClient != null) {
+				httpClient.disconnect();
+			}
 		}
 		Aladin.trace(3,"In createJob. Job phase is:"+job.getCurrentPhase());
 		job.server = server;
 		job.requestNumber = requestNumber;
 		return job;
 	}
+	
 	
 	/**
 	 * Adds newly created job into front-end and model
@@ -446,6 +458,7 @@ public class UWSFacade implements ActionListener{
 	
 	/**
 	 * Method updates job based on the new uws status
+	 * UWS spec 1.1, Section 2.2.2: the default behavior is to return XML, "accept" not set explicitly.
 	 * @param inputStream
 	 * @param job
 	 * @throws Exception 
@@ -479,9 +492,9 @@ public class UWSFacade implements ActionListener{
 	/**
 	 * Method deletes UWS job.
 	 * @param job
-	 * @throws IOException 
+	 * @throws IOException, Exception
 	 */
-	public void deleteJob(UWSJob job, boolean updateModelAndGui) throws IOException {
+	public void deleteJob(UWSJob job, boolean updateModelAndGui) throws IOException, Exception {
 		HttpURLConnection httpConn = null;
 		try {
 			URLConnection conn = job.getLocation().openConnection();
@@ -489,26 +502,42 @@ public class UWSFacade implements ActionListener{
 				httpConn = (HttpURLConnection) conn;
 				httpConn.setInstanceFollowRedirects(false);
 				httpConn.setRequestMethod("DELETE");
+				httpConn.setConnectTimeout(DELETETIMEOUTTIME);
 				httpConn.connect();
 				if (httpConn.getResponseCode() == HttpURLConnection.HTTP_SEE_OTHER) {
 					if (updateModelAndGui) {
 						removeJobUpdateGui(job);
 					}
 				} else {
-					Aladin.trace(3, "Error when deleting job! Http response is: "+httpConn.getResponseCode());
-					throw new IOException(JOBDELETEERRORMESSAGE);
+					if (httpConn.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+						int option = JOptionPane.showConfirmDialog(asyncPanel, UWSASKTOREMOVENOTFOUNDJOBS,
+								UWSASKTOREMOVENOTFOUNDJOBSTITLE, JOptionPane.OK_CANCEL_OPTION);
+						if (option == JOptionPane.OK_OPTION) {
+							removeJobUpdateGui(job);
+							return;
+						}
+					}
+					StringBuffer errorMessage = new StringBuffer(JOBDELETEERRORMESSAGE);
+					errorMessage.append("\n")
+					.append(Util.handleErrorResponseForTapAndDL(job.getLocation(), httpConn));
+					Aladin.trace(3, "Error when deleting job!"+errorMessage.toString());
+					throw new IOException(errorMessage.toString());
 				}
 			}
 		} catch (ProtocolException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(Aladin.levelTrace >=3 ) e.printStackTrace();
 			throw e;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(Aladin.levelTrace >=3 ) e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			if(Aladin.levelTrace >=3 ) e.printStackTrace();
 			throw e;
 		} finally {
-			if (httpConn!=null) {
+			if (httpConn != null) {
 				httpConn.disconnect();
 			}
 		}
@@ -679,7 +708,7 @@ public class UWSFacade implements ActionListener{
 				if (uwsJob.isDeleteOnExit()) {
 					try {
 						deleteJob(uwsJob, false);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						// We do nothing on quit
 					}
 				}
@@ -715,6 +744,8 @@ public class UWSFacade implements ActionListener{
 					showAsyncPanel();
 					Aladin.info(asyncPanel, UWSMULTIJOBLOADMESSAGE);
 					return;
+				} else {
+					resultsUrl = getResultsPath(uwsJob, resultsUrl);
 				}
 			}
 			URL urlToLoad = TapManager.getUrl(resultsUrl, null, null);
@@ -734,41 +765,58 @@ public class UWSFacade implements ActionListener{
 		URL resultsUrl = null;
 		if (resultToLoad.startsWith("http") || resultToLoad.startsWith("https")) {
 			resultsUrl = validateUrlSimple(resultToLoad);
-			if (resultsUrl != null) {
-				resultsUrlString = resultsUrl.toString();
-			}
 		} else {//if just path is provided and not full url: its path to be constructed from original url. we will assume located on the same server
 			try {
-				resultsUrl =  new URL(uwsJob.getLocation().getProtocol(), uwsJob.getLocation().getHost(), uwsJob.getLocation().getPort(), URLDecoder.decode(resultToLoad, Constants.UTF8));
-				resultsUrl.toURI();
+				resultsUrl = new URL(uwsJob.getLocation().getProtocol(), uwsJob.getLocation().getHost(), uwsJob.getLocation().getPort(), URLDecoder.decode(resultToLoad, Constants.UTF8));
+				resultsUrl = validateUrlSimple(resultsUrl);
+				if (resultsUrl == null) {
+					resultsUrl = new URL(uwsJob.getLocation().getProtocol(), uwsJob.getLocation().getHost(), uwsJob.getLocation().getPort(), resultToLoad);
+					resultsUrl = validateUrlSimple(resultsUrl);
+				}
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Aladin.trace(3, e.getMessage());
 			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			if (resultsUrl != null) {
-				resultsUrlString = resultsUrl.toString();
+				Aladin.trace(3, e.getMessage());
 			}
 			//parse if relative path ::
 			//server : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/async/1479376281691_5
 			//results path : /xamin/vo/tap/async/1479376281691_5/results/result
 			//server base url : http://heasarc.gsfc.nasa.gov/xamin/vo/tap/
+			
+			//some server results arrive un encoded example:
+			//result0=/skynode/do/tap/spcam/async/181112212721+0900_1184_107_9922775895291997506/results/result
+		}
+		if (resultsUrl != null) {
+			resultsUrlString = resultsUrl.toString();
 		}
 		return resultsUrlString;
 	}
 	
 	public URL validateUrlSimple(String resultToLoad) {
+		URL resultsUrl = validateUrlSimple(resultToLoad, true);
+		if (resultsUrl == null) {
+			resultsUrl = validateUrlSimple(resultToLoad, false);
+		}
+		return resultsUrl;
+	}
+	
+	public URL validateUrlSimple(String resultToLoad, boolean decode) {
 		URL resultsUrl = null;
 		try {
-			resultsUrl = new URL(URLDecoder.decode(resultToLoad, Constants.UTF8));
+			if (decode) {
+				resultsUrl = new URL(URLDecoder.decode(resultToLoad, Constants.UTF8));
+			} else {
+				resultsUrl = new URL(resultToLoad);
+			}
 			//if in application/x-www-form-urlencoded form
 			// as in case of csirohttp%3A%2F%2Fatoavo.atnf.csiro.au%2Ftap%2Fasync%2F1488450523217A%2Fresults%2Fresult
+			resultsUrl = validateUrlSimple(resultsUrl);
+			if (resultsUrl != null && resultsUrl.getAuthority() == null) {
+				Aladin.trace(3, "no authority " + resultsUrl);
+				resultsUrl = null;
+			}
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -776,19 +824,21 @@ public class UWSFacade implements ActionListener{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		if (resultsUrl != null) {
-			try {
+		return resultsUrl;
+	}
+	
+	public URL validateUrlSimple(URL resultsUrl) {
+		try {
+			if (resultsUrl != null) {
 				resultsUrl.toURI();
-			} catch (URISyntaxException e) {
-				Aladin.trace(3, "URISyntaxException "+e.getMessage());
-				resultsUrl = null;
+				if (resultsUrl.getAuthority() == null) {
+					Aladin.trace(3, "no authority " + resultsUrl);
+					resultsUrl = null;
+				}
 			}
-			
-			if (resultsUrl.getAuthority() == null) {
-				Aladin.trace(3, "no authority " + resultsUrl);
-				resultsUrl = null;
-			}
+		} catch (URISyntaxException e) {
+			Aladin.trace(3, "URISyntaxException when trying to decode"+e.getMessage());
+			resultsUrl = null;
 		}
 		return resultsUrl;
 	}
@@ -805,7 +855,7 @@ public class UWSFacade implements ActionListener{
 					selectedJob = getJobFromCache(jobUrl.toString());
 					if (selectedJob == null) {
 						selectedJob = new UWSJob(this, EMPTYSTRING, jobUrl);
-						populateJob(selectedJob.getLocation().openStream(), selectedJob);
+						populateJob(Util.openStreamForTapAndDL(selectedJob.getLocation(), null, true, 10000), selectedJob);
 					}
 					if (loadJobSummary) {
 						selectedJob.setJobDetailsPanel();
@@ -944,13 +994,11 @@ public class UWSFacade implements ActionListener{
 					}
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
-					e1.printStackTrace();
 					if (selectedJob != null) {
-						Aladin.error(asyncPanel, "Please try again. Error when aborting job: "+selectedJob.getJobId());
 						selectedJob.showErrorOnServer();
-					} else {
-						Aladin.error(asyncPanel, e1.getMessage());
-					}
+					} 
+					Aladin.trace(3, e1.getMessage());
+					Aladin.error(asyncPanel, e1.getMessage());
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					Aladin.error(asyncPanel, e1.getMessage());

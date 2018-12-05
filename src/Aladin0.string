@@ -1726,6 +1726,8 @@ UPPROJALLSKYH Specify the default projection for progressive sky mode
 UPFRAMEH	Specify the default coordinate frame.\nIn case of progressive mode (HiPS display), the drawing orientation will use by default the same coordinate system. But you can explicitely specify another orientation.\nYou can modify this first choice via the plane propertie window.
 UPCACHE	Permanent disk cache
 UPCACHEH	Aladin requires local disk space for keeping data from one session to the other. More it has, better it runs. It is localized in your $HOME/.aladin directory.
+UPHIDETAPSCHEMA Hide tap schema tables
+UPHIDETAPSCHEMAH Hide tap schema tables on Aladin tap interface(if it is irrelevant to your usage).
 UPLOG CDS log
 UPLOGH You are freely using Aladin developed by the Centre de Données astronomiques de Strasbourg (France). You will help a lot the developer team by activating the Aladin usage statistic mechanism (short reports automatically sent to CDS). These logs are anonymous and do not contain any local or personal information (paths, file names, ...).\n \nThese statistics are highly valuable for us to justify our activity and to decide next developements.
 UPLOGH1 Do you accept anonymous statistics logs (you will always be able to change this choice via the menu Edit -> Preferrences) ?
@@ -3161,7 +3163,7 @@ FORMATFORBETWEEN Format for between operator: value1 AND value2. Ex: 2 and 3.
 INCORRECTCONSTRAINTVALUE Please input a number constraint value
 JOINTABLETOOLTIP Join with an uploaded table
 QUERIESREFRESHED Queries refreshed as per your selection!
-JOINTIP You can construct join constraints from this form. \nThe table selected in the main tap form can be joined with one of tables in Aladin stack \nOR ..with one of the server's own table. \n3 types of join constraints can be constructed using this form:\n   1. Join where a foreign key relation exists\n   2. Join with a position constraints: specify radius to constrain a cone area within which the targets from the 2 tables should lie\n   3. Or join for any 2 columns you know are related(ensure they are of same datatype)\n\nClick on "Add this join query button" to add the join constraint.\nYou can review/delete your join constraints in the bottom panel.\nAll join constraints constructed in this "sub-form" are simultaneously updated in the main tap form.\nTherefore, you can review, validate and submit the query from the main tap form.\n\nClick on the info(i) button to see this message again.
+JOINTIP You can construct join constraints from this form. \nThe table selected in the main tap form can be joined with one of tables in Aladin stack(if the TAP server supports upload) \nOR ..with one of the server's own table. \n3 types of join constraints can be constructed using this form:\n   1. Join where a foreign key relation exists\n   2. Join with a position constraints: specify radius to constrain a cone area within which the targets from the 2 tables should lie\n   3. Or join for any 2 columns you know are related(ensure that they are of the same datatype)\n\nClick on "Add join query button" to add the join constraint.\nYou can review/delete your join constraints in the bottom panel.\nAll join constraints constructed in this "sub-form" are simultaneously updated in the main tap form.\nTherefore, you can review, validate and submit the query from the main tap form.\n\nClick on the info(i) button to see this message again.
 
 TAPTABLEJOINTIP.fr  Jointure de table
 TAPTABLEUPLOADPARSETIP.fr  Charger ces données dans l'interface.
@@ -3204,9 +3206,9 @@ NOCUTOUTCLIENTSUPPORT Cutout clients are not supported in this Aladin version ye
 NOCUTOUTCLIENTSUPPORT.fr Le Cutout service n'est pas encore supporté par cette version d'Aladin. Veuillez utiliser la dernière version Aladin BETA pour utiliser l'implémentation en cours d'élaboration pour ce service.
 
 # FrameUploadServer.java strings
-UPTITLE	Upload tables
+UPLOADTITLE	Upload tables
 UPFILEINFO Choose to add a local file or an already loaded file in Aladin.
-UPTITLE.fr	Upload serveur
+UPLOADTITLE.fr	Upload serveur
 DISCARD	Discard table
 DISCARDALL Discard all
 DISCARDTIP Click to discard the parsed table currently selected in the tables dropdown
@@ -3239,6 +3241,8 @@ NOJOBURLMESSAGE Please enter the job url!
 JOBDELETEERRORMESSAGE Error when deleting job!
 DELETEONCLOSEBUTTONLABEL Delete on closing Aladin
 UWSMULTIJOBLOADMESSAGE Job completed. Please choose the result to load on Aladin!
+UWSASKTOREMOVENOTFOUNDJOBS Job seems to be deleted. Remove from job list?
+UWSASKTOREMOVENOTFOUNDJOBSTITLE Delete job not found on server
 
 JOBERRORTOOLTIP.fr  Erreur d'exécution de la requête. Consultez le rapport d'exécution pour les détails
 JOBNOTFOUNDMESSAGE.fr  Impossible de poursuire l'exécution de la requête car la tâche n'est plus accessible sur le serveur. Veuillez relancer la requête.

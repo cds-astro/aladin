@@ -470,7 +470,7 @@ public class Fov {
 	  * @param radius
 	  * @return
 	  */
-	public double getPlotRadiusForCircleFromCoord(Projection proj, Coord centre, double radius) {
+	public static double getPlotRadiusForCircleFromCoord(Projection proj, Coord centre, double radius) {
 		Coord c0 = new Coord(centre.al, centre.del);
 		proj.getXY(c0);
 		Coord c1 = new Coord(0, 0);

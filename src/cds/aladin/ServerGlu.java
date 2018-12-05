@@ -1858,11 +1858,11 @@ public class ServerGlu extends Server implements Runnable {
  	      String adqlQueryEncoded = URLEncoder.encode(adqlQueryUnEncoded, UTF8);
  	     
  		  url = url.replace(adqlQueryUnEncoded, adqlQueryEncoded);
- 		  if(Aladin.levelTrace >= 3){
- 			  System.out.println("adqlQueryUnEncoded: "+adqlQueryUnEncoded);//TODO:: tintin sysouts
- 			  System.out.println("adqlQueryEncoded: "+adqlQueryEncoded);
- 			  System.out.println("Tryin to decode again: "+URLDecoder.decode(adqlQueryEncoded, UTF8));
- 		  }
+// 		  if(Aladin.levelTrace >= 3){
+// 			  System.out.println("adqlQueryUnEncoded: "+adqlQueryUnEncoded);
+// 			  System.out.println("adqlQueryEncoded: "+adqlQueryEncoded);
+// 			  System.out.println("Tryin to decode again: "+URLDecoder.decode(adqlQueryEncoded, UTF8));
+// 		  }
  		  aladin.glu.aladinDic.put(gluTag+"v1", url);
  		  u = new URL(url);
 		} catch (UnsupportedEncodingException e1) {
