@@ -287,7 +287,9 @@ public class ImageMaker {
             //1.Optional parameters change start here--
             if (!projection.trim().isEmpty()) {
   				p.modifyProj(projection);
-  			}
+  			} /*else if(calib.widtha < 30){ //projection is not an optional param in a fitsHeader so this case is not expected.
+  				p.modifyProj("Tangential");
+			}*/
             //1.Optional parameters change end here
             
             // Génération de la vue de travail
@@ -406,18 +408,6 @@ public class ImageMaker {
 		double deICRS = 0;
 		int width = 0, height = 0;
 
-		if (optionalParams.length > 0) {
-			if (optionalParams[0] != null && optionalParams[0] instanceof String) {
-				String projection = (String) optionalParams[0];
-				if (!projection.trim().isEmpty()) {
-					p.modifyProj(projection);
-				}
-			}
-			if (optionalParams.length > 1 && optionalParams[1] != null && Double.class.isInstance(optionalParams[1])) {
-				rotationAngle = (Double) optionalParams[1];
-			}
-		}
-
 		double size = 0;
 		double calc = 0;
 		STCObj stcObj = null;
@@ -443,7 +433,7 @@ public class ImageMaker {
 		            Coord  c2 = new Coord(xminMax[0],yminMax[0]);
 		            size = Coord.getDist(c1,c2);
 					width = (int) (size *60.*60./res);
-					
+																																																																																		
 					deICRS = (yminMax[0] + yminMax[1])/ 2.0 ;
 					c1 = new Coord(xminMax[0],yminMax[1]);
 		            c2 = new Coord(xminMax[0],yminMax[0]);
@@ -458,8 +448,12 @@ public class ImageMaker {
 					stcObj = null;
 				}
 				int nbpoints = (int) (size * 60. * 60./ res);
+				checkPixelLimit(width, height, p);
+//				System.err.println("w * h = "+width+" "+height);
+//				System.out.println(pos);
 				if (nbpoints > PIXEL_MAX) {
-					throw new Exception("Generated FITS cannot exceed " + PIXEL_MAX + "Â² (" + nbpoints + "^2 requested)");
+					Aladin.trace(3, "Generated FITS exceeds " + PIXEL_MAX + "Â² (" + nbpoints + "^2 requested).. ");
+//					throw new Exception("Generated FITS cannot exceed " + PIXEL_MAX + "Â² (" + nbpoints + "^2 requested)");
 			
 				}
 				int orderMaxCheck = p.maxOrder - 1;
@@ -475,6 +469,24 @@ public class ImageMaker {
 	    } else {
 			throw new Exception("Target is mandatory!");
 		}
+		
+		String projection = null;
+		if (optionalParams.length > 0) {
+			if (optionalParams[0] != null && optionalParams[0] instanceof String) {
+				projection = (String) optionalParams[0];
+				if (!projection.trim().isEmpty()) {
+					p.modifyProj(projection);
+				}
+			}
+			if (optionalParams.length > 1 && optionalParams[1] != null && Double.class.isInstance(optionalParams[1])) {
+				rotationAngle = (Double) optionalParams[1];
+			}
+		} 
+		// for larger cutout projection(if unspecified is maintained to Ait or Mollweide. For smaller ones we go for TAN.
+		//(this is changed only in the new methods of imageMaker. the premier version does not get projection defaults)
+		if (projection == null && size < 30) {//>30 deg will be anyway Aitoff by default currently.
+			p.modifyProj("Tangential");
+		}
     
 	    // Génération de la vue de travail
 	    ViewSimpleStatic vs = new ViewSimpleStatic(aladin);
@@ -485,6 +497,9 @@ public class ImageMaker {
 	    
 	//	       Extraction/rééchantillonnage des pixels de la vue
 	    PlanImage pi = aladin.calque.createCropImage(vs, stcObj, fullRes);
+	    /*if (pi.pixels== null) {
+			throw new Exception("Unable to process large request. Please consider retrying with smaller field of view or lower order/resolution");
+		}*/
 	    if (rotationAngle != 0.0d) {
 	  	  pi.projd.setProjRot(rotationAngle);
 	    }
@@ -499,8 +514,16 @@ public class ImageMaker {
    
    /************************************************* Pour exemple et debug *****************************************/
 
-   /** Juste pour démo */
-   static public void main(String [] argv) {
+   private void checkPixelLimit(int width, int height, PlanBG planBG) throws Exception {
+	// TODO Auto-generated method stub
+	   int bitpix= planBG.getBitpix()==-64 ? -64 : -32;
+	      long limit = (long) width * (long)height * (long) (Math.abs(bitpix)/8);
+	      if (limit < Integer.MIN_VALUE || limit >Integer.MAX_VALUE) {
+	    	  throw new Exception("Unable to process large request. Please consider retrying with smaller field of view or lower order/resolution");
+		}
+   }
+/** Juste pour démo */
+   static public void mai32n(String [] argv) {
       try {
 
          ImageMaker im  = new ImageMaker(3);
