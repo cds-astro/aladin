@@ -15,8 +15,10 @@
    
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
-     <javac srcdir="${src}" destdir="${bin}"
-	    encoding="Cp1252" source="1.6" target="1.6" deprecation="off" >
+     <javac destdir="${bin}"
+	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >
+	    <src path="${src}"/>
+        <src path="/Users/Pierre/Documents/Développements/CDSHealpixJava/src/main/java"/>
      <classpath>
           <pathelement path="${java.class.path}/"/>
         <pathelement path="${lib}/adql1.3.jar"/>

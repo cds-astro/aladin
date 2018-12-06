@@ -96,7 +96,7 @@ public final class Command implements Runnable {
 
    JTextArea infoTxt;
 
-   HashMap<String, String> var = new HashMap<String, String>(100);
+   HashMap<String, String> var = new HashMap<>(100);
 
    MyRobot robot;
 
@@ -219,7 +219,7 @@ public final class Command implements Runnable {
 
    private InputStream stream = System.in;
 
-   Stack<InputStream> stackStream = new Stack<InputStream>();
+   Stack<InputStream> stackStream = new Stack<>();
 
    synchronized void setStream(InputStream in) {
       if( in == null ) {
@@ -560,7 +560,7 @@ public final class Command implements Runnable {
    }
 
    protected Plan[] getPlan(String param, int method) {
-      Vector<Plan> v = new Vector<Plan>();
+      Vector<Plan> v = new Vector<>();
 
       param = param.trim();
 
@@ -1413,7 +1413,7 @@ public final class Command implements Runnable {
          String scriptFile = a.getFullFileName(tok.nextToken());
          scriptStream = (new MyInputStream(Util.openAnyStream(scriptFile))).startRead();
          String s;
-         Vector<String> v = new Vector<String>(100);
+         Vector<String> v = new Vector<>(100);
          while( (s = scriptStream.readLine()) != null ) {
             String s1 = s.trim();
             v.addElement(s1);
@@ -1648,7 +1648,7 @@ public final class Command implements Runnable {
    protected String execCM(String param) {
       Plan p;
       boolean defaultPlan = true;
-      Vector<Plan> v = new Vector<Plan>(10);
+      Vector<Plan> v = new Vector<>(10);
       String s = null;
       boolean ok = false;
 
@@ -2372,7 +2372,7 @@ public final class Command implements Runnable {
       // Récupération de la liste des plans concernés
       Plan[] plans = getPlan(param, 2);
       PlanMoc pMoc = null;
-      ArrayList<Plan> pcats = new ArrayList<Plan>();
+      ArrayList<Plan> pcats = new ArrayList<>();
       for( Plan p : plans ) {
          if( p.pcat != null ) pcats.add(p);
          else if( p instanceof PlanMoc ) {
@@ -3416,7 +3416,7 @@ public final class Command implements Runnable {
       // else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       if( cmd.equalsIgnoreCase("macro") ) execMacro(param);
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
-      else if( cmd.equalsIgnoreCase("fx") ) fx(param);
+//      else if( cmd.equalsIgnoreCase("fx") ) fx(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
@@ -3767,7 +3767,7 @@ public final class Command implements Runnable {
          // Pour les plans
          st = new Tok(param);
          try {
-            Vector<Plan> vp = new Vector<Plan>(10);
+            Vector<Plan> vp = new Vector<>(10);
             while( st.hasMoreTokens() ) {
                vp.addElement(getNumber(st.nextToken()));
             }
@@ -4332,7 +4332,7 @@ public final class Command implements Runnable {
     */
    private ViewSimple[] getViews(String param) {
       StringTokenizer st = new StringTokenizer(param);
-      Vector<ViewSimple> tmp = new Vector<ViewSimple>();
+      Vector<ViewSimple> tmp = new Vector<>();
       while( st.hasMoreTokens() ) {
          int nview = getViewNumber(st.nextToken(), false);
          if( nview >= 0 ) tmp.addElement(a.view.viewSimple[nview]);
@@ -4504,7 +4504,7 @@ public final class Command implements Runnable {
 
    /************************************* Gestion des fonctions *************************************************/
 
-   private ArrayList<Function> function = new ArrayList<Function>();
+   private ArrayList<Function> function = new ArrayList<>();
 
    private boolean functionLocalDefinition = false;
 
@@ -4749,7 +4749,7 @@ public final class Command implements Runnable {
     * @param mode 0 - les fonctions bookmarkées, 1- Les fonctions locales
     */
    private Vector<Function> getFunctions(int mode) {
-      Vector<Function> v = new Vector<Function>(10);
+      Vector<Function> v = new Vector<>(10);
       if( getNbFunctions() == 0 ) return v;
       Iterator<Function> e = function.iterator();
       while( e.hasNext() ) {
@@ -5095,15 +5095,15 @@ public final class Command implements Runnable {
          g.delete();
          RandomAccessFile gf = new RandomAccessFile(g, "rw");
 
-         Vector<String> key = new Vector<String>(20);
-         Vector<String> value = new Vector<String>(20);
+         Vector<String> key = new Vector<>(20);
+         Vector<String> value = new Vector<>(20);
          try {
             p.getWCS(key, value);
          } catch( Exception e ) {
             System.err.println("GetWCS error");
          }
 
-         Vector<byte[]> v = new Vector<byte[]>();
+         Vector<byte[]> v = new Vector<>();
          v.addElement(Save.getFitsLine("SIMPLE", "T", "Aladin image test"));
          v.addElement(Save.getFitsLine("BITPIX", bitpix + "", null));
          v.addElement(Save.getFitsLine("NAXIS", 2 + "", null));
@@ -5209,10 +5209,10 @@ public final class Command implements Runnable {
       }
    }
    
-   private void fx(String param) {
-      CDSHealpix.FX = !CDSHealpix.FX;
-      System.out.println("Utilisation librairie HEALPix => "+(CDSHealpix.FX ? "FX":"Reinecke"));
-   }
+//   private void fx(String param) {
+//      CDSHealpix.FX = !CDSHealpix.FX;
+//      System.out.println("Utilisation librairie HEALPix => "+(CDSHealpix.FX ? "FX":"Reinecke"));
+//   }
 
    // Just for testing tap list for Chaitra
    private void tap(String keyword) {

@@ -225,7 +225,7 @@ public final class HeaderFits {
       String key, value, desc;
       int linesRead = 0;
       sizeHeader=0;
-      boolean firstLine=true;
+//      boolean firstLine=true;
 
 //Aladin.trace(3,"Reading FITS header");
       byte[] buffer = new byte[fieldsize];
@@ -244,10 +244,26 @@ public final class HeaderFits {
             linesRead++;
             if( key.equals("END" ) ) break;
             appendMHF(new String(buffer,0));
-            if( buffer[8] != '=' ) continue;
+            
             value=getValue(buffer);
+            desc = null;
+            
+            // Pour supporter la convention CONTINUE
+            if( key.equals("CONTINUE") && buffer[8] != '=') {
+               int n = keysOrder.size();
+               if( n==0 ) throw new Exception("FITS CONTINUE convention error: no previous keyword");
+               String lastKey = keysOrder.get( n-1 );
+               String lastValue = (String ) header.get( lastKey );
+               n = lastValue.length();
+               if( n==0 || lastValue.charAt(n-1)!='&' ) throw new Exception("FITS CONTINUE convention error: & missing");
+               value = lastValue.substring(0,n-1)+value;
+               key=lastKey;
+               
+            } else {
+               if( buffer[8] != '=' ) continue;
+               desc=getDescription(buffer);
+            }
 //Aladin.trace(3,key+" ["+value+"]");
-            desc=getDescription(buffer);
             header.put(key, value);
             if( desc!=null ) headDescr.put(key, desc);
             keysOrder.addElement(key);

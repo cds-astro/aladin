@@ -1244,7 +1244,10 @@ public class PlanBG extends PlanImage {
          
          // Dans le cas d'un ID qui commence par DIRECT/, on ne va surtout pas réutiliser
          // le même cache
-         if( id!=null && id.startsWith(TreeObjDir.DIRECT) ) s=id;
+         if( id!=null && id.startsWith(TreeObjDir.DIRECT) ) {
+            s=id;
+            if( s.startsWith("ivo://") ) s = s.substring(6);
+         }
          
          else {
             MyProperties prop = new MyProperties();
@@ -1258,6 +1261,7 @@ public class PlanBG extends PlanImage {
             s = getHiPSID(prop);
          }
 
+         s = s.replace(":","_");
          s = s.replace("/","_");
          s = s.replace("\\","_");
          s = s.replace("?","_");

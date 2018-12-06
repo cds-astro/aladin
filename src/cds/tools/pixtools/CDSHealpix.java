@@ -51,13 +51,13 @@ import healpix.essentials.RangeSet;
 import healpix.essentials.Scheme;
 import healpix.essentials.Vec3;
 
-/** Wrapper Healpix CDS pour ne pas r�initialiser syst�matiquement l'objet HealpixBase pour chaque NSIDE
+/** Wrapper Healpix CDS pour ne pas reinitialiser systematiquement l'objet HealpixBase pour chaque NSIDE
  * @author Pierre Fernique [CDS] with the help of Martin Reinecke
  * @version 1.1 Avril 2018 - passage librairie FX
  */
 public final class CDSHealpix {
    
-   static public boolean FX = true;
+   static final public boolean FX = true;
 
    static final public int MAXORDER=29;
 
@@ -131,11 +131,12 @@ public final class CDSHealpix {
    }
    
    public static void main(String [] arg) {
-      double ra=13.158329, dec=-72.80028, radius=5.64323;
-      int order=3;
+      double ra=97.91750000, dec=5.76952778, radius=4.45/60;
+      int order=9;
       
       final HealpixNested hn = Healpix.getNested(order);
       final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer( Math.toRadians(radius) );
+//      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox( Math.toRadians(radius) );
       final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
       long [] out = toFlatArrayOfHash(bmoc);
       
@@ -160,8 +161,11 @@ public final class CDSHealpix {
      
 //     long l1 = System.nanoTime();
      final HealpixNested hn = Healpix.getNested(Healpix.depth((int) nside));
-     final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer(radius);
-     // final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox(radius);
+      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer(radius);
+//     final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox(radius);
+     
+//     cp.overlappingCells((Math.toRadians(ra), Math.toRadians(dec), ReturnedCells.FULLY_IN)
+     
      final HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec)) :
            cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
 //     final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));

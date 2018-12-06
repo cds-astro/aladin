@@ -1138,7 +1138,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    protected void loadCS(String cone) {
       if( cone==null ) { loadCS(); return; }
-     exec( addBrowse(  getCSCmd()+" "+cone));
+      exec( addBrowse(  getCSCmd()+" "+cone));
    }
    protected String getCSBkm() { return addBrowse( getCSCmd(false)+" $TARGET $RADIUS" ); }
    private String getCSCmd() { return getCSCmd(true); }
@@ -1502,7 +1502,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    /**********************  Gestion des propriétés associées aux différents modes d'interrogation ************************/
    
    static public HashMap<String, String> paramsFactory() {
-      HashMap<String, String> params = new HashMap<String, String>();
+      HashMap<String, String> params = new HashMap<>();
       params.put(XMATCH_RADIUS_KEY, "5");
       params.put(XMATCH_SELECTION_KEY, XMATCH_SELECTION[0]);
       params.put(HIPS_FORMAT_KEY, HIPS_FORMAT[0]);
@@ -1525,7 +1525,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 
    @Override
    public Vector<Prop> getProp() {
-      Vector<Prop> v = new Vector<Prop>();
+      Vector<Prop> v = new Vector<>();
       if( hasHipsFmt() ) v.add( getHipsFmtProp() );
       if( isCatalog() ) {
          v.add( getCatLimitProp() );
@@ -1560,7 +1560,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    static public String    BROWSING_HELP;
 
    public Prop getBrowsingProp() {
-      final JComboBox<String> combo =  new JComboBox<String>( BROWSING );
+      final JComboBox<String> combo =  new JComboBox<>( BROWSING );
       final PropAction update = new PropAction() {
          public int action() { combo.setSelectedItem( aladin.directory.getParam(BROWSING_KEY)); return PropAction.SUCCESS; }
       };
@@ -1610,7 +1610,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    static public String    XMATCH_SELECTION_HELP;
 
    public Prop getXmatchSelectionProp() {
-      final JComboBox<String> combo =  new JComboBox<String>( XMATCH_SELECTION );
+      final JComboBox<String> combo =  new JComboBox<>( XMATCH_SELECTION );
       final PropAction update = new PropAction() {
          public int action() { combo.setSelectedItem( aladin.directory.getParam(XMATCH_SELECTION_KEY)); return PropAction.SUCCESS; }
       };
@@ -1632,7 +1632,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    static public String    HIPS_FORMAT_HELP;
 
    public Prop getHipsFmtProp() {
-      final JComboBox<String> combo =  new JComboBox<String>( HIPS_FORMAT );
+      final JComboBox<String> combo =  new JComboBox<>( HIPS_FORMAT );
       final PropAction update = new PropAction() {
          public int action() { combo.setSelectedItem( aladin.directory.getParam(HIPS_FORMAT_KEY)); return PropAction.SUCCESS; }
       };
@@ -1653,7 +1653,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    static public String    CAT_LIMIT_HELP;
 
    public Prop getCatLimitProp() {
-      final JComboBox<String> combo =  new JComboBox<String>( CAT_LIMIT );
+      final JComboBox<String> combo =  new JComboBox<>( CAT_LIMIT );
       final PropAction update = new PropAction() {
          public int action() { combo.setSelectedItem( aladin.directory.getParam(CAT_LIMIT_KEY)); return PropAction.SUCCESS; }
       };
@@ -1674,7 +1674,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    static public String    CAT_COLUMNS_HELP;
 
    public Prop getCatColumnProp() {
-      final JComboBox<String> combo =  new JComboBox<String>( CAT_COLUMNS );
+      final JComboBox<String> combo =  new JComboBox<>( CAT_COLUMNS );
       final PropAction update = new PropAction() {
          public int action() { combo.setSelectedItem( aladin.directory.getParam(CAT_COLUMNS_KEY)); return PropAction.SUCCESS; }
       };
