@@ -8233,5 +8233,27 @@ DropTargetListener, DragSourceListener, DragGestureListener
 			aladin.executor = Executors.newFixedThreadPool(10);
 		}
 	}
+	
+   IMListener imListener;
+   boolean bubbleWrapIMProcessing = false;
+   
+	public synchronized void makeIMSettings(IMListener imListener, boolean bubbleWrap) {
+		this.imListener = imListener;
+		bubbleWrapIMProcessing = bubbleWrap;
+	}
+   
+   public synchronized void notifyIMStatusChange(short status) {
+	   if (this.imListener != null) {
+		   this.imListener.progressStatusChange(status);
+		   this.imListener = null;
+		   bubbleWrapIMProcessing = false;
+	   }
+   }
+   
+   public synchronized void askIMResourceCheck(long nbpoints) throws Exception {
+	   if (this.imListener != null) {
+		   this.imListener.checkProceedAction(nbpoints);
+	   }
+   }
 
 }

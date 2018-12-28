@@ -53,8 +53,9 @@ import cds.tools.pixtools.Util;
 public class ImageMaker {
    
    private Aladin aladin=null;
+   public int pixel_max = -1;// -1 = no pixel limit is checked. 
+   public int res_max = -1;//1014 -1- res is hwat is defined by input. 0== force full res, >0 full res if input is within the limit.
    
-   public final static int PIXEL_MAX = 1014;
    
    /** Fournit une "fabrique" d'images, soit preview, soit fits. A utiliser en batch
     * ou en frontal sur un serveur, de préférence localisé directement sur le serveur HiPS
@@ -235,6 +236,7 @@ public class ImageMaker {
 			myStream = new MyInputStream(wcsFileStream);
 			myStream = myStream.startRead();
 			HeaderFits hf = new HeaderFits(myStream);
+			myStream.close();
 			fits(hipsUrlOrPath, hf, filename);
 		} catch (Exception e) {
 			Aladin.trace(3, "Error : could not create HeaderFits object");
@@ -277,10 +279,14 @@ public class ImageMaker {
             PlanBG p = new PlanBGStatic(aladin, hipsUrlOrPath, true );
             
             //checking request to large
-			double calcRes = Util.pixRes(1 << (p.minOrder + 9));
-			int calc_nbpoints = (int) (calib.widtha * 60. * 60. /calcRes);
-			if (calc_nbpoints > PIXEL_MAX) {
-				throw new IllegalArgumentException("Generated FITS cannot exceed " + PIXEL_MAX + "Â² (" + calc_nbpoints + "^2 requested)");
+			double calcRes = 0.0d;
+			int calc_nbpoints = 0;
+			if (pixel_max > 0) {
+				calcRes = Util.pixRes(1 << (p.minOrder + 9));
+				calc_nbpoints = (int) (calib.widtha * 60. * 60. /calcRes);
+				if (calc_nbpoints > pixel_max) {
+					throw new IllegalArgumentException("Generated FITS cannot exceed " + pixel_max + "Â² (" + calc_nbpoints + "^2 requested)");
+				}
 			}
             
             output = new FileOutputStream( new File(filename) );
@@ -299,15 +305,22 @@ public class ImageMaker {
             // Positionnement de la zone de travail
             vs.setViewParam(p, width, height, center, calib.widtha);
             
-            //checking is we can do fullRes
+            //checking if we can do fullRes
             boolean fullRes = false;
-            calcRes = Util.pixRes(1 << ((p.maxOrder - 1) + 9));
-			calc_nbpoints = (int) (calib.widtha * 60. * 60. /calcRes);
-			if (calc_nbpoints <= PIXEL_MAX) {
+            if (res_max < 0) {
+				fullRes = false;
+			} else if (res_max == 0) {
 				fullRes = true;
+			} else if (res_max > 0) {
+				calcRes = Util.pixRes(1 << ((p.maxOrder - 1) + 9));
+				calc_nbpoints = (int) (calib.widtha * 60. * 60. /calcRes);
+				if (calc_nbpoints <= res_max) {
+					fullRes = true;
+				}
 			}
+			
 //             Extraction/rééchantillonnage des pixels de la vue
-            PlanImage pi = aladin.calque.createCropImage(vs, fullRes);
+            PlanImage pi = aladin.calque.createCropImage(vs, null, fullRes);
             
             //2.Optional parameters change start here--
             if (rotation != 0.0d) {
@@ -451,17 +464,26 @@ public class ImageMaker {
 				checkPixelLimit(width, height, p);
 //				System.err.println("w * h = "+width+" "+height);
 //				System.out.println(pos);
-				if (nbpoints > PIXEL_MAX) {
-					Aladin.trace(3, "Generated FITS exceeds " + PIXEL_MAX + "Â² (" + nbpoints + "^2 requested).. ");
-//					throw new Exception("Generated FITS cannot exceed " + PIXEL_MAX + "Â² (" + nbpoints + "^2 requested)");
-			
+				if (pixel_max > 0) {
+					if (nbpoints > pixel_max) {
+						Aladin.trace(3, "Generated FITS exceeds " + pixel_max + "Â² (" + nbpoints + "^2 requested).. ");
+						throw new Exception("Generated FITS cannot exceed " + pixel_max + "Â² (" + nbpoints + "^2 requested)");
+				
+					}
 				}
-				int orderMaxCheck = p.maxOrder - 1;
-				double full_res = Util.pixRes(1 << ((orderMaxCheck + 9)));
-				int calc_nbpoints = (int) (size * 60. * 60. /full_res);
-				if (calc_nbpoints <= PIXEL_MAX) {
+				if (res_max < 0) {
+					fullRes = false;
+				} else if (res_max == 0) {
 					fullRes = true;
+				} else if (res_max > 0) {
+					int orderMaxCheck = p.maxOrder - 1;
+					double full_res = Util.pixRes(1 << ((orderMaxCheck + 9)));
+					int calc_nbpoints = (int) (size * 60. * 60. /full_res);
+					if (calc_nbpoints <= res_max) {
+						fullRes = true;
+					}
 				}
+				
 				
 			} else {
 				throw new Exception("Unable to parse the position input!");
@@ -497,9 +519,9 @@ public class ImageMaker {
 	    
 	//	       Extraction/rééchantillonnage des pixels de la vue
 	    PlanImage pi = aladin.calque.createCropImage(vs, stcObj, fullRes);
-	    /*if (pi.pixels== null) {
-			throw new Exception("Unable to process large request. Please consider retrying with smaller field of view or lower order/resolution");
-		}*/
+	    if (pi.pixels== null) {
+			throw new Exception("Unable to generate request. Please consider retrying later and/or with smaller field of view or lower order/resolution");
+		}
 	    if (rotationAngle != 0.0d) {
 	  	  pi.projd.setProjRot(rotationAngle);
 	    }
@@ -514,7 +536,13 @@ public class ImageMaker {
    
    /************************************************* Pour exemple et debug *****************************************/
 
-   private void checkPixelLimit(int width, int height, PlanBG planBG) throws Exception {
+	public synchronized void makeIMSettings(int pixel_max, int res_max, IMListener imListener, boolean bubbleWrap) {
+		this.pixel_max = pixel_max;
+		this.res_max = res_max;
+		this.aladin.makeIMSettings(imListener, bubbleWrap);
+	}
+   
+   public static void checkPixelLimit(int width, int height, PlanBG planBG) throws Exception {
 	// TODO Auto-generated method stub
 	   int bitpix= planBG.getBitpix()==-64 ? -64 : -32;
 	      long limit = (long) width * (long)height * (long) (Math.abs(bitpix)/8);
@@ -523,7 +551,7 @@ public class ImageMaker {
 		}
    }
 /** Juste pour démo */
-   static public void mai32n(String [] argv) {
+   static public void main(String [] argv) {
       try {
 
          ImageMaker im  = new ImageMaker(3);
