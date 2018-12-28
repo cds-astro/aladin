@@ -3307,7 +3307,7 @@ public class Calque extends JPanel implements Runnable {
          p.setActivated(true);
          if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
          
-         if( Aladin.PROTO) {//TODO:: tintinproto
+         if( Aladin.PROTO) {
             TapManager.getInstance(aladin).updateAddUploadPlans(p);
          }
       } else {

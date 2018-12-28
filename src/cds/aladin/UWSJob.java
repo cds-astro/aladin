@@ -26,6 +26,7 @@ import static cds.aladin.Constants.PATHPHASE;
 import static cds.aladin.Constants.PATHRESULTS;
 import static cds.aladin.Constants.UTF8;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -501,12 +502,15 @@ public class UWSJob implements ActionListener{
 			resultsPanel.add(new JLabel("Load on Aladin: "));
 			displayResults = new JComboBox(this.results.values().toArray());
 			resultsPanel.add(displayResults);
+			resultsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+			jobDetails.add(resultsPanel);
 
 			JButton loadbutton = new JButton("LOAD");
 			loadbutton.setActionCommand(LOADJOBRESULT);
 			loadbutton.addActionListener(this);
-			resultsPanel.add(loadbutton);
-			jobDetails.add(resultsPanel);
+			resultsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+//			resultsPanel.add(loadbutton);
+			jobDetails.add(loadbutton);
 			
 			/*JButton loadDefault = new JButton(UWSFacade.STANDARDRESULTSLOAD);
 			loadDefault.setToolTipText(UWSFacade.STANDARDRESULTSLOADTIP);
@@ -534,6 +538,8 @@ public class UWSJob implements ActionListener{
 		JTextPane summary = new JTextPane();
 		summary.setContentType("text/html");
 		summary.setText(this.getResponsetoDisplay());
+		summary.setAlignmentX(Component.LEFT_ALIGNMENT);
+		summary.setCaretPosition(0);
 		jobDetails.add(summary);
 		
 		if (!jobDetails.isVisible()) {

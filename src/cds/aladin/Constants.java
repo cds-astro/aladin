@@ -236,7 +236,7 @@ public static final String SUBMITACTION = "SUBMIT";
 public static final String RESETACTION = "RESET";
 public static final String CLEARACTION = "CLEAR";
 public static final String EDITUPLOADTABLENAMEACTION = "EDITUPLOADTABLENAMEACTION";
-public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: tintin
+public static final String STANDARD_TAPRESULTFORMAT = "votable";// "application/x-votable+xml";//TODO:: either
 public static final String TABLEGUINAME = "table";
 
 /** Liste des caractère définissant une chaine de carac @author Mallory Marcot*/

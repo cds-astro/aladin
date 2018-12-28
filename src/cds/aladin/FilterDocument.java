@@ -49,7 +49,6 @@ import javax.swing.text.PlainDocument;
  * User still gets to type in their filter without the back-end interfering, unless they change focus(e.g. tab-out) from the <code>JComboBox</code>.</br>
  * 		- At this point a valid input is selected, whether the user has typed it in or not.</br>
  * During search the user can clear the search input with backspace/delete to see the full list of options again.</p>
- * TODO:: tintin the sysouts 
  */
 public class FilterDocument extends PlainDocument{
 	

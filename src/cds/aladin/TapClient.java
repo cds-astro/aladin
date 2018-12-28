@@ -136,14 +136,14 @@ public class TapClient{
 			String[] modesAllowed = null;
 			
 			if (this.nodeName != null) {
-				if (Aladin.PROTO) {//TODO:: tintinproto
+				if (Aladin.PROTO) {
 					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC, TEMPLATES, OBSCORE };
 				} else {
 					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC};
 				}
 				
 			} else {
-				if (Aladin.PROTO) {//TODO:: tintinproto
+				if (Aladin.PROTO) {
 					modesAllowed = new String []{ /*GLU, */GENERIC, TEMPLATES, OBSCORE };
 				} else {
 					modesAllowed = new String []{ /*GLU, */ GENERIC};
@@ -320,7 +320,12 @@ public class TapClient{
 			} else {//preference is for what is already loaded
 				if (this.serverTapNode != null && this.serverTapNode.isLoaded()) {
 					dynamicTapForm = this.serverTapNode;
-					model.setSelectedItem(NODE);
+					if (nodeName != null) {
+						model.setSelectedItem(nodeName);
+					} else {
+						model.setSelectedItem(NODE);
+					}
+					
 				} else if (this.serverTap != null && this.serverTap.isLoaded()) {
 					dynamicTapForm = this.serverTap;
 					model.setSelectedItem(GENERIC);
@@ -389,7 +394,8 @@ public class TapClient{
 				} else {
 					this.infoPanel.cancel(true);
 				}
-			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer().equals(newServer)) {
+			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer() != null
+					&& aladin.frameInfoServer.getServer().equals(newServer)) {
 				//this else part is for a specific case where generic status report is displayed before table meta can be obtained
 				if (newInfoPanel == null) {
 					frameInfoServer = new FrameInfoServer(aladin);
@@ -533,7 +539,7 @@ public class TapClient{
 		}
 	}
 	
-	//TODO::: tintin refactor may be move this to obstap server constructor
+	//TODO::: refactor may be move this to obstap server constructor
 	public boolean parseForObscore(String tableName, TapTable tapTable) {
 		String priRaColumnName = tapTable.getRaColumnName();
 		String priDecColumnName = tapTable.getDecColumnName();
@@ -799,7 +805,7 @@ public class TapClient{
 	
 	public boolean isUploadAllowed() {
 		boolean result = false;
-		if (this.capabilities != null && Aladin.PROTO) {//tintinproto
+		if (this.capabilities != null && Aladin.PROTO) {
 			VOSICapabilitiesReader meta;
 			try {
 				meta = this.capabilities.get();

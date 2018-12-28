@@ -312,7 +312,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			c.gridx++;
 			tablesPanel.add(button,c);
 		
-			if (Aladin.PROTO) {//TODO:: tintinproto
+			if (Aladin.PROTO) {
 				button = new JButton("Join");
 				c.weightx = 0.05;
 				c.gridx++;

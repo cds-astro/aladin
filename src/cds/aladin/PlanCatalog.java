@@ -215,7 +215,7 @@ public class PlanCatalog extends Plan {
       if( getCounts()<=0 || isSED() ) return true;
       
       aladin.view.deSelect(this);
-      if (Aladin.PROTO) {//TODO:: tintinproto
+      if (Aladin.PROTO) {
     	  TapManager.getInstance(aladin).updateDeleteUploadPlans(this);
       }
       super.Free();
@@ -327,7 +327,7 @@ public class PlanCatalog extends Plan {
          setFilter(filterIndex);
          
          //to add loaded plan into upload options
-         if (Aladin.PROTO) {//TODO:: tintinproto
+         if (Aladin.PROTO) {
         	 TapManager.getInstance(aladin).updateAddUploadPlans(this);
 		}
       }

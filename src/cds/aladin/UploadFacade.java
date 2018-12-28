@@ -140,7 +140,6 @@ public class UploadFacade extends JFrame {
 					
 					final File tmpFile;
 					if ((tmpFile = aladin.createTempFile(SAMPUtil.sanitizeFilename(referencedTable), ".xml")) == null) {
-						// TODO:: tintin when doing join need to send more files
 						Aladin.trace(3, "ERROR in aladin.createTempFile for "+uploadFileName);
 						throw new Exception("Unable to parse " + uploadFileName + " data for upload!");
 					}

@@ -444,7 +444,7 @@ public class TapManager {
 			if (tapClient.tapBaseUrl == null) {
 				throw new Exception("Tap server url not found");
 			}
-		}//TODO:: tintin remove all comments and methods in commented
+		}
 		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
 		
 		// just another control on the nodes feature
@@ -740,7 +740,7 @@ public class TapManager {
 		ExamplesReader daliExamplesReader = new ExamplesReader();
 		MyInputStream is = null;
 		Map examples = null;
-		try {//tintin
+		try {
 			URL url = getUrl(tapServiceUrl, null, GETTAPEXAMPLES);//new URL(tapServiceUrl+GETTAPEXAMPLES);
 //			URL examplesUrl = new URL("http://gaia.ari.uni-heidelberg.de/tap/examples");
 //			URL examplesUrl = new URL("http://130.79.129.54:8080/simbadExamples.xhtml");
@@ -2273,7 +2273,7 @@ public class TapManager {
 							URL syncUrl = getUrl(url, queryParam, PATHSYNC);
 //									new URL(String.format(SYNCGETRESULT, url, queryParam));
 							currentT.setName("TsubmitSync: " + syncUrl);
-							//TODO:: tintin check for the query status before loading: and remove return- covert to execute
+							//TODO:: check for the query status before loading: and remove return- covert to execute
 							/*
 							 * one INFO element with name=\94QUERY_STATUS\94 and value=\94OK\94 or
 							value=\94ERROR\94 must be included before the TABLE. If the TABLE does not
