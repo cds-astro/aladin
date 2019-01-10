@@ -220,7 +220,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
    static protected final String PROTO_VERSION    = "    *** PROTOTYPE VERSION (based on "+VERSION+") ***";
-   static protected  String currentVersion = null;	// Version courante dispo
+   static protected  String currentVersion = null;  // Version courante dispo
 
    /** MRdecomp active */
    static protected final boolean MRDECOMP= false;
@@ -554,7 +554,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
    Hdr pix;                      // Gère le logo pour le passage en full dynamique
-   ViewControl viewControl;	     // Gere le logo de controle des views
+   ViewControl viewControl;      // Gere le logo de controle des views
    MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
    Mesure mesure;                // Gere la "Frame of measurements"
 //   MySplitPaneMesure splitMesureHeight;     // Gère la séparation mesure/Vue
@@ -600,12 +600,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
    public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
    public Console console;       // Gere la fenetre de la console
-   public Command command=null;	 // Gere les commandes asynchrones
+   public Command command=null;  // Gere les commandes asynchrones
    public TargetHistory targetHistory; // Gère l'historique des targets successives
    Synchro synchroServer;        // Gère les synchronisations des servers
    Synchro synchroPlan;              // Gère les synchronisations des Plans
    FrameNewCalib frameNewCalib=null; // Gere la fenetre de recalibration astrometrique
-   public Configuration configuration;	      // Configuration utilisateur
+   public Configuration configuration;        // Configuration utilisateur
    public KernelList kernelList;    // Gère la liste des noyaux de convolution
    static protected Chaine chaine;     // Gère les chaines de textes (support multilangage
    AppMessagingInterface appMessagingMgr;    // Gère la connexion/l'envoi de messages PLASTIC/SAMP
@@ -616,8 +616,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static Cache cache=null; // Gère le cache
    protected Plugins plugins;    // Accès aux plugins
    CardLayout cardView;          // Gere la permutation entre le "Help" et la "View"
-   CreatObj co;		          // pour gerer la creation parallele des widgets
-   public Save save=null;		          // pour gerer les sauvegardes
+   CreatObj co;               // pour gerer la creation parallele des widgets
+   public Save save=null;                 // pour gerer les sauvegardes
    ExtApp extApp = null;         // Application cooperative a Aladin
    String javaVersion;
    static boolean macPlateform = false; // Aladin est-il exécuté sur un Mac ?
@@ -639,7 +639,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Les memorisations en vue de mises a jour
    JPanel infoPanel;             // Panel de la ligne tout en bas
    JPanel bigView;               // Panel contenant a la fois le view et le help
-   JPanel mesurePanel;		      // Panel contenant les mesures
+   JPanel mesurePanel;            // Panel contenant les mesures
    Vector vButton;               // Vecteur des boutons du menu a (des/)activer
    Container myParent=null;      // Pour pouvoir re-fenestrer
    Rectangle origPos=null;       // Dimension d'origine dans le navigateur
@@ -669,7 +669,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
    JButton ExportYourWork,searchData,avant,apres;
 
-   static boolean STANDALONE = false;	// True si on fonctionne en mode standalone
+   static boolean STANDALONE = false;   // True si on fonctionne en mode standalone
    static boolean SIGNEDAPPLET = false;// True si on fonctionne en mode applet signé
 
    // Juste pour les essais NED
@@ -683,7 +683,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public int levelTrace=0;
 
    // Variables associees au mode de fonctionnement
-   boolean flagLoad=false;	      // true si on est en mode de chargement
+   boolean flagLoad=false;        // true si on est en mode de chargement
    public MyFrame f=null;        // Le "Frame" en mode "Standalone"
    protected boolean msgOn=true;           // True si le message d'accueil est actif
    static boolean flagLaunch=false; // true si on a demarre aladin par launch
@@ -692,15 +692,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
    boolean inScriptHelp=false;  // True si le mode "ScriptHelp" est actif
    static int iv=0;              // Indice de la performance JAVA
    //    boolean flagInsets=false;     // True si on a deja pris en compte le Insets du peer
-   boolean print=false;	  // true si on est entrain d'imprimer
-   protected boolean gc=true;	// false si on a inhibé l'appel à Aladin.gc()
+   boolean print=false;   // true si on est entrain d'imprimer
+   protected boolean gc=true;   // false si on a inhibé l'appel à Aladin.gc()
    static Applet extApplet=null; // Decrit l'applet qui aurait appele launch()
    protected boolean firstLoad=true; // true si on n'a pas encore affiché le ServerDialog
    protected boolean flagDetach=true; // true si on tourne aladin dans sa propre frame
 
 
    // Les textes associes aux differentes possibilites du menu
-   static final int GETHEIGHT  = 15;		// Cochonnerie de getHeight()
+   static final int GETHEIGHT  = 15;        // Cochonnerie de getHeight()
 
    // Les menus;
    String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,SEARCHDIR,
@@ -776,7 +776,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       saveConfig();
       removeCache();
       // unregister from PLASTIC/SAMP if needed and destroy singleton
-      if( Aladin.PLASTIC_SUPPORT && messagingMgrCreated )	{
+      if( Aladin.PLASTIC_SUPPORT && messagingMgrCreated )   {
          getMessagingMgr().unregister(true);
       }
 
@@ -1456,7 +1456,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //         menu[0] = menu1;
 //         
 //         menu1 = new String[][] {
-//        	 {MTOOLS},
+//           {MTOOLS},
 //             {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
 //             {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
 //             {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
@@ -3249,7 +3249,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Class x = Class.forName("cds.aladin.Printer");
          Class a = this.getClass();
          Constructor c = x.getDeclaredConstructor(new Class [] { a });
-	 c.newInstance(new Object[] { this });
+     c.newInstance(new Object[] { this });
       } catch( Exception e ) { System.out.println(e); }
    }
     */
@@ -3275,7 +3275,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          return;
       }
 
-      //	   if( ji== hpxCtrl ) { view.newView(); view.repaintAll(); }
+      //       if( ji== hpxCtrl ) { view.newView(); view.repaintAll(); }
       //
       //       if( Aladin.BETA && hpxCtrl!=null ) {
       //          for( int  i=0; i<healpixCtrl.length; i++ ) {
@@ -3569,17 +3569,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       // Peut être un plugin ?
       } else if (isMenu(s, ACCESSTAP)) {
-		try {
-			dialog.show("TAP");
-		} catch (Exception e) {
-			error(this, Aladin.chaine.getString("GENERICERROR"));
-		}
+        try {
+            dialog.show("TAP");
+        } catch (Exception e) {
+            error(this, Aladin.chaine.getString("GENERICERROR"));
+        }
       } else if (isMenu(s, JOBCONTROLLER)) {
-		try {
-			UWSFacade.getInstance(this).showAsyncPanel();
-		} catch (Exception e) {
-			error(this, Aladin.chaine.getString("GENERICERROR"));
-		}
+        try {
+            UWSFacade.getInstance(this).showAsyncPanel();
+        } catch (Exception e) {
+            error(this, Aladin.chaine.getString("GENERICERROR"));
+        }
       } else if( plugins!=null ) {
          AladinPlugin ap = plugins.find(s);
          if( ap!=null ) {
@@ -4394,128 +4394,128 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return m;
    }
    
-	protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
-		return createMocRegion(stcObjects.get(0), order);
-	}
-	
-	protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
-	   HealpixMoc moc = null;
-	   if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
-	      moc = createMocRegionPol((STCPolygon)stcobj,order);
-	   } else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
-	      moc = createMocRegionCircle((STCCircle)stcobj, order);
-	   }
-	   if( moc!=null ) moc.toRangeSet();
-	   return moc;
-	}
-	
-	protected HealpixMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {
-		return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order);
-	}
-	
-	public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
-	      double height) throws Exception {
-	   HealpixMoc moc=null;
-	   double maxSize=0;
-	   Coord c1=null;
-	   boolean first=true;
-	   int order=0;
-	   double firstRa = 0.0d,firstDec = 0.0d;
-	   rectVertices = Util.getRectangleVertices(ra, dec, width, height); 
+    protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
+        return createMocRegion(stcObjects.get(0), order);
+    }
+    
+    protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
+       HealpixMoc moc = null;
+       if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
+          moc = createMocRegionPol((STCPolygon)stcobj,order);
+       } else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
+          moc = createMocRegionCircle((STCCircle)stcobj, order);
+       }
+       if( moc!=null ) moc.toRangeSet();
+       return moc;
+    }
+    
+    protected HealpixMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {
+        return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order);
+    }
+    
+    public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
+          double height) throws Exception {
+       HealpixMoc moc=null;
+       double maxSize=0;
+       Coord c1=null;
+       boolean first=true;
+       int order=0;
+       double firstRa = 0.0d,firstDec = 0.0d;
+       rectVertices = Util.getRectangleVertices(ra, dec, width, height); 
 
-	   for( int sens=0; sens<2; sens++ ) {
-	      ArrayList<Vec3> cooList = new ArrayList<>();
-	      if( sens==1 ) trace(3,"createMocRegion("+rectVertices.toString()+") trying reverse polygon order...");
+       for( int sens=0; sens<2; sens++ ) {
+          ArrayList<Vec3> cooList = new ArrayList<>();
+          if( sens==1 ) trace(3,"createMocRegion("+rectVertices.toString()+") trying reverse polygon order...");
 
-	      try {
-	         for (Coord rectCoord : rectVertices) {
-	            if (first) {
-	               firstRa = rectCoord.al;
-	               firstDec = rectCoord.del;
-	               c1 = rectCoord;
-	               first = false;
-	            } else {
-	               double size = Coord.getDist(c1, rectCoord);
-	               if (size > maxSize)
-	                  maxSize = size;
-	            }
+          try {
+             for (Coord rectCoord : rectVertices) {
+                if (first) {
+                   firstRa = rectCoord.al;
+                   firstDec = rectCoord.del;
+                   c1 = rectCoord;
+                   first = false;
+                } else {
+                   double size = Coord.getDist(c1, rectCoord);
+                   if (size > maxSize)
+                      maxSize = size;
+                }
 
-	            addVec3(cooList, rectCoord.al, rectCoord.del);
-	         }
+                addVec3(cooList, rectCoord.al, rectCoord.del);
+             }
 
-	         addVec3(cooList, firstRa, firstDec);
+             addVec3(cooList, firstRa, firstDec);
 
-	         if( sens==0 ) {
-	            // L'ordre est déterminé automatiquement par la largeur du polygone
-	            order=getAppropriateOrder(maxSize);
-	            trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
-	            if( order<10 ) order=10;
-	            else if( order>29 ) order=29;
+             if( sens==0 ) {
+                // L'ordre est déterminé automatiquement par la largeur du polygone
+                order=getAppropriateOrder(maxSize);
+                trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+                if( order<10 ) order=10;
+                else if( order>29 ) order=29;
 
-	         }
+             }
 
-	         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-	         moc = new HealpixMoc();
-	         moc.rangeSet = new Range( m.getRangeSet() );
-	         moc.toHealpixMoc();
+             Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+             moc = new HealpixMoc();
+             moc.rangeSet = new Range( m.getRangeSet() );
+             moc.toHealpixMoc();
 
-	         // moins de la moitié du ciel => ca doit être bon
-	         if( moc.getCoverage()<0.5 ) break;
+             // moins de la moitié du ciel => ca doit être bon
+             if( moc.getCoverage()<0.5 ) break;
 
-	         Collections.reverse(rectVertices);
-	      } catch( Throwable e ) {
-	         if( sens==1 && e instanceof Exception ) throw (Exception)e;
-	      }
+             Collections.reverse(rectVertices);
+          } catch( Throwable e ) {
+             if( sens==1 && e instanceof Exception ) throw (Exception)e;
+          }
 
 
-	   }
+       }
 
-	   return moc;
-	}
+       return moc;
+    }
 
-	
-	public double getMaxSize(Coord c1,Coord c2, double maxSize) {
-		double size = Coord.getDist(c1,c2);
-		if (size > maxSize)
-			maxSize = size;
-		return maxSize;
-	}
-	protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon, int order) throws Exception {
-	      double ra,de;
-	      Ligne oo=null;
+    
+    public double getMaxSize(Coord c1,Coord c2, double maxSize) {
+        double size = Coord.getDist(c1,c2);
+        if (size > maxSize)
+            maxSize = size;
+        return maxSize;
+    }
+    protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon, int order) throws Exception {
+          double ra,de;
+          Ligne oo=null;
 
-	      STCFrame frame = stcPolygon.getFrame();
-	      // currently, we only support FK5, ICRS and J2000 frames
-	      if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)
-	            && frame!=STCFrame.UNKNOWNFRAME ) {
-	         return null;
-	      }
+          STCFrame frame = stcPolygon.getFrame();
+          // currently, we only support FK5, ICRS and J2000 frames
+          if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)
+                && frame!=STCFrame.UNKNOWNFRAME ) {
+             return null;
+          }
 
-	      Ligne o,first=null;
+          Ligne o,first=null;
           ArrayList<Double> a = stcPolygon.getxCorners();
           ArrayList<Double> b = stcPolygon.getyCorners();
-	      for (int i=0; i < a.size(); i++) {
-	         ra = a.get(i);
-	         de = b.get(i);
-	         o = new Ligne(ra,de);
-	         o.finligne = oo;
-	         if( oo!=null ) oo.debligne = o;
-	         else { first=o; first.bout=3; }
-	         oo = o;
-	      }
-	      o = new Ligne( first.raj, first.dej );
-	      o.bout = 3;
-	      o.finligne=oo;
-	      oo.debligne=o;
-	      
+          for (int i=0; i < a.size(); i++) {
+             ra = a.get(i);
+             de = b.get(i);
+             o = new Ligne(ra,de);
+             o.finligne = oo;
+             if( oo!=null ) oo.debligne = o;
+             else { first=o; first.bout=3; }
+             oo = o;
+          }
+          o = new Ligne( first.raj, first.dej );
+          o.bout = 3;
+          o.finligne=oo;
+          oo.debligne=o;
+          
           return createMocRegionPol(o, order, false);
-	}
-	
-	public void addVec3(ArrayList<Vec3> cooList, double ra, double dec) {
-		double theta = Math.PI / 2 - Math.toRadians(dec);
-		double phi = Math.toRadians(ra);
-		cooList.add(new Vec3(new Pointing(theta, phi)));
-	}
+    }
+    
+    public void addVec3(ArrayList<Vec3> cooList, double ra, double dec) {
+        double theta = Math.PI / 2 - Math.toRadians(dec);
+        double phi = Math.toRadians(ra);
+        cooList.add(new Vec3(new Pointing(theta, phi)));
+    }
    
    /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets */
    protected HealpixMoc createMocRegionPol(Ligne o, int order, boolean isCounterClock) throws Exception {
@@ -4766,14 +4766,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       
       if (this.executor != null && !this.executor.isShutdown()) {
-    	  this.executor.shutdownNow();//Shuts down all lingering tap threads
-    	  Aladin.trace(3,"Shutdown of threads, tap service...");
+          this.executor.shutdownNow();//Shuts down all lingering tap threads
+          Aladin.trace(3,"Shutdown of threads, tap service...");
       }
 
       if( aladinSession>0 || flagLaunch ) { // Si Aladin demarre par launch() cacher la fenetre
          //          System.out.println("Aladin.action: flagLaunch true => dispose");
          trace(3,"Slave session => not true exit() ...");
-         reset();		// Nécessaire pour ne pas avoir de ressurections intempestives
+         reset();       // Nécessaire pour ne pas avoir de ressurections intempestives
          command.stop();
          f.setVisible(false);        // Pour une sombre histoire de bug MAC
          
@@ -4804,17 +4804,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /**
-	 * Gentle shut down of all threads
-	 * plus async job clean up
-	 */
-	public void cleanUpThreadPool() {
-		if (this.executor != null) {
-			this.executor.shutdown();
-			Aladin.trace(3, "soft shutdown of tap/uws thread pool....");
-			UWSFacade.getInstance(this).deleteAllSetToDeleteJobs();
-			Aladin.trace(3, "deleting all(set to delete) uws jobs....");
-		}
-	}
+     * Gentle shut down of all threads
+     * plus async job clean up
+     */
+    public void cleanUpThreadPool() {
+        if (this.executor != null) {
+            this.executor.shutdown();
+            Aladin.trace(3, "soft shutdown of tap/uws thread pool....");
+            UWSFacade.getInstance(this).deleteAllSetToDeleteJobs();
+            Aladin.trace(3, "deleting all(set to delete) uws jobs....");
+        }
+    }
    
 
    /** retourne l'instance de FrameInfo actuellement utilisée
@@ -5234,12 +5234,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    static final int DEFAULTCURSOR = 0;
-   static final int WAITCURSOR 	= 1;
-   static final int HANDCURSOR 	= 2;
+   static final int WAITCURSOR  = 1;
+   static final int HANDCURSOR  = 2;
    static final int CROSSHAIRCURSOR=3;
-   static final int MOVECURSOR 	= 4;
-   static final int RESIZECURSOR 	= 5;
-   static final int TEXTCURSOR 	= 6;
+   static final int MOVECURSOR  = 4;
+   static final int RESIZECURSOR    = 5;
+   static final int TEXTCURSOR  = 6;
    static final int TURNCURSOR    = 7;
    static final int PLANCURSOR    = 8;
    static final int STRECHCURSOR  = 9;
@@ -5879,7 +5879,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected static void setAladinHome() {
       String PS = System.getProperty("path.separator");
 
-      HOME="."+Util.FS;		// Par defaut, le repertoire courant
+      HOME="."+Util.FS;     // Par defaut, le repertoire courant
       String path = System.getProperty("java.class.path");
       if( path==null ) return;
       StringTokenizer st = new StringTokenizer(path,PS);
@@ -6081,7 +6081,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    static private void setMacWinLinuxProperties() {
       // propriété spécifique à Mac OS permettant de faire apparaitre les éléments de menu tout en haut (selon le L'n'F Mac)
-      // (cf.	http://devworld.apple.com/documentation/Java/Conceptual/Java14Development/04-JavaUIToolkits/JavaUIToolkits.html#//apple_ref/doc/uid/TP40001901-209837)
+      // (cf.   http://devworld.apple.com/documentation/Java/Conceptual/Java14Development/04-JavaUIToolkits/JavaUIToolkits.html#//apple_ref/doc/uid/TP40001901-209837)
       macPlateform = System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
       winPlateform = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
       // we set the property only if it has not been set yet (by -Dprop=value at startup for instance)
@@ -6117,8 +6117,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * See Aladin
     */
    public static void main(String[] args) {
-      String chart=null;		// en cas de demande de carte de champ
-      int lastArg;		// Prochain indice des arguments a loader
+      String chart=null;        // en cas de demande de carte de champ
+      int lastArg;      // Prochain indice des arguments a loader
       String SCREEN=null;
       String TTL=null;
       if( extApplet==null ) STANDALONE = true;
@@ -6175,7 +6175,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-hub") || args[i].equals("-samp") )     { NOHUB=false; lastArg=i+1; }
          else if( args[i].equals("-noplugin") )    { NOPLUGIN=true; lastArg=i+1; }
          else if( args[i].equals("-plugin") )      { NOPLUGIN=false; lastArg=i+1; }
-         else if( args[i].equals("-open") ) lastArg=i+1;	//Simplement ignoré pour supporter protocol Windows
+         else if( args[i].equals("-open") ) lastArg=i+1;    //Simplement ignoré pour supporter protocol Windows
          else if( args[i].startsWith("-screen=") ) { SCREEN=args[i].substring(8); lastArg=i+1; }
          else if( args[i].startsWith("-preview") ) { SCREEN="preview"; lastArg=i+1; }
          else if( args[i].startsWith("-script=") ) { scriptParam=args[i].substring(8); lastArg=i+1; }
@@ -6323,7 +6323,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //      return null;
    }
 
-   protected Vector VOObsPos = null;	// Liste des VOObserver de la position courante
+   protected Vector VOObsPos = null;    // Liste des VOObserver de la position courante
    protected Vector VOObsPix = null;  // Liste des VOObserver de la valeur courante du pixel
    protected Vector VOObsMes = null;  // Liste des VOObserver sur les mesures
    protected Vector VOObsEvent= null;  // Liste des VOObserver sur les événements de la pile
@@ -6958,7 +6958,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private void writeVOTableData(OutputStream s,Source o,boolean writeOID,boolean addCoo, boolean addXY)
          throws IOException {
       StringTokenizer st = new StringTokenizer(o.info,"\t");
-      st.nextElement();		// On saute le triangle
+      st.nextElement();     // On saute le triangle
 
       // Ajout colonnes X et Y
       PointD pAddXY=null;
@@ -7069,7 +7069,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       if( leg==null ) {
          writeBytes(s1, "   </RESOURCE>\n");
-         return;	// Il n'y avait aucun objet dans cette ressource
+         return;    // Il n'y avait aucun objet dans cette ressource
       }
 
       // Fin de la derniere table et fin de la ressource
@@ -7674,7 +7674,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final public boolean isFootprintPlane(Plan p) {
       return p.type==Plan.FOV || p.type==Plan.APERTURE;
       //      if( p instanceof PlanFov || p instanceof PlanField ) return true;
-      //	   return false;
+      //       return false;
    }
    
    private boolean flagGoto=false;
@@ -7896,8 +7896,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return calque.getStackLabels();
    }
 
-   //	faire log IDL + log macro
-   //	faire FAQ IDL + FAQ macro
+   //   faire log IDL + log macro
+   //   faire FAQ IDL + FAQ macro
 
    /************** Méthodes liées à l'interaction IDL/Aladin ****************/
 
@@ -8013,7 +8013,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       Source s;
-      //		String[] values;
+      //        String[] values;
       String[][] data = new String[plan.getCounts()][colIdx.length];
       Iterator<Obj> it = plan.iterator();
       // boucle sur les objets du plan
@@ -8021,11 +8021,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;
          s = (Source)o;
-         //			values = Util.split(s.info, "\t");
+         //         values = Util.split(s.info, "\t");
 
          // boucle sur les colonnes à récupèrer
          for( int j=0; j<colIdx.length; j++ ) {
-            //				System.out.println(s.getValue(colIdx[j]));
+            //              System.out.println(s.getValue(colIdx[j]));
             data[i][j] = s.getValue(colIdx[j]);
          }
       }
@@ -8081,7 +8081,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          f = new Field(vecNames[i]);
          if( i==0 ) f.coo = Field.RA;
          else if( i==1 ) f.coo = Field.DE;
-         //			if( i==0 || i==1 ) f.coo = true;
+         //         if( i==0 || i==1 ) f.coo = true;
          vField.addElement(f);
       }
       Legende leg = new Legende(vField);
@@ -8126,8 +8126,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
 
-      //		int indice = calque.newPlanCatalog(mis, planeName);
-      //		PlanCatalog plan = (PlanCatalog)calque.plan[indice];
+      //        int indice = calque.newPlanCatalog(mis, planeName);
+      //        PlanCatalog plan = (PlanCatalog)calque.plan[indice];
    }
    /******************* fin des méthodes liées à IDL ************************/
 
@@ -8228,34 +8228,34 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
    }
 
-	public void initThreadPool() {
-		// TODO Auto-generated method stub
-		if (aladin.executor == null) {
-			aladin.executor = Executors.newFixedThreadPool(10);
-		}
-	}
-	
+    public void initThreadPool() {
+        // TODO Auto-generated method stub
+        if (aladin.executor == null) {
+            aladin.executor = Executors.newFixedThreadPool(10);
+        }
+    }
+    
 
    IMListener imListener;
    boolean bubbleWrapIMProcessing = false;
    
-	public synchronized void makeIMSettings(IMListener imListener, boolean bubbleWrap) {
-		this.imListener = imListener;
-		bubbleWrapIMProcessing = bubbleWrap;
-	}
+    public synchronized void makeIMSettings(IMListener imListener, boolean bubbleWrap) {
+        this.imListener = imListener;
+        bubbleWrapIMProcessing = bubbleWrap;
+    }
    
    public synchronized void notifyIMStatusChange(short status) {
-	   if (this.imListener != null) {
-		   this.imListener.progressStatusChange(status);
-		   this.imListener = null;
-		   bubbleWrapIMProcessing = false;
-	   }
+       if (this.imListener != null) {
+           this.imListener.progressStatusChange(status);
+           this.imListener = null;
+           bubbleWrapIMProcessing = false;
+       }
    }
    
    public synchronized void askIMResourceCheck(long nbpoints) throws Exception {
-	   if (this.imListener != null) {
-		   this.imListener.checkProceedAction(nbpoints);
-	   }
+       if (this.imListener != null) {
+           this.imListener.checkProceedAction(nbpoints);
+       }
    }
 
 }

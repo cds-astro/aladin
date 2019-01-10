@@ -386,8 +386,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false,aladin);
       prop = new Vector(10);
-      filterMoc = new HashMap<String, HealpixMoc>();
-      filterExpr = new LinkedHashMap<String,String>();
+      filterMoc = new HashMap<>();
+      filterExpr = new LinkedHashMap<>();
       setDirFilter("Color surveys", "dataproduct_subtype=color && moc_sky_fraction>0.2",null);
       setDirFilter("Large catalogs", "nb_rows>1000000",null);
       setDirFilter("Log missions", "ID=CDS/B*",null);
@@ -763,7 +763,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected boolean showHelpIfOk(String key) { 
 //      return showHelpIfOk(null,key,500); }
 //   protected boolean showHelpIfOk(final Component c,final String key, int delay) {
-      if( stopHelp==null ) stopHelp = new Vector<String>();
+      if( stopHelp==null ) stopHelp = new Vector<>();
       if( stopHelp.contains(key) ) return false;
       
       aladin.calque.select.setMessageTip(key,aladin.chaine.getString(key));
@@ -790,7 +790,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    
    /** Acquittement d'un message d'aide ponctuelle afin qu'elle n'apparaisse plus une seconde fois */
    protected void showHelpDone(String key) {
-      if( stopHelp==null ) stopHelp = new Vector<String>();
+      if( stopHelp==null ) stopHelp = new Vector<>();
       stopHelp.add(key);
       
    }
@@ -798,7 +798,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    // Initialisation de la liste des mots clés dont les HELPs ne doivent plus être affichés
    private void initStopHelp(String s) {
       if( s==null ) return;
-      stopHelp = new Vector<String>();
+      stopHelp = new Vector<>();
       StringTokenizer st = new StringTokenizer(s);
       while( st.hasMoreTokens() ) stopHelp.add(st.nextToken());
    }
@@ -2716,7 +2716,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    /** Mémorise un nouveau path de fichier récemment ouvert */
    protected void setLastFile(String path,boolean checkDoublon) {
-      if( lastFile==null ) lastFile = new LinkedBlockingDeque<String>(MAXLASTFILE);
+      if( lastFile==null ) lastFile = new LinkedBlockingDeque<>(MAXLASTFILE);
       if( checkDoublon ) {
          path=path.replace('\\','/');
          File f1 = new File(path);
@@ -2739,7 +2739,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Memorise les derniers tests GLU passer dans les sessions précédentes
     * on les traitera par la suite dans la classe Glu lorsqu'elle sera créée */
    private void memoLastGlu(String gluSerialized) {
-      if( memoGlu==null ) memoGlu = new ArrayList<String>();
+      if( memoGlu==null ) memoGlu = new ArrayList<>();
       memoGlu.add(gluSerialized);
    }
    
