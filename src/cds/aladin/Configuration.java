@@ -189,6 +189,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String INFOCL     = "InfoColorLabel";
    protected static String INFOF      = "InfoFont";
    protected static String INFOB      = "InfoBorder";
+   protected static String TAPSCHEMADISPLAY = "TapSchemaDisplay";
+   
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
    
@@ -205,7 +207,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    CMB,CMH,CMV,CMM,CMC,CMF,/*BKGB,BKGH,*/WEBB,WEBH,RELOAD,
    REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
-   IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
+   IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
    FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,RESTART,
    GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
@@ -279,7 +281,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    static private Langue lang[];                  // La liste des langues installées
    private Vector remoteLang = null;              // Lal iste des langues connues mais non installées
    private int previousTheme=0;                   // Indice du thème au démarrage
-
+   private JCheckBox hideTapSchema = null;			//Hide tapschema tables on tap clients or not.
 
    protected void createChaine() {
       TITLE = aladin.chaine.getString("UPTITLE");
@@ -320,6 +322,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       CACHES = aladin.chaine.getString("UPCACHE");
       CLEARCACHE = aladin.chaine.getString("NPRESET");
       CACHEH = aladin.chaine.getString("UPCACHEH");
+      UPHIDETAPSCHEMA = aladin.chaine.getString("UPHIDETAPSCHEMA");
+      UPHIDETAPSCHEMAH = aladin.chaine.getString("UPHIDETAPSCHEMAH");
       FRAMEALLSKYB = aladin.chaine.getString("UPFRAMEALLSKYB");
       FRAMEH = aladin.chaine.getString("UPFRAMEH");
       PROJALLSKYB = aladin.chaine.getString("UPPROJALLSKYB");
@@ -366,7 +370,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       INFOCOLOR=aladin.chaine.getString("UPINFOCOLOR");
       INFOLABELCOLOR=aladin.chaine.getString("UPINFOLABELCOLOR");
       INFOFONTBORDER=aladin.chaine.getString("UPINFOFONTBORDER");
-
+      
       //      TAGCENTER = aladin.chaine.getString("UPTAGCENTER");
       //      TAGCENTERH = aladin.chaine.getString("UPTAGCENTERH");
 
@@ -1066,7 +1070,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne true si le mode Look & Feel est java (et non operating system) */
    public boolean isLookAndFeelJava() {
       String s = get(LOOKANDFEEL);
-      if( s==null && Aladin.macPlateform ) return false;
+//      if( s==null && Aladin.macPlateform ) return false;
       if( s==null || s.equals(JAVA) ) return true;
       return false;
    }
@@ -1664,6 +1668,18 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          panel.add( b );
          PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
 //      }
+         
+         //tap: display of schema tables
+         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
+         hideTapSchema = new JCheckBox();
+         hideTapSchema.setSelected(hideTapSchema());
+         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
+
+         //tap: display of schema tables
+         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
+         hideTapSchema = new JCheckBox();
+         hideTapSchema.setSelected(hideTapSchema());
+         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
 
       return p;
    }
@@ -2509,6 +2525,20 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             PlanBG.setMaxCacheSize(maxCacheSize*1024);
          } catch( Exception e ) { }
       }
+      
+      if( hideTapSchema != null ) {
+    	  if (hideTapSchema.isSelected() != TapManager.getInstance(aladin).hideTapSchema) {
+    		  set(TAPSCHEMADISPLAY, String.valueOf(hideTapSchema.isSelected()));
+    		  Aladin.info(this,RESTART);
+    	  }
+      }
+
+      if( hideTapSchema != null ) {
+    	  if (hideTapSchema.isSelected() != TapManager.getInstance(aladin).hideTapSchema) {
+    		  set(TAPSCHEMADISPLAY, String.valueOf(hideTapSchema.isSelected()));
+    		  Aladin.info(this,RESTART);
+    	  }
+      }
 
       // Sauvegarde immédiate
       save();
@@ -2764,6 +2794,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             || prop.equalsIgnoreCase("projection")
             || prop.equalsIgnoreCase("Proj") )    setProjAllsky(value);
       else throw new Exception("Unknown conf. propertie ["+prop+"]");
+   }
+   
+   /** TAP hide schema tables */
+   protected boolean hideTapSchema() {
+      String s = get(TAPSCHEMADISPLAY);
+      return s==null || !s.equals("false");
    }
    
 //   private static final String DEFAULT_FILENAME = "-";

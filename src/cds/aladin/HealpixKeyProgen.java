@@ -238,11 +238,16 @@ public class HealpixKeyProgen extends HealpixKeyCat {
    
    // Procédure interne : mode=0 pour récupérer les clés, mode=1 pour les valeurs
    private ArrayList<String> getJson(String s,int mode) {
-      ArrayList<String> res = new ArrayList<String>(5);
-      int start=s.indexOf("\"");
+      ArrayList<String> res = new ArrayList<>(5);
+      char quote='"';
+      int start=s.indexOf(quote);
+      if( start==-1 ) {
+         quote='\'';
+         start=s.indexOf(quote);
+      }
       int end=0;
-      for( int n=0; start>=0; n++, start = s.indexOf("\"",end+1) ) {
-         end = s.indexOf("\"",start+1);
+      for( int n=0; start>=0; n++, start = s.indexOf(quote,end+1) ) {
+         end = s.indexOf(quote,start+1);
          if( end==-1 ) break;
          if( (n%2) != mode ) continue;
          String k = s.substring(start+1,end);
@@ -255,7 +260,13 @@ public class HealpixKeyProgen extends HealpixKeyCat {
    // Méthode pour récupérer le centre de chaque observation à partir du STC d'une ligne JSON progen
    private double [] getJsonCenter(String s) throws Exception {
       int i = s.indexOf(STC);
-      int j = s.indexOf("\"",i);
+      char quote='"';
+      int j = s.indexOf(quote,i);
+      if( j==-1 ) {
+         quote='\'';
+         j=s.indexOf(quote,i);
+      }
+      
       String listCoo = s.substring(i+STC.length(),j);
       StringTokenizer st = new StringTokenizer(listCoo);
       double coo [] = new double[2];

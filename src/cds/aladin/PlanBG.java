@@ -30,8 +30,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Paint;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
@@ -41,6 +44,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -52,11 +56,14 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import cds.aladin.stc.STCCircle;
 import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCPolygon;
 import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
@@ -2504,7 +2511,6 @@ public class PlanBG extends PlanImage {
 //      
 //   }
 
-
    /** Retourne un tableau de pixels d'origine couvrant la vue courante */
    protected void getCurrentBufPixels(PlanImage pi,RectangleD rcrop, double zoom,double resMult,boolean fullRes) {
       int w = (int)Math.round(rcrop.width*zoom);
@@ -2592,13 +2598,151 @@ public class PlanBG extends PlanImage {
       pi.colorBackground=Color.white;
 
    }
-
+   
    protected void getCurrentBufPixels(PlanImage pi,RectangleD rcrop, STCObj stcObj, double zoom,double resMult,boolean fullRes) {
+	      int w = (int)Math.round(rcrop.width*zoom);
+	      int h = (int)Math.round(rcrop.height*zoom);
+	      int bitpix= getBitpix()==-64 ? -64 : -32;
+	      int npix = Math.abs(bitpix)/8;
+	      byte [] pixelsOrigin = new byte[w*h*npix];
+	      byte [] onePixelOrigin = new byte[npix];
+
+	      double blank = Double.NaN;
+
+	      //      boolean flagClosest = maxOrder()*resMult>maxOrder+4;
+	      boolean flagClosest = false;
+	      boolean testClosest = false;
+
+	      int order = fullRes ? maxOrder : (int)(getOrder()*resMult);
+	      if( order<3 ) order=3;
+	      else if( order>maxOrder ) order=maxOrder;
+
+
+	      int offset=0;
+	      double fct = 100./h;
+	      Coord coo = new Coord();
+	      Coord coo1 = new Coord();
+		    Healpix healPix = new Healpix();
+		    HealpixMoc posBounds = null;
+		    try {
+				if (stcObj != null) {
+					posBounds = aladin.createMocRegion(stcObj, -1);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace(); //in this case the bounding box is the outline instead
+			}
+		    
+	      for( int y=h-1; y>=0; y-- ) {
+	         pi.pourcent+=fct;
+	         for( int x=0; x<w; x++ ) {
+	            double val = Double.NaN;
+	            
+	            try {
+					// Point de référence milieu bord gauche du pixel d'arrivée
+		            // Pour trouver au mieux les 4 pixels Healpix recouvrant le pixel d'arrivée
+		            double x1 = rcrop.x + (x+0.5)/zoom;
+		            double y1 = rcrop.y + (y)/zoom;
+		            coo.x = x1; coo.y = y1;
+		            pi.projd.getCoord(coo);
+		            coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
+		            
+		            // Point central du pixel d'arrivée
+		            double x2 = rcrop.x + (x+1)/zoom;
+		            double y2 = rcrop.y + (y)/zoom;
+		            coo1.x = x2; coo1.y = y2;
+		            pi.projd.getCoord(coo1);
+		            coo1 = Localisation.frameToFrame(coo1,Localisation.ICRS,frameOrigin);
+
+		            if (posBounds != null && !posBounds.contains(healPix, coo1.al,coo1.del)) {
+						val = Double.NaN;
+					} else {
+						// Passe en mode Closest si il y a suréchantillonnage
+			            if( !testClosest ) {
+			               testClosest=true;
+			               double resDest = Coo.distance(coo.al,coo.del,coo1.al,coo1.del)*2;
+			               double resSrc = getPixelResolution();
+			               if( resDest<resSrc/2 ) flagClosest=true;
+			               //               System.out.println("resSrc="+resSrc+" resDst="+resDest+" flagClosest="+flagClosest);
+			            }
+			            
+			            if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) val = Double.NaN;
+			            else if( flagClosest ) val = getHealpixClosestPixel(coo1.al,coo1.del,order);
+			            else val = getHealpixLinearPixel(coo.al,coo.del,coo1.al,coo1.del,order);
+						}
+					} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+					}
+
+	            if( Double.isNaN(val) ) {
+	               setPixVal(onePixelOrigin, bitpix, 0, blank);
+	               if( !pi.isBlank ) {
+	                  pi.isBlank=true;
+	                  pi.blank=blank;
+	                  if( bitpix>0 && pi.headerFits!=null) pi.headerFits.setKeyValue("BLANK", blank+"");
+	               }
+	            } else {
+	               val = val*bScale+bZero;
+	               setPixVal(onePixelOrigin, bitpix, 0, val);
+	            }
+
+	            System.arraycopy(onePixelOrigin, 0, pixelsOrigin, offset, npix);
+	            offset+=npix;
+	            if( offset>pixelsOrigin.length ) break;  // Le tableau est plein
+	         }
+	      }
+
+	      // Ajustement des variables en fonction du changement de bitpix
+	      pi.bitpix = bitpix;
+	      pi.pixelsOrigin = pixelsOrigin;
+	      pi.dataMin = dataMin*bScale+bZero;
+	      pi.dataMax = dataMax*bScale+bZero;
+	      pi.pixelMin = pixelMin*bScale+bZero;
+	      pi.pixelMax = pixelMax*bScale+bZero;
+	      pi.bScale=1; pi.bZero=0;
+	      pi.pixels = getPix8Bits(null,pi.pixelsOrigin,pi.bitpix,pi.width,pi.height,pi.pixelMin,pi.pixelMax,false,0,0,0);
+	      pi.invImageLine(pi.width,pi.height,pi.pixels);
+	      pi.colorBackground=Color.white;
+
+	   }
+   
+
+   protected void getCurrentBufPixelsBubbleWrapped(PlanImage pi,RectangleD rcrop, STCObj stcObj, double zoom,double resMult,boolean fullRes) {
       int w = (int)Math.round(rcrop.width*zoom);
       int h = (int)Math.round(rcrop.height*zoom);
       int bitpix= getBitpix()==-64 ? -64 : -32;
       int npix = Math.abs(bitpix)/8;
-      byte [] pixelsOrigin = new byte[w*h*npix];
+      
+      try {
+		aladin.askIMResourceCheck(w*h*npix);
+	  } catch (Exception e1) {
+			// TODO Auto-generated catch block
+		Aladin.trace(3, "No sufficient memory");
+		aladin.notifyIMStatusChange(IMListener.ERROR);
+		return;
+	  }
+      
+      SoftReference<byte[]> ref = new SoftReference<>(new byte[w*h*npix]);
+      if (ref == null || ref.get() == null) {
+    	  aladin.notifyIMStatusChange(IMListener.LOWMEMORY);
+    	  Aladin.trace(3, "can't process this"); return;
+      } else {//if only using SF scheme, consider checking additional memory as well.
+//    	  SoftReference<byte[]> buffer = new SoftReference<byte[]>(new byte[(int) (w*h*npix)]); 
+//		if (buffer == null || buffer.get() == null) {
+//			aladin.notifyIMStatusChange(IMListener.LOWMEMORY);
+//			Aladin.trace(3, "not enough buffer memory"); return;
+//		} else if (ref == null || ref.get() == null) {
+//			aladin.notifyIMStatusChange(IMListener.LOWMEMORY);
+//			Aladin.trace(3, "the byte array is now gone"); return;
+//		} else {
+//			buffer = null;
+			aladin.notifyIMStatusChange(IMListener.PROCESSING);
+//		}
+      }
+//      byte [] pixelsOrigin = new byte[w*h*npix];
+//      byte [] pixelsOrigin = ref.get(); ref = null;
+      
       byte [] onePixelOrigin = new byte[npix];
 
       double blank = Double.NaN;
@@ -2681,15 +2825,30 @@ public class PlanBG extends PlanImage {
                setPixVal(onePixelOrigin, bitpix, 0, val);
             }
 
-            System.arraycopy(onePixelOrigin, 0, pixelsOrigin, offset, npix);
+//            System.arraycopy(onePixelOrigin, 0, pixelsOrigin, offset, npix);
+            int length = -1;
+            if (ref == null || ref.get() == null) {	
+            	Aladin.trace(3, "ooo im thinking out of memory. free:"+(Runtime.getRuntime().freeMemory())/1E6+" request: "+stcObj);
+            	return;
+			} else {
+				length = ref.get().length;
+				System.arraycopy(onePixelOrigin, 0, ref.get(), offset, npix);
+			}
+            
             offset+=npix;
-            if( offset>pixelsOrigin.length ) break;  // Le tableau est plein
+            if( offset>length ) break;  // Le tableau est plein
          }
       }
 
       // Ajustement des variables en fonction du changement de bitpix
       pi.bitpix = bitpix;
-      pi.pixelsOrigin = pixelsOrigin;
+//      pi.pixelsOrigin = pixelsOrigin;
+      if (ref == null || ref.get() == null) {
+    	  Aladin.trace(3, "ooo im thinking out of memory. free:"+(Runtime.getRuntime().freeMemory())/1E6+" request: "+stcObj);
+			return;
+		} else {
+			pi.pixelsOrigin = ref.get();
+		}
       pi.dataMin = dataMin*bScale+bZero;
       pi.dataMax = dataMax*bScale+bZero;
       pi.pixelMin = pixelMin*bScale+bZero;
@@ -2709,6 +2868,23 @@ public class PlanBG extends PlanImage {
    }
    protected byte [] getPixels8Area(ViewSimple v,RectangleD rcrop,boolean now) {
       int rgb [] = getPixelsRGBArea(v,rcrop,now);
+      if( rgb==null ) return null;
+      int taille = rgb.length;
+      byte [] pixels = new byte[taille];
+      for( int i=0; i<taille; i++ ) {
+         if( ((rgb[i] >>> 24) & 0xFF)==0 ) pixels[i]=0;  // transparent
+         else {
+            int pix = rgb[i] & 0xFF;
+            if( pix<255 ) pix++;
+            pixels[i] = (byte)(pix & 0xFF);
+         }
+      }
+      rgb=null;
+      return pixels;
+   }
+	//Method repeated just to isolate existing from the new developments.   
+   protected byte [] getPixels8Area(ViewSimple v,RectangleD rcrop, STCObj stcObj, boolean now) {
+      int rgb [] = getPixelsRGBArea(v,rcrop, stcObj, now);
       if( rgb==null ) return null;
       int taille = rgb.length;
       byte [] pixels = new byte[taille];
@@ -2748,6 +2924,81 @@ public class PlanBG extends PlanImage {
 
       return rgb;
    }
+   
+   protected int [] getPixelsRGBArea(ViewSimple v,RectangleD rcrop, STCObj stcObj, boolean now) {
+      if( v==null ) return null;
+      BufferedImage imgBuf = new BufferedImage(v.rv.width,v.rv.height,BufferedImage.TYPE_INT_ARGB);
+      Graphics g = imgBuf.getGraphics();
+      Shape shape = getShape(v, stcObj);
+      if (shape != null) {
+          g.setClip(shape);
+      }
+      drawLosanges(g, v, now);
+      g.finalize(); 
+      if (shape != null) {
+          g.setClip(null);
+      }
+      g=null;
+      
+      int width = (int)Math.ceil(rcrop.width);
+      int height = (int)Math.ceil(rcrop.height);
+      int taille = width * height;
+      int rgb[] = new int[taille];
+
+      // En cas de problème d'arrondi négatif
+      int x = (int)Math.floor(rcrop.x);
+      if( x<0 ) x=0;
+      int y = (int)Math.floor(rcrop.y);
+      if( y<0 ) y=0;
+      
+      imgBuf.getRGB(x, y, width, height, rgb, 0,width);
+      imgBuf.flush(); imgBuf=null; 
+
+      return rgb;
+   }
+   
+   /**
+    * Gets a java.awt.Shape from an STCObj
+    * @param v
+    * @param stcObj
+    * @return
+    */
+	public Shape getShape(ViewSimple v, STCObj stcObj) {
+		Shape shape = null;
+		Coord coord = null;
+		PointD pt = null;
+		if (stcObj instanceof STCCircle) {
+			STCCircle circle = (STCCircle) stcObj;
+			coord = getCoodSetXY(circle.getCenter().al, circle.getCenter().del);
+            double radius = Server.getAngleInArcmin(String.valueOf(circle.getRadius()), Server.RADIUSd) / 60.;
+			int plotRadius = (int) Math.round(Fov.getPlotRadiusForCircleFromCoord(projd, coord, radius) * v.getZoom());
+			pt = v.getViewCoordDble(coord.x, coord.y);
+			shape = new Ellipse2D.Double((int) (pt.x-plotRadius), (int) (pt.y-plotRadius), plotRadius * 2, plotRadius * 2);
+		} else if (stcObj instanceof STCPolygon) {
+			STCPolygon poly = (STCPolygon) stcObj;
+			List<Double> xCorners = poly.getxCorners();
+			List<Double> yCorners = poly.getyCorners();
+			int xPoly[] = new int[xCorners.size()];
+		    int yPoly[] = new int[xCorners.size()];
+			for (int i = 0; i < xCorners.size(); i++) {
+				coord = getCoodSetXY(xCorners.get(i), yCorners.get(i));
+	            pt = v.getViewCoordDble(coord.x,coord.y);
+	            xPoly[i] = (int)Math.floor(pt.x);
+	            if( xPoly[i]<0 ) xPoly[i]=0;
+	            yPoly[i] = (int)Math.floor(pt.y);
+	            if( yPoly[i]<0 ) yPoly[i]=0;
+			}
+			shape = new Polygon(xPoly, yPoly, xPoly.length);
+		}
+		return shape;
+	}
+	
+	public Coord getCoodSetXY(double ra, double dec) {
+		Coord coord = new Coord(ra, dec);
+		coord = Localisation.frameToFrame(coord,Localisation.ICRS,frameOrigin);
+		coord = projd.getXY(coord);
+		return coord;
+	}
 
    /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
     * si ce n'est pas nécessaire
@@ -3242,9 +3493,6 @@ public class PlanBG extends PlanImage {
          else {
             pix = getPixList(v,center,max);
             for( int i=0; i<pix.length; i++ ) {
-               if( max==4 && pix[i]==2088 ) {
-                  System.out.println("J'y suis");
-               }
                HealpixKey healpix = getHealpix(max,pix[i],z, false);
                if( healpix==null ) {
                   if( isOutMoc(max,pix[i]) ||

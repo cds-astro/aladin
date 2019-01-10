@@ -21,6 +21,7 @@
 
 package cds.tools;
 
+import static cds.aladin.Constants.CONTENT_TYPE_VOTABLE;
 import static cds.aladin.Constants.DATE_FORMATS;
 import static cds.aladin.Constants.LISTE_CARACTERE_STRING;
 import static cds.aladin.Constants.RESULTS_RESOURCE_NAME;
@@ -55,10 +56,12 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -112,7 +115,7 @@ import cds.image.EPSGraphics;
 import cds.savot.model.ResourceSet;
 import cds.savot.model.SavotResource;
 import cds.savot.pull.SavotPullParser;
-import cds.xml.TapQueryResponseStatusReader;
+import cds.xml.VotQueryResponseStatusReader;
 import healpix.essentials.FastMath;
 
 /**
@@ -167,7 +170,7 @@ public final class Util {
       return mis.startRead();
    }
    
-   static public MyInputStream openStreamForTap(URL u, URLConnection conn, boolean useCache,int timeOut) throws Exception {
+   static public MyInputStream openStreamForTapAndDL(URL u, URLConnection conn, boolean useCache,int timeOut) throws Exception {
 	   boolean alreadyConnected = true;
 	   if (conn == null) {
 		   conn = u.openConnection();
@@ -182,20 +185,8 @@ public final class Util {
 	        	 http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
 		         http.setRequestProperty("Accept-Encoding", "gzip");
 	         }
-	         InputStream is = null;
 	         if (http.getResponseCode() >= 400) {
-	        	is = http.getErrorStream();
-				TapQueryResponseStatusReader queryStatusReader = new TapQueryResponseStatusReader();
-				queryStatusReader.load(is);
-				is.close();
-				String errorMessage = queryStatusReader.getQuery_status_message();
-				if (errorMessage == null || errorMessage.isEmpty()) {
-					errorMessage = "Error: "+http.getResponseCode()+" from server. Unable to get response! Server : "+u;
-				} else {
-					errorMessage = queryStatusReader.getQuery_status_value() + " " + errorMessage;
-				}
-				http.disconnect();
-				throw new IOException(errorMessage);
+	        	throw new Exception(handleErrorResponseForTapAndDL(u, http));
 			}
 	      }
 
@@ -2344,11 +2335,20 @@ public final class Util {
 
    }
 
+   /** Extraction d'un champ spécifique d'une chaine "à la JSON" nécessaire sur une ligne */
    static public String extractJSON(String key,String s) {
-      String k="\""+key+"\"";
+      String rep = extractJSON(key,s,'"');
+      if( rep==null ) return extractJSON(key,s,'\'');
+      return rep;
+   }
+
+   /** Extraction d'un champ spécifique d'une chaine "à la JSON" nécessaire sur une ligne, et dont
+    * on spécifie le caractère qui délimite les champs  */
+   static private String extractJSON(String key,String s,char quote) {
+      String k=quote+key+quote;
       int o1 = s.indexOf(key);
       if( o1<0 ) return null;
-      int o2 = s.indexOf('"',o1+k.length()+1);
+      int o2 = s.indexOf(quote,o1+k.length()+1);
       if( o2<0 ) return null;
       return Tok.unQuote( (new Tok(s.substring(o2),"},")).nextToken() );
    }
@@ -2606,6 +2606,78 @@ public final class Util {
 		result[0] = min;
 		result[1] = max;
 		return result;
+	}
+
+	public static String getMessageFromIOStream(InputStream is) {
+		BufferedReader bufferedReader = null;
+		StringBuilder messageBuffer = new StringBuilder();
+		String line;
+		try {
+			bufferedReader = new BufferedReader(new InputStreamReader(is));
+			while ((line = bufferedReader.readLine()) != null) {
+				messageBuffer.append(line);
+			}
+
+		} catch (IOException e) {
+			Aladin.trace(3, e.getMessage());
+		} finally {
+			if (bufferedReader != null) {
+				try {
+					bufferedReader.close();
+				} catch (IOException e) {
+					Aladin.trace(3, e.getMessage());
+				}
+			}
+		}
+		return messageBuffer.toString();
+	}
+	
+	/**
+	 * For Tap and datalink
+	 * Provides default error message or throws exception when http status code >= 400
+	 * @param u	URL for display
+	 * @param httpClient
+	 * @param checkVotable
+	 * @return error message
+	 * @throws IOException
+	 * @throws Exception
+	 */
+	public static String handleErrorResponseForTapAndDL(URL u, HttpURLConnection httpClient) throws IOException, Exception {
+		InputStream errorStream = null;
+		StringBuffer message = new StringBuffer("Error: ");
+		try {
+			message.append(httpClient.getResponseCode())
+			.append(" from server. \n URL : ").append(u).append("\n")
+			.append(httpClient.getResponseMessage());
+			if (httpClient.getResponseCode() >= 400) {
+				StringBuffer errorMessage = new StringBuffer();
+				errorStream = httpClient.getErrorStream();
+				if (errorStream != null) {
+					if (httpClient.getContentType().equalsIgnoreCase(CONTENT_TYPE_VOTABLE)) {
+						VotQueryResponseStatusReader queryStatusReader = new VotQueryResponseStatusReader();
+						queryStatusReader.load(errorStream);
+						errorMessage.append(queryStatusReader.getQuery_status_message());
+					} else if(httpClient.getContentType().contains("text/plain")){
+						errorMessage.append(Util.getMessageFromIOStream(errorStream));
+					}
+					errorStream.close();
+				}
+				
+				if (errorMessage != null && !errorMessage.toString().trim().isEmpty()) {
+					message.append("\n").append(errorMessage);
+				}
+				Aladin.trace(3,message.toString());
+			}
+		} finally {
+			if (errorStream != null) {
+				try {
+					errorStream.close();
+				} catch (IOException e) {
+					Aladin.trace(3, e.getMessage());
+				}
+			}
+		}
+		return message.toString();
 	}
 
    // PAS ENCORE TESTE

@@ -247,7 +247,7 @@ public class GluAdqlTemplate extends ADQLQuery {
 			queryToUpdate.gluFrom.put(gluIndex, valueSet);
 			queryToUpdate.gluTable = new String[2];//prefixe.equalsIgnoreCase(GLU_TABLES)
 			queryToUpdate.gluTable[0] = gluIndex;
-			queryToUpdate.gluTable[1] = valueSet;//TODO:: tintin delete this if table is the only from
+			queryToUpdate.gluTable[1] = valueSet;//TODO:: delete this if table is the only from
 		}
 		
 	}

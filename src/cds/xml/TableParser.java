@@ -303,7 +303,7 @@ final public class TableParser implements XMLConsumer {
             len[i] = 1;
 
             // Champ variable => len=-1, sizeRecord=-1
-            if( f.arraysize!=null && f.arraysize.equals("*") ) {
+            if( f.arraysize!=null && f.arraysize.indexOf('*')>=0 ) {
                len[i]=-1;
                sizeRecord=-1;
                variableField=true;
@@ -390,7 +390,6 @@ final public class TableParser implements XMLConsumer {
             System.arraycopy(b,position,memoB,0,n);
             return true;
          }
-
 
          // Est-ce un champ null ?
          if( inBinary2 && isNull(nullMask,nField) ) record[nField]="null";
@@ -1419,7 +1418,7 @@ final public class TableParser implements XMLConsumer {
 //      }
       
       // Peut être une alternative sur une seule colonne
-      if( nRA<0 && nDEC<0 && nRADEC>=0 ) {
+      if( (nRA<0 || nDEC<0) && nRADEC>=0 ) {
          nRA=nDEC=nRADEC;
          format=formatx;
       }
@@ -1428,9 +1427,11 @@ final public class TableParser implements XMLConsumer {
          if( nX>=0 && nY>=0  ){
             flagXY=true;
             consumer.setTableInfo("__XYPOS","true");
-         } if( flagTSV ) {
+            
+         } else if( flagTSV ) {
             nRA=0; nDEC=1;
-         }else {
+            
+         } else {
             nRA=nDEC=-1;
             flagNOCOO=true;
             consumer.setTableInfo("__NOCOO","true");
@@ -2521,7 +2522,7 @@ final public class TableParser implements XMLConsumer {
       boolean excelCSV = cs.length>0 && cs[0]==',';
 
       //      System.out.println("getField ["+getStringTrim(ch,start,end-start)+"]");
-
+      
       // Cas particulier du CSV mode Excel "xxx","yyyy",zzzz
       if( excelCSV ) {
          boolean inQuote=false;
@@ -2534,12 +2535,13 @@ final public class TableParser implements XMLConsumer {
 
          // Mode TSV, CSV courant
       } else {
-         while( cur<end && (sep=isColSep(ch[cur],cs))==0 && ch[cur]!=rs ) cur++;
+         while( cur<end && (sep=isColSep(ch[cur],cs))==0 && (ch[cur]!=rs ) ) cur++;
       }
-      
-      // Dans le cas d'oubli du caractère de fin de ligne sur la dernière ligne
+
+      // DESORMAIS TRAITE EN AMONT DANS XMLParser.java.xmlGetString(...)
+//      // Dans le cas d'oubli du caractère de fin de ligne sur la dernière ligne
       int plusUn = 0;
-      if( cur==end && cur>0 && ch[cur-1]!=rs ) plusUn=1;
+//      if( cur==end && cur>0 && ch[cur-1]!=rs ) plusUn=1;
 
       String value;
       if( excelCSV ) {
@@ -2616,7 +2618,7 @@ final public class TableParser implements XMLConsumer {
     * @return retourne l'indice du prochain caractère après le champ
     */
    static protected int skipRecSep(char ch[],int cur,char rs) {
-      if( ch[cur]==rs ) {
+      if( cur<ch.length && ch[cur]==rs ) {
          if( rs=='\n' && cur<ch.length-1 && ch[cur+1]=='\r' ) cur+=2;
          else cur++;
       }
@@ -2629,7 +2631,7 @@ final public class TableParser implements XMLConsumer {
     * @return retourne l'indice du prochain caractère après le champ
     */
    static protected int skipRec(char ch[],int cur,char rs) {
-      while( ch[cur]!=rs && cur<ch.length-1 ) cur++;
+      while( cur<ch.length-1 && ch[cur]!=rs ) cur++;
       return skipRecSep(ch,cur,rs);
    }
 
@@ -2673,7 +2675,7 @@ final public class TableParser implements XMLConsumer {
 
    /** Dans le mode CSV, parsing des données passées en paramètre. Cette méthode
     * peut être appelé plusieurs fois de suite pour un même tableau CSV
-    * @param ch,start,length désignation de la chaine à perser
+    * @param ch,start,length désignation de la chaine à parser
     * @throws Exception
     */
    private void dataParse(char ch[], int start, int length) throws Exception {
@@ -2739,7 +2741,9 @@ final public class TableParser implements XMLConsumer {
          // en fonction et recopier le contenu de vRecord.
          if( record==null ) {
             nField = vRecord.size();
-            consumer.tableParserInfo("   -found CSV DATA ("+nField+" fields)");
+            consumer.tableParserInfo("   -found CSV DATA ("+nField+" fields "
+                          +"record sep="+(rs=='\n'?"\\n":"["+(byte)rs+"])")+")");
+
             record = new String[nField];
             Enumeration<String> e = vRecord.elements();
             for( i=0; i<nField; i++ ) record[i] = e.nextElement();

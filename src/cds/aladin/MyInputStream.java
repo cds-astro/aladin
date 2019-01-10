@@ -1011,7 +1011,7 @@ public class MyInputStream extends FilterInputStream {
       return n;
    }
 
-   static final private String SEP = "\t;:,!| /&";
+   static final private String SEP = "\t,;!| :/&";
 
    /** Analyse les lignes s[]. Dénombre les catactères présents dans chacune d'elles (>31 & <127)
     * et recherche celui qui pourrait être un séparateur CSV, càd de même dénombrement dans chaque

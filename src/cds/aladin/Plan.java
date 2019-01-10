@@ -911,9 +911,12 @@ public class Plan implements Runnable {
       aladin.trace(3,label+" new ICRS => RA pos="+(nra+1)+" DE pos="+(ndec+1)
             +" PMRA pos="+(npmra+1)+" PMDE pos="+(npmde+1));
 
-      recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
+         recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
+      
+         // Il faut générer une projection centrée sur le nuage de point si aucune 
+         if( hasNoReduction() ) pcat.createDefaultProj();
 
-      if( hasXYorig || hasNoPos ) {
+         if( hasXYorig || hasNoPos ) {
          hasNoPos=hasXYorig=false;
          error=null;
       }
@@ -2480,6 +2483,8 @@ public class Plan implements Runnable {
          // Voir si ca marche
          aladin.calque.unSelectAllPlan();
          selected=true;
+       //set current plan in all tap guis by default of what is chosen on plan stack.
+         TapManager.getInstance(aladin).setCurrentUploadPlane(this.label);
       }
 
 

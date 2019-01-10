@@ -489,7 +489,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
             setStatus(ERROR);
             if( this instanceof HealpixAllsky ) planBG.askForRepaint();
-            //            if( Aladin.levelTrace>=3 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
+            if( Aladin.levelTrace>=6 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
          }
       }
    }
@@ -672,8 +672,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
     */
    public byte [] readFully(MyInputStream in,boolean fastLoad) throws Exception {
 
-      Vector<byte[]> v = new Vector<byte[]>(10);
-      Vector<Integer> vSize = new Vector<Integer>(10);
+      Vector<byte[]> v = new Vector<>(10);
+      Vector<Integer> vSize = new Vector<>(10);
       int n=0,m=0,i=0,j=0;
       byte [] tmp;
       long t = System.currentTimeMillis();

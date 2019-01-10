@@ -109,7 +109,7 @@ final public class ThreadBuilderTile {
       hpxFinderPath = context.getHpxFinderPath();
       tileSide = context.getTileSide();
 
-      downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
+      downFiles = new ArrayList<>(Constante.MAXOVERLAY);
    }
 
    public long getMem() {
@@ -211,7 +211,7 @@ final public class ThreadBuilderTile {
       
       try {
          // initialisation de la liste des fichiers originaux pour ce losange
-         downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY*2);
+         downFiles = new ArrayList<>(Constante.MAXOVERLAY*2);
          if( !askLocalFinder(bt,downFiles,hpxFinderPath, order, npix_file, blank)) {
             return null;
          }
@@ -718,9 +718,13 @@ final public class ThreadBuilderTile {
 
       int x1 = (int)x;
       int y1 = (int)y;
+
+//      if( x-x1<0.5 ) x1--;
+//      if( y-y1<0.5 ) y1--;
+      
       int x2=x1+1;
       int y2=y1+1;
-
+ 
       int ox1= x1;
       int oy1= y1;
       int ox2= x2;

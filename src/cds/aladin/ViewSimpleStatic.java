@@ -100,7 +100,11 @@ public class ViewSimpleStatic extends ViewSimple {
          pi.height = pi.naxis2 = (int)Math.round(rcrop.height*zoomFct);
          pi.initZoom=1;
          
-         pref.getCurrentBufPixels(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
+         if (aladin.bubbleWrapIMProcessing && aladin.imListener != null) {
+        	 pref.getCurrentBufPixelsBubbleWrapped(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
+         } else {
+        	 pref.getCurrentBufPixels(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
+		}
 
          pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
 

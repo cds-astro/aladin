@@ -454,7 +454,12 @@ public final class XMLParser {
       // Memorization
       if( mode!=4 ) ch=curString.toString().toCharArray();
       start=0;
-      length=(mode==3)?ch.length-3:(mode==5 && xml4 && ol>=0 )?ol:ch.length-1;
+      
+      // Petite bidouille pour le CSV qui ne finirait pas par un CR
+      if( beforeXML && c1==EOF ) length = ch.length;
+      else 
+         length=(mode==3)?ch.length-3:(mode==5 && xml4 && ol>=0 )?ol: ch.length-1;
+      
       if( length<0 ) length=0;
 //      System.out.println("]");
       return c1;

@@ -522,7 +522,7 @@ public class ServerTapExamples extends DynamicTapForm {
 		scrolley2.setToolTipText(TAPEXSERVICEPROVIDEDTOOLTIP);
 		scrolley2.setBorder(getFancyTitleBorder(TAPEXSERVICEPROVIDEDLABEL));
 		centerPanel = new MySplitPane(aladin, JSplitPane.HORIZONTAL_SPLIT, scrolley1, scrolley2 , 1);
-		centerPanel.setBackground(Aladin.BLUE);
+		centerPanel.setBackground(this.tapClient.primaryColor);
 		centerPanel.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {

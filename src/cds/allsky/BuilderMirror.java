@@ -619,7 +619,6 @@ public class BuilderMirror extends BuilderTiles {
       fOut.setLastModified(lastModified);
 
       return (int)size;
-
    }
    
    boolean oneWaiting() {

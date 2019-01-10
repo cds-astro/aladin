@@ -76,7 +76,6 @@ import javax.swing.text.BadLocationException;
 
 import adql.db.DBChecker;
 import adql.parser.QueryChecker;
-import cds.aladin.Constants.TapClientMode;
 import cds.tools.Util;
 
 public class ServerTap extends DynamicTapForm implements MouseListener {

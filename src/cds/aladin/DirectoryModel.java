@@ -46,21 +46,33 @@ public class DirectoryModel extends DefaultTreeModel {
    protected int populateFlagIn() { return populateFlagIn(root); }
    private int populateFlagIn(DefaultMutableTreeNode node) {
       TreeObj treeObj = (TreeObj) node.getUserObject();
+      if( treeObj.isHidden && node.isLeaf() ) return -2;
       if( node.isLeaf() ) return treeObj.getIsIn();
 
       DefaultMutableTreeNode subNode = null;
       Enumeration e = node.children();
       int rep = -2;
+// Méthode de colaration initiale => le vert n'était pas contaminant
+//      while( e.hasMoreElements() ) {
+//         subNode = (DefaultMutableTreeNode) e.nextElement();
+//         int isIn =  populateFlagIn(subNode);
+//         if( rep==-2 ) rep=isIn;
+//         else if( rep!=isIn ) rep=-1;
+//      }
       while( e.hasMoreElements() ) {
          subNode = (DefaultMutableTreeNode) e.nextElement();
          int isIn =  populateFlagIn(subNode);
+         if( isIn==-2 ) continue;
          if( rep==-2 ) rep=isIn;
-         else if( rep!=isIn ) rep=-1;
+         else if( isIn==1 ) rep=isIn;             // Le vert est contaminant
+         else if( isIn==-1 && rep==0 ) rep=isIn;  // Le blanc aussi mais uniquement si orange précédemment
       }
+
       treeObj.setIn(rep);
       return rep;
    }
    
+
    /** Comptage de la descendance de chaque branche (nombre de noeuds terminaux d'une branche)
     * Mémorisation dans TreeObj, soit en tant que référence (hs!=null), soit
     * en tant que décompte courant

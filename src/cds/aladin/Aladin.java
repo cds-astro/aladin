@@ -183,6 +183,7 @@ import healpix.essentials.Vec3;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> VOTABLE BINARY variable array with upper limit
  * @beta    <LI> Reticle copy/paste (rounding bug)
  * @beta    <LI> Hipsgen BSCALE+specific skyvals use case bug
  * @beta    <LI> XMM EPN FoV better definition
@@ -214,7 +215,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.101";
+   static public final    String VERSION = "v10.104";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -8233,5 +8234,28 @@ DropTargetListener, DragSourceListener, DragGestureListener
 			aladin.executor = Executors.newFixedThreadPool(10);
 		}
 	}
+	
+
+   IMListener imListener;
+   boolean bubbleWrapIMProcessing = false;
+   
+	public synchronized void makeIMSettings(IMListener imListener, boolean bubbleWrap) {
+		this.imListener = imListener;
+		bubbleWrapIMProcessing = bubbleWrap;
+	}
+   
+   public synchronized void notifyIMStatusChange(short status) {
+	   if (this.imListener != null) {
+		   this.imListener.progressStatusChange(status);
+		   this.imListener = null;
+		   bubbleWrapIMProcessing = false;
+	   }
+   }
+   
+   public synchronized void askIMResourceCheck(long nbpoints) throws Exception {
+	   if (this.imListener != null) {
+		   this.imListener.checkProceedAction(nbpoints);
+	   }
+   }
 
 }

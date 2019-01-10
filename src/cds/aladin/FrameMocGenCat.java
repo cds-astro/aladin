@@ -86,11 +86,9 @@ public final class FrameMocGenCat extends FrameMocGenImg {
       p2.add(new JLabel(" in arcsec"),BorderLayout.EAST);
       PropPanel.addCouple(frame,p, " -Radius around position:","A circle of the disgnated radius centered on each source is used to populate the MOC", p2, g,c);
       
-      if( Aladin.BETA ) {
-         box =boxFov= new JCheckBox();
-         bg.add( box);
-         PropPanel.addCouple(frame,p, " - Source associated FoV:", "The Field of View (for instance s_region information) associated to each source is used to populate the MOC.", box, g,c);
-      }
+      box =boxFov= new JCheckBox();
+      bg.add( box);
+      PropPanel.addCouple(frame,p, " - FoV associated to each source:", "The Field of View (for instance s_region information) associated to each source is used to populate the MOC.", box, g,c);
    }
    
    private double getRadius() throws Exception {

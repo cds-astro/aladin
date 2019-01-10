@@ -742,9 +742,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       PlanBG pref = (PlanBG)this.pref;
       pref.projd = this.pref.projd.copy();
       
-      if( pref.color ) throw new Exception("Not a HiPS fits");
-      if( !pref.hasOriginalPixels() ) throw new Exception("No fits tiles");
-
       try {
 		  if( label==null ) label = pref.label;
 		  if( inStack)  pi = (PlanImage)aladin.calque.dupPlan(pref, null,pref.type,false);
@@ -764,7 +761,31 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          pi.height = pi.naxis2 = (int)Math.round(rcrop.height*zoomFct);
          pi.initZoom=1;
          
-         pref.getCurrentBufPixels(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
+         
+      // Conversion dans les coord. de la vue
+         PointD p = getViewCoordDble(rcrop.x, rcrop.y);
+         RectangleD rview = new RectangleD(p.x,p.y,pi.width,pi.height);
+
+         if( pref.hasOriginalPixels() ) {
+        	 pref.getCurrentBufPixels(pi,rcrop,stcObj,zoomFct,resMult,fullRes);
+
+         } else if( pref.color ) {
+            pi.type=Plan.IMAGERGB;
+            pi.bitpix=8;
+
+            ((PlanImageRGB)pi).pixelsRGB = pref.getPixelsRGBArea(this,rview,stcObj, true);
+            pi.cm = IndexColorModel.getRGBdefault();
+            ((PlanImageRGB)pi).initCMControl();
+            ((PlanImageRGB)pi).flagRed=((PlanImageRGB)pi).flagGreen=((PlanImageRGB)pi).flagBlue=true;
+
+         } else {
+            pi.pixels = pref.getPixels8Area(this,rview,stcObj, true);
+            pi.bitpix=8;
+            pi.video = pref.video;
+            pi.setTransfertFct(PlanImage.LINEAR);
+            pi.cmControl[0]=0; pi.cmControl[1]=128; pi.cmControl[2]=255;
+            pi.restoreCM();
+         }
 
          pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
 

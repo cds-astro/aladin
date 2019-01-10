@@ -1282,8 +1282,8 @@ public class Calque extends JPanel implements Runnable {
     */
    protected boolean canBeRef(Plan p) {
       if( p==null ) return false;
-      if( p.hasNoPos ) return false;
       if( p.hasXYorig ) return true;
+      if( p.hasNoPos ) return false;
       // ajout thomas : PlanFov peut être un plan de référence
       return (p.isImage() || p.type==Plan.ALLSKYIMG || p.isPlanBGOverlay()
             || p.isCatalog()
@@ -3307,7 +3307,7 @@ public class Calque extends JPanel implements Runnable {
          p.setActivated(true);
          if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
          
-         if( Aladin.PROTO) {//TODO:: tintinproto
+         if( Aladin.PROTO) {
             TapManager.getInstance(aladin).updateAddUploadPlans(p);
          }
       } else {
@@ -4068,7 +4068,7 @@ public class Calque extends JPanel implements Runnable {
          return true;
       }
       
-      if( p!=null && p.hasNoPos ) {
+      if( p!=null && p.hasNoPos && !p.hasXYorig ) {
          p.setDebugFlag(Plan.CANBETRANSP,false);
          return false;
       }

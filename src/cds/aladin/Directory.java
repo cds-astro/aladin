@@ -462,7 +462,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // Si on se déplace davantage vers la droite que vers le bas ou le haut
             // => on ne change pas
             Point p = e.getPoint();
-            if( lastMove != null && 1.5 * (p.x - lastMove.x) > Math.abs(p.y - lastMove.y) ) {
+            if( lastMove != null && 5 * (p.x - lastMove.x) > Math.abs(p.y - lastMove.y) ) {
                lastMove = p;
                return;
             }
@@ -1419,7 +1419,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       // Répercussion des états des feuilles sur les branches
       model.populateFlagIn();
-      
       T("Populate flags");
 
       try {
@@ -1447,11 +1446,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             dirTree.restoreListener();
         }
          
+         
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
 
-      
       aladin.trace(4,"ResumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
 
    }
@@ -1640,7 +1639,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected void resumeIn(ResumeMode mode) {
       if( !checkIn(mode) ) return;
       if( iconInside.isActivated() ) resumeTree();
-      ((DirectoryModel) dirTree.getModel()).populateFlagIn();
+      else ((DirectoryModel) dirTree.getModel()).populateFlagIn();
       repaint();
    }
 

@@ -63,6 +63,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -260,8 +261,8 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			params.put(ServerObsTap.SPATIALRESOLUTION, obsCoreColumns.get(ServerObsTap.SPATIALRESOLUTION));
 			params.put(RA, obsCoreColumns.get(RA));
 			params.put(DEC, obsCoreColumns.get(DEC));
+			params.values().removeAll(Collections.singleton(null));
 			this.spatialFieldValueOptions.put(tableName, params);
-			
 			
 			if (this.timeFieldValueOptions == null) {
 				this.timeFieldValueOptions = new HashMap<String, Map<String, String>>();
@@ -271,6 +272,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			params.put(T_MAX, obsCoreColumns.get(T_MAX));
 			params.put(ServerObsTap.EXPOSURETIME, obsCoreColumns.get(ServerObsTap.EXPOSURETIME));
 			params.put(ServerObsTap.TIMERESOLUTION, obsCoreColumns.get(ServerObsTap.TIMERESOLUTION));
+			params.values().removeAll(Collections.singleton(null));
 			this.timeFieldValueOptions.put(tableName, params);
 			
 			if (this.spectralFieldValueOptions == null) {
@@ -281,6 +283,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			params.put(EM_MAX, obsCoreColumns.get(EM_MAX));
 			params.put(ServerObsTap.SPECTRALRESOLUTION, obsCoreColumns.get(ServerObsTap.SPECTRALRESOLUTION));
 			params.put(ServerObsTap.SPECTRALRESOLUTIONPOWER, obsCoreColumns.get(ServerObsTap.SPECTRALRESOLUTIONPOWER));
+			params.values().removeAll(Collections.singleton(null));
 			this.spectralFieldValueOptions.put(tableName, params);
 			this.addOtherParams(tableName);
 		}
@@ -460,6 +463,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		//Spectral constraints
 		if (!spectralFieldValueOptions.get(selectedTableName).isEmpty()) {
 			c.gridy++;
+			c.gridwidth = 1;
 			c.gridx = 0;
 			spectral_fields = new JComboBox(spectralFieldValueOptions.get(selectedTableName).keySet().toArray());
 			spectral_fields.setFont(BOLD);
@@ -495,7 +499,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (!timeFieldValueOptions.get(selectedTableName).isEmpty()) {
 			c.gridy++;
 			c.gridx = 0;
-			
+			c.gridwidth = 1;
 			time_fields = new JComboBox(timeFieldValueOptions.get(selectedTableName).keySet().toArray());
 			time_fields.setFont(BOLD);
 			c.weightx = 0.05;
@@ -529,6 +533,7 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 		if (columns != null && !columns.isEmpty()) {
 			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			Vector<TapTableColumn> model = new Vector<TapTableColumn>();
 			model.addAll(columns);
 			free_fields = new JComboBox(model);
@@ -961,12 +966,13 @@ public class ServerObsTap extends DynamicTapForm implements ItemListener {
 			}
 			
 			String processedInput = null;
-			if (value == null || value.isEmpty()) {// tintin below if condn
-				if (inRange) {
+			if (value == null || value.isEmpty()) {
+				processedInput = defaultValue;
+				/*if (inRange) {
 					processedInput = defaultValue;
 				} else {
 					processedInput = defaultValue;//constraint+SPACESTRING+defaultValue;
-				}
+				}*/
 			} else {
 				if (processAsNumber) {
 					if (inRange) {

@@ -312,6 +312,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       if( flagXY ) {
 
          plan.hasXYorig=true;
+         flagXY=false;   // on resete ce flag sinon ça posera souci en cas de positionnement ultérieur d'une projection via RA,DEC manuel
 
          //         aladin.info(aladin.chaine.getString("INFOXY"));
          //
@@ -336,7 +337,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       // Positionnement du centre
       plan.co=new Coord(rajc,dejc);
    }
-
+   
+   
    /** L'interface AstroRes */
    public void startTable(String name) {
       Aladin.trace(3,"startTable "+name);
@@ -359,7 +361,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    // Ajoute un GROUP à la liste des GROUPs à associer à la prochaine légende qui sera créée
    private void addGroup(String s) {
       if( s==null ) { group=null; return; } // reset forcé
-      if( group==null ) group = new Vector<String>();
+      if( group==null ) group = new Vector<>();
       group.addElement(s);
    }
 
@@ -510,7 +512,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    private int indexOID=-1;          // Position de la colonne OID eventuelle
    private TableParser res;          // Parser utilisé pour créer les objets
    private StringBuilder line = new StringBuilder(500);
-   private Map<Integer, Field> standardisedColumns = new HashMap<Integer, Field>();
+   private Map<Integer, Field> standardisedColumns = new HashMap<>();
 
 
 //   // Légende générique qui vient remplacer toutes les légendes propres
@@ -1172,9 +1174,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             rajc = (minRa+alpha)/2 - alpha;
          } else rajc = (minRa+maxRa)/2;
          dejc = (minDec+maxDec)/2;
-         double r = Math.max(Math.abs(minRa-rajc)*Math.cos( (dejc*Math.PI)/180.0 ),
-               Math.abs(minDec-dejc));
-         rm = (nb_o==1 || r==0.)?7:r*60.0*1.4142;
+//         double r = Math.max(Math.abs(minRa-rajc)*Math.cos( (dejc*Math.PI)/180.0 ), Math.abs(minDec-dejc));
+//         rm = (nb_o==1 || r==0.)?7:r*60.0*1.4142;
+         double r = Coord.getDist( new Coord(minRa, minDec), new Coord(maxRa, maxDec) )/2;
+         rm = (nb_o==1 || r==0.)?7:r*60.0;
+
       }
       Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+".."+maxDec+"]=>"+dejc+" rm=["+rm+"]");
    }

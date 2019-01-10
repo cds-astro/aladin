@@ -74,7 +74,7 @@ public class HipsGen {
 
     public HipsGen() {
         this.context = new Context();
-        actions = new Vector<Action>();
+        actions = new Vector<>();
     }
 
     /**
@@ -350,6 +350,9 @@ public class HipsGen {
                         t.write("CD1_2   = 0");        t.newLine();
                         t.write("CD2_1   = 0");        t.newLine();
                         t.write("CD2_2   = "+cd);      t.newLine();
+                    }
+                    catch( Exception e ) {
+                       e.printStackTrace();
                     }
                     finally {
                         if( t!=null ) t.close();

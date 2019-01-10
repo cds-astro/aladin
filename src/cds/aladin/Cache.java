@@ -68,7 +68,7 @@ public final class Cache implements Runnable {
    }
    
    /** Retourne le nom du répertoire servant de cache */
-   static String getCacheDir() {
+   public static String getCacheDir() {
       return System.getProperty("user.home")+Util.FS+Aladin.CACHE+Util.FS+CACHE;
    }
    

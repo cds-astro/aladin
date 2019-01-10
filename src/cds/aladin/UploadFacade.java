@@ -140,7 +140,6 @@ public class UploadFacade extends JFrame {
 					
 					final File tmpFile;
 					if ((tmpFile = aladin.createTempFile(SAMPUtil.sanitizeFilename(referencedTable), ".xml")) == null) {
-						// TODO:: tintin when doing join need to send more files
 						Aladin.trace(3, "ERROR in aladin.createTempFile for "+uploadFileName);
 						throw new Exception("Unable to parse " + uploadFileName + " data for upload!");
 					}
@@ -256,6 +255,14 @@ public class UploadFacade extends JFrame {
     */
 	public boolean tableAlreadyExists(String input) {
 		return (this.uploadTableNameDict.containsValue(input));
+	}
+	
+	public String getUploadTableName(String planeName) {
+		String result = null;
+		if (this.uploadTableNameDict.containsKey(planeName)) {
+			result = this.uploadTableNameDict.get(planeName);
+		}
+		return result;
 	}
 	
 	/**

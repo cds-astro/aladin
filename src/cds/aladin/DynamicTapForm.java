@@ -37,11 +37,11 @@ import static cds.aladin.Constants.RELOAD;
 import static cds.aladin.Constants.SHOWAYNCJOBS;
 import static cds.aladin.Constants.SYNC_ASYNC;
 import static cds.aladin.Constants.TABLEGUINAME;
+import static cds.aladin.Constants.TABLESLABEL;
 import static cds.aladin.Constants.TAPFORM_STATUS_ERROR;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADED;
 import static cds.aladin.Constants.TAPFORM_STATUS_LOADING;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
-import static cds.aladin.Constants.TABLESLABEL;
 import static cds.tools.CDSConstants.BOLD;
 
 import java.awt.BorderLayout;
@@ -58,6 +58,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Vector;
 
@@ -99,6 +100,8 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	 * 
 	 */
 	private static final long serialVersionUID = 8296179835574266057L;
+
+	private static final int TAPSCHEMACOUNT = 5;
 	
 	public static String TIPRETRY, TAPTABLEUPLOADTIP, TAPTABLENOUPLOADTIP, REFRESHQUERYTOOLTIP, CHECKQUERYTOOLTIP,
 			SYNCASYNCTOOLTIP, SHOWASYNCTOOLTIP, TAPTABLEJOINTIP, DISCARD, DISCARDTIP, SETRADECBUTTONTIP,
@@ -309,7 +312,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			c.gridx++;
 			tablesPanel.add(button,c);
 		
-			if (Aladin.PROTO) {//TODO:: tintinproto
+			if (Aladin.PROTO) {
 				button = new JButton("Join");
 				c.weightx = 0.05;
 				c.gridx++;
@@ -951,6 +954,17 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			}
 		} else {
 			tables.addAll(this.tapClient.tablesMetaData.keySet());
+			if (TapManager.getInstance(aladin).hideTapSchema) {
+				ListIterator<String> tablesIterator  = tables.listIterator(tables.size());
+				int schemaTables = TAPSCHEMACOUNT;
+				while (tablesIterator.hasPrevious() && schemaTables > 0) {
+					String tableName = (String) tablesIterator.previous();
+					if (TapClient.isSchemaTable(tableName)) {
+						tablesIterator.remove();
+						schemaTables--;
+					}
+				}
+			}
 		}
 		return tables;
 		

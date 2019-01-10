@@ -101,7 +101,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	private AbstractButton expandCollapse;
 
 	protected void createChaine() {
-		TITLE = Aladin.chaine.getString("UPTITLE");
+		TITLE = Aladin.chaine.getString("UPLOADTITLE");
 		CLOSE = Aladin.chaine.getString("CLOSE");
 		IDENTIFIER = Aladin.chaine.getString("ISIDENTIFIER");
 		ERRORMSG = Aladin.chaine.getString("ERROR");
@@ -422,7 +422,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 					
 					final File tmpFile;
 					if ((tmpFile = aladin.createTempFile(SAMPUtil.sanitizeFilename(referencedTable), ".xml")) == null) {
-						// TODO:: tintin when doing join need to send more files
+						// TODO:: when doing join need to send more files
 						Aladin.trace(3, "ERROR in aladin.createTempFile for "+uploadFileName);
 						throw new Exception("Unable to parse " + uploadFileName + " data for upload!");
 					}

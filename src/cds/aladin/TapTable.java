@@ -201,6 +201,7 @@ public class TapTable {
 	}
 	
 	/**
+	 * Unused. For reference
 	 * Method only used for cases of table names with special chars.
 	 * Adds double quote to the names
 	 * @param tapTable 
@@ -209,7 +210,7 @@ public class TapTable {
 	 */
 	public static String getQueryPart1(String queryPartInput) {//keeping for reference
 		if (queryPartInput != null) {
-//			queryPartInput = tapTable.getAdqlName(); //TODO:: tintin : when we add schema name
+//			queryPartInput = tapTable.getAdqlName(); //TODO::  : when we add schema name
 			Pattern regex = Pattern.compile(REGEX_TABLENAME_SPECIALCHAR);
 			/*String[] tableName = queryPartInput.split("\\."); nope. Vizier can have dot inside a table adql name: J/other/BAJ/24.62/table5 
 			if (tableName.length > 1) {

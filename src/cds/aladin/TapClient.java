@@ -136,14 +136,14 @@ public class TapClient{
 			String[] modesAllowed = null;
 			
 			if (this.nodeName != null) {
-				if (Aladin.PROTO) {//TODO:: tintinproto
+				if (Aladin.PROTO) {
 					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC, TEMPLATES, OBSCORE };
 				} else {
 					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC};
 				}
 				
 			} else {
-				if (Aladin.PROTO) {//TODO:: tintinproto
+				if (Aladin.PROTO) {
 					modesAllowed = new String []{ /*GLU, */GENERIC, TEMPLATES, OBSCORE };
 				} else {
 					modesAllowed = new String []{ /*GLU, */ GENERIC};
@@ -320,7 +320,12 @@ public class TapClient{
 			} else {//preference is for what is already loaded
 				if (this.serverTapNode != null && this.serverTapNode.isLoaded()) {
 					dynamicTapForm = this.serverTapNode;
-					model.setSelectedItem(NODE);
+					if (nodeName != null) {
+						model.setSelectedItem(nodeName);
+					} else {
+						model.setSelectedItem(NODE);
+					}
+					
 				} else if (this.serverTap != null && this.serverTap.isLoaded()) {
 					dynamicTapForm = this.serverTap;
 					model.setSelectedItem(GENERIC);
@@ -366,9 +371,10 @@ public class TapClient{
 	/**
 	 * Method to update the frame info panel.
 	 * 	if the old frame is visible the method reloads it.
+	 * @param newServer 
 	 * @param newInfoPanel
 	 */
-	protected void tackleFrameInfoServerUpdate(Aladin aladin, Future<JPanel> newInfoPanel) {
+	protected void tackleFrameInfoServerUpdate(Aladin aladin, DynamicTapForm newServer, Future<JPanel> newInfoPanel) {
 		try {
 			FrameInfoServer frameInfoServer = null;
 			if (this.infoPanel!=null) {
@@ -388,9 +394,15 @@ public class TapClient{
 				} else {
 					this.infoPanel.cancel(true);
 				}
-			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer().equals(this)) {
+			} else if (aladin.frameInfoServer != null && aladin.frameInfoServer.getServer() != null
+					&& aladin.frameInfoServer.getServer().equals(newServer)) {
 				//this else part is for a specific case where generic status report is displayed before table meta can be obtained
-				frameInfoServer = new FrameInfoServer(aladin, newInfoPanel);
+				if (newInfoPanel == null) {
+					frameInfoServer = new FrameInfoServer(aladin);
+				} else {
+					frameInfoServer = new FrameInfoServer(aladin, newInfoPanel);
+				}
+				
 				if (aladin.frameInfoServer.isVisible()) {
 					frameInfoServer.updateInfoPanel();
 					aladin.frameInfoServer.dispose();
@@ -473,7 +485,7 @@ public class TapClient{
 		this.tapManager.setTargetDimensions(this);
 	}
 
-	public boolean isSchemaTable(String tableName) {
+	public static boolean isSchemaTable(String tableName) {
 		// TODO Auto-generated method stub
 		boolean result = false;
 		Pattern tapSchemaPattern = Pattern.compile(REGEX_TAPSCHEMATABLES, Pattern.CASE_INSENSITIVE);
@@ -527,7 +539,7 @@ public class TapClient{
 		}
 	}
 	
-	//TODO::: tintin refactor may be move this to obstap server constructor
+	//TODO::: refactor may be move this to obstap server constructor
 	public boolean parseForObscore(String tableName, TapTable tapTable) {
 		String priRaColumnName = tapTable.getRaColumnName();
 		String priDecColumnName = tapTable.getDecColumnName();
@@ -780,6 +792,7 @@ public class TapClient{
 			this.serverObsTap.removeAll();
 			this.serverObsTap.formLoadStatus = TAPFORM_STATUS_NOTLOADED;
 		}
+		this.infoPanel = null;
 		tapManager.createAndLoadATapServer(this, dynamicTapForm);
 		if (this.mode == TapClientMode.TREEPANEL) {
 			tapManager.showTapPanelFromTree(tapLabel, dynamicTapForm);
@@ -792,7 +805,7 @@ public class TapClient{
 	
 	public boolean isUploadAllowed() {
 		boolean result = false;
-		if (this.capabilities != null && Aladin.PROTO) {//tintinproto
+		if (this.capabilities != null && Aladin.PROTO) {
 			VOSICapabilitiesReader meta;
 			try {
 				meta = this.capabilities.get();

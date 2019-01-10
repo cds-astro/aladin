@@ -130,9 +130,11 @@ public final class CDSHealpix {
       return query_disc(nside, ra, dec, radius, true);
    }
    
+   
    public static void main(String [] arg) {
-      double ra=97.91750000, dec=5.76952778, radius=4.45/60;
-      int order=9;
+      
+      double ra=160.771389, dec=-64.3813, radius=0.8962;
+      int order=6;
       
       final HealpixNested hn = Healpix.getNested(order);
       final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer( Math.toRadians(radius) );
