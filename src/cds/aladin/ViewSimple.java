@@ -81,9 +81,9 @@ import javax.swing.SwingUtilities;
 import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
 import cds.moc.Healpix;
+import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import healpix.essentials.FastMath;
 
 /**
  * Gestionnaire de la vue. Il s'agit d'afficher les plans acifs (voir

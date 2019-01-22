@@ -46,6 +46,8 @@ import java.util.StringTokenizer;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import cds.tools.Util;
+
 /**
  * Gestion des messages
  * <p>Description: </p>
@@ -90,6 +92,12 @@ public class Message extends Panel {
 
         JLabel a;
         c.anchor = GridBagConstraints.WEST;
+        
+        // On replie les lignes si nécessaire
+        if( message.length()>80 && message.indexOf('\n')<0 ) {
+           message = Util.fold(message, 80);
+        }
+        
         StringTokenizer st = new StringTokenizer(message,"\n");
         int MH=0;
         int mh=10;

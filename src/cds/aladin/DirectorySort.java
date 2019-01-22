@@ -103,6 +103,8 @@ public class DirectorySort {
    static final public int BRANCH1    = 23;
    static final public int BRANCH2    = 24;
    static final public int DATATYPE   = 25;
+   static final public int VIZID      = 26;
+   static final public int VIZCODEFULL= 27;
    
    private Aladin aladin;
    
@@ -127,7 +129,7 @@ public class DirectorySort {
    
    class BranchRules {
       // Liste des règles de tri compatibles avec la branche
-      ArrayList<SortRule> rules = new ArrayList<DirectorySort.SortRule>();
+      ArrayList<SortRule> rules = new ArrayList<>();
       
       // Règle de tri courante
       int current=0;
@@ -252,7 +254,7 @@ public class DirectorySort {
             return (s2.length()-s1.length())*10000+s1.compareTo(s2);
          }           
       };
-      AllRules = new TreeMap<String, BranchRules>(comparator);
+      AllRules = new TreeMap<>(comparator);
       initBranchRules("",  
             new SortRule[] {
                   new SortRule("Name","By name, grouped by origin, CDS first",
@@ -312,6 +314,8 @@ public class DirectorySort {
                         new int[] { BRANCH, VIZIER, -YEAR, -DATE, VIZCAT } ),
                   new SortRule("Coverage","Descending coverage, grouped by coverage range",
                         new int[] { BRANCH, VIZIER, COVERAGE, ID } ),
+                  new SortRule("Identifier","Ascending ID, grouped by VizieR category and catalogue number",
+                        new int[] { BRANCH, VIZIER, VIZCODEFULL, VIZID } ),
       } );
       initBranchRules("Outreach",  
             new SortRule[] {
@@ -701,8 +705,45 @@ public class DirectorySort {
             if( c==-1 ) c=99;
             else if( flagReverse ) c = 98-c;
             return String.format("%02d", c);
+
+            // Selon l'ordre des codes catalogues VizieR (I, II, III, IV ...) puis des catalogues ou numéro de journal
+         case VIZCODEFULL:
+            code = Directory.getCatCode( id );
+            c = Util.indexInArrayOf(code, CATCODE);
+            if( c==-1 ) c=99;
             
-         // Selon la popularité de VizieR
+            String suffix = "";
+            
+            // Pour les catalogues
+            if( !code.equals("J") ) {
+               String number = Directory.getCatNumber( id );
+               try {
+                  int j = 0;
+                  int n= number.length();
+                  while( j<n && Character.isDigit( number.charAt(j) ) ) j++;
+                  suffix = String.format("%04d", Integer.parseInt( number.substring(0,j) ) );
+                  if( j<n ) suffix += "/"+number.substring(j+1);
+               } catch( Exception e )  { }
+               
+            // Pour les journaux
+            } else {
+               String num = Directory.getJournalNum(id);
+               int vol=9999;
+               int page=9999;
+               int offset = num.indexOf('/');
+               try {
+                  vol = Integer.parseInt( num.substring(0,offset) );
+                  if( flagReverse ) vol= 9998 - vol;
+               } catch( Exception e )  { }
+               try {
+                  for( offset++; offset<num.length() && !Character.isDigit( num.charAt(offset) ); offset++);
+                  page = Integer.parseInt( num.substring(offset) );
+               } catch( Exception e )  { }
+               suffix = keyAlpha( Directory.getJournalCode(id), flagReverse,6)+"/"+String.format("%04d",vol)+"/"+String.format("%04d",page);
+            }
+            return String.format("%02d", c)+"/"+suffix;
+
+            // Selon la popularité de VizieR
          case POPULAR:
             String popularity = prop.get("vizier_popularity");
             long pop = 99;
@@ -776,7 +817,7 @@ public class DirectorySort {
    // Backslash le résultat de getBranchKey1
    private String getBranchKey(String id, MyProperties prop, String branch, int mode ) {
       String s = getBranchKey1(id,prop,branch,mode);
-      if( s!=null && mode!=BRANCH1 && mode!=BRANCH2 ) s=s.replace("/","\\/");
+      if( s!=null && mode!=BRANCH1 && mode!=BRANCH2 && mode!=VIZID ) s=s.replace("/","\\/");
       return s;
    }
    
@@ -864,6 +905,11 @@ public class DirectorySort {
             boolean hasMultiple = aladin.directory.hasMultiple(parent);
             if( hasMultiple ) return prop.get("obs_collection");
             return null;
+         
+         case VIZID:
+            // Concerne bien VizieR ?
+            if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) break;
+            return Directory.getCatParent( id.substring(4));
          
          case YEAR:
             String year=null;

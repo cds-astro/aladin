@@ -1080,7 +1080,7 @@ public class Calque extends JPanel implements Runnable {
     */
    protected Vector<Obj> setMultiSelect(ViewSimple v,RectangleD r) {
       int i;
-      Vector<Obj> res = new Vector<Obj>(5000);
+      Vector<Obj> res = new Vector<>(5000);
 
       Plan folder = getMyScopeFolder(v.pref);
 
@@ -1106,7 +1106,7 @@ public class Calque extends JPanel implements Runnable {
     */
    protected Vector<Obj> getObjWith(ViewSimple v,double x,double y) {
       int i;
-      Vector<Obj> res = new Vector<Obj>(500,500);
+      Vector<Obj> res = new Vector<>(500,500);
 
       Plan folder = getMyScopeFolder(v.pref);
 
@@ -1135,7 +1135,7 @@ public class Calque extends JPanel implements Runnable {
    protected Source[] getSources(String oid[]) {
       int i,j,k;
       if( oid==null ) return new Source[0];
-      Vector<Source> v = new Vector<Source>(500,500);
+      Vector<Source> v = new Vector<>(500,500);
 
       // Pour chaque OID a trouver, parcours de tous les plans CATALOG
       Plan [] plan = getPlans();
@@ -1674,7 +1674,7 @@ public class Calque extends JPanel implements Runnable {
          // Sélection par types simple de plan
          } else if( pc.type!=type ) continue;
 
-         if( v==null ) v = new Vector<Plan>(plan.length);
+         if( v==null ) v = new Vector<>(plan.length);
          v.addElement(pc);
       }
       return v;
@@ -1697,7 +1697,7 @@ public class Calque extends JPanel implements Runnable {
             continue;
          }
 
-         if( v==null ) v = new Vector<Plan>(plan.length);
+         if( v==null ) v = new Vector<>(plan.length);
          v.addElement(pc);
       }
       return v;
@@ -2648,7 +2648,7 @@ public class Calque extends JPanel implements Runnable {
 
       unlock();
       
-      Vector<Plan> v = new Vector<Plan>();
+      Vector<Plan> v = new Vector<>();
       try {
          for( int nExt=0; !allFitsExt(numext); nExt++ )  {
             boolean keepIt = keepFitsExt(nExt,numext);  // Pour savoir s'il faut garder cette extension
@@ -3193,7 +3193,7 @@ public class Calque extends JPanel implements Runnable {
    protected String newPlanCatalogByCatalogs(Plan []pList,boolean uniqTable,String label) {
       StringBuilder list = null;
       Plan [] p = pList!=null ? pList : getPlans();
-      Vector<Source> v = new Vector<Source>(100000);
+      Vector<Source> v = new Vector<>(100000);
       for( int i=0; i<p.length; i++ ) {
          if( !p[i].isCatalog() || !p[i].flagOk ) continue;
          if( pList==null && !p[i].selected ) continue;
@@ -3307,9 +3307,9 @@ public class Calque extends JPanel implements Runnable {
          p.setActivated(true);
          if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
          
-         if( Aladin.PROTO) {
+//         if( Aladin.PROTO) {
             TapManager.getInstance(aladin).updateAddUploadPlans(p);
-         }
+//         }
       } else {
          p.flagOk=true;
          p.active=true;
@@ -3464,7 +3464,7 @@ public class Calque extends JPanel implements Runnable {
    // Procédure interne de découpage d'un plan Catalogue en plusieurs Plan, ou
    // pour chaque table
    private Vector<Plan> splitCatalog1(PlanCatalog p) {
-      Vector<Plan> v = new Vector<Plan>(10);
+      Vector<Plan> v = new Vector<>(10);
       PlanCatalog p1=null;
       Legende leg=null;
       int folder = p.folder;

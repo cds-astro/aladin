@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import healpix.essentials.RangeSet;
-
 /** HEALPix Multi Order Coverage Map (MOC)
  * This object provides read, write and process methods to manipulate an HEALPix Multi Order Coverage Map (MOC)
  * A MOC is used to define a sky region by using HEALPix sky tesselation
@@ -783,7 +781,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       
       sort();
       rangeSet = new Range( getSize() );
-      RangeSet rtmp=new RangeSet();
+      Range rtmp=new Range();
       for (int order=0; order<nOrder; ++order) {
          rtmp.clear();
          int shift=2*(Healpix.MAXORDER-order);
@@ -796,8 +794,8 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
    public void toHealpixMoc() throws Exception {
       clear();
       setCheckConsistencyFlag(false);
-      RangeSet r2 = new RangeSet(rangeSet);
-      RangeSet r3 = new RangeSet();
+      Range r2 = new Range(rangeSet);
+      Range r3 = new Range();
       for( int o=0; o<=Healpix.MAXORDER; ++o) {
          if( r2.isEmpty() ) return;
          int shift = 2*(Healpix.MAXORDER-o);
@@ -1277,7 +1275,7 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
       this.coordSys=coordSys;
       this.minLimitOrder=minLimitorder;
       this.maxLimitOrder=maxLimitOrder;
-      property = new HashMap<String, String>();
+      property = new HashMap<>();
       if( maxLimitOrder!=-1 ) property.put("MOCORDER",maxLimitOrder+"");
       property.put("COORDSYS",coordSys);
       property.put("MOCTOOL","CDSjavaAPI-"+VERSION);

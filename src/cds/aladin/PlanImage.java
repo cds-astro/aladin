@@ -45,8 +45,8 @@ import java.util.zip.Inflater;
 import cds.image.Hdecomp;
 import cds.image.Iqefunc;
 import cds.tools.Astrodate;
+import cds.tools.FastMath;
 import cds.tools.Util;
-import healpix.essentials.FastMath;
 
 /**
  * Plan dedie a une image (IMAGE)

@@ -28,8 +28,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 
+import cds.tools.FastMath;
 import cds.tools.pixtools.CDSHealpix;
-import healpix.essentials.FastMath;
 
 /**
   * Gère un losange Healpix pour un PlanBG

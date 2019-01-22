@@ -38,9 +38,9 @@ import java.util.Vector;
 import cds.aladin.Hist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
+import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import healpix.essentials.FastMath;
 
 /**
  * Objet graphique pour une Ligne.

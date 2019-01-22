@@ -21,7 +21,7 @@
 
 package cds.moc;
 
-import healpix.essentials.*;
+import cds.tools.pixtools.CDSHealpix;
 
 /** HEALPix CDS wrapper
  * Encapsulate the usage of the official HEALPix GAIA package
@@ -29,6 +29,7 @@ import healpix.essentials.*;
  * The HEALPix ordering is always NESTED
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.4 Jan 2019 - use of Pineau Healpix lib
  * @version 1.3 May 2014 - NPIX => UNIQ fits keyword
  * @version 1.2 Jan 2012 - Thread safe implementation
  * @version 1.1 Oct 2011 - direct HealpixBase use
@@ -46,7 +47,7 @@ public final class Healpix implements HealpixImpl {
    public long ang2pix(int order,double lon, double lat) throws Exception {
       double theta = Math.PI/2. - lat/180.*Math.PI;
       double phi = lon/180.*Math.PI;
-      return healpixBase[order].ang2pix(new Pointing(theta,phi));
+      return CDSHealpix.ang2pix_nest( pow2(order), theta, phi);
    }
 
    /** Provide the spherical coord associated to an HEALPix number, for a given order
@@ -56,8 +57,8 @@ public final class Healpix implements HealpixImpl {
     * @throws Exception
     */
    public double [] pix2ang(int order,long npix) throws Exception {
-      Pointing res = healpixBase[order].pix2ang(npix);
-      return new double[]{ res.phi*180./Math.PI, (Math.PI/2. - res.theta)*180./Math.PI};
+      double lonlat[] = CDSHealpix.pix2ang_nest(pow2(order), npix);
+      return new double[]{ lonlat[1]*180./Math.PI, (Math.PI/2. - lonlat[0])*180./Math.PI};
    }
 
    /** Provide the list of HEALPix numbers fully covering a circle (for a specified order)
@@ -71,26 +72,13 @@ public final class Healpix implements HealpixImpl {
    public long [] queryDisc(int order, double lon, double lat, double radius) throws Exception {
       double theta = Math.PI/2. - lat/180.*Math.PI;
       double phi = lon/180.*Math.PI;
-      RangeSet list = healpixBase[order].queryDiscInclusive(
-            new Pointing(theta, phi), Math.toRadians(radius),2);
-      if( list==null ) return new long[0];
-      return list.toArray();
+      return CDSHealpix.query_disc(pow2(order), theta, phi, Math.toRadians(radius), true);
    }
 
    /*********************** private stuff ***************************************************/
 
    /** Maximal HEALPix order supported by the library */
    static public final int MAXORDER = 29;
-
-   static private HealpixBase [] healpixBase;
-   static {
-      healpixBase = new HealpixBase[MAXORDER+1];
-      try {
-         for( int order=0; order<healpixBase.length; order++ ) {
-            healpixBase[order] = new HealpixBase(pow2(order),Scheme.NESTED );
-         }
-      } catch( Exception e) { healpixBase=null; }
-   }
 
    static public final long pow2(long order){ return 1<<order;}
    static public final long log2(long nside){ int i=0; while((nside>>>(++i))>0); return --i; }

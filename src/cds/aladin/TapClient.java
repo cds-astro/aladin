@@ -23,16 +23,16 @@ package cds.aladin;
 import static cds.aladin.Constants.ADQLVALUE_FORBETWEEN;
 import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.EMPTYSTRING;
-import static cds.aladin.Constants.TEMPLATES;
 import static cds.aladin.Constants.GENERIC;
 import static cds.aladin.Constants.GLU;
+import static cds.aladin.Constants.NODE;
 import static cds.aladin.Constants.OBSCORE;
 import static cds.aladin.Constants.REGEX_OPALPHANUM;
 import static cds.aladin.Constants.REGEX_OPNUM;
 import static cds.aladin.Constants.REGEX_RANGENUMBERINPUT;
 import static cds.aladin.Constants.REGEX_TAPSCHEMATABLES;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
-import static cds.aladin.Constants.NODE;
+import static cds.aladin.Constants.TEMPLATES;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -108,7 +108,7 @@ public class TapClient{
 	Color primaryColor = Aladin.BLUE;
     Color secondColor = new Color(198,218,239);
     private boolean editing = false;
-    public Map<String, TapTable> obscoreTables = new LinkedHashMap<String, TapTable>();
+    public Map<String, TapTable> obscoreTables = new LinkedHashMap<>();
     
     public TapClient() {
 		// TODO Auto-generated constructor stub
@@ -122,7 +122,7 @@ public class TapClient{
 		}
     	if (nodeTable != null) {
     		this.nodeName = nodeTable;
-        	this.nodeTableNames = new ArrayList<String>();
+        	this.nodeTableNames = new ArrayList<>();
     		this.nodeTableNames.add(nodeTable);
 		}
     	
@@ -136,18 +136,18 @@ public class TapClient{
 			String[] modesAllowed = null;
 			
 			if (this.nodeName != null) {
-				if (Aladin.PROTO) {
+//				if (Aladin.PROTO) {
 					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC, TEMPLATES, OBSCORE };
-				} else {
-					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC};
-				}
+//				} else {
+//					modesAllowed = new String []{ /*GLU, */nodeName, GENERIC};
+//				}
 				
 			} else {
-				if (Aladin.PROTO) {
+//				if (Aladin.PROTO) {
 					modesAllowed = new String []{ /*GLU, */GENERIC, TEMPLATES, OBSCORE };
-				} else {
-					modesAllowed = new String []{ /*GLU, */ GENERIC};
-				}
+//				} else {
+//					modesAllowed = new String []{ /*GLU, */ GENERIC};
+//				}
 				
 			}
 			model = new DefaultComboBoxModel(modesAllowed); 
@@ -213,7 +213,7 @@ public class TapClient{
 		tapClient.serverTap.tapClient = tapClient;
 		tapClient.primaryColor = new Color(198,218,239);
 		tapClient.secondColor = Aladin.COLOR_CONTROL_FOREGROUND;
-		tapClient.tablesMetaData = new HashMap<String, TapTable>();
+		tapClient.tablesMetaData = new HashMap<>();
 		return tapClient;
 	}
 	
@@ -433,7 +433,7 @@ public class TapClient{
 	 */
 	public void preprocessTapClient() {
 		Map<String, TapTable> backUpTablesMetaData = this.tablesMetaData;
-		List<Map.Entry<String, TapTable>> sorter = new LinkedList<Map.Entry<String,TapTable>>();
+		List<Map.Entry<String, TapTable>> sorter = new LinkedList<>();
 		sorter.addAll(this.tablesMetaData.entrySet());
 		
 		Collections.sort(sorter, new Comparator<Map.Entry<String,TapTable>>() {
@@ -459,15 +459,15 @@ public class TapClient{
 		});
 		
 		if (this.queryCheckerTables == null) {//initialise for the first time
-			this.queryCheckerTables = new ArrayList<DefaultDBTable>();
+			this.queryCheckerTables = new ArrayList<>();
 		} else {
 			this.queryCheckerTables.clear();
 		}
 		//sory as per size.
 		//make obscore second choice- if it exixts
 		//place tap schema at the last
-		Map<String, TapTable> sorted = new LinkedHashMap<String, TapTable>();
-		Map<String, TapTable> tapSchemaMeta = new LinkedHashMap<String, TapTable>();
+		Map<String, TapTable> sorted = new LinkedHashMap<>();
+		Map<String, TapTable> tapSchemaMeta = new LinkedHashMap<>();
 		for (Entry<String, TapTable> metaDataEntry : sorter) {
 			DefaultDBTable parserTable = new DefaultDBTable(metaDataEntry.getKey());
 			Vector<TapTableColumn> columnsMeta = backUpTablesMetaData.get(metaDataEntry.getKey()).getColumns();
@@ -805,7 +805,7 @@ public class TapClient{
 	
 	public boolean isUploadAllowed() {
 		boolean result = false;
-		if (this.capabilities != null && Aladin.PROTO) {
+		if (this.capabilities != null /* && Aladin.PROTO */) {
 			VOSICapabilitiesReader meta;
 			try {
 				meta = this.capabilities.get();
@@ -853,13 +853,13 @@ public class TapClient{
 		//check if query has any of those references
 		//if yes update
 		
-		List<DefaultDBTable> queryCheckerTablesUpdate = new ArrayList<DefaultDBTable>();
+		List<DefaultDBTable> queryCheckerTablesUpdate = new ArrayList<>();
 		if (this.queryCheckerTables != null && !this.queryCheckerTables.isEmpty()) {
 			queryCheckerTablesUpdate.addAll(this.queryCheckerTables);
 		}
 		
 		Map<String, TapTable> uploadedTables = tapManager.getUploadedTables();
-		List<String> uploadTablesReferenced = new ArrayList<String>();
+		List<String> uploadTablesReferenced = new ArrayList<>();
 		if (uploadedTables != null) {
 			for (String uploadtable : uploadedTables.keySet()) {
 				if (server.tap.getText().toUpperCase().contains(uploadtable.toUpperCase())) {

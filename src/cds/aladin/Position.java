@@ -30,8 +30,8 @@ import java.awt.Rectangle;
 import java.io.OutputStream;
 
 import cds.aladin.Hist.HistItem;
+import cds.tools.FastMath;
 import cds.tools.Util;
-import healpix.essentials.FastMath;
 
 /**
  * Manipulation d'un objet graphique affichable dans la vue

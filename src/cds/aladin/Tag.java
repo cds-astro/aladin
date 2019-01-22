@@ -45,8 +45,8 @@ import javax.swing.JTextField;
 
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
+import cds.tools.FastMath;
 import cds.tools.Util;
-import healpix.essentials.FastMath;
 
 /**
  * Objet graphique Tag/Label affichable dans la vue

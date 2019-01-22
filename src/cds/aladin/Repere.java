@@ -38,9 +38,9 @@ import javax.swing.JTextField;
 import cds.aladin.Hist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
+import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import healpix.essentials.FastMath;
 
 
 /**
@@ -409,8 +409,7 @@ public class Repere extends Position {
             Coord coo = new Coord(raj,dej);
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
             double radiusRadian = Math.toRadians(getRadius());
-            long [] npix = CDSHealpix.FX ? CDSHealpix.query_discFXCenters(nside, coo.al, coo.del, radiusRadian)
-                  : CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
+            long [] npix = CDSHealpix.query_discFXCenters(nside, coo.al, coo.del, radiusRadian);
             //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
             for( int i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);

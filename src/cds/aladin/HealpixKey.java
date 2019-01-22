@@ -58,10 +58,10 @@ import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
 import cds.fits.Fits;
+import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
-import healpix.essentials.FastMath;
 
 /**
  * Gère un losange Healpix pour un PlanBG

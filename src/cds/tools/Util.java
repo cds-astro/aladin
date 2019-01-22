@@ -116,7 +116,6 @@ import cds.savot.model.ResourceSet;
 import cds.savot.model.SavotResource;
 import cds.savot.pull.SavotPullParser;
 import cds.xml.VotQueryResponseStatusReader;
-import healpix.essentials.FastMath;
 
 /**
  * Diverses méthodes utilitaires
@@ -670,7 +669,7 @@ public final class Util {
       if( s==null ||s.trim().length()==0 ) return s;
       char a[] = s.toCharArray();
       String NL = !html ? "\n" : "<BR>";
-      StringBuffer res = new StringBuffer(a.length+30);
+      StringBuilder res = new StringBuilder(a.length+30);
       if( html ) res.append("<html>");
       boolean debut=true;
       for( int i=0,k=0,marge=0; i<a.length; i++,k++ ) {
@@ -684,8 +683,7 @@ public final class Util {
             res.append(NL);
             continue;
          }
-         if( k>limit+10
-               || k>limit && space ) {
+         if( k>limit+10 || k>limit && space ) {
             res.append(NL);
             for( int j=0; j<marge; j++ ) res.append(' ');
             k=0;

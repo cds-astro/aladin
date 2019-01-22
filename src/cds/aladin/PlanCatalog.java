@@ -215,9 +215,9 @@ public class PlanCatalog extends Plan {
       if( getCounts()<=0 || isSED() ) return true;
       
       aladin.view.deSelect(this);
-      if (Aladin.PROTO) {
+//      if (Aladin.PROTO) {
     	  TapManager.getInstance(aladin).updateDeleteUploadPlans(this);
-      }
+//      }
       super.Free();
       aladin.view.free(this);
       headerFits=null;
@@ -327,9 +327,9 @@ public class PlanCatalog extends Plan {
          setFilter(filterIndex);
          
          //to add loaded plan into upload options
-         if (Aladin.PROTO) {
+//         if (Aladin.PROTO) {
         	 TapManager.getInstance(aladin).updateAddUploadPlans(this);
-		}
+//		}
       }
 
       if( getNbTable()>1 ) aladin.calque.splitCatalog(this);
@@ -367,7 +367,7 @@ public class PlanCatalog extends Plan {
 
    /** Retourne la liste des légendes des tables qui composent le catalogue */
    protected Vector<Legende> getLegende() {
-      Vector<Legende> leg = new Vector<Legende>(10);
+      Vector<Legende> leg = new Vector<>(10);
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();

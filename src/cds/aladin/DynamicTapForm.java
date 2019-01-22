@@ -297,7 +297,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		if (actionClass instanceof DynamicTapForm) {
 			server = (DynamicTapForm) actionClass;
 		} else if (actionClass instanceof JoinFacade) {
-			server = (DynamicTapForm) ((JoinFacade)actionClass).serverTap;
+			server = ((JoinFacade)actionClass).serverTap;
 			isJoin = true;
 		} 
 		
@@ -312,7 +312,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 			c.gridx++;
 			tablesPanel.add(button,c);
 		
-			if (Aladin.PROTO) {
+//			if (Aladin.PROTO) {
 				button = new JButton("Join");
 				c.weightx = 0.05;
 				c.gridx++;
@@ -321,7 +321,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 //				button.setEnabled(false);
 				button.addActionListener(server);
 				button.setToolTipText(TAPTABLEJOINTIP);
-			}
+//			}
 		} else if (isJoin || server instanceof ServerTapExamples) {
 			c.insets = new Insets(1, 3, 1, 3);
 			c.weightx = 0.10;
@@ -469,7 +469,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		gridbag.setConstraints(radius, c);
 		targetPanel.add(radius);
 		
-		this.circleOrSquare = new JComboBox<String>(CIRCLEORSQUARE);
+		this.circleOrSquare = new JComboBox<>(CIRCLEORSQUARE);
 		circleOrSquare.setOpaque(false);
 		circleOrSquare.setName("posConstraintShape");
 //		this.circleOrSquare.setActionCommand(POSCONSTRAINTSHAPECHANGED);
@@ -527,7 +527,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		button.addActionListener(this);
 		bottomPanel.add(button);
 		
-		this.sync_async = new JComboBox<String>(SYNC_ASYNC);
+		this.sync_async = new JComboBox<>(SYNC_ASYNC);
 		this.sync_async.setOpaque(false);
 		if (SYNCASYNCTOOLTIP!=null && !SYNCASYNCTOOLTIP.isEmpty()) {
 			this.sync_async.setToolTipText("<html><p width=\"500\">"+SYNCASYNCTOOLTIP+"</p></html>");
@@ -656,7 +656,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		Vector<TapTableColumn> columnNames = tablesMetaData.get(tableName).getColumns();
 		if (columnNames == null) {
 			try {
-				List<String> tableNamesToUpdate = new ArrayList<String>();
+				List<String> tableNamesToUpdate = new ArrayList<>();
 				tableNamesToUpdate.add(tableName);
 				this.tapClient.tapManager.updateTableColumnSchemas(this, tableNamesToUpdate);
 				columnNames = tablesMetaData.get(tableName).getColumns();
@@ -731,7 +731,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	
 	@Override
 	public Vector<String> getMatches(String mask, JComboBox<String> comboBox) {
-		Vector<String> matches = new Vector<String>();
+		Vector<String> matches = new Vector<>();
 		if (/*this.tablesGui ==  comboBox && */mask != null && !mask.isEmpty()) {
 			for (String key : getTableNames()) {
 				boolean checkDescription = false;
@@ -754,14 +754,14 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	public ADQLQuery checkQuery(Map<String, Object> requestParams)  throws UnresolvedIdentifiersException {
 		ADQLQuery query = null;
 		try {
-			if (Aladin.PROTO) {
+//			if (Aladin.PROTO) {
 				try {
 					this.tapClient.updateUploadedTablesToADQLParser(this, requestParams);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					Aladin.trace(3, "error trying to update adql parser" +e.getMessage());
 				}
-			}
+//			}
 			query = super.checkQuery(null);
 //			DefaultDBTable table = new DefaultDBTable(selectedTableName);
 //			System.err.println("getADQLCatalogName "+table.getADQLCatalogName()+"\ngetADQLSchemaName "+table.getADQLSchemaName()+"\ngetADQLName "+table.getADQLName()+"\ntoString "+table.toString());
@@ -803,7 +803,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 		List<String> tableNames = null;
 		try {
 			ADQLQuery adqlQuery = syntaxParser.parseQuery(query);
-			tableNames = new ArrayList<String>();
+			tableNames = new ArrayList<>();
 //			DBColumn[] columns = query.getResultingColumns();//match columns with the unresolvedIdentifiers?
 			for (ADQLTable adqlTable : adqlQuery.getFrom().getTables()) {
 				String tableNameKey = getTableMetaCacheKey(adqlTable.getFullTableName());
@@ -934,7 +934,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 	
 	//Not bothering for ServerObscore.. yet!
 	public Vector<String> getTableNames() {
-		Vector<String> tables = new Vector<String>();
+		Vector<String> tables = new Vector<>();
 		if (!isFullServer && this.tapClient.nodeTableNames != null) {
 			for (String nodeTableName : this.tapClient.nodeTableNames) {
 				DefaultDBTable ntable = new DefaultDBTable(nodeTableName);
@@ -958,7 +958,7 @@ public abstract class DynamicTapForm extends Server implements FilterActionClass
 				ListIterator<String> tablesIterator  = tables.listIterator(tables.size());
 				int schemaTables = TAPSCHEMACOUNT;
 				while (tablesIterator.hasPrevious() && schemaTables > 0) {
-					String tableName = (String) tablesIterator.previous();
+					String tableName = tablesIterator.previous();
 					if (TapClient.isSchemaTable(tableName)) {
 						tablesIterator.remove();
 						schemaTables--;

@@ -21,13 +21,12 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.Color;
 import java.awt.Graphics;
 
 import javax.swing.JComponent;
 
+import cds.tools.FastMath;
 import cds.tools.Util;
 
 /**

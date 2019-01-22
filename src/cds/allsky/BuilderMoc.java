@@ -72,26 +72,33 @@ public class BuilderMoc extends Builder {
 
       // dans le cas d'un survey à faible résolution
       // ou qui couvre une petite partie du ciel, 
-      boolean isLarge=true;
-      try { 
-         if( context.mocIndex==null ) context.loadMocIndex();
-         isLarge = context.mocIndex.getCoverage()>1/6.;
-      } catch( Exception e ) { }
+//      boolean isLarge=true;
+//      try { 
+//         if( context.mocIndex==null ) context.loadMocIndex();
+//         isLarge = context.mocIndex.getCoverage()>1/6.;
+//      } catch( Exception e ) { }
       
       
       // mocOrder explicitement fourni par l'utilisateur
       if( context.getMocOrder()!=-1 ) mocOrder = context.getMocOrder();
       
-      // mocOrder déterminé par la nature du survey
+      // Sinon on prend classiquement le niveau des tuiles
       else {
-         if( mocOrder<Constante.DEFAULTMOCORDER || !isLarge ) {
-            mocOrder = context.getOrder()+context.getTileOrder()-Constante.DIFFMOCORDER;
-         }
+         mocOrder = fileOrder;
          if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
-         
-         // Couleur
-         if( context.isColor() ) mocOrder=fileOrder;
       }
+    
+// POSAIT TROP DE SOUCI DE MOC TROP LONG A CALCULER => LA DERTERMINATION AUTOMATIQUE EST SUPPRIME (PF 14/1/2019)
+//      // mocOrder déterminé par la nature du survey
+//      else {
+//         if( mocOrder<Constante.DEFAULTMOCORDER || !isLarge ) {
+//            mocOrder = context.getOrder()+context.getTileOrder()-Constante.DIFFMOCORDER;
+//         }
+//         if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
+//         
+//         // Couleur
+//         if( context.isColor() ) mocOrder=fileOrder;
+//      }
       
       // On ne peut prendre un MOC order supérieur à la résolution nomimale
       if( mocOrder>tileOrder+fileOrder ) {

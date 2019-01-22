@@ -21,11 +21,10 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.Graphics;
 import java.awt.Point;
 
+import cds.tools.FastMath;
 import cds.tools.Util;
 
 /**

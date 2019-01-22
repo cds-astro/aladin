@@ -4774,7 +4774,7 @@ public final class Command implements Runnable {
          + "setconf frame=Gal;" + "184.57316 -05.83741;" + "flipflop Gauss V;" + "Crop = crop Gauss 100x100;" + "rm Gauss;"
          + "rm A2;" + "Cube=blink Sk* Crop ESO*;" + "PR=get Press;" + "cview Sk* A2;" + "set PR opacity=65;" + "rm A2;"
          + "pause 2;" + "get Simbad M1 14';" + "call NED(M1,\"10'\");" + "get Vizier(USNO);" + "md Fold;" + "mv RGB Fold;"
-         + "sync;" + "mv I/284 Fold;" + "filter Magn {;" + "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };"
+         + "sync;" + "mv I/252 Fold;" + "filter Magn {;" + "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };"
          + "};" + "mv Magn Fold;" + "set Fold scope=local;" + "rm USNO;" + "XMatch = xmatch CDS/Simbad NED 45;"
          + "addcol XMatch,B-V,${B_tab1}-${V_tab1};" + "select XMatch;" + "search -B-V=\"\";" + "tag;" + "cplane B-V;"
          + "rm XMatch;" + "get Fov(HST);" + "mv HST Fold;" + "export CDS/Simbad Cat.xml;" + "export NED Cat1.tsv;"
@@ -4784,7 +4784,7 @@ public final class Command implements Runnable {
          + "zoom 15';" + "rm B1;" + "set Melling* opacity=30;" +
          // "get hips(\"Simbad density\");" +
          "set proj=CARTESIAN;" + "cm eosb reverse log;" + "M1;" + "zoom 30°;" + "set opacity=30;" + "rm B1;"
-         + "cview -plot I/284(Imag,R2mag) B1;" + "sync;" + "select B-V;" + "grid on;" + "setconf overlays=-label;"
+         + "cview -plot I/252(Imag,R2mag) B1;" + "sync;" + "select B-V;" + "grid on;" + "setconf overlays=-label;"
          + "info The end !;";
 
    /**

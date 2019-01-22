@@ -34,9 +34,6 @@ import cds.moc.MocCell;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
-import healpix.essentials.HealpixBase;
-import healpix.essentials.Pointing;
-import healpix.essentials.Vec3;
 
 /**
  * Génération d'un plan MOC à partir d'un flux
@@ -227,22 +224,22 @@ public class PlanMoc extends PlanBGCat {
    static public ArrayList<double[]> getPerimeter(HealpixMoc moc) throws Exception {
       if( moc==null ) return null;
       int maxOrder = getRealMaxOrder(moc);
-      ArrayList<double[]> a = new ArrayList<double[]>();
+      ArrayList<double[]> a = new ArrayList<>();
       if( maxOrder==-1 || moc.isAllSky() ) return a;
       HealpixMoc done = new HealpixMoc( moc.getCoordSys(), moc.getMinLimitOrder(),maxOrder );
-      HealpixBase hpx= CDSHealpix.getHealpixBase(maxOrder);
+      long nside = CDSHealpix.pow2( maxOrder );
 
       Iterator<Long> it = moc.pixelIterator();
       while( it.hasNext() ) {
          long pix = it.next();
-         parcoursBord(hpx,moc,done,a,maxOrder,pix,0,0);
+         parcoursBord(nside,moc,done,a,maxOrder,pix,0,0);
          if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
       }
 
       return a;
    }
    
-   static private void parcoursBord(HealpixBase hpx, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
+   static private void parcoursBord(long nside, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
          int maxOrder, long pix, int sens, int rec ) throws Exception {
       if( done.isIntersecting(maxOrder,pix) ) return;
       
@@ -250,13 +247,13 @@ public class PlanMoc extends PlanBGCat {
       
       done.add(maxOrder,pix);
       
-      long [] voisins = getVoisins(hpx,moc,maxOrder,pix);
+      long [] voisins = getVoisins(nside,moc,maxOrder,pix);
       double [][] corners = null;
       for( int j=0; j<4; j++ ) {
          int i = (sens+j)%4;
          long voisin = voisins[i];
          if( voisin!=-1 ) continue;
-         if( corners==null ) corners = getCorners(hpx,pix);
+         if( corners==null ) corners = getCorners(nside,pix);
          
          boolean flagAdd=true;
          if( flagAdd && a.size()>0 ) {
@@ -270,12 +267,12 @@ public class PlanMoc extends PlanBGCat {
          long nextVoisin = voisins[ i<3 ? i+1 : 0 ];
          if( nextVoisin!=-1 ) {
             
-            long [] vVoisins = getVoisins(hpx,moc,maxOrder,nextVoisin);
+            long [] vVoisins = getVoisins(nside,moc,maxOrder,nextVoisin);
             long nNextVoisin = vVoisins[i];
             if( nNextVoisin!=-1 ) {
-               parcoursBord(hpx,moc,done,a,maxOrder,nNextVoisin,i==0?3:i-1,rec+1);
+               parcoursBord(nside,moc,done,a,maxOrder,nNextVoisin,i==0?3:i-1,rec+1);
             }
-            else parcoursBord(hpx,moc,done,a,maxOrder,nextVoisin,i,rec+1);
+            else parcoursBord(nside,moc,done,a,maxOrder,nextVoisin,i,rec+1);
             if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
          }
       }
@@ -285,27 +282,37 @@ public class PlanMoc extends PlanBGCat {
 
    // Retourne les coordonnées des 4 coins du pixel HEALPix indiqué
    // Ordre des coins => S, W, N, E
-   static private double [][] getCorners(HealpixBase hpx,long pix) throws Exception {
-      Vec3[] tvec = hpx.boundaries(pix,1);   // N W S E
-      double [][] corners = new double[tvec.length][2];
-      for (int i=0; i<tvec.length; ++i) {
-         Pointing pt = new Pointing(tvec[i]);
+   static private double [][] getCorners(long nside,long pix) throws Exception {
+      double [][] radec =  CDSHealpix.borders(nside,pix,1);
+      double [][] corners = new double[radec.length][2];
+      for (int i=0; i<radec.length; ++i) {
          int j=A[i];
-         corners[j][0] = ra(pt);
-         corners[j][1] = dec(pt);
+         corners[j] = CDSHealpix.polarToRadec( radec[i] );
       }
       return corners;
    }
-   
-   public static final double cPr = Math.PI / 180;
-   static private double dec(Pointing ptg) { return (Math.PI*0.5 - ptg.theta) / cPr; }
-   static private double ra(Pointing ptg) { return ptg.phi / cPr; }
+
+//   static private double [][] getCorners(long nside,long pix) throws Exception {
+//      Vec3[] tvec = hpx.boundaries(pix,1);   // N W S E
+//      double [][] corners = new double[tvec.length][2];
+//      for (int i=0; i<tvec.length; ++i) {
+//         Pointing pt = new Pointing(tvec[i]);
+//         int j=A[i];
+//         corners[j][0] = ra(pt);
+//         corners[j][1] = dec(pt);
+//      }
+//      return corners;
+//   }
+//   
+//   public static final double cPr = Math.PI / 180;
+//   static private double dec(Pointing ptg) { return (Math.PI*0.5 - ptg.theta) / cPr; }
+//   static private double ra(Pointing ptg) { return ptg.phi / cPr; }
 
    // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'ils sont en dehors du MOC   
    // Ordre des voisins => W, N, E, S
-   static private long [] getVoisins(HealpixBase hpx, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+   static private long [] getVoisins(long nside, HealpixMoc moc, int maxOrder,long npix) throws Exception {
       long [] voisins = new long[4];
-      long [] neib = hpx.neighbours(npix);
+      long [] neib = CDSHealpix.neighbours(nside,npix);
       for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {
          voisins[i] = moc.isIntersecting(maxOrder, neib[j]) ? neib[j] : -1;
       }
@@ -314,9 +321,9 @@ public class PlanMoc extends PlanBGCat {
    
    // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'il n'y en a pas du même ordre   
    // Ordre des voisins => W, N, E, S
-   private long [] getVoisinsSameOrder(HealpixBase hpx, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+   private long [] getVoisinsSameOrder(long nside, HealpixMoc moc, int maxOrder,long npix) throws Exception {
       long [] voisins = new long[4];
-      long [] neib = hpx.neighbours(npix);
+      long [] neib = CDSHealpix.neighbours(nside,npix);
       for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {
          voisins[i] = moc.isIn(maxOrder, neib[j]) ? neib[j] : -1;
       }
@@ -403,20 +410,37 @@ public class PlanMoc extends PlanBGCat {
             return false;
          }
       }
+      
+      // Détermination ou correction du target
+      if( !(/* flagNoTarget || */ moc==null || moc.isEmpty()) ) {
+         
+         // est-ce que le target tombe bien dans le moc ? sinon on va forcer le recalcul sur la première cellule du MOC
+         if( co!=null ) {
+            int order = moc.getMocOrder();
+            Coord c = Localisation.frameToFrame(co, Localisation.ICRS, frameOrigin);
+            double[] radec = CDSHealpix.radecToPolar(new double[] { c.al, c.del });
+            try {
+               long npix = CDSHealpix.ang2pix_nest( CDSHealpix.pow2(order), radec[0], radec[1]);
+               if( !moc.isIntersecting(order, npix) ) co=null;
+            } catch( Exception e ) {}
+         }
 
-      // Mémoristion de la position de la première cellule
-      if( (co==null || flagNoTarget ) && moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
-         try {
-            MocCell cell = moc.iterator().next();
-            double res[] = CDSHealpix.pix2ang_nest(CDSHealpix.pow2(cell.getOrder()), cell.getNpix());
-            double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
-            co = new Coord(radec[0],radec[1]);
-         } catch( Exception e ) {
-            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         // Mémorisation en tant que target de la position de la première cellule
+         if( co==null || co.al==0 && co.del==0  ) {
+            try {
+               MocCell cell = moc.iterator().next();
+               long nside = CDSHealpix.pow2(cell.getOrder());
+               double res[] = CDSHealpix.pix2ang_nest(nside, cell.getNpix());
+               double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
+               co = Localisation.frameToFrame( new Coord(radec[0],radec[1]) , frameOrigin, Localisation.ICRS);
+               aladin.trace(3,"MOC target (re)computed from the first MOC HEALPix cell => "+co);
+            } catch( Exception e ) {
+               if( aladin.levelTrace>=3 ) e.printStackTrace();
+            }
          }
       }
 
-      // Je force le MOC minOrder à 3 pour que l'affichage soit propre
+      // Je force le MOC minOrder à 3 pour que l'affichage soit toujours propre
       if( moc!=null && moc.getMinLimitOrder()<3 ) {
          try {
             if( moc.getMocOrder()<3 ) moc.setMocOrder(3);   
@@ -606,7 +630,6 @@ public class PlanMoc extends PlanBGCat {
          t = System.currentTimeMillis();
          
          int drawingOrder = 0;
-         HealpixBase hpx=null;
          HealpixMoc lowMoc = null;
          boolean flagPeri = isDrawingPerimeter();
          boolean flagBorder = isDrawingBorder();
@@ -623,8 +646,8 @@ public class PlanMoc extends PlanBGCat {
             drawingOrder = getRealMaxOrder(lowMoc);
             if( drawingOrder==-1 ) return;
             //            System.out.println("Récupération Hpix order "+drawingOrder);
-            hpx= CDSHealpix.getHealpixBase(drawingOrder);
-            ArrayList<Hpix> a1 = new ArrayList<Hpix>(10000);
+            long drawingNside = CDSHealpix.pow2(drawingOrder);
+            ArrayList<Hpix> a1 = new ArrayList<>(10000);
             ArrayList<Hpix> a2 = !flagPeri ? null : new ArrayList<Hpix>(10000);
             Iterator<MocCell> it = lowMoc.iterator();
             while( it.hasNext() ) {
@@ -635,7 +658,7 @@ public class PlanMoc extends PlanBGCat {
                a1.add(p);
 
                if( flagPeri )  {
-                  long [] vo = getVoisinsSameOrder(CDSHealpix.getHealpixBase(p.order), lowMoc, p.order, p.npix);
+                  long [] vo = getVoisinsSameOrder(CDSHealpix.pow2(p.order), lowMoc, p.order, p.npix);
                   if( vo[0]!=-1 && vo[1]!=-1 && vo[2]!=-1 && vo[3]!=-1 ) continue;
 
                   //                  long deb = p.npix << 2*(drawingOrder-p.order);
@@ -648,7 +671,7 @@ public class PlanMoc extends PlanBGCat {
                      long b = bord.next();
                      long pix = base | b;
 
-                     vo = getVoisins(hpx, lowMoc, drawingOrder, pix);
+                     vo = getVoisins(drawingNside, lowMoc, drawingOrder, pix);
                      int mask = (vo[0]==-1?0x1:0) | (vo[1]==-1?0x2:0) | (vo[2]==-1?0x4:0) | (vo[3]==-1?0x8:0);
                      if( mask!=0 ) {
                         Hpix p1 = new Hpix(drawingOrder, pix, frameOrigin);

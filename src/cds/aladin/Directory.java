@@ -2614,10 +2614,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    // }
    //
 
-   /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */
-   static protected String getCatCode(String id) {
-      return Util.getSubpath(id, 1);
-   }
+	   /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */
+	   static protected String getCatCode(String id) {
+	      return Util.getSubpath(id, 1);
+	   }
+
+	   /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => 246) */
+	   static protected String getCatNumber(String id) {
+	      return Util.getSubpath(id, 2);
+	   }
 
    /** retourne l'abbréviation du journal (ex: CDS/J/A+A/171/261/table1 => A+A) */
    static protected String getJournalCode(String id) {

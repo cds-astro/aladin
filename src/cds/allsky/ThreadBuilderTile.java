@@ -43,8 +43,6 @@ import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
-import healpix.essentials.HealpixBase;
-import healpix.essentials.Pointing;
 
 final public class ThreadBuilderTile {
 
@@ -428,7 +426,9 @@ final public class ThreadBuilderTile {
          double [] pixcoef = new double[overlay];
          if( flagColor ) { pixvalG = new double[overlay]; pixvalB = new double[overlay]; }
 
-         HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
+//         HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
+         
+         long nside = CDSHealpix.pow2( order+context.getTileOrder() );
 
          boolean gal2ICRS = context.getFrame()!=Localisation.ICRS;
 
@@ -436,9 +436,11 @@ final public class ThreadBuilderTile {
             for (int x = 0; x < out.width; x++) {
                index = min + context.xy2hpx(y * out.width + x);
                // recherche les coordonnées du pixels HPX
-               Pointing pt = hpx.pix2ang(index);
-               radec[1] = (PI2 - pt.theta)*toRad;
-               radec[0] = pt.phi*toRad;
+//               Pointing pt = hpx.pix2ang(index);
+//               radec[1] = (PI2 - pt.theta)*toRad;
+//               radec[0] = pt.phi*toRad;
+               radec = CDSHealpix.pix2ang_nest(nside, index);
+               radec = CDSHealpix.polarToRadec( radec );
 
                if( gal2ICRS ) radec = context.gal2ICRSIfRequired(radec);
                coo.al = radec[0]; coo.del = radec[1];

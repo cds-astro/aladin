@@ -1708,36 +1708,30 @@ public class PlanBG extends PlanImage {
       try {
          if( center==null ) center = getCooCentre(v);
          double radius = v.getTaille();
-         if( CDSHealpix.FX ) radius= (radius/2)*1.43;
+         radius= (radius/2)*1.43;
          long [] listPix = getNpixList(order,center,radius).clone();
-         long [] out = CDSHealpix.FX ? listPix : filterByMoc( listPix, order );
-//         if( CDSHealpix.FX ) {
-//            System.out.println("\ndraw circle("+center.al+", "+center.del+", "+radius+")");
-//            System.out.print("draw moc "+order+"/");
-//            for( long a : listPix ) System.out.print(" "+a);
-//            System.out.println();
-//         }
+         long [] out = listPix;
          return out;
          
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
       
    }
 
-   /** Supprime du tableau les losanges qui sont hors du MOC */
-   private long [] filterByMoc(long [] pix,int order) {
-      if( moc==null || moc.isAllSky() ) return pix;
-      int j=0;
-      for( int i=0; i<pix.length; i++ ) {
-         if( moc.isIntersecting(order,pix[i]) ) {
-            if( i!=j ) pix[j]=pix[i];
-            j++;
-         }
-      }
-      if( j==pix.length ) return pix;
-      long [] p = new long[j];
-      System.arraycopy(pix, 0, p, 0, j);
-      return p;
-   }
+//   /** Supprime du tableau les losanges qui sont hors du MOC */
+//   private long [] filterByMoc(long [] pix,int order) {
+//      if( moc==null || moc.isAllSky() ) return pix;
+//      int j=0;
+//      for( int i=0; i<pix.length; i++ ) {
+//         if( moc.isIntersecting(order,pix[i]) ) {
+//            if( i!=j ) pix[j]=pix[i];
+//            j++;
+//         }
+//      }
+//      if( j==pix.length ) return pix;
+//      long [] p = new long[j];
+//      System.arraycopy(pix, 0, p, 0, j);
+//      return p;
+//   }
 
    protected double RES[]=null;
 

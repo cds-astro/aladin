@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import cds.tools.Astrodate;
-import healpix.essentials.RangeSet;
 
 /**
  * Extension of MOC principle to temporal axis. 
@@ -54,7 +53,7 @@ public class TMoc extends HealpixMoc {
    public void add(double jdmin, double jdmax) {
       long min = (long)(jdmin*DAYMICROSEC);
       long max = (long)(jdmax*DAYMICROSEC)+1L;
-      RangeSet rtmp=new RangeSet();
+      Range rtmp=new Range();
       rtmp.append(min,max);
       if( !rtmp.isEmpty() ) rangeSet=rangeSet.union(rtmp);
    }
@@ -140,9 +139,9 @@ public class TMoc extends HealpixMoc {
       int pos, endpos;
       
       JDIterator(long start, long end) {
-         pos = rangeSet.getIndex(start)/2;;
+         pos = rangeSet.iiv(start)/2;;
          if( pos<0 ) pos=0;
-         endpos = rangeSet.getIndex(end)/2+1;
+         endpos = rangeSet.iiv(end)/2+1;
       }
       
       public boolean hasNext() { return pos<endpos; }

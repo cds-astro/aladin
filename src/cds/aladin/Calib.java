@@ -36,9 +36,9 @@ import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.astro.Supergal;
 import cds.fits.HeaderFits;
+import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import healpix.essentials.FastMath;
 
 //import healpix.newcore.FastMath;
 
