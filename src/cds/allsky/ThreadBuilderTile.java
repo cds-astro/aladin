@@ -151,7 +151,7 @@ final public class ThreadBuilderTile {
             if( context.getVerbose()>3 ) context.info("Need more RAM: output Fits bitmap release => "+cds.tools.Util.getUnitDisk(sizeReleaseBitmap));
             if( !needMem(rqMem) ) return;
          }
-
+         
          if( builderTiles.getNbThreadRunning()<=1 ) {
             context.cacheFits.forceClean();
             if( context.getVerbose()>3 ) context.warning(Thread.currentThread().getName()+" needs "+
@@ -225,6 +225,8 @@ final public class ThreadBuilderTile {
             statOnePass++;
             long mem = getReqMem(downFiles, 0, n);
             checkMem(mixing ? n : 1, mem, true);
+            
+            threadBuilder.setInfo("createLeavveHpx onepass memOk "+order+"/"+npix_file+"...");
             out = buildHealpix1(bt,order,npix_file,z,downFiles,0,n,null);
 
             // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
@@ -246,6 +248,7 @@ final public class ThreadBuilderTile {
                long mem = getReqMem(downFiles,deb,fin); //n);
                checkMem( fin-deb, mem, false);
                
+               threadBuilder.setInfo("createLeavveHpx multipass memOk "+order+"/"+npix_file+"...");
                f = buildHealpix1(bt,order,npix_file,z,downFiles,deb,fin,fWeight);
                if( f!=null ) {
                   if( out==null ) {
@@ -307,6 +310,7 @@ final public class ThreadBuilderTile {
 
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       
+      threadBuilder.setInfo("createLeavveHpx done "+path+"...");
       return out;
    }
    

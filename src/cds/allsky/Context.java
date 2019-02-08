@@ -86,6 +86,7 @@ public class Context {
 
    protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
+   protected String split;                   // Répertoires out alternatifs si trop plein - syntaxe: 300g;/hips3 500m;/hips4
    protected String hpxFinderPath;           // Répertoire de l'index spatial Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String timeFinderPath;          // Répertoire de l'index temporel (null si défaut => dans outputPath/TimeFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
@@ -167,7 +168,7 @@ public class Context {
    protected String scriptCommand;           // Mémorisation de la commande  script
    protected int targetColorMode = Constante.TILE_PNG;       // Mode de compression des tuiles couleurs
 
-   protected ArrayList<String> tileTypes=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
+   protected ArrayList<String> tileFormat=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
    protected boolean testClonable=true;
    protected boolean live=false;             // true si on doit garder les tuiles de poids
 
@@ -190,7 +191,7 @@ public class Context {
       depthInit=false;
       crpix3=crval3=cdelt3=0;
       bunit3=null;
-      tileTypes = null;
+      tileFormat = null;
       outputRGB = null;
       redInfo=blueInfo=greenInfo=null;
       gaussFilter = false;
@@ -230,6 +231,7 @@ public class Context {
    public String getInputPath() { return inputPath; }
    public boolean getMirrorCheck() { return mirrorCheck; }
    public String getOutputPath() { return outputPath; }
+   public String getSplit() { return split; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_HPXFINDER); }
    public String getTimeFinderPath() { return timeFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_TIMEFINDER); }
    public String getImgEtalon() { return imgEtalon; }
@@ -499,24 +501,24 @@ public class Context {
    }
 
    /** Indication des types de tuiles à copier lors d'une action MIRROR */
-   protected void setTileTypes(String s) {
+   protected void setTileFormat(String s) {
       Tok tok = new Tok(s);
-      while( tok.hasMoreTokens() ) addTileType(tok.nextToken());
+      while( tok.hasMoreTokens() ) addTileFormat(tok.nextToken());
    }
 
    /** Mémorisation d'une extension pour le mirroring HiPS (MIRROR).
     * Ajoute le '.' en préfixe, sauf si l'extension est vide */
-   protected void addTileType(String s) {
+   protected void addTileFormat(String s) {
       if( s.equalsIgnoreCase("jpeg") ) s="jpg";
-      if( tileTypes==null ) tileTypes = new ArrayList<String>();
-      tileTypes.add( s.length()==0 ? s : "."+s.toLowerCase() );
+      if( tileFormat==null ) tileFormat = new ArrayList<>();
+      tileFormat.add( s.length()==0 ? s : "."+s.toLowerCase() );
    }
 
    /** Retourne la liste des formats de tuiles mirrorées */
-   protected String getTileTypes() {
-      if( tileTypes==null ) return null;
+   protected String getTileFormat() {
+      if( tileFormat==null ) return null;
       StringBuilder format = new StringBuilder();
-      for( String s :tileTypes) {
+      for( String s :tileFormat) {
          if( s.length()==0 ) continue;
          if( format.length()>0 ) format.append(' ');
          if( s.equals(".jpg")) format.append("jpeg");
@@ -533,7 +535,7 @@ public class Context {
       if( s.length()==0 || s.equals("0") ) return hdu;
       if( s.equalsIgnoreCase("all") ) return new int[]{-1}; // Toutes les extensions images
       StringTokenizer st = new StringTokenizer(s," ,;-",true);
-      ArrayList<Integer> a = new ArrayList<Integer>();
+      ArrayList<Integer> a = new ArrayList<>();
       boolean flagRange=false;
       int previousN=-1;
       while( st.hasMoreTokens() ) {
@@ -554,10 +556,11 @@ public class Context {
 
    public void setInputPath(String path)  { this.inputPath = path;  }
    public void setOutputPath(String path) { this.outputPath = path; }
+   public void setSplit(String split) { this.split = split; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setIndexFitskey(String list) {
       StringTokenizer st = new StringTokenizer(list);
-      fitsKeys = new ArrayList<String>(st.countTokens());
+      fitsKeys = new ArrayList<>(st.countTokens());
       while( st.hasMoreTokens() ) fitsKeys.add(st.nextToken());
    }
    public void setMode(Mode coAdd) { this.mode = coAdd; }
@@ -744,7 +747,7 @@ public class Context {
          Coord c = fitsfile.calib.getImgCenter();
          String s = Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5);
          setTarget(s);
-         info("setTarget => "+s);
+         info("Set default target => "+s);
          if( targetRadius==null ) {
             double r = Math.max( fitsfile.calib.getImgHeight(),fitsfile.calib.getImgWidth());
             setTargetRadius(Util.round(r,5)+"");
@@ -762,7 +765,7 @@ public class Context {
    // Retourne la liste des Fits Keys de l'entête qui matchent la liste par défaut.
    // Si aucun retourne null
    protected ArrayList<String> scanDefaultFitsKey( HeaderFits h ) {
-      ArrayList<String> a = new ArrayList<String>();
+      ArrayList<String> a = new ArrayList<>();
       Enumeration<String> e = h.getKeys();
       while( e.hasMoreElements() ) {
          String s = e.nextElement();
@@ -827,7 +830,7 @@ public class Context {
       if( list==null ) return false;
       String path = rootPath;
 
-      ArrayList<String> dir = new ArrayList<String>();
+      ArrayList<String> dir = new ArrayList<>();
 
       for( int f = 0 ; f < list.length ; f++ ) {
          if( !rootPath.endsWith(Util.FS) ) rootPath = rootPath+Util.FS;
@@ -887,7 +890,7 @@ public class Context {
       if( list==null ) return null;
       String path = rootPath;
 
-      ArrayList<String> dir = new ArrayList<String>();
+      ArrayList<String> dir = new ArrayList<>();
 
       for( int f = 0 ; f < list.length ; f++ ) {
          if( !rootPath.endsWith(Util.FS) ) rootPath = rootPath+Util.FS;
@@ -1708,7 +1711,7 @@ public class Context {
    static private final int MAXREMOVEDFILE=100;
    private HashSet<String> removeList = null;
    public void addFileRemoveList(String file) {
-      if( removeList==null ) removeList = new HashSet<String>();
+      if( removeList==null ) removeList = new HashSet<>();
       if( removeList.size()>MAXREMOVEDFILE ) {
          abort("Too many removed original files (>"+MAXREMOVEDFILE+")");
          taskAbort();
@@ -1752,8 +1755,8 @@ public class Context {
    
    private void setPropriete1(String key, String value,boolean flagInsert) {
       if( keyAddProp==null ) {
-         keyAddProp = new Vector<String>();
-         valueAddProp = new Vector<String>();
+         keyAddProp = new Vector<>();
+         valueAddProp = new Vector<>();
       }
       if( flagInsert ) {
          keyAddProp.insertElementAt(key,0);
@@ -2177,9 +2180,9 @@ public class Context {
 //   }
    
 // Retourne les types de tuiles déjà construites (en regardant les tuiles déjà construites)
-   protected String getAvailableTileFormats() {
+   protected String getAvailableTileFormats() { return getAvailableTileFormats( getOutputPath() ); }
+   protected String getAvailableTileFormats( String path ) {
       
-      String path = getOutputPath();
       File root = new File(path);
       
       // Recherche du premier NorderXX trouvé où XX est un nombre

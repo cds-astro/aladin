@@ -178,6 +178,7 @@ public class HipsGen {
         } else if (opt.equalsIgnoreCase("cacheSize"))          { cacheSize = Long.parseLong(val);
         } else if (opt.equalsIgnoreCase("cacheRemoveOnExit"))  { cacheRemoveOnExit = Boolean.parseBoolean(val);
         } else if (opt.equalsIgnoreCase("hhh"))          { generateHHH(val);
+        } else if (opt.equalsIgnoreCase("split"))        { context.setSplit(val);
         } else if (opt.equalsIgnoreCase("verbose"))      { Context.setVerbose(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("pilot"))        { context.setPilot(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
@@ -216,7 +217,7 @@ public class HipsGen {
         } else if (opt.equalsIgnoreCase("out") )         { context.setOutputPath(val);
         } else if (opt.equalsIgnoreCase("mode"))         { context.setMode(Mode.valueOf(val.toUpperCase())); flagMode=true;
         } else if( opt.equalsIgnoreCase("partitioning")) { context.setPartitioning(val);
-        } else if( opt.equalsIgnoreCase("tileTypes") )   { context.setTileTypes(val);
+        } else if( opt.equalsIgnoreCase("tileTypes") )   { context.setTileFormat(val);
         } else if( opt.equalsIgnoreCase("shape") )       { context.setShape(val);
         } else if ( opt.equalsIgnoreCase("method"))      { context.setMethod(val); flagMethod=true;
         } else if (opt.equalsIgnoreCase("histoPercent")) { context.setHistoPercent(val);
@@ -853,6 +854,7 @@ public class HipsGen {
                         "   cmBlue              Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
                         "   filter=gauss        Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
                         "   tileTypes           List of tile format to copy (MIRROR action)" + "\n" +
+                        "   split='size;altPath]' Split information for MIRROR action (ex: 300g;/hips/part2)" + "\n" +
                         //                  "   hhh=[path/]image[.ext] widthxheigth [wCellxhCell] Generation of .hhh files for CAR image"+ "\n" +
                         //                  "                       possibly splitted as an array of cells"+ "\n" +
                         "   maxThread=nn        Max number of computing threads" + "\n" +

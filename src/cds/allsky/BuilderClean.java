@@ -22,6 +22,8 @@
 package cds.allsky;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /** Permet de nettoyer la totalité d'un survey généré, sauf le fichier Properties
  * @author Anaïs Oberto & Pierre Fernique [CDS]
@@ -59,11 +61,16 @@ public class BuilderClean extends Builder {
    
    public void deleteDir(File dir) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
-
+      
       // répertoire
       if( dir.isDirectory() ) {
          for ( File f : dir.listFiles() ) deleteDir(f);
-         dir.delete();
+         
+         if( Files.isSymbolicLink( dir.toPath()) ) {
+            Path target = Files.readSymbolicLink( dir.toPath() );
+            if( (target.toFile()).delete() ) dir.delete();   // on supprime à la fois le répertoire cible et le lien symbolique
+            
+         } else dir.delete();
 
          // simple fichier
       } else if( mustBeDeleted(dir) ) {

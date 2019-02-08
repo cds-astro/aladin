@@ -43,6 +43,7 @@ import cds.tools.Util;
 /** Recopie d'un HiPS distant via HTTP
  * @author Pierre Fernique
  * @version 1.0 juin 2015 création
+ * @version 1.1 février 2019 gestion du multi-partition (paramètre split=...)
  */
 public class BuilderMirror extends BuilderTiles {
    
@@ -122,15 +123,15 @@ public class BuilderMirror extends BuilderTiles {
       // depuis les propriétés distantes
       s = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
       if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_TILE_FORMAT);
-      if( context.tileTypes==null ) {
+      if( context.tileFormat==null ) {
          if( s==null ) throw new Exception("tile format unknown");
          Tok tok = new Tok(s);
-         while( tok.hasMoreTokens() ) context.addTileType(tok.nextToken());
+         while( tok.hasMoreTokens() ) context.addTileFormat(tok.nextToken());
       } else {
-         if( s!=null && !context.getTileTypes().equals(s) ) isPartial=true;
+         if( s!=null && !context.getTileFormat().equals(s) ) isPartial=true;
       }
-      context.info("Mirroring tiles: "+context.getTileTypes()+"...");
-
+      context.info("Mirroring tiles: "+context.getTileFormat()+"...");
+      
       // Détermination du Moc
       HealpixMoc area = new HealpixMoc();
       in = null;
@@ -203,8 +204,35 @@ public class BuilderMirror extends BuilderTiles {
 
          } finally{ if( in1!=null ) in1.close(); }
       }
-   }
+      
 
+      validateSplit(prop);
+   }
+   
+   // Récupération des paramètres pour effectuer un split multi-partitions
+   // puis appel à la méthode de génération des liens  qu'l faut.
+   private void validateSplit(MyProperties prop) throws Exception {
+      String splitCmd = context.getSplit();
+      if( splitCmd==null ) return;
+      
+      int bitpix, tileWidth, depth, order;
+      HealpixMoc m;
+      
+      
+      try { 
+         bitpix       = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_PIXEL_BITPIX) );
+         tileWidth    = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH) );
+         order        = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_ORDER) );
+         try { depth  = Integer.parseInt( prop.getProperty(Constante.KEY_CUBE_DEPTH) ); }
+         catch( Exception e1 ) { depth = 1; }
+      } catch( Exception e ) { throw new Exception("Missing info in properties file => splitting action not possible"); }
+      
+      m = (HealpixMoc)( context.moc!=null ? context.moc.clone() : context.mocIndex.clone() );
+      if( m==null ) throw new Exception("No MOC available => splitting action not possible");
+
+      validateSplit( context.getOutputPath(), splitCmd, m, order, bitpix, tileWidth, depth, context.getTileFormat() );
+   }
+   
    public void run() throws Exception {
       if( flagIsUpToDate ) {
          context.info("Local HiPS copy seems to be already up-to-date (same hips_release_date="+dateRelease+")");
@@ -257,7 +285,7 @@ public class BuilderMirror extends BuilderTiles {
          double skyFraction = context.moc.getCoverage();
          prop.replaceValue(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );
 
-         prop.replaceValue(Constante.KEY_HIPS_TILE_FORMAT, context.getTileTypes() );
+         prop.replaceValue(Constante.KEY_HIPS_TILE_FORMAT, context.getTileFormat() );
 
          String status = prop.getProperty(Constante.KEY_HIPS_STATUS);
          StringBuilder status1;
@@ -376,7 +404,7 @@ public class BuilderMirror extends BuilderTiles {
 
       try {
          long size=0L;
-         for( String ext : context.tileTypes ) {
+         for( String ext : context.tileFormat ) {
             String fileIn = fileInX+ext;
             String fileOut = file+ext;
             size+=copy(hpx,order,fileIn,fileOut);
@@ -392,7 +420,7 @@ public class BuilderMirror extends BuilderTiles {
    // Copie des Allsky
    private void copyAllsky() throws Exception {
       for( int z=0; z<context.depth; z++) {
-         for( String ext : context.tileTypes ) {
+         for( String ext : context.tileFormat ) {
             String suf = z==0 ? "" : "_"+z;
             String fileIn = context.getInputPath()+"/Norder3/Allsky"+suf+ext;
             String fileOut = context.getOutputPath()+"/Norder3/Allsky"+suf+ext;

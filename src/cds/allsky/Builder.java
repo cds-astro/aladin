@@ -25,9 +25,14 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import cds.aladin.MyProperties;
+import cds.aladin.Tok;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
 /**
@@ -135,6 +140,7 @@ public abstract class Builder {
    // S'il existe déjà, vérifie qu'il s'agit bien d'un répertoire utilisable
    protected void validateOutput() throws Exception { 
       String output = context.getOutputPath();
+      
 
       String name = null;
       String path = null;
@@ -187,45 +193,11 @@ public abstract class Builder {
       output = path+FS+name;
       context.setOutputPath( output );
 
-      
-      
-//      if( output==null ) {
-//         output = context.getInputPath();
-//         if( output!=null && (output.startsWith("http://") || output.startsWith("https://"))) {
-//            output = context.getInputPath();
-//            int n = output.length();
-//            if( output.charAt(n-1)=='/' ) n--;
-//            int offset = output.lastIndexOf('/',n);
-//            output = output.substring(offset+1,n);
-//         } else {
-//            
-//            String id = context.getHipsId();
-//            
-//            // Pas d'id => On ajoute simplement le suffixe HiPS au répertoire d'origine
-//            if( id==null ) {
-//               output = (output==null?"":output) + Constante.HIPS;
-//               
-//            // Un Id => on l'utilise comme nom de répertoire cible (avec des _ à la place des / et ?)
-//            } else {
-//               output = context.getInputPath();
-//               output = output.replace('\\', '/');
-//               int n = output.length();
-//               if( output.charAt(n-1)=='/' ) n--;
-//               int offset = output.lastIndexOf('/',n);
-//               output = output.substring(0,offset+1);
-//               id = id.substring(6);
-//               id = id.replace('/','_');
-//               id = id.replace('?','_');
-//               output = output+id;
-//            }
-//            
-//         }
-//         context.setOutputPath(output);
-//      }
-      
       File f = new File(output);
       if( f.exists() && (!f.isDirectory()  || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
       context.info("the output directory will be "+output);
+      
+      
       context.setValidateOutput(true);
       
 //      if( true ) System.exit(0);
@@ -528,4 +500,140 @@ public abstract class Builder {
 
       }
    }
+   
+   
+   // Gestion des paramètres pour le stockage dans une partition alternative
+   private class Part {
+      double size;   // taille courante en Ko
+      double max;    // taille max de la partition en Ko ou <=0 si non utilisé
+      String dir;    // Nom du répertoire root de la partition
+   }
+   
+   static final int MAXPART = 10;   // Nombre max de partitions d'un HiPS
+   protected Part part [];            // Gestion des partitions alternatives (mais pas la partition originale)
+   
+   // Retourne le nombre de Ko correspondant à une expression du genre 4.2g
+   private double getMem( String s ) throws Exception {
+      char u = Character.toLowerCase( s.charAt( s.length()-1 ) );
+      double fct = u=='k' ? 1 : u=='m' ? 1024 : u=='g' ? 1024*1024 : u=='t' ? 1024*1024*1024 : -1;
+      if( fct==-1 ) throw new Exception("Invalid mem unit");
+      return Double.parseDouble( s.substring( 0,s.length()-1 )) * fct;
+   }
+   
+   // Retourne la taille moyenne d'une tuile (tous les formats additionnés) - en bytes
+   private long getTileSize( int bitpix, int width, int depth, String fmt ) {
+      long nbpix = width*width;
+      
+      // Cas couleur
+      if( bitpix==0 ) {
+         long nbBytesJpg = fmt.toLowerCase().indexOf("jpeg")>=0 ? (nbpix*4)/10L : 0L;
+         long nbBytesPng = fmt.toLowerCase().indexOf("png")>=0  ? (nbpix*4)/8L : 0L;
+         long nbBytes = (nbBytesJpg + nbBytesPng ) * depth;
+         return nbBytes;
+      } 
+      
+      // Cas classique
+      long nbBytesFits = fmt.toLowerCase().indexOf("fits")>=0 ? 2880 + Math.abs(bitpix)/8 * nbpix : 0L;
+      long nbBytesJpg = fmt.toLowerCase().indexOf("jpeg")>=0  ? nbBytesFits/10L : 0L;
+      long nbBytesPng = fmt.toLowerCase().indexOf("png")>=0   ? nbBytesFits/8L : 0L;
+      long nbBytes = (nbBytesFits + nbBytesJpg + nbBytesPng ) * depth;
+      return nbBytes;
+   }
+   
+   /** Génération des liens symboliques et des répertoires Dirnn à l'order le plus profond afin de
+     * pouvoir par la suite répartir le HiPS sur plusieurs partitions
+     */
+   protected void validateSplit(String outputPath, String split, HealpixMoc moc, int order, int bitpix, int tileWidth, int depth, String fmt) throws Exception {
+      
+      // Détermination de la taille totale requise (en Ko)
+      moc.setMocOrder(order);
+      long numberOfTiles = moc.getUsedArea();
+      long tileSize = getTileSize( bitpix, tileWidth, depth, fmt);
+      if( tileSize==0 ) throw new Exception("No remote tile found");
+      long fullSize = (long)( ( 1.3 * tileSize * numberOfTiles + 8 ) / 1024. );
+      context.stat("Max order="+order+", Number of tiles="+numberOfTiles+", tile size("+fmt+")="+cds.tools.Util.getUnitDisk( tileSize )+", HiPS size estimation="+ cds.tools.Util.getUnitDisk( fullSize*1024L ) );
+      
+      // Scan du paramètre de split
+      part = new Part[ MAXPART ];
+      String s = split;
+      Tok tok = new Tok(s,";");
+      double firstPartSize = getMem( tok.nextToken() );
+//      System.out.println("First part => "+Util.getUnitDisk( (long)( firstPartSize*1024L) ));
+      if( fullSize<=firstPartSize ) {
+         context.info("Enough space in master partition quota => no split required");
+         return;   // tout tient dans la première partition
+      }
+      for( int n=0; tok.hasMoreTokens(); n++ ) {
+         if( n==MAXPART ) throw new Exception("Too many slitting partitions");
+         part[n] = new Part();
+         String s1 = tok.nextToken();
+         int i = s1.lastIndexOf(' ');
+         part[n].max = i<0 ? -1 : getMem( s1.substring(i+1) );
+         part[n].dir = i<0 ? s1 : s1.substring(0,i);
+         
+         if( !( new File(part[n].dir).isAbsolute() ) ) throw new Exception("alternative target partitions must use an absolute path");
+//         System.out.println(part[n].dir+" => "+Util.getUnitDisk( (long)( part[n].max)*1024L ));
+      }
+      
+      // Détermination de la taille de chaque Dirnn de niveau le plus profond (en Ko)
+      HashMap<Long, Double> hashDir = new HashMap<>();
+      Iterator<Long> it = moc.pixelIterator();
+      while( it.hasNext() ) {
+         long ndirLink = it.next()/10000;
+         Double mem = hashDir.get(ndirLink);
+         if( mem==null ) hashDir.put(ndirLink, tileSize/1024. );
+         else hashDir.put( ndirLink, tileSize/1024. + mem);
+      }
+      
+      // Génération des répertoires et liens symboliques vers les partitions alternatives
+      String mainPart = outputPath;   // Path de la partition principale
+      int nAltPart = 0;   // indice de la partition alternative courante
+      int nlinks=0;       // Nombre de links pour la partition altenative courante
+      int totNlinks=0;    // Total du nombre de links vers les partitions alternatives
+      boolean first = true;
+      
+      for( Long norderLink : hashDir.keySet() ) {
+         
+         // Que va-t-on gagner comme place ?
+         double sizeLink = hashDir.get(norderLink);
+         fullSize -= sizeLink;
+         
+         // Plus de place sur la partition alternative courante ? on passe à la partition suivante
+         if( part[nAltPart].size > part[nAltPart].max && part[nAltPart].max>0 ) { 
+            context.stat(part[nAltPart].dir+" will content "+cds.tools.Util.getUnitDisk( (long)( part[nAltPart].size*1024L))+" thanks to "+nlinks+" links");
+            nAltPart++;
+            nlinks=0;
+         }
+         if( nAltPart>=part.length ) throw new Exception("Not enough space on alternative target partitions");
+         part[nAltPart].size += sizeLink;
+         nlinks++;
+         totNlinks++;
+         
+         // Création du répertoire Ndir sur la partition alternative, ainsi que du lien symbolique associé
+         if( !context.fake ) {
+            String sOrig = cds.tools.pixtools.Util.getFileDir( mainPart, order, norderLink*10000);
+            String sTarg = cds.tools.pixtools.Util.getFileDir( part[nAltPart].dir, order, norderLink*10000);
+
+            File fTarg = new File( sTarg );
+            File fOrig = new File( sOrig );
+
+            if( first ) cds.tools.Util.createPath(sOrig);
+            fTarg.mkdirs();
+            Files.createSymbolicLink(fOrig.toPath(), fTarg.toPath() );
+         }
+         first=false;
+         
+         // si on a fait assez de liens symboliques, pas la peine d'aller plus loin
+         if( fullSize<firstPartSize ) break;
+
+      }
+      
+      if( part[nAltPart].size!=0 ) context.stat(part[nAltPart].dir+" will content "+cds.tools.Util.getUnitDisk( (long)( part[nAltPart].size*1024L))+" thanks to "+nlinks+" links");
+      int nbdir = (hashDir.size()-totNlinks);
+      context.stat(mainPart+" will content "+cds.tools.Util.getUnitDisk( fullSize*1024L )+" (HiPS hierarchy"+(nbdir>0 ?" and "+nbdir+" directories)":")"));
+
+   }
+   
+
+   
 }

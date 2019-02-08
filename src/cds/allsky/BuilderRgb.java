@@ -77,7 +77,7 @@ public class BuilderRgb extends BuilderTiles {
       context.setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, context.getJpegMethod().toString().toLowerCase());
 
       if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(output);
-      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
+      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
    }
    
    protected void activateCache(long size,long sizeCache) { }

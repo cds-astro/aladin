@@ -27,11 +27,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.StringTokenizer;
 
 import cds.aladin.MyProperties;
+import cds.aladin.Tok;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
@@ -80,9 +80,9 @@ public class BuilderCube extends Builder {
 
       boolean propFound=false;
 
-      // découpage et vérification de la liste des HiPS sources
+      // découpage et vérification de la liste des HiPS sources (séparés par des ";")
       String s = context.getInputPath();
-      StringTokenizer st = new StringTokenizer(s," ");
+      Tok st = new Tok(s,";");
       inputPath = new String [st.countTokens()];
       for( int i=0; i<inputPath.length; i++ ) {
          String path = inputPath[i]=st.nextToken();
@@ -215,32 +215,32 @@ public class BuilderCube extends Builder {
    static private void link(File src, File trg) throws Exception {
 
       // Lorsqu'on sera compatible 1.7 uniquement
-      //      Files.createSymbolicLink(src.toPath(), trg.toPath() );
+      Files.createSymbolicLink(trg.toPath(), src.toPath() );
 
       // En attendant, on travaille par "réflexion"
-      Method toPath = File.class.getDeclaredMethod("toPath",new Class[]{});
-      Object pathSrc = toPath.invoke((Object)src, new Object[] {});
-      Object pathTrg = toPath.invoke((Object)trg, new Object[] {});
-      Class files = Class.forName("java.nio.file.Files");
-      Class path  = Class.forName("java.nio.file.Path");
-      Class fileAttribute = Class.forName("java.nio.file.attribute.FileAttribute");
-      Object [] attrib = (Object[])Array.newInstance(fileAttribute, 0);
-      Class<?>[] a = { path, path, attrib.getClass() };
-      Method createSymbolicLink = files.getDeclaredMethod("createSymbolicLink", a);
-      createSymbolicLink.invoke((Object)null, new Object[] { pathSrc, pathTrg, attrib });
+//      Method toPath = File.class.getDeclaredMethod("toPath",new Class[]{});
+//      Object pathSrc = toPath.invoke((Object)src, new Object[] {});
+//      Object pathTrg = toPath.invoke((Object)trg, new Object[] {});
+//      Class files = Class.forName("java.nio.file.Files");
+//      Class path  = Class.forName("java.nio.file.Path");
+//      Class fileAttribute = Class.forName("java.nio.file.attribute.FileAttribute");
+//      Object [] attrib = (Object[])Array.newInstance(fileAttribute, 0);
+//      Class<?>[] a = { path, path, attrib.getClass() };
+//      Method createSymbolicLink = files.getDeclaredMethod("createSymbolicLink", a);
+//      createSymbolicLink.invoke((Object)null, new Object[] { pathSrc, pathTrg, attrib });
    }
 
 
-   //   static public void main(String [] args) {
-   //      try {
-   //         File trg = new File("VISTA");
-   //         File src = new File("C:\\Users\\Pierre\\Desktop\\Link");
-   //         src.delete();
-   //         link(src,trg);
-   //      } catch( Exception e ) {
-   //         e.printStackTrace();
-   //      }
-   //   }
+//      static public void main(String [] args) {
+//         try {
+//            File trg = new File("VISTA");
+//            File src = new File("C:\\Users\\Pierre\\Desktop\\Link");
+//            src.delete();
+//            link(src,trg);
+//         } catch( Exception e ) {
+//            e.printStackTrace();
+//         }
+//      }
 
    // Copie du fichier
    private void copy(File src, File trg) throws Exception {

@@ -127,6 +127,20 @@ public class Util {
       "Npix" + npix
       + ( z<=0 ? "" : "_"+z);
    }
+   
+   /**
+    * Donne le répertoire DIR d'un chemin HiPS
+    * ex: toto, 12, 130001 => toto/Norder12/Dir130000
+    * @param survey
+    * @param order
+    * @param npix
+    * @return
+    */
+   static public String getFileDir(String survey, int order, long npix) {
+      String suffix = "Norder" + order + "/" + "Dir" + ((npix / DIRSIZE)*DIRSIZE);
+      return cds.tools.Util.concatDir(survey, suffix);
+   }
+
 
    static public int getOrderFromPath(String filename) {
       int fromIndex = filename.indexOf("Norder");

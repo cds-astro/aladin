@@ -21,7 +21,6 @@
 
 package cds.allsky;
 
-import java.awt.Shape;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ public class BuilderTiles extends Builder {
    private Context.JpegMethod method;
 
    // Liste des Threads de calcul
-   protected ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
+   protected ArrayList<ThreadBuilder> threadList = new ArrayList<>();
    private Mode coaddMode=Mode.REPLACETILE;
 
    protected int ordermin = 3;
@@ -137,7 +136,7 @@ public class BuilderTiles extends Builder {
                context.fading ? "border_fading" : context.mixing ? "mean" : "first");
       context.setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, context.getJpegMethod().toString().toLowerCase());
       
-      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
+      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
       if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
       
       context.removeListReport();
@@ -237,7 +236,49 @@ public class BuilderTiles extends Builder {
       
       // Info sur le coordinate frame
       context.info("HiPS coordinate frame => "+context.getFrameName());
+      
+      validateSplit();
    }
+   
+   
+   private void validateSplit() throws Exception {
+      String splitCmd = context.getSplit();
+      if( splitCmd==null ) return;
+      
+      int bitpix, tileWidth, depth, order;
+      String format, outputPath;
+      HealpixMoc moc;
+      
+      outputPath   = context.getOutputPath();
+      bitpix       = context.getBitpix();
+      tileWidth    = context.getTileSide();
+      order        = context.getOrder();
+      depth        = context.getDepth();
+      format       = context.isColor() ? "jpeg" : "fits png";  // on suppose qu'on va créer des tuiles fits et preview (png)
+      moc          = (HealpixMoc)( context.mocIndex.clone() );
+      if( moc==null ) throw new Exception("No MOC available => splitting action not possible");
+      if( !outputIsFree( outputPath, order ) ) {
+         context.warning("HiPS output dir not empty => split function ignored");
+         return;
+      }
+
+      validateSplit( outputPath, splitCmd, moc, order, bitpix, tileWidth, depth, format );
+   }
+   
+   private boolean outputIsFree(String outputPath, int order) {
+      String path = cds.tools.Util.concatDir(outputPath, "Norder" + order);
+      File dir = new File(path);
+      File [] fs = dir.listFiles();
+      if( fs==null ) return true;
+      for( File f : fs ) {
+         if( f.isDirectory() && f.getName().startsWith("Dir") ) {
+            try { Integer.parseInt( f.getName().substring(3) ); return false; }
+            catch( Exception e ) {}
+         }
+      }
+      return false;
+   }
+   
 
    long lastTime = 0L;
    long lastNbTile = 0L;
@@ -259,7 +300,9 @@ public class BuilderTiles extends Builder {
       if( Aladin.levelTrace>=3 ) {
          String s = showMem();
          if( s.length()>0 ) context.stat(s);
+         showDebugInfo();
       }
+     
       //      if( context.cacheFits!=null && context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
    }
 
@@ -272,7 +315,7 @@ public class BuilderTiles extends Builder {
       statTotalTime=statNodeTotalTime=0L;
       startTime = System.currentTimeMillis();
       totalTime=0L;
-      memPerThread = new Hashtable<Thread,ArrayList<Fits>>();
+      memPerThread = new Hashtable<>();
    }
 
    //   private long maxMem=0;
@@ -325,7 +368,7 @@ public class BuilderTiles extends Builder {
       synchronized( memPerThread ) {
          ArrayList<Fits> m = memPerThread.get(t);
          if( m==null ) {
-            m=new  ArrayList<Fits>();
+            m=new  ArrayList<>();
             memPerThread.put(t,m);
          }
          m.add(f);
@@ -438,14 +481,20 @@ public class BuilderTiles extends Builder {
          this.suspendable=suspendable;
       }
       
-      protected boolean hasBeenUsed() { return order!=-1; }
+      protected boolean hasBeenUsed() { 
+         synchronized( fifo ) { return order!=-1; }
+      }
       
-      private synchronized boolean isReady() { return ready; }
+      private boolean isReady() { 
+         synchronized( fifo ) { return ready; }
+      }
       
-      private synchronized Fits getFits() { return fits; }
+      private Fits getFits() { 
+         synchronized( fifo ) { return fits; }
+      }
       
       private void setFits(Fits fits) throws Exception {
-         synchronized( this ) { 
+         synchronized( fifo ) { 
             ready=true;
             this.fits=fits;
          }
@@ -472,7 +521,7 @@ public class BuilderTiles extends Builder {
       
       moc.setMocOrder(minorder);
       int depth = context.getDepth();
-      fifo = new LinkedList<Item>();
+      fifo = new LinkedList<>();
       
 //      Iterator<Long> it = moc.pixelIterator();
 //      while( it.hasNext() ) {
@@ -541,7 +590,7 @@ public class BuilderTiles extends Builder {
       if( !context.isTaskAborting() ) {
 
          if( ThreadBuilderTile.statMaxOverlays>0 )
-            context.info("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
+            context.stat("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
                   ThreadBuilderTile.statOnePass+" in one step, "+
                   ThreadBuilderTile.statMultiPass+" in multi steps");
          if( context.cacheFits!=null ) Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
@@ -571,8 +620,12 @@ public class BuilderTiles extends Builder {
       // Il y a eu du progres => c'est bon
       if( context.progress!=lastProgress ) { lastProgress=context.progress; return; }
       
-      context.warning("ALERT !!! (fifosize="+fifo.size()+")");
       context.warning("Nothing done since a while. Here a short report to understand the problem:");
+      showDebugInfo();
+   }
+   
+   protected void showDebugInfo() {
+      context.warning("DEBUG REPORT !!! (fifosize="+fifo.size()+")");
       int nbDied=0;
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) {
@@ -585,7 +638,6 @@ public class BuilderTiles extends Builder {
       CacheFits cache = context.getCache();
       if( cache!=null ) context.warning(cache.toString());
       else context.warning("No cache. FreeRAM="+cds.tools.Util.getUnitDisk(CacheFits.getFreeMem()));
-      
    }
    
    protected void activateCache(long size,long sizeCache) {
@@ -637,6 +689,7 @@ public class BuilderTiles extends Builder {
          hpx.threadBuilder.setInfo("createLeavveHpx "+file+"...");
          try { f = createLeaveHpx(hpx,file,path,order,npix,z); }
          catch( Exception e ) {
+            hpx.threadBuilder.setInfo("createLeavveHpx error "+file+"...");
             System.err.println("BuilderTiles.createLeave error: "+file);
             e.printStackTrace();
             return null;
@@ -660,7 +713,10 @@ public class BuilderTiles extends Builder {
                nbDelegate++;
                wakeUp();
 
-            } else fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
+            } else {
+               hpx.threadBuilder.setInfo("CreateHpx go to next order => "+(order+1)+"/"+(npix*4+i)+"...");
+               fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
+            }
          }
 
          // Attente et récupération des fils si besoin
@@ -848,6 +904,7 @@ public class BuilderTiles extends Builder {
                   if( item.order==3 && item.z==0 ) setProgressBar((int)item.npix);
 
                } catch( Throwable e ) {
+                  try { item.setFits(null); } catch( Exception e1 ) {}
                   Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");
                   e.printStackTrace();
                   context.taskAbort();
@@ -892,7 +949,7 @@ public class BuilderTiles extends Builder {
       initStat(nbThreads);
       context.createHealpixOrder(context.getTileOrder());
 //      ThreadBuilderTile.nbThreads=nbThreads;
-      ThreadBuilderTile.hasShape = new HashMap<File, Shape>();
+      ThreadBuilderTile.hasShape = new HashMap<>();
 
       for( int i=0; i<nbThreads; i++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
@@ -1269,6 +1326,7 @@ public class BuilderTiles extends Builder {
       if (out!=null) {
          context.updateHeader(out,order,npix);
          write(file,out);
+         hpx.threadBuilder.setInfo("createLeavveHpx write done "+file+"...");
          duree = System.currentTimeMillis()-t;
          //         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
          updateStat(0,1,0,duree,0,0);

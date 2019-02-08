@@ -50,7 +50,7 @@ public enum Action {
    TREE      ("(Re)build HiPS tree structure from already existing tiles"),
    APPEND    ("Append new images/cubes to an already existing HiPS"),
    CONCAT    ("Concatenate one HiPS to another HiPS"),
-   CUBE      ("Create a HiPS cube based on a list of HiPS"),
+   CUBE      ("Create a HiPS cube based on a list of HiPS (; separated)"),
    DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),
    UPDATE    ("Upgrade HiPS metadata additionnal files to HiPS version "+Constante.HIPS_VERSION),
    PROP      ("Display HiPS properties files in HiPS version "+Constante.HIPS_VERSION+" syntax"),
