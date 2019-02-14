@@ -99,8 +99,8 @@ public class MultiMoc implements Iterable<MocItem> {
    private MyProperties example = null;  // List of existing properties with examples
    
    public MultiMoc() {
-      map = new HashMap<String, MocItem>(30000);
-      tri = new ArrayList<String>(30000);
+      map = new HashMap<>(30000);
+      tri = new ArrayList<>(30000);
    }
    
    /** MultiMoc creation from a binary dump file
@@ -177,7 +177,7 @@ public class MultiMoc implements Iterable<MocItem> {
    /** Return the list of current properties known by the MultiMoc, with one example by property */
    public MyProperties getProperties() {
       MyProperties prop = new MyProperties();
-      HashMap<String, Integer> count = new HashMap<String, Integer>();
+      HashMap<String, Integer> count = new HashMap<>();
       
       for( MocItem mi : this ) {
          if( mi.prop==null ) continue;
@@ -467,8 +467,7 @@ public class MultiMoc implements Iterable<MocItem> {
    public boolean exceptProp(MyProperties prop,String id) {
       if( except==null || prop==null ) return true;
       for( MyProperties p : except ) prop.exceptions(p,id);
-      return prop.get(KEY_ID)==null
-            || prop.get("MOCSERVER_REMOVE")==null;   // A virer plus tard
+      return prop.get(KEY_ID)==null || prop.get("MOCSERVER_REMOVE")==null;   // A virer plus tard
    }
    
    // Loading Exceptions as Array of property records
@@ -501,7 +500,7 @@ public class MultiMoc implements Iterable<MocItem> {
    //   #     
    private void loadException(String file) {
       if( file==null ) return;
-      ArrayList<MyProperties> p = new ArrayList<MyProperties>();
+      ArrayList<MyProperties> p = new ArrayList<>();
       BufferedReader br = null;
       try {
          br = new BufferedReader(new FileReader( file ));
@@ -704,7 +703,7 @@ public class MultiMoc implements Iterable<MocItem> {
    public ArrayList<String> scan(int order,long npix,String mask ) {
       boolean match=false;
       if( mask.charAt(0)=='!' ) { match=true; mask=mask.substring(1); }
-      ArrayList<String> res = new ArrayList<String>();
+      ArrayList<String> res = new ArrayList<>();
       for( MocItem mi : this ) {
          if( mask!=null && MyProperties.matchMask(mask, mi.mocId )==match ) continue;
          if( mi.moc!=null && mi.moc.isIntersecting(order, npix) ) res.add(mi.mocId);
@@ -1007,7 +1006,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @return list of MOC identifiers
     */
    public ArrayList<String> scan(HealpixMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top, int intersect ) {
-      ArrayList<String> res = new ArrayList<String>();
+      ArrayList<String> res = new ArrayList<>();
 
       int n=0;
       for( MocItem mi : this ) {
@@ -1047,7 +1046,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @return list of IDs (keep the original MultiMoc order)
     */
    public ArrayList<String> scan( HealpixMoc moc, String expr, boolean casesens, int top, int intersect ) throws Exception {
-      ArrayList<String> res = new ArrayList<String>();
+      ArrayList<String> res = new ArrayList<>();
       
       // Détermination des IDs candidats
       HashSet<String> candidateIds = scanExpr(expr,casesens);
@@ -1078,7 +1077,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @return list of IDs (keep the original MultiMoc order)
     */
    public ArrayList<String> scan() { 
-      ArrayList<String> res = new ArrayList<String> (this.size() );
+      ArrayList<String> res = new ArrayList<> (this.size() );
       for( MocItem mi : this ) res.add(mi.mocId);
       return res;
 //      IDENTIQUE A L'EXPRESSION SUIVANTE QUI EST PLUS LENTE
@@ -1446,7 +1445,7 @@ public class MultiMoc implements Iterable<MocItem> {
             && val.indexOf('*')<0 && val.indexOf('?')<0 && val.indexOf(',')<0) {
 
          // Est-ce qu'il n'y a que la contrainte sur l'ID ? alors je peux y accéder directement
-         op.res = new HashSet<String>( 10 );   // <= je crée une Hashset petite car ce ne sera probablement 
+         op.res = new HashSet<>( 10 );   // <= je crée une Hashset petite car ce ne sera probablement 
                                                //    jamais elle qui sera conservé lors des opérations ensemblistes 
          MocItem mi1 = getItem(val);
 //         System.out.println("Accès direct pour "+val);
@@ -1455,12 +1454,12 @@ public class MultiMoc implements Iterable<MocItem> {
       }
       
      
-      HashMap<String, String[]> mapFilters = new HashMap<String, String[]>();
+      HashMap<String, String[]> mapFilters = new HashMap<>();
       mapFilters.put( key, new String[] { val } );
       
       // Scanning du multimoc et mémorisation des éléments qui correspondent
       ArrayList<String> res = scan( (HealpixMoc)null, mapFilters, casesens, -1, OVERLAPS);
-      op.res = new HashSet<String>( Math.max(2*res.size(), size()) );   // <= Je crée une HashSet assez grande, car elle est susceptible
+      op.res = new HashSet<>( Math.max(2*res.size(), size()) );   // <= Je crée une HashSet assez grande, car elle est susceptible
                                                                         //    de contenir l'ensemble des résultats. On pourrait affiner en
       op.res.addAll( res );
    }

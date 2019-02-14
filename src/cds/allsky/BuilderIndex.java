@@ -169,7 +169,7 @@ public class BuilderIndex extends Builder {
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
       } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
-            +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+context.getTileOrder()))/3600. ) );
+            +Coord.getUnit( CDSHealpix.pixRes( context.getOrder()+context.getTileOrder())/3600. ) );
 
       int w = context.getTileSide();
       context.info("TileOrder="+context.getTileOrder()+" => tileSize="+w+"x"+w+" pixels");
@@ -526,7 +526,7 @@ public class BuilderIndex extends Builder {
             * (fitsfile.bitpix==0 ?32 : Math.abs( fitsfile.bitpix ) /8);
 
       long[] npixs=null;
-      long nside = CDSHealpix.pow2(order);
+//      long nside = CDSHealpix.pow2(order);
       
       double maxRadius=0;
       for( Coord c2 : corner ) {
@@ -538,7 +538,7 @@ public class BuilderIndex extends Builder {
       // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
       if( radius<30 && !isCAR ) {
          try {
-            npixs = CDSHealpix.query_polygon(nside, cooList, true);
+            npixs = CDSHealpix.query_polygon(order, cooList, true);
          } catch( Exception e ) { }
       }
          
@@ -573,7 +573,7 @@ public class BuilderIndex extends Builder {
             }
 
             double cent[] = context.ICRS2galIfRequired(center.al, center.del);
-            npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], Math.toRadians(radius));
+            npixs = CDSHealpix.query_disc(order, cent[0], cent[1], Math.toRadians(radius));
          } catch( Exception e ) {
           throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" center="+center+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
          }

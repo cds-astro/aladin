@@ -50,8 +50,9 @@ public final class Projection {
    static final String [] NAME = { "-", "Aladin reduction",
       "WCS reduction",
       "Simple reduction","Matching star red.","Squattered plot" };
-
+   
    // Les parametres de la projection
+   protected String body = null;    // null pour sky, sinon la planète concernée, en anglais et en minuscule
    protected int frame = Localisation.ICRS;
    protected String label=null;		// Label de la projection
    protected double raj,dej;		// Centre de l'image (J2000)
@@ -265,6 +266,7 @@ public final class Projection {
          System.arraycopy(coo,0,p.coo,0,coo.length);
       }
       p.c = c==null ? null : Calib.copy(c);
+      p.body = body;
 
       return  p;
    }
@@ -328,6 +330,11 @@ public final class Projection {
 
    public void setProjSym(boolean sym) {
       modify(label,modeCalib,alphai,deltai,rm,rm1,cx,cy,r,r1,rot,sym,t,system);
+   }
+   
+   // Positionnement du corps concerné. null si sky
+   public void setBody(String s) {
+      body= s==null ? null : s.trim().toLowerCase();
    }
    
    public void setProj(int type) {
@@ -621,6 +628,25 @@ public final class Projection {
     * @param c La calibration aladin qu'il faut associe a la projection
    protected void setCalib(Calib c) { this.c = c; }
     */
+   
+   // POUR LE MOMENT JE LAISSE TOUT PASSER SANS BLOQUER LES AFFICHAGES MEME
+   // SI LES CORPS CELESTES NE SONT PAS LES MEMES
+   protected boolean isUncompatibleBody( Projection p ) {
+      boolean r = isUncompatibleBody1( p );
+      if( r ) Aladin.aladin.warning("You are probably using an uncompatible spacial reference (planets vs sky). "
+            + "This uncompatibility is ignored in this beta release (test phase)");
+      return false;
+   }
+   
+   /** Teste si les projections ne concerneraient pas des corps célestes incompatibles */
+   // POUR LE MOMENT JE LAISSE TOUT PASSER SANS BLOQUER LES AFFICHAGES MEME
+   // SI LES CORPS CELESTES NE SONT PAS LES MEMES
+   protected boolean isUncompatibleBody1( Projection p ) {
+      if( !isOk(p) ) return false;
+      if( body==null && p.body==null ) return false;;
+      if( body==null && p.body!=null ) return true;
+      return !body.equals(p.body);
+   }
 
    /** Test de ``superposabilite'' de deux projections.
     * Retourne vrai si la projection passee en parametre est compatible
@@ -636,8 +662,11 @@ public final class Projection {
 
       if( p==null ) return false;
 
-      // La meme projection
+      // La même projection
       if( this==p ) return true;
+      
+      // Le même corps ?
+      if( isUncompatibleBody( p ) ) return false;
 
       // Concerne un champ très large => toujours compatible
       if( p.rm>30*60 ) return true;

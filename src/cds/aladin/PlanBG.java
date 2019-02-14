@@ -195,6 +195,7 @@ public class PlanBG extends PlanImage {
    public boolean inPNG=false;       // true: Les losanges originaux peuvent être fournis en PNG
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
+   private String body=null;         // le corps céleste concerné (en minuscule et en anglais), null si sky
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin!=null && aladin.configuration!=null ? aladin.configuration.getFrameDrawing() : 0;   // Frame de tracé, 0 si utilisation du repère général
    protected boolean local;
@@ -481,6 +482,9 @@ public class PlanBG extends PlanImage {
          if( strFrame.equals("equatorial") || isPlanet(strFrame) )  frame=Localisation.ICRS;
          else if( strFrame.equals("galactic"))  frame=Localisation.GAL;
          else if( strFrame.equals("ecliptic"))  frame=Localisation.ECLIPTIC;
+         
+         // Body
+         if( isPlanet(strFrame) ) body=strFrame.trim().toLowerCase();
 
          // Pour compatibilité avec le vieux vocabulaire
          else if( strFrame.equals("X")) {
@@ -799,7 +803,7 @@ public class PlanBG extends PlanImage {
       if( (co==null || flagNoTarget) && moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
          try {
             MocCell cell = moc.iterator().next();
-            double res[] = CDSHealpix.pix2ang_nest(CDSHealpix.pow2(cell.getOrder()), cell.getNpix());
+            double res[] = CDSHealpix.pix2ang_nest( cell.getOrder(), cell.getNpix());
             double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
             co = new Coord(radec[0],radec[1]);
          } catch( Exception e1 ) {
@@ -921,6 +925,12 @@ public class PlanBG extends PlanImage {
       
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
             projection,Calib.FK5);
+      
+      // Il s'agit d'un corps céleste (et non pas le ciel) ?
+      if( body!=null ) {
+         p.setBody( body );
+         aladin.trace(3,"Body set \""+body+"\" for "+this);
+      }
 
       p.frame = getCurrentFrameDrawing();
 //      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
@@ -1658,7 +1668,7 @@ public class PlanBG extends PlanImage {
    
    static long [] getNpixList(int order, Coord center, double radius) throws Exception {
       if( order==0 ) return ALLSKY;
-      return CDSHealpix.query_disc(CDSHealpix.pow2(order),center.al, center.del, Math.toRadians(radius));
+      return CDSHealpix.query_disc( order,center.al, center.del, Math.toRadians(radius));
    }
 
    static protected String CURRENTMODE="";
@@ -1881,9 +1891,10 @@ public class PlanBG extends PlanImage {
          getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
       //      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
       if( h==null || h.getStatus()!=HealpixKey.READY ) return Double.NaN;
-      long nside = h.width * CDSHealpix.pow2(h.order);
+//      long nside = h.width * CDSHealpix.pow2(h.order);
+      int order = (int)CDSHealpix.log2(h.width) + h.order;
       try {
-         long healpixIdxPixel = CDSHealpix.ang2pix_nest(nside, theta, phi);
+         long healpixIdxPixel = CDSHealpix.ang2pix_nest(order, theta, phi);
          return h.getPixelValue(healpixIdxPixel,mode);
       } catch( Exception e ) {
          return Double.NaN;
@@ -1918,8 +1929,9 @@ public class PlanBG extends PlanImage {
          HealpixKey h = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
 
-         long nside = h.width * CDSHealpix.pow2(h.order);
-         long npixPixel = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
+//         long nside = h.width * CDSHealpix.pow2(h.order);
+         int orderPix = (int)CDSHealpix.log2( h.width) + h.order;
+         long npixPixel = CDSHealpix.ang2pix_nest(orderPix, polar[0], polar[1]);
 
          HealpixKey h1 = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h1==null ) return Double.NaN;
@@ -1939,20 +1951,21 @@ public class PlanBG extends PlanImage {
     */
    protected double getHealpixLinearPixel(double ra,double dec,double ra1,double dec1, int order) {
       double pixel = Double.NaN;
-      int nSideFile = (int)CDSHealpix.pow2(order);
+//      int nSideFile = (int)CDSHealpix.pow2(order);
 
       try {
          double[] polar = CDSHealpix.radecToPolar(new double[] {ra, dec});
          double[] polar1 = CDSHealpix.radecToPolar(new double[] {ra1, dec1});
-         long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
+         long npixFile = CDSHealpix.ang2pix_nest( order, polar[0], polar[1]);
 
          HealpixKey h = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
 
-         long nside = h.width * CDSHealpix.pow2(h.order);
-         long npixPixel = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
+//         long nside = h.width * CDSHealpix.pow2(h.order);
+         int orderPix = (int)CDSHealpix.log2(h.width) + h.order;
+         long npixPixel = CDSHealpix.ang2pix_nest(orderPix, polar[0], polar[1]);
 
-         long [] voisins = CDSHealpix.neighbours(nside,npixPixel);
+         long [] voisins = CDSHealpix.neighbours(orderPix,npixPixel);
 
          // On ne va prendre 3 voisins (S,SW,W) + le pixel en question
          // pour l'interpolation
@@ -1979,7 +1992,7 @@ public class PlanBG extends PlanImage {
             try {
                double pix = h1.getPixelValue(nlpix,HealpixKey.NOW);
                if( Double.isNaN(pix) ) continue;
-               double [] polar2 = CDSHealpix.pix2ang_nest(nside, nlpix);
+               double [] polar2 = CDSHealpix.pix2ang_nest(orderPix, nlpix);
                double coef = Coo.distance(polar1[0],polar1[1],polar2[0],polar2[1]);
                if( coef==0 ) return pix;  // Je suis pile dessus
                double c = 1/coef;
@@ -2080,8 +2093,9 @@ public class PlanBG extends PlanImage {
          oLosangeOrder = myOrder;
          if( RES==null ) RES = new double[20];
          for( lastMaxOrder=0; lastMaxOrder<20; lastMaxOrder++ ) {
-            long nside = CDSHealpix.pow2(lastMaxOrder+myOrder+1);
-            RES[lastMaxOrder]=CDSHealpix.pixRes(nside)/3600;
+//            long nside = CDSHealpix.pow2(lastMaxOrder+myOrder+1);
+            int order = lastMaxOrder+myOrder+1;
+            RES[lastMaxOrder]=CDSHealpix.pixRes(order)/3600;
          }
       }
       double pixSize = v.getPixelSize();
@@ -2142,8 +2156,8 @@ public class PlanBG extends PlanImage {
 
    /** Retourne la résolution angulaire du pixel au NSIDE max (en degrés) */
    public double getPixelResolution() {
-      long nside = CDSHealpix.pow2(getMaxHealpixOrder());
-      return CDSHealpix.pixRes(nside)/3600;
+//      long nside = CDSHealpix.pow2(getMaxHealpixOrder());
+      return CDSHealpix.pixRes(getMaxHealpixOrder())/3600;
    }
 
    /** Retourne true si l'image a été entièrement "drawé" à la résolution attendue */
@@ -3214,8 +3228,8 @@ public class PlanBG extends PlanImage {
          int norder = aladin.getOrder();
          if( norder<0 ) return;
          double polar[] = CDSHealpix.radecToPolar(new double[]{coo.al,coo.del});
-         long nside = CDSHealpix.pow2(norder);
-         long npix = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
+//         long nside = CDSHealpix.pow2(norder);
+         long npix = CDSHealpix.ang2pix_nest(norder, polar[0], polar[1]);
          HealpixKey hk = new HealpixKey(this,norder,npix,HealpixKey.NOLOAD);
          hk.drawCtrl(g, v);
       } catch( Exception e ) {
@@ -3550,7 +3564,7 @@ public class PlanBG extends PlanImage {
                // On place le losange central en premier dans la liste
                try {
                   if( center!=null ) {
-                     long firstPix = CDSHealpix.ang2pix_nest(CDSHealpix.pow2(order),theta, phi);
+                     long firstPix = CDSHealpix.ang2pix_nest(order,theta, phi);
 
                      // Permutation en début de liste
                      for( int i=0; i<pix.length; i++ ) {

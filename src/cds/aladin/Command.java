@@ -2162,9 +2162,8 @@ public final class Command implements Runnable {
          int order = Integer.parseInt(param.substring(0, offset).trim());
          int npix = Integer.parseInt(param.substring(offset + 1).trim());
 
-         long nSide = CDSHealpix.pow2(order);
          double x[];
-         x = CDSHealpix.polarToRadec(CDSHealpix.pix2ang_nest(nSide, npix));
+         x = CDSHealpix.polarToRadec(CDSHealpix.pix2ang_nest(order, npix));
          Coord c = new Coord(x[0], x[1]);
          a.localisation.frameToFrame(c, a.localisation.getFrameGeneric(), Localisation.ICRS);
          // ViewSimple v = a.view.getCurrentView();

@@ -132,13 +132,13 @@ public class PlanMocGen extends PlanMoc {
       double gapA=0,gapD=0;
       try { 
          gapA = Math.min(p1.projd.getPixResAlpha(),p1.projd.getPixResDelta());
-         for( o1=order; CDSHealpix.pixRes( CDSHealpix.pow2(o1) )/3600. <= gapA*2; o1--);
+         for( o1=order; CDSHealpix.pixRes( o1 )/3600. <= gapA*2; o1--);
       } catch( Exception e1 ) {
          e1.printStackTrace();
       }
 //      if( gap<1 || Double.isNaN(gap) ) gap=1;
 //      
-      gapD = CDSHealpix.pixRes( CDSHealpix.pow2(o1) )/3600.;
+      gapD = CDSHealpix.pixRes( o1 )/3600.;
 //      System.out.println("res="+res+" order="+order+" gapA ="+Coord.getUnit(gapA)+" gapD ="+Coord.getUnit(gapD)+" gap="+gap);
       
       // Pour garder en mémoire les pixels 
@@ -345,7 +345,7 @@ public class PlanMocGen extends PlanMoc {
       // Et si oui, on va l'insérer, mais virer autant des pixels les plus petits que nécessaire
       ArrayList<PixCum> list;
       try {
-         list = new ArrayList<PixCum>((int)(n*nsize*nsize));
+         list = new ArrayList<>((int)(n*nsize*nsize));
       } catch( Exception e1 ) {
          throw new Exception("Sorry! too large probability sky map !");
       }

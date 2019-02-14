@@ -54,8 +54,8 @@ public class Util {
    }
 
    static public Coord [] getCorners(Coord [] corners,int order, long npix) throws Exception {
-      long nside = CDSHealpix.pow2(order);
-      double [][] x = CDSHealpix.corners(nside, npix);
+//      long nside = CDSHealpix.pow2(order);
+      double [][] x = CDSHealpix.corners(order, npix);
       if( corners==null ) corners = new Coord[4];
       for( int i=0; i<4; i++ ) {
          corners[i] = new Coord(x[i][0],x[i][1]);  

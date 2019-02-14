@@ -385,17 +385,18 @@ public class SourceStat extends SourceTag {
          try {
             PlanBG pbg = (PlanBG)v.pref;
             int orderFile = pbg.getOrder();
-            long nsideFile = CDSHealpix.pow2(orderFile);
+//            long nsideFile = CDSHealpix.pow2(orderFile);
             long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-            long nside = nsideFile * nsideLosange;
-            pixelSurf = CDSHealpix.pixRes(nside)/3600;
+//            long nside = nsideFile * nsideLosange;
+            int orderPix = pbg.getOrder() + pbg.getTileOrder();
+            pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
             pixelSurf *= pixelSurf;
             //            System.out.println("order="+CDSHealpix.log2(nside)+" => surf="
             //                  +Coord.getUnit(pixelSurf, false, true));
             Coord coo = new Coord(raj,dej);
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
             double radiusRadian = Math.toRadians(getRadius());
-            long [] npix = CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
+            long [] npix = CDSHealpix.query_disc(orderPix, coo.al, coo.del, radiusRadian, false);
             //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
             for( int i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);
@@ -403,7 +404,7 @@ public class SourceStat extends SourceTag {
                //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
                if( Double.isNaN(pix) ) continue;
                pix = pix*pbg.bScale+pbg.bZero;
-               double polar[] = CDSHealpix.pix2ang_nest(nside, npix[i]);
+               double polar[] = CDSHealpix.pix2ang_nest(orderPix, npix[i]);
                polar = CDSHealpix.polarToRadec(polar);
                coo.al = polar[0]; coo.del = polar[1];
                coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
@@ -481,15 +482,16 @@ public class SourceStat extends SourceTag {
 //         int orderFile = pbg.maxOrder;
 //         int orderFile = pbg.getOrder();
          
-         long nsideFile = CDSHealpix.pow2(orderFile);
+//         long nsideFile = CDSHealpix.pow2(orderFile);
          long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-         long nside = nsideFile * nsideLosange;
-         pixelSurf = CDSHealpix.pixRes(nside)/3600;
+//         long nside = nsideFile * nsideLosange;
+         int orderPix = orderFile + pbg.getTileOrder();
+         pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
          pixelSurf *= pixelSurf;
          Coord coo = new Coord(raj,dej);
          coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
          double radiusRadian = Math.toRadians(getRadius());
-         long [] npix = CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
+         long [] npix = CDSHealpix.query_disc(orderPix, coo.al, coo.del, radiusRadian, false);
          for( int i=0; i<npix.length; i++ ) {
             long npixFile = npix[i]/(nsideLosange*nsideLosange);
             //            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);

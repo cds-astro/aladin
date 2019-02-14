@@ -765,7 +765,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /** Retourne le type de données auquel on va accéder */
    protected String getDataType() {
-      if( hasCS() || hasTAP() ) return "Tabular";
+      if( hasCS() || hasTAP() ) return "Table";
       if( hasHips() || hasSIA() ) return "Image";
       if( hasSSA() ) return "Spectrum";
       return "";

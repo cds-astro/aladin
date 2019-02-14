@@ -161,7 +161,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    protected JComboBox getComboRes() {
       JComboBox c = new JComboBox();
       for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
-         String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(o))/3600. );
+         String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( o)/3600. );
          c.addItem(s);
       }
       c.setSelectedIndex(7);

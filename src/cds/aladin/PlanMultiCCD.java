@@ -217,7 +217,7 @@ public class PlanMultiCCD extends PlanImage {
          proj.c.GetCoord(coo);
          cooList.add(new double[]{coo.al,coo.del});
       }
-      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList, true);
+      long [] npixs = CDSHealpix.query_polygon( order, cooList, true);
       for( long npix : npixs ) moc.add(order,npix) ;
       return moc;
    }

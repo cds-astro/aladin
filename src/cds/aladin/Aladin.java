@@ -215,7 +215,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.108";
+   static public final    String VERSION = "v10.109";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4384,7 +4384,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       long i=0;
       m.setCheckConsistencyFlag(false);
-      for( long pix : CDSHealpix.query_disc( CDSHealpix.pow2(order), ra, de, Math.toRadians(radius)) ) {
+      for( long pix : CDSHealpix.query_disc( order, ra, de, Math.toRadians(radius)) ) {
          m.add(order,pix);
          i++;
          if( i%10000L==0 ) m.checkAndFix();

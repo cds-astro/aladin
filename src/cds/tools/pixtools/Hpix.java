@@ -265,8 +265,8 @@ public class Hpix extends MocCell {
    // Initialise les coordonnées ICRS des 4 coins
    private void computeCorners() {
       try {
-         long nside = CDSHealpix.pow2(order);
-         double [][] x = CDSHealpix.corners(nside,npix);
+//         long nside = CDSHealpix.pow2(order);
+         double [][] x = CDSHealpix.corners(order,npix);
          corners = new Coord[4];
          for( int i=0; i<x.length; i++ ) corners[i] = new Coord(x[i][0],x[i][1]);
          corners = computeCornersToICRS(corners);
@@ -285,7 +285,7 @@ public class Hpix extends MocCell {
    private double getMaxSize(ViewSimple v) {
       double maxSize=150;
       if( !v.isAllSky() ) {
-         double pixRes = CDSHealpix.pixRes(CDSHealpix.pow2(order))/3600;
+         double pixRes = CDSHealpix.pixRes( order )/3600;
          double pixelViewSize = v.getPixelSize();
          maxSize = (pixRes/pixelViewSize)*4;
       }

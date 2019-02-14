@@ -582,12 +582,12 @@ public class Plan implements Runnable {
    protected Vector<Obj> setMultiSelect(ViewSimple v,RectangleD r) {
 
       // Le plan n'a pas d'objet sélectionnable
-      if( !isSelectable() ) return new Vector<Obj>();
+      if( !isSelectable() ) return new Vector<>();
 
       // objets ne sont pas projetable dans cette vue (ACCELERATION POUR PLAN SIMPLE)
-      if( !(this instanceof PlanBG) && pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<Obj>();
+      if( !(this instanceof PlanBG) && pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<>();
 
-      Vector<Obj> res = new Vector<Obj>(5000);
+      Vector<Obj> res = new Vector<>(5000);
 
       Iterator<Obj> it = iterator(v);
       while( it!=null && it.hasNext() ) {
@@ -619,15 +619,15 @@ public class Plan implements Runnable {
       int i;
 
       // Le plan n'a pas d'objet sélectionnable
-      if( !isSelectable() ) return new Vector<Obj>();
+      if( !isSelectable() ) return new Vector<>();
 
       // objets ne sont pas projetable dans cette vue
-      if( pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<Obj>(1);
+      if( pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<>(1);
 
-      Vector<Obj> res = new Vector<Obj>(500);
+      Vector<Obj> res = new Vector<>(500);
 
       Iterator<Obj> it = iterator(v);
-      if( it==null ) return new Vector<Obj>(1);
+      if( it==null ) return new Vector<>(1);
 
       if( type==Plan.APERTURE ) {
          for( i=0; it.hasNext() ; i++ ) {
@@ -647,7 +647,7 @@ public class Plan implements Runnable {
          }
 
       } else {
-         Vector<Ligne> vo = new Vector<Ligne>();
+         Vector<Ligne> vo = new Vector<>();
          while( it.hasNext() ) {
             Obj o = it.next();
 
@@ -1367,7 +1367,7 @@ public class Plan implements Runnable {
     * @return le tableau des plans de reference possibles
     */
    protected Plan [] getAvailablePlanRef() {
-      Vector<Plan> v = new Vector<Plan>();
+      Vector<Plan> v = new Vector<>();
       if( isImage() || this instanceof PlanBG /* type==IMAGE || type==IMAGEHUGE */ ) v.addElement(this);
       else {
          Plan [] allPlan = aladin.calque.getPlans();
@@ -1441,9 +1441,10 @@ public class Plan implements Runnable {
    static final int SELECTED          = 0x1<<10;
    static final int UNDERIMG          = 0x1<<11;
    static final int UNDERBKGD         = 0x1<<12;
+   static final int NOTSAMEBODY       = 0x1<<13;
 
    static final String DEBUGFLAG[] = { "","RefForVisibleView","CanBeTransp","OutOfView","Viewable","Activated",
-      "AskActivated","Ref","FlagOk","FlagProcessing","FlagUpdating","Selected","UnderImg","UnderBkg"};
+      "AskActivated","Ref","FlagOk","FlagProcessing","FlagUpdating","Selected","UnderImg","UnderBkg","NotSameBody"};
 
    private int debugFlag = 0x0;   // flag d'état du plan pour débugging
 
@@ -1641,6 +1642,12 @@ public class Plan implements Runnable {
          setUnderBackGroundFlag(v);   // Faut tout de même positionner ce flag
          return true;
       }
+      
+      // S'agit-il bien du même corps céleste
+      if( v.getProj().isUncompatibleBody( projd ) ) {
+         setDebugFlag(NOTSAMEBODY, true);
+         return false;
+      } else setDebugFlag(NOTSAMEBODY, false);
 
       if( !(aladin.view.isMultiView() && v.pref.ref)
             && v.pref.isImage() && (type==Plan.IMAGE /* || type==Plan.ALLSKYIMG */  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
@@ -2055,7 +2062,7 @@ public class Plan implements Runnable {
          return;
       }
 
-      if( plasticIDs==null ) plasticIDs = new Vector<String>();
+      if( plasticIDs==null ) plasticIDs = new Vector<>();
 
       if( plasticIDs.indexOf(id)<0 ) plasticIDs.addElement(id);
    }

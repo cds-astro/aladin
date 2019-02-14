@@ -1513,10 +1513,10 @@ public final class Calib  implements Cloneable {
   //    System.out.println("proj "+proj) ;
    }
 
-   public Calib (long nside,  long npix, int frame, int width) {
+   public Calib (int order,  long npix, int frame, int width) {
       try {
-         double [][] bord = CDSHealpix.borders(nside, npix, 2) ;
-         double [] center = CDSHealpix.pix2ang_nest(nside, npix) ;
+         double [][] bord = CDSHealpix.borders(order, npix, 2) ;
+         double [] center = CDSHealpix.pix2ang_nest( order, npix) ;
          double [] centerRadec = CDSHealpix.polarToRadec(center);
          alphai = centerRadec[0] ;
          deltai = centerRadec[1] ;
@@ -1747,7 +1747,7 @@ public final class Calib  implements Cloneable {
    //   System.out.println("2-3 alpha "+0.5*(bord[1][0]+bord[2][0])+" "+(bord[1][0]-bord[2][0]));
    //   System.out.println("2-3 delta "+0.5*(bord[1][1]+bord[2][1])+" "+(bord[1][1]-bord[2][1]));
 
-   double [][] bord1 = CDSHealpix.borders(nside, npix, 2) ; 
+   double [][] bord1 = CDSHealpix.borders(order, npix, 2) ; 
 
    //       System.out.println("bord 0 "+bord1[0][0]+" "+bord1[0][1]);
    //       System.out.println("bord 1 "+bord1[1][0]+" "+bord1[1][1]);
@@ -4630,8 +4630,8 @@ public final class Calib  implements Cloneable {
    //   }
    static public boolean test1() {
       boolean toutestbon=true;
-      Calib C = new Calib(8,424,0,1) ;
-      Calib Cp = new Calib(8,0,0,1 ) ;
+      Calib C = new Calib(3,424,0,1) ;
+      Calib Cp = new Calib(3,0,0,1 ) ;
 
       return toutestbon ;
    }

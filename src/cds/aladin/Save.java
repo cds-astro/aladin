@@ -2792,7 +2792,7 @@ public class Save extends JFrame implements ActionListener {
          p.pixelsOriginFromCache();
          for( long ipix=0; ipix<nbPix; ipix++) {
             //         double [] polar = ring ? CDSHealpix.pix2ang_ring(nside,ipix) : CDSHealpix.pix2ang_nest(nside,ipix);
-            double [] polar = CDSHealpix.pix2ang_nest(nside,ipix);
+            double [] polar = CDSHealpix.pix2ang_nest(order,ipix);
             double [] radec = CDSHealpix.polarToRadec(polar);
             c.al = radec[0];
             c.del = radec[1];

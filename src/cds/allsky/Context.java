@@ -1842,8 +1842,8 @@ public class Context {
       if( sys==null ) sys="galactic";
 
       long nside = CDSHealpix.pow2(order);
-      long nsideP = CDSHealpix.pow2(order+getTileOrder());
-      double resol = CDSHealpix.pixRes(nsideP)/3600;
+//      long nsideP = CDSHealpix.pow2(order+getTileOrder());
+      double resol = CDSHealpix.pixRes(order+getTileOrder())/3600;
 
       int width = getTileSide();
       String tiles = getAvailableTileFormats();
@@ -2045,7 +2045,7 @@ public class Context {
       if( targetRadius!=null ) setPropriete(Constante.KEY_HIPS_INITIAL_FOV, targetRadius);
 
       // Resolution du hiPS
-      double res = CDSHealpix.pixRes( CDSHealpix.pow2( order + getTileOrder()) );
+      double res = CDSHealpix.pixRes( order + getTileOrder() );
       setPropriete(Constante.KEY_HIPS_PIXEL_SCALE, Util.myRound(res/3600.) );
 
       if( resolution!=null ) setPropriete(Constante.KEY_S_PIXEL_SCALE, resolution);

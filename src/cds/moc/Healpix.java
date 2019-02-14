@@ -47,7 +47,7 @@ public final class Healpix implements HealpixImpl {
    public long ang2pix(int order,double lon, double lat) throws Exception {
       double theta = Math.PI/2. - lat/180.*Math.PI;
       double phi = lon/180.*Math.PI;
-      return CDSHealpix.ang2pix_nest( pow2(order), theta, phi);
+      return CDSHealpix.ang2pix_nest(order, theta, phi);
    }
 
    /** Provide the spherical coord associated to an HEALPix number, for a given order
@@ -57,7 +57,7 @@ public final class Healpix implements HealpixImpl {
     * @throws Exception
     */
    public double [] pix2ang(int order,long npix) throws Exception {
-      double lonlat[] = CDSHealpix.pix2ang_nest(pow2(order), npix);
+      double lonlat[] = CDSHealpix.pix2ang_nest(order, npix);
       return new double[]{ lonlat[1]*180./Math.PI, (Math.PI/2. - lonlat[0])*180./Math.PI};
    }
 
@@ -72,7 +72,7 @@ public final class Healpix implements HealpixImpl {
    public long [] queryDisc(int order, double lon, double lat, double radius) throws Exception {
       double theta = Math.PI/2. - lat/180.*Math.PI;
       double phi = lon/180.*Math.PI;
-      return CDSHealpix.query_disc(pow2(order), theta, phi, Math.toRadians(radius), true);
+      return CDSHealpix.query_disc(order, theta, phi, Math.toRadians(radius), true);
    }
 
    /*********************** private stuff ***************************************************/

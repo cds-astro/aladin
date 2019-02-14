@@ -740,7 +740,7 @@ public class Ligne extends Position {
       if( isHiPS ) {
 
          PlanBG pbg = (PlanBG) v.pref;
-         double d = CDSHealpix.pixRes( CDSHealpix.pow2( pbg.getOrder() + pbg.getTileOrder() ) ) / 3600;
+         double d = CDSHealpix.pixRes( pbg.getOrder() + pbg.getTileOrder() ) / 3600;
          d /= 2;   // Pour être sur de ne pas sauter une ligne
 //         System.out.println("From "+Coord.getUnit(mind)+" to "+Coord.getUnit(maxd)+" Delta = " + Coord.getUnit(d) );
          Coord haut = new Coord( (maxa+mina)/2, mind);
@@ -753,17 +753,18 @@ public class Ligne extends Position {
          
          try {
             int orderFile = pbg.getOrder();
-            long nsideFile = CDSHealpix.pow2(orderFile);
+//            long nsideFile = CDSHealpix.pow2(orderFile);
             long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-            long nside = nsideFile * nsideLosange;
+//            long nside = nsideFile * nsideLosange;
+            int order = orderFile + pbg.getTileOrder();
             long [] npix=null;
             
             // Dégradation de la résolution si trop de pixel
-            for( long o = CDSHealpix.log2(nside); o>=pbg.getMinOrder(); o--) {
-               nside = CDSHealpix.pow2(o);
-               pixelSurf = CDSHealpix.pixRes(nside)/3600;
+            for( long o = order; o>=pbg.getMinOrder(); o--) {
+//               nside = CDSHealpix.pow2(o);
+               pixelSurf = CDSHealpix.pixRes(order)/3600;
                pixelSurf *= pixelSurf;
-               npix = CDSHealpix.query_polygon(nside, cooList,false);
+               npix = CDSHealpix.query_polygon(order, cooList,false);
                if( npix.length<=MAXSTATPIXELS ) break;
             }; 
             
@@ -776,7 +777,7 @@ public class Ligne extends Position {
                double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
                if( Double.isNaN(pix) ) continue;
                pix = pix*pbg.bScale+pbg.bZero;
-               double polar[] = CDSHealpix.pix2ang_nest(nside, npix[i]);
+               double polar[] = CDSHealpix.pix2ang_nest(order, npix[i]);
                polar = CDSHealpix.polarToRadec(polar);
                coo.al = polar[0]; coo.del = polar[1];
                coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);

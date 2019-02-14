@@ -178,8 +178,8 @@ class HealpixKeyPol extends HealpixKey {
    }
 
    protected double getPixRes() {
-      long nside = CDSHealpix.pow2(order+PlanHealpix.log2(width));
-      return CDSHealpix.pixRes(nside)/3600;
+//      long nside = CDSHealpix.pow2(order+PlanHealpix.log2(width));
+      return CDSHealpix.pixRes(order+(int)CDSHealpix.log2(width))/3600;
    }
 
    static final private int MAXPOLARSIZE=15;

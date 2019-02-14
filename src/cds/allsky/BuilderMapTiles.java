@@ -446,6 +446,11 @@ public class BuilderMapTiles extends Builder {
                if( context.isTaskAborting() ) throw new Exception("Task abort !");
                if( step == nbStep - 1 ) updateStat(n);
 
+               
+               // ON DEVRAIT PROBABLEMENT POUVOIR UTILISER UNE AUTRE VARIABLE QUI CONTIENT DEJA o
+               // MAIS JE PREFERE ASSURER SANS TROP ME CASSER LA TETE
+               int o = (int)CDSHealpix.log2(nside);
+               
                for( int i = 0; i < nbValPerSegment; i++ ) {
 
                   // Détermination du numéro de pixel HEALPix
@@ -455,7 +460,7 @@ public class BuilderMapTiles extends Builder {
                   else npix = count;
                   count++;
 
-                  if( !isNested ) npix = CDSHealpix.ring2nest(nside, npix);
+                  if( !isNested ) npix = CDSHealpix.ring2nest(o, npix);
 
                   // Récupération de la valeur associée
                   double val = getVal(buf, bitpixOrig, offsetVal + cRecordInBuf * sizeRecord + i * sizeFieldVal);

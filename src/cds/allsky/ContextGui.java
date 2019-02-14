@@ -187,7 +187,7 @@ public class ContextGui extends Context {
             mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(mysky);
 
             if (mainPanel.planPreview == null || mainPanel.planPreview.isFree() || mainPanel.planPreview.hasError() ) {
-               double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), npix);
+               double[] res = CDSHealpix.pix2ang_nest(3, npix);
                double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
                radec = gal2ICRSIfRequired(radec);
                TreeObjDir gSky = new TreeObjDir(mainPanel.aladin, getOutputPath());

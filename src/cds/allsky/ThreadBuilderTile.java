@@ -432,7 +432,8 @@ final public class ThreadBuilderTile {
 
 //         HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
          
-         long nside = CDSHealpix.pow2( order+context.getTileOrder() );
+//         long nside = CDSHealpix.pow2( order+context.getTileOrder() );
+         int orderPix = order+context.getTileOrder();
 
          boolean gal2ICRS = context.getFrame()!=Localisation.ICRS;
 
@@ -443,7 +444,7 @@ final public class ThreadBuilderTile {
 //               Pointing pt = hpx.pix2ang(index);
 //               radec[1] = (PI2 - pt.theta)*toRad;
 //               radec[0] = pt.phi*toRad;
-               radec = CDSHealpix.pix2ang_nest(nside, index);
+               radec = CDSHealpix.pix2ang_nest(orderPix, index);
                radec = CDSHealpix.polarToRadec( radec );
 
                if( gal2ICRS ) radec = context.gal2ICRSIfRequired(radec);

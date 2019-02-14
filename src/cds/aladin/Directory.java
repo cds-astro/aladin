@@ -1836,7 +1836,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( mode == ResumeMode.FORCE || !sameLocation ) {
                URL u = aladin.glu.getURL("MocServer", params, true);
 
-               Aladin.trace(4, "HipsMarket.hipsUpdate: Contacting MocServer : " + u);
+               Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
                in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
                String s;
 
@@ -2228,6 +2228,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          try {
             int year = Integer.parseInt(bib.substring(0, 4));
             prop.replaceValue("bib_year", "" + year);
+            
+            // Ajout de l'entrée bib_reference_url (si elle n'existe pas)
+            if( prop.get("bib_reference_url") == null ) {
+               prop.replaceValue("bib_reference_url", "https://ui.adsabs.harvard.edu/?#abs/"+URLEncoder.encode(bib));
+            }
+
          } catch( Exception e ) { }
       }
 
@@ -2251,7 +2257,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Génération de la clé de tri
       directorySort.setInternalSortKey(id,prop);
    }
-
+   
    private void propAdjust1(String id, MyProperties prop) {
       
       String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
@@ -2272,7 +2278,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( prop.get("tap_service_url") == null ) {
          prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
       }
-
+      
       // Détermination de la catégorie
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, "Catalog/VizieR");
       
@@ -3506,10 +3512,22 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             } else {
                s = to.getProperty("bib_year");
                if( s != null ) {
-                  s = "    " + AWREFPUB + " " + s + " ";
-                  a = new MyAnchor(aladin, s, 50, null, null);
-                  a.setForeground(Color.gray);
-                  p1.add(a);
+                  String url = to.getProperty("bib_reference_url");
+                  
+                  // Pas de lien, juste l'année de publi
+                  if( url==null ) {
+                     a = new MyAnchor(aladin, "    " + AWREFPUB + " " + s + " ", 50, null, null);
+                     a.setForeground(Color.gray);
+                     p1.add(a);
+                     
+                  // ON met une URL sur l'année de publi
+                  } else {
+                     a = new MyAnchor(aladin, "    " + AWREFPUB + " ", 50, null, null);
+                     a.setForeground(Color.gray);
+                     p1.add(a);
+                     a = new MyAnchor(aladin, s + " ", 50, null, url);
+                     p1.add(a);
+                  }
                }
             }
 
@@ -4331,8 +4349,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          // Chaque MOC individuellement
          if( mode == MultiMocMode.EACH ) {
-            for( TreeObjDir to : treeObjs )
-               to.loadMoc();
+            for( TreeObjDir to : treeObjs ) to.loadMoc();
             return;
          }
 

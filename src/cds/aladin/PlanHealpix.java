@@ -404,7 +404,7 @@ public class PlanHealpix extends PlanBG {
 
       active=selected=true;
 
-      pixList = new Hashtable<String, HealpixKey>(1000);
+      pixList = new Hashtable<>(1000);
       //       allsky=null;
       loader = new HealpixLoader();
       
@@ -1105,9 +1105,10 @@ public class PlanHealpix extends PlanBG {
       int nbVal = (int)(high-low);
       double[] ret = new double[nbVal];
       try {
+         int order = (int)CDSHealpix.log2(nSideFile);
          for (int i=0; i<nbVal; i++) {
             //             ret[i] = partialValues[(int)CDSHealpix.nest2ring(nSideFile, low + i)];
-            Double a = (Double)partialValues.get( CDSHealpix.nest2ring(nSideFile, low + i));
+            Double a = (Double)partialValues.get( CDSHealpix.nest2ring(order, low + i));
             ret[i] = a==null ? Double.NaN : a.doubleValue();
          }
       } catch( Exception e ) { e.printStackTrace(); }
@@ -1149,8 +1150,9 @@ public class PlanHealpix extends PlanBG {
       int length = maxNested - minNested;
       double[] val = new double[length];
       try {
+         int order = (int)CDSHealpix.log2(nside);
          for (int i=0; i<length; i++) {
-            val[i] = ringValues[(int)CDSHealpix.nest2ring(nside, minNested + i)];
+            val[i] = ringValues[(int)CDSHealpix.nest2ring(order, minNested + i)];
          }
       } catch( Exception e ) {
          e.printStackTrace();

@@ -80,7 +80,6 @@ import javax.swing.SwingUtilities;
 
 import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
-import cds.moc.Healpix;
 import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -3962,8 +3961,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             double [] d = new double[]{ c.al,c.del };
             d=CDSHealpix.radecToPolar(d);
             int order = getLastGridHpxOrder();
-            long nside = CDSHealpix.pow2(order);
-            long npix = CDSHealpix.ang2pix_nest(nside, d[0], d[1]);
+//            long nside = CDSHealpix.pow2(order);
+            long npix = CDSHealpix.ang2pix_nest(order, d[0], d[1]);
             aladin.console.printCommand(order+"/"+npix);
          } catch( Exception e ) { }
          
@@ -5900,11 +5899,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       double taille = getTaille();
       if( taille<30 ) {
          for( order=CDSHealpix.MAXORDER; order>=3; order-- ) {
-            nside = Healpix.pow2(order);
-            double resDeg = CDSHealpix.pixRes(nside)/3600;
+            double resDeg = CDSHealpix.pixRes(order)/3600;
             if( taille/resDeg<8 ) break;
          }
          if( order<3 ) order=3;
+         nside = CDSHealpix.pow2(order);
       }
       
       // mémorisation pour usage éventuel dans moveRepere pour affichage dans la console
@@ -5929,7 +5928,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             c=Localisation.frameToFrame(c,Localisation.ICRS,frame);
             a.add(new double[]{c.al,c.del});
          }
-         try { npix = hpx.query_polygon(nside, a, true); }
+         try { npix = hpx.query_polygon(order, a, true); }
          catch( Exception e ) { return; }
       }
       

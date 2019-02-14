@@ -23,7 +23,6 @@ package cds.aladin;
 
 import java.util.ArrayList;
 
-import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -128,10 +127,10 @@ public class PlanMocAlgo extends PlanMoc {
       try {
          CDSHealpix hpx = new CDSHealpix();
          int order = mocSource.moc.getMaxOrder();
-         long nside = Healpix.pow2(order);
+//         long nside = Healpix.pow2(order);
          ArrayList<double[]> a = new ArrayList<>();
          for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
-         long [] npix = hpx.query_polygon(nside, a,true);
+         long [] npix = hpx.query_polygon(order, a,true);
          
          moc.clear();
          moc.setCheckConsistencyFlag(false);

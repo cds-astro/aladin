@@ -214,7 +214,7 @@ public class MocGen {
       double gap=1;
       try { 
          double resImage = Math.min(c.GetResol()[0],c.GetResol()[1]);
-         for( localOrder=order; CDSHealpix.pixRes( CDSHealpix.pow2(localOrder) )/3600. <= resImage; localOrder--);
+         for( localOrder=order; CDSHealpix.pixRes( localOrder )/3600. <= resImage; localOrder--);
          if( gap<1 ) gap=1;
       } catch( Exception e1 ) {
          e1.printStackTrace();
@@ -308,7 +308,7 @@ public class MocGen {
          c.GetCoord(coo);
          cooList.add(new double[]{coo.al,coo.del});
       }
-      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList,true);
+      long [] npixs = CDSHealpix.query_polygon( order, cooList,true);
       for( long npix : npixs ) moc.add(order,npix) ;
       return res;
    }

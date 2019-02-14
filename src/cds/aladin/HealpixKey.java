@@ -905,8 +905,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) throw new Exception();
 
       double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
-      long nside = CDSHealpix.pow2(order+ CDSHealpix.log2(width) );
-      long healpixIdxPixel = CDSHealpix.ang2pix_nest( nside, polar[0], polar[1]);
+//      long nside = CDSHealpix.pow2(order+ CDSHealpix.log2(width) );
+      int orderPix = order+ (int)CDSHealpix.log2(width);
+      long healpixIdxPixel = CDSHealpix.ang2pix_nest( orderPix, polar[0], polar[1]);
 
       long startIdx =  npix * width * width;
 
@@ -1118,7 +1119,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                // centrée sur un pixel particulier
                int w = width;
                if( planBG.flagRecutRadius>0 ) {
-                  double angRes = CDSHealpix.pixRes( CDSHealpix.pow2(order + CDSHealpix.log2(width) ) ) / 3600;
+                  double angRes = CDSHealpix.pixRes( order + (int)CDSHealpix.log2(width) ) / 3600;
                   w = (int)( planBG.flagRecutRadius/ angRes );
                }
                if( w>width ) w=width;
@@ -2152,7 +2153,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected void drawRealBorders(Graphics g, ViewSimple v) {
       try {
          Projection proj = v.getProj();
-         double x [][] = CDSHealpix.borders(CDSHealpix.pow2(order), npix, 50);
+         double x [][] = CDSHealpix.borders( order, npix, 50);
          for( int i=0; i<x.length; i++ ) {
             Coord c = new Coord(x[i][0],x[i][1]);
             int frame = hpix.getFrame();
@@ -2186,7 +2187,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       String s=getStringNumber();
       g.setFont(Aladin.PLAIN);
       try {
-         s = s+" ("+CDSHealpix.nest2ring(CDSHealpix.pow2(order-parente), npix/(long)Math.pow(4,parente))+")";
+         s = s+" ("+CDSHealpix.nest2ring(order-parente, npix/(long)Math.pow(4,parente))+")";
       } catch( Exception e ) { }
       int size=g.getFontMetrics().stringWidth(s);
       int x = (int)(b[0].x+b[1].x+b[2].x+b[3].x)/4;
