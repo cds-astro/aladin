@@ -549,6 +549,7 @@ final public class TableParser implements XMLConsumer {
                      for( k++; k<s.length() && Character.isDigit(s.charAt(k)); k++ ) {
                         prec[i] = prec[i]*10 + (s.charAt(k)-'0');
                      }
+                     f.precision=prec[i]+"";
                   }
 
                   //System.out.println("TFORM"+(i+1)+" width="+f.width+" prec="+prec[i]);
@@ -599,6 +600,7 @@ final public class TableParser implements XMLConsumer {
                   for( k++; k<s.length() && Character.isDigit(s.charAt(k)); k++ ) {
                      prec[i] = prec[i]*10 + (s.charAt(k)-'0');
                   }
+                  f.precision = prec[i]+"";
                }
 
                //System.out.println("TDISP"+(i+1)+" width="+f.width+" prec="+prec[i]);
@@ -750,12 +752,11 @@ final public class TableParser implements XMLConsumer {
       return a+"";
    }
 
-   final private String getBinField(byte t[],int i, char type,int prec,double tzero,double tscale,
-         boolean hasNull, int n) {
-
-      String a = getBinField1(t,i,type,prec,tzero,tscale,hasNull,n);
-      return a;
-   }
+//   final private String getBinField(byte t[],int i, char type,int prec,double tzero,double tscale,
+//         boolean hasNull, int n) {
+//      String a = getBinField1(t,i,type,prec,tzero,tscale,hasNull,n);
+//      return a;
+//   }
 
 
 
@@ -771,7 +772,7 @@ final public class TableParser implements XMLConsumer {
     * @param n valeur indéfinie (uniquement pour les types B,I, et J
     * @return la chaine correspondante à la valeur
     */
-   final private String getBinField1(byte t[],int i, char type,int prec,double tzero,double tscale,
+   final private String getBinField(byte t[],int i, char type,int prec,double tzero,double tscale,
          boolean hasNull, int n) {
       long a,b;
       int c;
@@ -877,7 +878,11 @@ final public class TableParser implements XMLConsumer {
       if( Double.isNaN(x) ) return "";
       if( tscale!=1. ) x*=tscale;
       if( tzero!=0.  ) x+=tzero;
-      if( prec>=0 ) x = Util.round(x,prec);
+// Pas assez précis dans certains cas
+//      if( prec>=0 ) x = Util.round(x,prec);
+      
+// En fait la précision sera appliquée uniquement à l'affichage
+//      if( prec>=0 ) return Util.myRound(x+"", prec);
       return x+"";
    }
 
@@ -886,7 +891,7 @@ final public class TableParser implements XMLConsumer {
    // Recupere sous la forme d'un entier 32bits un nombre entier se trouvant
    // a l'emplacement i du tableau t[]
    final private int getInt(byte[] t,int i) {
-      return ((t[i])<<24) | (((t[i+1])&0xFF)<<16)
+      return (t[i]<<24) | (((t[i+1])&0xFF)<<16)
             | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
    }
 
@@ -894,7 +899,7 @@ final public class TableParser implements XMLConsumer {
    // Recupere sous la forme d'un entier 16bits un nombre entier se trouvant
    // a l'emplacement i du tableau t[]
    final private int getShort(byte[] t,int i) {
-      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
+      return  (t[i]<<8) | (t[i+1])&0xFF;
    }
 
 

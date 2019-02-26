@@ -126,26 +126,78 @@ public final class HeaderFits {
     * @param buffer La ligne
     * @return La valeur
     */
+//   static public String getValue(byte [] buffer) {
+//       int i;
+//       boolean quote = false;
+//       boolean blanc=true;
+//       int offset = 9;
+//
+//       for( i=offset ; i<80; i++ ) {
+//          if( !quote ) {
+//             if( buffer[i]==(byte)'/' ) break;   // on a atteint le commentaire
+//          } else {
+//             if( buffer[i]==(byte)'\'') break;   // on a atteint la prochaine quote
+//          }
+//
+//          if( blanc ) {
+//             if( buffer[i]!=(byte)' ' ) blanc=false;
+//             if( buffer[i]==(byte)'\'' ) { quote=true; offset=i+1; }
+//          }
+//       }
+//       return (new String(buffer, 0, offset, i-offset)).trim();
+//   }
+   
+   /** Extraction de la valeur d'un champ FITS. va jusqu'au commentaire, ou sinon la fin de la ligne
+    * Vire les quotes si nécessaires. Vire les blancs après.
+    * @param buffer La ligne
+    * @return La valeur
+    */
    static public String getValue(byte [] buffer) {
-       int i;
-       boolean quote = false;
-       boolean blanc=true;
-       int offset = 9;
-
-       for( i=offset ; i<80; i++ ) {
-          if( !quote ) {
-             if( buffer[i]==(byte)'/' ) break;   // on a atteint le commentaire
-          } else {
-             if( buffer[i]==(byte)'\'') break;   // on a atteint la prochaine quote
-          }
-
-          if( blanc ) {
-             if( buffer[i]!=(byte)' ' ) blanc=false;
-             if( buffer[i]==(byte)'\'' ) { quote=true; offset=i+1; }
-          }
-       }
-       return (new String(buffer, 0, offset, i-offset)).trim();
+      int mode=0;
+      int tailSpace=0;
+      boolean end=false;
+      boolean oQuote=false;
+      
+      StringBuilder s1 = new StringBuilder(80);
+      
+      for( int i=9; i<buffer.length && i<80 && !end; i++ ) {
+         char ch= (char) buffer[i];
+         switch(mode) {
+            case 0: // Avant la valeur
+               if( ch!=' ' ) {
+                  mode=1;
+                  if( ch=='\'' ) mode=1;
+                  else { mode=2; s1.append(ch); }
+               }
+               break;
+            case 1: // Dans la valeur quotée
+               if( ch=='\'' ) {
+                  
+                  // Première quote ?
+                  if( !oQuote ) {
+                     
+                     // Pas de quote après => c'est terminé
+                     char nCh = (char)( i>=buffer.length-1 || i>=79 ? ' ' : buffer[i+1] );
+                     if( nCh!='\'' ) { mode=2; break; }
+                     
+                  // Deuxième quote
+                  } else { oQuote=false; break; }
+               }
+               oQuote = ch=='\'';
+               s1.append(ch);
+               break;
+            case 2: // Dans la valeur non quoté (ou fin de valeur quotée)
+               if( ch=='/' ) { end=true; break;  } // je suis arrivé au commentaire
+               if( ch==' ' ) tailSpace++;
+               else tailSpace=0;
+               s1.append(ch);
+               break;
+         }
+      }
+      return s1.substring(0, s1.length()-tailSpace);
    }
+
+
 
    /** Extraction de la description d'un champ FITS.
     * @return La description, ou null si aucune
@@ -251,13 +303,21 @@ public final class HeaderFits {
             // Pour supporter la convention CONTINUE
             if( key.equals("CONTINUE") && buffer[8] != '=') {
                int n = keysOrder.size();
-               if( n==0 ) throw new Exception("FITS CONTINUE convention error: no previous keyword");
-               String lastKey = keysOrder.get( n-1 );
-               String lastValue = (String ) header.get( lastKey );
-               n = lastValue.length();
-               if( n==0 || lastValue.charAt(n-1)!='&' ) throw new Exception("FITS CONTINUE convention error: & missing");
-               value = lastValue.substring(0,n-1)+value;
-               key=lastKey;
+               if( n==0 ) {
+                  //                  throw new Exception("FITS CONTINUE convention error: no previous keyword");
+                  System.err.println("FITS CONTINUE convention error: no previous keyword => ignored");
+               } else {
+                  String lastKey = keysOrder.get( n-1 );
+                  String lastValue = (String ) header.get( lastKey );
+                  n = lastValue.length();
+                  if( n==0 || lastValue.charAt(n - 1)!='&' ) {
+                     //                  throw new Exception("FITS CONTINUE convention error: & missing");
+                     System.err.println("FITS CONTINUE convention error: & missing => ignored");
+                  } else {
+                     value = lastValue.substring(0,n-1)+value;
+                     key=lastKey;
+                  }
+               }
                
             } else {
                if( buffer[8] != '=' ) continue;
@@ -486,6 +546,38 @@ public final class HeaderFits {
       result = Double.valueOf(trimDouble(s)).doubleValue();
       return result;
    }
+   
+   /** Enlève les quotes d'une valeur String FITS (si nécessaire) */
+   static public String unquoteFits( String s ) {
+      int n;
+      if( s==null || (n=s.length())<2 ) return s;
+      char c = s.charAt(0);
+      if( c!='\'' || c!=s.charAt(n-1) ) return s;
+      
+      char [] a = s.toCharArray();
+      StringBuilder s1 = new StringBuilder(a.length);
+      boolean quote=false;
+      for( int i=1; i<n-1; i++ ) {
+         c=a[i];
+         if( quote && c=='\'' ) { quote=false; continue; }
+         else s1.append(c);
+         quote= c=='\'';
+      }
+      return s1.toString();
+   }
+   
+   /** Ajoute les quotes pour mettre en forme une chaine */
+   static public String quoteFits( String s ) {
+      if( s==null ) return s;
+      StringBuilder s1 = new StringBuilder( s.length()+10 );
+      s1.append('\'');
+      for( char a : s.toCharArray() ) {
+         if( a=='\'' ) s1.append('\'');
+         s1.append(a);
+      }
+      s1.append('\'');
+      return s1.toString();
+   }
 
    /** Recherche d'une chaine par son mot cle
     * @param key le mot cle  (inutile de l'aligner en 8 caractères)
@@ -494,9 +586,9 @@ public final class HeaderFits {
     public String getStringFromHeader(String key) throws NullPointerException {
        String s = (String) header.get(key.trim());
        if( s==null || s.length()==0 ) return s;
-       if( s.charAt(0)=='\'' ) return s.substring(1,s.length()-1).trim();
-       return s;
-//       return (String) header.get(key.trim());
+//       if( s.charAt(0)=='\'' ) return s.substring(1,s.length()-1).trim();
+//       return s;
+       return unquoteFits(s).trim();
     }
 
     /** Recherche de la description d'une entrée par son mot cle

@@ -182,6 +182,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Base64 Binary SHORT decoding error (bad casting)
  * @beta    <LI> Hipsgen mocorder param
  * @beta    <LI> VOTABLE BINARY variable array with upper limit
  * @beta    <LI> Reticle copy/paste (rounding bug)
@@ -215,7 +216,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.109";
+   static public final    String VERSION = "v10.110";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

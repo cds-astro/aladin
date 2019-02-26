@@ -73,7 +73,7 @@ public final class Tok {
       
       if( !( (c=='\"' || c=='\'') && c==s.charAt(n-1) )) return s;
       char [] a = s.toCharArray();
-      StringBuffer s1 = new StringBuffer(a.length);
+      StringBuilder s1 = new StringBuilder(a.length);
       boolean backslash=false;
       for( int i=1; i<n-1; i++ ) {
          c=a[i];

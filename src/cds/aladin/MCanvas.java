@@ -42,10 +42,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Locale;
 import java.util.Vector;
 
 import javax.swing.JComponent;
@@ -455,7 +453,7 @@ MouseWheelListener, Widget
          JMenuItem item;
          menuBroadcastSpectrum.removeAll();
          
-         HashSet<String> set = new HashSet<String>();
+         HashSet<String> set = new HashSet<>();
          if( spectrumApps!=null && spectrumApps.size()>0) {
             for (String appName: spectrumApps) {
                if( set.contains(appName) ) continue;
@@ -601,9 +599,11 @@ MouseWheelListener, Widget
             //            int pos = w.precision>0 ? w.precision+1 : w.precision;
             //            if( i+pos<text.length() ) text = text.substring(0,i+pos);
 
+            
             try {
-               double v = Double.parseDouble(w.text);
-               text = (new Formatter(Locale.ENGLISH)).format("%."+w.precision+"f", v).toString();
+//               double v = Double.parseDouble(w.text);
+//               text = (new Formatter(Locale.ENGLISH)).format("%."+w.precision+"f", v).toString();
+               text = Util.myRound(w.text,w.precision, false);
                int i = text.lastIndexOf('.');
                if( i>0 ) {
                   int k;
@@ -616,7 +616,7 @@ MouseWheelListener, Widget
                      text = text.substring(0,k+1)+trail.toString();
                   }
                }
-            } catch( Exception e) { }
+            } catch( Exception e) {}
          }
       }
 

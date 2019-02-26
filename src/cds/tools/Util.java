@@ -63,6 +63,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -83,6 +85,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -388,7 +391,8 @@ public final class Util {
 
       return DF.format(x);
    }
-
+   
+   
    /**
     * Arrondit en travaillant sur la representation String
     * @param x Le nombre a arrondir
@@ -396,46 +400,71 @@ public final class Util {
     * @return
     */
    static public String myRound(String x) { return myRound(x,0); }
-   static public String myRound(String x,int p) {
-
-      // Problème en cas de notation scientifique
-
-      char a[] = x.toCharArray();
-      char b[] = new char[a.length];
-      int j=0;
-      int mode=0;
-
-      int len=x.indexOf('E');
-      if( len<0 ) len=x.indexOf('e');
-
-      int n = len<0 ? a.length : len;
-
-      for( int i=0; i<n; i++ ) {
-         switch(mode) {
-            case 0: if( a[i]=='.' ) {
-               if (p == 0)  return new String(b,0,j);
-               mode = 1;
-            }
-            b[j++]=a[i];
-            break;
-            case 1: p--;
-            if( p==0 ) mode=2;
-            if( i+1<a.length && Character.isDigit(a[i+1]) && a[i+1]>='5' ) {
-               b[j++]=a[i]++;
-            } else b[j++]=a[i];
-            break;
-            case 2:
-               if( Character.isDigit(a[i])) break;
-               mode=3;
-            case 3:
-               b[j++]=a[i];
-               break;
-         }
+   static public String myRound(String x,int p) { return myRound(x,p,true); }
+   static public String myRound(String x,int p,boolean removeTrailingZero) {
+      
+      int i = x.indexOf('.');
+      if( i==-1) return x;
+      
+      String s=null;
+      boolean decimal=true;
+      
+      double v = Double.parseDouble(x);
+      double v1 = Math.abs(v);
+      if( v1<1E-8 || v1>1E10 ) {
+         s = new Formatter(Locale.ENGLISH).format("%."+p+"G", v).toString();
+         decimal = s.indexOf('E')<0;
       }
+      if( decimal ) {
+         s = new Formatter(Locale.ENGLISH).format("%."+p+"f", v).toString();
+         if( removeTrailingZero  ) {
+            s = s.indexOf('.') < 0 ? s : s.replaceAll("0*$", "").replaceAll("\\.$", "");
+         }
+      } 
 
-      String s = new String(b,0,j);
-      if( len>=0 ) return s+x.substring(len);
       return s;
+
+
+      // ATTENTION, l'ARRONDI N'EST PAS CORRECTEMENT EFFECTUE
+
+//      char a[] = x.toCharArray();
+//      char b[] = new char[a.length];
+//      int j=0;
+//      int mode=0;
+//
+//      int len=x.indexOf('E');
+//      if( len<0 ) len=x.indexOf('e');
+//
+//      int n = len<0 ? a.length : len;
+//
+//      for( int i=0; i<n; i++ ) {
+//         switch(mode) {
+//            case 0: 
+//               if( a[i]=='.' ) {
+//                  if (p == 0)  return new String(b,0,j);
+//                  mode = 1;
+//               }
+//               b[j++]=a[i];
+//               break;
+//            case 1: 
+//               p--;
+//               if( p==0 ) mode=2;
+//               if( i+1<a.length && Character.isDigit(a[i+1]) && a[i+1]>='5' ) {
+//                  b[j++]=a[i]++;
+//               } else b[j++]=a[i];
+//               break;
+//            case 2:
+//               if( Character.isDigit(a[i])) break;
+//               mode=3;
+//            case 3:
+//               b[j++]=a[i];
+//               break;
+//         }
+//      }
+//
+//      String s = new String(b,0,j);
+//      if( len>=0 ) return s+x.substring(len);
+//      return s;
 
    }
    
@@ -650,9 +679,22 @@ public final class Util {
     * @param nbDec nb de décimales à conserver
     * @return le nombre arrondi en conservant nbDec décimales
     */
-   public static double round(double d, int nbDec) {
-      double fact = Math.pow(10,nbDec);
-      return Math.round(d*fact)/fact;
+//   public static double round(double d, int nbDec) {
+//      StringBuilder fmt = new StringBuilder("#.");
+//      for( int i=0; i<nbDec; i++ ) fmt.append('#');
+//      DecimalFormat df = new DecimalFormat(fmt.toString());
+//      df.setRoundingMode(RoundingMode.CEILING);
+//      return Double.parseDouble( df.format(d).replace(',','.') );
+//      
+////      double fact = Math.pow(10,nbDec);
+////      return Math.round(d*fact)/fact;
+//   }
+   
+   public static double round(double value, int places) {
+//      if( Math.abs(value)<1E-10 ) return value;
+      BigDecimal bd = new BigDecimal(Double.toString(value));
+      bd = bd.setScale(places, RoundingMode.HALF_UP);
+      return bd.doubleValue();
    }
 
    /**

@@ -1669,17 +1669,17 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
 //      }
          
-         //tap: display of schema tables
-         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
-         hideTapSchema = new JCheckBox();
-         hideTapSchema.setSelected(hideTapSchema());
-         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
+//         //tap: display of schema tables
+//         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
+//         hideTapSchema = new JCheckBox();
+//         hideTapSchema.setSelected(hideTapSchema());
+//         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
 
-         //tap: display of schema tables
-         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
-         hideTapSchema = new JCheckBox();
-         hideTapSchema.setSelected(hideTapSchema());
-         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
+//         //tap: display of schema tables
+//         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
+//         hideTapSchema = new JCheckBox();
+//         hideTapSchema.setSelected(hideTapSchema());
+//         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
 
       return p;
    }

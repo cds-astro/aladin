@@ -90,7 +90,7 @@ public final class Legende extends AbstractTableModel  {
 
    /** Construction d'une légende générique en fonction d'un tableau de légendes */
    protected Legende(ArrayList<Legende> leg) {
-      ArrayList<Field> f = new ArrayList<Field>(100);
+      ArrayList<Field> f = new ArrayList<>(100);
       for(int i=0; i<leg.size(); i++ ) {
          Legende lg = leg.get(i);
          for( int j=0; j<lg.field.length; j++) {
@@ -446,11 +446,14 @@ public final class Legende extends AbstractTableModel  {
    protected int getPrecision(int i) {
       if( i>=field.length ) return -1;
       Field f = field[i];
-      try { return Integer.parseInt(f.precision); }
-      catch( Exception e ) {}
+      try { 
+         // Il peut y avoir une lettre avant (ex: F8)
+         int offset = Character.isDigit( f.precision.charAt(0) ) ? 0 : 1;
+         return Integer.parseInt(f.precision.substring(offset) ); 
+      } catch( Exception e ) {}
       return -1;
    }
-
+   
    /** Retourne la desc
   /** Retourne le nombre de caracteres associes au champ.
     * @param i numero du champ
@@ -573,7 +576,7 @@ public final class Legende extends AbstractTableModel  {
 
    protected JComboBox<String> createCombo() { return createCombo(false); }
    protected JComboBox<String> createCombo(boolean forPlot) {
-      JComboBox<String> combo = new JComboBox<String>();
+      JComboBox<String> combo = new JComboBox<>();
       combo.setPrototypeDisplayValue("12345678901234567890123456789");
       combo.setMaximumRowCount(15);
       for( int i=0; i<field.length; i++ ) {
