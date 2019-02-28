@@ -89,7 +89,6 @@ import javax.swing.tree.TreePath;
 import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
-import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.mocmulti.BinaryDump;
 import cds.mocmulti.MocItem;
@@ -98,6 +97,7 @@ import cds.mocmulti.MultiMoc;
 import cds.mocmulti.MultiMoc2;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Classe qui gère l'arbre du Directory des collections
@@ -1855,18 +1855,20 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( flagScanLocal && (mode == ResumeMode.FORCE || mode == ResumeMode.LOCALADD || !sameLocation) ) {
 
             // Construction d'un MOC qui englobe le cercle couvrant le champ de vue courant
-            Healpix hpx = new Healpix();
+//            Healpix hpx = new Healpix();
             int order = getAppropriateOrder(size);
             mocQuery = new HealpixMoc(order);
+            
             int i = 0;
             mocQuery.setCheckConsistencyFlag(false);
-            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
+//            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
+            for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), false) ) {
                mocQuery.add(order, n);
                if( (++i) % 1000 == 0 ) mocQuery.checkAndFix();
             }
             mocQuery.setCheckConsistencyFlag(true);
             // System.out.println("Moc d'interrogation => "+mocQuery.todebug());
-
+            
             ArrayList<String> mocIds = multiProp.scan(mocQuery);
             if( mocIds != null ) for( String id : mocIds )
                set.add(id);

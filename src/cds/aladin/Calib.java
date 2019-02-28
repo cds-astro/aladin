@@ -1361,8 +1361,8 @@ public final class Calib  implements Cloneable {
         //  if (proj == SIP) {    
         //  System.out.println("proj "+proj) ;
          try {
-            order_a = hf.getIntFromHeader("A_ORDER") ;
-            order_b= hf.getIntFromHeader("B_ORDER") ;
+            try { order_a = hf.getIntFromHeader("A_ORDER") ; } catch( Exception e ) { order_a=1; }
+            try { order_b= hf.getIntFromHeader("B_ORDER") ;  } catch( Exception e ) { order_b=1; }
 
             for (int order = 2;  order < order_a+1 ; order++)
             {
@@ -1439,14 +1439,11 @@ public final class Calib  implements Cloneable {
             //    bp[1][2] = hf.getDoubleFromHeader("BP_1_2 ");
             //    bp[0][3] = hf.getDoubleFromHeader("BP_0_3 ");
             //     }
-         }
-         catch (Exception e14 ){ proj = -1  ;} 
         
-         try {
             //   System.out.println("ici") ;
-            order_ap = hf.getIntFromHeader("AP_ORDER") ;
+            try { order_ap = hf.getIntFromHeader("AP_ORDER") ; } catch( Exception e) { order_ap = 1; }
             //   System.out.println("ici") ;
-            order_bp = hf.getIntFromHeader("BP_ORDER") ;
+            try { order_bp = hf.getIntFromHeader("BP_ORDER") ; } catch( Exception e) { order_bp = 1; }
             //   System.out.println("ici") ;  
             for (int order = 2;  order < order_ap+1 ; order++)
             {
@@ -1477,7 +1474,10 @@ public final class Calib  implements Cloneable {
             }       
             //     System.out.println("ici") ;
          }
-         catch (Exception e15 ) { }
+         catch (Exception e15 ) { 
+            e15.printStackTrace();
+            proj=-1;
+         }
       }
        
       if (type1.indexOf("COE")>= 0 && type2.indexOf("COE")>= 0) proj = TAN ;

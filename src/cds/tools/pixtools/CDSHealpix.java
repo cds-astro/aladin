@@ -89,6 +89,24 @@ public final class CDSHealpix {
       return query_disc(order, ra, dec, radius, true);
    }
    
+   public static void main(String [] arg) {
+
+      double ra=210.80216136704843, dec=54.34890606617321, radius=0.1652;
+      int order=11;
+
+      final HealpixNested hn = Healpix.getNested(order);
+      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer( Math.toRadians(radius) );
+      // final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox( Math.toRadians(radius) );
+      final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
+      long [] out = toFlatArrayOfHash(bmoc);
+
+      System.out.print("overlappingCells checker:\ndraw circle("+ra+","+dec+","+radius+")\ndraw moc "+order+"/");
+      for( long a : out ) System.out.print(" "+a);
+      System.out.println();
+   }
+
+
+   
 //   public static void main(String [] arg) {
 //      
 //      double ra=160.771389, dec=-64.3813, radius=0.8962;
@@ -116,11 +134,9 @@ public final class CDSHealpix {
       //    cp.overlappingCells((Math.toRadians(ra), Math.toRadians(dec), ReturnedCells.FULLY_IN)
 
       double [] coo = normalizeRaDec( ra,dec );
-      final HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(coo[0]), Math.toRadians(coo[1])) :
-         cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
-      //    final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
-      //    long l2 = System.nanoTime();
-      //    System.err.println("Cone FX computed in " + (l2 - l1) / (1e6d) + " ms");
+      HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(coo[0]), Math.toRadians(coo[1])) :
+//         final HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec)) :
+            cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
 
       return toFlatArrayOfHash(bmoc);
    }
@@ -130,6 +146,7 @@ public final class CDSHealpix {
       final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer(radius);
       double [] coo = normalizeRaDec( ra,dec );
       final HealpixNestedBMOC bmoc = cp.overlappingCenters(Math.toRadians(coo[0]), Math.toRadians(coo[1]));
+//      final HealpixNestedBMOC bmoc = cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
       return toFlatArrayOfHash(bmoc);
    }
 
@@ -302,7 +319,7 @@ public final class CDSHealpix {
    
    /** Transforme si nécessaire les coordonnées pour être dans la plage des valeurs usuelles 
     * parce que la librairie de FX est tatillonne */
-   static double [] normalizeRaDec( double ra, double dec) {
+   static public double [] normalizeRaDec( double ra, double dec) {
       if( dec<-90 ) { dec = 180+dec; ra+= 180; }
       else if( dec>90 ) { dec = 180-dec; ra+=180; }
       if( ra>=360 ) ra-=360;

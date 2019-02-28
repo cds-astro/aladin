@@ -56,6 +56,7 @@ import cds.moc.HealpixMoc;
 import cds.mocmulti.MocItem2;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gère les noeuds de l'arbre des HiPS
@@ -1321,6 +1322,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       }
       
       if( url==null ) return;
+//      System.out.println("ULR scan = "+url);
       
       // Mémorisation du résultat
       HealpixMoc moc;
@@ -1333,15 +1335,19 @@ public class TreeObjDir extends TreeObj implements Propable {
       // Mémorisation de la surface couverte
       try {
          int order=11;
-         Healpix hpx = new Healpix();
          moc = new HealpixMoc(order);
          int i=0;
          moc.setCheckConsistencyFlag(false);
-         for( long n : hpx.queryDisc(order, c.al, c.del,  rad) ) {
+         for( long n : CDSHealpix.query_disc(order, c.al, c.del,  Math.toRadians(rad), false) ) {
             moc.add(order, n);
             if( (++i)%1000==0 )  moc.checkAndFix();
          }
          moc.setCheckConsistencyFlag(true);
+         
+//         Iterator<Long> it  = moc.pixelIterator();
+//         System.out.print("TreeObjDir.scan1():\ndraw circle("+c.al+","+c.del+","+radius+")\ndraw moc "+order+"/");
+//         while( it.hasNext() ) System.out.print(" "+it.next());
+//         System.out.println();
          
          if( mo.mocRef==null ) mo.mocRef=moc;
          else mo.mocRef.add(moc);
@@ -1381,7 +1387,10 @@ public class TreeObjDir extends TreeObj implements Propable {
             if( !(o instanceof Position) ) continue;
             if( Double.isNaN( ((Position)o).raj ) ) continue;
             try {
-               long pix = hpx.ang2pix(order, ((Position)o).raj, ((Position)o).dej);
+               
+               double [] c = CDSHealpix.normalizeRaDec( ((Position)o).raj, ((Position)o).dej);
+               long pix = hpx.ang2pix(order, c[0], c[1] );
+//               long pix = hpx.ang2pix(order, ((Position)o).raj, ((Position)o).dej);
                moc.add(order,pix);
                n++;
                if( n>10000 ) { moc.checkAndFix(); n=0; }
