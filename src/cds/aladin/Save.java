@@ -1277,7 +1277,7 @@ public class Save extends JFrame implements ActionListener {
          append(CR+"     width=\""+pi.width+"\"");
          append(CR+"     height=\""+pi.height+"\"");
          append(CR+"     video=\""+pi.video+"\"");
-         append(CR+"     transfertFct=\""+pi.transfertFct+"\"");
+         append(CR+"     transfertFct=\""+pi.getTransfertFct()+"\"");
          append(CR+"     minPix=\""+pi.dataMin+"\"");
          append(CR+"     maxPix=\""+pi.dataMax+"\"");
          append(CR+"     minPixCut=\""+pi.pixelMin+"\"");

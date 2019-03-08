@@ -517,7 +517,7 @@ public class PlanImage extends Plan {
          System.arraycopy(cmControl,0,p.cmControl,0,3);
          p.cm = CanvasColorMap.getCM(p.cmControl[0],p.cmControl[1],p.cmControl[2],
                p.video==PlanImage.VIDEO_INVERSE,
-               p.typeCM, p.transfertFct,p.isTransparent());
+               p.typeCM, p.getTransfertFct(),p.isTransparent());
 
       }
       
@@ -675,7 +675,7 @@ public class PlanImage extends Plan {
 
    /** Indique l'objet central et les parametres de l'image pour un log */
    protected String getLogInfo() {
-      return (transfertFct!=LINEAR?TRANSFERTFCT[transfertFct]+"/":"")+
+      return (getTransfertFct()!=LINEAR?TRANSFERTFCT[getTransfertFct()]+"/":"")+
             super.getLogInfo();
    }
 
@@ -759,7 +759,7 @@ public class PlanImage extends Plan {
    public void restoreCM() {
       IndexColorModel  ic = CanvasColorMap.getCM(cmControl[0],cmControl[1],cmControl[2],
             video==PlanImage.VIDEO_INVERSE,
-            typeCM,transfertFct,isTransparent());
+            typeCM,getTransfertFct(),isTransparent());
       setCM(ic);
    }
 
@@ -2570,7 +2570,7 @@ public class PlanImage extends Plan {
 
    /** Retourne le nom de la fonction de transition (asinh, log, sqrt, linear ou sqr) */
    static public String getTransfertFctInfo(int i) { return TRANSFERTFCT[i]; }
-   public String getTransfertFctInfo() { return getTransfertFctInfo(transfertFct); }
+   public String getTransfertFctInfo() { return getTransfertFctInfo( getTransfertFct() ); }
 
    /** Retourne le code de la fonction de transition */
    static public int getTransfertFct(String s) { return Util.indexInArrayOf(s, TRANSFERTFCT,true); }
@@ -2588,7 +2588,7 @@ public class PlanImage extends Plan {
    }
 
    /** Retourne l'indice de la fonction de transfert courante */
-   protected int getTransfertFct() { return transfertFct; }
+   public int getTransfertFct() { return transfertFct; }
 
    /** Retourne la valeur du pixel minimale pour le cut (bcale et bzero ont été déjà appliqué) */
    public double getPixelMin() { return pixelMin*bScale + bZero; }
@@ -3548,7 +3548,7 @@ public class PlanImage extends Plan {
 
             // S'agit-il d'une fonction de transfert ?
          } else if( (i=Util.indexInArrayOf(s, TRANSFERTFCT, true))>=0 ) {
-            if( i!=transfertFct ) { transfertFct=i; flagCM=true; }
+            if( i!=getTransfertFct() ) { transfertFct=i; flagCM=true; }
 
             // S'agit-il d'un reverse ?
          } else if( s.equalsIgnoreCase("reverse") || s.equalsIgnoreCase("inverse") ) {
@@ -3600,7 +3600,7 @@ public class PlanImage extends Plan {
       if( flagCM ) {
          IndexColorModel cm = CanvasColorMap.getCM(
                cmControl[0], cmControl[1],cmControl[2],
-               video==VIDEO_INVERSE,typeCM,transfertFct);
+               video==VIDEO_INVERSE,typeCM,getTransfertFct());
          setCM(cm);
       }
 
@@ -3628,7 +3628,7 @@ public class PlanImage extends Plan {
       video = video==PlanImage.VIDEO_INVERSE ? PlanImage.VIDEO_NORMAL :PlanImage.VIDEO_INVERSE;
       IndexColorModel cm = CanvasColorMap.getCM(
             cmControl[0], cmControl[1],cmControl[2],
-            video==PlanImage.VIDEO_INVERSE,typeCM,transfertFct);
+            video==PlanImage.VIDEO_INVERSE,typeCM,getTransfertFct());
       setCM(cm);
    }
 
@@ -3968,7 +3968,7 @@ public class PlanImage extends Plan {
       if( typeCM!=CMGRAY ) {
          s+="\ncm "+CanvasColorMap.getCMName(typeCM);
          if( video==PlanImage.VIDEO_NORMAL ) s+=" noreverse";
-         if( transfertFct!=LINEAR) s+=" "+TRANSFERTFCT[transfertFct];
+         if( getTransfertFct()!=LINEAR) s+=" "+TRANSFERTFCT[getTransfertFct()];
       }
       return s;
    }

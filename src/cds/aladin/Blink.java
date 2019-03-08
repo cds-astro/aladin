@@ -108,11 +108,13 @@ public final class Blink {
    /** Demande le démarrage du blink pour une source donnée s */
    synchronized protected void start(Source s) {
       if( s==null ) return;
-      this.s=s;
-      c = v.getProjSyncView().getProj().c;
-      p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());
-      if( p==null ) { mode=NOBLINK; return; }
-      mode=START;
+      try {
+         this.s=s;
+         c = v.getProjSyncView().getProj().c;
+         p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());
+         if( p==null ) { mode=NOBLINK; return; }
+         mode=START;
+      } catch( Exception e ) { }
    }
 
    /** Demande d'arrêt du mode blink */

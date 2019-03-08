@@ -340,7 +340,7 @@ public class ContextGui extends Context {
    public TransfertFct getFct() throws Exception {
       if(  mainPanel.tabJpg.isCutFromPlanBase() ) {
          PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
-         return TransfertFct.getFromCode(p.transfertFct);
+         return TransfertFct.getFromCode(p.getTransfertFct());
       }
       return super.getFct();
 

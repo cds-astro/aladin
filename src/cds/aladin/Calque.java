@@ -920,10 +920,9 @@ public class Calque extends JPanel implements Runnable {
             if( plan[i].isEmpty() ) {
                if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
                scroll.rm(i);
-               Plan ptmp = plan[i];
                for( j=i; j>1; j-- ) plan[j]=plan[j-1];
                i++;
-               plan[1]=ptmp;
+               plan[0]=new PlanFree(aladin);
             }
          }
       }
@@ -956,10 +955,8 @@ public class Calque extends JPanel implements Runnable {
                if( verbose ) aladin.console.printCommand("rm "+Tok.quote(plan[i].label));
                if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
                scroll.rm(i);
-               //               Plan ptmp = plan[i];
                for( j=i; j>1; j-- ) plan[j]=plan[j-1];
                i++;
-               //               plan[1]=ptmp;
                plan[0]=new PlanFree(aladin);
             }
          }
@@ -991,10 +988,8 @@ public class Calque extends JPanel implements Runnable {
                if( verbose ) aladin.console.printCommand("rm "+Tok.quote(plan[i].label));
                if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
                scroll.rm(i);
-               //               Plan ptmp = plan[i];
                for( j=i; j>1; j-- ) plan[j]=plan[j-1];
                i++;
-               //               plan[1]=ptmp;
                plan[0]=new PlanFree(aladin);
             }
          }

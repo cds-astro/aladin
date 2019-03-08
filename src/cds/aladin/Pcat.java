@@ -334,8 +334,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             0.0,false,
             typeProj,Calib.FK5));
 
-      // Positionnement du centre
-      plan.co=new Coord(rajc,dejc);
+      // Positionnement du centre que si ce n'est pas la valeur par défaut 0,0
+      if( rajc!=0 && dejc!=0 ) plan.co=new Coord(rajc,dejc);
    }
    
    

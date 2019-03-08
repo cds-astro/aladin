@@ -1050,7 +1050,7 @@ public class ServerFile extends Server implements XMLConsumer {
                pi.cm=CanvasColorMap.getCM(pi.cmControl[0],pi.cmControl[1],pi.cmControl[2],
                      pi.video==PlanImage.VIDEO_INVERSE,
                      pi.typeCM,
-                     pi.transfertFct);
+                     pi.getTransfertFct());
                pi.calculPixelsZoom();
                pi.changeImgID();
             }

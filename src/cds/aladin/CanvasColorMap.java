@@ -419,7 +419,7 @@ MouseMotionListener, MouseListener, KeyListener
       flagCMBand=false;
       return getCM(triangle[0],triangle[1],triangle[2],
             pimg.video==PlanImage.VIDEO_INVERSE,
-            pimg.typeCM,pimg.transfertFct,pimg.isTransparent());
+            pimg.typeCM,pimg.getTransfertFct(),pimg.isTransparent());
    }
 
    static byte [] r = new byte[256];

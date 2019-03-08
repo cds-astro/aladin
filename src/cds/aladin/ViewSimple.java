@@ -3058,7 +3058,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       } else {
          IndexColorModel  ic = CanvasColorMap.getCM(tr1,tr2,tr3,
                pimg.video==PlanImage.VIDEO_INVERSE,
-               pimg.typeCM,pimg.transfertFct,pimg.isTransparent());
+               pimg.typeCM,pimg.getTransfertFct(),pimg.isTransparent());
          pimg.setCM(ic);
          aladin.calque.zoom.zoomView.setCM(ic);
       }

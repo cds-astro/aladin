@@ -65,7 +65,7 @@ public class PlanImageBlink extends PlanImage {
       isOldPlan=false;
 
       pRef=p[0];
-      vFrames=new Vector<PlanImageBlinkItem>();
+      vFrames=new Vector<>();
 
       Aladin.trace(3,"Blink ref plane: " + pRef.label);
 
@@ -143,7 +143,7 @@ public class PlanImageBlink extends PlanImage {
       video = VIDEO_NORMAL;
       typeCM = p.typeCM;
       cmControl[0] = 0; cmControl[1] = 128; cmControl[2] = 255;
-      cm = CanvasColorMap.getCM(0,128,255,false,typeCM,transfertFct);
+      cm = CanvasColorMap.getCM(0,128,255,false,typeCM,getTransfertFct());
       vFrames.addElement( new PlanImageBlinkItem(p));
       dataMin=pixelMin=0;
       dataMax=pixelMax=255;
@@ -233,7 +233,7 @@ public class PlanImageBlink extends PlanImage {
 
          try {
             // Initialisation
-            v = new ArrayList<PlanImageBlinkItem>(d);
+            v = new ArrayList<>(d);
             for( int i=0; i<d; i++ ) {
                byte [] pixels = new byte[ w*h ];
                byte [] pixelsOrign = full ? new byte [ w*h*npix ] : null;
@@ -271,7 +271,7 @@ public class PlanImageBlink extends PlanImage {
       }
 
       // Mise sous forme vecteur
-      Vector<PlanImageBlinkItem> v1 = new Vector<PlanImageBlinkItem>(d);
+      Vector<PlanImageBlinkItem> v1 = new Vector<>(d);
       for( PlanImageBlinkItem p : v ) v1.add(p);
 
       // Remplacement
@@ -393,7 +393,7 @@ public class PlanImageBlink extends PlanImage {
    synchronized protected void addFrame(String label,byte pixels[],byte pixelsOrigin[],
          boolean cacheFromOriginalFile,String cacheID, long cacheOffset) {
 
-      if( vFrames==null ) vFrames = new Vector<PlanImageBlinkItem>();
+      if( vFrames==null ) vFrames = new Vector<>();
       vFrames.addElement( new PlanImageBlinkItem(label,pixels,pixelsOrigin,cacheFromOriginalFile,cacheID,cacheOffset));
    }
 

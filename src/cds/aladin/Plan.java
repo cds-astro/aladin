@@ -2547,7 +2547,11 @@ public class Plan implements Runnable {
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;
          Source s = (Source)o;
-         if( s.getFootprint() != null) return true;
+         if( s.getFootprint() != null) {
+//            SourceFootprint sf = s.getFootprint();
+//            System.out.println("Trouvé "+sf);
+            return true;
+         }
       }
       return false;
    }

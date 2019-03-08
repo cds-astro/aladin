@@ -47,7 +47,7 @@ import cds.aladin.Save;
  */
 public final class HeaderFits {
 
-   private StringBuffer   memoHeaderFits = null;  // Memorisation de l'entete FITS telle quelle (en Strings)
+   private StringBuilder   memoHeaderFits = null;  // Memorisation de l'entete FITS telle quelle (en Strings)
    
   /** Les elements de l'entete */
    protected Hashtable header;     // Valeur pour chaque clé
@@ -84,14 +84,14 @@ public final class HeaderFits {
     public String getOriginalHeaderFits() { return memoHeaderFits.toString(); }
     
     /** Mémorise le header FITS original (en Strings) */
-    public void setOriginalHeaderFits(String s) { memoHeaderFits= new StringBuffer(s); }
+    public void setOriginalHeaderFits(String s) { memoHeaderFits= new StringBuilder(s); }
 
    /** Ajoute la ligne courante a la memorisation du header FITS
     * en supprimant les blancs en fin de ligne
     * @param s la chaine a ajouter
     */
     public void appendMHF(String s) {
-       if( memoHeaderFits==null ) memoHeaderFits=new StringBuffer();
+       if( memoHeaderFits==null ) memoHeaderFits=new StringBuilder();
        memoHeaderFits.append(s.trim()+"\n");
     }
 

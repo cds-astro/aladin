@@ -917,6 +917,7 @@ public class Context {
          }  
          catch( MyInputStreamCachedException e) { taskAbort(); throw e; }
          catch( Exception e) {
+            e.printStackTrace();
             Aladin.trace(4, "justFindImgEtalon : " +e.getMessage());
             continue;
          }
@@ -1042,11 +1043,25 @@ public class Context {
          // Y a-t-il un changement de bitpix ?
          // Les cuts changent
          if( bitpixOrig!=-1 && bitpix != bitpixOrig ) {
-            cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
-                  : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
-            cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-                  : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-            coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
+            cut[2] = bitpix==-64? -Double.MAX_VALUE :
+                     bitpix==-32? -Float.MAX_VALUE : 
+                     bitpix==64?   Long.MIN_VALUE+1 :
+                     bitpix==32?   Integer.MIN_VALUE+1 :
+                     bitpix==16?   Short.MIN_VALUE+1 : 
+                     1;
+            cut[3] = bitpix==-64? Double.MAX_VALUE :
+                     bitpix==-32? Float.MAX_VALUE :
+                     bitpix==64?  Long.MAX_VALUE :
+                     bitpix==32?  Integer.MAX_VALUE :
+                     bitpix==16?   Short.MAX_VALUE :
+                     255;
+            
+//            double plageOrig = cutOrig[3]-cutOrig[2];
+//            if( bitpixOrig>0 ) plageOrig++;   // [0..N] => N+1 valeurs possibles contrairement aux réelles
+//            double plage = cut[3]-cut[2];
+//            if( bitpix>0 ) plage++;
+//            coef = plage / plageOrig;
+               coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
 
             cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
             cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
@@ -1712,10 +1727,18 @@ public class Context {
    private HashSet<String> removeList = null;
    public void addFileRemoveList(String file) {
       if( removeList==null ) removeList = new HashSet<>();
-      if( removeList.size()>MAXREMOVEDFILE ) {
+      if( (removeList.size()) >MAXREMOVEDFILE ) {
          abort("Too many removed original files (>"+MAXREMOVEDFILE+")");
          taskAbort();
       }
+      
+      // j'enlève un éventuel suffixe [xxxx]
+      if( file.endsWith("]") ) {
+         int i = file.lastIndexOf('[');
+         if( i>0 ) file = file.substring(0,i);
+      }
+      warning("Problem on open => file retired: "+file);
+
       removeList.add(file);
    }
    

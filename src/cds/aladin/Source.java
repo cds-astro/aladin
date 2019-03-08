@@ -1311,7 +1311,7 @@ public class Source extends Position implements Comparator {
                double cd01 = Double.parseDouble( st.nextToken() );
                st.nextToken();
                double cd11 = Double.parseDouble( st.nextToken() );
-               angle = Math.atan2(cd01, cd11)*180.0/Math.PI;
+               angle = 90 - Math.atan2(cd01, cd11)*180.0/Math.PI;
                if( Double.isNaN(angle) ) angle=0;
             } catch( Exception e ) { angle=0; }
          }

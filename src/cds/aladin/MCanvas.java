@@ -1381,11 +1381,13 @@ MouseWheelListener, Widget
 
       // Une date en JD ou MJD => ISO
       boolean mjd=false;
-      if( unit.equalsIgnoreCase("jd") || (mjd=unit.equalsIgnoreCase("mjd")) )  {
-         double x = Double.parseDouble(val);
-         if( mjd ) x = Astrodate.MJDToJD( x );
-         return Astrodate.JDToDate( x );
-      }
+      try {
+         if( unit.equalsIgnoreCase("jd") || (mjd=unit.equalsIgnoreCase("mjd")) )  {
+            double x = Double.parseDouble(val);
+            if( mjd ) x = Astrodate.MJDToJD( x );
+            return Astrodate.JDToDate( x );
+         }
+      } catch( NumberFormatException e ) { }
       return null;
    }
    

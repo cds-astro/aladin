@@ -765,10 +765,14 @@ final public class Fits {
                dis.skip( (long)zCell * width*height*n );
                for( int frame=0; frame<depthCell; frame++ ) {
                   dis.skip( (long)yCell * width * n);
-                  byte[] buf = new byte[ width * n ]; // une ligne complète
+//                  byte[] buf = new byte[ width * n ]; // une ligne complète
                   for( int lig = 0; lig < heightCell; lig++ ) {
-                     dis.readFully(buf);
-                     System.arraycopy(buf, xCell * n , pixels, frame*widthCell*heightCell + lig * widthCell * n, widthCell * n);
+//                     dis.readFully(buf);
+//                     System.arraycopy(buf, xCell * n , pixels, frame*widthCell*heightCell + lig * widthCell * n, widthCell * n);
+                 
+                       dis.skip(xCell*n);
+                       dis.readFully( pixels, frame*widthCell*heightCell + lig * widthCell * n, widthCell * n);
+                       dis.skip( ( width-(xCell+widthCell) )*n );
                   }
                   dis.skip((height - (yCell + heightCell)) * width * (long)n);
                }

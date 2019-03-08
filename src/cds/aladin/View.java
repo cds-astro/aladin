@@ -163,7 +163,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    static final int REALX   = 3;
 
    // Les composantes de l'objet
-   Vector<Obj> vselobj = new Vector<Obj>(500); // Vecteur des objets selections
+   Vector<Obj> vselobj = new Vector<>(500); // Vecteur des objets selections
    String saisie ="";          // La saisie en cours (cf Localisation)
    boolean nextSaisie=true;    // Va remettre a zero saisie a la prochaine frappe
    protected Repere repere;    // Le repère de la position courante
@@ -953,7 +953,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int first = -1;
 
       // Détermination des views images concernées
-      Vector<ViewSimple> vcVect = new Vector<ViewSimple>();
+      Vector<ViewSimple> vcVect = new Vector<>();
 
       // On commence par les plans sélectionnés
       // CA NE MARCHE PAS
@@ -1007,7 +1007,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
 
       // Récupération des sources concernées dans l'ordre des mesures
-      Vector<Obj> vsel = new Vector<Obj>();
+      Vector<Obj> vsel = new Vector<>();
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) vsel.add(aladin.mesure.src[i]);
 
       // Détermination de la taille si non précisée
@@ -1962,7 +1962,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Coord c = null;
       if( p instanceof PlanBG ) c = p.co;
       else if( p instanceof PlanField ) c = ((PlanField)p).getCenter();
-      else c = p.projd.getProjCenter();
+      else if( p instanceof PlanImage) try { c=p.projd.c.getImgCenter(); } catch( Exception e) {}
+      if( c==null ) c = p.projd.getProjCenter();
       return gotoThere(Projection.isOk(p.projd)?c:p.co,0,true);
    }
 
@@ -2376,7 +2377,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne le tableau des Source sélectionnées (uniquement les Source) */
    protected Source[] getSelectedSources() {
       if( vselobj==null ) return new Source[]{};
-      Vector<Source> vSources = new Vector<Source>();
+      Vector<Source> vSources = new Vector<>();
       Enumeration<Obj> eObj = vselobj.elements();
       Obj o;
       while( eObj.hasMoreElements() ) {
@@ -2646,7 +2647,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected Source addSEDSource(Plan p) {
       if( p.getCounts()==0 ) return null;
-      Vector<Source> v = new Vector<Source>();
+      Vector<Source> v = new Vector<>();
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj s = it.next();
@@ -3168,7 +3169,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
 
       // vecteur des sources à supprimer de vselobj
-      Vector<Source> v = new Vector<Source>();
+      Vector<Source> v = new Vector<>();
       while( e.hasMoreElements() ) {
          Obj o = e.nextElement();
 
@@ -3462,7 +3463,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return lastDelai > 500;
    }
    
-   private HashMap<String, String> miniCache = new HashMap<String, String>();
+   private HashMap<String, String> miniCache = new HashMap<>();
 
    /** Action sur le ENTER dans la boite de localisation */
    protected void sesameResolve(String coord) { sesameResolve(coord,false); }

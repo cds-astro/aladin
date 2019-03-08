@@ -407,7 +407,7 @@ public class MyInputStreamCached extends MyInputStream {
          double rmSize=0;
          int n=0;
          File [] files = cachedir.listFiles();
-         for( File f : files ) {
+         if( files!=null ) for( File f : files ) {
             rmSize += f.length()/(1024*1024.);
             n++;
             f.delete();

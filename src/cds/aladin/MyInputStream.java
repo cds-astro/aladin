@@ -1388,8 +1388,8 @@ public class MyInputStream extends FilterInputStream {
    }
 
    /** Pour débugging: affichage en hexadécimal d'un octet */
-   private String HEX = "0123456789ABCDEF";
-   private String H(int b) {
+   static private String HEX = "0123456789ABCDEF";
+   static private String H(int b) {
       return ""+HEX.charAt(b/16)+HEX.charAt(b%16);
    }
 

@@ -41,7 +41,8 @@ import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
-import cds.tools.pixtools.CDSHealpix;
+import cds.healpix.Healpix;
+import cds.healpix.HealpixNestedFast;
 import cds.tools.pixtools.Util;
 
 final public class ThreadBuilderTile {
@@ -364,8 +365,8 @@ final public class ThreadBuilderTile {
    static long statMultiPass=0L;
    static int statMaxOverlays=0;
 
-   static private double toRad = 180./Math.PI;
-   static private double PI2 = Math.PI/2.;
+   final static private double toDeg = 180./Math.PI;
+   final static private double PI2 = Math.PI/2.;
    
    static public int I = 0;
 
@@ -430,25 +431,41 @@ final public class ThreadBuilderTile {
          double [] pixcoef = new double[overlay];
          if( flagColor ) { pixvalG = new double[overlay]; pixvalB = new double[overlay]; }
 
-//         HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
+         // METHODE REINECKE
+//         healpix.essentials.HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
          
 //         long nside = CDSHealpix.pow2( order+context.getTileOrder() );
          int orderPix = order+context.getTileOrder();
 
          boolean gal2ICRS = context.getFrame()!=Localisation.ICRS;
+         
+         final HealpixNestedFast hn = Healpix.getNestedFast(orderPix);
+//         final VerticesAndPathComputer vpc = hn.newVerticesAndPathComputer(); // For thread safety issues
 
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
                index = min + context.xy2hpx(y * out.width + x);
-               // recherche les coordonnées du pixels HPX
-//               Pointing pt = hpx.pix2ang(index);
+               
+               // recherche les coordonnées du pixels HPX (METHODE REINECKE)
+//               healpix.essentials.Pointing pt = hpx.pix2ang(index);
 //               radec[1] = (PI2 - pt.theta)*toRad;
 //               radec[0] = pt.phi*toRad;
-               radec = CDSHealpix.pix2ang_nest(orderPix, index);
-               radec = CDSHealpix.polarToRadec( radec );
-
-               if( gal2ICRS ) radec = context.gal2ICRSIfRequired(radec);
-               coo.al = radec[0]; coo.del = radec[1];
+               
+               // ON TRAVAILLE DIRECTEMENT AVEC vpc POUR EVITER LES ALLOCATIONS INUTILES
+//               radec = CDSHealpix.pix2ang_nest(orderPix, index);
+//               CDSHealpix.polarToRadec( radec, radec );
+               
+               hn.center(index,radec);
+               if( gal2ICRS ) {
+                  radec[0] *= toDeg;
+                  radec[1] *= toDeg;
+                  radec = context.gal2ICRSIfRequired(radec);
+                  coo.al = radec[0]; 
+                  coo.del = radec[1];
+               } else {
+                  coo.al = radec[0]*toDeg;
+                  coo.del = radec[1]*toDeg;
+               }
 
                int nbPix=0;
                double totalCoef=0;
@@ -457,18 +474,13 @@ final public class ThreadBuilderTile {
                for( int i=deb; i<fin; i++ ) {
                   try {
                      file = downFiles.get(i);
-                     if( file.flagRemoved ) {
-                        continue;
-                     }
+                     if( file.flagRemoved ) continue;
                      try {
                         file.open(z, flagGauss);
 
                      } catch( Exception e ) {
-                        e.printStackTrace();
+                        if( context.getVerbose()>=3 ) e.printStackTrace();
                         context.addFileRemoveList(file.name);
-                        if( context.getVerbose()>=3 ) {
-                           context.warning("Problem on open => file retired: "+file.name+" => exception "+e.getMessage());
-                        }
                         
                         // Cas complexe où l'image originale est un JPEG ou un PNG et que JAVA
                         // tente de l'ouvrir sur une portion uniquement. Il va en interne
@@ -513,6 +525,7 @@ final public class ThreadBuilderTile {
                         // Cas normal
                      } else {
                         double pix = getBilinearPixel(file,coo,z,file.blank);
+
                         if( Double.isNaN(pix) ) continue;
                         pixval[nbPix]=pix;
                      }
@@ -602,7 +615,7 @@ final public class ThreadBuilderTile {
                            : pixelFinal<=cutOrig[2] ? cut[2]
                                  : pixelFinal>=cutOrig[3] ? cut[3]
                                        : (pixelFinal-cutOrig[2])*context.coef + cut[2];
-                                 if( bitpix>0 && (long)pixelFinal==blank && pixelFinal!=blank ) pixelFinal+=0.5;
+                       if( bitpix>0 && (long)pixelFinal==blank && pixelFinal!=blank ) pixelFinal+=0.5;
                   } else if( Double.isNaN(pixelFinal) ) pixelFinal = blank;
 
                   out.setPixelDouble(x,y,pixelFinal);

@@ -55,6 +55,7 @@ public class Constante {
    static public final String KEY_HIPS_VERSION          = "hips_version";
    static public final String KEY_HIPS_PIXEL_CUT        = "hips_pixel_cut";
    static public final String OLD_HIPS_PIXEL_CUT        = "pixelCut";
+   static public final String KEY_HIPS_PIXEL_FUNCTION   = "hips_pixel_function";
    static public final String KEY_HIPS_DATA_RANGE       = "hips_data_range";
    static public final String OLD_HIPS_DATA_RANGE       = "pixelRange";
    static public final String OLD_HIPS_PUBLISHER        = "hips_publisher";

@@ -203,6 +203,8 @@ public class PlanBG extends PlanImage {
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    protected String pixelRange=null;   // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected String pixelCut=null;     // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
+   protected int transferFct4Fits=LINEAR;  // Fonction de transfert si décrite dans le fichier properties (mots-clés reconnus: asinh, log, linear, pow2)
+   protected int transferFct4Preview=LINEAR;  // Fonction de transfert pour le preview (par défaut celui de la configuration user)
    protected boolean flagNoTarget=false; // Par défaut pas de target indiquée
    private boolean flagWaitAllSky;     // En attente du chargement AllSky
    private int tileOrder=-1;        // Ordre des losanges
@@ -530,6 +532,12 @@ public class PlanBG extends PlanImage {
          if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_PIXEL_CUT);
          if( s!=null ) pixelCut = s;
          
+         s = prop.getProperty(Constante.KEY_HIPS_PIXEL_FUNCTION);
+         if( s!=null ) {
+            int i = Util.indexInArrayOf(s, TRANSFERTFCT, true);
+            if( i>=0 ) transferFct4Fits=i;
+         }
+
          // Détermination de l'identificateur du HiPs, méthode post Markus, pré-Markus, 
          // et même encore avant
          id = getHiPSID(prop);
@@ -937,7 +945,8 @@ public class PlanBG extends PlanImage {
       setNewProjD(p);
       
       typeCM = aladin.configuration.getCMMap();
-      transfertFct = aladin.configuration.getCMFct();
+      transferFct4Preview = aladin.configuration.getCMFct();
+      transfertFct = truePixels ? transferFct4Fits : transferFct4Preview;
       video = aladin.configuration.getCMVideo();
 
       setDefaultZoom(co,coRadius);
@@ -1107,7 +1116,7 @@ public class PlanBG extends PlanImage {
       this.cm = (ColorModel)cm;
       changeImgID();
    }
-
+   
    /** Libération du plan Background */
    @Override
    protected boolean Free() {
@@ -1861,7 +1870,7 @@ public class PlanBG extends PlanImage {
    protected double getOnePixelFromCache(Projection projd, double x,double y,int order,int z,int mode) {
       double pixel = Double.NaN;
       if( order<=0 ) order = getOrder();   // L'ordre n'est pas mentionné, on prend l'ordre de l'affichage courant
-      int nSideFile = (int)CDSHealpix.pow2(order);
+//      int nSideFile = (int)CDSHealpix.pow2(order);
 
       try {
          Coord coo = new Coord();
@@ -1870,7 +1879,7 @@ public class PlanBG extends PlanImage {
          coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
          if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) return Double.NaN;
          double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
-         long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
+         long npixFile = CDSHealpix.ang2pix_nest( order, polar[0], polar[1]);
 
          pixel = getHealpixPixel(order,npixFile,polar[0], polar[1], z,mode);
 
@@ -1880,6 +1889,22 @@ public class PlanBG extends PlanImage {
 
       return pixel;
    }
+   
+//   try {
+//      Coord coo = new Coord();
+//      coo.x = x; coo.y = y;
+//      projd.getCoord(coo);
+//      coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
+//      if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) return Double.NaN;
+//      double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
+//      long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
+//
+//      pixel = getHealpixPixel(order,npixFile,polar[0], polar[1], z,mode);
+//
+//   } catch( Exception e ) {
+//      if( aladin.levelTrace>=3 ) e.printStackTrace();
+//   }
+
 
    /**
     * Retourne la valeur du pixel Healpix qui se trouve en theta,phi pour un losange HealpixKey orderFile/npixFile
@@ -1920,11 +1945,10 @@ public class PlanBG extends PlanImage {
     */
    protected double getHealpixClosestPixel(double ra,double dec,int order) {
       double pixel = Double.NaN;
-      int nSideFile = (int)CDSHealpix.pow2(order);
 
       try {
          double[] polar = CDSHealpix.radecToPolar(new double[] {ra, dec});
-         long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
+         long npixFile = CDSHealpix.ang2pix_nest( order, polar[0], polar[1]);
 
          HealpixKey h = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
@@ -2122,8 +2146,17 @@ public class PlanBG extends PlanImage {
 
    /** Change le format d'affichage truePixels (Fits) <=> 8bits (JPEG) */
    protected void switchFormat() {
+      
+      // mémorisation de la fonction de transfert de l'ancien mode
+      if( truePixels ) transferFct4Fits = transfertFct;
+      else transferFct4Preview = transfertFct;
+      
       truePixels = !truePixels;
       pixMode = truePixels ? PIX_TRUE : colorPNG ? PIX_255 : PIX_256;
+      
+      // Positionnement de la fonction de transfert pour le nouveau mode
+      transfertFct = truePixels ? transferFct4Fits : transferFct4Preview;
+      
       restoreCM();
       forceReload();
       if( aladin.frameCM!=null ) aladin.frameCM.majCM(true);

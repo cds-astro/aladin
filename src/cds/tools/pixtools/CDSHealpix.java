@@ -55,12 +55,25 @@ public final class CDSHealpix {
    static final public int MAXORDER=29;
 
 //   static private HealpixBase hpxBase[] = new HealpixBase[MAXORDER+1];  // Objet HealpixBase pour chaque nside utilisé
-//
-//
+////
+////
 //   static public HealpixBase getHealpixBase(int order) throws Exception  {
 //      if( hpxBase[order]==null ) hpxBase[order] = new HealpixBase((int)pow2(order),Scheme.NESTED);
 //      return hpxBase[order];
 //   }
+//
+//   static private int init(long nside) throws Exception {
+//      int order = (int)log2(nside);
+//      if( hpxBase[order]!=null ) return order;
+//      hpxBase[order] = new HealpixBase((int)nside,Scheme.NESTED);
+//      return order;
+//   }
+//
+//   static public double[] pix2ang_nest(long nside,long ipix) throws Exception {
+//      Pointing res = hpxBase[ init(nside) ].pix2ang(ipix);
+//      return new double[]{ res.theta, res.phi };
+//   }
+
 
    static public double[] pix2ang_nest(int order,long ipix) throws Exception {
       final HealpixNested hn = Healpix.getNested(order);
@@ -76,10 +89,10 @@ public final class CDSHealpix {
       // Travailler directement en lonRad, laRad !!
       final double lonRad = phi;
       final double latRad = HALF_PI - theta;
-      // A essayer: moins rapide, mais moins de cache necessaire donc peu être plus rapide:
+      // A essayer: moins rapide, mais moins de cache necessaire donc peut être plus rapide:
       // final HashComputer hc = Healpix.getNestedFast(Healpix.depth((int) nside), FillingCurve2DType.Z_ORDER_XOR);
       // Tester aussi les perfs avec le code plus lisible
-      // HashComputer hc = Healpix.getNested(Healpix.depth((int) nside)).newHashComputer();
+      // HashComputer hc = Healpix.getNested(order).newHashComputer();
       final HashComputer hc = Healpix.getNestedFast(order);
       return hc.hash(lonRad, latRad);  
    }
@@ -312,8 +325,9 @@ public final class CDSHealpix {
 
    static public double[] polarToRadec(double[] polar) { return polarToRadec(polar,new double[2]); }
    static public double[] polarToRadec(double[] polar,double radec[]) {
-      radec[1] = (Math.PI/2. - polar[0])*180./Math.PI;
+      double dec = (Math.PI/2. - polar[0])*180./Math.PI;
       radec[0] = polar[1]*180./Math.PI;
+      radec[1] = dec;
       return radec;
    }
    

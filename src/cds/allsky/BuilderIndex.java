@@ -474,6 +474,9 @@ public class BuilderIndex extends Builder {
 //         System.out.print(" "+coo.al+" "+coo.del);
 
          cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
+//         double [] cx = CDSHealpix.normalizeRaDec(coo.al, coo.del);
+//         cooList.add( context.ICRS2galIfRequired(cx[0], cx[1]) );
+         
          cornerCell[i] = new Coord(coo.al,coo.del);
 
          // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
@@ -538,7 +541,16 @@ public class BuilderIndex extends Builder {
       // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
       if( radius<30 && !isCAR ) {
          try {
+//            System.out.print("draw stc polygon");
+//            for( double [] c1 : cooList ) System.out.print(" "+c1[0]+" "+c1[1]);
+//            System.out.println();
+//            System.out.print("draw moc "+order+"/");
+            
             npixs = CDSHealpix.query_polygon(order, cooList, true);
+            
+//            for( long a : npixs ) System.out.print(" "+a);
+//            System.out.println();
+            
          } catch( Exception e ) { }
       }
          
