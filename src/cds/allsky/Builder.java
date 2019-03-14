@@ -85,6 +85,7 @@ public abstract class Builder {
          case MIRROR:    return new BuilderMirror(context);
          case MAP:       return new BuilderMap(context);
          case TMOC:      return new BuilderTMoc(context);
+         case ZIP:       return new BuilderZip(context);
          default: break;
       }
       throw new Exception("No builder associated to this action");

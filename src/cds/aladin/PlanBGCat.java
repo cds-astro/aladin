@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import cds.allsky.Constante;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
 public class PlanBGCat extends PlanBG {
@@ -79,7 +80,7 @@ public class PlanBGCat extends PlanBG {
 
    protected void suiteSpecific() {
       isOldPlan=false;
-      pixList = new Hashtable<String,HealpixKey>(1000);
+      pixList = new Hashtable<>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
    }
@@ -199,7 +200,9 @@ public class PlanBGCat extends PlanBG {
       long nTotal=0L;
       boolean allsky1=false,allsky2=false,allsky3=false;
       boolean hipsOld = allskyExt==HealpixAllsky.XML;  // Vieille version d'un HiPS catalog
-      StringBuilder debug = new StringBuilder();
+      
+      HealpixMoc lastMoc = new HealpixMoc();   // Moc des tuiles "last" (inutile d'aller plus loin)
+      try { lastMoc.setCheckConsistencyFlag(false); } catch( Exception e1 ) { }
       
       resetDrawnInView(v);
       
@@ -210,26 +213,10 @@ public class PlanBGCat extends PlanBG {
       
       hasDrawnSomething = allsky1 || allsky2 || allsky3;
       
-//      if( hipsOld ) debug.append("Old");
-//      if( hasDrawnSomething ) {
-//         if( debug.length()>0 ) debug.append(" ");
-//         debug.append("allsky");
-//         if( allsky1 ) debug.append("1");
-//         if( allsky2 ) debug.append("2");
-//         if( allsky3 ) debug.append("3");
-//      }
-
       setMem();
       resetPriority();
 
       boolean moreDetails=order<=3;
-      
-      pix = getPixListView(v,3);
-      int pixLength = pix.length;
-      long [] npix = null;
-      int npixLength = 0;
-      
-//      if( (hipsOld?3:1)<order ) debug.append(" order");
       
       for( int norder= hipsOld?3:1; norder<=order; norder++ ) {
          
@@ -241,28 +228,15 @@ public class PlanBGCat extends PlanBG {
             if( norder==3 && allsky[3].getStatus()!=HealpixKey.ERROR ) continue;
          }
          
-         // On prépare la liste des pixels Healpix pour le prochain niveau
-         if( norder<order ) {
-            npix = new long[ pix.length*4 ]; 
-            npixLength=0;
-         } else npix=null;
-         
-//         debug.append(norder+"("+pixLength+")");
-
-         for( int i=0; i<pixLength; i++ ) {
+         pix = getPixListView(v,norder);
+         for( int i=0; i<pix.length; i++ ) {
             
-            if( isOutMoc(norder, pix[i]) ) continue;
-
+            // Losange à écarter ?
+            if( lastMoc.isDescendant(norder, pix[i]) ) continue;
+            if( isOutMoc(norder, pix[i]) )  continue;
             if( (new HealpixKey(this,norder,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
 
             HealpixKeyCat healpix = (HealpixKeyCat)getHealpix(norder,pix[i], true);
-            
-            if( npix!=null ) {
-               npix[npixLength++] = pix[i]*4;
-               npix[npixLength++] = pix[i]*4+1;
-               npix[npixLength++] = pix[i]*4+2;
-               npix[npixLength++] = pix[i]*4+3;
-            }
             
             // Juste pour tester la synchro
 //            Util.pause(100);
@@ -271,7 +245,6 @@ public class PlanBGCat extends PlanBG {
             if( healpix==null ) continue;
             
             int status = healpix.getStatus();
-//            debug.append(","+pix[i]+HealpixKey.STATUS[status]);
 
             // Losange erroné ?
             if( status==HealpixKey.ERROR ) continue;
@@ -293,19 +266,19 @@ public class PlanBGCat extends PlanBG {
             nb += healpix.draw(g,v);
             
             // Il n'y aura plus rien dans cette branche du HiPS
-            if( healpix.isLast() ) npixLength-=4;
-
-            if( order==norder ) {
+            if( norder!=order ) {
+               if( healpix.isLast() ) {
+                  try { lastMoc.add(healpix.order,healpix.npix); } catch( Exception e ) { }
+               }
+               
+            // Y a-t-il encore des sources non visibles dans le champ (PAS SUR DE BIEN COMPRENDRE PF Mars 2019)
+            } else  {
                HealpixKeyCat h = healpix;
                if( !moreDetails && !h.isReallyLast(v) ) moreDetails = true;
-
                nLoaded += h.nLoaded;
                nTotal += h.nTotal;
             }
          }
-         
-         pix = npix;
-         pixLength = npixLength;
       }
       
       // On continue à afficher les sources sélectionnées même si elles appartiennent
@@ -351,21 +324,27 @@ public class PlanBGCat extends PlanBG {
    protected double completude=0;
    protected double getCompletude() { return completude; }
 
+   private int oNbObj = -1;   // Compteur d'objets déjà chargées
+   
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {
-//      System.out.println("askForRepaint...");
-      updateFilter();
+      // Mise à jour des filtres (uniquement si le nombre d'objets à changé)
+      // UN PEU CASSE GUEULE COMME TEST
+      int nbObj = getCounts();
+      if( oNbObj!=getCounts() ) {
+         oNbObj = nbObj;
+//         System.out.println("update filter");
+//         for( PlanFilter pf : PlanFilter.allFilters ) System.out.println("."+pf);
+         updateDedicatedFilter();
+      }
       aladin.view.repaintAll();
    }
    
    protected void planReady(boolean ready) {
       super.planReady(ready);
+      if( filters==null ) System.err.println("Le filters est null");
+      setFilter(filterIndex);
       askForRepaint();
-   }
-   
-   /** Force le reset de l'influence des filtres sur ce plan */
-   protected void updateFilter() {
-      planFilter.updateNow();
    }
    
    protected boolean Free() {
@@ -409,7 +388,7 @@ public class PlanBGCat extends PlanBG {
    protected int getNbTable() { return 1; }
 
    protected Vector<Legende> getLegende() {
-      Vector<Legende> v = new Vector<Legende>();
+      Vector<Legende> v = new Vector<>();
       v.addElement( getFirstLegende() );
       return v;
    }

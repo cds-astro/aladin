@@ -57,6 +57,7 @@ public enum Action {
    MIRROR    ("Mirror a remote HiPS locally"),
    RGB       ("Build and RGB HiPS based on 2 or 3 other HiPS"),
    LINT      ("Check HiPS IVOA 1.0 standard compatibility"),
+   ZIP       ("ZIP HiPS directories"),
    //   INFO      ("Generate properties and index.html information files"),
    MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité

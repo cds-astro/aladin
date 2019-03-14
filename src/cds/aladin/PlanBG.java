@@ -1049,9 +1049,11 @@ public class PlanBG extends PlanImage {
     */
    public boolean checkSite(boolean withTrace) {
       if( nbCheckSite>=MAXCHECKSITE ) return false;
-      if( gluTag==null || gluTag.startsWith("__")) return false;
+      if( gluTag==null || gluTag.startsWith("__") || gluTag.startsWith(TreeObjDir.DIRECT)) return false;
       aladin.glu.checkIndirection(gluTag, "/properties" ); //"");
-      String url1 = ""+aladin.glu.getURL(gluTag, "", false,true,1);
+      URL u = aladin.glu.getURL(gluTag, "", false,true,1);
+      if( u==null ) return false;
+      String url1 = ""+u;
       if( url1.equals(url) ) return false;
       nbCheckSite++;
       if( withTrace ) {
@@ -1065,7 +1067,7 @@ public class PlanBG extends PlanImage {
    
    /** Retourne la liste des URLs pour tous les sites (en commençant par la courante) */
    public ArrayList<String> getMirrorsUrl() {
-      if( gluTag==null || gluTag.startsWith("__")) return null;
+      if( gluTag==null || gluTag.startsWith("__") || gluTag.startsWith(TreeObjDir.DIRECT)) return null;
       ArrayList<String> a = aladin.glu.getAllUrls(gluTag);
       if( a.size()<2 ) return null;
       return a;

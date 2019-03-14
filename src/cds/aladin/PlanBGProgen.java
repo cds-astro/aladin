@@ -154,7 +154,7 @@ public class PlanBGProgen extends PlanBGCat {
       int nb=0;
       long nLoaded=0L;
       long nTotal=0L;
-      TreeMap<String, Source> map = new TreeMap<String, Source>();
+      TreeMap<String, Source> map = new TreeMap<>();
       setHasMoreDetails(true);
 
       int order = maxOrder(v)+1;
@@ -166,7 +166,7 @@ public class PlanBGProgen extends PlanBGCat {
          return false;
       }
       if( order>maxOrder ) order=maxOrder;
-
+      
       hasDrawnSomething=false;
 
       if( drawAllSky(v, map, 3) )  return hasDrawnSomething;

@@ -384,7 +384,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( pixels!=null )  { pixels=null;  rep=1; }
       if( rgb!=null ) {  rgb=null; rep=1; }
       if( imgBuf!=null ) {  imgBuf.flush(); imgBuf=null;  rep=1; }
-      if( pixelsOrigin!=null ) { pixelsOrigin=null; rep=1; }
+      if( pixelsOrigin!=null && !isPixelsOriginFreeable() ) { pixelsOrigin=null; rep=1; }
 
       return rep;
    }
@@ -426,7 +426,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    /** Nettoyage de la mémoire temporaire, ainsi que pour les fils */
    protected void clearBuf() {
-      if( pixelsOrigin!=null ) {
+      if( pixelsOrigin!=null && !isPixelsOriginFreeable() ) {
          //         Aladin.trace(4,"clearBuf.pixelsOrigin pour "+this);
          pixelsOrigin=null;
       }
@@ -445,7 +445,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected void loadFromNet() {
       setStatus(LOADINGFROMNET);
       try {
-
+         
          long t = System.currentTimeMillis();
          String fileName = planBG.url+"/"+fileNet;
 
@@ -888,13 +888,24 @@ public class HealpixKey implements Comparable<HealpixKey> {
          return pixels[ y*width+x ];
       }
 
-      if( !loadPixelsOrigin(mode) ) return Double.NaN;
-      resetTimer();
-      double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
-            : getPixValDouble(pixelsOrigin,planBG.bitpix,idx);
-      if( planBG.isBlank(pix) ) pix = Double.NaN;
-      return pix;
+      setPixelOriginFreeable(true);
+      try {
+         if( !loadPixelsOrigin(mode) ) return Double.NaN;
+         resetTimer();
+         double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
+               : getPixValDouble(pixelsOrigin,planBG.bitpix,idx);
+         if( planBG.isBlank(pix) ) pix = Double.NaN;
+         return pix;
+         
+      } finally { setPixelOriginFreeable(false); }
    }
+   
+   
+   // Pour éviter que le buffer des pixels ne soient libéré au mauvais moment
+   private Object lockFree = new Object();
+   private boolean pixelOriginFreeable=false;
+   private boolean isPixelsOriginFreeable() { synchronized( lockFree) { return pixelOriginFreeable; } }
+   private void setPixelOriginFreeable( boolean flag ) { synchronized( lockFree) { pixelOriginFreeable=flag; } }
 
 
    /** Retourne un tableau w*w pixels d'origine (sous forme de byte[]) centré sur le pixel

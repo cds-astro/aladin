@@ -23,15 +23,17 @@ package cds.aladin;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
-import java.text.ParseException;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -71,11 +73,19 @@ public class FrameCooToolbox extends JFrame {
    private double rv=0;              // Vélocité radiale (km/s)
    private double plx=0;             // Parallax (mas)
    private double targetEpoch=2000;  // Epoque pour laquelle on veut calculer la position
+   private int precision=-1;         // Précision, -1 si non précisée
 
    private JTextField cooField[];   // Les champs des coordonnées dans les différents systèmes
    private JTextField pmraField,pmdeField,originEpochField,targetEpochField;
    private JTextField distField,plxField,rvField,distALField,distParsecField;
    private SliderEpochTool sliderEpoch;
+   private JComboBox<String> precisionField;
+   
+   static private String PREC_S  [] = { "unknown", "1degree", "0.1degree", "1arcmin", "0.1arcmin", "1arcsec",
+   "0.1arcsec", "10mas", "1mas", "0.1mas", "10\u00b5as",
+   "1\u00b5as", "0.1\u00b5as", "0.01\u00b5as"  };
+
+   static private int    PREC_VAL[] = { -1,   1,2,3,4,5,6,7,8,9,10,11,12 };
    
    protected FrameCooToolbox(Aladin aladin) {
       super();
@@ -87,6 +97,7 @@ public class FrameCooToolbox extends JFrame {
       setLocation( Aladin.computeLocation(this) );
       getContentPane().add( createPanelLeft(), BorderLayout.WEST);
       getContentPane().add( createPanelRight(), BorderLayout.EAST);
+      getContentPane().add( getPanelBottom(), BorderLayout.SOUTH);
       pack();
       setVisible(true);
    }
@@ -134,6 +145,30 @@ public class FrameCooToolbox extends JFrame {
       
       return p;
    }
+   
+   /** Construction du panel des boutons de validation
+    * @return Le panel contenant les boutons Apply/Close
+    */
+   protected JPanel getPanelBottom() {
+      JPanel p = new JPanel();
+      p.setLayout( new FlowLayout(FlowLayout.CENTER));
+      JButton b;
+//      p.add( b=new JButton(aladin.chaine.getString("UPAPPLY"))); 
+//      b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) { modify(); }} );
+//      b.setFont(b.getFont().deriveFont(Font.BOLD));
+      p.add( b=new JButton(aladin.chaine.getString("TAGIT"))); 
+      b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) { tagit(); }} );
+      p.add( b=new JButton(aladin.chaine.getString("CLEAR"))); 
+      b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) { reset(); }} );
+      p.add( b=new JButton(aladin.chaine.getString("UPCLOSE"))); 
+      b.addActionListener( new ActionListener() { 
+         public void actionPerformed(ActionEvent e) { 
+            aladin.frameCooTool=null;
+            dispose(); }
+      });
+      return p;
+   }
+
    
    // Création du panel contenant les époques et les composantes du PM
    private JPanel createPanelLeft() {
@@ -211,6 +246,14 @@ public class FrameCooToolbox extends JFrame {
          }
       });
       
+      JLabel precisionLabel = new JLabel("Precision");
+      precisionField = new JComboBox<>( PREC_S );
+      precisionField.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            modify();
+         }
+      });
+      
       sliderEpoch = new SliderEpochTool(this);
       
       PropPanel.addCouple(p,pmraLabel, pmraField, g,c);
@@ -232,6 +275,7 @@ public class FrameCooToolbox extends JFrame {
       distField = new JTextField(10);
       distField.setEditable(false);
       PropPanel.addCouple(p,distLabel, distField, g,c);
+      PropPanel.addCouple(p,precisionLabel, precisionField, g,c);
 
       return p;
    }
@@ -249,6 +293,7 @@ public class FrameCooToolbox extends JFrame {
       // Récupération des coordonnées d'origines
       int nra   = leg.getRa();
       int ndec  = leg.getDe();
+      if( nra==-1 && ndec==-1 ) return;
       String sra = s.getValue(nra);
       String sdec= s.getValue(ndec);
       
@@ -261,6 +306,8 @@ public class FrameCooToolbox extends JFrame {
          ra = c.getLon();
          dec = c.getLat();
          
+         pmra=pmdec=0;
+         
          // Récupération des mouvements propres
          int npmra = leg.getPmRa();
          int npmde = leg.getPmDe();
@@ -269,13 +316,14 @@ public class FrameCooToolbox extends JFrame {
             try {
                mu1.setUnit(s.getUnit(npmra));
                mu1.setValue(s.getValue(npmra));
-            } catch( Exception e1 ) { e1.printStackTrace(); }
+            } catch( Exception e1 ) { }
             Unit mu2 = new Unit();
             try {
                mu2.setUnit(s.getUnit(npmde));
                mu2.setValue(s.getValue(npmde));
-            } catch( Exception e1 ) { e1.printStackTrace();  }
-            if( mu1.getValue()!=0 || mu2.getValue()!=0 ) {
+            } catch( Exception e1 ) { }
+            if( (mu1.getValue()!=0 || mu2.getValue()!=0) 
+                  && !Double.isNaN(mu1.getValue()) && !Double.isNaN(mu2.getValue()) ) {
                try {
                   mu1.convertTo(new Unit("mas/yr"));
                } catch( Exception e) { 
@@ -287,18 +335,18 @@ public class FrameCooToolbox extends JFrame {
                   mu1 = new Unit(v+"mas/yr");
                };
 
-               pmra = Util.round( mu1.getValue(),3);
+               pmra =mu1.getValue();
                mu2.convertTo(new Unit("mas/yr"));
-               pmdec = Util.round( mu2.getValue(),3);
+               pmdec = mu2.getValue();
             }
-         } else pmra=pmdec=0;
+         }
          
       } catch( Exception e ) {
          e.printStackTrace();
       }
       
       // Récupération de l'époque
-      originEpoch = 2000;
+      originEpoch = s.plan.getOriginalEpoch().getJyr();
       targetEpoch = s.plan.getEpoch().getJyr();
       
       init=true;
@@ -353,6 +401,7 @@ public class FrameCooToolbox extends JFrame {
          aft.convertTo( Localisation.getAstroframe(Localisation.ICRS) );
          originEpochField.setText(aft.epoch+"");
          targetEpochField.setText(aft.epoch+"");
+         precision=-1;
          ra=aft.getLon();
          dec=aft.getLat();
          init=true;
@@ -377,6 +426,10 @@ public class FrameCooToolbox extends JFrame {
          if( Character.isDigit( s.charAt(0)) ) s = "J"+s;
          targetEpoch = (new Astrotime(s)).getJyr();
       } catch( Exception e ) { }
+
+      try {
+         precision = PREC_VAL[ precisionField.getSelectedIndex() ];
+      } catch( Exception e ) { precision=-1; }
 
       try {
          pmra = getField(pmraField);
@@ -405,6 +458,20 @@ public class FrameCooToolbox extends JFrame {
       moveRepere();      
    }
    
+   // Création d'un tag à la position indiquée, et déplacement des vues à l'emplacement correspondant
+   private void tagit() {
+      try {
+         Plan plan = aladin.calque.selectPlanTool();
+         Coord coo = getCoordInICRS();
+         Tag tag = new Tag(plan,coo,null);
+         aladin.calque.updateToolCatTag(tag,aladin.view.getCurrentView());
+//         aladin.view.setRepere(coo);
+         aladin.view.gotoThere( coo );
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+   
    // Retourne la valeur numérique du champ qui peut être une expression algébrique
    private double getField(JTextField field) throws Exception {
       String s = field.getText();
@@ -429,10 +496,12 @@ public class FrameCooToolbox extends JFrame {
       
       originEpochField.setText( !init ? "" : originEpoch+"" );
       targetEpochField.setText( !init ? "" : targetEpoch+"" );
-      pmraField.setText(  (pmdec==0 && pmra==0) ? "" : Util.myRound(pmra) );
-      pmdeField.setText(  (pmdec==0 && pmra==0) ? "" :Util.myRound( pmdec) );
-      rvField.setText(    rv==0 ? "" : Util.myRound(rv) );
-      plxField.setText(   getParallaxe() );
+//      int i = Util.indexInArrayOf(precision+"", PREC_S);
+//      precisionField.setSelectedIndex( !init ||i==-1 ? 0 : i );
+      pmraField.setText(  !init ? "" : (pmdec==0 && pmra==0) ? "" : Util.myRound(pmra+"",3) );
+      pmdeField.setText(  !init ? "" : (pmdec==0 && pmra==0) ? "" :Util.myRound( pmdec+"",3) );
+      rvField.setText(    !init ? "" : rv==0 ? "" : Util.myRound(rv+"",3) );
+      plxField.setText(   !init ? "" : getParallaxe() );
       
       distField.setText( getDistance() );
       distALField.setText( getDistAL() );
@@ -443,17 +512,22 @@ public class FrameCooToolbox extends JFrame {
       if( flagLog ) aladin.glu.log("CoordToolbox","");
    }
    
-   
-   /** Déplace le réticule à la position courante */
-   private void moveRepere() {
-      try {
-         Coo c = new Coo(cooField[0].getText() );
-         aladin.view.gotoThere( new Coord(c.getLon(),c.getLat()) );
-      } catch( ParseException e ) {
-         if( Aladin.levelTrace>=3 )  e.printStackTrace();
-      }
+   // Reset complet du formulaire
+   private void reset() {
+      init=false;
+      resume(false);
+      precision=-1;
+      precisionField.setSelectedIndex(0);
    }
    
+   
+//   /** Déplace le réticule à la position courante */
+   private void moveRepere() {
+      try {
+         Coord coo = getCoordInICRS();
+         aladin.view.gotoThere( coo );
+      } catch( Exception e ) { }
+   }
    
    static private double PARSEC2AL = 3.2614945566008;
   
@@ -487,6 +561,7 @@ public class FrameCooToolbox extends JFrame {
       Astropos targetCoo = new Astropos(Localisation.AF_ICRS);
       targetCoo.set(ra,dec,originEpoch,null,pmra,pmdec,originEpoch,null,
             new double[] { plx,0}, new double []{ rv,0});
+      if( precision>-1 ) targetCoo.setPrecision(precision);
       targetCoo.toEpoch(targetEpoch);
      
 //      System.out.println("==> "+targetCoo);
@@ -499,11 +574,25 @@ public class FrameCooToolbox extends JFrame {
       Astropos targetCoo = new Astropos(Localisation.AF_ICRS);
       targetCoo.set(ra,dec,originEpoch,null,pmra,pmdec,originEpoch,null,
             new double[] { plx,0}, new double []{ rv,0});
+      if( precision>-1 ) targetCoo.setPrecision(precision);
       targetCoo.toEpoch(targetEpoch);
      
 //      System.out.println("==> "+targetCoo);
       double d = Coo.distance(ra, dec, targetCoo.getLon(), targetCoo.getLat() );
       return Coord.getUnit( d );
+   }
+   
+   // Calcule les coordonnées en ICRS à l'époque indiquée
+   private Coord getCoordInICRS() {
+      Astropos targetCoo = new Astropos(Localisation.AF_ICRS);
+      targetCoo.set(ra,dec,originEpoch,null,pmra,pmdec,originEpoch,null,
+            new double[] { plx,0}, new double []{ rv,0});
+      if( precision>-1 ) targetCoo.setPrecision(precision);
+      targetCoo.convertTo( Localisation.getAstroframe(Localisation.ICRS) );
+      targetCoo.toEpoch(targetEpoch);
+      
+      Coord coo = new Coord( targetCoo.getLon(), targetCoo.getLat() );
+      return coo;
    }
    
    // Calcule et édite les coordonnées dans un système donnée (frameTarget) en prenant
@@ -513,6 +602,7 @@ public class FrameCooToolbox extends JFrame {
       Astropos targetCoo = new Astropos(Localisation.AF_ICRS);
       targetCoo.set(ra,dec,originEpoch,null,pmra,pmdec,originEpoch,null,
             new double[] { plx,0}, new double []{ rv,0});
+      if( precision>-1 ) targetCoo.setPrecision(precision);
       targetCoo.convertTo( Localisation.getAstroframe(frameTarget) );
       targetCoo.toEpoch(targetEpoch);
       

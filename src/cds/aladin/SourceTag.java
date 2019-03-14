@@ -74,6 +74,8 @@ public class SourceTag extends Source  {
       Field fde = legende.field[ nde ];
       fra.type=fde.type="hidden";
       fra.visible=fde.visible=false;
+      fra.coo=Field.RA;
+      fde.coo=Field.DE;
    }
    
    /** Retourne le prochain indice pour les labels */
@@ -150,7 +152,7 @@ public class SourceTag extends Source  {
    
    /** Retourne la liste des Propriétés éditables */
    public Vector<Prop> getProp() {
-      Vector<Prop> propList = new Vector<Prop>();
+      Vector<Prop> propList = new Vector<>();
       JLabel l = new JLabel("\""+getObjType()+"\" in plane: \""+plan.getLabel()+"\"");
       l.setFont(l.getFont().deriveFont(Font.BOLD));
       l.setFont(l.getFont().deriveFont(14f));

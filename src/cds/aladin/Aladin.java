@@ -170,6 +170,7 @@ import cds.xml.XMLParser;
  * @beta          - drag & drop to view panels
  * @beta    <LI> FITS WCS GLS support
  * @beta    <LI> Distance tool improvement
+ * @beta    <LI> Coordinate calculator tool improvement
  * @beta    <LI> Log control adapted to Debian policy
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
  * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
@@ -217,7 +218,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.113";
+   static public final    String VERSION = "v10.115";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -8284,5 +8285,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
            this.imListener.checkProceedAction(nbpoints);
        }
    }
+
+   
+
 
 }

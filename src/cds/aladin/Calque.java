@@ -1827,10 +1827,11 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Met à jour le plan "Tag" */
-   protected void updateToolCatTag(Tag tag) {
+   protected void updateToolCatTag(Tag tag) { updateToolCatTag(tag,aladin.view.getMouseView()); }
+   protected void updateToolCatTag(Tag tag, ViewSimple vs) {
 
       final PlanTool p = selectPlanTool();
-      final SourceTag s = p.addTag( aladin.view.getMouseView(), tag.raj, tag.dej);
+      final SourceTag s = p.addTag( vs, tag.raj, tag.dej);
 
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {

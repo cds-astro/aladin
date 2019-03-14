@@ -3432,9 +3432,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void moveRepere(double ra, double dec) {
       repere.raj=ra;
       repere.dej=dec;
-
-      if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
-
       aladin.localisation.setLastCoord(ra,dec);
    }
 

@@ -50,6 +50,7 @@ public class HipsGen {
     private boolean flagMode=false;
     private boolean flagConcat=false;
     private boolean flagMirror=false;
+    private boolean flagZip=false;
     private boolean flagUpdate=false;
     private boolean flagLint=false;
     private boolean flagTMoc=false;
@@ -504,6 +505,7 @@ public class HipsGen {
                     if( a==Action.FINDER ) a=Action.INDEX;     // Pour compatibilité
                     if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
                     if( a==Action.MIRROR ) flagMirror=true;
+                    if( a==Action.ZIP )    flagZip=true;
                     if( a==Action.UPDATE ) flagUpdate=true;
                     if( a==Action.LINT )   flagLint=true;
                     if( a==Action.TMOC )   flagTMoc=true;
@@ -608,7 +610,8 @@ public class HipsGen {
                 } catch( Exception e ) { }
             }
 
-            if( !flagConcat && !flagMirror && !flagUpdate && !flagLint && !flagMocError && !flagProp && !flagTMoc && !flagTIndex ) {
+            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint 
+                            && !flagMocError && !flagProp && !flagTMoc   && !flagTIndex ) {
                 String s = context.checkHipsId(context.hipsId);
                 context.setHipsId(s);
 
@@ -694,7 +697,7 @@ public class HipsGen {
                 // Suppression du cache disque si nécessaire
                 if( cacheRemoveOnExit ) MyInputStreamCached.removeCache();
 
-                if( !flagMirror && !flagLint ) {
+                if( !flagMirror && !flagLint && !flagZip ) {
                     String id = context.getHipsId();
                     if( id==null || id.startsWith("ivo://UNK.AUT") ) {
                         context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());

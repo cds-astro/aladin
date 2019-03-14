@@ -83,11 +83,7 @@ public class HealpixKeyCat extends HealpixKey {
       MyInputStream in = null;
 
       try {
-         try {
-            testLast(stream);      // A virer lorsqu'on n'utilisera plus les anciens HiPS
-            testNLoaded(stream);   // A virer lorsqu'on n'utilisera plus les anciens HiPS
-            testCompleteness(stream);
-         } catch( Exception e ) {  if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
+         try { testLast(stream); } catch( Exception e ) {  if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
 
          int trace=planBG.aladin.levelTrace;
          planBG.aladin.levelTrace=0;
@@ -128,59 +124,79 @@ public class HealpixKeyCat extends HealpixKey {
       planBG.recomputePosition(pcat.iterator(),leg,nra,nde,npmra,npmde);
    }
 
-   static final private char [] LAST = { '#','l','a','s','t',' ','l','e','v','e','l' };
-
-   private void testLast(byte [] stream) {
-      if( stream.length<LAST.length ) return;
-      for( int i=0; i<LAST.length; i++ ) if( LAST[i]!=stream[i] ) return;
-      last=true;
-   }
-
    static final private char [] NLOADED = { '#',' ','n','L','o','a','d','e','d',':',' ' };
+   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=' };
+  
+   // Postionne le flag last selon méthode "Completeness", retourne true si on a trouvé ce commentaire
+   // # Completeness = 903 / 90811
+   // # nLoaded: 48/48   (alternative pour compatibilité)
+   private boolean testLast(byte [] stream) {
+      boolean rep;
+      
+      // En début de fichier
+      rep = testLast(stream,0,COMPLETENESS);
+      if( !rep ) testLast(stream,0,NLOADED);    // A virer lorsque FX aura fait la modif sur son serveur
+      
+      // Parmi des commentaires ?
+      if( !rep ) {
+         for( int i=1; !rep && i<stream.length-1; i++) {
+            if( stream[i]=='\n' || stream[i]=='\r' ) {  
+               if( stream[i+1]=='#' ) {
+                  rep=testLast(stream,i+1,COMPLETENESS);    
+                  if( !rep ) rep=testLast(stream,i+1,NLOADED);    // A virer lorsque FX aura fait la modif sur son serveur
+               }
+               else if( stream[i+1]!='\n' && stream[i+1]!='\r' ) break;  // fin des commentaires ?
+            }
+         }
+      }
+      return rep;
+   }
    
-   // # nLoaded: 48/48
-   private void testNLoaded(byte [] stream) {
-      if( stream.length<NLOADED.length ) return;
-      for( int i=0; i<NLOADED.length; i++ ) if( NLOADED[i]!=stream[i] ) return;
-      int deb=NLOADED.length;
+   // Scanne à partir de l'offset
+   private boolean testLast(byte [] stream,int offset, char [] signature) {
+      if( stream.length<signature.length ) return false;
+      for( int i=offset; i<signature.length; i++ ) if( signature[i]!=stream[i] ) return false;
+      int deb=offset+signature.length;
       int fin;
       int slash=0;
-      for( fin=NLOADED.length; fin<stream.length 
+      for( fin=offset+signature.length; fin<stream.length 
          && stream[fin]!='\n' && stream[fin]!='\r' && stream[fin]!=' '; fin++ ) {
          if( stream[fin]=='/' ) slash=fin;
       }
-      if( slash==0 ) return;
-      if( fin==stream.length ) return;
+      if( slash==0 ) return false;
+      if( fin==stream.length ) return false;
       try {
          nLoaded = Integer.parseInt(new String(stream,deb,slash-deb));
          nTotal = Integer.parseInt(new String(stream,slash+1,fin-(slash+1)));
          last = nLoaded==nTotal;
 //         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
       } catch( Exception e ) { nLoaded = 1; nTotal = 2; last=false; }
+      return true;
    }
    
-   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=' };
    
-   // # Completeness = 903 / 90811
-   private void testCompleteness(byte [] stream) {
-      if( stream.length<COMPLETENESS.length ) return;
-      for( int i=0; i<COMPLETENESS.length; i++ ) if( COMPLETENESS[i]!=stream[i] ) return;
-      int deb=COMPLETENESS.length;
-      int fin;
-      int slash=0;
-      for( fin=COMPLETENESS.length; fin<stream.length 
-         && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
-         if( stream[fin]=='/' ) slash=fin;
-      }
-      if( slash==0 ) return;
-      if( fin==stream.length ) return;
-      try {
-         nLoaded = Integer.parseInt((new String(stream,deb,slash-deb)).trim());
-         nTotal = Integer.parseInt((new String(stream,slash+1,fin-(slash+1))).trim());
-         last = nLoaded==nTotal;
-//         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
-      } catch( Exception e ) { nLoaded = 1; nTotal = 2; last=false; }
-   }
+//   // Postionne le flag last selon méthode "Completeness", retourne true si on a trouvé ce commentaire
+//   // # Completeness = 903 / 90811
+//   private boolean testCompleteness(byte [] stream) {
+//      if( stream.length<COMPLETENESS.length ) return false;
+//      for( int i=0; i<COMPLETENESS.length; i++ ) if( COMPLETENESS[i]!=stream[i] ) return false;
+//      int deb=COMPLETENESS.length;
+//      int fin;
+//      int slash=0;
+//      for( fin=COMPLETENESS.length; fin<stream.length 
+//         && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
+//         if( stream[fin]=='/' ) slash=fin;
+//      }
+//      if( slash==0 ) return false;
+//      if( fin==stream.length ) return false;
+//      try {
+//         nLoaded = Integer.parseInt((new String(stream,deb,slash-deb)).trim());
+//         nTotal = Integer.parseInt((new String(stream,slash+1,fin-(slash+1))).trim());
+//         last = nLoaded==nTotal;
+////         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
+//      } catch( Exception e ) { nLoaded = 1; nTotal = 2; last=false; }
+//      return true;
+//   }
 
   /** Retourne true s'il n'y a pas de descendant */
    protected boolean isLast() { return last; }

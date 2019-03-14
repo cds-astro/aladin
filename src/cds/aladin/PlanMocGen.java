@@ -269,8 +269,8 @@ public class PlanMocGen extends PlanMoc {
             }
             
             // On remet immédiatement au propre le MOC uniquement si on a inséré
-            // au-moins 1000 cellules (histoire de ne pas exploser la mémoire)
-            if( nb>10000 ) moc.checkAndFix();
+            // au-moins 100000 cellules (histoire de ne pas exploser la mémoire)
+            if( nb>100000 ) moc.checkAndFix();
             
          } catch( Exception e ) {
             e.printStackTrace();
@@ -317,7 +317,7 @@ public class PlanMocGen extends PlanMoc {
          order = fileOrder+o1;
       }
       
-      moc.setMaxLimitOrder(order);
+      moc.setMocOrder(order);
       
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
@@ -399,7 +399,7 @@ public class PlanMocGen extends PlanMoc {
             if( somme>threshold ) break;
             moc.add(order,npix>>>divOrder);
             nb++;
-            if( nb>10000 ) { moc.checkAndFix(); nb=0; }
+            if( nb>100000 ) { moc.checkAndFix(); nb=0; }
          }
 
          // Conversion en ICRS si nécessaire

@@ -4724,6 +4724,9 @@ public final class Calib  implements Cloneable {
       return toutestbon;
    }
    
+   
+   
+   
    // Pour tests FX
    static public void main( String [] args) {
       double cra=0., cdec=0.; // centre de la projection

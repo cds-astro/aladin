@@ -3343,6 +3343,8 @@ DTALLCOLL	all collections
 DTALLCOLL.fr	toutes les collections
 DTWORKLIST	working list
 DTWORKLIST.fr	liste de travail
+TAGIT	Tag this position
+TAGIT.fr	Marque cette position
 
 #V10 - Filter Panel
 FPTITLE	Data discovery tree filter
