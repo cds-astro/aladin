@@ -164,7 +164,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
          String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( o)/3600. );
          c.addItem(s);
       }
-      c.setSelectedIndex(7);
+      c.setSelectedIndex(6);
       return c;
    }
    
@@ -203,6 +203,9 @@ public class FrameMocGenImg extends FrameRGBBlink {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
          int order=getOrder();
+         if( order>12 ) {
+            if( !a.confirmation("Do you really want to generate a so high MOC resolution ?" ) ) return;
+         }
          double pixMin=getMin();
          double pixMax=getMax();
          

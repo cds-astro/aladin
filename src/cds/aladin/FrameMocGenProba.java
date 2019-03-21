@@ -60,8 +60,15 @@ public final class FrameMocGenProba extends FrameMocGenImg {
       
       addSpecifPanel(p,c,g);
       
+      JPanel pp=new JPanel();
+      pp.add( new JLabel("MOC resolution :"));
+      mocOrder = getComboRes();
+      pp.add(mocOrder);
+      p.add(pp);
+
       return p;
    }
+   
    
    protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) {
       
@@ -86,10 +93,15 @@ public final class FrameMocGenProba extends FrameMocGenImg {
    protected void submit() {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int res= ((PlanBG)ps[0]).getMaxHealpixOrder();
+//         int res= ((PlanBG)ps[0]).getMaxHealpixOrder();
+         int order =getOrder();
+         if( order>12 ) {
+            if( !a.confirmation("Do you really want to generate a so high MOC resolution ?" ) ) return;
+         }
+
          double threshold=getThreshold();
-         a.console.printCommand("cmoc -threshold="+threshold+" "+labelList(ps));
-         a.calque.newPlanMoc("MOC "+threshold+" "+ps[0].label,ps,res,0,Double.NaN,Double.NaN,threshold,false);
+         a.console.printCommand("cmoc -order="+order+" -threshold="+threshold+" "+labelList(ps));
+         a.calque.newPlanMoc("MOC "+threshold+" "+ps[0].label,ps,order,0,Double.NaN,Double.NaN,threshold,false);
          hide();
 
       } catch ( Exception e ) {
@@ -100,5 +112,13 @@ public final class FrameMocGenProba extends FrameMocGenImg {
    }
 
    @Override
-   protected void adjustWidgets() { };
+   protected void adjustWidgets() { 
+      try {
+         Plan [] ps = new Plan[]{ getPlan(ch[0]) };
+         int order = ((PlanBG)ps[0]).getMaxHealpixOrder();
+         if( getOrder()>order ) {
+            mocOrder.setSelectedIndex(order-FIRSTORDER);
+         }
+      } catch( Exception e ) { }
+   };
 }

@@ -888,7 +888,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          return pixels[ y*width+x ];
       }
 
-      setPixelOriginFreeable(true);
+      setPixelOriginFreeable(false);
       try {
          if( !loadPixelsOrigin(mode) ) return Double.NaN;
          resetTimer();
@@ -897,7 +897,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( planBG.isBlank(pix) ) pix = Double.NaN;
          return pix;
          
-      } finally { setPixelOriginFreeable(false); }
+      } finally { setPixelOriginFreeable(true); }
    }
    
    

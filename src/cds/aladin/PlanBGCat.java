@@ -329,7 +329,7 @@ public class PlanBGCat extends PlanBG {
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {
       // Mise à jour des filtres (uniquement si le nombre d'objets à changé)
-      // UN PEU CASSE GUEULE COMME TEST
+      // UN PEU CASSE GUEULE COMME TEST, mais pour le moment ça va faire l'affaire
       int nbObj = getCounts();
       if( oNbObj!=getCounts() ) {
          oNbObj = nbObj;
@@ -342,7 +342,6 @@ public class PlanBGCat extends PlanBG {
    
    protected void planReady(boolean ready) {
       super.planReady(ready);
-      if( filters==null ) System.err.println("Le filters est null");
       setFilter(filterIndex);
       askForRepaint();
    }

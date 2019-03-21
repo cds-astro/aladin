@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
@@ -33,6 +34,7 @@ import cds.tools.pixtools.CDSHealpix;
 
 /** Generation d'un plan MOC à partir d'une liste de plans (Image, Catalogue ou map HEALPix) 
  * @author P.Fernique [CDS]
+ * @version 1.2 - mar 2019 - correction HipstoMoc + correction
  * @version 1.1 - mar 2016 - ajout probability sky map
  * @version 1.0 - nov 2012
  */
@@ -184,88 +186,123 @@ public class PlanMocGen extends PlanMoc {
    }
    
    // Ajout d'un plan map Healpix au MOC en cours de construction
-   private void addMocFromPlanBG(Plan p1,int order, double pixMin,double pixMax) {
+   private void addMocFromPlanBG(Plan p1,int order, double pixMin,double pixMax) throws Exception { addMocFromPlanBG(p1,order,-1,pixMin,pixMax); }
+   
+   private void addMocFromPlanBG(Plan p1,int order, int infoTileWidth, double pixMin,double pixMax) throws Exception {
       boolean flagRange = !Double.isNaN(pixMin) || !Double.isNaN(pixMax);
       PlanBG p = (PlanBG)p1;
-      
       
       // Passage en mode FITS
       if( !p.hasOriginalPixels() ) p.switchFormat();
       
-      // Détermination de l'ordre pixel (order) et tuiles (fileOrder)
-      int tileOrder = p.getTileOrder();
+      // Recherche de la taille d'une tuile si non explicitement mentionnée
+      int tileOrder = infoTileWidth==-1 ? p.getTileOrder() : (int) CDSHealpix.log2(infoTileWidth);
+      int tileWidth = (int)CDSHealpix.pow2(tileOrder);
       int z = (int)p.getZ();
       
-      int divOrder=0;
-      int fileOrder = order - tileOrder;
-      
-      // L'ordre des tuiles ne peut être inférieur à 3
-      if( fileOrder<3 ) {
-         divOrder=(3-fileOrder)*2;
-         fileOrder=3;
+      if( order> tileOrder+ p.maxOrder ) {
+         order = tileOrder+p.maxOrder;
+         aladin.warning("MOC order greater than HiPS resolution. Assuming MOC order "+order);
       }
+
       
-      /// L'ordre des tuiles ne peut entrainer le dépassement de la résolution
-      // de la map HEALPix
-      if( fileOrder>p.getMaxFileOrder() ) {
-         fileOrder=p.getMaxFileOrder();
-         order = fileOrder+tileOrder;
+      // Quel est l'ordre des tuiles requis
+      int requiredHipsOrder = order-tileOrder;
+      
+      // Par défaut on suppose que cet order Hips est disponible
+      int hipsOrder = requiredHipsOrder;
+      
+      // Par défaut on considère qu'un pixel de tuile correspond à un pixel du MOC
+      int cellOrder = 0;
+      
+      // Cet ordre HiPS est-il disponible ? et sinon quel est le niveau sup le plus proche
+      // Cela impactera le nombre de pixels à moyenner dans la tuile de départ pour un pixel du MOC : 2^cellOrder = taille de ce bloc
+      int minHipsOrder = p.getMinOrder();
+      if( minHipsOrder>requiredHipsOrder ) {
+         cellOrder = minHipsOrder - requiredHipsOrder;
+         hipsOrder=minHipsOrder;
       }
       
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
+      moc.setMocOrder(order);
       moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
                        p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
       try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
       
       // Nombre de losanges à traiter
-      int n = (int)CDSHealpix.pow2(fileOrder); 
+      int n = (int)CDSHealpix.pow2(hipsOrder); 
       n=12*n*n;
       
 //      System.out.println("Nombre de losanges à traiter : "+n);
       
-      // Sans doute inutile car déjà fait
-      try { p.createHealpixOrder(tileOrder); } catch( Exception e1 ) { e1.printStackTrace(); }
-      long nsize = CDSHealpix.pow2(tileOrder);
+      try { createHealpixOrder(tileOrder-cellOrder); }
+      catch( Exception e1 ) { }
       
       double incrPourcent = gapPourcent/n;
+      boolean first=true;
+      
+      int cellWidth = (int)CDSHealpix.pow2(cellOrder);   // taille d'un bloc (coté)
+      int nbCell = tileWidth/cellWidth;                  // Nombre de blocs à considérer dans une ligne de la tuile
+      int virtualTileWidth = tileWidth/cellWidth;
       
       for( int npixFile=0; npixFile<n; npixFile++ ) {
 //         System.out.println("Traitement de "+npixFile);
          pourcent += incrPourcent;
-         HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,z,HealpixKey.SYNC);
+         if( p.moc!=null && p.isOutMoc(hipsOrder, npixFile) ) continue;
+         
+         HealpixKey h = p.getHealpixLowLevel(hipsOrder,npixFile,z,HealpixKey.SYNC);
          if( h==null ) continue;
          
-         long min = nsize * nsize * npixFile;
+         // Dans le cas où la taille de la tuile annoncée ou supposée est fausse
+         // on recommence en indiquant explicitement cette taille
+         if( first && infoTileWidth==-1 && h.width!=CDSHealpix.pow2(tileOrder) ) {
+            if( aladin.levelTrace>=3) System.err.println("Warning, the HiPS \""+p.label+"\" has missing or erroneous tileWidth propertie value => assuming "+h.width);
+            addMocFromPlanBG(p1,order,h.width,pixMin,pixMax);
+            return;
+         }
+         first=false;
+         
+         long min = virtualTileWidth *virtualTileWidth * npixFile;
          try {
             int nb=0;
-            long oNpix=-1;  
-            for( int y=0; y<h.height; y++ ) {
-               for( int x=0; x<h.width; x++ ) {
-                  try {
-                     int idx = y * h.width + x;
-                     double pixel = h.getPixel(idx,HealpixKey.NOW);
-                     
-                     // Pixel vide
-                     if( Double.isNaN( pixel ) || pixel==blank ) continue;
-                     
-                     // En dehors de la plage
-                     if( flagRange ) {
-                        if( !Double.isNaN(pixMin) && pixel<pixMin ) continue;
-                        if( !Double.isNaN(pixMax) && pixel>pixMax ) continue;
+            
+            // Parcours des blocs
+            for( int yCell=0; yCell<nbCell; yCell++ ) {
+               for( int xCell=0; xCell<nbCell; xCell++ ) {
+                  
+                  // Parcours des pixels du bloc courant et détermination de la moyenne de ses pixels
+                  double average = 0;
+                  int nbPixels=0;
+                  for( int y=0; y<cellWidth; y++ ) {
+                     for( int x=0; x<cellWidth; x++ ) {
+                        int idx = ((yCell*cellWidth)+y) * h.width + (xCell*cellWidth)+x;
+                        double pixel = h.getPixel(idx,HealpixKey.NOW);
+                        
+                        // Pixel vide
+                        if( Double.isNaN( pixel ) || pixel==blank ) continue;
+                        
+                        pixel = pixel  * p.bScale+ p.bZero;
+                        
+                        average += pixel;
+                        nbPixels++;
                      }
-                     
-                     long npix = min + p.xy2hpx(idx);
-
-                     // Juste pour éviter d'insérer 2x de suite le même npix
-                     if( npix==oNpix ) continue;
-                     
-                     moc.add(order,npix>>>divOrder);
-                     oNpix=npixFile;
-                     nb++;
-                  } catch( Exception e ) { e.printStackTrace(); }
-               }
+                  }
+                  if( nbPixels==0 ) continue;
+                  average /= nbPixels;
+                  
+                  // En dehors de la plage
+                  if( flagRange ) {
+                     if( !Double.isNaN(pixMin) && average<pixMin ) continue;
+                     if( !Double.isNaN(pixMax) && average>pixMax ) continue;
+                  }
+                  
+                  
+                  long npixMoc = min + xy2hpx(yCell*virtualTileWidth + xCell);
+                  moc.add(order,npixMoc);
+                  nb++;
+              }
             }
             
             // On remet immédiatement au propre le MOC uniquement si on a inséré
@@ -286,118 +323,209 @@ public class PlanMocGen extends PlanMoc {
          } catch( Exception e ) { e.printStackTrace(); }
       }
    }
+
    
    /** Creation d'un plan Moc à partir d'un HiPS en prenant toutes les pixels qui représentent
     * threshold (sommation) de la totalité des pixels. On commence par les valeurs les plus grandes.
     * Permet par exemple de créer un MOC à 10% (threshold=0.1) pour des maps de probabilité
     * issues de l'étude des ondes gravitationnelles.
     */
-   private void addMocFromPlanBG(Plan p1, double threshold) throws Exception {
+   // Ajout d'un plan map Healpix au MOC en cours de construction
+   private void addMocFromPlanBG(Plan p1, int order, double threshold) throws Exception { addMocFromPlanBG(p1,order, -1,threshold); }
+   
+   private void addMocFromPlanBG(Plan p1, int order, int infoTileWidth, double threshold) throws Exception {
       PlanBG p = (PlanBG)p1;
+      if( order==-1 ) {
+         order= infoTileWidth==-1 ? p.getMaxHealpixOrder() : p.getMaxFileOrder() + (int)CDSHealpix.log2(infoTileWidth);
+         if( order>12 ) order=12;
+      }
       
-      order=p.getMaxHealpixOrder();
+      // Passage en mode FITS
+      if( !p.hasOriginalPixels() ) p.switchFormat();
       
-      // Détermination de l'ordre pixel (o1) et tuiles (fileOrder)
-      int o1 = p.getTileOrder();
+      // Recherche de la taille d'une tuile si non explicitement mentionnée
+      int tileOrder = infoTileWidth==-1 ? p.getTileOrder() : (int) CDSHealpix.log2(infoTileWidth);
+      int tileWidth = (int)CDSHealpix.pow2(tileOrder);
       int z = (int)p.getZ();
       
-      int divOrder=0;
-      int fileOrder = order - o1;
-      
-      // L'ordre des tuiles ne peut être inférieur à 3
-      if( fileOrder<3 ) {
-         divOrder=(3-fileOrder)*2;
-         fileOrder=3;
+      if( order> tileOrder+ p.maxOrder ) {
+         order = tileOrder+p.maxOrder;
+         aladin.warning("MOC order greater than HiPS resolution. Assuming MOC order "+order);
       }
       
-      /// L'ordre des tuiles ne peut entrainer le dépassement de la résolution
-      // de la map HEALPix
-      if( fileOrder>p.getMaxFileOrder() ) {
-         fileOrder=p.getMaxFileOrder();
-         order = fileOrder+o1;
-      }
+      // Quel est l'ordre des tuiles requis
+      int requiredHipsOrder = order-tileOrder;
       
-      moc.setMocOrder(order);
+      // Par défaut on suppose que cet order Hips est disponible
+      int hipsOrder = requiredHipsOrder;
+      
+      // Par défaut on considère qu'un pixel de tuile correspond à un pixel du MOC
+      int cellOrder = 0;
+      
+      // Cet ordre HiPS est-il disponible ? et sinon quel est le niveau sup le plus proche
+      // Cela impactera le nombre de pixels à moyenner dans la tuile de départ pour un pixel du MOC : 2^cellOrder = taille de ce bloc
+      int minHipsOrder = p.getMinOrder();
+      if( minHipsOrder>requiredHipsOrder ) {
+         cellOrder = minHipsOrder - requiredHipsOrder;
+         hipsOrder=minHipsOrder;
+      }
       
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
       moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
                        p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
+      try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
       
       // Nombre de losanges à traiter
-      int n = (int)CDSHealpix.pow2(fileOrder); 
+      int n = (int)CDSHealpix.pow2(hipsOrder); 
       n=12*n*n;
       
-//      System.out.println("Nombre de losanges à traiter : "+n);
+      System.out.println("Nombre de losanges à traiter (order="+hipsOrder+") : "+n);
       
-      // Sans doute inutile car déjà fait
-      try { p.createHealpixOrder(o1); } catch( Exception e1 ) { e1.printStackTrace(); }
-      long nsize = CDSHealpix.pow2(o1);
+      try { createHealpixOrder(tileOrder-cellOrder); }
+      catch( Exception e1 ) { }
       
       double incrPourcent = gapPourcent/n;
+      boolean first=true;
       
-      // Principe de l'algo: on parcours la map, pixel après pixel qu'on ajoute
-      // à la liste cumul en la triant immédiatement en ordre décroissant, 
-      // tout en calculant la somme.
-      //Dès qu'on dépasse le threshold, l'insertion sera conditionnée au fait qu'il faut
-      // que le nouveau pixel soit plus petit que la dernière valeur de la liste 
-      // Et si oui, on va l'insérer, mais virer autant des pixels les plus petits que nécessaire
-      ArrayList<PixCum> list;
-      try {
-         list = new ArrayList<>((int)(n*nsize*nsize));
-      } catch( Exception e1 ) {
-         throw new Exception("Sorry! too large probability sky map !");
-      }
+      int cellWidth = (int)CDSHealpix.pow2(cellOrder);   // taille d'un bloc (coté)
+      int nbCell = tileWidth/cellWidth;                  // Nombre de blocs à considérer dans une ligne de la tuile
+      int virtualTileWidth = tileWidth/cellWidth;
+      
+      // Liste des numéros de tuiles à traiter. Dans la première étape on se contentera
+      // de calculer la moyenne de l'ensemble des pixels concernées dans chaque tuile.
+      // Puis avant la deuxième étape, on triera ces numéros de tuiles en commençant par celles
+      // qui ont la moyenne la plus élevée (le but est de commencer par les valeurs
+      // les plus grandes pour éviter de saturer "queue" (voir ci-dessous)
+      ArrayList<PixCum> tileList = new ArrayList<>(n);
+      
+      // La queue va servir dans la deuxième étape.
+      // On ne va garder que les pixels qui ont les plus grandes valeurs, et à chaque fois qu'on devra en insérer un nouveau, on virera
+      // autant de pixels de plus petites valeurs dont la somme est égale à la nouvelle valeur inséréé
+      Queue<PixCum> queue = new Queue<>( threshold );
+
+      // Somme totale déterminée à la première étape, et qui permettra de normaliser les valeurs
+      // entre 0 et 1 à la deuxième étape.
       double somme=0;
-      
-      for( int npixFile=0; npixFile<n; npixFile++ ) {
-         pourcent += incrPourcent;
-         HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,z,HealpixKey.SYNC);
-         if( h==null ) continue;
+
+      for( int step=0; step<2; step++ ) {
          
-         long min = nsize * nsize * npixFile;
-         try {
-            for( int y=0; y<h.height; y++ ) {
-               for( int x=0; x<h.width; x++ ) {
-                  try {
-                     int idx = y * h.width + x;
-                     double pixel = h.getPixel(idx,HealpixKey.NOW);
-                     
-                     // Pixel vide
-                     if( Double.isNaN( pixel ) || pixel==blank ) continue;
-                     
-                     long npix = min + p.xy2hpx(idx);
-                     list.add( new PixCum(npix,pixel) );
-                     somme += pixel;
-                     
-                  } catch( Exception e ) {
-                     e.printStackTrace();
-                  }
+         // 1ère étape, Initilisation de la liste des losanges =>  suit l'ordre naturel
+         if( step==0 ) {
+            for( int i=0; i<n; i++ ) tileList.add( new PixCum(i,0) );
+            
+         // 2ème étape: Tri de la liste des losanges => suit l'odre décroissant des moyennes
+         } else  Collections.sort(tileList);
+         
+         // Parcours des tuiles
+         for( PixCum tile : tileList ) {
+            if( tile.npix==-1 ) continue;   // c'est une tuile écartée à l'étape 1
+            int tileNpix = (int) tile.npix;
+            tile.npix = -1;   // par défaut, la tuile sera supposée rejetée;
+            
+            aladin.trace(4,"Processing tile "+tileNpix+" (step "+(step+1)+
+                  (step==1 ? " mean="+tile.val+" max="+tile.max+" queue.size="+queue.size() : "")+")");
+            
+            double tileTotal = 0;  // Cumul des pixels de la tuile courante
+            double tileMax = 0;    // Valeur max sur les pixels de la tuile courante
+            int tileNbPixel = 0;   // Nomre de pixels de la tuile courante
+         
+            pourcent += incrPourcent/2;
+            if( p.moc!=null && p.isOutMoc(hipsOrder, tileNpix) ) continue;
+
+            HealpixKey h = p.getHealpixLowLevel(hipsOrder,tileNpix,z,HealpixKey.SYNC);
+            if( h==null ) continue;
+
+            // Dans le cas où la taille de la tuile annoncée ou supposée est fausse
+            // on recommence en indiquant explicitement cette taille
+            if( first && infoTileWidth==-1 && h.width!=CDSHealpix.pow2(tileOrder) ) {
+               if( aladin.levelTrace>=3) System.err.println("Warning, the HiPS \""+p.label+"\" has missing or erroneous tileWidth propertie value => assuming "+h.width);
+               addMocFromPlanBG(p1,order, h.width, threshold );
+               return;
+            }
+            first=false;
+            
+            // Dans la deuxième étape, si le max de la tuile est inférieur à la plus petite
+            // valeur de queue, on peut tout de suite écarter cette tuile
+            if( step==1 && queue.size()>0 ) {
+               PixCum last = queue.last();
+               if( last.val>(tile.max/somme) ) {
+//                  System.out.println(" tilemax="+(tile.max/somme)+" less that the min of queue="+last.val+" => rejected");
+                  continue;
                }
             }
-         } catch( Exception e ) {
-            e.printStackTrace();
+
+            long min = virtualTileWidth *virtualTileWidth * tileNpix;
+            try {
+               
+               // Parcours des blocs
+               for( int yCell=0; yCell<nbCell; yCell++ ) {
+                  for( int xCell=0; xCell<nbCell; xCell++ ) {
+
+                     // Parcours des pixels du bloc courant et détermination de la moyenne de ses pixels
+                     double pixel = 0;
+                     int nbPixels=0;
+                     for( int y=0; y<cellWidth; y++ ) {
+                        for( int x=0; x<cellWidth; x++ ) {
+                           int idx = ((yCell*cellWidth)+y) * h.width + (xCell*cellWidth)+x;
+                           double localPixel = h.getPixel(idx,HealpixKey.NOW);
+
+                           // Pixel vide
+                           if( Double.isNaN( localPixel ) || localPixel==blank ) continue;
+
+                           localPixel = localPixel  * p.bScale+ p.bZero;
+
+                           pixel += localPixel;
+                           nbPixels++;
+                        }
+                     }
+                     if( nbPixels==0 ) continue; // aucune valeur dans ce bloc
+                     pixel /= nbPixels;        // moyenne de la valeur des pixels du bloc courant
+                     
+                     // Etape 1: mesures statistiques par tuile et globales
+                     if( step==0 ) {
+                        somme += pixel;
+                        tileTotal += pixel;
+                        if( tileNbPixel==0 || pixel>tileMax ) tileMax = pixel;
+                        tileNbPixel ++;
+                        
+                     // Etape 2: valeur ramenée entre 0 et 1, et mémorisation éventuelle
+                     // dans la file des candidats
+                     } else  {
+                        pixel /= somme;
+                        long npixMoc = min + xy2hpx(yCell*virtualTileWidth + xCell);
+                        queue.add( new PixCum(npixMoc,pixel) );
+                     }
+                  }
+               }
+
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+            
+            // Etape 1: la tuile sera-t-elle traitée à l'étape 2 ? si oui, mémorisation de la moyenne
+            // de ses valeurs
+            if( step==0 && tileNbPixel>0 ) {
+               tile.npix = tileNpix;
+               tile.val  = tileTotal / tileNbPixel;
+               tile.max  = tileMax;
+            }
          }
       }
-      
-      Collections.sort(list);
-      
-      // Normalisation éventuelle
-      if( Math.abs(1-somme)>1e-8 ) {
-         for( PixCum pc : list ) pc.val/=somme;
-      }
-      
+
       somme=0;
       try {
          // Remplissage du Moc
          moc.setCheckConsistencyFlag(false);
          int nb=0;
-         for( PixCum pc : list ) {
+         Iterator<PixCum> it = queue.iterator();
+         while( it.hasNext() ) {
+            PixCum pc = it.next();
             long npix = pc.npix;
             somme += pc.val;
             if( somme>threshold ) break;
-            moc.add(order,npix>>>divOrder);
+            moc.add(order,npix);
             nb++;
             if( nb>100000 ) { moc.checkAndFix(); nb=0; }
          }
@@ -412,10 +540,52 @@ public class PlanMocGen extends PlanMoc {
       }
    }
    
+   public class Queue<E> extends TreeSet<PixCum> {
+
+      private double threshold;
+      private double somme;
+
+      public Queue(double threshold) {
+          super();
+          this.threshold = threshold;
+      }
+
+      public boolean add(PixCum e) {
+         if( somme<=0 || somme+e.val<threshold ) {
+            somme += e.val;
+            super.add(e);
+            return true;
+
+         } else {
+            double tot=0L;
+            while( true ) {
+               PixCum last = last();
+               if( last==null ) break;
+               tot += last.val;
+               somme -= last.val;
+               if( tot<e.val ) pollLast();
+               else break;
+            }
+            if( tot!=0 ) {
+               somme += e.val;
+               super.add(e);
+               return true;
+            }
+         }
+         return false;
+      }
+      
+      public String toString() {
+         PixCum e = first(), f = last();
+         return size()+"/"+threshold+"/"+somme+"["+e+".."+f+"]";
+      }
+   }
+
    // Pour gérer un pixel Healpix
    class PixCum implements Comparable {
       long npix;   // indice dans la map
       double val;  // valeur du pixel
+      double max;
       
       PixCum(long npix,double val) {
          this.npix=npix;
@@ -429,8 +599,131 @@ public class PlanMocGen extends PlanMoc {
          }
          return val < ((PixCum)o).val ? 1 : -1;
       }
+      
+      public String toString() { return npix+"/"+val; }
    }
    
+
+   // ANCIENNE METHODE -> A JETER
+//   private void addMocFromPlanBG(Plan p1, double threshold) throws Exception {
+//      PlanBG p = (PlanBG)p1;
+//      
+//      order=p.getMaxHealpixOrder();
+//      
+//      // Détermination de l'ordre pixel (o1) et tuiles (fileOrder)
+//      int o1 = p.getTileOrder();
+//      int z = (int)p.getZ();
+//      
+//      int divOrder=0;
+//      int fileOrder = order - o1;
+//      
+//      // L'ordre des tuiles ne peut être inférieur à 3
+//      if( fileOrder<3 ) {
+//         divOrder=(3-fileOrder)*2;
+//         fileOrder=3;
+//      }
+//      
+//      /// L'ordre des tuiles ne peut entrainer le dépassement de la résolution
+//      // de la map HEALPix
+//      if( fileOrder>p.getMaxFileOrder() ) {
+//         fileOrder=p.getMaxFileOrder();
+//         order = fileOrder+o1;
+//      }
+//      
+//      moc.setMocOrder(order);
+//      
+//      // On génère d'abord un MOC dans le système de référence de la map HEALPix
+//      // on fera la conversion en ICRS à la fin du processus
+//      moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
+//                       p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
+//      frameOrigin = p.frameOrigin;
+//      
+//      // Nombre de losanges à traiter
+//      int n = (int)CDSHealpix.pow2(fileOrder); 
+//      n=12*n*n;
+//      
+////      System.out.println("Nombre de losanges à traiter : "+n);
+//      
+//      // Sans doute inutile car déjà fait
+//      try { p.createHealpixOrder(o1); } catch( Exception e1 ) { e1.printStackTrace(); }
+//      long nsize = CDSHealpix.pow2(o1);
+//      
+//      double incrPourcent = gapPourcent/n;
+//      
+//      // Principe de l'algo: on parcours la map, pixel après pixel qu'on ajoute
+//      // à la liste cumul en la triant immédiatement en ordre décroissant, 
+//      // tout en calculant la somme.
+//      //Dès qu'on dépasse le threshold, l'insertion sera conditionnée au fait qu'il faut
+//      // que le nouveau pixel soit plus petit que la dernière valeur de la liste 
+//      // Et si oui, on va l'insérer, mais virer autant des pixels les plus petits que nécessaire
+//      ArrayList<PixCum> list;
+//      try {
+//         list = new ArrayList<>((int)(n*nsize*nsize));
+//      } catch( Exception e1 ) {
+//         throw new Exception("Sorry! too large probability sky map !");
+//      }
+//      double somme=0;
+//      
+//      for( int npixFile=0; npixFile<n; npixFile++ ) {
+//         pourcent += incrPourcent;
+//         HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,z,HealpixKey.SYNC);
+//         if( h==null ) continue;
+//         
+//         long min = nsize * nsize * npixFile;
+//         try {
+//            for( int y=0; y<h.height; y++ ) {
+//               for( int x=0; x<h.width; x++ ) {
+//                  try {
+//                     int idx = y * h.width + x;
+//                     double pixel = h.getPixel(idx,HealpixKey.NOW);
+//                     
+//                     // Pixel vide
+//                     if( Double.isNaN( pixel ) || pixel==blank ) continue;
+//                     
+//                     long npix = min + p.xy2hpx(idx);
+//                     list.add( new PixCum(npix,pixel) );
+//                     somme += pixel;
+//                     
+//                  } catch( Exception e ) {
+//                     e.printStackTrace();
+//                  }
+//               }
+//            }
+//         } catch( Exception e ) {
+//            e.printStackTrace();
+//         }
+//      }
+//      
+//      Collections.sort(list);
+//      
+//      // Normalisation éventuelle
+//      if( Math.abs(1-somme)>1e-8 ) {
+//         for( PixCum pc : list ) pc.val/=somme;
+//      }
+//      
+//      somme=0;
+//      try {
+//         // Remplissage du Moc
+//         moc.setCheckConsistencyFlag(false);
+//         int nb=0;
+//         for( PixCum pc : list ) {
+//            long npix = pc.npix;
+//            somme += pc.val;
+//            if( somme>threshold ) break;
+//            moc.add(order,npix>>>divOrder);
+//            nb++;
+//            if( nb>100000 ) { moc.checkAndFix(); nb=0; }
+//         }
+//
+//         // Conversion en ICRS si nécessaire
+//         moc.setCheckConsistencyFlag(true);
+//         moc=toReferenceFrame("C");
+//         frameOrigin=Localisation.ICRS;
+//         
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
    
 //   /** Creation d'un plan Moc à partir d'un HiPS en prenant tous les pixels dont les
 //    * valeurs sont comprises dans un interval (bornes incluses)
@@ -541,7 +834,7 @@ public class PlanMocGen extends PlanMoc {
                else addMocFromCatalog(p1,radius,order);
             }
             else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
-            else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,threshold);
+            else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,order,threshold);
             else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,order,pixMin,pixMax);
          }
          moc.setCheckConsistencyFlag(true);

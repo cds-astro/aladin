@@ -582,8 +582,7 @@ public class HipsGen {
                 }
 
                 if( !context.isColor() ) {
-                    actions.add(Action.GZIP);
-                    //            actions.add(Action.JPEG);
+//                    actions.add(Action.GZIP);    // JE NE GZIPPE PLUS PAR DEFAUT
                     actions.add(Action.PNG);
                     if( !flagMapFits ) actions.add(Action.DETAILS);
                 }
@@ -871,7 +870,7 @@ public class HipsGen {
                         //          "   debug=true|false  to set output display as te most verbose or just statistics" + "\n" +
                 );
 
-        System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG GZIP DETAILS\"):" + "\n" +
+        System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG DETAILS\"):" + "\n" +
                 "   INDEX      "+Action.INDEX.doc() + "\n" +
                 "   TILES      "+Action.TILES.doc() + "\n" +
                 "   JPEG       "+Action.JPEG.doc() + "\n" +

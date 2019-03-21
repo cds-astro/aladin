@@ -3736,7 +3736,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( !trouve && !rep  ) {
-         StringBuffer s = new StringBuffer();
+         StringBuilder s = new StringBuilder();
          if( aladin.view.isMultiView() ) {
             s.append("["+view.VIEW+" "+getID()+"]");
             s.append( (s.length()>0 ? " - ":"")+pref.label);

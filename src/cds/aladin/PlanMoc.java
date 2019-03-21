@@ -116,9 +116,9 @@ public class PlanMoc extends PlanBGCat {
       ADD( buf, "\n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
       ADD( buf, "\n* Best ang.res: ",Coord.getUnit(moc.getAngularRes()));
       
-      int order = getRealMaxOrder(moc);
+      int order = moc.getMocOrder();
       int drawOrder = getDrawOrder();
-      ADD( buf,"\n","* MOC order: "+ (order==drawOrder ? order+"" : drawOrder+"/"+order));
+      ADD( buf,"\n","* MOC order: "+ (order==drawOrder ? order+"" : "draw:"+drawOrder+"/"+order));
    }
 
    /** Changement de référentiel si nécessaire */

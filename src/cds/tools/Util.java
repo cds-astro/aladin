@@ -154,6 +154,10 @@ public final class Util {
       URLConnection conn = u.openConnection();
       if( !useCache ) conn.setUseCaches(false);
       if( timeOut>0 ) conn.setConnectTimeout(timeOut);
+      
+      if( u.toString().indexOf("8326.fits")>0 ) {
+         System.out.println("J'y suis");
+      }
       // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
       if( conn instanceof HttpURLConnection ) {
          HttpURLConnection http = (HttpURLConnection)conn;
@@ -162,8 +166,7 @@ public final class Util {
       }
 
       MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
-//             MyInputStream mis = new M/yInputStream(conn.getInputStream());
-      
+//             MyInputStream mis = new MyInputStream(conn.getInputStream());
 //      if( (mis.getType()&MyInputStream.GZ)!=0 ) {
 //         System.out.println("IN GZIP "+u);
 //      } else {

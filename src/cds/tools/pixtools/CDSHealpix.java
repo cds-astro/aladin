@@ -102,21 +102,21 @@ public final class CDSHealpix {
       return query_disc(order, ra, dec, radius, true);
    }
    
-   public static void main(String [] arg) {
-
-      double ra=210.80216136704843, dec=54.34890606617321, radius=0.1652;
-      int order=11;
-
-      final HealpixNested hn = Healpix.getNested(order);
-      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer( Math.toRadians(radius) );
-      // final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox( Math.toRadians(radius) );
-      final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
-      long [] out = toFlatArrayOfHash(bmoc);
-
-      System.out.print("overlappingCells checker:\ndraw circle("+ra+","+dec+","+radius+")\ndraw moc "+order+"/");
-      for( long a : out ) System.out.print(" "+a);
-      System.out.println();
-   }
+//   public static void main(String [] arg) {
+//
+//      double ra=210.80216136704843, dec=54.34890606617321, radius=0.1652;
+//      int order=11;
+//
+//      final HealpixNested hn = Healpix.getNested(order);
+//      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer( Math.toRadians(radius) );
+//      // final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputerApprox( Math.toRadians(radius) );
+//      final HealpixNestedBMOC bmoc = cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec));
+//      long [] out = toFlatArrayOfHash(bmoc);
+//
+//      System.out.print("overlappingCells checker:\ndraw circle("+ra+","+dec+","+radius+")\ndraw moc "+order+"/");
+//      for( long a : out ) System.out.print(" "+a);
+//      System.out.println();
+//   }
 
 
    
@@ -269,12 +269,30 @@ public final class CDSHealpix {
       res[7] = neigList.get(MainWind.S);
       return res;
    }
+   
+   public static void main(String [] arg) {
+      int order = 3;
+      long max = 12*pow2(order)*pow2(order);
+      
+      try {
+         for( long npix=0; npix<max; npix++ ) {
+            long ring = nest2ring(order,npix);
+            long nest = ring2nest(order,ring);
+            if( nest!=npix ) {
+               System.out.println("J'ai un gros souci pour order="+order+"/"+npix
+                     +" => ring="+ring+" nest="+nest);
+               System.exit(1);
+            }
+         }
+      } catch( Exception e ) { e.printStackTrace(); }
+   }
+
 
    static public long nest2ring(int order, long npix) throws Exception  {
       final HealpixNested hn = Healpix.getNested(order);
       return hn.toRing(npix);
    }
-
+   
    static public long ring2nest(int order, long npix) throws Exception  {
       final HealpixNested hn = Healpix.getNested(order);
       return hn.toNested(npix);
@@ -292,7 +310,7 @@ public final class CDSHealpix {
       res = Math.sqrt(res);
       return res;
    }
-
+   
    /** Retourne la numérotation unique pour un pixel d'un nside donné */
    static long nsidepix2uniq(long nside, long npix) {
       return 4*nside*nside + npix;

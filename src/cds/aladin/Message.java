@@ -266,6 +266,9 @@ public class Message extends Panel {
 //        );
 
         dialog.setVisible(true);
+        
+        // Juste pour passer la main à un autre thread
+        try { Thread.currentThread().sleep(100); } catch( Exception e ) {}
 
         return currentMessage.value;
     }
