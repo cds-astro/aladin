@@ -58,7 +58,6 @@ public class PlanTMoc extends PlanMoc {
       if( label==null ) label="TMOC";
       setLabel(label);
       aladin.trace(3,"TMOC creation: "+Plan.Tp[type]);
-//      wireFrame=DRAW_FILLIN;
       suite();
    }
 

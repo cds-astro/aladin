@@ -414,6 +414,15 @@ public class Range {
       sz-=pos1+1;
       if( (sz&1)!=0 ) throw new IllegalArgumentException("cannot happen");
    }
+   
+   public void add( Range m ) {
+      if( m.sz==0 ) return;
+      if( sz==0 || m.r[0]>=r[sz-1] ) append(m);
+      else {
+         for( int i=0; i<m.sz; i+=2 ) addRemove( m.r[i], m.r[i+1],1);
+      }
+
+   }
 
    /** After this operation, the Range contains the union of itself and [a;b[. */
    public void add( long a, long b) {

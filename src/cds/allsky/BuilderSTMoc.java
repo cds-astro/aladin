@@ -39,7 +39,7 @@ public class BuilderSTMoc extends BuilderTMoc {
    }
    
    protected void initIt() {
-      stMoc = new SpaceTimeMoc(4, context.getOrder() );
+      stMoc = new SpaceTimeMoc(14, context.getOrder() );
    }
    
    int n=0;

@@ -575,7 +575,7 @@ public class PlanMoc extends PlanBGCat {
          };
          
          // Si petit, je ne threade pas
-         if( moc.getSize()<50000 ) t.run();
+         if( moc.getSize()<100000 ) t.run();
          else t.start();
 
       }

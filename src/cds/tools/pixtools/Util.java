@@ -185,8 +185,10 @@ public class Util {
             if( !sf[i].isDirectory() ) continue;
             String name = sf[i].getName();
             if( name.startsWith("Norder") ) {
-               int n = Integer.parseInt(name.substring(6));
-               if( n>maxOrder ) maxOrder=n;
+               try {
+                  int n = Integer.parseInt(name.substring(6));
+                  if( n>maxOrder ) maxOrder=n;
+               } catch( NumberFormatException e ) { }
             }
          }
       }

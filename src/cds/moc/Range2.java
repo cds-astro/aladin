@@ -43,7 +43,9 @@ public class Range2 extends Range {
    public Range2(Range2 other) {
       super(other);
       rangeArray = new Range[other.sz/2];
-      System.arraycopy(other.rangeArray,0,rangeArray,0,other.sz/2);
+      for( int i=0; i<sz/2; i++ ) {
+         rangeArray[i] = new Range( other.rangeArray[i] );
+      }
    }
 
 
@@ -83,14 +85,71 @@ public class Range2 extends Range {
   public void append (Range2 other) {
      for (int i=0; i<other.sz; i+=2) append(other.r[i],other.r[i+1], other.rangeArray[i>>>1]);
   }
+  
+  /** Push two entries at the end of the entry vector (no check)  */
+  public void push(long min, long max, Range m) {
+     
+     // Si le dernier intervalle temporel est identique, on ajoute le range spacial directement
+     // sans créer un nouvel intervall temporel
+     if( sz>=2 && r[sz-2]==min && r[sz-1]==max ) {
+        rangeArray[(sz-2)>>>1].add(m);
+        
+     } else {
+        ensureCapacity(sz+2);
+        r[sz]=min;
+        r[sz+1]=max;
+        if( m!=null ) rangeArray[sz>>>1] = m;
+        sz+=2;
+     }
+  }
 
-  /** Push a single entry at the end of the entry vector. */
+
+  /** Push a single entry at the end of the entry vector (no check)*/
   private void push(long v, Range m) {
      ensureCapacity(sz+1);
      r[sz]=v;
      if( m!=null ) rangeArray[sz>>>1] = m;
      sz++;
   }
+  
+  
+  /** Sort and remove useless ranges and trim the buffer  => Warning: not thread safe */
+  public void sortAndFix() { System.err.println("No yet implemented"); }
+//
+//     // On remplit un tableau externe pour pouvoir le trier
+//     // par intervalles croissants, et le plus grand en premier si égalité sur le début de l'intervalle
+//     ArrayList<Ran> list = new ArrayList<>( sz );
+//     for( int j=0; j<sz; j+=2 ) list.add( new Ran( r[j], r[j+1] ) );
+//     Collections.sort(list);
+//
+//     // On recopie les intervalles en enlevant tout ce qui n'est pas nécessaire
+//     long r1[] = new long[ list.size()*2 ];
+//     long min=-1,max=-1;
+//     int n=0;
+//     for( Ran ran : list ) {
+//        if( ran.min>max ) {
+//           if( max!=-1 ) { r1[n++]=min; r1[n++]=max; }
+//           min = ran.min;
+//           max = ran.max;
+//        } else {
+//           if( ran.max>max ) max=ran.max;
+//        }
+//     }
+//     if( max!=-1 ) { r1[n++]=min; r1[n++]=max; }
+//
+//     // On remplace le vecteur original
+//     r=r1;
+//     sz=n;
+//  }
+//
+//  private class Ran implements Comparable<Ran> {
+//     long min,max;
+//     Range r;
+//     Ran(long min,long max,Range r) { this.min=min; this.max=max; this.r = r; }
+//     public int compareTo(Ran o) {
+//        return o.min<min ? 2 : o.min>min ? -2 : o.max>max ? 1 : o.max<max ? -1 : 0;
+//     }
+//  }
   
   static final private int REMOVE = 0;
   static final private int UNION  = 1;
@@ -264,7 +323,7 @@ public class Range2 extends Range {
      long [] inter = new long[]{ a,b };
      int pos=indexOf(a);
      
-     while(pos>=0 && r[pos]==a ) pos--;     // En début d'intervalle => on prend avec le précédent
+     while(pos>=0 && r[pos]==a ) pos--;      // En début d'intervalle => on prend avec le précédent
      if( pos<0 ) pos=0;                      // avant tout
      if( pos>0  && (pos&1)==1 ) pos++;       // dans un inter-intervalle => on démarre sur le suivant
      

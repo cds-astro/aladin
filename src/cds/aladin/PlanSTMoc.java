@@ -38,13 +38,12 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class PlanSTMoc extends PlanTMoc {
    
-   private TimeMoc timeMoc = null;
    
    public PlanSTMoc(Aladin a) { super(a); }
    
+   
    protected PlanSTMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
       super(aladin);
-//      wireFrame=DRAW_FILLIN;
       arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
       arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
@@ -60,6 +59,14 @@ public class PlanSTMoc extends PlanTMoc {
       aladin.trace(3,"STMOC creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
       suite();
    }
+   
+   /** Recopie du Plan à l'identique dans p1 */
+   protected void copy(Plan p1) {
+      super.copy(p1);
+      PlanSTMoc pm = (PlanSTMoc)p1;
+      pm.arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
+   }
+
 
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {

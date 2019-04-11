@@ -27,6 +27,7 @@ import java.util.Iterator;
 import cds.aladin.HealpixProgen;
 import cds.moc.HealpixMoc;
 import cds.moc.TimeMoc;
+import cds.tools.Astrodate;
 import cds.tools.pixtools.Util;
 
 /** Construction d'un TMOC à partir des données HpxFinder
@@ -64,11 +65,15 @@ public class BuilderTMoc extends Builder {
       // détermination de l'ordre minimum pour les tuiles concaténées
       // soit indiqué via le parametre "order", soit déterminé à partir du order
       // de l'index et de la taille typique d'une image.
-      maxOrder = Util.getMaxOrderByPath( context.getHpxFinderPath() );
-      if( maxOrder==-1 ) throw new Exception("HpxFinder seems to be not yet ready ! (order=-1)");
-      context.info("Order retrieved from HpxFinder => "+maxOrder);
+      int o = context.getOrder();
+      if( o==-1 ) {
+         maxOrder = Util.getMaxOrderByPath( context.getHpxFinderPath() );
+         if( maxOrder==-1 ) throw new Exception("HpxFinder seems to be not yet ready ! (order=-1)");
+         context.info("Order retrieved from HpxFinder => "+maxOrder);
 
-      context.setOrder(maxOrder); // juste pour que les statistiques de progression s'affichent correctement
+         context.setOrder(maxOrder); // juste pour que les statistiques de progression s'affichent correctement
+         
+      } else maxOrder = o;
 
       context.mocIndex=null;
       context.initRegion();
@@ -83,7 +88,7 @@ public class BuilderTMoc extends Builder {
    static private final int UNKNOWN    = 0;
    static private final int TMINMAX    = 1;
    static private final int MJDEXPTIME = 2;
-   static private final int ISOTIME    = 3;
+   static private final int DATEOBS    = 3;
    
    private int mode=UNKNOWN;
    
@@ -129,6 +134,16 @@ public class BuilderTMoc extends Builder {
                   s= cds.tools.Util.extractJSON("T_MAX", json);
                   if( s==null ) continue;
                   tmax = Double.parseDouble(s  );
+                  
+               } else if( mode==DATEOBS ) {
+                  String s = cds.tools.Util.extractJSON("DATEOBS1", json);
+                  if( s==null ) continue;
+                  tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
+                  s = cds.tools.Util.extractJSON("DATEOBS2", json);
+                  if( s==null ) continue;
+                  tmax = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
+                  if( Double.isNaN(tmax) ) tmax=tmin;
+//                  System.out.println("tmin="+tmin+" tmax="+tmax+" date="+s);
                   
                } else {
                   String s= cds.tools.Util.extractJSON("MJD-OBS", json);
@@ -177,7 +192,9 @@ public class BuilderTMoc extends Builder {
       if( s!=null ) return TMINMAX;
       s = cds.tools.Util.extractJSON("EXPTIME", json);
       if( s!=null ) return MJDEXPTIME;
-      throw new Exception("Not able to determine HpxFinder time keywords (ex: T_MIN and T_MAX or MJD-OBS and EXPTIME");
+      s = cds.tools.Util.extractJSON("DATEOBS1", json);
+      if( s!=null ) return DATEOBS;
+      throw new Exception("Not able to determine HpxFinder time keywords (ex: T_MIN and T_MAX or MJD-OBS and EXPTIME, or DATEOBS1 and DATEOBS2");
    }
 
    private void initStat() { statNbFile=0; startTime = System.currentTimeMillis(); }

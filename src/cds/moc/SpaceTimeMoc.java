@@ -47,7 +47,7 @@ public class SpaceTimeMoc extends Moc {
 
    public SpaceTimeMoc(Range2 rangeSet) {
       init();
-      this.timeRange = rangeSet;
+      this.timeRange = new Range2(rangeSet);
    }
    
    public SpaceTimeMoc(String s)  throws Exception {
@@ -185,30 +185,48 @@ public class SpaceTimeMoc extends Moc {
       
    }
    
+   /** Ajustement d'une valeur à l'ordre indiquée */
+   public long getVal(long val, int order) {
+      if( order==MAXORDER ) return val;
+      int deltaOrder = (MAXORDER - order)<<1;
+      val = (val>>>deltaOrder) << deltaOrder;
+      return val;
+   }
+
    public void add(long tmin, long tmax, long smin, long smax) {
-      
-      // Changement de résolution temporelle ?
-      int deltaTimeOrder = (MAXORDER - timeOrder)<<1;
-      if( deltaTimeOrder>0 ) {
-         tmin = (tmin>>>deltaTimeOrder) << deltaTimeOrder;
-         tmax = (tmax>>>deltaTimeOrder) << deltaTimeOrder;
-         if( tmin==tmax ) tmax++;
-      }
-      
-   // Changement de résolution spatiale ?
-      int deltaSpaceOrder = (MAXORDER - spaceOrder)<<1;
-      if( deltaSpaceOrder>0 ) {
-         smin = (smin>>>deltaSpaceOrder) << deltaSpaceOrder;
-         smax = (smax>>>deltaSpaceOrder) << deltaSpaceOrder;
-         if( smin==smax ) smax++;
-      }
-      
+      tmin = getVal(tmin, timeOrder);
+      tmax = getVal(tmax, timeOrder);
+      if( tmax==tmin ) tmax++;
+      smin = getVal(smin, spaceOrder);
+      smax = getVal(smax, spaceOrder);
+      if( smax==smin ) smax++;
+     
       // Moc Spatial réduit à un intervalle spatial
       Range r = new Range();
       r.append(smin,smax);
       
       // Ajout de la cellule spatio-temporelle
       timeRange.add(tmin,tmax,r);
+   }
+
+//   public void push(long tmin, long tmax, long smin, long smax) {
+//      tmin = getVal(tmin, timeOrder);
+//      tmax = getVal(tmax, timeOrder);
+//      if( tmax==tmin ) tmax++;
+//      smin = getVal(smin, spaceOrder);
+//      smax = getVal(smax, spaceOrder);
+//      if( smax==smin ) smax++;
+//     
+//      // Moc Spatial réduit à un intervalle spatial
+//      Range r = new Range();
+//      r.append(smin,smax);
+//      
+//      // Ajout en fin de MOC de la cellule spatio-temporelle
+//      timeRange.push(tmin,tmax,r);
+//   }
+   
+   public void sortAndFix() {
+      timeRange.sortAndFix();
    }
 
    @Override
@@ -605,10 +623,9 @@ public class SpaceTimeMoc extends Moc {
 
    @Override
    public Moc clone() {
-      // TODO Auto-generated method stub
-      return null;
+      SpaceTimeMoc moc = new SpaceTimeMoc();
+      moc.timeRange = new Range2( timeRange );
+      return moc;
    }
-
-
    
 }

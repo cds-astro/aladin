@@ -22,14 +22,13 @@
 package cds.aladin;
 
 import cds.moc.Moc;
-import cds.moc.TimeMoc;
 import cds.tools.Util;
 
-/** Génération d'un MOC de manière algorythmique
+/** Génération d'un STMOC de manière algorythmique
  * @author P.Fernique [CDS]
  * @version 1.0 - nov 2012
  */
-public class PlanTMocAlgo extends PlanTMoc {
+public class PlanSTMocAlgo extends PlanSTMoc {
    
    static final int UNION        = 0;
    static final int INTERSECTION = 1;
@@ -56,7 +55,7 @@ public class PlanTMocAlgo extends PlanTMoc {
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */
-   public PlanTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
+   public PlanSTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
@@ -66,7 +65,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       if( label==null ) label = s;
       setLabel(label);
       
-      aladin.trace(3,"TMOC computation: "+Plan.Tp[type]+" => "+s);
+      aladin.trace(3,"STMOC computation: "+Plan.Tp[type]+" => "+s);
       
       try {
          moc = p1.getMoc().clone();
@@ -75,13 +74,12 @@ public class PlanTMocAlgo extends PlanTMoc {
          else {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
-//               SpaceMoc m2=pList[i].toReferenceFrame(m1.getCoordSys());
-               Moc m2=pList[i].moc;
+               Moc m2=pList[i].getMoc();
                switch(op) {
                   case UNION :        moc = m1.union(        m2); break;
                   case INTERSECTION : moc = m1.intersection( m2 ); break;
                   case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-                  case DIFFERENCE  :  moc = ((TimeMoc)m1).difference(   m2 ); break;
+//                  case DIFFERENCE  :  moc = ((SpaceTimeMoc)m1).difference(   m2 ); break;
                }
             }
          }
@@ -97,7 +95,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       flagProcessing=false;
       flagOk=true;
       setActivated(flagOk);
-      if( moc.getSize()==0 ) error="Empty TMOC";
+      if( moc.getSize()==0 ) error="Empty STMOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");
