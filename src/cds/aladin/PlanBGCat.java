@@ -401,7 +401,7 @@ public class PlanBGCat extends PlanBG {
    
    
    /** Mémorisation d'un pcat "étalon" qui va me servir pour connaître la légende générique
-    * ou spécifique à lapremière tuile chargée
+    * ou spécifique à la première tuile chargée
     */
    protected void setGenericPcat(Pcat pcat) {
       genericPcat = pcat;

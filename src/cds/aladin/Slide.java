@@ -382,14 +382,28 @@ public final class Slide {
    }
    
    
+   // Adaptation du logo pour un plan STMOC
+   static void drawLogoSTMOC(Graphics g,int dx,int dy,Color c) {
+      int x = dx+gapL+10;
+      int y = dy+3;
+      Grid.fillMOC(g,x,y,Color.white);
+      Grid.drawMOC(g, x, y, c);
+      
+      x = dx+frX[2]-24;
+      y = dy+frY[2]-9;
+      int h=5;
+      g.setColor(c.brighter());
+      g.drawRect(x,y,1,h); x+=2+1;
+      g.drawRect(x,y,5,h); x+=2+5;
+      g.drawRect(x,y,2,h); x+=3+2;
+      g.drawRect(x,y,1,h);
+   }
+   
    // Adaptation du logo pour un plan TMOC
    static void drawLogoTMOC(Graphics g,int dx,int dy,Color c) {
       int x = dx+frX[2]-24;
       int y = dy+frY[2]-9;
       int h=5;
-//      g.setColor(Color.white);
-//      g.fillRect( x+3,y,5,h);
-//      g.fillRect( x+10,y,2,h);
       g.setColor(c);
       g.drawRect(x,y,1,h); x+=2+1;
       g.drawRect(x,y,5,h); x+=2+5;
@@ -700,8 +714,9 @@ public final class Slide {
             case Plan.IMAGECUBERGB:
             case Plan.IMAGERGB:    drawLogoImg(g,dx,dy,null);                                 break;
             case Plan.IMAGEHUGE:   drawLogoImgHuge(g,dx,dy,colorForeground);                  break;
-            case Plan.ALLSKYTMOC:  drawLogoTMOC(g,dx,dy,isViewable?p.c:colorFillFG);           break;
+            case Plan.ALLSKYTMOC:  drawLogoTMOC(g,dx,dy,isViewable?p.c:colorFillFG);          break;
             case Plan.ALLSKYMOC:   drawLogoMOC(g,dx,dy,isViewable?p.c:colorFillFG);           break;
+            case Plan.ALLSKYSTMOC: drawLogoSTMOC(g,dx,dy,isViewable?p.c:colorFillFG);         break;
             case Plan.ALLSKYCAT:   drawLogoImgBG(g,dx,dy,isViewable?p.c:colorFillFG);         break;
             case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,isViewable?Color.black:colorFillFG); break;
             case Plan.ALLSKYPOL:   drawLogoPolarisation(g,dx,dy,isViewable?p.c:colorFillFG);  break;

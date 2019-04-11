@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.Util;
 
 public class BuilderCube extends Builder {
@@ -124,7 +125,7 @@ public class BuilderCube extends Builder {
             HealpixMoc m = new HealpixMoc();
             m.read( path+Util.FS+Constante.FILE_MOC);
             if( context.moc==null ) context.moc=m;
-            else context.moc = context.moc.union(m);
+            else context.moc = (SpaceMoc)context.moc.union(m);
          } catch( Exception e ) {
             context.warning("Missing original MOC in "+path+" => running time estimation will be wrong");
          }

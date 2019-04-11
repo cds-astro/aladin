@@ -55,7 +55,7 @@ import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.Util;
 import cds.tools.hpxwcs.Tile2HPX;
 import cds.tools.hpxwcs.Tile2HPX.WCSFrame;
@@ -153,9 +153,9 @@ public class Context {
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
    private int frame =-1;                    // Système de coordonnée de la boule HEALPIX à générée
-   protected HealpixMoc mocArea = null;      // Zone du ciel à traiter (décrite par un MOC)
-   protected HealpixMoc mocIndex = null;     // Zone du ciel correspondant à l'index Healpix
-   protected HealpixMoc moc = null;          // Intersection du mocArea et du mocIndex => regénérée par setParameters()
+   protected SpaceMoc mocArea = null;        // Zone du ciel à traiter (décrite par un MOC)
+   protected SpaceMoc mocIndex = null;       // Zone du ciel correspondant à l'index Healpix
+   protected SpaceMoc moc = null;            // Intersection du mocArea et du mocIndex => regénérée par setParameters()
    protected int mocOrder=-1;                // order du MOC des tuiles
    protected int nside=1024;                 // NSIDE pour la génération d'une MAP healpix
    protected int tileOrder=-1;               // Valeur particulière d'un ordre pour les tuiles
@@ -246,7 +246,7 @@ public class Context {
    public double getBlank() { return blank; }
    public double getBlankOrig() { return blankOrig; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
-   public HealpixMoc getArea() { return mocArea; }
+   public SpaceMoc getArea() { return mocArea; }
    public Mode getMode() { return mode; } //isColor() ? CoAddMode.REPLACETILE : coAdd; }
    public double[] getCut() throws Exception { return cut; }
    public double[] getCutOrig() throws Exception { return cutOrig; }
@@ -989,11 +989,11 @@ public class Context {
 
    protected void setMocArea(String s) throws Exception {
       if( s.length()==0 ) return;
-      mocArea = new HealpixMoc(s);
+      mocArea = new SpaceMoc(s);
       if( mocArea.getSize()==0 ) throw new Exception("MOC sky area syntax error");
    }
 
-   public void setMocArea(HealpixMoc area) throws Exception {
+   public void setMocArea(SpaceMoc area) throws Exception {
       mocArea = area;
    }
 
@@ -1104,36 +1104,36 @@ public class Context {
       if( isValidateRegion() ) return;
       try {
          if( mocIndex==null ) {
-            if( isMap() ) mocIndex=new HealpixMoc("0/0-11");
+            if( isMap() ) mocIndex=new SpaceMoc("0/0-11");
             else loadMocIndex();
          }
       } catch( Exception e ) {
          //         warning("No MOC index found => assume all sky");
-         mocIndex=new HealpixMoc("0/0-11");  // par défaut tout le ciel
+         mocIndex=new SpaceMoc("0/0-11");  // par défaut tout le ciel
       }
       if( mocArea==null ) moc = mocIndex;
-      else moc = mocIndex.intersection(mocArea);
+      else moc = (SpaceMoc)mocIndex.intersection(mocArea);
       setValidateRegion(true);
    }
 
    /** Retourne la zone du ciel à calculer */
-   protected HealpixMoc getRegion() { return moc; }
+   protected SpaceMoc getRegion() { return moc; }
 
    /** Chargement du MOC de l'index */
    protected void loadMocIndex() throws Exception {
-      HealpixMoc mocIndex = new HealpixMoc();
+      SpaceMoc mocIndex = new SpaceMoc();
       mocIndex.read( getHpxFinderPath()+Util.FS+Constante.FILE_MOC);
       this.mocIndex=mocIndex;
    }
 
    /** Chargement du MOC réel */
    protected void loadMoc() throws Exception {
-      HealpixMoc mocIndex = new HealpixMoc();
+      SpaceMoc mocIndex = new SpaceMoc();
       mocIndex.read( getOutputPath()+Util.FS+Constante.FILE_MOC);
       this.mocIndex=mocIndex;
    }
 
-   protected HealpixMoc getMocIndex() { return mocIndex; }
+   protected SpaceMoc getMocIndex() { return mocIndex; }
 
    //   /** Positionne les cuts de sortie en fonction du fichier Allsky.fits
    //    * @return retourn le cut ainsi calculé
@@ -1367,7 +1367,7 @@ public class Context {
    }
 
    /** Positionne le MOC correspondant à l'index */
-   protected void setMocIndex(HealpixMoc m) throws Exception {
+   protected void setMocIndex(SpaceMoc m) throws Exception {
       mocIndex=m;
    }
 
@@ -1375,9 +1375,9 @@ public class Context {
    protected long getNbLowCells() {
       int o = getOrder();
       if( moc==null && mocIndex==null || o==-1 ) return -1;
-      HealpixMoc m = moc!=null ? moc : mocIndex;
+      SpaceMoc m = moc!=null ? moc : mocIndex;
       if( o!=m.getMocOrder() ) {
-         m =  (HealpixMoc) m.clone();
+         m =  (SpaceMoc) m.clone();
          try { m.setMocOrder( o ); } catch( Exception e ) {}
       }
       long res = m.getUsedArea() * depth;
@@ -2102,7 +2102,7 @@ public class Context {
          if( blueInfo!=null )  setPropriete(Constante.KEY_HIPS_RGB_BLUE,blueInfo);
       }
 
-      HealpixMoc m = moc!=null ? moc : mocIndex;
+      SpaceMoc m = moc!=null ? moc : mocIndex;
       double skyFraction = m==null ? 0 : m.getCoverage();
       if( skyFraction>0 ) {
 
@@ -2255,7 +2255,7 @@ public class Context {
    }
    
    // Retourne le min et le max order en fonction des tuiles présentes
-   private int [] findMinMaxOrder() {
+   protected int [] findMinMaxOrder() {
       
       String path = getOutputPath();
       File root = new File(path);
@@ -2536,7 +2536,7 @@ public class Context {
                // pour éviter de récupérer le bug sur le MocOrder
                try {
                   int n = Integer.parseInt( prop.get("moc_order"));
-                  HealpixMoc mm = new HealpixMoc();
+                  SpaceMoc mm = new SpaceMoc();
                   mm.setMocOrder(n);
                   fov =  mm.getAngularRes()+"";
                } catch( Exception e) {

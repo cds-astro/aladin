@@ -133,8 +133,8 @@ public final class FrameMocFiltering extends FrameRGBBlink {
    protected PlanCatalog createPlane(String label,PlanMoc pMoc, Plan [] p, boolean lookIn) throws Exception {
       Coord c = new Coord();
       Healpix hpx = new Healpix();
-      HealpixMoc moc = pMoc.getMoc();
-      Vector<Obj> v = new Vector<Obj>();
+      HealpixMoc moc = new HealpixMoc( pMoc.getMoc() );
+      Vector<Obj> v = new Vector<>();
       
       for( int i=0; i<p.length; i++ ) {
          Plan pCat = p[i];
@@ -168,7 +168,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
          
          // Détermination des plans concernés
          String label="";
-         ArrayList<Plan> v = new ArrayList<Plan>();
+         ArrayList<Plan> v = new ArrayList<>();
          for( int i=1; i<ch.length; i++ ) {
             Plan pCat = getPlan(ch[i]);
             if( pCat==null ) continue;

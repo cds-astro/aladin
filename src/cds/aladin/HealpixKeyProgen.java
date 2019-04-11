@@ -44,7 +44,12 @@ public class HealpixKeyProgen extends HealpixKeyCat {
    
    /** Fournit un Inputstream à partir du bloc de byte lu */
    protected InputStream getInputStreamFromStream() throws Exception {
-      return json2TSV(stream);
+      try {
+         return json2TSV(stream);
+      } catch( Exception e ) {
+         if( planBG.aladin.levelTrace>=3 ) e.printStackTrace();
+         throw e;
+      }
    }
    
 //   static boolean flagP=true;
@@ -66,6 +71,7 @@ public class HealpixKeyProgen extends HealpixKeyCat {
 //            if( flagP ) System.out.print("\n"+s1);
             out.write( s1 );
          }
+         
          s1 = parseJson(s,leg);
 //         if( flagP ) System.out.print(s1);
          out.write( s1 );
@@ -239,22 +245,72 @@ public class HealpixKeyProgen extends HealpixKeyCat {
    // Procédure interne : mode=0 pour récupérer les clés, mode=1 pour les valeurs
    private ArrayList<String> getJson(String s,int mode) {
       ArrayList<String> res = new ArrayList<>(5);
-      char quote='"';
-      int start=s.indexOf(quote);
-      if( start==-1 ) {
-         quote='\'';
-         start=s.indexOf(quote);
-      }
-      int end=0;
-      for( int n=0; start>=0; n++, start = s.indexOf(quote,end+1) ) {
-         end = s.indexOf(quote,start+1);
-         if( end==-1 ) break;
-         if( (n%2) != mode ) continue;
-         String k = s.substring(start+1,end);
-         res.add(k);
+      
+      char a[] = s.toCharArray();
+      int m=0;
+      int start=0;
+      int crochet=0;
+      boolean backslash=false;
+      char quote=0;
+      
+      for( int i=0; i<a.length; i++ ) {
+         char c = a[i];
+         switch( m ) {
+            case 0 : // Avant le premier champ
+               if( c=='"' | c=='\'' ) { m=1; quote=c; start=i; }
+               break;
+            case 1 : // Dans le nom du champ
+               if( c==quote && !backslash ) { if( mode==0 ) res.add( Tok.unQuote(s.substring(start,i+1)) ); m=2; }
+               break;
+            case 2 : // Avant le ":"
+               if( c==':' ) m=3;
+               break;
+            case 3 : // Avant la valeur
+               if( c=='[' ) { m=4; start=i; }
+               else if( !Character.isSpace(c) ) { 
+                  start=i;
+                  if( c=='"' || c=='\'' ) { m=5; quote=c; }
+                  else m=6;  
+               }
+               break;
+            case 4 : // Dans un tableau
+               if( c=='[' && !backslash ) crochet++;
+               else if( c==']' && !backslash ) {
+                  crochet--;
+                  if( crochet==0 ) { if( mode==1 ) res.add( s.substring(start,i+1) ); m=0; }
+               }
+               break;
+            case 5: // Dans une valeur quotée
+               if( c==quote && !backslash ) { if( mode==1 ) res.add( Tok.unQuote(s.substring(start,i+1)) ); m=0; }
+               break;
+            case 6 : // Dans une valeur non quotée
+               if( Character.isSpace(c) || c=='}' ) { if( mode==1 ) res.add( s.substring(start,i) ); m=0; }
+               break;
+         }
+         backslash = c=='\\';
       }
       return res;
    }
+   
+//   private ArrayList<String> getJson(String s,int mode) {
+//      ArrayList<String> res = new ArrayList<>(5);
+//      char quote='"';
+//      int start=s.indexOf(quote);
+//      if( start==-1 ) {
+//         quote='\'';
+//         start=s.indexOf(quote);
+//      }
+//      int end=0;
+//      for( int n=0; start>=0; n++, start = s.indexOf(quote,end+1) ) {
+//         end = s.indexOf(quote,start+1);
+//         if( end==-1 ) break;
+//         if( (n%2) != mode ) continue;
+//         String k = s.substring(start+1,end);
+//         res.add(k);
+//      }
+//      return res;
+//   }
+
    
    private static String STC = "POLYGON J2000 ";
    // Méthode pour récupérer le centre de chaque observation à partir du STC d'une ligne JSON progen

@@ -2294,6 +2294,7 @@ final public class TableParser implements XMLConsumer {
          else if( resourceSub!=null ) consumer.setResourceInfo(resourceSub,getStringTrim(ch,start,length));
       } catch( Exception e ) {
          if( Aladin.levelTrace==4 ) System.err.println("TableParser.character() exception: table line "+xmlparser.getCurrentLine());
+         if( Aladin.levelTrace>4 ) e.printStackTrace();
          throw e;
       }
    }
@@ -2603,7 +2604,7 @@ final public class TableParser implements XMLConsumer {
       // Dans le cas d'oubli du caractère de retour à la ligne sur la dernière ligne, et qu'en
       // plus le dernier champ est vide
       if( record!=null && row==record.length-1 && cur==end && cur>0 && ch[cur-1]!=rs ) {
-         System.out.println("dernier champ vide avec absence de retour à la ligne");
+         // dernier champ vide avec absence de retour à la ligne
          record[row++]="";
       }
       
@@ -2776,8 +2777,7 @@ final public class TableParser implements XMLConsumer {
          // Ou une entete d'une seule ligne (2)
          // On va tester si les deux premiers champs (cas 1) ou les
          // champs repérés de position (cas 2) sont uniquement numériques...
-         if( n==0
-               || (n==1 && (qualRA<500 && qualDEC<500 || qualX<700 && qualY<700)) ) {
+         if( n==0 || (n==1 && (qualRA<500 && qualDEC<500 || qualX<700 && qualY<700)) ) {
             int p=0,r=1;   // cas 1
             if( n==1 ) {   // cas 2
                if( qualRA<500 ) { p=nRA; r=nDEC; }
@@ -2805,6 +2805,11 @@ final public class TableParser implements XMLConsumer {
                posChooser();
                break;
             }
+            
+         // Faut bien sortir de l'entete
+         } else {
+            flagDejaLu=true;
+            break;
          }
 
          // Détermination des colonnes de position RA,DEC ou X,Y
@@ -2869,7 +2874,7 @@ final public class TableParser implements XMLConsumer {
       // Traitement d'un message d'erreur
       if( nbRecord==0 ) {
          s = getStringTrim(ch,start,length>200?200:length);
-         throw new Exception("Data parsing error:\n \n["+s+"...]");
+         throw new Exception("Data parsing error (no record found):\n \n["+s+"...]");
       }
    }
 

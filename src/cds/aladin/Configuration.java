@@ -79,6 +79,7 @@ import javax.swing.event.ChangeListener;
 
 import cds.aladin.prop.PropPanel;
 import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
@@ -229,7 +230,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private String          currentLang="En";     // Le suffixe de la langue courante
    protected LinkedBlockingDeque<String> lastFile;  // La liste des derniers fichiers chargés
    protected LinkedHashMap<String,String>  filterExpr; // Liste des filtres pour l'arbre des découvertes -(name->filterRule)
-   protected HashMap<String, HealpixMoc>   filterMoc;  // Liste des régions associées aux filtres
+   protected HashMap<String, SpaceMoc>   filterMoc;  // Liste des régions associées aux filtres
 
    // Les variables pour la gestion des champs de préférences
 //   private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
@@ -2123,7 +2124,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
                if( name.equals(Directory.ALLCOLL) ) continue;
                if( name.equals(Directory.MYLIST) ) continue;
                String expr = filterExpr.get(name);
-               HealpixMoc moc = filterMoc.get(name);
+               SpaceMoc moc = filterMoc.get(name);
                if( moc==null && (expr==null || expr.equals("*") || expr.equals("")) ) continue;
                
                String mocInfo = moc==null ? "" : MultiMoc.INTERSECT[ DirectoryFilter.getIntersect(moc) ]+":";
@@ -2707,7 +2708,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
    
    /** Mémorise un nouveau filtre sur l'arbre des collections */
-   protected void setDirFilter(String name,String expr, HealpixMoc moc) {
+   protected void setDirFilter(String name,String expr, SpaceMoc moc) {
       filterExpr.put(name, expr);
       if( moc!=null ) filterMoc.put(name,moc);
    }

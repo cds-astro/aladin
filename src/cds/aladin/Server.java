@@ -31,6 +31,7 @@ import static cds.aladin.Constants.REGEX_TIME_RANGEINPUT;
 import static cds.aladin.Constants.SPACESTRING;
 import static cds.aladin.Constants.TAP;
 import static cds.aladin.Constants.TIME;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -791,7 +792,7 @@ public void layout() {
     		
     		if (userSpecified!=null) {
     			userSpecified.toRangeSet();
-            	if (!posBounds.rangeSet.containsAll(userSpecified.rangeSet)) {
+            	if (!posBounds.spaceRange.contains(userSpecified.spaceRange)) {
     				result = TARGETOUTOFBOUNDSMESSAGE;
     			}
 			} else {
@@ -2127,7 +2128,7 @@ public void layout() {
 	 */
 	public void submitTapServerRequest(boolean sync, String name, String url, String queryString) {
 		ADQLQuery query = null;
-		Map<String, Object> requestParams = new HashMap<String, Object>();
+		Map<String, Object> requestParams = new HashMap<>();
 		try {
 			query = checkQuery(requestParams);
 		} catch (UnresolvedIdentifiersException e) {

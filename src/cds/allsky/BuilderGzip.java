@@ -61,7 +61,8 @@ public class BuilderGzip extends Builder {
     * Attention: ne change pas pour autant les extensions des fichiers (toujours.fits)
     */
    public void run() throws Exception { 
-      gzipRec(true);
+      context.warning("GZIP action is deprecated => ignored");
+//      gzipRec(true);
    }
    
    public boolean isAlreadyDone() {

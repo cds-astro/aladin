@@ -73,7 +73,9 @@ import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
 import cds.astro.Astrotime;
 import cds.moc.HealpixMoc;
-import cds.moc.TMoc;
+import cds.moc.SpaceMoc;
+import cds.moc.SpaceTimeMoc;
+import cds.moc.TimeMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -1028,24 +1030,44 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 //         final Frame frameProp = this;
          
          if( plan.type==Plan.ALLSKYMOC ) {
-            double cov = pmoc.getMoc().getCoverage();
+            double cov = ((SpaceMoc)pmoc.getMoc()).getCoverage();
             double degrad = Math.toDegrees(1.0);
             double skyArea = 4.*Math.PI*degrad*degrad;
-            //         final long mocSize = pmoc.getMoc().getSize();
             PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
-            PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
-                  +" (moc order="+pmoc.getMoc().getMocOrder()+")"),g,c);
-            //         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
+            PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(((SpaceMoc)pmoc.getMoc()).getAngularRes())
+                  +" (order="+pmoc.getMoc().getMocOrder()+")"),g,c);
          }
 
-         if( plan.type==Plan.ALLSKYTMOC ) {
-            TMoc moc = (TMoc) ((PlanTMoc)plan).moc;
+         else if( plan.type==Plan.ALLSKYTMOC ) {
+            TimeMoc moc = (TimeMoc) ((PlanTMoc)plan).moc;
             long nbSec = moc.getUsedArea();
             int order = moc.getMocOrder();
             PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( moc.getTimeMin()) ), g,c);
             PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( moc.getTimeMax()) ), g,c);
             PropPanel.addCouple(p,"Accuracy", new JLabel( Util.getTemps(  1000*( 1<<(2*(HealpixMoc.MAXORDER-order))))+" (order="+order+")" ), g,c);
             PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000000, true) ), g,c);
+         }
+
+         else if( plan.type==Plan.ALLSKYSTMOC ) {
+            try {
+               SpaceMoc spaceMoc =  ((SpaceTimeMoc) ((PlanMoc)plan).moc).getSpaceMoc();
+               double cov = spaceMoc.getCoverage();
+               double degrad = Math.toDegrees(1.0);
+               double skyArea = 4.*Math.PI*degrad*degrad;
+               PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+               PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(spaceMoc.getAngularRes())
+                     +" (order="+spaceMoc.getMocOrder()+")"),g,c);
+
+               TimeMoc timeMoc =  ((SpaceTimeMoc) ((PlanMoc)plan).moc).getTimeMoc();
+               long nbSec = timeMoc.getUsedArea();
+               int order = timeMoc.getMocOrder();
+               PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMin()) ), g,c);
+               PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMax()) ), g,c);
+               PropPanel.addCouple(p,"Time Accuracy", new JLabel( Util.getTemps(  1000*( 1<<(2*(HealpixMoc.MAXORDER-order))))+" (order="+order+")" ), g,c);
+               
+            } catch( Exception e1 ) {
+               if( aladin.levelTrace>=3 ) e1.printStackTrace();
+            }
          }
 
 

@@ -62,6 +62,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -90,6 +91,7 @@ import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
 import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.mocmulti.BinaryDump;
 import cds.mocmulti.MocItem;
 import cds.mocmulti.MocItem2;
@@ -1035,7 +1037,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // System.out.println("filter("+name+")");
 
       String expr = name.equals(ALLCOLL) ? "*" : aladin.configuration.filterExpr.get(name);
-      HealpixMoc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
+      SpaceMoc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
 
       if( expr != null || moc != null ) {
          if( directoryFilter == null ) directoryFilter = new DirectoryFilter(aladin);
@@ -1575,7 +1577,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param moc filtrage spatial, null si aucun
     * @param intersect pour le filtrage spatial: MultiMoc.OVERLAPS, ENCLOSED ou COVERS
     */
-   protected void resumeFilter(String expr, HealpixMoc moc, int intersect) {
+   protected void resumeFilter(String expr, SpaceMoc moc, int intersect) {
       try {
 
          // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
@@ -1649,7 +1651,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param moc filtrage spatial, null si aucun
     * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     */
-   private void checkFilter(String expr, HealpixMoc moc, int intersect) throws Exception {
+   private void checkFilter(String expr, SpaceMoc moc, int intersect) throws Exception {
 
       // Filtrage par expression
       // long t0 = System.currentTimeMillis();
@@ -1668,7 +1670,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       for( TreeObjDir to : dirList ) to.setHidden(!set.contains(to.internalId));
    }
 
-   private HealpixMoc oldMocSpatial = null;
+   private SpaceMoc oldMocSpatial = null;
 
    private ArrayList<String> oldIds = null;
 
@@ -1680,7 +1682,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     * @return la liste des IDs qui matchent
     */
-   private ArrayList<String> filtrageSpatial(HealpixMoc moc, int intersect) {
+   private ArrayList<String> filtrageSpatial(SpaceMoc moc, int intersect) {
       if( moc == null ) return null;
       if( oldMocSpatial != null && intersect == oldIntersect && oldMocSpatial.equals(moc) ) return oldIds;
 
@@ -1698,7 +1700,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /**
     * Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire => voir filtrageSpatial(...)
     */
-   private ArrayList<String> filtrageSpatial1(HealpixMoc moc, int intersect) throws Exception {
+   private ArrayList<String> filtrageSpatial1(SpaceMoc moc, int intersect) throws Exception {
       String url = aladin.glu.getURL("MocServer").toString();
       int i = url.lastIndexOf('?');
       if( i > 0 ) url = url.substring(0, i);
@@ -1747,7 +1749,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param size taille à couvrir (en degrés)
     * @return order HEALPix approprié
     */
-   private int getAppropriateOrder(double size) {
+   static public int getAppropriateOrder(double size) {
       int order = 4;
       if( size == 0 ) order = HealpixMoc.MAXORDER;
       else {
@@ -1862,7 +1864,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             int i = 0;
             mocQuery.setCheckConsistencyFlag(false);
 //            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
-            for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), false) ) {
+            for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), true) ) {
                mocQuery.add(order, n);
                if( (++i) % 1000 == 0 ) mocQuery.checkAndFix();
             }
@@ -4304,7 +4306,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // CS et assimilés
             if( csBx != null && csBx.isSelected() ) {
                if( tooMany(treeObjs.size()) ) return;
-               for( TreeObjDir to : treeObjs ) {
+               
+               
+               for( TreeObjDir to : removeDoublon(treeObjs) ) {
                   if( to.getIsIn() == 0 ) continue; // Je n'interroge pas les collections hors champs
                   if( to.hasSIA() ) to.loadSIA(cone);
                   else if( to.hasSSA() ) to.loadSSA(cone);
@@ -4367,6 +4371,51 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       }
    }
+   
+   // Suppression des doublons SIA, SSA et CS éventuels pour faire plaisir à Markus
+   private ArrayList<TreeObjDir> removeDoublon( ArrayList<TreeObjDir> treeObjs ) {
+      
+      LinkedHashMap<String, TreeObjDir> map = new LinkedHashMap<>();
+      for( TreeObjDir to : treeObjs ) {
+         if( to.getIsIn() == 0 ) continue; // Je n'interroge pas les collections hors champs
+         if( to.hasSIA() ) {
+            String urlList = resolveServiceUrl("SIA",to.internalId);
+            if( urlList!=null ) {
+               Tok tokUrlList = new Tok(urlList,"\t");
+               while( tokUrlList.hasMoreTokens() ) {
+                  String u = tokUrlList.nextToken();
+                  if( map.get(u)==null ) map.put(u,to);
+               }
+            }
+         }
+         else if( to.hasSSA() ) {
+            String urlList = resolveServiceUrl("SSA",to.internalId);
+            if( urlList!=null ) {
+               Tok tokUrlList = new Tok(urlList,"\t");
+               while( tokUrlList.hasMoreTokens() ) {
+                  String u = tokUrlList.nextToken();
+                  if( map.get(u)==null ) map.put(u,to);
+               }
+            }
+         }
+         else if( to.hasGlobalAccess() ) map.put( to.getGlobalAccessCmd(), to);
+         else {
+            String urlList = resolveServiceUrl("CS",to.internalId);
+            if( urlList!=null ) {
+               Tok tokUrlList = new Tok(urlList,"\t");
+               while( tokUrlList.hasMoreTokens() ) {
+                  String u = tokUrlList.nextToken();
+                  if( map.get(u)==null ) map.put(u,to);
+               }
+            }
+         }
+      }
+      
+      ArrayList<TreeObjDir> n = new ArrayList<>();
+      for( TreeObjDir to : map.values() ) n.add( to);
+      return n;
+   }
+   
    static private enum MultiMocMode {
       EACH, UNION, INTER
    }

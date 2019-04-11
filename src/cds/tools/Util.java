@@ -1908,7 +1908,7 @@ public final class Util {
                      MyInputStream in=null;
                      try {
                         in = new MyInputStream(new FileInputStream(f));
-                        if( (in.getType()&MyInputStream.HPXMOC)!=0 ) return true;
+                        if( (in.getType()&MyInputStream.SMOC)!=0 ) return true;
                      } catch( Exception e ) { }
                      finally { if( in!=null ) try { in.close(); } catch(Exception e) {} }
                      return false;

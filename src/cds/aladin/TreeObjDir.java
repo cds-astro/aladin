@@ -1079,7 +1079,7 @@ public class TreeObjDir extends TreeObj implements Propable {
      exec( addBrowse( getSIACmd()+" "+cone) );
    }
    protected String getSIABkm() { return addBrowse( getSIACmd()+" $TARGET $RADIUS"); }
-   private String getSIACmd() {
+   protected String getSIACmd() {
       String gluTag=null;
       
       // URL de base ?
@@ -1099,7 +1099,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Génération et exécution de la requête script correspondant à un accès global */
    protected void loadGlobalAccess() {exec( addBrowse( getGlobalAccessCmd(), false ) ); }
    protected String getGlobalAccessBkm() { return addBrowse( getGlobalAccessCmd(), false ); }
-   private String getGlobalAccessCmd() {
+   protected String getGlobalAccessCmd() {
       String cmd = null;
       
       String id = Tok.quote(internalId);
@@ -1142,8 +1142,8 @@ public class TreeObjDir extends TreeObj implements Propable {
       exec( addBrowse(  getCSCmd()+" "+cone));
    }
    protected String getCSBkm() { return addBrowse( getCSCmd(false)+" $TARGET $RADIUS" ); }
-   private String getCSCmd() { return getCSCmd(true); }
-   private String getCSCmd(boolean flagReplace) {
+   protected String getCSCmd() { return getCSCmd(true); }
+   protected String getCSCmd(boolean flagReplace) {
       String cmd = null;
       String allcolumns = aladin.directory.getParam("QueryCatColumns");
       String label="";

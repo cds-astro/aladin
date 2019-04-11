@@ -80,6 +80,10 @@ import javax.swing.SwingUtilities;
 
 import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
+import cds.moc.Moc;
+import cds.moc.Range;
+import cds.moc.SpaceMoc;
+import cds.moc.TimeMoc;
 import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -388,7 +392,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          selected=true;
          aladin.view.setSelectFromView(true);
       }
-
+      
       aladin.view.setZoomRaDecForSelectedViews(nz,coo,this,true,false);
       //      if( aladin.view.onUndoTop() ) aladin.view.memoUndo(this, coo, null);
    }
@@ -512,7 +516,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isPlot() ) {
          plot.free();
          plot=null;
-//         newView(1);
          reInitZoom(true);
          repaint();
       } else {
@@ -571,7 +574,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       menuLabel.setText( view.labelOn() ? view.MLABELON:view.MLABELOFF);
       menuLock.setEnabled( !isProjSync() );
       menuLock.setSelected(locked);
-      menuPlot.setEnabled(pref.isCatalog());
+      menuPlot.setEnabled(pref.isCatalog()||pref instanceof PlanSTMoc );
       menuPlot.setSelected(isPlot());
       //      menuMore.setEnabled( !aladin.view.allImageWithView());
       //      menuNext.setEnabled( aladin.calque.getNbPlanImg()>1 );
@@ -1166,8 +1169,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( this.rzoom==null || isFree() ) return;
 
       // Mémorisation des paramètres courants du zoom
-      double pwidth = rzoom.width;
-      double pheight = rzoom.height;
+//      double pwidth = rzoom.width;
+//      double pheight = rzoom.height;
       double z = zoom;
       double x = xzoomView;
       double y = yzoomView;
@@ -1178,7 +1181,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( rzoom==null ) return;
 
       // Determination du facteur d'accroissement
-      double fct = Math.max( rzoom.width/pwidth, rzoom.height/pheight );
+//      double fct = Math.max( rzoom.width/pwidth, rzoom.height/pheight );
 
       // Détermination du facteur de zoom le plus adapté pour conserver
       // la même portion de l'image visible
@@ -1516,7 +1519,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( plot!=null ) { plot.free(); plot=null; }
          
       } else {
-         if( p.type== Plan.ALLSKYTMOC ) {
+         if(p.isTimeMoc() ) {
             plot = new Plot(this);
             SwingUtilities.invokeLater(new Runnable() {
                public void run() { plot.adjustPlot(); }
@@ -5042,6 +5045,52 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       return coo;
 
    }
+   
+   /** Calcule le MOC couvrant la vue courante (en time ou en space) */
+   protected Moc getMoc() { return getMoc(-1); }
+   protected Moc getMoc( int order) {
+      if( !Projection.isOk( getProj()) && !isPlotTime() ) return null;
+      
+      try {
+         // Cas temporel
+         if( isPlotTime() ) {
+            long tmin = (long)( plot.getMin()*TimeMoc.DAYMICROSEC );
+            long tmax = (long)( plot.getMax()*TimeMoc.DAYMICROSEC );
+            TimeMoc moc = new TimeMoc();
+            if( order>=0 ) moc.setMocOrder(order);
+            moc.spaceRange =  new Range( new long[] { tmin, tmax } );
+            moc.toHealpixMoc();
+            return moc;
+         }
+            
+         // Cas spatial
+          if( isAllSky() ) return new SpaceMoc("0/0-11");
+          
+          // Détermination de l'order
+          Coord c = getCooCentre();
+          double size = getTaille();
+          if( order==-1 ) order = Directory.getAppropriateOrder(size);
+        
+          SpaceMoc spaceMoc = new SpaceMoc(order);
+          int i = 0;
+          spaceMoc.setCheckConsistencyFlag(false);
+          for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), true) ) {
+             spaceMoc.add(order, n);
+             if( (++i) % 10000 == 0 ) spaceMoc.checkAndFix();
+          }
+          spaceMoc.setCheckConsistencyFlag(true);
+          
+//          Coord [] corners = getCooCorners( getProj() );
+//          ArrayList<double[]> radecList = new ArrayList<>();
+//          for (Coord rectCoord : corners) {
+//             radecList.add( new double[]{rectCoord.al, rectCoord.del } );
+//          }
+          
+          return spaceMoc;
+        
+      } catch( Exception e ) {  if( aladin.levelTrace>3  ) e.printStackTrace(); }
+      return null;
+   }
 
    /** Retourne les coordonnées des 4 coins dans le sens HG,HD,BD,BG */
    protected Coord [] getCooCorners() { return getCooCorners(pref.projd); }
@@ -6483,8 +6532,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
             if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
             
-            // Seuls les catalogues (et éventuellement les surcharges graphiques et TMOC) sont traçables dans un plot
-            if( isPlot() && !p.isCatalog() && !p.isTool() && p.type!=Plan.ALLSKYTMOC ) continue;
+            // Seuls les catalogues (et éventuellement les surcharges graphiques et TMOC/STMOC) sont traçables dans un plot
+            if( isPlot() && !p.isCatalog() && !p.isTool() && !p.isTimeMoc() ) continue;
 
             // Repérage d'un éventuel plan sous la souris dans le stack
             if( p.underMouse && p.isImage() ) planUnderMouse = (PlanImage)p;

@@ -21,8 +21,9 @@
 
 package cds.aladin;
 
-import cds.moc.HealpixMoc;
-import cds.moc.TMoc;
+import cds.moc.Moc;
+import cds.moc.SpaceMoc;
+import cds.moc.TimeMoc;
 import cds.tools.Util;
 
 /** Génération d'un MOC de manière algorythmique
@@ -69,22 +70,21 @@ public class PlanTMocAlgo extends PlanTMoc {
       aladin.trace(3,"TMOC computation: "+Plan.Tp[type]+" => "+s);
       
       try {
-         moc = (HealpixMoc)p1.getMoc().clone();
-         if( op==COMPLEMENT ) moc = moc.complement();
-         else if( op==TOORDER ) moc.setMocOrder(order);
+         moc = p1.getMoc().clone();
+         /*if( op==COMPLEMENT ) moc = moc.complement();
+         else */if( op==TOORDER ) moc.setMocOrder(order);
          else {
             for( int i=1; i<pList.length; i++ ) {
-               HealpixMoc m1=moc;
-               HealpixMoc m2=pList[i].toReferenceFrame(m1.getCoordSys());
+               Moc m1=moc;
+               SpaceMoc m2=pList[i].toReferenceFrame(m1.getCoordSys());
                switch(op) {
                   case UNION :        moc = m1.union(        m2); break;
                   case INTERSECTION : moc = m1.intersection( m2 ); break;
                   case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-                  case DIFFERENCE  :  moc = m1.difference(   m2 ); break;
+                  case DIFFERENCE  :  moc = ((TimeMoc)m1).difference(   m2 ); break;
                }
             }
          }
-         if( !(moc instanceof TMoc) ) moc.setMinLimitOrder(3);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

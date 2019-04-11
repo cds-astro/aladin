@@ -34,6 +34,7 @@ import cds.aladin.PlanImage;
 import cds.aladin.Tok;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.Util;
 
 public class BuilderRgb extends BuilderTiles {
@@ -208,7 +209,7 @@ public class BuilderRgb extends BuilderTiles {
             // Ajustement de la région qu'il faudra calculer
             HealpixMoc m = moc[c] = loadMoc( inputs[c] );
             if( context.moc==null ) context.moc = m;
-            else context.moc = context.moc.union(m);
+            else context.moc = (SpaceMoc)context.moc.union(m);
             
            // Vérification de la cohérence des systèmes de coordonnées
             String f = getFrameFromProp( prop[c] );
@@ -228,7 +229,7 @@ public class BuilderRgb extends BuilderTiles {
       this.output = path;
 
       if( context instanceof ContextGui ) {
-         HealpixMoc m = context.moc;
+         SpaceMoc m = context.moc;
          ((ContextGui)context).mainPanel.clearForms();
          context.moc = m;
       }
@@ -259,7 +260,7 @@ public class BuilderRgb extends BuilderTiles {
       }
 
       // détermination de la zone à calculer
-      if( context.mocArea!=null ) context.moc = context.moc.intersection( context.mocArea );
+      if( context.mocArea!=null ) context.moc = (SpaceMoc)context.moc.intersection( context.mocArea );
       
       // Faut-il un filtre gaussien
       if( context.gaussFilter ) context.info("Gauss filter activated...");

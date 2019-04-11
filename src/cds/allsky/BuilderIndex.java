@@ -32,7 +32,7 @@ import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -48,7 +48,7 @@ public class BuilderIndex extends Builder {
    private boolean partitioning;
    private double maxRatio;
    private int [] hdu = null;
-   private HealpixMoc area;                // région de travail
+   private SpaceMoc area;                  // région de travail
    private boolean flagAppend;             // true => inutile de vérifier les doublons
    private int maxOverlays;                // Estimation du nombre max d'overlays 
                                            // (en décomptant le nombre d'entrées dans chaque tuile de HpxFinder=

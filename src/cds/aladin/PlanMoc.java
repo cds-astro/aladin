@@ -29,8 +29,9 @@ import java.util.Iterator;
 
 import cds.moc.Array;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.Moc;
 import cds.moc.MocCell;
+import cds.moc.SpaceMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
@@ -51,17 +52,17 @@ public class PlanMoc extends PlanBGCat {
    static final public int DRAW_FILLIN   = 0x4;      // Remplissage avec aplat de demi-opacité
    static final public int DRAW_PERIMETER     = 0x8; // Tracé du périmètres
 
-   protected HealpixMoc moc = null;                 // Le MOC
+   protected Moc moc = null;                 // Le MOC
    protected int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
 
-   protected HealpixMoc [] arrayMoc =null;        // Le MOC à tous les ordres */
+   protected Moc [] arrayMoc =null;        // Le MOC à tous les ordres */
    protected ArrayList<Hpix> arrayHpix = null;    // Liste des cellules correspondant aux cellules tracés (order courant)
    private ArrayList<Hpix> arrayPeri = null;      // Liste des cellules correspondant au périmètre tracé (ordre courant)
    
    public PlanMoc(Aladin a) { super(a); }
 
    /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
-   protected PlanMoc(Aladin aladin, HealpixMoc moc, String label, Coord c, double radius) {
+   protected PlanMoc(Aladin aladin, SpaceMoc moc, String label, Coord c, double radius) {
       this(aladin,null,moc,label,c,radius);
    }
 
@@ -69,10 +70,10 @@ public class PlanMoc extends PlanBGCat {
    protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
       this(aladin,in,null,label,c,radius);
    }
-
-   protected PlanMoc(Aladin aladin, MyInputStream in, HealpixMoc moc, String label, Coord c, double radius) {
+   
+   protected PlanMoc(Aladin aladin, MyInputStream in, SpaceMoc moc, String label, Coord c, double radius) {
       super(aladin);
-      arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
+      arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       this.moc   = moc;
       useCache = false;
@@ -101,29 +102,29 @@ public class PlanMoc extends PlanBGCat {
       super.copy(p1);
       PlanMoc pm = (PlanMoc)p1;
       pm.frameOrigin=frameOrigin;
-      pm.moc = (HealpixMoc)moc.clone();
+      pm.moc = moc.clone();
       pm.wireFrame=wireFrame;
       pm.gapOrder=gapOrder;
       pm.arrayHpix = arrayPeri = null;
-      pm.arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
+      pm.arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
    }
    
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
-      double cov = moc.getCoverage();
+      double cov = ((SpaceMoc)moc).getCoverage();
       double degrad = Math.toDegrees(1.0);
       double skyArea = 4.*Math.PI*degrad*degrad;
       ADD( buf, "\n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
-      ADD( buf, "\n* Best ang.res: ",Coord.getUnit(moc.getAngularRes()));
+      ADD( buf, "\n* Best ang.res: ",Coord.getUnit(((SpaceMoc)moc).getAngularRes()));
       
       int order = moc.getMocOrder();
       int drawOrder = getDrawOrder();
-      ADD( buf,"\n","* MOC order: "+ (order==drawOrder ? order+"" : "draw:"+drawOrder+"/"+order));
+      ADD( buf,"\n","* SMOC order: "+ (order==drawOrder ? order+"" : "draw:"+drawOrder+"/"+order));
    }
 
    /** Changement de référentiel si nécessaire */
-   public HealpixMoc toReferenceFrame(String coordSys) throws Exception {
-      HealpixMoc moc1 = convertTo(moc,coordSys);
+   public SpaceMoc toReferenceFrame(String coordSys) throws Exception {
+      SpaceMoc moc1 = convertTo((SpaceMoc)moc,coordSys);
       if( moc!=moc1 ) {
          aladin.trace(2,"Moc reference frame conversion: "+moc.getCoordSys()+" => "+moc1.getCoordSys());
       }
@@ -131,7 +132,7 @@ public class PlanMoc extends PlanBGCat {
    }
 
    /** Changement de référentiel si nécessaire */
-   static public HealpixMoc convertTo(HealpixMoc moc, String coordSys) throws Exception {
+   static public SpaceMoc convertTo(SpaceMoc moc, String coordSys) throws Exception {
       if( coordSys.equals( moc.getCoordSys()) ) return moc;
 
       char a = moc.getCoordSys().charAt(0);
@@ -141,7 +142,7 @@ public class PlanMoc extends PlanBGCat {
 
       Healpix hpx = new Healpix();
       int order = moc.getMaxOrder();
-      HealpixMoc moc1 = new HealpixMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
+      SpaceMoc moc1 = new SpaceMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
       moc1.setCheckConsistencyFlag(false);
       long onpix1=-1;
       Iterator<Long> it = moc.pixelIterator();
@@ -164,7 +165,7 @@ public class PlanMoc extends PlanBGCat {
    
    /** Retourne le Moc.maxOrder réel, même pour les vieux MOCs dont le Norder est généralement
     * faux */
-   static protected int getRealMaxOrder(HealpixMoc m) {
+   static protected int getRealMaxOrder(SpaceMoc m) {
       int nOrder = m.getMaxOrder();
       if( nOrder<=0 ) return nOrder;
       Array a;
@@ -174,7 +175,7 @@ public class PlanMoc extends PlanBGCat {
    
    // POUR LE MOMENT ON N'UTILISE PAS ENCORE CETTE FONCTION
    // Création du Pcat qui contient les lignes du périmètre du MOC
-//   private Pcat createPerimetre(ViewSimple v,HealpixMoc moc) throws Exception {
+//   private Pcat createPerimetre(ViewSimple v,SpaceMoc moc) throws Exception {
 //      Pcat pcat = new Pcat(this);
 //      ArrayList<double[]> a = getPerimeter(moc);
 //      Ligne oo=null;
@@ -201,7 +202,7 @@ public class PlanMoc extends PlanBGCat {
     * @return
     * @throws Exception
     */
-   static public String createPerimeterString(HealpixMoc moc) throws Exception {
+   static public String createPerimeterString(SpaceMoc moc) throws Exception {
       StringBuilder res = null;
       ArrayList<double[]> a = getPerimeter(moc);
 
@@ -221,12 +222,12 @@ public class PlanMoc extends PlanBGCat {
     * @return
     * @throws Exception
     */
-   static public ArrayList<double[]> getPerimeter(HealpixMoc moc) throws Exception {
+   static public ArrayList<double[]> getPerimeter(SpaceMoc moc) throws Exception {
       if( moc==null ) return null;
       int maxOrder = getRealMaxOrder(moc);
       ArrayList<double[]> a = new ArrayList<>();
       if( maxOrder==-1 || moc.isAllSky() ) return a;
-      HealpixMoc done = new HealpixMoc( moc.getCoordSys(), moc.getMinLimitOrder(),maxOrder );
+      SpaceMoc done = new SpaceMoc( moc.getCoordSys(), moc.getMinLimitOrder(),maxOrder );
 //      long nside = CDSHealpix.pow2( maxOrder );
 
       Iterator<Long> it = moc.pixelIterator();
@@ -239,7 +240,7 @@ public class PlanMoc extends PlanBGCat {
       return a;
    }
    
-   static private void parcoursBord(int order, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
+   static private void parcoursBord(int order, SpaceMoc moc, SpaceMoc done, ArrayList<double[]> a, 
          int maxOrder, long pix, int sens, int rec ) throws Exception {
       if( done.isIntersecting(maxOrder,pix) ) return;
       
@@ -310,7 +311,7 @@ public class PlanMoc extends PlanBGCat {
 
    // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'ils sont en dehors du MOC   
    // Ordre des voisins => W, N, E, S
-   static private long [] getVoisins(int order, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+   static private long [] getVoisins(int order, SpaceMoc moc, int maxOrder,long npix) throws Exception {
       long [] voisins = new long[4];
       long [] neib = CDSHealpix.neighbours(order,npix);
       for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {
@@ -321,7 +322,7 @@ public class PlanMoc extends PlanBGCat {
    
    // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'il n'y en a pas du même ordre   
    // Ordre des voisins => W, N, E, S
-   private long [] getVoisinsSameOrder(int order, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+   private long [] getVoisinsSameOrder(int order, SpaceMoc moc, int maxOrder,long npix) throws Exception {
       long [] voisins = new long[4];
       long [] neib = CDSHealpix.neighbours(order,npix);
       for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {
@@ -333,7 +334,7 @@ public class PlanMoc extends PlanBGCat {
    protected int getMocOrder() { return moc.getMocOrder(); }
 
    /** Retourne le Moc */
-   protected HealpixMoc getMoc() { return moc; }
+   protected Moc getMoc() { return moc; }
 
    protected void suiteSpecific() { isOldPlan=false; }
    protected boolean isSync() { return isReady(); }
@@ -381,10 +382,10 @@ public class PlanMoc extends PlanBGCat {
    }
    
    /** Retourne une chaine décrivant le pourcentage de couverture */
-   public String getPropCoverage() { return Util.myRound(moc.getCoverage()); }
+   public String getPropCoverage() { return Util.myRound(((SpaceMoc)moc).getCoverage()); }
 
    /** Retourne une chaine décrivant le MOC order */
-   public String getPropMocOrder() { return getRealMaxOrder(moc)+""; }
+   public String getPropMocOrder() { return getRealMaxOrder((SpaceMoc)moc)+""; }
 
    protected boolean isCatalog() { return false; }
    protected boolean isTime() { return false; }
@@ -397,7 +398,7 @@ public class PlanMoc extends PlanBGCat {
          super.waitForPlan();
          try {
             if( moc==null && dis!=null ) {
-               moc = new HealpixMoc();
+               moc = new SpaceMoc();
                if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
                else moc.readASCII(dis);
             }
@@ -421,7 +422,7 @@ public class PlanMoc extends PlanBGCat {
             double[] radec = CDSHealpix.radecToPolar(new double[] { c.al, c.del });
             try {
                long npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
-               if( !moc.isIntersecting(order, npix) ) co=null;
+               if( !((SpaceMoc)moc).isIntersecting(order, npix) ) co=null;
             } catch( Exception e ) {}
          }
 
@@ -441,10 +442,10 @@ public class PlanMoc extends PlanBGCat {
       }
 
       // Je force le MOC minOrder à 3 pour que l'affichage soit toujours propre
-      if( moc!=null && moc.getMinLimitOrder()<3 ) {
+      if( moc!=null && ((SpaceMoc)moc).getMinLimitOrder()<3 ) {
          try {
             if( moc.getMocOrder()<3 ) moc.setMocOrder(3);   
-            moc.setMinLimitOrder(3);
+            ((SpaceMoc)moc).setMinLimitOrder(3);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
             error="MOC error";
@@ -453,7 +454,7 @@ public class PlanMoc extends PlanBGCat {
       }
       
       // Je rectifie une éventuelle erreur de déclaration du maxOrder
-      int maxOrder = getRealMaxOrder(moc);
+      int maxOrder = getRealMaxOrder((SpaceMoc)moc);
       int o = moc.getMaxOrder();
       if( maxOrder!=o ) {
          try {
@@ -475,17 +476,24 @@ public class PlanMoc extends PlanBGCat {
    protected boolean isDrawn() { return true; }
 
    // Fournit le MOC qui couvre le champ de vue courant
-   protected HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
-      Coord center = getCooCentre(v);
-      long [] pix = getPixList(v,center,order);
-
-      HealpixMoc m = new HealpixMoc();
-      m.setCheckConsistencyFlag(false);
-      m.setCoordSys(moc.getCoordSys());
-      for( int i=0; i<pix.length; i++ ) m.add(order,pix[i]);
-      m.setCheckConsistencyFlag(true);
-      return m;
+   protected SpaceMoc getViewMoc(ViewSimple v,int order) throws Exception {
+      return (SpaceMoc) v.getMoc(order);
    }
+//   protected SpaceMoc getViewMoc(ViewSimple v,int order) throws Exception {
+//      Coord center = getCooCentre(v);
+//      long [] pix = getPixList(v,center,order);
+//      if( pix==null ) {
+//         if( Aladin.levelTrace>=3 ) System.err.println("Bizarre PlanMoc.getViewMoc=null center="+center+" order="+order);
+//         return null;
+//      }
+//
+//      SpaceMoc m = new SpaceMoc();
+//      m.setCheckConsistencyFlag(false);
+//      m.setCoordSys(moc.getCoordSys());
+//      for( int i=0; i<pix.length; i++ ) m.add(order,pix[i]);
+//      m.setCheckConsistencyFlag(true);
+//      return m;
+//   }
 
    static int MAXGAPORDER=3;
    protected int gapOrder=0;
@@ -527,11 +535,14 @@ public class PlanMoc extends PlanBGCat {
       }
    }
    
+   protected SpaceMoc getSpaceMoc() { return (SpaceMoc)moc; }
+   
+   protected  boolean isTimeModified() { return false; }
+   
    // retourne/construit la liste du MOC
    // à l'ordre courant (mode progressif)
-   protected HealpixMoc getHealpixMocLow(int order,int gapOrder) {
-      
-      // On fournit le meilleur MOC dans le cas de la génération d'une image
+   protected Moc getSpaceMocLow(int order,int gapOrder) {
+      final SpaceMoc moc = getSpaceMoc();
       if( aladin.NOGUI ) return moc;
 
       int mo = moc.getMaxOrder();
@@ -542,15 +553,18 @@ public class PlanMoc extends PlanBGCat {
       if( order<5 ) order=5;
       if( order>mo ) order=mo;
       //      System.out.println("getHpixListProg("+o+") => "+order);
-      if( arrayMoc[order]==null ) {
-         arrayMoc[order] = new HealpixMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
+      if( arrayMoc[order]==null || mocSpaceLowReset ) {
+         arrayMoc[order] = new SpaceMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
+         
+         System.out.println("Le nouveau moc spatial ==> "+moc.getSize());
+
          final int myOrder = order;
          final int myMo=mo;
-         (new Thread("PlanMoc building order="+order){
+         Thread t = new Thread("PlanMoc building order="+order){
 
             public void run() {
                Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") running...");
-               HealpixMoc mocLow = myOrder==myMo ? moc : (HealpixMoc)moc.clone();
+               Moc mocLow = myOrder==myMo ? moc : moc.clone();
                try { mocLow.setMocOrder(myOrder); }
                catch( Exception e ) { e.printStackTrace(); }
                arrayMoc[myOrder]=mocLow;
@@ -558,7 +572,11 @@ public class PlanMoc extends PlanBGCat {
                askForRepaint();
             }
 
-         }).start();
+         };
+         
+         // Si petit, je ne threade pas
+         if( moc.getSize()<50000 ) t.run();
+         else t.start();
 
       }
       // peut être y a-t-il déjà un MOC de plus basse résolution déjà prêt
@@ -610,19 +628,32 @@ public class PlanMoc extends PlanBGCat {
 	}
    }
    
-   private long oiz=-1;
+   
+   protected void memoNewTime() { }
+   
+   protected long oiz=-1;
    private boolean oFlagPeri;
    private int oGapOrder;
    
+   protected boolean mocSpaceLowReset=false;
+   protected void mocSpaceLowReset() { mocSpaceLowReset=true; }
+   
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
+      drawInSpaceView(g,v);
+   }
+   
+   private SpaceMoc lastDrawMoc=null;
+   protected SpaceMoc getLastDrawMoc() { return lastDrawMoc; }
+
+      
+   protected void drawInSpaceView(Graphics g, ViewSimple v) {
            
       long t1 = Util.getTime();
       g.setColor(c);
       int max = Math.min(maxOrder(v),maxOrder)+1;
       
       try {
-         HealpixMoc viewMoc = v.isAllSky() ? null : getViewMoc(v,max);
          
          long t=0;
          int myOrder = max+ (v.isAllSky()?0:1);
@@ -630,23 +661,25 @@ public class PlanMoc extends PlanBGCat {
          t = System.currentTimeMillis();
          
          int drawingOrder = 0;
-         HealpixMoc lowMoc = null;
+         Moc lowMoc = null;
          boolean flagPeri = isDrawingPerimeter();
          boolean flagBorder = isDrawingBorder();
          boolean flagFill = isDrawingFillIn();
 
          int gapOrder = this.gapOrder;
-         if( mustDrawFast() ) {
-            gapOrder--;
-         }
+         if( mustDrawFast() ) gapOrder--;
 
          // Génération des Hpix concernées par le champ de vue
-         if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder ) {
-            lowMoc = getHealpixMocLow(myOrder,gapOrder);
-            drawingOrder = getRealMaxOrder(lowMoc);
+         if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder || mocSpaceLowReset ) {
+            lowMoc = getSpaceMocLow(myOrder,gapOrder);
+            mocSpaceLowReset=false;
+            drawingOrder = getRealMaxOrder((SpaceMoc)lowMoc);
             if( drawingOrder==-1 ) return;
             //            System.out.println("Récupération Hpix order "+drawingOrder);
 //            long drawingNside = CDSHealpix.pow2(drawingOrder);
+            
+            lastDrawMoc = getViewMoc(v,max);
+            SpaceMoc viewMoc = v.isAllSky() ? null : lastDrawMoc ;
             ArrayList<Hpix> a1 = new ArrayList<>(10000);
             ArrayList<Hpix> a2 = !flagPeri ? null : new ArrayList<Hpix>(10000);
             Iterator<MocCell> it = lowMoc.iterator();
@@ -658,7 +691,7 @@ public class PlanMoc extends PlanBGCat {
                a1.add(p);
 
                if( flagPeri )  {
-                  long [] vo = getVoisinsSameOrder(p.order, lowMoc, p.order, p.npix);
+                  long [] vo = getVoisinsSameOrder(p.order, (SpaceMoc)lowMoc, p.order, p.npix);
                   if( vo[0]!=-1 && vo[1]!=-1 && vo[2]!=-1 && vo[3]!=-1 ) continue;
 
                   //                  long deb = p.npix << 2*(drawingOrder-p.order);
@@ -671,7 +704,7 @@ public class PlanMoc extends PlanBGCat {
                      long b = bord.next();
                      long pix = base | b;
 
-                     vo = getVoisins(drawingOrder, lowMoc, drawingOrder, pix);
+                     vo = getVoisins(drawingOrder, (SpaceMoc)lowMoc, drawingOrder, pix);
                      int mask = (vo[0]==-1?0x1:0) | (vo[1]==-1?0x2:0) | (vo[2]==-1?0x4:0) | (vo[3]==-1?0x8:0);
                      if( mask!=0 ) {
                         Hpix p1 = new Hpix(drawingOrder, pix, frameOrigin);

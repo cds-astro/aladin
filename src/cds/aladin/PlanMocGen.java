@@ -30,6 +30,7 @@ import java.util.TreeSet;
 import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.CDSHealpix;
 
 /** Generation d'un plan MOC à partir d'une liste de plans (Image, Catalogue ou map HEALPix) 
@@ -116,7 +117,7 @@ public class PlanMocGen extends PlanMoc {
             
             for( long pix : npix ) moc.add(o1,pix);
             n+=npix.length;
-            if( n>10000 ) { moc.checkAndFix(); n=0; }
+            if( n>10000 ) { ((SpaceMoc)moc).checkAndFix(); n=0; }
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
@@ -307,7 +308,7 @@ public class PlanMocGen extends PlanMoc {
             
             // On remet immédiatement au propre le MOC uniquement si on a inséré
             // au-moins 100000 cellules (histoire de ne pas exploser la mémoire)
-            if( nb>100000 ) moc.checkAndFix();
+            if( nb>100000 ) ((SpaceMoc)moc).checkAndFix();
             
          } catch( Exception e ) {
             e.printStackTrace();
@@ -527,7 +528,7 @@ public class PlanMocGen extends PlanMoc {
             if( somme>threshold ) break;
             moc.add(order,npix);
             nb++;
-            if( nb>100000 ) { moc.checkAndFix(); nb=0; }
+            if( nb>100000 ) { ((SpaceMoc)moc).checkAndFix(); nb=0; }
          }
 
          // Conversion en ICRS si nécessaire
@@ -823,8 +824,8 @@ public class PlanMocGen extends PlanMoc {
    protected boolean waitForPlan() {
       try {
          moc = new HealpixMoc();
-         moc.setMinLimitOrder(3);
-         if( order!=-1) moc.setMaxLimitOrder(order);
+         ((SpaceMoc)moc).setMinLimitOrder(3);
+         if( order!=-1) ((SpaceMoc)moc).setMaxLimitOrder(order);
          moc.setCoordSys("C");
          frameOrigin=Localisation.ICRS;
          moc.setCheckConsistencyFlag(false);

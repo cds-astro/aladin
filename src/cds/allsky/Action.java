@@ -62,7 +62,8 @@ public enum Action {
    MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité
    ABORT, PAUSE, RESUME,
-   TMOC;
+   TMOC      ("Build a TMOC.fits based on HpxFinder tiles"),
+   STMOC      ("Build a STMOC.fits based on HpxFinder tiles");
 
    Action() {}
    Action(String s ) { doc=s; }

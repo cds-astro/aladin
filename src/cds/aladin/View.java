@@ -386,8 +386,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       aladin.calque.select.repaint();
    }
    
-   /** Création d'une vue Time si nécessaire pour accueillir un TMOC */
-   protected void createView4TMOC(PlanTMoc p) {
+   /** Création d'une vue Time si nécessaire pour accueillir un TMOC ou un STMOC */
+   protected void createView4TMOC(Plan p) {
       if( p==null ) return;
       calque.resumeTimeStackIndex();
       int m=getNbView();
@@ -2190,8 +2190,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int m=getNbView();
       for( int i=0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( /* v.locked || */ !v.selected && v!=vc  || v.isPlot()!=vc.isPlot() ) continue;
+         
+         // Pour le cas où on zoomerait dans un plot avec un STMOC
+         if( vc.isPlotTime() && v!=vc ) v.newView();
 
+         if( !v.selected && v!=vc  || v.isPlot()!=vc.isPlot() ) continue;
 
          // Calcul du facteur de zoom pour les vues en fonction de la taille
          // du pixel
@@ -2206,8 +2209,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          // En cas de recalibration on va éviter de déplacer la vue intempestivement
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere
-         if( isRecalibrating() && aladin.toolBox.getTool()==ToolBox.SELECT
-               || v.isPlot() || v.locked ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+         if( isRecalibrating() && aladin.toolBox.getTool()==ToolBox.SELECT || v.isPlot() || v.locked ) {
+            v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+         }
 
          // Mode courant => Déplacement soit sur la coordonnée indiquée, soit sur le repere
          else {
@@ -3426,7 +3430,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       return rep;
    }
-
+   
+   
    /** Nouvelle position du repere courant (sans réaffichage) */
    protected void moveRepere(Coord coo) { moveRepere(coo.al,coo.del); }
    protected void moveRepere(double ra, double dec) {

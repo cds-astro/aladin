@@ -147,9 +147,17 @@ public final class CDSHealpix {
       //    cp.overlappingCells((Math.toRadians(ra), Math.toRadians(dec), ReturnedCells.FULLY_IN)
 
       double [] coo = normalizeRaDec( ra,dec );
-      HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(coo[0]), Math.toRadians(coo[1])) :
+      HealpixNestedBMOC bmoc=null;
+      try {
+         bmoc = inclusive ? cp.overlappingCells(Math.toRadians(coo[0]), Math.toRadians(coo[1])) :
 //         final HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec)) :
-            cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
+               cp.overlappingCenters(Math.toRadians(coo[0]), Math.toRadians(coo[1]));
+      } catch( Exception e ) {
+         System.err.println("ra="+ra+" dec="+dec+" coo[0]="+coo[0]+" coo[1]="+coo[1]);
+         if( inclusive ) System.err.println("p.overlappingCells(+"+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
+         else System.err.println("cp.overlappingCenters("+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
+         e.printStackTrace();
+      }
 
       return toFlatArrayOfHash(bmoc);
    }

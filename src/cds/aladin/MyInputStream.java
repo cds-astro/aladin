@@ -97,7 +97,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long GLU     = 1L<<33;
    static final public long ARGB    = 1L<<34;
    static final public long PDS     = 1L<<35;
-   static final public long HPXMOC  = 1L<<36;
+   static final public long SMOC  = 1L<<36;
    static final public long DS9REG  = 1L<<37;
    static final public long SED     = 1L<<38;
    static final public long BZIP2   = 1L<<39;
@@ -112,14 +112,15 @@ public class MyInputStream extends FilterInputStream {
    static final public long DATALINK= 1L<<48;
    static final public long DALIEX  = 1L<<49;
    static final public long TMOC    = 1L<<50;
+   static final public long STMOC   = 1L<<51;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC"};
+      "SMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
+      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -301,8 +302,11 @@ public class MyInputStream extends FilterInputStream {
       // Healpix
       if( (type & XFITS) !=0 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
             || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) {
-         type |= HPXMOC;
-         if( hasFitsKey("TIMESYS",null) ) type |= TMOC;
+         boolean timeSys = hasFitsKey("TIMESYS",null);
+         boolean cooSys = hasFitsKey("COORDSYS",null);
+         if( timeSys && !cooSys) type |= TMOC;
+         else if( timeSys && cooSys ) type |= STMOC;
+         else type |= SMOC;
       }
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
@@ -374,7 +378,7 @@ public class MyInputStream extends FilterInputStream {
          else if( c[0]=='P' && c[1]=='D' && c[2]=='S' ) type |=PDS;
 
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
-         else if( c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=HPXMOC;
+         else if( c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=SMOC;
 
          // Détection DS9REG
          else if( c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g'
@@ -383,17 +387,20 @@ public class MyInputStream extends FilterInputStream {
 
          // Détection HPXMO (ASCII - ancienne définition #HPXMOCM &  #HPXMOC...)
          else if( c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X'
-               && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=HPXMOC;
+               && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=SMOC;
 
          // Détection MOCORDER (ASCII - nouvelle définition #MOCORDER...)
          else if( c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
-               && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=HPXMOC;
+               && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=SMOC;
 
          // Détection #TMOC...)
          else if( c[0]=='#' && c[1]=='T' && c[2]=='M' && c[3]=='O' && c[4]=='C') type |= TMOC;
 
+         // Détection #TMOC...)
+         else if( c[0]=='#' && c[1]=='S' && c[2]=='T' && c[3]=='M' && c[4]=='O' && c[5]=='C') type |= STMOC;
+
         // Détection MOC JSON (une ligne de blanc \n{"  )
-         else if( isJsonMoc(c) ) type |=HPXMOC;
+         else if( isJsonMoc(c) ) type |=SMOC;
          
          //         // Detection de BMP
          //         else if( c[0]==66  && c[1]==77 ) type |= BMP;

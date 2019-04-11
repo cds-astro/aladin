@@ -28,7 +28,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.CDSHealpix;
 
 
@@ -172,7 +172,7 @@ public class PlanMultiCCD extends PlanImage {
       try {
          if( v.size()<2 ) return false;
          
-         HealpixMoc moc = null;
+         SpaceMoc moc = null;
          Enumeration<Plan> e = v.elements();
          while( e.hasMoreElements() ) {
             Plan p = e.nextElement();
@@ -188,15 +188,15 @@ public class PlanMultiCCD extends PlanImage {
                order = Aladin.getAppropriateOrder(size);
             }
             
-            HealpixMoc m = buildMoc(p.projd,order);
+            SpaceMoc m = buildMoc(p.projd,order);
             if( moc==null ) { 
                moc=m;
                marge = (long)( moc.getUsedArea()*0.2 );
             }
             else {
-               HealpixMoc inter = moc.intersection(m);
+               SpaceMoc inter = (SpaceMoc)moc.intersection(m);
                if( inter.getUsedArea() > marge ) return false;
-               moc = moc.union(m);
+               moc = (SpaceMoc)moc.union(m);
             }
          }
          return true;
@@ -206,8 +206,8 @@ public class PlanMultiCCD extends PlanImage {
       return false;
    }
    
-   static private HealpixMoc buildMoc(Projection proj, int order) throws Exception {
-      HealpixMoc moc = new HealpixMoc(0,order);
+   static private SpaceMoc buildMoc(Projection proj, int order) throws Exception {
+      SpaceMoc moc = new SpaceMoc(0,order);
       Coord coo = new Coord();
       ArrayList<double[]> cooList = new ArrayList<>(10);
       Dimension dim = proj.c.getImgSize();

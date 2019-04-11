@@ -99,13 +99,14 @@ public class Plan implements Runnable {
    static final int ALLSKYFINDEX=21; // Plan HiPS Finder (de fait pas un vrai plan => voir PlanBG)
    static final int ALLSKYCUBE=22; // Plan HiPS cube
    static final int ALLSKYTMOC=23; // Le plan contient un Multi-Order Coverage map Temporel
+   static final int ALLSKYSTMOC=24; // Le plan contient un Multi-Order Coverage map Saptio-Temporel
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
       "Catalog",
       "Tool","Aperture","Folder","Filter",
       "Image FoV","In progress","ImageHuge",
       "HipsImage","HipsPolarisation","HipsCatalog",
-      "MOC","CubeColor","HipsFinder","HipsCube","TMOC",
+      "MOC","CubeColor","HipsFinder","HipsCube","TMOC","STMOC",
    };
 
    protected String id=null;     // Identification unique (ex: CDS/I/231...)
@@ -453,7 +454,13 @@ public class Plan implements Runnable {
    protected boolean isTime() { return false; }
   
    /** Il s'agit d'un plan de type MOC */
-   protected boolean isMoc() { return type==ALLSKYMOC || type==ALLSKYTMOC; }
+   protected boolean isMoc() { return type==ALLSKYMOC || type==ALLSKYTMOC || type==ALLSKYSTMOC; }
+
+   /** Il s'agit d'un plan de type Space MOC (ou Space Time Moc) */
+   protected boolean isSpaceMoc() { return type==ALLSKYMOC || type==ALLSKYSTMOC; }
+
+   /** Il s'agit d'un plan de type Time MOC ou (Space Time Moc) */
+   protected boolean isTimeMoc() { return type==ALLSKYTMOC || type==ALLSKYSTMOC; }
 
    /** Retourne true si le plan est un cube */
    protected boolean isCube() { return false; }
@@ -488,7 +495,7 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan de type Tools */
    protected boolean isTool() {
-      return type==TOOL || type==ALLSKYMOC || type==ALLSKYTMOC || type==APERTURE || type==Plan.FOV;
+      return type==TOOL || type==APERTURE || type==Plan.FOV || isMoc();
    }
 
    /** Il s'agit d'un plan catalogue non progressif */
@@ -1416,9 +1423,11 @@ public class Plan implements Runnable {
    /** Vérifie que le plan n'est pas de référence pour une vue visible actuellement */
    protected boolean isRefForVisibleView() {
       try {
-         for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
-            ViewSimple v = aladin.view.viewSimple[i];
-            if( v.pref==this ) { setDebugFlag(REFFORVISIBLEVIEW,true); return true; }
+         if( isPixel() ) {
+            for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
+               ViewSimple v = aladin.view.viewSimple[i];
+               if( v.pref==this ) { setDebugFlag(REFFORVISIBLEVIEW,true); return true; }
+            }
          }
          setDebugFlag(REFFORVISIBLEVIEW,false);
       } catch( Exception e ) {

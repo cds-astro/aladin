@@ -28,8 +28,8 @@ import java.util.Iterator;
 
 import cds.aladin.HealpixProgen;
 import cds.aladin.HealpixProgenItem;
-import cds.moc.HealpixMoc;
-import cds.moc.TMoc;
+import cds.moc.SpaceMoc;
+import cds.moc.TimeMoc;
 import cds.tools.pixtools.Util;
 
 
@@ -82,9 +82,9 @@ final public class BuilderTIndex  extends Builder {
       String timePath = context.getTimeFinderPath();
       
       // détermination des tuiles de HpxFinder à scanner
-      HealpixMoc mocRegion = context.getRegion();
+      SpaceMoc mocRegion = context.getRegion();
       if( mocRegion.getMocOrder()!=hpxOrder ) {
-         mocRegion = (HealpixMoc) mocRegion.clone();
+         mocRegion = (SpaceMoc) mocRegion.clone();
          mocRegion.setMocOrder( hpxOrder );
       }
       
@@ -92,7 +92,7 @@ final public class BuilderTIndex  extends Builder {
       initStat( mocRegion.getUsedArea() );
       
       // On va créer également le TMoc correspondant 
-      TMoc tmoc = new TMoc( TIMEORDER );
+      TimeMoc tmoc = new TimeMoc( TIMEORDER );
       
       // Parcours de toutes les tuiles meta du HpxFinder
       int i=0;
@@ -128,7 +128,7 @@ final public class BuilderTIndex  extends Builder {
    }
    
    // mise à jour de toutes les tuiles du TimeFinder pour chacune des entrées de la tuile meta
-   private void updateTimeFinder(String timePath, TMoc tmoc, HealpixProgen tileIn) {
+   private void updateTimeFinder(String timePath, TimeMoc tmoc, HealpixProgen tileIn) {
 
       for( String key : tileIn ) {
          HealpixProgenItem item = tileIn.get(key);
@@ -152,7 +152,7 @@ final public class BuilderTIndex  extends Builder {
             tmoc.add(jdtmin,jdtmax);
             
             // Ajout dans toutes les tuiles qu'il faut du TimeFinder
-            TMoc a = new TMoc( TIMEORDER );
+            TimeMoc a = new TimeMoc( TIMEORDER );
             a.add(jdtmin,jdtmax);
             a.toHealpixMoc();
             Iterator<Long> it = a.pixelIterator();

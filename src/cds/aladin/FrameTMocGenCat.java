@@ -37,7 +37,7 @@ import javax.swing.SwingUtilities;
 
 import cds.aladin.prop.PropPanel;
 import cds.moc.Healpix;
-import cds.moc.TMoc;
+import cds.moc.TimeMoc;
 
 /**
  * Gestion de la fenetre associee a la creation d'un MOC à partir d'un catalogue
@@ -64,7 +64,7 @@ public class FrameTMocGenCat extends FrameMocGenImg {
    protected JComboBox getComboRes() {
       JComboBox c = new JComboBox();
       for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
-         String s = "Order "+o+" => "+TMoc.getTemps( TMoc.getDuration(o) );
+         String s = "Order "+o+" => "+TimeMoc.getTemps( TimeMoc.getDuration(o) );
          c.addItem(s);
       }
       c.setSelectedIndex(7);

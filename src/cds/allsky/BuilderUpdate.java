@@ -21,6 +21,8 @@
 
 package cds.allsky;
 
+import cds.aladin.Tok;
+
 /** Permet de mettre à jour un survey préalablement généré
  * @author Pierre Fernique [CDS]
  */
@@ -33,9 +35,47 @@ public class BuilderUpdate extends Builder {
    public Action getAction() { return Action.UPDATE; }
 
    public void run() throws Exception {
-      if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
-      if( !context.isTaskAborting() ) { (b=new BuilderGzip(context)).run(); b=null; }
+      context.loadProperties();
+      if( !context.isTaskAborting() ) builderMoc(); 
+      if( !context.isTaskAborting() ) { (b=new BuilderGunzip(context)).run(); b=null; }
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
+//      if( !context.isTaskAborting() ) builderHighOrder();
+   }
+   
+   private void builderMoc() throws Exception {
+      try { context.loadMoc(); }
+      catch( Exception e ) {
+         (b=new BuilderMoc(context)).run();
+         context.info("MOC rebuilt from low rhombs");
+         context.loadMoc();
+         b=null;
+      }
+   }
+   
+   private void builderHighOrder() throws Exception {
+      int [] minmax = context.findMinMaxOrder();
+      if( minmax[0]==0 ) return;   // inutile car déjà fait 
+      if( context.getMinOrder()==minmax[0] ) return;  // ca commence explicitement au-dela de Norder0
+      
+      boolean flagFits = false;
+      int bitpixOrig = context.getBitpixOrig();
+      
+      String s = context.prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
+      Tok tok = new Tok(s);
+      while( tok.hasMoreTokens() ) {
+         String fmt = tok.nextToken();
+         if( fmt.equals("fits") ) { flagFits=true; continue; } 
+         context.info("Building Norder0,1 and 2 for "+fmt+" tiles...");
+         context.setColor(fmt);
+         (b=new BuilderTree(context)).run();
+      }
+      
+      if( flagFits ) {
+         context.info("Building Norder0,1 and 2 for fits tiles...");
+         context.bitpixOrig = bitpixOrig;
+         (b=new BuilderTree(context)).run();
+        
+      }
    }
 
    public void validateContext() throws Exception {

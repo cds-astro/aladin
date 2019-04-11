@@ -32,7 +32,7 @@ import java.util.Iterator;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.Util;
 
 /**
@@ -85,6 +85,7 @@ public abstract class Builder {
          case MIRROR:    return new BuilderMirror(context);
          case MAP:       return new BuilderMap(context);
          case TMOC:      return new BuilderTMoc(context);
+         case STMOC:     return new BuilderSTMoc(context);
          case ZIP:       return new BuilderZip(context);
          default: break;
       }
@@ -544,7 +545,7 @@ public abstract class Builder {
    /** Génération des liens symboliques et des répertoires Dirnn à l'order le plus profond afin de
      * pouvoir par la suite répartir le HiPS sur plusieurs partitions
      */
-   protected void validateSplit(String outputPath, String split, HealpixMoc moc, int order, int bitpix, int tileWidth, int depth, String fmt) throws Exception {
+   protected void validateSplit(String outputPath, String split, SpaceMoc moc, int order, int bitpix, int tileWidth, int depth, String fmt) throws Exception {
       
       // Détermination de la taille totale requise (en Ko)
       moc.setMocOrder(order);

@@ -38,7 +38,7 @@ import java.util.StringTokenizer;
 /** HEALPix Multi Order Coverage Map (MOC) IO routines
  * Compliante with IVOA MOC Rec 1.0 June 2014
  *
- * Example : HealpixMoc moc = new HealpixMoc();
+ * Example : SpaceMoc moc = new SpaceMoc();
  *           (new IO(moc).read(String filename);
  *
  * @author Pierre Fernique [CDS]
@@ -47,15 +47,15 @@ import java.util.StringTokenizer;
  * @version 1.3 Sep 2013 - WD 1.0 10/9/2013 compliante
  * @version 1.2 Avr 2012 - JSON ASCII support
  * @version 1.1 Mar 2012 - Healpix FITS header adjustements
- * @version 1.0 Oct 2011 - Dedicated class (removed from HealpixMoc)
+ * @version 1.0 Oct 2011 - Dedicated class (removed from SpaceMoc)
  */
 public final class MocIO {
 
-   static public final int FITS = HealpixMoc.FITS;         // Standard format
-   static public final int JSON = HealpixMoc.JSON;         // JSON format (suggested in IVOA REC)
-   static public final int ASCII = HealpixMoc.ASCII;       // ASCII format (suggested in IVOA REC)
+   static public final int FITS = SpaceMoc.FITS;         // Standard format
+   static public final int JSON = SpaceMoc.JSON;         // JSON format (suggested in IVOA REC)
+   static public final int ASCII = SpaceMoc.ASCII;       // ASCII format (suggested in IVOA REC)
    
-   static public final int JSON0 = HealpixMoc.JSON0;       // JSON obsolete format (only reading supported for compatibility)
+   static public final int JSON0 = SpaceMoc.JSON0;       // JSON obsolete format (only reading supported for compatibility)
 
    static private String CR = System.getProperty("line.separator");
 
@@ -74,10 +74,10 @@ public final class MocIO {
    static final public String OLDSIGNATURE = "HPXMOC";   // FITS keywords used as signature (obsoleted syntax)
    static final public String SIGNATURE = "MOCORDER";    // FITS keywords used as signature
 
-   private HealpixMoc moc;
+   private Moc moc;
    private byte firstChar=0; // Use for storing first character (mode detection)
 
-   public MocIO(HealpixMoc m) { moc=m; }
+   public MocIO(Moc m) { moc=m; }
 
    /** Read HEALPix MOC from a file.
     * Support standard FITS format and ASCII non standard alternatives (JSON, ASCII)
@@ -180,7 +180,7 @@ public final class MocIO {
       moc.clear();
       moc.setCheckConsistencyFlag(false); // We assume that the input MOC is well formed
       String s;
-      int mocOrder=HealpixMoc.MAXORDER;
+      int mocOrder=SpaceMoc.MAXORDER;
       boolean flagTMoc = false;
       boolean flagMocOrder=false;
       for( int line=0; (s=dis.readLine())!=null; line++ ) {
@@ -219,7 +219,7 @@ public final class MocIO {
       while( st.hasMoreTokens() ) {
          String s1 = st.nextToken();
          String s2 = st.nextToken();
-         ((TMoc)moc).add( Double.parseDouble(s1), Double.parseDouble(s2));
+         ((TimeMoc)moc).add( Double.parseDouble(s1), Double.parseDouble(s2));
       }
    }
    
@@ -251,10 +251,9 @@ public final class MocIO {
          int naxis2 = header.getIntFromHeader("NAXIS2");
          String tform = header.getStringFromHeader("TFORM1");
          int nbyte= tform.indexOf('K')>=0 ? 8 : tform.indexOf('J')>=0 ? 4 : -1;   // entier 64 bits, sinon 32
-         if( nbyte<=0 ) throw new Exception("HEALPix Multi Order Coverage Map only requieres integers (32bits or 64bits)");
-         byte [] buf = new byte[naxis1*naxis2];
-         readFully(in,buf);
-         createUniq((naxis1*naxis2)/nbyte,nbyte,buf);
+         if( nbyte<=0 ) throw new Exception("Multi Order Coverage Map only requieres integers (32bits or 64bits)");
+
+         moc.readSpecificData( in, naxis1,naxis2, nbyte);
       } catch( EOFException e ) { }
    }
 
@@ -308,7 +307,7 @@ public final class MocIO {
    }
 
    private void testMocNotNull() throws Exception {
-      if( moc==null ) throw new Exception("No MOC assigned (use setMoc(HealpixMoc))");
+      if( moc==null ) throw new Exception("No MOC assigned (use setMoc(SpaceMoc))");
    }
 
    private static final int MAXWORD=20;
@@ -395,10 +394,8 @@ public final class MocIO {
    public void writeFits(OutputStream out) throws Exception {
       testMocNotNull();
       writeHeader0(out);
-      int maxOrder = moc.getMocOrder();
-      int nbytes=moc.getType(maxOrder)==HealpixMoc.LONG ? 8 : 4;  // Codage sur des integers ou des longs
-      writeHeader1(out,nbytes);
-      writeData(out,nbytes);
+      writeHeader1(out);
+      writeData(out);
    }
 
    /*********************************************** Private methods  *****************************************/
@@ -407,7 +404,7 @@ public final class MocIO {
    private void setCurrentParseOrder(String s) throws Exception {
       int i = s.indexOf('=');
       try {
-         moc.setCurrentOrder( (int)HealpixMoc.log2(Long.parseLong(s.substring(i+1))) );
+         moc.setCurrentOrder( (int)SpaceMoc.log2(Long.parseLong(s.substring(i+1))) );
       } catch( Exception e ) {
          throw new Exception("HpixList.setNside: syntax error ["+s+"]");
       }
@@ -454,32 +451,6 @@ public final class MocIO {
       }
    }
 
-   public void createUniq(int nval,int nbyte,byte [] t) throws Exception {
-      int i=0;
-      long [] hpix = null;
-      long oval=-1;
-      for( int k=0; k<nval; k++ ) {
-         long val=0;
-
-         int a =   ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
-         if( nbyte==4 ) val = a;
-         else {
-            int b = ((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF;
-            val = (((long)a)<<32) | ((b)& 0xFFFFFFFFL);
-         }
-         i+=nbyte;
-
-         long min = val;
-         if( val<0 ) { min = oval+1; val=-val; }
-         for( long v = min ; v<=val; v++) {
-            hpix = HealpixMoc.uniq2hpix(v,hpix);
-            int order = (int)hpix[0];
-            moc.add( order, hpix[1]);
-         }
-         oval=val;
-      }
-   }
-
    private void writeASCIIFlush(OutputStream out, StringBuilder s) throws Exception {
       writeASCIIFlush(out, s, true);
    }
@@ -493,7 +464,7 @@ public final class MocIO {
    // Write the primary FITS Header
    private void writeHeader0(OutputStream out) throws Exception {
       int n=0;
-      out.write( getFitsLine("SIMPLE","T","Written by MOC java API "+HealpixMoc.VERSION) ); n+=80;
+      out.write( getFitsLine("SIMPLE","T","Written by MOC java API "+SpaceMoc.VERSION) ); n+=80;
       out.write( getFitsLine("BITPIX","8") ); n+=80;
       out.write( getFitsLine("NAXIS","0") );  n+=80;
       out.write( getFitsLine("EXTEND","T") ); n+=80;
@@ -501,10 +472,11 @@ public final class MocIO {
    }
    
    // Write the FITS HDU Header for the UNIQ binary table
-   private void writeHeader1(OutputStream out,int nbytes) throws Exception {
+   private void writeHeader1(OutputStream out) throws Exception {
       int n=0;
+      int nbytes = moc.getType()==SpaceMoc.LONG ? 8 : 4;
       int naxis2 = moc.getSize();
-      out.write( getFitsLine("XTENSION","BINTABLE","HEALPix Multi Order Coverage map") ); n+=80;
+      out.write( getFitsLine("XTENSION","BINTABLE","Multi Order Coverage map") ); n+=80;
       out.write( getFitsLine("BITPIX","8") ); n+=80;
       out.write( getFitsLine("NAXIS","2") );  n+=80;
       out.write( getFitsLine("NAXIS1",nbytes+"") );  n+=80;
@@ -513,16 +485,9 @@ public final class MocIO {
       out.write( getFitsLine("GCOUNT","1") ); n+=80;
       out.write( getFitsLine("TFIELDS","1") ); n+=80;
       out.write( getFitsLine("TFORM1",nbytes==4 ? "1J" : "1K") ); n+=80;
-      out.write( getFitsLine("TTYPE1","UNIQ","HEALPix UNIQ pixel number") ); n+=80;
-      out.write( getFitsLine("PIXTYPE","HEALPIX","HEALPix magic code") );    n+=80;
-      out.write( getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;      
-     
-      if( moc instanceof TMoc ) out.write( getFitsLine("TIMESYS","JD","ref system JD BARYCENTRIC TT, 1 microsec level 29") );
-      else out.write( getFitsLine("COORDSYS",""+moc.getCoordSys(),"reference frame (C=ICRS)") );    
-      n+=80;
       
-      out.write( getFitsLine("MOCORDER",""+moc.getMocOrder(),"MOC resolution (best order)") );    n+=80;      
-      out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+HealpixMoc.VERSION,"Name of the MOC generator") );    n+=80;      
+      n+=moc.writeSpecificFitsProp( out );
+      out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+SpaceMoc.VERSION,"Name of the MOC generator") );    n+=80;      
 
       for( int i=0; i<FITSKEY.length; i++ ) {
          String key = FITSKEY[i][0];
@@ -538,24 +503,13 @@ public final class MocIO {
    }
 
    // Write the UNIQ FITS HDU Data in basic mode
-   private void writeData(OutputStream out,int nbytes) throws Exception {
-      if( moc.getSize()<=0 ) return;
-      byte [] buf = new byte[nbytes];
-      int size = 0;
-      int nOrder = moc.getMaxOrder()+1;
-      for( int order=0; order<nOrder; order++ ) {
-         int n = moc.getSize(order);
-         if( n==0 ) continue;
-         Array a = moc.getArray(order);
-         for( int i=0; i<n; i++) {
-            long val = HealpixMoc.hpix2uniq(order, a.get(i) );
-            size+=writeVal(out,val,buf);
-         }
-      }
+   protected void writeData(OutputStream out) throws Exception {
+      int size = moc.writeSpecificData( out);
       out.write( getBourrage(size) );
+      System.out.println("write size="+size+" getSize="+moc.getSize()*8);
    }
 
-   private int writeVal(OutputStream out,long val,byte []buf) throws Exception {
+   static protected int writeVal(OutputStream out,long val,byte []buf) throws Exception {
       for( int j=0,shift=(buf.length-1)*8; j<buf.length; j++, shift-=8 ) buf[j] = (byte)( 0xFF & (val>>shift) );
       out.write( buf );
       return buf.length;
@@ -576,7 +530,7 @@ public final class MocIO {
     * @param comment The commend, or null
     * @return the 80 character FITS line
     */
-   private byte [] getFitsLine(String key, String value, String comment) {
+   static protected byte [] getFitsLine(String key, String value, String comment) {
       int i=0,j;
       char [] a;
       byte [] b = new byte[80];
@@ -629,20 +583,20 @@ public final class MocIO {
    }
 
    /** Generate the end of a FITS block assuming a current block size of headSize bytes */
-   private byte [] getBourrage(int currentPos) {
+   static protected byte [] getBourrage(int currentPos) {
       int size = 2880 - currentPos%2880;
       byte [] b = new byte[size];
       return b;
    }
 
    /** Fully read buf.length bytes from in input stream */
-   private void readFully(InputStream in, byte buf[]) throws IOException {
+   static public void readFully(InputStream in, byte buf[]) throws IOException {
       readFully(in,buf,0,buf.length);
    }
 
    /** Fully read len bytes from in input stream and store the result in buf[]
     * from offset position. */
-   private void readFully(InputStream in,byte buf[],int offset, int len) throws IOException {
+   static public void readFully(InputStream in,byte buf[],int offset, int len) throws IOException {
       int m;
       for( int n=0; n<len; n+=m ) {
          m = in.read(buf,offset+n,(len-n)<512 ? len-n : 512);
@@ -656,7 +610,7 @@ public final class MocIO {
     * @return true si s est une chaine ni numérique, ni booléenne
     * ATTENTION: NE PREND PAS EN COMPTE LES NOMBRES IMAGINAIRES
     */
-   private boolean isFitsString(String s) {
+   static private boolean isFitsString(String s) {
       if( s.length()==0 ) return true;
       char c = s.charAt(0);
       if( s.length()==1 && (c=='T' || c=='F') ) return false;   // boolean
@@ -667,7 +621,7 @@ public final class MocIO {
       } catch( Exception e ) { return true; }
    }
 
-   private char [] formatFitsString(char [] a) {
+   static private char [] formatFitsString(char [] a) {
       if( a.length==0 ) return a;
       StringBuffer s = new StringBuffer();
       int i;
@@ -741,7 +695,7 @@ public final class MocIO {
          int linesRead = 0;
          sizeHeader=0;
 
-         header = new Hashtable<String,String>(200);
+         header = new Hashtable<>(200);
          byte[] buffer = new byte[fieldsize];
 
          while (true) {

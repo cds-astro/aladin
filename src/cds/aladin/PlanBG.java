@@ -1734,7 +1734,7 @@ public class PlanBG extends PlanImage {
          long [] out = listPix;
          return out;
          
-      } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
+      } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return null; } // new long[]{}; }
       
    }
 

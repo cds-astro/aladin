@@ -40,7 +40,7 @@ import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import cds.aladin.stc.STCObj;
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.Util;
 
 /**
@@ -3626,21 +3626,30 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
-   /** Création d'un plan Healpix Multi-Order Coverage Temporel à partir d'un flux */
+   /** Création d'un plan Multi-Order Coverage Temporel à partir d'un flux */
    protected int newPlanTMOC(MyInputStream in,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
-      
       plan[n] = new PlanTMoc(aladin,in,label);
-//      plan[n] = new PlanTMoc(aladin,label);
-      
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
+
+   /** Création d'un plan Multi-Order Coverage Spatio-Temporel à partir d'un flux */
+   protected int newPlanSTMOC(MyInputStream in,String label) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      Coord c=getTargetBG(null,null);
+      double rad=getRadiusBG(null,null,null);
+      plan[n] = new PlanSTMoc(aladin,in,label,c,rad);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
    }
 
    /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
-   protected int newPlanMOC(HealpixMoc moc,String label) {
+   protected int newPlanMOC(SpaceMoc moc,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);

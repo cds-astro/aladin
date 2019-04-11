@@ -38,6 +38,7 @@ import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.Util;
 
 /** Recopie d'un HiPS distant via HTTP
@@ -143,7 +144,7 @@ public class BuilderMirror extends BuilderTiles {
          } else {
             if( !context.getArea().equals(area)) {
                isSmaller=isPartial=true;
-               context.setMocArea( area.intersection( context.getArea()) );
+               context.setMocArea( (SpaceMoc)area.intersection( context.getArea()) );
                context.info("Partial spacial mirror");
             }
          }

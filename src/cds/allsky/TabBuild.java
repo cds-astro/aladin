@@ -46,6 +46,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.tools.Util;
@@ -471,7 +472,7 @@ public class TabBuild extends JPanel implements ActionListener {
 
    private void perform() {
       try {
-         Vector<Action> actions = new Vector<Action>();
+         Vector<Action> actions = new Vector<>();
 
          boolean isMap = context.isMap();
 
@@ -485,7 +486,6 @@ public class TabBuild extends JPanel implements ActionListener {
          else actions.add(Action.TILES);
 
          if( !context.isColor() ) {
-            actions.add(Action.GZIP);
             if( !isMap ) actions.add(Action.DETAILS);
          }
 

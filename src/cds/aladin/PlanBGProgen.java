@@ -114,6 +114,7 @@ public class PlanBGProgen extends PlanBGCat {
    }
 
    protected void draw(Graphics g,ViewSimple v) {
+      
       prepareDraw(v);
 
       if( pcat==null || !pcat.hasObj() ) return;
@@ -159,8 +160,8 @@ public class PlanBGProgen extends PlanBGCat {
 
       int order = maxOrder(v)+1;
       if( order<BuilderDetails.MINORDER ) order=BuilderDetails.MINORDER;
-      //      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
-
+//      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+((order<BuilderDetails.MINORDER || order<minOrder) && maxOrder>=BuilderDetails.MINORDER));
+            
       // On n'a pas assez zoomé pour afficher le contenu des losanges
       if( (order<BuilderDetails.MINORDER || order<minOrder) && maxOrder>=BuilderDetails.MINORDER ) {
          return false;
@@ -177,6 +178,7 @@ public class PlanBGProgen extends PlanBGCat {
       boolean moreDetails = false;
 
       for( int i=0; i<pix.length; i++ ) {
+         
          if( isOutMoc(order, pix[i]) ) continue;
          if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
          nTotal++;

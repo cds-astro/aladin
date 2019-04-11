@@ -1364,11 +1364,13 @@ public final class Calib  implements Cloneable {
             try { order_a = hf.getIntFromHeader("A_ORDER") ; } catch( Exception e ) { order_a=1; }
             try { order_b= hf.getIntFromHeader("B_ORDER") ;  } catch( Exception e ) { order_b=1; }
 
-            for (int order = 2;  order < order_a+1 ; order++)
+       //     for (int order = 2;  order < order_a+1 ; order++)
+            for (int order = 0;  order <= order_a ; order++)
             {
-               for (int powx =0 ; powx < order+1 ; powx++ )
+               for (int powx =0 ; powx <= order ; powx++ )
                {
-                  for (int j = 0 ; j < order-powx + 1 ; j++)
+                //  for (int j = 0 ; j < order-powx + 1 ; j++)
+            	   int j = order -powx ; 
                      try {
                         sip_a[powx][j] = hf.getDoubleFromHeader("A_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
                        // System.out.println("sip_a "+powx+" "+j+" "+sip_a[powx][j]) ;
@@ -1377,11 +1379,13 @@ public final class Calib  implements Cloneable {
                }
             }   
             
-            for (int order = 2;  order < order_b+1 ; order++)
+  //          for (int order = 2;  order < order_b+1 ; order++)
+            for (int order = 0;  order <= order_b ; order++)
             {
-               for (int powx =0 ; powx < order+1 ; powx++ )
+               for (int powx =0 ; powx <= order ; powx++ )
                {
-                  for (int j = 0 ; j < order-powx + 1 ; j++)
+    //              for (int j = 0 ; j < order-powx + 1 ; j++)
+            	    int j = order -powx ;
                      try {
                         sip_b[powx][j] = hf.getDoubleFromHeader("B_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
                         //                                          System.out.println("sip_b "+powx+" "+j+" "+sip_b[powx][j])  ;
@@ -1440,16 +1444,15 @@ public final class Calib  implements Cloneable {
             //    bp[0][3] = hf.getDoubleFromHeader("BP_0_3 ");
             //     }
         
-            //   System.out.println("ici") ;
             try { order_ap = hf.getIntFromHeader("AP_ORDER") ; } catch( Exception e) { order_ap = 1; }
-            //   System.out.println("ici") ;
             try { order_bp = hf.getIntFromHeader("BP_ORDER") ; } catch( Exception e) { order_bp = 1; }
-            //   System.out.println("ici") ;  
-            for (int order = 2;  order < order_ap+1 ; order++)
+     //       for (int order = 2;  order < order_ap+1 ; order++)
+            for (int order = 0; order <= order_ap ; order++)
             {
-               for (int powx =0 ; powx < order+1 ; powx++ )
+               for (int powx =0 ; powx <= order ; powx++ )
                {
-                  for (int j = 0 ; j < order-powx + 1 ; j++)
+              //    for (int j = 0 ; j < order-powx + 1 ; j++)
+            	  int j = order -powx ;
                      try {
                         sip_ap[powx][j] = hf.getDoubleFromHeader("AP_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
                         //                                  System.out.println("sip_ap "+powx+" "+j+" "+sip_ap[powx][j]) ;
@@ -1458,11 +1461,13 @@ public final class Calib  implements Cloneable {
                }
             }   
             //      System.out.println("ici") ;
-            for (int order = 2;  order < order_bp+1 ; order++)
+            // for (int order = 2;  order < order_bp+1 ; order++)
+            for (int order = 0;  order <= order_bp ; order++)
             {
-               for (int powx =0 ; powx < order+1 ; powx++ )
+               for (int powx =0 ; powx <= order ; powx++ )
                {
-                  for (int j = 0 ; j < order-powx + 1 ; j++)
+            	   int j = order -powx ;
+                 // for (int j = 0 ; j < order-powx + 1 ; j++)
                      try {
                         sip_bp[powx][j] = hf.getDoubleFromHeader("BP_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
                         //                                      System.out.println("sip_bp "+powx+" "+j+" "+sip_bp[powx][j]) ;
@@ -2310,19 +2315,19 @@ public final class Calib  implements Cloneable {
          double yint = y_obj;
          // PFOPT: NE PAS FAIRE DE CALCUL DANS LE TEST DE FIN DE BOUCLE
          // REMPLACER order < order_a+1 PAR order <=order_a
-         for (int order = 2;  order < order_a+1 ; order++)
+         for (int order = 0;  order <= order_a ; order++)
          {
             // PFOPT: IDEM
-            for (int powx =0 ; powx < order+1 ; powx++ )
+            for (int powx =0 ; powx <= order ; powx++ )
             {
                   x_obj = x_obj + sip_a[powx][order-powx]*Math.pow(xint,(powx))*Math.pow(yint,order-powx);
             }
          }
          // PFOPT: IDEM
-        for (int order = 2;  order < order_b+1 ; order++)
+        for (int order = 0;  order <= order_b ; order++)
          {
            // PFOPT: IDEM
-            for (int powx =0 ; powx < order+1 ; powx++ )
+            for (int powx =0 ; powx <= order ; powx++ )
             {
                   y_obj = y_obj + sip_b[powx][order-powx]*Math.pow(xint,(powx))*Math.pow(yint,order-powx);
             }
@@ -3742,7 +3747,6 @@ public final class Calib  implements Cloneable {
   //       if ((proj == SIP)||(proj == SINSIP))
             if (proj == SIP )
          {
-            //                System.out.println("aqui ");
             if ((order_ap == 0)||(order_bp == 0))
             {
                double X = 0;
@@ -3759,33 +3763,33 @@ public final class Calib  implements Cloneable {
                {
                   iter++ ;
                   m1 = 1 ;
-                  for (int order = 2;  order < order_a+1 ; order++)
+                  for (int order = 0;  order <= order_a ; order++)
                   {
-                     for (int powx =0 ; powx < order+1 ; powx++ )
+                     for (int powx =0 ; powx <= order ; powx++ )
                      {
                            m1 = m1 + powx*sip_a[powx][order-powx]*Math.pow(xx,powx-1)*Math.pow(yy,order-powx);
                      }
                   }
                   m2 = 0 ;
-                  for (int order = 2;  order < order_a+1 ; order++)
+                  for (int order = 0;  order <= order_a ; order++)
                   {
-                     for (int powx =0 ; powx < order+1 ; powx++ )
+                     for (int powx =0 ; powx <= order ; powx++ )
                      {
                            m2 = m2 + (order-powx)*sip_a[powx][order-powx]*Math.pow(xx,(powx))*Math.pow(yy,order-powx-1);
                      }
                   } 
                   m3 = 1 ;
-                  for (int order = 2;  order < order_b+1 ; order++)
+                  for (int order = 0;  order <= order_b ; order++)
                   {
-                     for (int powx =0 ; powx < order+1 ; powx++ )
+                     for (int powx =0 ; powx <= order ; powx++ )
                      {
                            m3 = m3 + powx*sip_b[powx][order-powx]*Math.pow(xx,powx-1)*Math.pow(yy,order-powx);
                      }
                   }
                   m4 = 0 ;
-                  for (int order = 2;  order < order_b+1 ; order++)
+                  for (int order = 0;  order <= order_b ; order++)
                   {
-                     for (int powx =0 ; powx < order+1 ; powx++ )
+                     for (int powx =0 ; powx <= order ; powx++ )
                      {
                            m4 = m4 + (order-powx)*sip_b[powx][order-powx]*Math.pow(xx,(powx))*Math.pow(yy,order-powx-1);
                      }
@@ -3810,17 +3814,17 @@ public final class Calib  implements Cloneable {
                   double yint = yy ;
                   double    px = xint ;
                   double    py = yint ; 
-                  for (int order = 2;  order < order_a+1 ; order++)
+                  for (int order = 0;  order <= order_a ; order++)
                   {
-                     for (int powx =0 ; powx < order+1 ; powx++ )
+                     for (int powx =0 ; powx <= order ; powx++ )
                      {
                            px = px + sip_a[powx][order-powx]*Math.pow(xint,(powx))*Math.pow(yint,order-powx);
                      }
                   }
 
-                  for (int order = 2;  order < order_b+1 ; order++)
+                  for (int order = 0;  order <= order_b ; order++)
                   {
-                     for (int powx =0 ; powx < order+1 ; powx++ )
+                     for (int powx =0 ; powx <= order ; powx++ )
                      {
                            py = py + sip_b[powx][order-powx]*Math.pow(xint,(powx))*Math.pow(yint,order-powx);
                      }
@@ -3835,21 +3839,19 @@ public final class Calib  implements Cloneable {
             {               
                double xint= c.x -Xcen ;
                double yint= -(c.y -ynpix + Ycen) ;
-               //                System.out.println("ICI "+yint);
                c.x = xint ;
-               for (int order = 2;  order < order_ap+1 ; order++)
+ //              for (int order = 2;  order < order_ap+1 ; order++)
+              for (int order = 0;  order <= order_ap ; order++)
                {
-                  for (int powx =0 ; powx < order+1 ; powx++ )
+                  for (int powx =0 ; powx <= order ; powx++ )
 
                   {
-                     for (int j = 0 ; j < order-powx + 1 ; j++)
-                     {
-
+ //                    for (int j = 0 ; j < order-powx + 1 ; j++)
+                     // {
+                     int  j = order - powx ;
                         //                           System.out.println("powx j "+powx+" "+j + " "+ sip_ap[powx][j]) ;
 
                            c.x = c.x + sip_ap[powx][j]*Math.pow(xint,(powx))*Math.pow(yint,(j));
-                        //                            System.out.println("c.x "+c.x);
-                     }
                   }
                }
 
@@ -3864,18 +3866,20 @@ public final class Calib  implements Cloneable {
                //       bp[3][0]*xint*xint*xint + Xcen ;
 
                c.y = yint ;
-               for (int order = 2;  order < order_bp+1 ; order++)
+  //             for (int order = 2;  order < order_bp+1 ; order++)
+               for (int order = 0; order <= order_bp ; order++)
                {
-                  for (int powx =0 ; powx < order+1 ; powx++ )
+                  for (int powx =0 ; powx <= order ; powx++ )
                   {
-                     for (int j = 0 ; j < order-powx + 1 ; j++)
-                     {
+    //                 for (int j = 0 ; j < order-powx + 1 ; j++)
+      //               {
                         //                           System.out.println("powx j "+powx+" "+j+" "+sip_bp[powx][j])  ;
 
+                          int j = order -powx ;
 
                            c.y = c.y + sip_bp[powx][j]*Math.pow(xint,(powx))*Math.pow(yint,(j));
                         //                           System.out.println("c.y "+c.y);
-                     }
+                     //}
 
                      // c.y = yint + 
                      // bp[0][2]*Math.pow(yint,(double)(nnnn)) +

@@ -21,6 +21,7 @@
 
 package cds.moc;
 
+import java.io.OutputStream;
 import java.util.InputMismatchException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -34,17 +35,18 @@ import cds.tools.Astrodate;
  * @version 1.0 March 2018 - creation
  *
  */
-public class TMoc extends HealpixMoc {
+public class TimeMoc extends SpaceMoc {
    
    static public final double DAYMICROSEC = 86400000000.;
    static public final double MAXDAY = ( 1L<<(MAXORDER*2) ) / 86400L;
    
    
-   public TMoc() { this(-1); }
-   public TMoc( int mocOrder) {
+   public TimeMoc() { this(-1); }
+   public TimeMoc( int mocOrder) {
       init("JD",0,mocOrder);
-      rangeSet = new Range(1024);
+      spaceRange = new Range(1024);
    }
+   public TimeMoc(Range range) throws Exception { super(range); }
    
    /** Add JD range
     * @param jdmin start time (in JD - unit=day) - included in the range
@@ -55,51 +57,40 @@ public class TMoc extends HealpixMoc {
       long max = (long)(jdmax*DAYMICROSEC)+1L;
       Range rtmp=new Range();
       rtmp.append(min,max);
-      if( !rtmp.isEmpty() ) rangeSet=rangeSet.union(rtmp);
+      if( !rtmp.isEmpty() ) spaceRange=spaceRange.union(rtmp);
    }
    
    /** Deep copy */
-   public Object clone() {
-      HealpixMoc moc = new TMoc();
+   public Moc clone() {
+      TimeMoc moc = new TimeMoc();
       return clone1(moc);
    }
    
-   public HealpixMoc complement() throws Exception {
-      TMoc allTime = new TMoc();
-      allTime.add(0.,MAXDAY);
-      allTime.toRangeSet();
-      toRangeSet();
-      HealpixMoc res = new TMoc();
-      res.rangeSet = allTime.rangeSet.difference(rangeSet);
-      res.toHealpixMoc();
-      return res;
-   }
-   
    // Generic operation
-   protected HealpixMoc operation(HealpixMoc moc,int op) throws Exception {
+   protected SpaceMoc operation(SpaceMoc moc,int op) throws Exception {
       testCompatibility(moc);
       toRangeSet();
       moc.toRangeSet();
-      HealpixMoc res = new TMoc();
+      SpaceMoc res = new TimeMoc();
       switch(op) {
-         case 0 : res.rangeSet = rangeSet.union(moc.rangeSet); break;
-         case 1 : res.rangeSet = rangeSet.intersection(moc.rangeSet); break;
-         case 2 : res.rangeSet = rangeSet.difference(moc.rangeSet); break;
+         case 0 : res.spaceRange = spaceRange.union(moc.spaceRange); break;
+         case 1 : res.spaceRange = spaceRange.intersection(moc.spaceRange); break;
+         case 2 : res.spaceRange = spaceRange.difference(moc.spaceRange); break;
       }
       res.toHealpixMoc();
       return res;
    }
 
    // Throw an exception if the coordsys of the parameter moc differs of the coordsys
-   protected void testCompatibility(HealpixMoc moc) throws Exception {
-      if( !(moc instanceof TMoc) ) throw new Exception("Incompatible => not a TMOC");
+   protected void testCompatibility(SpaceMoc moc) throws Exception {
+      if( !(moc instanceof TimeMoc) ) throw new Exception("Incompatible => not a TMOC");
    }
    
    /** Return minimal time in JD - -1 if empty*/
    public double getTimeMin() {
       if( isEmpty() ) return -1;
       toRangeSet();
-      return rangeSet.ivbegin(0) / DAYMICROSEC;
+      return spaceRange.begins(0) / DAYMICROSEC;
    }
    
    
@@ -107,7 +98,7 @@ public class TMoc extends HealpixMoc {
    public double getTimeMax() {
       if( isEmpty() ) return -1;
       toRangeSet();
-      return rangeSet.ivend( rangeSet.nranges()-1 ) / DAYMICROSEC;
+      return spaceRange.ends( spaceRange.nranges()-1 ) / DAYMICROSEC;
    }
    
    
@@ -139,9 +130,9 @@ public class TMoc extends HealpixMoc {
       int pos, endpos;
       
       JDIterator(long start, long end) {
-         pos = rangeSet.iiv(start)/2;;
+         pos = spaceRange.indexOf(start)/2;;
          if( pos<0 ) pos=0;
-         endpos = rangeSet.iiv(end)/2+1;
+         endpos = spaceRange.indexOf(end)/2+1;
       }
       
       public boolean hasNext() { return pos<endpos; }
@@ -149,16 +140,27 @@ public class TMoc extends HealpixMoc {
       public long [] next() {
          if( pos>endpos ) throw new NoSuchElementException();
          long ret [] = new long[2];
-         ret[0] = rangeSet.ivbegin(pos);
-         ret[1] = rangeSet.ivend(pos);
+         ret[0] = spaceRange.begins(pos);
+         ret[1] = spaceRange.ends(pos);
          pos++;
          return ret;
       }
 
       public void remove() { }
-
    }
-
+   
+   /** Write specifif FITS keywords
+    * @param out
+    * @return number of written bytes
+    */
+  protected int writeSpecificFitsProp( OutputStream out  ) throws Exception {
+      int n=0;
+      out.write( MocIO.getFitsLine("MOC","TIME","Temporal MOC") );    n+=80;      
+      out.write( MocIO.getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;      
+      out.write( MocIO.getFitsLine("TORDER",""+getMocOrder(),"Time MOC resolution (best order)") );    n+=80;      
+      out.write( MocIO.getFitsLine("TIMESYS","JD","Time ref system JD BARYCENTRIC TCB, 1 microsec order 29") ); n+=80;
+      return n;
+   }
    
    static public void main( String argv[] ) {
       try {
@@ -169,7 +171,7 @@ public class TMoc extends HealpixMoc {
          long max = getDuration(MAXORDER) * ( 1L<<(2*MAXORDER) );
          System.out.println("At order "+MAXORDER+" we can address "+getTemps(max)+" with a resolution of 1µs");
          
-         TMoc tmoc = new TMoc();
+         TimeMoc tmoc = new TimeMoc();
          double jdmin = Astrodate.dateToJD(2000, 06, 18, 12, 00, 00);  // 18 juin 2000 à midi
          double jdmax = Astrodate.dateToJD(2017, 12, 25, 00, 00, 00);  // Noël 2017 à minuit
          tmoc.add(jdmin, jdmax);

@@ -2525,7 +2525,7 @@ public final class Command implements Runnable {
             if( label != null ) pMoc.setLabel(label);
 
             // Pour les MOCs
-         } else if( type == Plan.ALLSKYMOC || type == Plan.ALLSKYTMOC) {
+         } else if( type == Plan.ALLSKYMOC || type == Plan.ALLSKYTMOC || type == Plan.ALLSKYSTMOC) {
             boolean flagCheckOrder = order == -1;
             PlanMoc[] pList = new PlanMoc[p.length];
             for( int j = 0; j < p.length; j++ ) {

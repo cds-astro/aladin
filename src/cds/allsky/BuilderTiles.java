@@ -33,7 +33,7 @@ import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.tools.pixtools.Util;
 
 /** Permet la génération du survey HEALPix à partir d'un index préalablement généré
@@ -247,7 +247,7 @@ public class BuilderTiles extends Builder {
       
       int bitpix, tileWidth, depth, order;
       String format, outputPath;
-      HealpixMoc moc;
+      SpaceMoc moc;
       
       outputPath   = context.getOutputPath();
       bitpix       = context.getBitpix();
@@ -255,7 +255,7 @@ public class BuilderTiles extends Builder {
       order        = context.getOrder();
       depth        = context.getDepth();
       format       = context.isColor() ? "jpeg" : "fits png";  // on suppose qu'on va créer des tuiles fits et preview (png)
-      moc          = (HealpixMoc)( context.mocIndex.clone() );
+      moc          = (SpaceMoc)( context.mocIndex.clone() );
       if( moc==null ) throw new Exception("No MOC available => splitting action not possible");
       if( !outputIsFree( outputPath, order ) ) {
          context.warning("HiPS output dir not empty => split function ignored");
@@ -512,9 +512,9 @@ public class BuilderTiles extends Builder {
       this.ordermax = context.getOrder();
       long t = System.currentTimeMillis();
 
-      HealpixMoc moc = new HealpixMoc();
-      HealpixMoc m = context.getRegion();
-      if( m==null ) m = new HealpixMoc("0/1-11");
+      SpaceMoc moc = new SpaceMoc();
+      SpaceMoc m = context.getRegion();
+      if( m==null ) m = new SpaceMoc("0/1-11");
       moc.add( m );
       int minorder=0; //3;
       context.setMinOrder( minorder );
@@ -674,8 +674,8 @@ public class BuilderTiles extends Builder {
       if( coaddMode==Mode.KEEPTILE ) {
          Fits oldOut = findLeaf(file);
          if( oldOut!=null ) {
-            HealpixMoc moc = context.getRegion();
-            moc = moc.intersection(new HealpixMoc(order+"/"+npix));
+            SpaceMoc moc = context.getRegion();
+            moc = (SpaceMoc)moc.intersection(new SpaceMoc(order+"/"+npix));
             int nbTiles = (int)moc.getUsedArea();
             updateStat(0,0,nbTiles,0,nbTiles/4,0);
             return oldOut;

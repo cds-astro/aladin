@@ -26,7 +26,7 @@ import java.util.Iterator;
 
 import cds.aladin.HealpixProgen;
 import cds.moc.HealpixMoc;
-import cds.moc.TMoc;
+import cds.moc.TimeMoc;
 import cds.tools.pixtools.Util;
 
 /** Construction d'un TMOC à partir des données HpxFinder
@@ -38,9 +38,9 @@ public class BuilderTMoc extends Builder {
 
    static public final int MINORDER = 3;   // niveau minimal pris en compte
 
-   private int maxOrder;
-   private int statNbFile;
-   private long startTime,totalTime;
+   protected int maxOrder;
+   protected int statNbFile;
+   protected long startTime,totalTime;
 
    /**
     * Création du générateur de l'arbre des index.
@@ -50,7 +50,7 @@ public class BuilderTMoc extends Builder {
       super(context);
    }
 
-   public Action getAction() { return Action.DETAILS; }
+   public Action getAction() { return Action.TMOC; }
 
    public void run() throws Exception {
       build();
@@ -86,26 +86,33 @@ public class BuilderTMoc extends Builder {
    static private final int ISOTIME    = 3;
    
    private int mode=UNKNOWN;
+   
+   private TimeMoc tmoc = null; 
 
    public void build() throws Exception {
       initStat();
 
       String output = context.getOutputPath();
+      String hpxFinder = context.getHpxFinderPath();
       
       HealpixMoc moc = new HealpixMoc();
-      moc.read(output+Util.FS+"Moc.fits");
+      moc.read(hpxFinder+Util.FS+"Moc.fits");
       moc.setMocOrder(maxOrder);
       
       long progress=0L;
       context.setProgressMax(moc.getUsedArea());
       
-      TMoc tmoc = new TMoc();
+      initIt();
       
       Iterator<Long> it = moc.pixelIterator();
       while( it.hasNext() ) {
          long npix = it.next();
-         String file = Util.getFilePath(output, maxOrder, npix);
+         String file = Util.getFilePath(hpxFinder, maxOrder, npix);
          HealpixProgen out = createLeave(file);
+         if( out==null ) {
+            context.warning("Missing HpxFinder tile "+maxOrder+"/"+npix+" => ignored ("+file+")");
+            continue;
+         }
          for( String key : out ) {
             String json = out.get(key).getJson();
             double tmin;
@@ -137,18 +144,32 @@ public class BuilderTMoc extends Builder {
                double jdtmin = tmin+2400000.5;
                double jdtmax = tmax+2400000.5;
                
-               tmoc.add(jdtmin,jdtmax);
+               addIt(maxOrder,npix,jdtmin,jdtmax);
                
             } catch( Exception e ) {
+               e.printStackTrace();
                context.warning("parsing error => "+json);
                continue;
             }
          }
          context.setProgress( progress++ );
       }
-      tmoc.toHealpixMoc();
-      tmoc.write(output+Util.FS+"TMoc.fits");
+      writeIt();
 
+   }
+   
+   protected void initIt() {
+      tmoc = new TimeMoc();
+   }
+   
+   protected void addIt(int order, long npix, double jdtmin, double jdtmax) {
+      tmoc.add(jdtmin,jdtmax);
+   }
+   
+   protected void writeIt() throws Exception {
+      String file = context.getOutputPath()+Util.FS+"TMoc.fits";
+      tmoc.toHealpixMoc();
+      tmoc.write(file);
    }
    
    private int detectMode(String json ) throws Exception {

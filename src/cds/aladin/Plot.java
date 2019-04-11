@@ -133,7 +133,7 @@ public class Plot {
 
    // initialisation du plot
    protected void initPlot() {
-      if( plotTable==null ) plotTable = new Vector<PlotItem>(10);
+      if( plotTable==null ) plotTable = new Vector<>(10);
    }
    
    // recopie du plot pour la vue passée en paramètre
@@ -213,7 +213,7 @@ public class Plot {
             boolean flagNoSerie = first;
             for( Plan p1 : aladin.calque.getPlans() ) {
                if( !p1.flagOk || !p1.active ) continue;
-               if( p1.type != Plan.ALLSKYTMOC ) continue;
+               if( !p1.isTimeMoc() ) continue;
                
                double tmin = p1.getTimeMin();
                double tmax = p1.getTimeMax();

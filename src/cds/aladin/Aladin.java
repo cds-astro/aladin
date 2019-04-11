@@ -159,6 +159,7 @@ import cds.xml.XMLParser;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> TAP JOIN and UPLOAD support
+ * @beta    <LI> MOC extractions from any HiPS or HEALPix maps
  * @beta    <LI> Temporal support (prototype implementation) <br>
  * @beta          - Time plots <br>
  * @beta          - Time MOC
@@ -218,7 +219,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.115";
+   static public final    String VERSION = "v10.118";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -249,7 +250,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
-   static public boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
+   static public final boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
 //   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
    static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
@@ -1269,67 +1270,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       String meta = macPlateform?"meta":"ctrl";
       String alt = macPlateform?"meta shift":"alt";
 
-//      // TODO : meta ne fonctionne pas sous windows
-//      if( OUTREACH ) {
-//         return new String[][][]{
-//               { {MFILE},
-//                  {OPENLOAD+"|"+meta+" L"},{OPENFILE+"|"+meta+" O"},
-//                  {},{LOADIMG,"-"},{LOADCAT,"-"},{BACKUP},{MPRINT+"|"+meta+" P"},
-//                  {},{ extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
-//               },
-//               { {MEDIT},
-//                  {"?"+PAN+"|"+alt+" Z"},
-//                  {ZOOM,"?"+ZOOMPT+"|F6","",ZOOMM+"|F7",ZOOMP+"|F8"},
-//                  {},{COPIER+"|"+meta+" C"},{COLLER+"|"+meta+" V"},
-//                  {},{SELECTALL+"|"+meta+" A"},{UNSELECT+"|"+meta+" U"},
-//                  {},{DEL+"|DELETE"},{DELALL+"|shift DELETE"},
-//                  {},{HEAD+"|"+alt+" H"},{PROP+"|"+alt+" ENTER"}, {}, {PREF},
-//               },
-//               { {MIMAGE},
-//                  {PIXEL+"|"+meta+" M"},{"?"+GLASS+"|"+meta+" G"},
-//                  //           {},{TRANSP},
-//                  {},{RGB},{GREY},{BLINK},
-//                  {},{CALIMG},
-//                  {},{FLIP,TOPBOTTOM,RIGHTLEFT},
-//               },
-//               { {MCATALOG},
-//                  {XMATCH},{ADDCOL},{FILTERB,"-"},
-//                  {},{CLONE},
-//               },
-//               { {MOVERLAY},
-//                  {CONTOUR},
-//                  {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
-//                  {},{"?"+GRID+"|"+alt+" G"},{"?"+CONST},{"?"+OVERLAY+"|"+alt+" O"},
-//               },
-//               { {MTOOLS},
-//                  {SESAME+"|"+meta+" R"},{VOTOOL,VOINFO},
-//               },
-//               { {MVIEW},
-//                  {"?"+FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
-//                  {},{MOREVIEWS+"|F9"}, {"?"+LOCKVIEW},
-//               },
-//               { {MHELP},
-//                  {HELP},{ABOUT},
-//               },
-//         };
-//
-//      }
-
-//      JOBCONTROLLER = "Show async jobs";
 
       String[][][] menu = new String[][][] {
-            { /*{MFILE},
-               {OPENLOAD+"|"+meta+" L"},{OPENFILE+"|"+meta+" O"},{OPENURL},
-               {LASTFILE,"???"},
-               {},{MBGKG,"???"},
-               {},{LOADIMG,"-"},{LOADCAT,"-"}, {LOADVO}, {LOADFOV},
-               {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
-               //                  {},{HISTORY+"|"+(macPlateform?alt:meta)+" H"},
-               {},{MPRINT+"|"+meta+" P"},
-               {},{NEW+"|"+meta+" N"},
-               {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT} */
-               
-               
+            { 
                {MFILE},
                {OPENDIRIMG+"|"+meta+" I"},{OPENDIRDB+"|"+meta+" D"},
                     {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},

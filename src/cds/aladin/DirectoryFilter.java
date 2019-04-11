@@ -67,8 +67,8 @@ import javax.swing.border.TitledBorder;
 import cds.aladin.prop.PropPanel;
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCStringParser;
-import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
+import cds.moc.SpaceMoc;
 import cds.mocmulti.MocItem;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Astrodate;
@@ -159,7 +159,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private JButton btMocShow;
    private JLabel labelIntersect,labelCollection;
    private boolean flagFormEdit=false;
-   private HealpixMoc mocFiltreSpatial=null;
+   private SpaceMoc mocFiltreSpatial=null;
    
    
    /** Création du panel de l'expression correspondant au filtre courant */
@@ -424,7 +424,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          }
       }.setParam(ascending);
 
-      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      Map<K, V> sortedByValues = new TreeMap<>(valueComparator);
       sortedByValues.putAll(map);
       return sortedByValues;
    }
@@ -443,7 +443,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          }
       }.setParam(ascending);
 
-      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      Map<K, V> sortedByValues = new TreeMap<>(valueComparator);
       sortedByValues.putAll(map);
       return sortedByValues;
    }
@@ -464,7 +464,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          }
       }.setParam();
 
-      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      Map<K, V> sortedByValues = new TreeMap<>(valueComparator);
       sortedByValues.putAll(map);
       return sortedByValues;
    }
@@ -487,7 +487,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
     * @return
     */
    private JPanel createFilterBis( final Vector<JCheckBox> vBx, int max, boolean split, String key, String delim, int sort) {
-      Map<String, Integer> map = new HashMap<String, Integer>();
+      Map<String, Integer> map = new HashMap<>();
       
       // On décompte les occurences
       int total=0;
@@ -706,7 +706,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //         String smoc = mocArea.getText().trim();
 //         try {
 //            if( smoc.length()==0 ) mocFiltreSpatial=null;
-//            else mocFiltreSpatial = new HealpixMoc(smoc);
+//            else mocFiltreSpatial = new SpaceMoc(smoc);
 //         } catch( Exception e ) {
 //            mocArea.setText( MOCERROR );
 //            mocFiltreSpatial=null;
@@ -742,13 +742,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Génération du MOC de filtrage correspondante aux positionnements des checkboxes et autres
     * champs de saisie. */
-   private HealpixMoc getMoc() {
-      HealpixMoc moc=null;
+   private SpaceMoc getMoc() {
+      SpaceMoc moc=null;
       
       try {
          if( cbMocInLine.isSelected() ) {
             String s = tMoc.getText().trim();
-            moc = s.length()==0 ? null : new HealpixMoc( s );
+            moc = s.length()==0 ? null : new SpaceMoc( s );
          }
          
          else if( cbStcInLine.isSelected() ) {
@@ -759,7 +759,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          else if( cbMocPlane.isSelected() ) {
             String  label = (String)comboMocPlane.getSelectedItem();
             PlanMoc p = (PlanMoc) aladin.calque.getPlan( label );
-            moc = p==null ? null : p.getMoc();
+            moc = (SpaceMoc)( p==null ? null : p.getMoc() );
          }
          
          else if( cbSelectedGraph.isSelected() ) {
@@ -775,7 +775,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return moc;
    }
    
-   static public void setIntersect( HealpixMoc moc, int intersect ) {
+   static public void setIntersect( SpaceMoc moc, int intersect ) {
       if( moc==null ) return;
       String value = intersect==MultiMoc.OVERLAPS ? null : MultiMoc.INTERSECT[ intersect ];
       try {
@@ -785,15 +785,15 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-   static public int getIntersect( HealpixMoc moc ) {
+   static public int getIntersect( SpaceMoc moc ) {
       if( moc==null ) return -1;
       String s = moc.getProperty("intersect");
       return s==null ? MultiMoc.OVERLAPS : Util.indexInArrayOf(s,MultiMoc.INTERSECT,true);
    }
    
    /** Return the ASCII basic representation of a MOC  */
-   static public String getASCII(HealpixMoc moc ) { return getASCII(moc,40); }
-   static public String getASCII(HealpixMoc moc, int nbChars) {
+   static public String getASCII(SpaceMoc moc ) { return getASCII(moc,40); }
+   static public String getASCII(SpaceMoc moc, int nbChars) {
       if( moc==null ) return "";
       StringBuffer s = new StringBuffer();
       long oOrder=-1;
@@ -824,8 +824,8 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
     * champs de saisie. */
    private String getExpression() {
       
-      HashMap<String, String []> inclu = new HashMap<String, String[]>();
-      HashMap<String, String []> exclu = new HashMap<String, String[]>();
+      HashMap<String, String []> inclu = new HashMap<>();
+      HashMap<String, String []> exclu = new HashMap<>();
       
       StringBuilder special = new StringBuilder();
       
@@ -848,19 +848,19 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       for( JCheckBox bx : regVbx )    if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
       for( JCheckBox bx : authVbx )   if( bx.isSelected() ) addParam( inclu,exclu, bx.getActionCommand() );
       
-      HashMap<String, String []> inclu1 = new HashMap<String, String[]>();
+      HashMap<String, String []> inclu1 = new HashMap<>();
       for( JCheckBox bx : catMisVbx ) if( bx.isSelected() )  addParam( inclu1,exclu, bx.getActionCommand() );
       if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
       
-      inclu1 = new HashMap<String, String[]>();
+      inclu1 = new HashMap<>();
       for( JCheckBox bx : catkeyVbx ) if( bx.isSelected() )  addParam( inclu1,exclu, bx.getActionCommand() );
       if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
       
-      inclu1 = new HashMap<String, String[]>();
+      inclu1 = new HashMap<>();
       for( JCheckBox bx : assdataVbx ) if( bx.isSelected() ) addParam( inclu1,exclu, bx.getActionCommand() );
       if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
       
-      inclu1 = new HashMap<String, String[]>();
+      inclu1 = new HashMap<>();
       for( JCheckBox bx : catUcdVbx ) if( bx.isSelected() ) addParam( inclu1,exclu, bx.getActionCommand() );
       if( inclu1.size()>0 )  special.append(" && (dataproduct_type!=catalog || "+rebuildInclu(inclu1)+")");
       
@@ -1039,7 +1039,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    protected boolean hasBeenApplied1() {
       if( flagFormEdit ) return false;
 
-      HealpixMoc moc = getMoc();
+      SpaceMoc moc = getMoc();
       if( moc==null && mocFiltreSpatial!=null || moc!=null && mocFiltreSpatial==null
             || moc!=null && !moc.equals(mocFiltreSpatial) ) return false;
 
@@ -1110,7 +1110,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Mise en place d'un filtre prédéfini.
     * POUR LE MOMENT, SEULE LA SYNTAXE AVANCEE EST PRISE EN COMPTE, LES CHECKBOXES NE SONT PAS UTILISEES */
-   protected void setSpecificalFilter(String name, String expr, HealpixMoc moc, int intersect) {
+   protected void setSpecificalFilter(String name, String expr, SpaceMoc moc, int intersect) {
       clean();
       if( name.equals(Directory.ALLCOLL) ) name=Directory.MYLIST;
       nameField.setText(name);      // Positionnement du nom du filtre
@@ -1150,7 +1150,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       PropPanel.addCouple(this, p, S("FPKEYWORD"), S("FPKEYWORDTIP"), tfDescr, g, c, GridBagConstraints.EAST);
       
       // Catégories des collections
-      catVbx = new Vector<JCheckBox>();
+      catVbx = new Vector<>();
       subPanel = createFilterBis(catVbx, -2, true, "client_category", "/",SORT_ALPHA);
       PropPanel.addCouple(this, p, S("FPDATATYPE"), S("FPDATATYPETIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
@@ -1159,7 +1159,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       PropPanel.addCouple(this, p, S("FPCOVERAGE"), S("FPCOVERAGETIP"), tfCoverage, g, c, GridBagConstraints.EAST);
       
       // Les différents régimes
-      regVbx = new Vector<JCheckBox>();
+      regVbx = new Vector<>();
       subPanel = createFilterBis(regVbx, -2, true, "obs_regime", null,SORT_LIST);
       PropPanel.addCouple(this, p, S("FPREGIME"), S("FPREGIMETIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
@@ -1169,7 +1169,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 
       
       // Les différentes origines des HiPS
-      authVbx = new Vector<JCheckBox>();
+      authVbx = new Vector<>();
       subPanel = createFilterBis(authVbx, -1, true, "ID", "/",SORT_ALPHA);
       PropPanel.addCouple(this, p, S("FPAUTH"), S("FPAUTHTIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
@@ -1236,12 +1236,12 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //      setTitleBorder(p, "Dedicated catalog/table filters");
       
       // Les différents mots clés
-      catkeyVbx = new Vector<JCheckBox>();
+      catkeyVbx = new Vector<>();
       subPanel = createFilterBis(catkeyVbx, -1, false, "obs_astronomy_kw", null, SORT_ALPHA);
       PropPanel.addCouple(this, p, S("FPCATKEYWORD"), S("FPCATKEYWORDTIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Les différents mots clés
-      catMisVbx = new Vector<JCheckBox>();
+      catMisVbx = new Vector<>();
       subPanel = createFilterBis(catMisVbx, -1, false, "obs_mission", null, SORT_ALPHA);
       PropPanel.addCouple(this, p, S("FPMISSION"), S("FPMISSIONTIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
@@ -1252,7 +1252,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
             tfCatNbRow, g, c, GridBagConstraints.EAST);
       
       // les UCDs
-      catUcdVbx = new Vector<JCheckBox>();
+      catUcdVbx = new Vector<>();
       subPanel = new JPanel( new GridLayout(0,3) );
       subPanel.add( bx = new JCheckBox("Parallax"));       bx.setSelected(false); bx.addActionListener(this);
       bx.setActionCommand("data_ucd=pos.parallax*");       setToolTip(bx);   catUcdVbx.add(bx);
@@ -1287,7 +1287,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       PropPanel.addCouple(this, p, S("FPCONTENT"), S("FPCONTENTTIP"), p1, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
       // Les données associées
-      assdataVbx = new Vector<JCheckBox>();
+      assdataVbx = new Vector<>();
       subPanel = createFilterBis(assdataVbx, -1, false, "associated_dataproduct_type", null, SORT_FREQ );
       PropPanel.addCouple(this, p, S("FPASSDATA"), S("FPASSDATATIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
       
@@ -1332,7 +1332,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       cb.addActionListener( this );
       cb.setSelected(true);
       spaceBG.add(cb);
-      comboMocPlane = new JComboBox<String>();
+      comboMocPlane = new JComboBox<>();
       comboMocPlane.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             cbMocPlane.setSelected(true);
@@ -1379,7 +1379,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p1.add(cb); p1.add(js);
       PropPanel.addCouple(this, p, "   ", S("FPSPACESTCINLINETIP"), p1, g, c, GridBagConstraints.EAST);
       
-      comboIntersecting = new JComboBox<String>( SINTERSECT );
+      comboIntersecting = new JComboBox<>( SINTERSECT );
       comboIntersecting.addActionListener( this );
       PropPanel.addFilet(p, g, c, 20, 2);
       JLabel mode = new JLabel(S("FPSPACEINTER"));

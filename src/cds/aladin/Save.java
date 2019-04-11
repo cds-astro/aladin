@@ -80,6 +80,8 @@ import cds.fits.HeaderFits;
 import cds.image.BMPWriter;
 import cds.image.EPSGraphics;
 import cds.moc.HealpixMoc;
+import cds.moc.Moc;
+import cds.moc.SpaceMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.xml.Field;
@@ -405,6 +407,7 @@ public class Save extends JFrame implements ActionListener {
          switch( p.type ) {
             case Plan.ALLSKYMOC:
             case Plan.ALLSKYTMOC:
+            case Plan.ALLSKYSTMOC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
                res &= saveMoc(s,(PlanMoc)p,jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.ASCII : HealpixMoc.FITS);
                break;
@@ -1992,7 +1995,7 @@ public class Save extends JFrame implements ActionListener {
       PrintWriter fo =null;
       try {
          fo = new PrintWriter(new FileOutputStream(new File(filename)));
-         String s = PlanMoc.createPerimeterString(p.getMoc());
+         String s = PlanMoc.createPerimeterString((SpaceMoc)p.getMoc());
          fo.print("#AJS\ndraw line("+s+")\n");
          fo.close();
          fo=null;
@@ -2002,11 +2005,17 @@ public class Save extends JFrame implements ActionListener {
    }
 
    protected boolean saveMoc(String filename, PlanMoc p, int format) {
+      Moc moc = p.getMoc();
       try {
-         HealpixMoc moc = (HealpixMoc)p.getMoc().clone();
-         moc.setMinLimitOrder(0);
-         moc.write(filename, format);
+         if( moc instanceof SpaceMoc && ((SpaceMoc)moc).getMinLimitOrder()>0 ) {
+            SpaceMoc moc1 = (SpaceMoc)moc.clone();
+            moc1.setMinLimitOrder(0);
+            moc1.write(filename, format);
+         } else {
+            moc.write(filename, format);
+         }
          aladin.memoLastFile(filename);
+         
       } catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          return false;
