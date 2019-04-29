@@ -98,7 +98,8 @@ public class BuilderGzip extends Builder {
 
             // On ne compresse pas les tuiles au-delà de l'ordre 5
             // Ni celles du dernier niveau
-            if( compress && (order>Constante.GZIPMAXORDER || order==maxOrder) ) continue;
+            if( order>Constante.GZIPMAXORDER || order==maxOrder) continue;
+//            if( compress && (order>Constante.GZIPMAXORDER || order==maxOrder) ) continue;
 
             // Traitement de toutes les tuiles du niveau
             long maxNpix = Healpix.pow2(order);

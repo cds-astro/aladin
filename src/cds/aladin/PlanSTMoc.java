@@ -28,6 +28,7 @@ import cds.moc.SpaceMoc;
 import cds.moc.SpaceTimeMoc;
 import cds.moc.TimeMoc;
 import cds.tools.Astrodate;
+import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /**
@@ -70,14 +71,27 @@ public class PlanSTMoc extends PlanTMoc {
 
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
-//      long nbMicrosec = ((TimeMoc)moc).getUsedArea();
-      ADD( buf, "\n* Start: ",Astrodate.JDToDate( ((SpaceTimeMoc)moc).getTimeMin()));
-      ADD( buf, "\n* End: ",Astrodate.JDToDate( ((SpaceTimeMoc)moc).getTimeMax()));
-//      ADD( buf, "\n* Sum: ",Util.getTemps(nbMicrosec/1000L, true));
-//      int order = getRealMaxOrder( (TimeMoc)moc);
-//      int drawOrder = getDrawOrder();
-//      ADD( buf,"\n","* Accuracy: "+ TimeMoc.getTemps(  TimeMoc.getDuration(order)));
-//      ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? order+"" : drawOrder+"/"+order));
+      SpaceTimeMoc stmoc = (SpaceTimeMoc) moc;
+      ADD( buf, "\n* Start: ",Astrodate.JDToDate( stmoc.getTimeMin()));
+      ADD( buf, "\n* End: ",Astrodate.JDToDate( stmoc.getTimeMax()));
+      ADD( buf,"\n* # ranges: ",stmoc.timeRange.nranges()+"");
+      int timeOrder = stmoc.getTimeOrder();
+      ADD( buf,"\n* Time res: ",TimeMoc.getTemps(  TimeMoc.getDuration(timeOrder)));
+      ADD( buf,"\n* Best time order: ",timeOrder+"");
+
+      double cov=0;
+      try { cov = (stmoc.getSpaceMoc()).getCoverage();
+      } catch( Exception e ) { }
+      double degrad = Math.toDegrees(1.0);
+      double skyArea = 4.*Math.PI*degrad*degrad;
+      ADD( buf, "\n \n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+      int spaceOrder =stmoc.getSpaceOrder();
+      ADD( buf,"\n* Space res: ",( Coord.getUnit( CDSHealpix.pixRes(spaceOrder)/3600.) ));
+      ADD( buf,"\n* Best space order: ",timeOrder+"");
+      
+      if( Aladin.levelTrace>0 ) {
+         ADD( buf,"\n \nRAM: ",Util.getUnitDisk( stmoc.getMem() ) );
+      }
       
    }
    
@@ -121,11 +135,11 @@ public class PlanSTMoc extends PlanTMoc {
       long tmin = (long)( oLastDrawTmin=getLastDrawTmin()*TimeMoc.DAYMICROSEC );
       long tmax = (long)( oLastDrawTmax=getLastDrawTmax()*TimeMoc.DAYMICROSEC );
       
-      System.out.println("tmin="+tmin+" tmax="+tmax);
+//      System.out.println("tmin="+tmin+" tmax="+tmax);
       
       try {
          return ((SpaceTimeMoc)moc).getSpaceMoc(tmin, tmax);
-      } catch( Exception e ) {
+       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
       return null;
@@ -142,8 +156,6 @@ public class PlanSTMoc extends PlanTMoc {
       return null;
    }
    
-   
-
    private double oLastDrawTmin = -1;
    private double oLastDrawTmax = -1;
    private SpaceMoc oLastDrawMoc = null;
@@ -158,7 +170,7 @@ public class PlanSTMoc extends PlanTMoc {
    }
    
    protected void memoNewTime() {
-      System.out.println("memoNewTime");
+//      System.out.println("memoNewTime");
       oLastDrawTmin = getLastDrawTmin();
       oLastDrawTmax = getLastDrawTmax();
       mocSpaceLowReset();
@@ -167,7 +179,7 @@ public class PlanSTMoc extends PlanTMoc {
    }
 
    protected void memoNewSpace() {
-      System.out.println("memoNewSpace");
+//      System.out.println("memoNewSpace");
       oLastDrawMoc = getLastDrawMoc();
       mocTimeLowReset();
       oiz=-1;
@@ -178,7 +190,7 @@ public class PlanSTMoc extends PlanTMoc {
       if( !isDisplayedInPlot() ) return false;
       Moc m = getLastDrawMoc();
       boolean rep = !mocEquals(m,oLastDrawMoc);
-      System.out.println("isSpaceModified = "+rep);
+//      System.out.println("isSpaceModified = "+rep);
       return rep;
    }
    
@@ -194,7 +206,7 @@ public class PlanSTMoc extends PlanTMoc {
       double tmin = getLastDrawTmin();
       double tmax = getLastDrawTmax();
       boolean rep = tmin!=oLastDrawTmin || tmax!=oLastDrawTmax;
-      System.out.println("isTimeModified = "+rep);
+//      System.out.println("isTimeModified = "+rep);
       return rep;
    }
    
@@ -203,11 +215,11 @@ public class PlanSTMoc extends PlanTMoc {
    
    protected SpaceMoc getSpaceMoc() {
       if( lastCurrentSpaceMoc!=null && !isTimeModified() ) return lastCurrentSpaceMoc;
-      long t1 = System.currentTimeMillis();
+//      long t1 = System.currentTimeMillis();
       SpaceMoc m = getCurrentSpaceMoc();
-      long t2 = System.currentTimeMillis();
-      System.out.println("Regenerate currentSpaceMoc from "+((SpaceTimeMoc)moc).timeRange.sz/2+" ranges "
-            + "=> size="+(m==null?"null":m.getSize()) +" built in "+(t2-t1)+"ms ");
+//      long t2 = System.currentTimeMillis();
+//      System.out.println("Regenerate currentSpaceMoc from "+((SpaceTimeMoc)moc).timeRange.sz/2+" ranges "
+//            + "=> size="+(m==null?"null":m.getSize()) +" built in "+(t2-t1)+"ms ");
       lastCurrentSpaceMoc = m;
       memoNewTime();
       return lastCurrentSpaceMoc;
@@ -215,11 +227,11 @@ public class PlanSTMoc extends PlanTMoc {
    
    protected TimeMoc getTimeMoc() {
       if( lastCurrentTimeMoc!=null && !isSpaceModified() ) return lastCurrentTimeMoc;
-      long t1 = System.currentTimeMillis();
+//      long t1 = System.currentTimeMillis();
       TimeMoc m = getCurrentTimeMoc();
-      long t2 = System.currentTimeMillis();
-      System.out.println("Regenerate currentTimeMoc from "+((SpaceTimeMoc)moc).timeRange.sz/2+" ranges "
-            + "=> size="+(m==null?"null":m.getSize()) +" built in "+(t2-t1)+"ms ");
+//      long t2 = System.currentTimeMillis();
+//      System.out.println("Regenerate currentTimeMoc from "+((SpaceTimeMoc)moc).timeRange.sz/2+" ranges "
+//            + "=> size="+(m==null?"null":m.getSize()) +" built in "+(t2-t1)+"ms ");
       lastCurrentTimeMoc = m;
       memoNewSpace();
       return lastCurrentTimeMoc;

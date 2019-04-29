@@ -229,7 +229,7 @@ public class SED extends JPanel {
             Util.pause(10);
             MyInputStream inParam =  null;
             try {
-               inParam = Util.openAnyStream(url);
+               inParam = Util.openAnyStream(url,20000);
                plan.pcat.tableParsing(inParam, "TABLE");
                parseAndDraw();
             } catch( Exception e ) {
@@ -294,7 +294,7 @@ public class SED extends JPanel {
    
    // Génère la liste des points SED "prémachés" sous la forme d'un ArrayList de SEDItem
    private void createSEDlist(Iterator<?> it) {
-       if( sedList==null ) sedList = new ArrayList<SEDItem>();
+       if( sedList==null ) sedList = new ArrayList<>();
        while( it.hasNext() ) {
           Source s = (Source) it.next();
           double freq = getFreq(s);

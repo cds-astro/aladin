@@ -39,14 +39,16 @@ public class SpaceTimeMoc extends Moc {
       timeRange = new Range2();
    }
 
-   public SpaceTimeMoc( int timeOrder, int spaceOrder ) {
+   public SpaceTimeMoc( int spaceOrder , int timeOrder ) {
       this();
       this.timeOrder=timeOrder;
       this.spaceOrder=spaceOrder;
    }
 
-   public SpaceTimeMoc(Range2 rangeSet) {
+   public SpaceTimeMoc(int spaceOrder , int timeOrder ,Range2 rangeSet) {
       init();
+      this.spaceOrder=spaceOrder;
+      this.timeOrder=timeOrder;
       this.timeRange = new Range2(rangeSet);
    }
    
@@ -90,52 +92,43 @@ public class SpaceTimeMoc extends Moc {
 
    @Override
    public void add(String s) throws Exception {
-      // TODO Auto-generated method stub
-      
    }
 
    @Override
    public void add(Moc moc) throws Exception {
-      // TODO Auto-generated method stub
-      
    }
 
    @Override
    public void check() throws Exception {
-      // TODO Auto-generated method stub
    }
 
    @Override
    public void setProperty(String key, String value) throws Exception {
-      // TODO Auto-generated method stub
-      
    }
 
    @Override
    public String toASCII() throws Exception {
-      // TODO Auto-generated method stub
       return null;
    }
 
    @Override
    public boolean isIntersecting(Moc moc) {
-      // TODO Auto-generated method stub
       return false;
    }
 
    @Override
    public Moc union(Moc moc) throws Exception {
-      return new SpaceTimeMoc( timeRange.union( ((SpaceTimeMoc)moc).timeRange ));
+      return new SpaceTimeMoc( spaceOrder, timeOrder, timeRange.union( ((SpaceTimeMoc)moc).timeRange ));
    }
 
    @Override
    public Moc intersection(Moc moc) throws Exception {
-      return new SpaceTimeMoc( timeRange.intersection( ((SpaceTimeMoc)moc).timeRange ));
+      return new SpaceTimeMoc( spaceOrder, timeOrder, timeRange.intersection( ((SpaceTimeMoc)moc).timeRange ));
    }
    
    @Override
    public Moc subtraction(Moc moc) throws Exception {
-      return new SpaceTimeMoc( timeRange.difference( ((SpaceTimeMoc)moc).timeRange ));
+      return new SpaceTimeMoc( spaceOrder, timeOrder, timeRange.difference( ((SpaceTimeMoc)moc).timeRange ));
    }
 
    @Override
@@ -145,44 +138,34 @@ public class SpaceTimeMoc extends Moc {
 
    @Override
    public void trim() {
-      // TODO Auto-generated method stub
-      
    }
 
    @Override
    public Iterator<MocCell> iterator() {
-      // TODO Auto-generated method stub
       return null;
    }
 
    @Override
    public int getSize(int order) {
-      // TODO Auto-generated method stub
       return 0;
    }
 
    @Override
    public Array getArray(int order) {
-      // TODO Auto-generated method stub
       return null;
    }
 
    @Override
    public void setCurrentOrder(int order) {
-      // TODO Auto-generated method stub
-      
    }
 
    @Override
    public void setCoordSys(String s) {
-      // TODO Auto-generated method stub
-      
+      System.err.println("Not yet implemented");
    }
 
    @Override
    public void addHpix(String s) throws Exception {
-      // TODO Auto-generated method stub
-      
    }
    
    /** Ajustement d'une valeur à l'ordre indiquée */
@@ -231,7 +214,6 @@ public class SpaceTimeMoc extends Moc {
 
    @Override
    public boolean add(int order, long npix) throws Exception {
-      // TODO Auto-generated method stub
       return false;
    }
 
@@ -242,20 +224,15 @@ public class SpaceTimeMoc extends Moc {
 
    @Override
    public String getCoordSys() {
-      // TODO Auto-generated method stub
       return null;
    }
 
    @Override
    public void setCheckConsistencyFlag(boolean flag) throws Exception {
-      // TODO Auto-generated method stub
-      
    }
 
    @Override
    public void toHealpixMoc() throws Exception {
-      // TODO Auto-generated method stub
-      
    }
    
    public void append(String s1) throws Exception {
@@ -412,7 +389,9 @@ public class SpaceTimeMoc extends Moc {
          s.append("\n Union: "+stmoc3);
          s.append( test[3].equals(stmoc3.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
          
-         stmoc1.timeRange.add(stmoc2.timeRange.r[0], stmoc2.timeRange.r[1], stmoc2.timeRange.rangeArray[0]);
+         for( int j=0; j<stmoc2.timeRange.sz; j+=2 ) {
+            stmoc1.timeRange.add(stmoc2.timeRange.r[j], stmoc2.timeRange.r[j+1], stmoc2.timeRange.rangeArray[j/2]);
+         }
          s.append("\n Add  : "+stmoc1);
          s.append( test[3].equals(stmoc1.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
 
@@ -581,38 +560,9 @@ public class SpaceTimeMoc extends Moc {
    static public void main(String a[] ) {
       try {
          
-//         test();
-                
-//         SpaceTimeMoc stmoc1 = new SpaceTimeMoc("t3-5s3-10 t4-6s1-9 t7s3-12 t10s15-18");
-//         stmoc1.setTimeOrder(14);
-//         stmoc1.setMocOrder(13);
-//         System.out.println("\nA:\n"+stmoc1);
-//         System.out.println();
-//         SpaceMoc moc = stmoc1.getSpaceMoc();
-//         System.out.println("\nB:\n"+moc);
+         test();
+//         test(17);
          
-         SpaceTimeMoc stmoc1 = new SpaceTimeMoc(TEST[17][1]);
-         System.out.println("\nA:\n"+stmoc1);
-         System.out.println();
-         
-//         for( int i=0; i<stmoc1.timeRange.size; i++ ) System.out.println("range["+i+"]="+stmoc1.timeRange.range[i]);
-//         System.out.println();
-//         
-//         for( int i=(int)stmoc1.timeRange.range[0]-1; i<stmoc1.timeRange.range[stmoc1.timeRange.size-1]+1; i++ ) {
-//            int j = stmoc1.timeRange.indexOf(i);
-//            boolean avant = j<0;
-//            boolean apres = j==stmoc1.timeRange.size-1;
-//            boolean in = (j&1)==0;
-//            String vals = avant ? "out .."+stmoc1.timeRange.range[j+1]+"[" :
-//                          apres ? "out ["+stmoc1.timeRange.range[j]+".." :
-//                          in    ? "in ["+stmoc1.timeRange.range[j]+".."+stmoc1.timeRange.range[j+1]+"[" :
-//                                  "out ["+stmoc1.timeRange.range[j]+".."+stmoc1.timeRange.range[j+1]+"[" ;
-//            System.out.println("i="+i+" indice="+j+ " ==> "+vals);
-//         }
-//
-//         System.out.println("\nAjout:"+TEST[17][2]);
-         
-         test(17);
 //         
 //         stmoc1.write( "D:/STMoc.fits");
 //         stmoc1.read("D:/STMoc.fits");

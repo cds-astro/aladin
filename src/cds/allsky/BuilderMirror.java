@@ -611,7 +611,7 @@ public class BuilderMirror extends BuilderTiles {
    
    // Copie d'un fichier local (path) vers un fichier local, uniquement si la copie évenutelle
    // et plus ancienne et/ou de taille différente à l'originale.
-   private int copyLocal(String fileIn, String fileOut) throws Exception {
+   public static int copyLocal(String fileIn, String fileOut) throws Exception {
       File fOut,fIn;
       long lastModified;
       long size=-1;

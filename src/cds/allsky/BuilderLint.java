@@ -30,14 +30,15 @@ import java.util.StringTokenizer;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
+import cds.moc.SpaceMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
 /**
  * Vérification de la conformité IVOA 1.0 HiPS
  * @author Pierre Fernique [CDS]
- * @version 23 avril 2017
+ * @version 1.1 - 23 avril 2019 - ajustement pour les Norder0 à 2
+ * @version 1.0 - 23 avril 2017
  */
 public class BuilderLint extends Builder {
    
@@ -58,7 +59,7 @@ public class BuilderLint extends Builder {
    private int tileWidth;       // Taille des tuiles
    private int depth;           // Epaisseur pour un HiPS cube
    private int bitpix;          // bitpix utilisé pour un HiPS catalog tuiles Fits
-   private HealpixMoc moc;      // MOC associé au HiPS
+   private SpaceMoc moc;        // MOC associé au HiPS
    private ArrayList<String> extensions; // Liste des extensions des tuiles (le point inclus)
    
   
@@ -150,7 +151,7 @@ public class BuilderLint extends Builder {
       id="null";
       flagCDS = context.isCDSLint();
       
-      extensions = new ArrayList<String>();
+      extensions = new ArrayList<>();
       
       // Vérification du path du HiPS à checker
       path = context.getOutputPath();
@@ -284,7 +285,7 @@ public class BuilderLint extends Builder {
       
       // Méthode 1: On prend au hasard une cellule du MOC de couverture
       if( moc!=null ) {
-         HealpixMoc moc1 = (HealpixMoc) moc.clone();
+         SpaceMoc moc1 = (SpaceMoc) moc.clone();
          moc1.setMocOrder(order);
          
          long nb = moc1.getUsedArea();
@@ -439,7 +440,7 @@ public class BuilderLint extends Builder {
       }
 
       try {
-         moc = new HealpixMoc();
+         moc = new SpaceMoc();
          moc.read(in);
          in.close();
          
@@ -479,6 +480,7 @@ public class BuilderLint extends Builder {
       boolean [] propReq    = new boolean[ PROP_REQ.length ];
       boolean [] propShould = new boolean[ PROP_SHOULD.length ];
       StringBuilder propUnref = null;
+      ArrayList<String> propUnrefArray = new ArrayList<>();
       
       // Vérification du numéro de version HiPS
       s = prop.get("hips_version");
@@ -515,10 +517,12 @@ public class BuilderLint extends Builder {
             i=Util.indexInArrayOf(key, PROP_SHOULD);
             if( i>=0 ) propShould[i]=true;
             else {
-               i=Util.indexInArrayOf(key, PROP_OTHERS);
-               if( i<0 ) {
-                  if( propUnref==null ) propUnref = new StringBuilder( key );
-                  else propUnref.append(","+key);
+               String keyx = withoutNumSuffix(key);
+               i=Util.indexInArrayOf(keyx, PROP_OTHERS);
+               if( i<0 && !propUnrefArray.contains(keyx) ) {
+                  propUnrefArray.add(keyx);
+                  if( propUnref==null ) propUnref = new StringBuilder( keyx );
+                  else propUnref.append(","+keyx);
                }
             }
          }
@@ -860,6 +864,18 @@ public class BuilderLint extends Builder {
       return mode==2 || mode==4 || mode==5;
    }
    
+   // Retourne un mot clé HiPS sans son éventuel suffixe numérique "_nn"
+   // ex: hipsgen_params_1 => hipsgen_params
+   static private String withoutNumSuffix( String s ) {
+      int i = s.lastIndexOf('_');
+      if( i<0 ) return s;
+      try { 
+         Integer.parseInt(s.substring(i+1) ); 
+         return s.substring(0,i);
+      } catch( Exception e ) {}
+      return s;
+   }
+
    static private String getFilePath(int order, long npix,int z, String FS) {
       return
       "Norder" + order + FS +

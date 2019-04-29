@@ -581,6 +581,8 @@ public class Plot {
                ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
            }
 
+            String prevDate = null;
+            
             c.del = plotProj.isLogYPlot() ? 0.1 :initValY;
             for( c.al=initValX, i=-10; i<200; c.al+=incrX, i++ ) {
                plotProj.getXY(c);
@@ -592,7 +594,12 @@ public class Plot {
                   if( isPlotTime() ) {
                      s1 = Astrodate.JDToDate( c.al );
                      int offset = s1.indexOf('T');
-                     if( offset>0 ) s1 = s1.substring(0,offset);
+                     if( offset>0 ) {
+                        String d1 = s1.substring(0,offset);
+                        String h1 = s1.substring(offset+1);
+                        s1 = d1.equals(prevDate) ? h1 : d1;
+                        prevDate=d1;
+                     }
                   }
                   else {
                      if( plotProj.isLogXPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;

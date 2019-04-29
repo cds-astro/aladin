@@ -118,6 +118,10 @@ public class PlanTMoc extends PlanMoc {
    
    protected boolean mocTimeLowReset=false;
    protected void mocTimeLowReset()  { mocTimeLowReset=true;  }
+   
+   
+   private int lastTimeOrderDrawn = -1;
+   protected int getDrawOrder() { return lastTimeOrderDrawn; }
 
    
    protected Moc getTimeMocLow(int order,int gapOrder) {
@@ -149,7 +153,7 @@ public class PlanTMoc extends PlanMoc {
          if( i>=5 ) order=i;
       } else isLoading=false;
 
-      lastOrderDrawn = order;
+      lastTimeOrderDrawn = order;
       return arrayTimeMoc[order];
    }
    

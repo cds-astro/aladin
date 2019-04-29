@@ -70,9 +70,10 @@ public final class Healpix implements HealpixImpl {
     * @throws Exception
     */
    public long [] queryDisc(int order, double lon, double lat, double radius) throws Exception {
-      double theta = Math.PI/2. - lat/180.*Math.PI;
-      double phi = lon/180.*Math.PI;
-      return CDSHealpix.query_disc(order, theta, phi, Math.toRadians(radius), true);
+//      double theta = Math.PI/2. - lat/180.*Math.PI;
+//      double phi = lon/180.*Math.PI;
+//      return CDSHealpix.query_disc(order, theta, phi, Math.toRadians(radius), true);
+      return CDSHealpix.query_disc(order, lon, lat, Math.toRadians(radius), true);
    }
 
    /*********************** private stuff ***************************************************/

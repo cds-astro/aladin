@@ -221,7 +221,7 @@ public class BuilderIndex extends Builder {
 
 
    // Génération de l'index
-   private boolean build() throws Exception {
+   protected void build() throws Exception {
       initStat();
       String input = context.getInputPath();
       String output = context.getOutputPath();
@@ -235,8 +235,6 @@ public class BuilderIndex extends Builder {
       String pathDest = context.getHpxFinderPath();
 
       create(input, pathDest, order);
-
-      return true;
    }
 
    // Initialisation des statistiques

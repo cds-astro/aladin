@@ -2154,7 +2154,7 @@ public class PlanBG extends PlanImage {
       else transferFct4Preview = transfertFct;
       
       truePixels = !truePixels;
-      pixMode = truePixels ? PIX_TRUE : colorPNG ? PIX_255 : PIX_256;
+      setPixMode(truePixels ? PIX_TRUE : colorPNG ? PIX_255 : PIX_256);
       
       // Positionnement de la fonction de transfert pour le nouveau mode
       transfertFct = truePixels ? transferFct4Fits : transferFct4Preview;

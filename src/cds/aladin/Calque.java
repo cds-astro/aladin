@@ -2059,6 +2059,22 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
+   /** Crée un plan STMOC à la résolution indiquée à partir d'une liste de catalogues avec timestamp. */
+   protected int newPlanSTMoc(String label,Plan [] p,int spaceOrder,int timeOrder,
+         double duration,double radius,boolean fov) {
+      int n;
+      PlanTMoc pa;
+
+      if( label==null ) label = "="+p[0].getUniqueLabel("["+p[0].getLabel()+"]");
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanSTMocGen(aladin,label,p,spaceOrder,timeOrder,duration,radius,fov);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
+
 
    /** Crée une image Algo sur la pile avec l'algo suivant : "p1 fct p2" ou "p1 fct coef" si p2
     * est nul. Si p1 est nul, la première opérande sera le plan de base lui-même et le résultat
@@ -2438,7 +2454,7 @@ public class Calque extends JPanel implements Runnable {
       p2.cm = CanvasColorMap.getCM(0,128,255,p2.video==PlanImage.VIDEO_INVERSE,
             aladin.configuration.getCMMap(),aladin.configuration.getCMFct());
       p2.cmControl[0] = 0; p2.cmControl[1] = 128; p2.cmControl[2] = 255;
-      p2.pixMode = PlanImage.PIX_256;
+      p2.setPixMode(PlanImage.PIX_256);
       p2.changeImgID();
       p2.setPourcent(-1);
 

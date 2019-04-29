@@ -21,10 +21,10 @@
 
 package cds.aladin;
 
-import cds.tools.Util;
+import java.io.RandomAccessFile;
+import java.util.Date;
 
-import java.io.*;
-import java.util.*;
+import cds.tools.Util;
 
 /**
  * Gestion d'un plan image Cube
@@ -90,7 +90,7 @@ public class PlanImageCube extends PlanImageBlink {
       naxis2=height = headerFits.getIntFromHeader("NAXIS2");
       depth = headerFits.getIntFromHeader("NAXIS3");
 
-      pixMode = PIX_TRUE;
+      setPixMode( PIX_TRUE );
       npix = n = Math.abs(bitpix)/8;  // Nombre d'octets par valeur
       taille=(long)width*height*depth*n;	  // Nombre d'octets
       setPourcent(0);

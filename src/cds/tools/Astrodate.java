@@ -21,7 +21,10 @@
 
 package cds.tools;
 
+import org.jastronomy.jsofa.JSOFA;
+
 import cds.aladin.Tok;
+import cds.astro.Unit;
 
 /**
  * Quelques fonctions pour la conversions des dates astronomiques.
@@ -155,5 +158,103 @@ public class Astrodate {
          return MJDToJD( Util.ISOToMJD( Util.parseDate( date ) ) );
       } catch( Exception e ) { }
       return Double.NaN;
+   }
+   
+   static private double getSofaJD( JSOFA.JulianDate jd ) { return jd.djm0 + jd.djm1; }
+   
+   static public double getTCBTime(double jdTime, String timeScale, String refPosition ) throws Exception {
+      if( timeScale.equals("TCB") && refPosition.equals("BARYCENTER") ) return jdTime;
+      
+      double deltaT=-1;   // JE NE SAIS PAS ENCORE CE QUE C'EST
+      double dtr=-1;  
+
+//      The argument dtr represents the quasi-periodic component of the
+//      *     GR transformation between TT and TCB.  It is dependent upon the
+//      *     adopted solar-system ephemeris, and can be obtained by numerical
+//      *     integration, by interrogating a precomputed time ephemeris or by
+//      *     evaluating a model such as that implemented in the SOFA function
+//      *     jauDtdb.   The quantity is dominated by an annual term of 1.7 ms
+//      *     amplitude.
+//      
+//      public static  double jauDtdb(double date1, double date2,
+//            double ut, double elong, double u, double v)
+//      *<!-- Given: -->
+//      *     @param date1 double   date, TDB (Notes 1-3)
+//      *     @param date2 double   date, TDB (Notes 1-3) 
+//      *     @param ut             double   universal time (UT1, fraction of one day)
+//      *     @param elong          double   longitude (east positive, radians)
+//      *     @param u              double   distance from Earth spin axis (km)
+//      *     @param v              double   distance north of equatorial plane (km)
+//      *
+//      * <!-- Returned (function value): -->
+//      *  @return @return             double  TDB-TT (seconds)
+   
+      
+      if( timeScale.equals("UTC") ) {
+         jdTime = getSofaJD( JSOFA.jauUtctai(jdTime,0) );
+         timeScale="TAI"; 
+      }
+
+      if( timeScale.equals("TAI") ) {
+         jdTime = getSofaJD( JSOFA.jauTaitt(jdTime,0) );
+         timeScale="TT"; 
+      }
+
+      if( timeScale.equals("UT1") ) {
+         if( deltaT==-1 ) throw new Exception("Astrodate convertion not possible - missing Solar ephemerids");
+         jdTime = getSofaJD( JSOFA.jauUt1tt(jdTime,0,deltaT) );
+         timeScale="TT"; 
+      }
+
+      if( timeScale.equals("TT") ) {
+         if( deltaT==-1 ) throw new Exception("Astrodate convertion not possible - missing Solar ephemerids");
+         jdTime = getSofaJD( JSOFA.jauTttdb(jdTime,0,dtr) );
+         timeScale="TDB"; 
+      }
+      
+      if( timeScale.equals("TDB") ) {
+         jdTime = getSofaJD( JSOFA.jauTdbtcb(jdTime,0) );
+         timeScale="TCB"; 
+      }
+      
+      if( timeScale.equals("TCB") ) return jdTime;
+      
+      throw new Exception("Astrodate convertion error");
+   }
+   
+   /** Pour palier le bug de la librairie de FOX qui ne supporte pas les unités types 10-2yr */
+   static public double convert(double val, String fromUnit, String toUnit) throws Exception {
+      
+      // On applique la puissance de 10 en amont si nécessaire
+      boolean flagMoins;
+      if( (flagMoins=fromUnit.startsWith("10-")) || fromUnit.startsWith("10+")) {
+         int deb=3;
+         int fin=deb+1;
+         while( Character.isDigit( fromUnit.charAt(fin)) ) fin++;
+         int exp = Integer.parseInt( fromUnit.substring(deb, fin));
+         double fct =  Math.pow(10,exp);
+         val = flagMoins ? val/fct : val*fct;
+         fromUnit = fromUnit.substring(fin);
+      }
+      
+      // On applique la puissance de 10 en amont si nécessaire
+      double fctOut=1;
+      if( (flagMoins=toUnit.startsWith("10-")) || fromUnit.startsWith("10+") ) {
+         int deb=3;
+         int fin=deb+1;
+         while( Character.isDigit( toUnit.charAt(fin)) ) fin++;
+         int exp = Integer.parseInt( fromUnit.substring(deb, fin));
+         fctOut =  Math.pow(10,exp);
+         toUnit = toUnit.substring(fin);
+      }
+      
+      // Conversion à la FOX dans les unités finales
+      if( !fromUnit.equals(toUnit) ) {
+         Unit m1 = new Unit(val+" "+fromUnit);
+         m1.convertTo( new Unit(toUnit));
+         val = m1.getValue();
+      }
+      
+      return flagMoins ? val*fctOut : val/fctOut;
    }
 }

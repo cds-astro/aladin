@@ -33,6 +33,7 @@ import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
 import cds.moc.SpaceMoc;
+import cds.mocmulti.MultiMoc;
 import cds.tools.pixtools.Util;
 
 /**
@@ -51,7 +52,7 @@ public abstract class Builder {
    static public Builder createBuilder(Context context,Action action) throws Exception {
       switch(action) {
          case INDEX:     return new BuilderIndex(context);
-         case TINDEX:    return new BuilderTIndex(context);
+//         case TINDEX:    return new BuilderTIndex(context);
          case TILES:     return new BuilderTiles(context);
          case ALLSKY:    return new BuilderAllsky(context);
          case JPEG:      return new BuilderJpg(context);
@@ -71,7 +72,7 @@ public abstract class Builder {
          case CLEANDATE: return new BuilderCleanDate(context);
          case CLEANWEIGHT:return new BuilderCleanWeight(context);
          case LINT:      return new BuilderLint(context);
-         case GZIP:      return new BuilderGzip(context);
+//         case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
@@ -86,7 +87,7 @@ public abstract class Builder {
          case MAP:       return new BuilderMap(context);
          case TMOC:      return new BuilderTMoc(context);
          case STMOC:     return new BuilderSTMoc(context);
-         case ZIP:       return new BuilderZip(context);
+//         case ZIP:       return new BuilderZip(context);
          default: break;
       }
       throw new Exception("No builder associated to this action");
@@ -101,6 +102,9 @@ public abstract class Builder {
    /** Exécute la tâche */
    public abstract void run() throws Exception;
 
+   /** Exécute la tâche sans info technique */
+   protected void build() throws Exception {}
+      
    /** Retourne l'identificateur de l'action */
    public abstract Action getAction();
 
@@ -393,7 +397,7 @@ public abstract class Builder {
    }
 
    protected void validateLabel() {
-      if( context.getLabel()!=null ) return;
+      if( context.label!=null ) return;
       String label = getALabel(context.getOutputPath(),context.getInputPath());
       if( label!=null && label.length()>0 ) context.label=label;
    }
@@ -410,9 +414,16 @@ public abstract class Builder {
             InputStreamReader in = new InputStreamReader( new BufferedInputStream( new FileInputStream(propFile) ), "UTF-8");
             prop.load(in);
             in.close();
-            String s = prop.getProperty(Constante.KEY_OBS_TITLE);
+            
+            String s =  MultiMoc.getID(prop);
+            s=context.getLabelFromHipsId(s);
+            if( s==null ) {
+               s = prop.getProperty(Constante.KEY_OBS_TITLE);
+            }
 //            String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
-            if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
+            if( s==null ) {
+               s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
+            }
             if( s!=null && s.length()>0 ) label=s;
          }
       } catch( Exception e ) { }

@@ -22,10 +22,14 @@
 package cds.aladin;
 
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.util.*;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBufferInt;
+import java.net.URL;
+import java.util.Date;
+import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
@@ -80,7 +84,7 @@ public class PlanImageColor extends PlanImageRGB {
             String fmt = (type & MyInputStream.JPEG) != 0 ? "jpeg" :
                (type & MyInputStream.PNG) != 0 ? "png" : "gif";
             
-            pixMode = (type & MyInputStream.JPEG) != 0 ? PIX_RGB : PIX_ARGB;
+            setPixMode( (type & MyInputStream.JPEG) != 0 ? PIX_RGB : PIX_ARGB );
                
             Iterator readers = ImageIO.getImageReadersByFormatName(fmt);
             ImageReader reader = (ImageReader)readers.next();

@@ -749,6 +749,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
             dis = Util.openStream(filename,false,10000);
             if( skip>0 ) dis.skip(skip);
             buf = readFully(dis, fastLoad );
+            
+            detectTypeColor(buf);
+
          } finally { if( dis!=null ) dis.close(); }
 
          // Fichier local (zippé ou non)
@@ -761,10 +764,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             byte [] c = new byte[8];
             f.readFully(c);
 
-            // Detection de JPEG
-            if( (c[0] & 0xFF)==255 && (c[1] & 0xFF)==216 ) typeColor = JPEG;
-            else if( (c[0] & 0xFF)==137 && c[1]==80 && c[2]==78 && c[3]==71
-                  && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
+            detectTypeColor(c);
 
             if( (c[0] & 0xFF)==31 && (c[1] & 0xFF)==139 ) {
                //                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
@@ -791,6 +791,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
       else timeNet = t;
 
       return buf;
+   }
+   
+   // Detection de JPEG ou PNG
+   private void detectTypeColor( byte [] c ) {
+      if( (c[0] & 0xFF)==255 && (c[1] & 0xFF)==216 ) typeColor = JPEG;
+      else if( (c[0] & 0xFF)==137 && c[1]==80 && c[2]==78 && c[3]==71
+            && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
    }
 
    /** Chargement du losange sous forme de JPEG
@@ -833,7 +840,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( planBG.pixMode==-1 ) {
          
          if( !planBG.color ) {
-            planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
+            planBG.setPixMode(extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255);
             planBG.setBufPixels8(pixels);
             planBG.pixelMin   = 0;
             planBG.pixelMax   = 255;
@@ -841,7 +848,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             planBG.dataMax    = 255;
             
          } else {
-            planBG.pixMode = typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB;
+            planBG.setPixMode( typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB );
             planBG.video = PlanImage.VIDEO_NORMAL;
          }
 
@@ -1048,7 +1055,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       stream = loadStream(filename);
 
       boolean initPixMode = planBG.pixMode==-1;
-      if( initPixMode ) planBG.pixMode = PlanBG.PIX_TRUE;
+      if( initPixMode ) planBG.setPixMode(PlanBG.PIX_TRUE);
 
       // Lecture de l'entete Fits (à la brute - elle ne doit pas dépasser 2880 catactères)
       byte [] head = new byte[2880];
@@ -1063,7 +1070,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          bitpix = (int)getValue(head,"BITPIX");
          if( flagARGB =isARGB(head) ) {
             bitpix=0;
-            if( initPixMode ) planBG.pixMode = PlanBG.PIX_ARGB;
+            if( initPixMode ) planBG.setPixMode(PlanBG.PIX_ARGB);
             //            System.out.println("HealpixKey FITS in ARGB");
          }
          if( bitpix!=8 && !flagARGB ) truePixels=true;

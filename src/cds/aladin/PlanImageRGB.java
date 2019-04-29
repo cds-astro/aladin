@@ -81,9 +81,9 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       type=IMAGERGB;
       isOldPlan=false;
 
-      pixMode = PIX_RGB;
+      setPixMode( PIX_RGB );
       if( (r==null || r.isTransparent() ) && (g==null || g.isTransparent() )
-            && (g==null || g.isTransparent()) ) pixMode=PIX_ARGB;
+            && (g==null || g.isTransparent()) ) setPixMode( PIX_ARGB );
 
       planRed=r; planGreen=g; planBlue=b;
       flagRed=planRed!=null;
@@ -148,7 +148,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       super(aladin,file,inImg);
       if( u!=null ) this.u = u;	// C'est pas beau hein ?! En fait u est modifié comme pour un fichier dans super(), faut bien lui remettre les idées en place
       type=IMAGERGB;
-      pixMode = PIX_RGB;
+      setPixMode( PIX_RGB );
       active=true;
       flagRed=flagGreen=flagBlue=true;
       initCMControl();
@@ -252,7 +252,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       // Lecture de l'entete Fits si ce n'est deja fait
       if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
 
-      pixMode = isARGB ? PIX_ARGB : PIX_RGB;
+      setPixMode( isARGB ? PIX_ARGB : PIX_RGB );
       bitpix = headerFits.getIntFromHeader("BITPIX");
       if( bitpix==0 ) {
          aladin.command.printConsole("!!! RGB BITPIX=0 => assuming BITPIX=8 !\n");

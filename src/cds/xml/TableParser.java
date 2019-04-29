@@ -54,6 +54,7 @@ import cds.tools.Util;
  * du AstroRes, du VOTable, du VOTable avec CSV encapsulé, VOTable base64,
  * du FITS ASCII, du FITS BINTABLE, ...
  *
+ * @version 3.2 - avr 19 - prise en compte du TIMESYS
  * @version 3.1 - avr 18 - prise en compte d'une colonne de temps
  * @version 3.0 - avr 13 - BINARY correction + BINARY2
  * @version 2.4 - 2009 - Support pour VOTable 1.2
@@ -71,7 +72,7 @@ import cds.tools.Util;
  * @Author P.Fernique [CDS]
  */
 final public class TableParser implements XMLConsumer {
-
+   
    static final Astroframe AF_FK4 = new FK4();
    static final Astroframe AF_FK5 = new FK5();
    static final Astroframe AF_GAL = new Galactic();
@@ -162,13 +163,105 @@ final public class TableParser implements XMLConsumer {
    private Hashtable<String,String> cooFieldref;     // Liste des références de FIELD pour un coosys partitulier
    private boolean inAstroCoords;     // true si on est dans un GROUP de définition d'un système de coordonnées
    private String astroCoordsID;      // Dernier ID d'une définition d'un système de coordonnées
-   private int timeSystem=-1 ;        // Système temporel (JD, MJD, YEARS, ISOUTC) le plus probable
-   private Field timeField;           // Le field associé à la colonne de temps la plus probable;
    private Astroframe srcAstroFrame = null;     // Systeme de coord initial
    private Astroframe trgAstroFrame = AF_ICRS;  // System de coord final
    private Astropos c = new Astropos();         // coord courante
    private String filter;          // Le filtre en cours de parsing, null sinon
    private boolean inSEDGroup;     // true si on est dans un GROUP de définition d'un point SED
+   private Hashtable<String,String> timescale;        // Liste des timescale trouvés dans la VOTable
+   private Hashtable<String,String> timeorigin;       // Liste des timeorigin trouvés dans la VOTable
+   private Hashtable<String,String> refposition;      // Liste des refposition trouvés dans la VOTable
+   private TimeFrame srcTimeFrame = null;     // Systeme de temps initial
+   private int timeFormat=-1 ;        // Format temporel (JD, MJD, YEARS, ISOUTC) le plus probable
+   private Field timeField;           // Le field associé à la colonne de temps la plus probable;
+   private boolean first=true;        // Pour n'afficher qu'une fois un message d'alerte sur TCB/BARYCENTER
+ 
+   
+   class TimeFrame {
+      String id=null;                  // Identifier
+      String timeScale=null;           // Système temporel
+      String refPosition=null;         // Position de référence de ce système
+      double timeOrigin;               // Offset sur l'origine (toujours en JD)
+      int timeFormat=TIME_UNKNOWN;     // format temporel (JD, MJD, YEARS, ISOUTC) le plus probable UNKNOWN
+      String unit;                     // Unité utilisé
+      
+      TimeFrame(String timescale, String refposition, double timeOrigin, String unit, int timeFormat) {
+         this.timeScale = timescale;
+         this.refPosition = refposition;
+         this.timeOrigin = timeOrigin;
+         this.unit = unit;
+         this.timeFormat=timeFormat;
+      }
+      
+      // Positionne le time origin. Si présence d'une unité, convertit la valeur
+      // en jours (d), sinon suppose que c'est exprimés en jours (JD)
+      void setTimeOrigin(double timeOrigin, String unit) throws Exception {
+         if( unit!=null && !unit.equals("d") ) {
+            timeOrigin = Astrodate.convert(timeOrigin, unit, "d");
+         }
+         this.timeOrigin = timeOrigin;
+      }
+      
+      double getJDTime( String date ) throws Exception {
+         String valTime = date;
+         
+         // Changement d'unités en cas de subdivisions d'années
+         if( timeFormat==YEARS && unit!=null && !unit.equals("yr") ) {
+            double t=Double.parseDouble( valTime );;
+            t = Astrodate.convert( t, unit, "yr");
+            valTime = t+"";
+         }
+         
+         // Transformation en JD
+         double jdTime =  Astrodate.parseTime(valTime, timeFormat);
+         
+         // ICI IL FAUDRAIT FAIRE LE CHANGEMENT DE SYSTEM DE REF SI NECESSAIRE
+//         if( first && !(timeScale.equals("TCB") &&  refPosition.equals("BARYCENTER")) ) {
+//            first=false;
+//            aladin.warning("Note that Aladin is not able to convert the time values "
+//                  + "in this table from "+timeScale+"/"+refPosition+" to TCB/BARYCENTER. This implies approximation on time tools & plots "
+//                        + "(in any cases < 15mn)");
+//         }
+         
+         boolean flagError=false;
+         if( timeScale!=null && refPosition!=null ) {
+            try {
+               jdTime = Astrodate.getTCBTime(jdTime, timeScale, refPosition);
+            } catch( Exception e ) {
+               if( first && Aladin.levelTrace>=3 ) e.printStackTrace();
+               flagError=true;
+            }
+         }
+
+         if( first && flagError ) {
+            first=false;
+            aladin.warning("Note that Aladin can not convert the time values "
+                  + "in this table from "+timeScale+"/"+refPosition+" to TCB/BARYCENTER. This implies approximation on time tools & plots "
+                  + "(in any cases < 15mn)");
+         }
+         
+         // Ajout de l'offset éventuel
+         jdTime += timeOrigin;
+         
+         return jdTime;
+      }
+      
+      void setTimeFormat(int timeFormat) {
+         this.timeFormat = timeFormat;
+         if( timeFormat==MJD) timeOrigin-=2400000.5;
+      }
+      
+      public String toString() {
+         return (id!=null?"ID="+id:"")
+               +" format="+Field.COOSIGN[ timeFormat ]
+               +(unit!=null?" unit="+unit:"")
+               +(timeOrigin!=0?" timeOffset="+timeOrigin:"")
+               +(timeScale!=null?" timescale="+timeScale:"")
+               +(refPosition!=null?" refposition="+refPosition:"")
+               ;
+      }
+   }
+   
 
    // Pour le traitement des tables FITS
    private HeaderFits headerFits;
@@ -439,6 +532,9 @@ final public class TableParser implements XMLConsumer {
          cooepoch = new Hashtable<>(10);
          cooequinox = new Hashtable<>(10);
          cooFieldref = new Hashtable<>(10);
+         timeorigin = new Hashtable<>(10);
+         timescale = new Hashtable<>(10);
+         refposition = new Hashtable<>(10);
       }
 
       try {
@@ -994,6 +1090,9 @@ final public class TableParser implements XMLConsumer {
       cooepoch = new Hashtable<>(10);
       cooequinox = new Hashtable<>(10);
       cooFieldref = new Hashtable<>(10);
+      timeorigin = new Hashtable<>(10);
+      timescale = new Hashtable<>(10);
+      refposition = new Hashtable<>(10);
       typeFmt = dis.getType();
 
       return (xmlparser.parse(dis,endTag) && error==null /* && nField>1 */ );
@@ -1008,7 +1107,7 @@ final public class TableParser implements XMLConsumer {
    private void initTable() {
       nRA=nDEC=nPMRA=nPMDEC=nX=nY=nRADEC=nTime=-1;
       qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=qualPMRA=qualPMDEC=qualTime=1000; // 1000 correspond au pire
-      timeSystem = -1;
+      timeFormat = -1;
       timeField = null;
       timeOffset = 0;
       format = formatx = FMT_UNKNOWN;
@@ -1225,7 +1324,7 @@ final public class TableParser implements XMLConsumer {
 
       // Traitement de quelques balises qui peuvent avoir des profondeurs diverses
       // sans pour autant entrer dans les FIELD ou DATA
-      if( depth<4 ) {
+      if( depth<5 ) {
          if( name.equals("INFO") ) {
             att=(String)atts.get("name");
             if( att!=null && att.equals("AladinFilter") ) {
@@ -1249,6 +1348,13 @@ final public class TableParser implements XMLConsumer {
                if( (att=(String)atts.get("system"))!=null )  coosys.put(id,att);
                if( (att=(String)atts.get("epoch"))!=null )   cooepoch.put(id,att);
                if( (att=(String)atts.get("equinox"))!=null ) cooequinox.put(id,att);
+            }
+         } else if( name.equalsIgnoreCase("TIMESYS") ) {
+            id=(String)atts.get("ID");
+            if( id!=null ) {
+               if( (att=(String)atts.get("timescale"))!=null )   timescale.put(id,att);
+               if( (att=(String)atts.get("timeorigin"))!=null )  timeorigin.put(id,att);
+               if( (att=(String)atts.get("refposition"))!=null ) refposition.put(id,att);
             }
          }
       }
@@ -1413,8 +1519,9 @@ final public class TableParser implements XMLConsumer {
          consumer.tableParserInfo("   -EPNTAP VOTABLE => c1min,c2min used as longitude,latitude");
       }
 
-      // Par défaut, ce sera du ICRS
+      // Par défaut, ce sera du ICRS en TCB-BARYCENTRER-sans offset
       srcAstroFrame=null;
+      srcTimeFrame=null;
       
       // Aucune colonne ne ressemble de près ou de loin à des coordonnées
 //      if( nRA<0 || nDEC<0 ) {
@@ -1482,11 +1589,11 @@ final public class TableParser implements XMLConsumer {
             }
          }
       }
-
+      
       consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY,
             (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
       if( nTime>=0 ) {
-         consumer.tableParserInfo("   -assuming Time column "+(nTime+1)+" "+proba(qualTime)+" timesys unknown (assuming TDB/Barycentric)");
+         consumer.tableParserInfo("   -assuming Time column "+(nTime+1)+" "+proba(qualTime));
       }
       if( flagXY ) {
          consumer.tableParserInfo("   -assuming XY positions column "+(nX+1)+" for X and "+(nY+1)+" for Y");
@@ -1538,12 +1645,64 @@ final public class TableParser implements XMLConsumer {
             }
             else consumer.tableParserInfo("!!! Coordinate system assignation error... assuming ICRS");
          }
+         
       } else {
          if( !flagNOCOO ) consumer.tableParserInfo("   -No coordinate system reference found... assuming ICRS");
       }
+      
+      if( timescale!=null && timescale.size()>0 ) {
+         consumer.tableParserInfo("   -Time system references found:");
+         Enumeration<String> ce = timescale.keys();
+         while( ce.hasMoreElements() ) {
+            String k = ce.nextElement();
+            String origin   = timeorigin.get(k);
+            String scale    = timescale.get(k);
+            String refpos   = refposition.get(k);
+            String s = "      ID=\""+k+"\" => "
+                  + (origin==null?"":" timeorigin="+origin)
+                  + (scale==null  ?"":" timescale="+scale)
+                  + (refpos==null  ?"":" refposition="+refpos)
+                  ;
+            consumer.tableParserInfo(s);
+         }
+
+         try {
+            Field f = memoField.elementAt(nTime);
+
+            // Assignation du système de time par "ref" classique
+            if( f.ref!=null &&  timescale.get(f.ref)!=null ) setSourceTimeFrame(f.ref,f.unit,TIME_UNKNOWN);
+
+         } catch( Exception e) {
+
+            // Pas de désignation du système, mais un seul système défini => on le prend
+            if( timescale.size()==1 ) {
+               try { setSourceTimeFrame(timescale.keys().nextElement(),f.unit,TIME_UNKNOWN); }
+               catch( Exception e1 ) {  }
+            }
+            else {
+               if( Aladin.levelTrace>=3 ) e.printStackTrace();
+               consumer.tableParserInfo("!!! Time system assignation error... assuming TCB/BARYCENTER");
+            }
+         }
+         
+      } else {
+         if( nTime>=0 ) consumer.tableParserInfo("   -No time system reference found... TCB/BARYCENTER");
+      }
+
    }
    
    static private String proba(int qual) { return "(proba="+(100-qual/10.)+"%)"; }
+   
+   
+   private void setSourceTimeFrame(String ref,String unit, int timeSystem) {
+      String scale = timescale.get(ref);
+      String refpos =refposition.get(ref);
+      double origin = 0;
+      String s =timeorigin.get(ref);
+      if( s!=null ) origin=Double.parseDouble(s);
+      srcTimeFrame = new TimeFrame(scale,refpos,origin,unit,timeSystem);
+      srcTimeFrame.id = ref;
+   }
 
    /** Positionnement du Frame source */
    private void setSourceAstroFrame(String ref,String eq, String ep,int n) throws Exception {
@@ -1855,13 +2014,18 @@ final public class TableParser implements XMLConsumer {
 
    private static final String DEFAULT = "Default";
    private Astroframe lastCoordSys=null;             // Systeme de coordonnées associé au champ courant (avant validation)
-
+   private TimeFrame lastTimeSys=null;
+   
    private void validLastCoordSys() {
       srcAstroFrame = lastCoordSys;
       if( srcAstroFrame==AF_GAL )  coosys.put(DEFAULT,"GAL");
       else if( srcAstroFrame==AF_SGAL ) coosys.put(DEFAULT,"SGAL");
       else if( srcAstroFrame==AF_SGAL ) coosys.put(DEFAULT,"ECL");
       else coosys.remove(DEFAULT);
+   }
+   
+   private void validLastTimeSys() {
+      srcTimeFrame = lastTimeSys;
    }
 
    private void setGal()  { lastCoordSys = AF_GAL;  }
@@ -1882,6 +2046,17 @@ final public class TableParser implements XMLConsumer {
       int n = Util.indexInArrayOf(s, UCDTIME);
       if( n>=0 && s.endsWith("meta.main") ) n-=10;
       return n;
+   }
+   
+   // Retourne 0 si le champ utilise une ref vers un TIMESYS + ucd MAIN, sans ucd MAIN retourne 50
+   // et sinon -1
+   private int useTimeSys(Field f,String ucd) {
+      if( timescale==null ) return -1;
+      if( f.ref==null ) return -1;
+      if( timescale.get(f.ref)!=null ) {
+         return ucd!=null && Util.indexOfIgnoreCase(ucd, "main")>=0 ? 50 : 0;
+      }
+      return -1;
    }
 
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
@@ -2031,7 +2206,8 @@ final public class TableParser implements XMLConsumer {
       
       // Détection du Time et évaluation de la qualité de cette détection + mémorisation du système temporel probable
       qual=-1;
-      if( (n=timeUcd(ucd))>=0 ) qual=100+n;
+      if( (n=useTimeSys(f,ucd))>=0 ) qual=0+n;
+      else if( (n=timeUcd(ucd))>=0 ) qual=100+n;
       else if( unit.indexOf("H:")>=0 || unit.indexOf("M:")>=0 ) qual=300;
       else if( (n=timeName(name))>=0 ) qual=400+n;
       else if( (n=timeSubName(name))>=0 ) qual=500+n;
@@ -2039,6 +2215,7 @@ final public class TableParser implements XMLConsumer {
          nTime=nField; qualTime=qual;
          timeField = f;
          if( !scanTimeOffset(name) ) scanTimeOffset(f.description);
+         validLastTimeSys();
       }
 
       // Détection du RA et évaluation de la qualité de cette détection
@@ -2330,17 +2507,17 @@ final public class TableParser implements XMLConsumer {
       if( nTime>=0 && (timeValue=hasSomething(rec[nTime]) ) ) {
          
          // Première valeur de temps => on en profite pour détecter le codage temporel le plus probable
-         if( timeSystem==-1 ) {
+         if( timeFormat==-1 ) {
             boolean numeric = false;
             double t=Double.NaN;
             
             // Cas particulier d'unités spécifiques JD ou MJD
             if( timeField.unit!=null ) {
-               if( timeField.unit.equalsIgnoreCase("JD") ) timeSystem=JD;
-               else if( timeField.unit.equalsIgnoreCase("MJD") ) timeSystem=MJD;
+               if( timeField.unit.equalsIgnoreCase("JD") ) timeFormat=JD;
+               else if( timeField.unit.equalsIgnoreCase("MJD") ) timeFormat=MJD;
             }
             
-            if( timeSystem==-1 ) {
+            if( timeFormat==-1 ) {
                try { t=Double.parseDouble( rec[nTime] ); } catch( Exception e1) {}
                if( timeField.datatype!=null && timeField.isNumDataType() ) numeric=true;
                else if( !Double.isNaN(t) ) numeric=true;
@@ -2348,30 +2525,42 @@ final public class TableParser implements XMLConsumer {
                // S'il s'agit d'un champ numérique c'est probablement du JD, MJD ou YEARS
                if( numeric ) {
                   if( timeOffset>0 ) t+=timeOffset;
-                  boolean flagDay = timeField.unit!=null && timeField.unit.equals("d");
-                  timeSystem = t<3000 && !flagDay ? YEARS : t<100000 ? MJD : JD;
+                  boolean flagYear = timeField.unit!=null 
+                        && (timeField.unit.indexOf("y")>=0 || timeField.unit.indexOf("a")>=0);
+                  timeFormat = flagYear ? YEARS : t<100000 ? MJD : JD;
 
                   // Si c'est une chaine de caractères, la présence d'un "T" va faire penser à de l'ISO
                   // sinon on ne sait pas trop...
                } else {
-                  if( rec[nTime].indexOf('T')>0 ) timeSystem=ISOTIME;
-                  else timeSystem=YMD;
+                  if( rec[nTime].indexOf('T')>0 ) timeFormat=ISOTIME;
+                  else timeFormat=YMD;
                }
             }
-            timeField.coo=timeSystem;
-            if( timeSystem>0 ) consumer.tableParserInfo("   -assuming Time format:"+Field.COOSIGN[ timeSystem ]+(timeOffset!=0?" timeOffset: "+timeOffset:""));
+            timeField.coo=timeFormat;
+
+            // Aucun TIMESYS => méthode empirique pour créer le srcTimeFrame
+            if( srcTimeFrame==null ) {
+               srcTimeFrame = new TimeFrame("TCB", "BARYCENTER", timeOffset, timeField.unit, timeFormat);
+               if( timeOffset!=0 && timeField.unit!=null ) {
+                  try {
+                     // Je dois supprimer un éventuel préfixe sur l'unité de l'offset
+                     // car la convention VizieR n'utilise de fait pas la sous-unité
+                     // ex! "RA-1900" unit=10-2yr => 1900yr d'offset
+                     String u = cleanUnitPrefix(timeField.unit);
+                     srcTimeFrame.setTimeOrigin(timeOffset,u);
+                  } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+               }
+
+               // sinon on met juste à jour le timeSystem repéré
+            } else  srcTimeFrame.setTimeFormat(timeFormat);
+
+            consumer.tableParserInfo("   -Ref time system:"+srcTimeFrame);
          }
-         
+
          if( timeValue ) {
             String valTime = rec[nTime];
             try {
-               if( timeOffset!=0 ) {
-                  try { 
-                     double t=Double.parseDouble( rec[nTime] ); 
-                     valTime = (t + timeOffset)+"";
-                  } catch( Exception e1) {}
-               }
-               jdTime = Astrodate.parseTime(valTime, timeSystem);
+               jdTime = srcTimeFrame.getJDTime( valTime );
             } catch( Exception e) {
                System.err.println("Table time parsing error "+ (nbRecord!=-1 ? "(record "+(nbRecord+1)+")":"") +": "+e);
             }
@@ -2481,6 +2670,15 @@ final public class TableParser implements XMLConsumer {
          e1.printStackTrace();
       }
 
+   }
+   
+   // Vire le préfixe numérique sur une unité
+   // ex: 10-2yr => yr
+   private String cleanUnitPrefix(String unit) {
+      int i=0;
+      char c;
+      while( Character.isDigit( (c=unit.charAt(i))) || c=='-' || c=='+' || c=='.' ) i++;
+      return unit.substring(i);
    }
    
 

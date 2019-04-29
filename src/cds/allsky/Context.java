@@ -212,6 +212,7 @@ public class Context {
    }
    static public String getCanonicalFrameName( String s) { return getFrameName( getFrameVal(s)); }
 
+   
    // Getters
    public String getLabel() {
       if( label==null ) return getLabelFromHipsId();
@@ -461,10 +462,11 @@ public class Context {
    }
 
    /** retourne un label issu de l'ID du HiPS */
-   public String getLabelFromHipsId() {
+   public String getLabelFromHipsId() { return getLabelFromHipsId( hipsId ); }
+   public String getLabelFromHipsId( String hipsId) {
       if( hipsId==null ) return null;
       String s = hipsId;
-      if( s!=null && s.startsWith("ivo://") ) s=s.substring(6);
+      if( s.startsWith("ivo://") ) s=s.substring(6);
       int offset = s.indexOf('/');
       int offset1 = s.indexOf('?');
       if( offset==-1 && offset1==-1 ) return null;
@@ -1794,8 +1796,8 @@ public class Context {
 
          "<HTML>\n" +
                "<HEAD>\n" +
-               "   <script type=\"text/javascript\" src=\"//code.jquery.com/jquery-1.10.1.min.js\"></script>\n" +
-               "   <link rel=\"stylesheet\" href=\"//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
+               "   <script type=\"text/javascript\" src=\"https://code.jquery.com/jquery-1.10.1.min.js\"></script>\n" +
+               "   <link rel=\"stylesheet\" href=\"https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
                "   <script type=\"text/javascript\">var jqMenu = jQuery.noConflict();</script>\n" +
                "   <script type=\"text/javascript\">\n" +
                "var hipsDir=null;</script>\n" +
@@ -1812,11 +1814,11 @@ public class Context {
          "<TR>\n" +
          "<TD>\n" +
          "   <script type=\"text/javascript\" src=\"//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
-         "<div id=\"aladin-lite-div\" style=\"width:350px;height:350px;\"></div>\n" +
+         "<div id=\"aladin-lite-div\" style=\"width:70vw;height:70vh;\"></div>\n" +
          "<script type=\"text/javascript\">\n" +
          "//var hipsDir = location.href;\n" +
          "//hipsDir = hipsDir.substring(0,hipsDir.lastIndexOf(\"/\",hipsDir.length));\n" +
-         "var aladin = $.aladin(\"#aladin-lite-div\");\n" +
+         "var aladin = $.aladin(\"#aladin-lite-div\", {showSimbadPointerControl: true });\n" +
          "aladin.setImageSurvey(aladin.createImageSurvey('$LABEL', '$LABEL',\n" +
          "hipsDir, '$SYS', $ORDER, {imgFormat: '$FMT'}));\n" +
 
@@ -1994,7 +1996,10 @@ public class Context {
       setPropriete("#"+Constante.KEY_HIPS_COPYRIGHT,"Copyright mention of the HiPS");
       
       if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
-      setPropriete(Constante.KEY_OBS_TITLE,getLabel());
+      
+      String title = prop.get( Constante.KEY_OBS_TITLE);
+      if( title==null ) title=getLabel();
+      setPropriete(Constante.KEY_OBS_TITLE,title);
       setPropriete("#"+Constante.KEY_OBS_COLLECTION,"Dataset collection name");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
       setPropriete("#"+Constante.KEY_OBS_ACK,"Acknowledgement mention");
@@ -2262,7 +2267,9 @@ public class Context {
       
       // Recherche des NorderXX où XX est un nombre
       int min=-1,max=-1;
-      for( String s : root.list() ) {
+      String [] lists = root.list();
+      if( lists==null ) lists = new String [] {};
+      for( String s : lists ) {
          if( s.startsWith("Norder") ) {
             try {
                int n = Integer.parseInt( s.substring(6));
@@ -2345,7 +2352,11 @@ public class Context {
 
 
    private void replaceKey(MyProperties prop, String oldKey, String key) {
-      if( prop.getProperty(key)==null ) prop.replaceKey(oldKey,key);
+      String s;
+      if( (s=prop.getProperty(key))==null && prop.getProperty(oldKey)!=null ) {
+         info("Replace properties key "+oldKey+" by "+key+" ["+s+"]");
+         prop.replaceKey(oldKey,key);
+      }
    }
 
    private void replaceKeys(MyProperties prop) {
@@ -2490,10 +2501,19 @@ public class Context {
       prop.remove("hips_glu_tag");
       prop.remove("imageSourcePath");
       prop.remove("orderGeneratedImgs");
+      
+      // On vire les vieux mots clés qui étaient encore utilisés pour compatibilité
+      prop.remove(Constante.OLD_OBS_COLLECTION);
+      prop.remove(Constante.OLD_OBS_COLLECTION);
+      prop.remove(Constante.OLD_HIPS_TILE_FORMAT);
+      prop.remove(Constante.OLD_HIPS_FRAME);
+      prop.remove(Constante.OLD_HIPS_ORDER);
+      prop.remove(Constante.OLD_HIPS_PIXEL_CUT);
+      prop.remove(Constante.OLD_HIPS_DATA_RANGE);
+      prop.remove(Constante.OLD_ISCOLOR);
+      prop.remove(Constante.OLD_ISCUBE);
+      prop.remove(Constante.OLD_CUBE_DEPTH);
    }   
-
-   
-
 
    /** Mise à jour du fichier des propriétés associées au survey HEALPix (propertie file dans la racine)
     * Conserve les clés/valeurs existantes.
@@ -2608,22 +2628,21 @@ public class Context {
          // Gestion de la compatibilité
          // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
          while( prop.removeComment(FORCOMPATIBILITY) );
-         prop.add("#",FORCOMPATIBILITY);
-         prop.add(Constante.OLD_OBS_COLLECTION,getLabel());
-         prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
-         prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
-//         prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
-         String fmt = getAvailableTileFormats();
-         if( fmt.length()>0 ) prop.add(Constante.OLD_HIPS_TILE_FORMAT,fmt);
-         if( fmt.indexOf("fits")>=0 && cut!=null ) {
-            if( cut[0]!=0 || cut[1]!=0 ) prop.add(Constante.OLD_HIPS_PIXEL_CUT, Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
-            if( cut[2]!=0 || cut[3]!=0 ) prop.add(Constante.OLD_HIPS_DATA_RANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
-         }
-         if( isColor() ) prop.add(Constante.OLD_ISCOLOR,"true");
-         if( isCube() ) {
-            prop.add(Constante.OLD_ISCUBE,"true");
-            prop.add(Constante.OLD_CUBE_DEPTH,depth+"");
-         }
+//         prop.add("#",FORCOMPATIBILITY);
+//         prop.add(Constante.OLD_OBS_COLLECTION,getLabel());
+//         prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
+//         prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
+//         String fmt = getAvailableTileFormats();
+//         if( fmt.length()>0 ) prop.add(Constante.OLD_HIPS_TILE_FORMAT,fmt);
+//         if( fmt.indexOf("fits")>=0 && cut!=null ) {
+//            if( cut[0]!=0 || cut[1]!=0 ) prop.add(Constante.OLD_HIPS_PIXEL_CUT, Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
+//            if( cut[2]!=0 || cut[3]!=0 ) prop.add(Constante.OLD_HIPS_DATA_RANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
+//         }
+//         if( isColor() ) prop.add(Constante.OLD_ISCOLOR,"true");
+//         if( isCube() ) {
+//            prop.add(Constante.OLD_ISCUBE,"true");
+//            prop.add(Constante.OLD_CUBE_DEPTH,depth+"");
+//         }
          
          // Remplacement du précédent fichier
          if( stream!=null ) prop.store( stream, null);

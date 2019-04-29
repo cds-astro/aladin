@@ -557,25 +557,10 @@ public class PlanMoc extends PlanBGCat {
          arrayMoc[order] = new SpaceMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          
          System.out.println("Le nouveau moc spatial ==> "+moc.getSize());
-
-         final int myOrder = order;
-         final int myMo=mo;
-         Thread t = new Thread("PlanMoc building order="+order){
-
-            public void run() {
-               Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") running...");
-               Moc mocLow = myOrder==myMo ? moc : moc.clone();
-               try { mocLow.setMocOrder(myOrder); }
-               catch( Exception e ) { e.printStackTrace(); }
-               arrayMoc[myOrder]=mocLow;
-               Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") done !");
-               askForRepaint();
-            }
-
-         };
+         BuildLow t = new BuildLow(moc,order,mo);
          
          // Si petit, je ne threade pas
-         if( moc.getSize()<100000 ) t.run();
+         if( moc.getSize()<100000 || (lastBuildingTime>=0 && lastBuildingTime<30) ) t.run();
          else t.start();
 
       }
@@ -589,6 +574,36 @@ public class PlanMoc extends PlanBGCat {
 
       lastOrderDrawn = order;
       return arrayMoc[order];
+   }
+   
+   private long lastBuildingTime=-1;
+   
+   class BuildLow extends Thread {
+      int myOrder,myMo;
+      SpaceMoc moc;
+
+      BuildLow(SpaceMoc moc,int myOrder,int myMo) {
+         super("BuidLow order="+myOrder);
+         this.moc = moc;
+         this.myOrder= myOrder;
+         this.myMo = myMo;
+      }
+      
+      public void run() {
+         long t0 = System.currentTimeMillis();
+         Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") running...");
+         Moc mocLow = myOrder==myMo ? moc : moc.clone();
+         try {
+            mocLow.setMocOrder(myOrder);
+            ((SpaceMoc)mocLow).setMinLimitOrder(3);
+         }
+         catch( Exception e ) { e.printStackTrace(); }
+         arrayMoc[myOrder]=mocLow;
+         lastBuildingTime = System.currentTimeMillis() - t0;
+         Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") done in "+lastBuildingTime+"ms");
+         askForRepaint();
+      }
+
    }
 
    protected boolean isLoading=false;

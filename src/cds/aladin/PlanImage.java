@@ -1670,7 +1670,7 @@ public class PlanImage extends Plan {
                   (type & MyInputStream.PDS)!=0?PDS:
                      (type & MyInputStream.NativeImage())!=0?JPEG:
                         FITS;
-         pixMode = fmt==JPEG ? PIX_256 : PIX_TRUE;
+         setPixMode(fmt==JPEG ? PIX_256 : PIX_TRUE);
       } catch( Exception e) {}
    }
 
@@ -2419,6 +2419,11 @@ public class PlanImage extends Plan {
       return s+(bitpix%2==0?" (bitpix="+bitpix+")":"");
    }
 
+   /** Positionnement du mode pixel */
+   protected void setPixMode(int pixMode) {
+      this.pixMode = pixMode;
+   }
+   
    /** retourne la description du mode graphique */
    protected String getPixModeInfo() { return pixMode<0 ? "" : PIX_MODE[ pixMode ]; }
 
@@ -2969,11 +2974,11 @@ public class PlanImage extends Plan {
          if( s.equalsIgnoreCase("NaN") ) blank = Double.NaN;
          else blank = Double.parseDouble(s);
          isBlank=true;
-         if( pixMode==PIX_256 ) pixMode=PIX_255;
+         if( pixMode==PIX_256 ) setPixMode(PIX_255);
       } catch( Exception e ) {
          isBlank=false;
          blank=Double.NaN;
-         if( pixMode==PIX_255 ) pixMode=PIX_256;
+         if( pixMode==PIX_255 ) setPixMode(PIX_256);
       }
       recut(pixelMin,pixelMax,false);
       restoreCM();

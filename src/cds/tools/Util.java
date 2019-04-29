@@ -133,18 +133,24 @@ public final class Util {
       CR = System.getProperty("line.separator");
       FS = System.getProperty("file.separator");
    }
+   
+   static final int DEFAULTTIMEOUT = 10000;
 
    /** Ouverture d'un MyInputStream que ce soit un fichier ou une url */
    static public MyInputStream openAnyStream(String urlOrFile) throws Exception {
+      return openAnyStream(urlOrFile,DEFAULTTIMEOUT);
+   }
+      
+   static public MyInputStream openAnyStream(String urlOrFile, int timeout) throws Exception {
       if( urlOrFile.startsWith("http:") || urlOrFile.startsWith("https:")
-            || urlOrFile.startsWith("ftp:") ) return openStream(urlOrFile);
+            || urlOrFile.startsWith("ftp:") ) return openStream(urlOrFile,false,timeout);
       FileInputStream f = new FileInputStream(urlOrFile);
       MyInputStream is = new MyInputStream(f);
       return is.startRead();
    }
 
    /** Ouverture d'un MyInputStream avec le User-Agent correspondant à Aladin */
-   static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,10000); }
+   static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,DEFAULTTIMEOUT); }
    static public MyInputStream openStream(String u,boolean useCache, int timeOut) throws Exception {
       return openStream(new URL(u),useCache,timeOut);
    }
@@ -155,9 +161,6 @@ public final class Util {
       if( !useCache ) conn.setUseCaches(false);
       if( timeOut>0 ) conn.setConnectTimeout(timeOut);
       
-      if( u.toString().indexOf("8326.fits")>0 ) {
-         System.out.println("J'y suis");
-      }
       // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
       if( conn instanceof HttpURLConnection ) {
          HttpURLConnection http = (HttpURLConnection)conn;

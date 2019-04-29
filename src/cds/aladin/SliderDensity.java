@@ -72,7 +72,7 @@ public class SliderDensity extends SliderPlusMoins {
    
    private boolean isOk(Plan p) {
       return p.selected && 
-            (p.type==Plan.ALLSKYCAT || p.type==Plan.ALLSKYMOC ); //|| p.type==Plan.ALLSKYTMOC);
+            (p.type==Plan.ALLSKYCAT || p instanceof PlanMoc ); //|| p.type==Plan.ALLSKYTMOC);
    }
    
    public void paintComponent(Graphics g) {

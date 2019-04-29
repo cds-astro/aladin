@@ -28,6 +28,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -35,42 +36,90 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import cds.aladin.prop.PropPanel;
+import cds.moc.Healpix;
+import cds.moc.TimeMoc;
 
 /**
- * Gestion de la fenetre associee a la creation d'un MOC à partir d'un catalogue
+ * Gestion de la fenetre associee a la creation d'un Space MOC à partir d'un catalogue
  *
  * @author Pierre Fernique [CDS]
- * @version 1.0 : (nov 2011) Creation
+ * @version 1.0 : (avril 2019) Creation
  */
-public final class FrameMocGenCat extends FrameMocGenImg {
+public class FrameSTMocGenCat extends FrameMocGenImg {
+   
+   private JTextField radius;
+   private JCheckBox boxRad, boxFov;
 
-   protected FrameMocGenCat(Aladin aladin) {
+   protected FrameSTMocGenCat(Aladin aladin) {
       super(aladin);
    }
    
    protected void createChaine() {
       super.createChaine();
-      INFO  = a.chaine.getString("MOCGENCATINFO");
+      INFO  = a.chaine.getString("STMOCGENCATINFO");
    }
 
    protected boolean isPlanOk(Plan p) {
-      if( p.isCatalog() ) return true;
+      if( p.isCatalogTime() ) return true;
       return false;
    }
    
-   private JTextField radius;
-   private JCheckBox boxRad, boxFov;
+   protected JComboBox getComboTimeRes() {
+      JComboBox c = new JComboBox();
+      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
+         String s = "Order "+o+" => "+TimeMoc.getTemps( TimeMoc.getDuration(o) );
+         c.addItem(s);
+      }
+      c.setSelectedIndex(7);
+      return c;
+   }
+   
+   JComboBox mocTimeOrder;
+   private JTextField duration;
+   private JCheckBox boxDuration;
    
    protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) { 
+      
       JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
       
+      
+      // Paramètres temporels
+      PropPanel.addFilet(p, g, c);
+      PropPanel.addSectionTitle(p, "Temporal parameters", g, c);
       ButtonGroup bg = new ButtonGroup();
       JCheckBox box = new JCheckBox();
       bg.add( box);
       box.setSelected( true );
-      PropPanel.addCouple(frame,p, " - Only the central position:", "Only the source position (lon,lat) is used to populate the MOC", box, g,c);
+      PropPanel.addCouple(frame,p, " - No duration", "Only the epoch is used to populate the temporal MOC", box, g,c);
 
       JPanel p2 = new JPanel( new BorderLayout(0,0));
+      duration=new JTextField("3", 5);
+      box =boxDuration= new JCheckBox();
+      bg.add( box);
+      p2.add(box,BorderLayout.WEST);
+      p2.add(duration,BorderLayout.CENTER);
+      p2.add(new JLabel(" in secondes"),BorderLayout.EAST);
+      PropPanel.addCouple(frame,p, " - Duration from starting time:","Duration of the event", p2, g,c);
+
+      c.gridwidth=GridBagConstraints.REMAINDER;
+      JPanel pp=new JPanel();
+      pp.add( new JLabel("Time resolution :"));
+      mocTimeOrder = getComboTimeRes();
+      pp.add(mocTimeOrder);
+      g.setConstraints(pp,c);
+      p.add(pp);
+      
+      PropPanel.addFilet(p, g, c);
+      PropPanel.addSectionTitle(p, "Spacial parameters", g, c);
+      
+      // Paramètres spaciaux
+      bg = new ButtonGroup();
+      box = new JCheckBox();
+      bg.add( box);
+      box.setSelected( true );
+      PropPanel.addCouple(frame,p, " - Only the central position:", "Only the source position (lon,lat) is used to populate the MOC", box, g,c);
+
+      p2 = new JPanel( new BorderLayout(0,0));
       radius=new JTextField("3", 5);
       box =boxRad= new JCheckBox();
       bg.add( box);
@@ -82,8 +131,24 @@ public final class FrameMocGenCat extends FrameMocGenImg {
       box =boxFov= new JCheckBox();
       bg.add( box);
       PropPanel.addCouple(frame,p, " - FoV associated to each source:", "The Field of View (for instance s_region information) associated to each source is used to populate the MOC.", box, g,c);
+
    }
    
+   private double getDuration() throws Exception {
+      double x=0;
+      try {
+         String s = duration.getText().trim();
+         if( s.length()>0 ) x=Double.parseDouble(s);
+      } catch( Exception e ) {
+         duration.setForeground(Color.red);
+         throw e;
+      }
+      duration.setForeground(Color.black);
+      return x;
+   }
+   
+   protected int getTimeOrder() { return mocTimeOrder.getSelectedIndex()+FIRSTORDER; }
+
    private double getRadius() throws Exception {
       double x=0;
       try {
@@ -100,23 +165,28 @@ public final class FrameMocGenCat extends FrameMocGenImg {
    @Override
    protected void submit() {
       try {
+         StringBuilder param = new StringBuilder();
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int order=getOrder();
+         int spaceOrder=getOrder();
+         int timeOrder=getTimeOrder();
+         double duration = boxDuration.isSelected() ? getDuration() : 0;
+         if( duration>0 ) param.append(" -duration="+duration);
+         
          double radius = boxRad.isSelected() ? getRadius() : 0;
          boolean fov = boxFov.isSelected();
-         String param = "";
-         if( fov ) param=" -fov";
+         if( fov ) param.append(" -fov");
          else {
-            if( radius>0 ) param=" -radius="+Coord.getUnit(radius);
+            if( radius>0 ) param.append(" -radius="+Coord.getUnit(radius) );
          }
          
-         a.console.printCommand("cmoc -order="+order+param+" "+labelList(ps));
-         a.calque.newPlanMoc(ps[0].label+" MOC",ps,order,radius,0,0,Double.NaN,fov);
+         
+         a.console.printCommand("cmoc -spacetime -order="+spaceOrder+"/"+timeOrder+param+" "+labelList(ps));
+         a.calque.newPlanSTMoc(ps[0].label+" STMOC",ps,spaceOrder,timeOrder,duration,radius,fov);
          hide();
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.error("MOC generation failed !");
+         Aladin.error("STMOC generation failed !");
       }
    }
    

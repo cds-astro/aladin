@@ -158,8 +158,10 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> VOTable1.4/TIMESYS support
+ * @beta    <LI> Space Time Multi-Order-Coverage support
  * @beta    <LI> TAP JOIN and UPLOAD support
- * @beta    <LI> MOC extractions from any HiPS or HEALPix maps
+ * @beta    <LI> Space MOC extractions from any HiPS or HEALPix maps
  * @beta    <LI> Temporal support (prototype implementation) <br>
  * @beta          - Time plots <br>
  * @beta          - Time MOC
@@ -176,14 +178,15 @@ import cds.xml.XMLParser;
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
  * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
  * @beta    <LI> HiPSgen improvements:
- * @beta    <LI> - progenitor keywords auto-extraction (-fitskey parameter no longer required)
- * @beta    <LI> - index.html HTTP/HTTPS compatibility
- * @beta    <LI> - MIRROR network speed auto adaptation
+ * @beta    <LI> - UPDATE improvement (Norder 0-2)
  * @beta    <LI> - MIRROR multi-partitions support (option split)
+ * @beta    <LI> - MIRROR network speed auto adaptation
+ * @beta    <LI> - index.html HTTP/HTTPS compatibility
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> PNG tiles opacity bug fix
  * @beta    <LI> HEALPix new lib bug fix (introduced in v10.107)
  * @beta    <LI> Base64 Binary SHORT decoding error (bad casting)
  * @beta    <LI> Hipsgen mocorder param
@@ -219,7 +222,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.118";
+   static public final    String VERSION = "v10.121";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -590,6 +593,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameMocGenCat frameMocGenCat;   // Gere la fenetre pour la génération d'un MOC à partir de catalogues
    FrameTMocGenCat frameTMocGenCat;   // Gere la fenetre pour la génération d'un T-MOC à partir de catalogues
    FrameTMocGenObj frameTMocGenObj;   // Gere la fenetre pour la génération d'un T-MOC à partir des sources sélectionnées
+   FrameSTMocGenCat frameSTMocGenCat;   // Gere la fenetre pour la génération d'un ST-MOC à partir de catalogues
+   FrameSTMocGenObj frameSTMocGenObj;   // Gere la fenetre pour la génération d'un ST-MOC à partir des sources sélectionnées
    FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution
    FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
    FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
@@ -666,7 +671,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miTMocGen,miTMocGenCat,miTMocGenObj,miMocOp,
+   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,
+   miTMocGen,miTMocGenCat,miTMocGenObj,miSTMocGen,miSTMocGenCat,miSTMocGenObj,miMocOp,
    miMocToOrder,miMocFiltering,miMocCrop,
    miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
    miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
@@ -724,7 +730,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
+   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,
+   STMOCGEN,STMOCGENCAT,STMOCGENOBJ,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
    MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
@@ -1174,6 +1181,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       TMOCGEN     =chaine.getString("MTMOCGEN");
       TMOCGENCAT   =chaine.getString("MTMOCGENCAT");
       TMOCGENOBJ   =chaine.getString("MTMOCGENOBJ");
+      STMOCGEN     =chaine.getString("MSTMOCGEN");
+      STMOCGENCAT   =chaine.getString("MSTMOCGENCAT");
+      STMOCGENOBJ   =chaine.getString("MSTMOCGENOBJ");
       MOCM     =chaine.getString("MMOCOP");
       MOCTOORDER     =chaine.getString("MMOCTOORDER");
       MOCFILTERING =chaine.getString("MMOCFILTERING");
@@ -1323,7 +1333,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
-               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA}, {TMOCGEN,TMOCGENCAT,TMOCGENOBJ},
+               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA}, 
+               {TMOCGEN,TMOCGENCAT,TMOCGENOBJ}, {STMOCGEN,STMOCGENCAT,STMOCGENOBJ},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
             },
             { /*{MTOOLS},
@@ -2040,6 +2051,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,TMOCGEN) )   miTMocGen  = ji;
       else if( isMenu(m,TMOCGENCAT) )   miTMocGenCat  = ji;
       else if( isMenu(m,TMOCGENOBJ) )   miTMocGenObj  = ji;
+      else if( isMenu(m,STMOCGEN) )   miSTMocGen  = ji;
+      else if( isMenu(m,STMOCGENCAT) )   miSTMocGenCat  = ji;
+      else if( isMenu(m,STMOCGENOBJ) )   miSTMocGenObj  = ji;
       else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
       else if( isMenu(m,NORM) )   miNorm    = ji;
       else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -3458,6 +3472,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
       } else if( isMenu(s,TMOCGENCAT) ){ updateTMocGenCat();
       } else if( isMenu(s,TMOCGENOBJ) ){ updateTMocGenObj();
+      } else if( isMenu(s,STMOCGENCAT) ){ updateSTMocGenCat();
+      } else if( isMenu(s,STMOCGENOBJ) ){ updateSTMocGenObj();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
       } else if( isMenu(s,MOCCROP) )  { crop();
@@ -4173,7 +4189,26 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       frameMocGenRes.maj();
    }
-   
+ 
+   /** Mise à jour de la fenêtre pour la génération d'un T-MOC à partir des sources sélectionnées */
+   protected void updateSTMocGenObj() {
+      if( frameSTMocGenObj==null ) {
+         trace(1,"Creating the STMocGenObj window");
+         frameSTMocGenObj = new FrameSTMocGenObj(aladin);
+      }
+      frameSTMocGenObj.maj();
+   }
+
+   /** Mise à jour de la fenêtre pour la génération d'un T-MOC à partir des catalogues sélectionnés */
+   protected void updateSTMocGenCat() {
+      if( frameSTMocGenCat==null ) {
+         trace(1,"Creating the STMocGenCat window");
+         frameSTMocGenCat = new FrameSTMocGenCat(aladin);
+      }
+      frameSTMocGenCat.maj();
+   }
+
+
    /** Mise à jour de la fenêtre pour la génération d'un T-MOC à partir des sources sélectionnées */
    protected void updateTMocGenObj() {
       if( frameTMocGenObj==null ) {
@@ -5782,6 +5817,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miTMocGen!=null ) miTMocGen.setEnabled( nbPlanCatTime>0 );
          if( miTMocGenCat!=null ) miTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miTMocGenObj!=null ) miTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
+         if( miSTMocGen!=null ) miSTMocGen.setEnabled( nbPlanCatTime>0 );
+         if( miSTMocGenCat!=null ) miSTMocGenCat.setEnabled( nbPlanCatTime>0 );
+         if( miSTMocGenObj!=null ) miSTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miMocToOrder!=null ) miMocToOrder.setEnabled(nbPlanMoc>0);
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );

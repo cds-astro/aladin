@@ -42,8 +42,9 @@ public class Range2 extends Range {
 
    public Range2(Range2 other) {
       super(other);
-      rangeArray = new Range[other.sz/2];
-      for( int i=0; i<sz/2; i++ ) {
+      int n = other.sz>>>1;
+      rangeArray = new Range[n];
+      for( int i=0; i<n; i++ ) {
          rangeArray[i] = new Range( other.rangeArray[i] );
       }
    }
@@ -157,28 +158,28 @@ public class Range2 extends Range {
   static final private int SUBTR  = 3;
   
   private static Range2 operation(Range2 a, Range2 b, int op) {
-     Range2 res = new Range2();
-     Range oldm =null;
-     
-     // flag d'état pour chaque tableau pour déterminer si je suis en-dehors ou à l'intérieur d'une intervalle
-     boolean ina=false;
-     boolean inb=false;
-     
-     // Indices de parcours des tableaux
-     int ia=0;
-     int ib=0;
+     Range2 res = new Range2();  // Tableau résultat
+     Range oldm =null;           // Pour comparer avec le précédent Range spatial
+     int ia,ib;                  // Indices de parcours des tableaux
+     boolean ina,inb;  // flag d'état pour chaque tableau pour déterminer si je suis en-dehors ou à l'intérieur d'une intervalle
      
      // Pour INTER, petite accélération pour trouver le premier indice concerné pour chaque tableau
      if( op==INTER && a.sz>0 && b.sz>0 ) {
-        ia = a.indexOf( b.r[0] ); while( ia>0 && a.r[ia]==b.r[0] ) ia--; if( ia<0 ) ia=0;
-        ib = b.indexOf( a.r[0] ); while( ib>0 && b.r[ib]==a.r[0] ) ib--; if( ib<0 ) ib=0;
+        ia = a.indexOf( b.r[0] ); while( ia>0 && a.r[ia]==a.r[ia-1] ) ia--; if( ia<0 ) ia=0;
+        ib = b.indexOf( a.r[0] ); while( ib>0 && b.r[ib]==a.r[ib-1] ) ib--; if( ib<0 ) ib=0;
+        ina = (ia&1)!=0 || ia>=a.sz;
+        inb = (ib&1)!=0 || ib>=b.sz;
+        
+     } else {
+        ia = ib = 0;
+        ina = inb = false;
      }
      
      // Je parcours les deux tableaux en parallèles
      boolean runa = ia!=a.sz;
      boolean runb = ib!=b.sz;
      
-     boolean outRun =false;
+     boolean outRun =false; // true si j'ai fini le parcours sur l'un ou l'autre des tableaux
      
      while( runa || runb ) {
      

@@ -101,7 +101,6 @@ public class TimeMoc extends SpaceMoc {
       return spaceRange.ends( spaceRange.nranges()-1 ) / DAYMICROSEC;
    }
    
-   
    /** Return JD time for a couple order/npix */
    public static double getTime(int order, long npix) {
       int shift = 2*(MAXORDER - order);

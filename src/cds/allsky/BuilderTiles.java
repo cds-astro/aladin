@@ -669,7 +669,7 @@ public class BuilderTiles extends Builder {
       // si on n'est pas dans le Moc, il faut retourner le fichier
       // pour la construction de l'arborescence...
       if( !context.isInMocTree(order,npix) ) return findLeaf(file);
-
+      
       // si le losange a déjà été calculé on le renvoie
       if( coaddMode==Mode.KEEPTILE ) {
          Fits oldOut = findLeaf(file);

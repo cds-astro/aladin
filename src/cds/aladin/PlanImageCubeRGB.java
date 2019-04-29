@@ -66,7 +66,7 @@ Aladin.trace(2,"Loading FITS "+Tp[type]);
          error="BITPIX must be 24 or 32 for RGB or ARGB FITS cube !";
          return false;
       }
-      pixMode = bitpix==32 ? PIX_ARGB : PIX_RGB;
+      setPixMode( bitpix==32 ? PIX_ARGB : PIX_RGB );
       naxis = headerFits.getIntFromHeader("NAXIS");
       
       // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
@@ -164,7 +164,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
     }
 
     synchronized protected void addFrame(String label,int pixelsRGB[]) {
-       if( vFrames==null ) vFrames = new Vector<PlanImageBlinkItem>();
+       if( vFrames==null ) vFrames = new Vector<>();
        vFrames.addElement( new PlanImageBlinkItem(label,pixelsRGB));
     }
 

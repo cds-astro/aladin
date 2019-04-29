@@ -1787,10 +1787,10 @@ public class MyInputStream extends FilterInputStream {
             try {
                while( offsetCache+i+2+size>=inCache ) loadInCache(8192);
             } catch( EOFException e ) { }
-            if( Aladin.levelTrace==6 ) {
-               Aladin.trace(6,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
-               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-            }
+//            if( Aladin.levelTrace==6 ) {
+//               Aladin.trace(6,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
+//               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+//            }
             if( mode==0xE1 ) {
                memoJpegAVMCalib(offsetCache+i+4,size-2);
 
@@ -1822,10 +1822,10 @@ public class MyInputStream extends FilterInputStream {
                if( more ) while( offsetCache+i+8+size>=inCache ) loadInCache(8192);
                else if( offsetCache+i+8+size>=inCache ) encore=false;
             } catch( EOFException e ) { more=false; }
-            if( Aladin.levelTrace==6 ) {
-               Aladin.trace(6,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
-               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-            }
+//            if( Aladin.levelTrace==6 ) {
+//               Aladin.trace(6,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
+//               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+//            }
             if( chunk.equals("tEXt") ) {
                if( memoPNGCalib(offsetCache+i+8,size,false) ) return true;
 
