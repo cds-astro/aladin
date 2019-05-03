@@ -111,9 +111,9 @@ class ZoomTimeControl {
       // Les dates min et max
       g.setColor( Aladin.COLOR_GREEN );
       String s = Astrodate.JDToDate( globalJdmin,false );
-      g.drawString( s,x,y+h+12);
+      g.drawString( s,x,y+h+13);
       s = Astrodate.JDToDate( globalJdmax, false );
-      g.drawString( s,width-g.getFontMetrics().stringWidth(s)-5,y+h+12);
+      g.drawString( s,width-g.getFontMetrics().stringWidth(s)-5,y+h+13);
    }
 
 }
