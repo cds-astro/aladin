@@ -253,7 +253,7 @@ public final class MocIO {
          int nbyte= tform.indexOf('K')>=0 ? 8 : tform.indexOf('J')>=0 ? 4 : -1;   // entier 64 bits, sinon 32
          if( nbyte<=0 ) throw new Exception("Multi Order Coverage Map only requieres integers (32bits or 64bits)");
 
-         moc.readSpecificData( in, naxis1,naxis2, nbyte);
+         moc.readSpecificData( in, naxis1,naxis2, nbyte, header);
       } catch( EOFException e ) { }
    }
 
@@ -506,7 +506,7 @@ public final class MocIO {
    protected void writeData(OutputStream out) throws Exception {
       int size = moc.writeSpecificData( out);
       out.write( getBourrage(size) );
-      System.out.println("write size="+size+" getSize="+moc.getSize()*8);
+//      System.out.println("write size="+size+" getSize="+moc.getSize()*8);
    }
 
    static protected int writeVal(OutputStream out,long val,byte []buf) throws Exception {
@@ -732,7 +732,7 @@ public final class MocIO {
        * @param key FITs key (with or without trailing blanks)
        * @return corresponding integer value
        */
-      private int getIntFromHeader(String key) throws NumberFormatException,NullPointerException {
+      public int getIntFromHeader(String key) throws NumberFormatException,NullPointerException {
          String s = header.get(key.trim());
          return (int)Double.parseDouble(s.trim());
       }
@@ -742,7 +742,7 @@ public final class MocIO {
        * @param key FITs key (with or without trailing blanks)
        * @return corresponding string value without quotes (')
        */
-      private String getStringFromHeader(String key) throws NullPointerException {
+      public String getStringFromHeader(String key) throws NullPointerException {
          String s = header.get(key.trim());
          if( s==null || s.length()==0 ) return s;
          if( s.charAt(0)=='\'' ) return s.substring(1,s.length()-1).trim();

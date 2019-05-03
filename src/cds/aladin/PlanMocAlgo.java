@@ -73,6 +73,7 @@ public class PlanMocAlgo extends PlanMoc {
       
       try {
          moc = p1.getMoc().clone();
+         
          if( op==COMPLEMENT ) moc = ((SpaceMoc)moc).complement();
          else if( op==TOORDER ) moc.setMocOrder(order);
          else {
@@ -88,6 +89,7 @@ public class PlanMocAlgo extends PlanMoc {
             }
          }
          ((SpaceMoc)moc).setMinLimitOrder(3);
+         if( order!=-1 ) moc.setMocOrder( order);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

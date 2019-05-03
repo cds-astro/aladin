@@ -47,7 +47,7 @@ public class STCStringParser {
      */
     public List<STCObj> parse(String stcString, boolean reduced) {
         stcString = stcString.toUpperCase();
-        List<STCObj> stcObjs = new ArrayList<STCObj>();
+        List<STCObj> stcObjs = new ArrayList<>();
 
         String[] shapesStrs = splitShapesStrings(stcString, reduced);
         for (String shapeStr : shapesStrs) {
@@ -78,7 +78,7 @@ public class STCStringParser {
      * @return
      */
     private String[] splitShapesStrings(String stcString, boolean reduced) {
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
 
         String shapes = new String("(");
         for (ShapeType shapeType : STCObj.ShapeType.values()) {
@@ -102,6 +102,12 @@ public class STCStringParser {
 
         return result.toArray(new String[result.size()]);
     }
+    
+    // AJOUT Pierre 2/5/2019
+    private double getDouble(String s) {
+       if( s.indexOf('E')>=0 ) s=s.replace('E','e');
+       return Double.parseDouble(s);
+    }
 
     private STCPolygon parsePolygon(Iterator<String> itWords, boolean reduced) throws Exception {
         STCPolygon polygon = new STCPolygon();
@@ -119,8 +125,8 @@ public class STCStringParser {
                 if (!isNumber(nextParam)) {// to ignore all strings [<refpos>] [<flavor>] which are not handled currently.
                 	continue;
                 }
-            	ra = Double.parseDouble(nextParam);
-            	dec = Double.parseDouble(itWords.next());// any words between numbers is unexpected and hence exception
+            	ra = getDouble(nextParam);
+            	dec = getDouble(itWords.next());// any words between numbers is unexpected and hence exception
 				
             }
             catch(Exception e) {
@@ -149,9 +155,9 @@ public class STCStringParser {
                 if (!isNumber(nextParam)) {// to ignore all strings [<refpos>] [<flavor>] which are not handled currently.
                 	continue;
                 }
-            	ra = Double.parseDouble(nextParam);
-            	dec = Double.parseDouble(stcWords.next());// any words between numbers is unexpected and hence exception
-            	rad = Double.parseDouble(stcWords.next());
+            	ra = getDouble(nextParam);
+            	dec = getDouble(stcWords.next());// any words between numbers is unexpected and hence exception
+            	rad = getDouble(stcWords.next());
             }
             catch(Exception e) {
                 e.printStackTrace();

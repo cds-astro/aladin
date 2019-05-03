@@ -165,11 +165,18 @@ public class Range2 extends Range {
      
      // Pour INTER, petite accélération pour trouver le premier indice concerné pour chaque tableau
      if( op==INTER && a.sz>0 && b.sz>0 ) {
-        ia = a.indexOf( b.r[0] ); while( ia>0 && a.r[ia]==a.r[ia-1] ) ia--; if( ia<0 ) ia=0;
-        ib = b.indexOf( a.r[0] ); while( ib>0 && b.r[ib]==a.r[ib-1] ) ib--; if( ib<0 ) ib=0;
+        
+        ia = a.indexOf( b.r[0] );
+        while( ia>0 && a.r[ia]==a.r[ia-1] ) ia--;
+        if( ia<0 ) ia=0;
+        
+        ib = b.indexOf( a.r[0] );
+        while( ib>0 && b.r[ib]==b.r[ib-1] ) ib--;
+        if( ib<0 ) ib=0;
+        
         ina = (ia&1)!=0 || ia>=a.sz;
         inb = (ib&1)!=0 || ib>=b.sz;
-        
+
      } else {
         ia = ib = 0;
         ina = inb = false;
@@ -342,7 +349,7 @@ public class Range2 extends Range {
         long vb = runb ? inter[ib] : 0L;
         
         // Idem pour les SMOC associé (uniquement sur les indices paires (début des intervalles)
-        Range ma = rangeArray[ia>>>1];
+        Range ma = runa ? rangeArray[ia>>>1] : null;
         Range mb = m1;
         
         // Dois-je avancer sur l'un, l'autre ou les deux tableaux en même temps

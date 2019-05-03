@@ -215,8 +215,10 @@ public class Plot {
                if( !p1.flagOk || !p1.active ) continue;
                if( !p1.isTimeMoc() ) continue;
                
-               double tmin = p1.getTimeMin();
-               double tmax = p1.getTimeMax();
+               double [] timeRange = p1.getTimeRange();
+               double tmin = timeRange[0];
+               double tmax = timeRange[1];
+              
                if( first || tmin<min1X ) { min1X = tmin; first=false; }
                if( first || tmax>max1X ) { max1X = tmax; first=false; }
             }

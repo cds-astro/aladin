@@ -34,6 +34,7 @@ import cds.aladin.Tok;
 import cds.fits.Fits;
 import cds.moc.SpaceMoc;
 import cds.mocmulti.MultiMoc;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
 /**
@@ -226,6 +227,16 @@ public abstract class Builder {
          context.info("Order retrieved from ["+path+"] => "+orderIndex);
          context.setOrder(orderIndex);
       } else if( orderIndex!=-1 && order!=orderIndex ) throw new Exception("Detected order ["+orderIndex+"] does not correspond to the param order ["+order+"]");
+   }
+   
+   // Récupère le tile side en fonction d'une tuile pré-existante. 
+   protected void validateTileSide(String path) throws Exception {
+      int tileSide = context.getTileSide();
+      int tileSideByNpixFile = context.getTileWidthByNpixFile(path);
+      if( tileSideByNpixFile!=-1 && tileSide!=tileSideByNpixFile ) {
+         context.warning("Size of pre-existing tiles incoherent with declarative tileSize ("+tileSide+"). Will assume "+tileSideByNpixFile);
+         context.setTileOrder( (int)CDSHealpix.log2(tileSideByNpixFile ));
+      }
    }
 
    /** Récupération de la profondeur (cube) */

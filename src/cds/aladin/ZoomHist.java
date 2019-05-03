@@ -37,7 +37,7 @@ import java.util.StringTokenizer;
 
 import cds.tools.Util;
 
-class Hist implements Runnable {
+class ZoomHist implements Runnable {
 
    int MARGE = 8;
    int NBHIST = 12;
@@ -64,7 +64,7 @@ class Hist implements Runnable {
    private int nPix;               // nombre de pixels
    protected boolean flagHistPixel;  // true s'il s'agit d'un histogramme de pixels
 
-   Hist(Aladin aladin) {
+   ZoomHist(Aladin aladin) {
       this.aladin=aladin;
    }
 

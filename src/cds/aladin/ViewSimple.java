@@ -203,6 +203,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected double HView,WView;  // Taille de l'imagette
    protected RectangleD rzoom;    // Portion de l'image visible par le zoom (coord image)
    protected short iz;
+   
+   // Les paramètres temporels de la vue
+   protected double jdmin;
+   protected double jdmax;
 
    // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
    protected Projection projLocal;  // Projection propre à la vue (pour planBG) => voir getProj()
@@ -3708,7 +3712,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             resetDefaultCursor(tool, e.isShiftDown() );
             if( flagOnFirstLine ) {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
-            } else if( flagRollable || inNE((int)x,(int)y) && pref instanceof PlanBG ) {
+            } else if( flagRollable || inNE((int)x,(int)y) && pref instanceof PlanBG && !isPlot() ) {
                if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( view.isSimbadOrVizieRPointing() ) {
                if( oc!=Aladin.LOOKCURSOR ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));

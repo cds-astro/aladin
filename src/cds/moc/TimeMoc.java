@@ -66,6 +66,18 @@ public class TimeMoc extends SpaceMoc {
       return clone1(moc);
    }
    
+   public TimeMoc complement() throws Exception {
+      TimeMoc allsky = new TimeMoc();
+      allsky.add("0/0");
+      allsky.toRangeSet();
+      toRangeSet();
+      TimeMoc res = new TimeMoc(maxLimitOrder);
+      res.spaceRange = allsky.spaceRange.difference(spaceRange);
+      res.toHealpixMoc();
+      return res;
+   }
+
+   
    // Generic operation
    protected SpaceMoc operation(SpaceMoc moc,int op) throws Exception {
       testCompatibility(moc);

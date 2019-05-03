@@ -70,12 +70,11 @@ public class PlanTMocAlgo extends PlanTMoc {
       
       try {
          moc = p1.getMoc().clone();
-         /*if( op==COMPLEMENT ) moc = moc.complement();
-         else */if( op==TOORDER ) moc.setMocOrder(order);
+         if( op==COMPLEMENT ) moc = ((TimeMoc)moc).complement();
+         else if( op==TOORDER ) moc.setMocOrder(order);
          else {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
-//               SpaceMoc m2=pList[i].toReferenceFrame(m1.getCoordSys());
                Moc m2=pList[i].moc;
                switch(op) {
                   case UNION :        moc = m1.union(        m2); break;
@@ -85,6 +84,8 @@ public class PlanTMocAlgo extends PlanTMoc {
                }
             }
          }
+         
+         if( order!=-1 ) moc.setMocOrder( order);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

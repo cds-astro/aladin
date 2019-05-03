@@ -287,7 +287,8 @@ public class MyInputStream extends FilterInputStream {
       if( hasFitsKey("EXTEND",null) || hasFitsKey("NAXIS","0") ) type |= XFITS;
 
       if( hasFitsKey("CTYPE3","RGB")
-            /* || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3")*/ ) type |= RGB;
+            || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3") && hasFitsKey("BITPIX","8") ) type |= RGB;
+//    || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3") ) type |= RGB;
 
       // Détection d'une image HUGE
       if( (type & (CUBE|RGB))==0 ) {

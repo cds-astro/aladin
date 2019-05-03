@@ -89,6 +89,10 @@ public class PlanTMoc extends PlanMoc {
       if( tmax==-1 ) tmax=Double.NaN;
       return tmax;
    }
+   
+   /** Retourne le time Range global du plan, Double.NaN,Double.NaN si non défini */
+   protected double [] getTimeRange() { return new double[] { getTimeMin(), getTimeMax() }; }
+
 
    protected boolean waitForPlan() {
       if( dis!=null ) {
@@ -271,6 +275,7 @@ public class PlanTMoc extends PlanMoc {
       flagWaitTarget=false;
       flagProcessing = false;
       aladin.view.createView4TMOC(this);
+      aladin.calque.resetTimeRange();
    }
 
 

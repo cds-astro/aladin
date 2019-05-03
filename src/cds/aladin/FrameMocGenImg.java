@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import cds.moc.Healpix;
+import cds.moc.TimeMoc;
 import cds.tools.pixtools.CDSHealpix;
 
 /**
@@ -44,6 +45,28 @@ import cds.tools.pixtools.CDSHealpix;
 public class FrameMocGenImg extends FrameRGBBlink {
 
    String TITLE,INFO,HELP1,PLANE;
+   
+   static final protected int FIRSTORDER=3;
+   
+   static protected JComboBox makeComboSpaceRes() {
+      JComboBox c = new JComboBox();
+      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
+         String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( o)/3600. );
+         c.addItem(s);
+      }
+      c.setSelectedIndex(6);
+      return c;
+   }
+
+   static protected JComboBox makeComboTimeRes() {
+      JComboBox c = new JComboBox();
+      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
+         String s = "Order "+o+" => "+TimeMoc.getTemps( TimeMoc.getDuration(o) );
+         c.addItem(s);
+      }
+      c.setSelectedIndex(7);
+      return c;
+   }
 
    // Les composantes de l'objet
    private ButtonGroup cbg;	         // Les checkBox des opérations possibles
@@ -156,17 +179,8 @@ public class FrameMocGenImg extends FrameRGBBlink {
       
    }
    
-   static final protected int FIRSTORDER=3;
    
-   protected JComboBox getComboRes() {
-      JComboBox c = new JComboBox();
-      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
-         String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( o)/3600. );
-         c.addItem(s);
-      }
-      c.setSelectedIndex(6);
-      return c;
-   }
+   protected JComboBox getComboRes() { return makeComboSpaceRes(); }
    
    protected int getOrder() { return mocOrder.getSelectedIndex()+FIRSTORDER; }
    

@@ -30,6 +30,7 @@ import cds.moc.HealpixMoc;
 import cds.moc.Range;
 import cds.moc.SpaceTimeMoc;
 import cds.moc.TimeMoc;
+import cds.tools.Util;
 
 /** Generation d'un plan STMOC à partir d'une liste de plans (Catalogue) 
  * @author P.Fernique [CDS]
@@ -85,6 +86,8 @@ public class PlanSTMocGen extends PlanSTMoc {
       addIt(m,smin,smax,jdtmin,jdtmax);
    }
    
+   
+   static final String TEST = "tmin=212100466200000000 tmax=212100741077906944 smin=1907076530098405376 smax=1907077629610033152";
    /**
     * Ajout d'un élément par [smin..smax[ et [jdtmin..jdtmax[
     * @param m
@@ -98,27 +101,24 @@ public class PlanSTMocGen extends PlanSTMoc {
       try {
          tmin = (long)(jdtmin*TimeMoc.DAYMICROSEC);
          tmax = (long)(jdtmax*TimeMoc.DAYMICROSEC +TimeMoc.getDuration(timeOrder));
-         
-         if( m.timeRange.sz==8 &&
-               m.timeRange.r[0]==2462579491264790528L &&
-               m.timeRange.r[1]== 2462580590776418304L &&
-               m.timeRange.rangeArray[0].sz==44 &&
-               m.timeRange.rangeArray[0].r[0]==1392152145066721280L &&
-               m.timeRange.rangeArray[0].r[1]==1392153244578349056L ) {
-            System.out.println("j'y suis");
+
+         String t = "tmin="+tmin+" tmax="+tmax+" smin="+smin+" smax="+smax;
+         if( t.equals(TEST) ) {
+            System.out.println("J'y suis");
          }
-         
+
          m.add(tmin,tmax,smin,smax);
       } catch( Exception e ) {
-        e.printStackTrace();
-        System.err.println("MOC="+m);
-        System.err.println("tmin="+tmin+" tmax="+tmax+" smin="+smin+" smax="+smax);
+         e.printStackTrace();
+         System.err.println("MOC="+m);
+         System.err.println("tmin="+tmin+" tmax="+tmax+" smin="+smin+" smax="+smax);
       }
    }
    
+
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(Plan p1,double duration,double radius, boolean fov) {
-//      SpaceTimeMoc m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
+      SpaceTimeMoc m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
       Healpix hpx = new Healpix();
@@ -130,11 +130,10 @@ public class PlanSTMocGen extends PlanSTMoc {
          if( m<100 ) pourcent+=incrPourcent;
          m++;
          
-//         if( m%500==0 ) {
-//            System.out.println("Union...");
-//            try { moc = moc.union( m2 ); } catch( Exception e ) { e.printStackTrace(); }
-//            m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
-//         }
+         if( m%1000==0 ) {
+            try { moc = moc.union( m2 ); } catch( Exception e ) { e.printStackTrace(); }
+            m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
+         }
          
          try {
             double jdtime = ((Position)o).jdtime;
@@ -152,16 +151,16 @@ public class PlanSTMocGen extends PlanSTMoc {
                   
                   m1.toRangeSet();
                   Range r = m1.spaceRange;
-//                  for( int j=0; j<r.sz; j+=2 ) addIt(m2,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
-                  for( int j=0; j<r.sz; j+=2 ) addIt( (SpaceTimeMoc)moc,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
+                  for( int j=0; j<r.sz; j+=2 ) addIt(m2,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
+//                  for( int j=0; j<r.sz; j+=2 ) addIt( (SpaceTimeMoc)moc,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
                   
                   
-//                  npixs = new long[ (int)( m1.getUsedArea()) ];
-//                  Iterator<Long> it1 = m1.pixelIterator();
-//                  for( int i=0; i<npixs.length; i++ ) npixs[i] = it1.next();
+                  npixs = new long[ (int)( m1.getUsedArea()) ];
+                  Iterator<Long> it1 = m1.pixelIterator();
+                  for( int i=0; i<npixs.length; i++ ) npixs[i] = it1.next();
                } catch( Exception e ) {
-                  if( aladin.levelTrace>=3 ) e.printStackTrace();
-               }
+                  if( aladin.levelTrace>=3) e.printStackTrace();
+                }
 
             } else {
                coo.al = ((Position)o).raj;
@@ -172,8 +171,8 @@ public class PlanSTMocGen extends PlanSTMoc {
             
             if( npixs==null ) continue;
             for( long npix : npixs ) {
-//               addIt(m2,spaceOrder,npix,jdtime,jdtime+ duration/86400.);
-               addIt((SpaceTimeMoc)moc,spaceOrder,npix,jdtime,jdtime+ duration/86400.);
+               addIt(m2,spaceOrder,npix,jdtime,jdtime+ duration/86400.);
+//               addIt((SpaceTimeMoc)moc,spaceOrder,npix,jdtime,jdtime+ duration/86400.);
             }
 
          } catch( Exception e ) {
@@ -181,7 +180,7 @@ public class PlanSTMocGen extends PlanSTMoc {
          }
       }
       try {
-//         moc = moc.union( m2 );
+         moc = moc.union( m2 );
          moc.toHealpixMoc();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -190,9 +189,9 @@ public class PlanSTMocGen extends PlanSTMoc {
    
 
    protected boolean waitForPlan() {
+      long t0 = System.currentTimeMillis();
       try {
          moc = new SpaceTimeMoc(spaceOrder,timeOrder);
-//         if( order!=-1) moc.setMocOrder(order);
          for( Plan p1 : p ) {
             if( p1.isCatalogTime() ) {
                if( c==null )  c = p1.c.darker();
@@ -205,8 +204,12 @@ public class PlanSTMocGen extends PlanSTMoc {
          flagProcessing=false;
          return false;
       }
+      long t1=System.currentTimeMillis();
+      Aladin.trace(3,"STMOC built in "+Util.getTemps(t1-t0));
+      
       flagProcessing=false;
       if( moc.getSize()==0 ) error="Empty STMOC";
+      
       flagOk=true;
       aladin.calque.repaintAll();
       return true;

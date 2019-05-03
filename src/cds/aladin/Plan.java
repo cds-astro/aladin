@@ -422,33 +422,24 @@ public class Plan implements Runnable {
       return false;
    }
    
-   /** Retourne le time stamp minimal */
-   protected double getTimeMin() { 
-      if( !isTime() ) return Double.NaN;
+   /** Retourne le time Range global du plan, Double.NaN,Double.NaN si non défini */
+   protected double [] getTimeRange() { 
       double tmin = Double.NaN;
-      Iterator<Obj> it = iterator();
-      while( it.hasNext() ) {
-         try {
-            Source src = (Source) it.next();
-            if( Double.isNaN( tmin ) || src.jdtime<tmin ) tmin=src.jdtime;
-         } catch (Exception e) { continue; }
+      double tmax = Double.NaN;
+
+      if( isTime() ) {
+         Iterator<Obj> it = iterator();
+         while( it.hasNext() ) {
+            try {
+               Source src = (Source) it.next();
+               if( Double.isNaN( tmin ) || src.jdtime<tmin ) tmin=src.jdtime;
+               if( Double.isNaN( tmax ) || src.jdtime>tmax ) tmax=src.jdtime;
+            } catch (Exception e) { continue; }
+         }
       }
-      return tmin;
+      return new double[] { tmin,tmax };
    }
 
-   /** Retourne le time stamp maximal */
-   protected double getTimeMax() { 
-      if( !isTime() ) return Double.NaN;
-      double tmax = Double.NaN;
-      Iterator<Obj> it = iterator();
-      while( it.hasNext() ) {
-         try {
-            Source src = (Source) it.next();
-            if( Double.isNaN( tmax ) || src.jdtime>tmax ) tmax=src.jdtime;
-         } catch (Exception e) { continue; }
-      }
-      return tmax;
-   }
    
    /** Il s'agit d'un Plan avec une caractéristique temporelle */
    protected boolean isTime() { return false; }
@@ -1085,6 +1076,8 @@ public class Plan implements Runnable {
     */
    protected boolean Free() {
       setLogMode(false);
+      
+      if( isTime() ) aladin.calque.resetTimeRange();
 
       // Tentatite d'arrêt d'un flux en cours
       // JE NE LE FAIS PAS POUR LES PLANS ISSUS DU SERVEUR ALADIN, PARCE QUE CA PEUT
@@ -2525,7 +2518,8 @@ public class Plan implements Runnable {
       flagWaitTarget=false;
 
       flagProcessing = false;
-
+      
+      aladin.calque.resetTimeRange();
       aladin.calque.repaintAll();
    }
 

@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import cds.moc.Moc;
+import cds.moc.SpaceTimeMoc;
 import cds.tools.Util;
 
 /** Génération d'un STMOC de manière algorythmique
@@ -55,13 +56,13 @@ public class PlanSTMocAlgo extends PlanSTMoc {
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */
-   public PlanSTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
+   public PlanSTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int spaceOrder,int timeOrder) {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
-      String s = getFonction(p1,pList,op,order);
+      String s = getFonction(p1,pList,op,timeOrder);
       if( label==null ) label = s;
       setLabel(label);
       
@@ -70,7 +71,7 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       try {
          moc = p1.getMoc().clone();
          /*if( op==COMPLEMENT ) moc = moc.complement();
-         else */if( op==TOORDER ) moc.setMocOrder(order);
+         else */if( op==TOORDER ) moc.setMocOrder(timeOrder);
          else {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
@@ -83,6 +84,8 @@ public class PlanSTMocAlgo extends PlanSTMoc {
                }
             }
          }
+         if( timeOrder>=0 ) ((SpaceTimeMoc)moc).setTimeOrder( timeOrder );
+         if( spaceOrder>=0 ) ((SpaceTimeMoc)moc).setSpaceOrder( spaceOrder );
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

@@ -170,7 +170,9 @@ public class Constante {
    static public final String OLD_ISCUBE                = "isCube";
    static public final String OLD_ISMETA                = "isMeta";
    static public final String OLD_ISCAT                 = "isCatalog";
-   static public final String OLD_ISCOLOR               = "isColored";
+   static public final String OLD_ISCOLORED             = "isColored";
+   static public final String OLD_ISCOLOR               = "isColor";
+   static public final String OLD_ORDER                 = "order";
 
    static public final String KEY_SIZERECORD            = "sizeRecord";
    static public final String KEY_OFFSET                = "offset";

@@ -128,7 +128,6 @@ import cds.aladin.stc.STCPolygon;
 import cds.allsky.Context;
 import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
-import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
@@ -222,7 +221,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.121";
+   static public final    String VERSION = "v10.123";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4552,18 +4551,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       
       
-      Healpix hpx = new Healpix();
-      
       // Création de la liste des sommets
       ArrayList<double[]> cooList = new ArrayList<>();
       Ligne a = isCounterClock ? o.getLastBout() : o.getFirstBout();
-      long onpix=-1;
       while( a!=null ) {
-         long npix = hpx.ang2pix(order, a.raj, a.dej);
-         if( npix!=onpix ) {
-            onpix=npix;
             cooList.add( new double[]{a.raj,a.dej});
-         }
 
          // Prochain sommet ?
          a = isCounterClock ? a.debligne : a.finligne;

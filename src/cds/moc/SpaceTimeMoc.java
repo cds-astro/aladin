@@ -366,7 +366,8 @@ public class SpaceTimeMoc extends Moc {
       { "Remplacement sur fin2",                     "t2-4s2 t6s1", "t6s2",     "t2-4s2 t6s1-2",        ""},
       { "Tordu",                                     "t3s1 t4-5s2", "t3-5s3",   "t3s1,3 t4-5s2-3",      ""},
       { "Inter simple",                              "t3-5s1-3",    "t4-8s2-4", "t3s1-3 t4-5s1-4 t6-8s2-4",  "t4-5s2-3"},
-      { "Inter spécial",  "t1s1-6 t3-9s2","t3s5-7 t8s1-2", "t1s1-6 t3s2,5-7 t4-7s2 t8s1-2 t9s2","t8s2" }
+      { "Inter spécial",     "t1s1-6 t3-9s2","t3s5-7 t8s1-2", "t1s1-6 t3s2,5-7 t4-7s2 t8s1-2 t9s2","t8s2" },
+      { "Ajout en suite",                            "t1-4s1",      "t5-6s1",   "t1-6s1",               "" }
    };
    
    static final void test() throws Exception { test(-1); }
@@ -437,7 +438,11 @@ public class SpaceTimeMoc extends Moc {
      return size;
   }
   
-  protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte) throws Exception {
+  protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte, cds.moc.MocIO.HeaderFits header) throws Exception {
+     
+     timeOrder = header.getIntFromHeader("TORDER");
+     spaceOrder = header.getIntFromHeader("MOCORDER");
+     
      byte [] buf = new byte[naxis1*naxis2];
      MocIO.readFully(in,buf);
      createMocByFits((naxis1*naxis2)/nbyte,buf);
@@ -560,8 +565,7 @@ public class SpaceTimeMoc extends Moc {
    static public void main(String a[] ) {
       try {
          
-         test();
-//         test(17);
+         test(1);
          
 //         
 //         stmoc1.write( "D:/STMoc.fits");

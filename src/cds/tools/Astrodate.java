@@ -83,7 +83,8 @@ public class Astrodate {
     * @param JD Jour Julien
     * @return
     */
-   static public String JDToDate(double JD) {
+   static public String JDToDate(double JD) { return JDToDate(JD,true); }
+   static public String JDToDate(double JD, boolean withTime) {
       long Z = (long)(JD+0.5);
       double F = JD+0.5 - Z;
       long G;
@@ -105,7 +106,7 @@ public class Astrodate {
       long HH = s/3600;
       long MM = (s  - HH*3600 )/60;
       long SS = (s - HH*3600 - MM*60);
-      return A+"-"+dd(M)+"-"+dd(J)+"T"+dd(HH)+":"+dd(MM)+":"+dd(SS);      
+      return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");      
    }
    
    // Ajout d'un zéro en primer digit si nécessaire

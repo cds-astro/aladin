@@ -47,14 +47,7 @@ public class BuilderTree extends BuilderTiles {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No tile found");
       validateOrder(context.getOutputPath());
-
-      //      if( !context.isColor() ) {
-      //         validateCut();
-      //         context.initParameters();
-      //      } else {
-      //         context.info("Building tree for a colored HiPS ("+context.getTileExt()+")");
-      //         context.initRegion();
-      //      }
+      validateTileSide(context.getOutputPath());
 
       try { context.loadMoc(); }
       catch( Exception e ) {

@@ -441,6 +441,7 @@ public class Calque extends JPanel implements Runnable {
       }
 
       taggedSrc=false;
+      aladin.calque.resetTimeRange();
    }
 
    /** Retourne le nombre de plans actuellement sélectionnés */
@@ -630,6 +631,21 @@ public class Calque extends JPanel implements Runnable {
       }
       return n;
    }
+
+   
+   /** Retourne l'intervalle de temps de l'ensemble des données chargées dans la pile */
+   protected double [] getGlobalTimeRange() {
+      double jdmin=Double.NaN,jdmax=Double.NaN;
+      for( Plan p : getPlans() ) {
+         if( !p.flagOk ) continue;
+         if( !p.isTime() ) continue;
+         double [] t = p.getTimeRange();
+         if( Double.isNaN(jdmin) || t[0]<jdmin ) jdmin=t[0];
+         if( Double.isNaN(jdmax) || t[1]<jdmax ) jdmax=t[1];
+      }
+      return new double[] { jdmin, jdmax };
+   }
+
 
    /** Positionnement du mode du réticule 0-sans, 1-normal, 2-large */
    protected void setReticle(int mode) {
@@ -1859,6 +1875,11 @@ public class Calque extends JPanel implements Runnable {
          plan[i].reset(flag);
       }
    }
+   
+   /** Remet à jour le time range global */
+   protected void resetTimeRange() {
+      aladin.view.zoomview.zoomTimeControl.setGlobalTimeRange( getGlobalTimeRange() );
+   }
 
    /** Cree un nouveau plan Filter
     * @param aladinLabel Le nom du plan
@@ -1995,7 +2016,7 @@ public class Calque extends JPanel implements Runnable {
 
 
    /** Crée un plan MOC en fonction d'un ou plusieurs plans MOCs et d'un opérateur */
-   protected int newPlanMoc(String label,PlanMoc [] pList,int op,int order) {
+   protected int newPlanMoc(String label,PlanMoc [] pList,int op,int spaceOrder,int timeOrder) {
       int n;
       PlanMoc pa;
 
@@ -2006,9 +2027,9 @@ public class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      if( pList[0] instanceof PlanSTMoc ) plan[n] = pa = new PlanSTMocAlgo(aladin,label,pList,op,order);
-      else if( pList[0] instanceof PlanTMoc ) plan[n] = pa = new PlanTMocAlgo(aladin,label,pList,op,order);
-      else plan[n] = pa = new PlanMocAlgo(aladin,label,pList,op,order);
+      if( pList[0] instanceof PlanSTMoc ) plan[n] = pa = new PlanSTMocAlgo(aladin,label,pList,op,spaceOrder,timeOrder);
+      else if( pList[0] instanceof PlanTMoc ) plan[n] = pa = new PlanTMocAlgo(aladin,label,pList,op,timeOrder);
+      else plan[n] = pa = new PlanMocAlgo(aladin,label,pList,op,spaceOrder);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -3779,7 +3800,7 @@ public class Calque extends JPanel implements Runnable {
    protected void suiteNew(Plan p) {
       if( p==null ) return;
       //      bestPlacePost(p);
-
+      
       // Affectation du plan aux vues qui utilisaient son prédécesseur
       // dans le cas d'une réutilisation de plan
       aladin.view.adjustViews(p);

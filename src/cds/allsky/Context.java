@@ -1312,8 +1312,29 @@ public class Context {
       return order!=-1;
    }
    
+   /** Retourne la largeur d'une tuile déjà générée, -1 si non trouvé */
+   protected int getTileWidthByNpixFile(String path) throws Exception {
+      String npixFile = findOneNpixFile(path);
+      if( npixFile==null ) return -1;
+      Fits f = new Fits();
+      MyInputStream mi = null;
+      try {
+         mi = new MyInputStream(new FileInputStream(npixFile));
+         mi = mi.startRead();
+         if( (mi.getType()&MyInputStream.FITS)!=0 ) f.loadFITS(mi);
+         else f.loadPreview(mi);
+         return f.width;
+      } finally { mi.close(); }
+   }
+   
    protected boolean isExistingTiles() { return isExistingTiles( getOutputPath() ); }
    protected boolean isExistingTiles(String path) {
+      String npixFile = findOneNpixFile(path);
+      return npixFile!=null && (new File(npixFile)).exists();
+   }
+   
+   /** Retourne une tuile HiPS */
+   protected String findOneNpixFile(String path) {
          File root = new File(path);
          
          // Recherche du premier NorderXX trouvé où XX est un nombre
@@ -1325,7 +1346,7 @@ public class Context {
                break;
             }
          }
-         if( norder==null ) return false;
+         if( norder==null ) return null;
          
          // Recherche du premier Dir trouvé où XX est un nombre
          File dir = null;
@@ -1336,7 +1357,7 @@ public class Context {
                break;
             } 
          }
-         if( dir==null ) return false;
+         if( dir==null ) return null;
          
          // Recherche du premier NpixXX.ext trouvé où XX est un nombre
          String npix = null;
@@ -1349,9 +1370,9 @@ public class Context {
                break;
             } 
          }
-         if( npix==null ) return false;
+         if( npix==null ) return null;
          
-         return (new File(npix)).exists();
+         return npix;
    }
    
    protected boolean hasPropertyFile(String path) {
@@ -1813,7 +1834,7 @@ public class Context {
          "<TABLE>\n" +
          "<TR>\n" +
          "<TD>\n" +
-         "   <script type=\"text/javascript\" src=\"//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
+         "   <script type=\"text/javascript\" src=\"https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
          "<div id=\"aladin-lite-div\" style=\"width:70vw;height:70vh;\"></div>\n" +
          "<script type=\"text/javascript\">\n" +
          "//var hipsDir = location.href;\n" +
@@ -1828,21 +1849,21 @@ public class Context {
          "<TD>\n" +
          "<UL>\n" +
          "$INFO" +
-         "   <LI> <B>Raw property file:</B> <A HREF=\"properties\">properties</A>\n" +
+         "   <LI> <B>Property file:</B> <A HREF=\"properties\">properties</A>\n" +
          "   <LI> <B>Base URL:<p id=\"hipsBase\"></p></B> \n" +
          "</UL>\n" +
          "</TD>\n" +
          "</TR>\n" +
          "</TABLE>\n" +
 
-         "This survey can be displayed by <A HREF=\"//aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
-         "by <A HREF=\"//aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
+         "This survey can be displayed by <A HREF=\"https://aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
+         "by <A HREF=\"https://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
          "(just open the base URL)<BR>or any other HiPS aware clients.\n" +
          "<HR>\n" +
          "<I>(*) HiPS is a recommended <A HREF=\"www.ivoa.net\">International Virtual Observatory Alliance</A> standard:"
          + "<A HREF=\"www.ivoa.net/documents/HiPS\">HiPS REC</A>. \n" +
          "The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
-         "HiPS has been invented by <A HREF=\"//aladin.u-strasbg.fr/hips\">CDS-Universit&eacute; de Strasbourg/CNRS</A> (<A HREF=\"//cdsads.u-strasbg.fr/abs/2015A%26A...578A.114F\">2015A&amp;A...578A.114F</A>). "
+         "HiPS has been invented by <A HREF=\"https://aladin.u-strasbg.fr/hips\">CDS-Universit&eacute; de Strasbourg/CNRS</A> (<A HREF=\"http://cdsads.u-strasbg.fr/abs/2015A%26A...578A.114F\">2015A&amp;A...578A.114F</A>). "
          + "It is based on HEALPix sky tessellation and it is designed for astronomical scientifical usages (low distorsion, true pixel values...).</I>" +
          "<script type=\"text/javascript\">\n" +
          "document.getElementById(\"hipsBase\").innerHTML=hipsDir;\n" +
@@ -1997,7 +2018,7 @@ public class Context {
       
       if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
       
-      String title = prop.get( Constante.KEY_OBS_TITLE);
+      String title = prop!=null ? prop.get( Constante.KEY_OBS_TITLE) : null;
       if( title==null ) title=getLabel();
       setPropriete(Constante.KEY_OBS_TITLE,title);
       setPropriete("#"+Constante.KEY_OBS_COLLECTION,"Dataset collection name");
@@ -2113,19 +2134,24 @@ public class Context {
 
          setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );
 
-         long tileSizeFits = Math.abs(bitpix/8) * CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder()) + 2048L;
-         long tileSizeJpeg = 70000;
-         long tileSizePng = 100000;
+         long nbpix = CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder());
+         long tileSizeFits = Math.abs(bitpix/8) * nbpix + 2048L;
+         long tileSizeJpeg = nbpix/30;
+         long tileSizePng = (long)(tileSizeJpeg*1.5);
          double coverage = m.getCoverage();
          long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;
-         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.3 * coverage) )/1024L;
-         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.3 * coverage) )/1024L;
-         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.3 * coverage) )/1024L;
+         
+//         System.out.println("nbpix="+nbpix+" TileSizeFits="+Util.getUnitDisk(tileSizeFits)+ " tileSizeJpeg="+Util.getUnitDisk(tileSizeJpeg)+" tileSizePng="+Util.getUnitDisk(tileSizePng)
+//         +" nbTiles="+numberOfTiles+" depth="+depth);
+         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.4 * coverage) )/1024L;
+         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.4 * coverage) )/1024L;
+         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.4 * coverage) )/1024L;
          long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
                + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
                + (fmt.indexOf("png")>=0 ? pngSize : 0)
                + 8;
-
+         size *= depth;
+//         System.out.println("fmt="+fmt+" => full size="+Util.getUnitDisk(size*1024L)+" => estsize="+size);
          setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
       }
 
@@ -2175,11 +2201,10 @@ public class Context {
       // Gestion de la compatibilité
       // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
       while( prop.removeComment(FORCOMPATIBILITY) );
-     prop.add("#",FORCOMPATIBILITY);
+      prop.add("#",FORCOMPATIBILITY);
       prop.add(Constante.OLD_OBS_COLLECTION,label);
       prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
       prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
-//    prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
       if( minOrder>3 ) prop.add(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
       prop.add(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
@@ -2474,14 +2499,14 @@ public class Context {
          //         prop.remove(Constante.OLD_ISCUBE);
       }
 
-      // Nettoyage des vieux mots clés à la mode PlanHealpix
+      // Nettoyage des vieux mots clés à la mode PlanHealpix et autres
       prop.remove(Constante.OLD_ALADINVERSION);
       prop.remove(Constante.OLD_LAST_MODIFICATON_DATE);
       prop.remove(Constante.OLD_CURTFORMBITPIX);
       prop.remove(Constante.OLD_NBPIXGENERATEDIMAGE);
       prop.remove(Constante.OLD_ORDERING);
       prop.remove(Constante.OLD_ISPARTIAL);
-      prop.remove(Constante.OLD_ISCOLOR);
+      prop.remove(Constante.OLD_ISCOLORED);
       prop.remove(Constante.OLD_ISIAU);
       prop.remove(Constante.OLD_ARGB);
       prop.remove(Constante.OLD_TYPEHPX);
@@ -2513,6 +2538,7 @@ public class Context {
       prop.remove(Constante.OLD_ISCOLOR);
       prop.remove(Constante.OLD_ISCUBE);
       prop.remove(Constante.OLD_CUBE_DEPTH);
+      prop.remove(Constante.OLD_ISCOLOR);
    }   
 
    /** Mise à jour du fichier des propriétés associées au survey HEALPix (propertie file dans la racine)

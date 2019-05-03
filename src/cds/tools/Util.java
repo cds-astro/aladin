@@ -698,9 +698,14 @@ public final class Util {
    
    public static double round(double value, int places) {
 //      if( Math.abs(value)<1E-10 ) return value;
-      BigDecimal bd = new BigDecimal(Double.toString(value));
-      bd = bd.setScale(places, RoundingMode.HALF_UP);
-      return bd.doubleValue();
+      try {
+         BigDecimal bd = new BigDecimal(Double.toString(value));
+         bd = bd.setScale(places, RoundingMode.HALF_UP);
+         return bd.doubleValue();
+      } catch( Exception e ) {
+         double fact = Math.pow(10,places);
+         return Math.round(value*fact)/fact;
+      }
    }
 
    /**

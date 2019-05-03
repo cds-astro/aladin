@@ -60,7 +60,7 @@ final public class BuilderAllsky  extends Builder {
             if( z==0 && !context.isColor() ) validateCut();
             createAllSkyColor(context.getOutputPath(),3,"png",64, z);
             createAllSkyColor(context.getOutputPath(),3,"jpeg",64, z);
-         } catch( Exception e ) { e.printStackTrace(); }
+         } catch( Exception e ) { }
       }
 
       postJob();
@@ -162,13 +162,13 @@ final public class BuilderAllsky  extends Builder {
 
       // Ecriture du FITS (true bits)
       String filename = getFileName(path, order,z);
-      out.writeFITS(filename+".fits",true);
+      out.writeFITS(filename+".fits");
 
       // Dans le cas d'un cube, il est possible que le Allsky.fits n'ait pas été créé (vide),
       // on va alors dupliquer le premier Allsky_nnn.fits en Allsky.fits pour s'en sortir
       if( z>1 ) {
          String f = getFileName(path,order,0);
-         if( !(new File(f+".fits")).isFile() ) out.writeFITS(f+".fits",true);
+         if( !(new File(f+".fits")).isFile() ) out.writeFITS(f+".fits");
       }
 
       Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
@@ -238,7 +238,7 @@ final public class BuilderAllsky  extends Builder {
       }
 
       if( first ) {
-         //         context.warning("createAllSkyColor : no "+ext+" tiles found!");
+         context.warning("CreateAllSkyColor: no "+ext+" tiles found!");
          return;
       }
 

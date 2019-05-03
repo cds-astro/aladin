@@ -42,7 +42,7 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderGzip extends Builder {
    
-   private int nbFile;      // Nombre de fichires traités
+   public int nbFile;      // Nombre de fichires traités
    
    public BuilderGzip(Context context) {
       super(context);
@@ -126,9 +126,9 @@ public class BuilderGzip extends Builder {
         if( !in.isFile() ) throw new Exception(file+" does not exist !");
         mis = new MyInputStream(new FileInputStream(in));
         if( compress ) {
-           if( mis.isGZ() ) throw new Exception(file+" already gzipped");
+           if( mis.isGZ() ) return; // throw new Exception(file+" already gzipped");
         } else {
-           if( !mis.isGZ() ) throw new Exception(file+" not gzipped");
+           if( !mis.isGZ() ) return; // throw new Exception(file+" not gzipped");
            mis = mis.startRead();
         }
         String outFile = file+".tmp";
@@ -151,13 +151,14 @@ public class BuilderGzip extends Builder {
         else {
 
            in.delete();
-           out.renameTo(in);
+           in = new File(file);
+           if( !out.renameTo(in) ) throw new Exception("Cannot rename "+outFile+" in "+file);
 
            nbFile++;
            if( context!=null ) context.setProgress(nbFile);
         }
         
-     } catch( Exception e ) { }
+     } 
      finally { 
         if( mis!=null ) mis.close();
         if( mos!=null ) mos.close();

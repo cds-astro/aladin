@@ -43,6 +43,9 @@ import cds.allsky.HipsGen;
 import cds.astro.Astrocoo;
 import cds.astro.Unit;
 import cds.moc.HealpixMoc;
+import cds.moc.Moc;
+import cds.moc.SpaceTimeMoc;
+import cds.moc.TimeMoc;
 import cds.savot.model.SavotField;
 import cds.tools.Computer;
 import cds.tools.Util;
@@ -2427,7 +2430,8 @@ public final class Command implements Runnable {
    protected String execCmocCmd(String param, String label) {
       try {
 
-         int order = -1;
+         int spaceOrder = -1;
+         int timeOrder = -1;
          double radius = 0;
          boolean fov = false;
          double thresHold = Double.NaN;
@@ -2435,13 +2439,19 @@ public final class Command implements Runnable {
          double pixMax = Double.NaN;
          int command = PlanMocAlgo.UNION;
 
-         // Extraction d'un éventuel paramètre -order=nn
+         // Extraction d'un éventuel paramètre -order=nn[/mm]
          int i = param.indexOf("-order=");
          if( i >= 0 ) {
             int j = i + 7;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ )
-               ;
-            order = Integer.parseInt(param.substring(j, i));
+            for( ; i < param.length() && !(Character.isSpace(param.charAt(i)) || param.charAt(i)=='/'); i++ ) ;
+            spaceOrder = Integer.parseInt(param.substring(j, i));
+            
+            if( i<param.length() && param.charAt(i)=='/' ) {
+               j=++i;
+               for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ ) ;
+               timeOrder = Integer.parseInt(param.substring(j, i));
+            }
+            
             param = i == param.length() ? "" : param.substring(i).trim();
          }
 
@@ -2476,12 +2486,9 @@ public final class Command implements Runnable {
          i = param.indexOf("-pixelCut=");
          if( i >= 0 ) {
             int j = i + 10;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ )
-               ;
-            for( ; i < param.length() && Character.isSpace(param.charAt(i)); i++ )
-               ;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ )
-               ;
+            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ ) ;
+            for( ; i < param.length() && Character.isSpace(param.charAt(i)); i++ ) ;
+            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ ) ;
             String c = Tok.unQuote(param.substring(j, i));
             Tok tok = new Tok(c);
             try {
@@ -2520,28 +2527,39 @@ public final class Command implements Runnable {
 
          // Pour des objets
          if( type == -1 || type == Plan.TOOL ) {
-            int n = a.createPlanMocByRegions(order);
+            int n = a.createPlanMocByRegions(spaceOrder);
             Plan pMoc = a.calque.getPlan(n);
             if( label != null ) pMoc.setLabel(label);
 
             // Pour les MOCs
          } else if( type == Plan.ALLSKYMOC || type == Plan.ALLSKYTMOC || type == Plan.ALLSKYSTMOC) {
-            boolean flagCheckOrder = order == -1;
+            boolean flagCheckSpaceOrder = spaceOrder == -1;
+            boolean flagCheckTimeOrder = timeOrder == -1;
             PlanMoc[] pList = new PlanMoc[p.length];
+            int spMoc=-1,tMoc=-1;
             for( int j = 0; j < p.length; j++ ) {
                pList[j] = (PlanMoc) p[j];
-               if( flagCheckOrder && pList[j].getMocOrder() > order ) order = pList[j].getMocOrder();
+               if( flagCheckSpaceOrder || flagCheckTimeOrder ) {
+                  Moc moc = pList[j].moc;
+                  if( moc instanceof SpaceTimeMoc ) {
+                     spMoc = ((SpaceTimeMoc)moc).getTimeOrder();
+                     tMoc = ((SpaceTimeMoc)moc).getSpaceOrder();
+                  } else if( moc instanceof TimeMoc ) tMoc = moc.getMocOrder();
+                  else spMoc=moc.getMocOrder();
+                  if( flagCheckSpaceOrder && spMoc>spaceOrder ) spaceOrder=spMoc;
+                  if( flagCheckTimeOrder && tMoc>timeOrder ) timeOrder=tMoc;
+               }
             }
-            a.calque.newPlanMoc(label, pList, command, order);
+            a.calque.newPlanMoc(label, pList, command, spaceOrder,timeOrder);
 
             // Pour les cartes de probabilités
          } else if( !Double.isNaN(thresHold) && type == Plan.ALLSKYIMG ) {
-            a.calque.newPlanMoc(label, p, order, 0, Double.NaN, Double.NaN, thresHold, fov);
+            a.calque.newPlanMoc(label, p, spaceOrder, 0, Double.NaN, Double.NaN, thresHold, fov);
 
             // Pour des catalogues ou des images
          } else {
-            if( order == -1 ) order = 13;
-            a.calque.newPlanMoc(label, p, order, radius, pixMin, pixMax, Double.NaN, fov);
+            if( spaceOrder == -1 ) spaceOrder = 13;
+            a.calque.newPlanMoc(label, p, spaceOrder, radius, pixMin, pixMax, Double.NaN, fov);
          }
          a.calque.repaintAll();
 

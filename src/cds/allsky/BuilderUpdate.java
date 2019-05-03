@@ -48,9 +48,13 @@ public class BuilderUpdate extends Builder {
    
    private void fillupContext() throws Exception {
       context.loadProperties();
+      
       String s = context.prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
       boolean color = s!=null && s.indexOf("color")>=0;
       if( color ) context.setColor("true");
+      
+      boolean live = s!=null && s.indexOf("live")>=0;
+      if( live ) context.setLive( live );
       
       int [] minmax = context.findMinMaxOrder();
       if( minmax[0]==-1 ) throw new Exception("No HiPS found in target dir ["+context.getOutputPath()+"] !");
@@ -60,6 +64,9 @@ public class BuilderUpdate extends Builder {
       s = context.prop.getProperty(Constante.KEY_CUBE_DEPTH);
       try { depth=Integer.parseInt(s); } catch( Exception e) {} 
       context.setDepth(depth);
+      
+      s = context.prop.getProperty(Constante.KEY_HIPS_STATUS);
+      if( s!=null ) context.setStatus(s);
 
       context.initRegion();
    }
@@ -93,9 +100,10 @@ public class BuilderUpdate extends Builder {
    
    
    private void builderGunzip() throws Exception {
-      context.info("Scanning and gunzipping required tiles (order <=5)...");
+      context.info("Scanning and gunzipping required tiles (order<=5)...");
       (b=new BuilderGunzip(context)) .run();
-      context.info("Gunzipping done");
+      if( ((BuilderGunzip)b).nbFile==0 ) context.info("Nothing gzipped");
+      else context.done("Gunzip done");
       b=null; 
    }
 
@@ -120,9 +128,11 @@ public class BuilderUpdate extends Builder {
          Tok tok = new Tok(s);
          while( tok.hasMoreTokens() ) {
             String fmt = tok.nextToken();
+            if( fmt.equals("jpeg") ) fmt="jpg";
             
+            File f = new File(filename+"."+fmt);
             // Manquant => on refait le tout
-            if( !(new File(filename+"."+fmt)).exists() ) {
+            if( !f.exists() ) {
                context.done("Regenerating Allsky file(s) from Norder3 tiles");
                b=new BuilderAllsky(context);
                b.run();
@@ -130,7 +140,7 @@ public class BuilderUpdate extends Builder {
                return;
             }
          }
-        
+
       }
       
       // Tous les allsky sont bons => Juste les actions en postJob à refaire
@@ -148,6 +158,8 @@ public class BuilderUpdate extends Builder {
       context.setMode( Mode.KEEPTILE );
       int order=context.getOrder();
       context.setOrder(3);
+      
+      validateTileSide(context.getOutputPath());
       
       context.info("Building Norder0,1 and 2...");
       

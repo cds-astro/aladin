@@ -1635,7 +1635,7 @@ Runnable, SwingWidgetFinder, Widget {
    
    private void resetUrl() { listUrl=null; }
    private void addUrl(String url, Rectangle r) {
-      if( listUrl==null ) listUrl = new ArrayList<ActionUrl>();
+      if( listUrl==null ) listUrl = new ArrayList<>();
       listUrl.add( new ActionUrl(url, r ) );
    }
    
@@ -1934,7 +1934,10 @@ Runnable, SwingWidgetFinder, Widget {
       a.resumeVariousThinks();
 
       // Reaffichage du status du plan sous la souris
-      if( planIn!=null ) setInfo(planIn);
+      if( planIn!=null && planIn.type!=Plan.NO ) {
+         setInfo(planIn);
+         setMessageInfo( planIn );
+      }
 
       //Clignotement des voyants si besoin
       if( slideBlink ) startBlink();

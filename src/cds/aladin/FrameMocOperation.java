@@ -29,8 +29,13 @@ import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+
+import cds.aladin.prop.PropPanel;
+import cds.moc.Moc;
+import cds.moc.SpaceTimeMoc;
 
 /**
  * Gestion de la fenetre associee a la creation d'un plan arithmétic
@@ -45,6 +50,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
    // Les composantes de l'objet
    private ButtonGroup cbg;	         // Les checkBox des opérations possibles
    private JRadioButton rUnion,rInter,rSub,rDiff,rComp;
+   private JComboBox mocTimeOrder,mocSpaceOrder;
 
    @Override
    protected void createChaine() {
@@ -100,6 +106,9 @@ public final class FrameMocOperation extends FrameRGBBlink {
    protected Color getColorLabel(int i) {
       return Color.black;
    }
+   
+   protected JComboBox getComboSpaceRes() { return FrameMocGenImg.makeComboSpaceRes(); }
+   protected JComboBox getComboTimeRes()  { return FrameMocGenImg.makeComboTimeRes(); }
 
    @Override
    protected JPanel getAddPanel() {
@@ -129,8 +138,19 @@ public final class FrameMocOperation extends FrameRGBBlink {
       c.weightx=10.0;
       g.setConstraints(pp,c);
       p.add(pp);
-
-
+      
+      PropPanel.addSectionTitle(p, new JLabel("Target resolution"), g, c);
+      c.gridwidth=GridBagConstraints.REMAINDER;
+      pp=new JPanel();
+      pp.add( new JLabel("Space "));
+      mocSpaceOrder = getComboSpaceRes();
+      pp.add(mocSpaceOrder);
+      pp.add( new JLabel("    Time "));
+      mocTimeOrder = getComboTimeRes();
+      pp.add(mocTimeOrder);
+      g.setConstraints(pp,c);
+      p.add(pp);
+      
       return p;
    }
 
@@ -144,7 +164,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
    }
 
    protected PlanMoc [] getPlans() {
-      ArrayList<PlanMoc> pListA = new ArrayList<PlanMoc>();
+      ArrayList<PlanMoc> pListA = new ArrayList<>();
       for( JComboBox c : ch ) {
          int i=c.getSelectedIndex()-1;
          if (i<0) continue;
@@ -156,6 +176,15 @@ public final class FrameMocOperation extends FrameRGBBlink {
       return pList;
    }
 
+   protected int getTimeOrder() {
+      return mocTimeOrder.isEnabled() ? 
+            mocTimeOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER : -1;
+   }
+
+   protected int getSpaceOrder() { 
+      return mocSpaceOrder.isEnabled() ? 
+            mocSpaceOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER : -1; 
+   }
 
    @Override
    protected void submit() {
@@ -166,11 +195,14 @@ public final class FrameMocOperation extends FrameRGBBlink {
          int fct=getOperation(s);
          String label = s.substring(0,3)+" "+pList[0].label+(pList.length==1?""
                :pList[1].label+(pList.length==2?"":"..."));
+         
+         int spaceOrder = getSpaceOrder();
+         int timeOrder = getTimeOrder();
 
          Plan [] ps = new Plan[ pList.length ];
          for( int i=0; i<ps.length; i++ ) ps[i] = pList[i];
          a.console.printCommand("cmoc -"+PlanMocAlgo.getOpName(fct)+" "+FrameMocGenImg.labelList(ps));
-         a.calque.newPlanMoc(label,pList,fct,0);
+         a.calque.newPlanMoc(label,pList,fct,spaceOrder,timeOrder);
          hide();
 
       } catch ( Exception e ) {
@@ -180,6 +212,9 @@ public final class FrameMocOperation extends FrameRGBBlink {
 
    }
    
+   private int initSpaceOrder=-1;
+   private int initTimeOrder=-1;
+   
    @Override
    protected void adjustWidgets() { 
       PlanMoc [] pList = getPlans();
@@ -187,11 +222,42 @@ public final class FrameMocOperation extends FrameRGBBlink {
       boolean un = pList.length==1;
       boolean deux = pList.length==2;
       boolean plus = pList.length>1;
+      boolean time=false;
+      boolean space=false;
+      
+      boolean setTimeOrder=false;
+      boolean setSpaceOrder=false;
+      
+      for( PlanMoc p : pList ) {
+         if( p.isTimeMoc() ) {
+            time=true;
+            Moc moc = p.moc;
+            if( initTimeOrder==-1 ) {
+               if( moc instanceof SpaceTimeMoc ) initTimeOrder = ((SpaceTimeMoc)moc).getTimeOrder();
+               else initTimeOrder = moc.getMocOrder();
+               setTimeOrder=true;
+            }
+            
+         } else {
+            space=true;
+            initSpaceOrder = p.moc.getMocOrder();
+            setSpaceOrder=true;
+         }
+      }
+      
+      if( !time ) initTimeOrder=-1;
+      if( !space ) initSpaceOrder=-1;
 
       rUnion.setEnabled(plus);
       rInter.setEnabled(plus);
       rDiff.setEnabled(deux);
       rSub.setEnabled(deux);
       rComp.setEnabled(un);
+      
+      if( setSpaceOrder ) mocSpaceOrder.setSelectedIndex( initSpaceOrder-FrameMocGenImg.FIRSTORDER);
+      if( setTimeOrder ) mocTimeOrder.setSelectedIndex( initTimeOrder-FrameMocGenImg.FIRSTORDER);
+      
+      mocSpaceOrder.setEnabled( space );
+      mocTimeOrder.setEnabled( time );
    };
 }

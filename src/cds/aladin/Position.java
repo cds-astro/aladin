@@ -29,7 +29,7 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.io.OutputStream;
 
-import cds.aladin.Hist.HistItem;
+import cds.aladin.ZoomHist.HistItem;
 import cds.tools.FastMath;
 import cds.tools.Util;
 

@@ -55,7 +55,7 @@ public final class FrameMocGenRes extends FrameMocGenImg {
       try {
          PlanMoc [] ps = new PlanMoc[]{ (PlanMoc)getPlan(ch[0]) };
          int order=getOrder();
-         a.calque.newPlanMoc(ps[0].label,ps,5,order);
+         a.calque.newPlanMoc(ps[0].label,ps,5,order,-1);
          hide();
 
       } catch ( Exception e ) {

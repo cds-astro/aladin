@@ -1116,7 +1116,7 @@ public class SpaceMoc extends Moc {
       return size;
    }
    
-   protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte) throws Exception {
+   protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte, cds.moc.MocIO.HeaderFits header) throws Exception {
       byte [] buf = new byte[naxis1*naxis2];
       MocIO.readFully(in,buf);
       createUniq((naxis1*naxis2)/nbyte,nbyte,buf);

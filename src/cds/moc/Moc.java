@@ -251,7 +251,7 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
 
    abstract protected int writeSpecificFitsProp( OutputStream out  ) throws Exception;
    abstract protected int writeSpecificData(OutputStream out) throws Exception;
-   abstract protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte) throws Exception;
+   abstract protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte, cds.moc.MocIO.HeaderFits header) throws Exception;
 
    /***************************************  Utilities **************************************************************/
 

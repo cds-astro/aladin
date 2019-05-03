@@ -35,7 +35,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
 
-import cds.aladin.Hist.HistItem;
+import cds.aladin.ZoomHist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.tools.FastMath;
