@@ -193,9 +193,9 @@ public class PlanBG extends PlanImage {
    public boolean inFits=false;      // true: Les losanges originaux peuvent être fournis en FITS
    public boolean inJPEG=false;      // true: Les losanges originaux peuvent être fournis en JPEG
    public boolean inPNG=false;       // true: Les losanges originaux peuvent être fournis en PNG
-   private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
-   private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
-   private String body=null;         // le corps céleste concerné (en minuscule et en anglais), null si sky
+   protected boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
+   protected boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
+   protected String body=null;         // le corps céleste concerné (en minuscule et en anglais), null si sky
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin!=null && aladin.configuration!=null ? aladin.configuration.getFrameDrawing() : 0;   // Frame de tracé, 0 si utilisation du repère général
    protected boolean local;
@@ -207,7 +207,7 @@ public class PlanBG extends PlanImage {
    protected int transferFct4Preview=LINEAR;  // Fonction de transfert pour le preview (par défaut celui de la configuration user)
    protected boolean flagNoTarget=false; // Par défaut pas de target indiquée
    private boolean flagWaitAllSky;     // En attente du chargement AllSky
-   private int tileOrder=-1;        // Ordre des losanges
+   protected int tileOrder=-1;        // Ordre des losanges
 
    protected int RGBCONTROL[] = { 0,128, 255 , 0,128, 255 , 0,128, 255 };
    protected int RGBControl[];
@@ -231,6 +231,8 @@ public class PlanBG extends PlanImage {
    protected PlanBG(Aladin aladin) {
       super(aladin);
       initCache();
+      suiteSpecific();
+      type=Plan.ALLSKYIMG;
    }
 
    /**

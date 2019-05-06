@@ -116,7 +116,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    protected boolean flagCut=false;  // true si une coupe est active
    private Obj objCut;               // L'Objet graphique correspondant au cut que l'on trace
 
-   ZoomTimeControl zoomTimeControl=null;  // Le controle du temps
+   ZoomTime zoomTime;
    ZoomHist hist=null;                  // L'histogramme courant
    SED sed=null;                      // SED courant
    protected boolean flagHist=false;  // true si l'histogramme est actif
@@ -135,9 +135,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       this.aladin = aladin;
       setOpaque(true);
       setBackground(Aladin.BLUE);
-      
-      zoomTimeControl = new ZoomTimeControl(this);
-      
       BGD = Aladin.COLOR_BACKGROUND;
 
       addMouseWheelListener(this);
@@ -145,6 +142,11 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       addMouseMotionListener(this);
 
       WENZOOM=8;
+   }
+   
+   /** Donne la référence du contoleur du temp */
+   protected void setZoomTime(ZoomTime zoomTime) {
+      this.zoomTime = zoomTime;
    }
    
    protected ZoomView() { super(); }
@@ -170,6 +172,10 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          ViewSimple vc = aladin.view.getCurrentView();
          vc.cubeControl.incFrame(-e.getWheelRotation());
          aladin.calque.repaintAll();
+         return;
+      }
+      if( zoomTime.mouseWheelMoved( e, aladin.view.getCurrentView() ) ) {
+         synchronizeTime(e);
          return;
       }
       synchronize(e);
@@ -274,11 +280,19 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       ViewSimple v = aladin.view.getCurrentView();
       v.stopAutomaticScroll();
       
+      boolean doubleClick = e.getClickCount()>=2;
+      
+      // Dans le controleur de temps ?
+      if( zoomTime.mousePress(e.getX(), e.getY(), v, doubleClick) ) {
+         synchronizeTime(e);
+         return;
+      }
+      
       or = null;
-      if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY()+DELTAY);
+      if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY()+deltaY);
       else {
          flagdrag = true;
-         newZoom(e.getX(),e.getY()+DELTAY);
+         newZoom(e.getX(),e.getY()+deltaY);
          synchronize(e);
       }
    }
@@ -295,6 +309,17 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          aladin.view.setZoomRaDecForSelectedViews(aladin.calque.zoom.getValue(),null);
          flagSynchronized=true;
       } else flagSynchronized=false;
+   }
+
+   /** Sélectionne et synchronize toutes les vues compatibles si demandé par SHIFT
+    * sinon affiche un texte expliquant que c'est possible le cas échéant */
+   protected void synchronizeTime(MouseEvent e) {
+      if( !e.isShiftDown() || !aladin.view.isMultiView() ) return;
+      ViewSimple vc=aladin.view.getCurrentView();
+      if( vc==null || vc.isFree() || !Projection.isOk(vc.pref.projd) ) return;
+
+      aladin.view.selectCompatibleViews();
+      aladin.view.syncTimeRange( vc );
    }
 
 
@@ -320,13 +345,20 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
       ViewSimple v = aladin.view.getCurrentView();
+      
+      // Dans le controleur de temps ?
+      if( zoomTime.mouseDrag(e.getX(), e.getY(), v) ) {
+         synchronizeTime(e);
+         return;
+      }
+
       if( v.isPlot() ) return;
       flagdrag = true;
-      if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY()+DELTAY);
+      if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY()+deltaY);
       else {
          synchronize(e);
-         newZoom(e.getX(),e.getY()+DELTAY);
-         drawInViewNow(e.getX(),e.getY()+DELTAY);
+         newZoom(e.getX(),e.getY()+deltaY);
+         drawInViewNow(e.getX(),e.getY()+deltaY);
       }
    }
 
@@ -382,7 +414,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       }
       else if( flagCut ) repaint();
       
-      else zoomTimeControl.mouseMove(e.getX(),e.getY());
+      else zoomTime.mouseMove(e.getX(),e.getY(), aladin.view.getCurrentView());
    }
 
    /** Dans le cas de l'affichage d'un cut Graph,
@@ -435,16 +467,18 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                if( Double.isNaN(coo.al) ) coo=null;
             }
          } catch( Exception e ) { coo=null; }
-      }
+         
+      // Synchronization de l'intervalle temps d'affichage
+      } else if( vc.isPlotTime() ) aladin.view.syncTimeRange( vc );
 
-      // Pas de calib ou une seule vue pour aller au plus vite
-      if( /* aladin.view.getNbSelectedView()==1 || */ coo==null ) {
+      // Pas de calib => pour aller au plus vite
+      if( coo==null ) {
          calculZoom(vc,xmouse,ymouse);
          repaint();
          vc.repaint();
 
          // Multi-vue
-      } else {
+      } else /* if( aladin.view.getNbSelectedView()>1 ) */ {
          aladin.view.setZoomRaDecForSelectedViews(0,coo,vc,false,true);
          aladin.view.syncView(1,coo,null);
       }
@@ -496,6 +530,12 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       flagSynchronized=false;
 
       ViewSimple v = aladin.view.getCurrentView();
+      
+      // Dans le controleur de temps ?
+      if( zoomTime.mouseRelease(e.getX(), e.getY(), v) ) {
+         synchronizeTime(e);
+         return;
+      }
 
       // Pour voir tout le champ initial
       if( e.isControlDown() || v.isPlot() ) {
@@ -503,7 +543,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
       //aladin.view.getCurrentView().stopAutomaticScroll();
-      Coord coo = drawInViewNow(e.getX(),e.getY()+DELTAY);
+      Coord coo = drawInViewNow(e.getX(),e.getY()+deltaY);
       if( coo!=null ) {
          aladin.view.setRepere(coo);
          //         aladin.view.memoUndo(v,coo,null);
@@ -639,18 +679,23 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       //      aladin.view.gotoThere(c);
       v.goToAllSky(c);
    }
+   
+   static private int DELTAYWITHTIME = 15;
 
    private int ov=0;
    private short oiz=-2;
    private Projection proj = null;
    private int lastHipsWidth=0,lastHiPSHeight=0;
-   int DELTAY=20;
+   int deltaY=0;
 
    private void drawHipsControl(Graphics g,ViewSimple v) {
       try {
 
          int width = getWidth();
          int height = getHeight();
+         
+         // Doit-on décaler vers le haut le controleur de zoom ?
+         deltaY =  zoomTime.isActivated() ? DELTAYWITHTIME : 0;
          
          if( lastHipsWidth!=width || lastHiPSHeight!=height ) {
             oiz=-1;
@@ -694,12 +739,12 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
 //            gbuf.translate(width/2-xc,height/2-yc);
             gbuf.setColor(Aladin.COLOR_GREEN);
-            gbuf.drawOval(x-ga,y-pa-DELTAY,ga*2,pa*2);
-            gbuf.drawOval(x-(ga+pa)/2,y-pa-DELTAY,ga+pa,pa*2);
-            gbuf.drawOval(x-pa,y-pa-DELTAY,pa*2,pa*2);
-            gbuf.drawOval(x-pa/2,y-pa-DELTAY,pa,pa*2);
-            gbuf.drawLine(x-ga,y-DELTAY,x+ga,y-DELTAY);
-            gbuf.drawLine(x,y-pa-DELTAY,x,y+pa-DELTAY);
+            gbuf.drawOval(x-ga,y-pa-deltaY,ga*2,pa*2);
+            gbuf.drawOval(x-(ga+pa)/2,y-pa-deltaY,ga+pa,pa*2);
+            gbuf.drawOval(x-pa,y-pa-deltaY,pa*2,pa*2);
+            gbuf.drawOval(x-pa/2,y-pa-deltaY,pa,pa*2);
+            gbuf.drawLine(x-ga,y-deltaY,x+ga,y-deltaY);
+            gbuf.drawLine(x,y-pa-deltaY,x,y+pa-deltaY);
 
             //            Projection proj = v.getProj();
             
@@ -712,7 +757,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                   c.al = coin[i].al;
                   c.del = coin[i].del;
                   proj.getXY(c);
-                  gbuf.drawLine((int)c.x,(int)c.y-DELTAY,(int)c.x,(int)c.y-DELTAY);
+                  gbuf.drawLine((int)c.x,(int)c.y-deltaY,(int)c.x,(int)c.y-deltaY);
                }
                c = v.getCooCentre();
                if( c== null ) {
@@ -728,15 +773,15 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 //               int w=5;
 //               gbuf.drawLine((int)c.x-w,(int)c.y,(int)c.x+w,(int)c.y);
 //               gbuf.drawLine((int)c.x,(int)c.y-w,(int)c.x,(int)c.y+w);
-               Util.fillCircle7(gbuf,(int)c.x,(int)c.y-DELTAY);
+               Util.fillCircle7(gbuf,(int)c.x,(int)c.y-deltaY);
             }
 
             gbuf.setFont(Aladin.SPLAIN);
-            gbuf.setColor(Aladin.COLOR_GREEN);
-            gbuf.drawString("+90",x-5,y-pa-2-DELTAY);
-            gbuf.drawString("-90",x-5,y+pa+10-DELTAY);
-            gbuf.drawString("-180",x-ga+5-gbuf.getFontMetrics().stringWidth("-180"),y+15-DELTAY);
-            gbuf.drawString("+180",x+ga-5,y-5-DELTAY);
+            gbuf.setColor(Aladin.COLOR_VERTDEAU);
+            gbuf.drawString("+90",x-5,y-pa-2-deltaY);
+            gbuf.drawString("-90",x-5,y+pa+10-deltaY);
+            gbuf.drawString("-180",x-ga+5-gbuf.getFontMetrics().stringWidth("-180"),y+15-deltaY);
+            gbuf.drawString("+180",x+ga-5,y-5-deltaY);
 //            gbuf.translate(xc-width/2,yc-height/2);
 
             String s;
@@ -755,12 +800,12 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             s=aladin.localisation.J2000ToString(c.al, c.del, Astrocoo.ARCSEC+1,false);
             xInfo = (int)( c.x + fm.stringWidth(s) > width ? c.x - fm.stringWidth(s)-10 : c.x+10);
             yInfo = (int)c.y-5;
-            gbuf.drawString(s,xInfo,yInfo-DELTAY);
+            gbuf.drawString(s,xInfo,yInfo-deltaY);
             
             String s1=v.getTaille(0);
             xInfo = (int)( c.x + fm.stringWidth(s) > width ? c.x - fm.stringWidth(s1)-10 : c.x+10);
             yInfo+=12;
-            gbuf.drawString(s1,xInfo,yInfo-DELTAY);
+            gbuf.drawString(s1,xInfo,yInfo-deltaY);
             
             drawBord(gbuf);
 
@@ -770,7 +815,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          g.drawImage(imgbuf, 0,0, this);
          drawTargetHistoryControl(g);
-         zoomTimeControl.draw(g);
+         zoomTime.draw(g,v);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -1477,9 +1522,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          String w1 = Coord.getUnit(c.getImgWidth());
          String h1 = Coord.getUnit(c.getImgHeight());
          g.setFont(Aladin.SPLAIN);
-         g.setColor( Aladin.COLOR_BLUE );
+         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
          String s = w1+" x "+h1;
-         g.drawString(s,w/2-g.getFontMetrics().stringWidth(s)/2,h-10);
+         g.drawString(s,w/2-g.getFontMetrics().stringWidth(s)/2,h-8);
       } catch( Exception e ) {}
    }
 
@@ -1540,27 +1585,27 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       int w = getWidth();
       int h = getHeight();
-      
+
       if( w!=lastWidth || h!=lastHeight ) {
          aladin.view.adjustZoomView(lastWidth,w, lastHeight,h);
          lastWidth=w;
          lastHeight=h;
          resumeSize();
       }
-      
-//      if( v==null || v.isFree() ) {
-         gr.setColor( Aladin.COLOR_BACKGROUND );
-         gr.fillRect(0,0,w,h);
-         drawBord(gr);
-         if( v==null || v.isFree() ) return;
-//      }
-      
+
+      gr.setColor( Aladin.COLOR_BACKGROUND );
+      gr.fillRect(0,0,w,h);
+      drawBord(gr);
+      if( v==null || v.isFree() ) return;
+
 
       Dimension d = v.getSize();
-      
-      // Faut-il afficher la loupe ou le zoom ?
+
+      // Faut-il afficher la loupe ?
       if( flagwen ) { imgok=true; drawImgWen(); }
-      else if( !flagdrag )  imgok = drawImgZoom(v);
+      
+      // Le zoom pour une image classique ?
+      if( !flagdrag )  imgok = drawImgZoom(v);
 
       // L'histogramme
       if( flagHist ) { drawImgHist(gr); return; }
@@ -1580,6 +1625,15 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                else if( objCut instanceof Repere ) drawCubeFrame(gr);
             }
          } catch( Exception e ) { setCut(null); }
+         return;
+      }
+      
+      if( v.isPlotTime() ) {
+         gr.setColor( BGD );
+         gr.fillRect(0,0,w,h);
+         drawBord(gr);
+         drawTargetHistoryControl(gr);
+         zoomTime.draw(gr, v);
          return;
       }
 
@@ -1604,18 +1658,12 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
 
-      if( imgok ) gr.drawImage(img,0,0,this);
-      else gr.clearRect(0,0,w,h);
+      if( imgok ) {
+         gr.drawImage(img,0,0,this);
+         zoomTime.draw(gr, v);
 
-      // Compteur pour le taquin
-//      if( aladin.view.flagTaquin ) {
-//         gr.setFont(new Font("Helvetica",Font.BOLD,30));
-//         gr.setColor(Color.red);
-//         if( startTaquinTime==0L ) startTaquinTime=System.currentTimeMillis();
-//         gr.drawString(getTaquinTime(),38,w/2+15);
-//         drawBord(gr);
-//         return;
-//      }
+      } else gr.clearRect(0,0,w,h);
+
 
       // Affichage du rectangle du zoom et des infos sur le champ
       if( !v.isFree() && !flagwen && !flagCut && rectzoom!=null ) {
@@ -1627,11 +1675,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       // Repere dans la loupe et les flèches dans les 4 directions
       if( flagwen && imgok ) {
-//         int n = (int)Math.ceil((double)getWidth()/WENZOOM);
-//         int c = (n/2)*WENZOOM;
          int W2 = WENZOOM/2;
          gr.setColor( Aladin.COLOR_BLUE );
-//         gr.drawRect(c,c,WENZOOM,WENZOOM);
          gr.drawRect(xWenrect,yWenrect,WENZOOM,WENZOOM);
 
          if( WENZOOM<=16 ) {
@@ -1642,8 +1687,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          }
          gr.setFont(Aladin.LBOLD);
          gr.setColor(Color.red);
-//         if( WENZOOM>8  ) gr.drawString("-",w-11,h-15);
-//         if( WENZOOM<64 )gr.drawString("+",w-12,h-5);
 
          // Affichage des valeurs individuelles des pixels
          if( isPixelTable() && v.pref.type!=Plan.IMAGERGB ) {

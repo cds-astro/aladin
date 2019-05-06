@@ -168,7 +168,7 @@ public class Save extends JFrame implements ActionListener {
    JComboBox format,format1;
    JCheckBox [] cbPlan;
    JRadioButton tsvCb, votCb, jsonCb;
-   JRadioButton jsonMocCb, fitsMocCb;
+   JRadioButton jsonMocCb, asciiMocCb, fitsMocCb;
    JRadioButton fitsCb, jpgCb, pngCb;
    JLabel info;
    String errorFile=null;
@@ -409,7 +409,9 @@ public class Save extends JFrame implements ActionListener {
             case Plan.ALLSKYTMOC:
             case Plan.ALLSKYSTMOC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
-               res &= saveMoc(s,(PlanMoc)p,jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.ASCII : HealpixMoc.FITS);
+               res &= saveMoc(s,(PlanMoc)p,
+                     asciiMocCb!=null && asciiMocCb.isSelected() ? HealpixMoc.ASCII :
+                        jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.JSON : HealpixMoc.FITS);
                break;
                //            case Plan.APERTURE:
             case Plan.TOOL:
@@ -442,7 +444,7 @@ public class Save extends JFrame implements ActionListener {
 
       aladin.memoDefaultDirectory(directory.getText());
    }
-
+   
    /** Construction du panel de sauvegarde des plans */
    protected JPanel getPlanPanel() {
       int i,j=0;
@@ -485,9 +487,8 @@ public class Save extends JFrame implements ActionListener {
          file=file.replace(':','-');
          file=file.replace('[','-');
          file=file.replace(']','-');
-         if( pl.isImage() || pl.type==Plan.ALLSKYMOC ) {
-            if( !file.endsWith(".fits") ) file=file+".fits";
-         } else file=file+".txt";
+         if( pl.isImage() || pl.isMoc() ) file=Util.replaceExt(file,"fits");
+         else file=Util.replaceExt(file,"txt");
          fileSavePlan[j] = new JTextField(file,20);
          c.gridwidth = 2;
          c.anchor = GridBagConstraints.EAST;
@@ -587,11 +588,15 @@ public class Save extends JFrame implements ActionListener {
          pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
          ButtonGroup cg = new ButtonGroup();
          fitsMocCb = new JRadioButton("FITS");      fitsMocCb.setActionCommand("FITS");
-         jsonMocCb = new JRadioButton("ASCII/JSON");      jsonMocCb.setActionCommand("ASCII/JSON");
-         cg.add(fitsMocCb); cg.add(jsonMocCb); fitsMocCb.setSelected(true);
+         asciiMocCb = new JRadioButton("ASCII");    asciiMocCb.setActionCommand("ASCII");
+         jsonMocCb = new JRadioButton("JSON");      jsonMocCb.setActionCommand("JSON");
+         cg.add(fitsMocCb); cg.add(jsonMocCb); cg.add(asciiMocCb);
+         fitsMocCb.setSelected(true);
          pFormat.add(fitsMocCb);
+         pFormat.add(asciiMocCb);
          pFormat.add(jsonMocCb);
          fitsMocCb.addActionListener(this);
+         asciiMocCb.addActionListener(this);
          jsonMocCb.addActionListener(this);
          c.gridwidth = 1;
          c.gridwidth = GridBagConstraints.REMAINDER;
@@ -726,7 +731,9 @@ public class Save extends JFrame implements ActionListener {
             if( !p.isReady() ) continue;
 
             switch(p.type) {
-//               case Plan.ALLSKYIMG: appendPlanBGXML(p);    break;
+               case Plan.ALLSKYCUBE: 
+               case Plan.ALLSKYCAT:
+               case Plan.ALLSKYIMG: appendPlanBGXML(p);    break;
                case Plan.FILTER:  appendPlanFilterXML(p);  break;
                case Plan.FOLDER:  appendPlanFolderXML(p);  break;
                case Plan.CATALOG: appendPlanCatalogXML(p); break;
@@ -791,7 +798,8 @@ public class Save extends JFrame implements ActionListener {
          append(CR+"       pref=\""+m.pref.label+"\"");
          append(CR+"       locked=\""+m.locked+"\"");
          append(CR+"       northUp=\""+m.northUp+"\"");
-         //         append(CR+"       sync=\""+m.sync+"\"");
+         if( !Double.isNaN(m.jdmin) ) append(CR+"       jdMin=\""+m.jdmin+"\"");
+         if( !Double.isNaN(m.jdmax) ) append(CR+"       jdMax=\""+m.jdmax+"\"");
       } catch( Exception e ) {}
    }
 
@@ -799,17 +807,12 @@ public class Save extends JFrame implements ActionListener {
     * on modifie le suffixe des noms de fichiers
     */
    private void changeMocFormat() {
-      boolean json = jsonMocCb.isSelected();
-      String newSuffix = json?".txt":".fits";
-      String oldSuffix = json?".fits":".txt";
-
+      String newSuffix = asciiMocCb.isSelected() ? "txt" :jsonMocCb.isSelected() ? "json" : "fits";
       for( int i=0; i<listPlan.length; i++ ) {
          Plan p =listPlan[i];
          if( p==null || !(p instanceof PlanMoc) ) continue;
          String label = fileSavePlan[i].getText();
-         if( !label.endsWith(oldSuffix) ) continue;
-         int offset = label.lastIndexOf('.');
-         fileSavePlan[i].setText(label.substring(0, offset)+newSuffix);
+         fileSavePlan[i].setText( Util.replaceExt( label, newSuffix));
       }
    }
 
@@ -819,35 +822,25 @@ public class Save extends JFrame implements ActionListener {
     */
    private void changeCatFormat() {
 
-      String newSuffix = tsvCb.isSelected() ? ".txt" : jsonCb!=null && jsonCb.isSelected() ? ".json" : ".xml";
+      String newSuffix = tsvCb.isSelected() ? "txt" : jsonCb!=null && jsonCb.isSelected() ? "json" : "xml";
 
       for( int i=0; i<listPlan.length; i++ ) {
          Plan p =listPlan[i];
          if( p==null || !p.isCatalog() ) continue;
          String label = fileSavePlan[i].getText();
-         int offset = label.lastIndexOf(".");
-         if( offset==-1 ) offset=label.length();
-         fileSavePlan[i].setText(label.substring(0, offset)+newSuffix);
+         fileSavePlan[i].setText( Util.replaceExt( label, newSuffix));
       }
    }
-
-   // les extensions à tester dans le cas d'une substitution */
-   static final private String [] EXTENSIONS = { ".png",".jpg",".jpeg",".fits",".fit" };
 
    /** appelé lorsque l'utilisateur a modifie le format de sauvegarde des image :
     * on modifie le suffixe des noms de fichiers */
    private void changeImgFormat() {
-      String newSuffix = fitsCb.isSelected()?".fits": jpgCb.isSelected()?".jpg" : ".png";
+      String newSuffix = fitsCb.isSelected()?"fits": jpgCb.isSelected()?"jpg" : "png";
       for( int i=0; i<listPlan.length; i++ ) {
          Plan p =listPlan[i];
          if( p==null || !p.isImage() ) continue;
          String label = fileSavePlan[i].getText();
-         int offset = label.lastIndexOf('.');
-         if( offset>0 ) {
-            String oldSuffix = label.substring(offset);
-            if( Util.indexInArrayOf(oldSuffix, EXTENSIONS, false)>=0 ) label= label.substring(0,offset);
-         }
-         fileSavePlan[i].setText(label+newSuffix);
+         fileSavePlan[i].setText( Util.replaceExt( label, newSuffix));
       }
    }
 
@@ -1065,10 +1058,6 @@ public class Save extends JFrame implements ActionListener {
    /** Sauvegarde du plan BG p sous forme XML (utilise le buffer f) */
    protected void appendPlanBGXML(Plan p) throws java.io.IOException {
       appendXMLHeadPlan(p);
-      append("    <AJS>"+CR);
-      append( XMLParser.XMLEncode("get HiPS("+((PlanBG)p).id+")")+CR);
-      append("    </AJS>"+CR);
-      append("  </PLANE>"+CR);
    }
 
    /** Sauvegarde du plan Filter p sous forme XML (utilise le buffer f) */
@@ -1305,6 +1294,38 @@ public class Save extends JFrame implements ActionListener {
             if( prgb.planRed!=null && prgb.planRed.type!=Plan.NO )     append(CR+"     RGBRed=\""+prgb.planRed.label+"\"");
             if( prgb.planGreen!=null && prgb.planGreen.type!=Plan.NO ) append(CR+"     RGBGreen=\""+prgb.planGreen.label+"\"");
             if( prgb.planBlue!=null && prgb.planBlue.type!=Plan.NO )   append(CR+"     RGBBlue=\""+prgb.planBlue.label+"\"");
+         }
+         
+         if( p instanceof PlanBG ) {
+            PlanBG pbg = (PlanBG)p;
+            if( pbg.gluTag!=null ) append(CR+"     hipsgluTag=\""+pbg.gluTag+"\"");
+            if( pbg.survey!=null ) append(CR+"     hipssurvey=\""+pbg.survey+"\"");
+            if( pbg.url!=null )    append(CR+"     hipsurl=\""+pbg.url+"\"");
+            append(CR+"     hipsminOrder=\""+pbg.minOrder+"\"");
+            append(CR+"     hipsmaxOrder=\""+pbg.maxOrder+"\"");
+            append(CR+"     hipscube=\""+pbg.cube+"\"");
+            append(CR+"     hipscolor=\""+pbg.color+"\"");
+            append(CR+"     hipscolorPNG=\""+pbg.colorPNG+"\"");
+            append(CR+"     hipscolorUnknown=\""+pbg.colorUnknown+"\"");
+            append(CR+"     hipsfitsGzipped=\""+pbg.fitsGzipped+"\"");
+            append(CR+"     hipstruePixels=\""+pbg.truePixels+"\"");
+            append(CR+"     hipsinFits=\""+pbg.inFits+"\"");
+            append(CR+"     hipsinJPEG=\""+pbg.inJPEG+"\"");
+            append(CR+"     hipsinPNG=\""+pbg.inPNG+"\"");
+            append(CR+"     hipshasMoc=\""+pbg.hasMoc+"\"");
+            append(CR+"     hipshasHpxFinder=\""+pbg.hasHpxFinder+"\"");
+            if( pbg.body!=null )    append(CR+"     hipsbody=\""+pbg.body+"\"");
+            append(CR+"     hipsframeOrigin=\""+pbg.frameOrigin+"\"");
+            append(CR+"     hipsframeDrawing=\""+pbg.frameDrawing+"\"");
+            append(CR+"     hipslive=\""+pbg.live+"\"");
+            if( pbg.pixelCut!=null )    append(CR+"     hipspixelCut=\""+pbg.pixelCut+"\"");
+            append(CR+"     hipstransferFct4Fits=\""+pbg.transferFct4Fits+"\"");
+            append(CR+"     hipstransferFct4Preview=\""+pbg.transferFct4Preview+"\"");
+            append(CR+"     hipstileOrder=\""+pbg.tileOrder+"\"");
+            
+            if( p instanceof PlanBGCube ) {
+               append(CR+"     hipsdepth=\""+ ((PlanBGCube)pbg).depth+"\"");
+            }
          }
       }
       append(" >"+CR);

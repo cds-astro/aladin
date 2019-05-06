@@ -35,6 +35,7 @@ public class PlanBGCube extends PlanBG {
 
    protected PlanBGCube(Aladin aladin) {
       super(aladin);
+      type=ALLSKYCUBE;
    }
 
    protected PlanBGCube(Aladin aladin, TreeObjDir gluSky,String label, Coord c, double radius,String startingTaskId) {
@@ -216,7 +217,7 @@ public class PlanBGCube extends PlanBG {
       return pixAsk;
    }
 
-   private Hashtable<String,Integer> previousWorkingFrame = new Hashtable<String,Integer>();
+   private Hashtable<String,Integer> previousWorkingFrame = new Hashtable<>();
 
    /** Retourne la précédédente tranche qui a marchée, null sinon */
    protected HealpixKey getHealpixPreviousFrame(int order, long npix) {

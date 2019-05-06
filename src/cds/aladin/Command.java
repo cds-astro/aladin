@@ -1108,6 +1108,9 @@ public final class Command implements Runnable {
 
             // Via une adresse healpix norder/npi
             if( execHpxCmd(cmd) ) return false;
+            
+//            // Via une date
+//            if( execDateCmd(cmd) ) return false;
 
             // ou via une position ou une target
             a.view.sesameResolve(cmd);
@@ -1323,7 +1326,6 @@ public final class Command implements Runnable {
                Aladin.error(e.getMessage(), 1);
             }
             if( coo == null ) return null;
-
          }
       }
 
@@ -2156,6 +2158,44 @@ public final class Command implements Runnable {
       }
       return res.toString();
    }
+   
+//   static private int getDigits(char [] a, int max, int n) throws Exception {
+//      int i=0;
+//      while( Character.isDigit( a[n] ) ) { n++; i++; };
+//      if( i<2 || i>=max ) throw new Exception();
+//      return n;
+//   }
+//   
+//   static public boolean isISOdate( String date ) {
+//      try {
+//         char [] a = date.toCharArray();
+//          int n = getDigits(a,4,0);
+//          if( a[n++]!='-' ) return false;
+//          n = getDigits(a,2,n);
+//          if( a[n++]!='-' ) return false;
+//          n = getDigits(a,2,n);
+//          if( date.length()==n ) return true;
+//          if( a[n++]!='T' ) return false;
+//          n = getDigits(a,2,n);
+//          if( a[n++]!=':' ) return false;
+//          n = getDigits(a,2,n);
+//          if( date.length()==n ) return true;
+//          if( a[n++]!=':' ) return false;
+//          n = getDigits(a,2,n);
+//          if( date.length()==n ) return true;
+//      } catch( Exception e ) { }
+//      return false;
+//   }
+   
+//   protected boolean execDateCmd(String date ) {
+//      try {
+//         double jd = Astrodate.dateToJD( date );
+//         ViewSimple v = a.view.getCurrentView();
+//         v.setTime( jd );
+//         return true;
+//      } catch( Exception e ) {}
+//      return false;
+//   }
 
    /** Interprétation d'une position healpix donnée par norder/npix */
    protected boolean execHpxCmd(String param) {

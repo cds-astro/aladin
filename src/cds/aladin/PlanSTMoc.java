@@ -132,10 +132,11 @@ public class PlanSTMoc extends PlanTMoc {
    /** Retourne le SpaceMoc correspondant à l'intervalle temporelle courant pour la vue courante,
     * ou null si impossible à définir */
    protected SpaceMoc getCurrentSpaceMoc() {
-      long tmin = (long)( oLastDrawTmin=getLastDrawTmin()*TimeMoc.DAYMICROSEC );
-      long tmax = (long)( oLastDrawTmax=getLastDrawTmax()*TimeMoc.DAYMICROSEC );
+      ViewSimple v = aladin.view.getCurrentView();
+      double t[] = oLastDrawTimeRange = v.getTimeRange();
       
-//      System.out.println("tmin="+tmin+" tmax="+tmax);
+      long tmin = Double.isNaN( t[0]) ?            -1L :  (long)( t[0]*TimeMoc.DAYMICROSEC );
+      long tmax = Double.isNaN( t[1]) ? Long.MAX_VALUE :  (long)( t[1]*TimeMoc.DAYMICROSEC );
       
       try {
          return ((SpaceTimeMoc)moc).getSpaceMoc(tmin, tmax);
@@ -156,8 +157,7 @@ public class PlanSTMoc extends PlanTMoc {
       return null;
    }
    
-   private double oLastDrawTmin = -1;
-   private double oLastDrawTmax = -1;
+   private double [] oLastDrawTimeRange = null;
    private SpaceMoc oLastDrawMoc = null;
    
    
@@ -171,8 +171,8 @@ public class PlanSTMoc extends PlanTMoc {
    
    protected void memoNewTime() {
 //      System.out.println("memoNewTime");
-      oLastDrawTmin = getLastDrawTmin();
-      oLastDrawTmax = getLastDrawTmax();
+      ViewSimple v = aladin.view.getCurrentView();
+      oLastDrawTimeRange = v.getTimeRange();
       mocSpaceLowReset();
       oiz=-1;
       askForRepaint();
@@ -202,12 +202,11 @@ public class PlanSTMoc extends PlanTMoc {
    }
 
    protected boolean isTimeModified () {
-      if( !isDisplayedInPlot() ) return false;
-      double tmin = getLastDrawTmin();
-      double tmax = getLastDrawTmax();
-      boolean rep = tmin!=oLastDrawTmin || tmax!=oLastDrawTmax;
-//      System.out.println("isTimeModified = "+rep);
-      return rep;
+      ViewSimple v = aladin.view.getCurrentView();
+      double t[] = v.getTimeRange();
+      boolean rep = (Double.isNaN(t[0]) && Double.isNaN(oLastDrawTimeRange[0]) || t[0]==oLastDrawTimeRange[0])
+                 && (Double.isNaN(t[1]) && Double.isNaN(oLastDrawTimeRange[1]) || t[1]==oLastDrawTimeRange[1]);
+      return !rep;
    }
    
    private SpaceMoc lastCurrentSpaceMoc = null;
@@ -215,11 +214,7 @@ public class PlanSTMoc extends PlanTMoc {
    
    protected SpaceMoc getSpaceMoc() {
       if( lastCurrentSpaceMoc!=null && !isTimeModified() ) return lastCurrentSpaceMoc;
-//      long t1 = System.currentTimeMillis();
       SpaceMoc m = getCurrentSpaceMoc();
-//      long t2 = System.currentTimeMillis();
-//      System.out.println("Regenerate currentSpaceMoc from "+((SpaceTimeMoc)moc).timeRange.sz/2+" ranges "
-//            + "=> size="+(m==null?"null":m.getSize()) +" built in "+(t2-t1)+"ms ");
       lastCurrentSpaceMoc = m;
       memoNewTime();
       return lastCurrentSpaceMoc;
@@ -227,11 +222,7 @@ public class PlanSTMoc extends PlanTMoc {
    
    protected TimeMoc getTimeMoc() {
       if( lastCurrentTimeMoc!=null && !isSpaceModified() ) return lastCurrentTimeMoc;
-//      long t1 = System.currentTimeMillis();
       TimeMoc m = getCurrentTimeMoc();
-//      long t2 = System.currentTimeMillis();
-//      System.out.println("Regenerate currentTimeMoc from "+((SpaceTimeMoc)moc).timeRange.sz/2+" ranges "
-//            + "=> size="+(m==null?"null":m.getSize()) +" built in "+(t2-t1)+"ms ");
       lastCurrentTimeMoc = m;
       memoNewSpace();
       return lastCurrentTimeMoc;
@@ -250,6 +241,10 @@ public class PlanSTMoc extends PlanTMoc {
       if( v.isPlotTime() ) drawInTimeView(g,v);
       else drawInSpaceView(g,v);
    }
+   
+   protected void planReadyPost() { }
+
+
 
 }
 

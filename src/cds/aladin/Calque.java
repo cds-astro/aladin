@@ -1651,6 +1651,19 @@ public class Calque extends JPanel implements Runnable {
       }
       return null;
    }
+   
+   protected Vector<Plan> getPlansMoc() {
+      Vector<Plan> v=null;
+      for( int i=0; i<plan.length; i++ ) {
+         Plan pc = plan[i];
+         if( pc.hasError() ) continue;
+         if( !pc.isMoc() ) continue;
+         if( v==null ) v = new Vector<>(plan.length);
+         v.addElement(pc);
+      }
+      return v;
+   }
+
 
    /**
     * Retourne la liste des plans valides d'un certain type
@@ -1878,7 +1891,7 @@ public class Calque extends JPanel implements Runnable {
    
    /** Remet à jour le time range global */
    protected void resetTimeRange() {
-      aladin.view.zoomview.zoomTimeControl.setGlobalTimeRange( getGlobalTimeRange() );
+      zoom.zoomTime.setGlobalTimeRange( getGlobalTimeRange() );
    }
 
    /** Cree un nouveau plan Filter

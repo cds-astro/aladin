@@ -689,6 +689,7 @@ public final class Legende extends AbstractTableModel  {
          if( !s.equals( field[i].getCooSignature() ) ) {
             int coo = Util.indexInArrayOf(s, Field.COOSIGN);
             modifyRaDecXYField(i,coo);
+            plan.resetTimeFieldCache();
             frameInfo.epochFieldActivate( Field.isEquatorial(coo) );
          }
          break;

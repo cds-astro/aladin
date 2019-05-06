@@ -821,6 +821,13 @@ public class SpaceMoc extends Moc {
       }
       setCheckConsistencyFlag(true);
    }
+   
+   
+   /** True if the npix at the deepest order is in the MOC */
+   public boolean contains(long npix) {
+      toRangeSet();
+      return spaceRange.contains(npix);
+   }
 
    /** Fast test for checking if the cell is intersecting
     * the current MOC object

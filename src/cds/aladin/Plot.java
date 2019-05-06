@@ -202,8 +202,8 @@ public class Plot {
 
             aladin.trace(4,"ViewSimple.adjustPlot: "+(isPlotTime()?" [plotTime]":"")+" nsrc="+n+" X=["+minX+" ("+min1X+") .. ("+max1X+") "+maxX+"] Y=["+minY+" ("+min1Y+") .. ("+max1Y+") "+maxY+"]");
          }
-         int w = (int)( viewSimple.getWidth() *0.9 );
-         int h = (int)( viewSimple.getHeight() *0.8 ); 
+         double w = viewSimple.getWidth(); // *0.9;
+         double h = viewSimple.getHeight() *0.8; 
 //         plotProj = new Projection(0,0,0,0, (max1X-min1X)*1.1, (max1Y-min1Y)*1.1, w, h, 
 //               plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
          
@@ -228,6 +228,8 @@ public class Plot {
             if( flagNoSerie && !first ) {  max1Y = h; min1Y=0; flagTime=true; }
          }
          
+         memoMaxTimeRange(min1X, max1X, min1Y, max1Y);
+         
          if( plotProj!=null ) {
             plotProj = new Projection(0,0,0,0, (max1X-min1X), (max1Y-min1Y), w, h, 
                   plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
@@ -242,6 +244,32 @@ public class Plot {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
+   }
+   
+   private double [] maxTimeRange = null;
+   private void memoMaxTimeRange(double jdmin, double jdmax, double ymin, double ymax ) { 
+      maxTimeRange = new double [] {jdmin,jdmax,ymin,ymax};
+   }
+   
+   /** Positionne la tranche de temps à visualiser dans le PlotTIme courant
+    * @param t => jdmin et jdmax (si Double.NaN utilise la plus petite (resp grande) valeur possible
+    */
+   protected void setTimeRange( double [] t ) {
+      if( !isPlotTime() ) return;
+      
+      double w = viewSimple.getWidth(); // *0.9;
+      double h = viewSimple.getHeight() *0.8; 
+      double min1X = Double.isNaN( t[0] ) ? maxTimeRange[0] : t[0];
+      double max1X = Double.isNaN( t[1] ) ? maxTimeRange[1] : t[1];
+      
+      plotProj = new Projection(0,0,0,0, (max1X-min1X), plotProj.rm1, w, h, 
+            plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
+      viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (maxTimeRange[2]+maxTimeRange[3])/2);
+      viewSimple.newView(1);
+   }
+   
+   protected double [] getTimeRange() {
+      return new double [] { getMin(), getMax() };
    }
    
    /** Retourne les valeurs de la source s pour le graphe */

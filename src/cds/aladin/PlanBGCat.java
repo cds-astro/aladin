@@ -43,6 +43,7 @@ public class PlanBGCat extends PlanBG {
 
    protected PlanBGCat(Aladin aladin) {
       super(aladin);
+      type = ALLSKYCAT;
    }
 
    protected PlanBGCat(Aladin aladin, TreeObjDir gluSky,String label, Coord c, double radius,String startingTaskId) {

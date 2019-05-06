@@ -57,6 +57,9 @@ public class Zoom extends JPanel {
    ZoomView   zoomView;          // Le canvas associe au Zoom
    JComboBox   cZoom;               // Le Choice des differentes valeurs de zoom
    protected ZoomChoice zoomChoicePanel;
+   
+// Le controle du temps
+   protected ZoomTime zoomTime=null;      
 
    // Les references aux objets
    Aladin aladin;
@@ -70,6 +73,8 @@ public class Zoom extends JPanel {
       int i;
       this.aladin = aladin;
       zoomView = new ZoomView(aladin);
+      zoomTime = new ZoomTime(zoomView);
+      zoomView.setZoomTime(zoomTime);
 
       setLayout( new BorderLayout(5,10) );
 

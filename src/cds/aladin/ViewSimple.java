@@ -84,6 +84,7 @@ import cds.moc.Moc;
 import cds.moc.Range;
 import cds.moc.SpaceMoc;
 import cds.moc.TimeMoc;
+import cds.tools.Astrodate;
 import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -252,6 +253,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       this.n=nview;
       iz=1;
       lastImgID=-1;
+      jdmin = jdmax = Double.NaN;    // Par défaut pas de restriction de temps
       
       BGD = Aladin.COLOR_BACKGROUND;
 
@@ -375,6 +377,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
+      view.syncTimeRange(vs);
       vs.syncZoom(-e.getWheelRotation()*mult,coo,false);
    }
 
@@ -406,6 +409,79 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    //             ,menuROI,menuDel,menuDelROI,menuStick,menuSel,
    //              menuMore,menuNext,menuScreen
    ;
+   
+   
+   /** retourne vrai si la date se trouve dans l'intervalle d'affichage */
+   protected boolean inTime( double jd ) {
+      if( Double.isNaN(jd) ) return false;
+      if( Double.isNaN(jdmin ) && Double.isNaN(jdmax )) return true;
+      if( Double.isNaN(jdmin ) && jd<=jdmax ) return true;
+      if( jdmin<=jd && Double.isNaN(jdmax ) ) return true;
+      return jdmin<=jd && jd<=jdmax;
+   }
+   
+   /** Retourne l'intervalle de temps courant concerné par la vue */
+   protected double [] getTimeRange() {
+      if( isPlotTime() ) return plot.getTimeRange();
+      return new double[] { jdmin, jdmax };
+   }
+   
+   /** Positionne l'intervalle de temps courant de la vue */
+   protected boolean setTimeRange( double [] range ) { return setTimeRange( range, true ); }
+   protected boolean setTimeRange( double [] range, boolean withPaint) {
+      // Pas de modif ? => rien à faire
+      if( Double.isNaN(range[0]) && Double.isNaN(jdmin) && Double.isNaN(range[1]) && Double.isNaN(jdmax)
+            || jdmin==range[0] && jdmax==range[1] ) return false;
+      
+      // Sinon affectation et réaffichage
+      jdmin = range[0];
+      jdmax = range[1];
+      
+      // Dans le cas d'un plot temporel
+      if( isPlotTime() ) plot.setTimeRange(range);
+     
+      if( withPaint) {
+         newView();
+         repaint();
+         aladin.view.zoomview.repaint();
+      }
+      return true;
+   }
+   
+//   private double jdmilieu=Double.NaN;
+//   private double jdrange=Double.NaN;
+//   
+//   protected void setRange( double jd ) {
+//      double jdmin, jdmax;
+//      if( Double.isNaN( this.jdmin ) || Double.isNaN( this.jdmax ) ) {
+//         if( !Double.isNaN( jdmilieu ) ) { // On utilise la date précédémment mémorisée
+//            jdmin = jdmilieu - jd/2;
+//            jdmax = jdmilieu + jd/2;
+//            jdmilieu = Double.NaN;
+//         } else { jdrange = jd;  return; } // Pour plus tard
+//      } else {
+//         double jdmilieu = (this.jdmax+this.jdmin)/2;
+//         jdmin = jdmilieu - jd/2;
+//         jdmax = jdmilieu + jd/2;
+//      }
+//      setTimeRange( new double[] { jdmin, jdmax } );
+//   }
+//   
+//   protected void setTime( double jd ) {
+//      double jdmin, jdmax;
+//      if( Double.isNaN( this.jdmin ) || Double.isNaN( this.jdmax ) ) {
+//         if( !Double.isNaN( jdrange ) ) { // On utilise le range précédémment mémorisée
+//            jdmin = jd - jdrange/2;
+//            jdmax = jd + jdrange/2;
+//            jdrange = Double.NaN;
+//         } else { jdmilieu = Double.NaN; return; }// Pour plus tard
+//      }  else {
+//         double range = this.jdmax - this.jdmin;
+//         jdmin = jdmilieu - range/2;
+//         jdmax = jdmilieu + range/2;
+//      }
+//      setTimeRange( new double[] { jdmin, jdmax } );
+//   }
 
    // Cree le popup menu associe au View
    private void createPopupMenu() {
@@ -5300,6 +5376,22 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       String s1 = dx>0?getCentre():"";
       String s = s1+(dx>0?" / ":"")+getTaille(0);
+      
+      // S'il y a une tranche temporelle, on l'ajoute
+      double t[] = getTimeRange();
+      if( !(Double.isNaN(t[0]) && Double.isNaN(t[1])) && rv.width>300 ) {
+         double gt [] = aladin.calque.zoom.zoomTime.getGlobalTimeRange();
+         for( int i=0; i<2; i++ ) if( Double.isNaN(t[i]) ) t[i] = gt[i] ;
+         String deb =  Astrodate.JDToDate( t[0],false);
+         String fin =  Astrodate.JDToDate( t[1],false);
+         if( fin.equals(deb) ) {
+            deb = Astrodate.JDToDate( t[0],true);
+            deb=deb.replace('T',' ');
+            fin = Astrodate.JDToDate( t[1],true);
+            fin = fin.substring( fin.indexOf('T')+1);
+         }
+         s = s+"     "+deb+" ... "+fin;
+      }
 
       int marge = getMarge();
       int taille = g.getFontMetrics().stringWidth(s);
@@ -6448,8 +6540,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Retourne la vue utilisée pour synchroniser cette vue (cf Aladin.sync),
     * la vue elle-même sinon */
    protected ViewSimple getProjSyncView() {
-      if( isProjSync() ) {
+      if( isProjSync() && !isPlot() ) {
          ViewSimple vs = aladin.view.getCurrentView();
+         if( vs.isPlot() ) return this;
 
          // Peut être égale s'il s'agit d'un cube
          if( vs.pref!=pref ) return vs;
@@ -6460,7 +6553,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Retourne true si la vue est synchronisée par projection sur une autre vue */
    protected boolean isProjSync() {
       ViewSimple v=aladin.view.getCurrentView();
-      return !locked && !isPlot()  && selected && (v==null || v!=this )
+      return !locked && /* !isPlot()  && */ selected && (v==null || v!=this )
             && aladin.match.isProjSync();
 
    }

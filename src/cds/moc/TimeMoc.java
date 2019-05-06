@@ -92,6 +92,13 @@ public class TimeMoc extends SpaceMoc {
       res.toHealpixMoc();
       return res;
    }
+   
+   /** True if the jd date is in TMOC */
+   public  boolean contains(double jd) {
+      long npix = (long)( jd * DAYMICROSEC );
+      toRangeSet();
+      return spaceRange.contains(npix);
+   }
 
    // Throw an exception if the coordsys of the parameter moc differs of the coordsys
    protected void testCompatibility(SpaceMoc moc) throws Exception {
@@ -204,15 +211,21 @@ public class TimeMoc extends SpaceMoc {
    static private long MS = 1000L;
    
    /** retourne un temps exprimé en ms sous une forme lisible 3j 5h 10mn 3.101s */
-   static public String getTemps(long microsec) {
-      StringBuffer s = new StringBuffer();
+   static public String getTemps(long microsec) { return getTemps(microsec,false); }
+   static public String getTemps(long microsec, boolean flagRound) { 
+
+      StringBuilder s = new StringBuilder();
       if( microsec<MS ) s.append( microsec+"µs");
       else if( microsec<S ) s.append( microsec/(double)MS+"ms");
       else {
-         if( microsec>Y ) { long j = microsec/Y; microsec -= j*Y; s.append(j+"y"); }
-         if( microsec>D ) { long j = microsec/D; microsec -= j*D; if( s.length()>0 ) s.append(' '); s.append(j+"d"); }
-         if( microsec>H ) { long h = microsec/H; microsec -= h*H; if( s.length()>0 ) s.append(' '); s.append(h+"h"); }
-         if( microsec>M ) { long m = microsec/M; microsec -= m*M; if( s.length()>0 ) s.append(' '); s.append(m+"m"); }
+         long y=-1,j=-1,h=-1,m=-1;
+         if( microsec>Y ) { y = microsec/Y; microsec -= y*Y; s.append(y+"y"); }
+         if( microsec>D ) { j = microsec/D; microsec -= j*D; if( s.length()>0 ) s.append(' '); s.append(j+"d"); }
+         if( flagRound && y!=-1 && y>1 ) return s.toString();
+         if( microsec>H ) { h = microsec/H; microsec -= h*H; if( s.length()>0 ) s.append(' '); s.append(h+"h"); }
+         if( flagRound && j!=-1 && j>1 ) return s.toString();
+         if( microsec>M ) { m = microsec/M; microsec -= m*M; if( s.length()>0 ) s.append(' '); s.append(m+"m"); }
+         if( flagRound && h!=-1 && h>1 ) return s.toString();
          if( microsec>0 ) { if( s.length()>0 ) s.append(' '); s.append( microsec/(double)S+"s"); }
       }
       return s.toString();

@@ -157,7 +157,8 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> VOTable1.4/TIMESYS support
+ * @beta    <LI> MOC1.1 support (ASCII format)
+ * @beta    <LI> VOTable1.4 support (TIMESYS)
  * @beta    <LI> Space Time Multi-Order-Coverage support
  * @beta    <LI> TAP JOIN and UPLOAD support
  * @beta    <LI> Space MOC extractions from any HiPS or HEALPix maps
@@ -250,7 +251,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    // Gère le mode particuliers
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
-   public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
+   public static boolean PROTO=true;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
    static public final boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
 //   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
@@ -5694,7 +5695,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miSaveG!=null ) miSaveG.setEnabled(mode && hasNoResctriction());
          if( miExport!=null ) miExport.setEnabled(mode1 && hasNoResctriction());
          if( miExportEPS!=null ) miExportEPS.setEnabled(mode1 && hasNoResctriction());
-         if( miBackup!=null ) miBackup.setEnabled(mode1 && hasNoResctriction());
+         if( miBackup!=null ) miBackup.setEnabled(mode && hasNoResctriction());
          if( miPrint!=null ) miPrint.setEnabled(!isFree && hasNoResctriction());
          if( miProp!=null ) miProp.setEnabled(!isFree);
          if( miPan!=null ) miPan.setEnabled(hasImage);

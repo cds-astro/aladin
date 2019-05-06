@@ -105,7 +105,6 @@ public class STCStringParser {
     
     // AJOUT Pierre 2/5/2019
     private double getDouble(String s) {
-       if( s.indexOf('E')>=0 ) s=s.replace('E','e');
        return Double.parseDouble(s);
     }
 

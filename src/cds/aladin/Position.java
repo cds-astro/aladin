@@ -175,6 +175,13 @@ public class Position extends Obj {
       xv[vt.n]=xv[vs.n];
       yv[vt.n]=yv[vs.n];
    }
+   
+   /** Vrai si le temps associé à la position se trouve dans l'intervalle temps d'affichage
+    * de la vue */
+   protected boolean inTime(ViewSimple v) {
+      if( !plan.isTime() ) return true;
+      return v.inTime( jdtime );
+   }
 
    /** Positionne le flag VISIBLE */
    protected final void setVisible(boolean visible) {
@@ -184,7 +191,7 @@ public class Position extends Obj {
 
    /** Retourne true si la source a le flag VISIBLE positionné */
    final protected boolean isVisible() { return (flags & VISIBLE) !=0; /* == VISIBLE;*/ }
-
+   
    /** Positionne le flag LABEL */
    protected void setWithLabel(boolean withLabel) {
       if( withLabel ) flags |= WITHLABEL;
@@ -498,6 +505,8 @@ public class Position extends Obj {
    */
    protected boolean draw(Graphics g,ViewSimple v,int dx, int dy) {
       if( !isVisible() ) return false;
+      if( !inTime(v) ) return false;
+      
       Point p = getViewCoord(v,0,0);
       if( p==null ) return false;
 

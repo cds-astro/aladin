@@ -502,6 +502,18 @@ public final class Util {
       return s.substring(0,i);
    }
    
+   /** 
+    * Ajout ou remplacement de l'extension du nom de fichier
+    * @param filename Le nom du fichier avec ou sans path
+    * @param ext l'extension à mettre (sans point)
+    * @return le nom du fichier avec l'extension ajoutée ou remplacée
+    */
+   static public String replaceExt(String filename, String ext) {
+      int i = filename.lastIndexOf('.');
+      if( i==-1 ) i=filename.length();
+      return filename.substring(0, i)+"."+ext;
+   }
+   
    /** Transforme une URL ou un filename en un label, éventuellement plus court en remplaçant une
     * partie du path par /.../ jusqu'à ce que ça taille soit inférieur à len
     * @param u l'url ou le path à raccourcir
@@ -786,6 +798,27 @@ public final class Util {
       g.setColor(Color.lightGray);
       g.drawLine(x+w-1,y+h-1,x,y+h-1); g.drawLine(x+w-1,y+h-1,x+w-1,y);
    }
+   
+   /**
+    * Dessine un triangle plein
+    * @param g Le contexte graphique
+    * @param x l'abscisse de la pointe du triangle
+    * @param y l'ordonnée de la pointe du triangle
+    * @param size la taille de la base
+    * @param up true si triangle vers le haut, sinon vers le bas
+    */
+   static public void drawTriangle(Graphics g,int x,int y, int size, boolean up) {
+      size /=2;
+      int [] tx = new int[4];
+      int [] ty = new int[4];
+      tx[0] = tx[3] = x;
+      tx[1] = tx[0]-size;
+      tx[2] = tx[0]+size;
+      ty[0] = ty[3] = y;
+      ty[1] = ty[2] = ty[0]+ (int)(size*1.3) * (up?1:-1);
+      g.fillPolygon(tx,ty,tx.length);
+   }
+
    
    /** Tracage d'un logo cercle coupé en 2 verticalement de 12 pixels de diamètre */
    static public void drawCirclePix(Graphics g,int x,int y) {

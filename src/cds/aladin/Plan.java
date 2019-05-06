@@ -412,14 +412,23 @@ public class Plan implements Runnable {
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() { return false; }
    
+   private int cacheCatalogTimeFlag = -1;  // Cache pour éviter de rescanner à chaque fois les légendes
+   
+   /** Supprime le cache qui évitait le rescanning des légendes pour détecter si un des
+    * champs est temporel */
+   protected void resetTimeFieldCache() { cacheCatalogTimeFlag = -1; }
+   
    /** Il s'agit d'un plan de type catalogue qui contient des infos temporels */
    protected boolean isCatalogTime() {
-      try {
-         for( Legende leg : getLegende() ) {
-            if( leg.getTime()>=0 ) return true; 
-         }
-      } catch( Exception e ) { }
-      return false;
+      if( cacheCatalogTimeFlag==-1 ) {
+         try {
+            cacheCatalogTimeFlag=0;
+            for( Legende leg : getLegende() ) {
+               if( leg.getTime()>=0 ) { cacheCatalogTimeFlag=1; break; } 
+            }
+         } catch( Exception e ) { }
+      }
+      return cacheCatalogTimeFlag==1;
    }
    
    /** Retourne le time Range global du plan, Double.NaN,Double.NaN si non défini */
@@ -595,7 +604,7 @@ public class Plan implements Runnable {
          if( p.plan.type==Plan.FOV || p instanceof Forme) continue;
 
          // on ne sélectionne que les sources "filtrées"
-         if( p.inRectangle(v,r) &&
+         if( p.inRectangle(v,r) && p.inTime(v) && 
                ( !( p instanceof Source) || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
             p.setSelect(true);
             res.addElement(p);
@@ -1077,8 +1086,8 @@ public class Plan implements Runnable {
    protected boolean Free() {
       setLogMode(false);
       
-      if( isTime() ) aladin.calque.resetTimeRange();
-
+      boolean isTime = isTime();
+      
       // Tentatite d'arrêt d'un flux en cours
       // JE NE LE FAIS PAS POUR LES PLANS ISSUS DU SERVEUR ALADIN, PARCE QUE CA PEUT
       // TOUT PLANTER
@@ -1118,6 +1127,9 @@ public class Plan implements Runnable {
       if( pcat!=null ) pcat.free();
       if( headerFits!=null ) headerFits.free();
       init();
+      
+      if( isTime ) aladin.calque.resetTimeRange();
+
 
       return true;
    }

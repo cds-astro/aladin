@@ -1965,6 +1965,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       else if( p instanceof PlanImage) try { c=p.projd.c.getImgCenter(); } catch( Exception e) {}
       if( c==null ) c = p.projd.getProjCenter();
       return gotoThere(Projection.isOk(p.projd)?c:p.co,0,true);
+      
    }
 
    /** Va montrer la source
@@ -2039,6 +2040,18 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    }
 
+   /** Toutes les vues au même time range */
+   protected void syncTimeRange( ViewSimple vorig ) {
+      boolean modif=false;
+      if( vorig==null ) vorig = getCurrentView();
+      double range[] = vorig.getTimeRange();
+      for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
+         ViewSimple v = viewSimple[i];
+         if( v.locked || v.isFree() || !v.selected || v==vorig ) continue;
+         if( modif|=v.setTimeRange(range,false) )  v.newView( v.isPlot() ? 0 : 1);
+      }
+      if( modif ) repaintAll();
+   }
    
    /** Ajustement de toutes les vues (non ROI )
     *  afin que leur centre corresponde à la coordonnée
@@ -2058,7 +2071,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       // Ajustement des zooms des autres vues en fonction
       for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
          v = viewSimple[i];
-         if( v.locked || v.isFree() || v.isPlot() )    continue;
+         if( v.locked || v.isFree()  )    continue;
+         if( v.isPlot() ) continue;
+         
          if( !force ) {
             if( v==vOrig && !(v.pref instanceof PlanBG) ) continue;
             if( !v.shouldMove(c.al,c.del) ) continue;
@@ -2194,7 +2209,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          // Pour le cas où on zoomerait dans un plot avec un STMOC
          if( vc.isPlotTime() && v!=vc ) v.newView();
 
-         if( !v.selected && v!=vc  || v.isPlot()!=vc.isPlot() ) continue;
+         if( !v.selected && v!=vc  ) continue;
+         
+         if( v.isPlot()!=vc.isPlot() ) continue;
 
          // Calcul du facteur de zoom pour les vues en fonction de la taille
          // du pixel
@@ -2257,7 +2274,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          v.repaint();
       }
       if( crop!=null && crop.isVisible() ) coo=null;  // pour éviter le déplacement du repère
-
+      
       // Réaffichages nécessaires
       if( flagMoveRepere ) moveRepere(coo);
       else repaintAll();
@@ -2857,6 +2874,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected void selectAllInPlanWithoutFree(Plan plan,int mode) {
       boolean flagSource=false;
+      ViewSimple v = getCurrentView();
+      if( v.isFree() ) v=null;
       Iterator<Obj> it = plan.iterator();
       if( plan.isCatalog() || plan.type==Plan.TOOL ) {
          while( it.hasNext() ) {
@@ -2865,6 +2884,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                Source o = (Source)o1;
                if( mode==1 && !o.isTagged() ) continue;
                if( !o.noFilterInfluence() && !o.isSelectedInFilter() ) continue;
+               if( v!=null && !o.inTime( v ) ) continue;
                aladin.mesure.insertInfo(o);
                flagSource=true;
             } else if( mode==1 ) continue;

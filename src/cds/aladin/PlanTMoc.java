@@ -192,11 +192,12 @@ public class PlanTMoc extends PlanMoc {
      drawInTimeView(g,v);
    }
    
-   private double lastDrawTmin=-1;
-   private double lastDrawTmax=Double.MAX_VALUE;
+   private double [] lastDrawTimeRange = new double[] { Double.NaN, Double.NaN };
    
-   protected double getLastDrawTmin() { return lastDrawTmin; }
-   protected double getLastDrawTmax() { return lastDrawTmax; }
+   protected double [] getLastDrawTimeRange() { return lastDrawTimeRange; }
+   
+   protected double getLastDrawTmin() { return lastDrawTimeRange[0]; }
+   protected double getLastDrawTmax() { return lastDrawTimeRange[1]; }
    
       
    // Tracé du MOC visible dans la vue
@@ -208,8 +209,10 @@ public class PlanTMoc extends PlanMoc {
       
       g.setColor(c);
       
-      double tmin = lastDrawTmin = plot.getMin();
-      double tmax = lastDrawTmax = plot.getMax();
+      double tmin = plot.getMin();
+      double tmax = plot.getMax();
+      
+      v.setTimeRange( new double[] { tmin, tmax });
       
       int drawingOrder = getDrawingOrder(v);
       
@@ -274,9 +277,11 @@ public class PlanTMoc extends PlanMoc {
       aladin.synchroPlan.stop(startingTaskId);
       flagWaitTarget=false;
       flagProcessing = false;
-      aladin.view.createView4TMOC(this);
       aladin.calque.resetTimeRange();
+      planReadyPost();
    }
+
+   protected void planReadyPost() { aladin.view.createView4TMOC(this); }
 
 
 }

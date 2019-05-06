@@ -39,6 +39,7 @@ public final class ViewMemoItem {
    protected int ordreTaquin;
    protected boolean locked,selected,northUp;
    protected Plot plot;
+   protected double jdmin,jdmax;
    
    
    boolean isPlotView;
@@ -71,6 +72,8 @@ public final class ViewMemoItem {
       vmi.northUp = northUp;
       vmi.plot = plot; 
       vmi.isPlotView = isPlotView;
+      vmi.jdmin = jdmin;
+      vmi.jdmax = jdmax;
       vmi.plotTable = plotTable;
       vmi.plotProj = plotProj==null ? null : plotProj.copy();
       vmi.projLocal = projLocal==null ? null : projLocal.copy();
@@ -102,7 +105,8 @@ public final class ViewMemoItem {
       northUp=v.northUp;
       selected=v.selected;
       ordreTaquin=v.ordreTaquin;
-      
+      jdmin = v.jdmin;
+      jdmax = v.jdmax;
       if( v.plot!=null ) plot = v.plot.copyIn(v);
       else plot=null;   
       
@@ -128,7 +132,8 @@ public final class ViewMemoItem {
       v.northUp=northUp;
       v.selected=selected;
       v.ordreTaquin=ordreTaquin;
-      
+      v.jdmin = jdmin;
+      v.jdmax=jdmax;
       v.plot = plot==null ? null : plot.copyIn(v);
       
       if( pref instanceof PlanBG ) {

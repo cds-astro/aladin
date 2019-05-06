@@ -52,8 +52,8 @@ import java.util.StringTokenizer;
 public final class MocIO {
 
    static public final int FITS = SpaceMoc.FITS;         // Standard format
+   static public final int ASCII = SpaceMoc.ASCII;       // ASCII format
    static public final int JSON = SpaceMoc.JSON;         // JSON format (suggested in IVOA REC)
-   static public final int ASCII = SpaceMoc.ASCII;       // ASCII format (suggested in IVOA REC)
    
    static public final int JSON0 = SpaceMoc.JSON0;       // JSON obsolete format (only reading supported for compatibility)
 
@@ -279,8 +279,8 @@ public final class MocIO {
          fo = new FileOutputStream(f);
          fb = new BufferedOutputStream(fo);
          if( mode==FITS ) writeFits(fb);
-         else if( mode==JSON  || mode==ASCII) writeJSON(fb);
-//         else if( mode==ASCII ) writeASCII(fb);
+         else if( mode==JSON  ) writeJSON(fb);
+         else if( mode==ASCII ) writeASCII(fb);
       } finally {
          if( fb!=null ) fb.close();
          else if( fo!=null ) fo.close();
@@ -302,8 +302,8 @@ public final class MocIO {
    public void write(OutputStream out,int mode) throws Exception {
       if( mode!=FITS && mode!=ASCII && mode!=JSON ) throw new Exception("Unknown MOC format !");
       if( mode==FITS ) writeFits(out);
-      else if( mode==JSON || mode==ASCII ) writeJSON(out);
-//      else if( mode==ASCII ) writeASCII(out);
+      else if( mode==JSON ) writeJSON(out);
+      else if( mode==ASCII ) writeASCII(out);
    }
 
    private void testMocNotNull() throws Exception {
@@ -315,10 +315,15 @@ public final class MocIO {
 
    /** Write HEALPix MOC to an output stream IN ASCII encoded format
     * @param out output stream
-    * @deprecated use FITS format
     */
    public void writeASCII(OutputStream out) throws Exception {
       testMocNotNull();
+      
+//      if( moc instanceof SpaceTimeMoc ) {
+//         moc.writeASCII(OutputStream out);
+//         return;
+//      }
+      
       out.write(("#"+SIGNATURE+" "+moc.getMocOrder()+CR).getBytes());
       StringBuilder res= new StringBuilder(moc.getSize()*8);
       int order=-1;
@@ -352,11 +357,11 @@ public final class MocIO {
 
    /** Write HEALPix MOC to an output stream IN JSON encoded format
     * @param out output stream
-    * @deprecated use FITS format
     */
    public void writeJSON(OutputStream out) throws Exception {
       testMocNotNull();
       
+      if( moc instanceof SpaceTimeMoc ) throw new Exception("JSON format not supported for SpaceTimeMoc");
       
       // Nouvelle version JSON
       // On remplace tout de même l'ancienne signature non compatible JSON par une ligne vide

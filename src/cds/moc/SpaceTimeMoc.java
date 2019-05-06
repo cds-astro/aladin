@@ -62,6 +62,16 @@ public class SpaceTimeMoc extends Moc {
       property.put("MOCTOOL","CDSjavaAPI-"+VERSION);
       property.put("DATE",String.format("%tFT%<tR", new Date()));
    }
+   
+   /** True if the npix (deepest level) and jd date is in the SpaceTimeMOC */
+   public  boolean contains(long npix, double jd) {
+      long npixTime = (long)( jd * TimeMoc.DAYMICROSEC );
+      if( !timeRange.contains(npixTime) ) return false;
+      for( Range range : timeRange.rangeArray ) {
+         if( range.contains(npix) ) return true;
+      }
+      return false;
+   }
 
    @Override
    public void clear() { timeRange.clear(); }
@@ -539,6 +549,9 @@ public class SpaceTimeMoc extends Moc {
     * @param tmax max of range (included - order 29)
     */
    public SpaceMoc getSpaceMoc(long tmin,long tmax) throws Exception {
+      if( Double.isNaN(tmin) ) tmin=-1;
+      if( Double.isNaN(tmax) ) tmax = Long.MAX_VALUE;
+      
       SpaceMoc moc = new SpaceMoc();
       int pos = timeRange.indexOf(tmin);
       if( (pos&1)==1 ) pos++;

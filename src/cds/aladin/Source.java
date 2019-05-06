@@ -706,6 +706,8 @@ public class Source extends Position implements Comparator {
    * @param v reference à la vue où on dessine
    */
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
+      if( !inTime( v )  ) return false;
+
       //System.out.println("On repaint");
       int L =getL();
       Point p = getViewCoord(v,L,L);

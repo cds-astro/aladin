@@ -33,7 +33,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.Moc;
+import cds.moc.SpaceMoc;
+import cds.moc.SpaceTimeMoc;
+import cds.moc.TimeMoc;
 
 /**
  * Gestion de la fenetre associeeau filtrage de sources par un MOC
@@ -88,7 +91,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
    /** Recupere la liste des plans images et catalogues valides */
    @Override
    protected Plan[] getPlan() {
-      Vector<Plan> v  = a.calque.getPlans( Plan.ALLSKYMOC);
+      Vector<Plan> v  = a.calque.getPlansMoc();
       Vector<Plan> v2  =a.calque.getPlans(Plan.CATALOG);
       if( v==null ) v=v2;
       else if( v2!=null ) v.addAll(v2);
@@ -133,8 +136,11 @@ public final class FrameMocFiltering extends FrameRGBBlink {
    protected PlanCatalog createPlane(String label,PlanMoc pMoc, Plan [] p, boolean lookIn) throws Exception {
       Coord c = new Coord();
       Healpix hpx = new Healpix();
-      HealpixMoc moc = new HealpixMoc( pMoc.getMoc() );
+//      HealpixMoc moc = new HealpixMoc( pMoc.getMoc() );
       Vector<Obj> v = new Vector<>();
+      
+      Moc moc = pMoc.moc;
+      int mode = moc instanceof SpaceTimeMoc ? 2 : moc instanceof TimeMoc ? 1 :0;
       
       for( int i=0; i<p.length; i++ ) {
          Plan pCat = p[i];
@@ -143,12 +149,31 @@ public final class FrameMocFiltering extends FrameRGBBlink {
          while( it.hasNext() ) {
             Obj o = it.next();
             if( !(o instanceof Source) ) continue;
-            c.al=o.getRa();
-            c.del=o.getDec();
-            if( Double.isNaN(c.al) ||  Double.isNaN(c.del) ) continue;
-            c=Localisation.frameToFrame(c,Localisation.ICRS, pMoc.frameOrigin);
-            boolean in = moc.contains(hpx, c.al, c.del);
-
+            
+            long npixSpace=-1;
+            
+            if( mode==2 || mode==0 ) {
+               c.al=o.getRa();
+               c.del=o.getDec();
+               if( Double.isNaN(c.al) ||  Double.isNaN(c.del) ) continue;
+               c=Localisation.frameToFrame(c,Localisation.ICRS, pMoc.frameOrigin);
+//            boolean in = moc.contains(hpx, c.al, c.del);
+               npixSpace = hpx.ang2pix(Moc.MAXORDER, c.al, c.del);
+            }
+            
+            boolean in;
+            
+            // SpaceTimeMoc ?
+            if( mode==2 ) { 
+               in = ((SpaceTimeMoc)moc).contains(npixSpace,((Source)o).jdtime);
+               
+            // TimeMoc ?
+            } else if( mode==1 ) {
+               in = ((TimeMoc)moc).contains(((Source)o).jdtime);
+               
+            // SpaceMoc
+            } else in = ((SpaceMoc)moc).contains(npixSpace);
+            
             if( lookIn==in ) v.add(o);
          }
       }
@@ -164,7 +189,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
          boolean lookIn = s.equals(IN);
 
          Plan pMoc = getPlan(ch[0]);
-         if( pMoc.type!=Plan.ALLSKYMOC ) throw new Exception("Not a MOC");
+         if( !pMoc.isMoc() ) throw new Exception("Not a MOC");
          
          // Détermination des plans concernés
          String label="";

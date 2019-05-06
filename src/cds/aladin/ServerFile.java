@@ -730,6 +730,8 @@ public class ServerFile extends Server implements XMLConsumer {
       ViewMemoItem vmi = new ViewMemoItem();
       String s;
       if( (s=(String)atts.get("zoom"))!=null )       vmi.zoom=Double.valueOf(s).doubleValue();
+      if( (s=(String)atts.get("jdMin"))!=null )      vmi.jdmin=Double.valueOf(s).doubleValue();
+      if( (s=(String)atts.get("jdMax"))!=null )      vmi.jdmax=Double.valueOf(s).doubleValue();
       if( (s=(String)atts.get("xzoomView"))!=null )  vmi.xzoomView=Double.valueOf(s).doubleValue();
       if( (s=(String)atts.get("yzoomView"))!=null )  vmi.yzoomView=Double.valueOf(s).doubleValue();
       if( (s=(String)atts.get("rzoomWidth"))!=null ) vmi.rzoomWidth=Double.valueOf(s).doubleValue();
@@ -791,6 +793,9 @@ public class ServerFile extends Server implements XMLConsumer {
                ((PlanTool)plan).hasXYorig = (new Boolean(s)).booleanValue();
             }
             break;
+         case Plan.ALLSKYIMG:
+         case Plan.ALLSKYCAT:
+         case Plan.ALLSKYCUBE:
          case Plan.IMAGEMOSAIC:
          case Plan.IMAGERSP:
          case Plan.IMAGEALGO:
@@ -798,6 +803,9 @@ public class ServerFile extends Server implements XMLConsumer {
          case Plan.IMAGE:
             boolean hasOrigPixel = atts.get("cacheID")!=null;
             if( typePlan==Plan.IMAGE ) plan = ( new PlanImage(aladin));
+            else if( typePlan==Plan.ALLSKYIMG )   plan = ( new PlanBG(aladin));
+            else if( typePlan==Plan.ALLSKYCAT )   plan = ( new PlanBGCat(aladin));
+            else if( typePlan==Plan.ALLSKYCUBE )  plan = ( new PlanBGCube(aladin));
             else if( typePlan==Plan.IMAGEMOSAIC ) plan = ( new PlanImageMosaic(aladin));
             else if( typePlan==Plan.IMAGERSP )    plan = ( new PlanImageResamp(aladin));
             else if( typePlan==Plan.IMAGEALGO )   plan = ( new PlanImageAlgo(aladin));
@@ -805,6 +813,39 @@ public class ServerFile extends Server implements XMLConsumer {
                plan = ( new PlanImageRGB(aladin));
                ((PlanImageRGB)plan).RGBControl = new int[9];
             }
+            
+            if( plan instanceof PlanBG ) {
+               PlanBG pbg = (PlanBG)plan;
+               if( (s=(String)atts.get("hipsgluTag"))!=null )     pbg.gluTag=s;
+               if( (s=(String)atts.get("hipssurvey"))!=null )     pbg.survey=s;
+               if( (s=(String)atts.get("hipsurl"))!=null )        pbg.url=s;
+               if( (s=(String)atts.get("hipsminOrder"))!=null )   pbg.minOrder = Integer.parseInt(s);
+               if( (s=(String)atts.get("hipsmaxOrder"))!=null )   pbg.maxOrder = Integer.parseInt(s);
+               if( (s=(String)atts.get("hipscube"))!=null )       pbg.cube = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipscolor"))!=null )      pbg.color = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipscolorPNG"))!=null )   pbg.colorPNG = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipscolorUnknown"))!=null )  pbg.colorUnknown = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipsfitsGzipped"))!=null )   pbg.fitsGzipped = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipstruePixels"))!=null )    pbg.truePixels = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipsinFits"))!=null )    pbg.inFits = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipsinJPEG"))!=null )    pbg.inJPEG = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipsinPNG"))!=null )     pbg.inPNG = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipshasMoc"))!=null )    pbg.hasMoc = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipshasHpxFinder"))!=null )   pbg.hasHpxFinder = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipsbody"))!=null )      pbg.body = s;
+               if( (s=(String)atts.get("hipsframeOrigin"))!=null )   pbg.frameOrigin = Integer.parseInt(s);
+               if( (s=(String)atts.get("hipsframeDrawing"))!=null )  pbg.frameDrawing = Integer.parseInt(s);
+               if( (s=(String)atts.get("hipslive"))!=null )      pbg.live = (new Boolean(s)).booleanValue();
+               if( (s=(String)atts.get("hipspixelCut"))!=null )  pbg.pixelCut = s;
+               if( (s=(String)atts.get("hipstransferFct4Fits"))!=null )     pbg.transferFct4Fits = Integer.parseInt(s);
+               if( (s=(String)atts.get("hipstransferFct4Preview"))!=null )  pbg.transferFct4Preview = Integer.parseInt(s);
+               if( (s=(String)atts.get("hipstrahipstileOrdernsferFct4Preview"))!=null )  pbg.tileOrder = Integer.parseInt(s);
+
+               if( plan instanceof PlanBGCube ) {
+                  if( (s=(String)atts.get("hipsdepth"))!=null )  ((PlanBGCube)pbg).depth = Integer.parseInt(s);
+               }
+            }
+            
             if( (s=(String)atts.get("object"))!=null )     plan.objet = s;
             PlanImage pi = (PlanImage)plan;
             if( (s=(String)atts.get("param"))!=null )      plan.param = s+".";
