@@ -47,6 +47,7 @@ import cds.moc.Moc;
 import cds.moc.SpaceTimeMoc;
 import cds.moc.TimeMoc;
 import cds.savot.model.SavotField;
+import cds.tools.Astrodate;
 import cds.tools.Computer;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -1109,8 +1110,8 @@ public final class Command implements Runnable {
             // Via une adresse healpix norder/npi
             if( execHpxCmd(cmd) ) return false;
             
-//            // Via une date
-//            if( execDateCmd(cmd) ) return false;
+//            // Via un range de 2 dates
+            if( execDateCmd(cmd) ) return false;
 
             // ou via une position ou une target
             a.view.sesameResolve(cmd);
@@ -2187,15 +2188,35 @@ public final class Command implements Runnable {
 //      return false;
 //   }
    
-//   protected boolean execDateCmd(String date ) {
-//      try {
-//         double jd = Astrodate.dateToJD( date );
-//         ViewSimple v = a.view.getCurrentView();
-//         v.setTime( jd );
-//         return true;
-//      } catch( Exception e ) {}
-//      return false;
-//   }
+   /** Un range de 2 dates séparées par un espace, ou une seule date */
+   protected boolean execDateCmd(String date ) {
+      try {
+         ViewSimple v = a.view.getCurrentView();
+         Tok tok = new Tok(date.trim()," ");
+         int n=tok.countTokens();
+         
+         // Deux dates => min et max
+         if( n==2 ) {
+            double jd1 = Astrodate.dateToJD( tok.nextToken() );
+            double jd2 = Astrodate.dateToJD( tok.nextToken() );
+            v.setTimeRange( new double[] { jd1, jd2 } );
+            
+         // Une date => centre du range actuel
+         } else {
+            double jd = Astrodate.dateToJD( tok.nextToken() );
+            double t[] = v.getTimeRange();
+            if( Double.isNaN(t[0]) ||  Double.isNaN(t[1]) ) {
+               a.warning("You must preselect a time range before modifying the middle time");
+            } else {
+               double range = t[1]-t[0];
+               t[0] = jd-range/2; t[1] = jd+range/2;
+               v.setTimeRange( t );
+            }
+         }
+         return true;
+      } catch( Exception e ) {}
+      return false;
+   }
 
    /** Interprétation d'une position healpix donnée par norder/npix */
    protected boolean execHpxCmd(String param) {

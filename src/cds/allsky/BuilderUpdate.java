@@ -42,8 +42,8 @@ public class BuilderUpdate extends Builder {
       fillupContext();
       if( !context.isTaskAborting() ) builderMoc(); 
       if( !context.isTaskAborting() ) builderGunzip();
-      if( !context.isTaskAborting() ) builderAllsky();
       if( !context.isTaskAborting() ) builderHighOrder();
+      if( !context.isTaskAborting() ) builderAllsky();
    }
    
    private void fillupContext() throws Exception {
@@ -65,6 +65,12 @@ public class BuilderUpdate extends Builder {
       try { depth=Integer.parseInt(s); } catch( Exception e) {} 
       context.setDepth(depth);
       
+      s = context.prop.getProperty(Constante.KEY_HIPS_FRAME);
+      try { 
+         int frame = context.getFrameVal(s);
+         context.setFrame(frame );
+      } catch( Exception e) {} 
+
       s = context.prop.getProperty(Constante.KEY_HIPS_STATUS);
       if( s!=null ) context.setStatus(s);
 
@@ -108,8 +114,13 @@ public class BuilderUpdate extends Builder {
    }
 
    private void builderMoc() throws Exception {
-      try { context.loadMoc(); }
-      catch( Exception e ) {
+      try {
+         context.loadMoc();
+         if( context.moc.getMocOrder()==29 ) {
+            context.info("Suspicious MOC order (29) !");
+            keepOldCopy("Moc.fits");
+         }
+      } catch( Exception e ) {
          context.info("Regenerating MOC from low rhombs...");
          (b=new BuilderMoc(context)).run();
          context.done("MOC regenerated from low rhombs");
@@ -180,6 +191,7 @@ public class BuilderUpdate extends Builder {
          (b=new BuilderTree(context)).build();
       }
       
+      context.setMinOrder(0);
       context.done("Norder0,1 and 2 built");
 
    }

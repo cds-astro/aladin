@@ -99,7 +99,7 @@ class ZoomTime {
       return getDeltaTime( x+DELTA_G ) + globalJdmin;
    }
    
-   protected void deltaXTime(int deltaX, ViewSimple v) {
+   protected double [] deltaXTime(int deltaX, ViewSimple v) {
       double deltaJD = getDeltaTime( deltaX );
       double t[] = v.getTimeRange();
       if( Double.isNaN(t[0]) ) t[0] = globalJdmin;
@@ -113,12 +113,13 @@ class ZoomTime {
       if( t[0]<=globalJdmin ) t[0]=Double.NaN;
       if( t[1]>=globalJdmax ) t[1]=Double.NaN;
       v.setTimeRange( t );
+      return t;
    }
    
-   protected void setXTime(int x, ViewSimple v) {
+   protected double setXTime(int x, ViewSimple v) {
       double jd = getTime(x);
       double t[] = v.getTimeRange();
-      if( Double.isNaN( t[0] ) && Double.isNaN( t[1] ) ) return;
+      if( Double.isNaN( t[0] ) && Double.isNaN( t[1] ) ) return Double.NaN;
       if( Double.isNaN( t[0] ) ) t[0] = globalJdmin;
       if( Double.isNaN( t[1] ) ) t[1] = globalJdmax;
       double midRange = (t[1]-t[0])/2;
@@ -127,6 +128,7 @@ class ZoomTime {
       if( t[0]<=globalJdmin ) t[0]=Double.NaN;
       if( t[1]>=globalJdmax ) t[1]=Double.NaN;
       v.setTimeRange( t );
+      return midRange;
    }
    
    
@@ -162,11 +164,13 @@ class ZoomTime {
    protected boolean mouseRelease(int x, int y, ViewSimple v) {
       if( xDrag==-1 ) {
          if( !mouseIn(x,y) ) return false;
-         setXTime(x, v);
+         double t = setXTime(x, v);
+         memoCommand(t);
          return true;
       }
       int deltaX = x-xDrag;
-      deltaXTime(deltaX,v);
+      double t [] = deltaXTime(deltaX,v);
+      memoCommand(t);
       xDrag=-1;
       return true;
    }
@@ -201,8 +205,20 @@ class ZoomTime {
       t[1] = centre+nRange/2;
       if( t[0]<=globalJdmin ) t[0] = Double.NaN;
       if( t[1]>=globalJdmax ) t[1] = Double.NaN;
+      memoCommand( t );
       if( v.setTimeRange( t ) ) zoomView.repaint();
       return true;
+   }
+   
+   
+   private void memoCommand( double [] t ) {
+      String cmd = Astrodate.JDToDate(t[0])+" "+Astrodate.JDToDate(t[1]);
+      aladin.console.printCommand(cmd);
+   }
+
+   private void memoCommand( double t ) {
+      String cmd = Astrodate.JDToDate(t);
+      aladin.console.printCommand(cmd);
    }
 
    protected void draw(Graphics g, ViewSimple v) { 

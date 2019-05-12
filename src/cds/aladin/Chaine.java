@@ -384,7 +384,7 @@ public class Chaine {
                     "for an official distribution, please " +
                     "after installing and testing your work, attach the following file " +
                     "to a mail address to:\n \n" +
-                    "Email: language@aladin.u-strasbg.fr\n" + 
+                    "Email: cds-question@unistra.fr\n" + 
                     "File : "+getTranslationFullName()+"\n \n" +
                     "Please, do not forget to specify in this mail " +
                     "your name and quality\n" +

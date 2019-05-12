@@ -1036,11 +1036,27 @@ public class Source extends Position implements Comparator {
      * tag GLU pour les liens
      */
     protected String getCodedValue(int index) throws NoSuchElementException {
-       StringTokenizer st = new StringTokenizer(this.info,"\t");
-       st.nextElement();     // skip the triangle
-       for(int i=0;i<index;i++) st.nextElement();
-       return st.nextElement().toString();
+       index++;   // skip du triangle  (il y a toujours une première valeur)
+       int deb= -1;
+       int n=info.length();
+       int i=0;
+       for( int j=0; i<n && j<index+1; i++) {
+          if( info.charAt(i)=='\t') {
+             j++;
+             if( j==index && deb==-1 ) deb=i+1;
+          }
+       }
+       if( deb==-1 ) throw new NoSuchElementException();
+       return info.substring(deb,i);
     }
+
+    // VERSION ORIGINALE BIEN PLUS LENTE
+//    protected String getCodedValue(int index) throws NoSuchElementException {
+//       StringTokenizer st = new StringTokenizer(this.info,"\t");
+//       st.nextElement();     // skip the triangle
+//       for(int i=0;i<index;i++) st.nextElement();
+//       return st.nextElement().toString();
+//    }
 
 
    /** Returns the value of the field at position index
@@ -1112,13 +1128,13 @@ public class Source extends Position implements Comparator {
      */
     public boolean setValue(int index,String value) {
        StringTokenizer st = new StringTokenizer(info,"\t");
-       StringBuffer nInfo=null;
+       StringBuilder nInfo=null;
        boolean encore;
        index++;
        for( int i=0; (encore=st.hasMoreTokens()) || i<=index; i++ ) {
           String s = encore ? st.nextToken() : "";
           if( i==index ) s=value;
-          if( i==0 ) nInfo = new StringBuffer(s);
+          if( i==0 ) nInfo = new StringBuilder(s);
           else nInfo.append("\t"+s);
        }
        info = nInfo.toString();

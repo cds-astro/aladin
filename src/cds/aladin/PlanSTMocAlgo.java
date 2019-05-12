@@ -68,6 +68,9 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       
       aladin.trace(3,"STMOC computation: "+Plan.Tp[type]+" => "+s);
       
+      long t0 = System.currentTimeMillis();
+      
+      
       try {
          moc = p1.getMoc().clone();
          /*if( op==COMPLEMENT ) moc = moc.complement();
@@ -93,6 +96,9 @@ public class PlanSTMocAlgo extends PlanSTMoc {
          aladin.error = error = e.getMessage();
          flagOk=false;
       }
+      
+      long t1 = System.currentTimeMillis();;
+      System.out.println("STMOC operation done in "+(t1-t0)+"ms");
       
       copyright = "Computed by Aladin";
       flagProcessing=false;

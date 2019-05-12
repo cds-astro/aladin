@@ -474,20 +474,23 @@ public final class Util {
 
    }
    
+   
    /** Retourne la sous-chaine d'un path délimité par des /
     * Rq: le / initial présent ou absent n'a pas d'incidence
     * @param path le path
+    * @param c le séparateur par défaut '/'
     * @param deb l'indice de l'élément (commence à 0)
     * @param num le nombre d'éléments (par défaut 1), -1 tout le reste
     * @return ex: CDS/P/DSS2/color,2,2  => DSS2/color
     */
    static public String getSubpath(String path,int deb ) { return getSubpath(path,deb,1); }
-   static public String getSubpath(String path,int deb, int num ) {
+   static public String getSubpath(String path,int deb, int num ) { return getSubpath(path,'/', deb, num); }
+   static public String getSubpath(String path,char c, int deb, int num ) {
       if( path==null ) return null;
       int j=-1;
       int posDeb=-1;
-      for( int i=0, pos=0; pos!=-1; pos=path.indexOf('/',pos+1), i++ ) {
-         if( i==deb ) { posDeb=pos+ (path.charAt(pos)=='/'? 1:0); j=i; }
+      for( int i=0, pos=0; pos!=-1; pos=path.indexOf(c,pos+1), i++ ) {
+         if( i==deb ) { posDeb=pos+ (path.charAt(pos)==c? 1:0); j=i; }
          if( j!=-1 && i-j==num ) return path.substring(posDeb,pos);
       }
       return (j>=0 || num==-1 ) && posDeb>=0 ? path.substring(posDeb) : null;

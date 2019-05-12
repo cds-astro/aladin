@@ -118,6 +118,9 @@ public class PlanSTMocGen extends PlanSTMoc {
 
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(Plan p1,double duration,double radius, boolean fov) {
+      
+      long t0 = System.currentTimeMillis();
+      
       SpaceTimeMoc m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
@@ -185,6 +188,9 @@ public class PlanSTMocGen extends PlanSTMoc {
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
+      
+      long t1 = System.currentTimeMillis();
+      System.out.println("STMOC generated in "+(t1-t0)+"ms");
    }
    
 

@@ -562,7 +562,7 @@ public class Localisation extends MyBox  {
                if( !proj.isXYLinear() ) s=NOXYLINEAR;
                else {
                   if( isPlotTime ) {
-                     s=Astrodate.JDToDate(coo.al)+" , "+Util.myRound(coo.del+"",4);
+                     s=Astrodate.JDToDate(coo.al); //+" , "+Util.myRound(coo.del+"",4);
                   } else s=Util.myRound(coo.al+"",4)+" , "+Util.myRound(coo.del+"",4);
                }
             } else {
@@ -730,8 +730,8 @@ public class Localisation extends MyBox  {
       
       // Coordonnées planéto ? => rien à faire
       if( flagPlaneto ) return coo1;
-
-      // Edition et conversion si nécessaire
+      
+     // Edition et conversion si nécessaire
       try {
          
          Astrocoo aft = new Astrocoo( getAstroframe(frameSource) );

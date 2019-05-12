@@ -1239,7 +1239,8 @@ public class PlanBG extends PlanImage {
 
       return true;
    }
-
+   
+   
    protected boolean flagRecut=true;
    protected double flagRecutRadius=0;
    protected Coord flagRecutCoo=null;
@@ -2413,7 +2414,8 @@ public class PlanBG extends PlanImage {
    //   }
 
 
-   protected int getMinOrder() { return minOrder==-1 ? 3 : minOrder; }
+//   protected int getMinOrder() { return minOrder==-1 ? 3 : minOrder; }
+   protected int getMinOrder() { return 3; }
    
    /** Chargement synchrone du allsky (nécessaire dans le cas d'une modif de la table des couleurs (Densité map),
     * avant même le premier affichage) */
@@ -4112,7 +4114,7 @@ public class PlanBG extends PlanImage {
     * Gère le chargement des losanges de manière asynchrone
     */
    class HealpixLoader implements Runnable {
-      static final int POOLSIZE = 8;
+      static final int POOLSIZE = 1; //8;
       boolean POOLTEST = true;   // EN COURS DE DEVELOPPEMENT POUR METTRE NE PLACE UN POOL DE THREADS DE CHARGEMENT DE TUILES
       static final int DELAI =1000;   // delai en ms entre deux demandes de chargement des losanges
 

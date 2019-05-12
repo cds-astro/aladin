@@ -2136,7 +2136,7 @@ public class Context {
 
          long nbpix = CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder());
          long tileSizeFits = Math.abs(bitpix/8) * nbpix + 2048L;
-         long tileSizeJpeg = nbpix/30;
+         long tileSizeJpeg = nbpix/15;
          long tileSizePng = (long)(tileSizeJpeg*1.5);
          double coverage = m.getCoverage();
          long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;

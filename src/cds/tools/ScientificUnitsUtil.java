@@ -54,7 +54,7 @@ public class ScientificUnitsUtil {
 	final static String endOfWordPrefix = "[a-zA-Z]$";
 	
 	static {
-		metricPrefixes = new HashMap<String, String>();
+		metricPrefixes = new HashMap<>();
 		metricPrefixes.put("-24", "y");
 		metricPrefixes.put("-21", "z");
 		metricPrefixes.put("-18", "a");
@@ -156,6 +156,8 @@ public class ScientificUnitsUtil {
 		return energy;
 	}
 	
+	static private final NumberFormat formatter = new DecimalFormat(NUMBER_FORMATTER_STRING);
+	
 	/**
 	 * Method to format numbers. If necessary
 	 * the appropriate metric prefixes are added to it.
@@ -167,17 +169,28 @@ public class ScientificUnitsUtil {
 		String unit = unitToProcess.getUnit();
 		
 		String metricPrefix = null;
-		NumberFormat formatter = new DecimalFormat(NUMBER_FORMATTER_STRING);
+// Code Chaitra => factorization en static
+//		NumberFormat formatter = new DecimalFormat(NUMBER_FORMATTER_STRING);
 		String valueInProcess = formatter.format(unitToProcess.value);
-		StringBuffer displayString;
+		StringBuilder displayString;
 		
-		if (valueInProcess.contains(EXPONENT_STRING)) {
-			String numeral = valueInProcess.split(EXPONENT_STRING)[0];
-			String basePower = valueInProcess.split(EXPONENT_STRING)[1];
-			metricPrefix = metricPrefixes.get(basePower);
-			displayString = new StringBuffer(numeral).append(metricPrefix).append(unit);
+		int i;
+		if( (i=valueInProcess.indexOf('E'))>0 ) {
+		   String numeral = valueInProcess.substring(0,i);
+		   String basePower = valueInProcess.substring(i+1);
+           metricPrefix = metricPrefixes.get(basePower);
+           displayString = new StringBuilder(numeral).append(metricPrefix).append(unit);
+           
+// Code Chaitra bien trop lent
+//		if (valueInProcess.contains(EXPONENT_STRING)) {
+//           String numeral = valueInProcess.split(EXPONENT_STRING)[0];
+//           String basePower = valueInProcess.split(EXPONENT_STRING)[1];
+//			metricPrefix = metricPrefixes.get(basePower);
+//			displayString = new StringBuilder(numeral).append(metricPrefix).append(unit);
+           
+           
 		} else {
-			displayString = new StringBuffer(valueInProcess).append(unit);
+			displayString = new StringBuilder(valueInProcess).append(unit);
 		}
 		return displayString.toString();
 	}

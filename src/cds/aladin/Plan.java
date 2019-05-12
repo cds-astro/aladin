@@ -416,20 +416,34 @@ public class Plan implements Runnable {
    
    /** Supprime le cache qui évitait le rescanning des légendes pour détecter si un des
     * champs est temporel */
-   protected void resetTimeFieldCache() { cacheCatalogTimeFlag = -1; }
+   protected void resetTimeFieldCache() { 
+      cacheCatalogTimeFlag = -1;
+   }
    
    /** Il s'agit d'un plan de type catalogue qui contient des infos temporels */
    protected boolean isCatalogTime() {
-      if( cacheCatalogTimeFlag==-1 ) {
-         try {
-            cacheCatalogTimeFlag=0;
-            for( Legende leg : getLegende() ) {
-               if( leg.getTime()>=0 ) { cacheCatalogTimeFlag=1; break; } 
-            }
-         } catch( Exception e ) { }
-      }
-      return cacheCatalogTimeFlag==1;
+      if( cacheCatalogTimeFlag!=-1 ) return cacheCatalogTimeFlag==1;
+      
+      int rep=0;
+      try {
+         for( Legende leg : getLegende() ) {
+            if( leg.getTime()>=0 ) { rep=1; break; } 
+         }
+         if( flagOk ) cacheCatalogTimeFlag=rep;
+      } catch( Exception e ) { }
+      return rep==1;
    }
+   
+//   protected boolean isCatalogTime() {
+//         try {
+//            cacheCatalogTimeFlag=0;
+//            for( Legende leg : getLegende() ) {
+//               if( leg.getTime()>=0 ) { return true; } 
+//            }
+//         } catch( Exception e ) { }
+//         return false;
+//   }
+
    
    /** Retourne le time Range global du plan, Double.NaN,Double.NaN si non défini */
    protected double [] getTimeRange() { 

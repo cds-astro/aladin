@@ -1297,15 +1297,32 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                plong.setBorder( BorderFactory.createEmptyBorder());
                longitude = new ButtonGroup();
                longitudeDescending = new JRadioButton("descending");
-               longitudeDescending.addActionListener(this);
+               longitudeDescending.addActionListener( new ActionListener() {
+                  public void actionPerformed(ActionEvent e) {
+                     ((PlanBG)plan).setSpecificProj(true);
+                     plan.projd.setProjSym( !plan.projd.sym );
+                     aladin.view.newView();
+                     actionSpecificProj();
+                     aladin.calque.repaintAll();
+                  }
+               });
                longitude.add(longitudeDescending);
                longitudeAscending = new JRadioButton("ascending");
-               longitudeAscending.addActionListener(this);
+               longitudeAscending.addActionListener( new ActionListener() {
+                  public void actionPerformed(ActionEvent e) {
+                     ((PlanBG)plan).setSpecificProj(true);
+                     plan.projd.setProjSym( !plan.projd.sym );
+                     aladin.view.newView();
+                     actionSpecificProj();
+                     aladin.calque.repaintAll();
+                  }
+               });
+
                longitude.add(longitudeAscending); 
+               if( plan.projd.sym ) longitudeAscending.setSelected(true);
+               else  longitudeDescending.setSelected(true);
                plong.add( longitudeAscending );
                plong.add( longitudeDescending );
-               longitudeAscending.setSelected(plan.projd.sym);
-               longitudeDescending.setSelected(!plan.projd.sym);
                if( Aladin.BETA ) PropPanel.addCouple(p,".longitude", plong, g,c);
 
             }
@@ -1775,11 +1792,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    }
 
    // Changement de motif pour les sources
-   private void actionSourceType() {
-      if( sourceType==null ) return;
+   private boolean actionSourceType() {
+      if( sourceType==null ) return false;
       plan.setSourceType(sourceType.getSelectedIndex());
       aladin.calque.repaintAll();
-
+      return true;
    }
 
    // Changement de projection pour le calcul des alpha,delta
@@ -1864,16 +1881,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       if( blankField!=null ) actionBlank();
-      
-      // Modification du sens de la longitude
-      // ATTENTION, DOIT NECESSAIREMENT ETRE AVANT actionDefCatProj() !!!
-      if( longitude!=null && plan.projd!=null ) {
-         boolean flagAsc = longitudeAscending.isSelected();
-         if( plan.projd.sym!=flagAsc ) {
-            plan.projd.setProjSym(flagAsc);
-            aladin.view.newView();
-         }
-      }
       
       // Changement de projection catalogue par défaut ?
       actionSpecificProj();
@@ -1980,8 +1987,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
 
-      actionSourceType();
-      aladin.calque.repaintAll();
+      if( ! actionSourceType() ) aladin.calque.repaintAll();
 
    }
 
@@ -1989,11 +1995,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       Object src = e.getSource();
       String what = src instanceof JButton ? ((JButton)src).getActionCommand() : "";
-
-      if( (src==longitudeDescending || src==longitudeAscending) && plan instanceof PlanBG ) {
-         apply();
-         return;
-      }
       
       // Bouton d'édition d'un filtre dédié
       if( src==toGenFilterButton ) {

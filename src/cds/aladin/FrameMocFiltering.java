@@ -134,13 +134,16 @@ public final class FrameMocFiltering extends FrameRGBBlink {
    
    /** Création d'un plan catalogue contenant les sources d'une liste de plans catalogs, filtrées par un Moc */
    protected PlanCatalog createPlane(String label,PlanMoc pMoc, Plan [] p, boolean lookIn) throws Exception {
+      long t0 = System.currentTimeMillis();
       Coord c = new Coord();
       Healpix hpx = new Healpix();
-//      HealpixMoc moc = new HealpixMoc( pMoc.getMoc() );
-      Vector<Obj> v = new Vector<>();
+      Vector<Obj> v = new Vector<>(10000);
       
       Moc moc = pMoc.moc;
       int mode = moc instanceof SpaceTimeMoc ? 2 : moc instanceof TimeMoc ? 1 :0;
+      
+      SpaceMoc spaceMoc = mode==0 ? (SpaceMoc)moc : mode==2 ? ((SpaceTimeMoc)moc).getSpaceMoc() : null;
+      TimeMoc timeMoc =   mode==1 ? (TimeMoc)moc  : mode==2 ? ((SpaceTimeMoc)moc).getTimeMoc()  : null;
       
       for( int i=0; i<p.length; i++ ) {
          Plan pCat = p[i];
@@ -151,32 +154,38 @@ public final class FrameMocFiltering extends FrameRGBBlink {
             if( !(o instanceof Source) ) continue;
             
             long npixSpace=-1;
+            boolean in=false;
             
-            if( mode==2 || mode==0 ) {
+            // Test Space
+            if( mode==0 || mode==2 ) {
                c.al=o.getRa();
                c.del=o.getDec();
                if( Double.isNaN(c.al) ||  Double.isNaN(c.del) ) continue;
                c=Localisation.frameToFrame(c,Localisation.ICRS, pMoc.frameOrigin);
-//            boolean in = moc.contains(hpx, c.al, c.del);
                npixSpace = hpx.ang2pix(Moc.MAXORDER, c.al, c.del);
+
+               in = spaceMoc.contains( npixSpace);
+               if( in!=lookIn ) continue;
             }
             
-            boolean in;
+            // Test time
+            if( mode==1 || mode==2 ) {
+               in = timeMoc.contains( ((Source)o).jdtime );
+               if( in!=lookIn ) continue;
+            }
             
-            // SpaceTimeMoc ?
-            if( mode==2 ) { 
+            // Test Space & Time
+            if( mode==2 ) {
                in = ((SpaceTimeMoc)moc).contains(npixSpace,((Source)o).jdtime);
-               
-            // TimeMoc ?
-            } else if( mode==1 ) {
-               in = ((TimeMoc)moc).contains(((Source)o).jdtime);
-               
-            // SpaceMoc
-            } else in = ((SpaceMoc)moc).contains(npixSpace);
+            }
             
             if( lookIn==in ) v.add(o);
          }
+            
       }
+      
+      long t1 = System.currentTimeMillis();
+      System.out.println("Catalog filtered by MOC in "+(t1-t0)+"ms");
 
       return a.calque.newPlanCatalogBySources(v,label,false);
    }

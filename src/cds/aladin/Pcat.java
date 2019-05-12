@@ -20,8 +20,6 @@
 //
 
 package cds.aladin;
-import static cds.aladin.Constants.REGEX_NUMBER;
-
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics;
@@ -41,8 +39,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -549,8 +545,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             String siaStandardColumns = null;
             String siaHideColumns = null;
             if (flagSIAV2) {
-            	siaStandardColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2StandardColumns"); //column to standardize in SIAV2 results table;
-            	siaHideColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns"); //column to hide in SIAV2 results table;
+                //column to standardize in SIAV2 results table;
+            	siaStandardColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2StandardColumns"); 
+            	//column to hide in SIAV2 results table;
+            	siaHideColumns = ConfigurationReader.getInstance().getPropertyValue("SIAV2HideColumns"); 
 			}
             
             for( int i = 0; e.hasMoreElements(); i++ ) {
@@ -569,10 +567,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                      underDE = i;
                      fDE = f;
                   }
-                  else if( f.name.equals("RAJ2000") ) RA = i;
-                  else if( f.name.equals("DEJ2000") ) DE = i;
-                  else if( f.name.equals("RA(ICRS)") ) RA = i;
-                  else if( f.name.equals("DE(ICRS)") ) DE = i;
+                  else if( f.name.equals("RAJ2000") )   RA = i;
+                  else if( f.name.equals("DEJ2000") )   DE = i;
+                  else if( f.name.equals("RA(ICRS)") )  RA = i;
+                  else if( f.name.equals("DE(ICRS)") )  DE = i;
+                  else if( f.name.equals("s_region") )  indexSTC=i;
                }
 
                if( f.type != null
@@ -582,17 +581,21 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                }
 
                v.addElement(f);
-               if(flagSIAV2 && f.name!=null){
-            	   if (siaHideColumns!=null && siaHideColumns.contains(f.name)) {
+               if(flagSIAV2 && f.name!=null ){
+            	   if (siaHideColumns!=null && siaHideColumns.indexOf(f.name)>-1) {
             		   hiddenField[i] = true;
                        f.visible=false;
             	   }
             	   
-            	   if (siaStandardColumns != null && siaStandardColumns.contains(f.name)) {
+            	   if (siaStandardColumns != null && siaStandardColumns.indexOf(f.name)>-1) {
             		   Field displayField = new Field(f);
-            		   displayField.name = Aladin.getChaine().getString(f.name);
+            		   
+            		   // COde CHaitra => bien trop lent
+                       displayField.name = Aladin.getChaine().getString(f.name);
+//                       displayField.name = f.name;
+                       
             		   //below logic to check if standardized columns are to be hidden
-            		   if (siaHideColumns != null && siaHideColumns.contains(displayField.name)) {
+            		   if (siaHideColumns != null && siaHideColumns.indexOf(displayField.name)>-1) {
             			   displayField.visible = false;
                 	   } else {
                 		   displayField.visible = true;
@@ -620,7 +623,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
             // Ajout de GROUPs éventuels
             if( group!=null ) leg.setGroup(group);
-
+            
             nbTable++;
             flagFirstRecord = false;
          }
@@ -636,8 +639,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          }
 
          // Generation de la ligne d'info
-         //         line = new StringBuffer(500);
-         Util.resetString(line);
+          line = new StringBuilder(1000);
+//         Util.resetString(line);
          //         line.append(table);
          if( catalog!=null && catalog.equals("Simbad") ) line.append("<&_SIMBAD |Simbad>");
          else if( catalog!=null && (catalog.equals("NED") || catalog.equals("Ned")) ) line.append("<&_NED |NED>");
@@ -648,13 +651,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          int j = -1; // Veritable index de la mesure (en fonction des champs
          // caches)
          for( int i = 0; i < n; i++ ) {
-            // "<" et ">" n'étaient pas décodés
-            // ajout thomas pour démo AVO
-            //        value[i] = cds.savot.samples.WriteDocument.Decode(value[i]);
-            // Rectification Pierre pour éviter de charger WriteDocument dans le
-            // .jar
             if( value[i]==null ) value[i]="";	// En cas de VOTable <TD/>
-            //            value[i] = cds.xml.XMLParser.XMLDecode(value[i]);
 
             // Memorisation d'un eventuel OID
             if( indexOID >= 0 && i == indexOID ) oid = value[i];
@@ -677,16 +674,16 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             // Construction des ancres
             String href = leg.getHref(j);
             String gref = leg.getGref(j);
-            String refText = leg.getRefText(j);
+//            String refText = leg.getRefText(j);
             String flagArchive = leg.getRefValue(j);
             String utype = leg.getUtype(j);
             String name = leg.getName(j);
             
-            try {
-               if( indexSTC==-1 && /* flagEPNTAP && */ leg.getID(j).equals("s_region") ) {
-                  indexSTC=j;
-               }
-            } catch( Exception e ) { }
+//            try {
+//               if( indexSTC==-1 && /* flagEPNTAP && */ leg.getID(j).equals("s_region") ) {
+//                  indexSTC=j;
+//               }
+//            } catch( Exception e ) { }
             
             if( indexSTC==-1 && Util.indexOfIgnoreCase( value[i], "Polygon ")==0 ) {
                indexSTC=j;
@@ -712,7 +709,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                      indexAccessUrl=-2;  // Pour éviter de le traiter par la suite
                   }
                }
-               // SSA - preview
+               // SSA + preview
                if( flagArchive==null ) {
                   String ucd = leg.getUCD(j);
                   if( ucd!=null && Util.indexOfIgnoreCase(ucd,"meta.ref.url;datalink.preview")>=0 ) {
@@ -818,7 +815,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             }
             
          // Peut être un FoV peut être tout de même généré par SIA1 ou SSA ?
-         } else if( flagSIA && !flagSIAV2 ) {
+         } else 
+         
+         if( flagSIA && !flagSIAV2 ) {
             String fov = source.createSIAFoV();
             if( fov!=null ) {
                source.setFootprint(fov);
@@ -863,32 +862,53 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     * @param text
     * @return formated string
     */
+   
+   // J'INVALIDE CES CONVERSIONS QUI RALENTISSENT BIEN TROP LE CHARGEMENT - PF 7/5/2019
 	public String processValuesToStandardRepresentation(Field field, String text) {
-		if (!flagSIAV2) {//for now only siav2 are known to get time in MJD and spectral data in m.
+		if( !flagSIAV2) {//for now only siav2 are known to get time in MJD and spectral data in m.
 			return text;
 		}
-
+		
 		String standardRepresentation = text;
 		try {
 			if (text != null && !text.trim().isEmpty() && field != null && field.ucd != null) {
-				if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
-						&& "d".equalsIgnoreCase(field.unit)) {
-					Pattern regex = Pattern.compile(REGEX_NUMBER);
-					Matcher matcher = regex.matcher(text);
-					if (matcher.find()) {
-						standardRepresentation = this.convertMJDToISO(text);
-					}
-				} else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
-						&& "m".equalsIgnoreCase(field.unit)) {
-					standardRepresentation = this.setStandardSpectralRepresentation(text);
-				}
+			   
+			      int i;
+                  String s = ((i=field.ucd.indexOf('.'))<0 ? field.ucd : field.ucd.substring(0,i)).toLowerCase();
+			      
+	              if( s.equals("time") && "D".equalsIgnoreCase(field.datatype) && "d".equalsIgnoreCase(field.unit)) {
+	                 if( isNumber(text) ) standardRepresentation = this.convertMJDToISO(text);
+	              } else if( s.equals("em") && "D".equalsIgnoreCase(field.datatype) && "m".equalsIgnoreCase(field.unit)) {
+                     standardRepresentation = this.setStandardSpectralRepresentation(text);
+                }
+
+// Code Chaitra => bien trop lent [le split est à fuir]
+//				if (field.ucd.split("\\.")[0].equalsIgnoreCase("time") && "D".equalsIgnoreCase(field.datatype)
+//						&& "d".equalsIgnoreCase(field.unit)) {
+//					Pattern regex = Pattern.compile(REGEX_NUMBER);
+//					Matcher matcher = regex.matcher(text);
+//					if (matcher.find()) {
+//						standardRepresentation = this.convertMJDToISO(text);
+//					}
+//				} else if (field.ucd.split("\\.")[0].equalsIgnoreCase("em") && "D".equalsIgnoreCase(field.datatype)
+//						&& "m".equalsIgnoreCase(field.unit)) {
+//					standardRepresentation = this.setStandardSpectralRepresentation(text);
+//				}
 			}
 		} catch (Exception e) {
-			if (Aladin.levelTrace >= 3)
-				e.printStackTrace();
+			if (Aladin.levelTrace >= 3) e.printStackTrace();
 			standardRepresentation = text;
 		}
 		return standardRepresentation;
+	}
+	
+	private boolean isNumber( String s) {
+	   try { Double.parseDouble(s); return true; } catch( Exception e ) { }
+	   return false;
+	   
+//       Pattern regex = Pattern.compile(REGEX_NUMBER);
+//       Matcher matcher = regex.matcher(s);
+//       return matcher.find();
 	}
 
    public String convertMJDToISO(String timeWord) {
@@ -912,8 +932,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 		String defaultWavelengthUnit = "m";
 		Double spectralVal = Double.parseDouble(text);
 		Unit unitToProcess = null;
-		Double wavelengthRange1 = Double
-				.parseDouble(ConfigurationReader.getInstance().getPropertyValue("WAVELENGTHRANGE1"));
+		Double wavelengthRange1 = Double.parseDouble(ConfigurationReader.getInstance().getPropertyValue("WAVELENGTHRANGE1"));
 		Double wavelengthRange2 = Double
 				.parseDouble(ConfigurationReader.getInstance().getPropertyValue("WAVELENGTHRANGE2"));
 		try {
@@ -1262,7 +1281,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          long type=dis.getType();
          flagVOTable=(type & MyInputStream.VOTABLE)!=0;
          flagFootprint = (type & MyInputStream.FOV)!=0;
-         flagSIAV2 = (type & MyInputStream.SIAV2)!= 0;
+//         flagSIAV2 = (type & MyInputStream.SIAV2)!= 0;
          flagSIA = (type & MyInputStream.SIA)!= 0;
          flagEPNTAP = (type & MyInputStream.EPNTAP)!= 0;
          if( flagFootprint ) {

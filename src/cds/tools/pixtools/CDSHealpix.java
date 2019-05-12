@@ -153,10 +153,12 @@ public final class CDSHealpix {
 //         final HealpixNestedBMOC bmoc = inclusive ? cp.overlappingCells(Math.toRadians(ra), Math.toRadians(dec)) :
                cp.overlappingCenters(Math.toRadians(coo[0]), Math.toRadians(coo[1]));
       } catch( Exception e ) {
-         System.err.println("ra="+ra+" dec="+dec+" coo[0]="+coo[0]+" coo[1]="+coo[1]);
-         if( inclusive ) System.err.println("p.overlappingCells(+"+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
-         else System.err.println("cp.overlappingCenters("+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
+         
+         System.err.println("\nHEALPix.query_disc error: ra="+ra+" dec="+dec+" radius="+radius+" (rad)");
+         if( inclusive ) System.err.println("  Executing p.overlappingCells(+"+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
+         else System.err.println("  Executing cp.overlappingCenters("+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
          e.printStackTrace();
+         
       }
 
       return toFlatArrayOfHash(bmoc);

@@ -99,7 +99,9 @@ public class PlanHealpix extends PlanBG {
    //    private int myAllskyMode = FIRST; // mode de creation des images de niveau superieur et de l'image all sky : FIRST, MOYENNE, ...
 
    private boolean fromProperties; // true si la création du plan a été demandée depuis la fenetre des properties. Dans ce cas, on ne touche pas à idxTFormToRead, même pour les fichiers partiels
-
+   
+    // pour afficher une map planétaire dans le bon sens et avec la bonne projection
+   boolean isAPlanet = false;
 
    /** @param mode : DRAWPIXEL : les pixels, DRAWPOLARISATION : les segments de polarisation, DRAWANGLE : les angles sous forme d'une image */
    public PlanHealpix(Aladin aladin, String file, MyInputStream in, String label, int mode, int idxTFormToRead, boolean fromProperties, Coord c,double radius) {
@@ -364,6 +366,7 @@ public class PlanHealpix extends PlanBG {
       prop.setProperty(Constante.OLD_LENHPX, Util.join(lenHpx, ','));
       prop.setProperty(Constante.OLD_TYPEHPX, Util.join(typeHpx, ','));
       prop.setProperty(Constante.OLD_ALADINVERSION, aladin.VERSION);
+
       
       OutputStreamWriter out = null;
       try {
@@ -418,8 +421,15 @@ public class PlanHealpix extends PlanBG {
       int defaultProjType = aladin.configuration.getProjAllsky();
       Plan base = aladin.calque.getPlanBase();
       if( base instanceof PlanBG ) defaultProjType = base.projd.t;
+      
+      boolean longAsc = isAPlanet;
+      if( isAPlanet ) {
+         defaultProjType = Calib.SIN;
+         setSpecificProj(true);
+      }
 
-      Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5);
+      Projection p =  new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,
+            longAsc, defaultProjType,Calib.FK5);
 
       p.frame = getCurrentFrameDrawing();
 //      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
@@ -823,6 +833,9 @@ public class PlanHealpix extends PlanBG {
          String s = prop.getProperty(Constante.KEY_HIPS_FRAME);
          if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_FRAME);
          if( s==null ) s = "galactic";
+         
+         isAPlanet = isPlanet(s);
+         
          coordsys = coordsys(s);
          frameOrigin = coordsysToFrame(coordsys);
 
