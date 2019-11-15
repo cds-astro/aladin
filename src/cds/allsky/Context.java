@@ -70,6 +70,8 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Context {
    
+   private boolean TERM=false;   // True si on va utiliser les codes couleurs du terminal
+     
    static final public String FORCOMPATIBILITY = "#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____";
    
    static private String [] FITSKEYS = { 
@@ -172,7 +174,18 @@ public class Context {
    protected boolean testClonable=true;
    protected boolean live=false;             // true si on doit garder les tuiles de poids
 
-   public Context() {}
+   public Context() { 
+      
+      // CE NE FONCTIONNE PAS BIEN, NOTAMMENT SOUS CYGWIN
+      if( !(this instanceof ContextGui ) ) {
+//         System.out.println("getenv().get(\"TERM\") => "+ System.getenv().get("TERM")+" System.console()="+System.console());
+         if( /* System.console()!=null && */ System.getenv().get("TERM") != null) {
+            setTerm(true);
+        } else {
+            setTerm(false);
+        }
+      }
+   }
 
    public void reset() {
       mocArea=mocIndex=moc=null;
@@ -1726,20 +1739,23 @@ public class Context {
       return s1+" "+s+" "+(s.length()%2==0?"":" ")+s1;
    }
    
-   protected boolean ANSI = false;
+   // True si on veut utiliser les codes couleurs du terminal
+   protected void setTerm(boolean isTermCompliant) { TERM=isTermCompliant;  }
    
-   private String rouge() { return ANSI ? "\033[32m" : ""; }
-   private String brun()  { return ANSI ? "\033[33m" : ""; }
-   private String blue()  { return ANSI ? "\033[34m" : ""; }
-   private String violet(){ return ANSI ? "\033[35m" : ""; }
-   private String bluec() { return ANSI ? "\033[36m" : ""; }
-   private String cyan()  { return ANSI ? "\033[37m" : ""; }
-   private String end()   { return ANSI ? "\033[0m"  : ""; }
+   private String rouge() { return TERM ? "\033[31m" : ""; }
+   private String vert()  { return TERM ? "\033[32m" : ""; }
+   private String brun()  { return TERM ? "\033[33m" : ""; }
+   private String blue()  { return TERM ? "\033[34m" : ""; }
+   private String violet(){ return TERM ? "\033[35m" : ""; }
+   private String bluec() { return TERM ? "\033[36m" : ""; }
+   private String cyan()  { return TERM ? "\033[37m" : ""; }
+   private String end()   { return TERM ? "\033[0m"  : ""; }
 
    public void running(String s)  { nl(); System.out.println(blue()  +"RUN   : "+getTitle(s,'=')+end()); }
    public void done(String r)     { nl(); System.out.println(blue()  +"DONE  : "+r+end()); }
    public void abort(String r)    { nl(); System.out.println(rouge() +"ABORT : "+r+end()); }
    public void info(String s)     { nl(); System.out.println(         "INFO  : "+s); }
+   public void run(String s)      { nl(); System.out.println(blue()  +"RUN   : "+s+end()); }
    public void warning(String s)  { nl(); System.out.println(violet()+"*WARN*: "+s+end()); }
    public void error(String s)    { nl(); System.out.println(rouge() +"*ERROR: "+s+end()); }
    public void action(String s)   { nl(); System.out.println(blue()  +"ACTION: "+s+end()); }
@@ -2049,21 +2065,21 @@ public class Context {
 
       // L'url
       setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
-      setPropriete(Constante.KEY_HIPS_STATUS,"public master clonableOnce");
       
       // le status du HiPS : par defaut "public master clonableOnce"
+//      setPropriete(Constante.KEY_HIPS_STATUS,"public master clonableOnce");
       String pub = Constante.PUBLIC;
-      String clone = Constante.CLONABLEONCE;
+      String clone = " "+Constante.CLONABLEONCE;
       if( status!=null ) {
          Tok tok = new Tok(status);
          while( tok.hasMoreTokens() ) {
             String s = tok.nextToken().toLowerCase();
             if( s.equals(Constante.PRIVATE) ) pub = Constante.PRIVATE;
-            else if( s.equals(Constante.UNCLONABLE) ) pub=Constante.UNCLONABLE;
-            else if( s.equals(Constante.CLONABLE) ) pub=Constante.CLONABLE;
+            if( s.equals(Constante.UNCLONABLE) ) clone=" "+Constante.UNCLONABLE;
+            else if( s.equals(Constante.CLONABLE) ) clone=" "+Constante.CLONABLE;
          }
       }
-      setPropriete(Constante.KEY_HIPS_STATUS,pub+" "+Constante.MASTER+" "+clone);
+      setPropriete(Constante.KEY_HIPS_STATUS,pub+" "+Constante.MASTER+clone);
 
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
@@ -2201,12 +2217,14 @@ public class Context {
       // Gestion de la compatibilité
       // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
       while( prop.removeComment(FORCOMPATIBILITY) );
-      prop.add("#",FORCOMPATIBILITY);
-      prop.add(Constante.OLD_OBS_COLLECTION,label);
-      prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
-      prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
-      if( minOrder>3 ) prop.add(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
-      prop.add(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
+//      prop.add("#",FORCOMPATIBILITY);
+//      prop.add(Constante.OLD_OBS_COLLECTION,label);
+//      prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
+//      prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
+//      if( minOrder>3 ) prop.add(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
+      
+// SANS DOUTE UN MAUVAIS COPIER/COLLER -> RIEN A VOIR  AVEC UN HPXFINDER      
+//      prop.add(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
 
       String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
@@ -2649,6 +2667,7 @@ public class Context {
             while( prop.getProperty("hipsgen_params"+(n==0?"":"_"+n))!=null) n++;
             prop.add("hipsgen_date"+(n==0?"":"_"+n),getNow());
             prop.add("hipsgen_params"+(n==0?"":"_"+n),scriptCommand);
+            scriptCommand=null;
          }
          
          // Gestion de la compatibilité
@@ -2817,10 +2836,8 @@ public class Context {
       
       // Génération des mots clés WCS dans l'entête des tuiles (appel code FX)
       try {
-         if( tile2Hpx==null ) {
-            tile2Hpx = new Tile2HPX(order, fits.width, frame==Localisation.ICRS ? WCSFrame.EQU: 
+         tile2Hpx = new Tile2HPX(order, fits.width, frame==Localisation.ICRS ? WCSFrame.EQU: 
                   frame==Localisation.ECLIPTIC ? WCSFrame.ECL : WCSFrame.GAL );
-         }
          Map<String, String> map = tile2Hpx.toFitsHeader(npix);
          for(Map.Entry<String, String> e : map.entrySet()) {
             

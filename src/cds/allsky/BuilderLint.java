@@ -24,15 +24,19 @@ package cds.allsky;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 
+import cds.aladin.Coord;
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.fits.Fits;
+import cds.moc.Array;
 import cds.moc.SpaceMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Vérification de la conformité IVOA 1.0 HiPS
@@ -41,6 +45,8 @@ import cds.tools.Util;
  * @version 1.0 - 23 avril 2017
  */
 public class BuilderLint extends Builder {
+   
+   public static int TIMEOUT = 20000;   // timeout de 20s sur les connections réseaux
    
    private String path;         // path (ou préfixe URL) du HiPS à valider
    private boolean flagRemote;  // true s'il s'agit d'un HiPS distant
@@ -55,12 +61,15 @@ public class BuilderLint extends Builder {
    private boolean flagCDS;     // true si on fait en plus des vérifs propres au CDS
    private double skyFraction;  // portion de couverture du ciel [0..1]
    private int order;           // ordre du HiPS 
+   private int minOrder;        // ordre minimal du HiPS
    private int version;         // numéro de version (1.4 => 140)
    private int tileWidth;       // Taille des tuiles
+   private int frame;           // Frame du Hips
    private int depth;           // Epaisseur pour un HiPS cube
    private int bitpix;          // bitpix utilisé pour un HiPS catalog tuiles Fits
    private SpaceMoc moc;        // MOC associé au HiPS
    private ArrayList<String> extensions; // Liste des extensions des tuiles (le point inclus)
+   private boolean flagMinOrderSet=false; // true si le hips_order_min a été spécifié explicitement
    
   
    private boolean flagError;   // true si le HiPS n'est pas conforme au standard HiPS IVOA 1.0
@@ -143,6 +152,7 @@ public class BuilderLint extends Builder {
       flagWarning=false;
       flagImage=flagCatalog=flagCube=false;
       flagICRS=false;
+      minOrder=3;     // Par défaut
       order=-1;
       bitpix=-1;
       tileWidth=-1;
@@ -198,7 +208,7 @@ public class BuilderLint extends Builder {
       
       String f = path+FS+"metadata.xml";
       try {
-         MyInputStream in = Util.openAnyStream( f );
+         MyInputStream in = Util.openAnyStream( f,false,false,TIMEOUT );
          long type=in.getType();
          if( (type&MyInputStream.VOTABLE)==0 ) {
             context.error("Lint[4.4.3] \"metadata.xml\" format error (expecting \"votable\", found ["+MyInputStream.decodeType(type)+"])");
@@ -221,7 +231,7 @@ public class BuilderLint extends Builder {
       // preview.jpg
       String f = path+FS+"preview.jpg";
       try {
-         MyInputStream in = Util.openAnyStream( f );
+         MyInputStream in = Util.openAnyStream( f,false,false,TIMEOUT );
          long type=in.getType();
          if( type!=MyInputStream.JPEG ) {
             context.error("Lint[4.4.4] \"preview.jpg\" format error (expecting \"jpeg\", found ["+MyInputStream.decodeType(type)+"])");
@@ -235,7 +245,7 @@ public class BuilderLint extends Builder {
       // index.html
       f = path+FS+"index.html";
       try {
-         MyInputStream in = Util.openAnyStream( f );
+         MyInputStream in = Util.openAnyStream( f,false,false,TIMEOUT );
          in.close();
       } catch( Exception e) {
          context.info("Lint[4.4.5] no \"index.html\" file");
@@ -250,7 +260,7 @@ public class BuilderLint extends Builder {
             String suffix = "Norder"+o+FS+"Allsky"+ext;
             String f = path+FS+suffix;
             try {
-               MyInputStream in = Util.openAnyStream( f );
+               MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
                long type = in.getType();
                if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
                      ||  ext.equals(".png") && type!=MyInputStream.PNG
@@ -260,18 +270,25 @@ public class BuilderLint extends Builder {
                   context.error("Lint[4.2.1.3] Allsky format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
                   flagError=true;
                }
+               
+               if( ext.equals(".fits") &&  (type&MyInputStream.GZ)!=0 ) {
+                  context.warning("Lint[4.2.1.3] Allsky.fits gzipped (deprecated method)");
+               }
 
                Fits fits = null;
-               if( ext.equals(".fits") ) {
-                  fits = new Fits();
-                  fits.loadFITS(in);
-               } else if( ext.equals(".jpg") ||  ext.equals(".png") ) {
-                  fits = new Fits();
-                  fits.loadPreview(in);
-               }
-               in.close();
-               context.info("Lint: Allsky found ["+suffix+"] ok");
-               found=true;
+               try {
+                  if( !flagRemote ) {
+                     if( ext.equals(".fits") ) {
+                        fits = new Fits();
+                        fits.loadFITS(in);
+                     } else if( ext.equals(".jpg") ||  ext.equals(".png") ) {
+                        fits = new Fits();
+                        fits.loadPreview(in);
+                     }
+                  }
+                  context.info("Lint: Allsky found ["+suffix+"] ok");
+                  found=true;
+               }finally { in.close(); in=null; }
             } catch( Exception e ) { }
          }
          if( !found ) {
@@ -284,18 +301,47 @@ public class BuilderLint extends Builder {
    private long getOneNpix() throws Exception {
       
       // Méthode 1: On prend au hasard une cellule du MOC de couverture
-      if( moc!=null ) {
-         SpaceMoc moc1 = (SpaceMoc) moc.clone();
-         moc1.setMocOrder(order);
+      // On va partir des tuiles les plus grandes du Moc pour être sûr qu'on ne va pas
+      // tester sur un bord.
+      if( moc!=null && moc.getSize()!=0 ) {
          
-         long nb = moc1.getUsedArea();
-         long step = (long)( Math.random()*nb);
-         if( step>=nb ) step=nb-1;
-         Iterator<Long> it = moc1.pixelIterator();
-         for( int i=0; i<step-1; i++ )  it.next();
-         return it.next();
+         int orderMoc = moc.getMinLimitOrder();
+         int orderMax = moc.getMaxOrder();
+         while( orderMoc<orderMax && moc.getArray( orderMoc ).getSize()<3 ) orderMoc++;
+         Array a = moc.getArray( orderMoc );
+         if( a==null || a.getSize()==0) return -1;
+         int nb = a.getSize();
+         int i = (int)( Math.random()*nb);
+         if( i>=nb ) i=nb-1;
+         long npix = a.get( i );
+         
+         // On prend le npix central ramené à la résolution du HiPS
+         if( orderMoc<order ) {
+            int shift = (order - orderMoc)*2;
+            long npix1 = npix<<shift ;
+            long npix2 = (npix+1)<<shift;
+            npix = (npix1+npix2)/2;
+            
+         // On prend la tuile qui le contient
+         } else if( orderMoc>order ) {
+            int shift = (orderMoc - order)*2;
+            npix = npix>>shift;
+         }
+         
+         // Attention, le Hips et le MOC n'ont pas le même système de coord
+         int frameMoc = context.getFrameVal( moc.getCoordSys() );
+         if( frame!=frameMoc ) {
+            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
+            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
+            Coord co = new Coord(radec[0],radec[1]);
+            co = Localisation.frameToFrame(co, frame, frameMoc);
+            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
+            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
+         }
+         
+         return npix;
       }
-      
+
       //  Méthode 2: On cherche une tuile dans le premier répertoire de l'ordre le plus profond
       if( !flagRemote ) {
          File f = new File(path+FS+"Norder"+order);
@@ -311,7 +357,7 @@ public class BuilderLint extends Builder {
          i = name.lastIndexOf('.');
          if( i==-1 ) i=name.length();
          String s = name.substring(4, i);
-            return Long.parseLong(s);
+         return Long.parseLong(s);
       }
 
       // Bon ben c'est loupé
@@ -321,6 +367,8 @@ public class BuilderLint extends Builder {
    /** Test sur n tuiles au hasard */
    private void lintTile( int n ) throws Exception {
       boolean flagError=false,flagWarning=false;
+      int lowOrder=-1;
+      HashSet<String> dejaTeste = new HashSet<>();  // pour éviter de tester 2x la même tuile
 
       for( int j=0; j<n; j++ ) {
          long npix1 = getOneNpix();
@@ -340,70 +388,97 @@ public class BuilderLint extends Builder {
             boolean found=false;
             long npix = npix1;
             String first=null,last=null;
-            for( int o=order; o>=3; o--, npix/=4L) {
+            lowOrder=-1;
+               for( int o=order; o>=0; o--, npix/=4L) {
                String suffix = getFilePath(o, npix, z, FS)+ext;
-               if( o==3 ) first=suffix;
                String f = path+FS+suffix;
-               try {
-                  MyInputStream in = Util.openAnyStream( f );
-                  long type = in.getType();
-                  if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
-                        ||  ext.equals(".png") && type!=MyInputStream.PNG
-                        ||  ext.equals(".fits") && (type&MyInputStream.FITS)!=MyInputStream.FITS
-                        ||  ext.equals(".tsv") && (type&MyInputStream.CSV)!=MyInputStream.CSV
-                        ) {
-                     context.error("Lint[4.2.1.3] tile format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
-                     flagError=true;
-                  }
-
-                  Fits fits = null;
-                  if( ext.equals(".fits") ) {
-                     fits = new Fits();
-                     fits.loadFITS(in);
-                  } else if( ext.equals(".jpg") ||  ext.equals(".png") ) {
-                     fits = new Fits();
-                     fits.loadPreview(in);
-                  }
-                  in.close();
-                  found=true;
-                  if( last==null ) last=suffix;
-
-                  boolean ok=true;
-                  if( fits!=null ) {
-                     if( fits.width != fits.height ) {
-                        context.error("Lint[4.2.1] not square tile ["+fits.width+"x"+fits.height+"]");
+               if( lowOrder==-1 || o<lowOrder ) first=suffix;
+//               System.out.println("Loading "+f+"...");
+               
+               if( dejaTeste.contains(f) ) {
+                  // Conserve le plus petit ordre trouvé
+                  if( lowOrder==-1 || o<lowOrder ) lowOrder=o; 
+               } else {
+                  dejaTeste.add(f);
+                  try {
+                     MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
+                     long type = in.getType();
+                     if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
+                           ||  ext.equals(".png") && type!=MyInputStream.PNG
+                           ||  ext.equals(".fits") && (type&MyInputStream.FITS)!=MyInputStream.FITS
+                           ||  ext.equals(".tsv") && (type&MyInputStream.CSV)!=MyInputStream.CSV
+                           ) {
+                        context.error("Lint[4.2.1.3] tile format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
                         flagError=true;
                      }
-                     double o1 = Math.log10(fits.width)/Math.log10(2);
-                     if( o1!=(long)o1 ) {
-                        context.error("Lint[4.2.1] tile width error ["+fits.width+"x"+fits.height+"]");
-                        ok=false;
+                     if( ext.equals(".fits") &&  (type&MyInputStream.GZ)!=0 ) {
+                        context.warning("Lint[4.2.1.3] fits tile gzipped (deprecated method) ["+suffix+"]");
                      }
-                     if( tileWidth!=-1 && tileWidth!=fits.width ) {
-                        context.error("Lint[4.2.1] tile width not conform to hips_tile_width ["+fits.width+"!="+tileWidth+"]");
-                        ok=false;
-                     }
-                     if( ext.equals(".fits") ) {
-                        if( bitpix!=-1 && bitpix!=fits.bitpix ) {
-                           context.error("Lint[4.2.1] tile bitpix not conform to hips_pixel_bitpix ["+fits.bitpix+"!="+bitpix+"]");
+
+                     // On ne lit plus le contenu à distance, c'est trop long
+                     Fits fits = null;
+                     try {
+                        if( !flagRemote ) {
+                           if( ext.equals(".fits") ) {
+                              fits = new Fits();
+                              fits.loadFITS(in);
+                           } else if( ext.equals(".jpg") ||  ext.equals(".png") ) {
+                              fits = new Fits();
+                              fits.loadPreview(in);
+                           }
+                        }
+                        
+                        found=true;
+                        if( last==null ) last=suffix;
+                     } finally { in.close(); in=null;}
+
+                     // Conserve le plus petit ordre trouvé
+                     if( lowOrder==-1 || o<lowOrder ) lowOrder=o;
+
+                     boolean ok=true;
+                     if( fits!=null ) {
+                        if( fits.width != fits.height ) {
+                           context.error("Lint[4.2.1] not square tile ["+fits.width+"x"+fits.height+"]");
+                           flagError=true;
+                        }
+                        double o1 = Math.log10(fits.width)/Math.log10(2);
+                        if( o1!=(long)o1 ) {
+                           context.error("Lint[4.2.1] tile width error ["+fits.width+"x"+fits.height+"]");
                            ok=false;
                         }
+                        if( tileWidth!=-1 && tileWidth!=fits.width ) {
+                           context.error("Lint[4.2.1] tile width not conform to hips_tile_width ["+fits.width+"!="+tileWidth+"]");
+                           ok=false;
+                        }
+                        if( ext.equals(".fits") ) {
+                           if( bitpix!=-1 && bitpix!=fits.bitpix ) {
+                              context.error("Lint[4.2.1] tile bitpix not conform to hips_pixel_bitpix ["+fits.bitpix+"!="+bitpix+"]");
+                              ok=false;
+                           }
+                        }
                      }
-                  }
-                  if( !ok ) flagError=true;
-//                  else context.info("Lint: tile test on ["+suffix+"] ok");
+                     if( !ok ) flagError=true;
+                     //                  else context.info("Lint: tile test on ["+suffix+"] ok");
+                     
+//                     System.out.println("  "+f+" achieved");
 
-               } catch( Exception e1 ) {
-                  if( !flagCatalog || found) {
-                     context.error("Lint[4.1] tile missing ["+o+"/"+npix+" => "+f+"]");
-                     flagError=true;
+                  } catch( Exception e1 ) {
+                     if( found) {
+                        String s1 = e1.getMessage()!=null ? " ("+e1.getMessage()+")":"";
+                        if( flagMinOrderSet && o>=minOrder ) {
+                           context.error("Lint[4.1] tile missing ["+o+"/"+npix+" => "+f+"]"+s1);
+                           flagError=true;
+                        }
+                     }
                   }
                }
             }
          
-            if( flagCatalog && !found ) {
-               context.error("Lint[4.1] tile hierarchy missing ["+first+" ... "+last+"]");
-               flagError=true;
+            if( !found ) {
+               if( flagMinOrderSet && lowOrder>minOrder ) {
+                  context.error("Lint[4.1] tile hierarchy missing ["+first+" ... "+last+"] claiming to start at order "+minOrder);
+                  flagError=true;
+               }
             } else if( found ) {
                context.info("Lint: tile test hierarchy ["+first+" ... "+last+"] ok");
             }
@@ -413,7 +488,13 @@ public class BuilderLint extends Builder {
          if( flagError ) n=j;
       }
       
-//      if( !flagError ) context.info("Lint: tile tests & tile hierarchy tests ok");
+//    if( !flagError ) context.info("Lint: tile tests & tile hierarchy tests ok");
+      if( flagMinOrderSet && lowOrder!=-1 && lowOrder!=minOrder ) context.error("Lint[4.1] min order found in the tile hierarchy ["+lowOrder+"] not conform [hips_min_order="+minOrder+"]");
+      else {
+         if( lowOrder>0 ) context.info("Lint: not all low tile hierarchy is provided [realMinOrder="+lowOrder+" (greater than 0)]");
+         else if( lowOrder==0 ) context.info("Lint: Low orders provided [0..2]");
+      }
+      
       this.flagError|=flagError;
       this.flagWarning|=flagWarning;
    }
@@ -429,7 +510,7 @@ public class BuilderLint extends Builder {
       MyInputStream in = null;
       try {
          String f = path+FS+"Moc.fits";
-         in = Util.openAnyStream( f );
+         in = Util.openAnyStream(f,false,false,TIMEOUT);
       } catch( Exception e ) {
          if( flagICRS ) {
             context.warning("lint[4.4.2] \"Moc.fits\" file missing");
@@ -467,7 +548,7 @@ public class BuilderLint extends Builder {
       MyProperties prop=null;
       try {
          String f = path+FS+"properties";
-         MyInputStream in = Util.openAnyStream( f );
+         MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
          InputStreamReader isr = new InputStreamReader( in, "UTF-8" );
          prop = new MyProperties();
          prop.load( isr );
@@ -475,6 +556,7 @@ public class BuilderLint extends Builder {
       } catch( Exception e1 ) {
          context.error("Lint[4.4] \"properties\" file missing");
          flagError=true;
+         return;
       }
 
       boolean [] propReq    = new boolean[ PROP_REQ.length ];
@@ -600,7 +682,7 @@ public class BuilderLint extends Builder {
         
          // Est-ce une URL ?
          if( key.endsWith("_url") ) {
-            if( !s1.startsWith("http://") && !s1.startsWith("https//") ) {
+            if( !s1.startsWith("http://") && !s1.startsWith("https://") && !s1.startsWith("ftp://")) {
                context.warning("Lint[4.4.1] url value required for keyword "+key+" ["+s1+"]");
                flagWarning=true;
             }
@@ -734,11 +816,22 @@ public class BuilderLint extends Builder {
       if( s!=null ) {
          try { order = Integer.parseInt(s); }
          catch( Exception e ) { }
-         if( order<=0 || order>29) {
+         if( order<0 || order>29) {
             context.error("Lint[4.4.1] hips_order error ["+s+"]");
             flagError=true;
          }
       }  
+      
+      // Vérification du hips_order_min si présent
+      s = prop.get("hips_order_min");
+      if( s!=null ) {
+         try { minOrder = Integer.parseInt(s); flagMinOrderSet=true; }
+         catch( Exception e ) { }
+         if( minOrder<0 || minOrder>29) {
+            context.error("Lint[4.4.1] hips_order_min error ["+s+"]");
+            flagError=true;
+         }
+      } else if( flagCatalog ) minOrder=0;
       
       // Vérification du hips_tile_width
       s = prop.get("hips_tile_width");
@@ -759,6 +852,7 @@ public class BuilderLint extends Builder {
             context.warning("Lint[4.4.1] unreferenced hips_frame ["+s+"]");
             flagWarning=true;
          }
+         frame=context.getFrameVal(s);
       }
       
       // Vérification du moc_sky_fraction

@@ -23,6 +23,7 @@ package cds.aladin;
 
 import java.util.ArrayList;
 
+import cds.moc.HealpixMoc;
 import cds.moc.Moc;
 import cds.moc.SpaceMoc;
 import cds.tools.Util;
@@ -128,19 +129,19 @@ public class PlanMocAlgo extends PlanMoc {
       aladin.trace(3,"MOC cropping: "+Plan.Tp[type]+" => "+s);
       
       try {
-         CDSHealpix hpx = new CDSHealpix();
          int order = mocSource.moc.getMaxOrder();
-//         long nside = Healpix.pow2(order);
          ArrayList<double[]> a = new ArrayList<>();
          for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
-         long [] npix = hpx.query_polygon(order, a,true);
          
-         moc.clear();
-         moc.setCheckConsistencyFlag(false);
-         for( long pix : npix ) moc.add(order,pix);
-         moc.setCheckConsistencyFlag(true);
-         
-         moc = moc.intersection(mocSource.moc);
+         HealpixMoc m1 = CDSHealpix.createHealpixMoc(a, order);
+         moc = m1.intersection(mocSource.moc);
+//         CDSHealpix hpx = new CDSHealpix();
+//         long [] npix = hpx.query_polygon(order, a,true);
+//         moc.clear();
+//         moc.setCheckConsistencyFlag(false);
+//         for( long pix : npix ) moc.add(order,pix);
+//         moc.setCheckConsistencyFlag(true);
+//         moc = moc.intersection(mocSource.moc);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

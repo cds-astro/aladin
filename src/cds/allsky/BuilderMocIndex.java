@@ -22,6 +22,7 @@
 package cds.allsky;
 
 import static cds.tools.Util.FS;
+
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
@@ -42,15 +43,27 @@ public class BuilderMocIndex extends BuilderMoc {
       moc.setMocOrder(mocOrder);
 
       String outputFile = path + FS + Constante.FILE_MOC;
-      moc.setCoordSys(getFrame());
+      String frame = getFrame();
+      moc.setCoordSys(frame);
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,mocOrder, path);
       moc.setCheckConsistencyFlag(true);
       moc.write(outputFile);
       
+// IL NE FAUT PAS CONVERTIR EN ICRS SI ON EST EN GAL CAR SINON LE BuilderTiles NE VA PAS
+// FONCTIONNER (cf. BuilderTiles.createHpx -> isInMoc(norder,npix)
+//
+//      // Faut-il changer le référentiel du MOC ?
+//      if( !frame.equals("C") ) {
+//         HealpixMoc moc1 = convertTo(moc,"C");
+//         context.info("MOC Index convertTo ICRS...");
+//         moc = moc1;
+//      }
+      
       long time = System.currentTimeMillis() - t;
       context.info("MOC Index done in "+cds.tools.Util.getTemps(time,true)
                         +": mocOrder="+moc.getMocOrder()
+                        +"  frame="+frame
                         +" size="+cds.tools.Util.getUnitDisk( moc.getSize()));
 
    }

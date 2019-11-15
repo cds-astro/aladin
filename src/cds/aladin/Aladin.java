@@ -88,6 +88,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -157,16 +158,18 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC1.1 support (ASCII format)
- * @beta    <LI> VOTable1.4 support (TIMESYS)
  * @beta    <LI> Space Time Multi-Order-Coverage support
  * @beta    <LI> TAP JOIN and UPLOAD support
- * @beta    <LI> Space MOC extractions from any HiPS or HEALPix maps
+ * @beta    <LI> Space MOC extractions from any HiPS or HEALPix maps, or observations FoV (TAP or SIA results)
+ * @beta    <LI> IVOA new standard compliance :<br>
+ * @beta          - TAP1.1 support (notably s_region definition support without frame definition)<br>
+ * @beta          - MOC1.1 support (ASCII format)<br>
+ * @beta          - VOTable1.4 support (TIMESYS)
  * @beta    <LI> Temporal support (prototype implementation) <br>
  * @beta          - Time plots <br>
  * @beta          - Time MOC
  * @beta    <LI> New CDS HEALPix library <br>
- * @beta          - polygonal photometry tool for HiPS
+ * @beta          - polygonal photometry tool for HiPS<br>
  * @beta          - query by any region
  * @beta    <LI> Data discovery tree: <br>
  * @beta          - sort and hiearchy control <br>
@@ -176,16 +179,20 @@ import cds.xml.XMLParser;
  * @beta    <LI> Coordinate calculator tool improvement
  * @beta    <LI> Log control adapted to Debian policy
  * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
+ * @beta    <LI> Dynamic HiPS support (ex: cat tiler)
  * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
- * @beta    <LI> HiPSgen improvements:
- * @beta    <LI> - UPDATE improvement (Norder 0-2)
- * @beta    <LI> - MIRROR multi-partitions support (option split)
- * @beta    <LI> - MIRROR network speed auto adaptation
- * @beta    <LI> - index.html HTTP/HTTPS compatibility
+ * @beta    <LI> HiPSgen improvements: <br>
+ * @beta          - UPDATE improvement (Norder 0-2)
+ * @beta          - MIRROR multi-partitions support (option split)<br>
+ * @beta          - MIRROR network speed auto adaptation<br>
+ * @beta          - index.html HTTP/HTTPS compatibility
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Hipsgen LINT remote tile tests bug fixed
+ * @beta    <LI> Hipsgen hips_status bug fixed
+ * @beta    <LI> Hipsgen FITS tile 2880 boundary bug fixed
  * @beta    <LI> PNG tiles opacity bug fix
  * @beta    <LI> HEALPix new lib bug fix (introduced in v10.107)
  * @beta    <LI> Base64 Binary SHORT decoding error (bad casting)
@@ -221,7 +228,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.127";
+   static public final    String VERSION = "v10.139";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4308,7 +4315,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
    protected HealpixMoc createMocByRegions(int order) {
-      HealpixMoc moc = new HealpixMoc();
+      
+      ArrayList<HealpixMoc> arr = new ArrayList<>(10000);
       HashSet<Obj> set = new HashSet<>();
       for( Obj o : view.vselobj ) {
          
@@ -4322,7 +4330,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
                HealpixMoc m = createMocRegionCircle( ra,de,radius,order );
                if( m==null || m.getSize()==0 ) continue;
-               moc.add(m);
+               arr.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
          }
          
@@ -4340,14 +4348,73 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //            trace(4,"polygon counterClock="+isCounterClock);
             HealpixMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock );
             if( m==null || m.getSize()==0 ) continue;
-            moc.add(m);
+            arr.add(m);
          } catch( Exception e) { if( levelTrace>=3 ) { e.printStackTrace();  } }
 //         if( levelTrace>=3 ) errorMoc( order, (Ligne)o);
+         
+         // Si on prend plus de 100Mo on va faire une union intermédiaire
+         if( arr.size()%1000==0 ) System.out.println("MOCs "+arr.size());
+         if( arr.size()>=10000 ) {
+            try {
+               long t0 = Util.getTime();
+               HealpixMoc moc;
+               moc = getUnionMoc( arr );
+               arr.clear();
+               arr.add(moc);
+               System.out.println("Union in "+(Util.getTime()-t0)+"ns");
+            } catch( Exception e ) {
+               if( levelTrace>=3 ) e.printStackTrace();
+               return null;
+            }
+         }
+
       }
       
-      if( moc.getSize()==0 )  return null;
+      try {
+         if( arr.size()==0 ) return null;
+         if( arr.size()==1 ) return arr.get(0);   // Un seul élément
+         return getUnionMoc( arr );
+      } catch( Exception e ) {
+         if( levelTrace>=3 ) e.printStackTrace();
+         return null;
+      }
+   }
+   
+   /**
+    * Unions de tous les Mocs passés en paramètres
+    * @return Union des Mocs
+    * @throws Exception
+    */
+   static public HealpixMoc getUnionMoc(ArrayList<HealpixMoc> arrMoc) throws Exception {
+      int maxMocOrder=0;
+      
+      // Un seul élément, pas besoin d'aller plus loin
+      if( arrMoc.size()==1 ) return (HealpixMoc)arrMoc.get(0).clone();
+      
+      // On tri pour avoir les plus grands en début
+      Collections.sort(arrMoc);
+      HealpixMoc[] a = new HealpixMoc[ arrMoc.size() ];
+      arrMoc.toArray(a);
+      
+      // Calcul d'un ciel complet pour éviter des unions inutiles
+      long max=HealpixMoc.pow2(HealpixMoc.MAXORDER);
+      max=12L*max*max;
+      
+      HealpixMoc moc = new HealpixMoc(maxMocOrder);
+      moc.toRangeSet();
+      
+      for( HealpixMoc m : a ) {
+         m.toRangeSet();
+         moc.spaceRange = moc.spaceRange.union(m.spaceRange);
+
+         // Ciel complet ? inutile d'aller plus loin pour l'union
+         if( moc.spaceRange!=null && moc.spaceRange.contains(0, max)) break;
+      }
+      
+      moc.toHealpixMoc();
       return moc;
    }
+   
       
 //   private void errorMoc( int order, Ligne o ) {
 //      StringBuilder s = new StringBuilder("Poly2Moc (order="+order+"):");
@@ -4359,19 +4426,21 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
    protected HealpixMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
-      HealpixMoc m = new HealpixMoc();
       if( order==-1 ) order=getAppropriateOrder(radius);
+      return CDSHealpix.getMocByCircle(order, ra, de,  Math.toRadians(radius), true);
       
-      long i=0;
-      m.setCheckConsistencyFlag(false);
-      for( long pix : CDSHealpix.query_disc( order, ra, de, Math.toRadians(radius)) ) {
-         m.add(order,pix);
-         i++;
-         if( i%10000L==0 ) m.checkAndFix();
-      }
-      m.setCheckConsistencyFlag(true);
-      
-      return m;
+//      HealpixMoc m = new HealpixMoc();
+//      
+//      long i=0;
+//      m.setCheckConsistencyFlag(false);
+//      for( long pix : CDSHealpix.query_disc( order, ra, de, Math.toRadians(radius)) ) {
+//         m.add(order,pix);
+//         i++;
+//         if( i%10000L==0 ) m.checkAndFix();
+//      }
+//      m.setCheckConsistencyFlag(true);
+//      
+//      return m;
    }
    
     protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
@@ -4380,11 +4449,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
     
     protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
        HealpixMoc moc = null;
-       if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
-          moc = createMocRegionPol((STCPolygon)stcobj,order);
-       } else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
-          moc = createMocRegionCircle((STCCircle)stcobj, order);
-       }
+       try {
+         if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
+             moc = createMocRegionPol((STCPolygon)stcobj,order);
+          } else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
+             moc = createMocRegionCircle((STCCircle)stcobj, order);
+          }
+      } catch( Exception e ) {
+         if( levelTrace>=3 ) e.printStackTrace();
+         moc=null;
+      }
        if( moc!=null ) moc.toRangeSet();
        return moc;
     }
@@ -4399,7 +4473,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
        HealpixMoc moc=null;
        
        // L'ordre est déterminé automatiquement par la largeur du polygone
-       int order=getAppropriateOrder( Double.max(widthInDeg,heightInDeg) );
+       int order=getAppropriateOrder( Math.max(widthInDeg,heightInDeg) );
        trace(3,"MocRegion generation:  maxRadius="+Double.max(widthInDeg,heightInDeg)+"deg => order="+order);
        if( order<10 ) order=10;
        else if( order>29 ) order=29;

@@ -174,6 +174,7 @@ public class PlanBG extends PlanImage {
 
    protected String gluTag=null;   // Identificateur dans le dico GLU
    protected String survey;        // Nom du background
+   protected String urlSuffix=null; // Paramètres de l'URL (HiPS dynamique)
    protected String version="";    // Numéro de version du background si existant (ex: -v1.2)
    protected String url;           // Préfixe de l'url permettant d'accéder au background
    protected int minOrder=3;       // Ordre HEALPIX "fichier" min du background
@@ -291,7 +292,7 @@ public class PlanBG extends PlanImage {
    protected MyProperties loadPropertieFile() {
       if( prop!=null ) return prop;
       String dateRef=null;
-
+      
       boolean local=!(url.startsWith("http:") || url.startsWith("https:") ||url.startsWith("ftp:"));
       try {
          InputStream in=null;
@@ -305,8 +306,15 @@ public class PlanBG extends PlanImage {
 //            checkSite(false);
 
             String cacheFile = getCacheDir()+Util.FS+getCacheName()+Util.FS+Constante.FILE_PROPERTIES;
+            
             File f = new File(cacheFile);
             String urlFile = url+"/"+Constante.FILE_PROPERTIES;
+            
+            if( isDynHiPS() ) {
+               urlFile += "?"+urlSuffix;
+               System.out.println("Scanning for "+urlFile);
+            }
+
             HttpURLConnection conn = (HttpURLConnection) (new URL(urlFile)).openConnection();
 
             // Ne charge la version distante que si elle est plus récente que celle du cache
@@ -647,6 +655,10 @@ public class PlanBG extends PlanImage {
       type = ALLSKYIMG;
       video=aladin.configuration.getCMVideo();
       url = u.toString();
+      
+      // Cas particulier d'une URL HiPS avec suffixe
+      // => http://host.fr/truc/_HIPS_?param=xx&...
+      url=checkDynHiPS(url);
 
       maxOrder = 3;
       useCache = true;
@@ -662,9 +674,48 @@ public class PlanBG extends PlanImage {
       survey = this.label!=null && this.label.length()>0 ? this.label : url.substring(url.lastIndexOf('/',n-1)+1,n);
       scanProperties();
       scanMetadata();
-      aladin.trace(3,"AllSky http... "+this+(c!=null ? " around "+c:""));
+      aladin.trace(3,"HiPS http... "+this+(c!=null ? " around "+c:""));   
+         
+//      setParamForDynHiPS();
       suite();
    }
+   
+   /** True s'il s'agit d'un HiPS dynamique (paramètres en suffixe des URLs d'appels) */
+   protected boolean isDynHiPS() { return urlSuffix!=null; }
+   
+   /** Repère s'il s'agit d'un HiPS dynamique. Pour le moment se base sur la présence
+    * d'un "joker" dans l'URL d'appel. Si celle-ci contient la chaine "_HIPS_, il va en déduire
+    * l'URL racine du HiPS et la liste des paramètres dynamiques. Si c'est le cas, met à jour
+    * l'url et la variable urlsuffix.
+    * @param url ex: http://alasky/cattiles/_HIPS_?param=value..
+    * @return l'URL, éventuellement modifiée
+    */
+   protected String checkDynHiPS(String url) {
+      int i=url.indexOf("_HIPS_");
+      if( i<0 ) return url;
+      urlSuffix = url.substring(i+7);
+      url = url.substring(0,i);
+      if( url.endsWith("/" ) ) url=url.substring(0,url.length()-1);
+      id = TreeObjDir.DIRECT+System.currentTimeMillis()/1000;
+      aladin.trace(1,"Dynamical HiPS detected ! id="+id+" param=["+urlSuffix+"]");
+      return url;
+   }
+
+//   /** (Re)positionne certains paramètres en cas de HiPS dynamique */
+//   private void setParamForDynHiPS() {
+//      if( !isDynHiPS() ) return;
+//      
+//      // POUR LE MOMENT, EN DUR CAR LE SERVEUR DE THOMAS N'A PAS DE PROPERTIES
+//      truePixels=false;
+//      inFits=false;
+//      inJPEG=false;
+//      hasMoc=false;
+//      hasHpxFinder=false;
+//      color=true;
+//      colorPNG=false;
+//      colorUnknown=false;
+//      frameOrigin = Localisation.ICRS;
+//   }
 
    protected void paramByTreeNode(TreeObjDir gSky, Coord c, double radius) {
       if( label!=null && label.trim().length()>0 ) setLabel(label);
@@ -1277,6 +1328,9 @@ public class PlanBG extends PlanImage {
          else {
             MyProperties prop = new MyProperties();
             String urlFile = url+"/"+Constante.FILE_PROPERTIES;
+            
+            if( isDynHiPS() ) urlFile += "?"+urlSuffix;
+
             InputStreamReader in = null;
             try {
                in= new InputStreamReader( Util.openAnyStream(urlFile), "UTF-8" );
@@ -1285,12 +1339,13 @@ public class PlanBG extends PlanImage {
 
             s = getHiPSID(prop);
          }
-
+         
          s = s.replace(":","_");
          s = s.replace("/","_");
          s = s.replace("\\","_");
          s = s.replace("?","_");
          s = s.replace("#","_");
+         s = s.replace("&","_");
          cacheName = s;
       } catch( Exception e ) {
          cacheName = survey + version;
@@ -1682,7 +1737,7 @@ public class PlanBG extends PlanImage {
    
    static long [] getNpixList(int order, Coord center, double radius) throws Exception {
       if( order==0 ) return ALLSKY;
-      return CDSHealpix.query_disc( order,center.al, center.del, Math.toRadians(radius));
+      return CDSHealpix.query_disc( order,center.al, center.del, Math.toRadians(radius),true);
    }
 
    static protected String CURRENTMODE="";
@@ -2430,6 +2485,7 @@ public class PlanBG extends PlanImage {
 
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(Graphics g,ViewSimple v) {
+      
       boolean hasDrawnSomething=false;
       int z = (int)getZ(v);
       HealpixKey allsky = pixList.get( key(getMinOrder(),  -1, z) );
@@ -2458,8 +2514,20 @@ public class PlanBG extends PlanImage {
       }
       int status= allsky.getStatus();
 
+      
       if( status==HealpixKey.ERROR ) return false;
-
+      // A POURSUIVRE QUAND J'AURAIS LE TEMPS
+//      if( status==HealpixKey.ERROR ){
+//         if( minOrder!=0 ) return false;
+//         
+//         System.out.println("On génère les tuiles allsky par les tuiles Norder0");     
+//         allsky =  new HealpixAllsky(this,xxxxx 0,z);
+//         pixList.put( key(allsky) , allsky);
+//         tryWakeUp();
+//         if( v.pref==this ) drawBackground(g, v);
+//         return true;
+//      }
+      
       if( status==HealpixKey.READY ) {
          allsky.resetTimer();
          //         long t = Util.getTime();
@@ -3488,6 +3556,20 @@ public class PlanBG extends PlanImage {
     * MOC associé au HIPS */
    protected boolean isOutMoc(int order,long npix) {
       if( moc==null ) return false; // pas de MOC chargé, je ne sais pas !
+      
+      // Attention, le Hips et le MOC n'ont pas le même système de coord
+      char a = moc.getCoordSys().charAt(0);
+      int frameMoc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+      if( frameOrigin!=frameMoc ) {
+         try {
+            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
+            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
+            Coord co = new Coord(radec[0],radec[1]);
+            co = Localisation.frameToFrame(co, frameOrigin, frameMoc);
+            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
+            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
+         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); return false; }
+      }
       boolean res = !moc.isIntersecting(order, npix);
       //      if( res ) System.out.println("en dehors du MOC "+order+"/"+npix);
       return res;
@@ -3508,9 +3590,12 @@ public class PlanBG extends PlanImage {
       boolean oneKeyReady = false;
       boolean allskyDrawn=false;           // true si on a déjà essayé de tracer un allsky
 //      StringBuilder debug=new StringBuilder(" ");
-      HealpixKey allsky = pixList.get( key(getMinOrder(),  -1, z) );
+      HealpixKey allsky = isDynHiPS() ? null : pixList.get( key(getMinOrder(),  -1, z) );
 
 //      if( z>0 ) debug.append(" z="+z);
+      
+      // EN ATTENDANT QUE LE SERVEUR DE THOMAS FASSE DES ORDRES PLUS FAIBLES
+      if( isDynHiPS() ) min=3;
 
       // On dessine le ciel entier à basse résolution
       if( min<getMinOrder() ) {
@@ -3572,8 +3657,7 @@ public class PlanBG extends PlanImage {
             //            if( !allKeyReady ) pix=null;
          }
 
-         if( nb==0 && max<=getMinOrder()  && (!allKeyReady  || (!oneKeyReady && allsky!=null))
-               /* && (!isCube() || isCube() && !oneKeyReady) */ ) {
+         if( nb==0 && max<=getMinOrder()  && (!allKeyReady  || (!oneKeyReady && allsky!=null)) ) {
             if( drawAllSky(g,v) ) {
                nb++;
 //               debug.append(" allsky2");

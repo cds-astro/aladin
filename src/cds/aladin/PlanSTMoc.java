@@ -87,7 +87,7 @@ public class PlanSTMoc extends PlanTMoc {
       ADD( buf, "\n \n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
       int spaceOrder =stmoc.getSpaceOrder();
       ADD( buf,"\n* Space res: ",( Coord.getUnit( CDSHealpix.pixRes(spaceOrder)/3600.) ));
-      ADD( buf,"\n* Best space order: ",timeOrder+"");
+      ADD( buf,"\n* Best space order: ",spaceOrder+"");
       
       if( Aladin.levelTrace>0 ) {
          ADD( buf,"\n \nRAM: ",Util.getUnitDisk( stmoc.getMem() ) );

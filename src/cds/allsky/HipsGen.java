@@ -59,6 +59,7 @@ public class HipsGen {
     private boolean flagProp=false;
     private boolean flagMethod=false;
     private boolean flagRGB=false;
+    private boolean flagGunzip=false;
     private boolean flagMapFits=false;
     private boolean flagAbort=false,flagPause=false,flagResume=false;
     public Context context;
@@ -475,8 +476,8 @@ public class HipsGen {
             else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
             else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
             else if (arg.equalsIgnoreCase("-notouch") ) context.notouch=true;
-            else if (arg.equalsIgnoreCase("-nocolor") ) context.ANSI=false;
-            else if (arg.equalsIgnoreCase("-color") ) context.ANSI=true;
+            else if (arg.equalsIgnoreCase("-nocolor") ) context.setTerm(false);
+            else if (arg.equalsIgnoreCase("-color") ) context.setTerm(true);
             else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
             else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
             else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
@@ -507,6 +508,7 @@ public class HipsGen {
                     if( a==Action.MIRROR ) flagMirror=true;
                     if( a==Action.ZIP )    flagZip=true;
                     if( a==Action.UPDATE ) flagUpdate=true;
+                    if( a==Action.GUNZIP ) flagGunzip=true;
                     if( a==Action.LINT )   flagLint=true;
                     if( a==Action.TMOC )   flagTMoc=true;
                     if( a==Action.TINDEX ) flagTIndex=true;
@@ -609,7 +611,7 @@ public class HipsGen {
                 } catch( Exception e ) { }
             }
 
-            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint 
+            if( !flagConcat && !flagMirror   && !flagZip  && !flagUpdate && !flagLint && !flagGunzip
                             && !flagMocError && !flagProp && !flagTMoc   && !flagTIndex ) {
                 String s = context.checkHipsId(context.hipsId);
                 context.setHipsId(s);
@@ -699,7 +701,8 @@ public class HipsGen {
                 if( !flagMirror && !flagLint && !flagZip ) {
                     String id = context.getHipsId();
                     if( id==null || id.startsWith("ivo://UNK.AUT") ) {
-                        context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
+                        context.warning("a valid HiPS IVOID identifier is strongly recommended"
+                                +(id==null?"":" => in the meantime, assuming "+id));
 
                     }
                     if( context.nbPilot>0 ) context.warning("Pilot test limited to "+context.nbPilot+" images => partial HiPS");

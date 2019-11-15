@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import cds.moc.Array;
-import cds.moc.Healpix;
 import cds.moc.Moc;
 import cds.moc.MocCell;
 import cds.moc.SpaceMoc;
@@ -124,44 +123,44 @@ public class PlanMoc extends PlanBGCat {
 
    /** Changement de référentiel si nécessaire */
    public SpaceMoc toReferenceFrame(String coordSys) throws Exception {
-      SpaceMoc moc1 = convertTo((SpaceMoc)moc,coordSys);
+      SpaceMoc moc1 = SpaceMoc.convertTo((SpaceMoc)moc,coordSys);
       if( moc!=moc1 ) {
          aladin.trace(2,"Moc reference frame conversion: "+moc.getCoordSys()+" => "+moc1.getCoordSys());
       }
       return moc1;
    }
 
-   /** Changement de référentiel si nécessaire */
-   static public SpaceMoc convertTo(SpaceMoc moc, String coordSys) throws Exception {
-      if( coordSys.equals( moc.getCoordSys()) ) return moc;
-
-      char a = moc.getCoordSys().charAt(0);
-      char b = coordSys.charAt(0);
-      int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
-      int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
-
-      Healpix hpx = new Healpix();
-      int order = moc.getMaxOrder();
-      SpaceMoc moc1 = new SpaceMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
-      moc1.setCheckConsistencyFlag(false);
-      long onpix1=-1;
-      Iterator<Long> it = moc.pixelIterator();
-      while( it.hasNext() ) {
-         long npix = it.next();
-         for( int i=0; i<4; i++ ) {
-            double [] coo = hpx.pix2ang(order+1, npix*4+i);
-            Coord c = new Coord(coo[0],coo[1]);
-            c = Localisation.frameToFrame(c, frameSrc, frameDst);
-            long npix1 = hpx.ang2pix(order+1, c.al, c.del);
-            if( npix1==onpix1 ) continue;
-            onpix1=npix1;
-            moc1.add(order,npix1/4);
-         }
-
-      }
-      moc1.setCheckConsistencyFlag(true);
-      return moc1;
-   }
+//   /** Changement de référentiel si nécessaire */
+//   static public SpaceMoc convertTo(SpaceMoc moc, String coordSys) throws Exception {
+//      if( coordSys.equals( moc.getCoordSys()) ) return moc;
+//
+//      char a = moc.getCoordSys().charAt(0);
+//      char b = coordSys.charAt(0);
+//      int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+//      int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+//
+//      Healpix hpx = new Healpix();
+//      int order = moc.getMaxOrder();
+//      SpaceMoc moc1 = new SpaceMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
+//      moc1.setCheckConsistencyFlag(false);
+//      long onpix1=-1;
+//      Iterator<Long> it = moc.pixelIterator();
+//      while( it.hasNext() ) {
+//         long npix = it.next();
+//         for( int i=0; i<4; i++ ) {
+//            double [] coo = hpx.pix2ang(order+1, npix*4+i);
+//            Coord c = new Coord(coo[0],coo[1]);
+//            c = Localisation.frameToFrame(c, frameSrc, frameDst);
+//            long npix1 = hpx.ang2pix(order+1, c.al, c.del);
+//            if( npix1==onpix1 ) continue;
+//            onpix1=npix1;
+//            moc1.add(order,npix1/4);
+//         }
+//
+//      }
+//      moc1.setCheckConsistencyFlag(true);
+//      return moc1;
+//   }
    
    /** Retourne le Moc.maxOrder réel, même pour les vieux MOCs dont le Norder est généralement
     * faux */
@@ -453,19 +452,19 @@ public class PlanMoc extends PlanBGCat {
          }
       }
       
-      // Je rectifie une éventuelle erreur de déclaration du maxOrder
-      int maxOrder = getRealMaxOrder((SpaceMoc)moc);
-      int o = moc.getMaxOrder();
-      if( maxOrder!=o ) {
-         try {
-            moc.setMocOrder(maxOrder);
-            aladin.console.printError("Moc order probably wrong ("+o+"), assuming "+maxOrder);
-         } catch( Exception e ) {
-            if( aladin.levelTrace>=3 ) e.printStackTrace();
-            return false;
-         }
-         
-      }
+//      // Je rectifie une éventuelle erreur de déclaration du maxOrder
+//      int maxOrder = getRealMaxOrder((SpaceMoc)moc);
+//      int o = moc.getMaxOrder();
+//      if( maxOrder!=o ) {
+//         try {
+//            moc.setMocOrder(maxOrder);
+//            aladin.console.printError("Moc order probably wrong ("+o+"), assuming "+maxOrder);
+//         } catch( Exception e ) {
+//            if( aladin.levelTrace>=3 ) e.printStackTrace();
+//            return false;
+//         }
+//         
+//      }
 
       return true;
    }
@@ -556,7 +555,6 @@ public class PlanMoc extends PlanBGCat {
       if( arrayMoc[order]==null || mocSpaceLowReset ) {
          arrayMoc[order] = new SpaceMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          
-         System.out.println("Le nouveau moc spatial ==> "+moc.getSize());
          BuildLow t = new BuildLow(moc,order,mo);
          
          // Si petit, je ne threade pas
@@ -694,7 +692,8 @@ public class PlanMoc extends PlanBGCat {
 //            long drawingNside = CDSHealpix.pow2(drawingOrder);
             
             lastDrawMoc = getViewMoc(v,max);
-            SpaceMoc viewMoc = v.isAllSky() ? null : lastDrawMoc ;
+            boolean notEquatorial = moc!=null && moc.getCoordSys()!=null && !moc.getCoordSys().equals("C");
+            SpaceMoc viewMoc = v.isAllSky() || notEquatorial ? null : lastDrawMoc ;
             ArrayList<Hpix> a1 = new ArrayList<>(10000);
             ArrayList<Hpix> a2 = !flagPeri ? null : new ArrayList<Hpix>(10000);
             Iterator<MocCell> it = lowMoc.iterator();

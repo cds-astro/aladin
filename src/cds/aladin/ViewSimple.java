@@ -5151,14 +5151,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
           double size = getTaille();
           if( order==-1 ) order = Directory.getAppropriateOrder(size);
         
-          SpaceMoc spaceMoc = new SpaceMoc(order);
-          int i = 0;
-          spaceMoc.setCheckConsistencyFlag(false);
-          for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), true) ) {
-             spaceMoc.add(order, n);
-             if( (++i) % 10000 == 0 ) spaceMoc.checkAndFix();
-          }
-          spaceMoc.setCheckConsistencyFlag(true);
+//          SpaceMoc spaceMoc = new SpaceMoc(order);
+//          int i = 0;
+//          spaceMoc.setCheckConsistencyFlag(false);
+//          for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true) ) {
+//             spaceMoc.add(order, n);
+//             if( (++i) % 10000 == 0 ) spaceMoc.checkAndFix();
+//          }
+//          spaceMoc.setCheckConsistencyFlag(true);
+          SpaceMoc spaceMoc = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
           
 //          Coord [] corners = getCooCorners( getProj() );
 //          ArrayList<double[]> radecList = new ArrayList<>();

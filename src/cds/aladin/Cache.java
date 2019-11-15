@@ -140,7 +140,7 @@ Aladin.trace(3,"Clear cache");
       
       // Tentative d'accès direct par le réseau
       try {
-         is = Util.openStream(url,true,3000);
+         is = Util.openStream(url,true,true,3000);
          if( is==null ) throw new Exception("cache openStream error");
       } catch( Exception e ) {
          is=null;

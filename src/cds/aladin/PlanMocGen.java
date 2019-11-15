@@ -85,7 +85,7 @@ public class PlanMocGen extends PlanMoc {
          SourceFootprint sf = s.getFootprint();
          if( sf==null ) continue;
          List<STCObj> listStcs = sf.getStcObjects();
-         if( listStcs==null ) continue;
+         if( listStcs==null || listStcs.size()==0 ) continue;
          try {
             HealpixMoc m1 = aladin.createMocRegion(listStcs,order);
             if( m1!=null ) moc.add(m1);
@@ -282,7 +282,7 @@ public class PlanMocGen extends PlanMoc {
                         double pixel = h.getPixel(idx,HealpixKey.NOW);
                         
                         // Pixel vide
-                        if( Double.isNaN( pixel ) || pixel==blank ) continue;
+                        if( Double.isNaN( pixel ) || isBlank && pixel==blank ) continue;
                         
                         pixel = pixel  * p.bScale+ p.bZero;
                         
@@ -451,7 +451,8 @@ public class PlanMocGen extends PlanMoc {
             // valeur de queue, on peut tout de suite écarter cette tuile
             if( step==1 && queue.size()>0 ) {
                PixCum last = queue.last();
-               if( last.val>(tile.max/somme) ) {
+//               if( last.val>(tile.max/somme) ) {
+               if( last.val*somme>tile.max ) {
 //                  System.out.println(" tilemax="+(tile.max/somme)+" less that the min of queue="+last.val+" => rejected");
                   continue;
                }
@@ -473,7 +474,7 @@ public class PlanMocGen extends PlanMoc {
                            double localPixel = h.getPixel(idx,HealpixKey.NOW);
 
                            // Pixel vide
-                           if( Double.isNaN( localPixel ) || localPixel==blank ) continue;
+                           if( Double.isNaN( localPixel ) || isBlank && localPixel==blank ) continue;
 
                            localPixel = localPixel  * p.bScale+ p.bZero;
 
@@ -482,7 +483,7 @@ public class PlanMocGen extends PlanMoc {
                         }
                      }
                      if( nbPixels==0 ) continue; // aucune valeur dans ce bloc
-                     pixel /= nbPixels;        // moyenne de la valeur des pixels du bloc courant
+//                     pixel /= nbPixels;        // moyenne de la valeur des pixels du bloc courant
                      
                      // Etape 1: mesures statistiques par tuile et globales
                      if( step==0 ) {
@@ -509,7 +510,8 @@ public class PlanMocGen extends PlanMoc {
             // de ses valeurs
             if( step==0 && tileNbPixel>0 ) {
                tile.npix = tileNpix;
-               tile.val  = tileTotal / tileNbPixel;
+//               tile.val  = tileTotal / tileNbPixel;
+               tile.val  = tileTotal;
                tile.max  = tileMax;
             }
          }

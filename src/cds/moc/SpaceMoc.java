@@ -29,6 +29,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import cds.aladin.Coord;
+import cds.aladin.Localisation;
+
 /** HEALPix Multi Order Coverage Map (MOC)
  * This object provides read, write and process methods to manipulate an HEALPix Multi Order Coverage Map (MOC)
  * A MOC is used to define a sky region by using HEALPix sky tesselation
@@ -198,7 +201,7 @@ public class SpaceMoc extends Moc {
       if( limitOrder!=-1 && limitOrder<minLimitOrder ) throw new Exception("Max limit order smaller than min limit order");
       isConsistant = false;
       maxLimitOrder=limitOrder;
-      checkAndFix();
+      if( getSize()>0 ) checkAndFix();
       if( limitOrder!=-1 ) nOrder=limitOrder+1;
       property.put("MOCORDER", ""+(limitOrder==-1 ? MAXORDER : limitOrder));
    }
@@ -1573,5 +1576,39 @@ public class SpaceMoc extends Moc {
    }
 
    static private final double SKYAREA = 4.*Math.PI*Math.toDegrees(1.0)*Math.toDegrees(1.0);
+   
+   /** Changement de référentiel si nécessaire */
+   static public SpaceMoc convertTo(SpaceMoc moc, String coordSys) throws Exception {
+      if( coordSys.equals( moc.getCoordSys()) ) return moc;
+
+      char a = moc.getCoordSys().charAt(0);
+      char b = coordSys.charAt(0);
+      int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+      int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+
+      Healpix hpx = new Healpix();
+      int order = moc.getMaxOrder();
+      SpaceMoc moc1 = new SpaceMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
+      moc1.setCheckConsistencyFlag(false);
+      long onpix1=-1;
+      Iterator<Long> it = moc.pixelIterator();
+      while( it.hasNext() ) {
+         long npix = it.next();
+         for( int i=0; i<4; i++ ) {
+            double [] coo = hpx.pix2ang(order+1, npix*4+i);
+            Coord c = new Coord(coo[0],coo[1]);
+            c = Localisation.frameToFrame(c, frameSrc, frameDst);
+            long npix1 = hpx.ang2pix(order+1, c.al, c.del);
+            if( npix1==onpix1 ) continue;
+            onpix1=npix1;
+            moc1.add(order,npix1/4);
+         }
+
+      }
+      moc1.setCheckConsistencyFlag(true);
+      return moc1;
+   }
+   
+
 
 }

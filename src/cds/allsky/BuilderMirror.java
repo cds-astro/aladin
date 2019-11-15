@@ -22,6 +22,7 @@
 package cds.allsky;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -527,13 +528,33 @@ public class BuilderMirror extends BuilderTiles {
             
 //            if( i>0 ) context.warning("Reopen connection for "+fileIn+" ...");
    
-            // Si on a déjà la tuile, on vérifie qu'elle est à jour (date et taille)
+            // Si on a déjà la tuile, on vérifie qu'elle est à jour
             if( fOut.exists() && (len=fOut.length())>0 ) {
                
                // reprise => pas de vérif date&size des tuiles déjà arrivées
                // On garde un vieux doute sur les fichiers vraiments petits
                // ON POURRAIT VERIFIER QUE LE FICHIER N'EST PAS TRONQUE EN CHARGEANT LA TUILE SANS ERREUR MAIS CA VA PRENDRE DES PLOMBES...
-               if( !check && len>1024L)  return 0;
+               if( !check ) {
+                  
+                  // Des heuristiques simples pour ne pas recopier des tuiles
+                  // visiblement déjà copiées et bonnes.
+                  if( fileOut.endsWith(".fits") ) {
+                     
+                     // si assez grand, peut être déjà bon
+                     if( len>2048L ) {
+                        MyInputStream in = null;
+                        try { 
+                           in=new MyInputStream( new FileInputStream( fOut ) );
+                           
+                           // C'est pas du GZ et c'est assez grand => on estime que c'est bon
+                           if( !in.isGZ() ) { in.close(); in=null; return 0; }
+                        } catch( Exception e ) {
+                        } finally { if( in!=null ) in.close(); }
+                     }
+                     
+                  // assez grand pour du non fits =>  on estime que c'est bon
+                  } else if(  len>1024L )  return 0;  
+               }
                
                httpc = (HttpURLConnection)u.openConnection();
                timeout = new TimeOut(httpc,fileIn,TIMEOUT);

@@ -220,7 +220,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
 
    protected String getFileNet() {
-      return getFilePath(null,order,npix,z)+ EXT[extNet];
+      String s= getFilePath(null,order,npix,z)+ EXT[extNet];
+      
+      // Peut être y a-t-il des paramètres spécifiques
+      if( planBG.isDynHiPS() ) s+="?"+planBG.urlSuffix;
+      
+      return s;
    }
 
    protected String getFileCache() {
@@ -452,7 +457,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          char c = planBG.url.charAt(planBG.url.length()-1);
          if( c=='\\' || c=='/' ) fileName = planBG.url+fileNet;  // Directement sur root
 
-         //System.out.println("Start load from NET "+fileName+"...");
+//         System.out.println("Start load from NET "+fileName+"...");
          planBG.nByteReadNet+=loadNet(fileName);
          alreadyCached=false;
          resetTimer();
@@ -746,7 +751,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( filename.startsWith("http://") || filename.startsWith("https://") ) {
          local=false;
          try {
-            dis = Util.openStream(filename,false,10000);
+            dis = Util.openStream(filename,false,true,10000);
             if( skip>0 ) dis.skip(skip);
             buf = readFully(dis, fastLoad );
             

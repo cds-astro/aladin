@@ -205,7 +205,10 @@ public final class MocIO {
       }
       
       // If the MocOrder is found by the content
-      if( !flagMocOrder ) moc.setProperty("MORORDER", moc.getMaxOrder()+"" );
+      if( !flagMocOrder ) {
+//         moc.setProperty("MORORDER", moc.getMaxOrder()+"" );
+         moc.setMocOrder(moc.getMaxOrder());
+      }
       
       if( flagTMoc ) {
          moc.toHealpixMoc();
@@ -324,7 +327,7 @@ public final class MocIO {
 //         return;
 //      }
       
-      out.write(("#"+SIGNATURE+" "+moc.getMocOrder()+CR).getBytes());
+//      out.write(("#"+SIGNATURE+" "+moc.getMocOrder()+CR).getBytes());
       StringBuilder res= new StringBuilder(moc.getSize()*8);
       int order=-1;
       boolean flagNL = moc.getSize()>MAXWORD;
@@ -337,8 +340,10 @@ public final class MocIO {
                else res.append(" ");
             } else {
                int n=(c.npix+"").length();
-               if( flagNL && n+sizeLine>MAXSIZE ) { res.append(",\n "); sizeLine=3; j++; }
-               else { res.append(','); sizeLine++; }
+//               if( flagNL && n+sizeLine>MAXSIZE ) { res.append(",\n "); sizeLine=3; j++; }
+//               else { res.append(','); sizeLine++; }
+               if( flagNL && n+sizeLine>MAXSIZE ) { res.append("\n "); sizeLine=2; j++; }
+               else { res.append(' '); sizeLine++; }
             }
             if( j>15) { writeASCIIFlush(out,res,false); j=0; }
          }
@@ -347,10 +352,22 @@ public final class MocIO {
          sizeLine+=s.length();
          order=c.order;
       }
-      int n = res.length();
+      
+      // Ajout de la resolution max si nécessaire
+      int mocOrder = moc.getMocOrder();
+      if( order<mocOrder ) {
+         StringBuilder s= new StringBuilder(10);
+         if( flagNL && sizeLine!=2 ) { res.append('\n'); sizeLine=0; }
+         else s.append(' ');
+         s.append(mocOrder+"/");
+         sizeLine+=s.length();
+         res.append(s);
+      } 
 
-      if( n>0 && res.charAt(n-1)==',' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
-      else res.append((flagNL?"\n":" "));
+//      int n = res.length();
+//      if( n>0 && res.charAt(n-1)==',' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
+//      else res.append((flagNL?"\n":" "));
+      if( flagNL && sizeLine!=2 ) res.append('\n');
 
       writeASCIIFlush(out,res);
    }

@@ -102,10 +102,10 @@ public class PlanSTMocGen extends PlanSTMoc {
          tmin = (long)(jdtmin*TimeMoc.DAYMICROSEC);
          tmax = (long)(jdtmax*TimeMoc.DAYMICROSEC +TimeMoc.getDuration(timeOrder));
 
-         String t = "tmin="+tmin+" tmax="+tmax+" smin="+smin+" smax="+smax;
-         if( t.equals(TEST) ) {
-            System.out.println("J'y suis");
-         }
+//         String t = "tmin="+tmin+" tmax="+tmax+" smin="+smin+" smax="+smax;
+//         if( t.equals(TEST) ) {
+//            System.out.println("J'y suis");
+//         }
 
          m.add(tmin,tmax,smin,smax);
       } catch( Exception e ) {

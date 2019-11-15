@@ -175,7 +175,8 @@ public class TimeMoc extends SpaceMoc {
       int n=0;
       out.write( MocIO.getFitsLine("MOC","TIME","Temporal MOC") );    n+=80;      
       out.write( MocIO.getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;      
-      out.write( MocIO.getFitsLine("TORDER",""+getMocOrder(),"Time MOC resolution (best order)") );    n+=80;      
+//      out.write( MocIO.getFitsLine("TORDER",""+getMocOrder(),"Time MOC resolution (best order)") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"Time MOC resolution (best order)") );    n+=80;      
       out.write( MocIO.getFitsLine("TIMESYS","JD","Time ref system JD BARYCENTRIC TCB, 1 microsec order 29") ); n+=80;
       return n;
    }

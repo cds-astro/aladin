@@ -161,13 +161,13 @@ public class BuilderCube extends Builder {
       for( int z=0; z<context.depth; z++ ) {
          String input = inputPath[z];
 
-         for( int order = 3; order<=context.getOrder(); order++ ) {
+         for( int order = 0; order<=context.getOrder(); order++ ) {
             treeCopy(input, output, "Norder"+order,z);
          }
 
          String inputHpxFinder = input+Util.FS+Constante.FILE_HPXFINDER;
          if( (new File(inputHpxFinder).isDirectory()) ) {
-            for( int order = 3; order<=context.getOrder(); order++ ) {
+            for( int order = 0; order<=context.getOrder(); order++ ) {
                treeCopy(inputHpxFinder, outputHpxFinder, "Norder"+order,z);
             }
          }

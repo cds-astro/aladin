@@ -632,8 +632,10 @@ public final class Projection {
    // POUR LE MOMENT JE LAISSE TOUT PASSER SANS BLOQUER LES AFFICHAGES MEME
    // SI LES CORPS CELESTES NE SONT PAS LES MEMES
    protected boolean isUncompatibleBody( Projection p ) {
+
       boolean r = isUncompatibleBody1( p );
-      if( r ) Aladin.aladin.warning("You are probably using an uncompatible spacial reference (planets vs sky). "
+      if( r) Aladin.aladin.trace(3,"body="+body+" p.body="+p.body+" isUncompatibleBody="+r);
+      if( r && !Aladin.aladin.isFullScreen() ) Aladin.aladin.warning("You are probably using an uncompatible spacial reference (planets vs sky). "
             + "This uncompatibility is ignored in this beta release (test phase)");
       return false;
    }

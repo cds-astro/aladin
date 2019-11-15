@@ -197,7 +197,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       catch( Exception e ) {
          maxOrder = getMaxOrderByPath(pathOrUrl,local);
          
-         if( maxOrder==-1 ) throw new Exception("Not an HiPS");
+//         if( maxOrder==-1 ) throw new Exception("Not an HiPS");
          if( maxOrder==-1 ) {
             aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
             maxOrder=11;
@@ -1335,14 +1335,15 @@ public class TreeObjDir extends TreeObj implements Propable {
       // Mémorisation de la surface couverte
       try {
          int order=11;
-         moc = new HealpixMoc(order);
-         int i=0;
-         moc.setCheckConsistencyFlag(false);
-         for( long n : CDSHealpix.query_disc(order, c.al, c.del,  Math.toRadians(rad), false) ) {
-            moc.add(order, n);
-            if( (++i)%1000==0 )  moc.checkAndFix();
-         }
-         moc.setCheckConsistencyFlag(true);
+//         moc = new HealpixMoc(order);
+//         int i=0;
+//         moc.setCheckConsistencyFlag(false);
+//         for( long n : CDSHealpix.query_disc(order, c.al, c.del,  Math.toRadians(rad), false) ) {
+//            moc.add(order, n);
+//            if( (++i)%1000==0 )  moc.checkAndFix();
+//         }
+//         moc.setCheckConsistencyFlag(true);
+         moc = CDSHealpix.getMocByCircle(order, c.al, c.del,  Math.toRadians(rad), false);
          
 //         Iterator<Long> it  = moc.pixelIterator();
 //         System.out.print("TreeObjDir.scan1():\ndraw circle("+c.al+","+c.del+","+radius+")\ndraw moc "+order+"/");
@@ -1375,7 +1376,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       
       try {
          moc = new HealpixMoc(order);
-         inScan=new MyInputStream( Util.openStream(url,false,30000) );
+         inScan=new MyInputStream( Util.openStream(url,false,true,30000) );
          pcat.tableParsing(inScan,null);
          
          Iterator<Obj> it = pcat.iterator();

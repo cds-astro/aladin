@@ -308,8 +308,11 @@ public class MocGen {
          c.GetCoord(coo);
          cooList.add(new double[]{coo.al,coo.del});
       }
-      long [] npixs = CDSHealpix.query_polygon( order, cooList,true);
-      for( long npix : npixs ) moc.add(order,npix) ;
+//      long [] npixs = CDSHealpix.query_polygon( order, cooList,true);
+//      for( long npix : npixs ) moc.add(order,npix) ;
+      
+      HealpixMoc m1 = CDSHealpix.createHealpixMoc(cooList, order);
+      moc.add( m1 );
       return res;
    }
    

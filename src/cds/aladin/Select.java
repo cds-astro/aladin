@@ -1466,6 +1466,7 @@ Runnable, SwingWidgetFinder, Widget {
     */
    protected void setMessageError(String s) {
       if( s!=null ) s=WARN+"\n \n"+s;
+      if( s.equals(message) ) return;
       message=s;
       messageType=MESSAGE_ERROR;
       messageKey=null;

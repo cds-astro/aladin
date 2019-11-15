@@ -97,7 +97,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long GLU     = 1L<<33;
    static final public long ARGB    = 1L<<34;
    static final public long PDS     = 1L<<35;
-   static final public long SMOC  = 1L<<36;
+   static final public long SMOC    = 1L<<36;
    static final public long DS9REG  = 1L<<37;
    static final public long SED     = 1L<<38;
    static final public long BZIP2   = 1L<<39;
@@ -302,12 +302,21 @@ public class MyInputStream extends FilterInputStream {
 
       // Healpix
       if( (type & XFITS) !=0 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
-            || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) {
-         boolean timeSys = hasFitsKey("TIMESYS",null);
-         boolean cooSys = hasFitsKey("COORDSYS",null);
-         if( timeSys && !cooSys) type |= TMOC;
-         else if( timeSys && cooSys ) type |= STMOC;
-         else type |= SMOC;
+            || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ") ) ) {
+         String m = getFitsValue("MOC");
+         
+         // Méthode directe
+         if( m!=null ) {
+            type |= m.equals("SPACE") ? SMOC : m.equals("TIME") ? TMOC : STMOC;
+            
+         // Pour supporter les TMOC et STMOC prototypes
+         } else {
+            boolean timeSys = hasFitsKey("TIMESYS",null);
+            boolean cooSys = hasFitsKey("COORDSYS",null);
+            if( timeSys && !cooSys) type |= TMOC;
+            else if( timeSys && cooSys ) type |= STMOC;
+            else type |= SMOC;
+         }
       }
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
@@ -355,7 +364,9 @@ public class MyInputStream extends FilterInputStream {
 
          int c[] = new int[16];
          // On charge qq octets dans le tampon si nécessaire
-         if( inCache<c.length ) loadInCache(c.length);
+         try {
+            if( inCache<c.length ) loadInCache(c.length);
+         } catch( EOFException e ) {}
 
          for( int i=0; i<c.length; i++ ) {
             c[i] = (cache[offsetCache+i]) & 0xFF;
@@ -363,67 +374,69 @@ public class MyInputStream extends FilterInputStream {
          }
          
          // Préfixe BOM UTF-8
-         if( c[0]==239 && c[1]==187 && c[2]==191 ) {
+         if( inCache>=3 && c[0]==239 && c[1]==187 && c[2]==191 ) {
             Aladin.trace(3,"BOM UTF-8 detected and skipped");
             for( int i=0; i<3; i++ ) read();
             System.arraycopy(c, 3, c, 0, c.length-3);
          }
          
          // Detection de GZIP
-         if( c[0]==31  && c[1]==139 ) type |= GZ;
+         if( inCache>=2 && c[0]==31  && c[1]==139 ) type |= GZ;
 
          // Detection de BZIP2 => ACTUELLEMENT IL Y A UN BUG DANS LE DECOMPRESSEUR BZIP2
-         else if( Aladin.PROTO && c[0]=='B'  && c[1]=='Z' )  type |= BZIP2;
+         else if( Aladin.PROTO && inCache>=2 && c[0]=='B'  && c[1]=='Z' )  type |= BZIP2;
          
          // Détection PDS
-         else if( c[0]=='P' && c[1]=='D' && c[2]=='S' ) type |=PDS;
+         else if( inCache>=3 && c[0]=='P' && c[1]=='D' && c[2]=='S' ) type |=PDS;
 
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
-         else if( c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=SMOC;
+         else if( inCache>=5 && c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=SMOC;
+         
+         else if( isAsciiMoc(c,inCache) ) type |=SMOC;
 
          // Détection DS9REG
-         else if( c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g'
+         else if( inCache>=13 && c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g'
                && c[5]=='i' && c[6]=='o' && c[7]=='n' && c[8]==' ' && c[9]=='f'
                &&c[10]=='i' &&c[11]=='l'&& c[12]=='e' ) type |= DS9REG|AJS;
 
          // Détection HPXMO (ASCII - ancienne définition #HPXMOCM &  #HPXMOC...)
-         else if( c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X'
+         else if( inCache>=7 && c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X'
                && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=SMOC;
 
          // Détection MOCORDER (ASCII - nouvelle définition #MOCORDER...)
-         else if( c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
+         else if( inCache>=7 && c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
                && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=SMOC;
 
          // Détection #TMOC...)
-         else if( c[0]=='#' && c[1]=='T' && c[2]=='M' && c[3]=='O' && c[4]=='C') type |= TMOC;
+         else if( inCache>=5 && c[0]=='#' && c[1]=='T' && c[2]=='M' && c[3]=='O' && c[4]=='C') type |= TMOC;
 
-         // Détection #TMOC...)
-         else if( c[0]=='#' && c[1]=='S' && c[2]=='T' && c[3]=='M' && c[4]=='O' && c[5]=='C') type |= STMOC;
+         // Détection #STMOC...)
+         else if( inCache>=6 && c[0]=='#' && c[1]=='S' && c[2]=='T' && c[3]=='M' && c[4]=='O' && c[5]=='C') type |= STMOC;
 
         // Détection MOC JSON (une ligne de blanc \n{"  )
-         else if( isJsonMoc(c) ) type |=SMOC;
+         else if( isJsonMoc(c,inCache) ) type |=SMOC;
          
          //         // Detection de BMP
          //         else if( c[0]==66  && c[1]==77 ) type |= BMP;
 
          // Detection de JPEG
-         else if( c[0]==255 && c[1]==216 ) {
+         else if( inCache>=2 && c[0]==255 && c[1]==216 ) {
             type |= JPEG;
             lookForJpegCalib(limit);
          }
 
          // Detection de GIF (GIF..a)
-         else if( c[0]==71 && c[1]==73 && c[2]==70 && c[5]==97) type |= GIF;
+         else if( inCache>=6 && c[0]==71 && c[1]==73 && c[2]==70 && c[5]==97) type |= GIF;
 
          // Detection de PNG
-         else if( c[0]==137 && c[1]==80 && c[2]==78 && c[3]==71
+         else if( inCache>=8 && c[0]==137 && c[1]==80 && c[2]==78 && c[3]==71
                && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10) {
             type |= PNG;
             lookForPNGCalib(limit);
          }
 
          // Detection de MRCOMP
-         else if( c[0]==1 && c[1]==121 && c[2]==1 &&
+         else if( inCache>=7 && c[0]==1 && c[1]==121 && c[2]==1 &&
                c[3]==75 && c[4]==1 && c[5]==121 && c[6]==64   ) {
 
             type |= MRCOMP;
@@ -434,7 +447,7 @@ public class MyInputStream extends FilterInputStream {
          //         else if( c[0]=='\\' || c[0]=='|' ) type |= IPAC;
 
          // Detection du début d'une extension FITS IMAGE
-         else if( c[0]=='X' && c[1]=='T' && c[2]=='E' &&
+         else if( inCache>=16 && c[0]=='X' && c[1]=='T' && c[2]=='E' &&
                c[3]=='N' && c[4]=='S' && c[5]=='I' &&
                c[6]=='O' && c[7]=='N' && c[8]=='=' &&
                c[11]=='I' && c[12]=='M' && c[13]=='A' && c[14]=='G' && c[15]=='E') {
@@ -448,7 +461,7 @@ public class MyInputStream extends FilterInputStream {
          }
 
          // Detection du début d'une extension FITS TABLE
-         else if( c[0]=='X' && c[1]=='T' && c[2]=='E' &&
+         else if( inCache>=16 && c[0]=='X' && c[1]=='T' && c[2]=='E' &&
                c[3]=='N' && c[4]=='S' && c[5]=='I' &&
                c[6]=='O' && c[7]=='N' && c[8]=='=' &&
                c[11]=='T' && c[12]=='A' && c[13]=='B' && c[14]=='L' && c[15]=='E') {
@@ -457,7 +470,7 @@ public class MyInputStream extends FilterInputStream {
          }
 
          // Detection du début d'une extension FITS BINTABLE
-         else if( c[0]=='X' && c[1]=='T' && c[2]=='E' &&
+         else if( inCache>=16 && c[0]=='X' && c[1]=='T' && c[2]=='E' &&
                c[3]=='N' && c[4]=='S' && c[5]=='I' &&
                c[6]=='O' && c[7]=='N' && c[8]=='=' &&
                c[11]=='B' && c[12]=='I' && c[13]=='N' && c[14]=='T' && c[15]=='A') {
@@ -476,7 +489,7 @@ public class MyInputStream extends FilterInputStream {
          }
 
          // Detection de FITS
-         else if( c[0]=='S' && c[1]=='I' && c[2]=='M' &&
+         else if( inCache>=9 && c[0]=='S' && c[1]=='I' && c[2]=='M' &&
                c[3]=='P' && c[4]=='L' && c[5]=='E' &&
                c[6]==' ' && c[7]==' ' && c[8]=='=' ) {
 
@@ -1105,11 +1118,46 @@ public class MyInputStream extends FilterInputStream {
       nHead.append("\n");
       return nHead.toString();
    }
+   
+   // Les séparateurs pris en compte dans les MOCs ASCII (la virgule est pris en compte pour compatibilité)
+   private boolean isMocAsciiSep(char ch) { return ch==',' || Character.isSpace(ch); }
+   
+   // Recherche d'une chaine d'un moc ASCII (ex: 1/3-5,8 7/)
+   private boolean isAsciiMoc(int c[],int n ) {
+      int mode=1;
+      for( int i=0; i<n && i<c.length; i++ ) {
+         char ch = (char) c[i];
+         switch(mode) {
+            case 1: // Je cherche le premier non blanc
+               if( isMocAsciiSep(ch) ) continue;
+               mode=2;
+            case 2: // Je dois avoir un nombre jusqu'a un /
+               if( ch=='/' ) { mode=3; continue; }
+               if( !Character.isDigit(ch ) ) return false;
+               break;
+            case 3: // Je cherche le prochain non blanc
+               if( isMocAsciiSep(ch) ) continue;
+               mode=4;
+               break;
+            case 4: // Je dois avoir un nombre jusqu'au prochain espace ou - ou /
+               if( ch=='-' || isMocAsciiSep(ch)) { mode=5; continue; }
+               if( ch=='/' ) { mode=3; continue; }
+               if( !Character.isDigit(ch) ) return false;
+               break;
+            case 5: // Je dois avoir un nombre jusqu'a un / ou un separateur
+               if( ch=='/' || isMocAsciiSep(ch)) { mode=3; continue; }
+               if( !Character.isDigit(ch ) ) return false;
+               break;
+         }
+      }
+      return true;
+   }
+   
       
    // Recherche d'une chaine {"nn":[
-   private boolean isJsonMoc(int c[] ) {
+   private boolean isJsonMoc(int c[],int n ) {
       int mode=0;
-      for( int i=0; i<c.length; i++ ) {
+      for( int i=0; i<n && i<c.length; i++ ) {
          char ch = (char) c[i];
          switch(mode) {
             case 0: // Je cherche le premier non blanc
@@ -1970,7 +2018,7 @@ public class MyInputStream extends FilterInputStream {
       int k=offsetCache;
       while( (k=lookForSignature(key+"=",false,k,false))>=0 ) {
 
-         //System.out.println("J'ai trouvé ["+key+"] =  => position "+k+" ["+(new String(cache,k-9,80))+"]");
+//         System.out.println("J'ai trouvé ["+key+"] =  => position "+k+" ["+(new String(cache,k-9,80))+"]");
          int i=k;
          if( (i-9)%80!=0 ) continue;   // Pas sur un multiple de 80 => pas un mot clé FITS
 
@@ -1978,11 +2026,11 @@ public class MyInputStream extends FilterInputStream {
 
          // Comparaison sur la valeur qui suit
          while( !isFitsVal( (char)cache[i]) && i<k+71 ) i++;  //passe blancs et quotes simples
-         //System.out.println("  Compare ["+value+" ] len="+len+" à ["+(new String(cache,i,len+1))+"]");
+//         System.out.println("  Compare ["+value+" ] len="+len+" à ["+(new String(cache,i,len+1))+"]");
          int j;
          for( j=0; j<len && value.charAt(j)==(char)cache[i]; j++, i++);
          if( j==len && !isFitsVal( (char)cache[i]) ) {
-            // System.out.println("   ==> Ok");
+//             System.out.println("   ==> Ok");
             return true;
          }
       }

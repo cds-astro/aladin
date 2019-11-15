@@ -1959,8 +1959,9 @@ final public class TableParser implements XMLConsumer {
    private int raSubName(String s) {
       s = s.toLowerCase();
       if( s.indexOf("radius")>=0 ) { setEq(); return -1; }
-      if( s.startsWith("_ra") ) { setEq(); return 0; }
-      if( s.startsWith("ra") )   { setEq(); return 1; }
+      if( s.startsWith("_ra") )   { setEq(); return 0; }
+      if( s.endsWith("_ra") )     { setEq(); return 1; }
+      if( s.startsWith("ra") )    { setEq(); return 1; }
       if( s.startsWith("alpha") ) { setEq(); return 2; }
       if( s.startsWith("lon") )   { setEq(); return 3; }
       if( s.startsWith("glon") )  { setGal();  return 0; }
@@ -2000,6 +2001,8 @@ final public class TableParser implements XMLConsumer {
       s = s.toLowerCase();
       if( s.startsWith("_dec") ) { setEq(); return 0; }
       if( s.startsWith("_de") )  { setEq(); return 1; }
+      if( s.endsWith("_de") )    { setEq(); return 1; }
+      if( s.endsWith("_dec") )   { setEq(); return 1; }
       if( s.startsWith("dec") )  { setEq(); return 2; }
       if( s.startsWith("de") )   { setEq(); return 3; }
       if( s.indexOf("de")>0 )    { setEq(); return 4; }

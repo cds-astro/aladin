@@ -141,22 +141,24 @@ public final class Util {
       return openAnyStream(urlOrFile,DEFAULTTIMEOUT);
    }
       
-   static public MyInputStream openAnyStream(String urlOrFile, int timeout) throws Exception {
+   static public MyInputStream openAnyStream(String urlOrFile, int timeout) throws Exception { return openAnyStream(urlOrFile,false,true,timeout); }
+   
+   static public MyInputStream openAnyStream(String urlOrFile, boolean useCache,boolean askGzip, int timeout) throws Exception {
       if( urlOrFile.startsWith("http:") || urlOrFile.startsWith("https:")
-            || urlOrFile.startsWith("ftp:") ) return openStream(urlOrFile,false,timeout);
+            || urlOrFile.startsWith("ftp:") ) return openStream(urlOrFile,useCache,askGzip,timeout);
       FileInputStream f = new FileInputStream(urlOrFile);
       MyInputStream is = new MyInputStream(f);
       return is.startRead();
    }
 
    /** Ouverture d'un MyInputStream avec le User-Agent correspondant à Aladin */
-   static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,DEFAULTTIMEOUT); }
-   static public MyInputStream openStream(String u,boolean useCache, int timeOut) throws Exception {
-      return openStream(new URL(u),useCache,timeOut);
+   static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,true,DEFAULTTIMEOUT); }
+   static public MyInputStream openStream(String u,boolean useCache,boolean askGzip, int timeOut) throws Exception {
+      return openStream(new URL(u),useCache,askGzip,timeOut);
    }
 //   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,10000); }
-   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,-1); }
-   static public MyInputStream openStream(URL u, boolean useCache,int timeOut) throws Exception {
+   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,true,-1); }
+   static public MyInputStream openStream(URL u, boolean useCache,boolean askGzip, int timeOut) throws Exception {
       URLConnection conn = u.openConnection();
       if( !useCache ) conn.setUseCaches(false);
       if( timeOut>0 ) conn.setConnectTimeout(timeOut);
@@ -165,7 +167,7 @@ public final class Util {
       if( conn instanceof HttpURLConnection ) {
          HttpURLConnection http = (HttpURLConnection)conn;
          http.setRequestProperty("User-Agent", "Aladin/"+Aladin.VERSION);
-         http.setRequestProperty("Accept-Encoding", "gzip");
+         if( askGzip ) http.setRequestProperty("Accept-Encoding", "gzip");
       }
 
       MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
@@ -240,6 +242,10 @@ public final class Util {
          while( in==null && error==null && (timeout==-1 || (System.currentTimeMillis()-t0)<timeout) ) {
             try { Util.pause(10); }
             catch( Exception e ) { }
+         }
+         
+         if( error==null && timeout!=-1 && (System.currentTimeMillis()-t0)>timeout ) {
+            error=new Exception("OpenConnectionTimeOut["+timeout+"ms]");
          }
       }
       

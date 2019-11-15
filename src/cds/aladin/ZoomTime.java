@@ -210,12 +210,13 @@ class ZoomTime {
       return true;
    }
    
-   
+   // Mémorisatino de la commmande script associée au temps => intervalle
    private void memoCommand( double [] t ) {
       String cmd = Astrodate.JDToDate(t[0])+" "+Astrodate.JDToDate(t[1]);
       aladin.console.printCommand(cmd);
    }
 
+   // Mémorisatino de la commmande script associée au temps => date centrale
    private void memoCommand( double t ) {
       String cmd = Astrodate.JDToDate(t);
       aladin.console.printCommand(cmd);

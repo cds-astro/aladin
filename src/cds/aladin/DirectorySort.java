@@ -75,7 +75,7 @@ public class DirectorySort {
          "VIII-Radio and Far-IR data", "IX-High-Energy data", "B-External databases, regularly updated",
          "Journal table"};
    public static final String[] PLANETS   = { 
-         "Sun", "Mercury","Venus","Earth","Mars","Saturn","Jupiter","Uranus","Neptune","Pluton" };
+         "Sun", "Mercury","Venus","Earth","Mars","Asteroid belt", "Saturn","Jupiter","Uranus","Neptune","Pluton" };
   
    static final public int DEFAULT    = 0;
    static final public int BRANCH     = 1;

@@ -74,7 +74,7 @@ public class UrlLoader extends Thread {
          try {
             if( conn!=null ) conn.disconnect();
             if( is!=null ) is.close();
-         } catch( Exception e ) { }
+         } catch( Exception e ) {  }
          error = "Timeout";
       }
       if( error!=null ) {
@@ -88,9 +88,9 @@ public class UrlLoader extends Thread {
    
    public void run() {
       try {
-//         System.out.println("Fils créé...");
+//         System.out.println("Fils créé... ");
          if( is==null ) {
-            is=Util.openStream(url,false,(int)timeout);
+            is=Util.openStream(url,false,true,(int)timeout);
 //            conn = (HttpURLConnection) url.openConnection();
 //            is = new MyInputStream(conn.getInputStream());
          }
@@ -108,9 +108,9 @@ public class UrlLoader extends Thread {
             is.close();
          }
       } catch( Exception e ) {
-//         e.printStackTrace();
+         e.printStackTrace();
          error = e.toString();
-//         error = e.getMessage();
+         error = e.getMessage();
       }
       isWaiting=false;
 //            System.out.println("Fils meurt...");

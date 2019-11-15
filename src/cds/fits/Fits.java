@@ -1130,17 +1130,18 @@ final public class Fits {
       }
 
       // Ecriture des éventuelles extensions
-      if( extHeader == null ) return;
-      int n = extHeader.size();
-      for( int i = 0; i < n; i++ ) {
-         byte[] b = getBourrage(size);
-         size += b.length;
-         os.write(b);
-         HeaderFits h = (HeaderFits) extHeader.elementAt(i);
-         h.writeHeader(os);
-         byte[] p = (byte[]) extPixels.elementAt(i);
-         os.write(p);
-         size += p.length;
+      if( extHeader != null ) {
+         int n = extHeader.size();
+         for( int i = 0; i < n; i++ ) {
+            byte[] b = getBourrage(size);
+            size += b.length;
+            os.write(b);
+            HeaderFits h = (HeaderFits) extHeader.elementAt(i);
+            h.writeHeader(os);
+            byte[] p = (byte[]) extPixels.elementAt(i);
+            os.write(p);
+            size += p.length;
+         }
       }
 
       // Bourrage final

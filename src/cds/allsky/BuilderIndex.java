@@ -583,7 +583,7 @@ public class BuilderIndex extends Builder {
             }
 
             double cent[] = context.ICRS2galIfRequired(center.al, center.del);
-            npixs = CDSHealpix.query_disc(order, cent[0], cent[1], Math.toRadians(radius));
+            npixs = CDSHealpix.query_disc(order, cent[0], cent[1], Math.toRadians(radius),true);
          } catch( Exception e ) {
           throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" center="+center+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
          }

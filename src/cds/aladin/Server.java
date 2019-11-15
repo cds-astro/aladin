@@ -198,7 +198,7 @@ public class Server extends JPanel
    static final int IMGs   = 2;		// Input : URLs d'images (FITS)
    static final int CAT    = 4;		// Input : une URL de catalogue (VOTABLE)
    static final int CATs   = 8;		// Input : URLs de catalogues (VOTABLE)
-   static final int ALLIMG = 16;     // Input : une URL d'image qq soit son type (FITS)
+   static final int ALLIMG = 16;    // Input : une URL d'image qq soit son type (FITS)
 
    static int ORDRE=0;
 
@@ -1538,6 +1538,15 @@ public void layout() {
      protected boolean isBaseUrl(JComponent c) {
         return baseUrl==c;
      }
+     
+     
+     /** Retourne true si le Component passé en paramètre ne sert qu'à repérer un champ qui
+      * recevra le suffixe d'une URL HiPS */
+     protected boolean isFieldHiPS(JComponent c ) {
+        return c instanceof JHiPS;
+     }
+     
+     class JHiPS extends JComponent { }
 
      /** Retourne true si le Component passé en paramètre est input */
      protected boolean isFieldInput(JComponent c) {

@@ -755,9 +755,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          // Format d'image
          JLabel fmtl = new JLabel(
                plan instanceof PlanHealpix ? "HEALPix map" :
-                  plan instanceof PlanTMoc ? "Temporal Multi-Order Coverage map (TMOC)" :
-                  plan instanceof PlanMoc ? "Spatial Multi-Order Coverage map (MOC)" :
-                     plan instanceof PlanBG ? "HiPS" :
+               plan instanceof PlanSTMoc ?   "Space Time Multi-Order Coverage map (STMOC)" :
+               plan instanceof PlanTMoc ?    "Temporal Multi-Order Coverage map (TMOC)" :
+               plan instanceof PlanMoc ?     "Spatial Multi-Order Coverage map (MOC)" :
+               plan instanceof PlanBG ?      "Hierarchical Progressive Survey (HiPS)" :
                         PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
          // Bouton de visualisation du header FITS

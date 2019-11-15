@@ -418,10 +418,13 @@ public class SpaceTimeMoc extends Moc {
     */
   protected int writeSpecificFitsProp( OutputStream out  ) throws Exception {
       int n=0;
-      out.write( MocIO.getFitsLine("MOC","SPACETIME","Space Time MOC") );    n+=80;      
+//      out.write( MocIO.getFitsLine("MOC","SPACETIME","Space Time MOC") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOC","TIME.SPACE","STMOC: Time dimension first, ") );    n+=80;      
       out.write( MocIO.getFitsLine("ORDERING","RANGE29","Range coding") );    n+=80;      
-      out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
-      out.write( MocIO.getFitsLine("TORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
+//      out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
+//      out.write( MocIO.getFitsLine("TORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCORD_1",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
       out.write( MocIO.getFitsLine("COORDSYS","C","Space reference frame (C=ICRS)") );  n+=80;
       out.write( MocIO.getFitsLine("TIMESYS","JD","Time ref system JD BARYCENTRIC TCB, 1 microsec order 29") ); n+=80;
       return n;
@@ -450,9 +453,17 @@ public class SpaceTimeMoc extends Moc {
   
   protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte, cds.moc.MocIO.HeaderFits header) throws Exception {
      
-     timeOrder = header.getIntFromHeader("TORDER");
-     spaceOrder = header.getIntFromHeader("MOCORDER");
-     
+     // Entête proto => MOC=SPACETIME ou même pas mentionné
+     String type = header.getStringFromHeader("MOC");
+     if( type==null || type.equals("SPACETIME") ) {
+        timeOrder = header.getIntFromHeader("TORDER");
+        spaceOrder = header.getIntFromHeader("MOCORDER");
+        
+     // Format TIME.SPACE
+     } else {
+        timeOrder = header.getIntFromHeader("MOCORDER");
+        spaceOrder = header.getIntFromHeader("MOCORD_1");
+     }
      byte [] buf = new byte[naxis1*naxis2];
      MocIO.readFully(in,buf);
      createMocByFits((naxis1*naxis2)/nbyte,buf);
@@ -578,7 +589,11 @@ public class SpaceTimeMoc extends Moc {
    static public void main(String a[] ) {
       try {
          
-         test(1);
+//         SpaceTimeMoc stm = new SpaceTimeMoc(29,29);
+//         stm.append("t1-2 s3/40");
+//         System.out.println("stm = "+stm);
+         
+//         test(1);
          
 //         
 //         stmoc1.write( "D:/STMoc.fits");

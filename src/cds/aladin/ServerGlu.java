@@ -25,6 +25,8 @@ import static cds.aladin.Constants.CHANGESERVER;
 import static cds.aladin.Constants.CHECKQUERY;
 import static cds.aladin.Constants.COMMA_CHAR;
 import static cds.aladin.Constants.DATALINK_FORM;
+import static cds.aladin.Constants.DATALINK_FORM_ASYNC;
+import static cds.aladin.Constants.DATALINK_FORM_SYNC;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.GETRESULTPARAMS;
 import static cds.aladin.Constants.LASTPANEL;
@@ -40,8 +42,6 @@ import static cds.aladin.Constants.SYNC_ASYNC;
 import static cds.aladin.Constants.TABLECHANGED;
 import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.UTF8;
-import static cds.aladin.Constants.DATALINK_FORM_SYNC;
-import static cds.aladin.Constants.DATALINK_FORM_ASYNC;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -103,6 +103,7 @@ public class ServerGlu extends Server implements Runnable {
    private boolean flagSIAIDHA=false;
    private boolean flagTAP=false;
    private boolean flagTAPV2=false;
+   private boolean flagHiPS=false;
    int fmt;		// Format de retour (PlanImage.fmt)
    String info1, /* info2, */filter, PARSEMJDFIELDHINT, GENERICERROR, CHECKQUERYTOOLTIP, SYNCASYNCTOOLTIP, SYNCASYNCSELECTIONCHANGE,
 			SHOWASYNCTOOLTIP, ASYNCTOOLTIP;
@@ -121,12 +122,12 @@ public class ServerGlu extends Server implements Runnable {
 
    protected int lastY;
    
-   HashMap<Integer, String[]> rangeValues = new HashMap<Integer, String[]>();
+   HashMap<Integer, String[]> rangeValues = new HashMap<>();
    
    private Source dataLinkSource = null;
    private HealpixMoc posBounds = null;
    private String boundaryAreaStcs = null;
-   private Map<String, Vector> tapTableMapping = new HashMap<String, Vector>();
+   private Map<String, Vector> tapTableMapping = new HashMap<>();
    private Map<String, GluAdqlTemplate> gluAdqlQueryTemplates;
    private String currentSelectedTapTable;
    private Hashtable<String, String> adqlFunc = null;
@@ -234,7 +235,7 @@ public class ServerGlu extends Server implements Runnable {
 			LISTDELIMITER = COMMA_CHAR;
 			this.tapClient = tapClient;
 			this.tapClient.serverGlu = this;
-			this.gluAdqlQueryTemplates = new HashMap<String, GluAdqlTemplate>();
+			this.gluAdqlQueryTemplates = new HashMap<>();
 			for (int i = 0; i < tapTables.length; i++) {
 				this.gluAdqlQueryTemplates.put(tapTables[i], new GluAdqlTemplate());
 			}
@@ -338,7 +339,7 @@ public class ServerGlu extends Server implements Runnable {
          StringTokenizer pv = (paramValue[i]!=null)?new StringTokenizer(paramValue[i],"\t"):null;
 
          if (checkIfMultiSelect(paramDataType[i])) {
-        	 list = new JList<String>(paramValue[i].split("\t"));
+        	 list = new JList<>(paramValue[i].split("\t"));
              list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
              list.setVisibleRowCount(5);
              if (flagTAPV2) {
@@ -484,7 +485,7 @@ public class ServerGlu extends Server implements Runnable {
 			button.addActionListener(this);
 			linePanel.add(button);
 			
-			this.sync_async = new JComboBox<String>(SYNC_ASYNC);
+			this.sync_async = new JComboBox<>(SYNC_ASYNC);
 			this.sync_async.setToolTipText(SYNCASYNCTOOLTIP);
 			this.sync_async.setOpaque(false);
 			linePanel.add(sync_async);
@@ -563,7 +564,7 @@ public class ServerGlu extends Server implements Runnable {
    
 	private void setSyncAsyncOption() {
 		// TODO Auto-generated method stub
-		this.sync_async = new JComboBox<String>(SYNC_ASYNC);
+		this.sync_async = new JComboBox<>(SYNC_ASYNC);
 		this.sync_async.setOpaque(false);
 		
 		if (showSyncAsync > 0) {
@@ -624,7 +625,7 @@ public class ServerGlu extends Server implements Runnable {
 			y += 20;
 		}
 		y += 20;
-		Vector<Component> components = new Vector<Component>();
+		Vector<Component> components = new Vector<>();
 //		components.addAll(tapTableMapping.get("GENERAL"));
 		components.addAll(tapTableMapping.get(this.currentSelectedTapTable));
 		for (Component co : components) {
@@ -866,7 +867,8 @@ public class ServerGlu extends Server implements Runnable {
 
        for( i=0; i<a.length && a[i]!='('; i++);
        String prefixe = new String(a,0,i);
-       return !( prefixe.equalsIgnoreCase("Target") || prefixe.equalsIgnoreCase("Field") );
+       return !( prefixe.equalsIgnoreCase("Target") || prefixe.equalsIgnoreCase("Field") 
+             || prefixe.equalsIgnoreCase("HiPS"));
     }
     
     //Change this if isShownField(String PK) changes it logic from identifying target panel components
@@ -966,7 +968,7 @@ public class ServerGlu extends Server implements Runnable {
         	   classifyAsPerTapTables(prefixe, s, gluIndex+1, sourceGluAdqlTemplate);
            } else if( flagTAPV2 && s.equalsIgnoreCase("OP") && f instanceof JTextField) {
         	   if( adqlOpInputs==null ) {
-    			   adqlOpInputs = new Vector<JTextField>();
+    			   adqlOpInputs = new Vector<>();
                 }
     		   adqlOpInputs.addElement((JTextField) f);
         	   
@@ -1006,7 +1008,7 @@ public class ServerGlu extends Server implements Runnable {
                classifyAsPerTapTables(prefixe, s, gluIndex+1, sourceGluAdqlTemplate);
             } else if( flagTAPV2 && s.equalsIgnoreCase("OP") && f instanceof JTextField) {
                if( adqlOpInputs==null ) {
-                  adqlOpInputs = new Vector<JTextField>();
+                  adqlOpInputs = new Vector<>();
                }
                adqlOpInputs.addElement((JTextField) f);
 
@@ -1046,7 +1048,7 @@ public class ServerGlu extends Server implements Runnable {
          	   classifyAsPerTapTables(prefixe, s, gluIndex+1, sourceGluAdqlTemplate);
             } else if( flagTAPV2 && s.equalsIgnoreCase("OP") && f instanceof JTextField) {
           	   if( adqlOpInputs==null ) {
-      			   adqlOpInputs = new Vector<JTextField>();
+      			   adqlOpInputs = new Vector<>();
                   }
       		   adqlOpInputs.addElement((JTextField) f);
           	   
@@ -1078,7 +1080,7 @@ public class ServerGlu extends Server implements Runnable {
            	   classifyAsPerTapTables(prefixe, s, gluIndex+1, sourceGluAdqlTemplate);
               } else if( flagTAPV2 && s.equalsIgnoreCase("OP") && f instanceof JTextField) {
            	   if( adqlOpInputs==null ) {
-       			   adqlOpInputs = new Vector<JTextField>();
+       			   adqlOpInputs = new Vector<>();
                    }
        		   adqlOpInputs.addElement((JTextField) f);
            	   
@@ -1092,6 +1094,11 @@ public class ServerGlu extends Server implements Runnable {
            band = (JTextField)f;
         } else if( flagTAPV2) {
         	setGluAdqlForAllTapTables(prefixe, i, a, gluIndex+1, sourceGluAdqlTemplate, f);
+        	
+        // Cas spécial pour repérer le champ qui devra recevoir le suffixe de l'URL HiPS
+        } else if( prefixe.equalsIgnoreCase("HiPS") ) {
+           f = new JHiPS();
+           flagHiPS=true;
         }
 
       return f;
@@ -1106,7 +1113,7 @@ public class ServerGlu extends Server implements Runnable {
            String s = mode.toString();
            if(s.equalsIgnoreCase("OP") && f instanceof JTextField) {
         	   if( adqlOpInputs==null ) {
-    			   adqlOpInputs = new Vector<JTextField>();
+    			   adqlOpInputs = new Vector<>();
                 }
     		   adqlOpInputs.addElement((JTextField) f);
         	   
@@ -1512,7 +1519,7 @@ public class ServerGlu extends Server implements Runnable {
       Enumeration e;
       String code=null;
       boolean flagScriptEquiv=true;	// Par défaut, il existe tjs une commande script équivalent
-      List<Coord> rectVertices = new ArrayList<Coord>();//code for poly addition --in progress 1 line
+      List<Coord> rectVertices = new ArrayList<>();//code for poly addition --in progress 1 line
       
       // Resolution par Simbad necessaire ?
       if(target!=null) {
@@ -1560,7 +1567,12 @@ public class ServerGlu extends Server implements Runnable {
       while( e.hasMoreElements() ) {
          JComponent c = (JComponent)e.nextElement();
          String crit=null;
-         if( isFieldInput(c) ) {
+         if( isFieldHiPS(c) ) {
+            v.addElement("_HIPS_");
+            vbis.addElement("HiPS");
+            flagScriptEquiv=false;
+            
+         } else  if( isFieldInput(c) ) {
             v.addElement( getInputUrl(c) );
             vbis.addElement( getInputPlaneName(c) );
             flagScriptEquiv=false;
@@ -1763,30 +1775,35 @@ public class ServerGlu extends Server implements Runnable {
           } catch( Exception e1) {
  		    String message = e1.getMessage();
 		    if( message==null ) message="unknown error";
-            Aladin.error(this,ERR+"\n["+message+"]");
-			if (Aladin.levelTrace>=3) e1.printStackTrace();
-			defaultCursor();
-            ball.setMode(Ball.HS);
+		    Aladin.error(this,ERR+"\n["+message+"]");
+		    if (Aladin.levelTrace>=3) e1.printStackTrace();
+		    defaultCursor();
+		    ball.setMode(Ball.HS);
           }
           return;
 
       } else defaultCursor();
 
-		if (flagTAPV2) {
-			String url = (String) aladin.glu.aladinDic.get(gluTag);
-			boolean isSync = this.sync_async.getSelectedItem().equals("SYNC");
-			this.submitTapServerRequest(isSync, label, url, tap.getText());
-		} else {
-			if (showSyncAsync > -1 && this.sync_async != null && this.sync_async.getSelectedItem().equals("ASYNC")) {
-				this.fireASync(label, u);
-			} else {
-				lastPlan = aladin.calque.createPlan(u + "", label, "provided by " + institute, this);
-			}
-		}
-      
+      if (flagTAPV2) {
+         String url = (String) aladin.glu.aladinDic.get(gluTag);
+         boolean isSync = this.sync_async.getSelectedItem().equals("SYNC");
+         this.submitTapServerRequest(isSync, label, url, tap.getText());
+
+
+      } else if( flagHiPS ) {
+         aladin.calque.newPlanBG(u,label,null,null);
+
+      } else {
+         if (showSyncAsync > -1 && this.sync_async != null && this.sync_async.getSelectedItem().equals("ASYNC")) {
+            this.fireASync(label, u);
+         } else {
+            lastPlan = aladin.calque.createPlan(u + "", label, "provided by " + institute, this);
+         }
+      }
+
       if( code!=null && lastPlan!=null ) lastPlan.setBookmarkCode(code+" $TARGET $RADIUS");
-    }
-   
+   }
+
    /**
     * Method shows fov from the stc string
     */
@@ -1964,7 +1981,7 @@ public class ServerGlu extends Server implements Runnable {
 //      setRadius(radius);
 
       // Mise en place des paramètres
-      Vector<String> v = new Vector<String>(10);
+      Vector<String> v = new Vector<>(10);
       e = vc.elements();
       while( e.hasMoreElements() ) {
          Component c = (Component)e.nextElement();
@@ -2056,7 +2073,7 @@ public class ServerGlu extends Server implements Runnable {
 	public void fireASync(String name, final URL url) {
 		final int requestNumber = -1;//newRequestCreation(); 
 		try {
-			final Map<String, Object> requestParams = new HashMap<String, Object>();
+			final Map<String, Object> requestParams = new HashMap<>();
 			String query = url.getQuery();
 			String[] pairs = query.split("&");
 			for (String pair : pairs) {

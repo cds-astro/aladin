@@ -264,9 +264,6 @@ public class Range2 extends Range {
      return m1.equals(m2);
   }
 
-  // J'EN SUIS ICI - PF - 25 MARS 2019
-
-
   
   /** Internal helper function for constructing unions, intersections
       and differences of two Ranges. */

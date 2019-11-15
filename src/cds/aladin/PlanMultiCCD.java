@@ -28,6 +28,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
+import cds.moc.HealpixMoc;
 import cds.moc.SpaceMoc;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -207,7 +208,7 @@ public class PlanMultiCCD extends PlanImage {
    }
    
    static private SpaceMoc buildMoc(Projection proj, int order) throws Exception {
-      SpaceMoc moc = new SpaceMoc(0,order);
+//      SpaceMoc moc = new SpaceMoc(0,order);
       Coord coo = new Coord();
       ArrayList<double[]> cooList = new ArrayList<>(10);
       Dimension dim = proj.c.getImgSize();
@@ -217,9 +218,13 @@ public class PlanMultiCCD extends PlanImage {
          proj.c.GetCoord(coo);
          cooList.add(new double[]{coo.al,coo.del});
       }
-      long [] npixs = CDSHealpix.query_polygon( order, cooList, true);
-      for( long npix : npixs ) moc.add(order,npix) ;
+      
+      HealpixMoc moc = CDSHealpix.createHealpixMoc(cooList, order);
       return moc;
+      
+//      long [] npixs = CDSHealpix.query_polygon( order, cooList, true);
+//      for( long npix : npixs ) moc.add(order,npix) ;
+//      return moc;
    }
    
 

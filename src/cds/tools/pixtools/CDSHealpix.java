@@ -28,6 +28,7 @@ import static cds.healpix.common.math.Math.HALF_PI;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Iterator;
 
 import cds.healpix.CompassPoint.Cardinal;
 import cds.healpix.CompassPoint.MainWind;
@@ -36,15 +37,14 @@ import cds.healpix.HashComputer;
 import cds.healpix.Healpix;
 import cds.healpix.HealpixNested;
 import cds.healpix.HealpixNestedBMOC;
+import cds.healpix.HealpixNestedBMOC.CurrentValueAccessor;
 import cds.healpix.HealpixNestedFixedRadiusConeComputer;
 import cds.healpix.HealpixNestedPolygonComputer;
 import cds.healpix.NeighbourList;
 import cds.healpix.NeighbourSelector;
 import cds.healpix.VerticesAndPathComputer;
 import cds.moc.HealpixMoc;
-//import healpix.essentials.HealpixBase;
-//import healpix.essentials.Pointing;
-//import healpix.essentials.Scheme;
+import cds.moc.Range;
 
 /** Wrapper Healpix CDS pour ne pas reinitialiser systematiquement l'objet HealpixBase pour chaque NSIDE
  * @author Pierre Fernique [CDS] (Initially based on Martin Reinecke, now on François Xavier Pineau's code)
@@ -97,11 +97,6 @@ public final class CDSHealpix {
       return hc.hash(lonRad, latRad);  
    }
 
-   // ATTNENTION LE RAYON EST EN RADIAN
-   static public long[] query_disc(int order,double ra, double dec, double radius) throws Exception {
-      return query_disc(order, ra, dec, radius, true);
-   }
-   
 //   public static void main(String [] arg) {
 //
 //      double ra=210.80216136704843, dec=54.34890606617321, radius=0.1652;
@@ -136,7 +131,8 @@ public final class CDSHealpix {
 //      System.out.println();
 //  }
 
-   static public long[] query_disc(int order,double ra, double dec, double radius, boolean inclusive) throws Exception {
+   // ATTNENTION LE RAYON EST EN RADIAN
+  static public long[] query_disc(int order,double ra, double dec, double radius, boolean inclusive) throws Exception {
       //    System.err.println("Cone. depth: " + order + "; lonRad: " + Math.toRadians(ra) + "; latRad: " + Math.toRadians(dec) + "; rRad: " + radius);
 
       //    long l1 = System.nanoTime();
@@ -171,6 +167,63 @@ public final class CDSHealpix {
       final HealpixNestedBMOC bmoc = cp.overlappingCenters(Math.toRadians(coo[0]), Math.toRadians(coo[1]));
 //      final HealpixNestedBMOC bmoc = cp.overlappingCenters(Math.toRadians(ra), Math.toRadians(dec));
       return toFlatArrayOfHash(bmoc);
+   }
+   
+   // ATTNENTION LE RAYON EST EN RADIAN
+   static public HealpixMoc getMocByCircle(int order,double ra, double dec, double radius, boolean inclusive) throws Exception {
+      final HealpixNested hn = Healpix.getNested(order);
+      final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer(radius);
+      double [] coo = normalizeRaDec( ra,dec );
+      HealpixNestedBMOC bmoc=null;
+      try {
+         bmoc = inclusive ? cp.overlappingCells(Math.toRadians(coo[0]), Math.toRadians(coo[1])) :
+               cp.overlappingCenters(Math.toRadians(coo[0]), Math.toRadians(coo[1]));
+      } catch( Exception e ) {
+         System.err.println("\nHEALPix.query_disc error: ra="+ra+" dec="+dec+" radius="+radius+" (rad)");
+         if( inclusive ) System.err.println("  Executing p.overlappingCells(+"+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
+         else System.err.println("  Executing cp.overlappingCenters("+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
+         e.printStackTrace();
+      }
+      return bmoc2moc( bmoc);
+   }
+   
+   static HealpixMoc getMocByPolygon(int order,ArrayList<double[]>cooList, boolean inclusive) throws Exception {
+      final HealpixNested hn = Healpix.getNested(order);
+      final HealpixNestedPolygonComputer pc = hn.newPolygonComputer();
+      double[][] vertices = new double[cooList.size()][2];
+      cooList.toArray(vertices);
+      for (int i = 0; i < vertices.length; i++) {
+         vertices[i][0] = Math.toRadians(vertices[i][0]);
+         vertices[i][1] = Math.toRadians(vertices[i][1]);
+      }
+      final HealpixNestedBMOC bmoc = inclusive ? pc.overlappingCells(vertices) : pc.overlappingCenters(vertices);
+      return bmoc2moc( bmoc);
+   }
+   
+   
+   /** Conversion d'un BMOC a la FX en Moc à la Fernique via les Range */
+   static public HealpixMoc bmoc2moc(HealpixNestedBMOC bmoc) throws Exception {
+      int depthMax = HealpixMoc.MAXORDER;
+      Range range = new Range();
+      
+      Iterator<CurrentValueAccessor> it = bmoc.iterator();
+      while( it.hasNext() ) {
+         CurrentValueAccessor c = it.next();
+         int depth = c.getDepth();
+         int depthDiff = depthMax - depth;
+         int twiceDepthDiff = depthDiff << 1;
+         long hash = c.getHash();
+         long a = hash << twiceDepthDiff;
+         long b = a | ((1L << twiceDepthDiff) - 1L);
+         range.add(a, b);
+      }
+      
+      int mocOrder = bmoc.getDepthMax();
+      HealpixMoc moc = new HealpixMoc(mocOrder);
+      moc.spaceRange = range;
+      moc.toHealpixMoc();
+      return moc;
+
    }
 
       
@@ -378,8 +431,12 @@ public final class CDSHealpix {
     * @throws Exception
     */
    static public HealpixMoc createHealpixMoc(ArrayList<double[]> radecList, int order ) throws Exception {
-      final HealpixMoc hmoc = new HealpixMoc(order);
-      hmoc.add(order, query_polygon( order, radecList, true));
-      return hmoc;
+      return getMocByPolygon( order, radecList, true);
    }
+
+//   static public HealpixMoc createHealpixMoc(ArrayList<double[]> radecList, int order ) throws Exception {
+//      final HealpixMoc hmoc = new HealpixMoc(order);
+//      hmoc.add(order, query_polygon( order, radecList, true));
+//      return hmoc;
+//   }
 }

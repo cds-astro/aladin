@@ -238,7 +238,7 @@ final public class BuilderAllsky  extends Builder {
       }
 
       if( first ) {
-         context.warning("CreateAllSkyColor: no "+ext+" tiles found!");
+//         context.warning("CreateAllSkyColor: no "+ext+" tiles found!");
          return;
       }
 

@@ -1569,7 +1569,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    private int oIntersect = -1;
 
-   private HealpixMoc oMoc = null;
+   private SpaceMoc oMoc = null;
 
    /**
     * Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
@@ -1591,7 +1591,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( expr.equals(oExpr) && (moc == oMoc || moc != null && moc.equals(oMoc) && intersect == oIntersect) ) { return; }
          oExpr = expr;
          oIntersect = intersect;
-         oMoc = moc == null ? null : (HealpixMoc) moc.clone();
+         oMoc = moc == null ? null : (SpaceMoc) moc.clone();
 
          // logs
          String smoc = moc == null ? "" : directoryFilter.getASCII(moc);
@@ -1859,16 +1859,18 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // Construction d'un MOC qui englobe le cercle couvrant le champ de vue courant
 //            Healpix hpx = new Healpix();
             int order = getAppropriateOrder(size);
-            mocQuery = new HealpixMoc(order);
+            mocQuery = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians(size / 2), true);
             
-            int i = 0;
-            mocQuery.setCheckConsistencyFlag(false);
-//            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
-            for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), true) ) {
-               mocQuery.add(order, n);
-               if( (++i) % 1000 == 0 ) mocQuery.checkAndFix();
-            }
-            mocQuery.setCheckConsistencyFlag(true);
+//            mocQuery = new HealpixMoc(order);
+//            int i = 0;
+//            mocQuery.setCheckConsistencyFlag(false);
+////            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
+//            for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), true) ) {
+//               mocQuery.add(order, n);
+//               if( (++i) % 1000 == 0 ) mocQuery.checkAndFix();
+//            }
+//            mocQuery.setCheckConsistencyFlag(true);
+            
             // System.out.println("Moc d'interrogation => "+mocQuery.todebug());
             
             ArrayList<String> mocIds = multiProp.scan(mocQuery);
@@ -2892,7 +2894,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          String u = aladin.glu.getURL("MocServer", params, true).toString();
          try {
-            in = new InputStreamReader(Util.openStream(u, false, 3000));
+            in = new InputStreamReader(Util.openStream(u, false, true, 3000));
             if( in == null ) throw new Exception("cache openStream error");
 
             // Peut être un site esclave actif ?
@@ -2902,7 +2904,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( !aladin.glu.checkIndirection("MocServer", null) ) throw e;
             u = aladin.glu.getURL("MocServer", params, true).toString();
             try {
-               in = new InputStreamReader(Util.openStream(u, false, -1));
+               in = new InputStreamReader(Util.openStream(u, false, true, -1));
             } catch( EOFException e1 ) {
                eof = true;
             }
