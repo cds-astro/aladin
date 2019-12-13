@@ -152,6 +152,11 @@ public class Context {
    protected boolean gaussFilter=false;      // Filtrage gaussien lors de la génération d'un HiPS RGB (pour améliorer le rendu du fond)
    protected int nbPilot=-1;                 // Indique le nombre d'images à prendre en compte (pour faire un test pilot)
 
+   protected boolean flagLupton = false;         // Méthode Lupton ?
+   protected double luptonM;                 
+   protected double luptonQ;
+   protected double [] luptonScale;
+
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
    private int frame =-1;                    // Système de coordonnée de la boule HEALPIX à générée

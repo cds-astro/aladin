@@ -211,7 +211,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     static final protected String MSG_REPLY_SAMP_ERROR = "samp.error";
 
     // map faisant la correspondance entre plans et msgId
-    private Hashtable<Plan, String> planesToMsgIds = new Hashtable<Plan, String>();
+    private Hashtable<Plan, String> planesToMsgIds = new Hashtable<>();
 
     // answer to getName message
     static final protected String ALADIN_NAME = "Aladin";
@@ -391,11 +391,11 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         }
 
         // set MTypes
-        params = new Vector<Object>();
+        params = new Vector<>();
         params.add(myPrivateKey);
-        Map<String, Map<String, String>> subscriptionMap = new Hashtable<String, Map<String, String>>();
+        Map<String, Map<String, String>> subscriptionMap = new Hashtable<>();
         for( int i=0; i<SUPPORTED_MESSAGES.length; i++ ) {
-            Map<String, String> subscriptionAnnotation = new Hashtable<String, String>();
+            Map<String, String> subscriptionAnnotation = new Hashtable<>();
             subscriptionAnnotation.put("x-samp.mostly-harmless", "1");
             subscriptionMap.put(SUPPORTED_MESSAGES[i], subscriptionAnnotation);
         }
@@ -611,7 +611,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                         replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, result);
                     }
                     else {
-                        Map<String, String> scriptResult = new Hashtable<String, String>();
+                        Map<String, String> scriptResult = new Hashtable<>();
                         scriptResult.put("script.result", result);
                         replyToMessage(msgId, MSG_REPLY_SAMP_STATUSOK, scriptResult, null);
                     }
@@ -691,7 +691,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                     replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, "no repere has been set");
                 }
                 else {
-                    Map<String, String> positionMap = new Hashtable<String, String>();
+                    Map<String, String> positionMap = new Hashtable<>();
                     positionMap.put("ra", Double.toString(a.view.repere.raj));
                     positionMap.put("dec", Double.toString(a.view.repere.dej));
                     replyToMessage(msgId, MSG_REPLY_SAMP_STATUSOK, positionMap, null);
@@ -735,7 +735,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
                     }
                 }
 
-                Map<String, String> resultMap = new Hashtable<String, String>();
+                Map<String, String> resultMap = new Hashtable<>();
                 resultMap.put("data", base64Str.toString().replaceAll("(\r\n|\n)", ""));
 
                 replyToMessage(msgId, MSG_REPLY_SAMP_STATUSOK, resultMap, null);
@@ -1117,7 +1117,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     }
 
     public void sendMessageLoadImage(String url, String name, List recipients) {
-        Map<String, String>paramMap = new Hashtable<String, String>();
+        Map<String, String>paramMap = new Hashtable<>();
         // ajout de l'url
         paramMap.put("url", url);
         // ajout de image-id
@@ -1133,7 +1133,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     }
 
     public void sendMessageLoadMOC(String url, String name, List recipients) {
-        Map<String, String>paramMap = new Hashtable<String, String>();
+        Map<String, String>paramMap = new Hashtable<>();
         // ajout de l'url
         paramMap.put("url", url);
         // ajout de image-id
@@ -1229,7 +1229,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
      * @return la liste des noms des applications supportant le message passé en param
      */
     private synchronized ArrayList<String> getAppsSupporting(String message) {
-        ArrayList<String> apps = new ArrayList<String>();
+        ArrayList<String> apps = new ArrayList<>();
 
         if( message==null ) return apps;
 

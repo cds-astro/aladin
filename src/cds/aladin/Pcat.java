@@ -529,6 +529,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          // uniquement fait a la premiere source (test sur flagFirstRecord)
 
          if( flagFirstRecord ) {
+            leg=null;   // Reinitialisation si plusieurs tables dans une même resource
             firstTrace = true; // Pour afficher la premiere source en cas de trace
             indexAccessFormat=indexAccessUrl=indexDataProductType=-1;
             n = vField.size();

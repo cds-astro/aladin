@@ -149,7 +149,8 @@ public final class Calib  implements Cloneable {
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
    static int getProjType(String s) {//System.out.println("ssss "+s);
-   return Util.indexInArrayOf(s, projType); }
+      return Util.indexInArrayOf(s, projType); 
+   }
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres)
     * en se contentant éventuellement de ne trouver qu'une sous chaine, -1 si non trouvé */
@@ -191,7 +192,7 @@ public final class Calib  implements Cloneable {
    }
 
    /** Retourne la signature de la projection (code 3 lettres) de l'indice passé en paramètre */
-   static String getProjName(int indice ) { return projType[indice]; }
+   static public String getProjName(int indice ) { return projType[indice]; }
 
    //#ifndef PIERRE
    //    /** Retourne true si le type de projection est reconnu par Calib

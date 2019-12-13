@@ -61,6 +61,11 @@ public class BuilderRgb extends BuilderTiles {
    private int missing=-1;
    private boolean flagGauss;
    
+   private boolean flagLupton;
+   private double luptonScale[];
+   private double luptonM;
+   private double luptonQ;
+   
    private int statNbFile;
 
    private Mode coaddMode=Mode.REPLACETILE;
@@ -265,6 +270,14 @@ public class BuilderRgb extends BuilderTiles {
       // Faut-il un filtre gaussien
       if( context.gaussFilter ) context.info("Gauss filter activated...");
       flagGauss = context.gaussFilter;
+      
+      // Est-ce un traitement à la Lupton ?
+      flagLupton=context.flagLupton;
+      if( flagLupton ) {
+         luptonM = context.luptonM;
+         luptonQ = context.luptonQ;
+         luptonScale = context.luptonScale;
+      }
 
       context.writeMetaFile();
    }
@@ -448,8 +461,73 @@ public class BuilderRgb extends BuilderTiles {
 //      out.writeCompressed(filename,0,0,null, Constante.TILE_MODE[ context.targetColorMode ]);
 //   }
    
+   
+// r = np.maximum(0, r + m)
+// g = np.maximum(0, g + m)
+// b = np.maximum(0, b + m)
+// I = (r+g+b)/3.
+// fI = np.arcsinh(Q * I) / np.sqrt(Q)
+// I += (I == 0.) * 1e-6
+// R = fI * r / I
+// G = fI * g / I
+// B = fI * b / I
+   
+   static double arcsinh( double v ) {
+      return Math.log(v + Math.sqrt(Math.pow(v, 2.)+1));
+   }
+
+   // IL FAUT ENCORE PASSER LES PARAMETRES - PF DEC 2019
+   private Fits createLeaveRGBLupton(Fits [] in) throws Exception {
+      double Q2 = Math.sqrt(luptonQ);
+      
+      double gap=0;
+      double range=256;
+      if( Fits.isTransparent(format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256) ) {
+         range = 255;
+         gap = 1;
+      }
+
+      Fits rgb = new Fits(width,width,0);
+      double [] pix = new double[3];
+      int i=0;
+      for( int y=0; y<width; y++ ) {
+         for( int x=0; x<width; x++,i++ ) {
+            
+            double I=0;
+            int tot=0;
+            for( int c=0; c<3; c++ ) {
+               if( c==missing || in[c]==null ) continue;
+               double v = in[c].getPixelDouble(x,y);
+               if( in[c].isBlankPixel(v) ) pix[c] = 0;
+               pix[c] = Math.max(0, in[c].getPixelDouble(x,y) * luptonScale[c] + luptonM);
+               I += pix[i];
+               tot++;
+            }
+            
+            I /= tot;
+            if( I==0 ) I=1e-6;
+            double fI =arcsinh(luptonQ * I) / Q2;
+            int pixel=0;
+            
+            for( int c=0; c<3; c++ ) {
+               double v = c==missing || in[c]==null ? 0 : fI * pix[c] / I;
+               v = gap+ ( v< pixelMin[c] ? 0 : v> pixelMax[c] ? range-gap-1
+                     : range *( (v-pixelMin[c]) / (pixelMax[c] - pixelMin[c]) ) );
+               pixel = (pixel<<8) | ((int)v & 0xFF);
+            }
+            
+            rgb.rgb[i]=pixel;
+         }
+      }
+      
+      return rgb;
+   }
+   
    // génération du RGB à partir des composantes
    private Fits createLeaveRGB(Fits [] in) throws Exception {
+      
+      // Il s'agit d'un traitement à la Lupton ?
+      if( flagLupton ) return createLeaveRGBLupton(in);
       
       // Application d'un filtre ?
       if( flagGauss ) {

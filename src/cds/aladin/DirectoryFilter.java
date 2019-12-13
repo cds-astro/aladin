@@ -1330,7 +1330,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       p1 = new JPanel( new FlowLayout(FlowLayout.LEFT,0,0));
       cb = cbMocPlane = new JCheckBox(S("FPSPACEMOC"));
       cb.addActionListener( this );
-      cb.setSelected(true);
+      cb.setSelected(false);
       spaceBG.add(cb);
       comboMocPlane = new JComboBox<>();
       comboMocPlane.addActionListener( new ActionListener() {

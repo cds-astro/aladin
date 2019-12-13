@@ -98,8 +98,13 @@ public class TreeObjDir extends TreeObj implements Propable {
    public double radius=-1;   // Field size for starting display
    public int nside=-1;          // Max NSIDE
    public boolean local=false;   // Il s'agit d'un survey sur disque local
-   public Image imPreview=null;  // Image preview
+   
+   public Image previewImg=null;  // Image preview courante
+   public Image previewImgHips2Fits=null;  // Image de la vignette courante
    public boolean previewError=false; // true s'il y a eu un problème lors du chargement du preview
+   public String previewUrlHips2Fits=null; // URL vers l'image preview récupérée par Hips2fits
+   public boolean previewErrorHips2Fits=false; // true s'il y a eu un problème à l'accès à Hips2fits
+   public boolean previewLoading=false; // true si on est en train de charger un preview ou une vignette
    
    protected MyProperties prop=null; // Ensemble des propriétés associées au HiPS (via son fichier de properties ou MocServer)
 
@@ -804,7 +809,9 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /** Retourne true si la collection dispose d'un TMOC */
    protected  boolean hasTMoc() {
-      return hasTMocByMocServer() || prop!=null && prop.getProperty("tmoc_access_url")!=null || hasHiPSTMocFile();
+      return hasTMocByMocServer() || prop!=null && prop.getProperty("tmoc_access_url")!=null
+            ;
+            // || hasHiPSTMocFile();   // CA PREND TROP DE TEMPS
    }
    
    /** En attendant que ce soit dans le MocServer, je regarde l'existence du fichier HpxFinder/TMoc.fits */

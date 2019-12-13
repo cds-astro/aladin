@@ -493,13 +493,12 @@ public class Localisation extends MyBox  {
 
    
    /** Retourne le frame "générique" courant (ICRS | GAL | SGAL | ECLIPTIC | -1) */
-   protected int getFrameGeneric() {
+   public int getFrameGeneric() {
       return frame==GAL ? GAL :
              frame==ECLIPTIC ? ECLIPTIC :
              frame==SGAL ? SGAL :
              (frame!=XY || frame!=XYNAT || frame!=XYLINEAR || frame!=PLANET) ? ICRS : -1;
    }
-   
    
    /** Insère le résultat d'une résolution Sésame dans le champ de commande avec le label
     * POSITION histoire que cela se comprenne */

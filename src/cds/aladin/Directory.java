@@ -112,6 +112,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    // Nombre de collections appelables individuellement en parallèle
    static private final int MAX_PARALLEL_QUERY = 30;
+   
+   // Taille de la vignette
+   static final int PREVIEW_SIZE=88;
 
    static private String DIRECTORY, MULTICOL, HELP;
    static protected String AWCSLAB, AWCSTIP, AWMCSTIP, AWSIATIP, AWSSATIP, AWMOCQLAB, AWMOCQLABTIP, AWMOCTITLE, AWMOC1, AWMOC1TIP,
@@ -149,6 +152,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private Timer timer = null;                     // Timer pour le réaffichage lors du chargement
    private JLabel dir = null;                      // Le titre qui apparait au-dessus de l'arbre
    private FrameProp frameProp = null;             // Frame des paramètres pour les différents types d'interrogation
+
+   
+   static String LoadingUrl=null;                  // L'URL de la vignette entrain d'être chargée
 
    // Paramètres d'appel initial du MocServer (construction de l'arbre)
    private static String MOCSERVER_INIT = "*&fields=!hipsgen*&get=record&fmt=asciic";
@@ -1301,9 +1307,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private void buildTree() {
       DirectoryModel model = (DirectoryModel) dirTree.getModel();
       model.resetCreate();
-      for( TreeObjDir to : dirList ) model.createTreeBranch(to);
-      int n = initCounter(model);
-      updateTitre(n);
+      for( TreeObjDir to : dirList ) {
+         model.createTreeBranch(to);
+         int n;
+//         if( DirectoryModel.NB>(n=model.countDescendance()) ) {
+//            System.err.println("Bizarre en position NB="+DirectoryModel.NB+" desc="+n+" pour "+to.path+" ["+to+"]");
+//         }
+      }
+      int nb = initCounter(model);
+      updateTitre(nb);
    }
    
    private int nbVisible=-1;
@@ -1328,9 +1340,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 //         System.err.println("updateTitre = "+nb);
 //         e.printStackTrace();
 //      }
+      
+//      System.err.println("updateTitre("+nb+" dirList.size()="+dirList.size()+" multiProp.size()="+multiProp.size());
       String t = DIRECTORY;
-      if( nb != -1 && dirList != null && nb < dirList.size() ) {
-         t = "<html>" + t + "<font color=\"#D0D0F0\"> &rarr; " + nb + " / " + dirList.size() + "</font></html>";
+      if( nb != -1 && dirList != null ) { //&& nb < dirList.size() ) {
+         if( nb < dirList.size() ) {
+            t = "<html>" + t + "<font color=\"#D0D0F0\"> &rarr; " + nb + " / " + dirList.size() + "</font></html>";
+         } else {
+            t = "<html>" + t + "<font color=\"#D0D0F0\"> &rarr; " + nb + "</font></html>";
+         }
          nbVisible=nb;
       } else nbVisible=-1;
       
@@ -1414,8 +1432,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       
       T("Create tree");
 
-      if( initCounter ) initCounter(model);
-      else updateTitre(model.countDescendance());
+      if( initCounter )  initCounter(model);
+      else updateTitre( model.countDescendance());
       
       T("Init counters");
 
@@ -1451,6 +1469,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
+         
+      // En cas de souci
+      } finally {
+         dirTree.restoreListener();
       }
 
       aladin.trace(4,"ResumeTree done in "+(System.currentTimeMillis()-t0)+"ms");
@@ -1654,9 +1676,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private void checkFilter(String expr, SpaceMoc moc, int intersect) throws Exception {
 
       // Filtrage par expression
-      // long t0 = System.currentTimeMillis();
+      long t0 = System.currentTimeMillis();
       ArrayList<String> ids = multiProp.scan((HealpixMoc) null, expr, false, -1, -1);
-      // System.out.println("Filter: "+ids.size()+"/"+multiProp.size()+" in "+(System.currentTimeMillis()-t0)+"ms");
 
       // Filtrage spatial
       ArrayList<String> ids1 = filtrageSpatial(moc, intersect);
@@ -1667,7 +1688,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( ids1 != null && !ids1.contains(s) ) continue;
          set.add(s);
       }
-      for( TreeObjDir to : dirList ) to.setHidden(!set.contains(to.internalId));
+      int nbHidden=0;
+      for( TreeObjDir to : dirList ) {
+         boolean flagHidden=!set.contains(to.internalId);
+         to.setHidden(flagHidden);
+         if( flagHidden ) nbHidden++;
+      }
    }
 
    private SpaceMoc oldMocSpatial = null;
@@ -3167,7 +3193,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          String target;
          try {
             coo = aladin.view.getCurrentView().getCooCentre();
-            target = aladin.localisation.aladin.localisation.getFrameCoord( coo.getDeg() );
+            target = aladin.localisation.getFrameCoord( coo.getDeg() );
          } catch( Exception e ) { return null; }
          
          double radius = aladin.view.getCurrentView().getTaille();
@@ -3998,33 +4024,85 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
 
       class Preview extends JPanel {
-         String url;
 
          TreeObjDir to;
 
          Preview(TreeObjDir to) {
             super();
             this.to = to;
-
-            // Déjà fait ?
-            if( to.previewError || to.imPreview != null ) return;
-
-            // Pas de preview ?
-            if( !to.hasPreview() ) {
-               to.previewError = true;
-               return;
+            
+            int mode=0; // 0-le preview par defaut   1-une vignette dynamique
+            double radius=0;
+            Coord target=null;
+            
+            // Est-il possible de demander une vignette du champ courant
+            if( !to.isCatalog() && !to.previewErrorHips2Fits && to.getIsIn()==1 ) {
+               // Récupération du champ de vue courant
+               try {
+                  radius = aladin.view.getCurrentView().getTaille();
+                  target = aladin.view.getCurrentView().getCooCentre();
+                  
+                  // Si trop grand, on va prendre le preview par defaut
+                  mode = radius>10 && !to.previewError ? 0 : 1;  
+               } catch( Exception e) {  }
             }
-
-            this.url = to.getPreviewUrl();
-            (new Thread() {
-               public void run() {
-                  load();
+            
+            // Chargement de la vignette à la position courante
+            if( mode==1 ) {
+               try {
+                  
+                  // On constuit l'URL pour Hips2fits
+                  String sys = aladin.localisation.getFrameGeneric()==Localisation.GAL ? "gal":"icrs";
+                  String proj = aladin.projSelector.getProjName();
+                  String param = target.al+" "+target.del+" "+radius+" "+to.getID()
+                                +" "+PREVIEW_SIZE+" "+sys+" "+proj+" jpg";
+                  final String url = aladin.glu.getURL("Hips2Fits", param, false, false).toString();
+                  
+                  // Déjà fait ? => rien à faire
+                  if( url.equals( to.previewUrlHips2Fits ) ) return;
+                  
+                  // On change de champ
+                  to.previewImgHips2Fits = null;
+                  (new Thread() { public void run() { load(1,url);  } }).start();
+               } catch( Exception e ) {
+                  to.previewErrorHips2Fits=true;
+                  mode=0;  // on ce sera le preview
                }
-            }).start();
+            }
+            
+            // Chargement du preview par défaut
+            if( mode==0 ) {
+
+               // Déjà fait ?
+               if( to.previewError || to.previewImg != null ) return;
+
+               // Pas de preview ?
+               if( !to.hasPreview() ) { to.previewError = true; return; }
+               
+
+               final String url = to.getPreviewUrl();
+               (new Thread() { public void run() { load(0,url);  } }).start();
+            }
          }
+         
 
-         void load() {
+         // mode=0 => chargement du preview officiel
+         // mode=1 => chargement d'une vignette par Hipstofits
+         void load(int mode,String url) {
 
+            LoadingUrl=url;
+            to.previewLoading=true;
+            
+            // On lache la main, histoire de faciliter l'affichage
+            Util.pause(30);
+            
+            // On a visiblement changer de vignette => interruption du chargement
+            if( !url.equals(LoadingUrl) ) return;
+            
+            aladin.trace(5,"Loading hips2Fits "+url);
+            
+            long t0 = Util.getTime();
+            
             MyInputStream is = null;
             try {
                is = new MyInputStream(Util.openStream(url));
@@ -4035,22 +4113,33 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                MediaTracker mt = new MediaTracker(this);
                mt.addImage(im, 0);
                mt.waitForAll();
-
-               to.imPreview = im;
+               
+               if( mode==1 ) {
+                  to.previewImgHips2Fits=im;
+                  to.previewUrlHips2Fits=url;
+                  
+               } else {
+                  to.previewImg = im;
+                  to.previewImgHips2Fits = null;  // on n'affichera plus la vignette 
+                  to.previewUrlHips2Fits=null;
+              }
 
             } catch( Exception e ) {
-               to.previewError = true;
+               if( mode==0 ) to.previewError = true;
+               else to.previewErrorHips2Fits = true;
             } finally {
+               to.previewLoading=false;
                if( is != null ) try {
                   is.close();
-               } catch( Exception e1 ) {
-               }
+               } catch( Exception e1 ) { }
             }
+            
+//            System.err.println("Loading hips2fits in "+(Util.getTime()-t0)+" => "+url);
             repaint();
          }
 
          public Dimension getPreferredSize() {
-            return new Dimension(88, 88);
+            return new Dimension(PREVIEW_SIZE, PREVIEW_SIZE);
          }
 
          public void paintComponent(Graphics g) {
@@ -4095,19 +4184,19 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             int hs = getHeight();
             g.setColor(Color.gray);
             g.fillRect(0, 0, ws, hs);
+            
+            boolean noImg = to.previewImg == null && to.previewImgHips2Fits == null;
 
-            if( to.previewError || to.imPreview == null ) {
+            if( noImg || to.previewLoading ) {
                g.setColor(Color.lightGray);
-               String s = to.previewError ? "no preview" : "loading...";
+               String s = to.previewLoading ? "loading" : "no preview";
                g.setFont(Aladin.ITALIC);
                java.awt.FontMetrics fm = g.getFontMetrics();
                g.drawString(s, ws / 2 - fm.stringWidth(s) / 2, hs / 2 + 4);
                return;
             }
 
-            if( to.imPreview == null ) return;
-
-            Image img = to.imPreview;
+            Image img = to.previewImgHips2Fits!=null ? to.previewImgHips2Fits : to.previewImg;
 
             int wi = img.getWidth(this);
             int hi = img.getHeight(this);

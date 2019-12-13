@@ -99,6 +99,7 @@ public class PlanBGCat extends PlanBG {
          ADD( buf, "\n* Sources loaded: ",String.format("%,d", n));
       }
       try { if( (s=prop.getFirst("nb_rows"))!=null ) ADD( buf,"\n* Total: ",String.format("%,d", Long.parseLong(s))); } catch( Exception e ) {}
+      ADD( buf,"\n","* HiPS order: "+getOrder()+"/"+maxOrder);
    }
    
    protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op,boolean now) {
@@ -191,6 +192,8 @@ public class PlanBGCat extends PlanBG {
          if( healpix!=null ) healpix.resetDrawnInView(v);
       }
    }
+   
+   protected int getMinOrder() { return minOrder==-1 ? 1 : minOrder; }
 
    protected void draw(Graphics g,ViewSimple v) {
       long [] pix=null;
@@ -201,6 +204,9 @@ public class PlanBGCat extends PlanBG {
       long nTotal=0L;
       boolean allsky1=false,allsky2=false,allsky3=false;
       boolean hipsOld = allskyExt==HealpixAllsky.XML;  // Vieille version d'un HiPS catalog
+      int minOrder = hipsOld?3: getMinOrder(); //1;
+      
+//      System.out.println("hipsOld="+hipsOld+" minOrder = "+minOrder);
       
       HealpixMoc lastMoc = new HealpixMoc();   // Moc des tuiles "last" (inutile d'aller plus loin)
       try { lastMoc.setCheckConsistencyFlag(false); } catch( Exception e1 ) { }
@@ -219,7 +225,7 @@ public class PlanBGCat extends PlanBG {
 
       boolean moreDetails=order<=3;
       
-      for( int norder= hipsOld?3:1; norder<=order; norder++ ) {
+      for( int norder= minOrder; norder<=order; norder++ ) {
          
          // Si on n'a fait le allsky, inutile de faire les losanges individuels correspondants
          // sauf s'il s'agit de l'ancienne forme des HiPS (uniquement pour norder=3)

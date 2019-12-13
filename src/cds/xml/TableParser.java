@@ -2649,9 +2649,19 @@ final public class TableParser implements XMLConsumer {
                            mu1 = new Unit(v+"mas/yr");
                         };
 
-                        pmra = mu1.getValue();
-                        mu2.convertTo(new Unit("mas/yr"));
-                        pmdec = mu2.getValue();
+                        try {
+                           pmra = mu1.getValue();
+                           mu2.convertTo(new Unit("mas/yr"));
+                           pmdec = mu2.getValue();
+                           
+                        // On arrive pas à calculer le changement d'époque
+                        // on prend alors la position telle que
+                        } catch( Exception e2 ) {
+                           System.err.println("Table PM converting error "+ (nbRecord!=-1 ? "(record "+(nbRecord+1)+")":"") +": "+e2);
+                           if( aladin.levelTrace>=3 ) e2.printStackTrace();
+                           consumer.setRecord(c.getLon(),c.getLat(),jdTime, rec);
+                           return;
+                        }
                      }
                   }
                }
@@ -2670,7 +2680,7 @@ final public class TableParser implements XMLConsumer {
 
       } catch( Exception e1 ) {
          System.err.println("Table coordinate parsing error "+ (nbRecord!=-1 ? "(record "+(nbRecord+1)+")":"") +": "+e1);
-         e1.printStackTrace();
+         if( aladin.levelTrace>=3 ) e1.printStackTrace();
       }
 
    }

@@ -56,7 +56,7 @@ public class ProjSelector extends JPanel {
       lab.setForeground(Aladin.COLOR_LABEL);
 
       String [] list = Projection.getAlaProj();
-      combo = new JComboBox<String>( list );
+      combo = new JComboBox<>( list );
       combo.setUI( new MyComboBoxUI());
       combo.setMaximumRowCount(list.length);
       combo.setFont(Aladin.PLAIN);
@@ -128,6 +128,11 @@ public class ProjSelector extends JPanel {
       String calibProj = Projection.alaProjToType[i];
       i=Calib.getProjType(calibProj);
       return i;
+   }
+   
+   /** Retourne le nom (code 3 lettres) de la projection courante */
+   protected String getProjName() {
+      return Calib.getProjName( getProjType() );
    }
    
    /** Retourne le nom de la projection courante */

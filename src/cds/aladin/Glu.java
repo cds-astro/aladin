@@ -2018,7 +2018,7 @@ public final class Glu implements Runnable {
          }
 
       } catch( Exception e ) {
-         System.err.println("GLU Aladin.profile version number error ["+s+"]");
+         System.err.println("GLU Aladin.Profile version number error ["+s+"]");
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
       return false;
@@ -2026,7 +2026,7 @@ public final class Glu implements Runnable {
 
    //   private boolean hasValidProfile(String profile) {
    //      boolean rep = hasValidProfile1(profile);
-   //      if( profile!=null ) System.out.println("Aladin.profile "+profile+" "+(rep? "Ok":"Nok"));
+   //      if( profile!=null ) System.out.println("Aladin.Profile "+profile+" "+(rep? "Ok":"Nok"));
    //      return rep;
    //   }
 
@@ -2515,7 +2515,7 @@ public final class Glu implements Runnable {
    /** Retourne toutes les URLs possibles pour un tag en commençant par celle qui
     * est actuellement utilisée */
    protected ArrayList<String> getAllUrls(String id) {
-      ArrayList<String> a = new ArrayList<String>();
+      ArrayList<String> a = new ArrayList<>();
       int i=1;
       URL u;
       boolean oChut=chut;
@@ -2660,7 +2660,7 @@ public final class Glu implements Runnable {
          }
       }.setParam(ascending);
 
-      Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+      Map<K, V> sortedByValues = new TreeMap<>(valueComparator);
       sortedByValues.putAll(map);
       return sortedByValues;
    }
@@ -2738,7 +2738,7 @@ public final class Glu implements Runnable {
 
    /** Rechargement d'une entrée historique GLU qui avait été sauvegardée dans le fichier de config */
    protected void setGluHistory(String serialized) {
-      if( gluHistory==null ) gluHistory = new HashMap<String,GluHistory>();
+      if( gluHistory==null ) gluHistory = new HashMap<>();
       try {
          GluHistory gh = GluHistoryFactory(serialized);
          gluHistory.put( gh.tag, gh );
@@ -2750,7 +2750,7 @@ public final class Glu implements Runnable {
    // Mémorisation des aliases d'un tag GLU
    private void setGluHistory(String tag, String aliases) {
       if( !aliases.startsWith("%I") ) return;
-      if( gluHistory==null ) gluHistory = new HashMap<String,GluHistory>();
+      if( gluHistory==null ) gluHistory = new HashMap<>();
 //      System.out.println("setGluHistory "+tag+" -> "+aliases);
       gluHistory.put( tag, new GluHistory(tag,aliases) );
    }

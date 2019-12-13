@@ -72,7 +72,6 @@ public class DirectoryModel extends DefaultTreeModel {
       return rep;
    }
    
-
    /** Comptage de la descendance de chaque branche (nombre de noeuds terminaux d'une branche)
     * Mémorisation dans TreeObj, soit en tant que référence (hs!=null), soit
     * en tant que décompte courant
@@ -81,11 +80,12 @@ public class DirectoryModel extends DefaultTreeModel {
    protected int countDescendance() { return countDescendance(null); }
    protected int countDescendance(HashMap<String,Integer> hs) {
       if( root.isLeaf() ) return 0;
-      return countDescendance(root.toString(),root,hs);
-   }
+      int nb=countDescendance(root.toString(),root,hs);
+      return nb;
+  }
    private int countDescendance(String prefix,DefaultMutableTreeNode parent,HashMap<String,Integer> hs) {
       TreeObj to = (TreeObj) parent.getUserObject();
-      if( parent.isLeaf() ) return 1;
+      if( parent.isLeaf() )  return 1;
 
       int n=0;
       Enumeration e = parent.children();
@@ -139,7 +139,7 @@ public class DirectoryModel extends DefaultTreeModel {
       DefaultMutableTreeNode nodeUp [] = new DefaultMutableTreeNode[1];
       int index [] = new int[1];
       DefaultMutableTreeNode lastParentNode = createTreeBranch( this, root, treeObj, 0, nodeUp, index);
-      memoFast(lastParentNode);
+      if( lastParentNode!=null ) memoFast(lastParentNode);
    }
    
    /** Méthode interne - Tentative d'insertion d'un noeud sur le parent de la dernière insertion. Retourne true
@@ -152,7 +152,6 @@ public class DirectoryModel extends DefaultTreeModel {
       DefaultMutableTreeNode node = findFast( path );
       if( node==null ) return false;
       node.add( new DefaultMutableTreeNode(treeObj) );
-      
       return true;
    }
    
@@ -170,7 +169,7 @@ public class DirectoryModel extends DefaultTreeModel {
    }
 
    /** Méthode interne - Insertion récursive d'un noeud en fonction du "path" du noeud à insérer.
-    * Création évenutelle des noeuds des branches si ceux-ci n'existente pas encore
+    * Création éventuelle des noeuds des branches si ceux-ci n'existent pas encore
     * @param model Le modèle associé à l'arbre
     * @param parent Le noeud courant du parcours de l'arbre (root au début)
     * @param treeObj Le noeud à insérer
@@ -217,11 +216,23 @@ public class DirectoryModel extends DefaultTreeModel {
          if( subNode==null ) {
             
             // Noeud terminal ? c'est donc celui à insérer
-            if( pos==-1 ) subNode = new DefaultMutableTreeNode( treeObj );
+            if( pos==-1 ) {
+               subNode = new DefaultMutableTreeNode( treeObj );
+            }
             
             // Branche intermédiaire ? déjà connue ou non ?
             else  subNode = new DefaultMutableTreeNode( new TreeObj(aladin,"",null,label,path) );
             
+            // Cas tordu où le père était en fait une branche terminal à tord
+            // Je greffe alors l'objet terminal associé en tant que fils, et je rectifie la nature
+            // de l'objet associé au père.
+            TreeObj pere = (TreeObj) parent.getUserObject();
+            if( pere!=null && pere instanceof TreeObjDir) {
+               if( Aladin.levelTrace>=3 ) System.err.println("Directory tree clash on "+pere.path+" (supposed to be a leaf, and in fact a node)");
+               DefaultMutableTreeNode pereNode = new DefaultMutableTreeNode( pere );
+               parent.add( pereNode );
+               parent.setUserObject( new TreeObj(aladin,"",null,pere.label,pere.path)  );
+            }
             parent.add(subNode);
          }
          

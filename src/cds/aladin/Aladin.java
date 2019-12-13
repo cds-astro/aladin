@@ -172,6 +172,7 @@ import cds.xml.XMLParser;
  * @beta          - polygonal photometry tool for HiPS<br>
  * @beta          - query by any region
  * @beta    <LI> Data discovery tree: <br>
+ * @beta          - pointed thumbnails <br>
  * @beta          - sort and hiearchy control <br>
  * @beta          - drag & drop to view panels
  * @beta    <LI> FITS WCS GLS support
@@ -190,9 +191,9 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
- * @beta    <LI> Hipsgen LINT remote tile tests bug fixed
- * @beta    <LI> Hipsgen hips_status bug fixed
- * @beta    <LI> Hipsgen FITS tile 2880 boundary bug fixed
+ * @beta    <LI> Resource Tree stack MOC filtering bug fix
+ * @beta    <LI> Hipsgen hips_status bug fix
+ * @beta    <LI> Hipsgen FITS tile 2880 boundary bug fix
  * @beta    <LI> PNG tiles opacity bug fix
  * @beta    <LI> HEALPix new lib bug fix (introduced in v10.107)
  * @beta    <LI> Base64 Binary SHORT decoding error (bad casting)
@@ -201,7 +202,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> Reticle copy/paste (rounding bug)
  * @beta    <LI> Hipsgen BSCALE+specific skyvals use case bug
  * @beta    <LI> XMM EPN FoV better definition
- * @beta    <LI> Grid missing label bug fixing
+ * @beta    <LI> Grid missing label bug fix
  * @beta    <LI> Hipsgen multithread dead lock (multipass bug)
  * @beta    <LI> Grid stroke line adjustement (for very huge images in NOGUI mode)
  * @beta    <LI> Debian+GNOME context (Jtree, TextField, SwingInvokeLater...)
@@ -228,7 +229,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.139";
+   static public final    String VERSION = "v10.042";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -244,7 +245,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2018 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
+   static String COPYRIGHT         = "(c) 2020 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
