@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -71,16 +71,19 @@ public class ServerXmatch extends ServerMocQuery  {
       return s;
    }
    
+   static private final boolean TEST = true;
+   
    protected void addUpload( MultiPartPostOutputStream out, Plan plan ) throws Exception {
       Legende leg = plan.getFirstLegende();
       boolean addCoo=false;
+      
       
       String raName, deName;
       int raIndex = leg.getRa();
       int deIndex = leg.getDe();
       String dataType = leg.getDataType(raIndex);
       String unit = leg.getUnit(raIndex);
-      if( dataType!=null && (dataType.equals("double") || dataType.equals("float")) 
+      if( !TEST && dataType!=null && (dataType.equals("double") || dataType.equals("float")) 
             && unit!=null && unit.startsWith("deg")) {
          raName = leg.getName( raIndex );
          deName = leg.getName( deIndex );

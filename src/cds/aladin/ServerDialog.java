@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -329,7 +329,7 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       Aladin.setIcon(this);
 
       int i;
-      Vector<Server> sv = new Vector<Server>(100); // Temporaire pour la creation de serveur[]
+      Vector<Server> sv = new Vector<>(100); // Temporaire pour la creation de serveur[]
       JPanel actions = new JPanel();
       createChaine();
       setTitle(TITLE);
@@ -355,7 +355,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       status.setForeground( Color.blue );
 
       // Les serveurs Images par programme
-      if( Aladin.NETWORK ) sv.addElement(aladinServer = new ServerAladin(aladin));
+      if( Aladin.NETWORK ) { 
+         aladinServer = new ServerAladin(aladin);
+         if( Aladin.OLD ) sv.addElement(aladinServer);
+      }
 
       // Les serveurs Images via GLU
       if( Aladin.NETWORK ) addGluServer(sv, Glu.vGluServer, Server.IMAGE);
@@ -367,13 +370,16 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          vizierServer = svizier = new ServerVizieR(aladin, this, actions);
 //         if( !Aladin.OUTREACH ) {
             sv.addElement(svizier);
+            if( !Aladin.OLD ) svizier.HIDDEN=true; 
+            
+            
 //               sv.addElement(vizierSurveys = new ServerVizieRSurvey(aladin,
 //                     ((ServerVizieR) svizier).vSurveys));
 //               sv.addElement(vizierArchives = new ServerVizieRMission(aladin,
 //                     ((ServerVizieR) svizier).vArchives));
             
             if( aladin.glu.get("Simbad")==null ) sv.addElement(new ServerSimbad(aladin));
-            if( aladin.glu.get("Ned")==null ) sv.addElement(new ServerNED(aladin));
+//            if( aladin.glu.get("Ned")==null ) sv.addElement(new ServerNED(aladin));
             
 //               sv.addElement(new ServerSWarp(aladin));
 //               sv.addElement(new ServerMocQuery(aladin));

@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -229,7 +229,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v10.042";
+   static public final    String VERSION = "v11.000"; //"v10.145";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -241,11 +241,27 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Taille moyenne des fonts */
    static protected int  SIZE   = 12;
+   
+   // Gère le mode particuliers
+   public static boolean PREMIERE=true;  // true si on tourne en mode AVANT-PREMIERE
+   public static boolean BETA=true;  // true si on tourne en mode BETA
+   public static boolean CDS=false;   // true si on tourne en mode CDS
+   public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
+   static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
+   static public final boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
+//   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
+   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
+   static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
+   static boolean SETLOG=false; // true si on a forcé le positionnement du LOG
+   
+   static { if( PREMIERE ) BETA=PROTO=false; }
+   
 
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2020 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
+   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2020 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
+                               "(c) 2020 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -254,17 +270,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FOVURL  = "http://"+Aladin.ALADINMAINSITE+"/java/FOVs.xml";
    static protected final String TREEURL = "http://"+Aladin.ALADINMAINSITE+"/java/Tree.dic";
    static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
-
-   // Gère le mode particuliers
-   public static boolean BETA=true;  // true si on tourne en mode BETA
-   public static boolean CDS=false;   // true si on tourne en mode CDS
-   public static boolean PROTO=true;    // true si on tourne en mode PROTO (nécessite Proto.jar)
-   static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
-   static public final boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
-//   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
-   static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
-   static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
-   static boolean SETLOG=false; // true si on a forcé le positionnement du LOG
 
    // La couleur du fond
    
@@ -470,6 +475,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // true si on affiche la console
    static boolean CONSOLE=true;
+   
+   // true si on affiche les anciennes fonctions désormais obsolètes et sans garantie
+   static boolean OLD=false;
 
    // true si on affiche le banner
    static boolean BANNER=true;
@@ -3022,7 +3030,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( isFullScreen() ) fullScreen.repaint();
       setHelp(false);
       
-      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips NGC 2244 1.2deg");
+      
+      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips 22:47:38.58 +58:02:48.6 0.8deg");   // SH2-142 
+//      if( !command.hasCommand() && command.isSync() ) execAsyncCommand("get hips NGC 2244 1.2deg");
    }
 
 
@@ -3157,12 +3167,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Affichage des authors et contributors
    private void about() {
-      Aladin.info(TITRE+" ("+VERSION+(BETA?" beta":PROTO?" proto":"")+") "+
+      Aladin.info(TITRE+" ("+VERSION+(PREMIERE?" avant-premiere":BETA?" beta":PROTO?" proto":"")+") "+
             chaine.getString("CDS")+
             "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel, Chaitra\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
-            "* Copyright: Université de Strasbourg/CNRS - developed by the Centre de Données de Strasbourg "
-            + "from the Observatoire astronomique de Strasbourg\n  \n" +
+            "* "+COPYRIGHT+"\n \n" +
+//            "* Copyright: Université de Strasbourg/CNRS - developed by the Centre de Données de Strasbourg "
+//            + "from the Observatoire astronomique de Strasbourg\n  \n" +
             "Portions of the code (HiPS & MOCs) have been developed  in the framework of ASTERICS project (2015-2018)." +
             "Progressive catalogs, PM facility, have been developed  in the framework of GAIA CU9 (2012-2022)." +
             "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +
@@ -6056,6 +6067,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -[no]log: with/without anonymous statistic reports\n"+
                "       -[no]beta: with/without new features in beta test\n"+
 //               "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
+               "       -old: obsoleted facilities re-activated (without any warranty)\n"+
                "       -trace: trace mode for debugging purpose\n"+
                "       -debug: debug mode (very verbose)\n"+
 //               "       -chart=: build a png field chart directly on stdout\n"+
@@ -6272,6 +6284,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             trace(2,"default font size = "+SIZE);
             lastArg=i+1;
          }
+         else if( args[i].equals("-old") ) { OLD=true; lastArg=i+1; }
          else if( args[i].charAt(0)=='-' ) { System.err.println("Aladin option unknown ["+args[i]+"]"); lastArg=i+1; }
       }
       
@@ -7311,7 +7324,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private static Hashtable imageCache=null;
    public Image getImagette(String name) {
       if( imageCache==null ) imageCache = new Hashtable(10);
-
+      
       // L'image a-t-elle ete deja chargee
       Object i = imageCache.get(name);
       if( i!=null ) {

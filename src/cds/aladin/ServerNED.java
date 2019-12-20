@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -49,16 +49,6 @@ public final class ServerNED extends ServerSimbad  {
             "${Type}=\"X*\" {draw cross}\n" +
             "{ draw ${Type} }\n" +
             "}",
-//            "#NED filter (colorized)\nfilter NED.filterC {\n" +
-//            "${Type}=\"G\" { draw blue oval }\n" +
-//            "${Type}=\"RadioS\" || ${Type}=\"Maser\" { draw green triangle }\n" +
-//            "${Type}=\"IRS\" || ${Type}=\"IrS\" {draw red rhomb}\n" +
-//            "${Type}=\"\\*\" {draw red circle(3)}\n" +
-//            "${Type}=\"Vis*\" || ${Type}=\"SNR\" || ${Type}=\"Neb\" || ${Type}=\"HI*\" {draw red square}\n" +
-//            "${Type}=\"UV*\" {draw magenta cross;draw magenta plus}\n" +
-//            "${Type}=\"X*\" {draw black cross}\n" +
-//            "{ draw #9900CC ${Type} }\n" +
-//            "}",
             "#Star\nfilter Star {\n" +
             "${Type}=\"\\*\" {draw circle(3)}\n" +
             "}\n",

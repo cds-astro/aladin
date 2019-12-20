@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -246,6 +246,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       int taille;		// nombre d'octets a lire
       int n;			// nombre d'octets pour un pixel
       boolean isARGB = (dis.getType() & MyInputStream.ARGB) != 0;
+      int mode;         // ordre des pixels:  0=>NAXIS3=3, 1=>NAXIS2=3 sinon 3=>NAXIS1=3
 
       Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
 
@@ -260,13 +261,21 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       }
       if( bitpix!=8 && !isARGB ) aladin.command.printConsole("!! RGB BITPIX!=8 => autocutting each color component !\n");
       naxis1=width = headerFits.getIntFromHeader("NAXIS1");
-      if (width  <= 0) return false;
+      if (naxis1  <= 0) return false;
       naxis2=height = headerFits.getIntFromHeader("NAXIS2");
-      if (height  <= 0) return false;
+      if (naxis2  <= 0) return false;
+      int naxis3 =  headerFits.getIntFromHeader("NAXIS3");
+      if (naxis3  <= 0) return false;
+     
+      if( naxis3==3 ) mode=0;
+      else if( naxis2==3 ) { mode=1; width=naxis1; height=naxis3; }
+      else if( naxis1==3 ) { mode=2; width=naxis2; height=naxis3; }
+      else throw new Exception("Unsupported RGB FITS image (no NAXISn=3 keywords");
+      
       npix = Math.abs(bitpix)/8;
       taille=width*height*3;	// Nombre d'octets
       setPourcent(0);
-      Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+" => size="+taille);
+      Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+naxis3+" BITPIX="+bitpix+" => size="+taille);
 
       // Pour des stats
       Date d = new Date();
@@ -304,12 +313,24 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
          // mode RGB => les valeurs des composantes sont rangées dans trois tableaux consécutifs R, G et B
       } else {
 
-         byte [] buf;
-         for( i=0; i<3; i++ ) {
-            buf = i==0 ? red : i==1 ? green : blue;
-            readColor(buf,dis,width,height,bitpix);
-            setPourcent(pourcent+33);
-         }
+         // Rangement habituel width x height x 3
+         if( mode==0 ) {
+            byte [] buf;
+            for( i=0; i<3; i++ ) {
+               buf = i==0 ? red : i==1 ? green : blue;
+               readColor(buf,dis,width,height,bitpix);
+               setPourcent(pourcent+33);
+            }
+            
+         // Rangement à la Thomas  3 x width x height
+         } else if( mode==2 ) {
+            String e="RGB FITS image width suspicious pixel order (3x width x height). Load anyway";
+            aladin.warning(e);
+            aladin.console.printError("!!! "+e);
+            readColorALaThomas(red,green,blue,dis,width,height,bitpix);
+            
+         } else if( mode==1 ) throw new Exception ("Unsupported RGB FITS format (width x 3 x height !).");
+         
       }
 
       d1=new Date(); temps = (int)(d1.getTime()-d.getTime()); d=d1;
@@ -339,7 +360,39 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
          pIn=null;
       }
    }
-
+   
+   // Lecteur des 3 couleurs d'un coup en prenant en compte le packaging à la Thomas
+   // soit nframe x width x height
+   private void readColorALaThomas(byte [] red,byte [] green,byte [] blue,
+         MyInputStream dis,int width,int height,int bitpix) throws Exception {
+      
+      // Je lis le tout
+      int npix = Math.abs(bitpix)/8;
+      int taille = width*height;
+      byte [] pIn = new byte[ 3*taille*npix ];
+      dis.readFully(pIn);
+      
+      byte [] r = bitpix==8 ? red   : new byte[taille*npix];
+      byte [] g = bitpix==8 ? green : new byte[taille*npix];
+      byte [] b = bitpix==8 ? blue  : new byte[taille*npix];
+      
+      // Je parcours dans le sens Thomas RGB
+      int i=0;
+      for( int from=0; from<pIn.length; from+=npix ) {
+         int z = from%3;
+         byte [] out = z==0 ? r : z==1 ? g : b;
+         int to = from/3;
+         System.arraycopy(pIn, from, out, to , npix);
+      }
+      
+      if( bitpix!=8 ) {
+         getPix8Bits(red,  r,bitpix,width,height,0.,0.,true,0,0,0);
+         getPix8Bits(green,g,bitpix,width,height,0.,0.,true,0,0,0);
+         getPix8Bits(blue, b,bitpix,width,height,0.,0.,true,0,0,0);
+      }
+      
+   }
+   
    /**
     * Calcul les pixels de l'imagette pour le ZoomView en prenant le pixel au plus proche
     * C'est très rapide et le rendu visuel est quasi le même que par interpolation

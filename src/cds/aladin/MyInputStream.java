@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -269,6 +269,29 @@ public class MyInputStream extends FilterInputStream {
 
       return 0;
    }
+   
+   // Détection d'une image FITS RGB explicite ou implicite
+   private boolean isFitsRGB() throws IOException {
+      
+      // Description explicite => c'est facile
+      if( hasFitsKey("CTYPE3","RGB") ) return true;
+      
+      // Si ce n'est pas du 8bits, de n'est pas du RGB autodétectable
+      if( !hasFitsKey("BITPIX","8") ) return false;
+      
+      // S'il y a 3 plans de taille égale, c'est bon
+      try {
+         int naxis= Integer.parseInt( getFitsValue("NAXIS"));
+         if( naxis!=3 ) return false;
+         int naxis1 = Integer.parseInt( getFitsValue("NAXIS1"));
+         int naxis2 = Integer.parseInt( getFitsValue("NAXIS2"));
+         int naxis3 = Integer.parseInt( getFitsValue("NAXIS3"));
+         if( naxis1==3 && naxis2==naxis3 ) return true;
+         if( naxis2==3 && naxis1==naxis3 ) return true;
+         if( naxis3==3 && naxis1==naxis2 ) return true;
+      } catch( Exception e ) {}
+      return false;
+   }
 
    /** Sous-types particulier au FITS image */
    private void getTypeFitsImg() throws IOException {
@@ -286,9 +309,8 @@ public class MyInputStream extends FilterInputStream {
       // Détection d'une extension FITS à suivre
       if( hasFitsKey("EXTEND",null) || hasFitsKey("NAXIS","0") ) type |= XFITS;
 
-      if( hasFitsKey("CTYPE3","RGB")
-            || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3") && hasFitsKey("BITPIX","8") ) type |= RGB;
-//    || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3") ) type |= RGB;
+      // Detection d'une image RGB
+      if( isFitsRGB() ) type |= RGB;
 
       // Détection d'une image HUGE
       if( (type & (CUBE|RGB))==0 ) {

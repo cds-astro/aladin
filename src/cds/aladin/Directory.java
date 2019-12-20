@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -2310,7 +2310,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( prop.get("tap_service_url") == null ) {
          prop.replaceValue("tap_service_url", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
       }
-      
+
       // Détermination de la catégorie
       prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, "Catalog/VizieR");
       
@@ -2383,8 +2383,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
    // Ajoute le label en préfixe si les premiers mots sont différents
    // Supprime éventuellement l'article The en début de titre
-   protected String addLabelPrefix(String label, String title) {
+   static protected String addLabelPrefix(String label, String title) {
       if( label==null ) return title;
+      
+      // Probablement déjà fait
+      if( title.startsWith(label) ) return title;
       
       String title1 = title;
       if( title.startsWith("The ") ) title = title.substring(4);

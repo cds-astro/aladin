@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -110,6 +110,28 @@ public class TreeObjDir extends TreeObj implements Propable {
 
    public final static String DIRECT = "DIRECT/"; // préfixe ajouté à l'ID dans le cas d'un accès direct par URL explicite
    
+   
+   /** Ajustement des labels qui s'affiche dans l'arbre pour les ressources VizieR */
+   private void adjustVizieR() {
+      
+      // Est-ce bien un enregsitrement VizieR ?
+      if( !internalId.startsWith("CDS/") || internalId.startsWith("CDS/Simbad") ) return;
+      
+      // Incorpartion en préfixe de la description du label du catalogue
+      Directory dir = aladin.directory;
+      
+      // Une table unique => Incorpartion en préfixe de la description du label du catalogue
+      if( !dir.hasMultiple( dir.getCatParent(internalId)) ) {
+         String prefixe = prop.getFirst("obs_collection_label");
+         if( prefixe!=null ) aladinLabel=label = dir.addLabelPrefix(prefixe,label);
+         
+      // Une table parmi d'autres => Incorporation en suffixe du label de la table
+      } else {
+         String suffixe = prop.getFirst("obs_label");
+         if( suffixe!=null && label.indexOf("("+suffixe+")")<0 ) aladinLabel=label = label+" ("+suffixe+")";
+      }
+   }
+   
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
    public TreeObjDir(Aladin aladin,String pathOrUrl) throws Exception {
@@ -164,6 +186,9 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( copyrightUrl==null ) copyrightUrl = prop.getProperty(Constante.OLD_OBS_COPYRIGHT_URL);
       useCache = !local && Boolean.parseBoolean( prop.getProperty(Constante.OLD_USECACHE,"True") );
       skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+      
+      // Petit peaufinage pour VizieR
+      adjustVizieR();
 
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
       if( s!=null) {
@@ -337,6 +362,9 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( s==null ) s=prop.getProperty( Constante.KEY_OBS_COLLECTION );
       aladinLabel = label = s!=null ? s : createLabel(id,cat);      
 
+      // Petit peaufinage des labels pour VizieR
+      adjustVizieR();
+      
       // Initialisation de la clé de tri et du path
       setTri();
       setPath();
@@ -348,6 +376,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
       copyrightUrl = prop.getProperty(Constante.KEY_OBS_COPYRIGHT_URL);
       skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+      
 
       // Le champ initial
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);

@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.allsky;
@@ -2263,36 +2263,45 @@ public class Context {
       
       // Recherche du premier NorderXX trouvé où XX est un nombre
       File norder = null;
-      for( String s : root.list() ) {
-         if( s.startsWith("Norder") ) {
-            try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
-            norder= new File(path+"/"+s);
-            break;
+      String [] rootList = root.list();
+      if( rootList!=null ) {
+         for( String s : rootList ) {
+            if( s.startsWith("Norder") ) {
+               try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
+               norder= new File(path+"/"+s);
+               break;
+            }
          }
       }
       if( norder==null ) return "";
       
       // Recherche du premier Dir trouvé où XX est un nombre
       File dir = null;
-      for( String s : norder.list() ) {
-         if( s.startsWith("Dir") ) {
-            try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
-            dir = new File(norder.getAbsolutePath()+"/"+s);
-            break;
-         } 
+      String [] norderList = norder.list();
+      if( norderList!=null ) {
+         for( String s : norderList ) {
+            if( s.startsWith("Dir") ) {
+               try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
+               dir = new File(norder.getAbsolutePath()+"/"+s);
+               break;
+            } 
+         }
       }
       if( dir==null ) return "";
       
       // Recherche du premier NpixXX.ext trouvé où XX est un nombre
       String npix = null;
-      for( String s : dir.list() ) {
-         if( s.startsWith("Npix") ) {
-            int j = s.lastIndexOf('.');
-            if( j<0 ) continue;
-            try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
-            npix = dir.getAbsolutePath()+"/"+s.substring(0,j);
-            break;
-         } 
+      String [] dirList = dir.list();
+      if( dirList!=null ) {
+         for( String s : dirList ) {
+            if( s.startsWith("Npix") ) {
+               int j = s.lastIndexOf('.');
+               if( j<0 ) continue;
+               try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
+               npix = dir.getAbsolutePath()+"/"+s.substring(0,j);
+               break;
+            } 
+         }
       }
       if( npix==null ) return "";
       
@@ -2337,36 +2346,45 @@ public class Context {
       
       // Recherche du premier NorderXX trouvé où XX est un nombre
       File norder = null;
-      for( String s : root.list() ) {
-         if( s.startsWith("Norder") ) {
-            try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
-            norder= new File(path+"/"+s);
-            break;
+      String [] rootList = root.list();
+      if( rootList!=null ) {
+         for( String s : rootList ) {
+            if( s.startsWith("Norder") ) {
+               try { Integer.parseInt( s.substring(6)); } catch( Exception e) { continue; }
+               norder= new File(path+"/"+s);
+               break;
+            }
          }
       }
       if( norder==null ) return -1;
       
       // Recherche du premier Dir trouvé où XX est un nombre
       File dir = null;
-      for( String s : norder.list() ) {
-         if( s.startsWith("Dir") ) {
-            try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
-            dir = new File(norder.getAbsolutePath()+"/"+s);
-            break;
-         } 
+      String [] norderList = norder.list();
+      if( norderList!=null ) {
+         for( String s : norderList ) {
+            if( s.startsWith("Dir") ) {
+               try { Integer.parseInt( s.substring(3)); } catch( Exception e) { continue; }
+               dir = new File(norder.getAbsolutePath()+"/"+s);
+               break;
+            } 
+         }
       }
       if( dir==null ) return -1;
       
       // Recherche du premier NpixXX.ext trouvé où XX est un nombre
       String npix = null;
-      for( String s : dir.list() ) {
-         if( s.startsWith("Npix") ) {
-            int j = s.lastIndexOf('.');
-            if( j<0 ) continue;
-            try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
-            npix = dir.getAbsolutePath()+"/"+s;
-            break;
-         } 
+      String [] dirList = dir.list();
+      if( dirList!=null ) {
+         for( String s : dirList ) {
+            if( s.startsWith("Npix") ) {
+               int j = s.lastIndexOf('.');
+               if( j<0 ) continue;
+               try { Integer.parseInt( s.substring(4,j)); } catch( Exception e) { continue; }
+               npix = dir.getAbsolutePath()+"/"+s;
+               break;
+            } 
+         }
       }
       if( npix==null ) return -1;
       

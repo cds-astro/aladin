@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -63,69 +63,7 @@ public class ServerSimbad extends Server  {
          gluTag = gluTag.substring(0,gluTag.length()-1);
       } else TESTSERVER=true;
       
-      filters = 
-//         !Aladin.OUTREACH ? new String[] {
-//            "#Simbad filter\nfilter Smb.filter {\n" +
-//            "(${OTYPE}=\"Star\" || ${OTYPE}=\"*\\**\") && (${B}!=0 || ${V}!=0 || ${R}!=0 || ${J}!=0 || ${K}!=0) {\n" +
-//            "   draw pm(${PMRA},${PMDEC})\n" +
-//            "   draw circle(-$[phot.mag*],3,15)\n" +
-//            "}\n" +
-//            "(${OTYPE}=\"Star\" ||${OTYPE}=\"*\\**\") && ${B}=\"\" && ${V}=\"\" && ${R}=\"\" && ${J}=\"\" && ${K}=\"\" {\n" +
-//            "   draw pm(${PMRA},${PMDEC})\n" +
-//            "   draw circle(3)\n" +
-//            "}\n" +
-//            "(${OTYPE}=\"G*\" || ${OTYPE}=\"*G\") && ${GALDIM_MAJAXIS}!=0 {\n" +
-//            "   draw ellipse(0.5*${GALDIM_MAJAXIS},0.5*${GALDIM_MINAXIS},${GALDIM_ANGLE})\n" +
-//            "}\n" +
-//            "(${OTYPE}=\"G*\" || ${OTYPE}=\"*G\")) && ${GALDIM_MAJAXIS}==\"\" {\n" +
-//            "   draw oval\n" +
-//            "}\n" +
-//            "${OTYPE}=\"Radio*\" || ${OTYPE}=\"Maser\" || ${OTYPE}=\"HI\" { draw triangle }\n" +
-//            "${OTYPE}=\"UV\" {draw cross;draw plus}\n" +
-//            "${OTYPE}=\"IR\" || ${OTYPE}=\"Red*\" {draw rhomb}\n" +
-//            "${OTYPE}=\"Neb\"  || ${OTYPE}=\"PN*\" || ${OTYPE}=\"SNR*\" {draw square}\n" +
-//            "${OTYPE}=\"HII\" { draw dot }" +
-//            "${OTYPE}=\"X\" { draw cross }\n" +
-//            "${OTYPE}!=\"Unknown\" { draw ${OTYPE} }\n" +
-//            "{ draw dot }\n" +
-//            "}",
-//            "#Simbad filter (colorized)\nfilter Smb.filterC {" +
-//            "(${OTYPE}=\"Star\" || ${OTYPE}=\"*\\**\") && (${B}!=0 || ${V}!=0 || ${R}!=0 || ${J}!=0 || ${K}!=0) {\n" +
-//            "   draw red pm(${PMRA},${PMDEC})\n" +
-//            "   draw red circle(-$[phot.mag*],3,15)\n" +
-//            "}\n" +
-//            "(${OTYPE}=\"Star\" ||${OTYPE}=\"*\\**\") && ${B}=\"\" && ${V}=\"\" && ${R}=\"\" && ${J}=\"\" && ${K}=\"\" {\n" +
-//            "   draw red pm(${PMRA},${PMDEC})\n" +
-//            "   draw red circle(3)\n" +
-//            "}\n" +
-//            "(${OTYPE}=\"G*\" || ${OTYPE}=\"*G\") && ${GALDIM_MAJAXIS}!=0 {\n" +
-//            "   draw blue ellipse(0.5*${GALDIM_MAJAXIS},0.5*${GALDIM_MINAXIS},${GALDIM_ANGLE})\n" +
-//            "}\n" +
-//            "(${OTYPE}=\"G*\" || ${OTYPE}=\"*G\")) && ${GALDIM_MAJAXIS}==\"\" {\n" +
-//            "   draw blue oval\n" +
-//            "}\n" +
-//            "${OTYPE}=\"Radio*\" || ${OTYPE}=\"HI\" || ${OTYPE}=\"Maser\" { draw green triangle }\n" +
-//            "${OTYPE}=\"UV\" {draw magenta cross;draw magenta plus}\n" +
-//            "${OTYPE}=\"IR\" || ${OTYPE}=\"Red*\" {draw red rhomb}\n" +
-//            "${OTYPE}=\"Neb\"  || ${OTYPE}=\"PN*\" || ${OTYPE}=\"SNR*\" {draw red square}\n" +
-//            "${OTYPE}=\"HII\" { draw red dot }" +
-//            "${OTYPE}=\"X\" { draw black cross }\n" +
-//            "${OTYPE}!=\"Unknown\" { draw #9900CC ${OTYPE} }\n" +
-//            "{ draw #9900CC dot }\n" +
-//            "}",
-//            "#object class\nfilter Class { draw ${OTYPE} }",
-//            "#position uncertainty\nfilter Uncertainty {" +
-//            "draw;" +
-//            "draw ellipse(0.5*${COO_ERR_MAJA},0.5*${COO_ERR_MINA},${COO_ERR_ANGLE})" +
-//            "}",
-//            "#object size\nfilter Size {" +
-//            "draw;" +
-//            "draw magenta ellipse(0.5*${GALDIM_MAJAXIS},0.5*${GALDIM_MINAXIS},${GALDIM_ANGLE})" +
-//            "}",
-//            "#proper motion\nfilter PM { draw;draw magenta pm(${PMRA},${PMDEC}) }",
-////            "#B-V rainbow effect\nfilter BVrainbow { ${Bmag}!=\"\" && ${Vmag}!=\"\" { draw square rainbow(${Bmag}-${Vmag},-0.3,1) }}",
-//      } :
-         new String[] {
+      filters = new String[] {
                   "#All objects\nfilter All {\n" +
                   "(${OTYPE}=\"Star\" || ${OTYPE}=\"*\\**\") && (${B}!=0 || ${V}!=0 || ${R}!=0 || ${J}!=0 || ${K}!=0) {\n" +
                   "   draw pm(${PMRA},${PMDEC})\n" +

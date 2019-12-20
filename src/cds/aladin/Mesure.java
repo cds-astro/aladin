@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -172,7 +172,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
        // archive
        // server", o, true);
        if (this.activeDataLinkWord.datalinksInfo == null || this.activeDataLinkWord.datalinksInfo.isEmpty()) {//just instantiating
-    	   this.activeDataLinkWord.datalinksInfo = new ArrayList<SimpleData>();
+    	   this.activeDataLinkWord.datalinksInfo = new ArrayList<>();
     	   datalinkUrl = new URL(url);
        } else if (this.activeDataLinkGlu!=null && this.activeDataLinkWord.datalinksInfo.contains(this.activeDataLinkGlu)) {
 
@@ -181,7 +181,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 				dataLinkInfoCopy.addAll(datalinksInfo);
 				dataLinkInfoCopy.remove(aladin.mesure.activeDataLinkGlu);*/
 
-    	  this.activeDataLinkWord.datalinksInfo = new ArrayList<SimpleData>();
+    	  this.activeDataLinkWord.datalinksInfo = new ArrayList<>();
           SimpleData activeDatalinkLabel = this.activeDataLinkGlu;
           datalinkUrl = new URL(activeDatalinkLabel.getParams().get(Constants.ACCESSURL));
        }
@@ -253,14 +253,14 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 					
 					if (semantics.equalsIgnoreCase(SEMANTIC_CUTOUT) || semantics.equalsIgnoreCase(SEMANTIC_ACCESS)
 							|| semantics.equalsIgnoreCase(SEMANTIC_PROC)) {//TODO:: remove access semantic. added to facilitate testing.
-						if (Aladin.BETA) {
+//						if (Aladin.BETA) {
 							if (aladin.datalinkGlu == null) {
 								aladin.datalinkGlu = new DataLinkGlu(aladin);
 							}
 							aladin.datalinkGlu.createDLGlu(this.activeDataLinkSource, activeDataLinkGlu);
-						} else {
-							Aladin.error(NOCUTOUTCLIENTSUPPORT, 1);
-						}
+//						} else {
+//							Aladin.error(NOCUTOUTCLIENTSUPPORT, 1);
+//						}
 					} else if (semantics.startsWith(SEMANTIC_PREVIEWPLOT) && accessUrl != null 
 							&& contentType.equalsIgnoreCase(CONTENT_TYPE_VOTABLE)) {
 						int x = this.activeDataLinkWord.x + this.activeDataLinkWord.w/2;
@@ -784,7 +784,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
    // Liste des liens qui ont déjà été cliqué (on mémorise le hashcode de l'obj et l'index
    // de la colonne concernée
-   private HashSet<String> haspushedSet = new HashSet<String>();
+   private HashSet<String> haspushedSet = new HashSet<>();
    protected void setHaspushed(Obj o, int numField) {
       String key = o.hashCode()+"/"+numField;
       haspushedSet.add( key );

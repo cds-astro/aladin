@@ -197,7 +197,7 @@
 %L    http://alaskybis.u-strasbg.fr/hips-image-services/hips2fits
 
 %A    Hips2Fits
-%D    Aladin HiPS cutout service form
+%D    Aladin HiPS to Fits cutout service form
 %O    aladin
 %Z    ALADIN
 %U    <&Hips2FitsU>?ra=$1&dec=$2&fov=$3&hips=$4&width=$5&height=$5&coordsys=$6&projection=$7&rotation_angle=0&format=$8
@@ -212,7 +212,7 @@
 %P.K  1:Target(RAd)
 %P.K  2:Target(DEd)
 %P.K  3:Field(RADIUSd)
-%P.V  4:CDS/P/DSS2/blue
+%P.V  4:CDS/P/2MASS/J
 %P.V  5:1024
 %P.V  6:icrs
 %P.V  6:galactic
@@ -242,9 +242,9 @@
 %P.V 8:png - Compressed, 8 bits
 %R    Mime(image)
 %F.U  http://alaskybis.u-strasbg.fr/hips-image-services/hips2fits
-%Aladin.Profile >10.4 beta
-%Aladin.Label Hips2Fits
-%Aladin.Logo aladin.gif
-%Aladin.LabelPlane Hips2Fits $4
+%Aladin.Profile >10.140
+%Aladin.Label Aladin
+%Aladin.Logo AladinHips2fits.png
+%Aladin.LabelPlane Hips2fits $4
 %Aladin.MenuNumber I2
 

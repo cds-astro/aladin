@@ -1,10 +1,10 @@
-// Copyright 1999-2018 - Université de Strasbourg/CNRS
+// Copyright 1999-2020 - Université de Strasbourg/CNRS
 // The Aladin Desktop program is developped by the Centre de Données
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
 //
-//This file is part of Aladin.
+//This file is part of Aladin Desktop.
 //
 //    Aladin Desktop is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //    GNU General Public License for more details.
 //
 //    The GNU General Public License is available in COPYING file
-//    along with Aladin.
+//    along with Aladin Desktop.
 //
 
 package cds.aladin;
@@ -1443,13 +1443,17 @@ public class ServerGlu extends Server implements Runnable {
                if( !verif(Plan.IMAGE,objet,param) ) {
                   return -1;
                }
-               if( fmt==PlanImage.NATIVE ) {
-                  n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
-                        fmt,PlanImage.UNDEF,null,null);
-               } else {
-                  n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
-                        label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
-               }
+               
+               // AVEC L'ARRIVEE DE hips2fits IL VAUT MIEUX DETECTER LE TYPE D'IMAGE A POSTERIORI
+               n = ((ServerFile)aladin.dialog.localServer).creatLocalPlane(u+"",label,origin,null,null,null,this,null,null);
+
+//               if( fmt==PlanImage.NATIVE ) {
+//                  n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
+//                        fmt,PlanImage.UNDEF,null,null);
+//               } else {
+//                  n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
+//                        label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
+//               }
 
                // Ou d'un serveur de MOC (on prend on compte les mirroirs)
             } else if( type==MOC ) {
