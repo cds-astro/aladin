@@ -231,6 +231,7 @@ public class ColumnCalculator {
         
         // ajout de la nouvelle valeur
         s.info = new String(s.info+"\t"+value);
+        
         // pb des colonnes vide qui engendrent un décalage
         s.fixInfo();
     }
@@ -241,7 +242,7 @@ public class ColumnCalculator {
      * @return Source[]
      */
     private Source[] getSources() {
-        Vector<Source> vec = new Vector<Source>();
+        Vector<Source> vec = new Vector<>();
 
         // loop on all plans and selection of catalogs which are active
         // we retrieve all sources in active plans

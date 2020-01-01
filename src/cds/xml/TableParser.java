@@ -2521,9 +2521,20 @@ final public class TableParser implements XMLConsumer {
             }
             
             if( timeFormat==-1 ) {
-               try { t=Double.parseDouble( rec[nTime] ); } catch( Exception e1) {}
-               if( timeField.datatype!=null && timeField.isNumDataType() ) numeric=true;
-               else if( !Double.isNaN(t) ) numeric=true;
+               String s = rec[nTime].trim();;
+               if( s.length()>0 ) { 
+                  try { t=Double.parseDouble( s ); } catch( Exception e1) {}
+               /* if( timeField.datatype!=null && timeField.isNumDataType() ) numeric=true;
+               else */
+                  if( !Double.isNaN(t) ) {
+                     numeric=true;
+                  } else {
+                     if( timeField.datatype!=null && timeField.isNumDataType() ) {
+                        consumer.tableParserInfo("   -Dubious time field data type [numerical] => ignored");
+                     }
+                  }
+               
+               }
 
                // S'il s'agit d'un champ numérique c'est probablement du JD, MJD ou YEARS
                if( numeric ) {

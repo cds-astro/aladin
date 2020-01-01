@@ -124,26 +124,32 @@ public final class Command implements Runnable {
          + "                                           @mv|@copy v1 v2\n"
          + "#IMAGE:#                                     @rm [v1] [v2..] | -lock\n"
          + "   @cm [x1|v1...] [colorMap...]             @save [-fmt] [-lk] [WxH] [file]\n"
-         + "   @RGB|@RGBdiff [x1|v1...]                  @coord|@object\n" + "   @blink|@mosaic [x1] [x2...]\n"
-         + "   @+ | @- | @* | @/ ...                     #CATALOG:#\n"
-         + "   @norm [-cut] [x]                         @filter ...\n"
-         + "   @conv [x] ...                            @addcol ...\n"
-         + "   @kernel ...                              @xmatch x1 x2 [dist] ...\n"
-         + "   @resamp x1 x2 ...                        @ccat [-uniq] [x1...]\n"
-         + "   @crop [x|v] [[X,Y] WxH]                  @search {expr|+|-}\n"
-         + "   @flipflop [x|v] [V|H]                    @tag|@untag\n"
-         + "   @contour [nn] [nosmooth] [zoom]          @select [-tag]\n"
-         + "   @grey|@bitpix [-cut] [x] BITPIX           @browse [x]\n" + " \n \n"
-         + "#GRAPHIC# #TOOL:#                            #FOLDER:#\n"
-         + "   @draw [color] fct(param)                 @md [-localscope] [name]\n"
-         + "   @grid [on|off]                           @mv|@rm [name]\n"
-         + "   @reticle [on|off]                        @collapse|@expand [name]\n" + "   @overlay [on|off]\n"
-         + "                                         #COVERAGE:#\n"
-         + "                                           @cmoc [-order=o] [x1|v1...]\n" + "#MISCELLANEOUS:#\n"
+         + "   @RGB|@RGBdiff [x1|v1...]                  @coord|@object\n" 
+         + "   @blink|@mosaic [x1] [x2...]               @timerange|@time\n"
+         + "   @+ | @- | @* | @/ ...\n"               
+         + "   @norm [-cut] [x]                       #CATALOG:#\n"               
+         + "   @conv [x] ...                            @filter ...\n"               
+         + "   @kernel ...                              @addcol ...\n"               
+         + "   @resamp x1 x2 ...                        @xmatch x1 x2 [dist] ...\n"  
+         + "   @crop [x|v] [[X,Y] WxH]                  @ccat [-uniq] [x1...]\n"     
+         + "   @flipflop [x|v] [V|H]                    @search {expr|+|-}\n"        
+         + "   @contour [nn] [nosmooth] [zoom]          @tag|@untag\n"               
+         + "   @grey|@bitpix [-cut] [x] BITPIX           @select [-tag]\n"            
+         + "                                           @browse [x]\n"              
+         + "#GRAPHIC# #TOOL:#\n"
+         + "   @draw [color] fct(param)               #FOLDER:#\n"                
+         + "   @grid [on|off]                           @md [-localscope] [name]\n"  
+         + "   @reticle [on|off]                        @mv|@rm [name]\n"            
+         + "   @overlay [on|off]                        @collapse|@expand [name]\n"  
+         + " \n \n"                                                                        
+         + "                                         #COVERAGE:#\n"                  
+         + "                                           @cmoc [-order=o] [x1|v1...]\n"
+         + "#MISCELLANEOUS:#\n"
          + "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n"
          + "   @help ...            @trace        @mem        @info msg\n"
          + "   @macro script param  @call fct     @list [fct] @reset\n"
-         + "   @setconf prop=value  @function ... @= ...      @convert      @quit   " + "";;
+         + "   @setconf prop=value  @function ... @= ...      @convert      @quit   "
+         + "";
 
    private String execHelp() {
       if( Aladin.levelTrace > 0 ) {
@@ -2188,6 +2194,31 @@ public final class Command implements Runnable {
 //      return false;
 //   }
    
+   
+   /** S'agit-il d'une commande temporelle ? */
+   static protected boolean isDateCmd(String date) {
+      try {
+         Tok tok = new Tok(date.trim()," ");
+         int n=tok.countTokens();
+         
+         // Deux dates => min et max
+         if( n==2 ) {
+            String s1 = tok.nextToken();
+            String s2 = tok.nextToken();
+            
+            double jd1 = s1.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s1 );
+            double jd2 = s2.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s2 );
+            
+         // Une date => centre du range actuel
+         } else {
+            double jd = Astrodate.dateToJD( tok.nextToken() );
+         }
+         return true;
+      } catch( Exception e ) {}
+      return false;
+
+   }
+   
    /** Un range de 2 dates séparées par un espace, ou une seule date */
    protected boolean execDateCmd(String date ) {
       try {
@@ -2197,8 +2228,11 @@ public final class Command implements Runnable {
          
          // Deux dates => min et max
          if( n==2 ) {
-            double jd1 = Astrodate.dateToJD( tok.nextToken() );
-            double jd2 = Astrodate.dateToJD( tok.nextToken() );
+            String s1 = tok.nextToken();
+            String s2 = tok.nextToken();
+            
+            double jd1 = s1.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s1 );
+            double jd2 = s2.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s2 );
             v.setTimeRange( new double[] { jd1, jd2 } );
             
          // Une date => centre du range actuel
@@ -2206,7 +2240,7 @@ public final class Command implements Runnable {
             double jd = Astrodate.dateToJD( tok.nextToken() );
             double t[] = v.getTimeRange();
             if( Double.isNaN(t[0]) ||  Double.isNaN(t[1]) ) {
-               a.warning("You must preselect a time range before modifying the middle time");
+               a.warning("You must set a time range before modifying its middle time");
             } else {
                double range = t[1]-t[0];
                t[0] = jd-range/2; t[1] = jd+range/2;

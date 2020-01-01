@@ -35,7 +35,7 @@ public class TargetHistory {
    
    protected TargetHistory(Aladin aladin) {
       this.aladin = aladin;
-      list = new ArrayList<String>();
+      list = new ArrayList<>();
    }
    
    /** Ajoute une target, en la replacant "dessus" si elle existe déjà */
@@ -43,7 +43,7 @@ public class TargetHistory {
       if( target==null || target.trim().length()==0 ) return;
       
       String t = getTarget( target );
-      if( !Localisation.notCoord(t) && !Localisation.hasFoxSuffix(t) ) {
+      if( !Command.isDateCmd(t) && !Localisation.notCoord(t) && !Localisation.hasFoxSuffix(t) ) {
          target = target+" "+aladin.localisation.getFrameFox();
       }
       remove(target);
@@ -86,7 +86,7 @@ public class TargetHistory {
     * @return
     */
    protected ArrayList<String> getTargets(int index, int nb) {
-      ArrayList<String> a = new ArrayList<String>(nb);
+      ArrayList<String> a = new ArrayList<>(nb);
       int n=list.size()-1-index;
       for( int i=0; i<nb && n>=0; i++, n-- ) a.add( list.get(n) );
       if( n>0 ) a.add("...");

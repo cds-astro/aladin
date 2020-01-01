@@ -663,7 +663,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             // pas d'info sur la mesure ou mesure vide ou nulle
             String a=value[i].trim();
             if( leg == null || !leg.hasInfo(j) || a.length() == 0
-                  || a.equals("0") || a.equals("-") /* || a.equalsIgnoreCase("null") */ ) {
+                  || a.equals("0") || a.equals("-") /* || a.equalsIgnoreCase("null") */ 
+                  ) {
             	String displayString = "\t" + ((a.length() == 0) ? " " : value[i]);
             	line.append(displayString);
             	if (flagSIAV2 && standardisedColumns.containsKey(i)) {
@@ -745,7 +746,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             // Les TABs ne peuvent être présents dans les valeurs individuelles (au risque de ne plus pouvoir relire les données
             // correctement). Je les remplace par un espace
             if( text.indexOf('\t')>=0 ) text=text.replace("\t"," ");
-
+            
             line.append('\t');
             if( tag != null ) {
                line.append("<&" + dollarSub(tag, value, (href != null) ? 1 : 0));
@@ -848,7 +849,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          }
 
       } catch( Exception e ) {
-         System.out.println("setRecord (3p) " + e);
+         if( aladin.levelTrace>=3 ) System.err.println("Pcat setRecord (3p) exception " + e);
          e.printStackTrace();
       }
    }

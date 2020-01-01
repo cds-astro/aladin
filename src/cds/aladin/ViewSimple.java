@@ -413,7 +413,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    
    /** retourne vrai si la date se trouve dans l'intervalle d'affichage */
    protected boolean inTime( double jd ) {
-      if( Double.isNaN(jd) ) return false;
+      if( Double.isNaN(jd) ) return true;
       if( Double.isNaN(jdmin ) && Double.isNaN(jdmax )) return true;
       if( Double.isNaN(jdmin ) && jd<=jdmax ) return true;
       if( jdmin<=jd && Double.isNaN(jdmax ) ) return true;

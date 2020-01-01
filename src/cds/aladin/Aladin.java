@@ -229,7 +229,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.000"; //"v10.145";
+   static public final    String VERSION = "v11.001"; //"v10.145";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3205,7 +3205,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Pour afficher les nouveautes
    private void newsReport() {
-      glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV10.png", true);
+      glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV11.png", true);
    }
 
    // Pour affiche la page d'info sur les plugins

@@ -105,6 +105,7 @@ public class Source extends Position implements Comparator {
       super(plan,null,0.,0.,raj,dej,RADE,id);
       this.info = info;
       sourceType=(byte)plan.sourceType;
+      
       fixInfo();
    }
    
@@ -132,7 +133,7 @@ public class Source extends Position implements Comparator {
       this.info = info;
       this.leg=leg;
       sourceType=(byte)plan.sourceType;
-
+      
       fixInfo();
    }
 
@@ -151,7 +152,7 @@ public class Source extends Position implements Comparator {
       this.info = info;
       this.leg=leg;
       sourceType=(byte)plan.sourceType;
-
+      
       fixInfo();
 
    }
@@ -241,7 +242,7 @@ public class Source extends Position implements Comparator {
            if( Aladin.levelTrace>=3) System.err.println("Source.fixInfo() =>  pour "+id);
        }
    }
-
+   
    /**
     * Retourne l'identificateur unique de la source, fourni par une application
     * externe tel VOPlot. S'il ne s'agit pas d'un objet de ce type, retourne
@@ -309,7 +310,10 @@ public class Source extends Position implements Comparator {
   /** Modification de l'information associee a la source
    * @param info la nouvelle info supplementaire
    */
-   public void setInfo(String info) { this.info = info; oid=""; }
+   public void setInfo(String info) { 
+      this.info = info; 
+      oid="";
+   }
 
   /** Modification de la legende associee a la source
    * @param leg la nouvelle legende
@@ -1047,6 +1051,10 @@ public class Source extends Position implements Comparator {
           }
        }
        if( deb==-1 ) throw new NoSuchElementException();
+       
+       // BUG FIX 1/1/2020 PF
+       if( i<n ) i--;
+       
        return info.substring(deb,i);
     }
 
@@ -1138,6 +1146,7 @@ public class Source extends Position implements Comparator {
           else nInfo.append("\t"+s);
        }
        info = nInfo.toString();
+
        return true;
     }
 
