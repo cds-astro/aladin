@@ -300,7 +300,7 @@ public class DirectoryTree extends JTree {
       Image img;
       
       try {
-         mapIcon = new HashMap<String, MyImageIcon>();
+         mapIcon = new HashMap<>();
          
          img = aladin.getImagette("Folder.png");
          mapIcon.put("folder",new MyImageIcon(img));
@@ -360,41 +360,56 @@ public class DirectoryTree extends JTree {
          
          img = aladin.getImagette("wfau.png");
          mapIcon.put("wfau.roe.ac.uk",new MyImageIcon(img));
-         mapIcon.put("wfau.roe.ac.uk/color",new MyImageIcon(img));
+         mapIcon.put("wfau.roe.ac.uk/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("inaf.png");
          mapIcon.put("ia2.inaf.it",new MyImageIcon(img));
-         mapIcon.put("ia2.inaf.it/color",new MyImageIcon(img));
+         mapIcon.put("ia2.inaf.it/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("cfa.png");
          mapIcon.put("cfa.tdc",new MyImageIcon(img));
-         mapIcon.put("cfa.tdc/color",new MyImageIcon(img));
+         mapIcon.put("cfa.tdc/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("nrao.png");
          mapIcon.put("nrao",new MyImageIcon(img));
-         mapIcon.put("nrao/color",new MyImageIcon(img));
+         mapIcon.put("nrao/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("cvo.png");
          mapIcon.put("cvo.naoc",new MyImageIcon(img));
-         mapIcon.put("cvo.naoc/color",new MyImageIcon(img));
+         mapIcon.put("cvo.naoc/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("nova.png");
          mapIcon.put("ar.nova",new MyImageIcon(img));
-         mapIcon.put("ar.nova/color",new MyImageIcon(img));
+         mapIcon.put("ar.nova/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("svo.png");
          mapIcon.put("svo.cab",new MyImageIcon(img));
-         mapIcon.put("svo.cab/color",new MyImageIcon(img));
+         mapIcon.put("svo.cab/color",new MyImageIcon(setIconTag(img)));
          mapIcon.put("svo.ifca",new MyImageIcon(img));
               
          img = aladin.getImagette("ucl.png");
          mapIcon.put("mssl.ucl.ac.uk",new MyImageIcon(img));
-         mapIcon.put("mssl.ucl.ac.uk/color",new MyImageIcon(img));
+         mapIcon.put("mssl.ucl.ac.uk/color",new MyImageIcon(setIconTag(img)));
          
          img = aladin.getImagette("gavo.png");
          mapIcon.put("org.gavo.dc",new MyImageIcon(img));
-         mapIcon.put("org.gavo.dc/color",new MyImageIcon(img));
+         mapIcon.put("org.gavo.dc/color",new MyImageIcon(setIconTag(img)));
          
+         img = aladin.getImagette("vopdc.png");
+         mapIcon.put("vopdc.obspm",new MyImageIcon(img));
+         mapIcon.put("vopdc.obspm/color",new MyImageIcon(setIconTag(img)));
+        
+         img = aladin.getImagette("chinavo.png");
+         mapIcon.put("china-vo",new MyImageIcon(img));
+         mapIcon.put("china-vo/color",new MyImageIcon(setIconTag(img)));
+        
+         img = aladin.getImagette("noao.png");
+         mapIcon.put("noao",new MyImageIcon(img));
+         mapIcon.put("noao/color",new MyImageIcon(setIconTag(img)));
+        
+         img = aladin.getImagette("sdss.png");
+         mapIcon.put("sdss.jhu",new MyImageIcon(img));
+         mapIcon.put("sdss.jhu/color",new MyImageIcon(setIconTag(img)));
         
          mapIcon.put("f",new MyImageIcon(img));
          

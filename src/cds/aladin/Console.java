@@ -90,12 +90,12 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    private JTextArea fieldPad;         // La zone du notepad
    private JButton exec,clear,delete,dump,clearPad;  // Qq boutons
 
-   private Vector<String> cmd = new Vector<String>();              // Les commandes non encore traitées
-   private  Vector<Command> cmdHistory = new Vector<Command>();  // L'historique des commandes traitées
+   private Vector<String> cmd = new Vector<>();              // Les commandes non encore traitées
+   private  Vector<Command> cmdHistory = new Vector<>();  // L'historique des commandes traitées
    
    private String currentCmd = null;  // La dernière commande en cours de saisie 
    
-   private ArrayList<Lot> lots = new ArrayList<Lot>(); // Liste des lots de commandes en attente de traitement
+   private ArrayList<Lot> lots = new ArrayList<>(); // Liste des lots de commandes en attente de traitement
    private Lot currentLot=null;                        // Lot courant, càd qui correspond à la commande 
                                                        // qui est entrain d'être traitée
 
@@ -219,7 +219,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
                           // -2 est une valeur spéciale pour indiquer l'attente du lancement imminent d'un thread
       
       // Fifo des commandes du lot
-      Queue<String> cmds=new LinkedList<String>();
+      Queue<String> cmds=new LinkedList<>();
       
       // Ajout d'une commande
       void add(String s) {
@@ -290,7 +290,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       }
       
       // Suppression des lots vides
-      ArrayList<Lot> lotsBis = new ArrayList<Console.Lot>();
+      ArrayList<Lot> lotsBis = new ArrayList<>();
       for( Lot lot : lots ) if( !lot.isEmpty() ) lotsBis.add(lot);
       lots=lotsBis;
       
@@ -539,7 +539,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    public ArrayList<String> getRecentHistory(int max) { return getRecentHistory(0,max); }
    public ArrayList<String> getRecentHistory(int indexInit, int max) {
       if( indexInit<=0 ) indexInit = 0;
-      ArrayList<String> v = new ArrayList<String>(max);
+      ArrayList<String> v = new ArrayList<>(max);
       int  i= cmdHistory.size()-1;
       for( int j=0; i>=0 && v.size()<max; i-- ) {
          Command cmd = cmdHistory.get(i);

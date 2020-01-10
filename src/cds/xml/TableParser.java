@@ -1428,7 +1428,7 @@ final public class TableParser implements XMLConsumer {
                if( (att=(String)atts.get("name"))!=null ) consumer.startTable(att);
                else consumer.startTable(att=(String)atts.get("ID"));
 
-               consumer.tableParserInfo(".Table "+att);
+               consumer.tableParserInfo("\n.Table "+att);
 
                if( (att=(String)atts.get("name"))!=null ) consumer.setTableInfo("name",att);
 

@@ -634,10 +634,10 @@ public final class Projection {
    protected boolean isUncompatibleBody( Projection p ) {
 
       boolean r = isUncompatibleBody1( p );
-      if( r) Aladin.aladin.trace(3,"body="+body+" p.body="+p.body+" isUncompatibleBody="+r);
-      if( r && !Aladin.aladin.isFullScreen() ) Aladin.aladin.warning("You are probably using an uncompatible spacial reference (planets vs sky). "
-            + "This uncompatibility is ignored in this beta release (test phase)");
-      return false;
+//      if( r) Aladin.aladin.trace(3,"body="+body+" p.body="+p.body+" isUncompatibleBody="+r);
+      if( r && !Aladin.aladin.isFullScreen() ) Aladin.aladin.uncompatibleFrameWarning();
+         
+       return false;
    }
    
    /** Teste si les projections ne concerneraient pas des corps célestes incompatibles */

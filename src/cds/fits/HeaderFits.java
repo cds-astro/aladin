@@ -777,6 +777,9 @@ public final class HeaderFits {
 
      return s.toString().toCharArray();
   }
+  
+  /** Retourne true si l'entête ne contient encore rien */
+  public boolean isEmpty() { return header.size()==0; }
 
   /** Allocation ou réallocation des structures de mémorisation */
   protected void alloc() {
@@ -784,6 +787,14 @@ public final class HeaderFits {
      header = new Hashtable(200);
      headDescr = new Hashtable(200);
      keysOrder = new Vector(200);
+  }
+  
+  /** Copie des données du Header dans le Header passé en paramètre (écrasement des données précédentes éventuelles) */
+  protected void copyTo( HeaderFits out ) {
+     out.header = (Hashtable) header.clone();
+     out.headDescr = (Hashtable) headDescr.clone();
+     out.keysOrder = (Vector) keysOrder.clone();
+     
   }
   
   /** Retourne la taille mémoire approximative */

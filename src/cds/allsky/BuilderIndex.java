@@ -145,7 +145,7 @@ public class BuilderIndex extends Builder {
          }
          if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
          try {
-            Fits file = new Fits();
+            Fits file = new Fits( context.getHDU() );
             file.loadHeaderFITS(img);
             if( file.getCalib()==null ) throw new Exception("null calib");
 

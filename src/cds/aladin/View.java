@@ -1679,6 +1679,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       //      viewMemo.freeSelected();
    }
 
+   
+   /** Retourne true s'il n'y a que des vues "Plot" actives */
+   protected boolean hasOnlyPlotView() {
+      for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
+         if( !viewSimple[i].isFree() && !viewSimple[i].isPlot() ) return false;
+      }
+      return true;
+   }
 
    /** Retourne true s'il y a au-moins une vue lockée (même parmi les vues sauvegardées  */
    protected boolean hasLock() {
@@ -2042,13 +2050,17 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Toutes les vues au même time range */
    protected void syncTimeRange( ViewSimple vorig ) {
+      
       boolean modif=false;
       if( vorig==null ) vorig = getCurrentView();
       double range[] = vorig.getTimeRange();
       for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
          ViewSimple v = viewSimple[i];
          if( v.locked || v.isFree() || !v.selected || v==vorig ) continue;
-         if( modif|=v.setTimeRange(range,false) )  v.newView( v.isPlot() ? 0 : 1);
+         if( v.setTimeRange(range,false) )  {
+            v.newView( v.isPlot() ? 0 : 1);
+            modif=true;
+         }
       }
       if( modif ) repaintAll();
    }

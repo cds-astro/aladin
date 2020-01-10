@@ -314,11 +314,11 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    /** Sélectionne et synchronize toutes les vues compatibles si demandé par SHIFT
     * sinon affiche un texte expliquant que c'est possible le cas échéant */
    protected void synchronizeTime(MouseEvent e) {
-      if( !e.isShiftDown() || !aladin.view.isMultiView() ) return;
+      if( !e.isShiftDown() && !aladin.view.isMultiView() ) return;
       ViewSimple vc=aladin.view.getCurrentView();
       if( vc==null || vc.isFree() || !Projection.isOk(vc.pref.projd) ) return;
 
-      aladin.view.selectCompatibleViews();
+      if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
       aladin.view.syncTimeRange( vc );
    }
 

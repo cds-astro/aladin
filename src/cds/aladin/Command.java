@@ -3513,7 +3513,7 @@ public final class Command implements Runnable {
       }
 
       // Echo sur la console
-      if( echo ) a.console.printCommand(s1);
+      if( echo )  a.console.printCommand(s1);
 
       // Commentaire
       if( s1.length() > 0 && s1.trim().charAt(0) == '#' ) return "";

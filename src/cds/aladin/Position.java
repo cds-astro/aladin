@@ -310,6 +310,7 @@ public class Position extends Obj {
 
       // Sinon on calcule les xy en fonction des coord. ra,de
       } else {
+         
          // Calcul initial d'un objet n'ayant des des positions xy natives
          if( raj==Double.NaN && xv[v.n]!=0 ) setCoord(v,proj);
 
@@ -337,6 +338,7 @@ public class Position extends Obj {
 
       xv[v.n] = x;
       yv[v.n] = y;
+      
       setCoord(v);
    }
 

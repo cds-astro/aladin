@@ -2566,8 +2566,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          view.newobj=null;
       }
 
-      // Creation d'un nouvel objet
-      if( ToolBox.isForTool(tool) ) {
+      // Creation d'un nouvel objet ?
+      if( ToolBox.isForTool(tool) && !vs.isPlot() ) {
          Plan plan = aladin.calque.selectPlanTool();
          view.newobj = aladin.toolBox.newTool( plan ,vs,p.x,p.y);
       } else view.newobj=null;

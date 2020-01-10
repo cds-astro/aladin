@@ -624,6 +624,15 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             pscope.add( scopeLocal );
             pscope.add( b=new JButton(" ? ")); b.addActionListener(this);
             PropPanel.addCouple(p,SCOPE, pscope, g,c);
+            
+            if( hasCatalogInfo() ) {
+               b = new JButton(aladin.chaine.getString("PARSING"));
+               b.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent e) { seeCatalogInfo(); }
+               });
+               PropPanel.addCouple(p,"", b, g,c);
+            }
+
          } else scope=null;
 
          // cas d'un PlanContour
@@ -900,19 +909,29 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan.isCatalog() ) {
          Vector<Legende> legs = plan.getLegende();
+         
+         JPanel pt = new JPanel();
          b=new JButton(SEEPARSING);
          b.addActionListener(this);
+         pt.add(b);
+         if( hasCatalogInfo() ) {
+            b = new JButton(aladin.chaine.getString("PARSING"));
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) { seeCatalogInfo(); }
+            });
+            pt.add(b);
+         }
          int n = legs.size();
-         if( n==1 ) PropPanel.addCouple(p,TABLEINFO, b, g,c);
+         if( n==1 ) PropPanel.addCouple(p,TABLEINFO, pt, g,c);
          else {
             StringBuffer s = new StringBuffer("<html>");
             for( int i=0; i<legs.size(); i++ ) s.append((i>0?"<br>":"")+(i+1)+": "+legs.elementAt(i).name);
             s.append("</html>");
             PropPanel.addCouple(p,TABLEINFO, new JLabel(s.toString()), g,c);
-            PropPanel.addCouple(p,"", b, g,c);
+            PropPanel.addCouple(p,"", pt, g,c);
          }
       }
-
+      
       // Gestion des filtres prédéfinis
       if( plan.filters!=null ) {
          PropPanel.addFilet(p,g,c);
@@ -1871,6 +1890,20 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
       String param1 = param.length()>0 ? param.toString() : null;
       fb.createNewBookmark(name,param1,"Load "+plan.label+(param1!=null?"":" on the view"), code);
+   }
+   
+   private boolean hasCatalogInfo() {
+      try {
+         if( plan instanceof PlanBGCat ) return ((PlanBGCat)plan).getGenericPcat().hasCatalogInfo();
+         return plan.pcat.hasCatalogInfo();
+      } catch( Exception e ) {
+         return false;
+      }
+   }
+   
+   private void seeCatalogInfo() { 
+      if( plan instanceof PlanBGCat ) ((PlanBGCat)plan).getGenericPcat().seeCatalogInfo();
+      else plan.pcat.seeCatalogInfo();
    }
 
    private void apply() {

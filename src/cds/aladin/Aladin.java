@@ -158,6 +158,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> FITS 4.0 support (compression, continue keyword...)
  * @beta    <LI> Space Time Multi-Order-Coverage support
  * @beta    <LI> TAP JOIN and UPLOAD support
  * @beta    <LI> Space MOC extractions from any HiPS or HEALPix maps, or observations FoV (TAP or SIA results)
@@ -229,7 +230,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.001"; //"v10.145";
+   static public final    String VERSION = "v11.007"; //"v10.145";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -6838,6 +6839,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
             }
          }
       }
+   }
+   
+   /** Message de warning en cas d'incompatibilité de Frame. Ne s'affiche que s'il n'y a pas déjà
+    * un message */
+   protected void uncompatibleFrameWarning() {
+      String error = calque.select.getMessage();
+      if( error!=null ) return;
+      calque.select.setMessageError("You are probably using an uncompatible spacial reference (planets vs sky). "
+         + "This uncompatibility is ignored in this beta release (test phase)");
    }
 
    /** Dernier objet (Source) transmis à un observer */

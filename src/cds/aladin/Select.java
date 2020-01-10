@@ -1417,6 +1417,9 @@ Runnable, SwingWidgetFinder, Widget {
             : Aladin.COLOR_LABEL;
    }
    
+   /** Retourne le message courant */
+   protected String getMessage() { return message; }
+   
    /** Positionnement d'un message d'annonce CDS
     * FORMAT [ttt] [^en:]This is an <&http://aladin.fr|link>\\n...[^fr:Ceci est ....]
     * @param s
@@ -1479,6 +1482,12 @@ Runnable, SwingWidgetFinder, Widget {
       messageType=MESSAGE_UNKNOWN;
       messageKey=null;
       repaint();
+   }
+   
+   /** arrête l'affichage du message courant s'il s'agit d'une erreur uniquement */
+   protected void hideMessageError() {
+      if( message==null || messageType!=MESSAGE_ERROR ) return;
+      hideMessage();
    }
    
    // Mise en forme du message CDS

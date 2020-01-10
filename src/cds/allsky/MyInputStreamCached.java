@@ -28,15 +28,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
 import cds.aladin.Cache;
 import cds.aladin.MyInputStream;
-import cds.aladin.PlanImageRice;
 import cds.fits.HeaderFits;
+import cds.fits.UtilFits;
 import cds.image.Bzip2;
 import cds.tools.Util;
 
@@ -57,24 +55,34 @@ public class MyInputStreamCached extends MyInputStream {
       this.filename = filename;
    }
    
+   
+   private int [] hdu=null;
+   
+   /** Seul le constructeur avec un vrai fichier local est disponible */
+   public MyInputStreamCached(String filename, int hdu[]) throws Exception {
+      super( new FileInputStream(filename) );
+      this.filename = filename;
+      this.hdu = hdu;
+   }
+   
    private MyInputStreamCached(InputStream in,long type,String filename) {
       super(in,type,true);
       this.filename = filename;
    }
 
    /**
-    * Si le flux est compressé (gzip ou Rice), on va décompresser dans un cache disque temporaire
+    * Si le flux est compressé (gzip ou FitsCmpressed), on va décompresser dans un cache disque temporaire
     * @return le flux lui-meme, ou un nouveau flux s'il s'agissait d'un flux compressé
     */
    public MyInputStream startRead() throws IOException,Exception,MyInputStreamCachedException {
       
       long type = getType(10000);
       
-      if( (type & ( GZ|BZIP2|RICE) )==0 ) return this;
+      if( (type & ( GZ|BZIP2|FITSCMP) )==0 ) return this;
       
       synchronized( lock ) {
          if( (type & (GZ|BZIP2))!=0 )    return convertGZorBzip2(type);
-         if( (type & RICE)!=0 )          return convertRice();
+         if( (type & FITSCMP)!=0 )       return convertFitsCmp();
       }
       throw new MyInputStreamCachedException("Compression mode not implemented yet!");
    }
@@ -132,13 +140,20 @@ public class MyInputStreamCached extends MyInputStream {
       return new MyInputStreamCached( new FileInputStream(file), type, filename);
    }
    
-   private MyInputStream convertRice() throws Exception,MyInputStreamCachedException {
+   private MyInputStream convertFitsCmp() throws Exception,MyInputStreamCachedException {
       
       // Détermination du nom de fichier dans le cache disque
       File dir = getCacheDir();
       nameInCache = getTargetName();
       String targetFile = dir.getCanonicalPath()+Util.FS+nameInCache;
       File file = new File( targetFile );
+      
+      HeaderFits emptyHDU = new HeaderFits();
+      emptyHDU.setKeyValue("XTENSION", "IMAGE");
+      emptyHDU.setKeyValue("BITPIX", "8");
+      emptyHDU.setKeyValue("NAXIS", "0");
+      emptyHDU.setKeyValue("PCOUNT", "0");
+      emptyHDU.setKeyValue("GCOUNT", "1");
       
       // N'existe pas encore ? => il faut décompresser et stocker dans le cache
       if( !file.exists() ) {
@@ -157,11 +172,38 @@ public class MyInputStreamCached extends MyInputStream {
             // La première entête
             long size = header.writeHeader(out);
 
-            // Chaque HDU RICE, jusqu'à la fin du fichier
+            // Chaque HDU souhaitées de FITS compressé, jusqu'à la fin du fichier
             long n;
-            while( (n=writeRice( out, this))!=-1 ) {
+            int nDone=0;
+            for( int nhdu=1; true; nhdu++ ) {
+               boolean flagskip = false;
+               if( hdu!=null && hdu[0]!=-1 ) {
+                  flagskip=true;
+                  for( int h : hdu ) { if( h==nhdu ) { flagskip=false; break; } }
+               }
+//               System.err.println("Traitement HDU "+nhdu+" flagskip="+flagskip);
+               n=writeFitsCmp( out, this, flagskip);
+               
+               // fin de fichier, ou fin de la première HDU qui était seule demandée, ou le nombre de HDU a traité a été fait
+               if( n==-1 || hdu==null || (hdu[0]!=-1 && nDone==hdu.length) ) {
+//                  System.err.println("n="+n+" hdu="+hdu);
+                  break;    
+               }
+               
+               // Ecriture d'une entête pour une HDU vide pour garder l'ordre des HDU
+               if( n==0 ) {
+//                  System.err.println("writing Empty HDU");
+                  n = emptyHDU.writeHeader(out);
+                  
+               // On décompte le nombre d'HDU traités
+               } else nDone++;
+               
                size+=n;
             }
+            
+//            while( (n=writeFitsCmp( out, this))!=-1 ) {
+//               size+=n;
+//            }
             
             // Positionnement de la nouvelle taille du cache disque
             cacheSize+=size/(1024*1024.);
@@ -179,120 +221,154 @@ public class MyInputStreamCached extends MyInputStream {
          }
       }
       
-      return new MyInputStreamCached( new FileInputStream(file), RICE, filename);
+      return new MyInputStreamCached( new FileInputStream(file), FITSCMP, filename);
    }
    
-   protected long writeRice(OutputStream os, MyInputStream dis) throws Exception {
-
-      HeaderFits headerFits;
-      try {
-         headerFits = new HeaderFits(dis);
-      } catch( EOFException e0 ) { return -1; }
-
-      int bitpix = headerFits.getIntFromHeader("ZBITPIX");
-      int naxis1 = headerFits.getIntFromHeader("ZNAXIS1");
-      int naxis2 = headerFits.getIntFromHeader("ZNAXIS2");
-      int n = Math.abs(bitpix)/8;    // Nombre d'octets par valeur
-
-      int nnaxis1 = headerFits.getIntFromHeader("NAXIS1");
-      int nnaxis2 = headerFits.getIntFromHeader("NAXIS2");
-      int theap=nnaxis1*nnaxis2;
-      try  { theap = headerFits.getIntFromHeader("THEAP"); } catch( Exception e ) {}
-
-      int pcount=headerFits.getIntFromHeader("PCOUNT");    // nombres d'octets a lire en tout
-      int tile = headerFits.getIntFromHeader("ZTILE1");
-
-      int nblock=32;
-      try { nblock = headerFits.getIntFromHeader("ZVAL1"); } catch( Exception e ) {}
-
-      int bsize=4;
-      try { bsize = headerFits.getIntFromHeader("ZVAL2"); } catch( Exception e ) {}
-
-      int posCompress=0;
-      int posZscale=-1;
-      int posZzero=-1;
-      int posUncompress=-1;
-
-      int tfields = headerFits.getIntFromHeader("TFIELDS");
-      for( int i=1,pos=0; i<=tfields; i++ ) {
-         String type = headerFits.getStringFromHeader("TTYPE"+i);
-         if( type.equals("COMPRESSED_DATA") ) posCompress = pos;
-         if( type.equals("ZSCALE") ) posZscale = pos;
-         if( type.equals("ZZERO") ) posZzero = pos;
-         if( type.equals("UNCOMPRESSED_DATA") ) posUncompress = pos;
-         String form = headerFits.getStringFromHeader("TFORM"+i);
-         pos+=Util.binSizeOf(form);
-      }
-//      System.out.println("Converting RICE FITS image (TFIELDS="+tfields+" NBLOCK="+nblock+" BSIZE="+bsize+")");
-      
-      byte [] pixelsOrigin = new byte[naxis1*naxis2*n];
-      byte [] table = new byte[nnaxis1*nnaxis2];
-      byte [] heap = new byte[pcount];
-
-      dis.readFully(table);
-      dis.skip(theap - nnaxis1*nnaxis2);
-      dis.readFully(heap);
-
-      int offset=0;
-      for( int row=0; row<nnaxis2; row++ ) {
-         int offsetRec = row*nnaxis1;
-         int size = PlanImageRice.getInt(table,offsetRec+posCompress);
-         int pos = PlanImageRice.getInt(table,offsetRec+posCompress+4);
-         double bzero = posZscale<0 ? 0 : PlanImageRice.getDouble(table,offsetRec+posZzero);
-         double bscale = posZscale<0 ? 1 : PlanImageRice.getDouble(table,offsetRec+posZscale);
-
-         // Non compressé
-         if( size==0 && posUncompress>=0 ) {
-            size = PlanImageRice.getInt(table,offsetRec+posUncompress);
-            pos  = PlanImageRice.getInt(table,offsetRec+posUncompress);
-            PlanImageRice.direct(heap,pos,pixelsOrigin,offset,tile,bitpix,bzero,bscale);
-
-            // Compressé
-         } else PlanImageRice.decomp(heap,pos,pixelsOrigin,offset,tile,bsize,nblock,bitpix,bzero,bscale);
-
-         offset+=tile;
-      }
-      
-      // Alignement sur 2880
-      // On se cale sur le prochain segment de 2880
-      long pos = getPos();
-      if( pos%2880!=0 ) {
-         long off = ((pos/2880)+1) *2880  -pos;
-         skip(off);
-      }
-      
-      // Génération de l'entête de sortie
-      HeaderFits outHeader = new HeaderFits();
-      Hashtable<String,String> map = headerFits.getHashHeader();
-      Enumeration<String> e = headerFits.getKeys();
-      while( e.hasMoreElements() ) {
-         String key = e.nextElement();
-         if( Util.indexInArrayOf(key, KEYIGNORE)>=0 ) continue;
-         
-         String  val;
-              if( key.equals("XTENSION") ) val="IMAGE";
-         else if( key.equals("BITPIX") )   val=bitpix+"";
-         else if( key.equals("NAXIS1") )   val=naxis1+"";
-         else if( key.equals("NAXIS2") )   val=naxis2+"";
-         else if( key.equals("NAXIS") )    val="2";
-         else if( key.equals("PCOUNT") )   val="0";
-         else if( key.equals("GCOUNT") )   val="1";
-         else val = map.get(key);
-         outHeader.setKeyValue(key, val);
-      }
+   // Génération d'un FLUX contenant un FITS classique correspondant au FITS compressé
+   // passé en flux d'entrée
+   protected long writeFitsCmp(OutputStream os, MyInputStream dis, boolean flagskip) throws Exception {
       
       // Ecriture de l'image FITS décompressée
-      long size = outHeader.writeHeader(os);
-      os.write(pixelsOrigin);
-      size += pixelsOrigin.length;
-      os.write( getBourrage(size) ); 
+      long size;
+      try {
+         HeaderFits inHeader = new HeaderFits( dis );
+         HeaderFits outHeader = new HeaderFits();
+         
+         byte[] buf = UtilFits.uncompress(outHeader, inHeader, dis, flagskip);
+         
+         // Alignement sur 2880
+         // On se cale sur le prochain segment de 2880
+         long pos = getPos();
+         if( pos%2880!=0 ) {
+            long off = ((pos/2880)+1) *2880  -pos;
+            skip(off);
+         }
+         
+         if( !flagskip ) {
+            size = outHeader.writeHeader(os);
+            os.write(buf);
+            size += buf.length;
+            os.write( getBourrage(size) );
+            
+         } else size=0;
+         
+      } catch( EOFException e0 ) { return -1; }
       
       return size;
    }
+
    
-   static private String [] KEYIGNORE = { "TFIELDS","TFIELDS","TTYPE1","TFORM1",
-         "ZIMAGE","ZTILE1","ZTILE2","ZCMPTYPE","ZNAME1","ZVAL1","ZNAME2","ZVAL2","ZSIMPLE","ZBITPIX",
-         "ZNAXIS","ZNAXIS1","ZNAXIS2","ZEXTEND","ZPCOUNT","ZGCOUNT","ZTENSION" };
+//   protected long writeRice(OutputStream os, MyInputStream dis) throws Exception {
+//
+//      HeaderFits headerFits;
+//      try {
+//         headerFits = new HeaderFits(dis);
+//      } catch( EOFException e0 ) { return -1; }
+//
+//      int bitpix = headerFits.getIntFromHeader("ZBITPIX");
+//      int naxis1 = headerFits.getIntFromHeader("ZNAXIS1");
+//      int naxis2 = headerFits.getIntFromHeader("ZNAXIS2");
+//      int n = Math.abs(bitpix)/8;    // Nombre d'octets par valeur
+//
+//      int nnaxis1 = headerFits.getIntFromHeader("NAXIS1");
+//      int nnaxis2 = headerFits.getIntFromHeader("NAXIS2");
+//      int theap=nnaxis1*nnaxis2;
+//      try  { theap = headerFits.getIntFromHeader("THEAP"); } catch( Exception e ) {}
+//
+//      int pcount=headerFits.getIntFromHeader("PCOUNT");    // nombres d'octets a lire en tout
+//      int tile = headerFits.getIntFromHeader("ZTILE1");
+//
+//      int nblock=32;
+//      try { nblock = headerFits.getIntFromHeader("ZVAL1"); } catch( Exception e ) {}
+//
+//      int bsize=4;
+//      try { bsize = headerFits.getIntFromHeader("ZVAL2"); } catch( Exception e ) {}
+//
+//      int posCompress=0;
+//      int posZscale=-1;
+//      int posZzero=-1;
+//      int posUncompress=-1;
+//
+//      int tfields = headerFits.getIntFromHeader("TFIELDS");
+//      for( int i=1,pos=0; i<=tfields; i++ ) {
+//         String type = headerFits.getStringFromHeader("TTYPE"+i);
+//         if( type.equals("COMPRESSED_DATA") ) posCompress = pos;
+//         if( type.equals("ZSCALE") ) posZscale = pos;
+//         if( type.equals("ZZERO") ) posZzero = pos;
+//         if( type.equals("UNCOMPRESSED_DATA") ) posUncompress = pos;
+//         String form = headerFits.getStringFromHeader("TFORM"+i);
+//         pos+=Util.binSizeOf(form);
+//      }
+////      System.out.println("Converting RICE FITS image (TFIELDS="+tfields+" NBLOCK="+nblock+" BSIZE="+bsize+")");
+//      
+//      byte [] pixelsOrigin = new byte[naxis1*naxis2*n];
+//      byte [] table = new byte[nnaxis1*nnaxis2];
+//      byte [] heap = new byte[pcount];
+//
+//      dis.readFully(table);
+//      dis.skip(theap - nnaxis1*nnaxis2);
+//      dis.readFully(heap);
+//
+//      int offset=0;
+//      for( int row=0; row<nnaxis2; row++ ) {
+//         int offsetRec = row*nnaxis1;
+//         int size = PlanImageFitsRice.getInt(table,offsetRec+posCompress);
+//         int pos = PlanImageFitsRice.getInt(table,offsetRec+posCompress+4);
+//         double bzero = posZscale<0 ? 0 : PlanImageFitsRice.getDouble(table,offsetRec+posZzero);
+//         double bscale = posZscale<0 ? 1 : PlanImageFitsRice.getDouble(table,offsetRec+posZscale);
+//
+//         // Non compressé
+//         if( size==0 && posUncompress>=0 ) {
+//            size = PlanImageFitsRice.getInt(table,offsetRec+posUncompress);
+//            pos  = PlanImageFitsRice.getInt(table,offsetRec+posUncompress+4);
+//            PlanImageFitsCmp.direct(heap,pos,pixelsOrigin,offset,tile,bitpix,bzero,bscale);
+//
+//            // Compressé
+//         } else PlanImageFitsRice.riceDecomp(heap,pos,pixelsOrigin,offset,tile,nblock,bsize,bitpix,bzero,bscale);
+//
+//         offset+=tile;
+//      }
+//      
+//      // Alignement sur 2880
+//      // On se cale sur le prochain segment de 2880
+//      long pos = getPos();
+//      if( pos%2880!=0 ) {
+//         long off = ((pos/2880)+1) *2880  -pos;
+//         skip(off);
+//      }
+//      
+//      // Génération de l'entête de sortie
+//      HeaderFits outHeader = new HeaderFits();
+//      Hashtable<String,String> map = headerFits.getHashHeader();
+//      Enumeration<String> e = headerFits.getKeys();
+//      while( e.hasMoreElements() ) {
+//         String key = e.nextElement();
+//         if( Util.indexInArrayOf(key, KEYIGNORE)>=0 ) continue;
+//         
+//         String  val;
+//              if( key.equals("XTENSION") ) val="IMAGE";
+//         else if( key.equals("BITPIX") )   val=bitpix+"";
+//         else if( key.equals("NAXIS1") )   val=naxis1+"";
+//         else if( key.equals("NAXIS2") )   val=naxis2+"";
+//         else if( key.equals("NAXIS") )    val="2";
+//         else if( key.equals("PCOUNT") )   val="0";
+//         else if( key.equals("GCOUNT") )   val="1";
+//         else val = map.get(key);
+//         outHeader.setKeyValue(key, val);
+//      }
+//      
+//      // Ecriture de l'image FITS décompressée
+//      long size = outHeader.writeHeader(os);
+//      os.write(pixelsOrigin);
+//      size += pixelsOrigin.length;
+//      os.write( getBourrage(size) ); 
+//      
+//      return size;
+//   }
+//   
+//   static private String [] KEYIGNORE = { "TFIELDS","TFIELDS","TTYPE1","TFORM1",
+//         "ZIMAGE","ZTILE1","ZTILE2","ZCMPTYPE","ZNAME1","ZVAL1","ZNAME2","ZVAL2","ZSIMPLE","ZBITPIX",
+//         "ZNAXIS","ZNAXIS1","ZNAXIS2","ZEXTEND","ZPCOUNT","ZGCOUNT","ZTENSION" };
    
    static public byte[] getBourrage(long currentPos) {
       int n = (int)(currentPos % 2880L);

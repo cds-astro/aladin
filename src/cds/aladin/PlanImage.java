@@ -1891,19 +1891,6 @@ public class PlanImage extends Plan {
    }
 
 
-   // Conversion byte[] en entier 32
-   // Recupere sous la forme d'un entier 32bits un nombre entier se trouvant
-   // a l'emplacement i du tableau t[]
-   //   static final public int getInt(byte[] t,int i) {
-   //      return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
-   //   }
-   // Conversion byte[] en entier 16
-   // Recupere sous la forme d'un entier 16bits un nombre entier se trouvant
-   // a l'emplacement i du tableau t[]
-   //   static final public int getShort(byte[] t,int i) {
-   //      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
-   //   }
-
    static final public int getByte(byte[] t, int i) {
       return t[i]&0xFF;
    }

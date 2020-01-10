@@ -74,6 +74,29 @@
       </signjar>
    </target>
     
+	   <target name="hipslint" depends="compil" description="jar generation" >
+	      <jar destfile="Hipslint.jar" duplicate="preserve">
+	        <fileset dir="${bin}"/>
+		    <zipfileset src="${lib}/adql1.3.jar"/>
+		    <zipfileset src="${lib}/jsamp.jar"/>
+		    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
+	        <manifest>
+	           <attribute name="Main-Class" value="cds.allsky.HipsLint" />
+	           <attribute name="Permissions" value="all-permissions" />
+	        </manifest>
+	      </jar>
+	      <signjar
+	         jar="Hipslint.jar"
+	         signedjar="Hipslint.jar"
+	         lazy="true"
+	         alias="server"
+	         keystore="${cert}/Aladin.jks"
+	         tsaurl="http://timestamp.digicert.com"
+	         storepass="bal$bol"
+	         preservelastmodified="true">
+	      </signjar>
+	   </target>
+	    
    <target name="clean" description="Remove building directory" >
       <delete includeEmptyDirs="true" quiet="true">
 	     <fileset dir="${bin}" />

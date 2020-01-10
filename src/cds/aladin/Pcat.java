@@ -252,6 +252,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    boolean flagTarget=false;
    boolean flagEndResource;
    boolean flagFirstRecord=true;		// True si on n'a pas encore traite le premier enr.
+   long timeStartTable;                 // Date du début du parsing de la table
+   int lastNb_o;                        // juste pour connaitre le nombre d'objets dans chaque table
    double minRa,maxRa,minDec,maxDec;
 
    /** L'interface AstroRes */
@@ -350,6 +352,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       nId=-1;
       nIdVraisemblance=0;
       group=null;
+      timeStartTable=Util.getTime();
+      lastNb_o=nb_o;
    }
 
    private Vector<String> group=null;  // Liste des GROUP servant aux définitions des systèmes de coordonnées ou des Flux
@@ -384,7 +388,13 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    }
 
    /** L'interface AstroRes */
-   public void endTable() { }
+   public void endTable() { 
+      long t = Util.getTime() - timeStartTable;
+      int nbObj = nb_o-lastNb_o;
+      tableParserInfo("   -Table loaded & parsed in "+Util.getTemps(t)
+            + " for "+nbObj+" object"+(nbObj>1?"s":"")
+            + (nbObj<1000?"":" ("+Util.myRound(""+1000.*nbObj/t)+" objects per sec)"));
+   }
 
    /** L'interface AstroRes */
    public void setField(Field f) {
@@ -978,11 +988,14 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       }
       return false;
    }
+   
+   /** Retourne true si on dispose d'informations techniques sur le parsing */
+   protected boolean hasParsingInfo() { return parsingInfo!=null || description!=null; }
 
    /** Affichage de la fenêtre contenant les informations sur le parsing
        et les données */
    protected void seeCatalogInfo() {
-      if( parsingInfo==null && description==null ) return;
+      if( !hasParsingInfo() ) return;
       JFrame f = new JFrame("Catalog information");
       Util.setCloseShortcut(f, false, aladin);
       //      f.setBackground(Aladin.BKGD);
@@ -1156,8 +1169,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       if( ok ) {
          if( !flagEndResource ) endResource();
          long duree=System.currentTimeMillis()-d;
-         String s = "Catalog parsed in "+Util.myRound(""+duree/1000.,3)+"s"+(nb_o<1000?"":" ("
-               +Util.myRound(""+1000.*nb_o/duree)+" objects per sec)");
+         String s = "Catalog queried, loaded and parsed in "+Util.getTemps(duree);
          tableParserInfo("\n"+s);
          Aladin.trace(3,s);
          if( !flagXY && rm==0.0 ) plan.error = aladin.error = "no RA or DE columns";

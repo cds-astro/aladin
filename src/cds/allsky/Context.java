@@ -731,8 +731,7 @@ public class Context {
 
       String path = imgEtalon;
       Fits fitsfile = new Fits();
-
-      fitsfile.loadHeaderFITS(path);
+      fitsfile.loadHeaderFITS( path );
 
       setBitpixOrig(fitsfile.bitpix);
       if( !isColor() ) {
@@ -806,7 +805,7 @@ public class Context {
       if (w > 1024) { w = 1024; x=file.width/2 - 512; }
       if (h > 1024) { h = 1024; y=file.height/2 -512; }
       if (d > 1 ) { d = 1;  z=file.depth/2 - 1/2; }
-      if( file.getFilename()!=null ) file.loadFITS(file.getFilename(), 0, x, y, z, w, h, d);
+      if( file.getFilename()!=null ) file.loadFITS(file.getFilename(), file.getExt(), x, y, z, w, h, d);
       
       if( !flagNoInitEtalon ) {
 
@@ -928,7 +927,7 @@ public class Context {
             if( path.endsWith(".hhh") ) return path;
 
 //            in = (new MyInputStream( new FileInputStream(path)) ).startRead();
-            in = (new MyInputStreamCached(path) ).startRead();
+            in = (new MyInputStreamCached(path, getHDU()) ).startRead();
             
             long type = in.getType();
             if( (type&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;

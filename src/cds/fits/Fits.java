@@ -116,6 +116,9 @@ final public class Fits {
    // public byte [] pix8; // Pixels 8 bits en vue d'une sauvegarde JPEG (y
    // compté depuis le haut)
    public int[] rgb; // pixels dans le cas d'une image couleur RGB
+   
+   
+   private int [] hdu=null;   // Liste des HDU à prendre en compte (en cas de décompression requise)
 
    public Calib calib; // Calibration astrométrique
 
@@ -135,6 +138,10 @@ final public class Fits {
 
    /** Création en vue d'une lecture */
    public Fits() { }
+   
+   /** Création en vue d'une lecture avec indcation des HDU concernées par une éventuelle décompression */
+   public Fits(int [] hdu) { this.hdu = hdu; } 
+
 
    /**
     * Création en vu d'une construction "manuelle"
@@ -597,7 +604,7 @@ final public class Fits {
       // nom fichier.fits[x,y-wxh]
       MyInputStream is = null;
       try {
-         is = new MyInputStreamCached( filename);
+         is = new MyInputStreamCached( filename, hdu);
          is = is.startRead();
          if( color ) {
             if( widthCell < 0 ) throw new Exception( "Mosaic mode not supported yet for FITS color file");
@@ -621,7 +628,7 @@ final public class Fits {
    }
 
    // Se cale sur le début de l'extension indiqué par le numéro ext
-   private void moveOnHUD(MyInputStream dis, int ext) throws Exception {
+   public void moveOnHUD(MyInputStream dis, int ext) throws Exception {
       boolean first=true;
       for( ; ext>0; ext-- ) {
          HeaderFits h = new HeaderFits(dis);
@@ -1407,7 +1414,9 @@ final public class Fits {
       + xCell + "," + yCell + (depth>1?","+zCell:"") + "-" + widthCell + "x" + heightCell + (depth>1?"x"+depthCell:"")
       + "]";
    }
-
+   
+   /** Retourne l'extension concernée */
+   public int getExt() { return ext; }
 
    /**
     * Retourne la description de l'extension courante selon la syntaxe [e]

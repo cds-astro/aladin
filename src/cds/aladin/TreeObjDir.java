@@ -203,7 +203,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( s==null ) target=null;
       else {
          try { target = new Coord(s); }
-         catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
+         catch( Exception e) { aladin.trace(3,"HiPS target error for "+id+" ["+s+"]!"); target=null; }
       }
       double div2=2;
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
@@ -211,7 +211,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( s==null ) radius=-1;
       else {
          try { radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2; }
-         catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
+         catch( Exception e) { aladin.trace(3,"HiPS radius error for "+id+" ["+s+"]!"); radius=-1; }
       }
 
       s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
@@ -388,7 +388,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( s==null ) target=null;
       else {
          try { target = new Coord(s); }
-         catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
+         catch( Exception e) { aladin.trace(3,"HiPS target error for "+id+" ["+s+"]!"); target=null; }
       }
       double div2=2;
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
@@ -397,7 +397,7 @@ public class TreeObjDir extends TreeObj implements Propable {
          try {
             radius=(Server.getAngleInArcmin(s, Server.RADIUSd)/60.)/div2;
             if( radius>180 ) radius=180;
-         } catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
+         } catch( Exception e) { aladin.trace(3,"HiPS radius error for "+id+" ["+s+"]!"); radius=-1; }
       }
 
       // La taille de la tuile Hips
@@ -738,6 +738,13 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected boolean hasHips() { return prop!=null && 
          (prop.get("hips_service_url")!=null || prop.get("hips_service_path")!=null); }
    
+   /** Retourne true si la collection is est un HiPS catalogue */
+   protected boolean isHipsCat() {
+      if( !hasHips() ) return false;
+      String s = prop.get("dataproduct_type");
+      return s!=null && s.indexOf("catalog")>=0; 
+   }
+   
    /** Retourne true si la collection dispose d'un accès TAP */
    protected boolean hasTAP() {
       if( prop==null ) return false;
@@ -800,7 +807,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /** Retourne le type de données auquel on va accéder */
    protected String getDataType() {
-      if( hasCS() || hasTAP() ) return "Table";
+      if( hasCS() || hasTAP() || isHipsCat() ) return "Catalog";
       if( hasHips() || hasSIA() ) return "Image";
       if( hasSSA() ) return "Spectrum";
       return "";

@@ -32,6 +32,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import cds.tools.Util;
@@ -92,7 +93,6 @@ SwingWidgetFinder, Widget {
       CONTOUR,HIST,PROP,
       DEL };
 
-
    // liste des boutons lies au plan tool
    static int [] to = { CROP,SELECT,DRAW,TAG,PHOT,DIST,PAN,PROP,ZOOM,SPECT };
 
@@ -105,14 +105,16 @@ SwingWidgetFinder, Widget {
    // liste des boutons toujours up (simple clic)
    static int [] up = { BNOTE,DEL,PROP,FILTER,PLOT };
 
-   // Liste des tools non-autorisees en fonction du type de plan
+   // Liste des tools non-autorisés en fonction du type de plan
    static int [] imgmode  = { /*DRAW,TAG,PHOT,DIST*//*, LABEL */ PLOT};   // pour Image
    static int [] imghugemode  = { /*DRAW,TAG,PHOT,DIST,*/RGB,BLINK,/*RESAMP,*/WEN,PLOT};   // pour Image huge
    static int [] contourmode = { HIST,DRAW,TAG,PHOT,DIST,CROP/* ,LABEL */,PLOT }; // pour un PlanContour
    static int [] toolmode = { HIST,CROP,PLOT };                       // pour Tool
    static int [] catmode  = { HIST,CROP /*,DRAW,TAG,PHOT,DIST*/ };         // pour Catalogue
    static int [] fieldmode= { HIST,CROP,PLOT /*,DRAW,TAG,PHOT,DIST,HIST*/ };   // pour Field
-
+   
+   // Liste des tools non-autorisés pour les vues "plot"
+   static int [] viewplotmode = { DIST,TAG,PHOT,DRAW,SPECT,CROP };
 
    // Les parametres generaux
    static int W        = 34;      // Largeur d'un bouton
@@ -341,6 +343,11 @@ SwingWidgetFinder, Widget {
       if( aladin.calque.getFirstSelectedPlan() instanceof PlanMoc ) {
          mode[ToolBox.CROP]=Tool.UP;
       }
+      
+      // Outils non utilisables pour une vue "plot"
+      if( aladin.view.hasOnlyPlotView() ) {
+         for( j=0; j<viewplotmode.length; j++ ) mode[j]=Tool.UNAVAIL;
+      }
 
       // On invalide l'outil phot pour les plan BG
       //      if( v!=null && !v.isFree() && v.pref instanceof PlanBG ) mode[ToolBox.PHOT]=Tool.UNAVAIL;
@@ -375,6 +382,19 @@ SwingWidgetFinder, Widget {
 
       // Repaint si necessaire
       if( withRepaint && dorepaint ) repaint();
+      
+      postAction();
+      
+   }
+    
+   protected void postAction() {
+      // on en profite pour supprimer un éventuel message d'erreur dans le select
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            aladin.calque.select.hideMessageError();
+         }
+      });
+
    }
 
    /** Test d'un bouton exclusif.

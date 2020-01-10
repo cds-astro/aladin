@@ -114,12 +114,6 @@ public class FrameInfoTable extends JFrame {
           
           p2.add(new JLabel(" - "));
 	      
-          b = new JButton(aladin.chaine.getString("PARSING"));
-          b.addActionListener(new ActionListener() {
-             public void actionPerformed(ActionEvent e) { seeCatalogInfo(); }
-          });
-          p2.add(b);
-          
           b = new JButton(aladin.chaine.getString("COORDCOLUMN"));
           b.addActionListener(new ActionListener() {
              public void actionPerformed(ActionEvent e) { seeCoordColumnInfo(); }
@@ -161,11 +155,6 @@ public class FrameInfoTable extends JFrame {
 	
 	private void seeCoordColumnInfo() {
 	   aladin.info(this, Util.fold( aladin.chaine.getString("COORDCOLUMNDETAIL"),50));
-	}
-	
-	private void seeCatalogInfo() { 
-	   if( plan instanceof PlanBGCat ) ((PlanBGCat)plan).getGenericPcat().seeCatalogInfo();
-	   else plan.pcat.seeCatalogInfo();
 	}
 	
 	// Affiche/cache tous les champs

@@ -1930,8 +1930,8 @@ public class Plan implements Runnable {
 
       if( active ) {
          if( statNbComputing!=0 ) {
-            s.append("\n - "+statNbComputing+" projection"+(statNbComputing>1?"s":"")
-                  +" ("+statTimeComputing+"ms)");
+            s.append("\n - "+statNbComputing+" projection"+(statNbComputing>1?"s":"")+" computed");
+            s.append("\n - last proj computed in "+statTimeComputing+"ms");
          }
          if( statNbItems!=0 ) {
             s.append("\n - "+statNbItems+" object"+(statNbItems>1?"s":"")+" drawn ("+statTimeDisplay+"ms)");

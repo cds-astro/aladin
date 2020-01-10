@@ -2727,8 +2727,8 @@ public class Calque extends JPanel implements Runnable {
                }
                
             } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
-               if( (type & MyInputStream.RICE)!=0 ) {
-                  p = new PlanImageRice(aladin,file,in,label,null,o,null,!keepIt,false,firstPlan);
+               if( (type & MyInputStream.FITSCMP)!=0 ) {
+                  p = new PlanImageFitsCmp(aladin,file,in,label,null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.AIPSTABLE)!=0 ) {
                   Aladin.trace(3,"MEF AIPS CC table detected => ignored !");
                   new PlanCatalog(aladin,"",in,true,false);  // Justes pour le manger
@@ -3542,6 +3542,7 @@ public class Calque extends JPanel implements Runnable {
             p1.sourceType=p.sourceType;
             p1.fullSource=p.fullSource;
             p1.planFilter=p.planFilter;
+            p1.pcat.parsingInfo = p.pcat.parsingInfo;
 
             p1.projd = p.projd.copy();
             p1.setLabel(p1.getTableName(o));

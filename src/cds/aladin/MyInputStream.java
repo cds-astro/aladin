@@ -24,14 +24,13 @@ package cds.aladin;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
@@ -55,6 +54,9 @@ import cds.xml.TableParser;
  * @version 1.0 : (16 juin 2003) creation
  */
 public class MyInputStream extends FilterInputStream {
+   
+   static private boolean TEST_FITSKEY = false;   // Accélération d'analyse FITS par mémorisation dans une Hashmap des mots clés
+   static private boolean TEST_SKIP80  = true;    // Accélération d'analyse FITS par déplacement de 80 en 80 caractères
 
    // La taille des blocs du tampon
    private static final int BLOCCACHE = 65536;
@@ -92,7 +94,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long AIPSTABLE = 1<<28;
    static final public long IPAC    = 1<<29;
    static final public long BMP     = 1<<30;
-   static final public long RICE    = 1L<<31;
+   static final public long FITSCMP = 1L<<31;
    static final public long HEALPIX = 1L<<32;
    static final public long GLU     = 1L<<33;
    static final public long ARGB    = 1L<<34;
@@ -118,9 +120,9 @@ public class MyInputStream extends FilterInputStream {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
-      "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
+      "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","FITSCMP","HEALPIX","GLU","ARGB","PDS",
       "SMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC" };
+      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC", };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -209,6 +211,9 @@ public class MyInputStream extends FilterInputStream {
    public void resetType() {
       type = (type & GZ) | (type & XFITS);
       flagGetType = alreadyRead = false;
+      
+      resetFitsKeys();
+      fitsHeadRead = false;
    }
 
    //   private boolean alreadyHCOMPtested=false;
@@ -295,19 +300,25 @@ public class MyInputStream extends FilterInputStream {
 
    /** Sous-types particulier au FITS image */
    private void getTypeFitsImg() throws IOException {
+      
+      
+      String snaxis  = getFitsValue("NAXIS");
+      String snaxis1 = getFitsValue("NAXIS1");
+      String snaxis2 = getFitsValue("NAXIS2");
+      String snaxis3 = getFitsValue("NAXIS3");
 
       // Détection d'un CUBE
       //    if( lookForSignature("NAXIS   = 3",false)>0
-      if( hasFitsKey("NAXIS","3") && !hasFitsKey("NAXIS3","1")
-            || hasFitsKey("NAXIS","4")
-            && !hasFitsKey("NAXIS3","1")
+      if( "3".equals(snaxis) && !"1".equals(snaxis2)
+            || "4".equals(snaxis)
+            && !"1".equals(snaxis3)
             && hasFitsKey("NAXIS4","1")) type |= CUBE;
 
       // Mode couleur ARGB
       if( hasFitsKey("COLORMOD", "ARGB") )  type |= ARGB;
 
-      // Détection d'une extension FITS à suivre
-      if( hasFitsKey("EXTEND",null) || hasFitsKey("NAXIS","0") ) type |= XFITS;
+      // Détection d'une extension FITS à suivre éventuelle
+      if( hasFitsKey("EXTEND",null) || "0".equals(snaxis) ) type |= XFITS;
 
       // Detection d'une image RGB
       if( isFitsRGB() ) type |= RGB;
@@ -315,16 +326,17 @@ public class MyInputStream extends FilterInputStream {
       // Détection d'une image HUGE
       if( (type & (CUBE|RGB))==0 ) {
          try {
-            int naxis1 = Integer.parseInt(getFitsValue("NAXIS1"));
-            int naxis2 = Integer.parseInt(getFitsValue("NAXIS2"));
+            int naxis1 = Integer.parseInt(snaxis1);
+            int naxis2 = Integer.parseInt(snaxis2);
             int npix = Integer.parseInt(getFitsValue("BITPIX"));
             if( (long)naxis1*naxis2*(Math.abs(npix)/8) > Aladin.LIMIT_HUGEFILE ) type |= HUGE;
          }catch( Exception e ) {}
       }
 
       // Healpix
+      String o = getFitsValue("ORDERING");
       if( (type & XFITS) !=0 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
-            || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ") ) ) {
+            || "UNIQ".equals(o) || "NUNIQ".equals(o) ) ) {
          String m = getFitsValue("MOC");
          
          // Méthode directe
@@ -340,14 +352,15 @@ public class MyInputStream extends FilterInputStream {
             else type |= SMOC;
          }
       }
-      else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
+      else if( (hasFitsKey("PIXTYPE", "HEALPIX") || "NEST".equals(o) || "RING".equals(o))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
 
-      // Rice
+      // Fits compressé
       if(  (type&XFITS)!=0 ) {
          findFitsEnd2();
-         if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
-         else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
+         if( getFitsValue("ZCMPTYPE")!=null ) type |= FITSCMP;
+//         if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= FITSCMP;
+//         else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= FITSCMP;
          
          // Detection de HCOMP
       } else {
@@ -358,7 +371,7 @@ public class MyInputStream extends FilterInputStream {
          if( c0==221 && c1==153 ) type |= HCOMP;
       }
    }
-
+   
    /**
     * Determine le type de fichier.
     * Met a jour un champ de bit ou chaque bit decrit un type.
@@ -375,6 +388,7 @@ public class MyInputStream extends FilterInputStream {
 
       // le type de stream a deja ete detecte, on le retourne tel que
       if( flagGetType ) return type;
+      
       flagGetType=true;
 
       // Le stream a deja ete entame, impossible de determine le type
@@ -389,11 +403,9 @@ public class MyInputStream extends FilterInputStream {
          try {
             if( inCache<c.length ) loadInCache(c.length);
          } catch( EOFException e ) {}
+         if( inCache==0 ) throw new EOFException();
 
-         for( int i=0; i<c.length; i++ ) {
-            c[i] = (cache[offsetCache+i]) & 0xFF;
-            //System.out.println("MAGIC CODE c["+i+"]="+c[i]);
-         }
+         for( int i=0; i<c.length; i++ ) c[i] = (cache[offsetCache+i]) & 0xFF;
          
          // Préfixe BOM UTF-8
          if( inCache>=3 && c[0]==239 && c[1]==187 && c[2]==191 ) {
@@ -414,7 +426,7 @@ public class MyInputStream extends FilterInputStream {
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
          else if( inCache>=5 && c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=SMOC;
          
-         else if( isAsciiMoc(c,inCache) ) type |=SMOC;
+         else if( inCache>=3 && isAsciiMoc(c,inCache) ) type |=SMOC;
 
          // Détection DS9REG
          else if( inCache>=13 && c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g'
@@ -436,7 +448,7 @@ public class MyInputStream extends FilterInputStream {
          else if( inCache>=6 && c[0]=='#' && c[1]=='S' && c[2]=='T' && c[3]=='M' && c[4]=='O' && c[5]=='C') type |= STMOC;
 
         // Détection MOC JSON (une ligne de blanc \n{"  )
-         else if( isJsonMoc(c,inCache) ) type |=SMOC;
+         else if( inCache>=3 && isJsonMoc(c,inCache) ) type |=SMOC;
          
          //         // Detection de BMP
          //         else if( c[0]==66  && c[1]==77 ) type |= BMP;
@@ -462,7 +474,7 @@ public class MyInputStream extends FilterInputStream {
                c[3]==75 && c[4]==1 && c[5]==121 && c[6]==64   ) {
 
             type |= MRCOMP;
-            if( lookForSignature("SIMPLE  =",false)>0 ) type |= FITS;
+            if( lookForSignature("SIMPLE  =",false,false)>0 ) type |= FITS;
          }
 
          // Detection d'une table IPAC
@@ -498,16 +510,18 @@ public class MyInputStream extends FilterInputStream {
                c[11]=='B' && c[12]=='I' && c[13]=='N' && c[14]=='T' && c[15]=='A') {
 
             type |= FITSB;
+            
+            // détermination d'un éventuel mode de compression FITS
+            
+            if( getFitsValue("ZCMPTYPE")!=null ) type |= FITSCMP;
+            else {
 
-            // Compression RICE
-            if( hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
-            else if( hasFitsKey("ZCMPTYPE","RICE_ONE") ) type |= RICE;
-
-            // Pour répérer les tables AIPS CC de calculs intermédiaires
-            else if( hasFitsKey("EXTNAME","AIPS CC") && hasFitsKey("TFIELDS","3")
-                  && hasFitsKey("TTYPE2","DELTAX") && hasFitsKey("TUNIT2","DEGREES")
-                  && hasFitsKey("TTYPE3","DELTAY") && hasFitsKey("TUNIT3","DEGREES")
-                  ) type |= AIPSTABLE;
+               // Pour répérer les tables AIPS CC de calculs intermédiaires
+               if( hasFitsKey("EXTNAME","AIPS CC") && hasFitsKey("TFIELDS","3")
+                     && hasFitsKey("TTYPE2","DELTAX") && hasFitsKey("TUNIT2","DEGREES")
+                     && hasFitsKey("TTYPE3","DELTAY") && hasFitsKey("TUNIT3","DEGREES")
+                     ) type |= AIPSTABLE;
+            }
          }
 
          // Detection de FITS
@@ -521,8 +535,8 @@ public class MyInputStream extends FilterInputStream {
          }
 
          // Détection fichier GLU (parfile)
-         else if( lookForSignature("\n%A",false,offsetCache,2048,false)>0
-               && lookForSignature("\n%U",false,offsetCache,2048,false)>0 ) type |= GLU;
+         else if( lookForSignature("\n%A",false,true,false,offsetCache,2048,false)>0
+               && lookForSignature("\n%U",false,true,false,offsetCache,2048,false)>0 ) type |= GLU;
 
          // Détection fichier properties (hips properties)
          else if( isProperties() ) type |= PROP;
@@ -674,7 +688,10 @@ public class MyInputStream extends FilterInputStream {
          type |= EOF;
          //System.out.println("getType impossible: EOFException !!");
       }
-
+      
+      // Reset du cache des mots clés FITS pour économiser la place
+      if( TEST_FITSKEY ) resetFitsKeys();
+      
       return type;
 
    }
@@ -1146,6 +1163,7 @@ public class MyInputStream extends FilterInputStream {
    
    // Recherche d'une chaine d'un moc ASCII (ex: 1/3-5,8 7/)
    private boolean isAsciiMoc(int c[],int n ) {
+      if( n<3 ) return false;
       int mode=1;
       for( int i=0; i<n && i<c.length; i++ ) {
          char ch = (char) c[i];
@@ -1916,12 +1934,20 @@ public class MyInputStream extends FilterInputStream {
     * Recherche d'une signature dans le tampon.
     * @param sig la signature a chercher (uniquement du texte)
     * @param caseInsensitive true si on confond les maj. et les minuscules
+    * @param skipSpace true si on saute les espaces consécutifs
     * @param retourne l'indice dans le tampon de l'octet qui suit la signature
     *        ou -1 si la signature n'a pas ete trouvee
     */
    private int lookForSignature(String sig,boolean caseInsensitive)
          throws IOException {
-      return lookForSignature(sig,caseInsensitive,offsetCache,false);
+      int rep = lookForSignature(sig,caseInsensitive,true,false,offsetCache,false);
+//      if( rep>0 ) System.out.println("J'ai trouve ["+sig+"] a la position "+rep);
+      return rep;
+   }
+
+   private int lookForSignature(String sig,boolean caseInsensitive, boolean skipSpace)
+         throws IOException {
+      return lookForSignature(sig,caseInsensitive,skipSpace,false,offsetCache,false);
    }
 
    /**
@@ -1929,6 +1955,8 @@ public class MyInputStream extends FilterInputStream {
     * RQ: On ignore les blancs
     * @param sig la signature a chercher (uniquement du texte, éventuellement précédé par \n pour dire début de ligne)
     * @param caseInsensitive true si on confond les maj. et les minuscules
+    * @param skipSpace true si on saute les espaces consécutifs
+    * @param skip80 true si on se déplace de 80 caractères en 80 caractères
     * @param offset indique a partir de quelle position dans le tampon
     *               on va chercher la signature
     * @param maxOffset valeur limite de la recherche, -1 si aucune borne
@@ -1938,14 +1966,16 @@ public class MyInputStream extends FilterInputStream {
     * @param retourne l'indice dans le tampon de l'octet qui suit la signature
     *        ou -1 si la signature n'a pas ete trouvee
     */
-   private int lookForSignature(String sig,boolean caseInsensitive,
+   private int lookForSignature(String sig,boolean caseInsensitive,boolean skipSpace,boolean skip80,
          int offset,boolean flagEOF) throws IOException {
-      return lookForSignature(sig,caseInsensitive,offset,-1,flagEOF);
+      return lookForSignature(sig,caseInsensitive,skipSpace,skip80,offset,-1,flagEOF);
    }
-   private int lookForSignature(String sig,boolean caseInsensitive,
-         int offset,int maxOffset,boolean flagEOF) throws IOException {
+   private int lookForSignature(String sig,boolean caseInsensitive, boolean skipSpace,
+         boolean skip80, int offset,int maxOffset,boolean flagEOF) throws IOException {
       //System.out.println("Call lookForSignature("+sig+","+offset+")");
-
+      
+      if( !TEST_SKIP80 ) skip80=false;
+      
       boolean EOF=false;	// memorise qu'on a atteint la fin de stream
 
       // n'est-on pas allé déjà trop loin dans le fichier ?
@@ -1969,9 +1999,8 @@ public class MyInputStream extends FilterInputStream {
       int i,j;
       for( i=offset==0 && s[0]=='\n' && s.length>1 ? 1:0, j=offset-offsetCache; i<s.length && j<inCache; j++ ) {
          char a = s[i];
-         while( j<inCache && isSpace((char)cache[offsetCache+j]) ) j++;
+         if( skipSpace ) { while( j<inCache && isSpace((char)cache[offsetCache+j]) ) j++; }
          char b = (char)cache[offsetCache+j];
-         //         if( b=='\r' ) b='\n';
 
          if( caseInsensitive ) {
             a=Character.toUpperCase(a);
@@ -1980,17 +2009,32 @@ public class MyInputStream extends FilterInputStream {
 
          if( a==b ) i++;
          else {
-            if( i>0 ) j--;	// On rejouera sur le premier caractère de la signature
+            
+            // On s'aligne sur la prochaine frontière de 80
+            if( skip80 ) {
+               int pos = 80-j%80;
+               j += pos;
+               j--;
+                          
+            } else {
+               if( i>0 ) j--;	// On rejouera sur le premier caractère de la signature
+            }
+            
             i=0;
          }
-         while( i<s.length && isSpace(s[i]) ) i++;
+         if( skipSpace ) { while( i<s.length && isSpace(s[i]) ) i++; }
       }
 
-      if( i==s.length ) return offsetCache+j;
+      // Trouvé ?
+      if( i==s.length ) {
+         return offsetCache+j;
+      }
+      
       if( EOF && flagEOF ) throw new EOFException();
       return -1;
    }
-
+   
+   
    /** Retourne true si c'est un espace sans prendre en compte les retours
     * à la ligne
     */
@@ -2012,7 +2056,11 @@ public class MyInputStream extends FilterInputStream {
    private int findFitsEnd() throws IOException {
       if( fitsHeadRead ) return posAfterFitsHead;
       posAfterFitsHead =  findSignature("END",false,FITSEND);
-      fitsHeadRead=true;
+      
+      if( TEST_FITSKEY ) {
+         resetFitsKeys();
+         fitsHeadRead=true;
+      }
       return posAfterFitsHead;
    }      
 
@@ -2025,20 +2073,42 @@ public class MyInputStream extends FilterInputStream {
    private int findFitsEnd2() throws IOException {
       if( fitsHeadRead ) return posAfterFitsHead;
       posAfterFitsHead =  findSignature("END",false,FITSEND2);
-      fitsHeadRead=true;
+      
+      if( TEST_FITSKEY ) {
+         resetFitsKeys();
+         fitsHeadRead=true;
+      }
       return posAfterFitsHead;
    }      
+   
+
+// ETUDE => voir getFitsKey   
+   private boolean hasFitsKey(String key,String value) throws IOException {
+      if( !TEST_FITSKEY ) return hasFitsKey1(key,value);
+      
+      String val = getFitsValue(key);
+      if( value==null ) return val!=null;
+      return val!=null && HeaderFits.unquoteFits( value ).equals( val );
+   }
 
    /** Détermine si le flux contient un mot clé Fits "KEY   = Value" ou  "KEY   = 'Value'"
     *  Va au préalable charger le tampon jusqu'au prochain END en position %80 si nécessaire
     *  @param key Le mot clé fits recherché (sans blanc ni égale (=), en majuscules
     *  @param value la valeur associée, ou null si aucune
     */
-   private boolean hasFitsKey(String key,String value) throws IOException {
+   private boolean hasFitsKey1(String key,String value) throws IOException {
       if( !fitsHeadRead ) findFitsEnd();
       int len= value==null ? -1 : value.length();
       int k=offsetCache;
-      while( (k=lookForSignature(key+"=",false,k,false))>=0 ) {
+      
+      // Préparation du mot clé à trouver
+      StringBuilder key1 = new StringBuilder(key);
+      while( key1.length()<8 ) key1.append(' ');
+      key1.append('=');
+      key = key1.toString();
+      
+
+      while( (k=lookForSignature(key,false,false,true,k,false))>=0 ) {
 
 //         System.out.println("J'ai trouvé ["+key+"] =  => position "+k+" ["+(new String(cache,k-9,80))+"]");
          int i=k;
@@ -2058,15 +2128,140 @@ public class MyInputStream extends FilterInputStream {
       }
       return false;
    }
+   
+// ETUDE POUR ACCELERER LE TRAITEMENT FITS - PF Janvier 2020
+ private HashMap<String, String> fitskey = null;
+ 
+ private String getFitsValue(String sig) throws IOException {
+    if( !TEST_FITSKEY )  return getFitsValue1(sig);
+    
+    if( fitskey==null ) {
+       if( !fitsHeadRead ) findFitsEnd(); 
+       initFitskeys();
+    }
+    return fitskey.get(sig.trim());
+ }
+ 
+ private void resetFitsKeys() { fitskey=null; }
+ 
+ private void initFitskeys() {
+    fitskey = new HashMap<>();
+    
+    int i=0;        // position dans le cache
+    int mode=0;     // état courant du parser
+    int n=-1;       // position dans la ligne courante
+    char och=' ';   // précédent caractère lu
+    
+    boolean reset=false;         // true si demande de réinitialisation des variables
+    boolean memo=false;          // idem mais avec mémorisation de la paire courante clé=valeur
+    boolean abort=false;         // true si demande d'interruption du parsing
+    boolean checkFirstKey=false; // true si demande de vérification de la compatibilité FITS du premier mot clé
+    boolean flagQuote=false;     // true si on est dans une valeur quotée
+    int     nbEnd=0;             // Nombre de END repérés
+    
+    try {
+       StringBuilder key = new StringBuilder(10);
+       StringBuilder val = new StringBuilder(70);
+       
+       while( !abort ) {
+          if( i>=inCache ) break;  // Limite du buffer atteinte
+          n++;
+          int codePoint = getValAt(i++);
+          
+          // Fichier trop court ou caractère non FITS ?
+          if( i==-1 ) {
+             if( nbEnd>0 ) break;
+             else { abort=true; System.err.println("parseFits abort: end of file"); break; }
+          }
+          if( !Character.isDefined(codePoint) ) { abort=true; System.err.println("parseFits abort: codepoint undefined");break; }
+          
+          char ch = (char)codePoint;
+          switch( mode ) {
+             case 0: // Dans le mot clé
+                key.append(ch);
+                if( n==7 ) {
+                   if( fitskey.size()==0 ) checkFirstKey=true;
+                   mode=1;
+                }
+                break;
+             case 1:  // Sur le signe égal
+                if( ch=='=' ) mode=2;
+                else {
+                   // Traitement d'un END éventuel
+                   if( key.toString().trim().equals("END") ) nbEnd++; // return;
+                   reset=true; // Sans doute un CONTINUE ou HISTORY => on passe à la ligne suivante
+                }
+                break;
+             case 2: // Dans l'espace qui suit le '='
+                if( ch!=' ' ) { 
+                   if( nbEnd>0 ) return;   // on a dépassé la fin de l'entête
+                   abort=true; System.err.println("parseFits abort: missing blank ["+key+"]"); }
+                else mode=3;
+                break;     
+             case 3: // Une quote ?
+                if( ch=='\'' ) { flagQuote=true; och=ch; }
+                mode=4;
+             case 4: // Dans la valeur
+                if( n==80 ) memo=true; 
+                else if( ch=='/' && !flagQuote) memo=true;
+                else {
+                   if( ch=='\'' && och!='\'' ) flagQuote=false;
+                   val.append(ch);
+                }
+                break;
+          }
+          
+          // Vérifie que le premier mot clé est bien compatible FITS
+          if( checkFirstKey ) {
+             String k = key.toString().trim();
+             if( !k.equals("SIMPLE") && !k.equals("XTENSION") ) {
+                abort=true;
+                System.err.println("parseFits abort: not SIMPLE not XTENSION ["+k+"]");
+             }
+             checkFirstKey=false;
+          }
+          
+          // Traitement final de la ligne courante
+          if( reset || memo ) {
+             if( memo ) {
+                String s = key.toString().trim();
+                String v =  HeaderFits.unquoteFits(val.toString().trim()).trim();
+                fitskey.put( s,v );
+             }
+             i+=80-n-1; n=-1; mode=0;
+             key = new StringBuilder(10); val = new StringBuilder(70);
+             memo=reset=flagQuote = false;
+          }
+          
+          och=ch;
+       }
+       
+       // Interruption du parsing ?
+       if( abort ) {
+          System.err.println("fitskey clear");
+          fitskey.clear();
+       }
+       
+    } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
+ }
+
 
    /** Récupère la valeur d'un mot clé fits ou null si non trouvé */
-   private String getFitsValue(String key) throws IOException {
+   private String getFitsValue1(String key) throws IOException {
       if( !fitsHeadRead ) findFitsEnd();
+      
+      // Préparation du mot clé à trouver
+      StringBuilder key1 = new StringBuilder(key);
+      while( key1.length()<8 ) key1.append(' ');
+      key1.append('=');
+      key = key1.toString();
+      
       StringBuilder value;
       int k=offsetCache;
-      while( (k=lookForSignature(key+"=",false,k,false))>=0 ) {
+//      while( (k=lookForSignature(key+"=",false,k,false))>=0 ) {
+      while( (k=lookForSignature(key,false,false,true,k,false))>=0 ) {
 
-         //System.out.println("J'ai trouvé ["+key+"] =  => position "+k+" ["+(new String(cache,k-9,80))+"]");
+//         System.out.println("J'ai trouvé ["+key+"] =  => position "+k+" ["+(new String(cache,k-9,80))+"]");
          int i=k;
          if( (i-9)%80!=0 ) continue;   // Pas sur un multiple de 80 => pas un mot clé FITS
 
@@ -2115,10 +2310,14 @@ public class MyInputStream extends FilterInputStream {
       int nbEnd=0;
       
       do {
+         
+         boolean skip80 = false;
+         boolean skipSpace = true;
+         if( methode==FITSEND || methode==FITSEND2 ) { skipSpace=false; skip80=true; }
 
          // Recherche de la signature, avec reiteration (augmente le tampon)
          // tant qu'elle n'a pas ete trouvee
-         while( (n=lookForSignature(sig,caseInsensitive,offset,true))<0 ) {
+         while( (n=lookForSignature(sig,caseInsensitive,skipSpace,skip80,offset,true))<0 ) {
             offset=offsetCache+inCache;
          }
 
@@ -2164,27 +2363,27 @@ public class MyInputStream extends FilterInputStream {
       return n;
    }
 
-      public static void main(String[] args) {
-         try {
-            if( args.length==0 ) args = new String[] { "D:\\Skymapper\\Skymapper_0864036950_2016-04-07T03c27c51_24_red.fits.fz" };
-            for( int i=0; i<args.length; i++ ) {
-               String file=args[i];
-               InputStream in = new FileInputStream(new File(file));
-   //            OutputStream out = new FileOutputStream(new File(file+".mys"));
-   
-               MyInputStream f = new MyInputStream(in);
-               f=f.startRead();
-               try {
-                  System.out.println(file+" =>"+decodeType(f.getType()));
-               } catch( Exception e ) {
-                  e.printStackTrace();
-               }
-   //            byte buf[] = f.readFully();
-   //            out.write(buf);
-               f.close();
-   //            out.close();
-            }
-         } catch( Exception e ) { e.printStackTrace(); }
-      }
+//      public static void main(String[] args) {
+//         try {
+//            if( args.length==0 ) args = new String[] { "D:\\Skymapper\\Skymapper_0864036950_2016-04-07T03c27c51_24_red.fits.fz" };
+//            for( int i=0; i<args.length; i++ ) {
+//               String file=args[i];
+//               InputStream in = new FileInputStream(new File(file));
+//   //            OutputStream out = new FileOutputStream(new File(file+".mys"));
+//   
+//               MyInputStream f = new MyInputStream(in);
+//               f=f.startRead();
+//               try {
+//                  System.out.println(file+" =>"+decodeType(f.getType()));
+//               } catch( Exception e ) {
+//                  e.printStackTrace();
+//               }
+//   //            byte buf[] = f.readFully();
+//   //            out.write(buf);
+//               f.close();
+//   //            out.close();
+//            }
+//         } catch( Exception e ) { e.printStackTrace(); }
+//      }
 
 }

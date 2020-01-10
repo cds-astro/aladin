@@ -2717,8 +2717,8 @@ NOTTOOMANY Do you really want to download\nall these images ?
 NOTTOOMANY.fr Voulez-vous vraiment\ncharger toutes ces images ? 
 TOOMANYIMG	You can not download\nso many images simultaneously ! 
 TOOMANYIMG.fr	Vous ne pouvez pas charger\nautant d'images simultanément !
-PARSING	Parsing report
-PARSING.fr Rapport de traitement
+PARSING	Parsing report...
+PARSING.fr Rapport techn...
 CHECK Select all
 CHECK.fr Coche tout
 UNCHECK Unselect all

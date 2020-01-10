@@ -89,7 +89,7 @@ class ZoomTime {
    
    private double getDeltaTime( int deltaX ) {
       double total = globalJdmax - globalJdmin;
-      double w = width -DELTA_G -DELTA_D;
+      double w = width - (DELTA_G+DELTA_D);
       double onePix = total/w;
       double deltaJD = deltaX*onePix;
       return deltaJD;
@@ -107,7 +107,8 @@ class ZoomTime {
       if( state==ONSTART ) t[0]+=deltaJD;
       else if( state==ONEND ) t[1]+=deltaJD;
       else if( state==INTIME ) {
-         t[0]+=deltaJD; t[1]+=deltaJD;
+         t[0]+=deltaJD; 
+         t[1]+=deltaJD;
       }
       if( t[0]>t[1] ) t[0]=t[1];
       if( t[0]<=globalJdmin ) t[0]=Double.NaN;
@@ -130,7 +131,6 @@ class ZoomTime {
       v.setTimeRange( t );
       return midRange;
    }
-   
    
    protected void mouseMove(int x, int y, ViewSimple v) {
       if( !mouseIn(x,y) ) { stateMove=OUT; return; }
@@ -165,12 +165,12 @@ class ZoomTime {
       if( xDrag==-1 ) {
          if( !mouseIn(x,y) ) return false;
          double t = setXTime(x, v);
-         memoCommand(t);
+//         memoCommand(t);
          return true;
       }
       int deltaX = x-xDrag;
       double t [] = deltaXTime(deltaX,v);
-      memoCommand(t);
+//      memoCommand(t);
       xDrag=-1;
       return true;
    }
@@ -184,9 +184,9 @@ class ZoomTime {
    
    private int getX( double jd ) {
       double total = globalJdmax - globalJdmin;
-      double w = width - DELTA_G -DELTA_D;
+      double w = width - (DELTA_G+DELTA_D);
       double fct = w/total;
-      return (int)( (jd-globalJdmin)*fct );
+      return (int)( (jd-globalJdmin)*fct ) + DELTA_G;
    }
    
    final static double FCTZOOM = 0.12;
@@ -205,7 +205,7 @@ class ZoomTime {
       t[1] = centre+nRange/2;
       if( t[0]<=globalJdmin ) t[0] = Double.NaN;
       if( t[1]>=globalJdmax ) t[1] = Double.NaN;
-      memoCommand( t );
+//      memoCommand( t );
       if( v.setTimeRange( t ) ) zoomView.repaint();
       return true;
    }
@@ -232,7 +232,7 @@ class ZoomTime {
 
       int x = DELTA_G;
       int y = height-DELTAY;
-      int w = width-DELTA_G-DELTA_D;
+      int w = width-(DELTA_G+DELTA_D);
       int h = 13;
       
       // Mémorisation de la position du controleur
