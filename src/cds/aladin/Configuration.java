@@ -191,6 +191,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String INFOF      = "InfoFont";
    protected static String INFOB      = "InfoBorder";
    protected static String TAPSCHEMADISPLAY = "TapSchemaDisplay";
+   protected static String FILTERHDU     = "FilterHDU";
    
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
@@ -208,7 +209,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    CMB,CMH,CMV,CMM,CMC,CMF,/*BKGB,BKGH,*/WEBB,WEBH,RELOAD,
    REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
-   IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
+   IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,FILTERHDUS,FILTERHDUH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
    FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,RESTART,
    GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
@@ -255,6 +256,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JComboBox        transparencyChoice;   // Pour l'activation de la transparence des footprints
    private JComboBox        logChoice;            // Pour l'activation des logs
    private JComboBox        helpChoice;           // Pour l'activation de l'aide des débutants
+   private JComboBox        filterHDUChoice;        // Pour le chargement ou non de toutes les extensions FITS
    //   private JComboBox        tagChoice;           // Pour l'activation du centrage des tags
    private JSlider          transparencyLevel;    // niveau de transparence pour footprints
    private JComboBox        csvChoice;            // Pour la sélection du caractère CSV
@@ -344,6 +346,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       LOGH = aladin.chaine.getString("UPLOGH");
       HELPS = aladin.chaine.getString("UPHELP");
       HELPH = aladin.chaine.getString("UPHELPH");
+      FILTERHDUS = aladin.chaine.getString("UPFILTERHDU");
+      FILTERHDUH = aladin.chaine.getString("UPFILTERHDUH");
       SLIDERS = aladin.chaine.getString("UPSLIDERS");
       SLIDERH = aladin.chaine.getString("UPSLIDERH");
       SLIDEREPOCH = aladin.chaine.getString("SLIDEREPOCH");
@@ -1068,6 +1072,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return s==null || s.equals(ACTIVATED);
    }
 
+   /** Retourne true si les HDU non intéressantes doivent être filtrées */
+   protected boolean isFilterHDU() {
+      String s = get(FILTERHDU);
+      return s==null || s.startsWith(ACTIVATED);
+   }
+
    /** Retourne true si le mode Look & Feel est java (et non operating system) */
    public boolean isLookAndFeelJava() {
       String s = get(LOOKANDFEEL);
@@ -1445,27 +1455,40 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       modeChoice.addItem(UNDERGRADUATE);
       if( aladin.PROTO ) modeChoice.addItem(PREVIEW);
       (l = new JLabel(MODE)).setFont(l.getFont().deriveFont(Font.BOLD));
-//      if( !aladin.setOUTREACH && !Aladin.BETA) {
 //         PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);
-//      }
 
-//      if( !Aladin.OUTREACH ) {
-         (l = new JLabel(HELPS)).setFont(l.getFont().deriveFont(Font.BOLD));
-         helpChoice = new JComboBox();
-         helpChoice.addItem(ACTIVATED);
-         helpChoice.addItem(NOTACTIVATED);
-         PropPanel.addCouple(this, p, l, HELPH, helpChoice, g, c, GridBagConstraints.EAST);
+      // Wizard ?
+      (l = new JLabel(HELPS)).setFont(l.getFont().deriveFont(Font.BOLD));
+      helpChoice = new JComboBox();
+      helpChoice.addItem(ACTIVATED);
+      helpChoice.addItem(NOTACTIVATED);
+      PropPanel.addCouple(this, p, l, HELPH, helpChoice, g, c, GridBagConstraints.EAST);
 
-         (l = new JLabel(SLIDERS)).setFont(l.getFont().deriveFont(Font.BOLD));
-         JPanel sliderPanel = new JPanel( new GridLayout(1,0));
-         sliderPanel.add( bxEpoch = new JCheckBox(SLIDEREPOCH));
-         sliderPanel.add( bxSize  = new JCheckBox(SLIDERSIZE));
-         sliderPanel.add( bxDens  = new JCheckBox(SLIDERDENSITY));
-         sliderPanel.add( bxCube  = new JCheckBox(SLIDERCUBE));
-         sliderPanel.add( bxOpac  = new JCheckBox(SLIDEROPAC));
-         sliderPanel.add( bxZoom  = new JCheckBox(SLIDERZOOM));
-         PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
-//      }
+      // Le thème du Look&Feel
+      (l = new JLabel(THEME)).setFont(l.getFont().deriveFont(Font.BOLD));
+      themeChoice = new JComboBox();
+      themeChoice.addItem("dark");
+      themeChoice.addItem("classic");
+      themeChoice.addActionListener(this);
+      PropPanel.addCouple(this, p, l, THEMEHELP, themeChoice, g, c, GridBagConstraints.EAST);
+
+      // Le Look&Feel des FileDialog
+      (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
+      lfChoice = new JComboBox();
+      lfChoice.addItem(FILEDIALOGJAVA);
+      lfChoice.addItem(FILEDIALOGNATIVE);
+      lfChoice.addActionListener(this);
+      PropPanel.addCouple(this, p, l, FILEDIALOGHELP, lfChoice, g, c, GridBagConstraints.EAST);
+
+      (l = new JLabel(SLIDERS)).setFont(l.getFont().deriveFont(Font.BOLD));
+      JPanel sliderPanel = new JPanel( new GridLayout(1,0));
+      sliderPanel.add( bxEpoch = new JCheckBox(SLIDEREPOCH));
+      sliderPanel.add( bxSize  = new JCheckBox(SLIDERSIZE));
+      sliderPanel.add( bxDens  = new JCheckBox(SLIDERDENSITY));
+      sliderPanel.add( bxCube  = new JCheckBox(SLIDERCUBE));
+      sliderPanel.add( bxOpac  = new JCheckBox(SLIDEROPAC));
+      sliderPanel.add( bxZoom  = new JCheckBox(SLIDERZOOM));
+      PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
 
       // Le Répertoire par défaut
       dir = new JTextField(35);
@@ -1483,13 +1506,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       (l = new JLabel(FRAMEB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(frameChoice);
-      //      if( aladin.PROTO ) {
       panel.add(new JLabel(" - "+FRAMEALLSKYB));
       panel.add(frameAllskyChoice);
-      //      }
-//      if( !aladin.OUTREACH ) {
-         PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
-//      }
+      PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
 
       // La projection par défaut pour les allsky
       projAllskyChoice = new JComboBox( Projection.getAlaProj() );
@@ -1497,9 +1516,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       (l = new JLabel(PROJALLSKYB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(projAllskyChoice);
-//      if( !aladin.OUTREACH ) {
-         PropPanel.addCouple(this, p, l, PROJALLSKYH, panel, g, c, GridBagConstraints.EAST);
-//      }
+      PropPanel.addCouple(this, p, l, PROJALLSKYH, panel, g, c, GridBagConstraints.EAST);
 
       // Le mode pixel
       //      pixelChoice = new JComboBox();
@@ -1511,15 +1528,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       mapChoice = x = FrameColorMap.createComboCM();
       cutChoice = x=new JComboBox();   x.addItem("autocut"); x.addItem("noautocut");
       fctChoice = x=new JComboBox();   for( int i=0; i<PlanImage.TRANSFERTFCT.length; i++ ) x.addItem(PlanImage.TRANSFERTFCT[i]);
-//      if( !aladin.OUTREACH ) {
-         panel = new JPanel(new GridLayout(2,2,4,4));
-         panel.add(new JLabel("- "+CMV,JLabel.LEFT)); panel.add(videoChoice);
-         panel.add(new JLabel("  - "+CMM,JLabel.LEFT)); panel.add(mapChoice);
-         panel.add(new JLabel("- "+CMC,JLabel.LEFT)); panel.add(cutChoice);
-         panel.add(new JLabel("  - "+CMF,JLabel.LEFT)); panel.add(fctChoice);
-         (l = new JLabel(CMB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         PropPanel.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
-//      }
+      panel = new JPanel(new GridLayout(2,2,4,4));
+      panel.add(new JLabel("- "+CMV,JLabel.LEFT)); panel.add(videoChoice);
+      panel.add(new JLabel("  - "+CMM,JLabel.LEFT)); panel.add(mapChoice);
+      panel.add(new JLabel("- "+CMC,JLabel.LEFT)); panel.add(cutChoice);
+      panel.add(new JLabel("  - "+CMF,JLabel.LEFT)); panel.add(fctChoice);
+      (l = new JLabel(CMB)).setFont(l.getFont().deriveFont(Font.BOLD));
+      PropPanel.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
       
       //      csvChoice = new JComboBox();
       //      for( int i=0; i<CSVITEM.length; i++ ) csvChoice.addItem(CSVITEMLONG[i]);
@@ -1532,10 +1547,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       filterChoice = new JComboBox();
       filterChoice.addItem(NOTACTIVATED);
       filterChoice.addItem(ACTIVATED);
-//      if( !aladin.OUTREACH ) {
-         (l = new JLabel(FILTERB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         PropPanel.addCouple(this, p, l, FILTERH, filterChoice, g, c, GridBagConstraints.EAST);
-//      }
+      (l = new JLabel(FILTERB)).setFont(l.getFont().deriveFont(Font.BOLD));
+      PropPanel.addCouple(this, p, l, FILTERH, filterChoice, g, c, GridBagConstraints.EAST);
 
      // Transparence des footprints
 //      transparencyChoice = new JComboBox();
@@ -1578,110 +1591,91 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // Le survey par défaut
       serverTxt = new JTextField(10);
       surveyTxt = new JTextField(10);
-//      if( !aladin.OUTREACH ) {
-         JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
-         p1.add(new JLabel(IMGS,JLabel.LEFT)); p1.add(serverTxt);
-         p1.add(new JLabel(IMGC,JLabel.LEFT)); p1.add(surveyTxt);
-         (l = new JLabel(IMGB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         PropPanel.addCouple(this, p, l, IMGH, p1, g, c,GridBagConstraints.EAST);
-//      }
+      JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
+      p1.add(new JLabel(IMGS,JLabel.LEFT)); p1.add(serverTxt);
+      p1.add(new JLabel(IMGC,JLabel.LEFT)); p1.add(surveyTxt);
+      (l = new JLabel(IMGB)).setFont(l.getFont().deriveFont(Font.BOLD));
+      PropPanel.addCouple(this, p, l, IMGH, p1, g, c,GridBagConstraints.EAST);
 
       // Le GLU
       (l = new JLabel(REGB)).setFont(l.getFont().deriveFont(Font.BOLD));
       reload = b = new JButton(RELOAD);
       createGluChoice();
 
-//      if( !aladin.OUTREACH ) {
+      // Le glu
+      panel = new JPanel(new BorderLayout(5,5));
+      panel.add(gluChoice,BorderLayout.WEST);
+      b.setMargin( new Insets(2,4,2,4));
+      b.addActionListener(this);
+      panel.add(b,BorderLayout.EAST);
+      PropPanel.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
 
-         // Le glu
-         panel = new JPanel(new BorderLayout(5,5));
-         panel.add(gluChoice,BorderLayout.WEST);
-         b.setMargin( new Insets(2,4,2,4));
-         b.addActionListener(this);
-         panel.add(b,BorderLayout.EAST);
-         PropPanel.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
+      // Les paramètres de la grille
+      CouleurBox y;
+      panel = new JPanel(new GridLayout(2,2,4,4));
+      gridFontCombo = new JComboBox( new String[]{"6","7","8","9","10","11","12","13","14","16"} );
+      gridFontCombo.setPrototypeDisplayValue(new Integer(100000000));
+      gridFontCombo.setSelectedItem( getGridFontSize()+"" );
+      panel.add(new JLabel("- "+GRIDFONT,JLabel.LEFT)); panel.add( gridFontCombo );
+      gridColorBox = y = new CouleurBox( Aladin.COLOR_GREEN, aladin.view.gridColor );
+      panel.add(new JLabel("  - "+GRIDCOLOR,JLabel.LEFT)); panel.add(y);
+      gridColorRABox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHT, aladin.view.gridColorRA );
+      panel.add(new JLabel("- "+GRIDRACOLOR,JLabel.LEFT)); panel.add(y);
+      gridColorDEBox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHTER, aladin.view.gridColorDEC );
+      panel.add(new JLabel("  - "+GRIDDECOLOR,JLabel.LEFT)); panel.add(y);
+      (l = new JLabel(GRID)).setFont(l.getFont().deriveFont(Font.BOLD));
+      PropPanel.addCouple(this, p, l, GRIDH, panel, g, c, GridBagConstraints.EAST);
+
+      // Les paramètres des infos
+      panel = new JPanel(new GridLayout(2,2,4,4));
+      infoFontCombo = new JComboBox( new String[]{"8","9","10","11","12","13","14","16","18","20"} );
+      infoFontCombo.setPrototypeDisplayValue(new Integer(100000000));
+      infoFontCombo.setSelectedItem( getInfoFontSize()+"" );
+      panel.add(new JLabel("- "+INFOFONT,JLabel.LEFT)); panel.add( infoFontCombo );
+      infoFontBorderCombo = new JComboBox( new String[]{"on","off"} );
+      infoFontBorderCombo.setSelectedIndex( isInfoBorder()?0:1 );
+      panel.add(new JLabel("- "+INFOFONTBORDER,JLabel.LEFT)); panel.add( infoFontBorderCombo );
+      infoColorBox = y = new CouleurBox( Color.cyan, getInfoColor() );
+      panel.add(new JLabel("- "+INFOCOLOR,JLabel.LEFT)); panel.add(y);
+      infoLabelColorBox = y = new CouleurBox( Color.yellow, getInfoLabelColor() );
+      panel.add(new JLabel("  - "+INFOLABELCOLOR,JLabel.LEFT)); panel.add(y);
+      (l = new JLabel(INFO)).setFont(l.getFont().deriveFont(Font.BOLD));
+      PropPanel.addCouple(this, p, l, INFOH, panel, g, c, GridBagConstraints.EAST);
+
+      // Les logs
+      if( !Aladin.SETLOG ) {
+         (l = new JLabel(LOGS)).setFont(l.getFont().deriveFont(Font.BOLD));
+         logChoice = new JComboBox();
+         logChoice.addItem(ACTIVATED);
+         logChoice.addItem(NOTACTIVATED);
+         PropPanel.addCouple(this, p, l, LOGH, logChoice, g, c, GridBagConstraints.EAST);
+      }
+
+      // Le cache
+      (l = new JLabel(CACHES)).setFont(l.getFont().deriveFont(Font.BOLD));
+      panel = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
+      panel.add( cache=new JLabel("???? / "));
+      panel.add( maxCache = new JTextField(6));
+      panel.add( new JLabel("MB"));
+      b=new JButton(CLEARCACHE); b.addActionListener(this);
+      b.setMargin( new Insets(2,4,2,4));
+      panel.add( b );
+      PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
          
-         // Le thème du Look&Feel
-         (l = new JLabel(THEME)).setFont(l.getFont().deriveFont(Font.BOLD));
-         themeChoice = new JComboBox();
-         themeChoice.addItem("dark");
-         themeChoice.addItem("classic");
-         themeChoice.addActionListener(this);
-         PropPanel.addCouple(this, p, l, THEMEHELP, themeChoice, g, c, GridBagConstraints.EAST);
-
-         // Les paramètres de la grille
-         CouleurBox y;
-         panel = new JPanel(new GridLayout(2,2,4,4));
-         gridFontCombo = new JComboBox( new String[]{"6","7","8","9","10","11","12","13","14","16"} );
-         gridFontCombo.setPrototypeDisplayValue(new Integer(100000000));
-         gridFontCombo.setSelectedItem( getGridFontSize()+"" );
-         panel.add(new JLabel("- "+GRIDFONT,JLabel.LEFT)); panel.add( gridFontCombo );
-         gridColorBox = y = new CouleurBox( Aladin.COLOR_GREEN, aladin.view.gridColor );
-         panel.add(new JLabel("  - "+GRIDCOLOR,JLabel.LEFT)); panel.add(y);
-         gridColorRABox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHT, aladin.view.gridColorRA );
-         panel.add(new JLabel("- "+GRIDRACOLOR,JLabel.LEFT)); panel.add(y);
-         gridColorDEBox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHTER, aladin.view.gridColorDEC );
-         panel.add(new JLabel("  - "+GRIDDECOLOR,JLabel.LEFT)); panel.add(y);
-         (l = new JLabel(GRID)).setFont(l.getFont().deriveFont(Font.BOLD));
-         PropPanel.addCouple(this, p, l, GRIDH, panel, g, c, GridBagConstraints.EAST);
-
-         // Les paramètres des infos
-         panel = new JPanel(new GridLayout(2,2,4,4));
-         infoFontCombo = new JComboBox( new String[]{"8","9","10","11","12","13","14","16","18","20"} );
-         infoFontCombo.setPrototypeDisplayValue(new Integer(100000000));
-         infoFontCombo.setSelectedItem( getInfoFontSize()+"" );
-         panel.add(new JLabel("- "+INFOFONT,JLabel.LEFT)); panel.add( infoFontCombo );
-         infoFontBorderCombo = new JComboBox( new String[]{"on","off"} );
-         infoFontBorderCombo.setSelectedIndex( isInfoBorder()?0:1 );
-         panel.add(new JLabel("- "+INFOFONTBORDER,JLabel.LEFT)); panel.add( infoFontBorderCombo );
-         infoColorBox = y = new CouleurBox( Color.cyan, getInfoColor() );
-         panel.add(new JLabel("- "+INFOCOLOR,JLabel.LEFT)); panel.add(y);
-         infoLabelColorBox = y = new CouleurBox( Color.yellow, getInfoLabelColor() );
-         panel.add(new JLabel("  - "+INFOLABELCOLOR,JLabel.LEFT)); panel.add(y);
-         (l = new JLabel(INFO)).setFont(l.getFont().deriveFont(Font.BOLD));
-         PropPanel.addCouple(this, p, l, INFOH, panel, g, c, GridBagConstraints.EAST);
-
-             // Le Look&Feel des FileDialog
-         (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
-         lfChoice = new JComboBox();
-         lfChoice.addItem(FILEDIALOGJAVA);
-         lfChoice.addItem(FILEDIALOGNATIVE);
-         lfChoice.addActionListener(this);
-         PropPanel.addCouple(this, p, l, FILEDIALOGHELP, lfChoice, g, c, GridBagConstraints.EAST);
-
-         // Les logs
-         if( !Aladin.SETLOG ) {
-            (l = new JLabel(LOGS)).setFont(l.getFont().deriveFont(Font.BOLD));
-            logChoice = new JComboBox();
-            logChoice.addItem(ACTIVATED);
-            logChoice.addItem(NOTACTIVATED);
-            PropPanel.addCouple(this, p, l, LOGH, logChoice, g, c, GridBagConstraints.EAST);
-         }
-
-         // Le cache
-         (l = new JLabel(CACHES)).setFont(l.getFont().deriveFont(Font.BOLD));
-         panel = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
-         panel.add( cache=new JLabel("???? / "));
-         panel.add( maxCache = new JTextField(6));
-         panel.add( new JLabel("MB"));
-         b=new JButton(CLEARCACHE); b.addActionListener(this);
-         b.setMargin( new Insets(2,4,2,4));
-         panel.add( b );
-         PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
-//      }
-         
-//         //tap: display of schema tables
-//         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
-//         hideTapSchema = new JCheckBox();
-//         hideTapSchema.setSelected(hideTapSchema());
-//         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
-
-//         //tap: display of schema tables
-//         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
-//         hideTapSchema = new JCheckBox();
-//         hideTapSchema.setSelected(hideTapSchema());
-//         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
-
+      (l = new JLabel(FILTERHDUS)).setFont(l.getFont().deriveFont(Font.BOLD));
+      filterHDUChoice = new JComboBox();
+      filterHDUChoice.addItem(ACTIVATED);
+      filterHDUChoice.addItem(NOTACTIVATED);
+      PropPanel.addCouple(this, p, l, FILTERHDUH, filterHDUChoice, g, c, GridBagConstraints.EAST);
+      
+      if( Aladin.BETA || Aladin.PROTO ) {
+         //tap: display of schema tables
+         (l = new JLabel(UPHIDETAPSCHEMA)).setFont(l.getFont().deriveFont(Font.BOLD));
+         hideTapSchema = new JCheckBox();
+         hideTapSchema.setSelected(hideTapSchema());
+         PropPanel.addCouple(this, p, l, UPHIDETAPSCHEMAH, hideTapSchema, g, c, GridBagConstraints.EAST);
+      }
+     
       return p;
    }
 
@@ -1830,6 +1824,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( logChoice!=null) logChoice.setSelectedIndex(isLog()?0:1);
 
       if( helpChoice!=null) helpChoice.setSelectedIndex(isHelp()?0:1);
+
+      if( filterHDUChoice!=null) filterHDUChoice.setSelectedIndex( isFilterHDU()?0:1 );
 
       if( bxEpoch!=null ) bxEpoch.setSelected( isSliderEpoch() );
       if( bxSize!=null )  bxSize.setSelected( isSliderSize() );
@@ -2003,6 +1999,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
       s = get(HELP);
       if( s!=null && s.equals(ACTIVATED) ) remove(HELP);
+
+      s = get(FILTERHDU);
+      if( s!=null && s.equals(ACTIVATED) ) remove(FILTERHDU);
 
       s = get(LOOKANDFEEL);
       if( s!=null && s.equals(JAVA) ) remove(LOOKANDFEEL);
@@ -2368,6 +2367,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          else remove(HELP);
       }
 
+      // Pour l'assistant débutant
+      if( filterHDUChoice!=null ) {
+         if( filterHDUChoice.getSelectedIndex()==1 ) set(FILTERHDU,(String)filterHDUChoice.getSelectedItem());
+         else remove(FILTERHDU);
+      }
+
       // Pour le Look & Feel
       if( lfChoice!=null ) {
          if( lfChoice.getSelectedIndex()==1 ) set(LOOKANDFEEL,OPSYS);
@@ -2527,13 +2532,6 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          } catch( Exception e ) { }
       }
       
-      if( hideTapSchema != null ) {
-    	  if (hideTapSchema.isSelected() != TapManager.getInstance(aladin).hideTapSchema) {
-    		  set(TAPSCHEMADISPLAY, String.valueOf(hideTapSchema.isSelected()));
-    		  Aladin.info(this,RESTART);
-    	  }
-      }
-
       if( hideTapSchema != null ) {
     	  if (hideTapSchema.isSelected() != TapManager.getInstance(aladin).hideTapSchema) {
     		  set(TAPSCHEMADISPLAY, String.valueOf(hideTapSchema.isSelected()));

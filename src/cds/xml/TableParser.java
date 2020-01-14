@@ -814,7 +814,8 @@ final public class TableParser implements XMLConsumer {
                                        type=='U'? 2:
                                        0;
       if( sizeOf==0 ) {
-         System.out.println("Problème sérieux pour ["+type+"]");
+         sizeOf=1;
+         if( Aladin.aladin.levelTrace>=3 ) System.err.println("TableParser warning: unknown field datatype ["+type+"] => assuming 1 byte");
       }
       return sizeOf * n;
    }
@@ -1591,7 +1592,7 @@ final public class TableParser implements XMLConsumer {
       }
       
       consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY,
-            (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
+            flagNOCOO || (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
       if( nTime>=0 ) {
          consumer.tableParserInfo("   -assuming Time column "+(nTime+1)+" "+proba(qualTime));
       }

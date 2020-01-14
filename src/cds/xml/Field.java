@@ -336,7 +336,7 @@ final public class Field {
             +(datatype==null? "":" datatype="+datatype)
             +(precision==null?"":" precision="+precision)
             +(type==null?     "":" type="+type)
-            +" coo="+getCooSignature()
+//            +" coo="+getCooSignature()
             +(arraysize==null?"":" arraysize="+arraysize)
             +(nullValue==null?"":" nullValue="+nullValue)
             ;

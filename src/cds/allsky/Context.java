@@ -153,10 +153,10 @@ public class Context {
    protected int nbPilot=-1;                 // Indique le nombre d'images à prendre en compte (pour faire un test pilot)
 
    protected boolean flagLupton = false;         // Méthode Lupton ?
-   protected double luptonM;                 
-   protected double luptonQ;
-   protected double [] luptonScale;
-
+   protected double luptonQ = Double.NaN;;
+   protected double [] luptonM = new double[] { Double.NaN, Double.NaN, Double.NaN };;                
+   protected double [] luptonS= new double[] { Double.NaN, Double.NaN, Double.NaN };
+   
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
    private int frame =-1;                    // Système de coordonnée de la boule HEALPIX à générée
@@ -217,6 +217,10 @@ public class Context {
       cmsRGB = new String [3];
       flagNoInitEtalon=false;
       tile2Hpx=null;
+      flagLupton  = false;
+      luptonQ     = Double.NaN;
+      luptonM     = new double[] { Double.NaN, Double.NaN, Double.NaN };
+      luptonS = new double[] { Double.NaN, Double.NaN, Double.NaN };
    }
 
    // manipulation des chaines désignant le système de coordonnées (syntaxe longue et courte)
@@ -960,6 +964,47 @@ public class Context {
    }
 
    public void setRgbCmParam(String cmParam,int c) { cmsRGB[c] = cmParam; }
+   
+   
+   public void setRgbLuptonQ(String s) throws Exception { setRgbLuptonParam(s,0); }
+   public void setRgbLuptonM(String s) throws Exception { setRgbLuptonParam(s,1); }
+   public void setRgbLuptonS(String s) throws Exception { setRgbLuptonParam(s,2); }
+   
+   /** Parsing des paramètres Lupton
+    * 0: Q => une valeur unique
+    * 1: m => "auto" ou "val" ou "val/val/val" avec val=numérique ou auto ou vide
+    * 2: idem que 1
+    * @param s la valeur du paramètre
+    * @param param le numéro du parametre
+    * @throws Exception
+    */
+   private void setRgbLuptonParam(String s,int param) throws Exception {
+      flagLupton = true;
+      try {
+         
+         // 0 - Q
+         if( param==0 ) {
+            try { luptonQ = Double.parseDouble(s); } catch( Exception e ) { luptonQ=Double.NaN; }
+            return;
+         }
+
+         // 1 - m, 2 - scale
+         double [] lup = param==1 ? luptonM : luptonS;
+         Tok tok = new Tok(s,"/");
+         double lastVal=Double.NaN;
+         for( int i=0;i<3; i++ ) {
+            if( tok.hasMoreTokens() ) {
+               String s1 = tok.nextToken();
+               if( s1.equals("auto") || s1.length()==0 ) lup[i]=Double.NaN;
+               else lup[i]=Double.parseDouble(s1);
+            } else lup[i]=lastVal;
+            lastVal = lup[i];
+         }
+         
+      } catch( Exception e) {
+         throw new Exception("lupton param error ["+s+"] (ex: luptonQ=20 luptonS=auto luptonM=0.02/0.03/0.01)");
+      }
+   }
 
    public void setSkyval(String fieldName) throws Exception {
       boolean flagNum = false;

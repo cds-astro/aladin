@@ -2317,11 +2317,11 @@ public class Plan implements Runnable {
       
       if( !active ) aladin.view.deSelect(this);
       else {
-//         if( !noBestPlacePost ) {
-            if( hasNoPos ) {
-               if( !aladin.view.hasSelectedSource() ) aladin.view.selectAllInPlan(this);
-            } else aladin.view.addTaggedSource(this);
-//         }
+//         if( hasNoPos ) {
+//            if( !aladin.view.hasSelectedSource() ) aladin.view.selectAllInPlan(this);
+//         } else aladin.view.addTaggedSource(this);
+
+         if( !hasNoPos ) aladin.view.addTaggedSource(this);
       }
       
       // Activation le cas échéant d'un filtre qui serait associé

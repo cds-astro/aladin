@@ -1738,6 +1738,8 @@ UPLOGH You are freely using Aladin developed by the Centre de Données astronomiq
 UPLOGH1 Do you accept anonymous statistics logs (you will always be able to change this choice via the menu Edit -> Preferrences) ?
 UPHELP Wizard
 UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progressively the Aladin graphical interface.
+UPFILTERHDU FITS HDU filtering
+UPFILTERHDUH If activated, only usefull FITS extensions (images, tables) will be loaded, otherwise useless tables (technical reduction information, without coordinates, ...) will be ignored
 #UPTAGCENTER	Centered tag
 #UPTAGCENTERH Activate this selector to automatically center tags ("Tag" tool button) on the barycentre of the closest object.
 UPSLIDERS	Control sliders
@@ -1848,6 +1850,8 @@ UPLOGH.fr Vous utilisez gratuitement Aladin développé par le Centre de Données a
 UPLOGH1.fr Autorisez-vous ces statistiques anonymes (vous pourrez toujours changer ce choix via le menu Editer -> Préférences) ?
 UPHELP.fr Assistant
 UPHELPH.fr Active/désactive l'assistant pour les débutatns. Celui-ci permet aux nouveaux utilisateurs d'Aaldin de se familiariser avec l'interface graphique
+UPFILTERHDU.fr Filtrage des HDU FITS
+UPFILTERHDUH.fr Si le filtrage HDU est activé les extensions des fichiers FITS (HDU) techniques (information de réduction de données, sans coordonnées célestes...) seront ignorées.
 #UPTAGCENTER.fr	Marque centrée
 #UPTAGCENTERH.fr Activez ce sélecteur afin de contraindre l'outil de marquage (Outil "Marq") à se centrer automatiquement sur le barycentre de l'objet le plus proche
 UPSLIDERS.fr	Contrôles

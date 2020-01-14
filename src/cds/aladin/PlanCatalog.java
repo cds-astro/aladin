@@ -40,11 +40,15 @@ import cds.tools.Util;
  */
 public class PlanCatalog extends Plan {
    URL url = null;
+   boolean autoSelect=false;    // si true sélectionne automatiquement tous les objets s'ils n'ont pas de coordonnées
 
   /** Creation d'un plan de type CATALOG (via une fichier)
    * @param file  Le nom du fichier
    */
    protected PlanCatalog(Aladin aladin, String file, MyInputStream in,boolean skip,boolean doClose) {
+      this(aladin,file,in,skip,doClose,true);
+   }
+   protected PlanCatalog(Aladin aladin, String file, MyInputStream in,boolean skip,boolean doClose,boolean autoSelect) {
       this.doClose=doClose;
       flagSkip = skip;
       String label = "Cat";
@@ -135,7 +139,7 @@ public class PlanCatalog extends Plan {
       Suite(aladin,label,objet,param,from,server, u, null);
 
    }
-
+   
   /** Creation d'un plan de type CATALOG
    * @param aladin reference
    * @param label  le nom du plan (dans la pile des plans)
@@ -270,6 +274,9 @@ public class PlanCatalog extends Plan {
    
    protected boolean setActivated() {
       if( !hasSources() ) return false;
+      
+      if( autoSelect && !aladin.view.hasSelectedSource() ) aladin.view.selectAllInPlan(this);
+      
       return super.setActivated();
    }
 

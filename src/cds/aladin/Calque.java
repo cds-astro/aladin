@@ -2697,6 +2697,7 @@ public class Calque extends JPanel implements Runnable {
       
       Vector<Plan> v = new Vector<>();
       try {
+         int nbExt=0;
          for( int nExt=0; !allFitsExt(numext); nExt++ )  {
             boolean keepIt = keepFitsExt(nExt,numext);  // Pour savoir s'il faut garder cette extension
             p=null;
@@ -2705,16 +2706,20 @@ public class Calque extends JPanel implements Runnable {
             if( (type & MyInputStream.EOF)!=0 ) break;
             
             Aladin.trace(3,"MultiExtension "+nExt+" detect => "+MyInputStream.decodeType(type));
-            if( (type & MyInputStream.FITS)!=0 /* || (type & MyInputStream.HPX)!=0 */ ) {
+            if( (type & MyInputStream.FITS)!=0 ) {
                PlanImage pi = null;
+               
                if( (type&MyInputStream.CUBE)!=0 ) {
                   if( (type&MyInputStream.ARGB)!=0) pi = new PlanImageCubeRGB(aladin,file,in,label,null,o,null,false,false,null);
                   else pi = new PlanImageCube(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
+                  
                } else if( (type & MyInputStream.HUGE)!=0 ) {
                   pi = new PlanImageHuge(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
+                  
                } else if( (type & MyInputStream.HEALPIX)!=0 ) {
                   pi = new PlanHealpix(aladin,file,in,label+"["+nExt+"]",PlanBG.DRAWPIXEL,0, false,
                         getTargetBG(target, null),getRadiusBG(target, radius, null));
+                  
                } else {
                   pi = new PlanImage(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                }
@@ -2729,16 +2734,19 @@ public class Calque extends JPanel implements Runnable {
             } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
                if( (type & MyInputStream.FITSCMP)!=0 ) {
                   p = new PlanImageFitsCmp(aladin,file,in,label,null,o,null,!keepIt,false,firstPlan);
-               } else if( (type & MyInputStream.AIPSTABLE)!=0 ) {
+                  
+               } else if( aladin.configuration.isFilterHDU() && (type & MyInputStream.AIPSTABLE)!=0 ) {
                   Aladin.trace(3,"MEF AIPS CC table detected => ignored !");
                   new PlanCatalog(aladin,"",in,true,false);  // Justes pour le manger
+                  
                } else {
-                  PlanCatalog pc = new PlanCatalog(aladin,""/*file*/,in,!keepIt,false);
+                  PlanCatalog pc = new PlanCatalog(aladin,""/*file*/,in,!keepIt,false,false);
                   if( pc.label.equals("") ) pc.setLabel(file);
                   p=pc;
-                  if( /* aladin.OUTREACH && */ (pc.pcat.badRaDecDetection || pc.pcat.getCount()==0)
+                  if(  aladin.configuration.isFilterHDU()
+                        && (pc.pcat.badRaDecDetection || pc.pcat.getCount()==0)
                         && nExt>0 && v.size()>0 && v.elementAt(0).isImage() ) {
-                     p=null; // pour eviter les extensions DSS
+                     p=null; // pour eviter les extensions DSS, LSST et équivalentes
                      aladin.command.printConsole("!!! Table MEF extension ignored => seems to be reduction information");
                   }
                }
@@ -2748,9 +2756,9 @@ public class Calque extends JPanel implements Runnable {
                break;
             }
 
-            folder.setPourcent(nExt);
-
             if( p!=null ) {
+               
+               folder.setPourcent(++nbExt);
 
                // Pas terrible: pour détecter la fin de fichier on passe par
                // le p.error avec une chaine particulière
@@ -2815,7 +2823,7 @@ public class Calque extends JPanel implements Runnable {
       // Aucun plan dans ce fits extension
       if( v.size()==0 ) return;
       
-      int nbPlanInserted = 0;
+//      int nbPlanInserted = 0;
 
       // On met tout ça dans la pile
       if( v.size()>1 ) {
@@ -2827,7 +2835,7 @@ public class Calque extends JPanel implements Runnable {
                if( p.type==Plan.NO ) continue;
                if( p.error!=null && p.error.equals("_HEAD_XFITS_") ) continue;
                int n=getStackIndex();
-               nbPlanInserted++;
+//               nbPlanInserted++;
                plan[n] = p;
                plan[n].setLabel(plan[n].label);    // Pour s'assurer que son nom est unique dans la pile
                permute(plan[n],folder);
@@ -2843,6 +2851,7 @@ public class Calque extends JPanel implements Runnable {
       }
       p.doClose=true;
       p.planReady(true);
+      
       
 //      if( nbPlanInserted>6 ) aladin.calque.select.switchCollapseFolder( folder );
    }

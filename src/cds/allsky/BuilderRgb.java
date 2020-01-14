@@ -62,8 +62,8 @@ public class BuilderRgb extends BuilderTiles {
    private boolean flagGauss;
    
    private boolean flagLupton;
-   private double luptonScale[];
-   private double luptonM;
+   private double luptonS[];
+   private double luptonM[];
    private double luptonQ;
    
    private int statNbFile;
@@ -186,11 +186,11 @@ public class BuilderRgb extends BuilderTiles {
             if( missing!=-1 ) throw new Exception("HiPS RGB generation required at least 2 original components");
             missing=c;
          } else {
-            
+
             if( !context.isExistingAllskyDir( inputs[c] ) ) {
                throw new Exception("Input HiPS missing ["+inputs[c]+"]");
             }
-                  
+
             if( pathRef==null ) pathRef=inputs[c];
 
             // Récupération des propriétés
@@ -215,15 +215,15 @@ public class BuilderRgb extends BuilderTiles {
             HealpixMoc m = moc[c] = loadMoc( inputs[c] );
             if( context.moc==null ) context.moc = m;
             else context.moc = (SpaceMoc)context.moc.union(m);
-            
-           // Vérification de la cohérence des systèmes de coordonnées
+
+            // Vérification de la cohérence des systèmes de coordonnées
             String f = getFrameFromProp( prop[c] );
             if( frame==null ) frame=f;
             else if( !frame.equals(f) ) throw new Exception("Uncompatible coordsys for "+labels[c]);
 
          }
       }
-      
+
       // Si le répertoire de destination est absent, je donne une valeur par défaut
       if( path==null ) {
          int n = pathRef.length()-1;
@@ -273,14 +273,32 @@ public class BuilderRgb extends BuilderTiles {
       
       // Est-ce un traitement à la Lupton ?
       flagLupton=context.flagLupton;
-      if( flagLupton ) {
-         luptonM = context.luptonM;
-         luptonQ = context.luptonQ;
-         luptonScale = context.luptonScale;
-      }
+      if( flagLupton ) initLuptonParam();
 
       context.writeMetaFile();
    }
+
+   // Initialisation des paramètres de l'algo Lupton en fonction de cutmin et cutmax
+   // (uniquement pour les valeurs non déterminées explicitement)
+   private void initLuptonParam() {
+      luptonQ = !Double.isNaN(context.luptonQ) ? context.luptonQ : 20;
+      luptonS = new double[3];
+      luptonM = new double[3];
+      for(int c=0; c<3; c++ ) {
+         double z = 4/((pixelMax[c]*bscale[c]+bzero[c]) - (pixelMin[c]*bscale[c]+bzero[c]));
+         luptonS[c] = !Double.isNaN(context.luptonS[c]) ? context.luptonS[c] : z;
+         luptonM[c] = !Double.isNaN(context.luptonM[c]) ? context.luptonM[c]
+               : -(( (pixelMin[c]+(pixelMax[c]-pixelMin[c])/10)*bscale[c]+bzero[c]) * z); 
+      }
+      
+      String sm = (luptonM[0]==luptonM[1] && luptonM[1]==luptonM[2]) ? R(luptonM[0])
+            : R(luptonM[0])+"/"+R(luptonM[1])+"/"+R(luptonM[2]);
+      String ss = (luptonS[0]==luptonS[1] && luptonS[1]==luptonS[2]) ? R(luptonS[0])
+            : R(luptonS[0])+"/"+R(luptonS[1])+"/"+R(luptonS[2]);
+      context.info("Lupton algo: Q="+luptonQ+" m="+sm+" scale="+ss);
+   }
+   
+   private String R(double x) { return cds.tools.Util.myRound(x); }
 
    // Chargement d'un MOC, et par défaut, d'un MOC couvrant tout le ciel
    private HealpixMoc loadMoc( String path ) throws Exception {
@@ -364,7 +382,17 @@ public class BuilderRgb extends BuilderTiles {
          min = Double.parseDouble(tok.nextToken());
          max = Double.parseDouble(tok.nextToken());
       } catch( Exception e1 ) {
-         throw new Exception("Colormap parameter error ["+s+"] => usage: min [middle] max [fct]");
+         
+         // Pas fournis ? On va récupérer les cuts depuis les properties
+         String s1 = getCmParamFromProp( prop[c] );
+         Tok tok1 = new Tok(s1);
+         try {
+            min = Double.parseDouble(tok1.nextToken());
+            max = Double.parseDouble(tok1.nextToken());
+            tok = new Tok(s);
+         } catch( Exception e2 ) {
+            throw new Exception("Colormap parameter error ["+s+"] => usage: min [middle] max [fct]");
+         }
       }
       int transfertFct;
 
@@ -403,6 +431,9 @@ public class BuilderRgb extends BuilderTiles {
       try { bzero = f.headerFits.getDoubleFromHeader("BZERO"); } catch( Exception e ) { }
       try { bscale = f.headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { }
 
+      this.bscale[c] = bscale;
+      this.bzero[c] = bzero;
+      
       pixelMin[c]    = (min-bzero)/bscale;
       pixelMiddle[c] = (med-bzero)/bscale;
       pixelMax[c]    = (max-bzero)/bscale;
@@ -422,22 +453,6 @@ public class BuilderRgb extends BuilderTiles {
 
    private String L(int c) { return c==0?"red":c==1?"green":"blue"; }
 
-
-//   public void build() throws Exception  {
-//      initStat();
-//      
-//      for( int i=0; i<768; i++ ) {
-//         if( context.isTaskAborting() ) new Exception("Task abort !");
-//         // Si le fichier existe déjà on ne l'écrase pas
-//         String rgbfile = Util.getFilePath(output,3, i)+Constante.TILE_EXTENSION[format];
-//         if( !context.isInMocTree(3, i) ) continue;
-//         if ((new File(rgbfile)).exists()) continue;
-//         createRGB(3,i);
-//         context.setProgressLastNorder3(i);
-//      }
-//   }
-   
-   
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits [] in = getLeaves(order, npix);
@@ -456,27 +471,35 @@ public class BuilderRgb extends BuilderTiles {
       return rgb;
    }
    
-//   protected void write(String file, Fits out) throws Exception {
-//      String filename = file+context.getTileExt();
-//      out.writeCompressed(filename,0,0,null, Constante.TILE_MODE[ context.targetColorMode ]);
-//   }
-   
-   
-// r = np.maximum(0, r + m)
-// g = np.maximum(0, g + m)
-// b = np.maximum(0, b + m)
-// I = (r+g+b)/3.
-// fI = np.arcsinh(Q * I) / np.sqrt(Q)
-// I += (I == 0.) * 1e-6
-// R = fI * r / I
-// G = fI * g / I
-// B = fI * b / I
+   // génération du RGB
+   private Fits createLeaveRGB(Fits [] in) throws Exception {
+
+      // Application d'un filtre ?
+      if( flagGauss ) {
+         for( int i=0; i<3; i++ ) gaussian(in[i]);
+      }
+
+      // Quel traitement ?
+      return flagLupton ? createLeaveRGBLupton(in)
+            : createLeaveRGBClassic(in);
+   } 
    
    static double arcsinh( double v ) {
       return Math.log(v + Math.sqrt(Math.pow(v, 2.)+1));
    }
+   
 
-   // IL FAUT ENCORE PASSER LES PARAMETRES - PF DEC 2019
+   // Génération du RGB à partir des composantes (méthode Lupton)
+   // Une des composantes peut être manquante (remplacée par la moyenne des deux autres)
+   // r = np.maximum(0, r + m)
+   // g = np.maximum(0, g + m)
+   // b = np.maximum(0, b + m)
+   // I = (r+g+b)/3.
+   // fI = np.arcsinh(Q * I) / np.sqrt(Q)
+   // I += (I == 0.) * 1e-6
+   // R = fI * r / I
+   // G = fI * g / I
+   // B = fI * b / I
    private Fits createLeaveRGBLupton(Fits [] in) throws Exception {
       double Q2 = Math.sqrt(luptonQ);
       
@@ -490,6 +513,7 @@ public class BuilderRgb extends BuilderTiles {
       Fits rgb = new Fits(width,width,0);
       double [] pix = new double[3];
       int i=0;
+      
       for( int y=0; y<width; y++ ) {
          for( int x=0; x<width; x++,i++ ) {
             
@@ -497,25 +521,30 @@ public class BuilderRgb extends BuilderTiles {
             int tot=0;
             for( int c=0; c<3; c++ ) {
                if( c==missing || in[c]==null ) continue;
-               double v = in[c].getPixelDouble(x,y);
+               double v = in[c].getPixelFull(x,y);   // getPixelDouble(x,y);
                if( in[c].isBlankPixel(v) ) pix[c] = 0;
-               pix[c] = Math.max(0, in[c].getPixelDouble(x,y) * luptonScale[c] + luptonM);
-               I += pix[i];
+               else {
+                  pix[c] = v * luptonS[c] + luptonM[c];
+                  if( pix[c]<0 ) pix[c]=0;
+               }
+               I += pix[c];
                tot++;
             }
-            
             I /= tot;
-            if( I==0 ) I=1e-6;
-            double fI =arcsinh(luptonQ * I) / Q2;
-            int pixel=0;
+            if( missing!=-1 ) pix[missing] = I;
             
+            if( I==0 ) I=1e-6;
+            double fI = arcsinh(luptonQ * I) / Q2;
+            
+            int pixel = 0xFF;
             for( int c=0; c<3; c++ ) {
-               double v = c==missing || in[c]==null ? 0 : fI * pix[c] / I;
-               v = gap+ ( v< pixelMin[c] ? 0 : v> pixelMax[c] ? range-gap-1
-                     : range *( (v-pixelMin[c]) / (pixelMax[c] - pixelMin[c]) ) );
+               double v = fI * pix[c] / I;
+               if( v>1-1e-6 ) v=1-1e-6;
+               v = v*range + gap;
+               v = v<gap ? gap : v>range ? range : v;
                pixel = (pixel<<8) | ((int)v & 0xFF);
             }
-            
+
             rgb.rgb[i]=pixel;
          }
       }
@@ -523,17 +552,10 @@ public class BuilderRgb extends BuilderTiles {
       return rgb;
    }
    
-   // génération du RGB à partir des composantes
-   private Fits createLeaveRGB(Fits [] in) throws Exception {
-      
-      // Il s'agit d'un traitement à la Lupton ?
-      if( flagLupton ) return createLeaveRGBLupton(in);
-      
-      // Application d'un filtre ?
-      if( flagGauss ) {
-         for( int i=0; i<3; i++ ) gaussian(in[i]);
-      }
-      
+   // Génération du RGB à partir des composantes (méthode classique -> basée sur la colormap)
+   // Une des composantes peut être manquante (remplacée par la moyenne des deux autres)
+   private Fits createLeaveRGBClassic(Fits [] in) throws Exception {
+
       double gap=0;
       double range=256;
       if( Fits.isTransparent(format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256) ) {
@@ -550,7 +572,7 @@ public class BuilderRgb extends BuilderTiles {
             double tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
             for( int c=0; c<3; c++ ) {
                if( c==missing || in[c]==null ) continue;
-               double v = in[c].getPixelDouble(x,y); //width-y-1);
+               double v = in[c].getPixelDouble(x,y); 
                if( in[c].isBlankPixel(v) ) pix[c] = 0;
                else {
                   pix[c] = gap+ ( v< pixelMin[c] ? 0 : v> pixelMax[c] ? range-gap-1
@@ -594,6 +616,7 @@ public class BuilderRgb extends BuilderTiles {
    
    static final double [] kernel = KernelList.createFastGaussienMatrix(2, 0.8);
    
+   /** Convolution par une gaussienne */
    static public void gaussian(Fits in) {
       if( in==null ) return;
       double [] inPixels = new double[in.width*in.height];

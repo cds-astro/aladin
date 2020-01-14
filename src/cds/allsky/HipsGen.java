@@ -204,6 +204,9 @@ public class HipsGen {
         } else if (opt.equalsIgnoreCase("cmRed"))        { context.setRgbCmParam(val, 0);
         } else if (opt.equalsIgnoreCase("cmGreen"))      { context.setRgbCmParam(val, 1);
         } else if (opt.equalsIgnoreCase("cmBlue"))       { context.setRgbCmParam(val, 2);
+        } else if (opt.equalsIgnoreCase("luptonQ"))      { context.setRgbLuptonQ(val);
+        } else if (opt.equalsIgnoreCase("luptonM"))      { context.setRgbLuptonM(val);
+        } else if (opt.equalsIgnoreCase("luptonS"))      { context.setRgbLuptonS(val);
         } else if (opt.equalsIgnoreCase("img"))          { context.setImgEtalon(val);
         } else if (opt.equalsIgnoreCase("fitskeys"))     { context.setIndexFitskey(val);
         } else if (opt.equalsIgnoreCase("hips_status"))  { context.setStatus(val);
@@ -857,6 +860,9 @@ public class HipsGen {
                         "   cmRed               Colormap parameters for HiPS red component (min [mid] max [fct])\n" +
                         "   cmGreen             Colormap parameters for HiPS green component (min [mid] max [fct])\n" +
                         "   cmBlue              Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
+                        "   luptonQ=x           Q coef Lupton RGB builder (default auto)\n" +
+                        "   luptonS=x/x/x       scale coefs Lupton RGB builder (default auto)\n" +
+                        "   luptonM=x/x/x       m coefs Lupton RGB builder (default auto)\n" +
                         "   filter=gauss        Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
                         "   tileTypes           List of tile format to copy (MIRROR action)" + "\n" +
                         "   split='size;altPath]' Split information for MIRROR action (ex: 300g;/hips/part2)" + "\n" +
