@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 import cds.aladin.CanvasColorMap;
 import cds.aladin.KernelList;
 import cds.aladin.MyProperties;
+import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
 import cds.aladin.Tok;
 import cds.fits.Fits;
@@ -145,6 +146,7 @@ public class BuilderRgb extends BuilderTiles {
    }
    
    public void validateContext() throws Exception {
+      
 
       String path = context.getRgbOutput();
       
@@ -233,11 +235,13 @@ public class BuilderRgb extends BuilderTiles {
       }
       this.output = path;
 
-      if( context instanceof ContextGui ) {
-         SpaceMoc m = context.moc;
-         ((ContextGui)context).mainPanel.clearForms();
-         context.moc = m;
-      }
+      if( context instanceof ContextGui ) context.resetProgressParam();
+      
+//      if( context instanceof ContextGui ) {
+//         SpaceMoc m = context.moc;
+//         ((ContextGui)context).mainPanel.clearForms();
+//         context.moc = m;
+//      }
 
       // Pas d'ordre indiqué => on va utiliser l'ordre de la composante la plus profonde
       if( context.getOrder()==-1 ) {
@@ -254,11 +258,15 @@ public class BuilderRgb extends BuilderTiles {
 
       context.setBitpixOrig(0);
 
+      // Est-ce un traitement à la Lupton ?
+      if( context.flagLupton ) initLuptonParam();
 
       // mémorisation des informations de colormaps
       for( int c=0; c<3; c++) {
          if( c==missing ) continue;
-         String info =  labels[c]+" ["+pixelMin[c]+" "+pixelMiddle[c]+" "+pixelMax[c]+" "+transfertFcts[c]+"]";
+         String info;
+         if( flagLupton ) info = labels[c]+" [lupton min="+R(luptonM[c])+" scale="+R(luptonS[c])+" Q="+luptonQ+"]";
+         else info =  labels[c]+" ["+pixelMin[c]+" "+pixelMiddle[c]+" "+pixelMax[c]+" "+transfertFcts[c]+"]";
          if( c==0 ) context.redInfo=info;
          else if( c==1 ) context.greenInfo=info;
          else context.blueInfo=info;
@@ -270,25 +278,33 @@ public class BuilderRgb extends BuilderTiles {
       // Faut-il un filtre gaussien
       if( context.gaussFilter ) context.info("Gauss filter activated...");
       flagGauss = context.gaussFilter;
-      
-      // Est-ce un traitement à la Lupton ?
-      flagLupton=context.flagLupton;
-      if( flagLupton ) initLuptonParam();
 
       context.writeMetaFile();
+   }
+   
+   
+   /** Estimation du paramètre S lupton (Scale) */
+   static public double estimateLuptonS( PlanBG p ) {
+      return 10/( p.getCutCtrlMax()- p.getCutCtrlMin() );
+   }
+
+   /** Estimation du paramètre M lupton (minimum) */
+   static public double estimateLuptonM( PlanBG p ) {
+      return -(( (p.getCutCtrlMin()+( p.getCutCtrlMax() - p.getCutCtrlMin())/20) * p.bScale + p.bZero) *  estimateLuptonS(p) ); 
    }
 
    // Initialisation des paramètres de l'algo Lupton en fonction de cutmin et cutmax
    // (uniquement pour les valeurs non déterminées explicitement)
    private void initLuptonParam() {
+      flagLupton=true;
       luptonQ = !Double.isNaN(context.luptonQ) ? context.luptonQ : 20;
       luptonS = new double[3];
       luptonM = new double[3];
       for(int c=0; c<3; c++ ) {
-         double z = 4/((pixelMax[c]*bscale[c]+bzero[c]) - (pixelMin[c]*bscale[c]+bzero[c]));
+         double z = 10/((pixelMax[c]*bscale[c]+bzero[c]) - (pixelMin[c]*bscale[c]+bzero[c]));
          luptonS[c] = !Double.isNaN(context.luptonS[c]) ? context.luptonS[c] : z;
          luptonM[c] = !Double.isNaN(context.luptonM[c]) ? context.luptonM[c]
-               : -(( (pixelMin[c]+(pixelMax[c]-pixelMin[c])/10)*bscale[c]+bzero[c]) * z); 
+               : -(( (pixelMin[c]+(pixelMax[c]-pixelMin[c])/20)*bscale[c]+bzero[c]) * z); 
       }
       
       String sm = (luptonM[0]==luptonM[1] && luptonM[1]==luptonM[2]) ? R(luptonM[0])
@@ -444,7 +460,7 @@ public class BuilderRgb extends BuilderTiles {
          tr1 = (int)( ( (med-min)/(max-min) ) *255 );
       }
 
-      context.info("Using pixelCut "+L(c)+" = "+min+(Double.isNaN(med)?"":" "+med)+" "+max+
+      if( !context.flagLupton ) context.info("Using pixelCut "+L(c)+" = "+min+(Double.isNaN(med)?"":" "+med)+" "+max+
             (transfertFct!=PlanImage.LINEAR ?" "+PlanImage.getTransfertFctInfo(transfertFct):""));
 
       IndexColorModel cm = CanvasColorMap.getCM(0, tr1, 255, false, PlanImage.CMGRAY, transfertFct, true );
@@ -473,15 +489,10 @@ public class BuilderRgb extends BuilderTiles {
    
    // génération du RGB
    private Fits createLeaveRGB(Fits [] in) throws Exception {
-
-      // Application d'un filtre ?
-      if( flagGauss ) {
-         for( int i=0; i<3; i++ ) gaussian(in[i]);
-      }
-
+      
       // Quel traitement ?
-      return flagLupton ? createLeaveRGBLupton(in)
-            : createLeaveRGBClassic(in);
+      return flagLupton ? createLeaveRGBLupton(in,width,format,flagGauss,missing,luptonQ,luptonM,luptonS)
+            : createLeaveRGBClassic(in,width,format,flagGauss,missing,pixelMin,pixelMax,tcm);
    } 
    
    static double arcsinh( double v ) {
@@ -500,7 +511,14 @@ public class BuilderRgb extends BuilderTiles {
    // R = fI * r / I
    // G = fI * g / I
    // B = fI * b / I
-   private Fits createLeaveRGBLupton(Fits [] in) throws Exception {
+   public static Fits createLeaveRGBLupton(Fits [] in,int width,int format, boolean flagGauss, int missing,
+         double luptonQ, double [] luptonM, double [] luptonS) throws Exception {
+      
+      // Application d'un filtre ?
+      if( flagGauss ) {
+         for( int i=0; i<3; i++ ) gaussian(in[i]);
+      }
+
       double Q2 = Math.sqrt(luptonQ);
       
       double gap=0;
@@ -519,22 +537,24 @@ public class BuilderRgb extends BuilderTiles {
             
             double I=0;
             int tot=0;
+            boolean allBlank=true;
             for( int c=0; c<3; c++ ) {
                if( c==missing || in[c]==null ) continue;
                double v = in[c].getPixelFull(x,y);   // getPixelDouble(x,y);
                if( in[c].isBlankPixel(v) ) pix[c] = 0;
                else {
+                  allBlank=false;
                   pix[c] = v * luptonS[c] + luptonM[c];
                   if( pix[c]<0 ) pix[c]=0;
                }
                I += pix[c];
                tot++;
             }
+            if( allBlank ) { rgb.rgb[i]=0; continue; }
             I /= tot;
-            if( missing!=-1 ) pix[missing] = I;
-            
             if( I==0 ) I=1e-6;
             double fI = arcsinh(luptonQ * I) / Q2;
+            if( missing!=-1 ) pix[missing] = I;
             
             int pixel = 0xFF;
             for( int c=0; c<3; c++ ) {
@@ -554,7 +574,13 @@ public class BuilderRgb extends BuilderTiles {
    
    // Génération du RGB à partir des composantes (méthode classique -> basée sur la colormap)
    // Une des composantes peut être manquante (remplacée par la moyenne des deux autres)
-   private Fits createLeaveRGBClassic(Fits [] in) throws Exception {
+   static public Fits createLeaveRGBClassic(Fits [] in,int width,int format,boolean flagGauss, int missing,
+         double [] pixelMin, double [] pixelMax, byte [][] tcm) throws Exception {
+
+      // Application d'un filtre ?
+      if( flagGauss ) {
+         for( int i=0; i<3; i++ ) gaussian(in[i]);
+      }
 
       double gap=0;
       double range=256;
@@ -658,153 +684,6 @@ public class BuilderRgb extends BuilderTiles {
    }
 
 
-
-
-   // Génération des RGB récursivement en repartant du niveau de meilleure résolution
-   // afin de pouvoir utiliser un calcul de médiane sur chacune des composantes R,G et B
-//   private Fits [] createRGB(int order, long npix) throws Exception {
-//
-//      if( context.isTaskAborting() ) new Exception("Task abort !");
-//
-//      // si on n'est pas dans le Moc, il faut retourner les 4 fits de son niveau
-//      // pour la construction de l'arborescence...
-//      if( !context.isInMocTree(order,npix) ) return createLeaveRGB(order, npix);
-//
-//      // si le losange a déjà été calculé on renvoie les 4 fits de son niveau
-//      if( coaddMode==Mode.KEEPTILE ) {
-//         if( findLeaf(order, npix) ) {
-//            Fits [] oldOut = createLeaveRGB(order, npix);
-//            HealpixMoc moc = context.getRegion();
-//            moc = moc.intersection(new HealpixMoc(order+"/"+npix));
-//            int nbTiles = (int)moc.getUsedArea();
-//            updateStat(nbTiles);
-//            return oldOut;
-//         }
-//      }
-//
-//      // S'il n'existe pas au-moins 1 tuile de la composante à cette position, c'est une branche morte
-//      boolean trouve=false;
-//      for( int c=0; !trouve && c<3; c++ ) {
-//         if( c==missing ) continue;
-//         trouve = moc[c].isIntersecting(order, npix);
-//      }
-//      if( !trouve ) return null;
-//
-//      Fits [] out = null;
-//
-//      // Branche terminale
-//      boolean leaf=false;
-//      if( order==maxOrder ) {
-//         out = createLeaveRGB(order, npix);
-//         leaf=true;
-//      }
-//
-//      // Noeud intermédiaire
-//      else {
-//         Fits [][] fils = new Fits[4][3];
-//         boolean found = false;
-//         for( int i=0; i<4; i++ ) {
-//            fils[i] = createRGB(order+1,npix*4+i);
-//            if( fils[i] != null && !found ) found = true;
-//         }
-//         if( found ) out = createNodeRGB(fils);
-//      }
-//      if( out!=null ) generateRGB(out, order, npix, leaf);
-//      return out;
-//   }
-
-//   private boolean findLeaf(int order, long npix) throws Exception {
-//      String filename = Util.getFilePath(output,order, npix)+Constante.TILE_EXTENSION[format];
-//      File f = new File(filename);
-//      return f.exists();
-//   }
-
-   // Génération d'un noeud par la médiane pour les 3 composantes
-   // (on ne génère pas encore le RGB (voir generateRGB(...))
-//   private Fits [] createNodeRGB(Fits [][] fils) throws Exception {
-//
-//      Fits [] out = new Fits[3];
-//      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-//
-//      for( int c=0; c<3; c++ ) {
-//         out[c] = new Fits(width,width,bitpix[c]);
-//         out[c].setBlank(blank[c]);
-//         out[c].setBzero(bzero[c]);
-//         out[c].setBscale(bscale[c]);
-//      }
-//
-//      for( int dg=0; dg<2; dg++ ) {
-//         for( int hb=0; hb<2; hb++ ) {
-//            int quad = dg<<1 | hb;
-//            int offX = (dg*width)/2;
-//            int offY = ((1-hb)*width)/2;
-//
-//            for( int c=0; c<3; c++ ) {
-//               if( c==missing ) continue;
-//               Fits in = fils[quad]==null ? null : fils[quad][c];
-//               double p[] = new double[4];
-//               double coef[] = new double[4];
-//
-//               for( int y=0; y<width; y+=2 ) {
-//                  for( int x=0; x<width; x+=2 ) {
-//
-//                     double pix=blank[c];
-//                     if( in!=null ) {
-//
-//                        // On prend la moyenne (sans prendre en compte les BLANK)
-//                        if( method==Context.JpegMethod.MEAN ) {
-//                           double totalCoef=0;
-//                           for( int i=0; i<4; i++ ) {
-//                              int dx = i==1 || i==3 ? 1 : 0;
-//                              int dy = i>=2 ? 1 : 0;
-//                              p[i] = in.getPixelDouble(x+dx,y+dy);
-//                              if( in.isBlankPixel(p[i]) ) coef[i]=0;
-//                              else coef[i]=1;
-//                              totalCoef+=coef[i];
-//                           }
-//                           if( totalCoef!=0 ) {
-//                              pix = 0;
-//                              for( int i=0; i<4; i++ ) {
-//                                 if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
-//                              }
-//                           }
-//
-//                           // On garde la valeur médiane (les BLANK seront automatiquement non retenus)
-//                        } else {
-//
-//                           double p1 = in.getPixelDouble(x,y);
-//                           if( in.isBlankPixel(p1) ) p1=Double.NaN;
-//                           double p2 = in.getPixelDouble(x+1,y);
-//                           if( in.isBlankPixel(p2) ) p1=Double.NaN;
-//                           double p3 = in.getPixelDouble(x,y+1);
-//                           if( in.isBlankPixel(p3) ) p1=Double.NaN;
-//                           double p4 = in.getPixelDouble(x+1,y+1);
-//                           if( in.isBlankPixel(p4) ) p1=Double.NaN;
-//
-//                           if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-//                           else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-//                           else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-//                           else pix=p4;
-//                        }
-//                     }
-//
-//                     out[c].setPixelDouble(offX+(x/2), offY+(y/2), pix);
-//                  }
-//               }
-//            }
-//         }
-//      }
-//
-//      for( int j=0; j<4; j++ ) {
-//         for( int c=0; c<3; c++ ) {
-//            if( c==missing ) continue;
-//            if( fils[j]!=null && fils[j][c]!=null ) fils[j][c].free();
-//         }
-//      }
-//
-//      return out;
-//   }
-
    // Génération d'une feuille terminale (=> simple chargement des composantes)
    private Fits [] getLeaves(int order, long npix) throws Exception {
       if( context.isTaskAborting() ) new Exception("Task abort !");
@@ -904,120 +783,8 @@ public class BuilderRgb extends BuilderTiles {
       return fits;
    }
    
-   // génération du RGB à partir des composantes
-//   private void generateRGB(Fits [] out, int order, long npix, boolean leaf) throws Exception {
-//      
-//      double gap=0;
-//      double range=256;
-//      if( Fits.isTransparent(format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256) ) {
-//         range = 255;
-//         gap = 1;
-//      }
-//
-//      Fits rgb = new Fits(width,width,0);
-//      double [] pix = new double[3];
-//      int i=0;
-//      for( int y=0; y<width; y++ ) {
-//         for( int x=0; x<width; x++,i++ ) {
-//
-//            double tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
-//            for( int c=0; c<3; c++ ) {
-//               if( c==missing || out[c]==null ) continue;
-//               double v = out[c].getPixelDouble(x,width-y-1);
-//               if( out[c].isBlankPixel(v) ) pix[c] = 0;
-//               else {
-//                  pix[c] = gap+ ( v< pixelMin[c] ? 0 : v> pixelMax[c] ? range-gap-1
-//                        : range *( (v-pixelMin[c]) / (pixelMax[c] - pixelMin[c]) ) );
-//                  tot += pix[c];
-//               }
-//            }
-//            if( missing!=-1 ) pix[missing] = tot/2;
-//            
-//            int pixel;
-//            double[] pix8 = new double[3];
-//            if( tot==0 ) pixel=0x00;
-//            else {
-//               pixel = 0xFF;
-//               for( int c=0; c<3; c++ ) { 
-//                  int itcm =  (int)Math.floor( pix[c] );
-//                  if( tcm[c]==null ) pix8[c] = itcm;
-//                  else if( itcm>=255 ) pix8[c] = tcm[c][255];
-//                  else if( itcm<=gap ) pix8[c] = tcm[c][(int)gap];
-//                  else {
-//                     double d1 = pix[c] - itcm;
-//                     if( d1==0 ) pix8[c] = tcm[c][ itcm ] & 0xFF;
-//                     else {
-//                        double d2 = 1-d1;
-//                        double v1 = tcm[c][ itcm ] & 0xFF;
-//                        double v2 = tcm[c][ itcm+1 ] & 0xFF;
-//                        pix8[c] = (int)Math.round( v1*d2  + v2*d1 );
-//                     }
-//                  }
-//                  pixel = (pixel<<8) | ((int)pix8[c] & 0xFF);
-//               }
-//            }
-//
-//            rgb.rgb[i]=pixel;
-//         }
-//      }
-//      String file="";
-//
-//      file = Util.getFilePath(output,order, npix)+Constante.TILE_EXTENSION[format];
-//      rgb.writeRGBPreview(file,Constante.TILE_MODE[format]);
-//      rgb.free();
-//
-//      if( leaf ) {
-//         File f = new File(file);
-//         updateStat(f);
-//      }
-//   }
    
    
-   // génération du RGB à partir des composantes
-//   private void generateRGB(Fits [] out, int order, long npix, boolean leaf) throws Exception {
-//      byte [][] pixx8 = new byte [3][];
-//
-//      // Passage en 8 bits pour chaque composante
-//      for( int c=0; c<3; c++ ) {
-//         if( c==missing || out[c]==null ) continue;
-//         pixx8[c] = out[c].toPix8( pixelMin[c],pixelMax[c], tcm[c],
-//               format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256);
-//      }
-//
-//      Fits rgb = new Fits(width,width,0);
-//      int [] pix8 = new int[3];
-//      for( int i=width*width-1; i>=0; i-- ) {
-//         
-//         int tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
-//         for( int c=0; c<3; c++ ) {
-//            if( c==missing ) continue;
-//            if( out[c]==null ) pix8[c]=0;
-//            else {
-//               pix8[c] = 0xFF & pixx8[c][i];
-//               tot += pix8[c];
-//            }
-//         }
-//         if( missing!=-1 ) pix8[missing] = tot/2;
-//         int pix;
-//         if( tot==0 ) pix=0x00;
-//         else {
-//            pix = 0xFF;
-//            for( int c=0; c<3; c++ ) pix = (pix<<8) | pix8[c];
-//         }
-//         rgb.rgb[i]=pix;
-//      }
-//      String file="";
-//
-//      file = Util.getFilePath(output,order, npix)+Constante.TILE_EXTENSION[format];
-//      rgb.writeRGBPreview(file,Constante.TILE_MODE[format]);
-//      rgb.free();
-//
-//      if( leaf ) {
-//         File f = new File(file);
-//         updateStat(f);
-//      }
-//   }
-
 }
 
 

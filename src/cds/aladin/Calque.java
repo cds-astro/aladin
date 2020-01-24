@@ -40,6 +40,7 @@ import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import cds.aladin.stc.STCObj;
+import cds.allsky.TabRgb;
 import cds.moc.SpaceMoc;
 import cds.tools.Util;
 
@@ -617,7 +618,8 @@ public class Calque extends JPanel implements Runnable {
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type==Plan.ALLSKYIMG && plan[i].flagOk
-               && ((PlanBG)plan[i]).isLocalAllSky() && !((PlanBG)plan[i]).isColored()) n++;
+               && (Aladin.PROTO || ((PlanBG)plan[i]).isLocalAllSky() )
+               && ((PlanBG)plan[i]).canbeTruePixels()) n++;
       }
       return n;
    }
@@ -3748,6 +3750,28 @@ public class Calque extends JPanel implements Runnable {
       n=bestPlace(n);
       suiteNew(p);
       return n;
+   }
+   
+   
+   // Retourne l'indice dans la pile du premier planBGrgb, -1 si aucun
+   private int getPlanBGRgbIndex() {
+      for( int i=0; i<plan.length; i++ ) if( plan[i] instanceof PlanBGRgb ) return i;
+      return -1;
+   }
+   
+   /** Création/remplacement du plan HiPS RGB dynamique (il ne peut y en avoir qu'un seul dans la pile */
+   public PlanBGRgb createPlanBGRgb(TabRgb tabRgb, PlanBG red,PlanBG green,PlanBG blue) {
+      String label = "HiPS RGB preview";
+      int n = getPlanBGRgbIndex();
+      if( n==-1 ) n=getStackIndex(label);
+      label = prepareLabel(label);
+      Coord co = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
+      double coRadius = aladin.view.getCurrentView().getTaille();
+      PlanBGRgb p;
+      plan[n] = p = new PlanBGRgb(aladin,tabRgb, label,red,green,blue,co,coRadius);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return p;
    }
 
 

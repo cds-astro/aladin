@@ -1054,10 +1054,9 @@ public final class Command implements Runnable {
 
       // Parcours de tous les serveurs
       for( inPar = 0, i = d; i < b.length; i++ ) {
-         if( inPar == 0 ) {
-            if( b[i] == '(' ) inPar++;
-            else if( b[i] == ' ' ) break;
-         } else if( b[i] == ')' ) inPar--;
+         if( b[i] == '(' ) inPar++;
+         else if( b[i] == ')' ) inPar--;
+         if( inPar == 0 && b[i] == ' ' ) break;
       }
 
       // Memorisation temporaire
@@ -4729,10 +4728,10 @@ public final class Command implements Runnable {
             String unit = from.substring(m + 1).trim();
             
             Unit m1;
-            m1 = new Unit(unit);
+            m1 = new Unit( Util.adjustFoxUnit(unit));
             m1.setValue(val);
             Unit m2 = new Unit();
-            m2.setUnit(to);
+            m2.setUnit( Util.adjustFoxUnit(to));
             m1.convertTo(m2);
             res = m1.getValue() + " " + m1.getUnit();
          } catch( Exception e ) {

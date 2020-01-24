@@ -22,8 +22,8 @@
 package cds.aladin;
 
 import static cds.aladin.Constants.CLEARACTION;
-import static cds.aladin.Constants.SUBMITACTION;
 import static cds.aladin.Constants.RESETACTION;
+import static cds.aladin.Constants.SUBMITACTION;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
@@ -219,8 +219,8 @@ public class FrameSimple extends JFrame implements ActionListener, GrabItFrame {
 	}
 
 	@Override
-	public void setGrabItCoord(double x, double y) {
-		GrabUtil.setGrabItCoord(aladin, server, x, y);
+	public void setGrabItCoord(Coord c) { //double x, double y) {
+		GrabUtil.setGrabItCoord(aladin, server, c); //x, y);
 	}
 
 	@Override

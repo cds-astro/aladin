@@ -58,7 +58,7 @@ public class PlanMocColl extends PlanMoc {
     aladin.log("MOCcoll",null);
    }
    
-   protected void suite1() {}
+   protected void launchLoading() {}
    
    protected boolean Free() {
       if( generator!=null ) generator.abort();

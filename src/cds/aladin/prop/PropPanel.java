@@ -91,7 +91,7 @@ public class PropPanel extends JPanel {
    /********************************** Methodes statitiques de mise en forme ******************************************/
    
    
-   public static void addCouple(JFrame frame, JPanel p, Object titre, String help, Component valeur,
+   public static void addCouple(Component frame, JPanel p, Object titre, String help, Component valeur,
             GridBagLayout g, GridBagConstraints c) {
         addCouple(frame, p, titre, help, valeur, g, c, GridBagConstraints.WEST);
     }
@@ -109,12 +109,12 @@ public class PropPanel extends JPanel {
    * @param g      Le gestionnaire d'affichage
    * @param c      Les contraintes courantes sur le gestionnaire d'affichage
    */
-   public static void addCouple(final JFrame frame, JPanel p, Object titre, final String help, Component valeur,
+   public static void addCouple(final Component frame, JPanel p, Object titre, final String help, Component valeur,
                 GridBagLayout g, GridBagConstraints c, int titleAnchor) {
       addCouple(frame,p,titre,help,valeur,g,c,titleAnchor,GridBagConstraints.NONE);
    }
    
-      public static void addCouple(final JFrame frame, JPanel p, Object titre, final String help, Component valeur,
+      public static void addCouple(final Component frame, JPanel p, Object titre, final String help, Component valeur,
             GridBagLayout g, GridBagConstraints c, int titleAnchor, int fillComp) {
       Component t;
    

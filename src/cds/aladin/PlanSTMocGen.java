@@ -69,7 +69,7 @@ public class PlanSTMocGen extends PlanSTMoc {
       log();
    }
    
-   protected void suite1() {}
+   protected void launchLoading() {}
    
    
    /**

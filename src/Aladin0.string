@@ -2523,6 +2523,16 @@ ABORT Abort
 ABORT.fr Annuler
 START START
 START.fr LANCER
+SEEPREVIEW See preview...
+SEEPREVIEW.fr Prévisualisation...
+CMDLINE Script command?
+CMDLINE.fr Commande script ?
+CMDLINEINFO The command line has been copied in the clipboard
+CMDLINEINFO.fr La ligne de commande a été copiée dans le presse-papier
+RGBMETHOD RGB method
+RGBMETHOD.fr Méthode RVB
+RGBMETHODH Specifies the method used to generate the RGB tiles. The classical method takes into account the range of pixels defined by the "cutmin" and the "cutmax", the transfer function and the "cutmiddle" to calculate the rendering of the red component, resp. green and blue. The Lupton method implements an algorithm increasing the differences between the red, green and blue components. The "minimum" determines the start of the range of pixels concerned, the "scale" acts on the extent of the pixels concerned, and "Q" modifies the sensitivity of the algorithm.
+RGBMETHODH.fr Spécifie la méthode utilisée pour générer les tuiles RVB. La méthode classique prend en compte la plage de pixels définie par le "cutmin" et le "cutmax", ainsi que la fonction de transfert et le "cutmiddle" pour calculer le rendu de la composante rouge, resp. verte ou bleue. La méthode Lupton met un oeuvre un algorithme accroissant les différentes entre les composantes rouge, verte et bleue. Le "minimum" détermine le début de la plage des pixels concernés, le "Stretch" agit sur l'étendue des pixels concernées, et "Q" régit la sensibilité de l'algorithme.
 #STOP Stop
 #STOP.fr Stop
 LOADMOC	See index coverage...
@@ -2547,8 +2557,8 @@ PAUSE.fr Pause
 #DONE.fr FINI
 PUBLISHALLSKY Form to publish
 PUBLISHALLSKY.fr Formulaire pour publier
-HELPRGBALLSKY In order to build a colored progressive sky, select 2 or 3 allskys already generated and loaded in the Aladin stack (adjust their contrast before starting the process).  
-HELPRGBALLSKY.fr Afin de générer un ciel progressif (HiPS) en couleur, vous devez sélectionner 2 ou 3 HiPS déjà générés et chargés dans la pile (veillez à ajuster leur contraste avant de démarrer le processus).
+HELPRGBALLSKY In order to build a colored progressive sky, select 2 or 3 allskys already generated and loaded in the Aladin stack. You have to adjust their contrast and/or specify manually the parameters before starting the process. Before launching the generation, it is possible to view the result which will be obtained via the "preview" button.
+HELPRGBALLSKY.fr Afin de générer un ciel progressif (HiPS) en couleur, vous devez sélectionner 2 ou 3 HiPS déjà générés et chargés dans la pile. Vous devez ajuster leur contraste et/ou mettre à jour manuellement les paramètres avant de démarrer le processus. Avant de lancer la génération, il est possible de visualiser le résultat qui sera obtenu via le bouton "prévisualisation".
 TITLEALLSKY Build your own Hierarchical Progressive Sky (HiPS)
 TITLEALLSKY.fr Créez votre propre ciel progressif (HiPS)
 TIPSTOPALLSKY Kill the building process
@@ -2645,14 +2655,24 @@ HELPJPEGCUTALLSKY Take into account the cut parameters presently used in the con
 HELPJPEGCUTALLSKY.fr Va prendre en compte les paramètres de seuillage actuellement utilisés dans la vue de contrôle. Cette méthode est plus performante que la précédente car elle n'est pas nécessairement linéaire. 
 JPEGBUILDALLSKY Build
 JPEGBUILDALLSKY.fr Génération
-METHODJPG Computing method:
-METHODJPG.fr Méthode de calcul :
+METHODJPG Hierarchical computing:
+METHODJPG.fr Calcul de la hiérarchie:
+METHODJPGH Specifies the method used to generate each tile of level N from the 4 daughter tiles of level N+1. Each pixel can be determined either by the average of the 4 child pixels or by the median.
+METHODJPGH.fr Spécifie la méthode utilisée pour générer une tuile de niveau N à partir des 4 tuiles filles de niveaux N+1. Chaque pixel peut être déterminée soit par la moyenne des 4 pixels fils, soit par la médiane.
 MEDIANJPG median
 MEDIANJPG.fr médiane
 AVERAGEJPG average
 AVERAGEJPG.fr moyenne
+FILTERRGB Filters
+FILTERRGB.fr Filtre
+FILTERRGBH Specifies any filters to apply when generating RGB tiles. The noise reduction is obtained by a convolution with a Gaussian (kernel radius 2, sigma 0.8).
+FILTERRGBH.fr Spécifie les éventuels filtres à appliquer lors de la génération des tuiles RVB. La réduction du bruit s'obtient par une convolution avec une gaussienne (noyau rayon 2, sigma 0.8).
+FILTERGAUSS Noise reduction
+FILTERGAUSS.fr Réduction du bruit
 FORMATTILES Tiles format
 FORMATTILES.fr Format des tuiles
+FORMATTILESH Specifies the RGB tile format. JPEG is more compact and faster to generate. On the other hand, PNG has a transparency channel which is especially useful for HiPS which do not cover the entire sky.
+FORMATTILESH.fr Spécifie le format des tuiles RVB. JPEG est plus compacte et plus rapide à générer. En revanche, PNG gère un canal de transparence notamment utile pour les HiPS qui ne couvrent pas la totalité du ciel.
 PUBFORYOUALLSKY Only for you:
 PUBFORYOUALLSKY.fr Juste pour vous :
 OPENALLSKY You can load whenever you want your progressive sky by opening the target directory

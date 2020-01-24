@@ -391,6 +391,9 @@ public class PlanMoc extends PlanBGCat {
    protected boolean hasSources() { return false; }
    protected boolean hasCatalogInfo() { return false; }
    protected int getCounts() { return 0; }
+   
+   // Pas de MOc à charger pour un plan Moc
+   protected void planReadyMoc() {}
 
    protected boolean waitForPlan() {
       if( dis!=null ) {

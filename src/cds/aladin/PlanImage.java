@@ -143,10 +143,10 @@ public class PlanImage extends Plan {
    public int transfertFct;           // Fonction de transfert (LINEAR,LOG,SQR...)
    protected double hist[]=new double[256]; // Histogrammes des pixels (voir ColorMap)
    protected boolean flagHist;        // true si on dispose de l'histogramme des pixels à jour
-   protected int width;				  // largeur de l'image
-   protected int height;			  // hauteur de l'image
+   public int width;				  // largeur de l'image
+   public int height;			      // hauteur de l'image
    public int video;				  // memorise le mode video (NORMAL ou INVERSE)
-   protected int bitpix;              // profondeur de l'image a l'origine
+   public int bitpix;                 // profondeur de l'image a l'origine
    protected int naxis1;              // Largeur de l'image (diffère de width dans le cas de PlanImageHuge)
    protected int naxis2;              // Hauteur de l'image (diffère de height dans le cas de PlanImageHuge)
    protected int npix;                // nombre d'octets par pixel (pour éviter de le recalculer tout le temps à partir de bitpix)
@@ -157,8 +157,8 @@ public class PlanImage extends Plan {
    protected double pixelMin,pixelMax;// Les min et max des cuts - sans prendre en compte BSCALE et BZERO
    protected boolean isBlank=false;   // True s'il y a une valeur consideree comme BLANK
    protected double blank;            // La valeur BLANK si elle existe
-   public double bZero;            // La valeur BZERO si elle existe
-   public double bScale=1.;        // La valeur BSCALE si elle existe
+   public double bZero;               // La valeur BZERO si elle existe
+   public double bScale=1.;           // La valeur BSCALE si elle existe
 
    // Les caracteristiques du plan Image
    Obj o=null;		   // La source associee a une image archive
@@ -2290,10 +2290,10 @@ public class PlanImage extends Plan {
 
       //    Juste pour que le message n'apparaisse que pour les images normales ou le
       //    premier plan d'une cube
-      if( Aladin.levelTrace>=4 && (!(this instanceof PlanImageCube) || autocut) ) {
-         Aladin.trace(4,"PlanImage.findMinMax(minCut="+minCut+",maxCut"+maxCut
-               +",autocut="+autocut+",ntest="+ntest+") => min="+min+" max="+max);
-      }
+//      if( Aladin.levelTrace>=4 && (!(this instanceof PlanImageCube) || autocut) ) {
+//         Aladin.trace(4,"PlanImage.findMinMax(minCut="+minCut+",maxCut"+maxCut
+//               +",autocut="+autocut+",ntest="+ntest+") => min="+min+" max="+max);
+//      }
 
 
       //    Memorisation des parametres de l'autocut
@@ -2589,13 +2589,22 @@ public class PlanImage extends Plan {
    public double getPixelMax() { return pixelMax*bScale + bZero; }
 
    /** Retourne la valeur du pixel médiane (approximative) pour le cut (bcale et bzero ont été déjà appliqué) */
-   public double getPixelMiddle() { return getInvPixel( cmControl[1] )*bScale + bZero; }
+   public double getPixelCtrlMin()    { return getInvPixel( cmControl[0] )*bScale + bZero; }
+   public double getPixelCtrlMiddle() { return getInvPixel( cmControl[1] )*bScale + bZero; }
+   public double getPixelCtrlMax()    { return getInvPixel( cmControl[2] )*bScale + bZero; }
+   
+   public double getCutCtrlMin()    { return getInvPixel( cmControl[0] ); }
+   public double getCutCtrlMax()    { return getInvPixel( cmControl[2] ); }
+
 
    /** Retourne le bitpix */
    protected int getBitpix() { return bitpix; }
 
    /** Retourne la valeur du cut min, sans appliquer le BSCALE et BZERO */
    public double getCutMin() {return pixelMin; }
+
+   /** Retourne la valeur du cut middle, sans appliquer le BSCALE et BZERO */
+   public double getCutMiddle() {return getInvPixel( cmControl[1] ); }
 
    /** Retourne la valeur du cut max, sans appliquer le BSCALE et BZERO */
    public double getCutMax() {return pixelMax; }
@@ -2984,7 +2993,7 @@ public class PlanImage extends Plan {
     *                les 256 niveaux de gris
     * @return false si impossible de recharger les pixels d'origine
     */
-   protected boolean recut() { return recut(pixelMin,pixelMax,false); };
+   public boolean recut() { return recut(pixelMin,pixelMax,false); };
    protected boolean recut(double min,double max,boolean autocut) {
 
       if( min==-1 && max==-1 ) { min=dataMinFits; max=dataMaxFits; }

@@ -213,7 +213,7 @@ public class PlanBG extends PlanImage {
    protected int RGBCONTROL[] = { 0,128, 255 , 0,128, 255 , 0,128, 255 };
    protected int RGBControl[];
    
-   private boolean specificProj = false;  // true si on utilise une projection spécifique pour ce plan
+   protected boolean specificProj = false;  // true si on utilise une projection spécifique pour ce plan
 
 
    // Gestion du cache
@@ -271,6 +271,21 @@ public class PlanBG extends PlanImage {
       //      if( copyrightUrl==null ) copyrightUrl=url;
       aladin.trace(3,"AllSky creation: "+to.toString1()+(c!=null ? " around "+c:""));
       suite();
+   }
+
+   /** Mise à jour des paramètres globaux du plan à partir du chargement des tuiles */
+   protected void initTileParam(int width,int height,int bitpix,byte [] pixelsOrigin,byte [] pixels) {
+      if( color ) return;   // pas de maj pour les plans couleurs (pas sur de comprendre - PF jan 2020)
+      
+      System.err.println("initTileParam pour "+this);
+      this.pixelsOrigin = pixelsOrigin;
+      this.pixels = pixels;
+      this.bitpix=bitpix;
+      this.npix=Math.abs(bitpix)/8;
+      this.naxis1=this.width=width;
+      this.naxis2=this.height=height;
+      
+      if( hasRecutListener() ) getRecutListener().initTileParam(width,height);
    }
 
    // Supprime le cache en le renommant simplement => il sera nettoyé par la suite
@@ -766,8 +781,6 @@ public class PlanBG extends PlanImage {
 
    private boolean testHpxFinder=false; // true : la présence d'un HpxFinder a été testé
    
-   
-
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
       String s;
@@ -777,7 +790,7 @@ public class PlanBG extends PlanImage {
 
    // Juste pour se simplifier la vie sur le test de prop==null
    protected String getProperty(String key) { return prop==null ? null : prop.getProperty(key); }
-
+   
    protected boolean hasHpxFinder() {
       if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
       String s = getProperty(Constante.KEY_HIPS_PROGENITOR_URL);
@@ -1004,10 +1017,10 @@ public class PlanBG extends PlanImage {
 
       setDefaultZoom(co,coRadius);
       suiteSpecific();
-      suite1();
+      launchLoading();
    }
 
-   protected void suite1() {
+   protected void launchLoading() {
       threading();
       log();
    }
@@ -1139,14 +1152,26 @@ public class PlanBG extends PlanImage {
       if( co!=null ) aladin.view.setRepere(co);
 
       // Chargement du MOC associé, avec ou sans création d'un plan dédié
-      if( !(this instanceof PlanMoc) ) {
-         if( loadMocNow ) {
-            (new Thread() { public void run() { loadMoc(); } }).start();
-         } else if( hasMoc() ) {
-            (new Thread() {
-               public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
-            }).start();
-         }
+      planReadyMoc();
+//      if( !(this instanceof PlanMoc) ) {
+//         if( loadMocNow ) {
+//            (new Thread() { public void run() { loadMoc(); } }).start();
+//         } else if( hasMoc() ) {
+//            (new Thread() {
+//               public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
+//            }).start();
+//         }
+//      }
+   }
+   
+   /** Chargement du plan MOC si nécessaire, avec ou sans création d'un plan dédié */
+   protected void planReadyMoc() {
+      if( loadMocNow ) {
+         (new Thread() { public void run() { loadMoc(); } }).start();
+      } else if( hasMoc() ) {
+         (new Thread() {
+            public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
+         }).start();
       }
    }
 
@@ -1266,6 +1291,42 @@ public class PlanBG extends PlanImage {
    /** Retourne true si on dispose (ou peut disposer) des pixels originaux */
    @Override
    protected boolean hasOriginalPixels() { return isTruePixels(); }
+   
+   protected double getInvPixel(double pix8) {
+      if( width==0 && local && truePixels ) loadOneKey();
+      return super.getInvPixel(pix8);
+   }
+
+   // On va forcer le chargement d'une tuile pour récupérer les paramètres
+   private void loadOneKey() {
+      try {
+         
+         int order = cds.tools.pixtools.Util.getMaxOrderByPath(url);
+         
+         // On récupère la première tuile que l'on trouve à l'ordre Max
+         File f = new File( HealpixKey.getFilePath(url, order, 0, 0));
+         f=f.getParentFile().getParentFile();
+         File [] list = f.listFiles();
+         list = list[0].listFiles();
+         
+         // On en extrait le numéro Healpix
+         String name = list[0].getName();
+         int i = name.lastIndexOf('.');
+         int npix = Integer.parseInt(name.substring(4,i));
+         
+         // Et on charge la tuile correspondante
+         new HealpixKey(this, order, npix, HealpixKey.SYNC);
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+   
+   // Mémorise un plan qui doit être averti (recut()) en cas de modif de la table des couleurs
+   // et ou du cut
+   private PlanBGRgb planBgRgb = null;
+   protected void addRecutListener( PlanBGRgb p )  { planBgRgb=p; }
+   protected boolean hasRecutListener() { return planBgRgb!=null; }
+   protected PlanBGRgb getRecutListener() { return planBgRgb; }
 
    @Override
    protected boolean recut(double min,double max,boolean autocut) {
@@ -1287,6 +1348,9 @@ public class PlanBG extends PlanImage {
          to8bits(pixels, 0, pixelsOrigin, size, bitpix, pixelMin, pixelMax, false);
          resetHist();
       }
+      
+      // Y a-t-il des plans RGB dépendants
+      if( planBgRgb!=null ) planBgRgb.recut();
 
       return true;
    }
@@ -2326,6 +2390,9 @@ public class PlanBG extends PlanImage {
    /** Retourne true si le all-sky est affiché en FITS */
    public boolean isTruePixels() { return truePixels; }
 
+   /** Retourne true si le all-sky peut être affiché en FITS */
+   public boolean canbeTruePixels() { return inFits; }
+
    /** Retourne true si le all-sky est local */
    public boolean isLocalAllSky() { return local; }
 
@@ -2469,8 +2536,13 @@ public class PlanBG extends PlanImage {
    //   }
 
 
-//   protected int getMinOrder() { return minOrder==-1 ? 3 : minOrder; }
-   protected int getMinOrder() { return 3; }
+   protected int futurGetMinOrder() { return minOrder==-1 ? 3 : minOrder; }
+//   protected int getMinOrder() { return 3; }
+   
+   protected int getMinOrder() {
+      if( hasRecutListener() ) return futurGetMinOrder();
+      return 3;
+   }
    
    /** Chargement synchrone du allsky (nécessaire dans le cas d'une modif de la table des couleurs (Densité map),
     * avant même le premier affichage) */
@@ -3539,7 +3611,7 @@ public class PlanBG extends PlanImage {
             try { healpix.loadNow(); }
             catch( Exception e ) { e.printStackTrace(); continue; }
          }
-         if( healpix.status==HealpixKey.READY )  {
+         if( healpix.getStatus()==HealpixKey.READY )  {
             healpix.resetTimer();
             healpix.draw(g,v/*,localRedraw*/);
          }
@@ -3633,8 +3705,9 @@ public class PlanBG extends PlanImage {
                   } else { allKeyReady=false;  break; }
                } else {
                   if( isOutMoc(max,pix[i] ) || healpix.isOutView(v) ) { pix[i]=-1; continue; }
-                  if( healpix.status!=HealpixKey.READY
-                        && healpix.status!=HealpixKey.ERROR ) { allKeyReady=false; break; }
+                  int status = healpix.getStatus();
+                  if( status!=HealpixKey.READY
+                        && status!=HealpixKey.ERROR ) { allKeyReady=false; break; }
                   else {
                      healpix.resetTimer();
                      oneKeyReady=true;
@@ -3731,7 +3804,7 @@ public class PlanBG extends PlanImage {
                   // Positionnement de la priorité d'affichage
                   healpix.priority=order<max ? 500-(priority++) : priority++;
 
-                  int status = healpix.status;
+                  int status = healpix.getStatus();
                   
                   ServerSocket s;
 
@@ -3851,7 +3924,6 @@ public class PlanBG extends PlanImage {
          gv.setColor(Color.red);
          gv.drawString("Whole sky in progress...", 5,30);
       }
-
    }
 
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
@@ -4092,16 +4164,21 @@ public class PlanBG extends PlanImage {
 
    // Test qui repère un problème sur le serveur
    protected boolean detectServerError(int nb[]) {
-      if( moc==null ) removeHealpixOutsideMoc();
+      if( moc==null ) return false;
+      else removeHealpixOutsideMoc();
+      
+//      return nb[HealpixKey.READY]==0 && nb[HealpixKey.ERROR]>5;
+      
+      int nbReady=0;
+      int nbError=0;
+      
+      for( HealpixKey key : pixList.values() ) {
+         int status = key.getStatus();
+         if( status==HealpixKey.READY ) nbReady++;
+         else if( status==HealpixKey.ERROR ) nbError++;
+      }
 
-      //      StringBuilder s = new StringBuilder();
-      //      for( int i=0; i<nb.length; i++ ) {
-      //         if( nb[i]==0 ) continue;
-      //         s.append(" "+HealpixKey.STATUS[i]+":"+nb[i]);
-      //      }
-      //      if( s.length()>0 ) System.out.println(s);
-
-      return nb[HealpixKey.READY]==0 && nb[HealpixKey.ERROR]>5;
+      return nbReady==0 && nbError>5;
    }
 
 
@@ -4193,7 +4270,7 @@ public class PlanBG extends PlanImage {
       System.out.println(res);
       aladin.console.printInfo(label+" net perf "+res);
    }
-
+   
    /**
     * Gère le chargement des losanges de manière asynchrone
     */
@@ -4324,7 +4401,7 @@ public class PlanBG extends PlanImage {
 
          boolean first=true;
          int n=0;
-
+         
          // Parcours de la liste en commençant par les résolutions les plus mauvaises
          try {
             ArrayList<HealpixKey> list = new ArrayList<>();
@@ -4389,11 +4466,11 @@ public class PlanBG extends PlanImage {
          nbReady=nb[HealpixKey.READY];
 
 
-         //                        System.out.print("HealpixKey loader (loading="+loading+" purging="+purging+"): ");
-         //                        for( int i=0; i<HealpixKey.NBSTATUS; i++ ) {
-         //                           if( nb[i]>0 ) System.out.print(HealpixKey.STATUS[i]+"="+nb[i]+" ");
-         //                        }
-         //                        System.out.println();
+//         System.out.print("HealpixKey loader (loading="+loading+" purging="+purging+"): ");
+//         for( int i=0; i<HealpixKey.NBSTATUS; i++ ) {
+//            if( nb[i]>0 ) System.out.print(HealpixKey.STATUS[i]+"="+nb[i]+" ");
+//         }
+//         System.out.println();
 
          if( detectServerError(nb) ) error="Server not available";
 
@@ -4508,8 +4585,7 @@ public class PlanBG extends PlanImage {
             try {
                //System.out.println(label+" running...");
                flagLoad=false;
-
-
+               
                // On ne charge que si on a le temps...
                if( !aladin.view.mustDrawFast() ) {
                   try {

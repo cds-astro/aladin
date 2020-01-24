@@ -104,7 +104,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       sendLog("Compute"," [" + this + " = "+s+"]");
    }
    
-   protected void suite1() { }
+   protected void launchLoading() { }
    
    // Retourne le label associé à l'opération
    private String getFonction(PlanMoc p1,PlanMoc [] pList,int op,int order) {

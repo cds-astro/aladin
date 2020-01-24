@@ -314,12 +314,12 @@ public class FrameCooToolbox extends JFrame {
          if( npmra>0 && npmde>0 ) {
             Unit mu1 = new Unit();
             try {
-               mu1.setUnit(s.getUnit(npmra));
+               mu1.setUnit( Util.adjustFoxUnit( s.getUnit(npmra) ));
                mu1.setValue(s.getValue(npmra));
             } catch( Exception e1 ) { }
             Unit mu2 = new Unit();
             try {
-               mu2.setUnit(s.getUnit(npmde));
+               mu2.setUnit( Util.adjustFoxUnit( s.getUnit(npmde) ));
                mu2.setValue(s.getValue(npmde));
             } catch( Exception e1 ) { }
             if( (mu1.getValue()!=0 || mu2.getValue()!=0) 
@@ -328,7 +328,7 @@ public class FrameCooToolbox extends JFrame {
                   mu1.convertTo(new Unit("mas/yr"));
                } catch( Exception e) { 
                   // Il faut reinitialiser parce que mu1 a changé d'unité malgré l'échec !
-                  mu1.setUnit(s.getUnit(npmra));
+                  mu1.setUnit( Util.adjustFoxUnit( s.getUnit(npmra) ));
                   mu1.setValue(s.getValue(npmra));
                   mu1.convertTo(new Unit("ms/yr"));
                   double v = 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180);

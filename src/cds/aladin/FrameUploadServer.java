@@ -21,15 +21,15 @@
 
 package cds.aladin;
 
+import static cds.aladin.Constants.EDITUPLOADTABLENAMEACTION;
 import static cds.aladin.Constants.EMPTYSTRING;
 import static cds.aladin.Constants.REGEX_ALPHA;
 import static cds.aladin.Constants.REGEX_ONLYALPHANUM;
 import static cds.aladin.Constants.SPACESTRING;
+import static cds.aladin.Constants.TABLEGUINAME;
 import static cds.aladin.Constants.TAPFORM_STATUS_NOTLOADED;
 import static cds.aladin.Constants.UPLOAD;
 import static cds.aladin.Constants.UPLOADTABLEPREFIX;
-import static cds.aladin.Constants.EDITUPLOADTABLENAMEACTION;
-import static cds.aladin.Constants.TABLEGUINAME;
 
 import java.awt.AWTEvent;
 import java.awt.Component;
@@ -86,7 +86,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 //	public static final String FILEPREFIX = "file_";
 	private Aladin aladin;
 	protected JComboBox<String> uploadOptions;
-	protected Map<String, String> uploadTableNameDict = new HashMap<String, String>();
+	protected Map<String, String> uploadTableNameDict = new HashMap<>();
 	TapClient uploadClient;
 	GridBagConstraints c;
 	JLabel infoLabel;
@@ -286,13 +286,13 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 		boolean hasUploaded = false;
 		
 		initUploadParameters();
-		Vector<String> canUploadVOTablesNames = new Vector<String>();
+		Vector<String> canUploadVOTablesNames = new Vector<>();
 		canUploadVOTablesNames.addAll(this.uploadTableNameDict.keySet());
 		
 		if (canUploadVOTablesNames.isEmpty()) {
-			uploadOptions  = new JComboBox<String>();
+			uploadOptions  = new JComboBox<>();
 		} else {
-			uploadOptions  = new JComboBox<String>(canUploadVOTablesNames);
+			uploadOptions  = new JComboBox<>(canUploadVOTablesNames);
 			hasUploaded = true;
 		}
 		uploadOptions.addActionListener(new ActionListener() {
@@ -368,7 +368,7 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	 */
 	public Vector<String> initUploadParameters() {
 		PlanCatalog planCatalog = null;
-		Vector<String> canUploadVOTablesNames = new Vector<String>();
+		Vector<String> canUploadVOTablesNames = new Vector<>();
 		Plan[] plan = this.aladin.calque.plan;
 		for (int i = 0; i < plan.length; i++) {
 			if (plan[i].flagOk/*plan[i].error == null*/ && plan[i].pcat != null && plan[i] instanceof PlanCatalog && plan[i].pcat.flagVOTable) {
@@ -740,8 +740,8 @@ public class FrameUploadServer extends JFrame implements ActionListener, PlaneLo
 	}
 
 	@Override
-	public void setGrabItCoord(double x, double y) {
-		GrabUtil.setGrabItCoord(aladin, uploadClient.serverTap, x, y);
+	public void setGrabItCoord(Coord c) { //double x, double y) {
+		GrabUtil.setGrabItCoord(aladin, uploadClient.serverTap, c); //x, y);
 	}
 
 	@Override

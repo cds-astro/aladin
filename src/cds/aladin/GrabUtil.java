@@ -31,8 +31,8 @@ public class GrabUtil {
 
 	public GrabItFrame grabFrame;
 	private static GrabUtil instance = null;
-	List<Server> grabItServers = new ArrayList<Server>();// JFrames with their own rest methods might not need to use this
-	List<JToggleButton> grabs = new ArrayList<JToggleButton>(); //some grabs are not on servers
+	List<Server> grabItServers = new ArrayList<>();// JFrames with their own rest methods might not need to use this
+	List<JToggleButton> grabs = new ArrayList<>(); //some grabs are not on servers
 	
 	public static synchronized GrabUtil getInstance() {
 		if (instance == null) {
@@ -53,17 +53,18 @@ public class GrabUtil {
 	 *            Position dans la vue
 	 * @return 
 	 */
-	protected static String getGrabItCoord(Aladin aladin, double x, double y) {
-		ViewSimple v = aladin.view.getCurrentView();
-		Plan pr = v.pref;
-		if (pr == null) return null;
-		Projection proj = pr.projd;
-		if (proj == null) return null;
-		PointD p = v.getPosition(x, y);
-		Coord c = new Coord();
-		c.x = p.x;
-		c.y = p.y;
-		proj.getCoord(c);
+	protected static String getGrabItCoord(Aladin aladin, Coord c) { // double x, double y) {
+//		ViewSimple v = aladin.view.getCurrentView();
+//		Plan pr = v.pref;
+//		if (pr == null) return null;
+//		Projection proj = pr.projd;
+//		if (proj == null) return null;
+//		PointD p = v.getPosition(x, y);
+//		Coord c = new Coord();
+//		c.x = p.x;
+//		c.y = p.y;
+//		proj.getCoord(c);
+		
 		if (Double.isNaN(c.al)) return null;
 		return c.getSexa();
 	}
@@ -75,8 +76,16 @@ public class GrabUtil {
 	 * @param x,y
 	 *            Position dans la vue
 	 */
-	public static void setGrabItCoord(Aladin aladin, Server server, double x, double y) {
-		String sexaCoord = getGrabItCoord(aladin, x, y);
+	public static void setGrabItCoord(Aladin aladin, Server server, Coord c) { //double x, double y) {
+	      
+//		ViewSimple v = aladin.view.getCurrentView();
+//		Projection proj = v.getProj();
+//		PointD p = v.getPosition(x, y);
+//		Coord c = new Coord();
+//		c.x = p.x;
+//		c.y = p.y;
+//		proj.getCoord(c);
+		String sexaCoord = getGrabItCoord(aladin, c); //x, y);
 		if (sexaCoord!=null) {
 			server.setTarget(aladin.localisation.getFrameCoord(sexaCoord));
 		}

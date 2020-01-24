@@ -95,7 +95,7 @@ public class Message extends Panel {
         
         // On replie les lignes si nécessaire
         if( message.length()>80 && message.indexOf('\n')<0 ) {
-           message = Util.fold(message, 80);
+           message = Util.fold(message, 60);
         }
         
         StringTokenizer st = new StringTokenizer(message,"\n");

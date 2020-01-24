@@ -70,7 +70,7 @@ public class PlanMocGen extends PlanMoc {
       log();
    }
    
-   protected void suite1() {}
+   protected void launchLoading() {}
    
    private void addMocFromCatFov(Plan p1,int order) {
       Iterator<Obj> it = p1.iterator();

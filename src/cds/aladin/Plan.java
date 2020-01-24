@@ -106,7 +106,7 @@ public class Plan implements Runnable {
       "Tool","Aperture","Folder","Filter",
       "Image FoV","In progress","ImageHuge",
       "HipsImage","HipsPolarisation","HipsCatalog",
-      "MOC","CubeColor","HipsFinder","HipsCube","TMOC","STMOC",
+      "MOC","CubeColor","HipsFinder","HipsCube","TMOC","STMOC","RGBdyn"
    };
 
    protected String id=null;     // Identification unique (ex: CDS/I/231...)
@@ -128,8 +128,10 @@ public class Plan implements Runnable {
    protected String query = null; //query that generated this plane (only the query written in tap text area)
    protected String tapUrl = null; //url that generated this plane
 
-   protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
+   protected double coRadius;     // le rayon du champ de vue demandée (J2000 deg) => voir allsky
    protected Coord co;           // Les coordonnees J2000 du target de l'interrogation
+   private double energy=-1;     // Niveau d'énergie moyen associé au plan  (em_max+em_min)/2 (-1 pour non encore cherché)
+
    // ou null si non encore calcule
    //   protected Thread	sr;	         // Thread pour la resolution Simbad */
    protected Color c;            // La couleur associee au plan
@@ -345,6 +347,11 @@ public class Plan implements Runnable {
       }
       return rep.toString();
    }
+   
+   /** retourne true si le plan est en overflow (il y a a priori plus de data que ce qu'il contient) */
+   public boolean hasOverflow() {
+      return error!=null && error.indexOf("OVERFLOW")>=0;
+   }
 
    /** Retourne true s'il s'agit d'un plan en erreur
     * => càd avec un message d'erreur avec l'exception du message d'absence de réduction
@@ -352,7 +359,8 @@ public class Plan implements Runnable {
    public boolean hasError() {
       if( !flagOk ) return false;   // pas encore prêt
       if( hasNoReduction() ) return false;  // Exception
-      if( hasNoPosition() ) return false;  // Exception
+      if( hasNoPosition() ) return false;   // Exception
+      if( hasOverflow() ) return false;     // Exception
       return error!=null;
    }
 
@@ -587,6 +595,23 @@ public class Plan implements Runnable {
       else epoch.set(s);
       if( !recomputePosition() ) throw new Exception("Unknown proper motion fields !");
    }
+   
+   /** Retourne le niveau d'énergie moyen associé au plan (em_max+em_min)/2
+    * ou NaN si inconnu */
+   public double getEnergy() {
+      if( energy!=-1 ) return energy;
+      double x = Double.NaN;
+      MyProperties prop = aladin.directory.getProperties( id );
+      if( prop!=null ) {
+         try {
+            double em_min = Double.parseDouble( prop.get("em_min") );
+            double em_max = Double.parseDouble( prop.get("em_max") );
+            x = (em_max+em_min)/2;
+         } catch( Exception e ) {}
+      }
+      energy =x;
+      return x;
+   }
 
    protected Obj[] getObj() { return new Obj[0]; }
 
@@ -816,13 +841,13 @@ public class Plan implements Runnable {
                try {
                   Unit mu1 = new Unit();
                   try {
-                     mu1.setUnit(s.getUnit(npmra));
+                     mu1.setUnit( Util.adjustFoxUnit( s.getUnit(npmra) ));
                      mu1.setValue(s.getValue(npmra));
                   } catch( Exception e1 ) { e1.printStackTrace(); }
                   Unit mu2 = new Unit();
                   
                   try {
-                     mu2.setUnit(s.getUnit(npmde));
+                     mu2.setUnit( Util.adjustFoxUnit( s.getUnit( npmde)) );
                      mu2.setValue(s.getValue(npmde));
                   } catch( Exception e1 ) { e1.printStackTrace();  }
                   
@@ -831,7 +856,7 @@ public class Plan implements Runnable {
                         mu1.convertTo(new Unit("mas/yr"));
                      } catch( Exception e) {
                         // Il faut reinitialiser parce que mu1 a changé d'unité malgré l'échec !
-                        mu1.setUnit(s.getUnit(npmra));
+                        mu1.setUnit( Util.adjustFoxUnit( s.getUnit(npmra)) );
                         mu1.setValue(s.getValue(npmra));
                         mu1.convertTo(new Unit("ms/yr"));
                         double v = 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180);
@@ -1879,6 +1904,7 @@ public class Plan implements Runnable {
       return null;
    }
    
+   
    /** Retourne une chaine décrivant le plan qui va s'afficher au-dessus de la pile
     * => cf Select.setMessageInfo(...) */
    protected String getMessageInfo() {
@@ -2549,9 +2575,12 @@ public class Plan implements Runnable {
       aladin.calque.repaintAll();
    }
 
-   public String toString() {
-      return label+"["+Tp[type]+"]";
-   }
+   
+   public String toString() { return label; }
+
+//   public String toString() {
+//      return label+" ["+Tp[type]+"]";
+//   }
 
    // Arrondi plus facile à écrire que (int)Math.round()
    static protected int round(double x) { return (int)(x+0.5); }

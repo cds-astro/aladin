@@ -30,7 +30,7 @@ public interface GrabItFrame {
 	 * @param x,y
 	 *            Position dans la vue
 	 */
-	void setGrabItCoord(double x, double y);
+	void setGrabItCoord(Coord c); //double x, double y);
 
 	/**
 	 * Arrete le GrabIt

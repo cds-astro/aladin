@@ -52,7 +52,7 @@ public class PlanTMocGen extends PlanTMoc {
       log();
    }
    
-   protected void suite1() {}
+   protected void launchLoading() {}
    
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(Plan p1,double duration) {

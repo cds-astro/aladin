@@ -688,6 +688,13 @@ public final class Slide {
             g.drawLine(xc[1],yc[1]+1,xc[2],yc[1]+1);
          }
          
+         // détermination de la couleur de l'intérieur du logo pour les plans dépendants d'un PlanBgRgb
+         Color c = Color.black;
+         if( p instanceof PlanBG && ((PlanBG)p).hasRecutListener() ) {
+            PlanBGRgb p1 = ((PlanBG)p).getRecutListener();
+            c = p1.red==p ? Color.red : p1.green==p ? Color.GREEN : Color.blue;
+         }
+         
          // Le logo du plan en fonction de son type
          switch( p.type ) {
             case Plan.IMAGE:
@@ -698,9 +705,9 @@ public final class Slide {
             case Plan.IMAGEHUGE:   drawLogoImgHuge(g,dx,dy,colorForeground);                  break;
             case Plan.ALLSKYTMOC:  drawLogoTMOC(g,dx,dy,isViewable?p.c:colorFillFG);          break;
             case Plan.ALLSKYMOC:   
-            case Plan.ALLSKYSTMOC: drawLogoMOC(g,dx,dy,isViewable?p.c:colorFillFG);         break;
+            case Plan.ALLSKYSTMOC: drawLogoMOC(g,dx,dy,isViewable?p.c:colorFillFG);           break;
             case Plan.ALLSKYCAT:   drawLogoImgBG(g,dx,dy,isViewable?p.c:colorFillFG);         break;
-            case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,isViewable?Color.black:colorFillFG); break;
+            case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,isViewable?c:colorFillFG);           break;
             case Plan.ALLSKYPOL:   drawLogoPolarisation(g,dx,dy,isViewable?p.c:colorFillFG);  break;
             case Plan.IMAGEMOSAIC:
             case Plan.IMAGECUBE: 

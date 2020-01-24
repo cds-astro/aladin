@@ -2263,6 +2263,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // Pour pouvoir changer la Colormap associée à cette vue même en mode synchronisé
          if( selected && aladin.match.isProjSync()  ) {
             aladin.view.setLastClickView(this);
+            if( !isFree() ) aladin.calque.selectPlan(pref); 
             aladin.calque.repaintAll();
          }
 
@@ -2310,7 +2311,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       GrabItFrame grabItDialog = isGrabIt();
       // Mode GrabIt actif
       if( grabItDialog!=null && !isFree() ) {
-    	  grabItDialog.setGrabItCoord(x,y);
+    	  grabItDialog.setGrabItCoord(cs); //x,y);
     	  cGrabItX=pGrabItX=-1;
     	  grabItX=x; grabItY=y;
     	  modeGrabIt=true;
@@ -3147,6 +3148,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
       repaint();
       aladin.calque.zoom.zoomView.repaint();
+      
+      if( pimg instanceof PlanBG && ((PlanBG)pimg).hasRecutListener() ) pimg.recut();
 
       if( aladin.frameCM!=null ) {
          for( int i=0; i<3; i++ ) {

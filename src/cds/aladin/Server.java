@@ -791,10 +791,14 @@ public void layout() {
 			}
     		
     		if (userSpecified!=null) {
-    			userSpecified.toRangeSet();
-            	if (!posBounds.spaceRange.contains(userSpecified.spaceRange)) {
-    				result = TARGETOUTOFBOUNDSMESSAGE;
-    			}
+               if( aladin.levelTrace>=5) {
+                  aladin.execCommand("bounds= draw MOC "+posBounds.toASCII());
+                  aladin.execCommand("users= draw MOC "+userSpecified.toASCII());
+               }
+    		   
+    		   if( posBounds.intersection( userSpecified ).isEmpty() ) {
+                  result = TARGETOUTOFBOUNDSMESSAGE;
+    		   }
 			} else {
 				result = TARGETOUTOFBOUNDSMESSAGE;
 			}
@@ -995,20 +999,12 @@ public void layout() {
       aladin.dialog.setDefaultParameters(aladin.dialog.getCurrent(),5);
    }
 
-  /** Pre-remplissage du(des) champ target + activation eventuelle
-   * du bouton GrabIt
+  /** Pre-remplissage du(des) champ target
    * @param s La chaine a mettre dans le champ target
    */
    protected void setTarget(String s) {
       if( target==null || s.equals(aladin.GETOBJ) ) return;
       target.setText(s);
-
-      // Activation ou non du bouton GrabIt
-//      if( aladin.dialog!=null && !aladin.dialog.isGrabIt() && grab!=null ) {
-//         Plan pref = aladin.calque.getPlanRef();
-//         boolean grabEnable = pref!=null && Projection.isOk(pref.projd);
-//         grab.setEnabled(grabEnable);
-//      }
    }
 
    protected boolean updateWidgets() {

@@ -2163,6 +2163,25 @@ public final class Util {
       }
    }
    
+   /** Supprime d'une chaine Unit les ** qui ne sont pas requises dans la lib de Fox 
+    * ex: mas.yr**-1 => mas.yr-1
+    */
+   static public String adjustFoxUnit(String u) {
+      if( u==null ) return u;
+      return u.replace("**","");
+   }
+
+   /** Conversion d'une expression xxxx.yy**-1 en xxxx/yy
+    * typiquement mas.yr**-1 => mas/yr */
+//  static public String adjustFoxUnit(String u) {
+//     if( u==null ) return u;
+//     int off1 = u.indexOf('.');
+//     if( off1<0 ) return u;
+//     int off2 = u.indexOf("**-1",off1);
+//     if( off2<0 ) return u;
+//     return u.substring(0,off1)+"/"+u.substring(off1+1,off2)+u.substring(off2+4);
+//  }
+   
    static private long Y =  (long)( 86400 * 365.25) * 1000L;
    static private long D =  86400L * 1000L;
    static private long H =  3600L * 1000L;

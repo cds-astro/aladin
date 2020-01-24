@@ -864,17 +864,17 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
     * fonction du x,y de la souris
     * @param x,y Position dans la vue
     */
-   public void setGrabItCoord(double x, double y) {
-      ViewSimple v = aladin.view.getCurrentView();
-      Plan pr = v.pref;
-      if( pr == null ) return;
-      Projection proj = pr.projd;
-      if( proj == null ) return;
-      PointD p = v.getPosition(x, y);
-      Coord c = new Coord();
-      c.x = p.x;
-      c.y = p.y;
-      proj.getCoord(c);
+   public void setGrabItCoord(Coord c) { //double x, double y) {
+//      ViewSimple v = aladin.view.getCurrentView();
+//      Plan pr = v.pref;
+//      if( pr == null ) return;
+//      Projection proj = pr.projd;
+//      if( proj == null ) return;
+//      PointD p = v.getPosition(x, y);
+//      Coord c = new Coord();
+//      c.x = p.x;
+//      c.y = p.y;
+//      proj.getCoord(c);
       if(  Double.isNaN(c.al) ) return;
       server[current].setTarget(aladin.localisation.getFrameCoord(c.getSexa()));
    }

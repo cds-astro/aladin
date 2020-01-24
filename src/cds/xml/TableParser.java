@@ -2185,7 +2185,8 @@ final public class TableParser implements XMLConsumer {
       }
       return false;
    }
-
+   
+   
    /** Cherche à determiner si f concerne RA,DE,PMRA,PMDEC, X ou Y en mettant à jour
     * les indices de qualité (qualRA, qualDEC, qualPMRA, qualPMDEC, qualX, qualY)
     * et mémorise le numéro du champ si la qualité est meilleure (nRA,nDEC,nPMRA,nPMDEC,nX,nY)
@@ -2309,7 +2310,7 @@ final public class TableParser implements XMLConsumer {
       }
       if( qual>=0 &&  qualPMRA>qual ) {
          nPMRA=nField; qualPMRA=qual;
-         unitPMRA=unit;
+         unitPMRA=Util.adjustFoxUnit(unit);
          f.cooPossibleSignature = Field.PMRA;
       }
 
@@ -2331,7 +2332,7 @@ final public class TableParser implements XMLConsumer {
       }
       if( qual>=0 &&  qualPMDEC>qual ) {
          nPMDEC=nField; qualPMDEC=qual;
-         unitPMDEC=unit;
+         unitPMDEC=Util.adjustFoxUnit(unit);
          f.cooPossibleSignature = Field.PMDE;
       }
 

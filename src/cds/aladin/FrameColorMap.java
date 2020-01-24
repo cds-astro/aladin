@@ -183,7 +183,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
     */
    protected void majCM() { majCM(false); }
    protected void majCM(boolean force) {
-      if( force ) pimg=null;
+       if( force ) pimg=null;
       if( aladin.toolBox.tool[ToolBox.HIST].mode==Tool.DOWN ) {
          memoControl();
 
@@ -399,12 +399,19 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
       if( aladin.frameAllsky!=null ) aladin.frameAllsky.updateCurrentCM();
       cm.resumePixelTool();
+      
+      // Y a-t-il un PlanBGRgb à l'écoute ?
+      updatePlanRgb();
 
       if( canvasPixelRange!=null ) canvasPixelRange.repaint();
       cm.repaint();
       pimg.aladin.calque.repaintAll();
 
       defaultConf.memo();
+   }
+   
+   private void updatePlanRgb() {
+      if( pimg instanceof PlanBG && ((PlanBG)pimg).hasRecutListener() ) pimg.recut();
    }
 
    private JPanel createPanelTop() {
@@ -739,7 +746,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    /** Création d'un Combo des CM possibles */
    protected static JComboBox<String> createComboCM() {
-      JComboBox<String> c = new JComboBox<String>();
+      JComboBox<String> c = new JComboBox<>();
       for( String s : CanvasColorMap.getCMList() ) c.addItem(s);
       c.addItem(" -- ");
       return c;
@@ -747,7 +754,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    /** Création d'un Combo des Fonctions de transferts possibles */
    protected static JComboBox<String> createComboFct() {
-      JComboBox<String> c = new JComboBox<String>( PlanImage.TRANSFERTFCT );
+      JComboBox<String> c = new JComboBox<>( PlanImage.TRANSFERTFCT );
       return c;
    }
 

@@ -265,11 +265,11 @@ public class ContextGui extends Context {
 
    //   public void setRgbPlans(Object [] plans) { plansRgb=plans; }
    public void setRgbOutput(String output) { outputRGB=output; }
-   public void setRgbMethod(JpegMethod method) { methodRgb=method; }
+   public void setHierarchyAlgo(JpegMethod method) { hierarchyAlgo=method; }
 
    //   public Object [] getRgbPlans() { return plansRgb; }
    public String getRgbOutput() { return outputRGB; }
-   public JpegMethod getRgbMethod() { return methodRgb; }
+   public JpegMethod getHierarchyAlgo() { return hierarchyAlgo; }
 
    public void setRgbFormat(int format) { targetColorMode=format; }
 

@@ -208,6 +208,7 @@ public final class ViewControl extends JComponent implements
 
    public void mousePressed(MouseEvent e) {
       if( aladin.inHelp ) return;
+      aladin.endMsg();
       
       // Effectue un simple réaffichage du controleur de vue
       // suivant la nouvelle configuration

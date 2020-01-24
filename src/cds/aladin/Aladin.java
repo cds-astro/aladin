@@ -192,6 +192,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Script get command parser bug fix (TAP command)
  * @beta    <LI> Resource Tree stack MOC filtering bug fix
  * @beta    <LI> Hipsgen hips_status bug fix
  * @beta    <LI> Hipsgen FITS tile 2880 boundary bug fix
@@ -230,7 +231,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.007"; //"v10.145";
+   static public final    String VERSION = "v11.009"; //"v10.145";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5227,7 +5228,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
     * @param text le texte à mettre dans le presse-papiers
     */
-   protected void copyToClipBoard(String text) {
+   public void copyToClipBoard(String text) {
       if( isNonCertifiedApplet() ) return;
       if( text==null ) return;
       Transferable selection = new StringSelection(text);
@@ -5724,7 +5725,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void setButtonMode() {
       try {
          Plan pc = calque.getFirstSelectedPlan();
-         //         PlanImage pimg = calque.getFirstSelectedSimpleImage();
          PlanImage pimg = calque.getFirstSelectedImage();
          Plan base = calque.getPlanBase();
          boolean hasImage = base!=null;
@@ -5746,11 +5746,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          int m = view.getModeView();
          boolean hasSelectedCat = (pc!=null && pc.isCatalog());
          ViewSimple v = view.getCurrentView();
-         //         boolean isBG = v!=null && v.pref!=null && v.pref instanceof PlanBG;
          boolean isBG = pimg!=null && pimg instanceof PlanBG;
          boolean isCube = hasImage && (base.type==Plan.IMAGECUBE || base.type==Plan.IMAGECUBERGB);
-         //         boolean hasPixels = v!=null && v.pref!=null && v.pref.hasAvailablePixels() && v.pref.type!=Plan.IMAGEHUGE
-         //         && !isBG;
          boolean hasPixels = pimg!=null && pimg.hasAvailablePixels() && pimg.type!=Plan.IMAGEHUGE && !isBG;
          boolean hasProj = pimg!=null && Projection.isOk(pimg.projd);
          boolean isFree = calque.isFree();

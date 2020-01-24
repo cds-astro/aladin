@@ -198,8 +198,6 @@ public class Context {
       hasAlternateBlank=false;
       bscaleBzeroOrigSet=false;
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
-      lastNorder3=-2;
-      live=validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
       isMap=false;
       prop=null;
       pixelGood=null;
@@ -221,6 +219,12 @@ public class Context {
       luptonQ     = Double.NaN;
       luptonM     = new double[] { Double.NaN, Double.NaN, Double.NaN };
       luptonS = new double[] { Double.NaN, Double.NaN, Double.NaN };
+      resetProgressParam();
+   }
+   
+   public void resetProgressParam() {
+      lastNorder3=-2;
+      live=validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
    }
 
    // manipulation des chaines désignant le système de coordonnées (syntaxe longue et courte)
@@ -369,7 +373,7 @@ public class Context {
    }
 
    public String getRgbOutput() { return getOutputPath(); }
-   public JpegMethod getRgbMethod() { return getJpegMethod(); }
+   public JpegMethod getHierarchyAlgo() { return getJpegMethod(); }
    public int getRgbFormat() { return targetColorMode; }
 
    public void setFov(String r) throws Exception {
@@ -955,17 +959,12 @@ public class Context {
    }
 
    protected String outputRGB;
-   protected JpegMethod methodRgb;
+   protected JpegMethod hierarchyAlgo;
    protected String [] plansRGB = new String [3];
    protected String [] cmsRGB = new String [3];
 
-   public void setRgbInput(String path,int c) {
-      plansRGB[c] = path;
-   }
-
+   public void setRgbInput(String path,int c) { plansRGB[c] = path; }
    public void setRgbCmParam(String cmParam,int c) { cmsRGB[c] = cmParam; }
-   
-   
    public void setRgbLuptonQ(String s) throws Exception { setRgbLuptonParam(s,0); }
    public void setRgbLuptonM(String s) throws Exception { setRgbLuptonParam(s,1); }
    public void setRgbLuptonS(String s) throws Exception { setRgbLuptonParam(s,2); }

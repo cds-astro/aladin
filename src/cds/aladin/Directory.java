@@ -4517,8 +4517,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected boolean grabIt=false;
    public boolean isGrabIt() { return grabIt; }
    public void stopGrabIt() { grabIt=false; }
-   public void setGrabItCoord(double x, double y) {
-      String sexaCoord = GrabUtil.getGrabItCoord(aladin, x, y);
+   public void setGrabItCoord(Coord c) { //double x, double y) {
+      String sexaCoord = GrabUtil.getGrabItCoord(aladin, c); //x, y);
       frameInfo.setTarget( aladin.localisation.getFrameCoord(sexaCoord) );
       frameInfo.updateWidget();
 
