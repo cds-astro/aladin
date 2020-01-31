@@ -126,7 +126,6 @@ public class BuilderIndex extends Builder {
       partitioning = context.partitioning;
       if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixels");
 
-      
       validateInput();
       validateOutput();
       validateLabel();
@@ -307,18 +306,41 @@ public class BuilderIndex extends Builder {
 
          if( flagAppend ) out.seek( out.length() );
          else {
-            String s;
-            while( (s=out.readLine())!=null ) {
-               if( (s+"\n").equals(line) ) {
-//                  System.out.println("Bloc déjà présent dans la tuile => "+line);
-                  return;       // déjà présent dans la tuile d'index
-               }
+            if( checkIn(out,line) ) {
+//             System.out.print("Ligne déjà présente dans la tuile => "+line);
+             return;
+               
             }
+//            String s;
+//            while( (s=out.readLine())!=null ) {
+//               if( (s+"\n").equals(line) ) {
+////                  System.out.print("Ligne déjà présente dans la tuile => "+line);
+//                  return;       // déjà présent dans la tuile d'index
+//               }
+//            }
          }
          out.write( line.getBytes() );
+         out.close();
+         out=null;
       } finally { if( out!=null ) out.close(); }
    }
    
+   // Recherche rapide d'une chaine dans le fichier out
+   // Charge tout d'abord, puis compare ensuite.
+   private boolean checkIn(RandomAccessFile out, String line) throws IOException {
+      long size = out.length();
+      byte [] buf = new byte[(int)size];
+      out.readFully(buf);
+      int start=0;
+      for( int i=0; i<buf.length; i++ ) {
+         if( (char)buf[i]=='\n' ) {
+            if( (new String(buf,start,i-start+1)).equals(line) ) return true;
+            start=i+1;
+         }
+      }
+      return false;
+   }
+         
    // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
    // les fichiers FITS

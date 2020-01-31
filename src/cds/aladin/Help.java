@@ -357,6 +357,11 @@ public final class Help extends JComponent implements
       g.fillRect(2,2,ws-3,hs-3);
       Util.drawEdge(g,ws,hs);
       
+      // Les marges
+      int margeX = (ws-600)/2;
+      if( margeX<0 ) margeX=0;
+      int margeY=hs>500? 20 : 0;
+      
       // tracé du Banner d'accueil
       boolean flagBanner = center; 
       if( flagBanner ) {
@@ -420,13 +425,13 @@ public final class Help extends JComponent implements
             s=s.substring(Aladin.PROTOPREFIX.length());
          }
 
-         y=drawString(g,s,x-2,y-2);
+         y=drawString(g,s,margeX+x-2,margeY+y-2)-margeY;
       }
       
       // Dans le cas d'un hyper-text, possibilité de revenir en
       // arrière.
-      if( hasStack()>0 ) drawWord(g,"Back",ws-40,15,true,Font.PLAIN);
-      if( hasStack()>1 ) drawWord(g,"Home",ws-80,15,true,Font.PLAIN);
+      if( hasStack()>0 ) drawWord(g,"Back",ws-margeX-40,margeY+15,true,Font.PLAIN);
+      if( hasStack()>1 ) drawWord(g,"Home",ws-margeX-80,margeY+15,true,Font.PLAIN);
 
    }
    

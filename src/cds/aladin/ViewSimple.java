@@ -2332,13 +2332,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             repaint();
             return;
          }
-
-         // Dans le cas d'un Repere temporaire Simbad
-//         if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) {
-//            view.showSimRep();
-//            flagSimRepClic=true;
-//            return;
-//         }
       }
 
       // Initialisation d'un clic-and-drag de la vue
@@ -2366,34 +2359,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Si on a Control, on déplace uniquement le repère
       if( e.isControlDown() ) return;
 
-      // JE L'AI DEPLACE DANS mouseRelease()
-      //    boolean recalib = !isProjSync && aladin.view.isRecalibrating();
-      //      // Recalibration dynamique en cours ?
-      //      if( recalib ) {
-      //         Vector v=null;
-      //
-      //         if( aladin.frameNewCalib.isGettingOriginalXY() ) v=aladin.frameNewCalib.plan.getObjWith(this,p.x,p.y);
-      //         else v=calque.getObjWith(this,p.x,p.y);
-      //
-      //         Obj o = v!=null && v.size()>0?(Obj)v.elementAt(0):null;
-      //         flagMoveRepere=false;
-      //
-      //         if( o==null || o instanceof Position ) {
-      //
-      //            // Déplacement globale
-      //            int method=aladin.frameNewCalib.getModeCalib();
-      //            if( method==FrameNewCalib.SIMPLE ) {
-      //               if( o!=null && ((Position)o).plan==aladin.frameNewCalib.plan ) {
-      //                  planRecalibrating=aladin.frameNewCalib.plan;
-      //                }
-      //
-      //            // Mise à jour de la liste des quadruplets
-      //            } else if( method==FrameNewCalib.QUADRUPLET ) {
-      //               aladin.frameNewCalib.mouse(p.x,p.y,(PlanImage)pref,(Position)o);
-      //            }
-      //         }
-      //      }
-
       if( tool== -1 ) return;
 
       // Edition, modification d'un tag ?
@@ -2413,7 +2378,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       // Dans le cas de l'outil de selection
-      if( tool==ToolBox.SELECT ) {
+      if( tool==ToolBox.SELECT && Projection.isOk(vs.getProj())) {
 
          Vector<Obj> v = calque.getObjWith(vs,p.x,p.y);
 
@@ -3649,6 +3614,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Juste pour éviter de le faire 2x
       boolean isSelectOrTool = tool==ToolBox.SELECT || tool==ToolBox.PAN || ToolBox.isForTool(tool);
+      isSelectOrTool &= Projection.isOk( getProj() );
 
       // Affichage du rectangle du zoom
       if( tool==ToolBox.ZOOM && !isScrolling() ) {
@@ -6602,7 +6568,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          vs=this;
          vs.flagPhotometry=true;
       }
-
+      
       if( dx==0 ) drawBlinkControl(g);      // Il ne s'agit pas d'une impression
 
       Plan [] allPlans = calque.getPlans();
@@ -6690,9 +6656,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
             // Activé ?
             boolean flagActive = flagDraw && p.active;
-
+            
             // Cas d'un image ou d'un plan BG
-            if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
+            if( (p.isImage() || p instanceof PlanBG ) 
+                  && Projection.isOk(p.projd) && Projection.isOk(proj) ) {
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
                

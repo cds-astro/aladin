@@ -802,7 +802,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( treeObjs.size() == 0 ) return;
       hideInfo();
       if( tooMany(treeObjs.size()) ) return;
-      for( TreeObjDir to : treeObjs )
+      for( TreeObjDir to : treeObjs ) 
          to.load();
    }
 
@@ -2290,16 +2290,20 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       directorySort.setInternalSortKey(id,prop);
    }
    
+   // POURRA ETRE SUPPRIME POUR LA V12 - PF 31 janvier 2020
    private void propAdjust1(String id, MyProperties prop) {
       
       String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
       if( type == null || type.indexOf("catalog") < 0 ) return;
       
-      // Déjà fait en amont => on ne bidouille plus dans le client
-      if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) return;
-
       // Ne concerne pas VizieR => on ne bidouille pas dans le client
-      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;
+      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;      
+
+      // Déjà fait en amont => on ne bidouille plus dans le client (en fait si, mais juste le minimum)
+     
+      if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) {
+         return;
+      }
 
       // Nettoyage des macros latex qui trainent
       if( cleanLatexMacro(prop) ) {
@@ -2379,6 +2383,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
     }
    
+   
    static private boolean isSep(char c) { return c==' ' || c=='-' || c=='_'; }
    
    // Ajoute le label en préfixe si les premiers mots sont différents
@@ -2404,7 +2409,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
       return title;
    }
-
+   
    static private final String[] TEXTKEYS = { "obs_title", "obs_description", "obs_label", "obs_collection" };
 
    /** Nettoyage des macros Latex oublié par VizieR */
@@ -2428,7 +2433,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /**
     * Suppression des macros Latex présent dans la chaine ex: texte avant \macro{contenu{ou plus}} texte avant...
     */
-   private String cleanLatexMacro(String s) {
+   static public String cleanLatexMacro(String s) {
       StringBuilder s1 = new StringBuilder();
       StringBuilder macro = new StringBuilder();
       char[] a = s.toCharArray();
@@ -2509,7 +2514,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    static final private String MACRO_CONV[] = { "°", "" };
 
-   private String resolveMacro(String macro) {
+   static private String resolveMacro(String macro) {
       int i = Util.indexInArrayOf(macro, MACRO_LIST);
       if( i < 0 ) return macro;
       return MACRO_CONV[i];
@@ -3473,10 +3478,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             to = treeObjs.get(0);
 
-            if( to.verboseDescr != null || to.description != null ) {
-               s = to.verboseDescr == null ? null : to.verboseDescr;
-               String s1 = to.description != null && to.description.length() > 60 ? (to.description.substring(0, 58) + "...")
-                     : to.description;
+            String titre = to.getVizieRLongTitre();
+            if( to.verboseDescr != null || titre != null ) {
+               s = titre+"\n \n"+ (to.verboseDescr == null ? "" : to.verboseDescr);
+               String s1 = titre != null && titre.length() > 60 ? (titre.substring(0, 58) + "...") : titre;
                a = new MyAnchor(aladin, s1, 50, s, null);
                a.setFont(a.getFont().deriveFont(Font.BOLD));
                a.setFont(a.getFont().deriveFont(a.getFont().getSize2D() + 1));

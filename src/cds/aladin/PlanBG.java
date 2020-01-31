@@ -1852,10 +1852,7 @@ public class PlanBG extends PlanImage {
          if( center==null ) center = getCooCentre(v);
          double radius = v.getTaille();
          radius= (radius/2)*1.43;
-         long [] listPix = getNpixList(order,center,radius).clone();
-         long [] out = listPix;
-         return out;
-         
+         return getNpixList(order,center,radius).clone();
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return null; } // new long[]{}; }
       
    }
@@ -2341,44 +2338,30 @@ public class PlanBG extends PlanImage {
    @Override
    protected boolean isSync() {
       if( error!=null ) {
-         aladin.trace(4,"PlanBG.isSync()=true:"+label+" => in error (error!=null)");
+         aladin.trace(6,"PlanBG.isSync()=true:"+label+" => in error (error!=null)");
          return true;
       }
       if( !flagOk ) {
-         aladin.trace(4,"PlanBG.isSync()=false: "+label+" => not ready (!flagOk)");
+         aladin.trace(6,"PlanBG.isSync()=false: "+label+" => not ready (!flagOk)");
          return false;
       }
       if( !active ) {
-         aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> not active (!active)");
+         aladin.trace(6,"PlanBG.isSync()=true: "+label+"=> not active (!active)");
          return true;
       }
       if( getOpacityLevel()==0f && !ref ) {
-         aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> transparent (!ref && opacity="+getOpacityLevel()+")");
+         aladin.trace(6,"PlanBG.isSync()=true: "+label+"=> transparent (!ref && opacity="+getOpacityLevel()+")");
          return true;
       }
-
       if( flagProcessing ) {
-         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is processing (flagProcessing)");
+         aladin.trace(6,"PlanBG.isSync()=false: "+label+"=> is processing (flagProcessing)");
          return false;
       }
-
       if( isLoading() ) {
-         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is loading (isLoading())");
+         aladin.trace(6,"PlanBG.isSync()=false: "+label+"=> is loading (isLoading())");
          return false;
       }
-      //      if( !isFullyDrawn() ) {
-      //         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is not fully drawn at the best resolution (!isFullyDrawn()=> isDrawn()=="+isDrawn()+"[readyDone="+readyDone+",readyAfterDraw="+readyAfterDraw+"] && allWaitingKeysDrawn=="+allWaitingKeysDrawn+")");
-      //         return false;
-      //      }
-
-      //      aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> ready");
       return true;
-
-      //      boolean rep = error!=null || flagOk && (!active || getOpacityLevel()==0f  && !ref || !flagProcessing && !isLoading() && (isFullyDrawn() /* || pourcent==-2*/) );
-      //      aladin.trace(4,"PlanBG.isSync()="+rep+" => thread="+this.hashCode()+" "+label+" error="+(error==null?"null":error)+
-      //            " active="+active+" ref="+ref+" opacity="+getOpacityLevel()+" flagProcessing="+flagProcessing+" isLoading="+isLoading()+" isDrawn="+isDrawn()+" isFullyDrawn="+isFullyDrawn()+
-      //            " pourcent="+pourcent);
-      //      return rep;
    }
 
    /** Retourne true s'il s'agit d'un HiPS cube */
@@ -3633,17 +3616,23 @@ public class PlanBG extends PlanImage {
       char a = moc.getCoordSys().charAt(0);
       int frameMoc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
       if( frameOrigin!=frameMoc ) {
-         try {
-            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
-            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
-            Coord co = new Coord(radec[0],radec[1]);
-            co = Localisation.frameToFrame(co, frameOrigin, frameMoc);
-            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
-            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
-         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); return false; }
+         return false;
+      
+// CA NE FONCTIONNE PAS CAR CA CONVERTIT LE CENTRE DU LOSANGE ET NON TOUTE SA SURFACE - PF 27 janvier 2020
+// ON VA ALORS ESTIMER DANS CES CAS QU'IL N'EST JAMAIS EN DEHORS
+//         try {
+//            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
+//            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
+//            Coord co = new Coord(radec[0],radec[1]);
+//            co = Localisation.frameToFrame(co, frameOrigin, frameMoc);
+//            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
+//            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
+//         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); return false; }
+         
       }
+      
       boolean res = !moc.isIntersecting(order, npix);
-      //      if( res ) System.out.println("en dehors du MOC "+order+"/"+npix);
+//            if( res ) System.out.println("en dehors du MOC "+order+"/"+npix);
       return res;
    }
 

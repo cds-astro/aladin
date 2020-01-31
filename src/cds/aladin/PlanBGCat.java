@@ -236,6 +236,7 @@ public class PlanBGCat extends PlanBG {
          }
          
          pix = getPixListView(v,norder);
+         if( pix==null ) return;
          for( int i=0; i<pix.length; i++ ) {
             
             // Losange à écarter ?

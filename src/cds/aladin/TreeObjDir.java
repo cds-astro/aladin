@@ -111,25 +111,58 @@ public class TreeObjDir extends TreeObj implements Propable {
    public final static String DIRECT = "DIRECT/"; // préfixe ajouté à l'ID dans le cas d'un accès direct par URL explicite
    
    
+   /** Retourne le titre long de la ressource, et si c'est une table VizieR, un nom composé du titre du catalogue,
+    * suivi du titre de la table et suffixé par le label de la table */
+   protected String getVizieRLongTitre() {
+     String titre = description;
+     
+     // Est-ce bien un enregistrement VizieR ? nouvelle formule ?
+     if( !internalId.startsWith("CDS/") ) return titre;
+     if( internalId.startsWith("CDS/P") || internalId.startsWith("CDS/C") || internalId.startsWith("CDS/Simbad") ) return titre;
+     if( prop.getFirst("client_category")==null ) return titre;
+     
+     String tableTitle = prop.getFirst("obs_title");
+     String tableLabel = prop.getFirst("obs_label");
+     String catalogTitle = prop.getFirst("obs_collection");
+     String prefix = prop.getFirst("obs_collection_label");
+    
+     return aladin.directory.addLabelPrefix( prefix, (catalogTitle!=null ? catalogTitle+" - "+tableTitle : tableTitle) 
+                                                   + (tableLabel!=null? " ("+tableLabel+")":"") );
+   }
+   
    /** Ajustement des labels qui s'affiche dans l'arbre pour les ressources VizieR */
    private void adjustVizieR() {
       
-      // Est-ce bien un enregsitrement VizieR ?
-      if( !internalId.startsWith("CDS/") || internalId.startsWith("CDS/Simbad") ) return;
+      // Est-ce bien un enregistrement VizieR ?
+      if( !internalId.startsWith("CDS/") ) return;
+      if( internalId.startsWith("CDS/P") || internalId.startsWith("CDS/C") || internalId.startsWith("CDS/Simbad") ) return;
+      
+      if( prop.getFirst("client_category")==null ) return;
+      
       
       // Incorpartion en préfixe de la description du label du catalogue
       Directory dir = aladin.directory;
       
-      // Une table unique => Incorpartion en préfixe de la description du label du catalogue
+      // Une table unique => remplacement par le nom du catalogue et préfixage avec le label
       if( !dir.hasMultiple( dir.getCatParent(internalId)) ) {
-         String prefixe = prop.getFirst("obs_collection_label");
-         if( prefixe!=null ) aladinLabel=label = dir.addLabelPrefix(prefixe,label);
+         String catalogTitle = prop.getFirst("obs_collection");
+         if(  catalogTitle!=null ) {
+            // Ce n'est qu'un accronyme, donc il y a déjà eu traitement
+            if( catalogTitle.indexOf(' ')<0 ) return;
+            label = catalogTitle;
+         }
          
-      // Une table parmi d'autres => Incorporation en suffixe du label de la table
+         String prefix = prop.getFirst("obs_collection_label");
+         label = dir.addLabelPrefix( prefix ,label);
+         
       } else {
          String suffixe = prop.getFirst("obs_label");
-         if( suffixe!=null && label.indexOf("("+suffixe+")")<0 ) aladinLabel=label = label+" ("+suffixe+")";
+         if( suffixe!=null && label.indexOf("("+suffixe+")")<0 ) label = label+" ("+suffixe+")";
       }
+
+      label = dir.cleanLatexMacro( label );
+      aladinLabel=label;
+
    }
    
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
@@ -770,6 +803,16 @@ public class TreeObjDir extends TreeObj implements Propable {
       return prop!=null && prop.get("access_url")!=null;
    }
    
+   /** retourne true si on peut faire un chargement global */
+   protected boolean hasAllAccess() {
+      if( !isCDSCatalog() ) return false;
+      try {
+         long nbRows = Long.parseLong(getProperty(Constante.KEY_NB_ROWS));
+         return nbRows>-1 && nbRows<20000;
+      } catch( Exception e ) { }
+      return false;
+   }
+   
    /** Retourne true si la collection dispose d'une URL donnant accès à un preview */
    protected boolean hasPreview() {
       return (isCDSCatalog() || isHiPS());
@@ -1002,10 +1045,11 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /** Chargement par défaut à effectuer (suite à un double-clic sur le noeud de l'arbre) */
    protected void load() {
-      if( hasSIA() ) loadSIA();
+      if( hasGlobalAccess() ) loadGlobalAccess();
+      else if( hasAllAccess() ) loadAll();
+      else if( hasSIA() ) loadSIA();
       else if( hasSSA() ) loadSSA();
       else if( getUrl()==null && isCatalog() ) loadCS();
-      else if( hasGlobalAccess() ) loadGlobalAccess();
       else loadHips();
    }
    

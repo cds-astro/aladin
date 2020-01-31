@@ -643,7 +643,7 @@ public class Calque extends JPanel implements Runnable {
          if( !p.isTime() ) continue;
          double [] t = p.getTimeRange();
          if( Double.isNaN(jdmin) || t[0]<jdmin ) jdmin=t[0];
-         if( Double.isNaN(jdmax) || t[1]<jdmax ) jdmax=t[1];
+         if( Double.isNaN(jdmax) || t[1]>jdmax ) jdmax=t[1];
       }
       return new double[] { jdmin, jdmax };
    }

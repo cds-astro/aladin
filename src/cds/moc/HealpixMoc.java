@@ -34,9 +34,10 @@ public class HealpixMoc extends SpaceMoc {
    public HealpixMoc() { super(); }
    
    public HealpixMoc( Moc smoc ) throws Exception {
-      init("C",0,maxLimitOrder);
+      init(smoc.getCoordSys(),0,maxLimitOrder);
+      ((SpaceMoc)smoc).toRangeSet();
       spaceRange = ((SpaceMoc)smoc).spaceRange;
-      toHealpixMoc();
+      if( spaceRange!=null ) toHealpixMoc();
    }
 
    public HealpixMoc(int maxLimitOrder) throws Exception {

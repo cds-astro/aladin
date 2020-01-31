@@ -709,11 +709,14 @@ public class SpaceMoc extends Moc {
       }
       return s.toString();
    }
+   
+   public String toString() { try { return toASCII(); } catch( Exception e) { return null; } }
+
 
    private static final int MAXWORD=20;
    private static final int MAXSIZE=80;
 
-   public String toString() {
+   public String toJSON() {
       StringBuilder res= new StringBuilder(getSize()*8);
       int order=-1;
       boolean flagNL = getSize()>MAXWORD;
@@ -759,8 +762,8 @@ public class SpaceMoc extends Moc {
                else res.append(" ");
             } else {
                int n=(c.npix+"").length();
-               if( flagNL && n+sizeLine>MAXSIZE ) { res.append(",\n "); sizeLine=3; j++; }
-               else { res.append(','); sizeLine++; }
+               if( flagNL && n+sizeLine>MAXSIZE ) { res.append("\n "); sizeLine=3; j++; }
+               else { res.append(' '); sizeLine++; }
             }
          }
          String s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
@@ -770,7 +773,7 @@ public class SpaceMoc extends Moc {
       }
       int n = res.length();
 
-      if( n>0 && res.charAt(n-1)==',' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
+      if( n>0 && res.charAt(n-1)==' ' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
       else res.append((flagNL?"\n":" "));
 
       return res.toString();

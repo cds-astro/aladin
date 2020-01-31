@@ -179,9 +179,10 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
       if( v.isFree() ) return;
 
-
       Projection proj = v.getProj();
-      if( plan.proj[v.n]==proj && Projection.isOk(proj)
+      if( !Projection.isOk( proj ) ) return;
+      
+      if( plan.proj[v.n]==proj /* && Projection.isOk(proj) */
             && (!(plan instanceof PlanBGCat)
                ||  plan instanceof PlanBGCat && !(plan instanceof PlanMoc) && projpcat[v.n]==proj )   // Dans le cas d'un planBGCat
             ) {
@@ -192,7 +193,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       }
 
       // Test sur le recouvrement des champs
-      if( Projection.isOk(proj) && plan.type!=Plan.TOOL && plan.type!=Plan.APERTURE
+      if( /* Projection.isOk(proj) && */plan.type!=Plan.TOOL && plan.type!=Plan.APERTURE
             && !(plan.isSimpleCatalog() && (plan.hasXYorig || v.isPlot()) )
             && !proj.agree(plan.projd,v) ) return;
 

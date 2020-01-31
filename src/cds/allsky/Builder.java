@@ -151,7 +151,8 @@ public abstract class Builder {
 
       String name = null;
       String path = null;
-      int i = output==null ? -1 : output.lastIndexOf(FS);
+      int i = output==null ? -1 : output.lastIndexOf('/');
+      if( i==-1 && output!=null ) i=output.lastIndexOf('\\');
 
       // Path indiqué spécifiquement ?
       if( i>=0 ) path = output.substring(0,i);

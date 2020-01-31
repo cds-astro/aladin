@@ -690,18 +690,18 @@ public final class Command implements Runnable {
     */
    protected boolean isSync() {
       if( a.dialog == null || a.calque == null ) {
-         a.trace(4, "Command.isSync() : waiting (Aladin.dialog not ready)...");
+         a.trace(6, "Command.isSync() : waiting (Aladin.dialog not ready)...");
          return false;
       }
 
       if( isSyncNeedSesame() && a.view.isSesameInProgress() ) {
-         a.trace(4, "Command.isSync() : waiting sesame...\n" + "==> " + a.view.sesameSynchro);
+         a.trace(6, "Command.isSync() : waiting sesame...\n" + "==> " + a.view.sesameSynchro);
          return false;
       }
       setSyncNeedSesame(false);
 
       if( isSyncNeedRepaint() ) {
-         a.trace(4, "Command.isSync() : waiting viewSimple.paintComponent()...");
+         a.trace(6, "Command.isSync() : waiting viewSimple.paintComponent()...");
          a.view.repaintAll();
          return false;
       }
@@ -716,7 +716,7 @@ public final class Command implements Runnable {
       Plan[] plan = a.calque.getPlans();
       for( int i = plan.length - 1; i >= 0; i-- ) {
          if( plan[i].type != Plan.NO && !plan[i].isSync() ) {
-            a.trace(4, "Command.isSync() : waiting plane \"" + plan[i] + "\"...");
+            a.trace(6, "Command.isSync() : waiting plane \"" + plan[i] + "\"...");
             if( plan[i].label == null ) {
                System.err.println("isSync label==null : type=" + plan[i].type + " state=" + plan[i].getDebugFlag());
             }
@@ -1979,9 +1979,10 @@ public final class Command implements Runnable {
       if( param.length() == 0 ) {
          if( inAladinFrame ) {
             a.log("Help", "script command");
+            a.endMsg();
             a.cardView.show(a.bigView, "Help");
             a.inScriptHelp = true;
-            if( a.msgOn ) a.msgOn = false;
+//            a.msgOn = false;
             a.help.setHyperText("", "|!Aladin script commands." + execHelp());
          }
          println(removeLinks(execHelp()));

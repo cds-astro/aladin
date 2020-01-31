@@ -134,15 +134,30 @@ public class BuilderMirror extends BuilderTiles {
       }
       context.info("Mirroring tiles: "+context.getTileFormat()+"...");
       
+      // référence spatiale
+      s = prop.getProperty(Constante.KEY_HIPS_FRAME);
+      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_FRAME);
+      if( s!=null ) context.setFrameName(s);
+
       // Détermination du Moc
       HealpixMoc area = new HealpixMoc();
       in = null;
       try {
          in = Util.openAnyStream( context.getInputPath()+"/Moc.fits");
          area.read(in);
+         
+         
+         // Si le système de coordonnées du MOC n'est pas le même que celui de HiPS, il faut 
+         // convertir le MOC
+         if( !context.getFrameCode().equals( area.getCoordSys()) ) {
+            context.info("MOC conversion in "+context.getFrameName()+" frame (HiPS target frame)...");
+            area = new HealpixMoc( HealpixMoc.convertTo( area, context.getFrameCode()) );
+         }
+         
          if( context.getArea()==null ) {
             context.setMocArea( area );
          } else {
+            
             if( !context.getArea().equals(area)) {
                isSmaller=isPartial=true;
                context.setMocArea( (SpaceMoc)area.intersection( context.getArea()) );
@@ -160,11 +175,6 @@ public class BuilderMirror extends BuilderTiles {
          if( s!=null && s.equals("true")) context.setBitpixOrig(0);
       }
       if( context.isColor() ) context.info("Mirroring colored HiPS");
-
-      // référence spatiale
-      s = prop.getProperty(Constante.KEY_HIPS_FRAME);
-      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_FRAME);
-      if( s!=null ) context.setFrameName(s);
 
       // Cube ?
       s = prop.getProperty(Constante.KEY_CUBE_DEPTH);
