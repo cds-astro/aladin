@@ -55,6 +55,7 @@ public class PlanSTMocGen extends PlanSTMoc {
       this.c=null;
       this.p = p;
       
+      this.label = label;
       this.spaceOrder=spaceOrder;
       this.timeOrder=timeOrder;
       this.duration=duration;
@@ -115,12 +116,18 @@ public class PlanSTMocGen extends PlanSTMoc {
       }
    }
    
+   protected boolean Free() {
+      stop=true;
+      return super.Free();
+   }
+   
+   private boolean stop;
 
    // Ajout d'un plan catalogue au moc en cours de construction
-   private void addMocFromCatalog(Plan p1,double duration,double radius, boolean fov) {
+   private void addMocFromCatalog(Plan p1,double duration,double radius, boolean fov) throws Exception {
       
       long t0 = System.currentTimeMillis();
-      
+      stop=false;
       SpaceTimeMoc m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
@@ -130,10 +137,11 @@ public class PlanSTMocGen extends PlanSTMoc {
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
-         if( m<100 ) pourcent+=incrPourcent;
+         pourcent+=incrPourcent;
          m++;
          
-         if( m%1000==0 ) {
+         if( m%100==0 ) {
+            if( stop ) throw new Exception("Abort");
             try { moc = moc.union( m2 ); } catch( Exception e ) { e.printStackTrace(); }
             m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
          }
@@ -151,16 +159,9 @@ public class PlanSTMocGen extends PlanSTMoc {
                if( listStcs==null ) continue;
                try {
                   HealpixMoc m1 = aladin.createMocRegion(listStcs,spaceOrder);
-                  
                   m1.toRangeSet();
                   Range r = m1.spaceRange;
                   for( int j=0; j<r.sz; j+=2 ) addIt(m2,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
-//                  for( int j=0; j<r.sz; j+=2 ) addIt( (SpaceTimeMoc)moc,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
-                  
-                  
-                  npixs = new long[ (int)( m1.getUsedArea()) ];
-                  Iterator<Long> it1 = m1.pixelIterator();
-                  for( int i=0; i<npixs.length; i++ ) npixs[i] = it1.next();
                } catch( Exception e ) {
                   if( aladin.levelTrace>=3) e.printStackTrace();
                 }
@@ -175,7 +176,6 @@ public class PlanSTMocGen extends PlanSTMoc {
             if( npixs==null ) continue;
             for( long npix : npixs ) {
                addIt(m2,spaceOrder,npix,jdtime,jdtime+ duration/86400.);
-//               addIt((SpaceTimeMoc)moc,spaceOrder,npix,jdtime,jdtime+ duration/86400.);
             }
 
          } catch( Exception e ) {

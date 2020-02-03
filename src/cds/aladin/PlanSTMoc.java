@@ -146,7 +146,7 @@ public class PlanSTMoc extends PlanTMoc {
       return null;
    }
    
-   /** Retourne leTimeMoc correspondant au champ spatial de la vue courante,
+   /** Retourne le TimeMoc correspondant au champ spatial de la vue courante,
     * ou null si impossible à définir */
    protected TimeMoc getCurrentTimeMoc() {
       try {

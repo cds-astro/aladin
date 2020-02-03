@@ -42,6 +42,7 @@ import javax.swing.SwingUtilities;
 import cds.aladin.stc.STCObj;
 import cds.allsky.TabRgb;
 import cds.moc.SpaceMoc;
+import cds.moc.TimeMoc;
 import cds.tools.Util;
 
 /**
@@ -3718,6 +3719,16 @@ public class Calque extends JPanel implements Runnable {
       Coord c=getTargetBG(null,null);
       double rad=getRadiusBG(null,null,null);
       plan[n] = new PlanMoc(aladin,moc,label,c,rad);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
+
+   /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
+   protected int newPlanMOC(TimeMoc moc,String label) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = new PlanTMoc(aladin,moc,label);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;

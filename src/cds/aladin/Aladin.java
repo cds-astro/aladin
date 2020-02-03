@@ -130,6 +130,9 @@ import cds.allsky.Context;
 import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
 import cds.moc.HealpixMoc;
+import cds.moc.Moc;
+import cds.moc.SpaceMoc;
+import cds.moc.TimeMoc;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
 import cds.tools.Util;
@@ -231,7 +234,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.010"; //"v10.145";
+   static public final    String VERSION = "v11.011"; //"v10.145";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -685,7 +688,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
-   miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
+   miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,
+   miCropTMOC,miCropSMOC,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
    miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,
@@ -749,7 +753,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,
    STMOCGEN,STMOCGENCAT,STMOCGENOBJ,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
-   MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
+   MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCEXTRACTSMOC,MOCEXTRACTTMOC,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
    REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
@@ -1205,6 +1209,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOCTOORDER     =chaine.getString("MMOCTOORDER");
       MOCFILTERING =chaine.getString("MMOCFILTERING");
       MOCCROP =chaine.getString("MMOCCROP");
+      MOCEXTRACTSMOC =chaine.getString("MMOCEXTRACTSMOC");
+      MOCEXTRACTTMOC =chaine.getString("MMOCEXTRACTTMOC");
       MOCHELP =chaine.getString("MMOCHELP");
       MOCLOAD =chaine.getString("MMOCLOAD");
       MOCHIPS =chaine.getString("MMOCHIPS");
@@ -1350,9 +1356,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
-               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA}, 
-               {TMOCGEN,TMOCGENCAT,TMOCGENOBJ}, {STMOCGEN,STMOCGENCAT,STMOCGENOBJ},
-               {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
+               {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA, MOCEXTRACTSMOC,MOCCROP}, 
+               {TMOCGEN,TMOCGENCAT,TMOCGENOBJ,MOCEXTRACTTMOC}, 
+               {STMOCGEN,STMOCGENCAT,STMOCGENOBJ},
+               {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{},{MOCHELP}
             },
             { /*{MTOOLS},
                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
@@ -2060,6 +2067,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOCTOORDER) )   miMocToOrder  = ji;
       else if( isMenu(m,MOCFILTERING) )   miMocFiltering  = ji;
       else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
+      else if( isMenu(m,MOCEXTRACTSMOC) )   miCropSMOC  = ji;
+      else if( isMenu(m,MOCEXTRACTTMOC) )   miCropTMOC  = ji;
       else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
       else if( isMenu(m,MOCGENPROBA) )   miMocGenProba  = ji;
       else if( isMenu(m,MOCHIPS) )   miMocHips  = ji;
@@ -3497,6 +3506,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
       } else if( isMenu(s,MOCCROP) )  { crop();
+      } else if( isMenu(s,MOCEXTRACTSMOC) )  { cropSMOC();
+      } else if( isMenu(s,MOCEXTRACTTMOC) )  { cropTMOC();
       } else if( isMenu(s,MOCHELP) )  { info(chaine.getString("MOCHELP"));
       } else if( isMenu(s,MOCLOAD) )  { loadMoc();
       } else if( isMenu(s,MOCHIPS) )  { loadMocHips();
@@ -3738,6 +3749,22 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Activation du DUMP depuis la JBar */
    protected void crop() {
       toolBox.setMode(ToolBox.CROP, Tool.DOWN);
+   }
+   
+   /** Création d'un plan SpaceMoc depuis le plan STMOC sélectionné */
+   protected void cropSMOC() {
+      Plan p = calque.getFirstSelectedPlan();
+      if( p==null || !(p instanceof PlanSTMoc) ) { aladin.warning("No STMOC"); return; }
+      SpaceMoc moc = ((PlanSTMoc)p).getCurrentSpaceMoc();
+      calque.newPlanMOC(moc, "MOC from "+p.label);
+   }
+
+   /** Création d'un plan TimeMoc depuis le plan STMOC sélectionné */
+   protected void cropTMOC() {
+      Plan p = calque.getFirstSelectedPlan();
+      if( p==null || !(p instanceof PlanSTMoc) ) { aladin.warning("No STMOC"); return; }
+      TimeMoc moc = ((PlanSTMoc)p).getCurrentTimeMoc();
+      calque.newPlanMOC(moc, "MOC from "+p.label);
    }
 
    /** Création d'un fichier map HEALpix à partir d'un PlanImage et affichage de cette map */
@@ -4003,6 +4030,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else { calque.flagSimbad = false; calque.flagVizierSED = true; }
       
       if( mode!=0 ) view.startQuickSimbad();
+      else {
+         view.simRep=null;
+         view.stopSED(false);
+      }
       
       look.repaint();
    }
@@ -4458,7 +4489,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
    
     protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
-        return createMocRegion(stcObjects.get(0), order);
+//        return createMocRegion(stcObjects.get(0), order);
+        Moc moc = null;
+        for( STCObj stc : stcObjects ) {
+           HealpixMoc m = createMocRegion(stc, order);
+           moc = moc==null ? m : moc.union(m);
+        }
+        return new HealpixMoc( moc );
     }
     
     protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
@@ -5890,7 +5927,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
          if( miMocGenProba!=null ) miMocGenProba.setEnabled( nbPlanImgBG>0 );
          if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
-         if( miTMocGen!=null ) miTMocGen.setEnabled( nbPlanCatTime>0 );
+         if( miTMocGen!=null ) miTMocGen.setEnabled( nbPlanCatTime>0 || pc instanceof PlanSTMoc );
          if( miTMocGenCat!=null ) miTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miTMocGenObj!=null ) miTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
          if( miSTMocGen!=null ) miSTMocGen.setEnabled( nbPlanCatTime>0 );
@@ -5899,7 +5936,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miMocToOrder!=null ) miMocToOrder.setEnabled(nbPlanMoc>0);
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );
-         if( miMocCrop!=null ) miMocCrop.setEnabled( pc instanceof PlanMoc );
+         if( miMocCrop!=null ) miMocCrop.setEnabled( pc instanceof PlanMoc && !(pc instanceof PlanTMoc) );
+         if( miCropSMOC!=null ) miCropSMOC.setEnabled( pc instanceof PlanSTMoc );
+         if( miCropTMOC!=null ) miCropTMOC.setEnabled( pc instanceof PlanSTMoc );
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
          if( miNorm!=null ) miNorm.setEnabled(hasPixels && !isCube);
@@ -5910,6 +5949,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miCreateHpxRgb!=null ) miCreateHpxRgb.setEnabled( nbPlanHiPS4RGB>1 );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
          if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube && !isBG);
+         
          int syncMode=match.getMode();
          if( miSync!=null ) {
             miSync.setEnabled(syncMode!=0);

@@ -178,6 +178,7 @@ public class Context {
    protected ArrayList<String> tileFormat=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
    protected boolean testClonable=true;
    protected boolean live=false;             // true si on doit garder les tuiles de poids
+   protected long bytes=0L;                 // Taille du HiPS généré en Kb
 
    public Context() { 
       
@@ -219,6 +220,7 @@ public class Context {
       luptonQ     = Double.NaN;
       luptonM     = new double[] { Double.NaN, Double.NaN, Double.NaN };
       luptonS = new double[] { Double.NaN, Double.NaN, Double.NaN };
+      bytes = 0L;
       resetProgressParam();
    }
    
@@ -226,6 +228,12 @@ public class Context {
       lastNorder3=-2;
       live=validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
    }
+   
+   /** Ajoute au compteur de taille le volume indiqué (en bytes) */
+   public void incrBytes(long bytes ) { this.bytes += bytes; }
+   
+   /** Donne la taille du HiPS générés (en bytes) */
+   public long getBytes() { return bytes; }
 
    // manipulation des chaines désignant le système de coordonnées (syntaxe longue et courte)
    static public String getFrameName(int frame) { return frame==Localisation.GAL ? "galactic"

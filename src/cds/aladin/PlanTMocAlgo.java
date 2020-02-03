@@ -24,6 +24,7 @@ package cds.aladin;
 import cds.moc.Moc;
 import cds.moc.TimeMoc;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /** Génération d'un MOC de manière algorythmique
  * @author P.Fernique [CDS]
@@ -58,6 +59,7 @@ public class PlanTMocAlgo extends PlanTMoc {
     */
    public PlanTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
       super(aladin);
+      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
       PlanMoc p1 = pList[0];
       p1.copy(this);
       this.c = Couleur.getNextDefault(aladin.calque);

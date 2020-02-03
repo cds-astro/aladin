@@ -53,6 +53,9 @@ public class PlanMoc extends PlanBGCat {
 
    protected Moc moc = null;                 // Le MOC
    protected int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
+   
+   static int MAXGAPORDER=3;
+   protected int gapOrder=0;
 
    protected Moc [] arrayMoc =null;        // Le MOC à tous les ordres */
    protected ArrayList<Hpix> arrayHpix = null;    // Liste des cellules correspondant aux cellules tracés (order courant)
@@ -497,9 +500,6 @@ public class PlanMoc extends PlanBGCat {
 //      return m;
 //   }
 
-   static int MAXGAPORDER=3;
-   protected int gapOrder=0;
-   
    protected void setMaxGapOrder() { setGapOrder(MAXGAPORDER); }
    
    protected int getGapOrder() { return gapOrder; }

@@ -72,15 +72,31 @@ public class PlanMocGen extends PlanMoc {
    
    protected void launchLoading() {}
    
-   private void addMocFromCatFov(Plan p1,int order) {
+   protected boolean Free() {
+      stop=true;
+      return super.Free();
+   }
+   
+   private boolean stop;
+   
+   private void addMocFromCatFov(Plan p1,int order) throws Exception {
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
-      int n=0;
       double incrPourcent = gapPourcent/m;
+      int n=0;
+      stop=false;
+      
       while( it.hasNext() ) {
+         n++;
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;
-         if( m<100 || n%100==0 ) pourcent+=incrPourcent;
+         
+         if( m<100 || n%100==0 ) {
+            pourcent+=incrPourcent;
+            if( stop ) throw new Exception("Abort");
+         }
+         
+         pourcent+=incrPourcent;
          Source s = (Source)o;
          SourceFootprint sf = s.getFootprint();
          if( sf==null ) continue;
@@ -93,21 +109,27 @@ public class PlanMocGen extends PlanMoc {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
+      
    }
       
    // Ajout d'un plan catalogue au moc en cours de construction
-   private void addMocFromCatalog(Plan p1,double radius,int order) {
+   private void addMocFromCatalog(Plan p1,double radius,int order) throws Exception {
       Iterator<Obj> it = p1.iterator();
       Healpix hpx = new Healpix();
       int o1 = order;
       Coord coo = new Coord();
       int n=0;
+      stop=false;
       int m= p1.getCounts();
       double incrPourcent = gapPourcent/m;
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
-         if( m<100 || n%100==0 ) pourcent+=incrPourcent;
+         
+         if( m<100 || n%100==0 ) {
+            pourcent+=incrPourcent;
+            if( stop ) throw new Exception("Abort");
+         }
          try {
             coo.al = ((Position)o).raj;
             coo.del = ((Position)o).dej;

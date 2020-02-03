@@ -61,6 +61,20 @@ public class PlanTMoc extends PlanMoc {
       suite();
    }
 
+   protected PlanTMoc(Aladin aladin, TimeMoc moc, String label) {
+      super(aladin);
+      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
+      this.moc = moc;
+      useCache = false;
+      type = ALLSKYTMOC;
+      this.c = Couleur.getNextDefault(aladin.calque);
+      setOpacityLevel(1.0f);
+      if( label==null ) label="TMOC";
+      setLabel(label);
+      aladin.trace(3,"TMOC creation: "+Plan.Tp[type]);
+      suite();
+   }
+
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
       long nbMicrosec = ((TimeMoc)moc).getUsedArea();
