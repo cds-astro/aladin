@@ -63,6 +63,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -72,7 +73,6 @@ import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
 import cds.astro.Astrotime;
-import cds.moc.HealpixMoc;
 import cds.moc.SpaceMoc;
 import cds.moc.SpaceTimeMoc;
 import cds.moc.TimeMoc;
@@ -422,95 +422,96 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       return p;
    }
+   
+   
+   private TimeField timeField=null;  // Voir createTimeField()
+   
+   /** Création des deux champs temporaires sde saisie de dates, notamment pour les MOC */
+   protected void createTimeField() {
+      double [] t = aladin.calque.getDefaultTimeRange();
+      timeField = new TimeField(t[0],t[1]);
+      showProp(true);
+   }
+   
+   // Transforme le plan SMOC en STMOC avec un intervalle de temps par défaut
+   private boolean moc2STmoc() {
+      try {
+         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,14, timeField.getJdmin(), timeField.getJdmax());
+         aladin.view.repaintAll();
+         SwingUtilities.invokeLater( new Runnable() {
+            public void run() {
+               showProp(true);
+               aladin.view.createView4TMOC(plan);
+            }
+         });
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         return false;
+      }
+      return true;
+   }
+   
+   // Gère les deux textfields pour l'ajustement des dates d'une STMOC à un seul intervalle temporel
+   class TimeField extends JPanel implements KeyListener {
+      PlanSTMoc p;
+      JTextField start,end;
+      
+      // Objet temporaire qui sera utilisé pour un MOC qu'on est entrain de transformer en STMOC
+      TimeField( double jdmin, double jdmax) {
+         setLayout( new GridLayout(2, 1) );
+         try {
+            start = new JTextField( Astrodate.JDToDate( jdmin ) );
+            add( start);
+            end= new JTextField( Astrodate.JDToDate( jdmax) );
+            add(end);
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
+      }
+      
+      // Objet de saisie d'un range de date pour un STMOC à un seul intervalle temporel
+      TimeField( PlanSTMoc p) {
+         this.p=p;
+         setLayout( new GridLayout(2, 1) );
+         try {
+            TimeMoc timeMoc =  ((SpaceTimeMoc) ((PlanMoc)p).moc).getTimeMoc();
+            start = new JTextField( Astrodate.JDToDate(timeMoc.getTimeMin()) );
+            start.addKeyListener( this );
+            add( start);
+            end= new JTextField( Astrodate.JDToDate(timeMoc.getTimeMax()) );
+            end.addKeyListener( this );
+            add(end);
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
+      }
 
-   //   private void showInfo() {
-   //      aladin.info(this,plan.verboseDescr);
-   //   }
-
-
-//   /** Genère un Label, éventuellement sur plusieurs lignes, qui peut avoir à la fin un lien (more...) pour de l'info
-//    * additionnel, ou une url complète associée. Les deux simultanément ne sont pas possibles.
-//    */
-//   class MyAnchor extends JLabel {
-//      String url,more;
-//      int width;
-//
-//      /**
-//       * @param text Texte du baratin (ou null si début du texte supplémentaire à afficher)
-//       * @param width nombre de caractères avant repli (-1 si pas de repli), ou césure si text==null
-//       * @param more texte supplémentaire accessible par (more...), null sinon
-//       * @param url url associée, null sinon
-//       */
-//      MyAnchor(String text,int width, String more,final String url) {
-//         super();
-//
-//         if( text==null && more==null && url!=null ) text=url;
-//
-//         if( text==null && more!=null ) {
-//            if( more.length()>width ) {
-//               int n = more.lastIndexOf(' ',width);
-//               if( n<=0 ) n=width;
-//               text=more.substring(0,n)+"...";
-//            }
-//            else { text=more; more=null; }
-//         }
-//         if( text==null ) text="";
-//         this.more = more;
-//         this.url=url;
-//         if( width>0 ) {
-//            if( (text.startsWith("http://") || text.startsWith("ftp://")) && text.length()>width ) text=text.substring(0,width)+"...";
-//            else {
-//               if( url!=null ) text = Util.fold(text,width,true);
-//               text = Util.fold(text,width);
-//            }
-//         }
-//         if( url!=null ) {
-//            text = "<html><A HREF=\"\">"+text+"</A></html>";
-//            setToolTipText(url);
-//         }
-//         if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
-//         setText(text);
-//         setFont(getFont().deriveFont(Font.ITALIC));
-//         final String more1 = more;
-//         if( url!=null || more!=null ) {
-//            final Component c = this;
-//            addMouseMotionListener(new MouseMotionListener() {
-//               public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
-//               public void mouseDragged(MouseEvent e) { }
-//            });
-//            addMouseListener(new MouseListener() {
-//               public void mouseReleased(MouseEvent e) {
-//                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) return;
-//                  if( url!=null ) aladin.glu.showDocument(url);
-//                  else aladin.info(c,more1.replace("\\n","\n"));
-//               }
-//               public void mousePressed(MouseEvent e)  { 
-//                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) {
-//                     showPopMenu(e.getX(),e.getY());
-//                  }
-//               }
-//               public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
-//               public void mouseEntered(MouseEvent e)  { }
-//               public void mouseClicked(MouseEvent e) { }
-//            });
-//         }
-//      }
-//      
-//      // Affiche le popup
-//      private void showPopMenu(int x,int y) {
-//         JPopupMenu popMenu = new JPopupMenu();
-//         popMenu.setLightWeightPopupEnabled(false);
-//         JMenuItem j=new JMenuItem(aladin.chaine.getString("MFCOPYURL"));
-//         popMenu.add(j);
-//         j.addActionListener( new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//               aladin.copyToClipBoard(url);
-//            }
-//         });
-//         popMenu.show(this,x,y);
-//      }
-//   }
-//
+      public void keyTyped(KeyEvent e) { }
+      public void keyPressed(KeyEvent e) { }
+      public void keyReleased(KeyEvent e) {
+         if( e.getKeyCode()==KeyEvent.VK_ENTER ) submit();
+      }
+      
+      double getJdmin() { return Astrodate.dateToJD( start.getText() ); }
+      double getJdmax() { return Astrodate.dateToJD( end.getText() ); }
+      
+      // Modification de l'intervalle associé au STMOC
+      void submit() {
+         boolean error=false;
+         double jdmin=Double.NaN;
+         double jdmax=Double.NaN;
+         try { jdmin = getJdmin(); } catch( Exception e) { start.setForeground( Color.red ); error=true;};
+         try { jdmax = getJdmax(); } catch( Exception e) { end.setForeground( Color.red ); error=true;};
+         if( error ) return;
+         try { p.changeTimeRange( jdmin, jdmax ); } catch( Exception e ) { e.printStackTrace(); }
+         start.setForeground( Color.black );
+         end.setForeground( Color.black );
+         aladin.calque.resetTimeRange();
+         aladin.view.repaintAll();
+     }
+               
+   }
+   
    /** Construction du panel des proprietes du plan courant.
     * @return Le panel des proprietes du plan courant
     */
@@ -1056,6 +1057,18 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
             PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(((SpaceMoc)pmoc.getMoc()).getAngularRes())
                   +" (order="+pmoc.getMoc().getMocOrder()+")"),g,c);
+            
+            if( Aladin.BETA ) {
+               if( timeField!=null ) {
+                  PropPanel.addCouple(p,"Time : ", timeField, g,c);
+               } else {
+                  JButton t = new JButton("Range?");
+                  t.addActionListener(new ActionListener() {
+                     public void actionPerformed(ActionEvent e) { createTimeField();  }
+                  });
+                  PropPanel.addCouple(p,"Time",t,g,c);
+               }
+            }
          }
 
          else if( plan.type==Plan.ALLSKYTMOC ) {
@@ -1064,8 +1077,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             int order = moc.getMocOrder();
             PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( moc.getTimeMin()) ), g,c);
             PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( moc.getTimeMax()) ), g,c);
-            PropPanel.addCouple(p,"Accuracy", new JLabel( Util.getTemps(  1000*( 1<<(2*(HealpixMoc.MAXORDER-order))))+" (order="+order+")" ), g,c);
-            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000000, true) ), g,c);
+            PropPanel.addCouple(p,"Accuracy", new JLabel(
+                  TimeMoc.getTemps(  TimeMoc.getDuration(moc.getMocOrder()))), g,c);
+//            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000000, true) ), g,c);
          }
 
          else if( plan.type==Plan.ALLSKYSTMOC ) {
@@ -1081,9 +1095,15 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                TimeMoc timeMoc =  ((SpaceTimeMoc) ((PlanMoc)plan).moc).getTimeMoc();
                long nbSec = timeMoc.getUsedArea();
                int order = timeMoc.getMocOrder();
-               PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMin()) ), g,c);
-               PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMax()) ), g,c);
-               PropPanel.addCouple(p,"Time Accuracy", new JLabel( Util.getTemps(  1000*( 1<<(2*(HealpixMoc.MAXORDER-order))))+" (order="+order+")" ), g,c);
+               if( ((PlanSTMoc)plan).isOneTimeRange() ) {
+                  PropPanel.addCouple(p,"Time : ", new TimeField((PlanSTMoc)plan), g,c);
+
+               } else {
+                  PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMin()) ), g,c);
+                  PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMax()) ), g,c);
+                  PropPanel.addCouple(p,"Time Accuracy", new JLabel( 
+                        TimeMoc.getTemps(  TimeMoc.getDuration(timeMoc.getMocOrder()))), g,c);
+               }
                
             } catch( Exception e1 ) {
                if( aladin.levelTrace>=3 ) e1.printStackTrace();
@@ -2029,6 +2049,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       Object src = e.getSource();
       String what = src instanceof JButton ? ((JButton)src).getActionCommand() : "";
+
+      // Prise en compte d'un intervalle temporaire pour un MocSpatial
+      // => transformation en STMOC
+      if( timeField!=null ) {
+         if( moc2STmoc() ) timeField=null;
+      }
       
       // Bouton d'édition d'un filtre dédié
       if( src==toGenFilterButton ) {
@@ -2146,6 +2172,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    // Supprime la fenetre des Properties
    public void dispose() {
+      timeField=null;   // Si on était en train de fournir un intervalle de temps, sans l'avoir valider
       frameProp.removeElement(this);
       super.dispose();
    }

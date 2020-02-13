@@ -61,7 +61,10 @@ public class PlanMoc extends PlanBGCat {
    protected ArrayList<Hpix> arrayHpix = null;    // Liste des cellules correspondant aux cellules tracés (order courant)
    private ArrayList<Hpix> arrayPeri = null;      // Liste des cellules correspondant au périmètre tracé (ordre courant)
    
-   public PlanMoc(Aladin a) { super(a); }
+   public PlanMoc(Aladin a) {
+      super(a);
+      type = ALLSKYMOC;
+   }
 
    /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
    protected PlanMoc(Aladin aladin, SpaceMoc moc, String label, Coord c, double radius) {
@@ -75,7 +78,7 @@ public class PlanMoc extends PlanBGCat {
    
    protected PlanMoc(Aladin aladin, MyInputStream in, SpaceMoc moc, String label, Coord c, double radius) {
       super(aladin);
-      arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       this.moc   = moc;
       useCache = false;
@@ -104,11 +107,11 @@ public class PlanMoc extends PlanBGCat {
       super.copy(p1);
       PlanMoc pm = (PlanMoc)p1;
       pm.frameOrigin=frameOrigin;
-      pm.moc = moc.clone();
+      pm.moc = moc!=null ? moc.clone() : null;
       pm.wireFrame=wireFrame;
       pm.gapOrder=gapOrder;
       pm.arrayHpix = arrayPeri = null;
-      pm.arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      pm.arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
    }
    
    /** Ajoute des infos sur le plan */
@@ -541,12 +544,10 @@ public class PlanMoc extends PlanBGCat {
    
    protected  boolean isTimeModified() { return false; }
    
-   // retourne/construit la liste du MOC
-   // à l'ordre courant (mode progressif)
-   protected Moc getSpaceMocLow(int order,int gapOrder) {
-      final SpaceMoc moc = getSpaceMoc();
-      if( aladin.NOGUI ) return moc;
-
+   
+   /** Retourne l'order à utiliser pour l'affichage courant en fonction de la position
+    * du slider "densité" */
+   protected int getLowOrder(int order, int gapOrder ) {
       int mo = moc.getMaxOrder();
       if( mo<3 ) mo=3;
       order += 5;
@@ -554,8 +555,26 @@ public class PlanMoc extends PlanBGCat {
       order += gapOrder;
       if( order<5 ) order=5;
       if( order>mo ) order=mo;
+      return order;
+   }
+   
+   // retourne/construit la liste du MOC
+   // à l'ordre courant (mode progressif)
+   protected Moc getSpaceMocLow(ViewSimple v,int order,int gapOrder) {
+      final SpaceMoc moc = getSpaceMoc();
+      if( aladin.NOGUI ) return moc;
+
+      int mo = moc.getMaxOrder();
+      if( mo<3 ) mo=3;
+//      order += 5;
+//      if( order<7 ) order=7;
+//      order += gapOrder;
+//      if( order<5 ) order=5;
+//      if( order>mo ) order=mo;
+      order = getLowOrder(order,gapOrder);
       //      System.out.println("getHpixListProg("+o+") => "+order);
-      if( arrayMoc[order]==null || mocSpaceLowReset ) {
+      if( arrayMoc==null || arrayMoc[order]==null || mocSpaceLowReset ) {
+         if( arrayMoc==null ) arrayMoc = new SpaceMoc[Moc.MAXORDER+1];
          arrayMoc[order] = new SpaceMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          
          BuildLow t = new BuildLow(moc,order,mo);
@@ -638,10 +657,10 @@ public class PlanMoc extends PlanBGCat {
          if( (++i)>=order ) { bord++; i=1; }
          return res;
       }
-	@Override
-	public void remove() {
-		// TODO Auto-generated method stub
-	}
+    @Override
+    public void remove() {
+        // TODO Auto-generated method stub
+    }
    }
    
    
@@ -674,7 +693,7 @@ public class PlanMoc extends PlanBGCat {
          long t=0;
          int myOrder = max+ (v.isAllSky()?0:1);
          
-         t = System.currentTimeMillis();
+//         t = System.currentTimeMillis();
          
          int drawingOrder = 0;
          Moc lowMoc = null;
@@ -687,7 +706,7 @@ public class PlanMoc extends PlanBGCat {
 
          // Génération des Hpix concernées par le champ de vue
          if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder || mocSpaceLowReset ) {
-            lowMoc = getSpaceMocLow(myOrder,gapOrder);
+            lowMoc = getSpaceMocLow(v,myOrder,gapOrder);
             mocSpaceLowReset=false;
             drawingOrder = getRealMaxOrder((SpaceMoc)lowMoc);
             if( drawingOrder==-1 ) return;

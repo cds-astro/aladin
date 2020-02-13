@@ -435,7 +435,7 @@ public final class Command implements Runnable {
          printConsole("!!! Not a valid view identifier [ex: B2]");
          return -1;
       }
-      if( nview >= a.view.getModeView() ) {
+      if( nview >= a.view.getNbView() ) {
          if( verbose ) printConsole("!!! View \"" + vID + "\" not visible " + nview);
          return -1;
       }
@@ -2525,85 +2525,66 @@ public final class Command implements Runnable {
    protected String execCmocCmd(String param, String label) {
       try {
 
-         int spaceOrder = -1;
-         int timeOrder = -1;
+         int firstOrder = -1;
+         int secondOrder = -1;
          double radius = 0;
+         double duration=0;
          boolean fov = false;
+         int mode = 0;   // 0 -spoc,  1-tmoc,  2-stmoc
          double thresHold = Double.NaN;
          double pixMin = Double.NaN;
          double pixMax = Double.NaN;
-         int command = PlanMocAlgo.UNION;
-
-         // Extraction d'un éventuel paramètre -order=nn[/mm]
-         int i = param.indexOf("-order=");
-         if( i >= 0 ) {
-            int j = i + 7;
-            for( ; i < param.length() && !(Character.isSpace(param.charAt(i)) || param.charAt(i)=='/'); i++ ) ;
-            spaceOrder = Integer.parseInt(param.substring(j, i));
+         double jdmin = Double.NaN;
+         double jdmax = Double.NaN;
+         int command = -1;
+         int posParam=0;  // Position du paramètre (voir commentaire sur OPERATION
+//         String s;
+         
+         // Découpage des paramètres
+         Tok tok = new Tok(param);
+         while( tok.hasMoreTokens() ) {
+            posParam++;
+            String s = tok.nextToken();
+            int i = s.indexOf('=');
+            String cle = i<0 ? s : s.substring(0,i);
+            String val = i<0 ? null : s.substring(i+1);
+            boolean found=true;
             
-            if( i<param.length() && param.charAt(i)=='/' ) {
-               j=++i;
-               for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ ) ;
-               timeOrder = Integer.parseInt(param.substring(j, i));
+            if( cle.equalsIgnoreCase("-order") ) {
+               Tok tok1 = new Tok(Tok.unQuote(val),"/ ,");
+               try{ firstOrder = Integer.parseInt( tok1.nextToken() ); } catch( Exception e) { }
+               if( tok1.hasMoreTokens() ) secondOrder= Integer.parseInt( tok1.nextToken() );
+               posParam--;
+            } 
+            else if( cle.equalsIgnoreCase("-pixelCut") ) {
+               Tok tok1 = new Tok(Tok.unQuote(val),"/ ,");
+               pixMin = Double.parseDouble(tok1.nextToken());
+               pixMax = Double.parseDouble(tok1.nextToken());
+            } 
+            else if( cle.equalsIgnoreCase("-timeRange") ) {
+               Tok tok1 = new Tok(Tok.unQuote(val),"/ ,");
+               try { jdmin = Astrodate.dateToJD(tok1.nextToken()); } catch( Exception e) {}
+               try { jdmax = Astrodate.dateToJD(tok1.nextToken()); } catch( Exception e) {}
+            } 
+            else if( cle.equalsIgnoreCase("-threshold") ) thresHold = Double.parseDouble( val );
+            else if( cle.equalsIgnoreCase("-radius") ) radius = Server.getAngleInArcmin(val, Server.RADIUSs);
+            else if( cle.equalsIgnoreCase("-duration") ) duration = Double.parseDouble( val );
+            else if( cle.equalsIgnoreCase("-fov") ) fov=true;
+            else if( cle.equalsIgnoreCase("-time") || cle.equals("-t")) mode=1;
+            else if( cle.equalsIgnoreCase("-spacetime") || cle.equals("-st")) mode=2;
+            else if( posParam==1 ) {   // on vérifie que ce serait l'unique param pour éviter de considérer 
+               found=false;           // un nom de plan ayant le même label qu'une opération
+               for( String opName: PlanMocAlgo.OPERATION ) {
+                  if( cle.equalsIgnoreCase("-"+opName) ) { command = PlanMocAlgo.getOp(opName); found=true; }
+               }
+            } else found=false;
+
+            // On tombe sur un paramètre inconnu, on suppose que c'est la suite de l'instruction
+            if( !found ) {
+               if( cle.charAt(0)=='-' ) throw new Exception("Unknown cmoc param ["+cle+"]"); 
+               param = param.substring( tok.getPreviousPos() ); 
+               break;
             }
-            
-            param = i == param.length() ? "" : param.substring(i).trim();
-         }
-
-         // Extraction d'un éventuel paramètre -threshold=0.x
-         i = param.indexOf("-threshold=");
-         if( i >= 0 ) {
-            int j = i + 12;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ )
-               ;
-            thresHold = Double.parseDouble(param.substring(j, i));
-            param = i == param.length() ? "" : param.substring(i).trim();
-         }
-
-         // Extraction d'un éventuel paramètre -radius=xxunit (par défaut en ARCSEC)
-         i = param.indexOf("-radius=");
-         if( i >= 0 ) {
-            int j = i + 8;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ )
-               ;
-            radius = Server.getAngleInArcmin(param.substring(j, i), Server.RADIUSs);
-            param = i == param.length() ? "" : param.substring(i).trim();
-         }
-
-         // Extraction d'un éventuel paramètre -fov
-         i = param.indexOf("-fov");
-         if( i >= 0 ) {
-            fov = true;
-            param = i == param.length() ? "" : param.substring(i).trim();
-         }
-
-         // Extraction d'un éventuel paramètre -pixelCut="min max"
-         i = param.indexOf("-pixelCut=");
-         if( i >= 0 ) {
-            int j = i + 10;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ ) ;
-            for( ; i < param.length() && Character.isSpace(param.charAt(i)); i++ ) ;
-            for( ; i < param.length() && !Character.isSpace(param.charAt(i)); i++ ) ;
-            String c = Tok.unQuote(param.substring(j, i));
-            Tok tok = new Tok(c);
-            try {
-               pixMin = Double.parseDouble(tok.nextToken());
-            } catch( Exception e ) {
-            }
-            try {
-               pixMax = Double.parseDouble(tok.nextToken());
-            } catch( Exception e ) {
-            }
-            param = i == param.length() ? "" : param.substring(i).trim();
-         }
-
-         // Extraction d'un éventuel paramètre "-union, -inter ..."
-         i = param.indexOf(' ');
-         if( i < 0 ) i = param.length();
-         String opName = param.substring(0, i);
-         if( opName.startsWith("-") ) {
-            command = PlanMocAlgo.getOp(opName);
-            if( command > 0 ) param = param.substring(i);
          }
 
          // Récupération des plans concernés
@@ -2615,46 +2596,87 @@ public final class Command implements Runnable {
             for( Plan p1 : p ) {
                if( type == -1 ) type = p1.type; // Initialisation du type de plan pris en compte (TOOL, CATALOG ou IMAGE, mais
                                                 // séparémment)
-               if( p1.type != type ) throw new Exception("mixed source plane types are not authorized");
+               if( p1.type != type ) throw new Exception("Mixed source plane types are not authorized");
                if( p1.type == Plan.TOOL ) a.view.selectAllInPlanWithoutFree(p1, 0);
+            }
+         }
+         
+         // Time MOC sur catalogues ?
+         if( mode==1 ) {
+            if( type==Plan.CATALOG || type==Plan.ALLSKYCAT ) {
+               a.calque.newPlanTMoc(label, p, firstOrder, duration);
+               a.calque.repaintAll();
+               return "";
+               
+            } else if( type!=Plan.ALLSKYSTMOC && type!=Plan.ALLSKYTMOC && type!=Plan.ALLSKYMOC ) {
+               throw new Exception("Unsupported plane for time MOC generation (required time info)");
+            }
+         }
+
+         // Space Time MOC sur catalogues ?
+         if( mode==2 ) {
+            if( type==Plan.CATALOG || type==Plan.ALLSKYCAT ) {
+               a.calque.newPlanSTMoc(label, p, firstOrder, secondOrder, duration, radius, fov);
+               a.calque.repaintAll();
+               return "";
+               
+            // Ajout d'un range temporel à un ou plusieurs MOC spatiaux pour produire un STMOC à un intervalle temporel
+            } else if( type==Plan.ALLSKYMOC ) {
+               a.calque.newPlanSTMoc(label, p, firstOrder, secondOrder, jdmin, jdmax);
+               a.calque.repaintAll();
+               return "";
+              
+            } else if( type!=Plan.ALLSKYSTMOC && type!=Plan.ALLSKYTMOC && type!=Plan.ALLSKYMOC ) {
+               throw new Exception("Unsupported plane for space time MOC generation (required time and space info)");
             }
          }
 
          // Pour des objets
          if( type == -1 || type == Plan.TOOL ) {
-            int n = a.createPlanMocByRegions(spaceOrder);
+            int n = a.createPlanMocByRegions(firstOrder);
             Plan pMoc = a.calque.getPlan(n);
             if( label != null ) pMoc.setLabel(label);
 
-            // Pour les MOCs
          } else if( type == Plan.ALLSKYMOC || type == Plan.ALLSKYTMOC || type == Plan.ALLSKYSTMOC) {
-            boolean flagCheckSpaceOrder = spaceOrder == -1;
-            boolean flagCheckTimeOrder = timeOrder == -1;
-            PlanMoc[] pList = new PlanMoc[p.length];
-            int spMoc=-1,tMoc=-1;
-            for( int j = 0; j < p.length; j++ ) {
-               pList[j] = (PlanMoc) p[j];
-               if( flagCheckSpaceOrder || flagCheckTimeOrder ) {
-                  Moc moc = pList[j].moc;
-                  if( moc instanceof SpaceTimeMoc ) {
-                     spMoc = ((SpaceTimeMoc)moc).getTimeOrder();
-                     tMoc = ((SpaceTimeMoc)moc).getSpaceOrder();
-                  } else if( moc instanceof TimeMoc ) tMoc = moc.getMocOrder();
-                  else spMoc=moc.getMocOrder();
-                  if( flagCheckSpaceOrder && spMoc>spaceOrder ) spaceOrder=spMoc;
-                  if( flagCheckTimeOrder && tMoc>timeOrder ) timeOrder=tMoc;
+            
+            // Opérations sur les MOCs
+            if( command!=-1 ) {
+               boolean flagCheckSpaceOrder = firstOrder == -1;
+               boolean flagCheckTimeOrder = secondOrder == -1;
+               PlanMoc[] pList = new PlanMoc[p.length];
+               int spMoc=-1,tMoc=-1;
+               for( int j = 0; j < p.length; j++ ) {
+                  pList[j] = (PlanMoc) p[j];
+                  if( flagCheckSpaceOrder || flagCheckTimeOrder ) {
+                     Moc moc = pList[j].moc;
+                     if( moc instanceof SpaceTimeMoc ) {
+                        spMoc = ((SpaceTimeMoc)moc).getTimeOrder();
+                        tMoc = ((SpaceTimeMoc)moc).getSpaceOrder();
+                     } else if( moc instanceof TimeMoc ) tMoc = moc.getMocOrder();
+                     else spMoc=moc.getMocOrder();
+                     if( flagCheckSpaceOrder && spMoc>firstOrder ) firstOrder=spMoc;
+                     if( flagCheckTimeOrder && tMoc>secondOrder ) secondOrder=tMoc;
+                  }
+               }
+               a.calque.newPlanMoc(label, pList, command, firstOrder,secondOrder);
+               
+            // Projections ?
+            } else {
+               
+               // Crop temporel d'un STMOC vers un MOC
+               if( p[0] instanceof PlanSTMoc ) {
+                  a.calque.newPlanMoc(label, (PlanMoc)p[0], jdmin, jdmax);
                }
             }
-            a.calque.newPlanMoc(label, pList, command, spaceOrder,timeOrder);
 
             // Pour les cartes de probabilités
          } else if( !Double.isNaN(thresHold) && type == Plan.ALLSKYIMG ) {
-            a.calque.newPlanMoc(label, p, spaceOrder, 0, Double.NaN, Double.NaN, thresHold, fov);
+            a.calque.newPlanMoc(label, p, firstOrder, 0, Double.NaN, Double.NaN, thresHold, fov);
 
             // Pour des catalogues ou des images
          } else {
-            if( spaceOrder == -1 ) spaceOrder = 13;
-            a.calque.newPlanMoc(label, p, spaceOrder, radius, pixMin, pixMax, Double.NaN, fov);
+            if( firstOrder == -1 ) firstOrder = 13;
+            a.calque.newPlanMoc(label, p, firstOrder, radius, pixMin, pixMax, Double.NaN, fov);
          }
          a.calque.repaintAll();
 

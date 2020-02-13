@@ -179,7 +179,9 @@ import cds.xml.XMLParser;
  * @beta          - pointed thumbnails <br>
  * @beta          - sort and hiearchy control <br>
  * @beta          - drag & drop to view panels
+ * @beta    <LI> Stack backup improvements (HiPS, MOC support)
  * @beta    <LI> FITS WCS GLS support
+ * @beta    <LI> 2 horizontal panel 2/3 - 1/3 mode
  * @beta    <LI> Distance tool improvement
  * @beta    <LI> Coordinate calculator tool improvement
  * @beta    <LI> Log control adapted to Debian policy
@@ -234,7 +236,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.011"; //"v10.145";
+   static public final    String VERSION = "v11.013"; //"v10.145";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -333,6 +335,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static public Color COLOR_RED;
    static public Color COLOR_BLUE;
    static public Color COLOR_VERTDEAU;
+   static public Color COLOR_BLUETIME;
    static public Color COLOR_GREEN;
    static public Color COLOR_GREEN_LIGHT;
    static public Color COLOR_GREEN_LIGHTER;
@@ -348,6 +351,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       COLOR_BLUE = Color.blue;
       COLOR_RED = Color.red;
+      COLOR_BLUETIME = new Color(140,140,255);
       COLOR_VERTDEAU = new Color(85,161,137);
       COLOR_GREEN = new Color(27,137,0);
       COLOR_GREEN_LIGHT = new Color(27,177,0);
@@ -406,6 +410,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_STATUS_LEFT_FOREGROUND = COLOR_TEXT_FOREGROUND;
          COLOR_RED = new Color(214,45,0);
          COLOR_BLUE = new Color(120,149,220);
+         COLOR_BLUETIME = COLOR_BLUE.darker().darker();
          COLOR_VERTDEAU = COLOR_VERTDEAU.brighter();
          COLOR_FOREGROUND_ANCHOR = new Color(0,136,204);
          COLOR_GREEN = new Color(57,167,0);
@@ -685,7 +690,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miProp,miGrid,miNoGrid,miReticle,miReticleL,miNoReticle,
    miTarget,miOverlay,miConst,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
    /* miPrevPos,miNextPos, */
-   miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
+   miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel2t,miPanel4,miPanel9,miPanel16,
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,
@@ -693,7 +698,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
    miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,
-   miTMocGen,miTMocGenCat,miTMocGenObj,miSTMocGen,miSTMocGenCat,miSTMocGenObj,miMocOp,
+   miTMocGen,miTMocGenCat,miTMocGenObj,miSTMocGen,miSTMocGenCat,miSTMocGenObj,miSTMocGenMoc,miMocOp,
    miMocToOrder,miMocFiltering,miMocCrop,
    miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
    miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
@@ -749,10 +754,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,PLOTVIEW,
    DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,COPIER,COLLER,
    RGB,MOSAIC,BLINK,SPECTRUM,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
-   PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
+   PANEL1,PANEL2C,PANEL2L,PANEL2T,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,
-   STMOCGEN,STMOCGENCAT,STMOCGENOBJ,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
+   STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
    MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCEXTRACTSMOC,MOCEXTRACTTMOC,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
@@ -1153,6 +1158,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PANEL1  = chaine.getString("MPANEL1");
       PANEL2C = chaine.getString("MPANEL2");
       PANEL2L  = chaine.getString("MPANEL2L");
+      PANEL2T  = chaine.getString("MPANEL2T");
       PANEL4  = chaine.getString("MPANEL4");
       PANEL9  = chaine.getString("MPANEL9");
       PANEL16 = chaine.getString("MPANEL16");
@@ -1200,11 +1206,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOCGENIMGS  =chaine.getString("MMOCGENIMGS");
       MOCGENCAT   =chaine.getString("MMOCGENCAT");
       TMOCGEN     =chaine.getString("MTMOCGEN");
-      TMOCGENCAT   =chaine.getString("MTMOCGENCAT");
-      TMOCGENOBJ   =chaine.getString("MTMOCGENOBJ");
-      STMOCGEN     =chaine.getString("MSTMOCGEN");
-      STMOCGENCAT   =chaine.getString("MSTMOCGENCAT");
-      STMOCGENOBJ   =chaine.getString("MSTMOCGENOBJ");
+      TMOCGENCAT  =chaine.getString("MTMOCGENCAT");
+      TMOCGENOBJ  =chaine.getString("MTMOCGENOBJ");
+      STMOCGEN    =chaine.getString("MSTMOCGEN");
+      STMOCGENCAT =chaine.getString("MSTMOCGENCAT");
+      STMOCGENOBJ =chaine.getString("MSTMOCGENOBJ");
+      STMOCGENMOC =chaine.getString("MSTMOCGENMOC");
       MOCM     =chaine.getString("MMOCOP");
       MOCTOORDER     =chaine.getString("MMOCTOORDER");
       MOCFILTERING =chaine.getString("MMOCFILTERING");
@@ -1358,7 +1365,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             { {MOC},
                {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA, MOCEXTRACTSMOC,MOCCROP}, 
                {TMOCGEN,TMOCGENCAT,TMOCGENOBJ,MOCEXTRACTTMOC}, 
-               {STMOCGEN,STMOCGENCAT,STMOCGENOBJ},
+               {STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{},{MOCHELP}
             },
             { /*{MTOOLS},
@@ -1395,9 +1402,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
             },
             { {MVIEW},
                {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
-               {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL2L,
+               {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL2L,"%"+PANEL2T,
                   "%"+PANEL4+"|shift F2","%"+PANEL9+"|shift F3","%"+PANEL16+"|shift F4"},
-                  {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW}, {"?"+PLOTVIEW},
+                  {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW}, {},{PLOTVIEW},
                   //                {},{"?"+LOCKVIEW},{DELLOCKVIEW},
                   {},{"?"+STICKVIEW},
                   {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
@@ -2020,6 +2027,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,PANEL1))  miPanel1  = ji;
       else if( isMenu(m,PANEL2C))  miPanel2c  = ji;
       else if( isMenu(m,PANEL2L))  miPanel2l  = ji;
+      else if( isMenu(m,PANEL2T))  miPanel2t  = ji;
       else if( isMenu(m,PANEL4))  miPanel4  = ji;
       else if( isMenu(m,PANEL9))  miPanel9  = ji;
       else if( isMenu(m,PANEL16)) miPanel16 = ji;
@@ -2080,6 +2088,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,STMOCGEN) )   miSTMocGen  = ji;
       else if( isMenu(m,STMOCGENCAT) )   miSTMocGenCat  = ji;
       else if( isMenu(m,STMOCGENOBJ) )   miSTMocGenObj  = ji;
+      else if( isMenu(m,STMOCGENMOC) )   miSTMocGenMoc  = ji;
       else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
       else if( isMenu(m,NORM) )   miNorm    = ji;
       else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -3228,7 +3237,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private void VOReport() {
       FrameVOTool.display(this);
    }
-
+   
    // Juste pour eviter que la classe Printer.class ne soit chargee
    // dans la version applet
    // RETIRER POUR DES PROBLEMES AVEC JSHRINK
@@ -3388,7 +3397,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,ONEVIEW) ) { view.oneView();
       } else if( isMenu(s,NEXT) )  { view.next(1);
       } else if( isMenu(s,LOCKVIEW) )  { view.getCurrentView().switchLock();
-      } else if( isMenu(s,PLOTVIEW) )  { view.getCurrentView().switchView();
+      } else if( isMenu(s,PLOTVIEW) )  { createTimeView();
       } else if( isMenu(s,NORTHUP) )  { view.getCurrentView().switchNorthUp();
       } else if( isMenu(s,DELLOCKVIEW) )  { view.freeLock(); calque.repaintAll();
       } else if( isMenu(s,STICKVIEW) ) { view.stickSelectedView(); calque.repaintAll();
@@ -3431,7 +3440,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //      } else if( isMenu(s,NEXTPOS)) { view.redo(false);
       } else if( isMenu(s,SYNC))   { switchMatch(false);
       } else if( isMenu(s,SYNCPROJ))   { switchMatch(true);
-      } else if( isMenu(s,PANEL1) || isMenu(s,PANEL1) || isMenu(s,PANEL2C) || isMenu(s,PANEL2L)
+      } else if( isMenu(s,PANEL1) || isMenu(s,PANEL1) || isMenu(s,PANEL2C) || isMenu(s,PANEL2L) || isMenu(s,PANEL2T)
             || isMenu(s,PANEL4) || isMenu(s,PANEL9) || isMenu(s,PANEL16))   { panel(s);
       } else if( isMenu(s,PAN))    { pan();
       } else if( isMenu(s,RSAMP))  { rsamp();
@@ -3503,6 +3512,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,TMOCGENOBJ) ){ updateTMocGenObj();
       } else if( isMenu(s,STMOCGENCAT) ){ updateSTMocGenCat();
       } else if( isMenu(s,STMOCGENOBJ) ){ updateSTMocGenObj();
+      } else if( isMenu(s,STMOCGENMOC) ){ showProp();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
       } else if( isMenu(s,MOCCROP) )  { crop();
@@ -3704,6 +3714,30 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.newPlanCatalogBySelectedObjet(uniqTable);
       console.printCommand("ccat"+(uniqTable?" -uniq ":""));
    }
+   
+   // Creation d'une vue temporelle
+   private void createTimeView() {
+      Plan p = calque.getFirstSelectedorNotPlanTime();
+      if( p==null ) return;
+      
+      // Recherche de la prochaine vue libre
+      int nview=-1;
+      int m=view.getNbView();
+      for( int i=0; i<m; i++ ) {
+         if( view.viewSimple[i].isFree() ) { nview=i; break; }
+      }
+      
+      if( nview==-1 ) {
+         // Faut-il créer une nouvelle vue ?
+         ViewSimple cv = view.getCurrentView();
+         if( !cv.isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2T);
+         nview = aladin.view.getLastNumView(p);
+      }
+
+      view.setPlanRef(nview, p);
+//      view.viewSimple[nview].addPlotTable(p, -1, -1,true);
+      view.repaintAll();
+  }
 
    /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
    protected void createPlotCat() {
@@ -3725,7 +3759,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
          // Faut-il créer une nouvelle vue ?
          ViewSimple cv = view.getCurrentView();
          if( !cv.isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2C);
-         
          nview = aladin.view.getLastNumView(p);
       }
       
@@ -3753,18 +3786,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    /** Création d'un plan SpaceMoc depuis le plan STMOC sélectionné */
    protected void cropSMOC() {
-      Plan p = calque.getFirstSelectedPlan();
-      if( p==null || !(p instanceof PlanSTMoc) ) { aladin.warning("No STMOC"); return; }
-      SpaceMoc moc = ((PlanSTMoc)p).getCurrentSpaceMoc();
+      PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
+      if( p==null) { aladin.warning("No STMOC in the stack"); return; }
+      SpaceMoc moc = p.getCurrentSpaceMoc( view.getCurrentView(), true );
       calque.newPlanMOC(moc, "MOC from "+p.label);
    }
 
    /** Création d'un plan TimeMoc depuis le plan STMOC sélectionné */
    protected void cropTMOC() {
-      Plan p = calque.getFirstSelectedPlan();
-      if( p==null || !(p instanceof PlanSTMoc) ) { aladin.warning("No STMOC"); return; }
-      TimeMoc moc = ((PlanSTMoc)p).getCurrentTimeMoc();
-      calque.newPlanMOC(moc, "MOC from "+p.label);
+      PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
+      if( p==null ) { aladin.warning("No STMOC in the stack"); return; }
+      TimeMoc moc = p.getCurrentTimeMoc(  );
+      calque.newPlanMOC(moc, "TMOC from "+p.label);
+      console.printCommand("cmoc -time "+p.label);
    }
 
    /** Création d'un fichier map HEALpix à partir d'un PlanImage et affichage de cette map */
@@ -4003,7 +4037,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Cycle sur les modes match (aucun, simple match, match + orientation) */
    protected void cycleMatch() {
       int syncMode = match.getMode();
-      int mode = syncMode==3 ? 0 :  3;
+      
+      int mode;
+      
+      // Le mode 3 est impossible actuellement si les panels n'ont pas même taille
+      if( view.getModeView()==ViewControl.MVIEW2T ) {
+         mode = syncMode<=1 ? 2 : 1;
+         
+      } else mode = syncMode==3 ? 0 :  3;
 
       // Pour conserver la même position approximative après un retour à la normal
       if( mode==0 ) view.setZoomRaDecForSelectedViews(view.getCurrentView().getZoom(),null);
@@ -4015,6 +4056,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( mode==0 || mode==1 && view.isSelectCompatibleViews() ) {
          if( mode==0 )  view.unselectViewsPartial();
       }
+      
       match(mode);
    }
    
@@ -4240,6 +4282,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       frameMocGenRes.maj();
    }
+   
+   /** Affiche les properties du plan courant */
+   protected void showProp() {
+      Plan p = calque.getFirstSelectedPlan();
+      if( p==null ) return;
+      Properties.createProperties(p);
+      Properties.getProperties(p).createTimeField();
+   }
  
    /** Mise à jour de la fenêtre pour la génération d'un T-MOC à partir des sources sélectionnées */
    protected void updateSTMocGenObj() {
@@ -4361,6 +4411,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
    protected HealpixMoc createMocByRegions(int order) {
       
+      // reset des boutons
+      toolBox.tool[ToolBox.DRAW].setMode(Tool.UP);
+      toolBox.tool[ToolBox.PHOT].setMode(Tool.UP);
+      toolBox.tool[ToolBox.SELECT].setMode(Tool.DOWN);
+      toolBox.toolMode();
+      
       ArrayList<HealpixMoc> arr = new ArrayList<>(10000);
       HashSet<Obj> set = new HashSet<>();
       for( Obj o : view.vselobj ) {
@@ -4398,15 +4454,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //         if( levelTrace>=3 ) errorMoc( order, (Ligne)o);
          
          // Si on prend plus de 100Mo on va faire une union intermédiaire
-         if( arr.size()%1000==0 ) System.out.println("MOCs "+arr.size());
+//         if( arr.size()%1000==0 ) System.out.println("MOCs "+arr.size());
          if( arr.size()>=10000 ) {
             try {
-               long t0 = Util.getTime();
+//               long t0 = Util.getTime();
                HealpixMoc moc;
                moc = getUnionMoc( arr );
                arr.clear();
                arr.add(moc);
-               System.out.println("Union in "+(Util.getTime()-t0)+"ns");
+//               System.out.println("Union in "+(Util.getTime()-t0)+"ns");
             } catch( Exception e ) {
                if( levelTrace>=3 ) e.printStackTrace();
                return null;
@@ -4414,6 +4470,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
 
       }
+      
+      // Déselection des objets ayant été utilisés
+      view.deSelectLigneAndCercle();
       
       try {
          if( arr.size()==0 ) return null;
@@ -4444,6 +4503,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Calcul d'un ciel complet pour éviter des unions inutiles
       long max=HealpixMoc.pow2(HealpixMoc.MAXORDER);
       max=12L*max*max;
+      
+      // Détermination de l'order maximal
+      int n;
+      for( Moc m : a ) if( (n=m.getMocOrder())>maxMocOrder ) maxMocOrder=n; 
       
       HealpixMoc moc = new HealpixMoc(maxMocOrder);
       moc.toRangeSet();
@@ -5848,10 +5911,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
             miLock.setEnabled(v!=null && !v.isProjSync());
             miLock.setSelected(v!=null && v.locked);
          }
-         if( miPlot!=null ) {
-            miPlot.setEnabled(v!=null && !v.isFree() && v.pref.isCatalog());
-            miPlot.setSelected(v!=null && v.isPlot());
-         }
+         if( miPlot!=null ) { miPlot.setEnabled(calque.getFirstSelectedorNotPlanTime()!=null); }
+         
          if( miNorthUp!=null ) miNorthUp.setEnabled(v!=null && v.canBeNorthUp() );
          if( miNorthUp!=null ) miNorthUp.setSelected(v!=null && v.northUp);
          if( miDelLock!=null ) miDelLock.setEnabled( view.hasLock() );
@@ -5885,8 +5946,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miGlassTable!=null ) miGlassTable.setSelected(toolBox.tool[ToolBox.WEN].mode==Tool.DOWN && calque.zoom.zoomView.isPixelTable() );
          if( miPanel1!=null ) {
             if( m==ViewControl.MVIEW1 ) miPanel1.setSelected(true);
-            else if( m==ViewControl.MVIEW2L ) miPanel2c.setSelected(true);
-            else if( m==ViewControl.MVIEW2C ) miPanel2l.setSelected(true);
+            else if( m==ViewControl.MVIEW2L ) miPanel2l.setSelected(true);
+            else if( m==ViewControl.MVIEW2C ) miPanel2c.setSelected(true);
+            else if( m==ViewControl.MVIEW2T ) miPanel2t.setSelected(true);
             else if( m==ViewControl.MVIEW4 ) miPanel4.setSelected(true);
             else if( m==ViewControl.MVIEW9 ) miPanel9.setSelected(true);
             else if( m==ViewControl.MVIEW16 )miPanel16.setSelected(true);
@@ -5930,9 +5992,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miTMocGen!=null ) miTMocGen.setEnabled( nbPlanCatTime>0 || pc instanceof PlanSTMoc );
          if( miTMocGenCat!=null ) miTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miTMocGenObj!=null ) miTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
-         if( miSTMocGen!=null ) miSTMocGen.setEnabled( nbPlanCatTime>0 );
+         if( miSTMocGen!=null ) miSTMocGen.setEnabled( nbPlanCatTime>0 || pc!=null && pc.type==Plan.ALLSKYMOC );
          if( miSTMocGenCat!=null ) miSTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miSTMocGenObj!=null ) miSTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
+         if( miSTMocGenMoc!=null ) miSTMocGenMoc.setEnabled( pc!=null && pc.type==Plan.ALLSKYMOC );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miMocToOrder!=null ) miMocToOrder.setEnabled(nbPlanMoc>0);
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );
@@ -7709,7 +7772,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( firstMem==0 ) firstMem=mem;
       mem-=firstMem;
       String s= nbSel+" sel / "+nbSrc+" src    "
-            + (nbView>view.getModeView()?nbView+" views   ":"")
+            + (nbView>view.getNbView()?nbView+" views   ":"")
             +(fps>0?(int)Math.round(fps)+"fps / ":"")+mem+MB;
       memStatus.setText(s);
       if( infoPanel!=null ) infoPanel.doLayout();

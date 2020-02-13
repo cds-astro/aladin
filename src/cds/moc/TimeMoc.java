@@ -26,7 +26,7 @@ import java.util.InputMismatchException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import cds.tools.Astrodate;
+import cds.aladin.Coord;
 
 /**
  * Extension of MOC principle to temporal axis. 
@@ -66,6 +66,30 @@ public class TimeMoc extends SpaceMoc {
       return clone1(moc);
    }
    
+   /** Retourne la composante temporelle du MOC */
+   public TimeMoc getTimeMoc() throws Exception { return this; }
+   
+   /** Retourne la composante spatiale du MOC */
+   public SpaceMoc getSpaceMoc() throws Exception { throw new Exception("No spatial dimension"); }
+   
+
+   public Moc union(Moc moc) throws Exception {
+      return operation(moc.getTimeMoc(),0);
+   }
+   public Moc intersection(Moc moc) throws Exception {
+      return operation(moc.getTimeMoc(),1);
+   }
+   public Moc subtraction(Moc moc) throws Exception {
+      return operation(moc.getTimeMoc(),2);
+   }
+
+   public Moc difference(Moc moc) throws Exception {
+      TimeMoc m = moc.getTimeMoc();
+      Moc inter = intersection(m);
+      Moc union = union(m);
+      return union.subtraction(inter);
+   }
+   
    public TimeMoc complement() throws Exception {
       TimeMoc allsky = new TimeMoc();
       allsky.add("0/0");
@@ -77,22 +101,6 @@ public class TimeMoc extends SpaceMoc {
       return res;
    }
 
-   
-   // Generic operation
-   protected SpaceMoc operation(SpaceMoc moc,int op) throws Exception {
-      testCompatibility(moc);
-      toRangeSet();
-      moc.toRangeSet();
-      SpaceMoc res = new TimeMoc();
-      switch(op) {
-         case 0 : res.spaceRange = spaceRange.union(moc.spaceRange); break;
-         case 1 : res.spaceRange = spaceRange.intersection(moc.spaceRange); break;
-         case 2 : res.spaceRange = spaceRange.difference(moc.spaceRange); break;
-      }
-      res.toHealpixMoc();
-      return res;
-   }
-   
    /** True if the jd date is in TMOC */
    public  boolean contains(double jd) {
       long npix = (long)( jd * DAYMICROSEC );
@@ -183,61 +191,30 @@ public class TimeMoc extends SpaceMoc {
    
    static public void main( String argv[] ) {
       try {
+         System.out.println("  Order    Space res.   Time resolution");
          for( int i=0; i<=MAXORDER; i++ ) {
-            long d = getDuration(i);
-            System.out.println("order "+i+" cellRes="+ d+"µs => "+getTemps(d));
+            String spaceRes = Coord.getUnit(  Math.sqrt( SpaceMoc.getPixelArea( i ) ));
+            String timeRes = getTemps(  getDuration(i) );
+            
+            System.out.printf("   %2d     %-10s %s\n",i,spaceRes,timeRes);
          }
-         long max = getDuration(MAXORDER) * ( 1L<<(2*MAXORDER) );
-         System.out.println("At order "+MAXORDER+" we can address "+getTemps(max)+" with a resolution of 1µs");
+//         long max = getDuration(MAXORDER) * ( 1L<<(2*MAXORDER) );
+//         System.out.println("At order "+MAXORDER+" we can address "+getTemps(max)+" with a resolution of 1µs");
          
-         TimeMoc tmoc = new TimeMoc();
-         double jdmin = Astrodate.dateToJD(2000, 06, 18, 12, 00, 00);  // 18 juin 2000 à midi
-         double jdmax = Astrodate.dateToJD(2017, 12, 25, 00, 00, 00);  // Noël 2017 à minuit
-         tmoc.add(jdmin, jdmax);
-         tmoc.toHealpixMoc();
-         System.out.println("Moc="+tmoc);
-         System.out.println("min="+Astrodate.JDToDate( tmoc.getTimeMin()));
-         System.out.println("max="+Astrodate.JDToDate( tmoc.getTimeMax()));
-         System.out.println("duration="+getTemps( tmoc.getUsedArea() ));
+//         TimeMoc tmoc = new TimeMoc();
+//         double jdmin = Astrodate.dateToJD(2000, 06, 18, 12, 00, 00);  // 18 juin 2000 à midi
+//         double jdmax = Astrodate.dateToJD(2017, 12, 25, 00, 00, 00);  // Noël 2017 à minuit
+//         tmoc.add(jdmin, jdmax);
+//         tmoc.toHealpixMoc();
+//         System.out.println("Moc="+tmoc);
+//         System.out.println("min="+Astrodate.JDToDate( tmoc.getTimeMin()));
+//         System.out.println("max="+Astrodate.JDToDate( tmoc.getTimeMax()));
+//         System.out.println("duration="+getTemps( tmoc.getUsedArea() ));
       } catch( Exception e ) {
          e.printStackTrace();
       }
    }
    
-   
-   /*
-   0      9133y 171d 11h 22m 31.711744s
-   1      2283y 134d 4h 20m 37.927936s
-   2      570y 307d 11h 35m 9.481984s
-   3      142y 259d 11h 53m 47.370496s
-   4      35y 247d 11h 58m 26.842624s
-   5      8y 335d 19h 29m 36.710656s
-   6      2y 83d 22h 52m 24.177664s
-   7      203d 14h 43m 6.044416s
-   8      50d 21h 40m 46.511104s
-   9      12d 17h 25m 11.627776s
-   10     3d 4h 21m 17.906944s
-   11     19h 5m 19.476736s
-   12     4h 46m 19.869184s
-   13     1h 11m 34.967296s
-   14     17m 53.741824s
-   15     4m 28.435456s
-   16     1m 7.108864s
-   17     16.777216s
-   18     4.194304s
-   19     1.048576s
-   20     262.144ms
-   21     65.536ms
-   22     16.384ms
-   23     4.096ms
-   24     1.024ms
-   25     256µs
-   26     64µs
-   27     16µs
-   28     4µs
-   29     1µs
-   */
-
    
    static private long Y =  (long)(365.25*86400) * 1000000L;
    static private long D =  86400000000L;

@@ -115,6 +115,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long DALIEX  = 1L<<49;
    static final public long TMOC    = 1L<<50;
    static final public long STMOC   = 1L<<51;
+   static final public long HPXMOC  = 1L<<52;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
@@ -122,7 +123,7 @@ public class MyInputStream extends FilterInputStream {
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","FITSCMP","HEALPIX","GLU","ARGB","PDS",
       "SMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC", };
+      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC", "HPXMOC" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -333,27 +334,41 @@ public class MyInputStream extends FilterInputStream {
          }catch( Exception e ) {}
       }
 
-      // Healpix
-      String o = getFitsValue("ORDERING");
-      if( (type & XFITS) !=0 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
-            || "UNIQ".equals(o) || "NUNIQ".equals(o) ) ) {
-         String m = getFitsValue("MOC");
+      // Healpix ? or MOC ?
+      if( (type & XFITS) !=0 ) {
+         String o = getFitsValue("ORDERING");
+         int tfields = 1;
+         try { tfields=Integer.parseInt( getFitsValue("TFIELDS") ); } catch( Exception e ) {}
          
-         // Méthode directe
-         if( m!=null ) {
-            type |= m.equals("SPACE") ? SMOC : m.equals("TIME") ? TMOC : STMOC;
+         if( tfields==1 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
+               || "UNIQ".equals(o) || "NUNIQ".equals(o)) ) {
+            String m = getFitsValue("MOC");
+
+            // Description explicite ?
+            if( "SPACE".equals(m) ) type |= SMOC;
+            else if( "TIME".equals(m) ) type |= TMOC;
+            else if( "TIME.SPACE".equals(m) ) type |= STMOC;
+
+            // Pour supporter certains STMOCS de test
+            else if( "SPACETIME".equals(m) ) type |= STMOC;
+
+            // Pour supporter les TMOC et STMOC prototypes
+            else {
+               boolean timeSys = hasFitsKey("TIMESYS",null);
+               boolean cooSys = hasFitsKey("COORDSYS",null);
+               if( timeSys && !cooSys) type |= TMOC;
+               else if( timeSys && cooSys ) type |= STMOC;
+               else type |= SMOC;
+            }
             
-         // Pour supporter les TMOC et STMOC prototypes
          } else {
-            boolean timeSys = hasFitsKey("TIMESYS",null);
-            boolean cooSys = hasFitsKey("COORDSYS",null);
-            if( timeSys && !cooSys) type |= TMOC;
-            else if( timeSys && cooSys ) type |= STMOC;
-            else type |= SMOC;
+            if( (hasFitsKey("PIXTYPE", "HEALPIX") || "NEST".equals(o) || "RING".equals(o))
+                  && !hasFitsKey("XTENSION","IMAGE") )  {
+               type |= HEALPIX;
+               if( "NUNIQ".equals(o) ) type |= HPXMOC;
+            }
          }
       }
-      else if( (hasFitsKey("PIXTYPE", "HEALPIX") || "NEST".equals(o) || "RING".equals(o))
-            && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
 
       // Fits compressé
       if(  (type&XFITS)!=0 ) {

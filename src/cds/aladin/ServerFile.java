@@ -43,6 +43,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import cds.allsky.Constante;
+import cds.moc.HealpixMoc;
+import cds.moc.SpaceTimeMoc;
+import cds.moc.TimeMoc;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.XMLConsumer;
@@ -789,6 +792,9 @@ public class ServerFile extends Server implements XMLConsumer {
                ((PlanTool)plan).hasXYorig = (new Boolean(s)).booleanValue();
             }
             break;
+         case Plan.ALLSKYMOC:
+         case Plan.ALLSKYTMOC:
+         case Plan.ALLSKYSTMOC:
          case Plan.ALLSKYIMG:
          case Plan.ALLSKYCAT:
          case Plan.ALLSKYCUBE:
@@ -802,6 +808,9 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( typePlan==Plan.ALLSKYIMG )   plan = ( new PlanBG(aladin));
             else if( typePlan==Plan.ALLSKYCAT )   plan = ( new PlanBGCat(aladin));
             else if( typePlan==Plan.ALLSKYCUBE )  plan = ( new PlanBGCube(aladin));
+            else if( typePlan==Plan.ALLSKYMOC )   plan = ( new PlanMoc(aladin));
+            else if( typePlan==Plan.ALLSKYTMOC )  plan = ( new PlanTMoc(aladin));
+            else if( typePlan==Plan.ALLSKYSTMOC ) plan = ( new PlanSTMoc(aladin));
             else if( typePlan==Plan.IMAGEMOSAIC ) plan = ( new PlanImageMosaic(aladin));
             else if( typePlan==Plan.IMAGERSP )    plan = ( new PlanImageResamp(aladin));
             else if( typePlan==Plan.IMAGEALGO )   plan = ( new PlanImageAlgo(aladin));
@@ -856,6 +865,7 @@ public class ServerFile extends Server implements XMLConsumer {
             if( (s=(String)atts.get("RA"))!=null )     ra=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("DE"))!=null )     de=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("radius"))!=null ) rm=Double.valueOf(s).doubleValue();
+            if( (s=(String)atts.get("color"))!=null )  plan.c=Action.getColor(s);
             pi.transfertFct=PlanImage.LINEAR;
             pi.bScale=1.0;
             pi.bitpix=8;
@@ -1107,7 +1117,15 @@ public class ServerFile extends Server implements XMLConsumer {
          aladin.view.scrollOn(firstView,0,1);
       } else if( name.equals("SCRIPT") )  { inFilterScript =false;
       } else if( name.equals("TABLE") )   { leg=null; vField=null; if( flagCatalogSource ) typePlan=CATALOGTOOL;
-      } else if( name.equals("VALUE") )   { inValue=false;
+      } else if( name.equals("VALUE") )   {
+         inValue=false;
+         if( plan instanceof PlanMoc ) {
+            try {
+               ((PlanMoc)plan).moc.read( inMoc.getInputStream() );
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+         }
       } else if( name.equals("ALADINJAVA") ) {
 
          // mise à jour des différents filtres mémorisés
@@ -1175,7 +1193,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
       return ch[cur]=='\t'?cur+1:cur;
    }
-
+   
    /** Cherche les infos de la source courante et ajoute l'objet correspondant
     * au plan courant
     * utilise la variable de classe rec
@@ -1270,8 +1288,6 @@ public class ServerFile extends Server implements XMLConsumer {
       if( o!=null ) {
          o.raj=ra; o.dej=de;
          o.x=x;    o.y=y;
-         o.setWithLabel(withlabel);
-         o.setSpecificAJInfo(id);
 
          // Suivi de ligne
          try {
@@ -1282,10 +1298,11 @@ public class ServerFile extends Server implements XMLConsumer {
          } catch( Exception e ) { }
 
          // Fin d'un polygone
-         try {
-            if( flagSpecial ) ((Ligne)o).bout=3;
-         } catch( Exception e ) { }
+         try { if( flagSpecial ) ((Ligne)o).bout=3; } catch( Exception e ) { }
 
+         try { o.setWithLabel(withlabel); } catch( Exception e ) {  }
+         o.setSpecificAJInfo(id);
+         
          // Enregistrement de l'objet dans le plan
          plan.pcat.setObjetFast(o);
 
@@ -1296,6 +1313,28 @@ public class ServerFile extends Server implements XMLConsumer {
 
       return cur;
    }
+   
+   
+   private MyByteArrayStream inMoc = null;  // Contenu du MOC courant
+   
+   /** Lecture du MOC ASCII, et l'associe au plan courant. C'est procedure peut être appelee plusieurs
+    * fois en sequence.
+    * @param ch
+    * @param cur
+    * @param length
+    * @throws Exception
+    */
+   private void getMoc(char [] ch, int cur, int length) {
+      if( ((PlanMoc)plan).moc==null ) {
+         ((PlanMoc)plan).moc = plan instanceof PlanSTMoc ? new SpaceTimeMoc()
+            : plan instanceof PlanTMoc  ? new TimeMoc()
+            : new HealpixMoc();
+         inMoc =  new MyByteArrayStream( length );
+      }
+      inMoc.write( new String( ch, cur,length) );
+   }
+
+
 
    /** Cherche les pixels RGB de l'image et l'associe au plan courant.
     * Cette procedure peut etre appelee plusieurs fois en sequence.
@@ -1398,6 +1437,11 @@ public class ServerFile extends Server implements XMLConsumer {
                   cur++;
                }
                prevFlagSuite=false; // pour ne pas accoler deux objets
+               break;
+            case Plan.ALLSKYMOC:
+            case Plan.ALLSKYTMOC:
+            case Plan.ALLSKYSTMOC:
+               getMoc(ch,start,length);
                break;
             case Plan.IMAGE:
             case Plan.IMAGEHUGE:

@@ -21,14 +21,19 @@
 
 package cds.aladin;
 
-import java.util.*;
-import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
 
 import cds.tools.Util;
 
@@ -204,7 +209,7 @@ class Printer implements Runnable {
          Graphics2D pg = (Graphics2D)g;
          pg.scale(scale,scale);
 
-         for( int i=0; i<aladin.view.getModeView(); i++ ) {
+         for( int i=0; i<aladin.view.getNbView(); i++ ) {
             ViewSimple v = aladin.view.viewSimple[i];
 
             // Changement de ligne

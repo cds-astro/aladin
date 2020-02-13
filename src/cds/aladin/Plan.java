@@ -1468,7 +1468,7 @@ public class Plan implements Runnable {
    protected boolean isRefForVisibleView() {
       try {
          if( isPixel() ) {
-            for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
+            for( int i=aladin.view.getNbView()-1; i>=0; i-- ) {
                ViewSimple v = aladin.view.viewSimple[i];
                if( v.pref==this ) { setDebugFlag(REFFORVISIBLEVIEW,true); return true; }
             }
@@ -1553,7 +1553,7 @@ public class Plan implements Runnable {
             && !(isImage() || type==ALLSKYIMG) ) { setDebugFlag(VIEWABLE,true); return true; }
 
       // Parcours de l'ensemble des vues visibles
-      for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
+      for( int i=aladin.view.getNbView()-1; i>=0; i-- ) {
          ViewSimple v = aladin.view.viewSimple[i];
          if( v.isFree() ) continue;
 
@@ -1599,17 +1599,19 @@ public class Plan implements Runnable {
    protected boolean shouldHaveARefCheckBox() {
 
       if( !isReady() ) return false;
-      if( ref ) return true;
 
       //      // Un plan pris en référence quel qu'il soit doit avoir une coche
       //      // s'il n'est pas tout seul dans la pile
       //      if( ref && aladin.calque.getNbUsedPlans()>1 ) return true;
 
-      boolean isImage = isImage();
+      boolean isImage   = isImage();
       boolean isCatalog = isSimpleCatalog();
-      boolean isImgBg = type==ALLSKYIMG;
-      boolean isCatBg = isPlanBGOverlay();
+      boolean isImgBg   = type==ALLSKYIMG;
+      boolean isMoc     = isMoc();
+      boolean isCatBg   = isPlanBGOverlay();
 
+      if( ref && !isMoc ) return true;
+      
       // réponse par défaut
       boolean rep = isCatalog ? true : false;
 
@@ -1626,15 +1628,19 @@ public class Plan implements Runnable {
                   // Ou qu'il y a une autre image, ou un allsky image
                   || p[i].isImage() || p[i].type==ALLSKYIMG ) return true;
          }
+         
+         // Pour un Moc
+         if( isMoc ) return false;
 
-         // pour un catalogue...
-         if( isCatalog ) {
+         // pour un catalogue
+         if( isCatalog || isMoc ) {
             // si j'ai une image ou allskyimg compatible , c'est inutile
             if( p[i].isImage() && isCompatibleWith(p[i]) || p[i] instanceof PlanBG  ) return false;
 
             // Si j'ai un catalogue situé en dessous compatible, c'est inutile
             if( p[i].isSimpleCatalog() && isCompatibleWith(p[i]) && i>n ) return false;
          }
+         
 
          // Pour un allsky image...
          if( isImgBg ) {

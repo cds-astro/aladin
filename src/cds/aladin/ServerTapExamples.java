@@ -119,7 +119,7 @@ public class ServerTapExamples extends DynamicTapForm {
 	public static final String TAPEXDEFAULTMAXROWS_INT = "2000";
 	Map serviceExamples = null;
 	
-	Map<String, CustomListCell> basicExamples = new LinkedHashMap<String, CustomListCell>();
+	Map<String, CustomListCell> basicExamples = new LinkedHashMap<>();
 	Map<String, String> serviceExamples2;
 
 	String secondaryTable; 
@@ -256,7 +256,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				addSecondTable.setEnabled((uploadModel.getSize() > 0));
 				
 				secondaryTablesGui = new JComboBox(uploadModel);
-				ArrayList<JComponent> compToPrefix = new ArrayList<JComponent>();
+				ArrayList<JComponent> compToPrefix = new ArrayList<>();
 				compToPrefix.add(addSecondTable);
 				tablesPanel = getTablesPanel(this.tapClient, this, "Join:", secondaryTablesGui, chosenTable2, null, compToPrefix, false);
 				UploadTablesRenderer uploadTableRenderer = UploadTablesRenderer.getInstance(this.aladin);
@@ -327,7 +327,7 @@ public class ServerTapExamples extends DynamicTapForm {
 				// TODO Auto-generated method stub
 				String queryLabel = (String) examplesGui.getSelectedValue();
 				if (queryLabel != null && basicExamples.containsKey(queryLabel) ) {
-					tap.setText(((CustomListCell)basicExamples.get(queryLabel)).label);
+					tap.setText(basicExamples.get(queryLabel).label);
 					if (serviceExamplesGui != null && !examplesGui.isSelectionEmpty()) {
 						serviceExamplesGui.clearSelection();
 					}
@@ -738,8 +738,8 @@ public class ServerTapExamples extends DynamicTapForm {
 		StringBuffer hints = null;
 		CustomListCell setCell = null;
 		String queryName = null;
-		List<String> mandateParamsToAdd = new ArrayList<String>();
-		List<String> optionalParamsToAdd = new ArrayList<String>();
+		List<String> mandateParamsToAdd = new ArrayList<>();
+		List<String> optionalParamsToAdd = new ArrayList<>();
 
 		// some nice select statements..also set param names
 		TapTableColumn parallax = priTableMetaData.getFlaggedColumn(PARALLAX), radialVelocity = priTableMetaData.getFlaggedColumn(RADIALVELOCITY);
@@ -1190,7 +1190,7 @@ public class ServerTapExamples extends DynamicTapForm {
 			List<String> optionalParamsToAdd, CustomListCell setCell, String whereLabel, String wherePart, String wherePartToolTip) {
 		String tableSelectQuery = "Select %s %s from %s";
 		StringBuffer spQuery = new StringBuffer();
-		List<String> selectParamsToAdd = new ArrayList<String>();
+		List<String> selectParamsToAdd = new ArrayList<>();
 		selectParamsToAdd.addAll(optionalParamsToAdd);
 		selectParamsToAdd.addAll(mandatoryParams);
 		appendSelectString(selectParamsToAdd, spQuery);

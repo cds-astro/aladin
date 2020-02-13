@@ -39,7 +39,7 @@ public final class ViewMemoItem {
    protected int ordreTaquin;
    protected boolean locked,selected,northUp;
    protected Plot plot;
-   protected double jdmin,jdmax;
+   protected double jdmin=Double.NaN,jdmax=Double.NaN;
    
    
    boolean isPlotView;

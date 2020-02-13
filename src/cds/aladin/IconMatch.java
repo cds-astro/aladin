@@ -108,8 +108,19 @@ public class IconMatch extends Icon {
    }
    
    protected boolean isProjSync() { return getMode()==3; }
+   
+   // L'écho de la commande script
+   private void echoCommand() {
+      int mode = getMode(); 
+      if( mode==3 ) aladin.console.printCommand("match "+ aladin.view.getCurrentView().getID());
+      else if( mode<=1 ) aladin.console.printCommand("match off");
 
-   protected void submit() { aladin.cycleMatch(); }
+   }
+
+   protected void submit() {
+      aladin.cycleMatch();
+      echoCommand();
+   }
       
    protected String getHelpTip() { return aladin.chaine.getString("MVIEWSYNC"); }
    protected String getHelpKey() { return "Sync.HELP"; }

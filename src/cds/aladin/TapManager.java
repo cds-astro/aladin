@@ -124,6 +124,7 @@ import cds.xml.Field;
 import cds.xml.VOSICapabilitiesReader;
 
 public class TapManager {
+   
 	
 	private static TapManager instance = null;
 	private boolean initAllLoad = true;
@@ -136,9 +137,9 @@ public class TapManager {
 	MutableComboBoxModel uploadTablesModel = new DefaultComboBoxModel();
 	protected FrameSimple joinFrame;
 	
-	protected static Map<String, TapClient> tapServerPanelCache = new HashMap<String, TapClient>();//main cache where all the ServerGlu's are loaded on init
-	protected static Map<String, TapClient> tapServerTreeCache = new HashMap<String, TapClient>();//cache for the servers loading from tree
-	public static final String STANDARDQUERYPARAMSTEMPLATE = "REQUEST=doQuery&LANG=ADQL&QUERY=";
+	protected static Map<String, TapClient> tapServerPanelCache = new HashMap<>();//main cache where all the ServerGlu's are loaded on init
+	protected static Map<String, TapClient> tapServerTreeCache = new HashMap<>();//cache for the servers loading from tree
+	public static final String STANDARDQUERYPARAMSTEMPLATE = "REQUEST=doQuery&LANG=ADQL&MAXREC="+TapManager.MAXTAPROWS+"&QUERY=";
 	public static final String GETTAPSCHEMACOLUMNCOUNT = STANDARDQUERYPARAMSTEMPLATE + "SELECT+COUNT%28*%29+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMACOLUMNS = STANDARDQUERYPARAMSTEMPLATE + "SELECT+*+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMATABLES = STANDARDQUERYPARAMSTEMPLATE + "SELECT+*+FROM+TAP_SCHEMA.tables";
@@ -150,6 +151,7 @@ public class TapManager {
 	public static final String GETTAPFOREIGNRELFORTABLE = "SELECT target_table, from_table, target_column, from_column FROM TAP_SCHEMA.keys JOIN TAP_SCHEMA.key_columns ON TAP_SCHEMA.keys.key_id = TAP_SCHEMA.key_columns.key_id WHERE target_table ='%1$s'";
 	public static final String GENERICERROR, TAPLOADINGMESSAGE, TAPLOADERRORMESSAGE, UPLOADTABLECHANGEWARNING;
 	public static final int MAXTAPCOLUMNDOWNLOADVOLUME = 1000;//limit for the table columns that will be downloaded together. 409 cadc;1000 decided limit
+	public static final long MAXTAPROWS = 20000000;  // MAXREC TAP rows
 	
 	protected List<String> eligibleUploadServers;//URls of servers loaded and allow uploads
 	
@@ -229,12 +231,12 @@ public class TapManager {
 	 */
 	public void addTapService(String actionName, String label, String url, String description) {
 		if (actionName != null) {
-			Vector<String> newDatalabel = new Vector<String>();
+			Vector<String> newDatalabel = new Vector<>();
 			newDatalabel.add(TapFrameServer.labelId, label);
 			newDatalabel.add(TapFrameServer.descriptionId, description);
 			newDatalabel.add(TapFrameServer.urlId, url);
 			if (splTapServerLabels == null) {
-				splTapServerLabels = new Vector<Vector<String>>();
+				splTapServerLabels = new Vector<>();
 			}
 			removeOldEntries(label);
 			splTapServerLabels.add(newDatalabel);
@@ -253,7 +255,7 @@ public class TapManager {
 	public void populateTapServersFromTree(String mask){
 		try {
 			if (allTapServerLabels == null) {
-				allTapServerLabels = new Vector<String>();
+				allTapServerLabels = new Vector<>();
 			} else {
 				allTapServerLabels.clear();
 			}
@@ -274,7 +276,7 @@ public class TapManager {
 	private void populateSplFromDirectory() {
 		try {
 			if (splTapServerLabels == null) {
-				splTapServerLabels = new Vector<Vector<String>>();
+				splTapServerLabels = new Vector<>();
 			}
 			String url;
 			String description;
@@ -285,7 +287,7 @@ public class TapManager {
                 url = mi.prop.get("tap_service_url");
                 description = mi.prop.get("obs_title");
                 if( description == null ) description = mi.prop.get("obs_collection");
-                Vector<String> tapServer = new Vector<String>();
+                Vector<String> tapServer = new Vector<>();
                 tapServer.add(TapFrameServer.labelId, id);
                 tapServer.add(TapFrameServer.descriptionId, description);
                 tapServer.add(TapFrameServer.urlId, url);
@@ -448,10 +450,10 @@ public class TapManager {
 		// we only get nodes in trees for now. from tap server list we do not support taking table param as of now.
 		
 		// just another control on the nodes feature
-		if (tapClient.mode != null && tapClient.mode == TapClientMode.TREEPANEL) {
-			tapClient.primaryColor = Aladin.COLOR_FOREGROUND;
-			tapClient.secondColor = Color.white;
-		}
+//		if (tapClient.mode != null && tapClient.mode == TapClientMode.TREEPANEL) {
+//			tapClient.primaryColor = Aladin.COLOR_FOREGROUND;
+//			tapClient.secondColor = Color.white;
+//		}
 		newServer.setOpaque(true);
 		newServer.showloading();
 		tapClient.capabilities = this.getTapCapabilities(tapClient.tapBaseUrl);
@@ -540,10 +542,10 @@ public class TapManager {
 			copy.setData(original.tablesMetaData);
 			copy.queryCheckerTables = original.queryCheckerTables;
 			copy.obscoreTables = original.obscoreTables;
-			if (mode == TapClientMode.TREEPANEL) {
-				copy.primaryColor = Aladin.COLOR_FOREGROUND;
-				copy.secondColor = Color.white;
-			}
+//			if (mode == TapClientMode.TREEPANEL) {
+//				copy.primaryColor = Aladin.COLOR_FOREGROUND;
+//				copy.secondColor = Color.white;
+//			}
 		}
 		copy.infoPanel = original.infoPanel;
 	}
@@ -1562,7 +1564,7 @@ public class TapManager {
 					//conserve columns if already set. but other details are updated
 					TapTable tableToUpdate = tapClient.tablesMetaData.get(tableName);
 					if (tableToUpdate.foreignKeyColumns == null) {
-						tableToUpdate.foreignKeyColumns = new ArrayList<ForeignKeyColumn>();
+						tableToUpdate.foreignKeyColumns = new ArrayList<>();
 					}
 					if (keyColumn != null) {
 						tableToUpdate.foreignKeyColumns.add(keyColumn);
@@ -1722,11 +1724,11 @@ public class TapManager {
 					table = tapClient.tablesMetaData.get(tableColumn.getTable_name());
 					tableColumns = table.getColumns();
 					if (tableColumns == null) {
-						tableColumns = new Vector<TapTableColumn>();
+						tableColumns = new Vector<>();
 						table.setColumns(tableColumns);
 					}
 				} else {
-					tableColumns = new Vector<TapTableColumn>();
+					tableColumns = new Vector<>();
 					table = new TapTable();
 					table.setTable_name(tableName);
 					table.setColumns(tableColumns);
@@ -1812,7 +1814,7 @@ public class TapManager {
 	 * @param tablesMetaData
 	 */
 	public static void populateColumnsFromPlan(Plan planToUpload, String tableName, Map<String, TapTable> tablesMetaData) {
-		Vector<TapTableColumn> tableColumns = new Vector<TapTableColumn>();
+		Vector<TapTableColumn> tableColumns = new Vector<>();
 		TapTable table = null; 
 		TapTableColumn tableColumn = null; 
 		
@@ -2188,7 +2190,7 @@ public class TapManager {
  								infoPanel.add(tableDescription, bagConstraints);
  							}
  							
- 							allRows = new Vector<Vector<String>>();
+ 							allRows = new Vector<>();
  							for (TapTableColumn tapTableColumn : columnMetadata) {
  								allRows.addElement(tapTableColumn.getRowVector());
  							}
@@ -2302,7 +2304,8 @@ public class TapManager {
 
 							// standard request parameters
 							out.writeField("REQUEST", "doQuery");
-							out.writeField("LANG", "ADQL");
+                            out.writeField("LANG", "ADQL");
+                            out.writeField("MAXREC", MAXTAPROWS+"");
 //							out.writeField("request", "doQuery");
 //							out.writeField("lang", "ADQL");
 //							out.writeField("version", "1.0");
@@ -2470,9 +2473,10 @@ public class TapManager {
 					currentT.setName("TsubmitAsync: " + server.tapClient.tapBaseUrl);
 					try {
 						uwsFacade.showAsyncPanel();
-						Map<String, Object> requestParams = new HashMap<String, Object>();
+						Map<String, Object> requestParams = new HashMap<>();
 						requestParams.put("REQUEST", "doQuery");
 						requestParams.put("LANG", "ADQL");
+						requestParams.put("MAXREC", MAXTAPROWS+"");
 						requestParams.put("QUERY", queryString);
 						if (postParams != null && !postParams.isEmpty()) {
 							requestParams.putAll(postParams);
@@ -2505,7 +2509,7 @@ public class TapManager {
 					
 					boolean addTargetPanel = false;
 					TapTable selectedTable = serverTap.tapClient.tablesMetaData.get(selectedTableName);
-					Vector<TapTableColumn> raColumnModel = new Vector<TapTableColumn>();
+					Vector<TapTableColumn> raColumnModel = new Vector<>();
 					raColumnModel.addAll(ServerTap.getPotentialRaOrDecColumns(selectedTable.getColumns()));
 					JComboBox raColumn = new JComboBox(raColumnModel);
 					raColumn.setRenderer(new CustomListCellRenderer());
@@ -2516,8 +2520,8 @@ public class TapManager {
 					}
 					raColumn.setSize(raColumn.getWidth(), Server.HAUT);
 					
-					Vector<TapTableColumn> decColumnModel = new Vector<TapTableColumn>();
-					decColumnModel = new Vector<TapTableColumn>();
+					Vector<TapTableColumn> decColumnModel = new Vector<>();
+					decColumnModel = new Vector<>();
 					decColumnModel.addAll(raColumnModel);
 					JComboBox decColumn = new JComboBox(decColumnModel);
 					decColumn.setRenderer(new CustomListCellRenderer());

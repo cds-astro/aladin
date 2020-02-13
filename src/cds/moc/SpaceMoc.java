@@ -199,11 +199,12 @@ public class SpaceMoc extends Moc {
       if( limitOrder==maxLimitOrder ) return;
       if( limitOrder>MAXORDER ) throw new Exception("Max limit order exceed HEALPix library possibility ("+MAXORDER+")");
       if( limitOrder!=-1 && limitOrder<minLimitOrder ) throw new Exception("Max limit order smaller than min limit order");
-      isConsistant = false;
+      property.put("MOCORDER", ""+(limitOrder==-1 ? MAXORDER : limitOrder));
       maxLimitOrder=limitOrder;
+      if( limitOrder+1>=nOrder ) return;  // rien à agréger
+      isConsistant = false;
       if( getSize()>0 ) checkAndFix();
       if( limitOrder!=-1 ) nOrder=limitOrder+1;
-      property.put("MOCORDER", ""+(limitOrder==-1 ? MAXORDER : limitOrder));
    }
 
    /** Provide the minimal limit order supported by the Moc (by default 0) */
@@ -748,36 +749,36 @@ public class SpaceMoc extends Moc {
       return res.toString();
    }
    
-   public String toASCII() throws Exception {
-      StringBuilder res= new StringBuilder( getSize()*8 );
-      int order=-1;
-      boolean flagNL = getSize()>MAXWORD;
-      flagNL=false;
-      int sizeLine=0;
-      int j=0;
-      for( MocCell c : this ) {
-         if( res.length()>0 ) {
-            if( c.order!=order ) {
-               if( flagNL ) { res.append("\n"); sizeLine=0; j++; }
-               else res.append(" ");
-            } else {
-               int n=(c.npix+"").length();
-               if( flagNL && n+sizeLine>MAXSIZE ) { res.append("\n "); sizeLine=3; j++; }
-               else { res.append(' '); sizeLine++; }
-            }
-         }
-         String s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
-         res.append(s);
-         sizeLine+=s.length();
-         order=c.order;
-      }
-      int n = res.length();
-
-      if( n>0 && res.charAt(n-1)==' ' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
-      else res.append((flagNL?"\n":" "));
-
-      return res.toString();
-   }
+//   public String toASCII() throws Exception {
+//      StringBuilder res= new StringBuilder( getSize()*8 );
+//      int order=-1;
+//      boolean flagNL = getSize()>MAXWORD;
+//      flagNL=false;
+//      int sizeLine=0;
+//      int j=0;
+//      for( MocCell c : this ) {
+//         if( res.length()>0 ) {
+//            if( c.order!=order ) {
+//               if( flagNL ) { res.append("\n"); sizeLine=0; j++; }
+//               else res.append(" ");
+//            } else {
+//               int n=(c.npix+"").length();
+//               if( flagNL && n+sizeLine>MAXSIZE ) { res.append("\n "); sizeLine=3; j++; }
+//               else { res.append(' '); sizeLine++; }
+//            }
+//         }
+//         String s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
+//         res.append(s);
+//         sizeLine+=s.length();
+//         order=c.order;
+//      }
+//      int n = res.length();
+//
+//      if( n>0 && res.charAt(n-1)==' ' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
+//      else res.append((flagNL?"\n":" "));
+//
+//      return res.toString();
+//   }
 
 
    //   public static void main(String s[] ) {
@@ -872,16 +873,30 @@ public class SpaceMoc extends Moc {
       }
       return true;
    }
+   
+   /** Retourne la composante spatiale du MOC */
+   public SpaceMoc getSpaceMoc() throws Exception { return this; }
+   
+   /** Retourne la composante temporelle du MOC */
+   public TimeMoc getTimeMoc() throws Exception { throw new Exception("No temporal dimension"); }
 
    public Moc union(Moc moc) throws Exception {
-      return operation((SpaceMoc)moc,0);
+      return operation(moc.getSpaceMoc(),0);
    }
    public Moc intersection(Moc moc) throws Exception {
-      return operation((SpaceMoc)moc,1);
+      return operation(moc.getSpaceMoc(),1);
    }
    public Moc subtraction(Moc moc) throws Exception {
-      return operation((SpaceMoc)moc,2);
+      return operation(moc.getSpaceMoc(),2);
    }
+
+   public Moc difference(Moc moc) throws Exception {
+      SpaceMoc m = moc.getSpaceMoc();
+      Moc inter = intersection(m);
+      Moc union = union(m);
+      return union.subtraction(inter);
+   }
+
 
    public SpaceMoc complement() throws Exception {
       SpaceMoc allsky = new SpaceMoc();
@@ -892,12 +907,6 @@ public class SpaceMoc extends Moc {
       res.spaceRange = allsky.spaceRange.difference(spaceRange);
       res.toHealpixMoc();
       return res;
-   }
-
-   public Moc difference(Moc moc) throws Exception {
-      Moc inter = intersection(moc);
-      Moc union = union(moc);
-      return union.subtraction(inter);
    }
 
    // Generic operation
@@ -916,7 +925,7 @@ public class SpaceMoc extends Moc {
       res.toHealpixMoc();
       return res;
    }
-
+   
    /** Return true if the MOC covers the whole sky */
    public boolean isAllSky() {
       return  getSize( minLimitOrder ) == 12L*pow2(minLimitOrder)*pow2(minLimitOrder);
@@ -1048,8 +1057,7 @@ public class SpaceMoc extends Moc {
 
    /** Write HEALPix MOC to a file
     * @param filename name of file
-    * @param mode encoded format (JSON or FITS)
-    * @deprecated
+    * @param mode encoded format (ASCII, JSON or FITS)
     */
    public void write(String filename,int mode) throws Exception {
       check();
@@ -1058,21 +1066,20 @@ public class SpaceMoc extends Moc {
 
    /** Write HEALPix MOC to an output stream
     * @param out output stream
-    * @param mode encoded format (JSON or FITS)
-    * @deprecated
+    * @param mode encoded format (ASCII, JSON or FITS)
     */
    public void write(OutputStream out,int mode) throws Exception {
       check();
       (new MocIO(this)).write(out,mode);
    }
 
-   /** Write HEALPix MOC to an output stream IN JSON encoded format
+   /** Write HEALPix MOC to an output stream IN ASCII encoded format
     * @param out output stream
-    * @deprecated see write(OutputStream)
     *
     */
    public void writeASCII(OutputStream out) throws Exception {
-      writeJSON(out);
+      check();
+      (new MocIO(this)).writeASCII(out);
    }
 
    /** Write HEALPix MOC to an output stream IN JSON encoded format
@@ -1370,16 +1377,15 @@ public class SpaceMoc extends Moc {
    // Ajout d'un pixel selon le format "order/npix[-npixn]".
    // Si l'order n'est pas mentionné, utilise le dernier order utilisé
    public void addHpix(String s) throws Exception {
+      if( s==null ) return;
       int i=s.indexOf('/');
       if( i<0 ) i=s.indexOf(':');
       if( i>0 ) currentOrder = Integer.parseInt( unQuote( s.substring(0,i) ) );
       int j=s.indexOf('-',i+1);
       if( j<0 ) {
          String s1 = unBracket( s.substring(i+1) );
-//         if( s1.length()>0 ) {
             long npix = s1.trim().length()==0 ? -1 : Long.parseLong( s1 );
             add(currentOrder, npix );
-//         }
       } else {
          long startIndex = Long.parseLong(s.substring(i+1,j));
          long endIndex = Long.parseLong(s.substring(j+1));
@@ -1571,7 +1577,7 @@ public class SpaceMoc extends Moc {
    /***************************************  Utilities **************************************************************/
 
    /** Pixel area (in square degrees) for a given order */
-   static private double getPixelArea(int order) {
+   static public double getPixelArea(int order) {
       if( order<0 ) return SKYAREA;
       long nside = pow2(order);
       long npixels = 12*nside*nside;

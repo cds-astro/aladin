@@ -204,6 +204,9 @@ public final class MocIO {
          else parseASCIILine(s);
       }
       
+      // Pour conclure (parsing STMOC notamment)
+      moc.addHpix(null);
+      
       // If the MocOrder is found by the content
       if( !flagMocOrder ) {
 //         moc.setProperty("MORORDER", moc.getMaxOrder()+"" );
@@ -214,8 +217,9 @@ public final class MocIO {
          moc.toHealpixMoc();
          if( mocOrder!=29 ) moc.setMocOrder(mocOrder);
       }
+      
    }
-   
+  
    // Parse une ligne d'un flux TMOC par intervalles JD en notation floattante
    private void parseTMocASCIILine(String s) throws Exception {
       StringTokenizer st = new StringTokenizer(s," ;,\n\r\t");
@@ -300,7 +304,7 @@ public final class MocIO {
    /** Write HEALPix MOC to an output stream
     * At the end, the stream is not closed
     * @param out output stream
-    * @param mode encoded format (FITS or JSON)
+    * @param mode encoded format (FITS, JSON or ASCII)
     */
    public void write(OutputStream out,int mode) throws Exception {
       if( mode!=FITS && mode!=ASCII && mode!=JSON ) throw new Exception("Unknown MOC format !");
@@ -315,19 +319,73 @@ public final class MocIO {
 
    private static final int MAXWORD=20;
    private static final int MAXSIZE=80;
+   
+   static final private boolean TEST=false;
 
+   /** Write an HEALPix STMOC to an output stream in ASCII encoded format */
+   private void writeASCII( SpaceTimeMoc moc, OutputStream out) throws Exception {
+      StringBuilder res= new StringBuilder(moc.getSize()*8);
+      for( int i=0; i<moc.getTimeRanges(); i++ ) {
+         
+         long deb = moc.timeRange.r[i*2];
+         long fin = moc.timeRange.r[i*2 +1];
+         res.append("t"+deb+"-"+fin+"\ns");
+         
+         HealpixMoc m = new HealpixMoc();
+         m.spaceRange = moc.timeRange.rangeArray[i];
+         m.toHealpixMoc();
+         
+         long npix=-1;
+         int order=-1;
+         int sizeLine=0;
+         int j=0;
+         for( MocCell c : m ) {
+            if( res.length()>0 ) {
+               if( c.order!=order ) {
+                  if( order!=-1 ) res.append(" ");
+               } else {
+                  int n=(c.npix+"").length();
+                  if( n+sizeLine>MAXSIZE ) { res.append("\n  "); sizeLine=2; j++; }
+                  else { 
+                     if( !TEST ) res.append(' '); 
+                     sizeLine++; 
+                  }
+               }
+               if( j>15) { writeASCIIFlush(out,res,false); j=0; }
+            }
+            String s;
+            if( TEST ) {
+               if( c.order!=order ) {
+                  s= c.order+"/"+c.npix;
+                  order=c.order;
+               } else s="+"+(c.npix-npix);
+               npix=c.npix;
+            } else {
+               s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
+            }
+            res.append(s);
+            sizeLine+=s.length();
+            order=c.order;
+         }
+         res.append(CR);
+      }
+      
+      res.append("t"+moc.getTimeOrder()+"/ s"+moc.getSpaceOrder()+"/"+CR);
+      
+      writeASCIIFlush(out,res);
+   }
+   
    /** Write HEALPix MOC to an output stream IN ASCII encoded format
     * @param out output stream
     */
    public void writeASCII(OutputStream out) throws Exception {
       testMocNotNull();
       
-//      if( moc instanceof SpaceTimeMoc ) {
-//         moc.writeASCII(OutputStream out);
-//         return;
-//      }
+      if( moc instanceof SpaceTimeMoc ) {
+         writeASCII( (SpaceTimeMoc)moc, out);
+         return;
+      }
       
-//      out.write(("#"+SIGNATURE+" "+moc.getMocOrder()+CR).getBytes());
       StringBuilder res= new StringBuilder(moc.getSize()*8);
       int order=-1;
       boolean flagNL = moc.getSize()>MAXWORD;
@@ -340,8 +398,6 @@ public final class MocIO {
                else res.append(" ");
             } else {
                int n=(c.npix+"").length();
-//               if( flagNL && n+sizeLine>MAXSIZE ) { res.append(",\n "); sizeLine=3; j++; }
-//               else { res.append(','); sizeLine++; }
                if( flagNL && n+sizeLine>MAXSIZE ) { res.append("\n "); sizeLine=2; j++; }
                else { res.append(' '); sizeLine++; }
             }
@@ -364,9 +420,6 @@ public final class MocIO {
          res.append(s);
       } 
 
-//      int n = res.length();
-//      if( n>0 && res.charAt(n-1)==',' ) res.replace(n-1, n-1, (flagNL?"\n":" "));
-//      else res.append((flagNL?"\n":" "));
       if( flagNL && sizeLine!=2 ) res.append('\n');
 
       writeASCIIFlush(out,res);

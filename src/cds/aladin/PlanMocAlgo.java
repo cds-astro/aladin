@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import cds.moc.HealpixMoc;
 import cds.moc.Moc;
 import cds.moc.SpaceMoc;
+import cds.moc.SpaceTimeMoc;
+import cds.moc.TimeMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -43,7 +45,7 @@ public class PlanMocAlgo extends PlanMoc {
    static final int TOORDER      = 5;
    
    
-   static private final String [] OPERATION = { "union","inter","sub","diff","compl","ord" };
+   static protected final String [] OPERATION = { "union","inter","sub","diff","compl","ord" };
    
    /** Retourne le nom qui correspond à une opération */
    static protected String getOpName(int op) { return OPERATION[op]; }
@@ -135,13 +137,50 @@ public class PlanMocAlgo extends PlanMoc {
          
          HealpixMoc m1 = CDSHealpix.createHealpixMoc(a, order);
          moc = m1.intersection(mocSource.moc);
-//         CDSHealpix hpx = new CDSHealpix();
-//         long [] npix = hpx.query_polygon(order, a,true);
-//         moc.clear();
-//         moc.setCheckConsistencyFlag(false);
-//         for( long pix : npix ) moc.add(order,pix);
-//         moc.setCheckConsistencyFlag(true);
-//         moc = moc.intersection(mocSource.moc);
+         
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         moc.clear();
+         aladin.error = error = e.getMessage();
+         flagOk=false;
+      }
+      
+      copyright = "Computed by Aladin";
+      flagProcessing=false;
+      if( moc.getSize()==0 ) {
+         error="Empty MOC";
+         flagOk=true;
+      } else flagOk=true;
+      setActivated(flagOk);
+      aladin.calque.repaintAll();
+
+      sendLog("Compute"," [" + this + " = "+s+"]");
+   }
+   
+   /** Création d'un Plan MOC par un "crop" temporel sur un STMOC existant (mocSource)
+    * @param aladin
+    * Rq : méthode synchrone (pas de threading)
+    *
+    * @param label
+    * @param mocSource Le MOC à cropper
+    * @param jdmin, jdmax : le range temporel. NaN,NaN si aucune limite temporelle
+    */
+   protected PlanMocAlgo(Aladin aladin,String label,PlanMoc mocSource,double jdmin, double jdmax) {
+      super(aladin);
+      
+      mocSource.copy(this);
+      this.c = Couleur.getNextDefault(aladin.calque);
+      setOpacityLevel(1.0f);
+      String s = "timecrop";
+      if( label==null ) label = s;
+      setLabel(label);
+      
+      aladin.trace(3,"MOC temporal cropping: "+Plan.Tp[type]+" => "+s);
+      
+      try {
+         long tmin = Double.isNaN(jdmin) ? -1L : (long)( jdmin*TimeMoc.DAYMICROSEC );
+         long tmax = Double.isNaN(jdmax) ? Long.MAX_VALUE : (long)( jdmax*TimeMoc.DAYMICROSEC );
+         moc = ((SpaceTimeMoc)mocSource.moc).getSpaceMoc(tmin, tmax);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

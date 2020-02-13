@@ -21,10 +21,10 @@
 
 package cds.aladin;
 
-import cds.tools.*;
+import java.io.RandomAccessFile;
+import java.util.Date;
 
-import java.io.*;
-import java.util.*;
+import cds.tools.Util;
 
 /**
  * Plan dedie a une image tres grande (IMAGEHUGE)
@@ -171,7 +171,7 @@ public class PlanImageHuge extends PlanImage implements Runnable {
             nextPixelsSub=0;
             for( int i=0; i<vPixelsSub.length; i++ ) {
                PixelsSub px = vPixelsSub[i];
-               for( int j=0; j<aladin.view.getModeView(); j++ ) {
+               for( int j=0; j<aladin.view.getNbView(); j++ ) {
                   ViewSimple v = aladin.view.viewSimple[j];
                   if( v.isFree() || v.pref!=this || !v.flagHuge ) continue;
                   if( px.agree(v.xHuge,v.yHuge,v.wHuge,v.hHuge) ) continue;

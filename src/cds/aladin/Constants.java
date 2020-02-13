@@ -28,10 +28,10 @@ import java.util.Map;
 
 public class Constants {
 	
-public static final List<String> SODAHINTPARAMS = new ArrayList<String>();
-public static final List<String> SODAINPUTPARAMS_POS = new ArrayList<String>();
-public static final List<String> SODAINPUTPARAMS_BAND = new ArrayList<String>();
-public static final List<String> SODAINPUTPARAMS_TIME = new ArrayList<String>();
+public static final List<String> SODAHINTPARAMS = new ArrayList<>();
+public static final List<String> SODAINPUTPARAMS_POS = new ArrayList<>();
+public static final List<String> SODAINPUTPARAMS_BAND = new ArrayList<>();
+public static final List<String> SODAINPUTPARAMS_TIME = new ArrayList<>();
 
 public static final String ID = "ID";
 public static final String TARGET = "Target";
@@ -94,7 +94,7 @@ public static final int NUMBEROFOPTIONS = 14;
 public static final String REGEX_ARRAY_PRINT = "[\\[\\]null(,$)]";
 public static final String NEWLINE_CHAR = "\n";
 
-public static final Map<String, String> DATE_FORMATS = new HashMap<String, String>();
+public static final Map<String, String> DATE_FORMATS = new HashMap<>();
 //wont allow .0
 //if allowing exponent:: REGEX_NUMBER = "^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$";
 public static final String REGEX_NUMBER = "[-+]?\\d+(\\.\\d+)?";//integer plus decimal
@@ -210,7 +210,7 @@ public static final String UPLOAD = "UPLOAD";
 public static final String SELECTALL = "SELECTALL";
 public static final String OPEN_SET_RADEC = "OPEN_SET_RADEC";
 public static final String JOIN_TABLE = "JOIN_TABLE";
-public static final String GETRESULTPARAMS = "REQUEST=doQuery&LANG=ADQL&QUERY="; //As per TAP spec
+public static final String GETRESULTPARAMS = "REQUEST=doQuery&LANG=ADQL&MAXREC="+TapManager.MAXTAPROWS+"&QUERY="; //As per TAP spec
 //public static final String SYNCGETRESULT = "%1$s/sync?REQUEST=doQuery&LANG=ADQL&QUERY=%2$s";
 public static final String POSQuery = "CONTAINS(POINT('ICRS', %1$s%2$s, %1$s%3$s), CIRCLE('ICRS', %4$s, %5$s, %6$s)) = 1";
 //public static final String UCD_RA_PATTERN1 = "pos.eq.ra;meta.main";//wont explicitely check for this. pos.eq.ra is allowed for now.

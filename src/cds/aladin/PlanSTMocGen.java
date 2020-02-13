@@ -27,7 +27,10 @@ import java.util.List;
 import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.moc.Moc;
 import cds.moc.Range;
+import cds.moc.Range2;
+import cds.moc.SpaceMoc;
 import cds.moc.SpaceTimeMoc;
 import cds.moc.TimeMoc;
 import cds.tools.Util;
@@ -38,12 +41,16 @@ import cds.tools.Util;
  */
 public class PlanSTMocGen extends PlanSTMoc {
    
-   private Plan [] p;       // Liste des plans à ajouter dans le TMOC
+   private Plan [] p;       // Liste des plans à ajouter dans le STMOC
    private double duration; // Pour un plan catalogue, duréeen seconde à partir de l'époque initiale (0 sinon)
    private double radius;   // Pour un plan catalogue, rayon autour de chaque source (en degres), sinon 0
    private boolean fov;     // Plan un plan catalogue, true si on prend les FOVs associés
    private int timeOrder=14;
    private int spaceOrder=10;
+   
+   private boolean flagOneRange=false;
+   
+
    
    private double gapPourcent;  // Pourcentage de progression par plan (100 = tout est terminé)
    
@@ -73,6 +80,46 @@ public class PlanSTMocGen extends PlanSTMoc {
    protected void launchLoading() {}
    
    
+   /** Génération d'un plan STMOC à partir d'une liste de MOC spatiaux et d'un unique intervalle temporel
+    * @param aladin
+    * @param pList
+    * @param spaceOrder -1 si inchangé 
+    * @param timeOrder  29 par défaut
+    * @param jdmin
+    * @param jdmax
+    */
+   protected PlanSTMocGen(Aladin aladin, String label, Plan [] pList, int spaceOrder, int timeOrder, double jdmin, double jdmax) {
+      super(aladin);
+      PlanMoc p1 = (PlanMoc) pList[0];
+      p1.copy(this);
+      type = ALLSKYSTMOC;
+      setLabel(label==null ? "["+this.label+"]" : label);
+      c = Couleur.getNextDefault(aladin.calque);
+      
+      // On aggrège tous les spaces MOC
+      SpaceMoc m1 = (SpaceMoc) p1.getMoc().clone();
+      for( int i=1; i<pList.length; i++ ) {
+         SpaceMoc m2= (SpaceMoc) ((PlanMoc)pList[i]).getMoc(); 
+         try {  m1 = (SpaceMoc) m1.union( m2); } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
+      m1.toRangeSet();
+      
+      // On crée le STMOC à partir du range de temps et de l'aggrégation des MOC spatiaux
+      Range2 r = new Range2();
+      long min = (long)(jdmin*TimeMoc.DAYMICROSEC);
+      long max = (long)(jdmax*TimeMoc.DAYMICROSEC)+1L;
+      r.append(min, max, m1.spaceRange);
+      moc = new SpaceTimeMoc(spaceOrder==-1?m1.getMocOrder():spaceOrder, timeOrder<0?Moc.MAXORDER:timeOrder, r);
+      flagOneRange=true;
+   }
+
+   /** Retourne true si le STMOC ne contient qu'un range de temps, potentiellement modifiable */
+   protected boolean isOneTimeRange() { 
+      return flagOneRange && ((SpaceTimeMoc)moc).timeRange.nranges()==1; 
+   }
+
    /**
     * Ajout d'un élément par order/npix et [jdtmin..jdtmax[
     * @param m

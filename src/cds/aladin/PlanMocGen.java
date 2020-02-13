@@ -109,7 +109,6 @@ public class PlanMocGen extends PlanMoc {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
-      
    }
       
    // Ajout d'un plan catalogue au moc en cours de construction

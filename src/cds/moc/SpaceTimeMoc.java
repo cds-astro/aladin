@@ -31,8 +31,8 @@ import java.util.StringTokenizer;
 public class SpaceTimeMoc extends Moc {
    
    public Range2 timeRange;
-   private int timeOrder = MAXORDER;
-   private int spaceOrder = MAXORDER;
+   private int timeOrder = -1;
+   private int spaceOrder = -1;
 
    public SpaceTimeMoc() {
       init();
@@ -107,18 +107,13 @@ public class SpaceTimeMoc extends Moc {
    @Override
    public void add(Moc moc) throws Exception {
    }
-
+   
    @Override
    public void check() throws Exception {
    }
 
    @Override
    public void setProperty(String key, String value) throws Exception {
-   }
-
-   @Override
-   public String toASCII() throws Exception {
-      return null;
    }
 
    @Override
@@ -173,10 +168,7 @@ public class SpaceTimeMoc extends Moc {
    public void setCoordSys(String s) {
       System.err.println("Not yet implemented");
    }
-
-   @Override
-   public void addHpix(String s) throws Exception {
-   }
+   
    
    /** Ajustement d'une valeur à l'ordre indiquée */
    public long getVal(long val, int order) {
@@ -244,6 +236,69 @@ public class SpaceTimeMoc extends Moc {
    @Override
    public void toHealpixMoc() throws Exception {
    }
+   
+   // Pour construire au fur et à mesure le STMOC via addHpix
+   private StringBuilder buf=null;   // Le buffer de lecture
+   private HealpixMoc tmoc=null;     // Le dernier TMOC lu lors du parsing
+
+   @Override
+   public void addHpix(String s) throws Exception {
+      
+      // Fin de traitement ou nouvelle dimension temporelle ?
+      if( s==null || s.charAt(0)=='t' ) {
+         
+         // Insertion du précédent couple si existant 
+         if( tmoc!=null ) {
+            int st = buf.indexOf("/");
+            
+            // Je crée le MOC spatial du contenu bufferisé, juste récupérer son rangeSet
+            HealpixMoc moc = new HealpixMoc( (st<0?"29/":"")+buf);
+            moc.toRangeSet();
+            if( st>=0 && moc.getMocOrder()>spaceOrder ) spaceOrder=moc.getMocOrder();
+            
+           // J'insère chaque élément 
+            for( int i=0; i<tmoc.spaceRange.sz; i+=2 ) {
+               timeRange.append(tmoc.spaceRange.r[i], tmoc.spaceRange.r[i+1], moc.spaceRange);
+            }
+            
+            tmoc=null;
+            buf=null;
+         }
+         
+         // Memorisation du contenu jusqu'à la dimension spatiale (sans le préfixe de la dimension)
+         if( s!=null ) buf = new StringBuilder( s.substring(1) );
+         
+      // Nouvelle dimension spatiale ?
+      } else if( s.charAt(0)=='s' ) {
+         
+         // Génération du rangeset temporel du contenu bufferisé
+         int st = buf.indexOf("/");
+         
+         // range au niveau le plus profond
+         if( st<0 ) {
+            int tiret = buf.indexOf("-");
+            long a = Long.parseLong( buf.substring(0,tiret) );
+            long b = Long.parseLong( buf.substring(tiret+1) );
+            tmoc = new HealpixMoc();
+            tmoc.spaceRange = new Range( new long[] { a, b });
+            
+         // moc classique
+         } else {
+            tmoc = new HealpixMoc( buf.toString() );
+            tmoc.toRangeSet();
+            if( tmoc.getMocOrder()>timeOrder ) timeOrder=tmoc.getMocOrder();
+         }
+
+         // Memorisation du contenu jusqu'à la dimension temporelle suivante (sans le prefixe de la dimension)
+         buf = new StringBuilder( s.substring(1) );
+         
+      // Bufferisation du mot courant   
+      } else {
+         buf.append(' ');
+         buf.append(s);
+      }
+   }
+
    
    public void append(String s1) throws Exception {
       if( s1.charAt(0)!='t' ) throw new Exception("Invalid STMOC syntax (expecting 't')");
@@ -411,6 +466,7 @@ public class SpaceTimeMoc extends Moc {
 
       System.out.println(s);
    }
+   
 
    /** Write specifif FITS keywords
     * @param out
@@ -560,8 +616,7 @@ public class SpaceTimeMoc extends Moc {
     * @param tmax max of range (included - order 29)
     */
    public SpaceMoc getSpaceMoc(long tmin,long tmax) throws Exception {
-      if( Double.isNaN(tmin) ) tmin=-1;
-      if( Double.isNaN(tmax) ) tmax = Long.MAX_VALUE;
+      if( tmin>=tmax ) { tmin=-1; tmax = Long.MAX_VALUE; }
       
       SpaceMoc moc = new SpaceMoc();
       int pos = timeRange.indexOf(tmin);
@@ -571,7 +626,7 @@ public class SpaceTimeMoc extends Moc {
       long [] buf = new long[ getSize() ];
       int size=0;
       for( int i=pos; i<timeRange.sz; i+=2 ) {
-         if( timeRange.r[i+1]>tmax ) break;
+         if( timeRange.r[i]>tmax ) break;
          Range m = timeRange.rangeArray[i>>>1];
          for( int j=0; j<m.sz; j++ ) buf[size++] = m.r[j];
       }
@@ -588,6 +643,9 @@ public class SpaceTimeMoc extends Moc {
    
    static public void main(String a[] ) {
       try {
+         SpaceTimeMoc moc = new SpaceTimeMoc();
+         moc.read("C:/Users/Pierre/Downloads/MocA.txt"); 
+         System.out.println( moc.toASCII() );
          
 //         SpaceTimeMoc stm = new SpaceTimeMoc(29,29);
 //         stm.append("t1-2 s3/40");
@@ -606,6 +664,8 @@ public class SpaceTimeMoc extends Moc {
    @Override
    public Moc clone() {
       SpaceTimeMoc moc = new SpaceTimeMoc();
+      moc.timeOrder = timeOrder;
+      moc.spaceOrder = spaceOrder;
       moc.timeRange = new Range2( timeRange );
       return moc;
    }

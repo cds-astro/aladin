@@ -295,7 +295,7 @@ public class ServerMocQuery extends Server  {
    }
    
    protected void addUpload( MultiPartPostOutputStream out, Plan plan ) throws Exception {
-      SpaceMoc hpxMoc = ((PlanMoc)plan).getSpaceMoc();
+      SpaceMoc hpxMoc = ((PlanMoc)plan).getSpaceMoc(  );
       File tmp = File.createTempFile("tmp", "fits");
       tmp.deleteOnExit();
       FileOutputStream fo = new FileOutputStream(tmp);

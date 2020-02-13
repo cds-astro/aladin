@@ -211,8 +211,8 @@ public class TapClient{
 		TapClient tapClient = new TapClient(TapClientMode.UPLOAD, tapManager, tapLabel, mainServerUrl, null);
 		tapClient.serverTap = new ServerTap(aladin);
 		tapClient.serverTap.tapClient = tapClient;
-		tapClient.primaryColor = new Color(198,218,239);
-		tapClient.secondColor = Aladin.COLOR_CONTROL_FOREGROUND;
+//		tapClient.primaryColor = new Color(198,218,239);
+//		tapClient.secondColor = Aladin.COLOR_CONTROL_FOREGROUND;
 		tapClient.tablesMetaData = new HashMap<>();
 		return tapClient;
 	}
@@ -354,10 +354,10 @@ public class TapClient{
 					tapManager.createAndLoadATapServer(this, dynamicTapForm);
 				} else {
 					dynamicTapForm.showloading();
-					if (this.mode == TapClientMode.TREEPANEL) {
-						this.primaryColor = Aladin.COLOR_FOREGROUND;
-						this.secondColor = Color.white;
-					}
+//					if (this.mode == TapClientMode.TREEPANEL) {
+//						this.primaryColor = Aladin.COLOR_FOREGROUND;
+//						this.secondColor = Color.white;
+//					}
 					tapManager.createGenericTapFormFromMetaData(dynamicTapForm);
 				}
 			}

@@ -167,7 +167,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 			Aladin.error(this, e.getMessage());
 			return;
 		}
-		tablesPanel.setBackground(this.tapClient.primaryColor);
+//		tablesPanel.setBackground(this.tapClient.primaryColor);
 		tablesPanel.setFont(BOLD);
 		c.weighty = 0.02;
         c.anchor = GridBagConstraints.LINE_START;
@@ -335,7 +335,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		}
 		
 		this.selectList.removeAll();
-		Vector<TapTableColumn> model = new Vector<TapTableColumn>();
+		Vector<TapTableColumn> model = new Vector<>();
 		model.addAll(columnNames);
 		this.selectList.setListData(model);
 		
@@ -385,7 +385,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		panel.add(selectAll);
 		
 		if (columnNames != null) {
-			Vector<TapTableColumn> modelNames = new Vector<TapTableColumn>();
+			Vector<TapTableColumn> modelNames = new Vector<>();
 			modelNames.addAll(columnNames);
 			this.selectList = new JList(modelNames);
 			this.selectList.setSelectionInterval(0, modelNames.size()-1);
@@ -451,7 +451,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 		label.setFont(BOLD);
 		panel.add(label);
 		
-		this.limit = new JComboBox<String>(TAP_REC_LIMIT);
+		this.limit = new JComboBox<>(TAP_REC_LIMIT);
 		if (TAPEXDEFAULTMAXROWS != null) {
 			if (!TAPEXDEFAULTMAXROWS.isEmpty()) {
 				this.limit.setSelectedItem(TAPEXDEFAULTMAXROWS);
@@ -945,7 +945,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	}
 	
 	public static Vector<TapTableColumn> getPotentialRaOrDecColumns(Vector<TapTableColumn> allColumns) {
-		Vector<TapTableColumn> displayColumns = new Vector<TapTableColumn>();
+		Vector<TapTableColumn> displayColumns = new Vector<>();
 		for (TapTableColumn tapTableColumn : allColumns) {
 			if (tapTableColumn.isNumeric()) {
 				displayColumns.add(tapTableColumn);
@@ -961,7 +961,7 @@ public class ServerTap extends DynamicTapForm implements MouseListener {
 	 */
 	public Vector<TapTableColumn> getSelectedTablesColumns() throws Exception {
 		// TODO Auto-generated method stub
-		Vector<TapTableColumn> displayColumns = new Vector<TapTableColumn>();
+		Vector<TapTableColumn> displayColumns = new Vector<>();
 		if (this.joinPanel != null && this.joinPanel.constraints != null && !this.joinPanel.constraints.isEmpty()) {
 			displayColumns.addAll(this.getSelectedTableColumns());
 //			this.raColumnName = this.joinPanel.mainRaColumnName;

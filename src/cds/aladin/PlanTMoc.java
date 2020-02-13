@@ -33,7 +33,6 @@ import cds.moc.Moc;
 import cds.moc.TimeMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
-import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Génération d'un plan TMOC
@@ -45,11 +44,14 @@ public class PlanTMoc extends PlanMoc {
 
    protected Moc [] arrayTimeMoc =null;        // Le MOC à tous les ordres */
 
-   public PlanTMoc(Aladin a) { super(a); }
+   public PlanTMoc(Aladin a) {
+      super(a);
+      type = ALLSKYTMOC;
+   }
    
    protected PlanTMoc(Aladin aladin, MyInputStream in, String label) {
       super(aladin);
-      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       useCache = false;
       type = ALLSKYTMOC;
@@ -63,7 +65,7 @@ public class PlanTMoc extends PlanMoc {
 
    protected PlanTMoc(Aladin aladin, TimeMoc moc, String label) {
       super(aladin);
-      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.moc = moc;
       useCache = false;
       type = ALLSKYTMOC;
@@ -151,7 +153,8 @@ public class PlanTMoc extends PlanMoc {
       order += gapOrder;
       if( order>moc.getMocOrder() ) order=moc.getMocOrder();
       if( order<0 ) order=0;
-      if( arrayTimeMoc[order]==null || mocTimeLowReset ) {
+      if( arrayTimeMoc==null || arrayTimeMoc[order]==null || mocTimeLowReset ) {
+         if( arrayTimeMoc==null ) arrayTimeMoc = new TimeMoc[ Moc.MAXORDER+1];
          arrayTimeMoc[order] = new TimeMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          final int myOrder = order;
          final int myMo=moc.getMocOrder();

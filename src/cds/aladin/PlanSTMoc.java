@@ -39,14 +39,15 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class PlanSTMoc extends PlanTMoc {
    
-   
-   public PlanSTMoc(Aladin a) { super(a); }
-   
+   public PlanSTMoc(Aladin a) {
+      super(a);
+      type = ALLSKYSTMOC;
+   }
    
    protected PlanSTMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
       super(aladin);
-      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
-      arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       type = ALLSKYSTMOC;
       useCache = false;
@@ -64,10 +65,21 @@ public class PlanSTMoc extends PlanTMoc {
    /** Recopie du Plan à l'identique dans p1 */
    protected void copy(Plan p1) {
       super.copy(p1);
-      PlanSTMoc pm = (PlanSTMoc)p1;
-      pm.arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
+//      PlanSTMoc pm = (PlanSTMoc)p1;
+//      pm.arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
    }
 
+   /** Retourne true si le STMOC ne contient qu'un range de temps, potentiellement modifiable */
+   protected boolean isOneTimeRange() { return false; }
+   
+   protected void changeTimeRange(double jdmin, double jdmax) throws Exception {
+      if( !isOneTimeRange() ) throw new Exception("Not a oneTimeRange STMOC");
+      long min = (long)(jdmin*TimeMoc.DAYMICROSEC);
+      long max = (long)(jdmax*TimeMoc.DAYMICROSEC)+1L;
+      SpaceTimeMoc m = (SpaceTimeMoc)moc;
+      m.timeRange.r[0]=min;
+      m.timeRange.r[1]=max;
+   }
 
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
@@ -131,12 +143,24 @@ public class PlanSTMoc extends PlanTMoc {
    
    /** Retourne le SpaceMoc correspondant à l'intervalle temporelle courant pour la vue courante,
     * ou null si impossible à définir */
-   protected SpaceMoc getCurrentSpaceMoc() {
-      ViewSimple v = aladin.view.getCurrentView();
-      double t[] = oLastDrawTimeRange = v.getTimeRange();
+   protected SpaceMoc getCurrentSpaceMoc(ViewSimple v) { return getCurrentSpaceMoc(v,false); }
+   protected SpaceMoc getCurrentSpaceMoc(ViewSimple v, boolean echoCommand) {
+      double t[] = v.getTimeRange();
+      if( v==aladin.view.getCurrentView() ) oLastDrawTimeRange = t;
       
       long tmin = Double.isNaN( t[0]) ?            -1L :  (long)( t[0]*TimeMoc.DAYMICROSEC );
       long tmax = Double.isNaN( t[1]) ? Long.MAX_VALUE :  (long)( t[1]*TimeMoc.DAYMICROSEC );
+      
+      // echo de la commande script équivalente
+      if( echoCommand ) {
+         String range = 
+               Double.isNaN( t[0] ) && Double.isNaN( t[1] ) ? "":
+               Double.isNaN( t[0] ) ? " -timeRange=NaN/"+Astrodate.JDToDate(t[1]):
+               Double.isNaN( t[1] ) ? " -timeRange="+Astrodate.JDToDate(t[0])+"/NaN":
+                  " -timeRange="+Astrodate.JDToDate(t[0])+"/"+Astrodate.JDToDate(t[1]);
+                  ;
+         aladin.console.printCommand("cmoc"+range+" "+Tok.quote(this.label));
+      }
       
       try {
          return ((SpaceTimeMoc)moc).getSpaceMoc(tmin, tmax);
@@ -150,7 +174,7 @@ public class PlanSTMoc extends PlanTMoc {
     * ou null si impossible à définir */
    protected TimeMoc getCurrentTimeMoc() {
       try {
-         return ((SpaceTimeMoc)moc).getTimeMoc( oLastDrawMoc );
+         return ((SpaceTimeMoc)moc).getTimeMoc( isDisplayedInView() ? oLastDrawMoc : null );
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -161,12 +185,31 @@ public class PlanSTMoc extends PlanTMoc {
    private SpaceMoc oLastDrawMoc = null;
    
    
-   private boolean isDisplayedInPlot() { 
+   private boolean isDisplayedInView() {
       int m=aladin.view.getNbView();
       for( int i=0; i<m; i++ ) {
-         if( aladin.view.viewSimple[i].isPlotTime() ) return true;
+         ViewSimple v = aladin.view.viewSimple[i];
+         if( v.isFree() ) continue;
+         if( v.selected && !v.isPlotTime() ) return true;
       }
       return false;
+   }
+   
+   // Retourne la première vue TimePlot dans laquelle le STMOC est tracé
+   // null si aucune
+   private ViewSimple getViewPlot() { 
+      int m=aladin.view.getNbView();
+      for( int i=0; i<m; i++ ) {
+         if( aladin.view.viewSimple[i].isPlotTime() ) return aladin.view.viewSimple[i];
+      }
+      return null;
+   }
+   
+   // Retourne true s'il y a au moins une vue qui affiche le STMOC sous
+   // la forme temporelle
+   private boolean isDisplayedInPlot() { 
+      ViewSimple v = getViewPlot();
+      return v!=null && v.selected; 
    }
    
    protected void memoNewTime() {
@@ -180,7 +223,7 @@ public class PlanSTMoc extends PlanTMoc {
 
    protected void memoNewSpace() {
 //      System.out.println("memoNewSpace");
-      oLastDrawMoc = getLastDrawMoc();
+      oLastDrawMoc = isDisplayedInView() ? getLastDrawMoc() : null;
       mocTimeLowReset();
       oiz=-1;
       askForRepaint();
@@ -188,7 +231,7 @@ public class PlanSTMoc extends PlanTMoc {
 
    protected boolean isSpaceModified () {
       if( !isDisplayedInPlot() ) return false;
-      Moc m = getLastDrawMoc();
+      Moc m = isDisplayedInView() ? getLastDrawMoc() : null;
       boolean rep = !mocEquals(m,oLastDrawMoc);
 //      System.out.println("isSpaceModified = "+rep);
       return rep;
@@ -212,13 +255,72 @@ public class PlanSTMoc extends PlanTMoc {
    private SpaceMoc lastCurrentSpaceMoc = null;
    private TimeMoc lastCurrentTimeMoc = null;
    
+   protected Moc getSpaceMocLow(ViewSimple v,int order,int gapOrder) {
+      
+      // Si on n'est pas dans la vue principale, on va regénérer à chaque fois le MOC
+      // spatiale correspondant à la tranche de temps de la vue sans utiliser les
+      // LowMoc précalculés. On pourrait faire mieux mais ça permet à moindre cout
+      // de pouvoir afficher le même STMOC pour des tranches de temps différentes définies
+      // par chaque View
+     if( aladin.view.getNbUsedView()>1 ) { //v!=aladin.view.getCurrentView() ) {
+//        long t0 = Util.getTime();
+        SpaceMoc m = getCurrentSpaceMoc( v );
+        int lowOrder = getLowOrder( order, gapOrder );
+        try { m.setMocOrder( lowOrder ); } catch( Exception e ) { }
+//        System.out.println("J'ai recalculé le MocLow pour "+v+" en "+(Util.getTime()-t0)+"ms");
+        return m;
+     }
+     return super.getSpaceMocLow(v, order, gapOrder);
+   }
+
    protected SpaceMoc getSpaceMoc() {
+      ViewSimple v = aladin.view.getCurrentView();
       if( lastCurrentSpaceMoc!=null && !isTimeModified() ) return lastCurrentSpaceMoc;
-      SpaceMoc m = getCurrentSpaceMoc();
+      SpaceMoc m = getCurrentSpaceMoc( v );
       lastCurrentSpaceMoc = m;
       memoNewTime();
       return lastCurrentSpaceMoc;
    }
+   
+   // L'empreinte spatiale pour tracer la partie temps du STMOC dans un plot
+   // ne doit être prise en compte que s'il y a simultanément un vue plot et une vue classique
+   // pour ce STMOC. Si c'est le cas, il s'agit de l'union des MOCs couvrant la ou les vues
+   // classiques concernées. Sinon, il n'y a pas de contrainte spaciale
+   
+   // Retourne la première vue TimePlot dans laquelle le STMOC est tracé
+   // null si aucune
+//   private SpaceMoc getSpacialConstraint() { 
+//      int n=aladin.view.getNbView();
+//      ArrayList<ViewSimple> listV = new ArrayList<>(n);
+//      boolean flagPlot=false;
+//      for( int i=0; i<n; i++ ) {
+//         ViewSimple v = aladin.view.viewSimple[i];
+//         if( !v.selected || v.isFree() ) continue;
+//         if( v.isPlotTime() ) flagPlot=true;
+//         else listV.add(v);
+//      }
+//      if( !flagPlot ) return null;
+//      
+//      Moc m = null;
+//      try {
+//         for( ViewSimple v : listV ) {
+//            if( m==null ) m = v.getMoc();
+//            else m = m.union( m );
+//         }
+//      } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
+//      return (SpaceMoc)m;
+//   }
+//   
+//   protected TimeMoc getTimeMoc() {
+//      try {
+//         SpaceMoc m = getSpacialConstraint();
+//         return ((SpaceTimeMoc)moc).getTimeMoc( m );
+//      } catch( Exception e ) {
+//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//      }
+//      return null;
+//   }
+
    
    protected TimeMoc getTimeMoc() {
       if( lastCurrentTimeMoc!=null && !isSpaceModified() ) return lastCurrentTimeMoc;
@@ -226,19 +328,13 @@ public class PlanSTMoc extends PlanTMoc {
       lastCurrentTimeMoc = m;
       memoNewSpace();
       return lastCurrentTimeMoc;
-
-      
-//      try {
-//         if( timeMoc==null ) timeMoc = ((SpaceTimeMoc)moc).getTimeMoc();
-//      } catch( Exception e ) { }
-//      return timeMoc;
    }
-   
 
    
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
-      if( v.isPlotTime() ) drawInTimeView(g,v);
+      if( v.isPlotTime() ) 
+         drawInTimeView(g,v);
       else drawInSpaceView(g,v);
    }
    

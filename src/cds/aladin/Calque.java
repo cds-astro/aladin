@@ -43,6 +43,7 @@ import cds.aladin.stc.STCObj;
 import cds.allsky.TabRgb;
 import cds.moc.SpaceMoc;
 import cds.moc.TimeMoc;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 
 /**
@@ -578,6 +579,7 @@ public class Calque extends JPanel implements Runnable {
          Plan p = plan[i];
          if( !p.flagOk || !p.active ) continue;
          if( p instanceof PlanContour ) continue;
+         if( p instanceof PlanMoc ) continue;
          if( p.hasObj() || p.hasSources() ) return true;
       }
       return false;
@@ -913,7 +915,7 @@ public class Calque extends JPanel implements Runnable {
             if( plan[i].isImage() && canBeRef(plan[i]) ) nb++;
 
          }
-         if( nb>aladin.view.getModeView() ) {
+         if( nb>aladin.view.getNbView() ) {
             aladin.view.setModeView(
                   nb<=ViewControl.MVIEW2L ? ViewControl.MVIEW2L :
                      nb<=ViewControl.MVIEW4 ? ViewControl.MVIEW4 :
@@ -1896,6 +1898,20 @@ public class Calque extends JPanel implements Runnable {
    protected void resetTimeRange() {
       zoom.zoomTime.setGlobalTimeRange( getGlobalTimeRange() );
    }
+   
+   /** Retourne un intervalle de temps par défaut. Soit l'intervalle de la vue courante
+    * si elle en possède un, sinon l'intervalle de la journée courante */
+   double [] getDefaultTimeRange() {
+      ViewSimple v = aladin.view.getCurrentView();
+      double [] t = v.getTimeRange();
+      if( Double.isNaN(t[0]) || Double.isNaN(t[1]) ) {
+         long d = Util.getTime(2);
+         d -= d%86400;
+         t[0] = Astrodate.UnixToJD( d );
+         t[1] = Astrodate.UnixToJD( d+86399 );
+      }
+      return t;
+   }
 
    /** Cree un nouveau plan Filter
     * @param aladinLabel Le nom du plan
@@ -2011,7 +2027,7 @@ public class Calque extends JPanel implements Runnable {
       return 1;
    }
 
-   /** Crée un plan MOC en faisant un crop */
+   /** Crée un plan MOC en faisant un crop spatial rectangulaire */
    protected int newPlanMoc(String label,PlanMoc source,Coord [] coo) {
       int n;
       PlanMoc pa;
@@ -2024,6 +2040,25 @@ public class Calque extends JPanel implements Runnable {
       n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = pa = new PlanMocAlgo(aladin,label,source,coo);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
+
+
+   /** Crée un plan MOC en faisant un "crop" temporel */
+   protected int newPlanMoc(String label,PlanMoc source,double jdmin, double jdmax) {
+      int n;
+      PlanMoc pa;
+
+      if( label==null && source!=null ) {
+         PlanMoc p1 = source;
+         label = "="+p1.getUniqueLabel("[PROJ "+p1.getLabel()+"]");
+      }
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanMocAlgo(aladin,label,source,jdmin,jdmax);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -2100,7 +2135,7 @@ public class Calque extends JPanel implements Runnable {
    protected int newPlanSTMoc(String label,Plan [] p,int spaceOrder,int timeOrder,
          double duration,double radius,boolean fov) {
       int n;
-      PlanTMoc pa;
+      PlanSTMoc pa;
 
       if( label==null ) label = "="+p[0].getUniqueLabel("["+p[0].getLabel()+"]");
 
@@ -2112,6 +2147,20 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
+   /** Crée un plan STMOC à la résolution indiquée à partir d'un MOC spatial et d'un range temporel unique */
+   protected int newPlanSTMoc(String label,Plan [] p,int spaceOrder,int timeOrder, double jdmin, double jdmax) {
+      int n;
+      PlanSTMoc pa;
+
+      if( label==null ) label = "="+p[0].getUniqueLabel("["+p[0].getLabel()+"]");
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanSTMocGen(aladin,label,p,spaceOrder,timeOrder,jdmin,jdmax);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
 
    /** Crée une image Algo sur la pile avec l'algo suivant : "p1 fct p2" ou "p1 fct coef" si p2
     * est nul. Si p1 est nul, la première opérande sera le plan de base lui-même et le résultat
@@ -3431,6 +3480,20 @@ public class Calque extends JPanel implements Runnable {
       //PlanFilter.newPlan(plan[n]);
       return n;
    }
+   
+   /** Transformation d'un Plan SMOC en STMOC */
+   Plan moc2STMoc( PlanMoc p, int timeOrder, double jdmin, double jdmax) {
+      int n = getIndex(p);
+      PlanSTMoc p1 = new PlanSTMocGen(aladin, null, new Plan[]{p}, -1, timeOrder, jdmin, jdmax);
+      p1.label = p.label;  // On reprend le même label
+      p1.c = p.c;          // et la même couleur
+      plan[n] = p1;
+      resetTimeRange();
+      
+      aladin.console.printCommand(Tok.quote(p.label)+" = cmoc -spacetime -order=/"+timeOrder+" -timeRange="
+                    +Astrodate.JDToDate(jdmin)+"/"+Astrodate.JDToDate(jdmax)+" "+Tok.quote(p.label));
+      return p1;
+   }
 
    /** Generation d'un plan Image à partir d'un crop de la vue passée en paramètre (doit être un PlanBG) */
    PlanImage createCropImage(ViewSimple v, boolean fullRes ) throws Exception {
@@ -3862,6 +3925,9 @@ public class Calque extends JPanel implements Runnable {
       // Affectation du plan aux vues qui utilisaient son prédécesseur
       // dans le cas d'une réutilisation de plan
       aladin.view.adjustViews(p);
+      
+      // Peut être que la plage temporelle a été modifiée ?
+      resetTimeRange();
 
       select.repaint();
 
@@ -3994,6 +4060,32 @@ public class Calque extends JPanel implements Runnable {
          if( plan[i].selected && plan[i].isCatalog() ) return plan[i];
       }
       return null;
+   }
+   
+   /** Retourne le premier plan STMOC sélectionné, ou le premier si aucun sélectionné, et sinon null */
+   protected PlanSTMoc getFirstSelectedorNotPlanSTMoc() {
+      PlanSTMoc p =null;
+      for( Plan p1 : plan ) {
+         if( !p1.isReady() ) continue;
+         if( p1 instanceof PlanSTMoc ) {
+            if( p1.selected ) return (PlanSTMoc)p1;
+            p = (PlanSTMoc)p1;
+         }
+      }
+      return p;
+   }
+
+   /** Retourne le premier plan temps sélectionné, ou le premier si aucun sélectionné, et sinon null */
+   protected Plan getFirstSelectedorNotPlanTime() {
+      Plan p =null;
+      for( Plan p1 : plan ) {
+         if( !p1.isReady() ) continue;
+         if( p1.isTime() ) {
+            if( p1.selected ) return p1;
+            p = p1;
+         }
+      }
+      return p;
    }
 
    /** Retourne le premier plan Image sélectionné, ou null si aucun */

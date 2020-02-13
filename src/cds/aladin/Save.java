@@ -731,19 +731,23 @@ public class Save extends JFrame implements ActionListener {
             if( !p.isReady() ) continue;
 
             switch(p.type) {
+               case Plan.ALLSKYMOC: 
+               case Plan.ALLSKYTMOC: 
+               case Plan.ALLSKYSTMOC: appendPlanMOCXML(p);   break;
+              
                case Plan.ALLSKYCUBE: 
                case Plan.ALLSKYCAT:
-               case Plan.ALLSKYIMG: appendPlanBGXML(p);    break;
-               case Plan.FILTER:  appendPlanFilterXML(p);  break;
-               case Plan.FOLDER:  appendPlanFolderXML(p);  break;
-               case Plan.CATALOG: appendPlanCatalogXML(p); break;
+               case Plan.ALLSKYIMG: appendPlanBGXML(p);      break;
+               case Plan.FILTER:    appendPlanFilterXML(p);  break;
+               case Plan.FOLDER:    appendPlanFolderXML(p);  break;
+               case Plan.CATALOG:   appendPlanCatalogXML(p); break;
                //               case Plan.APERTURE:
-               case Plan.TOOL:    appendPlanToolXML(p);    break;
+               case Plan.TOOL:      appendPlanToolXML(p);    break;
                case Plan.IMAGERSP:
                case Plan.IMAGEALGO:
                case Plan.IMAGEMOSAIC:
-               case Plan.IMAGE:   appendPlanImageXML(p);   break;
-               case Plan.IMAGERGB:appendPlanImageRGBXML(p);break;
+               case Plan.IMAGE:     appendPlanImageXML(p);   break;
+               case Plan.IMAGERGB:  appendPlanImageRGBXML(p);break;
                //               default: appendGenericCommand(p); break;    // PAS ENCORE SUPPORTE - A REFLECHIR
             }
 
@@ -1055,9 +1059,21 @@ public class Save extends JFrame implements ActionListener {
       if( pcat.hasObj() ) append(getXMLTailTable());
    }
    
+   /** Sauvegardde du plan MOC sous forme ASCII dans un segment XML CDATA */
+   protected void appendPlanMOCXML(Plan p) throws Exception {
+      appendXMLHeadPlan(p);
+      append("    <TABLE><VALUE><![CDATA["+CR);
+      Moc moc = ((PlanMoc)p).getMoc();
+      append( moc.toASCII() );
+      append(CR);
+      append("]]></VALUE></TABLE>"+CR);
+      append("  </PLANE>"+CR);
+   }
+   
    /** Sauvegarde du plan BG p sous forme XML (utilise le buffer f) */
    protected void appendPlanBGXML(Plan p) throws java.io.IOException {
       appendXMLHeadPlan(p);
+      append("  </PLANE>"+CR);
    }
 
    /** Sauvegarde du plan Filter p sous forme XML (utilise le buffer f) */

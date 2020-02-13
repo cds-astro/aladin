@@ -27,6 +27,7 @@ package cds.aladin;
  */
 public final class Tok {
    private char a[];	// Le string en cours d'analyse
+   private int oi;      // La position courante précédente (avant lecture du token
    private int i;       // La position courante de l'analyse
    private char c;      // La quote courante
    private String separator;  // Liste des séparateurs, isSpace par défaut
@@ -36,7 +37,7 @@ public final class Tok {
    public Tok(String s,String separator) {
       this.separator = separator;
       a = s.toCharArray();
-      i=0;
+      oi=i=0;
    }
    
    /** Quote la chaine si c'est nécessaire (et backquote les " internes) */
@@ -107,6 +108,9 @@ public final class Tok {
    /** Retourne la position courante */
    public  int getPos() { return i; }
    
+   /** Retourne la position courante précédente (avant lecture du token courant) */
+   public  int getPreviousPos() { return oi; }
+   
    
    private char lastSeparator=0;
    
@@ -136,6 +140,7 @@ public final class Tok {
       boolean backslash=false;
       boolean first=true;
       
+      oi = i;
       for( ; i<a.length; i++) {
          if( !backslash && (a[i]=='"' || a[i]=='\'') ) {
             if( !quote && first) { c=a[i]; quote=true; }

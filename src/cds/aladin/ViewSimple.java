@@ -206,8 +206,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected short iz;
    
    // Les paramètres temporels de la vue
-   protected double jdmin;
-   protected double jdmax;
+   protected double jdmin=Double.NaN;
+   protected double jdmax=Double.NaN;
 
    // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
    protected Projection projLocal;  // Projection propre à la vue (pour planBG) => voir getProj()
@@ -278,7 +278,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
    
    // pour les classes dérivées
-   protected ViewSimple(Aladin aladin) { this.aladin=aladin; }
+   protected ViewSimple(Aladin aladin) { 
+      this.aladin=aladin; 
+      jdmin = jdmax = Double.NaN;    // Par défaut pas de restriction de temps
+  }
    
    public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }
    public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
@@ -1321,7 +1324,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       // Déplacement par changement de centre de projection
-      if( pref instanceof PlanBG && !(e.isControlDown() || getTaille()<30)  ) {
+      if( !isPlot() && pref instanceof PlanBG && !(e.isControlDown() || getTaille()<30)  ) {
 
          Point ps = getPosition(scrollX, scrollY);
          Point pt = getPosition(x, y);
@@ -2133,7 +2136,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
 
-      if( tool==ToolBox.SELECT /* && !Aladin.OUTREACH */ && !aladin.calque.hasSelectableObjects() ) {
+      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() ) {
 
          // En multiview, on garde la possibilité de déplacer les vues en attrapant
          // leur bord
@@ -3549,7 +3552,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Memorisation de la position en cas de deplacement fin avec les fleches
       lastMove = vs.getPosition(x,y);
       lastView = new PointD(x,y);
-
+      
       int tool=getTool(e);
 
       // Gestion du rectangle de crop
@@ -3565,7 +3568,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       boolean fullScreen = isFullScreen();
 
       if( fullScreen && aladin.fullScreen.mouseMoved((int)x,(int)y) ) return;
-
+      
       // Affichage de la position et de la valeur du pixel
       aladin.localisation.setPos(vs,x,y);
       Projection proj = vs.getProj();
@@ -6115,7 +6118,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             pasa=30;
             pasd=15;
          } else {
-            int nb = fullScreen ? 6 : NBCELL[ViewControl.getLevel(aladin.view.getModeView())];
+            int nb = fullScreen ? 6 : NBCELL[ViewControl.getLevel(aladin.view.getNbView())];
             double rd = tailleDE*60.;
             if( rd==0. || Double.isNaN(rd) ) rd=60*360.;
             pasd = goodPas(rd/nb,PASD)/60.;
@@ -6376,7 +6379,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                   String s=Coord.getUnit(y,true,false);
 
                   // Affichage
-                  int bord = aladin.view.getModeView()>4?2:4;
+                  int bord = aladin.view.getModeView()>5?2:4;
                   X+=dx; Y+=dy;
 
                   if( view.infoBorder ) {
@@ -6510,7 +6513,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Retourne la vue utilisée pour synchroniser cette vue (cf Aladin.sync),
     * la vue elle-même sinon */
    protected ViewSimple getProjSyncView() {
-      if( isProjSync() && !isPlot() ) {
+      if( isProjSync() && !isPlot() ) {  // Pas la même taille des panels => impossible
          ViewSimple vs = aladin.view.getCurrentView();
          if( vs.isPlot() ) return this;
 
@@ -7148,7 +7151,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Quelle est la taille actuelle du view
       if( !Aladin.NOGUI ) rv = new Rectangle(0,0,getSize().width,getSize().height);
-
+      
       PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
 
       if( !getImgView(pi) || isFree() ) {
@@ -7298,9 +7301,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       rLanguette = null;
 //      if( !Aladin.BETA ) return;
       if( aladin.splitHiPSWidth.getCompSize()>10 ) return;
-      int nb = view.getModeView();
-      int ok = nb==ViewControl.MVIEW1 ? 0 : nb==ViewControl.MVIEW2C ? 1 : nb==ViewControl.MVIEW2L ? 0 
-             : nb==ViewControl.MVIEW4 ? 2 : nb==ViewControl.MVIEW9  ? 6 : 12;
+      int m = view.getModeView();
+      int ok = m==ViewControl.MVIEW1 ? 0 
+             : m==ViewControl.MVIEW2C || m==ViewControl.MVIEW2T ? 1 
+             : m==ViewControl.MVIEW2L ? 0 
+             : m==ViewControl.MVIEW4 ? 2 
+             : m==ViewControl.MVIEW9  ? 6 : 12;
       if( n!=ok ) return;  // Seule la vue en bas à gauche a une languette
       rLanguette = MySplitPane.drawLanguette(g, 1, true, 6, 0, getHeight()-70, aladin.COLOR_DIRECTORY_BACKGROUND, Color.gray);
    }

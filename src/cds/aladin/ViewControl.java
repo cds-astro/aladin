@@ -43,13 +43,14 @@ public final class ViewControl extends JComponent implements
                   MouseMotionListener, MouseListener
                   {
    static public final int MVIEW1  = 1;
+   static public final int MVIEW2T    = 5;
    static public final int MVIEW2C = 2;
-   static public final int MVIEW2L  = 3;
+   static public final int MVIEW2L    = 3;
    static public final int MVIEW4  = 4;
    static public final int MVIEW9  = 9;
    static public final int MVIEW16 = 16;
    static final int DEFAULT = MVIEW1;
-   static final int[] MODE = { MVIEW1,MVIEW2C,MVIEW2L,MVIEW4,MVIEW9,MVIEW16 };
+   static final int[] MODE = { MVIEW1,MVIEW2T,MVIEW2C,MVIEW2L,MVIEW4,MVIEW9,MVIEW16 };
    static final int MAXVIEW = MVIEW16;
    
    String INFOMVIEW,INFOSYNC,LABEL;
@@ -109,14 +110,14 @@ public final class ViewControl extends JComponent implements
    
    /** Retourne le nombre de vues en fonction du mode courant */
    protected int getNbView(int mode) {
-      return mode==MVIEW2L ? 2 : mode;
+      return mode==MVIEW2L || mode==MVIEW2T ? 2 : mode;
    }
    
    /** Retourne le nombre de lignes de vues en fonction du mode */
    protected int getNbLig() { return getNbLig(modeView); }
    protected int getNbLig(int mode) {
       if( mode==MVIEW2L ) return 1;
-      else if( mode==MVIEW2C ) return 2;
+      else if( mode==MVIEW2C || mode==MVIEW2T ) return 2;
       return (int)Math.sqrt(mode);
    }
    
@@ -124,7 +125,7 @@ public final class ViewControl extends JComponent implements
    protected int getNbCol() { return getNbCol(modeView); }
    protected int getNbCol(int mode) {
       if( mode==MVIEW2L ) return 2;
-      else if( mode==MVIEW2C ) return 1;
+      else if( mode==MVIEW2C || mode==MVIEW2T ) return 1;
       return (int)Math.sqrt(mode);
    }
 
@@ -143,17 +144,22 @@ public final class ViewControl extends JComponent implements
          int mh = L/nlig;              // entre 2 vignette en absisse
          int w = L/ncol-2;             // largeur d'une vignette
          int h = L/nlig-2;             // hauteur d'une vignette
+         
+         
          for( int j =0; j<ncol; j++ ) {
             for( int k=0; k<nlig; k++ ) {
                int x=5+i*(L+2)+j*mw;
                int y=2+k*mh;
                
+               int m = mode!=MVIEW2T ? 0 : k==0 ? h/2 : -h/2;   // Si hauteur 3/4 1/4
+               int d = mode!=MVIEW2T ? 0 : k==0 ? 0 : h/2;   // Si hauteur 3/4 1/4
+               
                Color fg = !enabled ? Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE
                             : down ? Aladin.COLOR_ICON_ACTIVATED : Aladin.COLOR_CONTROL_FOREGROUND;
                if( enabled && in ) fg = fg.brighter();
                g.setColor( fg );
-               g.drawLine(x,y,x+w,y); g.drawLine(x,y,x,y+h);
-               g.drawLine(x+w,y,x+w,y+h); g.drawLine(x,y+h,x+w,y+h);
+               g.drawLine(x,y+d,x+w,y+d); g.drawLine(x,y+d,x,y+d+h+m);
+               g.drawLine(x+w,y+d,x+w,y+d+h+m); g.drawLine(x,y+d+h+m,x+w,y+d+h+m);
                
 //               if( down || in ) {
 //                  g.setColor( !enabled ? Aladin.MYGRAY : in ? Aladin.MYBLUE : Aladin.COLOR_LABEL);

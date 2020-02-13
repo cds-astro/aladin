@@ -61,6 +61,7 @@ class ZoomTime {
    void setGlobalTimeRange(double [] timeRange ) {
       globalJdmin = timeRange[0];
       globalJdmax = timeRange[1];
+      zoomView.repaint();
    }
    
    /** Donne l'intervalle de temps max (en fonction du dernier scan de la pile */
@@ -245,7 +246,7 @@ class ZoomTime {
       // Dessin de la barre temporelle complète
       g.setColor( Aladin.COLOR_GREEN );
       g.drawRect(x,y,w,h);
-      g.setColor( Aladin.COLOR_BLUE.darker().darker() );
+      g.setColor( Aladin.COLOR_BLUETIME );
       g.fillRect(x+2, y+2, w-4, h-4);
       
       // Les dates min et max

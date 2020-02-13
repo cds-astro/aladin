@@ -26,7 +26,10 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Label;
 import java.awt.Panel;
 import java.awt.Point;
@@ -399,7 +402,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       
       // On crée une vue supplémentaire si nécessaire
-      if( !getCurrentView().isFree() && !isMultiView() ) setModeView(ViewControl.MVIEW2C);
+      if( !getCurrentView().isFree() && !isMultiView() ) setModeView(ViewControl.MVIEW2T);
       int nview = aladin.view.getLastNumView(p);
       
       setPlanRef(nview, p);
@@ -1485,7 +1488,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne le mode courant */
    protected int getModeView() { return modeView>viewSimple.length ? viewSimple.length : modeView; }
-
+   
    /** Retourne le status des vues visibles (voir command status views) */
    protected StringBuffer getStatus() {
       StringBuffer res = new StringBuffer();
@@ -1522,9 +1525,24 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       mviewPanel.removeAll();
       int lig = aladin.viewControl.getNbLig(m);
       int col = aladin.viewControl.getNbCol(m);
-      mviewPanel.setLayout( new GridLayout(lig,col,0,0));
-      if( m==ViewControl.MVIEW2L) m=ViewControl.MVIEW2C;
-      for( int i=0; i<m; i++ ) mviewPanel.add(viewSimple[i]);
+      
+      // Cas particulier en 2/3 - 1/3
+      if( modeView==ViewControl.MVIEW2T ) {
+         GridBagLayout g = new GridBagLayout();
+         mviewPanel.setLayout(g);
+         GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0.75, 
+               GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0,0,0), 0,0);
+         g.setConstraints(viewSimple[0], c);
+         mviewPanel.add(viewSimple[0]);
+         c.weighty=0.25; c.gridy=1;
+         g.setConstraints(viewSimple[1], c);
+         mviewPanel.add(viewSimple[1]);
+         
+      } else {
+         mviewPanel.setLayout( new GridLayout(lig,col,0,0));
+         if( m==ViewControl.MVIEW2L ) m=ViewControl.MVIEW2C;
+         for( int i=0; i<m; i++ ) mviewPanel.add(viewSimple[i]);
+      }
    }
 
    /** Changement de taille de la zone des vues, et appel aux changements
@@ -1665,6 +1683,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       aladin.console.printCommand("rm "+cmd);
       sauvegarde();
+      
+      // Si on est en 2 vues, et qu'on vient de supprimer la deuxième, on repasse en 1 vue automatiquement
+      int m = getNbView();
+      if( m==2 && viewSimple[1].isFree() 
+            && viewMemo.getNbUsed()<=2 ) { setCurrentNumView(0); oneView(); }
    }
 
    /** Libération des vues spécifiées */
@@ -2077,6 +2100,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void syncView(double fct,Coord coo,ViewSimple vOrig,boolean force) {
       ViewSimple v;
       
+      if( vOrig!=null && vOrig.isPlot() ) return;
+      
       boolean flagNull = coo==null;
       Coord c = flagNull ? new Coord(repere.raj,repere.dej) : coo;
 
@@ -2440,6 +2465,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void propResume() {
       if( aladin.frameProp==null ) return;
       aladin.frameProp.resume();
+      aladin.calque.resetTimeRange();
    }
    
    /** Edition des propriétés du dernier objets sélectionnés */
@@ -2626,6 +2652,20 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       aladin.mesure.removeAllElements();
 
       return true;
+   }
+   
+   /** Déselection des lignes et des Cercle uniquement */
+   protected void deSelectLigneAndCercle() {
+      Vector<Obj> v = new Vector<>(vselobj.size());
+      for( Obj o : vselobj ) {
+         if( o instanceof Ligne || o instanceof Cercle || o instanceof SourceStat ) {
+            o.setSelect(false);
+            if( o instanceof SourceStat ) aladin.mesure.remove( (SourceStat)o );
+            continue;
+         }
+         v.add(o);
+      }
+      vselobj = v;
    }
 
    /** Déselection de tous les objets du plan p et réaffichage complet */
@@ -4430,6 +4470,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void setModeView(int m) {
       if( aladin.viewControl.modeView!=m ) aladin.viewControl.setModeView(m);
       if( modeView==m ) return;
+      
+      int nbView = aladin.viewControl.getNbView(m);
+      int cNbView = aladin.viewControl.getNbView(modeView);
 
       // Peut être faut-il générer quelques vues ??
       // AVEC LES TRASNPARENCE DES IMAGES, JE TROUVE QUE CA COMPLIQUE PLUS QUE CA NE SIMPLIFIE
@@ -4447,7 +4490,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       // via memoPos ou qu'il n'est plus possible d'y revenir parce que la vue
       // courante ne peut s'y trouver, la nouvelle configuration d'affichage
       // aura comme première vue la vue courante
-      if( memoPos!=null && memoPos.y+currentView<m ) {
+      if( memoPos!=null && memoPos.y+currentView<nbView ) {
          //System.out.println("memoPos à partir de "+memoPos.x+" en position "+memoPos.y);
          pos=new Point(memoPos.x,memoPos.y+currentView);
       } else {
@@ -4462,7 +4505,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Mémorisation de la nouvelle configuration d'affichage dans
       // le cas où l'utilisateur souhaite y revenir
-      if( m<modeView ) memoPos=new Point(previousScrollGetValue,currentView);
+      if( nbView<cNbView ) memoPos=new Point(previousScrollGetValue,currentView);
       else memoPos=null;
 
       // INFO: Pour le mode MVIEW1, la gestion du stick est plus complexe
@@ -4483,7 +4526,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Ajustement des flags stick en fonction du nouveau mode Multiview
       if( m!=ViewControl.MVIEW1 ) {
-         for( int i=0; i<m; i++ ) {
+         for( int i=0; i<nbView; i++ ) {
             //            int x = getStickPos(i);
             //if( memoStick[x] ) System.out.println("Je dois sticker la vue "+i);
             viewSimple[i].sticked = memoStick[ getStickPos(i) ];
@@ -4492,12 +4535,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Chargement des vues stickées dans le nouveau mode
       int nbStick=0;
-      for( int i=0; i<m; i++) {
+      for( int i=0; i<nbView; i++) {
          if( viewSimple[i].sticked ) { nbStick++; rechargeFromStick(i); }
       }
 
       // Puis les vues normales
-      int max = pos.x+m-nbStick;
+      int max = pos.x+nbView-nbStick;
       for( int i=pos.x,j=0; i<max;j++ ) {
          if( viewSimple[j].sticked ) continue;
          rechargeFromMemo(i++,j);
@@ -4507,7 +4550,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       setCurrentNumView(pos.y);
 
       // Nouvelle configuration de la scrollbar verticale
-      scrollV.setValues(pos.x/m,m, 0  ,1+viewMemo.size()/m);
+      scrollV.setValues(pos.x/nbView,nbView, 0  ,1+viewMemo.size()/nbView);
       int bloc = aladin.viewControl.getNbLig(m);
       scrollV.setBlockIncrement(bloc);
 

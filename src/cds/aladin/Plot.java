@@ -125,6 +125,16 @@ public class Plot {
    public boolean isPlotTime() { return flagTime; }
    public boolean isPlotTimeWithoutTable() { return flagTime && !hasTable(); }
    
+//   protected void mouseMove(MouseEvent e) {
+//      Coord coo = new Coord();
+//      PointD p   = viewSimple.getPosition( (double)e.getX(), (double)e.getY());
+//      coo.x = p.x;
+//      coo.y = p.y;
+//      plotProj.getCoord(coo);
+//      String s=Astrodate.JDToDate(coo.al);
+//      System.out.println("Date: "+s);
+//   }
+   
    // Retourne le premier PlotItem du graphique
    private PlotItem getFirstPlotItem() {
       if( plotTable==null || plotTable.size()==0 ) return null;
@@ -213,7 +223,7 @@ public class Plot {
             boolean flagNoSerie = first;
             for( Plan p1 : aladin.calque.getPlans() ) {
                if( !p1.flagOk || !p1.active ) continue;
-               if( !p1.isTimeMoc() ) continue;
+//               if( !p1.isTimeMoc() ) continue;
                
                double [] timeRange = p1.getTimeRange();
                double tmin = timeRange[0];
@@ -570,8 +580,16 @@ public class Plot {
    private double getIncrX()  { return getIncr(1.,0,0,0); }
    private double getIncrY()  { return getIncr(1.,1,0,0); }
    
+//   private void drawReticle(Graphics g) {
+//      if( !isPlotTime() && viewSimple!=null && viewSimple.lastView!=null ) return;
+//      int x = (int)viewSimple.lastView.x;
+//      g.setColor(Color.magenta);
+//      g.drawLine(x, 0, x, viewSimple.getHeight()-20);
+//   }
+   
    /** Tracé de la grille */
    public void drawGrid(Graphics g,int dx,int dy) {
+//      drawReticle(g);
       try {
          double incrX = plotProj.isLogXPlot() ? 1e-10 : getIncrX();
          double incrY = plotProj.isLogYPlot() ? 1e-10 : getIncrY();

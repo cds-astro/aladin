@@ -21,6 +21,9 @@
 
 package cds.moc;
 
+
+
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -29,6 +32,38 @@ import java.util.Iterator;
 /** Multi Order Coverage Map (MOC)
  * This object provides read, write and process methods to manipulate a Multi Order Coverage Map (MOC)
  * A MOC is used to define a sky region by using HEALPix sky tesselation
+ * 
+ * Order    Space res.   Time resolution
+ * 0      58.63°     9133y 171d 11h 22m 31.711744s
+ * 1      29.32°     2283y 134d 4h 20m 37.927936s
+ * 2      14.66°     570y 307d 11h 35m 9.481984s
+ * 3      7.329°     142y 259d 11h 53m 47.370496s
+ * 4      3.665°     35y 247d 11h 58m 26.842624s
+ * 5      1.832°     8y 335d 19h 29m 36.710656s
+ * 6      54.97'     2y 83d 22h 52m 24.177664s
+ * 7      27.48'     203d 14h 43m 6.044416s
+ * 8      13.74'     50d 21h 40m 46.511104s
+ * 9      6.871'     12d 17h 25m 11.627776s
+ * 10     3.435'     3d 4h 21m 17.906944s
+ * 11     1.718'     19h 5m 19.476736s
+ * 12     51.53"     4h 46m 19.869184s
+ * 13     25.77"     1h 11m 34.967296s
+ * 14     12.88"     17m 53.741824s
+ * 15     6.442"     4m 28.435456s
+ * 16     3.221"     1m 7.108864s
+ * 17     1.61"      16.777216s
+ * 18     805.2mas   4.194304s
+ * 19     402.6mas   1.048576s
+ * 20     201.3mas   262.144ms
+ * 21     100.6mas   65.536ms
+ * 22     50.32mas   16.384ms
+ * 23     25.16mas   4.096ms
+ * 24     12.58mas   1.024ms
+ * 25     6.291mas   256µs
+ * 26     3.145mas   64µs
+ * 27     1.573mas   16µs
+ * 28     786.3µas   4µs
+ * 29     393.2µas   1µs
  *
  * @authors Pierre Fernique [CDS]
  * @version 1.0 April 2019 - Refactoring
@@ -68,6 +103,12 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    /** Provide the MOC order. By default 29 */
    abstract public int getMocOrder();
 
+   /** Retourne la composante spatiale du MOC */
+   abstract public SpaceMoc getSpaceMoc() throws Exception;
+
+   /** Retourne la composante temporelle du MOC */
+   abstract public TimeMoc getTimeMoc() throws Exception;
+
    /** Return approximatively the memory used for this moc (in bytes) */
    abstract public long getMem();
 
@@ -100,7 +141,11 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
       return property.get(key);
    }
   
-   abstract public String toASCII() throws Exception;
+   public String toASCII() throws Exception {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      (new MocIO(this)).writeASCII(out);
+      return out.toString();
+   }
 
    /** Fast test for checking if the parameter MOC is intersecting
     * the current MOC object
@@ -203,8 +248,7 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
 
    /** Write HEALPix MOC to a file
     * @param filename name of file
-    * @param mode encoded format (JSON or FITS)
-    * @deprecated
+    * @param mode encoded format (ASCII, JSON or FITS)
     */
    public void write(String filename,int mode) throws Exception {
       check();
@@ -213,21 +257,20 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
 
    /** Write HEALPix MOC to an output stream
     * @param out output stream
-    * @param mode encoded format (JSON or FITS)
-    * @deprecated
+    * @param mode encoded format (ASCII, JSON or FITS)
     */
    public void write(OutputStream out,int mode) throws Exception {
       check();
       (new MocIO(this)).write(out,mode);
    }
 
-   /** Write HEALPix MOC to an output stream IN JSON encoded format
+   /** Write HEALPix MOC to an output stream IN ASCII encoded format
     * @param out output stream
-    * @deprecated see write(OutputStream)
     *
     */
    public void writeASCII(OutputStream out) throws Exception {
-      writeJSON(out);
+      check();
+      (new MocIO(this)).writeASCII(out);
    }
 
    /** Write HEALPix MOC to an output stream IN JSON encoded format

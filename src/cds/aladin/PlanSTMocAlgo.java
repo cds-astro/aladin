@@ -52,7 +52,7 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       if( s.startsWith("-") ) s=s.substring(1);
       return Util.indexInArrayOf(s, OPERATION, true);
    }
-
+   
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */

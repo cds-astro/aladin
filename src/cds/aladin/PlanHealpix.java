@@ -42,6 +42,7 @@ import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
+import cds.moc.Moc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -85,7 +86,7 @@ public class PlanHealpix extends PlanBG {
    private boolean isGZ = false;
    private boolean isPartial = false; // true if partial Healpix mode
    private boolean isARGB=false;      // True if ARGB Healpix map (32 int bits, COLORMOD ARGB)
-   private double[] partialHpxPixIdx; // indexes of healpix pixels
+   private long[] partialHpxPixIdx; // indexes of healpix pixels
    private int nbRecordsPartial;
 
    private String originalPath;
@@ -503,9 +504,19 @@ public class PlanHealpix extends PlanBG {
 
       int nsideImage=0;
       int minLevel = 3; // Norder minimum désiré
-      if( nside==0 ) nside = headerFits.getIntFromHeader("NSIDE");
+      if( nside==0 ) {  
+         try { nside = headerFits.getIntFromHeader("NSIDE"); } catch( Exception e ) {} 
+         
+         // Ce doit être un fichier HEALPIX MOC à la Giuseppe
+         if( nside==0 ) {
+            try { 
+               int o = headerFits.getIntFromHeader("MOCORDER"); 
+               nside = (int)CDSHealpix.pow2(o);
+            } catch( Exception e ) {} 
+         }
+      }
       int maxSizeGeneratedImage = 512;
-      if( nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
+      if( nside!=0 && nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
       Aladin.trace(3, "maxSizeGeneratedImage: "+maxSizeGeneratedImage);
       nbPixGeneratedImage = 2*maxSizeGeneratedImage;
       nSideFile = nside;
@@ -653,8 +664,7 @@ public class PlanHealpix extends PlanBG {
          fillRingValues(0, 12*newNSideFile*newNSideFile, idxTForm);
       }
 
-
-      if (tfieldNames.length>0 && tfieldNames[0].equals("PIXEL") ) {
+      if ( ordering.equals("NUNIQ") || tfieldNames.length>0 && tfieldNames[0].equals("PIXEL") ) {
          isPartial = true;
 
          // on skippe le premier champ qui donne les numéros Healpix des pixels
@@ -673,13 +683,17 @@ public class PlanHealpix extends PlanBG {
 
          Aladin.trace(3, "nbRecordsPartial: "+nbRecordsPartial);
 
-
-         if (ordering.equals("NESTED") ) {
-            // on passe 0 comme indice, car le champ PIXEL est en position 0
-            partialHpxPixIdx = getValuesNested(0, nbRecordsPartial, rafHpx, initialOffsetHpx, 0);
-         }
-         else {
-            partialHpxPixIdx = getValuesRing(0, nbRecordsPartial, newNSideFile);
+         // on passe 0 comme indice, car le champ PIXEL est en position 0
+         if (ordering.equals("NESTED") || ordering.equals("NUNIQ") ) {
+            partialHpxPixIdx = getIndex(0, nbRecordsPartial, rafHpx, initialOffsetHpx, 0);
+//            partialHpxPixIdx = getValuesNested(0, nbRecordsPartial, rafHpx, initialOffsetHpx, 0);
+            
+         } else {
+            
+            double [] x =  getValuesRing(0, nbRecordsPartial, newNSideFile);
+            partialHpxPixIdx = new long[ x.length ];
+            for( int i=0; i<x.length; i++ ) partialHpxPixIdx[i]= (long) x[i];
+//            partialHpxPixIdx = getValuesRing(0, nbRecordsPartial, newNSideFile);
          }
          fillPartialValues(idxTForm);
       }
@@ -696,7 +710,7 @@ public class PlanHealpix extends PlanBG {
          Fits out = new Fits(nbPixGeneratedImage, nbPixGeneratedImage, curTFormBitpix);
          buildDoubleHealpix(newNSideImage, i, newNSideFile, out, idxTForm, dir);
       }
-
+      
       // on rend la mémoire
       ringValues = null;
 
@@ -970,16 +984,17 @@ public class PlanHealpix extends PlanBG {
 
    private double[] getValues(long lowHealpixIdx, long highHealpixIdx,
          RandomAccessFile raf, long initialOffset, long idxTForm) {
-      if (isPartial && ordering.equals("NESTED")) {
+      
+      if (isPartial && (ordering.equals("NESTED") || ordering.equals("NUNIQ")) ) {
          return getValuesPartialNested(lowHealpixIdx, highHealpixIdx);
-      }
-      else if (isPartial && ordering.equals("RING")) {
+         
+      } else if (isPartial && ordering.equals("RING")) {
          return getValuesPartialRing(lowHealpixIdx, highHealpixIdx);
-      }
-      else if (ordering.equals("RING")) {
+         
+      } else if (ordering.equals("RING")) {
          return getValuesRing(lowHealpixIdx, highHealpixIdx, nSideFile);
-      }
-      else {
+         
+      } else {
          return getValuesNested(lowHealpixIdx, highHealpixIdx, raf, initialOffset, idxTForm);
       }
    }
@@ -1072,6 +1087,86 @@ public class PlanHealpix extends PlanBG {
       return result;
    }
 
+   private long[] getIndex(long lowHealpixIdx, long highHealpixIdx,
+         RandomAccessFile raf, long initialOffset, long idxTForm) {
+
+
+      // TODO : ATTENTION : si lowHealpixIdx n'est pas un multiple du format (1024E par exemple), ça ne marchera pas
+      long val = 0; // Valeur du champ courant
+
+      int nbValues = (int) (highHealpixIdx - lowHealpixIdx);
+      long[] result = new long[nbValues];
+
+
+      // On prend un buffer assez grand pour tout recuperer en une fois
+      // (raisonnable quand on genere des images 512*512)
+      int nbRowsToRead = nbValues / lenHpx[(int)idxTForm];
+      // dans ce cas, on ne récupère qu'une partie d'une ligne de données (bug fix pour fichier Caroline toto.fits)
+      if (nbRowsToRead==0) {
+         nbRowsToRead = 1;
+      }
+      //        System.out.println("nbValues: "+nbValues);
+      //        System.out.println("NB ROWS TO READ: "+nbRowsToRead);
+      //        System.out.println(sizeRecord);
+      int sizeBuf = nbRowsToRead * sizeRecord;
+      byte[] buf = new byte[sizeBuf];
+
+      // (bug fix pour fichier Caroline toto.fits)
+      int inrowSkip = 0;
+      if (nbValues<lenHpx[(int)idxTForm]) {
+         inrowSkip = ((int)lowHealpixIdx % lenHpx[(int)idxTForm]) * Util.binSizeOf(typeHpx[(int)idxTForm], 1);
+      }
+
+      int nbRowsToSkip = (int) lowHealpixIdx / lenHpx[(int)idxTForm];
+      // on se place à l'endroit qui nous intéresse et on lit
+      try {
+
+         // System.out.println("NB ROWS TO SKIP: "+ nbRowsToSkip);
+         raf.seek(initialOffset + nbRowsToSkip * sizeRecord + inrowSkip);
+         try {
+            raf.readFully(buf);
+         } catch (EOFException e) {
+         } catch (IOException e) {
+            e.printStackTrace();
+         }
+         // System.out.println(buf.length);
+      } catch (IOException e1) {
+         // TODO Auto-generated catch block
+         e1.printStackTrace();
+      }
+
+      int resultIdx = 0;
+      int offset = 0;
+      int offsetField;
+      for( int idxRow=0; idxRow<nbRowsToRead; idxRow++, offset+=sizeRecord ) {
+         offsetField = 0;
+         for( int idxField=0; idxField<nField; idxField++ ) {
+            if( idxField!=idxTForm ) {
+               offsetField += Util.binSizeOf(typeHpx[idxField], lenHpx[idxField]);
+               continue;
+            }
+
+            int totalOffset = offset+offsetField;
+            for( int k=0; k<lenHpx[idxField] && resultIdx<result.length; k++, resultIdx++ ) {
+               int offsetc = Util.binSizeOf(typeHpx[idxField],k);
+               if (k==0) {
+               }
+               switch(typeHpx[idxField]) {
+                  case 'B': val = getByte(buf,totalOffset+offsetc); break;
+                  case 'I': val = getShort(buf,totalOffset+offsetc); break;
+                  case 'J': val = getInt(buf,totalOffset+offsetc); break;
+                  case 'K': val = (((long)getInt(buf,totalOffset+offsetc))<<32)
+                        | ((getInt(buf,totalOffset+offsetc+4))& 0xFFFFFFFFL); break;
+                  default: val=-1;
+               }
+               result[resultIdx] = val;
+            }
+         }
+      }
+
+      return result;
+   }
+
    public static long getHealpixMin(int n1, long n, int n2, boolean nside) {
       if (nside)
          return n*(long)(Math.pow(4,(log2(n2) - log2(n1))/log2(2)));
@@ -1093,26 +1188,49 @@ public class PlanHealpix extends PlanBG {
       //        partialValues = new double[12*newNSideFile*newNSideFile];
       partialValues = new HashMap();
       double[] values;
-      if( ordering.equals("NESTED")) {
+      boolean flagNuniq = ordering.equals("NUNIQ");
+      
+      if( flagNuniq || ordering.equals("NESTED")) {
          values = getValuesNested(0, nbRecordsPartial, rafHpx, initialOffsetHpx, idxTForm);
       }
       else {
          values = getValuesRing(0, nbRecordsPartial, newNSideFile);
       }
-      // on initialize les valeurs à NaN
-      //        for (int i = 0; i < partialValues.length; i++) {
-      //            partialValues[i] = Double.NaN;
-      //        }
-      //        // on boucle sur les indices partiels
-      //        for (int i = 0; i < partialHpxPixIdx.length; i++) {
-      //            partialValues[(int)partialHpxPixIdx[i]] = values[i];
-      //        }
-      // on boucle sur les indices partiels
-      for (int i = 0; i < partialHpxPixIdx.length; i++) {
-         partialValues.put((long)partialHpxPixIdx[i],values[i]);
+
+      if( !flagNuniq ) {
+         for (int i = 0; i < partialHpxPixIdx.length; i++) {
+            partialValues.put(partialHpxPixIdx[i],values[i]);
+         }
+         
+      // Si c'est du HEALPix hiérarchique, on va itérer sur les pixels agrégés
+      //autant de fois qu'il faut
+      } else {
+         long [] hpix = new long[2];
+         int maxOrder = (int) log2( newNSideFile );
+         
+         for (int i = 0; i < partialHpxPixIdx.length; i++) {
+            Moc.uniq2hpix(partialHpxPixIdx[i],hpix);
+            histo[(int)hpix[0]]++;
+            int gap = (int) (maxOrder - hpix[0]);
+            int n = 1<<(2*gap);
+            double val = values[i]/n;   // la valeur est divisée par le nombre de sous-cellules
+            for( int j=0; j<n; j++ ) partialValues.put(hpix[1]+j,val);
+         }
       }
 
+      resultNuniq();
+
    }
+
+   long histo [] = new long[29];
+   
+   void resultNuniq() {
+      for( int i=0; i<29; i++ ) {
+         System.out.println("Order "+i+": "+histo[i]);
+      }
+   }
+
+
 
    private double[] getValuesPartialRing(long low, long high) {
       int nbVal = (int)(high-low);
@@ -1139,7 +1257,7 @@ public class PlanHealpix extends PlanBG {
 
       return ret;
    }
-
+   
 
    private double[] ringValues; // tableau des valeurs des pixels RING, indexées en RING
    private void fillRingValues(int minIdx, int maxIdx, long idxTForm) {
@@ -1178,19 +1296,19 @@ public class PlanHealpix extends PlanBG {
          Fits out, long idxTForm, String dir) {
       return buildDoubleHealpix(nside_file, npix_file, nside, out, true, idxTForm, dir);
    }
-
+   
    boolean buildDoubleHealpix(int nside_file, long npix_file, int nside,
          Fits out, boolean write, long idxTForm, String dir) {
       boolean empty = true;
       long min, max;
       long index;
-
+      
       // cherche les numéros de pixels Healpix dans ce losange
       min = getHealpixMin(nside_file, npix_file, nside, true);
       max = min+out.width*out.height;
 
 
-      double[] values = getValues(min, max, rafHpx, initialOffsetHpx, idxTForm);
+      double[] values = getValues(min, max, rafHpx, initialOffsetHpx, idxTForm);  // PF ICI
       double value;
       // cherche la valeur à affecter dans chacun des pixels healpix
       for( int y=0; y<out.height; y++ ) {
