@@ -249,12 +249,10 @@ public class SpaceTimeMoc extends Moc {
          
          // Insertion du précédent couple si existant 
          if( tmoc!=null ) {
-            int st = buf.indexOf("/");
-            
             // Je crée le MOC spatial du contenu bufferisé, juste récupérer son rangeSet
-            HealpixMoc moc = new HealpixMoc( (st<0?"29/":"")+buf);
+            HealpixMoc moc = new HealpixMoc( buf.toString() );
             moc.toRangeSet();
-            if( st>=0 && moc.getMocOrder()>spaceOrder ) spaceOrder=moc.getMocOrder();
+            if( moc.getMocOrder()>spaceOrder ) spaceOrder=moc.getMocOrder();
             
            // J'insère chaque élément 
             for( int i=0; i<tmoc.spaceRange.sz; i+=2 ) {
@@ -272,22 +270,9 @@ public class SpaceTimeMoc extends Moc {
       } else if( s.charAt(0)=='s' ) {
          
          // Génération du rangeset temporel du contenu bufferisé
-         int st = buf.indexOf("/");
-         
-         // range au niveau le plus profond
-         if( st<0 ) {
-            int tiret = buf.indexOf("-");
-            long a = Long.parseLong( buf.substring(0,tiret) );
-            long b = Long.parseLong( buf.substring(tiret+1) );
-            tmoc = new HealpixMoc();
-            tmoc.spaceRange = new Range( new long[] { a, b });
-            
-         // moc classique
-         } else {
-            tmoc = new HealpixMoc( buf.toString() );
-            tmoc.toRangeSet();
-            if( tmoc.getMocOrder()>timeOrder ) timeOrder=tmoc.getMocOrder();
-         }
+         tmoc = new HealpixMoc( buf.toString() );
+         tmoc.toRangeSet();
+         if( tmoc.getMocOrder()>timeOrder ) timeOrder=tmoc.getMocOrder();
 
          // Memorisation du contenu jusqu'à la dimension temporelle suivante (sans le prefixe de la dimension)
          buf = new StringBuilder( s.substring(1) );
@@ -644,7 +629,8 @@ public class SpaceTimeMoc extends Moc {
    static public void main(String a[] ) {
       try {
          SpaceTimeMoc moc = new SpaceTimeMoc();
-         moc.read("C:/Users/Pierre/Downloads/MocA.txt"); 
+//         SpaceMoc moc = new SpaceMoc();
+         moc.read("C:/Users/Pierre/Downloads/Moc.txt"); 
          System.out.println( moc.toASCII() );
          
 //         SpaceTimeMoc stm = new SpaceTimeMoc(29,29);

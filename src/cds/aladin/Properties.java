@@ -436,7 +436,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    // Transforme le plan SMOC en STMOC avec un intervalle de temps par défaut
    private boolean moc2STmoc() {
       try {
-         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,14, timeField.getJdmin(), timeField.getJdmax());
+         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,24, timeField.getJdmin(), timeField.getJdmax());
          aladin.view.repaintAll();
          SwingUtilities.invokeLater( new Runnable() {
             public void run() {
@@ -759,8 +759,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          // Survey de l'image
          String survey=pimg.survey();
-         if( survey!=null && survey.length()>0 )
-            PropPanel.addCouple(p,INF, new JLabel(pimg.survey()), g,c);
+         if( survey!=null && survey.length()>0 && !survey.equals(pimg.getUrl()) ) {
+            PropPanel.addCouple(p,INF, new MyAnchor(aladin,survey,50,null,survey), g,c);
+         }
 
          // Format d'image
          JLabel fmtl = new JLabel(

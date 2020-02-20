@@ -1393,7 +1393,9 @@ public class Context {
          if( (mi.getType()&MyInputStream.FITS)!=0 ) f.loadFITS(mi);
          else f.loadPreview(mi);
          return f.width;
-      } finally { mi.close(); }
+      } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
+      finally { mi.close(); }
+      return -1;
    }
    
    protected boolean isExistingTiles() { return isExistingTiles( getOutputPath() ); }

@@ -2434,7 +2434,13 @@ public final class Command implements Runnable {
          if( a.view.isSelectCompatibleViews() ) a.view.unselectViewsPartial();
          a.match(0);
 
-      } else a.switchMatch(mode == 3);
+      } else {
+         if( a.view.getCurrentView().isFree() ) {
+            printConsole("!!! match error: unknown plane or empty view ["+p+"]");
+            return;
+         }
+         a.switchMatch(mode == 3);
+      }
    }
 
    /**
@@ -2851,7 +2857,6 @@ public final class Command implements Runnable {
 
       if( v.cropArea(new RectangleD(x, pi.naxis2 - (y + h), w, h), label, v.zoom, 1, true, false) == null ) {
          Aladin.error("crop error: view [" + v + "] not usable!", 1);
-         ;
          System.err.println("crop error: view [" + v + "] not usable!");
          return null;
       }
@@ -2929,6 +2934,7 @@ public final class Command implements Runnable {
          }
          try {
             HealpixMoc moc = new HealpixMoc(m);
+            moc.setMinLimitOrder(3);
             Plan p = a.calque.getPlan(a.calque.newPlanMOC(moc, "Moc"));
             if( specifColor != null ) p.c = specifColor;
             return true;
@@ -3984,17 +3990,18 @@ public final class Command implements Runnable {
          } else nview = a.view.getLastNumView(p);
          if( nview < 0 ) return "";
 
-         if( !a.view.viewSimple[nview].isPlot() ) {
-            // AJOUT LAURENT M. POUR ARCHES
-            if( p instanceof PlanBG ) a.calque.setPlanRefOnSameTarget((PlanBG) p);
-            else a.view.setPlanRef(nview, p);
-         }
          if( plot ) {
             try {
                a.view.viewSimple[nview].addPlotTable(p, col[0], col[1], false);
             } catch( Exception e ) {
                printConsole("!!! cview -plot error: " + e.getMessage());
             }
+         }
+         
+         if( !a.view.viewSimple[nview].isPlot() ) {
+            // AJOUT LAURENT M. POUR ARCHES
+            if( p instanceof PlanBG ) a.calque.setPlanRefOnSameTarget((PlanBG) p);
+            else a.view.setPlanRef(nview, p);
          }
          a.calque.repaintAll();
       } else if( cmd.equalsIgnoreCase("hide") ) {
@@ -4896,31 +4903,157 @@ public final class Command implements Runnable {
 
    /************************************** Test de non régression du code **************************************/
 
-   protected String TEST = "info Aladin test script in progress...;" + "reset;" + "setconf frame=ICRS;" + "setconf timeout=1;"
-         + "mview 4;" + "get ESO(dss1,25,25),Aladin(DSS2) M1;" + "get skyview(Surveys=2MASS,400,Sin) m1;" + "cview DSS* A1;"
-         + "cview Sk* B1;" + "cview ESO* A2;" + "set ESO* planeID=ESO.DSS1;" + "cm A2 noreverse 2200..13000 log;" + "mv A2 B2;"
-         + "mv B1 A2;" + "mv B2 B1;" + "select Sk*;" + "contour;" + "select DSS*;" + "contour;" + "select Sk*;"
-         + "draw mode(radec);" + "draw tag(05:34:30.87,+22:01:02.1,\"Crab nebulae\",50,-30,circle,14);"
-         + "set Draw* color=yellow;" + "draw mode(xy);" + "draw phot(63 57 15);" + "get LEDA M1;" + "hide Contours;"
-         + "select ESO*;" + "zoom 1x;" + "Gauss = conv Skw* gauss(fwhm=10\",radius=12);" + "backup back.aj;" + "reset;"
-         + "pause 2;" + "load back.aj;" + "RGB = RGB ESO* DSS*;" + "zoom 1x;" + "rm DSS*;" + "rm Contours~1;" + "show Contours;"
-         + "Gauss1 = Gauss;" + "set Gauss1 FITS:CRPIX1=203;" + "Gauss = Gauss / Gauss1;" + "rm Gauss1;" + "cview Gauss;"
-         + "setconf frame=Gal;" + "184.57316 -05.83741;" + "flipflop Gauss V;" + "Crop = crop Gauss 100x100;" + "rm Gauss;"
-         + "rm A2;" + "Cube=blink Sk* Crop ESO*;" + "PR=get Press;" + "cview Sk* A2;" + "set PR opacity=65;" + "rm A2;"
-         + "pause 2;" + "get Simbad M1 14';" + "call NED(M1,\"10'\");" + "get Vizier(USNO);" + "md Fold;" + "mv RGB Fold;"
-         + "sync;" + "mv I/252 Fold;" + "filter Magn {;" + "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };"
-         + "};" + "mv Magn Fold;" + "set Fold scope=local;" + "rm USNO;" + "XMatch = xmatch CDS/Simbad NED 45;"
-         + "addcol XMatch,B-V,${B_tab1}-${V_tab1};" + "select XMatch;" + "search -B-V=\"\";" + "tag;" + "cplane B-V;"
-         + "rm XMatch;" + "get Fov(HST);" + "mv HST Fold;" + "export CDS/Simbad Cat.xml;" + "export NED Cat1.tsv;"
-         + "export Crop Img.jpg;" + "rm CDS/Simbad NED Crop;" + "load Img.jpg;" + "grey Img.jpg;" + "rm A2;" + "load Cat.xml;"
-         + "load Cat1.tsv;" + "mv Img.jpg Fold;" + "mv Cat.xml Fold;" + "mv Cat1.tsv Fold;" + "set Img.jpg opacity=20;"
-         + "collapse Fold;" + "get hips(SHASSA);" + "set proj=AITOFF;" + "zoom 180°;" + "rm B1;" + "get hips(Mellinger);" + "m1;"
-         + "zoom 15';" + "rm B1;" + "set Melling* opacity=30;" +
-         // "get hips(\"Simbad density\");" +
-         "set proj=CARTESIAN;" + "cm eosb reverse log;" + "M1;" + "zoom 30°;" + "set opacity=30;" + "rm B1;"
-         + "cview -plot I/252(Imag,R2mag) B1;" + "sync;" + "select B-V;" + "grid on;" + "setconf overlays=-label;"
-         + "info The end !;";
+//   protected String TEST = "info Aladin test script in progress...;" + "reset;" + "setconf frame=ICRS;" + "setconf timeout=1;"
+//         + "mview 4;" + "get ESO(dss1,25,25),Aladin(DSS2) M1;" + "get skyview(Surveys=2MASS,400,Sin) m1;" + "cview DSS* A1;"
+//         + "cview Sk* B1;" + "cview ESO* A2;" + "set ESO* planeID=ESO.DSS1;" + "cm A2 noreverse 2200..13000 log;" + "mv A2 B2;"
+//         + "mv B1 A2;" + "mv B2 B1;" + "select Sk*;" + "contour;" + "select DSS*;" + "contour;" + "select Sk*;"
+//         + "draw mode(radec);" + "draw tag(05:34:30.87,+22:01:02.1,\"Crab nebulae\",50,-30,circle,14);"
+//         + "set Draw* color=yellow;" + "draw mode(xy);" + "draw phot(63 57 15);" + "get LEDA M1;" + "hide Contours;"
+//         + "select ESO*;" + "zoom 1x;" + "Gauss = conv Skw* gauss(fwhm=10\",radius=12);" + "backup back.aj;" + "reset;"
+//         + "pause 2;" + "load back.aj;" + "RGB = RGB ESO* DSS*;" + "zoom 1x;" + "rm DSS*;" + "rm Contours~1;" + "show Contours;"
+//         + "Gauss1 = Gauss;" + "set Gauss1 FITS:CRPIX1=203;" + "Gauss = Gauss / Gauss1;" + "rm Gauss1;" + "cview Gauss;"
+//         + "setconf frame=Gal;" + "184.57316 -05.83741;" + "flipflop Gauss V;" + "Crop = crop Gauss 100x100;" + "rm Gauss;"
+//         + "rm A2;" + "Cube=blink Sk* Crop ESO*;" + "PR=get Press;" + "cview Sk* A2;" + "set PR opacity=65;" + "rm A2;"
+//         + "pause 2;" + "get Simbad M1 14';" + "call NED(M1,\"10'\");" + "get Vizier(USNO);" + "md Fold;" + "mv RGB Fold;"
+//         + "sync;" + "mv I/252 Fold;" + "filter Magn {;" + "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };"
+//         + "};" + "mv Magn Fold;" + "set Fold scope=local;" + "rm USNO;" + "XMatch = xmatch CDS/Simbad NED 45;"
+//         + "addcol XMatch,B-V,${B_tab1}-${V_tab1};" + "select XMatch;" + "search -B-V=\"\";" + "tag;" + "cplane B-V;"
+//         + "rm XMatch;" + "get Fov(HST);" + "mv HST Fold;" + "export CDS/Simbad Cat.xml;" + "export NED Cat1.tsv;"
+//         + "export Crop Img.jpg;" + "rm CDS/Simbad NED Crop;" + "load Img.jpg;" + "grey Img.jpg;" + "rm A2;" + "load Cat.xml;"
+//         + "load Cat1.tsv;" + "mv Img.jpg Fold;" + "mv Cat.xml Fold;" + "mv Cat1.tsv Fold;" + "set Img.jpg opacity=20;"
+//         + "collapse Fold;" + "get hips(SHASSA);" + "set proj=AITOFF;" + "zoom 180°;" + "rm B1;" + "get hips(Mellinger);" + "m1;"
+//         + "zoom 15';" + "rm B1;" + "set Melling* opacity=30;" +
+//         // "get hips(\"Simbad density\");" +
+//         "set proj=CARTESIAN;" + "cm eosb reverse log;" + "M1;" + "zoom 30°;" + "set opacity=30;" + "rm B1;"
+//         + "cview -plot I/252(Imag,R2mag) B1;" + "sync;" + "select B-V;" + "grid on;" + "setconf overlays=-label;"
+//         + "info The end !;";
 
+   protected String TEST = "info Aladin test script in progress...;"
+      + "reset;"
+      + "setconf frame=ICRS;"
+      + "setconf timeout=1;"
+      + "mview 4;"
+      + "ESO = get ESO(dss1,25,25) 05:34:30.57 +22:00:49.2;"
+      + "DSS = get Aladin(CDS/P/DSS2/red,fits) M1 15';"
+      + "SkyView = get skyview(Surveys=2MASS,400,Sin) m1;"
+      + "cview DSS* A1;"
+      + "cview Sk* B1;"
+      + "cview ESO* A2;"
+      + "set ESO* planeID=ESO.DSS1;"
+      + "cm A2 noreverse 2200..13000 log;"
+      + "mv A2 B2;"
+      + "mv B1 A2;"
+      + "mv B2 B1;"
+      + "select Sk*;"
+      + "contour;"
+      + "select DSS*;"
+      + "contour;"
+      + "select Sk*;"
+      + "draw mode(radec);"
+      + "draw tag(05:34:30.87,+22:01:02.1,\"Crab nebulae\",50,-30,circle,14);"
+      + "set Draw* color=yellow;"
+      + "draw mode(xy);"
+      + "draw phot(63 57 15);"
+      + "#get LEDA M1;"
+      + "hide Contours;"
+      + "select ESO*;"
+      + "zoom 1x;"
+      + "Gauss = conv Sk* gauss(fwhm=10\",radius=12);"
+      + "backup back.aj;"
+      + "pause 2;"
+      + "reset;"
+      + "load back.aj;"
+      + "RGB = RGB ESO* DSS*;"
+      + "zoom 1x;"
+      + "rm DSS*;"
+      + "rm Contours~1;"
+      + "show Contours;"
+      + "Gauss1 = Gauss;"
+      + "set Gauss1 FITS:CRPIX1=203;"
+      + "Gauss = Gauss * Gauss1;"
+      + "rm Gauss1;"
+      + "cview Gauss;"
+      + "setconf frame=Gal;"
+      + "184.57316 -05.83741;"
+      + "flipflop Gauss V;"
+      + "Crop = crop Gauss 100x100;"
+      + "rm Gauss;"
+      + "rm A2;"
+      + "Cube=blink Sk* Crop ESO*;"
+      + "ColorHips0 = get HiPS(CDS/P/DSS2/color) M1;"
+      + "ColorHips = crop ColorHips0 300x300;"
+      + "rm ColorHips0;"
+      + "cview Sk* A2;"
+      + "set ColorHips opacity=55;"
+      + "rm A2;"
+      + "pause 2;"
+      + "Simbad = get Simbad M1 14';"
+      + "get Vizier(USNO) M1 14';"
+      + "NED = get NED(M1,\"3'\");"
+      + "md Fold;"
+      + "mv RGB Fold;"
+      + "sync;"
+      + "mv I/284 Fold;"
+      + "filter Magn {;"
+      + "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };"
+      + "};"
+      + "mv Magn Fold;"
+      + "set Fold scope=local;"
+      + "rm *USNO;"
+      + "XMatch = xmatch Simbad NED 45;"
+      + "addcol XMatch,B-V,${B_tab1}-${V_tab1};"
+      + "select XMatch;"
+      + "search -B-V=\"\";"
+      + "tag;"
+      + "cplane B-V;"
+      + "rm XMatch;"
+      + "get Fov(HST);"
+      + "mv HST Fold;"
+      + "export Simbad Cat.xml;"
+      + "export NED Cat1.tsv;"
+      + "export Crop Img.jpg;"
+      + "rm Simbad NED Crop;"
+      + "load Img.jpg;"
+      + "grey Img.jpg;"
+      + "rm A2;"
+      + "load Cat.xml;"
+      + "load Cat1.tsv;"
+      + "mv Img.jpg Fold;"
+      + "mv Cat.xml Fold;"
+      + "mv Cat1.tsv Fold;"
+      + "set Img.jpg opacity=20;"
+      + "collapse Fold;"
+      + "get hips(SHASSA);"
+      + "set proj=AITOFF;"
+      + "zoom 180°;"
+      + "Moc = get MOC(*SHASSA);"
+      + "draw newtool(DrawPlan);"
+      + "select DrawPlan;"
+      + "draw circle(216.64216290,-06.68295022,30°);"
+      + "MocCircle = cmoc;"
+      + "rm DrawPlan;"
+      + "Moc = cmoc -sub Moc MocCircle;"
+      + "rm MocCircle;"
+      + "Moc = cmoc -spacetime -order=/24 -timeRange=2020-02-20/2020-02-21 Moc;"      
+      + "rm B1;"
+      + "Mellinger = get hips(Mellinger);"
+      + "m1;"
+      + "zoom 15';"
+      + "rm B1;"
+      + "set Melling* opacity=30;"
+      + "set proj=CARTESIAN;"
+      + "cm eosb reverse log;"
+      + "M1;"
+      + "zoom 30°;"
+      + "#set opacity=30;"
+      + "rm B1;"
+      + "cview -plot I/284(Imag,R2mag) B1;"
+      + "sync;"
+      + "select B-V;"
+      + "grid on;"
+      + "setconf overlays=-label;"
+      + "info The end !;";
+      
    /**
     * Test des vues et des opérations arithmétiques sur les images 1) Je crée une image test
     */
@@ -4929,7 +5062,7 @@ public final class Command implements Runnable {
       a.console.clearPad();
       a.console.printInPad(TEST.replace(';', '\n'));
       execScript(TEST);
-      a.glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/Testscript.jpg", true);
+      a.glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/Testscript.png", true);
    }
 
    /**

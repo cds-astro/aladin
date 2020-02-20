@@ -201,7 +201,6 @@ public class SpaceMoc extends Moc {
       if( limitOrder!=-1 && limitOrder<minLimitOrder ) throw new Exception("Max limit order smaller than min limit order");
       property.put("MOCORDER", ""+(limitOrder==-1 ? MAXORDER : limitOrder));
       maxLimitOrder=limitOrder;
-      if( limitOrder+1>=nOrder ) return;  // rien à agréger
       isConsistant = false;
       if( getSize()>0 ) checkAndFix();
       if( limitOrder!=-1 ) nOrder=limitOrder+1;
@@ -214,9 +213,9 @@ public class SpaceMoc extends Moc {
     * @deprecated see getMocOrder()
     */
    public int getMaxLimitOrder() {
-      //      if( maxLimitOrder==-1 ) return MAXORDER;
-      if( maxLimitOrder==-1 ) return nOrder-1;   // Si non défini, on prend la cellule la plus fine entrée
-      return maxLimitOrder;
+      
+      // Si non défini, on prend la cellule la plus fine entrée en cours de saisie, ou à défaut en mémorisation
+      return maxLimitOrder>=0 ? maxLimitOrder : currentOrder>=0 ? currentOrder : nOrder-1;
    }
 
    /** Provide the MOC order. By default 29
@@ -1389,8 +1388,22 @@ public class SpaceMoc extends Moc {
       } else {
          long startIndex = Long.parseLong(s.substring(i+1,j));
          long endIndex = Long.parseLong(s.substring(j+1));
-         for( long k=startIndex; k<=endIndex; k++ ) add(currentOrder, k);
+         
+         // Accélération en passant par l'ordre le plus profond
+         if( endIndex-startIndex>10 ) addRange(currentOrder,startIndex,endIndex); 
+         
+         // Sinon au compte goutte
+         else for( long k=startIndex; k<=endIndex; k++ ) add(currentOrder, k);
       }
+   }
+   
+   private void addRange(int order,long start, long end ) throws Exception {
+      int shift = (MAXORDER-order)*2;
+      start = start<<shift;
+      end =  (end+1)<<shift;
+      toRangeSet();
+      spaceRange.add(start, end);
+      toHealpixMoc();
    }
 
    private String unQuote(String s) {

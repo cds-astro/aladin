@@ -357,11 +357,13 @@ public class BuilderIndex extends Builder {
       int nbPilot = context.nbPilot;
 
       int i=0;
+      int nbFiles=0;
+      
       context.setProgress(0,list.length-1);
       for( File file : list ) {
          
          // S'agit-il d'un Pilot ?
-         if( nbPilot>=0 && i>nbPilot ) {
+         if( nbPilot>=0 && nbFiles>nbPilot ) {
             context.warning("Test Pilot limited to "+nbPilot+" images => partial HiPS");
             return false;
          }
@@ -392,6 +394,8 @@ public class BuilderIndex extends Builder {
                   if( flagDefaultHDU ) break;
                   else continue;
                }
+               
+              nbFiles++;
 
                if( firstDepth==0 ) firstDepth=fitsfile.depth;
                else if( fitsfile.depth!=firstDepth ) continue;

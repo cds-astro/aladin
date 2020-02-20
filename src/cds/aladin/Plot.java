@@ -366,24 +366,21 @@ public class Plot {
             indexX = leg.getIndexNumericField();
             indexY = leg.getIndexNumericField(indexX);
          } else {
-            p.flagIsTime=true;
             indexY = leg.getIndexNumericField();
             if( indexY==indexX ) indexY = leg.getIndexNumericField(indexY);
          }
       }
-      p.index[0] = indexX;
-      p.index[1] = indexY;
-      p.plan=plan;
+      p.flagIsTime= isTime;
+      p.index[0]  = indexX;
+      p.index[1]  = indexY;
+      p.plan      = plan;
       
       aladin.trace(4,"ViewSimple.addPlotTable: "+(modify?"modify":"add")+" plan="+plan.label+" indexX="+indexX+" indexY="+indexY);
       
       final boolean flagMainPlot=isMainPlot(p);
       final boolean flagIsTime=isTime;
-      adjustPlot();
-      if( flagMainPlot )  {
-         this.flagTime=isTime;
-      }
-      viewSimple.newView(1);
+      if( flagMainPlot ) this.flagTime=isTime;
+      adjustPlot(p);
       if( openProp ) {
          SwingUtilities.invokeLater( new Runnable() {
             public void run() {
@@ -743,6 +740,8 @@ public class Plot {
       }
       
       boolean isTime() { return flagIsTime; }
+      
+      public String toString() { return "Plot["+plan.label+"] index="+index[0]+","+index[1]+" flagisTime="+flagIsTime; }
       
       
    }

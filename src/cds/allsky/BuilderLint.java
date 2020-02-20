@@ -94,7 +94,7 @@ public class BuilderLint extends Builder {
          "hips_tile_width","hips_pixel_cut","hips_data_range","hips_sampling",
          "hips_overlay","hips_skyval","hips_pixel_bitpix","data_pixel_bitpix",
          "hips_progenitor_url","hips_cube_firstframe","data_cube_crpix3",
-         "data_cube_crval3","data_cube_cdelt3","data_cube_bunit3","hips_pixel_scale",
+         "data_cube_crval3","data_cube_cdelt3","hips_pixel_scale",
          "s_pixel_scale","client_category","client_sort_key","addendum_did",
          "moc_sky_fraction",
          "dataproduct_subtype"

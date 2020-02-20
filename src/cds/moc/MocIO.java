@@ -324,12 +324,22 @@ public final class MocIO {
 
    /** Write an HEALPix STMOC to an output stream in ASCII encoded format */
    private void writeASCII( SpaceTimeMoc moc, OutputStream out) throws Exception {
+      
+      int spaceOrder = 0;
+      int timeOrder = moc.getTimeOrder();
+      
+      int shift = (Moc.MAXORDER-timeOrder)*2;
+      
       StringBuilder res= new StringBuilder(moc.getSize()*8);
       for( int i=0; i<moc.getTimeRanges(); i++ ) {
          
          long deb = moc.timeRange.r[i*2];
          long fin = moc.timeRange.r[i*2 +1];
-         res.append("t"+deb+"-"+fin+"\ns");
+         
+         deb = deb>>>shift;
+         fin = (fin-1)>>>shift;
+         
+         res.append("t"+timeOrder+"/"+deb+ (fin==deb?"":"-"+fin)+"\ns");
          
          HealpixMoc m = new HealpixMoc();
          m.spaceRange = moc.timeRange.rangeArray[i];
@@ -363,6 +373,7 @@ public final class MocIO {
             } else {
                s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
             }
+            if( c.order>spaceOrder ) spaceOrder = c.order;
             res.append(s);
             sizeLine+=s.length();
             order=c.order;
@@ -370,7 +381,7 @@ public final class MocIO {
          res.append(CR);
       }
       
-      res.append("t"+moc.getTimeOrder()+"/ s"+moc.getSpaceOrder()+"/"+CR);
+      if( spaceOrder!=moc.getSpaceOrder() ) res.append("t"+timeOrder+"/ s"+moc.getSpaceOrder()+"/"+CR);
       
       writeASCIIFlush(out,res);
    }

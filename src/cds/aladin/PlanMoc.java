@@ -78,7 +78,6 @@ public class PlanMoc extends PlanBGCat {
    
    protected PlanMoc(Aladin aladin, MyInputStream in, SpaceMoc moc, String label, Coord c, double radius) {
       super(aladin);
-//      arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       this.moc   = moc;
       useCache = false;

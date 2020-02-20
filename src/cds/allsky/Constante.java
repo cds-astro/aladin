@@ -116,7 +116,8 @@ public class Constante {
    static public final String KEY_CUBE_CRPIX3           = "data_cube_crpix3";
    static public final String KEY_CUBE_CRVAL3           = "data_cube_crval3";
    static public final String KEY_CUBE_CDELT3           = "data_cube_cdelt3";
-   static public final String KEY_CUBE_BUNIT3           = "data_cube_bunit3";
+   static public final String KEY_CUBE_BUNIT3           = "data_cube_bunit3";   // remplacé par cunit3
+   static public final String KEY_CUBE_CUNIT3           = "data_cube_cunit3";
    static public final String KEY_CUBE_FIRSTFRAME       = "hips_cube_firstframe";
    static public final String OLD_CUBE_FIRSTFRAME       = "cubeFirstFrame";
    static public final String KEY_CUBE_DEPTH            = "hips_cube_depth";

@@ -105,6 +105,7 @@ public class PlanBGCube extends PlanBG {
             cdelt3 = Double.parseDouble(s);
             fromCanal=true;
             bunit3 = prop.getProperty(Constante.KEY_CUBE_BUNIT3);
+            if( bunit3==null ) bunit3 = prop.getProperty(Constante.KEY_CUBE_CUNIT3);
          } catch( Exception e ) { fromCanal=false; }
 
       } catch( Exception e ) { return false; }

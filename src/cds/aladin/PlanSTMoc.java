@@ -266,7 +266,10 @@ public class PlanSTMoc extends PlanTMoc {
 //        long t0 = Util.getTime();
         SpaceMoc m = getCurrentSpaceMoc( v );
         int lowOrder = getLowOrder( order, gapOrder );
-        try { m.setMocOrder( lowOrder ); } catch( Exception e ) { }
+        try {
+           m.setMinLimitOrder(3);
+           m.setMocOrder( lowOrder );
+        } catch( Exception e ) { }
 //        System.out.println("J'ai recalculé le MocLow pour "+v+" en "+(Util.getTime()-t0)+"ms");
         return m;
      }
@@ -333,8 +336,7 @@ public class PlanSTMoc extends PlanTMoc {
    
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
-      if( v.isPlotTime() ) 
-         drawInTimeView(g,v);
+      if( v.isPlotTime() ) drawInTimeView(g,v);
       else drawInSpaceView(g,v);
    }
    

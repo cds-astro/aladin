@@ -233,6 +233,7 @@ public abstract class Builder {
    // Récupère le tile side en fonction d'une tuile pré-existante. 
    protected void validateTileSide(String path) throws Exception {
       int tileSide = context.getTileSide();
+      if( tileSide==-1 ) return;
       int tileSideByNpixFile = context.getTileWidthByNpixFile(path);
       if( tileSideByNpixFile!=-1 && tileSide!=tileSideByNpixFile ) {
          context.warning("Size of pre-existing tiles incoherent with declarative tileSize ("+tileSide+"). Will assume "+tileSideByNpixFile);

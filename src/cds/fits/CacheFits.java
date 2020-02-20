@@ -64,8 +64,8 @@ public class CacheFits {
    protected HashMap<String, FitsFile> map;             // Table des fichiers
    //   private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
    Context context;
-   private Hashtable<String, double[]> cutCache = new Hashtable<String, double[]>();
-   private Hashtable<String, double[]> shapeCache = new Hashtable<String, double[]>();
+   private Hashtable<String, double[]> cutCache = new Hashtable<>();
+   private Hashtable<String, double[]> shapeCache = new Hashtable<>();
 
 
    //private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment
@@ -89,7 +89,7 @@ public class CacheFits {
       cacheOutOfMem = maxMem==0;
       nextId = 0;
       statNbFree = statNbOpen = statNbFind = 0;
-      map = new HashMap<String, FitsFile>(MAXFILE+MAXFILE/100);
+      map = new HashMap<>(MAXFILE+MAXFILE/100);
       //      sortedMap = new TreeMap<String, FitsFile>( new ValueComparator(map) );
    }
 
@@ -364,8 +364,8 @@ public class CacheFits {
          try {
             cacheOutOfMem=true;
 
-            HashMap<String,String> libere = new  HashMap<String,String>(map.size());
-            HashMap<String,FitsFile> map1 = new  HashMap<String,FitsFile>(map.size());
+            HashMap<String,String> libere = new  HashMap<>(map.size());
+            HashMap<String,FitsFile> map1 = new  HashMap<>(map.size());
 
             // en premier tour, on supprime les fits non utilisés
             // depuis plus de 5s, et si pas assez de mémoire, on ne regarde plus la date
@@ -435,7 +435,7 @@ public class CacheFits {
       statNbFree+=map.size();
       
       if( this instanceof CacheFitsWriter ) {
-         ArrayList<String> a = new ArrayList<String>(map.size());
+         ArrayList<String> a = new ArrayList<>(map.size());
          for( String key: map.keySet() ) a.add(key);
          for( String key: a ) {
             try { remove(key); } catch( Exception e1 ) { }
@@ -574,7 +574,8 @@ public class CacheFits {
 
 
    private boolean first=true;
-
+   
+   
    /**
     * Applique un filtre (soustraction du skyval, division par le expTime)
     * sur les pixels avant de les mettre dans le cache
