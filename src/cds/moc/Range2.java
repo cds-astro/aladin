@@ -57,6 +57,32 @@ public class Range2 extends Range {
       rangeArray = nSpaceRangeArray;
    }
    
+   /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
+    * Aggrège les intervalles si nécessaires et ajuste l'occupation mémoire
+    * @param shift1 Nombre de bits dégradés - première dimension (1 => dégradation d'un facteur 2, 2 => d'un facteur 4...)
+    * @param shift2 Nombre de bits dégradés - deuxième dimension (1 => dégradation d'un facteur 2, 2 => d'un facteur 4...)
+    * @return un nouveau Range dégradé
+    */
+   public Range2 degrade(int shift1, int shift2) {
+      if( shift1==0 && shift2==0 ) return new Range2( this );
+      Range2 r1 = new Range2(sz);
+      long mask = (~0L)<<shift1;   // Mask qui va bien sur les bits de poids faibles
+      for( int i=0; i<sz; i+=2 ) {
+         long a =  r[i] & mask;
+         long b = (((r[i+1]-1)>>>shift1)+1 ) << shift1;
+         Range r = rangeArray[i>>>1].degrade(shift2);
+         r1.append(a, b, r );
+      }
+      r1.trimIfTooLarge();
+      return r1;
+   }
+   
+   /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
+    * Aggrège les intervalles si nécessaires et ajuste l'occupation mémoire
+    * @param shift Nombre de bits dégradés (1 => dégradation d'un facteur 2, 2 => d'un facteur 4...)
+    * @return un nouveau Range dégradé
+    */
+   public Range2 degrade(int shift) { return degrade(shift,0); }
 
   /** Append a range to the object.
     * @param a first long in range

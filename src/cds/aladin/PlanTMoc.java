@@ -151,13 +151,13 @@ public class PlanTMoc extends PlanMoc {
       if( aladin.NOGUI ) return moc;
 
       order += gapOrder;
-      if( order>moc.getMocOrder() ) order=moc.getMocOrder();
+      if( order>moc.getTimeOrder() ) order=moc.getTimeOrder();
       if( order<0 ) order=0;
       if( arrayTimeMoc==null || arrayTimeMoc[order]==null || mocTimeLowReset ) {
          if( arrayTimeMoc==null ) arrayTimeMoc = new TimeMoc[ Moc.MAXORDER+1];
          arrayTimeMoc[order] = new TimeMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          final int myOrder = order;
-         final int myMo=moc.getMocOrder();
+         final int myMo=moc.getTimeOrder();
          Aladin.trace(4,"PlanTMoc.getHealpixMocLow("+myOrder+") running...");
          Moc mocLow = myOrder==myMo ? moc : moc.clone();
          try { mocLow.setMocOrder(myOrder); }

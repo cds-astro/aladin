@@ -2655,11 +2655,8 @@ public final class Command implements Runnable {
                   pList[j] = (PlanMoc) p[j];
                   if( flagCheckSpaceOrder || flagCheckTimeOrder ) {
                      Moc moc = pList[j].moc;
-                     if( moc instanceof SpaceTimeMoc ) {
-                        spMoc = ((SpaceTimeMoc)moc).getTimeOrder();
-                        tMoc = ((SpaceTimeMoc)moc).getSpaceOrder();
-                     } else if( moc instanceof TimeMoc ) tMoc = moc.getMocOrder();
-                     else spMoc=moc.getMocOrder();
+                     if( moc.isSpace() ) spMoc = moc.getSpaceOrder();
+                     if( moc.isTime() )  tMoc = moc.getTimeOrder();
                      if( flagCheckSpaceOrder && spMoc>firstOrder ) firstOrder=spMoc;
                      if( flagCheckTimeOrder && tMoc>secondOrder ) secondOrder=tMoc;
                   }

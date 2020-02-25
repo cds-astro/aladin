@@ -72,6 +72,14 @@ public class TimeMoc extends SpaceMoc {
    /** Retourne la composante spatiale du MOC */
    public SpaceMoc getSpaceMoc() throws Exception { throw new Exception("No spatial dimension"); }
    
+   public int getSpaceOrder() { return -1; }  // No space dimension
+   public int getTimeOrder() { return getMocOrder(); }
+   
+   public void setSpaceOrder(int order) throws Exception { throw new Exception("No spatial dimension"); }
+   public void setTimeOrder(int order) throws Exception { setMocOrder(order); }
+   
+   public boolean isSpace() { return false; }
+   public boolean isTime()  { return true; }
 
    public Moc union(Moc moc) throws Exception {
       return operation(moc.getTimeMoc(),0);

@@ -317,123 +317,9 @@ public final class MocIO {
       if( moc==null ) throw new Exception("No MOC assigned (use setMoc(SpaceMoc))");
    }
 
-   private static final int MAXWORD=20;
-   private static final int MAXSIZE=80;
-   
-   static final private boolean TEST=false;
-
-   /** Write an HEALPix STMOC to an output stream in ASCII encoded format */
-   private void writeASCII( SpaceTimeMoc moc, OutputStream out) throws Exception {
-      
-      int spaceOrder = 0;
-      int timeOrder = moc.getTimeOrder();
-      
-      int shift = (Moc.MAXORDER-timeOrder)*2;
-      
-      StringBuilder res= new StringBuilder(moc.getSize()*8);
-      for( int i=0; i<moc.getTimeRanges(); i++ ) {
-         
-         long deb = moc.timeRange.r[i*2];
-         long fin = moc.timeRange.r[i*2 +1];
-         
-         deb = deb>>>shift;
-         fin = (fin-1)>>>shift;
-         
-         res.append("t"+timeOrder+"/"+deb+ (fin==deb?"":"-"+fin)+"\ns");
-         
-         HealpixMoc m = new HealpixMoc();
-         m.spaceRange = moc.timeRange.rangeArray[i];
-         m.toHealpixMoc();
-         
-         long npix=-1;
-         int order=-1;
-         int sizeLine=0;
-         int j=0;
-         for( MocCell c : m ) {
-            if( res.length()>0 ) {
-               if( c.order!=order ) {
-                  if( order!=-1 ) res.append(" ");
-               } else {
-                  int n=(c.npix+"").length();
-                  if( n+sizeLine>MAXSIZE ) { res.append("\n  "); sizeLine=2; j++; }
-                  else { 
-                     if( !TEST ) res.append(' '); 
-                     sizeLine++; 
-                  }
-               }
-               if( j>15) { writeASCIIFlush(out,res,false); j=0; }
-            }
-            String s;
-            if( TEST ) {
-               if( c.order!=order ) {
-                  s= c.order+"/"+c.npix;
-                  order=c.order;
-               } else s="+"+(c.npix-npix);
-               npix=c.npix;
-            } else {
-               s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
-            }
-            if( c.order>spaceOrder ) spaceOrder = c.order;
-            res.append(s);
-            sizeLine+=s.length();
-            order=c.order;
-         }
-         res.append(CR);
-      }
-      
-      if( spaceOrder!=moc.getSpaceOrder() ) res.append("t"+timeOrder+"/ s"+moc.getSpaceOrder()+"/"+CR);
-      
-      writeASCIIFlush(out,res);
-   }
-   
-   /** Write HEALPix MOC to an output stream IN ASCII encoded format
-    * @param out output stream
-    */
    public void writeASCII(OutputStream out) throws Exception {
       testMocNotNull();
-      
-      if( moc instanceof SpaceTimeMoc ) {
-         writeASCII( (SpaceTimeMoc)moc, out);
-         return;
-      }
-      
-      StringBuilder res= new StringBuilder(moc.getSize()*8);
-      int order=-1;
-      boolean flagNL = moc.getSize()>MAXWORD;
-      int sizeLine=0;
-      int j=0;
-      for( MocCell c : moc ) {
-         if( res.length()>0 ) {
-            if( c.order!=order ) {
-               if( flagNL ) { res.append("\n"); sizeLine=0; j++; }
-               else res.append(" ");
-            } else {
-               int n=(c.npix+"").length();
-               if( flagNL && n+sizeLine>MAXSIZE ) { res.append("\n "); sizeLine=2; j++; }
-               else { res.append(' '); sizeLine++; }
-            }
-            if( j>15) { writeASCIIFlush(out,res,false); j=0; }
-         }
-         String s = c.order!=order ?  c.order+"/"+c.npix : c.npix+"";
-         res.append(s);
-         sizeLine+=s.length();
-         order=c.order;
-      }
-      
-      // Ajout de la resolution max si nécessaire
-      int mocOrder = moc.getMocOrder();
-      if( order<mocOrder ) {
-         StringBuilder s= new StringBuilder(10);
-         if( flagNL && sizeLine!=2 ) { res.append('\n'); sizeLine=0; }
-         else s.append(' ');
-         s.append(mocOrder+"/");
-         sizeLine+=s.length();
-         res.append(s);
-      } 
-
-      if( flagNL && sizeLine!=2 ) res.append('\n');
-
-      writeASCIIFlush(out,res);
+      moc.writeASCII(out);
    }
 
    /** Write HEALPix MOC to an output stream IN JSON encoded format
@@ -465,13 +351,13 @@ public final class MocIO {
          for( int i=0; i<n; i++ ) {
             s.append( a.get(i)+(i==n-1?"":",") );
             j++;
-            if( j==15 ) { writeASCIIFlush(out,s); j=0; }
+            if( j==15 ) { moc.writeASCIIFlush(out,s); j=0; }
          }
       }
       
       if( !first ) s.append("]");
       s.append("}");
-      writeASCIIFlush(out,s);
+      moc.writeASCIIFlush(out,s);
    }
 
    /** Write HEALPix MOC to an output stream in FITS encoded format
@@ -537,15 +423,15 @@ public final class MocIO {
       }
    }
 
-   private void writeASCIIFlush(OutputStream out, StringBuilder s) throws Exception {
-      writeASCIIFlush(out, s, true);
-   }
-   
-   private void writeASCIIFlush(OutputStream out, StringBuilder s,boolean nl) throws Exception {
-      if( nl ) s.append(CR);
-      out.write(s.toString().getBytes());
-      s.delete(0,s.length());
-   }
+//   private void writeASCIIFlush(OutputStream out, StringBuilder s) throws Exception {
+//      writeASCIIFlush(out, s, true);
+//   }
+//   
+//   private void writeASCIIFlush(OutputStream out, StringBuilder s,boolean nl) throws Exception {
+//      if( nl ) s.append(CR);
+//      out.write(s.toString().getBytes());
+//      s.delete(0,s.length());
+//   }
 
    // Write the primary FITS Header
    private void writeHeader0(OutputStream out) throws Exception {

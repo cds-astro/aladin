@@ -236,7 +236,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.016";
+   static public final    String VERSION = "v11.017";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -250,7 +250,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected int  SIZE   = 12;
    
    // Gère le mode particuliers
-   public static boolean PREMIERE=true;  // true si on tourne en mode AVANT-PREMIERE
+   public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)

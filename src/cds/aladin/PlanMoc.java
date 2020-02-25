@@ -341,7 +341,7 @@ public class PlanMoc extends PlanBGCat {
    protected Moc getMoc() { return moc; }
 
    protected void suiteSpecific() { isOldPlan=false; }
-   protected boolean isSync() { return isReady(); }
+   protected boolean isSync() { return isReady() && !isLoading(); }
    protected void reallocObjetCache() { }
 
    public void setWireFrame(int wireFrame) { this.wireFrame=wireFrame; }
@@ -544,10 +544,19 @@ public class PlanMoc extends PlanBGCat {
    protected  boolean isTimeModified() { return false; }
    
    
+   protected Moc getSpaceMocLow(ViewSimple v,int order,int gapOrder) {
+      SpaceMoc m = (SpaceMoc) getSpaceMocLow1(v,order,gapOrder);
+      try { m.setMinLimitOrder(3); } catch( Exception e ) { }
+      return m;
+   }
+   
    /** Retourne l'order à utiliser pour l'affichage courant en fonction de la position
     * du slider "densité" */
    protected int getLowOrder(int order, int gapOrder ) {
-      int mo = moc.getMaxOrder();
+      int mo = moc.getSpaceOrder();
+      if( mo==-1 ) {
+         try { mo = getRealMaxOrder( (SpaceMoc) moc); } catch( Exception e ) {  e.printStackTrace(); }
+      }
       if( mo<3 ) mo=3;
       order += 5;
       if( order<7 ) order=7;
@@ -557,25 +566,42 @@ public class PlanMoc extends PlanBGCat {
       return order;
    }
    
-   // retourne/construit la liste du MOC
-   // à l'ordre courant (mode progressif)
-   protected Moc getSpaceMocLow(ViewSimple v,int order,int gapOrder) {
-      final SpaceMoc moc = getSpaceMoc();
+   // retourne/construit la liste du MOC à l'ordre courant (mode progressif)
+   protected Moc getSpaceMocLow1(ViewSimple v,int order,int gapOrder) {
       if( aladin.NOGUI ) return moc;
 
       int mo = moc.getMaxOrder();
       if( mo<3 ) mo=3;
-//      order += 5;
-//      if( order<7 ) order=7;
-//      order += gapOrder;
-//      if( order<5 ) order=5;
-//      if( order>mo ) order=mo;
       order = getLowOrder(order,gapOrder);
-      //      System.out.println("getHpixListProg("+o+") => "+order);
-      if( arrayMoc==null || arrayMoc[order]==null || mocSpaceLowReset ) {
-         if( arrayMoc==null ) arrayMoc = new SpaceMoc[Moc.MAXORDER+1];
-         arrayMoc[order] = new SpaceMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
-         
+      
+      // Pour les petits champs, on travaille sans cache, en découpant le MOC à la bonne
+      // résolution et à la bonne taille.
+      if( v.getTaille()<20 ) {
+         try {
+            // On améliore un peu la résolution
+            if( order<moc.getSpaceOrder() ) order++;
+            
+            // Peut être y a-t-il dans le cache des MocLows la Moc complet à la bonne résolution ?
+            // Sinon on prend le MOC d'origine
+            Moc mocP = arrayMoc!=null && arrayMoc[order]!=null 
+                  && arrayMoc[order].getSize()>0 ? arrayMoc[order] : moc;
+            
+            // On découpe la zone concernée
+            Moc moclow = mocP.intersection( v.getMoc() );
+            
+            // On ajuste l'ordre spatial max
+            moclow.setSpaceOrder(order);
+            return moclow;
+            
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
+      
+      // Pour les grands champs on va précalculer les MOC à chaque résolution pour pouvoir
+      /// fournir rapidement celui à la résolution la plus adéquate.
+      if( arrayMoc==null || arrayMoc[order]==null ) {
+         initArrayMoc(order);
          BuildLow t = new BuildLow(moc,order,mo);
          
          // Si petit, je ne threade pas
@@ -595,14 +621,20 @@ public class PlanMoc extends PlanBGCat {
       return arrayMoc[order];
    }
    
+   protected void initArrayMoc(int order) {
+      if( arrayMoc==null ) arrayMoc = new Moc[Moc.MAXORDER+1];
+      arrayMoc[order] = new SpaceMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
+   }
+   
    private long lastBuildingTime=-1;
    
    class BuildLow extends Thread {
       int myOrder,myMo;
-      SpaceMoc moc;
+      Moc moc;
 
-      BuildLow(SpaceMoc moc,int myOrder,int myMo) {
+      BuildLow(Moc moc,int myOrder,int myMo) {
          super("BuidLow order="+myOrder);
+         setPriority( getPriority()-1 );
          this.moc = moc;
          this.myOrder= myOrder;
          this.myMo = myMo;
@@ -611,12 +643,22 @@ public class PlanMoc extends PlanBGCat {
       public void run() {
          long t0 = System.currentTimeMillis();
          Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") running...");
-         Moc mocLow = myOrder==myMo ? moc : moc.clone();
-         try {
-            mocLow.setMocOrder(myOrder);
-            ((SpaceMoc)mocLow).setMinLimitOrder(3);
+         Moc mocLow=null;
+         if( myOrder==myMo ) mocLow = moc;
+         else {
+            // Si déjà calculé, on va dégrader le MOC à partir d'un autre à une meilleure résolution la plus proche
+            for( int o=myOrder; o<myMo; o++ ) {
+               if( arrayMoc[o]!=null && arrayMoc[o].getSize()!=0) {
+                  mocLow = arrayMoc[o].clone();
+                  break;
+               }
+            }
+            if( mocLow==null ) mocLow = moc.clone();
          }
-         catch( Exception e ) { e.printStackTrace(); }
+//         Moc mocLow = myOrder==myMo ? moc : moc.clone();
+         try {
+            mocLow.setSpaceOrder(myOrder);
+         } catch( Exception e ) { e.printStackTrace(); }
          arrayMoc[myOrder]=mocLow;
          lastBuildingTime = System.currentTimeMillis() - t0;
          Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") done in "+lastBuildingTime+"ms");
@@ -669,9 +711,6 @@ public class PlanMoc extends PlanBGCat {
    private boolean oFlagPeri;
    private int oGapOrder;
    
-   protected boolean mocSpaceLowReset=false;
-   protected void mocSpaceLowReset() { mocSpaceLowReset=true; }
-   
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
       drawInSpaceView(g,v);
@@ -704,9 +743,8 @@ public class PlanMoc extends PlanBGCat {
          if( mustDrawFast() ) gapOrder--;
 
          // Génération des Hpix concernées par le champ de vue
-         if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder || mocSpaceLowReset ) {
+         if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder ) {
             lowMoc = getSpaceMocLow(v,myOrder,gapOrder);
-            mocSpaceLowReset=false;
             drawingOrder = getRealMaxOrder((SpaceMoc)lowMoc);
             if( drawingOrder==-1 ) return;
             //            System.out.println("Récupération Hpix order "+drawingOrder);

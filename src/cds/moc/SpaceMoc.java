@@ -31,6 +31,7 @@ import java.util.StringTokenizer;
 
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
+import cds.tools.Util;
 
 /** HEALPix Multi Order Coverage Map (MOC)
  * This object provides read, write and process methods to manipulate an HEALPix Multi Order Coverage Map (MOC)
@@ -180,6 +181,11 @@ public class SpaceMoc extends Moc {
       setCheckConsistencyFlag(true);
    }
 
+   
+   public void setTimeOrder(int order) throws Exception { throw new Exception("No time dimension"); }
+
+   public void setSpaceOrder(int order) throws Exception { setMocOrder(order); }
+
    /** Set the limit order supported by the Moc (-1 for Healpix library implementation)
     *  (and automatically switch on the testConsistency)
     * Any future addition of pixel with order exceeding limitOrder will be automatically replaced by the
@@ -222,6 +228,9 @@ public class SpaceMoc extends Moc {
     * @return Provide the MOC order (by default 29 = HEALPix lib limit)
     */
    public int getMocOrder() { return getMaxLimitOrder(); }
+   
+   public int getSpaceOrder() { return getMocOrder(); }
+   public int getTimeOrder()  { return -1; }  // No time dimension
 
    /** Set the MOC order. By default 29.
     * If the MOC already contains smaller cells, these cells will be replaced by
@@ -710,9 +719,6 @@ public class SpaceMoc extends Moc {
       return s.toString();
    }
    
-   public String toString() { try { return toASCII(); } catch( Exception e) { return null; } }
-
-
    private static final int MAXWORD=20;
    private static final int MAXSIZE=80;
 
@@ -791,6 +797,13 @@ public class SpaceMoc extends Moc {
 
 
    /*************************** Operations on MOCs ************************************************/
+   
+   
+   /** Provide array of ranges at the deepest order */
+   public Range getRange() {
+      toRangeSet();
+      return spaceRange;
+   }
 
    // Store the MOC as a RangeSet if not yet done
    public void toRangeSet() {
@@ -811,24 +824,44 @@ public class SpaceMoc extends Moc {
    public void toHealpixMoc() throws Exception {
       clear();
       setCheckConsistencyFlag(false);
-      Range r2 = new Range(spaceRange);
+      Range r2 = new Range( getRange() );
       Range r3 = new Range();
-      for( int o=0; o<=Healpix.MAXORDER; ++o) {
-         if( r2.isEmpty() ) return;
-         int shift = 2*(Healpix.MAXORDER-o);
+      for( int o=0; o<=MAXORDER; ++o) {
+         if( r2.isEmpty() ) break;
+         int shift = 2*(MAXORDER-o);
          long ofs=(1L<<shift)-1;
          r3.clear();
-         for( int iv=0; iv<r2.nranges(); ++iv ) {
-            long a=(r2.begins(iv)+ofs)>>>shift, b=r2.ends(iv)>>>shift;
+         for( int i=0; i<r2.sz; i+=2 ) {
+            long a=(r2.r[i]+ofs) >>>shift;
+            long b= r2.r[i+1] >>>shift;
+            if( a>=b ) continue;
             r3.append(a<<shift, b<<shift);
-            for( long c=a; c<b; ++c ) add1(o,c);
+            for( long c=a; c<b; add1(o,c++) );
          }
          if( !r3.isEmpty() ) r2 = r2.difference(r3);
       }
-      setCheckConsistencyFlag(true);
    }
    
-   
+   static public void main(String a[] ) {
+      try {
+         long t;
+         SpaceMoc moc = new SpaceMoc();
+         t = Util.getTime();
+         moc.read("C:/Users/Pierre/Documents/Fits et XML/MocImg/ChandraMOC15.fits");
+         System.out.println( "\nreadFits: "+(Util.getTime()-t) +"ms");
+         System.out.println( "Moc: "+moc.todebug());
+         
+         t = Util.getTime();
+         moc.toRangeSet();
+         System.out.println( "\ntoRangeSet: "+(Util.getTime()-t)+"ms");
+         
+         t = Util.getTime();
+         moc.toHealpixMoc();
+         System.out.println( "\ntoHealpixMoc: "+(Util.getTime()-t)+"ms");
+         System.out.println( "Moc: "+moc.todebug());
+     } catch( Exception e ) { e.printStackTrace(); }
+   }
+
    /** True if the npix at the deepest order is in the MOC */
    public boolean contains(long npix) {
       toRangeSet();
@@ -929,6 +962,9 @@ public class SpaceMoc extends Moc {
    public boolean isAllSky() {
       return  getSize( minLimitOrder ) == 12L*pow2(minLimitOrder)*pow2(minLimitOrder);
    }
+   
+   public boolean isSpace() { return true; }
+   public boolean isTime()  { return false; }
    
    /** Return true if the MOC is empty */
    public boolean isEmpty() {
@@ -1072,15 +1108,6 @@ public class SpaceMoc extends Moc {
       (new MocIO(this)).write(out,mode);
    }
 
-   /** Write HEALPix MOC to an output stream IN ASCII encoded format
-    * @param out output stream
-    *
-    */
-   public void writeASCII(OutputStream out) throws Exception {
-      check();
-      (new MocIO(this)).writeASCII(out);
-   }
-
    /** Write HEALPix MOC to an output stream IN JSON encoded format
     * @param out output stream
     */
@@ -1144,26 +1171,30 @@ public class SpaceMoc extends Moc {
    protected void createUniq(int nval,int nbyte,byte [] t) throws Exception {
       int i=0;
       long [] hpix = null;
-      long oval=-1;
+//      long oval=-1;
+      long val;
       for( int k=0; k<nval; k++ ) {
-         long val=0;
+//         long val=0;
 
-         int a =   ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
+         int a =   ((t[i++])<<24) | (((t[i++])&0xFF)<<16) | (((t[i++])&0xFF)<<8) | (t[i++])&0xFF;
          if( nbyte==4 ) val = a;
          else {
-            int b = ((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF;
+            int b = ((t[i++])<<24) | (((t[i++])&0xFF)<<16) | (((t[i++])&0xFF)<<8) | (t[i++])&0xFF;
             val = (((long)a)<<32) | ((b)& 0xFFFFFFFFL);
          }
-         i+=nbyte;
+//         i+=nbyte;
+         
+         hpix = SpaceMoc.uniq2hpix(val,hpix);
+         add1( (int)hpix[0], hpix[1]);
 
-         long min = val;
-         if( val<0 ) { min = oval+1; val=-val; }
-         for( long v = min ; v<=val; v++) {
-            hpix = SpaceMoc.uniq2hpix(v,hpix);
-            int order = (int)hpix[0];
-            add( order, hpix[1]);
-         }
-         oval=val;
+//         long min = val;
+//         if( val<0 ) { min = oval+1; val=-val; }
+//         for( long v = min ; v<=val; v++) {
+//            hpix = SpaceMoc.uniq2hpix(v,hpix);
+//            int order = (int)hpix[0];
+//            add( order, hpix[1]);
+//         }
+//         oval=val;
       }
    }
 

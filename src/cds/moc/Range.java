@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 
+import cds.tools.Util;
+
 /**
  * Adaptation & extension of RangeSet from Healpix.essentials lib (GNU General Public License)
  * from Martin Reinecke [Max-Planck-Society] built from Jan Kotek's "LongRange" class
@@ -75,7 +77,7 @@ public class Range {
       r=r1;
       sz=n;
    }
-
+   
    private class Ran implements Comparable<Ran> {
       long min,max;
       Ran(long min,long max) { this.min=min; this.max=max; }
@@ -86,6 +88,56 @@ public class Range {
    
    /** RAM usage (in bytes) */
    public long getMem() { return r==null ? 0 : r.length*8L; }
+   
+   /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
+    * Aggrège les intervalles si nécessaires et ajuste l'occupation mémoire
+    * @param shift Nombre de bits dégradés (1 => dégradation d'un facteur 2, 2 => d'un facteur 4...)
+    * @return un nouveau Range dégradé
+    */
+   public Range degrade(int shift) {
+      if( shift==0 ) return new Range(this);
+      Range r1 = new Range(sz);
+      long mask = (~0L)<<shift;   // Mask qui va bien sur les bits de poids faibles
+      for( int i=0; i<sz; i+=2 ) {
+         long a =  r[i] & mask;
+         long b = (((r[i+1]-1)>>>shift)+1 ) << shift;
+         r1.append(a, b);
+      }
+      r1.trimIfTooLarge();
+      return r1;
+   }
+   
+   static public void main(String [] arg) {
+      try {
+         Range r = new Range();
+         r.append(1,4);
+         r.append(6,15);
+         r.append(17,18);
+         System.out.println("Avant: "+r);
+         Range r1 = r.degrade(1);
+         System.out.println("Apres: "+r1);
+         
+         int shift = 8;
+         long mask = (~0) << shift;
+         
+         long max=100000000L;
+         long t,s;
+         t=Util.getTime(0);
+         s=0L;
+         long max2=max*2;
+         for( long i=0; i<max2; i+=2 ) {
+            s+= i;
+         }
+         System.out.println("tempsDiv   = "+(Util.getTime(0)-t)+"ns => "+s);
+         t=Util.getTime(0);
+         s=0L;
+         for( long i=0; i<max; i++ ) {
+            s+= i;
+          }
+         System.out.println("tempsShift = "+(Util.getTime(0)-t)+"ns => "+s);
+      } catch( Exception e) { e.printStackTrace(); }
+   }
+   
 
 
    /************************************* Original code *********** Martin Reinecke [Max-Planck-Society] built from Jan Kotek's "LongRange"*********************/

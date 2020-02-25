@@ -1188,49 +1188,18 @@ public class PlanHealpix extends PlanBG {
       //        partialValues = new double[12*newNSideFile*newNSideFile];
       partialValues = new HashMap();
       double[] values;
-      boolean flagNuniq = ordering.equals("NUNIQ");
       
-      if( flagNuniq || ordering.equals("NESTED")) {
+      if( ordering.equals("NUNIQ") || ordering.equals("NESTED")) {
          values = getValuesNested(0, nbRecordsPartial, rafHpx, initialOffsetHpx, idxTForm);
       }
       else {
          values = getValuesRing(0, nbRecordsPartial, newNSideFile);
       }
 
-      if( !flagNuniq ) {
-         for (int i = 0; i < partialHpxPixIdx.length; i++) {
-            partialValues.put(partialHpxPixIdx[i],values[i]);
-         }
-         
-      // Si c'est du HEALPix hiérarchique, on va itérer sur les pixels agrégés
-      //autant de fois qu'il faut
-      } else {
-         long [] hpix = new long[2];
-         int maxOrder = (int) log2( newNSideFile );
-         
-         for (int i = 0; i < partialHpxPixIdx.length; i++) {
-            Moc.uniq2hpix(partialHpxPixIdx[i],hpix);
-            histo[(int)hpix[0]]++;
-            int gap = (int) (maxOrder - hpix[0]);
-            int n = 1<<(2*gap);
-            double val = values[i]/n;   // la valeur est divisée par le nombre de sous-cellules
-            for( int j=0; j<n; j++ ) partialValues.put(hpix[1]+j,val);
-         }
-      }
-
-      resultNuniq();
-
-   }
-
-   long histo [] = new long[29];
-   
-   void resultNuniq() {
-      for( int i=0; i<29; i++ ) {
-         System.out.println("Order "+i+": "+histo[i]);
+      for (int i = 0; i < partialHpxPixIdx.length; i++) {
+         partialValues.put(partialHpxPixIdx[i],values[i]);
       }
    }
-
-
 
    private double[] getValuesPartialRing(long low, long high) {
       int nbVal = (int)(high-low);
@@ -1250,14 +1219,54 @@ public class PlanHealpix extends PlanBG {
       int nbVal = (int)(high-low);
       double[] ret = new double[nbVal];
       for (int i=0; i<nbVal; i++) {
-         //            ret[i] = partialValues[(int)low+i];
-         Double a = (Double)partialValues.get( low+i );
-         ret[i] = a==null ? Double.NaN : a.doubleValue();
+//         Double a = (Double)partialValues.get( low+i );
+//         ret[i] = a==null ? Double.NaN : a.doubleValue();
+         ret[i] = getPartialValue(low+i);
       }
 
       return ret;
    }
+
    
+   private int lastOrder=0;
+//   boolean X=true;
+//   private int histo[] = new int[30];
+
+   private double getPartialValue(long npix) {
+      if( !ordering.equals("NUNIQ") ) {
+         Double a = (Double)partialValues.get( npix );
+         return a==null ? Double.NaN : a.doubleValue();
+      }
+      
+//      if( X ) {
+//         X=false;
+//         for( Object k : partialValues.keySet() ) {
+//            long nuniq = (long)k;
+//            long [] hpix = Moc.uniq2hpix(nuniq);
+//            histo[ (int)hpix[0] ] ++;
+//            if( nuniq==29389659 ) {
+//               System.out.println("J'y suis");
+//            }
+//         }
+//         
+//         int somme=0;
+//         for( int i=0; i<histo.length; i++ )  { System.out.println("histo["+i+"] = "+histo[i]); somme+=histo[i]; };
+//         System.out.println("Somme ="+somme);
+//      }
+      
+      // On va chercher dans tous les NUNIQ possibles pour chaque ordre.
+      // On repart toujours du dernier ordre traité car il y a une forte probabilité
+      // que deux pixels consécutifs soient de même ordre
+      int maxOrder = (int) log2( newNSideFile );
+      for( int i=0; i<=maxOrder; i++,lastOrder++ ) {
+         if( lastOrder>maxOrder ) lastOrder=0;
+         int gap = 2*(maxOrder-lastOrder);
+         long nuniq = Moc.hpix2uniq(lastOrder, npix>>>gap);
+         Double a = (Double)partialValues.get( nuniq );
+         if( a!=null ) return a; 
+      }
+      return Double.NaN;
+   }
 
    private double[] ringValues; // tableau des valeurs des pixels RING, indexées en RING
    private void fillRingValues(int minIdx, int maxIdx, long idxTForm) {
@@ -1313,13 +1322,7 @@ public class PlanHealpix extends PlanBG {
       // cherche la valeur à affecter dans chacun des pixels healpix
       for( int y=0; y<out.height; y++ ) {
          for( int x=0; x<out.width; x++ ) {
-
-
             index = min + xy2hpx(y*out.width+x);
-            //                for( int i=0; i<overSamplingFactor; i++ ) {
-            //                    indexFather = getFather(indexFather);
-            //                }
-
             value = values[(int) (index-min)];
             if( empty && !Double.isNaN(value) ) empty=false;  // PF - juin 2013
             out.setPixelDouble(x, y, value);

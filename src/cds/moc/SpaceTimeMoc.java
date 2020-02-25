@@ -55,6 +55,7 @@ public class SpaceTimeMoc extends Moc {
    public SpaceTimeMoc(String s)  throws Exception {
       this();
       if( s!=null && s.length()>0 ) append(s);
+      else timeOrder=spaceOrder=MAXORDER;
    }
    
    private void init() {
@@ -76,15 +77,29 @@ public class SpaceTimeMoc extends Moc {
    @Override
    public void clear() { timeRange.clear(); }
    
-   public void setTimeOrder(int order) throws Exception { timeOrder=order; }
+   public void setTimeOrder(int order) throws Exception {
+      if( order<timeOrder ) degradeTimeOrder(order);
+      timeOrder=order;
+   }
    public int getTimeOrder() { return timeOrder; }
 
-   public void setSpaceOrder(int order) throws Exception { spaceOrder=order; }
+   public void setSpaceOrder(int order) throws Exception { 
+      if( order<spaceOrder ) degradeSpaceOrder(order);
+      spaceOrder=order; 
+   }
    public int getSpaceOrder() { return spaceOrder; }
    
+   private void degradeSpaceOrder(int order) { degradeOrder(-1,order); }
+   private void degradeTimeOrder(int order)  { degradeOrder(order,-1); }
    
-   public void setMocOrder(int order) throws Exception { setSpaceOrder(order); }
-   public int getMocOrder() { return getSpaceOrder(); }
+   private void degradeOrder(int timeOrder, int spaceOrder) {
+      int shift1 = timeOrder==-1  ? 0 : (MAXORDER - timeOrder  )*2;
+      int shift2 = spaceOrder==-1 ? 0 : (MAXORDER - spaceOrder )*2;
+      timeRange = timeRange.degrade(shift1, shift2);
+   }
+   
+   public void setMocOrder(int order) throws Exception { setTimeOrder(order); }
+   public int getMocOrder() { try{ return getTimeOrder(); } catch( Exception e ) {} return -1; }
 
    @Override
    public long getMem() { return timeRange.getMem()+20L; }
@@ -94,7 +109,7 @@ public class SpaceTimeMoc extends Moc {
       // les indices temporels
       int size=timeRange.sz;   
       // Les indices spatiaux
-      for( int i=0; i<timeRange.sz/2; i++ ) size += timeRange.rangeArray[i].sz;
+      for( int i=timeRange.sz/2 -1; i>=0; i-- ) size += timeRange.rangeArray[i].sz;
       return size;
    }
    
@@ -121,20 +136,45 @@ public class SpaceTimeMoc extends Moc {
       return false;
    }
 
+   private int maxT(Moc moc) { 
+      int o = moc.getTimeOrder();
+      return timeOrder<o ? o : timeOrder;
+   }
+   
+   private int maxS(Moc moc) { 
+      int o = moc.getSpaceOrder();
+      return spaceOrder<o ? o : spaceOrder;
+   }
+   
    @Override
    public Moc union(Moc moc) throws Exception {
-      return new SpaceTimeMoc( spaceOrder, timeOrder, timeRange.union( ((SpaceTimeMoc)moc).timeRange ));
+      return new SpaceTimeMoc( maxS(moc), maxT(moc), timeRange.union( ((SpaceTimeMoc)moc).timeRange ));
    }
 
    @Override
    public Moc intersection(Moc moc) throws Exception {
-      return new SpaceTimeMoc( spaceOrder, timeOrder, timeRange.intersection( ((SpaceTimeMoc)moc).timeRange ));
+      SpaceTimeMoc m;
+      if( moc instanceof SpaceTimeMoc ) {
+         m = (SpaceTimeMoc) moc;
+      } else if( moc instanceof TimeMoc ) {
+         throw new Exception("Not yet supported with TimeMoc");
+      } else {
+         // On crée un STMoc avec une seule plage temporaire correspondante
+         // à l'étendue maximale du temps du Moc avec lequel on veut faire l'intersection
+         Range2 r = new Range2(2);
+         r.add( timeRange.r[0], timeRange.r[ timeRange.sz-1 ], moc.getRange() );
+         m = new SpaceTimeMoc( moc.getMocOrder(), getMocOrder(), r);
+      }
+      return new SpaceTimeMoc( maxS(m), maxT(m), timeRange.intersection( m.timeRange ));
    }
    
    @Override
    public Moc subtraction(Moc moc) throws Exception {
-      return new SpaceTimeMoc( spaceOrder, timeOrder, timeRange.difference( ((SpaceTimeMoc)moc).timeRange ));
+      return new SpaceTimeMoc( maxS(moc), maxT(moc), timeRange.difference( ((SpaceTimeMoc)moc).timeRange ));
    }
+   
+   public boolean isSpace() { return true; }
+   public boolean isTime()  { return true; }
 
    @Override
    public boolean isEmpty() {
@@ -193,22 +233,6 @@ public class SpaceTimeMoc extends Moc {
       // Ajout de la cellule spatio-temporelle
       timeRange.add(tmin,tmax,r);
    }
-
-//   public void push(long tmin, long tmax, long smin, long smax) {
-//      tmin = getVal(tmin, timeOrder);
-//      tmax = getVal(tmax, timeOrder);
-//      if( tmax==tmin ) tmax++;
-//      smin = getVal(smin, spaceOrder);
-//      smax = getVal(smax, spaceOrder);
-//      if( smax==smin ) smax++;
-//     
-//      // Moc Spatial réduit à un intervalle spatial
-//      Range r = new Range();
-//      r.append(smin,smax);
-//      
-//      // Ajout en fin de MOC de la cellule spatio-temporelle
-//      timeRange.push(tmin,tmax,r);
-//   }
    
    public void sortAndFix() {
       timeRange.sortAndFix();
@@ -220,9 +244,7 @@ public class SpaceTimeMoc extends Moc {
    }
 
    @Override
-   public int getMaxOrder() {
-      return getSpaceOrder();
-   }
+   public int getMaxOrder() { return -1; }
 
    @Override
    public String getCoordSys() {
@@ -270,6 +292,7 @@ public class SpaceTimeMoc extends Moc {
       } else if( s.charAt(0)=='s' ) {
          
          // Génération du rangeset temporel du contenu bufferisé
+         
          tmoc = new HealpixMoc( buf.toString() );
          tmoc.toRangeSet();
          if( tmoc.getMocOrder()>timeOrder ) timeOrder=tmoc.getMocOrder();
@@ -279,51 +302,61 @@ public class SpaceTimeMoc extends Moc {
          
       // Bufferisation du mot courant   
       } else {
+         if( buf==null ) throw new Exception("Moc syntax error [token="+s+"]");
          buf.append(' ');
          buf.append(s);
       }
    }
-
    
-   public void append(String s1) throws Exception {
-      if( s1.charAt(0)!='t' ) throw new Exception("Invalid STMOC syntax (expecting 't')");
-      
-      StringTokenizer tok = new StringTokenizer(s1,"t");
-      while( tok.hasMoreTokens() ) {
-         String s="t"+tok.nextToken();
-//         System.out.println("["+s+"]");
-         int e = s.indexOf('s');
-         HealpixMoc moc=null;
-         HealpixMoc tmoc=null;
-
-         // Ai-je un SMOC associé au TMOC ?
-         if( e>0 ) {
-
-            // Les orders sont-il indiqués ?
-            int se = s.indexOf('/',e);
-
-            // Je crée le MOC juste pour récupérer le rangeSet
-            moc = new HealpixMoc( (se<0?"29/":"")+s.substring(e+1));
-            moc.toRangeSet();
-
-         } else e=s.length();
-
-         // Les orders sont-ils indiqués ?
-         int st = s.lastIndexOf('/',e-1);
-
-         // Je crée le MOC juste pour récupérer le rangeSet
-         tmoc = new HealpixMoc( (st<0?"29/":"")+s.substring(1,e));
-         tmoc.toRangeSet();
-
-         // J'insère chaque élément 
-         for( int i=0; i<tmoc.spaceRange.sz; i+=2 ) {
-            timeRange.append(tmoc.spaceRange.r[i], tmoc.spaceRange.r[i+1], moc.spaceRange);
-         }
+   public void append(String s) throws Exception {
+      StringTokenizer st = new StringTokenizer(s," ;,\n\r\t{}");
+      while( st.hasMoreTokens() ) {
+         String s1 = st.nextToken();
+         if( s1.length()==0 ) continue;
+         addHpix(s1);
       }
+      addHpix(null);
    }
    
-   public String toString() { return toString(false); }
-   public String toString( boolean flagNL ) {
+//   public void append(String s1) throws Exception {
+//      if( s1.charAt(0)!='t' ) throw new Exception("Invalid STMOC syntax (expecting 't')");
+//      
+//      StringTokenizer tok = new StringTokenizer(s1,"t");
+//      while( tok.hasMoreTokens() ) {
+//         String s="t"+tok.nextToken();
+////         System.out.println("["+s+"]");
+//         int e = s.indexOf('s');
+//         HealpixMoc moc=null;
+//         HealpixMoc tmoc=null;
+//
+//         // Ai-je un SMOC associé au TMOC ?
+//         if( e>0 ) {
+//
+//            // Les orders sont-il indiqués ?
+//            int se = s.indexOf('/',e);
+//
+//            // Je crée le MOC juste pour récupérer le rangeSet
+//            moc = new HealpixMoc( (se<0?"29/":"")+s.substring(e+1));
+//            moc.toRangeSet();
+//
+//         } else e=s.length();
+//
+//         // Les orders sont-ils indiqués ?
+//         int st = s.lastIndexOf('/',e-1);
+//
+//         // Je crée le MOC juste pour récupérer le rangeSet
+//         tmoc = new HealpixMoc( (st<0?"29/":"")+s.substring(1,e));
+//         tmoc.toRangeSet();
+//
+//         // J'insère chaque élément 
+//         for( int i=0; i<tmoc.spaceRange.sz; i+=2 ) {
+//            timeRange.append(tmoc.spaceRange.r[i], tmoc.spaceRange.r[i+1], moc.spaceRange);
+//         }
+//      }
+//   }
+   
+   public String toString2() { return toString2(false); }
+   public String toString2( boolean flagNL ) {
       StringBuilder s = new StringBuilder();
       for( int i=0; i<timeRange.sz; i+=2 ) {
          long a=timeRange.r[i];
@@ -355,7 +388,7 @@ public class SpaceTimeMoc extends Moc {
       return s.toString();
    }
    
-   public String toString2() {
+   public String toString3() {
       StringBuilder s = new StringBuilder();
       for( int i=0; i<timeRange.sz; i+=2 ) {
          s.append("t"+timeRange.r[i]);
@@ -374,14 +407,27 @@ public class SpaceTimeMoc extends Moc {
       return s.toString();
    }
    
-   public String toString3() {
+   public String toString4() {
       StringBuilder s = new StringBuilder();
       HealpixMoc moc;
+      int shift = (Moc.MAXORDER-timeOrder)*2;
+
       for( int i=0; i<timeRange.sz; i+=2 ) {
          s.append("t");
          try {
-            moc = new HealpixMoc(timeRange);
-            s.append(moc.toASCII());
+//            moc = new HealpixMoc(MAXORDER+"/"+timeRange.r[i]
+//                  +( timeRange.r[i+1]>timeRange.r[i]+1?"-"+(timeRange.r[i+1]-1):""));
+//            s.append(moc.toASCII());
+            
+//            s.append(MAXORDER+"/"+timeRange.r[i]
+//                  +( timeRange.r[i+1]>timeRange.r[i]+1?"-"+(timeRange.r[i+1]-1):""));
+            
+            long deb = timeRange.r[i];
+            long fin = timeRange.r[i+1];
+            deb = deb>>>shift;
+            fin = (fin-1)>>>shift;
+            s.append(timeOrder+"/"+deb+ (fin==deb?"":"-"+fin));
+            
          } catch( Exception e ) {  e.printStackTrace(); }
          Range m = timeRange.rangeArray[i>>>1];
          if( m!=null && !m.isEmpty() ) {
@@ -391,33 +437,32 @@ public class SpaceTimeMoc extends Moc {
                s.append(moc.toASCII());
             } catch( Exception e ) {  e.printStackTrace(); }
          }
-         if( i<timeRange.sz-2 ) s.append('\n');
+         if( i<timeRange.sz-2 ) s.append(' ');
       }
       return s.toString();
    }
-
    
    
    static final private String TEST[][] = {
-      { "Ajout à vide",                              "",           "t5-10s2",   "t5-10s2" ,             ""},
-      { "Ajout singleton derrière singleton",        "t4s1",       "t5s2",      "t4s1 t5s2",            ""},
-      { "Ajout singleton avant singleton",           "t5s2",       "t4s1",      "t4s1 t5s2",            ""},
-      { "Ajout intervalle entrelacés après",         "t4-6s1",     "t5-8s2",    "t4s1 t5-6s1-2 t7-8s2", ""},
-      { "Ajout intervalle entrelacés avant",         "t5-8s2",     "t4-6s1",    "t4s1 t5-6s1-2 t7-8s2", ""},
-      { "Ajout intervalle englobant (s différents)", "t2-6s2",     "t1-8s1",    "t1s1 t2-6s1-2 t7-8s1", ""},
-      { "Ajout intervalle englobant (s identiques)", "t2-6s2",     "t1-8s2",    "t1-8s2",               "t2-6s2"},
-      { "Ajout intervalle interne (s différents)",   "t1-8s1",     "t2-6s2",    "t1s1 t2-6s1-2 t7-8s1", ""},
-      { "Ajout intervalle interne (s identiques)",   "t1-8s2",     "t2-6s2",    "t1-8s2" ,              "t2-6s2"},
-      { "Intercallage",                              "t6-7 11s1",  "t9s2",      "t6-7s1 t9s2 t11s1",    ""},
-      { "Fusion différents s",                       "t2-6 8-9s2", "t7s1",      "t2-6s2 t7s1 t8-9s2",   ""},
-      { "Fusion indentiques s",                      "t2-6 8-9s2", "t7s2",      "t2-9s2",               ""},
-      { "Remplacement sur début",                    "t2-6s2 t7s1", "t2-7s2",   "t2-6s2 t7s1-2",        "t2-6s2"},
-      { "Remplacement sur fin",                      "t3-7s2 t8s1", "t2-7s2",   "t2-7s2 t8s1",          "t3-7s2"},
-      { "Remplacement sur fin2",                     "t2-4s2 t6s1", "t6s2",     "t2-4s2 t6s1-2",        ""},
-      { "Tordu",                                     "t3s1 t4-5s2", "t3-5s3",   "t3s1,3 t4-5s2-3",      ""},
-      { "Inter simple",                              "t3-5s1-3",    "t4-8s2-4", "t3s1-3 t4-5s1-4 t6-8s2-4",  "t4-5s2-3"},
-      { "Inter spécial",     "t1s1-6 t3-9s2","t3s5-7 t8s1-2", "t1s1-6 t3s2,5-7 t4-7s2 t8s1-2 t9s2","t8s2" },
-      { "Ajout en suite",                            "t1-4s1",      "t5-6s1",   "t1-6s1",               "" }
+      { "Ajout à vide",                              "",           "t29/5-10 s29/2",   "t29/5-10 s29/2" ,             ""},
+      { "Ajout singleton derrière singleton",        "t29/4 s29/1",       "t29/5 s29/2",      "t29/4 s29/1 t29/5 s29/2",            ""},
+      { "Ajout singleton avant singleton",           "t29/5 s29/2",       "t29/4 s29/1",      "t29/4 s29/1 t29/5 s29/2",            ""},
+      { "Ajout intervalle entrelacés après",         "t29/4-6 s29/1",     "t29/5-8 s29/2",    "t29/4 s29/1 t29/5-6 s29/1-2 t29/7-8 s29/2", ""},
+      { "Ajout intervalle entrelacés avant",         "t29/5-8 s29/2",     "t29/4-6 s29/1",    "t29/4 s29/1 t29/5-6 s29/1-2 t29/7-8 s29/2", ""},
+      { "Ajout intervalle englobant (s différents)", "t29/2-6 s29/2",     "t29/1-8 s29/1",    "t29/1 s29/1 t29/2-6 s29/1-2 t29/7-8 s29/1", ""},
+      { "Ajout intervalle englobant (s identiques)", "t29/2-6 s29/2",     "t29/1-8 s29/2",    "t29/1-8 s29/2",               "t29/2-6 s29/2"},
+      { "Ajout intervalle interne (s différents)",   "t29/1-8 s29/1",     "t29/2-6 s29/2",    "t29/1 s29/1 t29/2-6 s29/1-2 t29/7-8 s29/1", ""},
+      { "Ajout intervalle interne (s identiques)",   "t29/1-8 s29/2",     "t29/2-6 s29/2",    "t29/1-8 s29/2" ,              "t29/2-6 s29/2"},
+      { "Intercallage",                              "t29/6-7 11 s29/1",  "t29/9 s29/2",      "t29/6-7 s29/1 t29/9 s29/2 t29/11 s29/1",    ""},
+      { "Fusion différents s",                       "t29/2-6 8-9 s29/2", "t29/7 s29/1",      "t29/2-6 s29/2 t29/7 s29/1 t29/8-9 s29/2",   ""},
+      { "Fusion indentiques s",                      "t29/2-6 8-9 s29/2", "t29/7 s29/2",      "t29/2-9 s29/2",               ""},
+      { "Remplacement sur début",                    "t29/2-6 s29/2 t29/7 s29/1", "t29/2-7 s29/2",   "t29/2-6 s29/2 t29/7 s29/1-2",        "t29/2-6 s29/2"},
+      { "Remplacement sur fin",                      "t29/3-7 s29/2 t29/8 s29/1", "t29/2-7 s29/2",   "t29/2-7 s29/2 t29/8 s29/1",          "t29/3-7 s29/2"},
+      { "Remplacement sur fin2",                     "t29/2-4 s29/2 t29/6 s29/1", "t29/6 s29/2",     "t29/2-4 s29/2 t29/6 s29/1-2",        ""},
+      { "Tordu",                                     "t29/3 s29/1 t29/4-5 s29/2", "t29/3-5 s29/3",   "t29/3 s29/1 3 t29/4-5 s29/2-3",      ""},
+      { "Inter simple",                              "t29/3-5 s29/1-3",    "t29/4-8 s29/2-4", "t29/3 s29/1-3 t29/4-5 s29/1-4 t29/6-8 s29/2-4",  "t29/4-5 s29/2-3"},
+      { "Inter spécial",     "t29/1 s29/1-6 t29/3-9 s29/2","t29/3 s29/5-7 t29/8 s29/1-2", "t29/1 s29/1-6 t29/3 s29/2 5-7 t29/4-7 s29/2 t29/8 s29/1-2 t29/9 s29/2","t29/8 s29/2" },
+      { "Ajout en suite",                            "t29/1-4 s29/1",      "t29/5-6 s29/1",   "t29/1-6 s29/1",               "" }
    };
    
    static final void test() throws Exception { test(-1); }
@@ -425,47 +470,86 @@ public class SpaceTimeMoc extends Moc {
       String listTest[][] = x== -1 ? TEST : new String[][]{ TEST[x] };
       StringBuilder s = new StringBuilder();
 
-      int i= x==-1 ? 0 : x;
-      for( String [] test : listTest ) {
-         SpaceTimeMoc stmoc1 = new SpaceTimeMoc(test[1]);
-         SpaceTimeMoc stmoc2 = new SpaceTimeMoc(test[2]);
-         s.append("\n"+(i++)+") "+test[0]+":");
-         s.append("\n A: "+stmoc1+"\n B: "+stmoc2);
+      try {
+         int i= x==-1 ? 0 : x;
+         for( String [] test : listTest ) {
+            SpaceTimeMoc stmoc1 = new SpaceTimeMoc(test[1]);
+            SpaceTimeMoc stmoc2 = new SpaceTimeMoc(test[2]);
+            s.append("\n"+(i++)+") "+test[0]+":");
+            s.append("\n A: "+stmoc1+"\n B: "+stmoc2);
 
-         SpaceTimeMoc stmoc4 = (SpaceTimeMoc) stmoc1.intersection( stmoc2);
-         s.append("\n Inter: "+stmoc4);
-         s.append( test[4].equals(stmoc4.toString()) ? " => OK" : " => ERROR waiting: "+test[4] );
-        
-         SpaceTimeMoc stmoc3 = (SpaceTimeMoc) stmoc1.union( stmoc2);
-         s.append("\n Union: "+stmoc3);
-         s.append( test[3].equals(stmoc3.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
-         
-         for( int j=0; j<stmoc2.timeRange.sz; j+=2 ) {
-            stmoc1.timeRange.add(stmoc2.timeRange.r[j], stmoc2.timeRange.r[j+1], stmoc2.timeRange.rangeArray[j/2]);
+            SpaceTimeMoc stmoc4 = (SpaceTimeMoc) stmoc1.intersection( stmoc2);
+            s.append("\n Inter: "+stmoc4);
+            s.append( test[4].equals(stmoc4.toString()) ? " => OK" : " => ERROR waiting: "+test[4] );
+           
+            SpaceTimeMoc stmoc3 = (SpaceTimeMoc) stmoc1.union( stmoc2);
+            s.append("\n Union: "+stmoc3);
+            s.append( test[3].equals(stmoc3.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
+            
+            for( int j=0; j<stmoc2.timeRange.sz; j+=2 ) {
+               stmoc1.timeRange.add(stmoc2.timeRange.r[j], stmoc2.timeRange.r[j+1], stmoc2.timeRange.rangeArray[j/2]);
+            }
+            s.append("\n Add  : "+stmoc1);
+            s.append( test[3].equals(stmoc1.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
+
+            s.append("\n");
          }
-         s.append("\n Add  : "+stmoc1);
-         s.append( test[3].equals(stmoc1.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
-
-         s.append("\n");
+      } catch( Exception e ) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
       }
 
       System.out.println(s);
    }
-   
+
+   /** Write an HEALPix STMOC to an output stream in ASCII encoded format */
+   public void writeASCII(OutputStream out) throws Exception {
+      if( isEmpty() ) return;
+      int spaceOrder = 0;
+      int timeOrder = getTimeOrder();
+      boolean flagNL = getTimeRanges()>MAXWORD;
+      int shift = (Moc.MAXORDER-timeOrder)*2;
+
+      StringBuilder res= new StringBuilder(1000);
+      for( int i=0; i<getTimeRanges(); i++ ) {
+         
+         // Ecriture du range temporel (à la résolution temporelle spécifique)
+         long deb = timeRange.r[i*2] >>> shift;
+         long fin = (timeRange.r[i*2+1]-1) >>> shift;
+         if( i>0 ) res.append( flagNL ? CR:" ");
+         res.append("t"+timeOrder+"/"+deb+ (fin==deb?"":"-"+fin));
+         res.append( flagNL ? CR:" ");
+         
+         // Ecriture du Moc spatial associé
+         res.append('s');
+         writeASCIIFlush(out,res,false);
+         int order=Moc.writeASCII(out,timeRange.rangeArray[i],flagNL);
+         if( order>spaceOrder ) spaceOrder=order;
+      }
+
+      // Ajout de la résolution temporelle et spatiale si nécessaire
+      if( spaceOrder!=getSpaceOrder() ) {
+         res.append(flagNL ? CR : " " );
+         res.append("t"+timeOrder+"/ s"+getSpaceOrder()+"/");
+         if( flagNL ) res.append(CR);
+      }
+
+      writeASCIIFlush(out,res,false);
+   }
 
    /** Write specifif FITS keywords
     * @param out
     * @return number of written bytes
     */
-  protected int writeSpecificFitsProp( OutputStream out  ) throws Exception {
+   protected int writeSpecificFitsProp( OutputStream out  ) throws Exception {
       int n=0;
-//      out.write( MocIO.getFitsLine("MOC","SPACETIME","Space Time MOC") );    n+=80;      
+      //      out.write( MocIO.getFitsLine("MOC","SPACETIME","Space Time MOC") );    n+=80;      
       out.write( MocIO.getFitsLine("MOC","TIME.SPACE","STMOC: Time dimension first, ") );    n+=80;      
       out.write( MocIO.getFitsLine("ORDERING","RANGE29","Range coding") );    n+=80;      
-//      out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
+      //      out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
 //      out.write( MocIO.getFitsLine("TORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
       out.write( MocIO.getFitsLine("MOCORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
-      out.write( MocIO.getFitsLine("MOCORD_1",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCORD_1",""+getSpaceOrder(),"Space MOC resolution") );    n+=80;      
       out.write( MocIO.getFitsLine("COORDSYS","C","Space reference frame (C=ICRS)") );  n+=80;
       out.write( MocIO.getFitsLine("TIMESYS","JD","Time ref system JD BARYCENTRIC TCB, 1 microsec order 29") ); n+=80;
       return n;
@@ -628,18 +712,19 @@ public class SpaceTimeMoc extends Moc {
    
    static public void main(String a[] ) {
       try {
-         SpaceTimeMoc moc = new SpaceTimeMoc();
-//         SpaceMoc moc = new SpaceMoc();
-         moc.read("C:/Users/Pierre/Downloads/Moc.txt"); 
-         System.out.println( moc.toASCII() );
+//         SpaceMoc moc = new SpaceMoc("3/3-5 4/456 5/");
+//         System.out.println("result: "+moc);
+         
+//         SpaceTimeMoc moc = new SpaceTimeMoc();
+//         moc.read("C:/Users/Pierre/Downloads/Moc.txt"); 
+//         System.out.println( moc.toASCII() );
          
 //         SpaceTimeMoc stm = new SpaceTimeMoc(29,29);
-//         stm.append("t1-2 s3/40");
+//         stm.append("t28/1 s3/40");
 //         System.out.println("stm = "+stm);
          
-//         test(1);
+         test(0);
          
-//         
 //         stmoc1.write( "D:/STMoc.fits");
 //         stmoc1.read("D:/STMoc.fits");
 //         System.out.println("Resulat ecriture/lecture:\n"+stmoc1);
@@ -655,5 +740,8 @@ public class SpaceTimeMoc extends Moc {
       moc.timeRange = new Range2( timeRange );
       return moc;
    }
+   
+   /** Provide array of ranges at the deepest order */
+   public Range getRange() { return timeRange; }
    
 }

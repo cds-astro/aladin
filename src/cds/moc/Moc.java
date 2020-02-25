@@ -103,6 +103,20 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    /** Provide the MOC order. By default 29 */
    abstract public int getMocOrder();
 
+   /** Provide the Time MOC order. By default 29 */
+   abstract public int getTimeOrder();
+
+   /** Provide the Space MOC order. By default 29 */
+   abstract public int getSpaceOrder();
+   
+   abstract public void setTimeOrder(int order) throws Exception;
+
+   abstract public void setSpaceOrder(int order) throws Exception;
+   
+   abstract public boolean isSpace();
+
+   abstract public boolean isTime();
+
    /** Retourne la composante spatiale du MOC */
    abstract public SpaceMoc getSpaceMoc() throws Exception;
 
@@ -143,9 +157,101 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
   
    public String toASCII() throws Exception {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-      (new MocIO(this)).writeASCII(out);
+      writeASCII(out);
       return out.toString();
    }
+
+   static protected final int MAXWORD=20;
+   static protected final int MAXSIZE=80;
+   static protected String CR = System.getProperty("line.separator");
+   
+   /** Write HEALPix MOC to an output stream IN ASCII encoded format
+    * @param out output stream
+    */
+   public void writeASCII(OutputStream out) throws Exception {
+      boolean flagNL = getRange().sz>MAXWORD;
+      int order = writeASCII(out, getRange(), flagNL );
+      
+      // Ajout de la resolution max si nécessaire, et d'un CR si nécessaire
+      StringBuilder res= new StringBuilder(10);
+      int mocOrder = getMocOrder();
+      if( order<mocOrder ) {
+         if( flagNL ) res.append(CR);
+         else res.append(' ');
+         res.append(mocOrder+"/");
+      } 
+      if( flagNL ) res.append('\n');
+
+      // Dernier flush
+      writeASCIIFlush(out,res,false);
+   }
+   
+   static protected int writeASCII(OutputStream out, Range range, boolean flagNL) throws Exception {
+      if( range.isEmpty() ) return -1;
+      StringBuilder res= new StringBuilder(50000);
+      int order=-1;
+      int sizeLine=0;
+      int j=0;
+
+      Range r2 = new Range( range );
+      Range r3 = new Range();
+      for( int o=0; o<=Healpix.MAXORDER; o++) {
+         if( r2.isEmpty() ) break;
+         int shift = 2*(Healpix.MAXORDER-o);
+         long ofs=(1L<<shift)-1;
+         r3.clear();
+         int nranges = r2.sz;
+         for( int i=0; i<nranges; i+=2 ) {
+            long a = (r2.r[i]+ofs) >>> shift;
+            long b = r2.r[i+1] >>> shift;
+            if( a>=b ) continue;
+            r3.append(a<<shift, b<<shift);
+            
+            // Le token qu'on doit ajouter
+            StringBuilder s = new StringBuilder(100);
+            if( o!=order ) { 
+               s.append(o+"/"); 
+               order=o; 
+            }
+            s.append(a+"");
+            if( b>a+1 ) s.append("-"+(b-1));
+
+            // Traitement du retour à la ligne et d'un éventuel flush
+            if( res.length()>0 ) {
+               if( o!=order ) {
+                  if( flagNL ) { res.append(CR); sizeLine=0; j++; }
+                  else res.append(" ");
+               } else {
+                  if( flagNL && s.length()+sizeLine>MAXSIZE ) { res.append(CR+" "); sizeLine=1; j++; }
+                  else { res.append(' '); sizeLine++; }
+               }
+               if( j>15) { writeASCIIFlush(out,res,false); j=0; }
+            }
+
+            res.append(s);
+            sizeLine+=s.length();
+
+         }
+         if( !r3.isEmpty() ) r2 = r2.difference(r3);
+      }
+
+      // Dernier flush
+      writeASCIIFlush(out,res,false);
+      
+      return order;
+   }
+
+   static protected void writeASCIIFlush(OutputStream out, StringBuilder s) throws Exception {
+      writeASCIIFlush(out, s, true);
+   }
+   
+   static protected void writeASCIIFlush(OutputStream out, StringBuilder s,boolean nl) throws Exception {
+      if( nl ) s.append(CR);
+      out.write(s.toString().getBytes());
+      s.delete(0,s.length());
+   }
+
+
 
    /** Fast test for checking if the parameter MOC is intersecting
     * the current MOC object
@@ -173,6 +279,9 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
     * the first long is the order, the second long is the pixel number */
    abstract public Iterator<MocCell> iterator();
    
+   
+   abstract Range getRange();
+   
    // TO BE CLEAN
    abstract public int getSize( int order);
    abstract public Array getArray( int order);
@@ -184,6 +293,9 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    abstract public String getCoordSys();
    abstract public void setCheckConsistencyFlag(boolean flag) throws Exception;
    abstract public void toHealpixMoc() throws Exception;
+   
+   
+   public String toString() { try { return toASCII(); } catch( Exception e) { return null; } }
 
    /*************************** read and write *******************************************************/
 
@@ -262,15 +374,6 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    public void write(OutputStream out,int mode) throws Exception {
       check();
       (new MocIO(this)).write(out,mode);
-   }
-
-   /** Write HEALPix MOC to an output stream IN ASCII encoded format
-    * @param out output stream
-    *
-    */
-   public void writeASCII(OutputStream out) throws Exception {
-      check();
-      (new MocIO(this)).writeASCII(out);
    }
 
    /** Write HEALPix MOC to an output stream IN JSON encoded format

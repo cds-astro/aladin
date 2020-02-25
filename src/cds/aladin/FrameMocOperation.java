@@ -35,7 +35,6 @@ import javax.swing.JRadioButton;
 
 import cds.aladin.prop.PropPanel;
 import cds.moc.Moc;
-import cds.moc.SpaceTimeMoc;
 
 /**
  * Gestion de la fenetre associee a la creation d'un plan arithmétic
@@ -224,27 +223,40 @@ public final class FrameMocOperation extends FrameRGBBlink {
       boolean plus = pList.length>1;
       boolean time=false;
       boolean space=false;
-      
+
       boolean setTimeOrder=false;
       boolean setSpaceOrder=false;
-      
+
       for( PlanMoc p : pList ) {
-         if( p.isTimeMoc() ) {
+         Moc moc = p.getMoc();
+         
+         if( moc.isTime() ) {
             time=true;
-            Moc moc = p.moc;
             if( initTimeOrder==-1 ) {
-               if( moc instanceof SpaceTimeMoc ) initTimeOrder = ((SpaceTimeMoc)moc).getTimeOrder();
-               else initTimeOrder = moc.getMocOrder();
+               initTimeOrder = p.moc.getTimeOrder();
                setTimeOrder=true;
             }
-            
-         } else {
+         }
+         
+         if( moc.isSpace() ) {
             space=true;
-            initSpaceOrder = p.moc.getMocOrder();
+            initSpaceOrder = p.moc.getSpaceOrder();
             setSpaceOrder=true;
          }
+         
+//         if( p.isTimeMoc() ) {
+//            time=true;
+//            if( initTimeOrder==-1 ) {
+//               initTimeOrder = p.moc.getTimeOrder();
+//               setTimeOrder=true;
+//            }
+//         } else {
+//            space=true;
+//            initSpaceOrder = p.moc.getSpaceOrder();
+//            setSpaceOrder=true;
+//         }
       }
-      
+
       if( !time ) initTimeOrder=-1;
       if( !space ) initSpaceOrder=-1;
 
