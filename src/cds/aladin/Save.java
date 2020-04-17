@@ -79,9 +79,8 @@ import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.image.BMPWriter;
 import cds.image.EPSGraphics;
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.xml.Field;
@@ -410,8 +409,8 @@ public class Save extends JFrame implements ActionListener {
             case Plan.ALLSKYSTMOC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
                res &= saveMoc(s,(PlanMoc)p,
-                     asciiMocCb!=null && asciiMocCb.isSelected() ? HealpixMoc.ASCII :
-                        jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.JSON : HealpixMoc.FITS);
+                     asciiMocCb!=null && asciiMocCb.isSelected() ? SMoc.ASCII :
+                        jsonMocCb!=null && jsonMocCb.isSelected() ? SMoc.JSON : SMoc.FITS);
                break;
                //            case Plan.APERTURE:
             case Plan.TOOL:
@@ -2032,7 +2031,7 @@ public class Save extends JFrame implements ActionListener {
       PrintWriter fo =null;
       try {
          fo = new PrintWriter(new FileOutputStream(new File(filename)));
-         String s = PlanMoc.createPerimeterString((SpaceMoc)p.getMoc());
+         String s = PlanMoc.createPerimeterString((SMoc)p.getMoc());
          fo.print("#AJS\ndraw line("+s+")\n");
          fo.close();
          fo=null;
@@ -2044,9 +2043,9 @@ public class Save extends JFrame implements ActionListener {
    protected boolean saveMoc(String filename, PlanMoc p, int format) {
       Moc moc = p.getMoc();
       try {
-         if( moc instanceof SpaceMoc && ((SpaceMoc)moc).getMinLimitOrder()>0 ) {
-            SpaceMoc moc1 = (SpaceMoc)moc.clone();
-            moc1.setMinLimitOrder(0);
+         if( moc instanceof SMoc && ((SMoc)moc).getMinOrder()>0 ) {
+            SMoc moc1 = (SMoc)moc.clone();
+            moc1.setMinOrder(0);
             moc1.write(filename, format);
          } else {
             moc.write(filename, format);

@@ -23,71 +23,35 @@ package cds.moc;
 
 import java.io.InputStream;
 
-/** Extension of SpaceMoc for compatibility with deprecated HealpixMoc class
+/** Extension of SMoc for compatibility with old HealpixMoc class
+ * Use SMoc rather than this class.
+ * This class should be used only for HEALpix specific actions on SMoc
  *
  * @authors Pierre Fernique [CDS]
- * @version 1.0 April 2019 - creation (code are now in SpaceMoc)
+ * @version 2.1 Feb 2020 - cleaning
+ * @version 2.0 April 2019 - full refactoring (code are now in SMoc)
  */
-public class HealpixMoc extends SpaceMoc {
+public class HealpixMoc extends SMoc {
+   
+   public HealpixMoc(Moc smoc) throws Exception { super(smoc); }
 
-
+   /** @deprecated */
    public HealpixMoc() { super(); }
-   
-   public HealpixMoc( Moc smoc ) throws Exception {
-      init(smoc.getCoordSys(),0,maxLimitOrder);
-      ((SpaceMoc)smoc).toRangeSet();
-      spaceRange = ((SpaceMoc)smoc).spaceRange;
-      if( spaceRange!=null ) toHealpixMoc();
-   }
-
-   public HealpixMoc(int maxLimitOrder) throws Exception {
-      init("C",0,maxLimitOrder);
-   }
-
-   public HealpixMoc(int minLimitOrder,int maxLimitOrder) throws Exception {
-      super(minLimitOrder,maxLimitOrder);
-   }
-
-   public HealpixMoc(String coordSys, int minLimitOrder,int maxLimitOrder) throws Exception {
-      super(coordSys,minLimitOrder,maxLimitOrder);
-   }
-   
-   public HealpixMoc(Range r) throws Exception { super(r); }
-
+   /** @deprecated */
+   public HealpixMoc(int maxLimitOrder) throws Exception { super(maxLimitOrder); }
+   /** @deprecated */
+   public HealpixMoc(int minLimitOrder,int maxLimitOrder) throws Exception { super("C",minLimitOrder,maxLimitOrder); }
+   /** @deprecated */
+   public HealpixMoc(String coordSys, int minLimitOrder,int maxLimitOrder) throws Exception { super(coordSys,minLimitOrder,maxLimitOrder); }
+   /** @deprecated */
    public HealpixMoc(String s) throws Exception { super(s); }
-
+   /** @deprecated */
    public HealpixMoc(InputStream in) throws Exception { super(in); }
-
-   public HealpixMoc(InputStream in, int mode) throws Exception { super(in, mode); }
-
-
-   /** @deprecated see getMaxLimitOrder() */
-   public int getLimitOrder() { return getMaxLimitOrder(); }
-
-   /** @deprecated see setMaxLimitOrder() */
-   public void setLimitOrder(int limitOrder) throws Exception { setMaxLimitOrder(limitOrder); }
-
-   /** Specify the coordinate system (HEALPix convention: G-galactic, C-Equatorial, E-Ecliptic)
-    * @deprecated Standard MOC must be equatorial
-    */
-   public void setCoordSys(String coordSys) {
-      this.coordSys=coordSys;
-      property.put("COORDSYS", coordSys);
-   }
-
-   /** Fast test for checking if the HEALPix cell is intersecting
-    * the current MOC object
-    * @deprecated see isIntersecting(...)
-    */
-   public boolean isInTree(int order,long npix) { return isIntersecting(order,npix); }
-
-   /** Fast test for checking if the parameter MOC is intersecting
-    * the current MOC object
-    * @deprecated see isIntersecting(...)
-    */
-   public boolean isInTree(HealpixMoc moc) { return isIntersecting(moc); }
-
-    /** Check if the spherical coord is inside the MOC. The coordinate system must be compatible
+   /** @deprecated */
+   public HealpixMoc(InputStream in, int mode) throws Exception { super(in,mode); }
+   
+   
+   /** Check if the spherical coord is inside the MOC. The coordinate system must be compatible
     * with the MOC coordinate system.
     * @param alpha in degrees
     * @param delta in degrees
@@ -95,7 +59,7 @@ public class HealpixMoc extends SpaceMoc {
     * @throws Exception
     */
    public boolean contains(HealpixImpl healpix,double alpha, double delta) throws Exception {
-      int order = getMaxOrder();
+      int order = getMaxUsedOrder();
       if( order==-1 ) return false;
       long npix = healpix.ang2pix(order, alpha, delta);
       if( level[order].find( npix )>=0 ) return true;
@@ -111,11 +75,11 @@ public class HealpixMoc extends SpaceMoc {
     * @return an HealpixMox containing the list of pixels
     * @throws Exception
     */
-   public SpaceMoc queryDisc(HealpixImpl healpix,double alpha, double delta,double radius) throws Exception {
-      int order = getMaxOrder();
+   public SMoc queryDisc(HealpixImpl healpix,double alpha, double delta,double radius) throws Exception {
+      int order = getMaxUsedOrder();
       long [] list = healpix.queryDisc(order, alpha, delta, radius);
-      HealpixMoc mocA = new HealpixMoc(coordSys,minLimitOrder,maxLimitOrder);
+      SMoc mocA = new SMoc(sys,minOrder,mocOrder);
       mocA.add(order,list);
-      return (SpaceMoc)intersection(mocA);
+      return (SMoc)intersection(mocA);
    }
 }

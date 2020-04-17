@@ -31,7 +31,7 @@ import cds.aladin.HealpixProgen;
 import cds.aladin.MyProperties;
 import cds.aladin.PlanBG;
 import cds.fits.Fits;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.Util;
 
 /** Fusion de 2 HiPS, puis reconstruction de l'arborescence, du allsky et du MOC
@@ -41,7 +41,7 @@ public class BuilderConcat extends BuilderTiles {
    //   private int statNbFile;
    //   private long statSize;
    //   private long startTime,totalTime;
-   private SpaceMoc inputMoc,outputMoc;
+   private SMoc inputMoc,outputMoc;
    private String outputPath;
    private String inputPath;
    private String outputPathIndex;
@@ -85,11 +85,11 @@ public class BuilderConcat extends BuilderTiles {
 
       // Mise à jour ou generation du MOC final
       String outputPath = context.getOutputPath();
-      outputMoc = new SpaceMoc();
+      outputMoc = new SMoc();
       File f = new File(outputPath+Util.FS+Constante.FILE_MOC);
       if( f.exists() ) {
          outputMoc.read( f.getCanonicalPath() );
-         outputMoc = (SpaceMoc)outputMoc.union(inputMoc);
+         outputMoc = (SMoc)outputMoc.union(inputMoc);
          outputMoc.write( context.getOutputPath()+Util.FS+Constante.FILE_MOC);
          context.info("MOC updated");
       } else {
@@ -171,7 +171,7 @@ public class BuilderConcat extends BuilderTiles {
       doHpxFinder = (new File(inputPathIndex)).isDirectory() && (new File(outputPathIndex)).isDirectory();
       if( doHpxFinder ) context.info("HpxFinder will be also concatenated (mode="+mode+")");
 
-      inputMoc = new SpaceMoc();
+      inputMoc = new SMoc();
       f = new File(inputPath+Util.FS+Constante.FILE_MOC);
       if( f.exists() ) inputMoc.read( f.getCanonicalPath() );
       else {
@@ -183,7 +183,7 @@ public class BuilderConcat extends BuilderTiles {
          inputMoc.read( f.getCanonicalPath() );
       }
 
-      if( context.mocArea!=null ) inputMoc = (SpaceMoc)inputMoc.intersection(context.mocArea);
+      if( context.mocArea!=null ) inputMoc = (SMoc)inputMoc.intersection(context.mocArea);
       context.moc = inputMoc;
 
       // Dans le cas de rénégération des allsky.png il faut connaître les cuts

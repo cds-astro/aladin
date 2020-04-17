@@ -30,7 +30,7 @@ import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -47,7 +47,7 @@ public class MocGen {
    private String previous=null;    // Previous MOC file if need
    private int order=10;            // Default order
    private double blank=Double.NaN; // Alternative blank value
-   private int fmt=HealpixMoc.FITS;
+   private int fmt=SMoc.FITS;
    public  boolean verbose=false;
    public boolean debug=false;
    private boolean strict=false;
@@ -55,7 +55,7 @@ public class MocGen {
    private boolean multWrite=false; // true for updating output MOC continously
    private int hdu[] = null;
    
-   private HealpixMoc moc;      // Le MOC en cour de calcul
+   private SMoc moc;      // Le MOC en cour de calcul
    private boolean ready;       // true si le MOC est prêt
    private boolean error;       // true si le MOC n'a pas pu être généré
    private String serror;       // Message d'erreur
@@ -91,7 +91,7 @@ public class MocGen {
    public String getError() { return serror; }
    
    /** Retourne le MOC généré */
-   public HealpixMoc getMoc() throws Exception {
+   public SMoc getMoc() throws Exception {
       if( error ) throw new Exception("MOC error => "+serror);
       if( !ready ) throw new Exception("MOC not yet ready");
       return moc;
@@ -114,7 +114,7 @@ public class MocGen {
                serror=null;
                error=abort=ready=false;
                nbImg=0;
-               moc = new HealpixMoc();
+               moc = new SMoc();
                moc.setMocOrder(order);
                moc.setCheckConsistencyFlag(false);
                scanAndDo(moc,new File(in),order);
@@ -132,7 +132,7 @@ public class MocGen {
    }
    
    // Ajout dans le MOC du fichier passé en paramètre avec scan des pixels
-   private boolean addInMocPixel(HealpixMoc moc,File file,int order) throws Exception {
+   private boolean addInMocPixel(SMoc moc,File file,int order) throws Exception {
       boolean rep=false;
       
       String currentfile = file.getPath();
@@ -197,7 +197,7 @@ public class MocGen {
       return rep;
    }
    
-   private boolean addInMocPixel1(Fits f, HealpixMoc moc, String currentfile, String currentCell, int order) throws Exception {
+   private boolean addInMocPixel1(Fits f, SMoc moc, String currentfile, String currentCell, int order) throws Exception {
       boolean rep=false;
       
       int localOrder=0;
@@ -264,7 +264,7 @@ public class MocGen {
    
    // Ajout dans le MOC du losange indiqué à la condition que le pixel central correspondant soit dans l'image
    // et ne soit pas BLANK, sinon appel récursif sur les 4 fils jusqu'à atteindre la résolution de l'image
-//   private boolean addInMocNpix(Fits f,HealpixMoc moc,int order, long npix) throws Exception {
+//   private boolean addInMocNpix(Fits f,SMoc moc,int order, long npix) throws Exception {
 //      
 //      boolean rep=true;
 //      Calib c = f.getCalib();
@@ -296,7 +296,7 @@ public class MocGen {
 //   }
    
    // Ajout dans le MOC de la Calib passé en paramètre
-   private boolean addInMocBox(Fits f,HealpixMoc moc,int order) throws Exception {
+   private boolean addInMocBox(Fits f,SMoc moc,int order) throws Exception {
       boolean res=true;
       Coord coo = new Coord();
       ArrayList<double[]> cooList = new ArrayList<>(10);
@@ -311,7 +311,7 @@ public class MocGen {
 //      long [] npixs = CDSHealpix.query_polygon( order, cooList,true);
 //      for( long npix : npixs ) moc.add(order,npix) ;
       
-      HealpixMoc m1 = CDSHealpix.createHealpixMoc(cooList, order);
+      SMoc m1 = CDSHealpix.createSMoc(cooList, order);
       moc.add( m1 );
       return res;
    }
@@ -320,7 +320,7 @@ public class MocGen {
    // 1) Recherche d'une calibration astrométrique, 2) calcul des 4 coins en ra,dec
    // 3) extraction des pixels HEALPix correspondants, 4) ajout dans le MOC
    // Rq : les fichiers qui n'ont pas de calibration sont simplement ignorés
-   private boolean addInMocBox(HealpixMoc moc, File file,int order) throws Exception {
+   private boolean addInMocBox(SMoc moc, File file,int order) throws Exception {
       boolean rep=false;
       boolean flagFirstHdu = hdu==null;
       boolean flagAllHdu = hdu!=null && hdu.length>0 && hdu[0]==-1;
@@ -343,7 +343,7 @@ public class MocGen {
      return rep;
    }
    
-   private boolean addInMoc(HealpixMoc moc, File file, int order,boolean strict) throws Exception {
+   private boolean addInMoc(SMoc moc, File file, int order,boolean strict) throws Exception {
       if( !strict ) return addInMocBox(moc,file,order);
       return addInMocPixel(moc,file,order);
    }
@@ -353,7 +353,7 @@ public class MocGen {
    // trouvés dans le répertoire
    // Rq: méthode récursive en parcours en largeur d'abord.
    // @return : le nombre de fichiers traité
-   private void scanAndDo(HealpixMoc moc,File rep,int order) throws Exception {
+   private void scanAndDo(SMoc moc,File rep,int order) throws Exception {
       File [] list;
       
       scanningDir=rep.getCanonicalPath();
@@ -388,7 +388,7 @@ public class MocGen {
    private boolean needNL=false;
    
    // Met à jour si nécessaire le Moc sur le disque (mode maj continue)
-   private boolean updateMoc(HealpixMoc moc, String out, int fmt) throws Exception {
+   private boolean updateMoc(SMoc moc, String out, int fmt) throws Exception {
       long t = System.currentTimeMillis();
       if( (t-t1)<6000 ) return false;
       t1=t;
@@ -413,7 +413,7 @@ public class MocGen {
    }
          
    
-//   private int scanStdin(HealpixMoc moc,int order) throws Exception {
+//   private int scanStdin(SMoc moc,int order) throws Exception {
 //      int n=0;
 //      String s;
 //      BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -488,9 +488,9 @@ public class MocGen {
             
          } else if( s.startsWith("mocfmt=") ) {
             String a=s.substring(x);
-            if( a.equalsIgnoreCase("fits") ) fmt=HealpixMoc.FITS;
+            if( a.equalsIgnoreCase("fits") ) fmt=SMoc.FITS;
             else if( a.equalsIgnoreCase("json") 
-                  || a.equalsIgnoreCase("ascii") ) fmt=HealpixMoc.JSON;
+                  || a.equalsIgnoreCase("ascii") ) fmt=SMoc.JSON;
             else {
                System.out.println("Unkown MOC format ["+a+"]");
                return false;
@@ -534,7 +534,7 @@ public class MocGen {
             System.out.println();
          }
       }
-      System.out.println(".mocfmt="+(fmt==HealpixMoc.FITS?"fits":"ascii"));
+      System.out.println(".mocfmt="+(fmt==SMoc.FITS?"fits":"ascii"));
       if( strict ) System.out.println(".blank=NaN"+(Double.isNaN(blank)?"":"|"+blank));
 
       return true;
@@ -581,7 +581,7 @@ public class MocGen {
          serror=null;
          error=abort=ready=false;
          nbImg=0;
-         moc = new HealpixMoc();
+         moc = new SMoc();
          if( previous!=null ) moc.read(previous);
          moc.setMocOrder(order);
          moc.setCheckConsistencyFlag(false);

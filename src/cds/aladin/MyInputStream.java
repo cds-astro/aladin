@@ -399,6 +399,7 @@ public class MyInputStream extends FilterInputStream {
    public long getType() throws Exception { return getType(0); }
    public long getType(int limit) throws Exception {
       int csv;
+      int t;
       //System.out.println("call getType()");
 
       // le type de stream a deja ete detecte, on le retourne tel que
@@ -441,18 +442,19 @@ public class MyInputStream extends FilterInputStream {
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
          else if( inCache>=5 && c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=SMOC;
          
-         else if( inCache>=3 && isAsciiMoc(c,inCache) ) type |=SMOC;
+         // Détection MOC ASCII
+         else if( inCache>=3 && (t=isAsciiMoc(c,inCache))>0 ) type |= (t==1 ? SMOC : t==2 ? TMOC : STMOC);
 
          // Détection DS9REG
          else if( inCache>=13 && c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g'
                && c[5]=='i' && c[6]=='o' && c[7]=='n' && c[8]==' ' && c[9]=='f'
                &&c[10]=='i' &&c[11]=='l'&& c[12]=='e' ) type |= DS9REG|AJS;
 
-         // Détection HPXMO (ASCII - ancienne définition #HPXMOCM &  #HPXMOC...)
+         // Détection HPXMOC (ASCII - ancienne définition #HPXMOCM &  #HPXMOC...)
          else if( inCache>=7 && c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X'
                && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=SMOC;
 
-         // Détection MOCORDER (ASCII - nouvelle définition #MOCORDER...)
+         // Détection MOCORDER (ASCII - ancienne définition #MOCORDER...)
          else if( inCache>=7 && c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
                && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=SMOC;
 
@@ -1174,21 +1176,27 @@ public class MyInputStream extends FilterInputStream {
    }
    
    // Les séparateurs pris en compte dans les MOCs ASCII (la virgule est pris en compte pour compatibilité)
-   private boolean isMocAsciiSep(char ch) { return ch==',' || Character.isSpace(ch); }
+   private boolean isMocAsciiSep(char ch) { return ch==',' || Character.isWhitespace(ch) 
+                                             || ch=='s' || ch=='t'; }
    
    // Recherche d'une chaine d'un moc ASCII (ex: 1/3-5,8 7/)
-   private boolean isAsciiMoc(int c[],int n ) {
-      if( n<3 ) return false;
+   // retourne 0-ce n'est pas un MOC, 1-SMOC, 2-TMOC et 3-STMOC;
+   private int isAsciiMoc(int c[],int n ) {
+      if( n<3 ) return 0;
+      boolean space=true, time=false;   // On suppose que c'est un MOC spatials => ne détecte pas les TMOC
       int mode=1;
       for( int i=0; i<n && i<c.length; i++ ) {
          char ch = (char) c[i];
+         if( !space && ch=='s' ) space=true;
+         if( !time && ch=='t' ) time=true;
+         
          switch(mode) {
             case 1: // Je cherche le premier non blanc
                if( isMocAsciiSep(ch) ) continue;
                mode=2;
             case 2: // Je dois avoir un nombre jusqu'a un /
                if( ch=='/' ) { mode=3; continue; }
-               if( !Character.isDigit(ch ) ) return false;
+               if( !Character.isDigit(ch ) ) return 0;
                break;
             case 3: // Je cherche le prochain non blanc
                if( isMocAsciiSep(ch) ) continue;
@@ -1197,15 +1205,15 @@ public class MyInputStream extends FilterInputStream {
             case 4: // Je dois avoir un nombre jusqu'au prochain espace ou - ou /
                if( ch=='-' || isMocAsciiSep(ch)) { mode=5; continue; }
                if( ch=='/' ) { mode=3; continue; }
-               if( !Character.isDigit(ch) ) return false;
+               if( !Character.isDigit(ch) ) return 0;
                break;
             case 5: // Je dois avoir un nombre jusqu'a un / ou un separateur
                if( ch=='/' || isMocAsciiSep(ch)) { mode=3; continue; }
-               if( !Character.isDigit(ch ) ) return false;
+               if( !Character.isDigit(ch ) ) return 0;
                break;
          }
       }
-      return true;
+      return space && time ? 3 : time ? 2 : 1;
    }
    
       

@@ -64,7 +64,7 @@ import cds.astro.Ecliptic;
 import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 
 
 /**
@@ -117,10 +117,10 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param mocId  MOC identifier (unique)
     * @param moc MOC to memorize
     */
-   public void add(String mocId, HealpixMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
+   public void add(String mocId, SMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
       if( moc!=null ) {
          int o = moc.getMocOrder();
-         if( o==HealpixMoc.MAXORDER ) o = moc.getMaxOrder();  // A cause du bug
+         if( o==SMoc.MAXORDER ) o = moc.getMaxUsedOrder();  // A cause du bug
          if( mocOrder<o) mocOrder=o;
          moc.sort();
       }
@@ -162,7 +162,7 @@ public class MultiMoc implements Iterable<MocItem> {
    }
    
    /** Return the MOC associated to a mocId, null if not found */
-   public HealpixMoc getMoc(String mocId) {
+   public SMoc getMoc(String mocId) {
       MocItem mi = map.get(mocId);
       return mi==null ? null : mi.moc;
    }
@@ -219,7 +219,7 @@ public class MultiMoc implements Iterable<MocItem> {
    
    static private Healpix hpx = new Healpix();
    
-   public String adjustProp(MyProperties prop, String id, HealpixMoc moc) {
+   public String adjustProp(MyProperties prop, String id, SMoc moc) {
       
       String s;
       String mocId = getID(prop,id);
@@ -235,8 +235,8 @@ public class MultiMoc implements Iterable<MocItem> {
 
          // Petit bricolage horrible pour contourner les MocOrder que l'on a oublié
          // d'indiquer
-         if( s==null || s.equals(""+HealpixMoc.MAXORDER) || s.equals("0") || s.equals("-1")) {
-            int maxOrder = moc.getMaxOrder();
+         if( s==null || s.equals(""+SMoc.MAXORDER) || s.equals("0") || s.equals("-1")) {
+            int maxOrder = moc.getMaxUsedOrder();
             if( maxOrder==0 ) {
                String s1 = prop.get("hips_order");
                if( s1!=null ) s=s1;
@@ -263,7 +263,7 @@ public class MultiMoc implements Iterable<MocItem> {
                // pour éviter de récupérer le bug sur le MocOrder
                try {
                   int n = Integer.parseInt( prop.get("moc_order"));
-                  HealpixMoc mm = new HealpixMoc();
+                  SMoc mm = new SMoc();
                   mm.setMocOrder(n);
                   fov =  mm.getAngularRes()+"";
                } catch( Exception e) {
@@ -271,7 +271,7 @@ public class MultiMoc implements Iterable<MocItem> {
                }
             }
             if( ra==null || dec==null ) {
-               if( moc.isAllSky() ) { ra="0"; dec="+0"; }
+               if( moc.isFull() ) { ra="0"; dec="+0"; }
                else {
                   try {
                      int order = moc.getMocOrder();
@@ -336,7 +336,7 @@ public class MultiMoc implements Iterable<MocItem> {
                if( (new File(mocFile)).exists()) continue;
             }
 
-            HealpixMoc moc;
+            SMoc moc;
             MyProperties prop;
 
             try {
@@ -362,7 +362,7 @@ public class MultiMoc implements Iterable<MocItem> {
                if( prop==null && moc==null ) continue;
                if( prop==null && moc!=null ) prop = new MyProperties();
                mocId = adjustProp(prop,mocId,moc);
-               if( moc!=null && !moc.getCoordSys().equals(COORDSYS) ) moc=null; // Incompatible MOC coordsys
+               if( moc!=null && !moc.getSys().equals(COORDSYS) ) moc=null; // Incompatible MOC coordsys
 
                if( !exceptProp(prop,mocId) ) { prop=null; moc=null; }
 
@@ -571,35 +571,35 @@ public class MultiMoc implements Iterable<MocItem> {
    }
    
    /** Changement de référentiel d'un MOC */
-   static final public HealpixMoc convertToICRS(HealpixMoc moc) throws Exception {
-      char a = moc.getCoordSys().charAt(0);
+   static final public SMoc convertToICRS(SMoc moc) throws Exception {
+      char a = moc.getSys().charAt(0);
       
       // Déjà en ICRS
       if( a!='G' && a!='E' ) return moc;   // déjà en ICRS
       
       // Ca va prendre trop de temps si on garde la résolution max
-      if( moc.getMaxOrder()>10 && moc.getCoverage()>0.99 && !moc.isAllSky() ) {
+      if( moc.getMaxUsedOrder()>10 && moc.getCoverage()>0.99 && !moc.isFull() ) {
          moc.setMocOrder(10);
          
       // Pour convertir, il faut avoir un cran de marge
 //      } else {
-//         if( moc.getMaxOrder()==HealpixMoc.MAXORDER ) {
+//         if( moc.getMaxOrder()==SMoc.MAXORDER ) {
 //            System.out.println("Changement de order de 29 à 28");
-//            moc.setMocOrder(HealpixMoc.MAXORDER-1);
+//            moc.setMocOrder(SMoc.MAXORDER-1);
 //            System.out.println("C'est fait");
 //         }
       }
       
       // Ciel complet => cas trivial
-      if( moc.isAllSky()) {
-         moc.setCoordSys("C");
+      if( moc.isFull()) {
+         moc.setSys("C");
          return moc;
       }
       
       Astroframe frameSrc = a=='G' ? new Galactic() : a=='E' ? new Ecliptic() : new ICRS();
       Healpix hpx = new Healpix();
-      int order = moc.getMaxOrder();
-      HealpixMoc moc1 = new HealpixMoc(moc.getMinLimitOrder(),moc.getMocOrder());
+      int order = moc.getMaxUsedOrder();
+      SMoc moc1 = new SMoc(moc.getMinOrder(),moc.getMocOrder());
       moc1.setCheckConsistencyFlag(false);
       long onpix1=-1;
       int n=0;
@@ -628,15 +628,15 @@ public class MultiMoc implements Iterable<MocItem> {
 
    
    // Moc Loading
-   private HealpixMoc loadMoc(String filename) {
-      HealpixMoc moc=null;
+   private SMoc loadMoc(String filename) {
+      SMoc moc=null;
       try {
-         moc = new HealpixMoc();
+         moc = new SMoc();
          moc.read(filename);
          if( moc.getSize()==0 ) moc=null;
          
          // Pas dans le bon système de référence
-         String sys=moc.getCoordSys();
+         String sys=moc.getSys();
          if( !sys.equals(COORDSYS) ) {
             long t = System.currentTimeMillis();
             try {
@@ -716,7 +716,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param moc MOC describing input sky region
     * @return list of MOC identifiers
     */
-   public ArrayList<String> scan(HealpixMoc moc) { return scan(moc, (HashMap<String,String[]>)null, true, -1, OVERLAPS); }
+   public ArrayList<String> scan(SMoc moc) { return scan(moc, (HashMap<String,String[]>)null, true, -1, OVERLAPS); }
    
    
    // Détermination de l'ID, soit par le creator_did, ou le publisher_did sinon creator_id?obs_id ou publisher_id?obs_id
@@ -1005,7 +1005,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param casesensitive case sensitive (true by default) - never applied for ID field
     * @return list of MOC identifiers
     */
-   public ArrayList<String> scan(HealpixMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top, int intersect ) {
+   public ArrayList<String> scan(SMoc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top, int intersect ) {
       ArrayList<String> res = new ArrayList<>();
 
       int n=0;
@@ -1034,7 +1034,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @return
     */
    public ArrayList<String> scan(HashMap<String,String[]> mapFilter) {
-      return scan( (HealpixMoc)null, mapFilter, true, -1, OVERLAPS);
+      return scan( (SMoc)null, mapFilter, true, -1, OVERLAPS);
    }
    
    /**
@@ -1045,7 +1045,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * @param intersect true implies that all sky region must be inside
     * @return list of IDs (keep the original MultiMoc order)
     */
-   public ArrayList<String> scan( HealpixMoc moc, String expr, boolean casesens, int top, int intersect ) throws Exception {
+   public ArrayList<String> scan( SMoc moc, String expr, boolean casesens, int top, int intersect ) throws Exception {
       ArrayList<String> res = new ArrayList<>();
       
       // Détermination des IDs candidats
@@ -1093,7 +1093,7 @@ public class MultiMoc implements Iterable<MocItem> {
     */
    public ArrayList<String> scan(String mask) throws Exception { return scan( mask, true); }
    public ArrayList<String> scan(String mask, boolean casesensitive) throws Exception {
-      return scan( (HealpixMoc)null, mask, casesensitive, -1, OVERLAPS);
+      return scan( (SMoc)null, mask, casesensitive, -1, OVERLAPS);
    }
    
 
@@ -1458,7 +1458,7 @@ public class MultiMoc implements Iterable<MocItem> {
       mapFilters.put( key, new String[] { val } );
       
       // Scanning du multimoc et mémorisation des éléments qui correspondent
-      ArrayList<String> res = scan( (HealpixMoc)null, mapFilters, casesens, -1, OVERLAPS);
+      ArrayList<String> res = scan( (SMoc)null, mapFilters, casesens, -1, OVERLAPS);
       op.res = new HashSet<>( Math.max(2*res.size(), size()) );   // <= Je crée une HashSet assez grande, car elle est susceptible
                                                                         //    de contenir l'ensemble des résultats. On pourrait affiner en
       op.res.addAll( res );

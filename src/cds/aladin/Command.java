@@ -42,10 +42,8 @@ import javax.swing.SwingUtilities;
 import cds.allsky.HipsGen;
 import cds.astro.Astrocoo;
 import cds.astro.Unit;
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
-import cds.moc.SpaceTimeMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
 import cds.savot.model.SavotField;
 import cds.tools.Astrodate;
 import cds.tools.Computer;
@@ -69,46 +67,35 @@ public final class Command implements Runnable {
 
    static final long TIMEOUT = 3L; // 3 minutes de chien de garde
    // pour la commande "sync"
-
    static long timeout = TIMEOUT * 60000;
 
    // Gestion du systeme de coordonnees pour la commande "draw"
    static int DRAWXY = 0;
 
    static int DRAWRADEC = 1;
-
    static int drawMode = DRAWRADEC; // mode de coord courant
 
    Aladin a;
-
    Calque c;
-
    private CommandDS9 ds9; // Pour gérer les conversions de commandes DS9
-
    private boolean stop; // passe à true pour tuer les threads de lecture
-
    private String lastCmd = ""; // Dernière commande exécutée
 
    // protected boolean syncNeedSave=false; // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
    protected Synchro syncSave = new Synchro();
-
    private Thread thread; // Le thread de lecture des commandes
 
    JFrame robotInfo;
-
    String curTuto;
-
    JTextArea infoTxt;
-
    HashMap<String, String> var = new HashMap<>(100);
-
    MyRobot robot;
-
    public boolean robotMode = false; // pour robot : vrai si en mode "robot"
 
    boolean filterMode = false; // vrai si on est en mode "definition de filtre"
-
    StringBuffer filterDef = null; // objet contenant la def. du filtre
+   StringBuffer comment = null; // Last comment
+   Function fonct = null;
 
    PlanImage planRGBRef; // Particularite pour traiter la commande RGB
 
@@ -2546,6 +2533,13 @@ public final class Command implements Runnable {
          int posParam=0;  // Position du paramètre (voir commentaire sur OPERATION
 //         String s;
          
+         Moc moc=null;
+         if( (moc=getMoc(param))!=null ) {
+            a.calque.newPlanMOC(moc,label);
+            a.calque.repaintAll();
+            return "";
+         }
+         
          // Découpage des paramètres
          Tok tok = new Tok(param);
          while( tok.hasMoreTokens() ) {
@@ -2654,7 +2648,7 @@ public final class Command implements Runnable {
                for( int j = 0; j < p.length; j++ ) {
                   pList[j] = (PlanMoc) p[j];
                   if( flagCheckSpaceOrder || flagCheckTimeOrder ) {
-                     Moc moc = pList[j].moc;
+                     moc = pList[j].moc;
                      if( moc.isSpace() ) spMoc = moc.getSpaceOrder();
                      if( moc.isTime() )  tMoc = moc.getTimeOrder();
                      if( flagCheckSpaceOrder && spMoc>firstOrder ) firstOrder=spMoc;
@@ -2919,7 +2913,7 @@ public final class Command implements Runnable {
       specifColor = getSpecifColor(fct, tok);
       if( specifColor != null ) fct = tok.nextToken();
 
-      // Commande moc(3/124-126,133 4/566 ...)
+      // Commande moc(3/124-126 133 4/566 ...)
       if( fct.equalsIgnoreCase("moc") ) {
          String m;
          int i = param.indexOf('(');
@@ -2930,8 +2924,7 @@ public final class Command implements Runnable {
             m = param.substring(i + 1);
          }
          try {
-            HealpixMoc moc = new HealpixMoc(m);
-            moc.setMinLimitOrder(3);
+            Moc moc = Moc.createMoc(m);
             Plan p = a.calque.getPlan(a.calque.newPlanMOC(moc, "Moc"));
             if( specifColor != null ) p.c = specifColor;
             return true;
@@ -3374,23 +3367,30 @@ public final class Command implements Runnable {
    }
 
    /**
-    * Retourne true si la chaine est un MOC suivant la syntaxe du genre 3/123-124,156 ...
-    */
+    * Retourne true si la chaine est un MOC suivant la syntaxe du genre 3/123-124 156 ...
+    * éventuellement préfixée par 's' et/ou 't' */
+   
    private boolean findMoc(String s) {
-      int slash = -1, dashComma = -1;
-      char[] a = s.toCharArray();
-      for( int i = 0; i < a.length; i++ ) {
-         if( slash == -1 && a[i] == '/' ) slash = i;
-         else if( dashComma == -1 && (a[i] == '-' || a[i] == ',') ) dashComma = i;
-         else if( !Character.isDigit(a[i]) && !Character.isSpaceChar(a[i]) ) return false;
+      
+      // On teste l'absence de caractères incompatibles avec un MOC
+      boolean space=false;
+      boolean dash=false;
+      for( char c : s.toCharArray() ) {
+         if( !( Character.isDigit(c) || (space|=Character.isWhitespace(c)) 
+               || (dash|=(c=='-')) || c=='/' || (dash|=(c==',')) || c=='s' | c=='t') ) return false;
       }
-      return slash > 0 && slash < dashComma;
-
+      
+      // On ne prend pas en compte le MOC minimaliste d'un seul token (ex: 3/110)
+      if( !space && !dash && s.charAt(0)!='c' && s.charAt(0)!='t' ) return false;
+      
+      return getMoc(s)!=null; 
    }
-
-   StringBuffer comment = null; // Last comment
-
-   Function fonct = null;
+   private Moc getMoc(String s) {
+      try {
+         return Moc.createMoc(s);
+      } catch( Exception e ) {}
+      return null;
+   }
 
    /**
     * Traitement d'une commande aladin en mode immédiat (pas d'attente de synchronization)
@@ -3553,7 +3553,7 @@ public final class Command implements Runnable {
       // else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       if( cmd.equalsIgnoreCase("macro") ) execMacro(param);
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
-//      else if( cmd.equalsIgnoreCase("fx") ) fx(param);
+      else if( cmd.equalsIgnoreCase("pf") ) pf(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
@@ -3598,7 +3598,8 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("thumbnail") || cmd.equalsIgnoreCase("createROI") || cmd.equalsIgnoreCase("ROI") )
          execROICmd(param);
       else if( cmd.equalsIgnoreCase("stc") ) execDrawCmd("draw", param);
-      else if( findMoc(cmd) ) execDrawCmd("draw", "MOC " + cmd);
+//      else if( findMoc(s1)!=null ) execDrawCmd("draw", "MOC " + s1);
+      else if( findMoc(s1) ) return execCmocCmd(s1,label);
       else if( cmd.equalsIgnoreCase("cmoc") ) return execCmocCmd(param, label);
       else if( cmd.equalsIgnoreCase("draw") ) execDrawCmd(cmd, param);
       else if( cmd.equalsIgnoreCase("rename") || cmd.equalsIgnoreCase("ren") ) { // For compatibility
@@ -4241,7 +4242,7 @@ public final class Command implements Runnable {
 
                if( p instanceof PlanMoc ) {
                   if( ajs ) (a.save).saveMocAsAJS(file, (PlanMoc) p);
-                  else(a.save).saveMoc(file, (PlanMoc) p, json ? HealpixMoc.JSON : HealpixMoc.FITS);
+                  else(a.save).saveMoc(file, (PlanMoc) p, json ? SMoc.JSON : SMoc.FITS);
                } else if( p.isCatalog() ) (a.save).saveCatalog(file, p, !vot, false, addXY);
                else if( p.isImage() && !(p instanceof PlanImageBlink) ) (a.save).saveImage(file, p, hpx ? 1 : fits ? 0 : 2);
                else {
@@ -5473,10 +5474,16 @@ public final class Command implements Runnable {
       }
    }
    
-//   private void fx(String param) {
-//      CDSHealpix.FX = !CDSHealpix.FX;
-//      System.out.println("Utilisation librairie HEALPix => "+(CDSHealpix.FX ? "FX":"Reinecke"));
-//   }
+   private void pf(String param) {
+      try {
+         Plan p = a.calque.getFirstSelectedPlan();
+         Moc moc = ((PlanMoc)p).getMoc().clone();
+         moc.accretion();
+         a.calque.newPlanMOC(moc, "[EXT "+p.label+"]");
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
 
    // Just for testing tap list for Chaitra
    private void tap(String keyword) {

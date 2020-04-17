@@ -43,9 +43,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import cds.allsky.Constante;
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceTimeMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.STMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.XMLConsumer;
@@ -1326,9 +1326,9 @@ public class ServerFile extends Server implements XMLConsumer {
     */
    private void getMoc(char [] ch, int cur, int length) {
       if( ((PlanMoc)plan).moc==null ) {
-         ((PlanMoc)plan).moc = plan instanceof PlanSTMoc ? new SpaceTimeMoc()
-            : plan instanceof PlanTMoc  ? new TimeMoc()
-            : new HealpixMoc();
+         ((PlanMoc)plan).moc = plan instanceof PlanSTMoc ? new STMoc()
+            : plan instanceof PlanTMoc  ? new TMoc()
+            : new SMoc();
          inMoc =  new MyByteArrayStream( length );
       }
       inMoc.write( new String( ch, cur,length) );

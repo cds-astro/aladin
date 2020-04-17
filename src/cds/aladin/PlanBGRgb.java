@@ -25,9 +25,8 @@ import java.awt.Graphics;
 import java.util.Hashtable;
 
 import cds.allsky.TabRgb;
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.CDSHealpix;
 
 /** Gestion d'un Plan HiPS RGB dynamique utilisant les tuiles de deux ou trois autres plans HiPS.
@@ -162,11 +161,11 @@ public class PlanBGRgb extends PlanBG {
    /** Création du Moc associé au survey */
    protected void planReadyMoc() {
       try {
-         Moc m = new SpaceMoc();
+         Moc m = new SMoc();
          if( red!=null && red.moc!=null ) m = m.union( red.moc );
          if( green!=null && green.moc!=null ) m = m.union( green.moc );
          if( blue!=null && blue.moc!=null ) m = m.union( blue.moc );
-         moc = new HealpixMoc( m );
+         moc = new SMoc( m );
       } catch( Exception e ) { e.printStackTrace(); }
    }
 }

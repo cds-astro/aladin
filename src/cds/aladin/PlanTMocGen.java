@@ -23,7 +23,7 @@ package cds.aladin;
 
 import java.util.Iterator;
 
-import cds.moc.TimeMoc;
+import cds.moc.TMoc;
 
 /** Generation d'un plan TMOC à partir d'une liste de plans (Catalogue) 
  * @author P.Fernique [CDS]
@@ -66,13 +66,13 @@ public class PlanTMocGen extends PlanTMoc {
          try {
             double jdtime = ((Position)o).jdtime;
             if( Double.isNaN( jdtime ) ) continue;
-            ((TimeMoc)moc).add(jdtime, jdtime+ duration/86400.);
+            ((TMoc)moc).add(jdtime, jdtime+ duration/86400.);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
       try {
-         moc.toHealpixMoc();
+         moc.toMocSet();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -81,7 +81,7 @@ public class PlanTMocGen extends PlanTMoc {
 
    protected boolean waitForPlan() {
       try {
-         moc = new TimeMoc();
+         moc = new TMoc();
          if( order!=-1) moc.setMocOrder(order);
          for( Plan p1 : p ) {
             if( p1.isCatalogTime() ) {

@@ -129,10 +129,9 @@ import cds.aladin.stc.STCPolygon;
 import cds.allsky.Context;
 import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
-import cds.moc.SpaceMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.TMoc;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
 import cds.tools.Util;
@@ -174,7 +173,8 @@ import cds.xml.XMLParser;
  * @beta          - Time MOC
  * @beta    <LI> New CDS HEALPix library <br>
  * @beta          - polygonal photometry tool for HiPS<br>
- * @beta          - query by any region
+ * @beta          - query by any region<br>
+ * @beta          - ellipse2moc support
  * @beta    <LI> Data discovery tree: <br>
  * @beta          - pointed thumbnails <br>
  * @beta          - sort and hiearchy control <br>
@@ -236,7 +236,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.017";
+   static public final    String VERSION = "v11.021";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -251,7 +251,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    // Gère le mode particuliers
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
-   public static boolean BETA=true;  // true si on tourne en mode BETA
+   public static boolean BETA=false;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
@@ -3201,7 +3201,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
             "integration have been developed in the framework of the EuroVO VOTech project (2005-2008). " +
             "The contours, filters, data tree, column calculator and Xmatcher have been developed " +
             "in the framework of the Astrophysical Virtual Observatory (AVO), an EC RTD project 2002-2004. " +
-            "The RGB feature has been developed in the framework of the IDHA project (ACI GRID of the French Ministere de la Recherche).\n \n" +
+            "The RGB feature has been developed in the framework of the IDHA project (ACI GRID of the French Ministere de la Recherche).\n" +
+            "See also the Aladin FAQ for the external contributions notably JSAMP, JSOFA and all language supports.\n \n" +
             "* Contact:\ncds-question@unistra.fr\nhttp://aladin.u-strasbg.fr\n \n " +
             "If the Aladin sky atlas was helpful for your research work, the citation of the following " +
             "article 2000A&AS..143...33B would be appreciated.");
@@ -3784,19 +3785,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
       toolBox.setMode(ToolBox.CROP, Tool.DOWN);
    }
    
-   /** Création d'un plan SpaceMoc depuis le plan STMOC sélectionné */
+   /** Création d'un plan SMoc depuis le plan STMOC sélectionné */
    protected void cropSMOC() {
       PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
       if( p==null) { aladin.warning("No STMOC in the stack"); return; }
-      SpaceMoc moc = p.getCurrentSpaceMoc( view.getCurrentView(), true );
+      SMoc moc = p.getCurrentSpaceMoc( view.getCurrentView(), true );
       calque.newPlanMOC(moc, "MOC from "+p.label);
    }
 
-   /** Création d'un plan TimeMoc depuis le plan STMOC sélectionné */
+   /** Création d'un plan TMoc depuis le plan STMOC sélectionné */
    protected void cropTMOC() {
       PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
       if( p==null ) { aladin.warning("No STMOC in the stack"); return; }
-      TimeMoc moc = p.getCurrentTimeMoc(  );
+      TMoc moc = p.getCurrentTimeMoc(  );
       calque.newPlanMOC(moc, "TMOC from "+p.label);
       console.printCommand("cmoc -time "+p.label);
    }
@@ -4354,13 +4355,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    static public int getAppropriateOrder(double size) {
       int order = 4;
-      if( size==0 ) order=HealpixMoc.MAXORDER;
+      if( size==0 ) order=SMoc.MAXORDER;
       else {
          double pixRes = size/200;
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
          double res = Math.sqrt(skyArea/(12*16*16));
-         while( order<HealpixMoc.MAXORDER && res>pixRes) { res/=2; order++; }
+         while( order<SMoc.MAXORDER && res>pixRes) { res/=2; order++; }
       }
       return order;
    }
@@ -4368,7 +4369,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /**Creation d'un Plann MOC à partir de tous les polygones sélectionnés */
    protected int createPlanMocByRegions() { return createPlanMocByRegions(-1); }
    protected int createPlanMocByRegions(int order) {
-      HealpixMoc moc = createMocByRegions(order);
+      SMoc moc = createMocByRegions(order);
       if( moc==null ) {
          error("MOC creation error !\n",1);
          return -1;
@@ -4409,7 +4410,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
-   protected HealpixMoc createMocByRegions(int order) {
+   protected SMoc createMocByRegions(int order) {
       
       // reset des boutons
       toolBox.tool[ToolBox.DRAW].setMode(Tool.UP);
@@ -4417,7 +4418,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       toolBox.tool[ToolBox.SELECT].setMode(Tool.DOWN);
       toolBox.toolMode();
       
-      ArrayList<HealpixMoc> arr = new ArrayList<>(10000);
+      ArrayList<SMoc> arr = new ArrayList<>(10000);
       HashSet<Obj> set = new HashSet<>();
       for( Obj o : view.vselobj ) {
          
@@ -4429,13 +4430,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
                double radius =o.getRadius();
                if( radius==0 ) continue;
 
-               HealpixMoc m = createMocRegionCircle( ra,de,radius,order );
+               SMoc m = createMocRegionCircle( ra,de,radius,order );
+               if( m==null || m.getSize()==0 ) continue;
+               arr.add(m);
+            } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
+            
+            // Ajout des ellipses
+         } else if( o instanceof Ellipse ) {
+            try {
+               double ra = o.getRa();
+               double de = o.getDec();
+               double semiMA = ((Ellipse)o).getSemiMA();
+               double semiMI = ((Ellipse)o).getSemiMI();
+               double angle = ((Ellipse)o).getAngle()+90;
+               SMoc m = createMocRegionEllipse(ra, de, semiMA, semiMI, angle, order);
                if( m==null || m.getSize()==0 ) continue;
                arr.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
          }
-         
-         
+                  
          // Ajout des polygones
          if( !(o instanceof Ligne) ) continue;
          
@@ -4447,7 +4460,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try {
             boolean isCounterClock =  isCounterClok( (Ligne) o );
 //            trace(4,"polygon counterClock="+isCounterClock);
-            HealpixMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock );
+            SMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock );
             if( m==null || m.getSize()==0 ) continue;
             arr.add(m);
          } catch( Exception e) { if( levelTrace>=3 ) { e.printStackTrace();  } }
@@ -4458,7 +4471,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( arr.size()>=10000 ) {
             try {
 //               long t0 = Util.getTime();
-               HealpixMoc moc;
+               SMoc moc;
                moc = getUnionMoc( arr );
                arr.clear();
                arr.add(moc);
@@ -4489,37 +4502,37 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @return Union des Mocs
     * @throws Exception
     */
-   static public HealpixMoc getUnionMoc(ArrayList<HealpixMoc> arrMoc) throws Exception {
+   static public SMoc getUnionMoc(ArrayList<SMoc> arrMoc) throws Exception {
       int maxMocOrder=0;
       
       // Un seul élément, pas besoin d'aller plus loin
-      if( arrMoc.size()==1 ) return (HealpixMoc)arrMoc.get(0).clone();
+      if( arrMoc.size()==1 ) return (SMoc)arrMoc.get(0).clone();
       
       // On tri pour avoir les plus grands en début
       Collections.sort(arrMoc);
-      HealpixMoc[] a = new HealpixMoc[ arrMoc.size() ];
+      SMoc[] a = new SMoc[ arrMoc.size() ];
       arrMoc.toArray(a);
       
       // Calcul d'un ciel complet pour éviter des unions inutiles
-      long max=HealpixMoc.pow2(HealpixMoc.MAXORDER);
+      long max=SMoc.pow2(SMoc.MAXORDER);
       max=12L*max*max;
       
       // Détermination de l'order maximal
       int n;
       for( Moc m : a ) if( (n=m.getMocOrder())>maxMocOrder ) maxMocOrder=n; 
       
-      HealpixMoc moc = new HealpixMoc(maxMocOrder);
+      SMoc moc = new SMoc(maxMocOrder);
       moc.toRangeSet();
       
-      for( HealpixMoc m : a ) {
+      for( SMoc m : a ) {
          m.toRangeSet();
-         moc.spaceRange = moc.spaceRange.union(m.spaceRange);
+         moc.range = moc.range.union(m.range);
 
          // Ciel complet ? inutile d'aller plus loin pour l'union
-         if( moc.spaceRange!=null && moc.spaceRange.contains(0, max)) break;
+         if( moc.range!=null && moc.range.contains(0, max)) break;
       }
       
-      moc.toHealpixMoc();
+      moc.toMocSet();
       return moc;
    }
    
@@ -4533,36 +4546,29 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //   }
 
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
-   protected HealpixMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
+   protected SMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
       if( order==-1 ) order=getAppropriateOrder(radius);
       return CDSHealpix.getMocByCircle(order, ra, de,  Math.toRadians(radius), true);
-      
-//      HealpixMoc m = new HealpixMoc();
-//      
-//      long i=0;
-//      m.setCheckConsistencyFlag(false);
-//      for( long pix : CDSHealpix.query_disc( order, ra, de, Math.toRadians(radius)) ) {
-//         m.add(order,pix);
-//         i++;
-//         if( i%10000L==0 ) m.checkAndFix();
-//      }
-//      m.setCheckConsistencyFlag(true);
-//      
-//      return m;
+   }
+
+   /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
+   protected SMoc createMocRegionEllipse(double ra, double de, double a, double b, double pa, int order) throws Exception {
+      if( order==-1 ) order=getAppropriateOrder( Math.max(a,b) );
+      return CDSHealpix.getMocByEllipse(order, ra, de,  a,b,pa);
    }
    
-    protected HealpixMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
+    protected SMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
 //        return createMocRegion(stcObjects.get(0), order);
         Moc moc = null;
         for( STCObj stc : stcObjects ) {
-           HealpixMoc m = createMocRegion(stc, order);
+           SMoc m = createMocRegion(stc, order);
            moc = moc==null ? m : moc.union(m);
         }
-        return new HealpixMoc( moc );
+        return new SMoc( moc );
     }
     
-    protected HealpixMoc createMocRegion(STCObj stcobj, int order) throws Exception {
-       HealpixMoc moc = null;
+    protected SMoc createMocRegion(STCObj stcobj, int order) throws Exception {
+       SMoc moc = null;
        try {
          if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
              moc = createMocRegionPol((STCPolygon)stcobj,order);
@@ -4577,14 +4583,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
        return moc;
     }
     
-    protected HealpixMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {
+    protected SMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {
         return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order);
     }
     
-    public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double widthInDeg,
+    public SMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double widthInDeg,
           double heightInDeg) throws Exception {
        
-       HealpixMoc moc=null;
+       SMoc moc=null;
        
        // L'ordre est déterminé automatiquement par la largeur du polygone
        int order=getAppropriateOrder( Math.max(widthInDeg,heightInDeg) );
@@ -4600,15 +4606,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
        }
 
        // Génération du MOC
-       moc = CDSHealpix.createHealpixMoc(radecList, order);
+       moc = CDSHealpix.createSMoc(radecList, order);
 
        return moc;
     }
 
     
-//    public HealpixMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
+//    public SMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double width,
 //          double height) throws Exception {
-//       HealpixMoc moc=null;
+//       SMoc moc=null;
 //       double maxSize=0;
 //       Coord c1=null;
 //       boolean first=true;
@@ -4648,7 +4654,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //             }
 //
 //             Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-//             moc = new HealpixMoc();
+//             moc = new SMoc();
 //             moc.rangeSet = new Range( m.getRangeSet() );
 //             moc.toHealpixMoc();
 //
@@ -4673,7 +4679,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             maxSize = size;
         return maxSize;
     }
-    protected HealpixMoc createMocRegionPol(STCPolygon stcPolygon, int order) throws Exception {
+    protected SMoc createMocRegionPol(STCPolygon stcPolygon, int order) throws Exception {
           double ra,de;
           Ligne oo=null;
 
@@ -4711,8 +4717,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //    }
    
    /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets */
-   protected HealpixMoc createMocRegionPol(Ligne o, int order, boolean isCounterClock) throws Exception {
-      HealpixMoc moc=null;
+   protected SMoc createMocRegionPol(Ligne o, int order, boolean isCounterClock) throws Exception {
+      SMoc moc=null;
 
       double maxSize=0;
       Coord c1=null;
@@ -4753,7 +4759,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       cooList.remove( cooList.size()-1 );
      
       try {
-         moc = CDSHealpix.createHealpixMoc(cooList,order);
+         moc = CDSHealpix.createSMoc(cooList,order);
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception("Degenerated polygon");

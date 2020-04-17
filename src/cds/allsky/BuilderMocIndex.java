@@ -23,7 +23,7 @@ package cds.allsky;
 
 import static cds.tools.Util.FS;
 
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.Util;
 
 /** Création d'un fichier Moc.fits correspondant à l'index HEALpix
@@ -38,13 +38,13 @@ public class BuilderMocIndex extends BuilderMoc {
       
       String path = context.getHpxFinderPath();
       
-      moc = new HealpixMoc();
+      moc = new SMoc();
       mocOrder = Util.getMaxOrderByPath(path);
       moc.setMocOrder(mocOrder);
 
       String outputFile = path + FS + Constante.FILE_MOC;
       String frame = getFrame();
-      moc.setCoordSys(frame);
+      moc.setSys(frame);
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,mocOrder, path);
       moc.setCheckConsistencyFlag(true);
@@ -55,7 +55,7 @@ public class BuilderMocIndex extends BuilderMoc {
 //
 //      // Faut-il changer le référentiel du MOC ?
 //      if( !frame.equals("C") ) {
-//         HealpixMoc moc1 = convertTo(moc,"C");
+//         SMoc moc1 = convertTo(moc,"C");
 //         context.info("MOC Index convertTo ICRS...");
 //         moc = moc1;
 //      }

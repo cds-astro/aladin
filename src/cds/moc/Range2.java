@@ -31,21 +31,21 @@ package cds.moc;
 public class Range2 extends Range {
 
    // ranges spatiaux associés à un range temporel (contient 2x moins d'éléments r[i]..r[i+1] associé à smoc[i/2])
-   public Range [] rangeArray;
+   public Range [] rr;
 
    public Range2() { this(4); }
 
    public Range2(int cap) {
       super(cap);
-      rangeArray = new Range[cap];
+      rr = new Range[cap];
    }
 
    public Range2(Range2 other) {
       super(other);
       int n = other.sz>>>1;
-      rangeArray = new Range[n];
+      rr = new Range[n];
       for( int i=0; i<n; i++ ) {
-         rangeArray[i] = new Range( other.rangeArray[i] );
+         rr[i] = new Range( other.rr[i] );
       }
    }
 
@@ -53,8 +53,8 @@ public class Range2 extends Range {
    public void resize(int newsize) {
       super.resize(newsize);
       Range[] nSpaceRangeArray = new Range[newsize];
-      System.arraycopy(rangeArray,0,nSpaceRangeArray,0,sz/2);
-      rangeArray = nSpaceRangeArray;
+      System.arraycopy(rr,0,nSpaceRangeArray,0,sz/2);
+      rr = nSpaceRangeArray;
    }
    
    /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
@@ -70,7 +70,7 @@ public class Range2 extends Range {
       for( int i=0; i<sz; i+=2 ) {
          long a =  r[i] & mask;
          long b = (((r[i+1]-1)>>>shift1)+1 ) << shift1;
-         Range r = rangeArray[i>>>1].degrade(shift2);
+         Range r = rr[i>>>1].degrade(shift2);
          r1.append(a, b, r );
       }
       r1.trimIfTooLarge();
@@ -95,14 +95,14 @@ public class Range2 extends Range {
         if (a<r[sz-2]) throw new IllegalArgumentException("bad append operation");
         
         // J'agrandis l'intervalle précédent uniquement si les MOCs sont égaux
-        if( b>r[sz-1] && (sz<2 || sz>=2 && mocEquals( rangeArray[(sz>>>1)-1],m)) ) {
+        if( b>r[sz-1] && (sz<2 || sz>=2 && mocEquals( rr[(sz>>>1)-1],m)) ) {
            r[sz-1]=b;
            return;
         }
      }
      ensureCapacity(sz+2);
 
-     rangeArray[sz>>>1] = m;
+     rr[sz>>>1] = m;
      r[sz] = a;
      r[sz+1] = b;
      sz+=2;
@@ -110,7 +110,7 @@ public class Range2 extends Range {
 
   /** Append an entire range set to the object. */
   public void append (Range2 other) {
-     for (int i=0; i<other.sz; i+=2) append(other.r[i],other.r[i+1], other.rangeArray[i>>>1]);
+     for (int i=0; i<other.sz; i+=2) append(other.r[i],other.r[i+1], other.rr[i>>>1]);
   }
   
   /** Push two entries at the end of the entry vector (no check)  */
@@ -119,13 +119,13 @@ public class Range2 extends Range {
      // Si le dernier intervalle temporel est identique, on ajoute le range spacial directement
      // sans créer un nouvel intervall temporel
      if( sz>=2 && r[sz-2]==min && r[sz-1]==max ) {
-        rangeArray[(sz-2)>>>1].add(m);
+        rr[(sz-2)>>>1].add(m);
         
      } else {
         ensureCapacity(sz+2);
         r[sz]=min;
         r[sz+1]=max;
-        if( m!=null ) rangeArray[sz>>>1] = m;
+        if( m!=null ) rr[sz>>>1] = m;
         sz+=2;
      }
   }
@@ -135,7 +135,7 @@ public class Range2 extends Range {
   private void push(long v, Range m) {
      ensureCapacity(sz+1);
      r[sz]=v;
-     if( m!=null ) rangeArray[sz>>>1] = m;
+     if( m!=null ) rr[sz>>>1] = m;
      sz++;
   }
   
@@ -221,8 +221,8 @@ public class Range2 extends Range {
         long vb = runb ? b.r[ib] : 0L;
         
         // Idem pour les SMOC associé (uniquement sur les indices paires (début des intervalles)
-        Range ma = runa ? a.rangeArray[ia>>>1] : null;
-        Range mb = runb ? b.rangeArray[ib>>>1] : null;
+        Range ma = runa ? a.rr[ia>>>1] : null;
+        Range mb = runb ? b.rr[ib>>>1] : null;
         
         // Dois-je avancer sur l'un, l'autre ou les deux tableaux en même temps
         // en fonction de la valeur courante (ou choisit l'élément le plus petit en premier     
@@ -234,7 +234,7 @@ public class Range2 extends Range {
         if( adv_a ) { 
            // si je suis sur une fin d'intervalle, et qu'il n'y a pas d'inter-intervalle derrière,
            // je saute l'élément suivant
-           if( (ia&1)==1 && ia<a.sz-1 && a.r[ia]==a.r[ia+1] ) { ia++; ina=!ina; ma = a.rangeArray[ia>>>1]; }
+           if( (ia&1)==1 && ia<a.sz-1 && a.r[ia]==a.r[ia+1] ) { ia++; ina=!ina; ma = a.rr[ia>>>1]; }
            ina=!ina; ++ia; runa = ia!=a.sz;
         }
         
@@ -242,7 +242,7 @@ public class Range2 extends Range {
         if( adv_b ) {
            // si je suis sur une fin d'interalle, et qu'il n'y a pas d'inter-intervalle derrière,
            // je saute l'élément suivant
-           if( (ib&1)==1 && ib<b.sz-1 && b.r[ib]==b.r[ib+1] ) { ib++; inb=!inb; mb = b.rangeArray[ib>>>1]; }
+           if( (ib&1)==1 && ib<b.sz-1 && b.r[ib]==b.r[ib+1] ) { ib++; inb=!inb; mb = b.rr[ib>>>1]; }
            inb=!inb; ++ib; runb = ib!=b.sz;
         }
         
@@ -372,7 +372,7 @@ public class Range2 extends Range {
         long vb = runb ? inter[ib] : 0L;
         
         // Idem pour les SMOC associé (uniquement sur les indices paires (début des intervalles)
-        Range ma = runa ? rangeArray[ia>>>1] : null;
+        Range ma = runa ? rr[ia>>>1] : null;
         Range mb = m1;
         
         // Dois-je avancer sur l'un, l'autre ou les deux tableaux en même temps
@@ -385,7 +385,7 @@ public class Range2 extends Range {
         if( adv_a ) { 
            // si je suis sur une fin d'intervalle, et qu'il n'y a pas d'inter-intervalle derrière,
            // je saute l'élément suivant
-           if( (ia&1)==1 && ia<sz-1 && r[ia]==r[ia+1] ) { ia++; ina=!ina; ma = rangeArray[ia>>>1]; }
+           if( (ia&1)==1 && ia<sz-1 && r[ia]==r[ia+1] ) { ia++; ina=!ina; ma = rr[ia>>>1]; }
            ina=!ina; ++ia; runa = ia<sz && (r[ia]<=b || r[ia]>b && (ia&1)==1); 
         }
         
@@ -431,14 +431,14 @@ public class Range2 extends Range {
         ensureCapacity(sz+diff);
         for( int j=sz-1; j>=pos; j--) {
            r[j+diff] = r[j];
-           if( (j&1)==1 ) rangeArray[(j+diff)>>>1] = rangeArray[j>>>1];
+           if( (j&1)==1 ) rr[(j+diff)>>>1] = rr[j>>>1];
         }
      }
 
      // Insertion par écrasement dans la zone laissée libre des modifs mémorisées
      for( int j=0; j<ajout.sz; j++ ) {
         r[pos+j] = ajout.r[j];
-        if( (j&1)==0 ) rangeArray[(pos+j)>>>1] = ajout.rangeArray[j>>>1];
+        if( (j&1)==0 ) rr[(pos+j)>>>1] = ajout.rr[j>>>1];
      }
 
      // Décallage à gauche ?
@@ -446,11 +446,11 @@ public class Range2 extends Range {
         int j;
         for( j=pos+ajout.sz; j<sz+diff; j++) {
            r[j] = r[j-diff] ;
-           if( (j&1)==0 ) rangeArray[j>>>1] = rangeArray[(j-diff)>>>1];
+           if( (j&1)==0 ) rr[j>>>1] = rr[(j-diff)>>>1];
         }
         
         // Pour pouvoir libérer la mémoire
-        for( ;j<sz; j+=2 ) rangeArray[j>>>1] = null;
+        for( ;j<sz; j+=2 ) rr[j>>>1] = null;
      }
      sz+=diff;
   }
@@ -467,16 +467,16 @@ public class Range2 extends Range {
            System.out.println("J'ai un problème i="+i+" r[i]="+r[i]+" < r[i-1]="+r[i-1]);
            return false;
         }
-        if( rangeArray[i>>>1]==null ) {
+        if( rr[i>>>1]==null ) {
            System.out.println("J'ai un problème i="+i+" smoc=null");
            return false;
         }
-        if( i>0 && r[i]==r[i-1] && mocEquals( rangeArray[i>>>1], oldm) ) {
-           System.out.println("J'ai un problème i="+i+" smoc["+(i>>>1)+"]=oldm="+rangeArray[i>>>1]);
+        if( i>0 && r[i]==r[i-1] && mocEquals( rr[i>>>1], oldm) ) {
+           System.out.println("J'ai un problème i="+i+" smoc["+(i>>>1)+"]=oldm="+rr[i>>>1]);
            return false;
           
         }
-        oldm=rangeArray[i>>>1];
+        oldm=rr[i>>>1];
      }
      return true;
   }
@@ -485,7 +485,7 @@ public class Range2 extends Range {
    public long getMem() {
       if( r==null ) return 0L;
       long mem =  super.getMem();
-      for( int i=0;i<sz/2; i++ ) mem += rangeArray[i].getMem();
+      for( int i=0;i<sz/2; i++ ) mem += rr[i].getMem();
       return mem;
    }
 

@@ -35,18 +35,24 @@ import cds.aladin.Coord;
  * @version 1.0 March 2018 - creation
  *
  */
-public class TimeMoc extends SpaceMoc {
+public class TMoc extends SMoc {
    
    static public final double DAYMICROSEC = 86400000000.;
    static public final double MAXDAY = ( 1L<<(MAXORDER*2) ) / 86400L;
    
    
-   public TimeMoc() { this(-1); }
-   public TimeMoc( int mocOrder) {
+   public TMoc() { this(-1); }
+   public TMoc( int mocOrder) {
       init("JD",0,mocOrder);
-      spaceRange = new Range(1024);
+      range = new Range(1024);
    }
-   public TimeMoc(Range range) throws Exception { super(range); }
+   public TMoc(String s) throws Exception {
+      this();
+      add(s);
+   }
+   public TMoc(Range range) throws Exception { super(range); }
+   
+   protected void initPropSys(String sys) { property.put("TIMESYS",sys); }
    
    /** Add JD range
     * @param jdmin start time (in JD - unit=day) - included in the range
@@ -57,20 +63,20 @@ public class TimeMoc extends SpaceMoc {
       long max = (long)(jdmax*DAYMICROSEC)+1L;
       Range rtmp=new Range();
       rtmp.append(min,max);
-      if( !rtmp.isEmpty() ) spaceRange=spaceRange.union(rtmp);
+      if( !rtmp.isEmpty() ) range=range.union(rtmp);
    }
    
    /** Deep copy */
    public Moc clone() {
-      TimeMoc moc = new TimeMoc();
+      TMoc moc = new TMoc();
       return clone1(moc);
    }
    
    /** Retourne la composante temporelle du MOC */
-   public TimeMoc getTimeMoc() throws Exception { return this; }
+   public TMoc getTimeMoc() throws Exception { return this; }
    
    /** Retourne la composante spatiale du MOC */
-   public SpaceMoc getSpaceMoc() throws Exception { throw new Exception("No spatial dimension"); }
+   public SMoc getSpaceMoc() throws Exception { throw new Exception("No spatial dimension"); }
    
    public int getSpaceOrder() { return -1; }  // No space dimension
    public int getTimeOrder() { return getMocOrder(); }
@@ -92,40 +98,55 @@ public class TimeMoc extends SpaceMoc {
    }
 
    public Moc difference(Moc moc) throws Exception {
-      TimeMoc m = moc.getTimeMoc();
+      TMoc m = moc.getTimeMoc();
       Moc inter = intersection(m);
       Moc union = union(m);
       return union.subtraction(inter);
    }
    
-   public TimeMoc complement() throws Exception {
-      TimeMoc allsky = new TimeMoc();
+   public TMoc complement() throws Exception {
+      TMoc allsky = new TMoc();
       allsky.add("0/0");
       allsky.toRangeSet();
       toRangeSet();
-      TimeMoc res = new TimeMoc(maxLimitOrder);
-      res.spaceRange = allsky.spaceRange.difference(spaceRange);
-      res.toHealpixMoc();
+      TMoc res = new TMoc(mocOrder);
+      res.range = allsky.range.difference(range);
+      res.toMocSet();
       return res;
    }
-
+   
+   public void accretion() throws Exception { accretion( getTimeOrder() ); }
+   public void accretion(int order) throws Exception {
+      toRangeSet();
+      Range r = new Range(range.sz);
+      int shift = (MAXORDER-order)*2;
+      long add = 1L<<shift;
+      for( int i=0; i<range.sz; i+=2 ) {
+         long a = range.r[i] -add;
+         long b = range.r[i+1] +add;
+         r.add(a,b);
+      }
+      range = r;
+      toMocSet();
+  }
+  
    /** True if the jd date is in TMOC */
    public  boolean contains(double jd) {
       long npix = (long)( jd * DAYMICROSEC );
       toRangeSet();
-      return spaceRange.contains(npix);
+      return range.contains(npix);
    }
 
    // Throw an exception if the coordsys of the parameter moc differs of the coordsys
-   protected void testCompatibility(SpaceMoc moc) throws Exception {
-      if( !(moc instanceof TimeMoc) ) throw new Exception("Incompatible => not a TMOC");
+   protected void testCompatibility(SMoc moc) throws Exception {
+      if( !(moc instanceof TMoc) ) throw new Exception("Incompatible => not a TMOC");
    }
    
    /** Return minimal time in JD - -1 if empty*/
    public double getTimeMin() {
       if( isEmpty() ) return -1;
       toRangeSet();
-      return spaceRange.begins(0) / DAYMICROSEC;
+      return range.begins(0) / DAYMICROSEC;
    }
    
    
@@ -133,7 +154,7 @@ public class TimeMoc extends SpaceMoc {
    public double getTimeMax() {
       if( isEmpty() ) return -1;
       toRangeSet();
-      return spaceRange.ends( spaceRange.nranges()-1 ) / DAYMICROSEC;
+      return range.ends( range.nranges()-1 ) / DAYMICROSEC;
    }
    
    /** Return JD time for a couple order/npix */
@@ -164,9 +185,9 @@ public class TimeMoc extends SpaceMoc {
       int pos, endpos;
       
       JDIterator(long start, long end) {
-         pos = spaceRange.indexOf(start)/2;;
+         pos = range.indexOf(start)/2;;
          if( pos<0 ) pos=0;
-         endpos = spaceRange.indexOf(end)/2+1;
+         endpos = range.indexOf(end)/2+1;
       }
       
       public boolean hasNext() { return pos<endpos; }
@@ -174,8 +195,8 @@ public class TimeMoc extends SpaceMoc {
       public long [] next() {
          if( pos>endpos ) throw new NoSuchElementException();
          long ret [] = new long[2];
-         ret[0] = spaceRange.begins(pos);
-         ret[1] = spaceRange.ends(pos);
+         ret[0] = range.begins(pos);
+         ret[1] = range.ends(pos);
          pos++;
          return ret;
       }
@@ -201,7 +222,7 @@ public class TimeMoc extends SpaceMoc {
       try {
          System.out.println("  Order    Space res.   Time resolution");
          for( int i=0; i<=MAXORDER; i++ ) {
-            String spaceRes = Coord.getUnit(  Math.sqrt( SpaceMoc.getPixelArea( i ) ));
+            String spaceRes = Coord.getUnit(  Math.sqrt( SMoc.getPixelArea( i ) ));
             String timeRes = getTemps(  getDuration(i) );
             
             System.out.printf("   %2d     %-10s %s\n",i,spaceRes,timeRes);
@@ -209,7 +230,7 @@ public class TimeMoc extends SpaceMoc {
 //         long max = getDuration(MAXORDER) * ( 1L<<(2*MAXORDER) );
 //         System.out.println("At order "+MAXORDER+" we can address "+getTemps(max)+" with a resolution of 1µs");
          
-//         TimeMoc tmoc = new TimeMoc();
+//         TMoc tmoc = new TMoc();
 //         double jdmin = Astrodate.dateToJD(2000, 06, 18, 12, 00, 00);  // 18 juin 2000 à midi
 //         double jdmax = Astrodate.dateToJD(2017, 12, 25, 00, 00, 00);  // Noël 2017 à minuit
 //         tmoc.add(jdmin, jdmax);

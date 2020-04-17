@@ -78,8 +78,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.prop.PropPanel;
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
@@ -231,7 +230,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private String          currentLang="En";     // Le suffixe de la langue courante
    protected LinkedBlockingDeque<String> lastFile;  // La liste des derniers fichiers chargés
    protected LinkedHashMap<String,String>  filterExpr; // Liste des filtres pour l'arbre des découvertes -(name->filterRule)
-   protected HashMap<String, SpaceMoc>   filterMoc;  // Liste des régions associées aux filtres
+   protected HashMap<String, SMoc>   filterMoc;  // Liste des régions associées aux filtres
 
    // Les variables pour la gestion des champs de préférences
 //   private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
@@ -2123,7 +2122,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
                if( name.equals(Directory.ALLCOLL) ) continue;
                if( name.equals(Directory.MYLIST) ) continue;
                String expr = filterExpr.get(name);
-               SpaceMoc moc = filterMoc.get(name);
+               SMoc moc = filterMoc.get(name);
                if( moc==null && (expr==null || expr.equals("*") || expr.equals("")) ) continue;
                
                String mocInfo = moc==null ? "" : MultiMoc.INTERSECT[ DirectoryFilter.getIntersect(moc) ]+":";
@@ -2676,7 +2675,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       int i = s.indexOf(':');
       if( i<0 ) return;
       
-      HealpixMoc moc = null;
+      SMoc moc = null;
       int intersect=-1;   // Par défaut par de Moc associé, sinon MultiMoc.OVERLAPS|ENCLOSED|COVERS
       String name = s.substring(0,i).trim();
       String expr = s.substring(i+1).trim();
@@ -2695,7 +2694,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             InputStream in = null;
             try {
                in = new FileInputStream(f);
-               moc = new HealpixMoc(in);
+               moc = new SMoc(in);
                DirectoryFilter.setIntersect(moc, intersect);
             }
             catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
@@ -2706,7 +2705,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
    
    /** Mémorise un nouveau filtre sur l'arbre des collections */
-   protected void setDirFilter(String name,String expr, SpaceMoc moc) {
+   protected void setDirFilter(String name,String expr, SMoc moc) {
       filterExpr.put(name, expr);
       if( moc!=null ) filterMoc.put(name,moc);
    }

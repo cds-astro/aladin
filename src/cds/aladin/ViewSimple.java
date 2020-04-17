@@ -82,8 +82,8 @@ import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
 import cds.moc.Moc;
 import cds.moc.Range;
-import cds.moc.SpaceMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.FastMath;
 import cds.tools.Util;
@@ -2829,7 +2829,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // memorisation de la position et de la valeur du pixel
       // ou de l'objet sous la souris si il est unique
-      if( tool==ToolBox.SELECT || tool==ToolBox.PAN ) {
+      if( (tool==ToolBox.SELECT || tool==ToolBox.PAN) && rv.contains(x,y) ) {
 
          if( view.vselobj.size()==1 ) {
             aladin.localisation.seeCoord((Position)view.vselobj.elementAt(0),1);
@@ -5106,24 +5106,24 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       try {
          // Cas temporel
          if( isPlotTime() ) {
-            long tmin = (long)( plot.getMin()*TimeMoc.DAYMICROSEC );
-            long tmax = (long)( plot.getMax()*TimeMoc.DAYMICROSEC );
-            TimeMoc moc = new TimeMoc();
+            long tmin = (long)( plot.getMin()*TMoc.DAYMICROSEC );
+            long tmax = (long)( plot.getMax()*TMoc.DAYMICROSEC );
+            TMoc moc = new TMoc();
             if( order>=0 ) moc.setMocOrder(order);
-            moc.spaceRange =  new Range( new long[] { tmin, tmax } );
-            moc.toHealpixMoc();
+            moc.range =  new Range( new long[] { tmin, tmax } );
+            moc.toMocSet();
             return moc;
          }
             
          // Cas spatial
-          if( isAllSky() ) return new SpaceMoc("0/0-11");
+          if( isAllSky() ) return new SMoc("0/0-11");
           
           // Détermination de l'order
           Coord c = getCooCentre();
           double size = getTaille();
           if( order==-1 ) order = Directory.getAppropriateOrder(size);
         
-//          SpaceMoc spaceMoc = new SpaceMoc(order);
+//          SMoc spaceMoc = new SMoc(order);
 //          int i = 0;
 //          spaceMoc.setCheckConsistencyFlag(false);
 //          for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true) ) {
@@ -5131,7 +5131,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 //             if( (++i) % 10000 == 0 ) spaceMoc.checkAndFix();
 //          }
 //          spaceMoc.setCheckConsistencyFlag(true);
-          SpaceMoc spaceMoc = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
+          SMoc spaceMoc = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
           
 //          Coord [] corners = getCooCorners( getProj() );
 //          ArrayList<double[]> radecList = new ArrayList<>();

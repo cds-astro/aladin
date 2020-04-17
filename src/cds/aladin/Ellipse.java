@@ -41,6 +41,8 @@ import cds.tools.Util;
 public class Ellipse extends Forme {
    
    protected double angle;
+   protected double semiMA;
+   protected double semiMI;
       
    /**
     * Création d'une boite en coordonnées cartésiennes
@@ -90,6 +92,8 @@ public class Ellipse extends Forme {
    protected Ellipse(Plan plan,Coord c,double semiMA, double semiMI,double angle) {
       super(plan,new Position[5]);
       this.angle=angle;
+      this.semiMA=semiMA;
+      this.semiMI=semiMI;
       double b=90;
       o[0] = new Position(plan,null,0,0,c.al,c.del,RADE,null);
       Coord c1 = applySphereRot(c,semiMA,b+angle);
@@ -111,6 +115,9 @@ public class Ellipse extends Forme {
    
    /** Retourne l'angle mémorisé pour éviter de retourner un éventuel complément */
    protected double getAngle() { return angle; }
+   
+   protected double getSemiMA() { return semiMA; }
+   protected double getSemiMI() { return semiMI; }
    
    /** Retourne le demi grand axe */
    protected double getSemiMA(ViewSimple v) {

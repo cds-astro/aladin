@@ -68,8 +68,9 @@ import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
+import cds.moc.SMoc;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -822,7 +823,7 @@ public class PlanBG extends PlanImage {
       aladin.calque.newPlanMOC(moc,label+" MOC");
    }
 
-   protected HealpixMoc moc;
+   protected SMoc moc;
 
    /** Chargement du MOC associé au HiPS, soit depuis le cache, soit depuis le net */
    protected void loadInternalMoc() throws Exception {
@@ -832,8 +833,8 @@ public class PlanBG extends PlanImage {
             InputStream in = null;
             try {
                in = new FileInputStream(fcache);
-               moc = new HealpixMoc(in);
-               moc.setMinLimitOrder(3);
+               moc = new SMoc(in);
+               moc.setMinOrder(3);
                removeHealpixOutsideMoc();
             } finally { if( in!=null ) in.close(); }
             Aladin.trace(3,"Loading "+survey+" MOC from cache");
@@ -845,8 +846,8 @@ public class PlanBG extends PlanImage {
       MyInputStream mis = null;
       try {
          mis=Util.openAnyStream(f);
-         moc = new HealpixMoc(mis);
-         moc.setMinLimitOrder(3);
+         moc = new SMoc(mis);
+         moc.setMinOrder(3);
          removeHealpixOutsideMoc();
       } finally { if( mis!=null) mis.close(); }
       Aladin.trace(3,"Loading "+survey+" MOC from net");
@@ -2796,7 +2797,7 @@ public class PlanBG extends PlanImage {
             HealpixMoc posBounds = null;
             try {
                 if (stcObj != null) {
-                    posBounds = aladin.createMocRegion(stcObj, -1);
+                    posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1) );
                 }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
@@ -2934,7 +2935,7 @@ public class PlanBG extends PlanImage {
         HealpixMoc posBounds = null;
         try {
             if (stcObj != null) {
-                posBounds = aladin.createMocRegion(stcObj, -1);
+                posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1) );
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -3613,7 +3614,7 @@ public class PlanBG extends PlanImage {
       if( moc==null ) return false; // pas de MOC chargé, je ne sais pas !
       
       // Attention, le Hips et le MOC n'ont pas le même système de coord
-      char a = moc.getCoordSys().charAt(0);
+      char a = moc.getSys().charAt(0);
       int frameMoc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
       if( frameOrigin!=frameMoc ) {
          return false;

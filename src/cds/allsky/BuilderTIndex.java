@@ -28,8 +28,8 @@ import java.util.Iterator;
 
 import cds.aladin.HealpixProgen;
 import cds.aladin.HealpixProgenItem;
-import cds.moc.SpaceMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.TMoc;
 import cds.tools.pixtools.Util;
 
 
@@ -82,17 +82,17 @@ final public class BuilderTIndex  extends Builder {
       String timePath = context.getTimeFinderPath();
       
       // détermination des tuiles de HpxFinder à scanner
-      SpaceMoc mocRegion = context.getRegion();
+      SMoc mocRegion = context.getRegion();
       if( mocRegion.getMocOrder()!=hpxOrder ) {
-         mocRegion = (SpaceMoc) mocRegion.clone();
+         mocRegion = (SMoc) mocRegion.clone();
          mocRegion.setMocOrder( hpxOrder );
       }
       
       // On utilisera le nombre de tuiles en entrées comme indice de progression
-      initStat( mocRegion.getUsedArea() );
+      initStat( mocRegion.getNbCells() );
       
       // On va créer également le TMoc correspondant 
-      TimeMoc tmoc = new TimeMoc( TIMEORDER );
+      TMoc tmoc = new TMoc( TIMEORDER );
       
       // Parcours de toutes les tuiles meta du HpxFinder
       int i=0;
@@ -108,7 +108,7 @@ final public class BuilderTIndex  extends Builder {
       }
       
       // Génération du TMOC
-      tmoc.toHealpixMoc();
+      tmoc.toMocSet();
       tmoc.write(timePath+Util.FS+"TMoc.fits");
 
       // Generation du fichier metadata.xml
@@ -128,7 +128,7 @@ final public class BuilderTIndex  extends Builder {
    }
    
    // mise à jour de toutes les tuiles du TimeFinder pour chacune des entrées de la tuile meta
-   private void updateTimeFinder(String timePath, TimeMoc tmoc, HealpixProgen tileIn) {
+   private void updateTimeFinder(String timePath, TMoc tmoc, HealpixProgen tileIn) {
 
       for( String key : tileIn ) {
          HealpixProgenItem item = tileIn.get(key);
@@ -152,9 +152,9 @@ final public class BuilderTIndex  extends Builder {
             tmoc.add(jdtmin,jdtmax);
             
             // Ajout dans toutes les tuiles qu'il faut du TimeFinder
-            TimeMoc a = new TimeMoc( TIMEORDER );
+            TMoc a = new TMoc( TIMEORDER );
             a.add(jdtmin,jdtmax);
-            a.toHealpixMoc();
+            a.toMocSet();
             Iterator<Long> it = a.pixelIterator();
             while( it.hasNext() ) {
                long npix = it.next();

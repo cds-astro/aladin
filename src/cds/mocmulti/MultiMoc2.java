@@ -43,7 +43,7 @@ package cds.mocmulti;
 
 
 import cds.aladin.MyProperties;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 
 
 /**
@@ -65,10 +65,10 @@ public class MultiMoc2 extends MultiMoc {
     * @param mocId  MOC identifier (unique)
     * @param moc MOC to memorize
     */
-   public void add(String mocId, HealpixMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
+   public void add(String mocId, SMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
       if( moc!=null ) {
          int o = moc.getMocOrder();
-         if( o==HealpixMoc.MAXORDER ) o = moc.getMaxOrder();  // A cause du bug
+         if( o==SMoc.MAXORDER ) o = moc.getMaxUsedOrder();  // A cause du bug
          if( mocOrder<o) mocOrder=o;
          moc.sort();
       }

@@ -38,7 +38,7 @@ import java.util.StringTokenizer;
 /** HEALPix Multi Order Coverage Map (MOC) IO routines
  * Compliante with IVOA MOC Rec 1.0 June 2014
  *
- * Example : SpaceMoc moc = new SpaceMoc();
+ * Example : SMoc moc = new SMoc();
  *           (new IO(moc).read(String filename);
  *
  * @author Pierre Fernique [CDS]
@@ -47,15 +47,13 @@ import java.util.StringTokenizer;
  * @version 1.3 Sep 2013 - WD 1.0 10/9/2013 compliante
  * @version 1.2 Avr 2012 - JSON ASCII support
  * @version 1.1 Mar 2012 - Healpix FITS header adjustements
- * @version 1.0 Oct 2011 - Dedicated class (removed from SpaceMoc)
+ * @version 1.0 Oct 2011 - Dedicated class (removed from SMoc)
  */
 public final class MocIO {
 
-   static public final int FITS = SpaceMoc.FITS;         // Standard format
-   static public final int ASCII = SpaceMoc.ASCII;       // ASCII format
-   static public final int JSON = SpaceMoc.JSON;         // JSON format (suggested in IVOA REC)
-   
-   static public final int JSON0 = SpaceMoc.JSON0;       // JSON obsolete format (only reading supported for compatibility)
+   static public final int FITS = SMoc.FITS;         // Standard format
+   static public final int ASCII = SMoc.ASCII;       // ASCII format
+   static public final int JSON = SMoc.JSON;         // JSON format (suggested in IVOA REC)
 
    static private String CR = System.getProperty("line.separator");
 
@@ -180,7 +178,7 @@ public final class MocIO {
       moc.clear();
       moc.setCheckConsistencyFlag(false); // We assume that the input MOC is well formed
       String s;
-      int mocOrder=SpaceMoc.MAXORDER;
+      int mocOrder=SMoc.MAXORDER;
       boolean flagTMoc = false;
       boolean flagMocOrder=false;
       for( int line=0; (s=dis.readLine())!=null; line++ ) {
@@ -210,11 +208,11 @@ public final class MocIO {
       // If the MocOrder is found by the content
       if( !flagMocOrder ) {
 //         moc.setProperty("MORORDER", moc.getMaxOrder()+"" );
-         moc.setMocOrder(moc.getMaxOrder());
+         moc.setMocOrder(moc.getMaxUsedOrder());
       }
       
       if( flagTMoc ) {
-         moc.toHealpixMoc();
+         moc.toMocSet();
          if( mocOrder!=29 ) moc.setMocOrder(mocOrder);
       }
       
@@ -226,7 +224,7 @@ public final class MocIO {
       while( st.hasMoreTokens() ) {
          String s1 = st.nextToken();
          String s2 = st.nextToken();
-         ((TimeMoc)moc).add( Double.parseDouble(s1), Double.parseDouble(s2));
+         ((TMoc)moc).add( Double.parseDouble(s1), Double.parseDouble(s2));
       }
    }
    
@@ -314,7 +312,7 @@ public final class MocIO {
    }
 
    private void testMocNotNull() throws Exception {
-      if( moc==null ) throw new Exception("No MOC assigned (use setMoc(SpaceMoc))");
+      if( moc==null ) throw new Exception("No MOC assigned (use setMoc(SMoc))");
    }
 
    public void writeASCII(OutputStream out) throws Exception {
@@ -328,7 +326,7 @@ public final class MocIO {
    public void writeJSON(OutputStream out) throws Exception {
       testMocNotNull();
       
-      if( moc instanceof SpaceTimeMoc ) throw new Exception("JSON format not supported for SpaceTimeMoc");
+      if( moc instanceof STMoc ) throw new Exception("JSON format not supported for STMoc");
       
       // Nouvelle version JSON
       // On remplace tout de même l'ancienne signature non compatible JSON par une ligne vide
@@ -336,14 +334,14 @@ public final class MocIO {
       out.write(CR.getBytes());
       
       StringBuilder s = new StringBuilder(2048);
-      int nOrder = moc.getMaxOrder()+1;
+      int nOrder = moc.getMaxUsedOrder()+1;
       s.append("{");
       boolean first=true;
       int order;
       for( order=0; order<nOrder; order++) {
-         int n = moc.getSize(order);
+         int n = ((SMoc)moc).getSize(order);
          if( n==0 && order<nOrder-1 ) continue;
-         Array a = moc.getArray(order);
+         Array a = ((SMoc)moc).getArray(order);
          if( !first ) s.append("],"+CR);
          first = false;
          s.append("\""+order+"\":[");
@@ -376,7 +374,7 @@ public final class MocIO {
    private void setCurrentParseOrder(String s) throws Exception {
       int i = s.indexOf('=');
       try {
-         moc.setCurrentOrder( (int)SpaceMoc.log2(Long.parseLong(s.substring(i+1))) );
+         moc.setCurrentOrder( (int)SMoc.log2(Long.parseLong(s.substring(i+1))) );
       } catch( Exception e ) {
          throw new Exception("HpixList.setNside: syntax error ["+s+"]");
       }
@@ -403,7 +401,7 @@ public final class MocIO {
    // Parsing de la ligne COORDSYS=G|C
    private void setCoord(String s) throws Exception {
       int i = s.indexOf('=');
-      moc.setCoordSys(s.substring(i+1));
+      ((SMoc)moc).setSys(s.substring(i+1));
    }
 
    // Parse une ligne d'un flux (reconnait JSON et basic ASCII)
@@ -436,7 +434,7 @@ public final class MocIO {
    // Write the primary FITS Header
    private void writeHeader0(OutputStream out) throws Exception {
       int n=0;
-      out.write( getFitsLine("SIMPLE","T","Written by MOC java API "+SpaceMoc.VERSION) ); n+=80;
+      out.write( getFitsLine("SIMPLE","T","Written by MOC java API "+SMoc.VERSION) ); n+=80;
       out.write( getFitsLine("BITPIX","8") ); n+=80;
       out.write( getFitsLine("NAXIS","0") );  n+=80;
       out.write( getFitsLine("EXTEND","T") ); n+=80;
@@ -446,7 +444,7 @@ public final class MocIO {
    // Write the FITS HDU Header for the UNIQ binary table
    private void writeHeader1(OutputStream out) throws Exception {
       int n=0;
-      int nbytes = moc.getType()==SpaceMoc.LONG ? 8 : 4;
+      int nbytes = moc.getType()==SMoc.LONG ? 8 : 4;
       int naxis2 = moc.getSize();
       out.write( getFitsLine("XTENSION","BINTABLE","Multi Order Coverage map") ); n+=80;
       out.write( getFitsLine("BITPIX","8") ); n+=80;
@@ -459,7 +457,7 @@ public final class MocIO {
       out.write( getFitsLine("TFORM1",nbytes==4 ? "1J" : "1K") ); n+=80;
       
       n+=moc.writeSpecificFitsProp( out );
-      out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+SpaceMoc.VERSION,"Name of the MOC generator") );    n+=80;      
+      out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+SMoc.VERSION,"Name of the MOC generator") );    n+=80;      
 
       for( int i=0; i<FITSKEY.length; i++ ) {
          String key = FITSKEY[i][0];

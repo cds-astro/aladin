@@ -29,8 +29,7 @@ import java.util.TreeSet;
 
 import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.CDSHealpix;
 
 /** Generation d'un plan MOC à partir d'une liste de plans (Image, Catalogue ou map HEALPix) 
@@ -103,7 +102,7 @@ public class PlanMocGen extends PlanMoc {
          List<STCObj> listStcs = sf.getStcObjects();
          if( listStcs==null || listStcs.size()==0 ) continue;
          try {
-            HealpixMoc m1 = aladin.createMocRegion(listStcs,order);
+            SMoc m1 = aladin.createMocRegion(listStcs,order);
             if( m1!=null ) moc.add(m1);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -136,9 +135,9 @@ public class PlanMocGen extends PlanMoc {
             if( radius==0 ) npix = new long[] { hpx.ang2pix(o1, coo.al, coo.del) };
             else npix = hpx.queryDisc(o1, coo.al, coo.del, radius);
             
-            for( long pix : npix ) moc.add(o1,pix);
+            for( long pix : npix ) ((SMoc)moc).add(o1,pix);
             n+=npix.length;
-            if( n>10000 ) { ((SpaceMoc)moc).checkAndFix(); n=0; }
+            if( n>100000 ) { ((SMoc)moc).checkAndFix(); n=0; }
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
@@ -169,6 +168,8 @@ public class PlanMocGen extends PlanMoc {
       pimg.setLockCacheFree(true);
       pimg.pixelsOriginFromCache();
 
+      int n=0;
+
       double incrPourcent = gapPourcent/pimg.naxis2;
       long oNpix=-1;  
       for( double y=0; y<pimg.naxis2; y+=gap ) {
@@ -177,32 +178,33 @@ public class PlanMocGen extends PlanMoc {
             try {
                coo.x = x;
                coo.y = (pimg.naxis2-y-1);
-               
+
                // dans du vide - on test d'abord le buffers 8bits, et on vérifie si on tombe sur 0
                if( pimg.getPixel8Byte((int)x,(int)coo.y)==0 && Double.isNaN(pimg.getPixel((int)x,(int)y)) ) continue;
-               
+
                // Hors de la plage de pixels
                if( flagRange ) {
                   double pix = pimg.getPixel((int)x,(int)y);
                   if( !Double.isNaN(pixMin) && pix<pixMin ) continue;
                   if( !Double.isNaN(pixMax) && pix>pixMax ) continue;
                }
-               
+
                pimg.projd.getCoord(coo);
                long npix=0;
                npix = hpx.ang2pix(o1, coo.al, coo.del);
 
                // Juste pour éviter d'insérer 2x de suite le même npix
                if( npix==oNpix ) continue;
-               
-               moc.add(o1,npix);
+
+               ((SMoc)moc).add(o1,npix);
+               if( n>100000 ) { ((SMoc)moc).checkAndFix(); n=0; }
                oNpix=npix;
             } catch( Exception e ) {
                if( aladin.levelTrace>=3 ) e.printStackTrace();
             }
          }
       }
-      
+
       // Les pixels peuvent désormais être libérés
       pimg.setLockCacheFree(false);
    }
@@ -248,8 +250,8 @@ public class PlanMocGen extends PlanMoc {
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
       moc.setMocOrder(order);
-      moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
-                       p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
+      ((SMoc)moc).setSys( p.frameOrigin==Localisation.GAL ? "G" : 
+                               p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
       try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
       
@@ -322,14 +324,14 @@ public class PlanMocGen extends PlanMoc {
                   
                   
                   long npixMoc = min + xy2hpx(yCell*virtualTileWidth + xCell);
-                  moc.add(order,npixMoc);
+                  ((SMoc)moc).add(order,npixMoc);
                   nb++;
               }
             }
             
             // On remet immédiatement au propre le MOC uniquement si on a inséré
             // au-moins 100000 cellules (histoire de ne pas exploser la mémoire)
-            if( nb>100000 ) ((SpaceMoc)moc).checkAndFix();
+            if( nb>100000 ) { ((SMoc)moc).checkAndFix(); nb=0; }
             
          } catch( Exception e ) {
             e.printStackTrace();
@@ -394,8 +396,8 @@ public class PlanMocGen extends PlanMoc {
       
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
-      moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
-                       p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
+      ((SMoc)moc).setSys( p.frameOrigin==Localisation.GAL ? "G" : 
+                               p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
       try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
       
@@ -549,9 +551,9 @@ public class PlanMocGen extends PlanMoc {
             long npix = pc.npix;
             somme += pc.val;
             if( somme>threshold ) break;
-            moc.add(order,npix);
+            ((SMoc)moc).add(order,npix);
             nb++;
-            if( nb>100000 ) { ((SpaceMoc)moc).checkAndFix(); nb=0; }
+            if( nb>100000 ) { ((SMoc)moc).checkAndFix(); nb=0; }
          }
 
          // Conversion en ICRS si nécessaire
@@ -846,10 +848,10 @@ public class PlanMocGen extends PlanMoc {
    
    protected boolean waitForPlan() {
       try {
-         moc = new HealpixMoc();
-         ((SpaceMoc)moc).setMinLimitOrder(3);
-         if( order!=-1) ((SpaceMoc)moc).setMaxLimitOrder(order);
-         moc.setCoordSys("C");
+         moc = new SMoc();
+         ((SMoc)moc).setMinOrder(3);
+         if( order!=-1) moc.setMocOrder(order);
+         ((SMoc)moc).setSys("C");
          frameOrigin=Localisation.ICRS;
          moc.setCheckConsistencyFlag(false);
          for( Plan p1 : p ) {

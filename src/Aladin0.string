@@ -970,7 +970,7 @@ MOCCOMP	Complement
 MOCTITLE	MOC operations
 MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting MOC.\n
 MOCPLANE	Plane
-MOCHELP A MultiOrder Coverage map, also called MOC, described a sky region. It is a mesh of a part of the sky. The operations (unions, intersections, complement,...) on such MOCs are very fast.\n \nSome data servers, such as VizieR, can be "queried by MOC" in order to return data (catalog sources, of list of images) only inside a specifical sky area.
+MOCHELP A MultiOrder Coverage map, also called MOC, described a spatial coverage and/or a temporal coverage. The operations (unions, intersections, complement,...) on such MOCs are very fast.\n \nSome data servers, such as VizieR, can be "queried by MOC" in order to return data (catalog sources, of list of images) only inside a specifical sky area.
 
 MOCOP.fr	Opérations sur les MOC:
 MOCUNION.fr	Union
@@ -981,7 +981,7 @@ MOCCOMP.fr	Complement
 MOCTITLE.fr	Opérations sur les MOC
 MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer le MOC résultant.
 MOCPLANE.fr	Plan
-MOCHELP.fr	Un carte de couverture (MOC) permet de décrire une zone du ciel à partir d'une carte multi-échelle HEALPix. Il s'agit d'un maillage du ciel. Les opérations (unions, intersection, complément,...) s'effectuent très rapidement sur de tels MOCs.\n \nCertains serveurs de données, tel VizieR, sont capables de filtrer leurs réponses (sources de catalogues, listes d'images) en fonction d'une zone d'une ciel décrite par un MOC de manière particulièrement efficace.
+MOCHELP.fr	Un carte de couverture (MOC) permet de décrire une région du ciel et/ou une couverture temporelle. Les opérations (unions, intersection, complément,...) s'effectuent très rapidement sur de tels MOCs.\n \nCertains serveurs de données, tel VizieR, sont capables de filtrer leurs réponses (sources de catalogues, listes d'images) en fonction d'une zone d'une ciel décrite par un MOC de manière particulièrement efficace.
 
 # FrameMocFiltering.java strings
 MOCFILTERINGOP	Filter:

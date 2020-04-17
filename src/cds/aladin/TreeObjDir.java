@@ -52,7 +52,7 @@ import cds.aladin.prop.Propable;
 import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.mocmulti.MocItem2;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
@@ -1412,7 +1412,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 //      System.out.println("ULR scan = "+url);
       
       // Mémorisation du résultat
-      HealpixMoc moc;
+      SMoc moc;
       try { 
          moc = scan(url); 
          if( mo.moc==null ) mo.moc=moc;
@@ -1422,7 +1422,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       // Mémorisation de la surface couverte
       try {
          int order=11;
-//         moc = new HealpixMoc(order);
+//         moc = new SMoc(order);
 //         int i=0;
 //         moc.setCheckConsistencyFlag(false);
 //         for( long n : CDSHealpix.query_disc(order, c.al, c.del,  Math.toRadians(rad), false) ) {
@@ -1454,15 +1454,15 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /**  Génération d'un Moc à partir du catalogue retournée par l'URL
     * passée en paramètre */
-   private HealpixMoc scan( String url) {
+   private SMoc scan( String url) {
       Pcat pcat = new Pcat(aladin);
       pcat.plan = new PlanCatalog(aladin);
       pcat.plan.label="test";
-      HealpixMoc moc=null;
+      SMoc moc=null;
       int order=11;
       
       try {
-         moc = new HealpixMoc(order);
+         moc = new SMoc(order);
          inScan=new MyInputStream( Util.openStream(url,false,true,30000) );
          pcat.tableParsing(inScan,null);
          

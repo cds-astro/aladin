@@ -28,7 +28,7 @@ import java.io.FileInputStream;
 
 import cds.aladin.MyInputStream;
 import cds.fits.HeaderFits;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.Util;
 
 /** Création d'un fichier Moc.fits correspondant aux tuiles de plus bas niveau
@@ -50,7 +50,7 @@ public class BuilderMocError extends BuilderMoc {
    /** Création d'un Moc associé à l'arborescence trouvée dans le répertoire path */
    protected void createMoc(String path) throws Exception {
       
-      moc = new HealpixMoc();
+      moc = new SMoc();
       fileOrder = mocOrder = Util.getMaxOrderByPath(path);
       tileOrder = context.getTileOrder();
 
@@ -75,7 +75,7 @@ public class BuilderMocError extends BuilderMoc {
 
       String outputFile = path + FS + Constante.FILE_MOCERROR;
       
-      moc.setCoordSys(getFrame());
+      moc.setSys(getFrame());
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,fileOrder, path);
       moc.setCheckConsistencyFlag(true);
@@ -88,7 +88,7 @@ public class BuilderMocError extends BuilderMoc {
    
    private String getDefaultExt(String path) { return "fits"; }
    
-   protected void generateMoc(HealpixMoc moc, int fileOrder,String path) throws Exception {
+   protected void generateMoc(SMoc moc, int fileOrder,String path) throws Exception {
       
       initStat();
       
@@ -124,7 +124,7 @@ public class BuilderMocError extends BuilderMoc {
    }
    
 
-   protected void generateTileMoc(HealpixMoc moc,File f,int fileOrder, long npix) throws Exception {
+   protected void generateTileMoc(SMoc moc,File f,int fileOrder, long npix) throws Exception {
       updateStat();
       
       MyInputStream dis = null;

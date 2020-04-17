@@ -28,9 +28,9 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 
@@ -51,7 +51,6 @@ public class PlanTMoc extends PlanMoc {
    
    protected PlanTMoc(Aladin aladin, MyInputStream in, String label) {
       super(aladin);
-//      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       useCache = false;
       type = ALLSKYTMOC;
@@ -63,9 +62,8 @@ public class PlanTMoc extends PlanMoc {
       suite();
    }
 
-   protected PlanTMoc(Aladin aladin, TimeMoc moc, String label) {
+   protected PlanTMoc(Aladin aladin, TMoc moc, String label) {
       super(aladin);
-//      arrayTimeMoc = new Moc[CDSHealpix.MAXORDER+1];
       this.moc = moc;
       useCache = false;
       type = ALLSKYTMOC;
@@ -79,14 +77,14 @@ public class PlanTMoc extends PlanMoc {
 
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
-      long nbMicrosec = ((TimeMoc)moc).getUsedArea();
-      ADD( buf, "\n* Start: ",Astrodate.JDToDate( ((TimeMoc)moc).getTimeMin()));
-      ADD( buf, "\n* End: ",Astrodate.JDToDate( ((TimeMoc)moc).getTimeMax()));
+      long nbMicrosec = ((TMoc)moc).getNbCells();
+      ADD( buf, "\n* Start: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMin()));
+      ADD( buf, "\n* End: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMax()));
       ADD( buf, "\n* Sum: ",Util.getTemps(nbMicrosec/1000L, true));
       
-      int order = getRealMaxOrder( (TimeMoc)moc);
+      int order = getRealMaxOrder( (TMoc)moc);
       int drawOrder = getDrawOrder();
-      ADD( buf,"\n","* Accuracy: "+ TimeMoc.getTemps(  TimeMoc.getDuration(order)));
+      ADD( buf,"\n","* Accuracy: "+ TMoc.getTemps(  TMoc.getDuration(order)));
       ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? order+"" : drawOrder+"/"+order));
    }
    
@@ -94,14 +92,14 @@ public class PlanTMoc extends PlanMoc {
    
    /** Retourne le time stamp minimal */
    protected double getTimeMin() { 
-      double tmin = ((TimeMoc)moc).getTimeMin();
+      double tmin = ((TMoc)moc).getTimeMin();
       if( tmin==-1 ) tmin=Double.NaN;
       return tmin;
    }
 
    /** Retourne le time stamp maximal */
    protected double getTimeMax() { 
-      double tmax = ((TimeMoc)moc).getTimeMax();
+      double tmax = ((TMoc)moc).getTimeMax();
       if( tmax==-1 ) tmax=Double.NaN;
       return tmax;
    }
@@ -115,7 +113,7 @@ public class PlanTMoc extends PlanMoc {
          error=null;
          try {
             if( moc==null && dis!=null ) {
-               moc = new TimeMoc();
+               moc = new TMoc();
                if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
                else moc.readASCII(dis);
             }
@@ -130,9 +128,9 @@ public class PlanTMoc extends PlanMoc {
       return true;
    }
    
-   protected TimeMoc getTimeMoc() { return (TimeMoc)moc; }
+   protected TMoc getTimeMoc() { return (TMoc)moc; }
    
-   static protected int getRealMaxOrder(HealpixMoc m) { return m.getMocOrder(); }
+   static protected int getRealMaxOrder(SMoc m) { return m.getMocOrder(); }
    
    protected  boolean isSpaceModified() { return false; }
    
@@ -154,8 +152,8 @@ public class PlanTMoc extends PlanMoc {
       if( order>moc.getTimeOrder() ) order=moc.getTimeOrder();
       if( order<0 ) order=0;
       if( arrayTimeMoc==null || arrayTimeMoc[order]==null || mocTimeLowReset ) {
-         if( arrayTimeMoc==null ) arrayTimeMoc = new TimeMoc[ Moc.MAXORDER+1];
-         arrayTimeMoc[order] = new TimeMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
+         if( arrayTimeMoc==null ) arrayTimeMoc = new TMoc[ Moc.MAXORDER+1];
+         arrayTimeMoc[order] = new TMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          final int myOrder = order;
          final int myMo=moc.getTimeOrder();
          Aladin.trace(4,"PlanTMoc.getHealpixMocLow("+myOrder+") running...");
@@ -182,7 +180,7 @@ public class PlanTMoc extends PlanMoc {
    
    
 //   // Fournit le MOC qui couvre le champ de vue courant
-//   protected HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
+//   protected SMoc getViewMoc(ViewSimple v,int order) throws Exception {
 //      TMoc m = new TMoc();
 //      m.rangeSet.append( (long)(v.getTpsMin()*TMoc.DAYMICROSEC), (long)(v.getTpsMax()*TMoc.DAYMICROSEC) );
 //      m.toHealpixMoc();
@@ -196,8 +194,8 @@ public class PlanTMoc extends PlanMoc {
       Plot plot = v.plot;
       double dureeView = plot.getMax() - plot.getMin();
       int o;
-      for( o=TimeMoc.MAXORDER; o>=3; o-- ) {
-         double nbCell = dureeView / ( TimeMoc.getDuration(o)/1000000.);
+      for( o=TMoc.MAXORDER; o>=3; o-- ) {
+         double nbCell = dureeView / ( TMoc.getDuration(o)/1000000.);
          if( nbCell<MAXDRAWCELL ) return o;
       }
       return o;
@@ -233,7 +231,7 @@ public class PlanTMoc extends PlanMoc {
       
       int drawingOrder = getDrawingOrder(v);
       
-      TimeMoc lowMoc = (TimeMoc ) getTimeMocLow(drawingOrder,gapOrder);
+      TMoc lowMoc = (TMoc ) getTimeMocLow(drawingOrder,gapOrder);
       mocTimeLowReset=false;
       
       Iterator<long[]> it = lowMoc.jdIterator(tmin, tmax);
@@ -242,7 +240,7 @@ public class PlanTMoc extends PlanMoc {
       ArrayList<Rectangle> a = new ArrayList<>();
       while( it.hasNext() ) {
          jdRange = it.next();
-         a.add( computeRectangle(plot, jdRange[0]/TimeMoc.DAYMICROSEC,jdRange[1]/TimeMoc.DAYMICROSEC) );
+         a.add( computeRectangle(plot, jdRange[0]/TMoc.DAYMICROSEC,jdRange[1]/TMoc.DAYMICROSEC) );
       }
       
       // Tracé en aplat avec demi-niveau d'opacité
@@ -296,6 +294,7 @@ public class PlanTMoc extends PlanMoc {
       flagProcessing = false;
       aladin.calque.resetTimeRange();
       planReadyPost();
+      aladin.view.repaintAll();
    }
 
    protected void planReadyPost() { aladin.view.createView4TMOC(this); }

@@ -2003,7 +2003,7 @@ public final class Calib  implements Cloneable {
       //               if (equinox == 0.0 )  system = FK4 ;
       if (system ==  FK4)
          //             if ((equinox != 2000.0)&&(system != GALACTIC))
-         // Ancine test supprimé en 04/2012  
+         // Ancien test supprimé en 04/2012  
       {
          // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
          //                Astroframe j2000 = new Astroframe() ;
@@ -2014,13 +2014,15 @@ public final class Calib  implements Cloneable {
          //                del = natif.getLat() ;                               
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_FK4);
+         Astroframe af = new FK4(equinox) ;
+         ac.convertTo(af);		 
+        // ac.convertTo(AF_FK4);
          al = ac.getLon();
          del = ac.getLat();
       }
       if (system ==  FK5)
          //                 if ((equinox != 2000.0)&&(system != GALACTIC))
-         // Ancine test supprimé en 04/2012  
+         // Ancien test supprimé en 04/2012  
       {
          // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
          //                    Astroframe j2000 = new Astroframe() ;
@@ -2031,7 +2033,9 @@ public final class Calib  implements Cloneable {
          //                    del = natif.getLat() ;                               
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_FK5);
+         Astroframe af = new FK5(equinox) ;
+         ac.convertTo(af);
+       // ac.convertTo(AF_FK5);
          al = ac.getLon();
          del = ac.getLat();
       }
@@ -2832,7 +2836,9 @@ public final class Calib  implements Cloneable {
          //                 natif.convert(j2000) ;
          //                 c.al = j2000.getLon() ;
          //                 c.del = j2000.getLat() ;
-         Astrocoo ac = new Astrocoo(AF_FK4,c.al,c.del);
+         Astroframe af = new FK4(equinox);
+         //Astrocoo ac = new Astrocoo(AF_FK4,c.al,c.del);
+          Astrocoo ac = new Astrocoo(af,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
          ac.convertTo(AF_ICRS);
          c.al = ac.getLon();
@@ -2847,7 +2853,9 @@ public final class Calib  implements Cloneable {
          //                  natif.convert(j2000) ;
          //                  c.al = j2000.getLon() ;
          //                  c.del = j2000.getLat() ;
-         Astrocoo ac = new Astrocoo(AF_FK5,c.al,c.del);
+         Astroframe af = new FK5(equinox);
+         //Astrocoo ac = new Astrocoo(AF_FK5,c.al,c.del);
+          Astrocoo ac = new Astrocoo(af,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
          ac.convertTo(AF_ICRS);
          c.al = ac.getLon();
@@ -3014,11 +3022,14 @@ public final class Calib  implements Cloneable {
       del = c.del ;
       // System.out.println(c.al+" "+c.del);
       if( system!=ICRS && system!=XYLINEAR ) {
-         Astroframe af = system==FK4           ? AF_FK4 :
-                         system==FK5           ? AF_FK5 :
+         Astroframe af = // system==FK4           ? AF_FK4 :
+        		         system==FK4 ? new FK4(equinox) :
+                        // system==FK5           ? AF_FK5 :
+                        system==FK5 ? new FK5(equinox) :
                          system==GALACTIC      ? AF_GAL :
                          system==SUPERGALACTIC ? AF_SGAL:
                          system==ECLIPTIC      ? AF_ECL : null;
+         
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
          ac.convertTo(af);

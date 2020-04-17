@@ -23,11 +23,10 @@ package cds.aladin;
 
 import java.util.ArrayList;
 
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
-import cds.moc.SpaceMoc;
-import cds.moc.SpaceTimeMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.STMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -77,21 +76,21 @@ public class PlanMocAlgo extends PlanMoc {
       try {
          moc = p1.getMoc().clone();
          
-         if( op==COMPLEMENT ) moc = ((SpaceMoc)moc).complement();
+         if( op==COMPLEMENT ) moc = ((SMoc)moc).complement();
          else if( op==TOORDER ) moc.setMocOrder(order);
          else {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
-               SpaceMoc m2=pList[i].toReferenceFrame(m1.getCoordSys());
+               SMoc m2=pList[i].toReferenceFrame(m1.getSys());
                switch(op) {
                   case UNION :        moc = m1.union(        m2); break;
                   case INTERSECTION : moc = m1.intersection( m2 ); break;
                   case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-                  case DIFFERENCE  :  moc = ((SpaceMoc)m1).difference(   m2 ); break;
+                  case DIFFERENCE  :  moc = ((SMoc)m1).difference(   m2 ); break;
                }
             }
          }
-         ((SpaceMoc)moc).setMinLimitOrder(3);
+         ((SMoc)moc).setMinOrder(3);
          if( order!=-1 ) moc.setMocOrder( order);
          
       } catch( Exception e ) {
@@ -131,11 +130,11 @@ public class PlanMocAlgo extends PlanMoc {
       aladin.trace(3,"MOC cropping: "+Plan.Tp[type]+" => "+s);
       
       try {
-         int order = mocSource.moc.getMaxOrder();
+         int order = mocSource.moc.getMaxUsedOrder();
          ArrayList<double[]> a = new ArrayList<>();
          for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
          
-         HealpixMoc m1 = CDSHealpix.createHealpixMoc(a, order);
+         SMoc m1 = CDSHealpix.createSMoc(a, order);
          moc = m1.intersection(mocSource.moc);
          
       } catch( Exception e ) {
@@ -178,9 +177,9 @@ public class PlanMocAlgo extends PlanMoc {
       aladin.trace(3,"MOC temporal cropping: "+Plan.Tp[type]+" => "+s);
       
       try {
-         long tmin = Double.isNaN(jdmin) ? -1L : (long)( jdmin*TimeMoc.DAYMICROSEC );
-         long tmax = Double.isNaN(jdmax) ? Long.MAX_VALUE : (long)( jdmax*TimeMoc.DAYMICROSEC );
-         moc = ((SpaceTimeMoc)mocSource.moc).getSpaceMoc(tmin, tmax);
+         long tmin = Double.isNaN(jdmin) ? -1L : (long)( jdmin*TMoc.DAYMICROSEC );
+         long tmax = Double.isNaN(jdmax) ? Long.MAX_VALUE : (long)( jdmax*TMoc.DAYMICROSEC );
+         moc = ((STMoc)mocSource.moc).getSpaceMoc(tmin, tmax);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

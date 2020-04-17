@@ -25,8 +25,8 @@ import java.io.FileInputStream;
 import java.util.Iterator;
 
 import cds.aladin.HealpixProgen;
-import cds.moc.HealpixMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.pixtools.Util;
 
@@ -92,7 +92,7 @@ public class BuilderTMoc extends Builder {
    
    private int mode=UNKNOWN;
    
-   private TimeMoc tmoc = null; 
+   private TMoc tmoc = null; 
 
    public void build() throws Exception {
       initStat();
@@ -100,12 +100,12 @@ public class BuilderTMoc extends Builder {
       String output = context.getOutputPath();
       String hpxFinder = context.getHpxFinderPath();
       
-      HealpixMoc moc = new HealpixMoc();
+      SMoc moc = new SMoc();
       moc.read(hpxFinder+Util.FS+"Moc.fits");
       moc.setMocOrder(maxOrder);
       
       long progress=0L;
-      context.setProgressMax(moc.getUsedArea());
+      context.setProgressMax(moc.getNbCells());
       
       initIt();
       
@@ -174,7 +174,7 @@ public class BuilderTMoc extends Builder {
    }
    
    protected void initIt() {
-      tmoc = new TimeMoc();
+      tmoc = new TMoc();
    }
    
    protected void addIt(int order, long npix, double jdtmin, double jdtmax) {
@@ -183,7 +183,7 @@ public class BuilderTMoc extends Builder {
    
    protected void writeIt() throws Exception {
       String file = context.getOutputPath()+Util.FS+"TMoc.fits";
-      tmoc.toHealpixMoc();
+      tmoc.toMocSet();
       tmoc.write(file);
    }
    

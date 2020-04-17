@@ -42,9 +42,11 @@ import cds.healpix.HealpixNestedFixedRadiusConeComputer;
 import cds.healpix.HealpixNestedPolygonComputer;
 import cds.healpix.NeighbourList;
 import cds.healpix.NeighbourSelector;
+import cds.healpix.NestedEllipticalConeComputerApprox;
+import cds.healpix.NestedEllipticalConeComputerApprox.Mode;
 import cds.healpix.VerticesAndPathComputer;
-import cds.moc.HealpixMoc;
 import cds.moc.Range;
+import cds.moc.SMoc;
 
 /** Wrapper Healpix CDS pour ne pas reinitialiser systematiquement l'objet HealpixBase pour chaque NSIDE
  * @author Pierre Fernique [CDS] (Initially based on Martin Reinecke, now on François Xavier Pineau's code)
@@ -170,7 +172,7 @@ public final class CDSHealpix {
    }
    
    // ATTNENTION LE RAYON EST EN RADIAN
-   static public HealpixMoc getMocByCircle(int order,double ra, double dec, double radius, boolean inclusive) throws Exception {
+   static public SMoc getMocByCircle(int order,double ra, double dec, double radius, boolean inclusive) throws Exception {
       final HealpixNested hn = Healpix.getNested(order);
       final HealpixNestedFixedRadiusConeComputer cp = hn.newConeComputer(radius);
       double [] coo = normalizeRaDec( ra,dec );
@@ -187,7 +189,7 @@ public final class CDSHealpix {
       return bmoc2moc( bmoc);
    }
    
-   static HealpixMoc getMocByPolygon(int order,ArrayList<double[]>cooList, boolean inclusive) throws Exception {
+   static SMoc getMocByPolygon(int order,ArrayList<double[]>cooList, boolean inclusive) throws Exception {
       final HealpixNested hn = Healpix.getNested(order);
       final HealpixNestedPolygonComputer pc = hn.newPolygonComputer();
       double[][] vertices = new double[cooList.size()][2];
@@ -200,10 +202,22 @@ public final class CDSHealpix {
       return bmoc2moc( bmoc);
    }
    
+   static public SMoc getMocByEllipse(int order, double ra, double dec, double a, double b, double pa) throws Exception  {
+      final double aRad = Math.toRadians(a);
+      final double bRad = Math.toRadians(b);
+      final double paRad = Math.toRadians(pa);
+      final double lonRad = Math.toRadians(ra);
+      final double latRad = Math.toRadians(dec);
+     
+      final NestedEllipticalConeComputerApprox cp 
+      = new NestedEllipticalConeComputerApprox( aRad, bRad, paRad, Healpix.getNested(order));
+      final HealpixNestedBMOC bmoc = cp.overlapping(lonRad, latRad, Mode.OVERLAPPING_CELLS);
+      return bmoc2moc( bmoc);
+   }
    
    /** Conversion d'un BMOC a la FX en Moc à la Fernique via les Range */
-   static public HealpixMoc bmoc2moc(HealpixNestedBMOC bmoc) throws Exception {
-      int depthMax = HealpixMoc.MAXORDER;
+   static public SMoc bmoc2moc(HealpixNestedBMOC bmoc) throws Exception {
+      int depthMax = SMoc.MAXORDER;
       Range range = new Range();
       
       Iterator<CurrentValueAccessor> it = bmoc.iterator();
@@ -219,9 +233,9 @@ public final class CDSHealpix {
       }
       
       int mocOrder = bmoc.getDepthMax();
-      HealpixMoc moc = new HealpixMoc(mocOrder);
-      moc.spaceRange = range;
-      moc.toHealpixMoc();
+      SMoc moc = new SMoc(mocOrder);
+      moc.range = range;
+      moc.toMocSet();
       return moc;
 
    }
@@ -430,12 +444,12 @@ public final class CDSHealpix {
     * @return
     * @throws Exception
     */
-   static public HealpixMoc createHealpixMoc(ArrayList<double[]> radecList, int order ) throws Exception {
+   static public SMoc createSMoc(ArrayList<double[]> radecList, int order ) throws Exception {
       return getMocByPolygon( order, radecList, true);
    }
 
-//   static public HealpixMoc createHealpixMoc(ArrayList<double[]> radecList, int order ) throws Exception {
-//      final HealpixMoc hmoc = new HealpixMoc(order);
+//   static public SMoc createSMoc(ArrayList<double[]> radecList, int order ) throws Exception {
+//      final SMoc hmoc = new SMoc(order);
 //      hmoc.add(order, query_polygon( order, radecList, true));
 //      return hmoc;
 //   }

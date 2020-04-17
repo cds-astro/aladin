@@ -22,16 +22,16 @@
 package cds.mocmulti;
 
 import cds.aladin.MyProperties;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 
 
 public class MocItem {
    public String mocId;
-   public HealpixMoc moc;
+   public SMoc moc;
    public MyProperties prop;
    public long dateMoc,dateProp;
    
-   public MocItem(String id,HealpixMoc m, MyProperties p, long dMoc, long dProp) {
+   public MocItem(String id,SMoc m, MyProperties p, long dMoc, long dProp) {
       mocId=id; moc=m; prop=p;
       dateMoc=dMoc; dateProp=dProp;
       

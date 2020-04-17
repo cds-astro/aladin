@@ -32,7 +32,7 @@ import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.fits.Fits;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -41,7 +41,7 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderMoc extends Builder {
 
-   protected HealpixMoc moc;
+   protected SMoc moc;
    protected int mocOrder;
    protected int fileOrder;
    protected int tileOrder;
@@ -65,12 +65,12 @@ public class BuilderMoc extends Builder {
       if( !context.verifTileOrder() ) throw new Exception("Uncompatible tileOrder !");
    }
 
-   public HealpixMoc getMoc() { return moc; }
+   public SMoc getMoc() { return moc; }
 
    /** Création d'un Moc associé à l'arborescence trouvée dans le répertoire path */
    protected void createMoc(String path) throws Exception {
       
-      moc = new HealpixMoc();
+      moc = new SMoc();
       fileOrder = mocOrder = Util.getMaxOrderByPath(path);
       tileOrder = context.getTileOrder();
 
@@ -129,7 +129,7 @@ public class BuilderMoc extends Builder {
       context.info("MOC generation ("+(isMocHight?"deep resolution":"regular resolution")+" mocOrder="+moc.getMocOrder()+")...");
       
       String  frame = getFrame();
-      moc.setCoordSys(frame);
+      moc.setSys(frame);
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,fileOrder, path);
       moc.setCheckConsistencyFlag(true);
@@ -138,7 +138,7 @@ public class BuilderMoc extends Builder {
       // Faut-il changer le référentiel du MOC ?
       // A EVITER JUSQU'A CE QUE LA VERSION 10.135 ET SUIVANTES SOIENT SUFFISAMMENT REPANDUE
 //      if( !frame.equals("C") ) {
-//         HealpixMoc moc1 = convertTo(moc,"C");
+//         SMoc moc1 = convertTo(moc,"C");
 //         context.info("MOC convertTo ICRS...");
 //         moc = moc1;
 //      }
@@ -151,17 +151,17 @@ public class BuilderMoc extends Builder {
    
    /** Changement de référentiel si nécessaire */
    // IL FAUDRA REMETTRE TOUT CA DANS SpaceMOC
-   static public HealpixMoc convertTo(HealpixMoc moc, String coordSys) throws Exception {
-      if( coordSys.equals( moc.getCoordSys()) ) return moc;
+   static public SMoc convertTo(SMoc moc, String coordSys) throws Exception {
+      if( coordSys.equals( moc.getSys()) ) return moc;
 
-      char a = moc.getCoordSys().charAt(0);
+      char a = moc.getSys().charAt(0);
       char b = coordSys.charAt(0);
       int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
       int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
 
       Healpix hpx = new Healpix();
-      int order = moc.getMaxOrder();
-      HealpixMoc moc1 = new HealpixMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
+      int order = moc.getMaxUsedOrder();
+      SMoc moc1 = new SMoc(coordSys,moc.getMinOrder(),moc.getMocOrder());
       moc1.setCheckConsistencyFlag(false);
       long onpix1=-1;
       Iterator<Long> it = moc.pixelIterator();
@@ -213,12 +213,12 @@ public class BuilderMoc extends Builder {
    }
    
    /** Retourne la surface du Moc (en nombre de cellules de plus bas niveau */
-   public long getUsedArea() { return moc.getUsedArea(); }
+   public long getUsedArea() { return moc.getNbCells(); }
 
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
-   public long getArea() { return moc.getArea(); }
+   public long getArea() { return moc.getNbCellsFull(); }
 
-   protected void generateMoc(HealpixMoc moc, int fileOrder,String path) throws Exception {
+   protected void generateMoc(SMoc moc, int fileOrder,String path) throws Exception {
       
       initStat();
       
@@ -253,13 +253,13 @@ public class BuilderMoc extends Builder {
       }
    }
    
-   protected void generateTileMoc(HealpixMoc moc,File f,int fileOrder, long npix) throws Exception {
+   protected void generateTileMoc(SMoc moc,File f,int fileOrder, long npix) throws Exception {
       updateStat();
       if( isMocHight ) generateHighTileMoc(moc,fileOrder,f,npix);
       else moc.add(fileOrder,npix);
    }
    
-   private void generateHighTileMoc(HealpixMoc moc,int fileOrder, File f, long npix) throws Exception {
+   private void generateHighTileMoc(SMoc moc,int fileOrder, File f, long npix) throws Exception {
       Fits fits = new Fits();
       MyInputStream dis = null;
       try {

@@ -32,7 +32,7 @@ import java.util.Iterator;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -569,11 +569,11 @@ public abstract class Builder {
    /** Génération des liens symboliques et des répertoires Dirnn à l'order le plus profond afin de
      * pouvoir par la suite répartir le HiPS sur plusieurs partitions
      */
-   protected void validateSplit(String outputPath, String split, SpaceMoc moc, int order, int bitpix, int tileWidth, int depth, String fmt) throws Exception {
+   protected void validateSplit(String outputPath, String split, SMoc moc, int order, int bitpix, int tileWidth, int depth, String fmt) throws Exception {
       
       // Détermination de la taille totale requise (en Ko)
       moc.setMocOrder(order);
-      long numberOfTiles = moc.getUsedArea();
+      long numberOfTiles = moc.getNbCells();
       long tileSize = getTileSize( bitpix, tileWidth, depth, fmt);
       if( tileSize==0 ) throw new Exception("No remote tile found");
       long fullSize = (long)( ( 1.3 * tileSize * numberOfTiles + 8 ) / 1024. );

@@ -38,8 +38,7 @@ import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 
 /** Recopie d'un HiPS distant via HTTP
@@ -140,7 +139,7 @@ public class BuilderMirror extends BuilderTiles {
       if( s!=null ) context.setFrameName(s);
 
       // Détermination du Moc
-      HealpixMoc area = new HealpixMoc();
+      SMoc area = new SMoc();
       in = null;
       try {
          in = Util.openAnyStream( context.getInputPath()+"/Moc.fits");
@@ -149,9 +148,9 @@ public class BuilderMirror extends BuilderTiles {
          
          // Si le système de coordonnées du MOC n'est pas le même que celui de HiPS, il faut 
          // convertir le MOC
-         if( !context.getFrameCode().equals( area.getCoordSys()) ) {
+         if( !context.getFrameCode().equals( area.getSys()) ) {
             context.info("MOC conversion in "+context.getFrameName()+" frame (HiPS target frame)...");
-            area = new HealpixMoc( HealpixMoc.convertTo( area, context.getFrameCode()) );
+            area = new SMoc( SMoc.convertTo( area, context.getFrameCode()) );
          }
          
          if( context.getArea()==null ) {
@@ -160,7 +159,7 @@ public class BuilderMirror extends BuilderTiles {
             
             if( !context.getArea().equals(area)) {
                isSmaller=isPartial=true;
-               context.setMocArea( (SpaceMoc)area.intersection( context.getArea()) );
+               context.setMocArea( (SMoc)area.intersection( context.getArea()) );
                context.info("Partial spacial mirror");
             }
          }
@@ -228,7 +227,7 @@ public class BuilderMirror extends BuilderTiles {
       if( splitCmd==null ) return;
       
       int bitpix, tileWidth, depth, order;
-      HealpixMoc m;
+      SMoc m;
       
       
       try { 
@@ -239,7 +238,7 @@ public class BuilderMirror extends BuilderTiles {
          catch( Exception e1 ) { depth = 1; }
       } catch( Exception e ) { throw new Exception("Missing info in properties file => splitting action not possible"); }
       
-      m = (HealpixMoc)( context.moc!=null ? context.moc.clone() : context.mocIndex.clone() );
+      m = (SMoc)( context.moc!=null ? context.moc.clone() : context.mocIndex.clone() );
       if( m==null ) throw new Exception("No MOC available => splitting action not possible");
 
       validateSplit( context.getOutputPath(), splitCmd, m, order, bitpix, tileWidth, depth, context.getTileFormat() );

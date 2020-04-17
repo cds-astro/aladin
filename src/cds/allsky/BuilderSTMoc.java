@@ -20,7 +20,7 @@
 //
 
 package cds.allsky;
-import cds.moc.SpaceTimeMoc;
+import cds.moc.STMoc;
 import cds.tools.Util;
 
 /** Construction d'un STMOC à partir des données HpxFinder
@@ -32,14 +32,14 @@ public class BuilderSTMoc extends BuilderTMoc {
    
    static public final double DAYMICROSEC = 86400000000.;
 
-   SpaceTimeMoc stMoc;
+   STMoc stMoc;
 
    public BuilderSTMoc(Context context) {
       super(context);
    }
    
    protected void initIt() {
-      stMoc = new SpaceTimeMoc(context.getOrder() , 14 );
+      stMoc = new STMoc(context.getOrder() , 14 );
    }
    
    int n=0;
@@ -72,16 +72,16 @@ public class BuilderSTMoc extends BuilderTMoc {
 //   private void testPerf() throws Exception {
 //      long tmin = stMoc.rangeSet.r[ stMoc.getTimeRanges()/2 ];
 //      long tmax = stMoc.rangeSet.r[ 2*stMoc.getTimeRanges()/3 ];
-//      SpaceMoc sp = new SpaceMoc("3/40");
+//      SMoc sp = new SMoc("3/40");
 //      sp.toRangeSet();
-//      SpaceTimeMoc m = new SpaceTimeMoc();
+//      STMoc m = new STMoc();
 //      m.add(tmin,tmax, sp.rangeSet.r[0], sp.rangeSet.r[1]);
 //      
 //      int a=0;
 //      long t1 = System.currentTimeMillis();
-//      SpaceTimeMoc m1=null;
+//      STMoc m1=null;
 //      for( int i=0;i<10; i++ ) {
-//         m1 = (SpaceTimeMoc)stMoc.intersection(m);
+//         m1 = (STMoc)stMoc.intersection(m);
 //         a+=m1.getMocOrder();
 //      }
 //      long t2 = System.currentTimeMillis();

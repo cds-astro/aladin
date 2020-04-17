@@ -28,31 +28,31 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-public class SpaceTimeMoc extends Moc {
+public class STMoc extends Moc {
    
-   public Range2 timeRange;
+   public Range2 range;
    private int timeOrder = -1;
    private int spaceOrder = -1;
 
-   public SpaceTimeMoc() {
+   public STMoc() {
       init();
-      timeRange = new Range2();
+      range = new Range2();
    }
 
-   public SpaceTimeMoc( int spaceOrder , int timeOrder ) {
+   public STMoc( int spaceOrder , int timeOrder ) {
       this();
       this.timeOrder=timeOrder;
       this.spaceOrder=spaceOrder;
    }
 
-   public SpaceTimeMoc(int spaceOrder , int timeOrder ,Range2 rangeSet) {
+   public STMoc(int spaceOrder , int timeOrder ,Range2 rangeSet) {
       init();
       this.spaceOrder=spaceOrder;
       this.timeOrder=timeOrder;
-      this.timeRange = new Range2(rangeSet);
+      this.range = new Range2(rangeSet);
    }
    
-   public SpaceTimeMoc(String s)  throws Exception {
+   public STMoc(String s)  throws Exception {
       this();
       if( s!=null && s.length()>0 ) append(s);
       else timeOrder=spaceOrder=MAXORDER;
@@ -66,16 +66,16 @@ public class SpaceTimeMoc extends Moc {
    
    /** True if the npix (deepest level) and jd date is in the SpaceTimeMOC */
    public  boolean contains(long npix, double jd) {
-      long npixTime = (long)( jd * TimeMoc.DAYMICROSEC );
-      if( !timeRange.contains(npixTime) ) return false;
-      for( Range range : timeRange.rangeArray ) {
-         if( range.contains(npix) ) return true;
+      long npixTime = (long)( jd * TMoc.DAYMICROSEC );
+      if( !range.contains(npixTime) ) return false;
+      for( Range r : range.rr ) {
+         if( r.contains(npix) ) return true;
       }
       return false;
    }
 
    @Override
-   public void clear() { timeRange.clear(); }
+   public void clear() { range.clear(); }
    
    public void setTimeOrder(int order) throws Exception {
       if( order<timeOrder ) degradeTimeOrder(order);
@@ -95,25 +95,25 @@ public class SpaceTimeMoc extends Moc {
    private void degradeOrder(int timeOrder, int spaceOrder) {
       int shift1 = timeOrder==-1  ? 0 : (MAXORDER - timeOrder  )*2;
       int shift2 = spaceOrder==-1 ? 0 : (MAXORDER - spaceOrder )*2;
-      timeRange = timeRange.degrade(shift1, shift2);
+      range = range.degrade(shift1, shift2);
    }
    
    public void setMocOrder(int order) throws Exception { setTimeOrder(order); }
    public int getMocOrder() { try{ return getTimeOrder(); } catch( Exception e ) {} return -1; }
 
    @Override
-   public long getMem() { return timeRange.getMem()+20L; }
+   public long getMem() { return range.getMem()+20L; }
 
    @Override
    public int getSize() {
       // les indices temporels
-      int size=timeRange.sz;   
+      int size=range.sz;   
       // Les indices spatiaux
-      for( int i=timeRange.sz/2 -1; i>=0; i-- ) size += timeRange.rangeArray[i].sz;
+      for( int i=range.sz/2 -1; i>=0; i-- ) size += range.rr[i].sz;
       return size;
    }
    
-   public int getTimeRanges() { return timeRange.nranges(); }
+   public int getTimeRanges() { return range.nranges(); }
 
    @Override
    public void add(String s) throws Exception {
@@ -130,11 +130,25 @@ public class SpaceTimeMoc extends Moc {
    @Override
    public void setProperty(String key, String value) throws Exception {
    }
+   
+   public void accretion() throws Exception { accretion( getTimeOrder() ); }
+   public void accretion(int order) throws Exception {
+      Range2 r = new Range2(range.sz);
+      int shift = (MAXORDER-order)*2;
+      long add = 1L<<shift;
+      for( int i=0; i<range.sz; i+=2 ) {
+         long a = range.r[i] -add;
+         long b = range.r[i+1] +add;
+         r.add(a,b,range.rr[i>>>1]);
+      }
+      range = r;
+  }
 
    @Override
    public boolean isIntersecting(Moc moc) {
       return false;
    }
+   
 
    private int maxT(Moc moc) { 
       int o = moc.getTimeOrder();
@@ -148,68 +162,40 @@ public class SpaceTimeMoc extends Moc {
    
    @Override
    public Moc union(Moc moc) throws Exception {
-      return new SpaceTimeMoc( maxS(moc), maxT(moc), timeRange.union( ((SpaceTimeMoc)moc).timeRange ));
+      return new STMoc( maxS(moc), maxT(moc), range.union( ((STMoc)moc).range ));
    }
 
    @Override
    public Moc intersection(Moc moc) throws Exception {
-      SpaceTimeMoc m;
-      if( moc instanceof SpaceTimeMoc ) {
-         m = (SpaceTimeMoc) moc;
-      } else if( moc instanceof TimeMoc ) {
-         throw new Exception("Not yet supported with TimeMoc");
+      STMoc m;
+      if( moc instanceof STMoc ) {
+         m = (STMoc) moc;
+      } else if( moc instanceof TMoc ) {
+         throw new Exception("Not yet supported with TMoc");
       } else {
          // On crée un STMoc avec une seule plage temporaire correspondante
          // à l'étendue maximale du temps du Moc avec lequel on veut faire l'intersection
          Range2 r = new Range2(2);
-         r.add( timeRange.r[0], timeRange.r[ timeRange.sz-1 ], moc.getRange() );
-         m = new SpaceTimeMoc( moc.getMocOrder(), getMocOrder(), r);
+         r.add( range.r[0], range.r[ range.sz-1 ], moc.getRange() );
+         m = new STMoc( moc.getMocOrder(), getMocOrder(), r);
       }
-      return new SpaceTimeMoc( maxS(m), maxT(m), timeRange.intersection( m.timeRange ));
+      return new STMoc( maxS(m), maxT(m), range.intersection( m.range ));
    }
    
    @Override
    public Moc subtraction(Moc moc) throws Exception {
-      return new SpaceTimeMoc( maxS(moc), maxT(moc), timeRange.difference( ((SpaceTimeMoc)moc).timeRange ));
+      return new STMoc( maxS(moc), maxT(moc), range.difference( ((STMoc)moc).range ));
    }
    
+   public String getSys() { return "C"; }
    public boolean isSpace() { return true; }
    public boolean isTime()  { return true; }
+   public boolean isEmpty() { return range.isEmpty(); }
+   public boolean isFull() { return false; }
 
-   @Override
-   public boolean isEmpty() {
-      return timeRange.isEmpty();
-   }
 
-   @Override
-   public void trim() {
-   }
 
-   @Override
-   public Iterator<MocCell> iterator() {
-      return null;
-   }
 
-   @Override
-   public int getSize(int order) {
-      return 0;
-   }
-
-   @Override
-   public Array getArray(int order) {
-      return null;
-   }
-
-   @Override
-   public void setCurrentOrder(int order) {
-   }
-
-   @Override
-   public void setCoordSys(String s) {
-      System.err.println("Not yet implemented");
-   }
-   
-   
    /** Ajustement d'une valeur à l'ordre indiquée */
    public long getVal(long val, int order) {
       if( order==MAXORDER ) return val;
@@ -231,40 +217,23 @@ public class SpaceTimeMoc extends Moc {
       r.append(smin,smax);
       
       // Ajout de la cellule spatio-temporelle
-      timeRange.add(tmin,tmax,r);
+      range.add(tmin,tmax,r);
    }
    
-   public void sortAndFix() {
-      timeRange.sortAndFix();
-   }
-
-   @Override
-   public boolean add(int order, long npix) throws Exception {
-      return false;
-   }
-
-   @Override
-   public int getMaxOrder() { return -1; }
-
-   @Override
-   public String getCoordSys() {
-      return null;
-   }
-
-   @Override
-   public void setCheckConsistencyFlag(boolean flag) throws Exception {
-   }
-
-   @Override
-   public void toHealpixMoc() throws Exception {
-   }
+   public void sortAndFix() { range.sortAndFix(); }
+   public int getMaxUsedOrder() { return -1; }
+   public void setCheckConsistencyFlag(boolean flag) throws Exception { }
+   public void toMocSet() throws Exception { }
+   public void setCurrentOrder(int order) { }
+   public void trim() { }
+   public Iterator<MocCell> iterator() { return null; }
    
    // Pour construire au fur et à mesure le STMOC via addHpix
    private StringBuilder buf=null;   // Le buffer de lecture
-   private HealpixMoc tmoc=null;     // Le dernier TMOC lu lors du parsing
+   private SMoc tmoc=null;     // Le dernier TMOC lu lors du parsing
 
    @Override
-   public void addHpix(String s) throws Exception {
+   protected void addHpix(String s) throws Exception {
       
       // Fin de traitement ou nouvelle dimension temporelle ?
       if( s==null || s.charAt(0)=='t' ) {
@@ -272,13 +241,13 @@ public class SpaceTimeMoc extends Moc {
          // Insertion du précédent couple si existant 
          if( tmoc!=null ) {
             // Je crée le MOC spatial du contenu bufferisé, juste récupérer son rangeSet
-            HealpixMoc moc = new HealpixMoc( buf.toString() );
+            SMoc moc = new SMoc( buf.toString() );
             moc.toRangeSet();
             if( moc.getMocOrder()>spaceOrder ) spaceOrder=moc.getMocOrder();
             
            // J'insère chaque élément 
-            for( int i=0; i<tmoc.spaceRange.sz; i+=2 ) {
-               timeRange.append(tmoc.spaceRange.r[i], tmoc.spaceRange.r[i+1], moc.spaceRange);
+            for( int i=0; i<tmoc.range.sz; i+=2 ) {
+               range.append(tmoc.range.r[i], tmoc.range.r[i+1], moc.range);
             }
             
             tmoc=null;
@@ -293,7 +262,7 @@ public class SpaceTimeMoc extends Moc {
          
          // Génération du rangeset temporel du contenu bufferisé
          
-         tmoc = new HealpixMoc( buf.toString() );
+         tmoc = new SMoc( buf.toString() );
          tmoc.toRangeSet();
          if( tmoc.getMocOrder()>timeOrder ) timeOrder=tmoc.getMocOrder();
 
@@ -326,8 +295,8 @@ public class SpaceTimeMoc extends Moc {
 //         String s="t"+tok.nextToken();
 ////         System.out.println("["+s+"]");
 //         int e = s.indexOf('s');
-//         HealpixMoc moc=null;
-//         HealpixMoc tmoc=null;
+//         SMoc moc=null;
+//         SMoc tmoc=null;
 //
 //         // Ai-je un SMOC associé au TMOC ?
 //         if( e>0 ) {
@@ -336,7 +305,7 @@ public class SpaceTimeMoc extends Moc {
 //            int se = s.indexOf('/',e);
 //
 //            // Je crée le MOC juste pour récupérer le rangeSet
-//            moc = new HealpixMoc( (se<0?"29/":"")+s.substring(e+1));
+//            moc = new SMoc( (se<0?"29/":"")+s.substring(e+1));
 //            moc.toRangeSet();
 //
 //         } else e=s.length();
@@ -345,7 +314,7 @@ public class SpaceTimeMoc extends Moc {
 //         int st = s.lastIndexOf('/',e-1);
 //
 //         // Je crée le MOC juste pour récupérer le rangeSet
-//         tmoc = new HealpixMoc( (st<0?"29/":"")+s.substring(1,e));
+//         tmoc = new SMoc( (st<0?"29/":"")+s.substring(1,e));
 //         tmoc.toRangeSet();
 //
 //         // J'insère chaque élément 
@@ -358,19 +327,19 @@ public class SpaceTimeMoc extends Moc {
    public String toString2() { return toString2(false); }
    public String toString2( boolean flagNL ) {
       StringBuilder s = new StringBuilder();
-      for( int i=0; i<timeRange.sz; i+=2 ) {
-         long a=timeRange.r[i];
-         long b=timeRange.r[i+1];
+      for( int i=0; i<range.sz; i+=2 ) {
+         long a=range.r[i];
+         long b=range.r[i+1];
          s.append("t"+a);
          if( b-1L!=a) s.append("-"+(b-1L));
-         Range m = timeRange.rangeArray[i>>>1];
+         Range m = range.rr[i>>>1];
          if( m!=null && !m.isEmpty() ) {
             s.append( flagNL ? " s":"s");
             
             if( flagNL ) {
-               HealpixMoc moc;
+               SMoc moc;
                try {
-                  moc = new HealpixMoc(m);
+                  moc = new SMoc(m);
                   s.append(moc.toASCII());
                } catch( Exception e ) {  e.printStackTrace(); }
 
@@ -383,61 +352,61 @@ public class SpaceTimeMoc extends Moc {
                }
             }
          }
-         if( i<timeRange.sz-2 ) s.append(flagNL ?'\n':' ');
+         if( i<range.sz-2 ) s.append(flagNL ?'\n':' ');
       }
       return s.toString();
    }
    
    public String toString3() {
       StringBuilder s = new StringBuilder();
-      for( int i=0; i<timeRange.sz; i+=2 ) {
-         s.append("t"+timeRange.r[i]);
-         if( timeRange.r[i+1]-1!=timeRange.r[i]) s.append("-"+(timeRange.r[i+1]-1));
-         Range m = timeRange.rangeArray[i>>>1];
+      for( int i=0; i<range.sz; i+=2 ) {
+         s.append("t"+range.r[i]);
+         if( range.r[i+1]-1!=range.r[i]) s.append("-"+(range.r[i+1]-1));
+         Range m = range.rr[i>>>1];
          if( m!=null && !m.isEmpty() ) {
             s.append(" s");
-            HealpixMoc moc;
+            SMoc moc;
             try {
-               moc = new HealpixMoc(m);
+               moc = new SMoc(m);
                s.append(moc.toASCII());
             } catch( Exception e ) {  e.printStackTrace(); }
          }
-         if( i<timeRange.sz-2 ) s.append('\n');
+         if( i<range.sz-2 ) s.append('\n');
       }
       return s.toString();
    }
    
    public String toString4() {
       StringBuilder s = new StringBuilder();
-      HealpixMoc moc;
+      SMoc moc;
       int shift = (Moc.MAXORDER-timeOrder)*2;
 
-      for( int i=0; i<timeRange.sz; i+=2 ) {
+      for( int i=0; i<range.sz; i+=2 ) {
          s.append("t");
          try {
-//            moc = new HealpixMoc(MAXORDER+"/"+timeRange.r[i]
+//            moc = new SMoc(MAXORDER+"/"+timeRange.r[i]
 //                  +( timeRange.r[i+1]>timeRange.r[i]+1?"-"+(timeRange.r[i+1]-1):""));
 //            s.append(moc.toASCII());
             
 //            s.append(MAXORDER+"/"+timeRange.r[i]
 //                  +( timeRange.r[i+1]>timeRange.r[i]+1?"-"+(timeRange.r[i+1]-1):""));
             
-            long deb = timeRange.r[i];
-            long fin = timeRange.r[i+1];
+            long deb = range.r[i];
+            long fin = range.r[i+1];
             deb = deb>>>shift;
             fin = (fin-1)>>>shift;
             s.append(timeOrder+"/"+deb+ (fin==deb?"":"-"+fin));
             
          } catch( Exception e ) {  e.printStackTrace(); }
-         Range m = timeRange.rangeArray[i>>>1];
+         Range m = range.rr[i>>>1];
          if( m!=null && !m.isEmpty() ) {
             s.append(" s");
             try {
-               moc = new HealpixMoc(m);
+               moc = new SMoc(m);
                s.append(moc.toASCII());
             } catch( Exception e ) {  e.printStackTrace(); }
          }
-         if( i<timeRange.sz-2 ) s.append(' ');
+         if( i<range.sz-2 ) s.append(' ');
       }
       return s.toString();
    }
@@ -473,21 +442,21 @@ public class SpaceTimeMoc extends Moc {
       try {
          int i= x==-1 ? 0 : x;
          for( String [] test : listTest ) {
-            SpaceTimeMoc stmoc1 = new SpaceTimeMoc(test[1]);
-            SpaceTimeMoc stmoc2 = new SpaceTimeMoc(test[2]);
+            STMoc stmoc1 = new STMoc(test[1]);
+            STMoc stmoc2 = new STMoc(test[2]);
             s.append("\n"+(i++)+") "+test[0]+":");
             s.append("\n A: "+stmoc1+"\n B: "+stmoc2);
 
-            SpaceTimeMoc stmoc4 = (SpaceTimeMoc) stmoc1.intersection( stmoc2);
+            STMoc stmoc4 = (STMoc) stmoc1.intersection( stmoc2);
             s.append("\n Inter: "+stmoc4);
             s.append( test[4].equals(stmoc4.toString()) ? " => OK" : " => ERROR waiting: "+test[4] );
            
-            SpaceTimeMoc stmoc3 = (SpaceTimeMoc) stmoc1.union( stmoc2);
+            STMoc stmoc3 = (STMoc) stmoc1.union( stmoc2);
             s.append("\n Union: "+stmoc3);
             s.append( test[3].equals(stmoc3.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
             
-            for( int j=0; j<stmoc2.timeRange.sz; j+=2 ) {
-               stmoc1.timeRange.add(stmoc2.timeRange.r[j], stmoc2.timeRange.r[j+1], stmoc2.timeRange.rangeArray[j/2]);
+            for( int j=0; j<stmoc2.range.sz; j+=2 ) {
+               stmoc1.range.add(stmoc2.range.r[j], stmoc2.range.r[j+1], stmoc2.range.rr[j/2]);
             }
             s.append("\n Add  : "+stmoc1);
             s.append( test[3].equals(stmoc1.toString()) ? " => OK" : " => ERROR waiting: "+test[3] );
@@ -514,8 +483,8 @@ public class SpaceTimeMoc extends Moc {
       for( int i=0; i<getTimeRanges(); i++ ) {
          
          // Ecriture du range temporel (à la résolution temporelle spécifique)
-         long deb = timeRange.r[i*2] >>> shift;
-         long fin = (timeRange.r[i*2+1]-1) >>> shift;
+         long deb = range.r[i*2] >>> shift;
+         long fin = (range.r[i*2+1]-1) >>> shift;
          if( i>0 ) res.append( flagNL ? CR:" ");
          res.append("t"+timeOrder+"/"+deb+ (fin==deb?"":"-"+fin));
          res.append( flagNL ? CR:" ");
@@ -523,7 +492,7 @@ public class SpaceTimeMoc extends Moc {
          // Ecriture du Moc spatial associé
          res.append('s');
          writeASCIIFlush(out,res,false);
-         int order=Moc.writeASCII(out,timeRange.rangeArray[i],flagNL);
+         int order=Moc.writeASCII(out,range.rr[i],flagNL);
          if( order>spaceOrder ) spaceOrder=order;
       }
 
@@ -559,13 +528,13 @@ public class SpaceTimeMoc extends Moc {
   protected int writeSpecificData(OutputStream out) throws Exception {
      byte [] buf = new byte[ 8 ];
      int size = 0;
-     for( int i=0; i<timeRange.sz; i+=2 ) {
-        long tmin = -timeRange.r[i];
+     for( int i=0; i<range.sz; i+=2 ) {
+        long tmin = -range.r[i];
         size+=MocIO.writeVal(out,tmin,buf);
-        long tmax = -timeRange.r[i+1];
+        long tmax = -range.r[i+1];
         size+=MocIO.writeVal(out,tmax,buf);
         
-        Range m = timeRange.rangeArray[i>>>1];
+        Range m = range.rr[i>>>1];
         for( int j=0; j<m.sz; j+=2 ) {
            long smin = m.r[j];
            size+=MocIO.writeVal(out,smin,buf);
@@ -617,15 +586,15 @@ public class SpaceTimeMoc extends Moc {
            
            // Affectations des précédents indices spatiaux aux intervalles temporelles correspondants
            if( !m.isEmpty() ) {
-              for( int j = startT; j<timeRange.sz; j+=2 )  timeRange.rangeArray[j>>>1] = new Range(m);
+              for( int j = startT; j<range.sz; j+=2 )  range.rr[j>>>1] = new Range(m);
               
               // On prépare le range pour la prochaine liste spatiale
               m.clear();
-              startT=timeRange.sz;
+              startT=range.sz;
            }
            
            // Mémorisation du range temporel
-           timeRange.append( -min, -max, null);
+           range.append( -min, -max, null);
 
         // Liste spatiale
         } else m.append(min,max);
@@ -633,70 +602,70 @@ public class SpaceTimeMoc extends Moc {
      
      // Dernier "flush"
      if( !m.isEmpty() ) {
-        for( int j = startT; j<timeRange.sz; j+=2 )  timeRange.rangeArray[j>>>1] = m;
+        for( int j = startT; j<range.sz; j+=2 )  range.rr[j>>>1] = m;
      }
    }
   
-   protected int getType() { return SpaceMoc.LONG; }
+   protected int getType() { return SMoc.LONG; }
   
    /** Return minimal time in JD - -1 if empty*/
    public double getTimeMin() {
       if( isEmpty() ) return -1;
-      return timeRange.begins(0) / TimeMoc.DAYMICROSEC;
+      return range.begins(0) / TMoc.DAYMICROSEC;
    }
 
 
    /** Return maximal time in JD - -1 if empty*/
    public double getTimeMax() {
       if( isEmpty() ) return -1;
-      return timeRange.ends( timeRange.nranges()-1 ) / TimeMoc.DAYMICROSEC;
+      return range.ends( range.nranges()-1 ) / TMoc.DAYMICROSEC;
    }
    
-   /** TimeMoc from the whole STMOC */
-   public TimeMoc getTimeMoc() throws Exception {
-      TimeMoc moc = new TimeMoc();
-      moc.spaceRange = timeRange;
-      moc.toHealpixMoc();
+   /** TMoc from the whole STMOC */
+   public TMoc getTimeMoc() throws Exception {
+      TMoc moc = new TMoc();
+      moc.range = range;
+      moc.toMocSet();
       return moc;
    }
 
-   /** TimeMoc from the intersection with the spaceMoc */
-   public TimeMoc getTimeMoc( SpaceMoc spaceMoc) throws Exception {
+   /** TMoc from the intersection with the spaceMoc */
+   public TMoc getTimeMoc( SMoc spaceMoc) throws Exception {
       if( spaceMoc==null || spaceMoc.isEmpty() ) return getTimeMoc();
-      TimeMoc moc = new TimeMoc();
-      Range range = new Range();
+      TMoc moc = new TMoc();
+      Range r1 = new Range();
       spaceMoc.toRangeSet();
       
-      for( int i=0; i<timeRange.sz; i+=2 ) {
-         Range m = timeRange.rangeArray[i>>>1];
-         if( spaceMoc.spaceRange.overlaps(m) ) range.append( timeRange.r[i], timeRange.r[i+1] );
+      for( int i=0; i<range.sz; i+=2 ) {
+         Range m = range.rr[i>>>1];
+         if( spaceMoc.range.overlaps(m) ) r1.append( range.r[i], range.r[i+1] );
       }
       
-      moc.spaceRange = range;
-      moc.toHealpixMoc();
+      moc.range = r1;
+      moc.toMocSet();
       return moc;
    }
 
-   /** SpaceMoc from the whole STMOC */
-   public SpaceMoc getSpaceMoc() throws Exception { return getSpaceMoc(-1,Long.MAX_VALUE); }
+   /** SMoc from the whole STMOC */
+   public SMoc getSpaceMoc() throws Exception { return getSpaceMoc(-1,Long.MAX_VALUE); }
    
-   /** SpaceMoc extraction from a temporal time
+   /** SMoc extraction from a temporal time
     * @param tmin  min of range (order 29)
     * @param tmax max of range (included - order 29)
     */
-   public SpaceMoc getSpaceMoc(long tmin,long tmax) throws Exception {
+   public SMoc getSpaceMoc(long tmin,long tmax) throws Exception {
       if( tmin>=tmax ) { tmin=-1; tmax = Long.MAX_VALUE; }
       
-      SpaceMoc moc = new SpaceMoc();
-      int pos = timeRange.indexOf(tmin);
+      SMoc moc = new SMoc();
+      int pos = range.indexOf(tmin);
       if( (pos&1)==1 ) pos++;
       
       // On remplit un tableau de chaque intervalle spatial concerné (à la queue leu leu)
       long [] buf = new long[ getSize() ];
       int size=0;
-      for( int i=pos; i<timeRange.sz; i+=2 ) {
-         if( timeRange.r[i]>tmax ) break;
-         Range m = timeRange.rangeArray[i>>>1];
+      for( int i=pos; i<range.sz; i+=2 ) {
+         if( range.r[i]>tmax ) break;
+         Range m = range.rr[i>>>1];
          for( int j=0; j<m.sz; j++ ) buf[size++] = m.r[j];
       }
       
@@ -705,21 +674,21 @@ public class SpaceTimeMoc extends Moc {
       range.sortAndFix();
       
       // On l'utilise pour en faire un MOC
-      moc.spaceRange = range;
-      moc.toHealpixMoc();
+      moc.range = range;
+      moc.toMocSet();
       return moc;
    }
    
    static public void main(String a[] ) {
       try {
-//         SpaceMoc moc = new SpaceMoc("3/3-5 4/456 5/");
+//         SMoc moc = new SMoc("3/3-5 4/456 5/");
 //         System.out.println("result: "+moc);
          
-//         SpaceTimeMoc moc = new SpaceTimeMoc();
+//         STMoc moc = new STMoc();
 //         moc.read("C:/Users/Pierre/Downloads/Moc.txt"); 
 //         System.out.println( moc.toASCII() );
          
-//         SpaceTimeMoc stm = new SpaceTimeMoc(29,29);
+//         STMoc stm = new STMoc(29,29);
 //         stm.append("t28/1 s3/40");
 //         System.out.println("stm = "+stm);
          
@@ -734,14 +703,13 @@ public class SpaceTimeMoc extends Moc {
 
    @Override
    public Moc clone() {
-      SpaceTimeMoc moc = new SpaceTimeMoc();
+      STMoc moc = new STMoc();
       moc.timeOrder = timeOrder;
       moc.spaceOrder = spaceOrder;
-      moc.timeRange = new Range2( timeRange );
+      moc.range = new Range2( range );
       return moc;
    }
    
    /** Provide array of ranges at the deepest order */
-   public Range getRange() { return timeRange; }
-   
+   public Range getRange() { return range; }
 }

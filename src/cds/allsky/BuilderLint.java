@@ -33,7 +33,7 @@ import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.fits.Fits;
 import cds.moc.Array;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -67,7 +67,7 @@ public class BuilderLint extends Builder {
    private int frame;           // Frame du Hips
    private int depth;           // Epaisseur pour un HiPS cube
    private int bitpix;          // bitpix utilisé pour un HiPS catalog tuiles Fits
-   private SpaceMoc moc;        // MOC associé au HiPS
+   private SMoc moc;        // MOC associé au HiPS
    private ArrayList<String> extensions; // Liste des extensions des tuiles (le point inclus)
    private boolean flagMinOrderSet=false; // true si le hips_order_min a été spécifié explicitement
    
@@ -305,8 +305,8 @@ public class BuilderLint extends Builder {
       // tester sur un bord.
       if( moc!=null && moc.getSize()!=0 ) {
          
-         int orderMoc = moc.getMinLimitOrder();
-         int orderMax = moc.getMaxOrder();
+         int orderMoc = moc.getMinOrder();
+         int orderMax = moc.getMaxUsedOrder();
          while( orderMoc<orderMax && moc.getArray( orderMoc ).getSize()<3 ) orderMoc++;
          Array a = moc.getArray( orderMoc );
          if( a==null || a.getSize()==0) return -1;
@@ -329,7 +329,7 @@ public class BuilderLint extends Builder {
          }
          
          // Attention, le Hips et le MOC n'ont pas le même système de coord
-         int frameMoc = context.getFrameVal( moc.getCoordSys() );
+         int frameMoc = context.getFrameVal( moc.getSys() );
          if( frame!=frameMoc ) {
             double radec[] = CDSHealpix.pix2ang_nest( order, npix);
             radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
@@ -521,11 +521,11 @@ public class BuilderLint extends Builder {
       }
 
       try {
-         moc = new SpaceMoc();
+         moc = new SMoc();
          moc.read(in);
          in.close();
          
-         String frame = moc.getCoordSys();
+         String frame = moc.getSys();
          if( !frame.equals("C") ) {
             context.warning("Lint[4.4.2] \"Moc.fits\" coordinate system error, ICRS expecting, found ["+frame+"]");
             flagWarning=true;

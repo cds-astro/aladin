@@ -32,9 +32,12 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 
 import cds.aladin.prop.PropPanel;
 import cds.moc.Moc;
+import cds.moc.TMoc;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gestion de la fenetre associee a la creation d'un plan arithmétic
@@ -50,6 +53,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
    private ButtonGroup cbg;	         // Les checkBox des opérations possibles
    private JRadioButton rUnion,rInter,rSub,rDiff,rComp;
    private JComboBox mocTimeOrder,mocSpaceOrder;
+   private JSlider sliderAcc;
 
    @Override
    protected void createChaine() {
@@ -109,6 +113,44 @@ public final class FrameMocOperation extends FrameRGBBlink {
    protected JComboBox getComboSpaceRes() { return FrameMocGenImg.makeComboSpaceRes(); }
    protected JComboBox getComboTimeRes()  { return FrameMocGenImg.makeComboTimeRes(); }
 
+   protected JComboBox getComboSpaceAcc() { return makeComboSpaceAcc(9); }
+   protected JComboBox getComboTimeAcc()  { return makeComboTimeAcc(9); }
+   
+   protected JComboBox makeComboTimeAcc(int first) { return makeComboTimeAcc(first,null); }
+   protected JComboBox makeComboTimeAcc(int first, JComboBox c) {
+      int select=0;
+      if( c==null ) c = new JComboBox();
+      else {
+         c.getSelectedIndex();
+         c.removeAll();
+      }
+      for( int o=0; o<5; o++ ) {
+         c.setActionCommand(o+"");
+         String s = TMoc.getTemps( TMoc.getDuration(first)*o );
+         c.addItem(s);
+      }
+      c.setSelectedIndex(select);
+      return c;
+   }
+
+   static protected JComboBox makeComboSpaceAcc(int first) { return makeComboSpaceAcc(first,null); }
+   static protected JComboBox makeComboSpaceAcc(int first, JComboBox c) {
+      int select=0;
+      if( c==null ) c = new JComboBox();
+      else {
+         c.getSelectedIndex();
+         c.removeAll();
+      }
+      for( int o=0; o<5; o++ ) {
+         c.setActionCommand(o+"");
+         String s = Coord.getUnit( (CDSHealpix.pixRes(first)*o)/3600. );
+         c.addItem(s);
+      }
+      c.setSelectedIndex(select);
+      return c;
+   }
+
+   
    @Override
    protected JPanel getAddPanel() {
       GridBagConstraints c=new GridBagConstraints();
@@ -138,6 +180,14 @@ public final class FrameMocOperation extends FrameRGBBlink {
       g.setConstraints(pp,c);
       p.add(pp);
       
+// EN COURS DE DEVELOPPEMENT
+//      PropPanel.addSectionTitle(p, new JLabel("Accuracy"), g, c);
+//      c.gridwidth=GridBagConstraints.REMAINDER;
+//      pp=new JPanel();
+//      pp.add( sliderAcc=new JSlider(0, 10) );
+//      g.setConstraints(pp,c);
+//      p.add(pp);
+      
       PropPanel.addSectionTitle(p, new JLabel("Target resolution"), g, c);
       c.gridwidth=GridBagConstraints.REMAINDER;
       pp=new JPanel();
@@ -149,7 +199,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
       pp.add(mocTimeOrder);
       g.setConstraints(pp,c);
       p.add(pp);
-      
+            
       return p;
    }
 
@@ -266,10 +316,14 @@ public final class FrameMocOperation extends FrameRGBBlink {
       rSub.setEnabled(deux);
       rComp.setEnabled(un);
       
-      if( setSpaceOrder ) mocSpaceOrder.setSelectedIndex( initSpaceOrder-FrameMocGenImg.FIRSTORDER);
-      if( setTimeOrder ) mocTimeOrder.setSelectedIndex( initTimeOrder-FrameMocGenImg.FIRSTORDER);
+      if( setSpaceOrder ) {
+         mocSpaceOrder.setSelectedIndex( initSpaceOrder-FrameMocGenImg.FIRSTORDER);
+      }
+      if( setTimeOrder ) {
+         mocTimeOrder.setSelectedIndex( initTimeOrder-FrameMocGenImg.FIRSTORDER);
+      }
       
-      mocSpaceOrder.setEnabled( space );
+      mocSpaceOrder.setEnabled( space ); 
       mocTimeOrder.setEnabled( time );
    };
 }

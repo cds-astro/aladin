@@ -30,7 +30,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.MouseWheelEvent;
 
-import cds.moc.TimeMoc;
+import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 
@@ -295,7 +295,7 @@ class ZoomTime {
          g.drawString( s,x3,y-5-12);
          
          // La durée
-         s = TimeMoc.getTemps( (long)( (t[1]-t[0])*TimeMoc.DAYMICROSEC),true );
+         s = TMoc.getTemps( (long)( (t[1]-t[0])*TMoc.DAYMICROSEC),true );
          len = g.getFontMetrics().stringWidth(s);
          x3 = xm - len/2;
          if( x3<2 ) x3=2;

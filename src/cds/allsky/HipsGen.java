@@ -39,7 +39,7 @@ import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.allsky.Context.JpegMethod;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -232,7 +232,7 @@ public class HipsGen {
         } else if (opt.equalsIgnoreCase("hips_min_order"))  { context.setMinOrder(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("region")) {
             if (val.endsWith("fits")) {
-                HealpixMoc moc = new HealpixMoc();
+                SMoc moc = new SMoc();
                 moc.read(val);
                 context.setMocArea(moc);
             } else context.setMocArea(val);

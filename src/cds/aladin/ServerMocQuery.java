@@ -39,7 +39,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.MultiPartPostOutputStream;
 
 /**
@@ -295,7 +295,7 @@ public class ServerMocQuery extends Server  {
    }
    
    protected void addUpload( MultiPartPostOutputStream out, Plan plan ) throws Exception {
-      SpaceMoc hpxMoc = ((PlanMoc)plan).getSpaceMoc(  );
+      SMoc hpxMoc = ((PlanMoc)plan).getSpaceMoc(  );
       File tmp = File.createTempFile("tmp", "fits");
       tmp.deleteOnExit();
       FileOutputStream fo = new FileOutputStream(tmp);

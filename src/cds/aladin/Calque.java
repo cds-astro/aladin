@@ -41,8 +41,10 @@ import javax.swing.SwingUtilities;
 
 import cds.aladin.stc.STCObj;
 import cds.allsky.TabRgb;
-import cds.moc.SpaceMoc;
-import cds.moc.TimeMoc;
+import cds.moc.Moc;
+import cds.moc.SMoc;
+import cds.moc.STMoc;
+import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 
@@ -3774,9 +3776,28 @@ public class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
+   
+   /** Création d'un plan Multi-Order Coverage Map à partir d'un MOC (de n'importe quel type) */
+   protected int newPlanMOC(Moc moc, String label) {
+      if( moc instanceof STMoc ) return newPlanMOC( (STMoc)moc, label);
+      if( moc instanceof TMoc ) return newPlanMOC( (TMoc)moc, label); 
+      return newPlanMOC( (SMoc)moc, label); 
+   }
+   
+   /** Création d'un plan Multi-Order Coverage Map à partir d'un STMOC */
+   protected int newPlanMOC(STMoc moc,String label) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      Coord c=getTargetBG(null,null);
+      double rad=getRadiusBG(null,null,null);
+      plan[n] = new PlanSTMoc(aladin,moc,label,c,rad);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-   /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
-   protected int newPlanMOC(SpaceMoc moc,String label) {
+   /** Création d'un plan Multi-Order Coverage Map à partir d'un SMOC */
+   protected int newPlanMOC(SMoc moc,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
@@ -3787,8 +3808,8 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
-   /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
-   protected int newPlanMOC(TimeMoc moc,String label) {
+   /**  Création d'un plan Multi-Order Coverage Map à partir d'un TMOC */
+   protected int newPlanMOC(TMoc moc,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = new PlanTMoc(aladin,moc,label);

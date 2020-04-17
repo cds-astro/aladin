@@ -28,8 +28,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.CDSHealpix;
 
 
@@ -173,7 +172,7 @@ public class PlanMultiCCD extends PlanImage {
       try {
          if( v.size()<2 ) return false;
          
-         SpaceMoc moc = null;
+         SMoc moc = null;
          Enumeration<Plan> e = v.elements();
          while( e.hasMoreElements() ) {
             Plan p = e.nextElement();
@@ -189,15 +188,15 @@ public class PlanMultiCCD extends PlanImage {
                order = Aladin.getAppropriateOrder(size);
             }
             
-            SpaceMoc m = buildMoc(p.projd,order);
+            SMoc m = buildMoc(p.projd,order);
             if( moc==null ) { 
                moc=m;
-               marge = (long)( moc.getUsedArea()*0.2 );
+               marge = (long)( moc.getNbCells()*0.2 );
             }
             else {
-               SpaceMoc inter = (SpaceMoc)moc.intersection(m);
-               if( inter.getUsedArea() > marge ) return false;
-               moc = (SpaceMoc)moc.union(m);
+               SMoc inter = (SMoc)moc.intersection(m);
+               if( inter.getNbCells() > marge ) return false;
+               moc = (SMoc)moc.union(m);
             }
          }
          return true;
@@ -207,8 +206,8 @@ public class PlanMultiCCD extends PlanImage {
       return false;
    }
    
-   static private SpaceMoc buildMoc(Projection proj, int order) throws Exception {
-//      SpaceMoc moc = new SpaceMoc(0,order);
+   static private SMoc buildMoc(Projection proj, int order) throws Exception {
+//      SMoc moc = new SMoc(0,order);
       Coord coo = new Coord();
       ArrayList<double[]> cooList = new ArrayList<>(10);
       Dimension dim = proj.c.getImgSize();
@@ -219,7 +218,7 @@ public class PlanMultiCCD extends PlanImage {
          cooList.add(new double[]{coo.al,coo.del});
       }
       
-      HealpixMoc moc = CDSHealpix.createHealpixMoc(cooList, order);
+      SMoc moc = CDSHealpix.createSMoc(cooList, order);
       return moc;
       
 //      long [] npixs = CDSHealpix.query_polygon( order, cooList, true);

@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import cds.allsky.Constante;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 
 public class PlanBGCat extends PlanBG {
@@ -208,7 +208,7 @@ public class PlanBGCat extends PlanBG {
       
 //      System.out.println("hipsOld="+hipsOld+" minOrder = "+minOrder);
       
-      HealpixMoc lastMoc = new HealpixMoc();   // Moc des tuiles "last" (inutile d'aller plus loin)
+      SMoc lastMoc = new SMoc();   // Moc des tuiles "last" (inutile d'aller plus loin)
       try { lastMoc.setCheckConsistencyFlag(false); } catch( Exception e1 ) { }
       
       resetDrawnInView(v);

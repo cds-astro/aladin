@@ -26,13 +26,12 @@ import java.util.List;
 
 import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
 import cds.moc.Moc;
 import cds.moc.Range;
 import cds.moc.Range2;
-import cds.moc.SpaceMoc;
-import cds.moc.SpaceTimeMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.STMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
 
 /** Generation d'un plan STMOC à partir d'une liste de plans (Catalogue) 
@@ -56,8 +55,8 @@ public class PlanSTMocGen extends PlanSTMoc {
    
    protected PlanSTMocGen(Aladin aladin,String label,Plan[] p,int spaceOrder, int timeOrder, 
          double duration, double radius, boolean fov) {
-      super(aladin, null, label, null, 0.);
-      aladin.trace(3,"STMOC creation xxx: "+Plan.Tp[type]);
+      super(aladin, (MyInputStream)null, label, null, 0.);
+      aladin.trace(3,"STMOC creation: "+Plan.Tp[type]);
       
       this.c=null;
       this.p = p;
@@ -97,10 +96,10 @@ public class PlanSTMocGen extends PlanSTMoc {
       c = Couleur.getNextDefault(aladin.calque);
       
       // On aggrège tous les spaces MOC
-      SpaceMoc m1 = (SpaceMoc) p1.getMoc().clone();
+      SMoc m1 = (SMoc) p1.getMoc().clone();
       for( int i=1; i<pList.length; i++ ) {
-         SpaceMoc m2= (SpaceMoc) ((PlanMoc)pList[i]).getMoc(); 
-         try {  m1 = (SpaceMoc) m1.union( m2); } catch( Exception e ) {
+         SMoc m2= (SMoc) ((PlanMoc)pList[i]).getMoc(); 
+         try {  m1 = (SMoc) m1.union( m2); } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
@@ -108,16 +107,16 @@ public class PlanSTMocGen extends PlanSTMoc {
       
       // On crée le STMOC à partir du range de temps et de l'aggrégation des MOC spatiaux
       Range2 r = new Range2();
-      long min = (long)(jdmin*TimeMoc.DAYMICROSEC);
-      long max = (long)(jdmax*TimeMoc.DAYMICROSEC)+1L;
-      r.append(min, max, m1.spaceRange);
-      moc = new SpaceTimeMoc(spaceOrder==-1?m1.getMocOrder():spaceOrder, timeOrder<0?Moc.MAXORDER:timeOrder, r);
+      long min = (long)(jdmin*TMoc.DAYMICROSEC);
+      long max = (long)(jdmax*TMoc.DAYMICROSEC)+1L;
+      r.append(min, max, m1.range);
+      moc = new STMoc(spaceOrder==-1?m1.getMocOrder():spaceOrder, timeOrder<0?Moc.MAXORDER:timeOrder, r);
       flagOneRange=true;
    }
 
    /** Retourne true si le STMOC ne contient qu'un range de temps, potentiellement modifiable */
    protected boolean isOneTimeRange() { 
-      return flagOneRange && ((SpaceTimeMoc)moc).timeRange.nranges()==1; 
+      return flagOneRange && ((STMoc)moc).range.nranges()==1; 
    }
 
    /**
@@ -128,7 +127,7 @@ public class PlanSTMocGen extends PlanSTMoc {
     * @param jdtmin
     * @param jdtmax
     */
-   protected void addIt(SpaceTimeMoc m, int order, long npix, double jdtmin, double jdtmax) {
+   protected void addIt(STMoc m, int order, long npix, double jdtmin, double jdtmax) {
       long smin = npix<<(2*(29-order));
       long smax = (npix+1)<<(2*(29-order));
       addIt(m,smin,smax,jdtmin,jdtmax);
@@ -144,11 +143,11 @@ public class PlanSTMocGen extends PlanSTMoc {
     * @param jdtmin
     * @param jdtmax
     */
-   protected void addIt(SpaceTimeMoc m, long smin, long smax, double jdtmin, double jdtmax) {
+   protected void addIt(STMoc m, long smin, long smax, double jdtmin, double jdtmax) {
       long tmin=0,tmax=0;
       try {
-         tmin = (long)(jdtmin*TimeMoc.DAYMICROSEC);
-         tmax = (long)(jdtmax*TimeMoc.DAYMICROSEC +TimeMoc.getDuration(timeOrder));
+         tmin = (long)(jdtmin*TMoc.DAYMICROSEC);
+         tmax = (long)(jdtmax*TMoc.DAYMICROSEC +TMoc.getDuration(timeOrder));
 
 //         String t = "tmin="+tmin+" tmax="+tmax+" smin="+smin+" smax="+smax;
 //         if( t.equals(TEST) ) {
@@ -175,7 +174,7 @@ public class PlanSTMocGen extends PlanSTMoc {
       
       long t0 = System.currentTimeMillis();
       stop=false;
-      SpaceTimeMoc m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
+      STMoc m2 = new STMoc( spaceOrder, timeOrder );
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
       Healpix hpx = new Healpix();
@@ -190,7 +189,7 @@ public class PlanSTMocGen extends PlanSTMoc {
          if( m%100==0 ) {
             if( stop ) throw new Exception("Abort");
             try { moc = moc.union( m2 ); } catch( Exception e ) { e.printStackTrace(); }
-            m2 = new SpaceTimeMoc( spaceOrder, timeOrder );
+            m2 = new STMoc( spaceOrder, timeOrder );
          }
          
          try {
@@ -205,9 +204,9 @@ public class PlanSTMocGen extends PlanSTMoc {
                List<STCObj> listStcs = sf.getStcObjects();
                if( listStcs==null ) continue;
                try {
-                  HealpixMoc m1 = aladin.createMocRegion(listStcs,spaceOrder);
+                  SMoc m1 = aladin.createMocRegion(listStcs,spaceOrder);
                   m1.toRangeSet();
-                  Range r = m1.spaceRange;
+                  Range r = m1.range;
                   for( int j=0; j<r.sz; j+=2 ) addIt(m2,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);
                } catch( Exception e ) {
                   if( aladin.levelTrace>=3) e.printStackTrace();
@@ -231,7 +230,7 @@ public class PlanSTMocGen extends PlanSTMoc {
       }
       try {
          moc = moc.union( m2 );
-         moc.toHealpixMoc();
+         moc.toMocSet();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -244,7 +243,7 @@ public class PlanSTMocGen extends PlanSTMoc {
    protected boolean waitForPlan() {
       long t0 = System.currentTimeMillis();
       try {
-         moc = new SpaceTimeMoc(spaceOrder,timeOrder);
+         moc = new STMoc(spaceOrder,timeOrder);
          for( Plan p1 : p ) {
             if( p1.isCatalogTime() ) {
                if( c==null )  c = p1.c.darker();

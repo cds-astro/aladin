@@ -68,7 +68,7 @@ import cds.aladin.prop.PropPanel;
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCStringParser;
 import cds.moc.MocCell;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.mocmulti.MocItem;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Astrodate;
@@ -159,7 +159,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    private JButton btMocShow;
    private JLabel labelIntersect,labelCollection;
    private boolean flagFormEdit=false;
-   private SpaceMoc mocFiltreSpatial=null;
+   private SMoc mocFiltreSpatial=null;
    
    
    /** Création du panel de l'expression correspondant au filtre courant */
@@ -706,7 +706,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
 //         String smoc = mocArea.getText().trim();
 //         try {
 //            if( smoc.length()==0 ) mocFiltreSpatial=null;
-//            else mocFiltreSpatial = new SpaceMoc(smoc);
+//            else mocFiltreSpatial = new SMoc(smoc);
 //         } catch( Exception e ) {
 //            mocArea.setText( MOCERROR );
 //            mocFiltreSpatial=null;
@@ -742,13 +742,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Génération du MOC de filtrage correspondante aux positionnements des checkboxes et autres
     * champs de saisie. */
-   private SpaceMoc getMoc() {
-      SpaceMoc moc=null;
+   private SMoc getMoc() {
+      SMoc moc=null;
       
       try {
          if( cbMocInLine.isSelected() ) {
             String s = tMoc.getText().trim();
-            moc = s.length()==0 ? null : new SpaceMoc( s );
+            moc = s.length()==0 ? null : new SMoc( s );
          }
          
          else if( cbStcInLine.isSelected() ) {
@@ -759,7 +759,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          else if( cbMocPlane.isSelected() ) {
             String  label = (String)comboMocPlane.getSelectedItem();
             PlanMoc p = (PlanMoc) aladin.calque.getPlan( label );
-            moc = (SpaceMoc)( p==null ? null : p.getMoc() );
+            moc = (SMoc)( p==null ? null : p.getMoc() );
          }
          
          else if( cbSelectedGraph.isSelected() ) {
@@ -775,7 +775,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return moc;
    }
    
-   static public void setIntersect( SpaceMoc moc, int intersect ) {
+   static public void setIntersect( SMoc moc, int intersect ) {
       if( moc==null ) return;
       String value = intersect==MultiMoc.OVERLAPS ? null : MultiMoc.INTERSECT[ intersect ];
       try {
@@ -785,15 +785,15 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       }
    }
    
-   static public int getIntersect( SpaceMoc moc ) {
+   static public int getIntersect( SMoc moc ) {
       if( moc==null ) return -1;
       String s = moc.getProperty("intersect");
       return s==null ? MultiMoc.OVERLAPS : Util.indexInArrayOf(s,MultiMoc.INTERSECT,true);
    }
    
    /** Return the ASCII basic representation of a MOC  */
-   static public String getASCII(SpaceMoc moc ) { return getASCII(moc,40); }
-   static public String getASCII(SpaceMoc moc, int nbChars) {
+   static public String getASCII(SMoc moc ) { return getASCII(moc,40); }
+   static public String getASCII(SMoc moc, int nbChars) {
       if( moc==null ) return "";
       StringBuffer s = new StringBuffer();
       long oOrder=-1;
@@ -1039,7 +1039,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    protected boolean hasBeenApplied1() {
       if( flagFormEdit ) return false;
 
-      SpaceMoc moc = getMoc();
+      SMoc moc = getMoc();
       if( moc==null && mocFiltreSpatial!=null || moc!=null && mocFiltreSpatial==null
             || moc!=null && !moc.equals(mocFiltreSpatial) ) return false;
 
@@ -1110,7 +1110,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    /** Mise en place d'un filtre prédéfini.
     * POUR LE MOMENT, SEULE LA SYNTAXE AVANCEE EST PRISE EN COMPTE, LES CHECKBOXES NE SONT PAS UTILISEES */
-   protected void setSpecificalFilter(String name, String expr, SpaceMoc moc, int intersect) {
+   protected void setSpecificalFilter(String name, String expr, SMoc moc, int intersect) {
       clean();
       if( name.equals(Directory.ALLCOLL) ) name=Directory.MYLIST;
       nameField.setText(name);      // Positionnement du nom du filtre

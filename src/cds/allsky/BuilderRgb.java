@@ -34,8 +34,7 @@ import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
 import cds.aladin.Tok;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.tools.pixtools.Util;
 
 public class BuilderRgb extends BuilderTiles {
@@ -43,7 +42,7 @@ public class BuilderRgb extends BuilderTiles {
 
    private String [] inputs;         // Les paths des HiPS red, green, blue
    private int [] cubeIndex;         // Les indices des frames des composantes red, green, blue en cas de cubes d'origine (0 par défaut)
-   private HealpixMoc [] moc;        // Les Mocs de chaque composante
+   private SMoc [] moc;        // Les Mocs de chaque composante
    private MyProperties [] prop;     // Les propriétés de chaque composante
    private String [] labels;         // Les labels des HiPS red, green blue
    private String [] transfertFcts;  // Fonction de transfert à appliquer à chaque composante
@@ -164,7 +163,7 @@ public class BuilderRgb extends BuilderTiles {
       inputs = new String[3];
       cubeIndex = new int[3];
       labels = new String[3];
-      moc = new HealpixMoc[3];
+      moc = new SMoc[3];
       prop = new MyProperties[3];
       pixelMin = new double[3];
       pixelMiddle = new double[3];
@@ -214,9 +213,9 @@ public class BuilderRgb extends BuilderTiles {
             if( o>maxOrder ) maxOrder=o;
 
             // Ajustement de la région qu'il faudra calculer
-            HealpixMoc m = moc[c] = loadMoc( inputs[c] );
+            SMoc m = moc[c] = loadMoc( inputs[c] );
             if( context.moc==null ) context.moc = m;
-            else context.moc = (SpaceMoc)context.moc.union(m);
+            else context.moc = (SMoc)context.moc.union(m);
 
             // Vérification de la cohérence des systèmes de coordonnées
             String f = getFrameFromProp( prop[c] );
@@ -238,7 +237,7 @@ public class BuilderRgb extends BuilderTiles {
       if( context instanceof ContextGui ) context.resetProgressParam();
       
 //      if( context instanceof ContextGui ) {
-//         SpaceMoc m = context.moc;
+//         SMoc m = context.moc;
 //         ((ContextGui)context).mainPanel.clearForms();
 //         context.moc = m;
 //      }
@@ -273,7 +272,7 @@ public class BuilderRgb extends BuilderTiles {
       }
 
       // détermination de la zone à calculer
-      if( context.mocArea!=null ) context.moc = (SpaceMoc)context.moc.intersection( context.mocArea );
+      if( context.mocArea!=null ) context.moc = (SMoc)context.moc.intersection( context.mocArea );
       
       // Faut-il un filtre gaussien
       if( context.gaussFilter ) context.info("Gauss filter activated...");
@@ -317,10 +316,10 @@ public class BuilderRgb extends BuilderTiles {
    private String R(double x) { return cds.tools.Util.myRound(x); }
 
    // Chargement d'un MOC, et par défaut, d'un MOC couvrant tout le ciel
-   private HealpixMoc loadMoc( String path ) throws Exception {
+   private SMoc loadMoc( String path ) throws Exception {
       String s = path+Util.FS+"Moc.fits";
-      if( !(new File(s)).canRead() ) return new HealpixMoc("0/0-11");
-      HealpixMoc m = new HealpixMoc();
+      if( !(new File(s)).canRead() ) return new SMoc("0/0-11");
+      SMoc m = new SMoc();
       m.read(s);
       return m;
    }

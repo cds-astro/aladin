@@ -26,9 +26,9 @@ import java.io.RandomAccessFile;
 
 import cds.aladin.MyProperties;
 import cds.moc.Array;
-import cds.moc.HealpixMoc;
 import cds.moc.IntArray;
 import cds.moc.LongArray;
+import cds.moc.SMoc;
 import cds.moc.ShortArray;
 
 /**
@@ -141,25 +141,25 @@ public final class BinaryDump {
          // Lecture d'un MOC
          long dateMoc = buf.readLong();
          String mocId = buf.readString();
-         HealpixMoc moc = new HealpixMoc();
+         SMoc moc = new SMoc();
          int maxOrder = buf.readInteger();
          if( maxOrder==-1 ) moc=null;
          else {
             for( int o=0; o<=maxOrder; o++ ) {
                int size = buf.readInteger();
-               int type=HealpixMoc.getType(o);
+               int type=SMoc.getType(o);
                switch(type) {
-                  case HealpixMoc.SHORT:
+                  case SMoc.SHORT:
                      short [] val = new short[size];
                      for( int j=0; j<size; j++) val[j] = buf.readShort();
                      moc.setPixLevel(o,val);
                      break;
-                  case HealpixMoc.INT:
+                  case SMoc.INT:
                      int [] val1 = new int[size];
                      for( int j=0; j<size; j++) val1[j] = buf.readInteger();
                      moc.setPixLevel(o,val1);
                      break;
-                  case HealpixMoc.LONG:
+                  case SMoc.LONG:
                      long [] val2 = new long[size];
                      for( int j=0; j<size; j++) val2[j] = buf.readLong();
                      moc.setPixLevel(o,val2);
@@ -192,25 +192,25 @@ public final class BinaryDump {
 //         // Lecture d'un MOC
 //         long dateMoc = buf.readLong();
 //         String mocId = buf.readString();
-//         HealpixMoc moc = new HealpixMoc();
+//         SMoc moc = new SMoc();
 //         int maxOrder = buf.readInteger();
 //         if( maxOrder==-1 ) moc=null;
 //         else {
 //            for( int o=0; o<=maxOrder; o++ ) {
 //               int size = buf.readInteger();
-//               int type=HealpixMoc.getType(o);
+//               int type=SMoc.getType(o);
 //               switch(type) {
-//                  case HealpixMoc.SHORT:
+//                  case SMoc.SHORT:
 //                     short [] val = new short[size];
 //                     for( int j=0; j<size; j++) val[j] = buf.readShort();
 //                     moc.setPixLevel(o,val);
 //                     break;
-//                  case HealpixMoc.INT:
+//                  case SMoc.INT:
 //                     int [] val1 = new int[size];
 //                     for( int j=0; j<size; j++) val1[j] = buf.readInteger();
 //                     moc.setPixLevel(o,val1);
 //                     break;
-//                  case HealpixMoc.LONG:
+//                  case SMoc.LONG:
 //                     long [] val2 = new long[size];
 //                     for( int j=0; j<size; j++) val2[j] = buf.readLong();
 //                     moc.setPixLevel(o,val2);
@@ -250,28 +250,28 @@ public final class BinaryDump {
          
          // Enregistrement d'un MOC
          buf.memoLong(mi.dateMoc);
-         HealpixMoc moc = mi.moc;
+         SMoc moc = mi.moc;
          String mocId = mi.mocId;
          buf.memoString(mocId);
          if( moc==null ) buf.memoInteger(-1);
          else {
-            int maxOrder = moc.getMaxOrder();
+            int maxOrder = moc.getMaxUsedOrder();
             buf.memoInteger(maxOrder);
             for( int o=0; o<=maxOrder; o++ ) {
                int size = moc.getSize(o);
                buf.memoInteger( size );
                Array a = moc.getArray(o);
-               int type = HealpixMoc.getType(o);
+               int type = SMoc.getType(o);
                switch(type) {
-                  case HealpixMoc.SHORT:
+                  case SMoc.SHORT:
                      short [] val = ((ShortArray)a).seeArray();
                      for( int i=0; i<size; i++ ) buf.memoShort(val[i]);
                      break;
-                  case HealpixMoc.INT:
+                  case SMoc.INT:
                      int [] val1 = ((IntArray)a).seeArray();
                      for( int i=0; i<size; i++ ) buf.memoInteger(val1[i]);
                      break;
-                  case HealpixMoc.LONG:
+                  case SMoc.LONG:
                      long [] val2 = ((LongArray)a).seeArray();
                      for( int i=0; i<size; i++ ) buf.memoLong(val2[i]);
                      break;
@@ -314,7 +314,7 @@ public final class BinaryDump {
 //         
 //         // Enregistrement d'un MOC
 //         buf.memoLong(mi.dateMoc);
-//         HealpixMoc moc = mi.moc;
+//         SMoc moc = mi.moc;
 //         String mocId = mi.mocId;
 //         buf.memoString(mocId);
 //         if( moc==null ) buf.memoInteger(-1);
@@ -325,17 +325,17 @@ public final class BinaryDump {
 //               int size = moc.getSize(o);
 //               buf.memoInteger( size );
 //               Array a = moc.getArray(o);
-//               int type = HealpixMoc.getType(o);
+//               int type = SMoc.getType(o);
 //               switch(type) {
-//                  case HealpixMoc.SHORT:
+//                  case SMoc.SHORT:
 //                     short [] val = ((ShortArray)a).seeArray();
 //                     for( int i=0; i<size; i++ ) buf.memoShort(val[i]);
 //                     break;
-//                  case HealpixMoc.INT:
+//                  case SMoc.INT:
 //                     int [] val1 = ((IntArray)a).seeArray();
 //                     for( int i=0; i<size; i++ ) buf.memoInteger(val1[i]);
 //                     break;
-//                  case HealpixMoc.LONG:
+//                  case SMoc.LONG:
 //                     long [] val2 = ((LongArray)a).seeArray();
 //                     for( int i=0; i<size; i++ ) buf.memoLong(val2[i]);
 //                     break;
@@ -369,7 +369,7 @@ public final class BinaryDump {
 //      for( MocItem mi : mMoc ) {         
 //         size+=8;   // Date Moc
 //         String mocId = mi.mocId;
-//         HealpixMoc moc = mi.moc;
+//         SMoc moc = mi.moc;
 //         size+=Buf.sizeOfString(mocId);
 //         if( moc==null ) size+=4;
 //         else {
@@ -377,8 +377,8 @@ public final class BinaryDump {
 //            size+= 4;  // maxOrder
 //            for( int o=0; o<=maxOrder; o++) {
 //               size+= 4;  // val.length;
-//               int type = HealpixMoc.getType(o);
-//               int sizePix = type==HealpixMoc.SHORT ? 2 : type==HealpixMoc.INT ? 4 : 8;
+//               int type = SMoc.getType(o);
+//               int sizePix = type==SMoc.SHORT ? 2 : type==SMoc.INT ? 4 : 8;
 //               size+= sizePix * moc.getSize(o);
 //            }
 //         }
@@ -403,8 +403,8 @@ public final class BinaryDump {
 //   static private void test() throws Exception {
 //      debug=true;
 //      String s = "3/280 28/"+(Integer.MAX_VALUE+100L);
-//      HealpixMoc moc1 = new HealpixMoc(s); moc1.trim();
-//      HealpixMoc moc2 = new HealpixMoc("3/281 28/1"); moc2.trim();
+//      SMoc moc1 = new SMoc(s); moc1.trim();
+//      SMoc moc2 = new SMoc("3/281 28/1"); moc2.trim();
 //      MultiMoc mMoc = new MultiMoc();
 //      mMoc.add("moc1", moc1, null,0,0);
 //      mMoc.add("moc2", moc2, null,0,0);

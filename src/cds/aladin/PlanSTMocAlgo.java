@@ -22,7 +22,7 @@
 package cds.aladin;
 
 import cds.moc.Moc;
-import cds.moc.SpaceTimeMoc;
+import cds.moc.STMoc;
 import cds.tools.Util;
 
 /** Génération d'un STMOC de manière algorythmique
@@ -83,12 +83,12 @@ public class PlanSTMocAlgo extends PlanSTMoc {
                   case UNION :        moc = m1.union(        m2); break;
                   case INTERSECTION : moc = m1.intersection( m2 ); break;
                   case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-//                  case DIFFERENCE  :  moc = ((SpaceTimeMoc)m1).difference(   m2 ); break;
+//                  case DIFFERENCE  :  moc = ((STMoc)m1).difference(   m2 ); break;
                }
             }
          }
-         if( timeOrder>=0 ) ((SpaceTimeMoc)moc).setTimeOrder( timeOrder );
-         if( spaceOrder>=0 ) ((SpaceTimeMoc)moc).setSpaceOrder( spaceOrder );
+         if( timeOrder>=0 ) ((STMoc)moc).setTimeOrder( timeOrder );
+         if( spaceOrder>=0 ) ((STMoc)moc).setSpaceOrder( spaceOrder );
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

@@ -22,7 +22,7 @@
 package cds.aladin;
 
 import cds.moc.Moc;
-import cds.moc.TimeMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
 
 /** Génération d'un MOC de manière algorythmique
@@ -73,7 +73,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       
       try {
          moc = p1.getMoc().clone();
-         if( op==COMPLEMENT ) moc = ((TimeMoc)moc).complement();
+         if( op==COMPLEMENT ) moc = ((TMoc)moc).complement();
          else if( op==TOORDER ) moc.setMocOrder(order);
          else {
             for( int i=1; i<pList.length; i++ ) {
@@ -83,7 +83,7 @@ public class PlanTMocAlgo extends PlanTMoc {
                   case UNION :        moc = m1.union(        m2); break;
                   case INTERSECTION : moc = m1.intersection( m2 ); break;
                   case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-                  case DIFFERENCE  :  moc = ((TimeMoc)m1).difference(   m2 ); break;
+                  case DIFFERENCE  :  moc = ((TMoc)m1).difference(   m2 ); break;
                }
             }
          }

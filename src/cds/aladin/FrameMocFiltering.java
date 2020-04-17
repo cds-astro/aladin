@@ -34,9 +34,9 @@ import javax.swing.JRadioButton;
 
 import cds.moc.Healpix;
 import cds.moc.Moc;
-import cds.moc.SpaceMoc;
-import cds.moc.SpaceTimeMoc;
-import cds.moc.TimeMoc;
+import cds.moc.SMoc;
+import cds.moc.STMoc;
+import cds.moc.TMoc;
 
 /**
  * Gestion de la fenetre associeeau filtrage de sources par un MOC
@@ -140,10 +140,10 @@ public final class FrameMocFiltering extends FrameRGBBlink {
       Vector<Obj> v = new Vector<>(10000);
       
       Moc moc = pMoc.moc;
-      int mode = moc instanceof SpaceTimeMoc ? 2 : moc instanceof TimeMoc ? 1 :0;
+      int mode = moc instanceof STMoc ? 2 : moc instanceof TMoc ? 1 :0;
       
-      SpaceMoc spaceMoc = mode==0 ? (SpaceMoc)moc : mode==2 ? ((SpaceTimeMoc)moc).getSpaceMoc() : null;
-      TimeMoc timeMoc =   mode==1 ? (TimeMoc)moc  : mode==2 ? ((SpaceTimeMoc)moc).getTimeMoc()  : null;
+      SMoc spaceMoc = mode==0 ? (SMoc)moc : mode==2 ? ((STMoc)moc).getSpaceMoc() : null;
+      TMoc timeMoc =   mode==1 ? (TMoc)moc  : mode==2 ? ((STMoc)moc).getTimeMoc()  : null;
       
       for( int i=0; i<p.length; i++ ) {
          Plan pCat = p[i];
@@ -176,7 +176,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
             
             // Test Space & Time
             if( mode==2 ) {
-               in = ((SpaceTimeMoc)moc).contains(npixSpace,((Source)o).jdtime);
+               in = ((STMoc)moc).contains(npixSpace,((Source)o).jdtime);
             }
             
             if( lookIn==in ) v.add(o);

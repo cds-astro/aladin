@@ -82,7 +82,7 @@ import adql.parser.ADQLParser;
 import adql.parser.TokenMgrError;
 import adql.query.ADQLQuery;
 import adql.query.TextPosition;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.Astrodate;
 import cds.tools.ScientificUnitsUtil;
 import cds.tools.Util;
@@ -773,9 +773,9 @@ public void layout() {
      * @throws NumberFormatException
      * @throws Exception
      */
-    protected String isWithinBounds(HealpixMoc posBounds, List<Coord> rectVertices) throws NumberFormatException, Exception {
+    protected String isWithinBounds(SMoc posBounds, List<Coord> rectVertices) throws NumberFormatException, Exception {
     	String result = null;
-    	HealpixMoc userSpecified = null;
+    	SMoc userSpecified = null;
     	
 		if (posBounds!=null) {
     		String radiusInput  = radius.getText().trim();

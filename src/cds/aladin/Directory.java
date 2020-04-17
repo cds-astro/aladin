@@ -90,8 +90,7 @@ import javax.swing.tree.TreePath;
 import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
-import cds.moc.HealpixMoc;
-import cds.moc.SpaceMoc;
+import cds.moc.SMoc;
 import cds.mocmulti.BinaryDump;
 import cds.mocmulti.MocItem;
 import cds.mocmulti.MocItem2;
@@ -1043,7 +1042,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // System.out.println("filter("+name+")");
 
       String expr = name.equals(ALLCOLL) ? "*" : aladin.configuration.filterExpr.get(name);
-      SpaceMoc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
+      SMoc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
 
       if( expr != null || moc != null ) {
          if( directoryFilter == null ) directoryFilter = new DirectoryFilter(aladin);
@@ -1591,7 +1590,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    private int oIntersect = -1;
 
-   private SpaceMoc oMoc = null;
+   private SMoc oMoc = null;
 
    /**
     * Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
@@ -1599,7 +1598,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param moc filtrage spatial, null si aucun
     * @param intersect pour le filtrage spatial: MultiMoc.OVERLAPS, ENCLOSED ou COVERS
     */
-   protected void resumeFilter(String expr, SpaceMoc moc, int intersect) {
+   protected void resumeFilter(String expr, SMoc moc, int intersect) {
       try {
 
          // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
@@ -1613,7 +1612,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( expr.equals(oExpr) && (moc == oMoc || moc != null && moc.equals(oMoc) && intersect == oIntersect) ) { return; }
          oExpr = expr;
          oIntersect = intersect;
-         oMoc = moc == null ? null : (SpaceMoc) moc.clone();
+         oMoc = moc == null ? null : (SMoc) moc.clone();
 
          // logs
          String smoc = moc == null ? "" : directoryFilter.getASCII(moc);
@@ -1661,6 +1660,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    protected void resumeIn(ResumeMode mode) {
+      if( !Aladin.NETWORK ) return;
       if( !checkIn(mode) ) return;
       if( iconInside.isActivated() ) resumeTree();
       else ((DirectoryModel) dirTree.getModel()).populateFlagIn();
@@ -1673,11 +1673,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param moc filtrage spatial, null si aucun
     * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     */
-   private void checkFilter(String expr, SpaceMoc moc, int intersect) throws Exception {
+   private void checkFilter(String expr, SMoc moc, int intersect) throws Exception {
 
       // Filtrage par expression
       long t0 = System.currentTimeMillis();
-      ArrayList<String> ids = multiProp.scan((HealpixMoc) null, expr, false, -1, -1);
+      ArrayList<String> ids = multiProp.scan((SMoc) null, expr, false, -1, -1);
 
       // Filtrage spatial
       ArrayList<String> ids1 = filtrageSpatial(moc, intersect);
@@ -1696,7 +1696,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
    }
 
-   private SpaceMoc oldMocSpatial = null;
+   private SMoc oldMocSpatial = null;
 
    private ArrayList<String> oldIds = null;
 
@@ -1708,7 +1708,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     * @return la liste des IDs qui matchent
     */
-   private ArrayList<String> filtrageSpatial(SpaceMoc moc, int intersect) {
+   private ArrayList<String> filtrageSpatial(SMoc moc, int intersect) {
       if( moc == null ) return null;
       if( oldMocSpatial != null && intersect == oldIntersect && oldMocSpatial.equals(moc) ) return oldIds;
 
@@ -1726,7 +1726,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /**
     * Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire => voir filtrageSpatial(...)
     */
-   private ArrayList<String> filtrageSpatial1(SpaceMoc moc, int intersect) throws Exception {
+   private ArrayList<String> filtrageSpatial1(SMoc moc, int intersect) throws Exception {
       String url = aladin.glu.getURL("MocServer").toString();
       int i = url.lastIndexOf('?');
       if( i > 0 ) url = url.substring(0, i);
@@ -1777,13 +1777,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    static public int getAppropriateOrder(double size) {
       int order = 4;
-      if( size == 0 ) order = HealpixMoc.MAXORDER;
+      if( size == 0 ) order = SMoc.MAXORDER;
       else {
          double pixRes = size / 30;
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4. * Math.PI * degrad * degrad;
          double res = Math.sqrt(skyArea / (12 * 16 * 16));
-         while( order < HealpixMoc.MAXORDER && res > pixRes ) {
+         while( order < SMoc.MAXORDER && res > pixRes ) {
             res /= 2;
             order++;
          }
@@ -1795,7 +1795,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * Retourne true si pour la collection identifiée par "id" on dispose d'un MOC local sur la zone décrite par mocQuery (càd que
     * leur intersection n'est pas nulle
     */
-   private boolean hasLocalMoc(String id, HealpixMoc mocQuery) {
+   private boolean hasLocalMoc(String id, SMoc mocQuery) {
       if( mocQuery == null ) return false;
       MocItem2 mo = multiProp.getItem(id);
       if( mo.mocRef == null ) return false;
@@ -1879,7 +1879,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
 
          // Interrogation du Multimoc interne (uniquement par cercle)
-         HealpixMoc mocQuery = null;
+         SMoc mocQuery = null;
          if( flagScanLocal && (mode == ResumeMode.FORCE || mode == ResumeMode.LOCALADD || !sameLocation) ) {
 
             // Construction d'un MOC qui englobe le cercle couvrant le champ de vue courant
@@ -1887,7 +1887,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             int order = getAppropriateOrder(size);
             mocQuery = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians(size / 2), true);
             
-//            mocQuery = new HealpixMoc(order);
+//            mocQuery = new SMoc(order);
 //            int i = 0;
 //            mocQuery.setCheckConsistencyFlag(false);
 ////            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
@@ -2592,7 +2592,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    protected ArrayList<String> getTAPServersByMocServer(String query) throws Exception {
       ArrayList<String> b = new ArrayList<>();
-      ArrayList<String> a = multiProp.scan((HealpixMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
+      ArrayList<String> a = multiProp.scan((SMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
       for( String id : a ) {
          // String auth = Util.getSubpath(id, 0);
          MocItem mi = multiProp.getItem(id);
@@ -2607,13 +2607,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
  //returns multiPropId
 	protected ArrayList<String> getTAPServersMultiPropByMocServer(String query) throws Exception {
-		ArrayList<String> a = multiProp.scan((HealpixMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
+		ArrayList<String> a = multiProp.scan((SMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
 		return a;
 	}
 
    // protected ArrayList<String> getBigTAPServers(int limitNbCat) throws Exception {
    //
-   // ArrayList<String> a = multiProp.scan( (HealpixMoc)null, "tap_service_url*=*", false, -1, -1);
+   // ArrayList<String> a = multiProp.scan( (SMoc)null, "tap_service_url*=*", false, -1, -1);
    //
    // Map<String, Integer> map = new HashMap<String, Integer>();
    // for( String id : a) {
@@ -2831,6 +2831,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @return le nombre de records chargés
     */
    private int updateFromMocServer(boolean flagReload) {
+      if( !Aladin.NETWORK ) return 0;
       long t0 = System.currentTimeMillis();
       URL url;
       try {
@@ -4336,7 +4337,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // dans un plan tool
             if( aladin.view.hasMocPolSelected() ) {
 
-               HealpixMoc moc = null;
+               SMoc moc = null;
                try {
                   moc = aladin.createMocByRegions(-1);
                } catch( Exception e ) {

@@ -22,13 +22,13 @@
 package cds.mocmulti;
 
 import cds.aladin.MyProperties;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 
 
 public class MocItem2 extends MocItem {
-   public HealpixMoc mocRef;   // Couverture de référence (zone connue)
+   public SMoc mocRef;   // Couverture de référence (zone connue)
    
-   public MocItem2(String id,HealpixMoc m, MyProperties p, long dMoc, long dProp) {
+   public MocItem2(String id,SMoc m, MyProperties p, long dMoc, long dProp) {
       super(id,m,p,dMoc,dProp);
       mocRef=null;
    }
@@ -38,5 +38,5 @@ public class MocItem2 extends MocItem {
       mocRef=null;
    }
    
-   public HealpixMoc getMocRef() { return mocRef; }
+   public SMoc getMocRef() { return mocRef; }
 }

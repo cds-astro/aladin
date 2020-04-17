@@ -87,7 +87,7 @@ import adql.parser.ADQLParser;
 import adql.query.ADQLQuery;
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCStringParser;
-import cds.moc.HealpixMoc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 
 /**
@@ -125,7 +125,7 @@ public class ServerGlu extends Server implements Runnable {
    HashMap<Integer, String[]> rangeValues = new HashMap<>();
    
    private Source dataLinkSource = null;
-   private HealpixMoc posBounds = null;
+   private SMoc posBounds = null;
    private String boundaryAreaStcs = null;
    private Map<String, Vector> tapTableMapping = new HashMap<>();
    private Map<String, GluAdqlTemplate> gluAdqlQueryTemplates;
@@ -2196,11 +2196,11 @@ public class ServerGlu extends Server implements Runnable {
       super.actionPerformed(e);
    }
 
-   public HealpixMoc getPosBounds() {
+   public SMoc getPosBounds() {
       return posBounds;
    }
 
-   public void setPosBounds(HealpixMoc posBounds) {
+   public void setPosBounds(SMoc posBounds) {
       this.posBounds = posBounds;
    }
 
