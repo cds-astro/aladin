@@ -3197,7 +3197,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             "Portions of the code (HiPS & MOCs) have been developed in the framework of ASTERICS project (2015-2018)." +
             "Progressive catalogs, PM facility, have been developed in the framework of GAIA CU9 (2012-2022)." +
             "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +
-            "WCS in JPEG, extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, SAMP " +
+            "WCS in JPEG, extended SIA,  IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, SAMP " +
             "integration have been developed in the framework of the EuroVO VOTech project (2005-2008). " +
             "The contours, filters, data tree, column calculator and Xmatcher have been developed " +
             "in the framework of the Astrophysical Virtual Observatory (AVO), an EC RTD project 2002-2004. " +
