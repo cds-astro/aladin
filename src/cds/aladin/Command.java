@@ -152,6 +152,9 @@ public final class Command implements Runnable {
          "reticle", "RGB", "RGBdiff", "rm", "save", /* "scale", */"search", "select", "set", "setconf", "show", "status",
          /* "stick", */"sync", "tag", "thumbnail", "trace", "unlock", /* "unstick", */
          "untag", "xmatch", "moreonxmatch", "zoom", "+", "-", "*", "/", "=", };
+   
+   // Liste des commandes scripts additionnelles (non documentées)
+   static final String CMDPLUS[] = { "goto", "scale", "unstick", "stick" };
 
    // Liste des commandes qui ne requierent pas un sync() avant d'être exécutée
    static final private String NOSYNCCMD[] = { "call", "collapse", "demo", "expand", "function", "=", "get", "grid", "help",
@@ -947,7 +950,7 @@ public final class Command implements Runnable {
 
    /** Retourne true s'il s'agit d'une commande script */
    protected boolean isCommand(String c) {
-      return Util.indexInArrayOf(c, CMD, true) >= 0;
+      return Util.indexInArrayOf(c, CMD, true) >= 0; //|| Util.indexInArrayOf(c, CMDPLUS, true) >= 0;
    }
 
    static final private String OP = "+-*/";
@@ -3371,14 +3374,19 @@ public final class Command implements Runnable {
     * éventuellement préfixée par 's' et/ou 't' */
    
    private boolean findMoc(String s) {
+      boolean slash=false;
       
       // On teste l'absence de caractères incompatibles avec un MOC
       boolean space=false;
-      boolean dash=false;
+      boolean dash=false;      
       for( char c : s.toCharArray() ) {
+         if( c=='/' ) slash=true;
          if( !( Character.isDigit(c) || (space|=Character.isWhitespace(c)) 
                || (dash|=(c=='-')) || c=='/' || (dash|=(c==',')) || c=='s' | c=='t') ) return false;
       }
+      
+      // pas de / => pas de MOC
+      if( !slash ) return false;
       
       // On ne prend pas en compte le MOC minimaliste d'un seul token (ex: 3/110)
       if( !space && !dash && s.charAt(0)!='c' && s.charAt(0)!='t' ) return false;
@@ -3599,7 +3607,7 @@ public final class Command implements Runnable {
          execROICmd(param);
       else if( cmd.equalsIgnoreCase("stc") ) execDrawCmd("draw", param);
 //      else if( findMoc(s1)!=null ) execDrawCmd("draw", "MOC " + s1);
-      else if( findMoc(s1) ) return execCmocCmd(s1,label);
+      else if( Aladin.PROTO && findMoc(s1) ) return execCmocCmd(s1,label);
       else if( cmd.equalsIgnoreCase("cmoc") ) return execCmocCmd(param, label);
       else if( cmd.equalsIgnoreCase("draw") ) execDrawCmd(cmd, param);
       else if( cmd.equalsIgnoreCase("rename") || cmd.equalsIgnoreCase("ren") ) { // For compatibility

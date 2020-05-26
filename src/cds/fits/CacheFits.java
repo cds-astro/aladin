@@ -156,7 +156,7 @@ public class CacheFits {
    public Fits getFits(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception,MyInputStreamCachedException {
       if( cacheOutOfMem )  return open(fileName,mode,flagLoad,keepHeader).fits;
 
-//      synchronized( lockObj  ) {
+      synchronized( lockObj  ) {
          FitsFile f = find(fileName);
 
          // Trouvé, je le mets à jour
@@ -189,7 +189,7 @@ public class CacheFits {
          }
 
          return f.fits;
-//      }
+      }
    }
 
    // Retrouve l'objet Fits dans le cache, null si inconnu

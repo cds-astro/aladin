@@ -412,8 +412,10 @@ public class MyInputStreamCached extends MyInputStream {
       String filename = f.getCanonicalPath();
       int i = filename.lastIndexOf(Util.FS);
       String nameInCache = filename.substring(i+1);
-      Integer n = activeFile.get(nameInCache);
-      return n!=null && n>0;
+      synchronized( lock ) {
+         Integer n = activeFile.get(nameInCache);
+         return n!=null && n>0;
+      }
     }
    
    /** Mémorise le nombre d'utilisateur de chaque fichier dans le cache disque */

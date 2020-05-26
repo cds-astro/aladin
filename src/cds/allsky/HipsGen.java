@@ -253,6 +253,7 @@ public class HipsGen {
     // le dernier chiffre indique la colonne origine des longitudes, par défaut le milieu de l'image
     //
     // ex STEREO: [path/]Titan[.ext] 20000 60
+    // ext => "-N" ou "-S"
     // le premier chiffre indique la largeur de l'image en pixel, le deuxième la taille angulaire
     // correspondante en degrés
     private void generateHHH( String s1 ) throws Exception {

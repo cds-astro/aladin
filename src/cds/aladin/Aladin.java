@@ -197,6 +197,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Coordinates interpreted as an ASCII MOC (script command)
  * @beta    <LI> Script get command parser bug fix (TAP command)
  * @beta    <LI> Resource Tree stack MOC filtering bug fix
  * @beta    <LI> Hipsgen hips_status bug fix
@@ -236,7 +237,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.021";
+   static public final    String VERSION = "v11.024";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3114,7 +3115,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     *             -1-mode normal
     */
    protected void fullScreen(int mode) {
-      System.out.println("fullscreen("+mode+")");
+//      System.out.println("fullscreen("+mode+")");
       if( mode!=-1 ) {
          
          int m = mode==0 ? FrameFullScreen.FULL : mode==3 ? FrameFullScreen.CINEMA

@@ -479,7 +479,8 @@ final public class ThreadBuilderTile {
                         file.open(z, flagGauss);
 
                      } catch( Exception e ) {
-                        if( context.getVerbose()>=3 ) e.printStackTrace();
+                        System.err.println("Error on open:");
+                        /* if( context.getVerbose()>=3 ) */ e.printStackTrace();
                         context.addFileRemoveList(file.name);
                         
                         // Cas complexe où l'image originale est un JPEG ou un PNG et que JAVA
