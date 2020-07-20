@@ -128,6 +128,27 @@ public class Box extends Forme {
    
    /** Retourne l'angle mémorisé pour éviter de retourner un éventuel complément */
    protected double getAngle() { return angle; }
+   
+   /** Retourne les 4 coins sous la forme d'une Ligne (polygone fermée) */
+   protected Ligne getCorners() {
+      Ligne a=null,b=null,c=null;
+      for( int i=1; i<5; i++ ) {
+         a = new Ligne(plan);
+         a.raj = o[i].raj;
+         a.dej = o[i].dej;
+         a.debligne = b;
+         if( b!=null ) b.finligne = a;
+         b=a;
+         if( i==1 ) c=a;
+      }
+      a = new Ligne(plan);
+      a.raj = c.raj;
+      a.dej = c.dej;
+      a.bout=3;
+      a.debligne=b;
+      b.finligne = a;
+      return a;
+   }
      
    /** Test d'appartenance. */
    protected boolean inside(ViewSimple v,double x, double y) { return in(v,x,y); }

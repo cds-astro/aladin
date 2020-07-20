@@ -2389,6 +2389,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             if( o instanceof Ligne && ((Ligne)o).isPolygone() ) return true;
             if( o instanceof SourceStat && ((SourceStat)o).hasRayon() )  return true;
             if( o instanceof Cercle )  return true;
+            if( o instanceof Box )  return true;
             if( o instanceof Ellipse )  return true;
          }
       } catch( Exception e ) { }

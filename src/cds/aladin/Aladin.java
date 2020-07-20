@@ -161,6 +161,7 @@ import cds.xml.XMLParser;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> New supporting projection: Mercator
+ * @beta    <LI> SMOC generation form Box object
  * @beta </UL>
  * @beta <P>
  * @beta <B>Bug fixed:</B>
@@ -188,7 +189,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.026";
+   static public final    String VERSION = "v11.027";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -203,7 +204,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    // Gère le mode particuliers
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
-   public static boolean BETA=false;  // true si on tourne en mode BETA
+   public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
@@ -4399,6 +4400,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
                if( m==null || m.getSize()==0 ) continue;
                arr.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
+            
+         // Ajout des box
+         } else if( o instanceof Box ) {
+            o = ((Box)o).getCorners();
          }
                   
          // Ajout des polygones
