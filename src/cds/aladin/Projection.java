@@ -78,8 +78,8 @@ public final class Projection {
    protected Coord coo[];			// Liste de quadruplets pour methode QUADRUPLET de recalibration
 
    // Liste des projections comme elles apparaissent dans Aladin, et correspondances dans Calib
-   static String [] alaProj            = {"Spheric", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mollweide", "Arc" };
-   static String [] alaProjToType      = {"SIN",     "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC" };
+   static String [] alaProj            = {"Spheric", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mercator", "Mollweide", "Arc" };
+   static String [] alaProjToType      = {"SIN",     "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MER",      "MOL",       "ARC" };
 
 
    /** Retourne l'indice de la signature de la projection (case insensitive, qu'il s'agisse de son nom complet
@@ -120,7 +120,7 @@ public final class Projection {
    }
 
    protected double getDeMax() {
-      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.AIT || t==Calib.CAR || t==Calib.MOL
+      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.AIT || t==Calib.CAR || t==Calib.MER || t==Calib.MOL
             || t==Calib.ZEA /*|| t==Calib.ARC */ ? 180 : 360;
    }
 

@@ -1,5 +1,5 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
+// Copyright 1999-2020 - Universitï¿½ de Strasbourg/CNRS
+// The Aladin Desktop program is developped by the Centre de Donnï¿½es
 // astronomiques de Strasbourgs (CDS).
 // The Aladin Desktop program is distributed under the terms
 // of the GNU General Public License version 3.
@@ -107,7 +107,7 @@ public final class Calib  implements Cloneable {
    public static int ICRS = 6 ;
    public static int XYLINEAR = 7;
 
-   // PF - Jan 2011 - Différentes valeurs des mots clés en fonction du système de coordonnées
+   // PF - Jan 2011 - Diffï¿½rentes valeurs des mots clï¿½s en fonction du systï¿½me de coordonnï¿½es
    static final String[] RADECSYS    = { "", "FK4", "",       "",         "",        "FK5", "ICRS", "" };
 
    protected int system = ICRS;
@@ -142,18 +142,19 @@ public final class Calib  implements Cloneable {
    static public final int TPV = 14 ;
    static public final int SINSIP = 15 ;
    static public final int GLS = 16 ;
+   static public final int MER = 17 ;
 
-   // Signature dans les mots clés FITS des différentes projections (l'indice dans le tableau doit correspondre
+   // Signature dans les mots clï¿½s FITS des diffï¿½rentes projections (l'indice dans le tableau doit correspondre
    // aux constantes statics ci-dessus
-   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP", "GLS" };
+   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP", "GLS", "MER" };
 
-   /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
+   /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvï¿½ */
    static int getProjType(String s) {//System.out.println("ssss "+s);
       return Util.indexInArrayOf(s, projType); 
    }
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres)
-    * en se contentant éventuellement de ne trouver qu'une sous chaine, -1 si non trouvé */
+    * en se contentant ï¿½ventuellement de ne trouver qu'une sous chaine, -1 si non trouvï¿½ */
    static int getSubProjType(String s1) { 
       int i = getProjType(s1);
       if( i>0 ) return i;
@@ -191,12 +192,12 @@ public final class Calib  implements Cloneable {
       return -1;
    }
 
-   /** Retourne la signature de la projection (code 3 lettres) de l'indice passé en paramètre */
+   /** Retourne la signature de la projection (code 3 lettres) de l'indice passï¿½ en paramï¿½tre */
    static public String getProjName(int indice ) { return projType[indice]; }
 
    //#ifndef PIERRE
    //    /** Retourne true si le type de projection est reconnu par Calib
-   //     * AJOUT PF nov 09 pour supporter les projections linéaires CRVAL+CDELT, mÃ¯Â¿Â½me
+   //     * AJOUT PF nov 09 pour supporter les projections linï¿½aires CRVAL+CDELT, mÃ¯Â¿Â½me
    //     * si le type n'edst pas "Solar"
    //     */
    //    private boolean isUnknown(String type) {
@@ -207,10 +208,10 @@ public final class Calib  implements Cloneable {
    //       return true;
    //   }
 
-   // PF. 12/06 - Modif liées à l'utilisation de la nouvelle classe de Fox
-   // pour les conversions de coordonnées. On crée à l'avance les différents
-   // Astroframe et Astrocoo nécessaires aux manip. pour éviter les créations
-   // d'objets java à répétition
+   // PF. 12/06 - Modif liï¿½es ï¿½ l'utilisation de la nouvelle classe de Fox
+   // pour les conversions de coordonnï¿½es. On crï¿½e ï¿½ l'avance les diffï¿½rents
+   // Astroframe et Astrocoo nï¿½cessaires aux manip. pour ï¿½viter les crï¿½ations
+   // d'objets java ï¿½ rï¿½pï¿½tition
    //#endif
    static private Astroframe AF_FK4 = new FK4();
    static private Astroframe AF_FK5 = new FK5();
@@ -927,7 +928,7 @@ public final class Calib  implements Cloneable {
          type2 = hf.getStringFromHeader("CTYPE2  ");
 
          // Requis: position (alph delt) du centre sauf si CTYPE SOLAR
-         // Problème dans le cas ou le type est UNknown ? 
+         // Problï¿½me dans le cas ou le type est UNknown ? 
          if( type1.startsWith("Solar") || type1.startsWith("solar") ) { 
             try {
                alphai = hf.getDoubleFromHeader("CRVAL1  ");
@@ -1314,7 +1315,7 @@ public final class Calib  implements Cloneable {
       // else System.out.println("RA");
 
       // PF - sept 2010 - C'est plus generique comme cela
-      // PF - mai 2013 - on vérifie les deux axes (pour rotation cube)
+      // PF - mai 2013 - on vï¿½rifie les deux axes (pour rotation cube)
       try { proj = getSubProjType(type2.length()>=5 ? type2.substring(5):""); } 
       catch( Exception e ) { proj=-1; }
     
@@ -1774,8 +1775,8 @@ public final class Calib  implements Cloneable {
    double det ;
 
 
-   // PF - Jan 2011 - La méthode de calibration DSS ne marche pas actuellement avec les imagettes
-   // => dans les mains de François B. En attendant, je fais un gros patch
+   // PF - Jan 2011 - La mï¿½thode de calibration DSS ne marche pas actuellement avec les imagettes
+   // => dans les mains de Franï¿½ois B. En attendant, je fais un gros patch
    //               if( hf.getDoubleFromHeader("NAXIS1")<10000 ) throw new Exception("Certainely not a full plate");
 
 
@@ -2003,7 +2004,7 @@ public final class Calib  implements Cloneable {
       //               if (equinox == 0.0 )  system = FK4 ;
       if (system ==  FK4)
          //             if ((equinox != 2000.0)&&(system != GALACTIC))
-         // Ancien test supprimé en 04/2012  
+         // Ancine test supprimï¿½ en 04/2012  
       {
          // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
          //                Astroframe j2000 = new Astroframe() ;
@@ -2014,15 +2015,13 @@ public final class Calib  implements Cloneable {
          //                del = natif.getLat() ;                               
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
-         Astroframe af = new FK4(equinox) ;
-         ac.convertTo(af);		 
-        // ac.convertTo(AF_FK4);
+         ac.convertTo(AF_FK4);
          al = ac.getLon();
          del = ac.getLat();
       }
       if (system ==  FK5)
          //                 if ((equinox != 2000.0)&&(system != GALACTIC))
-         // Ancien test supprimé en 04/2012  
+         // Ancine test supprimï¿½ en 04/2012  
       {
          // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
          //                    Astroframe j2000 = new Astroframe() ;
@@ -2033,9 +2032,7 @@ public final class Calib  implements Cloneable {
          //                    del = natif.getLat() ;                               
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
-         Astroframe af = new FK5(equinox) ;
-         ac.convertTo(af);
-       // ac.convertTo(AF_FK5);
+         ac.convertTo(AF_FK5);
          al = ac.getLon();
          del = ac.getLat();
       }
@@ -2817,6 +2814,25 @@ public final class Calib  implements Cloneable {
             //       System.out.println("x_objr "+x_objr * rad_to_deg+" "+y_objr * rad_to_deg) ;
             //       System.out.println("aldel "+c.al+" "+c.del);
             break ;
+         case MER :
+            cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+            sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
+
+            Phi = x_objr ;
+            Tetha = 2 * Math.atan (Math.exp(y_objr)) -Math.PI / 2 ;
+
+            c.del =  rad_to_deg* Math.asin((sdelp*FastMath.sin(Tetha)
+                  - cdelp*FastMath.cos(Tetha)*FastMath.cos(Phi)));
+
+            arg3 = (FastMath.sin(Tetha)*cdelp
+                    + FastMath.cos(Tetha)*sdelp*FastMath.cos(Phi));
+
+            arg2 = (FastMath.cos(Tetha)*FastMath.sin(Phi));
+
+            c.al = alphai + rad_to_deg*Math.atan2(arg2,arg3) ;
+
+            break;
+
          case SOL: // SOLAR
             c.al = alphai +x_objr* rad_to_deg;
             c.del = deltai +y_objr * rad_to_deg;
@@ -2836,9 +2852,7 @@ public final class Calib  implements Cloneable {
          //                 natif.convert(j2000) ;
          //                 c.al = j2000.getLon() ;
          //                 c.del = j2000.getLat() ;
-         Astroframe af = new FK4(equinox);
-         //Astrocoo ac = new Astrocoo(AF_FK4,c.al,c.del);
-          Astrocoo ac = new Astrocoo(af,c.al,c.del);
+         Astrocoo ac = new Astrocoo(AF_FK4,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
          ac.convertTo(AF_ICRS);
          c.al = ac.getLon();
@@ -2853,9 +2867,7 @@ public final class Calib  implements Cloneable {
          //                  natif.convert(j2000) ;
          //                  c.al = j2000.getLon() ;
          //                  c.del = j2000.getLat() ;
-         Astroframe af = new FK5(equinox);
-         //Astrocoo ac = new Astrocoo(AF_FK5,c.al,c.del);
-          Astrocoo ac = new Astrocoo(af,c.al,c.del);
+         Astrocoo ac = new Astrocoo(AF_FK5,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
          ac.convertTo(AF_ICRS);
          c.al = ac.getLon();
@@ -3022,14 +3034,11 @@ public final class Calib  implements Cloneable {
       del = c.del ;
       // System.out.println(c.al+" "+c.del);
       if( system!=ICRS && system!=XYLINEAR ) {
-         Astroframe af = // system==FK4           ? AF_FK4 :
-        		         system==FK4 ? new FK4(equinox) :
-                        // system==FK5           ? AF_FK5 :
-                        system==FK5 ? new FK5(equinox) :
+         Astroframe af = system==FK4           ? AF_FK4 :
+                         system==FK5           ? AF_FK5 :
                          system==GALACTIC      ? AF_GAL :
                          system==SUPERGALACTIC ? AF_SGAL:
                          system==ECLIPTIC      ? AF_ECL : null;
-         
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
          ac.convertTo(af);
@@ -3702,7 +3711,7 @@ public final class Calib  implements Cloneable {
                //   entre les limites de l'image. On teste modulo 360 et modulo -360
                //                      System.out.println("Xcen "+CD[0][0]*Xcen + CD[0][1]*Ycen+"   "+
                //                             CD[0][0]*(Xcen-xnpix) +CD[0][1]*Ycen+" "+x_stand) ;
-               
+              
                
                if (((x_stand+ 360.) > Math.min(CD[0][0]*(-Xcen) + CD[0][1]*Ycen,
                      CD[0][0]*(xnpix-Xcen) +CD[0][1]*Ycen))
@@ -3724,6 +3733,15 @@ public final class Calib  implements Cloneable {
                //                       System.out.println("center x_stand"+x_stand+" "+y_stand);                               
 
                //                      System.out.println("center CD"+CD[0][0]+" "+CD[0][1] ) ;
+               break ;
+            case MER : 
+               cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+               sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
+
+               phi = Math.atan2(cos_del *sin_dalpha, -(sin_del*cdelp - cos_del*sdelp *cos_dalpha));
+               tet =  Math.asin(sin_del*sdelp + cos_del*cdelp *cos_dalpha);
+               x_stand = phi * rad_to_deg ; // (Phi * 180/pi ) ? inverse phi = x_objr * PI / 180
+               y_stand = Math.log (Math.tan(Math.PI / 4 + tet / 2)) * rad_to_deg ; //  * 180 / PI ? tet = 2 * Math.exp(y_objr * PI / 180) -Math.PI / 2
                break ;
             case SOL: // SOLAR
                x_stand = al-alphai ;
@@ -3748,7 +3766,7 @@ public final class Calib  implements Cloneable {
                        
          c.x = (ID[0][0]*x_stand +ID[0][1]*y_stand)+ Xcen;
          c.y =  -(ID[1][0]*x_stand +ID[1][1]* y_stand) + ynpix - Ycen;
-       //  if ((Math.abs(c.x) > 20000) || (Math.abs(c.y )> 10000))   System.out.println("on est là c.y c.x x_stand y_stand"+c.y+" "+c.x+" "+x_stand+" "+y_stand+" "+c.al+" "+c.del);
+       //  if ((Math.abs(c.x) > 20000) || (Math.abs(c.y )> 10000))   System.out.println("on est lï¿½ c.y c.x x_stand y_stand"+c.y+" "+c.x+" "+x_stand+" "+y_stand+" "+c.al+" "+c.del);
          if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&((proj==TAN)||(proj==SIP)) && (aladin == 3)  && (xydpoly[2]*ID[1][1] <0 )) 
          {    
                  //           System.out.println("on est ici") ;
@@ -3939,7 +3957,7 @@ public final class Calib  implements Cloneable {
 
    public  double [] GetResol() {
    double inc[] = new double[2];
-   // Pierre - sept 2011 : depuis la dernière mouture de Calib, il peut y avoir des valeurs négatives
+   // Pierre - sept 2011 : depuis la derniï¿½re mouture de Calib, il peut y avoir des valeurs nï¿½gatives
    //                    inc[0]= incA ;
    //                    inc[1]= incD ;
    inc[0]= Math.abs(incA) ;
@@ -4145,7 +4163,7 @@ public final class Calib  implements Cloneable {
    if (aladin == 1) value.addElement("'DEC--TAN'");
    else value.addElement(type2);
 
-   // Le mot clé RADECSYS n'est concerné que par les systèmé équatoriaux
+   // Le mot clï¿½ RADECSYS n'est concernï¿½ que par les systï¿½mï¿½ ï¿½quatoriaux
    // Modif PF Jan 2011
    if( RADECSYS[system].length()>0 ) {
       key.addElement("RADECSYS");
@@ -4519,7 +4537,7 @@ public final class Calib  implements Cloneable {
    public int getProj() { return proj; }
 
    /**
- * Retourne Le système de coordonnées
+ * Retourne Le systï¿½me de coordonnï¿½es
  */
    public int getSystem() { return system; }
 
@@ -4529,8 +4547,8 @@ public final class Calib  implements Cloneable {
    public Dimension getImgSize() { return new Dimension(xnpix,ynpix); }
 
    /**
- * Modifie la calibration astrométrique pour prendre en compte une sous-image
- * @param offx,offy : coin haut gauche (si absent, centré)
+ * Modifie la calibration astromï¿½trique pour prendre en compte une sous-image
+ * @param offx,offy : coin haut gauche (si absent, centrï¿½)
  * @param  w,h : taille de la sous-image
  */
    protected void cropping(double w,double h) { cropping((xnpix -w)/2.,(ynpix -h)/2.,w,h); }
@@ -4540,7 +4558,7 @@ public final class Calib  implements Cloneable {
    if(( aladin == 0)||(aladin == 3)) {
       Xcen -=  offx ;
       // toujours faire attention quand on part du haut. calib, comme FITS et WCS compte
-      // du bas et il y a la hauteur à enlever en prime ...
+      // du bas et il y a la hauteur ï¿½ enlever en prime ...
       Ycen -= (ynpix -offy -h ) ;
    }
    else {
@@ -4555,7 +4573,7 @@ public final class Calib  implements Cloneable {
    }
 
    // thomas, 19/11/2007
-   // TODO : François, peux tu me vérifier cette méthode ?
+   // TODO : Franï¿½ois, peux tu me vï¿½rifier cette mï¿½thode ?
    /** S'agit-il d'une calib avec rotation dans le sens direct */
    protected boolean sensDirect() {
    //  System.out.println("CD "+CD[0][0]+" "+CD[1][1]);
@@ -4583,8 +4601,8 @@ public final class Calib  implements Cloneable {
 
    }
 
-   /** Code modifié par Pierre F. Juillet 2010 - à vérifier par François B. SVP - code original ci-dessous
- * Remodifié par Pierre F. en Mars 2011 - toujours à vérifier par François B. SVP */
+   /** Code modifiï¿½ par Pierre F. Juillet 2010 - ï¿½ vï¿½rifier par Franï¿½ois B. SVP - code original ci-dessous
+ * Remodifiï¿½ par Pierre F. en Mars 2011 - toujours ï¿½ vï¿½rifier par Franï¿½ois B. SVP */
    protected void cropAndZoom(double deltaX, double deltaY, double w, double h, double zoom) {
 
    incX = incX/zoom ;
@@ -4608,7 +4626,7 @@ public final class Calib  implements Cloneable {
    cropping(deltaX*zoom,deltaY*zoom,w*zoom,h*zoom) ;
    }
 
-   /** Code original de François B. qui ne peut pas marcher pour zoom<1 (voir ci-dessus) */
+   /** Code original de Franï¿½ois B. qui ne peut pas marcher pour zoom<1 (voir ci-dessus) */
    //   protected void cropAndZoom(double deltaX, double deltaY, double w, double h, double zoom) {
    //      incX = incX/zoom ;
    //      incY = incY/zoom ;
@@ -4773,7 +4791,7 @@ public final class Calib  implements Cloneable {
             }
          }
          long t1 = System.currentTimeMillis();
-         System.out.println("Test terminé en "+(t1-t)+"ms");
+         System.out.println("Test terminï¿½ en "+(t1-t)+"ms");
       } catch( Exception e ) { e.printStackTrace(); }
    }
 }

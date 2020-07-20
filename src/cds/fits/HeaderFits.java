@@ -364,7 +364,7 @@ public final class HeaderFits {
     * @param c caractère à rechercher
     * @return position de c, ou de \n ou de finLigne
     */
-   private int getPos(char buf[],int from,int finLigne,char c) {
+   static private int getPos(char buf[],int from,int finLigne,char c) {
       int max = buf.length;
       boolean inQuote= from+2<buf.length && buf[from+2]=='\'' && c=='/';
       int deb=from;
@@ -375,7 +375,7 @@ public final class HeaderFits {
       }
       return from;
    }
-
+   
    /** Lecture d'une entête Fits quelque soit sa structure. Soit des lignes ASCII séparées
     * par des \n, soit des lignes de 80 caractères sans \n. Le = n'est pas obligatoirement
     * en 8ème position.

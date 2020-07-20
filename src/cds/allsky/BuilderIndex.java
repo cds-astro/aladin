@@ -480,7 +480,8 @@ public class BuilderIndex extends Builder {
 
       // Recherche les 4 coins de l'image (cellule)
       Calib c = fitsfile.getCalib();
-      boolean isCAR = c.getProj()==Calib.CAR;
+      int pj = c.getProj();
+      boolean isRECT = pj==Calib.CAR || pj==Calib.MER;
       ArrayList<double[]> cooList = new ArrayList<>(4);
       Coord coo = new Coord();
       Coord corner[] = new Coord[4];
@@ -518,7 +519,7 @@ public class BuilderIndex extends Builder {
       
       // On teste le rapport largeur/longeur du pixel si nécessaire
       // sauf s'il n'y a qu'une image ou que la projection est CAR
-      if( !isCAR && maxRatio>0 && statNbFile>0 ) {
+      if( !isRECT && maxRatio>0 && statNbFile>0 ) {
          double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
          double h = Coord.getDist(corner[1], corner[2])/fitsfile.height;
          //         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));
@@ -563,7 +564,7 @@ public class BuilderIndex extends Builder {
       double radius=maxRadius;
       
       // on évite les rayons trop grands pour ne pas tomber sur le cas d'un polygone concave
-      if( radius<30 && !isCAR ) {
+      if( radius<30 && !isRECT ) {
          try {
 //            System.out.print("draw stc polygon");
 //            for( double [] c1 : cooList ) System.out.print(" "+c1[0]+" "+c1[1]);
@@ -583,7 +584,7 @@ public class BuilderIndex extends Builder {
          try {
             
             // On calcule le centre et le rayon de la cellule
-            if( hasCell || isCAR ) {
+            if( hasCell || isRECT ) {
                center.x = fitsfile.xCell+fitsfile.widthCell/2.;
                center.y = fitsfile.yCell+fitsfile.heightCell/2.;
                if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
@@ -596,7 +597,7 @@ public class BuilderIndex extends Builder {
                   if( dist>maxRadius ) maxRadius=dist;
                }
                
-               if( isCAR ) {
+               if( isRECT ) {
                   Coord c2 = new Coord();
                   c2.x = fitsfile.xCell;
                   c2.y = center.y;
@@ -623,7 +624,7 @@ public class BuilderIndex extends Builder {
          if( area!=null && !area.isIntersecting(order, npix) ) continue;
          
          // vérifie la validité du losange trouvé
-         if( !isInImage(fitsfile, Util.getCorners(order, npix), isCAR)) continue;
+         if( !isInImage(fitsfile, Util.getCorners(order, npix), isRECT)) continue;
 
          hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
          out = openFile(hpxname);

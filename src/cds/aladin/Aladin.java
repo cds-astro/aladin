@@ -160,61 +160,12 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> FITS 4.0 support (compression, continue keyword...)
- * @beta    <LI> Space Time Multi-Order-Coverage support
- * @beta    <LI> TAP JOIN and UPLOAD support
- * @beta    <LI> Space MOC extractions from any HiPS or HEALPix maps, or observations FoV (TAP or SIA results)
- * @beta    <LI> IVOA new standard compliance :<br>
- * @beta          - TAP1.1 support (notably s_region definition support without frame definition)<br>
- * @beta          - MOC1.1 support (ASCII format)<br>
- * @beta          - VOTable1.4 support (TIMESYS)
- * @beta    <LI> Temporal support (prototype implementation) <br>
- * @beta          - Time plots <br>
- * @beta          - Time MOC
- * @beta    <LI> New CDS HEALPix library <br>
- * @beta          - polygonal photometry tool for HiPS<br>
- * @beta          - query by any region<br>
- * @beta          - ellipse2moc support
- * @beta    <LI> Data discovery tree: <br>
- * @beta          - pointed thumbnails <br>
- * @beta          - sort and hiearchy control <br>
- * @beta          - drag & drop to view panels
- * @beta    <LI> Stack backup improvements (HiPS, MOC support)
- * @beta    <LI> FITS WCS GLS support
- * @beta    <LI> 2 horizontal panel 2/3 - 1/3 mode
- * @beta    <LI> Distance tool improvement
- * @beta    <LI> Coordinate calculator tool improvement
- * @beta    <LI> Log control adapted to Debian policy
- * @beta    <LI> Galactic, supergalactic, and ecliptic coordinate frame manual setting
- * @beta    <LI> Dynamic HiPS support (ex: cat tiler)
- * @beta    <LI> HiPSgen LINT CDS specifical checking (parameter -cds)
- * @beta    <LI> HiPSgen improvements: <br>
- * @beta          - UPDATE improvement (Norder 0-2)
- * @beta          - MIRROR multi-partitions support (option split)<br>
- * @beta          - MIRROR network speed auto adaptation<br>
- * @beta          - index.html HTTP/HTTPS compatibility
+ * @beta    <LI> New supporting projection: Mercator
  * @beta </UL>
- * @beta
- * @beta <B>Major fixed bugs:</B>
+ * @beta <P>
+ * @beta <B>Bug fixed:</B>
  * @beta <UL>
- * @beta    <LI> Coordinates interpreted as an ASCII MOC (script command)
- * @beta    <LI> Script get command parser bug fix (TAP command)
- * @beta    <LI> Resource Tree stack MOC filtering bug fix
- * @beta    <LI> Hipsgen hips_status bug fix
- * @beta    <LI> Hipsgen FITS tile 2880 boundary bug fix
- * @beta    <LI> PNG tiles opacity bug fix
- * @beta    <LI> HEALPix new lib bug fix (introduced in v10.107)
- * @beta    <LI> Base64 Binary SHORT decoding error (bad casting)
- * @beta    <LI> Hipsgen mocorder param
- * @beta    <LI> VOTABLE BINARY variable array with upper limit
- * @beta    <LI> Reticle copy/paste (rounding bug)
- * @beta    <LI> Hipsgen BSCALE+specific skyvals use case bug
- * @beta    <LI> XMM EPN FoV better definition
- * @beta    <LI> Grid missing label bug fix
- * @beta    <LI> Hipsgen multithread dead lock (multipass bug)
- * @beta    <LI> Grid stroke line adjustement (for very huge images in NOGUI mode)
- * @beta    <LI> Debian+GNOME context (Jtree, TextField, SwingInvokeLater...)
- * @beta    <LI> Hipsgen DETAILS action on MEF file (FoV bug)
+ * @beta    <LI> Hipsgen RGB bug (MOC contains() bug)
  * @beta </UL>
  *
  */
@@ -237,7 +188,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.024";
+   static public final    String VERSION = "v11.026";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

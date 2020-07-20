@@ -459,6 +459,7 @@ public final class MocIO {
       n+=moc.writeSpecificFitsProp( out );
       out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+SMoc.VERSION,"Name of the MOC generator") );    n+=80;      
 
+      // Write specifical MOC properties
       for( int i=0; i<FITSKEY.length; i++ ) {
          String key = FITSKEY[i][0];
          if( key.equals("COORDSYS")) continue;
@@ -469,6 +470,23 @@ public final class MocIO {
          out.write( getFitsLine(key,value,FITSKEY[i][1]) );
          n+=80;
       }
+      
+      // Write additionnal properties
+      for( String key : moc.getProperties() ) {
+         
+         // Already written ?
+         boolean trouve=false;
+         for( int i=0; i<FITSKEY.length; i++ ) {
+            if( FITSKEY[i][0].equalsIgnoreCase(key) ) trouve=true;
+         }
+         if( trouve ) continue;
+         
+         String value = moc.getProperty(key);
+         String comment = moc.getComment(key);
+         out.write( getFitsLine(key,value,comment) );
+         n+=80;
+      }
+      
       out.write( getEndBourrage(n) );
    }
 

@@ -29,6 +29,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
+import cds.fits.HeaderFits;
 import cds.moc.Healpix;
 import cds.moc.SMoc;
 import cds.tools.Util;
@@ -38,6 +39,7 @@ import cds.tools.pixtools.CDSHealpix;
  * 
  * @author Pierre Fernique [CDS]
  * @version 1.0 - may 2013
+ * @version 1.1 - may 2020 - ajout paramètres pour mots clés FITS additionnels
  *
  */
 public class MocGen {
@@ -54,6 +56,7 @@ public class MocGen {
    private boolean recursive=false;
    private boolean multWrite=false; // true for updating output MOC continously
    private int hdu[] = null;
+   private ArrayList <Prop> prop;         // Property list
    
    private SMoc moc;      // Le MOC en cour de calcul
    private boolean ready;       // true si le MOC est prêt
@@ -64,9 +67,22 @@ public class MocGen {
    private int nbImg;           // Le nombre d'images sources
    private long tStart=0;       // Date de lancement
    
+   private class Prop {
+      String key,value,comment;
+      Prop(String s) throws Exception {
+         HeaderFits h = new HeaderFits();
+         h.readFreeHeader(s);
+         key     = h.getKeys().nextElement();
+         if( key==null ) throw new Exception("addprop error => ignored ["+s+"]");
+         value   = h.getStringFromHeader(key);
+         comment = h.getDescriptionFromHeader(key);
+      }
+   }
+   
    /** Génération d'un MOC à partir d'une ligne de commande */
    public MocGen(String [] args) {
       super();
+      prop = new ArrayList<>();
       execute(args);
    }
    
@@ -78,6 +94,7 @@ public class MocGen {
       this.recursive=recursive;
       this.order=order;
       this.hdu=hdu;
+      prop = new ArrayList<>();
    }
    
    /** Retourne true si le MOC est prêt - il faut tester isError() pour vérifier
@@ -466,6 +483,11 @@ public class MocGen {
                System.out.println("Unavailable HDU numbers ["+s.substring(x)+"]");
                return false;
             }
+         
+         } else if( s.startsWith("addprop=") ) {
+            try { prop.add( new Prop(s.substring(x) ) ); } catch( Exception e ) { 
+               System.out.println("Unavailable addprop syntax => ignored ["+s.substring(x)+"]");
+            }
             
          } else if( s.equals("-v") || s.equals("-verbose") ) {
             verbose=true;
@@ -551,6 +573,7 @@ public class MocGen {
             "[mocfmt=fits|json] : MOC output format (default Fits)\n" +
       		"[previous=moc.fits]: Previous MOC (if additions)\n" +
       		"[hdu=n1,n2-n3|all] : List of concerned Fits extensions\n" +
+      		"[addprop=\"cle=value[ / comment]\" : Additionnal property stored in the target MOC file header fits file\n" +
             "[-r]               : Recursive directory scanning\n" +
             "[-o]               : Output MOC updated continuously rather than generated at the end\n" +
             "in=fileOrDir       : Directory of images/headers collection\n" +
@@ -564,7 +587,7 @@ public class MocGen {
       		"(WCS header in the comment segment), .hhh file (FITS header files without pixels)\n" +
       		"and .txt simple ASCII file (FITS header as keyword = value basic ASCII lines).\n" +
       		"\n" +
-      		"Version: 1.5 - based on Aladin "+Aladin.VERSION+" - Oct 2015 - P.Fernique [CDS]");
+      		"Version: 1.6 - based on Aladin "+Aladin.VERSION+" - May 2020 - P.Fernique [CDS]");
    }
    
    // Generation d'un MOC pour toute une hiérarchie de fichiers FITS (ou JPEG/PNG avec calibration)
@@ -583,6 +606,12 @@ public class MocGen {
          nbImg=0;
          moc = new SMoc();
          if( previous!=null ) moc.read(previous);
+         
+         // Ajout des propriétés additionnelles
+         for( Prop p : prop ) {
+            moc.setProperty(p.key,p.value,p.comment);
+         }
+         
          moc.setMocOrder(order);
          moc.setCheckConsistencyFlag(false);
          tStart = System.currentTimeMillis();

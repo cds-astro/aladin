@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 /** Multi Order Coverage Map (MOC)
  * This object provides read, write and process methods to manipulate a Multi Order Coverage Map (MOC)
@@ -73,7 +74,7 @@ import java.util.Iterator;
 public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>  {
 
    /** MOC API version number */
-   static public final String VERSION = "7.0";
+   static public final String VERSION = "8.0";
 
    /** FITS encoding format (IVOA REC 1.0 compliante) */
    static public final int FITS  = 0;
@@ -87,8 +88,9 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    /** Maximal HEALPix order supported by the library */
    static public final int MAXORDER = 29;
    
-   /** MOC Properties */
-   protected HashMap<String, String> property;
+   /** MOC Properties and comments */
+   protected LinkedHashMap<String, String> property;
+   protected HashMap<String, String> comment;
    
    /** Generic MOC factory. Recognize the MOC ASCII string and create the associated space,
     * time or space-time MOC.
@@ -131,12 +133,17 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    abstract public boolean isSpace();
 
    abstract public boolean isTime();
+   
+   abstract public boolean isEnergy();
 
    /** Retourne la composante spatiale du MOC */
    abstract public SMoc getSpaceMoc() throws Exception;
 
    /** Retourne la composante temporelle du MOC */
    abstract public TMoc getTimeMoc() throws Exception;
+
+   /** Retourne la composante energie du MOC */
+   abstract public EMoc getEnergyMoc() throws Exception;
 
    /** Return approximatively the memory used for this moc (in bytes) */
    abstract public long getMem();
@@ -163,12 +170,22 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    abstract public void check() throws Exception;
          
    /** MOC propertie setter */
-   abstract public void setProperty(String key, String value) throws Exception;
+   public void setProperty(String key, String value) throws Exception { setProperty(key,value,null); }
+   abstract public void setProperty(String key, String value, String comment) throws Exception;
 
-   /** Provide MOC property value. */
-   public String getProperty(String key) {
-      return property.get(key);
+   /** Provide the list of MOC property keys*/
+   public String [] getProperties() {
+      String[] a = new String[property.size()];
+      int i=0;
+      for( String key : property.keySet() ) { a[i++]=key; }
+      return a;
    }
+   
+   /** Provide MOC property value. */
+   public String getProperty(String key) { return property.get(key); }
+   
+   /** Provide MOC property comment. */
+   public String getComment(String key) { return comment.get(key); }
    
    /** Accretion of the coverage by 1 cell of the MOC order around all the perimeter */
    abstract public void accretion() throws Exception;

@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 
 import cds.aladin.Coord;
@@ -176,7 +177,8 @@ public class SMoc extends Moc {
       for( int order=0; order<nOrder; order++ ) {
          moc.level[order] = (Array)level[order].clone();
       }
-      moc.property = (HashMap<String, String>)property.clone();
+      moc.property = (LinkedHashMap<String, String>)property.clone();
+      moc.comment = (HashMap<String, String>)comment.clone();
       return moc;
    }
 
@@ -628,7 +630,7 @@ public class SMoc extends Moc {
     * @param value
     * @throws Exception
     */
-   public void setProperty(String key, String value) throws Exception {
+   public void setProperty(String key, String value, String comment) throws Exception {
 
       // In case of a setProperty() direct call without using setMocOrder(...)
       if( key.equals("MOCORDER") ) {
@@ -644,6 +646,8 @@ public class SMoc extends Moc {
       // default
       else {
          property.put(key,value);
+         if( comment==null ) this.comment.remove(key);
+         else this.comment.put(key,comment);
       }
    }
 
@@ -835,7 +839,7 @@ public class SMoc extends Moc {
             tot+=d;
          }
          System.out.println("Moyenne : "+(tot/N)+"ms");
-        
+         
      } catch( Exception e ) { e.printStackTrace(); }
    }
 
@@ -853,7 +857,8 @@ public class SMoc extends Moc {
       
       // Plus rapide si on dispose déjà du range
       if( RANGE && range!=null ) {
-         return range.contains( npix<< ((MAXORDER-order)<<1) );
+         long shift = ((MAXORDER-order)<<1);
+         return range.overlaps( npix<<shift, (npix+1)<<shift  );
       }
       
       return isIn(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
@@ -900,6 +905,9 @@ public class SMoc extends Moc {
    
    /** Retourne la composante temporelle du MOC */
    public TMoc getTimeMoc() throws Exception { throw new Exception("No temporal dimension"); }
+
+   /** Retourne la composante en énergie du MOC */
+   public EMoc getEnergyMoc() throws Exception { throw new Exception("No energy dimension"); }
 
    public Moc union(Moc moc) throws Exception {
       return operation(moc.getSpaceMoc(),0);
@@ -954,6 +962,7 @@ public class SMoc extends Moc {
    
    public boolean isSpace() { return true; }
    public boolean isTime()  { return false; }
+   public boolean isEnergy()  { return false; }
    
    /** Return true if the MOC is empty */
    public boolean isEmpty() {
@@ -1329,7 +1338,8 @@ public class SMoc extends Moc {
       this.sys=sys;
       this.minOrder=minOrder;
       this.mocOrder=mocOrder;
-      property = new HashMap<>();
+      property = new LinkedHashMap<>();
+      comment = new HashMap<>();
       if( mocOrder!=-1 ) property.put("MOCORDER",mocOrder+"");
       initPropSys(sys);
       property.put("MOCTOOL","CDSjavaAPI-"+VERSION);
@@ -1403,6 +1413,16 @@ public class SMoc extends Moc {
          // Sinon au compte goutte
          else for( long k=startIndex; k<=endIndex; k++ ) add(currentOrder, k);
       }
+   }
+   
+   /** Add range (deepest order)
+    * @param min start range - included in the range
+    * @param max end range - included in the range
+    */
+   public void add(long min, long max) {
+      Range rtmp=new Range();
+      rtmp.append(min,max+1L);
+      if( !rtmp.isEmpty() ) range=range.union(rtmp);
    }
    
    private void addRange(int order,long start, long end ) throws Exception {

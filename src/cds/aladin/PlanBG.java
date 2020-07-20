@@ -68,9 +68,9 @@ import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
+import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.moc.SMoc;
-import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 

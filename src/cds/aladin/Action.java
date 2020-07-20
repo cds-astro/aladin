@@ -1977,7 +1977,7 @@ public class Action {
 		double petitAxe = Math.sqrt(Math.pow(p2.x-p1.x,2)+Math.pow(p2.y-p1.y,2));
 
 	      // Ne passe-t-on pas "derrière le ciel" - Modif PF déc 2010
-        if( proj.t==Calib.AIT || proj.t==Calib.MOL ) {
+        if( proj.t==Calib.AIT || proj.t==Calib.MOL) {
            Coord coordBis = new Coord(s.raj,s.dej);
            coordBis.al -= (majAxis/3600)*Math.sin(posAngle*2*Math.PI/360)/Math.cos(coordBis.del*2*Math.PI/360);
            coordBis.del -= (majAxis/3600)*Math.cos(posAngle*2*Math.PI/360);

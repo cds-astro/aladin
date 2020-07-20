@@ -1803,7 +1803,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                boolean methodeRecursive =  
                      ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC ) ||
                      planBG.projd.t==Calib.MOL || planBG.projd.t==Calib.AIT ) && mayCrossTheSky 
-                     || planBG.projd.t==Calib.CAR;
+                     || planBG.projd.t==Calib.CAR || planBG.projd.t==Calib.MER;
                
                // Methode récursive pour s'approcher du bord du ciel
                if( methodeRecursive && isTooLarge(b, planBG.projd.t==Calib.ARC ? 100 : 150) ) {

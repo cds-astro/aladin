@@ -54,16 +54,20 @@ public class TMoc extends SMoc {
    
    protected void initPropSys(String sys) { property.put("TIMESYS",sys); }
    
+   /** Compute the microsec from JD=0 from a date jd (in JD unit=day decimal) and an offset (in JD unit=day) */
+   static public long getMicrosec(double jd, long offset) {
+      long micron = (long)(jd*DAYMICROSEC);
+      return micron + (offset*86400000000L);
+   }
+   
    /** Add JD range
     * @param jdmin start time (in JD - unit=day) - included in the range
     * @param jdmax end time (in JD - unit=day) - included in the range
     */
    public void add(double jdmin, double jdmax) {
       long min = (long)(jdmin*DAYMICROSEC);
-      long max = (long)(jdmax*DAYMICROSEC)+1L;
-      Range rtmp=new Range();
-      rtmp.append(min,max);
-      if( !rtmp.isEmpty() ) range=range.union(rtmp);
+      long max = (long)(jdmax*DAYMICROSEC);
+      add( min,max);
    }
    
    /** Deep copy */
@@ -78,14 +82,18 @@ public class TMoc extends SMoc {
    /** Retourne la composante spatiale du MOC */
    public SMoc getSpaceMoc() throws Exception { throw new Exception("No spatial dimension"); }
    
+   /** Retourne la composante en énergie du MOC */
+   public EMoc getEnergyMoc() throws Exception { throw new Exception("No energy dimension"); }
+   
    public int getSpaceOrder() { return -1; }  // No space dimension
    public int getTimeOrder() { return getMocOrder(); }
    
    public void setSpaceOrder(int order) throws Exception { throw new Exception("No spatial dimension"); }
    public void setTimeOrder(int order) throws Exception { setMocOrder(order); }
    
-   public boolean isSpace() { return false; }
-   public boolean isTime()  { return true; }
+   public boolean isSpace()   { return false; }
+   public boolean isTime()    { return true; }
+   public boolean isEnergy()  { return false; }
 
    public Moc union(Moc moc) throws Exception {
       return operation(moc.getTimeMoc(),0);

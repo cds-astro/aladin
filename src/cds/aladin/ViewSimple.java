@@ -5206,7 +5206,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( oTailleRA!=iz ) {
          
          double max = proj.getRaMax();
-         if( (zoom<=ZOOMBGMIN || proj.t==Calib.MOL && zoom<=ZOOMBGMIN*2) && pref instanceof PlanBG ) {
+         if( (zoom<=ZOOMBGMIN || (proj.t==Calib.MOL || proj.t==Calib.MER || proj.t==Calib.AIT ) && zoom<=ZOOMBGMIN*2) && pref instanceof PlanBG ) {
             tailleRA=max;
          } else {
             double w = rv.width;
@@ -5235,7 +5235,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected double getTailleDE( Projection proj) {
       if( oTailleDE!=iz ) {
          double max = proj.getDeMax();
-         if( (zoom<=ZOOMBGMIN || proj.t==Calib.MOL && zoom<=ZOOMBGMIN*2) && pref instanceof PlanBG ) {
+         if( (zoom<=ZOOMBGMIN || (proj.t==Calib.MOL || proj.t==Calib.MER || proj.t==Calib.AIT ) && zoom<=ZOOMBGMIN*2) && pref instanceof PlanBG ) {
             tailleDE=max;
          } else {
             double w = rv.width;

@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 
 public class STMoc extends Moc {
@@ -59,7 +60,8 @@ public class STMoc extends Moc {
    }
    
    private void init() {
-      property = new HashMap<>();
+      property = new LinkedHashMap<>();
+      comment = new HashMap<>();
       property.put("MOCTOOL","CDSjavaAPI-"+VERSION);
       property.put("DATE",String.format("%tFT%<tR", new Date()));
    }
@@ -127,9 +129,9 @@ public class STMoc extends Moc {
    public void check() throws Exception {
    }
 
-   @Override
-   public void setProperty(String key, String value) throws Exception {
-   }
+//   @Override
+//   public void setProperty(String key, String value) throws Exception {
+//   }
    
    public void accretion() throws Exception { accretion( getTimeOrder() ); }
    public void accretion(int order) throws Exception {
@@ -188,12 +190,11 @@ public class STMoc extends Moc {
    }
    
    public String getSys() { return "C"; }
-   public boolean isSpace() { return true; }
-   public boolean isTime()  { return true; }
-   public boolean isEmpty() { return range.isEmpty(); }
-   public boolean isFull() { return false; }
-
-
+   public boolean isEnergy() { return false; }
+   public boolean isSpace()  { return true; }
+   public boolean isTime()   { return true; }
+   public boolean isEmpty()  { return range.isEmpty(); }
+   public boolean isFull()   { return false; }
 
 
    /** Ajustement d'une valeur à l'ordre indiquée */
@@ -645,6 +646,8 @@ public class STMoc extends Moc {
       moc.toMocSet();
       return moc;
    }
+   
+   public EMoc getEnergyMoc() throws Exception { throw new Exception("No energy dimension"); }
 
    /** SMoc from the whole STMOC */
    public SMoc getSpaceMoc() throws Exception { return getSpaceMoc(-1,Long.MAX_VALUE); }
@@ -712,4 +715,27 @@ public class STMoc extends Moc {
    
    /** Provide array of ranges at the deepest order */
    public Range getRange() { return range; }
+
+   @Override
+   public void setProperty(String key, String value, String comment) throws Exception {
+      // TODO => POUR LES PROPERTIES SPECIFIQUES OU STMOC
+//      
+//      // In case of a setProperty() direct call without using setMocOrder(...)
+//      if( key.equals("MOCORDER") ) {
+//         int mocOrder = Integer.parseInt(value);
+//         setMocOrder(mocOrder);
+//      }
+//
+//      // In case of a setProperty() direct call without using setCoordSys(...)
+//      else if( key.equals("COORDSYS") ) {
+//         setSys(value);
+//      }
+//
+//      // default
+//      else {
+         property.put(key,value);
+         if( comment==null ) this.comment.remove(key);
+         else this.comment.put(key,comment);
+//      }
+   }
 }
