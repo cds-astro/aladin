@@ -68,7 +68,7 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class SMoc extends Moc {
    
-   static public final boolean RANGE = true;
+   static public final boolean RANGE = false;
 
    static public final int SHORT = 0;
    static public final int INT   = 1;
@@ -775,8 +775,8 @@ public class SMoc extends Moc {
    }
    
    public void toMocSet() throws Exception {
-      if( RANGE ) toMocSetR();
-      else toMocSetFX();
+      if( RANGE ) toMocSetFX();
+      else toMocSetR();
    }
    
    // Generate the Moc tree structure from the rangeSet
@@ -1420,9 +1420,12 @@ public class SMoc extends Moc {
     * @param max end range - included in the range
     */
    public void add(long min, long max) {
-      Range rtmp=new Range();
-      rtmp.append(min,max+1L);
-      if( !rtmp.isEmpty() ) range=range.union(rtmp);
+//      Range rtmp=new Range();
+//      rtmp.append(min,max+1L);
+//      if( !rtmp.isEmpty() ) range=range.union(rtmp);
+      
+      toRangeSet();
+      range.add(min, max+1L);
    }
    
    private void addRange(int order,long start, long end ) throws Exception {
@@ -1751,7 +1754,7 @@ public class SMoc extends Moc {
       return SKYAREA/npixels;
    }
 
-   static private final double SKYAREA = 4.*Math.PI*Math.toDegrees(1.0)*Math.toDegrees(1.0);
+   static public final double SKYAREA = 4.*Math.PI*Math.toDegrees(1.0)*Math.toDegrees(1.0);
    
    /** Changement de référentiel si nécessaire */
    static public SMoc convertTo(SMoc moc, String coordSys) throws Exception {

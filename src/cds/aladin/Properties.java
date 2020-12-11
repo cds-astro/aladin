@@ -436,7 +436,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    // Transforme le plan SMOC en STMOC avec un intervalle de temps par défaut
    private boolean moc2STmoc() {
       try {
-         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,24, timeField.getJdmin(), timeField.getJdmax());
+         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,25, timeField.getJdmin(), timeField.getJdmax());
          aladin.view.repaintAll();
          SwingUtilities.invokeLater( new Runnable() {
             public void run() {
@@ -1405,7 +1405,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                      if( !(pi instanceof PlanImage) ) return;
                      Astrotime t = new Astrotime();
                      t.set( ((PlanImage)pi).getDateObs() );
-                     System.out.println("Epoch="+t+" => "+t.toString("J"));
+//                     System.out.println("Epoch="+t+" => "+t.toString("J"));
                      epField.setText(t.toString("J"));
                      apply();
                   } catch( ParseException e ) {

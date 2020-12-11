@@ -21,6 +21,8 @@
 
 package cds.tools;
 
+import java.util.Locale;
+
 import org.jastronomy.jsofa.JSOFA;
 
 import cds.aladin.Tok;
@@ -60,7 +62,11 @@ public class Astrodate {
       if( tok.hasMoreTokens() ) HH = Double.parseDouble( tok.nextToken() );
       if( tok.hasMoreTokens() ) MM = Double.parseDouble( tok.nextToken() );
       if( tok.hasMoreTokens() ) SS = Double.parseDouble( tok.nextToken() );
-      return dateToJD(A,M,J,HH,MM,SS);
+      
+//      System.out.println("Date="+date+" => ss="+SS);
+      double res = dateToJD(A,M,J,HH,MM,SS);
+//      System.out.println("res="+res);
+      return res;
    }
    
    /** Conversion d'une date en jour julien
@@ -87,7 +93,7 @@ public class Astrodate {
    }
    
    /**
-    * Conversion d'une date en jour julien en AAAA-MM-JJTHH:MM:SS (UTC)
+    * Conversion d'une date en jour julien en AAAA-MM-JJTHH:MM:SS[.SSS] (UTC)
     * @param JD Jour Julien
     * @return
     */
@@ -111,10 +117,14 @@ public class Astrodate {
       long M = E<13.5?E-1:E-13;
       long A = (M<2.5)?C-4715:C-4716;
       long s = (long)( (j-J)*86400 );
+      double ss = (j-J)*86400.;
       long HH = s/3600;
       long MM = (s  - HH*3600 )/60;
       long SS = (s - HH*3600 - MM*60);
-      return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");      
+      double SSf = (ss - HH*3600 - MM*60);
+      if( SSf-(int)SSf < 0.001 ) return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");
+      String s1 = String.format(Locale.ROOT,"%02.3f",SSf);
+      return A+"-"+dd(M)+"-"+dd(J)+ "T"+dd(HH)+":"+dd(MM)+":"+s1;
    }
    
    // Ajout d'un zéro en primer digit si nécessaire

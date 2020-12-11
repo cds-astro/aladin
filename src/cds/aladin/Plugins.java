@@ -49,7 +49,6 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
@@ -104,9 +103,13 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
     private JButton removePlug;                   // Le bouton pour supprimer des plugins
     private JList listPlugs;                       // Liste des plugins
     
+    private final MyClassloader classLoader;  // Mon propre classLoader qui peut ajouter des URL/Path
+    
     public Plugins(Aladin aladin) {
        this.aladin = aladin;
        plugs = new Vector();
+       
+       classLoader = new MyClassloader(new URL[0], this.getClass().getClassLoader());
        
        scanDir(getPlugPath());
 
@@ -191,6 +194,17 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
        }
     }
     
+    /** Nécessaire à partir de Jvm 1.0 */
+    public class MyClassloader extends URLClassLoader {
+       public MyClassloader(URL[] urls, ClassLoader parent) {
+           super(urls, parent);
+       }
+
+       public void addURL(URL url) {
+           super.addURL(url);
+       }
+   }
+    
     /** PEUT ETRE INUTILE: LE CLASSLOADER CONSERVE LE PATH VIA byteOfClass()
      * Ajout du dir dans le CLASSPATH du classLoader
      */
@@ -198,11 +212,15 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
 //System.out.println("J'ajoute ["+dir+"] au CLASSPATH");          
        try {
          URL u = new File(dir).toURL();
-          URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-          Class sysclass = URLClassLoader.class;
-          Method method = sysclass.getDeclaredMethod("addURL",new Class[]{URL.class});
-          method.setAccessible(true);
-          method.invoke(sysloader,new Object[]{ u });
+         classLoader.addURL(u);
+         
+// CETTE METHODE N'EST PLUS SUPPORTEE A PARTIR DE JVM1.9 => REMPLACER PAR MyClassLoader
+//          ClassLoader apploader = ClassLoader.getSystemClassLoader();
+//         URLClassLoader sysloader = (URLClassLoader)apploader;
+//          Class sysclass = URLClassLoader.class;
+//          Method method = sysclass.getDeclaredMethod("addURL",new Class[]{URL.class});
+//          method.setAccessible(true);
+//          method.invoke(sysloader,new Object[]{ u });
       } catch( Throwable e ) { 
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -494,8 +512,9 @@ Aladin.trace(3,"Scanning plugs in ["+dir+"]");
              String n = name.substring(pos>=0 ? pos+1 : 0 , name.length()-6).replace(FS, '.');
 //             path = name.substring(0,pos);
              try {
-//                Class plugin = (Class)loadClass(n);
-                Class plugin = ClassLoader.getSystemClassLoader().loadClass(n);
+//                Class plugin = ClassLoader.getSystemClassLoader().loadClass(n);
+                Class plugin = classLoader.loadClass(n);
+                
                 tryToAdd(n,plugin);
              } catch( Throwable e ) {
                 System.err.println("Cannot load plugin "+name+"\n ==> "+e.getMessage());
@@ -555,8 +574,8 @@ Aladin.trace(3,"Scanning plugs in ["+dir+"]");
             name = name.replace('/','.');
             
             try {
-//               Class plugin = (Class)loadClass(name);
-               Class plugin = ClassLoader.getSystemClassLoader().loadClass(name);
+//               Class plugin = ClassLoader.getSystemClassLoader().loadClass(name);
+               Class plugin = classLoader.loadClass(name);
                trouve= trouve || tryToAdd(name,plugin);
             } catch( Throwable e ) {
                e.printStackTrace();

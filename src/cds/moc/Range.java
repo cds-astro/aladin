@@ -87,7 +87,7 @@ public class Range {
    }
    
    /** RAM usage (in bytes) */
-   public long getMem() { return r==null ? 0 : r.length*8L; }
+   public long getMem() { return r==null ? 0 : sz*8L; }
    
    /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
     * Aggrège les intervalles si nécessaires et ajuste l'occupation mémoire

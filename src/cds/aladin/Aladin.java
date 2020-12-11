@@ -166,7 +166,9 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
- * @beta    <LI> Hipsgen RGB bug (MOC contains() bug)
+ * @beta    <LI> Plugins classLoader problem with JVM >=1.9
+ * @beta    <LI> Save JPEG images with OpenJDK
+ * @beta    <LI> STMOC millisecond precision in properties
  * @beta </UL>
  *
  */
@@ -189,7 +191,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.027";
+   static public final    String VERSION = "v11.031";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

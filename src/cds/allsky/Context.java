@@ -241,8 +241,9 @@ public class Context {
    static public String getFrameCode(int frame ) { return frame==Localisation.GAL ? "G"
          : frame==Localisation.ECLIPTIC ? "E" : frame==-1 ? "?" : "C"; }
    static public int getFrameVal( String frame) {
-      return (frame.equals("G")||frame.startsWith("gal"))? Localisation.GAL:
-         frame.equals("E") || frame.startsWith("ecl") ? Localisation.ECLIPTIC : Localisation.ICRS;
+      frame = frame.toUpperCase();
+      return (frame.equals("G") || frame.startsWith("GAL"))? Localisation.GAL:
+         frame.equals("E") || frame.startsWith("ECL") ? Localisation.ECLIPTIC : Localisation.ICRS;
    }
    static public String getCanonicalFrameName( String s) { return getFrameName( getFrameVal(s)); }
 

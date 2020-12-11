@@ -73,35 +73,42 @@ public class PlanMocAlgo extends PlanMoc {
       
       aladin.trace(3,"MOC computation: "+Plan.Tp[type]+" => "+s);
       
-      try {
-         moc = p1.getMoc().clone();
-         
-         if( op==COMPLEMENT ) moc = ((SMoc)moc).complement();
-         else if( op==TOORDER ) moc.setMocOrder(order);
-         else {
-            for( int i=1; i<pList.length; i++ ) {
-               Moc m1=moc;
-               SMoc m2=pList[i].toReferenceFrame(m1.getSys());
-               switch(op) {
-                  case UNION :        moc = m1.union(        m2); break;
-                  case INTERSECTION : moc = m1.intersection( m2 ); break;
-                  case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-                  case DIFFERENCE  :  moc = ((SMoc)m1).difference(   m2 ); break;
+//      for( int j=0; j<3; j++ ) {
+//         long t0 = System.currentTimeMillis();
+         try {
+            moc = p1.getMoc().clone();
+
+            if( op==COMPLEMENT ) moc = ((SMoc)moc).complement();
+            else if( op==TOORDER ) moc.setMocOrder(order);
+            else {
+               for( int i=1; i<pList.length; i++ ) {
+                  Moc m1=moc;
+                  SMoc m2=pList[i].toReferenceFrame(m1.getSys());
+                  switch(op) {
+                     case UNION :        moc = m1.union(        m2); break;
+                     case INTERSECTION : moc = m1.intersection( m2 ); break;
+                     case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
+                     case DIFFERENCE  :  moc = ((SMoc)m1).difference(   m2 ); break;
+                  }
                }
             }
+            ((SMoc)moc).setMinOrder(3);
+            if( order!=-1 ) moc.setMocOrder( order);
+
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            moc.clear();
+            aladin.error = error = e.getMessage();
+            flagOk=false;
          }
-         ((SMoc)moc).setMinOrder(3);
-         if( order!=-1 ) moc.setMocOrder( order);
+
+         copyright = "Computed by Aladin";
+         flagProcessing=false;
          
-      } catch( Exception e ) {
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-         moc.clear();
-         aladin.error = error = e.getMessage();
-         flagOk=false;
-      }
-      
-      copyright = "Computed by Aladin";
-      flagProcessing=false;
+//         long t1 = System.currentTimeMillis();
+//         System.out.println("Operation done in "+(t1-t0)+"ms");
+//
+//      }
       flagOk=true;
       setActivated(flagOk);
       if( moc.getSize()==0 ) error="Empty MOC";

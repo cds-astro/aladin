@@ -77,7 +77,7 @@ public class TargetHistory {
    
    
    /** Retourne la dernière target mémorisée */
-   protected String getLast() { return list.get( list.size()-1 ); }
+   protected String getLast() { return list.size()==0 ? "" : list.get( list.size()-1 ); }
    
    /** Retourne une liste de nb targets à partir de l'indice index. l'index 0 est celui
     * de la dernière target insérée, 1 pour l'avant-dernière, etc...

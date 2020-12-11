@@ -2104,18 +2104,30 @@ public class Save extends JFrame implements ActionListener {
 
    /** Sauvegarde sous forme JPEG ou PNG + header FITS d'un plan - mode peut être 3-"png" ou 2-"jpg" */
    protected boolean saveImageColor(OutputStream o,PlanImage p, int mode) {
+      boolean flagJpeg = mode==2;
       MemoryImageSource img;
       try {
          if( p.type==Plan.IMAGERGB ) {
             img = new MemoryImageSource(p.width,p.height,p.cm,
                   ((PlanRGBInterface)p).getPixelsRGB(), 0,p.width);
          } else img = new MemoryImageSource(p.width,p.height,p.cm, p.pixels, 0,p.width);
-
+         
          String s = "Created by Aladin";
          if( !p.hasNoReduction() ) s = generateFitsHeaderStringForNativeImage(p);
-         ImageWriter(getToolkit().createImage(img),mode==3 ? "png":"jpg",-1,
-               p.type==Plan.IMAGERGB, mode==3 ? new PNGOutputFilter(o,s) : new JpegOutputFilter(o,s));
+
+         if( flagJpeg ) {
+            BufferedImage imgBuf = new BufferedImage(p.width,p.height, BufferedImage.TYPE_INT_RGB);
+            Graphics g = imgBuf.getGraphics();
+            g.drawImage(getToolkit().createImage(img),0,0,null);
+            g.finalize(); 
+            g=null;
+            ImageWriter(imgBuf,"jpg",-1, p.type==Plan.IMAGERGB, new JpegOutputFilter(o,s));
+            
+         } else {
+            ImageWriter(getToolkit().createImage(img),"png",-1, p.type==Plan.IMAGERGB, new PNGOutputFilter(o,s));
+         }
       } catch(Exception e) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
          System.out.println("!!! JPEG image failed");
          System.err.println(e+"");
          return false;

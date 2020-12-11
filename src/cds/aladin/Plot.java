@@ -650,7 +650,8 @@ public class Plot {
                      if( plotProj.isLogXPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
                      else s1 = c.al+"";
                   }
-                  g.drawString(Util.myRound(s1,nbRoundX),p1.x+2+dx, h-5+dy);
+                  String s2 = s1.indexOf(':')>=0 ? s1 : Util.myRound(s1,nbRoundX);
+                  g.drawString(s2,p1.x+2+dx, h-5+dy);
                }
                if( p1==null || p1.x+dx>w ) break;
                if( plotProj.isLogXPlot() ) incrX*=10;

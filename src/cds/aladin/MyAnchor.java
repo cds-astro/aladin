@@ -72,7 +72,8 @@ class MyAnchor extends JLabel {
          if( (text.startsWith("http://") || text.startsWith("ftp://")) && text.length()>width ) text=text.substring(0,width)+"...";
          else {
             if( url!=null ) text = Util.fold(text,width,true);
-            text = Util.fold(text,width);
+            else if( more==null && text.length()>width ) { more=text; text=text.substring(0,width); }
+            else text = Util.fold(text,width);
          }
       }
       if( url!=null ) {

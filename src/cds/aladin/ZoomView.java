@@ -264,7 +264,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       // Actions liées à la liste des targets
       if( rectHistory!=null && flagTargetControl ) {
          if( rectTarget.contains(e.getPoint() ) ) {
-            aladin.command.execNow( aladin.targetHistory.getLast() );
+            String t = aladin.targetHistory.getLast();
+            if( t.length()>0 ) aladin.command.execNow( t );
 
          } else if( rectHistory.contains(e.getPoint()) ) {
             triangleAction(e.getX(), e.getY());
@@ -853,6 +854,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       
       // Affichage du dernier target
       String target = aladin.targetHistory.getLast();
+      if( target.length()==0 ) return;
       int w = g.getFontMetrics().stringWidth(target);
       g.setColor( flagTargetHistoryIn ? c.brighter() : c);
       g.drawString(target,x,y+6);

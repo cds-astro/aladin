@@ -228,6 +228,60 @@ public class TMoc extends SMoc {
    
    static public void main( String argv[] ) {
       try {
+//         
+//         int min = 0;
+//         int max = 100_000_000;
+//         int n = 10_000_000;
+//         
+//         for( int j=0; j<10; j++ ) {
+//         int[] a = new int[n];
+//         int[] b = new int[n];
+//         long l1 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           a[i] = ThreadLocalRandom.current().nextInt(min, max + 1);
+//         }
+//         long l2 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = a[i] >> 2;
+//         }
+//         long l3 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = 10 * (a[i] / 10);
+//         }
+//         long l4 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = a[i] >> 4;
+//         }
+//         long l5 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = 35 * (a[i] / 35);
+//         }
+//         long l6 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = 8 * (a[i] / 8);
+//         }
+//         long l7 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = a[i] >> 12;
+//         }
+//         long l8 = System.currentTimeMillis();
+//         for(int i = 0; i < a.length; i++) {
+//           b[i] = 1000 * (a[i] / 1000);
+//         }
+//         long l9 = System.currentTimeMillis();
+//         System.out.println("number of entries = " + n);
+//         System.out.println("t1: " + (l2 - l1) + " ms random generation");
+//         System.out.println("t2: " + (l3 - l2) + " ms x >> 2");
+//         System.out.println("t3: " + (l4 - l3) + " ms 10 * (x / 10)");
+//         System.out.println("t4: " + (l5 - l4) + " ms x >> 4");
+//         System.out.println("t5: " + (l6 - l5) + " ms 35 * (x / 35)");
+//         System.out.println("t6: " + (l7 - l6) + " ms 8 * (x / 8) op. equivalente à >> 3");
+//         System.out.println("t7: " + (l8 - l7) + " ms x >> 12");
+//         System.out.println("t8: " + (l9 - l8) + " ms 1000 * (x / 1000)");
+//         }
+
+
+         System.exit(0);
          System.out.println("  Order    Space res.   Time resolution");
          for( int i=0; i<=MAXORDER; i++ ) {
             String spaceRes = Coord.getUnit(  Math.sqrt( SMoc.getPixelArea( i ) ));

@@ -208,17 +208,17 @@ public class STMoc extends Moc {
    public void add(long tmin, long tmax, long smin, long smax) {
       tmin = getVal(tmin, timeOrder);
       tmax = getVal(tmax, timeOrder);
-      if( tmax==tmin ) tmax++;
+//      if( tmax==tmin ) tmax++;   !!! Bizarre
       smin = getVal(smin, spaceOrder);
       smax = getVal(smax, spaceOrder);
-      if( smax==smin ) smax++;
+//      if( smax==smin ) smax++;   !!! Bizarre
      
       // Moc Spatial réduit à un intervalle spatial
       Range r = new Range();
-      r.append(smin,smax);
+      r.append(smin,smax+1L);
       
       // Ajout de la cellule spatio-temporelle
-      range.add(tmin,tmax,r);
+      range.add(tmin,tmax+1L,r);
    }
    
    public void sortAndFix() { range.sortAndFix(); }
@@ -625,7 +625,7 @@ public class STMoc extends Moc {
    /** TMoc from the whole STMOC */
    public TMoc getTimeMoc() throws Exception {
       TMoc moc = new TMoc();
-      moc.range = range;
+      moc.range = new Range(range);
       moc.toMocSet();
       return moc;
    }

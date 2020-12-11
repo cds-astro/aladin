@@ -847,35 +847,43 @@ public class PlanMocGen extends PlanMoc {
 //   }
    
    protected boolean waitForPlan() {
-      try {
-         moc = new SMoc();
-         ((SMoc)moc).setMinOrder(3);
-         if( order!=-1) moc.setMocOrder(order);
-         ((SMoc)moc).setSys("C");
-         frameOrigin=Localisation.ICRS;
-         moc.setCheckConsistencyFlag(false);
-         for( Plan p1 : p ) {
-            if( p1.isCatalog() ) {
-               if( fov ) addMocFromCatFov(p1,order);
-               else addMocFromCatalog(p1,radius,order);
+
+//      for( int order=6; order<=20; order+=2 ) {
+//         for( int i=0; i<5; i++ ) {
+//            long t0 = System.currentTimeMillis();
+            try {
+               moc = new SMoc();
+               ((SMoc)moc).setMinOrder(3);
+               if( order!=-1) moc.setMocOrder(order);
+               ((SMoc)moc).setSys("C");
+               frameOrigin=Localisation.ICRS;
+               moc.setCheckConsistencyFlag(false);
+               for( Plan p1 : p ) {
+                  if( p1.isCatalog() ) {
+                     if( fov ) addMocFromCatFov(p1,order);
+                     else addMocFromCatalog(p1,radius,order);
+                  }
+                  else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
+                  else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,order,threshold);
+                  else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,order,pixMin,pixMax);
+               }
+               moc.setCheckConsistencyFlag(true);
+            } catch( Exception e ) {
+               error=e.getMessage();
+               if( aladin.levelTrace>=3 ) e.printStackTrace();
+               flagProcessing=false;
+               return false;
             }
-            else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
-            else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,order,threshold);
-            else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,order,pixMin,pixMax);
-         }
-         moc.setCheckConsistencyFlag(true);
-      } catch( Exception e ) {
-         error=e.getMessage();
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-         flagProcessing=false;
-         return false;
-      }
-      flagProcessing=false;
-      if( moc.getSize()==0 ) error="Empty MOC";
+            flagProcessing=false;
+            if( moc.getSize()==0 ) error="Empty MOC";
+//            long t1 = System.currentTimeMillis();
+//            Aladin.trace(3,"MOC built in "+(t1-t0)+"ms order="+moc.getMocOrder()+" nb cells="+moc.getSize()+" mem="+moc.getMem());
+//         }
+//      }
       flagOk=true;
       return true;
    }
-   
+
 
       
 }

@@ -43,6 +43,7 @@ import cds.allsky.Context;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.moc.Moc;
+import cds.moc.SMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -1229,6 +1230,8 @@ public class PlanHealpix extends PlanBG {
 
    
    private int lastOrder=0;
+   static final double DENSPROB = (Math.PI/180.)*(Math.PI/180.);
+   
 //   boolean X=true;
 //   private int histo[] = new int[30];
 
@@ -1258,12 +1261,24 @@ public class PlanHealpix extends PlanBG {
       // On repart toujours du dernier ordre traité car il y a une forte probabilité
       // que deux pixels consécutifs soient de même ordre
       int maxOrder = (int) log2( newNSideFile );
+      
       for( int i=0; i<=maxOrder; i++,lastOrder++ ) {
          if( lastOrder>maxOrder ) lastOrder=0;
          int gap = 2*(maxOrder-lastOrder);
          long nuniq = Moc.hpix2uniq(lastOrder, npix>>>gap);
+         
          Double a = (Double)partialValues.get( nuniq );
-         if( a!=null ) return a; 
+         double s=DENSPROB;
+         long ncell = 12<<(maxOrder*2);
+         double s1=SMoc.SKYAREA/ncell;
+         
+//         if( nuniq==33845035) {
+//            System.out.println("nuniq="+nuniq+" npix="+npix+" order="+lastOrder+" a="+a+" area="+s+" prob2="+((a*s)*s1));
+//         }
+         if( a!=null ) {
+            a = a*s*s1;
+            return a; 
+         }
       }
       return Double.NaN;
    }

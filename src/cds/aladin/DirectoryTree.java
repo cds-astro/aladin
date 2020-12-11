@@ -411,6 +411,10 @@ public class DirectoryTree extends JTree {
          mapIcon.put("sdss.jhu",new MyImageIcon(img));
          mapIcon.put("sdss.jhu/color",new MyImageIcon(setIconTag(img)));
         
+         img = aladin.getImagette("astron.png");
+         mapIcon.put("astron.nl",new MyImageIcon(img));
+         mapIcon.put("hips.astron.nl",new MyImageIcon(img));
+
          mapIcon.put("f",new MyImageIcon(img));
          
          mapIcon.put("defaut",new MyImageIcon());

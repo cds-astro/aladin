@@ -23,6 +23,8 @@ package cds.aladin;
 
 import java.awt.Graphics;
 
+import javax.swing.SwingUtilities;
+
 import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.moc.STMoc;
@@ -87,6 +89,22 @@ public class PlanSTMoc extends PlanTMoc {
       m.range.r[0]=min;
       m.range.r[1]=max;
    }
+   
+   private double cov=-1;
+   private double getFullCoverage() {
+      if( cov>=0 ) return cov;
+      if( cov==-2 ) return -1;
+      cov=-2;
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            try {
+               cov = (((STMoc) moc).getSpaceMoc()).getCoverage();
+            } catch( Exception e ) { }
+        }
+      });
+
+      return cov;
+   }
 
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
@@ -98,9 +116,7 @@ public class PlanSTMoc extends PlanTMoc {
       ADD( buf,"\n* Time res: ",TMoc.getTemps(  TMoc.getDuration(timeOrder)));
       ADD( buf,"\n* Best time order: ",timeOrder+"");
 
-      double cov=0;
-      try { cov = (stmoc.getSpaceMoc()).getCoverage();
-      } catch( Exception e ) { }
+      double cov=getFullCoverage();
       double degrad = Math.toDegrees(1.0);
       double skyArea = 4.*Math.PI*degrad*degrad;
       ADD( buf, "\n \n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");

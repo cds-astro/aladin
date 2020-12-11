@@ -1419,7 +1419,7 @@ final public class TableParser implements XMLConsumer {
                if( att!=null && att.equals("QUERY_STATUS") ) {
                   att=(String)atts.get("value");
                   if( att!=null && att.equalsIgnoreCase("ERROR")) {
-                     error="je me suis planté";
+                     error="QUERY_STATUS error returned";
                      inError=true;
                      return;
                   }
