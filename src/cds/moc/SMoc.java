@@ -496,7 +496,9 @@ public class SMoc extends Moc {
 
    /** Sort each level of the Moc */
    public void sort() {
-      for( int order=0; order<nOrder; order++ ) level[order].sort();
+      for( int order=0; order<nOrder; order++ ) {
+         level[order].sort();
+      }
    }
 
    /** Return true if all Moc level is sorted */
@@ -1277,7 +1279,7 @@ public class SMoc extends Moc {
 
    // Création d'un itérator sur la liste des pixels triés et ramenés au max order
    // Méthode : parcours en parallèle tous les niveaux, en conservant pour chacun d'eux l'indice de sa tête
-   //           prends la plus petite "tête", et pour celle-là, itère dans l'intervalle (fonction de la différence par rapport
+   //           prend la plus petite "tête", et pour celle-là, itère dans l'intervalle (fonction de la différence par rapport
    //           à l'ordre max => 4 pour order-1, 16 pour order-2 ...).
    private class PixelIterator implements Iterator<Long> {
       private boolean ready=false;      // Le goNext() a été effectué et le pixel courant pas encore lu
@@ -1324,7 +1326,7 @@ public class SMoc extends Moc {
          }
 
          // On énumère tous les pixels du range
-         current = new Long(currentTete + indice);
+         current = Long.valueOf(currentTete + indice);
          indice++;
 
          // Si on a terminé le range courant, on avance l'indice de sa tete

@@ -29,7 +29,6 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -56,16 +55,16 @@ public class SourceStat extends SourceTag {
    /** Création ou maj d'une légende associée à un SourcePhot */
    static protected Legende createLegende() {
       if( legende!=null ) return legende;
-      legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "_RAJ2000","_DEJ2000","ID",  "Image", "RA (ICRS)","DE (ICRS)","Count",  "Sum",   "Sigma",  "Min",   "Avg",   "Max",   "Radius","Area",       });
-      legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "double",  "double",  "char","char",  "char",     "char",     "integer","double","double", "double","double","double","double","double"  });
-      legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "deg",     "deg",     "",    "",      "\"h:m:s\"","\"h:m:s\"","pixel",  "",      "",       "",      "",      "",      "arcmin","arcmin^2"       });
-      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "10",      "10",      "10",  "20",    "13",      "13",        "10",     "10",    "10",    "10",    "10",     "10",    "10",    "10"    });
-      legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "6",       "6",       "",    "",      "4",        "5",        "2",      "4",     "4",     "4",     "4",      "4" ,    "4",     "4",         });
+      legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "_RAJ2000","_DEJ2000","ID",  "s_region", "Image", "RA (ICRS)","DE (ICRS)","Count",  "Sum",   "Sigma",  "Min",   "Avg",   "Max",   "Radius","Area",       });
+      legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "double",  "double",  "char","char",     "char",  "char",     "char",     "integer","double","double", "double","double","double","double","double"  });
+      legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "deg",     "deg",     "",    "",         "",      "\"h:m:s\"","\"h:m:s\"","pixel",  "",      "",       "",      "",      "",      "arcmin","arcmin^2"       });
+      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "10",      "10",      "10",  "5",        "20",    "13",      "13",        "10",     "10",    "10",    "10",    "10",     "10",    "10",    "10"    });
+      legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "6",       "6",       "",    "",         "",      "4",        "5",        "2",      "4",     "4",     "4",     "4",      "4" ,    "4",     "4",         });
       legende = Legende.adjustDefaultLegende(legende,Legende.DESCRIPTION,
-            new String[]{  "RA","DEC", "Identifier",  "Reference image", "Right ascension",  "Declination","Pixel count","Sum of pixel values","Median of the distribution", "Minimum value","Average value", "Maximum value",
+            new String[]{  "RA","DEC", "Identifier",  "Field of View", "Reference image", "Right ascension",  "Declination","Pixel count","Sum of pixel values","Median of the distribution", "Minimum value","Average value", "Maximum value",
                            "Radius","Area (pixels)" });
       legende = Legende.adjustDefaultLegende(legende,Legende.UCD,
-            new String[]{  "pos.eq.ra;meta.main","pos.eq.dec;meta.main","meta.id;meta.main","","pos.eq.ra","pos.eq.dec","","","","","","","","" });
+            new String[]{  "pos.eq.ra;meta.main","pos.eq.dec;meta.main","meta.id;meta.main","","","pos.eq.ra","pos.eq.dec","","","","","","","","" });
       legende.name="Pixel statistics";
       hideRADECLegende(legende);
       return legende;
@@ -75,6 +74,8 @@ public class SourceStat extends SourceTag {
    private double radius;        // Rayon en degrés image du cercle englobant
    protected int dw,dh;          // mesure du label
    protected Color couleur=null; // Couleur alternative
+   
+   protected boolean asSource =false;   // Par défaut, n'apparait pas en tant que Source
    
    /** Creation pour les backups */
    protected SourceStat(Plan plan) { super(plan); }
@@ -118,10 +119,19 @@ public class SourceStat extends SourceTag {
    /** (Re)énération de la ligne des infos (détermine les mesures associées) */
    protected void resumeMesures() {
       double stat[] = null;
+      int z=-1;
       
+      String nomPlan = planBase.label;
+      if( planBase.isCube() ) {
+         z=(int)planBase.getZ();
+         int d = 1+z;
+         nomPlan+="/"+d;
+      }
       
-      try { stat = getStatistics(planBase); }
+      try { stat = getStatistics(planBase,z); }
       catch( Exception e ) { stat=null; }
+      
+//      System.out.println("resumeMesures z="+z+" for "+id);
       
       String cnt  = stat==null ? " " : ""+stat[0];
       String tot  = stat==null ? " " : ""+stat[1];
@@ -134,19 +144,17 @@ public class SourceStat extends SourceTag {
       
       Coord c = new Coord(raj,dej);
       
-      String nomPlan = planBase.label;
       if( planBase instanceof PlanBG ) {
          PlanBG pbg = (PlanBG)planBase;
          int orderFile=order==-1 ? pbg.maxOrder : order==0 ?  pbg.getOrder() : order;
          nomPlan=orderFile+"/"+nomPlan;
       }
       
-      if( planBase.isCube() ) {
-         int d = 1+(int)planBase.getZ();
-         nomPlan+="/"+d;
-      }
+      String fov = "CIRCLE ICRS "+raj+" "+dej+" "+getRadius();
+      setFootprint(fov);
+      setIdxFootprint(3);
       
-      info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+nomPlan+"\t"+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+rad+"\t"+surf;
+      info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+fov+"\t"+nomPlan+"\t"+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+rad+"\t"+surf;
    }
    
    /** Retourne la liste des Propriétés éditables */
@@ -287,12 +295,6 @@ public class SourceStat extends SourceTag {
    /** Positionnement d'un ID particulier */
    protected void setId(String s) { id=s; setD(); }
 
-   /** Positionne l'id par defaut */
-   void setId() {
-      if( id==null ) id="Stat "+ nextIndice();
-      setD();
-   }
-   
    /** Test d'appartenance.
     * Retourne vrai si le point (x,y) de l'image se trouve sur le texte
     * @param x,y le point a tester
@@ -317,10 +319,9 @@ public class SourceStat extends SourceTag {
       clip = unionRect(clip, p.x-D,p.y-D,D*2,D*2);
       if( isSelected() )  clip = unionRect(clip, p.x-l-DS,p.y-l-DS,l*2+DDS,l*2+DDS);
       if( isWithLabel() ) clip = unionRect(clip, p.x-dw/2,p.y-L-1-dh-1,dw,dh);
-      if( isWithStat() )  clip = unionRect(clip,p.x,p.y-20,250,150);
+      if( isWithStat() )  clip = unionRect(clip,getStatPosition(v));
       return clip;
    }
-
    /** Donne la boite englobante afin de dessiner les poignées */
    protected Rectangle getClipRayon(ViewSimple v ) {
       Rectangle clip=null;
@@ -345,30 +346,19 @@ public class SourceStat extends SourceTag {
       return couleur;
    }
 
+
    /** Calcule des statistiques à la volée en fonction du plan de base de la vue passée en paramètre */
-   protected boolean statCompute(Graphics g,ViewSimple v) {
+   protected boolean statCompute(Graphics g,ViewSimple v, int z) {
 
       boolean flagHist = v==v.aladin.view.getCurrentView();
 
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
-      statInit();
-
-      double xc,yc;
-      xc=xv[v.n]-0.5;
-      yc=yv[v.n]-0.5;
-      double r=getRayon(v);
 
       // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
-      if( r>100 &&  v.flagClicAndDrag) return false;
-
-      // TODO : j'ai des doutes sur ces valeurs si v.pref.type==Plan.IMAGEBKGD
-      minx=(int)Math.floor(xc-r);
-      maxx=(int)Math.ceil(xc+r);
-      miny=(int)Math.floor(yc-r);
-      maxy=(int)Math.ceil(yc+r);
-
-      double carreRayon = r*r;
-      double pixelSurf = 0;
+      if( getRayon(v)>100 && v.flagClicAndDrag) return false;
+      
+      pixelStats.reinit( getPixelStatsCle(v.pref, z) );
+      double tripletPix [] = pixelStats.getStatisticsRaDecPix();
 
       HistItem onMouse=null;
       if( flagHist ) {
@@ -379,113 +369,90 @@ public class SourceStat extends SourceTag {
          if( onMouse==null ) v.aladin.view.zoomview.initPixelHist();
          else flagHist=false;
       }
-
-      // Dans le cas d'un plan HEALPix, il faut passer par les routines query_disk()
-      if( v.pref instanceof PlanBG ) {
-         try {
-            PlanBG pbg = (PlanBG)v.pref;
-            int orderFile = pbg.getOrder();
-//            long nsideFile = CDSHealpix.pow2(orderFile);
-            long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-//            long nside = nsideFile * nsideLosange;
-            int orderPix = pbg.getOrder() + pbg.getTileOrder();
-            pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
-            pixelSurf *= pixelSurf;
-            //            System.out.println("order="+CDSHealpix.log2(nside)+" => surf="
-            //                  +Coord.getUnit(pixelSurf, false, true));
-            Coord coo = new Coord(raj,dej);
-            coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
-            double radiusRadian = Math.toRadians(getRadius());
-            long [] npix = CDSHealpix.query_disc(orderPix, coo.al, coo.del, radiusRadian, false);
-            //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
-            for( int i=0; i<npix.length; i++ ) {
-               long npixFile = npix[i]/(nsideLosange*nsideLosange);
-               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
-               //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
-               if( Double.isNaN(pix) ) continue;
-               pix = pix*pbg.bScale+pbg.bZero;
-               double polar[] = CDSHealpix.pix2ang_nest(orderPix, npix[i]);
-               polar = CDSHealpix.polarToRadec(polar);
-               coo.al = polar[0]; coo.del = polar[1];
-               coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
-               statPixel(g,pix,coo.al,coo.del,v,onMouse);
-               //               System.out.println("pix["+i+"]="+pix);
-               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
-            }
-            //            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));
-         } catch( Exception e ) { e.printStackTrace(); }
-
-      } else {
-         try {
-            pixelSurf = v.pref.projd.getPixResAlpha()* v.pref.projd.getPixResDelta();
-         } catch( Exception e ) { }
-         for( double y=miny; y<=maxy; y++ ) {
-            for( double x=minx; x<=maxx; x++ ) {
-               if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
-               double pix = statPixel(g, (int)x, (int)y, v,onMouse);
-               if( Double.isNaN(pix) ) continue;
-               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
-            }
-         }
+      
+      // On colore les pixels qu'il faut, et on met à jour l'histogramme
+      for( int i=0; i<tripletPix.length; i+=3 ) {
+         double ra =tripletPix[i];
+         double de =tripletPix[i+1];
+         double val=tripletPix[i+2];
+         if( v.pref instanceof PlanBG ) statPixelBG(g,val,ra,de,v,onMouse);
+         else statPixel(g,val,ra,de,v,onMouse);
+         if( flagHist ) v.aladin.view.zoomview.addPixelHist(val);
       }
 
+
       if( flagHist ) v.aladin.view.zoomview.createPixelHist(v.pref.type==Plan.ALLSKYIMG ? "HEALPixels":"Pixels");
-
-      // Valeurs en float pour la bounding box
-      xc=xv[v.n];
-      yc=yv[v.n];
-      minx=xc-r;
-      maxx=xc+r;
-      miny=yc-r;
-      maxy=yc+r;
-
-      // Calculs des statistiques => sera utilisé immédiatement par le paint
-      // Attention, il s'agit de variables statiques
-      try {
-         surface = nombre*pixelSurf;
-         moyenne = total/nombre;
-         variance = carre/nombre - moyenne*moyenne;
-         sigma = Math.sqrt(variance);
-         if( medianeArrayNb==MAXMEDIANE ) mediane=Double.NaN;
-         else {
-            Arrays.sort(medianeArray,0,medianeArrayNb);
-            mediane = medianeArray[medianeArrayNb/2];
-         }
-         setWithStat(true);
-      } catch( Exception e ) { }
-
+      setWithStat(true);
+      
       return true;
    }
 
-   /** Calcule des statistiques en fonction du plan passé en paramètre
-    * @return Nombre, total, sigma, surface, min, max
+   
+   private PixelStats pixelStats = new PixelStats();
+   
+   /** Retourne une clé unique associé aux statistiques courantes */
+   String getPixelStatsCle(Plan p, int z) { 
+      if( z==-1 && p.isCube() ) z=(int)p.getZ();
+      String sync = p.isSync() ? "sync":"";
+      return raj+","+dej+","+radius+","+p.hashCode()
+            + ","+sync
+            + (p.isCube() ? ","+z : "")
+            + (p instanceof PlanBG ? ((PlanBG)p).getOrder()+"" : "");
+   }
+   
+   /** Retourne la liste des triplets associées aux pixels des statistiques (raj,dej,val)
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return le tableau des triplets
+    * @throws Exception
     */
-   public double [] getStatistics(Plan p) throws Exception {
-
+   public double [] getStatisticsRaDecPix(Plan p, int z) throws Exception {
+      if( p.isCube() && z==-1 ) z=(int)p.getZ();
+      resumeStatistics(p,z);
+      return pixelStats.getStatisticsRaDecPix();
+   }
+   
+   /** Retourne les statistiques en fonction du plan passé en paramètre
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return Nombre, total, sigma, surface, min, max, [median]
+    */
+   public double [] getStatistics(Plan p, int z) throws Exception {
+      if( p.isCube() && z==-1 ) z=(int)p.getZ();
+      resumeStatistics(p,z);
+      boolean withMedian = pixelStats.nb<MAXMEDIANE;
+      return pixelStats.getStatistics( withMedian );
+   }
+   
+   /** Regénère si nécessaire les statistiques associées à l'objet
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @param withMedian true si on veut également la valeur médiane
+    * @return true si les stats ont été regénérées, false si inutile
+    * @throws Exception
+    */
+   private boolean resumeStatistics(Plan p, int z) throws Exception {
+      
       Projection proj = p.projd;
       if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
       if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
       if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
-      if( radius<=0 ) throw new Exception("getStats error: no radius");
-
-      double nombre=0;
-      double carre=0;
-      double total=Double.NaN;
+//      if( radius<=0 ) throw new Exception("getStats error: no radius");
+      
+      // Faut-il re-extraire les pixels concernés par la stat ?
+      String cle = getPixelStatsCle(p,z);
+      if( !pixelStats.reinit( cle ) ) return false;
+      
       double pixelSurf;
-      double min = Double.NaN;
-      double max = Double.NaN;
+      int nombre=0;
 
-      // Cas d'une map HEALPix
-      if( p.type==Plan.ALLSKYIMG ) {
-         PlanBG pbg = (PlanBG)p;
-         int orderFile=order==-1 ? pbg.maxOrder : order==0 ?  pbg.getOrder() : order;
-//         int orderFile = pbg.maxOrder;
-//         int orderFile = pbg.getOrder();
-         
-//         long nsideFile = CDSHealpix.pow2(orderFile);
+      // Cas HiPS
+      if( p.type==Plan.ALLSKYIMG || p.type==Plan.ALLSKYCUBE ) {
+
+         PlanBG pbg = (PlanBG) p;
+         int orderFile = pbg.getOrder();
          long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-//         long nside = nsideFile * nsideLosange;
-         int orderPix = orderFile + pbg.getTileOrder();
+         int orderPix = pbg.getOrder() + pbg.getTileOrder();
          pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
          pixelSurf *= pixelSurf;
          Coord coo = new Coord(raj,dej);
@@ -494,23 +461,21 @@ public class SourceStat extends SourceTag {
          long [] npix = CDSHealpix.query_disc(orderPix, coo.al, coo.del, radiusRadian, false);
          for( int i=0; i<npix.length; i++ ) {
             long npixFile = npix[i]/(nsideLosange*nsideLosange);
-            //            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
-            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
+            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],z,HealpixKey.SYNC);
             if( Double.isNaN(pix) ) continue;
             pix = pix*pbg.bScale+pbg.bZero;
-            if( nombre==0 ) { min=max=pix; total=0; }
-            if( pix<min ) min=pix;
-            if( pix>max ) max=pix;
-            nombre++;
-            total+=pix;
-            carre+=pix*pix;
+            double polar[] = CDSHealpix.pix2ang_nest(orderPix, npix[i]);
+            polar = CDSHealpix.polarToRadec(polar);
+            coo.al = polar[0]; coo.del = polar[1];
+            coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
+
+            nombre=pixelStats.addPix(coo.al,coo.del, pix);
          }
 
-         // Cas d'une image "classique"
+         // Cas d'une image ou d'un cube "classique"
       } else {
+         boolean isCube = p instanceof PlanImageBlink;
          PlanImage pi = (PlanImage)p;
-         pi.setLockCacheFree(true);
-         pi.pixelsOriginFromCache();
 
          pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
          Coord c = new Coord(raj,dej);
@@ -530,30 +495,41 @@ public class SourceStat extends SourceTag {
          int miny=(int)Math.floor(yc-r);
          int maxy=(int)Math.ceil(yc+r);
 
-         for( int y=miny; y<=maxy; y++ ) {
-            for( int x=minx; x<=maxx; x++ ) {
-               if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
-               if( !pi.isIn(x,y) ) continue;
-               double pix= pi.getPixelInDouble(x,y);
-               if( Double.isNaN(pix) ) continue;
-               if( nombre==0 ) { min=max=pix; total=0; }
-               if( pix<min ) min=pix;
-               if( pix>max ) max=pix;
-               nombre++;
-               total+=pix;
-               carre+=pix*pix;
+         try {
+            // Cas d'une image "classique"
+            if( !isCube ) {
+               pi.setLockCacheFree(true);
+               pi.pixelsOriginFromCache();
+
+               // Pour un cube
+            } else {
+               if( z<0 || z>((PlanImageBlink)pi).getDepth() ) throw new Exception("Cube index out of frame range");
             }
+
+            for( int y=miny; y<=maxy; y++ ) {
+               for( int x=minx; x<=maxx; x++ ) {
+                  if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
+                  if( !pi.isIn(x,y) ) continue;
+                  double pix= isCube ? ((PlanImageBlink)pi).getPixel(x, pi.height-y-1, z) : pi.getPixelInDouble(x,y);
+                  if( Double.isNaN(pix) ) continue;
+                  pix = pix*pi.bScale+pi.bZero;
+
+                  c.x=x+0.5; 
+                  c.y=y+0.5;
+                  proj.getCoord(c);
+
+                  nombre=pixelStats.addPix(c.al,c.del, pix);
+               }
+            }
+         } finally {
+            if( !isCube ) pi.setLockCacheFree(false);
          }
-         pi.setLockCacheFree(false);
       }
 
-      double surface = nombre*pixelSurf;
-      double moyenne = total/nombre;
-      double variance = carre/nombre - moyenne*moyenne;
-      double sigma = Math.sqrt(variance);
-
-      return new double[]{ nombre, total, sigma, surface, min, max };
+      pixelStats.setSurface( nombre*pixelSurf );
+      return true;
    }
+
 
    /** Retourne la rayon du repère en degrés */
    public double getRadius() { return radius; }
@@ -567,6 +543,8 @@ public class SourceStat extends SourceTag {
       if( !hasPhot() ) return false;
       return p.hasAvailablePixels();
    }
+   
+   public boolean hasSurface() { return radius>0; }
 
    /** Retourne la commande script équivalente */
    public String getCommand() {
@@ -611,6 +589,13 @@ public class SourceStat extends SourceTag {
    }
 
    static final Color JAUNEPALE = new Color(255,255,225);
+   
+   /** Retourne la position en unité View des stats */
+   protected Rectangle getStatPosition(ViewSimple v) {
+      int l = (int)(getRayon(v)*v.getZoom());
+      Point p = getViewCoord(v,l,l);
+      return new Rectangle(p.x+l+4, p.y-l,LARGSTAT,HAUTSTAT);
+   }
 
    /** Tracé effectif */
    protected boolean draw(Graphics g,ViewSimple v,int dx, int dy) {
@@ -627,8 +612,8 @@ public class SourceStat extends SourceTag {
       
       if( isWithLabel() ) g.drawString(id,p.x-dw/2,p.y-1);
       
-      if( hasPhot(v.pref) && isSelected() ) statDraw(g, v,dx,dy);
-      
+      if( hasPhot(v.pref) && isSelected() ) statDraw(g, v, p.x,p.y, p.x+l+4, p.y-l);
+     
       if( isSelected()  ) {
          g.setColor( Color.green );
          drawSelect(g,v);
@@ -647,8 +632,8 @@ public class SourceStat extends SourceTag {
       for( int i=0; i<4; i++ ) {
          switch(i ) {
             case 0: xc=r.x+r.width/2-DS; yc=r.y; break;                // Bas
-            case 1: xc=r.x+r.width/2-DS; yc=r.y+r.height-DS; break;       // Haut
-            case 2: xc=r.x+r.width-DS; yc=r.y+r.height/2-DS;  break;      // Droite
+            case 1: xc=r.x+r.width/2-DS; yc=r.y+r.height-DS; break;    // Haut
+            case 2: xc=r.x+r.width-DS; yc=r.y+r.height/2-DS;  break;   // Droite
             case 3: xc=r.x; yc=r.y+r.height/2-DS;  break;              // Gauche
          }
          g.setColor( c );
@@ -693,5 +678,7 @@ public class SourceStat extends SourceTag {
 
       return true;
    }
+
+   protected boolean asSource() { return true; }
 
 }

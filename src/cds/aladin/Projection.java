@@ -229,7 +229,7 @@ public final class Projection {
          double alphai, double deltai, double rm,double rm1,
          double cx, double cy,double r, double r1,
          double rot,boolean sym,int t,int system) {
-
+      
       c=new Calib(alphai,deltai,cx,cy,r,r1,rm,rm1,rot,t,sym,system);
       adjustParamByCalib(c);
       this.modeCalib=type;
@@ -423,6 +423,9 @@ public final class Projection {
       this.coo = null;
       adjustParamByCalib(c);
    }
+   
+   
+   static private boolean flagUN=true;
 
    /** Recupere les parametres de la projection a partir de la calib passee
     * en parametre
@@ -435,6 +438,7 @@ public final class Projection {
          cy = co.y;
          alphai = co.al;
          deltai = co.del;
+         
          co = c.getImgCenter();
          co = Localisation.frameToFrame(co, frame,Localisation.ICRS);
          //         co.x = c.xnpix/2.;
@@ -497,7 +501,7 @@ public final class Projection {
    @Override
    public String toString() {
       return (label==null?"":label+" ")+getName(modeCalib,t)+" "+
-            round(alphai)+","+round(deltai)+"=>"+((int)cx)+","+((int)cy)+" "+
+             alphai+","+deltai+"=>"+cx+","+cy+" "+
             "("+rm+"x"+rm1+")/("+r+"x"+r1+") "+
             (rot!=0.?"rot="+rot+"deg ":"")+
             (sym?"RA_symetry ":"")+

@@ -60,7 +60,7 @@ public final class FrameContour extends JFrame implements ActionListener {
                          CHOOSELEVEL, GENERATE, SMOOTH, LEVEL, MANUALLY,
                          USESM, REDUCE, CONSIDER, TITRE2;
 
-       static final Font HELPFONT = new Font("Monospaced",Font.PLAIN,10);
+       static final Font HELPFONT = Aladin.SPLAIN; 
 
        boolean showHelp = false;	    // faut-il montrer les labels d'aide ?
 

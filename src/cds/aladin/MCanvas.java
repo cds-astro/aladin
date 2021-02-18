@@ -75,15 +75,15 @@ KeyListener,ActionListener,
 MouseWheelListener, Widget
 {
    private int NBLIGNE = 5;        // Nombre de lignes visibles par defaut
-   static Font FONT = Aladin.COURIER;
-   static final int HF = Aladin.SIZE;   // Hauteur des lettres
-   static final int HL = HF+3;          // Hauteur d'une ligne
-   static final int MH = HL;            // Hauteur de la marge du haut
-   static final int MB = 1;             // Hauteur de la marge du bas
+   private Font FONT;
+   private int HF;          // Hauteur des lettres
+   private int HL;          // Hauteur d'une ligne
+   private int MH;          // Hauteur de la marge du haut
+   private int MB;          // Hauteur de la marge du bas
 
    // Triangles-reperes de la ligne courante (position sur 1ere ligne)
-   static final int [] tX =  {         5,         5,     14 };    // Exterieur
-   static final int [] tY =  { HL/2+1 -5, HL/2+1 +5, HL/2+1 };
+   private int [] tX;    // Exterieur
+   private int [] tY;
 
    Aladin aladin;        // Reference
    MyScrollbar scrollV;  // Reference
@@ -133,14 +133,21 @@ MouseWheelListener, Widget
       this.aladin = aladin;
       this.scrollV = scrollV;
       this.scrollH = scrollH;
+      
+      FONT = Aladin.COURIER;
+      HF = FONT.getSize(); // Hauteur des lettres
+      HL = HF+3;          // Hauteur d'une ligne
+      MH = HL;            // Hauteur de la marge du haut
+      MB = 1;             // Hauteur de la marge du bas
+
+      tX = new int[]{         5,         5,     14 };    // Exterieur
+      tY = new int[]{ HL/2+1 -5, HL/2+1 +5, HL/2+1 };
+
 
       // Determination des tailles des lettres
       wblanc = getToolkit().getFontMetrics(FONT).stringWidth("M");
 
-//      if( Aladin.OUTREACH ) NBLIGNE=3;
-
       TIPHEAD = aladin.chaine.getString("TIPHEAD");
-      //      TIPREP  = aladin.chaine.getString("TIPREP");
       TIPGLU  = aladin.chaine.getString("TIPGLU");
       TIPARCH = aladin.chaine.getString("TIPARCH");
       TIPFOV  = aladin.chaine.getString("TIPFOV");
@@ -150,7 +157,7 @@ MouseWheelListener, Widget
       createPinPopupMenu();
 
       setOpaque(true);
-      setDoubleBuffered(false);
+      setDoubleBuffered(false); 
       addMouseListener(this);
       addMouseMotionListener(this);
       addKeyListener(this);
@@ -653,11 +660,13 @@ MouseWheelListener, Widget
          }
 
          g.setColor( bg );
-         g.fillRect(x-4,y-HF,width+7,HL-1);
+//         g.fillRect(x-4,y-HF,width+7,HL-1);
+         g.fillRect(x-6,y-HF,width+9,HL-1);
          if( w.onMouse && !(w.archive || w.footprint)  ) {
             int M=2;
             g.setColor( Aladin.COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL );
-            g.fillRect(x-4+M,y-HF+M-1,width+7-2*M,HL-1-2*M+2);
+//            g.fillRect(x-4+M,y-HF+M-1,width+7-2*M,HL-1-2*M+2);
+            g.fillRect(x-6+M,y-HF+M-1,width+9-2*M,HL-1-2*M+2);
          }
       }
 
@@ -1838,6 +1847,7 @@ MouseWheelListener, Widget
    
    private Image iconOut=null;
    private Rectangle rectOut = null;
+   
 
    // Regeneration du plan image pour la fenetre des mesures
    public void paintComponent(Graphics gr) {
@@ -1863,6 +1873,8 @@ MouseWheelListener, Widget
       
       super.paintComponent(gr);
       
+      boolean flagDoubleBuffering = Aladin.useDoubleBuffering(gr);
+      
       int j;
 
       // Positionnement du curseur apres le demarrage d'Aladin
@@ -1875,16 +1887,14 @@ MouseWheelListener, Widget
       showLigne=null;
       ow=null;
       
-      // Double buffer (beaucoup plus rapide que le double buffering natif de SWING)
-      if( img==null || img.getWidth(this)!=getWidth()
-            || img.getHeight(this)!=getHeight() ) {
+      if( img==null || img.getWidth(this)!=getWidth() || img.getHeight(this)!=getHeight() 
+          ){
          W=getWidth();
          H=getHeight();
-         //         img = getGraphicsConfiguration().createCompatibleImage(W,H);
          img = aladin.createImage(W,H);
       }
-      Graphics g=img.getGraphics();
-
+      Graphics g = flagDoubleBuffering ? img.getGraphics() : gr;
+      
       // AntiAliasing
       aladin.setAliasing(g);
 
@@ -1950,7 +1960,7 @@ MouseWheelListener, Widget
       // Les bordures du cadre
       Util.drawEdge(g,W,H);
       
-      gr.drawImage(img,0,0,this);
+      if( flagDoubleBuffering ) gr.drawImage(img,0,0,this);
       
       if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();
       

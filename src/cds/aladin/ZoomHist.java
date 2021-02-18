@@ -59,13 +59,17 @@ class ZoomHist implements Runnable {
    String texte=null;       // Texte en surcharge, ou null (retour à la ligne par "/")
 
    // Paramètres pour un histogramme de pixels
-   static final int MAX = 200000;   // nombre max de pixels pris en compte
-   private double [] pixelList;    // liste des valeurs des pixels (lors de la construction)
-   private int nPix;               // nombre de pixels
+//   static final int MAX = 200000;   // nombre max de pixels pris en compte
+//   private double [] pixelList;    // liste des valeurs des pixels (lors de la construction)
+//   private int nPix;               // nombre de pixels
    protected boolean flagHistPixel;  // true s'il s'agit d'un histogramme de pixels
+   
+   PixelStats pixelStats;   // Statistisques et valeur des pixels
+   
 
    ZoomHist(Aladin aladin) {
       this.aladin=aladin;
+      pixelStats = new PixelStats();
    }
 
    /** Positionnement d'un texte en surcharge de l'histogramme, null si aucun */
@@ -76,26 +80,33 @@ class ZoomHist implements Runnable {
 
    /** Commence ou recommence la mémorisation des pixels d'un histogramme de pixels */
    protected void startHistPixel() {
-      if( pixelList==null ) pixelList = new double[MAX];
-      nPix=0;
+//      if( pixelList==null ) pixelList = new double[MAX];
+//      nPix=0;
       flagHistPixel=true;
       texte=null;
+      
+      pixelStats.reinit();
    }
 
-   protected boolean isOverFlow() { return nPix==MAX; }
+//   protected boolean isOverFlow() { return nPix==MAX; }
+   protected boolean isOverFlow() { return false; }
 
    /** Ajoute une valeur pour un future histogramme de pixels */
    protected boolean addPixel(double pix) {
-      if( nPix==MAX ) return false;
-      pixelList[nPix++] = pix;
+//      if( nPix==MAX ) return false;
+//      pixelList[nPix++] = pix;
+//      return true;
+      
+      pixelStats.addPix(0, 0, pix);
       return true;
    }
 
    /** Construction de l'histogramme de pixels en fonction de la liste des valeurs passées */
-   protected void createHistPixel(String titre) { {
+   protected void createHistPixel(String titre) {
       //      titre="Pixels";
       this.titre = titre;
-      setHist(pixelList); }
+//      setHist(pixelList);
+      setHist(pixelStats);
    }
 
 
@@ -139,7 +150,8 @@ class ZoomHist implements Runnable {
 
    /** Si trop de sources, on va threader */
    protected boolean init() {
-      if( flagHistPixel ) { setHist(pixelList); return true; }
+//      if( flagHistPixel ) { setHist(pixelList); return true; }
+      if( flagHistPixel ) { setHist(pixelStats); return true; }
       else {
          if( aladin.mesure.getNbSrc()>10000 ) {
             thread = new Thread(this,"Histo");
@@ -160,8 +172,14 @@ class ZoomHist implements Runnable {
    protected boolean initThread() {
       if( o.getLeg().isNumField(nField) ) {
          double [] xHist = aladin.mesure.getFieldNumericValues(o, nField);
-         nb=xHist.length;
-         setHist(xHist);
+//         nb=xHist.length;
+//         setHist(xHist);
+         
+         pixelStats.reinit();
+         for( double x : xHist) pixelStats.addPix(0, 0, x);
+         flagHistPixel=true;
+         setHist(pixelStats);
+         
       } else {
          String [] sHist=aladin.mesure.getFieldStringValues(o, nField);
          nb=sHist.length;
@@ -199,13 +217,16 @@ class ZoomHist implements Runnable {
       setNbHist(n);
       return true;
    }
+   
+   protected void setHist(PixelStats pixelStats) { setHist( pixelStats.getStatisticPix() ); }
 
    /**
     * Initialisation de l'histogramme avec une liste de valeurs numériques
     */
-   protected void setHist(double [] x) {
+   protected void setHist(double [] x) { setHist(x,x.length); }
+   protected void setHist(double [] x, int length) {
 
-      int length = flagHistPixel ? nPix : x.length;
+//      int length = flagHistPixel ? nPix : x.length;
 
       // Recherche du min et max
       double min=Double.MAX_VALUE;
@@ -462,7 +483,8 @@ class ZoomHist implements Runnable {
          } else {
             g.setColor( hist[i]==onMouse ? Aladin.COLOR_GREEN : Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
             g.fillRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
-            g.setColor( Aladin.COLOR_CONTROL_FOREGROUND ); //Color.black );
+//            g.setColor( Aladin.COLOR_CONTROL_FOREGROUND ); 
+            g.setColor( Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE );
             g.drawRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
             hist[i].x=(int)x; hist[i].y=y-hist[i].haut; hist[i].larg=(int)larg; // voir setIn()
             x+=larg+gap;
@@ -541,24 +563,36 @@ class ZoomHist implements Runnable {
       }
 
       // Des informations textuelles en surcharge (on écarte Stat.. qui concerne les cercles)
-      if( texte!=null && !texte.startsWith("Stat")) {
+      if( flagHistPixel ) {
          g.setFont(Aladin.BOLD);
          fm = g.getFontMetrics();
-         g.setColor( aladin.COLOR_RED );
-         StringTokenizer st = new StringTokenizer(texte,"/");
+         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
+         StringTokenizer st = new StringTokenizer(getStringStat(),"/");
          y = 17;
          int h= fm.getHeight();
          int h1 = fm.getAscent();
-//                  Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
-//         g.setColor(Color.black);
          while( st.hasMoreTokens() ) {
             s = st.nextToken().trim();
             int len = fm.stringWidth(s);
             int x1 = width - len-5;
-//            Util.drawCartouche(g, x1, y, len, h, 0.8f, null, aladin.DARK_THEME ? Color.gray : Color.white);
+//            Util.drawStringOutline(g, s, x1, y+h1, aladin.COLOR_RED, Color.white);
             g.drawString(s, x1, y+h1);
             y+=h;
          }
       }
+   }
+      
+   String getStringStat() {
+      // nb, sum, sigma, surface, min, max, median
+      double x [] = pixelStats.getStatistics(true);
+      return "Cnt "+Util.myRound(x[0])
+            +" / Sum "+Util.myRound(x[1])
+            +" / Sigma "+Util.myRound(x[2])
+//            +" / Min "+Util.myRound(x[4])
+            +" / Avg "+Util.myRound((x[1]/x[0]))
+            +(Double.isNaN(x[6])?"":" / Med "+Util.myRound(x[6]))
+//            +" / Max "+Util.myRound(x[5])
+            ;
+
    }
 }

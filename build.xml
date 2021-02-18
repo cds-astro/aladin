@@ -16,10 +16,14 @@
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
      <javac destdir="${bin}"
+	    encoding="UTF-8" source="1.7" target="1.7" deprecation="off" >
+         <src path="/Users/Pierre/Documents/Développements/CDSastro/src"/>
+     </javac>
+     <javac destdir="${bin}"
 	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >
 	    <src path="${src}"/>
-        <src path="/Users/Pierre/Documents/Développements/CDSHealpixJava/src/main/java"/>
-     <classpath>
+      <src path="/Users/Pierre/Documents/Développements/CDSHealpixJava/src/main/java"/>
+      <classpath>
           <pathelement path="${java.class.path}/"/>
         <pathelement path="${lib}/adql1.3.jar"/>
         <pathelement path="${lib}/jsamp.jar"/>

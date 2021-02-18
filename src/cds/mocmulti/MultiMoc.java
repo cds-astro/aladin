@@ -60,9 +60,6 @@ import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.astro.Astroframe;
 import cds.astro.Coo;
-import cds.astro.Ecliptic;
-import cds.astro.Galactic;
-import cds.astro.ICRS;
 import cds.moc.Healpix;
 import cds.moc.SMoc;
 
@@ -596,7 +593,8 @@ public class MultiMoc implements Iterable<MocItem> {
          return moc;
       }
       
-      Astroframe frameSrc = a=='G' ? new Galactic() : a=='E' ? new Ecliptic() : new ICRS();
+//      Astroframe frameSrc = a=='G' ? new Galactic() : a=='E' ? new Ecliptic() : new ICRS();
+      Astroframe frameSrc = Astroframe.create( a=='G' ?"Galactic" : a=='E' ? "Ecliptic" : "ICRS");
       Healpix hpx = new Healpix();
       int order = moc.getMaxUsedOrder();
       SMoc moc1 = new SMoc(moc.getMinOrder(),moc.getMocOrder());

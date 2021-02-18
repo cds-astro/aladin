@@ -14,12 +14,15 @@
 %A AlaU
 %D Aladin generical URL prefix
 %O CDS'aladin
-%I AlaU.fr:5
-%I AlaU.us:0
+%I AlaU.fr:0
+%I AlaU.us:1
 %I AlaU.ca:2
 %I AlaU.uk:3
 %I AlaU.jp:4
-%I AlaU.iucaa:1
+%I AlaU.cn:5
+%I AlaU.ru:6
+%I AlaU.za:7
+%I AlaU.iucaa:8
 
 %A AlaU.ca
 %D Aladin URL prefix for CADC (Victoria Canada)
@@ -34,8 +37,7 @@
 %A AlaU.iucaa
 %D Aladin URL prefix for IUCAA (UCAA/Pune, India)
 %O CDS'aladin
-%L http://vizier.iucaa.ernet.in/viz-bin
-#%L http://urania.iucaa.ernet.in/viz-bin
+%L https://vizier.iucaa.in/viz-bin
 
 %A AlaU.jp
 %D Aladin URL prefix for ADAC (ADAC, Tokyo)
@@ -53,10 +55,26 @@
 %O CDS'aladin
 %L http://vizier.cfa.harvard.edu/viz-bin
 
+%A AlaU.ru
+%D Aladin URL prefix for INASAN (Russia)
+%O CDS'aladin
+%L https://vizier.inasan.ru/viz-bin
+
+%A AlaU.cn
+%D Aladin URL prefix for Beijing Obs (China)
+%O CDS'aladin
+%L http://vizier.china-vo.org/viz-bin
+
+%A AlaU.za
+%D Aladin URL prefix for IDIA (South Africa)
+%O CDS'aladin
+%L http://vizier.idia.ac.za/viz-bin
+
 %A Aladin.java.gludic
 %D Provides Glu records in Aladin domain from the closest Aladin site
 %O CDS'aladin
-%U <&AlaU>/nph-aladin.pl?frame=gludic
+%U <&AlaU>/nph-glu.pl?param=-p+-a+-w+Z:ALADIN
+#%U <&AlaU>/nph-aladin.pl?frame=gludic
 
 
 

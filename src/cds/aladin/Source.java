@@ -1502,5 +1502,9 @@ public class Source extends Position implements Comparator {
 
    }
 
+   /** Retourne vrai si l'objet doit être considéré comme une Source, et par conséquent repris
+    * dans la tables des mesures, dans les VOTables exportés, etc...
+    */
+   protected boolean asSource() { return true; }
 
 }

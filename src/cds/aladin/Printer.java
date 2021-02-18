@@ -494,7 +494,8 @@ class Printer implements Runnable {
          Source o=null;
          while( it.hasNext() ) {
             Obj o1 = it.next();
-            if( !(o1 instanceof Source) ) continue;
+//            if( !(o1 instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             o = (Source)o1;
             break;
          }

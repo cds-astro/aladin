@@ -113,6 +113,12 @@ MouseMotionListener,MouseListener,Widget {
       addMouseWheelListener(this);
       this.wheelIncr=wheelIncr;
    }
+   
+   public Dimension getPreferredSize() {
+      Dimension dim = super.getPreferredSize();
+      double scale = (Aladin.getUIScale()-1)/1.25 +1;
+      return new Dimension( dim.width, (int)( dim.height*scale) );
+   }
 
    public void mouseWheelMoved(MouseWheelEvent e) {
       if( !enable ) return;

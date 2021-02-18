@@ -112,8 +112,12 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
        classLoader = new MyClassloader(new URL[0], this.getClass().getClassLoader());
        
        scanDir(getPlugPath());
-
+       
 //        Recherche des plugins dans mon répertoire de développement
+//       System.out.println("Chargement des plugins locaux");
+//       scanDir("C:\\Users\\Pierre\\Documents\\Développements\\AladinGit\\bin");
+
+
 //        (juste pour me simplifier la vie)
 //       if( aladin.PROTO && aladin.levelTrace>=3 ) {
 //          try {

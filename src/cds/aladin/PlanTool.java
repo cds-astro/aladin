@@ -74,63 +74,6 @@ public class PlanTool extends PlanCatalog {
       askActive  = true;
    }
    
-//   public void updatePhotMan(Obj o) {
-//      if( legPhotMan==null ) createPhotManuelLegende();
-//
-//      String [] val = { o.id, o.raj+"", o.dej+"", o.getRadius()+"", "","","","","","","" };
-//      StringBuffer rep = new StringBuffer();
-//      for( String s : val ) {
-//         if( rep.length()>0 ) rep.append('\t');
-//         rep.append(s);
-//      }
-//      o.id=rep.toString();
-//      if( o instanceof Source ) ((Source)o).leg = legPhotMan;
-//
-//      pcat.setObjetFast(o);
-//      aladin.view.newView(1);
-//   }
-//
-//   private void createPhotManuelLegende() {
-//      setSourceRemovable(true);
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","Radius","Count",  "Sum",   "Mean",  "Sigma", "Area",  "Median" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","integer","double","double","double","double","double"});
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","arcmin","pixel",  "",      "",      "",    "arcmin^2","" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "10",    "10",     "10",    "10",    "10",  "10" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",     "2",     "2",     "2",     "2",     "2" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DESCRIPTION,
-//            new String[]{  "Identifier",  "Right ascension",  "Declination","Radius","Pixel count","Sum of pixel values","Mean of pixel values","Sigma of pixel list","Area", "Median of pixel list" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UCD,
-//            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
-//   }
-
-//   private void createTagLegende() {
-//      setSourceRemovable(true);
-//      legTag = SourceTag.createTagLegende();
-//   }
-
-//   private void createPhotLegende() {
-//      setSourceRemovable(true);
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","X",     "Y",      "FWHM_X", "FWHM_Y", "Angle",  "Peak",  "Background" });
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","double", "double", "double", "double", "double","double" });
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","",      "",       "",       "",       "deg",    "",      "" });
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "8",    "8",      "10",     "10",      "5",      "10",    "10"   });
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",    "2",      "2",      "2",       "0",      "3",     "3"   });
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.DESCRIPTION,
-//            new String[]{  "Identifier",  "Right ascension",  "Declination",
-//            "X image coordinate",     "Y image coordinate",
-//            "X Full Width at Half Maximum", "Y Full Width at Half Maximum",
-//            "Angle",  "Source peak",  "image background" });
-//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.UCD,
-//            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main",
-//            "pos.cartesian.x;obs.field","pos.cartesian.y;obs.field",
-//            "", "",
-//            "pos.posAng;obs.field", "","instr.background;obs.field" });
-//
-//      addFilter("#Object elongation\nfilter obj_elong { draw ellipse(${FWHM_X}/2,${FWHM_Y}/2,270-${Angle}) }");
-//      setFilter("obj_elong");
-//
-//   }
-
    protected boolean Free() {
 
       // Pour suspendre éventuellement l'affichage des histogrammes
@@ -171,29 +114,6 @@ public class PlanTool extends PlanCatalog {
    }
      
       
-//      if( legPhot==null ) createPhotLegende();
-//
-//      String id = pcat.getNextID()+"/"+planBase.label;
-//      Coord c = new Coord(ra,dec);
-//      String [] val = { id, c.getRA(), c.getDE()+"", iqe[0]+"", iqe[2]+"",iqe[1]+"",iqe[3]+"",iqe[4]+"",iqe[5]+"",iqe[6]+"" };
-//      Source o1 = addSource(id, ra, dec, val);
-//      o1.setShape(Obj.PLUS);
-//      aladin.view.newView(1);
-//      return o1;
-//   }
-//
-//   private Source addSource(String id,double ra, double dec, String [] value) {
-//      StringBuffer s = new StringBuffer("<&_A>");
-//      for( int i=0; i<value.length; i++ ) {
-//         if( value[i].startsWith("http://") || value[i].startsWith("https://") ) s.append("\t<&Http "+value[i]+">");
-//         else s.append("\t"+value[i]);
-//      }
-//      Source o = new Source(this,ra,dec,id,s.toString());
-//      o.leg = legPhot;
-//      pcat.setObjetFast(o);
-//      return o;
-//   }
-
    /** Retourne la ligne d'informations concernant le plan dans le statut d'Aladin*/
    protected String getInfo() {
 

@@ -98,7 +98,8 @@ public class Astrodate {
     * @return
     */
    static public String JDToDate(double JD) { return JDToDate(JD,true); }
-   static public String JDToDate(double JD, boolean withTime) {
+   static public String JDToDate(double JD, boolean withTime) { return JDToDate(JD,withTime,true); }
+   static public String JDToDate(double JD, boolean withTime, boolean flagDecimalSecond) {
       long Z = (long)(JD+0.5);
       double F = JD+0.5 - Z;
       long G;
@@ -122,7 +123,7 @@ public class Astrodate {
       long MM = (s  - HH*3600 )/60;
       long SS = (s - HH*3600 - MM*60);
       double SSf = (ss - HH*3600 - MM*60);
-      if( SSf-(int)SSf < 0.001 ) return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");
+      if( !flagDecimalSecond || SSf-(int)SSf < 0.001 ) return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");
       String s1 = String.format(Locale.ROOT,"%02.3f",SSf);
       return A+"-"+dd(M)+"-"+dd(J)+ "T"+dd(HH)+":"+dd(MM)+":"+s1;
    }

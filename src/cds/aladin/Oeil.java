@@ -76,7 +76,7 @@ public class Oeil extends Icon {
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x=5;
+      int x=5+DX;
       int y=2;
       
       drawOeil(g,x,y, getLogoColor() );

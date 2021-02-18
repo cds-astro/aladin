@@ -49,8 +49,6 @@ import cds.aladin.MyProperties;
 import cds.aladin.Tok;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
-import cds.astro.Galactic;
-import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
@@ -1864,12 +1862,16 @@ public class Context {
    public boolean isValidateRegion() { return validateRegion; }
    public void setValidateRegion(boolean flag) { validateRegion=flag; }
 
-   static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
-   static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
-   static private Astroframe AF_GAL1 = new Galactic();
-   static private Astroframe AF_ICRS1 = new ICRS();
-
-   /** Mémorisation d'une propriété à ajouter dans le fichier properties */
+//   static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
+//   static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
+//   static private Astroframe AF_GAL1 = new Galactic();
+//   static private Astroframe AF_ICRS1 = new ICRS();
+   static private final Astrocoo COO_GAL = new Astrocoo( Astroframe.create("GALACTIC") );
+   static private final Astrocoo COO_EQU = new Astrocoo( Astroframe.create("ICRS") );
+   static private Astroframe AF_GAL1 = Astroframe.create("GALACTIC"); 
+   static private Astroframe AF_ICRS1 = Astroframe.create("ICRS"); 
+   
+  /** Mémorisation d'une propriété à ajouter dans le fichier properties */
    protected void setComment(String comment) { setPropriete1("#","#"+comment,false); }
    protected void insertPropriete(String key,String value) { setPropriete1(key,value,true); }
    protected void setPropriete(String key, String value) { setPropriete1(key,value,false); }

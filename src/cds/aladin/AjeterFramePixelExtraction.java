@@ -35,12 +35,12 @@ import javax.swing.*;
  * @date jan 2009 - création
  * @author P. Fernique
  */
-public class FramePixelExtraction extends JFrame {
+public class AjeterFramePixelExtraction extends JFrame {
 
 	private Aladin aladin;
 	private PlanImage pimg;
 
-	protected FramePixelExtraction(Aladin aladin) {
+	protected AjeterFramePixelExtraction(Aladin aladin) {
 	   super();
 	   this.aladin = aladin;
        Aladin.setIcon(this);

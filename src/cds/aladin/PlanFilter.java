@@ -462,7 +462,7 @@ public final class PlanFilter extends Plan {
    protected Source[] getSources(Aladin a, final boolean inThread) {
       int i;
       Plan p = null;
-      Vector<Source> vec = new Vector<Source>();
+      Vector<Source> vec = new Vector<>();
       Plan[] plans = getConcernedPlans();
       int k=1;
 
@@ -481,7 +481,8 @@ public final class PlanFilter extends Plan {
             	   break;
                }
 
-               if( s instanceof Source && s!=null) {
+//               if( s instanceof Source && s!=null) {
+               if( s!=null && s.asSource() ) {
                   vec.addElement((Source)s);
                   k++;
                }
@@ -520,7 +521,7 @@ public final class PlanFilter extends Plan {
 
 /** retourne tous les plans d'un folder donne (plans des sous-folders inclus) */
    private Vector<Plan> getAllPlansOfFolder(Plan folder) {
-      Vector<Plan> vec = new Vector<Plan>(10);
+      Vector<Plan> vec = new Vector<>(10);
       getAllPlansOfFolder(folder,vec);
       return vec;
    }
@@ -559,7 +560,7 @@ public final class PlanFilter extends Plan {
    private void setPlanMemory() {
       Plan[] plans = getConcernedPlans();
       omemPlan = memPlan;
-      memPlan = new Vector<Plan>();
+      memPlan = new Vector<>();
       for( int i=0; i<plans.length; i++ ) {
          memPlan.addElement(plans[i]);
       }
@@ -656,7 +657,8 @@ public final class PlanFilter extends Plan {
             Iterator<Obj> it = p.iterator();
             while( it.hasNext()) {
                Obj o = it.next();
-               if( !(o instanceof Source) ) continue;
+//               if( !(o instanceof Source) ) continue;
+               if( !o.asSource() ) continue;
                Source s = (Source)o;
                if( s!=null) {
                   // allocation mémoire pour le tableau "isSelected" liés aux sources
@@ -742,7 +744,8 @@ public final class PlanFilter extends Plan {
             Iterator<Obj> it = p.iterator();
             if( it!=null ) while( it.hasNext() ) {
                Obj o = it.next();
-               if( !(o instanceof Source) ) continue;
+//               if( !(o instanceof Source) ) continue;
+               if( !o.asSource() ) continue;
                s = (Source)o;
 
                // realloc de isSelected

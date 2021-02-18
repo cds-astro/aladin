@@ -429,14 +429,19 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    }
    
    /** Traitement à faire suite à un changement de plan dans un Cube */
-   protected void resumeSourceStatOnCube() {
-      if( vselobj.size()!=1 ) return;
+   protected void resumeStatOnCube() {
+//      if( vselobj.size()!=1 ) return;
+      boolean flagMesure=false;
+      boolean flagNewView=false;
+      
       for( Obj o : vselobj ) {
-         if( o instanceof SourceStat ) ((SourceStat)o).resume();
+         if( o instanceof SourceStat ) { ((SourceStat)o).resumeMesures(); flagNewView=flagMesure=true; }
+         if( o instanceof Ligne && ((Ligne)o).bout==3 ) { ((Ligne)o).resumeMesures(); flagNewView=true; }
       }
+      
+      if( flagNewView ) newView(1);
+      if( flagMesure ) aladin.mesure.redisplay();
    }
-
-
 
    /**
     * Synchronisation de toutes les vues blinks sur le même plan de référence
@@ -882,7 +887,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          Obj o = (Obj)e.nextElement();
 
          // On ne garde que les Sources et les Reperes (tags)
-         if( !(o instanceof Source) && !(o instanceof Repere || o instanceof Tag ) ) continue;
+//         if( !(o instanceof Source) && !(o instanceof Repere || o instanceof Tag ) ) continue;
+         if( !o.asSource() && !(o instanceof Repere || o instanceof Tag ) ) continue;
          Position s = (Position)o;
 
          // présent dans toutes les vues ?
@@ -997,7 +1003,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             Iterator<Obj> it = p.iterator();
             while( it.hasNext() ) {
                Obj o = it.next();
-               if( !(o instanceof Source) && !(o instanceof Repere) ) continue;
+//               if( !(o instanceof Source) && !(o instanceof Repere) ) continue;
+               if( !o.asSource() && !(o instanceof Repere) ) continue;
                setSelected(o,true);
             }
             if( hasSelectedObj() ) {
@@ -2280,21 +2287,31 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
                coo = new Coord(repere.raj,repere.dej);
                if( !flagNow && v.pref instanceof PlanBG ) {
                   try {
-                     coo = v.getProj().getXY(coo);
-                     Coord c1 = v.getCooCentre();
-                     coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
-
-                     // Si ce point est en dehors de la vue, on va directement au repere
                      v.getProj().getXY(coo);
+                     Coord c1 = v.getCooCentre();
+                     v.getProj().getXY(c1);
+                     coo.x = c1.x+(coo.x-c1.x)/3;
+                     coo.y = c1.y+(coo.y-c1.y)/3;
+                     v.getProj().getCoord(coo);
+                     
+//                     double a[] = normalizeRaDec(c1.al,c1.del);
+//                     double b[] = normalizeRaDec(coo.al,coo.del);
+//                     coo = new Coord(a[0]+(b[0]-a[0])/3,a[1]+(b[1]-a[1])/3);
+//                     v.getProj().getXY(coo);
+                     
+                     // Si ce point est en dehors de la vue, on va directement au repere
                      PointD p = v.getPositionInView(coo.x, coo.y);
-                     if( p.x<0 || p.x>v.rv.width || p.y<0 || p.y>v.rv.height ) coo = new Coord(repere.raj,repere.dej);
+                     if( p.x<0 || p.x>v.rv.width || p.y<0 || p.y>v.rv.height ) {
+                        coo = new Coord(repere.raj,repere.dej);
+                     }
 
                   } catch( Exception e ) { }
                }
             }
             if( v.pref instanceof PlanBG ) {
-               v.getProj().setProjCenter(coo.al,coo.del);
-               v.pref.projd.setProjCenter(coo.al,coo.del);
+               Projection pj = v.getProj();
+               pj.setProjCenter(coo.al,coo.del);
+               if( pj!=v.pref.projd ) v.pref.projd.setProjCenter(coo.al,coo.del);
                v.newView(1);
             }
             flag=v.setZoomRaDec(nz,coo.al,coo.del);
@@ -2325,6 +2342,16 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
 
    }
+   
+   /** Transforme si nécessaire les coordonnées pour être dans la plage des valeurs usuelles 
+    * parce que la librairie de FX est tatillonne */
+   static public double [] normalizeRaDec( double ra, double dec) {
+      if( ra>=180 ) ra-=360;
+      else if( ra<-180 ) ra+=360;
+      return new double[] {ra,dec};
+   }
+   
+
 
    /** Force le recalcul de la grille de coordonnées */
    protected void grilAgain() {
@@ -2372,7 +2399,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected Source getFirstSelectedSource() { 
       if( vselobj==null ) return null;
       for( Obj o : vselobj ) {
-         if( o instanceof Source ) return (Source)o;
+//         if( o instanceof Source ) return (Source)o;
+         if( o.asSource() ) return (Source)o;
       }
       return null;
    }
@@ -2409,12 +2437,22 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return n==2;
    }
 
+   /** Indique s'il y a au- moins un Objet Phot sélectionné */
+   protected boolean hasSelectedPhot() {
+      Enumeration<Obj> e = vselobj.elements();
+      while( e.hasMoreElements() ) {
+         Obj o = e.nextElement();
+         if( o.hasPhot() ) return true;
+      }
+      return false;
+   }
 
    /** Indique s'il y a au- moins une source sélectionnée */
    protected boolean hasSelectedSource() {
       Enumeration<Obj> e = vselobj.elements();
       while( e.hasMoreElements() ) {
-         if( e.nextElement() instanceof Source ) return true;
+//         if( e.nextElement() instanceof Source ) return true;
+         if( e.nextElement().asSource() ) return true;
       }
       return false;
    }
@@ -2425,11 +2463,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Enumeration<Obj> e = v.elements();
       while( e.hasMoreElements() ) {
          Obj o = e.nextElement();
-         if( !(o instanceof Source && !(o instanceof SourceTag)) ) return true;
+//         if( !(o instanceof Source && !(o instanceof SourceTag)) ) return true;
+         if( !(o.asSource() && !(o instanceof SourceTag)) ) return true;
       }
       return false;
    }
-
 
    /** Retourne le Vector des objets sélectionnés */
    protected Vector<Obj> getSelectedObjet() { return vselobj; }
@@ -2442,7 +2480,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Obj o;
       while( eObj.hasMoreElements() ) {
          o = eObj.nextElement();
-         if( o instanceof Source ) vSources.addElement( (Source) o);
+//         if( o instanceof Source ) vSources.addElement( (Source) o);
+         if( o.asSource() ) vSources.addElement( (Source) o);
       }
       Source[] sources = new Source[vSources.size()];
       vSources.copyInto(sources);
@@ -2505,7 +2544,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       while( e.hasMoreElements() ) {
          Position o = (Position) e.nextElement();
-         if( o instanceof Source ) continue;
+//         if( o instanceof Source ) continue;
+         if( o.asSource() ) continue;
          if( o.id!=null && o.id.length()>0 ) res.append(o.id+"\n");
       }
       aladin.console.printInPad(res.toString());
@@ -2529,7 +2569,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // décompte des tags
       int tags = 0;
-      for( Obj o : vselobj ) { if( o instanceof Source && o.plan!=null && o.plan instanceof PlanTool ) tags++; }
+//      for( Obj o : vselobj ) { if( o instanceof Source && o.plan!=null && o.plan instanceof PlanTool ) tags++; }
+      for( Obj o : vselobj ) { if( o.asSource() && o.plan!=null && o.plan instanceof PlanTool ) tags++; }
 
       e = vselobj.elements();
 
@@ -2542,9 +2583,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          extendClip(o);
 
          // On ne supprime pas s'il y a plus de 1 tags sélectionnés
-         if( tags>1 && o instanceof Source && o.plan!=null && o.plan instanceof PlanTool )  continue;
+//         if( tags>1 && o instanceof Source && o.plan!=null && o.plan instanceof PlanTool )  continue;
+         if( tags>1 && o.asSource() && o.plan!=null && o.plan instanceof PlanTool )  continue;
 
-         if( o instanceof Source && ((Source)o).plan.isSourceRemovable() ) {
+//         if( o instanceof Source && ((Source)o).plan.isSourceRemovable() ) {
+         if( o.asSource() && ((Source)o).plan.isSourceRemovable() ) {
             aladin.mesure.remove((Source)o);
          }
 
@@ -2580,40 +2623,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void setSourceLabel() {
       int i/*,j,k*/;
       boolean enleve=false;  // true s'il faut enlever les labels, false sinon
-
-      //      // Label sur les plans courants
-      //      if( vselobj.size()==0 ) {
-      //
-      //         // deux tours : 1 pour le pre-traitement et l'autre pour le traitement
-      //         for( k=0; k<2; k++ ) {
-      //            encore:
-      //            for( i=0; i<calque.plan.length; i++ ) {
-      //               if( calque.plan[i].type!=Plan.CATALOG
-      //                  && calque.plan[i].type!=Plan.TOOL
-      //                  || !calque.plan[i].selected ) continue;
-      //               PlanObjet pcat = calque.plan[i].pcat;
-      //
-      //               for( j=0; j<pcat.o.length; j++ ) {
-      //                  Position o = (Position) pcat.o[j];
-      //                  if( !(o instanceof Source || o instanceof Repere) ) continue;
-      //
-      //                  // Preparation du traitement
-      //                  if( k==0 ) {
-      //                     if( o.withlabel ) {
-      //                        enleve=true;
-      //                        break encore;
-      //                     }
-      //
-      //                 // Traitement
-      //                 } else o.withlabel=!enleve;
-      //               }
-      //            }
-      //         }
-      //
-      //         repaintAll();
-      //         return;
-      //      }
-
 
       // label sur les objets selectionnees
       enleve=true;
@@ -2703,7 +2712,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       synchronized(this) {
          while( it.hasNext() ) {
             Obj s = it.next();
-            if( !(s instanceof Source) || !((Source)s).isTagged() || ((Source)s).isSelected() ) continue;
+//            if( !(s instanceof Source) || !((Source)s).isTagged() || ((Source)s).isSelected() ) continue;
+            if( !s.asSource() || !((Source)s).isTagged() || ((Source)s).isSelected() ) continue;
             ((Source)s).setSelect(true);
             vselobj.add(s);
             aladin.mesure.insertInfo((Source)s);
@@ -2726,7 +2736,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj s = it.next();
-         if( !(s instanceof Source) || !((Source)s).getLeg().isSED() ) continue;
+//         if( !(s instanceof Source) || !((Source)s).getLeg().isSED() ) continue;
+         if( !s.asSource() || !((Source)s).getLeg().isSED() ) continue;
          //         if( ((Source)s).isSelected() ) return null;
          v.add( (Source) s);
       }
@@ -2782,7 +2793,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       for( i=0; i<m; i++ ){
          Obj o = vselobj.elementAt(i);
 
-         if( o instanceof Source && !((Source)o).isSelected() ) continue;
+//         if( o instanceof Source && !((Source)o).isSelected() ) continue;
+         if( o.asSource() && !((Source)o).isSelected() ) continue;
          if( i!=n ) vselobj.setElementAt(o,n);
          n++;
       }
@@ -2810,11 +2822,13 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( oMode == mode ) return;
       if( !mode ) {
          vselobj.remove(o);
-         if( o instanceof Source ) aladin.mesure.remove((Source)o);
+//         if( o instanceof Source ) aladin.mesure.remove((Source)o);
+         if( o.asSource() ) aladin.mesure.remove((Source)o);
       } else {
          if( !vselobj.contains(o) ) {
             vselobj.addElement(o);
-            if( o instanceof Source ) aladin.mesure.insertInfo((Source)o);
+//            if( o instanceof Source ) aladin.mesure.insertInfo((Source)o);
+            if( o.asSource() ) aladin.mesure.insertInfo((Source)o);
          }
       }
       o.setSelect(mode);
@@ -2934,7 +2948,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( plan.isCatalog() || plan.type==Plan.TOOL ) {
          while( it.hasNext() ) {
             Obj o1 = it.next();
-            if( o1 instanceof Source ) {
+//            if( o1 instanceof Source ) {
+            if( o1.asSource() ) {
                Source o = (Source)o1;
                if( mode==1 && !o.isTagged() ) continue;
                if( !o.noFilterInfluence() && !o.isSelectedInFilter() ) continue;
@@ -3251,7 +3266,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       while( e.hasMoreElements() ) {
          Obj o = e.nextElement();
 
-         if( o instanceof Source ) {
+//         if( o instanceof Source ) {
+         if( o.asSource() ) {
             // pas de selection pour les objets ne "passant" pas le filtre
             if( ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) {
                o.info(aladin);

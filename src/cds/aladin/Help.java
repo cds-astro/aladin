@@ -324,8 +324,8 @@ public final class Help extends JComponent implements
       int w1 = fm.stringWidth("ceci est un test");
       int w2 = fm.stringWidth("wwwwwwwwwwwwwwww");
       if( w1!=w2 ) {
-         Aladin.COURIER  = new Font("Monospaced",Font.PLAIN,Aladin.SIZE);
-         Aladin.BCOURIER  = new Font("Monospaced",Font.PLAIN+Font.BOLD,Aladin.SIZE);
+         Aladin.COURIER  = aladin.createFont("Monospaced",Font.PLAIN,Aladin.SIZE);
+         Aladin.BCOURIER  = aladin.createFont("Monospaced",Font.PLAIN+Font.BOLD,Aladin.SIZE);
       }
    }
 

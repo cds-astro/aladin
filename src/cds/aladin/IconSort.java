@@ -69,7 +69,7 @@ public class IconSort extends Icon {
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x = 10;
+      int x = 10+DX;
       int y = 3;
       
       if( isAvailable() ) {

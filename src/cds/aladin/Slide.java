@@ -272,8 +272,10 @@ public final class Slide {
    // Adaptation du logo pour un plan Filter
    static void drawLogoFilter(Graphics g,int dx,int dy,
                               boolean active,boolean button,Color c,Color bord) {
-      int L=button?Tool.W-7:DX;		// Largeur
-      int H=button?Tool.H-24:frY[1]-frY[0];	// Hauteur
+//      int L=button?Tool.W-7:DX;     // Largeur
+//      int H=button?Tool.H-24:frY[1]-frY[0]; // Hauteur
+      int L= DX;     // Largeur
+      int H= frY[1]-frY[0]; // Hauteur
       int i;
       int deb=-3,fin=3;
       int x1=L/2-5,x2=L/2-6;

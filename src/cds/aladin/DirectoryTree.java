@@ -477,6 +477,8 @@ public class DirectoryTree extends JTree {
          textBackground = UIManager.getColor("Tree.textBackground");
          
          nonLeafRenderer.setBackgroundNonSelectionColor( getBackground() );
+         
+         setFont( getFont().deriveFont( getFont().getSize2D()* Aladin.getUIScale() ));
       }
 
       public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded,

@@ -401,18 +401,19 @@ public class PlanBGCat extends PlanBG {
    }
 
    protected Legende getFirstLegende() { return genericPcat==null ? null : genericPcat.leg; }
-   protected boolean hasGenericPcat() { return genericPcat!=null; }
+   protected boolean hasGenericPcat() {  return genericPcat!=null; }
    protected Pcat getGenericPcat() { return genericPcat; }
    protected boolean hasCatalogInfo() { return hasGenericPcat() && genericPcat.hasCatalogInfo(); }
-   
-   
    
    
    /** Mémorisation d'un pcat "étalon" qui va me servir pour connaître la légende générique
     * ou spécifique à la première tuile chargée
     */
    protected void setGenericPcat(Pcat pcat) {
-      genericPcat = pcat;
+      if( pcat==null ) return;
+      
+      if( genericPcat==null )  genericPcat=pcat;
+      
       if( pcat.hasObj() ) {
          try {
             Source src = (Source)pcat.iterator().next();

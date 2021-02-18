@@ -753,7 +753,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          
          else if( cbStcInLine.isSelected() ) {
             List<STCObj> stcObjects = new STCStringParser().parse( tSTC.getText().trim() );
-            moc = aladin.createMocRegion(stcObjects,-1);
+            moc = aladin.createMocRegion(stcObjects,-1,true);
          }
          
          else if( cbMocPlane.isSelected() ) {
@@ -763,7 +763,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
          }
          
          else if( cbSelectedGraph.isSelected() ) {
-            moc = aladin.createMocByRegions(-1);
+            moc = aladin.createMocByRegions(-1,true);
          }
          
       } catch( Exception e ) {

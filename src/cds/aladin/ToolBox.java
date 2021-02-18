@@ -117,11 +117,11 @@ SwingWidgetFinder, Widget {
    static int [] viewplotmode = { DIST,TAG,PHOT,DRAW,SPECT,CROP };
 
    // Les parametres generaux
-   static int W        = 34;      // Largeur d'un bouton
-   static int HMIN     = W-5;     // Hauteur minimale d'un bouton
-   static int HREC     = W+2;       // Hauteur recommandee d'un bouton
-   static int L        = 3;       // Demi-taille du carre de changt de prop.
-   static int ICONEGAP = 12;      // Nombre de pixels reserves pour le changement de proportions
+   private int W;        // Largeur d'un bouton
+   private int HMIN;     // Hauteur minimale d'un bouton
+   private int HREC;     // Hauteur recommandee d'un bouton
+   private int L;        // Demi-taille du carre de changt de prop.
+   private int ICONEGAP; // Nombre de pixels reserves pour le changement de proportions
 
    // Les chaines
    String ICONEBAR,DRAWING;
@@ -131,8 +131,8 @@ SwingWidgetFinder, Widget {
    Calque calque;                 // La reference a l'objet calque
 
    // Les parametres a memoriser
-   int ws=W;                      // Derniere largeur de la boite a boutons
-   int hs=600;                    // Derniere hauteur de la boite a boutons
+   int ws;                        // Derniere largeur de la boite a boutons
+   int hs;                        // Derniere hauteur de la boite a boutons
    int nc;                        // nombre de colonnes de boutons
    int nb;                        // nombre de boutons par colonne
    int H;                         // Hauteur courante d'un bouton
@@ -152,9 +152,16 @@ SwingWidgetFinder, Widget {
       addMouseMotionListener(this);
       ICONEBAR = aladin.chaine.getString("TBBAR");
       DRAWING = aladin.chaine.getString("TBDRAW");
+          
+      double scale = (Aladin.getUIScale()-1)/1.5+1;
+      W        = (int)(34*scale);      // Largeur d'un bouton
+      HMIN     = W- (int)(5*scale);    // Hauteur minimale d'un bouton
+      HREC     = W+(int)(2*scale);     // Hauteur recommandee d'un bouton
+      L        = (int)(3*scale);       // Demi-taille du carre de changt de prop.
+      ICONEGAP = (int)(12*scale);      // Nombre de pixels reserves pour le changement de proportions
 
-      // Quels sont les boutons à afficher ?
-//      if( Aladin.OUTREACH ) drawn = OUTREACHDRAWN;
+      ws=W;                             // Derniere largeur de la boite a boutons
+      hs=600;                           // Derniere hauteur de la boite a boutons
 
       calcConf(500-ICONEGAP);   //Calcul de la conf initiale
 

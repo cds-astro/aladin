@@ -21,13 +21,25 @@
 
 package cds.vizier;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
@@ -35,6 +47,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
+import cds.aladin.Aladin;
 import cds.tools.TwoColorJTable;
 import cds.tools.Util;
 
@@ -70,13 +83,13 @@ public final class VizieRTable extends TwoColorJTable {
     protected Vector v;
 
     private final int mode;
-
-    static final boolean LSCREEN= Toolkit.getDefaultToolkit().getScreenSize().width>1000;
-
-    /** Taille moyenne des fonts */
-    static protected final int  SIZE   = LSCREEN?12:10;
-
-    protected static Font COURIER= new Font("Monospaced",Font.PLAIN, SIZE);
+//
+//    static final boolean LSCREEN= Toolkit.getDefaultToolkit().getScreenSize().width>1000;
+//
+//    /** Taille moyenne des fonts */
+//    static protected final int  SIZE   = LSCREEN?12:10;
+//
+//    protected static Font COURIER= new Font("Monospaced",Font.PLAIN, SIZE);
 
     /** Constructor Table creation
      * Set the selected catalogs
@@ -137,7 +150,7 @@ public final class VizieRTable extends TwoColorJTable {
 
         getTableHeader().setDefaultRenderer(new VizieRTableHeaderRenderer(getTableHeader().getDefaultRenderer()));
 
-        this.setFont( COURIER );
+        this.setFont( Aladin.COURIER );
         this.getSelectionModel().addListSelectionListener(new VizieRTableSelectionListener());
     }
 

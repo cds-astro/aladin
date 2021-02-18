@@ -30,6 +30,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.Event;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -37,6 +38,8 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -73,6 +76,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.MemoryImageSource;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -120,6 +124,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.plaf.FontUIResource;
 
 import cds.aladin.bookmark.Bookmarks;
 import cds.aladin.stc.STCCircle;
@@ -160,12 +165,17 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> New supporting projection: Mercator
+ * @beta    <LI> Support for Hight DPI screen -> See User Preference Scaling method
+ * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Table generation...
+ * @beta    <LI> Plugin extension for pixel stats (getStatistics..)
+ * @beta    <LI> New projection: Mercator
  * @beta    <LI> SMOC generation form Box object
  * @beta </UL>
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> HiPS tiles crossing the view in AITOFF projection
+ * @beta    <LI> s_region circle radius expressed with E notation (xxEn) 
  * @beta    <LI> Plugins classLoader problem with JVM >=1.9
  * @beta    <LI> Save JPEG images with OpenJDK
  * @beta    <LI> STMOC millisecond precision in properties
@@ -191,7 +201,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.031";
+   static public final    String VERSION = "v11.035";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -202,7 +212,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final boolean MRDECOMP= false;
 
    /** Taille moyenne des fonts */
-   static protected int  SIZE   = 12;
+   static protected int  SIZE   = 13;
    
    // Gère le mode particuliers
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
@@ -796,7 +806,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public void myInit() {
       if( SCREENSIZE==null ) SCREENSIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
-      setMacWinLinuxProperties();
+      setSystemProperties();
 
       // set user-agent (see RFC 2616, User-Agent section)
       try {
@@ -1006,6 +1016,77 @@ DropTargetListener, DragSourceListener, DragGestureListener
       String s=path+ (path.endsWith(Util.FS) ? "":Util.FS) + name;
       return s;
    }
+   
+   // Facteur d'agrandissement global des fonts et widgets
+   static private float UISCALE=-2;   // -2 non initialisé, -1 l'OS gère, 0 Aladin détermine tout seul => valeur >=1.0
+   
+   /** Retourne vrai si le UIscale est géré par l'OS et JAva */
+   static protected boolean isOSUIScaled() { return UISCALE==-1; }
+   
+   /** On va éviter d'utiliser le double buffering dans le cas où le facteur d'échelle de l'UI est géré
+    * par l'OS et JAVA, et que ce facteur est différent de 1 */
+   static protected boolean useDoubleBuffering(Graphics gr) {
+      boolean flagDoubleBuffering=true;
+      if( isOSUIScaled() && gr instanceof Graphics2D) {
+         AffineTransform at = ((Graphics2D)gr).getTransform();
+         flagDoubleBuffering= (at.getScaleY()==1); // Bon scale==1, on peut tout de même en faire   
+      }
+      return flagDoubleBuffering;
+   }
+   
+   /** Retourne le facteur d'agrandissement des fonts et widgets 
+    * en fonction de la résolution de l'écran (DPI).
+    * Attention, un déplacement de l'application dans un écran secondaire ne changera
+    * pas pour autant le calcul initial
+    */
+   static public float getUIScale() {
+      
+      // Laisse-t-on l'OS géré tout seul => alors pas de facteur spécifique
+      if( UISCALE==-1 ) return 1f;
+
+      // Initialisation 
+      if( UISCALE== -2 ) {
+         float f = aladin.configuration.getUiScale();
+         
+         // Choix de l'utilisateur ?
+         if( f!=0 ) UISCALE=f;
+         
+         // Détermination automatique par Aladin en fonction de la résolution de l'écran
+         else {
+            UISCALE=1f;
+            try {
+               //            int dpi= Toolkit.getDefaultToolkit().getScreenResolution();
+               //            System.out.println("DPI clamed by Toolkit().getScreenResolution()="+dpi);
+               //            GraphicsDevice allgd [] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+               GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+               //            boolean firstScreen = gd == allgd[0];
+               //            if( firstScreen ) dpi = Toolkit.getDefaultToolkit().getScreenResolution();
+               //            else {
+               DisplayMode dm = gd.getDisplayMode();
+               int height = dm.getHeight();
+               UISCALE = height<=1080 ? 1f : height<=2880 ? 1.25f : 1.5f; 
+               //            }
+               if( UISCALE<1f ) UISCALE=1f;
+               if( UISCALE!=1 ) trace(2,"Hight resolution screen detected => UI scale factor = "
+                     +(int)(UISCALE*100f)+"%");
+            } catch( Exception e ) {
+               UISCALE=1f;
+            }
+         }
+      }
+      return UISCALE; 
+   }
+   
+   /** Ajustement de la taille de la font du Component en fonction du facteur
+    * d'affichage lié à la résolution de l'écran
+    * @param c Le component 
+    */
+   static public void fontResize( Component c ) {
+      c.setFont( fontResize( c.getFont() ));
+   }
+   static public Font fontResize( Font f ) {
+      return f.deriveFont( f.getSize2D()*getUIScale());
+   }
 
    /** Creation des fonts */
    protected void creatFonts() {
@@ -1015,25 +1096,30 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       trace(1,"Creating Fonts");
       
-      BOLD   = new Font(s,Font.BOLD,  SIZE);
-      PLAIN  = new Font(s,Font.PLAIN, SIZE);
-      ITALIC = new Font(s,Font.ITALIC,SIZE);
+      BOLD   = createFont(s,Font.BOLD,  SIZE);
+      PLAIN  = createFont(s,Font.PLAIN, SIZE);
+      ITALIC = createFont(s,Font.ITALIC,SIZE);
       SSIZE  = SIZE-2;
       SSSIZE  = SSIZE-1;
-      SBOLD  = new Font(s,Font.BOLD,  SSIZE);
-      SSBOLD = new Font(s,Font.BOLD,  SSSIZE);
-      SPLAIN = new Font(s,Font.PLAIN, SSIZE);
-      SSPLAIN= new Font(s,Font.PLAIN, SSSIZE);
-      SITALIC= new Font(s,Font.ITALIC,SSIZE);
+      SBOLD  = createFont(s,Font.BOLD,  SSIZE);
+      SSBOLD = createFont(s,Font.BOLD,  SSSIZE);
+      SPLAIN = createFont(s,Font.PLAIN, SSIZE);
+      SSPLAIN= createFont(s,Font.PLAIN, SSSIZE);
+      SITALIC= createFont(s,Font.ITALIC,SSIZE);
       LSIZE  = SIZE+2;
-      LPLAIN = new Font(s,Font.PLAIN, LSIZE);
-      LBOLD  = new Font(s,Font.BOLD,  LSIZE);
-      LITALIC= new Font(s,Font.ITALIC,LSIZE);
+      LPLAIN = createFont(s,Font.PLAIN, LSIZE);
+      LBOLD  = createFont(s,Font.BOLD,  LSIZE);
+      LITALIC= createFont(s,Font.ITALIC,LSIZE);
       LLITALIC= LBOLD;
-      COURIER= new Font(s1,Font.PLAIN,Aladin.SIZE);
-      BCOURIER= new Font(s1,Font.PLAIN+Font.BOLD,Aladin.SIZE);
-      JOLI    = new Font("Trebuchet MS",Font.PLAIN,Aladin.LSIZE);
-      BJOLI   = new Font("Trebuchet MS",Font.BOLD,Aladin.LSIZE+2);
+      COURIER= createFont(s1,Font.PLAIN,SIZE);
+      BCOURIER= createFont(s1,Font.PLAIN+Font.BOLD,SIZE);
+      JOLI    = createFont("Trebuchet MS",Font.PLAIN,LSIZE);
+      BJOLI   = createFont("Trebuchet MS",Font.BOLD,LSIZE+2);
+   }
+   
+   protected Font createFont(String name, int style, int size) {
+      Font f = new Font(name,style,size);
+      return f.deriveFont( f.getSize2D()*getUIScale() );
    }
 
    /** Création des chaines dans la langue */
@@ -2141,6 +2227,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    // Nécessaire pour récupérer la largeur du panel afin de post positionner le split
    private JPanel mainRight;
+   
+   /** Ajustement de l'ensemble des fonts utilisées par SWING */
+   public static void resizeAllFontUI(){
+      Enumeration keys = UIManager.getDefaults().keys();
+      while (keys.hasMoreElements()) {
+         Object key = keys.nextElement();
+         Object value = UIManager.get (key);
+         if (value instanceof FontUIResource) {
+            FontUIResource f = (FontUIResource)value;
+            f = new FontUIResource( f.deriveFont( f.getSize2D()*getUIScale()) );
+            UIManager.put (key, f);
+         }
+      }
+   } 
 
    /** Creation des objets et mise en place de l'interface.
     * On utilisera la plupart du temps des Panels hierarchises
@@ -2152,6 +2252,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 //                       UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+            
          } catch( Exception e ) { e.printStackTrace(); }
          
       // Dans le cas d'un lancement par une autre application, s'il n'y a pas d'indication
@@ -2163,9 +2264,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       targetHistory = new TargetHistory(aladin);
       configuration = new Configuration(this);
       if( STANDALONE ) {
-         try {  configuration.load(); }
-         catch( Exception e ) { System.err.println(e.getMessage()); }
+         try {  configuration.load();
+         if( !flagLaunch ) resizeAllFontUI();
+         } catch( Exception e ) { System.err.println(e.getMessage()); }
       }
+
 
       // Initialisations des couleurs
       initColors();
@@ -3482,7 +3585,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,HEALPIXARITHM) ){ updateHealpixArithm();
       } else if( isMenu(s,NORM) )  { norm();
       } else if( isMenu(s,BITPIX) )  { updateBitpix();
-      } else if( isMenu(s,PIXEXTR) )  { new FramePixelExtraction(this);
+//      } else if( isMenu(s,PIXEXTR) )  { new FramePixelExtraction(this);
+      } else if( isMenu(s,PIXEXTR) )  { pixelExtraction();
       } else if( isMenu(s,HEAD) )  { header();
       } else if( isMenu(s,HPXGENERATE)){ buildHiPS();
       } else if( isMenu(s,HPXGENMAP)){ buildHiPS();
@@ -4322,9 +4426,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
    
    /**Creation d'un Plann MOC à partir de tous les polygones sélectionnés */
-   protected int createPlanMocByRegions() { return createPlanMocByRegions(-1); }
-   protected int createPlanMocByRegions(int order) {
-      SMoc moc = createMocByRegions(order);
+   protected int createPlanMocByRegions() { return createPlanMocByRegions(-1, true); }
+   protected int createPlanMocByRegions(int order, boolean inclusive) {
+      SMoc moc = createMocByRegions(order, inclusive);
       if( moc==null ) {
          error("MOC creation error !\n",1);
          return -1;
@@ -4336,7 +4440,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return n;
    }
    
-   private double calculAngle(Ligne avant, Ligne centre, Ligne apres ) {
+   static private double calculAngle(Ligne avant, Ligne centre, Ligne apres ) {
       double xavant = avant.xv[0] - centre.xv[0];
       double yavant = avant.yv[0] - centre.yv[0];
       double xapres = apres.xv[0] - centre.xv[0];
@@ -4347,7 +4451,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    // Détermine le sens du polygone en fonction de l'angle signé (atan2) du plus haut sommet avec
    // ses deux arcs adjacents
-   private boolean isCounterClok(Ligne o ) { 
+   static protected boolean isCounterClok(Ligne o ) { 
       Ligne o0 = o.getLastBout();
       Ligne oN = o0;
       double ymin = o.yv[0];
@@ -4365,7 +4469,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
-   protected SMoc createMocByRegions(int order) {
+   protected SMoc createMocByRegions(int order, boolean inclusive) {
       
       // reset des boutons
       toolBox.tool[ToolBox.DRAW].setMode(Tool.UP);
@@ -4373,9 +4477,31 @@ DropTargetListener, DragSourceListener, DragGestureListener
       toolBox.tool[ToolBox.SELECT].setMode(Tool.DOWN);
       toolBox.toolMode();
       
+      SMoc moc = createMocByRegions(order,view.vselobj, inclusive);
+      
+      // Déselection des objets ayant été utilisés
+      view.deSelectLigneAndCercle();
+      
+      return moc;
+   }
+   
+      
+//   protected SMoc createMocByRegions(int order, Vector<Obj> v, boolean inclusive) {
+//      SMoc moc = createMocByRegions1(order,view.vselobj,inclusive);
+//      try {
+//         moc.checkAndFix();
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//      return moc;
+//   }
+   
+   /**Creation d'un MOC à partir de tous les polygones et cercles sélectionnés */
+   protected SMoc createMocByRegions(int order, Vector<Obj> v, boolean inclusive) {
+      
       ArrayList<SMoc> arr = new ArrayList<>(10000);
       HashSet<Obj> set = new HashSet<>();
-      for( Obj o : view.vselobj ) {
+      for( Obj o : v ) {
          
          // Ajout des cercles (Phot ou cercle)
          if( o instanceof SourceStat || o instanceof Cercle) {
@@ -4385,7 +4511,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                double radius =o.getRadius();
                if( radius==0 ) continue;
 
-               SMoc m = createMocRegionCircle( ra,de,radius,order );
+               SMoc m = createMocRegionCircle( ra,de,radius,order,inclusive );
                if( m==null || m.getSize()==0 ) continue;
                arr.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
@@ -4419,7 +4545,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          try {
             boolean isCounterClock =  isCounterClok( (Ligne) o );
 //            trace(4,"polygon counterClock="+isCounterClock);
-            SMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock );
+            SMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock, inclusive );
             if( m==null || m.getSize()==0 ) continue;
             arr.add(m);
          } catch( Exception e) { if( levelTrace>=3 ) { e.printStackTrace();  } }
@@ -4442,9 +4568,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
 
       }
-      
-      // Déselection des objets ayant été utilisés
-      view.deSelectLigneAndCercle();
       
       try {
          if( arr.size()==0 ) return null;
@@ -4505,9 +4628,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //   }
 
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
-   protected SMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
+   protected SMoc createMocRegionCircle(double ra, double de, double radius, int order, boolean inclusive) throws Exception {
       if( order==-1 ) order=getAppropriateOrder(radius);
-      return CDSHealpix.getMocByCircle(order, ra, de,  Math.toRadians(radius), true);
+      return CDSHealpix.getMocByCircle(order, ra, de,  Math.toRadians(radius), inclusive);
    }
 
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
@@ -4516,23 +4639,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return CDSHealpix.getMocByEllipse(order, ra, de,  a,b,pa);
    }
    
-    protected SMoc createMocRegion(List<STCObj> stcObjects, int order) throws Exception {
+    protected SMoc createMocRegion(List<STCObj> stcObjects, int order, boolean inclusive) throws Exception {
 //        return createMocRegion(stcObjects.get(0), order);
         Moc moc = null;
         for( STCObj stc : stcObjects ) {
-           SMoc m = createMocRegion(stc, order);
+           SMoc m = createMocRegion(stc, order,inclusive);
            moc = moc==null ? m : moc.union(m);
         }
         return new SMoc( moc );
     }
     
-    protected SMoc createMocRegion(STCObj stcobj, int order) throws Exception {
+    protected SMoc createMocRegion(STCObj stcobj, int order, boolean inclusive) throws Exception {
        SMoc moc = null;
        try {
          if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
-             moc = createMocRegionPol((STCPolygon)stcobj,order);
+             moc = createMocRegionPol((STCPolygon)stcobj,order,inclusive);
           } else if (stcobj.getShapeType() == STCObj.ShapeType.CIRCLE) {
-             moc = createMocRegionCircle((STCCircle)stcobj, order);
+             moc = createMocRegionCircle((STCCircle)stcobj, order,inclusive);
           }
       } catch( Exception e ) {
          if( levelTrace>=3 ) e.printStackTrace();
@@ -4542,8 +4665,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
        return moc;
     }
     
-    protected SMoc createMocRegionCircle(STCCircle stcCircle, int order) throws Exception {
-        return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order);
+    protected SMoc createMocRegionCircle(STCCircle stcCircle, int order, boolean inclusive) throws Exception {
+        return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order, inclusive);
     }
     
     public SMoc createMocRegionRectangle(List<Coord> rectVertices, double ra, double dec, double widthInDeg,
@@ -4638,7 +4761,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             maxSize = size;
         return maxSize;
     }
-    protected SMoc createMocRegionPol(STCPolygon stcPolygon, int order) throws Exception {
+    protected SMoc createMocRegionPol(STCPolygon stcPolygon, int order, boolean inclusive) throws Exception {
           double ra,de;
           Ligne oo=null;
 
@@ -4666,7 +4789,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
           o.finligne=oo;
           oo.debligne=o;
           
-          return createMocRegionPol(o, order, false);
+          return createMocRegionPol(o, order, false, inclusive);
     }
     
 //    public void addVec3(ArrayList<Vec3> cooList, double ra, double dec) {
@@ -4676,7 +4799,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //    }
    
    /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets */
-   protected SMoc createMocRegionPol(Ligne o, int order, boolean isCounterClock) throws Exception {
+   static protected SMoc createMocRegionPol(Ligne o, int order, boolean isCounterClock, boolean inclusive) throws Exception {
       SMoc moc=null;
 
       double maxSize=0;
@@ -4700,7 +4823,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( order<10 ) order=10;
          else if( order>29 ) order=29;
 
-         trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+//         trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
       }
       
       
@@ -4718,7 +4841,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       cooList.remove( cooList.size()-1 );
      
       try {
-         moc = CDSHealpix.createSMoc(cooList,order);
+         moc = CDSHealpix.createSMoc(cooList,order,inclusive);
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception("Degenerated polygon");
@@ -4728,7 +4851,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // Il faudrait également tester si le résultat donne des zones disjointes => prob
 //      if( moc.getCoverage()>0.5 ) throw new Exception("Polygon must be expressed in anti-clockwise direction");
 
-
+      moc.checkAndFix();   // A VIRER LORSQUE LE BUG DES REDONDANCES SERA FIXE
       return moc;
    }
 
@@ -4777,6 +4900,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
          frameBitpix = new FrameBitpix(aladin);
       }
       frameBitpix.maj();
+   }
+   
+   /** Génération d'un catalogues des pixels de stats sélectionnées par un ou plusieurs
+    * objets photométriques */
+   protected void pixelExtraction() {
+      try {
+         calque.newCatalogPixelExtraction();
+      } catch( Exception e ) {
+         String msg = e.getMessage();
+         warning("Extraction error"+ (msg==null ? "":": "+msg));
+      }
    }
    
    /** Active la fonction d'extraction d'un spectre depuis un cube */
@@ -5804,6 +5938,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          int nbPlanTranspImg = calque.getNbPlanTranspImg();
          int nbPlanImgWithoutBG = calque.getNbPlanImg(false);
          boolean hasSelectedObj = view.hasSelectedObj();
+         boolean hasSelectedPhot = view.hasSelectedObj();
          boolean hasMocPol = view.hasMocPolSelected();
          boolean hasSelectedSrc = view.hasSelectedSource();
          boolean hasTagSrc = calque.hasTaggedSrc();
@@ -5813,7 +5948,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          ViewSimple v = view.getCurrentView();
          boolean isBG = pimg!=null && pimg instanceof PlanBG;
          boolean isCube = hasImage && (base.type==Plan.IMAGECUBE || base.type==Plan.IMAGECUBERGB);
-         boolean hasPixels = pimg!=null && pimg.hasAvailablePixels() && pimg.type!=Plan.IMAGEHUGE && !isBG;
+         boolean hasPixels = pimg!=null && pimg.hasAvailablePixels() && pimg.type!=Plan.IMAGEHUGE;
          boolean hasProj = pimg!=null && Projection.isOk(pimg.projd);
          boolean isFree = calque.isFree();
          int nbPlans = calque.getNbPlans(true);
@@ -5821,7 +5956,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          boolean mode1 = nbPlans>1 || nbPlans==1 && !isBG;
          
          /** Il n'est pas possible de changer la projection globale pour certain plan */
-         boolean projEnabled = !isFree && base!=null && /* !base.hasSpecificProj() && */ base instanceof PlanBG;
+         boolean projEnabled = !isFree && base!=null && base instanceof PlanBG;
          projSelector.setEnabled( projEnabled );
 
          //         if( console!=null ) console.clone.setEnabled(hasSelectedSrc);
@@ -5933,7 +6068,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miCut!=null ) miCut.setEnabled(nbPlanImgWithoutBG>0);
          if( miSpect!=null ) miSpect.setEnabled(base!=null && base.type==Plan.IMAGECUBE);
          PlanImage pi = calque.getFirstSelectedPlanImage();
-         if( miStatSurf!=null ) miStatSurf.setEnabled(hasPixels && (!isBG || pi instanceof PlanHealpix));
+         if( miStatSurf!=null ) miStatSurf.setEnabled(hasPixels);
          if( miTransp!=null ) miTransp.setEnabled(pi!=null && calque.canBeTransparent(pi));
          if( miTranspon!=null ) miTranspon.setEnabled(nbPlanTranspImg>0);
          if( miDist!=null ) miDist.setEnabled(nbPlanImg>0);
@@ -5971,7 +6106,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
          if( miNorm!=null ) miNorm.setEnabled(hasPixels && !isCube);
          if( miBitpix!=null ) miBitpix.setEnabled(hasPixels && !isCube);
-         if( miPixExtr!=null ) miPixExtr.setEnabled(hasPixels && !isCube);
+         if( miPixExtr!=null ) miPixExtr.setEnabled( hasSelectedPhot );
          if( miCopy!=null ) miCopy.setEnabled(hasPixels /* && !isCube */);
          if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj && base!=null && (base.isSimpleImage() || base.type==Plan.IMAGERGB) );
          if( miCreateHpxRgb!=null ) miCreateHpxRgb.setEnabled( nbPlanHiPS4RGB>1 );
@@ -6230,10 +6365,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
   
 
+   // True si le propriétés systèmes ont été positionnées
+   static private boolean flagSystemProperty=false;
+   
    /**
     * Positionne des flags et des propriétés spécifiques au Mac
     */
-   static private void setMacWinLinuxProperties() {
+   static private void setSystemProperties() {
+      if( flagSystemProperty ) return;
+      flagSystemProperty = true;
+      
       // propriété spécifique à Mac OS permettant de faire apparaitre les éléments de menu tout en haut (selon le L'n'F Mac)
       // (cf.   http://devworld.apple.com/documentation/Java/Conceptual/Java14Development/04-JavaUIToolkits/JavaUIToolkits.html#//apple_ref/doc/uid/TP40001901-209837)
       macPlateform = System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
@@ -6243,6 +6384,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( macPlateform && System.getProperty("apple.laf.useScreenMenuBar")==null && !isApplet() ) {
          System.setProperty("apple.laf.useScreenMenuBar", "true");
       }
+      
+      // Gère-t-on nous-même les facteurs d'agrandissement dans le cas d'écran hight DPI ?
+      if( !Configuration.isUIScaleByOs() || Aladin.NOGUI ) System.setProperty("sun.java2d.uiScale", "1");
+      else Aladin.trace(2,"UIScale managed by OS & Java");
+      
    }
 
    // Les commandes a exécuter après la création d'Aladin (voir creanObj.run())
@@ -6374,9 +6520,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
 
       //      if( chart!=null ) NOGUI=true;
+     
 
       // Création d'Aladin
-      setMacWinLinuxProperties(); // indispensable d'appeler cette méthode avant la création de l'objet Aladin !
+      setSystemProperties(); // indispensable d'appeler cette méthode avant la création de l'objet Aladin !
       aladin = new Aladin();
       aladin.SCREEN = SCREEN;
       aladin.flagScreen = SCREEN!=null;
@@ -6599,6 +6746,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    public String execCommand(String cmd) {
       waitDialog();
+      
+      System.out.println("execCommand(\""+cmd+"\")...");
       
       // Arrêt de l'animation en cours
       while( isAnimated() ) stopAnimation();
@@ -7222,7 +7371,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj o1 = it.next();
-         if( !(o1 instanceof Source) ) continue;
+//         if( !(o1 instanceof Source) ) continue;
+         if( !o1.asSource() ) continue;  // Certaines Source ne sont pas prise (voir SourceStat par exemple)
          Source o = (Source)o1;
 
          // Ne traite que les objets selectionnes par l'utilisateur le cas echeant
@@ -8005,6 +8155,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //         throw new AladinException(AladinData.ERR009);
    //      }
    //   }
+   
+   /**
+    * Create a new Aladin Tool plane by plugin.
+    * @param name plane name
+    * @return The AladinData java object corresponding to this new plane
+    * @throws AladinException
+    */
+   public AladinData createAladinTool(String name) throws AladinException {
+      return new AladinData(this,3,name);
+   }
+
 
    /** Return the Aladin plugin directory */
    public String getPluginDir() {
@@ -8183,7 +8344,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // boucle sur les objets du plan
       for( int i=0; it.hasNext(); i++ ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          s = (Source)o;
          //         values = Util.split(s.info, "\t");
 

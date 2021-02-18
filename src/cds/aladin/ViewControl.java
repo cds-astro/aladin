@@ -54,10 +54,9 @@ public final class ViewControl extends JComponent implements
    static final int MAXVIEW = MVIEW16;
    
    String INFOMVIEW,INFOSYNC,LABEL;
-   static final int SL = 18;     // Taille du sync
-   static final int L = 12;      // Taille d'un logo
-   static final int H = 24;      // Hauteur de la fenetre
-   static final int W  = (L+2)*MODE.length+2;
+   private int L;      // Taille d'un logo
+   private int H;      // Hauteur du controleur
+   private int W;      // Largeur du controleur
 
    protected int modeView=DEFAULT;    // Mode courant
    private int nMode=-1;              // Dernière position de la souris
@@ -69,6 +68,12 @@ public final class ViewControl extends JComponent implements
    */
    protected ViewControl(Aladin aladin) {
       this.aladin=aladin;
+      
+      double scale = (Aladin.getUIScale()-1)/1.25 +1;
+      L = (int)( 12*scale );      // Taille d'un logo
+      H = (int)( 24*scale );      // Hauteur de la fenetre
+      W  = (L+2)*MODE.length+2;
+
       INFOMVIEW = aladin.chaine.getString("MVIEWDESC");
       LABEL = aladin.chaine.getString("MVIEWLABEL");
       addMouseMotionListener(this);

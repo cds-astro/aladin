@@ -181,6 +181,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String LASTRUN    = "LastRun";
    protected static String STOPHELP   = "StopHelp";
    protected static String LOOKANDFEELTHEME      = "LookAndFeelTheme";
+   protected static String LOOKANDFEELSCALE      = "LookAndFeelScale";
    protected static String GRIDC      = "GridColor";
    protected static String GRIDCRA    = "GridColorRA";
    protected static String GRIDCDE    = "GridColorDE";
@@ -191,6 +192,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String INFOB      = "InfoBorder";
    protected static String TAPSCHEMADISPLAY = "TapSchemaDisplay";
    protected static String FILTERHDU     = "FilterHDU";
+   
+   static final private String [] UISCALESTR = {"Automatic","OS method","100%","110%","125%","150%","175%","200%","225%","250%"};
+
    
    //   protected static String TAG        = "CenteredTag";
    //   protected static String WENSIZE    = "WenSize";
@@ -210,7 +214,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,FILTERHDUS,FILTERHDUH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
-   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,THEMEHELP,RESTART,
+   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,UISCALE,THEMEHELP,RESTART,
    GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
 
 
@@ -248,6 +252,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JComboBox        gluChoice;            // Pour la sélection du site GLU
    private JComboBox        lfChoice;             // Pour la sélection du Look & Feel
    private JComboBox        themeChoice;          // Pour la sélection du thème du Look & Feel (dark or classic)
+   private JComboBox        uiScaleChoice;        // Pour la sélection du facteur d'échelle de l'UI
    private JComboBox        langChoice;           // Pour la sélection de la langue
    private JComboBox        modeChoice;           // Pour la sélection du mode (astronomers | undergraduate)
    //   private JComboBox        smbChoice;            // Pour la sélection du mode Simbad pointer
@@ -283,6 +288,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    static private Langue lang[];                  // La liste des langues installées
    private Vector remoteLang = null;              // Lal iste des langues connues mais non installées
    private int previousTheme=0;                   // Indice du thème au démarrage
+   private int previousUiScale=0;                   // Indice du facteur d'échelle au démarrage
    private JCheckBox hideTapSchema = null;			//Hide tapschema tables on tap clients or not.
 
    protected void createChaine() {
@@ -361,6 +367,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       FILEDIALOGNATIVE = aladin.chaine.getString("FILEDIALOGNATIVE");
       THEME = aladin.chaine.getString("THEME");
       THEMEHELP = aladin.chaine.getString("THEMEHELP");
+      UISCALE = aladin.chaine.getString("UISCALE");
       RESTART = aladin.chaine.getString("RESTART");
       GRID=aladin.chaine.getString("UPGRID");
       GRIDH=aladin.chaine.getString("UPGRIDH");
@@ -852,6 +859,23 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected boolean isDarkTheme() {
       String s = Aladin.THEME!=null ? Aladin.THEME : get(LOOKANDFEELTHEME);
       return s==null || s.equals("dark");
+   }
+   
+   /** retourne le facteur d'échelle s'il a été positionnée (1.25 par exemple),
+    * -1 si on laisse l'OS gérer, et 0 si Aladin va essayer de le déterminer automatiquement
+    */
+   protected float getUiScale() {
+      String s = get(LOOKANDFEELSCALE);
+      if( s==null || s.equals( UISCALESTR[0] ) ) return 0;   // Aladin va déterminer automatiquement
+      if( s.equals( UISCALESTR[1] ) ) return -1;   // On laisse l'OS gérer
+
+      // Bon, c'est alors un des items du genre "125%" on retourne dès lors 1.25
+       try {
+         s = s.substring(0,s.length()-1);
+         float f = Float.parseFloat(s);
+         return f/100f;
+      } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
+      return 0;
    }
 
    /** Retourne l'indice de la frame mémorisée par l'utilisateur, ICRS par défaut */
@@ -1464,12 +1488,19 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       PropPanel.addCouple(this, p, l, HELPH, helpChoice, g, c, GridBagConstraints.EAST);
 
       // Le thème du Look&Feel
-      (l = new JLabel(THEME)).setFont(l.getFont().deriveFont(Font.BOLD));
       themeChoice = new JComboBox();
       themeChoice.addItem("dark");
       themeChoice.addItem("classic");
       themeChoice.addActionListener(this);
-      PropPanel.addCouple(this, p, l, THEMEHELP, themeChoice, g, c, GridBagConstraints.EAST);
+      uiScaleChoice = new JComboBox( UISCALESTR );
+      uiScaleChoice.addActionListener(this);
+      l = new JLabel(" - "+UISCALE);
+      panel = new JPanel( new FlowLayout(FlowLayout.LEFT,5,0));
+      panel.add(themeChoice);
+      panel.add(l);
+      panel.add(uiScaleChoice);
+      (l = new JLabel(THEME)).setFont(l.getFont().deriveFont(Font.BOLD));
+      PropPanel.addCouple(this, p, l, THEMEHELP, panel, g, c, GridBagConstraints.EAST);
 
       // Le Look&Feel des FileDialog
       (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1715,20 +1746,19 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       else modeChoice.setSelectedItem(s);
       modeItem = modeChoice.getSelectedIndex();
 
-//      if( !Aladin.OUTREACH ) {
-         s = get(LOOKANDFEEL);
-         if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
-         if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
-         else lfChoice.setSelectedIndex(1);
-         
-         s = get(LOOKANDFEELTHEME);
-         if( s!=null ) themeChoice.setSelectedItem("classic");
-         else themeChoice.setSelectedIndex(0);
-//      }
+      s = get(LOOKANDFEEL);
+      if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
+      if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
+      else lfChoice.setSelectedIndex(1);
 
-      //      s = get(PIXEL);
-      //      if( s == null || s.charAt(0)!='8' ) pixelChoice.setSelectedIndex(0);
-      //      else pixelChoice.setSelectedIndex(1);
+      s = get(LOOKANDFEELTHEME);
+      if( s!=null ) themeChoice.setSelectedItem("classic");
+      else themeChoice.setSelectedIndex(0);
+
+      s = get(LOOKANDFEELSCALE);
+      int i = Util.indexInArrayOf(s, UISCALESTR);
+      if( i<0 ) i=0;
+      uiScaleChoice.setSelectedIndex(i);
 
       s = get(FRAME);
       if( s == null ) frameChoice.setSelectedItem("ICRS");
@@ -1749,7 +1779,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          Tok tok = new Tok(s);
          while( tok.hasMoreTokens() ) {
             s = tok.nextToken();
-            suite: for( int i=0; i<4; i++) {
+            suite: for( i=0; i<4; i++) {
                c = i==0 ? videoChoice : i==1 ? mapChoice : i==2 ? cutChoice : fctChoice;
                for( int j=0; j<c.getItemCount(); j++ ) {
                   if( ((String)c.getItemAt(j)).equalsIgnoreCase(s) ) { c.setSelectedIndex(j); break suite; }
@@ -2008,6 +2038,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       s = get(LOOKANDFEELTHEME);
       if( s!=null && s.equals("dark") ) remove(LOOKANDFEELTHEME);
 
+      s = get(LOOKANDFEELSCALE);
+      if( s!=null && s.equals("Automatic") ) remove(LOOKANDFEELSCALE);
+
       // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
       if( !aladin.calque.flagSimbad ) set(SIMBAD,"Off");
       else remove(SIMBAD);
@@ -2187,12 +2220,47 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    public String getLocalBookmarksFileName() {
       return System.getProperty("user.home") + Util.FS + aladin.CACHE + Util.FS + CONFIGBKM;
    }
+   
+   
+   /** Retourne vrai si la config indique que l'UISCALE doit être géré par l'OS
+    * Cette méthode statique peut être appelée avant la création du premier objet Swing
+    */
+   static protected boolean isUIScaleByOs() {
+      String s = getProperty( LOOKANDFEELSCALE );
+      return s!=null && s.equals( UISCALESTR[1] );
+   }
+   
+   /** Lecture manuelle du fichier de conf pour retourner la valeur d'une clé, null si non trouvé */
+   static private String getProperty(String k) {
+      BufferedReader br=null;
+      String s;
+      int i,j;
+      try {
+         String configDir = System.getProperty("user.home") + Util.FS + Aladin.CACHE;
+         File f = new File(configDir);
+         if( !f.isDirectory() ) return null;
+         f = new File( configDir + Util.FS + CONFIGNAME );
+         if( !f.exists() ) return null;
+         br = new BufferedReader(new FileReader(f));
+         while( (s = br.readLine()) != null ) {
+            char a[] = s.toCharArray();
+            for( i = 0; i < a.length && !Character.isSpace(a[i]); i++ );
+            String key = new String(a, 0, i);
+            for( j = i; j < a.length && Character.isSpace(a[j]); j++ );
+            String value = (new String(a, j, a.length - j)).trim();
+            if( k.equals(key) ) return value;
+         }
+      } 
+      catch( Exception e ) { }
+      finally { if( br!=null ) try { br.close(); } catch( Exception e ) {}  }
+      return null;
+   }
 
    /** Chargement des propriétés depuis un fichier de configuration */
    protected void load() throws Exception {
 
       // Existe-il déjà un répertoire générique .aladin
-      String configDir = System.getProperty("user.home") + Util.FS + aladin.CACHE;
+      String configDir = System.getProperty("user.home") + Util.FS + Aladin.CACHE;
       File f = new File(configDir);
       if( !f.isDirectory() ) return;
 
@@ -2226,7 +2294,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          for( i = 0; i < a.length && !Character.isSpace(a[i]); i++ );
          String key = new String(a, 0, i);
          for( j = i; j < a.length && Character.isSpace(a[j]); j++ );
-         String value = new String(a, j, a.length - j);
+         String value = (new String(a, j, a.length - j)).trim();
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
          if( key.equals(LOOKANDFEELTHEME) && !value.equals("dark") ) previousTheme=1;
          aladin.trace(6, "Configuration.load() [" + key + "] = [" + value + "]");
@@ -2384,6 +2452,14 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( t!=0 ) set(LOOKANDFEELTHEME, (String) themeChoice.getSelectedItem() );
          else remove(LOOKANDFEELTHEME);
          if( t!=previousTheme ) Aladin.info(this,RESTART);
+      }
+
+      // Pour le facteur d'échelle
+      if( uiScaleChoice!=null ) {
+         int t = uiScaleChoice.getSelectedIndex();
+         if( t!=0 ) set(LOOKANDFEELSCALE, (String) uiScaleChoice.getSelectedItem() );
+         else remove(LOOKANDFEELSCALE);
+         if( t!=previousUiScale ) Aladin.info(this,RESTART);
       }
 
       // Les sliders de controle

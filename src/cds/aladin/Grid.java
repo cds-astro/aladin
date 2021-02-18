@@ -165,7 +165,7 @@ public class Grid extends Icon {
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x=5;
+      int x=5+DX;
       int y=2;
       
       fillBG(g,x,y, getFillInColor());

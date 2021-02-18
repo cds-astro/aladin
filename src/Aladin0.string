@@ -130,7 +130,7 @@ MHEALPIXARITHM HEALPix arithmetic operations...
 #MDIV	Division
 MNORM	Pixel normalisation (div. by avg)
 MBITPIX	Bitpix convert...
-MPIXEXTR Pixel extraction...
+MPIXEXTR Table generation from selected pixels
 MCONV	Convolution...
 MHEAD	Fits header...
 MBKGD	Progressive sky (HiPS)
@@ -262,7 +262,7 @@ MHEALPIXARITHM.fr Opérations arithmétiques sur plan Healpix...
 #MDIV.fr	Division
 MNORM.fr	Normalisation des pixels (div. by avg)
 MBITPIX.fr	Conversion Bitpix...
-MPIXEXTR.fr Extraction des pixels...
+MPIXEXTR.fr Génération de la table des pixels sélectionnés
 MCONV.fr	Convolution...
 MHEAD.fr	Entête Fits...
 MBKGD.fr	Ciel progressif (HiPS)
@@ -1762,10 +1762,12 @@ FILEDIALOG.fr Style de fenêtres
 FILEDIALOGHELP.fr Rendu (Look&feel) des fenêtres de dialogue de sélection des fichiers et des répertoires.
 FILEDIALOGJAVA.fr Library Java
 FILEDIALOGNATIVE.fr Système d'exploitation
-THEME	Interface theme
-THEMEHELP	Graphical interface theme. Required to restart.
+THEME	Interface
+THEMEHELP	General interface properties. These properties indicate the graphical theme of the interface as well as the scale factor that manages the enlargement of fonts and menus when Aladin runs on a high-resolution screen. It is possible to explicitly indicate a scale factor, or let Aladin decide the best choice (Automatic). It is also possible to let the Operating System and the Java machine manage the scale factor (OS method). Note that this last method may cause blurring effects depending on the type of monitor concerned. These properties require a restart.
+UISCALE UI scale
 THEME.fr	Thème de l'interface
-THEMEHELP.fr	Thème de l'interface graphique. Nécessite un redémarrage.
+THEMEHELP.fr	Propriétés générales de l'interface. Ces propriétés ermettent d'indiquer le thème graphique de l'interface ainsi que le facteur d'échelle qui gère l'agrandissement des polices et menus lorsque Aladin s'exécute sur un écran à haute résolution. Il est possible d'indiquer explicitement un facteur d'échelle, ou de laisser Aladin décider du meilleur choix (Automatic). Il est également possible de laisser le Système d'Exploitation et la machine Java gérer le facteur d'échelle (OS method). A noter que cette dernière méthode peut entrainer des effets de flous suivant le type de moniteur concerné. Ces propriétés nécessitent un redémarrage.
+UISCALE.fr Echelle
 UPGRID Coordinate grid
 UPGRID.fr Grille de coord.
 UPGRIDH Grid coordinate color and font controls

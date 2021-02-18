@@ -627,7 +627,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             }
 
             // En cas de plan HiPS catalog, la légende est globale et externe
-            if( plan instanceof PlanBGCat ) leg=((PlanBGCat)plan).getFirstLegende();
+            if( plan instanceof PlanBGCat ) {
+               leg=((PlanBGCat)plan).getFirstLegende();
+            }
             if( leg==null ) {
                leg = new Legende(v);
                leg.name=table;
@@ -698,7 +700,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 //               }
 //            } catch( Exception e ) { }
             
-            if( indexSTC==-1 && Util.indexOfIgnoreCase( value[i], "Polygon ")==0 ) {
+            if( indexSTC==-1 && ( Util.indexOfIgnoreCase( value[i], "Polygon ")==0 
+                               || Util.indexOfIgnoreCase( value[i], "Circle ")==0 )) {
                indexSTC=j;
             }
             
@@ -985,7 +988,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       while( it.hasNext() ) {
          Obj o = it.next();
          if( o.isSelected() ) return true;
-         if( o instanceof Source && ((Source)o).isTagged() ) return true;
+//         if( o instanceof Source && ((Source)o).isTagged() ) return true;
+         if( o.asSource() && ((Source)o).isTagged() ) return true;
+
       }
       return false;
    }
@@ -1358,7 +1363,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       FootprintBean footprint;
       PlanField pf;
       for( int i=0; i<nb_o; i++ ) {
-         if( ! (o[i] instanceof Source) ) continue;
+//         if( ! (o[i] instanceof Source) ) continue;
+         if( !o[i].asSource() ) continue;
          s = (Source)o[i];
          pf=null;
 
@@ -1444,7 +1450,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /**Insertion de la source après la dernière source de même légende, sinon à la fin */
    protected void insertSource(Source src) {
       for( int i=nb_o-1; i>=0; i-- ) {
-         if( !(o[i] instanceof Source) ) continue;
+//         if( !(o[i] instanceof Source) ) continue;
+         if( !o[i].asSource() ) continue;
          
          // On a trouvé ?
          if( ((Source)o[i]).getLeg()==src.getLeg() ) {
@@ -1471,7 +1478,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    protected void fixInfo(Legende leg) {
       int j=0;
       for( int i=0; i<nb_o; i++ ) {
-         if( !(o[i] instanceof Source) ) continue;
+//         if( !(o[i] instanceof Source) ) continue;
+         if( !o[i].asSource() ) continue;
          Source s = (Source)o[i];
          if( s.getLeg()==leg ) { s.fixInfo(); j++; }
       }
@@ -1498,7 +1506,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       int i;
 
       // Les sources ne peuvent etre supprimer individuellement
-      if( !force && obj instanceof Source ) return false;
+//      if( !force && obj instanceof Source ) return false;
+      if( !force && obj.asSource() ) return false;
 
       // Peut être faut-il qu'il mette à jour certains paramètres (ex. Ligne)
       obj.remove();
@@ -1671,7 +1680,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    synchronized protected void writeLinkFlex(OutputStream out, ViewSimple v,boolean draw) throws Exception {
       if( !computeAndTestDraw(v,draw) ) return;
       for( int i=0; i<nb_o; i++ ) {
-         if( ! (o[i] instanceof Source) ) continue;
+//         if( ! (o[i] instanceof Source) ) continue;
+         if( !o[i].asSource() ) continue;
          ((Source)o[i]).writeLinkFlex(out,v);
       }
    }

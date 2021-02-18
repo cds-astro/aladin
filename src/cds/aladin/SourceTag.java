@@ -122,7 +122,12 @@ public class SourceTag extends Source  {
       setWithLabel(true);
       resumeMesures();
    }
-
+   
+   /** Positionne l'id par defaut */
+   void setId() {
+      if( id==null ) id="Phot "+ nextIndice();
+   }
+   
    /** (Re)genération des mesures et réaffichage */
    protected void resume() {
       resumeMesures();
@@ -237,18 +242,5 @@ public class SourceTag extends Source  {
       return propList;
    }
    
-//   /** Tracé effectif dans la vue indiquée */
-//   protected boolean draw(Graphics g,ViewSimple v,int dx, int dy) {
-//      if( !isVisible() ) return false;
-//      int L = getL();
-//      Point p = getViewCoord(v,L,L);
-//      g.setColor( getColor() );
-//      super.drawPlus(g, p);
-//      if( isSelected() ) {
-//         g.setColor( isTagged() ? Color.magenta : Color.green);
-//         g.drawRect(p.x-L-1,p.y-L-1, L*2+2, L*2+2);
-//      }
-//      return true;
-//   }
 }
 

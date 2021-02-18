@@ -782,7 +782,7 @@ public void layout() {
     		int i = getDelimiterIndex(radiusInput);
     		if (i<0) {
 				//circle
-    			userSpecified = aladin.createMocRegionCircle(Double.parseDouble(coo[0].getText()), Double.parseDouble(coo[1].getText()), Double.parseDouble(rad[0].getText()), -1);
+    			userSpecified = aladin.createMocRegionCircle(Double.parseDouble(coo[0].getText()), Double.parseDouble(coo[1].getText()), Double.parseDouble(rad[0].getText()), -1, true);
 			} else {
 				//rectangly
 				double width = getWM(radiusInput)/60.;
@@ -905,11 +905,16 @@ public void layout() {
          else if( modeRad==RADIUSs ) fct=1/60.;
       }
       
-      r = (new StringTokenizer(r)).nextToken();		// Recup du premier mot
+//      r = (new StringTokenizer(r)).nextToken();		// Recup du premier mot
+//      char [] a = r.toCharArray();
+//      int i;
+//      for( i=0; i<a.length && ((a[i]>='0' && a[i]<='9') || a[i]=='.' || a[i]=='-'); i++);
+      
       char [] a = r.toCharArray();
       int i;
-      for( i=0; i<a.length && ((a[i]>='0' && a[i]<='9') || a[i]=='.' || a[i]=='-'); i++);
-      r = new String(a,0,i);
+      for( i=a.length-1; i>0 && !((a[i]>='0' && a[i]<='9') || a[i]=='.'); i-- );
+      
+      r = new String(a,0,i+1);
       return Double.valueOf(r).doubleValue()*fct;
    }
    

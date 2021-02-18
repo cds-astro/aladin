@@ -50,23 +50,24 @@ public class Position extends Obj {
 
    protected double x,y;        // Position initiale de l'objet en X,Y (soit catalogue sans coordonnée, soit graphique sans calib)
    protected double xv[],yv[];   // Position de l'objet pour chaque vue
+   
+   static final int MAXMEDIANE = 10000;
 
    /** Variables statiques utilisées pour le calcul des statistiques sur un polygone */
-   static double minx,maxx;
-   static double miny,maxy;
-   static double posx,posy;    // position pour l'accrochage du label (-1,-1 si non fourni)
-   static double total;
-   static double carre;
-   static int nombre;
-   static double surface;
-   static double moyenne;
-   static double variance;
-   static double sigma;
-   static double minimum,maximum;
-   static double mediane;
-   static final int MAXMEDIANE = 10000;
-   static int medianeArrayNb=0;
-   static double [] medianeArray = new double[MAXMEDIANE];
+//   static double minx,maxx;
+//   static double miny,maxy;
+//   static double posx,posy;    // position pour l'accrochage du label (-1,-1 si non fourni)
+//   static double total;
+//   static double carre;
+//   static int nombre;
+//   static double surface;
+//   static double moyenne;
+//   static double variance;
+//   static double sigma;
+//   static double minimum,maximum;
+//   static double mediane;
+//   static int medianeArrayNb=0;
+//   static double [] medianeArray = new double[MAXMEDIANE];
 
 
    /*
@@ -183,15 +184,6 @@ public class Position extends Obj {
       return v.inTime( jdtime );
    }
 
-   /** Positionne le flag VISIBLE */
-   protected final void setVisible(boolean visible) {
-      if( visible ) flags |= VISIBLE;
-      else flags &= ~VISIBLE;
-   }
-
-   /** Retourne true si la source a le flag VISIBLE positionné */
-   final protected boolean isVisible() { return (flags & VISIBLE) !=0; /* == VISIBLE;*/ }
-   
    /** Positionne le flag LABEL */
    protected void setWithLabel(boolean withLabel) {
       if( withLabel ) flags |= WITHLABEL;
@@ -367,10 +359,6 @@ public class Position extends Obj {
    protected void deltaRaDec1(double dra, double dde) {
       raj+=dra;
       dej+=dde;
-//      if( dej>90.) { dej=180-dej; raj+=180.; }
-//      if( dej<90.) { dej=-180-dej; raj+=180.; }
-//      if( raj>=360.) raj-=360;
-//      if( raj<0.) raj+=360;
       View view= plan.aladin.view;
       int m = view.getNbView();
       for( int i=0; i<m; i++ ) {
@@ -432,8 +420,6 @@ public class Position extends Obj {
     * @param x,y le point a tester
     */
     protected boolean inside(ViewSimple v, double x, double y) {
-//       double a=mouseDist(v);
-//       return Math.abs(xv[v.n]-x)<a && Math.abs(yv[v.n]-y)<a;
        return inBout(v,x,y);
     }
 
@@ -447,10 +433,6 @@ public class Position extends Obj {
         PointD p1 = v.getViewCoordDble(xv[v.n], yv[v.n]);
         double d =  mouseDist(v);
         return p1.x*p1.x + p.x*p.y < d*d;
-        
-//        double d =  mouseDist(v);
-//        d = d*d*4;
-//        return (xv[v.n]-x) * (xv[v.n]-x) + (yv[v.n]-y) * (yv[v.n]-y) < d;
      }
 
   /** Test d'appartenance a l'objet
@@ -556,54 +538,18 @@ public class Position extends Obj {
       plan.aladin.calque.zoom.zoomView.activeHistPixel(id);
    }
 
+   /** Utilisé pour le colorier les pixels pris en compte dans une mesure de stats*/
+   protected void  statPixel(Graphics g, double pix, double ra, double dec, ViewSimple v,HistItem onMouse) {
 
-//   protected void histOn() {
-//
-//      // recherche du maximum
-//      int max=0,i;
-//      for( i=0; i<statHist.length; i++ ) if( max<statHist[i] ) max = statHist[i];
-//
-//      // Mise a l'echelle des histogrammes
-//      int Hp = plan.aladin.calque.zoom.zoomView.SIZE;
-//      max+=max/5;
-//      if( max!=0 ) for( i=0; i<statHist.length; i++ ) {
-//         statHist[i] =  (statHist[i]*Hp)/max;
-//      }
-//
-//      plan.aladin.calque.zoom.zoomView.setCut(this,statHist,ZoomView.CUTHIST);
-//   }
-
-   /** Initialisation des variables des statistiques */
-   protected void statInit() {
-      nombre=0;
-      carre=total=0;
-      medianeArrayNb=0;
-      posx=posy=-1;
-      minimum=Double.MAX_VALUE;
-      maximum=-Double.MAX_VALUE;
-   }
-
-   /** Utilisé pour le calcul des statistiques sur un polygone */
-   protected double statPixel(Graphics g,int x,int y,ViewSimple v,HistItem onMouse) {
-
-      // Mise à jour des stats
-      double pix;
-      PlanImage pi = (PlanImage)v.pref;
+      Coord coo = new Coord(ra,dec);
+      v.getProj().getXY(coo);
       Color col = g.getColor();
-      
-      if( !(plan instanceof PlanBG) && (y<0 || y>=pi.naxis2 || x<0 || x>=pi.naxis1
-            || (pi.fmt==PlanImage.JPEG || pi.pixelsOrigin==null && !pi.isBigImage())
-            )) {
-         pix=Double.NaN;
-      } else {
-         pix= pi.getPixelInDouble(x,y);
-      }
       
       double zoom = v.getZoom();
       
       // Coloriage du pixel si concerné
       if( g!=null && onMouse!=null && onMouse.contains(pix)) {
-         Point p = v.getViewCoord(x+0.5,y+0.5);
+         Point p = v.getViewCoord(coo.x,coo.y);
          if( p!=null ) {
             g.setColor(Color.cyan);
             int z1=(int)zoom;
@@ -613,25 +559,18 @@ public class Position extends Obj {
       }
       
       if( zoom>2 ) {
-         Point p = v.getViewCoord(x+0.5,y+0.5);
+         Point p = v.getViewCoord(coo.x,coo.y);
          if( !Double.isNaN(pix) ) {
             g.setColor( col );
             if( zoom>4 ) Util.fillCircle5(g, p.x, p.y);
             else Util.fillCircle2(g, p.x, p.y);
          }
-//         if( Double.isNaN(pix) ) g.setColor(Color.orange);
-//         else g.setColor(Color.red);
-//         if( zoom>4 ) Util.fillCircle5(g, p.x, p.y);
-//         else Util.fillCircle2(g, p.x, p.y);
       }
       g.setColor(col);
-      
-      return statPixel(pix);
    }
-   
-   
-   /** Utilisé pour le calcul des statistiques sur un polygone */
-   protected double statPixel(Graphics g,double pix, double ra, double dec,ViewSimple v,HistItem onMouse) {
+
+   /** Utilisé pour le colorier les pixels pris en compte dans une mesure de stats sur des Plan HiPS*/
+   protected void statPixelBG(Graphics g,double pix, double ra, double dec,ViewSimple v,HistItem onMouse) {
 
      Coord coo = new Coord(ra,dec);
      v.getProj().getXY(coo);
@@ -660,124 +599,97 @@ public class Position extends Obj {
             if( pixelSize>8 ) Util.fillCircle5(g, p.x, p.y);
             else Util.fillCircle2(g, p.x, p.y);
          }
-//         if( Double.isNaN(pix) ) g.setColor(Color.orange);
-//         else g.setColor(Color.red);
-//         if( pixelSize>8 ) Util.fillCircle5(g, p.x, p.y);
-//         else Util.fillCircle2(g, p.x, p.y);
       }
       g.setColor(col);
-      
-      return statPixel(pix);
-   }
-   
-
-   protected double statPixel(double pix) {
-      if( Double.isNaN(pix) ) return pix;
-      nombre++;
-      if( pix<minimum ) minimum=pix;
-      if( pix>maximum ) maximum=pix;
-      if( medianeArrayNb<MAXMEDIANE ) medianeArray[medianeArrayNb++] = pix;
-      total+=pix;
-      carre+=pix*pix;
-      return pix;
    }
 
-
-   protected boolean statCompute(Graphics g, ViewSimple v) { return false; };
+   protected boolean statCompute(Graphics g, ViewSimple v, int z) { return false; };
 
    static final int STATDY = 13;            // Hauteur d'une ligne de texte pour les stats
    static final int HAUTSTAT = STATDY*9;    // Hauteur de la boite des stats
-   static final int LARGSTAT = 120;         // Largeur de la boite des stats
+   static final int LARGSTAT = 150;         // Largeur de la boite des stats
 
    /** Retourne la position en unité View des stats */
-   protected Rectangle getStatPosition(ViewSimple v) {
-      Point hg = v.getViewCoord(minx,miny);
-      Point bd = v.getViewCoord(maxx,maxy);
-      if( hg==null || bd==null ) return null;
-      return new Rectangle(bd.x+5,hg.y,LARGSTAT,HAUTSTAT);
+   protected Rectangle getStatPosition(ViewSimple v) { return null; }
+
+   /** Affichage des statistiques d'un polygone */
+   protected void statDraw(Graphics g,ViewSimple v, int xvOrig, int yvOrig, int xvLabel, int yvLabel) {
+      
+      if( !v.flagPhotometry || !v.pref.hasAvailablePixels() || v.pref instanceof PlanImageRGB ) return;
+
+      int z=-1;
+      if( v.pref.isCube() ) z = v.cubeControl.getCurrentFrameIndex();
+      
+      double [] stats = null;
+      try {
+         stats = getStatistics(v.pref,z);
+         if( stats==null || !statCompute(g,v, z) ) return;
+      } catch( Exception e ) { return; }
+      
+      // nb, sum, sigma, surface, min, max, median
+      String cnt=Util.myRound(stats[0]);
+      String sum=Util.myRound(stats[1]);
+      String avg=Util.myRound(stats[1]/stats[0]);
+      String med=Double.isNaN(stats[6]) ? "" : Util.myRound(stats[6]);
+      String sig=Util.myRound(stats[2]);
+      String surf=Coord.getUnit(stats[3],false,true)+"²";
+      String min=Util.myRound(stats[4]);
+      String max=Util.myRound(stats[5]);
+
+      if( isWithStat() || isWithLabel() ) {
+         Color c1=g.getColor();
+         Color c2=c1==Color.red || c1==Color.blue?Color.white:null;
+         Rectangle r = new Rectangle( xvLabel, yvLabel, LARGSTAT,HAUTSTAT);
+         if( isWithLabel() || v.aladin.view.isMultiView() || this instanceof Ligne ) {
+//         if( isWithLabel() || this instanceof Ligne ) {
+            g.drawLine(r.x,r.y,r.x,r.y+HAUTSTAT);
+            Point c = new Point(xvOrig,yvOrig);
+            g.drawLine(r.x,r.y+HAUTSTAT/2,c.x,c.y);
+            Util.fillCircle5(g,c.x,c.y);
+            r.x+=2; r.y+=STATDY-2;
+
+            g.setFont(Aladin.BOLD);
+            Util.drawStringOutline(g,"Cnt",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,cnt,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+            Util.drawStringOutline(g,"Sum",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,sum,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+            Util.drawStringOutline(g,"Sigma",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,sig,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+            Util.drawStringOutline(g,"Min",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,min,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+            Util.drawStringOutline(g,"Avg",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,avg,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+            if( !Double.isNaN(stats[6]) ) {
+               Util.drawStringOutline(g,"Med",r.x,r.y,c1,c2);
+               Util.drawStringOutline(g,med,r.x+43,r.y,c1,c2); 
+               r.y+=STATDY;
+            }
+            Util.drawStringOutline(g,"max",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,max,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+            if( this instanceof SourceStat ) {
+               Util.drawStringOutline(g,"Rad",r.x,r.y,c1,c2);
+               Util.drawStringOutline(g,Coord.getUnit( ((SourceStat)this).getRadius()),r.x+43,r.y,c1,c2); 
+               r.y+=STATDY;
+            }
+            Util.drawStringOutline(g,"Surf",r.x,r.y,c1,c2);
+            Util.drawStringOutline(g,surf,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+
+         }
+      }
+
+      if( v.pref==plan.aladin.calque.getPlanBase() ) {
+         if( !(this instanceof SourceStat) ) {
+            id="Cnt "+cnt+" / Sum "+sum
+                  +" / Sigma "+sig
+                  +" / Min "+min
+                  +" / Avg "+avg
+                  +(Double.isNaN(stats[6])?"":" / Med "+med)
+                  +" / Max "+max
+                  + (this instanceof SourceStat ? " / Rad "+Coord.getUnit( ((SourceStat)this).getRadius()):"")
+                  +" / Surf "+surf
+                  ;
+         }
+         histOn();
+      }
    }
-
-    /** Affichage des statistiques d'un polygone */
-    protected void statDraw(Graphics g,ViewSimple v,int dx, int dy) {
-       
-       // Juste pour afficher le débugging des losanges HEALPix couvrant
-//       if( v.pref instanceof PlanBG && ((PlanBG)v.pref).DEBUGMODE )  { statCompute(g,v); return; } 
-
-       if( !v.flagPhotometry || !v.pref.hasAvailablePixels() || v.pref instanceof PlanImageRGB ) return;
-
-       if( !statCompute(g,v) ) return;
-       
-       String cnt=Util.myRound(nombre);
-       String sum=Util.myRound(total);
-       String avg=Util.myRound(moyenne);
-       String med=Double.isNaN(mediane) ? "" : Util.myRound(mediane);
-       String sig=Util.myRound(sigma);
-       String surf=Coord.getUnit(surface,false,true)+"²";
-       String min=Util.myRound(minimum);
-       String max=Util.myRound(maximum);
-
-       if( isWithStat() || isWithLabel() ) {
-          Color c1=g.getColor();
-          Color c2=c1==Color.red || c1==Color.blue?Color.white:null;
-          Rectangle r = getStatPosition(v);
-          if( r!=null && (isWithLabel() || v.aladin.view.isMultiView() || this instanceof Ligne) ) {
-             r.x+=dx;
-             r.y+=dy;
-             g.drawLine(r.x,r.y,r.x,r.y+HAUTSTAT);
-             if( posx==-1 ) {
-                posx = minx+3*(maxx-minx)/4.;
-                posy = (maxy+miny)/2;
-             }
-             Point c = v.getViewCoord(posx,posy);
-             if( c!=null ) {
-                g.drawLine(r.x,r.y+HAUTSTAT/2,c.x,c.y);
-                Util.fillCircle5(g,c.x,c.y);
-
-                r.x+=2; r.y+=STATDY-2;
-
-                g.setFont(Aladin.BOLD);
-                Util.drawStringOutline(g,"Cnt",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,cnt,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                Util.drawStringOutline(g,"Sum",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,sum,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                Util.drawStringOutline(g,"Sigma",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,sig,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                Util.drawStringOutline(g,"Min",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,min,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                Util.drawStringOutline(g,"Avg",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,avg,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                if( !Double.isNaN(mediane) ) {
-                   Util.drawStringOutline(g,"Med",r.x,r.y,c1,c2);
-                   Util.drawStringOutline(g,med,r.x+43,r.y,c1,c2); 
-                   r.y+=STATDY;
-                }
-                Util.drawStringOutline(g,"max",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,max,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                if( this instanceof SourceStat ) {
-                   Util.drawStringOutline(g,"Rad",r.x,r.y,c1,c2);
-                   Util.drawStringOutline(g,Coord.getUnit( ((SourceStat)this).getRadius()),r.x+43,r.y,c1,c2); 
-                   r.y+=STATDY;
-                }
-                Util.drawStringOutline(g,"Surf",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,surf,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-             }
-          }
-       }
-
-       if( v.pref==plan.aladin.calque.getPlanBase() ) {
-          if( !(this instanceof SourceStat) ) {
-             id="Cnt "+cnt+" / Sum "+sum
-                   +" / Sigma "+sig
-                   +" / Min "+min
-                   +" / Avg "+avg
-                   +(Double.isNaN(mediane)?"":" / Med "+med)
-                   +" / Max "+max
-                   + (this instanceof SourceStat ? " / Rad "+Coord.getUnit( ((SourceStat)this).getRadius()):"")
-                   +" / Surf "+surf
-                   ;
-          }
-          histOn();
-       }
-//       status(plan.aladin);
-    }
 }

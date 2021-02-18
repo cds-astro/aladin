@@ -249,7 +249,8 @@ public class ColumnCalculator {
         Iterator<Obj> it = p.iterator();
         while( it.hasNext() ) {
            Obj o = it.next();
-           if( !(o instanceof Source) ) continue;
+//           if( !(o instanceof Source) ) continue;
+           if( !o.asSource() ) continue;
            Source s = (Source)o;
            if( s!=null ) vec.addElement(s);
         }

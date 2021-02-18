@@ -35,12 +35,7 @@ import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Astropos;
 import cds.astro.Astrotime;
-import cds.astro.Ecliptic;
-import cds.astro.FK4;
-import cds.astro.FK5;
-import cds.astro.Galactic;
 import cds.astro.ICRS;
-import cds.astro.Supergal;
 import cds.astro.Unit;
 import cds.fits.HeaderFits;
 import cds.tools.Astrodate;
@@ -73,12 +68,18 @@ import cds.tools.Util;
  */
 final public class TableParser implements XMLConsumer {
    
-   static final Astroframe AF_FK4 = new FK4();
-   static final Astroframe AF_FK5 = new FK5();
-   static final Astroframe AF_GAL = new Galactic();
-   static final Astroframe AF_SGAL = new Supergal();
-   static final Astroframe AF_ICRS = new ICRS();
-   static final Astroframe AF_ECLI = new Ecliptic();
+//   static final Astroframe AF_FK4 = new FK4();
+//   static final Astroframe AF_FK5 = new FK5();
+//   static final Astroframe AF_GAL = new Galactic();
+//   static final Astroframe AF_SGAL = new Supergal();
+//   static final Astroframe AF_ICRS = new ICRS();
+//   static final Astroframe AF_ECLI = new Ecliptic();
+   static final Astroframe AF_FK4 = Astroframe.create("FK4");
+   static final Astroframe AF_FK5 = Astroframe.create("FK5");
+   static final Astroframe AF_GAL = Astroframe.create("Galactic");
+   static final Astroframe AF_SGAL = Astroframe.create("Supergalactic");
+   static final Astroframe AF_ICRS = Astroframe.create("ICRS");
+   static final Astroframe AF_ECLI = Astroframe.create("Ecliptic");
 
    // Différents formats pour les coordonnées célestes
    static final public int FMT_UNKNOWN=0;
@@ -1722,19 +1723,22 @@ final public class TableParser implements XMLConsumer {
 
       if( sys.indexOf("FK4")>=0 ) {
          if( eq==null ) srcAstroFrame = AF_FK4;
-         else srcAstroFrame = new FK4( (new Astrotime(eq)).getByr() );
+//         else srcAstroFrame = new FK4( (new Astrotime(eq)).getByr() );
+         else srcAstroFrame = Astroframe.create("FK4(B"+  (new Astrotime(eq)).getByr()+")");
          if( ep!=null ) srcAstroFrame.setFrameEpoch((new Astrotime(ep)).getByr());
       }
       else if( sys.indexOf("B1950")>=0 ) srcAstroFrame = AF_FK4;
       else if( sys.indexOf("FK5")>=0 ) {
          if( eq==null ) srcAstroFrame = AF_FK5;
-         else srcAstroFrame = new FK5( (new Astrotime(eq)).getJyr() );
+//         else srcAstroFrame = new FK5( (new Astrotime(eq)).getJyr() );
+         else srcAstroFrame = Astroframe.create("FK5(J"+(new Astrotime(eq)).getJyr()+")" );
          if( ep!=null ) srcAstroFrame.setFrameEpoch((new Astrotime(ep)).getJyr());
       }
       else if( sys.indexOf("J2000")>=0 ) srcAstroFrame = AF_FK5;
       else if( sys.indexOf("ECLIPTIC")>=0 || sys.indexOf("ECL")>=0 ) {
          if( eq==null ) srcAstroFrame = AF_ECLI;
-         else srcAstroFrame = new Ecliptic( (new Astrotime(eq)).getJyr() );
+//         else srcAstroFrame = new Ecliptic( (new Astrotime(eq)).getJyr() );
+         else srcAstroFrame =Astroframe.create("Ecliptic(J"+ (new Astrotime(eq)).getJyr() +")" );
          if( ep!=null ) srcAstroFrame.setFrameEpoch((new Astrotime(ep)).getJyr());
       }
       else if( sys.indexOf("SUPER_GALACTIC")>=0 || sys.indexOf("SGAL")>=0 ) srcAstroFrame = AF_SGAL;
@@ -1940,6 +1944,7 @@ final public class TableParser implements XMLConsumer {
     * (-1 s'il ne s'agit a priori pas de cela)
     */
    private int raName(String s) {
+      if( s.equalsIgnoreCase("elonavg") ) { setEq(); return 0; }
       if( s.equalsIgnoreCase("_RAJ2000") ) { setEq(); return 0; }
       if( s.equalsIgnoreCase("RAJ2000") )  { setEq(); return 1; }
       if( s.equalsIgnoreCase("_RA") )      { setEq(); return 2; }
@@ -1965,10 +1970,10 @@ final public class TableParser implements XMLConsumer {
       if( s.startsWith("ra") )    { setEq(); return 1; }
       if( s.startsWith("alpha") ) { setEq(); return 2; }
       if( s.startsWith("lon") )   { setEq(); return 3; }
-      if( s.startsWith("glon") )  { setGal();  return 0; }
-      if( s.startsWith("sglon") ) { setSGal(); return 0; }
-      if( s.startsWith("slon") )  { setSGal(); return 0; }
-      if( s.startsWith("elon") )  { setEcl();  return 0; }
+      if( s.startsWith("glon") )  { setGal();  return 4; }
+      if( s.startsWith("sglon") ) { setSGal(); return 4; }
+      if( s.startsWith("slon") )  { setSGal(); return 4; }
+      if( s.startsWith("elon") )  { setEcl();  return 4; }
       return -1;
    }
 
@@ -1977,6 +1982,7 @@ final public class TableParser implements XMLConsumer {
     * (-1 s'il ne s'agit a priori pas de cela)
     */
    private int deName(String s) {
+      if( s.equalsIgnoreCase("elatavg") ) { setEq(); return 0; }
       if( s.equalsIgnoreCase("_DEJ2000") )  { setEq(); return 0; }
       if( s.equalsIgnoreCase("_DECJ2000") ) { setEq(); return 1; }
       if( s.equalsIgnoreCase("DEJ2000") )   { setEq(); return 2; }
@@ -2009,10 +2015,10 @@ final public class TableParser implements XMLConsumer {
       if( s.indexOf("de")>0 )    { setEq(); return 4; }
       if( s.startsWith("delta") ){ setEq(); return 5; }
       if( s.startsWith("lat") )  { setEq();  return 6; }
-      if( s.startsWith("glat") )  { setGal();  return 0; }
-      if( s.startsWith("sglat") ) { setSGal(); return 0; }
-      if( s.startsWith("slat") )  { setSGal(); return 0; }
-      if( s.startsWith("elat") )  { setEcl();  return 0; }
+      if( s.startsWith("glat") )  { setGal();  return 6; }
+      if( s.startsWith("sglat") ) { setSGal(); return 6; }
+      if( s.startsWith("slat") )  { setSGal(); return 6; }
+      if( s.startsWith("elat") )  { setEcl();  return 6; }
       return -1;
    }
 
@@ -2680,7 +2686,8 @@ final public class TableParser implements XMLConsumer {
                }
 
                Astropos targetCoo = new Astropos(srcAstroFrame);
-               targetCoo.set(c.getLon(),c.getLat(),srcAstroFrame.getEpoch(),pmra,pmdec);
+//               targetCoo.set(c.getLon(),c.getLat(),srcAstroFrame.getEpoch(),pmra,pmdec);
+               targetCoo.set(c.getLon(),c.getLat(),pmra,pmdec);
 //               if( pmra!=0 ) System.out.println("BEFORE c="+targetCoo);
                targetCoo.toEpoch( trgAstroFrame.getEpoch() );
                targetCoo.convertTo(trgAstroFrame);

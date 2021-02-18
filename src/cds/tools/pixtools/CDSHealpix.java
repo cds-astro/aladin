@@ -444,8 +444,9 @@ public final class CDSHealpix {
     * @return
     * @throws Exception
     */
-   static public SMoc createSMoc(ArrayList<double[]> radecList, int order ) throws Exception {
-      return getMocByPolygon( order, radecList, true);
+   static public SMoc createSMoc(ArrayList<double[]> radecList, int order ) throws Exception { return createSMoc(radecList,order,true); }
+   static public SMoc createSMoc(ArrayList<double[]> radecList, int order, boolean inclusive ) throws Exception {
+      return getMocByPolygon( order, radecList, inclusive);
    }
 
 //   static public SMoc createSMoc(ArrayList<double[]> radecList, int order ) throws Exception {

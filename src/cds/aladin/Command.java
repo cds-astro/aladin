@@ -2636,7 +2636,7 @@ public final class Command implements Runnable {
 
          // Pour des objets
          if( type == -1 || type == Plan.TOOL ) {
-            int n = a.createPlanMocByRegions(firstOrder);
+            int n = a.createPlanMocByRegions(firstOrder, true);
             Plan pMoc = a.calque.getPlan(n);
             if( label != null ) pMoc.setLabel(label);
 
@@ -5483,73 +5483,13 @@ public final class Command implements Runnable {
    }
    
    
-   private static int MAXC = 10000000;
-   private static int MAXSTEP = 2;
-   private static int LEVEL = 8;
    private void pf(String param) {
-      long t0,t1;
-      
       try {
-         for( int k=0; k<MAXSTEP; k++ ) {
-            double a1=1.;
-            double tot1=0.;
-            t0 = System.currentTimeMillis();
-            for( int i=0; i<MAXC; i++ ) {
-               for( int j=0; j<LEVEL; j++ ) { a1*=4; tot1 += a1; }
-               for( int j=0; j<LEVEL; j++ ) { a1/=4; tot1 -= a1; }
-            }
-            t1 = System.currentTimeMillis();
-            if( k==MAXSTEP-1 ) System.out.println("Calcul double res="+tot1+" en "+(t1-t0)+"ms");
-
-            float a2=1f;
-            float tot2=0f;
-            t0 = System.currentTimeMillis();
-            for( int i=0; i<MAXC; i++ ) {
-               for( int j=0; j<LEVEL; j++ ) { a2*=4; tot2 += a2; }
-               for( int j=0; j<LEVEL; j++ ) { a2/=4; tot2 -= a2; }
-            }
-            t1 = System.currentTimeMillis();
-            if( k==MAXSTEP-1 ) System.out.println("Calcul float res="+tot2+" en "+(t1-t0)+"ms");
-            
-            int a3=1;
-            int tot3=0;
-            t0 = System.currentTimeMillis();
-            for( int i=0; i<MAXC; i++ ) {
-               for( int j=0; j<LEVEL; j++ ) { a3<<=2; tot3 += a3; }
-               for( int j=0; j<LEVEL; j++ ) { a3>>>=2; tot3 -= a3; }
-            }
-            t1 = System.currentTimeMillis();
-            if( k==MAXSTEP-1 ) System.out.println("Shift int res="+tot3+" en "+(t1-t0)+"ms");
-
-            long a=1L;
-            long tot=0L;
-            t0 = System.currentTimeMillis();
-            for( int i=0; i<MAXC; i++ ) {
-               for( int j=0; j<LEVEL; j++ ) { a<<=2; tot += a; }
-               for( int j=0; j<LEVEL; j++ ) { a>>>=2; tot -= a; }
-            }
-            t1 = System.currentTimeMillis();
-            if( k==MAXSTEP-1 ) System.out.println("Shift long res="+tot+" en "+(t1-t0)+"ms");
-
-            a=1L;
-            tot=0L;
-            t0 = System.currentTimeMillis();
-            for( int i=0; i<MAXC; i++ ) {
-               for( int j=0; j<LEVEL; j++ ) { a*=4; tot += a; }
-               for( int j=0; j<LEVEL; j++ ) { a/=4; tot -= a; }
-            }
-            t1 = System.currentTimeMillis();
-            if( k==MAXSTEP-1 ) System.out.println("Calcul long res="+tot+" en "+(t1-t0)+"ms");
-
-
-         }
-
+         a.calque.newCatalogPixelExtraction();
       } catch( Exception e ) {
          e.printStackTrace();
       }
    }
-
-
    
    private void pf1(String param) {
       try {

@@ -195,8 +195,9 @@ public class PlanCatalog extends Plan {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
-         return getTableName( (Source)o );
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
+        return getTableName( (Source)o );
       }
       return null;
    }
@@ -367,7 +368,8 @@ public class PlanCatalog extends Plan {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          ((Source)o).increaseSourceSize(sens);
       }
    }
@@ -378,7 +380,8 @@ public class PlanCatalog extends Plan {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          Source s = (Source)o;
          if( s.getLeg()==null ) continue;
          if( !leg.contains(s.getLeg()) ) leg.addElement(s.getLeg());
@@ -391,7 +394,8 @@ public class PlanCatalog extends Plan {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          Source s = (Source)o;
          if( s.getLeg()!=null ) return s.getLeg();
       }

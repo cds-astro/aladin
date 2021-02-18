@@ -1431,7 +1431,8 @@ public final class FilterProperties extends Properties implements MouseListener,
                Iterator<Obj> it = p.iterator();
                while( it!=null && it.hasNext() ) {
                   Obj o1 = it.next();
-                  if( !(o1 instanceof Source) ) continue;
+//                  if( !(o1 instanceof Source) ) continue;
+                  if( !o1.asSource() ) continue;
                   s = (Source)o1;
                   if( s.getLeg()==null || s.getLeg().field==null ) {
                      System.out.println("Bizarre");
@@ -1676,7 +1677,8 @@ public final class FilterProperties extends Properties implements MouseListener,
 	               Iterator<Obj> it = plan.iterator();
 	               while( it.hasNext() ) {
 	                  Obj o = it.next();
-	                  if( !(o instanceof Source) ) continue;
+//	                  if( !(o instanceof Source) ) continue;
+	                  if( !o.asSource() ) continue;
 	                  s = (Source)o;
 
 	                  leg = s.getLeg();

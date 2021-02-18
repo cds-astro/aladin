@@ -1035,7 +1035,8 @@ public class Save extends JFrame implements ActionListener {
       Iterator<Obj> it = pcat.iterator();
       while( it.hasNext() ) {
          Obj o1 = it.next();
-         if( !(o1 instanceof Source) ) continue;
+//         if( !(o1 instanceof Source) ) continue;
+         if( !o1.asSource() ) continue;
          Source o = (Source)o1;
 
          // Nouvelle table dans le plan courant
@@ -1111,7 +1112,8 @@ public class Save extends JFrame implements ActionListener {
       while( it.hasNext() ) {
          Position o = (Position)it.next();
 
-         if( o instanceof Source ) { flagSource=true; continue; }
+//         if( o instanceof Source ) { flagSource=true; continue; }
+         if( o.asSource() ) { flagSource=true; continue; }
 
          // Beurk - PF nov 2010
          if (o instanceof Cercle) {

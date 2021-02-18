@@ -81,7 +81,7 @@ public class ServerSimbad extends Server  {
                   "}\n" +
                   "${OTYPE}=\"Radio*\" || ${OTYPE}=\"Maser\" || ${OTYPE}=\"HI\" { draw triangle }\n" +
                   "${OTYPE}=\"UV\" {draw cross;draw plus}\n" +
-                  "${OTYPE}=\"IR\" || ${OTYPE}=\"Red*\" {draw rhomb}\n" +
+                  "${OTYPE}=\"IR\" || ${OTYPE}=\"FIR*\" {draw rhomb}\n" +
                   "${OTYPE}=\"Neb\"  || ${OTYPE}=\"PN*\" || ${OTYPE}=\"SNR*\" {draw square}\n" +
                   "${OTYPE}=\"HII\" { draw dot }" +
                   "${OTYPE}=\"X\" { draw cross }\n" +
@@ -113,7 +113,7 @@ public class ServerSimbad extends Server  {
                   "${OTYPE}=\"UV\" {draw cross;draw plus}\n" +
                   "}",
                   "#IR\nfilter IR {\n" +
-                  "${OTYPE}=\"IR\" || ${OTYPE}=\"Red*\" {draw rhomb}\n" +
+                  "${OTYPE}=\"IR\" || ${OTYPE}=\"FIR*\" {draw rhomb}\n" +
                   "}",
                   "#Neb\nfilter Neb {\n" +
                   "${OTYPE}=\"Neb\"  || ${OTYPE}=\"PN*\" || ${OTYPE}=\"SNR*\" {draw square}\n" +

@@ -25,8 +25,6 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import cds.xml.Field;
-
 /**
  * <P>Aladin stack plane access for plugins. </P>
  * This class allows Aladin compatible plugins to access the stack plane data.
@@ -550,6 +548,15 @@ public class AladinData {
    /** FOR ADVANCED DEVELOPERS ONLY !
     * This method is dedicated to the overlay planes and specifically source planes
     * For providing a fast and direct way for creating overlay source plane.
+    * Set the column description list for a source plane.
+    * @see addObj(Obj obj) method for adding new sources
+    * @param name column description list
+    */ 
+   public void setDescription(String [] desc) { leg = Legende.adjustDefaultLegende(leg,Legende.DESCRIPTION,desc); }
+   
+   /** FOR ADVANCED DEVELOPERS ONLY !
+    * This method is dedicated to the overlay planes and specifically source planes
+    * For providing a fast and direct way for creating overlay source plane.
     * Set the column data type list for a source plane
     * => A la VOTABLE : int, long, char, float, double , boolean, short, bit, unsignedByte, floatComplex, doubleComplex
     * => A la FORTRAN: J,K,A,E,D,L,I,X,B,C,M
@@ -715,7 +722,7 @@ public class AladinData {
    /**
     * Aladin plane data creation and/or simple access.
     * @param aladin aladin object reference
-    * @param mode Plan mode:  0-get a plane, 1-create a new image, 2-create a new catalog
+    * @param mode Plan mode:  0-get a plane, 1-create a new image, 2-create a new catalog, 3-create a new plantool
     * @param name plane name for mode 0 (as displayed in the Aladin stack)
     * @throws AladinException
     */
@@ -758,10 +765,16 @@ public class AladinData {
                plan.planReady(true);
                
                // catalog
-            } else {
+            } else if( mode==2 ) {
                planeID = aladin.calque.newPlanPlugCat(name);
                plan = aladin.calque.getPlan(planeID,1);
-            }
+               
+               // Graphic
+            } else if( mode==3 ) {
+               planeID = aladin.calque.newPlanPlugTool(name);
+               plan = aladin.calque.getPlan(planeID,1);
+               
+            } else throw new Exception();
          } catch( Exception e ) { throw new AladinException(AladinData.ERR009); }
       }
    }

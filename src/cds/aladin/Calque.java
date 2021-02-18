@@ -31,6 +31,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -1037,7 +1038,8 @@ public class Calque extends JPanel implements Runnable {
          Iterator<Obj> it = plan[i].iterator();
          while( it.hasNext() ) {
             Obj o = it.next();
-            if( !(o instanceof Source) ) continue;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             Source s = (Source)o;
             if( s.isTagged() ) return true;
          }
@@ -1080,7 +1082,8 @@ public class Calque extends JPanel implements Runnable {
          Iterator<Obj> it = plan[i].iterator();
          while( it.hasNext() ) {
             Obj o = it.next();
-            if( !(o instanceof Source) ) continue;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             Source s = (Source)o;
             s.setTag(false);
          }
@@ -1164,7 +1167,8 @@ public class Calque extends JPanel implements Runnable {
             Iterator<Obj> it = p.iterator();
             while( it.hasNext() ) {
                Obj o = it.next();
-               if( !(o instanceof Source) ) continue;
+//               if( !(o instanceof Source) ) continue;
+               if( !o.asSource() ) continue;
                Source s = (Source)o;
                String cOid = s.getOID();
                if( cOid!=null && cOid.equals(oid[i]) ) {
@@ -3012,6 +3016,16 @@ public class Calque extends JPanel implements Runnable {
       return p.getLabel();
    }
 
+   /** Crée un plan Tool sur la pile avec le label indiqué.
+    * Cette méthode est dédiée au plugin (voir Aladin.createAladinTool()
+    * @param name nom du plan proposé
+    * @return nom du plan effectif
+    */
+   protected String newPlanPlugTool(String name) {
+      Plan p = createPlanTool(name);
+      return p.getLabel();
+   }
+
    //    protected int newPlanImage(String file,MyInputStream inImg) {
    //    	return newPlanImage(file, inImg, null, null, null);
    //    }
@@ -3315,8 +3329,9 @@ public class Calque extends JPanel implements Runnable {
          Iterator<Obj> it = p[i].iterator();
          while( it.hasNext() ) {
             Obj o = it.next();
-            if( !(o instanceof Source) ) continue;
-            Source s = (Source)o;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
+             Source s = (Source)o;
             v.addElement(s);
          }
       }
@@ -3367,7 +3382,8 @@ public class Calque extends JPanel implements Runnable {
          Enumeration e = vSources.elements();
          while( e.hasMoreElements() ) {
             Obj o = (Obj)e.nextElement();
-            if( !(o instanceof Source) ) continue;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             s = (Source)o;
             p.pcat.setObjetFast(newSource = new Source(p, s.raj, s.dej, s.jdtime, s.id, s.info));
             newSource.isSelected = s.isSelected;
@@ -3388,7 +3404,8 @@ public class Calque extends JPanel implements Runnable {
          Enumeration e = vSources.elements();
          while( e.hasMoreElements() ) {
             Obj o = (Obj)e.nextElement();
-            if( !(o instanceof Source) ) continue;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             s = (Source)o;
             if( !leg.contains(s.getLeg()) ) leg.add(s.getLeg());
          }
@@ -3398,7 +3415,8 @@ public class Calque extends JPanel implements Runnable {
          e = vSources.elements();
          while( e.hasMoreElements() ) {
             Obj o = (Obj)e.nextElement();
-            if( !(o instanceof Source) ) continue;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             s = (Source)o;
 
             // Création de la nouvelle ligne de mesures en fonction de la légende générique
@@ -3604,7 +3622,8 @@ public class Calque extends JPanel implements Runnable {
       Iterator<Obj> it = (p).iterator();
       while( it.hasNext() ) {
          Obj o1 = it.next();
-         if( !(o1 instanceof Source) ) continue;
+//         if( !(o1 instanceof Source) ) continue;
+         if( !o1.asSource() ) continue;
          Source o = (Source)o1;
          if( o.getLeg()!=leg ) {
             p1 = new PlanCatalog(aladin);
@@ -3937,6 +3956,98 @@ public class Calque extends JPanel implements Runnable {
 		if (n < 0) throw new Exception("plane creation error");
 		return plan[n];
 	}
+	
+	/** Génération d'un plan catalogue contenant les pixels extraits des mesures
+	 * des statistiques sur le plan courant
+	 * @throws Exception
+	 */
+	protected void newCatalogPixelExtraction() throws Exception {
+	   extractPixelAsSource( aladin.view.vselobj );
+	}
+	
+	/** Génération d'un plan catalogue
+	 * @param stcObjects Les objets STCs décrivant les régions concernées
+	 * @return Le tableau des Sources, une pour chaque pixel d'origine
+	 */
+	private void extractPixelAsSource( final Vector<Obj> v ) throws Exception {
+
+	   final Plan p = getPlanBase();
+
+	   try {
+	      final AladinData cat = aladin.createAladinCatalog("Pixels from "+p.label);
+	      cat.plan.flagProcessing=true;
+	      aladin.calque.repaintAll();
+	      (new Thread(){
+	         public void run() { 
+	            try {
+	               pixelExtraction(cat, p, v);
+	               aladin.view.unSelect();
+	               aladin.view.selectAllInPlan(cat.plan);
+	            } catch( Exception e1 ) {
+	               if( aladin.levelTrace>=3 ) e1.printStackTrace();
+	               cat.plan.error="Pixel extraction error !";
+	               aladin.error(cat.plan.error);
+	            } finally { 
+	               cat.plan.flagProcessing = false; 
+	            }
+	         }
+	      }).start();
+	   } catch( Exception e2 ) {
+	      if( aladin.levelTrace>=3 ) e2.printStackTrace();
+	      aladin.error("Pixel extraction error !");
+	   }
+	}
+
+	private void pixelExtraction(AladinData cat, Plan p, Vector<Obj> v) throws Exception  {
+
+	   int nbFields = 3;
+	   cat.setName( new String[]{ "Ra",   "Dec",   "Pixel" });
+	   cat.setDescription( new String[]{ "Right Ascension (ICRS)",   "Declination (ICRS)",   "Pixel value" });
+	   cat.setDatatype( new String[]{ "double","double","double"} );
+	   cat.setWidth( new String[]{ "15",    "15",    "15" } );
+	   cat.setPrecision( new String[]{ "6",    "6",    "5" } );
+
+	   // Reprérage des objets concernés et decompte du nombre de pixels
+	   Vector<Obj> v1 = new Vector<>();
+	   int m=0;
+	   for( Obj o : v ) {
+	      if( !o.hasPhot() ||  !o.isSelected() || !o.isVisible() ) continue;
+	      double [] triplet = o.getStatisticsRaDecPix(p);
+	      if( triplet==null ) continue;
+	      m+= triplet.length/3;
+	      v1.add(o);
+	   }
+
+	   // Pour éviter d'avoir des pixels en doublons
+	   boolean multiObj = v1.size()>1;
+	   HashSet<Double> set = multiObj ? new HashSet<Double>() : null;
+	   
+	   // Génération du catalogue des pixels
+	   String [] row = new String[ nbFields ];
+	   int shape = m >10000 ? Source.DOT : Source.POINT;
+	   int n=0;
+	   for( Obj o : v1 ) {
+	      double [] triplet = o.getStatisticsRaDecPix(p);
+	      for( int i=0; i<triplet.length; i+=3 ) {
+	         
+	         if( multiObj ) {
+	            double cle = triplet[i]*1000+triplet[i+1];
+	            if( n>0 && set.contains(cle) ) continue;
+	            set.add(cle);
+	         }
+	         
+	         row[0]=triplet[i]+"";
+	         row[1]=triplet[i+1]+"";
+	         row[2]=triplet[i+2]+"";
+	         cat.addSource("Pix_"+(m++), triplet[i], triplet[i+1], row).setShape(shape);
+	      }
+	      n++;
+	   }
+
+	   cat.objModified();
+	   cat.plan.flagProcessing=false;
+	}
+
 
    /** Actions a faire apres la demande de creation d'un nouveau plan */
    protected void suiteNew(Plan p) {

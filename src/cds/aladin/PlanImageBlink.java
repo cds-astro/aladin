@@ -836,8 +836,6 @@ public class PlanImageBlink extends PlanImage {
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
-      //      if( type==IMAGECUBERGB ) ((PlanRGBInterface)this).calculPixelsZoomRGB();
-      //      else calculPixelsZoom();
       aladin.calque.zoom.zoomView.resetImgID();
       aladin.calque.zoom.zoomView.repaint();
    }
@@ -850,7 +848,7 @@ public class PlanImageBlink extends PlanImage {
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
-      aladin.view.resumeSourceStatOnCube();
+      aladin.view.resumeStatOnCube();
       return true;
    }
    

@@ -69,7 +69,7 @@ public class IconMatch extends Icon {
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x = 20;
+      int x = 20+DX;
       int y = 7;
       int r = 3;
       

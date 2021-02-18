@@ -1348,7 +1348,10 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
 
       //Dans le cas ou il faut effacer la sous-fenetre VizieR
-      if( server[i] instanceof ServerVizieR ) ((ServerVizieR) server[VIZIER]).hideSFrame();
+      //SANS DOUTE DESORMAIS INUTILE/ERRONE DEPUIS LA V10 - JE METS EN TRY/CATCH AU CAS OU
+      try {
+         if( server[i] instanceof ServerVizieR ) ((ServerVizieR) server[VIZIER]).hideSFrame();
+      } catch( Exception e ) { }
 
       // initialisation du focus (Thomas, 16/03/06, à montrer à Pierre)
       // TODO : à vérifier depuis passage à swing

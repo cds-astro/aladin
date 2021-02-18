@@ -29,12 +29,6 @@ import java.util.Vector;
 
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
-import cds.astro.Ecliptic;
-import cds.astro.FK4;
-import cds.astro.FK5;
-import cds.astro.Galactic;
-import cds.astro.ICRS;
-import cds.astro.Supergal;
 import cds.fits.HeaderFits;
 import cds.tools.FastMath;
 import cds.tools.Util;
@@ -213,13 +207,19 @@ public final class Calib  implements Cloneable {
    // Astroframe et Astrocoo n�cessaires aux manip. pour �viter les cr�ations
    // d'objets java � r�p�tition
    //#endif
-   static private Astroframe AF_FK4 = new FK4();
-   static private Astroframe AF_FK5 = new FK5();
-   static private Astroframe AF_ICRS = new ICRS();
-   static private Astroframe AF_GAL = new Galactic();
-   static private Astroframe AF_SGAL = new Supergal() ;
-   static private Astroframe AF_ECL = new Ecliptic() ;
-
+//   static private Astroframe AF_FK4 = new FK4();
+//   static private Astroframe AF_FK5 = new FK5();
+//   static private Astroframe AF_ICRS = new ICRS();
+//   static private Astroframe AF_GAL = new Galactic();
+//   static private Astroframe AF_SGAL = new Supergal() ;
+//   static private Astroframe AF_ECL = new Ecliptic() ;
+   static private Astroframe AF_FK4 = Astroframe.create("FK4");
+   static private Astroframe AF_FK5 = Astroframe.create("FK5");
+   static private Astroframe AF_ICRS = Astroframe.create("ICRS");
+   static private Astroframe AF_GAL = Astroframe.create("Galactic");
+   static private Astroframe AF_SGAL = Astroframe.create("Supergalactic");
+   static private Astroframe AF_ECL = Astroframe.create("Ecliptic");
+   
    /** Clonage d'une Calib */
    static public Calib copy(Calib c) {
       Calib a = new Calib();

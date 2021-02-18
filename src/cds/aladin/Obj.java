@@ -98,7 +98,7 @@ public abstract class Obj implements Propable{
    
    public boolean hasProp() { return plan!=null && plan.type!=Plan.APERTURE; }
    public Vector<Prop> getProp() {
-      Vector<Prop> propList = new Vector<Prop>();
+      Vector<Prop> propList = new Vector<>();
       JLabel l = new JLabel("\""+getObjType()+"\" object in plane: \""+plan.getLabel()+"\"");
       l.setFont(l.getFont().deriveFont(Font.BOLD));
       l.setFont(l.getFont().deriveFont(14f));
@@ -161,6 +161,15 @@ public abstract class Obj implements Propable{
    /** Retourne true si la source a le flag sélect positionné  */
    final public boolean isSelected() { return (flags & SELECT) !=0; }
    
+   /** Positionne le flag VISIBLE */
+   public final void setVisible(boolean visible) {
+      if( visible ) flags |= VISIBLE;
+      else flags &= ~VISIBLE;
+   }
+
+   /** Retourne true si la source a le flag VISIBLE positionné */
+   final public boolean isVisible() { return (flags & VISIBLE) !=0; /* == VISIBLE;*/ }
+   
    
    /** Provide JD time (if available) */
    public double getJD() { return jdtime;}
@@ -184,21 +193,42 @@ public abstract class Obj implements Propable{
    public boolean hasSurface() { return false; }
    
    /** Provide photometric statistics for the area described by the object (only for circle and polygon)
-    * @param ad AladinData describing an image with valid pixels
-    * @return { cnt,sum,sigma,surface_in_square_deg,min,max }
+    * @param ad AladinData describing an image or cube with valid pixels
+    * @param z frame index in case of cube
+    * @return { cnt,sum,sigma,surface_in_square_deg,min,max,median }
     * @throws Exception
     */
-   public double[] getStatistics(AladinData ad) throws Exception {
-      return getStatistics(ad.plan);
-   }
+   public double[] getStatistics(AladinData ad) throws Exception { return getStatistics(ad.plan,-1); }
+   public double[] getStatistics(AladinData ad, int z) throws Exception { return getStatistics(ad.plan,z); }
    
    /** Provide photometric statistics for the area described by the object (only for circle and polygon)
-    * @param p Plan describing an image with valid pixels
+    * @param p Plan describing an image or cube with valid pixels
+    * @param z frame index in case of cube
     * @return { cnt,sum,sigma,surface_in_square_deg }
     * @throws Exception
     */
-   protected double[] getStatistics(Plan p) throws Exception { throw new Exception("no statistics available"); }
+   protected double[] getStatistics(Plan p) throws Exception { return getStatistics(p,-1); }
+   protected double[] getStatistics(Plan p,int z) throws Exception { throw new Exception("no statistics available"); }
    
+   /** Retourne la liste des triplets associées aux pixels des statistiques (raj,dej,val)
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return le tableau des triplets
+    * @throws Exception
+    */
+   public double [] getStatisticsRaDecPix(AladinData ad) throws Exception { return getStatisticsRaDecPix(ad.plan,-1); }
+   public double [] getStatisticsRaDecPix(AladinData ad, int z) throws Exception { return getStatisticsRaDecPix(ad.plan,z); }
+
+   /** Retourne la liste des triplets associées aux pixels des statistiques (raj,dej,val)
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return le tableau des triplets
+    * @throws Exception
+    */
+   protected double [] getStatisticsRaDecPix(Plan p) throws Exception { return getStatisticsRaDecPix(p,-1); }
+   protected double [] getStatisticsRaDecPix(Plan p, int z) throws Exception { throw new Exception("no statistics available"); }
+   
+
    /** Provide radius (in degrees) for photometry measure tags */
    public double getRadius() { return 0.; }
 
@@ -404,6 +434,9 @@ public abstract class Obj implements Propable{
    // Pour du debuging
    public String toString() { return "("+raj+","+dej+") -> "+id; }
    
-
+   /** Retourne vrai si l'objet doit être considéré comme une Source, et par conséquent repris
+    * dans la tables des mesures, dans les VOTables exportés, etc...
+    */
+   protected boolean asSource() { return false; }
 
 }

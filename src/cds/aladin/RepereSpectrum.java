@@ -25,6 +25,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Objet graphique representant un repere pour l'extraction d'un Spectre
@@ -88,5 +89,167 @@ public class RepereSpectrum extends Repere {
 
       return true;
    }
+   
+   public boolean hasPhot() { return true; }
+   
+   public boolean hasPhot(Plan p) { return p.isCube(); }
+   
+   private PixelStats pixelStats = new PixelStats();
+   
+   /** Retourne une clé unique associé aux statistiques courantes */
+   String getPixelStatsCle(Plan p, int z) { 
+      if( z==-1 && p.isCube() ) z=(int)p.getZ();
+      String sync = p.isSync() ? "sync":"";
+      return raj+","+dej+","+p.hashCode()
+            + (p.isCube() ? ","+z : "")
+            + ","+sync
+           + (p instanceof PlanBG ? ((PlanBG)p).getOrder()+"" : "");
+   }
+
+   
+   /** Retourne la liste des triplets associées aux pixels des statistiques (raj,dej,val)
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return le tableau des triplets
+    * @throws Exception
+    */
+   public double [] getStatisticsRaDecPix(Plan p, int z) throws Exception {
+      if( p.isCube() && z==-1 ) z=(int)p.getZ();
+      resumeStatistics(p,z);
+      return pixelStats.getStatisticsRaDecPix();
+   }
+   
+   /** Retourne les statistiques en fonction du plan passé en paramètre
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return Nombre, total, sigma, surface, min, max, [median]
+    */
+   public double [] getStatistics(Plan p, int z) throws Exception {
+      if( p.isCube() && z==-1 ) z=(int)p.getZ();
+      resumeStatistics(p,z);
+      return pixelStats.getStatistics();
+   }
+   
+   /** Regénère si nécessaire les statistiques associées à l'objet
+    * Dans le cas d'un RepereSpectrum, ne concerne qu'un seul pixel, mais
+    * on met à jour tout de même pixelsStat pour rester homogène
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return true si les stats ont été regénérées, false si inutile
+    * @throws Exception
+    */
+   private boolean resumeStatistics(Plan p, int z) throws Exception {
+      
+      Projection proj = p.projd;
+      if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
+      if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
+      if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
+      
+      // Faut-il re-extraire le pixel concerné par la stat ?
+      String cle = getPixelStatsCle(p,z);
+      if( !pixelStats.reinit( cle ) ) return false;
+      
+      double pixelSurf;
+
+      // Cas HiPS
+      if( p.type==Plan.ALLSKYIMG || p.type==Plan.ALLSKYCUBE ) {
+
+         PlanBG pbg = (PlanBG) p;
+         int orderFile = pbg.getOrder();
+         long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
+         int orderPix = pbg.getOrder() + pbg.getTileOrder();
+         pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
+         pixelSurf *= pixelSurf;
+         Coord coo = new Coord(raj,dej);
+         coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
+         double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
+         long npix = CDSHealpix.ang2pix_nest( orderPix, polar[0], polar[1]);
+         long npixFile = npix/(nsideLosange*nsideLosange);
+         double pix = pbg.getHealpixPixel(orderFile,npixFile,npix,z,HealpixKey.SYNC);
+         if( Double.isNaN(pix) ) return true;
+         pix = pix*pbg.bScale+pbg.bZero;
+         polar = CDSHealpix.pix2ang_nest(orderPix, npix);
+         polar = CDSHealpix.polarToRadec(polar);
+         coo.al = polar[0]; coo.del = polar[1];
+         coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
+         pixelStats.addPix(coo.al,coo.del, pix);
+
+         // Cas d'une image ou d'un cube "classique"
+      } else {
+         boolean isCube = p instanceof PlanImageBlink;
+         PlanImage pi = (PlanImage)p;
+
+         pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
+         Coord c = new Coord(raj,dej);
+         proj.getXY(c);
+         int  xc= (int)(c.x-0.5);
+         int  yc= (int)(c.y-0.5);
+
+         try {
+            // Cas d'une image "classique"
+            if( !isCube ) {
+               pi.setLockCacheFree(true);
+               pi.pixelsOriginFromCache();
+
+               // Pour un cube
+            } else {
+               if( z<0 || z>((PlanImageBlink)pi).getDepth() ) throw new Exception("Cube index out of frame range");
+            }
+
+            if( !pi.isIn(xc,yc) ) return true;
+            double pix= isCube ? ((PlanImageBlink)pi).getPixel(xc, pi.height-yc-1, z) : pi.getPixelInDouble(xc,yc);
+            if( Double.isNaN(pix) ) return true;
+            pix = pix*pi.bScale+pi.bZero;
+
+            c.x=xc+0.5; 
+            c.y=yc+0.5;
+            proj.getCoord(c);
+
+            pixelStats.addPix(c.al,c.del, pix);
+         } finally {
+            if( !isCube ) pi.setLockCacheFree(false);
+         }
+      }
+
+      pixelStats.setSurface( pixelSurf );
+      return true;
+   }
+
+
+   
+//   /** Calcule des statistiques en fonction du plan passé en paramètre
+//    * @return Nombre, total, sigma, surface, min, max
+//    */
+//   public double [] getStatistics(Plan p, int z) throws Exception {
+//
+//      Projection proj = p.projd;
+//      if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
+//      if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
+//      if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
+//
+//      double pix = Double.NaN;
+//      double pixelSurf;
+//
+//      // Cas d'une map HEALPix
+//      if( p.type==Plan.ALLSKYIMG || p.type==Plan.ALLSKYCUBE ) {
+//         throw new Exception("Not yet supported for HiPS cubes");
+//
+//         // Cas d'un cube "classique"
+//      } else {
+//         PlanImageBlink pi = (PlanImageBlink)p;
+//         pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
+//         Coord c = new Coord(raj,dej);
+//         proj.getXY(c);
+//         int  xc= (int)c.x;
+//         int  yc= (int)(pi.height-c.y);
+//
+//         if( z<0 || z>pi.getDepth() ) throw new Exception("Cube index out of frame range");
+//         if( pi.isIn(xc,yc) ) pix= pi.getPixel(xc, yc, z);
+//      }
+//
+//      return new double[]{ 1, pix, 0, pixelSurf, pix, pix };
+//   }
+
+
 
 }

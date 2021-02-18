@@ -792,7 +792,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 //            gbuf.drawString(s,getWidth()-fm.stringWidth(s)-2,10);
             
             
-            // Info spaciale texttuelle
+            // Info spatiale textuelle
 //            int yInfo = height-16;
             int xInfo,yInfo;
 //            gbuf.setColor( Aladin.COLOR_BLUE );
@@ -1270,9 +1270,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       flagSED=false;
       oSrcSed="";
 
-      int w = getWidth();
-      int h = getHeight();
-
       if( hist==null ) { hist = new ZoomHist(aladin); rep=true; }
       rep |= hist.o!=o || hist.nField!=nField;
       flagHist=hist.init(o, nField);
@@ -1630,6 +1627,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          return;
       }
       
+      // Tracé du slider temporel s'il y a lieu
       if( v.isPlotTime() ) {
          gr.setColor( BGD );
          gr.fillRect(0,0,w,h);
@@ -1747,17 +1745,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
    /** Gestion du Help */
    protected String Help() { return aladin.chaine.getString("ZoomView.HELP"); }
-
-   // Gestion du Help
-   //   public boolean handleEvent(Event e) {
-   //      if( Aladin.inHelp ) {
-   //         if( e.id==Event.MOUSE_ENTER ) aladin.help.setText(Help());
-   //         else if( e.id==Event.MOUSE_UP ) aladin.helpOff();
-   //         return true;
-   //      }
-   //
-   //      return super.handleEvent(e);
-   //   }
 
    private WidgetControl voc=null;
 

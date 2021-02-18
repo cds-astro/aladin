@@ -266,8 +266,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       addMouseMotionListener(this);
       addKeyListener(this);
 
-      setOpaque(true);
-      //      setDoubleBuffered(false);
+//      setOpaque(true);
+//      setDoubleBuffered(false);
 
       setFocusTraversalKeysEnabled(false);
 
@@ -1914,12 +1914,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    private void setClip(Graphics g) { setClip(g,false); }
    private void setClip(Graphics g,boolean debug) {
       if( clip!=null ) {
-         g.clipRect(clip.x-1,clip.y-1,clip.width+2,clip.height+2);
+         g.drawRect(clip.x,clip.y,clip.width,clip.height);
 
          if( !debug ) return;
          g.setColor(Color.magenta);
          g.drawRect(clip.x,clip.y,clip.width,clip.height);
-
       }
    }
 
@@ -2134,7 +2133,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * en PAN avec la touche ALT enfoncée    */
    private int getTool(MouseEvent e) {
       int tool = aladin.toolBox.getTool();
-      if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
+      if( ((e.getModifiers() & java.awt.event.InputEvent.BUTTON2_MASK) !=0 || e.isAltDown() )
+            && pref instanceof PlanBG ) tool=ToolBox.PAN;
 
       if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() ) {
 
@@ -2565,65 +2565,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       return;
    }
 
-   /** Positionne les mesures dans la fenetre des infos.
-    * et reaffiche la fenetre des tools et de la vue
-    * en fonctions des objets selectionnes
-   protected void setMesure() {
-      boolean flagExtApp = aladin.hasExtApp();
-      String listOid[] = null;
-      int nbOid=0;
-
-      aladin.mesure.removeAllElements();
-
-      Enumeration e = aladin.view.vselobj.elements();
-      //long b = System.currentTimeMillis();
-
-      if( flagExtApp ) listOid = new String[aladin.view.vselobj.size()];
-
-      // vecteur des sources à supprimer de vselobj
-      Vector v = new Vector();
-      while( e.hasMoreElements() ) {
-         Objet o = (Objet) e.nextElement();
-
-         if( o instanceof Source ) {
-            // pas de selection pour les objets ne "passant" pas le filtre
-               if( ((Source)o).noFilterInfluence() || ((Source)o).isSelected() ) {
-                  o.info(aladin);
-               }
-               else {
-                   ((Source)o).select = false;
-                   //vselobj.removeElement(o);
-                   v.addElement(o);
-               }
-
-              // Test si cette source provient d'une application cooperative
-              // type VOPlot, et si oui, fait le callBack adequat
-             if( flagExtApp ) {
-                String oid = ((Source)o).getOID();
-                if( oid!=null ) listOid[nbOid++]=oid;
-             }
-         }
-      }
-
-      // on supprime de vselobj toutes les sources qui doivent l'etre
-      Enumeration eObjTodel = v.elements();
-      while( eObjTodel.hasMoreElements() ) aladin.view.vselobj.removeElement(eObjTodel.nextElement());
-
-      //long end = System.currentTimeMillis();
-      //System.out.println(end-b);
-      aladin.toolbox.toolMode();
-      aladin.mesure.mcanvas.fullRepaint();
-
-      // Callback adequat pour la liste des sources que l'application cooperative
-      // doit selectionner
-      if( flagExtApp ) aladin.callbackSelectExtApp(listOid,nbOid);
-
-      // Calculs pour CDS team
-      aladin.view.forCDSteam();
-
-      aladin.view.repaintAll();
-   }
-    */
 
    public void mouseReleased(MouseEvent e) {
       if( isFullScreen() && widgetControl!=null && widgetControl.mouseReleased(e) ) {
@@ -2844,6 +2785,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Cas du zoom => Rien a faire
       if( tool==ToolBox.ZOOM ) return;
       
+      // Un RepereSpectrum est inséré
+      if( view.newobj instanceof RepereSpectrum ) addObjSurfMove(view.newobj);
+      
       // Le Phot est insere
       if( view.newobj instanceof SourceStat ) {
          flagDrag=false;
@@ -2871,23 +2815,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                view.newobj = null;
             }
          }
-         
-//         // Insertion d'un repère avec mesure de surface
-//         if( view.newobj!=null ) {
-//
-//            // Juste pour le spectre localisé pour un cube via un repere
-//            if( pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
-//               aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
-//               aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
-//               view.selectCote(view.newobj);
-//               view.extendClip(view.newobj);
-//            }
-//
-////            if( ((SourcePhot)view.newobj).hasRayon() ) {
-////               view.newobj.setSelected(true);
-////               addObjSurfMove(view.newobj);
-////            }
-//         }
 
          finNewObjet();
          view.newobj=null;
@@ -3358,7 +3285,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                      && flagDragField==0 ) o.deltaRaDec(dra,dde);
                else o.deltaPosition(vs,dx,dy);
 
-               if( o instanceof SourceStat && ((SourceStat)o).hasRayon() && o.plan.isMovable()) {
+//               if( o instanceof SourceStat && ((SourceStat)o).hasRayon() && o.plan.isMovable()) {
+               if( o.hasPhot() && o.plan.isMovable()) {
                   addObjSurfMove(o);
                }
 
@@ -3721,12 +3649,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
 
             // Show info de la source dans le canvas des mesures
-            if( cPlan.isCatalog() && memoObj instanceof Source ) {
+//            if( cPlan.isCatalog() && memoObj instanceof Source ) {
+            if( cPlan.isCatalog() && memoObj.asSource() ) {
                Source o = (Source) memoObj;
                if( o.isSelected() ) ok=aladin.mesure.mcanvas.show(o,1);
 
                //System.out.println("je vais p-e monter la source courante");
-               //if(o instanceof Source) System.out.println(((Source)o).isSelected);
                // Je montre la source courante
                if(   o.noFilterInfluence() || o.isSelectedInFilter()   ) {
                   aladin.view.showSource(o);
@@ -6083,7 +6011,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       Font f = g.getFont();
       long t = Util.getTime();
-      g.setFont( new Font("SansSerif",Font.PLAIN,view.gridFontSize) );
+      g.setFont( Aladin.fontResize( new Font("SansSerif",Font.PLAIN,view.gridFontSize) ));
       
       if( calque!=null && calque.gridMode==2 ) {
          drawGridHpx(g, clip, dx, dy, view.gridColor, view.gridColorRA, view.gridColorDEC);
@@ -6744,7 +6672,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       int fontSize = view.infoFontSize;
       if( fullScreen ) fontSize++;
       else if( rv.width<=200 ) fontSize--;
-      g.setFont( new Font( "SansSerif", Font.BOLD, fontSize ) );
+      g.setFont( Aladin.fontResize( new Font( "SansSerif", Font.BOLD, fontSize ) ) );
       
 //      if( fullScreen ) g.setFont( Aladin.BOLD);
 //      else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
@@ -6896,7 +6824,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Changement d'état d'un plan Blink, retourne le délai */
    protected int paintPlanBlink() {
       if( !isPlanBlink() || !pref.active ) return 0;
-      if( getCurrentFrameIndex() != previousFrameLevel ) repaint();
+      int n = getCurrentFrameIndex();
+      if( n != previousFrameLevel ) {
+         pref.setZ(n);
+         aladin.view.resumeStatOnCube();
+         repaint();
+      }
       return cubeControl.delay;
    }
 
@@ -6942,11 +6875,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public Projection getProj() {
       Projection proj;
       if( pref==null ) return null;
-
+      
       if( isPlot() ) return plot.getProj();
 
       proj = projLocal!=null ? projLocal : pref.projd;    // projLocal dans le cas d'un planBG
-      //      proj = pref.projd;
+//      proj = pref.projd;
       if( proj==null ) return null;
       
 //      if( Command.longitude==-1 && !proj.sym ) {
@@ -7213,14 +7146,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          // Ajout des infos clignotantes pour le mode fullScreen (curseur, voyant clignotant...)
          //         aladin.fullScreen.drawChecks(g);
          aladin.fullScreen.drawBlinkInfo(g);
-
-         // Gestion d'un message d'accueil
-         //         if( aladin.msgOn ) {
-         //            aladin.help.setText( aladin.logo.Help());
-         //            aladin.help.setSize(aladin.fullScreen.getSize());
-         //            aladin.help.paintComponent(g);
-         //            return ;
-         //         }
       }
 
       // Un objet en cours ?
@@ -7230,9 +7155,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( view.newobj instanceof Cote ) view.newobj.status(aladin);
       }
       
-//       Peut être un Moc de l'arbre HiPS
-//      aladin.hipsStore.drawMoc(g,this);
-
       // trace du rectangle de selection multiple
       if( flagDrag && rselect!=null ) {
          drawRectSelect(g);
@@ -7382,7 +7304,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          int x;
          
          Font f1 = g.getFont();
-         Font font = new Font( "Sans serif",Font.BOLD, fontSize );
+         Font font = Aladin.fontResize( new Font( "Sans serif",Font.BOLD, fontSize ) );
          
          
          // Affichage de la valeur du pixel

@@ -1186,7 +1186,7 @@ public final class Glu implements Runnable {
       }
 
       if( paramDescription1 == null ) return;
-            
+
 //      int n = paramDescription1.size();
       int n = hashSize(paramDescription1);
       int m = hashSize(paramDataType1); if( m>n ) n=m;

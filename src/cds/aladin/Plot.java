@@ -183,7 +183,8 @@ public class Plot {
                double [] val = null;
                while( it.hasNext() ) {
                   Obj o = it.next();
-                  if( !(o instanceof Source) ) continue;
+//                  if( !(o instanceof Source) ) continue;
+                  if( !o.asSource() ) continue;
                   Source s = (Source)o;
                   val = getValues(val,s);
                   if( Double.isNaN(val[0]) || Double.isNaN(val[1]) ) continue;

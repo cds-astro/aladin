@@ -66,10 +66,6 @@ public abstract class MyBox extends JPanel {
    static private final String LABEL_SAISIE    = "SAISIE";
    static private final String LABEL_AFFICHAGE = "AFFICHAGE";
 
-   // Les fontes associees a la classe
-   static protected final int DF = Aladin.SIZE;
-   static protected final Font F = Aladin.PLAIN;
-
    // Le mot affiche lorsque la position n'est pas disponible
    static protected String UNDEF = "";
 
@@ -83,27 +79,24 @@ public abstract class MyBox extends JPanel {
    protected JComboBox c;
    protected JLabel label;
 
-   static final Font FONT = new Font("Sans serif",Font.BOLD,12);
-
    protected MyBox() { super(); }
 
    protected MyBox(Aladin aladin,String titre) {
 
       this.aladin = aladin;
-
+      
       // Creation du selecteur du repere
       c = createChoice();
-//      c.setFont(c.getFont().deriveFont((float)c.getFont().getSize()-1));
 
       // Creation du label contenant la valeur de la position courant
       pos = new Text("",30);
-      pos.setFont(FONT);
+      pos.setFont(Aladin.PLAIN);
       pos.setBackground( Aladin.COLOR_TEXT_BACKGROUND );
       pos.setForeground( Aladin.COLOR_TEXT_FOREGROUND_INFO);
 
       // Creation d'un champ de saisie
       text = new Text("",30);
-      text.setFont(FONT);
+      text.setFont(Aladin.PLAIN);
       text.setBackground( Aladin.COLOR_TEXT_BACKGROUND );
       text.setForeground( Aladin.COLOR_TEXT_FOREGROUND );
 

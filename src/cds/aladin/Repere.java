@@ -29,18 +29,15 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.JTextField;
 
-import cds.aladin.ZoomHist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.tools.FastMath;
 import cds.tools.Util;
-import cds.tools.pixtools.CDSHealpix;
 
 
 /**
@@ -313,7 +310,6 @@ public class Repere extends Position {
       if( isSelected() )  clip = unionRect(clip, p.x-L-DS,p.y-L-DS,L*2+DDS,L*2+DDS);
       if( isWithLabel() ) clip = unionRect(clip, p.x-dw/2,p.y-L-1-dh-1,dw,dh);
 
-      if( hasRayon() && isSelected() ) clip = unionRect(clip,getStatPosition(v));
       return clip;
    }
 
@@ -357,214 +353,225 @@ public class Repere extends Position {
       g.drawLine(x,   y+demiLargeur, x,   y+demiCentre);
    }
 
-   protected boolean statCompute(Graphics g,ViewSimple v) {
-      //      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
-      //         ((PlanBG)v.pref).setDebugIn(raj,dej,getRadius());
-      //      }
-
-      boolean flagHist = v==v.aladin.view.getCurrentView();
-
-      if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
-      statInit();
-
-      double xc,yc;
-      xc=xv[v.n]-0.5;
-      yc=yv[v.n]-0.5;
-      double r=getRayon(v);
-
-      // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
-      if( r>100 &&  v.flagClicAndDrag) return false;
-
-      // TODO : j'ai des doutes sur ces valeurs si v.pref.type==Plan.IMAGEBKGD
-      minx=(int)Math.floor(xc-r);
-      maxx=(int)Math.ceil(xc+r);
-      miny=(int)Math.floor(yc-r);
-      maxy=(int)Math.ceil(yc+r);
-
-      double carreRayon = r*r;
-      double pixelSurf = 0;
-
-      HistItem onMouse=null;
-      if( flagHist ) {
-         onMouse =v.aladin.view.zoomview.hist==null ? null :  v.aladin.view.zoomview.hist.onMouse;
-
-         // Si le est simplement dû au passage de la souris sur un précédent histogramme,
-         // il ne faut pas regénérer cet histogramme
-         if( onMouse==null ) v.aladin.view.zoomview.initPixelHist();
-         else flagHist=false;
-      }
-
-      // Dans le cas d'un plan HEALPix, il faut passer par les routines query_disk()
-      if( /* v.pref.type==Plan.ALLSKYIMG */ v.pref instanceof PlanBG ) {
-         try {
-            PlanBG pbg = (PlanBG)v.pref;
-            int orderFile = pbg.getOrder();
-//            long nsideFile = CDSHealpix.pow2(orderFile);
-            long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-//            long nside = nsideFile * nsideLosange;
-            int orderPix = orderFile + pbg.getTileOrder();
-            pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
-            pixelSurf *= pixelSurf;
-            //            System.out.println("order="+CDSHealpix.log2(nside)+" => surf="
-            //                  +Coord.getUnit(pixelSurf, false, true));
-            Coord coo = new Coord(raj,dej);
-            coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
-            double radiusRadian = Math.toRadians(getRadius());
-            long [] npix = CDSHealpix.query_discFXCenters(orderPix, coo.al, coo.del, radiusRadian);
-            //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
-            for( int i=0; i<npix.length; i++ ) {
-               long npixFile = npix[i]/(nsideLosange*nsideLosange);
-               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
-               //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
-               if( Double.isNaN(pix) ) continue;
-               pix = pix*pbg.bScale+pbg.bZero;
-               double polar[] = CDSHealpix.pix2ang_nest(orderPix, npix[i]);
-               polar = CDSHealpix.polarToRadec(polar);
-               coo.al = polar[0]; coo.del = polar[1];
-               coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
-               statPixel(g,pix,coo.al,coo.del,v,onMouse);
-               //               System.out.println("pix["+i+"]="+pix);
-               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
-            }
-            //            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));
-         } catch( Exception e ) { e.printStackTrace(); }
-
-      } else {
-         try {
-            pixelSurf = v.pref.projd.getPixResAlpha()* v.pref.projd.getPixResDelta();
-         } catch( Exception e ) { }
-         for( double y=miny; y<=maxy; y++ ) {
-            for( double x=minx; x<=maxx; x++ ) {
-               if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
-               double pix = statPixel(g, (int)x, (int)y, v,onMouse);
-               if( Double.isNaN(pix) ) continue;
-               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
-            }
-         }
-      }
-
-      if( flagHist ) v.aladin.view.zoomview.createPixelHist(v.pref.type==Plan.ALLSKYIMG ? "HEALPixels":"Pixels");
-
-      //      if( v.pref.type==Plan.ALLSKYIMG ) {
-      //         xc=xv[v.n]-0.5;
-      //         yc=yv[v.n]-0.5;
-      //         minx=(int)Math.floor(xc-r);
-      //         maxx=(int)Math.ceil(xc+r);
-      //         miny=(int)Math.floor(yc-r);
-      //         maxy=(int)Math.ceil(yc+r);
-      //      }
-
-      // Valeurs en float pour la bounding box
-      xc=xv[v.n];
-      yc=yv[v.n];
-      minx=xc-r;
-      maxx=xc+r;
-      miny=yc-r;
-      maxy=yc+r;
-
-      // Calculs des statistiques => sera utilisé immédiatement par le paint
-      // Attention, il s'agit de variables statiques
-      try {
-         surface = nombre*pixelSurf;
-         moyenne = total/nombre;
-         variance = carre/nombre - moyenne*moyenne;
-         sigma = Math.sqrt(variance);
-         if( medianeArrayNb==MAXMEDIANE ) mediane=Double.NaN;
-         else {
-            Arrays.sort(medianeArray,0,medianeArrayNb);
-            mediane = medianeArray[medianeArrayNb/2];
-         }
-         setWithStat(true);
-      } catch( Exception e ) { }
-
-      return true;
-   }
+//   protected boolean statCompute(Graphics g,ViewSimple v) {
+//      //      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
+//      //         ((PlanBG)v.pref).setDebugIn(raj,dej,getRadius());
+//      //      }
+//
+//      boolean flagHist = v==v.aladin.view.getCurrentView();
+//
+//      if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
+//      statInit();
+//
+//      double xc,yc;
+//      xc=xv[v.n]-0.5;
+//      yc=yv[v.n]-0.5;
+//      double r=getRayon(v);
+//
+//      // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
+//      if( r>100 &&  v.flagClicAndDrag) return false;
+//
+//      // TODO : j'ai des doutes sur ces valeurs si v.pref.type==Plan.IMAGEBKGD
+//      minx=(int)Math.floor(xc-r);
+//      maxx=(int)Math.ceil(xc+r);
+//      miny=(int)Math.floor(yc-r);
+//      maxy=(int)Math.ceil(yc+r);
+//
+//      double carreRayon = r*r;
+//      double pixelSurf = 0;
+//
+//      HistItem onMouse=null;
+//      if( flagHist ) {
+//         onMouse =v.aladin.view.zoomview.hist==null ? null :  v.aladin.view.zoomview.hist.onMouse;
+//
+//         // Si le est simplement dû au passage de la souris sur un précédent histogramme,
+//         // il ne faut pas regénérer cet histogramme
+//         if( onMouse==null ) v.aladin.view.zoomview.initPixelHist();
+//         else flagHist=false;
+//      }
+//
+//      // Dans le cas d'un plan HEALPix, il faut passer par les routines query_disk()
+//      if( /* v.pref.type==Plan.ALLSKYIMG */ v.pref instanceof PlanBG ) {
+//         try {
+//            PlanBG pbg = (PlanBG)v.pref;
+//            int orderFile = pbg.getOrder();
+////            long nsideFile = CDSHealpix.pow2(orderFile);
+//            long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
+////            long nside = nsideFile * nsideLosange;
+//            int orderPix = orderFile + pbg.getTileOrder();
+//            pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
+//            pixelSurf *= pixelSurf;
+//            //            System.out.println("order="+CDSHealpix.log2(nside)+" => surf="
+//            //                  +Coord.getUnit(pixelSurf, false, true));
+//            Coord coo = new Coord(raj,dej);
+//            coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
+//            double radiusRadian = Math.toRadians(getRadius());
+//            long [] npix = CDSHealpix.query_discFXCenters(orderPix, coo.al, coo.del, radiusRadian);
+//            //            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
+//            for( int i=0; i<npix.length; i++ ) {
+//               long npixFile = npix[i]/(nsideLosange*nsideLosange);
+//               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
+//               //               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+//               if( Double.isNaN(pix) ) continue;
+//               pix = pix*pbg.bScale+pbg.bZero;
+//               double polar[] = CDSHealpix.pix2ang_nest(orderPix, npix[i]);
+//               polar = CDSHealpix.polarToRadec(polar);
+//               coo.al = polar[0]; coo.del = polar[1];
+//               coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
+//               statPixelBG(g,pix,coo.al,coo.del,v,onMouse);
+//               //               System.out.println("pix["+i+"]="+pix);
+//               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
+//            }
+//            //            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));
+//         } catch( Exception e ) { e.printStackTrace(); }
+//
+//      } else {
+//         try {
+//            pixelSurf = v.pref.projd.getPixResAlpha()* v.pref.projd.getPixResDelta();
+//         } catch( Exception e ) { }
+//         for( double y=miny; y<=maxy; y++ ) {
+//            for( double x=minx; x<=maxx; x++ ) {
+//               if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
+//               double pix = statPixel(g, (int)x, (int)y, v,onMouse);
+//               if( Double.isNaN(pix) ) continue;
+//               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
+//            }
+//         }
+//      }
+//
+//      if( flagHist ) v.aladin.view.zoomview.createPixelHist(v.pref.type==Plan.ALLSKYIMG ? "HEALPixels":"Pixels");
+//
+//      //      if( v.pref.type==Plan.ALLSKYIMG ) {
+//      //         xc=xv[v.n]-0.5;
+//      //         yc=yv[v.n]-0.5;
+//      //         minx=(int)Math.floor(xc-r);
+//      //         maxx=(int)Math.ceil(xc+r);
+//      //         miny=(int)Math.floor(yc-r);
+//      //         maxy=(int)Math.ceil(yc+r);
+//      //      }
+//
+//      // Valeurs en float pour la bounding box
+//      xc=xv[v.n];
+//      yc=yv[v.n];
+//      minx=xc-r;
+//      maxx=xc+r;
+//      miny=yc-r;
+//      maxy=yc+r;
+//
+//      // Calculs des statistiques => sera utilisé immédiatement par le paint
+//      // Attention, il s'agit de variables statiques
+//      try {
+//         surface = nombre*pixelSurf;
+//         moyenne = total/nombre;
+//         variance = carre/nombre - moyenne*moyenne;
+//         sigma = Math.sqrt(variance);
+//         if( medianeArrayNb==MAXMEDIANE ) mediane=Double.NaN;
+//         else {
+//            Arrays.sort(medianeArray,0,medianeArrayNb);
+//            mediane = medianeArray[medianeArrayNb/2];
+//         }
+//         setWithStat(true);
+//      } catch( Exception e ) { }
+//
+//      return true;
+//   }
 
    public boolean hasSurface() { return radius>0; }
 
-   public double [] getStatistics(Plan p) throws Exception {
-
-      Projection proj = p.projd;
-      if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
-      if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
-      if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
-      if( radius<=0 ) throw new Exception("getStats error: no radius");
-
-      double nombre=0;
-      double carre=0;
-      double total=0;
-      double pixelSurf;
-
-      // Cas d'une map HEALPix
-      if( p.type==Plan.ALLSKYIMG ) {
-         PlanBG pbg = (PlanBG)p;
-         int orderFile = pbg.getOrder();
-         //         if( pbg.maxOrder!=pbg.getOrder() ) return false;
-//         long nsideFile = CDSHealpix.pow2(orderFile);
-         long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-//         long nside = nsideFile * nsideLosange;
-         int orderPix = orderFile + pbg.getTileOrder();
-         pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
-         pixelSurf *= pixelSurf;
-         Coord coo = new Coord(raj,dej);
-         coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
-         double radiusRadian = Math.toRadians(getRadius());
-         long [] npix = CDSHealpix.query_disc(orderPix, coo.al, coo.del, radiusRadian, false);
-         for( int i=0; i<npix.length; i++ ) {
-            long npixFile = npix[i]/(nsideLosange*nsideLosange);
-            //            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
-            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
-            if( Double.isNaN(pix) ) continue;
-            pix = pix*pbg.bScale+pbg.bZero;
-            nombre++;
-            total+=pix;
-            carre+=pix*pix;
-         }
-
-         // Cas d'une image "classique"
-      } else {
-         PlanImage pi = (PlanImage)p;
-         pi.setLockCacheFree(true);
-         pi.pixelsOriginFromCache();
-
-         pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
-         Coord c = new Coord(raj,dej);
-         proj.getXY(c);
-         double  xc=c.x-0.5;
-         double  yc=c.y-0.5;
-
-         c.del=dej+radius;
-         proj.getXY(c);
-         double dy=(yc+0.5)-c.y;
-         double dx=(xc+0.5)-c.x;
-         double r = Math.sqrt(dx*dx + dy*dy);
-         double carreRayon = r*r;
-
-         int minx=(int)Math.floor(xc-r);
-         int maxx=(int)Math.ceil(xc+r);
-         int miny=(int)Math.floor(yc-r);
-         int maxy=(int)Math.ceil(yc+r);
-
-         for( int y=miny; y<=maxy; y++ ) {
-            for( int x=minx; x<=maxx; x++ ) {
-               if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
-               double pix= pi.getPixelInDouble(x,y);
-               if( Double.isNaN(pix) ) continue;
-               nombre++;
-               total+=pix;
-               carre+=pix*pix;
-            }
-         }
-         pi.setLockCacheFree(false);
-      }
-
-      double surface = nombre*pixelSurf;
-      double moyenne = total/nombre;
-      double variance = carre/nombre - moyenne*moyenne;
-      double sigma = Math.sqrt(variance);
-
-      return new double[]{ nombre, total, sigma, surface };
-   }
+//   public double [] getStatistics(Plan p) throws Exception {
+//
+//      Projection proj = p.projd;
+//      if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
+//      if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
+//      if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
+//      if( radius<=0 ) throw new Exception("getStats error: no radius");
+//
+//      double nombre=0;
+//      double carre=0;
+//      double total=0;
+//      double pixelSurf;
+//      double min=Double.NaN,max=Double.NaN;
+//
+//      // Cas d'une map HEALPix
+//      if( p.type==Plan.ALLSKYIMG ) {
+//         PlanBG pbg = (PlanBG)p;
+//         int orderFile = pbg.getOrder();
+//         //         if( pbg.maxOrder!=pbg.getOrder() ) return false;
+////         long nsideFile = CDSHealpix.pow2(orderFile);
+//         long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
+////         long nside = nsideFile * nsideLosange;
+//         int orderPix = orderFile + pbg.getTileOrder();
+//         pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
+//         pixelSurf *= pixelSurf;
+//         Coord coo = new Coord(raj,dej);
+//         coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
+//         double radiusRadian = Math.toRadians(getRadius());
+//         long [] npix = CDSHealpix.query_disc(orderPix, coo.al, coo.del, radiusRadian, false);
+//         for( int i=0; i<npix.length; i++ ) {
+//            long npixFile = npix[i]/(nsideLosange*nsideLosange);
+//            //            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+//            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
+//            if( Double.isNaN(pix) ) continue;
+//            pix = pix*pbg.bScale+pbg.bZero;
+//            nombre++;
+//            total+=pix;
+//            carre+=pix*pix;
+//            if( Double.isNaN(min) ) min=max = pix;
+//            else {
+//               if( pix>max ) max=pix;
+//               else if( pix<min ) min=pix;
+//            }
+//         }
+//
+//         // Cas d'une image "classique"
+//      } else {
+//         PlanImage pi = (PlanImage)p;
+//         pi.setLockCacheFree(true);
+//         pi.pixelsOriginFromCache();
+//
+//         pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
+//         Coord c = new Coord(raj,dej);
+//         proj.getXY(c);
+//         double  xc=c.x-0.5;
+//         double  yc=c.y-0.5;
+//
+//         c.del=dej+radius;
+//         proj.getXY(c);
+//         double dy=(yc+0.5)-c.y;
+//         double dx=(xc+0.5)-c.x;
+//         double r = Math.sqrt(dx*dx + dy*dy);
+//         double carreRayon = r*r;
+//
+//         int minx=(int)Math.floor(xc-r);
+//         int maxx=(int)Math.ceil(xc+r);
+//         int miny=(int)Math.floor(yc-r);
+//         int maxy=(int)Math.ceil(yc+r);
+//
+//         for( int y=miny; y<=maxy; y++ ) {
+//            for( int x=minx; x<=maxx; x++ ) {
+//               if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
+//               double pix= pi.getPixelInDouble(x,y);
+//               if( Double.isNaN(pix) ) continue;
+//               nombre++;
+//               total+=pix;
+//               carre+=pix*pix;
+//               if( Double.isNaN(min) ) min=max = pix;
+//               else {
+//                  if( pix>max ) max=pix;
+//                  else if( pix<min ) min=pix;
+//               }
+//            }
+//         }
+//         pi.setLockCacheFree(false);
+//      }
+//
+//      double surface = nombre*pixelSurf;
+//      double moyenne = total/nombre;
+//      double variance = carre/nombre - moyenne*moyenne;
+//      double sigma = Math.sqrt(variance);
+//
+//      return new double[]{ nombre, total, sigma, surface,min,max };
+//   }
 
 
    /** Retourne la rayon du repère en degrés */
@@ -685,18 +692,16 @@ public class Repere extends Position {
             g.drawLine(p.x,p.y,p1.x,p1.y);
             break;
          case DEFAULT:
-            if( !hasRayon() ) {
+//            if( !hasRayon() ) {
                g.drawLine(p.x-L, p.y,   p.x+L, p.y);
                g.drawLine(p.x,   p.y-L, p.x,   p.y+L);
-//               if( isSelected() && plan.aladin.view.nbSelectedObjet()<=2 ) cutOn();
-//               else cutOff();
-            } else {
-               int l = (int)(getRayon(v)*v.getZoom());
-               if( hasPhot(v.pref) ) {
-                  Util.drawFillOval(g, p.x-l, p.y-l, l*2, l*2, 0.1f * plan.getOpacityLevel(), null);
-                  if( isSelected() ) statDraw(g, v,dx,dy);
-               } else g.drawOval(p.x-l, p.y-l, l*2, l*2);
-            }
+//            } else {
+//               int l = (int)(getRayon(v)*v.getZoom());
+//               if( hasPhot(v.pref) ) {
+//                  Util.drawFillOval(g, p.x-l, p.y-l, l*2, l*2, 0.1f * plan.getOpacityLevel(), null);
+//                  if( isSelected() ) statDraw(g, v,dx,dy);
+//               } else g.drawOval(p.x-l, p.y-l, l*2, l*2);
+//            }
             break;
          case ARROW:
             //            g.setColor(Color.red);

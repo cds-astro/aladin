@@ -88,7 +88,8 @@ public class PlanMocGen extends PlanMoc {
       while( it.hasNext() ) {
          n++;
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          
          if( m<100 || n%100==0 ) {
             pourcent+=incrPourcent;
@@ -102,7 +103,7 @@ public class PlanMocGen extends PlanMoc {
          List<STCObj> listStcs = sf.getStcObjects();
          if( listStcs==null || listStcs.size()==0 ) continue;
          try {
-            SMoc m1 = aladin.createMocRegion(listStcs,order);
+            SMoc m1 = aladin.createMocRegion(listStcs,order,true);
             if( m1!=null ) moc.add(m1);
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();

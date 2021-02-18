@@ -127,7 +127,6 @@ public class Message extends Panel {
               if( !sta.hasMoreTokens() || n>max ) {
                  String ligne=b.toString();
                  a = new JLabel(ligne);
-//                 a.setFont( new Font("Helvetica",Font.BOLD,taille));
                  if( type==WARNING) {
                     a.setFont(a.getFont().deriveFont(Font.BOLD));
                     a.setForeground( Aladin.COLOR_RED );
@@ -149,13 +148,11 @@ public class Message extends Panel {
            non.addActionListener(new ActionListener()  {
               public void actionPerformed(ActionEvent e) { value=NON; dialog.dispose(); }
            });
-//           non.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(non);
            oui = new Button("Yes");
            oui.addActionListener(new ActionListener()  {
               public void actionPerformed(ActionEvent e) { value=OUI; dialog.dispose(); }
            });
-//           oui.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(oui);
         } else if( type==PASSWORD ) {
            user = new TextField(15);
@@ -174,13 +171,11 @@ public class Message extends Panel {
            oui.addActionListener(new ActionListener()  {
               public void actionPerformed(ActionEvent e) { value=OUI; dialog.dispose(); }
            });
-//           oui.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(oui);
            non = new Button("Cancel");
            non.addActionListener(new ActionListener()  {
               public void actionPerformed(java.awt.event.ActionEvent e) { value=NON; dialog.dispose(); }
            });
-//           non.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(non);
         } else if( type==QUESTION ) {
            g.setConstraints(myPanel,c);
@@ -189,20 +184,17 @@ public class Message extends Panel {
            oui.addActionListener(new ActionListener()  {
               public void actionPerformed(ActionEvent e) { value=OUI; dialog.dispose(); }
            });
-//           oui.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(oui);
            non = new Button("Cancel");
            non.addActionListener(new ActionListener()  {
               public void actionPerformed(java.awt.event.ActionEvent e) { value=NON; dialog.dispose(); }
            });
-//           non.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(non);
        } else {        
            ok = new Button("OK");
            ok.addActionListener(new ActionListener()  {
                public void actionPerformed(ActionEvent e) { dialog.dispose(); }
            });
-//           ok.setFont( new Font("Helvetica",Font.PLAIN,12));
            pb.add(ok);
         }
         

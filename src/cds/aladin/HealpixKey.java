@@ -1737,7 +1737,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     */
 
    protected boolean mayCrossTheSky(ViewSimple v) {
-      Projection proj = planBG.projd;
+      Projection proj = v.getProj();
       if( proj.t==Calib.TAN || proj.t==Calib.SIN || proj.t==Calib.STG ) return false;
       return v.getTaille(proj)> 40;
    }
@@ -1769,12 +1769,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
       boolean drawFast = planBG.mustDrawFast();
 //      boolean animated = planBG.aladin.isAnimated();
       
+      Projection proj=v.getProj();
+      
       // On a les 4 coins
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
 
          // En cas de bord du ciel : méthode des triangles (plus rapide que par récursion),
          // mais ne fonctionne bien que pour les ellipses (AITOFF et MOLDWEIDE)
-         boolean methodeTriangle = drawFast && (planBG.projd.t==Calib.AIT  || planBG.projd.t==Calib.MOL);
+         boolean methodeTriangle = drawFast && (proj.t==Calib.AIT  || proj.t==Calib.MOL);
          if( methodeTriangle && (aDroite(b[0],b[1],b[2])*aDroite(b[3],b[1],b[2])>=0
                || aDroite(b[1],b[0],b[3])*aDroite(b[2],b[0],b[3])>=0) ) {
             double d12=dist(b,1,2);
@@ -1801,14 +1803,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
                boolean mayCrossTheSky = mayCrossTheSky(v);
                boolean methodeRecursive =  
-                     ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC ) ||
-                     planBG.projd.t==Calib.MOL || planBG.projd.t==Calib.AIT ) && mayCrossTheSky 
-                     || planBG.projd.t==Calib.CAR || planBG.projd.t==Calib.MER;
+                     ( proj.t==Calib.ZEA || (proj.t==Calib.ARC ) ||
+                     proj.t==Calib.MOL || proj.t==Calib.AIT ) && mayCrossTheSky 
+                     || proj.t==Calib.CAR || proj.t==Calib.MER;
                
                // Methode récursive pour s'approcher du bord du ciel
-               if( methodeRecursive && isTooLarge(b, planBG.projd.t==Calib.ARC ? 100 : 150) ) {
+               if( methodeRecursive && isTooLarge(b, proj.t==Calib.ARC ? 100 : 150) ) {
                   resetTimer();
-                  int m = drawFils(g,v,drawFast?1:planBG.projd.t==Calib.ZEA?8:4);
+                  int m = drawFils(g,v,drawFast?1:proj.t==Calib.ZEA?8:4);
                   if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père
 
                // Méthode récursive pour dimiduer les déformations
@@ -1823,7 +1825,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
                // Les losanges trop grands sont simplement ignorés
                if( mayCrossTheSky && isTooLarge(b,150) ) return 0;
-               if( planBG.projd.t==Calib.STG && isTooLarge(b,2*v.rv.width/3) ) return 0;
+               if( proj.t==Calib.STG && isTooLarge(b,2*v.rv.width/3) ) return 0;
 
             } catch( Exception e ) { e.printStackTrace(); return 0; }
 

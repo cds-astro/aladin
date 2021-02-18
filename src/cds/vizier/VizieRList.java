@@ -21,14 +21,19 @@
 
 package cds.vizier;
 
-import java.awt.*;
-import java.awt.event.ActionListener;
-import java.util.Vector;
-import java.util.StringTokenizer;
 import java.util.Enumeration;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.JButton;
+import javax.swing.JList;
+import javax.swing.JTextField;
+import javax.swing.ListModel;
+import javax.swing.event.ListDataListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+import cds.aladin.Aladin;
 
 /**
  * VizieR catalog list
@@ -52,12 +57,12 @@ public final class VizieRList extends JList {
    protected int hCaracterCount = 0;
    protected MyList list;
 
-   static final boolean LSCREEN= Toolkit.getDefaultToolkit().getScreenSize().width>1000;
-
-    /** Taille moyenne des fonts */
-    static protected final int  SIZE   = LSCREEN?12:10;
-
-    protected static Font COURIER= new Font("Monospaced",Font.PLAIN, SIZE);
+//   static final boolean LSCREEN= Toolkit.getDefaultToolkit().getScreenSize().width>1000;
+//
+//    /** Taille moyenne des fonts */
+//    static protected final int  SIZE   = LSCREEN?12:10;
+//
+//    protected static Font COURIER= new Font("Monospaced",Font.PLAIN, SIZE);
 
    /** Constructor List creation
     * Set the selected catalogs
@@ -66,7 +71,6 @@ public final class VizieRList extends JList {
     * @param v vector of lines to put into the list
     */
    public VizieRList(JTextField catalog, JButton getReadMe, Vector v) {
-
       this(catalog, getReadMe, v, 20);
    }
 
@@ -81,7 +85,7 @@ public final class VizieRList extends JList {
       setVisibleRowCount(rows);
       this.catalog = catalog;
       this.getReadMe = getReadMe;
-      this.setFont( COURIER );
+      this.setFont( Aladin.COURIER );
       setModel(list = new MyList());
       preSelection(v);
       addListSelectionListener(new ListenList());

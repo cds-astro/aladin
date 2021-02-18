@@ -605,7 +605,8 @@ public class UWSJob implements ActionListener{
 	}
 	
 	public static Font getErrorFont() {
-		Font font = new Font("PLAIN", Font.PLAIN, 15);
+//		Font font = new Font("PLAIN", Font.PLAIN, 15);
+		Font font = Aladin.LPLAIN;
 		Map fontAttri = font.getAttributes();
 		fontAttri.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 		return new Font(fontAttri);

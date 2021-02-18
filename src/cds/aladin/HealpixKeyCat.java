@@ -87,6 +87,11 @@ public class HealpixKeyCat extends HealpixKey {
 
          int trace=planBG.aladin.levelTrace;
          planBG.aladin.levelTrace=0;
+         
+      // Indique a priori la légende à utiliser
+         if( ((PlanBGCat)planBG).hasGenericPcat() ) {
+            pcat.leg = ((PlanBGCat)planBG).getGenericPcat().leg;
+         }
 //         Legende leg = planBG.getFirstLegende();
 //         if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
          
@@ -101,7 +106,7 @@ public class HealpixKeyCat extends HealpixKey {
 //         if( leg==null  ) ((PlanBGCat)planBG).setLegende( ((Source)pcat.iterator().next()).leg );
          if(  !((PlanBGCat)planBG).hasGenericPcat() )  ((PlanBGCat)planBG).setGenericPcat(pcat);
 
-         // Dans le cas où l'époque aurait-été modifié
+         // Dans le cas où l'époque aurait-été modifié, ou les colonnes de positions mal détectées
          recomputePosition(((PlanBGCat)planBG).getFirstLegende(),pcat);
       } finally { if( in!=null ) in.close(); }
    }
@@ -112,13 +117,14 @@ public class HealpixKeyCat extends HealpixKey {
    }
    
    /** Recalcule toutes les positions internes dans le cas où l'époque
-    * aurait été modifiée au préalable */ 
+    * aurait été modifiée au préalable, ou bien si la détection des colonnes de position
+    * n'aurait pas été concluante => le refaire avec metadata.xml */ 
    public void recomputePosition(Legende leg,Pcat pcat) {
-      if( planBG.epoch==null || planBG.getEpoch().toString("J").equals("J2000") ) return;
+//      if( planBG.epoch==null || planBG.getEpoch().toString("J").equals("J2000") ) return;
 //      System.out.println("Adaptation à l'époque "+planBG.getEpoch());
       int npmra = leg.getPmRa();
       int npmde = leg.getPmDe();
-      if( npmra<=0 || npmde<=0 ) return;  // Inutile, pas de PM
+//      if( npmra<=0 || npmde<=0 ) return;  // Inutile, pas de PM
       int nra   = leg.getRa();
       int nde   = leg.getDe();
       planBG.recomputePosition(pcat.iterator(),leg,nra,nde,npmra,npmde);

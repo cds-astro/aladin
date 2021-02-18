@@ -84,7 +84,7 @@ public class IconStudy extends Icon {
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x = 10;
+      int x = 10+DX;
       int y = 0;
       int r = 10;
       

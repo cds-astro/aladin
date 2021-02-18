@@ -27,7 +27,15 @@
  */
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.FontMetrics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
@@ -374,7 +382,8 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
             while( it.hasNext() ) {
                // pour chaque source, on récupère les noms de colonnes (oui, c'est un peu lourd)
                Obj o = it.next();
-               if( !(o instanceof Source) ) continue;
+//               if( !(o instanceof Source) ) continue;
+               if( !o.asSource() ) continue;
                s = (Source)o;
                for( int k=s.getLeg().field.length-1;k>=0;k-- ) {
                   str = s.getLeg().field[k].name;
@@ -396,7 +405,8 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
 		Iterator<Obj> it = p.iterator();
 		while( it.hasNext() ) {
            Obj o = it.next();
-           if( !(o instanceof Source) ) continue;
+//           if( !(o instanceof Source) ) continue;
+           if( !o.asSource() ) continue;
            s = (Source)o;
 		   for (int k = s.getLeg().field.length - 1; k >= 0; k--) {
 		      str = s.getLeg().field[k].name;

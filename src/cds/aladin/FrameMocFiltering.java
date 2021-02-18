@@ -151,7 +151,8 @@ public final class FrameMocFiltering extends FrameRGBBlink {
          Iterator<Obj> it = pCat.iterator();
          while( it.hasNext() ) {
             Obj o = it.next();
-            if( !(o instanceof Source) ) continue;
+//            if( !(o instanceof Source) ) continue;
+            if( !o.asSource() ) continue;
             
             long npixSpace=-1;
             boolean in=false;

@@ -72,7 +72,7 @@ public class Hdr extends Icon {
   /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x=4,y=1;
+      int x=4+DX,y=1;
       
       g.setColor( getLogoColor() );
       g.fillRect(x+1, y+8, 3, 4);

@@ -40,6 +40,7 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Date;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.zip.Inflater;
 
 import cds.image.Hdecomp;
@@ -557,7 +558,13 @@ public class PlanImage extends Plan {
       p.opacityLevel=opacityLevel;
 
    }
-
+   
+   /** Génération d'une liste de Source à partir des pixels contenus dans les objets STCs passés en paramètres
+    * @param stcObjects Les objets STCs décrivant les régions concernées
+    * @return Le tableau des Sources, une pour chaque pixel d'origine
+    */
+   protected void extractPixelAsSource( final Vector<Obj> v ) throws Exception { }
+   
    /** Cropping de l'image sur la sous-image indiquée en paramètre et demande de réaffichage.
     * Si la sous-image sort de l'image, la sous-image sera automatiquement réduite à la zone
     * d'intersection.

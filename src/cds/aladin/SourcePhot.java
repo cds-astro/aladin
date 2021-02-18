@@ -94,10 +94,6 @@ public class SourcePhot extends SourceTag {
    /** Retourne le type d'objet */
    public String getObjType() { return "Phot"; }
 
-   /** Positionne l'id par defaut */
-   void setId() {
-      if( id==null ) id="Phot "+ nextIndice();
-   }
-   
    protected int getL() { return super.getL()*3; }
+   
 }

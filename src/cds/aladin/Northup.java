@@ -55,7 +55,7 @@ public class Northup extends Icon {
       super.drawLogo(g);
       
       g.setColor( getLogoColor() );
-      int x=7,y=0;
+      int x=7+DX,y=0;
       g.drawLine(x,y+10,x+9,y+10);
       g.drawLine(x+1,y+9,x+1,y+11);
       g.drawLine(x+2,y+8,x+2,y+12);

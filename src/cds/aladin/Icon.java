@@ -52,11 +52,15 @@ abstract public class Icon extends JComponent implements
 
    protected Aladin aladin;
    protected int W,H;
+   protected int DX;           // Marge de gauche pour l'icone
 
   /** Creation */
    protected Icon(Aladin aladin,int width,int height) {
-      W=width;
-      H=height;
+      double scale = (Aladin.getUIScale()-1)/1.25 +1;
+      W=(int)( width*scale );
+      H=(int)( height*scale );
+      DX =(int)Math.round( (W-width)/2. );
+      
       this.aladin=aladin;
       addMouseMotionListener(this);
       addMouseListener(this);
@@ -161,7 +165,6 @@ abstract public class Icon extends JComponent implements
       drawLogo(gr);
    }
    
-
    public void mouseDragged(MouseEvent e) { }
    public void mouseClicked(MouseEvent e) { }
    public void mousePressed(MouseEvent e) { }

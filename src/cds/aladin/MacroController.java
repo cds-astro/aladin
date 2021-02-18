@@ -31,12 +31,10 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -48,7 +46,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JTable;
 import javax.swing.JTextPane;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.text.Document;
 
 import cds.aladin.MacroModel.ParamTableModel;
 import cds.tools.Util;
@@ -123,7 +120,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
        ParamTableModel ptm = macroModel.getParamTableModel();
        Vector<Plan> p = a.calque.getSelectedPlanes();
        if( p!=null && p.size()>0 ) {
-          Vector<Plan> pa = new Vector<Plan>();
+          Vector<Plan> pa = new Vector<>();
           for( int i=0; i<p.size(); i++ ) {
              Plan p2 = p.get(i);
              if( p2.isReady() && p2.isSimpleCatalog() ) pa.add(p2);
@@ -133,7 +130,7 @@ public class MacroController implements ActionListener, MouseMotionListener,
           
        if( p==null || p.size()==0 ) {
           Plan p1 = a.calque.getFirstCatalog();
-          if( p1!=null ) { p = new Vector<Plan>(); p.add(p1); }
+          if( p1!=null ) { p = new Vector<>(); p.add(p1); }
        }
        if( p.size()==0 ) a.error(frameMacro,a.chaine.getString("NEEDCAT"));
 
@@ -146,7 +143,8 @@ public class MacroController implements ActionListener, MouseMotionListener,
           Iterator<Obj> it = p1.iterator();
           while( it.hasNext() ) {
              Obj o = it.next();
-             if( !(o instanceof Source) ) continue;
+//             if( !(o instanceof Source) ) continue;
+             if( !o.asSource() ) continue;
              Source s = (Source)o;
              ptm.addRecord( new String[] { (++n)+"" , s.id, a.localisation.J2000ToString(s.raj,s.dej), s.plan.label } );
           }

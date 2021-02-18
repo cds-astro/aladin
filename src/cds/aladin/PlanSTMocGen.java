@@ -202,7 +202,7 @@ public class PlanSTMocGen extends PlanSTMoc {
                List<STCObj> listStcs = sf.getStcObjects();
                if( listStcs==null ) continue;
                try {
-                  SMoc m1 = aladin.createMocRegion(listStcs,spaceOrder);
+                  SMoc m1 = aladin.createMocRegion(listStcs,spaceOrder,true);
                   m1.toRangeSet();
                   Range r = m1.range;
                   for( int j=0; j<r.sz; j+=2 ) addIt(m2,r.r[j],r.r[j+1],jdtime,jdtime+ duration/86400.);

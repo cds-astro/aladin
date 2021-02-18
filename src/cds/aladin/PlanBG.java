@@ -2054,7 +2054,11 @@ public class PlanBG extends PlanImage {
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
    protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int mode) {
-      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,(int)getZ(),mode==HealpixKey.ASYNC ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
+      return getHealpixPixel(orderFile,npixFile,healpixIdxPixel,-1,mode);
+   }
+   protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int z,int mode) {
+      if( z==-1 ) z=(int)getZ();
+      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.ASYNC ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
       if( h==null ) return Double.NaN;
       return h.getPixelValue(healpixIdxPixel,mode);
    }
@@ -2797,7 +2801,7 @@ public class PlanBG extends PlanImage {
             HealpixMoc posBounds = null;
             try {
                 if (stcObj != null) {
-                    posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1) );
+                    posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1, true) );
                 }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
@@ -2935,7 +2939,7 @@ public class PlanBG extends PlanImage {
         HealpixMoc posBounds = null;
         try {
             if (stcObj != null) {
-                posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1) );
+                posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1, true) );
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block

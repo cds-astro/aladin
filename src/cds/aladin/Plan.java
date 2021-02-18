@@ -35,6 +35,7 @@ import java.util.Vector;
 
 import javax.swing.SwingUtilities;
 
+import cds.astro.Astroframe;
 import cds.astro.Astropos;
 import cds.astro.Astrotime;
 import cds.astro.Unit;
@@ -547,7 +548,8 @@ public class Plan implements Runnable {
       Iterator<Obj> it = iterator();
       for( nbo=0; it.hasNext(); nbo++ ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          Source s = (Source)o;
          if( s.isSelected() ) nbSelected++;
          if( filter && s.isSelectedInFilter() ) nbFiltered++;
@@ -643,8 +645,10 @@ public class Plan implements Runnable {
          if( p.plan.type==Plan.FOV || p instanceof Forme) continue;
 
          // on ne sélectionne que les sources "filtrées"
-         if( p.inRectangle(v,r) && p.inTime(v) && 
-               ( !( p instanceof Source) || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
+//         if( p.inRectangle(v,r) && p.inTime(v) && 
+//               ( !( p instanceof Source) || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
+            if( p.inRectangle(v,r) && p.inTime(v) && 
+                  ( !p.asSource() || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
             p.setSelect(true);
             res.addElement(p);
          }
@@ -700,9 +704,11 @@ public class Plan implements Runnable {
             // On mémorise les points de controles d'un polygone si on a cliqué dessus
             if( o instanceof Ligne && ((Ligne)o).inPolygon(v, (int)x, (int)y) ) vo.addElement((Ligne)o);
             boolean in = o instanceof Cercle ? o.in(v,x,y) : o.inside(v,x,y);
-            if( in && ( !(o instanceof Source) ||
+            //            if( in && ( !(o instanceof Source) ||
+            //                  ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
+            if( in && ( !o.asSource() ||
                   ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
-               res.addElement(o);
+                res.addElement(o);
             }
          }
 
@@ -826,7 +832,8 @@ public class Plan implements Runnable {
       int nError=0;
       //       boolean first=true;
 
-      Astropos c = new Astropos();
+//      Astropos c = new Astropos();
+      Astropos c = new Astropos( Astroframe.create("ICRS("+originalEpoch+")") );
       while( it.hasNext() ) {
          try {
             Source s = (Source)it.next();
@@ -869,7 +876,8 @@ public class Plan implements Runnable {
                      double pmde = mu2.getValue();
                      //                   if( first ) System.out.println("pmde="+s1+" => mu2="+mu2+" => val="+pmde);
 
-                     c.set(c.getLon(),c.getLat(),originalEpoch,pmra,pmde);
+//                     c.set(c.getLon(),c.getLat(),originalEpoch,pmra,pmde);
+                     c.set(c.getLon(),c.getLat(),pmra,pmde);
                      //                   if( first ) System.out.println("set c : "+c);
                      c.toEpoch(epoch);
                      //                   if( first ) System.out.println("set epoch="+epoch+" : "+c);
@@ -1879,19 +1887,24 @@ public class Plan implements Runnable {
       if( s2==null ) s2=s1;
       if( s1==null ) return null;
       
-      
-      
-//      // On affiche aussi la fréquence si <10nm || > 100microns
-//      boolean flagFreq=false;
-//      try { 
-//         double c = Double.parseDouble(s1);
-//         flagFreq = c<10E-9 || c>1E-3;
-//      } catch( Exception e ) {} 
       boolean flagFreq=true;
+      boolean flagWave=true;
+      try { 
+         double c = Double.parseDouble(s1);
+//         flagFreq = c<10E-9 || c>1E-3;
+         flagWave = c>1E-10;
+      } catch( Exception e ) {
+         if( s1.equals(s2) ) return s1+"m";
+         else return s1+"m .. "+s2+"m";
+      } 
       
-      if( s1.equals(s2) ) return Util.getWaveFromMeter(s1)+( flagFreq? "/"+Util.getFreqFromMeter(s1):"");
-      return Util.getWaveFromMeter(s1)+( flagFreq? "/"+Util.getFreqFromMeter(s1):"") 
-           + " .. "+ Util.getWaveFromMeter(s2)+( flagFreq? "/"+Util.getFreqFromMeter(s2):"");
+      if( s1.equals(s2) )
+         return (flagWave ? Util.getWaveFromMeter(s1):"")
+               + (flagFreq && flagWave ?"/":"")
+               + ( flagFreq? Util.getFreqFromMeter(s1):"");
+      return (flagWave ? Util.getWaveFromMeter(s1):"") + (flagFreq && flagWave ?"/":"")+( flagFreq? Util.getFreqFromMeter(s1):"") 
+           + " .. "
+           + (flagWave ? Util.getWaveFromMeter(s2):"")+ (flagFreq && flagWave ?"/":"")+( flagFreq?  Util.getFreqFromMeter(s2):"");
 
    }
    
@@ -2609,7 +2622,8 @@ public class Plan implements Runnable {
       if( it==null ) return false;
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          Source s = (Source)o;
          if( s.getFootprint() != null) {
 //            SourceFootprint sf = s.getFootprint();
@@ -2628,7 +2642,8 @@ public class Plan implements Runnable {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          Source s = (Source)o;
          s.setShowFootprint(show,false);
       }
@@ -2643,7 +2658,8 @@ public class Plan implements Runnable {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-         if( !(o instanceof Source) ) continue;
+//         if( !(o instanceof Source) ) continue;
+         if( !o.asSource() ) continue;
          Source s = (Source)o;
          if( s.getFootprint()!=null ) {
             PlanField pf = s.getFootprint().getFootprint();

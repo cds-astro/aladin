@@ -45,12 +45,12 @@ public class Slider extends JComponent {
    private int curPos = 0; // current position (in term of number of steps from pos 0
 
    // Les constantes d'affichage
-   final int mX = 10;          // Marge en abscisse
-   final int margeDroite = 20;
-   final int mY = 0;       // Marge en ordonnee
-   final int Hp = 0;       // Hauteur du graphique
-   int W;     // Largeur totale du graphique
-   final int H = Hp+mY+34;     // Hauteur totale du graphique
+   private int mX;          // Marge en abscisse
+   private int margeDroite;
+   private int mY;       // Marge en ordonnee
+   private int Hp;       // Hauteur du graphique
+   private int W;        // Largeur totale du graphique
+   private int H;        // Hauteur totale du graphique
 
    boolean selected = false;
    boolean flagDrag = false;
@@ -68,6 +68,14 @@ public class Slider extends JComponent {
       setOpaque(true);
       this.begin = begin;
       this.nbSteps = nbSteps;
+      
+      double sc = Aladin.getUIScale();
+      
+      mX = (int)(10*sc);          // Marge en abscisse
+      margeDroite = (int)(20*sc);
+      mY = 0;       // Marge en ordonnee
+      Hp = 0;       // Hauteur du graphique
+      H = Hp+mY+(int)(34*sc);     // Hauteur totale du graphique
       W = nbSteps + mX + margeDroite;
    }
 

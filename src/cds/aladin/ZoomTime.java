@@ -251,8 +251,8 @@ class ZoomTime {
       
       // Les dates min et max
       g.setColor( Aladin.COLOR_VERTDEAU );
-      String startDate = Astrodate.JDToDate( globalJdmin,false );
-      String endDate = Astrodate.JDToDate( globalJdmax, false );
+      String startDate = Astrodate.JDToDate( globalJdmin,false,false );
+      String endDate = Astrodate.JDToDate( globalJdmax, false,false );
       if( startDate.equals(endDate) ) {
          startDate = Astrodate.JDToDate( globalJdmin );
          endDate = Astrodate.JDToDate( globalJdmax );
@@ -287,7 +287,7 @@ class ZoomTime {
          g.drawLine( xm,y-2, xm, y+h+2);
          if( Double.isNaN(t[0]) ) t[0] = globalJdmin;
          if( Double.isNaN(t[1]) ) t[1] = globalJdmax;
-         String s = Astrodate.JDToDate( (t[0]+t[1])/2 );
+         String s = Astrodate.JDToDate( (t[0]+t[1])/2,true,false );
          int len = g.getFontMetrics().stringWidth(s);
          int x3 = xm - len/2;
          if( x3<2 ) x3=2;

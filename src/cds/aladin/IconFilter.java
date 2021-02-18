@@ -77,7 +77,7 @@ public class IconFilter extends Icon {
    /** Affichage du logo */
    protected void drawLogo(Graphics g) {
       super.drawLogo(g);
-      int x = 3;
+      int x = 3+DX;
       int y = 1;
 
       g.setColor( getLogoColor() );

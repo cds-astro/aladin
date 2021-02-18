@@ -29,7 +29,6 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -38,6 +37,7 @@ import java.util.Vector;
 import cds.aladin.ZoomHist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
+import cds.moc.SMoc;
 import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -489,8 +489,7 @@ public class Ligne extends Position {
       if( bout>0 || isSelected() ) gap=DL;
       x1-=gap; y1-=gap+clipYId(); x2+=gap+clipXId(); y2+=gap+clipYId();
 
-      // Peut être y a-t-il des stats affichées sur le côté
-      if( bout==3 && hasOneSelected() ) clip = unionRect(clip,getStatPosition(v));
+      if( isWithStat() ) clip = unionRect(clip,getStatPosition(v));
 
       return unionRect(clip, x1,y1,x2-x1+1,y2-y1+1);
    }
@@ -586,11 +585,6 @@ public class Ligne extends Position {
          Segment b = (Segment)arg1;
          return a.y1==b.y1 ? 0 : a.y1<b.y1? -1 :1;
       }
-
-      //      public String toString() {
-      //         return Util.myRound(""+x1,2)+","+Util.myRound(""+y1,2)+" - "
-      //         +Util.myRound(""+x2,2)+","+Util.myRound(""+y2,2)+" dxb="+dxb+" out="+out+" cut="+cut;
-      //      }
    }
 
    /** Set specifical color (dedicated for catalog sources) */
@@ -598,130 +592,20 @@ public class Ligne extends Position {
       for( Ligne lig = getFirstBout(); lig!=null; lig = lig.finligne) lig.couleur=c;
    }
 
-
-
-   //   private ArrayList<Vec3> verto = null;
-   //
-   //   private void computeMoc() {
-   //      try {
-   //         long t = System.currentTimeMillis();
-   //
-   //         ArrayList<Vec3> vert = new ArrayList<Vec3>();
-   //         for( Ligne deb=getFirstBout(); deb!=null; deb=deb.finligne ) {
-   //            if( deb.finligne!=null ) {
-   //               double theta = Math.PI/2 - Math.toRadians( deb.dej );
-   //               double phi = Math.toRadians( deb.raj );
-   //               vert.add(new Vec3(new Pointing(theta,phi)));
-   //            }
-   //         }
-   //         if( verto!=null /* && verto.equals(vert) */ ) return;
-   //         verto=vert;
-   //
-   //         Moc moc=MocQuery.queryGeneralPolygon (vert,15);
-   //
-   //         for(  Ligne deb=getFirstBout(); deb!=null; deb=deb.finligne ) {
-   //            if( deb.finligne!=null ) {
-   //               double theta = Math.PI/2 - Math.toRadians( deb.dej );
-   //               double phi = Math.toRadians( deb.raj );
-   //               System.out.println("vert.add(new Vec3(new Pointing("+theta+","+phi+")))");
-   //            }
-   //         }
-   //
-   //         long t1 = System.currentTimeMillis();
-   //         System.out.println(vert.size()+" vertex Moc compute in "+Util.getTemps(t1-t));
-   //         String s = MocUtil.mocToStringJSON(moc);
-   //         System.out.println(s);
-   //         HealpixMoc m = new HealpixMoc(s);
-   //         plan.aladin.calque.newPlanMOC(m, "MocRegion");
-   //
-   //      } catch( Exception e ) {
-   //         e.printStackTrace();
-   //      }
-   //   }
-   
    private static final int MAXSTATPIXELS = 1000000;
+   
+   /** Calcule des statistiques à la volée en fonction du plan de base de la vue passée en paramètre */
+   protected boolean statCompute(Graphics g,ViewSimple v,int z) {
 
-   /**
-    * Méthode:
-    * 1) on trie les segments en ordonnée croissante
-    * 2) on balaye la boite englobante ligne par ligne
-    *    2.1) on compte le nombre d'intersection du x courant
-    *         avec les segments susceptibles d'être concernés.
-    *         S'il s'agit d'un nombre impair, le pixel est dedans
-    * On en profite pour mettre à jour posx,posy qui va indiquer
-    * le point d'accrochage de la légende afin d'éviter le cas genre
-    * "banane", où le barycentre est en dehors du polygone
-    */
-   protected boolean statCompute(Graphics g,ViewSimple v) {
-
-      if( bout!=3 ) return false;
-      
-
-//      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
-//         //         ((PlanBG)v.pref).setDebugIn(this);
-//         return false;
-//      }
-
-      
-      if( v.flagClicAndDrag) return false;
-      
-      if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
-
-      boolean isHiPS = (v.pref.type == Plan.ALLSKYIMG);
-      ArrayList<double[]> cooList = isHiPS ? new ArrayList<double[]>() : null;
-
-      statInit();
-
-      //      int x,y,i;
-      double x,y;
-      int i;
-      int nb;
-      Ligne tmp,deb,a,b;
       boolean flagHist = v==v.aladin.view.getCurrentView();
 
-      minx=miny=Integer.MAX_VALUE;
-      maxx=maxy=Integer.MIN_VALUE;
+      if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
 
-      double minx1,maxx1,miny1,maxy1, mind,maxd, mina,maxa;
-      mina=mind=minx1=miny1=Integer.MAX_VALUE;
-      maxa=maxd=maxx1=maxy1=Integer.MIN_VALUE;
-
-      double pixelSurf = 0;
-
-
-      tmp = deb=getFirstBout();
-      for( nb=0; tmp.finligne!=null; tmp=tmp.finligne) nb++;
-      Segment [] seg = new Segment[nb];
-
-      for( i=0, tmp=deb; tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
-         double fx=tmp.xv[v.n];
-         double tx=tmp.xv[v.n];
-         double fy=tmp.yv[v.n];
-         double ty=tmp.yv[v.n];
-         if( tx>maxx ) maxx=tx;
-         if( fx<minx ) minx=fx;
-         if( ty>maxy ) maxy=ty;
-         if( fy<miny ) miny=fy;
-
-         if( tmp.xv[v.n]<minx1 ) { minx1=tmp.xv[v.n]; mina=tmp.raj; }
-         if( tmp.xv[v.n]>maxx1 ) { maxx1=tmp.xv[v.n]; maxa=tmp.raj; }
-         if( tmp.yv[v.n]<miny1 ) { miny1=tmp.yv[v.n]; mind=tmp.dej; }
-         if( tmp.yv[v.n]>maxy1 ) { maxy1=tmp.yv[v.n]; maxd=tmp.dej; }
-
-         a=tmp; b=tmp.finligne;
-         if( tmp.yv[v.n]> tmp.finligne.yv[v.n] ) { b=tmp ; a=tmp.finligne; }
-
-         if( isHiPS ) {
-            seg[i] = new Segment(a.raj,a.dej, b.raj,b.dej);
-            
-            Coord coo = new Coord(tmp.raj,tmp.dej);
-            coo = Localisation.frameToFrame(coo,Localisation.ICRS,((PlanBG)v.pref).frameOrigin);
-            cooList.add( new double[]{ coo.al, coo.del });
-            
-         } else seg[i] = new Segment(a.xv[v.n]-0.5,a.yv[v.n]-0.5, b.xv[v.n]-0.5,b.yv[v.n]-0.5);
-      }
-
-      Arrays.sort(seg, seg[0]);
+      // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
+      if( v.flagClicAndDrag ) return false;
+      
+      pixelStats.reinit( getPixelStatsCle(v.pref,z) );
+      double tripletPix [] = pixelStats.getStatisticsRaDecPix();
 
       HistItem onMouse=null;
       if( flagHist ) {
@@ -732,194 +616,217 @@ public class Ligne extends Position {
          if( onMouse==null ) v.aladin.view.zoomview.initPixelHist();
          else flagHist=false;
       }
-
-      // Position prévue pour l'accrochage de la légende
-      double deuxTiersX = minx1+2*(maxx1-minx1)/3.;
-      double unTierY    = miny1+(maxy1-miny1)/3.;
-
-      if( isHiPS ) {
-
-         PlanBG pbg = (PlanBG) v.pref;
-         double d = CDSHealpix.pixRes( pbg.getOrder() + pbg.getTileOrder() ) / 3600;
-         d /= 2;   // Pour être sur de ne pas sauter une ligne
-//         System.out.println("From "+Coord.getUnit(mind)+" to "+Coord.getUnit(maxd)+" Delta = " + Coord.getUnit(d) );
-         Coord haut = new Coord( (maxa+mina)/2, mind);
-         Coord bas  = new Coord( (maxa+mina)/2, maxd);
-         double dist = Coord.getDist(haut, bas);
-         int n = (int) (dist/d);
-//         System.out.println("Distance entre "+haut+"  et "+bas+" => "+Coord.getUnit(dist)+" soit "+n+" itérations");
-
-//         return false;
-         
-         try {
-            int orderFile = pbg.getOrder();
-//            long nsideFile = CDSHealpix.pow2(orderFile);
-            long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
-//            long nside = nsideFile * nsideLosange;
-            int order = orderFile + pbg.getTileOrder();
-            long [] npix=null;
-            
-            // Dégradation de la résolution si trop de pixel
-            for( long o = order; o>=pbg.getMinOrder(); o--) {
-//               nside = CDSHealpix.pow2(o);
-               pixelSurf = CDSHealpix.pixRes(order)/3600;
-               pixelSurf *= pixelSurf;
-               npix = CDSHealpix.query_polygon(order, cooList,false);
-               if( npix.length<=MAXSTATPIXELS ) break;
-            }; 
-            
-            // Trop de pixels ?
-            if( npix.length>MAXSTATPIXELS ) return false;
-            
-            Coord coo = new Coord();
-            for( i=0; i<npix.length; i++ ) {
-               long npixFile = npix[i]/(nsideLosange*nsideLosange);
-               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.SYNC);
-               if( Double.isNaN(pix) ) continue;
-               pix = pix*pbg.bScale+pbg.bZero;
-               double polar[] = CDSHealpix.pix2ang_nest(order, npix[i]);
-               polar = CDSHealpix.polarToRadec(polar);
-               coo.al = polar[0]; coo.del = polar[1];
-               coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
-               statPixel(g,pix,coo.al,coo.del,v,onMouse);
-               if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
-            }
-//            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));
-         } catch( Exception e ) { e.printStackTrace(); }
+      
+      // On colore les pixels qu'il faut, et on met à jour l'histogramme
+      for( int i=0; i<tripletPix.length; i+=3 ) {
+         double ra =tripletPix[i];
+         double de =tripletPix[i+1];
+         double val=tripletPix[i+2];
+         if( v.pref instanceof PlanBG ) statPixelBG(g,val,ra,de,v,onMouse);
+         else statPixel(g,val,ra,de,v,onMouse);
+         if( flagHist ) v.aladin.view.zoomview.addPixelHist(val);
+      }
 
 
-      } else {
-
-         int n=0;   // Premier segment à tester
-         for( y=miny; y<=maxy; y++ )  {
-            for( ; n<nb && seg[n].out; n++ );
-            for( i=n; i<nb; i++ ) seg[i].init();
-            if( posy==-1 && (int)y==(int)unTierY ) posy=unTierY;
-            for( x=maxx+1; x>=minx-1; x-- ) {
-               int inter=0;  // Nombre de segments intersectés
-               for( i=n; i<nb; i++ ) {
-                  if( seg[i].cut(x,y) ) inter++;
-               }
-               if( inter%2==1 ) {
-                  double pix = statPixel(g, (int)x, (int)y, v, onMouse);
-                  if( flagHist ) plan.aladin.view.zoomview.addPixelHist(pix);
-                  if( posy!=-1 && (int)x==(int)deuxTiersX && posx==-1 ) posx=deuxTiersX;
-               } else {
-                  if( posy!=-1 && posx==-1 && inter>0) posx=x+1;
-               }
-            }
-         }
-
-         minx=minx1; maxx=maxx1; miny=miny1; maxy1=maxy;
-         try {
-            pixelSurf = plan.proj[v.n].getPixResAlpha()*plan.proj[v.n].getPixResDelta();
-         } catch( Exception e ) {}
-     }
-
-      if( flagHist ) plan.aladin.view.zoomview.createPixelHist("Pixels");
-
-
-      // Calculs des statistiques => sera utilisé immédiatement par le paint
-      // Attention, il s'agit de variables statiques
-      try {
-         surface = nombre*pixelSurf;
-         moyenne = total/nombre;
-         variance = carre/nombre - moyenne*moyenne;
-         sigma = Math.sqrt(variance);
-         if( medianeArrayNb==MAXMEDIANE ) mediane=Double.NaN;
-         else {
-            Arrays.sort(medianeArray,0,medianeArrayNb);
-            mediane = medianeArray[medianeArrayNb/2];
-         }
-         setWithStat(true);
-      } catch( Exception e ) { e.printStackTrace(); }
-
+      if( flagHist ) v.aladin.view.zoomview.createPixelHist(v.pref.type==Plan.ALLSKYIMG ? "HEALPixels":"Pixels");
+      setWithStat(true);
+      
       return true;
    }
 
+
    /** Retourne true que sur le dernier segment du polygone pour éviter les doublons */
    public boolean hasSurface() { return bout==3; }
+   
+   private PixelStats pixelStats = new PixelStats();
 
-   public double [] getStatistics(Plan p) throws Exception {
-
+   
+   /** Retourne une clé unique associé aux statistiques courantes - On utilise entre autre
+    * la somme des coordonnées. Si l'utilisateur déplace un sommet cette somme sera
+    * nécessairement modifiée. */
+   String getPixelStatsCle(Plan p, int z) { 
+      if( z==-1 && p.isCube() ) z=(int)p.getZ();
+      double tot=0;
+      for( Ligne a=getFirstBout(); a.finligne!=null; a=a.finligne )  tot += a.raj+a.dej;
+      String sync = p.isSync() ? "sync":"";
+      return raj+","+dej+","+tot+","+sync+","+p.hashCode()+","+z 
+            + (p instanceof PlanBG ? ((PlanBG)p).getOrder()+"" : "");
+   }
+   
+   /** Retourne la liste des triplets associées aux pixels des statistiques (raj,dej,val)
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return le tableau des triplets
+    * @throws Exception
+    */
+   public double [] getStatisticsRaDecPix(Plan p, int z) throws Exception {
+      if( bout!=3 ) return null;
+      if( z==-1 && p.isCube() ) z=(int)p.getZ();
+      resumeStatistics(p,z);
+      return pixelStats.getStatisticsRaDecPix();
+   }
+   
+   /** Retourne les statistiques en fonction du plan passé en paramètre
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @return Nombre, total, sigma, surface, min, max, [median]
+    */
+   public double [] getStatistics(Plan p, int z) throws Exception {
+      if( bout!=3 ) return null;
+      if( z==-1 && p.isCube() ) z=(int)p.getZ();
+      resumeStatistics(p,z);
+      boolean withMedian = pixelStats.nb<MAXMEDIANE;
+      return pixelStats.getStatistics( withMedian );
+   }
+   
+   /** Regénère si nécessaire les statistiques associées à l'objet
+    * @param p Le plan de base concernée
+    * @param z l'index de la tranche du cube s'il s'agit d'un cube
+    * @param withMedian true si on veut également la valeur médiane
+    * @return true si les stats ont été regénérées, false si inutile
+    * @throws Exception
+    */
+   private boolean resumeStatistics(Plan p, int z) throws Exception {
+      
       Projection proj = p.projd;
       if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
       if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
       if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
-      if( getLastBout().bout!=3 ) throw new Exception("getStats error: it is not a polygon");
 
-      int x,y,i;
-      int nb;
-      Coord ac = new Coord();
-      Coord bc = new Coord();
-      Ligne tmp,deb;
-
-      tmp = deb=getFirstBout();
-      for( nb=0; tmp.finligne!=null; tmp=tmp.finligne) nb++;
-      Segment [] seg = new Segment[nb];
-
-      int minx,maxx;
-      int miny,maxy;
-      minx=miny=Integer.MAX_VALUE;
-      maxx=maxy=Integer.MIN_VALUE;
-
-      for( i=0, tmp=deb; tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
-         ac.al = tmp.raj;
-         ac.del = tmp.dej;
-         proj.getXY(ac);
-
-         bc.al = tmp.finligne.raj;
-         bc.del = tmp.finligne.dej;
-         proj.getXY(bc);
-
-         int fx=(int)Math.floor(ac.x-0.5);
-         int tx=(int)Math.ceil(ac.x-0.5);
-         int fy=(int)Math.floor(ac.y-0.5);
-         int ty=(int)Math.ceil(ac.y-0.5);
-         if( tx>maxx ) maxx=tx;
-         if( fx<minx ) minx=fx;
-         if( ty>maxy ) maxy=ty;
-         if( fy<miny ) miny=fy;
-
-         if( ac.y > bc.y ) seg[i] = new Segment(bc.x-0.5,bc.y-0.5, ac.x-0.5,ac.y-0.5);
-         else seg[i] = new Segment(ac.x-0.5,ac.y-0.5, bc.x-0.5,bc.y-0.5);
-      }
-
-      Arrays.sort(seg, seg[0]);
-
+      // Faut-il re-extraire les pixels concernés par la stat ?
+      String cle = getPixelStatsCle(p,z);
+      if( !pixelStats.reinit( cle ) ) return false;
+      
+      Coord c = new Coord();
       double nombre=0;
-      double carre=0;
-      double total=0;
-      double moyenne, variance, sigma ,surface;
+      double pixelSurf=0;
 
-      int n=0;   // Premier segment à tester
-      for( y=miny; y<=maxy; y++ )  {
-         for( ; n<nb && seg[n].out; n++ );
-         for( i=n; i<nb; i++ ) seg[i].init();
-         for( x=maxx+1; x>=minx-1; x-- ) {
-            int inter=0;  // Nombre de segments intersectés
-            for( i=n; i<nb; i++ ) {
-               if( seg[i].cut(x,y) ) inter++;
+      // Cas HiPS
+      if( p.type==Plan.ALLSKYIMG || p.type==Plan.ALLSKYCUBE ) {
+
+         PlanBG pbg = (PlanBG) p;
+         int orderFile = pbg.getOrder();
+         long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
+         int orderPix = pbg.getOrder() + pbg.getTileOrder();
+         pixelSurf = CDSHealpix.pixRes(orderPix)/3600;
+         pixelSurf *= pixelSurf;
+
+         Ligne tmp = getLastBout();
+         boolean isCounterClock =  Aladin.isCounterClok( tmp );
+         SMoc moc = Aladin.createMocRegionPol( tmp, orderPix, isCounterClock, false );
+
+         Iterator<Long> it = moc.pixelIterator();
+         while( it.hasNext() ) {
+            long npix = it.next();
+
+            long npixFile = npix/(nsideLosange*nsideLosange);
+            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix,z,HealpixKey.SYNC);
+            if( Double.isNaN(pix) ) continue;
+            pix = pix*pbg.bScale+pbg.bZero;
+            double polar[]=null;
+            polar = CDSHealpix.pix2ang_nest(orderPix, npix);
+            polar = CDSHealpix.polarToRadec(polar);
+            c.al = polar[0]; c.del = polar[1];
+            c = Localisation.frameToFrame(c,pbg.frameOrigin,Localisation.ICRS);
+
+            nombre=pixelStats.addPix(c.al,c.del, pix);
+         }
+
+      } else {
+         int x,y,i;
+         int nb;
+         Coord ac = new Coord();
+         Coord bc = new Coord();
+         Ligne tmp,deb;
+
+         tmp = deb=getFirstBout();
+         for( nb=0; tmp.finligne!=null; tmp=tmp.finligne) nb++;
+         Segment [] seg = new Segment[nb];
+
+         int minx,maxx;
+         int miny,maxy;
+         minx=miny=Integer.MAX_VALUE;
+         maxx=maxy=Integer.MIN_VALUE;
+
+         for( i=0, tmp=deb; tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
+            ac.al = tmp.raj;
+            ac.del = tmp.dej;
+            proj.getXY(ac);
+
+            bc.al = tmp.finligne.raj;
+            bc.del = tmp.finligne.dej;
+            proj.getXY(bc);
+
+            int fx=(int)Math.floor(ac.x-0.5);
+            int tx=(int)Math.ceil(ac.x-0.5);
+            int fy=(int)Math.floor(ac.y-0.5);
+            int ty=(int)Math.ceil(ac.y-0.5);
+            if( tx>maxx ) maxx=tx;
+            if( fx<minx ) minx=fx;
+            if( ty>maxy ) maxy=ty;
+            if( fy<miny ) miny=fy;
+
+            if( ac.y > bc.y ) seg[i] = new Segment(bc.x-0.5,bc.y-0.5, ac.x-0.5,ac.y-0.5);
+            else seg[i] = new Segment(ac.x-0.5,ac.y-0.5, bc.x-0.5,bc.y-0.5);
+         }
+
+         Arrays.sort(seg, seg[0]);
+
+         boolean isCube = p instanceof PlanImageBlink;
+         PlanImage pi = (PlanImage)p;
+
+         pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
+
+         try {
+            // Cas d'une image "classique"
+            if( !isCube ) {
+               pi.setLockCacheFree(true);
+               pi.pixelsOriginFromCache();
+
+               // Pour un cube
+            } else {
+               if( z<0 || z>((PlanImageBlink)pi).getDepth() ) throw new Exception("Cube index out of frame range");
             }
-            if( inter%2==1 ) {
-               double pix= ((PlanImage)p).getPixelInDouble(x,y);
-               if( Double.isNaN(pix) ) continue;
-               nombre++;
-               total+=pix;
-               carre+=pix*pix;
+
+            int n=0;   // Premier segment à tester
+            for( y=miny; y<=maxy; y++ )  {
+               for( ; n<nb && seg[n].out; n++ );
+               for( i=n; i<nb; i++ ) seg[i].init();
+               for( x=maxx+1; x>=minx-1; x-- ) {
+                  int inter=0;  // Nombre de segments intersectés
+                  for( i=n; i<nb; i++ ) {
+                     if( seg[i].cut(x,y) ) inter++;
+                  }
+                  if( inter%2==1 ) {
+                     double pix= isCube ? ((PlanImageBlink)pi).getPixel(x, pi.height-y-1, z) : pi.getPixelInDouble(x,y);
+                     if( Double.isNaN(pix) ) continue;
+                     pix = pix*pi.bScale+pi.bZero;
+
+                     c.x=x+0.5; 
+                     c.y=y+0.5;
+                     proj.getCoord(c);
+
+                     nombre=pixelStats.addPix(c.al,c.del, pix);
+                  }
+               }
             }
+         } finally {
+            if( !isCube ) pi.setLockCacheFree(false);
          }
       }
 
-      double pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
-      surface = nombre*pixelSurf;
-      moyenne = total/nombre;
-      variance = carre/nombre - moyenne*moyenne;
-      sigma = Math.sqrt(variance);
-
-      return new double[]{ nombre, total, sigma, surface };
+      pixelStats.setSurface( nombre*pixelSurf );
+      return true;
    }
-
+   
+   protected void resumeMesures() {
+      if( bout!=3 ) return;
+      Plan p = plan.aladin.calque.getPlanBase();
+      int z=0;
+      if( p.isCube() ) z=(int)p.getZ();
+      try { resumeStatistics(p, z); } catch( Exception e ) { }
+   }
+   
    protected void drawID(Graphics g , ViewSimple v,Point p1,Point p2) { }
    
    /** Affichage du label indiqué au milieu du segment */
@@ -960,44 +867,6 @@ public class Ligne extends Position {
       return tmp.isSelected();
    }
 
-   protected void statDraw(Graphics g,ViewSimple v,int dx, int dy) {
-      super.statDraw(g,v,dx,dy);
-      getFirstBout().id=id;
-   }
-
-
-   //   static final int BETA = (int)(1./Math.tan(90*Math.PI/180));
-   //   protected boolean outOfSky(ViewSimple v) {
-   //      double al1,del1;
-   //      double al2,del2;
-   //      double al,del;
-   //      Point p1,p2,p;
-   //
-   //      if( debligne==null ) return false;
-   //
-   //      al1=raj; del1=dej; al2=debligne.raj; del2=debligne.dej;
-   //      al = (al2+al1)/2;
-   //      del = (del2+del1)/2;
-   //
-   //      p1 = debligne.getViewCoord(v);
-   //      p2 = getViewCoord(v);
-   //      p = (new Ligne(v,al,del)).getViewCoord(v);
-   //
-   //      double dx1 = p.x-p1.x; //s1.x2-s1.x1;
-   //      double dy1 = p.y-p1.y;  //s1.y2-s1.y1;
-   //      double dx2 = p2.x-p.x; // s2.x2-s2.x1;
-   //      double dy2 = p2.y-p.y; //s2.y2-s2.y1;
-   //
-   //      double theta1 = Math.atan2(dy1, dx1);
-   //      double theta2 = Math.atan2(dy2, dx2);
-   //      double angle = Math.abs(theta1-theta2);
-   //
-   //      System.out.println(p1.x+","+p1.y+" -> "+p.x+","+p.y+" -> "+p2.x+","+p2.y+" => "+(angle*180)/Math.PI);
-   //
-   //      return Math.abs(dx1*dy2-dx2*dy1) > 1+ Math.abs(dx1*dx2+dy1*dy2)/BETA;
-   //   }
-
-
    // Bidouillage pour éviter de traverser tout le ciel en passant derrière
    protected boolean tooLarge(ViewSimple v,Point p1, Point p2) {
       Projection proj =  v.getProj();
@@ -1014,6 +883,12 @@ public class Ligne extends Position {
    /** Dessin du segment à proprement parlé */
    protected void drawLine(Graphics g, ViewSimple v, Point p1, Point p2) {
       g.drawLine(p1.x,p1.y, p2.x,p2.y);
+   }
+   
+   /** Retourne la position en unité View des stats */
+   protected Rectangle getStatPosition(ViewSimple v) {
+      Point p1 = debligne.getViewCoord(v);
+      return new Rectangle(p1.x+50, p1.y-30,LARGSTAT,HAUTSTAT);
    }
 
    /** Trace de la portion de la ligne.
@@ -1043,7 +918,7 @@ public class Ligne extends Position {
             drawLine(g,v,p1,p2);
             if( bout==3 && hasPhot(v.pref) ){
                fillPolygon(g, v, dx, dy);
-               if( hasOneSelected() ) statDraw(g,v,dx,dy);
+               if( hasOneSelected() ) statDraw(g, v, p1.x,p1.y, p1.x+50, p1.y-30);
             }
             drawID(g,v,p1,p2);
 

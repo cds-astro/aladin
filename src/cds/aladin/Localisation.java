@@ -40,12 +40,6 @@ import javax.swing.JPopupMenu;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Coo;
-import cds.astro.Ecliptic;
-import cds.astro.FK4;
-import cds.astro.FK5;
-import cds.astro.Galactic;
-import cds.astro.ICRS;
-import cds.astro.Supergal;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 
@@ -387,7 +381,7 @@ public class Localisation extends MyBox  {
       });
       c.setPrototypeDisplayValue(new Integer(100000));
       c.setMaximumRowCount(REPERE.length);
-      c.setFont(F);
+      c.setFont(Aladin.PLAIN);
       int n = Aladin.BETA ? REPERE.length : REPERE.length-2;
       for( int i=0; i<n; i++ ) c.addItem(REPERE[i]);
       //      else for( int i=0; i<REPERE.length-1; i++ ) c.addItem(REPERE[i]);
@@ -602,14 +596,22 @@ public class Localisation extends MyBox  {
    protected Coord getLastCoordInCurrentFrame() { return ICRSToFrame(coo); }
    protected void setLastCoord(double ra,double dec) { coo=new Coord(ra,dec); }
 
-   static final Astroframe AF_FK4 = new FK4();
-   static final Astroframe AF_FK5 = new FK5();
-   static final Astroframe AF_GAL = new Galactic();
-   static final Astroframe AF_SGAL = new Supergal();
-   static final Astroframe AF_ICRS = new ICRS();
-   static final Astroframe AF_ECLI = new Ecliptic();
-   static final Astroframe AF_FK4_1900 = new FK4(1900);
-   static final Astroframe AF_FK4_1875 = new FK4(1875);
+//   static final Astroframe AF_FK4 = new FK4();
+//   static final Astroframe AF_FK5 = new FK5();
+//   static final Astroframe AF_GAL = new Galactic();
+//   static final Astroframe AF_SGAL = new Supergal();
+//   static final Astroframe AF_ICRS = new ICRS();
+//   static final Astroframe AF_ECLI = new Ecliptic();
+//   static final Astroframe AF_FK4_1900 = new FK4(1900);
+//   static final Astroframe AF_FK4_1875 = new FK4(1875);
+   static final Astroframe AF_FK4 = Astroframe.create("FK4");
+   static final Astroframe AF_FK5 = Astroframe.create("FK5");
+   static final Astroframe AF_GAL = Astroframe.create("Galactic");
+   static final Astroframe AF_SGAL = Astroframe.create("Supergalactic");
+   static final Astroframe AF_ICRS = Astroframe.create("ICRS");
+   static final Astroframe AF_ECLI = Astroframe.create("Ecliptic");
+   static final Astroframe AF_FK4_1900 = Astroframe.create("FK4(B1900)");
+   static final Astroframe AF_FK4_1875 = Astroframe.create("FK4(B1875)");
 
    // Retourne la valeur du frame prevue dans Astroframe
    // en fonction de la valeur courante du menu deroulant

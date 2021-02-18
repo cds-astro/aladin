@@ -157,7 +157,7 @@ public class Action {
 	int wTexte, hTexte;
 	// fonte du texte
 	// TODO : les '*' sont mal rendus (pb de fonte), faut il passer à une fonte PLAIN ?
-	static private Font FONT = Aladin.SBOLD;//new Font("SansSerif",Font.PLAIN,  Aladin.SIZE-1);
+	static private Font FONT = Aladin.SBOLD;
 	static private int FONT_SIZE = Aladin.SSIZE;//Aladin.SIZE-1;
 
     // Reference to Aladin
@@ -1319,7 +1319,8 @@ public class Action {
             Iterator<Obj> it = ((PlanCatalog)plans[i]).iterator();
             for( j=0; it.hasNext(); j++ ) {
                Obj o = it.next();
-               if( !(o instanceof Source) ) continue;
+//               if( !(o instanceof Source) ) continue;
+               if( !o.asSource() ) continue;
                Source s = (Source)o;
 
                 if( s!=null) {
@@ -1362,7 +1363,8 @@ public class Action {
     	    Iterator<Obj> it = p.iterator();
     	    for( j=0; it.hasNext(); j++ ) {
     	         Obj o = it.next();
-    	         if( !(o instanceof Source) ) continue;
+//    	         if( !(o instanceof Source) ) continue;
+    	         if( !o.asSource() ) continue;
     	         Source s = (Source)o;
 
     	   	    if( s!=null) {
@@ -1404,7 +1406,8 @@ public class Action {
     	    Iterator<Obj> it = ((PlanCatalog)p).iterator();
     	    for( j=0; it.hasNext(); j++ ) {
     	         Obj o = it.next();
-    	         if( !(o instanceof Source) ) continue;
+//    	         if( !(o instanceof Source) ) continue;
+                 if( !o.asSource() ) continue;
     	         Source s = (Source)o;
 
     	        if( s!=null) {

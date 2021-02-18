@@ -34,8 +34,8 @@ import javax.swing.JPanel;
 
 import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
+import cds.astro.Astroframe;
 import cds.astro.Coo;
-import cds.astro.ICRS;
 import cds.astro.Proj3;
 import cds.tools.Util;
 import cds.tools.VOApp;
@@ -1017,7 +1017,8 @@ public final class PlanField extends Plan {
       return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3,false);
    }
 
-   private Astrocoo afs = new Astrocoo(new ICRS());    // Frame ICRS (la reference de base)
+//   private Astrocoo afs = new Astrocoo(new ICRS());    // Frame ICRS (la reference de base)
+   private Astrocoo afs = new Astrocoo( Astroframe.create("ICRS") );    // Frame ICRS (la reference de base)
 
    /** Return the FoV center in J2000 sexagesimal coordinates */
    protected String getTarget() {
@@ -1119,7 +1120,7 @@ public final class PlanField extends Plan {
     * Export pointing centers, as a new catalogue plane (dedicated to ALMA footprints)
     */
    protected void exportAlmaPointings() {
-      List<Forme> pointings = new ArrayList<Forme>();
+      List<Forme> pointings = new ArrayList<>();
       for (Obj obj: pcat.o) {
          if (obj instanceof Cercle && ! (obj instanceof Pickle)) {
             pointings.add((Forme)obj);

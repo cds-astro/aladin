@@ -4339,7 +4339,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
                SMoc moc = null;
                try {
-                  moc = aladin.createMocByRegions(-1);
+                  moc = aladin.createMocByRegions(-1,true);
                } catch( Exception e ) {
                }
                if( moc != null ) {
