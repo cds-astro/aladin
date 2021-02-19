@@ -130,8 +130,8 @@ public class SourceTag extends Source  {
    
    /** (Re)genération des mesures et réaffichage */
    protected void resume() {
-      resumeMesures();
       plan.aladin.view.newView(1);
+      resumeMesures();
       plan.aladin.mesure.redisplay();
    }
    

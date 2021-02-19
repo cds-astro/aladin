@@ -592,7 +592,31 @@ public class Ligne extends Position {
       for( Ligne lig = getFirstBout(); lig!=null; lig = lig.finligne) lig.couleur=c;
    }
 
-   private static final int MAXSTATPIXELS = 1000000;
+   private boolean flagLiveMesure=true;
+   
+   // True s'il est possible de faire les mesures stats en live (clic&drag)
+   private boolean doLiveMesure() { return flagLiveMesure; }
+   
+   // Teste s'il est possible de faire les mesures stats en live (cf resumeMesures(). Si le dernier calcul
+   // était trop lent (20ms), inhibe les prochains calculs jusqu'à ce qu'on relache le cliquet de la souris
+   // suffisamment petit
+   private boolean tooSlow(ViewSimple v) {
+      long t=0;
+      if( v.flagClicAndDrag ) {
+         if( flagLiveMesure) {
+            t = statPixels.getTime();
+            if( t>20 ) flagLiveMesure=false;
+         }
+      } else {
+         if( !flagLiveMesure ) {
+            flagLiveMesure=true;
+            resume();
+         }
+      }
+//      System.out.println("t="+t+" flagLiveMesure="+flagLiveMesure);
+      return !flagLiveMesure;
+   }
+
    
    /** Calcule des statistiques à la volée en fonction du plan de base de la vue passée en paramètre */
    protected boolean statCompute(Graphics g,ViewSimple v,int z) {
@@ -600,12 +624,14 @@ public class Ligne extends Position {
       boolean flagHist = v==v.aladin.view.getCurrentView();
 
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
-
-      // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
-      if( v.flagClicAndDrag ) return false;
       
-      pixelStats.reinit( getPixelStatsCle(v.pref,z) );
-      double tripletPix [] = pixelStats.getStatisticsRaDecPix();
+      if( tooSlow(v) ) return false;
+      
+      double tripletPix [];
+      try {
+         getStatistics(v.pref,z);
+         tripletPix = statPixels.getStatisticsRaDecPix();
+      } catch( Exception e ) { return false; }
 
       HistItem onMouse=null;
       if( flagHist ) {
@@ -638,13 +664,13 @@ public class Ligne extends Position {
    /** Retourne true que sur le dernier segment du polygone pour éviter les doublons */
    public boolean hasSurface() { return bout==3; }
    
-   private PixelStats pixelStats = new PixelStats();
+   private StatPixels statPixels = new StatPixels();
 
    
    /** Retourne une clé unique associé aux statistiques courantes - On utilise entre autre
     * la somme des coordonnées. Si l'utilisateur déplace un sommet cette somme sera
     * nécessairement modifiée. */
-   String getPixelStatsCle(Plan p, int z) { 
+   protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       double tot=0;
       for( Ligne a=getFirstBout(); a.finligne!=null; a=a.finligne )  tot += a.raj+a.dej;
@@ -663,7 +689,7 @@ public class Ligne extends Position {
       if( bout!=3 ) return null;
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       resumeStatistics(p,z);
-      return pixelStats.getStatisticsRaDecPix();
+      return statPixels.getStatisticsRaDecPix();
    }
    
    /** Retourne les statistiques en fonction du plan passé en paramètre
@@ -675,8 +701,8 @@ public class Ligne extends Position {
       if( bout!=3 ) return null;
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       resumeStatistics(p,z);
-      boolean withMedian = pixelStats.nb<MAXMEDIANE;
-      return pixelStats.getStatistics( withMedian );
+      boolean withMedian = statPixels.nb<MAXMEDIANE;
+      return statPixels.getStatistics( withMedian );
    }
    
    /** Regénère si nécessaire les statistiques associées à l'objet
@@ -695,7 +721,7 @@ public class Ligne extends Position {
 
       // Faut-il re-extraire les pixels concernés par la stat ?
       String cle = getPixelStatsCle(p,z);
-      if( !pixelStats.reinit( cle ) ) return false;
+      if( !statPixels.reinit( cle ) ) return false;
       
       Coord c = new Coord();
       double nombre=0;
@@ -729,7 +755,7 @@ public class Ligne extends Position {
             c.al = polar[0]; c.del = polar[1];
             c = Localisation.frameToFrame(c,pbg.frameOrigin,Localisation.ICRS);
 
-            nombre=pixelStats.addPix(c.al,c.del, pix);
+            nombre=statPixels.addPix(c.al,c.del, pix);
          }
 
       } else {
@@ -806,7 +832,7 @@ public class Ligne extends Position {
                      c.y=y+0.5;
                      proj.getCoord(c);
 
-                     nombre=pixelStats.addPix(c.al,c.del, pix);
+                     nombre=statPixels.addPix(c.al,c.del, pix);
                   }
                }
             }
@@ -815,12 +841,23 @@ public class Ligne extends Position {
          }
       }
 
-      pixelStats.setSurface( nombre*pixelSurf );
+      statPixels.setSurface( nombre*pixelSurf );
       return true;
+   }
+   
+   /** (Re)genération des mesures et réaffichage */
+   protected void resume() {
+      plan.aladin.view.newView(1);
+      resumeMesures();
+      plan.aladin.view.repaint();
    }
    
    protected void resumeMesures() {
       if( bout!=3 ) return;
+      
+      // Si contexte trop lent, on ne fait pas la mesure
+      if( !doLiveMesure() ) return;
+
       Plan p = plan.aladin.calque.getPlanBase();
       int z=0;
       if( p.isCube() ) z=(int)p.getZ();

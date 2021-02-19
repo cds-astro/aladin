@@ -622,9 +622,9 @@ public class Position extends Obj {
       
       double [] stats = null;
       try {
-         stats = getStatistics(v.pref,z);
-         if( stats==null || !statCompute(g,v, z) ) return;
-      } catch( Exception e ) { return; }
+         stats = getStatistics(v.pref);
+         if( stats==null || !statCompute(g,v,z) ) return;
+      } catch( Exception e ) { e.printStackTrace(); return; }
       
       // nb, sum, sigma, surface, min, max, median
       String cnt=Util.myRound(stats[0]);

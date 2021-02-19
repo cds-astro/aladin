@@ -94,10 +94,10 @@ public class RepereSpectrum extends Repere {
    
    public boolean hasPhot(Plan p) { return p.isCube(); }
    
-   private PixelStats pixelStats = new PixelStats();
+   private StatPixels statPixels = new StatPixels();
    
    /** Retourne une clé unique associé aux statistiques courantes */
-   String getPixelStatsCle(Plan p, int z) { 
+   protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       String sync = p.isSync() ? "sync":"";
       return raj+","+dej+","+p.hashCode()
@@ -116,7 +116,7 @@ public class RepereSpectrum extends Repere {
    public double [] getStatisticsRaDecPix(Plan p, int z) throws Exception {
       if( p.isCube() && z==-1 ) z=(int)p.getZ();
       resumeStatistics(p,z);
-      return pixelStats.getStatisticsRaDecPix();
+      return statPixels.getStatisticsRaDecPix();
    }
    
    /** Retourne les statistiques en fonction du plan passé en paramètre
@@ -127,7 +127,7 @@ public class RepereSpectrum extends Repere {
    public double [] getStatistics(Plan p, int z) throws Exception {
       if( p.isCube() && z==-1 ) z=(int)p.getZ();
       resumeStatistics(p,z);
-      return pixelStats.getStatistics();
+      return statPixels.getStatistics();
    }
    
    /** Regénère si nécessaire les statistiques associées à l'objet
@@ -147,7 +147,7 @@ public class RepereSpectrum extends Repere {
       
       // Faut-il re-extraire le pixel concerné par la stat ?
       String cle = getPixelStatsCle(p,z);
-      if( !pixelStats.reinit( cle ) ) return false;
+      if( !statPixels.reinit( cle ) ) return false;
       
       double pixelSurf;
 
@@ -172,7 +172,7 @@ public class RepereSpectrum extends Repere {
          polar = CDSHealpix.polarToRadec(polar);
          coo.al = polar[0]; coo.del = polar[1];
          coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
-         pixelStats.addPix(coo.al,coo.del, pix);
+         statPixels.addPix(coo.al,coo.del, pix);
 
          // Cas d'une image ou d'un cube "classique"
       } else {
@@ -205,13 +205,13 @@ public class RepereSpectrum extends Repere {
             c.y=yc+0.5;
             proj.getCoord(c);
 
-            pixelStats.addPix(c.al,c.del, pix);
+            statPixels.addPix(c.al,c.del, pix);
          } finally {
             if( !isCube ) pi.setLockCacheFree(false);
          }
       }
 
-      pixelStats.setSurface( pixelSurf );
+      statPixels.setSurface( pixelSurf );
       return true;
    }
 

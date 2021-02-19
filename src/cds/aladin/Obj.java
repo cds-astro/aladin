@@ -228,7 +228,6 @@ public abstract class Obj implements Propable{
    protected double [] getStatisticsRaDecPix(Plan p) throws Exception { return getStatisticsRaDecPix(p,-1); }
    protected double [] getStatisticsRaDecPix(Plan p, int z) throws Exception { throw new Exception("no statistics available"); }
    
-
    /** Provide radius (in degrees) for photometry measure tags */
    public double getRadius() { return 0.; }
 

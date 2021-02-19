@@ -59,17 +59,13 @@ class ZoomHist implements Runnable {
    String texte=null;       // Texte en surcharge, ou null (retour à la ligne par "/")
 
    // Paramètres pour un histogramme de pixels
-//   static final int MAX = 200000;   // nombre max de pixels pris en compte
-//   private double [] pixelList;    // liste des valeurs des pixels (lors de la construction)
-//   private int nPix;               // nombre de pixels
-   protected boolean flagHistPixel;  // true s'il s'agit d'un histogramme de pixels
-   
-   PixelStats pixelStats;   // Statistisques et valeur des pixels
+   boolean flagHistPixel;   // true s'il s'agit d'un histogramme de pixels
+   StatPixels pixelStats;   // Statistisques et valeur des pixels
    
 
    ZoomHist(Aladin aladin) {
       this.aladin=aladin;
-      pixelStats = new PixelStats();
+      pixelStats = new StatPixels();
    }
 
    /** Positionnement d'un texte en surcharge de l'histogramme, null si aucun */
@@ -80,32 +76,23 @@ class ZoomHist implements Runnable {
 
    /** Commence ou recommence la mémorisation des pixels d'un histogramme de pixels */
    protected void startHistPixel() {
-//      if( pixelList==null ) pixelList = new double[MAX];
-//      nPix=0;
       flagHistPixel=true;
       texte=null;
       
       pixelStats.reinit();
    }
 
-//   protected boolean isOverFlow() { return nPix==MAX; }
    protected boolean isOverFlow() { return false; }
 
    /** Ajoute une valeur pour un future histogramme de pixels */
    protected boolean addPixel(double pix) {
-//      if( nPix==MAX ) return false;
-//      pixelList[nPix++] = pix;
-//      return true;
-      
       pixelStats.addPix(0, 0, pix);
       return true;
    }
 
    /** Construction de l'histogramme de pixels en fonction de la liste des valeurs passées */
    protected void createHistPixel(String titre) {
-      //      titre="Pixels";
       this.titre = titre;
-//      setHist(pixelList);
       setHist(pixelStats);
    }
 
@@ -150,7 +137,6 @@ class ZoomHist implements Runnable {
 
    /** Si trop de sources, on va threader */
    protected boolean init() {
-//      if( flagHistPixel ) { setHist(pixelList); return true; }
       if( flagHistPixel ) { setHist(pixelStats); return true; }
       else {
          if( aladin.mesure.getNbSrc()>10000 ) {
@@ -172,8 +158,6 @@ class ZoomHist implements Runnable {
    protected boolean initThread() {
       if( o.getLeg().isNumField(nField) ) {
          double [] xHist = aladin.mesure.getFieldNumericValues(o, nField);
-//         nb=xHist.length;
-//         setHist(xHist);
          
          pixelStats.reinit();
          for( double x : xHist) pixelStats.addPix(0, 0, x);
@@ -218,7 +202,7 @@ class ZoomHist implements Runnable {
       return true;
    }
    
-   protected void setHist(PixelStats pixelStats) { setHist( pixelStats.getStatisticPix() ); }
+   protected void setHist(StatPixels pixelStats) { setHist( pixelStats.getStatisticPix() ); }
 
    /**
     * Initialisation de l'histogramme avec une liste de valeurs numériques
@@ -582,6 +566,7 @@ class ZoomHist implements Runnable {
       }
    }
       
+   // Retourne une chaine reprenant les infos statistiques à afficher en superposition
    String getStringStat() {
       // nb, sum, sigma, surface, min, max, median
       double x [] = pixelStats.getStatistics(true);

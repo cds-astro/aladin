@@ -76,6 +76,7 @@ public class SourceStat extends SourceTag {
    protected Color couleur=null; // Couleur alternative
    
    protected boolean asSource =false;   // Par défaut, n'apparait pas en tant que Source
+   private StatPixels statPixels = new StatPixels();   // Gestion des stats associées
    
    /** Creation pour les backups */
    protected SourceStat(Plan plan) { super(plan); }
@@ -120,6 +121,9 @@ public class SourceStat extends SourceTag {
    protected void resumeMesures() {
       double stat[] = null;
       int z=-1;
+      
+      // Si contexte trop lent, on ne fait pas la mesure
+      if( !doLiveMesure() ) return;
       
       String nomPlan = planBase.label;
       if( planBase.isCube() ) {
@@ -346,19 +350,44 @@ public class SourceStat extends SourceTag {
       return couleur;
    }
 
+   private boolean flagLiveMesure=true;
+   
+   // True s'il est possible de faire les mesures stats en live (clic&drag)
+   private boolean doLiveMesure() { return flagLiveMesure; }
+   
+   // Teste s'il est possible de faire les mesures stats en live (cf resumeMesures(). Si le dernier calcul
+   // était trop lent (20ms), inhibe les prochains calculs jusqu'à ce que le rayon de redevienne
+   // suffisamment petit
+   private boolean tooSlow(ViewSimple v) {
+      long t=0;
+      if( v.flagClicAndDrag ) {
+         if( flagLiveMesure) {
+            t = statPixels.getTime();
+            if( t>20 ) flagLiveMesure=false;
+         } else if( getRayon(v)<100 ) flagLiveMesure=true;
+      } else {
+         if( !flagLiveMesure ) {
+            flagLiveMesure=true;
+            resume();
+         }
+      }
+      return !flagLiveMesure;
+   }
 
    /** Calcule des statistiques à la volée en fonction du plan de base de la vue passée en paramètre */
-   protected boolean statCompute(Graphics g,ViewSimple v, int z) {
+   protected boolean statCompute(Graphics g,final ViewSimple v, int z) {
 
       boolean flagHist = v==v.aladin.view.getCurrentView();
 
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
-
-      // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
-      if( getRayon(v)>100 && v.flagClicAndDrag) return false;
       
-      pixelStats.reinit( getPixelStatsCle(v.pref, z) );
-      double tripletPix [] = pixelStats.getStatisticsRaDecPix();
+      if( tooSlow(v) ) return false;
+      
+      double tripletPix [];
+      try {
+         getStatistics(v.pref,z);
+         tripletPix = statPixels.getStatisticsRaDecPix();
+      } catch( Exception e ) { return false; }
 
       HistItem onMouse=null;
       if( flagHist ) {
@@ -380,18 +409,14 @@ public class SourceStat extends SourceTag {
          if( flagHist ) v.aladin.view.zoomview.addPixelHist(val);
       }
 
-
       if( flagHist ) v.aladin.view.zoomview.createPixelHist(v.pref.type==Plan.ALLSKYIMG ? "HEALPixels":"Pixels");
       setWithStat(true);
       
       return true;
    }
 
-   
-   private PixelStats pixelStats = new PixelStats();
-   
    /** Retourne une clé unique associé aux statistiques courantes */
-   String getPixelStatsCle(Plan p, int z) { 
+   protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       String sync = p.isSync() ? "sync":"";
       return raj+","+dej+","+radius+","+p.hashCode()
@@ -409,7 +434,7 @@ public class SourceStat extends SourceTag {
    public double [] getStatisticsRaDecPix(Plan p, int z) throws Exception {
       if( p.isCube() && z==-1 ) z=(int)p.getZ();
       resumeStatistics(p,z);
-      return pixelStats.getStatisticsRaDecPix();
+      return statPixels.getStatisticsRaDecPix();
    }
    
    /** Retourne les statistiques en fonction du plan passé en paramètre
@@ -420,8 +445,8 @@ public class SourceStat extends SourceTag {
    public double [] getStatistics(Plan p, int z) throws Exception {
       if( p.isCube() && z==-1 ) z=(int)p.getZ();
       resumeStatistics(p,z);
-      boolean withMedian = pixelStats.nb<MAXMEDIANE;
-      return pixelStats.getStatistics( withMedian );
+      boolean withMedian = statPixels.nb<MAXMEDIANE;
+      return statPixels.getStatistics( withMedian );
    }
    
    /** Regénère si nécessaire les statistiques associées à l'objet
@@ -441,7 +466,7 @@ public class SourceStat extends SourceTag {
       
       // Faut-il re-extraire les pixels concernés par la stat ?
       String cle = getPixelStatsCle(p,z);
-      if( !pixelStats.reinit( cle ) ) return false;
+      if( !statPixels.reinit( cle ) ) return false;
       
       double pixelSurf;
       int nombre=0;
@@ -469,7 +494,7 @@ public class SourceStat extends SourceTag {
             coo.al = polar[0]; coo.del = polar[1];
             coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
 
-            nombre=pixelStats.addPix(coo.al,coo.del, pix);
+            nombre=statPixels.addPix(coo.al,coo.del, pix);
          }
 
          // Cas d'une image ou d'un cube "classique"
@@ -518,7 +543,7 @@ public class SourceStat extends SourceTag {
                   c.y=y+0.5;
                   proj.getCoord(c);
 
-                  nombre=pixelStats.addPix(c.al,c.del, pix);
+                  nombre=statPixels.addPix(c.al,c.del, pix);
                }
             }
          } finally {
@@ -526,7 +551,7 @@ public class SourceStat extends SourceTag {
          }
       }
 
-      pixelStats.setSurface( nombre*pixelSurf );
+      statPixels.setSurface( nombre*pixelSurf );
       return true;
    }
 
