@@ -107,11 +107,14 @@ final public class Field {
    // True s'il s'agit d'un champ équatorial
    static public boolean isEquatorial(int coo) { return coo==RA || coo==DE || coo==PMRA || coo==PMDE; }
 
-   static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4;
-   static public final String SEDLABEL[] = { "","SED_FREQ","SED_FLUX","SED_FLUXERR","SED_SEDID" };
-   public int sed;
+   // Gestion des champs propres aux SED made in VizieR
+   static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4, TIME=5;
+   static public final String SEDLABEL[] = { "","SED_FREQ","SED_FLUX","SED_FLUXERR","SED_SEDID","SED_TIME" };
+   public int sed;  // Type de champ SED dans la liste ci-dessus
    
    public boolean flagArchive=false;   // Ce champ va servir à un bouton vers une archive (SIA, SSA...)
+   
+   public int alternatePrecision=-1;   // Une précision qui sera calculée à partir des valeurs 
 
    //   /** True if it is the DE coordinate field */
    //   public boolean isDE;
@@ -196,7 +199,7 @@ final public class Field {
       if( n==0 && arraysize!=null && datatype!=null && datatype.equals("A") ) {
          try {
             if( !arraysize.endsWith("*")  ) n = Integer.parseInt(arraysize);
-            else n = Integer.parseInt(arraysize.substring(0, arraysize.length()-1));
+            else n = Integer.parseInt(arraysize.substring(0, arraysize.length()-1))+1;
             if( n>20 ) n=0;
          } catch( Exception e) { n=0; }
       }

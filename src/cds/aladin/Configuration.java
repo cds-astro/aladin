@@ -193,7 +193,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String TAPSCHEMADISPLAY = "TapSchemaDisplay";
    protected static String FILTERHDU     = "FilterHDU";
    
-   static final private String [] UISCALESTR = {"Automatic","OS method","100%","110%","125%","150%","175%","200%","225%","250%"};
+   static final private String [] UISCALESTR = {"Automatic","OS method","100%","110%","120%","130%","140%","150%","175%","200%","225%","250%"};
 
    
    //   protected static String TAG        = "CenteredTag";

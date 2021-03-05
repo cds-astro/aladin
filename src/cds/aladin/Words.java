@@ -112,6 +112,7 @@ public final class Words implements Runnable {
       } else text="undefined";
       if( defText!=null ) text=defText;
       setRepere();
+      
    }
 
    protected Words(String tag,int width,int precision,int align,boolean computed,boolean footprint,int num) {

@@ -312,7 +312,7 @@ public final class Tool {
       {14,19,4},{14,19,5},{15,18,6},{16,17,7}};
 
    // Les points pour le diagramme de dispersion
-   int [][] plot = { { 2,3 }, {4,4}, {5,5}, {5,7}, { 7,5}, {6,4}, {7,9}, {9,10}, {11,12}, {13,13}, {14, 5} };
+   static int [][] plot = { { 2,3 }, {4,4}, {5,5}, {5,7}, { 7,5}, {6,4}, {7,9}, {9,10}, {11,12}, {13,13}, {14, 5} };
 
    
    // Le graphique pour le SED
@@ -751,15 +751,7 @@ public final class Tool {
          case ToolBox.PLOT:
             int h=W-17;
             int w=18;
-            if( mode!=UNAVAIL ) {
-               g.setColor(cPapier);
-               g.fillRect(dx,dy+3,w-2,h-3);
-            }
-            g.setColor(c1);
-            g.drawLine(dx,dy,dx,dy+h); g.drawLine(dx-1,dy+1,dx+1,dy+1);
-            g.drawLine(dx,dy+h,dx+w,dy+h); g.drawLine(dx+w-1,dy+h-1,dx+w-1,dy+h+1);
-            g.setColor( mode==UNAVAIL ? c1 : Aladin.COLOR_RED ); //new Color( 85,121,203) );
-            for( i=0; i<plot.length; i++ ) g.drawLine(plot[i][0]+dx,dy+h-plot[i][1],plot[i][0]+dx,dy+h-plot[i][1]);
+            drawPlot(g,dx,dy,w,h,c1,cPapier,mode!=UNAVAIL);
             break;
       }
 
@@ -787,6 +779,19 @@ public final class Tool {
 
          g.drawString(label[ntool],x,y);
       }
+   }
+   
+   static public void drawPlot(Graphics g, int dx, int dy, int w, int h, Color c1, Color cPapier, boolean available) {
+      if( available ) {
+         g.setColor(cPapier);
+         g.fillRect(dx,dy+3,w-2,h-3);
+      }
+      g.setColor(c1);
+      g.drawLine(dx,dy,dx,dy+h); g.drawLine(dx-1,dy+1,dx+1,dy+1);
+      g.drawLine(dx,dy+h,dx+w,dy+h); g.drawLine(dx+w-1,dy+h-1,dx+w-1,dy+h+1);
+      g.setColor( !available ? c1 : Aladin.COLOR_RED ); //new Color( 85,121,203) );
+      for( int i=0; i<plot.length; i++ ) g.drawLine(plot[i][0]+dx,dy+h-plot[i][1],plot[i][0]+dx,dy+h-plot[i][1]);
+
    }
 
    // Trace un cercle de diamètre 12

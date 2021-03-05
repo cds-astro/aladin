@@ -198,6 +198,7 @@ public final class CDSHealpix {
          vertices[i][0] = Math.toRadians(vertices[i][0]);
          vertices[i][1] = Math.toRadians(vertices[i][1]);
       }
+      
       final HealpixNestedBMOC bmoc = inclusive ? pc.overlappingCells(vertices) : pc.overlappingCenters(vertices);
       return bmoc2moc( bmoc);
    }
@@ -229,7 +230,7 @@ public final class CDSHealpix {
          long hash = c.getHash();
          long a = hash << twiceDepthDiff;
          long b = a | ((1L << twiceDepthDiff) - 1L);
-         range.add(a, b);
+         range.add(a, b+1);
       }
       
       int mocOrder = bmoc.getDepthMax();

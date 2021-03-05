@@ -1891,9 +1891,6 @@ Runnable, SwingWidgetFinder, Widget {
       g.setColor( getBackground() );
       g.fillRect(0,0,ws,hs);
 
-      // Le pourtour
-      //      Util.drawEdge(g,ws,hs);
-
       // Le clip Rect pour ne pas depasser
       g.clipRect(2,2,ws-3,hs-3);
 

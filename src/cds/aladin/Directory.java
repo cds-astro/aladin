@@ -1817,6 +1817,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    private boolean checkIn(ResumeMode mode) {
       if( !dialogOk() ) return false;
+      if( aladin.isAnimated() ) return false;
 
       // Le champ est trop grand ou que la vue n'a pas de réf spatiale ?
       // => on suppose que tous les HiPS sont a priori visibles
@@ -3049,7 +3050,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          // System.out.println("Registry Tree updater running");
          while( encore ) {
             try {
-               // System.out.println("Hips updater checking...");
+//                System.out.println("Hips updater checking...");
                if( isReadyForUpdating() ) resumeIn();
                Thread.currentThread().sleep(1000);
             } catch( Exception e ) {

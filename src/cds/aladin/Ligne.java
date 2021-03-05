@@ -62,6 +62,9 @@ public class Ligne extends Position {
     * 4 - début polyligne circulaire en cours de tracé ) */
    protected byte bout;
 
+   // Les éléments de stats pour un polygone
+   private StatPixels statPixels = new StatPixels();
+
    /** <I>true</I> si la ligne doit etre affichee avec son id */
    //   protected boolean withlabel;
 
@@ -625,6 +628,8 @@ public class Ligne extends Position {
 
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
       
+      if( statPixels==null ) statPixels = new StatPixels();
+      
       if( tooSlow(v) ) return false;
       
       double tripletPix [];
@@ -639,7 +644,7 @@ public class Ligne extends Position {
 
          // Si le est simplement dû au passage de la souris sur un précédent histogramme,
          // il ne faut pas regénérer cet histogramme
-         if( onMouse==null ) v.aladin.view.zoomview.initPixelHist();
+         if( onMouse==null ) v.aladin.view.zoomview.initPixelHist(this);
          else flagHist=false;
       }
       
@@ -660,12 +665,20 @@ public class Ligne extends Position {
       return true;
    }
 
-
    /** Retourne true que sur le dernier segment du polygone pour éviter les doublons */
    public boolean hasSurface() { return bout==3; }
    
-   private StatPixels statPixels = new StatPixels();
-
+   /** Retourne le FoV à la STC-S */
+   protected String getFoV( ) { 
+      if( !isPolygone() ) return null;
+      StringBuilder s = new StringBuilder("POLYGON ICRS");
+      Iterator it = iterator();
+      while( it.hasNext() ) {
+         Ligne lig = (Ligne)it.next();
+         s.append(" "+lig.raj+" "+lig.dej);
+      }
+      return s.toString();
+   }
    
    /** Retourne une clé unique associé aux statistiques courantes - On utilise entre autre
     * la somme des coordonnées. Si l'utilisateur déplace un sommet cette somme sera
@@ -698,7 +711,7 @@ public class Ligne extends Position {
     * @return Nombre, total, sigma, surface, min, max, [median]
     */
    public double [] getStatistics(Plan p, int z) throws Exception {
-      if( bout!=3 ) return null;
+      if( bout!=3 || statPixels==null ) return null;
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       resumeStatistics(p,z);
       boolean withMedian = statPixels.nb<MAXMEDIANE;
@@ -718,6 +731,8 @@ public class Ligne extends Position {
       if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
       if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
       if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
+      
+      if( statPixels==null ) statPixels = new StatPixels();
 
       // Faut-il re-extraire les pixels concernés par la stat ?
       String cle = getPixelStatsCle(p,z);

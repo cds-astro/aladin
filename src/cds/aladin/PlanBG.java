@@ -2053,13 +2053,14 @@ public class PlanBG extends PlanImage {
     * @param HealpixKey.NOW - les données seront chargées immédiatement où qu'elles soient, sinon asynchrone
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
-   protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int mode) {
+   protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int mode) throws Exception {
       return getHealpixPixel(orderFile,npixFile,healpixIdxPixel,-1,mode);
    }
-   protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int z,int mode) {
+   protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int z,int mode) throws Exception {
       if( z==-1 ) z=(int)getZ();
       HealpixKey h = getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.ASYNC ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
-      if( h==null ) return Double.NaN;
+//      if( h==null ) return Double.NaN;
+      if( h==null ) throw new Exception("Tile "+orderFile+"/"+npixFile+" not yet ready");
       return h.getPixelValue(healpixIdxPixel,mode);
    }
 

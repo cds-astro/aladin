@@ -708,6 +708,7 @@ public class ServerFile extends Server implements XMLConsumer {
    private Vector vField;	// Vecteur contenant les FIELDS de la table courante
    private Legende leg=null;	// Legende de la table courante
    private Plan plan=null;	// Plan courant
+   private int footprintIdx=-1; // Indice de colonne d'un éventuel footprint associé à chaque source
    private ViewMemoItem vmi;  // ViewMemoItem courant
    private int firstView;   //indice de la première vue à afficher
    private double ra=0;		// RA du centre du plan courant
@@ -755,6 +756,8 @@ public class ServerFile extends Server implements XMLConsumer {
       String type = (String)atts.get("type");
       typePlan= Util.indexInArrayOf(type, Plan.Tp);
       inFilter = inFitsHeader = inFilterScript = false;
+      footprintIdx = -1;
+      
       switch(typePlan) {
          case Plan.FILTER:
             PlanCatalog p = null;
@@ -1069,7 +1072,12 @@ public class ServerFile extends Server implements XMLConsumer {
          Enumeration e = atts.keys();
          while( e.hasMoreElements() ) {
             String key = (String)e.nextElement();
-            f.addInfo(key,(String)atts.get(key));
+            String val = (String)atts.get(key);
+            if( key.equals("sregion") && val.equals("true") ) {
+               footprintIdx = vField.size();
+               System.out.println("footprint in "+footprintIdx+" on "+f);
+            }
+            else f.addInfo(key,val);
          }
          vField.addElement(f);
       }
@@ -1223,9 +1231,13 @@ public class ServerFile extends Server implements XMLConsumer {
 
       // Ajout de l'objet dans le plan courant
       Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg): new Source(plan,ra,de,id,rec);
-
-      // Cas particulier de sources dans un plan tool
-//      if( leg!=null && typePlan==CATALOGTOOL && ((PlanTool)plan).legPhot==null ) ((PlanTool)plan).legPhot=leg;
+      
+      // Génération d'un footprint associé à la source
+      if( footprintIdx!=-1 ) {
+         String fov = o.getCodedValue(footprintIdx);
+         o.setFootprint(fov);
+         o.setIdxFootprint(footprintIdx);
+      }
 
       plan.pcat.setObjetFast(o);
 

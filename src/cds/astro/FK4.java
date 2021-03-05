@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - UniversitÈ de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de DonnÈes
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 /*==================================================================
@@ -31,116 +10,245 @@ import java.text.*;	// for parseException
 /**
  * The FK4 is an equatorial coordinate system (coordinate system linked to 
  * the Earth) based on its B1950 position. 
- * The units used for time specification is the Besselian Year.
+ * 2 particularities are important:<ol>
+ * <li> the elliptical term of the aberration (abbreviated e-term) is
+ *      not removed in the (RA,Dec) expressed in this system; 
+ * <li> the unit of time is the Besselian year, slighly differing from
+ *      the Julian year (365.25days).
+ * </ol>
+ * It is assumed that these 2 peculiarities have been 
+ * <em>removed in the cartesian components</em> of the coordinates. 
+ * Removing the e-term is achieved by {@link #subEterm}, and
+ * computing the (RA,Dec) in a FK4 position is achieved by {@link #addEterm}.
  *
- * The conversion to/from FK5 (which coincides with ICRS) uses the 
- * algorithm published by Standish (1982A&A...115...20S)
- *  
  * @author Francois Ochsenbein (CDS)
+ * @version 1.0  03-Aug-2004
+ * @version 2.0  03-Feb-2019 Conversion to ICRS takes into account the FK5 rotation.
+ *               (Mignard &amp; Froeschl√© 2000A+A...354..732M).
+ *               Also use 1-D matrices (20% faster).
+ * References: <UL>
+ * <LI> Murray C.A. (1989A+A...218..325M) matricial relation FK4/FK5
+ * <LI> Mignard &amp; Froeschl√© 2000A+A...354..732M, FK5 rotation vs ICRS
+ * </UL>
  *
  */
 
 public class FK4 extends Equatorial {
+
+  /** Letter used to identify this frame in IAU names */
+   static final char letterIAU = 'B';
   /**
    * In addition to the equinox, we store the precession matrix
-   * which converts to the standard epoch.
+   * which converts to the standard epoch, and the E-term of the
+   * aberration which is not removed in the FK4 coordinates.
+   * In the cartesian representation of the coordinates, this 
+   * term is removed, i.e. the transformation of polar to cartesian
+   * is more complex than in the other frames.
   **/
-   static private boolean DEBUG=false;
-   static private double[] ev50 = eterm(1950.);	// e-term for B1950
-   protected double[][] toBaseEquinox;		// Precession to B1950
-   protected double[] ev_eq;			// e-term for Equinox
 
-  /**
-   * Initialize the parameters of this equatorial frame.
-   * @param equinox the equinox of definition, in Besselian Year.
-   * @param epoch   the default epoch, in Julian Year
-  **/
-   private void initialize(double equinox, double epoch) {
-	this.precision = 6;	// Intrinsic precision
-        base_epoch = Astrotime.B2J(1950.);
-	this.equinox = equinox;
-	this.epoch = epoch;
-	this.name = "FK4(B" + equinox + ")";
-        this.ed_lon = Editing.SEXA3c|Editing.ZERO_FILL;
-        this.ed_lat = Editing.SEXA3c|Editing.ZERO_FILL|Editing.SIGN_EDIT;
-	if (Math.abs(equinox-1950.0)>0.0003) {
-	     toBaseEquinox = this.precessionMatrix(equinox, 1950.);
-	     ev_eq = eterm(equinox);
-	}
-	else {
-	    toBaseEquinox = Coo.Umatrix3;
-	    ev_eq = ev50;
-	}
-   }
+   /** Value of the e-term aberration for the base equinox (B1950): 
+    * { -1.6256018e-6, -0.3191954e-6, -0.1384293e-6 }
+    */
+    static private double[] ev50 = eterm(1950.);	// e-term for B1950
+   /** 3x3 matrix Precession matrix which converts a Coo from this equinox
+    * to the standard equinox B1950. 
+    */
+    protected double[] toBaseEquinox;		// 3x3 matrix Precession to B1950
+
+   /** 1x3 vector of the e-term of the aberration for this equinox. */
+    protected double[] ev_eq;			// e-term for Equinox
 
    /**
-    * Constants for Conversion from FK4 to FK5
-    * The 6x6 matrix to move from FK4 to FK5
+    * In version 2.0, the conversion of FK4(B1950) is directly made into ICRS, 
+    * using Murray's (1989A+A...218..325M) method combined to the correction
+    * of the rotation of FK5 vs Hipparcos (ICRS) frame (Mignard &amp; Froeschl√©,
+    * 2000A+A...354..732M); see the "frames.pdf" document for details.
+    * The rotation matrix which converts FK4 to ICRS is XM4I, 
+    * its derivative at B1950 epoch is Xd4I.
+    * The 6x6 matrix to move the (u,ud) 6-vector from FK4 to ICRS is PM4I
     * Proper motions are in arcsec/century (10mas/yr) 
    **/
 
-   /** Matrix 6x1 to compute the e-term */
-   static protected double[] A = {		// For e-term
-      //-0.33530/206265., -0.06584/206265., -0.02855/206265.,
-           -1.62557e-6,    -0.31919e-6,      -0.13843e-6,
-      // 1.245e-3,      -1.580e-3,      -0.659e-3  
-         1.244e-3,      -1.579e-3,      -0.660e-3    };
+   /** 
+    * Ratio of Julian year (or century) to Besselian year (or tropical century)
+    */
+    static public final double FJB = 1.000021359027778; 
 
    /** 
-    * Table 2 of Standish (1982A&A...115...20S), rediscussed by Soma and
-    * Aoki (1990A&A...240..150S), and apparently slightly modified 
-    * by the starlink group.
+    * time interval between B1950.0 and J2000.0, in Julian years
+    * (ICRS.base_epoch - FK4.base_epoch)
+    */
+    static public final double TJ = 50.0002095577002;  
+
+   /** Base epoch for FK4 definitions, in <b>Julian years</b>
+    public static final double base_epoch = 2000.0 - TJ;  // epoch for FK4<=>ICRS
+    */
+
+   /** Definition of FK4-FK5 transformation from Murray 1989A+A...218..325M,
+    *  Eqs(28) and (29), but using Jumian years instead of Julian centuries.
+    */
+    public static final double[] X0 = {   
+        // Eq.(8)
+        0.9999256794956877, -0.0111814832204662, -0.0048590038153592,
+        0.0111814832391717,  0.9999374848933135, -0.0000271625947142,
+        0.0048590037723143, -0.0000271702937440,  0.9999881946023742,
+        // Eq.(29)
+       -0.0026455262e-8,    -1.1539918689e-8,     2.1111346190e-8,
+        1.1540628161e-8,    -0.0129042997e-8,     0.0236021478e-8,
+       -2.1112979048e-8,    -0.0056024448e-8,     0.0102587734e-8 };
+
+   /** 
+    * Rotation angles which align FK4(B1950) to ICRS, in arcsec.
+    */
+    static public final double[] XYZrota = { 5.584340790153,  1002.236538581694, -2306.398766625517 };
+
+   /** 
+    * Spin of FK4 relative to ICRS, in mas/Jyr (milli-arcsec per Julian year)
+    */
+    static public final double[] XYZspin = { -0.2817204053, -3.7515987371, -1.6789411256}; 
+
+   /** 
+    * Combined Rotation + Spin matrix (2x3x3 matrix). 
+    * Derivative (vs Julian year) of XM4I, which represents the spin of the FK4
+    *  with respect to the ICRS. It is computed as
+    *  <code>{@link AstroMath#m36p}({@link FK5#toICRSbase}, {@link #X0})</code>
+    */
+   static public final double[] toICRSbase = {
+      // AstroMath.m36p(FK5.toICRSbase, X0);
+      0.9999256809514446605,  -0.0111813722062681620,  -0.0048589597008613673,
+      0.0111813717563032290,   0.9999374861373183740,  -0.0000272585320447865,
+      0.0048589607363144413,  -0.0000270733285476070,   0.9999881948141177111, 
+      // spin
+     -0.0026428817769940e-9,  -8.1463562741672220e-9,  18.2024058051186966e-9,
+      8.1401195144477102e-9,  -0.0910561571313818e-9,  -1.2019145949013101e-9,
+    -18.1880492284604517e-9,   1.3658005511963221e-9,   0.0884130375706395e-9 };
+
+   /** 
+    * Inverse of toICRSmatrix, which converts ICRS into FK4(B1950).
+    * It is identical to:<br>
+    * <code>{@link AstroMath#rot_inv}({@link #toICRSbase})</code>.
     **/
-   static protected double[][] EM = {	// 
-     { 	 0.9999256782, 		-0.0111820611, 		-0.0048579477,
-		 2.42395018e-6,		-0.02710663e-6,		-0.01177656e-6},
-     {	 0.0111820610,     	 0.9999374784,     	-0.0000271765,
-		 0.02710663e-6,      	 2.42397878e-6,      	-0.00006587e-6},
-     {	 0.0048579479,     	-0.0000271474,     	 0.9999881997,
-		 0.01177656e-6,      	-0.00006582e-6,      	 2.42410173e-6},
-     {	-0.000551,         	-0.238565,         	 0.435739,
-		 0.99994704e0,       	-0.01118251e0,       	-0.00485767e0},
-     {	 0.238514,         	-0.002667,         	-0.008541,
-		 0.01118251e0,       	 0.99995883e0,       	-0.00002718e0},
-     {	-0.435623,         	 0.012254,         	 0.002117,
-		 0.00485767e0,       	-0.00002714e0,       	 1.00000956e0}
-     };
+   static public final double[] fromICRSbase = {
+    // AstroMath.rot_inv(toICRSbase)
+       0.9999256809514446605,   0.0111813717563032290,   0.0048589607363144413,
+      -0.0111813722062681620,   0.9999374861373183740,  -0.0000270733285476070,
+      -0.0048589597008613673,  -0.0000272585320447865,   0.9999881948141177111,
+      // spin
+      -0.0026428817769940e-9,   8.1401195144477114e-9, -18.1880492284604536e-9,
+      -8.1463562741672231e-9,  -0.0910561571313818e-9,   1.3658005511963220e-9,
+      18.2024058051186977e-9,  -1.2019145949013101e-9,   0.0884130375706395e-9 };
 
-   /* For moving from FK4 to FK5 without proper motion, the EM50 matrix
-      is used
-      EM50[i][j] = EM[i][j] + EM[i+3][j]*dtB/PMF ;
-   */
-   static private double EM50[][] = {
-     { 0.9999256795356672, -0.0111814827996970, -0.0048590039655699},
-     { 0.0111814828233251,  0.9999374848650175, -0.0000271557959449},
-     { 0.0048590038843768, -0.0000271771046587,  0.9999881945682256}
-   } ;
+   /** 
+    * Combined 6x6 matrix to convert the 6-vector (cartesian position and 
+    * derivative expressed in <em>rad/Jyr</em> from FK4(B1950),Ep=B1950 into
+    * ICRS,Ep=J2000. Its expression is <br><tt>
+    * | XM4I+T*Xd4I  T*XM4I |<br>
+    * |     Xd4I       XM4I |</tt><br>
+    * where T is the time interval between B1950.0 and J2000.0 ({@link #TJ})
+    * It is identical to: <br>
+    * <code>{@link AstroMath#motionMatrix)({@link #TJ}, {@link #toICRSbase})</code>
+   static public final double[] PM4I = {
+    // AstroMath.motionMatrix(TJ, X0)
+       0.9999256808193000178,  -0.0111817795257890021,  -0.0048580495767566571, // XM4I+T*Xd4I[0]
+      49.9964935896983064950,  -0.5590709534560527534,  -0.2429490032754886528, //      T*XM4I[0]
+       0.0111817787639847761,   0.9999374815844914359,  -0.0000273186280264020, // XM4I+T*Xd4I[1]
+       0.5590709309577118072,  49.9970838514658597711,  -0.0013629323144746095, //      T*XM4I[1]
+       0.0048580513300415725,  -0.0000270050382338332,   0.9999881992347881173, // XM4I+T*Xd4I[2]
+       0.2429490550483593421,  -0.0013536721008048170,  49.9996192959322203198, //      T*XM4I[2]
+      -0.0026428817769940e-9,  -8.1463562741672220e-9,  18.2024058051186966e-9, // Xd4I[0]
+       0.9999256809514446605,  -0.0111813722062681620,  -0.0048589597008613673, //        XM4I[0]
+       8.1401195144477102e-9,  -0.0910561571313818e-9,  -1.2019145949013101e-9, // Xd4I[1]
+       0.0111813717563032290,   0.9999374861373183740,  -0.0000272585320447865, //        XM4I[1]
+     -18.1880492284604517e-9,   1.3658005511963221e-9,   0.0884130375706395e-9, // Xd4I[2]
+       0.0048589607363144413,  -0.0000270733285476070,   0.9999881948141177111};//        XM4I[2]
+    **/
 
-   /** The 6x6 matrix to move from FK5 to FK4 */
-   static protected double[][] EM1 = {	/* FK5 ==> FK4	*/
-     { /*0.9999256795,      0.0111814828,     0.0048590039,*/
-         0.9999256795,      0.0111814829,     0.0048590038,
-	    /*-2.42389840e-6,      -0.02710544e-6,     -0.01177742e-6*/
-	      -2.42389840e-6,      -0.02710545e-6,     -0.01177742e-6},
-     {  -0.0111814828,      0.9999374849,    -0.0000271771,
-	     /*0.02710544e-6,      -2.42392702e-6,      0.00006585e-6*/
-	       0.02710545e-6,      -2.42392702e-6,      0.00006585e-6},
-     {/*-0.0048590040,     -0.0000271557,     0.9999881946,*/
-        -0.0048590040,     -0.0000271558,     0.9999881946,
-	       0.01177742e-6,       0.00006585e-6,     -2.42404995e-6},
-     {/*-0.000551,          0.238509,        -0.435614,*/
-        -0.000550,          0.238509,        -0.435613,
-  	       0.99990432e0,        0.01118145e0,       0.00485852e0},
-     {/*-0.238560,         -0.002667,         0.012254,*/
-        -0.238559,         -0.002668,         0.012254,
-	      -0.01118145e0,        0.99991613e0,      -0.00002717e0},
-     {/* 0.435730,         -0.008541,         0.002117,*/
-         0.435730,         -0.008541,         0.002116,
-	      -0.00485852e0,       -0.00002716e0,       0.99996684e0}
-     };
+   /** 
+    * Inverse matrix of PM4I, which converts ICRS,Ep=J2000 into FK4(B1950),Ep=B1950.
+    * It is identical to:<br>
+    * <code>{@link AstroMath#motionMatrix}({@link #fromICRSbase}, -TJ, {@link AstroMath#U3matrix})</code>
+   static public final double[] PMI4 = {
+    // AstroMath#motionMatrix}(fromICRSbase, -TJ, AstroMath.U3matrix)
+       0.9999256809514446604,   0.0111813717563032290,   0.0048589607363144413, // i=0 (x)  
+     -49.9964935896983064881,  -0.5590709309577118072,  -0.2429490550483593421,
+      -0.0111813722062681620,   0.9999374861373183739,  -0.0000270733285476070, // i=1 (y) 
+       0.5590709534560527533, -49.9970838514658597676,   0.0013536721008048170,
+      -0.0048589597008613673,  -0.0000272585320447865,   0.9999881948141177111, // i=2 (z) 
+       0.2429490032754886528,   0.0013629323144746095, -49.9996192959322203198,
+      -0.0026428817769940e-9,   8.1401195144477102e-9, -18.1880492284604517e-9, // i=3 (vx)
+       0.9999256810835893031,   0.0111809647486216819,   0.0048598701425873101,
+      -8.1463562741672220e-9,  -0.0910561571313818e-9,   1.3658005511963221e-9, // i=4 (vy)
+      -0.0111809648867473220,   0.9999374906901453120,  -0.0000271416188613808,
+      18.2024058051186966e-9,  -1.2019145949013101e-9,   0.0884130375706395e-9, // i=5 (vz)
+      -0.0048598698249660775,  -0.0000271984360631709,   0.9999881903934473050}; 
+    **/
 
-    /** To estimate the proper motions in FK4 **/
-     static double[][] EM2 = null; /* new double[6][6];	*/
+   // ===========================================================
+   // 	Retrieve an existing frame among fixedFrames
+   // ===========================================================
+
+  /**
+   * Retrieve a specific FK4 frame saved in "fixedFrames".
+   * @param equinox the equinox of definition, in <b>Besselian Year</b>.
+   * @param epoch   the epoch in <b>Besselian</b> Year.
+   *        (accept difference in epoch of ~1sec)
+   * @return  the frame if previsouly saved, null if not yet existing.
+  **/
+    public static FK4 scan(double equinox, double epoch) {
+        if(DEBUG) System.out.println("#...FK4.scan(B" + equinox + ", Ep=B" + epoch + ")");
+        if(fixedFrames==null) return(null);
+        boolean anyEpoch = Double.isNaN(epoch);
+        // Remember: epoch in saved in *Julian Years*
+        double Jep = Astrotime.B2J(epoch);
+        Iterator i = fixedFrames.iterator();
+        while(i.hasNext()) {
+            Object o = i.next();
+            if(!(o instanceof FK4)) continue;
+            FK4 f = (FK4)o;
+            if((f.fixed&0xf)!=0) continue;	// non-standard frame
+            //System.out.print("#...FK4.get(" + equinox + ", " + epoch + "): examine " + f);
+            //System.out.print("[epoch=" + f.epoch + ",Jep=" + Jep + "]");
+            //System.out.print(", diff_eq=" + (f.equinox-equinox));
+            //System.out.print(", diff_ep=" + (f.epoch-Jep));
+            //System.out.println("; compare=" + (f.equinox==equinox && Math.abs(f.epoch-Jep)<3.e-8));
+            if(f.equinox!=equinox) continue;
+            if(anyEpoch||(Math.abs(f.epoch-Jep)<Jsec))
+                return f;
+        }
+        return(null);
+    }
+
+  /**
+   * Create (and mark as fixed) a FK4 frame
+   * @param equinox the frame <em>equinox</em>, in <b>Besselian</b> years
+   * @param epoch default <i>epoch</i> of the frame, in <b>Besselian</b> years
+   * @return The frame
+  **/
+    public static FK4 create(double equinox, double epoch) {
+        FK4 f = scan(equinox, epoch);
+        if(f==null) {
+            f = new FK4(equinox, epoch);
+            f.fixFrame();
+        }
+        return(f);
+    }
+
+  /**
+   * Create (and mark as fixed) a FK4 frame with standard epoch
+   * @param equinox the equinox of definition, in <b>Besselian Year</b>.
+   * @return  the corresponding FK4 frame.
+  **/
+    public static FK4 create(double equinox) {
+	return create(equinox, equinox);
+    }
+
+  /**
+   * Instanciate the default FK4 frame
+   * @return  the standard FK4(B1950) coordinate frame.
+  **/
+    public static FK4 create() {
+	return create(1950.0, 1950.0);
+    }
 
    // ===========================================================
    // 			Contructor
@@ -149,33 +257,42 @@ public class FK4 extends Equatorial {
   /**
    * Instanciate an FK4 frame
    * @param equinox the equinox of definition, in Besselian Year.
-   * @param epoch   the epoch in Besselian Year.
+   * @param epoch   the epoch in <b>Besselian</b> Year.
   **/
     public FK4(double equinox, double epoch) {
-	initialize(equinox, Astrotime.B2J(epoch));
-    }
-
-  /**
-   * Instanciate an FK4 frame
-   * @param equinox the equinox of definition, in Besselian Year.
-  **/
-    public FK4(double equinox) {
-	initialize(equinox, Astrotime.B2J(equinox));
-    }
-
-  /**
-   * Instanciate an FK4 frame (at default B1950 equinox)
-  **/
-    public FK4() {
-	initialize(1950., base_epoch);
-    }
-
-  /**
-   * Get the conversion to ICRS matrix
-   * @return null (it's impossible to to reduce the transformation to a matrix)
-  **/
-    public double[][] toICRSmatrix() {
-	return(null);
+        if(Double.isNaN(epoch)) epoch = equinox;
+	this.precision = 6;	// Intrinsic precision 0.1"
+	this.equinox = equinox;
+	this.epoch = Astrotime.B2J(epoch);
+	this.name = "FK4(B" + equinox + ")";
+        full_name = name.substring(0, name.length()-1)
+                  + ",Ep=B" + epoch + ")";
+        ed_lon = Editing.SEXA3c|Editing.ZERO_FILL;
+        ed_lat = Editing.SEXA3c|Editing.ZERO_FILL|Editing.SIGN_EDIT;
+	if (Math.abs(equinox-1950.0)>1.e-4) {   // 1.e-4yr ~ 1hr
+	    toBaseEquinox = precessionMatrix(equinox, 1950.);
+            toICRSmatrix   = AstroMath.m36p(toICRSbase, toBaseEquinox);
+            fromICRSmatrix = AstroMath.rot_inv(toICRSmatrix);
+	    ev_eq = eterm(equinox);
+	}
+	else {  	// B1950.0
+	    toBaseEquinox  = AstroMath.U3matrix;
+            toICRSmatrix   = toICRSbase;
+            fromICRSmatrix = fromICRSbase;
+	    ev_eq = ev50;
+	}
+        compute_dotMatrix(this);
+        if(DEBUG) {
+            AstroMath.checkUnity("#---Verify to/fromICRSbase:", AstroMath.m36p(toICRSbase, fromICRSbase));
+            System.out.println("#---Constructing Astroframe: " + full_name);
+            System.out.print(AstroMath.toString("#...fromICRSmatrix:\n", fromICRSmatrix));
+            System.out.print(AstroMath.toString("#...(recomputed)..:\n",   AstroMath.m36p(AstroMath.rot_inv(toBaseEquinox), AstroMath.rot_inv(toICRSbase))));
+            System.out.print(AstroMath.toString("#.....toICRSmatrix:\n",   toICRSmatrix));
+            System.out.print(AstroMath.toString("#..6x6toICRSmatrix:\n",   AstroMath.m36p(AstroMath.m6(toICRSbase), AstroMath.m6(toBaseEquinox))));
+            System.out.print(AstroMath.toString("#.....Product=.....\n",
+                AstroMath.m36p(fromICRSmatrix, toICRSmatrix)));
+            System.out.print(AstroMath.toString("#....toBaseEquinox:\n",  toBaseEquinox));
+        }
     }
 
    // ===========================================================
@@ -186,10 +303,11 @@ public class FK4 extends Equatorial {
     * Precession matrix from equinox t0 to t1 (Besselian Years)
     * @param eq0 equinox at original equinox (Besselian year)
     * @param eq1 equinox of destination      (Besselian year)
-    * @return the rotation that converts t0 into t1 by  u1 = R * u0
+    * @return the rotation matrix R that converts t<sub>0</sub> into t<sub>1</sub> as
+    *                      u(t<sub>1</sub>) = R * u(t<sub>0</sub>)
    **/
-    static public double[][] precessionMatrix(double eq0, double eq1) {
-      /* Note: Seems to be not reversible. Choose t0 closest to 1900 */
+    static public double[] precessionMatrix(double eq0, double eq1) {
+      /* Note: Choose t0 closest to 1900 */
       double t0, dt, z, theta, zeta;
       boolean reverse = false;
         t0 = eq0 - 1900; dt = eq1 - eq0; 
@@ -204,26 +322,18 @@ public class FK4 extends Equatorial {
 	z    = zeta + dt*dt*(79.27+0.66*t0+0.32*dt)/3600.;
 	theta = dt* (20046.85 - t0*(85.33+0.37*t0)
 	      - dt*(42.67+0.37*t0+41.8*dt) )/3600.;
-	if (reverse) return(Coo.eulerMatrix(-zeta, -theta, -z));
-	else  return(Coo.eulerMatrix(z, theta, zeta));
+	if (reverse) //return(Coo.eulerMatrix(-zeta, -theta, -z));
+              return(AstroMath.rotation("zyz", -zeta, theta, -z));
+	else//return(Coo.eulerMatrix(z, theta, zeta));
+	      return(AstroMath.rotation("zyz", z, -theta, zeta));
     }
 
    // ===========================================================
-   // 			Convert To/From ICRS
+   // 			Compute the e-term of aberration
    // ===========================================================
 
-    /* For debugging purposes: display a 6-vector */
-    private static void pr6(double u6[], String t1, String t2) {
-	double v[] = { u6[0], u6[1], u6[2] };
-	    System.out.println(t1 + Coo.toString(v));
-	    v[0]=u6[3]; v[1]=u6[4]; v[2]=u6[5];
-	    System.out.println(t2 + Coo.toString(v));
-    }
-
-    /* Computation e-term */
-    /**  
-     * Compute the e-term (change due to the ellipticity of Earth orbit).
-     * @param  y the epoch, in Besselian years
+    /**  Compute the e-term (change due to the ellipticity of Earth orbit).
+     * @param  y the epoch, in Julian years
      * @return the 3 components of the E-term
     **/
     public static final double[] eterm(double y) {
@@ -234,323 +344,109 @@ public class FK4 extends Equatorial {
 	e   = 0.016751 - 0.000042*t;	// Eccentricity
 	L   = 281.221  + 1.719*t;	// Mean longitude of perihelion
 
-	e  *= (20.496/(3600.*180./Math.PI));	// Aberration
+	e  *= (20.496/AstroMath.ARCSEC);	// Aberration
 	cL  = AstroMath.cosd(L);
 	ev[0] =  e * AstroMath.sind(L);
 	ev[1] = -e * cL * AstroMath.cosd(eps);
 	ev[2] = -e * cL * AstroMath.sind(eps);
-	if(DEBUG) System.out.println(".... e-term(B" + y + "): " 
-		+ Coo.toString(ev));
+	if(DEBUG) System.out.println("#...FK4.e-term(B" + y + "): " 
+		+ AstroMath.toString(ev));
         return(ev);
     }
 
-  /**
-   * Convert the position to FK5 system -- assumed to be ICRS.
-   * We assume no proper motion in FK5, and an equinox/epoch in B1950.
-   * @param coo a coordinate which is converted from FK4(B1950) to FK5(J2000)
-  **/
-    public static void toFK5(Coo coo) {
-      double u6[] = new double[6]; 
-    /*-------------------------------
-     * NEW Method using the NEW Method Matrix
-     **
-	double w, x, y, z;
-	double u[] = { coo.x, coo.y, coo.z }; 	// coo.getUvector();
-	// Remove e-term (replace r by r - r^(A^r))
-	w = u[0]*A[0] + u[1]*A[1] + u[2]*A[2]; // A*r
-	u[0] -= A[0] - w*u[0];
-	u[1] -= A[1] - w*u[1];
-	u[2] -= A[2] - w*u[2];
-	// With EM50 matrix:
-	x = EM50[0][0]*u[0] + EM50[0][1]*u[1] + EM50[0][2]*u[2];
-	y = EM50[1][0]*u[0] + EM50[1][1]*u[1] + EM50[1][2]*u[2];
-	z = EM50[2][0]*u[0] + EM50[2][1]*u[1] + EM50[2][2]*u[2];
-	// Renormalize the Unit Vector
-	w = Math.sqrt(x*x + y*y + z*z);
-	x /= w; y /= w; z /= w;
-	u[0]=x; u[1]=y; u[2]=z; 
-	System.out.println("....toFK5.fast : " + Coo.toString(u));
-	coo.set(x, y, z);
-      ---------------------------------*/
-
-        // Estimate the proper motion...
-        coo.copyUvector(u6);
-        estimateFK4motion(u6);
-	// Convert to FK5
-	toFK5(u6);	// Now, in FK5, Ep.=Eq.=J2000
-	/* Verify consecutive transformations if they match... */
-	/* ---------------------------------- Test Code
-	if(DEBUG) {
-	  double v[] = new double[3]; int i;
-	    eterm(1950., v);
-	    v[0]=u6[0]; v[1]=u6[1]; v[2]=u6[2];
-	    System.out.println("....toFK5 gives: " + Coo.toString(v));
-	    v[0]=u6[3]; v[1]=u6[4]; v[2]=u6[5];
-	    System.out.println("          .dot.  " + Coo.toString(v));
-	  for(i=0; i<10; i++) {
-	    //u6[3] = u6[4] = u6[5] = 0;
-	    fromFK5(u6);
-	    v[0]=u6[0]; v[1]=u6[1]; v[2]=u6[2];
-	    System.out.println(".... back FK4  : " + Coo.toString(v));
-	    v[0]=u6[3]; v[1]=u6[4]; v[2]=u6[5];
-	    System.out.println("          .dot.  " + Coo.toString(v));
-	    System.out.println("          norm:  " 
-		    + Math.sqrt(u6[0]*u6[0]+u6[1]*u6[1]+u6[2]*u6[2]));
-	    toFK5(u6);
-	    v[0]=u6[0]; v[1]=u6[1]; v[2]=u6[2];
-	    System.out.println("....FK5 again  : " + Coo.toString(v));
-	    v[0]=u6[3]; v[1]=u6[4]; v[2]=u6[5];
-	    System.out.println("          .dot.  " + Coo.toString(v));
-	    System.out.println("          norm:  " 
-		    + Math.sqrt(u6[0]*u6[0]+u6[1]*u6[1]+u6[2]*u6[2]));
-	  }
-	}
-	---------------------------------------------*/
-	coo.set(u6[0], u6[1], u6[2]);
+    /**  Subtract the E-term of aberration from a cartesian position.
+     * @param  u  the direction vector, modified by Eterm
+    **/
+    public final void subEterm(double[] u) {
+        Coo.sub(u, ev_eq);
     }
 
-  /**
-   * Convert the position from standard B1950 FK4 to standard J2000 FK5 system 
-   * with Standish's algorithm.
-   * Standish uses the 6x6 matrix applied on the 6-vector
-   * (x y z xd yd zd) representing the position + derivative 
-   * (derivatives expressed in arcsec/century) with the EM matrix
-   * applied on the vector after subtraction of the E-term
-   * The E-term (due to the Earth's elliptical orbit) can be expressed
-   *  r ^ (A ^ r) = A - (A*r)r
-   *  where ^ represents the vectorial product, and * the scalar product.
-   * @param u6 6-vector containing position + mouvement (rad/yr)
-  **/
-    public static void toFK5(double[] u6) {
-	double v[] = new double[6];
-	double w, wd;
-	int i, j;
-	// *** Unknown positions: do nothing !
-	if ((u6[0]==0)&&(u6[1]==0)&&(u6[2]==0)) return;
-	// Convert the derivative part, originally in rad/yr, into arcsec/cy
-	v[0] = u6[0]; v[1] = u6[1]; v[2] = u6[2];
-	v[3] = u6[3] * (360000.*180./Math.PI);
-	v[4] = u6[4] * (360000.*180./Math.PI);
-	v[5] = u6[5] * (360000.*180./Math.PI);
-	if(DEBUG) pr6(v, "        toFK5(1) ", "                 ");
-	// Remove e-term (replace r by r - r^(A^r))
-	w  = v[0]*A[0] + v[1]*A[1] + v[2]*A[2]; // A*r
-	wd = v[0]*A[3] + v[1]*A[4] + v[2]*A[5];	// A1*r
-	v[0] -= A[0] - w*u6[0]; 
-	v[1] -= A[1] - w*u6[1]; 
-	v[2] -= A[2] - w*u6[2]; 
-	// Correction to the proper motions (not in Standish)
-	v[3] -= A[3] - wd*u6[0]; 
-	v[4] -= A[4] - wd*u6[1]; 
-	v[5] -= A[5] - wd*u6[2]; 
-	// Rotate with the EM matrix
-	for (i=0; i<6; i++) {
-	    w = 0;
-	    for (j=0; j<6; j++) w += EM[i][j]*v[j];
-	    u6[i] = w;
-	}
-	if(DEBUG) pr6(u6, "        toFK5(2) ", "                 ");
-	// Convert the derivative part to rad/yr
-	u6[3] /= (360000.*180./Math.PI);
-	u6[4] /= (360000.*180./Math.PI);
-	u6[5] /= (360000.*180./Math.PI);
-	// Renormalize
-	w = Math.sqrt(u6[0]*u6[0] + u6[1]*u6[1] + u6[2]*u6[2]);
-	for (i=0; i<6; i++) u6[i] /= w;
+    /** Add the the E-term of aberration from a cartesian position.
+     * @param  u  the direction vector, modified by Eterm
+    **/
+    public final void addEterm(double[] u) {
+        Coo.add(u, ev_eq);
     }
 
-   /**
-    * Compute FK4 position from FK5, assuming no proper motion in FK5
-    * and an observation in B1950.
-    * @param coo a coordinate which is converted from FK5(J2000) to FK4(B1950)
-   **/
-    public static void fromFK5(Coo coo) {
-    /* Note: could be coded with using the 6-vector method:
-     * ----
-        double u6[] = new double[6];
-        coo.copyUvector(u6); u6[3] = u6[4] = u6[5] = 0.;
-        fromFK5(u6);
-     *---------------------------------------------------*/
-	double w, x, y, z;
-	double u[] = { coo.x, coo.y, coo.z }; 	// coo.getUvector();
-	// 6-vector Rotation. The velocity is zero.
-	x = EM1[0][0]*u[0] + EM1[0][1]*u[1] + EM1[0][2]*u[2];
-	y = EM1[1][0]*u[0] + EM1[1][1]*u[1] + EM1[1][2]*u[2];
-	z = EM1[2][0]*u[0] + EM1[2][1]*u[1] + EM1[2][2]*u[2];
-	// Renormalize the Unit Vector
-	w = Math.sqrt(x*x + y*y + z*z);
-	if (w==0) return; 		// Undefined vector => no change
-	x /= w; y /= w; z /= w;	
-	// Apply e-term
-	w = x*A[0] + y*A[1] + z*A[2]; 	// A*r
-	x += A[0] - w*x;
-	y += A[1] - w*y;
-	z += A[2] - w*z;
-	// Renormalize the Unit Vector (a tiny bit)
-	w = Math.sqrt(x*x + y*y + z*z);
-	x /= w; y /= w; z /= w;
-	coo.set(x, y, z);
-    }
+   // ===========================================================
+   // 			Convert To/From ICRS
+   // ===========================================================
 
-  /**
-   * Convert the position from standard J2000 FK5 to standard B1950 FK4 system
-   * with Standish's algorithm.
-   * Standish uses the 6x6 matrix applied on the 6-vector
-   * (x y z xd yd zd) representing the position + derivative 
-   * (derivatives expressed in arcsec/century) with the EM matrix
-   * applied on the vector after subtraction of the E-term
-   * The E-term (due to the Earth's elliptical orbit) can be expressed
-   *  r ^ (A ^ r) = A - (A*r)r
-   *  where ^ represents the vectorial product, and * the scalar product.
-   * @param u6 6-vector containing position + mouvement (rad/yr)
-  **/
-    public static void fromFK5(double[] u6) {
-	double v[] = new double[6];
-	double w, wd;
-	int i, j;
-	// *** Unknown positions: do nothing !
-	if ((u6[0]*u6[0] + u6[1]*u6[1] + u6[2]*u6[2]) < 1.e-10)
-	    return;
-	// Convert the derivative part, originally in rad/yr, into arcsec/cy
-	// v[0] = u6[0]; v[1] = u6[1]; v[2] = u6[2];
-	// v[3] = u6[3] * (360000.*180./Math.PI);
-	// v[4] = u6[4] * (360000.*180./Math.PI);
-	// v[5] = u6[5] * (360000.*180./Math.PI);
-	u6[3] *= (360000.*180./Math.PI);
-	u6[4] *= (360000.*180./Math.PI);
-	u6[5] *= (360000.*180./Math.PI);
-	if(DEBUG) pr6(u6, "        from5(1) ", "                 ");
-	// Rotate with the EM1 matrix
-	for (i=0; i<6; i++) {
-	    w = 0;
-	    for (j=0; j<6; j++) w += EM1[i][j]*u6[j];
-	    v[i] = w;
-	}
-	// Renormalize
-	w = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-	for (i=0; i<6; i++) v[i] /= w;
-	if(DEBUG) pr6(v, "        from5(+) ", "                 ");
-	// Include the e-term (replace r by r + r^(A^r))
-	w  = v[0]*A[0] + v[1]*A[1] + v[2]*A[2];	// A*r
-	wd = v[0]*A[3] + v[1]*A[4] + v[2]*A[5];	// A1*r
-	// Correction to the proper motions (not in Standish)
-	u6[3] = v[3] + A[3] - wd*v[0]; 
-	u6[4] = v[4] + A[4] - wd*v[1]; 
-	u6[5] = v[5] + A[5] - wd*v[2]; 
-	// Correction to the position
-	u6[0] = v[0] + A[0] - w*v[0]; 
-	u6[1] = v[1] + A[1] - w*v[1]; 
-	u6[2] = v[2] + A[2] - w*v[2]; 
-	// Renormalize (a tiny amount only!)
-	w = Math.sqrt(u6[0]*u6[0] + u6[1]*u6[1] + u6[2]*u6[2]);
-	for (i=0; i<6; i++) u6[i] /= w;
-	if(DEBUG) pr6(u6, "        from5(2) ", "                 ");
-	// Convert the derivative part to rad/yr
-	u6[3] /= (360000.*180./Math.PI);
-	u6[4] /= (360000.*180./Math.PI);
-	u6[5] /= (360000.*180./Math.PI);
-    }
-
-  /**
-   * Estimate the proper motions in the FK4 system, assuming a zero
-   * proper motion in the FK5.
-   * @param u6 6-vector containing position + mouvement (rad/yr);
-   * 		the mouvement (derivative, pos. u6[3-5]) is updated.
-  **/
-    public static void estimateFK4motion(double[] u6) {
-	double v1[] = new double[6];
-	double w;
-	int i, j, k;
-	// the matrix EM2 = EM1 * (EM restricted to 3x3):
-	// Compute this matrix if not yet done.
-	if (EM2 == null) { double tm[][] = new double[6][6];
-	    for (i=0; i<6; i++) for (j=0; j<6; j++) {
-	        w = 0;
-	        for (k=0; k<3; k++) w += EM1[i][k] * EM[k][j];
-	        tm[i][j] = w;
-	    }
-	    EM2 = tm;
-	}
-	for (i=0; i<6; i++) {
-	    w=0;
-	    for (j=0; j<3; j++) 
-		w += EM2[i][j] * u6[j];
-	    v1[i] = w;
-	}
-	// Compute scalars u.A
-	w = v1[0]*A[3] + v1[1]*A[4] + v1[2]*A[5];
-	// Include A-term
-	for (i=3; i<6; i++) v1[i] += A[i] - w*v1[i-3];
-	// Output Derivative (in rad/yr)
-	for (i=3; i<6; i++) u6[i] = v1[i] / (360000.*180./Math.PI);
-    }
-
-   /**
-    * Convert the position to its ICRS equivalent.
-    * @param u6  the 6-vector (cartesian position + derivative) 
-    * 		Velocity in Jyr<sup>-1</sup>).
-    * 	        u6 is on FK4 on input, in ICRS on output)
-   **/
-    public void toICRS(double[] u6) {
-	if (toBaseEquinox != Coo.Umatrix3) {
-	  double[] ev = new double[3];
-	    Coo.sub(u6, ev_eq);		// Subtract E-term for Equinox
-	    Coo.rotateVector(toBaseEquinox, u6);
-	    Coo.add(u6, ev50);		// Add E-term for B1950.0
-	}
-	// System.out.println("....FK4.toICRS, base_epoch=" + base_epoch);
-	toFK5(u6);	// Converts rigorously.
-    }
-
-   /**
-    * Convert the position to its ICRS equivalent.
+   /** (standard method is ok)
+    * Convert the position to its ICRS equivalent, assuming zero proper motion in ICRS
     * @param coo on input the position in this frame; on ouput the ICRS
-   **/
     public void toICRS(Coo coo) {
-	if (toBaseEquinox != Coo.Umatrix3) {
-	  double[] ev = new double[3];
-	    coo.sub(ev_eq);		// Subtract E-term for Equinox
-	    coo.rotate(toBaseEquinox);
-	    coo.add(ev50);		// Add E-term for B1950.0
-	}
-	toFK5(coo);	// Converts rigorously.
+        if(toBaseEquinox != AstroMath.U3matrix) 
+            coo.rotate(toBaseEquinox);
+        coo.rotate(XM4I);
     }
-
-   /**
-    * Convert the position from the ICRS frame to FK4.
-    * @param u6  the 6-vector (cartesian position + derivative)
-    *            Velocity in Jyr<sup>-1</sup>).
-    *            (in ICRS on input, in FK4 on output)
    **/
-    public void fromICRS(double[] u6) {
-	// System.out.println("....FK4.fromICRS, base_epoch=" + base_epoch);
-	fromFK5(u6);
-	if (toBaseEquinox != Coo.Umatrix3) {
-	  double[] ev = new double[3];
-	    Coo.sub(u6, ev50);		// Subtract E-term for B1950.0
-	    Coo.rotateVector_1(toBaseEquinox, u6);
-	    Coo.add(u6, ev_eq);		// Add E-term for Equinox
-	}
-    }
 
-   /**
-    * Convert the position from the ICRS frame.
-    * @param coo on input the ICRS position, on output in FK4.
-   **/
+   /** (standard method is ok)
+    * Compute FK4 position from ICRS, assuming zero proper motion in ICRS
+    * @param coo a coordinate which is converted from ICRS to FK4(B1950), Ep=B1950.
     public void fromICRS(Coo coo) {
-      double[] u = new double[6];
-	coo.copyUvector(u);
-	u[3] = u[4] = u[5] = 0.;
-	fromFK5(u);
-	if(DEBUG) pr6(u, "FK4from ", "FK4from.");
-	coo.set(u[0], u[1], u[2]);
-	//if(DEBUG) coo.dump("FK4.fromICRS");
-	//fromFK5(coo);
-	if (toBaseEquinox != null) {
-	  double[] ev = new double[3];
-	    coo.sub(ev50);		// Subtract E-term for B1950.0
-	    coo.rotate_1(toBaseEquinox);
-	    coo.add(ev_eq);		// Add E-term for Equinox
-	}
+	coo.rotate_1(XM4I);
+        if(toBaseEquinox != AstroMath.U3matrix) 
+            coo.rotate_1(toBaseEquinox);
     }
+   **/
+
+  /** (standard method is ok)
+   * Convert the position/velocity from this.frame to ICRS,Ep=J2000.
+   * A dedicated method is required because u6 may contain only x,y,z
+   * @param u6 6-vector containing position + movement (rad/Jyr) in frame.
+   * @param v6 6-vector containing position + movement (rad/Jyr) in ICRS, epoch 2000.
+   *        Note that the 6-vector assumes no e-term (was removed), and
+   *        a derivative vs Jyr (motion was converted from 
+   *        Byr<sup>-1</sup> to Jyr<sup>-1</sup>).
+    public void toICRS(double[] u6, double[] v6) {
+        if(u6.length==3) {  // no proper motion!
+            AstroMath.m36v(ICRSmatrix, u6, v6);
+        }
+        else {
+            if(toICRSbase==null) setICRSbase();
+            // Simple multiplication 6x6 matrix -> 6-vector
+	    AstroMath.m36v(toICRSbase, u6, v6);
+        }
+    }
+  **/
+
+  /** (standard method is ok)
+   * Convert the position/velocity from ICRS,Ep=J2000 to this.frame.
+   * A dedicated method is required because u6 may contain only x,y,z
+   * @param u6 6-vector containing position + movement (rad/Jyr).
+   * @param u6 6-vector containing position + movement (rad/Jyr) in ICRS. epoch 2000.
+   * @param v6 6-vector containing position + movement (rad/Jyr) in frame.
+   *        Note that the 6-vector computed has no e-term (was removed), and
+   *        the derivative is vs Jyr (motion not converted into Byr<sup>-1</sup>)).
+    public void fromICRS(double[] u6, double[] v6) {
+        if(u6.length==3) {  // no proper motion!
+            AstroMath.m36v(ICRSmatrix_1, u6, v6);
+        }
+        else {
+            if(fromICRSbase==null) setICRSbase();
+            // Simple multiplication 6x6 matrix -> 6-vector
+	    AstroMath.m36v(fromICRSbase, u6, v6);
+        }
+    }
+  **/
+
+  /** (not useful, use fromICRS(u6, v6) with (0,0,0) as last three values in u6)
+   * Estimate the proper motions in the FK4 system, assuming a zero
+   * proper motion in the ICRS.
+   * @param u6 6-vector containing position + derivative (rad/Jyr);
+   *        the derivative (u6[3-5]) is updated.
+  **/
+    /*--- not really useful ...
+    public static void estimateFK4motion(double[] u6) {
+        // the motion is -scalar(Vz4I[i],u) 
+        for(int i=0; i<3; i++) {
+            int i3 = i*3;
+	    double w = Vz4I[i3+0]*u6[0] + Vz4I[i3+1]*u6[1] + Vz4I[i3+2]*u6[2];
+            u6[i+3] = -w;
+        }
+    }
+    ---*/
+
 }

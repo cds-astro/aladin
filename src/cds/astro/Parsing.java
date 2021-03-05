@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 /*==================================================================
@@ -40,7 +19,7 @@ import java.text.*;	// for parseException
  * <LI> the <em>format</em> of the number, as <tt>Parsing.DECIMAL</tt>,
  * 	<tt>Parsing.EFORMAT</tt>, <tt>Parsing.FACTOR</tt>, or various
  *	calendar or sexagesimal forms with the interpretation of the symbols 
- *	<B> </tt>: Y M D h m s d o &deg;; ' "</tt></B>
+ *	<B> <tt>: Y M D h m s d o &deg;; ' "</tt></B>
  * <LI> the <em>status</em>, currently used only in sexagesimal and
  * 	complex parsings:
  * 	a <tt>Parsing.WARNING</tt> indicates the last component is 60,
@@ -60,6 +39,10 @@ import java.text.*;	// for parseException
  * @version 1.8 : 15-Apr-2009 parseIAU()
  * @version 1.81: 08-May-2009 parseArray accepts commas between numbers
  * @version 1.82: 02-Feb-2010 parse_sexa bug fix 
+ * @version 2.0 : 02-Feb-2019 don't accept a single point in date.
+ *                      parseArray: accept it as bracketed ()[]{}
+ *                      advance / set / gobbleSpaces: return boolean.
+ *                      setError(String) added
  */
 
 public class Parsing extends Astroformat {
@@ -82,7 +65,7 @@ public class Parsing extends Astroformat {
     **/
     private int flags;
     /** Error message, if any (only in parseComplex) */
-    public String error_message;
+    public String error_message = null;
     /** The status of the last parsing operation is OK */
     static public final int OK=0;
     /** The last (sexagesimal) parsing has minutes or seconds equal to 60. */
@@ -90,7 +73,7 @@ public class Parsing extends Astroformat {
     /** The last (sexagesimal) parsing has a component greater than 60 */
     static public final int ERROR=2;
     /** Debugging level */
-    static public int DEBUG = 0;
+    static public boolean DEBUG = false;
     ///** A terminal error encountered, error_message set */
     //static public final int FATAL=3;
     /** The format of the numbers are defined in parent class Astroformat */
@@ -107,7 +90,7 @@ public class Parsing extends Astroformat {
 	 2 ,  4 ,  4 , 16|4,  6 , 1|6, 9|6,16|5, 20|9
     };
     /** The different sorts of parenthesis or brackets **/
-    static private final char[] brackets = "()[]{}<>".toCharArray();
+    static public final char[] brackets = "()[]{}<>\u3008\u3009\u3010\u3011".toCharArray();
     /** The different sorts of error matchers */
     static private final String[] error_symb = 
                       { "+/-", "+", "-", "\u00B1", "[" };
@@ -127,6 +110,7 @@ public class Parsing extends Astroformat {
     /** 
      * Create a Parsing unit from a string + offset
      * @param s the text to parse
+     * @param offset position of first character in <i>s</i> to consider.
      */
     public Parsing(String s, int offset) {
 	super();
@@ -142,11 +126,14 @@ public class Parsing extends Astroformat {
     /** 
      * Force the position within the Parsing piece
      * @param n the position -- if necessary, adjusted between 0 and length
+     * @return true when done, false when bounded
      */
-    public final void set(int n) {
-	pos = n ;
-	if (pos > a.length) pos = a.length;
-	if (pos < 0) pos = 0 ;
+    public final boolean set(int n) {
+        boolean ok = (n>=0) && (n<length);
+	if(ok) pos = n ;
+        else if(n<0) pos = 0;
+        else         pos = length;
+        return(ok);
     }
 
     /** 
@@ -160,11 +147,34 @@ public class Parsing extends Astroformat {
     }
 
     /** 
+     * Remove the error status
+     * @return true if it was in error.
+     */
+    public final boolean clearError() {
+        boolean state = (flags&0x2000000)!=0;
+        flags &= ~0x2000000;
+	return(state);
+    }
+
+    /** 
+     * Install an error message
+     * @param text the message text
+     * @return the previous error message
+     */
+    public final String setError(String text) {
+        String msg = this.error_message;
+        flags |= 0x2000000;
+	error_message = text;
+	return(msg);
+    }
+
+    /** 
      * Move (forward / backward) in the Parsing piece
      * @param n the value of the step
+     * @return true if possible
      */
-    public final void advance(int n) {
-	this.set(pos+n) ;
+    public final boolean advance(int n) {
+	return this.set(pos+n) ;
     }
 
     /*==============================================================
@@ -182,9 +192,12 @@ public class Parsing extends Astroformat {
 
     /**
      * Skip the spaces in the Parsing unit
+     * @return true if something exists, false when we're at end.
      */
-    public final void gobbleSpaces() {
-	while ((pos < length) && Character.isWhitespace(a[pos])) pos++;
+    public final boolean gobbleSpaces() {
+        boolean status;
+	while ((status=pos<length) && Character.isWhitespace(a[pos])) pos++;
+        return(status);
     }
 
     /** 
@@ -192,7 +205,7 @@ public class Parsing extends Astroformat {
      *  @param	tSymbol table of Symbols
      *  @return the index in table of Symbols (-1 if not found)
     **/ 
-    public final int lookup (char[] tSymbol) {
+    public final int lookup(char[] tSymbol) {
       char c;
       int i;
         if (pos >= length) return(-1);
@@ -239,6 +252,26 @@ public class Parsing extends Astroformat {
     }
 
     /** 
+     * Verify we're starting by a specific string, case insensitive.
+     *  Note that an, empty string will always match...
+     *  @param	text the string that should be there.
+     *  @return true (position changed)/false
+    **/ 
+    public final boolean matchIgnoreCase(String text) {
+      int posini = pos;
+      int len = text.length();
+      boolean matching = (len+pos) <= length;
+      int i;
+        for (i=0; matching && i<len; i++) {
+	    matching = Character.toLowerCase(text.charAt(i))
+                    == Character.toLowerCase(a[pos++]);
+        }
+	if (matching) matching = i==len;
+        if (!matching) pos = posini;
+	return(matching);
+    }
+
+    /** 
      * Try to match a Symbol in a defined piece of the text.
      *  The matching is successful when a symbol of the table
      *  with the specified length is matched.
@@ -246,7 +279,7 @@ public class Parsing extends Astroformat {
      *  @param	len exact length of text to match
      *  @return the index in table of Symbols (-1 if not found)
     **/ 
-    public final int lookup (String[] tSymbol, int len) {
+    public final int lookup(String[] tSymbol, int len) {
       int i, j;
 	if (flags>0) { flags = 0; /* error_message = null;*/ }
         if (pos+len <= length) for (i=0; i<tSymbol.length; i++) {
@@ -269,7 +302,7 @@ public class Parsing extends Astroformat {
      *  @param  tSymbol a table of Symbols
      *  @return	the index in table of Symbols (-1 if not found)
     **/ 
-    public final int lookup (String[] tSymbol) {
+    public final int lookup(String[] tSymbol) {
       int i, j;
       int maxlen = length - pos;
       int symlen  = 0;
@@ -316,23 +349,36 @@ public class Parsing extends Astroformat {
      *==============================================================*/
 
     /** 
+     * Locate a specific char from the current position.
+     * No mouvement in the Parsing structure (pos does not change)
+     * @param symb  the symbol to locate
+     * @return the position of first occurence of <i>symb</i> following (and including) the
+     *         current position (i.e. a value &geq; than the current position);
+     *         <b>-1</b> is returned if <i>symb</i> not found.
+     */
+    public final int indexOf(char symb) {
+        for(int i=pos; i<length; i++) {
+            if(a[i]==symb) return(i);
+        }
+        return(-1);
+    }
+
+    /** 
      * From current position assumed to contain a parenthesis or bracket,
      * return the location of the corresponding parenthesis.
      * No mouvement in the Parsing structure (pos does not change)
      * @return the position / -1 if not found
      */
     public final int matchingBracket() {
-      int posini = pos;
-      int i, j, depth;
-      char c, o;	
+        int posini = pos;
 	if (pos >= length) return(-1);
-	i = this.lookup(brackets);
+	int i = this.lookup(brackets);
 	if (i<0) return(i);	// Current char not in list of brackets...
-	pos = posini;
-	c = brackets[i];	// Note that c is also a[pos]
-	o = brackets[i^1];	// This gives the corresponding bracket
-	depth = 1;
-	j = pos;
+	pos = posini;		// Reset to original position.
+	char c = brackets[i];	// Note that c is also a[pos]
+	char o = brackets[i^1];	// This gives the corresponding bracket
+	int depth = 1;
+	int j = pos;
 	if ((i&1)==0) 		// I have a left bracket. Move forward
 	  for (++j; j<length; j++) {
 	    if (a[j] == c) depth++;
@@ -356,11 +402,21 @@ public class Parsing extends Astroformat {
      * No quote escaping allowed.
      * No mouvement in the Parsing structure (pos does not change)
      * Added in V1.3
+     * The quote may be escaped by 2 consecutive quotes, or a backslashed quote.
      * @return the position / -1 if not found.
      */
     public final int matchingQuote() {
-      int j;
-	for (j=pos+1; (j<length) && (a[j]!=a[pos]); j++) ;
+        int j=pos+1;
+        while(j<length) {
+            if(a[j]==a[pos]) {
+                int j1 = j+1;
+                if((j1>=length)||(a[j1]!=a[pos]))
+                    break;
+                else j++;
+            }
+            else if(a[j]=='\\') j++;
+            j++;
+        }
 	if (j>=length) j = -1;
 	return(j);
     }
@@ -370,13 +426,14 @@ public class Parsing extends Astroformat {
      *==============================================================*/
 
     /** 
-     * Verify a '-' sign.
+     * Verify a '-' sign. Plenty of Unicode chars can be found!
      *  @param  c  char to test
      *  @return	true / false
     **/ 
-    public static final boolean isMinus(char c) {  // Interpret an Integer
-	return( (c=='-') || ((c>='\u2010')&&(c<= '\u2015')) ||
-		(c=='\u2012') || (c=='\u00ad'));
+    public static final boolean isMinus(char c) {  // Interpret the minus sign
+        if(c<'\u0080') return(c=='-');	// pure ascii.
+	return ((c>='\u2010')&&(c<='\u2015')) ||
+		(c=='\u2212')||(c=='\u00ad') ;
     }
 
     /** 
@@ -391,7 +448,7 @@ public class Parsing extends Astroformat {
     /** 
      * Try to match a Sign.
      * No change is made in <em>pos</em> when no sign could be matched;
-     *  @return	+1 ('+' found), -1 ('-' found) or 0 (no signb)
+     *  @return	+1 ('+' found), -1 ('-' found) or 0 (no sign)
     **/ 
     public final int parseSign() {	// Interpret an Integer
         if (pos<length) {
@@ -728,14 +785,14 @@ public class Parsing extends Astroformat {
 	    pos = posini;
 	    return(0./0.) ;
 	}
-	if (DEBUG>0) System.out.print("parse_sexa(" + comp + "): " + this );
+	if (DEBUG) System.out.print("#...Parsing.parse_sexa(" + comp + "): " + this );
 	if ((sign = parseSign())>0) pec = SIGN_EDIT;
 	if (comp>0)
 	    while ((pos<length) && (a[pos] == ' ')) pos++;	// 26-Oct-2006
 
 	/* Get Hours or Degrees */
 	hms = comp>0 ? parseNum() : parseNum(2);
-	if (DEBUG>0) System.out.print("; hms=" + hms + ", flags=" + flags);
+	if (DEBUG) System.out.print("; hms=" + hms + ", flags=" + flags);
 	if (flags == 0) {	// No number at all ==> NaN
 	    pos = posini;
 	    if (!this.parseNaN()) pos = posini ;
@@ -755,7 +812,7 @@ public class Parsing extends Astroformat {
 		local_flags += flags;
 	    }
 	    else local_flags |= 1;	// Indicates "just a decimal point".
-	    if (DEBUG>0) System.out.print("=>" + local_flags);
+	    if (DEBUG) System.out.print("=>" + local_flags);
         }
 
 	/* Look for possible 'd' (deg) or 'h' specification */
@@ -894,10 +951,10 @@ public class Parsing extends Astroformat {
 	}
 	    
 	flags = local_flags;
-	if (DEBUG>0) System.out.print("=>" + flags);
+	if (DEBUG) System.out.print("=>" + flags);
 	if (sign<0) val = -val;
 	if (error>0) {			// Create the error message
-	    String tag = error > 1 ? "****" : "++++";
+	    String tag = error > 1 ? "#***" : "#+++";
 	    error_message = tag + "parseSexa("
 		+ String.valueOf(a, posini, pos-posini) + ")" + error_message;
 	}
@@ -916,7 +973,7 @@ public class Parsing extends Astroformat {
 	    else pec = SEXA1d;
 	    flags |= (pec<<16);
 	}
-	if (DEBUG>0) System.out.println("=>" + flags);
+	if (DEBUG) System.out.println("=>" + flags);
 	return(val);
     }
 
@@ -1038,6 +1095,8 @@ public class Parsing extends Astroformat {
 	}
 	nc = i;				// Number of components
 	// System.out.println(" (end)");
+        if((nc==2)&&(sep=='.')) 	// V2.0: not a date
+            nc=0;
 
 	/* A date requires at least 2 components */
 	if (nc < 2) {
@@ -1130,8 +1189,8 @@ public class Parsing extends Astroformat {
      *   specify the actual interpretation done in the parsing.
      * @throws  ParseException for invalid picture or non-conforming data.
      * 		The error_message of the exception starts by:<br>
-     * 		"++++" when upper/lower case were mixed; <br>
-     * 		"****" for terminal error, and contains ((pic)) for invalid arg
+     * 		"#+++" when upper/lower case were mixed; <br>
+     * 		"#***" for terminal error, and contains ((pic)) for invalid arg
      */
     public final double parseComplex(String pic) throws ParseException {
       int[]  comp6 = new int[6];	// Date/time elements
@@ -1153,7 +1212,7 @@ public class Parsing extends Astroformat {
       int mixed = 0;			// Indicates an interpretation made
       StringBuffer mixed_buf = null;	// Error message of interpretation
 
-	if (DEBUG>0) System.out.println("....cplx("+pic+")\tin=\"" 
+	if (DEBUG) System.out.println("....cplx("+pic+")\tin=\"" 
 		+ this.toString()+"\"");
 	if (flags>0) { flags = 0; error_message = null; }
 
@@ -1178,7 +1237,7 @@ public class Parsing extends Astroformat {
 		if (c == '.') break;			// Decimals
 		if (c == 'f') break;			// Fraction
 		if (c == '"') break;	// Ending '"' in pic.
-		error_message = "****parseComplex((" 
+		error_message = "[Parsing.parseComplex] ((" 
 		    + pic + ")): what is '" + c + "'?";
 		throw new ParseException(error_message, ipic);
 	    }
@@ -1191,8 +1250,8 @@ public class Parsing extends Astroformat {
 		    mixed |= (1<<k);	// mixed upper/lowercase in this element
 		}
 		if ((k!= 1) || (pic6[1] != Character.MIN_VALUE) || (i<0)) {
-		   error_message = "****parseComplex(" 
-		       + pic + "): month? "+ this.toString();
+		   error_message = "[Parsing.parseComplex] (("
+		       + pic + ")): month? "+ this.toString();
 		   throw new ParseException(error_message, ipic);
 		}
 		comp6[1] = i;		// Range 0..11
@@ -1208,7 +1267,7 @@ public class Parsing extends Astroformat {
 		    mixed |= (1<<k);	// mixed upper/lowercase in this element
 		}
 	        if (pic6[k] != Character.MIN_VALUE) {  // Duplication ??
-		    error_message = "****parseComplex((" + pic + ")): "
+		    error_message = "[Parsing.parseComplex] ((" + pic + ")): "
 			+ "duplicated component '" + pic1.charAt(k) + "'";
 		    throw new ParseException(error_message, ipic);
 		}
@@ -1236,14 +1295,14 @@ public class Parsing extends Astroformat {
 		else if (Character.isDigit(a[pos])) 
 		    comp6[k] = comp6[k]*10 + Character.digit(a[pos], 10);
 		else {
-		    error_message = "****parseComplex(" + pic + "): "
+		    error_message = "[Parsing.parseComplex] ((" + pic + ")): "
 			+ this.toString();
 		    throw new ParseException(error_message, ipic);
 		}
 	    }
 	    pic6[k] = c;
 	}
-	if (DEBUG>0) {
+	if (DEBUG) {
 	    System.out.print("....cplx[a]=");
 	    for(i=0;i<6;i++) System.out.print("("+pic6[i]+")"+comp6[i]);
 	    System.out.println(",last_comp=" + last_comp 
@@ -1298,7 +1357,7 @@ public class Parsing extends Astroformat {
 		    mpic[i++] = M;
 	    }
 	    mixed_buf = new StringBuffer(100);
-	    mixed_buf.append("++++parseComplex(");
+	    mixed_buf.append("#+++parseComplex(");
 	    mixed_buf.append(pic);
 	    mixed_buf.append(") interpreted as (");
 	    mixed_buf.append(mpic);
@@ -1313,7 +1372,7 @@ public class Parsing extends Astroformat {
 	 * and compute the date part if any
 	 */
 	value = 0; factor = fraction_factor = 1;
-	if (DEBUG>0) {
+	if (DEBUG) {
 	    System.out.print("....cplx[b]=");
 	    for(i=0;i<6;i++) System.out.print("("+pic6[i]+")"+comp6[i]);
 	    System.out.println("");
@@ -1331,7 +1390,7 @@ public class Parsing extends Astroformat {
 	        check_century = false;
 	    }
 	    if (sign<0) { comp6[0] = -comp6[0]; sign = 0; }
-	    if (DEBUG>0) {
+	    if (DEBUG) {
 	        System.out.print("....cplx[c]=");
 	        for(i=0;i<6;i++) System.out.print("("+pic6[i]+")"+comp6[i]);
 	        System.out.println("");
@@ -1341,7 +1400,7 @@ public class Parsing extends Astroformat {
 	}
 	else if (pic6[2] != Character.MIN_VALUE) {	// Elapsed days
 	    if (pic6[1] != Character.MIN_VALUE) {	// month/day, no year?
-		error_message = "****parseComplex((" + pic + ")): "
+		error_message = "[Parsing.parseComplex] ((" + pic + ")): "
 		    + "month without year ? " + this.toString();
 		throw new ParseException(error_message, ipic);
 	    }
@@ -1353,9 +1412,9 @@ public class Parsing extends Astroformat {
 	    pec |= SEXA3h;
 	for (i=3; i<6; i++) {
 	    if (pic6[i] != Character.MIN_VALUE) {
-	        if (DEBUG>0) System.out.print("    value=" + value + " => ");
+	        if (DEBUG) System.out.print("    value=" + value + " => ");
 		value += comp6[i]/factor;
-	        if (DEBUG>0) System.out.println(value);
+	        if (DEBUG) System.out.println(value);
 	        if (i == last_comp) fraction_factor = factor;
 	    }
 	    factor *= 60.;
@@ -1380,7 +1439,7 @@ public class Parsing extends Astroformat {
 	    pos++;
 	}
 	if ((c != '"') && (c != Character.MIN_VALUE)) {
-	    error_message = "****parseComplex(" + pic + "): "
+	    error_message = "[Parsing.parseComplex] ((" + pic + ")): "
 		+ "mismatch from \"" + pic.substring(ipic-1) + "\": "
 		+ this.toString();
 	    throw new ParseException(error_message, ipic);
@@ -1395,7 +1454,7 @@ public class Parsing extends Astroformat {
 	}
 	flags |= (pec<<16);		// Keep what was matched.
 	if (sign<0) value = -value;
-	if (DEBUG>0) System.out.println("....parseComplex("+pic+"): value=" 
+	if (DEBUG) System.out.println("#...parseComplex("+pic+"): value=" 
 		+ value + ", pec="+pec+", flags="+flags);
 	return(value);
     }
@@ -1517,28 +1576,28 @@ public class Parsing extends Astroformat {
      *==============================================================*/
 
    /**
-    * Interpret an array (several numbers).
-    * Accept a comma between numbers if exists.
+    * Interpret an array (several double numbers).
+    * Accepts an array within brackets (or parentheses/braces).
+    * Accept a separator between numbers if exists.
     * @param vec  Array containing on output the values parsed.
     * @param sep  Character accepted as separator
     * @return number of numbers found. 
    **/
     public int parseArray(double[] vec, char sep) {
-      int postart, ipos, i;
-      double x;
-        // Initialize all number to NaN.
-	for (i=0; i<vec.length; i++) vec[i] = 0./0.;
+        int i;
+        // Initialize all number to NaN -- no!
+	// for (i=0; i<vec.length; i++) vec[i] = 0./0.;
 	// Move in the text as long as possible.
 	for (i=0; (i<vec.length) && (this.pos<this.length); i++) {
-	    postart = this.pos;
+	    int postart = this.pos;
 	    this.gobbleSpaces(); 
 	    if (this.currentChar() == sep) {
 		if (i == 0) continue;
 		this.advance(1);
 	        this.gobbleSpaces(); 
 	    }
-	    ipos = this.pos;
-	    x = this.parseDouble();
+	    int ipos = this.pos;
+	    double x = this.parseDouble();
 	    if (this.pos == ipos) {	// Nothing found...
 		this.pos = postart;
 		break;
@@ -1550,11 +1609,28 @@ public class Parsing extends Astroformat {
 
    /**
     * Interpret an array (several numbers).
-    * Accept a comma between numbers if exists.
+    * Accept a comma between numbers if within a bracketed list.
     * @param vec  Array containing on output the values parsed.
-    * @return number of numbers found. 
+    * @return number of numbers found, between 0 and vec.length;
+    *         returns -1 for a bracketed expression with missing closing bracket.
+    *         In this last case, the current position is not changed.
    **/
     public int parseArray(double[] vec) {
+        int posini = this.pos; 
+        this.gobbleSpaces();
+        // Could it be bracketed set ?
+        int ibracket = this.lookup(brackets);
+        if((ibracket&1)==0) {
+            ibracket++;	// matching closing bracket.
+            int n = parseArray(vec, ',');
+            this.gobbleSpaces();
+            if(this.currentChar()==brackets[ibracket]) advance(1);
+            else { 
+                n = -1; this.set(posini); 
+                error_message = "[Parsing.parseArray] mismatched brackets " + brackets[ibracket-1] + brackets[ibracket];
+            }
+            return(n);
+        }
 	return(parseArray(vec, ' '));
     }
 
@@ -1565,6 +1641,8 @@ public class Parsing extends Astroformat {
     * @param vec  Array containing value PositiveError NegativeError
     * @return number of numbers found (0, 1, 2 or 3). 
     * 		When 0, the position was not changed.
+    * 		1 means a value without error, 2 value+error, 
+    * 		3 value + positive error + negative error.
    **/
     public int parseWithError(double[] vec) {
       int postart, ipos, poserr, i;
@@ -1624,12 +1702,23 @@ public class Parsing extends Astroformat {
 
     /**
      * View a part of the Parsing as a String. Added in V1.3
-    * @param len  Length to keep (truncated if necessary)
+     * @param len  Length to keep (truncated if necessary)
      * @return the not-yet-parsed part of the string.
      */
     public final String toString(int len) {
 	if ((len+pos) > length) len = length - pos;
 	return(new String(a, pos, len)) ;
+    }
+
+    /**
+     * View a part of the Parsing as a String. Added in V2.0
+     * @param start  beginning offset (from 0)
+     * @param end  ending(+1) offset
+     * @return a String made of chars [start ... end[
+     */
+    public final String toString(int start, int end) {
+        if(end>length) end=length;
+	return(new String(a, start, end-start)) ;
     }
 
 }

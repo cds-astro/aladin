@@ -130,7 +130,7 @@ MHEALPIXARITHM HEALPix arithmetic operations...
 #MDIV	Division
 MNORM	Pixel normalisation (div. by avg)
 MBITPIX	Bitpix convert...
-MPIXEXTR Table generation from selected pixels
+MPIXEXTR Pixel extraction as a table...
 MCONV	Convolution...
 MHEAD	Fits header...
 MBKGD	Progressive sky (HiPS)
@@ -139,6 +139,9 @@ SELECTTAG	Select tagged sources
 DETAG	Untag the tagged sources
 TAGSELECT	Tag selected sources
 FOVEDITOR Instrument footprint editor...
+
+INFOPIXEXTRACT Would you like to generate a table of pixels determined by the area of the different shapes (circles & polygons) currently selected. The pixels will be extracted from the current image whether it is a classic image or a progressive survey (in FITS tile mode - at the current display order). The generated table will have 3 columns: RA, DEC, PIXEL_VAL.
+INFOPIXEXTRACT.fr Souhaitez-vous générer une table des pixels déterminés par la surface des différentes formes (cercles & polygones) actuellement sélectionnées. Les pixels seront extraits de l'image courante qu'il s'agisse d'une image classique ou d'un relevé progressif (en mode tuiles FITS - à l'ordre courant d'affichage). La table générée aura 3 colonnes : RA, DEC, PIXEL_VAL.
 
 #MLOAD.fr	Charger...
 MSAVE.fr	Enregistrer...
@@ -262,7 +265,7 @@ MHEALPIXARITHM.fr Opérations arithmétiques sur plan Healpix...
 #MDIV.fr	Division
 MNORM.fr	Normalisation des pixels (div. by avg)
 MBITPIX.fr	Conversion Bitpix...
-MPIXEXTR.fr Génération de la table des pixels sélectionnés
+MPIXEXTR.fr Extraction des pixels sélectionnés en tant que table...
 MCONV.fr	Convolution...
 MHEAD.fr	Entête Fits...
 MBKGD.fr	Ciel progressif (HiPS)
@@ -272,12 +275,12 @@ DETAG.fr	Décocher les sources cochées
 TAGSELECT.fr	Cocher les sources sélectionnées
 FOVEDITOR.fr Editeur de champ instrumental...
 
-PIXEXTRINFO1 The pixel extraction creates a source catalogue. Each source will be centered on a pixel of the current image and will provide the pixel values of each selected images in the stack (via the closest pixel method).
-PIXEXTRINFO1.fr L'extraction de pixels génère un catalogue de sources centrées sur chaque pixel de l'image courante. Chaque source fournira les valeurs de pixels pour chaque image sélectionnée dans la pile (méthode du plus proche pixel).
-PIXEXTRINFO2 To select other images concerned by the extraction, click on their name in the stack with the CTRL key pressed.
-PIXEXTRINFO2.fr Pour sélectionner d'autres images concernées par l'extraction, cliquez sur leur nom dans la pile en maintenant appuyé la touche CTRL.
-PIXELEXTRSUBMIT Extract
-PIXELEXTRSUBMIT.fr Extraire
+#PIXEXTRINFO1 The pixel extraction creates a source catalogue. Each source will be centered on a pixel of the current image and will provide the pixel values of each selected images in the stack (via the closest pixel method).
+#PIXEXTRINFO1.fr L'extraction de pixels génère un catalogue de sources centrées sur chaque pixel de l'image courante. Chaque source fournira les valeurs de pixels pour chaque image sélectionnée dans la pile (méthode du plus proche pixel).
+#PIXEXTRINFO2 To select other images concerned by the extraction, click on their name in the stack with the CTRL key pressed.
+#PIXEXTRINFO2.fr Pour sélectionner d'autres images concernées par l'extraction, cliquez sur leur nom dans la pile en maintenant appuyé la touche CTRL.
+#PIXELEXTRSUBMIT Extract
+#PIXELEXTRSUBMIT.fr Extraire
 
 # Aladin.java - Sub-menus
 CMD	Script Console...
@@ -3386,6 +3389,18 @@ DTWORKLIST	working list
 DTWORKLIST.fr	liste de travail
 TAGIT	Tag this position
 TAGIT.fr	Marque cette position
+KEEP	Save
+KEEP.fr	Sauve
+KEEPHELP Stores these statistics as a new entry in the plane Drawing
+KEEPHELP.fr	Mémorise ces statistiques en tant que nouvelle entrée du plan Drawing
+TIMEPLOT	time
+TIMEPLOT.fr	temps
+TIMEPLOTHELP	This data is also associated with temporal information. Would you like to draw a light curve of it? 
+TIMEPLOTHELP.fr	Ces données sont également associées à des informations temporelles. Souhaitez vous en tracer une courbe de lumière ? 
+TABLEICON	table
+TABLEICON.fr	table
+TABLEICONHELP	Would you like to create a catalog plan from these values and thus visualize the spatial positions of each of the points on this graph?
+TABLEICONHELP.fr	Souhaitez-vous créer un plan catalogue depuis ces valeurs et ainsi visualiser les positions spatiales de chacun des points de ce graphique ?
 
 #V10 - Filter Panel
 FPTITLE	Data discovery tree filter

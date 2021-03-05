@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 /*==================================================================
@@ -47,7 +26,7 @@ public class Astroformat {
     	/** Format of number contains the <em>E</em> notation */
     static public final int EFORMAT=1;
     	/** Format of number is of the form 
-     	 *  <em>mantissa</em><tt>x10</tt><em>&#177;exp</em> */
+     	 *  <em>mantissa</em><tt>x10</tt><em>Â±exp</em> */
     static public final int FACTOR=10;
     	/** Format of number is sexagesimal (2 components h m) */
     static public final int SEXA2=2;
@@ -160,7 +139,8 @@ public class Astroformat {
     };
 
     /** 
-     * Explain the 'form' of the last parsed number
+     * Explain the 'form' of the last parsed number.
+     * @param bin_form the format as a binary number
      * @return A printable variant of format.
      */
     static public final String explain(int bin_form) {
@@ -174,6 +154,7 @@ public class Astroformat {
 
     /** 
      * Test whether a format indicates a Sexagesimal coding.
+     * @param bin_form the format as a binary number
      * @return true if it does.
      */
     static public final boolean isSexa(int bin_form) {
@@ -183,6 +164,7 @@ public class Astroformat {
     /** 
      * Test whether a format indicates a Date (YMD).
      * Units are days (a date is expressed as MJD)
+     * @param bin_form the format as a binary number
      * @return true if it does.
      */
     static public final boolean isDate(int bin_form) {
@@ -192,6 +174,7 @@ public class Astroformat {
     /** 
      * Test whether a format indicates a number of days.
      * Similar to isTime, but units are days.
+     * @param bin_form the format as a binary number
      * @return true if it does.
      */
     static public final boolean isDays(int bin_form) {
@@ -201,6 +184,7 @@ public class Astroformat {
     /** 
      * Test whether a format indicates Time (hms). 
      * Units are then hours.
+     * @param bin_form the format as a binary number
      * @return true if it does.
      */
     static public final boolean isTime(int bin_form) {
@@ -210,6 +194,7 @@ public class Astroformat {
     /** 
      * Test whether a format indicates Angle (dms or &deg;'"). 
      * Units are then degrees
+     * @param bin_form the format as a binary number
      * @return true if it does.
      */
     static public final boolean isAngle(int bin_form) {
@@ -278,6 +263,7 @@ public class Astroformat {
 
     /**
      * Create an Astroformat with the defaut "---" edition for NULL values.
+     * @param default_null the text to use for NaN values.
     **/
     public Astroformat(String default_null) {
 	setNaN(default_null);

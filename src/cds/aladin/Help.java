@@ -54,7 +54,7 @@ public final class Help extends JComponent implements
    String text;		                // Le texte courant
    Font font=FI;
    FontMetrics fm=null;	                // La font courante
-   int ws=520,hs=520;	                // Taille du Help par defaut
+   int wpanel=520,hpanel=520;	                // Taille du Help par defaut
    boolean flagFold=true;
 
    // Les references
@@ -200,7 +200,7 @@ public final class Help extends JComponent implements
          String imgFile = s.substring(flag_center?2:1);
          Image i = aladin.getImagette(imgFile);
          if( i==null ) return y;
-         if( flag_center ) x=ws/2-i.getWidth(imo)/2;
+         if( flag_center ) x=wpanel/2-i.getWidth(imo)/2;
          if( draw ) g.drawImage(i,x,y,imo);
          return y+=i.getHeight(imo)+dy;
       }
@@ -208,7 +208,7 @@ public final class Help extends JComponent implements
       // Pour un titre
       if( s.charAt(0)=='!' ) {
           g.setFont(FTITRE);
-          x=ws/2-fm.stringWidth(s)/2;
+          x=wpanel/2-fm.stringWidth(s)/2;
           y+=dy/2;
           if( draw ) g.drawString(s.substring(1),x,y);
           y+=1.5*dy;
@@ -219,7 +219,7 @@ public final class Help extends JComponent implements
       // Pour une chaine centrée
       if( s.charAt(0)=='*' || center) {
          if( s.charAt(0)=='*' ) s=s.substring(1);
-         x=ws/2-fm.stringWidth(s)/2;
+         x=wpanel/2-fm.stringWidth(s)/2;
          if( draw ) g.drawString(s,x,y);
          y+=dy;
          return y;
@@ -261,7 +261,7 @@ public final class Help extends JComponent implements
          if( mot.length()>=2 && mot.startsWith("\\@") ) mot = mot.substring(1);
           
          int w = fm.stringWidth(mot);
-         if( x+w>ws ) {
+         if( x+w>wpanel ) {
             x=10;
             y+=dy;
             if( mot.equals(" ") ) continue;
@@ -342,25 +342,25 @@ public final class Help extends JComponent implements
       if( text==null ) return;
 
       // Ajustement de taille ?
-      ws = getSize().width;
-      hs = getSize().height;
+      wpanel = getSize().width;
+      hpanel = getSize().height;
       
       // pour que les ancres retombent aux bons endroits
-      if( owidth!=ws || oheight!=hs ) {
+      if( owidth!=wpanel || oheight!=hpanel ) {
          resetLink();
-         owidth=ws;
-         oheight=hs;
+         owidth=wpanel;
+         oheight=hpanel;
       }
       
       // On efface tout
       g.setColor( BGD );
-      g.fillRect(2,2,ws-3,hs-3);
-      Util.drawEdge(g,ws,hs);
+      g.fillRect(2,2,wpanel-3,hpanel-3);
+      Util.drawEdge(g,wpanel,hpanel);
       
       // Les marges
-      int margeX = (ws-600)/2;
+      int margeX = (wpanel-600)/2;
       if( margeX<0 ) margeX=0;
-      int margeY=hs>500? 20 : 0;
+      int margeY=hpanel>500? 20 : 0;
       
       // tracé du Banner d'accueil
       boolean flagBanner = center; 
@@ -368,13 +368,14 @@ public final class Help extends JComponent implements
          try {
             Image img = aladin.getImagette("Background.jpg");
             aladin.waitImage(img);
-            int wi = img.getWidth(this);
-            int hi = img.getHeight(this);
-            boolean vertical = Math.abs(1-(double)hi/hs) < Math.abs(1-(double)wi/ws);
+            int wimg = img.getWidth(this);
+            int himg = img.getHeight(this);
+            boolean vertical = Math.abs(wpanel-wimg)>Math.abs(hpanel-himg);
+            if( vertical && wpanel>wimg || !vertical && hpanel>himg ) vertical = !vertical;
             double sx2,sy2;
-            if( vertical ) { sy2 = hi; sx2 = ws * ((double)hi/hs); }
-            else { sx2 = wi; sy2 = hs * ((double)wi/ws); }
-            g.drawImage(img,1,1,ws-2,hs-2, 0,0, (int)sx2,(int)sy2, this);
+            if( vertical ) { sy2 = himg; sx2 = wpanel * ((double)himg/hpanel); }
+            else { sx2 = wimg; sy2 = hpanel * ((double)wimg/wpanel); }
+            g.drawImage(img,1,1,wpanel-2,hpanel-2, 0,0, (int)sx2,(int)sy2, this);
          } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
       }
 
@@ -430,8 +431,8 @@ public final class Help extends JComponent implements
       
       // Dans le cas d'un hyper-text, possibilité de revenir en
       // arrière.
-      if( hasStack()>0 ) drawWord(g,"Back",ws-margeX-40,margeY+15,true,Font.PLAIN);
-      if( hasStack()>1 ) drawWord(g,"Home",ws-margeX-80,margeY+15,true,Font.PLAIN);
+      if( hasStack()>0 ) drawWord(g,"Back",wpanel-margeX-40,margeY+15,true,Font.PLAIN);
+      if( hasStack()>1 ) drawWord(g,"Home",wpanel-margeX-80,margeY+15,true,Font.PLAIN);
 
    }
    

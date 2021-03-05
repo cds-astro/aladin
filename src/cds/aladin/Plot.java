@@ -34,9 +34,8 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Enumeration;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -62,7 +61,7 @@ public class Plot {
    protected ViewSimple viewSimple;
 
    protected Projection plotProj = null;              // la projection du graphique
-   protected Vector<PlotItem> plotTable = null;       // la liste des plots à réaliser
+   protected ArrayList<PlotItem> plotTable = null;       // la liste des plots à réaliser
    protected boolean flagTime=false;                  // true si l'absisse est du temps
    
    public Plot(ViewSimple viewSimple) {
@@ -94,7 +93,7 @@ public class Plot {
       } else {
          if( hasTable() ) {
             for( int i=0; i<2 && i<plotTable.size(); i++ ) { 
-               PlotItem p = plotTable.elementAt(i);
+               PlotItem p = plotTable.get(i);
                if( s.length()>0 ) s.append(" + ");
                try {
                   Legende leg = p.plan.getFirstLegende();
@@ -143,14 +142,14 @@ public class Plot {
 
    // initialisation du plot
    protected void initPlot() {
-      if( plotTable==null ) plotTable = new Vector<>(10);
+      if( plotTable==null ) plotTable = new ArrayList<>(10);
    }
    
    // recopie du plot pour la vue passée en paramètre
    protected Plot copyIn(ViewSimple v) {
       Plot plot = new Plot(v);
       plot.plotProj = plotProj;
-      plot.plotTable = plotTable==null ? null : (Vector) plotTable.clone();
+      plot.plotTable = plotTable==null ? null : (ArrayList) plotTable.clone();
       plot.flagTime = flagTime;
       return plot;
    }
@@ -183,7 +182,6 @@ public class Plot {
                double [] val = null;
                while( it.hasNext() ) {
                   Obj o = it.next();
-//                  if( !(o instanceof Source) ) continue;
                   if( !o.asSource() ) continue;
                   Source s = (Source)o;
                   val = getValues(val,s);
@@ -236,7 +234,7 @@ public class Plot {
             
             // Pas de séries temporelles ? on donne tout de même une largeur pour que la projection
             // fonction pour les TMOC éventuels.
-            if( flagNoSerie && !first ) {  max1Y = h; min1Y=0; flagTime=true; }
+            if( flagNoSerie && !first ) {  max1Y = h; min1Y=0; setTimePlot( true ); }
          }
          
          memoMaxTimeRange(min1X, max1X, min1Y, max1Y);
@@ -358,7 +356,7 @@ public class Plot {
       PlotItem p = findPlotTable(plan);
       boolean modify=true;
       boolean isTime=false;
-      if( p==null ) { p = new PlotItem(); plotTable.addElement(p); modify=false; }
+      if( p==null ) { p = new PlotItem(); plotTable.add(p); modify=false; }
       if( indexX==-1 || indexY==-1 ) {
          Legende leg = plan.getFirstLegende();
          indexX=leg.getTime();
@@ -366,21 +364,26 @@ public class Plot {
          if( !isTime ) {
             indexX = leg.getIndexNumericField();
             indexY = leg.getIndexNumericField(indexX);
+            
+         // Si c'est un graphe temporel, on va d'abord chercher une colonne de flux pour l'ordonnée
          } else {
-            indexY = leg.getIndexNumericField();
-            if( indexY==indexX ) indexY = leg.getIndexNumericField(indexY);
+            indexY = leg.getIndexFluxField();
+            if( indexY==-1 ) {
+               indexY = leg.getIndexNumericField();
+               if( indexY==indexX ) indexY = leg.getIndexNumericField(indexY);
+            }
          }
+      } else {
+         Legende leg = plan.getFirstLegende();
+         isTime = leg.field[ indexX ].isTime();
       }
-      p.flagIsTime= isTime;
-      p.index[0]  = indexX;
-      p.index[1]  = indexY;
-      p.plan      = plan;
+      p.set( plan, indexX, indexY, isTime);
       
-      aladin.trace(4,"ViewSimple.addPlotTable: "+(modify?"modify":"add")+" plan="+plan.label+" indexX="+indexX+" indexY="+indexY);
+      aladin.trace(4,"ViewSimple.addPlotTable: "+(modify?"modify":"add")+" plan="+plan.label+" indexX="+indexX+" indexY="+indexY+" isTime="+isTime);
       
       final boolean flagMainPlot=isMainPlot(p);
       final boolean flagIsTime=isTime;
-      if( flagMainPlot ) this.flagTime=isTime;
+      if( flagMainPlot ) setTimePlot( isTime );
       adjustPlot(p);
       if( openProp ) {
          SwingUtilities.invokeLater( new Runnable() {
@@ -390,7 +393,7 @@ public class Plot {
                if( flagMainPlot && flagIsTime ) timePlotButton.setEnabled(false);
             }
          });
-      }
+      } 
       return new int[] { indexX, indexY };
    }
    
@@ -419,19 +422,31 @@ public class Plot {
    private JCheckBox flipX=null, flipLog=null;
    
    // Choisit automatiquement la colonne de temps en abscisse
-   private void toTimePlot(PlotItem p) {
+   protected void toTimePlot(PlotItem p) {
       Legende leg = p.plan.getFirstLegende();
       int nindex=leg.getTime();
       if( nindex<0 ) return;
       p.setIndex(0,nindex);
       comboX.setSelectedItem( leg.getNameAndDescription(nindex) );
-      flagTime = p.isTime();
+      setTimePlot( p.isTime() );
       adjustPlot();
       viewSimple.repaint();
    }
    
+   private void setTimePlot( boolean flag ) {
+      flagTime = flag;
+      if( !flag ) {
+      try {
+         throw new Exception();
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+      }
+      
+   }
+   
    // Mets à jour l'état des widgets de contrôle
-   private void adjustWidgets() {
+   private void adjustWidgets( ) {
       if( timePlotButton!=null ) timePlotButton.setEnabled( !flagTime );
       if( flipX!=null ) flipX.setEnabled( !flagTime );
       if( flipLog!=null ) flipLog.setEnabled( !flagTime );
@@ -499,7 +514,7 @@ public class Plot {
 //            Aladin.trace(4,"getPlotControlPanelForOneIndex: plan="+p.plan.label+" table="+p.leg.name+" col="+n+" index="+nindex);
             if( nindex==p.index[ n ] ) return;
             p.setIndex(n,nindex);
-            flagTime = p.isTime();
+            setTimePlot( p.isTime() );
             adjustPlot();
             viewSimple.repaint();
          }
@@ -691,10 +706,8 @@ public class Plot {
 
    // Retourne le PlotItem concernant le plan passé en paramètre sinon null
    protected PlotItem findPlotTable(Plan plan) {
-      if( ! hasTable() ) return null;
-      Enumeration<PlotItem> e = plotTable.elements();
-      while( e.hasMoreElements() ) {
-         PlotItem p = e.nextElement();
+      if( !hasTable() ) return null;
+      for( PlotItem p : plotTable ) {
          if( p.plan==plan ) return p;
       }
       return null;
@@ -726,6 +739,13 @@ public class Plot {
       int [] index = new int[2];
       boolean flagIsTime=false;
       
+      void set(Plan p, int indexX, int indexY, boolean isTime ) {
+         plan      = p;
+         index[0]  = indexX;
+         index[1]  = indexY;
+         flagIsTime= isTime;
+      }
+
       void setIndex(int n, int nindex) {
          
          // si c'est une ordonnée, cas trivial 
@@ -733,19 +753,16 @@ public class Plot {
          
          // Sinon il faut vérifier que ce n'est pas le champ temporel, et si c'est le cas l'indiquer
          else {
+            index[0]=nindex;
             Legende leg = plan.getFirstLegende();
-            if( flagIsTime=(leg!=null && leg.getTime()==nindex) ) {
-               index[0] = -nindex;   // on l'enregistre alors en valeur négative (à tout hasard si besoin)
-            } else index[0]=nindex;
+            flagIsTime=(leg!=null && leg.getTime()==nindex);
          }
-
       }
       
+      // Retourne true s'il s'agit d'un plot temporel
       boolean isTime() { return flagIsTime; }
       
-      public String toString() { return "Plot["+plan.label+"] index="+index[0]+","+index[1]+" flagisTime="+flagIsTime; }
-      
-      
+      public String toString() { return "Plot["+(plan==null?"null":plan.label)+"] index="+index[0]+","+index[1]+" flagisTime="+flagIsTime; }
    }
 
    

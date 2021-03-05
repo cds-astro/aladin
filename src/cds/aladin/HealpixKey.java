@@ -1152,9 +1152,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                tmp.pixels = in;
                if( planBG.flagRecutRadius>0 && w!=width) {
                   try { tmp.pixels = getSample(planBG.flagRecutCoo, w, in, width); }
-                  catch( Exception e ) {
-                     if( planBG.aladin.levelTrace>=3 ) e.printStackTrace();
-                  }
+                  catch( Exception e ) { }
                }
                double [] range = tmp.findAutocutRange(0,0,true);
 

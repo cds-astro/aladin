@@ -159,6 +159,10 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    /** Mémorisation d'une commande */
    public void printCommand(String cmd) {
       if( cmd==null || cmd.trim().length()==0 ) return;
+      
+      // On ne mémorise plus les coordonnées
+      if( !Localisation.notCoord(cmd) ) return;
+      
       cmdHistory.addElement( new Command(cmd) );
       resetArrowHistory();
 
@@ -496,6 +500,9 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
             c.cmd=s;
             c.type=CMD;
          }
+         
+         // On ne reprend plus les simples coordonnées
+         if( c.type==CMD && !Localisation.notCoord(c.cmd) ) continue;
          
          cmdHistory.addElement(c);
       }

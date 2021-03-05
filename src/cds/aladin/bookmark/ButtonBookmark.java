@@ -90,14 +90,6 @@ public class ButtonBookmark extends JButton {
    /** Fournit le texte du bouton, càd le nom de la fonction */
    public String getText() { return fct==null ? "X"  : fct.getName(); }
    
-//   public boolean isEnabled() {
-//      if( fonction==null ) return false;
-//      String param = fonction.getParam();
-//      if( param.indexOf("$TARGET")>=0 ) return fonction.getTarget(aladin).length()>0;
-//      if( param.indexOf("$RADIUS")>=0 ) return  fonction.getRadius(aladin).length()>0;
-//      return true;
-//   }
-   
    // Lance l'exécution du script
    private void exec() { 
       try { fct.exec(aladin,"",true); }
@@ -109,9 +101,8 @@ public class ButtonBookmark extends JButton {
    /** Affichage du bouton "bookmark", avec une petite étoile en préfixe */
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
-      Util.drawSignet(g, 5,8, fct.isLocalDefinition() ? 
+      Util.drawSignet(g, 5, getHeight()/2-2, fct.isLocalDefinition() ? 
             Aladin.COLOR_BLUE : Aladin.COLOR_GREEN_LIGHT);
-//            Aladin.COLOR_BLUE : Orange);
    }
 
 }

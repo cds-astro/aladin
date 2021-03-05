@@ -207,7 +207,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       for( int i=0; i<nb_o; i++ ) {
          try {
             o[i].projection(v);   // On applique la projection a chaque source
-         } catch( Exception e ) {}
+         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       }
 
       // Pour que les (x,y) soient recalcules dans la vue courante
@@ -1450,7 +1450,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    /**Insertion de la source après la dernière source de même légende, sinon à la fin */
    protected void insertSource(Source src) {
       for( int i=nb_o-1; i>=0; i-- ) {
-//         if( !(o[i] instanceof Source) ) continue;
          if( !o[i].asSource() ) continue;
          
          // On a trouvé ?

@@ -938,6 +938,12 @@ public final class Util {
    }
    
    /** Tracé d'un petit triangle plein */
+   static public void fillTriangle8(Graphics g, int x, int y) {
+      g.drawLine(x, y, x+10, y); x++; y++;
+      fillTriangle7(g,x,y);
+   }
+   
+   /** Tracé d'un petit triangle plein */
    static public void fillTriangle7(Graphics g, int x, int y) {
       g.drawLine(x, y, x+8, y); x++; y++;
       g.drawLine(x, y, x+6, y); x++; y++;
@@ -1179,7 +1185,7 @@ public final class Util {
       g.drawLine(x+2,y+3,x+2,y+3);
    }
    
-   /** Tracage d'un petit signet (bookmark) */
+   /** Tracage d'un petit signet (bookmark) de 8 de haut */
    static public void drawSignet(Graphics g,int x, int y,Color c) {
       g.setColor(c);
 

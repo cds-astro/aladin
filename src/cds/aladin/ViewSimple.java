@@ -1602,13 +1602,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( plot!=null ) { plot.free(); plot=null; }
          
       } else {
-         if(p.isTimeMoc() ) {
+         if( p.isTimeMoc() ) {
             plot = new Plot(this);
             SwingUtilities.invokeLater(new Runnable() {
                public void run() { plot.adjustPlot(); }
             });
          } else if( otherView!=null && !otherView.isPlot() || alreadyVisible ) {
-            addPlotTable(p, -1, -1,true);
+            addPlotTable(p, -1, -1 ,true);
          }
       }
       
@@ -1914,7 +1914,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    private void setClip(Graphics g) { setClip(g,false); }
    private void setClip(Graphics g,boolean debug) {
       if( clip!=null ) {
-         g.drawRect(clip.x,clip.y,clip.width,clip.height);
+         g.setClip(clip.x,clip.y,clip.width,clip.height);
 
          if( !debug ) return;
          g.setColor(Color.magenta);
@@ -2348,7 +2348,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          vs.initScroll();
          //         if( !fullScreen ) return;
       }
-
+      
       // Création automatique d'une vue associé au plan Draw ?
       if( isFree() ) {
          Plan pc = aladin.calque.getFirstSelectedPlan();
@@ -3139,7 +3139,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       // Scrolling de la vue par la souris
-      if( flagScrolling || inNE(x,y) ) {
+      if( tool==ToolBox.PAN && (flagScrolling || inNE(x,y)) ) {
          aladin.calque.zoom.zoomView.startDrag();
          lastWhenDrag = e.getWhen();
          vs.scroll(e);
@@ -3688,7 +3688,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             resetDefaultCursor(tool, e.isShiftDown() );
             if( flagOnFirstLine ) {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
-            } else if( flagRollable || inNE((int)x,(int)y) && pref instanceof PlanBG && !isPlot() ) {
+            } else if( flagRollable || (tool==ToolBox.PAN && inNE((int)x,(int)y)) && pref instanceof PlanBG && !isPlot() ) {
                if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( view.isSimbadOrVizieRPointing() ) {
                if( oc!=Aladin.LOOKCURSOR ) Aladin.makeCursor(this,(oc=Aladin.LOOKCURSOR));
@@ -6520,7 +6520,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          for( int i=allPlans.length-1; i>=0; i--) {
             Plan p = allPlans[i];
             if( p.type==Plan.NO || !p.flagOk ) continue;
-
+            
             // On affiche d'abord les images, puis tout le reste
             if( OVERLAYFORCEDISPLAY ) {
                if( passe==1 && !p.isPixel() ) continue;

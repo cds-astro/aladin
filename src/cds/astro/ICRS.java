@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 /*==================================================================
@@ -39,10 +18,64 @@ import java.text.*;	// for parseException
 
 public class ICRS extends Astroframe {
 
+  /** Letter used to identify this frame in IAU names */
+   static final char letterIAU = 'I';
+
   /**
-   * Name of this firame.
+   * ICRS at base_epoch is the pivot (intertial frame).
+   * Expressed in <b>Julian years</b>
+    static public final double base_epoch = 2000.0;
+   */
+    static public final double[] toICRSbase = AstroMath.U3matrix;
+
+   // ===========================================================
+   // 	Retrieve an existing frame among fixedFrames
+   // ===========================================================
+
+  /**
+   * Retrieve a frame saved in "fixedFrames".
+   * @param epoch   the epoch in <b>Julian</b> Year.
+   *        (accept difference in epoch of ~1sec)
+   * @return  the corresponding frame if existing, <em>null</em> if not existing.
   **/
-    static public String class_name = "ICRS";
+    public static ICRS scan(double epoch) {
+        if(DEBUG) System.out.println("#...ICRS.scan(" + epoch + ")");
+        if(fixedFrames==null) return(null);
+        boolean anyEpoch = Double.isNaN(epoch);
+        Iterator i = fixedFrames.iterator();
+        while(i.hasNext()) {
+            Object o = (Object)i.next();
+            if(!(o instanceof ICRS)) continue;
+            ICRS f = (ICRS)o;
+            if((f.fixed&0xf)!=0)	// non-standard frame
+                continue;
+            if(anyEpoch||(Math.abs(f.epoch-epoch)<=Astroframe.Jsec))
+                return f;
+        }
+        return(null);
+    }
+
+  /**
+   * Create (and mark as fixed) an ICRS frame
+   * @param epoch default epoch, in <b>Julian</b> Year.
+   * @return The corresponding frame, created if necessary.
+  **/
+    public static ICRS create(double epoch) {
+        ICRS f = scan(epoch);
+        if(f==null) {
+            f = new ICRS(epoch);
+            f.fixFrame();
+        }
+        return(f);
+    }
+
+  /**
+   * Create (and mark as fixed) the default ICRS frame
+   * @return The default ICRS(Ep=J2000) coordinate frame.
+  **/
+    public static ICRS create() {
+	return create(2000.0);
+    }
 
    // ===========================================================
    // 			Contructor
@@ -54,34 +87,14 @@ public class ICRS extends Astroframe {
   **/
     public ICRS(double epoch) {
     	this.precision = 9;		// Intrinsic precision = 0.1mas
-	ICRSmatrix = Coo.Umatrix3;	// Identity matrix
-	this.name = class_name;
-	this.epoch = epoch;
+	this.epoch = Double.isNaN(epoch) ? 2000: epoch;
+	this.name = "ICRS";
+        full_name = "ICRS(Ep=J" + epoch + ")";
+	toICRSmatrix = toICRSbase;	// Identity matrix
+	fromICRSmatrix = toICRSbase;	// Identity matrix
 	hms = true;			// Sexagesimal is h m s in RA
         ed_lon = Editing.SEXA3c|Editing.ZERO_FILL;
         ed_lat = Editing.SEXA3c|Editing.ZERO_FILL|Editing.SIGN_EDIT;
-    }
-
-  /**
-   * Instanciate an ICRS frame
-  **/
-    public ICRS() {
-	this(2000.);
-    }
-
-  /**
-   * Instanciate an ICRS frame
-   * @param text the default epoch, e.g. "J1991.25"
-  **/
-    public ICRS(String text) throws ParseException {
-        this();
-        Astrotime t = new Astrotime();
-        int o = t.parse(text, 0);
-        if (o > 0) 		// Epoch expressed in Julian years
-	    epoch = t.getJyr();
-	while (o<text.length() && Character.isWhitespace(text.charAt(o))) o++;
-	if (o<text.length()) throw new ParseException
-	    ("****Astroframe: '" + text + "'+" + o, o);
     }
 
    // ===========================================================
@@ -91,10 +104,10 @@ public class ICRS extends Astroframe {
   /**
    * Get the conversion to ICRS matrix
    * @return Indentity matrix
-  **/
-    public double[][] toICRSmatrix() {
-	return(Coo.Umatrix3);
+    public double[] toICRSmatrix() {
+	return(AstroMath.U3matrix);
     }
+  **/
 
   /**
    * Convert the position to its ICRS equivalent.
@@ -115,17 +128,17 @@ public class ICRS extends Astroframe {
   /**
    * Convert the position to its ICRS equivalent.
    * @param u a 6-vector
-  **/
     public void toICRS(double[] u) {
 	// Nothing to do !
     }
+  **/
 
   /**
    * Convert the position from the ICRS frame.
    * @param u a 6-vector
-  **/
     public void fromICRS(double[] u) {
 	// Nothing to do !
     }
+  **/
 
 }

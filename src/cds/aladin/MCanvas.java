@@ -91,7 +91,7 @@ MouseWheelListener, Widget
 
    int W=500,H;              // Taille courante du MCanvas
    Image img;            // Double buffer
-   int wblanc;           // Taille d'un ``blanc'' dans le texte
+   double wblanc=-1;        // Taille d'un ``blanc'' dans le texte
    int firstsee;         // Premiere ligne affichee
    int lastsee;          // Derniere ligne affichee
    int currentsee=-1;    // Ligne courante (sous la souris)
@@ -145,7 +145,7 @@ MouseWheelListener, Widget
 
 
       // Determination des tailles des lettres
-      wblanc = getToolkit().getFontMetrics(FONT).stringWidth("M");
+//      wblanc = getToolkit().getFontMetrics(FONT).stringWidth("M");
 
       TIPHEAD = aladin.chaine.getString("TIPHEAD");
       TIPGLU  = aladin.chaine.getString("TIPGLU");
@@ -588,7 +588,6 @@ MouseWheelListener, Widget
     */
    protected int drawWords(Graphics g, Words w, boolean flagClear) {
       return drawWords(g,w,flagClear, w.y<=HF ?  Aladin.COLOR_MEASUREMENT_HEADER_BACKGROUND : Aladin.COLOR_MEASUREMENT_BACKGROUND );
-//      return drawWords(g,w,flagClear, aladin.getBackground() ); //w.y<=HF ? Aladin.BKGD: (w.num%2==0 ? Color.white : BG ));
    }
    private int drawWords(Graphics g, Words w, boolean flagClear, Color background) {
       int y = w.y+HF;        // Ligne de base
@@ -598,18 +597,12 @@ MouseWheelListener, Widget
       int widthw;	     // Taille du mot
       String text =  w.text;
       
-      // Prise en compte de la precision
+      // Prise en compte de la precision pour aligner le point décimal
       if( w.precision>=0 ) {
-         //         int i = text.lastIndexOf('.');
          int j = text.indexOf(' ');
          if( j<0 ) {
-            //            int pos = w.precision>0 ? w.precision+1 : w.precision;
-            //            if( i+pos<text.length() ) text = text.substring(0,i+pos);
-
             
             try {
-//               double v = Double.parseDouble(w.text);
-//               text = (new Formatter(Locale.ENGLISH)).format("%."+w.precision+"f", v).toString();
                text = Util.myRound(w.text,w.precision, false);
                int i = text.lastIndexOf('.');
                if( i>0 ) {
@@ -622,6 +615,8 @@ MouseWheelListener, Widget
                      for( j=k;j<n-1;j++) trail.append(' ');
                      text = text.substring(0,k+1)+trail.toString();
                   }
+               } else {
+                  for( j=0; j<w.precision+1; j++ ) text+=' ';
                }
             } catch( Exception e) {}
          }
@@ -631,15 +626,16 @@ MouseWheelListener, Widget
       boolean flagCut=false;  // true si le mot est tronqué
       FontMetrics fm = g.getFontMetrics();
       widthw = fm.stringWidth(text) + (w.sort!=Field.UNSORT ? 12 : 0);
+//      widthw = (int)( text.length()*wblanc + (w.sort!=Field.UNSORT ? 12 : 0) );
       if( w.onMouse ) {
-         if( widthw<w.width*wblanc ) width = w.width*wblanc;
+         if( widthw<(int)(w.width*wblanc) ) width = (int)(w.width*wblanc);
          else {
             width=widthw;
             if( w.archive || w.footprint ) width+=3;
          }
       } else {
-         width = w.width*wblanc;
-         flagCut = widthw>w.width*wblanc;
+         width = (int)(w.width*wblanc);
+         flagCut = widthw>(int)(w.width*wblanc) ;
       }
 
       // Remplissage prealable si necessaire
@@ -660,12 +656,10 @@ MouseWheelListener, Widget
          }
 
          g.setColor( bg );
-//         g.fillRect(x-4,y-HF,width+7,HL-1);
          g.fillRect(x-6,y-HF,width+9,HL-1);
          if( w.onMouse && !(w.archive || w.footprint)  ) {
             int M=2;
             g.setColor( Aladin.COLOR_MEASUREMENT_BACKGROUND_MOUSE_CELL );
-//            g.fillRect(x-4+M,y-HF+M-1,width+7-2*M,HL-1-2*M+2);
             g.fillRect(x-6+M,y-HF+M-1,width+9-2*M,HL-1-2*M+2);
          }
       }
@@ -709,7 +703,7 @@ MouseWheelListener, Widget
 
       // Mot trop long ?
       if( flagCut ) {
-         int c = (widthw - (width - (w.archive?6:0)) )/wblanc +2;
+         int c = (int)((widthw - (width - (w.archive?6:0)) )/wblanc +2);
          int offset=text.length()-c;
          if( offset>0 ) text = text.substring(0,offset);
       }
@@ -727,7 +721,7 @@ MouseWheelListener, Widget
       // On ajoute des points à la fin du mot s'il est coupé
       if( flagCut ) {
          Font f = g.getFont();
-         int xp = g.getFontMetrics().stringWidth(text)+xtext;
+         int xp = g.getFontMetrics().stringWidth(text.trim())+xtext;
          g.setFont(Aladin.PLAIN);
          g.drawString("...",xp,y);
          g.setFont(f);
@@ -750,7 +744,7 @@ MouseWheelListener, Widget
 
       drawBordG(g,x,y-HF,width);
 
-      return w.width*wblanc;
+      return (int)Math.ceil(w.width*wblanc)+1;
    }
 
 
@@ -811,14 +805,14 @@ MouseWheelListener, Widget
          }
 
          w.setPosition(x,y-HF,width,HF);  // Memo de la boite recouvrant le mot, le repere
-         x += width+wblanc;               // Calcul de la prochaine abscisse
+         x += (int)(width+wblanc);               // Calcul de la prochaine abscisse
          flagFirst=false;
       }
 
       if( W!=-1 ) {
 
          // Affichage du repere de debut de ligne si necessaire
-         if( rep!=null && y>HF ) Util.drawCheckbox(g,X+3,y-11,o.plan.c,null,null,o.isTagged());
+         if( rep!=null && y>HF ) Util.drawCheckbox(g,X+3,y-HF/2-3,o.plan.c,null,null,o.isTagged());
 
          // On finit le fond de la ligne si nécessaire
          if( x<X+W ) {
@@ -901,7 +895,7 @@ MouseWheelListener, Widget
          }
 
          w.setPosition(x,y-HF,width,HF);  // Memo de la boite recouvrant le mot, le repere
-         x += width+wblanc;               // Calcul de la prochaine abscisse
+         x += (int)(width+wblanc);               // Calcul de la prochaine abscisse
       }
 
       if( W!=-1 ) {
@@ -1222,7 +1216,7 @@ MouseWheelListener, Widget
       // On redimensionne la colonne
       if( onBordField!=-1 ) {
          Field f = oleg.field[onBordField];
-         int offset = (onBordX-x)/wblanc;
+         int offset = (int)((onBordX-x)/wblanc);
          if( offset==0 ) return;
          int colSize = f.columnSize;
          colSize-=offset;
@@ -1302,7 +1296,7 @@ MouseWheelListener, Widget
       }
 
       // Affichage du repere de debut de ligne si necessaire
-      if( rep!=null && y>HF) Util.drawCheckbox(g,3,y+1,o.plan.c,null,null,o.isTagged());
+      if( rep!=null && y>HF) Util.drawCheckbox(g,3,y+HF/2-3,o.plan.c,null,null,o.isTagged());
    }
 
    /** Initialisation de la ligne à montrer  + affichage */
@@ -1798,7 +1792,7 @@ MouseWheelListener, Widget
       // Juste en cas d'ouverture du panel
       if( W!=oW ) {
          scrollH.setVisibleAmount(W);
-         scrollH.setBlockIncrement(W-10*wblanc);
+         scrollH.setBlockIncrement( (int)(W-10*wblanc) );
          oW=W;
       }
 
@@ -1807,7 +1801,7 @@ MouseWheelListener, Widget
          aladin.mesure.add(scrollH,"South");
          showScrollH=true;
          scrollH.setVisibleAmount(W);
-         scrollH.setBlockIncrement(W-10*wblanc);
+         scrollH.setBlockIncrement( (int)(W-10*wblanc));
          nbligne--;
       }
       if( !ok ) return;
@@ -1872,6 +1866,13 @@ MouseWheelListener, Widget
    private void paintComponent1(Graphics gr) {
       
       super.paintComponent(gr);
+      
+      // Initialisation de la taille d'une lettre (la fonte est nécessaire monoscaped)
+      if( wblanc==-1 ) {
+         StringBuilder s = new StringBuilder();
+         for( int i=0; i<100; i++ ) s.append('M');
+         wblanc = gr.getFontMetrics(FONT).stringWidth(s.toString())/(double)s.length();
+      }
       
       boolean flagDoubleBuffering = Aladin.useDoubleBuffering(gr);
       

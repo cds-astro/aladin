@@ -2165,6 +2165,7 @@ final public class TableParser implements XMLConsumer {
       else if( sFlux!=null    && name.equals(sFlux)    ) { f.sed=Field.FLUX;    nFlux=nField; }
       else if( sFluxErr!=null && name.equals(sFluxErr) ) { f.sed=Field.FLUXERR; nFluxErr=nField; }
       else if( sSedId!=null   && name.equals(sSedId)   ) { f.sed=Field.SEDID;   nSedId=nField; }
+      else if( nField==nTime ) { f.sed=Field.TIME; }
       else return;
    }
    
@@ -2391,6 +2392,7 @@ final public class TableParser implements XMLConsumer {
    public void endElement (String name) {
       if( inError ) inError=false;
       int depth = xmlparser.getDepth()+1; // faut ajouter 1 car il est déjà décompté
+      if( name.length()==0 ) return;  // Bizarre
 
       if( inGroup ) memoEndGroup(name);
 

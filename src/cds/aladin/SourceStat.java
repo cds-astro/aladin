@@ -47,35 +47,14 @@ import cds.tools.pixtools.CDSHealpix;
  *
  * @author Pierre Fernique [CDS]
  * @version 3.0 (juin 2016): Refonte complète depuis Repere.java
+ * @version 3.1 (fév 2021): Découpage en deux classes : SourceInfo et SourceStat
  */
-public class SourceStat extends SourceTag {
-   
-   static protected Legende legende=createLegende();
-   
-   /** Création ou maj d'une légende associée à un SourcePhot */
-   static protected Legende createLegende() {
-      if( legende!=null ) return legende;
-      legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "_RAJ2000","_DEJ2000","ID",  "s_region", "Image", "RA (ICRS)","DE (ICRS)","Count",  "Sum",   "Sigma",  "Min",   "Avg",   "Max",   "Radius","Area",       });
-      legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "double",  "double",  "char","char",     "char",  "char",     "char",     "integer","double","double", "double","double","double","double","double"  });
-      legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "deg",     "deg",     "",    "",         "",      "\"h:m:s\"","\"h:m:s\"","pixel",  "",      "",       "",      "",      "",      "arcmin","arcmin^2"       });
-      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "10",      "10",      "10",  "5",        "20",    "13",      "13",        "10",     "10",    "10",    "10",    "10",     "10",    "10",    "10"    });
-      legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "6",       "6",       "",    "",         "",      "4",        "5",        "2",      "4",     "4",     "4",     "4",      "4" ,    "4",     "4",         });
-      legende = Legende.adjustDefaultLegende(legende,Legende.DESCRIPTION,
-            new String[]{  "RA","DEC", "Identifier",  "Field of View", "Reference image", "Right ascension",  "Declination","Pixel count","Sum of pixel values","Median of the distribution", "Minimum value","Average value", "Maximum value",
-                           "Radius","Area (pixels)" });
-      legende = Legende.adjustDefaultLegende(legende,Legende.UCD,
-            new String[]{  "pos.eq.ra;meta.main","pos.eq.dec;meta.main","meta.id;meta.main","","","pos.eq.ra","pos.eq.dec","","","","","","","","" });
-      legende.name="Pixel statistics";
-      hideRADECLegende(legende);
-      return legende;
-   }
+public class SourceStat extends SourceInfo {
    
    protected int L = 5;          // taille des poignées de saisie
    private double radius;        // Rayon en degrés image du cercle englobant
    protected int dw,dh;          // mesure du label
    protected Color couleur=null; // Couleur alternative
-   
-   protected boolean asSource =false;   // Par défaut, n'apparait pas en tant que Source
    private StatPixels statPixels = new StatPixels();   // Gestion des stats associées
    
    /** Creation pour les backups */
@@ -103,64 +82,18 @@ public class SourceStat extends SourceTag {
    
    /** Post-traitement lors de la création */
    protected void suite() {
-      setLeg(legende);
       setId();
-      resumeMesures();
    }
    
-   private int order=0;   // -1 max, 0 courant, ou explicite
+   protected int order=0;   // -1 max, 0 courant, ou explicite
    
    public void setOrder(String order) throws Exception {
       if( order.equalsIgnoreCase("max") ) this.order=-1;
       else this.order=Integer.parseInt(order);
-//      System.out.println("setOrder="+this.order);
-      resumeMesures();
   }
-
-   /** (Re)énération de la ligne des infos (détermine les mesures associées) */
-   protected void resumeMesures() {
-      double stat[] = null;
-      int z=-1;
-      
-      // Si contexte trop lent, on ne fait pas la mesure
-      if( !doLiveMesure() ) return;
-      
-      String nomPlan = planBase.label;
-      if( planBase.isCube() ) {
-         z=(int)planBase.getZ();
-         int d = 1+z;
-         nomPlan+="/"+d;
-      }
-      
-      try { stat = getStatistics(planBase,z); }
-      catch( Exception e ) { stat=null; }
-      
-//      System.out.println("resumeMesures z="+z+" for "+id);
-      
-      String cnt  = stat==null ? " " : ""+stat[0];
-      String tot  = stat==null ? " " : ""+stat[1];
-      String avg  = stat!=null && stat[0]>0 ? ""+stat[1]/stat[0] : " ";;
-      String sig  = stat==null ? " " : ""+stat[2];
-      String surf = stat==null ? " " : ""+stat[3]*3600;
-      String rad  = ""+getRadius()*60;
-      String min = stat==null ? " " : ""+stat[4];
-      String max = stat==null ? " " : ""+stat[5];
-      
-      Coord c = new Coord(raj,dej);
-      
-      if( planBase instanceof PlanBG ) {
-         PlanBG pbg = (PlanBG)planBase;
-         int orderFile=order==-1 ? pbg.maxOrder : order==0 ?  pbg.getOrder() : order;
-         nomPlan=orderFile+"/"+nomPlan;
-      }
-      
-      String fov = "CIRCLE ICRS "+raj+" "+dej+" "+getRadius();
-      setFootprint(fov);
-      setIdxFootprint(3);
-      
-      info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+fov+"\t"+nomPlan+"\t"+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+rad+"\t"+surf;
-   }
    
+   protected void resumeMesures() { }
+
    /** Retourne la liste des Propriétés éditables */
    public Vector getProp() {
       Vector propList = super.getProp();
@@ -240,6 +173,9 @@ public class SourceStat extends SourceTag {
          } catch( Exception e ) { if( Aladin.levelTrace==3 ) e.printStackTrace(); }
       }
    }
+   
+   /** Retourne le FoV à la STC-S */
+   protected String getFoV( ) { return "CIRCLE ICRS "+raj+" "+dej+" "+getRadius(); }
 
    /** Retourne le type d'objet */
    public String getObjType() { return "Phot"; }
@@ -352,8 +288,8 @@ public class SourceStat extends SourceTag {
 
    private boolean flagLiveMesure=true;
    
-   // True s'il est possible de faire les mesures stats en live (clic&drag)
-   private boolean doLiveMesure() { return flagLiveMesure; }
+//   // True s'il est possible de faire les mesures stats en live (clic&drag)
+//   private boolean doLiveMesure() { return flagLiveMesure; }
    
    // Teste s'il est possible de faire les mesures stats en live (cf resumeMesures(). Si le dernier calcul
    // était trop lent (20ms), inhibe les prochains calculs jusqu'à ce que le rayon de redevienne
@@ -395,7 +331,7 @@ public class SourceStat extends SourceTag {
 
          // Si le est simplement dû au passage de la souris sur un précédent histogramme,
          // il ne faut pas regénérer cet histogramme
-         if( onMouse==null ) v.aladin.view.zoomview.initPixelHist();
+         if( onMouse==null ) v.aladin.view.zoomview.initPixelHist(this);
          else flagHist=false;
       }
       
@@ -414,7 +350,7 @@ public class SourceStat extends SourceTag {
       
       return true;
    }
-
+   
    /** Retourne une clé unique associé aux statistiques courantes */
    protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
@@ -704,6 +640,6 @@ public class SourceStat extends SourceTag {
       return true;
    }
 
-   protected boolean asSource() { return true; }
+   protected boolean asSource() { return false; }
 
 }

@@ -454,7 +454,17 @@ public final class Legende extends AbstractTableModel  {
       return -1;
    }
    
-   /** Retourne la desc
+   protected int getAlternatePrecision(int i) {
+      if( i>=field.length ) return -1;
+      return field[i].alternatePrecision;
+   }
+   
+   protected void setAlternatePrecision(int i,int prec) {
+      if( i>=field.length ) return;
+      field[i].alternatePrecision = prec;
+   }
+   
+  /** Retourne la desc
   /** Retourne le nombre de caracteres associes au champ.
     * @param i numero du champ
     * @return le nombre de caracteres, 10 si non specifie, -1 si erreur
@@ -604,6 +614,14 @@ public final class Legende extends AbstractTableModel  {
    
    /** Retourne l'indice du premier champ numérique */
    protected int getIndexNumericField() { return getIndexNumericField(-1); }
+   
+   /** Retourne l'indice d'un champ de flux sed si existant, sinon -1 */
+   protected int getIndexFluxField() {
+      for( int i=0; i<field.length; i++ ) {
+         if( field[i].sed==Field.FLUX ) return i;
+      }
+      return -1;
+   }
    
    /** Retourne l'indice du premier champ numérique après l'indique indiqué
     * @param after

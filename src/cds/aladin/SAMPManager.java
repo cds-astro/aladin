@@ -288,7 +288,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         EXCEPTION = a.chaine.getString("PMEXCEPTION").replaceAll("SAMP", name);
         CONFIRM_STOP_HUB = a.chaine.getString("PMCONFIRMSTOPHUB").replaceAll("SAMP", name);
     }
-
+    
     /**
      * Register with the SAMP hub
      *
@@ -299,40 +299,50 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
     public boolean register(boolean silent, boolean launchHubIfNeeded) {
         trace("Try to register Aladin with the SAMP hub");
 
-        if( isRegistered() ) {
-            trace("Aladin was already registered !");
-
-            return true;
-        }
-
-        if( !getHubListener(silent, launchHubIfNeeded) ) {
-            trace("Could not register to the SAMP hub");
-            return false;
-        }
-
-        boolean pbOccured = false;
-        // ###SAMP
-
         Vector params = new Vector();
-        params.add(sampSecret);
         Object result;
-        try {
-            // PF Mai 2017 - Tous les execute(...) ont été remplacés par callAndWait(...)
-            //           Map resultMap = (Map)hubClient.execute(HUB_MSG_REGISTER, params);
-            Map resultMap = (Map)hubClient.callAndWait(HUB_MSG_REGISTER, params);
-            // TODO : se prévenir contre les pbs de cast incorrect et de clé absentes !!
-            myPrivateKey = resultMap.get(KEY_PRIVATE_KEY).toString();
-            selfId = resultMap.get(KEY_SELF_ID).toString();
-            hubId = resultMap.get(KEY_HUB_ID).toString();
-            trace("Aladin has registered, self-id="+selfId);
-        }
-        catch(Exception e) {
-            pbOccured = true;
-        }
-        if( pbOccured ) isRegistered = false;
-        else {
-            isRegistered = true;
-            Aladin.trace(3, "Successful registration with the SAMP hub");
+        
+        // PF - Mar 2021 - J'ai ajouté ce verrou exclusif sur la variable isRegistered pour éviter
+        // qu'Aladin puisse s'inscrire deux fois. La conséquence était que le message table.highlight.row
+        // était alors envoyé à lui-même lorsque l'on survolait les sources dans la vue, et donc automatiquement
+        // sélectionnées
+        // Le problème n'arrivait que de temps en temps, probablement lié à un délai sur la réponse
+        // du getHubListener(...)
+        synchronized( lockRegistered ) {
+           
+           if( isRegistered() ) {
+              trace("Aladin was already registered !");
+              return true;
+           }
+
+           if( !getHubListener(silent, launchHubIfNeeded) ) {
+              trace("Could not register to the SAMP hub");
+              return false;
+           }
+
+           boolean pbOccured = false;
+           // ###SAMP
+
+           params.add(sampSecret);
+           try {
+              // PF Mai 2017 - Tous les execute(...) ont été remplacés par callAndWait(...)
+              //           Map resultMap = (Map)hubClient.execute(HUB_MSG_REGISTER, params);
+              Map resultMap = (Map)hubClient.callAndWait(HUB_MSG_REGISTER, params);
+              // TODO : se prévenir contre les pbs de cast incorrect et de clé absentes !!
+              myPrivateKey = resultMap.get(KEY_PRIVATE_KEY).toString();
+              selfId = resultMap.get(KEY_SELF_ID).toString();
+              hubId = resultMap.get(KEY_HUB_ID).toString();
+              trace("Aladin has registered, self-id="+selfId);
+              
+           }
+           catch(Exception e) {
+              pbOccured = true;
+           }
+           if( pbOccured ) setRegistered(false);
+           else {
+              setRegistered(true);
+              Aladin.trace(3, "Successful registration with the SAMP hub");
+           }
         }
 
         // declare metadata
@@ -447,14 +457,14 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
             if( mType.equals(HUB_MSG_SHUTDOWN) ) {
                 trace("hub is shutting down");
                 unregister(true);
-                isRegistered = false;
+                setRegistered(false);
                 updateState();
             }
 
             else if( mType.equals(HUB_MSG_DISCONNECT) ) {
                 trace("Hub wants us to disconnect ... proceed");
                 unregister(true);
-                isRegistered = false;
+                setRegistered(false);
                 a.dontReconnectAutomatically = true;
                 updateState();
             }
@@ -820,7 +830,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
             if( force ) {
                 // TODO : à factoriser
-                isRegistered = false;
+                setRegistered(false);
                 selfId = null;
 
                 // arrêt du hub interne
@@ -850,7 +860,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
             if( !force ) return false;
         }
 
-        isRegistered = false;
+        setRegistered(false);
         selfId = null;
 
         // arrêt du hub interne
@@ -869,9 +879,16 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
 
         return true;
     }
+    
+    private Object lockRegistered = new Object();
 
     public boolean isRegistered() {
-        return isRegistered;
+       synchronized( lockRegistered ) { return isRegistered; }
+    }
+    
+    // PF, pour éviter les accès parallèle => Aladin pouvait s'inscrire deux fois
+    public void setRegistered(boolean flag) {
+       synchronized( lockRegistered ) { isRegistered=flag; }
     }
 
     // référence au hub interne
@@ -1641,7 +1658,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
      */
     private void sendNotification(Map message, final String[] recipients) {
 
-        if( !isRegistered ) {
+        if( !isRegistered() ) {
             return;
         }
 
@@ -2374,7 +2391,7 @@ public class SAMPManager implements AppMessagingInterface, SampXmlRpcHandler, Pl
         }
         catch(Exception e) {
             unregister(true);
-            isRegistered = false;
+            setRegistered(false);
             updateState();
             return false;
         }

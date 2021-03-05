@@ -1042,7 +1042,7 @@ public class Save extends JFrame implements ActionListener {
          // Nouvelle table dans le plan courant
          if( o.getLeg()!=leg ) {
             if( leg!=null ) append( getXMLTailTable()); // fin de la table precedente
-            append( getXMLHeadTable(o.getLeg()) );           // Nouvelle table
+            append( getXMLHeadTable(o,o.getLeg()) );           // Nouvelle table
             leg=o.getLeg();
          }
 
@@ -1150,12 +1150,15 @@ public class Save extends JFrame implements ActionListener {
    }
 
    /** retourne l'entete XML d'une table */
-   protected String getXMLHeadTable(Legende leg) {
+   protected String getXMLHeadTable(Source o,Legende leg) {
       int i;
       StringBuffer s = new StringBuffer();
 
       // Entete de la table
       s.append("    <TABLE>"+CR);
+      
+      //Un Footprint associé ?
+      int fovIdx = o.getIdxFootprint();
 
       // Legende
       for( i=0; i<leg.field.length; i++ ) {
@@ -1177,6 +1180,7 @@ public class Save extends JFrame implements ActionListener {
          if( f.refText!=null )     s.append(CR+"         refText=\""+XMLParser.XMLEncode(f.refText)+"\"");
          if( f.refValue!=null )    s.append(CR+"         refValue=\""+XMLParser.XMLEncode(f.refValue)+"\"");
          if( f.sed!=0 )            s.append(CR+"         sed=\""+XMLParser.XMLEncode(f.getSEDtag())+"\"");
+         if( i==fovIdx )           s.append(CR+"         sregion=\"true\"");
          s.append("/>"+CR);
       }
 

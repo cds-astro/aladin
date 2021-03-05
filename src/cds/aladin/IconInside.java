@@ -36,21 +36,16 @@ public class IconInside extends Icon {
    static String INSIDE;
    
    private boolean activated=false;
-
-  /** Creation */
-   protected IconInside(Aladin aladin) {
-      super(aladin,32,24);
-      INSIDE=  aladin.chaine.getString("INSIDE");
-   }
    
-//   // Barres horizontales du dessin  (un sécateur)
-//   static final private int TX[][] = {
-//         {0,2,7},  {0,11,12},
-//         {1,0,8},  {1,10,17},
-//         {2,1,1},  {2,9,10},   {2,13,16},
-//         {3,8,9},  {3,11,15},
-//         {4,0,8},  {4,12,14},
-//         {5,1,7},   };
+   /** Creation */
+   protected IconInside(Aladin aladin) { this(aladin,32,24); }
+      
+   protected IconInside(Aladin aladin, int w, int h) {
+      super(aladin,w,h);
+      INSIDE=  aladin.chaine.getString("INSIDE");
+     
+   }
+
    
    // Barres horizontales du dessin (cadre et une flèche pointant à l'intérieur)
    static final private int TX[][] = {

@@ -91,11 +91,15 @@ public class SED extends JPanel {
    
    private ArrayList<SEDItem> sedList;  // Liste des points du SED sous une forme "prémachée"
    
+   private int w;                         // Taille des icones
    private Rectangle rCroix,rWave,rHelp,rMore;  // Position des icones sur le graphiques
    private double currentAbs=Double.NaN;  // Dernière fréquence/longueur d'onde sous la souris
    private double currentFlux=Double.NaN; // Dernier flux sous la souris
    private int currentX,currentY;         // Dernière position de la souris
    private SEDItem siIn;                  // !=null si sous la souris
+   
+   private TimeIcon timeIcon;       // Le bouton pour afficher un Time plot
+   private TableIcon tableIcon;       // Le bouton pour afficher la table du SED
    
    static private Color COLOROPT;
    static private Color COLORREF;
@@ -110,6 +114,10 @@ public class SED extends JPanel {
       
       COLOROPT = Aladin.DARK_THEME ? new Color(47,68,83) : new Color(234,234,255);
       COLORREF = Aladin.DARK_THEME ? Aladin.COLOR_STACK_HIGHLIGHT : new Color(255,234,234);
+      
+      w = Math.round(5*aladin.getUIScale());
+      timeIcon = new TimeIcon();
+      tableIcon = new TableIcon();
    }
    
    /** Mémorise le repère de la vue afin de pouvoir le réafficher ultérieurement
@@ -124,8 +132,6 @@ public class SED extends JPanel {
       if( source==null && first ) {
          System.out.println("SED.setSource("+source+")");
          first=false;
-         try { throw new Exception("ICI"); }
-         catch( Exception e ) { e.printStackTrace(); }
       }
       this.source=source;
    }
@@ -229,16 +235,26 @@ public class SED extends JPanel {
             Util.pause(10);
             MyInputStream inParam =  null;
             try {
-               inParam = Util.openAnyStream(url,20000);
+               inParam = Util.openAnyStream(url,10000);
                plan.pcat.tableParsing(inParam, "TABLE");
                parseAndDraw();
+               
             } catch( Exception e ) {
-               aladin.view.zoomview.setSED((String)null,(String)null);
-               aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
-               if( aladin.levelTrace>=3 ) e.printStackTrace();
+               
+               // On fait tout de suite un deuxième essai car VizieR a souvent ses vapeurs
+               try {
+                  inParam = Util.openAnyStream(url,20000);
+                  plan.pcat.tableParsing(inParam, "TABLE");
+                  parseAndDraw();
+                 
+               } catch( Exception e1 ) {
+                  aladin.view.zoomview.setSED((String)null,(String)null);
+                  aladin.command.printConsole("!!! VizieR photometry parsing error => "+e1.getMessage());
+                  if( aladin.levelTrace>=3 ) e1.printStackTrace();
+               }
             } finally {
                if( inParam!=null ) try { inParam.close(); } catch( Exception e ) {}
-               setIsLoading(false);
+                setIsLoading(false);
             }
          }
       } ).start();
@@ -251,6 +267,43 @@ public class SED extends JPanel {
       setPosition();
       aladin.calque.zoom.zoomView.flagSED=true;
       aladin.calque.repaintAll();
+   }
+   
+   // Active le bouton TimePlot si le SED contient une colonne de temps avec au moins 2 valeurs
+   private void activateTimePlot() {
+      boolean rep=false;
+      int ntime=-1;
+      int n=0;
+      String val0=null;
+      try {
+         for( SEDItem si: sedList ) {
+            Source s = si.o;
+            
+            // repérage du champ qui porte le temps
+            if( ntime<0 ) {
+               ntime=getField(s, Field.TIME);
+               if( ntime<0 ) break;        // Pas de colonne de temps
+            }
+            
+            // Vérification qu'il y a au-moins 2 sources qui ont un temps différent
+            String val = s.getValue( ntime ).trim();
+            
+            if( val.length()>0 && (val0==null || !val0.equals(val)) ) { val0=val; n++; }
+            if( n>1 ) { rep=true; break; }
+            
+         }
+      } catch( Exception e ) {}
+      timeIcon.activate(  rep );
+   }
+   
+   // Retourne true s'il existe déjà un Plot temporel pour ce SED
+   private boolean hasTimePlot() {
+      if( !planeAlreadyCreated ) return false;
+      for( int i=0; i<aladin.view.getNbView(); i++ ) {
+         ViewSimple v = aladin.view.viewSimple[i];
+         if( v.isPlotTime() && v.pref==plan ) return true;
+      }
+      return false;
    }
 
    /** Retourne la fréquence en GHz de la source */
@@ -266,30 +319,34 @@ public class SED extends JPanel {
       return x;
    }
    
-   // Procédure interne d'accès aux valeurs numériques du SED
-   private double getSEDValue(Source s,int sed) {
+   // retourne l'indice du champ de type sed (Field.FREQ, Field.FLUX, Field.TIME...), -1 si non trouvé
+   private int getField(Source s, int sed ) {
       Legende leg = s.getLeg();
       for( int i = 0; i<leg.field.length; i++ ) {
-         if( leg.field[i].sed == sed ) {
-            String val = s.getValue(i);
-            try {
-               return Double.parseDouble(val.trim());
-            } catch( Exception e ) {
-               return Double.NaN;
-            }
-         }
+         if( leg.field[i].sed == sed ) return i;
       }
-      return Double.NaN;
+      return -1;
+   }
+   
+   // Procédure interne d'accès aux valeurs numériques du SED
+   private double getSEDValue(Source s,int sed) {
+      try {
+         int i = getField(s,sed);
+         String val = s.getValue(i);
+         return Double.parseDouble(val.trim());
+      } catch( Exception e ) {  
+         return Double.NaN;
+      }
    }
    
    /** Retourne l'identificateur du filtre associé à la source */
    protected String getSEDId(Source s) {
-      Legende leg = s.getLeg();
-      String sId=null;
-      for( int i = 0; i<leg.field.length; i++ ) {
-         if( leg.field[i].sed == Field.SEDID ) sId = s.getValue(i);
+      int i = getField(s,Field.SEDID);
+      try {
+         return s.getValue(i);
+      } catch( Exception e ) {
+         return "Unknown";
       }
-      return sId;
    }
    
    // Génère la liste des points SED "prémachés" sous la forme d'un ArrayList de SEDItem
@@ -307,6 +364,9 @@ public class SED extends JPanel {
           SEDItem si = new SEDItem(s,freq,flux,fluxErr,sedId);
           sedList.add(si);
        }
+       
+       // Active le bouton time plot si possible
+       activateTimePlot();
    }
    
    /** Retourne true si l'absisse est en longueur d'onde plutôt qu'en fréquence */
@@ -604,15 +664,83 @@ public class SED extends JPanel {
             g.drawString(s1,x, dim.height-7);
          }
       }
+      
+      timeIcon.draw(g);     
+      tableIcon.draw(g);     
 
    }
    
    static public double freq2Wave(double freq) { return 2.998E5/freq; }
    static public double wave2Freq(double wave) { return 2.998E5/wave; }
    
+   static private String TIMEPLOT = null;
+   static private String TABLEICON = null;
+   
+   class TimeIcon {
+      int w = 18;
+      Rectangle in;
+      boolean inside=false;
+      boolean activate=false;
+      
+      TimeIcon() {
+         if( TIMEPLOT==null ) TIMEPLOT = aladin.chaine.getString("TIMEPLOT");
+      }
+      
+      void activate(boolean flag) { activate=flag; }
+
+      boolean inside(int x, int y) { inside = !hasTimePlot() && activate && in!=null && in.contains(x, y); return inside; }
+
+      void draw(Graphics g) {
+         if( !activate || hasTimePlot() ) return;
+         Color c = inside ? Aladin.COLOR_FOREGROUND : Aladin.COLOR_CONTROL_FOREGROUND;
+         g.setFont( Aladin.SSPLAIN );
+         FontMetrics fm = g.getFontMetrics();
+         Dimension dim = getDimension();
+         int x = dim.width-fm.stringWidth(TIMEPLOT)-25;
+         int y = 5;
+         Tool.drawPlot(g,x,y,w,w,c,Aladin.COLOR_MEASUREMENT_BACKGROUND,true);
+         Slide.drawClock(g, x+2, y+7, 4, Color.black, Color.white);
+         g.drawString(TIMEPLOT, x+w/2-fm.stringWidth(TIMEPLOT)/2, y+w+fm.getHeight());
+         in = new Rectangle(x,y,w,w+fm.getHeight());
+      }
+   }
+   
+   class TableIcon {
+      int w = 18;
+      Rectangle in;
+      boolean inside=false;
+      
+      TableIcon() {
+         if( TABLEICON==null ) TABLEICON = "table"; //aladin.chaine.getString("TABLEICON");
+      }
+      
+      boolean inside(int x, int y) { inside = !planeAlreadyCreated && in!=null && in.contains(x, y); return inside; }
+
+      void draw(Graphics g) {
+         if( planeAlreadyCreated ) return;
+         Color c = inside ? Aladin.COLOR_FOREGROUND : Aladin.COLOR_CONTROL_FOREGROUND;
+         g.setColor( c );
+         g.setFont( Aladin.SSPLAIN );
+         FontMetrics fm = g.getFontMetrics();
+         Dimension dim = getDimension();
+         int x = dim.width-fm.stringWidth(TIMEPLOT)-55;
+         int y = 5;
+         int L=8;
+         int dx = 8;
+         for( int i=0; i<5; i++ ) {
+            int h = y+i*2+10;
+            g.drawLine(dx+x-L-i,h, dx+x-5-i,h);
+            g.drawLine(dx+x-2-i,h, dx+x,h);
+            g.drawLine(dx+x+3,h, dx+x+5+i,h);
+            g.drawLine(dx+x+8+i,h, dx+x+L+1+i,h);
+         }
+         g.drawString(TABLEICON, x+w/2-fm.stringWidth(TABLEICON)/2, y+w+fm.getHeight());
+         in = new Rectangle(x,y,w+5,w+fm.getHeight());
+      }
+   }
+   
    // Trace l'icone de fermeture du graphique
    private void drawCroix(Graphics g) {
-      int w=5;
       int width=getDimension().width;
       g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rCroix = new Rectangle(width-w-4,1,w+4,w+4);
@@ -630,7 +758,6 @@ public class SED extends JPanel {
 //         rInfo = new Rectangle(0,0,0,0);
 //         return;
 //      }
-//      int w=5;
 //      int width=getDimension().width;
 //      g.setColor(Aladin.BKGD);
 //      rInfo = new Rectangle(width-w-4,6+w,w+4,w+4);
@@ -662,44 +789,52 @@ public class SED extends JPanel {
 
    // Trace l'icone de demande de chargement du SED dans l'outil Web
    private void drawMore(Graphics g) {
-      int w=5;
       Dimension dim=getDimension();
       g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rMore = new Rectangle(dim.width-w-4,16+3*w,w+4,w+4);
       g.fillRect(rMore.x,rMore.y,rMore.width,rMore.height);
       g.setColor( flagWavelength ? Color.blue : Color.red );
       g.setFont(Aladin.SBOLD);
-      g.drawString("+",rMore.x+2,rMore.y+8);
+      g.drawString("+",rMore.x+w/2,rMore.y+3+w);
    }
    
    // Trace l'icone de demande de passage freq <-> longueur d'onde
    private void drawWave(Graphics g) {
-      int w=5;
       Dimension dim=getDimension();
       g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rWave = new Rectangle(dim.width-w-4,11+2*w,w+4,w+4);
       g.fillRect(rWave.x,rWave.y,rWave.width,rWave.height);
       g.setColor( flagWavelength ? Color.blue : Color.red );
       g.setFont(Aladin.SBOLD);
-      g.drawString(TILDE+"",rWave.x+1,rWave.y+8);
+      g.drawString(TILDE+"",rWave.x+w/4,rWave.y+3+w);
    }
    
    // Trace l'icone du help
    private void drawHelp(Graphics g) {
-      int w=5;
       Dimension dim=getDimension();
       g.setColor(Aladin.COLOR_BUTTON_BACKGROUND);
       rHelp = new Rectangle(dim.width-w-4,6+w,w+4,w+4);
       g.fillRect(rHelp.x,rHelp.y,rHelp.width,rHelp.height);
       g.setColor( Color.blue );
       g.setFont(Aladin.SBOLD);
-      g.drawString("?",rHelp.x+2,rHelp.y+8);
+      g.drawString("?",rHelp.x+w/2,rHelp.y+3+w);
+   }
+   
+   // Création d'une courbe de lumière (Temps vs Flux)
+   private void createTimePlot() {
+      if( !planeAlreadyCreated ) createStackPlane();
+      Source s = sedList.get(0).o;
+      int nTime = getField(s, Field.TIME);
+      int nFlux = getField(s, Field.FLUX);
+      aladin.createPlotCat( plan, nTime, nFlux, false);
    }
    
    /** Actions à effectuer lors du relachement de la souris */
    protected void mouseRelease(int x,int y) {
-      if( rCroix.contains(x,y) ) aladin.view.zoomview.setSED((String)null,(String)null);
-//      else if( rInfo.contains(x,y) ) createStackPlane();
+      
+      if( timeIcon.inside(x, y) ) createTimePlot();
+      if( tableIcon.inside(x, y) ) { if( !planeAlreadyCreated ) createStackPlane(); }
+      else if( rCroix.contains(x,y) ) aladin.view.zoomview.setSED((String)null,(String)null);
       else if( rMore.contains(x,y) ) more();
       else if( rHelp.contains(x,y) ) help();
       else if( rWave.contains(x,y) ) {
@@ -758,13 +893,16 @@ public class SED extends JPanel {
    /** Associe le bon tooltip */
    private void toolTip(String k) {
       String s = k==null ? null : aladin.chaine.getString(k);
-      Util.toolTip(aladin.view.zoomview, s);
+      Util.toolTip(aladin.view.zoomview, s, true);
    }
    
    /** Actions à effectuer lorsque la souris survole le graphique */
    protected void mouseMove(int x, int y) {
       
+      
       // Tooltips ?
+      if( timeIcon.inside(x,y) )     { toolTip("TIMEPLOTHELP"); return; }
+      if( tableIcon.inside(x,y) )    { toolTip("TABLEICONHELP"); return; }
       if( rCroix.contains(x,y) )     { toolTip("SEDCLOSE");       return; }
       if( rMore.contains(x,y) )      { toolTip("SEDMORE");       return; }
 //      else if( rInfo.contains(x,y) ) { toolTip("SEDCREATEPLANE"); return; }

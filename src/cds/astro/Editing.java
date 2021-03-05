@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro ;
 
 /*==================================================================
@@ -206,17 +185,18 @@ public class Editing extends Astroformat {
     * @param  buf   the buffer to which the flags are appended
     * @param  flags    the list of flags.
     * @param  symbols  the table of symbols
+    * @return the StringBuffer parameter
     */
-   public StringBuffer editFlags(StringBuffer buf, int flags, String symbols[])
-   {
-      int i, j;
-      int n=symbols.length;
-      	for (i=j=0; i<n; i++) {
-	    if ((flags&(1<<i)) == 0) continue;
-	    if(j>0) buf.append(',');
-	    buf.append(symbols[i]);
-	    j++;
+    public StringBuffer editFlags(StringBuffer buf, int flags, String[] symbols) {
+        int flag=flags;
+        boolean need_comma=false;
+      	for (int i=0; (flag!=0)&&(i<symbols.length); i++, flag>>>=1) {
+            if((flag&1) == 0) continue;
+            if(need_comma) buf.append(',');
+            else need_comma = true;
+            buf.append(symbols[i]);
 	}
+        if(flag!=0) buf.append("0x" + Integer.toHexString(flag<<symbols.length) + "??");
 	return buf;
    }
 
@@ -225,6 +205,7 @@ public class Editing extends Astroformat {
     * Just appends the NULL string representation, right-aligned.
     * @param  buf   the buffer to which the string representation is appended
     * @param  width the total width
+    * @return the StringBuffer parameter
     */
     public StringBuffer editNaN(StringBuffer buf, int width) {
       	for (int nb = width - nulls[0].length(); nb>0; nb--)
@@ -239,6 +220,7 @@ public class Editing extends Astroformat {
     * @param  buf   the buffer to which the string representation is appended
     * @param  width the total width
     * @param  sign  positive(add +sign), negative(add -sign), or zero.
+    * @return the StringBuffer parameter
     */
    public StringBuffer editInfinite(StringBuffer buf, int width, int sign) {
       	int nb = width - inf_string.length(); 
@@ -425,7 +407,7 @@ public class Editing extends Astroformat {
     * depending on the FACTOR option.
     * @param  buf   buffer to which the string representation is appended
     * @param  value number to edit
-    * @param  ndig  number of significant digits (do the best if ndig<=0)
+    * @param  ndig  number of significant digits (do the best if ndig&leq;0)
     * @param  nexp  number of characters for the exponent value (3 recommended)
     * @param  option a combination of {@link Astroformat#EFORMAT} 
     * / {@link Astroformat#SIGN_EDIT}

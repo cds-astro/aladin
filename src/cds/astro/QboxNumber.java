@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 import java.io.*;
@@ -37,7 +16,7 @@ import java.text.*; // for parseException
 /**
  * The <em>QboxNumber</em> is just a number representing a <em>cell</em>
  * of the celestial sphere. This number is used in {@link Qbox} and
- * {@link QboxIndex} classes.
+ * {@link AbstractRegion} classes.
  *
  * <P>
  * A <em>qbox</em> number is formed by the values of the projections
@@ -92,7 +71,7 @@ import java.text.*; // for parseException
  * where level is a number which can be changed at any time using
  * <b>setLevel</b>(<EM>level</EM>) method.
  * <P>
- * The present implementation assumes that <EM>level<I><=12</I></EM>,
+ * The present implementation assumes that <EM>level<I>&leq;12</I></EM>,
  * corresponding to a maximum of 28 bits in the qbox number.
  * <P>
  * For a level 6, the qbox number is a short integer with bits
@@ -415,6 +394,7 @@ public class QboxNumber implements Serializable {
     /** 
      * Interpret an edited Qbox number (see {@link #toString(int)})
      * @param	text The text to interpret
+     * @return  the corresponding Qbox
      * @throws	ParseException when the text contains invalid characters
      **/
     static public int qbox(String text) throws ParseException {
@@ -508,6 +488,7 @@ public class QboxNumber implements Serializable {
 
     /** 
      * Face number on which the qbox is located.
+     * @param qbox the number of a qbox
      * @return	the face number, between <b>1</b> and <b>6</b> .
      * A value of <b>0</b> is returned when <tt>qbox=0</tt> (whole sphere)
      **/
@@ -557,6 +538,7 @@ public class QboxNumber implements Serializable {
      * Identifies the Qbox containing a position given by RA and Dec.
      * @param	lon   the longitude (RA), degrees
      * @param	lat   the latitude  (Dec), degrees
+     * @return  the corresponding Qbox number.
      **/
     public final int qbox(double lon, double lat) {
     	double[] XY = new double[2];
@@ -569,6 +551,7 @@ public class QboxNumber implements Serializable {
     /** 
      * Identifies the Qbox containing a position given by a Coocube.
      * @param	cc the Coocube equivalent of the position
+     * @return  the corresponding Qbox number.
      **/
     public final int qbox(Coocube cc) {
     	return(boxno(level, cc.face, cc.X, cc.Y));
@@ -577,6 +560,7 @@ public class QboxNumber implements Serializable {
     /** 
      * Identifies the Qbox containing a given position.
      * @param	c the Coocube equivalent of the position
+     * @return  the corresponding Qbox number.
      **/
     public final int qbox(Coo c) {
     	double[] XY = new double[2];
@@ -593,6 +577,7 @@ public class QboxNumber implements Serializable {
     /** 
      * Get the central position of a Qbox
      * @param	qbox   a Qbox number
+     * @return  the corresponding Qbox number.
      **/
     static public final Coo center(int qbox) {
 	double[]  u = new double[3];
@@ -912,6 +897,7 @@ public class QboxNumber implements Serializable {
 
     /** 
      * Edition of a Qbox value
+     * @param qbox the qbox number
      * @return	the string equivalent of the coocube
      * 		the letter 'A' is appended for ANY IN QBOX.
      **/

@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.HashMap;
@@ -38,6 +39,9 @@ import java.util.StringTokenizer;
 import cds.tools.Util;
 
 class ZoomHist implements Runnable {
+   
+   static private String KEEPHELP;
+   static private String KEEP;
 
    int MARGE = 8;
    int NBHIST = 12;
@@ -61,11 +65,15 @@ class ZoomHist implements Runnable {
    // Paramètres pour un histogramme de pixels
    boolean flagHistPixel;   // true s'il s'agit d'un histogramme de pixels
    StatPixels pixelStats;   // Statistisques et valeur des pixels
-   
+   Obj obj;                 // l'objet concerné par les stats pixels (cf startHistPixel())
+   IconKeep keep;           // Le bouton pour capturer les stats courantes
 
    ZoomHist(Aladin aladin) {
       this.aladin=aladin;
       pixelStats = new StatPixels();
+      KEEP = aladin.chaine.getString("KEEP");
+      KEEPHELP = aladin.chaine.getString("KEEPHELP");
+      keep = new IconKeep();
    }
 
    /** Positionnement d'un texte en surcharge de l'histogramme, null si aucun */
@@ -75,10 +83,10 @@ class ZoomHist implements Runnable {
    protected String getCopier() { return texte; }
 
    /** Commence ou recommence la mémorisation des pixels d'un histogramme de pixels */
-   protected void startHistPixel() {
+   protected void startHistPixel(Obj obj) {
+      this.obj = obj;
       flagHistPixel=true;
       texte=null;
-      
       pixelStats.reinit();
    }
 
@@ -109,7 +117,7 @@ class ZoomHist implements Runnable {
 
       /** Positionne le flag onMouse : true si le point passé en paramètre se trouve dans la case */
       boolean in(int xc,int yc) {
-         return xc>=x && xc<=x+larg;
+         return xc>=x && xc<=x+larg + GAP;
       }
 
       /** Retourne true si la valeur du pixel se trouve entre les bornes */
@@ -123,6 +131,7 @@ class ZoomHist implements Runnable {
     * @return true si l'histogramme a pu être généré
     */
    protected boolean init(Source o,int nField) {
+      obj=null;                               // si jamais le précédent Hist était associé à une mesure photométrique
       if( thread!=null ) return false;        // Pour le moment, un thread après l'autre uniquement
       flagHistPixel=false;
       texte=null;
@@ -332,6 +341,30 @@ class ZoomHist implements Runnable {
       }
    }
 
+   /** True si la souris est sur le bouton GetIt */
+   protected boolean isInGetIt(int x, int y) { 
+      boolean rep= keep.checkInside(x, y);
+      
+      // Si on est dans le bouton, on n'est pas dans une case de l'histogramme
+      if( rep ) onMouse=null;
+      return rep;
+   }
+   
+   /** Action du bouton getIt */
+   protected void getIt() { 
+      SourceInfo s=null;
+      
+      if( obj instanceof SourceStat )  s = new SourceInfo( ((SourceStat)obj ));
+      else if( obj instanceof Ligne )  s = new SourceInfo( ((Ligne)obj ));
+      else return;  // Bizarre
+      
+      // Insertion et sélection de la SourceInfo nouvellement créée
+      obj.plan.pcat.insertSource( s );
+      aladin.view.setSelected(s, true);
+      
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+   }
 
    /** Sélection de toutes les sources highlightées */
    protected void selectHighlightSource() {
@@ -404,6 +437,7 @@ class ZoomHist implements Runnable {
       }
       boolean rep = onMouse!=null;
       onMouse=null;
+      keep.inside=false;
       return rep;
    }
 
@@ -513,9 +547,7 @@ class ZoomHist implements Runnable {
          // Général
       } else {
          s=titre;
-         if( nbCategorie>0 ) {
-            s=s+" ("+nbCategorie+" item"+(nbCategorie>1?"s)":")");
-         }
+         if( nbCategorie>0 ) s=s+" ("+nbCategorie+" item"+(nbCategorie>1?"s)":")");
          if( s!=null ) g.drawString(s,5,14);
       }
 
@@ -550,7 +582,7 @@ class ZoomHist implements Runnable {
       if( flagHistPixel ) {
          g.setFont(Aladin.BOLD);
          fm = g.getFontMetrics();
-         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
+         g.setColor( Aladin.COLOR_ICON_ACTIVATED );
          StringTokenizer st = new StringTokenizer(getStringStat(),"/");
          y = 17;
          int h= fm.getHeight();
@@ -563,9 +595,13 @@ class ZoomHist implements Runnable {
             g.drawString(s, x1, y+h1);
             y+=h;
          }
+         
+         // Le bouton de capture
+         if( obj!=null ) keep.draw(g,width-40,y+15);
+         else keep.inside=false;
       }
    }
-      
+         
    // Retourne une chaine reprenant les infos statistiques à afficher en superposition
    String getStringStat() {
       // nb, sum, sigma, surface, min, max, median
@@ -580,4 +616,50 @@ class ZoomHist implements Runnable {
             ;
 
    }
+   
+   // Barres horizontales du dessin (cadre et une flèche pointant à l'intérieur)
+   static final private int KEEP_LOGO[][] = {
+         {0,0,13},
+         {1,0,0},             {1,13,13},
+         {2,0,0},             {2,13,13},
+         {3,0,0},             {3,13,13},
+         {4,0,0},             {4,13,13},
+         {5,0,0},  {5,6,6},   {5,13,13},
+         {6,0,0},  {6,5,7},   {6,13,13},
+         {7,0,0},  {7,4,8},   {7,13,13},
+         {8,0,0},  {8,5,7},   {8,13,13},
+         {9,0,2},  {9,5,7},   {9,11,13},
+                  {10,5,7},  
+                  {11,5,7},  
+         };
+   
+   /** Permet la gestion d'une petite icone qui apparait sous les statistiques des pixels afin de pouvoir les mémoriser
+    * en tant qu'entrée indépendante dans le Plan Drawing d'où est issu l'outil de photométrie (Cercle ou Polygone) qui a fourni
+    * ces statistiques */
+   public class IconKeep {
+      int width=32;         // Largeur de l'icone
+      int height=24;        // Hauteur de l'icone
+      int heightLogo=10;    // Bas du logo (car on va dessiner le logo en miroir horizontal
+      Rectangle rpos=null;  // Rectangle mémorisant l'emplacement de l'icone
+      boolean inside;       // true si la souris est supposé être sur l'icone
+
+      // Affichage du logo et du label juste en dessous
+      void draw(Graphics g, int x, int y) {
+         g.setColor( !inside ? Aladin.COLOR_CONTROL_FOREGROUND : Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT);
+         for( int i=0; i<KEEP_LOGO.length; i++ ) g.drawLine(KEEP_LOGO[i][1]+x,heightLogo-KEEP_LOGO[i][0]+y,KEEP_LOGO[i][2]+x,heightLogo-KEEP_LOGO[i][0]+y);
+         g.setFont(Aladin.SPLAIN);
+         g.drawString(KEEP,x-10+ width/2-g.getFontMetrics().stringWidth(KEEP)/2,y+height-2);
+         rpos = new Rectangle(x,y,width,height);
+      }
+      
+      // Retourne vrai si la coordonnée se trouve dans l'icone. 
+      boolean checkInside(int x, int y) {
+         boolean before=inside;
+         inside=rpos!=null && rpos.contains(x,y);
+         if( before!=inside ) Util.toolTip(aladin.calque.zoom.zoomView, inside ? KEEPHELP : null, true);
+         return inside;
+      }
+      
+   }
+
 }

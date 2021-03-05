@@ -1,26 +1,6 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro ;
-import java.text.*;	// for parseException
+// for parseException
+import java.text.ParseException;
 
 /**
  * Class defining the Mathematical Projections of the Celestial Sphere.
@@ -68,12 +48,13 @@ import java.text.*;	// for parseException
  * @version 1.1 : 24-Mar-2000: better documentation
  * @version 1.11: 24-Apr-2006: qualified exceptions
  * @version 1.2:  24-May-2008: creation from a Coo + set methods
- * @version 1.21: 24-May-2013: gug in set(Coo)
+ * @version 1.21: 24-May-2013: bug in set(Coo)
+ * @version 2.0 : 24-Mar-2019: 1-D matrices
  */
 
 public class Proj3 {
     protected byte type ;	// Projection type
-    private double R[][] ;	// Rotation Matrix
+    private double R[] ;	// Rotation Matrix
     protected double clon, clat; // Center of the Projection (degrees)
     /** The values of the projections */
     protected double X,Y ;	// One point in the projection (cartesian)
@@ -142,9 +123,9 @@ public class Proj3 {
   /** Creation of object used for Projections from a String.
    * @param type     projection type 
    * @param text     the center in a string
+   * @throws ParseException if the text cannot be fully interpreted.
    */
-   public Proj3(int type, String text) throws 
-       ParseException {
+   public Proj3(int type, String text) throws ParseException {
 	this.point = new Coo(text) ;
 	this.type  = (byte)type ;
 	this.clon  = this.point.lon ;
@@ -260,9 +241,9 @@ public class Proj3 {
 
 	if (R == null) { x = coo.x; y = coo.y; z = coo.z ; }
 	else {
-      	    x = R[0][0]*coo.x + R[0][1]*coo.y + R[0][2]*coo.z ;
-      	    y = R[1][0]*coo.x + R[1][1]*coo.y + R[1][2]*coo.z ;
-      	    z = R[2][0]*coo.x + R[2][1]*coo.y + R[2][2]*coo.z ;
+      	    x = R[0]*coo.x + R[1]*coo.y + R[2]*coo.z ;
+      	    y = R[3]*coo.x + R[4]*coo.y + R[5]*coo.z ;
+      	    z = R[6]*coo.x + R[7]*coo.y + R[8]*coo.z ;
 	}
 	switch(type) {
     	  case TAN      :	// Only 1 hemisphere valid
@@ -434,8 +415,8 @@ public class Proj3 {
 	    break ;
 
     	  case MERCATOR :
-	    r = 1./AstroMath.cosh(Y);
-	    z = AstroMath.tanh(Y) ;
+	    r = 1./Math.cosh(Y);
+	    z = Math.tanh(Y) ;
 	    x = r * Math.cos(X);
 	    y = r * Math.sin(X);
 	    break ;
@@ -453,14 +434,18 @@ public class Proj3 {
 	    throw new IllegalArgumentException(
 	     "****Proj3: Invalid Projection type #" + type) ;
 	}
-
+	
 	/* From Cartesian: just rotate (used transposed matrix) */
-	if (R != null) point.set(
-      	    R[0][0]*x + R[1][0]*y + R[2][0]*z ,
-      	    R[0][1]*x + R[1][1]*y + R[2][1]*z ,
-      	    R[0][2]*x + R[1][2]*y + R[2][2]*z 
-	) ;
-	else point.set(x, y, z) ;
+	if (R != null) { point.set(
+			// MODIFIED BY FXP
+      	    /*R[0]*x + R[1]*y + R[2]*z ,
+      	    R[3]*x + R[4]*y + R[5]*z ,
+      	    R[6]*x + R[7]*y + R[8]*z */
+      	    R[0]*x + R[3]*y + R[6]*z ,
+      	    R[1]*x + R[4]*y + R[7]*z ,
+      	    R[2]*x + R[5]*y + R[8]*z 
+	);
+	} else point.set(x, y, z) ;
      	return true ;
    }
 
@@ -484,19 +469,19 @@ public class Proj3 {
       // No change if same position...
       if ((X == X2) && (Y == Y2))
 	  return(true);
-      double M1[][] = point.localMatrix();
+      double M1[] = point.localMatrix();
       //System.out.println("#...moveCenter from (" + this +")");
       if (!this.set(X2, Y2))  // Not possible...
 	  return(false);
       //System.out.println("    to (" + X2 +"," +Y2 + ") = " + this.getCoo());
       // The new rotation matrix is:
       //System.out.println(Coo.toString("#  oldR: ", R));
-      double M2[][] = point.localMatrix();
+      double M2[] = point.localMatrix();
       M2 = AstroMath.m3p(M2, AstroMath.m3t(M1));
       if (R == null) R = M2;
       else R = AstroMath.m3p(R, M2);
       //System.out.println(Coo.toString("#  newR: ", R));
-      point.set(R[0][0], R[0][1], R[0][2]);
+      point.set(R[0], R[1], R[2]);
       //System.out.println("#  newC: " + point);
       clon = point.getLon(); clat = point.getLat(); 
       this.set(X2, Y2);

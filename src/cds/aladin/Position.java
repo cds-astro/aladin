@@ -54,21 +54,6 @@ public class Position extends Obj {
    static final int MAXMEDIANE = 10000;
 
    /** Variables statiques utilisées pour le calcul des statistiques sur un polygone */
-//   static double minx,maxx;
-//   static double miny,maxy;
-//   static double posx,posy;    // position pour l'accrochage du label (-1,-1 si non fourni)
-//   static double total;
-//   static double carre;
-//   static int nombre;
-//   static double surface;
-//   static double moyenne;
-//   static double variance;
-//   static double sigma;
-//   static double minimum,maximum;
-//   static double mediane;
-//   static int medianeArrayNb=0;
-//   static double [] medianeArray = new double[MAXMEDIANE];
-
 
    /*
    Un peu d'explication sur les caches pour les objets graphiques Aladin en multivues.
@@ -90,7 +75,6 @@ public class Position extends Obj {
    */
 
    protected void createCacheXYVP() {
-//      createCacheXYVP( plan==null ? ViewControl.MAXVIEW : plan.type==Plan.X ? 0:plan.aladin.view.getNbView());
       createCacheXYVP( plan==null ? ViewControl.MAXVIEW : plan.aladin.view.getNbView());
    }
    protected void createCacheXYVP(int dim) {
@@ -281,9 +265,6 @@ public class Position extends Obj {
 //   /** Modifie la propriété "rotable" de l'objet */
 //   protected void setRollable(boolean rollable) { this.rollable=rollable; }
 
-
-   // PEUT ETRE UN PEU DANGEREUX DE LA METTRE EN STATIC ?
-//   static protected Coord c = new Coord();	// Pour eviter les new inutiles
 
   /** Projection de la source => calcul (x,y).
    * @param proj la projection a utiliser
@@ -623,8 +604,8 @@ public class Position extends Obj {
       double [] stats = null;
       try {
          stats = getStatistics(v.pref);
-         if( stats==null || !statCompute(g,v,z) ) return;
-      } catch( Exception e ) { e.printStackTrace(); return; }
+         if( stats==null || stats[0]==0 || !statCompute(g,v,z) ) return;
+      } catch( Exception e ) { return; }
       
       // nb, sum, sigma, surface, min, max, median
       String cnt=Util.myRound(stats[0]);
@@ -678,7 +659,7 @@ public class Position extends Obj {
       }
 
       if( v.pref==plan.aladin.calque.getPlanBase() ) {
-         if( !(this instanceof SourceStat) ) {
+         if( !(this instanceof SourceStat) && stats[0]>0 ) {
             id="Cnt "+cnt+" / Sum "+sum
                   +" / Sigma "+sig
                   +" / Min "+min

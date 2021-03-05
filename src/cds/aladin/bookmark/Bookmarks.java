@@ -59,12 +59,12 @@ public class Bookmarks extends JToolBar implements Widget {
    private Color cbg;   // Couleur du fond (pour que ça marche sous Ubuntu)
    private String memoDefaultList="";
 
+   private String defaultBookmarkListByGlu=null;     // Liste des bookmarks trouvés via l'enregistrement GLU dedié aux BookMarks (%Aladin.Bookmarks)
+   private String gluTag=null;                       // Identificateur de l'enregistrement de bookmarks
+
    public Bookmarks(Aladin aladin) {
       this.aladin = aladin;
       frameBookmarks = null;
-      //      toolBar = null;
-
-//      setUI( new MyToolbarUI() );
       
       setRollover(true);
       setFloatable(false);
@@ -79,12 +79,6 @@ public class Bookmarks extends JToolBar implements Widget {
        g.fillRect(0, 0, getWidth(), getHeight());
    }
    
-//   public Dimension getMinimumSize() { return getPreferredSize(); }
-//   public Dimension getMaximumSize() { return getPreferredSize(); }
-//   public Dimension getPreferredSize() {
-//      Dimension dim = super.getPreferredSize(); dim.height=22; return dim;
-//   }
-
    /** Initialisation des bookmarks */
    public void init(boolean noCache) {
       createBookmarks(noCache);
@@ -111,18 +105,6 @@ public class Bookmarks extends JToolBar implements Widget {
       }
       if( aladin.hasGUI() ) resumeToolBar();
    }
-
-   /** Fournit la toolbar des signets (éventuellement la crée) */
-   //   public JToolBar getToolBar() {
-   //      if( toolBar==null ) {
-   //         toolBar = new JToolBar();
-   //         toolBar.setRollover(true);
-   //         toolBar.setFloatable(false);
-   //         toolBar.setBorder(BorderFactory.createEmptyBorder());
-   //         populateToolBar(toolBar);
-   //      }
-   //      return toolBar;
-   //   }
 
    public JToolBar getToolBar() {
       return this;
@@ -161,29 +143,19 @@ public class Bookmarks extends JToolBar implements Widget {
          toolBar.add(bkm);
       }
 
-//      if( !Aladin.OUTREACH ) {
-         JButton plus = new JButton("+");
-         plus.setBackground( aladin.getBackground());
-         plus.setForeground( Aladin.COLOR_LABEL );
-         plus.setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
-         plus.setToolTipText(aladin.getChaine().getString("BKMEDITOR"));
-         plus.setFont( plus.getFont().deriveFont(Font.BOLD));
-         plus.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { editFrame(); }
-         });
-         toolBar.add(plus);
-//      }
+      JButton plus = new JButton("+");
+      plus.setBackground( aladin.getBackground());
+      plus.setForeground( Aladin.COLOR_LABEL );
+      plus.setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
+      plus.setToolTipText(aladin.getChaine().getString("BKMEDITOR"));
+      plus.setFont( plus.getFont().deriveFont(Font.BOLD));
+      plus.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { editFrame(); }
+      });
+      toolBar.add(plus);
    }
 
-   /** Remet à jour la toolbar des signets suite à des modifs internes */
-   //   public void resumeToolBar() {
-   //      toolBar.removeAll();
-   //      populateToolBar(toolBar);
-   //      toolBar.validate();
-   //      aladin.validate();
-   //      aladin.repaint();
-   //   }
-   
+
    public void resumeToolBar() {
       if( SwingUtilities.isEventDispatchThread() ) {
          resumeToolBar1();
@@ -195,11 +167,6 @@ public class Bookmarks extends JToolBar implements Widget {
    }
 
    private void resumeToolBar1() {
-//      System.out.println("XXXX resumeToolBar");
-//      try { throw new Exception("XXXX resumeToolBar"); }
-//      catch( Exception e ) {
-//         e.printStackTrace();
-//      }
       removeAll();
       populateToolBar(this);
       
@@ -266,9 +233,6 @@ public class Bookmarks extends JToolBar implements Widget {
       resumeToolBar();
    }
 
-
-   private String defaultBookmarkListByGlu=null;     // Liste des bookmarks trouvés via l'enregistrement GLU dedié aux BookMarks (%Aladin.Bookmarks)
-   private String gluTag=null;                       // Identificateur de l'enregistrement de bookmarks
 
    // Mémorise les infos pour générer les bookmarks (voir createBookmarks() */
    public void memoGluBookmarks(String actionName, String aladinBookmarks) {

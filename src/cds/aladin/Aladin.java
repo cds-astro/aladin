@@ -165,8 +165,10 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Time serie display
  * @beta    <LI> Support for Hight DPI screen -> See User Preference Scaling method
- * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Table generation...
+ * @beta    <LI> Photometric tool stats improvements (table management from polygons and circles)
+ * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Pixel extraction...
  * @beta    <LI> Plugin extension for pixel stats (getStatistics..)
  * @beta    <LI> New projection: Mercator
  * @beta    <LI> SMOC generation form Box object
@@ -201,7 +203,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.035";
+   static public final    String VERSION = "v11.037";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1092,7 +1094,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void creatFonts() {
       if( BOLD!=null ) return;
       String s =  "SansSerif";
-      String s1 = "Lucida Sans typewriter"; //"Monospaced";
+//      String s1 = "Lucida Sans typewriter"; //"Monospaced";
+//      String s1 = "Consolas";
+      String s1 = "Lucida Console";
       
       trace(1,"Creating Fonts");
       
@@ -3799,9 +3803,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
       view.repaintAll();
   }
 
-   /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
-   protected void createPlotCat() {
-      Plan p = calque.getFirstSelectedPlanCatalog();
+   /** Création d'un graphe de nuage de points sur le catalogue sélectionné */
+   protected void createPlotCat() { createPlotCat( calque.getFirstSelectedPlanCatalog(), -1, -1, true ); }
+   
+   /** Création d'un graphe de nuage de points
+    * @param p Le plan Cat concerné
+    * @param idX l'indice de la colonne pour l'abscisse
+    * @param idY l'indice de la colonne pour l'ordonnée
+    * @param openProp true s'il faut ouvrir la fenêtre des propriétés
+    */
+   protected void createPlotCat(Plan p, int idX, int idY, boolean openProp) {
       if( p==null ) return;
       
       int nview=-1;
@@ -3823,7 +3834,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       
       view.setPlanRef(nview, p);
-      view.viewSimple[nview].addPlotTable(p, -1, -1,true);
+      view.viewSimple[nview].addPlotTable(p, idX, idY, openProp);
       view.repaintAll();
    }
 
@@ -4847,11 +4858,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          throw new Exception("Degenerated polygon");
       }
 
-      // plus de la moitié du ciel => y a un prob
-      // Il faudrait également tester si le résultat donne des zones disjointes => prob
-//      if( moc.getCoverage()>0.5 ) throw new Exception("Polygon must be expressed in anti-clockwise direction");
-
-      moc.checkAndFix();   // A VIRER LORSQUE LE BUG DES REDONDANCES SERA FIXE
+//      moc.checkAndFix();   // A VIRER LORSQUE LE BUG DES REDONDANCES SERA FIXE
       return moc;
    }
 
@@ -4906,7 +4913,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * objets photométriques */
    protected void pixelExtraction() {
       try {
-         calque.newCatalogPixelExtraction();
+         if( confirmation( chaine.getString("INFOPIXEXTRACT")) )
+            calque.newCatalogPixelExtraction();
       } catch( Exception e ) {
          String msg = e.getMessage();
          warning("Extraction error"+ (msg==null ? "":": "+msg));

@@ -3,6 +3,7 @@
  Very simple ANT build.xml file for compiling and generating Aladin.jar file
  * Author : P.Fernique [CDS]
  * Date   : Sep 2018
+ * Rev1   : Mar 2021
 -->
 
 <project name="Aladin" default="main" basedir="."> 
@@ -12,13 +13,18 @@
    
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
+     <javac destdir="${bin}"
+	    encoding="UTF-8" source="1.7" target="1.7" deprecation="off" >
+         <src path="${basedir}/cds/astro"/>
+     </javac>
      <javac srcdir="${basedir}" destdir="${bin}"
-	    encoding="Cp1252" source="1.6" target="1.6" deprecation="off" >
+	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >
        <classpath>
           <pathelement path="${java.class.path}/"/>
           <pathelement path="adql1.3.jar"/>
           <pathelement path="jsamp.jar"/>
           <pathelement path="kml2-2.3.0.jar"/>
+          <pathelement path="cdshealpix.0.28_1.jar"/>
       </classpath>
      </javac>
    </target>
@@ -29,7 +35,8 @@
 	    <zipfileset src="adql1.3.jar"/>
 	    <zipfileset src="jsamp.jar"/>
 	    <zipfileset src="kml2-2.3.0.jar"/>
-	    <fileset dir="${basedir}" includes="*.gif,*.jpg,Ala*.*"/>
+        <zipfileset src="cdshealpix.0.28_1.jar"/>
+	    <fileset dir="${basedir}" includes="*.gif,*.jpg,*.png,Ala*.*,Constellation.txt,viewConfiguration.properties,StandardForms.dic"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
         </manifest>

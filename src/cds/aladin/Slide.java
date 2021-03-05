@@ -39,7 +39,7 @@ public final class Slide {
    // Les valeurs accociees aux differents elements graphiques
    static final int gapL =  Select.gapL; // Marge de gauche (reserve pour le triangle)
    static final int DX   =  Select.DX;   // Largeur d'un slide (hors tout)
-   static final int DY   =  19;	         // Hauteur d'un slide (hors tout)
+   static int DY;	                     // Hauteur d'un slide (hors tout)
    static final int DFOLDER=10;		     // Decalage niveau de folder
 
    static final int VIDE=0;
@@ -104,6 +104,10 @@ public final class Slide {
       slides=null;
       p=plan;
       a=aladin;
+      
+      // ajustement de la hauteur inter slide en fonction du facteur d'échelle pour l'UI
+      float x = aladin.getUIScale();
+      DY = Math.round( 19 * x* (x>1.20 ? 0.85f: 1f));
    }
 
    /** retourne le plan associe au slide */
@@ -430,6 +434,8 @@ public final class Slide {
    // Affichage d'un label en diminuant la luminosité des séparateurs "/" le cas échéant
    static protected void drawLabel( Graphics g, String label, int x, int y, Color fg) {
       
+      if( fg==null ) fg = Aladin.COLOR_FOREGROUND;
+      
       // Pas de /, méthode rapide
       if( label.indexOf('/')<0 ) {
          g.setColor(fg);
@@ -543,7 +549,8 @@ public final class Slide {
          }
          
          // Calcul la taille des lettres
-         int ht = Aladin.SIZE;
+         g.setFont( Aladin.PLAIN );
+         int ht = Math.round( Aladin.PLAIN.getSize2D() );
          
          // Determination de la couleur du dessin du logo dans le cas où
          // il y a un plan couleur (choix des trois composantes RGB)
@@ -566,7 +573,7 @@ public final class Slide {
          for( int i=0; i<frX.length; i++ ) xc[i]=frX[i]+dx;
          
          // Paramètres pour tracer le cadre et la bordure
-         int y = dy-1;
+         int y = Math.round( dy-(1+(Aladin.getUIScale()-1)*10) );
          int x = dx+xLabel-1; // 1;
          int H = ht+7;
          int W = Select.ws-x;
@@ -782,8 +789,6 @@ public final class Slide {
          }
          
          // Le libelle
-//         g.setFont( Aladin.BOLD );
-         g.setFont( Aladin.PLAIN );
          if( p.label!=null ) {
             int py = dy+15-1;
             int px = Select.ws-12;

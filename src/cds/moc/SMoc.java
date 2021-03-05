@@ -776,34 +776,30 @@ public class SMoc extends Moc {
       }
    }
    
+   // Generate the Moc tree structure from the rangeSet (méthode Reinecke)
+//   public void toMocSet() throws Exception {
+//      clear();
+//      setCheckConsistencyFlag(false);
+//      Range r2 = new Range( getRange() );
+//      Range r3 = new Range();
+//      for( int o=0; o<=MAXORDER; ++o) {
+//         if( r2.isEmpty() ) break;
+//         int shift = 2*(MAXORDER-o);
+//         long ofs=(1L<<shift)-1;
+//         r3.clear();
+//         for( int i=0; i<r2.sz; i+=2 ) {
+//            long a=(r2.r[i]+ofs) >>>shift;
+//            long b= r2.r[i+1] >>>shift;
+//            if( a>=b ) continue;
+//            r3.append(a<<shift, b<<shift);
+//            for( long c=a; c<b; add1(o,c++) );
+//         }
+//         if( !r3.isEmpty() ) r2 = r2.difference(r3);
+//      }
+//   }
+   
+   // Méthode FX
    public void toMocSet() throws Exception {
-      if( RANGE ) toMocSetFX();
-      else toMocSetR();
-   }
-   
-   // Generate the Moc tree structure from the rangeSet
-   public void toMocSetR() throws Exception {
-      clear();
-      setCheckConsistencyFlag(false);
-      Range r2 = new Range( getRange() );
-      Range r3 = new Range();
-      for( int o=0; o<=MAXORDER; ++o) {
-         if( r2.isEmpty() ) break;
-         int shift = 2*(MAXORDER-o);
-         long ofs=(1L<<shift)-1;
-         r3.clear();
-         for( int i=0; i<r2.sz; i+=2 ) {
-            long a=(r2.r[i]+ofs) >>>shift;
-            long b= r2.r[i+1] >>>shift;
-            if( a>=b ) continue;
-            r3.append(a<<shift, b<<shift);
-            for( long c=a; c<b; add1(o,c++) );
-         }
-         if( !r3.isEmpty() ) r2 = r2.difference(r3);
-      }
-   }
-   
-   public void toMocSetFX() throws Exception {
       clear();
       setCheckConsistencyFlag(false);     
       Range range = new Range( getRange() );

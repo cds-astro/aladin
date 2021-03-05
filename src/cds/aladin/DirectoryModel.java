@@ -75,7 +75,7 @@ public class DirectoryModel extends DefaultTreeModel {
    /** Comptage de la descendance de chaque branche (nombre de noeuds terminaux d'une branche)
     * Mémorisation dans TreeObj, soit en tant que référence (hs!=null), soit
     * en tant que décompte courant
-    * @param hs mémorisation des valeurs sous forme path=n (ex: /Image/Optical=32, ...)
+    * @param hpanel mémorisation des valeurs sous forme path=n (ex: /Image/Optical=32, ...)
     */
    protected int countDescendance() { return countDescendance(null); }
    protected int countDescendance(HashMap<String,Integer> hs) {

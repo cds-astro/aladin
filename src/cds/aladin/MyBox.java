@@ -26,7 +26,6 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -227,7 +226,7 @@ public abstract class MyBox extends JPanel {
       }
    }
    
-   static final private int POSCROSS=30;
+   static private int POSCROSS;
    
    /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
    class Text extends JTextField implements MouseMotionListener, MouseListener {
@@ -235,11 +234,15 @@ public abstract class MyBox extends JPanel {
       private Rectangle region=null;
       private Rectangle regionCross=null;
       private Color colorTriangle = Color.darkGray;
+      
+      int w;
 
       Text(String t,int width) {
          super(t,width);
          setUI( new BasicTextFieldUI() );
          addMouseMotionListener(this);
+         w = Math.round( 10*aladin.getUIScale());
+         POSCROSS = 25+w;
          addMouseListener(this);
          
          // Pour ne pas passer sous la petite croix et le triangle
@@ -259,7 +262,7 @@ public abstract class MyBox extends JPanel {
             if( hasCross() ) {
                g.setColor( getBackground() );
                g.fillRect(getWidth()-POSCROSS,0,getWidth()-16,getHeight());
-               drawCross(g,getWidth()-(POSCROSS-2),8);
+               drawCross(g,getWidth()-(POSCROSS-2),getHeight()/2-4);
             }
             if( hasTriangle() ) {
                g.setColor( getBackground() );
@@ -271,14 +274,15 @@ public abstract class MyBox extends JPanel {
 
       private void drawCross(Graphics g, int x, int y) {
          g.setColor( colorTriangle );
-         Util.drawCross(g,x,y,6);
-         regionCross = new Rectangle(x-2,y-2,10,10);
+         Util.drawCross(g,x,y,w-4);
+         regionCross = new Rectangle(x-2,y-2,w,w);
       }
 
       private void drawTriangle(Graphics g, int x, int y) {
          g.setColor( colorTriangle );
-         Util.fillTriangle7(g, x, y);
-         region = new Rectangle(x-2,y-2,10,10);
+         if( aladin.getUIScale()<1.25 ) Util.fillTriangle7(g, x, y);
+         else Util.fillTriangle8(g, x, y);
+         region = new Rectangle(x-2,y-2,w,w);
       }
       
       protected void processComponentKeyEvent(KeyEvent e) {

@@ -2671,7 +2671,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       for( Obj o : vselobj ) {
          if( o instanceof Ligne || o instanceof Cercle || o instanceof SourceStat ) {
             o.setSelect(false);
-            if( o instanceof SourceStat ) aladin.mesure.remove( (SourceStat)o );
+//            if( o instanceof SourceStat ) aladin.mesure.remove( (SourceStat)o );
             continue;
          }
          v.add(o);

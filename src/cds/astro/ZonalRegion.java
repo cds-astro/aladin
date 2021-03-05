@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 import java.io.*;
@@ -47,7 +26,7 @@ public class ZonalRegion extends Region {
     Astroframe frame;		// Frame in which limits are defined.
     double lon0, lon1, dlon;	// Limits in longitude; dlon = (lon1-lon0)/2
     double lat0, lat1;		// Limits in latitude
-    double R[][];		// Rotation to bring position to original frame
+    double R[];			// Rotation to bring position to original frame
     double zmin, zmax, smax;	// Limits on z = sin(lat), and max(sec(dec))
     double xmin, ymax, tmax;	// cos(dlon), sin(dlon), tan(dlon/2)
 
@@ -78,7 +57,7 @@ public class ZonalRegion extends Region {
 	// Distance with left edge
 	double r = centroid.distc(v3[0], v3[1]);
 	if (r<minrad) minrad=r; if(r>maxrad) maxrad=r;
-	int i;
+	int i, m;
 	for (i=0; i<4; i++) {
 	    r = centroid.distance(v3[i]);
 	    if (r<minrad) minrad=r; if(r>maxrad) maxrad=r;
@@ -95,11 +74,11 @@ public class ZonalRegion extends Region {
 	        frame.toICRS(v3[i]);
 	    frame.toICRS(centroid);
 	}
-	R = new double[3][3];
-	for (i=0; i<3; i++) {
-	    R[i][0] = v3[i].x; 
-	    R[i][1] = v3[i].y; 
-	    R[i][2] = v3[i].z; 
+	R = new double[9];
+	for (i=m=0; i<3; i++) {
+	    R[m++] = v3[i].x; 
+	    R[m++] = v3[i].y; 
+	    R[m++] = v3[i].z; 
 	}
 
 	// Compute the zone extensions.

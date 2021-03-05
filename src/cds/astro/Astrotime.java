@@ -1,24 +1,3 @@
-// Copyright 1999-2020 - Université de Strasbourg/CNRS
-// The Aladin Desktop program is developped by the Centre de Données
-// astronomiques de Strasbourgs (CDS).
-// The Aladin Desktop program is distributed under the terms
-// of the GNU General Public License version 3.
-//
-//This file is part of Aladin Desktop.
-//
-//    Aladin Desktop is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, version 3 of the License.
-//
-//    Aladin Desktop is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    The GNU General Public License is available in COPYING file
-//    along with Aladin Desktop.
-//
-
 package cds.astro;
 
 /*==================================================================
@@ -36,6 +15,8 @@ import java.text.*;	// for parseException
  * @version 1.1 : 15-Aug-2004: Method getByr getJyr getJD getMJD getTime
  * @version 1.2 : 02-Sep-2006: Interpret date/time
  * @version 1.3 : 01-Aug-2011: Methods getLST
+ * @version 2.0 : 01-Feb-2019: Method B2MJD J2MJD; fixed parsing
+ *                            (empty string is NOT current time)
  *
  */
 
@@ -100,12 +81,29 @@ public class Astrotime {
       return JD_J2000 + (y-2000)*Jyr ;
    }
    /**
+    * Conversion of a Julian epoch to a Modified Julian Date
+    * @param y Julian epoch
+    * @return MJD 
+   */
+   public static final double J2MJD(double y) {
+      return (JD_J2000-JD_MJD0) + (y-2000)*Jyr ;
+   }
+
+   /**
     *  Conversion of a Besselian epoch to a Julian Date
     * @param y Besselian epoch
     * @return Julian date
     */
    public static final double B2JD(double y) {
       return JD_B1900 + (y-1900)*Byr ;
+   }
+   /**
+    *  Conversion of a Besselian epoch to a Modified Julian Date
+    * @param y Besselian epoch
+    * @return MJD
+    */
+   public static final double B2MJD(double y) {
+      return (JD_B1900-JD_MJD0) + (y-1900)*Byr ;
    }
 
    /**
@@ -283,6 +281,7 @@ public class Astrotime {
 
    /**
     * Dump the time contents.
+    * @param title the text to insert before the dumped time.
     */
     public final void dump (String title) {
 	System.out.println(title + " unit=" + unit + ", precision=" + precision
@@ -292,26 +291,30 @@ public class Astrotime {
    /**
     * Interpret a string for a time.
     * @param t	Text to interpret as a date/time object; 
-    *           "", ".", "now" are interpreted as current date/time
+    *           ".", "now" are interpreted as current date/time
     * @return true if something could be interpretated.
     */
-    public boolean parsing (Parsing t) {
+    public boolean parse(Parsing t) {
       int posini = t.pos;
       int k, pos1, prec;
-      double x;
+      double x=0./0.;	// v2.0: set NaN
       	t.gobbleSpaces();
 	prec = 0;		// Lowest precision, i.e. year/month
       	k = t.lookup(prefix); 
 	pos1 = t.pos;
-	if ((t.pos == t.length) || (t.lookupIgnoreCase(is_now)>=0)) {
-	    set(System.currentTimeMillis());
-	    return(true);
+	//if ((t.pos == t.length) || (t.lookupIgnoreCase(is_now)>=0))
+	if(t.lookupIgnoreCase(is_now)>=0) {
+            // Don't accept 'now' when directly followed by text or digit
+            if((t.pos==t.length)||(!Character.isLetterOrDigit(t.currentChar()))) {
+	        set(System.currentTimeMillis());
+	        return(true);
+            }
 	}
 	if (k<=0) {		/* V1.2 -- No prefix, try a standard date ? */
 	    int pdate = t.parseDate();
 	    boolean sexatime = false;
-	    x = 0;		// Default time part
 	    if (t.pos > pos1) {
+	        x = 0;		// Default time part (v2.0)
 	        k = 0;		// It's "date" unit
 		int pos2 = t.pos;
 		prec = t.format()&(~Astroformat.DATE_alpha);
@@ -346,7 +349,7 @@ public class Astrotime {
 		// System.out.println(", date=" + x);
 	    }
 	}
-	else {
+	if(Double.isNaN(x)) /*else*/ {	// v2.0 (year without prefix)
       	    x = t.parseDouble();
 	    prec = 1+t.decimals();
 	}
@@ -371,7 +374,7 @@ public class Astrotime {
     */
     public int parse(String text, int offset) {
       Parsing t = new Parsing(text, offset);
-      return( parsing(t) ? t.pos : offset );
+      return (parse(t) ? t.pos : offset );
     }
 
    /**
@@ -408,7 +411,7 @@ public class Astrotime {
     */
     public void set(String text) throws ParseException {
       Parsing t = new Parsing(text);
-      	if (parsing(t)) 	// Verify text completely interpretated
+      	if (parse(t)) 	// Verify text completely interpretated
 	    t.gobbleSpaces();
 	if (t.pos != t.length) throw new ParseException
 	    ("****Astrotime: argument '" + text + "'", t.pos);
@@ -420,6 +423,7 @@ public class Astrotime {
 
    /**
     * Get the time expressed in MJD (JD-2400000.5)
+    * @return the time in MJD
     */
     public double getMJD() {
 	return(mjd);
@@ -427,6 +431,7 @@ public class Astrotime {
 
    /**
     * Get the time expressed in Julian yr
+    * @return the time expressed in Jyr
     */
     public double getJyr() {
 	return(2000.+((mjd+(JD_MJD0-JD_J2000))/Jyr));
@@ -434,6 +439,7 @@ public class Astrotime {
 
    /**
     * Get the time expressed in Besselian yr
+    * @return the time expressed in Byr
     */
     public double getByr() {
 	return(1900.+((mjd+(JD_MJD0-JD_B1900))/Byr));
@@ -441,6 +447,7 @@ public class Astrotime {
 
    /**
     * Get the time expressed in JD
+    * @return the time expressed in Julian day (no offset)
     */
     public double getJD() {
 	return(mjd+JD_MJD0);
@@ -448,6 +455,7 @@ public class Astrotime {
 
    /**
     * Get the time expressed in milliseconds since 1 Jan 1970
+    * @return the time expressed in Unix ms
     */
     public long getTime() {
       	return (long)((mjd+(JD_MJD0-JD_1970))*86400e3);
@@ -456,6 +464,7 @@ public class Astrotime {
    /**
     * Get the Local Sideral Time (in sideral seconds at Greenwich meridian)
     * between 0 and 86400.
+    * @return the Local Sideral Time at Greenwich meridian (longitude=0)
     */
     public double getLST() {
 	// j0h = MJD day at 0h GMT
@@ -527,6 +536,7 @@ public class Astrotime {
    /**
     * Edit the time in the specified choice.
     * @param unit One of the possibilities "JD" "MJD" "J" "B" "ms"
+    * @return Edited time with the specified unit.
     */
     public String toString(String unit) {
       StringBuffer b = new StringBuffer(32);

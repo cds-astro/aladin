@@ -760,6 +760,42 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
          return getWordLine(src[i],i);
       }
    }
+   
+   // Retourne la précision d'un champ, et si inconnue, essaye de le déterminer en fonction des valeurs 
+   private int getPrecision(Source o, int field ) {
+      Legende leg = o.getLeg();
+      int p = leg.getPrecision(field);
+      if( p>=0 ) return p;
+      
+      if( !leg.isNumField(field) ) return -1;
+
+      p = leg.getAlternatePrecision(field);
+      if( p>=0 ) return p;
+
+      int i=0;
+      Iterator<Obj> it = o.plan.iterator();
+      int max=0;
+      while( it.hasNext() ) {
+         if( ++i>10000 ) break;
+         Obj x  = it.next();
+         if( !(x instanceof Source) || ((Source)x).getLeg()!=leg ) continue;
+         String s = ((Source)x).getValue(field);
+         int dot = s.indexOf('.');
+         if( dot==-1 ) continue;
+         int prec = s.length()-dot-1;
+         if( max<prec ) max=prec;
+      }
+      leg.setAlternatePrecision(field,max);
+      return max;
+   }
+
+   
+   // Retourne la largeur d'affichage d'un champ, et si inconnu, essaye de le déterminer en fonction des valeurs 
+   private int getWidth(Source o, int field ) {
+      Legende leg = o.getLeg();
+      return leg.getWidth(field);
+   }
+
 
    /** Génération de la HeadLine associée à la source passée en paramètre */
    protected Vector getHeadLine(Source o) {
@@ -773,7 +809,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       for( int i=0; i<leg.field.length; i++ )  {
          int nField = leg.fieldAt[i];
          if( !leg.isVisible(nField) ) continue;
-         Words w = new Words(leg.field[nField].name,null,o.getLeg().getWidth(nField),o.getLeg().getPrecision(nField),
+         Words w = new Words(leg.field[nField].name,null,getWidth(o,nField),getPrecision(o,nField),
                Words.CENTER,o.getLeg().computed.length==0?false:o.getLeg().computed[nField],
                      leg.field[nField].sort,-1);
          w.pin = i==0;
@@ -837,14 +873,14 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
             // Creation d'un mot dans le cas d'un footprint associé (Thomas, VOTech)
             if( indexFootPrint==nField ) {
-               w = new Words("  FoV",o.getLeg().getWidth(i-1),o.getLeg().getPrecision(nField),Words.LEFT,
+               w = new Words("  FoV",getWidth(o,nField),getPrecision(o,nField),Words.LEFT,
                      false,true,num);
             }
             // Creation du nouveau mot
             else {
                if( o.getLeg().isNullValue(tag, i-1) ) tag="";
-               w = new Words(tag,o.getLeg().getRefText(nField),o.getLeg().getWidth(nField),
-                     o.getLeg().getPrecision(nField),align,
+               w = new Words(tag,o.getLeg().getRefText(nField),getWidth(o,nField),
+                     getPrecision(o,nField),align,
                      o.getLeg().computed.length==0?false:o.getLeg().computed[nField],Field.UNSORT,num);
             }
          }

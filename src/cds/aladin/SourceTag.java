@@ -125,11 +125,12 @@ public class SourceTag extends Source  {
    
    /** Positionne l'id par defaut */
    void setId() {
-      if( id==null ) id="Phot "+ nextIndice();
+      id="Phot "+ nextIndice();
    }
    
    /** (Re)genération des mesures et réaffichage */
    protected void resume() {
+//      planBase = plan.aladin.calque.getPlanBase();
       plan.aladin.view.newView(1);
       resumeMesures();
       plan.aladin.mesure.redisplay();

@@ -711,6 +711,8 @@ public final class PlanField extends Plan {
             a.set(x,y);
             p.raj = a.getLon();
             p.dej = a.getLat();
+            
+//            System.out.println("x,y="+x+","+y+" -> raj,dej="+p.raj+","+p.dej);
          }
       }
 
@@ -718,6 +720,20 @@ public final class PlanField extends Plan {
       Properties.majProp(this);
 
    }
+   
+//   static public void main(String [] argv) {
+//      try {
+//         double x = -9.739519033341476E-5;
+//         double y = -0.011581459001125264;
+//         Proj3 a = new Proj3(Proj3.TAN,0.,0.);
+//         a.set( x,y );
+//         double raj = a.getLon();
+//         double dej = a.getLat();
+//         System.out.println("x,y="+x+","+y+" -> raj,dej="+raj+","+dej);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
 
    /** Reset the FoV for recomputing all drawing objects (after a translation
     * or a rotation to avoid distortions and repaint it
