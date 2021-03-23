@@ -1051,10 +1051,11 @@ public class PlanImage extends Plan {
       if( cacheID==null ) return false;
 
       if( aladin.view.getPixelMode()==View.INFILE ) return false;
-
+      
       // L'image est petite, on la charge entièrement pour s'éviter des
       // accès disques
       if( naxis1*naxis2*npix<=Aladin.LIMIT_PIXELORIGIN_INMEM ) return false;
+      
       return true;
    }
 
@@ -1154,12 +1155,21 @@ public class PlanImage extends Plan {
 
    /** Sauvegarde des pixels d'origine dans le cache et libération du bloc mémoire
     * si ce n'est déjà fait
+    * @oaral force true si on force la libération même s'il reste assez de RAM dispo
     * @return true si une liberation a eu lieu, sinon false
     */
-   protected boolean pixelsOriginIntoCache() {
+   protected boolean pixelsOriginIntoCache() { return pixelsOriginIntoCache(false); }
+   protected boolean pixelsOriginIntoCache( boolean force ) {
+      
+
       // Cas d'accès direct au fichier d'origine
       // ou cas du cache classique
       if( pixelsOrigin!=null && (cacheFromOriginalFile || setInCache(pixelsOrigin))) {
+         
+         // S'il reste assez de place en RAM, on va plutôt garder les pixels en mémoire
+         if( !force && aladin.enoughMemory() ) return false;
+         
+         
          Aladin.trace(3,"Original pixels RAM free for "+label);
          pixelsOrigin=null;
          return true;

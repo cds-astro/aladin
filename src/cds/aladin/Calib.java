@@ -30,9 +30,13 @@ import java.util.Vector;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.fits.HeaderFits;
+//import cds.healpix.Projection ;
+import  cds.healpix.Healpix ;
 import cds.tools.FastMath;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
+
+
 
 //import healpix.newcore.FastMath;
 
@@ -137,10 +141,11 @@ public final class Calib  implements Cloneable {
    static public final int SINSIP = 15 ;
    static public final int GLS = 16 ;
    static public final int MER = 17 ;
+   static public final int HPX = 18 ;
 
    // Signature dans les mots cl�s FITS des diff�rentes projections (l'indice dans le tableau doit correspondre
    // aux constantes statics ci-dessus
-   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP", "GLS", "MER" };
+   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP", "GLS", "MER", "HPX" };
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouv� */
    static int getProjType(String s) {//System.out.println("ssss "+s);
@@ -2153,7 +2158,7 @@ public final class Calib  implements Cloneable {
             }
             else rteta = (Math.PI/2 -tet) ;
           //  if (rteta > Math.PI) System.out.println("rteta"+rteta) ;
-            if (rteta < 0 ) System.out.println("rteta"+rteta) ;
+          //  if (rteta < 0 ) System.out.println("rteta"+rteta) ;
             //x_stand = (Math.PI/2 -tet)*FastMath.sin(phi) ;
             x_stand = rteta*FastMath.sin(phi) ;
             // y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;
@@ -2571,6 +2576,8 @@ public final class Calib  implements Cloneable {
                c.del = -c.del ;
             }
             //                          System.out.println("c al del  "+c.al+" "+c.del);
+            if (c.al > 360.0) c.al -= 360.0 ;
+            if (c.al < 0.0) c.al += 360.0    ;     
             break ;
          case ZPN: 
          case ARC: //ARC proj
@@ -2837,6 +2844,15 @@ public final class Calib  implements Cloneable {
             c.al = alphai +x_objr* rad_to_deg;
             c.del = deltai +y_objr * rad_to_deg;
             break;
+            
+         case HPX:
+        	double [] unproject1 ;
+    //    	  System.out.println("HPX "+x_objr+" "+y_objr);
+        	  unproject1 = Healpix.UI.unproject(x_objr,y_objr) ;
+        	 c.al = unproject1[0]*rad_to_deg ;
+        	 c.del = unproject1[1]*rad_to_deg ;
+      //  	 System.out.println("HPX "+unproject1[0]+" "+unproject1[1]);
+        	 break ;
          default:
             break ;
       }
@@ -3034,8 +3050,8 @@ public final class Calib  implements Cloneable {
       del = c.del ;
       // System.out.println(c.al+" "+c.del);
       if( system!=ICRS && system!=XYLINEAR ) {
-         Astroframe af = system==FK4           ? AF_FK4 :
-                         system==FK5           ? AF_FK5 :
+         Astroframe af = system==FK4           ? Astroframe.create("FK4(B"+equinox+")"):
+                         system==FK5           ? Astroframe.create("FK5("+equinox+")"):
                          system==GALACTIC      ? AF_GAL :
                          system==SUPERGALACTIC ? AF_SGAL:
                          system==ECLIPTIC      ? AF_ECL : null;
@@ -3748,6 +3764,11 @@ public final class Calib  implements Cloneable {
                y_stand = del-deltai ;
                //  System.out.println("xystand"+x_stand+" "+y_stand);
                break ;
+            case HPX :
+            	double [] project ;
+            	project = Healpix.UI.project(al*deg_to_rad,del*deg_to_rad) ;
+            	x_stand = project[0] *rad_to_deg ;
+            	y_stand = project[1]*rad_to_deg ;
             default:
                //                       System.out.println("proj default\n");
                break ;

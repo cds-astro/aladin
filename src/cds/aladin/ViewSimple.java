@@ -5471,7 +5471,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Calcul de la taille et de la position en fonction de la taille
       // de la vue et du nombre de vues simultanées
-      int size=rv.width>=200?8:6;
+      int size=rv.width>=200?9:6;
 
       if( cubeControl.SIZE==-1 ) {
          cubeControl.init(size);
@@ -5480,7 +5480,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( aladin.view.getModeView()<=ViewControl.MVIEW9 || fullScreen ) {
-         //         x=rv.width-blinkControl.getWidth()-10;
          x=rv.width/2 - cubeControl.getWidth()/2;
          y =5 + ( fullScreen ? 13:0);
       } else {

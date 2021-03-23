@@ -118,9 +118,48 @@ class MyAnchor extends JLabel {
     * si on clique sur le "..." ou le texte
     * @param aladin
     * @param text
+    * @param flagMore true si on veut un "...", false pour avoir un lien souligné directement (les caractères
+    *          non alphanumériques ne sont pas soulignés)
     * @param action
     */
-   MyAnchor(Aladin aladin,String text, final ActionListener action) {
+   MyAnchor(Aladin aladin,String text, final ActionListener action) { this(aladin,text,true,action); }
+   MyAnchor(Aladin aladin,String text, boolean flagMore, final ActionListener action) {
+      super();
+      if( flagMore ) {
+         text =  "<html>"+text+" <A HREF=\"\">...</A></html>";
+      } else {
+         int i=0;
+         int n = text.length();
+         while( !Character.isLetterOrDigit( text.charAt(i) ) && i<n) i++;
+         int j=n-1;
+         while( !Character.isLetterOrDigit( text.charAt(j) ) && j>0) j--;
+         j++;
+         if( i>=j ) text = "<html> <A HREF=\"\">"+text+"</A></html>";
+         else text = "<html>"+text.substring(0,i)+"<A HREF=\"\">"+text.substring(i,j)+"</A>"+text.substring(j)+"</html>";
+      }
+      setText(text);
+      setFont(getFont().deriveFont(Font.ITALIC));
+      final Component c = this;
+      addMouseMotionListener(new MouseMotionListener() {
+         public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
+         public void mouseDragged(MouseEvent e) { }
+      });
+      addMouseListener(new MouseListener() {
+         public void mouseReleased(MouseEvent e) {
+            if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) return;
+            action.actionPerformed(null);
+         }
+         public void mousePressed(MouseEvent e)  { }
+         public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
+         public void mouseEntered(MouseEvent e)  { }
+         public void mouseClicked(MouseEvent e) { }
+      });
+   }
+   
+   /**
+    * Texte sous forme de lien auquel on a associé une action qui sera effectué si on clique dessus
+    */
+   MyAnchor(String text, final ActionListener action) {
       super();
       text = "<html>"+text+" <A HREF=\"\">...</A></html>";
       setText(text);
@@ -142,6 +181,7 @@ class MyAnchor extends JLabel {
       });
    }
    
+
 
    
    // Affiche dans un navigateur Web

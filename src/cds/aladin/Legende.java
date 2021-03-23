@@ -373,7 +373,7 @@ public final class Legende extends AbstractTableModel  {
    /** retourne true s'il s'agit d'une légende comportant un point de SED */
    protected boolean isSED() {
       for( Field f : field ) {
-         if( f.sed!=0 ) return true;
+         if( f.sed==Field.FLUX ) return true;
       }
       return false;
    }

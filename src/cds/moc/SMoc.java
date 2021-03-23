@@ -84,9 +84,9 @@ public class SMoc extends Moc {
    protected int minOrder;         // Min order supported (by default 0)
    protected int mocOrder;         // Max order supported (by default depending of Healpix library => typically 29)
    protected Array [] level;            // pixel list for each HEALPix orders
-   private int nOrder;                  // The number of orders currently used
+   protected int nOrder;                  // The number of orders currently used
    private boolean testConsistency;     // true for checking the consistency during a MOC pixel addition (=> slower)
-   private boolean isConsistant;        // true if we are sure that the MOC is consistant
+   protected boolean isConsistant;        // true if we are sure that the MOC is consistant
    private int currentOrder=-1;         // last current order for pixel addition
    
    public Range range=null;
@@ -209,7 +209,7 @@ public class SMoc extends Moc {
       if( mocOrder==this.mocOrder ) return;
       if( mocOrder>MAXORDER ) throw new Exception("Moc order exceed HEALPix library possibility ("+MAXORDER+")");
       if( mocOrder!=-1 && mocOrder<minOrder ) throw new Exception("Max limit order smaller than min limit order");
-      property.put("MOCORDER", ""+(mocOrder==-1 ? MAXORDER : mocOrder));
+      property.put("MOCORD_S", ""+(mocOrder==-1 ? MAXORDER : mocOrder));
       this.mocOrder=mocOrder;
       isConsistant = false;
       if( getSize()>0 ) checkAndFix();
@@ -279,6 +279,9 @@ public class SMoc extends Moc {
       for( int order=0; order<nOrder; order++ ) size+= getSize(order);
       return size;
    }
+   
+   /** MOC 2.0 => NUNIQ => getSize(); */
+   public int getWriteSize() { return getSize(); }
 
    /** Return approximatively the memory used for this moc (in bytes) */
    public long getMem() {
@@ -1131,10 +1134,10 @@ public class SMoc extends Moc {
    protected int writeSpecificFitsProp( OutputStream out  ) throws Exception {
       int n=0;
       out.write( MocIO.getFitsLine("TTYPE1","UNIQ","UNIQ pixel number") ); n+=80;
-      out.write( MocIO.getFitsLine("PIXTYPE","HEALPIX","HEALPix magic code") );    n+=80;
+//      out.write( MocIO.getFitsLine("PIXTYPE","HEALPIX","HEALPix magic code") );    n+=80;
       out.write( MocIO.getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;      
-      out.write( MocIO.getFitsLine("COORDSYS",""+getSys(),"reference frame (C=ICRS)") );  n+=80;
-      out.write( MocIO.getFitsLine("MOC","SPACE","Spacial MOC") );    n+=80;      
+      out.write( MocIO.getFitsLine("COORDSYS",""+getSys(),"Reference frame (C=ICRS)") );  n+=80;
+      out.write( MocIO.getFitsLine("MOCDIM","SPACE","Physical dimension") );    n+=80;      
       out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"MOC resolution (best order)") );    n+=80;      
       return n;
    }

@@ -3109,7 +3109,7 @@ public final class Command implements Runnable {
                   label = p[4];
                } catch( Exception e1 ) {
                }
-               ;
+               
             }
             if( label == null ) try {
                label = p[5];
@@ -3130,7 +3130,7 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("vector") ) {
             double angle = parseDouble(p[3]);
             if( drawMode == DRAWRADEC ) {
-               double w = Server.getAngleInArcmin(p[2], Server.RADIUSd) / 60.;
+               double w = Server.getAngleInArcmin( p[2], Server.RADIUSd) / 60.;
                newobj = new Vecteur(plan, c, w, angle);
             } else {
                double w = parseDouble(p[2]);
@@ -3242,9 +3242,10 @@ public final class Command implements Runnable {
    private double parseDouble(String s) throws Exception {
       s = s.trim();
       int fin;
-      for( fin = s.length() - 1; fin > 0 && !Character.isDigit(s.charAt(fin)); fin-- )
-         ;
+      for( fin = s.length() - 1; fin > 0 && !Character.isDigit(s.charAt(fin)); fin-- ) ;
+      
       int deb = s.length() > 0 && s.charAt(0) == '+' ? 1 : 0;
+      System.out.println("Parsing ["+s+"] ["+s.substring(deb, fin + 1)+"]=> "+Double.parseDouble(s.substring(deb, fin + 1)));
       return Double.parseDouble(s.substring(deb, fin + 1));
    }
 

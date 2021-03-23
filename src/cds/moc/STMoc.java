@@ -115,6 +115,9 @@ public class STMoc extends Moc {
       return size;
    }
    
+   @Override
+   public int getWriteSize() { return getSize(); }
+
    public int getTimeRanges() { return range.nranges(); }
 
    @Override
@@ -513,15 +516,16 @@ public class STMoc extends Moc {
     */
    protected int writeSpecificFitsProp( OutputStream out  ) throws Exception {
       int n=0;
-      //      out.write( MocIO.getFitsLine("MOC","SPACETIME","Space Time MOC") );    n+=80;      
-      out.write( MocIO.getFitsLine("MOC","TIME.SPACE","STMOC: Time dimension first, ") );    n+=80;      
-      out.write( MocIO.getFitsLine("ORDERING","RANGE29","Range coding") );    n+=80;      
-      //      out.write( MocIO.getFitsLine("MOCORDER",""+getMocOrder(),"Space MOC resolution") );    n+=80;      
-//      out.write( MocIO.getFitsLine("TORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
-      out.write( MocIO.getFitsLine("MOCORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
-      out.write( MocIO.getFitsLine("MOCORD_1",""+getSpaceOrder(),"Space MOC resolution") );    n+=80;      
+//      out.write( MocIO.getFitsLine("MOC","TIME.SPACE","STMOC: Time dimension first, ") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCDIM","TIME.SPACE","STMOC: Time dimension first, ") );    n+=80;      
+//      out.write( MocIO.getFitsLine("ORDERING","RANGE29","Range coding") );    n+=80;      
+      out.write( MocIO.getFitsLine("ORDERING","RANGE","Range coding") );    n+=80;      
+//      out.write( MocIO.getFitsLine("MOCORDER",""+getTimeOrder(),"Time MOC resolution") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCORD_T",""+TMoc.toNewMocOrder( getTimeOrder() ),"Time MOC resolution") );    n+=80;      
+//      out.write( MocIO.getFitsLine("MOCORD_1",""+getSpaceOrder(),"Space MOC resolution") );    n+=80;      
+      out.write( MocIO.getFitsLine("MOCORD_S",""+getSpaceOrder(),"Space MOC resolution") );    n+=80;      
       out.write( MocIO.getFitsLine("COORDSYS","C","Space reference frame (C=ICRS)") );  n+=80;
-      out.write( MocIO.getFitsLine("TIMESYS","JD","Time ref system JD BARYCENTRIC TCB, 1 microsec order 29") ); n+=80;
+      out.write( MocIO.getFitsLine("TIMESYS","TCB","Time ref system") ); n+=80;
       return n;
    }
    
@@ -546,29 +550,31 @@ public class STMoc extends Moc {
      return size;
   }
   
+  
   protected void readSpecificData( InputStream in, int naxis1, int naxis2, int nbyte, cds.moc.MocIO.HeaderFits header) throws Exception {
-     
-     // Entête proto => MOC=SPACETIME ou même pas mentionné
-     String type = header.getStringFromHeader("MOC");
-     if( type==null || type.equals("SPACETIME") ) {
-        timeOrder = header.getIntFromHeader("TORDER");
-        spaceOrder = header.getIntFromHeader("MOCORDER");
+
+     // MOC V2.0
+     String type = header.getStringFromHeader("MOCDIM");
+     if( type!=null ) {
+        timeOrder = TMoc.toOldMocOrder( header.getIntFromHeader("MOCORD_T"));
+        spaceOrder = header.getIntFromHeader("MOCORD_S");
         
-     // Format TIME.SPACE
+     // Pour compatibilité pour les STMOC protos
      } else {
-        timeOrder = header.getIntFromHeader("MOCORDER");
-        spaceOrder = header.getIntFromHeader("MOCORD_1");
+        type = header.getStringFromHeader("MOC");
+        if( type==null || type.equals("SPACETIME") ) {
+           timeOrder = header.getIntFromHeader("TORDER");
+           spaceOrder = header.getIntFromHeader("MOCORDER");
+
+           // Format TIME.SPACE
+        } else {
+           timeOrder = header.getIntFromHeader("MOCORDER");
+           spaceOrder = header.getIntFromHeader("MOCORD_1");
+        }
      }
      byte [] buf = new byte[naxis1*naxis2];
      MocIO.readFully(in,buf);
      createMocByFits((naxis1*naxis2)/nbyte,buf);
-  }
-  
-  protected long readLong(byte t[], int i) {
-     int a = ((  t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
-     int b = ((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF;
-     long val = (((long)a)<<32) | (b & 0xFFFFFFFFL);
-     return val;
   }
   
   protected void createMocByFits(int nval,byte [] t) throws Exception {
@@ -738,4 +744,5 @@ public class STMoc extends Moc {
          else this.comment.put(key,comment);
 //      }
    }
+
 }

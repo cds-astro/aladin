@@ -74,7 +74,7 @@ import java.util.LinkedHashMap;
 public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>  {
 
    /** MOC API version number */
-   static public final String VERSION = "8.0";
+   static public final String VERSION = "9.0";
 
    /** FITS encoding format (IVOA REC 1.0 compliante) */
    static public final int FITS  = 0;
@@ -150,6 +150,9 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
 
    /** Return the number of elements */
    abstract public int getSize();
+   
+   /** Return the number of elements to write in FITS */
+   abstract public int getWriteSize();
    
    /** Add a list of MOC pixels provided in a string format (JSON format or basic ASCII format)
     * ex JSON:          { "order1":[npix1,npix2,...], "order2":[npix3...] }
@@ -429,6 +432,14 @@ public abstract class Moc implements Iterable<MocCell>,Cloneable,Comparable<Moc>
    }
 
    /***************************************  Utilities **************************************************************/
+   
+   protected long readLong(byte t[], int i) {
+      int a = ((  t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
+      int b = ((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF;
+      long val = (((long)a)<<32) | (b & 0xFFFFFFFFL);
+      return val;
+   }
+
 
    /** Code a couple (order,npix) into a unique long integer
     * @param order HEALPix order

@@ -915,7 +915,8 @@ public void layout() {
       for( i=a.length-1; i>0 && !((a[i]>='0' && a[i]<='9') || a[i]=='.'); i-- );
       
       r = new String(a,0,i+1);
-      return Double.valueOf(r).doubleValue()*fct;
+      r=r.replace('E', 'e');
+      return Double.parseDouble(r)*fct;
    }
    
 //   public static void main(String [] argv) {

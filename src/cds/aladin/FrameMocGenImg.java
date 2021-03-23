@@ -61,7 +61,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    static protected JComboBox makeComboTimeRes() {
       JComboBox c = new JComboBox();
       for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
-         String s = "Order "+o+" => "+TMoc.getTemps( TMoc.getDuration(o) );
+         String s = "Order "+TMoc.toNewMocOrder(o)+" => "+TMoc.getTemps( TMoc.getDuration(o) );
          c.addItem(s);
       }
       c.setSelectedIndex(7);

@@ -36,8 +36,6 @@ import javax.swing.JSlider;
 
 import cds.aladin.prop.PropPanel;
 import cds.moc.Moc;
-import cds.moc.TMoc;
-import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gestion de la fenetre associee a la creation d'un plan arithmétic
@@ -113,42 +111,42 @@ public final class FrameMocOperation extends FrameRGBBlink {
    protected JComboBox getComboSpaceRes() { return FrameMocGenImg.makeComboSpaceRes(); }
    protected JComboBox getComboTimeRes()  { return FrameMocGenImg.makeComboTimeRes(); }
 
-   protected JComboBox getComboSpaceAcc() { return makeComboSpaceAcc(9); }
-   protected JComboBox getComboTimeAcc()  { return makeComboTimeAcc(9); }
-   
-   protected JComboBox makeComboTimeAcc(int first) { return makeComboTimeAcc(first,null); }
-   protected JComboBox makeComboTimeAcc(int first, JComboBox c) {
-      int select=0;
-      if( c==null ) c = new JComboBox();
-      else {
-         c.getSelectedIndex();
-         c.removeAll();
-      }
-      for( int o=0; o<5; o++ ) {
-         c.setActionCommand(o+"");
-         String s = TMoc.getTemps( TMoc.getDuration(first)*o );
-         c.addItem(s);
-      }
-      c.setSelectedIndex(select);
-      return c;
-   }
-
-   static protected JComboBox makeComboSpaceAcc(int first) { return makeComboSpaceAcc(first,null); }
-   static protected JComboBox makeComboSpaceAcc(int first, JComboBox c) {
-      int select=0;
-      if( c==null ) c = new JComboBox();
-      else {
-         c.getSelectedIndex();
-         c.removeAll();
-      }
-      for( int o=0; o<5; o++ ) {
-         c.setActionCommand(o+"");
-         String s = Coord.getUnit( (CDSHealpix.pixRes(first)*o)/3600. );
-         c.addItem(s);
-      }
-      c.setSelectedIndex(select);
-      return c;
-   }
+//   protected JComboBox getComboSpaceAcc() { return makeComboSpaceAcc(9); }
+//   protected JComboBox getComboTimeAcc()  { return makeComboTimeAcc(9); }
+//   
+//   protected JComboBox makeComboTimeAcc(int first) { return makeComboTimeAcc(first,null); }
+//   protected JComboBox makeComboTimeAcc(int first, JComboBox c) {
+//      int select=0;
+//      if( c==null ) c = new JComboBox();
+//      else {
+//         c.getSelectedIndex();
+//         c.removeAll();
+//      }
+//      for( int o=0; o<5; o++ ) {
+//         c.setActionCommand(o+"");
+//         String s = TMoc.getTemps( TMoc.getDuration(first)*o );
+//         c.addItem(s);
+//      }
+//      c.setSelectedIndex(select);
+//      return c;
+//   }
+//
+//   static protected JComboBox makeComboSpaceAcc(int first) { return makeComboSpaceAcc(first,null); }
+//   static protected JComboBox makeComboSpaceAcc(int first, JComboBox c) {
+//      int select=0;
+//      if( c==null ) c = new JComboBox();
+//      else {
+//         c.getSelectedIndex();
+//         c.removeAll();
+//      }
+//      for( int o=0; o<5; o++ ) {
+//         c.setActionCommand(o+"");
+//         String s = Coord.getUnit( (CDSHealpix.pixRes(first)*o)/3600. );
+//         c.addItem(s);
+//      }
+//      c.setSelectedIndex(select);
+//      return c;
+//   }
 
    
    @Override

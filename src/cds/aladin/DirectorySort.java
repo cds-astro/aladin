@@ -546,6 +546,7 @@ public class DirectorySort {
          int c = countSlash(branch);
          assert c<=9;
          key = key+(9-c);
+//         key = key+c;
       }
       return key;
    }

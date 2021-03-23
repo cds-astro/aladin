@@ -441,11 +441,13 @@ public final class MocIO {
       out.write( getEndBourrage(n) );
    }
    
+   
    // Write the FITS HDU Header for the UNIQ binary table
    private void writeHeader1(OutputStream out) throws Exception {
       int n=0;
       int nbytes = moc.getType()==SMoc.LONG ? 8 : 4;
-      int naxis2 = moc.getSize();
+//      int naxis2 = moc.getSize();
+      int naxis2 = moc.getWriteSize();
       out.write( getFitsLine("XTENSION","BINTABLE","Multi Order Coverage map") ); n+=80;
       out.write( getFitsLine("BITPIX","8") ); n+=80;
       out.write( getFitsLine("NAXIS","2") );  n+=80;
@@ -456,15 +458,25 @@ public final class MocIO {
       out.write( getFitsLine("TFIELDS","1") ); n+=80;
       out.write( getFitsLine("TFORM1",nbytes==4 ? "1J" : "1K") ); n+=80;
       
+      out.write( getFitsLine("MOCVERS","2.0","MOC version") );    n+=80;      
       n+=moc.writeSpecificFitsProp( out );
       out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+SMoc.VERSION,"Name of the MOC generator") );    n+=80;      
 
       // Write specifical MOC properties
       for( int i=0; i<FITSKEY.length; i++ ) {
          String key = FITSKEY[i][0];
+         
+         // reserved key words => not allow to override them
+         if( key.equals("MOCVERS"))  continue;
+         if( key.equals("MOCDIM"))   continue;
+         if( key.equals("ORDERING")) continue;
          if( key.equals("COORDSYS")) continue;
+         if( key.equals("TIMESYS"))  continue;
          if( key.equals("MOCORDER")) continue;
-         if( key.equals("MOCTOOL")) continue;
+         if( key.equals("MOCORD_S")) continue;
+         if( key.equals("MOCORD_T")) continue;
+         if( key.equals("MOCTOOL"))  continue;
+         
          String value = moc.getProperty(key);
          if( value==null ) continue;
          out.write( getFitsLine(key,value,FITSKEY[i][1]) );

@@ -146,6 +146,7 @@ public class CubeControl {
     */
    protected void init(int size) {
       int dx=0;
+      size = Math.round( aladin.getUIScale() * size );
       SIZE=size;
 
       pauseX1[0]=3+dx; pauseX1[1]=3+dx; pauseX1[2]=4+dx; pauseX1[3]=4+dx;
@@ -490,7 +491,7 @@ public class CubeControl {
       Polygon p;
 
       g.setColor(mouseMove==EDIT ? Aladin.COLOR_GREEN : Color.red);
-      g.setFont(Aladin.SPLAIN);
+      g.setFont( Aladin.fontResize( Aladin.SPLAIN ));
       g.drawString(Util.align3(frame+1),edit[0]=x+labelX,edit[1]=y+labelY);
 
       g.setColor(Color.red);

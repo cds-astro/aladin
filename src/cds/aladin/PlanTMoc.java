@@ -85,7 +85,8 @@ public class PlanTMoc extends PlanMoc {
       int order = getRealMaxOrder( (TMoc)moc);
       int drawOrder = getDrawOrder();
       ADD( buf,"\n","* Accuracy: "+ TMoc.getTemps(  TMoc.getDuration(order)));
-      ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? order+"" : drawOrder+"/"+order));
+      ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? TMoc.toNewMocOrder(order)+"" 
+            : TMoc.toNewMocOrder(drawOrder)+"/"+TMoc.toNewMocOrder(order)));
    }
    
    protected boolean isTime() { return true; }

@@ -114,7 +114,7 @@ public class PlanSTMoc extends PlanTMoc {
       ADD( buf,"\n* # ranges: ",stmoc.range.nranges()+"");
       int timeOrder = stmoc.getTimeOrder();
       ADD( buf,"\n* Time res: ",TMoc.getTemps(  TMoc.getDuration(timeOrder)));
-      ADD( buf,"\n* Best time order: ",timeOrder+"");
+      ADD( buf,"\n* Best time order: ",TMoc.toNewMocOrder( timeOrder )+"");
 
       double cov=getFullCoverage();
       double degrad = Math.toDegrees(1.0);

@@ -103,6 +103,11 @@ final public class ThreadBuilderTile {
       }
       fading = context.getFading();
       borderSize = context.getBorderSize();
+      
+      // Ajustement pour éviter le problème des pixels inconnues sur les bords (algo bilinéaire)
+      if( borderSize[0]<1 ) borderSize[0]=1;
+      if( borderSize[1]<1 ) borderSize[1]=1;
+      
 //      circle = context.circle;
       globalShape=context.globalShape;
       hpxFinderPath = context.getHpxFinderPath();

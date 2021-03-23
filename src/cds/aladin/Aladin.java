@@ -145,9 +145,6 @@ import cds.tools.VOObserver;
 import cds.tools.pixtools.CDSHealpix;
 import cds.xml.Field;
 import cds.xml.XMLParser;
-//import healpix.essentials.MocUtil;
-//import healpix.essentials.Pointing;
-//import healpix.essentials.Vec3;
 
 /**
  * La classe Aladin est le point d'entree d'Aladin.
@@ -165,12 +162,13 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> MOC 2.0 support (partial - no yet ASCII time serialization)
  * @beta    <LI> Time serie display
  * @beta    <LI> Support for Hight DPI screen -> See User Preference Scaling method
  * @beta    <LI> Photometric tool stats improvements (table management from polygons and circles)
  * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Pixel extraction...
  * @beta    <LI> Plugin extension for pixel stats (getStatistics..)
- * @beta    <LI> New projection: Mercator
+ * @beta    <LI> New projections: Mercator, HEALPix
  * @beta    <LI> SMOC generation form Box object
  * @beta </UL>
  * @beta <P>
@@ -203,7 +201,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.037";
+   static public final    String VERSION = "v11.040";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

@@ -993,9 +993,10 @@ public class PlanBG extends PlanImage {
 
       // Choix spécifique d'une projection et d'un sens pour la longitude dans le cas
       // d'une planète
+      boolean isPanorama = isPanorama();
       boolean isAPlanet = isPlanet();
       boolean longAsc = isAPlanet;
-      int projection = isAPlanet ? Calib.SIN : defaultProjType ;
+      int projection = isPanorama ? Calib.MER : isAPlanet ? Calib.SIN : defaultProjType ;
       specificProj = isAPlanet;
       
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
@@ -1044,13 +1045,22 @@ public class PlanBG extends PlanImage {
       }
       return Localisation.getFrameName(frameOrigin);
    }
+   
+   /** Retourne true si le système de coordonnée est liée à une vue panorama */
+   protected boolean isPanorama() {
+      String s;
+      if( prop==null ) return false;
+      s = prop.getProperty("hips_frame");
+      if( !isPlanet(s) ) return false;
+      if( id.toLowerCase().indexOf("/pan")<0 && s.toLowerCase().indexOf("pan")<0 ) return false;
+      return true;
+   }
       
-   /** Retourne le mode d'affichage par défaut de la longitude. Si le frame n'est pas céleste,
-    * on suppose qu'il s'agit d'une planète et on affiche avec la longitude ascendante
-    */
+   /** Retourne true si le système de coordonnée est liée à une planète */
    protected boolean isPlanet() {
       if( prop==null ) return false;
-      return isPlanet( prop.getProperty("hips_frame") );
+      String s = prop.getProperty("hips_frame");
+      return isPlanet( s );
    }
       
    protected boolean isPlanet(String frame) {

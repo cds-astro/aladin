@@ -28,7 +28,6 @@ import java.awt.Rectangle;
 import java.util.Iterator;
 import java.util.Vector;
 
-import cds.aladin.Pcat.PlanObjetIterator;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.astro.Proj3;
@@ -179,16 +178,15 @@ public class Forme extends Position {
     * @return le point au bout du vecteur en coordonnées sphériques
     */
    protected Coord applySphereRot(Coord c, double radius, double angle) {
-      if( angle/360.==Math.round(angle/360.) ) return c;
       Proj3 a = new Proj3(Proj3.TAN,c.al,c.del);
       double tanr = Math.tan(Math.PI*radius/180.);
       double cost = Math.cos( Math.PI*angle/180.);
       double sint = Math.sin( Math.PI*angle/180.);
       double x =  tanr*sint;
       double y =  tanr*cost;
-//      a.computeAngles(x,y);
       a.set(x,y);
       return new Coord(a.getLon(),a.getLat());
+ 
    }
    
    // Recupération d'un itérator sur les objets qui compose la forme

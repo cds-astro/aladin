@@ -746,6 +746,9 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Retourne true s'il s'agit de Simbad et quu'on doit montrer un accès un mode live */
    protected boolean isSimbadLive() { return Aladin.CDS && internalId.equals("CDS/Simbad"); }
 
+   /** Retourne true s'il s'agit de Simbad */
+   protected boolean isSimbad() { return internalId.equals("CDS/Simbad"); }
+
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCDSCatalog() { return cat && internalId.startsWith("CDS/"); }
    
@@ -770,6 +773,9 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Retourne true si la collection dispose d'un HiPS */
    protected boolean hasHips() { return prop!=null && 
          (prop.get("hips_service_url")!=null || prop.get("hips_service_path")!=null); }
+   
+   /** Retourne true si la collection dispose d'un ou plusieurs liens vers d'autres collections */
+   protected boolean hasLinks() { return prop!=null && (prop.get("client_link")!=null); }
    
    /** Retourne true si la collection is est un HiPS catalogue */
    protected boolean isHipsCat() {

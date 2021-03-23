@@ -340,9 +340,11 @@ public class MyInputStream extends FilterInputStream {
          int tfields = 1;
          try { tfields=Integer.parseInt( getFitsValue("TFIELDS") ); } catch( Exception e ) {}
          
-         if( tfields==1 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
-               || "UNIQ".equals(o) || "NUNIQ".equals(o)) ) {
-            String m = getFitsValue("MOC");
+         if( tfields==1 && (hasFitsKey("MOCORD_T",null) 
+               || hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)  // Compatibilité
+               || "UNIQ".equals(o) || "NUNIQ".equals(o) || "RANGE".equals(o))) {
+            String m = getFitsValue("MOCDIM");
+            if( m==null ) m = getFitsValue("MOC");   // Compatibilité avec MOC 2.0 proto
 
             // Description explicite ?
             if( "SPACE".equals(m) ) type |= SMOC;

@@ -3718,7 +3718,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                Util.toolTip(bx, AWCRITTIP, true);
                bg.add(bx);
             }
-
+            
             // Juste pour ne pas sélectioner un truc inactivé
             if( csBx != null   && !csBx.isEnabled() )   csBx.setSelected(false);
             if( liveBx != null && !liveBx.isEnabled() ) liveBx.setSelected(false);
@@ -3742,7 +3742,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                Util.toolTip(bx, AWTMOCXTIP, true);
             }
 
-            if( to.isCDSCatalog() && nbRows != -1 && nbRows >= 10000 ) {
+            if( to.isCDSCatalog() && !to.isSimbad() && nbRows != -1 && nbRows >= 10000 ) {
                dmBx = bx = new JCheckBox(AWDM);
                bx.addActionListener(this);
                productPanel.add(bx);
@@ -3753,6 +3753,31 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                   bx.addActionListener(this);
                   productPanel.add(bx);
                   Util.toolTip(bx, AWPROGENTIP, true);
+               }
+            }
+            
+            // Les links vont créer des ancres à la queue leu leu. Au max 5 
+            if( to.hasLinks() ) {
+               try {
+                  int j=0;
+                  String s1 = to.prop.get("client_link");
+                  Tok tok = new Tok(s1,"\t");
+                  String linkId,linkText;
+                  while( tok.hasMoreTokens() && j<5 ) {
+                     s1 = tok.nextToken();
+                     int i = s1.indexOf(' ');
+                     if( i<0 ) { linkId = s1; linkText="assoc-"+(j+1); }
+                     else { linkId = s1.substring(0,i); linkText=s1.substring(i).trim(); }
+                     final String linkIdf = linkId;
+                     String prefix = j==0 ? "    +  ":", ";
+                     MyAnchor link = new MyAnchor(aladin, prefix+linkText, false, new ActionListener() {
+                        public void actionPerformed(ActionEvent e) { showTreeObj( linkIdf ); }
+                     });
+                     productPanel.add(link);
+                     j++;
+                  }
+               } catch( Exception e1 ) {
+                  if( Aladin.levelTrace>=3 ) e1.printStackTrace();
                }
             }
 

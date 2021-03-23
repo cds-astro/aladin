@@ -647,7 +647,12 @@ public class Calque extends JPanel implements Runnable {
       for( Plan p : getPlans() ) {
          if( !p.flagOk ) continue;
          if( !p.isTime() ) continue;
-         double [] t = p.getTimeRange();
+         double[] t =null;
+         try {
+            t = p.getTimeRange();
+         } catch( Exception e ) {
+            return new double[] { -1,-1 };
+         }
          if( Double.isNaN(jdmin) || t[0]<jdmin ) jdmin=t[0];
          if( Double.isNaN(jdmax) || t[1]>jdmax ) jdmax=t[1];
       }
@@ -1282,18 +1287,16 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /** Met dans le cache et libère le tableau sur les pixels d'origine
-    * pour tous les plans images qui ne sont pas visible, ou pour tous les plans
-    * images dans le cas où le mode Pixel courant est 8 bits.
+    * pour tous les plans images qui ne sont pas visible 
     * @return true s'il y a eu une libération effective, sinon false
     */
    protected boolean freeUnusedPixelsOrigin() {
       boolean rep=false;
-      //      boolean flagFreeAll = aladin.pixel.getPixelMode()==Pixel.LEVEL;
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type!=Plan.IMAGE && !(plan[i] instanceof PlanBG) || !plan[i].flagOk ) continue;
-         if( /* flagFreeAll || */ !plan[i].active
-               || ((PlanImage)plan[i]).pixelsOriginFromDisk() ) rep |= ((PlanImage)plan[i]).pixelsOriginIntoCache();
+         if(  !plan[i].active ) rep |= ((PlanImage)plan[i]).pixelsOriginIntoCache(true);
+         else if( ((PlanImage)plan[i]).pixelsOriginFromDisk() ) rep |= ((PlanImage)plan[i]).pixelsOriginIntoCache(false);
       }
       return rep;
    }
