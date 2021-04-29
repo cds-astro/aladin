@@ -71,7 +71,7 @@ public class Range2 extends Range {
          long a =  r[i] & mask;
          long b = (((r[i+1]-1)>>>shift1)+1 ) << shift1;
          Range r = rr[i>>>1].degrade(shift2);
-         r1.append(a, b, r );
+         r1.add(a, b, r );
       }
       r1.trimIfTooLarge();
       return r1;
@@ -102,10 +102,13 @@ public class Range2 extends Range {
      }
      ensureCapacity(sz+2);
 
+// A FAIRE EN AMONT
+//     int sz2 = sz>>>1;
+//     rr[sz2] = sz2>1 && m!=null && m.equals( rr[sz2-1]) ? rr[sz2-1] : m;   // En cas d'égalité, on utilise le MOC spatial de l'intervalle temps précédent.
      rr[sz>>>1] = m;
-     r[sz] = a;
-     r[sz+1] = b;
-     sz+=2;
+     
+     r[sz++] = a;
+     r[sz++] = b;
   }
 
   /** Append an entire range set to the object. */
@@ -441,7 +444,7 @@ public class Range2 extends Range {
         if( (j&1)==0 ) rr[(pos+j)>>>1] = ajout.rr[j>>>1];
      }
 
-     // Décallage à gauche ?
+     // Décalage à gauche ?
      if( diff<0 ) {
         int j;
         for( j=pos+ajout.sz; j<sz+diff; j++) {
@@ -455,6 +458,29 @@ public class Range2 extends Range {
      sz+=diff;
   }
   
+  public boolean equals( Object obj ) {
+     if( this==obj ) return true;
+     if( obj==null || !(obj instanceof Range2) ) return false;
+     Range2 other = (Range2) obj;
+     if( other.sz!=sz ) return false;
+     for (int i=0; i<sz; ++i) {
+        if (other.r[i]!=r[i]) return false;
+        if( i%2==0 && other.rr[i/2]!=null && !other.rr[i/2].equals(rr[i/2]) ) return false;
+     }
+     return true;
+  }
+  
+  public int hashCode() {
+     if (sz == 0)  return 0;
+     int result = 1;
+     for( int i=0; i<sz; i++) {
+        long element = r[i];
+        result = 31 * result + (int)(element ^ (element >>> 32));
+        if( i%2==0 ) result = 31 * result + rr[i/2].hashCode();
+     }
+     return result;
+  }
+
   public boolean check() {
      Range oldm=null;
      

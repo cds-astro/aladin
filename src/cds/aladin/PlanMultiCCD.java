@@ -191,11 +191,11 @@ public class PlanMultiCCD extends PlanImage {
             SMoc m = buildMoc(p.projd,order);
             if( moc==null ) { 
                moc=m;
-               marge = (long)( moc.getNbCells()*0.2 );
+               marge = (long)( moc.getNbValues()*0.2 );
             }
             else {
                SMoc inter = (SMoc)moc.intersection(m);
-               if( inter.getNbCells() > marge ) return false;
+               if( inter.getNbValues() > marge ) return false;
                moc = (SMoc)moc.union(m);
             }
          }

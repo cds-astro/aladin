@@ -64,7 +64,7 @@ public class BuilderMocIndex extends BuilderMoc {
       context.info("MOC Index done in "+cds.tools.Util.getTemps(time,true)
                         +": mocOrder="+moc.getMocOrder()
                         +"  frame="+frame
-                        +" size="+cds.tools.Util.getUnitDisk( moc.getSize()));
+                        +" size="+cds.tools.Util.getUnitDisk( moc.getMem()));
 
    }
    

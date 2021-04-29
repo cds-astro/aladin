@@ -532,7 +532,7 @@ public class BuilderTiles extends Builder {
 //      }
       
       for( int z=0; z<depth; z++ ) {
-         Iterator<Long> it = moc.pixelIterator();
+         Iterator<Long> it = moc.valIterator();
          while( it.hasNext() ) {
             long npix=it.next();
             fifo.add( new Item(minorder, npix,z,null,true ) );
@@ -676,7 +676,7 @@ public class BuilderTiles extends Builder {
          if( oldOut!=null ) {
             SMoc moc = context.getRegion();
             moc = (SMoc)moc.intersection(new SMoc(order+"/"+npix));
-            int nbTiles = (int)moc.getNbCells();
+            int nbTiles = (int)moc.getNbValues();
             updateStat(0,0,nbTiles,0,nbTiles/4,0);
             return oldOut;
          }

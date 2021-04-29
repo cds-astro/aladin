@@ -186,7 +186,7 @@ public final class CDSHealpix {
          else System.err.println("  Executing cp.overlappingCenters("+Math.toRadians(coo[0])+", "+Math.toRadians(coo[1])+")");
          e.printStackTrace();
       }
-      return bmoc2moc( bmoc);
+      return bmoc2moc( bmoc, order);
    }
    
    static SMoc getMocByPolygon(int order,ArrayList<double[]>cooList, boolean inclusive) throws Exception {
@@ -200,7 +200,7 @@ public final class CDSHealpix {
       }
       
       final HealpixNestedBMOC bmoc = inclusive ? pc.overlappingCells(vertices) : pc.overlappingCenters(vertices);
-      return bmoc2moc( bmoc);
+      return bmoc2moc( bmoc, order);
    }
    
    static public SMoc getMocByEllipse(int order, double ra, double dec, double a, double b, double pa) throws Exception  {
@@ -213,12 +213,12 @@ public final class CDSHealpix {
       final NestedEllipticalConeComputerApprox cp 
       = new NestedEllipticalConeComputerApprox( aRad, bRad, paRad, Healpix.getNested(order));
       final HealpixNestedBMOC bmoc = cp.overlapping(lonRad, latRad, Mode.OVERLAPPING_CELLS);
-      return bmoc2moc( bmoc);
+      return bmoc2moc( bmoc, order);
    }
    
    /** Conversion d'un BMOC a la FX en Moc à la Fernique via les Range */
-   static public SMoc bmoc2moc(HealpixNestedBMOC bmoc) throws Exception {
-      int depthMax = SMoc.MAXORDER;
+   static public SMoc bmoc2moc(HealpixNestedBMOC bmoc, int order) throws Exception {
+      int depthMax = SMoc.MAXORD_S;
       Range range = new Range();
       
       Iterator<CurrentValueAccessor> it = bmoc.iterator();
@@ -233,10 +233,8 @@ public final class CDSHealpix {
          range.add(a, b+1);
       }
       
-      int mocOrder = bmoc.getDepthMax();
-      SMoc moc = new SMoc(mocOrder);
-      moc.range = range;
-      moc.toMocSet();
+      SMoc moc = new SMoc(order);
+      moc.setRangeList( range );
       return moc;
 
    }

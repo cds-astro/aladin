@@ -756,7 +756,7 @@ public class Ligne extends Position {
          boolean isCounterClock =  Aladin.isCounterClok( tmp );
          SMoc moc = Aladin.createMocRegionPol( tmp, orderPix, isCounterClock, false );
 
-         Iterator<Long> it = moc.pixelIterator();
+         Iterator<Long> it = moc.valIterator();
          while( it.hasNext() ) {
             long npix = it.next();
 

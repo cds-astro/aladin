@@ -1905,7 +1905,11 @@ public class Calque extends JPanel implements Runnable {
    
    /** Remet à jour le time range global */
    protected void resetTimeRange() {
-      zoom.zoomTime.setGlobalTimeRange( getGlobalTimeRange() );
+      double [] t = getGlobalTimeRange();
+      if( Double.isNaN(t[0]) ) {
+         for( ViewSimple v : aladin.view.viewSimple ) v.resetTimeRange();
+      }
+      zoom.zoomTime.setGlobalTimeRange( t );
    }
    
    /** Retourne un intervalle de temps par défaut. Soit l'intervalle de la vue courante

@@ -21,6 +21,9 @@
 
 package cds.moc;
 
+import cds.healpix.FlatHashList;
+import cds.healpix.HealpixNested;
+import cds.healpix.NeighbourList;
 import cds.tools.pixtools.CDSHealpix;
 
 /** HEALPix CDS wrapper
@@ -70,9 +73,6 @@ public final class Healpix implements HealpixImpl {
     * @throws Exception
     */
    public long [] queryDisc(int order, double lon, double lat, double radius) throws Exception {
-//      double theta = Math.PI/2. - lat/180.*Math.PI;
-//      double phi = lon/180.*Math.PI;
-//      return CDSHealpix.query_disc(order, theta, phi, Math.toRadians(radius), true);
       return CDSHealpix.query_disc(order, lon, lat, Math.toRadians(radius), true);
    }
 
@@ -81,8 +81,33 @@ public final class Healpix implements HealpixImpl {
    /** Maximal HEALPix order supported by the library */
    static public final int MAXORDER = 29;
 
-   static public final long pow2(long order){ return 1<<order;}
+   static public final long pow2(long order){ return 1L<<order;}
    static public final long log2(long nside){ int i=0; while((nside>>>(++i))>0); return --i; }
-
+   
+   
+   static public final double SKYAREA = 4.*Math.PI*Math.toDegrees(1.0)*Math.toDegrees(1.0);
+   
+   /** Pixel area (in square degrees) for a given HEALPix order */
+   static public double getPixelArea(int order) {
+      if( order<0 ) return SKYAREA;
+      long nside = pow2(order);
+      long npixels = 12L*nside*nside;
+      return SKYAREA/npixels;
+   }
+   
+   static public  long [] externalNeighbours(HealpixNested h, int order, long npix, int o) throws Exception {
+      int deltaDepth = o-order;
+      if( deltaDepth== 0 ) {
+         NeighbourList nl = h.neighbours(npix);
+         long [] n = new long[nl.size()];
+         nl.arraycopy(0, n, 0, n.length);
+         return n;
+      }
+      FlatHashList res = h.externalEdges(npix, deltaDepth);
+      long [] neib = new long[ res.size() ];
+      res.arraycopy(0, neib, 0, neib.length);
+      return neib;
+   }
+   
 
 }

@@ -73,9 +73,9 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       
       try {
          moc = p1.getMoc().clone();
-         /*if( op==COMPLEMENT ) moc = moc.complement();
-         else */if( op==TOORDER ) moc.setMocOrder(timeOrder);
-         else {
+         if( op==COMPLEMENT ) moc = moc.complement();
+         else/*if( op==TOORDER ) moc.setMocOrder(timeOrder);
+         else */{
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
                Moc m2=pList[i].getMoc();
@@ -104,7 +104,7 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       flagProcessing=false;
       flagOk=true;
       setActivated(flagOk);
-      if( moc.getSize()==0 ) error="Empty STMOC";
+      if( moc.isEmpty() ) error="Empty STMOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");

@@ -79,11 +79,11 @@ public class PlanMocAlgo extends PlanMoc {
             moc = p1.getMoc().clone();
 
             if( op==COMPLEMENT ) moc = ((SMoc)moc).complement();
-            else if( op==TOORDER ) moc.setMocOrder(order);
+            else if( op==TOORDER ) ((SMoc)moc).setMocOrder(order);
             else {
                for( int i=1; i<pList.length; i++ ) {
                   Moc m1=moc;
-                  SMoc m2=pList[i].toReferenceFrame(m1.getSys());
+                  SMoc m2=pList[i].toReferenceFrame(((SMoc)m1).getSys());
                   switch(op) {
                      case UNION :        moc = m1.union(        m2); break;
                      case INTERSECTION : moc = m1.intersection( m2 ); break;
@@ -93,7 +93,7 @@ public class PlanMocAlgo extends PlanMoc {
                }
             }
             ((SMoc)moc).setMinOrder(3);
-            if( order!=-1 ) moc.setMocOrder( order);
+            if( order!=-1 ) ((SMoc)moc).setMocOrder( order);
 
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -111,13 +111,13 @@ public class PlanMocAlgo extends PlanMoc {
 //      }
       flagOk=true;
       setActivated(flagOk);
-      if( moc.getSize()==0 ) error="Empty MOC";
+      if( moc.isEmpty() ) error="Empty MOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");
    }
    
-   /** Création d'un Plan MOC par un "crop" polygone convexe sur un MOC existant (mocSource)
+   /** Création d'un Plan MOC par un "crop" polygone sur un MOC existant (mocSource)
     * @param aladin
     * Rq : méthode synchrone (pas de threading)
     *
@@ -137,7 +137,7 @@ public class PlanMocAlgo extends PlanMoc {
       aladin.trace(3,"MOC cropping: "+Plan.Tp[type]+" => "+s);
       
       try {
-         int order = mocSource.moc.getMaxUsedOrder();
+         int order = ((SMoc)mocSource.moc).getDeepestOrder();
          ArrayList<double[]> a = new ArrayList<>();
          for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
          
@@ -153,7 +153,7 @@ public class PlanMocAlgo extends PlanMoc {
       
       copyright = "Computed by Aladin";
       flagProcessing=false;
-      if( moc.getSize()==0 ) {
+      if( moc.isEmpty() ) {
          error="Empty MOC";
          flagOk=true;
       } else flagOk=true;
@@ -197,7 +197,7 @@ public class PlanMocAlgo extends PlanMoc {
       
       copyright = "Computed by Aladin";
       flagProcessing=false;
-      if( moc.getSize()==0 ) {
+      if( moc.isEmpty() ) {
          error="Empty MOC";
          flagOk=true;
       } else flagOk=true;

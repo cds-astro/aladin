@@ -117,7 +117,7 @@ public final class FrameMocGenProba extends FrameMocGenImg {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
          int order = ((PlanBG)ps[0]).getMaxHealpixOrder();
          if( getOrder()>order ) {
-            mocOrder.setSelectedIndex(order-FIRSTORDER);
+            mocOrder.setSelectedIndex(order-FIRSTORDER_S);
          }
       } catch( Exception e ) { }
    };

@@ -150,7 +150,7 @@ public class BuilderMirror extends BuilderTiles {
          // convertir le MOC
          if( !context.getFrameCode().equals( area.getSys()) ) {
             context.info("MOC conversion in "+context.getFrameName()+" frame (HiPS target frame)...");
-            area = new SMoc( SMoc.convertTo( area, context.getFrameCode()) );
+            area = new SMoc( Util.convertTo( area, context.getFrameCode()) );
          }
          
          if( context.getArea()==null ) {

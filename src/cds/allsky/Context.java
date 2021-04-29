@@ -291,7 +291,8 @@ public class Context {
    //   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
    public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
-   public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
+//   public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
+   public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isIncluding(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
    public int getMocOrder() { return mocOrder; }
    public long getMapNside() { return nside; }
@@ -1060,7 +1061,7 @@ public class Context {
    protected void setMocArea(String s) throws Exception {
       if( s.length()==0 ) return;
       mocArea = new SMoc(s);
-      if( mocArea.getSize()==0 ) throw new Exception("MOC sky area syntax error");
+      if( mocArea.isEmpty() ) throw new Exception("MOC sky area syntax error");
    }
 
    public void setMocArea(SMoc area) throws Exception {
@@ -1470,10 +1471,12 @@ public class Context {
       if( moc==null && mocIndex==null || o==-1 ) return -1;
       SMoc m = moc!=null ? moc : mocIndex;
       if( o!=m.getMocOrder() ) {
-         m =  (SMoc) m.clone();
-         try { m.setMocOrder( o ); } catch( Exception e ) {}
+         try { 
+            m =  m.clone();
+            m.setMocOrder( o ); 
+         } catch( Exception e ) {}
       }
-      long res = m.getNbCells() * depth;
+      long res = m.getNbValues() * depth;
       //      Aladin.trace(4,"getNbLowsCells => mocOrder="+m.getMocOrder()+" => UsedArea="+m.getUsedArea()+"+ depth="+depth+" => "+res);
       return res;
    }
@@ -2693,7 +2696,7 @@ public class Context {
                else {
                   try {
                      int o = moc.getMocOrder();
-                     long pix = moc.pixelIterator().next();
+                     long pix = moc.valIterator().next();
                      double coo[] = hpx.pix2ang(o,pix);
                      ra = coo[0]+"";
                      dec = coo[1]+"";

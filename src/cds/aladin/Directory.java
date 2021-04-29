@@ -1744,7 +1744,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       tmp.deleteOnExit();
       FileOutputStream fo = new FileOutputStream(tmp);
       try {
-         moc.writeFits(fo);
+         moc.writeFITS(fo);
       } finally {
          try {
             fo.close();
@@ -1777,13 +1777,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    static public int getAppropriateOrder(double size) {
       int order = 4;
-      if( size == 0 ) order = SMoc.MAXORDER;
+      if( size == 0 ) order = SMoc.MAXORD_S;
       else {
          double pixRes = size / 30;
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4. * Math.PI * degrad * degrad;
          double res = Math.sqrt(skyArea / (12 * 16 * 16));
-         while( order < SMoc.MAXORDER && res > pixRes ) {
+         while( order < SMoc.MAXORD_S && res > pixRes ) {
             res /= 2;
             order++;
          }
@@ -2722,6 +2722,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          aladin.trace(3, "Multiprop loaded (" + multiProp.size() + " rec.) from cache [" + s + "] in "
                + (System.currentTimeMillis() - t0) + "ms...");
       } catch( Exception e ) {
+         if( e.getMessage()!=null ) aladin.trace(1,"Multiprop cache ignored: "+e.getMessage());
          return false;
       }
       return true;

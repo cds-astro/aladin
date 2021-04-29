@@ -209,7 +209,6 @@ public class PlanBGCat extends PlanBG {
 //      System.out.println("hipsOld="+hipsOld+" minOrder = "+minOrder);
       
       SMoc lastMoc = new SMoc();   // Moc des tuiles "last" (inutile d'aller plus loin)
-      try { lastMoc.setCheckConsistencyFlag(false); } catch( Exception e1 ) { }
       
       resetDrawnInView(v);
       
@@ -240,7 +239,8 @@ public class PlanBGCat extends PlanBG {
          for( int i=0; i<pix.length; i++ ) {
             
             // Losange à écarter ?
-            if( lastMoc.isDescendant(norder, pix[i]) ) continue;
+//            if( lastMoc.isDescendant(norder, pix[i]) ) continue;
+            if( lastMoc.isIncluding(norder, pix[i]) ) continue;
             if( isOutMoc(norder, pix[i]) )  continue;
             if( (new HealpixKey(this,norder,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
 
@@ -276,7 +276,7 @@ public class PlanBGCat extends PlanBG {
             // Il n'y aura plus rien dans cette branche du HiPS
             if( norder!=order ) {
                if( healpix.isLast() ) {
-                  try { lastMoc.add(healpix.order,healpix.npix); } catch( Exception e ) { }
+                  try { lastMoc.add(healpix.order,healpix.npix); } catch( Exception e) {}
                }
                
             // Y a-t-il encore des sources non visibles dans le champ (PAS SUR DE BIEN COMPRENDRE PF Mars 2019)

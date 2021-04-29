@@ -39,7 +39,11 @@ public class BuilderSTMoc extends BuilderTMoc {
    }
    
    protected void initIt() {
-      stMoc = new STMoc(context.getOrder() , 14 );
+      try {
+         stMoc = new STMoc(31,context.getOrder() );
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
    }
    
    int n=0;

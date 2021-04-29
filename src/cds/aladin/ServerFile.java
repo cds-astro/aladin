@@ -1352,7 +1352,7 @@ public class ServerFile extends Server implements XMLConsumer {
     * Cette procedure peut etre appelee plusieurs fois en sequence.
     * @param ch le tableau de caracteres a analyser
     * @param cur l'indice du caractere courant
-    * @param end le dernier indice valide
+    * @param hi le dernier indice valide
     */
    private void getImageRGB(char [] ch, int start, int length) {
       PlanImageRGB p = (PlanImageRGB)plan;
@@ -1384,7 +1384,7 @@ public class ServerFile extends Server implements XMLConsumer {
     * Cette procedure peut etre appelee plusieurs fois en sequence.
     * @param ch le tableau de caracteres a analyser
     * @param cur l'indice du caractere courant
-    * @param end le dernier indice valide
+    * @param hi le dernier indice valide
     */
    private void getImage(char [] ch, int start, int length) {
       PlanImage p = (PlanImage)plan;

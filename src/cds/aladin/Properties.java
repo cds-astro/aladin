@@ -436,7 +436,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    // Transforme le plan SMOC en STMOC avec un intervalle de temps par défaut
    private boolean moc2STmoc() {
       try {
-         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,25, timeField.getJdmin(), timeField.getJdmax());
+         plan=aladin.calque.moc2STMoc( (PlanMoc)plan ,54, timeField.getJdmin(), timeField.getJdmax());
          aladin.view.repaintAll();
          SwingUtilities.invokeLater( new Runnable() {
             public void run() {
@@ -1057,7 +1057,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             double skyArea = 4.*Math.PI*degrad*degrad;
             PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
             PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(((SMoc)pmoc.getMoc()).getAngularRes())
-                  +" (order="+pmoc.getMoc().getMocOrder()+")"),g,c);
+                  +" (order="+((SMoc)pmoc.getMoc()).getMocOrder()+")"),g,c);
             
             if( Aladin.BETA ) {
                if( timeField!=null ) {
@@ -1074,12 +1074,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          else if( plan.type==Plan.ALLSKYTMOC ) {
             TMoc moc = (TMoc) ((PlanTMoc)plan).moc;
-            long nbSec = moc.getNbCells();
-            int order = moc.getMocOrder();
+            long nbSec = moc.getNbValues();
             PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( moc.getTimeMin()) ), g,c);
             PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( moc.getTimeMax()) ), g,c);
             PropPanel.addCouple(p,"Accuracy", new JLabel(
-                  TMoc.getTemps(  TMoc.getDuration(moc.getMocOrder()))), g,c);
+                  Util.getTemps(  TMoc.getDuration(moc.getMocOrder())/1000L)), g,c);
 //            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000000, true) ), g,c);
          }
 
@@ -1094,8 +1093,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                      +" (order="+spaceMoc.getMocOrder()+")"),g,c);
 
                TMoc timeMoc =  ((STMoc) ((PlanMoc)plan).moc).getTimeMoc();
-               long nbSec = timeMoc.getNbCells();
-               int order = timeMoc.getMocOrder();
+               long nbSec = timeMoc.getNbValues();
                if( ((PlanSTMoc)plan).isOneTimeRange() ) {
                   PropPanel.addCouple(p,"Time : ", new TimeField((PlanSTMoc)plan), g,c);
 
@@ -1103,7 +1101,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                   PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMin()) ), g,c);
                   PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMax()) ), g,c);
                   PropPanel.addCouple(p,"Time Accuracy", new JLabel( 
-                        TMoc.getTemps(  TMoc.getDuration(timeMoc.getMocOrder()))), g,c);
+                        Util.getTemps(  TMoc.getDuration(timeMoc.getMocOrder())/1000L)), g,c);
                }
                
             } catch( Exception e1 ) {

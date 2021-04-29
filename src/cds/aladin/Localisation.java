@@ -470,22 +470,6 @@ public class Localisation extends MyBox  {
    }
    
    
-//   static final public int ICRS   = 0;
-//   static final public int ICRSD  = 1;
-//   static final public int ECLIPTIC = 2;
-//   static final public int GAL    = 3;
-//   static final public int SGAL   = 4;
-//   static final public int J2000  = 5;
-//   static final public int J2000D = 6;
-//   static final public int B1950  = 7;
-//   static final public int B1950D = 8;
-//   static final public int B1900  = 9;
-//   static final public int B1875  = 10;
-//   static final public int XY     = 11;
-//   static final public int XYNAT  = 12;
-//   static final public int XYLINEAR  = 13;
-
-   
    /** Retourne le frame "générique" courant (ICRS | GAL | SGAL | ECLIPTIC | -1) */
    public int getFrameGeneric() {
       return frame==GAL ? GAL :
@@ -596,14 +580,6 @@ public class Localisation extends MyBox  {
    protected Coord getLastCoordInCurrentFrame() { return ICRSToFrame(coo); }
    protected void setLastCoord(double ra,double dec) { coo=new Coord(ra,dec); }
 
-//   static final Astroframe AF_FK4 = new FK4();
-//   static final Astroframe AF_FK5 = new FK5();
-//   static final Astroframe AF_GAL = new Galactic();
-//   static final Astroframe AF_SGAL = new Supergal();
-//   static final Astroframe AF_ICRS = new ICRS();
-//   static final Astroframe AF_ECLI = new Ecliptic();
-//   static final Astroframe AF_FK4_1900 = new FK4(1900);
-//   static final Astroframe AF_FK4_1875 = new FK4(1875);
    static final Astroframe AF_FK4 = Astroframe.create("FK4");
    static final Astroframe AF_FK5 = Astroframe.create("FK5");
    static final Astroframe AF_GAL = Astroframe.create("Galactic");

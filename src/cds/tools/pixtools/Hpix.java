@@ -75,7 +75,7 @@ public class Hpix extends MocCell {
    public Hpix [] getFils() {
       Hpix [] fils = new Hpix[4];
       int orderFils = order+1;
-      long npixFils = npix*4;
+      long npixFils = start*4;
       for( int i=0; i<4; i++ ) fils[i] = new Hpix(orderFils,npixFils+i,frame);
       return fils;
    }
@@ -155,6 +155,26 @@ public class Hpix extends MocCell {
       }
    }
    
+   /** Retourne true si le point de coordonnée (xview,yview) dans les coordonnées de la vue v
+    * se trouve dans le losange HEALpix */
+   public boolean contains(ViewSimple v, int xview, int yview) {
+      PointD [] b = getProjViewCorners(v);
+      if( b==null ) return false;
+      
+      Polygon pol = new Polygon();
+      double min=Double.MAX_VALUE;
+      for( int i=0; i<b.length; i++ ) {
+         int f = ORDRE[i];
+         pol.addPoint((int)b[f].x,(int)b[f].y);
+         int d = ORDRE[ i==0 ? 3 : i-1 ];
+        if( b[d]==null || b[f]==null ) return false;
+         double dist =  Math.sqrt(HealpixKey.dist(b,d,f));
+         if( dist>1 && min>0 && dist>6*min ) return false;
+         if( dist<min ) min=dist;
+      }
+      return pol.contains(xview, yview);
+   }
+   
    /** Retourne le carré de la taille de la plus grande diagonale projetée */
    public double getDiag2(ViewSimple v) {
       PointD [] b = getProjViewCorners(v);
@@ -172,7 +192,7 @@ public class Hpix extends MocCell {
       long max = 12*n;
       for( int i=1; i<=4; i++ ) {
          long m=n*i;
-         if( npix==m-1 || npix==max-m ) return true;
+         if( start==m-1 || start==max-m ) return true;
       }
       return false;
    }
@@ -249,7 +269,7 @@ public class Hpix extends MocCell {
       return false;  // Mais attention, ce n'est pas certain !!
    }
    
-   public String toString() { return order+"/"+npix+
+   public String toString() { return order+"/"+start+
          (computeCorners? ": "+corners[0]+" / "+corners[1]+" / "+corners[2]+" / "+corners[3]: ""); 
    }
    
@@ -257,7 +277,7 @@ public class Hpix extends MocCell {
    // Initialisation des valeurs
    private void init(int order, long npix,int frame) {
       this.order=order;
-      this.npix=npix;
+      this.start=npix;
       this.frame=frame;
       computeCorners=false;
    }
@@ -266,7 +286,7 @@ public class Hpix extends MocCell {
    private void computeCorners() {
       try {
 //         long nside = CDSHealpix.pow2(order);
-         double [][] x = CDSHealpix.corners(order,npix);
+         double [][] x = CDSHealpix.corners(order,start);
          corners = new Coord[4];
          for( int i=0; i<x.length; i++ ) corners[i] = new Coord(x[i][0],x[i][1]);
          corners = computeCornersToICRS(corners);

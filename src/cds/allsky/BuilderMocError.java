@@ -79,7 +79,7 @@ public class BuilderMocError extends BuilderMoc {
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,fileOrder, path);
       moc.setCheckConsistencyFlag(true);
-      if( moc.getSize()==0 ) context.info("MOCERROR empty (no error tiles detected)");
+      if( moc.isEmpty() ) context.info("MOCERROR empty (no error tiles detected)");
       else {
          context.warning("MOCERROR saved as "+Constante.FILE_MOCERROR);
          moc.write(outputFile);

@@ -42,8 +42,8 @@ import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
+import cds.moc.Healpix;
 import cds.moc.Moc;
-import cds.moc.SMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -1270,7 +1270,7 @@ public class PlanHealpix extends PlanBG {
          Double a = (Double)partialValues.get( nuniq );
          double s=DENSPROB;
          long ncell = 12<<(maxOrder*2);
-         double s1=SMoc.SKYAREA/ncell;
+         double s1=Healpix.SKYAREA/ncell;
          
 //         if( nuniq==33845035) {
 //            System.out.println("nuniq="+nuniq+" npix="+npix+" order="+lastOrder+" a="+a+" area="+s+" prob2="+((a*s)*s1));

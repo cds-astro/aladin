@@ -573,7 +573,7 @@ public abstract class Builder {
       
       // Détermination de la taille totale requise (en Ko)
       moc.setMocOrder(order);
-      long numberOfTiles = moc.getNbCells();
+      long numberOfTiles = moc.getNbValues();
       long tileSize = getTileSize( bitpix, tileWidth, depth, fmt);
       if( tileSize==0 ) throw new Exception("No remote tile found");
       long fullSize = (long)( ( 1.3 * tileSize * numberOfTiles + 8 ) / 1024. );
@@ -603,7 +603,7 @@ public abstract class Builder {
       
       // Détermination de la taille de chaque Dirnn de niveau le plus profond (en Ko)
       HashMap<Long, Double> hashDir = new HashMap<>();
-      Iterator<Long> it = moc.pixelIterator();
+      Iterator<Long> it = moc.valIterator();
       while( it.hasNext() ) {
          long ndirLink = it.next()/10000;
          Double mem = hashDir.get(ndirLink);

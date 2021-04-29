@@ -137,7 +137,7 @@ public class FrameSTMocGenCat extends FrameMocGenImg {
       return x;
    }
    
-   protected int getTimeOrder() { return mocTimeOrder.getSelectedIndex()+FIRSTORDER; }
+   protected int getTimeOrder() { return mocTimeOrder.getSelectedIndex()+FIRSTORDER_T; }
 
    private double getRadius() throws Exception {
       double x=0;

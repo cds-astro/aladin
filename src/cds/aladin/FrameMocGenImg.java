@@ -32,8 +32,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import cds.moc.Healpix;
+import cds.moc.SMoc;
 import cds.moc.TMoc;
+import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /**
@@ -46,25 +47,26 @@ public class FrameMocGenImg extends FrameRGBBlink {
 
    String TITLE,INFO,HELP1,PLANE;
    
-   static final protected int FIRSTORDER=3;
+   static final protected int FIRSTORDER_S=6;
+   static final protected int FIRSTORDER_T=26;
    
    static protected JComboBox makeComboSpaceRes() {
       JComboBox c = new JComboBox();
-      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
+      for( int o=FIRSTORDER_S; o<=SMoc.MAXORD_S; o++ ) {
          String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( o)/3600. );
          c.addItem(s);
       }
-      c.setSelectedIndex(6);
+      c.setSelectedIndex(9);   // about 7'
       return c;
    }
 
    static protected JComboBox makeComboTimeRes() {
       JComboBox c = new JComboBox();
-      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
-         String s = "Order "+TMoc.toNewMocOrder(o)+" => "+TMoc.getTemps( TMoc.getDuration(o) );
+      for( int o=FIRSTORDER_T; o<=TMoc.MAXORD_T; o++ ) {
+         String s = "Order "+o+" => "+Util.getTemps( TMoc.getDuration(o)/1000L );
          c.addItem(s);
       }
-      c.setSelectedIndex(7);
+      c.setSelectedIndex(34);   // ~1 day
       return c;
    }
 
@@ -182,7 +184,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    
    protected JComboBox getComboRes() { return makeComboSpaceRes(); }
    
-   protected int getOrder() { return mocOrder.getSelectedIndex()+FIRSTORDER; }
+   protected int getOrder() { return mocOrder.getSelectedIndex()+FIRSTORDER_S; }
    
    
    private double getMin() throws Exception {

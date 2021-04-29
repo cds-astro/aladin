@@ -24,47 +24,13 @@ package cds.moc;
 /** MOC cell object
  * 
  * @author Pierre Fernique [CDS]
+ * @version 2.0 apr 2021 - refactoring (Moc 2.0)
  * @version 1.0 dec 2011 - creation
  */
 public class MocCell {
-   
-   /** Healpix cell order */
-   public int order;
-   
-   /** Healpix cell value */
-   public long npix;
-   
-   /** Create Healpix cell */
-   public MocCell() {};
-   
-   /**
-    * Create Healpix cell
-    * @param order cell order (ie log2(Healpix NSIDE) )
-    * @param npix cell value (ie Healpix value)
-    */
-   public MocCell(int order,long npix) {
-      this.order=order;
-      this.npix=npix;
-   }
-   
-   /** Order getter */
-   public int getOrder() { return order; }
-   
-   /** Value getter */
-   public long getNpix() { return npix; }
-   
-   /** Order setter */
-   public void setOrder(int order) { this.order = order; }
-   
-   /** Value setter */
-   public void setNpix(long npix) { this.npix= npix; }
-   
-   /** Couple setter */
-   public void set(int order,long npix) {
-      this.order=order;
-      this.npix=npix;
-   }
-   
-   public String toString() { return order+"/"+npix; }
-   
+   public char dim;             // Char signature of the dimension ('s' for SPACE, 't' for TIME...)
+   public int order;            // Order of the Moc cell;
+   public long start;           // Cell value, or start index for a Range
+   public long end;             // Cell value+1, or end index (excluded) for a Range
+   public Moc1D moc;            // Moc1D associated to the cell (ex: for STMoc)
 }

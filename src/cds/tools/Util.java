@@ -86,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Formatter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -110,11 +111,14 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.Forme;
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.Plan;
 import cds.aladin.SED;
 import cds.aladin.Tok;
 import cds.image.EPSGraphics;
+import cds.moc.Healpix;
+import cds.moc.SMoc;
 import cds.savot.model.ResourceSet;
 import cds.savot.model.SavotResource;
 import cds.savot.pull.SavotPullParser;
@@ -2526,6 +2530,43 @@ public final class Util {
          s1.append(ch);
       }
       return s1.toString();
+   }
+   
+   
+   /** Changement de référentiel d'un SMOC si nécessaire */
+   static public SMoc convertTo(SMoc moc, String coordSys) throws Exception {
+      if( coordSys.equals( moc.getSys()) ) return moc;
+      
+      // Ciel complet => cas trivial
+      if( moc.isFull()) { moc.setSys(coordSys); return moc; }
+
+      char a = moc.getSys().charAt(0);
+      char b = coordSys.charAt(0);
+      int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+      int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
+
+      Healpix hpx = new Healpix();
+      int order = moc.getDeepestOrder();
+      SMoc moc1 = moc.dup();
+      moc1.setSys(coordSys);
+      moc1.bufferOn();
+      long onpix1=-1;
+      Iterator<Long> it = moc.valIterator();
+      while( it.hasNext() ) {
+         long npix = it.next();
+         for( int i=0; i<4; i++ ) {
+            double [] coo = hpx.pix2ang(order+1, (npix<<2)+i);
+            Coord c = new Coord(coo[0],coo[1]);
+            c = Localisation.frameToFrame(c, frameSrc, frameDst);
+            long npix1 = hpx.ang2pix(order+1, c.al, c.del);
+            if( npix1==onpix1 ) continue;
+            onpix1=npix1;
+            long val = npix1>>>2;
+            moc1.add(order,val);
+         }
+      }
+      moc1.bufferOff();
+      return moc1;
    }
 
    /**

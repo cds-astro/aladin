@@ -25,11 +25,8 @@ import java.io.File;
 import java.io.RandomAccessFile;
 
 import cds.aladin.MyProperties;
-import cds.moc.Array;
-import cds.moc.IntArray;
-import cds.moc.LongArray;
+import cds.moc.Range;
 import cds.moc.SMoc;
-import cds.moc.ShortArray;
 
 /**
  * Binary "dumper" dedicated for MultiMoc
@@ -40,7 +37,8 @@ import cds.moc.ShortArray;
 public final class BinaryDump {
    
    static private boolean debug=false;
-   static private final byte BINVERSION[]  = { 'M','C','0','8' };  // Binary magic code
+   static private final byte BINVERSION[]  = { 'M','C','0','9' };  // Binary magic code
+   static private final long MAGICODE = 2021042317L;
    
    public BinaryDump() { }
    
@@ -116,12 +114,23 @@ public final class BinaryDump {
     */
    public void save(MultiMoc mMoc,String path) throws Exception {
       long deb = System.currentTimeMillis();
-      File f = new File(path);
-      f.delete();
-      RandomAccessFile rf = new RandomAccessFile(f,"rw");
-      rf.write(BINVERSION);
-      createDump(mMoc,rf);
-      rf.close();
+      File tmp=null;
+      
+      try {
+         tmp = new File(path+".tmp"+(System.currentTimeMillis()%1000));
+         RandomAccessFile rf = new RandomAccessFile(tmp,"rw");
+         rf.write(BINVERSION);
+         createDump(mMoc,rf);
+         rf.close();
+
+         File f = new File(path);
+         f.delete();
+         tmp.renameTo(f);
+         tmp=null;
+      } finally {
+         if( tmp!=null ) tmp.delete();
+      }
+
       long fin = System.currentTimeMillis();
       long duree = fin-deb;
       if( debug ) System.out.println("MultiMoc binary dump written in "+(duree/1000.)+"s");
@@ -144,28 +153,11 @@ public final class BinaryDump {
          SMoc moc = new SMoc();
          int maxOrder = buf.readInteger();
          if( maxOrder==-1 ) moc=null;
-         else {
-            for( int o=0; o<=maxOrder; o++ ) {
-               int size = buf.readInteger();
-               int type=SMoc.getType(o);
-               switch(type) {
-                  case SMoc.SHORT:
-                     short [] val = new short[size];
-                     for( int j=0; j<size; j++) val[j] = buf.readShort();
-                     moc.setPixLevel(o,val);
-                     break;
-                  case SMoc.INT:
-                     int [] val1 = new int[size];
-                     for( int j=0; j<size; j++) val1[j] = buf.readInteger();
-                     moc.setPixLevel(o,val1);
-                     break;
-                  case SMoc.LONG:
-                     long [] val2 = new long[size];
-                     for( int j=0; j<size; j++) val2[j] = buf.readLong();
-                     moc.setPixLevel(o,val2);
-                     break;
-               }
-            }
+         else {            
+            int sz = buf.readInteger();
+            Range range = new Range(sz);
+            for( int j=0; j<range.sz; j++ ) range.push( buf.readLong() );
+            moc.setRangeList( range );
          }
          
          // Lecture de ses propriétés
@@ -179,6 +171,8 @@ public final class BinaryDump {
          }
          mMoc.add(mocId,moc,prop,dateMoc,dateProp);
       }
+      long mc = buf.readLong();
+      if( mc!=MAGICODE ) throw new Exception("Multimoc dump error. Bad end MAGIC CODE");
       return mMoc;
    }
 
@@ -255,28 +249,12 @@ public final class BinaryDump {
          buf.memoString(mocId);
          if( moc==null ) buf.memoInteger(-1);
          else {
-            int maxOrder = moc.getMaxUsedOrder();
-            buf.memoInteger(maxOrder);
-            for( int o=0; o<=maxOrder; o++ ) {
-               int size = moc.getSize(o);
-               buf.memoInteger( size );
-               Array a = moc.getArray(o);
-               int type = SMoc.getType(o);
-               switch(type) {
-                  case SMoc.SHORT:
-                     short [] val = ((ShortArray)a).seeArray();
-                     for( int i=0; i<size; i++ ) buf.memoShort(val[i]);
-                     break;
-                  case SMoc.INT:
-                     int [] val1 = ((IntArray)a).seeArray();
-                     for( int i=0; i<size; i++ ) buf.memoInteger(val1[i]);
-                     break;
-                  case SMoc.LONG:
-                     long [] val2 = ((LongArray)a).seeArray();
-                     for( int i=0; i<size; i++ ) buf.memoLong(val2[i]);
-                     break;
-               }
-            }
+            int mocOrder = moc.getMocOrder();
+            buf.memoInteger(mocOrder);
+            moc.toRangeSet();
+            Range range = moc.seeRangeList();
+            buf.memoInteger(range.sz);
+            for( int i=0; i<range.sz; i++ ) buf.memoLong(range.r[i]);
          }
 
          // Enregistrement de ses propriétés
@@ -300,6 +278,10 @@ public final class BinaryDump {
          
          buf.flush();
       }
+      // Marque de fin de fichier
+      buf.memoLong(MAGICODE);
+      buf.flush();
+
    }
 
    

@@ -299,7 +299,7 @@ public class ServerMocQuery extends Server  {
       File tmp = File.createTempFile("tmp", "fits");
       tmp.deleteOnExit();
       FileOutputStream fo = new FileOutputStream(tmp);
-      try { hpxMoc.writeFits(fo); }
+      try { hpxMoc.writeFITS(fo); }
       finally { try { fo.close(); } catch(Exception e) {} }
       out.writeFile("mocfile", null, tmp, false);
    }

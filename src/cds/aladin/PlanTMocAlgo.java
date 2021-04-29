@@ -74,7 +74,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       try {
          moc = p1.getMoc().clone();
          if( op==COMPLEMENT ) moc = ((TMoc)moc).complement();
-         else if( op==TOORDER ) moc.setMocOrder(order);
+         else if( op==TOORDER ) ((TMoc)moc).setMocOrder(order);
          else {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
@@ -88,7 +88,7 @@ public class PlanTMocAlgo extends PlanTMoc {
             }
          }
          
-         if( order!=-1 ) moc.setMocOrder( order);
+         if( order!=-1 ) ((TMoc)moc).setMocOrder( order);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -101,7 +101,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       flagProcessing=false;
       flagOk=true;
       setActivated(flagOk);
-      if( moc.getSize()==0 ) error="Empty TMOC";
+      if( moc.isEmpty() ) error="Empty TMOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");

@@ -163,7 +163,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
                c.del=o.getDec();
                if( Double.isNaN(c.al) ||  Double.isNaN(c.del) ) continue;
                c=Localisation.frameToFrame(c,Localisation.ICRS, pMoc.frameOrigin);
-               npixSpace = hpx.ang2pix(Moc.MAXORDER, c.al, c.del);
+               npixSpace = hpx.ang2pix(SMoc.MAXORD_S, c.al, c.del);
 
                in = spaceMoc.contains( npixSpace);
                if( in!=lookIn ) continue;

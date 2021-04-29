@@ -225,12 +225,12 @@ public final class FrameMocOperation extends FrameRGBBlink {
 
    protected int getTimeOrder() {
       return mocTimeOrder.isEnabled() ? 
-            mocTimeOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER : -1;
+            mocTimeOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER_S : -1;
    }
 
    protected int getSpaceOrder() { 
       return mocSpaceOrder.isEnabled() ? 
-            mocSpaceOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER : -1; 
+            mocSpaceOrder.getSelectedIndex()+FrameMocGenImg.FIRSTORDER_S : -1; 
    }
 
    @Override
@@ -315,10 +315,14 @@ public final class FrameMocOperation extends FrameRGBBlink {
       rComp.setEnabled(un);
       
       if( setSpaceOrder ) {
-         mocSpaceOrder.setSelectedIndex( initSpaceOrder-FrameMocGenImg.FIRSTORDER);
+         int i = initSpaceOrder-FrameMocGenImg.FIRSTORDER_S;
+         if( i<0 ) i=0;
+         mocSpaceOrder.setSelectedIndex( i );
       }
       if( setTimeOrder ) {
-         mocTimeOrder.setSelectedIndex( initTimeOrder-FrameMocGenImg.FIRSTORDER);
+         int i = initTimeOrder-FrameMocGenImg.FIRSTORDER_T;
+         if( i<0 ) i=0;
+         mocTimeOrder.setSelectedIndex( i );
       }
       
       mocSpaceOrder.setEnabled( space ); 

@@ -2790,7 +2790,7 @@ public final class Glu implements Runnable {
       return false;
    }
 
-   private boolean chut=false; // pour éviter trop de baratin à l'écran lors d'un checkIndirection
+   protected boolean chut=false; // pour éviter trop de baratin à l'écran lors d'un checkIndirection
    private String lastId=null;   // Dernière entrée utilisée dans le GLU
    private String indId=null;    // Dernière indirection utilisée dans le GLU (%I xxxx)
    
@@ -2949,7 +2949,7 @@ public final class Glu implements Runnable {
          return null;
       }
 
-      if( !chut ) Aladin.trace(4, "Glu.getURL(" + id + (params==null || params.length()==0 ? "": " params=" + params)
+      if( !chut ) Aladin.trace(7, "Glu.getURL(" + id + (params==null || params.length()==0 ? "": " params=" + params)
             + " encode=" + encode + " withLog=" + withLog + " indexIndirection=" + indexIndirection + ")");
       // log
       if( withLog ) {

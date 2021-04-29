@@ -117,7 +117,7 @@ public class MultiMoc implements Iterable<MocItem> {
    public void add(String mocId, SMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
       if( moc!=null ) {
          int o = moc.getMocOrder();
-         if( o==SMoc.MAXORDER ) o = moc.getMaxUsedOrder();  // A cause du bug
+         if( o==SMoc.MAXORD_S ) o = moc.getDeepestOrder();  // A cause du bug
          if( mocOrder<o) mocOrder=o;
          moc.sort();
       }
@@ -232,8 +232,8 @@ public class MultiMoc implements Iterable<MocItem> {
 
          // Petit bricolage horrible pour contourner les MocOrder que l'on a oublié
          // d'indiquer
-         if( s==null || s.equals(""+SMoc.MAXORDER) || s.equals("0") || s.equals("-1")) {
-            int maxOrder = moc.getMaxUsedOrder();
+         if( s==null || s.equals(""+SMoc.MAXORD_S) || s.equals("0") || s.equals("-1")) {
+            int maxOrder = moc.getDeepestOrder();
             if( maxOrder==0 ) {
                String s1 = prop.get("hips_order");
                if( s1!=null ) s=s1;
@@ -272,7 +272,7 @@ public class MultiMoc implements Iterable<MocItem> {
                else {
                   try {
                      int order = moc.getMocOrder();
-                     long pix = moc.pixelIterator().next();
+                     long pix = moc.valIterator().next();
                      double coo[] = hpx.pix2ang(order,pix);
                      ra = coo[0]+"";
                      dec = coo[1]+"";
@@ -575,7 +575,7 @@ public class MultiMoc implements Iterable<MocItem> {
       if( a!='G' && a!='E' ) return moc;   // déjà en ICRS
       
       // Ca va prendre trop de temps si on garde la résolution max
-      if( moc.getMaxUsedOrder()>10 && moc.getCoverage()>0.99 && !moc.isFull() ) {
+      if( moc.getDeepestOrder()>10 && moc.getCoverage()>0.99 && !moc.isFull() ) {
          moc.setMocOrder(10);
          
       // Pour convertir, il faut avoir un cran de marge
@@ -596,13 +596,14 @@ public class MultiMoc implements Iterable<MocItem> {
 //      Astroframe frameSrc = a=='G' ? new Galactic() : a=='E' ? new Ecliptic() : new ICRS();
       Astroframe frameSrc = Astroframe.create( a=='G' ?"Galactic" : a=='E' ? "Ecliptic" : "ICRS");
       Healpix hpx = new Healpix();
-      int order = moc.getMaxUsedOrder();
-      SMoc moc1 = new SMoc(moc.getMinOrder(),moc.getMocOrder());
+      int order = moc.getDeepestOrder();
+//      SMoc moc1 = new SMoc(moc.getMinOrder(),moc.getMocOrder());
+      SMoc moc1 = moc.dup();
       moc1.setCheckConsistencyFlag(false);
       long onpix1=-1;
       int n=0;
       Coo c =new Coo();
-      Iterator<Long> it = moc.pixelIterator();
+      Iterator<Long> it = moc.valIterator();
       while( it.hasNext() ) {
          long npix = it.next();
          for( int i=0; i<4; i++ ) {
@@ -631,7 +632,7 @@ public class MultiMoc implements Iterable<MocItem> {
       try {
          moc = new SMoc();
          moc.read(filename);
-         if( moc.getSize()==0 ) moc=null;
+         if( moc.isEmpty() ) moc=null;
          
          // Pas dans le bon système de référence
          String sys=moc.getSys();

@@ -68,7 +68,6 @@ import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
-import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.moc.SMoc;
 import cds.tools.Util;
@@ -875,10 +874,10 @@ public class PlanBG extends PlanImage {
       }
 
       // On en profite pour mémoriser la position de la première cellule
-      if( (co==null || flagNoTarget) && moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
+      if( (co==null || flagNoTarget) && !moc.isEmpty() && frameOrigin==Localisation.ICRS ) {
          try {
             MocCell cell = moc.iterator().next();
-            double res[] = CDSHealpix.pix2ang_nest( cell.getOrder(), cell.getNpix());
+            double res[] = CDSHealpix.pix2ang_nest( cell.order, cell.start);
             double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
             co = new Coord(radec[0],radec[1]);
          } catch( Exception e1 ) {
@@ -2809,10 +2808,12 @@ public class PlanBG extends PlanImage {
           Coord coo = new Coord();
           Coord coo1 = new Coord();
             Healpix healPix = new Healpix();
-            HealpixMoc posBounds = null;
+//            HealpixMoc posBounds = null;
+            SMoc posBounds = null;
             try {
                 if (stcObj != null) {
-                    posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1, true) );
+//                   posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1, true) );
+                   posBounds = new SMoc( aladin.createMocRegion(stcObj, -1, true) );
                 }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
@@ -2947,10 +2948,12 @@ public class PlanBG extends PlanImage {
       Coord coo = new Coord();
       Coord coo1 = new Coord();
         Healpix healPix = new Healpix();
-        HealpixMoc posBounds = null;
+//        HealpixMoc posBounds = null;
+        SMoc posBounds = null;
         try {
             if (stcObj != null) {
-                posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1, true) );
+//               posBounds = new HealpixMoc( aladin.createMocRegion(stcObj, -1, true) );
+               posBounds = new SMoc( aladin.createMocRegion(stcObj, -1, true) );
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -4220,35 +4223,37 @@ public class PlanBG extends PlanImage {
             int order = minOrder + (int)(Math.random()*(maxOrder-minOrder));
             long npix;
             long[] list=null;
-            if( moc!=null ) {
-
-               // On prend une cellule du MOC au hasard
-               int length=0;
-               int i;
-               for( i=0; i<maxOrder && length==0; i++ ) {
-                  order++;
-                  if( order>maxOrder ) order=minOrder;
-                  list=moc.getPixLevel(order);
-                  length=list.length;
-               }
-               if( i==maxOrder ) return;   // MOC erroné ??
-               i = (int)(Math.random()*length);
-               if( i>=length ) i=list.length-1;
-               npix = list[i];
-
-               // On choisit un fils au hasard dans sa descendance
-               int o = order+(int)(Math.random()*(maxOrder-order));
-               for( i=order; i<o; i++) {
-                  int j = (int)(Math.random()*4);
-                  npix = npix*4 + j;
-               }
-               order=o;
-
-            } else {
+            
+            // A REPRENDRE APRES MIGRATION MOC2.0
+//            if( moc!=null ) {
+//
+//               // On prend une cellule du MOC au hasard
+//               int length=0;
+//               int i;
+//               for( i=0; i<maxOrder && length==0; i++ ) {
+//                  order++;
+//                  if( order>maxOrder ) order=minOrder;
+//                  list=moc.getPixLevel(order);
+//                  length=list.length;
+//               }
+//               if( i==maxOrder ) return;   // MOC erroné ??
+//               i = (int)(Math.random()*length);
+//               if( i>=length ) i=list.length-1;
+//               npix = list[i];
+//
+//               // On choisit un fils au hasard dans sa descendance
+//               int o = order+(int)(Math.random()*(maxOrder-order));
+//               for( i=order; i<o; i++) {
+//                  int j = (int)(Math.random()*4);
+//                  npix = npix*4 + j;
+//               }
+//               order=o;
+//
+//            } else {
                long nbPix = 12*CDSHealpix.pow2(order)*CDSHealpix.pow2(order);
                npix = (long)( Math.random()* nbPix );
                if( npix>=nbPix ) npix=nbPix-1;
-            }
+//            }
 
             System.out.print(".Loading "+order+"/"+npix+"... ");
             HealpixKey hk = new HealpixKey(this, order, npix, HealpixKey.TESTNET);

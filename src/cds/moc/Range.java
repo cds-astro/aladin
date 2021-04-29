@@ -26,21 +26,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 
-import cds.tools.Util;
-
 /**
  * Adaptation & extension of RangeSet from Healpix.essentials lib (GNU General Public License)
  * from Martin Reinecke [Max-Planck-Society] built from Jan Kotek's "LongRange" class
  * @version 1.0 - april 2019
  * @author P.Fernique [CDS]
  */
-public class Range {
+public class Range implements Comparable<Range> {
    
    /** Sorted list of interval boundaries. */
    public long[] r;                // list of range [min;max[ ...
    public int sz;                  // Number of entries (=> ranges/2)
    
    /************************************** Fernique extension *********************************************************************/
+   
+   public int compareTo(Range o1) {
+      long nval0 = nval();
+      long nval1 = o1.nval();
+      return nval0>nval1 ? 1 : nval0<nval1 ? -1 : 0;
+   }
    
    /** Construct new object with the provided buffer (not copy). */
    public Range(long[] buf) { this(buf,buf.length); }
@@ -86,8 +90,87 @@ public class Range {
       }
    }
    
+//   static public void main(String [] arg) {
+//      try { 
+//         Range r = new Range();
+//         long memoStart=0, memoEnd=0;
+//         int n=10;
+//         for( int i=0; i<n; i++ ) {
+//            long start = (long)( Math.random()*100 );
+//            long end = start + ((long)( Math.random()*20) )+1L;
+//            r.push(start);
+//            r.push(end);
+//            if( i==2 ) { memoStart=start; memoEnd=end+7; }
+//         }
+//         r.push(memoStart);
+//         r.push(memoEnd);
+//         r.push(memoStart);
+//         r.push(memoStart+1);
+//         
+//         System.out.println(r);
+//         r.sort();
+//         System.out.println(r);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
+   
+//   public void sortAndFix() {
+//      binarySort(r,0,sz/2,0);
+//      
+//      // On recopie les intervalles en enlevant tout ce qui n'est pas nécessaire
+//      long r1[] = new long[ sz ];
+//      long min=-1,max=-1;
+//      int n=0;
+//      for( int i=0; i<sz; i+=2 ) {
+//         if( r[i]>max ) {
+//            if( max!=-1 ) { r1[n++]=min; r1[n++]=max; }
+//            min = r[i];
+//            max = r[i+1];
+//         } else {
+//            if( r[i+1]>max ) max=r[i+1];
+//         }
+//      }
+//      if( max!=-1 ) { r1[n++]=min; r1[n++]=max; }
+//
+//      // On remplace le vecteur original
+//      r=r1;
+//      sz=n;
+//   }
+//
+//   private static void binarySort(long[] a, int lo, int hi, int start) {
+//       assert lo <= start && start <= hi;
+//       if (start == lo) start++;
+//       for ( ; start < hi; start++) {
+//          long pivotStart =  a[start*2];
+//          long pivotEnd   =  a[start*2 +1];
+//
+//           int left = lo;
+//           int right = start;
+//           assert left <= right;
+//
+//           while (left < right) {
+//               int mid = (left + right) >>> 1;
+//               if( pivotStart < a[mid*2] ||  pivotStart == a[mid*2] && a[mid*2 +1] < pivotEnd ) right = mid;
+//               else left = mid + 1;
+//           }
+//           assert left == right;
+//
+//           int n = start - left; 
+//           switch (n) {
+//               case 2:  a[(left + 2)*2] = a[(left + 1)*2];   a[(left + 2)*2 +1] = a[(left + 1)*2 +1];
+//               case 1:  a[(left + 1)*2] = a[left*2];         a[(left + 1)*2 +1] = a[left*2 +1];
+//                        break;
+//               default: System.arraycopy(a, left*2, a, (left + 1)*2, n*2);
+//           }
+//           a[left*2]    = pivotStart;
+//           a[left*2 +1] = pivotEnd;
+//       }
+//   }
+
+   
    /** RAM usage (in bytes) */
-   public long getMem() { return r==null ? 0 : sz*8L; }
+   public long getMem() { return r==null ? 0L : r.length*8L; }
    
    /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
     * Aggrège les intervalles si nécessaires et ajuste l'occupation mémoire
@@ -100,7 +183,8 @@ public class Range {
       long mask = (~0L)<<shift;   // Mask qui va bien sur les bits de poids faibles
       for( int i=0; i<sz; i+=2 ) {
          long a =  r[i] & mask;
-         long b = (((r[i+1]-1)>>>shift)+1 ) << shift;
+//         long a = (((r[i])>>>shift) ) << shift;
+         long b = (((r[i+1]-1L)>>>shift)+1L ) << shift;
          r1.append(a, b);
       }
       r1.trimIfTooLarge();
@@ -108,39 +192,6 @@ public class Range {
    }
    
    
-   static public void main(String [] arg) {
-      try {
-         Range r = new Range();
-         r.append(1,4);
-         r.append(6,15);
-         r.append(17,18);
-         System.out.println("Avant: "+r);
-         Range r1 = r.degrade(1);
-         System.out.println("Apres: "+r1);
-         
-         int shift = 8;
-         long mask = (~0) << shift;
-         
-         long max=100000000L;
-         long t,s;
-         t=Util.getTime(0);
-         s=0L;
-         long max2=max*2;
-         for( long i=0; i<max2; i+=2 ) {
-            s+= i;
-         }
-         System.out.println("tempsDiv   = "+(Util.getTime(0)-t)+"ns => "+s);
-         t=Util.getTime(0);
-         s=0L;
-         for( long i=0; i<max; i++ ) {
-            s+= i;
-          }
-         System.out.println("tempsShift = "+(Util.getTime(0)-t)+"ns => "+s);
-      } catch( Exception e) { e.printStackTrace(); }
-   }
-   
-
-
    /************************************* Original code *********** Martin Reinecke [Max-Planck-Society] built from Jan Kotek's "LongRange"*********************/
 
    /** Default constuctor with initial space for 4 ranges. */
@@ -224,10 +275,8 @@ public class Range {
          return;
       }
       ensureCapacity(sz+2);
-
-      r[sz] = a;
-      r[sz+1] = b;
-      sz+=2;
+      r[sz++] = a;
+      r[sz++] = b;
    }
 
    /** Append an entire range set to the object. */
@@ -364,6 +413,26 @@ public class Range {
              strat==2 ? generalUnion2(a,b,flip_a,flip_b) :
                         generalUnion2(b,a,flip_b,flip_a);
    }
+   
+   public Range complement( long min, long max ) {
+      Range r1 = new Range(sz+2);
+      if( sz==0 ) {
+         r1.sz=2;
+         r1.r[0]   = min;
+         r1.r[r1.sz-1] = max;
+      } else {
+         boolean addMin = r[0]!=min;
+         boolean addMax = r[sz-1]!=max;
+         int n = sz;
+         if( !addMin ) n--;
+         if( !addMax ) n--;
+         System.arraycopy( r, addMin?0:1, r1.r, addMin?1:0, n);
+         r1.sz = n + (addMin?1:0) + (addMax?1:0);
+         if( addMin ) r1.r[0]=min;
+         if( addMax ) r1.r[r1.sz-1]=max;
+      }
+      return r1;
+   }
 
    /** Return the union of this Range and other. */
    public Range union( Range other) { return generalUnion (this,other,false,false); }
@@ -407,18 +476,19 @@ public class Range {
       return true;
    }
 
-// On va faire confiance à Java (P.Fernique)
-//   public int hashCode() {
-//      int result = Integer.valueOf(sz).hashCode();
-//      for (int i=0; i<sz; ++i) {
-//         result = 31 * result + Long.valueOf(r[sz]).hashCode();
-//      }
-//      return result;
-//   }
+   public int hashCode() {
+      if (sz == 0)  return 0;
+      int result = 1;
+      for( int i=0; i<sz; i++) {
+         long element = r[i];
+         result = 31 * result + (int)(element ^ (element >>> 32));
+      }
+      return result;
+   }
 
    /** @return total number of values (not ranges) in the set. */
-   public int nval() {
-      int res = 0;
+   public long nval() {
+      long res = 0;
       for (int i=0; i<sz; i+=2) res+=r[i+1]-r[i];
       return res;
    }
@@ -481,7 +551,8 @@ public class Range {
       }
 
    }
-
+   
+   
    /** After this operation, the Range contains the union of itself and [a;b[. */
    public void add( long a, long b) {
       if( sz==0 || a>=r[sz-1] ) append(a,b);
@@ -503,8 +574,10 @@ public class Range {
    /** Creates an array containing all the numbers in the Range.
       Not recommended, because the arrays can become prohibitively large.
       It is preferrable to use a ValueIterator or explicit loops. */
-   public long[] toArray() {
-      long[] res = new long[ nval() ];
+   public long[] toArray() throws Exception {
+      long nval = nval();
+      if( nval>Integer.MAX_VALUE ) throw new Exception("Too many values");
+      long[] res = new long[(int)nval ];
       int ofs=0;
       for (int i=0; i<sz; i+=2) {
          for (long j=r[i]; j<r[i+1]; ++j) res[ofs++]=j;
@@ -565,6 +638,7 @@ public class Range {
          }
       };
    }
+
 
 }
 

@@ -1469,6 +1469,7 @@ public class TreeObjDir extends TreeObj implements Propable {
       
       try {
          moc = new SMoc(order);
+         moc.bufferOn();
          inScan=new MyInputStream( Util.openStream(url,false,true,30000) );
          pcat.tableParsing(inScan,null);
          
@@ -1485,14 +1486,14 @@ public class TreeObjDir extends TreeObj implements Propable {
                double [] c = CDSHealpix.normalizeRaDec( ((Position)o).raj, ((Position)o).dej);
                long pix = hpx.ang2pix(order, c[0], c[1] );
 //               long pix = hpx.ang2pix(order, ((Position)o).raj, ((Position)o).dej);
+               
                moc.add(order,pix);
-               n++;
-               if( n>10000 ) { moc.checkAndFix(); n=0; }
+               
             } catch( Exception e ) {
                if( aladin.levelTrace>=3 ) e.printStackTrace();
             }
          }
-         moc.setCheckConsistencyFlag(true);
+         moc.bufferOff();
           
       } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace();
       } finally { if( inScan!=null ) try { inScan.close(); inScan=null; } catch( Exception e) {} }

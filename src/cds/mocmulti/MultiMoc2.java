@@ -68,7 +68,7 @@ public class MultiMoc2 extends MultiMoc {
    public void add(String mocId, SMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
       if( moc!=null ) {
          int o = moc.getMocOrder();
-         if( o==SMoc.MAXORDER ) o = moc.getMaxUsedOrder();  // A cause du bug
+         if( o==SMoc.MAXORD_S ) o = moc.getDeepestOrder();  // A cause du bug
          if( mocOrder<o) mocOrder=o;
          moc.sort();
       }

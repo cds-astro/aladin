@@ -25,13 +25,9 @@ import static cds.tools.Util.FS;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Iterator;
 
-import cds.aladin.Coord;
-import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.fits.Fits;
-import cds.moc.Healpix;
 import cds.moc.SMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -146,42 +142,8 @@ public class BuilderMoc extends Builder {
       long time = System.currentTimeMillis() - t;
       context.info("MOC done in "+cds.tools.Util.getTemps(time,true)
                         +": mocOrder="+moc.getMocOrder()
-                        +" size="+cds.tools.Util.getUnitDisk( moc.getSize()));
+                        +" size="+cds.tools.Util.getUnitDisk( moc.getMem()));
    }
-   
-   /** Changement de référentiel si nécessaire */
-   // IL FAUDRA REMETTRE TOUT CA DANS SpaceMOC
-   static public SMoc convertTo(SMoc moc, String coordSys) throws Exception {
-      if( coordSys.equals( moc.getSys()) ) return moc;
-
-      char a = moc.getSys().charAt(0);
-      char b = coordSys.charAt(0);
-      int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
-      int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
-
-      Healpix hpx = new Healpix();
-      int order = moc.getMaxUsedOrder();
-      SMoc moc1 = new SMoc(coordSys,moc.getMinOrder(),moc.getMocOrder());
-      moc1.setCheckConsistencyFlag(false);
-      long onpix1=-1;
-      Iterator<Long> it = moc.pixelIterator();
-      while( it.hasNext() ) {
-         long npix = it.next();
-         for( int i=0; i<4; i++ ) {
-            double [] coo = hpx.pix2ang(order+1, npix*4+i);
-            Coord c = new Coord(coo[0],coo[1]);
-            c = Localisation.frameToFrame(c, frameSrc, frameDst);
-            long npix1 = hpx.ang2pix(order+1, c.al, c.del);
-            if( npix1==onpix1 ) continue;
-            onpix1=npix1;
-            moc1.add(order,npix1/4);
-         }
-
-      }
-      moc1.setCheckConsistencyFlag(true);
-      return moc1;
-   }
-
    
    private String getDefaultExt(String path) {
       if( (new File(path+FS+"Norder3"+FS+"Allsky.fits")).exists() ) return "fits";
@@ -213,10 +175,11 @@ public class BuilderMoc extends Builder {
    }
    
    /** Retourne la surface du Moc (en nombre de cellules de plus bas niveau */
-   public long getUsedArea() { return moc.getNbCells(); }
+   public long getUsedArea() { return moc.getNbValues(); }
 
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
-   public long getArea() { return moc.getNbCellsFull(); }
+//   public long getArea() { return moc.getNbCellsFull(); }
+   public long getArea() { return moc.maxVal(); }
 
    protected void generateMoc(SMoc moc, int fileOrder,String path) throws Exception {
       

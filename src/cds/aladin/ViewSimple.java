@@ -80,7 +80,7 @@ import javax.swing.SwingUtilities;
 
 import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
-import cds.moc.Moc;
+import cds.moc.Moc1D;
 import cds.moc.Range;
 import cds.moc.SMoc;
 import cds.moc.TMoc;
@@ -451,56 +451,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       return true;
    }
    
-//   private double jdmilieu=Double.NaN;
-//   private double jdrange=Double.NaN;
-//   
-//   protected void setRange( double jd ) {
-//      double jdmin, jdmax;
-//      if( Double.isNaN( this.jdmin ) || Double.isNaN( this.jdmax ) ) {
-//         if( !Double.isNaN( jdmilieu ) ) { // On utilise la date précédémment mémorisée
-//            jdmin = jdmilieu - jd/2;
-//            jdmax = jdmilieu + jd/2;
-//            jdmilieu = Double.NaN;
-//         } else { jdrange = jd;  return; } // Pour plus tard
-//      } else {
-//         double jdmilieu = (this.jdmax+this.jdmin)/2;
-//         jdmin = jdmilieu - jd/2;
-//         jdmax = jdmilieu + jd/2;
-//      }
-//      setTimeRange( new double[] { jdmin, jdmax } );
-//   }
-//   
-//   protected void setTime( double jd ) {
-//      double jdmin, jdmax;
-//      if( Double.isNaN( this.jdmin ) || Double.isNaN( this.jdmax ) ) {
-//         if( !Double.isNaN( jdrange ) ) { // On utilise le range précédémment mémorisée
-//            jdmin = jd - jdrange/2;
-//            jdmax = jd + jdrange/2;
-//            jdrange = Double.NaN;
-//         } else { jdmilieu = Double.NaN; return; }// Pour plus tard
-//      }  else {
-//         double range = this.jdmax - this.jdmin;
-//         jdmin = jdmilieu - range/2;
-//         jdmax = jdmilieu + range/2;
-//      }
-//      setTimeRange( new double[] { jdmin, jdmax } );
-//   }
-
+   /** Reset du masque temporel sur la vue */
+   protected void resetTimeRange() { jdmin = jdmax = Double.NaN; }
+   
    // Cree le popup menu associe au View
    private void createPopupMenu() {
       JMenuItem j;
       popMenu = new JPopupMenu();
       popMenu.setLightWeightPopupEnabled(false);
-      //      popMenu.add( menuNext=j=new JMenuItem(view.NEXT));
-      //      j.addActionListener(this);
-      //      String s = aladin.isBetaProtoMenu(aladin.FULLSCREEN+"  (F9)");
-      //      if( s!=null ) {
-      //         popMenu.add( menuScreen=j=new JMenuItem(s));
-      //         j.addActionListener(this);
-      //      }
-      //      popMenu.add( menuMore=j=new JMenuItem(view.MOREVIEWS));
-      //      j.addActionListener(this);
-      //      popMenu.addSeparator();
       popMenu.add( menuLook=j=new JMenuItem(view.MLOOK));
       j.addActionListener(this);
       popMenu.addSeparator();
@@ -523,18 +481,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       j.addActionListener(this);
       popMenu.add( menuPlot=j=new JCheckBoxMenuItem(view.MPLOT));
       j.addActionListener(this);
-      ////      popMenu.add( menuROI=j=new JMenuItem(view.MROI));
-      ////      j.addActionListener(this);
-      //      popMenu.add( menuDelROI=j=new JMenuItem(view.MDELROI));
-      //      j.addActionListener(this);
-      //      popMenu.addSeparator();
-      //      popMenu.add( menuSel=j=new JMenuItem(view.MSEL));
-      //      j.addActionListener(this);
-      //      popMenu.add( menuDel=j=new JMenuItem(view.MDELV));
-      //      j.addActionListener(this);
-      //      popMenu.addSeparator();
-      //      popMenu.add( menuStick=j=new JMenuItem(view.MSTICKON));
-      //      j.addActionListener(this);
 
       super.add(popMenu);
    }
@@ -549,19 +495,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       else if( src==menuCopy )   copierReticule();
       else if( src==menuCopyImg ) copierVue();
       else if( src==menuLook ) look();
-      //      else if( src==menuROI )    aladin.view.createROI();
       else if( src==menuLock )   switchLock();
       else if( src==menuPlot )   switchView();
-      //      else if( src==menuDel )    aladin.view.freeSelected();
-      //      else if( src==menuDelROI ) aladin.view.freeLock();
-      //      else if( src==menuSel )    aladin.view.selectAllViews();
-      //      else if( src==menuMore )   aladin.view.autoViewGenerator();
-      //      else if( src==menuNext )   aladin.view.next(1);
-      //      else if( src==menuScreen )   aladin.fullScreen();
-      //      else if( src==menuStick ) {
-      //         aladin.view.stickSelectedView();
-      //         return;
-      //      }
       calque.repaintAll();
    }
    
@@ -577,7 +512,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    
    /** Copie de la position courante dans le Clipboard */
    protected void copierReticule() {
-//      aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del));
       aladin.copyToClipBoard(aladin.localisation.J2000ToString(aladin.view.repere.raj,aladin.view.repere.dej));
    }
 
@@ -2968,6 +2902,20 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          }
          objSurfMove=null;
       }
+      
+      // Traitement d'une sélection dans un STMoc
+      if( aladin.view.isMultiView() ) {
+         Plan[] allPlans = calque.getPlans();
+         for( int i=allPlans.length-1; i>=0; i-- ) {
+            Plan plan =  allPlans[i];
+            if( !plan.active || !(plan instanceof PlanSTMoc) ) continue;        // Pas concerné
+            if( isPlotTime() ) {
+               ((PlanSTMoc)plan).inTimeView(this, e, true );
+            } else {
+               ((PlanSTMoc)plan).inSpaceView(this, e, true );
+            }
+         }
+      }
 
       aladin.view.repaintAll();
    }
@@ -3587,7 +3535,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( folder!=calque.getMyScopeFolder(allPlans,plan) ) continue;
 
             boolean testOnMovable = fullScreen && (plan.type==Plan.APERTURE || plan.type==Plan.TOOL);
-
+            
+            
+            // Peut être sur des éléments MOC ?
+            if( plan instanceof PlanSTMoc && aladin.view.isMultiView() ) {
+               if( isPlotTime() ) {
+                  ((PlanSTMoc)plan).inTimeView(this, e, false );
+               } else {
+                  ((PlanSTMoc)plan).inSpaceView(this, e, false );
+               }
+            }
 
             // Determination du nombre d'objet sous la souris
             Iterator<Obj> it = plan.iterator(this);
@@ -3944,7 +3901,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             double [] d = new double[]{ c.al,c.del };
             d=CDSHealpix.radecToPolar(d);
             int order = getLastGridHpxOrder();
-//            long nside = CDSHealpix.pow2(order);
             long npix = CDSHealpix.ang2pix_nest(order, d[0], d[1]);
             aladin.console.printCommand(order+"/"+npix);
          } catch( Exception e ) { }
@@ -3953,17 +3909,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       } else aladin.console.printCommand(s);
       
       aladin.view.setRepereId(s);
-      //      aladin.view.memoUndo(this,repCoord,null);
-      //      if( flagSync ) aladin.view.syncView(1,repCoord,this);
       if( flagSync ) aladin.view.syncView(1,repCoord,this,flagSync);
       else { aladin.view.moveRepere(repCoord); aladin.view.repaintAll(); }
       
-      /* if( pref instanceof PlanBG ) */ aladin.dialog.adjustParameters();
-      //      if( pref instanceof PlanBG ) {
-      ////         aladin.dialog.setDefaultTarget(repCoord+"");
-      //         aladin.dialog.setDefaultTarget(s);
-      //         aladin.dialog.setDefaultParameters(Aladin.aladin.dialog.current,0);
-      //      }
+      aladin.dialog.adjustParameters();
       aladin.sendObserver();
    }
 
@@ -5011,7 +4960,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     */
    protected Coord getCooCentre() {
       if( isFree() ) return null;
-      //      Projection proj=pref.projd;
       Projection proj = getProj();
       if( isFree() || !Projection.isOk(proj) ) return null;
       double x = rv.width/2.;
@@ -5027,8 +4975,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
    
    /** Calcule le MOC couvrant la vue courante (en time ou en space) */
-   protected Moc getMoc() { return getMoc(-1); }
-   protected Moc getMoc( int order) {
+   protected Moc1D getMoc() { return getMoc(-1); }
+   protected Moc1D getMoc( int order) {
       if( !Projection.isOk( getProj()) && !isPlotTime() ) return null;
       
       try {
@@ -5038,36 +4986,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             long tmax = (long)( plot.getMax()*TMoc.DAYMICROSEC );
             TMoc moc = new TMoc();
             if( order>=0 ) moc.setMocOrder(order);
-            moc.range =  new Range( new long[] { tmin, tmax } );
-            moc.toMocSet();
+            moc.setRangeList( new Range( new long[] { tmin, tmax } ) );
             return moc;
          }
             
          // Cas spatial
-          if( isAllSky() ) return new SMoc("0/0-11");
+          if( isAllSky() ) return new SMoc("0/0-11 "+(order==-1?"10":order)+"/");
           
           // Détermination de l'order
           Coord c = getCooCentre();
           double size = getTaille();
           if( order==-1 ) order = Directory.getAppropriateOrder(size);
-        
-//          SMoc spaceMoc = new SMoc(order);
-//          int i = 0;
-//          spaceMoc.setCheckConsistencyFlag(false);
-//          for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true) ) {
-//             spaceMoc.add(order, n);
-//             if( (++i) % 10000 == 0 ) spaceMoc.checkAndFix();
-//          }
-//          spaceMoc.setCheckConsistencyFlag(true);
-          SMoc spaceMoc = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
-          
-//          Coord [] corners = getCooCorners( getProj() );
-//          ArrayList<double[]> radecList = new ArrayList<>();
-//          for (Coord rectCoord : corners) {
-//             radecList.add( new double[]{rectCoord.al, rectCoord.del } );
-//          }
-          
-          return spaceMoc;
+          return CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
         
       } catch( Exception e ) {  if( aladin.levelTrace>3  ) e.printStackTrace(); }
       return null;
@@ -5088,9 +5018,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          proj.getCoord(coo[i]);
       }
       return coo;
-
    }
-
 
    private Coord [] couverture = null;
    private short oCouverture = -1;

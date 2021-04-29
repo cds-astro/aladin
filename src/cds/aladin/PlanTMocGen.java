@@ -58,8 +58,8 @@ public class PlanTMocGen extends PlanTMoc {
    
    /** Ajustement d'une valeur à l'ordre indiquée */
    public long getVal(long val, int order) {
-      if( order==TMoc.MAXORDER ) return val;
-      int deltaOrder = (TMoc.MAXORDER - order)<<1;
+      if( order==TMoc.MAXORD_T ) return val;
+      int deltaOrder = (TMoc.MAXORD_T - order)<< (TMoc.FACT_T/2);
       val = (val>>>deltaOrder) << deltaOrder;
       return val;
    }
@@ -92,9 +92,9 @@ public class PlanTMocGen extends PlanTMoc {
       try {
          Range range = new Range(buf,n);
          range.sortAndFix();
-         moc.range = range;
+         moc.setRangeList( range );
          
-         moc.toMocSet();
+//         moc.toMocSet();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -107,7 +107,7 @@ public class PlanTMocGen extends PlanTMoc {
 //            long t0 = System.currentTimeMillis();
             try {
                moc = new TMoc();
-               if( order!=-1) moc.setMocOrder(order);
+               if( order!=-1) ((TMoc)moc).setMocOrder(order);
                for( Plan p1 : p ) {
                   if( p1.isCatalogTime() ) {
                      if( c==null )  c = p1.c.darker();
@@ -121,7 +121,7 @@ public class PlanTMocGen extends PlanTMoc {
                return false;
             }
             flagProcessing=false;
-            if( moc.getSize()==0 ) error="Empty TMOC";
+            if( moc.isEmpty() ) error="Empty TMOC";
 //            long t1 = System.currentTimeMillis();
 //            Aladin.trace(3,"MOC 'order="+moc.getMocOrder()+" built in "+(t1-t0)+"ms nb cells="+moc.getSize()+" mem="+moc.getMem());
 //         }

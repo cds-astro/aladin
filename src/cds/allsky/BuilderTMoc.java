@@ -105,11 +105,11 @@ public class BuilderTMoc extends Builder {
       moc.setMocOrder(maxOrder);
       
       long progress=0L;
-      context.setProgressMax(moc.getNbCells());
+      context.setProgressMax(moc.getNbValues());
       
       initIt();
       
-      Iterator<Long> it = moc.pixelIterator();
+      Iterator<Long> it = moc.valIterator();
       while( it.hasNext() ) {
          long npix = it.next();
          String file = Util.getFilePath(hpxFinder, maxOrder, npix);
@@ -178,12 +178,17 @@ public class BuilderTMoc extends Builder {
    }
    
    protected void addIt(int order, long npix, double jdtmin, double jdtmax) {
-      tmoc.add(jdtmin,jdtmax);
+      try {
+         tmoc.add(jdtmin,jdtmax);
+      } catch( Exception e ) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
    }
    
    protected void writeIt() throws Exception {
       String file = context.getOutputPath()+Util.FS+"TMoc.fits";
-      tmoc.toMocSet();
+//      tmoc.toMocSet();
       tmoc.write(file);
    }
    

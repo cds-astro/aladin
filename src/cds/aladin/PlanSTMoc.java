@@ -22,6 +22,7 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.awt.event.MouseEvent;
 
 import javax.swing.SwingUtilities;
 
@@ -32,6 +33,7 @@ import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
+import cds.tools.pixtools.Hpix;
 
 /**
  * Génération d'un plan TMOC
@@ -41,9 +43,16 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class PlanSTMoc extends PlanTMoc {
    
+   private PlanMocFromST  smocH = null; // Le plan SMOC pour l'highlight de la visu spatiale
+   private PlanTMocFromST tmocH = null; // Le plan TMOC pour l'highlight de la visu temporelle
+   private PlanMocFromST  smocS = null; // Le plan SMOC pour la sélection de la visu spatiale
+   private PlanTMocFromST tmocS = null; // Le plan TMOC pour la sélection de la visu temporelle
+
+   
    public PlanSTMoc(Aladin a) {
       super(a);
       type = ALLSKYSTMOC;
+      initST();
    }
    
    protected PlanSTMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
@@ -77,6 +86,8 @@ public class PlanSTMoc extends PlanTMoc {
       aladin.trace(3,"STMOC creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
       suite();
    }
+   
+   protected void suiteSpecific() { super.suiteSpecific(); initST(); }
    
    /** Retourne true si le STMOC ne contient qu'un range de temps, potentiellement modifiable */
    protected boolean isOneTimeRange() { return false; }
@@ -113,8 +124,8 @@ public class PlanSTMoc extends PlanTMoc {
       ADD( buf, "\n* End: ",Astrodate.JDToDate( stmoc.getTimeMax()));
       ADD( buf,"\n* # ranges: ",stmoc.range.nranges()+"");
       int timeOrder = stmoc.getTimeOrder();
-      ADD( buf,"\n* Time res: ",TMoc.getTemps(  TMoc.getDuration(timeOrder)));
-      ADD( buf,"\n* Best time order: ",TMoc.toNewMocOrder( timeOrder )+"");
+      ADD( buf,"\n* Time res: ",Util.getTemps(  TMoc.getDuration(timeOrder)/1000L));
+      ADD( buf,"\n* Best time order: ",timeOrder+"");
 
       double cov=getFullCoverage();
       double degrad = Math.toDegrees(1.0);
@@ -150,10 +161,10 @@ public class PlanSTMoc extends PlanTMoc {
          try {
             if( moc==null && dis!=null ) {
                moc = new STMoc();
-               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
+               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFITS(dis);
                else moc.readASCII(dis);
             }
-            if( moc.getSize()==0 ) error="Empty STMOC";
+            if( moc.isEmpty() ) error="Empty STMOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -299,12 +310,10 @@ public class PlanSTMoc extends PlanTMoc {
    }
 
    protected void initArrayMoc(int order) {
-      if( arrayMoc==null ) arrayMoc = new Moc[Moc.MAXORDER+1];
+      if( arrayMoc==null ) arrayMoc = new Moc[SMoc.MAXORD_S+1];
       arrayMoc[order] = new STMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
    }
    
-
-
    protected SMoc getSpaceMoc() {
       ViewSimple v = aladin.view.getCurrentView();
       if( lastCurrentSpaceMoc!=null && !isTimeModified() ) return lastCurrentSpaceMoc;
@@ -324,13 +333,176 @@ public class PlanSTMoc extends PlanTMoc {
    }
 
    
-   // Tracé du MOC visible dans la vue
-   protected void draw(Graphics g,ViewSimple v) {
-      if( v.isPlotTime() ) drawInTimeView(g,v);
-      else drawInSpaceView(g,v);
+   /**************************** Gestion des affichages Highligh et Select SMOC et TMOC courant *************************/
+   
+   // Création des plans SMOC et TMOC qui permettent l'affichage des éléments du STMOC à visualiser explicitement
+   private void initST() {
+      smocH = new PlanMocFromST(this,false);
+      tmocH = new PlanTMocFromST(this,false);
+      smocS = new PlanMocFromST(this,true);
+      tmocS = new PlanTMocFromST(this,true);
    }
    
-//   protected void planReadyPost() { }
+   // Demande de réaffichage
+   private void repaintST() {
+      smocH.oiz = tmocH.oiz = smocS.oiz = tmocS.oiz = -2;
+      aladin.view.repaintAll();
+   }
+   
+   // Tracé du MOC visible dans la vue
+   protected void draw(Graphics g,ViewSimple v) {
+      if( v.isPlotTime() ) {
+         drawInTimeView(g,v);
+         if( aladin.view.isMultiView() ) {
+            tmocS.drawInTimeView(g,v);
+            tmocH.drawInTimeView(g,v);
+         }
+         
+      } else {
+         drawInSpaceView(g,v);
+         if( aladin.view.isMultiView() ) {
+            smocS.drawInSpaceView(g,v);
+            smocH.drawInSpaceView(g,v);
+         }
+      }
+   }
+   
+   // Retourne true si les deux mocs sont différents
+   private boolean isDiff(Moc s1, Moc s2) { return s1==null && s2!=null  || s1!=null && !s1.equals(s2); }
+
+   private RectangleD lastR = null;  // Dernière case temporelle sous la souris connue
+   
+   /** Appelé lors du déplacement (select=false) ou d'un clic (select=true) de la souris
+    * dans la vue v temporelle, afin de sélectionner le SMOC et le TMOC extrait du STMOC pour la case
+    * temporelle sous la souris.
+    */
+   public boolean inTimeView( ViewSimple v, MouseEvent e, boolean select ) {
+      if( lastRectDrawn==null  ) return false;
+      
+      String info=null;
+      
+      int xview=e.getX();
+      int yview=e.getY();
+      
+      boolean trouve = false;
+      SMoc sh = (SMoc) smocH.moc;
+      TMoc th = (TMoc) tmocH.moc;
+      SMoc ss = (SMoc) smocS.moc;
+      TMoc ts = (TMoc) tmocS.moc;
+      
+      for( MyRect r : lastRectDrawn ) {
+         
+         // On prend éventuellement un peu de largeur pour que la souris puisse tomber "dedans"
+         MyRect r1 = r;
+         if( r.width<2 ) r1 = new MyRect(r.x-1,r.y,3.,r.height);
+         
+         if( r1.contains(xview, yview) ) {
+            if( select && lastR==r ) return true;
+            lastR=r;
+                  
+            try {
+               th = new TMoc();
+               th.add(TMoc.MAXORD_T,r.start,r.end-1L);
+               sh = ((STMoc)moc).getSpaceMoc(r.start, r.end-1L);
+               trouve=true;
+//               System.out.println("inTimeView: tmoc="+th.seeRangeList()+" smoc="+sh.toDebug());
+               
+               // Je clique sur une zone non sélectionné => je change la sélection
+               // sinon je change (ou j'étends) la sélection
+               if( select ) {
+                  if( ts!=null && th.isIntersecting(ts) ) { ss=null; ts=null; }
+                  else if( ts!=null && e.isShiftDown() ) { ss=ss.union(sh); ts=ts.union(th); }
+                  else if( ss==null || e.isControlDown() ) { ss = sh; ts = th; }
+               }
+               
+               String start =  Astrodate.JDToDate(r.start/TMoc.DAYMICROSEC, true, true);
+               int t1 = start.indexOf('T');
+               String end =  Astrodate.JDToDate((r.end-1L)/TMoc.DAYMICROSEC, true, true);
+               int t2 = end.indexOf('T');
+             
+               info = "\n \n* Start: "+start.substring(0,t1)+"\n   "+start.substring(t1+1)+"\n"
+                     + "\n \n* End: "+end.substring(0,t2)+"\n   "+end.substring(t2+1)+"\n"
+                     +"\n \n*  Res: "+Util.getTemps((r.end-r.start)/1000L, false);
+             
+            } catch( Exception e1 ) { e1.printStackTrace(); }
+            break;
+         }
+      }
+      
+      // En dehors de tout => aucune surbrillance
+      if( !trouve ) { sh = null; th = null; }
+
+      // Repaint nécessaire si l'un des Mocs a changé
+      if( isDiff(sh,smocH.moc) || isDiff(sh,smocH.moc)
+       || isDiff(ss,smocS.moc) || isDiff(ts,tmocS.moc) ) {
+         repaintST();
+         aladin.calque.select.setMessageInfo( info );
+      }
+      
+      smocH.moc = sh;
+      tmocH.moc = th;
+      smocS.moc = ss;
+      tmocS.moc = ts;
+      
+      return trouve;
+   }
+   
+   private Hpix lastHpix=null; // Dernière case spatiale sous la souris connue
+   
+   /** Appelé lors du déplacement (select=false) ou d'un clic (select=true) de la souris
+    * dans la vue v spatiale , afin de sélectionner le SMOC et le TMOC extrait du STMOC pour la case
+    * spatiale sous la souris.
+    */
+   public boolean inSpaceView( ViewSimple v, MouseEvent e, boolean select  ) {
+      if( arrayHpix==null  ) return false;
+      
+      int xview = e.getX();
+      int yview = e.getY();
+      
+      boolean trouve = false;
+      SMoc sh = (SMoc) smocH.moc;
+      TMoc th = (TMoc) tmocH.moc;
+      SMoc ss = (SMoc) smocS.moc;
+      TMoc ts = (TMoc) tmocS.moc;
+      
+      for( Hpix r : arrayHpix ) {
+         if( r.contains(v,xview, yview) ) {
+            if( !select && lastHpix==r ) return true;
+            lastHpix=r;
+            try {
+               sh = new SMoc();
+               sh.add(r.order,r.start);
+               th = ((STMoc)moc).getTimeMoc( sh );
+               trouve=true;
+//               System.out.println("inSpaceView: "+r.order+"/"+r.start+" tmoc="+th.seeRangeList());
+
+               // Je clique sur une zone non sélectionné => je change la sélection
+               // sinon je change (ou j'étends) la sélection
+               if( select ) {
+                  if( ss!=null && sh.isIntersecting(ss) ) { ss=null; ts=null; }
+                  else if( ss!=null && e.isShiftDown() ) { ss=ss.union(sh); ts=ts.union(th); }
+                  else if( ss==null || e.isControlDown() ) { ss = sh; ts = th; }
+               }
+            } catch( Exception e1 ) { e1.printStackTrace(); }
+            break;
+         }
+      }
+      
+      // En dehors de tout => aucune surbrillance
+      if( !trouve ) { sh = null; th = null; }
+      
+      // Repaint nécessaire si l'un des Mocs a changé
+      if( isDiff(sh,smocH.moc) || isDiff(sh,smocH.moc) 
+       || isDiff(ss,smocS.moc) || isDiff(ts,tmocS.moc) ) repaintST();
+
+      smocH.moc = sh;
+      tmocH.moc = th;
+      smocS.moc = ss;
+      tmocS.moc = ts;
+
+      return trouve;
+   }
+
 
 }
 

@@ -423,7 +423,7 @@ public class MocGen {
          t2=t;
       }
 
-      if( !multWrite || moc.getSize()==0 ) return false;
+      if( !multWrite || moc.isEmpty() ) return false;
       if( verbose ) System.out.println("Updating output MOC ["+out+"]...");
       moc.write(out, fmt);
       return true;

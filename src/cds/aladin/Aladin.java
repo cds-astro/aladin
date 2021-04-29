@@ -162,7 +162,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC 2.0 support (partial - no yet ASCII time serialization)
+ * @beta    <LI> MOC 2.0 full compliance
  * @beta    <LI> Time serie display
  * @beta    <LI> Support for Hight DPI screen -> See User Preference Scaling method
  * @beta    <LI> Photometric tool stats improvements (table management from polygons and circles)
@@ -201,7 +201,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.040";
+   static public final    String VERSION = "v11.050";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4423,13 +4423,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    static public int getAppropriateOrder(double size) {
       int order = 4;
-      if( size==0 ) order=SMoc.MAXORDER;
+      if( size==0 ) order=SMoc.MAXORD_S;
       else {
          double pixRes = size/200;
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
          double res = Math.sqrt(skyArea/(12*16*16));
-         while( order<SMoc.MAXORDER && res>pixRes) { res/=2; order++; }
+         while( order<SMoc.MAXORD_S && res>pixRes) { res/=2; order++; }
       }
       return order;
    }
@@ -4521,7 +4521,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                if( radius==0 ) continue;
 
                SMoc m = createMocRegionCircle( ra,de,radius,order,inclusive );
-               if( m==null || m.getSize()==0 ) continue;
+               if( m==null || m.isEmpty() ) continue;
                arr.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
             
@@ -4534,7 +4534,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                double semiMI = ((Ellipse)o).getSemiMI();
                double angle = ((Ellipse)o).getAngle()+90;
                SMoc m = createMocRegionEllipse(ra, de, semiMA, semiMI, angle, order);
-               if( m==null || m.getSize()==0 ) continue;
+               if( m==null || m.isEmpty() ) continue;
                arr.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
             
@@ -4555,7 +4555,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             boolean isCounterClock =  isCounterClok( (Ligne) o );
 //            trace(4,"polygon counterClock="+isCounterClock);
             SMoc m = createMocRegionPol( (Ligne)o, order, isCounterClock, inclusive );
-            if( m==null || m.getSize()==0 ) continue;
+            if( m==null || m.isEmpty() ) continue;
             arr.add(m);
          } catch( Exception e) { if( levelTrace>=3 ) { e.printStackTrace();  } }
 //         if( levelTrace>=3 ) errorMoc( order, (Ligne)o);
@@ -4597,7 +4597,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       int maxMocOrder=0;
       
       // Un seul élément, pas besoin d'aller plus loin
-      if( arrMoc.size()==1 ) return (SMoc)arrMoc.get(0).clone();
+      if( arrMoc.size()==1 ) return arrMoc.get(0).clone();
       
       // On tri pour avoir les plus grands en début
       Collections.sort(arrMoc);
@@ -4605,25 +4605,21 @@ DropTargetListener, DragSourceListener, DragGestureListener
       arrMoc.toArray(a);
       
       // Calcul d'un ciel complet pour éviter des unions inutiles
-      long max=SMoc.pow2(SMoc.MAXORDER);
+      long max=SMoc.pow2(SMoc.MAXORD_S);
       max=12L*max*max;
       
       // Détermination de l'order maximal
       int n;
-      for( Moc m : a ) if( (n=m.getMocOrder())>maxMocOrder ) maxMocOrder=n; 
+      for( SMoc m : a ) if( (n=m.getMocOrder())>maxMocOrder ) maxMocOrder=n; 
       
       SMoc moc = new SMoc(maxMocOrder);
-      moc.toRangeSet();
-      
       for( SMoc m : a ) {
-         m.toRangeSet();
-         moc.range = moc.range.union(m.range);
+         moc.setRangeList( moc.seeRangeList().union(m.seeRangeList()));
 
          // Ciel complet ? inutile d'aller plus loin pour l'union
-         if( moc.range!=null && moc.range.contains(0, max)) break;
+         if( moc.isFull() ) break;
       }
       
-      moc.toMocSet();
       return moc;
    }
    
@@ -4650,7 +4646,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
     protected SMoc createMocRegion(List<STCObj> stcObjects, int order, boolean inclusive) throws Exception {
 //        return createMocRegion(stcObjects.get(0), order);
-        Moc moc = null;
+        SMoc moc = null;
         for( STCObj stc : stcObjects ) {
            SMoc m = createMocRegion(stc, order,inclusive);
            moc = moc==null ? m : moc.union(m);
@@ -6395,6 +6391,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( !Configuration.isUIScaleByOs() || Aladin.NOGUI ) System.setProperty("sun.java2d.uiScale", "1");
       else Aladin.trace(2,"UIScale managed by OS & Java");
       
+      // Utilisation des MOCs en préservant par défaut les surfaces
+      Moc.setMocOrderLogic( Moc.LOGIC_MAX );
    }
 
    // Les commandes a exécuter après la création d'Aladin (voir creanObj.run())

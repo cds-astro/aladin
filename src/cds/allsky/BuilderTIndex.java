@@ -84,19 +84,19 @@ final public class BuilderTIndex  extends Builder {
       // détermination des tuiles de HpxFinder à scanner
       SMoc mocRegion = context.getRegion();
       if( mocRegion.getMocOrder()!=hpxOrder ) {
-         mocRegion = (SMoc) mocRegion.clone();
+         mocRegion = mocRegion.clone();
          mocRegion.setMocOrder( hpxOrder );
       }
       
       // On utilisera le nombre de tuiles en entrées comme indice de progression
-      initStat( mocRegion.getNbCells() );
+      initStat( mocRegion.getNbValues() );
       
       // On va créer également le TMoc correspondant 
       TMoc tmoc = new TMoc( TIMEORDER );
       
       // Parcours de toutes les tuiles meta du HpxFinder
       int i=0;
-      Iterator<Long> it = mocRegion.pixelIterator();
+      Iterator<Long> it = mocRegion.valIterator();
       while( it.hasNext() ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          long npix = it.next();
@@ -108,7 +108,7 @@ final public class BuilderTIndex  extends Builder {
       }
       
       // Génération du TMOC
-      tmoc.toMocSet();
+//      tmoc.toMocSet();
       tmoc.write(timePath+Util.FS+"TMoc.fits");
 
       // Generation du fichier metadata.xml
@@ -154,8 +154,8 @@ final public class BuilderTIndex  extends Builder {
             // Ajout dans toutes les tuiles qu'il faut du TimeFinder
             TMoc a = new TMoc( TIMEORDER );
             a.add(jdtmin,jdtmax);
-            a.toMocSet();
-            Iterator<Long> it = a.pixelIterator();
+//            a.toMocSet();
+            Iterator<Long> it = a.valIterator();
             while( it.hasNext() ) {
                long npix = it.next();
                String fileOut = Util.getFilePath(timePath,TIMEORDER,npix);

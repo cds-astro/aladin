@@ -24,12 +24,11 @@ package cds.aladin;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import cds.moc.Moc;
-import cds.moc.SMoc;
+import cds.moc.Moc1D;
 import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.Util;
@@ -43,6 +42,7 @@ import cds.tools.Util;
 public class PlanTMoc extends PlanMoc {
 
    protected Moc [] arrayTimeMoc =null;        // Le MOC à tous les ordres */
+   protected ArrayList<MyRect> lastRectDrawn = null;  // La liste des rectangles de tracé du TMoc dans un View temporellle
 
    public PlanTMoc(Aladin a) {
       super(a);
@@ -77,16 +77,15 @@ public class PlanTMoc extends PlanMoc {
 
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
-      long nbMicrosec = ((TMoc)moc).getNbCells();
+      long nbMicrosec = ((TMoc)moc).getNbValues();
       ADD( buf, "\n* Start: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMin()));
       ADD( buf, "\n* End: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMax()));
       ADD( buf, "\n* Sum: ",Util.getTemps(nbMicrosec/1000L, true));
       
       int order = getRealMaxOrder( (TMoc)moc);
       int drawOrder = getDrawOrder();
-      ADD( buf,"\n","* Accuracy: "+ TMoc.getTemps(  TMoc.getDuration(order)));
-      ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? TMoc.toNewMocOrder(order)+"" 
-            : TMoc.toNewMocOrder(drawOrder)+"/"+TMoc.toNewMocOrder(order)));
+      ADD( buf,"\n","* Accuracy: "+ Util.getTemps(  TMoc.getDuration(order)/1000L));
+      ADD( buf,"\n","* TMOC order: "+ (order==drawOrder ? order+""  : drawOrder+"/"+order));
    }
    
    protected boolean isTime() { return true; }
@@ -115,10 +114,10 @@ public class PlanTMoc extends PlanMoc {
          try {
             if( moc==null && dis!=null ) {
                moc = new TMoc();
-               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
+               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFITS(dis);
                else moc.readASCII(dis);
             }
-            if( moc.getSize()==0 ) error="Empty TMOC";
+            if( moc.isEmpty() ) error="Empty TMOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -131,7 +130,7 @@ public class PlanTMoc extends PlanMoc {
    
    protected TMoc getTimeMoc() { return (TMoc)moc; }
    
-   static protected int getRealMaxOrder(SMoc m) { return m.getMocOrder(); }
+   static protected int getRealMaxOrder(Moc1D m) { return m.getMocOrder(); }
    
    protected  boolean isSpaceModified() { return false; }
    
@@ -144,33 +143,38 @@ public class PlanTMoc extends PlanMoc {
 
    
    protected Moc getTimeMocLow(int order,int gapOrder) {
-      Moc moc = getTimeMoc();
+      TMoc moc = getTimeMoc();
       
       // On fournit le meilleur MOC dans le cas de la génération d'une image
       if( aladin.NOGUI ) return moc;
 
       order += gapOrder;
-      if( order>moc.getTimeOrder() ) order=moc.getTimeOrder();
+      if( order>moc.getMocOrder() ) order=moc.getMocOrder();
       if( order<0 ) order=0;
+      
       if( arrayTimeMoc==null || arrayTimeMoc[order]==null || mocTimeLowReset ) {
-         if( arrayTimeMoc==null ) arrayTimeMoc = new TMoc[ Moc.MAXORDER+1];
+         if( arrayTimeMoc==null ) arrayTimeMoc = new TMoc[ TMoc.MAXORD_T+1];
          arrayTimeMoc[order] = new TMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
-         final int myOrder = order;
-         final int myMo=moc.getTimeOrder();
-         Aladin.trace(4,"PlanTMoc.getHealpixMocLow("+myOrder+") running...");
-         Moc mocLow = myOrder==myMo ? moc : moc.clone();
-         try { mocLow.setMocOrder(myOrder); }
-         catch( Exception e ) { e.printStackTrace(); }
-         arrayTimeMoc[myOrder]=mocLow;
-         Aladin.trace(4,"PlanTMoc.getHealpixMocLow("+myOrder+") done !");
+         int myOrder;
+         myOrder = order;
+         try {
+            final int myMo=moc.getMocOrder();
+            Aladin.trace(4,"PlanTMoc.getTimeMocLow("+myOrder+") running...");
+            TMoc mocLow = myOrder==myMo ? moc : moc.clone();
+            mocLow.setMocOrder(myOrder);
+            arrayTimeMoc[myOrder]=mocLow;
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
+         Aladin.trace(4,"PlanTMoc.getTimeMocLow("+myOrder+") done !");
          askForRepaint();
       }
       // peut être y a-t-il déjà un MOC de plus basse résolution déjà prêt
-      if( arrayTimeMoc[order].getSize()==0 ) {
+      if( arrayTimeMoc[order].isEmpty() ) {
          isLoading=true;
          int i=order;
-         for( ; i>=5 && (arrayTimeMoc[i]==null || arrayTimeMoc[i].getSize()==0); i--);
-         if( i>=5 ) order=i;
+         for( ; i>=MINLIMIT && (arrayTimeMoc[i]==null || arrayTimeMoc[i].isEmpty()); i--);
+         if( i>=MINLIMIT ) order=i;
       } else isLoading=false;
 
       lastTimeOrderDrawn = order;
@@ -188,15 +192,16 @@ public class PlanTMoc extends PlanMoc {
 //      return m;
 //   }
    
-   static private final int MAXDRAWCELL = 100;  // Nombre de cellules TMOC à tracer dans la vue temporelle
+   static private final int MAXDRAWCELL = 300;  // Nombre de cellules TMOC à tracer dans la vue temporelle
+   static private final int MINLIMIT = 9;
    
    // Retourne l'ordre du TMoc le plus approprié en fonction du zoom de la vue temporelle
    protected int getDrawingOrder(ViewSimple v) {
       Plot plot = v.plot;
       double dureeView = plot.getMax() - plot.getMin();
       int o;
-      for( o=TMoc.MAXORDER; o>=3; o-- ) {
-         double nbCell = dureeView / ( TMoc.getDuration(o)/1000000.);
+      for( o=TMoc.MAXORD_T; o>=MINLIMIT; o-- ) {
+         double nbCell = dureeView / ( TMoc.getDuration(o)/TMoc.DAYMICROSEC);
          if( nbCell<MAXDRAWCELL ) return o;
       }
       return o;
@@ -215,13 +220,13 @@ public class PlanTMoc extends PlanMoc {
    protected double getLastDrawTmin() { return lastDrawTimeRange[0]; }
    protected double getLastDrawTmax() { return lastDrawTimeRange[1]; }
    
-      
    // Tracé du MOC visible dans la vue
    protected void drawInTimeView(Graphics g,ViewSimple v) {
+      if( moc==null ) return;
       Plot plot = v.plot;
       
-      boolean flagBorder = false; //isDrawingBorder();
-      boolean flagfillIn = true;  //isDrawingFillIn()
+      boolean flagBorder = isDrawingBorder();
+      boolean flagfillIn = isDrawingFillIn();
       
       g.setColor(c);
       
@@ -230,60 +235,80 @@ public class PlanTMoc extends PlanMoc {
       
       v.setTimeRange( new double[] { tmin, tmax });
       
-      int drawingOrder = getDrawingOrder(v);
+      int drawingOrder;
+      if( moc.getNbRanges()<MAXDRAWCELL ) drawingOrder=moc.getTimeOrder();
+      else drawingOrder=getDrawingOrder(v);
       
       TMoc lowMoc = (TMoc ) getTimeMocLow(drawingOrder,gapOrder);
       mocTimeLowReset=false;
       
       Iterator<long[]> it = lowMoc.jdIterator(tmin, tmax);
-      long [] jdRange=null;
-
-      ArrayList<Rectangle> a = new ArrayList<>();
-      while( it.hasNext() ) {
-         jdRange = it.next();
-         a.add( computeRectangle(plot, jdRange[0]/TMoc.DAYMICROSEC,jdRange[1]/TMoc.DAYMICROSEC) );
-      }
+      ArrayList<MyRect> a = new ArrayList<>();
+      while( it.hasNext() ) a.add( computeRectangle(plot, it.next()) );
       
       // Tracé en aplat avec demi-niveau d'opacité
       if( flagfillIn && g instanceof Graphics2D ) {
          Graphics2D g2d = (Graphics2D)g;
          Composite saveComposite = g2d.getComposite();
          try {
-            g2d.setComposite( Util.getImageComposite(getOpacityLevel())); //getFactorOpacity()) );
-            for( Rectangle r : a ) {
-               if( flagBorder && width<=1 ) continue;
-               g.fillRect(r.x,r.y, r.width, r.height);
+            g2d.setComposite( Util.getImageComposite(getOpacityLevel()*getFactorOpacity())); //getFactorOpacity()) );
+            for( RectangleD r : a ) {
+               if( flagBorder && r.width<=1 ) continue;
+               g.fillRect((int)r.x,(int)r.y, (int)r.width, (int)r.height);
             }
          } finally {
             g2d.setComposite(saveComposite);
          }
       }
       
-      // Tracé des bords
       if( flagBorder ) {
-         for( Rectangle r : a ) g.drawRect(r.x,r.y, r.width, r.height);
+         for( RectangleD r : a ) g.drawRect((int)r.x,(int)r.y, (int)r.width, (int)r.height);
       }
+      
+      // Mémorisation des rectangles pour la vue qui contient la souris
+      if( v==aladin.view.getMouseView() ) lastRectDrawn = a;
    }
    
    static public final int BAND = 20;
    static public final int MARGE = 30;
    
-   private Rectangle computeRectangle(Plot plot, double jdstart, double jdstop ) {
-      Rectangle r = new Rectangle();
+   protected int getTimeStackIndex() { return timeStackIndex; }
+   
+   private MyRect computeRectangle(Plot plot, long [] range ) {
+      MyRect r = new MyRect();
+      
+      // Mémorisation des bornes en microsec
+      r.start = range[0];   // inclus
+      r.end = range[1];     // exclus
+      
       Coord c = new Coord();
-      c.al = jdstart;
+      
+      // Début
+      c.al = r.start/TMoc.DAYMICROSEC;
       c.del = 0;
       plot.getProj().getXY(c);
       PointD a = plot.viewSimple.getPositionInView(c.x, c.y);
-      c.al = jdstop;
+      
+      // Fin (incluse)
+      c.al = r.end/TMoc.DAYMICROSEC;
       plot.getProj().getXY(c);
       PointD b = plot.viewSimple.getPositionInView(c.x, c.y);
-      r.x=(int)a.x;
-      r.y= plot.viewSimple.getHeight() -(BAND-BAND/4)*(timeStackIndex+1)-MARGE;
-      r.width=(int)Math.abs(b.x-a.x);
-      if( r.width==0) r.width=1;
+      
+      // Mapping sur le rectangle
+      r.x=a.x;
+      r.y= plot.viewSimple.getHeight() -(BAND-BAND/4)*(getTimeStackIndex()+1)-MARGE;
+      r.width=Math.abs(b.x-a.x);
+      if( r.width<1 ) r.width=1;
       r.height=BAND;
+      
       return r;
+   }
+   
+   class MyRect extends RectangleD {
+      long start;
+      long end;
+      MyRect() { super(); }
+      MyRect(double x, double y, double w, double h) { super(x,y,w,h); }
    }
    
    protected void planReady(boolean ready) {
@@ -297,6 +322,7 @@ public class PlanTMoc extends PlanMoc {
       planReadyPost();
       aladin.view.repaintAll();
    }
+   
 
    protected void planReadyPost() { aladin.view.createView4TMOC(this); }
 

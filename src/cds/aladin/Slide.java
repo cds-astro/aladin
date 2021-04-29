@@ -829,7 +829,7 @@ public final class Slide {
                      else if( p.isSimpleCatalog() && p.error.indexOf("OVERFLOW")>=0 ) { drawBall(g,px,py-9,Aladin.ORANGE); p.status|=Plan.STATUS_OVERFLOW; }
                      else if( p.isSimpleCatalog() && p.error!=null && !p.error.startsWith("EMPTY") ) { drawBall(g,px1,py-9,Color.red); p.status|=Plan.STATUS_ERROR;  }
                      else if( p.isSimpleCatalog() && !hasObj ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYCAT; }
-                     else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().getSize()==0 ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYMOC; }
+                     else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().isEmpty() ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYMOC; }
                      else { drawBall(g,px1,py-9,Color.red); p.status|=Plan.STATUS_ERROR; }
                   } else {
                      boolean flag=false;

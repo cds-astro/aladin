@@ -78,70 +78,60 @@ public class PlanMocGen extends PlanMoc {
    
    private boolean stop;
    
-   private void addMocFromCatFov(Plan p1,int order) throws Exception {
-      Iterator<Obj> it = p1.iterator();
-      int m= p1.getCounts();
-      double incrPourcent = gapPourcent/m;
-      int n=0;
-      stop=false;
-      
-      while( it.hasNext() ) {
-         n++;
-         Obj o = it.next();
-//         if( !(o instanceof Source) ) continue;
-         if( !o.asSource() ) continue;
-         
-         if( m<100 || n%100==0 ) {
-            pourcent+=incrPourcent;
-            if( stop ) throw new Exception("Abort");
-         }
-         
-         pourcent+=incrPourcent;
-         Source s = (Source)o;
-         SourceFootprint sf = s.getFootprint();
-         if( sf==null ) continue;
-         List<STCObj> listStcs = sf.getStcObjects();
-         if( listStcs==null || listStcs.size()==0 ) continue;
-         try {
-            SMoc m1 = aladin.createMocRegion(listStcs,order,true);
-            if( m1!=null ) moc.add(m1);
-         } catch( Exception e ) {
-            if( aladin.levelTrace>=3 ) e.printStackTrace();
-         }
-      }
-   }
-      
    // Ajout d'un plan catalogue au moc en cours de construction
-   private void addMocFromCatalog(Plan p1,double radius,int order) throws Exception {
-      Iterator<Obj> it = p1.iterator();
-      Healpix hpx = new Healpix();
-      int o1 = order;
-      Coord coo = new Coord();
-      int n=0;
+   private void addMocFromCatalog(Plan p1,double radius,int order,boolean fov) throws Exception {
+      
       stop=false;
+      SMoc m2 = new SMoc(order);
+      m2.bufferOn();
+      Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
+      Healpix hpx = new Healpix();
       double incrPourcent = gapPourcent/m;
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
-         
-         if( m<100 || n%100==0 ) {
-            pourcent+=incrPourcent;
+         pourcent+=incrPourcent;
+         m++;
+
+         if( m%100==0 ) {
             if( stop ) throw new Exception("Abort");
+            try { moc = moc.union( m2 ); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+            m2.clear();
          }
+
          try {
-            coo.al = ((Position)o).raj;
-            coo.del = ((Position)o).dej;
-            long [] npix ;
-            if( radius==0 ) npix = new long[] { hpx.ang2pix(o1, coo.al, coo.del) };
-            else npix = hpx.queryDisc(o1, coo.al, coo.del, radius);
+
+            // Ajout simple d'une cellule
+            if( !fov && radius==0 ) {
+               long npix = hpx.ang2pix(order, ((Position)o).raj,((Position)o).dej);
+               m2.add(order,npix);
+               continue;
+            }
+
+            // Ajouts par formes
+            SMoc m1=null;
+            // Par FoV ?
+            if( fov ) {
+               Source s = (Source)o;
+               SourceFootprint sf = s.getFootprint();
+               if( sf==null ) continue;
+               List<STCObj> listStcs = sf.getStcObjects();
+               if( listStcs==null ) continue;
+               m1 = aladin.createMocRegion(listStcs,order,true);
+
+               // Par Cones ?
+            } else {
+               m1 = aladin.createMocRegionCircle(((Position)o).raj, ((Position)o).dej, radius, order, true);
+            }
+            m2.setRangeList( m2.seeRangeList().union( m1.seeRangeList() ) );
             
-            for( long pix : npix ) ((SMoc)moc).add(o1,pix);
-            n+=npix.length;
-            if( n>100000 ) { ((SMoc)moc).checkAndFix(); n=0; }
          } catch( Exception e ) {
-            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            if( aladin.levelTrace>=3) e.printStackTrace();
          }
+      }
+      try {  moc = moc.union( m2 ); } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
    }
 
@@ -169,7 +159,7 @@ public class PlanMocGen extends PlanMoc {
       pimg.setLockCacheFree(true);
       pimg.pixelsOriginFromCache();
 
-      int n=0;
+      ((SMoc)moc).bufferOn();
 
       double incrPourcent = gapPourcent/pimg.naxis2;
       long oNpix=-1;  
@@ -196,15 +186,15 @@ public class PlanMocGen extends PlanMoc {
 
                // Juste pour éviter d'insérer 2x de suite le même npix
                if( npix==oNpix ) continue;
-
                ((SMoc)moc).add(o1,npix);
-               if( n>100000 ) { ((SMoc)moc).checkAndFix(); n=0; }
+
                oNpix=npix;
             } catch( Exception e ) {
                if( aladin.levelTrace>=3 ) e.printStackTrace();
             }
          }
       }
+      ((SMoc)moc).bufferOff();
 
       // Les pixels peuvent désormais être libérés
       pimg.setLockCacheFree(false);
@@ -250,12 +240,12 @@ public class PlanMocGen extends PlanMoc {
       
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
-      moc.setMocOrder(order);
+      ((SMoc)moc).setMocOrder(order);
       ((SMoc)moc).setSys( p.frameOrigin==Localisation.GAL ? "G" : 
                                p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
-      frameOrigin = p.frameOrigin;
-      try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
+      ((SMoc)moc).bufferOn();
       
+      frameOrigin = p.frameOrigin;
       // Nombre de losanges à traiter
       int n = (int)CDSHealpix.pow2(hipsOrder); 
       n=12*n*n;
@@ -291,7 +281,6 @@ public class PlanMocGen extends PlanMoc {
          
          long min = virtualTileWidth *virtualTileWidth * npixFile;
          try {
-            int nb=0;
             
             // Parcours des blocs
             for( int yCell=0; yCell<nbCell; yCell++ ) {
@@ -323,26 +312,22 @@ public class PlanMocGen extends PlanMoc {
                      if( !Double.isNaN(pixMax) && average>pixMax ) continue;
                   }
                   
-                  
                   long npixMoc = min + xy2hpx(yCell*virtualTileWidth + xCell);
                   ((SMoc)moc).add(order,npixMoc);
-                  nb++;
               }
             }
-            
-            // On remet immédiatement au propre le MOC uniquement si on a inséré
-            // au-moins 100000 cellules (histoire de ne pas exploser la mémoire)
-            if( nb>100000 ) { ((SMoc)moc).checkAndFix(); nb=0; }
             
          } catch( Exception e ) {
             e.printStackTrace();
          }
       }
       
+      ((SMoc)moc).bufferOff();
+      
       // Conversion en ICRS si nécessaire
       if( frameOrigin!=Localisation.ICRS ) {
          try {
-            moc.setCheckConsistencyFlag(true);
+            aladin.info("This HiPS uses a Galactic reference. The resulting MOC has been converted in Equatorial System");
             moc=toReferenceFrame("C");
             frameOrigin=Localisation.ICRS;
          } catch( Exception e ) { e.printStackTrace(); }
@@ -400,7 +385,6 @@ public class PlanMocGen extends PlanMoc {
       ((SMoc)moc).setSys( p.frameOrigin==Localisation.GAL ? "G" : 
                                p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
-      try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
       
       // Nombre de losanges à traiter
       int n = (int)CDSHealpix.pow2(hipsOrder); 
@@ -541,11 +525,10 @@ public class PlanMocGen extends PlanMoc {
          }
       }
 
+      ((SMoc)moc).bufferOn();
       somme=0;
       try {
          // Remplissage du Moc
-         moc.setCheckConsistencyFlag(false);
-         int nb=0;
          Iterator<PixCum> it = queue.iterator();
          while( it.hasNext() ) {
             PixCum pc = it.next();
@@ -553,12 +536,10 @@ public class PlanMocGen extends PlanMoc {
             somme += pc.val;
             if( somme>threshold ) break;
             ((SMoc)moc).add(order,npix);
-            nb++;
-            if( nb>100000 ) { ((SMoc)moc).checkAndFix(); nb=0; }
          }
+         ((SMoc)moc).bufferOff();
 
          // Conversion en ICRS si nécessaire
-         moc.setCheckConsistencyFlag(true);
          moc=toReferenceFrame("C");
          frameOrigin=Localisation.ICRS;
          
@@ -849,43 +830,30 @@ public class PlanMocGen extends PlanMoc {
    
    protected boolean waitForPlan() {
 
-//      for( int order=6; order<=20; order+=2 ) {
-//         for( int i=0; i<5; i++ ) {
-//            long t0 = System.currentTimeMillis();
-            try {
-               moc = new SMoc();
-               ((SMoc)moc).setMinOrder(3);
-               if( order!=-1) moc.setMocOrder(order);
-               ((SMoc)moc).setSys("C");
-               frameOrigin=Localisation.ICRS;
-               moc.setCheckConsistencyFlag(false);
-               for( Plan p1 : p ) {
-                  if( p1.isCatalog() ) {
-                     if( fov ) addMocFromCatFov(p1,order);
-                     else addMocFromCatalog(p1,radius,order);
-                  }
-                  else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
-                  else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,order,threshold);
-                  else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,order,pixMin,pixMax);
-               }
-               moc.setCheckConsistencyFlag(true);
-            } catch( Exception e ) {
-               error=e.getMessage();
-               if( aladin.levelTrace>=3 ) e.printStackTrace();
-               flagProcessing=false;
-               return false;
-            }
-            flagProcessing=false;
-            if( moc.getSize()==0 ) error="Empty MOC";
-//            long t1 = System.currentTimeMillis();
-//            Aladin.trace(3,"MOC built in "+(t1-t0)+"ms order="+moc.getMocOrder()+" nb cells="+moc.getSize()+" mem="+moc.getMem());
-//         }
-//      }
+      try {
+         moc = new SMoc();
+         ((SMoc)moc).setMinOrder(3);
+         if( order!=-1) ((SMoc)moc).setMocOrder(order);
+         frameOrigin=Localisation.ICRS;
+         for( Plan p1 : p ) {
+            if( p1.isCatalog() )    addMocFromCatalog(p1,radius,order,fov);
+            else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
+            else if( p1 instanceof PlanBG && !Double.isNaN(threshold) ) addMocFromPlanBG(p1,order,threshold);
+            else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,order,pixMin,pixMax);
+         }
+      } catch( Exception e ) {
+         error=e.getMessage();
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         flagProcessing=false;
+         return false;
+      }
+      flagProcessing=false;
+      if( moc.isEmpty() ) error="Empty MOC";
       flagOk=true;
       return true;
    }
 
 
-      
+
 }
 
