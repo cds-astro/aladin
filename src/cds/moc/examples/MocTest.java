@@ -55,13 +55,13 @@ public class MocTest {
       long max,min;
       int order;
       
-      System.out.println("SMOC degradation of the half of the coverage shift of one cell");
+      System.out.println("SMOC degradation");
       min = 1;
       max = SMoc.NBVAL_S/2L;
       SMoc moc1 = new SMoc("29/"+min+"-"+max);
-      String ref1 = "0/0-6";
+      String ref1 = "0/0-5 4/1536";
       String s1=null;
-      for( order=29; order>=0; order--) {
+      for( order=29; order>=0; order-=5) {
          moc1.setMocOrder(order);
          s1=moc1.toString();
          System.out.println("order: "+order+" -> "+s1+" range="+moc1.seeRangeList());
@@ -69,13 +69,13 @@ public class MocTest {
       boolean rep=ref1.equals(moc1.toString());
       if( !rep ) System.out.println("MocTest.testDegrade ERROR: \n.get ["+s1+"]\n.ref ["+ref1+"]\n");
          
-      System.out.println("\nTMOC degradation of the half of the coverage shift of one cell");
+      System.out.println("\nTMOC degradation");
       min = 1;
       max = TMoc.NBVAL_T/2L;
       TMoc moc2 = new TMoc("61/"+min+"-"+max);
-      String ref2 = "1/0 2/2";
+      String ref2 = "1/0 11/1024";
       String s2=null;
-      for( order=61; order>=2; order--) {
+      for( order=61; order>=2; order-=10) {
          moc2.setMocOrder(order);
          s2=moc2.toString();
          System.out.println("order: "+order+" -> "+s2+" range="+moc2.seeRangeList());
@@ -83,18 +83,19 @@ public class MocTest {
       rep&=ref2.equals(moc2.toString());
       if( !rep ) System.out.println("MocTest.testDegrade ERROR TMOC: \n.get ["+s2+"]\n.ref ["+ref2+"]\n");
          
-      System.out.println("\nSTMOC degradation of the half of the coverage without the first cell");
+      System.out.println("\nSTMOC degradation");
       min = 1L;
       max = Healpix.pow2(61)/12L;
       long mins = 1L;
       long maxs = Healpix.pow2(29)*Healpix.pow2(29);
-      STMoc moc3 = new STMoc("t3/0-1 s0/1-3 t3/2 s0/2-6");
-      String ref3 = "1/0";
+      STMoc moc3 = new STMoc("t3/0-1 s3/1-3 t3/2 s3/2-5");
+      String ref3 = "t1/0 s0/0";
       String s3=null;
-      for( order=61; order>=1; order--) {
-         moc3.setMocOrder1(order);
+      int sorder=3;
+      for( order=61; order>=1; order-=20, sorder--) {
+         moc3.setMocOrder(order, sorder);
          s3=moc3.toString();
-         System.out.println("order: "+order+" -> "+s3+" range="+moc3.seeRangeList());
+         System.out.println("torder:"+order+",sorder="+sorder+" -> "+s3+" range="+moc3.seeRangeList());
       }
       rep&=ref3.equals(moc3.toString());
       if( !rep ) System.out.println("MocTest.testDegrade ERROR TMOC: \n.get ["+s3+"]\n.ref ["+ref3+"]\n");
@@ -1163,18 +1164,17 @@ public class MocTest {
       boolean ok=true;
       
       try {
-         
          Moc.setMocOrderLogic( Moc.LOGIC_MAX );
          
-         ok&=testDegrade();
+//         ok&=testDegrade();
 //         ok&=testBasicSTMoc();
 //         ok&=testIteratorSTMoc();
 //         ok&=testOperationSTMoc();
-//         
-//         ok&=testFITS();
-//         ok&=testFITSTMoc();
-//         ok&=testFITSSTMoc();
-//         
+         
+         ok&=testFITS();
+         ok&=testFITSTMoc();
+         ok&=testFITSSTMoc();
+         
 //         ok&=testJSON();
 //         ok&=testASCII();
 //         ok&=testSTRING();
@@ -1196,8 +1196,8 @@ public class MocTest {
 //         ok&=testSyscompatibility();
 //         ok&=testHashCode();
 //         ok&=testComplement();
-         
-         
+//         
+//         
 //         testSpeedSTMoc();
          
          

@@ -40,8 +40,6 @@ public abstract class Moc1D extends Moc {
    private int biggestOrder;         // Biggest order used during the Moc generation, -1 if undefined
    private int currentOrder;         // last current order during the Moc generation
    
-   private int cacheHashCode;        // last computed hashcode
-   
    private long [] buf=null;         // Internal buffer to speed up iterative insertions (see bufferOn())    
    private int bufSz=0;              // Current size of the internal buffer
    
@@ -508,7 +506,7 @@ public abstract class Moc1D extends Moc {
          
          // no value => probably the terminal order (ex: 28/)
          if( s1.trim().length()==0 ) {
-            if( mocOrder!=-1 && mocOrder!=currentOrder) throw new Exception("MocOrder already specified ("+mocOrder+") => ignored ["+s1+"]");
+            if( mocOrder!=-1 && mocOrder!=currentOrder) throw new Exception("MocOrder already specified ("+mocOrder+") => ignored ["+currentOrder+"]");
             setMocOrder( currentOrder );
             return;
          }

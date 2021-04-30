@@ -55,12 +55,8 @@ public class TMoc extends Moc1D {
       super.clone1( moc );
    }
    
-   /** Create and instance of same class (no data but same mocOrder), but no data nor properties) */
-   public TMoc dup() {
-      TMoc moc = new TMoc();
-      moc.mocOrder = mocOrder;
-      return moc;
-   }
+   /** Create and instance of same class, same sys, but no data nor mocorder */
+   public TMoc dup() { return new TMoc(); }
    
    /** Return the number of bytes used for coding each FITS value (8 for long) */
    public int sizeOfCoding() { return 8; }

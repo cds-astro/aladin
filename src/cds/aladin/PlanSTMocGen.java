@@ -108,7 +108,7 @@ public class PlanSTMocGen extends PlanSTMoc {
       long min = (long)(jdmin*TMoc.DAYMICROSEC);
       long max = (long)(jdmax*TMoc.DAYMICROSEC)+1L;
       r.append(min, max, m1.seeRangeList());
-      try { moc = new STMoc(timeOrder<0?SMoc.MAXORD_S:timeOrder, spaceOrder==-1?m1.getMocOrder():spaceOrder);
+      try { moc = new STMoc(timeOrder<0?TMoc.MAXORD_T:timeOrder, spaceOrder==-1?m1.getMocOrder():spaceOrder);
       } catch( Exception e1 ) { e1.printStackTrace(); }
       moc.setRangeList(r);
       flagOneRange=true;

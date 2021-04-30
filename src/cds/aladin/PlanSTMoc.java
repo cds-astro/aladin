@@ -403,10 +403,18 @@ public class PlanSTMoc extends PlanTMoc {
             try {
                th = new TMoc();
                th.add(TMoc.MAXORD_T,r.start,r.end-1L);
-               sh = ((STMoc)moc).getSpaceMoc(r.start, r.end-1L);
+               STMoc m = (STMoc) moc;
+
+               // Si trop lourd, on prend en altervative le MocLow précalculé
+               if( !select && m.getNbCells()>10000 && r.order<=30 ) {
+                  STMoc m1 = (STMoc) getLastLowMoc();
+                  if( m1!=null)  m = m1;
+               }
+
+               sh = m.getSpaceMoc(r.start, r.end-1L);
                trouve=true;
-//               System.out.println("inTimeView: tmoc="+th.seeRangeList()+" smoc="+sh.toDebug());
-               
+               //  System.out.println("inTimeView: tmoc="+th.seeRangeList()+" smoc="+sh.toDebug());
+
                // Je clique sur une zone non sélectionné => je change la sélection
                // sinon je change (ou j'étends) la sélection
                if( select ) {

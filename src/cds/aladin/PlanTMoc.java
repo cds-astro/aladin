@@ -244,7 +244,7 @@ public class PlanTMoc extends PlanMoc {
       
       Iterator<long[]> it = lowMoc.jdIterator(tmin, tmax);
       ArrayList<MyRect> a = new ArrayList<>();
-      while( it.hasNext() ) a.add( computeRectangle(plot, it.next()) );
+      while( it.hasNext() ) a.add( computeRectangle(plot, drawingOrder,it.next()) );
       
       // Tracé en aplat avec demi-niveau d'opacité
       if( flagfillIn && g instanceof Graphics2D ) {
@@ -274,12 +274,15 @@ public class PlanTMoc extends PlanMoc {
    
    protected int getTimeStackIndex() { return timeStackIndex; }
    
-   private MyRect computeRectangle(Plot plot, long [] range ) {
+   private MyRect computeRectangle(Plot plot, int drawingOrder, long [] range ) {
       MyRect r = new MyRect();
       
       // Mémorisation des bornes en microsec
       r.start = range[0];   // inclus
       r.end = range[1];     // exclus
+      
+      // Mémorisation du order associé
+      r.order=drawingOrder;
       
       Coord c = new Coord();
       
@@ -307,6 +310,7 @@ public class PlanTMoc extends PlanMoc {
    class MyRect extends RectangleD {
       long start;
       long end;
+      int order;
       MyRect() { super(); }
       MyRect(double x, double y, double w, double h) { super(x,y,w,h); }
    }

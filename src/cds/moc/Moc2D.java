@@ -198,8 +198,8 @@ public abstract class Moc2D extends Moc{
       if( !(moc instanceof Moc2D) ) throw new CloneNotSupportedException("Uncompatible type of MOC for clone. Must derived from Moc2D");
       super.clone1( moc );
       Moc2D m = (Moc2D)moc;
-      m.protoDim1 = (Moc1D)protoDim1.dup();
-      m.protoDim2 = (Moc1D)protoDim2.dup();
+      m.protoDim1 = (Moc1D)protoDim1.clone();
+      m.protoDim2 = (Moc1D)protoDim2.clone();
       m.range= (range==null) ? null : new Range2(range);
    }
    

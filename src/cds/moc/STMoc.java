@@ -12,6 +12,8 @@ import java.io.OutputStream;
  *
  */
 public class STMoc extends Moc2D {
+   
+   private static boolean PROTOSTMOC = false;   // Compatibility with proto STMOC
 
    /** STMoc creator */
    public STMoc() {
@@ -22,10 +24,9 @@ public class STMoc extends Moc2D {
     * @param spaceOrder MocOrder for space dimension [0..29]
     * @param timeOrder MocOrder for time dimension [0..61]
     */
-   public STMoc( int spaceOrder, int timeOrder) throws Exception {
+   public STMoc( int timeOrder, int spaceOrder) throws Exception {
       this();
-      setTimeOrder(timeOrder);
-      setSpaceOrder(spaceOrder);
+      setMocOrder(timeOrder, spaceOrder);
    }
    
   /** STMoc creator
@@ -57,13 +58,8 @@ public class STMoc extends Moc2D {
       super.clone1( moc );
    }
    
-   /** Create and instance of same class (no data but same mocOrder), but no data nor properties) */
-   public STMoc dup() { 
-      STMoc m = new STMoc();
-      m.protoDim1 = (Moc1D) protoDim1.dup();
-      m.protoDim2 = (Moc1D) protoDim2.dup();
-      return m;
-   }
+   /** Create and instance of same class, same sys, but no data nor mocorder */
+   public STMoc dup() { return new STMoc(); }
    
    
    /******************************** Pour la migration d'Aladin et du MocServer ***********************************/
@@ -230,8 +226,7 @@ public class STMoc extends Moc2D {
    
    /** Return the complement */
    public STMoc complement() throws Exception {
-//      STMoc moc = new STMoc(  getTimeOrder() , getSpaceOrder());
-      STMoc moc = dup();
+      STMoc moc = new STMoc(  getTimeOrder() , getSpaceOrder());
       moc.add("t0/0 s0/0-11");
       return moc.subtraction(this);
    }
@@ -255,9 +250,9 @@ public class STMoc extends Moc2D {
       byte [] buf = new byte[ 8 ];
       int size = 0;
       for( int i=0; i<range.sz; i+=2 ) {
-         long tmin = -range.r[i];
+         long tmin = codeTime(range.r[i]);
          size+=writeVal(out,tmin,buf);
-         long tmax = -range.r[i+1];
+         long tmax = codeTime(range.r[i+1]);
          size+=writeVal(out,tmax,buf);
 
          // Si le prochain Moc dim2 est 
@@ -303,6 +298,7 @@ public class STMoc extends Moc2D {
             timeOrder  = header.getIntFromHeader("MOCORDER")*2+3;
             spaceOrder = header.getIntFromHeader("MOCORD_1");
          }
+         PROTOSTMOC=true;
       }
       
       setTimeOrder(timeOrder);
@@ -313,6 +309,21 @@ public class STMoc extends Moc2D {
       createSTmocByFits((naxis1*naxis2)/nbyte,buf);
    }
    
+   static public long MASK_T = 1L<<63;
+   static public long UNMASK_T = ~MASK_T;
+
+   static private boolean isTime(long a)  {
+      if( PROTOSTMOC ) return a<0;
+      return (a&MASK_T)!=0L;
+   }
+   
+   static private long codeTime(long a)  { return a|MASK_T; }
+   
+   static private long decodeTime(long a) {
+      if( PROTOSTMOC ) return -a;
+      return a&UNMASK_T;
+   }
+
    /** Create STMoc from the list of fits values */
    private void createSTmocByFits(int nval,byte [] t) throws Exception {
       int i=0;
@@ -326,7 +337,7 @@ public class STMoc extends Moc2D {
          long max = readLong(t,i+8);
          
          // Temporal list ? (negative values)
-         if( min<0 ) {
+         if( isTime(min) ) {
             
             // Assignments of the previous spatial indices to the corresponding time intervals (no copy)
             if( !m.isEmpty() ) {
@@ -339,7 +350,7 @@ public class STMoc extends Moc2D {
             }
             
             // Memorization of the temporal range
-            range.append( -min, -max, null);
+            range.append( decodeTime(min), decodeTime(max), null);
 
          //  Spatial list
          } else m.append(min,max);

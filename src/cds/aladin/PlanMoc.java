@@ -439,7 +439,6 @@ public class PlanMoc extends PlanBGCat {
          if( co==null || co.al==0 && co.del==0  ) {
             try {
                MocCell cell = moc.iterator().next();
-//               long nside = CDSHealpix.pow2(cell.getOrder());
                double res[] = CDSHealpix.pix2ang_nest(cell.order, cell.start);
                double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
                co = Localisation.frameToFrame( new Coord(radec[0],radec[1]) , frameOrigin, Localisation.ICRS);
@@ -470,10 +469,10 @@ public class PlanMoc extends PlanBGCat {
    protected void resetProj(int n) { }
    protected boolean isDrawn() { return true; }
 
-   // Fournit le MOC qui couvre le champ de vue courant
-   protected Moc getViewMoc(ViewSimple v,int order) throws Exception {
-      return v.getMoc(order);
-   }
+//   // Fournit le MOC qui couvre le champ de vue courant
+//   protected Moc getViewMoc(ViewSimple v,int order) throws Exception {
+//      return v.getMoc(order);
+//   }
 //   protected SMoc getViewMoc(ViewSimple v,int order) throws Exception {
 //      Coord center = getCooCentre(v);
 //      long [] pix = getPixList(v,center,order);
@@ -565,6 +564,8 @@ public class PlanMoc extends PlanBGCat {
       if( mo<3 ) mo=3;
       order = getLowOrder(order,gapOrder);
       
+      lastLowMoc=null;
+      
       // Pour les petits champs, on travaille sans cache, en découpant le MOC à la bonne
       // résolution et à la bonne taille.
       if( v.getTaille()<20 ) {
@@ -607,6 +608,7 @@ public class PlanMoc extends PlanBGCat {
       } else isLoading=false;
 
       lastOrderDrawn = order;
+      lastLowMoc = arrayMoc[order];
       return arrayMoc[order];
    }
    
@@ -720,6 +722,9 @@ public class PlanMoc extends PlanBGCat {
    
    private SMoc lastDrawMoc=null;
    protected SMoc getLastDrawMoc() { return lastDrawMoc; }
+   
+   private Moc lastLowMoc=null;
+   protected Moc getLastLowMoc() { return lastLowMoc; }
 
    protected void drawInSpaceView(Graphics g, ViewSimple v) {
       if( moc==null ) return;

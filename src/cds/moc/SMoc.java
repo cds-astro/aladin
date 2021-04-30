@@ -62,10 +62,9 @@ public class SMoc extends Moc1D {
       super.clone1( moc );
    }
       
-   /** Create and instance of same class (no data but same mocorder and sys) */
+   /** Create and instance of same class, same sys, but no data nor mocorder */
    public SMoc dup() {
       SMoc moc = new SMoc();
-      moc.mocOrder = mocOrder;
       moc.altCoosys=altCoosys;
       return moc;
    }

@@ -411,6 +411,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
       
       if( mode==FITS ) readFITS(in);
       else readASCII(in); 
+      resetCache();
    }
 
    /** Read MOC from an JSON stream */
@@ -427,6 +428,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
          add(s);
       }
       add(null);   // nécessaire, notamment pour STMOC
+      resetCache();
    }
    
    /** Read MOC from an Binary FITS stream */
@@ -449,6 +451,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
          }
 
          readSpecificData( in, naxis1,naxis2, nbyte, header);
+         resetCache();
       } catch( EOFException e ) { }
    }
    

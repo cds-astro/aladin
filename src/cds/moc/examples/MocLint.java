@@ -452,6 +452,9 @@ public class MocLint {
             Range prev_sr = null;                            // Last Space coverage
             Range sr = new Range();                          // Current space coverage
             
+            long MASK_T = 1L<<63;
+            long UNMASK_T = ~MASK_T;
+
             int mode=0;   // parsing mode: 0-time start, 1-time end, 2-space start, 3-space end
             int omode=-1; // previous parsing mode
             
@@ -490,7 +493,8 @@ public class MocLint {
                   // in time range
                   if( i<2 || mode<2 ) {
                      if( val >= 0 ) e+=error(out,"[5.2]: val error in row " + i+ " ["+val+"]. Time range must be coded as negative value");
-                     val = -val;
+//                     val = -val;
+                     val = val & UNMASK_T;
                      if( mode==0 && val >= maxt ) e+=error(out,"[3.2]: time val too high in row " + i+ " ["+val+">=2^62-1]");
                      if( mode==1 && val >  maxt ) e+=error(out,"[3.2]: time val too high in row " + i+ " ["+val+">2^62-1]");
                      
