@@ -23,8 +23,8 @@ package cds.aladin;
 
 import java.util.Iterator;
 
-import cds.moc.Range;
 import cds.moc.TMoc;
+import cds.tools.Util;
 
 /** Generation d'un plan TMOC à partir d'une liste de plans (Catalogue) 
  * @author P.Fernique [CDS]
@@ -57,21 +57,62 @@ public class PlanTMocGen extends PlanTMoc {
    
    
    /** Ajustement d'une valeur à l'ordre indiquée */
-   public long getVal(long val, int order) {
-      if( order==TMoc.MAXORD_T ) return val;
-      int deltaOrder = (TMoc.MAXORD_T - order)<< (TMoc.FACT_T/2);
-      val = (val>>>deltaOrder) << deltaOrder;
-      return val;
-   }
+//   public long getVal(long val, int order) {
+//      if( order==TMoc.MAXORD_T ) return val;
+//      int deltaOrder = (TMoc.MAXORD_T - order)<< (TMoc.FACT_T/2);
+//      val = (val>>>deltaOrder) << deltaOrder;
+//      return val;
+//   }
    
+//   // Ajout d'un plan catalogue au moc en cours de construction
+//   private void addMocFromCatalog(TMoc moc,Plan p1,double duration) {
+//      long t0,t1;
+//      t0=System.currentTimeMillis();
+//      Iterator<Obj> it = p1.iterator();
+//      int m= p1.getCounts();
+//      double incrPourcent = gapPourcent/m;
+//      long [] buf = new long[ m*2];
+//      int n=0;
+//      int order = moc.getMocOrder();
+//      while( it.hasNext() ) {
+//         Obj o = it.next();
+//         if( !(o instanceof Position) ) continue;
+//         if( m<100 ) pourcent+=incrPourcent;
+//         try {
+//            double jdtime = ((Position)o).jdtime;
+//            if( Double.isNaN( jdtime ) ) continue;
+////            moc.add(jdtime, jdtime+ duration/86400.);
+//            long start = (long)(jdtime*TMoc.DAYMICROSEC);
+//            long end = (long)( (jdtime+ duration/86400.) *TMoc.DAYMICROSEC);
+//            buf[n++]=getVal(start,order);
+//            buf[n++]=getVal(end,order)+1L;            
+//            
+//         } catch( Exception e ) {
+//            if( aladin.levelTrace>=3 ) e.printStackTrace();
+//         }
+//      }
+//      try {
+//         Range range = new Range(buf,n);
+//         range.sortAndFix();
+//         moc.setRangeList( range );
+//         
+////         moc.toMocSet();
+//      } catch( Exception e ) {
+//         if( aladin.levelTrace>=3 ) e.printStackTrace();
+//      }
+//      t1 =System.currentTimeMillis();
+//      aladin.trace(4,"TMOC created in "+Util.getTemps((t1-t0)*1000L)+" ("+m+" sources)");
+//   }
+
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(TMoc moc,Plan p1,double duration) {
+      long t0,t1;
+      t0=System.currentTimeMillis();
       Iterator<Obj> it = p1.iterator();
       int m= p1.getCounts();
       double incrPourcent = gapPourcent/m;
-      long [] buf = new long[ m*2];
-      int n=0;
-      int order = moc.getMocOrder();
+      moc.clear();
+      moc.bufferOn(10000);
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
@@ -79,32 +120,25 @@ public class PlanTMocGen extends PlanTMoc {
          try {
             double jdtime = ((Position)o).jdtime;
             if( Double.isNaN( jdtime ) ) continue;
-//            moc.add(jdtime, jdtime+ duration/86400.);
-            long start = (long)(jdtime*TMoc.DAYMICROSEC);
-            long end = (long)( (jdtime+ duration/86400.) *TMoc.DAYMICROSEC);
-            buf[n++]=getVal(start,order);
-            buf[n++]=getVal(end,order)+1L;            
+            moc.add(jdtime, jdtime+ duration/86400.);
             
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
-      try {
-         Range range = new Range(buf,n);
-         range.sortAndFix();
-         moc.setRangeList( range );
-         
-//         moc.toMocSet();
-      } catch( Exception e ) {
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-      }
+      moc.bufferOff();
+      t1 =System.currentTimeMillis();
+      aladin.trace(4,"TMOC created in "+Util.getTemps((t1-t0)*1000L)+" ("+m+" sources)");
    }
 
 
    protected boolean waitForPlan() {
-//      for( int order=6; order<=20; order+=2 ) {
-//         for( int i=0; i<5; i++ ) {
+      
+      // Pour des benchs
+//      for( int order=15; order<=43; order+=4 ) {
+//         for( int i=0; i<3; i++ ) {
 //            long t0 = System.currentTimeMillis();
+            
             try {
                moc = new TMoc();
                if( order!=-1) ((TMoc)moc).setMocOrder(order);
@@ -122,8 +156,23 @@ public class PlanTMocGen extends PlanTMoc {
             }
             flagProcessing=false;
             if( moc.isEmpty() ) error="Empty TMOC";
+            
 //            long t1 = System.currentTimeMillis();
-//            Aladin.trace(3,"MOC 'order="+moc.getMocOrder()+" built in "+(t1-t0)+"ms nb cells="+moc.getSize()+" mem="+moc.getMem());
+//            if( i==2 ) {
+//               try {
+//                  File f = File.createTempFile("toto", "titi");
+//                  FileOutputStream fo = new FileOutputStream(f);
+//                  moc.writeFITS(fo);
+//                  fo.close();
+//                  long sizeFits = f.length();
+//                  Aladin.trace(3,"TMOC 'order="+((TMoc)moc).getMocOrder()+" built in "+(t1-t0)
+//                        +"ms nbRanges="+moc.getNbRanges()
+//                        +" RAM="+Util.getUnitDisk( moc.getMem())
+//                        +" FITS="+Util.getUnitDisk(sizeFits )
+//                        );
+//               } catch( Exception e ) {}
+//            }
+//            
 //         }
 //      }
       flagOk=true;

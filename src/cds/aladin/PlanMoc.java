@@ -123,11 +123,12 @@ public class PlanMoc extends PlanBGCat {
       SMoc m = (SMoc)moc;
       double cov = m.getCoverage();
       ADD( buf, "\n* Space: ",Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
-      ADD( buf, "\n* Best ang.res: ",Coord.getUnit(m.getAngularRes()));
+      ADD( buf, "\n* Resolution: ",Coord.getUnit(m.getAngularRes()));
       
       int order = m.getMocOrder();
       int drawOrder = getDrawOrder();
-      ADD( buf,"\n","* SMOC order: "+ (drawOrder==-1 ? order : order==drawOrder ? order+"" : "draw:"+drawOrder+"/"+order) );
+      ADD( buf,"\n","* Order: "+ (drawOrder==-1 ? order : order==drawOrder ? order+"" : "draw:"+drawOrder+"/"+order) );
+      ADD( buf,"\n \nRAM: ",Util.getUnitDisk( moc.getMem() ) );
    }
 
    /** Changement de référentiel si nécessaire */
@@ -401,6 +402,23 @@ public class PlanMoc extends PlanBGCat {
    
    // Pas de MOc à charger pour un plan Moc
    protected void planReadyMoc() {}
+   
+
+   // Lecture du MOC, avec son entête FITS si possible
+   protected void readMoc(Moc moc, MyInputStream dis ) throws Exception {
+      
+      if(  (dis.getType() & MyInputStream.FITS)!=0 ) {
+         // Lecture de l'entete Fits en se préparant pour reprendre le flux
+         dis.mark(10000);
+         headerFits = new FrameHeaderFits(this,dis);
+         headerFits = new FrameHeaderFits(this,dis);   // On veut la deuximème HDU
+
+         // puis reprise de la lecture complete
+         dis.reset();
+         moc.readFITS(dis);
+         
+      } else moc.readASCII(dis);
+   }
 
    protected boolean waitForPlan() {
       if( dis!=null ) {
@@ -408,8 +426,7 @@ public class PlanMoc extends PlanBGCat {
          try {
             if( moc==null && dis!=null ) {
                moc = new SMoc();
-               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFITS(dis);
-               else moc.readASCII(dis);
+               readMoc(moc,dis);
             }
             String c = ((SMoc)moc).getSys();
             frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;

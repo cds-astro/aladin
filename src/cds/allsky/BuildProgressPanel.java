@@ -29,11 +29,9 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 
-import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.border.Border;
 
 import cds.aladin.prop.PropPanel;
 import cds.fits.CacheFits;
@@ -97,7 +95,7 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+"+"+nbEmptyTile+"/"+nbCells+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - avg.proc.time: "+Util.getTemps(avgTime)+" ["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"]";
+          + " - avg.proc.time: "+Util.getTemps(avgTime*1000L)+" ["+Util.getTemps(minTime*1000L)+" .. "+Util.getTemps(maxTime*1000L)+"]";
       setLowTileStat(s);
    }
    
@@ -111,7 +109,7 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - avg.proc.time: "+Util.getTemps(avgTime);
+          + " - avg.proc.time: "+Util.getTemps(avgTime*1000L);
       setNodeTileStat(s);
    }
    
@@ -121,9 +119,9 @@ public class BuildProgressPanel extends JPanel {
 
    protected void setTimeStat(long time,long nbTilesPerMin,long tempsTotalEstime) {
       StringBuilder s = new StringBuilder();
-      if( time!=-1 )  s.append((tempsTotalEstime>0?"running ":"")+Util.getTemps(time,true));
+      if( time!=-1 )  s.append((tempsTotalEstime>0?"running ":"")+Util.getTemps(time*1000L));
       if(  time>5000 && tempsTotalEstime>0 ) s.append(" - "+nbTilesPerMin+" tiles/mn");
-      if( time>20000 && tempsTotalEstime>0 ) s.append(" - ends in "+Util.getTemps(tempsTotalEstime,true));
+      if( time>20000 && tempsTotalEstime>0 ) s.append(" - ends in "+Util.getTemps(tempsTotalEstime*1000L));
       setTimeStat(s+"");
    }
    

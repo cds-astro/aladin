@@ -44,6 +44,22 @@ public abstract class Moc2D extends Moc{
       clear();
    }
    
+   public String toDebug() {
+      String so1 = ""+getMocOrder1();
+      if( protoDim1.mocOrder==-1 ) so1 = "("+so1+")"; 
+      char c1= Character.toUpperCase( cDim1() );
+      String so2 = ""+getMocOrder2();
+      if( protoDim2.mocOrder==-2 ) so2 = "("+so2+")"; 
+      char c2= Character.toUpperCase( cDim2() );
+      return (c1+"")+(c2+"")
+            +"MOC mocOrder="+so1+"/"+so2
+//            +" deepestOrder="+getDeepestOrder()
+            +" nbRanges="+getNbRanges()
+            +" nbCells="+getNbCells()
+            +" mem="+getUnitDisk( getMem());
+  }
+   
+   
    /** Return the deepest possible order for the first dimension (ex: 61 for TMoc) */
    public int maxOrder1()   { return protoDim1.maxOrder(); }
    
@@ -83,14 +99,14 @@ public abstract class Moc2D extends Moc{
      
       if( order1!=-1 || order2!=-1 ) {
          // If the Moc order was not yet defined, it was assumed to be at the best resolution
-         if( protoDim1.mocOrder==-1 ) protoDim1.mocOrder=protoDim1.maxOrder();
-         if( protoDim2.mocOrder==-1 ) protoDim2.mocOrder=protoDim2.maxOrder();
+         if( order1!=-1 && protoDim1.mocOrder==-1 ) protoDim1.mocOrder=protoDim1.maxOrder();
+         if( order2!=-1 && protoDim2.mocOrder==-1 ) protoDim2.mocOrder=protoDim2.maxOrder();
 
          // If the new mocOrder is smaller than the previous one, 
          // the cells must be aggregated according to the change in resolution
          if( order1<protoDim1.mocOrder || order2<protoDim2.mocOrder ) {
-            int shift1 = protoDim1.maxOrder() - order1;
-            int shift2 = protoDim2.maxOrder() - order2;
+            int shift1 = order1==-1 ? 0 : protoDim1.maxOrder() - order1;
+            int shift2 = order2==-1 ? 0 : protoDim2.maxOrder() - order2;
             range = range.degrade( shift1 * protoDim1.shiftOrder(), shift2 * protoDim2.shiftOrder() ); 
             resetCache();
          }
@@ -118,7 +134,14 @@ public abstract class Moc2D extends Moc{
    public long getEnd2(int order, long val) { return protoDim2.getEnd(order,val); }
    
    public void add(long val1, long val2, Range r) {
+      int mocOrder1 = protoDim1.mocOrder;
+      if( mocOrder1!=-1 ) {
+         int shift = (maxOrder1()-mocOrder1) * shiftOrder1();
+         val1 = (val1>>>shift ) << shift;
+         val2   = (((val2>>>shift )+1L)   << shift) -1L;
+      }
       range.add(val1, val2+1L, r);
+      resetCache();
    }
    
    /** Add one cell to the Moc2D.
@@ -142,7 +165,7 @@ public abstract class Moc2D extends Moc{
       int shift;
       
       // FIRST dimension
-      int mocOrder1 = getMocOrder1();
+      int mocOrder1 = protoDim1.mocOrder;
       
       // Do we have to degrade the order/val (if mocOrder is smaller than the order) ?
       if( mocOrder1!=-1 && mocOrder1<order1 ) {
@@ -157,7 +180,7 @@ public abstract class Moc2D extends Moc{
       long end1 =  (lastVal1+1L)<<shift;
       
       // SECOND dimension
-      int mocOrder2 = getMocOrder2();
+      int mocOrder2 = protoDim2.mocOrder;
       
       // Do we have to degrade the order/val (if mocOrder is smaller than the order) ?
       if( mocOrder2!=-1 && mocOrder2<order2 ) {
@@ -247,6 +270,26 @@ public abstract class Moc2D extends Moc{
       range = new Range2();
    }
    
+   /** Degrades the resolution(s) of the MOC until the RAM size of the MOC is reduced under the specified maximum (expressed in bytes). */
+   public void reduction( long maxSize) throws Exception { reduction( maxSize, null); }
+   
+   /** Degrades the resolution(s) of the MOC until the RAM size of the MOC is reduced under the specified maximum (expressed in bytes).
+    * @param maxMB size max in MB
+    * @param priority Indicates the dimensions to be degraded as a priority in the form of a list of the dimension's signature characters
+    *                 ex: "t" for time only, "s" space only, "st"-both alternatively, space first (default), "ttts", ...
+    */
+   public void reduction( long maxMB, String priority) throws Exception { 
+      if( maxMB<=0 ) throw new Exception("negative or null size not allowed");
+      if( priority==null || priority.trim().length()==0 ) { priority=(cDim2()+"")+(cDim1()+""); }
+      while( getMem()>maxMB && (getMocOrder1()>0 || getMocOrder2()>0) ) {
+         char c = priority.charAt(0);
+         if( c==cDim1() && getMocOrder1()>0 ) setMocOrder1( getMocOrder1()-1 );
+         else if( c==cDim2() && getMocOrder2()>0 ) setMocOrder2( getMocOrder2()-1 );
+         else throw new Exception("Unknown MOC signature ["+c+"]");
+         priority = priority.substring(1)+(c+"");
+      }
+   }
+   
    /** Generic operations: 0-union, 1-intersection, 2-subtraction */
    protected Moc2D operation(Moc moc, int op) throws Exception {
       Moc2D m = (Moc2D)moc;
@@ -260,9 +303,10 @@ public abstract class Moc2D extends Moc{
          case 1 : res.range = range.intersection(m.range); break;
          case 2 : res.range = range.difference(m.range);   break;
       }
+      res.range.trimSize();
       return res;
    }
-
+   
    /** Write MOC to an output stream in bASCII serialization */
    public void writeASCII(OutputStream out) throws Exception {
       if( isEmpty() ) return;

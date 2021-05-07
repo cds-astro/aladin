@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -68,14 +69,14 @@ import java.util.StringTokenizer;
  * of a MOC with the IVOA MOC 2.0 standard as well as its previous versions (1.1 and 1.0).
  * 
  * @author Pierre Fernique [CDS]
- * @version 10.0 - April 2021 - full refactoring
+ * @version 6.0 - April 2021 - full refactoring
  * @version 0.9 to 5 - 2011 to 2017 - predecessors
  *
  */
 public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Moc>{
    
    /** MOC API version number */
-   static public final String VERSION = "10.0";
+   static public final String VERSION = "6.0";
 
    /** MOC serialization formats */
    static private final int UNKNOWN  = -1;         // Formar inconnu
@@ -193,12 +194,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
       catch( Exception e) { return null; }
    }
       
-   public String toDebug() {
-      String s = toString();
-      if( s.length()>80 ) s = s.substring(0,76)+"...";
-      s=s.replace(Moc1D.CR," ");
-      return s;
-   }
+   public abstract String toDebug();
    
    /** Add a list of MOC elements provided in a string format (ASCII format or JSON format)
     * ex basic ASCII:   order1/npix1-npix2 npix3 ... order2/npix4 ...
@@ -223,6 +219,9 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
       cacheDeepestOrder=-1;
       cacheHashCode=-1;
    }
+   
+   /** Degrades the resolution(s) of the MOC until the RAM size of the MOC is reduced under the specified maximum (expressed in bytes). */
+   public abstract void reduction( long maxSize) throws Exception;
    
    /** Return true if the Moc is empty (no coverage) */
    public abstract boolean isEmpty();
@@ -546,8 +545,26 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
       int o1 = s.charAt(0)=='[' ? 1:0;
       int o2 = s.charAt(n-1)==']' ? n-1 : n;
       return s.substring(o1,o2);
-      
    }
+   
+   static final public String unites[] = {"B","KB","MB","GB","TB","PB","EB","ZB"};
+   static final public String getUnitDisk(long val) { return getUnitDisk(val, 0, 2); }
+   static final public String getUnitDisk(long val, int unit, int format) {
+      long div,rest=0;
+      boolean neg=false;
+      if( val<0 ) { neg=true; val=-val; }
+      while (val >= 1024L && unit<unites.length-1) {
+         unit++;
+         div = val / 1024L;
+         rest = val % 1024L;
+         val=div;
+      }
+      NumberFormat nf = NumberFormat.getInstance();
+      nf.setMaximumFractionDigits(format);
+      double x = val+rest/1024.;
+      return (neg?"-":"")+nf.format(x)+unites[unit];
+   }
+
    
    /******************************************** ASCII writers  ***************************************************************/
 
@@ -690,7 +707,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
       out.write( getFitsLine("TFIELDS","1") ); n+=80;
       out.write( getFitsLine("TFORM1",nbytes==4 ? "1J" : "1K") ); n+=80;
       
-      out.write( getFitsLine("MOCVERS","2.0","MOC version") );    n+=80;      
+      out.write( getFitsLine("MOCVERS","2.0","MOC version",true) );    n+=80;      
       n+=writeSpecificFitsProp( out );
       out.write( getFitsLine("MOCTOOL","CDSjavaAPI-"+SMoc.VERSION,"Name of the MOC generator") );    n+=80;      
 
@@ -795,7 +812,8 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
     * @param comment The commend, or null
     * @return the 80 character FITS line
     */
-   static protected byte [] getFitsLine(String key, String value, String comment) {
+   static protected byte [] getFitsLine(String key, String value, String comment) { return getFitsLine(key,value,comment,false); }
+   static protected byte [] getFitsLine(String key, String value, String comment, boolean forceStringMode) {
       int i=0,j;
       char [] a;
       byte [] b = new byte[80];
@@ -811,7 +829,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
          a = value.toCharArray();
 
          // Numeric value => right align
-         if( !isFitsString(value) ) {
+         if( !forceStringMode && !isFitsString(value) ) {
             for( j=0; j<20-a.length; j++)  b[i++]=(byte)' ';
             for( j=0; i<80 && j<a.length; j++,i++) b[i]=(byte)a[j];
 
@@ -879,7 +897,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
       if( s.length()==0 ) return true;
       char c = s.charAt(0);
       if( s.length()==1 && (c=='T' || c=='F') ) return false;   // boolean
-      if( !Character.isDigit(c) && c!='.' && c!='-' && c!='+' ) return true;
+      if( !Character.isDigit(c) && c!='.' && c!='-' && c!='+' && c!='E' && c!='e' ) return true;
       try {
          Double.valueOf(s);
          return false;

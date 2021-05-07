@@ -747,8 +747,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Plan MultiExtension
       // Bouton de recuperation de visualisation du header FITS
-      if( plan instanceof PlanFolder  && ((PlanFolder)plan).headerFits!=null ||
-            plan instanceof PlanCatalog && ((PlanCatalog)plan).headerFits!=null ) {
+      if( plan.headerFits!=null 
+            && (plan instanceof PlanFolder|| plan instanceof PlanCatalog ) ) {
          PropPanel.addCouple(p,"Fits extension", b=new JButton(SEEFITS), g,c);
          b.addActionListener(this);
       }
@@ -766,9 +766,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          // Format d'image
          JLabel fmtl = new JLabel(
                plan instanceof PlanHealpix ? "HEALPix map" :
-               plan instanceof PlanSTMoc ?   "Space Time Multi-Order Coverage map (STMOC)" :
-               plan instanceof PlanTMoc ?    "Temporal Multi-Order Coverage map (TMOC)" :
-               plan instanceof PlanMoc ?     "Spatial Multi-Order Coverage map (MOC)" :
+               plan instanceof PlanSTMoc ?   "Space Time MOC (STMOC)" :
+               plan instanceof PlanTMoc ?    "Temporal MOC (TMOC)" :
+               plan instanceof PlanMoc ?     "Spatial MOC (MOC)" :
                plan instanceof PlanBG ?      "Hierarchical Progressive Survey (HiPS)" :
                         PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
@@ -1058,17 +1058,15 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
             PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(((SMoc)pmoc.getMoc()).getAngularRes())
                   +" (order="+((SMoc)pmoc.getMoc()).getMocOrder()+")"),g,c);
-            
-            if( Aladin.BETA ) {
-               if( timeField!=null ) {
-                  PropPanel.addCouple(p,"Time : ", timeField, g,c);
-               } else {
-                  JButton t = new JButton("Range?");
-                  t.addActionListener(new ActionListener() {
-                     public void actionPerformed(ActionEvent e) { createTimeField();  }
-                  });
-                  PropPanel.addCouple(p,"Time",t,g,c);
-               }
+
+            if( timeField!=null ) {
+               PropPanel.addCouple(p,"Time : ", timeField, g,c);
+            } else {
+               JButton t = new JButton("Range?");
+               t.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent e) { createTimeField();  }
+               });
+               PropPanel.addCouple(p,"Time",t,g,c);
             }
          }
 
@@ -1078,7 +1076,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( moc.getTimeMin()) ), g,c);
             PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( moc.getTimeMax()) ), g,c);
             PropPanel.addCouple(p,"Accuracy", new JLabel(
-                  Util.getTemps(  TMoc.getDuration(moc.getMocOrder())/1000L)), g,c);
+                  Util.getTemps(  TMoc.getDuration(moc.getMocOrder()))), g,c);
 //            PropPanel.addCouple(p,"Sum", new JLabel( Util.getTemps(nbSec*1000000, true) ), g,c);
          }
 
@@ -1101,7 +1099,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                   PropPanel.addCouple(p,"Start", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMin()) ), g,c);
                   PropPanel.addCouple(p,"End", new JLabel( Astrodate.JDToDate( timeMoc.getTimeMax()) ), g,c);
                   PropPanel.addCouple(p,"Time Accuracy", new JLabel( 
-                        Util.getTemps(  TMoc.getDuration(timeMoc.getMocOrder())/1000L)), g,c);
+                        Util.getTemps(  TMoc.getDuration(timeMoc.getMocOrder()))), g,c);
                }
                
             } catch( Exception e1 ) {
@@ -1362,7 +1360,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                else  longitudeDescending.setSelected(true);
                plong.add( longitudeAscending );
                plong.add( longitudeDescending );
-               if( Aladin.BETA ) PropPanel.addCouple(p,".longitude", plong, g,c);
+               PropPanel.addCouple(p,".longitude", plong, g,c);
 
             }
          }

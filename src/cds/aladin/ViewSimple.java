@@ -380,7 +380,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
-      view.syncTimeRange(vs);
+      if( vs.isPlotTime() ) view.syncTimeRange(vs);
       vs.syncZoom(-e.getWheelRotation()*mult,coo,false);
    }
 
@@ -1518,8 +1518,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( flagMemo ) pref.memoInfoZoom(this);
       
       // Y a-t-il déjà une vue utilisant ce plan catalogue en référence , ou en simple affichage?
-      ViewSimple otherView = p.isCatalog() ? aladin.view.getView(p) : null;
-      boolean alreadyVisible = p.isCatalog() && p.active &&( otherView==null || !otherView.isPlot());
+      ViewSimple catViewPref = p.isCatalog() ? aladin.view.getView(p) : null;
+      boolean catVisible = p.isCatalog() && p.active && ( catViewPref==null || !catViewPref.isPlot());
+      
+      boolean mocSpaceVisible = p.isSpaceMoc() && view.isVisibleInSpaceView(p,this);
       
       // Changement de plan de référence
       if( pref!=p ) {
@@ -1531,19 +1533,37 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( pref instanceof PlanBG ) northUp=false;
 
-//      if( !p.isCatalog() && isPlot() ) { plot.free(); plot=null; }
       if( !p.isTime() ) { 
          if( plot!=null ) { plot.free(); plot=null; }
-         
+
       } else {
-         if( p.isTimeMoc() ) {
+         
+         // s'il s'agit d'un TMOC, ou d'un STMOC déjà visible dans une vue space  => Je crée une vue temporelle
+         if( p.type==Plan.ALLSKYTMOC || (p.type==Plan.ALLSKYSTMOC && mocSpaceVisible ) ) {
             plot = new Plot(this);
             SwingUtilities.invokeLater(new Runnable() {
                public void run() { plot.adjustPlot(); }
             });
-         } else if( otherView!=null && !otherView.isPlot() || alreadyVisible ) {
+            
+         // S'il s'agit d'un STMOC => ca va dépendre du View, s'il contient déjar un timePlot, j'affiche
+         // la composante temps, sinon spatiale
+         } else if ( p.type==Plan.ALLSKYSTMOC ) {
+            if( this.isPlotTime() ) addPlotTable(p, -1, -1 ,true);
+            
+            
+         // Sinon s'agit peut être d'un ajout de catalogue dans un plot ?
+         } else if( catViewPref!=null && !catViewPref.isPlot() || catVisible ) {
             addPlotTable(p, -1, -1 ,true);
          }
+         
+//         if( p.isTimeMoc() ) {
+//            plot = new Plot(this);
+//            SwingUtilities.invokeLater(new Runnable() {
+//               public void run() { plot.adjustPlot(); }
+//            });
+//         } else if( otherView!=null && !otherView.isPlot() || alreadyVisible ) {
+//            addPlotTable(p, -1, -1 ,true);
+//         }
       }
       
       // Création du controleur de blink s'il s'agit d'un cube
@@ -4747,7 +4767,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          } else imgDx=imgDy=0;
 
-         if( pref.active ) {
+         if( pref!=null && pref.active ) {
             // Ajustements négatifs de la première colonne et ligne de pixel (pixel partiel)
             // A DECOMMENTER SI UTILISATION ANCIENNE METHODE DANS createZoomView()
             //            if( zoom>=1 ) {

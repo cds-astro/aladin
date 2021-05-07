@@ -1810,6 +1810,30 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
       return null;
    }
+   
+   
+   /** Retourne true si le plan est visible dans au moins une vue space autre que celle passée en paramètre */
+   protected boolean isVisibleInSpaceView( Plan p, ViewSimple vc ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
+         if( viewSimple[i].isFree() ) continue;
+         if( viewSimple[i].isPlot() ) continue;
+         if( viewSimple[i]==vc ) continue;
+         if( p.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) return true;
+      }
+      return false;
+   }
+
+   /** Retourne true si le plan est visible dans au moins une vue space */
+   protected boolean isVisibleInTimeView( Plan p ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
+         if( viewSimple[i].isFree() ) continue;
+         if( !viewSimple[i].isPlotTime() ) continue;
+         if( p.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) return true;
+      }
+      return false;
+   }
 
    /** Retourne les numéros des vues qui ont comme plan de référence le plan
     *  passé en paramètre, ou null si aucun

@@ -104,8 +104,8 @@ public class ContextGui extends Context {
       double pourcent = (double)cRecord/nbRecord;
       long totalTime = pourcent==0 ? 0 : (long)( cTime/pourcent);
       long endsIn = totalTime==0 ? 0 : totalTime-cTime;
-      String s = Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true);
-      if( endsIn>0 ) s = s+" ends n="+Util.getTemps(endsIn, true);
+      String s = Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime*1000L);
+      if( endsIn>0 ) s = s+" ends n="+Util.getTemps(endsIn*1000L);
       mainPanel.tabBuild.buildProgressPanel.setTimeStat(s);
       s = "Records: "+cRecord+ " / "+nbRecord;
       mainPanel.tabBuild.buildProgressPanel.setLowTileStat(s);
@@ -121,8 +121,8 @@ public class ContextGui extends Context {
       long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
 
       String s1=statNbFile+" / "+nbLowCells+" tiles";
-      String s2=Util.getTemps(totalTime,true);
-      if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime,true);
+      String s2=Util.getTemps(totalTime*1000L);
+      if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime*1000L);
 
       mainPanel.tabJpg.setStat(s1,s2);
       setProgress(statNbFile, nbLowCells);
@@ -134,8 +134,8 @@ public class ContextGui extends Context {
       long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
 
       String s1=statNbFile+" / "+nbLowCells+" tiles";
-      String s2=Util.getTemps(totalTime,true);
-      if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime,true);
+      String s2=Util.getTemps(totalTime*1000L);
+      if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime*1000L);
 
       mainPanel.tabRgb.setStat(s1,s2);
       setProgress(statNbFile, nbLowCells);

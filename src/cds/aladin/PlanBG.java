@@ -4261,7 +4261,7 @@ public class PlanBG extends PlanImage {
             long t = hk.timeNet;
             long s = hk.sizeStream;
             if( s==0 ) System.out.println(" error => "+url+"/"+hk.getFileNet());
-            else System.out.println(Util.getUnitDisk(s)+" in "+Util.getTemps(t));
+            else System.out.println(Util.getUnitDisk(s)+" in "+Util.getTemps(t*1000L));
             time += t;
             size += s;
             n++;
@@ -4273,7 +4273,7 @@ public class PlanBG extends PlanImage {
 
       aladin.levelTrace=memo;
       System.out.println("=> Downloaded "+n+" tiles in "+HealpixKey.EXT[getTileMode()]
-            +" : "+Util.getUnitDisk(size)+" in "+Util.getTemps(time));
+            +" : "+Util.getUnitDisk(size)+" in "+Util.getTemps(time*1000L));
 
       long rate = (long)( size/(time/1000.) );
       String res = "=> Stream rate "+Util.getUnitDisk(rate)+"/s";

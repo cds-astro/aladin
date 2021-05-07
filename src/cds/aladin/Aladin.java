@@ -162,14 +162,18 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC 2.0 full compliance
+ * @beta    <LI> MOC extensions:
+ * @beta    <UL> <LI> MOC 2.0 full compliance (STMOC, TMOC)
+ * @beta         <LI> STMOC highlight & selection
+ * @beta         <LI> MOC size limit faciliity
+ * @beta         <LI> SMOC generation from Box object
+ * @beta    </Ul>
  * @beta    <LI> Time serie display
  * @beta    <LI> Support for Hight DPI screen -> See User Preference Scaling method
  * @beta    <LI> Photometric tool stats improvements (table management from polygons and circles)
  * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Pixel extraction...
  * @beta    <LI> Plugin extension for pixel stats (getStatistics..)
  * @beta    <LI> New projections: Mercator, HEALPix
- * @beta    <LI> SMOC generation form Box object
  * @beta </UL>
  * @beta <P>
  * @beta <B>Bug fixed:</B>
@@ -201,7 +205,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.050";
+   static public final    String VERSION = "v11.052";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -585,7 +589,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    FrameTMocGenObj frameTMocGenObj;   // Gere la fenetre pour la génération d'un T-MOC à partir des sources sélectionnées
    FrameSTMocGenCat frameSTMocGenCat;   // Gere la fenetre pour la génération d'un ST-MOC à partir de catalogues
    FrameSTMocGenObj frameSTMocGenObj;   // Gere la fenetre pour la génération d'un ST-MOC à partir des sources sélectionnées
-   FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution
    FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
    FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
    FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
@@ -4345,11 +4348,17 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Mise à jour de la fenêtre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution */
    protected void updateMocToOrder() {
-      if( frameMocGenRes==null ) {
-         trace(1,"Creating the MocGenRes window");
-         frameMocGenRes = new FrameMocGenRes(aladin);
+      if( frameMocOperation==null ) {
+         trace(1,"Creating the MocOp window");
+         frameMocOperation = new FrameMocOperation(aladin);
       }
-      frameMocGenRes.maj();
+      toolBox.setMode(ToolBox.MOC, Tool.DOWN);
+      frameMocOperation.maj(PlanMocAlgo.COPY);
+//      if( frameMocGenRes==null ) {
+//         trace(1,"Creating the MocGenRes window");
+//         frameMocGenRes = new FrameMocGenRes(aladin);
+//      }
+//      frameMocGenRes.maj();
    }
    
    /** Affiche les properties du plan courant */

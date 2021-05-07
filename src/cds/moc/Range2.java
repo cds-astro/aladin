@@ -51,11 +51,22 @@ public class Range2 extends Range {
 
 
    public void resize(int newsize) {
+      if( newsize==r.length ) return;
       super.resize(newsize);
       Range[] nSpaceRangeArray = new Range[newsize];
       System.arraycopy(rr,0,nSpaceRangeArray,0,sz/2);
       rr = nSpaceRangeArray;
    }
+   
+   public void trimSize() {
+      int n=sz/2;
+      for( int i=0; i<n; i++ ) { 
+         if( i>0 && rr[i].equals(rr[i-1]) ) rr[i] = rr[i-1];
+         else rr[i].trimSize(); 
+      }
+      super.trimSize();
+   }
+   
    
    /** Retourne un range dont la précision des intervalles est dégradée en fonction d'un nombre de bits
     * Aggrège les intervalles si nécessaires et ajuste l'occupation mémoire
@@ -73,7 +84,7 @@ public class Range2 extends Range {
          Range r = rr[i>>>1].degrade(shift2);
          r1.add(a, b, r );
       }
-      r1.trimIfTooLarge();
+      r1.trimSize();
       return r1;
    }
    
@@ -511,7 +522,11 @@ public class Range2 extends Range {
    public long getMem() {
       if( r==null ) return 0L;
       long mem =  super.getMem();
-      for( int i=0;i<sz/2; i++ ) mem += rr[i].getMem();
+      int n=sz/2;
+      for( int i=0;i<n; i++ ) {
+         if( i<n-1 && rr[i]==rr[i+1] ) continue;   // Si pointe sur le même coverage, inutile de le compter
+         mem += rr[i].getMem();
+      }
       return mem;
    }
 

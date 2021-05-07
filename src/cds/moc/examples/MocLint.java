@@ -63,7 +63,7 @@ public class MocLint {
                   "Usage:       MocLint MocFileName\n"
                 + "Description: Check compliance with MOC IVOA recommendations (1.0, 1.1 and 2.0).\n"
                 + "Author:      P.Fernique [CDS]\n"
-                + "Version:     2.0 - april 2021 (first version 2016)");
+                + "Version:     2.0 - Mai 2021 (first version 2016)");
              System.exit(2);
          }
          check(args[0]); }
@@ -87,6 +87,7 @@ public class MocLint {
     * @return true if MOC is compatible
     */
    public static boolean check(InputStream in) {
+      
       StringBuilder out = new StringBuilder();
       int rep=0;
 
@@ -175,6 +176,27 @@ public class MocLint {
       return (new String(buffer, 0, offset, i-offset)).trim();
   }
    
+   // Return true if the value is a String quoted
+   private static boolean isQuoted(byte [] buffer) {
+      int i;
+      boolean quote = false;
+      boolean blanc=true;
+      int offset = 9;
+
+      for( i=offset ; i<80; i++ ) {
+         if( !quote ) {
+            if( buffer[i]==(byte)'/' ) break;   // on a atteint le commentaire
+         }
+
+         if( blanc ) {
+            if( buffer[i]!=(byte)' ' ) blanc=false;
+            if( buffer[i]==(byte)'\'' ) return true;
+         }
+      }
+      return false;
+  }
+   
+
    // Extract FITS keyword from FITS header line.
    private static String getKey(byte [] buffer) {
       return new String(buffer, 0, 0, 8).trim();
@@ -211,9 +233,11 @@ public class MocLint {
    public static int checkFits(StringBuilder out, InputStream in) {
       long naxis = -1, naxis1 = -1, naxis2 = -1, pcount = 0, gcount = 1, tfields = -1; 
       long mocorder = -1, mocord_s = -1, mocord_t = -1;
+      boolean mocord_sQuoted=false, mocord_tQuoted=false, mocorderQuoted=false;
       String tform1 = "",  pixtype = "", ordering = "", coordsys = "";
       String moctool = "", date = "", origin = "", moctype = "", mocid = "", extname = "";
       String  mocvers = "", mocdim = "", timesys = "";
+      boolean mocversQuoted=false;
       int mocv=-1;   // MOC version: MOC1, MOC2 ...
       int moct=-1;   // Type of MOC: SPACE, TIME, TIMESPACE, ... 
       int w=0;       // Number of warnings
@@ -270,6 +294,7 @@ public class MocLint {
             if( line == 1 && (!key.equals("XTENSION") || key.equals("XTENSION") && !val.equals("BINTABLE")) ) {
                e+=error(out,"[4.3.1] HDU1 line " + line + ": XTENSION=BINTABLE missing");
             }
+            
             else if( key.equals("NAXIS") )    naxis = getInt(val);
             else if( key.equals("NAXIS1") )   naxis1 = getInt(val);
             else if( key.equals("NAXIS2") )   naxis2 = getInt(val);
@@ -278,22 +303,22 @@ public class MocLint {
             else if( key.equals("TFIELDS") )  tfields = getInt(val);
             else if( key.equals("TFORM1") )   tform1 = val;
             
-            else if( key.equals("MOCVERS") )  mocvers = val;
+            else if( key.equals("MOCVERS") )  { mocvers = val; mocversQuoted=isQuoted(buf); }
             else if( key.equals("MOCDIM") )   mocdim = val;
             else if( key.equals("ORDERING") ) ordering = val;
             else if( key.equals("COORDSYS") ) coordsys = val;
             else if( key.equals("TIMESYS") )  timesys = val;
             else if( key.equals("MOCTOOL") )  moctool = val;
             else if( key.equals("MOCTYPE") )  moctype = val;
-            else if( key.equals("MOCORD_S") ) mocord_s = getInt(val);
-            else if( key.equals("MOCORD_T") ) mocord_t = getInt(val);
-            else if( key.equals("MOCORDER") ) mocorder = getInt(val);
+            else if( key.equals("MOCORD_S") ) { mocord_s = getInt(val); mocord_sQuoted=isQuoted(buf); }
+            else if( key.equals("MOCORD_T") ) { mocord_t = getInt(val); mocord_tQuoted=isQuoted(buf); }
+            else if( key.equals("MOCORDER") ) { mocorder = getInt(val); mocorderQuoted=isQuoted(buf); }
             else if( key.equals("PIXTYPE") )  pixtype = val;
-
             else if( key.equals("DATE") ) date = val;
             else if( key.equals("ORIGIN") ) origin = val;
             else if( key.equals("EXTNAME") ) extname = val;
             else if( key.equals("MOCID") ) mocid = val;
+            
             if( e>MAXERROR ) tooMany(out);
          }
          
@@ -338,6 +363,7 @@ public class MocLint {
                if( mocorder ==-1 ) w+=warning(out,"[6.k]: MOCORDER is mandatory in HDU1");
                else if( mocorder < 0 || mocorder > 29 ) e+=error(out,"[3.1]: MOCORDER=n where n in [0..29] required in HDU1");
                //            if( mocorder==29 ) info(out,"(!) mocOrder 29 is probably a wrong default value rather than a deliberated choice - check it!");
+               if( mocorderQuoted ) w+=warning(out,"[4.3.1]: only numerical value authorized for MOCORDER");
                if( coordsys.length()==0 ) w+=warning(out,"[6.d]: COORDSYS=C mandatory in HDU1 for celestial coverage");
                if( !ordering.equals("NUNIQ") ) w+=warning(out,"[6.c]: ORDERING=NUNIQ mandatory in HDU1");
                if( tform1.equals("J") && mocorder > 13 ) info(out,"(!) mocOrder>13 may require 64 rather than 32 bits integer coding (TFORM1=1K) - check it!");
@@ -353,6 +379,7 @@ public class MocLint {
             
             if( !tform1.equals("K") || naxis1!=8 ) e+=error(out,"[4.3.1]: NAXIS1=8 / TFORM1=K required in HDU1");
             if( !mocvers.equals("2.0") ) w+=warning(out,"[6]: MOCVERS ["+mocvers+"] not supported for this MOC lint tool (should be 2.0, or not specified)");
+            if( !mocversQuoted ) w+=warning(out,"[4.3.1]: only string value (quoted) authorized for MOCVERS");
             if( mocdim.length()==0 ) e+=error(out,"[6.k]: MOCDIM is mandatory in HDU1");
             moct = mocdim.equals("SPACE") ? SPACE : mocdim.equals("TIME") ? TIME : mocdim.equals("TIME.SPACE") ? TIMESPACE : -1;
             if( moct==-1 ) e+=error(out,"[6.b]: unvalid MOCDIM value ["+mocdim+"]. Must be SPACE, TIME or TIME.SPACE");
@@ -362,6 +389,7 @@ public class MocLint {
                   info(out,"[6.k]: MOCORDER is suggested (=MOCORD_S) in HDU1 for backward compatibility (required in MOC1.0 & MOC1.1)");
                   moc1compatible=false;
                }
+               if( mocorderQuoted ) w+=warning(out,"[4.3.1]: only numerical value authorized for MOCORDER");
                if( !ordering.equals("NUNIQ") ) w+=warning(out,"[6.c]: ORDERING=NUNIQ mandatory in HDU1");
                if( tform1.equals("J") && mocorder > 13 ) info(out,"(!) mocOrder>13 may require 64 rather than 32 bits integer coding (TFORM1=1K) - check it!");
             }
@@ -369,12 +397,14 @@ public class MocLint {
             if( moct==SPACE || moct==TIMESPACE ) {
                if( mocord_s == -1 ) e+=error(out,"[6.i]: MOCORD_S is mandatory in HDU1");
                else if( mocord_s < 0 || mocord_s > 29 ) e+=error(out,"[3.1]: MOCORD_S=n where n in [0..29] required in HDU1");
+               if( mocord_sQuoted ) w+=warning(out,"[4.3.1]: only numerical value authorized for MOCORD_S");
                if( coordsys.length()>0 && !coordsys.equals("C") ) e+=error(out,"[6.d]: wrong COORDSYS ["+coordsys+"]. MOC must use ICRS (C) only");
             }
             
             if( moct==TIME || moct==TIMESPACE ) {
                if( mocord_t == -1 ) e+=error(out,"[6.j]: MOCORD_T is mandatory in HDU1");
                else if( mocord_t < 0 || mocord_t > 61 ) e+=error(out,"[3.2]: MOCORD_T=n where n in [0..61] required in HDU1");
+               if( mocord_tQuoted ) w+=warning(out,"[4.3.1]: only numerical value authorized for MOCORD_T");
                if( timesys.length()>0 && !timesys.equals("TCB") ) e+=error(out,"[6.e]: wrong TIMEDSYS ["+timesys+"]. MOC must use TCB only");
                
                if( moct==TIME && !ordering.equals("RANGE") && !ordering.equals("NUNIQ")) e+=error(out,"[4.3.1]: ORDERING=RANGE|NUNIQ mandatory in HDU1");
@@ -493,8 +523,8 @@ public class MocLint {
                   // in time range
                   if( i<2 || mode<2 ) {
                      if( val >= 0 ) e+=error(out,"[5.2]: val error in row " + i+ " ["+val+"]. Time range must be coded as negative value");
-//                     val = -val;
-                     val = val & UNMASK_T;
+                     if( mocv==MOC2PROTO ) val = -val;
+                     else val = val & UNMASK_T;
                      if( mode==0 && val >= maxt ) e+=error(out,"[3.2]: time val too high in row " + i+ " ["+val+">=2^62-1]");
                      if( mode==1 && val >  maxt ) e+=error(out,"[3.2]: time val too high in row " + i+ " ["+val+">2^62-1]");
                      

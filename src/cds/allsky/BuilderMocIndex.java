@@ -61,7 +61,7 @@ public class BuilderMocIndex extends BuilderMoc {
 //      }
       
       long time = System.currentTimeMillis() - t;
-      context.info("MOC Index done in "+cds.tools.Util.getTemps(time,true)
+      context.info("MOC Index done in "+cds.tools.Util.getTemps(time*1000L)
                         +": mocOrder="+moc.getMocOrder()
                         +"  frame="+frame
                         +" size="+cds.tools.Util.getUnitDisk( moc.getMem()));

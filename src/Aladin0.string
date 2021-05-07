@@ -970,6 +970,7 @@ MOCINTER	Intersection
 MOCSUB	Subtraction
 MOCDIFF	Difference
 MOCCOMP	Complement
+MOCCOPY Copy
 MOCTITLE	MOC operations
 MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting MOC.\n
 MOCPLANE	Plane
@@ -981,6 +982,7 @@ MOCINTER.fr	Intersection
 MOCSUB.fr	Soustraction
 MOCDIFF.fr	Difference
 MOCCOMP.fr	Complement
+MOCCOPY.fr	Copie
 MOCTITLE.fr	Opérations sur les MOC
 MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer le MOC résultant.
 MOCPLANE.fr	Plan

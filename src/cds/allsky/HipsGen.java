@@ -697,7 +697,7 @@ public class HipsGen {
 
             long t = System.currentTimeMillis();
             new Task(context,actions,true);
-            if( context.isTaskAborting() ) context.abort(context.getTitle("(aborted after "+Util.getTemps(System.currentTimeMillis()-t),'='));
+            if( context.isTaskAborting() ) context.abort(context.getTitle("(aborted after "+Util.getTemps((System.currentTimeMillis()-t)*1000L),'='));
             else {
                 // Suppression du cache disque si nécessaire
                 if( cacheRemoveOnExit ) MyInputStreamCached.removeCache();
@@ -713,7 +713,7 @@ public class HipsGen {
                     else context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
                 }
                 context.removeListReport();
-                context.done(context.getTitle("THE END (done in "+Util.getTemps(System.currentTimeMillis()-t),'='));
+                context.done(context.getTitle("THE END (done in "+Util.getTemps((System.currentTimeMillis()-t)*1000L),'='));
             }
 
         } catch (Exception e) {

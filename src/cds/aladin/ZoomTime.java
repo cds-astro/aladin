@@ -295,7 +295,7 @@ class ZoomTime {
          g.drawString( s,x3,y-5-12);
          
          // La durée
-         s = Util.getTemps( (long)( (t[1]-t[0])*(TMoc.DAYMICROSEC/1000L)),true );
+         s = Util.getTemps( (long)( (t[1]-t[0])*(TMoc.DAYMICROSEC)) );
          len = g.getFontMetrics().stringWidth(s);
          x3 = xm - len/2;
          if( x3<2 ) x3=2;

@@ -36,7 +36,7 @@ public class MocExample {
        
        try {
          // Creation by Stream
-          String u = "http://alasky.unistra.fr/MocServer/query?ivorn=CDS/II/311/wise&get=moc";
+          String u = "http://alasky.unistra.fr/MocServer/query?ID=CDS/II/311/wise&get=moc";
           System.out.println("Loading this remote MOC: "+u+"...");
           URL url = new URL(u);
           BufferedInputStream bis = new BufferedInputStream(url.openStream(), 32*1024);
@@ -79,17 +79,17 @@ public class MocExample {
              double lat = Math.random()*180 -90;
              mocD.add( hpx, lon, lat);
           }
-          mocD.bufferOff();
+          mocD.bufferOff();          // Stop and release the buffering
           System.out.print("\nAnother Moc created by spherical positions: "); display("MocD",mocD);
          
         
           // Intersection, union, clone
           
-          // Operation logic for preserving surfaces
+          // Operation logic for preserving surfaces (LOGIC_MIN for preserving observation coverage) -> see IVOA MOC doc
           Moc.setMocOrderLogic( Moc.LOGIC_MAX);
           SMoc clone = mocA.clone(); 
-          SMoc union = (SMoc)mocA.union(mocB);
-          SMoc inter = (SMoc)mocA.intersection(mocB);
+          SMoc union = clone.union(mocB);
+          SMoc inter = mocA.intersection(mocB);
           System.out.println("\nMocA coverage      : "+pourcent(mocA.getCoverage()));
           System.out.println("MocB coverage        : "+pourcent(mocB.getCoverage()));
           System.out.println("Moc union coverage   : "+pourcent(union.getCoverage()));
@@ -103,12 +103,12 @@ public class MocExample {
           mocA.writeFITS(outFits);
           outFits.close();
           
-          // Writing in JSON format
+          // Writing in ASCII format
           f = new File("Moc.txt");
-          System.out.println("Writing MocA in JSON file "+f.getAbsolutePath());
-          OutputStream outJson = (new FileOutputStream( f ));
-          mocA.writeJSON(outJson);
-          outJson.close();
+          System.out.println("Writing MocA in ASCII file "+f.getAbsolutePath());
+          OutputStream outAscii = (new FileOutputStream( f ));
+          mocA.writeASCII(outAscii);
+          outAscii.close();
           
           // HEALPix cell queries
           long npix;

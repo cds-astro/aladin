@@ -2951,7 +2951,7 @@ public class Save extends JFrame implements ActionListener {
       if( s.length()==0 ) return true;
       char c = s.charAt(0);
       if( s.length()==1 && (c=='T' || c=='F') ) return false;	// boolean
-      if( !Character.isDigit(c) && c!='.' && c!='-' && c!='+' ) return true;
+      if( !Character.isDigit(c) && c!='.' && c!='-' && c!='+' && c!='E' && c!='e' ) return true;
       c = s.charAt( s.length()-1 );
       if( !Character.isDigit(c) ) return true;
       try {

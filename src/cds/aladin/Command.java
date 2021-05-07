@@ -2532,6 +2532,9 @@ public final class Command implements Runnable {
          double pixMax = Double.NaN;
          double jdmin = Double.NaN;
          double jdmax = Double.NaN;
+         long maxSize=-1L;
+         String maxPriority=null;
+         
          int command = -1;
          int posParam=0;  // Position du paramètre (voir commentaire sur OPERATION
 //         String s;
@@ -2569,6 +2572,11 @@ public final class Command implements Runnable {
                try { jdmin = Astrodate.dateToJD(tok1.nextToken()); } catch( Exception e) {}
                try { jdmax = Astrodate.dateToJD(tok1.nextToken()); } catch( Exception e) {}
             } 
+            else if( cle.equalsIgnoreCase("-maxSize") ) {
+               Tok tok1 = new Tok(Tok.unQuote(val),"/ ,");
+               try { maxSize = 1024L*(long)(1024*Double.parseDouble(tok1.nextToken())); } catch( Exception e) {}
+               try { maxPriority = tok1.nextToken(); } catch( Exception e) {}
+            } 
             else if( cle.equalsIgnoreCase("-threshold") ) thresHold = Double.parseDouble( val );
             else if( cle.equalsIgnoreCase("-radius") ) radius = Server.getAngleInArcmin(val, Server.RADIUSs);
             else if( cle.equalsIgnoreCase("-duration") ) duration = Double.parseDouble( val );
@@ -2597,8 +2605,7 @@ public final class Command implements Runnable {
          if( p.length > 0 ) {
             a.view.deSelect();
             for( Plan p1 : p ) {
-               if( type == -1 ) type = p1.type; // Initialisation du type de plan pris en compte (TOOL, CATALOG ou IMAGE, mais
-                                                // séparémment)
+               if( type == -1 ) type = p1.type; // Initialisation du type de plan pris en compte (TOOL, CATALOG ou IMAGE, mais séparémment)
                if( p1.type != type ) throw new Exception("Mixed source plane types are not authorized");
                if( p1.type == Plan.TOOL ) a.view.selectAllInPlanWithoutFree(p1, 0);
             }
@@ -2658,7 +2665,7 @@ public final class Command implements Runnable {
                      if( flagCheckTimeOrder && tMoc>secondOrder ) secondOrder=tMoc;
                   }
                }
-               a.calque.newPlanMoc(label, pList, command, firstOrder,secondOrder);
+               a.calque.newPlanMoc(label, pList, command, firstOrder,secondOrder,maxSize,maxPriority);
                
             // Projections ?
             } else {

@@ -83,8 +83,6 @@ public class STMoc extends Moc2D {
       add(tmin,tmax,r);
    }
    
-   public int getTimeRanges() { return getNbRanges(); }
-   
    /************************************ STMoc specifical methods *****************************************/
    
    /** Set time order [0..61] */
@@ -110,6 +108,8 @@ public class STMoc extends Moc2D {
       if( isEmpty() ) return -1;
       return range.ends( range.nranges()-1 ) / TMoc.DAYMICROSEC;
    }
+   
+   public int getTimeRanges() { return getNbRanges(); }
    
    /** TMoc covering from the whole STMOC */
    public TMoc getTimeMoc() throws Exception {
@@ -255,7 +255,7 @@ public class STMoc extends Moc2D {
          long tmax = codeTime(range.r[i+1]);
          size+=writeVal(out,tmax,buf);
 
-         // Si le prochain Moc dim2 est 
+         // Si le prochain Moc dim2 est identique, on passe
          if( i<range.sz-2 && range.rr[i/2].equals(range.rr[i/2+1]) ) continue;
 
          Range m = range.rr[i/2];

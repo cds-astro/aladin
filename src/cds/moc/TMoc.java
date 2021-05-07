@@ -41,7 +41,7 @@ public class TMoc extends Moc1D {
    public TMoc( String s ) throws Exception { super(s); }
    public TMoc( TMoc moc ) throws Exception { super( moc ); }
    public TMoc( InputStream in ) throws Exception { super(in); }
-   
+      
    /** Clone Moc (deep copy) */
    public TMoc clone() throws CloneNotSupportedException {
       TMoc moc = dup();

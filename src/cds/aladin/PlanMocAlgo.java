@@ -23,7 +23,6 @@ package cds.aladin;
 
 import java.util.ArrayList;
 
-import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.moc.STMoc;
 import cds.moc.TMoc;
@@ -36,15 +35,15 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class PlanMocAlgo extends PlanMoc {
    
-   static final int UNION        = 0;
-   static final int INTERSECTION = 1;
-   static final int SUBTRACTION  = 2;
-   static final int DIFFERENCE   = 3;
-   static final int COMPLEMENT   = 4;
-   static final int TOORDER      = 5;
+   static protected final int UNION        = 0;
+   static protected final int INTERSECTION = 1;
+   static protected final int SUBTRACTION  = 2;
+   static protected final int DIFFERENCE   = 3;
+   static protected final int COMPLEMENT   = 4;
+   static protected final int COPY         = 5;
    
    
-   static protected final String [] OPERATION = { "union","inter","sub","diff","compl","ord" };
+   static protected final String [] OPERATION = { "union","inter","sub","diff","compl","copy" };
    
    /** Retourne le nom qui correspond à une opération */
    static protected String getOpName(int op) { return OPERATION[op]; }
@@ -61,7 +60,7 @@ public class PlanMocAlgo extends PlanMoc {
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */
-   public PlanMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
+   public PlanMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order,long maxSize) {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
@@ -79,21 +78,24 @@ public class PlanMocAlgo extends PlanMoc {
             moc = p1.getMoc().clone();
 
             if( op==COMPLEMENT ) moc = ((SMoc)moc).complement();
-            else if( op==TOORDER ) ((SMoc)moc).setMocOrder(order);
+            else if( op==COPY ) ((SMoc)moc).setMocOrder(order);
             else {
                for( int i=1; i<pList.length; i++ ) {
-                  Moc m1=moc;
-                  SMoc m2=pList[i].toReferenceFrame(((SMoc)m1).getSys());
+                  SMoc m1= (SMoc)moc;
+                  SMoc m2=pList[i].toReferenceFrame(m1.getSys());
+                  
+                  if( order>=0  ) { m1.setMocOrder( order ); m2.setMocOrder( order );}  
+
                   switch(op) {
-                     case UNION :        moc = m1.union(        m2); break;
+                     case UNION :        moc = m1.union(        m2);  break;
                      case INTERSECTION : moc = m1.intersection( m2 ); break;
                      case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-                     case DIFFERENCE  :  moc = ((SMoc)m1).difference(   m2 ); break;
+                     case DIFFERENCE  :  moc = m1.difference(   m2 ); break;
                   }
                }
             }
             ((SMoc)moc).setMinOrder(3);
-            if( order!=-1 ) ((SMoc)moc).setMocOrder( order);
+            if( maxSize!=-1L ) moc.reduction(maxSize);
 
          } catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -210,8 +212,8 @@ public class PlanMocAlgo extends PlanMoc {
    protected void launchLoading() { }
    
    // Retourne le label associé à l'opération
-   private String getFonction(PlanMoc p1,PlanMoc [] pList,int op,int order) {
-      if( op==TOORDER ) return p1.label+":"+order;
+   static protected String getFonction(PlanMoc p1,PlanMoc [] pList,int op,int order) {
+      if( op==COPY ) return p1.label+":"+order;
       String lab2= pList.length>1 ? pList[1].label : null;
       String lab3= pList.length>2 ? pList[2].label : null;
       return p1.label + " "+ getOpName(op) + (lab2==null ? " " : lab2 + (lab3==null?"":" ..."));

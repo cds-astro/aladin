@@ -140,7 +140,7 @@ public class BuilderMoc extends Builder {
 //      }
       
       long time = System.currentTimeMillis() - t;
-      context.info("MOC done in "+cds.tools.Util.getTemps(time,true)
+      context.info("MOC done in "+cds.tools.Util.getTemps(time*1000L)
                         +": mocOrder="+moc.getMocOrder()
                         +" size="+cds.tools.Util.getUnitDisk( moc.getMem()));
    }
@@ -171,7 +171,7 @@ public class BuilderMoc extends Builder {
       long cTime = now-startTime;
       if( cTime<2000 ) return;
       
-      context.stat(nbTiles+" tile"+(nbTiles>1?"s":"")+" scanned in "+cds.tools.Util.getTemps(cTime) );
+      context.stat(nbTiles+" tile"+(nbTiles>1?"s":"")+" scanned in "+cds.tools.Util.getTemps(cTime*1000L) );
    }
    
    /** Retourne la surface du Moc (en nombre de cellules de plus bas niveau */

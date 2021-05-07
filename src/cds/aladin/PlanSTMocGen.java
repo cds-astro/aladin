@@ -30,6 +30,7 @@ import cds.moc.Range2;
 import cds.moc.SMoc;
 import cds.moc.STMoc;
 import cds.moc.TMoc;
+import cds.tools.Util;
 
 /** Generation d'un plan STMOC à partir d'une liste de plans (Catalogue) 
  * @author P.Fernique [CDS]
@@ -130,18 +131,21 @@ public class PlanSTMocGen extends PlanSTMoc {
    private void addMocFromCatalog(Plan p1,double duration,double radius, boolean fov) throws Exception {
       
       stop=false;
+      SMoc m1=null;
       STMoc m2 = new STMoc( timeOrder, spaceOrder );
       Iterator<Obj> it = p1.iterator();
-      int m= p1.getCounts();
       Healpix hpx = new Healpix();
-      double incrPourcent = gapPourcent/m;
+      double incrPourcent = gapPourcent/p1.getCounts();
+      int m= 0;
+      long t0 = System.currentTimeMillis();
+      
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
          pourcent+=incrPourcent;
          m++;
 
-         if( m%100==0 ) {
+         if( m%10000==0 ) {
             if( stop ) throw new Exception("Abort");
             try { moc = moc.union( m2 ); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
             m2.clear();
@@ -161,7 +165,7 @@ public class PlanSTMocGen extends PlanSTMoc {
             }
 
             // Ajouts par formes
-            SMoc m1=null;
+            m1=null;
             // Par FoV ?
             if( fov ) {
                Source s = (Source)o;
@@ -184,25 +188,57 @@ public class PlanSTMocGen extends PlanSTMoc {
       try {  moc = moc.union( m2 ); } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
+        
+      long t1 = System.currentTimeMillis();
+      aladin.trace(4,"STMOC build in "+Util.getTemps( (t1-t0)*1000L)+" nbSrc="+m);
 
    }
 
 
    protected boolean waitForPlan() {
-      try {
-         moc = new STMoc(timeOrder,spaceOrder);
-         for( Plan p1 : p ) {
-            if( p1.isCatalogTime() ) {
-               if( c==null )  c = p1.c.darker();
-               addMocFromCatalog(p1,duration,radius,fov);
+      
+      // Pour des benchs
+//      int SPACE [] = {  6, 8,10,12,14,16,18,20, 8,12};
+//      int TIME []  = { 15,19,23,27,31,35,39,43,28,19};
+//      for( int n=0; n<SPACE.length; n++ ) {
+//         spaceOrder = SPACE[n];
+//         timeOrder = TIME[n];
+//         long t0 = System.currentTimeMillis();
+
+
+         try {
+            moc = new STMoc(timeOrder,spaceOrder);
+            for( Plan p1 : p ) {
+               if( p1.isCatalogTime() ) {
+                  if( c==null )  c = p1.c.darker();
+                  addMocFromCatalog(p1,duration,radius,fov);
+               }
             }
+         } catch( Exception e ) {
+            error=e.getMessage();
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            flagProcessing=false;
+            return false;
          }
-      } catch( Exception e ) {
-         error=e.getMessage();
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-         flagProcessing=false;
-         return false;
-      }
+
+//         long t1 = System.currentTimeMillis();
+//         try {
+//            File f = File.createTempFile("toto", "titi");
+//            FileOutputStream fo = new FileOutputStream(f);
+//            moc.writeFITS(fo);
+//            fo.close();
+//            long sizeFits = f.length();
+//            Aladin.trace(3,"STMOC"
+//                  +" timeOrder="+((STMoc)moc).getTimeOrder()
+//                  +" spaceOrder="+((STMoc)moc).getSpaceOrder()
+//                  +" built in "+(t1-t0)+"ms"
+//                  +" nbRanges="+moc.getNbRanges()
+//                  +" RAM="+Util.getUnitDisk( moc.getMem())
+//                  +" FITS="+Util.getUnitDisk(sizeFits )
+//                  );
+//         } catch( Exception e ) {}
+//      }
+
 
       flagProcessing=false;
       if( moc.isEmpty() ) error="Empty STMOC";

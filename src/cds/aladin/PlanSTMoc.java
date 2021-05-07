@@ -122,10 +122,11 @@ public class PlanSTMoc extends PlanTMoc {
       STMoc stmoc = (STMoc) moc;
       ADD( buf, "\n* Start: ",Astrodate.JDToDate( stmoc.getTimeMin()));
       ADD( buf, "\n* End: ",Astrodate.JDToDate( stmoc.getTimeMax()));
-      ADD( buf,"\n* # ranges: ",stmoc.range.nranges()+"");
+      ADD( buf,"\n* # ranges: ",stmoc.getNbRanges()+"");
       int timeOrder = stmoc.getTimeOrder();
-      ADD( buf,"\n* Time res: ",Util.getTemps(  TMoc.getDuration(timeOrder)/1000L));
-      ADD( buf,"\n* Best time order: ",timeOrder+"");
+      ADD( buf,"\n* Time res: ",Util.getTemps(  TMoc.getDuration(timeOrder)));
+      int drawOrder = getDrawOrder();
+      ADD( buf,"\n","* Time order: "+ (timeOrder==drawOrder ? timeOrder+""  : "draw:"+drawOrder+"/"+timeOrder));
 
       double cov=getFullCoverage();
       double degrad = Math.toDegrees(1.0);
@@ -133,13 +134,14 @@ public class PlanSTMoc extends PlanTMoc {
       ADD( buf, "\n \n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
       int spaceOrder =stmoc.getSpaceOrder();
       ADD( buf,"\n* Space res: ",( Coord.getUnit( CDSHealpix.pixRes(spaceOrder)/3600.) ));
-      ADD( buf,"\n* Best space order: ",spaceOrder+"");
-
-      if( Aladin.levelTrace>0 ) {
-         ADD( buf,"\n \nRAM: ",Util.getUnitDisk( stmoc.getMem() ) );
-      }
+      drawOrder = getSpaceDrawOrder();
+      ADD( buf,"\n","* Space order: "+ (drawOrder==-1 ? spaceOrder : spaceOrder==drawOrder ? spaceOrder+"" : "draw:"+drawOrder+"/"+spaceOrder) );
+      
+      ADD( buf,"\n \nRAM: ",Util.getUnitDisk( stmoc.getMem() ) );
 
    }
+   
+   protected int getSpaceDrawOrder() { return lastOrderDrawn; }
 
    /** Retourne le time stamp minimal */
    protected double getTimeMin() { 
@@ -161,8 +163,7 @@ public class PlanSTMoc extends PlanTMoc {
          try {
             if( moc==null && dis!=null ) {
                moc = new STMoc();
-               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFITS(dis);
-               else moc.readASCII(dis);
+               readMoc(moc,dis);
             }
             if( moc.isEmpty() ) error="Empty STMOC";
          }
@@ -430,7 +431,7 @@ public class PlanSTMoc extends PlanTMoc {
              
                info = "\n \n* Start: "+start.substring(0,t1)+"\n   "+start.substring(t1+1)+"\n"
                      + "\n \n* End: "+end.substring(0,t2)+"\n   "+end.substring(t2+1)+"\n"
-                     +"\n \n*  Res: "+Util.getTemps((r.end-r.start)/1000L, false);
+                     +"\n \n*  Res: "+Util.getTemps((r.end-r.start));
              
             } catch( Exception e1 ) { e1.printStackTrace(); }
             break;
@@ -509,6 +510,10 @@ public class PlanSTMoc extends PlanTMoc {
       tmocS.moc = ts;
 
       return trouve;
+   }
+
+   protected void planReadyPost() {
+      aladin.view.createView4TMOC(this);
    }
 
 

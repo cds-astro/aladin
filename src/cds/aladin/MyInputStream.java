@@ -45,6 +45,7 @@ import cds.xml.TableParser;
  * Plan dedie au stream.
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.6 : (mai 2021) support du mark()/reset()
  * @version 1.5 : (dec 2014) nettoyage
  * @version 1.4 : (oct 2006) support de la calib dans l'entête JPEG
  * @version 1.3 : (été 2006) support de Sectractor
@@ -144,6 +145,9 @@ public class MyInputStream extends FilterInputStream {
    protected String filename=null; // Nom du fichier d'origine si connu
    private boolean fitsHeadRead; // true si on a déjà charger (ou essayé)
    // toute l'entête fits courante dans le cache (voir hasFitsKey())
+   
+   private int markPos=-1;    // Positionnement d'une mark, -1 si aucune
+   private int markLen=0;     // Taille max du buffer pour la mark
 
    static public int NBOPENFILE = 0;
 
@@ -771,13 +775,22 @@ public class MyInputStream extends FilterInputStream {
       return super.available();
    }
 
-   /**
-    * Interface InputStream, methode markSupported()
-    * @return toujours false car MyInputStream ne supporte pas les marks
-    */
-   public boolean markSupported() {
-      //System.out.println("Call markSupported()");
-      return false;
+   /** Supporte le système de mark */
+   public boolean markSupported() { return true; }
+   
+   /** Positionnement de la mark en réservant size octets pour cela */
+   public synchronized void mark(int size) {
+      markPos = offsetCache;
+      markLen=size;
+   }
+   
+   /** Repositionnement à l'emplacement de la mark précédemment posée par mark(..) */
+   public synchronized void reset() {
+      if( markPos==-1 ) return;          // Il n'y avait pas de mark positionné
+      inCache += (offsetCache-markPos);
+      dejaLu -= (offsetCache-markPos);
+      offsetCache=markPos;
+      markPos=-1;
    }
 
    private byte bufRead[] = new byte[1];
@@ -817,6 +830,15 @@ public class MyInputStream extends FilterInputStream {
       // Pour garantir qu'un appel a getType() posterieur ne pourra plus etre
       // valide
       alreadyRead=true;
+      
+      // Y a-t-il une mark positionné ? => Il faut bufferiser.
+      if( markPos!=-1 ) {
+         if( inCache<len ) {
+            int alire = len - inCache-offsetCache;
+            if( inCache + alire > markLen ) throw new IOException("InputStream mark overflow");
+            loadInCache( alire );
+         }
+      }
 
       // S'il n'y a rien dans le tampon, on lit simplement le flux
       if( cache==null || inCache==0 ) {
@@ -835,6 +857,10 @@ public class MyInputStream extends FilterInputStream {
       offsetCache+=len;
       inCache-=len;
       dejaLu+=len;
+      
+      // On libère le cache
+      if( inCache==0 ) freeCache();
+      
       return len;
    }
 
@@ -961,6 +987,13 @@ public class MyInputStream extends FilterInputStream {
       if( s.length()==0 ) s.append(FORMAT[0]);
       return s.toString();
    }
+   
+   // Libération du cache
+   private void freeCache() { 
+      if( cache==null ) return;
+      cache=null;
+      offsetCache=0;
+    }
 
    /**
     * Charge "len" octets dans le tampon.

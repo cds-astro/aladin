@@ -2192,24 +2192,33 @@ public final class Util {
 //     return u.substring(0,off1)+"/"+u.substring(off1+1,off2)+u.substring(off2+4);
 //  }
    
-   static private long Y =  (long)( 86400 * 365.25) * 1000L;
-   static private long D =  86400L * 1000L;
-   static private long H =  3600L * 1000L;
-   static private long M =  60L * 1000L;
+   static private long Y =  (long)( 86400 * 365.25) * 1000000L;
+   static private long D =  86400L * 1000000L;
+   static private long H =  3600L * 1000000L;
+   static private long M =  60L * 1000000L;
+   static private long S =  1000000L;
+   static private long mS = 1000L;
+   static private long muS = 1L;
    
-   /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
-   static public String getTemps(long ms) { return getTemps(ms,false);  }
-   static public String getTemps(long ms,boolean round) {
-      StringBuffer s = new StringBuffer();
-      if( ms>Y ) { long j = ms/Y; ms -= j*Y; s.append(j+"y"); }
-      if( ms>D ) { long j = ms/D; ms -= j*D; if( s.length()>0 ) s.append(' '); s.append(j+"d"); }
-      if( ms>H ) { long h = ms/H; ms -= h*H; if( s.length()>0 ) s.append(' '); s.append(h+"h"); }
-      if( ms>M ) { long m = ms/M; ms -= m*M; if( s.length()>0 ) s.append(' '); s.append(m+"m"); }
-      if( ms>0 ) {
-         if( s.length()>0 ) s.append(' '); 
-         s.append( (round ? ""+ms/1000 : ""+ms/1000.)+"s");
+   static private long   DT[] = {  Y,  D,  H,  M,  S,  mS,  muS };
+   static private String UT[] = { "y","d","h","m","s","ms","µs" };
+   
+   /** retourne un temps en microsecondes sous une forme lisible 3j 5h 10mn 3s (round pour arrondir à deux unités max) */
+   static public String getTemps(long micsec) { return getTemps(micsec,true);  }
+   static public String getTemps(long micsec, boolean round) {
+      StringBuilder a = new StringBuilder();
+      int n=0;
+      for( int u=0; micsec>0 && u<DT.length; u++ ) {
+         if( round && n==2 ) break;   // En mode arrondi on ne met que deux expressions (ex: 30y 16d)
+         long duree = micsec/DT[u];
+         micsec -= duree*DT[u];
+         if( duree>0 ) {
+            if( a.length()>0 ) a.append(' ');
+            a.append(duree+UT[u]);
+            n++;
+         }
       }
-      return s.toString();
+      return a.toString();
    }
 
    //    static private boolean tryNano=false;

@@ -30,6 +30,7 @@ import java.util.TreeSet;
 import cds.aladin.stc.STCObj;
 import cds.moc.Healpix;
 import cds.moc.SMoc;
+import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /** Generation d'un plan MOC à partir d'une liste de plans (Image, Catalogue ou map HEALPix) 
@@ -81,20 +82,24 @@ public class PlanMocGen extends PlanMoc {
    // Ajout d'un plan catalogue au moc en cours de construction
    private void addMocFromCatalog(Plan p1,double radius,int order,boolean fov) throws Exception {
       
+      
+      long t0,t1;
+      t0=System.currentTimeMillis();
       stop=false;
+      ((SMoc)moc).setMocOrder(order);
       SMoc m2 = new SMoc(order);
-      m2.bufferOn();
+      m2.bufferOn(10000);
       Iterator<Obj> it = p1.iterator();
-      int m= p1.getCounts();
+      int m= 0;
       Healpix hpx = new Healpix();
-      double incrPourcent = gapPourcent/m;
+      double incrPourcent = gapPourcent/p1.getCounts();
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
          pourcent+=incrPourcent;
          m++;
 
-         if( m%100==0 ) {
+         if( m%10000==0 ) {
             if( stop ) throw new Exception("Abort");
             try { moc = moc.union( m2 ); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
             m2.clear();
@@ -133,6 +138,8 @@ public class PlanMocGen extends PlanMoc {
       try {  moc = moc.union( m2 ); } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
+      t1 =System.currentTimeMillis();
+      aladin.trace(4,"SMOC created in "+Util.getTemps((t1-t0)*1000L)+" ("+m+" sources)");
    }
 
    // Ajout d'un plan Image au MOC en cours de construction
@@ -148,7 +155,6 @@ public class PlanMocGen extends PlanMoc {
          gapA = Math.min(p1.projd.getPixResAlpha(),p1.projd.getPixResDelta());
          for( o1=order; CDSHealpix.pixRes( o1 )/3600. <= gapA*2; o1--);
       } catch( Exception e1 ) {
-         e1.printStackTrace();
       }
 //      if( gap<1 || Double.isNaN(gap) ) gap=1;
 //      
@@ -830,6 +836,10 @@ public class PlanMocGen extends PlanMoc {
    
    protected boolean waitForPlan() {
 
+      // Pour des benchs
+//      for( int order=6; order<=20; order+=2 ) {
+//         long t0 = System.currentTimeMillis();
+
       try {
          moc = new SMoc();
          ((SMoc)moc).setMinOrder(3);
@@ -847,7 +857,26 @@ public class PlanMocGen extends PlanMoc {
          flagProcessing=false;
          return false;
       }
-      flagProcessing=false;
+
+
+//         long t1 = System.currentTimeMillis();
+//         try {
+//            File f = File.createTempFile("toto", "titi");
+//            FileOutputStream fo = new FileOutputStream(f);
+//            moc.writeFITS(fo);
+//            fo.close();
+//            long sizeFits = f.length();
+//            Aladin.trace(3,"SMOC 'order="+((SMoc)moc).getMocOrder()
+//                  +" built in "+(t1-t0)+"ms"
+//                  +" nbRanges="+moc.getNbRanges()
+//                  +" RAM="+Util.getUnitDisk( moc.getMem())
+//                  +" FITS="+Util.getUnitDisk(sizeFits )
+//                  );
+//         } catch( Exception e ) {}
+//
+//      }
+
+     flagProcessing=false;
       if( moc.isEmpty() ) error="Empty MOC";
       flagOk=true;
       return true;

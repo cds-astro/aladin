@@ -206,7 +206,7 @@ public class Range implements Comparable<Range> {
   
    /** Construct new object from another Range */
    public Range(Range other) {
-      sz=other.sz;
+      sz= other.sz;
       r = new long[sz];
       System.arraycopy(other.r,0,r,0,sz);
    }

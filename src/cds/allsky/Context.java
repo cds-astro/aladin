@@ -1183,7 +1183,7 @@ public class Context {
          mocIndex=new SMoc("0/0-11");  // par défaut tout le ciel
       }
       if( mocArea==null ) moc = mocIndex;
-      else moc = (SMoc)mocIndex.intersection(mocArea);
+      else moc = mocIndex.intersection(mocArea);
       setValidateRegion(true);
    }
 
@@ -1501,7 +1501,7 @@ public class Context {
       else {
          String nbPerSec =  statDuree>1000 ? ""+Util.round(statNbFile/(statDuree/1000.),1) : "";
          s= statNbFile+" file"+(statNbFile>1?"s":"")
-               +" in "+Util.getTemps(statDuree)
+               +" in "+Util.getTemps(statDuree*1000L)
                +(nbPerSec.length()==0 ? "":" => "+nbPerSec+"/s")
                + (statNbFile>0 && statNbZipFile==statNbFile ? " - all gzipped" : statNbZipFile>0 ? " ("+statNbZipFile+" gzipped)":"")
                + " => "+Util.getUnitDisk(statPixSize).replace("B","pix")
@@ -1529,8 +1529,8 @@ public class Context {
 
       long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
 
-      String s=statNbTile+(statNbEmptyTile==0?"":"+"+statNbEmptyTile)+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime,true)+" ("
-            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+" tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime,true))+") "
+      String s=statNbTile+(statNbEmptyTile==0?"":"+"+statNbEmptyTile)+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime*1000L)+" ("
+            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+" tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime*1000L))+") "
 //            +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
 //            +Util.getTemps(statNodeAvgTime)+"/node"
             +(statNbThread==0 ? "":"by "+statNbThreadRunning+"/"+statNbThread+" threads")
@@ -1547,7 +1547,7 @@ public class Context {
       double pourcent = (double)cRecord/nbRecord;
       long totalTime = (long)( cTime/pourcent);
       long endsIn = totalTime-cTime;
-      stat(Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true)+" endsIn:"+Util.getTemps(endsIn, true)
+      stat(Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime*1000L)+" endsIn:"+Util.getTemps(endsIn*1000L)
             + " (record="+(cRecord+1)+"/"+nbRecord+")");
       if( cache!=null && cache.getStatNbOpen()>0 ) stat(cache+"");
       setProgress(cRecord,nbRecord);
@@ -1564,9 +1564,9 @@ public class Context {
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
 
       String s;
-      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime,true);
-      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
-            +pourcentNbCells+" endsIn:"+Util.getTemps(endsIn,true)
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime*1000L);
+      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime*1000L)+" ("
+            +pourcentNbCells+" endsIn:"+Util.getTemps(endsIn*1000L)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
@@ -1588,9 +1588,9 @@ public class Context {
       String debitI = Util.getUnitDisk( lastCumulPerSec )+"/s";
 
       String s;
-      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime,true);
-      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
-            +pourcentNbCells+"endsIn:"+Util.getTemps(endsIn,true)
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime*1000L);
+      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime*1000L)+" ("
+            +pourcentNbCells+"endsIn:"+Util.getTemps(endsIn*1000L)
             +" speed:"+ debitI + " avg:"+debit +" for "+Util.getUnitDisk(cumul)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
             +(timeIP==0 ? "":" IPTime:"+timeIP+"ms");
@@ -1610,9 +1610,9 @@ public class Context {
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
 
       String s;
-      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime,true);
-      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
-            +pourcentNbCells+" endsIn:"+Util.getTemps(endsIn,true)
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime*1000L);
+      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime*1000L)+" ("
+            +pourcentNbCells+" endsIn:"+Util.getTemps(endsIn*1000L)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
@@ -1678,9 +1678,9 @@ public class Context {
    }
    public void endAction() throws Exception {
       if( action==null ) return;
-      if( isTaskAborting() ) abort(action+" abort (after "+Util.getTemps(action.getDuree())+")");
+      if( isTaskAborting() ) abort(action+" abort (after "+Util.getTemps(action.getDuree()*1000L)+")");
       else {
-         done(action+" done (in "+Util.getTemps(action.getDuree())+")");
+         done(action+" done (in "+Util.getTemps(action.getDuree()*1000L)+")");
          //         updateProperties( getKeyActionEnd(action), getNow(),true);
       }
       action=null;

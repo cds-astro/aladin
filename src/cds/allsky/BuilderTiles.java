@@ -255,7 +255,7 @@ public class BuilderTiles extends Builder {
       order        = context.getOrder();
       depth        = context.getDepth();
       format       = context.isColor() ? "jpeg" : "fits png";  // on suppose qu'on va créer des tuiles fits et preview (png)
-      moc          = (SMoc)( context.mocIndex.clone() );
+      moc          = ( context.mocIndex.clone() );
       if( moc==null ) throw new Exception("No MOC available => splitting action not possible");
       if( !outputIsFree( outputPath, order ) ) {
          context.warning("HiPS output dir not empty => split function ignored");
@@ -594,7 +594,7 @@ public class BuilderTiles extends Builder {
                   ThreadBuilderTile.statOnePass+" in one step, "+
                   ThreadBuilderTile.statMultiPass+" in multi steps");
          if( context.cacheFits!=null ) Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
-         Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
+         Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps((System.currentTimeMillis()-t)*1000L));
       }
 
       if( context.cacheFits!=null ) context.cacheFits.reset();
@@ -675,7 +675,7 @@ public class BuilderTiles extends Builder {
          Fits oldOut = findLeaf(file);
          if( oldOut!=null ) {
             SMoc moc = context.getRegion();
-            moc = (SMoc)moc.intersection(new SMoc(order+"/"+npix));
+            moc = moc.intersection(new SMoc(order+"/"+npix));
             int nbTiles = (int)moc.getNbValues();
             updateStat(0,0,nbTiles,0,nbTiles/4,0);
             return oldOut;

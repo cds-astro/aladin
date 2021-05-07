@@ -418,7 +418,7 @@ public class MocGen {
       if( t2>0 && t-t2>60000 ) {
          if( needNL ) System.out.println();
          String s = nbImg+1>1 ? "s":"";
-         System.out.println((nbImg+1)+" image"+s+" in progress (MOC size="+Util.getUnitDisk(moc.getMem())+" in "+Util.getTemps(t-tStart)+")...");
+         System.out.println((nbImg+1)+" image"+s+" in progress (MOC size="+Util.getUnitDisk(moc.getMem())+" in "+Util.getTemps((t-tStart)*1000L)+")...");
          needNL=false;
          t2=t;
       }
@@ -623,10 +623,10 @@ public class MocGen {
          if( needNL ) System.out.println();
          if( verbose ) {
             String s = nbImg>1?"s":"";
-            System.out.println(nbImg+" image"+s+" added in the MOC in "+cds.tools.Util.getTemps(ms));
+            System.out.println(nbImg+" image"+s+" added in the MOC in "+cds.tools.Util.getTemps(ms*1000L));
          }
          moc.write(out,fmt);
-         System.out.println("MOC achieved in "+Util.getTemps(ms)+" => "+out);
+         System.out.println("MOC achieved in "+Util.getTemps(ms*1000L)+" => "+out);
          ready=true;
       } catch( Exception e ) {
          moc=null;

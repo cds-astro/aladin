@@ -76,6 +76,17 @@ public abstract class Moc1D extends Moc {
       moc.clone1( this );
    }
    
+   public String toDebug() {
+      String so = ""+getMocOrder();
+      if( mocOrder==-1 ) so = "("+so+")"; 
+      char c= Character.toUpperCase( cDim() );
+      return (c+"")
+             +"MOC mocOrder="+so+" deepestOrder="+getDeepestOrder()
+             +" nbRanges="+getNbRanges()
+             +" nbCells="+getNbCells()
+             +" mem="+getUnitDisk( getMem());
+   }
+   
    /** Clear the MOC - data only (not the properties, nor the mocOrder) */
    public void clear() {
       super.clear();
@@ -95,6 +106,12 @@ public abstract class Moc1D extends Moc {
       m.currentOrder=currentOrder;
    }
    
+   /** Degrades the resolution(s) of the MOC until the RAM size of the MOC is reduced under the specified maximum (expressed in bytes). */
+   public void reduction( long maxSize) throws Exception {
+      if( maxSize<=0L ) throw new Exception("negative or null size not allowed");
+      while( getMem()>maxSize && getMocOrder()>0 ) setMocOrder( getMocOrder()-1 );
+   }
+   
    /** Return the deepest possible order (ex: 29 for SMoc, 61 for TMoc) */
    public abstract int maxOrder();
    
@@ -112,16 +129,18 @@ public abstract class Moc1D extends Moc {
    protected void computeHierarchy() {
       int deep=-1;
       int size=0;
-      Iterator<MocCell> it = cellIterator( true );
-      while( it.hasNext() ) {
-         MocCell cell = it.next();
-         size += cell.end - cell.start;
-         if( cell.order>deep ) deep=cell.order;
+      if( range!=null ) {
+         Iterator<MocCell> it = cellIterator( true );
+         while( it.hasNext() ) {
+            MocCell cell = it.next();
+            size += cell.end - cell.start;
+            if( cell.order>deep ) deep=cell.order;
+         }
       }
       cacheDeepestOrder=deep;
       cacheNbCells=size;
    }
-   
+
    /** Return the number of Moc cells at the MAX order */
    public long getNbValues() { flush(); return range.nval(); }
    
@@ -168,6 +187,7 @@ public abstract class Moc1D extends Moc {
       int newOrder =  getMocOrder4op(getMocOrder(),m.getMocOrder());
       boolean force = newOrder< Math.min( getMocOrder(), m.getMocOrder() );
       res.setMocOrder( newOrder, force );
+      res.range.trimIfTooLarge();
       return res;
    }
    
@@ -281,6 +301,10 @@ public abstract class Moc1D extends Moc {
       
       // Fast bufferisation ? => see bufferOn()
       if( buf!=null ) {
+         
+         // Peut être 2x de suite la même case ?
+         if( bufSz>2 && buf[bufSz-2]==start && buf[bufSz-1]==end ) return;
+         
          buf[bufSz++]=start;
          buf[bufSz++]=end;
          if( bufSz==buf.length ) flush();

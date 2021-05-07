@@ -424,7 +424,7 @@ public class CacheFits {
          String s1 = i>1 ? "s":"";
          long freeRam = getFreeMem();
          if( context!=null ) {
-            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
+            context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files released ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree*1000L)
             +" => freeRAM="+Util.getUnitDisk(freeRam));
          }
       }

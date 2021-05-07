@@ -98,6 +98,9 @@ public class FrameTMocGenCat extends FrameMocGenImg {
       return x;
    }
    
+   protected int getOrder() { return mocOrder.getSelectedIndex()+FIRSTORDER_T; }
+
+   
    @Override
    protected void submit() {
       try {

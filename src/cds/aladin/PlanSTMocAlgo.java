@@ -23,7 +23,6 @@ package cds.aladin;
 
 import cds.moc.Moc;
 import cds.moc.STMoc;
-import cds.tools.Util;
 
 /** Génération d'un STMOC de manière algorythmique
  * @author P.Fernique [CDS]
@@ -31,32 +30,10 @@ import cds.tools.Util;
  */
 public class PlanSTMocAlgo extends PlanSTMoc {
    
-   static final int UNION        = 0;
-   static final int INTERSECTION = 1;
-   static final int SUBTRACTION  = 2;
-   static final int DIFFERENCE   = 3;
-   static final int COMPLEMENT   = 4;
-   static final int TOORDER      = 5;
-   
-   
-   static private final String [] OPERATION = { "union","inter","sub","diff","compl","ord" };
-   
-   /** Retourne le nom qui correspond à une opération */
-   static protected String getOpName(int op) { return OPERATION[op]; }
-   
-   /** Retourne le code de l'opération. Un tiret en préfixe peut être ou non présent
-    * @param s la chaine qui décrit l'opération
-    * @return le code de l'opération ou -1 si non trouvé
-    */
-   static int getOp(String s) {
-      if( s.startsWith("-") ) s=s.substring(1);
-      return Util.indexInArrayOf(s, OPERATION, true);
-   }
-   
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */
-   public PlanSTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int spaceOrder,int timeOrder) {
+   public PlanSTMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int spaceOrder,int timeOrder,long maxSize, String maxPriority) {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
@@ -70,25 +47,29 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       
       long t0 = System.currentTimeMillis();
       
-      
       try {
          moc = p1.getMoc().clone();
-         if( op==COMPLEMENT ) moc = moc.complement();
-         else/*if( op==TOORDER ) moc.setMocOrder(timeOrder);
-         else */{
+         if( op==PlanMocAlgo.COMPLEMENT ) moc = moc.complement();
+         else if( op==PlanMocAlgo.COPY ) ((STMoc)moc).setMocOrder(timeOrder,spaceOrder);
+         else {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
                Moc m2=pList[i].getMoc();
+               
+               // IL vaut mieux ajuster les ordres avant qu'après => c'est plus rapide
+               if( timeOrder>=0  ) { m1.setTimeOrder( timeOrder );   m2.setTimeOrder(  timeOrder ); }
+               if( spaceOrder>=0 ) { m1.setSpaceOrder( spaceOrder ); m2.setSpaceOrder( spaceOrder ); }
+
                switch(op) {
-                  case UNION :        moc = m1.union(        m2); break;
-                  case INTERSECTION : moc = m1.intersection( m2 ); break;
-                  case SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
-//                  case DIFFERENCE  :  moc = ((STMoc)m1).difference(   m2 ); break;
+                  case PlanMocAlgo.UNION :        moc = m1.union(        m2); break;
+                  case PlanMocAlgo.INTERSECTION : moc = m1.intersection( m2 ); break;
+                  case PlanMocAlgo.SUBTRACTION :  moc = m1.subtraction(  m2 ); break;
+                  case PlanMocAlgo.DIFFERENCE  :  moc = m1.difference(   m2 ); break;
                }
             }
          }
-         if( timeOrder>=0 ) ((STMoc)moc).setTimeOrder( timeOrder );
-         if( spaceOrder>=0 ) ((STMoc)moc).setSpaceOrder( spaceOrder );
+         
+         if( maxSize!=-1L ) ((STMoc)moc).reduction(maxSize,maxPriority);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -113,11 +94,6 @@ public class PlanSTMocAlgo extends PlanSTMoc {
    protected void launchLoading() { }
    
    // Retourne le label associé à l'opération
-   private String getFonction(PlanMoc p1,PlanMoc [] pList,int op,int order) {
-      if( op==TOORDER ) return p1.label+":"+order;
-      String lab2= pList.length>1 ? pList[1].label : null;
-      String lab3= pList.length>2 ? pList[2].label : null;
-      return p1.label + " "+ getOpName(op) + (lab2==null ? " " : lab2 + (lab3==null?"":" ..."));
-   }
+   private static String getFonction(PlanMoc p1,PlanMoc [] pList,int op,int order) { return PlanMocAlgo.getFonction(p1,pList,op,order); }
 }
 

@@ -392,7 +392,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    public void endTable() { 
       long t = Util.getTime() - timeStartTable;
       int nbObj = nb_o-lastNb_o;
-      tableParserInfo("   -Table loaded & parsed in "+Util.getTemps(t)
+      tableParserInfo("   -Table loaded & parsed in "+Util.getTemps(t*1000L)
             + " for "+nbObj+" object"+(nbObj>1?"s":"")
             + (nbObj<1000?"":" ("+Util.myRound(""+1000.*nbObj/t)+" objects per sec)"));
    }
@@ -1175,7 +1175,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       if( ok ) {
          if( !flagEndResource ) endResource();
          long duree=System.currentTimeMillis()-d;
-         String s = "Catalog queried, loaded and parsed in "+Util.getTemps(duree);
+         String s = "Catalog queried, loaded and parsed in "+Util.getTemps(duree*1000L);
          tableParserInfo("\n"+s);
          Aladin.trace(3,s);
          if( !flagXY && rm==0.0 ) plan.error = aladin.error = "no RA or DE columns";

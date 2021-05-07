@@ -32,7 +32,6 @@ import java.io.InputStream;
  * @authors Pierre Fernique [CDS]
  * 
  * @version 6.0 apr 2021 - Wrapper to SMoc => new cds.moc package
- * 
  * @version 5.0 Sept 2017 - JSON and ASCII full support, add(order,long[]) + add(order,Collection<Lon>), missing check npix over max limit bug fix
  * @version 4.8 July 2017 - isEmpty(), isIncluding(..) methods
  * @version 4.7 Dec 2016 - Undeprecated new HealpicMoc(Inputstream in, int mode) + isAscendant(int order, Array a) bug fix
@@ -120,9 +119,6 @@ public class HealpixMoc extends SMoc {
 
    /** @deprecated Provide the number of Healpix pixels (for all MOC orders) */
    public int getSize() { return getNbCells(); }
-
-   /** @deprecated Return approximatively the memory used for this moc (in bytes) */
-   public long getMem() { return getNbCells()*8L; }
 
    /** @deprecated  Provide the greatest order really used by the MOC */
    public int getMaxOrder() { return getMocOrder(); }
