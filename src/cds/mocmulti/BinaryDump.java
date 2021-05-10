@@ -251,7 +251,6 @@ public final class BinaryDump {
          else {
             int mocOrder = moc.getMocOrder();
             buf.memoInteger(mocOrder);
-            moc.toRangeSet();
             Range range = moc.seeRangeList();
             buf.memoInteger(range.sz);
             for( int i=0; i<range.sz; i++ ) buf.memoLong(range.r[i]);

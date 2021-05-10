@@ -775,11 +775,13 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       return moc;
    }
    
+   static private final String INTERSECT = "INTER";
+   
    static public void setIntersect( SMoc moc, int intersect ) {
       if( moc==null ) return;
       String value = intersect==MultiMoc.OVERLAPS ? null : MultiMoc.INTERSECT[ intersect ];
       try {
-         moc.setProperty("intersect", value);
+         moc.setProperty(INTERSECT, value);
       } catch( Exception e ) {
          e.printStackTrace();
       }
@@ -787,7 +789,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    
    static public int getIntersect( SMoc moc ) {
       if( moc==null ) return -1;
-      String s = moc.getProperty("intersect");
+      String s = moc.getProperty(INTERSECT);
       return s==null ? MultiMoc.OVERLAPS : Util.indexInArrayOf(s,MultiMoc.INTERSECT,true);
    }
    

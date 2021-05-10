@@ -81,15 +81,6 @@ public class SMoc extends Moc1D {
       super.add(moc);
    }
    
-   /*********************************** Pour assurer la migration d'Aladin et du Mocserver *************************/
-   
-   public void setCheckConsistencyFlag(boolean flag) throws Exception { }
-   public void checkAndFix() throws Exception { }
-   public void check() throws Exception {}
-   public void sort() {}
-   public void toRangeSet() {}
-   public void toMocSet() throws Exception {}
-   
    /************************************ SMoc specifical methods => HEALPix *****************************************/
    
    /** Add a Moc pixel (at max order) corresponding to the alpha,delta position

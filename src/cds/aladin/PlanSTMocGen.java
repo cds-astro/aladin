@@ -102,7 +102,6 @@ public class PlanSTMocGen extends PlanSTMoc {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
-      m1.toRangeSet();
       
       // On crée le STMOC à partir du range de temps et de l'aggrégation des MOC spatiaux
       Range2 r = new Range2();

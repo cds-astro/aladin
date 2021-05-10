@@ -110,7 +110,7 @@ public class MultiMoc implements Iterable<MocItem> {
       return dump.load(binaryDumpFile);
    }
    
-   /** Add or replace a MOC to the MultiMoc. The MOC is sorted (if required) for fast access
+   /** Add or replace a MOC to the MultiMoc.
     * @param mocId  MOC identifier (unique)
     * @param moc MOC to memorize
     */
@@ -119,7 +119,6 @@ public class MultiMoc implements Iterable<MocItem> {
          int o = moc.getMocOrder();
          if( o==SMoc.MAXORD_S ) o = moc.getDeepestOrder();  // A cause du bug
          if( mocOrder<o) mocOrder=o;
-         moc.sort();
       }
       MocItem mi = new MocItem(mocId,moc,prop,dateMoc,dateProp);
       add( mi );
@@ -599,9 +598,8 @@ public class MultiMoc implements Iterable<MocItem> {
       int order = moc.getDeepestOrder();
 //      SMoc moc1 = new SMoc(moc.getMinOrder(),moc.getMocOrder());
       SMoc moc1 = moc.dup();
-      moc1.setCheckConsistencyFlag(false);
+      moc1.bufferOn();
       long onpix1=-1;
-      int n=0;
       Coo c =new Coo();
       Iterator<Long> it = moc.valIterator();
       while( it.hasNext() ) {
@@ -615,12 +613,9 @@ public class MultiMoc implements Iterable<MocItem> {
             onpix1=npix1;
             
             moc1.add(order,npix1/4);
-            if( n>100000 ) { moc1.checkAndFix(); n=0; }
-            n++;
          }
-
       }
-      moc1.setCheckConsistencyFlag(true);
+      moc1.bufferOff();
       return moc1;
    }
 

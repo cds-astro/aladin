@@ -30,8 +30,6 @@ import cds.tools.Util;
  */
 public class BuilderSTMoc extends BuilderTMoc {
    
-   static public final double DAYMICROSEC = 86400000000.;
-
    STMoc stMoc;
 
    public BuilderSTMoc(Context context) {
@@ -47,27 +45,17 @@ public class BuilderSTMoc extends BuilderTMoc {
    }
    
    int n=0;
-
+   
    protected void addIt(int order, long npix, double jdtmin, double jdtmax) {
-      
       try {
-         long tmin = (long)(jdtmin*DAYMICROSEC);
-         long tmax = (long)(jdtmax*DAYMICROSEC);
-                 
-         long smin = npix<<(2*(29-order));
-         long smax = (npix+1)<<(2*(29-order));
-         
-         stMoc.add(tmin,tmax,smin,smax);
-         
-         n++;
+         stMoc.add(order,npix,jdtmin,jdtmax);
       } catch( Exception e ) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
    
+   
    protected void writeIt() throws Exception {
-      System.out.println("Order="+stMoc.getTimeOrder()+" Ntimes="+stMoc.getTimeRanges()+" Size="+Util.getUnitDisk( stMoc.getMem()));
       String file = context.getOutputPath()+Util.FS+"STMoc.fits";
       stMoc.write(file);
    }

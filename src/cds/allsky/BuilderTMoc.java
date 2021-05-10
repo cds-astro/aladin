@@ -85,11 +85,6 @@ public class BuilderTMoc extends Builder {
    }
    
    
-   static private final int UNKNOWN    = 0;
-   static private final int TMINMAX    = 1;
-   static private final int MJDEXPTIME = 2;
-   static private final int DATEOBS    = 3;
-   
    private int mode=UNKNOWN;
    
    private TMoc tmoc = null; 
@@ -120,22 +115,25 @@ public class BuilderTMoc extends Builder {
          }
          for( String key : out ) {
             String json = out.get(key).getJson();
-            double tmin;
-            double tmax;
+            double tmin=0;
+            double tmax=0;
             double exptime;
             
             try {
-               if( mode==UNKNOWN ) mode = detectMode(json);
+               if( mode==UNKNOWN ) {
+                  mode = detectMode(json);
+                  context.info("Time extraction from "+getTimeMode( mode )+" keywords");
+               }
 
-               if( mode==TMINMAX ) {
+               if( mode==TMIN ) {
                   String s = cds.tools.Util.extractJSON("T_MIN", json);
                   if( s==null ) continue;
                   tmin = Double.parseDouble( s );
                   s= cds.tools.Util.extractJSON("T_MAX", json);
-                  if( s==null ) continue;
-                  tmax = Double.parseDouble(s  );
-                  
-               } else if( mode==DATEOBS ) {
+                  if( s==null ) tmax=tmin;
+                  else tmax = Double.parseDouble(s  );
+
+               } else if( mode==DATEOBS12 ) {
                   String s = cds.tools.Util.extractJSON("DATEOBS1", json);
                   if( s==null ) continue;
                   tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
@@ -145,25 +143,50 @@ public class BuilderTMoc extends Builder {
                   if( Double.isNaN(tmax) ) tmax=tmin;
 //                  System.out.println("tmin="+tmin+" tmax="+tmax+" date="+s);
                   
-               } else {
+               } else if( mode==MJD ) {
                   String s= cds.tools.Util.extractJSON("MJD-OBS", json);
                   if( s==null ) continue;
                   tmin = Double .parseDouble( s );
                   s = cds.tools.Util.extractJSON("EXPTIME", json);
-                  if( s==null ) continue;
-                  exptime = Double.parseDouble( s );
-                  tmax = tmin+exptime;
+                  if( s==null ) tmax=tmin;
+                  else {
+                     exptime = Double.parseDouble( s );
+                     tmax = tmin+exptime;
+                  }
 
+               } else if(mode==DATEOBS ) {
+                  String s= cds.tools.Util.extractJSON("DATE-OBS", json);
+                  if( s==null ) continue;
+                  tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
+                  s = cds.tools.Util.extractJSON("EXPTIME", json);
+                  if( s==null ) tmax=tmin;
+                  else {
+                     exptime = Double.parseDouble( s );
+                     tmax = tmin+exptime;
+                  }
+                  
+               } else if(mode==OBSDATE ) {
+                  String s= cds.tools.Util.extractJSON("OBS-DATE", json);
+                  if( s==null ) continue;
+                  String s1 = cds.tools.Util.extractJSON("TIME-OBS", json);
+                  s1= s1==null ? "" : "T"+s1;
+                  tmin = Astrodate.JDToMJD( Astrodate.parseTime(s+s1, Astrodate.ISOTIME));
+                  s = cds.tools.Util.extractJSON("EXPTIME", json);
+                  if( s==null ) tmax=tmin;
+                  else {
+                     exptime = Double.parseDouble( s );
+                     tmax = tmin+exptime;
+                  }
                }
-               
+
                double jdtmin = tmin+2400000.5;
                double jdtmax = tmax+2400000.5;
                
                addIt(maxOrder,npix,jdtmin,jdtmax);
                
             } catch( Exception e ) {
-               e.printStackTrace();
                context.warning("parsing error => "+json);
+               if( mode==UNKNOWN ) throw e;
                continue;
             }
          }
@@ -191,15 +214,40 @@ public class BuilderTMoc extends Builder {
 //      tmoc.toMocSet();
       tmoc.write(file);
    }
+
+   static private final int UNKNOWN        = 0;
+   static private final int TMIN           = 1;
+   static private final int MJD            = 2;
+   static private final int DATEOBS        = 3;
+   static private final int DATEOBS12      = 4;
+   static private final int OBSDATE        = 5;
+
+   
+   private final String [] TIMEMODE = { "UNKNOWN", "T_MIN/T_MAX", "MJD-OBS/EXPTIME",
+         "DATE-OBS/EXPTIME","DATEOBS1/DATEOBS2","OBS-DATE+TIME-OBS" };
+   
+   private String getTimeMode(int i) { return TIMEMODE[i]; }
    
    private int detectMode(String json ) throws Exception {
-      String s = cds.tools.Util.extractJSON("T_MIN", json);
-      if( s!=null ) return TMINMAX;
-      s = cds.tools.Util.extractJSON("EXPTIME", json);
-      if( s!=null ) return MJDEXPTIME;
-      s = cds.tools.Util.extractJSON("DATEOBS1", json);
-      if( s!=null ) return DATEOBS;
-      throw new Exception("Not able to determine HpxFinder time keywords (ex: T_MIN and T_MAX or MJD-OBS and EXPTIME, or DATEOBS1 and DATEOBS2");
+      String s1,s2;
+      s1 = cds.tools.Util.extractJSON("T_MIN", json);
+      if( s1!=null ) return TMIN;
+      
+      s1 = cds.tools.Util.extractJSON("MJD-OBS", json);
+      if( s1!=null ) return MJD;
+      
+      s1 = cds.tools.Util.extractJSON("DATE-OBS", json);
+      if( s1!=null ) return DATEOBS;
+      
+      s1 = cds.tools.Util.extractJSON("OBS-DATE", json);
+      if( s1!=null ) return OBSDATE;
+      
+      s1 = cds.tools.Util.extractJSON("DATEOBS1", json);
+      s2 = cds.tools.Util.extractJSON("DATEOBS2", json);
+      if( s1!=null && s2!=null ) return DATEOBS12;
+      
+      throw new Exception("Not able to determine HpxFinder time keywords (ex: T_MIN [and T_MAX] or MJD-OBS [and EXPTIME],"
+            + " or DATE-OBS [and EXPTIME],  or DATEOBS1 and DATEOBS2, or OBS-DATE+TIME-OBS");
    }
 
    private void initStat() { statNbFile=0; startTime = System.currentTimeMillis(); }

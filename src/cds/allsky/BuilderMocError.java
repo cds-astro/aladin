@@ -76,9 +76,7 @@ public class BuilderMocError extends BuilderMoc {
       String outputFile = path + FS + Constante.FILE_MOCERROR;
       
       moc.setSys(getFrame());
-      moc.setCheckConsistencyFlag(false);
       generateMoc(moc,fileOrder, path);
-      moc.setCheckConsistencyFlag(true);
       if( moc.isEmpty() ) context.info("MOCERROR empty (no error tiles detected)");
       else {
          context.warning("MOCERROR saved as "+Constante.FILE_MOCERROR);
@@ -91,6 +89,7 @@ public class BuilderMocError extends BuilderMoc {
    protected void generateMoc(SMoc moc, int fileOrder,String path) throws Exception {
       
       initStat();
+      moc.bufferOn();
       
       File f = new File(path + Util.FS + "Norder" + fileOrder );
       
@@ -119,8 +118,8 @@ public class BuilderMocError extends BuilderMoc {
 
             generateTileMoc(moc,sf1[j], fileOrder, npix);
          }
-         moc.checkAndFix();
       }
+      moc.bufferOff();
    }
    
 
@@ -147,7 +146,5 @@ public class BuilderMocError extends BuilderMoc {
       }catch( Exception e ) {
          moc.add(mocOrder,npix);
       } finally { if( dis!=null ) dis.close(); }
-      
-      if( npix%10000 == 0 ) moc.checkAndFix();
    }
 }

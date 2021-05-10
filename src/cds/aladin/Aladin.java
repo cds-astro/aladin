@@ -178,6 +178,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Stat measurements shift error
  * @beta    <LI> HiPS tiles crossing the view in AITOFF projection
  * @beta    <LI> s_region circle radius expressed with E notation (xxEn) 
  * @beta    <LI> Plugins classLoader problem with JVM >=1.9
@@ -205,7 +206,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.052";
+   static public final    String VERSION = "v11.054";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4675,7 +4676,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( levelTrace>=3 ) e.printStackTrace();
          moc=null;
       }
-       if( moc!=null ) moc.toRangeSet();
        return moc;
     }
     

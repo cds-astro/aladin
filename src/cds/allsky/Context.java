@@ -74,8 +74,8 @@ public class Context {
    
    static private String [] FITSKEYS = { 
          "DATE","MJD_OBS","UTC","LST","DATE-OBS","MJD-OBS","MJD-END",
-         "DATE-OBS","DATE-END","DATEOBS1","DATEOBS2","MIDOBS",
-         "ORDATE","TIMESYS","MJDREF","JD","EXPTIME","TEXPTIME","OBSTIME",
+         "OBS-DATE","DATE-END","DATEOBS1","DATEOBS2","MIDOBS",
+         "ORDATE","TIMESYS","MJDREF","JD","EXPTIME","TEXPTIME","OBSTIME","TIME-OBS",
          "WAVELMIN","WAVELMAX","WAVELEN","TELESCOP","TELNAME"
    };
 

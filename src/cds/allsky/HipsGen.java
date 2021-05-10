@@ -713,7 +713,7 @@ public class HipsGen {
                     else context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
                 }
                 context.removeListReport();
-                context.done(context.getTitle("THE END (done in "+Util.getTemps((System.currentTimeMillis()-t)*1000L),'='));
+                context.done(context.getTitle("THE END (done in "+Util.getTemps((System.currentTimeMillis()-t)*1000L)+")",'='));
             }
 
         } catch (Exception e) {

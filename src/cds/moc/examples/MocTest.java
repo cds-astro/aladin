@@ -121,7 +121,22 @@ public class MocTest {
       boolean rep = s.toString().equals(ref);
       if( !rep ) {
          System.out.println("MocTest.testBasic ERROR: \n.get ["+s+"]\n.ref ["+ref+"]\n");
-      } else System.out.println("MocTest.testBasic OK");
+         return false;
+      }
+      
+      long nbCells=0L;
+      Iterator<Long> it1 = moc.valIterator();
+      while( it1.hasNext() ) { it1.next(); nbCells++; }
+      System.out.println("\nNb used cells at MocOrder "+moc.getMocOrder()+" => "+ moc.getNbValues());
+      rep = moc.getNbValues() == nbCells;
+      if( !rep ) {
+         System.out.println("Moc: "+moc);
+         System.out.println("MocTest.testBasic ERROR: \n.nbCells get ["+moc.getNbCells()+"]\n.ref ["+nbCells+"]\n");
+         return false;
+      }
+      
+      
+      if( rep ) System.out.println("MocTest.testBasic OK");
       return rep;
    }
 
@@ -1183,8 +1198,8 @@ public class MocTest {
       try {
          Moc.setMocOrderLogic( Moc.LOGIC_MAX );
 
-         //         ok&=testSetMocOrder();
-         //         ok&=testBasicSTMoc();
+//                  ok&=testSetMocOrder();
+//                  ok&=testBasicSTMoc();
          //         ok&=testIteratorSTMoc();
          //         ok&=testOperationSTMoc();
          //         
@@ -1195,7 +1210,7 @@ public class MocTest {
          //         ok&=testJSON();
          //         ok&=testASCII();
          //         ok&=testSTRING();
-         //         ok&=testBasic();
+                  ok&=testBasic();
          //         ok&=testBasicTMoc();
          //         ok&=testAdvancedTMoc();
          //         ok&=testSetLimitOrder();
@@ -1213,7 +1228,7 @@ public class MocTest {
          //         ok&=testSyscompatibility();
          //         ok&=testHashCode();
          //         ok&=testComplement();
-         ok&=testDegrade();
+//         ok&=testDegrade();
          //         
          //         
          //         testSpeedSTMoc();

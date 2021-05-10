@@ -133,9 +133,9 @@ public class MocGen {
                nbImg=0;
                moc = new SMoc();
                moc.setMocOrder(order);
-               moc.setCheckConsistencyFlag(false);
+               moc.bufferOn();
                scanAndDo(moc,new File(in),order);
-               moc.checkAndFix();
+               moc.bufferOff();
                ready=true;
             } catch( Exception e ) {
 //               System.out.println("Moc Exception => "+e.getMessage());
@@ -198,7 +198,6 @@ public class MocGen {
                      f.ext = ext;
                      String currentCell = f.getCellSuffix();
                      rep |= addInMocPixel1(f, moc, currentfile, currentCell, order);
-                     moc.checkAndFix();
                   }
 //               }
             } catch (Exception e) {
@@ -265,7 +264,6 @@ public class MocGen {
                n++;
                if( n>100000 ) {
                   n=0;
-                  moc.checkAndFix();
                   updateMoc(moc,out,fmt);
                }
                rep=true;
@@ -385,10 +383,7 @@ public class MocGen {
          if( abort ) throw new Exception("MOC aborted");
          if( f.isFile() ) {
             if( addInMoc(moc,f,order,strict) ) nbImg++;
-            if( nbImg>0 && nbImg%100==0 ) {
-               moc.checkAndFix();
-               updateMoc(moc,out,fmt);
-            }
+            if( nbImg>0 && nbImg%100==0 ) updateMoc(moc,out,fmt);
          }
       }
       if( recursive ) {
@@ -425,6 +420,7 @@ public class MocGen {
 
       if( !multWrite || moc.isEmpty() ) return false;
       if( verbose ) System.out.println("Updating output MOC ["+out+"]...");
+      moc.flush();
       moc.write(out, fmt);
       return true;
    }
@@ -613,12 +609,12 @@ public class MocGen {
          }
          
          moc.setMocOrder(order);
-         moc.setCheckConsistencyFlag(false);
          tStart = System.currentTimeMillis();
+         moc.bufferOn();
 //         if( in!=null ) scanAndDo(moc,new File(in),order);
 //         else scanStdin(moc,order);
          scanAndDo(moc,new File(in),order);
-         moc.checkAndFix();
+         moc.bufferOff();
          long ms = System.currentTimeMillis()-tStart;
          if( needNL ) System.out.println();
          if( verbose ) {

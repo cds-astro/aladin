@@ -126,9 +126,7 @@ public class BuilderMoc extends Builder {
       
       String  frame = getFrame();
       moc.setSys(frame);
-      moc.setCheckConsistencyFlag(false);
       generateMoc(moc,fileOrder, path);
-      moc.setCheckConsistencyFlag(true);
       moc.write(outputFile);
       
       // Faut-il changer le référentiel du MOC ?
@@ -184,6 +182,7 @@ public class BuilderMoc extends Builder {
    protected void generateMoc(SMoc moc, int fileOrder,String path) throws Exception {
       
       initStat();
+      moc.bufferOn();
       
       File f = new File(path + Util.FS + "Norder" + fileOrder );
       
@@ -212,8 +211,8 @@ public class BuilderMoc extends Builder {
 
             generateTileMoc(moc,sf1[j], fileOrder, npix);
          }
-         moc.checkAndFix();
       }
+      moc.bufferOff();
    }
    
    protected void generateTileMoc(SMoc moc,File f,int fileOrder, long npix) throws Exception {
@@ -268,7 +267,6 @@ public class BuilderMoc extends Builder {
             }
          }
       }
-      moc.checkAndFix();
    }
 
    

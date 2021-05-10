@@ -2481,7 +2481,7 @@ public final class Util {
       if( o1<0 ) return null;
       int o2 = s.indexOf(quote,o1+k.length()+1);
       if( o2<0 ) return null;
-      return Tok.unQuote( (new Tok(s.substring(o2),"},")).nextToken() );
+      return Tok.unQuote( (new Tok(s.substring(o2),"},")).nextToken().trim() );
    }
 
    static private String B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

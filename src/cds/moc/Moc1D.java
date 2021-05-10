@@ -141,8 +141,12 @@ public abstract class Moc1D extends Moc {
       cacheNbCells=size;
    }
 
-   /** Return the number of Moc cells at the MAX order */
-   public long getNbValues() { flush(); return range.nval(); }
+   /** Return the number of used cells at the Moc order: (ex: s2/1 3/5-6   => 6 */
+   public long getNbValues() {
+      flush();
+      int shift = (maxOrder()-getMocOrder())*shiftOrder();
+      return range.nval() >>> shift;
+   }
    
    /** Set the list of ranges - Warning: no copy */
    public void setRangeList( Range range ) { 
@@ -349,7 +353,7 @@ public abstract class Moc1D extends Moc {
    
    /** Inserts in the MOC all the elements being inserted in the buffer. 
     * The buffering remains active for future insertions (unlike bufferOff()) */
-   protected void flush() {
+   public void flush() {
       if( bufSz==0 ) return;
       add( buf, bufSz);
       bufSz=0;

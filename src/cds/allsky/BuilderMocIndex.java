@@ -45,9 +45,7 @@ public class BuilderMocIndex extends BuilderMoc {
       String outputFile = path + FS + Constante.FILE_MOC;
       String frame = getFrame();
       moc.setSys(frame);
-      moc.setCheckConsistencyFlag(false);
       generateMoc(moc,mocOrder, path);
-      moc.setCheckConsistencyFlag(true);
       moc.write(outputFile);
       
 // IL NE FAUT PAS CONVERTIR EN ICRS SI ON EST EN GAL CAR SINON LE BuilderTiles NE VA PAS

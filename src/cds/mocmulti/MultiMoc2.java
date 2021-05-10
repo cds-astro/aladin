@@ -61,7 +61,7 @@ public class MultiMoc2 extends MultiMoc {
       }
    }
    
-   /** Add or replace a MOC to the MultiMoc. The MOC is sorted (if required) for fast access
+   /** Add or replace a MOC to the MultiMoc.
     * @param mocId  MOC identifier (unique)
     * @param moc MOC to memorize
     */
@@ -70,7 +70,6 @@ public class MultiMoc2 extends MultiMoc {
          int o = moc.getMocOrder();
          if( o==SMoc.MAXORD_S ) o = moc.getDeepestOrder();  // A cause du bug
          if( mocOrder<o) mocOrder=o;
-         moc.sort();
       }
       MocItem2 mi = new MocItem2(mocId,moc,prop,dateMoc,dateProp);
       add( mi );
