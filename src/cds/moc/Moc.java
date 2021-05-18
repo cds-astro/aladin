@@ -398,7 +398,7 @@ public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Mo
 
       // Auto-detection du format ?
       if( mode==UNKNOWN ) {
-         if( !in.markSupported() ) throw new Exception("Moc stream with no mark/reset sopport. The MOC format must be specified");
+         if( !in.markSupported() ) throw new Exception("Moc stream with no mark/reset support. The MOC format must be specified");
 
          // Read the first charactere for deciding FITS or ASCII, and reset the stream
          in.mark(10);

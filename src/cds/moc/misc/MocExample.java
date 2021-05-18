@@ -17,7 +17,7 @@
 //    along with MOC API java project.
 //
 
-package cds.moc.examples;
+package cds.moc.misc;
 
 import java.io.BufferedInputStream;
 import java.io.File;

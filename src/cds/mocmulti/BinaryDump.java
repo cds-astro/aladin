@@ -150,13 +150,13 @@ public final class BinaryDump {
          // Lecture d'un MOC
          long dateMoc = buf.readLong();
          String mocId = buf.readString();
-         SMoc moc = new SMoc();
+         SMoc moc = null;
          int maxOrder = buf.readInteger();
-         if( maxOrder==-1 ) moc=null;
-         else {            
+         if( maxOrder!=-1 ) {
+            moc=new SMoc(maxOrder);
             int sz = buf.readInteger();
             Range range = new Range(sz);
-            for( int j=0; j<range.sz; j++ ) range.push( buf.readLong() );
+            for( int j=0; j<sz; j++ ) range.push( buf.readLong() );
             moc.setRangeList( range );
          }
          

@@ -195,3 +195,23 @@
 %Aladin.LabelPlane HiPS cat tiler
 
 
+%A    VizieRAssocData
+%D    VizieR Associated Data
+%O    aladin
+%Z    ALADIN
+%U    http://cdsarc.unistra.fr/saadavizier.tap/tap/sync?REQUEST=doQuery&LANG=ADQL&MAXREC=2000000&QUERY=SELECT+TOP+999+*+FROM+Obscore+WHERE+dataproduct_type+=+'image'+and+obs_collection+=+'$4'+and+1=CONTAINS(POINT('ICRS',s_ra,s_dec),CIRCLE('ICRS',$1,$2,$3))
+%P.D  1:Right Ascension
+%P.D  2:Declination
+%P.D  3:Radius in deg
+%P.D  4:Catalog ID
+%P.K  1:Target(RAd)
+%P.K  2:Target(DEd)
+%P.K  3:Field(RADIUSd)
+%R    Mime(text/xml)
+%Aladin.Menu IVOA...
+%Aladin.XLabel VizieR associated data
+%Aladin.LabelPlane AssocData $4
+%Aladin.Profile >11.052
+
+
+

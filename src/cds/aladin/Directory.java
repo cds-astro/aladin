@@ -2659,32 +2659,32 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    //
    // return b;
    // }
-   //
+	//
 
-	   /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */
-	   static protected String getCatCode(String id) {
-	      return Util.getSubpath(id, 1);
-	   }
+	/** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => I) */
+	static protected String getCatCode(String id) {
+	   return Util.getSubpath(id, 1);
+	}
 
-	   /** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => 246) */
-	   static protected String getCatNumber(String id) {
-	      return Util.getSubpath(id, 2);
-	   }
+	/** Retourne le code de la catégorie des catalogues, null sinon (ex: CDS/I/246/out => 246) */
+	static protected String getCatNumber(String id) {
+	   return Util.getSubpath(id, 2);
+	}
 
-   /** retourne l'abbréviation du journal (ex: CDS/J/A+A/171/261/table1 => A+A) */
-   static protected String getJournalCode(String id) {
-      return Util.getSubpath(id, 2);
-   }
+	/** retourne l'abbréviation du journal (ex: CDS/J/A+A/171/261/table1 => A+A) */
+	static protected String getJournalCode(String id) {
+	   return Util.getSubpath(id, 2);
+	}
 
-   /** retourne numéro du journal (ex: CDS/J/A+A/171/261/table1 => 171/261 ) */
-   static protected String getJournalNum(String id) {
-      return Util.getSubpath(id, 3,2);
-   }
+	/** retourne numéro du journal (ex: CDS/J/A+A/171/261/table1 => 171/261 ) */
+	static protected String getJournalNum(String id) {
+	   return Util.getSubpath(id, 3,2);
+	}
 
-   /**
-    * Retourne le suffixe de l'identificateur d'un catalogue => tous ce qui suit le code de catégorie (ex: CDS/I/246/out =>
-    * 246/out)
-    */
+	/**
+	 * Retourne le suffixe de l'identificateur d'un catalogue => tous ce qui suit le code de catégorie (ex: CDS/I/246/out =>
+	 * 246/out)
+	 */
    static protected String getCatSuffix(String id) {
       return Util.getSubpath(id, 2, 2);
    }
@@ -3096,7 +3096,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       JPanel panelInfo = null; // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
 
       JCheckBox hipsBx = null, tmocBx=null, mocBx = null, mociBx = null, mocuBx, progBx = null, dmBx = null, siaBx = null, ssaBx = null,
-            customBx = null, csBx = null, msBx = null, allBx = null, tapBx = null, xmatchBx = null, globalBx = null, liveBx = null;
+            customBx = null, csBx = null, msBx = null, allBx = null, tapBx = null, xmatchBx = null, globalBx = null, liveBx = null,
+            assocBx=null;
       ConeField target = null;
       JPanel targetPanel = null;
       JButton load = null, grab = null;
@@ -3155,6 +3156,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( ssaBx != null )  { activateLoad |= ssaBx.isSelected();  activateTarget |= ssaBx.isSelected(); }
          if( csBx != null )   { activateLoad |= csBx.isSelected();   activateTarget |= csBx.isSelected(); }
          if( liveBx != null ) { activateLoad |= liveBx.isSelected(); activateTarget |= liveBx.isSelected(); }
+         if( assocBx != null ){ activateLoad |= assocBx.isSelected();activateTarget |= assocBx.isSelected(); }
          if( customBx != null ) activateLoad |= customBx.isSelected();
          if( msBx != null )     activateLoad |= msBx.isSelected();
          if( allBx != null )    activateLoad |= allBx.isSelected();
@@ -3162,7 +3164,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( xmatchBx != null ) activateLoad |= xmatchBx.isSelected();
          if( globalBx != null ) activateLoad |= globalBx.isSelected();
          load.setEnabled(activateLoad);
-         
          
          if( activateTarget ) {
             if( sTarget!=null && sTarget.trim().length()==0  ) sTarget=null;
@@ -3339,6 +3340,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             boolean hasMoc = false;
             boolean hasHips = false;
             boolean hasGlobalAccess = false;
+            boolean hasVizieRAssocData = false;
             int nbIn = 0;
             int nbInMayBe = 0;
             int nbInHips = 0;
@@ -3448,7 +3450,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                mocAndMore.add(bx);
                Util.toolTip(bx, AWMOC3TIP);
             }
-
+            
             c.insets.top = 1;
             a = new MyAnchor(aladin, sList, 100, more, null);
             a.setForeground(Aladin.COLOR_BLUE);
@@ -3602,7 +3604,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             JPanel accessPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
             JCheckBox bx;
-            customBx = hipsBx = mocBx = tmocBx = mociBx = progBx = dmBx = csBx = liveBx = siaBx = ssaBx = allBx = globalBx = tapBx = xmatchBx = msBx = null;
+            customBx = hipsBx = mocBx = tmocBx = mociBx = progBx = dmBx = csBx = liveBx = null;
+            assocBx = siaBx = ssaBx = allBx = globalBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox(AWPROGACC);
                bx.addActionListener(this);
@@ -3661,7 +3664,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                bx.setSelected(!to.hasHips() && !allCat);
                bx.setToolTipText(AWINVIEWTIP);
                bg.add(bx);
-
+               
                if( to.isSimbadLive() ) {
                   liveBx = bx = new JCheckBox("live");
                   bx.addActionListener(this);
@@ -3715,16 +3718,18 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                tapBx = bx = new JCheckBox(AWCRIT);
                bx.addActionListener(this);
                accessPanel.add(bx);
-               bx.setSelected(csBx == null && siaBx == null && ssaBx == null && customBx == null );
+               bx.setSelected(csBx == null && siaBx == null && ssaBx == null 
+                           && customBx == null && assocBx == null );
                Util.toolTip(bx, AWCRITTIP, true);
                bg.add(bx);
             }
             
             // Juste pour ne pas sélectioner un truc inactivé
-            if( csBx != null   && !csBx.isEnabled() )   csBx.setSelected(false);
-            if( liveBx != null && !liveBx.isEnabled() ) liveBx.setSelected(false);
-            if( siaBx != null  && !siaBx.isEnabled() )  siaBx.setSelected(false);
-            if( ssaBx != null  && !ssaBx.isEnabled() )  ssaBx.setSelected(false);
+            if( csBx != null     && !csBx.isEnabled() )     csBx.setSelected(false);
+            if( liveBx != null   && !liveBx.isEnabled() )   liveBx.setSelected(false);
+            if( siaBx != null    && !siaBx.isEnabled() )    siaBx.setSelected(false);
+            if( ssaBx != null    && !ssaBx.isEnabled() )    ssaBx.setSelected(false);
+            if( assocBx != null  && !assocBx.isEnabled() )  assocBx.setSelected(false);
             if( customBx != null && !customBx.isEnabled() ) customBx.setSelected(false);
 
             JPanel productPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
@@ -3734,6 +3739,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                bx.addActionListener(this);
                productPanel.add(bx);
                Util.toolTip(bx, AWMOCXTIP, true);
+            }
+            
+            if( to.hasVizieRAssocData() ) {
+               assocBx= bx = new JCheckBox("Assoc.data");
+               productPanel.add(bx);
+               bx.addActionListener(this);
+               bg.add(bx);
+               Util.toolTip(bx, "Data (images) associated to this catalog");
             }
 
             if( to.hasTMoc() ) {
@@ -3967,7 +3980,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          });
          submitPanel.add(b);
 
-         if( siaBx!=null || ssaBx!=null || csBx!=null ) {
+         if( siaBx!=null || ssaBx!=null || csBx!=null || assocBx!=null ) {
             
             targetPanel = new JPanel( new FlowLayout(FlowLayout.RIGHT,0,0) );
             t = target = new ConeField();
@@ -4281,17 +4294,17 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       void bookmark() {
          StringBuilder bkm = new StringBuilder();
          TreeObjDir to = treeObjs.get(0);
-         if( allBx != null && allBx.isSelected() ) addBkm(bkm, to.getAllBkm());
+         if( allBx != null    && allBx.isSelected() )    addBkm(bkm, to.getAllBkm());
          if( globalBx != null && globalBx.isSelected() ) addBkm(bkm, to.getGlobalAccessBkm());
-         if( siaBx != null && siaBx.isSelected() ) addBkm(bkm, to.getSIABkm());
-         if( ssaBx != null && ssaBx.isSelected() ) addBkm(bkm, to.getSSABkm());
-         if( csBx != null && csBx.isSelected() ) addBkm(bkm, to.getCSBkm());
+         if( siaBx != null    && siaBx.isSelected() )    addBkm(bkm, to.getSIABkm());
+         if( ssaBx != null    && ssaBx.isSelected() )    addBkm(bkm, to.getSSABkm());
+         if( csBx != null     && csBx.isSelected() )     addBkm(bkm, to.getCSBkm());
+         if( liveBx != null   && liveBx.isSelected() )   addBkm(bkm, to.getLiveSimbadBkm());
+         if( hipsBx != null   && hipsBx.isSelected() )   addBkm(bkm, to.getHipsBkm());
+         if( mocBx != null    && mocBx.isSelected() )    addBkm(bkm, to.getMocBkm());
+         if( tmocBx != null   && tmocBx.isSelected() )   addBkm(bkm, to.getTMocBkm());
+         if( progBx != null   && progBx.isSelected() )   addBkm(bkm, to.getProgenitorsBkm());
 //         if( customBx != null && customBx.isSelected() ) addBkm(bkm, to.getCustomBkm());
-         if( liveBx != null && liveBx.isSelected() ) addBkm(bkm, to.getLiveSimbadBkm());
-         if( hipsBx != null && hipsBx.isSelected() ) addBkm(bkm, to.getHipsBkm());
-         if( mocBx != null && mocBx.isSelected() ) addBkm(bkm, to.getMocBkm());
-         if( tmocBx != null && tmocBx.isSelected() ) addBkm(bkm, to.getTMocBkm());
-         if( progBx != null && progBx.isSelected() ) addBkm(bkm, to.getProgenitorsBkm());
 
          // LES 3 AUTRES ACCES NE SONT PAS ACTUELLEMENT ACCESSIBLES PAR COMMANDE SCRIPT
          // => PAS DE BOOKMARK POSSIBLE
@@ -4414,6 +4427,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( globalBx != null && globalBx.isSelected() ) to.loadGlobalAccess();
             if( allBx != null    && allBx.isSelected() )    to.loadAll();
             if( siaBx != null    && siaBx.isSelected() )    to.loadSIA(cone);
+            if( assocBx != null  && assocBx.isSelected() )  to.loadAssoc(cone);
             if( ssaBx != null    && ssaBx.isSelected() )    to.loadSSA(cone);
             if( csBx != null     && csBx.isSelected() )     to.loadCS(cone);
             if( customBx!=null   && customBx.isSelected() ) to.loadCustom();

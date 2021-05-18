@@ -38,6 +38,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -831,7 +832,7 @@ public class PlanBG extends PlanImage {
          if( new File(fcache).exists() ) {
             InputStream in = null;
             try {
-               in = new FileInputStream(fcache);
+               in = new BufferedInputStream( new FileInputStream(fcache) );
                moc = new SMoc(in);
                moc.setMinOrder(3);
                removeHealpixOutsideMoc();

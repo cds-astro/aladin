@@ -16,7 +16,7 @@
 //    The GNU General Public License is available in COPYING file
 //    along with MOC API java project.
 //
-package cds.moc.examples;
+package cds.moc.misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

@@ -162,6 +162,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Access to the VizieR "associated data"
  * @beta    <LI> MOC extensions:
  * @beta    <UL> <LI> MOC 2.0 full compliance (STMOC, TMOC)
  * @beta         <LI> STMOC highlight & selection
@@ -206,7 +207,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.054";
+   static public final    String VERSION = "v11.055";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -709,7 +710,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Les menus;
    String MFILE,MSAVE,OPENDIRIMG,OPENDIRCAT,OPENDIRDB,OPENDIRCUBE,OPENLOAD,FILTERDIR,SEARCHDIR,
-          LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
+          LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,LOADTAP,/*HISTORY,*/MEDIT,MVIEW,
    MIMAGE,MCATALOG,MOVERLAY,MDOC,JOBCONTROLLER ;
    String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
    String MBGKG; // menus pour les backgrounds
@@ -1155,6 +1156,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       LOADVO  = chaine.getString("MLOADVO");
       //       HISTORY = chaine.getString("HISTORY");
       LOADFOV = chaine.getString("MLOADFOV");
+      LOADTAP = chaine.getString("MLOADTAP");
       PIXEL   = chaine.getString("MPIXEL");
       CONTOUR = chaine.getString("MCONTOUR");
       GRID    = chaine.getString("VWMGRID");
@@ -1365,7 +1367,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                     {OPENDIRCAT+"|"+meta+" T"},{OPENDIRCUBE},
                {},{SEARCHDIR+"|"+meta+" E"},{FILTERDIR},
                {},{OPENFILE+"|"+meta+" O"}, {OPENURL}, {LASTFILE,"???"},
-               {},{OPENLOAD+"|"+meta+" L"}, {LOADFOV}, 
+               {},{OPENLOAD+"|"+meta+" L"}, {LOADTAP}, {LOADFOV}, 
                {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
                {},{MPRINT+"|"+meta+" P"},
                {},{NEW+"|"+meta+" N"},
@@ -3427,7 +3429,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       // Interface d'interrogation des serveurs
       else if( isMenu(s,OPENFILE) || isMenu(s,OPENLOAD) || isMenu(s,OPENURL) || isMenu(s,LOADVO)
-            || isMenu(s,LOADFOV) || isMenu(s,ALADIN_IMG_SERVER) ) {
+            || isMenu(s,LOADFOV) || isMenu(s,LOADTAP) || isMenu(s,ALADIN_IMG_SERVER) ) {
          if( dialog==null ) {
             Aladin.error(chaine.getString("NOTYET"));
             return true;
@@ -3439,11 +3441,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
 
          if( isMenu(s,OPENLOAD) ) dialog.setVisible(true);
-         else {
-            Server server = /* isMenu(s,OPENFILE) || */isMenu(s,OPENURL)? dialog.localServer
-//                  : isMenu(s,LOADVO) ? dialog.discoveryServer
-                        : isMenu(s,ALADIN_IMG_SERVER) ? dialog.aladinServer
-                              : dialog.fovServer ;
+         else if( isMenu(s,LOADTAP) ) {
+            dialog.showGenericTapServer();
+         } else {
+            Server server =isMenu(s,OPENURL)? dialog.localServer
+                  : isMenu(s,ALADIN_IMG_SERVER) ? dialog.aladinServer
+                        : dialog.fovServer ;
 
             if( isMenu(s,OPENFILE) ) ((ServerFile)dialog.localServer).browseFile();
             else dialog.show(server);

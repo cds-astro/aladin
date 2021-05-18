@@ -1054,7 +1054,6 @@ public class Source extends Position implements Comparator {
        
        // BUG FIX 1/1/2020 PF
        if( i<n ) i--;
-       System.out.println("   => "+ info.substring(deb,i));
        
        return info.substring(deb,i);
     }

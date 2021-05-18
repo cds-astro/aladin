@@ -76,7 +76,7 @@ public final class Healpix implements HealpixImpl {
       return CDSHealpix.query_disc(order, lon, lat, Math.toRadians(radius), true);
    }
 
-   /*********************** private stuff ***************************************************/
+   /*********************** Healpix tilities ***************************************************/
 
    /** Maximal HEALPix order supported by the library */
    static public final int MAXORDER = 29;

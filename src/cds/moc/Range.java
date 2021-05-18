@@ -108,7 +108,7 @@ public class Range implements Comparable<Range> {
 //         r.push(memoStart+1);
 //         
 //         System.out.println(r);
-//         r.sort();
+//         r.sortAndFix();
 //         System.out.println(r);
 //      } catch( Exception e ) {
 //         e.printStackTrace();

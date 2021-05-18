@@ -1398,6 +1398,12 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
          return;
       }
    }
+   
+   public boolean showGenericTapServer() {
+      if (!tapManager.checkDummyInitForServerDialog(tapServer))  return false;
+       setCurrent("TAP");
+       return true;
+   }
 
    // Gestion des evenement
    public boolean action(Event evt, Object what) {
@@ -1406,22 +1412,12 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
 
       // Changement du formulaire
       server[current].memTarget(); // Memorisation du precedent target
-      if ("TAP".equals(what)) {
-    	  if (!tapManager.checkDummyInitForServerDialog(tapServer)) {
-			return false;
-    	  };
-    	 /* if (aladin.glu.lastTapGluServer == null && tapManager.checkDummyTapServer(tapServer)) {
-    		  try {
-				this.tapManager.showTapRegistryForm();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				Aladin.warning(this, Aladin.getChaine().getString("GENERICERROR"));
-				e.printStackTrace();
-			}
-    		  return false;
-		  }*/
-      }
-      setCurrent((String) what);
+      
+      // Cas spécifique pour TAP
+      if ("TAP".equals(what)) showGenericTapServer();
+      
+      // Cas général
+      else setCurrent((String) what);
 
       return false;
    }
@@ -1444,52 +1440,4 @@ DropTargetListener, DragSourceListener, DragGestureListener, GrabItFrame {
       if( name.equalsIgnoreCase("aladin") ) return cl.getLocation( buttons[ALADIN], this);
       return null;
    }
-
-
-//   public void show() {
-//      super.show();
-////      if( !aladin.PROTO ) startHipsUpdater();
-//   }
-//
-//   public void hide() {
-//      if( !aladin.BETA ) stopHipsUpdater();
-//      super.hide();
-//   }
-//
-//   private Thread threadUpdater=null;
-//   private boolean encore=true;
-//
-//   private void startHipsUpdater() {
-//      if( threadUpdater==null ) {
-//         threadUpdater = new Updater("HipsUpdater");
-//         threadUpdater.start();
-//      } else encore=true;
-//   }
-//
-//   private void stopHipsUpdater() { encore=false; }
-//
-//   class Updater extends Thread {
-//      public Updater(String s) { super(s); }
-//
-//      public void run() {
-//         encore=true;
-//         //         System.out.println("Hips updater running");
-//         while( encore ) {
-//            try {
-//               //               System.out.println("Hips updater checking...");
-//               if( isOpened() ) ((ServerHips)aladin.dialog.hipsServer).hipsUpdate();
-//               Thread.currentThread().sleep(1000);
-//            } catch( Exception e ) { }
-//         }
-//         //         System.out.println("Hips updater stopped");
-//         threadUpdater=null;
-//      }
-//   }
-//
-//   private boolean isOpened() {
-////      Window window = SwingUtilities.windowForComponent(this);
-//      return isVisible();
-//   }
-
-
 }

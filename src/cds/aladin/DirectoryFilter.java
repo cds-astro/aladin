@@ -803,7 +803,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       while( it.hasNext() ) {
          MocCell x = it.next();
          if( x.order!=oOrder ) s.append(" "+x.order+"/");
-         else s.append(",");
+         else s.append(" ");
          s.append(x.start);
          oOrder=x.order;
 

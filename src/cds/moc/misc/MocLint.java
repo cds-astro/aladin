@@ -16,7 +16,7 @@
 //    The GNU General Public License is available in COPYING file
 //    along with MOC API java project.
 //
-package cds.moc.examples;
+package cds.moc.misc;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -82,13 +82,25 @@ public class MocLint {
       } finally { in.close(); }
    }
    
-   /** Check the IVOA 2.0, 1.1 and 1.0 MOC recommendation compatibility
+   /** Check the IVOA 2.0 MOC recommendation compatibility
     * @param in stream containing the MOC in FITS or ASCII container
     * @return true if MOC is compatible
     */
    public static boolean check(InputStream in) {
-      
       StringBuilder out = new StringBuilder();
+      int rep = check(out,in);
+      System.out.print(out.toString());
+      return rep!=0;
+   }
+      
+   
+   /** Check the IVOA 2.0, 1.1 and 1.0 MOC recommendation compatibility
+    * @parm out StringBuilder for the output validator messages
+    * @param in stream containing the MOC in FITS or ASCII container
+    * @return 1-ok, 0-error, -1-warning
+    */
+   public static int check(StringBuilder out, InputStream in) {
+      
       int rep=0;
 
       try {
@@ -100,17 +112,14 @@ public class MocLint {
          bis.read(b);
          bis.reset();
          int mode = b[0]=='S' ? FITS : ASCII; 
-          
          switch( mode ) {
             case FITS:  rep = checkFits( out,bis);  break;
             case ASCII: rep = checkAscii( out,bis); break;
          }
-         
-         System.out.print(out.toString());
 
       } catch( Exception e ) { e.printStackTrace(); }
       
-      return rep!=0;
+      return rep;
    }
    
    private static int  error(StringBuilder out,String s)   { out.append("ERROR   "+s+"\n"); return 1; }

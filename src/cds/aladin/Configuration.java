@@ -42,6 +42,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -2769,13 +2770,14 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          if( f.exists() ) {
             InputStream in = null;
             try {
-               in = new FileInputStream(f);
+               in = new BufferedInputStream( new FileInputStream(f) );
                moc = new SMoc(in);
                DirectoryFilter.setIntersect(moc, intersect);
             }
             catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
             finally{ try{ in.close(); } catch( Exception e) {} }
          }
+         
       }
       setDirFilter( name, expr, moc );
    }

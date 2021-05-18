@@ -309,12 +309,14 @@ public abstract class Moc1D extends Moc {
          // Peut être 2x de suite la même case ?
          if( bufSz>2 && buf[bufSz-2]==start && buf[bufSz-1]==end ) return;
          
-         buf[bufSz++]=start;
-         buf[bufSz++]=end;
+         synchronized( this ) {
+            buf[bufSz++]=start;
+            buf[bufSz++]=end;
+         }
          if( bufSz==buf.length ) flush();
          
       // Or direct addition ?
-      } else  range.add(start,end);
+      } else range.add(start,end);
       
       resetCache();
    }
@@ -351,12 +353,16 @@ public abstract class Moc1D extends Moc {
       bufSz=0;
    }
    
+//   private Object lock = new Object();
+   
    /** Inserts in the MOC all the elements being inserted in the buffer. 
     * The buffering remains active for future insertions (unlike bufferOff()) */
    public void flush() {
       if( bufSz==0 ) return;
-      add( buf, bufSz);
-      bufSz=0;
+      synchronized( this ) {
+         add( buf, bufSz);
+         bufSz=0;
+      }
    }
    
    /** Fast addition of a list of ranges expressed at the maximum order (2 consecutive longq per range): start..end (end excluded). 

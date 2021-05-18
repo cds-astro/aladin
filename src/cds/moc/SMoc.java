@@ -60,6 +60,9 @@ public class SMoc extends Moc1D {
    protected void clone1( Moc moc ) throws CloneNotSupportedException {
       if( !(moc instanceof SMoc) ) throw new CloneNotSupportedException("Uncompatible type of MOC for clone. Must be SMoc");
       super.clone1( moc );
+      altCoosys = ((SMoc)moc).altCoosys;
+      minOrder = ((SMoc)moc).minOrder;
+      
    }
       
    /** Create and instance of same class, same sys, but no data nor mocorder */
@@ -146,7 +149,7 @@ public class SMoc extends Moc1D {
    
    /** get min Moc min Order. The hierarchical view will be start at this order. 0 by default */
    public int getMinOrder() { return minOrder; }
-   
+      
    /** Provide the angular resolution (in degrees) of the SMoc (sqrt of the smallest pixel area) */
    public double getAngularRes() {
       return Math.sqrt( Healpix.getPixelArea( getMocOrder() ) );

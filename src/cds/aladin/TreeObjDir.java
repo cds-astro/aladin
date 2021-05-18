@@ -743,6 +743,13 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Retourne true s'il s'agit d'un catalogue */
    protected boolean isCatalog() { return cat; }
    
+   /** retourne true s'il s'agit d'un catalogue VizieR avec des données images associées */
+   protected boolean hasVizieRAssocData() {
+      if( !isCDSCatalog() || prop==null ) return false;
+      String s = prop.get("associated_dataproduct_type");
+      return s!=null && s.indexOf("image")>=0;
+   }
+   
    /** Retourne true s'il s'agit de Simbad et quu'on doit montrer un accès un mode live */
    protected boolean isSimbadLive() { return Aladin.CDS && internalId.equals("CDS/Simbad"); }
 
@@ -1164,6 +1171,17 @@ public class TreeObjDir extends TreeObj implements Propable {
       return "get "+gluTag;
    }
    
+   /** Génération et exécution de la requête script correspondant à la requête TAp AssocData */
+   protected void loadAssoc() { loadAssoc( getDefaultTarget()+" "+getDefaultRadius(1)); }
+   protected void loadAssoc( String cone ) { 
+      if( cone==null ) { loadAssoc(); return; }
+      String ident = "\"AD "+internalId+"\"";
+     exec( ident+" = "+getAssocCmd()+" "+cone+"; select "+ident );
+   }
+   protected String getAssocCmd() {
+      String cat = Directory.getCatParent( internalId.substring(internalId.indexOf('/')+1) );
+      return "get VizieRAssocData("+cat+")";
+   }
    
    /** Génération et exécution de la requête script correspondant au protocole SIA ou SIA2 */
    protected void loadSIA() { loadSIA( getDefaultTarget()+" "+getDefaultRadius(1)); }

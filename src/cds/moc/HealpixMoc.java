@@ -23,7 +23,7 @@ package cds.moc;
 import java.io.InputStream;
 
 /** HEALPix Multi Order Coverage Map (MOC)
- * => DEPRECATED CLASS => Instead, use SMoc
+ * => DEPRECATED CLASS => use SMoc instead
  * THIS CLASS IS ONLY PROVIDED FOR COMPATIBILITY => TAKE THE TIME TO REWRITE YOUR CODE BY USING SMoc
  * 
  * This object provides read, write and process methods to manipulate an HEALPix Multi Order Coverage Map (MOC)
@@ -31,7 +31,7 @@ import java.io.InputStream;
  *
  * @authors Pierre Fernique [CDS]
  * 
- * @version 6.0 apr 2021 - Wrapper to SMoc => new cds.moc package
+ * @version 6.0 apr 2021 - Deprecate => Wrapper to SMoc => new cds.moc package
  * @version 5.0 Sept 2017 - JSON and ASCII full support, add(order,long[]) + add(order,Collection<Lon>), missing check npix over max limit bug fix
  * @version 4.8 July 2017 - isEmpty(), isIncluding(..) methods
  * @version 4.7 Dec 2016 - Undeprecated new HealpicMoc(Inputstream in, int mode) + isAscendant(int order, Array a) bug fix
@@ -56,9 +56,22 @@ import java.io.InputStream;
  */
 public class HealpixMoc extends SMoc {
 
+   /** Wrapper => just for helping the portability */
+   public HealpixMoc( SMoc moc ) {
+      super();
+      try {
+         clone1(moc);
+      } catch( CloneNotSupportedException e ) {
+         e.printStackTrace();
+      }
+   }
+   
+   /** Wrapper => just for helping the portability */
+   public HealpixMoc dup() { return new HealpixMoc( super.dup() ); }
+   
    /** @deprecated HEALPix Multi Order Coverage Map (MOC) creation */
    public HealpixMoc() { super(); }
-
+   
    /** @deprecated Moc Creation with a specified max limitOrder */
    public HealpixMoc(int maxLimitOrder) throws Exception {
       super();
@@ -102,7 +115,7 @@ public class HealpixMoc extends SMoc {
    /** @deprecated Set the Min limit order supported by the Moc (by default 0) */
    public void setMinLimitOrder(int limitOrder) throws Exception { setMinOrder(limitOrder); }
 
-   /** Set the limit order supported by the Moc */
+   /**  @deprecated Set the limit order supported by the Moc */
    public void setMaxLimitOrder(int limitOrder) throws Exception { setMocOrder(limitOrder); }
 
    /** @deprecated Provide the minimal limit order supported by the Moc (by default 0) */
@@ -130,7 +143,10 @@ public class HealpixMoc extends SMoc {
    }
    
    /** @deprecated Check and fix the consistency of the moc */
-   public void checkAndFix() throws Exception { flush(); }
+   public void checkAndFix() throws Exception { }
+   
+   /** @deprecated Check and fix the consistency of the moc */
+   public void check() throws Exception { }
 
    /** @deprecated  Add directly a full Moc. */
    public void add(HealpixMoc moc) throws Exception { super.add(moc); }
@@ -155,4 +171,27 @@ public class HealpixMoc extends SMoc {
  
    /** @deprecated Return true if the MOC covers the whole sky */
    public boolean isAllSky() { return isFull(); }
+   
+   /**  @deprecated Return the Union with another Moc */
+   public HealpixMoc union(HealpixMoc moc) throws Exception { return (HealpixMoc) super.union(moc); }
+
+   /**  @deprecated Return the Intersection with another Moc */
+   public HealpixMoc intersection(HealpixMoc moc) throws Exception { return (HealpixMoc) super.intersection(moc); }
+
+   /**  @deprecated Return the subtraction with another Moc */
+   public HealpixMoc subtraction(HealpixMoc moc) throws Exception { return (HealpixMoc) super.subtraction(moc); }
+   
+   /**  @deprecated Return the complement */
+   public HealpixMoc complement() throws Exception { return (HealpixMoc) super.complement(); }
+   
+   /** @deprecated => see getCoverage() : Return the area of the Moc computed in pixels at the Moc order */
+   public long getArea() {
+      long nside = pow2( getMocOrder() );
+      return 12L * nside * nside;
+   }
+   
+   /** @deprecated => see getCoverage() : Return the number of pixels of the Moc at the Moc order */
+   public long getUsedArea() { return getNbValues(); }
+
+
 }
