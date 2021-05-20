@@ -691,6 +691,8 @@ public class PlanMoc extends PlanBGCat {
 
    /** Retourne true si tout a été dessinée, sinon false */
    protected boolean hasMoreDetails() {
+      if( !isReady() ) return false;
+      if( flagProcessing ) return false;
       return moc!=null && lastOrderDrawn < moc.getDeepestOrder();
    }
    

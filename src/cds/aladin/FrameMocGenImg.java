@@ -226,7 +226,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
          
          String pixelCut="";
          if( !Double.isNaN(pixMin) || !Double.isNaN(pixMax) ) {
-            pixelCut = " -pixelCut=\""+pixMin+" "+pixMax+"\"";
+            pixelCut = " -pixelCut="+pixMin+"/"+pixMax+"";
          }
          a.console.printCommand("cmoc -order="+order+pixelCut+" "+labelList(ps));
          a.calque.newPlanMoc(ps[0].label+" MOC",ps,order,0,pixMin,pixMax,Double.NaN,false);

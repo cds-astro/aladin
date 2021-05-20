@@ -859,7 +859,7 @@ public class MyInputStream extends FilterInputStream {
       dejaLu+=len;
       
       // On libère le cache
-      if( inCache==0 ) freeCache();
+      if( inCache==0 && markPos==-1 ) freeCache();
       
       return len;
    }
