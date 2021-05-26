@@ -1,5 +1,11 @@
 package cds.savot.model.interpreter;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 //Copyright 2002-2014 - UDS/CNRS
 //The SAVOT library is distributed under the terms
 //of the GNU General Public License version 3.
@@ -22,11 +28,6 @@ package cds.savot.model.interpreter;
 //
 //Author, Co-Author:  Andre Schaaff (CDS), Laurent Bourges (JMMC)
 import cds.savot.model.SavotField;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 
 /**
  * A BinaryFieldInterpreter is able to encode and to decode a given type of data in binary.
@@ -134,7 +135,7 @@ public abstract class BinaryFieldInterpreter<T> {
 
         return decoded;
     }
-
+    
     /**
      * <p>Gets the number of data of type T to get currently.</p>
      * 
@@ -301,7 +302,7 @@ public abstract class BinaryFieldInterpreter<T> {
                 throw new BinaryInterpreterException("Impossible to encode an array into a single " + TYPE_LABEL + " !");
             }
         }
-        ArrayList<T> values = new ArrayList<T>(convertIntoArray(value));
+        ArrayList<T> values = new ArrayList<>(convertIntoArray(value));
 
         // Write the number of items if needed:
         if (variableArray) {
@@ -359,7 +360,7 @@ public abstract class BinaryFieldInterpreter<T> {
      * @see #convertPrimary(Object)
      */
     protected ArrayList<T> convertIntoArray(final Object value) throws BinaryInterpreterException {
-        ArrayList<T> list = new ArrayList<T>();
+        ArrayList<T> list = new ArrayList<>();
 
         // NULL values must be understandable by convertPrimary(...):
         if (value == null) {

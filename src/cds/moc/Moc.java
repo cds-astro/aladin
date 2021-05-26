@@ -69,6 +69,7 @@ import java.util.StringTokenizer;
  * of a MOC with the IVOA MOC 2.0 standard as well as its previous versions (1.1 and 1.0).
  * 
  * @author Pierre Fernique [CDS]
+ * @version 6.1 - May 2021 - bugs fixed version
  * @version 6.0 - April 2021 - full refactoring
  * @version 0.9 to 5 - 2011 to 2017 - predecessors
  *
@@ -76,7 +77,7 @@ import java.util.StringTokenizer;
 public abstract class Moc implements Iterable<MocCell>, Cloneable, Comparable<Moc>{
    
    /** MOC API version number */
-   static public final String VERSION = "6.0";
+   static public final String VERSION = "6.1";
 
    /** MOC serialization formats */
    static private final int UNKNOWN  = -1;         // Formar inconnu

@@ -353,8 +353,6 @@ public abstract class Moc1D extends Moc {
       bufSz=0;
    }
    
-//   private Object lock = new Object();
-   
    /** Inserts in the MOC all the elements being inserted in the buffer. 
     * The buffering remains active for future insertions (unlike bufferOff()) */
    public void flush() {

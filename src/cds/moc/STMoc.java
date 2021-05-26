@@ -1,3 +1,22 @@
+// Copyright 2021 - Unistra/CNRS
+// The MOC API project is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of MOC API java project.
+//
+//    MOC API java project is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    MOC API java project is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with MOC API java project.
+//
+
 package cds.moc;
 
 import java.io.InputStream;
@@ -13,7 +32,7 @@ import java.io.OutputStream;
  */
 public class STMoc extends Moc2D {
    
-   private static boolean PROTOSTMOC = false;   // Compatibility with proto STMOC
+   private boolean PROTOSTMOC = false;   // Compatibility with proto STMOC
 
    /** STMoc creator */
    public STMoc() {
@@ -62,7 +81,15 @@ public class STMoc extends Moc2D {
    public STMoc dup() { return new STMoc(); }
    
    
-   /******************************** Pour la migration d'Aladin et du MocServer ***********************************/
+   /************************************ STMoc specifical methods *****************************************/
+   
+   
+   public void add(HealpixImpl healpix,double alpha, double delta, double jdtmin, double jdtmax) throws Exception {
+      long smin = healpix.ang2pix(SMoc.MAXORD_S, alpha, delta);
+      long tmin = (long)(jdtmin*TMoc.DAYMICROSEC);
+      long tmax = (long)(jdtmax*TMoc.DAYMICROSEC);
+      add(tmin,tmax,smin,smin);
+   }
    
    /** Adding one élément by spaceOrder/npix et [jdtmin..jdtmax] */
    public void add(int order, long npix, double jdtmin, double jdtmax) throws Exception  {
@@ -77,13 +104,11 @@ public class STMoc extends Moc2D {
       add( TMoc.MAXORD_T, tmin, tmax, SMoc.MAXORD_S, smin, smax );
    }
    
-   public void add( double jdtmin, double jdtmax, Range r) throws Exception  {
+   public void add( double jdtmin, double jdtmax, SMoc smoc) throws Exception  {
       long tmin = (long)(jdtmin*TMoc.DAYMICROSEC);
       long tmax = (long)(jdtmax*TMoc.DAYMICROSEC +TMoc.getDuration( getTimeOrder()));
-      add(tmin,tmax,r);
+      add(tmin,tmax, new Range( smoc.seeRangeList() ) );
    }
-   
-   /************************************ STMoc specifical methods *****************************************/
    
    /** Set time order [0..61] */
    public void setTimeOrder( int timeOrder ) throws Exception { setMocOrder1( timeOrder ); }
@@ -250,10 +275,11 @@ public class STMoc extends Moc2D {
       byte [] buf = new byte[ 8 ];
       int size = 0;
       for( int i=0; i<range.sz; i+=2 ) {
-         long tmin = codeTime(range.r[i]);
-         size+=writeVal(out,tmin,buf);
-         long tmax = codeTime(range.r[i+1]);
-         size+=writeVal(out,tmax,buf);
+         long tmin = range.r[i];
+         long tmax = range.r[i+1];
+         if( tmin>=tmax ) throw new Exception("STMoc internal error. wrong time range at position "+i+" ["+tmin+".."+tmax+"[");
+         size+=writeVal(out,codeTime(tmin),buf);
+         size+=writeVal(out,codeTime(tmax),buf);
 
          // Si le prochain Moc dim2 est identique, on passe
          if( i<range.sz-2 && range.rr[i/2].equals(range.rr[i/2+1]) ) continue;
@@ -261,8 +287,9 @@ public class STMoc extends Moc2D {
          Range m = range.rr[i/2];
          for( int j=0; j<m.sz; j+=2 ) {
             long smin = m.r[j];
-            size+=writeVal(out,smin,buf);
             long smax = m.r[j+1];
+            if( smin>=smax ) throw new Exception("STMoc internal error. wrong space range at position "+i+"/"+j+" ["+smin+".."+smax+"[");
+            size+=writeVal(out,smin,buf);
             size+=writeVal(out,smax,buf);
          }
       }
@@ -312,18 +339,18 @@ public class STMoc extends Moc2D {
    static public long MASK_T = 1L<<63;
    static public long UNMASK_T = ~MASK_T;
 
-   static private boolean isTime(long a)  {
+   private boolean isTime(long a)  {
       if( PROTOSTMOC ) return a<0;
       return (a&MASK_T)!=0L;
    }
    
-   static private long codeTime(long a)  { return a|MASK_T; }
+   private long codeTime(long a)  { return a|MASK_T; }
    
-   static private long decodeTime(long a) {
+   private long decodeTime(long a) {
       if( PROTOSTMOC ) return -a;
       return a&UNMASK_T;
    }
-
+   
    /** Create STMoc from the list of fits values */
    private void createSTmocByFits(int nval,byte [] t) throws Exception {
       int i=0;
@@ -350,7 +377,11 @@ public class STMoc extends Moc2D {
             }
             
             // Memorization of the temporal range
-            range.append( decodeTime(min), decodeTime(max), null);
+            min = decodeTime(min);
+            max = decodeTime(max);
+            if( min>=max ) System.err.println("STMOC FITS time range error ["+min+".."+max+"[ => k="+k+" / "+nval);
+            range.push( min );
+            range.push( max );
 
          //  Spatial list
          } else m.append(min,max);

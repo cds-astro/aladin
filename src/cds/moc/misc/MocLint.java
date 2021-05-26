@@ -513,7 +513,8 @@ public class MocLint {
                if( moct==TIME ) mode = (int)( i%2L );
                else {
                   mode = (int)( i%2L );
-                  if( val>=0 ) mode+=2;
+                  if( mocv==MOC2PROTO ) { if( val>=0 ) mode+=2; }
+                  else if( (val&MASK_T)==0 ) mode+=2;
                }
                
                if( moct==TIME ) {
@@ -543,7 +544,7 @@ public class MocLint {
                      if( mode==2 && val >= maxs ) e+=error(out,"[3.2]: space val too high in row " + i+ " ["+val+">=12x2^29x2^29]");
                      if( mode==3 && val >  maxs ) e+=error(out,"[3.2]: space val too high in row " + i+ " ["+val+">12x2^29x2^29]");
                      
-                     sr.push(val);
+                     if( smocAggreg ) sr.push(val);
                   }
                   
                   if( timeAggreg ) {
@@ -575,6 +576,7 @@ public class MocLint {
                            smocAggreg=false;
                         }
                         prev_sr = sr;
+                        sr = new Range();
                      }
                   }
                   

@@ -140,7 +140,6 @@ public class BuilderMirror extends BuilderTiles {
 
       // Détermination du Moc
       SMoc area = new SMoc();
-      in = null;
       try {
          in = Util.openAnyStream( context.getInputPath()+"/Moc.fits");
          area.read(in);
@@ -159,7 +158,7 @@ public class BuilderMirror extends BuilderTiles {
             
             if( !context.getArea().equals(area)) {
                isSmaller=isPartial=true;
-               context.setMocArea( (SMoc)area.intersection( context.getArea()) );
+               context.setMocArea( area.intersection( context.getArea()) );
                context.info("Partial spacial mirror");
             }
          }
@@ -238,7 +237,7 @@ public class BuilderMirror extends BuilderTiles {
          catch( Exception e1 ) { depth = 1; }
       } catch( Exception e ) { throw new Exception("Missing info in properties file => splitting action not possible"); }
       
-      m = (SMoc)( context.moc!=null ? context.moc.clone() : context.mocIndex.clone() );
+      m = context.moc!=null ? context.moc.clone() : context.mocIndex.clone();
       if( m==null ) throw new Exception("No MOC available => splitting action not possible");
 
       validateSplit( context.getOutputPath(), splitCmd, m, order, bitpix, tileWidth, depth, context.getTileFormat() );

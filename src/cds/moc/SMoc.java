@@ -205,7 +205,9 @@ public class SMoc extends Moc1D {
    
    /** Return true if the moc is compatible for operation (same coosys) */
    private boolean isCompatible( SMoc moc ) {
-      return moc.altCoosys==altCoosys || moc.altCoosys!=null && moc.altCoosys.equals(altCoosys);
+      String a = altCoosys==null ? "C" : altCoosys;
+      String b = moc.altCoosys==null ? "C" : moc.altCoosys;
+      return a.equals(b);
    }
    
    /** Return the Union with another Moc */
