@@ -38,16 +38,22 @@ public class BuilderSTMoc extends BuilderTMoc {
    
    protected void initIt() {
       try {
+         System.out.println("STMOC DEBUG MODE....");
          stMoc = new STMoc(31,context.getOrder() );
       } catch( Exception e ) {
          e.printStackTrace();
       }
    }
    
-   int n=0;
    
-   protected void addIt(int order, long npix, double jdtmin, double jdtmax) {
+   protected void addIt(int order, long npix, double jdtmin, double jdtmax,String json) {
       try {
+         if( jdtmax<jdtmin ) {
+            context.warning("Bad time range ["+jdtmin+".."+jdtmax+"] => assuming jdtmax..jdtmin =>["+json+"]");
+            double t=jdtmax;
+            jdtmax=jdtmin;
+            jdtmin=t;
+         }
          stMoc.add(order,npix,jdtmin,jdtmax);
       } catch( Exception e ) {
          e.printStackTrace();
@@ -56,6 +62,16 @@ public class BuilderSTMoc extends BuilderTMoc {
    
    
    protected void writeIt() throws Exception {
+      
+      try {
+         stMoc.seeRangeList().checkConsistency();
+      } catch( Exception e1) {
+         System.out.println("Problème à l'écriture");
+         e1.printStackTrace();
+         return;
+      }
+
+
       String file = context.getOutputPath()+Util.FS+"STMoc.fits";
       stMoc.write(file);
    }

@@ -178,8 +178,8 @@ public class PlanSTMocGen extends PlanSTMoc {
             } else {
                m1 = aladin.createMocRegionCircle(((Position)o).raj,  ((Position)o).dej, radius, spaceOrder, true);
             }
-            m2.add(jdtime,jdend, m1 );
             
+            m2.add(jdtime,jdend, m1 );
          } catch( Exception e ) {
             if( aladin.levelTrace>=3) e.printStackTrace();
          }

@@ -975,7 +975,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 
    protected int getLosangeOrder() {
       if( progen || cat || nside==-1 /*|| maxOrder==-1 */) return -1;
-      return (int)Healpix.log2(nside) /*- maxOrder*/;
+      return (int)CDSHealpix.log2(nside) /*- maxOrder*/;
    }
    
    /** true si déjà chargé dans la pile */

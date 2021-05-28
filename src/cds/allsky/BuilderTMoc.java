@@ -182,7 +182,7 @@ public class BuilderTMoc extends Builder {
                double jdtmin = tmin+2400000.5;
                double jdtmax = tmax+2400000.5;
                
-               addIt(maxOrder,npix,jdtmin,jdtmax);
+               addIt(maxOrder,npix,jdtmin,jdtmax,json);
                
             } catch( Exception e ) {
                context.warning("parsing error => "+json);
@@ -198,10 +198,17 @@ public class BuilderTMoc extends Builder {
    
    protected void initIt() {
       tmoc = new TMoc();
+      tmoc.bufferOn();
    }
    
-   protected void addIt(int order, long npix, double jdtmin, double jdtmax) {
+   protected void addIt(int order, long npix, double jdtmin, double jdtmax,String json) {
       try {
+         if( jdtmax<jdtmin ) {
+            context.warning("Bad time range ["+jdtmin+".."+jdtmax+"] => assuming jdtmax..jdtmin =>["+json+"]");
+            double t=jdtmax;
+            jdtmax=jdtmin;
+            jdtmin=t;
+         }
          tmoc.add(jdtmin,jdtmax);
       } catch( Exception e ) {
          // TODO Auto-generated catch block

@@ -23,6 +23,7 @@
 	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >
 	    <src path="${src}"/>
       <src path="/Users/Pierre/Documents/Développements/CDSHealpixJava/src/main/java"/>
+      <src path="/Users/Pierre/Documents/Développements/Moc/src"/>
       <classpath>
           <pathelement path="${java.class.path}/"/>
         <pathelement path="${lib}/adql1.3.jar"/>
