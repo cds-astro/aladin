@@ -53,7 +53,7 @@ public class PlanMocGen extends PlanMoc {
    
    protected PlanMocGen(Aladin aladin,String label,Plan[] p,int order,double radius,
          double pixMin,double pixMax,double threshold,boolean fov) {
-      super(aladin,null,null,label,p[0].co,30);
+      super(aladin,null,null,label,p[0].co,30,null);
       this.p = p;
       this.order=order;
       this.radius=radius;

@@ -55,9 +55,10 @@ public class PlanSTMoc extends PlanTMoc {
       initST();
    }
    
-   protected PlanSTMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
+   protected PlanSTMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius, String url) {
       super(aladin);
       this.dis   = in;
+      this.url = url;
       type = ALLSKYSTMOC;
       useCache = false;
       frameOrigin = Localisation.ICRS;
@@ -71,9 +72,10 @@ public class PlanSTMoc extends PlanTMoc {
       suite();
    }
    
-   protected PlanSTMoc(Aladin aladin, STMoc moc, String label, Coord c, double radius) {
+   protected PlanSTMoc(Aladin aladin, STMoc moc, String label, Coord c, double radius, String url) {
       super(aladin);
       this.moc = moc;
+      this.url = url;
       useCache = false;
       frameOrigin = Localisation.ICRS;
       type = ALLSKYSTMOC;

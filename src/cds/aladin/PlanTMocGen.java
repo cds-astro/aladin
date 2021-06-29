@@ -39,7 +39,7 @@ public class PlanTMocGen extends PlanTMoc {
    private double gapPourcent;  // Pourcentage de progression par plan (100 = tout est terminé)
    
    protected PlanTMocGen(Aladin aladin,String label,Plan[] p,int order,double duration) {
-      super(aladin,(MyInputStream)null,label);
+      super(aladin,(MyInputStream)null,label,null);
       this.c=null;
       this.p = p;
       this.order=order;

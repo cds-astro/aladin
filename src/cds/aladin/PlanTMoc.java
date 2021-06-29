@@ -49,9 +49,10 @@ public class PlanTMoc extends PlanMoc {
       type = ALLSKYTMOC;
    }
    
-   protected PlanTMoc(Aladin aladin, MyInputStream in, String label) {
+   protected PlanTMoc(Aladin aladin, MyInputStream in, String label,String url) {
       super(aladin);
       this.dis   = in;
+      this.url = url;
       useCache = false;
       type = ALLSKYTMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
@@ -62,9 +63,10 @@ public class PlanTMoc extends PlanMoc {
       suite();
    }
 
-   protected PlanTMoc(Aladin aladin, TMoc moc, String label) {
+   protected PlanTMoc(Aladin aladin, TMoc moc, String label,String url) {
       super(aladin);
       this.moc = moc;
+      this.url = url;
       useCache = false;
       type = ALLSKYTMOC;
       this.c = Couleur.getNextDefault(aladin.calque);

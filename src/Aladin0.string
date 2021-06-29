@@ -3670,14 +3670,10 @@ AWCRIT	by criteria
 AWCRIT.fr	par critères
 AWCRITTIP	Advanced query by criteria\nby TAP protocol (Table Access Protocol).
 AWCRITTIP.fr	Interrogration avancée par critères\nvia le protocole TAP (Table Acccess Protocol).
-AWMOCX	space cov.
-AWMOCX.fr	couv.spatiale
-AWMOCXTIP	Load the spatiale coverage associated to the collection\nas a MOC MultiOrder Coverage map).
-AWMOCXTIP.fr	Charge la couverture spatiale associée à la collection\nsous la forme d'un MOC (MultiOrder Coverage map).
-AWTMOCX	time cov.
-AWTMOCX.fr	couv.temporelle
-AWTMOCXTIP	Load the temporal coverage associated to the collection\nas a TMOC (Temporal MultiOrder Coverage map).
-AWTMOCXTIP.fr	Charge la couverture temporelle associée à la collection\nsous la forme d'un TMOC (Temporal MultiOrder Coverage map).
+AWMOCX	coverage
+AWMOCX.fr	couverture
+AWMOCXTIP	Load the coverage associated to the collection\nas a MOC MultiOrder Coverage map).
+AWMOCXTIP.fr	Charge la couverture associée à la collection\nsous la forme d'un MOC (MultiOrder Coverage map).
 AWDM	density map
 AWDM.fr	carte de densité
 AWDMTIP	Load de density map associated to the catalog\nas a progressive view (HiPS).

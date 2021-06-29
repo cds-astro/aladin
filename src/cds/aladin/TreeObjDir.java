@@ -52,6 +52,7 @@ import cds.aladin.prop.Propable;
 import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.moc.Healpix;
+import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.mocmulti.MocItem2;
 import cds.mocmulti.MultiMoc;
@@ -899,23 +900,24 @@ public class TreeObjDir extends TreeObj implements Propable {
       return hasMocByMocServer() || prop!=null && prop.getProperty("moc_access_url")!=null || isHiPS();
    }
    
-   /** Retourne true si la collection dispose d'un TMOC */
-   protected  boolean hasTMoc() {
-      return hasTMocByMocServer() || prop!=null && prop.getProperty("tmoc_access_url")!=null
-            ;
-            // || hasHiPSTMocFile();   // CA PREND TROP DE TEMPS
-   }
-   
-   /** En attendant que ce soit dans le MocServer, je regarde l'existence du fichier HpxFinder/TMoc.fits */
-   private boolean hasHiPSTMocFile() {
-      if( !isHiPS() ) return false;
-      String url = getTMocUrl();
-      return Util.isUrlResponding( url );
-   }
+//   /** Retourne true si la collection dispose d'un TMOC */
+//   protected  boolean hasTMoc() {
+//      return hasTMocByMocServer() || prop!=null && prop.getProperty("tmoc_access_url")!=null
+//            ;
+//            // || hasHiPSTMocFile();   // CA PREND TROP DE TEMPS
+//   }
+//   
+//   /** En attendant que ce soit dans le MocServer, je regarde l'existence du fichier HpxFinder/TMoc.fits */
+//   private boolean hasHiPSTMocFile() {
+//      if( !isHiPS() ) return false;
+//      String url = getTMocUrl();
+//      return Util.isUrlResponding( url );
+//   }
    
    /** Retourne true si la collection dispose d'un MOC via le MocServer
     * (=> celui-ci ayant ajouté le mot clé moc_sky_fraction) */
-   private boolean hasMocByMocServer() { return prop!=null && prop.get("moc_sky_fraction")!=null; }
+   private boolean hasMocByMocServer() { return prop!=null && 
+         (prop.get("moc_sky_fraction")!=null || prop.getProperty("moc_access_url")!=null ); }
    
    /** Retourne true si la collection dispose d'un TMOC via le MocServer
     * (=> celui-ci ayant ajouté le mot clé tmoc_total_time) */
@@ -1314,7 +1316,9 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
 
    /** Génération et exécution de la requête script correspondant au protocole MOC */
-   protected void loadMoc( ) {exec( getMocCmd() ); }
+   protected void loadMoc( ) {
+      exec( getMocCmd() ); 
+      }
    protected String getMocBkm() { return getMocCmd(); }
    private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+")"; }
 
@@ -1436,11 +1440,11 @@ public class TreeObjDir extends TreeObj implements Propable {
 //      System.out.println("ULR scan = "+url);
       
       // Mémorisation du résultat
-      SMoc moc;
+      Moc moc;
       try { 
          moc = scan(url); 
          if( mo.moc==null ) mo.moc=moc;
-         else mo.moc.add(moc);
+         else mo.moc = mo.moc.union(moc);
       } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace();  }
       
       // Mémorisation de la surface couverte
@@ -1462,7 +1466,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 //         System.out.println();
          
          if( mo.mocRef==null ) mo.mocRef=moc;
-         else mo.mocRef.add(moc);
+         else mo.mocRef = mo.mocRef.union(moc);
         
          
       } catch( Exception e ) { if( aladin.levelTrace>=3 )  e.printStackTrace(); }
@@ -1478,7 +1482,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /**  Génération d'un Moc à partir du catalogue retournée par l'URL
     * passée en paramètre */
-   private SMoc scan( String url) {
+   private Moc scan( String url) {
       Pcat pcat = new Pcat(aladin);
       pcat.plan = new PlanCatalog(aladin);
       pcat.plan.label="test";

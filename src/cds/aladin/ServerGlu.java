@@ -1468,7 +1468,7 @@ public class ServerGlu extends Server implements Runnable {
                         in = Util.openStream(u);
                      } else throw e1;
                   }
-                  n = aladin.calque.newPlanMOC( in, label);
+                  n = aladin.calque.newPlanMOC( in, label, u.toString());
 
                } catch( Exception e1 ) {
                   if( aladin.levelTrace>=3 ) e1.printStackTrace(); 

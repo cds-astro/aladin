@@ -352,6 +352,21 @@ public class SourceStat extends SourceInfo {
    }
    
    /** Retourne une clé unique associé aux statistiques courantes */
+//  protected int getStatsHashcode(Plan p, int z) {
+//      int k= p.hashCode();
+//      k = k*13 + (raj+"").hashCode();
+//      k = k*17 + (dej+"").hashCode();
+//      k = k*19 + (radius+"").hashCode();
+//      if( p.isSync() ) k = k*23;
+//      if( z==-1 && p.isCube() ) z = (int)p.getZ();
+//      k = k*29 + z;
+//      if( p instanceof PlanBG ) k = k*31  + ((PlanBG)p).getOrder();
+//      return k;
+//   }
+   
+   protected int getStatsHashcode(Plan p, int z) { return getPixelStatsCle(p,z).hashCode(); }
+   
+   /** Retourne une clé unique associé aux statistiques courantes */
    protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       String sync = p.isSync() ? "sync":"";
@@ -384,6 +399,8 @@ public class SourceStat extends SourceInfo {
       boolean withMedian = statPixels.nb<MAXMEDIANE;
       return statPixels.getStatistics( withMedian );
    }
+   
+   private static int CLE =0;
    
    /** Regénère si nécessaire les statistiques associées à l'objet
     * @param p Le plan de base concernée
@@ -473,7 +490,6 @@ public class SourceStat extends SourceInfo {
                   if( !pi.isIn(x,y) ) continue;
                   double pix= isCube ? ((PlanImageBlink)pi).getPixel(x, pi.height-y-1, z) : pi.getPixelInDouble(x,y);
                   if( Double.isNaN(pix) ) continue;
-                  pix = pix*pi.bScale+pi.bZero;
 
                   c.x=x+0.5; 
                   c.y=y+0.5;

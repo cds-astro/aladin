@@ -22,13 +22,13 @@
 package cds.mocmulti;
 
 import cds.aladin.MyProperties;
-import cds.moc.SMoc;
+import cds.moc.Moc;
 
 
 public class MocItem2 extends MocItem {
-   public SMoc mocRef;   // Couverture de référence (zone connue)
+   public Moc mocRef;   // Couverture de référence (zone connue)
    
-   public MocItem2(String id,SMoc m, MyProperties p, long dMoc, long dProp) {
+   public MocItem2(String id,Moc m, MyProperties p, long dMoc, long dProp) {
       super(id,m,p,dMoc,dProp);
       mocRef=null;
    }
@@ -38,5 +38,5 @@ public class MocItem2 extends MocItem {
       mocRef=null;
    }
    
-   public SMoc getMocRef() { return mocRef; }
+   public Moc getMocRef() { return mocRef; }
 }

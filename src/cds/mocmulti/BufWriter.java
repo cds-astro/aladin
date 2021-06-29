@@ -49,6 +49,8 @@ public final class BufWriter {
    public void memoString(String s) throws Exception {
       if( s==null ) { memoShort( (short)-1); return; }
       byte[] a = s.getBytes();
+      int len = a.length;
+      if( len>Short.MAX_VALUE ) len=Short.MAX_VALUE;
       memoShort( (short)a.length );
       availability(a.length);
       System.arraycopy(a,0,buf,offset,a.length);
@@ -64,7 +66,7 @@ public final class BufWriter {
    /** Mémorisation d'un byte */
    public void memoByte(byte v) throws Exception {
       availability(1);
-      buf[offset++]= v;
+      buf[offset++]= (byte)(v & 0xFF);
    }
    
    /** Mémorisation d'un short (byte de poids faible en premier) */

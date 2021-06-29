@@ -65,7 +65,7 @@ public class StatPixels {
    protected boolean reinit() { return reinit(null); }
    protected boolean reinit( String cle ) { return reinit( cle, false); }
    protected boolean reinit( String cle, boolean withLimit ) {
-      if( cle!=null && hasSameCle( cle ) ) return false;
+      if( hasSameCle( cle ) ) return false;
       this.withLimit = withLimit;
       this.cle=cle;
       pixels = new ArrayList<>();
@@ -116,7 +116,10 @@ public class StatPixels {
    }
    
    // Vrai si la clé passée en paramètre est identique à la clé correspondant à la dernière statistique
-   protected boolean hasSameCle( String cle ) { return this.cle!=null && this.cle.equals(cle); }
+   protected boolean hasSameCle( String cle ) { 
+      return this.cle!=null && this.cle.equals(cle);
+//      return this.cle==cle;
+   }
    
    /** Ajout d'un pixel à la série */
    protected int addPix(double raj, double dej, double val) {

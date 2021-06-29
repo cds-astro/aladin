@@ -2541,7 +2541,7 @@ public final class Command implements Runnable {
          
          Moc moc=null;
          if( (moc=getMoc(param))!=null ) {
-            a.calque.newPlanMOC(moc,label);
+            a.calque.newPlanMOC(moc,label,null);
             a.calque.repaintAll();
             return "";
          }
@@ -2935,7 +2935,7 @@ public final class Command implements Runnable {
          }
          try {
             Moc moc = Moc.createMoc(m);
-            Plan p = a.calque.getPlan(a.calque.newPlanMOC(moc, "Moc"));
+            Plan p = a.calque.getPlan(a.calque.newPlanMOC(moc, "Moc",null));
             if( specifColor != null ) p.c = specifColor;
             return true;
          } catch( Exception e ) {
@@ -5504,7 +5504,7 @@ public final class Command implements Runnable {
          Plan p = a.calque.getFirstSelectedPlan();
          Moc moc = ((PlanMoc)p).getMoc().clone();
          moc.accretion();
-         a.calque.newPlanMOC(moc, "[EXT "+p.label+"]");
+         a.calque.newPlanMOC(moc, "[EXT "+p.label+"]",null);
       } catch( Exception e ) {
          e.printStackTrace();
       }

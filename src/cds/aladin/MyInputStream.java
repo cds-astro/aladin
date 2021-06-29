@@ -117,6 +117,7 @@ public class MyInputStream extends FilterInputStream {
    static final public long TMOC    = 1L<<50;
    static final public long STMOC   = 1L<<51;
    static final public long HPXMOC  = 1L<<52;
+   static final public long JSON    = 1L<<53;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
@@ -124,7 +125,7 @@ public class MyInputStream extends FilterInputStream {
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","FITSCMP","HEALPIX","GLU","ARGB","PDS",
       "SMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP","EOF","PROP","SSA", "SIAV2",
-      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC", "HPXMOC" };
+      "EPNTAP" ,"DATALINK", "DALIEX", "TMOC", "STMOC", "HPXMOC","JSON" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -405,7 +406,7 @@ public class MyInputStream extends FilterInputStream {
    public long getType() throws Exception { return getType(0); }
    public long getType(int limit) throws Exception {
       int csv;
-      int t;
+      long t;
       //System.out.println("call getType()");
 
       // le type de stream a deja ete detecte, on le retourne tel que
@@ -448,8 +449,8 @@ public class MyInputStream extends FilterInputStream {
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
          else if( inCache>=5 && c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=SMOC;
          
-         // Détection MOC ASCII
-         else if( inCache>=3 && (t=isAsciiMoc(c,inCache))>0 ) type |= (t==1 ? SMOC : t==2 ? TMOC : STMOC);
+         // Détection MOC ASCII ou JSON
+         else if( inCache>=3 && (t=isAsciiOrJsonMoc(c,inCache))>=0 ) type |= t;
 
          // Détection DS9REG
          else if( inCache>=13 && c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g'
@@ -464,14 +465,14 @@ public class MyInputStream extends FilterInputStream {
          else if( inCache>=7 && c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
                && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=SMOC;
 
-         // Détection #TMOC...)
-         else if( inCache>=5 && c[0]=='#' && c[1]=='T' && c[2]=='M' && c[3]=='O' && c[4]=='C') type |= TMOC;
-
-         // Détection #STMOC...)
-         else if( inCache>=6 && c[0]=='#' && c[1]=='S' && c[2]=='T' && c[3]=='M' && c[4]=='O' && c[5]=='C') type |= STMOC;
-
-        // Détection MOC JSON (une ligne de blanc \n{"  )
-         else if( inCache>=3 && isJsonMoc(c,inCache) ) type |=SMOC;
+//         // Détection #TMOC...)
+//         else if( inCache>=5 && c[0]=='#' && c[1]=='T' && c[2]=='M' && c[3]=='O' && c[4]=='C') type |= TMOC;
+//
+//         // Détection #STMOC...)
+//         else if( inCache>=6 && c[0]=='#' && c[1]=='S' && c[2]=='T' && c[3]=='M' && c[4]=='O' && c[5]=='C') type |= STMOC;
+//
+//        // Détection MOC JSON (une ligne de blanc \n{"  )
+//         else if( inCache>=3 && isJsonMoc(c,inCache) ) type |=SMOC;
          
          //         // Detection de BMP
          //         else if( c[0]==66  && c[1]==77 ) type |= BMP;
@@ -1211,15 +1212,35 @@ public class MyInputStream extends FilterInputStream {
    }
    
    // Les séparateurs pris en compte dans les MOCs ASCII (la virgule est pris en compte pour compatibilité)
-   private boolean isMocAsciiSep(char ch) { return ch==',' || Character.isWhitespace(ch) 
+   private boolean isMocAsciiSep(char ch) { return ch==',' || ch=='-' || Character.isWhitespace(ch) 
                                              || ch=='s' || ch=='t'; }
    
-   // Recherche d'une chaine d'un moc ASCII (ex: 1/3-5,8 7/)
-   // retourne 0-ce n'est pas un MOC, 1-SMOC, 2-TMOC et 3-STMOC;
-   private int isAsciiMoc(int c[],int n ) {
+   // Recherche d'une chaine d'un moc ASCII (ex: 1/3-5,8 7/) - SMOC, TMOC ou STMOC
+   // Supporte également la syntaxe JSON
+   //@return le type MOC | JSON, -1 sinon
+   private long isAsciiOrJsonMoc(int c[],int n ) {
       if( n<3 ) return 0;
+      
+      // Conversion MOC JSON en MOC ASCII
+      int [] c1 = new int[ Math.min(n,c.length)];
+      int n1=0;
+      boolean flagCDim=false;
+      boolean flagJson=false;
+      for( int i=0; i<n && i<c.length; i++ ) {
+         char a = (char)c[i];
+         if( flagCDim &&!Character.isDigit(a) ) continue;
+         if( "{}[]\"".indexOf(a)>=0 ) { flagJson=true; continue; }
+         flagCDim = a=='t' || a=='s';
+         if( a==',' ) a=' ';
+         if( a==':' ) a='/';
+         c1[n1++]=a;
+      }
+      c=c1;
+      n=n1;
+      
       boolean space=true, time=false;   // On suppose que c'est un MOC spatials => ne détecte pas les TMOC
       int mode=1;
+      
       for( int i=0; i<n && i<c.length; i++ ) {
          char ch = (char) c[i];
          if( !space && ch=='s' ) space=true;
@@ -1231,7 +1252,7 @@ public class MyInputStream extends FilterInputStream {
                mode=2;
             case 2: // Je dois avoir un nombre jusqu'a un /
                if( ch=='/' ) { mode=3; continue; }
-               if( !Character.isDigit(ch ) ) return 0;
+               if( !Character.isDigit(ch ) ) return -1;
                break;
             case 3: // Je cherche le prochain non blanc
                if( isMocAsciiSep(ch) ) continue;
@@ -1240,63 +1261,66 @@ public class MyInputStream extends FilterInputStream {
             case 4: // Je dois avoir un nombre jusqu'au prochain espace ou - ou /
                if( ch=='-' || isMocAsciiSep(ch)) { mode=5; continue; }
                if( ch=='/' ) { mode=3; continue; }
-               if( !Character.isDigit(ch) ) return 0;
+               if( !Character.isDigit(ch) ) return -1;
                break;
             case 5: // Je dois avoir un nombre jusqu'a un / ou un separateur
                if( ch=='/' || isMocAsciiSep(ch)) { mode=3; continue; }
-               if( !Character.isDigit(ch ) ) return 0;
+               if( !Character.isDigit(ch ) ) return -1;
                break;
          }
       }
-      return space && time ? 3 : time ? 2 : 1;
+      
+      long res=0L;
+      if( flagJson ) res = JSON;
+      return res | (space && time ? STMOC : time ? TMOC : SMOC);
    }
    
-      
-   // Recherche d'une chaine {"nn":[
-   private boolean isJsonMoc(int c[],int n ) {
-      int mode=0;
-      for( int i=0; i<n && i<c.length; i++ ) {
-         char ch = (char) c[i];
-         switch(mode) {
-            case 0: // Je cherche le premier non blanc
-               if( Character.isSpace(ch) ) continue;
-               mode=1;
-            case 1: // je dois avoir un {
-               if( ch!='{' ) return false;
-               mode=2;
-               break;
-            case 2: // Je cherche le prochain non blanc
-               if( Character.isSpace(ch) ) continue;
-               mode=3;
-            case 3: // Je dois avoir un "
-               if( ch!='\"' ) return false;
-               mode=4;
-               break;
-            case 4: // Je dois avoir un nombre jusqu'au prochain "
-               if( ch=='\"' ) { mode=5; continue; }
-               if( !Character.isDigit(ch) ) return false;
-               break;
-            case 5: // Je cherche le prochain non blanc
-               if( Character.isSpace(ch) ) continue;
-               mode=6;
-            case 6: // Je dois avoir un :
-               if( ch!=':' ) return false;
-               mode=7;
-               break;
-            case 7: // Je peux avoir un blanc
-               if( Character.isSpace(ch) ) continue;
-               mode=8;
-            case 8: // Je dois avoir un [
-               if( ch!='[' ) return false;
-               return true;
-         }
-      }
-      return true;
+   
+//   // Recherche d'une chaine {"nn":[
+//   private boolean isJsonMoc(int c[],int n ) {
+//      int mode=0;
+//      for( int i=0; i<n && i<c.length; i++ ) {
+//         char ch = (char) c[i];
+//         switch(mode) {
+//            case 0: // Je cherche le premier non blanc
+//               if( Character.isSpace(ch) ) continue;
+//               mode=1;
+//            case 1: // je dois avoir un {
+//               if( ch!='{' ) return false;
+//               mode=2;
+//               break;
+//            case 2: // Je cherche le prochain non blanc
+//               if( Character.isSpace(ch) ) continue;
+//               mode=3;
+//            case 3: // Je dois avoir un "
+//               if( ch!='\"' ) return false;
+//               mode=4;
+//               break;
+//            case 4: // Je dois avoir un nombre jusqu'au prochain "
+//               if( ch=='\"' ) { mode=5; continue; }
+//               if( !Character.isDigit(ch) ) return false;
+//               break;
+//            case 5: // Je cherche le prochain non blanc
+//               if( Character.isSpace(ch) ) continue;
+//               mode=6;
+//            case 6: // Je dois avoir un :
+//               if( ch!=':' ) return false;
+//               mode=7;
+//               break;
+//            case 7: // Je peux avoir un blanc
+//               if( Character.isSpace(ch) ) continue;
+//               mode=8;
+//            case 8: // Je dois avoir un [
+//               if( ch!='[' ) return false;
+//               return true;
+//         }
+//      }
+//      return true;
       
 //      else if( c[0]=='{' && c[1]=='"' ) type |=HPXMOC;
 //   else if( c[0]=='\n' && c[1]=='{' && c[2]=='"' ) type |=HPXMOC;
 //   else if( c[0]=='\r' && c[1]=='\n' && c[2]=='{' && c[3]=='"' ) type |=HPXMOC;
-   }
+//   }
    
    static private final String [] PROPKEY = { "ID", "creator_did","publisher_did","publisher_id","obs_did" };
    

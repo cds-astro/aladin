@@ -58,13 +58,20 @@ public class MyProperties {
    private StringBuilder propOriginal = null;   // Strings des properties originales (telles que) si demandé dans load()
 
    public MyProperties() {
-      prop = new ArrayList<PropItem>();
-      hash = new HashMap<String, PropItem>();
+      prop = new ArrayList<>();
+      hash = new HashMap<>();
+   }
+   
+   public MyProperties clone() {
+      MyProperties p = new MyProperties();
+      for( PropItem i : prop ) p.add( i.key, i.value);
+      p.propOriginal = propOriginal==null ? null : new StringBuilder(propOriginal );
+      return p;
    }
    
    /** Retourne la liste ordonnée des clés */
    public ArrayList<String> getKeys() {
-      ArrayList<String> a = new ArrayList<String>();
+      ArrayList<String> a = new ArrayList<>();
       for( PropItem ci : prop ) a.add(ci.key);
       return a;
    }
@@ -105,13 +112,24 @@ public class MyProperties {
          
          // Deux valeurs simples ?
          if( v1.indexOf('\t')<0 && v.indexOf('\t')<0 ) {
-            if( !v1.equals(v) ) return false;
+            
+            // Cas particulier de la popularite VizieR
+            // On estime différent si variation d'au moins 10%
+            if( k.equals("vizier_popularity") ) {
+               try {
+                  int pop  = Integer.parseInt(v);
+                  int pop1 = Integer.parseInt(v1);
+                  double var = (double)pop/pop1;
+                  if( var<0.9 || var>1.1 ) return false;
+               } catch( Exception e ) { return false; }
+               
+            } else if( !v1.equals(v) ) return false;
             
          // Des valeurs multiples => il faut comparer chaque possibilité de valeur
          } else if( !v1.equals(v) ) {
             int n=0,n1=0;
             Tok tok = new Tok(v,"\t");
-            HashMap<String, String> hash = new HashMap<String, String>(100);
+            HashMap<String, String> hash = new HashMap<>(100);
             while( tok.hasMoreTokens() ) { hash.put(tok.nextToken(),""); n++; }
 
             tok = new Tok(v1,"\t");
@@ -131,7 +149,7 @@ public class MyProperties {
     */
    public ArrayList<String> getModVal(MyProperties p) { return getModVal(p,null); }
    public ArrayList<String> getModVal(MyProperties p, String exceptKey) {
-      ArrayList<String> a = new ArrayList<String>();
+      ArrayList<String> a = new ArrayList<>();
       if( p==null ) return a;
       for( String k : getKeys() ) {
          if( k.equals(" ") || k.equals("#") ) continue;
@@ -149,7 +167,7 @@ public class MyProperties {
 
             int n=0,n1=0;
             Tok tok = new Tok(v,"\t");
-            HashMap<String, String> hash = new HashMap<String, String>(100);
+            HashMap<String, String> hash = new HashMap<>(100);
             while( tok.hasMoreTokens() ) { hash.put(tok.nextToken(),""); n++; }
 
             tok = new Tok(v1,"\t");
@@ -174,7 +192,7 @@ public class MyProperties {
     * @return Une liste des clés supprimées
     */
    public ArrayList<String> getDelKey(MyProperties p) {
-      ArrayList<String> a = new ArrayList<String>();
+      ArrayList<String> a = new ArrayList<>();
 
       for( String k : getKeys() ) {
          if( k.equals(" ") || k.equals("#") ) continue;
@@ -194,7 +212,7 @@ public class MyProperties {
     * @return Une liste des clés ajoutées
     */
    public ArrayList<String> getAddKey(MyProperties p) {
-      ArrayList<String> a = new ArrayList<String>();
+      ArrayList<String> a = new ArrayList<>();
       if( p==null ) return a;
       for( String k1 : p.getKeys() ) {
          if( k1.equals(" ") || k1.equals("#") ) continue;
@@ -317,11 +335,12 @@ public class MyProperties {
    }
    
    /** Remplacement de la valeur associée à une clé
-    * Ajout simple en fin de liste si inexistant au préalable
+    * Ajout simple en fin de liste si inexistant au préalable. Suppression si valeur==null
     * @param key
     * @param value
     */
    public void replaceValue(String key, String value) {
+      if( value==null ) { remove(key); return; }
       PropItem item = getItem(key);
       if( item == null ) {
          item = new PropItem(key, value);
@@ -406,8 +425,8 @@ public class MyProperties {
       // Pour conserver le flux original
       if( flagKeepOriginal ) propOriginal = new StringBuilder();
 
-      prop = new ArrayList<PropItem>();
-      hash = new HashMap<String, PropItem>();
+      prop = new ArrayList<>();
+      hash = new HashMap<>();
       
 
       // Je lis les propriétés de la configuration

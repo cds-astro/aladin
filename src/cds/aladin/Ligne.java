@@ -683,6 +683,25 @@ public class Ligne extends Position {
    /** Retourne une clé unique associé aux statistiques courantes - On utilise entre autre
     * la somme des coordonnées. Si l'utilisateur déplace un sommet cette somme sera
     * nécessairement modifiée. */
+//   protected int getStatsHashcode(Plan p, int z) {
+//      int k= p.hashCode();
+//      k = k*13 + (raj+"").hashCode();
+//      k = k*17 + (dej+"").hashCode();
+//      double tot=0;
+//      for( Ligne a=getFirstBout(); a.finligne!=null; a=a.finligne )  tot += a.raj+a.dej;
+//      k = k*19 + (tot+"").hashCode();
+//      if( p.isSync() ) k = k*23;
+//      if( z==-1 && p.isCube() ) z = (int)p.getZ();
+//      k = k*29 + z;
+//      if( p instanceof PlanBG ) k = k*31 + ((PlanBG)p).getOrder();
+//      return k;
+//   }
+   
+   protected int getStatsHashcode(Plan p, int z) { return getPixelStatsCle(p,z).hashCode(); }
+   
+   /** Retourne une clé unique associé aux statistiques courantes - On utilise entre autre
+    * la somme des coordonnées. Si l'utilisateur déplace un sommet cette somme sera
+    * nécessairement modifiée. */
    protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
       double tot=0;
@@ -841,7 +860,6 @@ public class Ligne extends Position {
                   if( inter%2==1 ) {
                      double pix= isCube ? ((PlanImageBlink)pi).getPixel(x, pi.height-y-1, z) : pi.getPixelInDouble(x,y);
                      if( Double.isNaN(pix) ) continue;
-                     pix = pix*pi.bScale+pi.bZero;
 
                      c.x=x+0.5; 
                      c.y=y+0.5;

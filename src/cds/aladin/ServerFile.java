@@ -391,9 +391,9 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
  
-            else if( (type & MyInputStream.SMOC)!=0 ) n=aladin.calque.newPlanMOC(in,label);
-            else if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label);
-            else if( (type & MyInputStream.STMOC)!=0) n=aladin.calque.newPlanSTMOC(in,label);
+            else if( (type & MyInputStream.SMOC)!=0 ) n=aladin.calque.newPlanMOC(in,label,u.toString());
+            else if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label,u.toString());
+            else if( (type & MyInputStream.STMOC)!=0) n=aladin.calque.newPlanSTMOC(in,label,u.toString());
 
             else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
                if( u!=null ) {

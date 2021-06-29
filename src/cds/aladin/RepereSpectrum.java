@@ -96,6 +96,21 @@ public class RepereSpectrum extends Repere {
    
    private StatPixels statPixels = new StatPixels();
    
+   
+   /** Retourne une clé unique associé aux statistiques courantes */
+//  protected int getStatsHashcode(Plan p, int z) {
+//      int k= p.hashCode();
+//      k = k*13 + (raj+"").hashCode();
+//      k = k*17 + (dej+"").hashCode();
+//      if( p.isSync() ) k = k*23;
+//      if( z==-1 && p.isCube() ) z = (int)p.getZ();
+//      k = k*29 + z;
+//      if( p instanceof PlanBG ) k = k*31 + ((PlanBG)p).getOrder();
+//      return k;
+//   }
+
+   protected int getStatsHashcode(Plan p, int z) { return getPixelStatsCle(p,z).hashCode(); }
+
    /** Retourne une clé unique associé aux statistiques courantes */
    protected String getPixelStatsCle(Plan p, int z) { 
       if( z==-1 && p.isCube() ) z=(int)p.getZ();
@@ -199,7 +214,6 @@ public class RepereSpectrum extends Repere {
             if( !pi.isIn(xc,yc) ) return true;
             double pix= isCube ? ((PlanImageBlink)pi).getPixel(xc, pi.height-yc-1, z) : pi.getPixelInDouble(xc,yc);
             if( Double.isNaN(pix) ) return true;
-            pix = pix*pi.bScale+pi.bZero;
 
             c.x=xc+0.5; 
             c.y=yc+0.5;

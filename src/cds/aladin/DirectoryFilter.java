@@ -219,7 +219,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bt.setMargin( new Insets(2,2,2,2) ); 
       bt.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { 
-            if( mocFiltreSpatial!=null ) aladin.calque.newPlanMOC(mocFiltreSpatial, "Moc spatial filter"); }
+            if( mocFiltreSpatial!=null ) aladin.calque.newPlanMOC(mocFiltreSpatial, "Moc spatial filter", null); }
       });
       p.add(bt);
       mocPanel.add(p, BorderLayout.EAST );

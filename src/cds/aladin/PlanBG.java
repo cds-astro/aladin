@@ -820,7 +820,7 @@ public class PlanBG extends PlanImage {
             return;
          }
       }
-      aladin.calque.newPlanMOC(moc,label+" MOC");
+      aladin.calque.newPlanMOC(moc,label+" MOC", getUrl()+"/"+Constante.FILE_MOC);
    }
 
    protected SMoc moc;
@@ -841,11 +841,12 @@ public class PlanBG extends PlanImage {
             return;
          }
       }
-      String f = getProperty(Constante.KEY_MOC_ACCESS_URL);
-      if( f==null ) f = getUrl()+"/"+Constante.FILE_MOC;
+//      String f = getProperty("moc_access_url");
+//      if( f==null ) f = getUrl()+"/"+Constante.FILE_MOC;
+      String f = getUrl()+"/"+Constante.FILE_MOC;
       MyInputStream mis = null;
       try {
-         mis=Util.openAnyStream(f);
+         mis = Util.openAnyStream(f);
          moc = new SMoc(mis);
          moc.setMinOrder(3);
          removeHealpixOutsideMoc();

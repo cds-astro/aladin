@@ -53,7 +53,7 @@ public class PlanSTMocGen extends PlanSTMoc {
    
    protected PlanSTMocGen(Aladin aladin,String label,Plan[] p,int spaceOrder, int timeOrder, 
          double duration, double radius, boolean fov) {
-      super(aladin, (MyInputStream)null, label, null, 0.);
+      super(aladin, (MyInputStream)null, label, null, 0.,null);
       aladin.trace(3,"STMOC creation: "+Plan.Tp[type]);
       
       this.c=null;

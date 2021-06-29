@@ -108,6 +108,8 @@ import cds.tools.pixtools.CDSHealpix;
 public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame {
    
    static protected final String MMOC = "Multiprop.bin";
+   
+   static public final String GLUMOCSERVER = "MocServer";
 
    // Nombre de collections appelables individuellement en parallèle
    static private final int MAX_PARALLEL_QUERY = 30;
@@ -120,7 +122,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          AWMOC2, AWMOC2TIP, AWMOC3, AWMOC3TIP ;
    static protected String ALLCOLL, MYLIST, ALLCOLLHTML, MYLISTHTML, AWSKYCOV, AWMOCUNK, AWHIPSRES, AWNBROWS, AWREFPUB, AWPROGACC,
          AWPROGACCTIP, AWDATAACC, AWDATAACCTIP, AWDATAACCTIP1, AWINVIEWTIP, AWMOCQLABTIP2, AWXMATCH, AWXMATCHTIP, AWCRIT,
-         AWCRITTIP, AWMOCX, AWMOCXTIP, AWTMOCX, AWTMOCXTIP, AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
+         AWCRITTIP, AWMOCX, AWMOCXTIP, /* AWTMOCX, AWTMOCXTIP, */AWDM, AWDMTIP, AWPROGEN, AWPROGENTIP, AWSCANONLY, AWSCANONLYTIP, AWLOAD, FPCLOSE,
          AWFRAMEINFOTITLE,AWCGRAPTIP,AWCONE,AWCONETIP,AWACCMODE,AWACCMODETIP,AwDERPROD,AwDERPRODTIP,AWINFOTIP,AWPROPTIP,
          AWBOOKMARKTIP,AWPARAMTIP,AWSTICKTIP,AWCUSTOM,AWCUSTOMTIP;
    static private final String UPDATING = "  updating...";
@@ -222,8 +224,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       AWCRITTIP = S("AWCRITTIP");
       AWMOCX = S("AWMOCX");
       AWMOCXTIP = S("AWMOCXTIP");
-      AWTMOCX = S("AWTMOCX");
-      AWTMOCXTIP = S("AWTMOCXTIP");
+//      AWTMOCX = S("AWTMOCX");
+//      AWTMOCXTIP = S("AWTMOCXTIP");
       AWDM = S("AWDM");
       AWDMTIP = S("AWDMTIP");
       AWPROGEN = S("AWPROGEN");
@@ -270,12 +272,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       this.cbg = cbg;
       
 //       POUR LES TESTS => Surcharge de l'URL du MocServer
-//       if( aladin.levelTrace>=3 ) {
-//       aladin.glu.aladinDic.put("MocServer","http://localhost:8080/MocServer/query?$1");
-//       aladin.glu.aladinDic.put("MocServer","http://alaskybis.u-strasbg.fr/MocServer/query?$1");
-//       aladin.trace(0,"WARNING: use local MocServer for test => http://localhost:8080/MocServer/query !!!");
-//       }
-      
+//      if( aladin.levelTrace>=3 ) {
+//         String mochost = "http://localhost:8080/MocServer/query";
+////                String mochost = "http://alasky4.u-strasbg.fr:8080/MocServer/query";
+//         aladin.glu.aladinDic.put(GLUMOCSERVER,mochost+"?$1");
+//         aladin.trace(0,"WARNING: use local MocServer for test =>"+mochost+" !!!");
+//      }
+
 
       setBackground(cbg);
       setLayout(new BorderLayout(0, 0));
@@ -1727,7 +1730,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire => voir filtrageSpatial(...)
     */
    private ArrayList<String> filtrageSpatial1(SMoc moc, int intersect) throws Exception {
-      String url = aladin.glu.getURL("MocServer").toString();
+      String url = aladin.glu.getURL(GLUMOCSERVER).toString();
       int i = url.lastIndexOf('?');
       if( i > 0 ) url = url.substring(0, i);
 
@@ -1795,7 +1798,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * Retourne true si pour la collection identifiée par "id" on dispose d'un MOC local sur la zone décrite par mocQuery (càd que
     * leur intersection n'est pas nulle
     */
-   private boolean hasLocalMoc(String id, SMoc mocQuery) {
+   private boolean hasLocalMoc(String id, SMoc mocQuery) throws Exception {
       if( mocQuery == null ) return false;
       MocItem2 mo = multiProp.getItem(id);
       if( mo.mocRef == null ) return false;
@@ -1863,7 +1866,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          try {
             if( mode == ResumeMode.FORCE || !sameLocation ) {
-               URL u = aladin.glu.getURL("MocServer", params, true);
+               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
 
                Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
                in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
@@ -2837,7 +2840,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       long t0 = System.currentTimeMillis();
       URL url;
       try {
-         url = aladin.glu.getURL("MocServer");
+         url = aladin.glu.getURL(GLUMOCSERVER);
       } catch( Exception e ) {
          if( aladin.levelTrace >= 3 ) e.printStackTrace();
          return -1;
@@ -2929,7 +2932,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          long t0 = System.currentTimeMillis();
          Aladin.trace(3, text + "ing Multiprop definitions from MocServer...");
 
-         String u = aladin.glu.getURL("MocServer", params, true).toString();
+         String u = aladin.glu.getURL(GLUMOCSERVER, params, true).toString();
          try {
             in = new InputStreamReader(Util.openStream(u, false, true, 3000));
             if( in == null ) throw new Exception("cache openStream error");
@@ -2938,8 +2941,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          } catch( EOFException e1 ) {
             eof = true;
          } catch( Exception e ) {
-            if( !aladin.glu.checkIndirection("MocServer", null) ) throw e;
-            u = aladin.glu.getURL("MocServer", params, true).toString();
+            if( !aladin.glu.checkIndirection(GLUMOCSERVER, null) ) throw e;
+            u = aladin.glu.getURL(GLUMOCSERVER, params, true).toString();
             try {
                in = new InputStreamReader(Util.openStream(u, false, true, -1));
             } catch( EOFException e1 ) {
@@ -3749,12 +3752,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                Util.toolTip(bx, "Data (images) associated to this catalog");
             }
 
-            if( to.hasTMoc() ) {
-               tmocBx = bx = new JCheckBox(AWTMOCX);
-               bx.addActionListener(this);
-               productPanel.add(bx);
-               Util.toolTip(bx, AWTMOCXTIP, true);
-            }
+//            if( to.hasTMoc() ) {
+//               tmocBx = bx = new JCheckBox(AWTMOCX);
+//               bx.addActionListener(this);
+//               productPanel.add(bx);
+//               Util.toolTip(bx, AWTMOCXTIP, true);
+//            }
 
             if( to.isCDSCatalog() && !to.isSimbad() && nbRows != -1 && nbRows >= 10000 ) {
                dmBx = bx = new JCheckBox(AWDM);
@@ -4385,7 +4388,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( moc != null ) {
                   Coord c = aladin.calque.getTargetBG(null, null);
                   double rad = aladin.calque.getRadiusBG(null, null, null);
-                  planMoc = new PlanMoc(aladin, moc, "moc", c, rad);
+                  planMoc = new PlanMoc(aladin, moc, "moc", c, rad,null);
                } else {
                   aladin.warning("MOC creation failed !\nYour graphical region must be circles, "
                         + "and/or polygons counter-clock oriented");

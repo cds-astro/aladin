@@ -189,7 +189,7 @@ import cds.xml.XMLParser;
  *
  */
 public class Aladin extends JApplet
-implements ExtApp,VOApp,ClipboardOwner,
+implements ExtApp,VOApp,VOObserver,ClipboardOwner,
 MouseListener,MouseMotionListener,
 ActionListener,
 DropTargetListener, DragSourceListener, DragGestureListener
@@ -207,7 +207,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.060";
+   static public final    String VERSION = "v11.062";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3865,7 +3865,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
       if( p==null) { aladin.warning("No STMOC in the stack"); return; }
       SMoc moc = p.getCurrentSpaceMoc( view.getCurrentView(), true );
-      calque.newPlanMOC(moc, "MOC from "+p.label);
+      calque.newPlanMOC(moc, "MOC from "+p.label,null);
    }
 
    /** Création d'un plan TMoc depuis le plan STMOC sélectionné */
@@ -3873,7 +3873,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
       if( p==null ) { aladin.warning("No STMOC in the stack"); return; }
       TMoc moc = p.getCurrentTimeMoc(  );
-      calque.newPlanMOC(moc, "TMOC from "+p.label);
+      calque.newPlanMOC(moc, "TMOC from "+p.label,null);
       console.printCommand("cmoc -time "+p.label);
    }
 
@@ -4455,7 +4455,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          error("MOC creation error !\n",1);
          return -1;
       }
-      int n = calque.newPlanMOC(moc,"Moc reg");
+      int n = calque.newPlanMOC(moc,"Moc reg",null);
       
       // Affichage à la densité max du MOC immédiatement
       ((PlanMoc)calque.plan[n]).setGapOrder(PlanBGCat.MAXGAPORDER);
@@ -6763,7 +6763,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public String execCommand(String cmd) {
       waitDialog();
       
-      System.out.println("execCommand(\""+cmd+"\")...");
+      if( levelTrace>=3 ) System.out.println("execCommand(\""+cmd+"\")...");
       
       // Arrêt de l'animation en cours
       while( isAnimated() ) stopAnimation();
@@ -8600,7 +8600,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
        }
    }
 
-   
+   @Override
+   public void position(double raJ2000, double deJ2000) {
+      view.moveRepere(raJ2000, deJ2000);
+   }
 
+   @Override
+   public void pixel(double pixValue) { }
 
 }

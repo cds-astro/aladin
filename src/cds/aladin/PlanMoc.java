@@ -68,19 +68,20 @@ public class PlanMoc extends PlanBGCat {
    protected int getTimeStackIndex() { return 0; }
 
    /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
-   protected PlanMoc(Aladin aladin, SMoc moc, String label, Coord c, double radius) {
-      this(aladin,null,moc,label,c,radius);
+   protected PlanMoc(Aladin aladin, SMoc moc, String label, Coord c, double radius,String url) {
+      this(aladin,null,moc,label,c,radius,url);
    }
 
    /** Création d'un Plan MOC à partir d'un flux */
-   protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
-      this(aladin,in,null,label,c,radius);
+   protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius,String url) {
+      this(aladin,in,null,label,c,radius,url);
    }
    
-   protected PlanMoc(Aladin aladin, MyInputStream in, SMoc moc, String label, Coord c, double radius) {
+   protected PlanMoc(Aladin aladin, MyInputStream in, SMoc moc, String label, Coord c, double radius,String url) {
       super(aladin);
       this.dis   = in;
       this.moc   = moc;
+      this.url = url;
       useCache = false;
       frameOrigin = Localisation.ICRS;
       if( moc!=null ) {
@@ -417,7 +418,9 @@ public class PlanMoc extends PlanBGCat {
          dis.reset();
          moc.readFITS(dis);
          
-      } else moc.readASCII(dis);
+      } 
+      else if(  (dis.getType() & MyInputStream.JSON)!=0 ) moc.readASCII(dis);
+      else moc.readASCII(dis);
    }
 
    protected boolean waitForPlan() {
@@ -747,6 +750,7 @@ public class PlanMoc extends PlanBGCat {
 
    protected void drawInSpaceView(Graphics g, ViewSimple v) {
       if( moc==null ) return;
+      if( v.isPlot() ) return;  // Il ne s'agit pas d'une View space
            
       long t1 = Util.getTime();
       g.setColor(c);
@@ -781,10 +785,12 @@ public class PlanMoc extends PlanBGCat {
 
             Moc x = v.getMoc();
             if( !(x instanceof SMoc) ) {
-               System.out.println("Bizarre j'ai un TMoc");
-               try {
-                  throw new Exception ();
-               } catch( Exception e ) { e.printStackTrace(); }
+               if( aladin.levelTrace>=3 ) {
+                  System.out.println("Bizarre v.getMoc() ne me retourne pas un SMOC => "+x.toDebug());
+                  try {
+                     throw new Exception ();
+                  } catch( Exception e ) { e.printStackTrace(); }
+               }
                return;
             }
             lastDrawMoc =(SMoc) x;

@@ -3769,76 +3769,89 @@ public class Calque extends JPanel implements Runnable {
       return rad;
    }
 
-   /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un flux */
-   protected int newPlanMOC(MyInputStream in,String label) {
+   /** Création d'un plan MOC (qq soit son type SMOC, TMOC, STMOC...) à partir d'un flux */
+   protected int newPlanMOC(MyInputStream in,String label,String url) {
+      long t=0;
+      try { t = in.getType(); } catch( Exception e ) {
+         e.printStackTrace();
+      }
+      if( (t&MyInputStream.STMOC)!=0 ) return newPlanSTMOC(in, label, url);
+      if( (t&MyInputStream.TMOC)!=0) return newPlanTMOC(in, label, url);
+      return newPlanSMOC(in, label,url);
+
+   }
+
+   /** Création d'un plan Multi-Order Coverage spatial à partir d'un flux */
+   protected int newPlanSMOC(MyInputStream in,String label, String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
       double rad=getRadiusBG(null,null,null);
-      plan[n] = new PlanMoc(aladin,in,label,c,rad);
+      plan[n] = new PlanMoc(aladin,in,label,c,rad, url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
    }
 
    /** Création d'un plan Multi-Order Coverage Temporel à partir d'un flux */
-   protected int newPlanTMOC(MyInputStream in,String label) {
+   protected int newPlanTMOC(MyInputStream in,String label, String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = new PlanTMoc(aladin,in,label);
+      plan[n] = new PlanTMoc(aladin,in,label,url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
    }
 
    /** Création d'un plan Multi-Order Coverage Spatio-Temporel à partir d'un flux */
-   protected int newPlanSTMOC(MyInputStream in,String label) {
+   protected int newPlanSTMOC(MyInputStream in,String label, String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
       double rad=getRadiusBG(null,null,null);
-      plan[n] = new PlanSTMoc(aladin,in,label,c,rad);
+      plan[n] = new PlanSTMoc(aladin,in,label,c,rad,url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
    }
    
    /** Création d'un plan Multi-Order Coverage Map à partir d'un MOC (de n'importe quel type) */
-   protected int newPlanMOC(Moc moc, String label) {
-      if( moc instanceof STMoc ) return newPlanMOC( (STMoc)moc, label);
-      if( moc instanceof TMoc ) return newPlanMOC( (TMoc)moc, label); 
-      return newPlanMOC( (SMoc)moc, label); 
+   protected int newPlanMOC(Moc moc, String label, String url) {
+      if( moc instanceof STMoc ) return newPlanMOC( moc, label, url);
+      if( moc instanceof TMoc ) return newPlanMOC( moc, label, url); 
+      return newPlanSMOC( moc, label, url); 
    }
    
    /** Création d'un plan Multi-Order Coverage Map à partir d'un STMOC */
-   protected int newPlanMOC(STMoc moc,String label) {
+   protected int newPlanMOC(STMoc moc,String label,String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
       double rad=getRadiusBG(null,null,null);
-      plan[n] = new PlanSTMoc(aladin,moc,label,c,rad);
+      plan[n] = new PlanSTMoc(aladin,moc,label,c,rad,url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
    }
 
    /** Création d'un plan Multi-Order Coverage Map à partir d'un SMOC */
-   protected int newPlanMOC(SMoc moc,String label) {
+   protected int newPlanSMOC(Moc moc,String label,String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
       double rad=getRadiusBG(null,null,null);
-      plan[n] = new PlanMoc(aladin,moc,label,c,rad);
+      
+      plan[n] = new PlanMoc(aladin,(SMoc)moc,label,c,rad,url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
    }
 
    /**  Création d'un plan Multi-Order Coverage Map à partir d'un TMOC */
-   protected int newPlanMOC(TMoc moc,String label) {
+   protected int newPlanMOC(TMoc moc,String label,String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = new PlanTMoc(aladin,moc,label);
+      plan[n] = new PlanTMoc(aladin,moc,label,url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;

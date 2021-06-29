@@ -157,7 +157,7 @@ public abstract class Obj implements Propable{
    /** Retourne true si l'objet contient des informations de photométrie  */
    public boolean hasPhot() { return false; }
    public boolean hasPhot(ViewSimple v) { return false; }
-
+   
    /** Retourne true si la source a le flag sélect positionné  */
    final public boolean isSelected() { return (flags & SELECT) !=0; }
    
@@ -191,6 +191,11 @@ public abstract class Obj implements Propable{
    
    /** Return true if this object can be used for getting photometrical statistics (first segment of a polygon, or circle) */
    public boolean hasSurface() { return false; }
+   
+   
+   /** Retourne une clé unique associé aux statistiques courantes (si l'objet en a) */
+   public int getStatsHashcode(AladinData ad) { return getStatsHashcode(ad.plan,-1); }
+   protected int getStatsHashcode(Plan p, int z) { return 0; }
    
    /** Provide photometric statistics for the area described by the object (only for circle and polygon)
     * @param ad AladinData describing an image or cube with valid pixels

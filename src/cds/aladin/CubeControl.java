@@ -65,7 +65,7 @@ public class CubeControl {
 
    private StringBuilder sedit=null;
 
-   protected int mode=PLAY;
+   protected int mode=PAUSE;
    protected int delay;         // Délai en ms entre deux Frames
    protected int nbFrame;       // Nombre de frames
    protected int lastFrame=-1;   // Dernière Frame affichée

@@ -39,7 +39,7 @@ public class PlanMocColl extends PlanMoc {
    
    protected PlanMocColl(Aladin aladin,String label,String directory,int order,
          boolean strict,boolean recursive,double blank,int [] hdu) {
-      super(aladin,null,null,label,null,0);
+      super(aladin,null,null,label,null,0,null);
       this.directory = directory;
       this.order = order;
       this.strict=strict;
