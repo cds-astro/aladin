@@ -378,7 +378,8 @@ public class ServerFile extends Server implements XMLConsumer {
             String t = in.decodeType(type);
             Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
             aladin.log("load",mode+t);
-
+            
+            String ustr = u==null ? null : u.toString();
 
             // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
             if( (type & (MyInputStream.DS9REG /* |MyInputStream.AJTOOL */))!=0 ) {
@@ -391,9 +392,9 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
  
-            else if( (type & MyInputStream.SMOC)!=0 ) n=aladin.calque.newPlanMOC(in,label,u.toString());
-            else if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label,u.toString());
-            else if( (type & MyInputStream.STMOC)!=0) n=aladin.calque.newPlanSTMOC(in,label,u.toString());
+            else if( (type & MyInputStream.SMOC)!=0 ) n=aladin.calque.newPlanMOC(in,label,ustr);
+            else if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label,ustr);
+            else if( (type & MyInputStream.STMOC)!=0) n=aladin.calque.newPlanSTMOC(in,label,ustr);
 
             else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
                if( u!=null ) {

@@ -5095,7 +5095,7 @@ public final class Command implements Runnable {
          if( Aladin.levelTrace >= 3 ) e.printStackTrace();
       }
    }
-
+   
    /** Test de lecture et d'écriture du disque */
    private void testperf(final String param) {
       final long GB = 1024 * 1024 * 1024;

@@ -99,10 +99,15 @@ public class MultiMoc implements Iterable<MocItem> {
    protected int mocOrder=-1;              // Better MOC order
    private ArrayList<MyProperties> except = null;   // List of exceptions and associating rewriting rules
    private MyProperties example = null;  // List of existing properties with examples
+//   private int nbThomas2Vizier;          // Nombre d'enregistrements convertis du format Thomas au format original
+   private int nbConvertFromGtoC;        // Nombre de MOC converti de Galactic en Equatorial
+   private int nbReduceMem;              // Nombre de MOC dont ont a réduit la résolution pour réduire la RAM
    
    public MultiMoc() {
       map = new HashMap<>(30000);
       tri = new ArrayList<>(30000);
+//      nbThomas2Vizier=0;
+      nbConvertFromGtoC=0;
    }
    
    /** MultiMoc creation from a binary dump file
@@ -342,67 +347,97 @@ public class MultiMoc implements Iterable<MocItem> {
       return mocId;
    }
    
+   // Détection des enregistrements manipulés par Thomas
+   // @return 0 - non, 1 - (table), 2 - obs_collection
+   private int isThomas(MyProperties prop) {
    
-   /************************* PEAUFINAGE POUR LES CATALOGUE VIZIER EN ATTENDANT LE RETOUR CANONIQUE ****************/
-   
-   // POURRA ETRE VIRE DES QUE LES MODIFS DE THOMAS B. AURONT ETE SUPPRIMEES - PF JUIN 2021
-   private MyProperties thomas2VizieR(String id, MyProperties prop) {
-      int i;
-      if( prop==null ) return null;
-      
-      // Ne concerne pas VizieR => on ne bidouille pas dans le client
-      String type = prop.getProperty("dataproduct_type");
-      if( type == null || type.indexOf("catalog") < 0 ) return prop;
-      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return prop;      
-
-      // Si on ne trouve pas le nom de la table en suffixe du title c'est que c'est déjà fait en amont
-      String label = prop.get("obs_label");
-      String title = prop.get("obs_title");
-      if( title==null || label==null ) return prop;
-      i = title.lastIndexOf('(');
-      if( i<0 ) return prop;
-      String table = title.substring(i+1,title.length()-1);
-      if( !label.equals(table) ) return prop;
-//      System.out.println("Multimoc.peaufinageVizieR(...) => thomas2VizieR ["+id+"]");
-      
-      prop = prop.clone();
-      
-      title = title.substring(0, i - 1);
-      prop.remove("obs_collection");
-      prop.replaceKey("obs_title","obs_collection");
-      prop.replaceValue("obs_collection",title);
-      prop.replaceKey("obs_description","obs_title");
-
-      return prop;
-    }
-   
-   // POURRA ETRE VIRE DES QUE LS VIEUX CLIENTS UNIQUEMENT COMPATIBLES 
-   // AVEC L'ANCIENNE FORMULE THOMAS AURONT DISPARUS - PF JUIN 2021
-   public MyProperties vizier2Thomas(String id, MyProperties prop) {
-      if( prop==null ) return null;
-      
-      // Ne concerne pas VizieR => on ne bidouille pas dans le client
-      String type = prop.getProperty("dataproduct_type");
-      if( type == null || type.indexOf("catalog") < 0 ) return prop;
-      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return prop;      
-      
-      prop = prop.clone();
-//      System.out.println("Multimoc.peaufinageVizieR(...) => vizier2Thomas ["+id+"]");
-     
+      // 1ère possibilité
       String label = prop.getFirst("obs_label");
-      String t = prop.get("obs_collection")+" ("+label+")";
-
-      prop.replaceKey("obs_title","obs_description");
-      prop.replaceKey("obs_collection","obs_title");
-      prop.replaceValue("obs_title",t);
+      String title = prop.get("obs_title");
+      if( title!=null && label!=null ) {
+         int i = title.lastIndexOf('(');
+         if( i>0 ) {
+      String table = title.substring(i+1,title.length()-1);
+            if( label.equals(table) ) return 1;
+         }
+      }
       
-      String collection = prop.getFirst("obs_collection_label");
-      if( collection!=null ) prop.add("obs_collection", collection);
+      // 2ème possibilité
+      String collection = prop.get("obs_collection");
+      String collectionLabel = prop.getFirst("obs_collection_label");
+      if( collection!=null && collectionLabel!=null ) {
+         if( collection.equals(collectionLabel) ) return 2;
+      }
       
-      return prop;
+      return 0;
     }
+   
       
-
+   /************************* PEAUFINAGE POUR LES CATALOGUE VIZIER EN ATTENDANT LE RETOUR CANONIQUE ****************/
+      
+   // POURRA ETRE VIRE DES QUE LES MODIFS DE THOMAS B. AURONT ETE SUPPRIMEES - PF JUIN 2021
+//   private MyProperties thomas2VizieR(String id, MyProperties prop) {
+//      int i;
+//      if( prop==null ) return null;
+//      
+//      // Ne concerne pas VizieR => on ne bidouille pas dans le client
+//      String type = prop.getProperty("dataproduct_type");
+//      if( type == null || type.indexOf("catalog") < 0 ) return prop;
+//      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return prop;      
+//      
+//      if( id.equals("CDS/I/317/sample") ) {
+//         System.out.println("j'y suis AVANT\n"+prop);
+//      }
+//
+//      int th = isThomas(prop);
+//      if( th==0 ) return prop;
+//      
+//      prop = prop.clone();
+//      
+//      String title = prop.get("obs_title");
+//      if( th==1 ) {
+//         i = title.lastIndexOf('(');
+//         title = title.substring(0, i - 1);
+//      }
+//      prop.remove("obs_collection");
+//      prop.replaceKey("obs_title","obs_collection");
+//      prop.replaceValue("obs_collection",title);
+//      prop.replaceKey("obs_description","obs_title");
+////      prop.replaceValue("client_category", "Catalog/VizieR");
+////      System.out.println("\n\n"+prop);
+//      
+//      nbThomas2Vizier++;
+//      
+//      return prop;
+//    }
+//   
+//   // POURRA ETRE VIRE DES QUE LS VIEUX CLIENTS UNIQUEMENT COMPATIBLES 
+//   // AVEC L'ANCIENNE FORMULE THOMAS AURONT DISPARUS - PF JUIN 2021
+//   public MyProperties vizier2Thomas(String id, MyProperties prop) {
+//      if( prop==null ) return null;
+//      
+//      // Ne concerne pas VizieR => on ne bidouille pas dans le client
+//      String type = prop.getProperty("dataproduct_type");
+//      if( type == null || type.indexOf("catalog") < 0 ) return prop;
+//      if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return prop;      
+//      
+//      prop = prop.clone();
+////      System.out.println("Multimoc.peaufinageVizieR(...) => vizier2Thomas ["+id+"]");
+//     
+//      String label = prop.getFirst("obs_label");
+//      String t = prop.get("obs_collection")+" ("+label+")";
+//
+//      prop.replaceKey("obs_title","obs_description");
+//      prop.replaceKey("obs_collection","obs_title");
+//      prop.replaceValue("obs_title",t);
+//      
+//      String collection = prop.getFirst("obs_collection_label");
+//      if( collection!=null ) prop.add("obs_collection", collection);
+//      
+//      return prop;
+//    }
+     
+      
    /********************************************** FIN DU PEAUFINAGE VIZIER ***********************************/
    
 
@@ -493,10 +528,8 @@ public class MultiMoc implements Iterable<MocItem> {
          try { Thread.sleep(1000); } catch( Exception e ) {}
       }
       
-      // Traitement pour règler les soucis Thomas
-      for( MocItem mi : this ) {
-         mi.prop = thomas2VizieR(mi.mocId, mi.prop);
-      }
+      // Traitement pour règler le retour aux données originales (cf. modif contenu Thomas B.)
+//      for( MocItem mi : this )  mi.prop = thomas2VizieR(mi.mocId, mi.prop);
 
       // Mise à jour des compteurs
       int nbFiles=0;
@@ -510,12 +543,17 @@ public class MultiMoc implements Iterable<MocItem> {
 
       double nb = nbFiles%1000;
       long t2 = System.currentTimeMillis();
-      s=nbFiles+" loaded in "+Unite.getTemps(t2-t0)+" => "+(int)(nb/((t2-t0)/1000.))+"/s\n";
+      s=nbFiles+" loaded in "+Unite.getTemps(t2-t0)+" => avg: "+(int)(nb/((t2-t0)/1000.))+"/s\n";
+//      s=s+(nbThomas2Vizier>0?" - "+nbThomas2Vizier+" prop re-translated to orig":"");
+      s=s+(nbConvertFromGtoC>0?" - "+nbConvertFromGtoC+" moc converted from G to C":"")
+            +(nbReduceMem>0?" - "+nbReduceMem+" moc RAM reduced":"")
+         +"\n";
+
       if( out!=null  ) print(out,s);
       System.out.print(s);
 
       if( oMM!=null ) {
-         s = " => "+nbCreation+" created or updated, "+nbReused+" reused as is\n";
+         s = " => "+nbCreation+" created or updated - "+nbReused+" reused as is\n";
          if( out!=null )print(out,s);
          System.out.print(s);
       }
@@ -597,8 +635,6 @@ public class MultiMoc implements Iterable<MocItem> {
                if( prop==null && moc==null ) continue;
                if( prop==null && moc!=null ) prop = new MyProperties();
                mocId = adjustProp(prop,mocId,moc);
-//            if( moc!=null && !moc.getSys().equals(COORDSYS) ) moc=null; // Incompatible MOC coordsys
-
                if( !exceptProp(prop,mocId) ) { prop=null; moc=null; }
 
                // Dans le cas où je ne mémorise pas le Moc
@@ -949,7 +985,8 @@ public class MultiMoc implements Iterable<MocItem> {
       FileInputStream fi=null;
       try {
          fi = new FileInputStream( new File(filename));
-         moc = Moc.createMoc(fi,  30 *1024L*1024L );
+         moc = Moc.createMoc(fi);
+         moc.reduction(30 *1024L*1024L);
          fi.close(); fi=null;
          if( moc.isEmpty() ) moc=null;
          
@@ -968,7 +1005,10 @@ public class MultiMoc implements Iterable<MocItem> {
             try {
                   moc = convertToICRS(((SMoc)moc));
                   if( moc==null ) throw new Exception("Moc coordsys not supported by MocServer");
+                  nbConvertFromGtoC++;
+//                  if( Data.DEBUG) System.out.println(filename+" MOC convert from "+sys+" to "+COORDSYS+" in "+ (System.currentTimeMillis()-t)+"ms");
             } catch( Exception e ) {
+//                  if( Data.DEBUG) System.out.println(filename+" MOC conversion error or COORDSYS not supported ("+((SMoc)moc).getSys()+") => ignored");
 //               e.printStackTrace();
                throw e;
             }

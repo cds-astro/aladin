@@ -2112,11 +2112,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       interruptServerReading = true;
    }
    
+   private boolean infoVizieROld;   // true si on doit afficher un message concernant les enr. VizieR traduits
+   
    /**
     * Génération de la liste des collections en fonction du contenu du MultiProp La liste est triée Les URLs HiPS seront
     * mémorisées dans le Glu afin de pouvoir gérer les sites miroirs
     */
    private ArrayList<TreeObjDir> populateMultiProp() {
+      infoVizieROld=true;
       ArrayList<TreeObjDir> listReg = new ArrayList<>(30000);
       multiple=null;  // Il faut reseter la liste des collections à plusieurs "feuilles"
       for( MocItem mi : this ) populateProp(listReg, mi.prop);
@@ -2247,6 +2250,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          // Mémorisation des indirections possibles sous la forme %I id0\tid1\t...
          if( indirection != null ) aladin.glu.aladinDic.put(id, indirection.toString());
       }
+      
 
       // Ajout dans la liste des noeuds d'arbre
       listReg.add(new TreeObjDir(aladin, id, prop));
@@ -2304,10 +2308,29 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;      
 
       // Déjà fait en amont => on ne bidouille plus dans le client (en fait si, mais juste le minimum)
-     
       if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) {
          return;
       }
+      
+      
+//      // Gère les conversions des propriétés VizieR pour l'ancienne syntaxe Thomas B.
+//      // Si on ne trouve pas le nom de la table en suffixe du title c'est que c'est déjà fait en amont
+//      boolean oldVizieRMode=false;
+//      String obslabel = prop.get("obs_label");
+//      String title = prop.get("obs_title");
+//      if( title!=null && obslabel!=null ) {
+//         int i = title.lastIndexOf('(');
+//         if( i>0 && title.length()>3 ) {
+//            String table = title.substring(i+1,title.length()-1);
+//            if( obslabel.equals(table) ) {
+//               oldVizieRMode=true; 
+//               if( infoVizieROld ) {
+//                  infoVizieROld=false;
+//                  if( aladin.levelTrace>=3 ) System.err.println("Directory.propAdjust1(...) => prop VizieR old syntax found and translated (ex: "+id+"...)");
+//               }
+//            }
+//         }
+//      }
 
       // Nettoyage des macros latex qui trainent
       if( cleanLatexMacro(prop) ) {
@@ -2349,12 +2372,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          // Je vire le nom de la table a la fin du titre
          String titre = prop.get(Constante.KEY_OBS_TITLE);
-         int i;
          boolean modif=false;
-         if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
-            titre = titre.substring(0, i - 1);
-            modif=true;
-         }
+//         if( oldVizieRMode ) {
+            int i;
+            if( titre != null && (i = titre.lastIndexOf('(')) > 0 ) {
+               titre = titre.substring(0, i - 1);
+               modif=true;
+            }
+//         }
 
          // J'ajoute le petit nom de la collection en suffixe si nécessaire
          String label = prop.getFirst("obs_collection_label");
@@ -2364,7 +2389,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
          if( modif ) prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
 
-      } else {
+      } else /* if( oldVizieRMode ) */ {
          String titre = prop.get(Constante.KEY_OBS_TITLE);
          if( titre != null ) {
 
@@ -2377,7 +2402,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( desc != null ) {
                   String newTitre = desc + titre.substring(i - 1, j + 1);
                   prop.replaceValue(Constante.KEY_OBS_TITLE, newTitre);
-//                  prop.remove(Constante.KEY_OBS_DESCRIPTION);
                }
                prop.replaceValue("obs_collection",titre.substring(0, i-1));
                prop.replaceValue(Constante.KEY_OBS_DESCRIPTION,titre.substring(0, i-1));
@@ -2875,6 +2899,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          }
 
          out.writeField("fmt", "asciic");
+//       out.writeField("get", "record-v2");
+         out.writeField("get", "record");
          out.writeFile("maj", null, tmpMoc, true);
          out.close();
          aladin.trace(4, "ID list sent");
