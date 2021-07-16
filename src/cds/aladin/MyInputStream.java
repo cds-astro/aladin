@@ -1238,7 +1238,8 @@ public class MyInputStream extends FilterInputStream {
       c=c1;
       n=n1;
       
-      boolean space=true, time=false;   // On suppose que c'est un MOC spatials => ne détecte pas les TMOC
+//      boolean space=true, time=false;   // On suppose que c'est un MOC spatial => ne détecte pas les TMOC
+      boolean space=false, time=false;
       int mode=1;
       
       for( int i=0; i<n && i<c.length; i++ ) {

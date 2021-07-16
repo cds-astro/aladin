@@ -437,6 +437,7 @@ public class PlanMoc extends PlanBGCat {
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
+            error="MOC error";
             return false;
          }
       }

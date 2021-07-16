@@ -614,25 +614,25 @@ public class TreeObjDir extends TreeObj implements Propable {
 //      return u;
 //   }
 //   
-   /** Retourne l'URL d'accès au MOC, null sinon */
-   protected String getTMocUrl() {
-      String u=null;
-      
-      // On dispose du MOC directement dans le MOC server qui a fourni les propriétés ?
-      if( hasTMocByMocServer() ) {
-         String params = internalId+"&get=tmoc";
-         u = aladin.glu.getURL("MocServer",params,true).toString();
-         
-      // Serait-il explicitement mentionné ?
-      } else  {
-         
-         if( prop!=null ) u = prop.getProperty("tmoc_access_url");
-
-         // Pour un HiPS on peut y accéder directement
-         if( u==null && isHiPS() ) return getUrl()+"/TMoc.fits";
-      }
-      return u;
-   }
+//   /** Retourne l'URL d'accès au MOC, null sinon */
+//   protected String getTMocUrl() {
+//      String u=null;
+//      
+//      // On dispose du MOC directement dans le MOC server qui a fourni les propriétés ?
+//      if( hasTMocByMocServer() ) {
+//         String params = internalId+"&get=tmoc";
+//         u = aladin.glu.getURL("MocServer",params,true).toString();
+//         
+//      // Serait-il explicitement mentionné ?
+//      } else  {
+//         
+//         if( prop!=null ) u = prop.getProperty("tmoc_access_url");
+//
+//         // Pour un HiPS on peut y accéder directement
+//         if( u==null && isHiPS() ) return getUrl()+"/TMoc.fits";
+//      }
+//      return u;
+//   }
    
    protected String getCoverage() {
       if( prop==null ) return null;
@@ -749,6 +749,14 @@ public class TreeObjDir extends TreeObj implements Propable {
       if( !isCDSCatalog() || prop==null ) return false;
       String s = prop.get("associated_dataproduct_type");
       return s!=null && s.indexOf("image")>=0;
+   }
+   
+   /** true s'il s'agit d'une table VizieR sans position => on se base sur la présence d'une TMOC */
+   protected boolean isVizierTimeOnly() {
+      if( !isCDSCatalog() || prop==null ) return false;
+      if( prop==null ) return false;
+      String t = prop.get("moc_type");
+      return t!=null && t.equals("tmoc");
    }
    
    /** Retourne true s'il s'agit de Simbad et quu'on doit montrer un accès un mode live */
@@ -917,11 +925,12 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Retourne true si la collection dispose d'un MOC via le MocServer
     * (=> celui-ci ayant ajouté le mot clé moc_sky_fraction) */
    private boolean hasMocByMocServer() { return prop!=null && 
-         (prop.get("moc_sky_fraction")!=null || prop.getProperty("moc_access_url")!=null ); }
+         (prop.get("moc_type")!=null
+         || prop.get("moc_sky_fraction")!=null || prop.getProperty("moc_access_url")!=null ); }
    
-   /** Retourne true si la collection dispose d'un TMOC via le MocServer
-    * (=> celui-ci ayant ajouté le mot clé tmoc_total_time) */
-   private boolean hasTMocByMocServer() { return prop!=null && prop.get("tmoc_total_time")!=null; }
+//   /** Retourne true si la collection dispose d'un TMOC via le MocServer
+//    * (=> celui-ci ayant ajouté le mot clé tmoc_total_time) */
+//   private boolean hasTMocByMocServer() { return prop!=null && prop.get("tmoc_total_time")!=null; }
    
    /** Retourne l'URL d'un Cone search ou null si aucun */
    protected String getCSUrl() {
@@ -1306,21 +1315,21 @@ public class TreeObjDir extends TreeObj implements Propable {
       return "get "+glutag+"(....) $TARGET $RADIUS";
    }
    
-   /** Génération et exécution de la requête script correspondant au protocole TMOC */
-   protected void loadTMoc( ) {exec( getTMocCmd() ); }
-   protected String getTMocBkm() { return getTMocCmd(); }
-//   private String getTMocCmd() { return "get TMOC("+Tok.quote(internalId)+")"; }
-   private String getTMocCmd() {
-      String id = Tok.quote(internalId!=null?internalId:label);
-      return "TMoc_"+id+"=load "+getTMocUrl();
-   }
+//   /** Génération et exécution de la requête script correspondant au protocole TMOC */
+//   protected void loadTMoc( ) {exec( getTMocCmd() ); }
+//   protected String getTMocBkm() { return getTMocCmd(); }
+////   private String getTMocCmd() { return "get TMOC("+Tok.quote(internalId)+")"; }
+//   private String getTMocCmd() {
+//      String id = Tok.quote(internalId!=null?internalId:label);
+//      return "TMoc_"+id+"=load "+getTMocUrl();
+//   }
 
    /** Génération et exécution de la requête script correspondant au protocole MOC */
    protected void loadMoc( ) {
       exec( getMocCmd() ); 
       }
    protected String getMocBkm() { return getMocCmd(); }
-   private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+")"; }
+   private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+",anymoc)"; }
 
    /** Génération et exécution de la requête script correspondant au protocole HiPS */
    protected void loadHips() {

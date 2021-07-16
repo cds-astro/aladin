@@ -50,7 +50,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -95,7 +94,7 @@ public class MultiMoc implements Iterable<MocItem> {
    final private String COORDSYS ="C";   // Coordinate system (HEALPix convention => G=galactic, C=Equatorial, E=Ecliptic)
    
    protected HashMap<String, MocItem> map; // Liste des MocItem repéré par leur ID (ex: CDS/P/2MASS/J)
-   private ArrayList<String> tri;        // Liste des IDs afin de pouvoir les parcourirs en ordre alphanumérique
+//   private ArrayList<String> tri;        // Liste des IDs afin de pouvoir les parcourirs en ordre alphanumérique
    protected int mocOrder=-1;              // Better MOC order
    private ArrayList<MyProperties> except = null;   // List of exceptions and associating rewriting rules
    private MyProperties example = null;  // List of existing properties with examples
@@ -105,7 +104,7 @@ public class MultiMoc implements Iterable<MocItem> {
    
    public MultiMoc() {
       map = new HashMap<>(30000);
-      tri = new ArrayList<>(30000);
+//      tri = new ArrayList<>(30000);
 //      nbThomas2Vizier=0;
       nbConvertFromGtoC=0;
    }
@@ -149,12 +148,13 @@ public class MultiMoc implements Iterable<MocItem> {
       MocItem mi = map.get(mocId);
       if( mi==null ) return;
       map.remove(mocId);
-      tri.remove(mocId);
+//      tri.remove(mocId);
    }
    
    /** Add directly a MocItem */
    public void add(MocItem mi) {
-      if( map.put(mi.mocId,mi)==null ) tri.add(mi.mocId);
+      map.put(mi.mocId,mi);
+//      if( map.put(mi.mocId,mi)==null ) tri.add(mi.mocId);
    }
    
    /** Return directly a MocItem */
@@ -262,7 +262,7 @@ public class MultiMoc implements Iterable<MocItem> {
    /** Clear the multiMoc */
    public void clear() {
       map.clear();
-      tri.clear();
+//      tri.clear();
    }
    
    static private Healpix hpx = new Healpix();
@@ -277,6 +277,12 @@ public class MultiMoc implements Iterable<MocItem> {
       
       // Ajout de propriétés propres au MOC
       if( moc!=null ) {
+         
+         // On mémorise le type de MOC que l'on a
+         String mocType =  moc instanceof STMoc ? "stmoc" : moc instanceof TMoc ? "tmoc" : "smoc";
+         prop.replaceValue("moc_type", mocType);
+         
+         if( moc.isSpace() ) {
          prop.replaceValue("moc_sky_fraction", Unite.myRound( moc.getCoverage() )+"" );
 
          s = moc.getProperty("MOCORDER");
@@ -306,7 +312,6 @@ public class MultiMoc implements Iterable<MocItem> {
          }
          
          try {
-            if( moc.isSpace() ) {
          if( ra==null || dec==null || fov==null ) {
                   SMoc m = moc.getSpaceMoc();
             if( fov==null ) {
@@ -338,39 +343,39 @@ public class MultiMoc implements Iterable<MocItem> {
             if( dec!=null ) prop.replaceValue("obs_initial_dec",dec);
             prop.replaceValue("obs_initial_fov",fov);
          }
-      }
          } catch( Exception e ) {
             e.printStackTrace();
          }
+      }
       }
       
       return mocId;
    }
    
-   // Détection des enregistrements manipulés par Thomas
-   // @return 0 - non, 1 - (table), 2 - obs_collection
-   private int isThomas(MyProperties prop) {
-   
-      // 1ère possibilité
-      String label = prop.getFirst("obs_label");
-      String title = prop.get("obs_title");
-      if( title!=null && label!=null ) {
-         int i = title.lastIndexOf('(');
-         if( i>0 ) {
-      String table = title.substring(i+1,title.length()-1);
-            if( label.equals(table) ) return 1;
-         }
-      }
-      
-      // 2ème possibilité
-      String collection = prop.get("obs_collection");
-      String collectionLabel = prop.getFirst("obs_collection_label");
-      if( collection!=null && collectionLabel!=null ) {
-         if( collection.equals(collectionLabel) ) return 2;
-      }
-      
-      return 0;
-    }
+//   // Détection des enregistrements manipulés par Thomas
+//   // @return 0 - non, 1 - (table), 2 - obs_collection
+//   private int isThomas(MyProperties prop) {
+//      
+//      // 1ère possibilité
+//      String label = prop.getFirst("obs_label");
+//      String title = prop.get("obs_title");
+//      if( title!=null && label!=null ) {
+//         int i = title.lastIndexOf('(');
+//         if( i>0 ) {
+//            String table = title.substring(i+1,title.length()-1);
+//            if( label.equals(table) ) return 1;
+//         }
+//      }
+//      
+//      // 2ème possibilité
+//      String collection = prop.get("obs_collection");
+//      String collectionLabel = prop.getFirst("obs_collection_label");
+//      if( collection!=null && collectionLabel!=null ) {
+//         if( collection.equals(collectionLabel) ) return 2;
+//      }
+//      
+//      return 0;
+//   }
    
       
    /************************* PEAUFINAGE POUR LES CATALOGUE VIZIER EN ATTENDANT LE RETOUR CANONIQUE ****************/
@@ -512,20 +517,29 @@ public class MultiMoc implements Iterable<MocItem> {
       while( encore ) {
          int nbFiles=0;
          encore=false;
+         int nth=0;
          for( Reader r : reader ) {
+            if( r.running() ) nth++;
             encore |= r.running();
             nbFiles+= r.nbFiles;
          }
          long t2 = System.currentTimeMillis();
          if( (t2-t1)>5000 ) {
             s=nbFiles+"... in "+Unite.getTemps(t2-t0)
-            +" => "+(int)(((double)nbFiles-oNbFiles)/((t2-t1)/1000.))+"/s\n";
+            +" => "+(int)(((double)nbFiles-oNbFiles)/((t2-t1)/1000.))+"/s ("+nth+" still running)\n";
             if( out!=null  ) print(out,s);
             System.out.print(s);
             t1=t2;
             oNbFiles=nbFiles;
          }
          try { Thread.sleep(1000); } catch( Exception e ) {}
+      }
+      
+      if( list.size()>0 ) {
+         s="Loading process not achieved (not enough RAM ?) => keep MocServer as it was before";
+         if( out!=null  ) print(out,s);
+         System.out.print(s);
+         throw new Exception(s);
       }
       
       // Traitement pour règler le retour aux données originales (cf. modif contenu Thomas B.)
@@ -585,7 +599,7 @@ public class MultiMoc implements Iterable<MocItem> {
       
       public void run() {
          try { reload( this ); } 
-         catch( Exception e) { e.printStackTrace(); }
+         catch( Throwable e) { }
          running=false;
       }
    }
@@ -629,9 +643,14 @@ public class MultiMoc implements Iterable<MocItem> {
 
                mocId = getMocId( f1.getName() );
 
-               // Chargement du Moc et des Prop
-               moc = loadMoc(filename);
                prop = loadProp(propname);
+            try {
+               moc = filename.endsWith(".prop") ? null : loadMoc(filename,prop);
+            } catch( OutOfMemoryError e ) {
+               System.err.println("OutOfMemory during "+f1+" process => stop a thread and redo");
+               r.list.add(f1);
+               throw e;
+            }
                if( prop==null && moc==null ) continue;
                if( prop==null && moc!=null ) prop = new MyProperties();
                mocId = adjustProp(prop,mocId,moc);
@@ -895,32 +914,33 @@ public class MultiMoc implements Iterable<MocItem> {
       return example.get(s)!=null;
    }
 
-   /** Tri des Mocs en ordre alphanum sur les ID */
-   public void sort() { Collections.sort(tri); }
-   
-   /** Tri des Mocs en fonction de la valeur de champs particuliers
-    * La clé de tri prend en compte une succession de champs */
-   public void sort(final String [] keys) {
-      Collections.sort(tri, new Comparator<String>() {
-
-         @Override
-         public int compare(String o1, String o2) {
-            MocItem mi1 = o1==null ? null : map.get(o1);
-            MocItem mi2 = o2==null ? null : map.get(o2);
-
-            String k1,k2;
-            for( String key : keys ) {
-               k1 = mi1==null || mi1.prop==null ? null : mi1.prop.get(key);
-               k2 = mi2==null || mi2.prop==null ? null : mi2.prop.get(key);
-               if( k1==null ) k1="";
-               if( k2==null ) k2="";
-               int rep = k1.compareTo(k2);
-               if( rep!=0 ) return rep;
-            }
-            return 0;
-         }
-      });
-   }
+   public void sort() {  }
+//   /** Tri des Mocs en ordre alphanum sur les ID */
+//   public void sort() { Collections.sort(tri); }
+//   
+//   /** Tri des Mocs en fonction de la valeur de champs particuliers
+//    * La clé de tri prend en compte une succession de champs */
+//   public void sort(final String [] keys) {
+//      Collections.sort(tri, new Comparator<String>() {
+//
+//         @Override
+//         public int compare(String o1, String o2) {
+//            MocItem mi1 = o1==null ? null : map.get(o1);
+//            MocItem mi2 = o2==null ? null : map.get(o2);
+//
+//            String k1,k2;
+//            for( String key : keys ) {
+//               k1 = mi1==null || mi1.prop==null ? null : mi1.prop.get(key);
+//               k2 = mi2==null || mi2.prop==null ? null : mi2.prop.get(key);
+//               if( k1==null ) k1="";
+//               if( k2==null ) k2="";
+//               int rep = k1.compareTo(k2);
+//               if( rep!=0 ) return rep;
+//            }
+//            return 0;
+//         }
+//      });
+//   }
    
    // Extraction of MOC id from MOC file name
    private String getMocId(String filename) {
@@ -980,25 +1000,25 @@ public class MultiMoc implements Iterable<MocItem> {
 
    
    // Moc Loading
-   private Moc loadMoc(String filename) {
+   private Moc loadMoc(String filename, MyProperties prop) {
       Moc moc=null;
       FileInputStream fi=null;
       try {
          fi = new FileInputStream( new File(filename));
          moc = Moc.createMoc(fi);
-         moc.reduction(30 *1024L*1024L);
+         if( moc.reduction(20 *1024L*1024L) ) {
+            nbReduceMem++;
+            System.err.println("Moc info: resolution reduced to "+moc.getMem()/(1024L*1024L)+"MB => "+filename);
+         }
          fi.close(); fi=null;
          if( moc.isEmpty() ) moc=null;
          
-         try {
+         // Check validity
             moc.seeRangeList().checkConsistency();
-         } catch( Exception e ) {
-            System.err.println("MocServer.loadMoc: pb on "+filename+" ["+e.getMessage()+"] => MOC ignored");
-            moc=null;
-         }
 
-         // Pas dans le bon système de référence
          if( moc instanceof SMoc ) {
+            
+         // Pas dans le bon système de référence
             String sys=((SMoc)moc).getSys();
          if( !sys.equals(COORDSYS) ) {
             long t = System.currentTimeMillis();
@@ -1013,13 +1033,37 @@ public class MultiMoc implements Iterable<MocItem> {
                throw e;
             }
          }
+            
+            // Peut être ai-je une indication TMIN, TMAX ? => on fait un STMOC sur un range temporel
+            double jdRange [] = getTimeRange(prop);
+            if( jdRange!=null ) {
+               STMoc moc1 = new STMoc(41, moc.getSpaceOrder() );
+               moc1.add( jdRange[0],jdRange[1], (SMoc)moc );
+               moc = moc1;
+            }
          }
  
-      } catch( Exception e ) { moc=null; }
+
+      } catch( Exception e ) { 
+         moc=null; 
+         System.err.println("Moc error ["+e.getMessage()+"] => "+filename);
+      }
       finally { if( fi!=null ) { try { fi.close(); } catch( Exception e ) {} } }
       return moc;
    }
    
+   /** Extrait le range temporelle d'un Prop à partir des t_min et t_max (Attention MJD -> JD ), null sinon */
+   private double [] getTimeRange(MyProperties prop) {
+      if( prop==null ) return null;
+      double tmin=Double.NaN;
+      double tmax=Double.NaN;
+      try { tmin = Double.parseDouble( prop.get("t_min") )+2400000.5; } catch( Exception e ) {}
+      try { tmax = Double.parseDouble( prop.get("t_max") )+2400000.5; } catch( Exception e ) {}
+      if( Double.isNaN(tmin) && Double.isNaN(tmax) ) return null;
+      if( tmin>tmax ) { double x=tmin; tmin=tmax; tmax=x; }
+      return new double[] { tmin, tmax };
+   }
+
    // Properties loading 
    private MyProperties loadProp(String propname) {
       
@@ -1045,15 +1089,29 @@ public class MultiMoc implements Iterable<MocItem> {
       return prop;
    }
 
-   /** Iterator on MocItem */
-   public Iterator<MocItem> iterator() { return new ItemIterator(); }
+   public Iterator<MocItem> iterator() { return iterator(false); }
    
-   private class ItemIterator implements Iterator<MocItem> {
-      int i=0;
-      public boolean hasNext() { return i<tri.size(); }
-      public MocItem next() { return map.get(  tri.get(i++) ); }
-      public void remove() { }
+   /** Retourne un itérateur sur les valeurs du MultiMoc. Si flagCopy==true, il s'agira d'une 
+    * copy de la liste des références our éviter les soucis d'accès concurrents
+    * @param flagCopy
+    * @return
+    */
+   public Iterator<MocItem> iterator(boolean flagCopy) {
+      if( !flagCopy ) return map.values().iterator();
+      ArrayList<MocItem> list = new ArrayList<>( map.size() );
+      for( MocItem mi : map.values() ) list.add(mi);
+      return list.iterator();
    }
+   
+//   /** Iterator on MocItem */
+//   public Iterator<MocItem> iterator1() { return new ItemIterator(); }
+//   
+//   private class ItemIterator implements Iterator<MocItem> {
+//      int i=0;
+//      public boolean hasNext() { return i<tri.size(); }
+//      public MocItem next() { return map.get(  tri.get(i++) ); }
+//      public void remove() { }
+//   }
    
    /**
     * Search by HEALPix cell.
@@ -1080,6 +1138,7 @@ public class MultiMoc implements Iterable<MocItem> {
             if( mi.moc!=null && mi.moc.getSpaceMoc().isIntersecting(order, npix) ) res.add(mi.mocId);
          } catch( Exception e ) { continue; }
       }
+      Collections.sort(res);
       return res;
    }
    
@@ -1380,14 +1439,19 @@ public class MultiMoc implements Iterable<MocItem> {
    public ArrayList<String> scan(Moc moc,HashMap<String, String[]> mapFilter, boolean casesens, int top, int intersect ) {
       ArrayList<String> res = new ArrayList<>();
 
+      boolean scanTime = moc!=null && moc.isTime();
+      boolean scanSpace = moc!=null && moc.isSpace();
+      
       int n=0;
       for( MocItem mi : this ) {
          if( mapFilter!=null && !match(mi,mapFilter,casesens,true)) continue;
          if( moc!=null ) {
             if( mi.moc==null ) continue;
+            if( scanSpace && !mi.moc.isSpace() ) continue;
+            if( scanTime && !mi.moc.isTime() ) continue;
             try {
                if( intersect==OVERLAPS ) {
-                  if( !mi.moc.isIntersecting(moc) ) continue;
+                  if( !moc.isIntersecting(mi.moc) ) continue;
                } else if( intersect==ENCLOSED ) {
                   if( !mi.moc.isIncluding(moc) ) continue;
                } else { // COVERS
@@ -1399,6 +1463,7 @@ public class MultiMoc implements Iterable<MocItem> {
          if( top!=-1 && (++n)>=top ) return res;
       }
 
+      Collections.sort(res);
       return res;
    }
    
@@ -1426,15 +1491,19 @@ public class MultiMoc implements Iterable<MocItem> {
       HashSet<String> candidateIds = scanExpr(expr,casesens);
       if( candidateIds.size()==0 ) return res;
 
+      boolean scanTime = moc!=null && moc.isTime();
+      boolean scanSpace = moc!=null && moc.isSpace();
+
       int n=0;
       for( MocItem mi : this ) {
          if( !candidateIds.contains(mi.mocId) ) continue;
          if( moc!=null ) {
             if( mi.moc==null ) continue;
-            if( !mi.moc.isSpace() ) continue;
+            if( scanSpace && !mi.moc.isSpace() ) continue;
+            if( scanTime && !mi.moc.isTime() ) continue;
             try {
             if( intersect==OVERLAPS ) {
-               if( !mi.moc.isIntersecting(moc) ) continue;
+                  if( !moc.isIntersecting(mi.moc) ) continue;
             } else if( intersect==ENCLOSED ) {
                if( !mi.moc.isIncluding(moc) ) continue;
             } else { // COVERS
@@ -1446,6 +1515,7 @@ public class MultiMoc implements Iterable<MocItem> {
          if( top!=-1 && (++n)>=top ) return res;
       }
 
+      Collections.sort(res);
       return res;
    }
    
@@ -1456,6 +1526,7 @@ public class MultiMoc implements Iterable<MocItem> {
    public ArrayList<String> scan() { 
       ArrayList<String> res = new ArrayList<> (this.size() );
       for( MocItem mi : this ) res.add(mi.mocId);
+      Collections.sort(res);
       return res;
 //      IDENTIQUE A L'EXPRESSION SUIVANTE QUI EST PLUS LENTE
 //      try { return scan("*"); }

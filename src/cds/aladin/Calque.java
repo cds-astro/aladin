@@ -647,14 +647,15 @@ public class Calque extends JPanel implements Runnable {
       for( Plan p : getPlans() ) {
          if( !p.flagOk ) continue;
          if( !p.isTime() ) continue;
-         double[] t =null;
-         try {
-            t = p.getTimeRange();
-         } catch( Exception e ) {
-            return new double[] { -1,-1 };
+         if( Aladin.TIMETEST ) {
+            if( !p.active ) continue;
          }
-         if( Double.isNaN(jdmin) || t[0]<jdmin ) jdmin=t[0];
-         if( Double.isNaN(jdmax) || t[1]>jdmax ) jdmax=t[1];
+         double[] t =null;
+         try { 
+            t = p.getTimeRange(); 
+            if( Double.isNaN(jdmin) || t[0]<jdmin ) jdmin=t[0];
+            if( Double.isNaN(jdmax) || t[1]>jdmax ) jdmax=t[1];
+         } catch( Exception e ) { }
       }
       return new double[] { jdmin, jdmax };
    }
@@ -1905,11 +1906,17 @@ public class Calque extends JPanel implements Runnable {
    
    /** Remet à jour le time range global */
    protected void resetTimeRange() {
+      if( Aladin.TIMETEST ) return;
       double [] t = getGlobalTimeRange();
-      if( Double.isNaN(t[0]) ) {
-         for( ViewSimple v : aladin.view.viewSimple ) v.resetTimeRange();
-      }
       zoom.zoomTime.setGlobalTimeRange( t );
+      
+      if( !Aladin.TIMETEST ) {
+         if( Double.isNaN(t[0]) ) {
+            for( ViewSimple v : aladin.view.viewSimple ) {
+               v.resetTimeRange();
+            }
+         }
+      }
    }
    
    /** Retourne un intervalle de temps par défaut. Soit l'intervalle de la vue courante
@@ -3817,23 +3824,11 @@ public class Calque extends JPanel implements Runnable {
    
    /** Création d'un plan Multi-Order Coverage Map à partir d'un MOC (de n'importe quel type) */
    protected int newPlanMOC(Moc moc, String label, String url) {
-      if( moc instanceof STMoc ) return newPlanMOC( moc, label, url);
-      if( moc instanceof TMoc ) return newPlanMOC( moc, label, url); 
+      if( moc instanceof STMoc ) return newPlanSTMOC( (STMoc)moc, label, url);
+      if( moc instanceof TMoc ) return newPlanTMOC( (TMoc)moc, label, url); 
       return newPlanSMOC( moc, label, url); 
    }
    
-   /** Création d'un plan Multi-Order Coverage Map à partir d'un STMOC */
-   protected int newPlanMOC(STMoc moc,String label,String url) {
-      int n=getStackIndex(label);
-      label = prepareLabel(label);
-      Coord c=getTargetBG(null,null);
-      double rad=getRadiusBG(null,null,null);
-      plan[n] = new PlanSTMoc(aladin,moc,label,c,rad,url);
-      n=bestPlace(n);
-      suiteNew(plan[n]);
-      return n;
-   }
-
    /** Création d'un plan Multi-Order Coverage Map à partir d'un SMOC */
    protected int newPlanSMOC(Moc moc,String label,String url) {
       int n=getStackIndex(label);
@@ -3848,10 +3843,22 @@ public class Calque extends JPanel implements Runnable {
    }
 
    /**  Création d'un plan Multi-Order Coverage Map à partir d'un TMOC */
-   protected int newPlanMOC(TMoc moc,String label,String url) {
+   protected int newPlanTMOC(TMoc moc,String label,String url) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = new PlanTMoc(aladin,moc,label,url);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
+   
+   /** Création d'un plan Multi-Order Coverage Map à partir d'un STMOC */
+   protected int newPlanSTMOC(STMoc moc,String label,String url) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      Coord c=getTargetBG(null,null);
+      double rad=getRadiusBG(null,null,null);
+      plan[n] = new PlanSTMoc(aladin,moc,label,c,rad,url);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;

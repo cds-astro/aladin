@@ -171,6 +171,7 @@ public class PlanSTMoc extends PlanTMoc {
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
+            error="MOC error";
             return false;
          }
       }
@@ -231,6 +232,19 @@ public class PlanSTMoc extends PlanTMoc {
       }
       return null;
    }
+   
+   /** Retourne le STMoc correspondant à la sélection courante */
+   protected STMoc getCurrentSpaceTimeMoc() {
+      try {
+         return new STMoc( (TMoc)tmocS.moc, (SMoc)smocS.moc);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+      return null;
+   }
+   
+   /** Retourne true s'il y a une sélection d'une sous-partie du STMOC en cours */
+   protected boolean hasSelection() { return true; }   // <= DEVRAI TETRE PLUS TATILLON
    
    private double [] oLastDrawTimeRange = null;
    private SMoc oLastDrawMoc = null;

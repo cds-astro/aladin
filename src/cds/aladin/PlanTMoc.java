@@ -124,6 +124,7 @@ public class PlanTMoc extends PlanMoc {
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
+            error="MOC error";
             return false;
          }
       }
@@ -236,7 +237,7 @@ public class PlanTMoc extends PlanMoc {
       double tmin = plot.getMin();
       double tmax = plot.getMax();
       
-      v.setTimeRange( new double[] { tmin, tmax });
+      if( !Aladin.TIMETEST ) v.setTimeRange( new double[] { tmin, tmax });
       
       int drawingOrder;
       if( moc.getNbRanges()<MAXDRAWCELL ) drawingOrder=moc.getTimeOrder();

@@ -136,6 +136,7 @@ import cds.allsky.HipsGen;
 import cds.allsky.MocGen;
 import cds.moc.Moc;
 import cds.moc.SMoc;
+import cds.moc.STMoc;
 import cds.moc.TMoc;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
@@ -165,8 +166,9 @@ import cds.xml.XMLParser;
  * @beta    <LI> Access to the VizieR "associated data"
  * @beta    <LI> MOC extensions:
  * @beta    <UL> <LI> MOC 2.0 full compliance (STMOC, TMOC)
+ * @beta         <LI> MocServer v2 => Resource Tree controlled both by space and time filters)
  * @beta         <LI> STMOC highlight & selection
- * @beta         <LI> MOC size limit faciliity
+ * @beta         <LI> MOC size limit facility
  * @beta         <LI> SMOC generation from Box object
  * @beta    </Ul>
  * @beta    <LI> Time serie display
@@ -207,7 +209,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.063";
+   static public final    String VERSION = "v11.064";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -221,13 +223,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected int  SIZE   = 13;
    
    // Gère le mode particuliers
+   public static boolean MOCV2=false;    // true si on tourne sur un MocServer V2 (support du temps)
+   public static boolean MOCLOCAL=false; // true si on tourne sur un MocServer local
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
    public static boolean BETA=true;  // true si on tourne en mode BETA
    public static boolean CDS=false;   // true si on tourne en mode CDS
    public static boolean PROTO=false;    // true si on tourne en mode PROTO (nécessite Proto.jar)
    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH   (n'est gardé que pour éliminer les enregistrements GLU)
    static public final boolean SLIDERTEST=false; // true pour les tests de développement sur le slider de transparent actif même pour les plans de référence
-//   static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
+   static public final boolean TIMETEST=true;    // true pour le test sur le développement des controles temporels avancés
    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
    static public String LOCATION=null;  // Force Aladin à s'afficher à un emplacement précis (syntaxe: x,y,w,h)
    static boolean SETLOG=false; // true si on a forcé le positionnement du LOG
@@ -664,7 +668,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,miSpectrum,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
    miUnSelect,miCut,miSpect,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,
-   miCropTMOC,miCropSMOC,miCreateHpx,miCreateHpxRgb,
+   miCropSTMOC,miCropTMOC,miCropSMOC,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
    miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,
@@ -728,7 +732,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    STATSURFPOLY,CUT,SPECT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
    SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENPROBA,TMOCGEN,TMOCGENCAT,TMOCGENOBJ,
    STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
-   MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCEXTRACTSMOC,MOCEXTRACTTMOC,MOCHELP,MOCLOAD,MOCHIPS,
+   MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCEXTRACTSMOC,MOCEXTRACTTMOC,MOCEXTRACTSTMOC,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
    REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
@@ -1267,6 +1271,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOCCROP =chaine.getString("MMOCCROP");
       MOCEXTRACTSMOC =chaine.getString("MMOCEXTRACTSMOC");
       MOCEXTRACTTMOC =chaine.getString("MMOCEXTRACTTMOC");
+      MOCEXTRACTSTMOC =chaine.getString("MMOCEXTRACTSTMOC");
       MOCHELP =chaine.getString("MMOCHELP");
       MOCLOAD =chaine.getString("MMOCLOAD");
       MOCHIPS =chaine.getString("MMOCHIPS");
@@ -1414,7 +1419,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             { {MOC},
                {MOCHIPS}, {MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS,MOCGENPROBA, MOCEXTRACTSMOC,MOCCROP}, 
                {TMOCGEN,TMOCGENCAT,TMOCGENOBJ,MOCEXTRACTTMOC}, 
-               {STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC},
+               {STMOCGEN,STMOCGENCAT,STMOCGENOBJ,STMOCGENMOC,MOCEXTRACTSTMOC},
                {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{},{MOCHELP}
             },
             { /*{MTOOLS},
@@ -2126,6 +2131,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
       else if( isMenu(m,MOCEXTRACTSMOC) )   miCropSMOC  = ji;
       else if( isMenu(m,MOCEXTRACTTMOC) )   miCropTMOC  = ji;
+      else if( isMenu(m,MOCEXTRACTSTMOC) )  miCropSTMOC  = ji;
       else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
       else if( isMenu(m,MOCGENPROBA) )   miMocGenProba  = ji;
       else if( isMenu(m,MOCHIPS) )   miMocHips  = ji;
@@ -3586,6 +3592,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MOCCROP) )  { crop();
       } else if( isMenu(s,MOCEXTRACTSMOC) )  { cropSMOC();
       } else if( isMenu(s,MOCEXTRACTTMOC) )  { cropTMOC();
+      } else if( isMenu(s,MOCEXTRACTSTMOC) ) { cropSTMOC();
       } else if( isMenu(s,MOCHELP) )  { info(chaine.getString("MOCHELP"));
       } else if( isMenu(s,MOCLOAD) )  { loadMoc();
       } else if( isMenu(s,MOCHIPS) )  { loadMocHips();
@@ -3873,9 +3880,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
       if( p==null ) { aladin.warning("No STMOC in the stack"); return; }
       TMoc moc = p.getCurrentTimeMoc(  );
-      calque.newPlanMOC(moc, "TMOC from "+p.label,null);
+      calque.newPlanTMOC(moc, "TMOC from "+p.label,null);
       console.printCommand("cmoc -time "+p.label);
    }
+
+   /** Création d'un plan STMoc depuis le plan STMOC sélectionné à partir de la sélection "blanche" courante */
+   protected void cropSTMOC() {
+      PlanSTMoc p = calque.getFirstSelectedorNotPlanSTMoc();
+      if( p==null) { aladin.warning("No STMOC in the stack"); return; }
+      STMoc moc = p.getCurrentSpaceTimeMoc( );
+      calque.newPlanMOC(moc, "STMOC from "+p.label,null);
+   }
+
 
    /** Création d'un fichier map HEALpix à partir d'un PlanImage et affichage de cette map */
    protected void createHpx() {
@@ -6106,7 +6122,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miTMocGen!=null ) miTMocGen.setEnabled( nbPlanCatTime>0 || pc instanceof PlanSTMoc );
          if( miTMocGenCat!=null ) miTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miTMocGenObj!=null ) miTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
-         if( miSTMocGen!=null ) miSTMocGen.setEnabled( nbPlanCatTime>0 || pc!=null && pc.type==Plan.ALLSKYMOC );
+         if( miSTMocGen!=null ) miSTMocGen.setEnabled( nbPlanCatTime>0 || pc!=null && (pc.type==Plan.ALLSKYMOC
+               || pc instanceof PlanSTMoc && ((PlanSTMoc)pc).hasSelection()) );
          if( miSTMocGenCat!=null ) miSTMocGenCat.setEnabled( nbPlanCatTime>0 );
          if( miSTMocGenObj!=null ) miSTMocGenObj.setEnabled( nbPlanCatTime>0 && hasSelectedSrc );
          if( miSTMocGenMoc!=null ) miSTMocGenMoc.setEnabled( pc!=null && pc.type==Plan.ALLSKYMOC );
@@ -6116,6 +6133,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miMocCrop!=null ) miMocCrop.setEnabled( pc instanceof PlanMoc && !(pc instanceof PlanTMoc) );
          if( miCropSMOC!=null ) miCropSMOC.setEnabled( pc instanceof PlanSTMoc );
          if( miCropTMOC!=null ) miCropTMOC.setEnabled( pc instanceof PlanSTMoc );
+         if( miCropSTMOC!=null ) miCropSTMOC.setEnabled( pc instanceof PlanSTMoc && ((PlanSTMoc)pc).hasSelection());
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
          if( miNorm!=null ) miNorm.setEnabled(hasPixels && !isCube);
@@ -6463,6 +6481,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
+         else if( args[i].equals("-mocv2") )       { MOCV2=true; lastArg=i+1; }
+         else if( args[i].equals("-moclocal") )    { MOCLOCAL=true; lastArg=i+1; }
          else if( args[i].equals("-nolog") )       { Default.LOG=false; SETLOG=true; lastArg=i+1; }
          else if( args[i].equals("-log") )         { Default.LOG=true; SETLOG=true; lastArg=i+1; }
          else if( args[i].equals("-outreach") )    { /* OUTREACH=true; setOUTREACH=true; */ lastArg=i+1; }

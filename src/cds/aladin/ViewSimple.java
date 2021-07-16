@@ -380,7 +380,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
-      if( vs.isPlotTime() ) view.syncTimeRange(vs);
+      if( !Aladin.TIMETEST && vs.isPlotTime() ) view.syncTimeRange(vs);
       vs.syncZoom(-e.getWheelRotation()*mult,coo,false);
    }
 
@@ -432,6 +432,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Positionne l'intervalle de temps courant de la vue */
    protected boolean setTimeRange( double [] range ) { return setTimeRange( range, true ); }
    protected boolean setTimeRange( double [] range, boolean withPaint) {
+      
       // Pas de modif ? => rien à faire
       if( Double.isNaN(range[0]) && Double.isNaN(jdmin) && Double.isNaN(range[1]) && Double.isNaN(jdmax)
             || jdmin==range[0] && jdmax==range[1] ) return false;
@@ -2192,12 +2193,23 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( tool==ToolBox.SELECT  || tool==-1  || tool==ToolBox.PAN  || tool==ToolBox.CROP ) {
          
          if( !isProjSync ) {
-            if( !flagshift && (!selected || !view.isMultiView()) ) {
-               aladin.calque.unSelectAllPlan();
-               aladin.view.unSelectAllView();
-            }
+            
+            if( Aladin.TIMETEST ) {
+               if( !flagshift && (!selected || !view.isMultiView()) ) {
+                  aladin.calque.unSelectAllPlan();
+                  aladin.view.unSelectAllView();
 
-            selected=flagshift?!selected:true;
+               } else selected = !selected;
+            } else {
+
+               if( !flagshift && (!selected || !view.isMultiView()) ) {
+                  aladin.calque.unSelectAllPlan();
+                  aladin.view.unSelectAllView();
+
+               } 
+               selected=flagshift?!selected:true;
+            }
+            
             if( !isFree() ) pref.selected=selected;
 
             // S'il n'y a plus aucune vue/plan sélectionné, je resélectionne la dernière
@@ -5229,10 +5241,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // S'il y a une tranche temporelle, on l'ajoute
       double t[] = getTimeRange();
       if( !(Double.isNaN(t[0]) && Double.isNaN(t[1])) && rv.width>300 ) {
-         double gt [] = aladin.calque.zoom.zoomTime.getGlobalTimeRange();
-         for( int i=0; i<2; i++ ) if( Double.isNaN(t[i]) ) t[i] = gt[i] ;
-         String deb =  Astrodate.JDToDate( t[0],false);
-         String fin =  Astrodate.JDToDate( t[1],false);
+//         double gt [] = aladin.calque.zoom.zoomTime.getGlobalTimeRange();
+//         for( int i=0; i<2; i++ ) if( Double.isNaN(t[i]) ) t[i] = gt[i] ;
+         String deb =  Double.isNaN(t[0]) ? "Inf" : Astrodate.JDToDate( t[0],false);
+         String fin =  Double.isNaN(t[1]) ? "Inf" : Astrodate.JDToDate( t[1],false);
          if( fin.equals(deb) ) {
             deb = Astrodate.JDToDate( t[0],true);
             deb=deb.replace('T',' ');
@@ -5244,8 +5256,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       int marge = getMarge();
       int taille = g.getFontMetrics().stringWidth(s);
-      int x = mode==0?marge:mode==1?rv.width/2-taille/2:
-         rv.width- taille-marge;
+      int x = mode==0?marge:mode==1?rv.width/2-taille/2: rv.width- taille-marge;
 
       if( x+taille > rv.width ) s=s1;
       //      g.setColor( getGoodColor(x+dx,rv.height-marge+2 + dy-10,taille,15));
@@ -6747,7 +6758,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          g.drawRect(1,1,w-3,h-3);
          g.drawRect(2,2,w-5,h-5);
       }
-      else if( show ) {
+      else if( !Aladin.TIMETEST && show ) {
          g.setColor(Color.green);
          g.drawRect(0,0,w-1,h-1);
          g.drawRect(1,1,w-3,h-3);

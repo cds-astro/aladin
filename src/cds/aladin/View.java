@@ -1521,6 +1521,44 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       //      return ((PlanImage)p).getPixelInDouble(x,y);
       return ((PlanImage)p).getPixelOriginInDouble(x,((PlanImage)p).naxis2-y-1);
    }
+   
+   /** Retourne l'intervalle de temps de l'ensemble des vues sélectionnées */
+   protected double [] getTimeRange() {
+      
+      return getCurrentView().getTimeRange();
+      
+//      // Dans le cas où la vue de base est en mode match, retourne
+//      // l'intervalle temporel de cette vue
+//      ViewSimple vb = getCurrentView();
+//      if( vb.isProjSync() ) return vb.getTimeRange();
+//      
+//      double jdmin=Double.NaN,jdmax=Double.NaN;
+//      for( ViewSimple v : getSelectedView() ) {
+//         if( v.isFree() ) continue;
+//         double[] t =null;
+//         try { 
+//            t = v.getTimeRange(); 
+//            if( Double.isNaN(jdmin) || t[0]<jdmin ) jdmin=t[0];
+//            if( Double.isNaN(jdmax) || t[1]>jdmax ) jdmax=t[1];
+//         } catch( Exception e ) { }
+//      }
+//      return new double[] { jdmin, jdmax };
+   }
+   
+   /** Positionne l'intervalle temporel de l'ensemble des vues sélectionnées */
+   protected boolean setTimeRange( double [] range ) {
+      
+      return getCurrentView().setTimeRange(range);
+      
+//      // Dans le cas où la vue de base est en mode match, ne set que cette vue
+//      ViewSimple vb = getCurrentView();
+//      if( vb.isProjSync() ) return vb.setTimeRange(range);
+//      
+//      boolean rep=true;
+//      for( ViewSimple v : getSelectedView() ) rep |= v.setTimeRange(range);
+//      return rep;
+   }
+
 
    /** Ajustement de la taille des panels de chaque vue en fonction de la taille
     *  disponible pour le mode m

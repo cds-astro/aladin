@@ -47,6 +47,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -90,6 +91,7 @@ import javax.swing.tree.TreePath;
 import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
+import cds.astro.Astrotime;
 import cds.moc.SMoc;
 import cds.mocmulti.BinaryDump;
 import cds.mocmulti.MocItem;
@@ -132,6 +134,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    protected MultiMoc2 multiProp; // Le multimoc de stockage des properties des collections
    private Color cbg;             // La couleur du fond
+   protected double mocServerVersion=-1;   // Numéro de version du MocServer
 
    private DirectoryFilter directoryFilter = null; // Formulaire de filtrage de l'arbre des collections
    private DirectorySort directorySort = null;     // Gestion du tri de l'arbre des collections
@@ -272,12 +275,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       this.cbg = cbg;
       
 //       POUR LES TESTS => Surcharge de l'URL du MocServer
-//      if( aladin.levelTrace>=3 ) {
-//         String mochost = "http://localhost:8080/MocServer/query";
-////                String mochost = "http://alasky4.u-strasbg.fr:8080/MocServer/query";
-//         aladin.glu.aladinDic.put(GLUMOCSERVER,mochost+"?$1");
-//         aladin.trace(0,"WARNING: use local MocServer for test =>"+mochost+" !!!");
-//      }
+      if( aladin.MOCV2 || aladin.MOCLOCAL ) {
+         String mochost = aladin.MOCLOCAL ? "http://localhost:8080/MocServer/query"
+                                          : "http://alasky4.u-strasbg.fr:8080/MocServer/query";
+         aladin.glu.aladinDic.put(GLUMOCSERVER,mochost+"?$1");
+         aladin.glu.aladinDic.put("MOC_url",mochost+"?$1");
+         aladin.trace(0,"WARNING: use an alternate MocServer for test =>"+mochost+" !!!");
+      }
 
 
       setBackground(cbg);
@@ -1270,9 +1274,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    @Override
-   public Iterator<MocItem> iterator() {
-      return multiProp.iterator();
-   }
+   public Iterator<MocItem> iterator() { return multiProp.iterator(); }
 
    // False lorsque la première initialisation de l'arbre est faite
    private boolean init = true;
@@ -1807,6 +1809,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    // Dernier champs interrogé sur le MocServer
    private Coord oc = null;
+   
+   private double orange [] = new double[]{ -1, -1 };
 
    private double osize = -1;
 
@@ -1821,11 +1825,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private boolean checkIn(ResumeMode mode) {
       if( !dialogOk() ) return false;
       if( aladin.isAnimated() ) return false;
-
+      
       // Le champ est trop grand ou que la vue n'a pas de réf spatiale ?
       // => on suppose que tous les HiPS sont a priori visibles
       ViewSimple v = aladin.view.getCurrentView();
-      if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) || v.isPlot() ) {
+      if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) || (v.isPlot() && !v.isPlotTime()) ) {
          boolean modif = false;
          for( TreeObjDir to : dirList ) {
             if( !modif && to.getIsIn() != -1 ) modif = true;
@@ -1834,72 +1838,130 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          isCheckIn=false;
          return modif;
       }
+      
+    try {
 
-      try {
+       HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
 
-         HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
+       // Pour éviter de faire 2x la même chose de suite
+       Coord c=null;
+       double size=0; 
+       if( !v.isPlotTime() ) {
+          c = v.getCooCentre();
+          size = v.getTaille();
+       }
+       boolean sameLocation = c==null && oc==null || c!=null && c.equals(oc) && size == osize;
+       
+       double [] range = v.getTimeRange();
+       boolean sameTime =  Double.isNaN(range[0]) && Double.isNaN(orange[0]) && Double.isNaN(range[1]) && Double.isNaN(orange[1])
+             || orange[0]==range[0] && orange[1]==range[1];
 
-         // Pour éviter de faire 2x la même chose de suite
-         Coord c = v.getCooCentre();
-         double size = v.getTaille();
-         boolean sameLocation = c.equals(oc) && size == osize;
 
-         String params;
-         if( mode == ResumeMode.NORMAL && sameLocation ) return false;
-         oc = c;
-         osize = size;
+       String params;
+       if( mode == ResumeMode.NORMAL && sameLocation && sameTime ) return false;
+       oc = c;
+       osize = size;
+       orange = range;
+       
+       
+       boolean withSpace = c!=null;
+       boolean withTime = mocServerVersion>=5 && (!Double.isNaN(range[0]) || !Double.isNaN(range[1]));
+       
+       if( !withTime && !withSpace ) return true;
+       
+       // Interrogation du MocServer distant...
+       BufferedReader in = null;
 
-         // Interrogation du MocServer distant...
-         BufferedReader in = null;
+       params = MOCSERVER_PARAM;
+       if( withSpace ) {
+          // Interrogation par cercle
+          if( v.getTaille() > 45 ) {
+             params += "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
 
-         // Interrogation par cercle
-         if( v.getTaille() > 45 ) {
-            params = MOCSERVER_PARAM + "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
+             // Interrogation par rectangle
+          } else {
+             StringBuilder s1 = new StringBuilder("Polygon");
+             for( Coord c1 : v.getCooCorners() ) s1.append(" " + c1.al + " " + c1.del);
+             params += "&stc=" + URLEncoder.encode(s1.toString());
+          }
+       }
+       if( withTime ) {
+          double mjdmin = Double.isNaN(range[0]) ? 0 : Astrotime.JD2MJD(range[0]);
+          double mjdmax = Double.isNaN(range[1]) ? Double.MAX_VALUE : Astrotime.JD2MJD(range[1]);
+          params += "&TIME="+URLEncoder.encode(mjdmin+" "+mjdmax);
+       }
 
-            // Interrogation par rectangle
-         } else {
-            StringBuilder s1 = new StringBuilder("Polygon");
-            for( Coord c1 : v.getCooCorners() )
-               s1.append(" " + c1.al + " " + c1.del);
-            params = MOCSERVER_PARAM + "&stc=" + URLEncoder.encode(s1.toString());
-         }
+       try {
+          if( mode == ResumeMode.FORCE || !sameLocation || !sameTime ) {
+             URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
 
-         try {
-            if( mode == ResumeMode.FORCE || !sameLocation ) {
-               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
+             Aladin.trace(3, "Directory.hipsUpdate: Contacting MocServer : " + u);
+             in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
+             String s;
 
-               Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
-               in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
-               String s;
+             // récupération de chaque ID concernée (1 par ligne)
+             while( (s = in.readLine()) != null ) set.add(getId(s));
+          }
 
-               // récupération de chaque ID concernée (1 par ligne)
-               while( (s = in.readLine()) != null )
-                  set.add(getId(s));
-            }
+       } catch( EOFException e ) {
+       } finally {
+          if( in != null ) in.close();
+       }
 
-         } catch( EOFException e ) {
-         } finally {
-            if( in != null ) in.close();
-         }
+//      try {
+//
+//         HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
+//
+//         // Pour éviter de faire 2x la même chose de suite
+//         Coord c = v.getCooCentre();
+//         double size = v.getTaille();
+//         boolean sameLocation = c.equals(oc) && size == osize;
+//
+//         String params;
+//         if( mode == ResumeMode.NORMAL && sameLocation ) return false;
+//         oc = c;
+//         osize = size;
+//
+//         // Interrogation du MocServer distant...
+//         BufferedReader in = null;
+//
+//         // Interrogation par cercle
+//         if( v.getTaille() > 45 ) {
+//            params = MOCSERVER_PARAM + "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
+//
+//            // Interrogation par rectangle
+//         } else {
+//            StringBuilder s1 = new StringBuilder("Polygon");
+//            for( Coord c1 : v.getCooCorners() )
+//               s1.append(" " + c1.al + " " + c1.del);
+//            params = MOCSERVER_PARAM + "&stc=" + URLEncoder.encode(s1.toString());
+//         }
+//
+//         try {
+//            if( mode == ResumeMode.FORCE || !sameLocation ) {
+//               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
+//
+//               Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
+//               in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
+//               String s;
+//
+//               // récupération de chaque ID concernée (1 par ligne)
+//               while( (s = in.readLine()) != null )
+//                  set.add(getId(s));
+//            }
+//
+//         } catch( EOFException e ) {
+//         } finally {
+//            if( in != null ) in.close();
+//         }
 
          // Interrogation du Multimoc interne (uniquement par cercle)
          SMoc mocQuery = null;
          if( flagScanLocal && (mode == ResumeMode.FORCE || mode == ResumeMode.LOCALADD || !sameLocation) ) {
 
             // Construction d'un MOC qui englobe le cercle couvrant le champ de vue courant
-//            Healpix hpx = new Healpix();
             int order = getAppropriateOrder(size);
             mocQuery = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians(size / 2), true);
-            
-//            mocQuery = new SMoc(order);
-//            int i = 0;
-//            mocQuery.setCheckConsistencyFlag(false);
-////            for( long n : hpx.queryDisc(order, c.al, c.del, size / 2) ) {
-//            for( long n : CDSHealpix.query_disc(order, c.al, c.del, Math.toRadians(size / 2), true) ) {
-//               mocQuery.add(order, n);
-//               if( (++i) % 1000 == 0 ) mocQuery.checkAndFix();
-//            }
-//            mocQuery.setCheckConsistencyFlag(true);
             
             // System.out.println("Moc d'interrogation => "+mocQuery.todebug());
             
@@ -2122,7 +2184,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       infoVizieROld=true;
       ArrayList<TreeObjDir> listReg = new ArrayList<>(30000);
       multiple=null;  // Il faut reseter la liste des collections à plusieurs "feuilles"
-      for( MocItem mi : this ) populateProp(listReg, mi.prop);
+      
+//      for( MocItem mi : this ) populateProp(listReg, mi.prop);
+      Iterator<MocItem> it = multiProp.iterator(true);
+      while( it.hasNext() ) populateProp(listReg, (it.next()).prop);
+      
       Collections.sort(listReg, TreeObj.getComparator());
       return listReg;
    }
@@ -2213,9 +2279,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Est-ce qu'il y a un "profile", et si oui, est-il compatible avec cette version d'Aladin
       if( !hasValidProfile(prop) ) return;
 
-      // Y a-t-il au moins un moyen d'accès ?
-      if( !hasURLkey(prop) ) return;
-
       // Ajustement local des propriétés
       try {
          propAdjust(id, prop);
@@ -2223,6 +2286,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          return;
       }
+      
+      // Y a-t-il au moins un moyen d'accès ?
+      if( !hasURLkey(prop) ) return;
+      
 
       String HIPSU = Constante.KEY_HIPS_SERVICE_URL;
 
@@ -2301,15 +2368,24 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    // POURRA ETRE SUPPRIME POUR LA V12 - PF 31 janvier 2020
    private void propAdjust1(String id, MyProperties prop) {
       
-      String type = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
-      if( type == null || type.indexOf("catalog") < 0 ) return;
-      
       // Ne concerne pas VizieR => on ne bidouille pas dans le client
       if( !id.startsWith("CDS/") || id.equals("CDS/Simbad") ) return;      
+      
 
       // Déjà fait en amont => on ne bidouille plus dans le client (en fait si, mais juste le minimum)
-      if( prop.get(Constante.KEY_CLIENT_CATEGORY)!=null ) {
-         return;
+      if( prop.get("client_category")!=null ) return;
+      
+      String type = prop.getProperty("dataproduct_type");
+      if( type == null || type.indexOf("catalog") < 0 ) {
+         
+         // Cas des enregistrements VizieR des tables temporelles non décrites.
+         // POUR LE MOMENT ON LES GARDE AVEC UN ACCES TAP UNIQUEMENT
+         String tmoc = prop.get("moc_type");
+         if( tmoc!=null && tmoc.equals("tmoc") ) {
+            prop.add("dataproduct_type","catalog");
+            
+         // Sinon on ne prend pas en compte
+         } else return;
       }
       
       
@@ -2343,7 +2419,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
 
       // Détermination de la catégorie
-      prop.replaceValue(Constante.KEY_CLIENT_CATEGORY, "Catalog/VizieR");
+      prop.replaceValue("client_category", "Catalog/VizieR");
       
       // Réorganisation des champs en attendant que Thomas le fasse en amont
       //
@@ -2371,7 +2447,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       if( !hasMultiple ) {
 
          // Je vire le nom de la table a la fin du titre
-         String titre = prop.get(Constante.KEY_OBS_TITLE);
+         String titre = prop.get("obs_title");
          boolean modif=false;
 //         if( oldVizieRMode ) {
             int i;
@@ -2387,10 +2463,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             titre = addLabelPrefix(label,titre);
             modif=true;
          }
-         if( modif ) prop.replaceValue(Constante.KEY_OBS_TITLE, titre);
+         if( modif ) prop.replaceValue("obs_title", titre);
 
       } else /* if( oldVizieRMode ) */ {
-         String titre = prop.get(Constante.KEY_OBS_TITLE);
+         String titre = prop.get("obs_title");
          if( titre != null ) {
 
             // Je remonte le nom du catalog (obs_description sans la parenthèse finale) sur la branche (obs_collection)
@@ -2398,13 +2474,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             int j = titre.indexOf(')', i);
             if( i > 0 && j > i ) {
 
-               String desc = prop.get(Constante.KEY_OBS_DESCRIPTION);
+               String desc = prop.get("obs_description");
                if( desc != null ) {
                   String newTitre = desc + titre.substring(i - 1, j + 1);
-                  prop.replaceValue(Constante.KEY_OBS_TITLE, newTitre);
+                  prop.replaceValue("obs_title", newTitre);
                }
                prop.replaceValue("obs_collection",titre.substring(0, i-1));
-               prop.replaceValue(Constante.KEY_OBS_DESCRIPTION,titre.substring(0, i-1));
+               prop.replaceValue("obs_description",titre.substring(0, i-1));
             }
          }
       }
@@ -2728,6 +2804,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
    // Sauvegarde dans le cache du MultiMoc sous forme binaire
    private boolean cacheWrite() {
+      // On ne sauvegarde pas dans le cache les essais en cours
+      // sinon il y aura souci lorsqu'on reprendra la config normale
+      if( aladin.MOCLOCAL || aladin.MOCV2 ) return false;
+      
       try {
          String s = aladin.cache.getCacheDir() + Util.FS + MMOC;
          (new BinaryDump()).save(multiProp, s);
@@ -2786,31 +2866,31 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          startTimer();
          while( !init )
             Util.pause(100);
-         (new Thread("updateFromMocServer") {
-            public void run() {
-               try {
-                  quickFilter.setEditable(false);
-                  quickFilter.setText(UPDATING);
-                  if( updateFromMocServer(flagReload) > 0 ) {
-                     cacheWrite();
-                     final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
-                     SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                           replaceTree(tmpListReg);
-                           stopTimer();
-                        }
-                     });
-                  } else stopTimer();
-               } finally {
-                  quickFilter.setText("");
-                  quickFilter.setEditable(true);
+            (new Thread("updateFromMocServer") {
+               public void run() {
+                  try {
+                     quickFilter.setEditable(false);
+                     quickFilter.setText(UPDATING);
+                     if( updateFromMocServer(flagReload) > 0 ) {
+                        cacheWrite();
+                        final ArrayList<TreeObjDir> tmpListReg = populateMultiProp();
+                        SwingUtilities.invokeLater(new Runnable() {
+                           public void run() {
+                              replaceTree(tmpListReg);
+                              stopTimer();
+                           }
+                        });
+                     } else stopTimer();
+                  } finally {
+                     quickFilter.setText("");
+                     quickFilter.setEditable(true);
+                  }
                }
-            }
-         }).start();
+            }).start();
 
-         // Le cache est vide => il faut charger depuis le MocServer
+            // Le cache est vide => il faut charger depuis le MocServer
       } else {
-         
+
 
          // L'initialisation se fait en deux temps pour pouvoir laisser
          // l'utilisateur travailler plus rapidement
@@ -2838,7 +2918,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       this.dirList = populateMultiProp();
    }
-
+   
    /** Ajout de nouvelles collections */
    protected boolean addHipsProp(InputStreamReader in, boolean addition, String path) {
       try {
@@ -2852,6 +2932,26 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          return false;
       }
       return true;
+   }
+   
+   /** Positionne le numéro de version du MocServer 
+    * >=5.0 indique que le MocServer prend en compte la dimension temporelle
+    */
+   private void setMocserverVersion() {
+      if( mocServerVersion==-2 ) return;    // déjà testé sans succès
+      
+      DataInputStream dis=null;
+      try {
+         String url =aladin.glu.getURL(GLUMOCSERVER)+"?help=version";
+         dis = new DataInputStream( Util.openAnyStream(url));
+         double v = Double.parseDouble( dis.readLine().trim() );
+         aladin.trace(3,"MocServer version="+v);
+         mocServerVersion=v;
+      } 
+      catch( Exception e ) { mocServerVersion=-2; }
+      finally {
+         try { dis.close(); } catch( Exception e ) {}
+      }
    }
 
    /**
@@ -2869,6 +2969,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( aladin.levelTrace >= 3 ) e.printStackTrace();
          return -1;
       }
+      
+      // Test et mémorisation de la version du MocServer
+      setMocserverVersion();
 
       try {
          mocServerUpdating = true;
@@ -2959,6 +3062,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          Aladin.trace(3, text + "ing Multiprop definitions from MocServer...");
 
          String u = aladin.glu.getURL(GLUMOCSERVER, params, true).toString();
+         setMocserverVersion();
          try {
             in = new InputStreamReader(Util.openStream(u, false, true, 3000));
             if( in == null ) throw new Exception("cache openStream error");
@@ -2986,11 +3090,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       } finally {
          mocServerLoading = false;
-         if( in != null ) {
-            try {
-               in.close();
-            } catch( Exception e ) {
-            }
+         if( in != null ) { try { in.close(); } catch( Exception e ) { }
          }
       }
       return n;
@@ -3124,7 +3224,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       JPanel panelInfo = null; // le panel qui contient les infos (sera remplacé à chaque nouveau hips)
 
-      JCheckBox hipsBx = null, tmocBx=null, mocBx = null, mociBx = null, mocuBx, progBx = null, dmBx = null, siaBx = null, ssaBx = null,
+      JCheckBox hipsBx = null, /* tmocBx=null,*/  mocBx = null, mociBx = null, mocuBx, progBx = null, dmBx = null, siaBx = null, ssaBx = null,
             customBx = null, csBx = null, msBx = null, allBx = null, tapBx = null, xmatchBx = null, globalBx = null, liveBx = null,
             assocBx=null;
       ConeField target = null;
@@ -3176,7 +3276,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          boolean activateTarget = false;
          if( hipsBx != null )   activateLoad |= hipsBx.isSelected();
          if( mocBx != null )    activateLoad |= mocBx.isSelected();
-         if( tmocBx != null )   activateLoad |= tmocBx.isSelected();
+//         if( tmocBx != null )   activateLoad |= tmocBx.isSelected();
          if( mociBx != null )   activateLoad |= mociBx.isSelected();
          if( mocuBx != null )   activateLoad |= mocuBx.isSelected();
          if( progBx != null )   activateLoad |= progBx.isSelected();
@@ -3403,7 +3503,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             JPanel mocAndMore = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
             JCheckBox bx;
-            mociBx = mocBx = tmocBx = csBx = liveBx = customBx = null;
+            mociBx = mocBx = csBx = liveBx = customBx = null;
+//            tmocBx = null;
 
             // S'il n'y a pas trop de collections, on pourra les appeler en parallèle
             boolean flagTooMany = false;
@@ -3507,12 +3608,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             }
 
-            // Une seule collection
+         // Une seule collection
          } else {
-
             to = treeObjs.get(0);
-
             String titre = to.getVizieRLongTitre();
+
             if( to.verboseDescr != null || titre != null ) {
                s = titre+"\n \n"+ (to.verboseDescr == null ? "" : to.verboseDescr);
                String s1 = titre != null && titre.length() > 60 ? (titre.substring(0, 58) + "...") : titre;
@@ -3553,7 +3653,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( s != null ) {
                boolean isIn = to.getIsIn() == 1;
                s = AWSKYCOV + " " + s + " ";
-                             a = new MyAnchor(aladin, s, 50, null, null);
+               a = new MyAnchor(aladin, s, 50, null, null);
                a.setForeground(Color.gray);
                p1.add(a);
 
@@ -3633,7 +3733,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
             JPanel accessPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
             JCheckBox bx;
-            customBx = hipsBx = mocBx = tmocBx = mociBx = progBx = dmBx = csBx = liveBx = null;
+            customBx = hipsBx = mocBx = mociBx = progBx = dmBx = csBx = liveBx = null;
+//            tmocBx = null;
             assocBx = siaBx = ssaBx = allBx = globalBx = tapBx = xmatchBx = msBx = null;
             if( to.hasHips() ) {
                hipsBx = bx = new JCheckBox(AWPROGACC);
@@ -3674,7 +3775,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                Util.toolTip(bx, AWSSATIP, true);
             }
 
-            if( to.isCDSCatalog() ) {
+            if( to.isCDSCatalog() && !to.isVizierTimeOnly() ) {
                boolean allCat = nbRows < 2000;
                if( hipsBx != null ) bg.add(hipsBx);
 
@@ -4331,7 +4432,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( liveBx != null   && liveBx.isSelected() )   addBkm(bkm, to.getLiveSimbadBkm());
          if( hipsBx != null   && hipsBx.isSelected() )   addBkm(bkm, to.getHipsBkm());
          if( mocBx != null    && mocBx.isSelected() )    addBkm(bkm, to.getMocBkm());
-         if( tmocBx != null   && tmocBx.isSelected() )   addBkm(bkm, to.getTMocBkm());
+//         if( tmocBx != null   && tmocBx.isSelected() )   addBkm(bkm, to.getTMocBkm());
          if( progBx != null   && progBx.isSelected() )   addBkm(bkm, to.getProgenitorsBkm());
 //         if( customBx != null && customBx.isSelected() ) addBkm(bkm, to.getCustomBkm());
 
@@ -4464,7 +4565,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( msBx != null     && msBx.isSelected() )     to.queryByMoc(planMoc);
             if( hipsBx != null   && hipsBx.isSelected() )   to.loadHips();
             if( mocBx != null    && mocBx.isSelected() )    to.loadMoc();
-            if( tmocBx != null   && tmocBx.isSelected() )   to.loadTMoc();
+//            if( tmocBx != null   && tmocBx.isSelected() )   to.loadTMoc();
             if( progBx != null   && progBx.isSelected() )   to.loadProgenitors();
             if( dmBx != null     && dmBx.isSelected() )     to.loadDensityMap();
             if( tapBx != null    && tapBx.isSelected() )    to.queryByTap();
@@ -4507,11 +4608,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                multiMocLoad(treeObjs, MultiMocMode.EACH);
             }
             
-            // Union desT MOCs
-            if( tmocBx != null && tmocBx.isSelected() ) {
-               if( tooMany(treeObjs.size()) ) return;
-               multiTMocLoad(treeObjs, MultiMocMode.EACH);
-            }
             if( mocuBx != null && mocuBx.isSelected() ) multiMocLoad(treeObjs, MultiMocMode.UNION);
             if( mociBx != null && mociBx.isSelected() ) multiMocLoad(treeObjs, MultiMocMode.INTER);
          }
@@ -4519,9 +4615,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
 
       /** Chargement de chaque MOC ou de l'union ou intersection des Mocs */
-      void multiTMocLoad(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode) { multiMocLoad1(treeObjs,mode,"TMoc"); }
-      void multiMocLoad(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode) { multiMocLoad1(treeObjs,mode,"Moc"); }
-      void multiMocLoad1(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode, String mocCmd ) {
+      void multiMocLoad(ArrayList<TreeObjDir> treeObjs, MultiMocMode mode) {
 
          // Chaque MOC individuellement
          if( mode == MultiMocMode.EACH ) {
@@ -4535,7 +4629,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             if( params == null ) params = new StringBuilder(to.internalId);
             else params.append("," + to.internalId);
          }
-         String cmd = (mode == MultiMocMode.INTER ? "iMOCs" : "MOCs") + "=get "+mocCmd+"(" + Tok.quote(params.toString())
+         String cmd = (mode == MultiMocMode.INTER ? "iMOCs" : "MOCs") + "=get Moc(" + Tok.quote(params.toString())
                + (mode == MultiMocMode.INTER ? ",imoc" : "") + ")";
          aladin.execAsyncCommand(cmd);
 

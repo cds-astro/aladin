@@ -478,7 +478,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          } catch( Exception e ) { coo=null; }
          
       // Synchronization de l'intervalle temps d'affichage
-      } else if( vc.isPlotTime() ) aladin.view.syncTimeRange( vc );
+      } else if( !Aladin.TIMETEST && vc.isPlotTime() ) aladin.view.syncTimeRange( vc );
 
       // Pas de calib => pour aller au plus vite
       if( coo==null ) {

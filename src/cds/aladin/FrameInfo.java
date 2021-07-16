@@ -21,14 +21,48 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -305,8 +339,6 @@ public class FrameInfo extends JFrame implements WindowListener, MyListener, Act
 
         memorySlice = node.curImgNumber;
 
-
-
         // à la première update, on positionne la frame
         if( firstUpdate ) {
             firstUpdate = false;
@@ -485,10 +517,10 @@ public class FrameInfo extends JFrame implements WindowListener, MyListener, Act
         }
         else modePanel.setVisible(false);
 
-        ArrayList<Object> names = new ArrayList<Object>();
-        ArrayList<Object> values = new ArrayList<Object>();
-        ArrayList<String> ucds = new ArrayList<String>();
-        ArrayList<String> utypes = new ArrayList<String>();
+        ArrayList<Object> names = new ArrayList<>();
+        ArrayList<Object> values = new ArrayList<>();
+        ArrayList<String> ucds = new ArrayList<>();
+        ArrayList<String> utypes = new ArrayList<>();
 
 //        c.fill = GridBagConstraints.BOTH;
         if( node.type==ResourceNode.IMAGE || node.type==ResourceNode.SPECTRUM  || node.type==ResourceNode.CUBE ||
@@ -720,7 +752,7 @@ public class FrameInfo extends JFrame implements WindowListener, MyListener, Act
     	 JMenu menu = new JMenu(DISPLAY);
     	 menuBar.add(menu);
     	 JMenuItem mi;
-    	 colNames = new Vector<String>(Arrays.asList(new String[] {FIELD, "UCD", "UType", VALUE}));
+    	 colNames = new Vector<>(Arrays.asList(new String[] {FIELD, "UCD", "UType", VALUE}));
     	 Enumeration<String> e = colNames.elements();
     	 String s;
     	 int k=0;

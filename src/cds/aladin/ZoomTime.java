@@ -36,15 +36,15 @@ import cds.tools.Util;
 
 class ZoomTime {
    
-   static final int DELTAY = 40;
-   static final int DELTA_G = 7;
-   static final int DELTA_D = 7;
+   static final int DELTAY = 40;   // Distance au bord en bas.
+   static final int DELTA_G = 7;   // Marge de Gauche
+   static final int DELTA_D = 7;   // Marge de droite
    
    Aladin aladin;
    ZoomView zoomView;
    
-   private double globalJdmin=-1;   // Temps min global de toutes les données chargées dans Aladin
-   private double globalJdmax=-1;   // Temps max global de toutes les données chargées dans Aladin
+   private double globalJdmin=Aladin.TIMETEST ? Double.NaN : -1;   // Temps min global de toutes les données chargées dans Aladin
+   private double globalJdmax=Aladin.TIMETEST ? Double.NaN : -1;   // Temps max global de toutes les données chargées dans Aladin
    
    int width,height;
    int xDrag;
@@ -59,13 +59,14 @@ class ZoomTime {
    }
    
    void setGlobalTimeRange(double [] timeRange ) {
+      if( Aladin.TIMETEST ) return;
       globalJdmin = timeRange[0];
       globalJdmax = timeRange[1];
       zoomView.repaint();
    }
    
-   /** Donne l'intervalle de temps max (en fonction du dernier scan de la pile */
-   protected double [] getGlobalTimeRange() { return new double [] { globalJdmin, globalJdmax }; }
+//   /** Donne l'intervalle de temps max (en fonction du dernier scan de la pile */
+//   protected double [] getGlobalTimeRange() { return new double [] { globalJdmin, globalJdmax }; }
    
    protected boolean mouseIn(int x,int y) {
       return inRect==null ? false : inRect.contains(x, y);
@@ -102,7 +103,7 @@ class ZoomTime {
    
    protected double [] deltaXTime(int deltaX, ViewSimple v) {
       double deltaJD = getDeltaTime( deltaX );
-      double t[] = v.getTimeRange();
+      double t[] = Aladin.TIMETEST ? aladin.view.getTimeRange() : v.getTimeRange();
       if( Double.isNaN(t[0]) ) t[0] = globalJdmin;
       if( Double.isNaN(t[1]) ) t[1] = globalJdmax;
       if( state==ONSTART ) t[0]+=deltaJD;
@@ -112,9 +113,14 @@ class ZoomTime {
          t[1]+=deltaJD;
       }
       if( t[0]>t[1] ) t[0]=t[1];
-      if( t[0]<=globalJdmin ) t[0]=Double.NaN;
-      if( t[1]>=globalJdmax ) t[1]=Double.NaN;
-      v.setTimeRange( t );
+      if( !Aladin.TIMETEST ) {
+         if( t[0]<=globalJdmin ) t[0]=Double.NaN;
+         if( t[1]>=globalJdmax ) t[1]=Double.NaN;
+      }
+      
+      if( Aladin.TIMETEST ) aladin.view.setTimeRange(t);
+      else v.setTimeRange( t );
+      
       return t;
    }
    
@@ -129,7 +135,10 @@ class ZoomTime {
       t[1] = jd+midRange;
       if( t[0]<=globalJdmin ) t[0]=Double.NaN;
       if( t[1]>=globalJdmax ) t[1]=Double.NaN;
-      v.setTimeRange( t );
+      
+      if( Aladin.TIMETEST ) aladin.view.setTimeRange(t);
+      else v.setTimeRange( t );
+      
       return midRange;
    }
    
@@ -139,12 +148,17 @@ class ZoomTime {
 //      System.out.println("Je me déplace en "+x+","+y);
    }
    
+   
+   
    protected boolean mousePress(int x, int y, ViewSimple v, boolean doubleClick) {
       if( !mouseIn(x,y) ) { state=OUT; return false; }
       
       // Suppression de la restriction temporelle
       if( doubleClick ) {
-         v.setTimeRange( new double [] { Double.NaN, Double.NaN } );
+         double [] t = new double [] { Double.NaN, Double.NaN };
+         if( Aladin.TIMETEST ) aladin.view.setTimeRange(t);
+         else v.setTimeRange( t );
+
          return true;
       }
       
@@ -179,9 +193,25 @@ class ZoomTime {
    /** Retourne true s'il existe des données temporelles dans la pile et que l'on 
     * a pu initialiser un range temporel. */
    protected boolean isActivated() {
-      if( Double.isNaN(globalJdmin) ) return false;
+      if( Aladin.TIMETEST ) {
+         double t [] = aladin.view.calque.getGlobalTimeRange();
+         if( Double.isNaN(t[0]) ) t = aladin.view.getTimeRange();
+         if( Double.isNaN(t[0]) ) globalJdmax = globalJdmin = Double.NaN;
+         else {
+//            t = increase( t, 5);
+            globalJdmin = t[0];
+            globalJdmax = t[1];
+         }
+      }
+      
+      if( Double.isNaN(globalJdmin) )  return false;
       return globalJdmax!=globalJdmin;
    }
+   
+//   private double [] increase( double t[], double pourcent ) {
+//      double d = (t[1]-t[0])*(1+(pourcent/2)/100.);
+//      return new double[] { t[0]-d, t[1]+d };
+//   }
    
    private int getX( double jd ) {
       double total = globalJdmax - globalJdmin;
@@ -195,7 +225,7 @@ class ZoomTime {
    /** Modifie le time Range de la vue en fonction d'un clic de la molette de la souris */
    protected boolean mouseWheelMoved( MouseWheelEvent e, ViewSimple v ) {
       if( !mouseIn( e.getX(), e.getY() ) ) return false;
-      double [] t = v.getTimeRange();
+      double [] t = Aladin.TIMETEST ? aladin.view.getTimeRange() : v.getTimeRange();
       if( Double.isNaN(t[0]) ) t = new double [] { globalJdmin, globalJdmax }; 
       
       int sens = e.getWheelRotation()>0 ? 1 : -1;
@@ -204,10 +234,14 @@ class ZoomTime {
       double centre = (t[0]+t[1])/2;
       t[0] = centre-nRange/2;
       t[1] = centre+nRange/2;
-      if( t[0]<=globalJdmin ) t[0] = Double.NaN;
-      if( t[1]>=globalJdmax ) t[1] = Double.NaN;
+      if( !Aladin.TIMETEST ) {
+         if( t[0]<=globalJdmin ) t[0] = Double.NaN;
+         if( t[1]>=globalJdmax ) t[1] = Double.NaN;
+      }
 //      memoCommand( t );
-      if( v.setTimeRange( t ) ) zoomView.repaint();
+      
+      boolean rep = Aladin.TIMETEST ?  aladin.view.setTimeRange(t) : v.setTimeRange(t);
+      if( rep ) zoomView.repaint();
       return true;
    }
    
@@ -263,24 +297,31 @@ class ZoomTime {
       g.drawString( endDate,width-g.getFontMetrics().stringWidth(endDate)-5,y+h+13);
 
       // Dessin de la zone temporelle courante
-      double [] t = v.getTimeRange();
+      double [] t = Aladin.TIMETEST ? aladin.view.getTimeRange() : v.getTimeRange();
       if( !Double.isNaN(t[0]) || !Double.isNaN(t[1])) {
          int x1 = Double.isNaN(t[0]) ? DELTA_G : getX( t[0] );
          int x2 = Double.isNaN(t[1]) ? width-DELTA_D : getX( t[1] );
 
+         // zone temporelle courante (colorée)
          g.setColor( Aladin.COLOR_BLUE );
-         g.fillRect(x1, y+2, x2-x1+1, h-4);
+         int xa = x1<DELTA_G ? DELTA_G : x1;
+         int xb = x2>width-DELTA_D ? width-DELTA_D : x2;
+         g.fillRect(xa, y+2, xb-xa+1, h-4);
 
          // Crochet début
-         g.setColor ( Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT );
-         g.fillRect( x1, y-3, 2, h+6);
-         g.drawLine( x1, y-3, x1+3, y-3);
-         g.drawLine( x1, y+h+3, x1+3, y+h+3);
+         if( !Double.isNaN(t[0]) ) {
+            g.setColor ( Aladin.COLOR_CONTROL_FOREGROUND_HIGHLIGHT );
+            g.fillRect( x1, y-3, 2, h+6);
+            g.drawLine( x1, y-3, x1+3, y-3);
+            g.drawLine( x1, y+h+3, x1+3, y+h+3);
+         }
          
          // Crochet fin
-         g.fillRect( x2-1, y-3, 2, h+6);
-         g.drawLine( x2, y-3, x2-3, y-3);
-         g.drawLine( x2, y+h+3, x2-3, y+h+3);
+         if( !Double.isNaN(t[1]) ) {
+            g.fillRect( x2-1, y-3, 2, h+6);
+            g.drawLine( x2, y-3, x2-3, y-3);
+            g.drawLine( x2, y+h+3, x2-3, y+h+3);
+         }
          
          // La date centrale
          int xm = (x1+x2)/2;
@@ -311,7 +352,5 @@ class ZoomTime {
       }
 
    }
-   
-   static final private int SIZE_CLOCK = 5;
 
 }

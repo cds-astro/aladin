@@ -838,7 +838,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       if( bxTAP.isSelected() )       special.append(" && tap*=*");  
       if( bxCS.isSelected() )        special.append(" && cs*=*");   
       if( bxMOC.isSelected() )       special.append(" && moc*=*");   
-      if( bxTMOC.isSelected() )      special.append(" && tmoc*=*");   
+      if( bxSMOC.isSelected() )      special.append(" && moc_type=smoc");   
+      if( bxTMOC.isSelected() )      special.append(" && moc_type=tmoc");   
+      if( bxSTMOC.isSelected() )     special.append(" && moc_type=stmoc");   
       if( bxProg.isSelected() )      special.append(" && hips_progenitor_url=*");   
       
       if( bxPixFull.isSelected() )    special.append(" && (hips_tile_format=*fits* || dataproduct_type=!Image)");
@@ -1019,7 +1021,7 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
    }
    
    private JCheckBox cbMocPlane,cbMocInLine,cbStcInLine,cbSelectedGraph;
-   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSIA2,bxSSA,bxTAP,bxCS,bxMOC,bxTMOC,bxProg,bxSuperseded;
+   private JCheckBox bxPixFull,bxPixColor,bxHiPS,bxSIA,bxSIA2,bxSSA,bxTAP,bxCS,bxMOC,bxSMOC,bxTMOC,bxSTMOC,bxProg,bxSuperseded;
    private JTextFieldX tfCatNbRow,tfCoverage,tfHiPSorder,tfDescr,tfMinDate,tfMaxDate,tfBibYear;
    private JTextArea tMoc,tSTC;
    private Vector<JCheckBox> catVbx,authVbx,regVbx,catkeyVbx,catMisVbx,assdataVbx,catUcdVbx;
@@ -1080,7 +1082,9 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bxTAP.setSelected(false);
       bxCS.setSelected(false);
       bxMOC.setSelected(false);
+      bxSMOC.setSelected(false);
       bxTMOC.setSelected(false);
+      bxSTMOC.setSelected(false);
       bxProg.setSelected(false);
       bxPixColor.setSelected(false);
       tfCatNbRow.setText("");
@@ -1202,12 +1206,16 @@ public final class DirectoryFilter extends JFrame implements ActionListener {
       bx.setToolTipText(S("FPPROTOTAP"));
       subPanel.add( bx=bxCS   = new JCheckBox("Cone Search"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOCS"));
-      subPanel.add( bx=bxMOC  = new JCheckBox("MOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
-      bx.setToolTipText(S("FPPROTOMOC"));
-      subPanel.add( bx=bxTMOC  = new JCheckBox("TMOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
-      bx.setToolTipText(S("FPPROTOTMOC"));
       subPanel.add( bx=bxProg   = new JCheckBox("HiPS progenitors"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
       bx.setToolTipText(S("FPPROTOHIPSPRO"));
+      subPanel.add( bx=bxMOC  = new JCheckBox("MOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText(S("FPPROTOMOC"));
+      subPanel.add( bx=bxSMOC  = new JCheckBox("SMOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText(S("FPPROTOSMOC"));
+      subPanel.add( bx=bxTMOC  = new JCheckBox("TMOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText(S("FPPROTOTMOC"));
+      subPanel.add( bx=bxSTMOC  = new JCheckBox("STMOC"));   bx.setSelected(false); bx.addActionListener(this); bg.add(bx);
+      bx.setToolTipText(S("FPPROTOTMOC"));
       PropPanel.addCouple(this, p, S("FPPROTO")+" ", S("FPPROTOTIP"), subPanel, g, c, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL);
      
       

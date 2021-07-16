@@ -2223,7 +2223,9 @@ public final class Command implements Runnable {
             
             double jd1 = s1.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s1 );
             double jd2 = s2.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s2 );
-            v.setTimeRange( new double[] { jd1, jd2 } );
+            double [] t = new double[] { jd1, jd2 };
+            if( Aladin.TIMETEST ) a.view.setTimeRange(t);
+            else v.setTimeRange(t);
             
          // Une date => centre du range actuel
          } else {
@@ -2234,7 +2236,8 @@ public final class Command implements Runnable {
             } else {
                double range = t[1]-t[0];
                t[0] = jd-range/2; t[1] = jd+range/2;
-               v.setTimeRange( t );
+               if( Aladin.TIMETEST ) a.view.setTimeRange(t);
+               else v.setTimeRange(t);
             }
          }
          return true;
