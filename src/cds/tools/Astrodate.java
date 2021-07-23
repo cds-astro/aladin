@@ -123,7 +123,8 @@ public class Astrodate {
       long MM = (s  - HH*3600 )/60;
       long SS = (s - HH*3600 - MM*60);
       double SSf = (ss - HH*3600 - MM*60);
-      if( !flagDecimalSecond || SSf-(int)SSf < 0.001 ) return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");
+      if( !withTime || !flagDecimalSecond || SSf-(int)SSf < 0.001 ) 
+         return A+"-"+dd(M)+"-"+dd(J)+ (withTime ? "T"+dd(HH)+":"+dd(MM)+":"+dd(SS) : "");
       String s1 = String.format(Locale.ROOT,"%02.3f",SSf);
       return A+"-"+dd(M)+"-"+dd(J)+ "T"+dd(HH)+":"+dd(MM)+":"+s1;
    }
@@ -165,7 +166,20 @@ public class Astrodate {
    static public final int DATE    = 17; 
    static public final int UNIX    = 18; 
    
-   /** Conversion d'une chaine en JD */
+   /** Conversion JD en String */
+   static public String editTime( double jd, int timeMode ) {
+      try {
+         if( timeMode==JD )      return jd+"";
+         if( timeMode==MJD )     return JDToMJD(jd)+"";
+         if( timeMode==ISOTIME ) return JDToDate(jd);
+         if( timeMode==YEARS )   return JDToYd(jd)+"";
+         if( timeMode==UNIX )    return JDToUnix(jd)+"";
+         
+      } catch( Exception e ) { }
+      return null;
+   }
+   
+   /** Conversion d'une String en JD */
    static public double parseTime( String date, int timeMode ) {
       try {
          if( timeMode==JD )      return Double.parseDouble(date);

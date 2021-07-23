@@ -29,6 +29,7 @@ public interface PropAction {
    static final int NOTHING = -1;
    static final int FAILED  = 0;
    static final int SUCCESS = 1;
+   static final int SUCCESSCLOSE = 2;
    
    public int action();
 }

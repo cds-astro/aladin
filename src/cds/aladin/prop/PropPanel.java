@@ -65,8 +65,9 @@ public class PropPanel extends JPanel {
       for( Prop p : propList ) {
          int a = p.apply();
          if( a==PropAction.FAILED ) rep = a;
-         else if( rep==PropAction.NOTHING && a==PropAction.SUCCESS ) rep = a;
+         else if( rep==PropAction.NOTHING && (a==PropAction.SUCCESS || a==PropAction.SUCCESSCLOSE) ) rep = a;
       }
+      if( rep==PropAction.SUCCESSCLOSE && frame!=null ) frame.setVisible(false);
       return rep;
    }
    

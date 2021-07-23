@@ -46,7 +46,7 @@ import cds.aladin.prop.Propable;
  * @version 1.0 : (5 mai 99) Toilettage du code
  * @version 0.9 : (??) creation
  */
-public abstract class Obj implements Propable{
+public abstract class Obj implements Propable {
    
    // Les différentes formes (pour les Sources uniquement)
    public static final int OVAL     = 0;

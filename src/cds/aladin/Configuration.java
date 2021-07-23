@@ -79,6 +79,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.prop.PropPanel;
+import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
@@ -235,7 +236,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private String          currentLang="En";     // Le suffixe de la langue courante
    protected LinkedBlockingDeque<String> lastFile;  // La liste des derniers fichiers chargés
    protected LinkedHashMap<String,String>  filterExpr; // Liste des filtres pour l'arbre des découvertes -(name->filterRule)
-   protected HashMap<String, SMoc>   filterMoc;  // Liste des régions associées aux filtres
+   protected HashMap<String, Moc>   filterMoc;  // Liste des régions associées aux filtres
 
    // Les variables pour la gestion des champs de préférences
 //   private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
@@ -2156,7 +2157,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
                if( name.equals(Directory.ALLCOLL) ) continue;
                if( name.equals(Directory.MYLIST) ) continue;
                String expr = filterExpr.get(name);
-               SMoc moc = filterMoc.get(name);
+               Moc moc = filterMoc.get(name);
                if( moc==null && (expr==null || expr.equals("*") || expr.equals("")) ) continue;
                
                String mocInfo = moc==null ? "" : MultiMoc.INTERSECT[ DirectoryFilter.getIntersect(moc) ]+":";
@@ -2783,7 +2784,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    }
    
    /** Mémorise un nouveau filtre sur l'arbre des collections */
-   protected void setDirFilter(String name,String expr, SMoc moc) {
+   protected void setDirFilter(String name,String expr, Moc moc) {
       filterExpr.put(name, expr);
       if( moc!=null ) filterMoc.put(name,moc);
    }

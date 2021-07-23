@@ -447,7 +447,6 @@ public class Calque extends JPanel implements Runnable {
       }
 
       taggedSrc=false;
-      aladin.calque.resetTimeRange();
    }
 
    /** Retourne le nombre de plans actuellement sélectionnés */
@@ -647,9 +646,7 @@ public class Calque extends JPanel implements Runnable {
       for( Plan p : getPlans() ) {
          if( !p.flagOk ) continue;
          if( !p.isTime() ) continue;
-         if( Aladin.TIMETEST ) {
-            if( !p.active ) continue;
-         }
+         if( !p.active ) continue;
          double[] t =null;
          try { 
             t = p.getTimeRange(); 
@@ -1904,31 +1901,19 @@ public class Calque extends JPanel implements Runnable {
       }
    }
    
-   /** Remet à jour le time range global */
-   protected void resetTimeRange() {
-      if( Aladin.TIMETEST ) return;
-      double [] t = getGlobalTimeRange();
-      zoom.zoomTime.setGlobalTimeRange( t );
-      
-      if( !Aladin.TIMETEST ) {
-         if( Double.isNaN(t[0]) ) {
-            for( ViewSimple v : aladin.view.viewSimple ) {
-               v.resetTimeRange();
-            }
-         }
-      }
-   }
-   
    /** Retourne un intervalle de temps par défaut. Soit l'intervalle de la vue courante
-    * si elle en possède un, sinon l'intervalle de la journée courante */
+    * si elle en possède un, sinon l'intervalle de la pile, et sinon de la journée courante */
    double [] getDefaultTimeRange() {
       ViewSimple v = aladin.view.getCurrentView();
       double [] t = v.getTimeRange();
       if( Double.isNaN(t[0]) || Double.isNaN(t[1]) ) {
-         long d = Util.getTime(2);
-         d -= d%86400;
-         t[0] = Astrodate.UnixToJD( d );
-         t[1] = Astrodate.UnixToJD( d+86399 );
+         t = aladin.calque.getGlobalTimeRange();
+         if( Double.isNaN(t[0]) || Double.isNaN(t[1]) ) {
+            long d = Util.getTime(2);
+            d -= d%86400;
+            t[0] = Astrodate.UnixToJD( d );
+            t[1] = Astrodate.UnixToJD( d+86399 );
+         }
       }
       return t;
    }
@@ -3522,7 +3507,6 @@ public class Calque extends JPanel implements Runnable {
       p1.label = p.label;  // On reprend le même label
       p1.c = p.c;          // et la même couleur
       plan[n] = p1;
-      resetTimeRange();
       
       aladin.console.printCommand(Tok.quote(p.label)+" = cmoc -spacetime -order=/"+timeOrder+" -timeRange="
                     +Astrodate.JDToDate(jdmin)+"/"+Astrodate.JDToDate(jdmax)+" "+Tok.quote(p.label));
@@ -4085,9 +4069,6 @@ public class Calque extends JPanel implements Runnable {
       // dans le cas d'une réutilisation de plan
       aladin.view.adjustViews(p);
       
-      // Peut être que la plage temporelle a été modifiée ?
-      resetTimeRange();
-
       select.repaint();
 
       //      if( select!=null ) select.clinDoeil();

@@ -131,7 +131,7 @@ public class FrameCooToolbox extends JFrame {
       cooField = new JTextField[n];
       for( int i=0; i<n; i++ ) {
          label[i] = new JLabel( Localisation.REPERE[i] );
-         cooField[i] = new JTextField(22);
+         cooField[i] = new JTextField(38);
          cooField[i].setActionCommand(i+"");
          cooField[i].addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -153,9 +153,6 @@ public class FrameCooToolbox extends JFrame {
       JPanel p = new JPanel();
       p.setLayout( new FlowLayout(FlowLayout.CENTER));
       JButton b;
-//      p.add( b=new JButton(aladin.chaine.getString("UPAPPLY"))); 
-//      b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) { modify(); }} );
-//      b.setFont(b.getFont().deriveFont(Font.BOLD));
       p.add( b=new JButton(aladin.chaine.getString("TAGIT"))); 
       b.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e) { tagit(); }} );
       p.add( b=new JButton(aladin.chaine.getString("CLEAR"))); 
@@ -600,8 +597,13 @@ public class FrameCooToolbox extends JFrame {
    private String getCoordIn(int frameTarget) {
       if( !init ) return "";
       Astropos targetCoo = new Astropos(Localisation.AF_ICRS);
-      targetCoo.set(ra,dec,originEpoch,null,pmra,pmdec,originEpoch,null,
-            new double[] { plx,0}, new double []{ rv,0});
+      
+      double [] plxParam  = plx==0 ? null : new double[] { plx,0};
+      double [] rvParam = rv==0 ? null : new double []{ rv,0};
+      double pmraParam = pmra==0 ? Double.NaN : pmra;
+      double pmdecParam = pmdec==0 ? Double.NaN : pmdec;
+      
+      targetCoo.set(ra,dec,originEpoch,null,pmraParam,pmdecParam,originEpoch,null, plxParam, rvParam);
       if( precision>-1 ) targetCoo.setPrecision(precision);
       targetCoo.convertTo( Localisation.getAstroframe(frameTarget) );
       targetCoo.toEpoch(targetEpoch);
@@ -609,7 +611,7 @@ public class FrameCooToolbox extends JFrame {
       String s = (frameTarget==Localisation.J2000D || frameTarget==Localisation.B1950D 
                || frameTarget==Localisation.ICRSD  || frameTarget==Localisation.ECLIPTIC
                || frameTarget==Localisation.GAL    || frameTarget==Localisation.SGAL )?
-                  targetCoo.toString("2d"):targetCoo.toString("2s");
+                  targetCoo.toString("2d"): targetCoo.toString("2s");
                   
       if( s.indexOf("--")>=0 ) return "";
       return s;

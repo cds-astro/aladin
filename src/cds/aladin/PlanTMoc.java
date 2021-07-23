@@ -237,8 +237,6 @@ public class PlanTMoc extends PlanMoc {
       double tmin = plot.getMin();
       double tmax = plot.getMax();
       
-      if( !Aladin.TIMETEST ) v.setTimeRange( new double[] { tmin, tmax });
-      
       int drawingOrder;
       if( moc.getNbRanges()<MAXDRAWCELL ) drawingOrder=moc.getTimeOrder();
       else drawingOrder=getDrawingOrder(v);
@@ -326,7 +324,6 @@ public class PlanTMoc extends PlanMoc {
       aladin.synchroPlan.stop(startingTaskId);
       flagWaitTarget=false;
       flagProcessing = false;
-      aladin.calque.resetTimeRange();
       planReadyPost();
       aladin.view.repaintAll();
    }

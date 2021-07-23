@@ -1133,8 +1133,6 @@ public class Plan implements Runnable {
    protected boolean Free() {
       setLogMode(false);
       
-      boolean isTime = isTime();
-      
       // Tentatite d'arrêt d'un flux en cours
       // JE NE LE FAIS PAS POUR LES PLANS ISSUS DU SERVEUR ALADIN, PARCE QUE CA PEUT
       // TOUT PLANTER
@@ -1174,9 +1172,6 @@ public class Plan implements Runnable {
       if( pcat!=null ) pcat.free();
       if( headerFits!=null ) headerFits.free();
       init();
-      
-      if( isTime ) aladin.calque.resetTimeRange();
-
 
       return true;
    }
@@ -2587,10 +2582,8 @@ public class Plan implements Runnable {
 
       // Libération de l'attente possible sur le target (voir Command.waitingPlanInProgress)
       flagWaitTarget=false;
-
       flagProcessing = false;
       
-      aladin.calque.resetTimeRange();
       aladin.calque.repaintAll();
    }
 

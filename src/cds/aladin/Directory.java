@@ -92,6 +92,7 @@ import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Constante;
 import cds.astro.Astrotime;
+import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.mocmulti.BinaryDump;
 import cds.mocmulti.MocItem;
@@ -1049,7 +1050,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // System.out.println("filter("+name+")");
 
       String expr = name.equals(ALLCOLL) ? "*" : aladin.configuration.filterExpr.get(name);
-      SMoc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
+      Moc moc = name.equals(ALLCOLL) ? null : aladin.configuration.filterMoc.get(name);
 
       if( expr != null || moc != null ) {
          if( directoryFilter == null ) directoryFilter = new DirectoryFilter(aladin);
@@ -1338,14 +1339,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    /** Mise à jour du titre au-dessus de l'arbre en fonction des compteurs */
    private void updateTitre(int nb) {
-//      try {
-//         throw new Exception();
-//      } catch( Exception e ) {
-//         System.err.println("updateTitre = "+nb);
-//         e.printStackTrace();
-//      }
-      
-//      System.err.println("updateTitre("+nb+" dirList.size()="+dirList.size()+" multiProp.size()="+multiProp.size());
       String t = DIRECTORY;
       if( nb != -1 && dirList != null ) { //&& nb < dirList.size() ) {
          if( nb < dirList.size() ) {
@@ -1437,7 +1430,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       T("Create tree");
 
       if( initCounter )  initCounter(model);
-      else updateTitre( model.countDescendance());
+//      else updateTitre( model.countDescendance());
+      updateTitre( model.countDescendance());
       
       T("Init counters");
 
@@ -1595,15 +1589,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    private int oIntersect = -1;
 
-   private SMoc oMoc = null;
+   private Moc oMoc = null;
 
    /**
     * Filtrage et réaffichage de l'arbre en fonction des contraintes indiquées dans params
     * @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
-    * @param moc filtrage spatial, null si aucun
+    * @param moc filtrage, null si aucun
     * @param intersect pour le filtrage spatial: MultiMoc.OVERLAPS, ENCLOSED ou COVERS
     */
-   protected void resumeFilter(String expr, SMoc moc, int intersect) {
+   protected void resumeFilter(String expr, Moc moc, int intersect) {
       try {
 
          // Ajout de la contrainte du filtre rapide à l'expression issue du filtre global
@@ -1617,7 +1611,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( expr.equals(oExpr) && (moc == oMoc || moc != null && moc.equals(oMoc) && intersect == oIntersect) ) { return; }
          oExpr = expr;
          oIntersect = intersect;
-         oMoc = moc == null ? null : (SMoc) moc.clone();
+         oMoc = moc == null ? null : moc.clone();
 
          // logs
          String smoc = moc == null ? "" : directoryFilter.getASCII(moc);
@@ -1675,14 +1669,14 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /**
     * Positionnement des flags isHidden() de l'arbre en fonction des contraintes de filtrage
     * @param expr expression ensembliste de filtrage voir doc multimoc.scan(...)
-    * @param moc filtrage spatial, null si aucun
+    * @param moc filtrage, null si aucun
     * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     */
-   private void checkFilter(String expr, SMoc moc, int intersect) throws Exception {
+   private void checkFilter(String expr, Moc moc, int intersect) throws Exception {
 
       // Filtrage par expression
       long t0 = System.currentTimeMillis();
-      ArrayList<String> ids = multiProp.scan((SMoc) null, expr, false, -1, -1);
+      ArrayList<String> ids = multiProp.scan((Moc) null, expr, false, -1, -1);
 
       // Filtrage spatial
       ArrayList<String> ids1 = filtrageSpatial(moc, intersect);
@@ -1701,7 +1695,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       }
    }
 
-   private SMoc oldMocSpatial = null;
+   private Moc oldMocSpatial = null;
 
    private ArrayList<String> oldIds = null;
 
@@ -1713,7 +1707,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * @param intersect pour le filtrage spatial, OVERLAPS, ENCLOSED ou COVERS
     * @return la liste des IDs qui matchent
     */
-   private ArrayList<String> filtrageSpatial(SMoc moc, int intersect) {
+   private ArrayList<String> filtrageSpatial(Moc moc, int intersect) {
       if( moc == null ) return null;
       if( oldMocSpatial != null && intersect == oldIntersect && oldMocSpatial.equals(moc) ) return oldIds;
 
@@ -1729,9 +1723,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    /**
-    * Filtrage spatial sur le MocServer distant. Utilise un cache pour éviter de faire => voir filtrageSpatial(...)
+    * Filtrage sur le MocServer distant. Utilise un cache pour éviter de faire => voir filtrageSpatial(...)
     */
-   private ArrayList<String> filtrageSpatial1(SMoc moc, int intersect) throws Exception {
+   private ArrayList<String> filtrageSpatial1(Moc moc, int intersect) throws Exception {
       String url = aladin.glu.getURL(GLUMOCSERVER).toString();
       int i = url.lastIndexOf('?');
       if( i > 0 ) url = url.substring(0, i);
@@ -1825,11 +1819,11 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private boolean checkIn(ResumeMode mode) {
       if( !dialogOk() ) return false;
       if( aladin.isAnimated() ) return false;
-      
+
       // Le champ est trop grand ou que la vue n'a pas de réf spatiale ?
       // => on suppose que tous les HiPS sont a priori visibles
       ViewSimple v = aladin.view.getCurrentView();
-      if( v.isFree() || v.isAllSky() || !Projection.isOk(v.getProj()) || (v.isPlot() && !v.isPlotTime()) ) {
+      if( v.isFree() /* || v.isAllSky() */|| !Projection.isOk(v.getProj()) || (v.isPlot() && !v.isPlotTime()) ) {
          boolean modif = false;
          for( TreeObjDir to : dirList ) {
             if( !modif && to.getIsIn() != -1 ) modif = true;
@@ -1838,122 +1832,126 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          isCheckIn=false;
          return modif;
       }
-      
-    try {
 
-       HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
+      try {
 
-       // Pour éviter de faire 2x la même chose de suite
-       Coord c=null;
-       double size=0; 
-       if( !v.isPlotTime() ) {
-          c = v.getCooCentre();
-          size = v.getTaille();
-       }
-       boolean sameLocation = c==null && oc==null || c!=null && c.equals(oc) && size == osize;
-       
-       double [] range = v.getTimeRange();
-       boolean sameTime =  Double.isNaN(range[0]) && Double.isNaN(orange[0]) && Double.isNaN(range[1]) && Double.isNaN(orange[1])
-             || orange[0]==range[0] && orange[1]==range[1];
+         HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
+
+         // Pour éviter de faire 2x la même chose de suite
+         Coord c=null;
+         double size=0; 
+         if( !v.isPlotTime() ) {
+            c = v.getCooCentre();
+            size = v.getTaille();
+         }
+         boolean sameLocation = c==null && oc==null || c!=null && c.equals(oc) && size == osize;
+
+         double [] range = v.getTimeRange();
+         boolean sameTime =  Double.isNaN(range[0]) && Double.isNaN(orange[0]) && Double.isNaN(range[1]) && Double.isNaN(orange[1])
+               || orange[0]==range[0] && orange[1]==range[1];
 
 
-       String params;
-       if( mode == ResumeMode.NORMAL && sameLocation && sameTime ) return false;
-       oc = c;
-       osize = size;
-       orange = range;
-       
-       
-       boolean withSpace = c!=null;
-       boolean withTime = mocServerVersion>=5 && (!Double.isNaN(range[0]) || !Double.isNaN(range[1]));
-       
-       if( !withTime && !withSpace ) return true;
-       
-       // Interrogation du MocServer distant...
-       BufferedReader in = null;
+         String params;
+         if( mode == ResumeMode.NORMAL && sameLocation && sameTime ) return false;
+         oc = c;
+         osize = size;
+         orange = range;
 
-       params = MOCSERVER_PARAM;
-       if( withSpace ) {
-          // Interrogation par cercle
-          if( v.getTaille() > 45 ) {
-             params += "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
 
-             // Interrogation par rectangle
-          } else {
-             StringBuilder s1 = new StringBuilder("Polygon");
-             for( Coord c1 : v.getCooCorners() ) s1.append(" " + c1.al + " " + c1.del);
-             params += "&stc=" + URLEncoder.encode(s1.toString());
-          }
-       }
-       if( withTime ) {
-          double mjdmin = Double.isNaN(range[0]) ? 0 : Astrotime.JD2MJD(range[0]);
-          double mjdmax = Double.isNaN(range[1]) ? Double.MAX_VALUE : Astrotime.JD2MJD(range[1]);
-          params += "&TIME="+URLEncoder.encode(mjdmin+" "+mjdmax);
-       }
+         boolean withSpace = c!=null;
+         boolean withTime = mocServerVersion>=5 && (!Double.isNaN(range[0]) || !Double.isNaN(range[1]));
 
-       try {
-          if( mode == ResumeMode.FORCE || !sameLocation || !sameTime ) {
-             URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
+         if( !withTime && !withSpace ) return true;
 
-             Aladin.trace(3, "Directory.hipsUpdate: Contacting MocServer : " + u);
-             in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
-             String s;
+         // Interrogation du MocServer distant...
+         BufferedReader in = null;
 
-             // récupération de chaque ID concernée (1 par ligne)
-             while( (s = in.readLine()) != null ) set.add(getId(s));
-          }
+         params = MOCSERVER_PARAM;
+         if( withSpace ) {
+            double taille = v.getTaille();
+            if( taille > 90 ) {
+               params += "&moc=0/1-11";
+               
+               // Interrogation par cercle
+            } else if( taille > 45 ) {
+               params += "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
 
-       } catch( EOFException e ) {
-       } finally {
-          if( in != null ) in.close();
-       }
+               // Interrogation par rectangle
+            } else {
+               StringBuilder s1 = new StringBuilder("Polygon");
+               for( Coord c1 : v.getCooCorners() ) s1.append(" " + c1.al + " " + c1.del);
+               params += "&stc=" + URLEncoder.encode(s1.toString());
+            }
+         }
+         if( withTime ) {
+            double mjdmin = Double.isNaN(range[0]) ? 0 : Astrotime.JD2MJD(range[0]);
+            double mjdmax = Double.isNaN(range[1]) ? Double.MAX_VALUE : Astrotime.JD2MJD(range[1]);
+            params += "&TIME="+URLEncoder.encode(mjdmin+" "+mjdmax);
+         }
 
-//      try {
-//
-//         HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
-//
-//         // Pour éviter de faire 2x la même chose de suite
-//         Coord c = v.getCooCentre();
-//         double size = v.getTaille();
-//         boolean sameLocation = c.equals(oc) && size == osize;
-//
-//         String params;
-//         if( mode == ResumeMode.NORMAL && sameLocation ) return false;
-//         oc = c;
-//         osize = size;
-//
-//         // Interrogation du MocServer distant...
-//         BufferedReader in = null;
-//
-//         // Interrogation par cercle
-//         if( v.getTaille() > 45 ) {
-//            params = MOCSERVER_PARAM + "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
-//
-//            // Interrogation par rectangle
-//         } else {
-//            StringBuilder s1 = new StringBuilder("Polygon");
-//            for( Coord c1 : v.getCooCorners() )
-//               s1.append(" " + c1.al + " " + c1.del);
-//            params = MOCSERVER_PARAM + "&stc=" + URLEncoder.encode(s1.toString());
-//         }
-//
-//         try {
-//            if( mode == ResumeMode.FORCE || !sameLocation ) {
-//               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
-//
-//               Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
-//               in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
-//               String s;
-//
-//               // récupération de chaque ID concernée (1 par ligne)
-//               while( (s = in.readLine()) != null )
-//                  set.add(getId(s));
-//            }
-//
-//         } catch( EOFException e ) {
-//         } finally {
-//            if( in != null ) in.close();
-//         }
+         try {
+            if( mode == ResumeMode.FORCE || !sameLocation || !sameTime ) {
+               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
+
+               Aladin.trace(3, "Directory.hipsUpdate: Contacting MocServer : " + u);
+               in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
+               String s;
+
+               // récupération de chaque ID concernée (1 par ligne)
+               while( (s = in.readLine()) != null ) set.add(getId(s));
+            }
+
+         } catch( EOFException e ) {
+         } finally {
+            if( in != null ) in.close();
+         }
+
+         //      try {
+         //
+         //         HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
+         //
+         //         // Pour éviter de faire 2x la même chose de suite
+         //         Coord c = v.getCooCentre();
+         //         double size = v.getTaille();
+         //         boolean sameLocation = c.equals(oc) && size == osize;
+         //
+         //         String params;
+         //         if( mode == ResumeMode.NORMAL && sameLocation ) return false;
+         //         oc = c;
+         //         osize = size;
+         //
+         //         // Interrogation du MocServer distant...
+         //         BufferedReader in = null;
+         //
+         //         // Interrogation par cercle
+         //         if( v.getTaille() > 45 ) {
+         //            params = MOCSERVER_PARAM + "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
+         //
+         //            // Interrogation par rectangle
+         //         } else {
+         //            StringBuilder s1 = new StringBuilder("Polygon");
+         //            for( Coord c1 : v.getCooCorners() )
+         //               s1.append(" " + c1.al + " " + c1.del);
+         //            params = MOCSERVER_PARAM + "&stc=" + URLEncoder.encode(s1.toString());
+         //         }
+         //
+         //         try {
+         //            if( mode == ResumeMode.FORCE || !sameLocation ) {
+         //               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
+         //
+         //               Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
+         //               in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
+         //               String s;
+         //
+         //               // récupération de chaque ID concernée (1 par ligne)
+         //               while( (s = in.readLine()) != null )
+         //                  set.add(getId(s));
+         //            }
+         //
+         //         } catch( EOFException e ) {
+         //         } finally {
+         //            if( in != null ) in.close();
+         //         }
 
          // Interrogation du Multimoc interne (uniquement par cercle)
          SMoc mocQuery = null;
@@ -1962,9 +1960,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // Construction d'un MOC qui englobe le cercle couvrant le champ de vue courant
             int order = getAppropriateOrder(size);
             mocQuery = CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians(size / 2), true);
-            
+
             // System.out.println("Moc d'interrogation => "+mocQuery.todebug());
-            
+
             ArrayList<String> mocIds = multiProp.scan(mocQuery);
             if( mocIds != null ) for( String id : mocIds )
                set.add(id);
@@ -2696,7 +2694,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     */
    protected ArrayList<String> getTAPServersByMocServer(String query) throws Exception {
       ArrayList<String> b = new ArrayList<>();
-      ArrayList<String> a = multiProp.scan((SMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
+      ArrayList<String> a = multiProp.scan((Moc) null, "tap_service_url*=* && " + query, false, -1, -1);
       for( String id : a ) {
          // String auth = Util.getSubpath(id, 0);
          MocItem mi = multiProp.getItem(id);
@@ -2711,7 +2709,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    
  //returns multiPropId
 	protected ArrayList<String> getTAPServersMultiPropByMocServer(String query) throws Exception {
-		ArrayList<String> a = multiProp.scan((SMoc) null, "tap_service_url*=* && " + query, false, -1, -1);
+		ArrayList<String> a = multiProp.scan((Moc) null, "tap_service_url*=* && " + query, false, -1, -1);
 		return a;
 	}
 
@@ -3865,7 +3863,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             JPanel productPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
 
             if( to.hasMoc() ) {
-               mocBx = bx = new JCheckBox(AWMOCX);
+               mocBx = bx = new JCheckBox(to.getMocType()+" "+AWMOCX);
                bx.addActionListener(this);
                productPanel.add(bx);
                Util.toolTip(bx, AWMOCXTIP, true);

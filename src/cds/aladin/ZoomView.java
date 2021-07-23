@@ -45,6 +45,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import cds.astro.Astrocoo;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 
 /**
@@ -116,11 +117,14 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    private Obj objCut;               // L'Objet graphique correspondant au cut que l'on trace
 
    ZoomTime zoomTime;
-   ZoomHist hist=null;                  // L'histogramme courant
+   ZoomHist hist=null;                // L'histogramme courant
    SED sed=null;                      // SED courant
    protected boolean flagHist=false;  // true si l'histogramme est actif
    protected boolean flagSED=false;   // true s'il faut afficher le SED courant
    private boolean flagTargetControl=false; // true si on affiche le controle des targets
+   private boolean flagDateControl=false;   // true si on affiche le controle des Dates
+   
+   private String NOTIME, NOTIMESTACK;
    
    // Gestion de la synchronization des vues compatibles
    private boolean flagSynchronized=false;  // true - indique que l'on a déjà fait un synchronize des vues (SHIFT)
@@ -141,6 +145,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       addMouseMotionListener(this);
 
       WENZOOM=8;
+      NOTIME = aladin.chaine.getString("NOTIME");
+      NOTIMESTACK = aladin.chaine.getString("NOTIMESTACK");
    }
    
    /** Donne la référence du contoleur du temp */
@@ -202,13 +208,20 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
    
    /** Mémorisation de la position courante du réticule dans l'historique des targets */
-   private void memoLoc() {
+   private void memoTarget() {
       aladin.targetHistory.add( aladin.localisation.getLocalisation(aladin.view.repere) );
    }
    
-   /** Action à opérer lorsque l'on clique sur le triangle */
-   protected void triangleAction(int x,int y) { triangleAction(x,y,0); }
-   protected void triangleAction( final int x, final int y, int initIndex ) {
+   /** Saisie d'un range temporel et Mémorisation dans l'historique des dates */
+   private void memoDate() {
+      aladin.timeRange( aladin.view.getCurrentView() );
+   }
+   
+   /** Action à opérer lorsque l'on clique sur le triangle soit des targets, soit des dates
+    * @param mode 0-target, 1-Date
+    */
+   protected void targetTriangleAction(int x,int y) { targetTriangleAction(x,y,0); }
+   protected void targetTriangleAction( final int x, final int y, int initIndex) {
       int max=20;
       ArrayList<String> v =  aladin.targetHistory.getTargets( initIndex, max );
       if( v.size()==0 ) return;
@@ -225,14 +238,14 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                public void actionPerformed(ActionEvent e) {
                   try {
                      int index = Integer.parseInt( ((JMenuItem)e.getSource()).getActionCommand() );
-                     triangleAction(x,y,index);
+                     targetTriangleAction(x,y,index);
                   }catch( Exception e1) {}
                }
             });
 
          } else {
             mi = new JMenuItemExt( s.length()>40 ? s.substring(0,38)+" ..." : s);
-            mi.setActionCommand( TargetHistory.getTarget(s) );
+            mi.setActionCommand( TargetHistory.getValue(s) );
             mi.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   String s = ((JMenuItem)e.getSource()).getActionCommand();
@@ -261,21 +274,27 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( flagCut || flagHist || flagSED ) return;
       
       // Actions liées à la liste des targets
-      if( rectHistory!=null && flagTargetControl ) {
-         if( rectTarget.contains(e.getPoint() ) ) {
+      if( rectTargetTriangle!=null && flagTargetControl ) {
+         if( rectTargetList.contains(e.getPoint() ) ) {
             String t = aladin.targetHistory.getLast();
             if( t.length()>0 ) aladin.command.execNow( t );
 
-         } else if( rectHistory.contains(e.getPoint()) ) {
-            triangleAction(e.getX(), e.getY());
+         } else if( rectTargetTriangle.contains(e.getPoint()) ) {
+            targetTriangleAction(e.getX(), e.getY());
             
-         } else if( rectLoc.contains(e.getPoint()) ) {
-            memoLoc();
+         } else if( rectTargetLogo.contains(e.getPoint()) ) {
+            memoTarget();
             repaint();
          }
          return;
       }
 
+      // J'ai cliqué sur le logo Date
+      if( flagDateControl && rectDateLogo.contains(e.getPoint()) ) {
+         memoDate();
+         repaint();
+         return;
+      }
       
       ViewSimple v = aladin.view.getCurrentView();
       v.stopAutomaticScroll();
@@ -322,19 +341,6 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       aladin.view.syncTimeRange( vc );
    }
 
-
-   //   public void keyTyped(KeyEvent e) {}
-   //   public void keyReleased(KeyEvent e) {}
-   //   public void keyPressed(KeyEvent e) {
-   //      // Resynchronisation de toutes les vues compatibles
-   //      if( e.isShiftDown() ) {
-   ////         aladin.view.selectCompatibleViews();
-   //         if( aladin.view.switchSelectCompatibleViews() )
-   //             aladin.view.setZoomRaDecForSelectedViews(aladin.calque.zoom.getValue(),null);
-   //         return;
-   //      }
-   //   }
-
    /** Deplacement du rectangle de zoom */
    public void mouseDragged(MouseEvent e) {
       if( aladin.inHelp ) return;
@@ -365,7 +371,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    private int cutX=-1;
    private int cutY=-1;
 
-   private String INFO=null,TIPTARGET=null,TIPLISTTARGET=null,TIPSTORETARGET=null;
+   private String INFO=null,
+         TIPTARGET=null,TIPLISTTARGET=null,TIPSTORETARGET=null,
+         TIPDATE=null,TIPSTOREDATE=null;
 
    /** Dans le cas de l'affichage d'un cut Graph, affichage du de FWHM */
    public void mouseMoved(MouseEvent e) {
@@ -376,27 +384,48 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          TIPTARGET = aladin.chaine.getString("TIPTARGET");
          TIPLISTTARGET = aladin.chaine.getString("TIPLISTTARGET");
          TIPSTORETARGET = aladin.chaine.getString("TIPSTORETARGET");
+         TIPDATE = aladin.chaine.getString("TIPDATE");
+         TIPSTOREDATE = aladin.chaine.getString("TIPSTOREDATE");
       }
       
       // S'il y a affichage du controle de l'historique des targets, mise à jour
       // des flags si la souris est dessus
-      if( rectHistory!=null ) {
+      if( rectTargetTriangle!=null ) {
          boolean in1,in2,in3;
          boolean repaint=false;
-         in1=rectHistory.contains( e.getPoint() );
-         if( in1!=flagHistoryIn ) { flagHistoryIn=in1; repaint=true; }
+         in1=rectTargetTriangle.contains( e.getPoint() );
+         if( in1!=inTargetTriangle ) { inTargetTriangle=in1; repaint=true; }
          if( in1 ) Util.toolTip(this, TIPTARGET);
 
-         in2=rectTarget.contains( e.getPoint());
-         if( in2!=flagTargetHistoryIn ) { flagTargetHistoryIn=in2; repaint=true; }
+         in2=rectTargetList!=null && rectTargetList.contains( e.getPoint());
+         if( in2!=inTargetList ) { inTargetList=in2; repaint=true; }
          if( in2 ) Util.toolTip(this, TIPLISTTARGET);
 
-         in3=rectLoc.contains( e.getPoint());
-         if( in3!=flagLocHistoryIn ) { flagLocHistoryIn=in3; repaint=true; }
+         in3=rectTargetLogo.contains( e.getPoint());
+         if( in3!=inTargetLogo ) { inTargetLogo=in3; repaint=true; }
          if( in3 ) Util.toolTip(this, TIPSTORETARGET);
 
          flagTargetControl = in1 || in2 || in3;
          if( !flagTargetControl ) Util.toolTip(this, "");
+         if( repaint ) repaint();
+      }
+
+      // S'il y a affichage du controle de l'historique des dates, mise à jour
+      // des flags si la souris est dessus
+      if( rectDateLogo!=null ) {
+         boolean in2,in3;
+         boolean repaint=false;
+
+         in2=rectDateList!=null && rectDateList.contains( e.getPoint());
+         if( in2!=inDateList ) { inDateList=in2; repaint=true; }
+         if( in2 ) Util.toolTip(this, TIPDATE);
+
+         in3=rectDateLogo.contains( e.getPoint());
+         if( in3!=inDateLogo ) { inDateLogo=in3; repaint=true; }
+         if( in3 ) Util.toolTip(this, TIPSTOREDATE);
+
+         flagDateControl = in3 || in2 ;
+         if( !flagDateControl ) Util.toolTip(this, "");
          if( repaint ) repaint();
       }
 
@@ -476,9 +505,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                if( Double.isNaN(coo.al) ) coo=null;
             }
          } catch( Exception e ) { coo=null; }
-         
-      // Synchronization de l'intervalle temps d'affichage
-      } else if( !Aladin.TIMETEST && vc.isPlotTime() ) aladin.view.syncTimeRange( vc );
+      }
 
       // Pas de calib => pour aller au plus vite
       if( coo==null ) {
@@ -511,7 +538,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    public void mouseReleased(MouseEvent e) {
       if( aladin.inHelp ) { aladin.helpOff(); return; }
       
-      if( flagTargetControl && rectHistory!=null ) return;
+      if( flagTargetControl && rectTargetTriangle!=null ) return;
       
       if( flagSED ) { sed.mouseRelease(e.getX(), e.getY() ); return; }
 
@@ -691,7 +718,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       v.goToAllSky(c);
    }
    
-   static private int DELTAYWITHTIME = 15;
+   static private int DELTAYWITHTIME = 10;
 
    private int ov=0;
    private short oiz=-2;
@@ -708,7 +735,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          int height = getHeight();
          
          // Doit-on décaler vers le haut le controleur de zoom ?
-         deltaY =  zoomTime.isActivated() ? DELTAYWITHTIME : 0;
+         deltaY =  zoomTime.resume() ? DELTAYWITHTIME : 0;
          
          if( lastHipsWidth!=width || lastHiPSHeight!=height ) {
             oiz=-1;
@@ -801,13 +828,10 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             int xInfo,yInfo;
             gbuf.setColor( Aladin.COLOR_CONTROL_FOREGROUND ); //Color.magenta );
             s=aladin.localisation.J2000ToString(c.al, c.del, Astrocoo.ARCSEC+1,false);
-            xInfo = (int)( c.x + fm.stringWidth(s) > width ? c.x - fm.stringWidth(s)-10 : c.x+10);
-            yInfo = (int)c.y-5;
-            gbuf.drawString(s,xInfo,yInfo-deltaY);
-            
+            aladin.targetHistory.setCurrentPos(s);
             String s1=v.getTaille(0);
-            xInfo = (int)( c.x + fm.stringWidth(s) > width ? c.x - fm.stringWidth(s1)-10 : c.x+10);
-            yInfo+=12;
+            xInfo = (int)( c.x + fm.stringWidth(s1) > width ? c.x - fm.stringWidth(s1)-10 : c.x+10);
+            yInfo=(int)c.y+4;
             gbuf.drawString(s1,xInfo,yInfo-deltaY);
             
             drawBord(gbuf);
@@ -815,6 +839,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          if( flagDoubleBuffering ) g.drawImage(imgbuf, 0,0, this);
          drawTargetHistoryControl(g);
+         drawDateControl(g);
          zoomTime.draw(g,v);
          
       } catch( Exception e ) {
@@ -827,41 +852,42 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       Util.drawEdge(g,getWidth(),getHeight());
    }
    
+   /****************************************** La gestion de l'historique des targets ***************************/
    
-   private Rectangle rectLoc=null;
-   private Rectangle rectHistory=null;
-   private Rectangle rectTarget=null;
-   private boolean flagHistoryIn=false;
-   private boolean flagTargetHistoryIn=false;
-   private boolean flagLocHistoryIn=false;
+   private Rectangle rectTargetLogo=null;
+   private Rectangle rectTargetTriangle=null;
+   private Rectangle rectTargetList=null;
+   private boolean inTargetTriangle=false;
+   private boolean inTargetList=false;
+   private boolean inTargetLogo=false;
    
    private void drawTargetHistoryControl(Graphics g) {
       Color c =  Aladin.COLOR_CONTROL_FOREGROUND;
       
-      // Dessin du logo de localisation
+      // Dessin du logo
       int x=5, y=10;
-      g.setColor( flagLocHistoryIn ? c.brighter() : c);
-      drawLoc(g,x,y-5);
-      rectLoc = new Rectangle(x,y-5,15,20);
+      g.setColor( inTargetLogo ? c.brighter() : c);
+      drawTargetLogo(g,x,y-5);
+      rectTargetLogo = new Rectangle(x,y-5,15,20);
       x+=20;
       
       // Dessin du triangle
-      g.setColor( flagHistoryIn ? c.brighter() : c);
+      g.setColor( inTargetTriangle ? c.brighter() : c);
       Util.fillTriangle7(g, x,y);
-      rectHistory = new Rectangle(x,y-5,15,20);
+      rectTargetTriangle = new Rectangle(x,y-5,15,20);
       x+=15;
       
-      // Affichage du dernier target
+      // Affichage des dernières valeurs
       String target = aladin.targetHistory.getLast();
       if( target.length()==0 ) return;
       int w = g.getFontMetrics().stringWidth(target);
-      g.setColor( flagTargetHistoryIn ? c.brighter() : c);
+      g.setColor( inTargetList ? c.brighter() : c);
       g.drawString(target,x,y+6);
-      rectTarget = new Rectangle(x,y-5,w,20);
+      rectTargetList = new Rectangle(x,y-5,w,20);
    }
    
    // Barres horizontales du dessin 
-   static final private int LOCX[][] = {
+   static final private int TARGETX[][] = {
       {0, 5,9 },
       {1, 4,10},
       {2, 3,11},
@@ -879,10 +905,84 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    };
    
    /** Dessine l'icone de mémorisation de la localisation  */
-   protected void drawLoc(Graphics g, int x,int y) {
-      for( int i=0; i<LOCX.length; i++ ) g.drawLine(LOCX[i][1]+x,LOCX[i][0]+y,LOCX[i][2]+x,LOCX[i][0]+y);
+   protected void drawTargetLogo(Graphics g, int x,int y) {
+      for( int i=0; i<TARGETX.length; i++ ) g.drawLine(TARGETX[i][1]+x,TARGETX[i][0]+y,TARGETX[i][2]+x,TARGETX[i][0]+y);
    }
 
+   /****************************************** La gestion de l'historique des dates ***************************/
+   
+   private Rectangle rectDateLogo=null;
+   private boolean inDateLogo=false;
+   private boolean inDateList=false;
+   private Rectangle rectDateList=null;
+  
+   // Dessine la petit horloge et le range temporel global
+   private void drawDateControl(Graphics g) {
+      Color c =  Aladin.COLOR_CONTROL_FOREGROUND;
+      double [] stackTime = aladin.calque.getGlobalTimeRange();
+      double [] viewTime = aladin.view.getCurrentView().getTimeRange();
+      rectDateLogo = rectDateList = null;
+      
+      // Dessin du logo
+      int x=7, y=getHeight()-20;
+      g.setColor( inDateLogo ? c.brighter() : c);
+      drawDateLogo(g,x,y-5, c);
+      rectDateLogo = new Rectangle(x,y-5,15,20);
+      x+=20;
+      
+      String s;
+      // Aucune contrainte temporelle ?
+      if( Double.isNaN(stackTime[0]) && Double.isNaN(stackTime[1])
+            && Double.isNaN(viewTime[0]) && Double.isNaN(viewTime[1]) ) s=NOTIME;
+
+      // Tracé de l'intervalle temporel global (pile+vues)
+      else  {
+         double [] t = stackTime;
+         if( Double.isNaN( t[0]) && Double.isNaN( t[1] ) ) s=NOTIMESTACK;
+         else {
+            String startDate = Double.isNaN(t[0]) ? "" : Astrodate.JDToDate( t[0],false,false );
+            String endDate = Double.isNaN(t[1]) ? "" : Astrodate.JDToDate( t[1], false,false );
+            if( startDate.equals(endDate) ) {
+               startDate = Astrodate.JDToDate( stackTime[0] );
+               endDate = Astrodate.JDToDate( stackTime[1] );
+               int i= endDate.indexOf('T');
+               endDate = endDate.substring(i+1);
+            }
+            s = startDate+" ...  "+endDate;
+         }
+      }
+      int len = g.getFontMetrics().stringWidth(s);
+      g.drawString(s,x,y+6);
+      rectDateList = new Rectangle(x,y-5,len,20);
+   }
+
+   // Barres horizontales du dessin 
+   static final private int DATEX[][] = {
+      {0, 5,9 },
+      {1, 3,11},
+      {2, 2,3}, {2, 11,12},
+      {3, 1,2}, {3, 7,7}, {3, 12,13},
+      {4, 1,1}, {4, 7,7}, {4, 13,13},
+      {5, 0,1}, {5, 7,7}, {5, 13,14},
+      {6, 0,1}, {6, 7,7}, {6, 13,14},
+      {7, 0,1}, {7, 7,10}, {7, 13,14},
+      {8, 0,1}, {8, 13,14},
+      {9, 0,1}, {9, 13,14},
+      {10, 1,1}, {10, 13,13},
+      {11, 1,2}, {11, 12,13},
+      {12, 2,3}, {12, 11,12},
+      {13, 3,11},
+      {14, 5,9 },
+   };
+   
+   /** Dessine l'icone de mémorisation de la date  */
+   protected void drawDateLogo(Graphics g, int x,int y, Color c) {
+      g.setColor( c );
+      for( int i=0; i<DATEX.length; i++ ) g.drawLine(DATEX[i][1]+x,DATEX[i][0]+y,DATEX[i][2]+x,DATEX[i][0]+y);
+   }
+
+    /****************************************************************************************************************/
+   
    /** Changement de table des couleurs
     * POUR L'INSTANT JE FAIS UN SIMPLE REPAINT
     */
@@ -1570,7 +1670,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    public void paintComponent(Graphics gr) {
       if( Aladin.NOGUI ) return;
       
-      rectHistory=null;
+      rectTargetTriangle=null;
       
       // AntiAliasing
       aladin.setAliasing(gr);
@@ -1628,6 +1728,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          gr.fillRect(0,0,w,h);
          drawBord(gr);
          drawTargetHistoryControl(gr);
+         drawDateControl(gr);
          zoomTime.draw(gr, v);
          return;
       }

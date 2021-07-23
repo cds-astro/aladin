@@ -303,6 +303,7 @@ AUTODIST Auto-distance measurer
 FULLSCREEN	Full screen
 PREVIEWSCREEN	Simple window
 SESAME	Object name resolver
+TIMETOOL Time calculator...
 COOTOOL Coordinate calculator...
 PIXELTOOL Pixel calculator...
 CALCULATOR Calculator...
@@ -332,6 +333,7 @@ ROI.fr	Créer des vues vignettes...
 VOTOOL.fr	Outils OV
 GLUTOOL.fr	Outils distants
 SIMBAD.fr	Pointeur Simbad
+TIMETOOL.fr Calculatrice de temps...
 COOTOOL.fr Calculatrice de coordonnées...
 PIXELTOOL.fr Calculatrice de pixels...
 CALCULATOR.fr Calculatrice...
@@ -572,6 +574,10 @@ TIPLISTTARGET Go back to this target
 TIPLISTTARGET.fr Retourner sur cette cible
 TIPSTORETARGET Store the current reticle location in the list of targets
 TIPSTORETARGET.fr Mémoriser la position du réticule dans la liste des cibles
+TIPDATE Global time ranges of all data loaded in the stack
+TIPDATE.fr  Intervalle temporel global de toutes les données chargées dans la pile
+TIPSTOREDATE Associate a time interval to the current view
+TIPSTOREDATE.fr Associe un intervalle temporelle à la vue courante
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key
@@ -1401,6 +1407,7 @@ VWONEVIEW	Delete other views
 VWNEXT	Next image
 VWFULLINT	Full interface
 VWMNEWROI	Locked view
+VWTIMERANGE Time range filter
 VWMPLOT Create a time view
 VWNORTHUP	North up, East left
 VWMDELROI	Delete all the locked views
@@ -1444,6 +1451,7 @@ VWNEXT.fr	Image suivante
 VWFULLINT.fr	Interface complète
 VWMNEWROI.fr	Vue verrouillée
 VWMPLOT.fr Créer une vue temporelle
+VWTIMERANGE.fr Filtre temporel
 
 VWNORTHUP.fr	Nord en haut, Est à gauche
 VWMDELROI.fr	Supprimer toutes les vues verrouillées 
@@ -3407,6 +3415,10 @@ TABLEICON	table
 TABLEICON.fr	table
 TABLEICONHELP	Would you like to create a catalog plan from these values and thus visualize the spatial positions of each of the points on this graph?
 TABLEICONHELP.fr	Souhaitez-vous créer un plan catalogue depuis ces valeurs et ainsi visualiser les positions spatiales de chacun des points de ce graphique ?
+NOTIME no time filter
+NOTIME.fr Aucun filtre temporel
+NOTIMESTACK No time data available
+NOTIMESTACK.fr aucune donnée temps dispo.
 
 #V10 - Filter Panel
 FPTITLE	Data discovery tree filter
@@ -3431,8 +3443,8 @@ FPGLOBAL	Global constraints
 FPGLOBAL.fr	Contraintes globales
 FPCAT	Dedicated to catalog
 FPCAT.fr	Spécifiques aux catalogues
-FPREGION	Spatial
-FPREGION.fr	Spatiales
+FPREGION	Coverage
+FPREGION.fr	Couverture
 FPTECH	Technical
 FPTECH.fr	Techniques
 FPKEYWORD	Keyword
@@ -3489,30 +3501,34 @@ FPSUPERSEDEDTIP	Hide the catalogs for which there is a more recent release.
 FPSUPERSEDEDTIP.fr	Cache les catalogues dont il existe une version plus récente.
 FPSUPERSEDEDCB	hide superseded tables
 FPSUPERSEDEDCB,fr	cache les tables obsolètes
-FPSPACEDESC	The spatial filtering is based on<br>a specific region for which the matching collections<br>must respectively intersect, cover, or is enclosed it.<br>Several modes of region definition is proposed:
-FPSPACEDESC.fr	Le filtrage spatial consiste à définir<br>une région pour laquelle les collections retenues doivent<br>respectivement, intersecter, couvrir<br>ou être incluses dans cette région.<br>Plusieurs modes de définitions de la région sont possibles:
-FPSPACEDEFLAB	Region definition
-FPSPACEDEFLAB.fr	Définition de la région
+FPSPACEDESC	The coverage filtering is based on<br>a specific region and/or time range for which the matching collections<br>must respectively intersect, cover, or is enclosed it.<br>Several modes of coverage definition is proposed:
+FPSPACEDESC.fr	Le filtrage par couverture consiste à définir<br>une région et/ou un intervalle temporel pour lesquels les collections retenues doivent<br>respectivement, intersecter, couvrir<br>ou être incluses dans cette couverture spatio-temporelle.<br>Plusieurs modes de définitions de la couverture sont possibles:
+FPSPACEDEFLAB	Coverage definition
+FPSPACEDEFLAB.fr	Définition de la couverture
 FPSPACECURRENT	the polygon or circle presently selected in the current view
 FPSPACECURRENT.fr	le polygone ou le cercle sélectionné actuellement dans la vue
 FPSPACECURRENTTIP	The region is computed from the polygon or the circle presently selected in the current view. Warning, the computed region may be slightly greater that the drawn polygon or circle.
 FPSPACECURRENTTIP.fr	La région est calculée à partir du polygone ou du cercle actuellement sélectionné dans la vue courante. Attention, la région retenue peut être légèrement plus large que le polygone ou le cercle dessiné.
-FPSPACEMOC	a MOC plane loaded in the stack
-FPSPACEMOC.fr	un plan MOC déjà chargé dans la pile
-FPSPACEMOCTIP	The region is provided by the selected MOC plane.\nThis MOC has to be loaded prealably in the stack.\nFor instance, it could be the MOC\nof the coverage of another collection.
-FPSPACEMOCTIP.fr	La région est déterminée par le plan MOC indiquée.\nCelui-ci aura dû être préalablement chargé dans la pile.\nCe peut être par exemple le MOC\nde la couverture d'une autre collection.
+FPSPACEMOC	a MOC plane loaded in the stack 
+FPSPACEMOC.fr	un plan MOC déjà chargé dans la pile 
+FPSPACEMOCTIP	The coverage is provided by the selected MOC plane (SMOC, TMOC or STMOC)\nThis MOC has to be loaded prealably in the stack.\nFor instance, it could be the MOC\nof the coverage of another collection.
+FPSPACEMOCTIP.fr	La région est déterminée par le plan MOC indiquée (SMOC, TMOC or STMOC).\nCelui-ci aura dû être préalablement chargé dans la pile.\nCe peut être par exemple le MOC\nde la couverture d'une autre collection.
 FPSPACEMOCINLINE	an inline MOC       :
 FPSPACEMOCINLINE.fr	un MOC "en ligne"    :
-FPSPACEMOCINLINETIP	The region is provided as a MOC written in the ASCII string syntax.\nExample: 3/1,3,5-8 4/34-67
-FPSPACEMOCINLINETIP.fr	La région est déterminée par le MOC fourni sous la forme d'une chaine de caractère ASCII.\nExemple: 3/1,3,5-8 4/34-67
+FPSPACEMOCINLINETIP	The coverage is provided as a MOC written in the ASCII string syntax.\nExample: t16/2020 s3/1 3 5-8 4/34-67
+FPSPACEMOCINLINETIP.fr	La couverture est déterminée par le MOC fourni sous la forme d'une chaine de caractère ASCII.\nExemple: t16/2020 s3/1 3 5-8 4/34-67
 FPSPACESTCINLINE	a STC expression :
 FPSPACESTCINLINE.fr	une expression STC :
-FPSPACESTCINLINETIP	The region is provided by an STS-S simplified expression (J2000 or ICRS only, without union or intersectino).\nExample: POLYGON 311.45309 31.29971 311.63440 30.75153 310.85538 31.04652.\nWarning: the computed region may be slightly greater that the provided STS-S region.
-FPSPACESTCINLINETIP.fr	La région est déterminée par une expression STC-S simplifiée (uniquement en J2000 ou ICRS, sans union, ni intersection).\nExemple: POLYGON 311.45309 31.29971 311.63440 30.75153 310.85538 31.04652.\nAttention, la région retenue peut être légèrement plus large que l'expression STC-S spécifiée.
+FPSPACESTCINLINETIP	The spatial coverage is provided by an STS-S simplified expression (J2000 or ICRS only, without union or intersection).\nExample: POLYGON 311.45309 31.29971 311.63440 30.75153 310.85538 31.04652.\nWarning: the computed region may be slightly greater that the provided STS-S region.
+FPSPACESTCINLINETIP.fr	La couverture spatiale est déterminée par une expression STC-S simplifiée (uniquement en J2000 ou ICRS, sans union, ni intersection).\nExemple: POLYGON 311.45309 31.29971 311.63440 30.75153 310.85538 31.04652.\nAttention, la région retenue peut être légèrement plus large que l'expression STC-S spécifiée.
+FPSPACETIME	a time range:
+FPSPACETIME.fr	un intervalle temporel :
+FPSPACETIMETIP	The temporal coverage is determined by two dates (ex: 2010-01-01T21:55 2021-12-31) expressed in the barycentric system. Otherwise add 15mn to each boundary
+FPSPACETIMETIP.fr	La couverture temporelle est déterminée par deux dates (ex: 2010-01-01T21:55 2021-12-31) exprimées dans le système barycentrique. A défaut ajouter 15mn à chaque bornes
 FPSPACEINTER	Intersect mode
 FPSPACEINTER.FR	Mode d'intersection
-FPSPACEINTERTIP	Specify the intersect constraints between the provided region and the matching coverage collections. This constraints can be a simple overlap between both, or the region is enclosed in the collection coverage, or the opposite, the region covers totally the collection coverage.\n \nWarning: the collection coverage (MOC) is generally not the real coverage but a slighty upper approximation of it (depending of the resolution choosen for computing the coverage MOC).
-FPSPACEINTERTIP.fr	Détermine la contrainte de superposition de la région décrite et de la couverture des collections à retenir. Cette contrainte peut être une simple intersection non vide, un englobement complet de la région, ou au contraire un recouvrement complet par la region.\n \nAttention: Les couvertures des collections (MOC) sont généralement des approximations légèrement plus étendue que la couverture réelle car elles dépendent du niveau de résolution retenue pour les calculées (variables suivants les collections).
+FPSPACEINTERTIP	Specify the intersect constraints between the provided region and the matching coverage collections. This constraints can be a simple overlap between both, or the coverage is enclosed in the collection coverage, or the opposite, the coverage covers totally the collection coverage.\n \nWarning: the collection coverage (MOC) is generally not the real coverage but a slighty upper approximation of it (depending of the resolution choosen for computing the coverage MOC).
+FPSPACEINTERTIP.fr	Détermine la contrainte de superposition de la couverture décrite et de la couverture des collections à retenir. Cette contrainte peut être une simple intersection non vide, un englobement complet de la couverture, ou au contraire un recouvrement complet par la couverture.\n \nAttention: Les couvertures des collections (MOC) sont généralement des approximations légèrement plus étendue que la couverture réelle car elles dépendent du niveau de résolution retenue pour les calculées (variables suivants les collections).
 FPOVERLAPS	overlaps
 FPOVERLAPS.fr	intersecte
 FPISENCLOSED	is enclosed
@@ -3676,8 +3692,8 @@ AWCRIT	by criteria
 AWCRIT.fr	par critères
 AWCRITTIP	Advanced query by criteria\nby TAP protocol (Table Access Protocol).
 AWCRITTIP.fr	Interrogration avancée par critères\nvia le protocole TAP (Table Acccess Protocol).
-AWMOCX	coverage
-AWMOCX.fr	couverture
+AWMOCX	cov.
+AWMOCX.fr	couv.
 AWMOCXTIP	Load the coverage associated to the collection\nas a MOC MultiOrder Coverage map).
 AWMOCXTIP.fr	Charge la couverture associée à la collection\nsous la forme d'un MOC (MultiOrder Coverage map).
 AWDM	density map
@@ -3694,6 +3710,20 @@ AWSCANONLYTIP	Only check if the collections contains\ndata in the current view.
 AWSCANONLYTIP.fr	Vérifie uniquement si les collections\ncontiennent ou non des données dans la vue courante.
 AWLOAD	Load
 AWLOAD.fr	Charger
+
+#V12
+TPTITLE Time range of the current view
+TPTITLE.fr
+TPDESC Associates to the current view a temporal interval expressed by two dates (barycentric reference TCB) allowing to filter the graphical overlay (having a date: catalog, STMOC) as well as to control the coloring of the resource tree not only spatially but also temporally.
+TPDESC.fr Associe à la vue courante un intervalle temporel exprimé  par deux dates (référence barycentrique TCB) permettant de filtrer les surcharge graphique (possédant une date: catalogue, STMOC) ainsi que de contrôler le coloriage de l'arbre des ressources non seulement spatialement mais également temporellement.
+TPSTART Start
+TPSTART.fr Début
+TPSTARTHELP Start of the time range (ISO syntax) or Inf. if there is not
+TPSTARTHELP.fr Début de l'intervalle temporel (syntaxe ISO) ou Inf si non spécifié.
+TPEND End
+TPEND.fr Fin
+TPENDHELP End of the time range (ISO syntax) or Inf. if there is not
+TPENDHELP.fr Fin de l'intervalle temporel (syntaxe ISO) ou Inf si non spécifié.
 
 XMATCH_RADIUS_TITLE	Xmatch separation (arcsec)
 XMATCH_RADIUS_TITLE.fr	Séparation angulaire du Xmatch (arcsec)

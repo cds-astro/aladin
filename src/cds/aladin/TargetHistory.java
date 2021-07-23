@@ -42,7 +42,7 @@ public class TargetHistory {
    protected void add(String target ) {
       if( target==null || target.trim().length()==0 ) return;
       
-      String t = getTarget( target );
+      String t = getValue( target );
       if( !Command.isDateCmd(t) && !Localisation.notCoord(t) && !Localisation.hasFoxSuffix(t) ) {
          target = target+" "+aladin.localisation.getFrameFox();
       }
@@ -50,15 +50,32 @@ public class TargetHistory {
       list.add( target );
    }
    
+   static final String SEPARATOR = ": ";
+   static final String CURRENTPOS = "Last"+SEPARATOR;
+   
+   protected void setCurrentPos(String s) {
+      removeCurrentPos();
+      list.add(CURRENTPOS+s);
+   }
+   
+   private void removeCurrentPos() {
+      int i;
+      for( i=0; i<list.size(); i++ ) {
+         if( list.get(i).startsWith(CURRENTPOS) ) break;
+      }
+      if( i<list.size() ) list.remove(i);
+
+   }
+   
    /** Le target peut être éventuellement préfixé par un identificateur (texte libre)
     * et séparé par "->". Cette méthode retourne le target sans son éventuel préfixe
     * @param s le target éventuellement précédé d'une préfixe (ex: myTarget : M1)
     * @return le target sans son préfixe
     */
-   static protected String getTarget(String s) {
-      int i=s.indexOf("->");
+   static protected String getValue(String s) {
+      int i=s.indexOf(SEPARATOR);
       if( i<0 ) return s;
-      return s.substring(i+2);
+      return s.substring(i+SEPARATOR.length());
    }
    
    protected boolean remove( String target ) {
@@ -75,9 +92,10 @@ public class TargetHistory {
       return -1;
    }
    
+   protected int size() { return list.size(); }
    
    /** Retourne la dernière target mémorisée */
-   protected String getLast() { return list.size()==0 ? "" : list.get( list.size()-1 ); }
+   protected String getLast() { return list.size()==0 ? "" : getValue( list.get( list.size()-1 ) ); }
    
    /** Retourne une liste de nb targets à partir de l'indice index. l'index 0 est celui
     * de la dernière target insérée, 1 pour l'avant-dernière, etc...

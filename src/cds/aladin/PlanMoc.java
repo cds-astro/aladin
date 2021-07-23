@@ -560,9 +560,9 @@ public class PlanMoc extends PlanBGCat {
    
    /** Retourne l'order à utiliser pour l'affichage courant en fonction de la position
     * du slider "densité" */
-   protected int getLowOrder(int order, int gapOrder ) {
+   protected int getLowOrder(int order, int gapOrder) {
       int mo = -1;
-       mo = moc.getSpaceOrder();
+      mo = moc.getSpaceOrder();
       if( mo==-1 ) {
          try { mo = getRealMaxOrder( (SMoc)moc); } catch( Exception e ) {  e.printStackTrace(); }
       }
@@ -592,17 +592,20 @@ public class PlanMoc extends PlanBGCat {
       if( v.getTaille()<20 ) {
          try {
             // On améliore un peu la résolution
-            if( order<moc.getSpaceOrder() ) order++;
+//            if( order<moc.getSpaceOrder() ) order++;
             
             // Peut être y a-t-il dans le cache des MocLows la Moc complet à la bonne résolution ?
             // Sinon on prend le MOC d'origine
             Moc mocP = arrayMoc!=null && arrayMoc[order]!=null 
                   && !arrayMoc[order].isEmpty() ? arrayMoc[order] : moc;
                   
-            Moc1D mv = v.getMoc(); //order);
+            Moc1D mv = v.getMoc();
             
             // On découpe la zone concernée
             Moc moclow = mocP.intersection( mv );
+            
+            // Ajustement du MocOrder si on a travaillé directement sur le MOC original
+            if( order<moclow.getSpaceOrder() ) moclow.setSpaceOrder(order);
             return moclow;
             
          } catch( Exception e ) {
@@ -635,7 +638,7 @@ public class PlanMoc extends PlanBGCat {
    
    protected void initArrayMoc(int order) {
       if( arrayMoc==null ) arrayMoc = new Moc[SMoc.MAXORD_S+1];
-      arrayMoc[order] = new SMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
+      arrayMoc[order] = new SMoc(order);   // pour éviter de lancer plusieurs threads sur le meme calcul
    }
    
    private long lastBuildingTime=-1;

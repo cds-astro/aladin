@@ -104,7 +104,6 @@ class ZoomHist implements Runnable {
       setHist(pixelStats);
    }
 
-
    class HistItem {
       int nb;              // Nombre d'élément
       double prop;         // proportion

@@ -73,11 +73,16 @@ import java.util.Vector;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
+import cds.aladin.prop.Propable;
 import cds.aladin.stc.STCObj;
 import cds.astro.AstroMath;
 import cds.moc.Moc1D;
@@ -108,7 +113,7 @@ import cds.tools.pixtools.CDSHealpix;
  * @version 0.9 - 31 mars 1998
  */
 public class ViewSimple extends JComponent
-implements MouseWheelListener, MouseListener,MouseMotionListener,
+implements Propable,MouseWheelListener, MouseListener,MouseMotionListener,
 KeyListener,ActionListener,
 DropTargetListener, DragSourceListener, DragGestureListener {
 
@@ -380,7 +385,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
-      if( !Aladin.TIMETEST && vs.isPlotTime() ) view.syncTimeRange(vs);
       vs.syncZoom(-e.getWheelRotation()*mult,coo,false);
    }
 
@@ -428,6 +432,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isPlotTime() ) return plot.getTimeRange();
       return new double[] { jdmin, jdmax };
    }
+   
+   /** retourne true si la vue a une contrainte temporelle */
+   protected boolean hasTimeRange() { return !Double.isNaN(jdmin ) || !Double.isNaN(jdmax ); }
    
    /** Positionne l'intervalle de temps courant de la vue */
    protected boolean setTimeRange( double [] range ) { return setTimeRange( range, true ); }
@@ -2195,20 +2202,22 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( !isProjSync ) {
             
             if( Aladin.TIMETEST ) {
-               if( !flagshift && (!selected || !view.isMultiView()) ) {
+               if( !flagshift /* && (!selected || !view.isMultiView()) */ ) {
                   aladin.calque.unSelectAllPlan();
                   aladin.view.unSelectAllView();
 
                } else selected = !selected;
-            } else {
-
-               if( !flagshift && (!selected || !view.isMultiView()) ) {
-                  aladin.calque.unSelectAllPlan();
-                  aladin.view.unSelectAllView();
-
-               } 
-               selected=flagshift?!selected:true;
-            }
+            } 
+            
+//            else {
+//
+//               if( !flagshift && (!selected || !view.isMultiView()) ) {
+//                  aladin.calque.unSelectAllPlan();
+//                  aladin.view.unSelectAllView();
+//
+//               } 
+//               selected=flagshift?!selected:true;
+//            }
             
             if( !isFree() ) pref.selected=selected;
 
@@ -5217,6 +5226,79 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             + "\n"
             ;
    }
+   
+   private String S(String key ) { return aladin.chaine.getString(key); }
+   
+   // Les propriétés temporelles
+   public boolean hasProp() { return !isPlot(); }
+   public Vector getProp() {
+      Vector<Prop> propList = new Vector<>();
+      final ViewSimple myself = this;
+      
+      
+      JLabel l = new JLabel(Util.fold(S("TPDESC"), 40,true));
+      l.setFont(l.getFont().deriveFont(Font.ITALIC));
+      propList.add( Prop.propFactory("object","",null,l,null,null) );
+
+      final JTextField startField = new JTextField(20);
+      final JTextField endField = new JTextField(20);
+      
+      final double [] defaultT = aladin.calque.getDefaultTimeRange();
+      
+      PropAction initStartAction = new PropAction() {
+         public int action() {
+            startField.setText( dateDouble2String( myself.getTimeRange()[0], defaultT[0]) ); 
+            return PropAction.SUCCESS;}
+      };
+      PropAction execStartAction = new PropAction() {
+         public int action() { 
+            startField.setForeground(Color.black);
+            try {
+               double start = dateString2Double( startField.getText() );
+               double end   = dateString2Double( endField.getText() );
+               setTimeRange( new double[] { start, end}, true);
+               return PropAction.SUCCESSCLOSE;
+           } catch( Exception e1 ) { 
+              e1.printStackTrace();
+               startField.setForeground(Color.red);
+           }
+           return PropAction.FAILED;
+         }
+      };
+      propList.add( Prop.propFactory("start",S("TPSTART"),S("TPSTARTHELP"),startField,initStartAction,execStartAction) );
+
+      PropAction initEndAction = new PropAction() {
+         public int action() {
+            endField.setText( dateDouble2String( myself.getTimeRange()[1], defaultT[1]) );
+            return PropAction.SUCCESS;}
+      };
+      PropAction execEndAction = new PropAction() {
+         public int action() { 
+            endField.setForeground(Color.black);
+            try {
+               double start = dateString2Double( startField.getText() );
+               double end   = dateString2Double( endField.getText() );
+               setTimeRange( new double[] { start, end}, true);
+               return PropAction.SUCCESSCLOSE;
+           } catch( Exception e1 ) { 
+              e1.printStackTrace();
+               startField.setForeground(Color.red);
+           }
+           return PropAction.FAILED;
+         }
+      };
+      propList.add( Prop.propFactory("end",S("TPEND"),S("TPENDHELP"),endField,initEndAction,execEndAction) );
+
+      return propList;
+   }
+   
+   private String dateDouble2String(double d,double def) { return  Astrodate.JDToDate( Double.isNaN(d) ? def : d); }
+   private double dateString2Double(String s) {
+      s=s.trim();
+      if( s.length()==0 || s.toLowerCase().startsWith("inf") || s.equalsIgnoreCase("NaN") ) return Double.NaN;
+      return Astrodate.dateToJD(s);
+   }
+
 
    /** Affichage de la taille du champ courant. S'il s'agit d'une
     * impression (dx==0) on met aussi la position centrale
@@ -5243,6 +5325,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !(Double.isNaN(t[0]) && Double.isNaN(t[1])) && rv.width>300 ) {
 //         double gt [] = aladin.calque.zoom.zoomTime.getGlobalTimeRange();
 //         for( int i=0; i<2; i++ ) if( Double.isNaN(t[i]) ) t[i] = gt[i] ;
+         
          String deb =  Double.isNaN(t[0]) ? "Inf" : Astrodate.JDToDate( t[0],false);
          String fin =  Double.isNaN(t[1]) ? "Inf" : Astrodate.JDToDate( t[1],false);
          if( fin.equals(deb) ) {
@@ -6301,6 +6384,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Logo pour les vues lockées
       if( locked ) { drawLock(g,x,y,Color.red); x+=15; }
+      
+      // Le logo de l'horologe (time range)
+      if( hasTimeRange() ) { aladin.view.zoomview.drawDateLogo(g,x,y,Color.red); }
 
       // Logo pour les plans ré-échantillonés
       if( pref instanceof PlanImageResamp
@@ -6758,12 +6844,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          g.drawRect(1,1,w-3,h-3);
          g.drawRect(2,2,w-5,h-5);
       }
-      else if( !Aladin.TIMETEST && show ) {
-         g.setColor(Color.green);
-         g.drawRect(0,0,w-1,h-1);
-         g.drawRect(1,1,w-3,h-3);
-         g.drawRect(2,2,w-5,h-5);
-      }
+      
+      // Ancienne bordure verte lorsqu'on passait la souris sur les panels
+//      else if( show ) {
+//         g.setColor(Color.green);
+//         g.drawRect(0,0,w-1,h-1);
+//         g.drawRect(1,1,w-3,h-3);
+//         g.drawRect(2,2,w-5,h-5);
+//      }
 
       if( sticked ) drawStick(g);
       drawLanguette(g);

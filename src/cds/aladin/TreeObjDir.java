@@ -902,6 +902,14 @@ public class TreeObjDir extends TreeObj implements Propable {
       return false;
    }
 
+   /** retourne de type de MOC disponible: STMOC, TMOC, SMOC, ou MOC si indifférencié,
+    * ou "" si aucun */
+   protected String getMocType() {
+      if( !hasMoc() ) return "";
+      String s;
+      if( prop==null || (s=prop.get("moc_type"))==null ) return "MOC";
+      return s.toUpperCase();
+   }
    
    /** Retourne true si la collection dispose d'un MOC */
    protected  boolean hasMoc() {
@@ -1283,7 +1291,8 @@ public class TreeObjDir extends TreeObj implements Propable {
          String cat = internalId.substring(i+1);
          if( internalId.startsWith("CDS/Simbad") ) cmd = "get Simbad";
          else {
-            String s = allcolumns.equals("all") ? ",allcolumns":"";
+            boolean hasTime = getMocType().indexOf('T')>=0;  // toutes les colonnes pour ne pas louper l'époque
+            String s = allcolumns.equals("all") || hasTime ? ",allcolumns":"";
             cmd = "get VizieR("+cat+s+")";
          }
 
@@ -1329,7 +1338,10 @@ public class TreeObjDir extends TreeObj implements Propable {
       exec( getMocCmd() ); 
       }
    protected String getMocBkm() { return getMocCmd(); }
-   private String getMocCmd() { return "get MOC("+Tok.quote(internalId)+",anymoc)"; }
+   private String getMocCmd() {
+      String param = aladin.directory.mocServerVersion>=5 ? ",anymoc":"";
+      return "get MOC("+Tok.quote(internalId)+param+")";
+   }
 
    /** Génération et exécution de la requête script correspondant au protocole HiPS */
    protected void loadHips() {

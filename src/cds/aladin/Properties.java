@@ -506,7 +506,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          try { p.changeTimeRange( jdmin, jdmax ); } catch( Exception e ) { e.printStackTrace(); }
          start.setForeground( Color.black );
          end.setForeground( Color.black );
-         aladin.calque.resetTimeRange();
          aladin.view.repaintAll();
      }
                
