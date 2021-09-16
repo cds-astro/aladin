@@ -165,6 +165,7 @@ public class Astrodate {
    static public final int YEARS   = 16; 
    static public final int DATE    = 17; 
    static public final int UNIX    = 18; 
+   static public final int BES     = 19; 
    
    /** Conversion JD en String */
    static public String editTime( double jd, int timeMode ) {
@@ -174,6 +175,7 @@ public class Astrodate {
          if( timeMode==ISOTIME ) return JDToDate(jd);
          if( timeMode==YEARS )   return JDToYd(jd)+"";
          if( timeMode==UNIX )    return JDToUnix(jd)+"";
+         if( timeMode==BES )     return JSOFA.jauEpb(jd,0.)+"";
          
       } catch( Exception e ) { }
       return null;
@@ -187,6 +189,7 @@ public class Astrodate {
          if( timeMode==ISOTIME ) return dateToJD( date );
          if( timeMode==YEARS )   return YdToJD( Double.parseDouble(date) );
          if( timeMode==UNIX )    return UnixToJD( Long.parseLong(date) );
+         if( timeMode==BES )     return getSofaJD( JSOFA.jauEpb2jd( Double.parseDouble(date) ) );
          
          // Date format inconnue
          return MJDToJD( Util.ISOToMJD( Util.parseDate( date ) ) );
@@ -241,7 +244,8 @@ public class Astrodate {
       }
 
       if( timeScale.equals("TT") ) {
-         if( deltaT==-1 ) throw new Exception("Astrodate convertion not possible - missing Solar ephemerids");
+         if( dtr==-1 ) throw new Exception("Astrodate convertion not possible - missing Solar ephemerids");
+         
          jdTime = getSofaJD( JSOFA.jauTttdb(jdTime,0,dtr) );
          timeScale="TDB"; 
       }

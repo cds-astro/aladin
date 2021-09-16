@@ -291,10 +291,14 @@ public class CacheFits {
             }
          }
       }
-
+      
       // applique un filtre spécial
-      if ( context!=null && (context.skyvalName!=null || context.expTimeName!=null
-            || context.pixelGood!=null || flagChangeOrig || context.dataArea!=Constante.SHAPE_UNKNOWN)) delSkyval(f.fits,flagChangeOrig);
+      if ( context!=null && (context.skyvalName!=null 
+            || context.expTimeName!=null
+            || context.pixelGood!=null || flagChangeOrig 
+            || context.dataArea!=Constante.SHAPE_UNKNOWN )) {
+         applyPostFilter(f.fits,flagChangeOrig);
+      }
 
       // On ne conserve pas le HeaderFits
       if( !keepHeader ) f.fits.freeHeader();
@@ -577,11 +581,11 @@ public class CacheFits {
    
    
    /**
-    * Applique un filtre (soustraction du skyval, division par le expTime)
+    * Applique un filtre (soustraction du skyval, division par le expTime, masque, Lupton, ...)
     * sur les pixels avant de les mettre dans le cache
     * @param f fitsfile
     */
-   private void delSkyval(Fits f,boolean flagChangeOrig) {
+   private void applyPostFilter(Fits f,boolean flagChangeOrig) {
       double skyval = 0;
       double expTime = 1;
       //      double newval = f.blank;
@@ -592,7 +596,7 @@ public class CacheFits {
       boolean flagAuto=true;
       double pourcentMin = context.pourcentMin;
       double pourcentMax = context.pourcentMax;
-
+      
       // Faut-il retrancher le fond du ciel, et par quelle méthode ?
       if( context.skyvalName!=null ) {
 
@@ -610,16 +614,11 @@ public class CacheFits {
                   double refSkyVal = cutOrig[0]*context.bScaleOrig+context.bZeroOrig;
                   skyval -= refSkyVal;
                   skyval = (skyval - f.bzero)/f.bscale;
-                  
-//                  skyval = (skyval - context.bZeroOrig)/context.bScaleOrig;
-//                  skyval = skyval - cutOrig[0];
-                  
                   flagAuto=false;
                } catch( Exception e ) {
                   double cut [] = findAutocutRange(f,pourcentMin,pourcentMax);
                   double cutOrig [] = context.getCutOrig();
                   skyval = cut[0] - cutOrig[0];
-                  //                skyval = cut[0];
                   if( first ) {
                      context.warning("\nSKYVAL="+context.skyvalName+" not found is some images => use an estimation for these images");
                      first=false;
@@ -643,10 +642,11 @@ public class CacheFits {
          } catch (NullPointerException e) { }
       }
 
-      if( !skyValTag && !expTimeTag && !flagChangeOrig && context.pixelGood==null && shape==null ) return;
+      // Pas besoin d'aller plus loin
+      if( !skyValTag && !expTimeTag && !flagChangeOrig 
+            && context.pixelGood==null && shape==null ) return;
 
-      Aladin.trace(4,"SkyVal="+skyval+(flagAuto?"( estimation)":"( from header)")+" => "+f.getFileNameExtended());
-
+      if( skyValTag ) Aladin.trace(4,"SkyVal="+skyval+(flagAuto?"( estimation)":"( from header)")+" => "+f.getFileNameExtended());
 
       double blank = context.hasAlternateBlank() ? context.getBlankOrig() : f.blank;
       double a2=0,b2=0;
@@ -695,18 +695,19 @@ public class CacheFits {
 
                if( skyValTag  ) pixelFull -= skyval;
                if( expTimeTag ) pixelFull /= expTime;
-
+               
                if( flagChangeOrig ) {
                   pixelFull = pixelFull*f.bscale + f.bzero;
                   pixelFull = (pixelFull - context.bZeroOrig) / context.bScaleOrig;
                }
-
+               
                if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell, pixelFull);
                else f.setPixelInt(x+f.xCell, y+f.yCell, z+f.zCell, (int)(pixelFull+0.5));
             }
          }
       }
    }
+   
 
    static double obscale=-1;
 

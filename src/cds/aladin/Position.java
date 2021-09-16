@@ -51,7 +51,8 @@ public class Position extends Obj {
    protected double x,y;        // Position initiale de l'objet en X,Y (soit catalogue sans coordonnée, soit graphique sans calib)
    protected double xv[],yv[];   // Position de l'objet pour chaque vue
    
-   static final int MAXMEDIANE = 10000;
+   static final int MAXMEDIANE = 100;
+//   static final int MAXMEDIANE = 100000;
 
    /** Variables statiques utilisées pour le calcul des statistiques sur un polygone */
 

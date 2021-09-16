@@ -112,10 +112,14 @@ public final class CanvasPixelRange extends JPanel  implements MouseMotionListen
       if( isFitsHiPS ) { rectRange.x+=20; rectRange.width -= 2*20; }
 
       if( isFullDynamic ) {
-         pixelRangeMin = pimg.dataMin * pimg.bScale + pimg.bZero;
-         pixelRangeMax = pimg.dataMax * pimg.bScale + pimg.bZero;
-         pixelCutMin   = pimg.pixelMin* pimg.bScale + pimg.bZero;
-         pixelCutMax   = pimg.pixelMax* pimg.bScale + pimg.bZero;
+//         pixelRangeMin = pimg.dataMin * pimg.bScale + pimg.bZero;
+//         pixelRangeMax = pimg.dataMax * pimg.bScale + pimg.bZero;
+//         pixelCutMin   = pimg.pixelMin* pimg.bScale + pimg.bZero;
+//         pixelCutMax   = pimg.pixelMax* pimg.bScale + pimg.bZero;
+         pixelRangeMin = pimg.uncompressPixel(pimg.dataMin);
+         pixelRangeMax = pimg.uncompressPixel(pimg.dataMax);
+         pixelCutMin   = pimg.uncompressPixel(pimg.pixelMin);
+         pixelCutMax   = pimg.uncompressPixel(pimg.pixelMax);
 
          if( pixelCutMin<pixelRangeMin ) pixelRangeMin=pixelCutMin;
          if( pixelCutMax>pixelRangeMax ) pixelRangeMax=pixelCutMax;

@@ -325,14 +325,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
       //      long t = (int)(getAskRepaintTime()/1000L);
       return code+"["+Util.align(priority+"",5)+"] "+
       Util.align(getStringNumber()+(fils!=null?">":" "),8)+
-      Util.align(getLongFullMem(),8)+
+      Util.align((sizeStream!=0?Util.getUnitDisk(sizeStream)+"/":"")+getLongFullMem(),12)+
       (truePixels ? " truePix ":"         ")+
       Util.align(getStatusString(),16)+
       ( timer==-1 ? -1 : getCurrentLiveTime()/1000 ) +
       //             "/"+t + "s => "+VIE[-getLive()]+
       "s => "+VIE[-getLive()]+
-      (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"+"+
-            timeJPEG+"+"+timePixel+"ms" : "");
+      (getStatus()==READY?(fromNet?" Net":" Cache")+":"+(timeNet+timeStream+ timeJPEG+timePixel)+"ms" : "");
+      
+//      (getStatus()==READY?(fromNet?" Net":" Cache")+":"+(timeStream+"+"+
+//            timeJPEG+"+"+timePixel+"ms" : "");
+
    }
 
    //   private String toStringCorners() {
@@ -740,8 +743,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected byte [] loadStream(String filename,int skip) throws Exception {
       byte [] buf;
       boolean local=true;
-      long t1 = Util.getTime();
       planBG.aladin.trace(5,"HealpixKey.loadStream("+filename+")...");
+      long t1 = Util.getTime();
       MyInputStream dis=null;
       boolean fastLoad = this instanceof HealpixAllsky;
 
@@ -792,6 +795,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       int t = (int)(Util.getTime()-t1);
       if( local ) timeStream = t;
       else timeNet = t;
+      sizeStream = buf.length;
 
       return buf;
    }
@@ -1671,11 +1675,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       return mem;
    }
 
-   /** Retourne la taille du losange et de tous ses fytes dans une unité compréhensible */
+   /** Retourne la taille du losange et de tous ses bytes dans une unité compréhensible */
    protected String getLongFullMem() {
-      int n = getFullMem()/1024;
-      if( n>1024 ) return n/1024+"MB";
-      return n+"KB";
+      return Util.getUnitDisk( getFullMem() );
    }
 
    /** Retourne true si le losange décrit par ses quatres coins se trouve

@@ -160,7 +160,11 @@ public class PlanImage extends Plan {
    protected double blank;            // La valeur BLANK si elle existe
    public double bZero;               // La valeur BZERO si elle existe
    public double bScale=1.;           // La valeur BSCALE si elle existe
-
+   
+   boolean flagLupton = false;        // True si on a une image méthode Lupton (typiquement PanSTARRs)   
+   double bsoften;                    // Facteur Lupton                    
+   double boffset;                    // Offset Lupton
+   
    // Les caracteristiques du plan Image
    Obj o=null;		   // La source associee a une image archive
    protected int fmt=0;	           // Format : FITS ou JPEG
@@ -546,6 +550,9 @@ public class PlanImage extends Plan {
       p.blank=blank;
       p.bZero=bZero;
       p.bScale=bScale;
+      p.boffset=boffset;
+      p.bsoften=bsoften;
+      p.flagLupton=flagLupton;
       p.o=o;
       p.fmt=fmt;
       p.res=res;
@@ -1329,7 +1336,8 @@ public class PlanImage extends Plan {
          for( i=0; i<h; i++ ) {
             for( j=0; j<w; j++ ) {
                getOnePixelFromCache(b,npix,j+x,i+y);
-               newpixels[i*w+j] = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+//               newpixels[i*w+j] = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+               newpixels[i*w+j] = uncompressPixel( getPixVal(onePixelOrigin,bitpix,0));
             }
          }
 
@@ -2459,7 +2467,8 @@ public class PlanImage extends Plan {
          case View.REAL:
             if( fmt==JPEG ) return UNK;
             if( type!=ALLSKYIMG && pixelsOrigin!=null ) {
-               double val = getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x)*bScale+bZero;
+//               double val = getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x)*bScale+bZero;
+               double val = uncompressPixel( getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x));
                if( aladin.levelTrace<4 || mode==View.REALX ) return Y(val);
 
                double infileVal=getPixVal1(pixelsOrigin,bitpix,(height-y-1)*width+x);
@@ -2468,7 +2477,8 @@ public class PlanImage extends Plan {
             if( !pixelsOriginFromDisk() ) return UNK;
             if( onePixelOrigin==null ) onePixelOrigin = new byte[npix];
             if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return UNK;
-            double val = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+//            double val = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+            double val = uncompressPixel( getPixVal(onePixelOrigin,bitpix,0));
             if( aladin.levelTrace<4 || mode==View.REALX  ) return Y(val);
 
             double infileVal=getPixVal1(onePixelOrigin,bitpix,0);
@@ -2476,6 +2486,23 @@ public class PlanImage extends Plan {
       }
       return null;
    }
+   
+   
+   /** Décompression Lupton -> cf https://arxiv.org/pdf/1612.05245.pdf (page 18) */
+   static final double ALPHA = 2.5 * Math.log10(Math.E);
+   static public double uncompressLupton(double pixComp, double bsoften, double boffset) {
+      double ca = pixComp / ALPHA;
+      return boffset + bsoften * (Math.exp(ca) - Math.exp(-ca));
+   }
+   
+   /** Retourne la vraie valeur du pixel => application du bzero et bscale,
+    * et une éventuelle méthode Lupton */
+   protected double uncompressPixel(double pixComp) {
+      double pix = bZero + bScale * pixComp;
+      if( flagLupton ) pix = uncompressLupton(pix,bsoften,boffset);
+      return pix;
+   }
+
 
    /** Retourne la valeur du pixel en x,y sous la forme d'un double,
     * de préférence le pixel d'origine, et sinon le pixel 8 bits
@@ -2490,7 +2517,8 @@ public class PlanImage extends Plan {
       try {
          double pix = getPixVal(pixelsOrigin,bitpix,y*width+x);
          if( Double.isNaN(pix) ) return Double.NaN;
-         return pix*bScale+bZero;
+//         return pix*bScale+bZero;
+         return uncompressPixel(pix);
       } catch( Exception e ) { return Double.NaN; }
    }
 
@@ -2545,11 +2573,13 @@ public class PlanImage extends Plan {
       if( pixelsOriginFromDisk() ) {
          if( onePixelOrigin==null ) onePixelOrigin = new byte[npix];
          if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return Double.NaN;
-         return getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+//         return getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+         return uncompressPixel( getPixVal(onePixelOrigin,bitpix,0));
       }
 
       // On retourne la valeur en mémoire
-      return getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x)*bScale+bZero;
+//      return getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x)*bScale+bZero;
+      return uncompressPixel( getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x));
    }
 
 
@@ -2559,12 +2589,15 @@ public class PlanImage extends Plan {
    protected double getPixelOriginInDouble(int x,int y) {
       if( pixelsOrigin==null || fmt==JPEG ) return Double.NaN;
       try {
-         return getPixVal(pixelsOrigin,bitpix,y*width+x)*bScale+bZero;
+//         return getPixVal(pixelsOrigin,bitpix,y*width+x)*bScale+bZero;
+         return uncompressPixel( getPixVal(pixelsOrigin,bitpix,y*width+x));
       } catch( Exception e ) { return Double.NaN; }
    }
 
    /** Positionne la valeur du pixel en x,y en prenant en compte une valeur
-    * en double */
+    * en double 
+    * ATTENTION: ne supporte pas Lupton
+    */
    protected void setPixelOriginInDouble(int x,int y, double val) {
 
       //      // On accède directement à la valeur sur disque
@@ -2593,22 +2626,28 @@ public class PlanImage extends Plan {
 
    protected String getSpecialPixel(double x) {
       if( aladin.view.getPixelMode()==View.INFILE ) return X(x);
-      return Y(x*bScale+bZero);
+//      return Y(x*bScale+bZero);
+      return Y( uncompressPixel(x) );
    }
 
    /** Retourne l'indice de la fonction de transfert courante */
    public int getTransfertFct() { return transfertFct; }
 
    /** Retourne la valeur du pixel minimale pour le cut (bcale et bzero ont été déjà appliqué) */
-   public double getPixelMin() { return pixelMin*bScale + bZero; }
+//   public double getPixelMin() { return pixelMin*bScale + bZero; }
+   public double getPixelMin() { return uncompressPixel(pixelMin); }
 
    /** Retourne la valeur du pixel maximale pour le cut (bcale et bzero ont été déjà appliqué) */
-   public double getPixelMax() { return pixelMax*bScale + bZero; }
+//   public double getPixelMax() { return pixelMax*bScale + bZero; }
+   public double getPixelMax() { return uncompressPixel(pixelMax); }
 
    /** Retourne la valeur du pixel médiane (approximative) pour le cut (bcale et bzero ont été déjà appliqué) */
-   public double getPixelCtrlMin()    { return getInvPixel( cmControl[0] )*bScale + bZero; }
-   public double getPixelCtrlMiddle() { return getInvPixel( cmControl[1] )*bScale + bZero; }
-   public double getPixelCtrlMax()    { return getInvPixel( cmControl[2] )*bScale + bZero; }
+//   public double getPixelCtrlMin()    { return getInvPixel( cmControl[0] )*bScale + bZero; }
+//   public double getPixelCtrlMiddle() { return getInvPixel( cmControl[1] )*bScale + bZero; }
+//   public double getPixelCtrlMax()    { return getInvPixel( cmControl[2] )*bScale + bZero; }
+   public double getPixelCtrlMin()    { return uncompressPixel( getInvPixel( cmControl[0] )); }
+   public double getPixelCtrlMiddle() { return uncompressPixel( getInvPixel( cmControl[1] )); }
+   public double getPixelCtrlMax()    { return uncompressPixel( getInvPixel( cmControl[2] )); }
    
    public double getCutCtrlMin()    { return getInvPixel( cmControl[0] ); }
    public double getCutCtrlMax()    { return getInvPixel( cmControl[2] ); }
@@ -2645,8 +2684,9 @@ public class PlanImage extends Plan {
       switch(mode) {
          case View.LEVEL: return greyLevel+"";
          case View.INFILE: return X(getInvPixel(greyLevel));
-         case View.REAL: return Y(getInvPixel(greyLevel)*bScale+bZero);
-      }
+//         case View.REAL: return Y(getInvPixel(greyLevel)*bScale+bZero);
+         case View.REAL: return Y( uncompressPixel( getInvPixel(greyLevel)));
+              }
       return null;
    }
 
@@ -2656,6 +2696,7 @@ public class PlanImage extends Plan {
     * du sélecteur Pixel dans le cas REAL
     * @param s La valeur du pixel dans l'unité courante (sélecteur)
     * @return la valeur du pixel dans l'unité INFILE
+    * ATTENTION: Ne supporte pas Lupton
     */
    protected double getPixelValue(String s) {
       double pixel = Double.valueOf(s).doubleValue();
@@ -3150,6 +3191,15 @@ public class PlanImage extends Plan {
          bScale =  headerFits.getDoubleFromHeader("BSCALE");
          Aladin.trace(3," => BZERO = "+bZero+" BSCALE = "+bScale);
       } catch( Exception ebscale ) { bScale=1.; }
+      
+      // Compression Lupton (ex: Pan-STARRs) ?
+      try { boffset = headerFits.getDoubleFromHeader("BOFFSET"); }
+      catch( Exception e1 ) { boffset=0; }
+      try {bsoften = headerFits.getDoubleFromHeader("BSOFTEN"); flagLupton=true; }
+      catch( Exception e1 ) { flagLupton=false; }
+      if( flagLupton ) Aladin.trace(3," => Lupton comp: BOFFSET = "+boffset+" BSOFTEN = "+bsoften);
+
+
 
       //      // Y a-t-il des valeurs DATAMIN et DATAMAX
       //      try {
@@ -3422,7 +3472,7 @@ public class PlanImage extends Plan {
       catch( Exception e1 ) { bScale=1; }
       try { bZero = headerFits.getDoubleFromHeader("OFFSET"); }
       catch( Exception e1 ) { bZero=0; }
-
+      
       // détermination de l'offset de l'image
       int recordBytes = headerFits.getIntFromHeader("RECORD_BYTES");
       int offset,skip;

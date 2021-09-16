@@ -615,7 +615,10 @@ public class BuilderMirror extends BuilderTiles {
 
 //            e.printStackTrace();
             fOut.delete();
-            if( i<MAXRETRY-1 ) context.warning("File copy error  => try again ("+(i+1)+"x) ["+fileIn+"]");
+            if( i<MAXRETRY-1 ) {
+               context.warning("File copy error  => try again ("+(i+1)+"x) ["+fileIn+"]");
+               if( i==MAXRETRY/2 ) Util.pause(10000);
+            }
             else throw new Exception("File copy error ["+fileIn+"]");
             continue;
             

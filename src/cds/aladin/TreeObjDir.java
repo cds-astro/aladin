@@ -576,7 +576,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 
       // dans le cas d'un répertoire local => pas d'utilisateur du cache
       if( url!=null && !url.startsWith("http") && !url.startsWith("ftp") ) useCache=false;
-
+      
       if( color && !inJPEG && !inPNG ) inJPEG=true;
       
 //      if( !Aladin.BETA ) {

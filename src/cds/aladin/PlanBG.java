@@ -1017,6 +1017,11 @@ public class PlanBG extends PlanImage {
       transferFct4Preview = aladin.configuration.getCMFct();
       transfertFct = truePixels ? transferFct4Fits : transferFct4Preview;
       video = aladin.configuration.getCMVideo();
+      
+      if( Aladin.levelTrace==6 ) {
+         System.err.println("WARNING: Cache off for perf tests on "+id);
+         useCache=false;   // Pour des tests de perfs
+      }
 
       setDefaultZoom(co,coRadius);
       suiteSpecific();
@@ -4289,7 +4294,7 @@ public class PlanBG extends PlanImage {
    class HealpixLoader implements Runnable {
       static final int POOLSIZE = 1; //8;
       boolean POOLTEST = true;   // EN COURS DE DEVELOPPEMENT POUR METTRE NE PLACE UN POOL DE THREADS DE CHARGEMENT DE TUILES
-      static final int DELAI =1000;   // delai en ms entre deux demandes de chargement des losanges
+      static final int DELAI =500;   // delai en ms entre deux demandes de chargement des losanges
 
       private boolean loading;      // false s'il n'y a plus de losange en cours de chargement
       private boolean purging;      // false s'il n'y a plus aucun losange à purger

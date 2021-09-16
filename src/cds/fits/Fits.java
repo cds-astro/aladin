@@ -99,6 +99,7 @@ final public class Fits {
    public double bscale = DEFAULT_BSCALE; // BSCALE Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
    public double blank  = DEFAULT_BLANK;  // valeur BLANK
 
+   
    public long bitmapOffset = -1; // Repère le positionnement du bitmap des pixels (voir releaseBitmap());
 
    // Dans le cas où il s'agit d'une cellule sur l'image (seule une portion de
@@ -141,7 +142,7 @@ final public class Fits {
    
    /** Création en vue d'une lecture avec indcation des HDU concernées par une éventuelle décompression */
    public Fits(int [] hdu) { this.hdu = hdu; } 
-
+   
 
    /**
     * Création en vu d'une construction "manuelle"
@@ -798,6 +799,7 @@ final public class Fits {
       } catch( Exception e ) {
          bzero = DEFAULT_BZERO;
       }
+
       try {
          setCalib(new Calib(headerFits));
       } catch( Exception e ) {
@@ -864,12 +866,13 @@ final public class Fits {
    }
    
 
-   static final public int GZIP  = 1;
-   static final public int HHH   = 1 << 1;
-   static final public int COLOR = 1 << 2;
-   static final public int XFITS = 1 << 3;
+   static final public int GZIP     = 1;
+   static final public int HHH      = 1 << 1;
+   static final public int COLOR    = 1 << 2;
+   static final public int XFITS    = 1 << 3;
    static final public int HDU0SKIP = 1 << 4;
-   static final public int RICE = 1 << 5;
+   static final public int RICE     = 1 << 5;
+   static final public int LUPTON   = 1 << 6;
 
    /**
     * Chargement de l'entete d'une image FITS depuis un fichier
@@ -949,6 +952,9 @@ final public class Fits {
                headerFits.setKeyword("NAXIS","2");
                code |= RICE;
             }
+            
+            // Codage à la Lupton (Pan-STARRs) ?
+            if( headerFits.getStringFromHeader("BSOFTEN")!=null ) code |= LUPTON;
 
             bitmapOffset = is.getPos();
 

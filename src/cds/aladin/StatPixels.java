@@ -55,7 +55,8 @@ public class StatPixels {
    private long time;         // Durée de la dernière extraction des pixels
    private long t;            // Date de début de l'extraction
    private boolean withLimit; // true si on s'arrête à MAX valeurs
-
+   
+   
    /** Réinitialise les statistiques (liste de pixels et mesures) ssi la clé passée en paramètre ne correspond plus
     * à la clé du précédent calcul de statistiques
     * @param cle clé unique lié à la géométrie et la position de l'objet, et du plan de base
@@ -68,7 +69,7 @@ public class StatPixels {
       if( hasSameCle( cle ) ) return false;
       this.withLimit = withLimit;
       this.cle=cle;
-      pixels = new ArrayList<>();
+      pixels = new ArrayList<>(100000);
       nb=0;
       sum=Double.NaN;
       median=sigma=max=min=Double.NaN;

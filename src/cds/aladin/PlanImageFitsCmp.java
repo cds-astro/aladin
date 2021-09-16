@@ -58,6 +58,7 @@ public class PlanImageFitsCmp extends PlanImage {
       HeaderFits outHeader = new HeaderFits();
       try {
          pixelsOrigin = UtilFits.uncompress(outHeader, headerFits.getHeaderFits(), dis, flagSkip);
+//         loadFitsHeaderParam(new FrameHeaderFits(outHeader));
       } catch( Exception e ) {
          String m = e.getMessage();
          if( m==null ) m="FITS compressed image read error";

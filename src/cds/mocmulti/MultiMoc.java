@@ -526,7 +526,8 @@ public class MultiMoc implements Iterable<MocItem> {
          long t2 = System.currentTimeMillis();
          if( (t2-t1)>5000 ) {
             s=nbFiles+"... in "+Unite.getTemps(t2-t0)
-            +" => "+(int)(((double)nbFiles-oNbFiles)/((t2-t1)/1000.))+"/s ("+nth+" still running)\n";
+            +" => "+(int)(((double)nbFiles-oNbFiles)/((t2-t1)/1000.))+"/s"
+            +(nbReaders>nth?" ("+nth+" readers running)":"")+"\n";
             if( out!=null  ) print(out,s);
             System.out.print(s);
             t1=t2;

@@ -163,6 +163,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Fits improvement: PanSTARRs BOFFSET/BSOFTEN special coding supported
  * @beta    <LI> Access to the VizieR "associated data"
  * @beta    <LI> MOC extensions:
  * @beta    <UL> <LI> MOC 2.0 full compliance (STMOC, TMOC)
@@ -209,7 +210,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.066";
+   static public final    String VERSION = "v11.067";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

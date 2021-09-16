@@ -747,13 +747,20 @@ public class Context {
 
       String path = imgEtalon;
       Fits fitsfile = new Fits();
-      fitsfile.loadHeaderFITS( path );
-
-      setBitpixOrig(fitsfile.bitpix);
-      if( !isColor() ) {
-         setBZeroOrig(fitsfile.bzero);
-         setBScaleOrig(fitsfile.bscale);
-         if( !Double.isNaN(fitsfile.blank) ) setBlankOrig(fitsfile.blank);
+      int code = fitsfile.loadHeaderFITS( path );
+      
+      // Lupton
+      if( (code&cds.fits.Fits.LUPTON)!=0 ) {
+         info("Lutpon BOFFSET/BSOFTEN detected => default output bitpix -32");
+         setBitpixOrig(-32);
+         
+      } else {
+         setBitpixOrig(fitsfile.bitpix);
+         if( !isColor() ) {
+            setBZeroOrig(fitsfile.bzero);
+            setBScaleOrig(fitsfile.bscale);
+            if( !Double.isNaN(fitsfile.blank) ) setBlankOrig(fitsfile.blank);
+         }
       }
 
       // Mémorise la taille typique de l'image étalon

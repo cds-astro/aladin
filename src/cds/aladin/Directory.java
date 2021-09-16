@@ -2107,6 +2107,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    /** (Re)génération du Multiprop en fonction d'un stream d'enregistrements properties */
    protected int loadMultiProp(InputStreamReader in, boolean addition, String path) throws Exception {
+      return loadMultiProp(in,addition,path,false);
+   }
+   protected int loadMultiProp(InputStreamReader in, boolean addition, String path,boolean debug) throws Exception {
       MyProperties prop;
 
       boolean mocServerReading = true;
@@ -2115,7 +2118,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       int rm = 0;
       String memo = "";
 
+      if( debug ) aladin.trace(3,"loadMultiProp debug:");
       try {
+         String id=null;
          memo = quickFilter.getText();
          quickFilter.setEditable(false);
          quickFilter.setForeground(Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE);
@@ -2123,7 +2128,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          while( mocServerReading && !interruptServerReading ) {
             prop = new MyProperties();
             mocServerReading = prop.loadRecord(in);
-            if( prop.size() == 0 || MultiMoc.getID(prop) == null ) continue;
+            if( prop.size() == 0 || (id=MultiMoc.getID(prop)) == null ) continue;
+            
 
             // Définition locale => PROP_ORIGIN = local
             if( addition ) {
@@ -2136,24 +2142,30 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( path != null ) prop.setProperty("hips_service_url", path);
             }
 
+            int mode=0;   // 0-ajout, 1-modification, 2-suppression
             try {
 
                if( prop.getProperty("MOCSERVER_REMOVE") != null ) {
-                  multiProp.remove(MultiMoc.getID(prop));
+                  multiProp.remove(id);
+                  mode=2;
                   rm++;
-               } else multiProp.add(prop);
-
+               } else {
+                  if( debug ) mode = multiProp.getItem(id)!=null ? 1 : 0;
+                  multiProp.add(prop);
+               }
+               if( debug )  aladin.trace(3,"   ."+id+" "+(mode==0?"ADD":mode==1?"MOD":"DEL"));
                quickFilter.setText(UPDATING + " (" + n + ")");
+               
             } catch( Exception e ) {
                if( Aladin.levelTrace >= 3 ) e.printStackTrace();
             }
 
             n++;
-            if( n % 1000 == 0 && n > 0 ) aladin.trace(4,
-                  "Directory.loadMultiProp(..) " + (n - rm) + " prop loaded " + (rm > 0 ? " - " + rm + " removed" : "") + "...");
             // if( n%100==0 ) Util.pause(10);
          }
          if( interruptServerReading ) aladin.trace(3, "MocServer update interrupted !");
+         if( n > 0 ) aladin.trace(3,
+               "Directory.loadMultiProp(..) " + (n - rm) + " prop loaded " + (rm > 0 ? " - " + rm + " removed" : "") + "...");
       } finally {
          try {
             in.close();
@@ -2804,7 +2816,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private boolean cacheWrite() {
       // On ne sauvegarde pas dans le cache les essais en cours
       // sinon il y aura souci lorsqu'on reprendra la config normale
-      if( aladin.MOCLOCAL || aladin.MOCV2 ) return false;
+//      if( aladin.MOCLOCAL || aladin.MOCV2 ) return false;
+      if( aladin.MOCLOCAL ) return false;
       
       try {
          String s = aladin.cache.getCacheDir() + Util.FS + MMOC;
@@ -3006,7 +3019,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          out.close();
          aladin.trace(4, "ID list sent");
 
-         int n = loadMultiProp(new InputStreamReader(urlConn.getInputStream()), false, null);
+         int n = loadMultiProp(new InputStreamReader(urlConn.getInputStream()), false, null,true);
          Aladin.trace(3,
                "Multiprop updated in " + (System.currentTimeMillis() - t0) + "ms => " + n + " record" + (n > 1 ? "s" : ""));
          return n;

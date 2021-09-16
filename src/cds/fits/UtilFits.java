@@ -55,6 +55,8 @@ public class UtilFits {
       "ZIMAGE","ZTILE1","ZTILE2","ZCMPTYPE","ZNAME1","ZVAL1","ZNAME2","ZVAL2","ZSIMPLE","ZBITPIX",
       "ZNAXIS","ZNAXIS1","ZNAXIS2","ZEXTEND","ZPCOUNT","ZGCOUNT","ZTENSION" };
 
+   // Liste des mots clés supplémentaires à ignorer dans le cas d'une compression Lupton (Pan-STARRs)
+   static private String [] KEYIGNORELUPTON = { "BZERO","BSCALE","BLANK","BOFFSET","BSOFTEN" };
    
    /** Décompression d'une image dans un "flux" FITS. ne traite que le HDU courant
     * @param outHeader entête FITS de sortie correspondant à la matrice de pixels retournée (ou à la table s'il ne s'agit pas d'une image)
@@ -256,6 +258,41 @@ public class UtilFits {
           }
        } catch (Exception e ) { e.printStackTrace(); }
        
+       // Lupton ? =>  On décode en float 32 bits
+       boolean flagLupton=false;
+       if( inHeader.getStringFromHeader("BSOFTEN")!=null ) {
+          try {
+             double boffset = inHeader.getDoubleFromHeader("BOFFSET");
+             double bsoften = inHeader.getDoubleFromHeader("BSOFTEN");
+             double bzero = 0.;
+             double bscale = 1.;
+             double blank2 = Double.NaN;
+             try{ bzero  = inHeader.getDoubleFromHeader("BZERO");  } catch( Exception e ) {};
+             try{ bscale = inHeader.getDoubleFromHeader("BSCALE"); } catch( Exception e ) {};
+             try{ blank2 = inHeader.getDoubleFromHeader("BLANK");  } catch( Exception e ) {};
+             int bitpix2 = -32;              // On décompresse en float
+             int npix2 = Math.abs(bitpix2)/8;
+             int taille2 = naxis1*naxis2*npix2;
+             
+             // On travaille sur le même buffer, ou sur un autre ?
+             byte pix2[] = taille==taille2 ? pixelsOrigin : new byte[ taille2 ];
+             
+             for( int y=0; y<naxis2; y++ ) {
+                for( int x=0; x<naxis1; x++ ) {
+                   int pos = y*naxis1 +x;
+                   double val = getPixVal1(pixelsOrigin, bitpix, pos );
+                   val = Double.isNaN(val) || val==blank2 ? Double.NaN 
+                         : uncompressLupton(val,bzero,bscale,bsoften,boffset);
+                   setPixVal( pix2, bitpix2, pos, val);
+                }
+             }
+             pixelsOrigin = pix2;
+             bitpix = bitpix2;
+             flagLupton=true;
+          } catch( Exception e ) { throw new Exception("Lupton uncompress error"); }
+       }
+       
+       
        // Génération de l'entête de sortie si demandé
        if( outHeader!=null ) {
           
@@ -264,6 +301,7 @@ public class UtilFits {
           while( e.hasMoreElements() ) {
              String key = e.nextElement();
              if( Util.indexInArrayOf(key, KEYIGNORE)>=0 ) continue;
+             if( flagLupton && Util.indexInArrayOf(key, KEYIGNORELUPTON)>=0 ) continue;
              
              String  val;
                   if( key.equals("XTENSION") ) val="IMAGE";
@@ -274,11 +312,20 @@ public class UtilFits {
              else if( key.equals("PCOUNT") )   val="0";
              else if( key.equals("GCOUNT") )   val="1";
              else val = map.get(key);
-                  outHeader.setKeyValue(key, val);
+             
+             outHeader.setKeyValue(key, val);
           }
        }
-
        return pixelsOrigin;
+   }
+   
+   /** Décompression Lupton -> cf https://arxiv.org/pdf/1612.05245.pdf (page 18) */
+   static final double ALPHA = 2.5 * Math.log10(Math.E);
+   static public double uncompressLupton(double pixComp, 
+         double bzero, double bscale,double bsoften, double boffset) {
+      pixComp = bzero + bscale * pixComp;
+      double ca = pixComp / ALPHA;
+      return boffset + bsoften * (Math.exp(ca) - Math.exp(-ca));
    }
 
    // Décompression d'une tuile codée en GZIP1
