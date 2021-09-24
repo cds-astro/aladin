@@ -210,7 +210,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.067";
+   static public final    String VERSION = "v11.068";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -224,7 +224,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected int  SIZE   = 13;
    
    // Gère le mode particuliers
-   public static boolean MOCV2=false;    // true si on tourne sur un MocServer V2 (support du temps)
+   public static boolean MOCPROTO=false;    // true si on tourne sur un MocServer V2 (support du temps)
    public static boolean MOCLOCAL=false; // true si on tourne sur un MocServer local
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
    public static boolean BETA=true;  // true si on tourne en mode BETA
@@ -6503,7 +6503,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
-         else if( args[i].equals("-mocv2") )       { MOCV2=true; lastArg=i+1; }
+         else if( args[i].equals("-moproto") )     { MOCPROTO=true; lastArg=i+1; }
          else if( args[i].equals("-moclocal") )    { MOCLOCAL=true; lastArg=i+1; }
          else if( args[i].equals("-nolog") )       { Default.LOG=false; SETLOG=true; lastArg=i+1; }
          else if( args[i].equals("-log") )         { Default.LOG=true; SETLOG=true; lastArg=i+1; }

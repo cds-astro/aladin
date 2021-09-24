@@ -282,8 +282,15 @@ public class MultiMoc implements Iterable<MocItem> {
          String mocType =  moc instanceof STMoc ? "stmoc" : moc instanceof TMoc ? "tmoc" : "smoc";
          prop.replaceValue("moc_type", mocType);
          
+         if( moc.isTime() ) {
+            prop.replaceValue("moc_time_order",moc.getTimeOrder()+"");
+            prop.replaceValue("moc_time_range",moc.getNbRanges()+"");
+         }
+         
          if( moc.isSpace() ) {
-         prop.replaceValue("moc_sky_fraction", Unite.myRound( moc.getCoverage() )+"" );
+            try {
+               SMoc m = moc.getSpaceMoc();
+               prop.replaceValue("moc_sky_fraction", Unite.myRound( m.getCoverage() )+"" );
 
          s = moc.getProperty("MOCORDER");
          if( s==null ) s = moc.getProperty("MOCORD_S");
@@ -291,7 +298,7 @@ public class MultiMoc implements Iterable<MocItem> {
          // Petit bricolage horrible pour contourner les MocOrder que l'on a oublié
          // d'indiquer
          if( s==null || s.equals(""+SMoc.MAXORD_S) || s.equals("0") || s.equals("-1")) {
-            int maxOrder = moc.getDeepestOrder();
+                  int maxOrder = m.getDeepestOrder();
             if( maxOrder==0 ) {
                String s1 = prop.get("hips_order");
                if( s1!=null ) s=s1;
@@ -311,9 +318,7 @@ public class MultiMoc implements Iterable<MocItem> {
             dec = prop.get("hips_initial_dec");
          }
          
-         try {
          if( ra==null || dec==null || fov==null ) {
-                  SMoc m = moc.getSpaceMoc();
             if( fov==null ) {
                
                // On va préférer prendre le moc_order indiqué dans les properties
@@ -505,8 +510,9 @@ public class MultiMoc implements Iterable<MocItem> {
      
       // Partage des taches, et exécution en parallèle
       Reader reader [] = new Reader[ nbReaders ];
+      HashSet<String> listId = new HashSet<>(list.size() );
       for( int i=0; i<reader.length; i++ ) {
-         reader[i] = new Reader(oMM,flagWithMoc,out,list);
+         reader[i] = new Reader(oMM,flagWithMoc,out,list,listId);
          reader[i].start();
       }
       
@@ -527,7 +533,7 @@ public class MultiMoc implements Iterable<MocItem> {
          if( (t2-t1)>5000 ) {
             s=nbFiles+"... in "+Unite.getTemps(t2-t0)
             +" => "+(int)(((double)nbFiles-oNbFiles)/((t2-t1)/1000.))+"/s"
-            +(nbReaders>nth?" ("+nth+" readers running)":"")+"\n";
+                  +(nth<nbReaders ? " ("+nth+" readers running)\n":"\n");
             if( out!=null  ) print(out,s);
             System.out.print(s);
             t1=t2;
@@ -582,17 +588,19 @@ public class MultiMoc implements Iterable<MocItem> {
       ConcurrentLinkedQueue<File> list; // La liste des fichiers à lire
       boolean running;                  // true si le Thread est encore en train de travailler
       MultiMoc oMM;
+      HashSet<String> listId;           // Liste des mocId déjà traités
       boolean flagWithMoc;
       PrintWriter out;
       int nbFiles;                      // Nombre de fichiers traités par le reader
       int nbCreation,nbReused;          // Compteurs propres au reader
      
       Reader(MultiMoc oMM,boolean flagWithMoc, PrintWriter out,
-            ConcurrentLinkedQueue<File> list) {
+            ConcurrentLinkedQueue<File> list, HashSet<String> listId) {
          this.oMM=oMM;
          this.flagWithMoc=flagWithMoc;
          this.out=out;
          this.list = list;
+         this.listId=listId;
          running=true;
       }
       
@@ -621,20 +629,22 @@ public class MultiMoc implements Iterable<MocItem> {
       r.nbReused=0;
       String mocId=null;
       long dateMoc,dateProp;
+//      TEST=0;
 
       File f1;
+      String filename=null,propname=null;
       while( (f1 = r.list.poll())!=null ) {
          Moc moc;
             MyProperties prop;
 
             try {
                //            System.out.print("Loading "+f1.getName()+"...");
-               String filename = f1.getAbsolutePath();
+            filename = f1.getAbsolutePath();
                dateMoc = (new File(filename)).lastModified();
                //            dateMoc = !(new File(filename)).exists() ? 0L :Files.getLastModifiedTime(FileSystems.getDefault().getPath(filename)).toMillis();
 
                // Changement d'extension => ".prop"
-               String propname = filename;
+            propname = filename;
                int offset = propname.lastIndexOf('.');
                if( offset==-1 ) offset=propname.length();
                propname = propname.substring(0, offset)+".prop";
@@ -670,10 +680,16 @@ public class MultiMoc implements Iterable<MocItem> {
                boolean flagCreation=true;
                
             synchronized( this ) {
+               
+               // Pour éviter les doublons
+               if( r.listId.contains(mocId) ) throw new Exception("Duplicate ID");
+               r.listId.add(mocId);
+               
                if( r.oMM!=null && (mi=r.oMM.getItem(mocId))!=null ) {
                   
                   // Pas de changement ? => on le réutilise
-                  if( dateMoc==mi.dateMoc && prop!=null && mi.prop!=null && prop.equals(mi.prop) ) {
+                  if( (dateMoc==0L || dateMoc==mi.dateMoc) 
+                        && prop!=null && mi.prop!=null && prop.equals(mi.prop) ) {
                      add(mi);
                      flagCreation=false;
                      r.nbReused++;
@@ -682,8 +698,14 @@ public class MultiMoc implements Iterable<MocItem> {
                }
                
                if( flagCreation ) {
+                  if( TEST<10 ) { 
+                     System.out.println("Ajout de "+mocId+" datemoc="+dateMoc+" dateProp="+dateProp);
+                     if( prop!=null && mi!=null ) System.out.println("   Test d'égalité: "+prop.equals(mi.prop));
+                     if( mi!=null ) System.out.println("   Test des dates: dateMoc="+dateMoc+" mi.dateMoc="+mi.dateMoc+" => "+(dateMoc==mi.dateMoc));
+                     TEST++; 
+                     if( mi!=null && mi.prop!=null && prop!=null ) showDiff(mocId,mi.prop,prop);
+                  }  
                   add(mocId,moc,prop,dateMoc,dateProp);
-//                  System.out.println("Ajout de "+mocId);
                   r.nbCreation++;
                }
             }
@@ -691,11 +713,82 @@ public class MultiMoc implements Iterable<MocItem> {
             r.nbFiles++;
             
          } catch( Exception e ) {
-            e.printStackTrace();
-            print(r.out,mocId+" ["+e.getMessage()+"] => ignored\n");
+            try {
+               int x = propname.lastIndexOf('.');
+               String file = propname.substring(0,x);
+               print(r.out,"!"+mocId+" ["+e.getMessage()+"] => files ["+file+".xxx] ignored\n");
+            } catch( Exception e1 ) { e1.printStackTrace(); }
          }
+      }
+   }
+   
+   static int TEST=0;
+   
+   private void showDiff(String id,MyProperties pa,MyProperties p) {
+      
+      System.out.println("Comparaison pour "+id);
+      // Tests rapides
+      if( Math.abs( pa.size()-p.size() )>1 ) {
+         System.out.println(".Plus d'un champ différent => false");
+      }
+
+      // On compare les clés une à une
+      for( String k : pa.getKeys() ) {
+         if( k.equals(" ") || k.equals("#") ) continue; // On ne compare les commentaires
+         if( k.equals("TIMESTAMP") ) continue;          // On ne compare pas sur l'estampillage
+         String v1 = p.get(k);
+         String v = pa.get(k);
+         if( v1==v ) continue;
+         if( v1==null && v!=null || v1!=null && v==null ) {
+            System.out.println(".Un des champs de "+k+" est null: v1="+v1+" v="+v+" => false");
+            return;
+         }
+         
+         // Deux valeurs simples ?
+         if( v1.indexOf('\t')<0 && v.indexOf('\t')<0 ) {
+            
+            // Cas particulier de la popularite VizieR
+            // On estime différent si variation d'au moins 10%
+            if( k.equals("vizier_popularity") ) {
+               try {
+                  int pop  = Integer.parseInt(v);
+                  int pop1 = Integer.parseInt(v1);
+                  double var = (double)pop/pop1;
+                  if( var<0.9 || var>1.1 ) {
+                     System.out.println(".vizier_popularity trop différente: v1="+v1+" v="+v+" => false");
+                     return;
+                  }
+               } catch( Exception e ) { 
+                  System.out.println(".vizier_popularity erreur ["+e.getMessage()+"] => false");
+                  return;
+         }
+               
+            } else if( !v1.equals(v) ) {
+               System.out.println(".Valeurs différentes: pour ["+k+"] v1="+v1+"\n\t\tv="+v+" => false");
+               return;
                }
                
+         // Des valeurs multiples => il faut comparer chaque possibilité de valeur
+         } else if( !v1.equals(v) ) {
+            int n=0,n1=0;
+            Tok tok = new Tok(v,"\t");
+            HashMap<String, String> hash = new HashMap<>(100);
+            while( tok.hasMoreTokens() ) { hash.put(tok.nextToken(),""); n++; }
+
+            tok = new Tok(v1,"\t");
+            while( tok.hasMoreTokens() ) {
+               String it = tok.nextToken();
+               if( hash.get(it)==null ) {
+                  System.out.println(".Valeurs multiples pour ["+k+"] , item non trouvé ["+it+"] => false");
+                  return;
+               }
+               n1++; 
+            }
+            if( n!=n1 ) {
+               System.out.println(".Valeurs multiples ["+k+"] => pas le même nombres d'items => false");
+            }
+         }
+   }
    }
                
 //   /**
@@ -838,7 +931,10 @@ public class MultiMoc implements Iterable<MocItem> {
 
    // Just to print with flushing   
    private void print(PrintWriter out,String s) {
-      if( out==null ) return;
+      if( out==null || s==null ) return;
+      if( s.startsWith("!!") ) s="<font color=\"red\">"+s+"</font>";
+      else if( s.startsWith("!") ) s="<font color=\"orange\">"+s+"</font>";
+      else if( s.startsWith(".") ) s="<font color=\"grey\">"+s+"</font>";
       out.print(s);
       out.flush();
    }
@@ -1009,7 +1105,7 @@ public class MultiMoc implements Iterable<MocItem> {
          moc = Moc.createMoc(fi);
          if( moc.reduction(20 *1024L*1024L) ) {
             nbReduceMem++;
-            System.err.println("Moc info: resolution reduced to "+moc.getMem()/(1024L*1024L)+"MB => "+filename);
+//            if( Data.DEBUG) System.err.println("Moc info: resolution reduced to "+moc.getMem()/(1024L*1024L)+"MB => "+filename);
          }
          fi.close(); fi=null;
          if( moc.isEmpty() ) moc=null;
@@ -1047,7 +1143,7 @@ public class MultiMoc implements Iterable<MocItem> {
 
       } catch( Exception e ) { 
          moc=null; 
-         System.err.println("Moc error ["+e.getMessage()+"] => "+filename);
+         System.err.println("Moc error => ignored ["+e.getMessage()+"] => "+filename);
       }
       finally { if( fi!=null ) { try { fi.close(); } catch( Exception e ) {} } }
       return moc;
@@ -1975,6 +2071,15 @@ public class MultiMoc implements Iterable<MocItem> {
     */
    public int getMocOrder() { return mocOrder; }
 
+   /** Return the biggest TIMESTAMP used, 0 if unkonwn */
+   public long getBiggestTimeStamp() {
+      long t=0L;
+      for( MocItem mi : this ) {
+         if( mi.dateProp>t ) t=mi.dateProp;
+      }
+      return t;
+   }
+
    /**
     * Number of MOCS.
     * @return The number of MOCs
@@ -2010,6 +2115,10 @@ public class MultiMoc implements Iterable<MocItem> {
       return size;
    }
    
+   /**
+    * Size in memory for properties only (no MOCs).
+    * @return size in memory in bytes
+    */
    public long getPropMem() {
       long size=0;
       for( MocItem mi : this ) {
@@ -2022,7 +2131,7 @@ public class MultiMoc implements Iterable<MocItem> {
     * Debug string
     */
    public String toString() {
-      return "MultiMoc: nbmoc="+size()+" mem="+getMem()/(1024L*1024L)+"MB";
+      return "MultiMoc: hash="+hashCode()+" nbmoc="+size()+" mem="+getMem()/(1024L*1024L)+"MB";
    }   
    
    

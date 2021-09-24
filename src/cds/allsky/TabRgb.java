@@ -629,7 +629,7 @@ public class TabRgb extends JPanel implements ActionListener {
          for( Object p : x ) {
             if( ((PlanBG)p).isColored() ) continue;
             else if( !((PlanBG)p).canbeTruePixels() ) continue;
-            else if( !Aladin.PROTO && !((PlanBG)p).isLocalAllSky() ) continue;
+            else if( !Aladin.BETA && !((PlanBG)p).isLocalAllSky() ) continue;
             pi[i++]=(PlanBG)p;
          }
          

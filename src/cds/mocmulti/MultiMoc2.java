@@ -43,7 +43,7 @@ package cds.mocmulti;
 
 
 import cds.aladin.MyProperties;
-import cds.moc.SMoc;
+import cds.moc.Moc;
 
 
 /**
@@ -61,16 +61,12 @@ public class MultiMoc2 extends MultiMoc {
       }
    }
    
+   
    /** Add or replace a MOC to the MultiMoc.
     * @param mocId  MOC identifier (unique)
     * @param moc MOC to memorize
     */
-   public void add(String mocId, SMoc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
-      if( moc!=null ) {
-         int o = moc.getMocOrder();
-         if( o==SMoc.MAXORD_S ) o = moc.getDeepestOrder();  // A cause du bug
-         if( mocOrder<o) mocOrder=o;
-      }
+   public void add(String mocId, Moc moc, MyProperties prop, long dateMoc, long dateProp) throws Exception {
       MocItem2 mi = new MocItem2(mocId,moc,prop,dateMoc,dateProp);
       add( mi );
    }

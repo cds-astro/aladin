@@ -99,6 +99,7 @@ import cds.mocmulti.MocItem;
 import cds.mocmulti.MocItem2;
 import cds.mocmulti.MultiMoc;
 import cds.mocmulti.MultiMoc2;
+import cds.tools.Astrodate;
 import cds.tools.MultiPartPostOutputStream;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -136,6 +137,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    protected MultiMoc2 multiProp; // Le multimoc de stockage des properties des collections
    private Color cbg;             // La couleur du fond
    protected double mocServerVersion=-1;   // Numéro de version du MocServer
+   protected long mocServerBiggestTimeStamp=0L; // Plus grand TIMESTAMP connu du MocServer
 
    private DirectoryFilter directoryFilter = null; // Formulaire de filtrage de l'arbre des collections
    private DirectorySort directorySort = null;     // Gestion du tri de l'arbre des collections
@@ -276,14 +278,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       this.cbg = cbg;
       
 //       POUR LES TESTS => Surcharge de l'URL du MocServer
-      if( aladin.MOCV2 || aladin.MOCLOCAL ) {
+      if( aladin.MOCPROTO || aladin.MOCLOCAL ) {
          String mochost = aladin.MOCLOCAL ? "http://localhost:8080/MocServer/query"
                                           : "http://alasky4.u-strasbg.fr:8080/MocServer/query";
          aladin.glu.aladinDic.put(GLUMOCSERVER,mochost+"?$1");
          aladin.glu.aladinDic.put("MOC_url",mochost+"?$1");
          aladin.trace(0,"WARNING: use an alternate MocServer for test =>"+mochost+" !!!");
       }
-
 
       setBackground(cbg);
       setLayout(new BorderLayout(0, 0));
@@ -2142,20 +2143,13 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( path != null ) prop.setProperty("hips_service_url", path);
             }
 
-            int mode=0;   // 0-ajout, 1-modification, 2-suppression
             try {
-
                if( prop.getProperty("MOCSERVER_REMOVE") != null ) {
                   multiProp.remove(id);
-                  mode=2;
                   rm++;
-               } else {
-                  if( debug ) mode = multiProp.getItem(id)!=null ? 1 : 0;
-                  multiProp.add(prop);
-               }
-               if( debug )  aladin.trace(3,"   ."+id+" "+(mode==0?"ADD":mode==1?"MOD":"DEL"));
+               } else multiProp.add(prop);
                quickFilter.setText(UPDATING + " (" + n + ")");
-               
+
             } catch( Exception e ) {
                if( Aladin.levelTrace >= 3 ) e.printStackTrace();
             }
@@ -2178,6 +2172,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
       return n;
    }
+   
 
    /** Interruption du chargement des infos du MocServer */
    protected void interruptMocServerReading() {
@@ -2849,14 +2844,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    /**
     * Retourne la date d'estampillage la plus tardive de l'ensemble des enregistrements du multiProp. 0 si aucun
     */
-   private long getMultiPropTimeStamp() {
-      long max = 0;
-      for( MocItem mi : multiProp ) {
-         long ts = mi.getPropTimeStamp();
-         if( ts > max ) max = ts;
-      }
-      return max;
-   }
+   private long getMultiPropTimeStamp() { return multiProp.getBiggestTimeStamp(); }
 
    // Retourne la date du cache
    private long getCacheTimeStamp() {
@@ -2945,7 +2933,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       return true;
    }
    
-   /** Positionne le numéro de version du MocServer 
+   /** Positionne le numéro de version du MocServer (ligne 1), ainsi que le plus grand TIMESTAMP utilisé (ligne 2)
     * >=5.0 indique que le MocServer prend en compte la dimension temporelle
     */
    private void setMocserverVersion() {
@@ -2958,6 +2946,10 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          double v = Double.parseDouble( dis.readLine().trim() );
          aladin.trace(3,"MocServer version="+v);
          mocServerVersion=v;
+         
+         try {
+            mocServerBiggestTimeStamp = Long.parseLong( dis.readLine().trim() );
+         } catch( Exception e1 ) {}
       } 
       catch( Exception e ) { mocServerVersion=-2; }
       finally {
@@ -2983,6 +2975,15 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       
       // Test et mémorisation de la version du MocServer
       setMocserverVersion();
+      
+      // Si plus grand TIMESTAMP connu du MocServer, comparaison avec le plus grand TIMESTAMP local
+      if( mocServerBiggestTimeStamp>0L ) {
+         if( getMultiPropTimeStamp()==mocServerBiggestTimeStamp ) {
+            aladin.trace(3, "MocServer update not required => local cache up-to-date (last update: "
+               +Astrodate.JDToDate( Astrodate.UnixToJD(mocServerBiggestTimeStamp/1000L))+")");
+            return 0;
+         }
+      }
 
       try {
          mocServerUpdating = true;
@@ -3001,6 +3002,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          BufferedWriter fo = new BufferedWriter(new FileWriter(tmpMoc));
          try {
+            int i=0;
             for( MocItem mi : this ) {
                String s = mi.mocId + "=" + (flagReload ? "0":mi.getPropTimeStamp()) + "\n";
                fo.write(s.toCharArray());

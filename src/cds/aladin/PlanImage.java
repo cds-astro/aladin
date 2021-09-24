@@ -2489,7 +2489,7 @@ public class PlanImage extends Plan {
    
    
    /** Décompression Lupton -> cf https://arxiv.org/pdf/1612.05245.pdf (page 18) */
-   static final double ALPHA = 2.5 * Math.log10(Math.E);
+   static final double ALPHA = 0.4* Math.log(10);
    static public double uncompressLupton(double pixComp, double bsoften, double boffset) {
       double ca = pixComp / ALPHA;
       return boffset + bsoften * (Math.exp(ca) - Math.exp(-ca));

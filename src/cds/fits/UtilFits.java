@@ -320,7 +320,7 @@ public class UtilFits {
    }
    
    /** Décompression Lupton -> cf https://arxiv.org/pdf/1612.05245.pdf (page 18) */
-   static final double ALPHA = 2.5 * Math.log10(Math.E);
+   static final double ALPHA = 0.4* Math.log(10);
    static public double uncompressLupton(double pixComp, 
          double bzero, double bscale,double bsoften, double boffset) {
       pixComp = bzero + bscale * pixComp;

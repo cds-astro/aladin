@@ -115,15 +115,16 @@ public class MyProperties {
             
             // Cas particulier de la popularite VizieR
             // On estime différent si variation d'au moins 10%
-            if( k.equals("vizier_popularity") ) {
-               try {
-                  int pop  = Integer.parseInt(v);
-                  int pop1 = Integer.parseInt(v1);
-                  double var = (double)pop/pop1;
-                  if( var<0.9 || var>1.1 ) return false;
-               } catch( Exception e ) { return false; }
-               
-            } else if( !v1.equals(v) ) return false;
+//            if( k.equals("vizier_popularity") ) {
+//               try {
+//                  int pop  = Integer.parseInt(v);
+//                  int pop1 = Integer.parseInt(v1);
+//                  double var = (double)pop/pop1;
+//                  if( var<0.9 || var>1.1 ) return false;
+//               } catch( Exception e ) { return false; }
+//               
+//            } else 
+               if( !v1.equals(v) ) return false;
             
          // Des valeurs multiples => il faut comparer chaque possibilité de valeur
          } else if( !v1.equals(v) ) {
@@ -889,8 +890,8 @@ public class MyProperties {
        }
 
        public String toString() {
-          if( key.equals("#")) return value; // Commentaire unique (pour compatibilité)
           if( key==null || value==null ) return "";
+          if( key.equals("#")) return value; // Commentaire unique (pour compatibilité)
           if( value.indexOf('\t')==-1 ) return align(key, 20) +" = "+ value; // Propriété simple
           StringBuilder s = new StringBuilder();
           Tok tok = new Tok(value,"\t");

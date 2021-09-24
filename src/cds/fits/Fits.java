@@ -2493,24 +2493,8 @@ final public class Fits {
       }
    }
 
-   /**
-    * Remplace les pixels (pixels[] et rgb[] pour les nouvelles valeurs
-    * != NaN
-    */
-   //   public void overwriteWith(Fits a) throws Exception {
-   //      int taille = widthCell * heightCell;
-   //
-   //      if( a.pixels != null && pixels != null ) {
-   //         for( int i = 0; i < taille; i++ ) {
-   //            double v = a.getPixValDouble(pixels, bitpix, i);
-   //            if( a.isBlankPixel(v) ) v = -100; // continue;
-   //            setPixValDouble(pixels, bitpix, i, v);
-   //            if( a.rgb != null && rgb != null ) rgb[i] = a.rgb[i];
-   //         }
-   //      }
-   //   }
 
-   /** Ajoute les pixels (pixels[] et rgb[] sur les valeurs NaN, idem pour les poids corresondants */
+   /** Ajoute les pixels (pixels[] et rgb[] sur les valeurs NaN, idem pour les poids correspondants */
    public void mergeOnNaN(Fits a, double[] weightOut, double[] weightIn) throws Exception {
       int taille = widthCell * heightCell;
 
@@ -2535,7 +2519,6 @@ final public class Fits {
             weightOut[i] = weightIn[i];
          }
       }
-
    }
 
    /** Ajoute les pixels (pixels[] et rgb[] sur les valeurs NaN */
@@ -2561,7 +2544,6 @@ final public class Fits {
             rgb[i] = a.rgb[i];
          }
       }
-
    }
 
    public void setFilename(String filename) {
