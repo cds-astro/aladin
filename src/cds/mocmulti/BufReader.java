@@ -48,7 +48,7 @@ public final class BufReader {
       int n = readShort();
       if( n==-1 ) return null;
       availability(n);
-      String s = new String(buf,offset,n);
+      String s = new String(buf,offset,n,"UTF-8");
       offset+=n;
       return s;
    }

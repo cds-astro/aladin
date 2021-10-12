@@ -380,7 +380,7 @@ public class AladinData {
     */
    public Hashtable seeFitsKeys() throws AladinException {
       testImage();
-      fitsKeysModified();
+//      fitsKeysModified();   // Aucune raison de le faire ici PF. 8/10/2021
       return ((PlanImage)plan).headerFits.getHeaderFits().getHashHeader();
    }
 

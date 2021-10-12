@@ -396,7 +396,7 @@ public class PlanMocGen extends PlanMoc {
       int n = (int)CDSHealpix.pow2(hipsOrder); 
       n=12*n*n;
       
-      System.out.println("Nombre de losanges à traiter (order="+hipsOrder+") : "+n);
+//      System.out.println("Nombre de losanges à traiter (order="+hipsOrder+") : "+n);
       
       try { createHealpixOrder(tileOrder-cellOrder); }
       catch( Exception e1 ) { }
@@ -465,7 +465,6 @@ public class PlanMocGen extends PlanMoc {
             // valeur de queue, on peut tout de suite écarter cette tuile
             if( step==1 && queue.size()>0 ) {
                PixCum last = queue.last();
-//               if( last.val>(tile.max/somme) ) {
                if( last.val*somme>tile.max ) {
 //                  System.out.println(" tilemax="+(tile.max/somme)+" less that the min of queue="+last.val+" => rejected");
                   continue;

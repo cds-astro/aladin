@@ -1014,18 +1014,18 @@ public final class Glu implements Runnable {
     */
    private void memoApplication(String actionName,String aladinLabel,String aladinMenuNumber,String description,
          String verboseDescr,String institute,String releaseNumber,String copyright,
-         String docUser,String jar,String javaParam,String download,String webstart,String applet,
+         String docUser,String jar,String javaParam,String download,String webstart,String applet, String plugin,
          String dir,String aladinActivated,String system) {
 
       GluApp vo = getGluApp(actionName);
       if( vo!=null ) {
          vo.merge(aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
-               copyright,docUser,jar,javaParam,download,webstart,applet,aladinActivated,
+               copyright,docUser,jar,javaParam,download,webstart,applet,plugin,aladinActivated,
                GluApp.JAVA|GluApp.PLASTIC);
       } else {
          vGluApp.addElement( new GluApp(aladin,actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,
                institute,releaseNumber,copyright,docUser,jar,javaParam,dir,download,webstart,
-               applet,aladinActivated,system,GluApp.JAVA|GluApp.PLASTIC) );
+               applet,plugin,aladinActivated,system,GluApp.JAVA|GluApp.PLASTIC) );
       }
    }
 
@@ -1581,6 +1581,7 @@ public final class Glu implements Runnable {
       String download = null;// Url de la page de download
       String webstart = null; // Url du lancement par webstart
       String applet = null; // Url du lancement par applet
+      String plugin = null; // Url du jar du plugin
       String javaParam = null;// ligne de commande pour une application java (sans l'appel à java)
       String dir=null;  // Répertoire d'installation dans le cas d'un application VO
       String aladinActivated=null;  // NO si l'application est désactivé des menus Aladin
@@ -1690,6 +1691,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"Id") )                id=subCR(value);
             else if( isKey(name,"Webstart") )          webstart=subCR(value);
             else if( isKey(name,"Applet") )            applet=subCR(value);
+            else if( isKey(name,"Plugin") )            plugin=subCR(value);
             else if( isKey(name,"JavaParam") )         javaParam=subCR(value);
             else if( isKey(name,"Dir") )               dir=value;
             else if( isKey(name,"Aladin.Activated") )  aladinActivated=subCR(value);
@@ -1729,7 +1731,7 @@ public final class Glu implements Runnable {
 //                           aladinSurvey,aladinHpxParam,skyFraction,origin);
 //                     else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                      else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
-                           copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
+                           copyright,docUser,jar,javaParam,download,webstart,applet,plugin,dir,aladinActivated,system);
                      else if (flagTapServices && flagLabel) {
  						tapManager.addTapService(actionName, aladinLabel,url,description);
  					 }
@@ -1755,7 +1757,7 @@ public final class Glu implements Runnable {
                if( !flagLabel ) putAladinFilter(actionName,aladinFilter);
 
                maxIndir = Integer.MAX_VALUE;
-               copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=dir=
+               copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=plugin=dir=
                      system=aladinActivated=actionName=description=verboseDescr=ack=resultDataType=aladinMenu=
                      aladinMenuNumber=aladinLabel=aladinLabelPlane=docUser=seeAction=url=test=institute=aladinLogo=
                      aladinSurvey=aladinHpxParam=aladinBookmarks=id=skyFraction=origin=null;
@@ -1909,7 +1911,7 @@ public final class Glu implements Runnable {
 //                  aladinSurvey,aladinHpxParam,skyFraction,origin);
 //            else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
-                  copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
+                  copyright,docUser,jar,javaParam,download,webstart,applet,plugin,dir,aladinActivated,system);
             else if (flagTapServices && flagLabel) {
 					tapManager.addTapService(actionName, aladinLabel,url,description);
 			}

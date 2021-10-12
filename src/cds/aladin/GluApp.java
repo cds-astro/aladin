@@ -21,16 +21,12 @@
 
 package cds.aladin;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Comparator;
-
-import javax.swing.JLabel;
-
 
 import cds.tools.Util;
 
@@ -60,6 +56,7 @@ public class GluApp implements Comparator {
    public String downloadUrl;   // Adresse pour l'installation
    public String wsUrl;         // Adresse du lancement par webstart
    public String appletUrl;     // Adresse du lancement par l'applet
+   public String pluginUrl;     // Adresse de download du plugin
    public String activated;     // Yes si actif
    public String system;        // Ligne de commande perso
    public String dir;           // Le répertoire d'installation du jar
@@ -87,7 +84,7 @@ public class GluApp implements Comparator {
    public GluApp(Aladin aladin, String tagGlu,String aladinLabel, String aladinMenuNumber, String description,
          String verboseDescription, String institute, String releaseNumber, String copyright,
          String docUser,String jar, String javaParam, String dir, String download, String webstart,
-         String applet,String aladinActivated, String system, int type) {
+         String applet,String plugin,String aladinActivated, String system, int type) {
       this.aladin       = aladin;
       this.tagGlu       = tagGlu;
       this.aladinLabel  = aladinLabel;
@@ -103,6 +100,7 @@ public class GluApp implements Comparator {
       this.downloadUrl  = download;
       this.wsUrl        = webstart;
       this.appletUrl    = applet;
+      this.pluginUrl    = plugin;
       this.dir          = dir;
       this.type         = type;
       this.system       = system;
@@ -123,7 +121,7 @@ public class GluApp implements Comparator {
     * des informations locales */
    protected void merge(String aladinLabel,String aladinMenuNumber,String description,String verboseDescr,
          String institute, String releaseNumber, String copyright, String docUser,
-         String jar, String javaParam, String download, String webstart, String applet,
+         String jar, String javaParam, String download, String webstart, String applet, String plugin,
          String aladinActivated, int type) {
       this.tagGlu      = tagGlu;
       this.aladinLabel = aladinLabel;
@@ -139,21 +137,24 @@ public class GluApp implements Comparator {
       this.downloadUrl = download;
       this.wsUrl       = webstart;
       this.appletUrl   = applet;
+      this.pluginUrl   = plugin;
       this.activated   = this.activated==null ? aladinActivated : this.activated;
       this.type        = type;
       
 //      Aladin.trace(3,"VOTools ["+tagGlu+"] => *** UPDATED");
    }
    
-   static protected final int JAR = 1;
+   static protected final int JAR      = 1;
    static protected final int DOWNLOAD = 2;
    static protected final int WEBSTART = 3;
-   static protected final int APPLET = 4;
+   static protected final int APPLET   = 4;
+   static protected final int PLUGIN   = 5;
    
    /** Retourne le type d'installation supporté par l'application */
    protected int getInstallMode() {
       if( wsUrl!=null ) return WEBSTART;
       if( appletUrl!=null ) return APPLET;
+      if( pluginUrl!=null ) return PLUGIN;
       if( jarUrl!=null ) return JAR;
       if( downloadUrl!=null ) return DOWNLOAD;
       return 0;
@@ -183,7 +184,7 @@ public class GluApp implements Comparator {
    
    /** Retourne true s'il doit être intégré dans les menus Aladin */
    protected boolean canBeMenu() {
-      if( !canBeRun() ) return false;
+//      if( !canBeRun() ) return false;
       return isActivated();
    }
    
@@ -261,8 +262,14 @@ public class GluApp implements Comparator {
 
    /** Lance l'éxécution de l'application VO */
    protected boolean exec() {
+      if( !isInstalled() ) {
+         FrameVOTool.display(aladin,this);
+         return false;
+      }
+      
       aladin.log("VOToolExec",tagGlu);
       if( getInstallMode()==APPLET ) return execApplet();
+      if( getInstallMode()==PLUGIN ) return execPlugin();
       final String dir = getDir();
       Aladin.trace(1,"Exec: "+(dir!=null?"cd "+dir+";":"") + getCommand());
       try {
@@ -282,7 +289,25 @@ public class GluApp implements Comparator {
       return true;
    }
       
-   protected String getJarName() {
+   /** Démarrage en plugin */
+   protected boolean execPlugin() {
+      // Le javaParam sert pour connaitre la commande script, et à défaut le nom de l'enregistrement GLU
+      String pluginID = javaParam!=null ? javaParam : tagGlu;
+      AladinPlugin ap = aladin.plugins.find(pluginID);
+      if( ap!=null ) {
+         try { ap.start(); } catch( AladinException e1 ) {
+            e1.printStackTrace();
+            aladin.error(aladin.chaine.getString("PLUGERROR")+"\n\n"+e1.getMessage());
+            return false;
+         }
+      } else {
+         aladin.error(aladin.chaine.getString("PLUGERROR")+"\n\nPlugin "+tagGlu+" unknown");
+         return false;
+      }
+      return true;
+   }
+      
+   protected String getInstallationName( String jarUrl) {
       try {
          return jarUrl.substring(jarUrl.lastIndexOf('/'));
       } catch( Exception e) {}
@@ -295,6 +320,7 @@ public class GluApp implements Comparator {
    protected int install() {
       aladin.log("VOToolInstall",tagGlu);
       switch( getInstallMode() ) {
+         case PLUGIN: installPlugin(); return -3;
          case JAR: installJar(); return -3;
          case DOWNLOAD : aladin.glu.showDocument("Http", downloadUrl, true); return -1;
          default: return -2;
@@ -306,11 +332,29 @@ public class GluApp implements Comparator {
    
    synchronized void setDownloading(long n) { downloading=n; }
    
+   /** Déchargement du fichier jar d'un plugin dans le répertoire Plugin
+    *d'Aladin. Le répertoire adéquat est créé si besoin
+    * @return true si ça a marché.
+    */
+   protected boolean installPlugin() { return installJar1(pluginUrl,aladin.plugins.getPlugPath()); }
+   
+   /** Retourne vrai si l'outil VO est installé (pour ceux qui s'installe) */
+   protected boolean isInstalled() {
+      int mode = getInstallMode();
+      String file=null;
+      if( mode==JAR ) file = aladin.getVOPath()+Util.FS+getInstallationName(jarUrl);
+      else if( mode==PLUGIN ) file = aladin.plugins.getPlugPath()+Util.FS+getInstallationName(pluginUrl);
+      else return true;   // Les autres modes n'ont pas besoin d'installation spécifique
+      return (new File(file)).exists();
+   }
+   
+   
    /** Déchargement du fichier jar de l'application dans le répertoire VOTools
     * du cache d'Aladin. Le répertoire adéquat est créé si besoin
     * @return true si ça a marché.
     */
-   protected boolean installJar() {
+   protected boolean installJar() { return installJar1(jarUrl,aladin.getVOPath()); }
+   protected boolean installJar1(final String jarUrl,final String targetPath) {
        setDownloading(0);
        interrupt=false;
        (new Thread("Install") {
@@ -321,7 +365,9 @@ public class GluApp implements Comparator {
                if( inp==null ) throw new Exception();
                DataInputStream in = new DataInputStream(inp);
                if( in==null ) throw new Exception();
-               String file = aladin.getVOPath()+Util.FS+getJarName();
+               String installationName = getInstallationName(jarUrl);
+               if( installationName==null ) throw new Exception("Installation name error");
+               String file = targetPath+Util.FS+installationName;
                String tmp = file+".tmp";
                File g = new File(tmp); g.delete();
                RandomAccessFile out = new RandomAccessFile(tmp,"rw");
@@ -339,7 +385,7 @@ public class GluApp implements Comparator {
                } else {
                   File f = new File(file); f.delete();
                   g.renameTo(f);
-                  dir=aladin.getVOPath();
+                  dir=targetPath;
                   if( nextNumber!=null ) releaseNumber=nextNumber;
                   nextNumber=null;
                }

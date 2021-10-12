@@ -164,6 +164,7 @@ import cds.xml.XMLParser;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> Fits improvement: PanSTARRs BOFFSET/BSOFTEN special coding supported
+ * @beta    <LI> CASSIS VOTool/plugin compatibility
  * @beta    <LI> Access to the VizieR "associated data"
  * @beta    <LI> MOC extensions:
  * @beta    <UL> <LI> MOC 2.0 full compliance (STMOC, TMOC)
@@ -178,10 +179,13 @@ import cds.xml.XMLParser;
  * @beta    <LI> Pixel table generation from arbitrary areas (polygons, circles...) -> See Menu Image -> Pixel extraction...
  * @beta    <LI> Plugin extension for pixel stats (getStatistics..)
  * @beta    <LI> New projections: Mercator, HEALPix
+ * @beta    <LI> VOApp interface extension: MOUSEEVENT support
  * @beta </UL>
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Fix bug on UTF8 properties
+ * @beta    <LI> Fix bug on tiny FITS extension images
  * @beta    <LI> Stat measurements shift error
  * @beta    <LI> HiPS tiles crossing the view in AITOFF projection
  * @beta    <LI> s_region circle radius expressed with E notation (xxEn) 
@@ -210,7 +214,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.068";
+   static public final    String VERSION = "v11.077";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -375,7 +379,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          COLOR_CONTROL_BACKGROUND = new Color(229,229,229);
          COLOR_CONTROL_FOREGROUND = new Color(200,203,207);
          COLOR_CONTROL_FOREGROUND_HIGHLIGHT = COLOR_CONTROL_FOREGROUND.brighter();
-         COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(80,83,87);
+//         COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(80,83,87);
+         COLOR_CONTROL_FOREGROUND_UNAVAILABLE = new Color(90,93,97);
          COLOR_CONTROL_FILL_IN = new Color(60,60,60);
          COLOR_TOOL_DOWN = new Color(60,60,60);
          COLOR_TOOL_UP = new Color(80,80,80);
@@ -1445,7 +1450,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                   {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{TIMETOOL},{CALCULATOR},
                   {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},
                   {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
-                  {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
+                  {},{VOTOOL,VOINFO}, /* {GLUTOOL,"-"},*/ {MPLUGS,PLUGINFO},
                   {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
                   { BETAPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
                      "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
@@ -2230,14 +2235,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Regénère le popup menu associé aux VOtools */
    protected void VOReload() {
       if( isNonCertifiedApplet() || miVOtool==null ) return;
-      JMenuItem ji = ((JMenu)miVOtool).getItem(0);
+      JMenuItem ji = ((JMenu)miVOtool).getItem( ((JMenu)miVOtool).getItemCount() -1 );
       miVOtool.removeAll();
-      miVOtool.add(ji);
       String m[] = glu.getAppMenu();
       if( m.length>0 ) {
-         ((JMenu)miVOtool).addSeparator();
          appendJMenu((JMenu)miVOtool,m);
+         ((JMenu)miVOtool).addSeparator();
       }
+      miVOtool.add(ji);
    }
 
    /** Retourne le numéro de session d'Aladin. N'a d'intéret que dans le
@@ -4554,9 +4559,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       ArrayList<SMoc> arr = new ArrayList<>(10000);
       HashSet<Obj> set = new HashSet<>();
+      
+      
       for( Obj o : v ) {
          
-         // Ajout des cercles (Phot ou cercle)
+         
          if( o instanceof SourceStat || o instanceof Cercle) {
             try {
                double ra = o.getRa();
@@ -6195,11 +6202,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.resumeTimeStackIndex();
 
       // Test si le stack a évolué, et l'indique aux VO Observers correspondants
-      if( VOObsEvent!=null ) {
+      if( VOObsStack!=null ) {
          String status = command.getStatus("stack");
          if( !status.equals(ostatus) ) {
             ostatus=status;
-            sendEventObserver();
+            sendStackObserver(); 
          }
       }
    }
@@ -6503,7 +6510,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }
          else if( args[i].equals("-debug") )       { levelTrace=4; lastArg=i+1; }
          else if( args[i].equals("-beta") )        { BETA=true; lastArg=i+1; }
-         else if( args[i].equals("-moproto") )     { MOCPROTO=true; lastArg=i+1; }
+         else if( args[i].equals("-mocproto") )     { MOCPROTO=true; lastArg=i+1; }
          else if( args[i].equals("-moclocal") )    { MOCLOCAL=true; lastArg=i+1; }
          else if( args[i].equals("-nolog") )       { Default.LOG=false; SETLOG=true; lastArg=i+1; }
          else if( args[i].equals("-log") )         { Default.LOG=true; SETLOG=true; lastArg=i+1; }
@@ -6639,9 +6646,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Util.pause(100);
       }
       if( messReady ) return;
+      messReady=true;
       long tps = System.currentTimeMillis() - startTime;
       aladin.trace(3, "Aladin is fully ready (in "+(tps/1000.)+"s)");
-      messReady=true;
    }
 
    /** Retourne true si le dialog est prêt */
@@ -6686,7 +6693,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected Vector VOObsPos = null;    // Liste des VOObserver de la position courante
    protected Vector VOObsPix = null;  // Liste des VOObserver de la valeur courante du pixel
    protected Vector VOObsMes = null;  // Liste des VOObserver sur les mesures
-   protected Vector VOObsEvent= null;  // Liste des VOObserver sur les événements de la pile
+   protected Vector VOObsStack= null;  // Liste des VOObserver sur les événements de la pile
+   protected Vector VOObsMouse= null;  // Liste des VOObserver sur les événements de la souris
 
    /** Pour interface VOObserver */
    protected void sendObserver() {
@@ -6742,6 +6750,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
    //         if( Double.isNaN(coo.al) ) return;
    //      }
    //   }
+   
+   
+   /** Positioning of the stats calculation mask. The string passed in parameter contains a list 
+    * of stats labels (sum, min, max, area, sigma, median), possibly preceded by a '+' or a '-'.
+    * @param s
+    * @throws Exception
+    * @return the actual list
+    */
+   public String setStatMask(String listStats) {
+      try {
+         StatPixels.setStatMask( listStats);
+      } catch( Exception e ) { System.err.println("statMask error => "+e.getMessage()); }
+      return StatPixels.getStatMask();
+   }
 
    /** To register an observer of VO events.
     * see position() and pixel() associated callback methods
@@ -6757,7 +6779,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( VOObsPos!=null && VOObsPos.contains(app) ) VOObsPos.removeElement(app);
          if( VOObsPix!=null && VOObsPix.contains(app) ) VOObsPix.removeElement(app);
          if( VOObsMes!=null && VOObsMes.contains(app) ) VOObsMes.removeElement(app);
-         if( VOObsEvent!=null && VOObsEvent.contains(app) ) VOObsEvent.removeElement(app);
+         if( VOObsStack!=null && VOObsStack.contains(app) ) VOObsStack.removeElement(app);
          return;
       }
 
@@ -6779,21 +6801,42 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( !VOObsMes.contains(app) ) VOObsMes.addElement(app);
       }
 
-      // Ajout aux observers des events de la piel
+      // Ajout aux observers des events de la pile
       if( (eventMasq&VOApp.STACKEVENT)!=0 ) {
-         if( VOObsEvent==null ) VOObsEvent = new Vector();
-         if( !VOObsEvent.contains(app) ) VOObsEvent.addElement(app);
+         if( VOObsStack==null ) VOObsStack = new Vector();
+         if( !VOObsStack.contains(app) ) VOObsStack.addElement(app);
+      }
+      
+      // Ajout aux observers des events de la souris
+      if( (eventMasq&VOApp.MOUSEEVENT)!=0 ) {
+         if( VOObsMouse==null ) VOObsMouse = new Vector();
+         if( !VOObsMouse.contains(app) ) VOObsMouse.addElement(app);
+      }
+   }
+   
+   /** Envoi d'une commande aux observers des évènements sur la pile pour indiquer un changement  */
+   protected void sendMouseObserver() {
+      if( VOObsMouse==null || VOObsMouse.size()==0 ) return;
+
+      String s = "info mouseEvent";
+      Enumeration e = VOObsMouse.elements();
+      while( e.hasMoreElements() ) {
+         try { ((VOApp)e.nextElement()).execCommand(s); }
+         catch( Exception e1 ) { if( levelTrace>=3 ) e1.printStackTrace(); }
       }
    }
 
+
+
    /** Envoi d'une commande aux observers des évènements sur la pile pour indiquer un changement  */
-   protected void sendEventObserver() {
-      if( aladin.VOObsEvent==null || aladin.VOObsEvent.size()==0 ) return;
+   protected void sendStackObserver() {
+      if( VOObsStack==null || VOObsStack.size()==0 ) return;
+
       String s = "info stackEvent";
-      Enumeration e = aladin.VOObsEvent.elements();
+      Enumeration e = VOObsStack.elements();
       while( e.hasMoreElements() ) {
          try { ((VOApp)e.nextElement()).execCommand(s); }
-         catch( Exception e1 ) { if( aladin.levelTrace>=3 ) e1.printStackTrace(); }
+         catch( Exception e1 ) { if( levelTrace>=3 ) e1.printStackTrace(); }
       }
    }
 
@@ -7874,7 +7917,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
 
-   static private int firstMem=0;
+   static protected int firstMem=0;
    static private String MB;
 
 

@@ -4,6 +4,7 @@
  * Author : P.Fernique [CDS]
  * Date   : Sep 2018
  * Rev1   : Mar 2021
+ * Rev2   : Oct 2021
 -->
 
 <project name="Aladin" default="main" basedir="."> 
@@ -14,16 +15,16 @@
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
      <javac destdir="${bin}"
-	    encoding="UTF-8" source="1.7" target="1.7" deprecation="off" >
+	    encoding="UTF-8" source="1.7" target="1.7" deprecation="off" includeantruntime="false" >
          <src path="${basedir}/cds/astro"/>
      </javac>
      <javac srcdir="${basedir}" destdir="${bin}"
-	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >
+	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" includeantruntime="false" >
        <classpath>
           <pathelement path="${java.class.path}/"/>
           <pathelement path="adql1.3.jar"/>
           <pathelement path="jsamp.jar"/>
-          <pathelement path="kml2-2.3.0.jar"/>
+          <pathelement path="kxml2-2.3.0.jar"/>
           <pathelement path="cdshealpix.0.28_1.jar"/>
       </classpath>
      </javac>
@@ -34,9 +35,9 @@
         <fileset dir="${bin}"/>
 	    <zipfileset src="adql1.3.jar"/>
 	    <zipfileset src="jsamp.jar"/>
-	    <zipfileset src="kml2-2.3.0.jar"/>
+	    <zipfileset src="kxml2-2.3.0.jar"/>
         <zipfileset src="cdshealpix.0.28_1.jar"/>
-	    <fileset dir="${basedir}" includes="*.gif,*.jpg,*.png,Ala*.*,Constellation.txt,viewConfiguration.properties,StandardForms.dic"/>
+	    <fileset dir="${basedir}" includes="*.gif,*.jpg,*.png,Ala*.*,Constellation.txt,viewConfiguration.properties,StandardForms.dic" excludes="Aladin.jar"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
         </manifest>

@@ -589,7 +589,8 @@ public final class PlanField extends Plan {
             p.y = Util.tand( (DDE[i]+((k==2||k==3)?1.0:0.0))*DE+gapde -ODE );
 
             if( k>0 ) p.debligne=(Ligne)pcat.o[j-1];
-            if( k<4 ) p.finligne=(Ligne)pcat.o[j+1];
+            if( k<4 ) p.finligne=(Ligne)pcat.o[j+1]; 
+            else p.bout=3;
          }
 
          // CCD labels ?

@@ -1579,8 +1579,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          cubeControl = new CubeControl(this,pref,pref.getInitDelay(),pref.isPause());
          cubeControl.setFrameLevel(pref.getZ(),false);
          cubeControl.resume();
-      }
-      else cubeControl=null;
+      } else cubeControl=null;
 
       // Tentative de récupération de valeurs de zoom précédemment sauvegardées
       // pour ce plan dans le cas du mode MVIEW1
@@ -2120,6 +2119,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       mousePressed1(e.getX(),e.getY(),e);
+      aladin.sendMouseObserver();
    }
 
    private int tpsXDrag=-1,tpsYDrag=-1;
@@ -2202,14 +2202,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( !isProjSync ) {
             
             if( Aladin.TIMETEST ) {
-               if( !flagshift /* && (!selected || !view.isMultiView()) */ ) {
+//               if( !flagshift /* && (!selected || !view.isMultiView()) */ ) {
+               if( !flagshift && aladin.match.getMode()!=3 ) {
                   aladin.calque.unSelectAllPlan();
                   aladin.view.unSelectAllView();
 
                } else selected = !selected;
             } 
             
-//            else {
+//           else {
 //
 //               if( !flagshift && (!selected || !view.isMultiView()) ) {
 //                  aladin.calque.unSelectAllPlan();
@@ -2548,6 +2549,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       
       mouseReleased1(e.getX(),e.getY(),e);
       if( createCoteDist() ) repaint();
+      aladin.sendMouseObserver();
    }
    
    public void mouseReleased1(double x, double y,MouseEvent e) {
@@ -3090,7 +3092,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    private boolean flagMoveNotSelect=false; // true si le porchain clic and drag sera un déplacement d'objets
    // et non une extension du rectangle de la sélection
 
+   
    public void mouseDragged(MouseEvent e) {
+      mouseDragged1(e);
+      aladin.sendMouseObserver();
+   }
+
+   public void mouseDragged1(MouseEvent e) {
 
       if( isFullScreen() && widgetControl!=null && widgetControl.mouseDragged(e) ) {
          repaint(); return;
@@ -5507,7 +5515,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Affiche si nécessaire les logos de contrôles pour les images Blink */
    private void drawBlinkControl(Graphics g) {
-      if( !isPlanBlink() ) return;
+      if( !isPlanBlink() || cubeControl==null ) return;
       int x,y;
       boolean fullScreen = isFullScreen();
 

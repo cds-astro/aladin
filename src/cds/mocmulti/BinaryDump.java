@@ -42,7 +42,7 @@ import cds.moc.TMoc;
 public final class BinaryDump {
    
    static private boolean debug=false;
-   static private final byte BINVERSION[]  = { 'M','C','1','0' };  // Binary magic code
+   static private final byte BINVERSION[]  = { 'M','C','1','2' };  // Binary magic code
    static private final long MAGICODE = 2021042317L;
    
    public BinaryDump() { }
@@ -226,8 +226,6 @@ public final class BinaryDump {
     * @seealso parseDump(Buf)
     */
    public void createDump(MultiMoc mMoc,RandomAccessFile rf) throws Exception {
-//      int taille = sizeOfBinary(mMoc);
-//      if( debug ) System.out.println("Buf size = "+taille);
       BufWriter buf = new BufWriter(rf);
 
       buf.memoString(mMoc.getCoordSys());

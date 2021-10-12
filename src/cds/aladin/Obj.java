@@ -195,6 +195,7 @@ public abstract class Obj implements Propable {
    
    /** Retourne une clé unique associé aux statistiques courantes (si l'objet en a) */
    public int getStatsHashcode(AladinData ad) { return getStatsHashcode(ad.plan,-1); }
+   public int getStatsHashcode(AladinData ad, int z) { return getStatsHashcode( ad.plan,z); }
    protected int getStatsHashcode(Plan p, int z) { return 0; }
    
    /** Provide photometric statistics for the area described by the object (only for circle and polygon)

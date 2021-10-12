@@ -709,6 +709,7 @@ public class MyInputStream extends FilterInputStream {
 
 
       } catch ( EOFException e ) {
+//         e.printStackTrace();
          type |= EOF;
          //System.out.println("getType impossible: EOFException !!");
       }
@@ -2416,7 +2417,9 @@ public class MyInputStream extends FilterInputStream {
                // On remplit le cache jusqu'au deux premiers bytes
                // des donnees FITS pour preparer un eventuel test
                // du MAGIC NUMBER de HCOMP
-               if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
+               try {
+                  if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
+               } catch( IOException e ) {  }
 
                return dataFits;
                
@@ -2431,7 +2434,9 @@ public class MyInputStream extends FilterInputStream {
                      // On remplit le cache jusqu'au deux premiers bytes
                      // des donnees FITS pour preparer un eventuel test
                      // du MAGIC NUMBER de HCOMP
-                     if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
+                     try {
+                        if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
+                     } catch( IOException e ) { }
 
                      return dataFits;
                   }

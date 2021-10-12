@@ -442,6 +442,7 @@ public class SourceStat extends SourceInfo {
             double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],z,HealpixKey.SYNC);
             if( Double.isNaN(pix) ) continue;
             pix = pix*pbg.bScale+pbg.bZero;
+
             double polar[] = CDSHealpix.pix2ang_nest(orderPix, npix[i]);
             polar = CDSHealpix.polarToRadec(polar);
             coo.al = polar[0]; coo.del = polar[1];

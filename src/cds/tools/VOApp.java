@@ -20,7 +20,7 @@
 //
 
 package cds.tools;
-import java.io.*;
+import java.io.InputStream;
 
 /**
  * Interface between two Virtual Observatory applications, such as
@@ -138,6 +138,9 @@ public abstract interface VOApp {
    
    /** Stack event, see addObserver() */
    public final int STACKEVENT = 8;
+   
+   /** Mouse event, see addObserver() */
+   public final int MOUSEEVENT = 16;
    
    
 }

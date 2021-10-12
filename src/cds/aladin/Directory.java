@@ -3482,6 +3482,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             boolean hasMoc = false;
             boolean hasHips = false;
             boolean hasGlobalAccess = false;
+            boolean hasVizieRTimeOnly =false;
             boolean hasVizieRAssocData = false;
             int nbIn = 0;
             int nbInMayBe = 0;
@@ -3491,6 +3492,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                if( list == null ) list = new StringBuilder(to1.internalId);
                else list.append(", " + to1.internalId);
                if( sList == null && list.length() > 80 ) sList = list + "...";
+               if( !hasVizieRTimeOnly && to1.isVizierTimeOnly() ) hasVizieRTimeOnly=true;
                if( !hasCS && to1.hasCS() ) hasCS = true;
                if( !hasSIA && to1.hasSIA() ) hasSIA = true;
                if( !hasSSA && to1.hasSSA() ) hasSSA = true;
@@ -3522,16 +3524,16 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             // S'il n'y a pas trop de collections, on pourra les appeler en parallèle
             boolean flagTooMany = false;
             if( treeObjs.size() > MAX_PARALLEL_QUERY ) flagTooMany = true;
-            else {
+            else if( !hasVizieRTimeOnly )  {
 
                // On utilise le checkbox CS pour cumuler à la fois les accès CS,SIA et SSA
                if( hasCS || hasSIA || hasSSA || hasCDScat || hasGlobalAccess ) {
                   csBx = bx = new JCheckBox(AWCSLAB);
                   bx.addActionListener(this);
                   mocAndMore.add(bx);
-                  String info = nbIn + nbInMayBe == 0 ? "(no data in the field)"
+                  String info = nbIn + nbInMayBe == 0 ? "(no data in the view)"
                         : "(" + (nbIn + nbInMayBe) + " collections " + (nbInMayBe > 0 ? " may " : "should")
-                              + " have data in the field)";
+                              + " have data in the view)";
                   Util.toolTip(bx, Util.fold(AWMCSTIP + "\n" + info, 100, true));
 //                  bx.setEnabled(hasSmallView && Projection.isOk(aladin.view.getCurrentView().getProj()) && nbIn + nbInMayBe > 0);
 //                  bx.setSelected(hasSmallView && Projection.isOk(aladin.view.getCurrentView().getProj()) && bx.isEnabled());
@@ -3662,16 +3664,17 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             }
 
             JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0,0));
-            s = to.getCoverage();
-            if( s != null ) {
+            if( to.hasMoc() ) {
                boolean isIn = to.getIsIn() == 1;
-               s = AWSKYCOV + " " + s + " ";
-               a = new MyAnchor(aladin, s, 50, null, null);
-               a.setForeground(Color.gray);
-               p1.add(a);
-
-               if( hasView ) {
-                  a.setToolTipText(isIn ? "Data available in the current view" : "No data in the current view");
+               s = to.getSpaceCoverage();
+               if( s!=null ) {
+                  s = AWSKYCOV + " " + s + " ";
+                  a = new MyAnchor(aladin, s, 50, null, null);
+                  a.setForeground(Color.gray);
+                  p1.add(a);
+                  if( hasView ) {
+                     a.setToolTipText(isIn ? "Data available in the current view" : "No data in the current view");
+                  }
                }
 
             } else {
@@ -3899,7 +3902,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 //               Util.toolTip(bx, AWTMOCXTIP, true);
 //            }
 
-            if( to.isCDSCatalog() && !to.isSimbad() && nbRows != -1 && nbRows >= 10000 ) {
+            if( to.isCDSCatalog() && !to.isVizierTimeOnly()
+                && !to.isSimbad() && nbRows != -1 && nbRows >= 10000 ) {
                dmBx = bx = new JCheckBox(AWDM);
                bx.addActionListener(this);
                productPanel.add(bx);
@@ -4358,16 +4362,23 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
             y = h-16;
             g.setColor( c );
             g.drawString(s, x, y);
+            
+            // Une table uniquement temporelle ?
+            boolean timeTable = to.getMocType().indexOf('T')>=0;
+            if( timeTable ) {
+               Slide.drawClock(g, x-10, y-4, 4, c, Color.white);
+            }
 
             if( to.getIsIn() != -1 ) {
                g.setFont(Aladin.SPLAIN);
-               s = in ? "data in view" : "out of view";
+               s = in ? (timeTable?"events":"data")+" in view" : "out of view";
                x = w / 2 - g.getFontMetrics().stringWidth(s) / 2 + (in ? 0 : 3);
                y = h - 4;
                if( !in ) Util.drawWarning(g, x - 10, y - 7, c, Color.black);
                g.setColor( c );
                g.drawString(s, x, y);
             }
+            
          }
 
          private void paintComponent1(Graphics g) {

@@ -21,37 +21,29 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DropTarget;
-import java.awt.event.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.ListModel;
-import javax.swing.SwingConstants;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
-import javax.swing.table.DefaultTableCellRenderer;
 
 import cds.tools.Util;
 
@@ -64,9 +56,11 @@ public class FrameVOTool extends JFrame implements ActionListener,KeyListener {
     private JButton install,run,remove;
     protected JButton apply;
 
-    static void display(Aladin aladin) {
+    static void display(Aladin aladin) { display(aladin,null); }
+    static void display(Aladin aladin,GluApp ap) {
        if( aladin.frameVOTool==null ) aladin.frameVOTool = new FrameVOTool(aladin);
        aladin.frameVOTool.setVisible(true);
+       if( ap!=null ) aladin.frameVOTool.selectionne(ap);
     }
 
     static protected String INSTALL,NEWINSTALL,REINSTALL,REMOVE,INTERRUPT,NEW,__NEW__,

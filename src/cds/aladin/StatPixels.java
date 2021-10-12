@@ -57,6 +57,61 @@ public class StatPixels {
    private boolean withLimit; // true si on s'arrête à MAX valeurs
    
    
+   static private int STATSUM      = 0x1;       // Calcul de la somme
+   static private int STATMIN      = 0x1<<1;    // Calcul du min
+   static private int STATMAX      = 0x1<<2;    // Calcul du max
+   static private int STATAREA     = 0x1<<3;    // Calcul de l'aire
+   static private int STATSIGMA    = 0x1<<4;    // Calcul du sigma
+   static private int STATMEDIAN   = 0x1<<5;    // Calcul de la médiane
+   
+   static private String[] STATLABEL= { "none","sum","min","max","area","sigma","median" };
+   static private int[]    STATMASK = { 0, STATSUM,STATMIN,STATMAX,STATAREA,STATSIGMA, STATMEDIAN };
+   
+   static private int STATDEFAULT = STATSUM | STATMIN | STATMAX | STATAREA | STATSIGMA ;
+   static private int currentStatMask = STATDEFAULT;
+   
+   
+   /** Postionnement du mask de calcul des stats. La chaine passée en paramètre contient une liste
+    * de label de stats (sum, min, max, area, sigma, median), eventuellement précédé d'un '+' ou d'un '-'
+    * @param s
+    * @throws Exception
+    */
+   static public void setStatMask(String s) throws Exception {
+      if( s==null ) return;
+      Tok tok = new Tok(s,",; ");
+      while( tok.hasMoreTokens() ) {
+         String k = tok.nextToken();
+         if( k.length()==0 ) continue;
+         char c = k.charAt(0);
+         String s1=k.toLowerCase();
+         if( c=='+' || c=='-' ) s1=k.substring(1).toLowerCase();
+         else c=' ';
+         int n;
+         for( n=0; n<STATLABEL.length; n++ ) {
+            if( STATLABEL[n].toLowerCase().indexOf( s1 )>=0 ) break;
+         }
+         if( n==STATLABEL.length ) throw new Exception("Unknown stat label ["+k+"]");
+         if( c=='+' ) currentStatMask |= STATMASK[n];
+         else if( c=='-' ) currentStatMask = currentStatMask & ~STATMASK[n];
+         else currentStatMask = STATMASK[n];
+      }
+   }
+   
+   static public void setStatMask( int mask ) { STATMASK = STATMASK; }
+   
+   /** Retourne une chaine décrivant les stats appliquées : concaténation de (sum, min, max, area, sigma, median, pix) séparés
+    * par virgule */
+   static public String getStatMask() {
+      StringBuilder s = new StringBuilder(100);
+      for( int i=1; i<STATLABEL.length; i++ ) {
+         if( (STATMASK[i]&currentStatMask)!=0 ) {
+            if( s.length()>0 ) s.append(',');
+            s.append(STATLABEL[i]);
+         }
+      }
+      return s.toString();
+   }
+   
    /** Réinitialise les statistiques (liste de pixels et mesures) ssi la clé passée en paramètre ne correspond plus
     * à la clé du précédent calcul de statistiques
     * @param cle clé unique lié à la géométrie et la position de l'objet, et du plan de base
@@ -98,7 +153,7 @@ public class StatPixels {
     * Retourne la liste des pixels concernées par les statistiques sous la forme d'un tableau de triplets ra,de,val
     * @return le tableau des triplets
     */
-   protected double [] getStatisticsRaDecPix() {
+   protected double [] getStatisticsRaDecPix() throws Exception {
       double res [] = new double[ pixels.size()*3 ];
       int i=0;
       for( Pixel pix : pixels ) { res[i++]=pix.raj;  res[i++]=pix.dej; res[i++]=pix.val; }
@@ -142,7 +197,7 @@ public class StatPixels {
    private boolean compute( boolean withMedian ) {
             
       // Aucun pixels chargés, rien à faire
-      if( pixels.size()==0 ) return false;
+      if( pixels==null || pixels.size()==0 ) return false;
       
       // Si on demande la médiane et qu'on ne l'a pas encore calculée, il faut réinitialisé le flag
       if( withMedian && Double.isNaN( median ) ) computed=false;
@@ -152,27 +207,37 @@ public class StatPixels {
       // Calcul du temps de l'extration
       time = Util.getTime()-t;
       
+      boolean flagMin   = (currentStatMask & STATMIN)   !=0;
+      boolean flagMax   = (currentStatMask & STATMAX)   !=0;
+      boolean flagSigma = (currentStatMask & STATSIGMA) !=0;
+      boolean flagSum   = (currentStatMask & STATSUM)   !=0;
+      boolean flagMedian= (currentStatMask & STATMEDIAN)!=0;
+      
       double sqr=0;
       for( Pixel pix : pixels ) {
          if( Double.isNaN( pix.val ) ) continue;
-         if( Double.isNaN(sum) ) sum=0;
-         sum += pix.val;
          nb++;
-         if( Double.isNaN(min) || pix.val<min ) min=pix.val;
-         if( Double.isNaN(max) || pix.val>max ) max=pix.val;
-         sqr += pix.val*pix.val;
+         if( flagSum || flagSigma ) {
+            if( Double.isNaN(sum) ) sum=0;
+            sum += pix.val;
+         }
+         if( flagMin && (Double.isNaN(min) || pix.val<min) ) min=pix.val;
+         if( flagMax && (Double.isNaN(max) || pix.val>max) ) max=pix.val;
+         if( flagSigma ) sqr += pix.val*pix.val;
       }
       
-      double mean = sum/nb;
-      double variance = sqr/nb - mean*mean;
-      sigma = Math.sqrt(variance);
+      if( flagSigma ) {
+         double mean = sum/nb;
+         double variance = sqr/nb - mean*mean;
+         sigma = Math.sqrt(variance);
+      }
       
-      try {
-         if( withMedian ) {
+      if( flagMedian && withMedian ) {
+         try {
             Collections.sort(pixels);
             median = pixels.get( nb/2 ).val;
-         }
-      } catch( Exception e ) { }
+         } catch( Exception e ) { }
+      }
       
       // Pour éviter de le faire plusieurs fois
       computed=true;

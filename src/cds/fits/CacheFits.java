@@ -285,7 +285,7 @@ public class CacheFits {
                   } catch( Exception e) {
                      context.warning("All original data sets do no used the same CRPIX3,CRVAL3 & CDELT3 factors => factors ignored");
                      context.crpix3=context.crval3=context.cdelt3=0;
-                     context.bunit3=null;
+                     context.cunit3=null;
                   }
                }
             }

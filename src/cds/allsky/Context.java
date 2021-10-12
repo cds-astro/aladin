@@ -95,7 +95,7 @@ public class Context {
    public int depth=1;                    // profondeur du cube (1 pour une image)
    protected boolean depthInit=false;        // true si la profondeur du cube a été positionné
    public double crpix3=0,crval3=0,cdelt3=0;    // paramètre pour un cube
-   public String bunit3=null;
+   public String cunit3=null;
    protected int [] hdu = null;              // Liste des HDU à prendre en compte
    public int bitpixOrig = -1;               // BITPIX des images originales
    protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
@@ -205,7 +205,7 @@ public class Context {
       depth=1;
       depthInit=false;
       crpix3=crval3=cdelt3=0;
-      bunit3=null;
+      cunit3=null;
       tileFormat = null;
       outputRGB = null;
       redInfo=blueInfo=greenInfo=null;
@@ -774,8 +774,8 @@ public class Context {
             crpix3 = fitsfile.headerFits.getDoubleFromHeader("CRPIX3");
             crval3 = fitsfile.headerFits.getDoubleFromHeader("CRVAL3");
             cdelt3 = fitsfile.headerFits.getDoubleFromHeader("CDELT3");
-            bunit3 = fitsfile.headerFits.getStringFromHeader("BUNIT3");
-         }catch( Exception e ) { crpix3=crval3=cdelt3=0; bunit3=null; }
+            cunit3 = fitsfile.headerFits.getStringFromHeader("CUNIT3");
+         }catch( Exception e ) { crpix3=crval3=cdelt3=0; cunit3=null; }
 
       } catch( Exception e ) { setDepth(1); }
 
@@ -2196,7 +2196,7 @@ public class Context {
             setPropriete(Constante.KEY_CUBE_CRPIX3,crpix3+"");
             setPropriete(Constante.KEY_CUBE_CRVAL3,crval3+"");
             setPropriete(Constante.KEY_CUBE_CDELT3,cdelt3+"");
-            setPropriete(Constante.KEY_CUBE_BUNIT3,bunit3+"");
+            setPropriete(Constante.KEY_CUBE_BUNIT3,cunit3+"");
          }
 
          // Sinon c'est un HiPS image

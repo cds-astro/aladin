@@ -218,7 +218,6 @@ public class RepereSpectrum extends Repere {
             c.x=xc+0.5; 
             c.y=yc+0.5;
             proj.getCoord(c);
-
             statPixels.addPix(c.al,c.del, pix);
          } finally {
             if( !isCube ) pi.setLockCacheFree(false);

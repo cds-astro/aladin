@@ -34,6 +34,7 @@ import cds.tools.Util;
 public class PlanImageCube extends PlanImageBlink {
 
    private double crval3,crpix3,cdelt3;
+   private String cunit3;
    protected boolean fromCanal;
 
    /** Creation d'un plan de type IMAGECUBE (via un stream)
@@ -44,20 +45,29 @@ public class PlanImageCube extends PlanImageBlink {
       super(aladin,file,in,label,from,o,imgNode,skip,doClose,forPourcent);
       type=IMAGECUBE;
       initDelay=400;
+      
    }
-
-   private int precision = -1;
-
-   /** Retourne la valeur physique correspondant au numéro du canal */
+   
+   /** Retourne la valeur physique correspondant au numéro du canal 
+    * suffixée par l'unité si elle est connue */
    protected String getCanalValue(int n) {
-      if( precision==-1 ) {
-         double f = Math.abs(cdelt3);
-         precision = f<0.001 ? 3 : f<0.01 ? 2 : f<100 ? 1 : 0;
-      }
-      //      return Util.myRound( ""+(n-crpix3)*cdelt3+crval3,precision);
-      return ""+(int)Math.round(1000 * ((n+1-crpix3)*cdelt3+crval3))/1000.;
+      return getCanalValue(depth-n,crpix3,cdelt3,crval3,cunit3);
    }
 
+   /** Retourne la valeur physique correspondant au numéro du canal 
+    * en fonction des paramètres indiques,
+    * suffixée par l'unité si elle est connue */
+   static public String getCanalValue(int n, double crpix3, double cdelt3, double crval3, String cunit3) {
+      double val = (n+1.-crpix3)*cdelt3 + crval3;
+      String s = cunit3==null ? null : SED.getUnitFreq(val, cunit3);
+      if( s==null && cunit3!=null ) s=SED.getUnitWave(val, cunit3);
+      if( s==null ) {
+         s = Util.myRound(val);
+         if( cunit3!=null ) s=s+" "+cunit3;
+      }
+      return s;
+   }
+   
    protected boolean cacheImageFits(MyInputStream dis) throws Exception {
       int naxis;
       long taille;		// nombre d'octets a lire
@@ -104,6 +114,7 @@ public class PlanImageCube extends PlanImageBlink {
          crpix3 = headerFits.getDoubleFromHeader("CRPIX3");
          crval3 = headerFits.getDoubleFromHeader("CRVAL3");
          cdelt3 = headerFits.getDoubleFromHeader("CDELT3");
+         cunit3 = headerFits.getStringFromHeader("CUNIT3");
          fromCanal=true;
       } catch( Exception e ) { fromCanal=false; }
 
@@ -120,17 +131,36 @@ public class PlanImageCube extends PlanImageBlink {
          boolean dejaCharge=false;
          int frameToBeLoad = depth;
 
-         double requiredMo =  (double)width*height*depth*(npix+1)/(1024.*1024);
-         boolean loadInRam = aladin.getMem() - requiredMo > Aladin.MARGERAM;
+         long required =  (long)width*height*depth*(npix+1);
+         boolean loadInRam = aladin.getMem() - required/(1024*1024) > Aladin.MARGERAM;
          boolean partialInRam = false;
-         Aladin.trace(4,"PlanImageCube.loadImageFits() ask for "+requiredMo+"MB "+(loadInRam?"try in Ram":"=> not enough space in RAM"));
+         Aladin.trace(4,"PlanImageCube.loadImageFits() ask for "+Util.getUnitDisk( required)+" "+(loadInRam?"try in Ram":"=> not enough space in RAM"));
          if( !loadInRam ) {
-            aladin.freeSomeRam((long)(requiredMo*1024*1024),this);
-            loadInRam = aladin.getMem() - requiredMo/10 > Aladin.MARGERAM;
-            double t1 = (double)width*height*npix;
-            double free = (aladin.getMem() - Aladin.MARGERAM)*1024*1024 - width*height*depth;
+            aladin.freeSomeRam(required,this);
+            long freeMem = (long)aladin.getMem()*1024L*1024L;
+            System.out.println("freeMem => "+Util.getUnitDisk(freeMem));
+            loadInRam = (freeMem - required)/20L > Aladin.MARGERAM*1024L*1024L;
+            //            double t1 = (double)width*height*npix;
+            //            double dispMem=aladin.getMem();
+            //            double free = (aladin.getMem() - Aladin.MARGERAM)*1024*1024 - width*height*depth;
+            //            frameToBeLoad = (int)( free/t1);
+            long t1 = (long)width*height*npix;
+//            System.out.println("One frame => "+Util.getUnitDisk(t1));
+            long dispMem= freeMem - Aladin.MARGERAM*1024L*1024L;
+//            System.out.println("disp Mem => "+Util.getUnitDisk(dispMem));
+            long pixel8Mem = (long)width*height*depth;
+//            System.out.println("pixel8Mem => "+Util.getUnitDisk(pixel8Mem));
+            long free = dispMem - pixel8Mem;
+            if( free<0 ) free=0L;
+//            System.out.println("free => "+Util.getUnitDisk(free));
             frameToBeLoad = (int)( free/t1);
-            Aladin.trace(4,"PlanImageCube.loadImageFits() [2nd test]  ask for "+requiredMo+"MB "+(loadInRam?"try in Ram "+frameToBeLoad+" frames":"not in RAM")+ " freeRAM="+free/(1024*1024.)+"MB, one frame="+t1/(1024*1024.)+"MB");
+//            System.out.println("frameToBeLoad => "+frameToBeLoad);
+            //            Aladin.trace(4,"PlanImageCube.loadImageFits() [2nd test]  ask for "+requiredMo+"MB "
+            //                +(loadInRam?"try in Ram "+frameToBeLoad+" frames":"not in RAM")
+            //                + " freeRAM="+free/(1024L*1024L)+"MB, one frame="+t1/(1024L*1024L)+"MB");
+            Aladin.trace(4,"PlanImageCube.loadImageFits() [2nd test]  ask for "+Util.getUnitDisk( required)
+            +(loadInRam?"try in Ram "+frameToBeLoad+" frames":" not in RAM")
+            + " freeRAM="+Util.getUnitDisk(free)+", one frame="+Util.getUnitDisk(t1));
          }
 
          cacheFromOriginalFile = setCacheFromFile(dis);     // Positionnement de l'accès direct aux pixels sur fichier d'origine
@@ -186,59 +216,64 @@ public class PlanImageCube extends PlanImageBlink {
             findMinMax(pixelsOrigin,bitpix,width,height,dataMinFits,dataMaxFits,cut,0,0,0,0);
 
             double mem,amem=0,delta,adelta=0;
-
+            String s=null;
             for( int i=0; i<depth; i++ ) {
-               if( aladin.levelTrace==4 ) {
-                  mem = aladin.getMem();
-                  delta = amem-mem;
-                  if( Math.abs(adelta-delta)>0.2 || mem<Aladin.MARGERAM-1 ) {
-                     aladin.trace(4,"PlanImageCube.cacheImageFits(): frame "+i+" freeRam="+mem+"MB delta="+delta+"MB");
-                  }
-                  amem=mem;
-                  adelta=delta;
-               }
-
-               try { setBufPixels8(new byte[width*height]); }
-               catch( OutOfMemoryError e ) {
-                  e.printStackTrace();
-                  Aladin.trace(4,"PlanImageCube.loadImageFits(): out of memory1 freeRam="+aladin.getMem()+"MB => inRam=false...");
-                  loadInRam=false;
-                  freeRam();
-                  setBufPixels8(new byte[width*height]);
-               }
-
-               // Je suis avant la tranche qui a servi pour l'autocut
-               if( i<m ) {
-
-                  // En une passe => tout est en mémoire
-                  if( dejaCharge ) System.arraycopy(buffer,i*tailleImg,pixelsOrigin,0,tailleImg);
-                  else {
-                     if( i==0 ) {
-
-                        // Il s'agit d'un fichier local et non du cache (puisque pos2emeLecture!=0),
-                        // il faut réouvrir le fichier pour ne pas saboter le dataInputStream
-                        if( pos2emeLecture!=0 ) {
-                           //System.out.println("Réouverture du fichier d'origine à la position "+pos2emeLecture);
-                           f = new RandomAccessFile(cacheID,"r");
-                        }
-                        f.seek( pos2emeLecture );
-                     }
-                     f.readFully(pixelsOrigin);
-                  }
-
-                  // Je suis après la tranche de l'autocut
-               }else {
-                  dis.readFully(pixelsOrigin);
-                  if( f!=null && !cacheFromOriginalFile ) f.write(pixelsOrigin);
-               }
-
-               to8bits(getBufPixels8(),0,pixelsOrigin,pixelsOrigin.length/npix,bitpix,
-                     /*isBlank,blank,*/pixelMin,pixelMax,true);
-
-               invImageLine(width,height,getBufPixels8());
-               String s = (fromCanal ? getCanalValue(i): label);
                try {
-                  if( loadInRam && frameToBeLoad<0 ) {
+                  s = (fromCanal ? getCanalValue(i): label);
+                  mem = aladin.getMem();
+                  if( !loadInRam && mem<Aladin.MARGERAM-10 ) throw new OutOfMemoryError();
+                  if( aladin.levelTrace==4 ) {
+                     delta = amem-mem;
+                     if( Math.abs(adelta-delta)>0.2 || mem<Aladin.MARGERAM-1 ) {
+                        aladin.trace(4,"PlanImageCube.cacheImageFits(): frame "+i+" freeRam="+mem+"MB delta="+delta+"MB");
+                     }
+                     amem=mem;
+                     adelta=delta;
+                  }
+
+                  try { 
+                     setBufPixels8(new byte[width*height]);
+                     if( mem<Aladin.MARGERAM ) throw new OutOfMemoryError();
+                  } catch( OutOfMemoryError e ) {
+                     //                  e.printStackTrace();
+                     Aladin.trace(4,"PlanImageCube.loadImageFits(): out of memory1 freeRam="+aladin.getMem()+"MB => inRam=false...");
+                     loadInRam=false;
+                     if( !freeRam() ) throw new OutOfMemoryError();
+                     setBufPixels8(new byte[width*height]);
+                  }
+
+                  // Je suis avant la tranche qui a servi pour l'autocut
+                  if( i<m ) {
+
+                     // En une passe => tout est en mémoire
+                     if( dejaCharge ) System.arraycopy(buffer,i*tailleImg,pixelsOrigin,0,tailleImg);
+                     else {
+                        if( i==0 ) {
+
+                           // Il s'agit d'un fichier local et non du cache (puisque pos2emeLecture!=0),
+                           // il faut réouvrir le fichier pour ne pas saboter le dataInputStream
+                           if( pos2emeLecture!=0 ) {
+                              //System.out.println("Réouverture du fichier d'origine à la position "+pos2emeLecture);
+                              f = new RandomAccessFile(cacheID,"r");
+                           }
+                           f.seek( pos2emeLecture );
+                        }
+                        f.readFully(pixelsOrigin);
+                     }
+
+                     // Je suis après la tranche de l'autocut
+                  }else {
+                     dis.readFully(pixelsOrigin);
+                     if( f!=null && !cacheFromOriginalFile ) f.write(pixelsOrigin);
+                  }
+
+                  to8bits(getBufPixels8(),0,pixelsOrigin,pixelsOrigin.length/npix,bitpix,
+                        /*isBlank,blank,*/pixelMin,pixelMax,true);
+
+                  invImageLine(width,height,getBufPixels8());
+ 
+
+                  if( loadInRam && frameToBeLoad<=0 ) {
                      Aladin.trace(4,"PlanImageCube.loadImageFits(): low memory2 (frame="+i+") => other frames not in RAM...");
                      partialInRam=true;
                      loadInRam=false;
@@ -249,11 +284,13 @@ public class PlanImageCube extends PlanImageBlink {
                      frameToBeLoad--;
                   }
                } catch( OutOfMemoryError e ) {
-                  e.printStackTrace();
+                  //                  e.printStackTrace();
                   Aladin.trace(4,"PlanImageCube.loadImageFits(): out of memory freeRam="+aladin.getMem()+"MB => inRam=false...");
                   loadInRam=false;
                   freeRam();
+                  error="Out of memory";
                   addFrame(s,getBufPixels8(),null,cacheFromOriginalFile,cacheID,cacheOffset);
+                  return false;
                }
                cacheOffset+=pixelsOrigin.length;
 
@@ -292,7 +329,7 @@ public class PlanImageCube extends PlanImageBlink {
       if( flagSkip ) return true;
 
       creatDefaultCM();
-
+      z=depth/2;      // On commence à afficher la tranche médiane du cube
       setPourcent(-1);
       return true;
    }

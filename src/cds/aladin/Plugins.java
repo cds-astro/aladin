@@ -613,15 +613,16 @@ Aladin.trace(3,"Scanning plugs in ["+dir+"]");
     }
     
     /**
-     * Retourne le plugin correspondant au nom passé en paramètre
-     * @param name nom du plugin recherché
+     * Retourne le plugin correspondant au nom passé en paramètre 
+     * @param name nom du plugin recherché (ou sa commande script)
      * @return plugin Aladin
      */
     protected AladinPlugin find(String name) {
        Enumeration e = plugs.elements();
        while( e.hasMoreElements() ) {
           AladinPlugin ap = (AladinPlugin) e.nextElement();
-          if( ap.menu().equals(name) ) return ap;
+          if( ap.menu().equalsIgnoreCase(name) ) return ap;
+          if( name.equalsIgnoreCase( ap.scriptCommand() ) ) return ap;
        }
        return null;
     }

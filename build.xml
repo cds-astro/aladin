@@ -18,7 +18,6 @@
      <javac destdir="${bin}"
 	    encoding="UTF-8" source="1.7" target="1.7" deprecation="off" >
          <src path="/Users/Pierre/Documents/Développements/CDSastro/src"/>
-         <src path="/Users/Pierre/Documents/Développements/Moc/src"/>
      </javac>
      <javac destdir="${bin}"
 	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >

@@ -783,6 +783,7 @@ public class Ligne extends Position {
             double pix = pbg.getHealpixPixel(orderFile,npixFile,npix,z,HealpixKey.SYNC);
             if( Double.isNaN(pix) ) continue;
             pix = pix*pbg.bScale+pbg.bZero;
+
             double polar[]=null;
             polar = CDSHealpix.pix2ang_nest(orderPix, npix);
             polar = CDSHealpix.polarToRadec(polar);

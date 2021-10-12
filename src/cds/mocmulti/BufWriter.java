@@ -45,10 +45,10 @@ public final class BufWriter {
     */
    static public int sizeOfString(String s) { return 2+(s==null?0:s.getBytes().length); }
 
-   /** Mémorisation d'une chaine: 2 bytes pour la taille, suivi des lettres */
+   /** Mémorisation d'une chaine: 2 bytes pour la taille, suivi des lettres en UTF16 */
    public void memoString(String s) throws Exception {
       if( s==null ) { memoShort( (short)-1); return; }
-      byte[] a = s.getBytes();
+      byte[] a = s.getBytes("UTF-8");
       int len = a.length;
       if( len>Short.MAX_VALUE ) len=Short.MAX_VALUE;
       memoShort( (short)a.length );

@@ -961,6 +961,20 @@ public class SED extends JPanel {
    static final private String UNITFREQ[] = {"Hz","kHz", "MHz","GHz","THz","PHz","EHz"};
    static final private String UNITWAVE[] = {"nm",MU+"m", "mm","m","km","Mm","Gm"};
    static final private String UNITJY[]   = {MU+"Jy","mJy","Jy","kJy","MJy","GJy","TJy","PJy"};
+   
+   
+   /** Affichage avec la bonne unité : val donnée en u
+    * @return la fréquence dans la bonne unité, null si unité inconnue
+    */
+   static final public String getUnitFreq(double val,String u) { return getUnit(val,u,UNITFREQ); }
+   static final public String getUnitWave(double val,String u) { return getUnit(val,u,UNITWAVE); }
+   static final public String getUnit(double val,String u,String [] UNIT) {
+      int i=Util.indexInArrayOf(u, UNIT, true);
+      if( i<0 ) return null;
+      double fct=1.;
+      for( ;i>0; i-- ) fct*=1000.;
+      return getUnit(val*fct,UNIT,3);
+   }
   
    /** Affichage en fréquence : val donnée en GHz */
    static final public String getUnitFreq(double val) {
@@ -972,16 +986,18 @@ public class SED extends JPanel {
       return getUnit(val*1000000.,UNITJY);
    }
 
+  
    /** Affichage en longueur d'onde : val donnée en micron-mètre */
    static public String getUnitWave(double val) {
       return getUnit(val*1000.,UNITWAVE);
    }
 
-   static private String getUnit(double val,String [] unit) {
+   static private String getUnit(double val,String [] unit) { return getUnit(val,unit,1); }
+   static private String getUnit(double val,String [] unit,int decimal) {
       int u = 0;
       while (val >= 1000 && u<unit.length-1) { u++; val /= 1000L; }
       NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
-      nf.setMaximumFractionDigits(1);
+      nf.setMaximumFractionDigits(decimal);
       return nf.format(val)+unit[u];
    }
 

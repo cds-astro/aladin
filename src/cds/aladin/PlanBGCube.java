@@ -62,18 +62,12 @@ public class PlanBGCube extends PlanBG {
    }
 
    private double crval3,crpix3,cdelt3;
-   private String bunit3;
+   private String cunit3;
    protected boolean fromCanal;
-   private int precision = -1;
 
    /** Retourne la valeur physique correspondant au numéro du canal */
    protected String getCanalValue(int n) {
-      if( precision==-1 ) {
-         double f = Math.abs(cdelt3);
-         precision = f<0.001 ? 3 : f<0.01 ? 2 : f<100 ? 1 : 0;
-      }
-      //      return Util.myRound( ""+(n-crpix3)*cdelt3+crval3,precision);
-      return ""+(int)Math.round(1000 * ((n+1-crpix3)*cdelt3+crval3))/1000.+(bunit3!=null?" "+bunit3:"");
+      return PlanImageCube.getCanalValue(n,crpix3,cdelt3,crval3,cunit3);
    }
 
    protected boolean Free() {
@@ -104,8 +98,8 @@ public class PlanBGCube extends PlanBG {
             s = prop.getProperty(Constante.KEY_CUBE_CDELT3);
             cdelt3 = Double.parseDouble(s);
             fromCanal=true;
-            bunit3 = prop.getProperty(Constante.KEY_CUBE_BUNIT3);
-            if( bunit3==null ) bunit3 = prop.getProperty(Constante.KEY_CUBE_CUNIT3);
+            cunit3 = prop.getProperty(Constante.KEY_CUBE_CUNIT3);
+            if( cunit3==null ) cunit3 = prop.getProperty(Constante.KEY_CUBE_BUNIT3);
          } catch( Exception e ) { fromCanal=false; }
 
       } catch( Exception e ) { return false; }

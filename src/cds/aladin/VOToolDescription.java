@@ -21,14 +21,32 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.security.Key;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.EventListener;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.border.Border;
 
 import cds.tools.Util;
@@ -67,7 +85,8 @@ public class VOToolDescription extends JPanel {
       SYSTEM = "Command line";
       DIR = "Running directory";
       INSTALL = "Install. method";
-      MODEINSTALL = new String[]{ "Local","Java jar package","Web download page","Java Webstart (no installation)","Java Applet (no installation)" };
+      MODEINSTALL = new String[]{ "Local","Java jar package","Web download page","Java Webstart (no installation)",
+            "Java Applet (no installation)","Aladin Plugin" };
       createPanel();
       timer=new Timer(500,new ActionListener() {
          public void actionPerformed(ActionEvent e) { downloading(); }
@@ -132,8 +151,7 @@ public class VOToolDescription extends JPanel {
       m.addMouseListener(new MouseAdapter() {
          public void mouseReleased(MouseEvent e) {
             if( doc.getToolTipText() == null ) return;
-            aladin.glu.showDocument("Http", ((JLabel) e.getSource())
-                  .getToolTipText(), true);
+            aladin.glu.showDocument("Http", ((MyLabel) e.getSource()).getToolTipText(), true);
          }
 
          public void mouseEntered(MouseEvent e) {
@@ -245,10 +263,17 @@ public class VOToolDescription extends JPanel {
       aladin.frameVOTool.apply.setEnabled(hasBeenChanged());
    }
 
+   protected boolean hasBeenChanged() {
+      if( hasBeenChanged1() ) {
+         System.out.println("J'y suis");
+         return hasBeenChanged1();
+      }
+      return false;
+   }
 
    
    /** Retourne true si le formulaire a changé par rapport à son contenu initial */
-   protected boolean hasBeenChanged() {
+   protected boolean hasBeenChanged1() {
       if( vo==null ) return false;
       if( editable && name.getText().trim().length()>0 ) return true;
       if( vo.isActivated()!=state.isSelected() ) return true;
@@ -349,11 +374,16 @@ public class VOToolDescription extends JPanel {
          system.setMemo(" -- ");
          system.setEditable(false); 
          browse.setEnabled(false);
+         
+      } else if( mode==GluApp.PLUGIN ) {
+         dir.setMemo(vo.pluginUrl!=null ? aladin.getPluginDir() : "", vo==null ? null : vo.dir);
+         system.setMemo(" -- ");
+         system.setEditable(false); 
+         browse.setEnabled(true);
+         
       } else {
-         dir.setMemo(vo.jarUrl!=null ? aladin.getVOPath() : "",
-               vo==null ? null : vo.dir);
-         system.setMemo(vo.javaParam!=null ? vo.getJavaCommand() : "",
-               vo == null ? "" : vo.getCommand());
+         dir.setMemo(vo.jarUrl!=null ? aladin.getVOPath() : "", vo==null ? null : vo.dir);
+         system.setMemo(vo.javaParam!=null ? vo.getJavaCommand() : "", vo == null ? "" : vo.getCommand());
          browse.setEnabled(true);
       }
 

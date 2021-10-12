@@ -2474,8 +2474,13 @@ public class Save extends JFrame implements ActionListener {
             String valOrig = HeaderFits.getValue(s);
             String valC = headerFits.getHeaderFits().getHashHeader().get(k);
             if( valC==null ) continue;      // La clé a été supprimé
-            if( Tok.unQuote(valC).trim().equals(valOrig) ) v.addElement( getFullFitsLine(s));  // La clé n'a pas été touchée
-            else v.addElement( getFitsLine(k,valC,"Aladin modif") );   // La clé a été modifiée
+            if( Tok.unQuote(valC).trim().equals(valOrig.trim()) ) v.addElement( getFullFitsLine(s));  // La clé n'a pas été touchée
+            else {
+               v.addElement( getFitsLine(k,valC,"Aladin modif") );   // La clé a été modifiée
+//               try {
+//                  throw new Exception("Test Aladin modif");
+//               } catch( Exception e ) { e.printStackTrace(); }
+            }
          }
 
          // On vérifie qu'on a rien oublié

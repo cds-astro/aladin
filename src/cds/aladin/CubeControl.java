@@ -124,6 +124,7 @@ public class CubeControl {
       this.v=v;
       this.aladin=v.aladin;
       this.p=p;
+      nbFrame = p.getDepth();
       delay = d;
       startTime=System.currentTimeMillis();
       if( delay==0 || pause ) setMode(PAUSE);
@@ -430,19 +431,23 @@ public class CubeControl {
 
    /** Double le délai entre 2 frame sans dépasser la limite max */
    protected void increaseDelay() {
+      int z = lastFrame;
       int max = FrameBlink.getMaxDelay();
       if( delay>=max ) return;
       delay*=2;
       if( delay>max ) delay=max;
+      setFrameLevel(z,false);
       aladin.status.setText("New blink delay: "+delay+"ms");
    }
 
    /** Divise par 2 le délai entre 2 frame sans dépasser la limite min */
    protected void decreaseDelay() {
+      int z = lastFrame;
       int min = FrameBlink.getMinDelay();
       if( delay<=min ) return;
       delay/=2;
       if( delay<min ) delay=min;
+      setFrameLevel(z,false);
       aladin.status.setText("New blink delay: "+delay+"ms");
    }
 

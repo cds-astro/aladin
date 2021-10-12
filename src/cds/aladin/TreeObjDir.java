@@ -634,7 +634,7 @@ public class TreeObjDir extends TreeObj implements Propable {
 //      return u;
 //   }
    
-   protected String getCoverage() {
+   protected String getSpaceCoverage() {
       if( prop==null ) return null;
       return Plan.getCoverageSpace( prop.getFirst("moc_sky_fraction") );
    }
@@ -837,14 +837,14 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /** Retourne true si la collection dispose d'une URL donnant accès à un preview */
    protected boolean hasPreview() {
-      return (isCDSCatalog() || isHiPS());
+      return (isCDSCatalog() && !isVizierTimeOnly() || isHiPS());
    }
    
    /** Retourne l'URL du preview
     * ex: http://alasky.u-strasbg.fr/footprints/tables/vizier/B_denis_denis/densityMap?format=png&size=small
     */
    protected String getPreviewUrl() {
-      if( isCDSCatalog() ) {
+      if( isCDSCatalog() && !isVizierTimeOnly() ) {
          String s;
          if( internalId.startsWith("CDS/Simbad") ) s="simbad";
          else {
@@ -872,6 +872,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    
    /** Retourne le type de données auquel on va accéder */
    protected String getDataType() {
+      if( isVizierTimeOnly() ) return "Time serie";
       if( hasCS() || hasTAP() || isHipsCat() ) return "Catalog";
       if( hasHips() || hasSIA() ) return "Image";
       if( hasSSA() ) return "Spectrum";
@@ -943,6 +944,9 @@ public class TreeObjDir extends TreeObj implements Propable {
    /** Retourne l'URL d'un Cone search ou null si aucun */
    protected String getCSUrl() {
       if( prop==null ) return null;
+      
+      // En attendant que Thomas B. enlève le cds_service_url de ces tables
+      if( isVizierTimeOnly() ) return null;
       
       // J'ai un mode custom qui remplace le simple CS
       if( prop.get("cs_glutag")!=null ) return null;

@@ -1027,7 +1027,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( cut[0]!=-1 ) {
          g.setColor( Aladin.COLOR_CONTROL_FOREGROUND_UNAVAILABLE );
          for( int i=1; i<cut.length-1; i++ ) g.drawLine(i,h-cut[i],i,h);
-         g.setColor( Aladin.COLOR_CONTROL_FOREGROUND );
+         g.setColor( Aladin.COLOR_MEASUREMENT_FOREGROUND_SELECTED_LINE );
          for( int i=1; i<cut.length-1; i++ ) g.drawLine(i,h-cut[i-1],i,h-cut[i]);
 
       } else {
@@ -1142,7 +1142,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       else pic = null;
 
       // Affichage de l'info
-      g.setFont(Aladin.SPLAIN);
+      g.setFont(Aladin.SBOLD);
       String s = (pic!=null && pic.fromCanal ? pic.getCanalValue(frame) : ""+ (frame+1));
       int l = g.getFontMetrics().stringWidth(s);
       g.drawString(s, x+l+w>width ? x-l-2 : x+w+2,height-2);
@@ -1153,7 +1153,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       int y = height-cutY;
       String pixel = ((PlanImage)vc.pref).getPixelInfoFromGrey(y*256/height);
       if( pixel.length()==0 ) return;
-      g.setColor(Color.black);
+//      g.setColor(Color.black);
+      g.setColor(Aladin.COLOR_CONTROL_FOREGROUND);
       g.drawLine(1,cutY,width,cutY);
       g.drawString(pixel,10,cutY<20?cutY+10:cutY-2);
    }

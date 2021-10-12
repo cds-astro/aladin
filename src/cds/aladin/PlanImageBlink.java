@@ -626,6 +626,7 @@ public class PlanImageBlink extends PlanImage {
       if( oLastFrame!=-1 ) {
          PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
          if( pbi.pixelsOrigin!=null ) { pixelsOrigin = pbi.pixelsOrigin; return true; }
+         
       }
       return super.getFromCache();
    }
@@ -650,7 +651,10 @@ public class PlanImageBlink extends PlanImage {
          pbi.pixelsOrigin=null;
          if( askMem!=-1 && mem>askMem ) break;
       }
-      if( mem>0 ) aladin.trace(4,"PlanImageBlink.freeRam("+askMem+") ["+label+"] (free "+mem/(1024.*1024)+"MB) ...");
+      if( mem>0 ) {
+         aladin.trace(4,"PlanImageBlink.freeRam("+askMem+") ["+label+"] (free "+mem/(1024.*1024)+"MB) ...");
+         aladin.gc();
+      }
       return mem;
    }
 
@@ -721,7 +725,6 @@ public class PlanImageBlink extends PlanImage {
 
    /** Retourne 1 pixel depuis le disque (sert pour les plugins) */
    protected double getPixel(int x, int y, int z) throws Exception {
-      //      loadInRam();
       PlanImageBlinkItem pbi = vFrames.elementAt(z);
       byte [] pixelsOrigin;
       if( (pixelsOrigin=pbi.pixelsOrigin)!=null ) return getPixVal(pixelsOrigin,bitpix,y*width+x)*bScale+bZero;
@@ -732,10 +735,11 @@ public class PlanImageBlink extends PlanImage {
       }
       if( bufCache==null ) bufCache=new byte[npix];
       seekAndRead(fCacheBis,pbi.cacheOffset + npix*(y*width+x),bufCache,0,bufCache.length);
-      return getPixVal(bufCache,bitpix,x)*bScale+bZero;
+//      return getPixVal(bufCache,bitpix,x)*bScale+bZero;
+      return getPixVal(bufCache,bitpix,0)*bScale+bZero;
    }
 
-   long t,t1;
+//   long t,t1;
 
 
    /** Déplacement et lecture atomique pour éviter les problèmes en cas de threading */
