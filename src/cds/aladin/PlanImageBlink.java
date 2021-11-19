@@ -492,6 +492,7 @@ public class PlanImageBlink extends PlanImage {
       if( min==-1 && max==-1 ) { min=dataMinFits; max=dataMaxFits; }
       _min=min; _max=max; _autocut=autocut; flagRecut=true; _restart=false;
 
+      
       ViewSimple vc = aladin.view.getCurrentView();
       int frame = vc.cubeControl.lastFrame;
       activePixelsOrigin(frame);

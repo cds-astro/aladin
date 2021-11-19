@@ -253,6 +253,10 @@ public class Cote extends Ligne {
                   distDE=dde;
                   dist = Coord.getDist(c1,c2);
                   if( dist==0 ) id="Null distance";
+                  
+                  // On sort de la projection ?
+                  else if( dist>180 ) { id=""; return; }
+                  
                   else id= "Dist = "+ Coord.getUnit(dist) +
                      " (RA="+Coord.getUnit(drac)+
                      "/"+Coord.getUnitTime(dra/15)+
@@ -271,10 +275,12 @@ public class Cote extends Ligne {
 
       // Si on ne peut pas calculer les coordonnees, on donne juste
       // le dx et le dy
-      distRA=dx = v.HItoI(p1.xv[v.n]) - v.HItoI(p2.xv[v.n]);
-      distDE=dy = v.HItoI(p1.yv[v.n]) - v.HItoI(p2.yv[v.n]);
-      dist=distXY = Math.sqrt(dx*dx+dy*dy);
-      id= Util.myRound(distXY+"",1)+ " (delta x="+Util.myRound(dx+"",2)+", delta y="+Util.myRound(dy+"",2)+")";
+      if( !id.equals("-") ) {
+         distRA=dx = v.HItoI(p1.xv[v.n]) - v.HItoI(p2.xv[v.n]);
+         distDE=dy = v.HItoI(p1.yv[v.n]) - v.HItoI(p2.yv[v.n]);
+         dist=distXY = Math.sqrt(dx*dx+dy*dy);
+         id= Util.myRound(distXY+"",1)+ " (delta x="+Util.myRound(dx+"",2)+", delta y="+Util.myRound(dy+"",2)+")";
+      }
    }
 
   /** Test d'appartenance.
@@ -332,7 +338,7 @@ public class Cote extends Ligne {
    protected void drawID1(Graphics g, ViewSimple v,Point p1,Point p2) {
       int frame = plan.aladin.localisation.getFrame();
       String s = raj==Double.NaN || (frame==Localisation.XY 
-            || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )?  Util.myRound(dist+"", 2) : Coord.getUnit(dist);
+            || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )?  Util.myRound(dist+"", 2) : dist>180 ? "" : Coord.getUnit(dist);
       drawLabel(g,v,p1,p2,s,Aladin.BOLD);            
    }
 

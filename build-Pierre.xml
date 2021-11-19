@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!-- 
+ Very simple ANT build.xml file for compiling and generating Aladin.jar file
+ * Author : P.Fernique [CDS]
+ * Date   : May 2015
+-->
+
+<project name="Aladin" default="main" basedir="."> 
+
+   <description>Aladin Sky Atlas</description> 
+	   <property name="bin" value="${basedir}/bin"/>
+	   <property name="src" value="${basedir}/src"/>
+	   <property name="lib" value="${basedir}/lib"/>
+	   <property name="cert" value="/Users/Pierre/Documents/Aladin/Certificats"/>
+   
+   <target name="compil" description="source compilation" >
+     <mkdir dir="${bin}"/>
+     <javac destdir="${bin}"
+	    encoding="UTF-8" source="1.7" target="1.7" deprecation="off" >
+         <src path="/Users/Pierre/Documents/Développements/CDSastro/src"/>
+     </javac>
+     <javac destdir="${bin}"
+	    encoding="Cp1252" source="1.7" target="1.7" deprecation="off" >
+	    <src path="${src}"/>
+      <src path="/Users/Pierre/Documents/Développements/CDSHealpixJava/src/main/java"/>
+      <src path="/Users/Pierre/Documents/Développements/Moc/src"/>
+      <classpath>
+          <pathelement path="${java.class.path}/"/>
+        <pathelement path="${lib}/adql1.3.jar"/>
+        <pathelement path="${lib}/jsamp.jar"/>
+        <pathelement path="${lib}/kxml2-2.3.0.jar"/>
+      </classpath>
+     </javac>
+   </target>
+   
+   <target name="main" depends="compil" description="jar generation" >
+      <jar destfile="Aladin.jar" duplicate="preserve">
+        <fileset dir="${bin}"/>
+	    <zipfileset src="${lib}/adql1.3.jar"/>
+	    <zipfileset src="${lib}/jsamp.jar"/>
+	    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
+        <manifest>
+           <attribute name="Main-Class" value="cds.aladin.Aladin" />
+           <attribute name="Permissions" value="all-permissions" />
+        </manifest>
+      </jar>
+      <signjar
+         jar="Aladin.jar"
+         signedjar="Aladin.jar"
+         lazy="true"
+         alias="server"
+         keystore="${cert}/Aladin.jks"
+         tsaurl="http://timestamp.digicert.com"
+         storepass="bal$bol"
+         preservelastmodified="true">
+      </signjar>
+   </target>
+   
+   <target name="hipsgen" depends="compil" description="jar generation" >
+      <jar destfile="Hipsgen.jar" duplicate="preserve">
+        <fileset dir="${bin}"/>
+	    <zipfileset src="${lib}/adql1.3.jar"/>
+	    <zipfileset src="${lib}/jsamp.jar"/>
+	    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
+        <manifest>
+           <attribute name="Main-Class" value="cds.allsky.HipsGen" />
+           <attribute name="Permissions" value="all-permissions" />
+        </manifest>
+      </jar>
+      <signjar
+         jar="Hipsgen.jar"
+         signedjar="Hipsgen.jar"
+         lazy="true"
+         alias="server"
+         keystore="${cert}/Aladin.jks"
+         tsaurl="http://timestamp.digicert.com"
+         storepass="bal$bol"
+         preservelastmodified="true">
+      </signjar>
+   </target>
+    
+	   <target name="hipslint" depends="compil" description="jar generation" >
+	      <jar destfile="Hipslint.jar" duplicate="preserve">
+	        <fileset dir="${bin}"/>
+		    <zipfileset src="${lib}/adql1.3.jar"/>
+		    <zipfileset src="${lib}/jsamp.jar"/>
+		    <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
+	        <manifest>
+	           <attribute name="Main-Class" value="cds.allsky.HipsLint" />
+	           <attribute name="Permissions" value="all-permissions" />
+	        </manifest>
+	      </jar>
+	      <signjar
+	         jar="Hipslint.jar"
+	         signedjar="Hipslint.jar"
+	         lazy="true"
+	         alias="server"
+	         keystore="${cert}/Aladin.jks"
+	         tsaurl="http://timestamp.digicert.com"
+	         storepass="bal$bol"
+	         preservelastmodified="true">
+	      </signjar>
+	   </target>
+	    
+   <target name="clean" description="Remove building directory" >
+      <delete includeEmptyDirs="true" quiet="true">
+	     <fileset dir="${bin}" />
+      </delete>
+   </target>
+   
+   <target name="Src">
+      <jar destfile="${basedir}/AladinSrc.jar" >
+         <fileset dir="${basedir}" includes="src/**,lib/**"/>
+      </jar>
+   </target>
+   
+</project>
+

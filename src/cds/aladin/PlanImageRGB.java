@@ -1086,7 +1086,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
    /** Retournement de l'image
     * @param methode 0-N/S, 1-D/G, 2-N/S+D/G
     */
-   protected void flip(int methode) {
+   protected void flip(int methode)  throws Exception {
       createRGB();
       if( methode==0 || methode==2 ) invImageLine(width,height,pixelsRGB);
       if( methode==1 || methode==2 ) invImageRow(width,height,pixelsRGB);

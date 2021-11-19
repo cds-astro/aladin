@@ -1808,6 +1808,12 @@ final public class TableParser implements XMLConsumer {
 
       double signRa=1, signDec=1;
       
+      // Pas de coordonnées ?
+      if( ra==null || dec==null ) {
+         c.set(Double.NaN,Double.NaN);
+         return format;
+      }
+      
       // Détermination du format si non spécifié
       if( format==FMT_UNKNOWN ) {
          String ra1=ra;
@@ -1824,6 +1830,7 @@ final public class TableParser implements XMLConsumer {
             char ss = dec.charAt(0);
             format |= isSexa(ra1+( ss!='-' && ss!='+' ? " +":" " )+dec1) ? FMT_SEXAGESIMAL : FMT_DECIMAL;
          }catch( Exception e ) {
+            c.set(Double.NaN,Double.NaN);
             if( Aladin.levelTrace>3 ) e.printStackTrace();
          }
       }
@@ -1856,6 +1863,7 @@ final public class TableParser implements XMLConsumer {
             else s=ra+" +"+dec;
             c.set(s); }
          catch( Exception e ) {
+            c.set(Double.NaN,Double.NaN);
             if( Aladin.levelTrace>3 ) e.printStackTrace();
          }
 
@@ -1878,6 +1886,7 @@ final public class TableParser implements XMLConsumer {
 
             c.set( rax, dex);
          } catch( Exception e ) {
+            c.set(Double.NaN,Double.NaN);
             //            if( Aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }

@@ -225,6 +225,10 @@ public final class ServerFoV extends Server implements TableModel {
       if( fpBean!=null ) return aladin.calque.newPlanField(fpBean, target, label,roll);
       else return aladin.calque.newPlanField(target,roll,instrument,label);
    }
+   
+   
+   // Résolution si nécessaire
+   protected String resolveTargetName(String s) { return resolveTargetNameNow(s); }
 
   /** Interrogation  */
    public void submit() {
@@ -241,13 +245,16 @@ public final class ServerFoV extends Server implements TableModel {
          s = fov.id;
       } else s=null;
       
-      String code = "get FoV("+Tok.quote(s)+")";
-      aladin.console.printCommand(code+" "+t);
+      String code=null;
+      if( s!=null ) {
+         code = "get FoV("+Tok.quote(s)+")";
+         aladin.console.printCommand(code+" "+t);
+      }
 
       int n= creatFieldPlane(t,r,s,null);
       if( n!=-1 ) {
          ball.setMode(Ball.OK);
-         aladin.calque.getPlan(n).setBookmarkCode(code+" $TARGET");
+         if( code!=null ) aladin.calque.getPlan(n).setBookmarkCode(code+" $TARGET");
       } else ball.setMode(Ball.NOK);
    }
 
@@ -404,7 +411,7 @@ public final class ServerFoV extends Server implements TableModel {
    };
 
    private void initStaticFoV() {
-      fovList = new Vector<FoVItem>();
+      fovList = new Vector<>();
       for( int i=0; i<FOV.length; i++ ) {
          FoVItem fov = new FoVItem(FOV[i][0],FOV[i][1],FOV[i][2],FOV[i][3]);
          fovList.add(fov);

@@ -90,7 +90,13 @@ public class StatPixels {
          for( n=0; n<STATLABEL.length; n++ ) {
             if( STATLABEL[n].toLowerCase().indexOf( s1 )>=0 ) break;
          }
-         if( n==STATLABEL.length ) throw new Exception("Unknown stat label ["+k+"]");
+         if( n==STATLABEL.length ) {
+            if( s1.equals("pixels") ) { 
+               System.err.println("Obsoleted stat mask ["+s1+"] => ignored");
+               continue;
+            }
+            throw new Exception("Unknown stat label ["+k+"]");
+         }
          if( c=='+' ) currentStatMask |= STATMASK[n];
          else if( c=='-' ) currentStatMask = currentStatMask & ~STATMASK[n];
          else currentStatMask = STATMASK[n];

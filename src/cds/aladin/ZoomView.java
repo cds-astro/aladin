@@ -1343,8 +1343,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    }
 
    protected void initPixelHist(Obj obj) {
-      int w = getWidth();
-      int h = getHeight();
+//      int w = getWidth();
+//      int h = getHeight();
       if( hist==null ) hist = new ZoomHist(aladin);
       hist.startHistPixel(obj);  // Reset/Création du tableau des pixels
    }

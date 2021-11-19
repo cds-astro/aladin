@@ -332,7 +332,17 @@ public class ServerFile extends Server implements XMLConsumer {
             if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
                u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
                
-               try { in = Util.openStream(u); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+               try { in = Util.openStream(u); } catch( Exception e ) {
+                  String s = e.getMessage();
+                  if( s.startsWith(Util.HTTPERROR) ) {
+                     int code=0;
+                     try { 
+                        code=Integer.parseInt(s.substring(Util.HTTPERROR.length()));
+                     } catch(Exception e1) {}
+                     if( code>=401 && code<=403 ) throw new Exception("Data access forbidden ("+code+" HTTP error)"); 
+                  }
+                  if( aladin.levelTrace>=3 ) e.printStackTrace();
+               }
                mode="http";
             }
 

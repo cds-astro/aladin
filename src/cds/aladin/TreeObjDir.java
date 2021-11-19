@@ -748,7 +748,7 @@ public class TreeObjDir extends TreeObj implements Propable {
    protected boolean hasVizieRAssocData() {
       if( !isCDSCatalog() || prop==null ) return false;
       String s = prop.get("associated_dataproduct_type");
-      return s!=null && s.indexOf("image")>=0;
+      return s!=null; // && s.indexOf("image")>=0;
    }
    
    /** true s'il s'agit d'une table VizieR sans position => on se base sur la présence d'une TMOC */

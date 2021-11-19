@@ -124,7 +124,7 @@ public class PlanFolder extends Plan {
    /** Dans le cas d'un folder, le pourcent sert à indiquer le nombre de plans en cours
     * de chargement dans le folder (Fits extension)
     */
-   protected String getLabel() {
+   public String getLabel() {
       int p = (int)getPourcent();
       if( p>0 ) return Util.align(label,7,"..")+p;
       return super.getLabel();

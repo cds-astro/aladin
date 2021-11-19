@@ -51,7 +51,7 @@ public class PlanImageCube extends PlanImageBlink {
    /** Retourne la valeur physique correspondant au numéro du canal 
     * suffixée par l'unité si elle est connue */
    protected String getCanalValue(int n) {
-      return getCanalValue(depth-n,crpix3,cdelt3,crval3,cunit3);
+      return getCanalValue(n,crpix3,cdelt3,crval3,cunit3);
    }
 
    /** Retourne la valeur physique correspondant au numéro du canal 

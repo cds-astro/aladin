@@ -199,7 +199,7 @@
 %D    VizieR Associated Data
 %O    aladin
 %Z    ALADIN
-%U    http://cdsarc.unistra.fr/saadavizier.tap/tap/sync?REQUEST=doQuery&LANG=ADQL&MAXREC=2000000&QUERY=SELECT+TOP+999+*+FROM+Obscore+WHERE+dataproduct_type+=+'image'+and+obs_collection+=+'$4'+and+1=CONTAINS(POINT('ICRS',s_ra,s_dec),CIRCLE('ICRS',$1,$2,$3))
+%U    https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync?REQUEST=doQuery&LANG=ADQL&MAXREC=2000000&QUERY=SELECT+TOP+999+*+FROM+%22B%2Fassocdata%2Fobscore%22+WHERE+obs_collection='$4'+and+1=CONTAINS(POINT('ICRS',RAJ2000,DEJ2000),CIRCLE('ICRS',$1,$2,$3))
 %P.D  1:Right Ascension
 %P.D  2:Declination
 %P.D  3:Radius in deg

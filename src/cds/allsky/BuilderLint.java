@@ -21,21 +21,26 @@
 
 package cds.allsky;
 
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
+import cds.aladin.Coord;
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.fits.Fits;
 import cds.moc.SMoc;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Vérification de la conformité IVOA 1.0 HiPS
  * @author Pierre Fernique [CDS]
+ * @version 1.2 - 15 novembre 2021 - getProperties()
  * @version 1.1 - 23 avril 2019 - ajustement pour les Norder0 à 2
  * @version 1.0 - 23 avril 2017
  */
@@ -46,6 +51,10 @@ public class BuilderLint extends Builder {
    private String path;         // path (ou préfixe URL) du HiPS à valider
    private boolean flagRemote;  // true s'il s'agit d'un HiPS distant
    private String FS;           // "\" ou "/" suivant le cas
+   
+   
+   // Les propriétés (chargée par lintProperties)
+   private MyProperties prop=null;
    
    // Informations à récupérer depuis le fichier properties
    private String id;           // Identificateur du HiPS
@@ -135,6 +144,15 @@ public class BuilderLint extends Builder {
    
    public void run() throws Exception {
       lint();
+   }
+   
+   /**
+    * Provide the MyProperties objects used for lint check
+    * @throws Exception
+    */
+   protected MyProperties getProperties() throws Exception {
+      if( prop==null ) throw new Exception("Properties not loaded yet. Use lin() before !");
+      return prop;
    }
    
    /**
@@ -294,66 +312,59 @@ public class BuilderLint extends Builder {
 
    /** Retourne au hasard un indice HEALPix se situant dans le HiPS à la profondeur max */
    private long getOneNpix() throws Exception {
-      
+
       // Méthode 1: On prend au hasard une cellule du MOC de couverture
-      // On va partir des tuiles les plus grandes du Moc pour être sûr qu'on ne va pas
-      // tester sur un bord.
       if( moc!=null && !moc.isEmpty() ) {
-         
-         int orderMoc = moc.getMinOrder();
-         int orderMax = moc.getDeepestOrder();
-         if( true ) throw new Exception("MUST BE MODIFIED (AFTER MOC2.0)");
-//         while( orderMoc<orderMax && moc.getArray( orderMoc ).getSize()<3 ) orderMoc++;
-//         Array a = moc.getArray( orderMoc );
-//         if( a==null || a.getSize()==0) return -1;
-//         int nb = a.getSize();
-//         int i = (int)( Math.random()*nb);
-//         if( i>=nb ) i=nb-1;
-//         long npix = a.get( i );
-//         
-//         // On prend le npix central ramené à la résolution du HiPS
-//         if( orderMoc<order ) {
-//            int shift = (order - orderMoc)*2;
-//            long npix1 = npix<<shift ;
-//            long npix2 = (npix+1)<<shift;
-//            npix = (npix1+npix2)/2;
-//            
-//         // On prend la tuile qui le contient
-//         } else if( orderMoc>order ) {
-//            int shift = (orderMoc - order)*2;
-//            npix = npix>>shift;
-//         }
-//         
-//         // Attention, le Hips et le MOC n'ont pas le même système de coord
-//         int frameMoc = context.getFrameVal( moc.getSys() );
-//         if( frame!=frameMoc ) {
-//            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
-//            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
-//            Coord co = new Coord(radec[0],radec[1]);
-//            co = Localisation.frameToFrame(co, frame, frameMoc);
-//            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
-//            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
-//         }
-//         
-//         return npix;
-//      }
-//
-//      //  Méthode 2: On cherche une tuile dans le premier répertoire de l'ordre le plus profond
-//      if( !flagRemote ) {
-//         File f = new File(path+FS+"Norder"+order);
-//         File [] dirs = f.listFiles();
-//         int i = (int)( Math.random()*dirs.length);
-//         if( i>=dirs.length ) i=dirs.length-1;
-//         File dir = dirs[i];
-//         dirs = dir.listFiles();
-//         i = (int)( Math.random()*dirs.length);
-//         if( i>=dirs.length ) i=dirs.length-1;
-//         File npix = dirs[i];
-//         String name = npix.getName();
-//         i = name.lastIndexOf('.');
-//         if( i==-1 ) i=name.length();
-//         String s = name.substring(4, i);
-//         return Long.parseLong(s);
+
+         // On prend l'élément central d'un intervalle au hasard
+         int nb = moc.getNbRanges();
+         int i = (int)( Math.random()*nb);
+         long npix = (moc.seeRangeList().begins(i)+ (moc.seeRangeList().ends(i)-1))/2L;
+
+         // On prend le npix central ramené à la résolution du HiPS
+         int orderMoc = moc.getMocOrder();
+         if( orderMoc<order ) {
+            int shift = (order - orderMoc)*2;
+            long npix1 = npix<<shift ;
+            long npix2 = (npix+1)<<shift;
+            npix = (npix1+npix2)/2;
+
+            // On prend la tuile qui le contient
+         } else if( orderMoc>order ) {
+            int shift = (orderMoc - order)*2;
+            npix = npix>>shift;
+         }
+
+         // Attention, le Hips et le MOC n'ont pas le même système de coord
+         int frameMoc = context.getFrameVal( moc.getSys() );
+         if( frame!=frameMoc ) {
+            double radec[] = CDSHealpix.pix2ang_nest( order, npix);
+            radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
+            Coord co = new Coord(radec[0],radec[1]);
+            co = Localisation.frameToFrame(co, frame, frameMoc);
+            radec = CDSHealpix.radecToPolar(new double[] {co.al, co.del});
+            npix = CDSHealpix.ang2pix_nest(order, radec[0], radec[1]);
+         }
+
+         return npix;
+      }
+
+      //  Méthode 2: On cherche une tuile dans le premier répertoire de l'ordre le plus profond
+      if( !flagRemote ) {
+         File f = new File(path+FS+"Norder"+order);
+         File [] dirs = f.listFiles();
+         int i = (int)( Math.random()*dirs.length);
+         if( i>=dirs.length ) i=dirs.length-1;
+         File dir = dirs[i];
+         dirs = dir.listFiles();
+         i = (int)( Math.random()*dirs.length);
+         if( i>=dirs.length ) i=dirs.length-1;
+         File npix = dirs[i];
+         String name = npix.getName();
+         i = name.lastIndexOf('.');
+         if( i==-1 ) i=name.length();
+         String s = name.substring(4, i);
+         return Long.parseLong(s);
       }
 
       // Bon ben c'est loupé
@@ -499,10 +510,10 @@ public class BuilderLint extends Builder {
    /** Vérification du MOC associé au HiPS */
    private void lintMoc( ) throws Exception {
       boolean flagError=false,flagWarning=false;
-     
+
       // Pas de MOC requis dans certains cas
       if( !flagICRS && skyFraction<1 && skyFraction>=0 ) return; 
-      
+
       MyInputStream in = null;
       try {
          String f = path+FS+"Moc.fits";
@@ -520,7 +531,7 @@ public class BuilderLint extends Builder {
          moc = new SMoc();
          moc.read(in);
          in.close();
-         
+
          String frame = moc.getSys();
          if( !frame.equals("C") ) {
             context.warning("Lint[4.4.2] \"Moc.fits\" coordinate system error, ICRS expecting, found ["+frame+"]");
@@ -530,18 +541,17 @@ public class BuilderLint extends Builder {
          context.error("Lint[4.4.2] \"Moc.fits\" error");
          flagError=true;
       }
-      
+
       if( !flagError ) context.info("Lint: \"Moc.fits\" ok");
       this.flagError|=flagError;
       this.flagWarning|=flagWarning;
-}
-   
+   }
+
    /** Vérification du fichier properties */
    private void lintProperties( ) throws Exception {
       boolean flagError=false,flagWarning=false;
       int i;
       String s;
-      MyProperties prop=null;
       try {
          String f = path+FS+"properties";
          MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
@@ -840,6 +850,17 @@ public class BuilderLint extends Builder {
             flagError=true;
          }
       }  
+      
+      // Vérification du hips_service_url et de sa cohérence avec celui 
+      if( path.startsWith("http") ) {
+         s = prop.get("hips_service_url");
+         if( s!=null ) {
+            if( !s.equals(path) ) {
+               context.error("Lint[4.2.1] hips_service_url error ["+s+"] => not coherent with HiPSlist definition");
+               flagError=true;
+            }
+         }  
+      }
       
       // Vérification du hips_frame
       s = prop.get("hips_frame");

@@ -386,7 +386,7 @@ public abstract class Obj implements Propable {
    protected void setSpecificAJInfo(String s) { id = s==null || s.length()==0 ? null : s; }
    protected abstract void setVisibleGenerique(boolean flag);
    protected abstract void switchSelect();
-   protected abstract Plan getPlan();
+   public Plan getPlan() { return plan; }
    protected abstract boolean cutOn();
 
    // Carré de la distance entre souris et objet

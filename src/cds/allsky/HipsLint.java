@@ -137,6 +137,9 @@ public class HipsLint {
                int rep = builderLint.lint();
                if( rep==0 ) flagError=true;
                else if( rep==-1 ) flagWarning=true;
+               
+               if( !checkHipslistProp( context, prop, builderLint.getProperties() ) ) flagError=true;
+               
             } catch( Exception e) { flagException = true; e.printStackTrace(); }
             
          } catch( Exception e ) {
@@ -149,6 +152,26 @@ public class HipsLint {
       if( flagError ) context.info("*** ["+hipsListUrl+"] is not IVOA HiPS 1.0 compatible");
       else if( flagWarning ) context.info("!!! ["+hipsListUrl+"] is IVOA HiPS 1.0 compatible but with warnings !");
       else context.info("*** ["+hipsListUrl+"] is fully IVOA HiPS 1.0 compatible");
+   }
+   
+   /**
+    * Check the properties described in the HiPSlist and the internal properties of the HiPS
+    * @param context
+    * @param propHipslist
+    * @param p 
+    * @return true if all is ok.
+    */
+   private boolean checkHipslistProp( Context context, MyProperties propHipslist, MyProperties p) {
+      boolean flagError=false;
+      for( String key : propHipslist.getKeys() ) {
+         String val = propHipslist.get(key);
+         String v = p.get(key);
+         if( v!=null && !v.equals(val) ) {
+            context.error("Lint[5.2] HiPSList incoherency: said \""+key+"="+val+"\", found \""+v+"\"");
+            flagError=true;
+         }
+      }
+      return flagError;
    }
    
    private static boolean TERM = false;  // true si on passe en mode terminal couleur

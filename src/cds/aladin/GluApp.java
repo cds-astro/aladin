@@ -336,7 +336,14 @@ public class GluApp implements Comparator {
     *d'Aladin. Le répertoire adéquat est créé si besoin
     * @return true si ça a marché.
     */
-   protected boolean installPlugin() { return installJar1(pluginUrl,aladin.plugins.getPlugPath()); }
+   protected boolean installPlugin() {
+      try {
+         aladin.plugins.close();
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+      return installJar1(pluginUrl,aladin.plugins.getPlugPath());
+   }
    
    /** Retourne vrai si l'outil VO est installé (pour ceux qui s'installe) */
    protected boolean isInstalled() {
@@ -383,7 +390,8 @@ public class GluApp implements Comparator {
                   g.delete();
                   setDownloading(-1);
                } else {
-                  File f = new File(file); f.delete();
+                  File f = new File(file); 
+                  myDelete(file);
                   g.renameTo(f);
                   dir=targetPath;
                   if( nextNumber!=null ) releaseNumber=nextNumber;
@@ -398,6 +406,27 @@ public class GluApp implements Comparator {
          }
       }).start();
       return true;
+   }
+   
+   // On va renommer le fichier que l'on aurait voulu écraser et qui possède
+   // un lock système. Ca permettra de mettre le nouveau à la place en contournant le problème
+   private void myDelete(String file) throws Exception {
+      File f= new File(file);
+      for( int i=0; i<10; i++ ) {
+         File t = i==0 ? new File(file) : new File(file+"-toberemoved."+i);
+         t.delete();  
+         Util.pause(500);
+         if( t.exists() ) continue;   // problème pour effacer
+         if( i>0 ) {
+            if( !f.renameTo(t) ) {
+               throw new Exception();
+            }
+         }
+         return;
+      }
+      
+      // Bon, après 10 tentatives c'est qu'il y a un sérieux problème
+      throw new Exception("myDelete error");
    }
    
    public GluApp() {}

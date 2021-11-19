@@ -720,6 +720,16 @@ public class AladinData {
    }
    
    /**
+    * Aladin plane data for the specified plane
+    * @param aladin Aladin object reference
+    * @param planeHashCode plane hashCode (see getPlaneHashCode())
+    * @throws AladinException
+    */
+   public AladinData(Aladin aladin,Plan plan) throws AladinException {
+      this.plan = plan;
+   }
+   
+   /**
     * Aladin plane data creation and/or simple access.
     * @param aladin aladin object reference
     * @param mode Plan mode:  0-get a plane, 1-create a new image, 2-create a new catalog, 3-create a new plantool

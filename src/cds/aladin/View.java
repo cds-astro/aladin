@@ -2214,8 +2214,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void flip(PlanImage p,int methode) throws Exception {
       Coord centre[] =null;
 
-      if( p.type==Plan.IMAGECUBE || p.type==Plan.ALLSKYIMG ) throw new Exception("Flip not available for this kind of plane");
+      if( p.type==Plan.IMAGECUBE ) throw new Exception("Flip not available for this kind of plane");
 
+//      if( p.type==Plan.ALLSKYIMG ) {
+//         throw new Exception("Flip not available for this kind of plane");
+//      }
+      
       //      if( !Projection.isOk(p.projd) ) {
       //         aladin.warning("Cannot flip uncalibrated image !");
       //         return;

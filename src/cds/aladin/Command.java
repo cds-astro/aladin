@@ -862,11 +862,13 @@ public final class Command implements Runnable {
          } else if( plan.isCatalog() ) {
             res.append("NbObj   " + plan.getCounts() + "\n");
             res.append("Shape   " + Source.getShape(plan.sourceType) + "\n");
-            res.append("Filter  " + ((PlanCatalog) plan).getFilterDescription() + "\n");
+            if( plan instanceof PlanCatalog ) res.append("Filter  " + ((PlanCatalog) plan).getFilterDescription() + "\n");
             res.append("Color   " + Action.findColorName(plan.c) + "\n");
+            
          } else if( plan.type == Plan.TOOL ) {
             res.append("Color   " + Action.findColorName(plan.c) + "\n");
             res.append("Movable " + (plan.isMovable() ? "on" : "off") + "\n");
+            res.append("NbObj   " + plan.getCounts() + "\n");
 
          } else if( plan.type == Plan.IMAGE || plan.type == Plan.IMAGEHUGE ) {
             res.append("Width   " + ((PlanImage) plan).naxis1 + "\n" + "Height  " + ((PlanImage) plan).naxis2 + "\n");

@@ -2797,9 +2797,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          view.newobj=null;
       }
       
-      if( view.newobj instanceof RepereSpectrum && pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
+      if( view.newobj instanceof RepereSpectrum && pref instanceof PlanImageBlink /* && !view.hasSelectedObj() */ ) {
          aladin.toolBox.setMode(ToolBox.SPECT,Tool.UP);
          aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
+         view.deSelect();
          view.newobj.setSelected(true);
          view.extendClip(view.newobj);
          calque.setObjet(view.newobj);
@@ -6511,7 +6512,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    }
 
-   protected boolean flagPhotometry=false;
+   protected boolean flagPhotometry=false; // détermine si les valeurs photométriques peuvent être affichées dans la vue
 
    /** Tracage des overlays graphiques
     * @param g le contexte graphique concerne
@@ -6545,7 +6546,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isProjSync ) {
          vs = getProjSyncView();
          proj = vs.getProj();
-         vs.flagPhotometry=false;
+//         vs.flagPhotometry=false;
+         // Si les deux vues sont des HiPS, on peut tout de même afficher les valeurs photométriques (même projection)
+         vs.flagPhotometry = vs.pref instanceof PlanBG && pref instanceof PlanBG;
       } else {
          proj =getProj();
          vs=this;

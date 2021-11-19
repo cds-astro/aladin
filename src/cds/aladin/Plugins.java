@@ -103,7 +103,7 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
     private JButton removePlug;                   // Le bouton pour supprimer des plugins
     private JList listPlugs;                       // Liste des plugins
     
-    private final MyClassloader classLoader;  // Mon propre classLoader qui peut ajouter des URL/Path
+    private MyClassloader classLoader;  // Mon propre classLoader qui peut ajouter des URL/Path
     
     public Plugins(Aladin aladin) {
        this.aladin = aladin;
@@ -133,6 +133,17 @@ public class Plugins extends ClassLoader implements Runnable,ListModel,Comparato
 //             t.printStackTrace();
 //          }
 //       }     
+    }
+    
+    public void close() { 
+       if( classLoader==null ) return;
+       try {
+          classLoader.close();
+          classLoader=null;
+          aladin.gc();
+       } catch( Exception e ) {
+          e.printStackTrace();
+       }
     }
     
     public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }

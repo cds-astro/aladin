@@ -57,7 +57,9 @@ public class RepereSpectrum extends Repere {
       return super.draw(g,v,dx,dy);
    }
 
-   protected void remove() { cutOff(); }
+   protected void remove() {
+      cutOff();
+   }
 
    /** Suppression de la coupe memorise dans le zoomView
     * => arret de son affichage

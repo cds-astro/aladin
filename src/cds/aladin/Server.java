@@ -827,9 +827,43 @@ public void layout() {
          Aladin.error(this,WNEEDOBJ);
          return null;
       }
+
+      // Resolution d'un éventuel Target Name ? (dépendant du type de serveur)
+      String s1 = resolveTargetName(s);
+      if( s1!=null ) return s1;
+      
       return aladin.localisation.getICRSCoord(s);
    }
+   
+   // Par défaut, par de résolution de nom
+   // => C'est généralement le service distant qui assure la résolution
+   protected String resolveTargetName(String s) { return null; }
+   
+   // Cf les classes dérivées (=> resolveTargetName() qui appelle resolveTargetNameNow()
+   protected String resolveTargetNameNow(String s) { 
+      // ce n'est pas un nom d'objet, on laisse tomber
+      if( !Localisation.notCoord(s) ) return  null;
 
+      int csr = Aladin.WAITCURSOR;
+      Aladin.makeCursor(this, csr);
+      Coord coo = null;
+      try {
+         coo = aladin.view.sesame(s);
+         csr = Aladin.DEFAULTCURSOR;
+         Aladin.makeCursor(this, csr);
+         if( coo == null ) Aladin.error("\"" + s + "\": " + aladin.chaine.getString("OBJUNKNOWN"), 1);
+         s = coo.toString();
+         
+         // On fait un changement de repère pour changer la position de la vue courante sur l'objet
+         aladin.view.setRepere(coo);
+         return s;
+
+      } catch( Exception e ) {
+         Aladin.error(e.getMessage(), 1);
+      }
+      return null;
+   }
+   
    /** Retourne le radius courant
     * @param confirm true - teste que le champ est bien renseigné et non <0
     */

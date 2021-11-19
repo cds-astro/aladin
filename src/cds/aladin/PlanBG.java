@@ -1338,6 +1338,22 @@ public class PlanBG extends PlanImage {
       }
    }
    
+   /** Retournement de l'image
+    * @param methode 0-N/S, 1-D/G, 2-N/S+D/G
+    */
+   protected void flip(int methode) throws Exception {
+      setSpecificProj(true);
+      
+      boolean sym  = methode==1 || methode==2 ? !projd.sym : projd.sym;
+      double angle = methode==0 || methode==2 ? projd.rot+180 : projd.rot;
+      
+      Projection p = projd;
+      modifyProj(null,Projection.SIMPLE,p.alphai,p.deltai,p.rm1,p.cx,p.cy,p.r1,
+            angle,sym,p.t,p.system);
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+   }
+   
    // Mémorise un plan qui doit être averti (recut()) en cas de modif de la table des couleurs
    // et ou du cut
    private PlanBGRgb planBgRgb = null;

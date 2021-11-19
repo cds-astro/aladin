@@ -139,6 +139,7 @@ public final class Util {
    }
    
    static final int DEFAULTTIMEOUT = 10000;
+   static public final String HTTPERROR = "HTTP error: ";
 
    /** Ouverture d'un MyInputStream que ce soit un fichier ou une url */
    static public MyInputStream openAnyStream(String urlOrFile) throws Exception {
@@ -172,15 +173,15 @@ public final class Util {
          HttpURLConnection http = (HttpURLConnection)conn;
          http.setRequestProperty("User-Agent", "Aladin/"+Aladin.VERSION);
          if( askGzip ) http.setRequestProperty("Accept-Encoding", "gzip");
+         
+         // Je reprend l'idée de Chaitra pour remonter le code d'erreur
+         int code=http.getResponseCode();
+         if( code>=400 ) {
+            throw new Exception(HTTPERROR+code);
+        }
       }
 
       MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
-//             MyInputStream mis = new MyInputStream(conn.getInputStream());
-//      if( (mis.getType()&MyInputStream.GZ)!=0 ) {
-//         System.out.println("IN GZIP "+u);
-//      } else {
-//         System.out.println("NORMAL "+u);
-//      }
       return mis.startRead();
    }
    
@@ -192,6 +193,7 @@ public final class Util {
 	   }
 	      if( !useCache ) conn.setUseCaches(false);
 	      if( timeOut>0 ) conn.setConnectTimeout(timeOut);
+	      
 	      // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
 	      if( conn instanceof HttpURLConnection ) {
 	         HttpURLConnection http = (HttpURLConnection)conn;
@@ -199,13 +201,9 @@ public final class Util {
 	        	 http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
 		         http.setRequestProperty("Accept-Encoding", "gzip");
 	         }
-	         if (http.getResponseCode() >= 400) {
-	        	throw new Exception(handleErrorResponseForTapAndDL(u, http));
-			}
 	      }
 
 	      MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn,timeOut));
-	      //       MyInputStream mis = new MyInputStream(conn.getInputStream());
 	      return mis.startRead();
 	   
    }
@@ -283,6 +281,9 @@ public final class Util {
          if (conn instanceof HttpURLConnection) {
             HttpURLConnection http = (HttpURLConnection) conn;
             int stat = http.getResponseCode();
+            
+            if( stat>=401 && stat<=403 ) throw new IOException(HTTPERROR+stat);
+            
             if (stat >= 300 && stat <= 307 && stat != 306 && stat != HttpURLConnection.HTTP_NOT_MODIFIED) {
                URL base = http.getURL();
                String loc = http.getHeaderField("Location");

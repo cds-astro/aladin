@@ -1994,7 +1994,7 @@ public class Plan implements Runnable {
     * @param flagShort true si on veut qu'un éventuel préfixe soit enlevé (CDS/P/MAMA/J => MAMA/J)
     * @return Le label genere
     */
-   protected String getLabel() { return getLabel(false); }
+   public String getLabel() { return getLabel(false); }
    protected String getLabel(boolean flagShort) {
       String s= flagShort ? getShortLabel() : label;
       

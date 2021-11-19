@@ -2489,7 +2489,7 @@ public class PlanImage extends Plan {
    
    
    /** Décompression Lupton -> cf https://arxiv.org/pdf/1612.05245.pdf (page 18) */
-   static final double ALPHA = 0.4* Math.log(10);
+   static final double ALPHA = 2.5 / Math.log(10);
    static public double uncompressLupton(double pixComp, double bsoften, double boffset) {
       double ca = pixComp / ALPHA;
       return boffset + bsoften * (Math.exp(ca) - Math.exp(-ca));
@@ -2812,7 +2812,7 @@ public class PlanImage extends Plan {
    /** Retournement de l'image
     * @param methode 0-N/S, 1-D/G, 2-N/S+D/G
     */
-   protected void flip(int methode) {
+   protected void flip(int methode) throws Exception {
       setLockCacheFree(true);
       try {
          pixelsOriginFromCache();

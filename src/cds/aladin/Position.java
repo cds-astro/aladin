@@ -296,9 +296,6 @@ public class Position extends Obj {
       }
    }
    
-   /** Retourne le plan d'appartenance de l'objet */
-   protected Plan getPlan() { return plan; }
-
   /** Modification de la position (absolue)
    * @param x,y nouvelle position
    */
@@ -596,6 +593,8 @@ public class Position extends Obj {
 
    /** Affichage des statistiques d'un polygone */
    protected void statDraw(Graphics g,ViewSimple v, int xvOrig, int yvOrig, int xvLabel, int yvLabel) {
+      
+      System.out.println("statDraw "+this+" on "+v);
       
       if( !v.flagPhotometry || !v.pref.hasAvailablePixels() || v.pref instanceof PlanImageRGB ) return;
 

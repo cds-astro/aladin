@@ -180,10 +180,14 @@ import cds.xml.XMLParser;
  * @beta    <LI> Plugin extension for pixel stats (getStatistics..)
  * @beta    <LI> New projections: Mercator, HEALPix
  * @beta    <LI> VOApp interface extension: MOUSEEVENT support
+ * @beta    <LI> FoV selector improvements
+ * @beta    <LI> HiPS display symmetry (N<->S, E<->W)
  * @beta </UL>
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Correction of out-of-projection measurements (dist tool) 
+ * @beta    <LI> Fix bug on objects without coordinates
  * @beta    <LI> Fix bug on UTF8 properties
  * @beta    <LI> Fix bug on tiny FITS extension images
  * @beta    <LI> Stat measurements shift error
@@ -214,7 +218,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.077";
+   static public final    String VERSION = "v11.090";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -247,8 +251,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ICON              = "icon.gif";
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+" - "+getReleaseNumber();
-   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2020 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
-                               "(c) 2020 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
+   static String COPYRIGHT         = PREMIERE | BETA || PROTO ? "(c) 2021 Université de Strasbourg/CNRS - developed by CDS, ALL RIGHT RESERVED" :
+                               "(c) 2021 Université de Strasbourg/CNRS - developed by CDS, distributed under GPLv3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -1835,13 +1839,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } catch( Exception e ) { if( levelTrace>=3 ) e.printStackTrace(); }
 
 
-      // Chargement des plugins éventuels
-      if( !NOPLUGIN && !isApplet() && !ISJNLP ) {
-         (new Thread("plugin search"){
-            @Override
-            public void run() { pluginReload();}
-         }).start();
-      }
+//      // Chargement des plugins éventuels
+//      if( !NOPLUGIN && !isApplet() && !ISJNLP ) {
+//         (new Thread("plugin search"){
+//            @Override
+//            public void run() { pluginReload();}
+//         }).start();
+//      }
 
 //      // Pour les Cieux
 //      hipsReload();
@@ -2208,6 +2212,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    protected void pluginReload() {
       if( miPlugs==null ) return;
       //       if( plugins!=null ) plugins.controleur.dispose();
+      if( plugins!=null ) plugins.close();
       plugins = new Plugins(this);         // On le regénère systématiquement
       JMenuItem ji = ((JMenu)miPlugs).getItem(0);
       miPlugs.removeAll();
@@ -2243,6 +2248,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
          ((JMenu)miVOtool).addSeparator();
       }
       miVOtool.add(ji);
+      
+      // Certains outils VO sont sous forme de plugins
+      pluginReload();
    }
 
    /** Retourne le numéro de session d'Aladin. N'a d'intéret que dans le
@@ -6172,7 +6180,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj && base!=null && (base.isSimpleImage() || base.type==Plan.IMAGERGB) );
          if( miCreateHpxRgb!=null ) miCreateHpxRgb.setEnabled( nbPlanHiPS4RGB>1 );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
-         if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube && !isBG);
+         if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube); // && !isBG);
          
          int syncMode=match.getMode();
          if( miSync!=null ) {
@@ -6210,7 +6218,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
       }
    }
-
+   
+   
    String ostatus=null;
 
    static public void setIcon(Frame f) {
@@ -6831,6 +6840,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Envoi d'une commande aux observers des évènements sur la pile pour indiquer un changement  */
    protected void sendStackObserver() {
       if( VOObsStack==null || VOObsStack.size()==0 ) return;
+      
+      trace(4,"sendStackObserver event");
 
       String s = "info stackEvent";
       Enumeration e = VOObsStack.elements();
@@ -7821,7 +7832,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( label==null ) label = key;
          return calque.newPlanField(pf, label);
 
-      }
+         // Affichage de Sélecteur de Serveur pour les FoV
+      } else dialog.show(dialog.fovServer);
 
       return -1;
 
