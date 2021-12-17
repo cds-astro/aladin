@@ -232,6 +232,40 @@ public class PlanCatalog extends Plan {
       return true;
    }
    
+   /** Remet à jour le contenue du plan (catalogue classique) en fonction 
+    * du champ de la vue courante 
+    */
+   protected boolean redoConeSearch() {
+      aladin.trace(3,"redoConeSearch() for "+label+" => not yet fully implemented");
+      return false;
+
+      // Pas encore terminé - PF Dec 2021
+//      String code =  getBookmarkCode();
+//      if( code==null ) return false;
+//      
+//      // On vérifie que le bookmark peut utiliser un nouveau TARGET (que ce n'est pas
+//      // un whole catalog par exemple), et on prépare la chaine pour recevoir les nouveaux
+//      // paramètres d'interrogation.
+//      int offset = code.indexOf("$TARGET");
+//      if( offset<0 ) return false;
+//      code = code.substring(0,offset);
+//      
+//      // Ajout en suffixe du centre et de la taille du champ courant
+//      Coord target = aladin.view.getCurrentView().getCooCentre();
+//      double radius = aladin.view.getCurrentView().getTaille();
+//      String cmd = code+" "+target.getRA()+" "+target.getDE()+" "+radius+"deg";
+//      
+//      // Excécution de la commande en remplacement du plan courant
+//      aladin.execCommand(label+"="+cmd);
+//      
+//      // Affectation de la même couleur
+//      Plan p = aladin.calque.getPlan(label);
+//      p.c = c;
+//      
+//      return true;
+      
+   }
+   
    protected boolean isCatalog() { return true; }
    
    protected boolean isTime() { return isCatalogTime(); }

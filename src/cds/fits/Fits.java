@@ -2427,7 +2427,6 @@ final public class Fits {
             double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
             double v;
             if( average ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
-//            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : ((v1/2) + (v2/2) > max/2) ? max :  (v1 + v2);
             else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2);
             setPixValDouble(pixels, bitpix, i, v);
          }

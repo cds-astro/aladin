@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -3572,6 +3573,7 @@ public final class Command implements Runnable {
       // else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       if( cmd.equalsIgnoreCase("macro") ) execMacro(param);
       // else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
+      else if( cmd.equalsIgnoreCase("anaglyph") ) anaglyph(param);
       else if( cmd.equalsIgnoreCase("pf") ) pf(param);
       else if( cmd.equalsIgnoreCase("tap") ) tap(param);
       else if( cmd.equalsIgnoreCase("cleancache") ) PlanBG.cleanCache();
@@ -3580,7 +3582,7 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("testcat") ) testCalib(label, param, 1);
       else if( cmd.equalsIgnoreCase("testscript") ) testscript(param);
       else if( cmd.equalsIgnoreCase("testperf") ) testperf(param);
-      else if( cmd.equalsIgnoreCase("testnet") ) testnet();
+      else if( cmd.equalsIgnoreCase("testnet") ) testnet(param);
       else if( cmd.equalsIgnoreCase("call") ) execFunction(param);
       else if( cmd.equalsIgnoreCase("=") ) execEval(param);
       else if( cmd.equalsIgnoreCase("convert") ) execConvert(param);
@@ -5085,18 +5087,67 @@ public final class Command implements Runnable {
    /**
     * Test la qualité du serveur et du réseau pour le HiPS courant Les résultats s'affiche dans la console/pad
     */
-   protected void testnet() {
+   protected void testnet(String param) {
+      boolean flagUniq=true;
       Plan p = a.calque.getPlanBase();
       if( !(p instanceof PlanBG) ) {
          a.console.printError("testnet only on HiPS");
          return;
       }
-      try {
-         ((PlanBG) p).testnet();
-      } catch( Exception e ) {
-         a.console.printError("testnet error: " + e.getMessage());
-         if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+      PlanBG plan = (PlanBG) p;
+      String s1;
+      
+      // Ajustement du gzip ?
+      int previousGzip = Aladin.GZIP;
+      if( param.indexOf("nogzip")>=0 ) Aladin.GZIP=0;
+      else if( param.indexOf("gzip")>=0 ) Aladin.GZIP=1;
+      
+      StringBuilder res = new StringBuilder("testnet on "+plan.label+" ("
+            +(plan.truePixels?"fits":"jpeg or png")+" "
+            +(Aladin.GZIP==1?"gzip":Aladin.GZIP==0?"nogzip":"")+"):\n");
+      
+      // Tous les sites possibles pour ce HiPS
+      if( param.indexOf("all")>=0 ) {
+         String currentUrl = plan.url;
+         ArrayList<String> listUrl = plan.getMirrorsUrl();
+         Collections.sort(listUrl);
+         
+         if( listUrl!=null ) {
+            flagUniq=false;
+            for( String s : listUrl ) {
+               if( a.glu.setIndirectionByUrl(plan.gluTag, s) ) {
+                  plan.url = s;
+                  plan.resetStats();
+                  try {
+                     s1 = plan.testnet();
+                  } catch( Exception e ) {
+                     a.console.printError("testnet error: " + e.getMessage());
+                     if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+                     s1="error";
+                  }
+                  res.append(". "+s1+"   => "+plan.url+"\n");
+               }
+            }
+            plan.url = currentUrl;
+            plan.resetStats();
+         }
       }
+      
+      // Uniquement le site courant
+      if( flagUniq ) {
+         try {
+            s1=plan.testnet();
+         } catch( Exception e ) {
+            a.console.printError("testnet error: " + e.getMessage());
+            if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+            s1="error";
+         }
+         res.append(". "+s1+"   => "+plan.url+"\n");
+      }
+      Aladin.GZIP=previousGzip;
+      
+      a.console.printInPad(res.toString());
+      System.out.println(res);
    }
    
    /** Test de lecture et d'écriture du disque */
@@ -5493,6 +5544,10 @@ public final class Command implements Runnable {
       }
    }
    
+   private void anaglyph(String param) {
+      a.isAnaglyph = !param.equals("off"); 
+   }
+
    
    private void pf(String param) {
       try {

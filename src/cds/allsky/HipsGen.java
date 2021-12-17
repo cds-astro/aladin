@@ -185,7 +185,7 @@ public class HipsGen {
         } else if (opt.equalsIgnoreCase("pilot"))        { context.setPilot(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
         } else if (opt.equalsIgnoreCase("hips_order"))   { context.setOrder(Integer.parseInt(val));
-        } else if (opt.equalsIgnoreCase("mocOrder"))     { context.setMocOrder(Integer.parseInt(val));
+        } else if (opt.equalsIgnoreCase("mocOrder"))     { context.setMocOrder(val);
         } else if (opt.equalsIgnoreCase("nside"))        { context.setMapNside(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("tileOrder"))    { context.setTileOrder(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("hips_tile_width"))  { context.setTileOrder((int)CDSHealpix.log2( Integer.parseInt(val)));
@@ -647,13 +647,20 @@ public class HipsGen {
             context.setJpegMethod( JpegMethod.MEDIAN );
         }
 
-        if( context.getMode()==Mode.ADD  ) {
+        if( context.getMode()==Mode.ADD ) {
             context.setFading(false);
             context.setLive(false);
             context.setPartitioning("false");
             context.setMixing("true");
             context.info("Pixel mode=ADD => fading, partitioning, no-mixing and live parameter ignored");
-        }
+
+        } else if( context.getMode()==Mode.SUM  ) {
+           context.setFading(false);
+           context.setLive(false);
+           context.setPartitioning("false");
+           context.setMixing("true");
+           context.info("Pixel mode=SUM => fading, partitioning, no-mixing and live parameter ignored");
+       } 
 
         // Nettoyage avant ?
         if( force ) {

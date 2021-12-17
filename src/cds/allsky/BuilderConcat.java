@@ -89,7 +89,7 @@ public class BuilderConcat extends BuilderTiles {
       File f = new File(outputPath+Util.FS+Constante.FILE_MOC);
       if( f.exists() ) {
          outputMoc.read( f.getCanonicalPath() );
-         outputMoc = (SMoc)outputMoc.union(inputMoc);
+         outputMoc = outputMoc.union(inputMoc);
          outputMoc.write( context.getOutputPath()+Util.FS+Constante.FILE_MOC);
          context.info("MOC updated");
       } else {
@@ -183,7 +183,7 @@ public class BuilderConcat extends BuilderTiles {
          inputMoc.read( f.getCanonicalPath() );
       }
 
-      if( context.mocArea!=null ) inputMoc = (SMoc)inputMoc.intersection(context.mocArea);
+      if( context.mocArea!=null ) inputMoc = inputMoc.intersection(context.mocArea);
       context.moc = inputMoc;
 
       // Dans le cas de rénégération des allsky.png il faut connaître les cuts
@@ -369,6 +369,7 @@ public class BuilderConcat extends BuilderTiles {
             out=input;
             weightOut=weightIn;
             break;
+         case SUM:
          case ADD:
             if( out!=null ) {
                input.coadd(out,false);
@@ -417,6 +418,7 @@ public class BuilderConcat extends BuilderTiles {
             case KEEPTILE :
                if( outIndex==null ) outIndex=inputIndex;
                break;
+            case SUM:
             case ADD:
             case AVERAGE:
             case OVERWRITE:

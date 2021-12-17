@@ -162,6 +162,8 @@ public class Context {
    protected SMoc mocIndex = null;       // Zone du ciel correspondant à l'index Healpix
    protected SMoc moc = null;            // Intersection du mocArea et du mocIndex => regénérée par setParameters()
    protected int mocOrder=-1;                // order du MOC des tuiles
+   protected int mocTimeOrder=-1;            // time order du MOC
+   protected long mocMaxSize=20*1024*1024;   // Taille max du MOC
    protected int nside=1024;                 // NSIDE pour la génération d'une MAP healpix
    protected int tileOrder=-1;               // Valeur particulière d'un ordre pour les tuiles
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
@@ -295,6 +297,8 @@ public class Context {
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isIncluding(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
    public int getMocOrder() { return mocOrder; }
+   public int getTMocOrder() { return mocTimeOrder; }
+   public long getMocMaxSize() { return mocMaxSize; }
    public long getMapNside() { return nside; }
    public int getMinOrder() { return minOrder; }
    public int getTileOrder() { return tileOrder==-1 ? Constante.ORDER : tileOrder; }
@@ -332,6 +336,36 @@ public class Context {
    public void setOrder(int order) { this.order = order; }
    public void setMinOrder(int minOrder) { this.minOrder = minOrder; }
    public void setMocOrder(int mocOrder) { this.mocOrder = mocOrder; }
+   public void setMocOrder(String s) {
+      int offset = s.indexOf('/' );
+      
+      // Une expression sous la forme  timeOrder/spaceOrder
+      if( offset>0 ) {
+         mocTimeOrder = Integer.parseInt(s.substring(0,offset));
+         mocOrder = Integer.parseInt(s.substring(offset+1));
+         
+      // 
+      } else {
+         double fact=1.;
+         offset = s.indexOf("KB");
+         if( offset>0 ) fact=1024.;
+         else {
+            offset = s.indexOf("MB");
+            if( offset>0 ) fact=1024.*1024.;
+            else {
+               offset = s.indexOf("GB");
+               if( offset>0 ) fact=1024.*1024.*1024.;
+            }
+         }
+         
+         // Une expression sous la forme   20MB
+         if( offset>0 ) {
+            mocMaxSize = (long)(  Double.parseDouble( s.substring(0,offset).trim() ) * fact );
+            
+         // Le spaceOrder directement (syntaxe la plus simple)
+         } else mocOrder = Integer.parseInt(s);
+      }
+   }
    public void setMapNside(int nside) { this.nside = nside; }
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }

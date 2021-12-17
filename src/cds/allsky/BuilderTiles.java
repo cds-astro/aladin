@@ -132,8 +132,11 @@ public class BuilderTiles extends Builder {
          }
       }
       context.setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
-            context.isMap() ? "none" : context.mode==Mode.ADD ? "add" :
-               context.fading ? "border_fading" : context.mixing ? "mean" : "first");
+               context.isMap() ? "none" : 
+               context.mode==Mode.ADD ? "add" :
+               context.mode==Mode.SUM ? "cumul" :
+               context.fading ? "border_fading" : 
+               context.mixing ? "mean" : "first");
       context.setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, context.getJpegMethod().toString().toLowerCase());
       
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.done("ALLSKY file done"); }
@@ -514,7 +517,7 @@ public class BuilderTiles extends Builder {
 
       SMoc moc = new SMoc();
       SMoc m = context.getRegion();
-      if( m==null ) m = new SMoc("0/1-11");
+      if( m==null ) m = new SMoc("0/0-11");
       moc.add( m );
       int minorder=0; //3;
       context.setMinOrder( minorder );
@@ -1196,19 +1199,6 @@ public class BuilderTiles extends Builder {
                   }
                }
 
-               //               int pix=0;
-               //               if( in!=null ) {
-               //                  for( int i=0;i<4; i++ ) {
-               //                     int gx = i==1 || i==3 ? 1 : 0;
-               //                     int gy = i>1 ? 1 : 0;
-               //                     int p = in.getPixelRGBJPG(x+gx,y+gy);
-               //                     pix=p;
-               //                     break;
-               //                     //	                        pix+=p/4;
-               //                  }
-               //               }
-
-
                out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
 
                // Normal
@@ -1311,7 +1301,8 @@ public class BuilderTiles extends Builder {
                if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
 
                if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,true);
-               else if( coaddMode==Mode.ADD ) out.coadd(oldOut,false);
+               else if( coaddMode==Mode.ADD 
+                     || coaddMode==Mode.SUM ) out.coadd(oldOut,false);
                else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
                else if( coaddMode==Mode.KEEP ) {
                   oldOut.mergeOnNaN(out);

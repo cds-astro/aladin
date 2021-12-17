@@ -86,6 +86,7 @@ public abstract class Builder {
          case PROP:      return new BuilderProp(context);
          case MIRROR:    return new BuilderMirror(context);
          case MAP:       return new BuilderMap(context);
+         case SMOC:      return new BuilderSMoc(context);
          case TMOC:      return new BuilderTMoc(context);
          case STMOC:     return new BuilderSTMoc(context);
 //         case ZIP:       return new BuilderZip(context);

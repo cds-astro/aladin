@@ -22,8 +22,10 @@
 package cds.aladin;
 
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
@@ -711,6 +713,11 @@ public class Source extends Position implements Comparator {
    */
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       if( !inTime( v )  ) return false;
+      
+      if( plan.aladin.isAnaglyph ) {
+         if( drawAnaglyph(g, v) ) return true;
+      }
+
 
       //System.out.println("On repaint");
       int L =getL();
@@ -788,6 +795,82 @@ public class Source extends Position implements Comparator {
         }
     }
 
+
+    static final int MAXR=200;
+    
+    
+    private double getAnaglyphRadius() {
+       int i = plan.getIndexAnaglyphMag();
+       if( i==-1 ) return 0;
+       String s = getValue(i);
+       if( s.length()==0 ) return 0;
+       double val = Double.parseDouble(s);
+       return 25-val;                     // Entre 22 et 0
+    }
+    
+    private double getAnaglyphDistance() {
+       int i = plan.getIndexAnaglyphParallax();
+       if( i==-1 ) return 0;
+       String s = getValue(i);
+       if( s.length()==0 ) return 0;
+       double val = Double.parseDouble(s);
+       return val+2;                    // entre 300 et 0
+    }
+    
+    private void drawStar(Graphics g, int col, int lig, int ik ) {
+       int cx=0,cy=0;
+       Graphics2D g2d = (Graphics2D)g;
+       Composite saveComposite = g2d.getComposite();
+       try {
+          double k[][] = plan.aladin.kernelList.getKernel(ik);
+          int m = k[0].length;
+          for( int lk = 0; lk < m; lk++ ) {
+             for( int ck = 0; ck < m; ck++ ) {
+                float opacityLevel = (float) (k[lk][ck]) * plan.getOpacityLevel();
+                Composite myComposite = Util.getImageComposite(opacityLevel);
+                g2d.setComposite(myComposite);
+                int x = cx + (col - m / 2 + ck);
+                int y = cy + (lig - m / 2 + lk);
+                g2d.drawLine(x,y,x,y);
+             }
+          }
+       } finally {
+          g2d.setComposite(saveComposite);
+       }
+
+    }
+
+    private boolean drawAnaglyph(Graphics g, ViewSimple v) {
+       try {
+          double sizeView = v.getTaille();   // largeur du champ en degres
+          
+          Point p = getViewCoord(v,MAXR,MAXR);
+          if( p==null || p.x<0 ) return false;
+          
+          double radius = getAnaglyphRadius();
+          if( radius==0 ) throw new Exception("null radius");
+          double distance = getAnaglyphDistance();
+                
+          int r= (int) radius/4; if( r<2 ) r=2;
+          r= (int)radius*4;
+          int k = r<10?1:r<20?2:r<30?3:r<40?4:r<50?5:6;
+          int offset = (int) ( (distance/2)*plan.getScalingFactor() );
+          
+          g.setColor( Color.cyan );
+//          g.fillOval(p.x-r-offset, p.y-r, r*2, r*2);
+          drawStar(g,p.x-offset, p.y, k); 
+          
+          g.setColor( Color.red );
+//          g.fillOval(p.x-r+offset, p.y-r, r*2, r*2);
+          drawStar(g,p.x+offset, p.y, k); 
+         
+          return true;
+      } catch( Exception e ) {
+//         e.printStackTrace();
+      }
+       return true;
+    }
+
    /** Dessine la source en inversant sa couleur (ne concerne que les surcharges dues aux filtres)
     * @param g        le contexte graphique
     * @param v        référence à la vue sur laquelle on doit dessiner
@@ -839,10 +922,8 @@ public class Source extends Position implements Comparator {
    /** method that actually draws the source */
    protected void doDraw(Graphics g, Point p, Color c) {
 
-
     	if( c==null ) g.setColor(plan.c);
 		else g.setColor( c );
-//      	show=false;                // Le reaffichage supprime le caractere show
       	switch(sourceType) {
            case SOLIDOVAL:    drawOval(g,p,true);    break;
            case OVAL:         drawOval(g,p);         break;

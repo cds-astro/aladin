@@ -20,31 +20,21 @@
 //
 
 package cds.allsky;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Iterator;
-
-import cds.aladin.HealpixProgen;
 import cds.moc.SMoc;
 import cds.moc.TMoc;
 import cds.tools.Astrodate;
 import cds.tools.pixtools.Util;
 
 /** Construction d'un TMOC à partir des données HpxFinder
- * TEST TEST TEST TEST
- *
  * @author Pierre Fernique
  */
-public class BuilderTMoc extends Builder {
+public class BuilderTMoc extends BuilderSMoc {
 
-   static public final int MINORDER = 3;   // niveau minimal pris en compte
-
-   protected int maxOrder;
-   protected int statNbFile;
-   protected long startTime,totalTime;
+   private int mode=UNKNOWN;
+   private TMoc tmoc = null;       
 
    /**
-    * Création du générateur de l'arbre des index.
+    * Création du générateur du TMOC
     * @param context
     */
    public BuilderTMoc(Context context) {
@@ -52,173 +42,120 @@ public class BuilderTMoc extends Builder {
    }
 
    public Action getAction() { return Action.TMOC; }
-
-   public void run() throws Exception {
-      build();
-   }
-
-   // Valide la cohérence des paramètres pour la création des tuiles JPEG
-   public void validateContext() throws Exception {
-      validateOutput();
-      validateIndex();
-
-      // détermination de l'ordre minimum pour les tuiles concaténées
-      // soit indiqué via le parametre "order", soit déterminé à partir du order
-      // de l'index et de la taille typique d'une image.
-      int o = context.getOrder();
-      if( o==-1 ) {
-         maxOrder = Util.getMaxOrderByPath( context.getHpxFinderPath() );
-         if( maxOrder==-1 ) throw new Exception("HpxFinder seems to be not yet ready ! (order=-1)");
-         context.info("Order retrieved from HpxFinder => "+maxOrder);
-
-         context.setOrder(maxOrder); // juste pour que les statistiques de progression s'affichent correctement
-         
-      } else maxOrder = o;
-
-      context.mocIndex=null;
-      context.initRegion();
-   }
-
-   /** Demande d'affichage des stats via Task() */
-   public void showStatistics() {
-      context.showJpgStat(statNbFile, totalTime,0,0);
+   
+   // Conversion en double en prenant en compte le cas d'un point décimal final
+   private double parseDouble( String s ) throws Exception {
+      int n = s.length()-1;
+      if( s.charAt(n)=='.' ) s=s.substring(0,n);
+      return Double.parseDouble(s);
    }
    
-   
-   private int mode=UNKNOWN;
-   
-   private TMoc tmoc = null; 
+   /** Extraction du TMOC à partir des informations temporelles dans les propriétés JSON de la tuile */
+   protected TMoc getTMoc(int order, String json) { 
+      double tmin=0;
+      double tmax=0;
+      double exptime;
 
-   public void build() throws Exception {
-      initStat();
-
-      String output = context.getOutputPath();
-      String hpxFinder = context.getHpxFinderPath();
-      
-      SMoc moc = new SMoc();
-      moc.read(hpxFinder+Util.FS+"Moc.fits");
-      moc.setMocOrder(maxOrder);
-      
-      long progress=0L;
-      context.setProgressMax(moc.getNbValues());
-      
-      initIt();
-      
-      Iterator<Long> it = moc.valIterator();
-      while( it.hasNext() ) {
-         long npix = it.next();
-         String file = Util.getFilePath(hpxFinder, maxOrder, npix);
-         HealpixProgen out = createLeave(file);
-         if( out==null ) {
-            context.warning("Missing HpxFinder tile "+maxOrder+"/"+npix+" => ignored ("+file+")");
-            continue;
+      try {
+         if( mode==UNKNOWN ) {
+            mode = detectMode(json);
+            context.info("Time extraction from "+getTimeMode( mode )+" keywords");
          }
-         for( String key : out ) {
-            String json = out.get(key).getJson();
-            double tmin=0;
-            double tmax=0;
-            double exptime;
-            
-            try {
-               if( mode==UNKNOWN ) {
-                  mode = detectMode(json);
-                  context.info("Time extraction from "+getTimeMode( mode )+" keywords");
-               }
 
-               if( mode==TMIN ) {
-                  String s = cds.tools.Util.extractJSON("T_MIN", json);
-                  if( s==null ) continue;
-                  tmin = Double.parseDouble( s );
-                  s= cds.tools.Util.extractJSON("T_MAX", json);
-                  if( s==null ) tmax=tmin;
-                  else tmax = Double.parseDouble(s  );
+         if( mode==TMIN ) {
+            String s = cds.tools.Util.extractJSON("T_MIN", json);
+            if( s==null ) throw new Exception();
+            tmin = parseDouble( s );
+            s= cds.tools.Util.extractJSON("T_MAX", json);
+            if( s==null ) tmax=tmin;
+            else tmax = parseDouble(s  );
 
-               } else if( mode==DATEOBS12 ) {
-                  String s = cds.tools.Util.extractJSON("DATEOBS1", json);
-                  if( s==null ) continue;
-                  tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
-                  s = cds.tools.Util.extractJSON("DATEOBS2", json);
-                  if( s==null ) continue;
-                  tmax = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
-                  if( Double.isNaN(tmax) ) tmax=tmin;
-//                  System.out.println("tmin="+tmin+" tmax="+tmax+" date="+s);
-                  
-               } else if( mode==MJD ) {
-                  String s= cds.tools.Util.extractJSON("MJD-OBS", json);
-                  if( s==null ) continue;
-                  tmin = Double .parseDouble( s );
-                  s = cds.tools.Util.extractJSON("EXPTIME", json);
-                  if( s==null ) tmax=tmin;
-                  else {
-                     exptime = Double.parseDouble( s );
-                     tmax = tmin+exptime;
-                  }
+         } else if( mode==DATEOBS12 ) {
+            String s = cds.tools.Util.extractJSON("DATEOBS1", json);
+            if( s==null ) throw new Exception();
+            tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
+            s = cds.tools.Util.extractJSON("DATEOBS2", json);
+            if( s==null ) throw new Exception();
+            tmax = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
+            if( Double.isNaN(tmax) ) tmax=tmin;
+            //         System.out.println("tmin="+tmin+" tmax="+tmax+" date="+s);
 
-               } else if(mode==DATEOBS ) {
-                  String s= cds.tools.Util.extractJSON("DATE-OBS", json);
-                  if( s==null ) continue;
-                  tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
-                  s = cds.tools.Util.extractJSON("EXPTIME", json);
-                  if( s==null ) tmax=tmin;
-                  else {
-                     exptime = Double.parseDouble( s );
-                     tmax = tmin+exptime;
-                  }
-                  
-               } else if(mode==OBSDATE ) {
-                  String s= cds.tools.Util.extractJSON("OBS-DATE", json);
-                  if( s==null ) continue;
-                  String s1 = cds.tools.Util.extractJSON("TIME-OBS", json);
-                  s1= s1==null ? "" : "T"+s1;
-                  tmin = Astrodate.JDToMJD( Astrodate.parseTime(s+s1, Astrodate.ISOTIME));
-                  s = cds.tools.Util.extractJSON("EXPTIME", json);
-                  if( s==null ) tmax=tmin;
-                  else {
-                     exptime = Double.parseDouble( s );
-                     tmax = tmin+exptime;
-                  }
-               }
+         } else if( mode==MJD ) {
+            String s= cds.tools.Util.extractJSON("MJD-OBS", json);
+            if( s==null ) throw new Exception();
+            tmin = Double .parseDouble( s );
+            s = cds.tools.Util.extractJSON("EXPTIME", json);
+            if( s==null ) tmax=tmin;
+            else {
+               exptime = parseDouble( s );
+               tmax = tmin+exptime;
+            }
 
-               double jdtmin = tmin+2400000.5;
-               double jdtmax = tmax+2400000.5;
-               
-               addIt(maxOrder,npix,jdtmin,jdtmax,json);
-               
-            } catch( Exception e ) {
-               context.warning("parsing error => "+json);
-               if( mode==UNKNOWN ) throw e;
-               continue;
+         } else if(mode==DATEOBS ) {
+            String s= cds.tools.Util.extractJSON("DATE-OBS", json);
+            if( s==null ) throw new Exception();
+            tmin = Astrodate.JDToMJD( Astrodate.parseTime(s, Astrodate.ISOTIME));
+            s = cds.tools.Util.extractJSON("EXPTIME", json);
+            if( s==null ) tmax=tmin;
+            else {
+               exptime = parseDouble( s );
+               tmax = tmin+exptime;
+            }
+
+         } else if(mode==OBSDATE ) {
+            String s= cds.tools.Util.extractJSON("OBS-DATE", json);
+            if( s==null ) throw new Exception();
+            String s1 = cds.tools.Util.extractJSON("TIME-OBS", json);
+            s1= s1==null ? "" : "T"+s1;
+            tmin = Astrodate.JDToMJD( Astrodate.parseTime(s+s1, Astrodate.ISOTIME));
+            s = cds.tools.Util.extractJSON("EXPTIME", json);
+            if( s==null ) tmax=tmin;
+            else {
+               exptime = parseDouble( s );
+               tmax = tmin+exptime;
             }
          }
-         context.setProgress( progress++ );
-      }
-      writeIt();
 
-   }
-   
-   protected void initIt() {
-      tmoc = new TMoc();
-      tmoc.bufferOn();
-   }
-   
-   protected void addIt(int order, long npix, double jdtmin, double jdtmax,String json) {
-      try {
+         double jdtmin = tmin+2400000.5;
+         double jdtmax = tmax+2400000.5;
+
          if( jdtmax<jdtmin ) {
             context.warning("Bad time range ["+jdtmin+".."+jdtmax+"] => assuming jdtmax..jdtmin =>["+json+"]");
             double t=jdtmax;
             jdtmax=jdtmin;
             jdtmin=t;
          }
+
+         TMoc tmoc = new TMoc(order);
          tmoc.add(jdtmin,jdtmax);
+         return tmoc;
+
       } catch( Exception e ) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
+      return null;
+   }
+
+   
+   protected void initIt() throws Exception {
+      tmoc = new TMoc(timeOrder);
+      tmoc.bufferOn();
+   }
+   
+   protected void info() {
+      String s = maxSize>0 ? " maxSize="+cds.tools.Util.getUnitDisk(maxSize):"";
+      String s1 = tmoc.getMem()>0 ? " currentSize="+cds.tools.Util.getUnitDisk(tmoc.getMem()):"";
+      context.info("TMOC generation (timeOrder="+tmoc.getTimeOrder()+s+s1+")...");
+   }
+   
+   protected void addIt(TMoc tmoc1, SMoc smoc1) throws Exception {
+      tmoc.add(tmoc1);
+      adjustSize(tmoc,false);
    }
    
    protected void writeIt() throws Exception {
+      adjustSize(tmoc,true);
       String file = context.getOutputPath()+Util.FS+"TMoc.fits";
-//      tmoc.toMocSet();
       tmoc.write(file);
    }
 
@@ -255,24 +192,5 @@ public class BuilderTMoc extends Builder {
       
       throw new Exception("Not able to determine HpxFinder time keywords (ex: T_MIN [and T_MAX] or MJD-OBS [and EXPTIME],"
             + " or DATE-OBS [and EXPTIME],  or DATEOBS1 and DATEOBS2, or OBS-DATE+TIME-OBS");
-   }
-
-   private void initStat() { statNbFile=0; startTime = System.currentTimeMillis(); }
-
-   // Mise à jour des stats
-   private void updateStat() {
-      statNbFile++;
-      totalTime = System.currentTimeMillis()-startTime;
-   }
-
-   /** Construction d'une tuile terminale. Lit le fichier est map les entrées de l'index
-    * dans une TreeMap */
-   private HealpixProgen createLeave(String file) throws Exception {
-      File f = new File(file);
-      if( !f.exists() ) return null;
-      HealpixProgen out = new HealpixProgen();
-      out.loadStream( new FileInputStream(f));
-      updateStat();
-      return out;
    }
 }

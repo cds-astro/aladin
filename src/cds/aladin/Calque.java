@@ -1483,7 +1483,7 @@ public class Calque extends JPanel implements Runnable {
     * plans.
     * Si on reclique sur l'oeil, ce sera l'état préalablement mémorisé qui sera
     * restitué.
-    * Utilise la variable Claque.memoClinDoeil pour savoir si on a déjà
+    * Utilise la variable Calque.memoClinDoeil pour savoir si on a déjà
     * mémorisé un état antérieur. Et Plan.memoClinDoeil pour mémoriser individuellement
     * chaque état de plan.
     */
@@ -1506,6 +1506,7 @@ public class Calque extends JPanel implements Runnable {
          if( pc.ref ) continue;
          if( memoClinDoeil ) {
             pc.setActivated(pc.memoClinDoeil);
+            pc.redoConeSearch();
             
          } else {
             pc.memoClinDoeil=pc.active;

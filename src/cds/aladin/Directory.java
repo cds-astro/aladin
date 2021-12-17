@@ -1871,7 +1871,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( withSpace ) {
             double taille = v.getTaille();
             if( taille > 90 ) {
-               params += "&moc=0/1-11";
+               params += "&moc=0/0-11";
                
                // Interrogation par cercle
             } else if( taille > 45 ) {

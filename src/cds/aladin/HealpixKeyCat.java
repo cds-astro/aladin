@@ -70,6 +70,11 @@ public class HealpixKeyCat extends HealpixKey {
       stream=null;     // Inutile de conserver le stream puisqu'on le prend du cache
       return 0;
    }
+   
+   /** Indique si on veut charger les tuiles distantes en gzip live ou non */
+   // VERIFIER SI C'EST VRAIMENT INTERRANT
+   protected boolean askGzip() { return Aladin.GZIP==1 || Aladin.GZIP==2; }
+
 
    protected long loadNet(String filename) throws Exception {
       loadTSV(filename);

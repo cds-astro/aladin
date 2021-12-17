@@ -186,6 +186,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Fix bug on SMOC minOrder3 FITS export.
  * @beta    <LI> Correction of out-of-projection measurements (dist tool) 
  * @beta    <LI> Fix bug on objects without coordinates
  * @beta    <LI> Fix bug on UTF8 properties
@@ -218,7 +219,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.090";
+   static public final    String VERSION = "v11.097";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -232,6 +233,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected int  SIZE   = 13;
    
    // Gère le mode particuliers
+   public static int GZIP=2;             // Par défaut, 0-pas de gzip, 1-toujours gzip, 2-suivant circonstance
    public static boolean MOCPROTO=false;    // true si on tourne sur un MocServer V2 (support du temps)
    public static boolean MOCLOCAL=false; // true si on tourne sur un MocServer local
    public static boolean PREMIERE=false;  // true si on tourne en mode AVANT-PREMIERE
@@ -2301,6 +2303,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          } catch( Exception e ) { System.err.println(e.getMessage()); }
       }
 
+      if( GZIP!=2 ) trace(1,"HTTP GZIP mode "+(GZIP==1?"ON":"OFF")+" by default");
 
       // Initialisations des couleurs
       initColors();
@@ -4692,18 +4695,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
 //   }
 
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
-   protected SMoc createMocRegionCircle(double ra, double de, double radius, int order, boolean inclusive) throws Exception {
+   static public SMoc createMocRegionCircle(double ra, double de, double radius, int order, boolean inclusive) throws Exception {
       if( order==-1 ) order=getAppropriateOrder(radius);
       return CDSHealpix.getMocByCircle(order, ra, de,  Math.toRadians(radius), inclusive);
    }
 
    /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
-   protected SMoc createMocRegionEllipse(double ra, double de, double a, double b, double pa, int order) throws Exception {
+   static public SMoc createMocRegionEllipse(double ra, double de, double a, double b, double pa, int order) throws Exception {
       if( order==-1 ) order=getAppropriateOrder( Math.max(a,b) );
       return CDSHealpix.getMocByEllipse(order, ra, de,  a,b,pa);
    }
    
-    protected SMoc createMocRegion(List<STCObj> stcObjects, int order, boolean inclusive) throws Exception {
+    static public SMoc createMocRegion(List<STCObj> stcObjects, int order, boolean inclusive) throws Exception {
 //        return createMocRegion(stcObjects.get(0), order);
         SMoc moc = null;
         for( STCObj stc : stcObjects ) {
@@ -4713,7 +4716,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
         return new SMoc( moc );
     }
     
-    protected SMoc createMocRegion(STCObj stcobj, int order, boolean inclusive) throws Exception {
+    static public SMoc createMocRegion(STCObj stcobj, int order, boolean inclusive) throws Exception {
        SMoc moc = null;
        try {
          if (stcobj.getShapeType() == STCObj.ShapeType.POLYGON) {
@@ -4728,7 +4731,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
        return moc;
     }
     
-    protected SMoc createMocRegionCircle(STCCircle stcCircle, int order, boolean inclusive) throws Exception {
+    static public SMoc createMocRegionCircle(STCCircle stcCircle, int order, boolean inclusive) throws Exception {
         return createMocRegionCircle(stcCircle.getCenter().al, stcCircle.getCenter().del, stcCircle.getRadius(), order, inclusive);
     }
     
@@ -4824,7 +4827,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             maxSize = size;
         return maxSize;
     }
-    protected SMoc createMocRegionPol(STCPolygon stcPolygon, int order, boolean inclusive) throws Exception {
+    static public SMoc createMocRegionPol(STCPolygon stcPolygon, int order, boolean inclusive) throws Exception {
           double ra,de;
           Ligne oo=null;
 
@@ -6514,6 +6517,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
             System.exit(0);
          }
 
+         else if( args[i].equals("-gzip") )        { GZIP=1; lastArg=i+1; }
+         else if( args[i].equals("-nogzip") )      { GZIP=0; lastArg=i+1; }
          else if( args[i].equals("-version") )     { version(); System.exit(0); }
          else if( args[i].equals("-test") )        { boolean rep=test(); System.exit(rep ? 0 : 1); }
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }
@@ -8704,5 +8709,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    @Override
    public void pixel(double pixValue) { }
+   
+   
+   protected boolean isAnaglyph = false;
 
 }

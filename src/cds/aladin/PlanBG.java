@@ -62,6 +62,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import javax.swing.SwingUtilities;
+
 import cds.aladin.stc.STCCircle;
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCPolygon;
@@ -836,8 +838,9 @@ public class PlanBG extends PlanImage {
                moc = new SMoc(in);
                moc.setMinOrder(3);
                removeHealpixOutsideMoc();
-            } finally { if( in!=null ) in.close(); }
-            Aladin.trace(3,"Loading "+survey+" MOC from cache");
+               Aladin.trace(3,"Loading "+id+" MOC from cache");
+            } catch( Exception e ) { e.printStackTrace(); }
+            finally { if( in!=null ) in.close(); }
             return;
          }
       }
@@ -850,8 +853,9 @@ public class PlanBG extends PlanImage {
          moc = new SMoc(mis);
          moc.setMinOrder(3);
          removeHealpixOutsideMoc();
-      } finally { if( mis!=null) mis.close(); }
-      Aladin.trace(3,"Loading "+survey+" MOC from net");
+         Aladin.trace(3,"Loading "+id+" MOC from net");
+      } catch( Exception e ) { e.printStackTrace(); }
+      finally { if( mis!=null) mis.close(); }
 
       if( !local && useCache ) {
          moc.write(fcache);
@@ -1170,26 +1174,30 @@ public class PlanBG extends PlanImage {
 
       // Chargement du MOC associé, avec ou sans création d'un plan dédié
       planReadyMoc();
-//      if( !(this instanceof PlanMoc) ) {
-//         if( loadMocNow ) {
-//            (new Thread() { public void run() { loadMoc(); } }).start();
-//         } else if( hasMoc() ) {
-//            (new Thread() {
-//               public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
-//            }).start();
-//         }
-//      }
    }
    
    /** Chargement du plan MOC si nécessaire, avec ou sans création d'un plan dédié */
    protected void planReadyMoc() {
-      if( loadMocNow ) {
-         (new Thread() { public void run() { loadMoc(); } }).start();
-      } else if( hasMoc() ) {
-         (new Thread() {
-            public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
-         }).start();
-      }
+      
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            try {
+               if( loadMocNow ) loadMoc();
+               else if( hasMoc() ) loadInternalMoc();
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+         }
+      });
+
+
+//      if( loadMocNow ) {
+//         (new Thread() { public void run() { loadMoc(); } }).start();
+//      } else if( hasMoc() ) {
+//         (new Thread() {
+//            public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
+//         }).start();
+//      }
    }
 
    @Override
@@ -4217,22 +4225,24 @@ public class PlanBG extends PlanImage {
     * pour déterminer la qualité du serveur et du réseau pour le HiPS
     * @throws Exception
     */
-   public void testnet() throws Exception {
+   public String testnet() throws Exception {
 
       try {
          if( moc==null ) loadInternalMoc();
       } catch( Exception e1 ) { }
       long time=0L;
+      long tileTime=0L,allskyTime=0L;
       long size=0L;
       int minOrder=3;
 
       long timeMax = 10*1000;
-      long sizeMax = 30*1024*1024;
+//      long sizeMax = 30*1024*1024;
 
       long start = System.currentTimeMillis();
 
       System.out.println("Testnet HiPS "+label+" maxOrder="+maxOrder+" from "+url+" :");
       int n=0;
+      boolean allsky=false;
 
       int memo = aladin.levelTrace;
       aladin.levelTrace=0;
@@ -4241,51 +4251,40 @@ public class PlanBG extends PlanImage {
 
          try {
             // Fin du test
-            if( System.currentTimeMillis() - start > timeMax ) break;
-            if( size > sizeMax ) break;
+            if( System.currentTimeMillis() - start > timeMax ) {
+               if( allsky ) break;
+               allsky=true;
+            }
+//            if( size > sizeMax ) break;
             int order = minOrder + (int)(Math.random()*(maxOrder-minOrder));
             long npix;
-            long[] list=null;
-            
-            // A REPRENDRE APRES MIGRATION MOC2.0
-//            if( moc!=null ) {
-//
-//               // On prend une cellule du MOC au hasard
-//               int length=0;
-//               int i;
-//               for( i=0; i<maxOrder && length==0; i++ ) {
-//                  order++;
-//                  if( order>maxOrder ) order=minOrder;
-//                  list=moc.getPixLevel(order);
-//                  length=list.length;
-//               }
-//               if( i==maxOrder ) return;   // MOC erroné ??
-//               i = (int)(Math.random()*length);
-//               if( i>=length ) i=list.length-1;
-//               npix = list[i];
-//
-//               // On choisit un fils au hasard dans sa descendance
-//               int o = order+(int)(Math.random()*(maxOrder-order));
-//               for( i=order; i<o; i++) {
-//                  int j = (int)(Math.random()*4);
-//                  npix = npix*4 + j;
-//               }
-//               order=o;
-//
-//            } else {
-               long nbPix = 12*CDSHealpix.pow2(order)*CDSHealpix.pow2(order);
-               npix = (long)( Math.random()* nbPix );
-               if( npix>=nbPix ) npix=nbPix-1;
-//            }
+            ArrayList<String> a = new ArrayList<>();
 
-            System.out.print(".Loading "+order+"/"+npix+"... ");
-            HealpixKey hk = new HealpixKey(this, order, npix, HealpixKey.TESTNET);
+            // On prend l'élément central d'un intervalle au hasard
+            int nb = moc.getNbRanges();
+            int i = (int)( Math.random()*nb);
+            npix = (moc.seeRangeList().begins(i)+ (moc.seeRangeList().ends(i)-1))/2L;
+            int shift = (SMoc.MAXORD_S - order)*2;
+            npix = npix>>>shift;
+         
+            // Pour éviter de charger plusieurs fois la même tuiles
+            String key = order+"/"+npix;
+            if( a.contains(key) ) continue;
+            a.add(key);
+            
+            HealpixKey hk;
+            if( allsky ) {
+               key="3/-1";
+               hk = new HealpixAllsky(this, 3, 0, HealpixKey.TESTNET);
+            } else  hk = new HealpixKey(this, order, npix, HealpixKey.TESTNET);
 
             long t = hk.timeNet;
             long s = hk.sizeStream;
             if( s==0 ) System.out.println(" error => "+url+"/"+hk.getFileNet());
-            else System.out.println(Util.getUnitDisk(s)+" in "+Util.getTemps(t*1000L));
+            else  System.out.println(".Loading "+key+" "+Util.getUnitDisk(s)+(hk.askGzip()?"/gzip":"")+" in "+Util.getTemps(t*1000L));
             time += t;
+            if( allsky ) allskyTime=t;
+            else tileTime +=t;
             size += s;
             n++;
          } catch( Exception e ) {
@@ -4299,9 +4298,13 @@ public class PlanBG extends PlanImage {
             +" : "+Util.getUnitDisk(size)+" in "+Util.getTemps(time*1000L));
 
       long rate = (long)( size/(time/1000.) );
-      String res = "=> Stream rate "+Util.getUnitDisk(rate)+"/s";
+      String res = "=> Stream rate "+Util.getUnitDisk(rate)+"/s ("+n+" tiles)";
       System.out.println(res);
       aladin.console.printInfo(label+" net perf "+res);
+      
+      return Util.getUnitDisk(rate)+"/s"
+            +" ("+n+" tiles/avg="+Util.getTemps(tileTime/(n-1)*1000L)
+            +" allsky/"+Util.getTemps(allskyTime*1000L)+")";
    }
    
    /**

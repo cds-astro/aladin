@@ -2327,6 +2327,12 @@ public class Plan implements Runnable {
       long t = System.currentTimeMillis();
       return t-startCheckBoxBlink<4000;
    }
+   
+   /** Remet à jour le contenue du plan (catalogue classique) en fonction 
+    * du champ de la vue courante 
+    * @return true s'il y a eu effectivement changement de contenu
+    */
+   protected boolean redoConeSearch() { return false;}
 
    /** Demande d'activation/désactivation d'un plan
     * On mémorise le dernier état demandé au cas où ce n'est pas possible
@@ -2665,5 +2671,34 @@ public class Plan implements Runnable {
    }
 
 
+   /* TEST TEST TEST ANAGLYPH */
+   
+   private int indexAnaglyphMag=-2;   // -2 pas encore cherché, -1 pas trouvé
+   
+   /** Détermination de la colonne de magnitude */
+   protected int getIndexAnaglyphMag() {
+      if( indexAnaglyphMag==-2 ) {
+         Legende leg = getFirstLegende();
+         if( leg==null ) indexAnaglyphMag=-1;
+         else {
+            indexAnaglyphMag = leg.findUCD("phot.mag;em.opt");
+            setOpacityLevel(0.35f);
+         }
+      }
+      return indexAnaglyphMag;
+   }
+
+
+   private int indexAnaglyphParallax=-2;   // -2 pas encore cherché, -1 pas trouvé
+   
+   /** Détermination de la colonne de magnitude */
+   protected int getIndexAnaglyphParallax() {
+      if( indexAnaglyphParallax==-2 ) {
+         Legende leg = getFirstLegende();
+         if( leg==null ) indexAnaglyphParallax=-1;
+         else indexAnaglyphParallax = leg.findUCD("pos.parallax.trig");
+      }
+      return indexAnaglyphParallax;
+   }
 
 }

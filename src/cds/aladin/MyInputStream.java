@@ -1625,11 +1625,12 @@ public class MyInputStream extends FilterInputStream {
             return false;
          }
       }
-      //       System.out.println("CALIB=["+commentCalib+"]");
+//             System.out.println("CALIB=["+commentCalib+"]");
       if( commentCalib.indexOf("CTYPE1")<0 ) {
          commentCalib=null;
          return false;
       }
+      
       return true;
    }
 

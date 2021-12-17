@@ -157,12 +157,12 @@ public final class Util {
    }
 
    /** Ouverture d'un MyInputStream avec le User-Agent correspondant à Aladin */
-   static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,true,DEFAULTTIMEOUT); }
+   static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,false,DEFAULTTIMEOUT); }
    static public MyInputStream openStream(String u,boolean useCache,boolean askGzip, int timeOut) throws Exception {
       return openStream(new URL(u),useCache,askGzip,timeOut);
    }
 //   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,10000); }
-   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,true,-1); }
+   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,false,-1); }
    static public MyInputStream openStream(URL u, boolean useCache,boolean askGzip, int timeOut) throws Exception {
       URLConnection conn = u.openConnection();
       if( !useCache ) conn.setUseCaches(false);

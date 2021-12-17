@@ -594,8 +594,6 @@ public class Position extends Obj {
    /** Affichage des statistiques d'un polygone */
    protected void statDraw(Graphics g,ViewSimple v, int xvOrig, int yvOrig, int xvLabel, int yvLabel) {
       
-      System.out.println("statDraw "+this+" on "+v);
-      
       if( !v.flagPhotometry || !v.pref.hasAvailablePixels() || v.pref instanceof PlanImageRGB ) return;
 
       int z=-1;

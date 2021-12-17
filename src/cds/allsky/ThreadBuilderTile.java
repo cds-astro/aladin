@@ -245,7 +245,8 @@ final public class ThreadBuilderTile {
 
             // poids déjà calculés
             double [] weight = null;
-            double [] fWeight = coaddMode==Mode.ADD ? null : new double[tileSide*tileSide];
+            double [] fWeight = coaddMode==Mode.ADD || coaddMode==Mode.SUM  ? null 
+                  : new double[tileSide*tileSide];
 
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                int fin = deb+Constante.MAXOVERLAY;
@@ -260,9 +261,10 @@ final public class ThreadBuilderTile {
                   if( out==null ) {
                      out=f;
                      weight=fWeight;
-                     fWeight = coaddMode==Mode.ADD ? null : new double[tileSide*tileSide];
+                     fWeight = coaddMode==Mode.ADD || coaddMode==Mode.SUM  ? null 
+                           : new double[tileSide*tileSide];
                   } else {
-                     if( coaddMode==Mode.ADD ) out.coadd(f,false);
+                     if( coaddMode==Mode.ADD || coaddMode==Mode.SUM ) out.coadd(f,false);
                      else out.coadd(f,weight,fWeight);
                   }
                }
@@ -556,7 +558,7 @@ final public class ThreadBuilderTile {
                      if( totalCoef==0 )  pixelFinal = 0xFF000000 | (((int)pixval[0] & 0xFF)<<16) | (((int)pixvalG[0] & 0xFF)<<8) | ((int)pixvalB[0] & 0xFF);
 
                      // Addition simple
-                     else if( coaddMode==Mode.ADD ) {
+                     else if( coaddMode==Mode.ADD || coaddMode==Mode.SUM ) {
                         double r=0,g=0,b=0;
                         for( int i=0; i<nbPix; i++ ) {
                            r += pixval[i];
@@ -596,7 +598,14 @@ final public class ThreadBuilderTile {
                   if( nbPix==0 ) pixelFinal = Double.NaN;
 
                   // Mode ADD simple
+                  else if( coaddMode==Mode.SUM ) {
+                     empty=false;
+                     for( int i=0; i<nbPix; i++ ) {
+                        pixelFinal += pixval[i];
+                     }
+                  }
                   else if( coaddMode==Mode.ADD ) {
+                  
                      empty=false;
                      for( int i=0; i<nbPix; i++ ) {
                         if( pixelFinal/2. + pixval[i]/2 > max/2. ) { pixelFinal=max; break; }

@@ -42,10 +42,10 @@ import javax.swing.JPanel;
  */
 public class Zoom extends JPanel {
 
-   static int mzn[] = {     1,    1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
-   static int mzd[] = {  2048, 1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
+   static int mzn[] = {  1,       1,    1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
+   static int mzd[] = {  4096, 2048, 1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-   static final int MAXZOOM=67;   // en puissance de 2, valeur maximal du zoom
+   static final int MAXZOOM=88;   // en puissance de 2, valeur maximale du zoom
 
    static public final int MINSLIDERBG=0;
    static public final int MAXSLIDERBG=MAXZOOM-7;
@@ -178,7 +178,8 @@ public class Zoom extends JPanel {
 
    protected double getValueTest(int i) {
       double z;
-      z = Math.pow(1.2,i-MINZOOM);
+//      z = Math.pow(1.2,i-MINZOOM);
+      z = Math.pow(1.15,i-MINZOOM);
       z=z/10;
       //      System.out.println("i="+i+" => "+z);
       return z;

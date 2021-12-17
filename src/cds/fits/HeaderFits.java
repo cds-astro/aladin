@@ -649,21 +649,6 @@ public final class HeaderFits {
       n+=b.length;
       os.write(buf);
       return n;
-      
-//      int n=0;
-//      Enumeration e = keysOrder.elements();
-//      while( e.hasMoreElements() ) {
-//         String key = (String)e.nextElement();
-//         String value = (String) header.get(key);
-//         if( value==null ) continue;
-//         os.write( getFitsLine(key,value) );
-//         n+=80;
-//      }
-//      byte [] b= getEndBourrage(n);
-//      n+=b.length;
-//      os.write(b);
-//      return n;
-
    }
 
    /** Génération de la fin de l'entête FITS, càd le END et le byte de bourrage

@@ -34,7 +34,7 @@ public class Default  {
    //
    // If you turn it false, at the first launch, Aladin will ask to the user if he would agree
    // to switch on the anonymous log mechanism.
-   public static boolean LOG = true;
+   public static boolean LOG = false;
    
    // Choose here the default version test behaviour
    //

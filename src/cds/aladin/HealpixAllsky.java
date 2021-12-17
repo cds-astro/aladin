@@ -69,13 +69,25 @@ class HealpixAllsky extends HealpixKey {
       
       // Chargement immédiat des données
       try {
-         if(  mode==SYNC ||
+         
+         // Juste pour un test - temps récupéré dans "timeStream"
+         if( mode==TESTNET ) {
+            stream = loadStream(planBG.url+"/"+fileNet);
+            if( stream!=null ) sizeStream = stream.length;
+            stream=null;
+         }
+         
+          // Normal
+         else if(  mode==SYNC ||
              (mode==SYNCONLYIFLOCAL && (planBG.useCache && isCached() || planBG.isLocalAllSky())) ) loadNow();
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
 
    }
+   
+   /** Indique si on veut charger les tuiles distantes en gzip live ou non */
+   protected boolean askGzip() { return Aladin.GZIP==1 || Aladin.GZIP==2; }
    
    // On essaye de garder le plus longtemps possible les allsky en mémoire */
    protected long getLiveTime() { 

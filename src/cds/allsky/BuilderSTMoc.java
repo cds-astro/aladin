@@ -20,87 +20,62 @@
 //
 
 package cds.allsky;
+import cds.moc.Moc;
+import cds.moc.SMoc;
 import cds.moc.STMoc;
+import cds.moc.TMoc;
 import cds.tools.Util;
 
 /** Construction d'un STMOC à partir des données HpxFinder
- * TEST TEST TEST TEST
- *
  * @author Pierre Fernique
  */
 public class BuilderSTMoc extends BuilderTMoc {
    
-   STMoc stMoc;
+   STMoc stmoc;
+   private int nbAdd=0;    // Nombre d'ajouts avant une éventuelle reduction()
 
    public BuilderSTMoc(Context context) {
       super(context);
    }
    
-   protected void initIt() {
-      try {
-         System.out.println("STMOC DEBUG MODE....");
-         stMoc = new STMoc(31,context.getOrder() );
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
+   protected void reduction(Moc m) throws Exception { 
+      String priority="ts";
+      if( m.getSpaceOrder()<=hipsOrder ) priority="t";
+      if( m.getTimeOrder()<=20 ) priority="sst";
+      ((STMoc)m).reduction(maxSize,priority); 
+   }
+
+   protected void initIt() throws Exception {
+      stmoc = new STMoc(timeOrder,spaceOrder );
    }
    
-   
-   protected void addIt(int order, long npix, double jdtmin, double jdtmax,String json) {
-      try {
-         if( jdtmax<jdtmin ) {
-            context.warning("Bad time range ["+jdtmin+".."+jdtmax+"] => assuming jdtmax..jdtmin =>["+json+"]");
-            double t=jdtmax;
-            jdtmax=jdtmin;
-            jdtmin=t;
-         }
-         stMoc.add(order,npix,jdtmin,jdtmax);
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
+   protected void info() {
+      String s = maxSize>0 ? " maxSize="+Util.getUnitDisk(maxSize):"";
+      String s1 = stmoc.getMem()>0 ? " currentSize="+cds.tools.Util.getUnitDisk(stmoc.getMem()):"";
+      context.info("STMOC generation (timeOrder="+stmoc.getTimeOrder()
+                       +" spaceOrder="+stmoc.getSpaceOrder()+s+s1+")...");
    }
    
+   // retourne true s'il est temps de tester un ajustement de taille
+   protected boolean mustAdjustSize(Moc m, boolean force) {
+      if( force ) return true;
+      if( nbAdd<1000 ) { nbAdd++; return false; }
+      nbAdd=0;
+      return true;
+   }
    
+
+   protected void addIt(TMoc tmoc1, SMoc smoc1) throws Exception {
+      double jdtmin = tmoc1.getTimeMin();
+      double jdtmax = tmoc1.getTimeMax();
+      stmoc.add(jdtmin, jdtmax, smoc1);
+      adjustSize(stmoc,false);
+   }
+
    protected void writeIt() throws Exception {
-      
-      try {
-         stMoc.seeRangeList().checkConsistency();
-      } catch( Exception e1) {
-         System.out.println("Problème à l'écriture");
-         e1.printStackTrace();
-         return;
-      }
-
-
+      adjustSize(stmoc,true);
+      stmoc.seeRangeList().checkConsistency();     // A virer
       String file = context.getOutputPath()+Util.FS+"STMoc.fits";
-      stMoc.write(file);
+      stmoc.write(file);
    }
-
-   
-//   private void testPerf() throws Exception {
-//      long tmin = stMoc.rangeSet.r[ stMoc.getTimeRanges()/2 ];
-//      long tmax = stMoc.rangeSet.r[ 2*stMoc.getTimeRanges()/3 ];
-//      SMoc sp = new SMoc("3/40");
-//      sp.toRangeSet();
-//      STMoc m = new STMoc();
-//      m.add(tmin,tmax, sp.rangeSet.r[0], sp.rangeSet.r[1]);
-//      
-//      int a=0;
-//      long t1 = System.currentTimeMillis();
-//      STMoc m1=null;
-//      for( int i=0;i<10; i++ ) {
-//         m1 = (STMoc)stMoc.intersection(m);
-//         a+=m1.getMocOrder();
-//      }
-//      long t2 = System.currentTimeMillis();
-//      System.out.println("Inter en "+((t2-t1)/10.)+"ms\n=>"+m1);
-//   }
-   
-   /** Demande d'affichage des stats via Task() */
-   public void showStatistics() {
-     super.showStatistics();
-     context.info("STMOC time ranges:"+stMoc.getTimeRanges()+" size="+Util.getUnitDisk( stMoc.getMem()));
-   }
-
-   
 }

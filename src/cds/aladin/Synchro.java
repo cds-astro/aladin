@@ -58,7 +58,7 @@ public final class Synchro {
    public Synchro() { this(0); }
    public Synchro(long defaultDelay) {
       this.defaultDelay=defaultDelay;
-      taskList = new Vector<Task>();
+      taskList = new Vector<>();
    }
    
    /** Indique que plus aucune tâche n'est en attente */

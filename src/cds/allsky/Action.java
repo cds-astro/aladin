@@ -29,7 +29,7 @@ public enum Action {
    JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
    PNG       ("Build all preview tiles (PNG) + Allsky.png"),
    MOC       ("(Re)build the MOC (MultiOrder Coverage map)"),
-   MOCERROR  ("Build the MOC of suspected erroneous FITS tiles"),
+   MOCERROR  ("Build the MOC of suspected erroneous FITS tiles (TEST)"),
    MAP       ("Build an HEALPix map from the HiPS tiles"),
    MOCINDEX  ("(Re)build the index MOC (MultiOrder Coverage map) in HpxFinder directory"),
    MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
@@ -62,8 +62,10 @@ public enum Action {
    MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité
    ABORT, PAUSE, RESUME,
-   TMOC      ("Build a TMOC.fits based on HpxFinder tiles"),
-   STMOC      ("Build a STMOC.fits based on HpxFinder tiles");
+   
+   SMOC      ("Build a SMOC.fits based on HpxFinder tile descriptions (TEST)"),
+   TMOC      ("Build a TMOC.fits based on HpxFinder tile descriptions (TEST)"),
+   STMOC     ("Build a STMOC.fits based on HpxFinder tile descriptions (TEST)");
 
    Action() {}
    Action(String s ) { doc=s; }

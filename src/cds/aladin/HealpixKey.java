@@ -733,6 +733,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
 
 
+   /** Indique si on veut charger les tuiles distantes en gzip live ou non */
+   protected boolean askGzip() { return Aladin.GZIP==1 || Aladin.GZIP==2 && order<=3; }
 
    /** Chargement total du fichier en mémoire soit en un coup si fichier local, soit morceau
     * par morceau via le réseau
@@ -752,7 +754,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( filename.startsWith("http://") || filename.startsWith("https://") ) {
          local=false;
          try {
-            dis = Util.openStream(filename,false,true,10000);
+            dis = Util.openStream(filename,false,askGzip(),10000);
             if( skip>0 ) dis.skip(skip);
             buf = readFully(dis, fastLoad );
             
