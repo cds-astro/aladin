@@ -186,18 +186,18 @@ public final class Base64InputStream extends FilterInputStream {
             // If 4 characters have been grouped, extract the 3 encoded bytes:
             if (nbGroupedChars == 4) {
                 if (pad > 0) {
-                    eom = true;	// padding characters => End Of Message !
+                   eom = true;	// padding characters => End Of Message !
                 }
                 if (pad > 2) {
-                    throw new IOException("Encoded message corrupted: a message encoding in base64 can end with at most 2 padding characters (\"" + Base64.PADDING_CHAR + "\") !");
+                   throw new IOException("Encoded message corrupted: a message encoding in base64 can end with at most 2 padding characters (\"" + Base64.PADDING_CHAR + "\") !");
                 }
 
                 buffer[count++] = (byte) (group >> 16);
                 if (pad <= 1) {
-                    buffer[count++] = (byte) (group >> 8);
-                    if (pad <= 0) {
-                        buffer[count++] = (byte) group;
-                    }
+                   buffer[count++] = (byte) (group >> 8);
+                   if (pad <= 0) {
+                      buffer[count++] = (byte) group;
+                   }
                 }
                 group = 0;
                 nbGroupedChars = 0;
@@ -227,9 +227,12 @@ public final class Base64InputStream extends FilterInputStream {
     public int read(byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
+    
+    
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
+       
         ensureOpen();
 
         if (b == null) {

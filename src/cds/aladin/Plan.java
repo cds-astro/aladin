@@ -1316,11 +1316,8 @@ public class Plan implements Runnable {
          planFilter = new PlanFilter(aladin,name,script,this);
          planFilter.applyFilter();
          PlanFilter.updateAllFilters(aladin);
-         //System.out.println("XXXXXXX Creation du filtre "+name+" ["+script+"]");
-      }
-      else {
+      } else {
          planFilter.updateDefinition(script,name,null);
-         //System.out.println("XXXXXXX Application du filtre "+name+" ["+script+"]");
       }
    }
 

@@ -183,7 +183,12 @@ public class HipsGen {
         } else if (opt.equalsIgnoreCase("split"))        { context.setSplit(val);
         } else if (opt.equalsIgnoreCase("verbose"))      { Context.setVerbose(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("pilot"))        { context.setPilot(Integer.parseInt(val));
-        } else if (opt.equalsIgnoreCase("blank"))        { context.setBlankOrig(Double.parseDouble(val));
+        } else if (opt.equalsIgnoreCase("blank"))        { 
+           try {
+              context.setBlankOrig(Double.parseDouble(val));
+           } catch( Exception e ) {
+              context.setBlankOrig(val);   // peut être un mot clé spécifique alternatif pour le BLANK
+           }
         } else if (opt.equalsIgnoreCase("hips_order"))   { context.setOrder(Integer.parseInt(val));
         } else if (opt.equalsIgnoreCase("mocOrder"))     { context.setMocOrder(val);
         } else if (opt.equalsIgnoreCase("nside"))        { context.setMapNside(Integer.parseInt(val));
@@ -476,7 +481,6 @@ public class HipsGen {
 
             // debug
             if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) Context.setVerbose(4);
-            else if (arg.equalsIgnoreCase("-fast") ) context.mixing=true;
             else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
             else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
             else if (arg.equalsIgnoreCase("-notouch") ) context.notouch=true;
@@ -487,6 +491,7 @@ public class HipsGen {
             else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
             else if (arg.equalsIgnoreCase("-cds") )  context.cdsLint=true;
             else if (arg.equalsIgnoreCase("-check")) context.setMirrorCheck(true);
+            else if (arg.equalsIgnoreCase("-nocheck")) context.setMirrorCheck(false);
 
             // toutes les autres options écrasent les précédentes
             else if (arg.contains("=")) {
@@ -683,7 +688,7 @@ public class HipsGen {
             }
         }
 
-        if( context.fake ) context.warning("NO RUN MODE (option -n), JUST PRINT INFORMATION !!!");
+        if( context.fake ) context.warning("NO RUN MODE (option -n), JUST INFORMATION PRINT !!!");
         for( Action a : actions ) {
             context.info("Action => "+a+": "+a.doc());
             if( !flagMapFits && a==Action.MAPTILES ) flagMapFits=true;
@@ -698,7 +703,7 @@ public class HipsGen {
 
             // Création d'un cache disque si nécessaire
             MyInputStreamCached.context = context;
-            if( cache!=null || cacheSize!=-1 ) {
+            if( !context.fake && (cache!=null || cacheSize!=-1) ) {
                 MyInputStreamCached.setCache( cache==null ? null : new File(cache), cacheSize );
             }
 
@@ -807,7 +812,7 @@ public class HipsGen {
                         "   hips_status=xx      HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
                         "                       (default: public clonableOnce)\n" +
                         "   hdu=n1,n2-n3,...|all List of HDU numbers (0 is the primary HDU - default is 0)\n" +
-                        "   blank=nn            Specifical BLANK value" + "\n" +
+                        "   blank=nn|key        Specifical BLANK value, or alternate BLANK fits keyword" + "\n" +
                         "   skyval=key|auto|%info|%min %max   Fits key to use for removing a sky background, or auto\n" +
                         "                       detection or percents of pixel histogram kept (central ex 99, or\n" +
                         "                       min max ex 0.3 99.7)" + "\n" +
@@ -879,7 +884,7 @@ public class HipsGen {
                         "   maxThread=nn        Max number of computing threads" + "\n" +
                         "   target=ra +dec      Default HiPS target (ICRS deg)" + "\n"+
                         "   targetRadius=rad    Default HiPS radius view (deg)" + "\n"+
-                        "   -check              Force to fully check date&size of local tiles for MIRROR action" + "\n"+
+                        "   -nocheck            Do not check date&size of local tiles for MIRROR action" + "\n"+
                         "   -notouch            Do not touch the hips_release_date" + "\n"+
                         "   -color              Colorized console log messages" + "\n" +
                         "   -nice               Slow download for avoiding to overload remote http server (dedicated " + "\n" +

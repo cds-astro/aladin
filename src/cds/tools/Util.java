@@ -138,7 +138,7 @@ public final class Util {
       FS = System.getProperty("file.separator");
    }
    
-   static final int DEFAULTTIMEOUT = 10000;
+   static final int DEFAULTTIMEOUT = -1; //10000;
    static public final String HTTPERROR = "HTTP error: ";
 
    /** Ouverture d'un MyInputStream que ce soit un fichier ou une url */
@@ -162,7 +162,7 @@ public final class Util {
       return openStream(new URL(u),useCache,askGzip,timeOut);
    }
 //   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,10000); }
-   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,false,-1); }
+   static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,false,DEFAULTTIMEOUT); }
    static public MyInputStream openStream(URL u, boolean useCache,boolean askGzip, int timeOut) throws Exception {
       URLConnection conn = u.openConnection();
       if( !useCache ) conn.setUseCaches(false);

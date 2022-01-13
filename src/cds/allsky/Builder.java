@@ -116,7 +116,7 @@ public abstract class Builder {
    /** Indique le mode Just-print - not run -> retourne true si c'est le cas avec un message d'info */
    public boolean isFake() {
       if( !context.fake ) return false;
-      context.info("Action "+getAction()+" not run due to the -n option");
+      context.warning("Action "+getAction()+" not run due to the -n option");
       return true;
    }
 

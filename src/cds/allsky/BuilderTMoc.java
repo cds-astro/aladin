@@ -20,6 +20,8 @@
 //
 
 package cds.allsky;
+import java.io.File;
+
 import cds.moc.SMoc;
 import cds.moc.TMoc;
 import cds.tools.Astrodate;
@@ -51,17 +53,17 @@ public class BuilderTMoc extends BuilderSMoc {
    }
    
    /** Extraction du TMOC à partir des informations temporelles dans les propriétés JSON de la tuile */
-   protected TMoc getTMoc(int order, String json) { 
+   protected TMoc getTMoc(int order, String json) throws Exception { 
       double tmin=0;
       double tmax=0;
       double exptime;
 
-      try {
-         if( mode==UNKNOWN ) {
-            mode = detectMode(json);
-            context.info("Time extraction from "+getTimeMode( mode )+" keywords");
-         }
+      if( mode==UNKNOWN ) {
+         mode = detectMode(json);
+         context.info("Time extraction from "+getTimeMode( mode )+" keywords");
+      }
 
+      try {
          if( mode==TMIN ) {
             String s = cds.tools.Util.extractJSON("T_MIN", json);
             if( s==null ) throw new Exception();
@@ -153,6 +155,11 @@ public class BuilderTMoc extends BuilderSMoc {
       adjustSize(tmoc,false);
    }
    
+   protected void cleanIt() throws Exception {
+      String file = context.getOutputPath()+Util.FS+"TMoc.fits";
+      (new File(file)).delete();      
+   }
+   
    protected void writeIt() throws Exception {
       adjustSize(tmoc,true);
       String file = context.getOutputPath()+Util.FS+"TMoc.fits";
@@ -190,7 +197,9 @@ public class BuilderTMoc extends BuilderSMoc {
       s2 = cds.tools.Util.extractJSON("DATEOBS2", json);
       if( s1!=null && s2!=null ) return DATEOBS12;
       
-      throw new Exception("Not able to determine HpxFinder time keywords (ex: T_MIN [and T_MAX] or MJD-OBS [and EXPTIME],"
+      context.error("Not able to determine HpxFinder time keywords (ex: T_MIN [and T_MAX] or MJD-OBS [and EXPTIME],"
             + " or DATE-OBS [and EXPTIME],  or DATEOBS1 and DATEOBS2, or OBS-DATE+TIME-OBS");
+      
+      throw new MocParsingException();
    }
 }

@@ -5089,7 +5089,7 @@ public final class Command implements Runnable {
     */
    protected void testnet(String param) {
       boolean flagUniq=true;
-      Plan p = a.calque.getPlanBase();
+      Plan p = a.calque.getFirstSelectedPlan();
       if( !(p instanceof PlanBG) ) {
          a.console.printError("testnet only on HiPS");
          return;
@@ -5103,8 +5103,8 @@ public final class Command implements Runnable {
       else if( param.indexOf("gzip")>=0 ) Aladin.GZIP=1;
       
       StringBuilder res = new StringBuilder("testnet on "+plan.label+" ("
-            +(plan.truePixels?"fits":"jpeg or png")+" "
-            +(Aladin.GZIP==1?"gzip":Aladin.GZIP==0?"nogzip":"")+"):\n");
+            +(plan.isCatalog()?"tsv":plan.truePixels?"fits":"jpeg|png")+" "
+            +(Aladin.GZIP==1?"gzip":Aladin.GZIP==0?"nogzip":"auto")+"):\n");
       
       // Tous les sites possibles pour ce HiPS
       if( param.indexOf("all")>=0 ) {

@@ -304,9 +304,24 @@ public class ContextGui extends Context {
             hasAlternateBlank=true;
          }
       } catch( Exception e ) {
-         mainPanel.tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
+//         mainPanel.tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
       }
       return b;
+   }
+   
+   public String getBlankKey() {
+      String s = mainPanel.tabDesc.getBlank().trim();
+      if( s.length()>0 ) {
+         
+         // Ca ne doit pas être une valeur numérique
+         try { Double.parseDouble(s); }
+         catch( Exception e ) {
+            hasAlternateBlank=false;
+            return s;
+         }
+      }
+      return null;
+      
    }
 
    public int [] getHDU() {

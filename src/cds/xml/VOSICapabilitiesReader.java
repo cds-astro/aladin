@@ -37,8 +37,10 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 	//data
 	private boolean uploadAllowed = false;
 	private long uploadHardLimit = -1;
+	private boolean tabledataFormatAllowed = false;
 	
 	public boolean load(URL capabilitiesUrl) {
+	   System.err.println("URLCapability="+capabilitiesUrl);
 		XMLParser xmlParser = new XMLParser(this);
 		boolean result = false;
 		MyInputStream inputStream = null;
@@ -70,14 +72,31 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 		readHardUploadLimit = -1;
 	}
 	
+	private boolean inOutPutFormat=false;
+	private boolean inOutputFormatMime=false;
+	
+//	<outputFormat ivo-id="ivo://ivoa.net/std/TAPRegExt#output-votable-td">
+//     <mime>application/x-votable+xml;serialization=TABLEDATA</mime>
+//     <alias>text/xml</alias><alias>votable/td</alias><alias>votabletd</alias>
+//  </outputFormat>
+	
 	@Override
 	public void startElement(String name, Hashtable atts) {
-		// TODO Auto-generated method stub
-		if (name.equals("capability")) {
+	   
+	  if( name.equalsIgnoreCase("outputFormat") ) {
+	     inOutPutFormat=true;
+	     if( atts.containsKey("ivo-id") && atts.get("ivo-id").equals("ivo://ivoa.net/std/TAPRegExt#output-votable-td") ) {
+	        tabledataFormatAllowed=true;
+//	        System.err.println("BINGO - ivo-id TABLEDATA ****************");
+	     }
+	  } 
+	  else if( inOutPutFormat && name.equalsIgnoreCase("mime") ) inOutputFormatMime=true;
+      else  if (name.equals("capability")) {
 			if (atts.containsKey("standardid") && atts.get("standardid").equals("ivo://ivoa.net/std/TAP")
 					&& atts.containsKey("xsi:type") && atts.get("xsi:type").equals("tr:TableAccess")) {
 				inTableAccessCapabilityTag = true;
-			}
+		   }
+			
 		} else if (inTableAccessCapabilityTag) {
 			if (name.equals("uploadMethod")) {
 				uploadAllowed = true;
@@ -86,13 +105,16 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 			} else if (name.equals("hard") && readHardUploadLimit == 0) {
 				readHardUploadLimit++;
 			}
-		}
+			
+		}  
+
 	}
 
 	@Override
 	public void endElement(String name) {
-		// TODO Auto-generated method stub
-		if (inTableAccessCapabilityTag && name.equals("capability")) {
+		if( name.equals("outputFormat") ) inOutPutFormat=false;
+		else if( name.equals("mime") ) inOutputFormatMime=false;
+		else if (inTableAccessCapabilityTag && name.equals("capability")) {
 			inTableAccessCapabilityTag = false;
 		} else if (name.equals("uploadLimit")) {
 			readHardUploadLimit = -1;
@@ -105,6 +127,11 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 		String data = new String(ch, start, length);
 		if (inTableAccessCapabilityTag && readHardUploadLimit == 1) {
 			uploadHardLimit = Long.parseLong(data);
+		} else if( inOutputFormatMime ) {
+		   if( data.equalsIgnoreCase("application/x-votable+xml;serialization=TABLEDATA") ) {
+		      tabledataFormatAllowed=true;
+//		      System.err.println("BINGO - TABLEDATA ****************");
+		   }
 		}
 	}
 
@@ -123,5 +150,7 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 	public void setUploadHardLimit(long uploadHardLimit) {
 		this.uploadHardLimit = uploadHardLimit;
 	}
+	
+	public boolean tabledataFormatAllowed() { return tabledataFormatAllowed; }
 
 }

@@ -228,6 +228,7 @@ public class CacheFits {
       FitsFile f = new FitsFile();
       f.fits = new Fits();
       if( context!=null && context.skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
+      if( context!=null && context.getBlankKey()!=null ) f.fits.setBlank(context.getBlankKey());
 
       // Il faut lire deux fichiers, le HHH, puis le JPEG ou PNG, voire FITS suivant le cas
       if( (mode&HHH)!=0 ) {

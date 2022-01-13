@@ -114,6 +114,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean fromNet=true;// true si le losange provient du réseau et non du cache
    protected int timeStream;      // stat de lecture du stream,
    protected int timeNet;         // stat de lecture du stream via le net
+   protected boolean gzipped=false; // true si le flux était gzippé
    protected long sizeStream;     // Nombre d'octets du stream
    private int timeJPEG, timePixel;  // stat de la création de l'image, de l'extraction des pixels
    private int typeColor;         // Mode couleur JPEG ou PNG
@@ -734,7 +735,19 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
 
    /** Indique si on veut charger les tuiles distantes en gzip live ou non */
-   protected boolean askGzip() { return Aladin.GZIP==1 || Aladin.GZIP==2 && order<=3; }
+   
+//   protected boolean askGzip() {
+//      boolean rep=askGzip1();
+//      System.out.println("askgzip for "+order+"/"+npix+" => "+rep);
+//      return rep;
+//   }
+   protected boolean askGzip() {
+      if( Aladin.GZIP==1 ) return true;
+      if( Aladin.GZIP==0 ) return false;
+      int modegzip = planBG.getGzippedMode();
+      if( modegzip==1 || modegzip==-1 ) return true;
+      return false;
+   }
 
    /** Chargement total du fichier en mémoire soit en un coup si fichier local, soit morceau
     * par morceau via le réseau
@@ -755,6 +768,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          local=false;
          try {
             dis = Util.openStream(filename,false,askGzip(),10000);
+            gzipped = (dis.getType()& MyInputStream.GZ)!=0;
             if( skip>0 ) dis.skip(skip);
             buf = readFully(dis, fastLoad );
             
@@ -775,6 +789,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             detectTypeColor(c);
 
             if( (c[0] & 0xFF)==31 && (c[1] & 0xFF)==139 ) {
+               gzipped = true;
                //                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
                FileInputStream fgz = new FileInputStream(new File(filename));
                dis = new MyInputStream( new GZIPInputStream(fgz) );
@@ -796,7 +811,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
       // Stats de lecture
       int t = (int)(Util.getTime()-t1);
       if( local ) timeStream = t;
-      else timeNet = t;
+      else {
+         timeNet = t;
+         planBG.incrGzipMode( gzipped ? 1 : 2, t);
+      }
       sizeStream = buf.length;
 
       return buf;

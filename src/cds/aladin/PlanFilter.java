@@ -356,7 +356,7 @@ public final class PlanFilter extends Plan {
 	   if( runme==null ) return;
 
 	   Thread oldThread = runme;
-	   // en settant runme à null, on va forcer le thread à s'arreter --> TODO : vraiment ?
+	   // en settant runme à null, on va forcer le thread à s'arreter (test dessus dans la boucle)
 	   runme = null;
 	   // anciene méthode --> beurk !!
 //	   oldThread.stop();
@@ -938,6 +938,7 @@ public final class PlanFilter extends Plan {
       if(allFilters==null) return;
       for( int i=0;i<allFilters.length;i++) {
          pf = allFilters[i];
+//         System.out.println("updateNow. filter "+i+" pf="+pf+" pf.isOn="+pf.isOn());
          pf.setMustUpdate();
          pf.setPlanMemory();
 //         pf.updateInfluence();

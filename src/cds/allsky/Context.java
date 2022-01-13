@@ -99,6 +99,7 @@ public class Context {
    protected int [] hdu = null;              // Liste des HDU à prendre en compte
    public int bitpixOrig = -1;               // BITPIX des images originales
    protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
+   public String blankKey=null;           // Mot clé alternatif pour le BLANK
    protected boolean hasAlternateBlank=false;// true si on a indiqué une valeur BLANK alternative
    public double bZeroOrig=0;                // Valeur BZERO d'origine
    public double bScaleOrig=1;               // Valeur BSCALE d'origine
@@ -130,7 +131,7 @@ public class Context {
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
    protected boolean notouch=false;          // true si on ne doit pas modifier la date du hips_release_date
-   protected boolean mirrorCheck=false;      // true si on relance un hipsgen MIRROR => pas de vérif sur les tuiles déjà là
+   protected boolean mirrorCheck=true;      // true si on relance un hipsgen MIRROR => pas de vérif sur les tuiles déjà là
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
@@ -197,7 +198,9 @@ public class Context {
       mocArea=mocIndex=moc=null;
       mode=Mode.getDefault();
       hasAlternateBlank=false;
+      blankOrig = Double.NaN;
       bscaleBzeroOrigSet=false;
+      blankKey=null;
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       isMap=false;
       prop=null;
@@ -281,6 +284,7 @@ public class Context {
    public double getBScale() { return bscale; }
    public double getBlank() { return blank; }
    public double getBlankOrig() { return blankOrig; }
+   public String getBlankKey() { return blankKey; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
    public SMoc getArea() { return mocArea; }
    public Mode getMode() { return mode; } //isColor() ? CoAddMode.REPLACETILE : coAdd; }
@@ -646,7 +650,10 @@ public class Context {
    }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
    public void setBlankOrig(double x) {  
-      blankOrig = x; hasAlternateBlank=true; }
+      blankOrig = x;
+      hasAlternateBlank=true;
+   }
+   public void setBlankOrig(String key ) { blankKey = key; hasAlternateBlank=false; }
    public void setColor(String colorMode) {
       if( colorMode.equalsIgnoreCase("false")) return;
       bitpixOrig=0;

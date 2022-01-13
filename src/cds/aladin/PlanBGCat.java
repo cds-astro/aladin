@@ -339,6 +339,7 @@ public class PlanBGCat extends PlanBG {
       // Mise à jour des filtres (uniquement si le nombre d'objets à changé)
       // UN PEU CASSE GUEULE COMME TEST, mais pour le moment ça va faire l'affaire
       int nbObj = getCounts();
+      
       if( oNbObj!=getCounts() ) {
          oNbObj = nbObj;
 //         System.out.println("update filter");
@@ -350,7 +351,20 @@ public class PlanBGCat extends PlanBG {
    
    protected void planReady(boolean ready) {
       super.planReady(ready);
-      setFilter(filterIndex);
+      
+      // Pour éviter le deadlock, on temporise l'activation du filtre par défaut (s'il y a lieu)
+      if( filterIndex==-1 ) setFilter(filterIndex);
+      else {
+         (new Thread(){
+            public void run() {
+               Util.pause(300);
+               setFilter(filterIndex);
+            }
+         }).start();
+      }
+      
+//      setFilter(filterIndex);
+      
       askForRepaint();
    }
    

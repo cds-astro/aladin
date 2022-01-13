@@ -2979,7 +2979,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
       // Si plus grand TIMESTAMP connu du MocServer, comparaison avec le plus grand TIMESTAMP local
       if( mocServerBiggestTimeStamp>0L ) {
          if( getMultiPropTimeStamp()==mocServerBiggestTimeStamp ) {
-            aladin.trace(3, "MocServer update not required => local cache up-to-date (last update: "
+            aladin.trace(3, "MocServer update not required => local cache up to date (last update: "
                +Astrodate.JDToDate( Astrodate.UnixToJD(mocServerBiggestTimeStamp/1000L))+")");
             return 0;
          }

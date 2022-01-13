@@ -137,9 +137,12 @@ public class TapManager {
 	MutableComboBoxModel uploadTablesModel = new DefaultComboBoxModel();
 	protected FrameSimple joinFrame;
 	
+    protected static final String FORMAT = "FORMAT="+URLEncoder.encode("application/x-votable+xml;serialization=TABLEDATA")+"&";
+//    protected static final String FORMAT = "";
+	
 	protected static Map<String, TapClient> tapServerPanelCache = new HashMap<>();//main cache where all the ServerGlu's are loaded on init
 	protected static Map<String, TapClient> tapServerTreeCache = new HashMap<>();//cache for the servers loading from tree
-	public static final String STANDARDQUERYPARAMSTEMPLATE = "REQUEST=doQuery&LANG=ADQL&MAXREC="+TapManager.MAXTAPROWS+"&QUERY=";
+	public static final String STANDARDQUERYPARAMSTEMPLATE = "REQUEST=doQuery&LANG=ADQL&MAXREC="+TapManager.MAXTAPROWS+"&"+FORMAT+"QUERY=";
 	public static final String GETTAPSCHEMACOLUMNCOUNT = STANDARDQUERYPARAMSTEMPLATE + "SELECT+COUNT%28*%29+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMACOLUMNS = STANDARDQUERYPARAMSTEMPLATE + "SELECT+*+FROM+TAP_SCHEMA.columns";
 	public static final String GETTAPSCHEMATABLES = STANDARDQUERYPARAMSTEMPLATE + "SELECT+*+FROM+TAP_SCHEMA.tables";
@@ -1579,7 +1582,7 @@ public class TapManager {
 	 * Method tries to categorize savot resultsResource as either in binary or table format
 	 * @param tableIndex
 	 * @param resultsResource
-	 * @return 1 for binary, 0 for votable
+	 * @return 2 for binary2, 1 for binary, 0 for votable
 	 */
 	protected int getType(int tableIndex, SavotResource resultsResource) {
 		int type = -1;
@@ -1863,7 +1866,11 @@ public class TapManager {
 	 * @return
 	 * @throws MalformedURLException, Exception 
 	 */
-	public static SavotResource getResults(String what, String tapServiceUrl, String file, String path) throws MalformedURLException, Exception {
+    public static SavotResource getResults(String what, String tapServiceUrl, String file, String path) throws MalformedURLException, Exception {
+       return getResults1(what,tapServiceUrl,file,path,true);
+    }
+    public static SavotResource getResults1(String what, String tapServiceUrl, String file, String path,
+          boolean flagRedo) throws MalformedURLException, Exception {
 		SavotResource resultsResource = null;
 		MyInputStream is = null;
 		try {
@@ -1875,6 +1882,7 @@ public class TapManager {
 			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();
 			SavotPullParser savotParser = new SavotPullParser(is, SavotPullEngine.FULL, null, false);
+			if( savotParser.getTableCount()==0 ) throw new Exception("No table");  // Probably an error
 			resultsResource = Util.populateResultsResource(savotParser);
 			time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults parsing: "+time+" time taken : "+(time - startTime));
@@ -1884,17 +1892,25 @@ public class TapManager {
 		} catch (MalformedURLException me) {
 			if( Aladin.levelTrace >= 3 ) me.printStackTrace();
 			throw me;
-		} catch (IOException ioe) {
-			Aladin.trace(3, ioe.getMessage());
-			if (is != null) {
-				is.close();
-			}
-			throw ioe;
+//		} catch (IOException ioe) {
+//			Aladin.trace(3, ioe.getMessage());
+//			if (is != null) {
+//				is.close();
+//			}
+//			throw ioe;
 		} catch (Exception e) {
+		   if (is != null)  is.close();
+
+		   // On retente en supprimant le FORMAT explicite VOTABLE TABLEDATA (non supporté par les vieux serveurs TAP)
+		   if( flagRedo ) {
+		      int i=file.indexOf(FORMAT);
+		      if( i>=0 ) {
+		         file = file.substring(0,i)+file.substring(i+FORMAT.length());
+		         return getResults1(what,tapServiceUrl,file, path,false);
+		      }
+		   }
+
 			if( Aladin.levelTrace >= 3 ) e.printStackTrace();
-			if (is != null) {
-				is.close();
-			}
 			throw e;
 		}
 		return resultsResource;
@@ -2091,22 +2107,36 @@ public class TapManager {
 					currentT.setName("TupdateTableMetadata: "+tapServiceUrl);
 					currentT.setPriority(Thread.NORM_PRIORITY-2);
 					try {
-						SavotResource resultsResource = getResults("gettableInfos",tapServiceUrl, GETTAPSCHEMATABLES, PATHSYNC);
-						populateTables(newServer.tapClient, resultsResource);
-						//update info panel
-						Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, newServer.tapClient.tablesMetaData);
-						if (infoPanel != null) {
-							newServer.tapClient.tackleFrameInfoServerUpdate(aladin, newServer, infoPanel);
-						}
-						
+					   SavotResource resultsResource = getResults("gettableInfos",tapServiceUrl, GETTAPSCHEMATABLES, PATHSYNC);
+					   populateTables(newServer.tapClient, resultsResource);
+					   //update info panel
+					   Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, newServer.tapClient.tablesMetaData);
+					   if (infoPanel != null) {
+					      newServer.tapClient.tackleFrameInfoServerUpdate(aladin, newServer, infoPanel);
+					   }
+
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						if (Aladin.levelTrace >=3 ) {//we do not bother here if all table description is not obtained. 
-							//if there is problem obtaining essential metadata then there will be error actions in the main loadTapColumnSchemas thread
-							e.printStackTrace();
-						}
+					   
+					   // PF Jan 2022 - 2e essai en forçant le format pour contourner le bug de SAVOT sur le base64
+					   try {
+	                       SavotResource resultsResource = getResults("gettableInfos",tapServiceUrl, FORMAT+GETTAPSCHEMATABLES, PATHSYNC);
+	                       populateTables(newServer.tapClient, resultsResource);
+	                       //update info panel
+	                       Future<JPanel> infoPanel = createMetaInfoDisplay(tapServiceUrl, newServer.tapClient.tablesMetaData);
+	                       if (infoPanel != null) {
+	                          newServer.tapClient.tackleFrameInfoServerUpdate(aladin, newServer, infoPanel);
+	                       }
+					      
+					   } catch( Exception e1 ) {
+
+					   // TODO Auto-generated catch block
+					   if (Aladin.levelTrace >=3 ) {//we do not bother here if all table description is not obtained. 
+					      //if there is problem obtaining essential metadata then there will be error actions in the main loadTapColumnSchemas thread
+					      e1.printStackTrace();
+					   }
+					   }
 					} finally {
-						currentT.setName(oldTName);
+					   currentT.setName(oldTName);
 					}
 				}
 			});

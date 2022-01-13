@@ -2614,8 +2614,8 @@ OVERWRITEALLSKY overwrite
 OVERWRITEALLSKY.fr remplacer
 SPECIFALLSKY Only process these tiles (e.g 3/128...)
 SPECIFALLSKY.fr Ne traiter que certaines tuiles (ex 3/128...)
-BLANKALLSKY Alternate blank FITS value
-BLANKALLSKY.fr Valeur BLANK alternative
+BLANKALLSKY Alternate blank FITS value (or key)
+BLANKALLSKY.fr Valeur (ou mot clé) BLANK alternatif
 HDUALLSKY Specifical HDU numbers (e.g: 0 2|all)
 HDUALLSKY.fr Numéros HDU spécifiques(ex: 0 2|all)
 BORDERALLSKY Image border to ignore (N W S E in pix)

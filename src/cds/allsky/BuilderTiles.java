@@ -105,8 +105,9 @@ public class BuilderTiles extends Builder {
          if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
          double bl0 = context.getBlankOrig();
          double bl1 = context.getBlank();
+         String bkey = context.getBlankKey();
          if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
-         else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
+         else context.info("BLANK="+ (bkey!=null? bkey : Double.isNaN(bl1)?"NaN":bl1));
          if( context.good!=null ) context.info("Good pixel values ["+ip(context.good[0],bz,bs)+" .. "+ip(context.good[1],bz,bs)+"] => other values are ignored");
          context.info("Tile aggregation method="+Context.JpegMethod.MEAN);
          if( context.live ) context.info("Live HiPS => Weight tiles saved for potential future additions"); 

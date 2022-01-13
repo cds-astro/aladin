@@ -195,7 +195,7 @@ public class MyInputStream extends FilterInputStream {
     */
    public MyInputStream startRead() throws IOException,Exception {
       
-      long t = isGZorBzip2();
+      long t = getGZorBzip2();
       if( (t & GZ)!=0 ) {
          return new MyInputStream(new GZIPInputStream(this),GZ,withBuffer);
       } else if( (t & BZIP2)!=0 ) {
@@ -253,11 +253,16 @@ public class MyInputStream extends FilterInputStream {
 
    /** Juste pour tester s'il s'agit d'un flux gzippé */
    public boolean isGZ() throws IOException {
-      return (isGZorBzip2() & GZ)!=0;
+      return (getGZorBzip2() & GZ)!=0;
    }
 
    /** Juste pour tester s'il s'agit d'un flux gzippé ou Bzippé2 */
-   public long isGZorBzip2() throws IOException {
+   public long getGZorBzip2() throws IOException {
+      
+      // Le flag a été passé en paramètre lors de la création ?
+      // NON SURTOUT PAS, SINON, IPOSSIBLE D'OUVRIR UN GZIP
+//      if( type!=0 ) return type;
+      
       // le type de stream a deja ete detecte
       if( flagGetType && alreadyRead ) return type;
 

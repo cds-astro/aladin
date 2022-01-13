@@ -4240,6 +4240,7 @@ public class PlanBG extends PlanImage {
 
       long start = System.currentTimeMillis();
 
+      resetGzippedMode();
       System.out.println("Testnet HiPS "+label+" maxOrder="+maxOrder+" from "+url+" :");
       int n=0;
       boolean allsky=false;
@@ -4281,7 +4282,7 @@ public class PlanBG extends PlanImage {
             long t = hk.timeNet;
             long s = hk.sizeStream;
             if( s==0 ) System.out.println(" error => "+url+"/"+hk.getFileNet());
-            else  System.out.println(".Loading "+key+" "+Util.getUnitDisk(s)+(hk.askGzip()?"/gzip":"")+" in "+Util.getTemps(t*1000L));
+            else  System.out.println(".Loading "+key+" "+Util.getUnitDisk(s)+(hk.gzipped?"/gzip":"")+" in "+Util.getTemps(t*1000L));
             time += t;
             if( allsky ) allskyTime=t;
             else tileTime +=t;
@@ -4305,6 +4306,59 @@ public class PlanBG extends PlanImage {
       return Util.getUnitDisk(rate)+"/s"
             +" ("+n+" tiles/avg="+Util.getTemps(tileTime/(n-1)*1000L)
             +" allsky/"+Util.getTemps(allskyTime*1000L)+")";
+   }
+   
+   /** Incrémente le décompte des tuiles chargées: 1-gzipped, 2- no-gzipped */
+   protected void incrGzipMode( int mode, long t ) {
+      if( inJPEG || inPNG  ) return;
+      if( mode==1 ) { nbgzip++;  timegzip+=t; }
+      else { nbnogzip++; timenogzip+=t; }
+   }
+   
+   private int nbgzip=0;          // nombre de tuiles chargées en gzip
+   private long timegzip=0L;      // cumul du temps de chargement des tuiles gzippées
+   private int nbnogzip=0;        // nombre de tuiles chargées en nogzip
+   private long timenogzip=0L;    // cumul du temps de chargement des tuiles nogzippées
+   
+   private int gzipMode=0;  // 0-pas encore déterminé, -1-test gzip, -2-test nogzip, 1-gzip, 2-nogzip
+   
+   /** reset les statistiques et le mode gzip déterminé précédemment (typiquement lorsqu'on change de mirroir) */
+   protected void resetGzippedMode() {
+      nbgzip=nbnogzip=0;
+      timegzip=timenogzip=0L;
+      gzipMode=0;
+   }
+   
+   /** Détermine le mode de chargement gzip ou nogzip en fonction de la nature des tuiles
+    * et de tests préalables pour déterminer le meilleur choix en fonction du contexte.
+    * @return -1-test gzip, -2-test nogzip, 1-gzip, 2-nogzip
+    */
+//   protected int getGzippedMode() {
+//      int rep = getGzippedMode1();
+//      System.out.println("getGzippedMode() nbgzip="+nbgzip+" nbnogzip="+nbnogzip+" gzipMode="+gzipMode+" rep="+rep);
+//      return rep;
+//   }
+   protected int getGzippedMode() {
+      if( inJPEG || inPNG ) return 2;
+      if( gzipMode>0 ) return gzipMode;
+      if( gzipMode==0 ) {
+         
+         // On charge au moins 2 tuiles en gzip pour calculer une valeur moyenne
+         if( nbgzip<2 ) return -1;
+         // On charge au moins 2 tuiles en nogzip pour calculer une valeur moyenne
+         else if( nbnogzip<2 ) return -2;
+         
+         // Et on détermine la meilleure stratégie
+         else {
+            if( nbgzip==0 ) return -1;   // toujours pas assez de tuiles gzip chargées
+            if( nbnogzip==0 ) return -2;   // toujours pas assez de tuiles nogzip chargées
+            
+            // On peut décider de la meilleure stratégie
+            gzipMode = (timegzip/nbgzip)<(timenogzip/nbnogzip) ? 1 : 2;
+//            System.out.println("XXX timegzip="+(timegzip/nbgzip)+"ms timenogzip="+(timenogzip/nbnogzip)+"ms =>gzipmode="+gzipMode);
+         }
+      }
+      return gzipMode;
    }
    
    /**
@@ -4736,6 +4790,9 @@ public class PlanBG extends PlanImage {
       nbLoadNet=nbLoadCache=nbWriteCache=0;
       nByteReadNet=nByteReadCache=nByteWriteCache=0L;
       nbImgCreated=nbImgInBuf=nbCreated=nbFree=nbAborted=nbImgDraw=0;
+      
+      // On en profite pour resetter la stratégie gzip/nogzip 
+      resetGzippedMode();
    }
 
    /** retourne une chaine donnant des stats sur l'usage des losanges Healpix */

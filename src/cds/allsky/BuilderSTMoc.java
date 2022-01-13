@@ -20,6 +20,8 @@
 //
 
 package cds.allsky;
+import java.io.File;
+
 import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.moc.STMoc;
@@ -72,6 +74,11 @@ public class BuilderSTMoc extends BuilderTMoc {
       adjustSize(stmoc,false);
    }
 
+   protected void cleanIt() throws Exception {
+      String file = context.getOutputPath()+Util.FS+"STMoc.fits";
+      (new File(file)).delete();      
+   }
+   
    protected void writeIt() throws Exception {
       adjustSize(stmoc,true);
       stmoc.seeRangeList().checkConsistency();     // A virer

@@ -98,6 +98,7 @@ final public class Fits {
    public double bzero  = DEFAULT_BZERO;  // BZERO Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
    public double bscale = DEFAULT_BSCALE; // BSCALE Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
    public double blank  = DEFAULT_BLANK;  // valeur BLANK
+   public String blankKey = "BLANK";      // Mot clé BLANK par défaut (modifiable)
 
    
    public long bitmapOffset = -1; // Repère le positionnement du bitmap des pixels (voir releaseBitmap());
@@ -730,9 +731,9 @@ final public class Fits {
          zCell = z;
       }
       try {
-         blank = headerFits.getDoubleFromHeader("BLANK");
+         blank = headerFits.getDoubleFromHeader(blankKey);
       } catch( Exception e ) {
-         blank = /* bitpix>0 ? 0 : */DEFAULT_BLANK;
+         blank = DEFAULT_BLANK;
       }
 
       int n = (Math.abs(bitpix) / 8);
@@ -980,7 +981,7 @@ final public class Fits {
                depthCell  = depth;
             }
             try {
-               blank = headerFits.getDoubleFromHeader("BLANK");
+               blank = headerFits.getDoubleFromHeader(blankKey);
             } catch( Exception e ) {
                blank = DEFAULT_BLANK;
             }
@@ -1049,9 +1050,12 @@ final public class Fits {
    /** Positionement d'une valeur BLANK. Double.NaN est supporté */
    public void setBlank(double blank) {
       this.blank = blank;
-      if( headerFits != null ) headerFits.setKeyValue("BLANK",
+      if( headerFits != null ) headerFits.setKeyValue(blankKey,
             Double.isNaN(blank) ? (String) null : (bitpix>0?(int)blank:blank) + "");
    }
+   
+   /** Positionnement d'un mot clé BLANK alternatif (non standard) */
+   public void setBlank(String key) { blankKey=key; }
 
    /**
     * Positionnement du flag COLORMOD = ARGB pour signifier qu'il s'agit d'un
