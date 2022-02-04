@@ -418,7 +418,7 @@ Runnable, SwingWidgetFinder, Widget {
          if( pc.type==Plan.TOOL && pc.flagOk ) nbTool++;
          if( pc.type==Plan.IMAGE && pc.flagOk ) nbImg++;
          if( pc.type==Plan.IMAGEHUGE && pc.flagOk ) nbImg++;
-         if( pc.isSimpleCatalog() && pc.flagOk ) nbConeSearch++;
+         if( pc.isRedoable() ) nbConeSearch++;
          menuPlan.addElement(pc);
          allShow = allShow && pc.active;
          canBeColl = canBeColl && pc.type==Plan.FOLDER;

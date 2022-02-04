@@ -3570,8 +3570,9 @@ public class Calque extends JPanel implements Runnable {
 
    protected int newPlanCatalog(MyInputStream in, String label, String origin, Server server, URL url, String query, int requestNumber) {
       int n=getStackIndex(label);
+      Color color = isNewPlan(label) ? null : plan[n].c;
       label = prepareLabel(label);
-      plan[n] = new PlanCatalog(aladin,in,label, origin,server, url, query, requestNumber);
+      plan[n] = new PlanCatalog(aladin,in,label, origin,server, url, query, requestNumber,color);
       suiteNew(plan[n]);
       return n;
    }

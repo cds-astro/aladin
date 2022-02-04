@@ -21,6 +21,7 @@
 
 package cds.aladin;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +73,7 @@ public class PlanCatalog extends Plan {
       flagLocal=true;
       flagWaitTarget=true;  // Voir Command.waitingPlanInProgress
 
-      Suite(aladin,label,"","",null,null, null, null);
+      Suite(aladin,label,"","",null,null, null, null, null);
    }
 
   /** Creation d'un plan de type CATALOG (via un InputStream)
@@ -84,7 +85,7 @@ public class PlanCatalog extends Plan {
       this.dis = in;
       if( label==null) label="VOApp";
       flagWaitTarget=true;
-      Suite(aladin,label,"","",origin,server, null, null);
+      Suite(aladin,label,"","",origin,server, null, null, null);
    }
 
    protected PlanCatalog(Aladin aladin, MyInputStream in,String label) {
@@ -97,16 +98,16 @@ public class PlanCatalog extends Plan {
       this.httpConn = httpConn;
       if( label==null) label="HttpConn";
       flagWaitTarget=true;
-      Suite(aladin,label,"","",null,null, null, null);
+      Suite(aladin,label,"","",null,null, null, null, null);
      }
 	
-	protected PlanCatalog(Aladin aladin, MyInputStream in, String label,String origin, Server server, URL url, String query, int requestId) {
+	protected PlanCatalog(Aladin aladin, MyInputStream in, String label,String origin, Server server, URL url, String query, int requestId, Color color) {
 		this.dis = in;
 		if (label == null)
 			label = "VOApp";
 		flagWaitTarget = true;
 		this.requestId = requestId;
-		Suite(aladin, label, "", "", origin, server, url, query);
+		Suite(aladin, label, "", "", origin, server, url, query,color);
 	}
 
   /** Creation d'un plan de type CATALOG (sans info)
@@ -136,7 +137,7 @@ public class PlanCatalog extends Plan {
       flagLocal  = false;
 
 //      Suite(aladin,label,objet,param,from,server, null, null);  <= Chaitra bug
-      Suite(aladin,label,objet,param,from,server, u, null);
+      Suite(aladin,label,objet,param,from,server, u, null,null);
 
    }
    
@@ -149,11 +150,13 @@ public class PlanCatalog extends Plan {
    * @param server le serveur d'origine
  * @param query 
    */
-   protected void Suite(Aladin aladin, String label,String objet,String param,String from,Server server, URL url, String query ) {
+   protected void Suite(Aladin aladin, String label,String objet,String param,
+         String from,Server server, URL url, String query, Color color ) {
       setLogMode(true);
       this.aladin= aladin;
       type       = CATALOG;
-      c = Couleur.getNextDefault(aladin.calque);
+      System.err.println("Color = "+color);
+      c = color!=null ? color : Couleur.getNextDefault(aladin.calque);
       setLabel(label);
       id=this.label;
       this.objet = objet;
@@ -232,6 +235,19 @@ public class PlanCatalog extends Plan {
       return true;
    }
    
+   final String TAGCIRCLE="CIRCLE('ICRS',";
+   final String TAGTARGET="$TARGET";
+   
+   /** Retourne true si le plan peut être réinterroger sur la position courante */
+   protected boolean isRedoable() {
+      if( !flagOk ) return false;
+      String s =  getBookmarkCode();
+      if( s!=null && s.indexOf(TAGTARGET)>0 ) return true;
+      s = getAdqlQuery();
+      if( s!=null && s.indexOf(TAGCIRCLE)>0 ) return true;
+      return false;
+   }
+   
    /** Remet à jour le contenue du plan (catalogue classique) en fonction 
     * du champ de la vue courante 
     */
@@ -249,12 +265,11 @@ public class PlanCatalog extends Plan {
       // Substitution de la position et du rayon dans la contrainte 
       // ADQL de position
       if( query!=null ) {
-         String tag="CIRCLE('ICRS',";
-         int offset = query.indexOf(tag);
+         int offset = query.indexOf(TAGCIRCLE);
          if( offset<0 ) return false;
          int end = query.indexOf(')',offset);
          if( end<0 ) return false;
-         query = query.substring(0,offset+tag.length())
+         query = query.substring(0,offset+TAGCIRCLE.length())
                + target.al + ", "+ target.del+", "+radius
                + query.substring(end);
          
@@ -262,7 +277,7 @@ public class PlanCatalog extends Plan {
 
       // Substitution de la position et du rayon dans le bookmark Cone Search
       } else {
-         int offset = code.indexOf("$TARGET");
+         int offset = code.indexOf(TAGTARGET);
          if( offset<0 ) return false;
          code = code.substring(0,offset);
          cmd = code+" "+target.getRA()+" "+target.getDE()+" "+radius+"deg";

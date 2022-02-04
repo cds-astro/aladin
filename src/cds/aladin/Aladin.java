@@ -163,6 +163,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Catalog plane improvement : automatic content update
  * @beta    <LI> Sextractor service improvement (full local image support)
  * @beta    <LI> Fits improvement: PanSTARRs BOFFSET/BSOFTEN special coding supported
  * @beta    <LI> CASSIS VOTool/plugin compatibility
@@ -225,7 +226,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.110";
+   static public final    String VERSION = "v11.111";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

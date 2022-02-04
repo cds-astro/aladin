@@ -1191,9 +1191,6 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    private void exec(String cmd) {
-//      if( cmd.indexOf("browse")>=0  ) aladin.command.execScriptAsStream( cmd );
-//      else aladin.execAsyncCommand( cmd );
-      
       aladin.console.addLot( cmd );
    }
  

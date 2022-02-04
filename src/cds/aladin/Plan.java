@@ -2336,6 +2336,9 @@ public class Plan implements Runnable {
     * @return true s'il y a eu effectivement changement de contenu
     */
    protected boolean redoConeSearch() { return false;}
+   
+   /** Retourne true si le plan peut être réinterroger sur la position courante */
+   protected boolean isRedoable() { return false; }
 
    /** Demande d'activation/désactivation d'un plan
     * On mémorise le dernier état demandé au cas où ce n'est pas possible

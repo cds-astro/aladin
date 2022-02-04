@@ -699,10 +699,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             JScrollPane sc = new JScrollPane( ta );
             
             JPanel pa = new JPanel( new BorderLayout(5,5) );
-            pa.add(new JLabel("ADQL query"), BorderLayout.NORTH);
+            JLabel la = new JLabel("ADQL query: ");
+            la.setFont(la.getFont().deriveFont(Font.ITALIC));
+            pa.add( la, BorderLayout.NORTH);
             b1.addActionListener( new ActionListener() {
                public void actionPerformed(ActionEvent e) {
-                  ((PlanCatalog)plan).redoAdql( ta.getText() );
+                  ((PlanCatalog)plan).redoAdql( ta.getText().replace('\n',' ') );
                   dispose();
                }
             });
