@@ -122,24 +122,28 @@ public class PlanSTMoc extends PlanTMoc {
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
       STMoc stmoc = (STMoc) moc;
-      ADD( buf, "\n* Start: ",Astrodate.JDToDate( stmoc.getTimeMin()));
-      ADD( buf, "\n* End: ",Astrodate.JDToDate( stmoc.getTimeMax()));
+      boolean timeEmpty = stmoc.getTimeMin()== -1;
+      if( !timeEmpty ) {
+         ADD( buf, "\n* Start: ",Astrodate.JDToDate( stmoc.getTimeMin()));
+         ADD( buf, "\n* End: ",Astrodate.JDToDate( stmoc.getTimeMax()));
+      }
       ADD( buf,"\n* # ranges: ",stmoc.getNbRanges()+"");
       int timeOrder = stmoc.getTimeOrder();
       ADD( buf,"\n* Time res: ",Util.getTemps(  TMoc.getDuration(timeOrder)));
-      int drawOrder = getDrawOrder();
+      int drawOrder = timeEmpty ? -1 : getDrawOrder();
       ADD( buf,"\n","* Time order: "+ (timeOrder==drawOrder ? timeOrder+""  : "draw:"+drawOrder+"/"+timeOrder));
 
       double cov=getFullCoverage();
+      boolean spaceEmpty = cov==0;
       double degrad = Math.toDegrees(1.0);
       double skyArea = 4.*Math.PI*degrad*degrad;
-      ADD( buf, "\n \n* Space: ",Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+      ADD( buf, "\n \n* Space: ",spaceEmpty?"--empty--":Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
       int spaceOrder =stmoc.getSpaceOrder();
       ADD( buf,"\n* Space res: ",( Coord.getUnit( CDSHealpix.pixRes(spaceOrder)/3600.) ));
-      drawOrder = getSpaceDrawOrder();
+      drawOrder = spaceEmpty ? -1 : getSpaceDrawOrder();
       ADD( buf,"\n","* Space order: "+ (drawOrder==-1 ? spaceOrder : spaceOrder==drawOrder ? spaceOrder+"" : "draw:"+drawOrder+"/"+spaceOrder) );
       
-      ADD( buf,"\n \nRAM: ",Util.getUnitDisk( stmoc.getMem() ) );
+      if( !spaceEmpty || !timeEmpty ) ADD( buf,"\n \nRAM: ",Util.getUnitDisk( stmoc.getMem() ) );
 
    }
    
@@ -167,7 +171,7 @@ public class PlanSTMoc extends PlanTMoc {
                moc = new STMoc();
                readMoc(moc,dis);
             }
-            if( moc.isEmpty() ) error="Empty STMOC";
+//            if( moc.isEmpty() ) error="Empty STMOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();

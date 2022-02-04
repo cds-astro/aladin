@@ -162,6 +162,7 @@ public class BuilderTMoc extends BuilderSMoc {
    
    protected void writeIt() throws Exception {
       adjustSize(tmoc,true);
+      if( tmoc.isEmpty() ) throw new Exception("Empty MOC => not generated");
       String file = context.getOutputPath()+Util.FS+"TMoc.fits";
       tmoc.write(file);
    }

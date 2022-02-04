@@ -51,7 +51,8 @@ public class ServerSWarp extends Server  {
 
     private JComboBox comboProj;
 
-    private String baseUrl = "http://alasky.u-strasbg.fr/cgi/SWarp/nph-SWarp.py";
+//    private String baseUrl = "http://alasky.u-strasbg.fr/cgi/SWarp/nph-SWarp.py";
+    private String baseUrl = "http://aladin.u-strasbg.fr/java/post.pl";
 
     // TODO : liste complète à valider avec Caro et Mark
     private String[] availableProjections = {"TAN", "SIN", "ARC", "AIT",

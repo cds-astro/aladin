@@ -44,30 +44,120 @@ public class Astrodate {
    static public double MJDToJD(double MJD) { return MJD+2400000.5; }
    
    
-   /** Conversion d'une date ISOTIME (UTC) en jour julien */
-   static public double dateToJD(String date) {
-      
-      // Vérifie que ça a tout de même un peu la tête d'une ISOTIME AAA-MM-DD[THH:MM:SS]
-      // On renvoit une exception NumberFormat pour éviter d'avoir à patcher le code partout
+   /** Conversion d'une date ISOTIME (UTC) en jour julien
+    * Rq: Reconnaissance stricte de la syntaxe suivante uniquement
+    *  ISOTIME1 => YYYY-MM-DD[THH:MM[:SS.SS]]...
+    */
+   static public double ISOToJD(String date) throws Exception {
       int i = date.indexOf('-');
-      if( i<0 ) throw new NumberFormatException();
-      i = date.indexOf('-',i+1);
-      if( i<0 ) throw new NumberFormatException();
+      if( i<0 ) throw new Exception("Not ISO date");
       
-      Tok tok = new Tok(date,"-T:");
+      Tok tok = new Tok(date,"-T");
       double A = Double.parseDouble( tok.nextToken() );
       double M = Double.parseDouble( tok.nextToken() );
       double J = Double.parseDouble( tok.nextToken() );
+      
       double HH=0,MM=0,SS=0;
       if( tok.hasMoreTokens() ) HH = Double.parseDouble( tok.nextToken() );
       if( tok.hasMoreTokens() ) MM = Double.parseDouble( tok.nextToken() );
       if( tok.hasMoreTokens() ) SS = Double.parseDouble( tok.nextToken() );
       
-//      System.out.println("Date="+date+" => ss="+SS);
       double res = dateToJD(A,M,J,HH,MM,SS);
-//      System.out.println("res="+res);
       return res;
    }
+   
+   /** Conversion d'une date ISOTIME (UTC) en jour julien
+    * Tolère quelques autres syntaxes
+    *  ISOTIME1 => YYYY-MM-DD[THH:MM[:SS.SS]]...
+    *  ISOTIME2 => YYYYMMDD[THHMM[SS.SS]]...
+    *  DATE => DD/MM/YYYY... (éventuellement)
+    *  L'année peut être sur 2 digits (=> +1900) sauf pour ISOTIME2
+    */
+   static public double dateToJD(String date) {
+      boolean slash=false;
+      
+      int i = date.indexOf('-');
+      if( i<0 ) { i = date.indexOf('/'); slash=true; }
+      if( i<0 ) i = date.indexOf(' ');
+      
+      // aucun séparateur, donc YYYYMMDD[THHMMSS]... => conversion en YYYY-MM-DD...
+      if( i<0 ) {
+         String yyyy,mm,dd,hh,m,ss;
+         yyyy=mm=dd=hh=m=ss=null;
+         yyyy = date.substring(0,4);
+         mm = date.substring(4,6);
+         dd = date.substring(6,8);
+         int offsetT = date.indexOf('T');
+         if( offsetT>0 ) {
+            hh = date.substring(9,11);
+            m = date.substring(11,13);
+            if( date.length()>13 ) ss=date.substring(13);
+         }
+         date=yyyy+"-"+mm+"-"+dd;
+         if( hh!=null ) {
+            date+="T"+hh+":"+m;
+            if( ss!=null ) date+=":"+ss;
+         }
+      }
+      
+      // On supprime un éventuel suffixe Z, (TT) ...
+      int suffix = date.length();
+      for( suffix--; suffix>0; suffix--) {
+         if( Character.isDigit( date.charAt(suffix) ) ) { suffix++; break; }
+      }
+      if( suffix>0 ) date = date.substring(0,suffix);
+      
+      Tok tok = new Tok(date,"-/T: ");
+      double A = Double.parseDouble( tok.nextToken() );
+      double M = Double.parseDouble( tok.nextToken() );
+      double J = Double.parseDouble( tok.nextToken() );
+      
+      // HORREUR POUR SDSS, ON SUPPoSE QU'ACEC DES SLASHS LE FORMAT EST DD/MM/AA
+      if( slash ) { double x = A; A=J; J=x; }
+      
+      double HH=0,MM=0,SS=0;
+      if( tok.hasMoreTokens() ) HH = Double.parseDouble( tok.nextToken() );
+      if( tok.hasMoreTokens() ) MM = Double.parseDouble( tok.nextToken() );
+      if( tok.hasMoreTokens() ) SS = Double.parseDouble( tok.nextToken() );
+      
+      // Cas d'une année sur deux digits
+      if( A<100 ) A+=1900;
+      
+      double res = dateToJD(A,M,J,HH,MM,SS);
+      return res;
+   }
+   
+//   static public void main(String [] a) {
+//      String s;
+//      s="1967-05-09T10:39:10.1Z";
+//      double b = dateToJD(s);
+//      System.out.println(s+" => "+b +" => "+JDToDate(b));
+//      s="67-05-09T10:39:10.1";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="19670509T103910.1";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="1967/05/09 10:39:10.1";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="67/5/9";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="1967 05 09";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="1967-05-09";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="1967/05/09";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//      s="1967-05-09T10:39";
+//      b = dateToJD(s);
+//      System.out.println(s+" => "+b+" => "+JDToDate(b));
+//     
+//   }
    
    /** Conversion d'une date en jour julien
     * @param A année

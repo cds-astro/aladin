@@ -240,7 +240,7 @@ public class PlanSTMocGen extends PlanSTMoc {
 
 
       flagProcessing=false;
-      if( moc.isEmpty() ) error="Empty STMOC";
+//      if( moc.isEmpty() ) error="Empty STMOC";
 
       flagOk=true;
       aladin.calque.repaintAll();

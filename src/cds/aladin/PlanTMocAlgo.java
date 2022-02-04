@@ -52,8 +52,9 @@ public class PlanTMocAlgo extends PlanTMoc {
          else {
             for( int i=1; i<pList.length; i++ ) {
                TMoc m1= (TMoc)moc;
-               TMoc m2= (TMoc)pList[i].moc;
-               
+               TMoc m2= pList[i].getMoc().getTimeMoc();
+               if( !m1.isCompatible( m2 ) ) throw new Exception("Uncompatible MOCs");
+
                if( order>=0  ) { m1.setMocOrder( order ); m2.setMocOrder( order );}  
 
                switch(op) {
@@ -78,7 +79,7 @@ public class PlanTMocAlgo extends PlanTMoc {
       flagProcessing=false;
       flagOk=true;
       setActivated(flagOk);
-      if( moc.isEmpty() ) error="Empty TMOC";
+//      if( moc.isEmpty() ) error="Empty TMOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");

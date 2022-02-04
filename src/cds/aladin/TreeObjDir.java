@@ -31,7 +31,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
@@ -65,7 +64,7 @@ import cds.tools.pixtools.CDSHealpix;
  * @version 2.0 Janvier 2017 - désormais utilisé pour le HipsStore
  */
 public class TreeObjDir extends TreeObj implements Propable {
-
+   
    public String internalId;    // Alternative à l'ID de l'identificateur GLU
    private String url;          // L'url ou le path du survey
    public String description;   // Courte description (une ligne max)
@@ -167,21 +166,46 @@ public class TreeObjDir extends TreeObj implements Propable {
    }
    
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
-    * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
-   public TreeObjDir(Aladin aladin,String pathOrUrl) throws Exception {
+    * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties
+    * @param flagCheck true s'il y a un test que le HiPS pointé existe bien => renverra une exception au cas où
+    */
+   public TreeObjDir(Aladin aladin,String pathOrUrl) throws Exception { this(aladin,pathOrUrl,false); }
+   public TreeObjDir(Aladin aladin,String pathOrUrl,boolean flagCheck) throws Exception {
       String s;
       this.aladin = aladin;
+      
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
+      progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
+      if( progen ) maxOrder=15;  // Par défaut pour un Hips progenitor
+
       MyProperties prop = new MyProperties();
 
-      // Par http ou ftp ?
+      // Récupération des properties
+      InputStreamReader in=null;
       try {
-         InputStreamReader in=null;
-         if( !local ) in = new InputStreamReader( (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream(), "UTF-8" );
-         else in = new InputStreamReader( new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES)), "UTF-8" );
-         try { prop.load(in); } finally { in.close(); }
-      } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
-
+         if( !local ) in = new InputStreamReader( Util.openStream(pathOrUrl+"/"+Constante.FILE_PROPERTIES), "UTF-8" );
+         else in = new InputStreamReader( Util.openAnyStream( Util.concatDir(pathOrUrl,Constante.FILE_PROPERTIES)), "UTF-8" );
+         prop.load(in);
+      } catch( Exception e ) {
+         if( flagCheck && !progen) throw e;
+         aladin.trace(3,"No properties file found => auto discovery...");
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e) {}
+      }
+      
+      // Pour les Hips progenitor, on teste la présence du metada.xml
+      if( progen && flagCheck ) {
+         InputStreamReader meta=null;
+         try {
+            if( !local ) meta = new InputStreamReader( Util.openStream(pathOrUrl+"/"+Constante.FILE_METADATAXML), "UTF-8" );
+            else meta = new InputStreamReader( Util.openAnyStream( Util.concatDir(pathOrUrl,Constante.FILE_METADATAXML)), "UTF-8" );
+         } catch( Exception e ) {
+            if( flagCheck ) throw e;
+            aladin.trace(3,"No metadata.xml file found => auto discovery...");
+         } finally {
+            if( meta!=null ) try { meta.close(); } catch( Exception e) {}
+         }
+      }
 
       // recherche du frame Healpix (ancienne & nouvelle syntaxe)
       String strFrame = prop.getProperty(Constante.KEY_HIPS_FRAME);
@@ -297,8 +321,6 @@ public class TreeObjDir extends TreeObj implements Propable {
             }
          }
       }
-
-      progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
 
       s = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
       if( s!=null) {

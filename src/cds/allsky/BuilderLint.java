@@ -336,7 +336,7 @@ public class BuilderLint extends Builder {
          }
 
          // Attention, le Hips et le MOC n'ont pas le même système de coord
-         int frameMoc = context.getFrameVal( moc.getSys() );
+         int frameMoc = context.getFrameVal( moc.getSpaceSys() );
          if( frame!=frameMoc ) {
             double radec[] = CDSHealpix.pix2ang_nest( order, npix);
             radec = CDSHealpix.polarToRadec(new double[] { radec[0], radec[1] });
@@ -532,7 +532,7 @@ public class BuilderLint extends Builder {
          moc.read(in);
          in.close();
 
-         String frame = moc.getSys();
+         String frame = moc.getSpaceSys();
          if( !frame.equals("C") ) {
             context.warning("Lint[4.4.2] \"Moc.fits\" coordinate system error, ICRS expecting, found ["+frame+"]");
             flagWarning=true;

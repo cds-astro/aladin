@@ -44,7 +44,7 @@ public class BuilderMocIndex extends BuilderMoc {
 
       String outputFile = path + FS + Constante.FILE_MOC;
       String frame = getFrame();
-      moc.setSys(frame);
+      moc.setSpaceSys(frame);
       generateMoc(moc,mocOrder, path);
       moc.write(outputFile);
       

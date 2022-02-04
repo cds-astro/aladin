@@ -82,7 +82,9 @@ public class PlanMocAlgo extends PlanMoc {
             else {
                for( int i=1; i<pList.length; i++ ) {
                   SMoc m1= (SMoc)moc;
-                  SMoc m2=pList[i].toReferenceFrame(m1.getSys());
+                  SMoc m2= pList[i].getMoc().getSpaceMoc();
+                  if( !m1.isCompatible( m2 ) ) throw new Exception("Uncompatible MOCs");
+                  m2 = Util.convertTo(m2,m1.getSpaceSys());
                   
                   if( order>=0  ) { m1.setMocOrder( order ); m2.setMocOrder( order );}  
 
@@ -113,7 +115,7 @@ public class PlanMocAlgo extends PlanMoc {
 //      }
       flagOk=true;
       setActivated(flagOk);
-      if( moc.isEmpty() ) error="Empty MOC";
+//      if( moc.isEmpty() ) error="Empty MOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");
@@ -156,7 +158,7 @@ public class PlanMocAlgo extends PlanMoc {
       copyright = "Computed by Aladin";
       flagProcessing=false;
       if( moc.isEmpty() ) {
-         error="Empty MOC";
+//         error="Empty MOC";
          flagOk=true;
       } else flagOk=true;
       setActivated(flagOk);
@@ -200,7 +202,7 @@ public class PlanMocAlgo extends PlanMoc {
       copyright = "Computed by Aladin";
       flagProcessing=false;
       if( moc.isEmpty() ) {
-         error="Empty MOC";
+//         error="Empty MOC";
          flagOk=true;
       } else flagOk=true;
       setActivated(flagOk);

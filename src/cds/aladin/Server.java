@@ -207,6 +207,7 @@ public class Server extends JPanel
    protected double aladinMenuNumber=0;      // Numéro d'ordre du serveur (ordre d'apparition dans le serveur selector)
    protected String title;		  // Le titre de la fenêtre
    protected String gluTag;          // Le Tag GLU (ActionName) associé au serveur (ou null si aucun)
+   protected String resourceId;    // L'identificateur de la ressource concernée dans le cas d'une requête générique genre get TAP(ID,...)
    protected String aladinLabel="";       // le nom du serveur
    protected String description;         // les infos (une ligne) decrivant le serveur
    protected String verboseDescr;         // Description détaillée du serveur
@@ -1499,7 +1500,7 @@ public void layout() {
        StringBuffer res=null;
        for( int i=0; i<plan.length; i++ ) {
           String url = plan[i].getUrl();
-          if( url==null || url.startsWith("file:") ) url = Export.export(plan[i]);  // Serveur local
+          if( url==null || url.startsWith("file:") ) url= getUrl4LocalData(plan[i]); 
           if( url==null ) continue;
 
           url=backSlashPipe(url);
@@ -1507,6 +1508,12 @@ public void layout() {
           else res.append("|"+url);
        }
        return res==null ? null : res.toString();
+    }
+    
+    /** Retourne une URL temporaire pour récupérer des données locales (via le tiny httpd)
+     * Cette méthode est surchargée pour les services qui supportent le POST multipart => voir par exemple ServerSextractor */
+    protected String getUrl4LocalData(Plan p) {
+       return Export.export(p);  // Serveur local
     }
 
      /** Backslash les éventuels '|' */

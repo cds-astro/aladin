@@ -343,16 +343,15 @@ public final class PlanFilter extends Plan {
       }
       // On arrête d'abord le précédent thread (si on réappuie sur apply avant la fin)
       stopFilterThread();
-      synchronized( this ) {
+//      synchronized( this ) {
          runme = new Thread(this,"AladinFilterApply");
          Util.decreasePriority(Thread.currentThread(), runme);
-//         runme.setPriority( Thread.NORM_PRIORITY -1);
          runme.start();
-      }
+//      }
    }
 
    /** arrete proprement le thread courant */
-   private synchronized void stopFilterThread() {
+   private /* synchronized */ void stopFilterThread() {
 	   if( runme==null ) return;
 
 	   Thread oldThread = runme;

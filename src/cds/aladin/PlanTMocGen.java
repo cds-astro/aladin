@@ -155,7 +155,8 @@ public class PlanTMocGen extends PlanTMoc {
                return false;
             }
             flagProcessing=false;
-            if( moc.isEmpty() ) error="Empty TMOC";
+//            if( moc.isEmpty() ) error="Empty TMOC";
+            
             
 //            long t1 = System.currentTimeMillis();
 //            if( i==2 ) {

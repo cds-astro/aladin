@@ -110,8 +110,7 @@ public class Plan implements Runnable {
       "MOC","CubeColor","HipsFinder","HipsCube","TMOC","STMOC","RGBdyn"
    };
 
-   protected String id=null;     // Identification unique (ex: CDS/I/231...)
-   protected String asId=null;   // Identification technique (cf. prepareLabel()
+   protected String id=null;     // Identification unique du plan (ex: CDS/I/231...)
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
    protected int folder;	     // niveau du folder, 0 si aucun
    protected Slide slide=null;   // Slide pour la pile
@@ -228,10 +227,13 @@ public class Plan implements Runnable {
    protected Plan() { type=X; aladin=Aladin.aladin; flagOk=false; label=""; startTime = System.currentTimeMillis(); }
    protected Plan(Aladin aladin) { this.aladin=aladin; }
 
-   /** retourne la commande script qui a permit de créer le plan */
+   /** retourne la commande script qui a permis de créer le plan */
    private String bookmarkCode=null;
    protected String getBookmarkCode() { return bookmarkCode; }
    protected void setBookmarkCode(String code) { bookmarkCode=code; }
+   
+   /** Retourne la commande ADQL qui a permis de créer le plan */
+   protected String getAdqlQuery() { return query; }
 
    /** Duplication du Plan */
    protected void copy(Plan p) {
@@ -1919,13 +1921,17 @@ public class Plan implements Runnable {
    /** Retourne une chaine décrivant le plan qui va s'afficher au-dessus de la pile
     * => cf Select.setMessageInfo(...) */
    protected String getMessageInfo() {
-      MyProperties prop = aladin.directory.getProperties( id );
       
+      if( hasError() ) return "!!Error:\n \n"+error;
+      
+      MyProperties prop = aladin.directory.getProperties( id );
+
       String s1;
       String s = prop==null ? null : prop.getFirst("obs_collection_label");
       if( s==null ) s=label;
       StringBuilder buf = new StringBuilder(s+"\n ");
-      
+
+
       if( prop!=null ) {
          if( (s=prop.get("obs_regime"))!=null ) ADD( buf, "\n* Regime: ",s.replace("\t",", "));
          if( (s=prop.get("em_min"))!=null && (s1=prop.get("em_max"))!=null ) {
@@ -1938,19 +1944,19 @@ public class Plan implements Runnable {
       } else {
          if( filename==null ) ADD( buf, "\n* Provenance: ",copyright);
       }
-      
+
       addMessageInfo(buf,prop);
-      
+
       // La description du plan
       if( prop!=null ) {
          s = prop.getFirst("obs_title");
          if( s==null ) s=prop.getFirst("obs_collection");
       } else s=description;
       if( s!=null ) ADD( buf, "\n \n",s);
-      
+
       return buf.toString();
    }
-   
+
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) { }
    
    

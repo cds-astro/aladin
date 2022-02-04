@@ -818,8 +818,8 @@ public final class Slide {
                   setBlink(true);
                   p.status|=Plan.STATUS_INPROGRESS;
                   if( p.pourcent>0 ) drawFolderExt(g,(int)p.pourcent,0,dy,Color.gray);
-               }
-               else if( p.isSimpleCatalog() || p.isImage()
+                  
+               } else if( p.isSimpleCatalog() || p.isImage()
                      || p instanceof PlanContour || p.type==Plan.FILTER
                      || p instanceof PlanBG ) {
                   if( p.error!=null ) {
@@ -829,7 +829,7 @@ public final class Slide {
                      else if( p.isSimpleCatalog() && p.error.indexOf("OVERFLOW")>=0 ) { drawBall(g,px,py-9,Aladin.ORANGE); p.status|=Plan.STATUS_OVERFLOW; }
                      else if( p.isSimpleCatalog() && p.error!=null && !p.error.startsWith("EMPTY") ) { drawBall(g,px1,py-9,Color.red); p.status|=Plan.STATUS_ERROR;  }
                      else if( p.isSimpleCatalog() && !hasObj ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYCAT; }
-                     else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().isEmpty() ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYMOC; }
+//                     else if( p.isMoc() && ((PlanMoc)p).getMoc().isEmpty() && p.error==null ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYMOC; }
                      else { drawBall(g,px1,py-9,Color.red); p.status|=Plan.STATUS_ERROR; }
                   } else {
                      boolean flag=false;
@@ -854,9 +854,14 @@ public final class Slide {
                         setBlink(true);
                         
                      } else {
-                        if( p instanceof PlanBG  && p.active ) {
-                           drawBall(g,px,py-9, green );
-                         }
+                        if( p instanceof PlanBG  ) {
+                           if( p.isMoc() && ((PlanMoc)p).getMoc().isEmpty() ) {   
+                              drawCross(g,px1,py-9); 
+                              p.status|=Plan.STATUS_EMPTYMOC;
+                           } else if( p.active ) {
+                              drawBall(g,px,py-9, green );
+                           }
+                        }
                      }
                      if( p.getCompletude()>=0 && p.active ) {
                         int w = Select.sizeLabel+10-60;

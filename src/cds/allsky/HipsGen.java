@@ -860,8 +860,8 @@ public class HipsGen {
                         "                       compressed tiles (JPEG|PNG)" + "\n" +
                         "   hips_frame          Target coordinate frame (equatorial|galactic)" + "\n" +
                         "   hips_tile_width=nn  Specifical tile width (pow of 2) - default 512" + "\n" +
-                        "   mocOrder=nn         Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
-                        "                       auto-adapted to the HiPS" + "\n" +
+                        "   mocOrder=s          Specifical MOC order (only for MOC & STMOC action). syntax: [s[/t]] [<nnMB[:tts]]" + "\n" +
+                        "                       s-spaceOrder, t-timeOrder, maxLimit, degradation rule" + "\n" +
                         "   nside=nn            HEALPix map NSIDE (only for MAP action) - by default 2048" + "\n" +
                         "   exptime=key         Fits key to use for adjusting variation of exposition" + "\n" +
                         "   cache=dir           Directory name for an alternative cache disk location" + "\n" +

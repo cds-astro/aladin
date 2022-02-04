@@ -55,10 +55,15 @@ public class PlanSTMocAlgo extends PlanSTMoc {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
                Moc m2=pList[i].getMoc();
+               if( isCompatible(m1,m2) ) throw new Exception("Uncompatible MOCs");
                
                // IL vaut mieux ajuster les ordres avant qu'après => c'est plus rapide
-               if( timeOrder>=0  ) { m1.setTimeOrder( timeOrder );   m2.setTimeOrder(  timeOrder ); }
-               if( spaceOrder>=0 ) { m1.setSpaceOrder( spaceOrder ); m2.setSpaceOrder( spaceOrder ); }
+               try {
+                  if( timeOrder>=0  ) { m1.setTimeOrder( timeOrder );   m2.setTimeOrder(  timeOrder ); }
+               } catch( Exception e ) { }
+               try {
+                  if( spaceOrder>=0 ) { m1.setSpaceOrder( spaceOrder ); m2.setSpaceOrder( spaceOrder ); }
+               } catch( Exception e ) { }
 
                switch(op) {
                   case PlanMocAlgo.UNION :        moc = m1.union(        m2); break;
@@ -85,10 +90,24 @@ public class PlanSTMocAlgo extends PlanSTMoc {
       flagProcessing=false;
       flagOk=true;
       setActivated(flagOk);
-      if( moc.isEmpty() ) error="Empty STMOC";
+//      if( error==null && moc.isEmpty() ) error="Empty STMOC";
       aladin.calque.repaintAll();
 
       sendLog("Compute"," [" + this + " = "+s+"]");
+   }
+   
+   /** Vérifie la cohérence des systèmes de références spatiaux et temporels */
+   private boolean isCompatible(Moc m1, Moc m2 ) {
+      String a,b;
+      
+      a = m1.getSpaceSys();
+      b = m2.getSpaceSys();
+      if( ! (a==null && b==null || a.equals(b)) ) return false;
+
+      a = m1.getTimeSys();
+      b = m2.getTimeSys();
+      if( ! (a==null && b==null || a.equals(b)) ) return false;
+      return true;
    }
    
    protected void launchLoading() { }

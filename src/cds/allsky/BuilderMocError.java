@@ -75,7 +75,7 @@ public class BuilderMocError extends BuilderMoc {
 
       String outputFile = path + FS + Constante.FILE_MOCERROR;
       
-      moc.setSys(getFrame());
+      moc.setSpaceSys(getFrame());
       generateMoc(moc,fileOrder, path);
       if( moc.isEmpty() ) context.info("MOCERROR empty (no error tiles detected)");
       else {

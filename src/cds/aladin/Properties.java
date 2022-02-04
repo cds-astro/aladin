@@ -36,6 +36,7 @@ import java.awt.Point;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -684,10 +685,29 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          // Une ligne de separation
          if( plan.isCatalog() || plan.isImage() ) PropPanel.addFilet(p,g,c);
          
+         // La requête ADQL, et les mécanismes nécessaires pour la rejouer
          if (plan.isCatalog() && plan.query != null) {
-            JTextArea ta = new JTextArea(plan.query, 5, 40);
+            final JButton b1 = new JButton(" Re-submit ");
+            b1.setEnabled(false);
+            
+            final JTextArea ta = new JTextArea(plan.query, 5, 40);
+            ta.addKeyListener( new KeyAdapter() {
+               public void keyReleased(KeyEvent e) {
+                  b1.setEnabled( !plan.query.equals(ta.getText()) );
+               }
+            });
             JScrollPane sc = new JScrollPane( ta );
-        	PropPanel.addCouple(p,"ADQL query ", sc, g,c);
+            
+            JPanel pa = new JPanel( new BorderLayout(5,5) );
+            pa.add(new JLabel("ADQL query"), BorderLayout.NORTH);
+            b1.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  ((PlanCatalog)plan).redoAdql( ta.getText() );
+                  dispose();
+               }
+            });
+            pa.add(b1, BorderLayout.SOUTH);
+        	PropPanel.addCouple(p,pa, sc, g,c);
 		}
       }
 
@@ -1048,7 +1068,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan.isMoc() ) {
          final PlanMoc pmoc = (PlanMoc)plan;
-//         final Frame frameProp = this;
+//         final Frame frameProp = this;         
          
          if( plan.type==Plan.ALLSKYMOC ) {
             double cov = ((SMoc)pmoc.getMoc()).getCoverage();

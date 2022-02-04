@@ -42,7 +42,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
-import cds.allsky.Constante;
 import cds.moc.SMoc;
 import cds.moc.STMoc;
 import cds.moc.TMoc;
@@ -268,27 +267,41 @@ public class ServerFile extends Server implements XMLConsumer {
                      //                     setSync(true);
                      Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
 
-                     if( PlanBG.isPlanBG(f) ) {
+//                     if( PlanBG.isPlanBG(f) ) {
+//
+//                        // recherche des propriétés
+//                        TreeObjDir gSky=null;
+//                        try { gSky = new TreeObjDir(aladin, f); } catch( Exception e ) { }
+//                        
+//                        if( gSky==null ) {
+//
+//                           // Progen ?
+//                           if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeObjDir(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen",null);
+//
+//                           // Catalogue ?
+//                           else if(  (new File(f+"/"+Constante.FILE_METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+//                              gSky = new TreeObjDir(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat",null);
+//                           }
+//                        }
+//
+//                        if( gSky!=null ) n=aladin.calque.newPlanBG(gSky,label,target,radius);
+//                        else n=aladin.calque.newPlanBG(f,label,target,radius);
+//
 
-                        // recherche des propriétés
-                        TreeObjDir gSky=null;
-                        try { gSky = new TreeObjDir(aladin, f); } catch( Exception e ) { }
+                     
+//                     if( PlanBG.isPlanBG(f) ) {
 
-                        if( gSky==null ) {
+                     // recherche des propriétés d'un éventuel HiPS
+                     TreeObjDir gSky=null;
+                     try { gSky = new TreeObjDir(aladin, f, true); } catch( Exception e ) { }
 
-                           // Progen ?
-                           if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeObjDir(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen",null);
+                     // HiPS trouvé => on le charge
+                     if( gSky!=null ) {
+                        n=aladin.calque.newPlanBG(gSky,label,target,radius);
 
-                           // Catalogue ?
-                           else if(  (new File(f+"/"+Constante.FILE_METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
-                              gSky = new TreeObjDir(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat",null);
-                           }
-                        }
+                     // Ce n'est pas un Hips => exploration du répertoire
+                     } else {
 
-                        if( gSky!=null ) n=aladin.calque.newPlanBG(gSky,label,target,radius);
-                        else n=aladin.calque.newPlanBG(f,label,target,radius);
-
-                     }  else {
                         final ServerFile th = this;
                         (new Thread(){
                            public void run() {
@@ -328,22 +341,41 @@ public class ServerFile extends Server implements XMLConsumer {
                f = f.replaceAll("\\\\", "/");
             }
 
-            //Obtention du stream (donnee locale ou distante)
+            TreeObjDir gSky=null;
+
+            //Pas de stream, juste une URL en HTTP => découverte du contenu et/ou création du stream
             if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
-               u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
-               
-               try { in = Util.openStream(u); } catch( Exception e ) {
-                  String s = e.getMessage();
-                  if( s.startsWith(Util.HTTPERROR) ) {
-                     int code=0;
-                     try { 
-                        code=Integer.parseInt(s.substring(Util.HTTPERROR.length()));
-                     } catch(Exception e1) {}
-                     if( code>=401 && code<=403 ) throw new Exception("Data access forbidden ("+code+" HTTP error)"); 
-                  }
-                  if( aladin.levelTrace>=3 ) e.printStackTrace();
+
+               // S'agirait-il d'un HiPS distant ?
+               try {
+                  gSky = new TreeObjDir(aladin, f, true);
+//                  System.err.println("!!! gSky="+gSky.toString1());
+                  n=aladin.calque.newPlanBG(gSky,label,null,null);
+
+               } catch( Exception e ) {
+                  aladin.trace(3, "ServerFile.creatLocalPlane(...) HiPS properties file not found => autodiscovery");
                }
-               mode="http";
+               
+               // Non ! Alors obtention du stream
+               if( gSky==null ) {
+                  u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
+
+                  try { in = Util.openStream(u); } catch( Exception e ) {
+                     String s = e.getMessage();
+                     if( s.startsWith(Util.HTTPERROR) ) {
+                        int code=0;
+                        try { 
+                           code=Integer.parseInt(s.substring(Util.HTTPERROR.length()));
+                        } catch(Exception e1) {}
+                        if( code==400 ) throw new Exception("Bad request ("+code+" HTTP error)"); 
+                        if( code>=401 && code<=403 ) throw new Exception("Data access forbidden ("+code+" HTTP error)"); 
+                        if( code==404 ) throw new Exception("Resource not found ("+code+" HTTP error)"); 
+                        if( code>=405 ||code>=500 ) throw new Exception("Server error ("+code+" HTTP error)"); 
+                     }
+                     if( aladin.levelTrace>=3 ) e.printStackTrace();
+                  }
+                  mode="http";
+               }
             }
 
             // support FTP --> ça fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
@@ -358,9 +390,8 @@ public class ServerFile extends Server implements XMLConsumer {
                u = new URL(getNameWithoutBrackets(f));
                in = Util.openStream(u);
                mode="file";
-            }
-
-            else {
+               
+            }  else {
                if( is==null ) {
                   localFile=true;
                   Aladin.trace(3,"Opening "+getNameWithoutBrackets(f));
@@ -374,113 +405,116 @@ public class ServerFile extends Server implements XMLConsumer {
                   else in = new MyInputStream(is);
                }
             }
-            if( in!=null ) {
-               in = in.startRead();
-               type = in.getType();
-            } else type=MyInputStream.UNKNOWN;
-
-            // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
-            if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
-
-            // Petit rajouti pour reconnaitre l'extension REG pour les regions DS9
-            if( f!=null && f.endsWith(".reg") ) type |= MyInputStream.AJS;
-
-            String t = in.decodeType(type);
-            Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
-            aladin.log("load",mode+t);
             
-            String ustr = u==null ? null : u.toString();
+            if( gSky==null ) {
 
-            // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
-            if( (type & (MyInputStream.DS9REG /* |MyInputStream.AJTOOL */))!=0 ) {
-               //               aladin.command.resetPreviousDrawing();
-               aladin.calque.newPlanTool(null);
-            }
+               if( in!=null ) {
+                  in = in.startRead();
+                  type = in.getType();
+               } else type=MyInputStream.UNKNOWN;
 
-            if( (type & (MyInputStream.AJS|MyInputStream.AJSx|MyInputStream.UNKNOWN))!=0) aladin.command.readFromStream(in);
-            else if( (type & MyInputStream.AJ)!=0) n=loadAJ(in)?1:0;
-            else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
-            else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
- 
-            else if( (type & MyInputStream.SMOC)!=0 ) n=aladin.calque.newPlanMOC(in,label,ustr);
-            else if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label,ustr);
-            else if( (type & MyInputStream.STMOC)!=0) n=aladin.calque.newPlanSTMOC(in,label,ustr);
+               // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
+               if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
 
-            else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
-               if( u!=null ) {
-                  n=aladin.calque.newPlanImageRGB(u,in,PlanImage.OTHER,
-                        label,null,f, origin,
-                        PlanImage.UNKNOWN,PlanImage.UNDEF,
-                        null,resNode);
-               } else n=aladin.calque.newPlanImageRGB(f,null,in,resNode);
-            }
-            else if( (type & MyInputStream.HEALPIX)!=0 ) {
-               n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false,target,radius);
-            }
-            else if( (type & MyInputStream.XFITS)!=0) {
-               aladin.calque.newFitsExt(f,in,label,o,target,radius);
-               n=1;
-            }
-            else if( (type & (MyInputStream.FITS|MyInputStream.PDS))!=0) {
-               if( u!=null ) {
-                  n=aladin.calque.newPlanImage(u,in,PlanImage.OTHER,
-                        label,null,f, origin,
-                        PlanImage.UNKNOWN,PlanImage.UNDEF,
-                        o,resNode);
-                  
-               } else n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
-            }
-            else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
-               // un nouveau plan sera créé sur la pile si la description contient les PARAM de position
-               boolean newPlane = (n=aladin.processFovVOTable(in,null,true))>=0;
-               // si on a juste ajouté un FOV à la liste des FOV chargés,
-               // on se place sur cet onglet et on sélectionne le FOV en question
-               if( !newPlane ) {
-                  n=-2;  // Pour éviter une erreur via VOAPP (--> c'est du propre !)
-                  aladin.dialog.setCurrent(ServerDialog.FIELD);
-                  ((ServerFoV)aladin.dialog.server[ServerDialog.FIELD]).selectFOV(ServerFoV.idLastRegistered);
+               // Petit rajouti pour reconnaitre l'extension REG pour les regions DS9
+               if( f!=null && f.endsWith(".reg") ) type |= MyInputStream.AJS;
+
+               String t = in.decodeType(type);
+               Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
+               aladin.log("load",mode+t);
+
+               String ustr = u==null ? null : u.toString();
+
+               // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
+               if( (type & (MyInputStream.DS9REG /* |MyInputStream.AJTOOL */))!=0 ) {
+                  //               aladin.command.resetPreviousDrawing();
+                  aladin.calque.newPlanTool(null);
                }
-            } else if( (type & MyInputStream.DATALINK) != 0 && aladin.mesure.activeDataLinkWord != null) {
-            	aladin.mesure.showAssociatedDatalinks(f, o);
-             }
-            else if( (type & (MyInputStream.ASTRORES|MyInputStream.VOTABLE|
-                  MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
-               if( u!=null ) n=aladin.calque.newPlanCatalog(u,in,label,"",f,null,server);
-               else if( f!=null) n=aladin.calque.newPlanCatalog(f,in);
-               else n=aladin.calque.newPlanCatalog(in,label,origin, server, url, query, requestId);
 
-               // C'est peut être une image native ?
-            } else if( (type & MyInputStream.NativeImage())!=0 ) {
-               if( u!=null ) {
-                  n=aladin.calque.newPlanImageColor(u,in,PlanImage.OTHER,
-                        label,null,f, origin,
-                        PlanImage.UNKNOWN,PlanImage.UNDEF,
-                        o,resNode);
-               } else n=aladin.calque.newPlanImageColor(f,null,in,resNode);
+               if( (type & (MyInputStream.AJS|MyInputStream.AJSx|MyInputStream.UNKNOWN))!=0) aladin.command.readFromStream(in);
+               else if( (type & MyInputStream.AJ)!=0) n=loadAJ(in)?1:0;
+               else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
+               else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
 
-               // C'est peut être un dico GLU ?
-            } else if( (type & MyInputStream.GLU)!=0 ) {
-               if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
-                  aladin.glu.reload(false,true);
+               else if( (type & MyInputStream.SMOC)!=0 ) n=aladin.calque.newPlanMOC(in,label,ustr);
+               else if( (type & MyInputStream.TMOC)!=0 ) n=aladin.calque.newPlanTMOC(in,label,ustr);
+               else if( (type & MyInputStream.STMOC)!=0) n=aladin.calque.newPlanSTMOC(in,label,ustr);
+
+               else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
+                  if( u!=null ) {
+                     n=aladin.calque.newPlanImageRGB(u,in,PlanImage.OTHER,
+                           label,null,f, origin,
+                           PlanImage.UNKNOWN,PlanImage.UNDEF,
+                           null,resNode);
+                  } else n=aladin.calque.newPlanImageRGB(f,null,in,resNode);
+               }
+               else if( (type & MyInputStream.HEALPIX)!=0 ) {
+                  n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false,target,radius);
+               }
+               else if( (type & MyInputStream.XFITS)!=0) {
+                  aladin.calque.newFitsExt(f,in,label,o,target,radius);
                   n=1;
                }
+               else if( (type & (MyInputStream.FITS|MyInputStream.PDS))!=0) {
+                  if( u!=null ) {
+                     n=aladin.calque.newPlanImage(u,in,PlanImage.OTHER,
+                           label,null,f, origin,
+                           PlanImage.UNKNOWN,PlanImage.UNDEF,
+                           o,resNode);
 
-               // C'est peut être un fichier de properties ?
-            } else if( (type & MyInputStream.PROP)!=0 ) {
-               
-               // Dans le cas d'un fichier properties, on passe le path ou l'url pour 
-               // fournir l'accès au HiPS associé dans le cas où il n'est pas décrit
-               // par un hips_service_url
-               String path = null;
-               int i = (f==null /* || !mode.equals("file")*/ ) ? -1 : f.lastIndexOf("properties");
-               if( i>0 ) path = f.substring(0,i-1);
-               
-               if( aladin.directory.addHipsProp( new InputStreamReader(in), true, path) ) {
-                  n=1;
+                  } else n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
                }
+               else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
+                  // un nouveau plan sera créé sur la pile si la description contient les PARAM de position
+                  boolean newPlane = (n=aladin.processFovVOTable(in,null,true))>=0;
+                  // si on a juste ajouté un FOV à la liste des FOV chargés,
+                  // on se place sur cet onglet et on sélectionne le FOV en question
+                  if( !newPlane ) {
+                     n=-2;  // Pour éviter une erreur via VOAPP (--> c'est du propre !)
+                     aladin.dialog.setCurrent(ServerDialog.FIELD);
+                     ((ServerFoV)aladin.dialog.server[ServerDialog.FIELD]).selectFOV(ServerFoV.idLastRegistered);
+                  }
+               } else if( (type & MyInputStream.DATALINK) != 0 && aladin.mesure.activeDataLinkWord != null) {
+                  aladin.mesure.showAssociatedDatalinks(f, o);
+               }
+               else if( (type & (MyInputStream.ASTRORES|MyInputStream.VOTABLE|
+                     MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
+                  if( u!=null ) n=aladin.calque.newPlanCatalog(u,in,label,"",f,null,server);
+                  else if( f!=null) n=aladin.calque.newPlanCatalog(f,in);
+                  else n=aladin.calque.newPlanCatalog(in,label,origin, server, url, query, requestId);
 
-               // C'est peut être un planBG via HTTP
-            } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
+                  // C'est peut être une image native ?
+               } else if( (type & MyInputStream.NativeImage())!=0 ) {
+                  if( u!=null ) {
+                     n=aladin.calque.newPlanImageColor(u,in,PlanImage.OTHER,
+                           label,null,f, origin,
+                           PlanImage.UNKNOWN,PlanImage.UNDEF,
+                           o,resNode);
+                  } else n=aladin.calque.newPlanImageColor(f,null,in,resNode);
+
+                  // C'est peut être un dico GLU ?
+               } else if( (type & MyInputStream.GLU)!=0 ) {
+                  if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
+                     aladin.glu.reload(false,true);
+                     n=1;
+                  }
+
+                  // C'est peut être un fichier de properties ?
+               } else if( (type & MyInputStream.PROP)!=0 ) {
+
+                  // Dans le cas d'un fichier properties, on passe le path ou l'url pour 
+                  // fournir l'accès au HiPS associé dans le cas où il n'est pas décrit
+                  // par un hips_service_url
+                  String path = null;
+                  int i = (f==null /* || !mode.equals("file")*/ ) ? -1 : f.lastIndexOf("properties");
+                  if( i>0 ) path = f.substring(0,i-1);
+
+                  if( aladin.directory.addHipsProp( new InputStreamReader(in), true, path) ) {
+                     n=1;
+                  }
+
+                  // C'est peut être un planBG via HTTP
+               } else /* if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
 
                // Cubes ?
                TreeObjDir gSky=null;
@@ -522,16 +556,17 @@ public class ServerFile extends Server implements XMLConsumer {
 
                else throw new Exception("Data format not recognized");
 
-            } else {
-               throw new Exception("Data format not recognized");
-            }
-            aladin.endMsg();
+            } else */ {
+                  throw new Exception("Data format not recognized");
+               }
+               aladin.endMsg();
 
-            // Dans le cas de Meta-donnee (SIA ou IDHA) on va automatiquement ouvrir
-            // et positionner la fenetre des formulaires toFront
-            if( (type & (/*MyInputStream.SIA_SSA|*/MyInputStream.IDHA))!=0 ) {
-               aladin.dialog.show();
-               aladin.dialog.setCurrent(aladinLabel);
+               // Dans le cas de Meta-donnee (SIA ou IDHA) on va automatiquement ouvrir
+               // et positionner la fenetre des formulaires toFront
+               if( (type & (/*MyInputStream.SIA_SSA|*/MyInputStream.IDHA))!=0 ) {
+                  aladin.dialog.show();
+                  aladin.dialog.setCurrent(aladinLabel);
+               }
             }
          } catch(Exception e) {
             e.printStackTrace();

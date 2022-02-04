@@ -161,9 +161,9 @@ public class PlanBGRgb extends PlanBG {
    protected void planReadyMoc() {
       try {
          SMoc m = new SMoc();
-         if( red!=null && red.moc!=null ) m = (SMoc) m.union( red.moc );
-         if( green!=null && green.moc!=null ) m = (SMoc) m.union( green.moc );
-         if( blue!=null && blue.moc!=null ) m = (SMoc) m.union( blue.moc );
+         if( red!=null && red.moc!=null ) m = m.union( red.moc );
+         if( green!=null && green.moc!=null ) m = m.union( green.moc );
+         if( blue!=null && blue.moc!=null ) m = m.union( blue.moc );
          moc = new SMoc( m );
       } catch( Exception e ) { e.printStackTrace(); }
    }

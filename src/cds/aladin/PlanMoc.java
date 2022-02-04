@@ -85,7 +85,7 @@ public class PlanMoc extends PlanBGCat {
       useCache = false;
       frameOrigin = Localisation.ICRS;
       if( moc!=null ) {
-         String f = moc.getSys();
+         String f = moc.getSpaceSys();
          frameOrigin = f.equals("E")?Localisation.ECLIPTIC :
             f.equals("G")?Localisation.GAL:Localisation.ICRS;
          
@@ -119,17 +119,24 @@ public class PlanMoc extends PlanBGCat {
 //      pm.arrayMoc = new Moc[CDSHealpix.MAXORDER+1];
    }
    
+   protected String getHipsFrame() {
+      if( moc==null ) return super.getHipsFrame();
+      String s = moc.getSpaceSys();
+      return s+(s.equals("C")?" => ICRS":s.equals("G")?" => Galatic":s.equals("E")?" => Ecliptic":"");
+   }
+   
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
       SMoc m = (SMoc)moc;
+      boolean isEmpty = m.isEmpty();
       double cov = m.getCoverage();
-      ADD( buf, "\n* Space: ",Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+      ADD( buf, "\n* Space: ",isEmpty?"--empty--": Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
       ADD( buf, "\n* Resolution: ",Coord.getUnit(m.getAngularRes()));
       
       int order = m.getMocOrder();
-      int drawOrder = getDrawOrder();
+      int drawOrder = isEmpty ? -1 : getDrawOrder();
       ADD( buf,"\n","* Order: "+ (drawOrder==-1 ? order : order==drawOrder ? order+"" : "draw:"+drawOrder+"/"+order) );
-      ADD( buf,"\n \nRAM: ",Util.getUnitDisk( moc.getMem() ) );
+      if( !isEmpty ) ADD( buf,"\n \nRAM: ",Util.getUnitDisk( moc.getMem() ) );
    }
 
    /** Changement de référentiel si nécessaire */
@@ -137,7 +144,7 @@ public class PlanMoc extends PlanBGCat {
       SMoc m = (SMoc)moc;
       SMoc moc1 = Util.convertTo(m,coordSys);
       if( m!=moc1 ) {
-         aladin.trace(2,"Moc reference frame conversion: "+m.getSys()+" => "+moc1.getSys());
+         aladin.trace(2,"Moc reference frame conversion: "+m.getSpaceSys()+" => "+moc1.getSpaceSys());
       }
       return moc1;
    }
@@ -431,9 +438,9 @@ public class PlanMoc extends PlanBGCat {
                moc = new SMoc();
                readMoc(moc,dis);
             }
-            String c = ((SMoc)moc).getSys();
+            String c = ((SMoc)moc).getSpaceSys();
             frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
-            if( moc.isEmpty() ) error="Empty MOC";
+//            if( moc.isEmpty() ) error="Empty MOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -799,7 +806,7 @@ public class PlanMoc extends PlanBGCat {
             }
             lastDrawMoc =(SMoc) x;
             
-            String coordsys = moc instanceof SMoc ? ((SMoc)moc).getSys() : "C";
+            String coordsys = moc instanceof SMoc ? ((SMoc)moc).getSpaceSys() : "C";
             boolean notEquatorial = moc!=null && coordsys!=null && !coordsys.equals("C");
             SMoc viewMoc = v.isAllSky() || notEquatorial ? null : lastDrawMoc ;
             ArrayList<Hpix> a1 = new ArrayList<>(10000);

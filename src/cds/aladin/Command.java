@@ -2224,14 +2224,14 @@ public final class Command implements Runnable {
             String s1 = tok.nextToken();
             String s2 = tok.nextToken();
             
-            double jd1 = s1.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s1 );
-            double jd2 = s2.equals("NaN") ? Double.NaN : Astrodate.dateToJD( s2 );
+            double jd1 = s1.equals("NaN") ? Double.NaN : Astrodate.ISOToJD( s1 );
+            double jd2 = s2.equals("NaN") ? Double.NaN : Astrodate.ISOToJD( s2 );
             double [] t = new double[] { jd1, jd2 };
             a.view.setTimeRange(t);
             
          // Une date => centre du range actuel
          } else {
-            double jd = Astrodate.dateToJD( tok.nextToken() );
+            double jd = Astrodate.ISOToJD( tok.nextToken() );
             double t[] = v.getTimeRange();
             if( Double.isNaN(t[0]) ||  Double.isNaN(t[1]) ) {
                a.warning("You must set a time range before modifying its middle time");

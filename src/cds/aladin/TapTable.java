@@ -42,16 +42,16 @@ import static cds.aladin.Constants.PMRA;
 import static cds.aladin.Constants.RA;
 import static cds.aladin.Constants.RADIALVELOCITY;
 import static cds.aladin.Constants.REDSHIFT;
+import static cds.aladin.Constants.REGEX_TABLENAMEALREADYQUOTED;
 import static cds.aladin.Constants.REGEX_TABLENAME_SPECIALCHAR;
+import static cds.aladin.Constants.REGEX_VALIDTABLENAME;
+import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
 import static cds.aladin.Constants.T_MAX;
 import static cds.aladin.Constants.T_MIN;
 import static cds.aladin.Constants.UCD_DEC_PATTERN2;
 import static cds.aladin.Constants.UCD_DEC_PATTERN3;
 import static cds.aladin.Constants.UCD_RA_PATTERN2;
 import static cds.aladin.Constants.UCD_RA_PATTERN3;
-import static cds.aladin.Constants.REGEX_VALIDTABLENAME;
-import static cds.aladin.Constants.REGEX_VALIDTABLEPREFIX;
-import static cds.aladin.Constants.REGEX_TABLENAMEALREADYQUOTED;
 
 import java.util.HashMap;
 import java.util.List;
@@ -144,7 +144,7 @@ public class TapTable {
 	
 	public void initObsCoreColumns() {
 		if (this.obsCoreColumns == null) {
-			obsCoreColumns = new HashMap<String, String>();
+			obsCoreColumns = new HashMap<>();
 		}
 	}
 	
@@ -527,7 +527,7 @@ public class TapTable {
 	
 	public void initFlaggedColumns() {
 		if (this.flaggedColumns == null) {
-			this.flaggedColumns = new HashMap<String, TapTableColumn>();
+			this.flaggedColumns = new HashMap<>();
 		}
 	}
 

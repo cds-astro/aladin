@@ -23,11 +23,19 @@
  * 
  */
 package cds.aladin;
-import static cds.aladin.Constants.EMPTYSTRING;
-import static cds.aladin.Constants.UCD_MAINIDQUALIFIER;
-import static cds.aladin.Constants.DBColumnType.*;
-import static cds.aladin.Constants.REGEX_DIGITS;
 import static cds.aladin.Constants.DOT_CHAR;
+import static cds.aladin.Constants.EMPTYSTRING;
+import static cds.aladin.Constants.REGEX_DIGITS;
+import static cds.aladin.Constants.UCD_MAINIDQUALIFIER;
+import static cds.aladin.Constants.DBColumnType.BIGINT;
+import static cds.aladin.Constants.DBColumnType.CHAR;
+import static cds.aladin.Constants.DBColumnType.DOUBLE;
+import static cds.aladin.Constants.DBColumnType.INTEGER;
+import static cds.aladin.Constants.DBColumnType.REAL;
+import static cds.aladin.Constants.DBColumnType.SMALLINT;
+import static cds.aladin.Constants.DBColumnType.VARBINARY;
+import static cds.aladin.Constants.DBColumnType.VARCHAR;
+
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,7 +89,7 @@ public class TapTableColumn {
 	 * @return Vector<String>
 	 */
 	public Vector<String> getRowVector() {
-		Vector<String> allValuesVector = new Vector<String>(10);
+		Vector<String> allValuesVector = new Vector<>(10);
 		allValuesVector.addElement(this.column_name);
 		allValuesVector.addElement(this.description);
 		allValuesVector.addElement(this.unit);
@@ -105,7 +113,7 @@ public class TapTableColumn {
 	 * @return
 	 */
 	public static Vector<String> getColumnLabels() {
-		Vector<String> columnNames = new Vector<String>(10);
+		Vector<String> columnNames = new Vector<>(10);
 		columnNames.addElement("ColumnName");
 		columnNames.addElement("Description");
 		columnNames.addElement("Unit");
@@ -119,11 +127,18 @@ public class TapTableColumn {
 		return columnNames;
 	}
 	
+	static public String unquote(String s) {
+	   if( s==null ) return s;
+	   int n = s.length();
+	   if( n>=2 && s.charAt(0)=='"' && s.charAt( n-1 )=='"' ) return s.substring(1,n-1);
+	   return s;
+	}
+	
 	public String getTable_name() {
 		return table_name;
 	}
 	public void setTable_name(String table_name) {
-		this.table_name = table_name;
+       this.table_name = table_name;
 	}
 	
 	public String getColumn_name() {
@@ -135,7 +150,7 @@ public class TapTableColumn {
 	}
 	
 	public void setColumn_name(String column_name) {
-		this.column_name = column_name;
+		this.column_name = unquote(column_name);
 	}
 	
 	public String getDescription() {

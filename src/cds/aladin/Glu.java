@@ -1221,7 +1221,11 @@ public final class Glu implements Runnable {
             g = new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu,
                   aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
                   resultDataType, institute, aladinFilter, aladinLogo, record);
-         } else {
+         } else if( actionName.equals("sextractor") ) {
+            g = new ServerSextractor(aladin, actionName, description, verboseDescr, aladinMenu,
+                  aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue,
+                  resultDataType, institute, aladinFilter, aladinLogo, record);
+         } else{
             if(aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, TAPv1) == 0) {
             	boolean hidden = true;
 	            GluAdqlTemplate gluAdqlTemplate = new GluAdqlTemplate(adqlSelect, adqlFrom, adqlWhere, adqlFunc, adqlFuncParams);

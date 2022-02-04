@@ -1771,7 +1771,7 @@ public class TapManager {
 					String fieldName = field.getName();
 					if (fieldName != null && !fieldName.isEmpty()) {
 						if (fieldName.equalsIgnoreCase(TABLENAME)) {
-							tableColumn.setTable_name(parser.getCellAsString(j));
+							tableColumn.setTable_name( parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(COLUMNNAME)) {
 							tableColumn.setColumn_name(parser.getCellAsString(j));
 						} else if (fieldName.equalsIgnoreCase(DESCRIPTION)) {
@@ -1877,7 +1877,7 @@ public class TapManager {
 			URL url = getUrl(tapServiceUrl, file, path);
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
 			long startTime = getTimeToLog();
-			is = Util.openStreamForTapAndDL(url, null, true, 10000);
+			is = Util.openStreamForTapAndDL(url, null, true, 30000);
 			long time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println(what+ "getResults got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();

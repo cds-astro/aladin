@@ -72,7 +72,7 @@ Runnable, SwingWidgetFinder, Widget {
 
    String HSTACK0,HSTACK,HEYE,WAITMIN,NOPROJ,MSELECT,MBROADCASTALL,MALLAPPS,MBROADCASTTABLE,MBROADCASTIMAGE,
    MDEL,MDELALL,MDELALLOTHERS,MDELEMPTY,MCREATFOLD,HSTACK2,
-   MINSFOLD,MCOL,MEXP,MPROP,SHOW,GOTO,BROWSE,HIDE,WARNING,WARNINGSLIDER;
+   MINSFOLD,MCOL,MEXP,MPROP,SHOW,REDO,GOTO,BROWSE,HIDE,WARNING,WARNINGSLIDER;
    String [] BEGIN;
 
    // Les references aux autres objets
@@ -163,6 +163,7 @@ Runnable, SwingWidgetFinder, Widget {
       GOTO = a.chaine.getString("GOTO");
       BROWSE = a.chaine.getString("BROWSE");
       SHOW = a.chaine.getString("SHOW");
+      REDO = a.chaine.getString("REDO");
       HIDE = a.chaine.getString("HIDE");
       WARNING = a.chaine.getString("SWARNING");
       WARNINGSLIDER = a.chaine.getString("SWARNINGSLIDER");
@@ -231,7 +232,8 @@ Runnable, SwingWidgetFinder, Widget {
    //   public Dimension getPreferredSize() { return new Dimension(ws+5,hs); }
       public Dimension getPreferredSize() { return new Dimension(100,100); }
 
-   JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuDelAllOthers,menuShow,menuGoto,menuBrowse,
+   JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuDelAllOthers,menuShow,menuRedo,
+   menuGoto,menuBrowse,
    menuColl,menuCreatFold,menuInsertFold,menuProp,menuSelect,menuUnselect,
    menuConcat1,menuConcat2,menuTableInfo,menuPlot,menuCreateMulti,menuCreateUniq;
 
@@ -242,6 +244,8 @@ Runnable, SwingWidgetFinder, Widget {
       popMenu = new JPopupMenu();
       JMenuItem j;
       popMenu.add( menuShow=j=new JMenuItem(SHOW));
+      j.addActionListener(this);
+      popMenu.add( menuRedo=j=new JMenuItem(REDO));
       j.addActionListener(this);
       popMenu.add( menuGoto=j=new JMenuItem(GOTO));
       j.addActionListener(this);
@@ -317,6 +321,7 @@ Runnable, SwingWidgetFinder, Widget {
       else if( src==menuCreateMulti )a.cloneObj(false);
       else if( src==menuCreateUniq ) a.cloneObj(true);
       else if( src==menuShow )       a.calque.setActivatedSet(((JMenuItem)src).getActionCommand().equals(SHOW));
+      else if( src==menuRedo )       redo();
       else if( src==menuGoto )       a.view.syncPlan(a.calque.getFirstSelectedPlan());
       else if( src==menuBrowse )     a.command.browse(a.calque.getFirstSelectedPlan().id+"");
       else if( src==menuDel )        a.calque.FreeSet(true);
@@ -401,6 +406,7 @@ Runnable, SwingWidgetFinder, Widget {
       int nbCatalog=0;
       int nbImg=0;
       int nbTool=0;
+      int nbConeSearch=0;
       menuPlan = new Vector(10);
 
       Plan [] plan = a.calque.getPlans();
@@ -412,6 +418,7 @@ Runnable, SwingWidgetFinder, Widget {
          if( pc.type==Plan.TOOL && pc.flagOk ) nbTool++;
          if( pc.type==Plan.IMAGE && pc.flagOk ) nbImg++;
          if( pc.type==Plan.IMAGEHUGE && pc.flagOk ) nbImg++;
+         if( pc.isSimpleCatalog() && pc.flagOk ) nbConeSearch++;
          menuPlan.addElement(pc);
          allShow = allShow && pc.active;
          canBeColl = canBeColl && pc.type==Plan.FOLDER;
@@ -425,6 +432,7 @@ Runnable, SwingWidgetFinder, Widget {
       else menuColl.setText(MEXP);
       if( allShow ) menuShow.setText(HIDE);
       else menuShow.setText(SHOW);
+      menuRedo.setEnabled(nbConeSearch>0);
       menuShow.setEnabled(!a.calque.isFree());
       menuColl.setEnabled(canBeColl && menuPlan.size()>0);
       menuInsertFold.setEnabled(menuPlan.size()>0);
@@ -1036,6 +1044,16 @@ Runnable, SwingWidgetFinder, Widget {
       a.calque.repaintAll();
       if( boutonDroit ) showPopMenu(x, y);
    }
+   
+   
+   /** Réactualise le contenu du plan en fonction de la position courante
+    * (uniquement pour les plans concernés)
+    */
+   protected void redo() {
+      for( Plan p : a.calque.getPlanSelected() ) {
+         p.redoConeSearch();
+      }
+   }
 
    // Collapse ou uncollapse de tous les plans d'un folder
    protected void switchCollapseFolder(Plan f) {
@@ -1448,8 +1466,11 @@ Runnable, SwingWidgetFinder, Widget {
          String s = p.getMessageInfo();
          if( s==null ) hideMessage();
          else {
-            setMessageInfo( s );
-            messageType=MESSAGE_INFO_PLAN;
+            if( s.startsWith("!!") ) setMessageError(s.substring(2));
+            else {
+               setMessageInfo( s );
+               messageType=MESSAGE_INFO_PLAN;
+            }
          }
       }
    }

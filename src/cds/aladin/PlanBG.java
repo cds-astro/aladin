@@ -968,12 +968,12 @@ public class PlanBG extends PlanImage {
       return f.getName().equals(Constante.FILE_HPXFINDER) && f.isDirectory();
    }
 
-   static protected boolean isPlanBG(String path) {
-      if( isPlanHpxFinder(path) ) return true;
-      String s = path+Util.FS+"Norder3";
-      File f = new File(s);
-      return f.isDirectory();
-   }
+//   static protected boolean isPlanBG(String path) {
+//      if( isPlanHpxFinder(path) ) return true;
+//      String s = path+Util.FS+"Norder3";
+//      File f = new File(s);
+//      return f.isDirectory();
+//   }
 
    protected void suite() {
 
@@ -3663,7 +3663,7 @@ public class PlanBG extends PlanImage {
       if( moc==null ) return false; // pas de MOC chargé, je ne sais pas !
       
       // Attention, le Hips et le MOC n'ont pas le même système de coord
-      char a = moc.getSys().charAt(0);
+      char a = moc.getSpaceSys().charAt(0);
       int frameMoc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
       if( frameOrigin!=frameMoc ) {
          return false;

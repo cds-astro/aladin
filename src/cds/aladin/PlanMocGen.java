@@ -247,7 +247,7 @@ public class PlanMocGen extends PlanMoc {
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
       ((SMoc)moc).setMocOrder(order);
-      ((SMoc)moc).setSys( p.frameOrigin==Localisation.GAL ? "G" : 
+      ((SMoc)moc).setSpaceSys( p.frameOrigin==Localisation.GAL ? "G" : 
                                p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       ((SMoc)moc).bufferOn();
       
@@ -388,7 +388,7 @@ public class PlanMocGen extends PlanMoc {
       
       // On génère d'abord un MOC dans le système de référence de la map HEALPix
       // on fera la conversion en ICRS à la fin du processus
-      ((SMoc)moc).setSys( p.frameOrigin==Localisation.GAL ? "G" : 
+      ((SMoc)moc).setSpaceSys( p.frameOrigin==Localisation.GAL ? "G" : 
                                p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
       
@@ -876,7 +876,7 @@ public class PlanMocGen extends PlanMoc {
 //      }
 
      flagProcessing=false;
-      if( moc.isEmpty() ) error="Empty MOC";
+//      if( moc.isEmpty() ) error="Empty MOC";
       flagOk=true;
       return true;
    }

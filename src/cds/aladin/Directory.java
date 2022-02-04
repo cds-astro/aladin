@@ -283,7 +283,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
                                           : "http://alasky4.u-strasbg.fr:8080/MocServer/query";
          aladin.glu.aladinDic.put(GLUMOCSERVER,mochost+"?$1");
          aladin.glu.aladinDic.put("MOC_url",mochost+"?$1");
-         aladin.trace(0,"WARNING: use an alternate MocServer for test =>"+mochost+" !!!");
+         System.err.println("WARNING: use an alternate MocServer for test =>"+mochost+" !!!");
       }
 
       setBackground(cbg);
@@ -1861,13 +1861,21 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
          boolean withSpace = c!=null;
          boolean withTime = mocServerVersion>=5 && (!Double.isNaN(range[0]) || !Double.isNaN(range[1]));
+         boolean withsys =  mocServerVersion>=5.05;
 
          if( !withTime && !withSpace ) return true;
+         
+         String sysParam="";
+         if( withsys && v.pref instanceof PlanBG ) {
+            String body = ((PlanBG)v.pref).body;
+            if( body==null ) body="C";
+            sysParam="&spacesys="+URLEncoder.encode(body);
+         }
 
          // Interrogation du MocServer distant...
          BufferedReader in = null;
 
-         params = MOCSERVER_PARAM;
+         params = MOCSERVER_PARAM+sysParam;
          if( withSpace ) {
             double taille = v.getTaille();
             if( taille > 90 ) {
@@ -2827,6 +2835,9 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
 
    // Génération du MultiMoc depuis la sauvegarde binaire du cache
    private boolean cacheRead() {
+      
+      if( aladin.MOCLOCAL ) return false;
+      
       try {
          long t0 = System.currentTimeMillis();
          String s = aladin.cache.getCacheDir() + Util.FS + MMOC;

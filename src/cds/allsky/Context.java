@@ -164,7 +164,8 @@ public class Context {
    protected SMoc moc = null;            // Intersection du mocArea et du mocIndex => regénérée par setParameters()
    protected int mocOrder=-1;                // order du MOC des tuiles
    protected int mocTimeOrder=-1;            // time order du MOC
-   protected long mocMaxSize=20*1024*1024;   // Taille max du MOC
+   protected long mocMaxSize=-1; //20*1024*1024;   // Taille max du MOC
+   protected String mocRuleSize=null;        // Règle de dégradation de la résolution d'un MOC limité en taille
    protected int nside=1024;                 // NSIDE pour la génération d'une MAP healpix
    protected int tileOrder=-1;               // Valeur particulière d'un ordre pour les tuiles
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
@@ -303,6 +304,7 @@ public class Context {
    public int getMocOrder() { return mocOrder; }
    public int getTMocOrder() { return mocTimeOrder; }
    public long getMocMaxSize() { return mocMaxSize; }
+   public String getMocRuleSize() { return mocRuleSize; }
    public long getMapNside() { return nside; }
    public int getMinOrder() { return minOrder; }
    public int getTileOrder() { return tileOrder==-1 ? Constante.ORDER : tileOrder; }
@@ -341,34 +343,57 @@ public class Context {
    public void setMinOrder(int minOrder) { this.minOrder = minOrder; }
    public void setMocOrder(int mocOrder) { this.mocOrder = mocOrder; }
    public void setMocOrder(String s) {
-      int offset = s.indexOf('/' );
+      int slash = s.indexOf('/' );
+      int end = s.length();
+      int min = s.indexOf('<');
+      boolean inf=min>=0;
+      if( min==-1 ) min=end;
       
-      // Une expression sous la forme  timeOrder/spaceOrder
-      if( offset>0 ) {
-         mocTimeOrder = Integer.parseInt(s.substring(0,offset));
-         mocOrder = Integer.parseInt(s.substring(offset+1));
+      // Une expression sous la forme  spaceOrder/timeOrder
+      if( slash>=0 ) {
+         try {
+            mocOrder = Integer.parseInt(s.substring(0,slash));
+         } catch( Exception e ) {
+            mocOrder=-1;
+         }
+         mocTimeOrder = Integer.parseInt(s.substring(slash+1,min));
+         slash=min;
          
-      // 
-      } else {
+      // Le spaceOrder uniquement (syntaxe la plus simple)
+      } else if( !inf ) {
+         mocOrder = Integer.parseInt( s.substring(0,min).trim());
+      }
+      
+      // Une expression sous la forme <20MB:tttss
+      if( min<end ) {
+         int point = s.indexOf(':');
+         if( point==-1 ) point=end;
+         while( s.charAt(min)==' ' && min<end ) min++;
+         String s1 = s.substring(min,point);
          double fact=1.;
-         offset = s.indexOf("KB");
-         if( offset>0 ) fact=1024.;
+         int unit = s1.indexOf("KB");
+         if( unit>0 ) fact=1024.;
          else {
-            offset = s.indexOf("MB");
-            if( offset>0 ) fact=1024.*1024.;
+            unit = s1.indexOf("MB");
+            if( unit>0 ) fact=1024.*1024.;
             else {
-               offset = s.indexOf("GB");
-               if( offset>0 ) fact=1024.*1024.*1024.;
+               unit = s1.indexOf("GB");
+               if( unit>0 ) fact=1024.*1024.*1024.;
             }
          }
+        
+         // extraction du mocMaxSize
+         if( unit>0 ) {
+            mocMaxSize = (long)(  Double.parseDouble( s1.substring(1,unit).trim() ) * fact );
+         }
          
-         // Une expression sous la forme   20MB
-         if( offset>0 ) {
-            mocMaxSize = (long)(  Double.parseDouble( s.substring(0,offset).trim() ) * fact );
-            
-         // Le spaceOrder directement (syntaxe la plus simple)
-         } else mocOrder = Integer.parseInt(s);
-      }
+         // Extraction de la règle de dégradation
+         if( point<end ) {
+            mocRuleSize = s.substring(point+1,end);
+         }
+      } 
+      
+      
    }
    public void setMapNside(int nside) { this.nside = nside; }
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }

@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 
 import cds.aladin.MyInputStream;
 import cds.fits.Fits;
+import cds.moc.Moc;
 import cds.moc.SMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -39,6 +40,7 @@ public class BuilderMoc extends Builder {
 
    protected SMoc moc;
    protected int mocOrder;
+   protected long maxSize=-1;
    protected int fileOrder;
    protected int tileOrder;
    protected boolean isMocHight;
@@ -79,7 +81,7 @@ public class BuilderMoc extends Builder {
 //      } catch( Exception e ) { }
       
       
-      // mocOrder explicitement fourni par l'utilisateur
+      // mocOrder explicitement fourni par l'utilisateur ?
       if( context.getMocOrder()!=-1 ) mocOrder = context.getMocOrder();
       
       // Sinon on prend classiquement le niveau des tuiles
@@ -87,6 +89,10 @@ public class BuilderMoc extends Builder {
          mocOrder = fileOrder;
          if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
       }
+      
+      // Taille limite explicitement fournie par l'utilisateur ?
+      maxSize = context.getMocMaxSize();
+      
     
 // POSAIT TROP DE SOUCI DE MOC TROP LONG A CALCULER => LA DERTERMINATION AUTOMATIQUE EST SUPPRIME (PF 14/1/2019)
 //      // mocOrder déterminé par la nature du survey
@@ -122,11 +128,14 @@ public class BuilderMoc extends Builder {
       String outputFile = path + FS + Constante.FILE_MOC;
       
       long t = System.currentTimeMillis();
-      context.info("MOC generation ("+(isMocHight?"deep resolution":"regular resolution")+" mocOrder="+moc.getMocOrder()+")...");
+      context.info("MOC generation ("+(isMocHight?"deep resolution":"regular resolution")+" mocOrder="+moc.getMocOrder()
+            +(maxSize!=-1?" <"+cds.tools.Util.getUnitDisk(maxSize):"")
+            +")...");
       
       String  frame = getFrame();
-      moc.setSys(frame);
+      moc.setSpaceSys(frame);
       generateMoc(moc,fileOrder, path);
+      adjustSize(moc,true);
       moc.write(outputFile);
       
       // Faut-il changer le référentiel du MOC ?
@@ -178,6 +187,23 @@ public class BuilderMoc extends Builder {
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
 //   public long getArea() { return moc.getNbCellsFull(); }
    public long getArea() { return moc.maxVal(); }
+   
+   // retourne true s'il est temps de tester un ajustement de taille
+   protected boolean mustAdjustSize(Moc m, boolean force) {
+      if( force ) m.flush();
+      return m.bufferSize()==0;
+   }
+   
+   protected void reduction(Moc m) throws Exception { m.reduction(maxSize); }
+   
+   protected void adjustSize(Moc m, boolean force) throws Exception {
+      if( maxSize==-1 ) return;
+      if( !mustAdjustSize(m,force) ) return;
+      if( m.getMem() <= maxSize ) return;
+      
+      reduction(m);
+      
+   }
 
    protected void generateMoc(SMoc moc, int fileOrder,String path) throws Exception {
       
@@ -219,6 +245,7 @@ public class BuilderMoc extends Builder {
       updateStat();
       if( isMocHight ) generateHighTileMoc(moc,fileOrder,f,npix);
       else moc.add(fileOrder,npix);
+      adjustSize(moc,false);
    }
    
    private void generateHighTileMoc(SMoc moc,int fileOrder, File f, long npix) throws Exception {

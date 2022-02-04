@@ -1093,7 +1093,7 @@ public class MultiMoc implements Iterable<MocItem> {
    
    /** Changement de référentiel d'un MOC */
    static final public SMoc convertToICRS(SMoc moc) throws Exception {
-      String altsys = moc.getSys();
+      String altsys = moc.getSpaceSys();
       if( altsys.equals("C") 
             || altsys.equalsIgnoreCase("equatorial") || altsys.equalsIgnoreCase("equ")) return moc;   // déjà en ICRS
       
@@ -1110,7 +1110,7 @@ public class MultiMoc implements Iterable<MocItem> {
       }
       
       // Ciel complet => cas trivial
-      if( moc.isFull()) { moc.setSys("C"); return moc; }
+      if( moc.isFull()) { moc.setSpaceSys("C"); return moc; }
       
 //      Astroframe frameSrc = a=='G' ? new Galactic() : a=='E' ? new Ecliptic() : new ICRS();
       Astroframe frameSrc = Astroframe.create( a=='G' ?"Galactic" : a=='E' ? "Ecliptic" : "ICRS");
@@ -1160,7 +1160,7 @@ public class MultiMoc implements Iterable<MocItem> {
          if( moc instanceof SMoc ) {
             
          // Pas dans le bon système de référence
-            String sys=((SMoc)moc).getSys();
+            String sys=((SMoc)moc).getSpaceSys();
          if( !sys.equals(COORDSYS) ) {
             long t = System.currentTimeMillis();
             try {

@@ -114,8 +114,8 @@ public class PlanCatalog extends Plan {
   protected PlanCatalog(Aladin aladin) {
     this.aladin = aladin;
     type = CATALOG;
-    c          = Couleur.getNextDefault(aladin.calque);
-    pcat       = new Pcat(this,c,aladin.calque,aladin.status,aladin);
+    c = Couleur.getNextDefault(aladin.calque);
+    pcat = new Pcat(this,c,aladin.calque,aladin.status,aladin);
     flagOk=true;
   }
 
@@ -153,7 +153,7 @@ public class PlanCatalog extends Plan {
       setLogMode(true);
       this.aladin= aladin;
       type       = CATALOG;
-      c          = Couleur.getNextDefault(aladin.calque);
+      c = Couleur.getNextDefault(aladin.calque);
       setLabel(label);
       id=this.label;
       this.objet = objet;
@@ -236,34 +236,70 @@ public class PlanCatalog extends Plan {
     * du champ de la vue courante 
     */
    protected boolean redoConeSearch() {
-      aladin.trace(3,"redoConeSearch() for "+label+" => not yet fully implemented");
-      return false;
-
-      // Pas encore terminé - PF Dec 2021
-//      String code =  getBookmarkCode();
-//      if( code==null ) return false;
-//      
-//      // On vérifie que le bookmark peut utiliser un nouveau TARGET (que ce n'est pas
-//      // un whole catalog par exemple), et on prépare la chaine pour recevoir les nouveaux
-//      // paramètres d'interrogation.
-//      int offset = code.indexOf("$TARGET");
-//      if( offset<0 ) return false;
-//      code = code.substring(0,offset);
-//      
-//      // Ajout en suffixe du centre et de la taille du champ courant
-//      Coord target = aladin.view.getCurrentView().getCooCentre();
-//      double radius = aladin.view.getCurrentView().getTaille();
-//      String cmd = code+" "+target.getRA()+" "+target.getDE()+" "+radius+"deg";
-//      
-//      // Excécution de la commande en remplacement du plan courant
-//      aladin.execCommand(label+"="+cmd);
-//      
-//      // Affectation de la même couleur
-//      Plan p = aladin.calque.getPlan(label);
-//      p.c = c;
-//      
-//      return true;
+      String code =  getBookmarkCode();
+      String query = getAdqlQuery();
+      if( code==null && query==null ) return false;
       
+      String cmd;
+      
+      // Récupération du centre et de la taille du champ courant
+      Coord target = aladin.view.getCurrentView().getCooCentre();
+      double radius = aladin.view.getCurrentView().getTaille();
+
+      // Substitution de la position et du rayon dans la contrainte 
+      // ADQL de position
+      if( query!=null ) {
+         String tag="CIRCLE('ICRS',";
+         int offset = query.indexOf(tag);
+         if( offset<0 ) return false;
+         int end = query.indexOf(')',offset);
+         if( end<0 ) return false;
+         query = query.substring(0,offset+tag.length())
+               + target.al + ", "+ target.del+", "+radius
+               + query.substring(end);
+         
+         cmd = "get TAP("+getIdPrefix(id)+","+Tok.quote(query,true)+")";
+
+      // Substitution de la position et du rayon dans le bookmark Cone Search
+      } else {
+         int offset = code.indexOf("$TARGET");
+         if( offset<0 ) return false;
+         code = code.substring(0,offset);
+         cmd = code+" "+target.getRA()+" "+target.getDE()+" "+radius+"deg";
+      }
+      
+      // Excécution de la commande en remplacement du plan courant
+      aladin.execCommand(label+"="+cmd);
+      
+      // Affectation de la même couleur
+      Plan p = aladin.calque.getPlan(label,1);
+      p.c = c;
+      
+      return true;
+   }
+   
+   /** Remet à jour le contenue du plan (catalogue classique) en fonction 
+    * d'une nouvelle requête ADQL
+    */
+   protected boolean redoAdql(String query) {
+      if( getAdqlQuery()==null ) return false;
+      String cmd = "get TAP("+getIdPrefix(id)+","+Tok.quote(query,true)+")";
+      
+      // Excécution de la commande en remplacement du plan courant
+      aladin.execCommand(label+"="+cmd);
+      
+      // Affectation de la même couleur
+      Plan p = aladin.calque.getPlan(label,1);
+      p.c = c;
+      
+      return true;
+   }
+   
+   // Enlève le suffixe ~nn d'un identificateur CDS/P/Simbad~123
+   private String getIdPrefix(String id) {
+      int offset = id.indexOf('~');
+      if( offset<0 ) return id;
+      return id.substring(0,offset);
    }
    
    protected boolean isCatalog() { return true; }

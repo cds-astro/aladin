@@ -41,10 +41,17 @@ public class BuilderSTMoc extends BuilderTMoc {
    }
    
    protected void reduction(Moc m) throws Exception { 
-      String priority="ts";
-      if( m.getSpaceOrder()<=hipsOrder ) priority="t";
-      if( m.getTimeOrder()<=20 ) priority="sst";
-      ((STMoc)m).reduction(maxSize,priority); 
+      
+      if( ruleSize==null ) ruleSize="tts";
+
+      while( m.getMem()>maxSize && (m.getTimeOrder()>0 || m.getSpaceOrder()>0) ) {
+         char c = ruleSize.charAt(0);
+         if( c!='t' && c!='s' ) throw new Exception("Unknown MOC degration rule character ["+c+"]");
+         if( c=='t' && m.getTimeOrder()>0 ) m.setTimeOrder( m.getTimeOrder()-1 );
+         else if( c=='s' &&  m.getSpaceOrder()>0 ) m.setSpaceOrder( m.getSpaceOrder()-1 );
+         else break;  // Pas applicable
+         ruleSize = ruleSize.substring(1)+(c+"");
+      }
    }
 
    protected void initIt() throws Exception {
@@ -52,7 +59,7 @@ public class BuilderSTMoc extends BuilderTMoc {
    }
    
    protected void info() {
-      String s = maxSize>0 ? " maxSize="+Util.getUnitDisk(maxSize):"";
+      String s = maxSize<=0 ? "": " sizeLimit<"+Util.getUnitDisk(maxSize)+(ruleSize!=null?"(degradationRule:"+ruleSize+")":"");
       String s1 = stmoc.getMem()>0 ? " currentSize="+cds.tools.Util.getUnitDisk(stmoc.getMem()):"";
       context.info("STMOC generation (timeOrder="+stmoc.getTimeOrder()
                        +" spaceOrder="+stmoc.getSpaceOrder()+s+s1+")...");
@@ -82,6 +89,7 @@ public class BuilderSTMoc extends BuilderTMoc {
    protected void writeIt() throws Exception {
       adjustSize(stmoc,true);
       stmoc.seeRangeList().checkConsistency();     // A virer
+      if( stmoc.isEmpty() ) throw new Exception("Empty MOC => not generated");
       String file = context.getOutputPath()+Util.FS+"STMoc.fits";
       stmoc.write(file);
    }

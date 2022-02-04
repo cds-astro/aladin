@@ -1506,7 +1506,6 @@ public class Calque extends JPanel implements Runnable {
          if( pc.ref ) continue;
          if( memoClinDoeil ) {
             pc.setActivated(pc.memoClinDoeil);
-            pc.redoConeSearch();
             
          } else {
             pc.memoClinDoeil=pc.active;
@@ -1575,9 +1574,9 @@ public class Calque extends JPanel implements Runnable {
    protected int getIndexPlan(String mask,int mode) {
       
       // Premier tout avec les identificateurs techniques "asId"
-      for( int i=0; i<plan.length; i++ ) {
-         if( plan[i].asId!=null && plan[i].asId.equals(mask) ) return i;
-      }
+//      for( int i=0; i<plan.length; i++ ) {
+//         if( plan[i].id!=null && plan[i].id.equals(mask) ) return i;
+//      }
       
       // Deuxième tour sur les labels
       for( int i=0; i<plan.length; i++ ) {
@@ -1626,7 +1625,7 @@ public class Calque extends JPanel implements Runnable {
    static final int CALIB   = 0x0200;  // calibrées astrométriquement
    static final int TRUEIMG = 0x0400;  // Images avec vrais pixels accessibles
    static final int IMG     = 0x0800;  // Tous les types d'images
-   static final int SELECTED= 0x0F00;  // Plan sélectionné
+   static final int SELECTED= 0x1000;  // Plan sélectionné
 
    /** Retourne true si le paramètre est une masque de bits indiquant un type
     * spécial de plan  (càd > à 0xFF - on n'utilise pas le premier octet à droite) */
@@ -1689,7 +1688,7 @@ public class Calque extends JPanel implements Runnable {
       // Recherche des plans qui correspondent
       for( int i=0; i<plan.length; i++ ) {
          Plan pc = plan[i];
-         if( pc.hasError() ) continue;
+         if( pc.hasError() || pc.isFree() ) continue;
 
          // Sélection par type "spécial" de plan
          if( isSpecialType(type) )  {

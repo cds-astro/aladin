@@ -2545,12 +2545,12 @@ public final class Util {
    
    /** Changement de référentiel d'un SMOC si nécessaire */
    static public SMoc convertTo(SMoc moc, String coordSys) throws Exception {
-      if( coordSys.equals( moc.getSys()) ) return moc;
+      if( coordSys.equals( moc.getSpaceSys()) ) return moc;
       
       // Ciel complet => cas trivial
-      if( moc.isFull()) { moc.setSys(coordSys); return moc; }
+      if( moc.isFull()) { moc.setSpaceSys(coordSys); return moc; }
 
-      char a = moc.getSys().charAt(0);
+      char a = moc.getSpaceSys().charAt(0);
       char b = coordSys.charAt(0);
       int frameSrc = a=='G' ? Localisation.GAL : a=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
       int frameDst = b=='G' ? Localisation.GAL : b=='E' ? Localisation.ECLIPTIC : Localisation.ICRS;
@@ -2558,7 +2558,7 @@ public final class Util {
       Healpix hpx = new Healpix();
       int order = moc.getDeepestOrder();
       SMoc moc1 = moc.dup();
-      moc1.setSys(coordSys);
+      moc1.setSpaceSys(coordSys);
       moc1.bufferOn();
       long onpix1=-1;
       Iterator<Long> it = moc.valIterator();

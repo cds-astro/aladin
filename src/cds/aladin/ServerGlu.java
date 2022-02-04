@@ -1361,6 +1361,7 @@ public class ServerGlu extends Server implements Runnable {
             if( !s.startsWith("http://") && !s.startsWith("https://") ) {
                String urlList = aladin.directory.resolveServiceUrl(gluTag,s);
                if( urlList!=null ) {
+                  resourceId = s;   // mémorisation au cas de redo (cf. PlanCatalog.redo..)
                   tokUrlList = new Tok(urlList,"\t");
                   v.setElementAt( tokUrlList.nextToken(), baseUrlIndex);
                }
@@ -1801,11 +1802,18 @@ public class ServerGlu extends Server implements Runnable {
          if (showSyncAsync > -1 && this.sync_async != null && this.sync_async.getSelectedItem().equals("ASYNC")) {
             this.fireASync(label, u);
          } else {
-            lastPlan = aladin.calque.createPlan(u + "", label, "provided by " + institute, this);
+            lastPlan = callCreatePlan(u + "", label, "provided by " + institute, this);
+//            lastPlan = aladin.calque.createPlan(u + "", label, "provided by " + institute, this);
          }
       }
 
       if( code!=null && lastPlan!=null ) lastPlan.setBookmarkCode(code+" $TARGET $RADIUS");
+   }
+   
+   /** Appel effectif pour la création du plan.
+    * Cette méthode est surchargé dans le cas d'un service utilisant un POST multipart => ex: ServerSextractor */
+   protected Plan callCreatePlan(String u,String label, String orig, Server server) {
+      return aladin.calque.createPlan(u, label, orig, server);
    }
 
    /**

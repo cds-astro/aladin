@@ -147,7 +147,7 @@ public class BuilderMirror extends BuilderTiles {
          
          // Si le système de coordonnées du MOC n'est pas le même que celui de HiPS, il faut 
          // convertir le MOC
-         if( !context.getFrameCode().equals( area.getSys()) ) {
+         if( !context.getFrameCode().equals( area.getSpaceSys()) ) {
             context.info("MOC conversion in "+context.getFrameName()+" frame (HiPS target frame)...");
             area = new SMoc( Util.convertTo( area, context.getFrameCode()) );
          }

@@ -80,16 +80,18 @@ public class PlanTMoc extends PlanMoc {
    /** Ajoute des infos sur le plan */
    protected void addMessageInfo( StringBuilder buf, MyProperties prop ) {
 //      long nbMicrosec = ((TMoc)moc).getNbValues();
-      ADD( buf, "\n* Start: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMin()));
-      ADD( buf, "\n* End: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMax()));
+      boolean isEmpty = moc.isEmpty();
+      if( !isEmpty ) {
+         ADD( buf, "\n* Start: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMin()));
+         ADD( buf, "\n* End: ",Astrodate.JDToDate( ((TMoc)moc).getTimeMax()));
+      }
       ADD( buf,"\n* # ranges: ",moc.getNbRanges()+"");
       
       int order = getRealMaxOrder( (TMoc)moc);
-      int drawOrder = getDrawOrder();
+      int drawOrder = isEmpty ? -1 : getDrawOrder();
       ADD( buf,"\n","* Resolution: "+ Util.getTemps(  TMoc.getDuration(order)));
       ADD( buf,"\n","* Order: "+ (order==drawOrder ? order+""  : drawOrder+"/"+order));
-      ADD( buf,"\n \nRAM: ",Util.getUnitDisk( moc.getMem() ) );
-      
+      if( isEmpty ) ADD( buf,"\n \nRAM: ",Util.getUnitDisk( moc.getMem() ) );
    }
    
    protected boolean isTime() { return true; }
@@ -120,7 +122,7 @@ public class PlanTMoc extends PlanMoc {
                moc = new TMoc();
                readMoc(moc,dis);
             }
-            if( moc.isEmpty() ) error="Empty TMOC";
+//            if( moc.isEmpty() ) error="Empty TMOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
