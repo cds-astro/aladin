@@ -137,7 +137,9 @@ public class PlanSTMoc extends PlanTMoc {
       boolean spaceEmpty = cov==0;
       double degrad = Math.toDegrees(1.0);
       double skyArea = 4.*Math.PI*degrad*degrad;
-      ADD( buf, "\n \n* Space: ",spaceEmpty?"--empty--":Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+      String body = getBody();
+      if( body==null ) body="?";
+      ADD( buf, "\n \n* Space: ",spaceEmpty?"--empty--":Coord.getUnit(skyArea*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of "+body);
       int spaceOrder =stmoc.getSpaceOrder();
       ADD( buf,"\n* Space res: ",( Coord.getUnit( CDSHealpix.pixRes(spaceOrder)/3600.) ));
       drawOrder = spaceEmpty ? -1 : getSpaceDrawOrder();
@@ -162,7 +164,7 @@ public class PlanSTMoc extends PlanTMoc {
       if( tmax==-1 ) tmax=Double.NaN;
       return tmax;
    }
-
+   
    protected boolean waitForPlan() {
       if( dis!=null ) {
          error=null;
@@ -171,7 +173,6 @@ public class PlanSTMoc extends PlanTMoc {
                moc = new STMoc();
                readMoc(moc,dis);
             }
-//            if( moc.isEmpty() ) error="Empty STMOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -179,6 +180,8 @@ public class PlanSTMoc extends PlanTMoc {
             return false;
          }
       }
+      
+      analyseMoc(moc);
 
       return true;
    }

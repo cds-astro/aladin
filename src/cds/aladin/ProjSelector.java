@@ -125,7 +125,8 @@ public class ProjSelector extends JPanel {
    /** Retourne le code de la projection courante */
    protected int getProjType() {
       int i= Projection.getAlaProjIndex( (String)combo.getSelectedItem() );
-      String calibProj = Projection.alaProjToType[i];
+//      String calibProj = Projection.alaProjToType[i];
+      String calibProj = Projection.getProjType(i);
       i=Calib.getProjType(calibProj);
       return i;
    }

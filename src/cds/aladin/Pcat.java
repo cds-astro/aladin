@@ -1493,6 +1493,17 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
    protected boolean removable = false;     // Possibilité de changer le statut d'un plan catalogue
 
+   /** Suppression d'un objet, simple ou multicomponent
+    * @param obj L'objet a supprimer
+    * @param force true si on peut supprimer même les sources des catalogues
+    * @return <I>true</I> si trouve, sinon <I>false</I>
+    */
+   protected boolean delObjet(Obj obj) { return delObjet(obj,removable); }
+   protected boolean delObjet(Obj obj,boolean force) {
+      if( obj instanceof Ligne ) return delLigne(obj);
+      return delObjetOne(obj,force);
+   }
+
    /** Suppression d'un objet.
     * Suppression d'un objet par ecrasement de sa reference
     * avec le dernier element du tableau
@@ -1500,8 +1511,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
     * @param force true si on peut supprimer même les sources des catalogues
     * @return <I>true</I> si trouve, sinon <I>false</I>
     */
-   protected boolean delObjet(Obj obj) { return delObjet(obj,removable); }
-   protected boolean delObjet(Obj obj,boolean force) {
+   protected boolean delObjetOne(Obj obj,boolean force) {
       int i;
 
       // Les sources ne peuvent etre supprimer individuellement
@@ -1514,10 +1524,22 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       // Parcours de tous les objets du plan
       for( i=0; i<nb_o && obj!=o[i]; i++ );
       if( i<nb_o ) {
-         //         if( i!=nb_o-1 ) o[i] = o[nb_o-1];
          for( ; i<nb_o-1; i++ ) o[i]=o[i+1];  // Pour conserver l'ordonnancement
          nb_o--;
          return true;
+      }
+      return false;
+   }
+   
+   /** Suppression d'une polyligne
+    * @param obj L'objet a supprimer (un des sommets de la polyligne)
+    * @return <I>true</I> si trouve, sinon <I>false</I>
+    */
+   protected boolean delLigne(Obj obj) {
+      Iterator it = obj.iterator();
+      while( it.hasNext() ) {
+         obj = (Obj)it.next();
+         if( !delObjetOne(obj,true) ) return false;
       }
       return false;
    }

@@ -549,6 +549,10 @@ public abstract class Builder {
    
    // Retourne la taille moyenne d'une tuile (tous les formats additionnés) - en bytes
    private long getTileSize( int bitpix, int width, int depth, String fmt ) {
+      
+      // Cas d'un catalogue HiPS (on estime à 20Ko chaque tuile)
+      if( fmt.toLowerCase().indexOf("tsv")>=0 ) return 20*1024;  
+      
       long nbpix = width*width;
       
       // Cas couleur
@@ -598,7 +602,8 @@ public abstract class Builder {
          part[n].max = i<0 ? -1 : getMem( s1.substring(i+1) );
          part[n].dir = i<0 ? s1 : s1.substring(0,i);
          
-         if( !( new File(part[n].dir).isAbsolute() ) ) throw new Exception("alternative target partitions must use an absolute path");
+         char a = part[n].dir.charAt(0);
+         if( a!='\\' && a!='/' ) throw new Exception("alternative target partitions must use an absolute path");
 //         System.out.println(part[n].dir+" => "+Util.getUnitDisk( (long)( part[n].max)*1024L ));
       }
       

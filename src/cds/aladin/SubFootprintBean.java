@@ -75,7 +75,7 @@ public class SubFootprintBean {
 	private Color c; // couleur du FoV
 
 	protected SubFootprintBean() {
-		subSubsFootprints = new Vector<SubFootprintBean>();
+		subSubsFootprints = new Vector<>();
 	}
 
 
@@ -170,7 +170,7 @@ public class SubFootprintBean {
 	 * @return le tableau des Objet
 	 */
 	protected Obj[] buildObjets(PlanField pf) {
-		Vector<Obj> v  = new Vector<Obj>();
+		Vector<Obj> v  = new Vector<>();
 
 		switch(type) {
 			case POLYGON: {
@@ -230,11 +230,10 @@ public class SubFootprintBean {
 			}
 
 			case STRING : {
-				Tag t = new Tag(pf);
-				t.setText(content);
-				t.setXYTan(Util.tand(ra), Util.tand(dec));
+				Tag t = new Tag(pf,content,ra,dec);
+//				t.setText(content);
+//				t.setXYTan(Util.tand(ra), Util.tand(dec));
 				v.addElement(t);
-
 				break;
 			}
 

@@ -409,6 +409,8 @@ public final class PlanField extends Plan {
          setActivated(true);
          make(co.al,co.del,roll);
       }
+      
+      setRollable( fpBean.isRollable());
    }
 
    protected void setLabel(String s) {
@@ -1079,7 +1081,7 @@ public final class PlanField extends Plan {
    protected boolean isRollable() { return flagRoll; }
 
    /** Positionne l'attibut Rollable pour l'Aperture */
-   protected void setRollable(boolean b) { this.flagRoll = b; }
+   protected void setRollable(boolean b) { flagRoll = b; }
 
    /** Return true if the FoV is rollable and its roll center is movable */
    protected boolean isCenterRollable() { return flagCenterRoll; }

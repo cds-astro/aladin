@@ -401,7 +401,7 @@ public final class ServerFoV extends Server implements TableModel {
 
    static final String FOV[][] = {
 //      { "WFPC2",    "HST", "Wide Field and Planetary Camera",    "CDS"},
-      { "MEGACAM",  "CFHT","Wide field imaging camera",          "CFH" },
+//      { "MEGACAM",  "CFHT","Wide field imaging camera",          "CFH" },
       { "MEGAPRIME","CFHT","Wide field imaging camera + guiders","CFH" },
       { "CFH12K",   "CFHT","Large field camera",                 "CFH" },
       { "WIRCAM",   "CFHT","Wide field IR camera",               "CFH" },

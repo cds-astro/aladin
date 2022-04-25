@@ -78,15 +78,14 @@ public class BuilderConcat extends BuilderTiles {
          if( inPng ) { (new BuilderPng(context)).run(); context.info("PNG tiles updated"); }
       }
 
-      // INUTILE CAR DEJA FAIT
-//      // Regeneration des allsky si non encore fait
-//      if( !inJpg && !inPng ) (new BuilderAllsky(context)).run();
-//      context.info("Allsky updated");
-
+      // Dans le cas d'un traitement algorythmique, les mises à jour des métadonnées
+      // sont spécifiques (voir ci-dessous)
+      boolean coaddOp = mode==Mode.SUM || mode==mode.DIV || mode==Mode.MUL;
+      
       // Mise à jour ou generation du MOC final
       String outputPath = context.getOutputPath();
       outputMoc = new SMoc();
-      File f = new File(outputPath+Util.FS+Constante.FILE_MOC);
+      File f = coaddOp ? null :new File(outputPath+Util.FS+Constante.FILE_MOC);
       if( f.exists() ) {
          outputMoc.read( f.getCanonicalPath() );
          outputMoc = outputMoc.union(inputMoc);
@@ -98,24 +97,26 @@ public class BuilderConcat extends BuilderTiles {
       }
 
       // Post traitement sur le HpxFinder si nécessaire
-      if( !doHpxFinder ) {
-         f = new File(outputPathIndex);
-         if( f.isDirectory() ) {
-            f.renameTo( new File(outputPathIndex+"-partial"));
-            context.warning("Previous HpxFinder has been removed as "+Constante.FILE_HPXFINDER+"-partial");
-         }
-      } else {
-         // Il faut refaire le MOC de l'index cumulé
-         (new BuilderMocIndex(context)).run();
-         context.info("Index MOC updated");
+      if( !coaddOp ) {
+         if( !doHpxFinder ) {
+            f = new File(outputPathIndex);
+            if( f.isDirectory() ) {
+               f.renameTo( new File(outputPathIndex+"-partial"));
+               context.warning("Previous HpxFinder has been removed as "+Constante.FILE_HPXFINDER+"-partial");
+            }
+         } else {
+            // Il faut refaire le MOC de l'index cumulé
+            (new BuilderMocIndex(context)).run();
+            context.info("Index MOC updated");
 
-         // Faut-il lancer également une commande PROGEN
-         f = new File(outputPathIndex+Util.FS+"metadata.xml");
-         if( f.exists() ) {
-            BuilderDetails  b = new BuilderDetails(context);
-            b.validateContext();
-            b.run();
-            context.info("PROGEN tiles updated");
+            // Faut-il lancer également une commande PROGEN
+            f = new File(outputPathIndex+Util.FS+"metadata.xml");
+            if( f.exists() ) {
+               BuilderDetails  b = new BuilderDetails(context);
+               b.validateContext();
+               b.run();
+               context.info("PROGEN tiles updated");
+            }
          }
       }
    }
@@ -134,6 +135,9 @@ public class BuilderConcat extends BuilderTiles {
       File f = new File(inputPath);
       if( f.exists() && (!f.isDirectory() || !f.canRead() )) throw new Exception("\"inputPath\" directory not available ["+inputPath+"]");
 
+      // Mise à jour des propriétés pour le suivi des addendum
+      addAddendum( context.getInputPath(), context.getOutputPath() );
+
       int order = Util.getMaxOrderByPath( outputPath );
       if( order==-1 )  throw new Exception("No HiPS found in ouput dir");
       context.setOrder(order);
@@ -142,11 +146,6 @@ public class BuilderConcat extends BuilderTiles {
       if( order!=inputOrder ) throw new Exception("Uncompatible HiPS: out.order="+order+" input.order="+inputOrder);
       context.info("Order retrieved from ["+inputPath+"] => "+order);
       
-      // Mise à jour des propriétés pour le suivi des addendum
-     try {
-        addAddendum( context.getInputPath(), context.getOutputPath() );
-     } catch( Exception e ) { e.printStackTrace(); }
-
       String allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
       if( (new File(allsky)).exists() ) {
          setContextParamFromPreviousAllskyFile(allsky);
@@ -166,10 +165,6 @@ public class BuilderConcat extends BuilderTiles {
             }
          }
       }
-
-      // faudra-t-il traiter les index
-      doHpxFinder = (new File(inputPathIndex)).isDirectory() && (new File(outputPathIndex)).isDirectory();
-      if( doHpxFinder ) context.info("HpxFinder will be also concatenated (mode="+mode+")");
 
       inputMoc = new SMoc();
       f = new File(inputPath+Util.FS+Constante.FILE_MOC);
@@ -196,12 +191,24 @@ public class BuilderConcat extends BuilderTiles {
       liveOut = checkLiveByProperties(context.getOutputPath());
       liveIn = checkLiveByProperties(context.getInputPath());
       live = liveIn && liveOut;
+      
+      // faudra-t-il traiter les index
+      doHpxFinder = (new File(inputPathIndex)).isDirectory() && (new File(outputPathIndex)).isDirectory();
+      if( mode==Mode.DIV || mode==Mode.MUL || mode==Mode.SUM ) {
+         doHpxFinder=false;
+         if( liveIn ) context.warning("Source HiPS does provide weight tiles => ignored");
+      }
+      if( doHpxFinder ) context.info("HpxFinder will be also concatenated (mode="+mode+")");
+
+
+      
       if( mode==Mode.AVERAGE ) {
          if( !live ) context.warning("Both HiPS to merge do not provide weight tiles => assuming basic average");
          else if( !liveOut ) context.warning("Target HiPS do not provide weight tiles => assuming weigth 1 for each output pixel");
          else if( !liveIn ) context.warning("Source HiPS do not provide weight tiles => assuming weigth 1 for each input pixel");
-         
       }
+      
+      context.info("Coadd mode: "+Mode.getExplanation(mode));
       
    }
    
@@ -224,8 +231,7 @@ public class BuilderConcat extends BuilderTiles {
 
       String sourceHipsId = getHipsIdFromProperty(sourcePath);
       context.addAddendum(sourceHipsId);
-      context.info("Merging "+sourceHipsId+" into "+targetHipsId+"...");
-
+      context.info("Concat "+sourceHipsId+" into "+targetHipsId+"...");
    }
    
    
@@ -363,16 +369,24 @@ public class BuilderConcat extends BuilderTiles {
             break;
          case AVERAGE:
             if( out!=null ) {
-               if( !live ) input.coadd(out,true);
+               if( !live ) input.coadd(out,Fits.AVG);
                else input.coadd(out, weightIn, weightOut);
             }
             out=input;
             weightOut=weightIn;
             break;
+         case DIV:
+            if( out!=null ) out.coadd(input,Fits.DIV);
+            break;
+         case MUL:
+            if( out!=null ) out.coadd(input,Fits.MUL);
+            break;
          case SUM:
+            if( out!=null ) out.coadd(input,Fits.ADD);
+            break;
          case ADD:
             if( out!=null ) {
-               input.coadd(out,false);
+               input.coadd(out,Fits.ADD);
                if( live ) for( int i=0; i<weightOut.length; i++ ) weightIn[i] += weightOut[i];
             }
             out=input;
@@ -395,6 +409,9 @@ public class BuilderConcat extends BuilderTiles {
             out=input;
             weightOut=weightIn;
             break;
+         default:
+            throw new Exception("Coadd mode ["+mode+"] not supported for CONCAT action");
+
       }
 
       if( out==null ) throw new Exception("Y a un blème ! out==null");
@@ -418,7 +435,6 @@ public class BuilderConcat extends BuilderTiles {
             case KEEPTILE :
                if( outIndex==null ) outIndex=inputIndex;
                break;
-            case SUM:
             case ADD:
             case AVERAGE:
             case OVERWRITE:

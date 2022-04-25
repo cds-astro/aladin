@@ -264,7 +264,7 @@ final public class ThreadBuilderTile {
                      fWeight = coaddMode==Mode.ADD || coaddMode==Mode.SUM  ? null 
                            : new double[tileSide*tileSide];
                   } else {
-                     if( coaddMode==Mode.ADD || coaddMode==Mode.SUM ) out.coadd(f,false);
+                     if( coaddMode==Mode.ADD || coaddMode==Mode.SUM ) out.coadd(f,Fits.ADD);
                      else out.coadd(f,weight,fWeight);
                   }
                }

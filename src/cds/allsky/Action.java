@@ -24,18 +24,18 @@ package cds.allsky;
 public enum Action {
 
    INDEX     ("Build spatial index (in HpxFinder directory) + MOC index"),
-   TINDEX    ("Build time index (in TimeFinder directory) + TMOC index"),
+   TINDEX    ("Build time index (in TimeFinder directory) + TMOC index"),                  // PROTO
    TILES     ("Build all true value pixel tiles (FITS) + Allsky.fits + MOC"),
    JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
    PNG       ("Build all preview tiles (PNG) + Allsky.png"),
    MOC       ("(Re)build the MOC (MultiOrder Coverage map)"),
-   MOCERROR  ("Build the MOC of suspected erroneous FITS tiles (TEST)"),
+   MOCERROR  ("Build the MOC of suspected erroneous FITS tiles (TEST)"),                   // PROTO
    MAP       ("Build an HEALPix map from the HiPS tiles"),
    MOCINDEX  ("(Re)build the index MOC (MultiOrder Coverage map) in HpxFinder directory"),
    MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
    ALLSKY    ("(Re)build all Allsky files + index.html"),
-   GZIP      ("Compress some FITS tiles and Allsky.fits"),
-   GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
+   GZIP      ("Compress some FITS tiles and Allsky.fits"),                                 // DEPRECATED
+   GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),                                    // DEPRECATED
    CLEAN     ("Delete all Hips files (except properties file)"),
    CLEANALL  ("Delete all Hips files"),
    CLEANINDEX("Delete spatial index (HpxFinder dir)"),
@@ -53,19 +53,19 @@ public enum Action {
    CUBE      ("Create a HiPS cube based on a list of HiPS (; separated)"),
    DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),
    UPDATE    ("Upgrade HiPS metadata additionnal files to HiPS version "+Constante.HIPS_VERSION),
-   PROP      ("Display HiPS properties files in HiPS version "+Constante.HIPS_VERSION+" syntax"),
+   PROP      ("Display HiPS properties files in HiPS version "+Constante.HIPS_VERSION+" syntax"), // DEBUG
    MIRROR    ("Mirror a remote HiPS locally"),
    RGB       ("Build and RGB HiPS based on 2 or 3 other HiPS"),
    LINT      ("Check HiPS IVOA 1.0 standard compatibility"),
-   ZIP       ("ZIP HiPS directories"),
+   ZIP       ("ZIP HiPS directories"),                                                     // PROTO
    //   INFO      ("Generate properties and index.html information files"),
    MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
-   FINDER,PROGEN,  // Pour compatibilité
+   FINDER,PROGEN,                                                                          // DEPRECATED
    ABORT, PAUSE, RESUME,
    
-   SMOC      ("Build a SMOC.fits based on HpxFinder tile descriptions (TEST)"),
-   TMOC      ("Build a TMOC.fits based on HpxFinder tile descriptions (TEST)"),
-   STMOC     ("Build a STMOC.fits based on HpxFinder tile descriptions (TEST)");
+   SMOC      ("Build a SMOC.fits based on HpxFinder tile descriptions (TEST)"),            // PROTO
+   TMOC      ("Build a TMOC.fits based on HpxFinder tile descriptions (TEST)"),            // PROTO
+   STMOC     ("Build a STMOC.fits based on HpxFinder tile descriptions (TEST)");           // PROTO
 
    Action() {}
    Action(String s ) { doc=s; }

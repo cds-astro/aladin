@@ -1076,7 +1076,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             double cov = ((SMoc)pmoc.getMoc()).getCoverage();
             double degrad = Math.toDegrees(1.0);
             double skyArea = 4.*Math.PI*degrad*degrad;
-            PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+            String body = plan.getBody();
+            if( body==null ) body="?";
+            PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of "+body+" => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
             PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(((SMoc)pmoc.getMoc()).getAngularRes())
                   +" (order="+((SMoc)pmoc.getMoc()).getMocOrder()+")"),g,c);
 
@@ -1107,7 +1109,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                double cov = spaceMoc.getCoverage();
                double degrad = Math.toDegrees(1.0);
                double skyArea = 4.*Math.PI*degrad*degrad;
-               PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+               String body = plan.getBody();
+               if( body==null ) body="?";
+               PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of "+body+" => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
                PropPanel.addCouple(p,"Best ang.res: ",new JLabel(Coord.getUnit(spaceMoc.getAngularRes())
                      +" (order="+spaceMoc.getMocOrder()+")"),g,c);
 
@@ -1263,8 +1267,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                if( sS==null && pbg.moc!=null ) sS = pbg.moc.getCoverage()+"";
                JPanel p1 = new JPanel();
                if( sS!=null ) {
+                  String body = pbg.getBody();
+                  if( body==null ) body="?";
                   try { sS = Util.myRound( Double.parseDouble(sS)*100); } catch( Exception e) {}
-                  p1.add( new JLabel(sS+" % of sky"));
+                  p1.add( new JLabel(sS+" % of "+body));
                }
                if( hasMoc ) {
                   JButton bt = new JButton(aladin.MOC);

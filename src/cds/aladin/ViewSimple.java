@@ -5039,16 +5039,24 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             moc.setRangeList( new Range( new long[] { tmin, tmax } ) );
             return moc;
          }
-            
+
          // Cas spatial
-          if( isAllSky() ) return new SMoc("0/0-11 "+(order==-1?"10":order)+"/");
-          
-          // Détermination de l'order
-          Coord c = getCooCentre();
-          double size = getTaille();
-          if( order==-1 ) order = Directory.getAppropriateOrder(size);
-          return CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
-        
+         SMoc moc;
+         if( isAllSky() ) moc=new SMoc("0/0-11 "+(order==-1?"10":order)+"/");
+         else {
+
+            // Détermination de l'order
+            Coord c = getCooCentre();
+            double size = getTaille();
+            if( order==-1 ) order = Directory.getAppropriateOrder(size);
+            moc=CDSHealpix.getMocByCircle(order, c.al, c.del, Math.toRadians( 1.42* (size / 2) ), true);
+         }
+         
+         // Positionnement du système de référence qui va bien dans le cas d'une planète
+         if( pref instanceof PlanBG )  moc.setSys( ((PlanBG)pref).getPlanetSys() );
+         
+         return moc;
+
       } catch( Exception e ) {  if( aladin.levelTrace>3  ) e.printStackTrace(); }
       return null;
    }
@@ -5551,7 +5559,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected Coord getNECentre(Projection proj) {
       if( isFree() || !Projection.isOk(proj) ) return null;
       double x = rv.width-15;
-      double y = rv.height-15;
+      double y = rv.height-20;
       PointD p = getPosition(x,y);
       Coord coo = new Coord();
       coo.x = p.x;
@@ -5559,7 +5567,20 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       proj.getCoord(coo);
       if( Double.isNaN(coo.del) ) return null;
       return coo;
+   }
 
+   /** Retourne les coordonnées du Beam */
+   protected Coord getBeamCentre(Projection proj) {
+      if( isFree() || !Projection.isOk(proj) ) return null;
+      double x = rv.width-rv.width/5;
+      double y = rv.height-20;
+      PointD p = getPosition(x,y);
+      Coord coo = new Coord();
+      coo.x = p.x;
+      coo.y = p.y;
+      proj.getCoord(coo);
+      if( Double.isNaN(coo.del) ) return null;
+      return coo;
    }
 
    // Retourne la taille de la rose des vents
@@ -5589,8 +5610,30 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
       return x>lX && x<rv.width-8 && y>lY && y<rv.height-8 ;
    }
+   
+   /** Tracé du beam */
+   protected void drawBeam(Graphics g,Projection proj,int dx,int dy) {
+      if( !(pref instanceof PlanImage) ) return;
+      PlanImage pimg = (PlanImage)pref;
+      if( pimg.beam==null ) return;
+      
+      try {
+         Coord c = getBeamCentre(proj);
+         Ellipse o = new Ellipse(null, c, pimg.beam.bmaj, pimg.beam.bmin, pimg.beam.bpa+90.);
+         o.setColor(view.infoColor);
+         o.projection(this);
+         if( Math.max(o.getClip(this).width ,o.getClip(this).height)>rv.width/4.5 ) return;
+         o.draw(g,this,0,0);
+      } catch( Exception e) {}
+   }
 
-   /** Positionnement d'un repere Nord et Est */
+   /** Positionnement d'un repere Nord et Est
+    * @param g
+    * @param proj
+    * @param dx
+    * @param dy
+    * @return la distance en pixels dans la vue depuis le bord gauche
+    */
    protected void drawNE(Graphics g,Projection proj,int dx,int dy) {
       //flagAllSky=false;
       if( !aladin.calque.hasNE() || isAllSky() ) return;
@@ -5618,7 +5661,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             x=c.x; y=c.y;
             c = aladin.localisation.ICRSToFrame(c);
          }
-
+         
          c1 = new Coord(c.al,c.del+delta);
          if( !flagBG ) c1 = aladin.localisation.frameToICRS(c1);
          //         proj.getXYNative(c1);
@@ -5663,7 +5706,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             Util.drawFleche(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
          }
          g.setColor( c2 );
-      } catch( Exception e ) { return; }
+      } catch( Exception e ) { }
    }
 
    /** Pas d'incréments en déclinaison */
@@ -5971,7 +6014,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                RenderingHints.VALUE_ANTIALIAS_ON);
          st = ((Graphics2D)g).getStroke();
-         ((Graphics2D)g).setStroke(new BasicStroke(0.3f));
+         float epaisseur = aladin.configuration.getGridThickness();
+         if( epaisseur<=0 ) epaisseur = 0.3f;
+         ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
       }
 
 
@@ -6034,7 +6079,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                RenderingHints.VALUE_ANTIALIAS_ON);
          st = ((Graphics2D)g).getStroke();
-         ((Graphics2D)g).setStroke(new BasicStroke(0.4f));
+         float epaisseur = aladin.configuration.getGridThickness();
+         if( epaisseur<=0 ) epaisseur=0.4f;
+         ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
       }
 
       
@@ -6186,10 +6233,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                RenderingHints.VALUE_ANTIALIAS_ON);
          st = ((Graphics2D)g).getStroke();
-         float epaisseur = rv.width<1500 ? 0.5f : rv.width/1500f;
-         if( epaisseur<0.5f ) epaisseur=0.5f;
-         else if( epaisseur>2f ) epaisseur=2f;
          
+         float epaisseur = aladin.configuration.getGridThickness();
+         if( epaisseur<=0 ) {
+            epaisseur = w<1500 ? 0.5f : rv.width/1500f;
+            if( epaisseur<0.5f ) epaisseur=0.5f;
+            else if( epaisseur>2f ) epaisseur=2f;
+         }
          ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
       }
 
@@ -6755,6 +6805,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                if( isProjSync ) drawSync(g,x+10,rv.height-getMarge()-5,Color.red);
                vs.drawSize(g,dx,dy);
                vs.drawNE(g,proj,dx,dy);
+               vs.drawBeam(g, proj,dx,dy);
             }
          }
 

@@ -947,7 +947,10 @@ public final class Command implements Runnable {
       else if( s.endsWith("\"") ) s = s.substring(0, s.length() - 1) + "s";
 
       radius.append("" + Server.getAngleInArcmin(s, Server.RADIUS));
-      tX.append(new String(a, 0, j));
+      
+      // Target
+      String t1 = new String(a, 0, j);
+      tX.append(t1);
       return true;
    }
 

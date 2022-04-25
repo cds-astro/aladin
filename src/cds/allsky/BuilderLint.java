@@ -142,9 +142,7 @@ public class BuilderLint extends Builder {
    
    public void validateContext() throws Exception { }
    
-   public void run() throws Exception {
-      lint();
-   }
+   public void run() throws Exception { lint( ); }
    
    /**
     * Provide the MyProperties objects used for lint check
@@ -157,6 +155,7 @@ public class BuilderLint extends Builder {
    
    /**
     * Check IVOA HiPS 1.0 compatibility
+    * @param flagDeep true pour test profond (test random des tuiles)
     * @return 1 ok, -1 ok but with warning, 0 uncompatible
     * @throws Exception
     */
@@ -197,7 +196,7 @@ public class BuilderLint extends Builder {
       lintMoc();
       
       // Test sur une tuile au hasard
-      lintTile( 3 );
+      if( context.hipslintTileTest ) lintTile( 3 );
       
       // Test allsky
       lintAllsky();
@@ -208,8 +207,8 @@ public class BuilderLint extends Builder {
       // Test des autres fichiers optionels
       lintMiscFiles();
       
-      if( flagError ) context.error("*** HiPS "+id+" is not IVOA HiPS 1.0 compatible");
-      else if( flagWarning ) context.warning("!!! HiPS "+id+" is IVOA HiPS 1.0 compatible but with warnings");
+      if( flagError ) context.info("*** HiPS "+id+" is not IVOA HiPS 1.0 compatible");
+      else if( flagWarning ) context.info("!!! HiPS "+id+" is IVOA HiPS 1.0 compatible but with warnings");
       else context.info("HiPS "+id+" is fully IVOA HiPS 1.0 compatible");
       
       return flagError ? 0 : flagWarning ? -1 : 1;
@@ -220,8 +219,9 @@ public class BuilderLint extends Builder {
       boolean flagError=false,flagWarning=false;
       
       String f = path+FS+"metadata.xml";
+      MyInputStream in=null;
       try {
-         MyInputStream in = Util.openAnyStream( f,false,false,TIMEOUT );
+         in = Util.openAnyStream( f,false,false,TIMEOUT );
          long type=in.getType();
          if( (type&MyInputStream.VOTABLE)==0 ) {
             context.error("Lint[4.4.3] \"metadata.xml\" format error (expecting \"votable\", found ["+MyInputStream.decodeType(type)+"])");
@@ -231,6 +231,8 @@ public class BuilderLint extends Builder {
       } catch( Exception e) {
          context.error("Lint[4.4.3] \"metadata.xml\" is missing");
          flagError=true;
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e ) {}
       }
       
       if( !flagError ) context.info("Lint: \"metadata.xml\" ok");
@@ -243,53 +245,62 @@ public class BuilderLint extends Builder {
       
       // preview.jpg
       String f = path+FS+"preview.jpg";
+      MyInputStream in=null;
       try {
-         MyInputStream in = Util.openAnyStream( f,false,false,TIMEOUT );
-         long type=in.getType();
-         if( type!=MyInputStream.JPEG ) {
-            context.error("Lint[4.4.4] \"preview.jpg\" format error (expecting \"jpeg\", found ["+MyInputStream.decodeType(type)+"])");
-            flagError=true;
+         try {
+            in = Util.openAnyStream( f,false,false,TIMEOUT );
+            long type=in.getType();
+            if( type!=MyInputStream.JPEG ) {
+               context.error("Lint[4.4.4] \"preview.jpg\" format error (expecting \"jpeg\", found ["+MyInputStream.decodeType(type)+"])");
+               flagError=true;
+            }
+            in.close();
+            in=null;
+         } catch( Exception e) {
+            context.info("Lint[4.4.4] no \"preview.jpg\" file");
          }
-         in.close();
-      } catch( Exception e) {
-         context.info("Lint[4.4.4] no \"preview.jpg\" file");
-      }
-      
-      // index.html
-      f = path+FS+"index.html";
-      try {
-         MyInputStream in = Util.openAnyStream( f,false,false,TIMEOUT );
-         in.close();
-      } catch( Exception e) {
-         context.info("Lint[4.4.5] no \"index.html\" file");
+
+         // index.html
+         f = path+FS+"index.html";
+         try {
+            in = Util.openAnyStream( f,false,false,TIMEOUT );
+            in.close();
+            in=null;
+         } catch( Exception e) {
+            context.info("Lint[4.4.5] no \"index.html\" file");
+         }
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e ) {}
       }
    }
    
    /** Test des allsky */
    private void lintAllsky( ) throws Exception {
-      for( String ext : extensions ) {
-         boolean found=false;
-         for( int o=0; o<=3; o++ ) {
-            String suffix = "Norder"+o+FS+"Allsky"+ext;
-            String f = path+FS+suffix;
-            try {
-               MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
-               long type = in.getType();
-               if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
-                     ||  ext.equals(".png") && type!=MyInputStream.PNG
-                     ||  ext.equals(".fits") && (type&MyInputStream.FITS)!=MyInputStream.FITS
-                     ||  ext.equals(".tsv") && (type&MyInputStream.CSV)!=MyInputStream.CSV
-                     ) {
-                  context.error("Lint[4.2.1.3] Allsky format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
-                  flagError=true;
-               }
-               
-               if( ext.equals(".fits") &&  (type&MyInputStream.GZ)!=0 ) {
-                  context.warning("Lint[4.2.1.3] Allsky.fits gzipped (deprecated method)");
-               }
-
-               Fits fits = null;
+      MyInputStream in=null;
+      try {
+         for( String ext : extensions ) {
+            boolean found=false;
+            for( int o=0; o<=3; o++ ) {
+               String suffix = "Norder"+o+FS+"Allsky"+ext;
+               String f = path+FS+suffix;
                try {
+                  if( in!=null ) try { in.close(); } catch( Exception e ) {}
+                  in = Util.openAnyStream(f,false,false,TIMEOUT);
+                  long type = in.getType();
+                  if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
+                        ||  ext.equals(".png") && type!=MyInputStream.PNG
+                        ||  ext.equals(".fits") && (type&MyInputStream.FITS)!=MyInputStream.FITS
+                        ||  ext.equals(".tsv") && (type&MyInputStream.CSV)!=MyInputStream.CSV
+                        ) {
+                     context.error("Lint[4.2.1.3] Allsky format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
+                     flagError=true;
+                  }
+
+                  if( ext.equals(".fits") &&  (type&MyInputStream.GZ)!=0 ) {
+                     context.warning("Lint[4.2.1.3] Allsky.fits gzipped (deprecated method)");
+                  }
+
+                  Fits fits = null;
                   if( !flagRemote ) {
                      if( ext.equals(".fits") ) {
                         fits = new Fits();
@@ -301,13 +312,18 @@ public class BuilderLint extends Builder {
                   }
                   context.info("Lint: Allsky found ["+suffix+"] ok");
                   found=true;
-               }finally { in.close(); in=null; }
-            } catch( Exception e ) { }
+               } catch( Exception e ) { }
+            }
+            if( !found ) {
+               context.info("Lint[4.3.2] Allsky not found (order 0 to 3)");
+            }
          }
-         if( !found ) {
-            context.info("Lint[4.3.2] Allsky not found (order 0 to 3)");
-         }
+         if( in!=null ) in.close();
+         in=null;
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e ) {}
       }
+
    }
 
    /** Retourne au hasard un indice HEALPix se situant dans le HiPS à la profondeur max */
@@ -377,54 +393,56 @@ public class BuilderLint extends Builder {
       int lowOrder=-1;
       HashSet<String> dejaTeste = new HashSet<>();  // pour éviter de tester 2x la même tuile
 
-      for( int j=0; j<n; j++ ) {
-         long npix1 = getOneNpix();
-         if( npix1==-1 ) {
-            context.info("Lint: tile test cancelled");
-            return;
-         }
-         
-         // Dans le cas d'un cube, on teste aussi d'autres frames que 0
-         int z=0;
-         if( j>0 ) {
-            z = (int)(Math.random()*depth);
-            if( z>=depth ) z=depth-1;
-         }
+      MyInputStream in = null;
+      try {
+         for( int j=0; j<n; j++ ) {
+            long npix1 = getOneNpix();
+            if( npix1==-1 ) {
+               context.info("Lint: tile test cancelled");
+               return;
+            }
 
-         for( String ext : extensions ) {
-            boolean found=false;
-            long npix = npix1;
-            String first=null,last=null;
-            lowOrder=-1;
+            // Dans le cas d'un cube, on teste aussi d'autres frames que 0
+            int z=0;
+            if( j>0 ) {
+               z = (int)(Math.random()*depth);
+               if( z>=depth ) z=depth-1;
+            }
+
+            for( String ext : extensions ) {
+               boolean found=false;
+               long npix = npix1;
+               String first=null,last=null;
+               lowOrder=-1;
                for( int o=order; o>=0; o--, npix/=4L) {
-               String suffix = getFilePath(o, npix, z, FS)+ext;
-               String f = path+FS+suffix;
-               if( lowOrder==-1 || o<lowOrder ) first=suffix;
-//               System.out.println("Loading "+f+"...");
-               
-               if( dejaTeste.contains(f) ) {
-                  // Conserve le plus petit ordre trouvé
-                  if( lowOrder==-1 || o<lowOrder ) lowOrder=o; 
-               } else {
-                  dejaTeste.add(f);
-                  try {
-                     MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
-                     long type = in.getType();
-                     if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
-                           ||  ext.equals(".png") && type!=MyInputStream.PNG
-                           ||  ext.equals(".fits") && (type&MyInputStream.FITS)!=MyInputStream.FITS
-                           ||  ext.equals(".tsv") && (type&MyInputStream.CSV)!=MyInputStream.CSV
-                           ) {
-                        context.error("Lint[4.2.1.3] tile format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
-                        flagError=true;
-                     }
-                     if( ext.equals(".fits") &&  (type&MyInputStream.GZ)!=0 ) {
-                        context.warning("Lint[4.2.1.3] fits tile gzipped (deprecated method) ["+suffix+"]");
-                     }
+                  String suffix = getFilePath(o, npix, z, FS)+ext;
+                  String f = path+FS+suffix;
+                  if( lowOrder==-1 || o<lowOrder ) first=suffix;
+                  //               System.out.println("Loading "+f+"...");
 
-                     // On ne lit plus le contenu à distance, c'est trop long
-                     Fits fits = null;
+                  if( dejaTeste.contains(f) ) {
+                     // Conserve le plus petit ordre trouvé
+                     if( lowOrder==-1 || o<lowOrder ) lowOrder=o; 
+                  } else {
+                     dejaTeste.add(f);
                      try {
+                        if( in!=null ) try { in.close(); } catch( Exception e ) {}
+                        in = Util.openAnyStream(f,false,false,TIMEOUT);
+                        long type = in.getType();
+                        if(   ext.equals(".jpg") && type!=MyInputStream.JPEG
+                              ||  ext.equals(".png") && type!=MyInputStream.PNG
+                              ||  ext.equals(".fits") && (type&MyInputStream.FITS)!=MyInputStream.FITS
+                              ||  ext.equals(".tsv") && (type&MyInputStream.CSV)!=MyInputStream.CSV
+                              ) {
+                           context.error("Lint[4.2.1.3] tile format error (expecting \""+ext+"\", found ["+MyInputStream.decodeType(type)+"])");
+                           flagError=true;
+                        }
+                        if( ext.equals(".fits") &&  (type&MyInputStream.GZ)!=0 ) {
+                           context.warning("Lint[4.2.1.3] fits tile gzipped (deprecated method) ["+suffix+"]");
+                        }
+
+                        // On ne lit plus le contenu à distance, c'est trop long
+                        Fits fits = null;
                         if( !flagRemote ) {
                            if( ext.equals(".fits") ) {
                               fits = new Fits();
@@ -434,67 +452,71 @@ public class BuilderLint extends Builder {
                               fits.loadPreview(in);
                            }
                         }
-                        
+
                         found=true;
                         if( last==null ) last=suffix;
-                     } finally { in.close(); in=null;}
 
-                     // Conserve le plus petit ordre trouvé
-                     if( lowOrder==-1 || o<lowOrder ) lowOrder=o;
+                        // Conserve le plus petit ordre trouvé
+                        if( lowOrder==-1 || o<lowOrder ) lowOrder=o;
 
-                     boolean ok=true;
-                     if( fits!=null ) {
-                        if( fits.width != fits.height ) {
-                           context.error("Lint[4.2.1] not square tile ["+fits.width+"x"+fits.height+"]");
-                           flagError=true;
-                        }
-                        double o1 = Math.log10(fits.width)/Math.log10(2);
-                        if( o1!=(long)o1 ) {
-                           context.error("Lint[4.2.1] tile width error ["+fits.width+"x"+fits.height+"]");
-                           ok=false;
-                        }
-                        if( tileWidth!=-1 && tileWidth!=fits.width ) {
-                           context.error("Lint[4.2.1] tile width not conform to hips_tile_width ["+fits.width+"!="+tileWidth+"]");
-                           ok=false;
-                        }
-                        if( ext.equals(".fits") ) {
-                           if( bitpix!=-1 && bitpix!=fits.bitpix ) {
-                              context.error("Lint[4.2.1] tile bitpix not conform to hips_pixel_bitpix ["+fits.bitpix+"!="+bitpix+"]");
+                        boolean ok=true;
+                        if( fits!=null ) {
+                           if( fits.width != fits.height ) {
+                              context.error("Lint[4.2.1] not square tile ["+fits.width+"x"+fits.height+"]");
+                              flagError=true;
+                           }
+                           double o1 = Math.log10(fits.width)/Math.log10(2);
+                           if( o1!=(long)o1 ) {
+                              context.error("Lint[4.2.1] tile width error ["+fits.width+"x"+fits.height+"]");
                               ok=false;
                            }
+                           if( tileWidth!=-1 && tileWidth!=fits.width ) {
+                              context.error("Lint[4.2.1] tile width not conform to hips_tile_width ["+fits.width+"!="+tileWidth+"]");
+                              ok=false;
+                           }
+                           if( ext.equals(".fits") ) {
+                              if( bitpix!=-1 && bitpix!=fits.bitpix ) {
+                                 context.error("Lint[4.2.1] tile bitpix not conform to hips_pixel_bitpix ["+fits.bitpix+"!="+bitpix+"]");
+                                 ok=false;
+                              }
+                           }
                         }
-                     }
-                     if( !ok ) flagError=true;
-                     //                  else context.info("Lint: tile test on ["+suffix+"] ok");
-                     
-//                     System.out.println("  "+f+" achieved");
+                        if( !ok ) flagError=true;
+                        //                  else context.info("Lint: tile test on ["+suffix+"] ok");
 
-                  } catch( Exception e1 ) {
-                     if( found) {
-                        String s1 = e1.getMessage()!=null ? " ("+e1.getMessage()+")":"";
-                        if( flagMinOrderSet && o>=minOrder ) {
-                           context.error("Lint[4.1] tile missing ["+o+"/"+npix+" => "+f+"]"+s1);
-                           flagError=true;
+                        //                     System.out.println("  "+f+" achieved");
+
+                     } catch( Exception e1 ) {
+                        if( found) {
+                           String s1 = e1.getMessage()!=null ? " ("+e1.getMessage()+")":"";
+                           if( flagMinOrderSet && o>=minOrder ) {
+                              context.error("Lint[4.1] tile missing ["+o+"/"+npix+" => "+f+"]"+s1);
+                              flagError=true;
+                           }
                         }
                      }
                   }
                }
-            }
-         
-            if( !found ) {
-               if( flagMinOrderSet && lowOrder>minOrder ) {
-                  context.error("Lint[4.1] tile hierarchy missing ["+first+" ... "+last+"] claiming to start at order "+minOrder);
-                  flagError=true;
+
+               if( !found ) {
+                  if( flagMinOrderSet && lowOrder>minOrder ) {
+                     context.error("Lint[4.1] tile hierarchy missing ["+first+" ... "+last+"] claiming to start at order "+minOrder);
+                     flagError=true;
+                  }
+               } else if( found ) {
+                  context.info("Lint: tile test hierarchy ["+first+" ... "+last+"] ok");
                }
-            } else if( found ) {
-               context.info("Lint: tile test hierarchy ["+first+" ... "+last+"] ok");
             }
+
+            // Si erreur on ne va pas faire un autre test
+            if( flagError ) n=j;
+            if( in!=null ) in.close();
+            in=null;
          }
-         
-         // Si erreur on ne va pas faire un autre test
-         if( flagError ) n=j;
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e ) {}
       }
-      
+
 //    if( !flagError ) context.info("Lint: tile tests & tile hierarchy tests ok");
       if( flagMinOrderSet && lowOrder!=-1 && lowOrder!=minOrder ) context.error("Lint[4.1] min order found in the tile hierarchy ["+lowOrder+"] not conform [hips_min_order="+minOrder+"]");
       else {
@@ -516,30 +538,35 @@ public class BuilderLint extends Builder {
 
       MyInputStream in = null;
       try {
-         String f = path+FS+"Moc.fits";
-         in = Util.openAnyStream(f,false,false,TIMEOUT);
-      } catch( Exception e ) {
-         if( flagICRS ) {
-            context.warning("lint[4.4.2] \"Moc.fits\" file missing");
-            flagWarning=true;
-         } else {
-            context.warning("lint[4.4.2] no \"Moc.fits\" file");
+         try {
+            String f = path+FS+"Moc.fits";
+            in = Util.openAnyStream(f,false,false,TIMEOUT);
+         } catch( Exception e ) {
+            if( flagICRS ) {
+               context.warning("lint[4.4.2] \"Moc.fits\" file missing");
+               flagWarning=true;
+            } else {
+               context.warning("lint[4.4.2] no \"Moc.fits\" file");
+            }
          }
-      }
 
-      try {
-         moc = new SMoc();
-         moc.read(in);
-         in.close();
+         try {
+            moc = new SMoc();
+            moc.read(in);
+            in.close();
+            in=null;
 
-         String frame = moc.getSpaceSys();
-         if( !frame.equals("C") ) {
-            context.warning("Lint[4.4.2] \"Moc.fits\" coordinate system error, ICRS expecting, found ["+frame+"]");
-            flagWarning=true;
+            String frame = moc.getSpaceSys();
+            if( !frame.equals("C") ) {
+               context.warning("Lint[4.4.2] \"Moc.fits\" coordinate system error, ICRS expecting, found ["+frame+"]");
+               flagWarning=true;
+            }
+         } catch( Exception e ) {
+            context.error("Lint[4.4.2] \"Moc.fits\" error");
+            flagError=true;
          }
-      } catch( Exception e ) {
-         context.error("Lint[4.4.2] \"Moc.fits\" error");
-         flagError=true;
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e ) {}
       }
 
       if( !flagError ) context.info("Lint: \"Moc.fits\" ok");
@@ -552,17 +579,21 @@ public class BuilderLint extends Builder {
       boolean flagError=false,flagWarning=false;
       int i;
       String s;
+      MyInputStream in=null;
       try {
          String f = path+FS+"properties";
-         MyInputStream in = Util.openAnyStream(f,false,false,TIMEOUT);
+         in = Util.openAnyStream(f,false,false,TIMEOUT);
          InputStreamReader isr = new InputStreamReader( in, "UTF-8" );
          prop = new MyProperties();
          prop.load( isr );
-         isr.close();
+         in.close();
+         in=null;
       } catch( Exception e1 ) {
          context.error("Lint[4.4] \"properties\" file missing");
          flagError=true;
          return;
+      } finally {
+         if( in!=null ) try { in.close(); } catch( Exception e ) { }
       }
 
       boolean [] propReq    = new boolean[ PROP_REQ.length ];

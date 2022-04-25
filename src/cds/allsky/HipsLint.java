@@ -22,15 +22,22 @@
 package cds.allsky;
 
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
+import cds.aladin.Aladin;
 import cds.aladin.MyProperties;
 import cds.mocmulti.MultiMoc;
 import cds.tools.Util;
 
 public class HipsLint {
    
-   static boolean flagColor=false;   // true si on a positionné -color ou -nocolor
+   static boolean flagColor=false;     // true si on a positionné -color ou -nocolor
+   static boolean flagTileTest=true;   // false si on a positionné -nodeeptest
+   static boolean flagMirrorTest=false;    // true si on veut également checker les HiPS mirrors
 
    public HipsLint() { }
    
@@ -39,8 +46,9 @@ public class HipsLint {
       String s;
       MyProperties prop;
       Context context = new Context();
-      boolean flagError=false, flagWarning=false, flagException=false;
+      boolean flagError=false, flagWarning=false, flagException=false, mirror=false;
       
+      context.info("Starting HipsLint "+SDF.format(new Date())+" (based on Aladin "+Aladin.VERSION+")...");
       context.info(Context.getTitle("CHECKING HiPSserver ["+hipsListUrl+"]",'='));
       InputStreamReader in = new InputStreamReader( Util.openAnyStream(hipsListUrl,false,false,BuilderLint.TIMEOUT), "UTF-8");
       
@@ -82,6 +90,7 @@ public class HipsLint {
                context.info("Lint: \"hips_status\" ["+s+"]");
                StringBuilder statusUnref = null;
                boolean flagPub=false,flagMirror=false,flagClone=false;
+               mirror=false;
                StringTokenizer tok = new StringTokenizer(s," ");
                while( tok.hasMoreTokens() ) {
                   String s1 = tok.nextToken();
@@ -93,6 +102,7 @@ public class HipsLint {
                      } else flagPub=true;
                   } else {
                      i = Util.indexInArrayOf(s1, BuilderLint.STATUS_MIRROR);
+                     if( i==1 ) mirror=true;
                      if( i>=0 ) {
                         if( flagMirror ) {
                            context.error("Lint[4.4.1] hips_status error redundant definition [master/mirror/partial]");
@@ -129,18 +139,26 @@ public class HipsLint {
                flagError=true;
             }
             
-            context.info( Context.getTitle("Checking HiPS ["+id+"]"));
+            if( mirror && !flagMirrorTest ) {
+               context.info("Lint: HiPS mirror skipped ["+id+"]");
+               
+            } else {
 
-            context.setOutputPath(u);
-            BuilderLint builderLint = new BuilderLint( context );
-            try {
-               int rep = builderLint.lint();
-               if( rep==0 ) flagError=true;
-               else if( rep==-1 ) flagWarning=true;
-               
-               if( !checkHipslistProp( context, prop, builderLint.getProperties() ) ) flagError=true;
-               
-            } catch( Exception e) { flagException = true; e.printStackTrace(); }
+               context.info( Context.getTitle("Checking HiPS ["+id+"]"));
+               context.hipslintTileTest = flagTileTest;
+               if( !flagTileTest ) context.info("Lint: lite test => no random tile test");
+               context.setOutputPath(u);
+               BuilderLint builderLint = new BuilderLint( context );
+               try {
+                  int rep = builderLint.lint();
+                  if( rep==0 ) flagError=true;
+                  else if( rep==-1 ) flagWarning=true;
+
+                  if( !checkHipslistProp( context, prop, builderLint.getProperties() ) ) flagError=true;
+
+               } catch( Exception e) { flagException = true; e.printStackTrace(); }
+            }
+            
             
          } catch( Exception e ) {
             e.printStackTrace();
@@ -178,27 +196,41 @@ public class HipsLint {
    
    public static void main(String[] args) {
       if( args.length==0 || args[0].equals("-h") ) {
-         System.out.println("Usage: java -jar Hipslint [-color|-nocolor] http://hips.server/hipslist [hipslisturl2 ...]");
+         System.out.println("Usage: java -jar Hipslint [-color] [-mirrortest] [-notiletest] http://hips.server/hipslist [hipslisturl2 ...]");
          System.out.println("       HiPS server compatibility checker (IVOA HiPS 1.0 standard)");
+         System.out.println("       -color: colourized console messages");
+         System.out.println("       -mirrortest: also tests mirrored HiPS (by default discarded)");
+         System.out.println("       -notiletest: basic testing only by avoiding random tile checks (faster)");
+        
+         
          System.exit(0);
       }
       
-      // On traite le paramètre -color (qu'on enleve du tableau le cas échéant)
-      if( args.length>1 ) {
-         String args1[] = new String[ args.length-1 ];
-         for( int i=0,j=0; i<args.length; i++,j++ ) {
-            if( args[i].equalsIgnoreCase("-color") ) { TERM=true; j--; flagColor=true; }
-            else if( args[i].equalsIgnoreCase("-nocolor") ) { TERM=false; j--; flagColor=true; }
-            else if( j<args1.length ) args1[j]=args[i];
-         }
-         if( flagColor ) args=args1;
+      Util.setUserAgent("Hipslint Aladin/"+Aladin.VERSION.substring(1));
+      
+      // On traite les paramètres optionnels (qu'on enleve du tableau le cas échéant)
+      ArrayList<String> args1 = new ArrayList<>();
+      for( String s : args ) {
+         if( s.equalsIgnoreCase("-color") ) { TERM=true; flagColor=true; }
+         else if( s.equalsIgnoreCase("-nocolor") ) { TERM=false; flagColor=true; }
+         else if( s.equalsIgnoreCase("-notiletest") ) { flagTileTest=false; }
+         else if( s.equalsIgnoreCase("-mirrortest") ) { flagMirrorTest=false; }
+         else args1.add(s);
       }
       
       try {
          HipsLint lint = new HipsLint();
-         for( String hipsListUrl : args ) lint.check(hipsListUrl);
+         for( String hipsListUrl : args1 ) lint.check(hipsListUrl);
       } catch( Exception e ) {
          e.printStackTrace();
       }
    }
+   
+   static public SimpleDateFormat SDF;
+   static {
+       SDF = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+       SDF.setTimeZone(TimeZone.getDefault());
+   }
+
+
 }

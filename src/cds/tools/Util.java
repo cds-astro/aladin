@@ -140,6 +140,11 @@ public final class Util {
    
    static final int DEFAULTTIMEOUT = -1; //10000;
    static public final String HTTPERROR = "HTTP error: ";
+   static private String USERAGENT="Aladin/"+Aladin.VERSION.substring(1);
+   
+   /** Positionnement du UserAgent utilisé */
+   static public void setUserAgent(String userAgent) { USERAGENT=userAgent; }
+   static public String getUserAgent() { return USERAGENT; }
 
    /** Ouverture d'un MyInputStream que ce soit un fichier ou une url */
    static public MyInputStream openAnyStream(String urlOrFile) throws Exception {
@@ -171,7 +176,7 @@ public final class Util {
       // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
       if( conn instanceof HttpURLConnection ) {
          HttpURLConnection http = (HttpURLConnection)conn;
-         http.setRequestProperty("User-Agent", "Aladin/"+Aladin.VERSION);
+         http.setRequestProperty("User-Agent", USERAGENT);
          if( askGzip ) http.setRequestProperty("Accept-Encoding", "gzip");
          
          // Je reprend l'idée de Chaitra pour remonter le code d'erreur

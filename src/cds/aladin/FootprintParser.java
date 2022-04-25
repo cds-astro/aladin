@@ -74,7 +74,7 @@ public class FootprintParser {
 	static private Hashtable<String, FootprintBean> footprintHash; // conserve la mémoire des footbeans créés
 
 	static {
-		footprintHash = new Hashtable<String, FootprintBean>();
+		footprintHash = new Hashtable<>();
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class FootprintParser {
 
 		int nbRes = resSet.getItemCount();
 //		System.out.println(nbRes);
-		hash = new Hashtable<String, FootprintBean>();
+		hash = new Hashtable<>();
 
 		for( int i=0; i<nbRes; i++ ) {
 			Aladin.trace(3, "Footprint: Processing resource: "+i);
@@ -156,7 +156,7 @@ public class FootprintParser {
 		SubFootprintBean sub;
 
 //	    System.out.println("Processing resource "+res);
-		refMem = new Hashtable<String, MarkupComment>();
+		refMem = new Hashtable<>();
 		String id = res.getId();
         // par défaut
         fpBean.setInstrumentName(id);

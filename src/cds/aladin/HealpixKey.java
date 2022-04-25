@@ -1820,7 +1820,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
          } else {
             
             try {
-
                boolean mayCrossTheSky = mayCrossTheSky(v);
                boolean methodeRecursive =  
                      ( proj.t==Calib.ZEA || (proj.t==Calib.ARC ) ||

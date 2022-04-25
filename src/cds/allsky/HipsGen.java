@@ -138,7 +138,6 @@ public class HipsGen {
         if( s.equalsIgnoreCase("publisher") )  return "hips_creator";
         if( s.equalsIgnoreCase("creator") )    return "hips_creator";
         if( s.equalsIgnoreCase("pixel") )      return "mode";
-        //      if( s.equalsIgnoreCase("circle") )     return "radius";
         if( s.equalsIgnoreCase("status") )     return "hips_status";
         if( s.equalsIgnoreCase("order") )      return "hips_order";
         if( s.equalsIgnoreCase("minOrder") )   return "hips_min_order";
@@ -229,7 +228,7 @@ public class HipsGen {
         } else if( opt.equalsIgnoreCase("partitioning")) { context.setPartitioning(val);
         } else if( opt.equalsIgnoreCase("tileTypes") )   { context.setTileFormat(val);
         } else if( opt.equalsIgnoreCase("shape") )       { context.setShape(val);
-        } else if ( opt.equalsIgnoreCase("method"))      { context.setMethod(val); flagMethod=true;
+        } else if( opt.equalsIgnoreCase("method"))       { context.setMethod(val); flagMethod=true;
         } else if (opt.equalsIgnoreCase("histoPercent")) { context.setHistoPercent(val);
         } else if (opt.equalsIgnoreCase("pixelGood"))    { context.setPixelGood(val);
         } else if (opt.equalsIgnoreCase("hips_pixel_cut"))  { context.setPixelCut(val);
@@ -652,19 +651,12 @@ public class HipsGen {
             context.setJpegMethod( JpegMethod.MEDIAN );
         }
 
-        if( context.getMode()==Mode.ADD ) {
+        if( context.getMode()==Mode.ADD || context.getMode()==Mode.SUM ) {
             context.setFading(false);
             context.setLive(false);
             context.setPartitioning("false");
             context.setMixing("true");
-            context.info("Pixel mode=ADD => fading, partitioning, no-mixing and live parameter ignored");
-
-        } else if( context.getMode()==Mode.SUM  ) {
-           context.setFading(false);
-           context.setLive(false);
-           context.setPartitioning("false");
-           context.setMixing("true");
-           context.info("Pixel mode=SUM => fading, partitioning, no-mixing and live parameter ignored");
+            context.info("Pixel mode=ADD or SUM => fading, partitioning, no-mixing and live parameter ignored");
        } 
 
         // Nettoyage avant ?
@@ -799,35 +791,44 @@ public class HipsGen {
         System.out.println("       java -jar "+launcher+" -param=configfile\n");
         System.out.println("The config file must contain these following options, or use them\n" +
                 "directly on the comand line :\n");
+        System.out.println("\nAvailable actions (by default: \"INDEX TILES PNG DETAILS\"):" + "\n" +
+              "   INDEX      "+Action.INDEX.doc() + "\n" +
+              "   TILES      "+Action.TILES.doc() + "\n" +
+              "   JPEG       "+Action.JPEG.doc() + "\n" +
+              "   PNG        "+Action.PNG.doc() + "\n" +
+              "   RGB        "+Action.RGB.doc() + "\n" +
+              "   MOC        "+Action.MOC.doc() + "\n" +
+              //            "   MOCERROR   "+Action.MOCERROR.doc() + "\n" +
+              "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+
+              "   TREE       "+Action.TREE.doc() + "\n"+
+              "   MAPTILES   "+Action.MAPTILES.doc() + "\n"+
+              "   APPEND     "+Action.APPEND.doc() + "\n"+
+              "   CONCAT     "+Action.CONCAT.doc() + "\n"+
+              "   CUBE       "+Action.CUBE.doc() + "\n"+
+              //            "   GZIP       "+Action.GZIP.doc() + "\n"+
+              "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
+              "   DETAILS    "+Action.DETAILS.doc() + "\n"+
+              "   MAP        "+Action.MAP.doc() + "\n" +
+              "   MIRROR     "+Action.MIRROR.doc() + "\n"+
+              "   UPDATE     "+Action.UPDATE.doc() + "\n"+
+              "   LINT       "+Action.LINT.doc() + "\n"
+              );
         System.out.println(
-                "Required parameter:\n"+
+                        "Required parameter:\n"+
                         "   in=dir                  Source image directory (FITS or JPEG|PNG +hhh or HiPS),\n"+
                         "                           unique image or HEALPix map file" + "\n" +
+                        "   creator_did=id      HiPS identifier (syntax: AUTHORITY/internalID)" + "\n"+
                         "\n"+
                         "Basic optional parameters:\n"+
                         "   out=dir             HiPS target directory (default ./+\"AUTHORITY_internalID\")" + "\n" +
-                        "   obs_title=name      Name of the survey (by default, input directory name)" + "\n"+
-                        "   creator_did=id      HiPS identifier (syntax: [ivo://]AUTHORITY/internalID)" + "\n"+
                         "   hips_creator=name   Name of the person|institute who builds the HiPS" + "\n"+
-                        "   hips_status=xx      HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
-                        "                       (default: public clonableOnce)\n" +
                         "   hdu=n1,n2-n3,...|all List of HDU numbers (0 is the primary HDU - default is 0)\n" +
                         "   blank=nn|key        Specifical BLANK value, or alternate BLANK fits keyword" + "\n" +
-                        "   skyval=key|auto|%info|%min %max   Fits key to use for removing a sky background, or auto\n" +
-                        "                       detection or percents of pixel histogram kept (central ex 99, or\n" +
-                        "                       min max ex 0.3 99.7)" + "\n" +
                         "   color=jpeg|png      The source images are colored images (jpg or png) and the tiles\n" +
                         "                       will be produced in jpeg (resp. png)" + "\n" +
-                        "   shape=...           Shape of the observations (ellipse|rectangle)" + "\n" +
-                        "   border=...          Margins (in pixels) to ignore in the original observations\n" +
-                        "                       (top left bottom right or constant)" + "\n" +
-                        "   fov=true|x1,y1..    Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
-                        "   pilot=nnn           Pilot test limited to the nnn first original images." + "\n" +
-                        "   verbose=n           Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
-                        "   -live               incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
                         //                  "   -cds                Specifical CDS treatement (LINT action)" + "\n"+
-                        "   -f                  clear previous computations\n"+
                         "   -n                  Just print process information, but do not execute it.\n"+
+                        "   -f                  clear previous computations\n"+
                         "\n"+
                         "Advanced optional parameters:\n"+
                         "   hips_order=nn       Specifical HEALPix order - by default, adapted to the original\n" +
@@ -837,36 +838,60 @@ public class HipsGen {
                         "                       conversion - ex: \"120 140 log\")" + "\n" +
                         "   hips_data_range=min max Specifical pixel value range (required for bitpix\n" +
                         "                       conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
-                        "   pixelGood=min [max] Range of pixel values kept" + "\n" +
                         "   img=file            Specifical reference image for default initializations \n" +
                         "                       (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,pixelRange)" + "\n" +
-                        "   mode=xx             Coadd mode when restart: pixel level(OVERWRITE|KEEP|ADD|AVERAGE) \n" +
-                        "                       or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
-                        "                       Or LINK|COPY for CUBE action (default COPY)" + "\n" +
-                        "   fading=true|false   False to avoid fading effect on overlapping original images " + "\n" +
-                        "                       (default is false)" + "\n" +
-                        "   mixing=true|false   False to avoid mixing (and fading) effect on overlapping original\n" +
-                        "                       images (default is true)" + "\n" +
+                        "   mode=xx             Coadd mode, action dependent:"+"\n" +
+                        "                       .TILES (restart) -> pixel impact: *OVERWRITE*|KEEP|SUM|AVERAGE"+"\n" +
+                        "                                  tile impact: REPLACETILE|KEEPTILE"+"\n" +
+                        "                       .CUBE   -> tile copy: LINK|*COPY*"+"\n" +
+                        "                       .CONCAT -> pixel impact: OVERWRITE|KEEP|ADD|DIV|MUL|*AVERAGE*"+"\n" +
+                        "                                  tile impact : REPLACETILE|KEEPTILE"+"\n" +
                         "   partitioning=true|false|nnn True for cutting large original images in blocks of nnn x nnn " + "\n" +
                         "                       (default is true, nnn=512 )" + "\n" +
-                        "   region=moc          Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
+                        "   region=moc          Specifical MOC region to compute (ex: 3/34-38 50 53)\n" +
                         "                       or Moc.fits file (all sky by default)" + "\n" +
-                        "   maxRatio=nn         Max height/width pixel ratio tolerated for original obs " + "\n" +
-                        "                       (default 2, 0 for removing the test)" + "\n" +
-                        "   fitskeys=list       Fits key list (blank separator) designing metadata FITS keyword value " + "\n" +
-                        "                       to memorized in the HiPS index" + "\n" +
+                        "   fov=true|x1,y1..    Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
                         "   hips_min_order=nn   Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-                        "   method=m            Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored " + "\n" +
-                        "                       compressed tiles (JPEG|PNG)" + "\n" +
                         "   hips_frame          Target coordinate frame (equatorial|galactic)" + "\n" +
                         "   hips_tile_width=nn  Specifical tile width (pow of 2) - default 512" + "\n" +
-                        "   mocOrder=s          Specifical MOC order (only for MOC & STMOC action). syntax: [s[/t]] [<nnMB[:tts]]" + "\n" +
-                        "                       s-spaceOrder, t-timeOrder, maxLimit, degradation rule" + "\n" +
-                        "   nside=nn            HEALPix map NSIDE (only for MAP action) - by default 2048" + "\n" +
-                        "   exptime=key         Fits key to use for adjusting variation of exposition" + "\n" +
+                        "   hips_status=xx      HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
+                        "                       (default: public clonableOnce)\n" +
                         "   cache=dir           Directory name for an alternative cache disk location" + "\n" +
                         "   cacheSize=nn        Alternative cache disk size limit (in MB - default 1024" + "\n" +
                         "   cacheRemoveOnExit=true|false Remove or not the cache disk at the end - default true" + "\n" +
+                        //                  "   hhh=[path/]image[.ext] widthxheigth [wCellxhCell] Generation of .hhh files for CAR image"+ "\n" +
+                        //                  "                       possibly splitted as an array of cells"+ "\n" +
+                        "   maxThread=nn        Max number of computing threads" + "\n" +
+                        "   target=ra +dec      Default HiPS target (ICRS deg)" + "\n"+
+                        "   targetRadius=rad    Default HiPS radius view (deg)" + "\n"+
+                        "   pilot=nnn           Pilot test limited to the nnn first original images." + "\n" +
+                        "   verbose=n           Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
+                        "   -live               incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
+                        "   -notouch            Do not touch the hips_release_date" + "\n"+
+                        "   -color              Colorized console log messages" + "\n" +
+                        "\n" +
+                        "Specific optional parameters:\n"+
+                        ".INDEX action:\n"+
+                        "   fitskeys=list       Fits key list (blank separator) designing metadata FITS keyword value " + "\n" +
+                        "                       to memorized in the HiPS index" + "\n" +
+                        ".TILES action:\n"+
+                        "   shape=...           Shape of the observations (ellipse|rectangle)" + "\n" +
+                        "   border=...          Margins (in pixels) to ignore in the original observations\n" +
+                        "                       (top left bottom right or constant)" + "\n" +
+                        "   skyval=key|auto|%info|%min %max   Fits key to use for removing a sky background, or auto\n" +
+                        "                       detection or percents of pixel histogram kept (central ex 99, or\n" +
+                        "                       min max ex 0.3 99.7)" + "\n" +
+                        "   exptime=key         Fits key to use for adjusting variation of exposition" + "\n" +
+                        "   fading=true|false   False to avoid fading effect on overlapping original images " + "\n" +
+                        "                       (default is false)" + "\n" +
+                        "   mixing=true|false   False to avoid mixing effect on overlapping original\n" +
+                        "                       images (default is true [pixel average])" + "\n" +
+                        "   pixelGood=min [max] Range of pixel values kept" + "\n" +
+                        "   maxRatio=nn         Max height/width pixel ratio tolerated for original obs " + "\n" +
+                        "                       (default 2, 0 for removing the test)" + "\n" +
+                        "   method=m            Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored " + "\n" +
+                        "                       compressed tiles (JPEG|PNG)" + "\n" +
+                         ".RGB action:\n"+
                         "   inRed               HiPS red path component, possibly suffixed by cube index (ex: [1])\n" +
                         "   inGreen             HiPS green path component, possibly suffixed by cube index (ex: [1])\n" +
                         "   inBlue              HiPS blue path component, possibly suffixed by cube index (ex: [1])\n" +
@@ -876,44 +901,22 @@ public class HipsGen {
                         "   luptonQ=x           Q coef Lupton RGB builder (default auto)\n" +
                         "   luptonS=x/x/x       scale coefs Lupton RGB builder (default auto)\n" +
                         "   luptonM=x/x/x       m coefs Lupton RGB builder (default auto)\n" +
-                        "   filter=gauss        Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
-                        "   tileTypes           List of tile format to copy (MIRROR action)" + "\n" +
-                        "   split='size;altPath]' Split information for MIRROR action (ex: 300g;/hips/part2)" + "\n" +
-                        //                  "   hhh=[path/]image[.ext] widthxheigth [wCellxhCell] Generation of .hhh files for CAR image"+ "\n" +
-                        //                  "                       possibly splitted as an array of cells"+ "\n" +
-                        "   maxThread=nn        Max number of computing threads" + "\n" +
-                        "   target=ra +dec      Default HiPS target (ICRS deg)" + "\n"+
-                        "   targetRadius=rad    Default HiPS radius view (deg)" + "\n"+
-                        "   -nocheck            Do not check date&size of local tiles for MIRROR action" + "\n"+
-                        "   -notouch            Do not touch the hips_release_date" + "\n"+
-                        "   -color              Colorized console log messages" + "\n" +
-                        "   -nice               Slow download for avoiding to overload remote http server (dedicated " + "\n" +
-                        "                       to MIRROR action)" + "\n"
+                        "   filter=gauss        Gaussian filter applied on the 3 input HiPS" + "\n" +
+                        "\n"+
+                        ".MOC action:\n"+
+                        "   mocOrder=s          Specifical MOC order (only for MOC & STMOC action). syntax: [s[/t]] [<nnMB[:tts]]" + "\n" +
+                        "                       s-spaceOrder, t-timeOrder, maxLimit, degradation rule" + "\n" +
+                        ".MAP action:\n"+
+                        "   nside=nn            HEALPix map NSIDE - by default 2048" + "\n" +
+                        "\n"+
+                        ".MIRROR action:\n"+
+                        "   tileTypes           List of tile format to copy" + "\n" +
+                        "   split='size;altPath]' multi disk partition split (ex: 300g;/hips/part2)" + "\n" +
+                        "   -nocheck            Do not check date&size of local tiles" + "\n"+
+                        "   -nice               Slow download for avoiding to overload remote http server" + "\n"
                         //          "   debug=true|false  to set output display as te most verbose or just statistics" + "\n" +
                 );
 
-        System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG DETAILS\"):" + "\n" +
-                "   INDEX      "+Action.INDEX.doc() + "\n" +
-                "   TILES      "+Action.TILES.doc() + "\n" +
-                "   JPEG       "+Action.JPEG.doc() + "\n" +
-                "   PNG        "+Action.PNG.doc() + "\n" +
-                "   RGB        "+Action.RGB.doc() + "\n" +
-                "   MOC        "+Action.MOC.doc() + "\n" +
-                //            "   MOCERROR   "+Action.MOCERROR.doc() + "\n" +
-                "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+
-                "   TREE       "+Action.TREE.doc() + "\n"+
-                "   MAPTILES   "+Action.MAPTILES.doc() + "\n"+
-                "   APPEND     "+Action.APPEND.doc() + "\n"+
-                "   CONCAT     "+Action.CONCAT.doc() + "\n"+
-                "   CUBE       "+Action.CUBE.doc() + "\n"+
-                //            "   GZIP       "+Action.GZIP.doc() + "\n"+
-                "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
-                "   DETAILS    "+Action.DETAILS.doc() + "\n"+
-                "   MAP        "+Action.MAP.doc() + "\n" +
-                "   MIRROR     "+Action.MIRROR.doc() + "\n"+
-                "   UPDATE     "+Action.UPDATE.doc() + "\n"+
-                "   LINT       "+Action.LINT.doc() + "\n"
-                );
         System.out.println("\nEx: java -jar "+launcher+" in=/MyImg    => Do all the job." +
                 "\n    java -jar "+launcher+" in=/MyImg hips_pixel_bitpix=16 hips_pixel_cut=\"-1 100 log\"" +
                 "\n           The FITS tiles will be coded in short integers, the preview tiles" +
@@ -924,7 +927,7 @@ public class HipsGen {
                 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                 );
 
-        System.out.println("\n(c) Université de Strasbourg/CNRS 2018 - "+launcher+" based on Aladin "+Aladin.VERSION+" from CDS");
+        System.out.println("\n(c) Université de Strasbourg/CNRS 2018-2022 - "+launcher+" based on Aladin "+Aladin.VERSION+" from CDS");
     }
 
     private void setConfigFile(String configfile) throws Exception {

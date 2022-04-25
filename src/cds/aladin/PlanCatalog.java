@@ -283,6 +283,10 @@ public class PlanCatalog extends Plan {
          cmd = code+" "+target.getRA()+" "+target.getDE()+" "+radius+"deg";
       }
       
+      // Pour faire clignoter le plan
+      flagOk=false;
+      pourcent=0;
+      
       // Excécution de la commande en remplacement du plan courant
       aladin.execCommand(label+"="+cmd);
       

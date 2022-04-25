@@ -188,6 +188,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String GRIDCRA    = "GridColorRA";
    protected static String GRIDCDE    = "GridColorDE";
    protected static String GRIDF      = "GridColorFont";
+   protected static String GRIDSTROKE = "GridStroke";
    protected static String INFOC      = "InfoColor";
    protected static String INFOCL     = "InfoColorLabel";
    protected static String INFOF      = "InfoFont";
@@ -196,6 +197,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String FILTERHDU     = "FilterHDU";
    
    static final private String [] UISCALESTR = {"Automatic","OS method","100%","110%","120%","130%","140%","150%","175%","200%","225%","250%"};
+   static final private String [] STROKESTR  = {"Automatic","thin","medium","thick"};
+   static final private float [] STROKE      = {0f,         0.4f,  1f,      2f};
 
    
    //   protected static String TAG        = "CenteredTag";
@@ -217,7 +220,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,UPHIDETAPSCHEMA,UPHIDETAPSCHEMAH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,FILTERHDUS,FILTERHDUH,
    SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
    FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE,THEME,UISCALE,THEMEHELP,RESTART,
-   GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
+   GRID,GRIDH,GRIDFONT,GRIDCOLOR,GRIDRACOLOR,GRIDDECOLOR,GRIDTHICKNESS,INFO,INFOH,INFOFONT,INFOCOLOR,INFOLABELCOLOR,INFOFONTBORDER;
 
 
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
@@ -281,7 +284,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JCheckBox        bxOpac;               // Pour l'activation du slider du controle de la transparence
    private JCheckBox        bxZoom;               // Pour l'activation du slider du controle du zoom
    
-   private JComboBox gridFontCombo;
+   private JComboBox gridFontCombo,strokeCombo;
    private CouleurBox gridColorBox,gridColorRABox,gridColorDEBox;
 
    private JComboBox infoFontCombo,infoFontBorderCombo;
@@ -377,6 +380,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       GRIDCOLOR=aladin.chaine.getString("UPGRIDCOLOR");
       GRIDRACOLOR=aladin.chaine.getString("UPGRIDRACOLOR");
       GRIDDECOLOR=aladin.chaine.getString("UPGRIDDECOLOR");
+      GRIDTHICKNESS=aladin.chaine.getString("UPGRIDTHICKNESS");
       INFO=aladin.chaine.getString("UPINFO");
       INFOH=aladin.chaine.getString("UPINFOH");
       INFOFONT=aladin.chaine.getString("UPINFOFONT");
@@ -907,7 +911,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       try {
          String proj = get(PROJALLSKY);
          int i= Projection.getAlaProjIndex(proj);
-         String calibProj = Projection.alaProjToType[i];
+//         String calibProj = Projection.alaProjToType[i];
+         String calibProj = Projection.getProjType(i);
          i=Calib.getProjType(calibProj);
          if( i>=0 ) return i;
       } catch( Exception e ) { }
@@ -1019,6 +1024,15 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected int getInfoFontSize() {
       try { return Integer.parseInt( get(INFOF)); } catch( Exception e ) { }
       return Aladin.SSIZE;
+   }
+   
+   /** Retourne l'épaisseur du trait des grilles, <=0 si automatique */
+   protected float getGridThickness() {
+      String s = get(GRIDSTROKE);
+      if( s==null ) return 0f;
+      int i = Util.indexInArrayOf(s, STROKESTR );
+      if( i==-1 ) return 0;
+      return STROKE[i];
    }
    
    /** Retourne true si on doit détourer les infos de la vue */
@@ -1523,7 +1537,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
 
       // Le Répertoire par défaut
-      dir = new JTextField(35);
+      dir = new JTextField(30);
       b=new JButton(BROWSE); b.addActionListener(this);
       b.setMargin( new Insets(2,4,2,4));
       (l = new JLabel(DEFDIR)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1637,29 +1651,35 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // Le glu
       panel = new JPanel(new BorderLayout(5,5));
       panel.add(gluChoice,BorderLayout.WEST);
-      b.setMargin( new Insets(2,4,2,4));
+      b.setMargin( new Insets(3,4,2,4));
       b.addActionListener(this);
       panel.add(b,BorderLayout.EAST);
       PropPanel.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
 
       // Les paramètres de la grille
       CouleurBox y;
-      panel = new JPanel(new GridLayout(2,2,4,4));
+//      panel = new JPanel(new GridLayout(2,4,4,4));
+      panel = new JPanel(new GridLayout(3,4,4,4));
       gridFontCombo = new JComboBox( new String[]{"6","7","8","9","10","11","12","13","14","16"} );
       gridFontCombo.setPrototypeDisplayValue(new Integer(100000000));
       gridFontCombo.setSelectedItem( getGridFontSize()+"" );
       panel.add(new JLabel("- "+GRIDFONT,JLabel.LEFT)); panel.add( gridFontCombo );
       gridColorBox = y = new CouleurBox( Aladin.COLOR_GREEN, aladin.view.gridColor );
       panel.add(new JLabel("  - "+GRIDCOLOR,JLabel.LEFT)); panel.add(y);
+      
       gridColorRABox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHT, aladin.view.gridColorRA );
       panel.add(new JLabel("- "+GRIDRACOLOR,JLabel.LEFT)); panel.add(y);
       gridColorDEBox = y = new CouleurBox( Aladin.COLOR_GREEN_LIGHTER, aladin.view.gridColorDEC );
       panel.add(new JLabel("  - "+GRIDDECOLOR,JLabel.LEFT)); panel.add(y);
       (l = new JLabel(GRID)).setFont(l.getFont().deriveFont(Font.BOLD));
+      
+      strokeCombo = new JComboBox( STROKESTR);
+      panel.add(new JLabel("- "+GRIDTHICKNESS)); panel.add(strokeCombo);
+      
       PropPanel.addCouple(this, p, l, GRIDH, panel, g, c, GridBagConstraints.EAST);
 
       // Les paramètres des infos
-      panel = new JPanel(new GridLayout(2,2,4,4));
+      panel = new JPanel(new GridLayout(2,4,4,4));
       infoFontCombo = new JComboBox( new String[]{"8","9","10","11","12","13","14","16","18","20"} );
       infoFontCombo.setPrototypeDisplayValue(new Integer(100000000));
       infoFontCombo.setSelectedItem( getInfoFontSize()+"" );
@@ -1769,6 +1789,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       s = get(PROJALLSKY);
       if( s == null ) projAllskyChoice.setSelectedItem("Aitoff");
       else projAllskyChoice.setSelectedItem(s);
+      
+      s = get(GRIDSTROKE);
+      if( s==null )  strokeCombo.setSelectedIndex(0);
+      else strokeCombo.setSelectedItem( s );
 
       s = get(FRAMEALLSKY);
       if( s == null ) frameAllskyChoice.setSelectedItem("GAL");
@@ -2302,6 +2326,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          aladin.trace(6, "Configuration.load() [" + key + "] = [" + value + "]");
          
          if( Aladin.TREEWIDTH!=null && key.equals(HWIDTH) ) value=Aladin.TREEWIDTH;
+         
+         if( key.equals(LOOKANDFEELSCALE) ) setLastUiScale(value);
 
          if( key.startsWith(LASTFILE) ) setLastFile(value,false);
          else if( key.startsWith(LASTTARGET) ) setLastTarget(value);
@@ -2402,6 +2428,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          s = gridFontCombo.getSelectedItem()+"";
          if( (Aladin.SSIZE+"").equals(s) ) s=null;
          set(GRIDF,s);
+      }
+      if( strokeCombo!=null ) {
+         s = strokeCombo.getSelectedItem()+"";
+         if( STROKESTR[0].equals(s) ) s=null;
+         set(GRIDSTROKE,s); 
       }
       aladin.view.initGridParam(true);
 
@@ -2818,6 +2849,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private void memoLastGlu(String gluSerialized) {
       if( memoGlu==null ) memoGlu = new ArrayList<>();
       memoGlu.add(gluSerialized);
+   }
+   
+   /** Mémorise le dernier facteur d'agrandissement de l'interface graphique */
+   private void setLastUiScale(String s) {
+      previousUiScale=Util.indexInArrayOf(s, UISCALESTR);
+      if( previousUiScale==-1 ) previousUiScale=0;
    }
    
    /** Mise en place des éléments historiques de résolution GLu (appelé par GLu quand il sera créé) */

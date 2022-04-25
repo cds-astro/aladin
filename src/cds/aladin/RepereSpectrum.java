@@ -83,9 +83,11 @@ public class RepereSpectrum extends Repere {
       double y= yv[v.n];
       int n=pc.getDepth();
       int res[] = new int[n];
-      try {
-         for( int z=0; z<n; z++ ) res[z] = (pc.getPixel8bit(z,x,y)) & 0xFF;
-      } catch( Exception e ) {}
+      if( ((PlanImage)pc).isIn( (int)x,(int)y) ) {
+         try {
+            for( int z=0; z<n; z++ ) res[z] = (pc.getPixel8bit(z,x,y)) & 0xFF;
+         } catch( Exception e ) {}
+      }
 
       plan.aladin.calque.zoom.zoomView.setCut(this,res,ZoomView.CUTNORMAL);
 

@@ -78,13 +78,46 @@ public final class Projection {
    protected Coord coo[];			// Liste de quadruplets pour methode QUADRUPLET de recalibration
 
    // Liste des projections comme elles apparaissent dans Aladin, et correspondances dans Calib
-   static String [] alaProj            = {"Spheric", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mercator", "Mollweide", "Arc" };
-   static String [] alaProjToType      = {"SIN",     "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MER",      "MOL",       "ARC" };
+   static String [] alaProj            = null;
+   static String [] alaProjToType      = null;
 
+   static String [] alaProj1            = {"Spheric", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mercator", "Mollweide", "Arc", };
+   static String [] alaProjToType1      = {"SIN",     "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MER",      "MOL",       "ARC", };
 
+   static String [] alaProjBeta         = {"HEALPix" };
+   static String [] alaProjToTypeBeta   = {"HPX" };
+
+   
+   // Initialisation des projections supportées (en fonction du mode Béta ou non
+   static private void initAlaProj() {
+      if( alaProj!=null ) return;  // déjà fait
+      
+      if( !Aladin.BETA )  {
+         alaProj=alaProj1;
+         alaProjToType=alaProjToType1;
+         
+      } else {
+         int n1 = alaProj1.length;
+         int nBeta = alaProjBeta.length;
+         alaProj = new String[ n1+nBeta ];
+         alaProjToType = new String[ n1+nBeta ];
+         System.arraycopy(alaProj1, 0, alaProj, 0, n1);
+         System.arraycopy(alaProjBeta, 0, alaProj, n1, nBeta);
+         System.arraycopy(alaProjToType1, 0, alaProjToType, 0, n1);
+         System.arraycopy(alaProjToTypeBeta, 0, alaProjToType, n1, nBeta);
+      }
+   }
+   
+   /** Retourne la signature en fonction de l'indice de la projection */
+   static public String getProjType(int i) {
+      initAlaProj();
+      return alaProjToType[i];
+   }
+   
    /** Retourne l'indice de la signature de la projection (case insensitive, qu'il s'agisse de son nom complet
     * apparaissant dans Aladin, ou sa signature */
    static public int getProjType(String projectionName) {
+      initAlaProj();
       int i = Util.indexInArrayOf(projectionName,alaProj,true);
       if( i>= 0 ) projectionName = alaProjToType[i];
       return Util.indexInArrayOf(projectionName,Calib.projType,true);
@@ -93,16 +126,23 @@ public final class Projection {
    /** Retourne l'indice de la projection passée en paramètre (case insensitive)
     * dans le tableau des projections compatibles Aladin, -1 si non trouvée */
    static public int getAlaProjIndex(String projectionName) {
+      initAlaProj();
       int i = Util.indexInArrayOf(projectionName,alaProj,true);
       if( i>=0 ) return i;
       return Util.indexInArrayOf(projectionName,alaProjToType,true);
    }
 
    /** Retourne la liste des projections supportées par Aladin */
-   static public String[] getAlaProj() { return alaProj ; }
+   static public String[] getAlaProj() {       
+      initAlaProj();
+      return alaProj ; 
+   }
 
    /** Retourne la projection correspondante à l'index */
-   static public String getAlaProj(int i) { return alaProj[i]; }
+   static public String getAlaProj(int i) { 
+      initAlaProj();
+      return alaProj[i]; 
+   }
 
 
    /** Aucune projection */
@@ -633,25 +673,34 @@ public final class Projection {
    protected void setCalib(Calib c) { this.c = c; }
     */
    
-   // POUR LE MOMENT JE LAISSE TOUT PASSER SANS BLOQUER LES AFFICHAGES MEME
-   // SI LES CORPS CELESTES NE SONT PAS LES MEMES
+   /** Teste si les projections ne concerneraient pas des corps célestes incompatibles
+    * Affiche un warning en cas de suspicion d'incompatiblité
+    * Retourne false que si on est sûr de l'incompatibilité.
+    * IL FAUDRA MODIFIER CETTE METHODE EN FONCTION DE LA CONFIGURATION UTLISATEUR
+    */
    protected boolean isUncompatibleBody( Projection p ) {
 
-      boolean r = isUncompatibleBody1( p );
-//      if( r) Aladin.aladin.trace(3,"body="+body+" p.body="+p.body+" isUncompatibleBody="+r);
-      if( r && !Aladin.aladin.isFullScreen() ) Aladin.aladin.uncompatibleFrameWarning();
+      int r = isUncompatibleBody1( p );
+      if( r!=1 && !Aladin.aladin.isFullScreen() ) Aladin.aladin.uncompatibleFrameWarning(body, p.body);
          
-       return false;
+      return r==0;
    }
    
-   /** Teste si les projections ne concerneraient pas des corps célestes incompatibles */
-   // POUR LE MOMENT JE LAISSE TOUT PASSER SANS BLOQUER LES AFFICHAGES MEME
-   // SI LES CORPS CELESTES NE SONT PAS LES MEMES
-   protected boolean isUncompatibleBody1( Projection p ) {
-      if( !isOk(p) ) return false;
-      if( body==null && p.body==null ) return false;;
-      if( body==null && p.body!=null ) return true;
-      return !body.equals(p.body);
+   /** Teste si les projections ne concerneraient pas des corps célestes incompatibles
+    * @param p
+    * @return 0-incompatible, 1-compatible, -1 ne peut savoir
+    */
+   protected int isUncompatibleBody1( Projection p ) {
+      if( !isOk(p) ) return 0;
+      
+      // Toujours compatible pour un plot (time ou scatterplot)
+      if( Plot.PROJBODY.equals(body) || Plot.PROJBODY.equals(p.body) ) return 1;
+
+      // Inconnu => on ne sait pas la compatibilité
+      if( body==null || p.body==null ) return -1;
+      
+      // compatible que si les bodies sont égaux
+      return body.equals(p.body) ? 1 : 0;
    }
 
    /** Test de ``superposabilite'' de deux projections.

@@ -55,7 +55,7 @@ public class PlanSTMocAlgo extends PlanSTMoc {
             for( int i=1; i<pList.length; i++ ) {
                Moc m1=moc;
                Moc m2=pList[i].getMoc();
-               if( isCompatible(m1,m2) ) throw new Exception("Uncompatible MOCs");
+               if( !isCompatible(m1,m2) ) throw new Exception("Uncompatible MOCs");
                
                // IL vaut mieux ajuster les ordres avant qu'après => c'est plus rapide
                try {

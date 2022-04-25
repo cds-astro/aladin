@@ -83,15 +83,6 @@ public class PlanMoc extends PlanBGCat {
       this.moc   = moc;
       this.url = url;
       useCache = false;
-      frameOrigin = Localisation.ICRS;
-      if( moc!=null ) {
-         String f = moc.getSpaceSys();
-         frameOrigin = f.equals("E")?Localisation.ECLIPTIC :
-            f.equals("G")?Localisation.GAL:Localisation.ICRS;
-         
-         // Si le MOC est petit, affichage immédiat à la résolution max
-         if( moc.getNbCells()<10000 ) setMaxGapOrder();
-      }
       type = ALLSKYMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
@@ -102,7 +93,7 @@ public class PlanMoc extends PlanBGCat {
       aladin.trace(3,"MOC creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
       suite();
    }
-
+   
    /** Recopie du Plan à l'identique dans p1 */
    protected void copy(Plan p1) {
       super.copy(p1);
@@ -130,7 +121,9 @@ public class PlanMoc extends PlanBGCat {
       SMoc m = (SMoc)moc;
       boolean isEmpty = m.isEmpty();
       double cov = m.getCoverage();
-      ADD( buf, "\n* Space: ",isEmpty?"--empty--": Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of sky");
+      String body = getBody();
+      if( body==null ) body="?";
+      ADD( buf, "\n* Space: ",isEmpty?"--empty--": Coord.getUnit(Healpix.SKYAREA*cov, false, true)+"^2, "+Util.round(cov*100, 3)+"% of "+body);
       ADD( buf, "\n* Resolution: ",Coord.getUnit(m.getAngularRes()));
       
       int order = m.getMocOrder();
@@ -428,8 +421,40 @@ public class PlanMoc extends PlanBGCat {
       } 
       else if(  (dis.getType() & MyInputStream.JSON)!=0 ) moc.readASCII(dis);
       else moc.readASCII(dis);
+      
+   }
+   
+   
+   /** Post traitement après lecture ou passage du MOC */
+   protected void analyseMoc(Moc moc) {
+      if( moc==null ) return;
+      String f = moc.getSpaceSys();
+      frameOrigin = f.equals("E")?Localisation.ECLIPTIC : f.equals("G")?Localisation.GAL:Localisation.ICRS;
+      
+      if( moc instanceof SMoc ) {
+         
+         // Je force le MOC minOrder à 3 pour que l'affichage soit toujours propre
+         if( ((SMoc)moc).getMinOrder()<3 ) {
+            try {
+               if( ((SMoc)moc).getMocOrder()<3 ) ((SMoc)moc).setMocOrder(3);   
+               ((SMoc)moc).setMinOrder(3);
+            } catch( Exception e ) {
+               if( aladin.levelTrace>=3 ) e.printStackTrace();
+               error="MOC error";
+            }
+         }
+
+         // Si le MOC est petit, affichage immédiat à la résolution max
+         if( moc.getNbCells()<10000 ) setMaxGapOrder();
+      }
+
+      // Coverage planéto ?
+      if( moc.isSpace() ) {
+         if( !f.equals("C") && !f.equals("G") && !f.equals("E") ) setBody(f);
+      }
    }
 
+   
    protected boolean waitForPlan() {
       if( dis!=null ) {
          super.waitForPlan();
@@ -438,9 +463,6 @@ public class PlanMoc extends PlanBGCat {
                moc = new SMoc();
                readMoc(moc,dis);
             }
-            String c = ((SMoc)moc).getSpaceSys();
-            frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
-//            if( moc.isEmpty() ) error="Empty MOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -448,6 +470,8 @@ public class PlanMoc extends PlanBGCat {
             return false;
          }
       }
+      
+      analyseMoc(moc);
       
       // Détermination ou correction du target
       if( !(/* flagNoTarget || */ moc==null || moc.isEmpty()) ) {
@@ -474,18 +498,6 @@ public class PlanMoc extends PlanBGCat {
             } catch( Exception e ) {
                if( aladin.levelTrace>=3 ) e.printStackTrace();
             }
-         }
-      }
-
-      // Je force le MOC minOrder à 3 pour que l'affichage soit toujours propre
-      if( moc!=null && ((SMoc)moc).getMinOrder()<3 ) {
-         try {
-            if( ((SMoc)moc).getMocOrder()<3 ) ((SMoc)moc).setMocOrder(3);   
-            ((SMoc)moc).setMinOrder(3);
-         } catch( Exception e ) {
-            if( aladin.levelTrace>=3 ) e.printStackTrace();
-            error="MOC error";
-            return false;
          }
       }
 
@@ -607,6 +619,9 @@ public class PlanMoc extends PlanBGCat {
                   && !arrayMoc[order].isEmpty() ? arrayMoc[order] : moc;
                   
             Moc1D mv = v.getMoc();
+            
+            // POUR LE MOMENT ON NE PREND PAS EN COMPTE LE SYSTEME DE REFERENCE
+            mocP.setSpaceSys( mv.getSpaceSys());
             
             // On découpe la zone concernée
             Moc moclow = mocP.intersection( mv );

@@ -3171,6 +3171,7 @@ public class Calque extends JPanel implements Runnable {
       p.projd = pref==null || !Projection.isOk(pref.projd)? null :
          new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
                90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
+      if( pref!=null ) p.setBody( pref.getBody());
       suiteNew(p);
       aladin.command.resetPreviousDrawing();
       return (PlanTool)p;

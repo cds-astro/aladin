@@ -40,7 +40,6 @@ public class VOSICapabilitiesReader implements XMLConsumer {
 	private boolean tabledataFormatAllowed = false;
 	
 	public boolean load(URL capabilitiesUrl) {
-	   System.err.println("URLCapability="+capabilitiesUrl);
 		XMLParser xmlParser = new XMLParser(this);
 		boolean result = false;
 		MyInputStream inputStream = null;

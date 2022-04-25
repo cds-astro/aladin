@@ -541,9 +541,14 @@ public class MyInputStreamCached extends MyInputStream {
          if( !flagCreate ) throw new MyInputStreamCachedException("Cache disk creation error ("+cachedir.getAbsolutePath()+")");
       }
       if( flagCreate ) {
-         long freeSpace = (long)( cachedir.getFreeSpace()/(1024*1024.) );
+         long freeSpace = cachedir.getFreeSpace();
+         if( freeSpace<0 ) {
+            freeSpace = Long.MAX_VALUE;
+            context.warning("Cache disk partition estimation overflow (too large for java) => assuming "+Util.getUnitDisk(cacheLimit));
+         }
+         freeSpace /= (1024L*1024L);
          if( freeSpace<cacheLimit ) {
-            long newsize = (3L*freeSpace)/5L;
+            long newsize = 3L*(freeSpace/5L);
             String s = "Cache disk: not enough space on partition for "+Util.getUnitDisk(cacheLimit+"MB")
             +" => assume "+Util.getUnitDisk(newsize+"MB");
             if( context!=null ) context.warning(s);

@@ -330,13 +330,18 @@ public class PlanMocGen extends PlanMoc {
       
       ((SMoc)moc).bufferOff();
       
-      // Conversion en ICRS si nécessaire
-      if( frameOrigin!=Localisation.ICRS ) {
-         try {
-            aladin.info("This HiPS uses a Galactic reference. The resulting MOC has been converted in Equatorial System");
-            moc=toReferenceFrame("C");
-            frameOrigin=Localisation.ICRS;
-         } catch( Exception e ) { e.printStackTrace(); }
+      try {
+         // Affectation du système de référence planéto le cas échéant
+         String sys = p.projd.body;
+         if( sys!=null ) moc.setSpaceSys( sys );
+
+         // Conversion en ICRS si nécessaire
+         else moc=toReferenceFrame("C");
+
+         frameOrigin=Localisation.ICRS;
+
+      } catch( Exception e ) {
+         e.printStackTrace();
       }
    }
 
@@ -367,6 +372,15 @@ public class PlanMocGen extends PlanMoc {
       if( order> tileOrder+ p.maxOrder ) {
          order = tileOrder+p.maxOrder;
          aladin.warning("MOC order greater than HiPS resolution. Assuming MOC order "+order);
+      }
+      
+      // Cas particuliers où le threshold est nul => rien à ajouter
+      if( threshold==0 ) return;   // Rien a ajouter
+      
+      // Cas particulier où le threashold est 100%, on ajoute la totalité
+      else if( threshold>=1 ) {
+         moc = moc.union(p.moc);
+         return;
       }
       
       // Quel est l'ordre des tuiles requis
@@ -544,8 +558,13 @@ public class PlanMocGen extends PlanMoc {
          }
          ((SMoc)moc).bufferOff();
 
+         // Affectation du système de référence planéto le cas échéant
+         String sys = p.projd.body;
+         if( sys!=null ) moc.setSpaceSys( sys );
+         
          // Conversion en ICRS si nécessaire
-         moc=toReferenceFrame("C");
+         else moc=toReferenceFrame("C");
+         
          frameOrigin=Localisation.ICRS;
          
       } catch( Exception e ) {
@@ -844,6 +863,14 @@ public class PlanMocGen extends PlanMoc {
          ((SMoc)moc).setMinOrder(3);
          if( order!=-1) ((SMoc)moc).setMocOrder(order);
          frameOrigin=Localisation.ICRS;
+         
+         // Initialisation du body de référence
+         String body = p[0].getBody();
+         if( projd!=null ) projd.setBody(body);
+         setBody(body);
+         if( body!=null && body.equals("sky") ) body="C";
+         moc.setSpaceSys(body);
+         
          for( Plan p1 : p ) {
             if( p1.isCatalog() )    addMocFromCatalog(p1,radius,order,fov);
             else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);

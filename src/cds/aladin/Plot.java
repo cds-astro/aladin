@@ -56,6 +56,8 @@ import cds.tools.Util;
  */
 public class Plot {
    
+   static public final String PROJBODY = "__PLOT__";  // Body bidon associé à la projection du Plot (voir Projection.isUncompatibleBody()
+   
    // les références
    protected Aladin aladin;
    protected ViewSimple viewSimple;
@@ -245,6 +247,7 @@ public class Plot {
          } else {
             plotProj = new Projection(0,0,0,0, (max1X-min1X), (max1Y-min1Y), w, h, false,false,false,false);
          }
+         plotProj.setBody(PROJBODY);
          viewSimple.newView(1);
          viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (min1Y+max1Y)/2);
          adjustWidgets();
@@ -273,6 +276,8 @@ public class Plot {
       
       plotProj = new Projection(0,0,0,0, (max1X-min1X), plotProj.rm1, w, h, 
             plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
+      plotProj.setBody(PROJBODY);
+
       viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (maxTimeRange[2]+maxTimeRange[3])/2);
       viewSimple.newView(1);
    }
@@ -636,9 +641,12 @@ public class Plot {
                ((Graphics2D)g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aladin.view.opaciteGrid));
                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,  RenderingHints.VALUE_ANTIALIAS_ON);
                st = ((Graphics2D)g).getStroke();
-               float epaisseur = w<1500 ? 0.5f : w/1500f;
-               if( epaisseur<0.5f ) epaisseur=0.5f;
-               else if( epaisseur>2f ) epaisseur=2f;
+               float epaisseur = aladin.configuration.getGridThickness();
+               if( epaisseur<=0 ) {
+                  epaisseur = w<1500 ? 0.5f : w/1500f;
+                  if( epaisseur<0.5f ) epaisseur=0.5f;
+                  else if( epaisseur>2f ) epaisseur=2f;
+               }
                ((Graphics2D)g).setStroke(new BasicStroke(epaisseur));
            }
 

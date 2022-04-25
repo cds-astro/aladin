@@ -585,7 +585,6 @@ public class FrameCooToolbox extends JFrame {
       targetCoo.set(ra,dec,originEpoch,null,pmra,pmdec,originEpoch,null,
             new double[] { plx,0}, new double []{ rv,0});
       if( precision>-1 ) targetCoo.setPrecision(precision);
-      targetCoo.convertTo( Localisation.getAstroframe(Localisation.ICRS) );
       targetCoo.toEpoch(targetEpoch);
       
       Coord coo = new Coord( targetCoo.getLon(), targetCoo.getLat() );
@@ -605,8 +604,10 @@ public class FrameCooToolbox extends JFrame {
       
       targetCoo.set(ra,dec,originEpoch,null,pmraParam,pmdecParam,originEpoch,null, plxParam, rvParam);
       if( precision>-1 ) targetCoo.setPrecision(precision);
-      targetCoo.convertTo( Localisation.getAstroframe(frameTarget) );
       targetCoo.toEpoch(targetEpoch);
+      if( frameTarget!=Localisation.ICRS && frameTarget!=Localisation.ICRSD ) {
+         targetCoo.convertTo( Localisation.getAstroframe(frameTarget) ); 
+      }
       
       String s = (frameTarget==Localisation.J2000D || frameTarget==Localisation.B1950D 
                || frameTarget==Localisation.ICRSD  || frameTarget==Localisation.ECLIPTIC
@@ -616,5 +617,24 @@ public class FrameCooToolbox extends JFrame {
       if( s.indexOf("--")>=0 ) return "";
       return s;
    }
+   
+//   static public void main(String [] a) {
+//      try {
+//         Astropos targetCoo = new Astropos( Astroframe.create("ICRS") );
+//         double ra=10;
+//         double dec=20;
+//         double pmRa=0.01;
+//         double pmDec=0.01;
+//         double originEpoch=2016;
+//         double targetEpoch=2000;
+//         targetCoo.set(ra,dec,originEpoch,null,pmRa,pmDec,originEpoch,null, null, null);
+//         System.out.println(originEpoch+" => "+targetCoo.toString("2s"));
+//         targetCoo.convertTo( Astroframe.create("ICRS") );
+//         targetCoo.toEpoch(targetEpoch);
+//         System.out.println(targetEpoch+" => "+targetCoo.toString("2s"));
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
       
 }

@@ -165,6 +165,11 @@ public class TreeObjDir extends TreeObj implements Propable {
 
    }
    
+   public void checkHiPSProp( MyProperties prop ) throws Exception {
+      String id = MultiMoc.getID(prop);
+      if( id==null ) throw new Exception("Not an HiPS (no ID)");
+   }
+   
    /** Construction d'un TreeObjHips à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties
     * @param flagCheck true s'il y a un test que le HiPS pointé existe bien => renverra une exception au cas où
@@ -183,9 +188,13 @@ public class TreeObjDir extends TreeObj implements Propable {
       // Récupération des properties
       InputStreamReader in=null;
       try {
-         if( !local ) in = new InputStreamReader( Util.openStream(pathOrUrl+"/"+Constante.FILE_PROPERTIES), "UTF-8" );
+         if( !local ) {
+            if( pathOrUrl.indexOf('?')>0 ) throw new Exception("Probably not an HiPS URL"); 
+             in = new InputStreamReader( Util.openStream(pathOrUrl+"/"+Constante.FILE_PROPERTIES), "UTF-8" );
+         }
          else in = new InputStreamReader( Util.openAnyStream( Util.concatDir(pathOrUrl,Constante.FILE_PROPERTIES)), "UTF-8" );
          prop.load(in);
+         checkHiPSProp(prop);
       } catch( Exception e ) {
          if( flagCheck && !progen) throw e;
          aladin.trace(3,"No properties file found => auto discovery...");

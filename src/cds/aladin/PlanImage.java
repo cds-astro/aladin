@@ -160,6 +160,7 @@ public class PlanImage extends Plan {
    protected double blank;            // La valeur BLANK si elle existe
    public double bZero;               // La valeur BZERO si elle existe
    public double bScale=1.;           // La valeur BSCALE si elle existe
+   public Beam beam=null;             // Le beam dans le cas d'un image ou d'un cube radio 
    
    boolean flagLupton = false;        // True si on a une image méthode Lupton (typiquement PanSTARRs)   
    double bsoften;                    // Facteur Lupton                    
@@ -1789,7 +1790,9 @@ public class PlanImage extends Plan {
 
                      if( c==null ) throw new Exception();
 
-                  } else  c = new Calib(headerFits.getHeaderFits());
+                  } else  {
+                     c = new Calib(headerFits.getHeaderFits());
+                  }
 
                   //                  if( !Aladin.BETA && c.system==7 ) { c=null; projd=null; throw new Exception(); }
 
@@ -3192,6 +3195,17 @@ public class PlanImage extends Plan {
          Aladin.trace(3," => BZERO = "+bZero+" BSCALE = "+bScale);
       } catch( Exception ebscale ) { bScale=1.; }
       
+      // Y a-t-il un beam (BMAJ, BMIN et BPA)
+      try {
+         double bmaj = headerFits.getDoubleFromHeader("BMAJ");
+         double bmin = headerFits.getDoubleFromHeader("BMIN");
+         double bpa  = headerFits.getDoubleFromHeader("BPA");
+         beam = new Beam(bmaj,bmin,bpa);
+         Aladin.trace(3," => BMAJ = "+bmaj+" BMIN = "+bmin+" BPA = "+bpa+" => beam parameters");
+      } catch( Exception ebeam ) { beam=null; }
+      
+       
+      
       // Compression Lupton (ex: Pan-STARRs) ?
       try { boffset = headerFits.getDoubleFromHeader("BOFFSET"); }
       catch( Exception e1 ) { boffset=0; }
@@ -4066,9 +4080,17 @@ public class PlanImage extends Plan {
       bitpix = b;
    }
 
+   /** Gestion d'un beam associé à l'image/le cube */
+   class Beam {
+      double bmaj;   // axe majeur (en degrés)
+      double bmin;   // axe mineur (en degrés)
+      double bpa;    // angle (en degrés)
+
+      Beam(double bmaj,double bmin,double bpa) { this.bmaj=bmaj; this.bmin=bmin; this.bpa=bpa; }
+   }
 }
 
-/*
+   /*
 // CETTE CLASSE DOIT ETRE COMMENTEE SI ON NE VEUT PLUS SUPPORTER MRCOMP
 class MrDecomp {
    MrDecomp(byte []a) {

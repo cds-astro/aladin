@@ -2340,7 +2340,7 @@ final public class Fits {
                return (int) Float.intBitsToFloat(getInt(t, i * 4));
             case -64:
                i *= 8;
-               long a = (((long) getInt(t, i)) << 32)
+               long a = ((getInt(t, i)) << 32)
                      | ((getInt(t, i + 4)) & 0xFFFFFFFFL);
                return (int) Double.longBitsToDouble(a);
          }
@@ -2360,11 +2360,13 @@ final public class Fits {
                return (((t[i]) << 8) | (t[i + 1]) & 0xFF);
             case 32:
                return getInt(t, i * 4);
+//            case 32:
+//               return getIntViaLong(t, i * 4);
             case 8:
                return ((t[i]) & 0xFF);
             case -64:
                i *= 8;
-               long a = (((long) getInt(t, i)) << 32)
+               long a = ((getInt(t, i)) << 32)
                      | ((getInt(t, i + 4)) & 0xFFFFFFFFL);
                return Double.longBitsToDouble(a);
          }
@@ -2385,7 +2387,12 @@ final public class Fits {
       return ((t[i]) << 24) | (((t[i + 1]) & 0xFF) << 16)
             | (((t[i + 2]) & 0xFF) << 8) | (t[i + 3]) & 0xFF;
    }
-
+   
+   private long getIntViaLong(byte[] t, int i) {
+      return ((long)((t[i]) << 24)) | (((t[i + 1]) & 0xFF) << 16)
+            | (((t[i + 2]) & 0xFF) << 8) | (t[i + 3]) & 0xFF;
+   }
+   
    //   /** recopie les pixels (pixels[] et rgb[] avec éventuellement
    //    * un changement de bitpix*/
    //   public void overwriteWith(Fits a) throws Exception {
@@ -2419,9 +2426,16 @@ final public class Fits {
    static public double getMin(int bitpixOrig) {
       return bitpixOrig==8 ? 0: -getMax(bitpixOrig);
    }
+   
+   /** Différents modes de coadd supportés */
+   static public final int AVG = 0;  // Moyenne (qq soit les opérandes)
+   static public final int ADD = 1;  // Addition (qq soit les opérandes)
+   static public final int MUL = 2;  // Multiplicatino (uniquement sur l'opérande 1 existe)
+   static public final int DIV = 3;  // Division (uniquement sur l'opérande 1 existe)
+
 
    /** Coadditionne les pixels (pixels[] et rgb[], en faisant la moyenne ou par simple addition en bloquant sur la valeur max */
-   public void coadd(Fits a,boolean average) throws Exception {
+   public void coadd(Fits a,int mode) throws Exception {
       int taille = widthCell * heightCell * depthCell;
 
       if( a.pixels != null && pixels != null ) {
@@ -2430,20 +2444,23 @@ final public class Fits {
             double v1 = getPixValDouble(pixels, bitpix, i);
             double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
             double v;
-            if( average ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
+                 if( mode==AVG ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
+            else if( mode==MUL ) v = isBlankPixel(v1) || isBlankPixel(v2)? v1 :  v1 * v2;
+            else if( mode==DIV ) v = isBlankPixel(v1) || isBlankPixel(v2)? v1 :  v1 / v2;
             else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2);
             setPixValDouble(pixels, bitpix, i, v);
          }
       }
       if( a.rgb != null && rgb != null ) {
+         if( mode==MUL || mode==DIV ) throw new Exception("Fits RGB coadd MUL or DIV not allowed");
          for( int i = 0; i < taille; i++ ) {
             if( (a.rgb[i] & 0xFF000000)==0 ) continue;
             if( (rgb[i] & 0xFF000000)==0 ) { rgb[i]=a.rgb[i]; continue; }
             int r,g,b;
-            if( average ) {
-               r = (((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF))/2 << 16;
-               g = (((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF))/2 << 8;
-               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF))/2;
+            if( mode==AVG ) {
+               r = (((rgb[i] >> 16) & 0xFF)/2  + ((a.rgb[i] >> 16) & 0xFF))/2 << 16;
+               g = (((rgb[i] >> 8) & 0xFF)/2 + ((a.rgb[i] >> 8) & 0xFF))/2 << 8;
+               b = ((rgb[i] & 0xFF)/2 + (a.rgb[i] & 0xFF))/2;
             } else {
                r = ((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF);
                g = ((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF);
@@ -2458,6 +2475,46 @@ final public class Fits {
          }
       }
    }
+
+//   /** Coadditionne les pixels (pixels[] et rgb[], en faisant la moyenne ou par simple addition en bloquant sur la valeur max */
+//   public void coadd(Fits a,boolean average) throws Exception {
+//      int taille = widthCell * heightCell * depthCell;
+//
+//      if( a.pixels != null && pixels != null ) {
+////         double max = getMax(bitpix);
+//         for( int i = 0; i < taille; i++ ) {
+//            double v1 = getPixValDouble(pixels, bitpix, i);
+//            double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
+//            double v;
+//            if( average ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
+//            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2);
+//            setPixValDouble(pixels, bitpix, i, v);
+//         }
+//      }
+//      if( a.rgb != null && rgb != null ) {
+//         for( int i = 0; i < taille; i++ ) {
+//            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
+//            if( (rgb[i] & 0xFF000000)==0 ) { rgb[i]=a.rgb[i]; continue; }
+//            int r,g,b;
+//            if( average ) {
+//               r = (((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF))/2 << 16;
+//               g = (((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF))/2 << 8;
+//               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF))/2;
+//            } else {
+//               r = ((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF);
+//               g = ((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF);
+//               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF));
+//               if( r>255 ) r=255;
+//               if( g>255 ) g=255;
+//               if( b>255 ) b=255;
+//               r = r << 16;
+//               g = g << 8;
+//            }
+//            rgb[i] = 0xFF000000 | r | g | b;
+//         }
+//      }
+//   }
+
 
    /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */
    public void coadd(Fits a, double[] weightOut, double[] weightIn)

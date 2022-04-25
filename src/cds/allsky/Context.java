@@ -132,6 +132,7 @@ public class Context {
    protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
    protected boolean notouch=false;          // true si on ne doit pas modifier la date du hips_release_date
    protected boolean mirrorCheck=true;      // true si on relance un hipsgen MIRROR => pas de vérif sur les tuiles déjà là
+   protected boolean hipslintTileTest=true;  // true pour faire un hipslint test sur des tuiles au hasard
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
@@ -287,18 +288,19 @@ public class Context {
    public double getBlankOrig() { return blankOrig; }
    public String getBlankKey() { return blankKey; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
-   public SMoc getArea() { return mocArea; }
-   public Mode getMode() { return mode; } //isColor() ? CoAddMode.REPLACETILE : coAdd; }
+   public SMoc getArea() { 
+      if( mocArea!=null ) mocArea.setSys( getFrameCode() );  // On s'assure qu'on exprime bien le MOC dans le bon frame
+      return mocArea; 
+   }
+   public Mode getMode() { return mode; }
    public double[] getCut() throws Exception { return cut; }
    public double[] getCutOrig() throws Exception { return cutOrig; }
    public String getSkyval() { return skyvalName; }
    public boolean isColor() { return bitpixOrig==0; }
    public boolean isCube() { return depth>1; }
    public boolean isCubeCanal() { return crpix3!=0 || crval3!=0 || cdelt3!=0; }
-   //   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
    public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
-//   public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isIncluding(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
    public int getMocOrder() { return mocOrder; }
@@ -306,7 +308,10 @@ public class Context {
    public long getMocMaxSize() { return mocMaxSize; }
    public String getMocRuleSize() { return mocRuleSize; }
    public long getMapNside() { return nside; }
-   public int getMinOrder() { return minOrder; }
+   public int getMinOrder() {
+      if( minOrder==-1 ) return 0;   // Le défaut
+      return minOrder;
+   }
    public int getTileOrder() { return tileOrder==-1 ? Constante.ORDER : tileOrder; }
    public int getTileSide() { return (int) CDSHealpix.pow2( getTileOrder() ); }
    public int getDepth() { return depth; }
@@ -438,7 +443,7 @@ public class Context {
       if( addendum_id==null ) addendum_id=addId;
       else {
          Tok tok = new Tok(addendum_id,"\t");
-         while( tok.hasMoreTokens() ) { if( tok.nextToken().equals(addId) ) throw new Exception("Addendum_id already used  ["+addendum_id+"]"); }
+         while( tok.hasMoreTokens() ) { if( tok.nextToken().equals(addId) ) throw new Exception("Addendum_id already applied  ["+addendum_id+"]"); }
          addendum_id += "\t"+addId;
       }
    }
@@ -662,7 +667,7 @@ public class Context {
       fitsKeys = new ArrayList<>(st.countTokens());
       while( st.hasMoreTokens() ) fitsKeys.add(st.nextToken());
    }
-   public void setMode(Mode coAdd) { this.mode = coAdd; }
+   public void setMode(Mode coAdd) { this.mode = coAdd;  }
    public void setTarget(String target) { this.target = target; }
    public void setTargetRadius(String targetRadius) { this.targetRadius = targetRadius; }
    public void setBScaleOrig(double x) { bScaleOrig = x; bscaleBzeroOrigSet=true; }
@@ -1246,15 +1251,17 @@ public class Context {
     * seul sauf si besoin explicite */
    protected void initRegion() throws Exception {
       if( isValidateRegion() ) return;
+      
       try {
          if( mocIndex==null ) {
-            if( isMap() ) mocIndex=new SMoc("0/0-11");
+            if( isMap() )  mocIndex=new SMoc("0/0-11"); 
             else loadMocIndex();
          }
       } catch( Exception e ) {
          //         warning("No MOC index found => assume all sky");
-         mocIndex=new SMoc("0/0-11");  // par défaut tout le ciel
+         mocIndex=new SMoc("0/0-11"); 
       }
+      SMoc mocArea = getArea();
       if( mocArea==null ) moc = mocIndex;
       else moc = mocIndex.intersection(mocArea);
       setValidateRegion(true);
@@ -2064,7 +2071,7 @@ public class Context {
          double cov = moc.getCoverage();
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
-         info.append("   <LI> <B>Sky area:</B> "+Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2\n");
+         info.append("   <LI> <B>Area:</B> "+Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2\n");
          info.append("   <LI> <B>Associated coverage map:</B> <A HREF=\""+Constante.FILE_MOC+"\">MOC</A>\n");
       }
 
@@ -2346,6 +2353,7 @@ public class Context {
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
       prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");
+      if( tileOrder!=9 ) prop.setProperty(Constante.KEY_HIPS_TILE_WIDTH, getTileSide()+"");
       if( minOrder!=-1  ) prop.setProperty(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
       if( !notouch ) prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, getNow());
       prop.setProperty(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);

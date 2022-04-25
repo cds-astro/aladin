@@ -1820,6 +1820,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    private boolean checkIn(ResumeMode mode) {
       if( !dialogOk() ) return false;
       if( aladin.isAnimated() ) return false;
+      if( aladin.view.getCurrentView().flagClicAndDrag ) return false;
 
       // Le champ est trop grand ou que la vue n'a pas de réf spatiale ?
       // => on suppose que tous les HiPS sont a priori visibles
@@ -1866,10 +1867,12 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          if( !withTime && !withSpace ) return true;
          
          String sysParam="";
-         if( withsys && v.pref instanceof PlanBG ) {
-            String body = ((PlanBG)v.pref).body;
-            if( body==null ) body="C";
-            sysParam="&spacesys="+URLEncoder.encode(body);
+         if( withsys && withSpace ) {
+            String body = v.pref.getBody();
+            if( body!=null ) {
+               if( body.equals("sky") ) body="C";
+               sysParam="&spacesys="+URLEncoder.encode(body);
+            }
          }
 
          // Interrogation du MocServer distant...
@@ -1914,53 +1917,6 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
          } finally {
             if( in != null ) in.close();
          }
-
-         //      try {
-         //
-         //         HashSet<String> set = mode == ResumeMode.LOCALADD ? previousSet : new HashSet<String>();
-         //
-         //         // Pour éviter de faire 2x la même chose de suite
-         //         Coord c = v.getCooCentre();
-         //         double size = v.getTaille();
-         //         boolean sameLocation = c.equals(oc) && size == osize;
-         //
-         //         String params;
-         //         if( mode == ResumeMode.NORMAL && sameLocation ) return false;
-         //         oc = c;
-         //         osize = size;
-         //
-         //         // Interrogation du MocServer distant...
-         //         BufferedReader in = null;
-         //
-         //         // Interrogation par cercle
-         //         if( v.getTaille() > 45 ) {
-         //            params = MOCSERVER_PARAM + "&RA=" + c.al + "&DEC=" + c.del + "&SR=" + size * Math.sqrt(2);
-         //
-         //            // Interrogation par rectangle
-         //         } else {
-         //            StringBuilder s1 = new StringBuilder("Polygon");
-         //            for( Coord c1 : v.getCooCorners() )
-         //               s1.append(" " + c1.al + " " + c1.del);
-         //            params = MOCSERVER_PARAM + "&stc=" + URLEncoder.encode(s1.toString());
-         //         }
-         //
-         //         try {
-         //            if( mode == ResumeMode.FORCE || !sameLocation ) {
-         //               URL u = aladin.glu.getURL(GLUMOCSERVER, params, true);
-         //
-         //               Aladin.trace(6, "Directory.hipsUpdate: Contacting MocServer : " + u);
-         //               in = new BufferedReader(new InputStreamReader(Util.openStream(u)));
-         //               String s;
-         //
-         //               // récupération de chaque ID concernée (1 par ligne)
-         //               while( (s = in.readLine()) != null )
-         //                  set.add(getId(s));
-         //            }
-         //
-         //         } catch( EOFException e ) {
-         //         } finally {
-         //            if( in != null ) in.close();
-         //         }
 
          // Interrogation du Multimoc interne (uniquement par cercle)
          SMoc mocQuery = null;
@@ -2948,6 +2904,7 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
     * >=5.0 indique que le MocServer prend en compte la dimension temporelle
     */
    private void setMocserverVersion() {
+      if( !Aladin.NETWORK ) return;
       if( mocServerVersion==-2 ) return;    // déjà testé sans succès
       
       DataInputStream dis=null;
@@ -3072,6 +3029,8 @@ public class Directory extends JPanel implements Iterable<MocItem>, GrabItFrame 
    }
 
    private int loadFromMocServer(String params) {
+      if( !Aladin.NETWORK ) return -1;
+
       InputStreamReader in = null;
       boolean eof = false;
       int n = 0;

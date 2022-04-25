@@ -876,7 +876,7 @@ public class ServerFile extends Server implements XMLConsumer {
                if( (s=(String)atts.get("hipsinPNG"))!=null )     pbg.inPNG = (new Boolean(s)).booleanValue();
                if( (s=(String)atts.get("hipshasMoc"))!=null )    pbg.hasMoc = (new Boolean(s)).booleanValue();
                if( (s=(String)atts.get("hipshasHpxFinder"))!=null )   pbg.hasHpxFinder = (new Boolean(s)).booleanValue();
-               if( (s=(String)atts.get("hipsbody"))!=null )      pbg.body = s;
+               if( (s=(String)atts.get("hipsbody"))!=null )      pbg.body = s;  // Pour compatibilité - à virer quand on veut
                if( (s=(String)atts.get("hipsframeOrigin"))!=null )   pbg.frameOrigin = Integer.parseInt(s);
                if( (s=(String)atts.get("hipsframeDrawing"))!=null )  pbg.frameDrawing = Integer.parseInt(s);
                if( (s=(String)atts.get("hipslive"))!=null )      pbg.live = (new Boolean(s)).booleanValue();
@@ -948,6 +948,8 @@ public class ServerFile extends Server implements XMLConsumer {
       // Traitements génériques
       if( plan!=null ) {
          if( (s=(String)atts.get("label"))!=null )      plan.label = s;
+         if( (s=(String)atts.get("body"))!=null )       plan.body = s;
+
          if( (s=(String)atts.get("depth"))!=null ) plan.folder = Integer.parseInt(s);
          if( (s=(String)atts.get("activated"))!=null ) plan.active=plan.askActive = (new Boolean(s)).booleanValue();
          if( (s=(String)atts.get("selectable"))!=null ) plan.setSelectable( (new Boolean(s)).booleanValue() );

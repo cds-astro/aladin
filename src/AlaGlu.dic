@@ -9,7 +9,7 @@
 %A Aladin.java.home
 %D Get when the user clics on the CDS logo
 %O CDS'aladin
-%U http://aladin.u-strasbg.fr/
+%U http://aladin.cds.unistra.fr/
 
 %A AlaU
 %D Aladin generical URL prefix
@@ -32,7 +32,7 @@
 %A AlaU.fr
 %D Aladin URL prefix for CDS (Strasbourg France)
 %O CDS'aladin
-%L http://aladin.u-strasbg.fr/java
+%L http://aladin.cds.unistra.fr/java
 
 %A AlaU.iucaa
 %D Aladin URL prefix for IUCAA (UCAA/Pune, India)

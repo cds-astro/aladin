@@ -122,7 +122,6 @@ public class PlanTMoc extends PlanMoc {
                moc = new TMoc();
                readMoc(moc,dis);
             }
-//            if( moc.isEmpty() ) error="Empty TMOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();

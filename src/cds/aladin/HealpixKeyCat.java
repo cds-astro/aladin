@@ -131,8 +131,8 @@ public class HealpixKeyCat extends HealpixKey {
       planBG.recomputePosition(pcat.iterator(),leg,nra,nde,npmra,npmde);
    }
 
-   static final private char [] NLOADED = { '#',' ','n','L','o','a','d','e','d',':',' ' };
-   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=' };
+//   static final private char [] NLOADED = { '#',' ','n','L','o','a','d','e','d',':',' ' };
+   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=',' ' };
   
    // Postionne le flag last selon méthode "Completeness", retourne true si on a trouvé ce commentaire
    // # Completeness = 903 / 90811
@@ -142,7 +142,7 @@ public class HealpixKeyCat extends HealpixKey {
       
       // En début de fichier
       rep = testLast(stream,0,COMPLETENESS);
-      if( !rep ) testLast(stream,0,NLOADED);    // A virer lorsque FX aura fait la modif sur son serveur
+//      if( !rep ) testLast(stream,0,NLOADED);    // A virer lorsque FX aura fait la modif sur son serveur
       
       // Parmi des commentaires ?
       if( !rep ) {
@@ -150,7 +150,7 @@ public class HealpixKeyCat extends HealpixKey {
             if( stream[i]=='\n' || stream[i]=='\r' ) {  
                if( stream[i+1]=='#' ) {
                   rep=testLast(stream,i+1,COMPLETENESS);    
-                  if( !rep ) rep=testLast(stream,i+1,NLOADED);    // A virer lorsque FX aura fait la modif sur son serveur
+//                  if( !rep ) rep=testLast(stream,i+1,NLOADED);    // A virer lorsque FX aura fait la modif sur son serveur
                }
                else if( stream[i+1]!='\n' && stream[i+1]!='\r' ) break;  // fin des commentaires ?
             }
@@ -167,7 +167,7 @@ public class HealpixKeyCat extends HealpixKey {
       int fin;
       int slash=0;
       for( fin=offset+signature.length; fin<stream.length 
-         && stream[fin]!='\n' && stream[fin]!='\r' && stream[fin]!=' '; fin++ ) {
+         && stream[fin]!='\n' && stream[fin]!='\r' ; fin++ ) {
          if( stream[fin]=='/' ) slash=fin;
       }
       if( slash==0 ) return false;
@@ -182,29 +182,6 @@ public class HealpixKeyCat extends HealpixKey {
    }
    
    
-//   // Postionne le flag last selon méthode "Completeness", retourne true si on a trouvé ce commentaire
-//   // # Completeness = 903 / 90811
-//   private boolean testCompleteness(byte [] stream) {
-//      if( stream.length<COMPLETENESS.length ) return false;
-//      for( int i=0; i<COMPLETENESS.length; i++ ) if( COMPLETENESS[i]!=stream[i] ) return false;
-//      int deb=COMPLETENESS.length;
-//      int fin;
-//      int slash=0;
-//      for( fin=COMPLETENESS.length; fin<stream.length 
-//         && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
-//         if( stream[fin]=='/' ) slash=fin;
-//      }
-//      if( slash==0 ) return false;
-//      if( fin==stream.length ) return false;
-//      try {
-//         nLoaded = Integer.parseInt((new String(stream,deb,slash-deb)).trim());
-//         nTotal = Integer.parseInt((new String(stream,slash+1,fin-(slash+1))).trim());
-//         last = nLoaded==nTotal;
-////         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
-//      } catch( Exception e ) { nLoaded = 1; nTotal = 2; last=false; }
-//      return true;
-//   }
-
   /** Retourne true s'il n'y a pas de descendant */
    protected boolean isLast() { return last; }
    

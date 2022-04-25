@@ -123,6 +123,14 @@ public class BuilderAppend extends Builder {
       if( inputOrder!=-1 )  throw new Exception("The input directory must contains original images/cubes. Use CONCAT if you want to merge two HiPS");
       context.info("Order retrieved from ["+outputPath+"] => "+order);
       
+      
+      // Info sur la méthode
+      if( mode==Mode.MUL || mode==Mode.DIV || mode==Mode.COPY || mode==Mode.LINK ) {
+         throw new Exception("Coadd mode ["+mode+"] not supported for APPEND action");
+      }
+      context.info("Coadd mode: "+Mode.getExplanation(mode));
+
+      
       // Il faut voir si on peut utiliser les tuiles de poids
       live = checkLiveByProperties(context.getOutputPath());
       if( mode==Mode.AVERAGE ) {

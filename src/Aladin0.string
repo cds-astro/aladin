@@ -1341,7 +1341,7 @@ SLMEXP	Expand the selected folders
 SHOW	Show
 HIDE	Hide
 GOTO	Reticle to the initial plane location
-REDO  Updates the plan sources for the current field
+REDO  Updates the catalogue planes for the current field
 BROWSE	Browse the plane sources
 SWARNING For displaying this plane, activate before a reference plane with compatible projection
 SWARNINGSLIDER For displaying this plane, use the opacity slider.\noR activate it as the projection reference
@@ -1374,7 +1374,7 @@ SLMEXP.fr	Ouvrir les dossiers sélectionnés
 SHOW.fr	Montrer
 HIDE.fr	Cacher
 GOTO.fr	Réticule sur la position initiale du plan
-REDO.fr Actualise les sources du plan pour le champ courante
+REDO.fr Actualise les plans catalogues pour le champ courant
 BROWSE.fr	Parcourir les objets du plan
 SWARNING.fr Pour visualiser ce plan, activez au préalable un plan de reférence avec une projection compatible
 SWARNINGSLIDER.fr Pour visualiser ce plan, utilisez le curseur de transparence.\nOu activez-le en tant que référence de projection
@@ -1799,6 +1799,8 @@ UPGRIDRACOLOR longitude label
 UPGRIDRACOLOR.fr label longitude
 UPGRIDDECOLOR latitude label
 UPGRIDDECOLOR.fr label latitude
+UPGRIDTHICKNESS thickness
+UPGRIDTHICKNESS.fr  épaisseur
 UPINFO Overlay info
 UPINFOH Control of the info overlaid on the view (color, font, effect...)
 UPINFOFONT  font size

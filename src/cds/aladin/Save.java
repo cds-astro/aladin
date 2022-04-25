@@ -1201,6 +1201,8 @@ public class Save extends JFrame implements ActionListener {
       if( p.label!=null )      append(CR+"     label=\""+XMLParser.XMLEncode(p.label)+"\"");
       if( p.objet!=null )      append(CR+"     object=\""+XMLParser.XMLEncode(p.objet)+"\"");
       if( p.param!=null )      append(CR+"     param=\""+XMLParser.XMLEncode(p.param)+"\"");
+      if( p.body!=null )       append(CR+"     body=\""+XMLParser.XMLEncode(p.body)+"\"");
+
       if( p.type==Plan.FILTER )
          if( ((PlanFilter)p).plan!=null ) append(CR+"     dedicatedto=\""+((PlanFilter)p).plan.label+"\"");
       if( p.type==Plan.FOLDER )
@@ -1335,7 +1337,7 @@ public class Save extends JFrame implements ActionListener {
             append(CR+"     hipsinPNG=\""+pbg.inPNG+"\"");
             append(CR+"     hipshasMoc=\""+pbg.hasMoc+"\"");
             append(CR+"     hipshasHpxFinder=\""+pbg.hasHpxFinder+"\"");
-            if( pbg.body!=null )    append(CR+"     hipsbody=\""+pbg.body+"\"");
+//            if( pbg.body!=null )    append(CR+"     hipsbody=\""+pbg.body+"\"");
             append(CR+"     hipsframeOrigin=\""+pbg.frameOrigin+"\"");
             append(CR+"     hipsframeDrawing=\""+pbg.frameDrawing+"\"");
             append(CR+"     hipslive=\""+pbg.live+"\"");

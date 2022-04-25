@@ -146,6 +146,7 @@ public class PlanMocAlgo extends PlanMoc {
          for( Coord c : cooPolygon ) a.add(new double[]{c.al,c.del});
          
          SMoc m1 = CDSHealpix.createSMoc(a, order);
+         m1.setSpaceSys( mocSource.moc.getSpaceSys() );
          moc = m1.intersection(mocSource.moc);
          
       } catch( Exception e ) {

@@ -124,7 +124,7 @@ public class BuilderCube extends Builder {
             SMoc m = new SMoc();
             m.read( path+Util.FS+Constante.FILE_MOC);
             if( context.moc==null ) context.moc=m;
-            else context.moc = (SMoc)context.moc.union(m);
+            else context.moc = context.moc.union(m);
          } catch( Exception e ) {
             context.warning("Missing original MOC in "+path+" => running time estimation will be wrong");
          }
@@ -139,7 +139,12 @@ public class BuilderCube extends Builder {
       context.depth=inputPath.length;
 
       // Mode de travail (link ou copy)
-      if( context.getMode().equals(Mode.LINK) ) mode = context.getMode();
+      Mode m = context.getMode();
+      if( m==Mode.getDefault() ) mode=Mode.COPY;   // Le défaut de TILES est remplacé par le défaut de CUBE
+      else mode=m;
+      if( mode!=Mode.COPY && mode!=Mode.LINK ) {
+         throw new Exception("Coadd mode ["+mode+"] not supported for CUBE action");
+      }
       context.info(mode.getExplanation(mode));
    }
 

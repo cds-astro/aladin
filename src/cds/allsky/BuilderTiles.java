@@ -167,7 +167,7 @@ public class BuilderTiles extends Builder {
          // retry order validation with tiles directory
          validateOrder(context.getOutputPath());
       }
-
+      
       //      if(  !context.isColor() ) {
 
       String img = context.getImgEtalon();
@@ -235,8 +235,11 @@ public class BuilderTiles extends Builder {
 
 
       // Info sur la méthode
-      Mode m = context.getMode();
-      if( !context.isColor() || m==Mode.KEEPTILE || m==Mode.REPLACETILE ) context.info("mode="+Mode.getExplanation(m));
+      Mode mode = context.getMode();
+      if( mode==Mode.MUL || mode==Mode.DIV || mode==Mode.COPY || mode==Mode.LINK ) {
+         throw new Exception("Coadd mode ["+mode+"] not supported for TILES action");
+      }
+      context.info("Coadd mode: "+Mode.getExplanation(mode));
       
       // Info sur le coordinate frame
       context.info("HiPS coordinate frame => "+context.getFrameName());
@@ -520,8 +523,9 @@ public class BuilderTiles extends Builder {
       SMoc m = context.getRegion();
       if( m==null ) m = new SMoc("0/0-11");
       moc.add( m );
-      int minorder=0; //3;
-      context.setMinOrder( minorder );
+//      int minorder=0; //3;
+//      context.setMinOrder( minorder );
+      int minorder = context.getMinOrder();
       
       moc.setMocOrder(minorder);
       int depth = context.getDepth();
@@ -648,7 +652,13 @@ public class BuilderTiles extends Builder {
       context.setCache(new CacheFits(sizeCache));
       context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cds.tools.Util.getUnitDisk(sizeCache));
    }
-
+   
+   /** Par défaut, il s'agit d'un simple accès à la tuile déjà calculée,
+    * sauf pour BuilderMirror */
+   protected Fits findLeaf(ThreadBuilderTile hpx, String file, String path,int order,long npix, int z) throws Exception { 
+      return findLeaf(file);
+   }
+   
    /** Création d'un losange et de toute sa descendance si nécessaire.
     * Méthode récursive qui
     * 1) Vérifie si le travail n'a pas déjà été fait en se basant sur
@@ -669,17 +679,22 @@ public class BuilderTiles extends Builder {
 
       // si le process a été arrêté on essaie de ressortir au plus vite
 //      if (stopped) return null;
+      
 
       // si on n'est pas dans le Moc, il faut retourner le fichier
       // pour la construction de l'arborescence...
       if( !context.isInMocTree(order,npix) ) return findLeaf(file);
       
-      // si le losange a déjà été calculé on le renvoie
+      // si le losange a déjà été calculé on le renvoie directement
+      // ou que l'on n'a pas besoin de descendre plus loin dans c"ette branche
       if( coaddMode==Mode.KEEPTILE ) {
-         Fits oldOut = findLeaf(file);
+         Fits oldOut = findLeaf(hpx,file,path,order,npix, z);
          if( oldOut!=null ) {
             SMoc moc = context.getRegion();
-            moc = moc.intersection(new SMoc(order+"/"+npix));
+            SMoc a = new SMoc(order+"/"+npix);
+            a.setSys( context.getFrameCode() );
+            moc = moc.intersection(a);
+            moc.setMocOrder(ordermax);
             int nbTiles = (int)moc.getNbValues();
             updateStat(0,0,nbTiles,0,nbTiles/4,0);
             return oldOut;
@@ -1301,9 +1316,9 @@ public class BuilderTiles extends Builder {
                // celui renseigné par l'utilisateur, et sinon celui par défaut
                if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
 
-               if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,true);
+               if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,Fits.AVG);
                else if( coaddMode==Mode.ADD 
-                     || coaddMode==Mode.SUM ) out.coadd(oldOut,false);
+                     || coaddMode==Mode.SUM ) out.coadd(oldOut,Fits.ADD);
                else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
                else if( coaddMode==Mode.KEEP ) {
                   oldOut.mergeOnNaN(out);

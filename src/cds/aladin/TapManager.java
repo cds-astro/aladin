@@ -137,6 +137,7 @@ public class TapManager {
 	MutableComboBoxModel uploadTablesModel = new DefaultComboBoxModel();
 	protected FrameSimple joinFrame;
 	
+	protected static final int TIMEOUT = 45000;   // 45s pour les requêtes TAP
     protected static final String FORMAT = "FORMAT="+URLEncoder.encode("application/x-votable+xml;serialization=TABLEDATA")+"&";
 //    protected static final String FORMAT = "";
 	
@@ -752,7 +753,7 @@ public class TapManager {
 //			URL examplesUrl = new URL("http://130.79.129.54:8080/view-source_gaia.ari.uni-heidelberg.de_tap_examples.xhtml");
 			Aladin.trace(3, "TapManager.getResults() for: "+url);
 			long startTime = getTimeToLog();
-			is = Util.openStreamForTapAndDL(url, null, true, 10000);
+			is = Util.openStreamForTapAndDL(url, null, true, TIMEOUT);
 			long time = getTimeToLog();
 			if (Aladin.levelTrace >= 4) System.out.println("DaliExamples got inputstream: "+time+" time taken: "+(time - startTime));
 			startTime = getTimeToLog();
@@ -2402,7 +2403,7 @@ public class TapManager {
 //			int requestNumber) throws Exception {
 //		MyInputStream is = null;
 //		try {
-//			is = Util.openStreamForTap(url, null, true, 10000);
+//			is = Util.openStreamForTap(url, null, true, TIMEOUT);
 //			if (requestNumber == -1 || server.requestsSent != requestNumber) {
 //				server = null;
 //			} else {
@@ -2424,7 +2425,7 @@ public class TapManager {
 		MyInputStream is = null;
 		try {
 			Aladin.trace(3, "trying url : "+url);
-			is = Util.openStreamForTap(url, conn, true, 10000);
+			is = Util.openStreamForTap(url, conn, true, TIMEOUT);
 			if (requestNumber == -1 || server.requestsSent != requestNumber) {
 				server = null;
 			} else {
@@ -2446,7 +2447,7 @@ public class TapManager {
 		InputStream is = null;
 		try {
 			Aladin.trace(3, "trying url : "+url);
-			is = Util.openStreamForTapAndDL(url, conn, true, 10000);
+			is = Util.openStreamForTapAndDL(url, conn, true, TIMEOUT);
 			if (requestNumber == -1 || server.requestsSent != requestNumber) {
 				server = null;
 			} else {
@@ -2456,7 +2457,6 @@ public class TapManager {
 			if (server != null) {
 				institute = server.institute;
 			}
-//			Plan plan = aladin.calque.createPlan(url + "", planeLabel, institute, server);
 			aladin.calque.createPlan(is, planeLabel, institute, server, url, query, requestNumber);
 		} catch (Exception e) {
 			Aladin.trace(3, "Error when getting job!" + e.getMessage());

@@ -1036,7 +1036,7 @@ public class Ligne extends Position {
    }
    
    protected void drawCoteBase(Graphics g, ViewSimple v,int dx,int dy) {}
-
+   
    // Recupération d'un itérator sur les objets qui compose la forme (Ligne, Cote)
    public Iterator<Obj> iterator() { return new ObjetIterator(); }
 

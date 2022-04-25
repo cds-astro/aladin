@@ -119,8 +119,17 @@ public class Tag extends Position {
       setWH();
    }
 
-  /** Creation d'un tag pour les backups */
+   /** Creation d'un tag pour les backups */
    protected Tag(Plan plan) { super(plan); }
+   
+   /** Creation d'un tag String centré dédié à un PlanField */
+   protected Tag(PlanField plan, String content, double ra, double dec ) { 
+      this( plan);
+      setText(content);
+      setXYTan(Util.tand(ra), Util.tand(dec));
+      distAngulaireOrig=1000;   // Pour effacement automatique au dessus de qq deg de largeur de champ
+      accroche=0; dist=1;       // Subtilité pour forcer le centrage => BEURK
+   }
    
    /** Fournit une copie du Tag */
    protected Tag copy() {
@@ -722,11 +731,14 @@ public class Tag extends Position {
       
       FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics( getFont() );
       boolean aDroite =angle>Math.PI/2 && angle<3*Math.PI/2;
+      boolean centre = accroche==0 && dist==1;
       int y1 = p.y - dim.height/2 + m.getAscent();
       StringTokenizer st = new StringTokenizer(id,"\n");
       while( st.hasMoreTokens() ) {
          String s = st.nextToken();
-         int x1 = p.x + (aDroite ? dim.width/2 - m.stringWidth(s) : -dim.width/2);
+         int x1 = p.x + (centre  ? -m.stringWidth(s) : 
+                         aDroite ? dim.width/2 - m.stringWidth(s) : 
+                         -dim.width/2);
          g.drawString(s,x+x1,y+y1);
          if( fond==0 ) Util.drawStringOutline(g, s,x+x1,y+y1, null, Color.black);
          else g.drawString(s,x+x1,y+y1);

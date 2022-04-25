@@ -117,6 +117,7 @@ public class Plan implements Runnable {
    protected boolean isOldPlan;  // True s'il s'agit d'un plan réutilisé (algo) (voir Plan.planReady());
    protected boolean noBestPlacePost; // true s'il ne faut pas passer le plan à la méthode bestPlacePost() après son chargement
    protected boolean collapse;	 // true si le plan est collapse dans la pile
+   protected String body="sky";  // le corps céleste concerné, C pour céleste, et null pour inconnu
    protected String objet;       // Target du plan (celui qui a ete indique a l'interrogation)
    public String label;          // Label du plan; (celui qui apparait dans le "plane stack"
    protected String param;       // Les parametres d'interrogation du serveur
@@ -2030,6 +2031,16 @@ public class Plan implements Runnable {
       if( type.equals("P") || type.equals("C" ) ) return Util.getSubpath(label,2,-1).replace('/',' ');
       return Util.getSubpath(label,1,-1).replace('/',' ');
    }
+   
+   /** Retourne le body concerné, ou C si céleste ou null si inconnu */
+   protected String getBody() { return body; }
+   
+   /** Positionne le body concerné, ou C si céleste ou null si inconnu */
+   protected void setBody(String body) { 
+      this.body = body;
+      if( projd!=null ) projd.body=body;
+      if( Aladin.levelTrace>=3 ) System.err.println("Debug Plan.setBody("+body+") on "+this);
+   }
 
    // Prévu pour les cubes
    protected String getFrameLabel(int frame) { return label; }
@@ -2421,7 +2432,7 @@ public class Plan implements Runnable {
    //
       protected void draw(Graphics g,ViewSimple v,int dx, int dy, float op) { }
 
-
+      
    /** Attente pendant la construction du plan.
     * Il est necessaire de voir les specialisations des cette methode
     * dans les classes PlanImage et PlanObjet pour comprendre

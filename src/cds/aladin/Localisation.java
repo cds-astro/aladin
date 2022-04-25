@@ -464,7 +464,7 @@ public class Localisation extends MyBox  {
       }
       
       for( i=0; i<n; i++ ) {
-         if( a[i]>='a' && a[i]<='z' ||  a[i]>='A' && a[i]<='Z' ) return true;
+         if( a[i]>='a' && a[i]<='z' ||  a[i]>='A' && a[i]<='Z' || a[i]=='/' ) return true;
       }
       return false;
    }

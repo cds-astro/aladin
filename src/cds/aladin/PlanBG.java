@@ -199,7 +199,6 @@ public class PlanBG extends PlanImage {
    public boolean inPNG=false;       // true: Les losanges originaux peuvent être fournis en PNG
    protected boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    protected boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
-   protected String body=null;         // le corps céleste concerné (en minuscule et en anglais), null si sky
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin!=null && aladin.configuration!=null ? aladin.configuration.getFrameDrawing() : 0;   // Frame de tracé, 0 si utilisation du repère général
    protected boolean local;
@@ -514,7 +513,7 @@ public class PlanBG extends PlanImage {
          else if( strFrame.equals("ecliptic"))  frame=Localisation.ECLIPTIC;
          
          // Body
-         if( isPlanet(strFrame) ) body=strFrame.trim().toLowerCase();
+         if( isPlanet(strFrame) ) setBody( strFrame.trim().toLowerCase() ) ;
 
          // Pour compatibilité avec le vieux vocabulaire
          else if( strFrame.equals("X")) {
@@ -1006,13 +1005,7 @@ public class PlanBG extends PlanImage {
       
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,longAsc,
             projection,Calib.FK5);
-      
-      // Il s'agit d'un corps céleste (et non pas le ciel) ?
-      if( body!=null ) {
-         p.setBody( body );
-         aladin.trace(3,"Body set \""+body+"\" for "+this);
-      }
-
+      p.setBody( body );
       p.frame = getCurrentFrameDrawing();
 //      if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
@@ -1075,6 +1068,12 @@ public class PlanBG extends PlanImage {
       
    protected boolean isPlanet(String frame) {
       return frame!=null && Util.indexInArrayOf(frame, SKYFRAME, true)<0;
+   }
+
+   /** Retourne le système de référence dela Planète, ou null sinon */
+   protected String getPlanetSys() {
+      if( !isPlanet() ) return null;
+      return prop.getProperty("hips_frame");
    }
 
    protected void suiteSpecific() {

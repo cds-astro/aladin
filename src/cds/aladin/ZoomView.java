@@ -818,6 +818,10 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             gbuf.drawString("-90",x-5,y+pa+10-deltaY);
             gbuf.drawString("-180",x-ga+5-gbuf.getFontMetrics().stringWidth("-180"),y+15-deltaY);
             gbuf.drawString("+180",x+ga-5,y-5-deltaY);
+            
+            // Le body
+            String body = v.pref.getBody();
+            if( body!=null ) gbuf.drawString(body,width-gbuf.getFontMetrics().stringWidth(body)-4,y+pa+10-deltaY);
 
             String s;
             gbuf.setFont(Aladin.SBOLD);

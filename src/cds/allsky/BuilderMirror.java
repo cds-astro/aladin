@@ -49,7 +49,7 @@ import cds.tools.Util;
 public class BuilderMirror extends BuilderTiles {
    
    static private final int TIMEOUT = 15000;    // 15 sec sans nouvelle on réinitialise la connection HTTP
-   static private final int MAXRETRY = 10;      // Nombre max de réinitialisations possibles avant panique
+   static private String USERAGENT = "Hipsgen (mirror) Aladin/"+Aladin.VERSION.substring(1);
 
    private Fits bidon;                  // Ne sert qu'à renvoyer quelque chose pour faire plaisir à BuilderTiles
    private MyProperties prop;           // Correspond aux propriétés distantes
@@ -60,7 +60,8 @@ public class BuilderMirror extends BuilderTiles {
    private String dateRelease="";       // Date of last release date of the local copy
    private boolean isLocal=false;       // true s'il s'agit d'une copie locale
    private long timeIP;
-   private boolean check=false;       // true si on redémarre une session => pas de test de taille sur les tuiles déjà arrivées
+   private boolean check=false;         // true si on redémarre une session => pas de test de taille sur les tuiles déjà arrivées
+   boolean flagCat=false;               // true s'il s'agit d'un HiPS catalogue
 
    public BuilderMirror(Context context) {
       super(context);
@@ -98,9 +99,12 @@ public class BuilderMirror extends BuilderTiles {
       }
 
       // Détermination du type de HiPS
+      flagCat=false;
       s = prop.getProperty("dataproduct_type");
       if( s!=null && s.indexOf("catalog")>=0 ) {
-         throw new Exception("Hipsgen mirror not usable for catalog HiPS");
+         context.info("Mirroring a HiPS catalog...");
+//         throw new Exception("Hipsgen mirror not usable for catalog HiPS");
+         flagCat=true;
       }
 
       // Détermination de l'ordre max: si non précisé, récupéré depuis
@@ -116,6 +120,24 @@ public class BuilderMirror extends BuilderTiles {
       } else {
          if( o!=-1 ) {
             if( paramO>o ) throw new Exception("Order greater than the original");
+            else if( o!=paramO ) isPartial=true;
+         }
+      }
+
+      // Détermination de l'ordre min: si non précisé, récupéré depuis
+      // les propriétés distantes
+      s = prop.getProperty(Constante.KEY_HIPS_ORDER_MIN);
+      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER_MIN);
+      if( s==null ) context.info("No min order specified in the remote HiPS properties file !");
+      o = s==null ? -1 : Integer.parseInt(s) ;
+      paramO = context.minOrder;
+      if( paramO ==-1 ) {
+         o = flagCat ? 1 : 3;    // Le défaut en fonction de la nature du HiPS
+         context.warning("Min order unknown => use default ["+o+"]");
+         context.setMinOrder(o);
+      } else {
+         if( o!=-1 ) {
+            if( paramO<o ) throw new Exception("Min Order lower than the original");
             else if( o!=paramO ) isPartial=true;
          }
       }
@@ -144,7 +166,6 @@ public class BuilderMirror extends BuilderTiles {
          in = Util.openAnyStream( context.getInputPath()+"/Moc.fits");
          area.read(in);
          
-         
          // Si le système de coordonnées du MOC n'est pas le même que celui de HiPS, il faut 
          // convertir le MOC
          if( !context.getFrameCode().equals( area.getSpaceSys()) ) {
@@ -155,7 +176,6 @@ public class BuilderMirror extends BuilderTiles {
          if( context.getArea()==null ) {
             context.setMocArea( area );
          } else {
-            
             if( !context.getArea().equals(area)) {
                isSmaller=isPartial=true;
                context.setMocArea( area.intersection( context.getArea()) );
@@ -184,7 +204,7 @@ public class BuilderMirror extends BuilderTiles {
       if( context.isCube() ) context.info("Mirroring cube HiPS (depth="+context.depth+")");
 
       // Détermination de la zone à copier
-      context.moc = context.mocArea;
+      context.moc = context.getArea();
       context.setValidateRegion(true);
 
       // Peut être existe-t-il déjà une copie locale à jour ?
@@ -214,9 +234,13 @@ public class BuilderMirror extends BuilderTiles {
 
          } finally{ if( in1!=null ) in1.close(); }
       }
-      
 
       validateSplit(prop);
+      
+      // Le Mode n'est pas paramètrable par l'utilisateur
+      // KEEPTILE Obligatoire pour pouvoir tester les branches plus courtes dans le cas d'un catalogue
+      // => cf findLeaf(...)
+      context.setMode( flagCat ? Mode.KEEPTILE : Mode.REPLACETILE );
    }
    
    // Récupération des paramètres pour effectuer un split multi-partitions
@@ -225,13 +249,15 @@ public class BuilderMirror extends BuilderTiles {
       String splitCmd = context.getSplit();
       if( splitCmd==null ) return;
       
-      int bitpix, tileWidth, depth, order;
+      int bitpix=0, tileWidth=0, depth, order;
       SMoc m;
       
       
       try { 
-         bitpix       = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_PIXEL_BITPIX) );
-         tileWidth    = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH) );
+         if( !flagCat ) {
+            bitpix       = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_PIXEL_BITPIX) );
+            tileWidth    = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH) );
+         } 
          order        = Integer.parseInt( prop.getProperty(Constante.KEY_HIPS_ORDER) );
          try { depth  = Integer.parseInt( prop.getProperty(Constante.KEY_CUBE_DEPTH) ); }
          catch( Exception e1 ) { depth = 1; }
@@ -251,9 +277,20 @@ public class BuilderMirror extends BuilderTiles {
          build();
 
          if( !context.isTaskAborting() ) {
+            setDisplayWarn(false);
+            setMaxtry(2);
 
             copyX(context.getInputPath()+"/index.html",context.getOutputPath()+"/index.html");
             copyX(context.getInputPath()+"/preview.jpg",context.getOutputPath()+"/preview.jpg");
+            copyX(context.getInputPath()+"/metadata.xml",context.getOutputPath()+"/metadata.xml");
+            
+            // Mémorisation des paramètres de la commande MIRROR
+            if( context.scriptCommand!=null ) {
+               int n=0;
+               while( prop.getProperty("hipsgen_params"+(n==0?"":"_"+n))!=null) n++;
+               prop.add("hipsgen_date"+(n==0?"":"_"+n),context.getNow());
+               prop.add("hipsgen_params"+(n==0?"":"_"+n),context.scriptCommand);
+            }
             
             // On recopie simplement le MOC, sauf si copie partielle, ou erreur
             // et dans ce cas, on le recalcule.
@@ -312,7 +349,8 @@ public class BuilderMirror extends BuilderTiles {
             }
          }
          prop.replaceValue(Constante.KEY_HIPS_STATUS, status1.toString());
-
+         prop.replaceValue(Constante.KEY_HIPS_ORDER, context.getOrder()+"");
+         
          OutputStreamWriter out = null;
          try {
             out = new OutputStreamWriter( new FileOutputStream( context.getOutputPath()+"/properties"), "UTF-8");
@@ -406,6 +444,7 @@ public class BuilderMirror extends BuilderTiles {
    }
 
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+      if( !isSmaller ) return bidon;
       return createLeaveHpx(hpx,file,path,order,npix,z,true);
    }
 
@@ -429,22 +468,120 @@ public class BuilderMirror extends BuilderTiles {
 
    // Copie des Allsky
    private void copyAllsky() throws Exception {
-      for( int z=0; z<context.depth; z++) {
-         for( String ext : context.tileFormat ) {
-            String suf = z==0 ? "" : "_"+z;
-            String fileIn = context.getInputPath()+"/Norder3/Allsky"+suf+ext;
-            String fileOut = context.getOutputPath()+"/Norder3/Allsky"+suf+ext;
-            copyX(fileIn,fileOut);
+      for( int o = context.getMinOrder(); o<=3; o++ ) {
+         for( int z=0; z<context.depth; z++) {
+            for( String ext : context.tileFormat ) {
+               String suf = z==0 ? "" : "_"+z;
+               String fileIn = context.getInputPath()+"/Norder"+o+"/Allsky"+suf+ext;
+               String fileOut = context.getOutputPath()+"/Norder"+o+"/Allsky"+suf+ext;
+               copyX(fileIn,fileOut);
+            }
          }
       }
    }
+   
+   /** Dans le cas d'une copie, mirroir on profite de ce test pour copier la tuile
+    * Et dans le cas d'un Hips catalogue, on détermine si on doit aller vraiment plus profond
+    * en fonction du commentaire de complétude en première ligne de la tuile
+    * @return ATTENTION retourn null si on doit aller plus profond
+    */
+   protected Fits findLeaf(ThreadBuilderTile hpx, String file, String path,int order,long npix, int z) throws Exception { 
+      if( isSmaller ) return bidon;
+      try {
+         createLeaveHpx(hpx,file,path,order,npix,z,order==ordermax);
+         if( flagCat && order<ordermax && stopCompleteness(file) ) return bidon; 
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+      return null;
+   }
+   
+   public Fits findLeaf(String file) { return null; }
+   
+   // Vérifie la complétude de la tuile catalogue
+   private boolean stopCompleteness(String file) throws Exception {
+      boolean stop=false;
+      String ext = context.tileFormat.get(0);
+      String fileOut = file+ext;
+      if( !(new File(fileOut)).exists() ) {
+         stop=true;
+      } else {
+         RandomAccessFile f = null;
+         byte [] buf=new byte[128];
+         try {
+            f = new RandomAccessFile(fileOut, "r");
+            f.read(buf);
+            stop = testLast(buf);
+            f.close();
+            f=null;
+         } finally { 
+            if( f!=null ) try{ f.close(); } catch( Exception e) {} 
+         }
+      }
+      if( stop ) {
+         System.err.println("Stop tree for "+file);
+      }
+      return stop;
+   }
+         
+   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=',' ' };
+
+   // Vérifie la complétude de la tuile catalogue (les 128 premiers caractères)
+   // ex: "# Completeness = 903 / 90811"  => Return false
+   private boolean testLast(byte [] stream) {
+      boolean rep[];  // [0] test achevé true|false, [1] résultat du test
+      
+      // En début de fichier
+      rep = testLast(stream,0,COMPLETENESS);
+
+      // Parmi des commentaires ?
+      if( !rep[0] ) {
+         for( int i=1; !rep[0] && i<stream.length-1; i++) {
+            if( stream[i]=='\n' || stream[i]=='\r' ) {  
+               if( stream[i+1]=='#' ) {
+                  rep=testLast(stream,i+1,COMPLETENESS);    
+               }
+               else if( stream[i+1]!='\n' && stream[i+1]!='\r' ) break;  // fin des commentaires ?
+            }
+         }
+      }
+      return rep[1];
+   }
+
+   // Scanne à partir de l'offset
+   private boolean[] testLast(byte [] stream,int offset, char [] signature) {
+      boolean last=false;
+      
+      if( stream.length<signature.length ) return new boolean[] {false,false};
+      for( int i=offset; i<signature.length; i++ ) {
+         if( signature[i]!=stream[i] ) return new boolean[] {false,false};
+      }
+      int deb=offset+signature.length;
+      int fin;
+      int slash=0;
+      for( fin=offset+signature.length; fin<stream.length 
+            && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
+         if( stream[fin]=='/' ) slash=fin;
+      }
+      if( slash==0 ) return new boolean[] {false,false};
+      if( fin==stream.length ) return new boolean[] {false,false};
+      try {
+         String a = new String(stream,deb,slash-deb);
+         String b = new String(stream,slash+1,fin-(slash+1));
+         int nLoaded = Integer.parseInt(a);
+         int nTotal = Integer.parseInt(b);
+         last = nLoaded==nTotal;
+      } catch( Exception e ) { last=false; }
+      return new boolean[] {true,last};
+   }
+
 
    // Copie d'un fichier distant (url) vers un fichier local sans générer d'exception
    private int copyX(String fileIn, String fileOut) throws Exception {
       try { return copy(fileIn,fileOut); } catch( Exception e) {};
       return 0;
    }
-   
+
    private int copy(String fileIn, String fileOut) throws Exception { return copy(null,-1,fileIn,fileOut); }
    private int copy(ThreadBuilderTile hpx, int order,String fileIn, String fileOut) throws Exception {
       try {
@@ -452,7 +589,7 @@ public class BuilderMirror extends BuilderTiles {
          return copyRemote(hpx,fileIn,fileOut);
          
       } catch( FileNotFoundException e ) {
-         if( order>=3 ) context.warning("File not found ["+fileIn+"] => ignored (may be out of the MOC)");
+//         if( order>=3 ) context.warning("File not found ["+fileIn+"] => ignored (may be out of the MOC)");
       }
       return 0;
    }
@@ -504,6 +641,14 @@ public class BuilderMirror extends BuilderTiles {
       }
    }
    
+   private int maxtry = 10;      // Nombre max de réinitialisations possibles avant erreur définitive
+   private void setMaxtry(int n) { maxtry=n; }
+   private int getMaxtry() { return maxtry; }
+   
+   private boolean displayWarn = true;  // true pour affichage des messages verbeux sur les essais de lecture
+   private void setDisplayWarn(boolean flag) { displayWarn=flag; }
+   private boolean getDisplayWarn() { return displayWarn; }
+   
    // Copie d'un fichier distant (url) vers un fichier local, uniquement si la copie locale évenutelle
    // et plus ancienne et/ou de taille différente à l'originale.
    // Vérifie si possible que la taille du fichier copié est correct.
@@ -516,13 +661,14 @@ public class BuilderMirror extends BuilderTiles {
       int n;
       long len;
       byte [] buf = new byte[512];
+      int maxtry = getMaxtry();
 
       // Laisse-t-on souffler un peu le serveur HTTP ?
       try {
          if( context.mirrorDelay>0 ) Thread.currentThread().wait(context.mirrorDelay);
       } catch( Exception e ) { }
 
-      for( int i=0; i<MAXRETRY; i++ ) {
+      for( int i=0; i<maxtry; i++ ) {
          InputStream dis=null;
          RandomAccessFile f = null;
          TimeOut timeout = null;
@@ -569,7 +715,7 @@ public class BuilderMirror extends BuilderTiles {
                timeout.start();
                httpc.setReadTimeout(TIMEOUT-500);
                httpc.setConnectTimeout(TIMEOUT-500);
-               httpc.setRequestProperty("User-Agent", "Aladin/Hipsgen/"+Aladin.VERSION);
+               httpc.setRequestProperty("User-Agent", USERAGENT);
                httpc.setRequestMethod("HEAD");
                lastModified = httpc.getLastModified();
                size = httpc.getContentLength();
@@ -590,7 +736,7 @@ public class BuilderMirror extends BuilderTiles {
             timeout.start();
             httpc.setReadTimeout(TIMEOUT-500);
             httpc.setConnectTimeout(TIMEOUT-500);
-            httpc.setRequestProperty("User-Agent", "Aladin/Hipsgen/"+Aladin.VERSION);
+            httpc.setRequestProperty("User-Agent", USERAGENT);
             httpc.setRequestMethod("GET");
             if( lastModified==-1 ) lastModified = httpc.getLastModified();
 //            if( hpx!=null ) hpx.threadBuilder.setInfo("copyRemote opening inputstream from  "+fileIn+"...");
@@ -615,11 +761,11 @@ public class BuilderMirror extends BuilderTiles {
 
 //            e.printStackTrace();
             fOut.delete();
-            if( i<MAXRETRY-1 ) {
-               context.warning("File copy error  => try again ("+(i+1)+"x) ["+fileIn+"]");
-               if( i==MAXRETRY/2 ) Util.pause(10000);
+            if( i<maxtry-1 ) {
+               if( getDisplayWarn() ) context.warning("File copy error  => try again ("+(i+1)+"x) ["+fileIn+"]");
+               if( i==maxtry/2 ) Util.pause(10000);
             }
-            else throw new Exception("File copy error ["+fileIn+"]");
+            else throw new Exception("File copy error (try "+maxtry+"x) ["+fileIn+"]");
             continue;
             
          } finally {
@@ -631,8 +777,8 @@ public class BuilderMirror extends BuilderTiles {
          if( lastModified!=0L ) fOut.setLastModified(lastModified);
 
          if( sizeRead>0 && (new File(fileOut)).length()<size) {
-            if( i==MAXRETRY-1 ) throw new Exception("Truncated file copy ["+fileIn+"]");
-            context.warning("Truncated file copy => try again ["+fileIn+"]");
+            if( i==maxtry-1 ) throw new Exception("Truncated file copy ["+fileIn+"]");
+            if( getDisplayWarn() ) context.warning("Truncated file copy => try again ["+fileIn+"]");
          }
          else break;  // a priori c'est bon
       }
@@ -693,16 +839,10 @@ public class BuilderMirror extends BuilderTiles {
    // Dans le cas d'un mirroir complet, on copie également les noeuds. En revanche pour un miroir partiel
    // on regénérera l'arborescence à la fin
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
-      if( !isSmaller ) return createLeaveHpx(null,file,path,order,npix,z,false);
+//      if( !isSmaller ) return createLeaveHpx(null,file,path,order,npix,z,false);
       return bidon;
    }
-
-   /** Recherche et chargement d'un losange déjà calculé
-    *  Retourne null si non trouvé
-    * @param file Nom du fichier ( sans extension)
-    */
-   public Fits findLeaf(String file) throws Exception { return null; }
-
+   
    private void initStat() {
       statNbFile=0;
       statCumul=0L;
