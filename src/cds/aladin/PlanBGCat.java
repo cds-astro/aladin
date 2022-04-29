@@ -333,38 +333,61 @@ public class PlanBGCat extends PlanBG {
    protected double getCompletude() { return completude; }
 
    private int oNbObj = -1;   // Compteur d'objets déjà chargées
+   private int oHashObj=-1;   // Clé de hash de l'ensemble des objets déjà chargés
    
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {
-      // Mise à jour des filtres (uniquement si le nombre d'objets à changé)
-      // UN PEU CASSE GUEULE COMME TEST, mais pour le moment ça va faire l'affaire
-      int nbObj = getCounts();
       
-      if( oNbObj!=getCounts() ) {
+      int nbObj = getCounts();
+      int hashObj = 0;
+      
+      boolean flagUpdate=false;    // passera à true s'il faut relancer les filtres
+      if( oNbObj!=nbObj ) flagUpdate=true;
+      else {
+         hashObj = hashSrc();
+         if( hashObj!=oHashObj ) flagUpdate=true;
+      }
+      if( PlanFilter.DEBUG ) System.err.println("PlanBGCat.askForRepaint() nbObj="+nbObj+" hashSrc="+hashSrc()+" => update required");
+      
+      if( flagUpdate ) {
          oNbObj = nbObj;
-//         System.out.println("update filter");
-//         for( PlanFilter pf : PlanFilter.allFilters ) System.out.println("."+pf);
+         if( hashObj==0 ) hashObj = hashSrc();   // pas encore calculé ?
+         oHashObj = hashObj;
+         if( PlanFilter.DEBUG ) {
+            System.err.println("PlanBGCat.askForRepaint(): update filter");
+            for( PlanFilter pf : PlanFilter.allFilters ) System.err.println("  ."+pf);
+         }
          updateDedicatedFilter();
       }
       aladin.view.repaintAll();
+   }
+   
+   // Calcule une clé de hash pour l'ensemble des objets actuellement chargés
+   private int hashSrc() {
+      int hash=0;
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj obj = it.next();
+         hash += 31*obj.hashCode();
+      }
+      return hash;
    }
    
    protected void planReady(boolean ready) {
       super.planReady(ready);
       
       // Pour éviter le deadlock, on temporise l'activation du filtre par défaut (s'il y a lieu)
-      if( filterIndex==-1 ) setFilter(filterIndex);
-      else {
-         (new Thread(){
-            public void run() {
-               Util.pause(300);
-               setFilter(filterIndex);
-            }
-         }).start();
-      }
+//      if( filterIndex==-1 ) setFilter(filterIndex);
+//      else {
+//         (new Thread(){
+//            public void run() {
+//               Util.pause(300);
+//               setFilter(filterIndex);
+//            }
+//         }).start();
+//      }
       
-//      setFilter(filterIndex);
-      
+      setFilter(filterIndex);
       askForRepaint();
    }
    

@@ -1136,6 +1136,9 @@ public class Plan implements Runnable {
    protected boolean Free() {
       setLogMode(false);
       
+      // Arrêt d'un éventuel filterThread si Filtre dédié
+      if( planFilter!=null ) planFilter.Free();
+      
       // Tentatite d'arrêt d'un flux en cours
       // JE NE LE FAIS PAS POUR LES PLANS ISSUS DU SERVEUR ALADIN, PARCE QUE CA PEUT
       // TOUT PLANTER
@@ -1298,10 +1301,10 @@ public class Plan implements Runnable {
     * @param n indice du filtre à créer (dans filters[]) -1 si aucun
     */
    protected void setFilter(int n) {
-
+      
       if( filters==null ) return;
       filterIndex = n;
-
+      
       // JE PREFERERAIS UTILISER LE active DU FILTRE, MAIS JE N'Y PARVIENS PAS
       // A VOIR AVEC THOMAS
       if( n<0 ) {
@@ -1311,21 +1314,23 @@ public class Plan implements Runnable {
          return;
       }
 
-      planFilter.updateAllFilters(aladin);
       String name = Server.getFilterName(filters[n]);
       String script = Server.getFilterScript(filters[n]);
 
       if( planFilter==null ) {
          planFilter = new PlanFilter(aladin,name,script,this);
-         planFilter.applyFilter();
          PlanFilter.updateAllFilters(aladin);
+         planFilter.applyFilter();
+         if( PlanFilter.DEBUG ) System.err.println("Plan.setFilter("+n+") => adding predefined filter");
       } else {
          planFilter.updateDefinition(script,name,null);
+         if( PlanFilter.DEBUG ) System.err.println("Plan.setFilter("+n+") => updating definition of a predefined filter");
       }
    }
 
    protected void updateDedicatedFilter() {
       if( planFilter==null ) return;
+      PlanFilter.updateAllFilters(aladin);
       PlanFilter.updateNow();
    }
 
@@ -2503,8 +2508,7 @@ public class Plan implements Runnable {
       Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
       if( server!=null && server.ifTapIsCurrentRequest(this.requestId)) server.setStatus();
       boolean rep=true;
-      try { rep = waitForPlan();
-      } catch( Exception e ) {
+      try { rep = waitForPlan(); } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
       planReady( rep );

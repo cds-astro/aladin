@@ -658,9 +658,7 @@ public class Source extends Position implements Comparator {
       PlanFilter pf;
       for( int i=0;i<PlanFilter.allFilters.length;i++) {
          pf = PlanFilter.allFilters[i];
-         if( !pf.isOn() || !pf.flagOk ) {
-            continue;
-         }
+         if( !pf.isOn() || !pf.flagOk ) continue;
          if(plan.influence[pf.numero]) nb++;
       }
 
@@ -717,9 +715,7 @@ public class Source extends Position implements Comparator {
       if( plan.aladin.isAnaglyph ) {
          if( drawAnaglyph(g, v) ) return true;
       }
-
-
-      //System.out.println("On repaint");
+      
       int L =getL();
       Point p = getViewCoord(v,L,L);
       if( p==null ) return false;
@@ -746,22 +742,20 @@ public class Source extends Position implements Comparator {
       	  drawAssociatedFootprint(g,v,dx,dy);
       	  // si aucun des plans dont la source subit l'influence n'est pret
       	  // on dessine la source comme d'habitude
-      	  if( nbFiltersOk == 0 ) {
-      	     doDraw(g, p, plan.c);
-      	  }
+      	  if( nbFiltersOk == 0 ) doDraw(g, p, plan.c);
+      	  
       	  // on applique les differentes actions associees aux differents filtres
       	  else {
       	     boolean success = drawWithFilter(g, v, p, dx, dy);
       	     if ( ! success ) return false;
       	  }
-      }
 
       // pour les sources qui ne sont sous l'influence d'aucun filtre
-      else if(noInfluence) {
+      } else if( noInfluence ) {
          doDraw(g, p, plan.c);
          drawAssociatedFootprint(g,v,dx,dy);
-      }
-      else if(!iAmSelected && nbFiltersOk==0) {
+         
+      } else if(!iAmSelected && nbFiltersOk==0) {
          doDraw(g, p, plan.c);
          drawAssociatedFootprint(g,v,dx,dy);
       }

@@ -865,10 +865,9 @@ public class UCDFilter {
 
 	/** Filters sources according to the different constraints and set isSelected to true when a source correpsonds to the constraints
 	 *  @param sources array of sources one wants to filter
-	 *  @param inThread - si true, on appelle la méthode depuis le thread PlanFilter.runme
 	 *	@return array of all selected sources
 	 */
-	protected Source[] getFilteredSources(Source[] sources, boolean inThread) {
+	protected Source[] getFilteredSources(Source[] sources) {
 		long start = System.currentTimeMillis();
 		Vector filteredSources = new Vector();
 
@@ -892,83 +891,82 @@ public class UCDFilter {
         for( int i=0; i<vecBlockSources.length; i++ ) vecBlockSources[i] = new Vector();
 
 
-		// we test all sources
-		for (int i = sources.length - 1; i >= 0; i--) {
-			// allocation mémoire pour le tableau "values" liés aux sources
-			if( sources[i].values==null ) sources[i].values = new double[PlanFilter.LIMIT][][];
-			// allocation mémoire pour le tableau "isSelected" liés aux sources
-			if( sources[i].isSelected==null ) sources[i].isSelected = new boolean[PlanFilter.LIMIT];
-			// allocation mémoire pour le tableau "actions" liés aux sources
-			if( sources[i].actions==null ) sources[i].actions = new Action[PlanFilter.LIMIT][];
+        // we test all sources
+        for (int i = sources.length - 1; i >= 0; i--) {
+           // allocation mémoire pour le tableau "values" liés aux sources
+           if( sources[i].values==null ) sources[i].values = new double[PlanFilter.LIMIT][][];
+           // allocation mémoire pour le tableau "isSelected" liés aux sources
+           if( sources[i].isSelected==null ) sources[i].isSelected = new boolean[PlanFilter.LIMIT];
+           // allocation mémoire pour le tableau "actions" liés aux sources
+           if( sources[i].actions==null ) sources[i].actions = new Action[PlanFilter.LIMIT][];
 
+           // Pour laisser la main aux autres threads
+           if ( i % 50 == 0 ) {
+              // maj du pourcentage
+              pf.setPourcent(100.0*((double)(nbSources-i)/(double)(nbSources)));
+              //System.out.println(pf.pourcent);
+           }
 
-			// Pour laisser la main aux autres threads
-			if ( i % 50 == 0 ) {
-				// maj du pourcentage
-				pf.setPourcent(100.0*((double)(nbSources-i)/(double)(nbSources)));
-				//System.out.println(pf.pourcent);
-			}
+           if( pf.filterThread.askingRestart() ) {
+              if( pf.DEBUG ) System.err.println("UCDFilter.getFilteredSources() => break (filterThread.askingRestart())");
+              return null;
+           }
 
-            // should we stop the processing
-            if( inThread && i%100==0 && pf.runme==null ) {
-         	   return null;
-            }
+           boolean accomplished=false;
+           // loop on all blocks (on teste une par une les contraintes jusqu'à ce que la source en vérifie une)
+           for( int k=0;!accomplished&&k<blocks.length;k++ ) {
+              curBlock = blocks[k];
+              if (verifyValueConstraints(sources[i], curBlock)) {
+                 filteredSources.add(sources[i]);
+                 vecBlockSources[k].add(sources[i]);
+                 accomplished=true;
 
-			boolean accomplished=false;
-			// loop on all blocks (on teste une par une les contraintes jusqu'à ce que la source en vérifie une)
-			for( int k=0;!accomplished&&k<blocks.length;k++ ) {
-				curBlock = blocks[k];
-				if (verifyValueConstraints(sources[i], curBlock)) {
-					filteredSources.add(sources[i]);
-                    vecBlockSources[k].add(sources[i]);
-					accomplished=true;
+                 sources[i].isSelected[numero] = true;
+                 sources[i].actions[numero] = curBlock.actions;
 
-					sources[i].isSelected[numero] = true;
-					sources[i].actions[numero] = curBlock.actions;
+                 // initialisation of values array for each source
+                 //					sources[i].values[numero] = new double[sources[i].actions[numero].length][4];
+                 sources[i].values[numero] = new double[sources[i].actions[numero].length][4];
+                 for(int j = 0;j < sources[i].actions[numero].length; j++) {
+                    sources[i].actions[numero][j].computeValues(sources[i],numero,j);
+                 }
+              } else if (convertProblem) {
+                 //System.out.println("Problem");
+                 nbConvertProblem++;
+                 accomplished=true;
+              }
+           } // fin de la boucle for sur tous les blocks
 
-					// initialisation of values array for each source
-//					sources[i].values[numero] = new double[sources[i].actions[numero].length][4];
-					sources[i].values[numero] = new double[sources[i].actions[numero].length][4];
-					for(int j = 0;j < sources[i].actions[numero].length; j++) {
-                        sources[i].actions[numero][j].computeValues(sources[i],numero,j);
-					}
-				} else if (convertProblem) {
-					//System.out.println("Problem");
-					nbConvertProblem++;
-					accomplished=true;
-				}
-			} // fin de la boucle for sur tous les blocks
-
-			// on set actions à null si aucune contrainte n'est vérifiée
-			if( !accomplished ) {
-				sources[i].actions[numero] = null;
-			}
-		} // fin de la boucle for sur toutes les sources
+           // on set actions à null si aucune contrainte n'est vérifiée
+           if( !accomplished ) {
+              sources[i].actions[numero] = null;
+           }
+        } // fin de la boucle for sur toutes les sources
 
         ///////////////////////////////////////////////////////////
         // blockSources[i] is the array of selected sources for blocks[i]
         Source[][] blockSources = new Source[blocks.length][];
         for( int i=0; i<vecBlockSources.length; i++ ) {
-            blockSources[i] = new Source[vecBlockSources[i].size()];
-            vecBlockSources[i].copyInto(blockSources[i]);
-            vecBlockSources[i] = null;
+           blockSources[i] = new Source[vecBlockSources[i].size()];
+           vecBlockSources[i].copyInto(blockSources[i]);
+           vecBlockSources[i] = null;
         }
 
         // A ce stade blockSources contient les sources sélectionnées pour chaque block
         // Boucle sur l'ensemble des blocks
         for( int i=0; i<blocks.length; i++ ) {
 
-            // Boucle sur les actions pour calcul des extrema
-            for( int k=0; k<blocks[i].actions.length; k++) {
-                // calcul de l'extremum
-                blocks[i].actions[k].computeExtremum(blockSources[i]);
-            }
+           // Boucle sur les actions pour calcul des extrema
+           for( int k=0; k<blocks[i].actions.length; k++) {
+              // calcul de l'extremum
+              blocks[i].actions[k].computeExtremum(blockSources[i]);
+           }
 
-            // Boucle sur les sources
-            for( int j=0; j<blockSources[i].length; j++) {
-                // should we stop the processing
-                if( inThread && j%100==0 && pf.runme==null ) {
-             	   return null;
+           // Boucle sur les sources
+           for( int j=0; j<blockSources[i].length; j++) {
+                if( pf.filterThread.askingRestart() ) {
+                   if( pf.DEBUG ) System.err.println("UCDFilter.getFilteredSources() => return (filterThread.askingRestart())");
+                   return null;
                 }
 
                 // Boucle sur les actions
@@ -997,10 +995,6 @@ public class UCDFilter {
 		long end = System.currentTimeMillis();
         Aladin.trace(3,"Total time for filtering: "+(end-start));
 		return sourceArray;
-	}
-
-	protected Source[] getFilteredSources(Source[] sources) {
-		return getFilteredSources(sources, false);
 	}
 
 	protected boolean hasRainbowFunction() {

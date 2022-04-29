@@ -195,6 +195,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>Bug fixed:</B>
  * @beta <UL>
+ * @beta    <LI> Removal of potential deadlock when applying a dedicated filter on a HiPS catalogue
  * @beta    <LI> Java getFreeSpace() bug workaround for Hipsgen disk cache
  * @beta    <LI> Fix bug for Coord Tool box ICRS proper motion computation error
  * @beta    <LI> Correct detection of a remote resource not found
@@ -232,7 +233,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v11.122";
+   static public final    String VERSION = "v11.123";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel, Chaitra & al";
 //   static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

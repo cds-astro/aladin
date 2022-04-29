@@ -33,9 +33,13 @@ import cds.tools.Util;
  * Plan dedie a un filter (FILTER)
  *
  * @author Pierre Fernique [CDS] - Thomas Boch [CDS]
+ * @version 1.1 : avril 2022 correction bug dead lock sur le Thread join => gestion par un thread dédié
  * @version 1.0 : 29 octobre 2002 creation
  */
 public final class PlanFilter extends Plan {
+   
+   protected static final boolean DEBUG=false;   // Bcp de traces de débogage pour 
+   
    // incrément pour les tableaux liés aux filtres
    private static final int INCREMENT = 4/*20*/;
 
@@ -333,47 +337,18 @@ public final class PlanFilter extends Plan {
 
    protected void applyFilter() {
    	  // nécessaire pour ne pas avoir de pb avec la commande "sync" [thomas 03/02/2005]
-   	  if( mustUpdate ) {
-   	  	flagOk = false;
-   	  }
+//   	  if( mustUpdate ) flagOk = false;
+   	  
       if( initPlanMem ) {
          setPlanMemory();
          updateInfluence();
          initPlanMem = false;
       }
-      // On arrête d'abord le précédent thread (si on réappuie sur apply avant la fin)
-      stopFilterThread();
-//      synchronized( this ) {
-         runme = new Thread(this,"AladinFilterApply");
-         Util.decreasePriority(Thread.currentThread(), runme);
-         runme.start();
-//      }
+      
+      startFiltering();
+      filterThread.restart();
    }
 
-   /** arrete proprement le thread courant */
-   private /* synchronized */ void stopFilterThread() {
-	   if( runme==null ) return;
-
-	   Thread oldThread = runme;
-	   // en settant runme à null, on va forcer le thread à s'arreter (test dessus dans la boucle)
-	   runme = null;
-	   // anciene méthode --> beurk !!
-//	   oldThread.stop();
-	   try {
-//		   System.out.println("debut join");
-		   // on attend que le thread finisse
-		   oldThread.join();
-//		   System.out.println("fin join");
-	   }
-	   catch(InterruptedException ie) {
-//		   ie.printStackTrace();
-	   }
-	   catch(Exception e) {
-		   if( Aladin.levelTrace>=3 ) e.printStackTrace();
-	   }
-//	   System.out.println("stop filter thread !");
-   }
-   
    
    private long lastFilterLock=-1; // Date du dernier test de isSync() sur le filtre. Si on dépasse 4s, on relance
    private boolean relaunchDone=false; // true si on vient de relancer manuellement un filtre (sur un isSync() bloquant)
@@ -416,29 +391,35 @@ public final class PlanFilter extends Plan {
       return flagOk && !(error==null && mustUpdate);
    }
 
-   /** Methode appliquant le filtre sur tous les PlanCatalog concernés
-    * @param inThread si true, on appelle la méthode depuis le thread du filtre
-    */
-   protected void doApplyFilter(boolean inThread) {
+   /** Methode appliquant le filtre sur tous les PlanCatalog concernés */
+   protected boolean doApplyFilter() {
       if( mustUpdate) {
-         Aladin.trace(1,"Updating filter results");
          if( !isValid() ) {
             setActivated(false);
             flagOk = true;
-            return;
-         }
-         else {
+            return false;
+            
+         } else {
             flagOk = false;
             aladin.calque.repaintAll();
-            Source[] sources = getSources(aladin, inThread);
-            if( inThread && runme==null ) return;
+            Source[] sources = getSources(aladin);
+            if( filterThread.askingRestart() ) {
+               System.err.println("PlanFilter.doApplyFilter() => return (getSources->filterThread.askingRestart())");
+               return false;
+           }
+
             resetFlags();
-            filter.getFilteredSources(sources, inThread);
-            if( inThread && runme==null ) return;
+            filter.getFilteredSources(sources);
+            if( filterThread.askingRestart() ) {
+               if( DEBUG ) System.err.println("PlanFilter.doApplyFilter() => return (getFilteredSources->filterThread.askingRestart())");
+               return false;
+           }
             flagOk = true;
             setPourcent(-1);
          }
       }
+      
+      if( DEBUG ) System.err.println("PlanFilter.doApplyFilter() "+getLabel()+" done");
 
       if( mustRepaint ) {
          synchronized(aladin.mesure) {
@@ -446,47 +427,106 @@ public final class PlanFilter extends Plan {
          }
       }
       mustUpdate = false;
+      return true;
 
    }
 
-   protected void doApplyFilter() {
-	   doApplyFilter(false);
+   // démarrage si nécessaire du thread de filtrage
+   private void startFiltering() {
+      if( filterThread!=null ) return;  // En cas de double appel
+      filterThread = new FilterThread();
+      filterThread.start();
    }
-
+   
+   // le Thread dédié au calcul et au recalcul du filtre
+   protected FilterThread filterThread = null;
+   
+   class FilterThread extends Thread {
+      long timeStart=-1L;         // Date du démarrage du dernier calcul
+      long timeAsk=0L;            // Date de la dernière demande de relance d'un calcul
+      boolean flagKill=false;     // true pour arrêter le thread de calcul
+      long t = System.currentTimeMillis();
+      
+      // Demande de relance du calcul
+      public void restart() {
+         timeAsk=System.currentTimeMillis();
+         if( DEBUG ) System.err.println("FilterTread.askRestart() timeAsk="+(timeAsk-t));
+         filterThread.interrupt();
+      }
+      
+      // True s'il faut relancer un calcul de filtre un court (ou l'interrompre)
+      public boolean askingRestart() { return timeAsk>timeStart || flagKill; }
+      
+      // Demande l'arrêt du Thread de calcul
+      public void kill() {
+         flagKill=true;
+         if( DEBUG ) System.err.println("FilterTread.kill()");
+         filterThread.interrupt();
+      }
+      
+      // Boucle de calcul et d'attente
+      public void run() {
+         while( !flagKill ) {
+            computing();
+            sleeping();
+         }
+         filterThread=null;
+         if( DEBUG ) System.err.println("FilterTread.run() => died");
+      }
+      
+      // Attente
+      void sleeping() {
+         try {
+            while( timeAsk<timeStart && !flagKill ) {
+               if( DEBUG ) System.err.println("FilterTread.sleeping() sleeping!");
+               Util.pause(1000);
+            }
+         } catch( Exception e ) {
+            if( DEBUG ) System.err.println("FilterTread.sleeping() interrupted!");
+         }
+      }
+      
+      // Filtrage
+      void computing() {
+         if( flagKill ) return;
+         timeStart=System.currentTimeMillis();
+         if( DEBUG ) System.err.println("FilterTread.computing() timeStart="+(timeStart-t));
+         if( doApplyFilter() ) aladin.calque.repaintAll();
+      }
+   }
+   
+ 
    /** returns all sources of active plans and which are influenced by the filter
     *  @param aladin - reference to the Aladin object
-    *  @param inThread si true, on appelle la méthode depuis le thread du filtre
     *  @return the array of sources of all active plans
     */
-   protected Source[] getSources(Aladin a, final boolean inThread) {
+   protected Source[] getSources(Aladin a) {
       int i;
       Plan p = null;
       Vector<Source> vec = new Vector<>();
       Plan[] plans = getConcernedPlans();
-      int k=1;
+      if( DEBUG ) System.err.println("Plan concerné => "+plans[0]);
 
       // loop on all plans and selection of catalogs which are active
       // we retrieve all sources in active plans
+      all:
       for( i=plans.length-1; i>=0; i-- ) {
          p = plans[i];
          //if( p.type == Plan.CATALOG && p.flagOk && p.active ) {
-            Iterator<Obj> it = p.iterator();
-            if( it==null ) continue;
-            while( it.hasNext() ) {
-               Obj s= it.next();
+         Iterator<Obj> it = p.iterator();
+         if( it==null ) continue;
+         while( it.hasNext() ) {
+            Obj s= it.next();
 
-               // should we stop the processing
-               if( inThread && k%1000==0 && runme==null ) {
-            	   break;
-               }
-
-//               if( s instanceof Source && s!=null) {
-               if( s!=null && s.asSource() ) {
-                  vec.addElement((Source)s);
-                  k++;
-               }
+            if( filterThread.askingRestart() ) {
+               if( DEBUG ) System.err.println("PlanFilter.getSources() => break (filterThread.askingRestart())");
+               break all;
             }
-         //}
+
+            if( s!=null && s.asSource() ) {
+               vec.addElement((Source)s);
+            }
+         }
       }
 
       Source[] sources = new Source[vec.size()];
@@ -494,9 +534,6 @@ public final class PlanFilter extends Plan {
       vec = null;
 
       return sources;
-   }
-   protected Source[] getSources(Aladin a) {
-	   return getSources(a, false);
    }
 
 
@@ -710,20 +747,31 @@ public final class PlanFilter extends Plan {
    protected boolean isValid() {
       return !filter.badSyntax;
    }
-
-   /** PF oct 2007 - J'ai dû surcharger cette méthode sinon il y avait un changement
-    * de sélection de plan intempestif pour Simbad et NED (filtre prédéfini)
-    */
-   protected void planReady(boolean ready) { }
-
-
-   /** Methode appelee par le thread de calcul */
-   protected boolean waitForPlan() {
-//      System.out.println("debut thread");
-      doApplyFilter(true);
-//      System.out.println("finthread");
-      return true;
+   
+   
+   /** Lance le chargement du plan */
+   public void run() {
+      System.err.println("PlanFilter.waitForPlan() => debut thread");
+//      doApplyFilter(true);
+      updateNow();
+      System.err.println("PlanFilter.waitForPlan() => finthread");
    }
+
+//   /** PF oct 2007 - J'ai dû surcharger cette méthode sinon il y avait un changement
+//    * de sélection de plan intempestif pour Simbad et NED (filtre prédéfini)
+//    */
+//   protected void planReady(boolean ready) { 
+//      System.err.println("PlanFilter.planReady()");
+//   }
+//
+//
+//   /** Methode appelee par le thread de calcul */
+//   protected boolean waitForPlan() {
+//      System.err.println("PlanFilter.waitForPlan() => debut thread");
+//      doApplyFilter(true);
+//      System.err.println("PlanFilter.waitForPlan() => finthread");
+//      return true;
+//   }
 
    /** Realloue de la memoire pour les differents tableaux */
    private void realloc() {
@@ -845,9 +893,7 @@ public final class PlanFilter extends Plan {
 
       for( int i=a.calque.plan.length-1;i>=0;i-- ) {
          p = a.calque.plan[i];
-         if( p.type == Plan.FILTER ) {
-            v.addElement(p);
-         }
+         if( p.type == Plan.FILTER ) v.addElement(p);
 
          // TEST PIERRE 23/8/05, pour ajouter à la liste des filtres ceux qui sont
          // directement associés à des plans catalogues via les filtres prédéfinis
@@ -864,12 +910,13 @@ public final class PlanFilter extends Plan {
 
    /** Liberation de la memoire */
    protected boolean Free() {
-      stopFilterThread();
+      if( filterThread!=null ) filterThread.kill();
       memPlan = null;
       omemPlan = null;
       filter.Free();
       super.Free();
       // maj des filtres existant
+      if( plan!=null ) plan.planFilter=null;
       PlanFilter.updateAllFilters(aladin);
       // maj du Choice avec la liste des filtres
       FilterProperties.majFilterProp(true,false);
@@ -937,13 +984,12 @@ public final class PlanFilter extends Plan {
       if(allFilters==null) return;
       for( int i=0;i<allFilters.length;i++) {
          pf = allFilters[i];
-//         System.out.println("updateNow. filter "+i+" pf="+pf+" pf.isOn="+pf.isOn());
+         if( DEBUG ) System.err.println("PlanFilter.updateNow() filter "+i+" pf="+pf+" pf.isOn="+pf.isOn());
          pf.setMustUpdate();
-         pf.setPlanMemory();
-//         pf.updateInfluence();
          pf.mustUpdate = true;
          if( pf.isOn() ) pf.applyFilter();
       }
+      if( DEBUG ) if( allFilters.length==0 ) System.err.println("PlanFilter.updateNow() nothing to do !");
    }
 
 /** Generation du label du plan.
